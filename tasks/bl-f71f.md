@@ -1,7 +1,8 @@
 +++
 title = "Shell assembly: wire inspector tab content — transcript, steps, config editors, inbox, budgets, ops — into the window per DESIGN §11"
 created = 1784354484
-updated = 1784354484
+updated = 1784354493
+claimant = "filtered"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
