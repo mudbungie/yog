@@ -1,7 +1,8 @@
 +++
 title = "Y6: Watch registry + repaint bridge + clock-injected sweeps; single-workspace view goes live (M1)"
 created = 1784349555
-updated = 1784349555
+updated = 1784350603
+claimant = "filtered"
 parent = "bl-4e66"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
