@@ -1,9 +1,0 @@
-+++
-title = "Shell assembly: wire inspector tab content — transcript, steps, config editors, inbox, budgets, ops — into the window per DESIGN §11"
-created = 1784354484
-updated = 1784354493
-claimant = "filtered"
-priority = 1
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
-+++
-Y23's close note: the inspector tab SELECTOR (digits 1-5, InspectorTab on Focus) is wired, but per-tab CONTENT rendering remains unwired shell glue; the config editors (brazen bl-6cef, lernie-global bl-7d27, config-branch browse/edit bl-140a/bl-e796), transcript (bl-e820), steps inspector (bl-29a5), inboxview and budgets (bl-db45), and the opslog pane all have tested VMs + render fns but are not all reachable in the running window. This ball is the final assembly: per DESIGN §11's layout, wire each tab's content in the shell (coverage-excluded thin glue calling the landed render fns/VMs), including: transcript tab (with Raw toggle + streaming tail) for the focused agent; steps tab (list + drill-in with jsonview trees, selection/tab as RAM ephemera); config tab (governing-config frozen label for the focused agent + the three editor surfaces: brazen, lernie global, workspace config branches with the staged-edit flow); inbox tab (deposits for the focused agent); budgets display (spend fold) wherever §11 places it; ops pane (opslog tail). Wire the seen/attention acknowledgement consistently on tab focus where DESIGN specifies. Any VM gap discovered while wiring (a missing accessor, a render fn that needs a param) is in scope as a minimal tested change; any real feature gap gets filed as its own ball, not smuggled in. Acceptance: launch yog against a fixture workspace (make run WS=...) and every data surface named in the user requirement — agents/subagents, transcripts, step diagnostics incl. tool i/o, inbox, marks, budgets, config (all three), ops history — is reachable by keyboard/click from the window. Update README's feature list if it drifted.
