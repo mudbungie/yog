@@ -1,7 +1,8 @@
 +++
 title = "Y18: brazen config editor — raw text + bz validation + hash guard"
 created = 1784349561
-updated = 1784349561
+updated = 1784350335
+claimant = "filtered"
 parent = "bl-4e66"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
