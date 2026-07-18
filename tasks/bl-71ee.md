@@ -1,8 +1,8 @@
 +++
 title = "fs_watcher: macOS FSEvents rename-source (.tmp) leaks as a spurious Removed change — coalesces_atomic_rename_to_destination red on macos-14"
 created = 1784350143
-updated = 1784350143
-priority = 3
+updated = 1784350166
+priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Follow-up to bl-592b. That ball fixed 8 of 9 macOS failures (all probe canonicalization + 6 of 7 fs_watcher tests). CI run 29620934183 (commit faccc40) macos-14 job: 203 passed, 1 FAILED — fs_watcher::tests::coalesces_atomic_rename_to_destination.
