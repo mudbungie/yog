@@ -1,8 +1,8 @@
 +++
 title = "CI hygiene: lib.rs 99.90% coverage regression from module-decl folds blocks linux make ci; .githooks/pre-commit is non-executable so closes land ungated"
 created = 1784350147
-updated = 1784350147
-priority = 3
+updated = 1784350165
+priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Discovered while delivering bl-592b. Two linked defects keep CI red and let regressions land unnoticed.
