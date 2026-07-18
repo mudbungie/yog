@@ -1,7 +1,8 @@
 +++
 title = "Y3: cli_outbound generalization — parametric binaries, current_dir, detached spawn"
 created = 1784349554
-updated = 1784349554
+updated = 1784349660
+claimant = "filtered"
 parent = "bl-4e66"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
