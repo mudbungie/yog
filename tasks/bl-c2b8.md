@@ -1,7 +1,8 @@
 +++
 title = "Y14: projects + balls view-models + join-state table"
 created = 1784349559
-updated = 1784349559
+updated = 1784352414
+claimant = "filtered"
 parent = "bl-4e66"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
