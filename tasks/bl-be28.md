@@ -1,7 +1,8 @@
 +++
 title = "Y15: ops.jsonl — durable action-outcome log"
 created = 1784349560
-updated = 1784349560
+updated = 1784349732
+claimant = "filtered"
 parent = "bl-4e66"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
