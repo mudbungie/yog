@@ -1,7 +1,8 @@
 +++
 title = "Upstream delivery wiring: auto-push main on delivery, CI (linux + macos-arm64), crates.io publish wiring (no publish)"
 created = 1784349057
-updated = 1784349057
+updated = 1784349184
+claimant = "filtered"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
