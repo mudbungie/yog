@@ -1,7 +1,8 @@
 +++
 title = "Rebrand lernie-ui-egui -> yog: crate, binary, README, Makefile"
 created = 1784348197
-updated = 1784348197
+updated = 1784349044
+claimant = "filtered"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
