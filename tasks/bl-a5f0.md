@@ -1,7 +1,8 @@
 +++
 title = "Y2: xdg module — env-snapshot path folds with runtime-injected target_os"
 created = 1784349553
-updated = 1784349553
+updated = 1784349575
+claimant = "filtered"
 parent = "bl-4e66"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
