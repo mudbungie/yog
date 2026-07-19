@@ -1,7 +1,8 @@
 +++
 title = "B7: AGENTS.md + hook/CI ast-grep wiring + DESIGN amendment + fixtures smoke target"
 created = 1784433625
-updated = 1784433625
+updated = 1784436935
+claimant = "filtered"
 parent = "bl-97fb"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
