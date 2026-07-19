@@ -1,7 +1,7 @@
 +++
 title = "epic: the yog world, phase 1 — nested tool state, version gate, no-marks knob, escape hatches (DESIGN §16.6)"
 created = 1784435198
-updated = 1784435201
+updated = 1784437550
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
@@ -29,4 +29,4 @@ on = "claim"
 id = "bl-31bd"
 on = "claim"
 +++
-Phase 1 of DESIGN §16 (the yog world): nested LERNIE_HOME/XDG_STATE_HOME/BRAZEN_CONFIG for all child tools, brazen creds/cache shared, lernie home seeded via lernie's own bootstrap verb (upstream lernie bl-6d83), shared balls store branch with a per-project no-marks knob, a phase-1-scoped version gate, and yog env/exec escape hatches. W7 (install-tools convenience) is recorded in §16.6 but deliberately unfiled — file only if fresh-machine friction is felt. Phase 2 (embedded crates, no shipped binaries, agent-tool shims) is §16.7, gated on upstream readiness (lernie bl-231c).
+COMPLETE (phase 1). W1-W6 delivered: world-env composition with bl-delivery env-derivation verified (W1); standing world env at every spawn via construction-time Cli overrides, reads-spawns agreement proven (W2); lernie home seeding via the upstream lernie prime verb (W3, upstream lernie bl-6d83); the no-marks knob — Shared/Stealth/CustomBranch through bl conf (W4); phase-1 version gate + toolchain pane, mutating verbs refuse on mismatch (W5); yog env / yog exec escape hatches, live-smoke-tested (W6). W7 (install-tools) deliberately unfiled per §16.6 — file on friction. Phase 2 (embedded crates, no shipped binaries, lernie-tool-bl shim) is §16.7, gated on upstream lernie bl-231c.
