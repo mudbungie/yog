@@ -1,7 +1,8 @@
 +++
 title = "B4: owned-signature wave — rules 1/2/9 (lifetimes, pub borrows, pub bounds) + their ast-grep rules"
 created = 1784433624
-updated = 1784433624
+updated = 1784434636
+claimant = "filtered"
 parent = "bl-97fb"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
