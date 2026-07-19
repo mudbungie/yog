@@ -2,6 +2,7 @@
 title = "epic: the yog world, phase 1 — nested tool state, version gate, no-marks knob, escape hatches (DESIGN §16.6)"
 created = 1784435198
 updated = 1784437550
+claimant = "filtered"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
