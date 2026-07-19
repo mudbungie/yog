@@ -1,7 +1,8 @@
 +++
 title = "Design amendment: the yog world — nested tool state, pinned tuple, crate adoption phases, no-marks knob (DESIGN.md)"
 created = 1784434931
-updated = 1784434931
+updated = 1784434939
+claimant = "filtered"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
