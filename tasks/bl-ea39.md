@@ -1,7 +1,8 @@
 +++
 title = "W2: world-env injection at every spawn"
 created = 1784435199
-updated = 1784435199
+updated = 1784437054
+claimant = "filtered"
 parent = "bl-1a3c"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
