@@ -1,7 +1,7 @@
 +++
 title = "epic: Rust Bootstrap v3 adoption — pinned toolchain, deny.toml, ast-grep rules, panic-free prod, owned signatures, pedantic gate"
 created = 1784433623
-updated = 1784433625
+updated = 1784437110
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
@@ -33,4 +33,4 @@ on = "claim"
 id = "bl-eafd"
 on = "claim"
 +++
-Implement the user's "Rust Project Bootstrap v3" standard in yog, with surfaced adaptations. Assessment reports in the session scratchpad; adaptations recorded in AGENTS.md + DESIGN when B7 lands. Deliberate skips (surfaced to user): workspace/crates split (single published binary crate; module tree + 300-line cap already contain); musl static target (GL desktop app needs dynamic platform libs; TLS bans kept in deny.toml anyway); pre-commit framework + nextest + bacon/sccache/mold (one hook system — .githooks — carries the same checks; cargo test + tarpaulin remain the runners); anyhow (main.rs has no error plumbing; thiserror already in place). One irreducible unsafe (SIGTERM) is confined by an ast-grep location rule instead of unsafe_code=forbid (forbid is unoverridable and reaches tests; a nix/rustix dep or a crate split for ~10 lines is worse).
+COMPLETE. B1-B7 all delivered: pinned toolchain 1.95.0 + deny.toml (B1); unsafe reduced to one confined SIGTERM site + first ast-grep rule (B2); locks chokepointed in state.rs, zero Rc/RefCell repo-wide (B3); rules 2/9 owned signatures + pub(crate) boundary (B4); rule 1 zero named lifetimes (B4b/bl-ca57); panic-free prod + restriction lints + assert/suppression rules (B5); pedantic=deny with 13-entry sanctioned manifest allow-list (B6); AGENTS.md + full gate wiring, CI green both platforms (B7). Eight ast-grep rules live with two-direction fixtures audit. Surfaced skips recorded in DESIGN §12.1 and AGENTS.md: workspace split, musl, forbid-vs-confine unsafe, anyhow, pre-commit-framework/nextest/bacon.
