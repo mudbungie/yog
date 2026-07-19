@@ -1,7 +1,8 @@
 +++
 title = "W1: world-env module — compose the nested Env and the world layout"
 created = 1784435199
-updated = 1784435199
+updated = 1784435289
+claimant = "filtered"
 parent = "bl-1a3c"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
