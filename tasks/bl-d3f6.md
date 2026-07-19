@@ -1,7 +1,8 @@
 +++
 title = "B5: panic-free prod — restriction lints + no-assert/no-suppression rules"
 created = 1784433624
-updated = 1784435095
+updated = 1784435616
+claimant = "filtered"
 parent = "bl-97fb"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
