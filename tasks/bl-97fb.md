@@ -2,6 +2,7 @@
 title = "epic: Rust Bootstrap v3 adoption — pinned toolchain, deny.toml, ast-grep rules, panic-free prod, owned signatures, pedantic gate"
 created = 1784433623
 updated = 1784437110
+claimant = "filtered"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
