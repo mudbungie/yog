@@ -1,0 +1,18 @@
++++
+title = "Design amendment: the yog world — nested tool state, pinned tuple, crate adoption phases, no-marks knob (DESIGN.md)"
+created = 1784434931
+updated = 1784434931
+priority = 1
+root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
++++
+Amend docs/DESIGN.md with the decided architecture evolution (decisions are settled; record and decompose, do not relitigate):
+
+1. yog is an APPLICATION, not a layer. The sits-on-top narrative inverts: yog owns a nested world; playing on top of a user's direct tool usage remains possible via redirection knobs, making compatibility the user's decision.
+2. The nested world: yog composes one environment for itself and every child process — LERNIE_HOME under yog's data root (lernie config+data fully nested; seeding via lernie's own new bootstrap verb, requirement filed upstream as lernie bl-6d83 — yog NEVER apes lernie's seeding); XDG_STATE_HOME override on child bl processes (nested balls clones/worktrees/op-logs; verify bl-delivery derives territory from its own env as task 0); BRAZEN_CONFIG nested, brazen credentials and model cache SHARED with the ambient world (auth reuse decided: creds are secrets not schema-fragile state; cache is regenerable-and-forgiving).
+3. Balls store branch: shared balls/tasks by DEFAULT (the coordination point with the user's own bl usage; the branch schema is the stable contract). A per-project NO-MARKS knob for users who want yog without leaving marks: stealth (bl conf task-remote none) and/or custom task-branch, wired through bl's own config surface, exposed in yog's UI. Document the trade (stealth = yog's claims invisible to ambient bl list).
+4. Crate adoption, phased by upstream readiness — the direction is all three as exact-pinned crates, with the BINARIES remaining as the agent/human tool plane (lernie's own worker agents drive bl via bash; that surface stays essential) and installed into the world:
+   - Phase 1 (binaries, implement now): world-env module composing the nested Env; install-tools Makefile target pinning the tested tuple into a yog-owned bin dir (cargo install --locked --root); cli_outbound resolution prefers the world bin dir (env overrides stay); version gate at startup (probe what is probeable — note bl and lernie lack --version today; gate on what exists, surface the toolchain state as a UI pane; mutating verbs refuse on mismatch, rendering continues); yog env / yog exec escape hatches (print export lines / run a command inside the world); lernie home seeding via the upstream verb; the no-marks knob.
+   - Phase 2 (crates, per readiness): balls has a lib target (balls 0.5.7) — adopt for typed store reads where the lib serves them; brazen lib exists (pin-exact posture per its README) — adopt for canonical Event types and config validation; lernie is gated on upstream bl-231c (library port + driver/successor exec parametrization — if linked, yog re-execs itself as the driver binary). Record that process semantics are non-negotiable regardless of linking: drivers are processes holding flocks; plugin dispatch stays subprocess.
+5. Produce the implementation decomposition as bl-ready task specs (phase 1 fully; phase 2 as gated placeholders naming their upstream dependencies) in the DESIGN.md style of §15 — titles + scope paragraphs + deps + file/line budgets, copy-pasteable for filing.
+
+Sequencing note: the bootstrap-v3 epic (B4-B7) is landing concurrently — this ball touches ONLY docs/DESIGN.md; B7 also touches DESIGN.md later, so land this promptly. Gate as always (docs-only change; the code gate runs unchanged).
