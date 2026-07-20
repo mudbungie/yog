@@ -1,7 +1,8 @@
 +++
 title = "Z3: start flow — generalize start::plan to §3.4's axes"
 created = 1784523545
-updated = 1784524539
+updated = 1784525446
+claimant = "damson"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
 [[blockers]]
