@@ -1,7 +1,8 @@
 +++
 title = "Local CICD: install main to $PATH on close (bl-install-main plugin)"
 created = 1784518803
-updated = 1784518803
+updated = 1784518804
+claimant = "Floundered"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["build"]
 +++
