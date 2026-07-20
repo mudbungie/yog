@@ -1,7 +1,8 @@
 +++
 title = "DESIGN amendment: conversation-first start ladder + name-minted claim binding"
 created = 1784523333
-updated = 1784523333
+updated = 1784523334
+claimant = "blunderers"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Amend docs/DESIGN.md per the lightweight-interactions discussion:
