@@ -2,6 +2,7 @@
 title = "Theme the UI: iridescent-spheres palette + egui visuals (make it look alive)"
 created = 1784523387
 updated = 1784523387
+claimant = "defecates"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["ui"]
 +++
