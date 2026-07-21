@@ -1,7 +1,8 @@
 +++
 title = "Z8: login flow — streamed-piped bz --login + auth-failure detection"
 created = 1784524507
-updated = 1784524507
+updated = 1784604077
+claimant = "sorrel"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
 [[blockers]]
