@@ -1,7 +1,8 @@
 +++
 title = "top-level rework: workspace tabs (top right) + conversation-first center"
 created = 1784696431
-updated = 1784696431
+updated = 1784696451
+claimant = "Catoblepas"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
