@@ -1,7 +1,8 @@
 +++
 title = "world: stop nesting BRAZEN_CONFIG in phase 1 — share the ambient brazen config"
 created = 1784696431
-updated = 1784696431
+updated = 1784696446
+claimant = "Amphisbaena"
 priority = 4
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
