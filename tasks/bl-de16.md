@@ -1,7 +1,8 @@
 +++
 title = "conversation-ball association: derived join + badges + organizing views"
 created = 1784696431
-updated = 1784696431
+updated = 1784699030
+claimant = "Cleansing"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
