@@ -1,7 +1,8 @@
 +++
 title = "design: batteries-included rearch spec + arch"
 created = 1784784066
-updated = 1784784066
+updated = 1784784067
+claimant = "Cleansing"
 parent = "bl-b5d1"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
