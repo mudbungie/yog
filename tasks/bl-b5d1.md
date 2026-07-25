@@ -1,7 +1,7 @@
 +++
 title = "batteries-included: consume lernie/bl/brazen as library deps, drop all system-binary coupling"
 created = 1784784064
-updated = 1784784300
+updated = 1784959177
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
