@@ -1,7 +1,7 @@
 +++
 title = "wire evaluation blocked: installed bz 0.0.4 vs lernie linked brazen 0.0.3; the W5 gate is blind to it"
 created = 1784955879
-updated = 1784955879
+updated = 1784959173
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
