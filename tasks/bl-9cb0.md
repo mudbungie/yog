@@ -1,7 +1,7 @@
 +++
 title = "marks pane and ball row render for a workspace with no ball: focused_join returns the UnassignedWorkspace row"
 created = 1785130699
-updated = 1785131502
+updated = 1785131546
 claimant = "waxier-fix2"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
