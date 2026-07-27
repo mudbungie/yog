@@ -1,7 +1,7 @@
 +++
 title = "W11 embed lernie: the driver is yog"
 created = 1784784299
-updated = 1785124472
+updated = 1785125475
 claimant = "waxier-50bd"
 parent = "bl-b5d1"
 priority = 2
@@ -24,6 +24,8 @@ DESIGN §16.7 W11. Needs W12 + U-lernie (lernie repo: adapter_target via Fx + cr
 - [x] tests: multiplex/tests.rs reworked; src/multiplex/lernie/tests.rs (parse/edit_with/conclude/perform); tests/multiplex_lernie.rs end-to-end (own process env: prime/new/config editor both ways/dispatch prelude) — PASSES
 - [x] DESIGN §16.5 lernie bullet, §16.7 U-lernie, W9 shim note (superseded), W11 Landed + as-built note
 - [x] cargo test full suite: 741+ pass, 0 fail; fmt, clippy -D warnings, rules-audit, cargo deny all green
+- [x] coverage 100%: the arm's only uncovered lines were src/multiplex/lernie.rs:52-54 (the `targets()` Err arm — failed shim converge). Covered in tests/multiplex_lernie.rs by anchoring $XDG_DATA_HOME inside a regular file (ENOTDIR from `tools::ensure_shim`'s create_dir_all): dispatch returns 1 before the verb runs. 4487/4487 coverable lines.
+- [x] Registry adoption (crates.io lernie pin in place of the git pin) is NOT this task — queued as bl-89a4.
+
 ### Remaining
-- [ ] make coverage (tarpaulin 100%) — running
-- [ ] bl close (mention bl-89a4 adoption queued)
+- [ ] bl close (delivers onto epic ref work/bl-b5d1)
