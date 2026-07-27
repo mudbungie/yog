@@ -1,7 +1,8 @@
 +++
 title = "S7-T4 beat still asserts only that Flush dispatched lernie scan; the upstream exit-1 is fixed, so tighten it to exit 0 and correct the comment's wrong diagnosis"
 created = 1785133141
-updated = 1785133141
+updated = 1785133514
+claimant = "waxier-c03e"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 The residual of **bl-a942**, whose upstream half is fixed and delivered
