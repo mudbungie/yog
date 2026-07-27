@@ -1,7 +1,8 @@
 +++
 title = "REGRESSION on main: bl claim fails under the embedded balls — 'no ball on the wire: neither command.id nor a sealed bl-id trailer (§7)'"
 created = 1785131409
-updated = 1785131414
+updated = 1785131701
+claimant = "waxier-seam"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Caught by the drive harness on merged main b42af4d (bl-b5d1's batteries + W13's gate deletion). Evidence: docs/drive-logs/2026-07-27-s5-s7-s8-wire-green.md.
