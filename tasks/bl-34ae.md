@@ -1,7 +1,8 @@
 +++
 title = "CI red on macOS: tests/multiplex_bl.rs worktree-materialization assert fails (linux green)"
 created = 1785132694
-updated = 1785132694
+updated = 1785132886
+claimant = "waxier-34ae"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Found while landing bl-89a4 (registry adoption); NOT caused by it — reproduced on unmodified main (0d914fc) and present in CI runs for a3bce10 and 0d914fc.
