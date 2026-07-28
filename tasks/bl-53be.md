@@ -1,7 +1,7 @@
 +++
 title = "models.yaml offers two Claude models whose provider row does not exist in brazen — dead entries, no validation"
 created = 1785201365
-updated = 1785201365
+updated = 1785218850
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["reliability"]
@@ -75,3 +75,56 @@ checked.
 
 An edit that sets `provider:` to a non-existent brazen row is refused (or
 loudly warned) by the §9.2 editor, with a test.
+
+---
+
+## CORRECTION 2026-07-27 — the evidence above is partly WRONG
+
+I diagnosed the two Claude entries as dead because `provider: anthropic` matched
+no row in `~/.config/brazen/config.toml`. That grep was the wrong instrument.
+`bz --help` says plainly that `--dump-config` **omits the built-in rows**, and
+brazen ships built-ins in `data/defaults.toml`. The authoritative query is
+`bz --list-providers`, which reports the EFFECTIVE table:
+
+    codex                  openai_responses      oauth2   stored
+    local                  ollama_chat           none     not required
+    claude-code            claude_code           none     not required
+    claude-session-direct  anthropic_messages    oauth2   ambient
+    anthropic              anthropic_messages    api_key  missing
+    openai                 openai_chat           bearer   missing
+    mistral                openai_chat           bearer   missing
+    openai-responses       openai_responses      bearer   missing
+    google                 google_generative_ai  api_key  stored
+    ollama                 ollama_chat           none     not required
+
+So **`anthropic` exists** — a built-in row, `anthropic_messages` protocol,
+api_key auth. The entries are not unresolvable. What they are is
+**uncredentialed**: `api_key  missing`. Selecting `claude-sonnet-5` fails at
+auth, not at row resolution — a different failure with a different fix.
+
+Also corrected: `google` shows `stored`, so the `google.json` credential I
+flagged as an anomaly is an ordinary built-in row with a key. Not a finding.
+
+**`claude-session-direct` is the row that already works** — `anthropic_messages`,
+oauth2, credential `ambient`. A Claude model pointed at that row needs no new
+credential.
+
+## What actually remains, restated
+
+1. **The yog-side validator.** Still real, still yog's. §9.2's `lernie_global`
+   editor writes `models.yaml` with, in its own module doc, "no validator" — so
+   a `provider:` naming a row brazen does not have, or one with no credential,
+   is accepted silently. That is worth catching at edit time, and yog already
+   runs `bz` (`RealBzRunner`) so the effective table is reachable. Validate
+   against `bz --list-providers`, not against a grep of `config.toml`.
+2. **What the two entries should say** is no longer a yog question. The file is
+   shipped from the lernie repo (`install/models.yaml`, committed) and seeded by
+   `lernie prime`. See lernie **bl-35e2**, which carries the operator's ruling
+   that source should ship protocols and login URLs and no policy at all.
+
+## Standing question for the operator
+
+Unanswered, and now better posed: the working Anthropic row is
+`claude-session-direct` (already authenticated). Repointing the two entries at
+it would make them live with no new credential. Alternatively `anthropic` needs
+an api_key. Or drop them. Operator's call.
