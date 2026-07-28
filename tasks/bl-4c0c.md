@@ -1,7 +1,8 @@
 +++
 title = '＋ conversation renders as a tofu square — label it "new"'
 created = 1785201065
-updated = 1785201065
+updated = 1785201194
+claimant = "tofu"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["usability"]
 +++
