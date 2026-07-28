@@ -1,7 +1,8 @@
 +++
 title = "deny.toml's advisory ignore list is stale — two RUSTSECs no longer match any crate"
 created = 1785201669
-updated = 1785201669
+updated = 1785201834
+claimant = "denyfix"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["hygiene"]
 +++
