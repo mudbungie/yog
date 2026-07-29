@@ -1,7 +1,7 @@
 +++
-title = "conversation display name: one derived function — first payload line, harness workspace line stripped, root id fallback"
+title = "conversation display name: the §3.3 three-rung ladder — stamped name, first payload line, root id — one function"
 created = 1785201512
-updated = 1785201986
+updated = 1785287274
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["implementation"]
 
@@ -13,72 +13,70 @@ on = "claim"
 id = "bl-df65"
 on = "claim"
 +++
-Implementation of the bl-68d9 design ruling (DESIGN §3.3 as amended). Needs
-bl-2706 (the preamble wording it strips is settled there). Read DESIGN §3.3
-and §11 first.
+Implementation of the bl-df65 design ruling (DESIGN §3.3 as amended).
+Needs bl-2706 (the stamp it parses is minted and worded there). Read
+DESIGN §3.3 and §11 first. This body REPLACES the superseded bl-68d9 scope
+(display name = first payload line); bl-df65 gave conversations real
+minted names and demoted the payload line to a preview.
 
 ## The ruling being implemented
 
-DESIGN §3.3:
+DESIGN §3.3 (as amended at bl-df65):
 
-> **A conversation's name is its first payload line — derived, never minted,
-> never stored.** The §11 row title, the composer's `message <x>` target
-> label, and every "what do I call this row" fallback are **one function**:
-> the first line of the conversation's goal with the harness-stamped workspace
-> line stripped (the strip is the inverse of the stamp — compose and strip
-> live in one module, exactly the `Ball <id>:` stamp's idiom; it also
-> recognizes the retired `You are <name>.` shape, one extra line that
-> lernie's 30-day workspace retention ages out), falling back to the root
-> agent id when nothing else exists.
+> **Display: the name is the title; the first payload line is the
+> preview.** One function derives what a conversation is called, as a
+> ladder: the goal's stamped name → the first payload line (the goal with
+> the stamp stripped) → the root agent id. The §11 row title, the center
+> header, and the composer's `message <x>` target label (bl-2f30) all read
+> rung one and fall through; foreign and hand-typed roots (no stamp) land
+> on rungs two and three. The strip is the inverse of the stamp — compose
+> and strip live in one module — and recognizes both retired shapes
+> (`Your workspace is <x>.`, and the pre-bl-68d9 `You are <x>.` whose
+> `<x>` was a *workspace*).
 
-DESIGN §11 altitude 0: the conversation row shows "the conversation's
-**display name** (§3.3's conversation-name rule: the first payload line,
-harness workspace line stripped, root id fallback)". §11 altitude 1: the
-center header shows "the conversation's display name with the root id weak
-beside it — the id is the identifier, the name is the title".
+DESIGN §11 altitude 0: the row shows "the conversation's **name** with its
+preview weak beside it (§3.3's display ladder: the stamped minted name is
+the title, the first payload line is the preview/subtitle, the root id
+when neither exists)". §11 altitude 1: the center header leads with the
+display name, root id weak beside it.
+
+Accepted cosmetic misread (do not "fix"): a legacy root stamped with the
+retired `You are <ws-name>.` shape parses that workspace name as if it
+were the conversation's own, until lernie's 30-day retention ages the goal
+out. Bounded, display-only, ruled accepted in §3.3.
 
 ## Today (the defect)
 
 The preview is `steps/<id>/001/request.json` first-message content
-(`src/git_tree/detect.rs:11-33` `extract_request_preview` +
-`truncate_preview`, which collapses ALL whitespace to spaces before capping
-at 80). The stamped goal leads with the harness preamble, so every
-conversation in one workspace previews as "You are <workspace>. …" — the
-sphere name burns the first ~22 chars of every row identically.
+(`src/git_tree/detect.rs` `extract_request_preview` + `truncate_preview`,
+which collapses ALL whitespace before capping at 80), so every stamped
+conversation previews as its identity line; and the row/header/composer
+have no name at all, only the raw root id.
 
 ## Changes
 
-1. `src/start/goal.rs` — add the strip beside the compose (the
-   `parse_ball_stamp` idiom): given a goal's raw text, drop the first line iff
-   it matches the workspace-preamble shape (`Your workspace is <x>.` — and the
-   retired `You are <x>.`) plus the following blank line; return the rest.
+1. `src/start/goal.rs` — beside the compose (bl-2706), the strip/parse:
+   given a goal's raw text, recognize the first line as a stamp iff it
+   matches `You are <x>.` or the retired `Your workspace is <x>.`; return
+   (stamped name if any, payload = the rest after the blank line).
 2. `src/git_tree/detect.rs` — `extract_request_preview` strips BEFORE
-   whitespace-collapsing (the strip is line-wise; collapsing first destroys
-   the lines).
-3. One display-name function (per bl-2f30's note: the navigator fallback and
-   the composer label "should come from one function, not two"): preview
-   non-empty => preview's first line, else root_id. Natural home: a method or
-   fn beside `ConvRow` (`src/nav/convs.rs`); `src/shell/navigator.rs:223-227`
-   (the `if row.preview.is_empty() { row.root_id }` inline fallback) calls it.
-4. §11 altitude-1 center header: display name first, root id weak beside it
-   (today the header leads with the raw conversation id).
+   whitespace-collapsing (the strip is line-wise).
+3. One display-name function implementing the three-rung ladder (name →
+   first payload line → root id), the single source for: the §11 row
+   title, the navigator fallback (`src/shell/navigator.rs`'s inline
+   `if row.preview.is_empty() { row.root_id }`), the center header, and
+   bl-2f30's composer labels. Natural home: beside `ConvRow`
+   (`src/nav/convs.rs`).
+4. §11 row renders name as title with the payload-line preview weak beside
+   it; center header leads with the display name, root id weak beside it.
 
 ## Acceptance
 
-- A goal stamped "Your workspace is a-b.\n\nfix the parser" previews as
-  "fix the parser"; legacy "You are a-b.\n\n…" strips the same way; a
-  hand-typed goal with no stamp is untouched.
-- Ball-rung conversations display "Ball <id>: <title>" (their first payload
-  line); the row title, navigator fallback, and center header all derive from
-  the one function.
+- Goal "You are <workspace>.\n\nBall bl-1: fix" → name "<workspace>",
+  preview "Ball bl-1: fix". Legacy "Your workspace is <workspace>.\n\nX"
+  → no name rung, preview "X", display name "X". Hand-typed goal with no
+  stamp → untouched payload, display name = its first line. Nothing at
+  all → root id.
+- Row title, navigator fallback, center header, and composer labels all
+  derive from the one ladder function.
 - `make check` green.
-
----
-
-## SUPERSEDED 2026-07-27 — see bl-df65
-
-The operator reversed the bl-68d9 design this ball implements: workspaces get EXPLICIT operator-chosen names (`ops`, `dev`, an employer), conversations get AUTO-GENERATED ones, and whether the workspace belongs in agent context at all is an open question. His reason for naming conversations is one bl-68d9 never weighed: "two agents working together without a discriminator will become confused at their own identity, or blame the operator or a parent."
-
-Do not implement this ball as written. bl-df65 re-decides the design; rewrite or close this against whatever it rules.
-
-This ball was claimed and stopped mid-flight when the ruling arrived; the worktree was unclaimed and its uncommitted work discarded. Nothing landed.
