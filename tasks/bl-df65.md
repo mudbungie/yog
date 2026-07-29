@@ -1,7 +1,8 @@
 +++
 title = "DESIGN: workspaces get explicit operator-chosen names; conversations get auto-generated ones — supersedes bl-68d9"
 created = 1785201970
-updated = 1785201970
+updated = 1785287106
+claimant = "scorched-df65"
 priority = 5
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design"]
