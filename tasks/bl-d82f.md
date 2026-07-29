@@ -1,7 +1,8 @@
 +++
 title = "bump the embedded lernie pin past c816ee8 when the next lernie releases: yog's `lernie scan` still 128s on an out-of-grammar agents/* id"
 created = 1785133675
-updated = 1785133675
+updated = 1785287121
+claimant = "scorched-d82f"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 yog embeds lernie as a library dep pinned to the crates.io release —
