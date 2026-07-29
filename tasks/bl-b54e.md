@@ -1,7 +1,8 @@
 +++
 title = "SIGTERM loses an in-flight ui.json flush — yog has no non-graceful shutdown path"
 created = 1785202005
-updated = 1785202005
+updated = 1785287134
+claimant = "scorched-b54e"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["reliability"]
 +++
