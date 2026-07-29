@@ -2,6 +2,7 @@
 title = "test git fixtures are not hermetic: the machine's global core.hooksPath reaches into them — 66 tests fail under the new identity hook"
 created = 1785287220
 updated = 1785287220
+claimant = "scorched"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
