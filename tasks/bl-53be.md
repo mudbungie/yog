@@ -1,7 +1,8 @@
 +++
 title = "models.yaml offers two Claude models whose provider row does not exist in brazen — dead entries, no validation"
 created = 1785201365
-updated = 1785287751
+updated = 1785287752
+claimant = "scorched-53be"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["reliability"]
