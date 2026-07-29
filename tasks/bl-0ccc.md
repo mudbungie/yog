@@ -1,0 +1,7 @@
++++
+title = "workspace deletion: the §3.6 unmint — release→prune→rm plan, typed-name confirm, live-driver refusal"
+created = 1785287628
+updated = 1785287628
+root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
++++
+Implements DESIGN §3.6 (deletion semantics) and its §8.2 verb row, per bl-ef89's design. Scope: (1) the delete plan in the §8.1 planner idiom — bl unclaim each live bound ball --as <name> (short-piped, logged), prune the workspace's ui.json keys (seen[ws], pinned entry, collapsed override), then remove the workspace dir, logged as the non-spawn step ["yog-step","delete-workspace"] (§4.2 sentinel convention); releases first, removal last, convergent on re-run. (2) The gate: refuse while any of the workspace's agents probes Live/InFlight (§5.1 #9), the §10 '?' uncertainty counting as live; the refusal names the live conversations. (3) The §3.6 confirmation: a dialog enumerating the conversations (by display name) and the bound balls (by id), armed only by typing the workspace's name; no keyboard binding, ever. (4) Both carriers per §11 context-menu doctrine: the visible worded ichor 'delete this workspace…' row on config mode's per-workspace surface, and the workspace tab context-menu entry as its accelerator — both open the same dialog. Named workspaces only; foreign/replay never offer it. Do not fold a Stop into the verb.
