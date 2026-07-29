@@ -1,9 +1,13 @@
 +++
 title = "runaway recursive compaction dispatch blows through max_depth budget and leaves unresolved git conflict markers committed into a live summary"
 created = 1785287779
-updated = 1785306360
+updated = 1785306370
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
+
+[[blockers]]
+id = "bl-56bd"
+on = "claim"
 +++
 ## Origin
 Follow-up investigation, operator report: "agents still seem confused about usage. see chat <agent-id>". This conversation reproduces the known toolset-gap defect (bl-bd9d/bl-55b1 — evidence appended there), but it ALSO exhibits a second, unrelated, and much more severe defect in lernie's automatic intermediate-compaction machinery. Filing separately because the layer, mechanism, and severity are distinct from the tools/grant confusion.
