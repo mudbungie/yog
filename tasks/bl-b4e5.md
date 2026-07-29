@@ -1,7 +1,8 @@
 +++
 title = "login pane: every provider exits 78 — wrong flow (needs --browser), un-loginable rows offered, reason line never shown"
 created = 1785287184
-updated = 1785287184
+updated = 1785287228
+claimant = "scorched-b4e5"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
