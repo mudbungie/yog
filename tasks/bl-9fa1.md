@@ -1,7 +1,8 @@
 +++
 title = "compactor recursion: compaction triggers on compactor branches — 229-branch geometric dispatch storm in <workspace>"
 created = 1785287786
-updated = 1785287786
+updated = 1785287796
+claimant = "scorched"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
