@@ -1,7 +1,7 @@
 +++
 title = "runaway recursive compaction dispatch blows through max_depth budget and leaves unresolved git conflict markers committed into a live summary"
 created = 1785287779
-updated = 1785287779
+updated = 1785287795
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
 +++
@@ -68,3 +68,9 @@ lernie's automatic intermediate-compaction procedure and its budget enforcement 
 
 ## Workspace-wide cost
 This one root conversation left 227 branches in `<workspace>/repo.git` (up from 2 before this incident), which will slow every future `git for-each-ref`/`branch -a`/yog agent-tree enumeration in this workspace and clutter any UI rendering the agent tree (yog DESIGN.md §5.1 #8 "Agent set, descent, tips" derives directly from `git for-each-ref agents/*`).
+
+## Folded in from bl-9fa1 (duplicate incident filing, closed)
+
+Two additional asks ride this task:
+1. **Attribute the operator-visible kill flag**: which yog surface raised the non-responsiveness/kill affordance during the storm (machine was also at load ~15 from six concurrent tarpaulin close gates) — was it a correct read, and does it behave sanely under a dispatch storm?
+2. **Debris cleanup path**: the ~226 compactor branches in <workspace> need a documented, operator-approved cleanup (branch deletion + repair/removal of the conflict-markered summary/001.md on the root branch). Do NOT execute without operator sign-off; operator has been asked (2026-07-28).
