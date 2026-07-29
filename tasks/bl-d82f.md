@@ -1,7 +1,7 @@
 +++
 title = "bump the embedded lernie pin past c816ee8 when the next lernie releases: yog's `lernie scan` still 128s on an out-of-grammar agents/* id"
 created = 1785133675
-updated = 1785287121
+updated = 1785287187
 claimant = "scorched-d82f"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
@@ -50,3 +50,46 @@ bump.
 `Cargo.toml` pins a published lernie at or past `c816ee8`, `Cargo.lock` is
 committed with it, `cargo test` is green, and `scripts/drive/stories.sh run-s7`
 is green on a per-run seat.
+
+---
+
+## UPDATE 2026-07-28 (scorched-d82f) — already delivered by bl-4014, criteria met on main
+
+Checked crates.io: `cargo info lernie` reports **0.0.2** as the published
+latest. In `~/dev/lernie`, `git merge-base --is-ancestor c816ee8 v0.0.2` exits
+0 — **c816ee8 IS included** in the published 0.0.2 release. This qualifies per
+this ball's own gate.
+
+But the bump is already done. A separate ball, **bl-4014** ("yog links lernie
+=0.0.1 but 0.0.2 is the published latest — bump the registry pin so W11
+consumes upstream's current release"), landed this exact change on `main` as
+commit `798b75c` and has since been closed (it no longer appears in `bl list`,
+only in `bl list --all`). `Cargo.toml` on `main` already reads
+`lernie = "=0.0.2"` with an updated comment citing the 2.11 lost-wakeup fix.
+
+I claimed this ball and got a `work/bl-d82f` worktree off current `main` — it
+has **zero diff** against `main` (`git diff main -- Cargo.toml` empty,
+`git status` clean). There is nothing left to bump.
+
+**cargo test could not be verified green**, but not for a reason related to
+lernie or this ball: 66 tests fail identically on plain `main` (verified by
+running the same failing test directly on the `main` checkout, no worktree
+involved) with `commit refused: AUTHOR email is <t@t.local>, not
+<mudbungie@gmail.com>` — this machine's global `core.hooksPath`
+(`~/userconf/githooks-global`) enforces commit-identity on every repo,
+including the throwaway git fixtures yog's own test suite spins up and commits
+into as `t@t.local` (`src/git_tree/tests/git.rs`). This is a pre-existing,
+machine-local environment conflict, not a code or lernie-version defect, and
+is out of scope for this ball to fix (touches a personal dotfiles hook outside
+this repo).
+
+Given zero diff and this pre-existing unrelated test-environment issue, I did
+not run `scripts/drive/stories.sh run-s7` (heavy Xvfb e2e, not warranted for a
+no-op worktree) and I am **not closing this ball** as done — the acceptance
+text asks for a green `cargo test`, which I cannot certify here for reasons
+unrelated to the pin. Unclaiming rather than closing; recommend either (a)
+closing bl-d82f as a duplicate/no-op now that bl-4014 already satisfied the
+substantive requirement, once someone confirms cargo test is expected to be
+run in an environment without the conflicting global hook (e.g. CI), or (b)
+filing the hook/test-fixture conflict as its own ball if it should be fixed
+generally.
