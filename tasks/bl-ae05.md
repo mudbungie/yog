@@ -1,7 +1,8 @@
 +++
 title = "conversation rows: the run-state badge (● ◐ ○ ■, + the ? sigil) is the state's only carrier — no text, no hover"
 created = 1785287137
-updated = 1785287137
+updated = 1785306171
+claimant = "entrance-ae05"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["ui"]
 +++
