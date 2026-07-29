@@ -1,7 +1,7 @@
 +++
 title = "models.yaml offers two Claude models whose provider row does not exist in brazen — dead entries, no validation"
 created = 1785201365
-updated = 1785218850
+updated = 1785287751
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["reliability"]
@@ -128,3 +128,74 @@ Unanswered, and now better posed: the working Anthropic row is
 `claude-session-direct` (already authenticated). Repointing the two entries at
 it would make them live with no new credential. Alternatively `anthropic` needs
 an api_key. Or drop them. Operator's call.
+
+---
+
+## OPERATOR RULING 2026-07-28 (verbatim)
+
+> are you talking about just local configs, running on my machine? we should
+> _ship_ to git no actual configs. if you just mean configuring them locally?
+> sure, you can re-point them.
+
+Two consequences, both scoped to this ball:
+
+**(a) No actual config content ships from git.** Verified against yog's tree:
+yog ships NO `models.yaml` — `git ls-files` carries no `.yaml` outside
+`.github/workflows`, `rules/*.yml`, `sgconfig.yml`, and yog's `make install`
+installs only the binary, `assets/yog.svg`, `assets/yog.desktop`. The concrete
+`models.yaml` quoted at the top of this ball is **lernie's** shipped
+`install/models.yaml`, laid into yog's nested world by `lernie prime` —
+`src/world/seed.rs` (`ensure_seeded`) invokes lernie's own bootstrap verb and
+never reproduces its seed logic (DESIGN §14 rejection, "yog aping lernie's
+seeding"). So the derived-seed reframe is **already what yog does**: the seed is
+lernie's, obtained by running lernie, and yog adds nothing. Nothing to delete,
+nothing to template, no new mechanism. Dropping the dead entries from the
+*shipped* default is lernie bl-35e2's business, not yog's.
+
+**(b) The live file was re-pointed** (operator-approved, outside the repo).
+
+## The live re-point, exactly as set
+
+File: `$XDG_DATA_HOME/yog/world/lernie/models.yaml`
+(`/home/u/.local/share/yog/world/lernie/models.yaml`).
+
+Row evidence (`~/.config/brazen/config.toml`, read-only — not modified):
+
+- `claude-code` — `protocol = "claude_code"`, `auth = "none"`, `exec = "claude"`,
+  `unsupported_body_keys = ["max_tokens","temperature","top_p","stop","output"]`.
+  A CLI-exec dialect that takes alias model names (`-m sonnet`) and strips
+  `stop`; `bz --list-models --provider claude-code` answers "has no models
+  listing; pass --model verbatim". Wrong row for entries whose `model_id` is an
+  API id and whose `capabilities` claim `stop_sequences`.
+- `claude-session-direct` — `base_url = "https://api.anthropic.com"`,
+  `protocol = "anthropic_messages"`, `auth = "oauth2"`,
+  `ambient = { format = "claude_code", path = "~/.claude/.credentials.json" }`,
+  `body_defaults = { max_tokens = 32000 }`, no `unsupported_body_keys`.
+  `bz --list-providers` reports it credentialed (`ambient`).
+
+Measured, not assumed: `bz --list-models --provider claude-session-direct`
+lists `claude-sonnet-5` verbatim; `claude-haiku-4-5` is not in the listing
+(only `claude-haiku-4-5-20251001`), so the bare alias was tested live —
+`bz --provider claude-session-direct -m claude-haiku-4-5 "say ok"` → `ok`.
+Both ids therefore resolve on that row and no `model_id` needed changing.
+
+The whole edit is two lines:
+
+    claude-sonnet-5:  provider: anthropic  →  provider: claude-session-direct
+    claude-haiku-4-5: provider: anthropic  →  provider: claude-session-direct
+
+`gpt-5.4 / provider: codex` untouched. No `google` row was minted (undecided);
+the standing note about it is left as it stands. `~/.config/brazen/config.toml`
+was not touched.
+
+## What yog builds (the ball's own deliverable)
+
+1. **The §9.2 Apply gate.** `models.yaml`'s `provider:` values are validated
+   against brazen's effective provider table (`BzRunner::providers()`, the
+   linked-brazen `--list-providers` projection — never a grep of `config.toml`,
+   per the 2026-07-27 correction above). A draft naming a row brazen does not
+   have is REFUSED, the same posture §9.1 takes with `bz`-rejected TOML.
+2. **The picker surfaces it.** The §9.4 picker's candidate set is already a live
+   `bz --list-models` query, so a dead `models.yaml` entry is never *offered* —
+   what it does do is name the role's CURRENT model, read from `providers.yaml`,
+   which is exactly the dead entry. That row is marked and explained.
