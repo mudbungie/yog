@@ -1,7 +1,8 @@
 +++
 title = "DESIGN: context menus as an interaction surface; workspace deletion as the first consumer"
 created = 1785287538
-updated = 1785287538
+updated = 1785287608
+claimant = "scorched-ef89"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
