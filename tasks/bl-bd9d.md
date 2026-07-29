@@ -1,7 +1,7 @@
 +++
 title = "worker role's default toolset omits message/dispatch — root agents can never message siblings or spawn subagents out of the box"
 created = 1785287600
-updated = 1785287770
+updated = 1785306263
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
 +++
