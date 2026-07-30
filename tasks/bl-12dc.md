@@ -1,7 +1,7 @@
 +++
 title = "the 300-line cap is only enforced on staged files, so pre-existing violations ride forever: src/app/balls.rs sat at 308 undetected"
 created = 1785374145
-updated = 1785374620
+updated = 1785374679
 claimant = "entrance-12dc"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
