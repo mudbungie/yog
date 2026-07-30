@@ -1,7 +1,8 @@
 +++
 title = "conversation display name: the §3.3 three-rung ladder — stamped name, first payload line, root id — one function"
 created = 1785201512
-updated = 1785287274
+updated = 1785374603
+claimant = "entrance-1b5a"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["implementation"]
 
