@@ -1,7 +1,8 @@
 +++
 title = "the pre-commit hook can never pass on a plain git commit: 3 fs_watcher drift tests inherit the hook's GIT_DIR"
 created = 1785373550
-updated = 1785373550
+updated = 1785373860
+claimant = "entrance-0dff"
 priority = 4
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["bug"]
