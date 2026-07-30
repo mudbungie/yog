@@ -1,7 +1,8 @@
 +++
 title = "notify attention clears the signal and leaves no fact behind: nothing renders notify_oid anywhere in the UI"
 created = 1785374065
-updated = 1785374065
+updated = 1785392908
+claimant = "pedantic-efa2"
 priority = 4
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["bug"]
