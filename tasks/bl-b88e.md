@@ -1,7 +1,8 @@
 +++
 title = "steps view: the framing outcome (✔ ✖ ■) is glyph-only — §11 promises the words and the render omits them"
 created = 1785287139
-updated = 1785287139
+updated = 1785373497
+claimant = "entrance-b88e"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["ui"]
 +++
