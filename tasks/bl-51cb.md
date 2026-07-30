@@ -1,7 +1,8 @@
 +++
 title = "activity accessory: the chip's failure count (· M ⚠) and the row marker ⚠ carry 'failed' by glyph alone"
 created = 1785287143
-updated = 1785287143
+updated = 1785373504
+claimant = "entrance-51cb"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["ui"]
 +++
