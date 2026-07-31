@@ -1,7 +1,8 @@
 +++
 title = "runaway recursive compaction dispatch blows through max_depth budget and leaves unresolved git conflict markers committed into a live summary"
 created = 1785287779
-updated = 1785374009
+updated = 1785460464
+claimant = "pedantic-verify"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
 
