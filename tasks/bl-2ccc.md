@@ -1,7 +1,8 @@
 +++
 title = "decompose git_tree: 7 files over 250 — prior analysis says 2 SPLIT / 5 LEAVE, re-verify before acting"
 created = 1785461153
-updated = 1785461153
+updated = 1785461154
+claimant = "pedantic-sweep2"
 parent = "bl-52f8"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
