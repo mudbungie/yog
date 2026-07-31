@@ -1,7 +1,8 @@
 +++
 title = "DESIGN.md rewrite: 3653 lines, two hot tables serialize parallel work, ~700 lines of completed plans"
 created = 1785392865
-updated = 1785459952
+updated = 1785460086
+claimant = "Waddled"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design"]
