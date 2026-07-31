@@ -1,7 +1,8 @@
 +++
 title = "decompose shell: 7 files over 250 including mod.rs at 296 — seams must stay under src/shell/ (tarpaulin-excluded)"
 created = 1785460973
-updated = 1785460973
+updated = 1785460974
+claimant = "pedantic-sweep2"
 parent = "bl-52f8"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
