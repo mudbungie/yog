@@ -1,7 +1,8 @@
 +++
 title = "attention ack is a one-shot gesture where it should be a state: evidence landing while you are looking still raises the flag"
 created = 1785374069
-updated = 1785374069
+updated = 1785459749
+claimant = "pedantic-attn"
 priority = 4
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["bug"]
