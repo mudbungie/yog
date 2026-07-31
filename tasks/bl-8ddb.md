@@ -2,6 +2,7 @@
 title = "decompose start: goal.rs 261 and two test modules over 250"
 created = 1785461535
 updated = 1785461535
+claimant = "pedantic-sweep2"
 parent = "bl-52f8"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
