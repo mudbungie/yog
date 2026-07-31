@@ -1,7 +1,8 @@
 +++
 title = "yog pins brazen =0.0.4 / lernie =0.0.2 — take the next ecosystem rung: brazen 0.0.5 + lernie 0.0.3"
 created = 1785287536
-updated = 1785460077
+updated = 1785460197
+claimant = "pedantic-56bd"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 The manual run of the inheritance chain (the dependabot automation is deferred).
