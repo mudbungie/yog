@@ -1,7 +1,8 @@
 +++
 title = "chat transcript reads top-anchored: following the streaming tail requires constant manual scrolling — anchor the tail, make scrolling the review gesture"
 created = 1785648846
-updated = 1785648846
+updated = 1785648859
+claimant = "tail-anchor"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
