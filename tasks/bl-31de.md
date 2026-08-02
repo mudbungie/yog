@@ -1,7 +1,8 @@
 +++
 title = "make install replaces ~/.local/bin/yog non-atomically — drivers spawning yog mid-install get ENOENT"
 created = 1785645801
-updated = 1785645801
+updated = 1785645808
+claimant = "install-fixer"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
