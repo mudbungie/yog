@@ -1,7 +1,8 @@
 +++
 title = "pending ball-start draft stacks a second composer above the regular one — two 'You are <name>.' lines at once"
 created = 1785646891
-updated = 1785646891
+updated = 1785647682
+claimant = "Whin"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
