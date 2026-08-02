@@ -1,7 +1,8 @@
 +++
 title = "yog derives on the egui frame thread, so a 227-branch dispatch storm stalls the window — the 'non-responsiveness/kill flag' the operator saw was the desktop's, not yog's"
 created = 1785460448
-updated = 1785645173
+updated = 1785645185
+claimant = "Cobalt"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
 +++
