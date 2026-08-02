@@ -1,7 +1,8 @@
 +++
 title = "Raw toggle missing on Steps/Inbox/Files/Config tabs — STORIES §S7 promises it on every tab"
 created = 1785646892
-updated = 1785646892
+updated = 1785647796
+claimant = "Alder"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
