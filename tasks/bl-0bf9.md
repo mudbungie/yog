@@ -1,7 +1,8 @@
 +++
 title = "activity list: a prompt op's full goal text renders inline, breaking the one-row-per-op scan"
 created = 1785646893
-updated = 1785646893
+updated = 1785647259
+claimant = "Chert"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
