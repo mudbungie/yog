@@ -1,7 +1,8 @@
 +++
 title = "activity rows lead with raw epoch seconds — render human time"
 created = 1785646885
-updated = 1785646885
+updated = 1785646969
+claimant = "Bramble"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
