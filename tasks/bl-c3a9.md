@@ -1,7 +1,8 @@
 +++
 title = "world template/providers.yaml births every new workspace, but no yog surface can see, edit, or validate it"
 created = 1785645290
-updated = 1785645290
+updated = 1785645357
+claimant = "Osier"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
