@@ -1,7 +1,8 @@
 +++
 title = "design-doc jargon leaks into operator UI: '§9 — stage → validate → hash-guard → atomic rename', 'project marks (bl store branch)'"
 created = 1785646882
-updated = 1785647055
+updated = 1785647811
+claimant = "Rowan"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
