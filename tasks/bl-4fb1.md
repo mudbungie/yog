@@ -1,7 +1,7 @@
 +++
 title = "<workspace> storm debris: 179 stale refs/lernie/budget-exhausted refs keep 220 compactor commits alive — cleanup procedure drafted, AWAITING OPERATOR SIGN-OFF"
 created = 1785460448
-updated = 1785644902
+updated = 1785644945
 claimant = "Riffle"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
@@ -103,3 +103,12 @@ not doing it is one wasted `getdents` block per scan. Recommend: **skip**.
 
 Steps 0 + 1. Hold step 2 until the lernie 0.0.3 fixes have been live-verified against
 a real storm-shaped run; hold step 3 indefinitely.
+
+## Resolution (2026-08-01, operator-approved)
+
+- **Step 0 done:** `~/<workspace>-storm-20260728.bundle` (877 KB). `git bundle verify`: complete history; `list-heads` confirms all 179 `refs/lernie/budget-exhausted/*` present before deletion.
+- **Step 1 done:** all 179 refs deleted via `update-ref --stdin`. 0 remain; the 2 surviving `refs/heads/agents/*` branches untouched.
+- **Step 2 deliberately NOT run** (per recommendation, operator concurred by approving 'the cleanup' as recommended): the 220 storm commits stay on disk unreachable until lernie 0.0.3's storm fixes are live-verified. The bundle makes even a later gc recoverable.
+- **Step 3 skipped** (racy, cosmetic).
+
+The depth census preserving the too-late-gate evidence (2/11/54/112 at depths 2–5) is recorded above and in the bundle. Nothing further pending in this task; a future disk reclaim is a one-line `gc --prune=now` against a bundled repo.
