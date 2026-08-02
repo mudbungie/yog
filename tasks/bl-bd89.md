@@ -1,7 +1,8 @@
 +++
 title = "model selector: picking gpt-5.4 writes a models.yaml row pointing at provider 'codex', which brazen does not have"
 created = 1785644944
-updated = 1785644997
+updated = 1785644999
+claimant = "model-fixer"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
