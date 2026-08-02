@@ -1,7 +1,8 @@
 +++
 title = "the control boundary (VISION §4.8): typed action/query surface, one chokepoint, headless entrypoint, parity tests"
 created = 1785648911
-updated = 1785648911
+updated = 1785649207
+claimant = "Glamour"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
