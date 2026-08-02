@@ -1,7 +1,8 @@
 +++
 title = "spend attribution (VISION §4.5): the yog-side join and price table"
 created = 1785648911
-updated = 1785648911
+updated = 1785649260
+claimant = "Vellum"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
