@@ -1,7 +1,7 @@
 +++
-title = "text selection: double-click-drag doesn't extend selection by word boundaries"
+title = "text selection: double-click-drag doesn't extend selection by word boundaries — OPERATOR DISCUSSION, do not claim"
 created = 1785645008
-updated = 1785645061
+updated = 1785645625
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
@@ -70,3 +70,9 @@ That would fix the composer and the config editors — **not the conversation vi
 - **C. TextEdit-only partial** (above) — only if the operator decides the composer alone is worth it.
 
 Explicitly NOT done, per the dispatch and AGENTS.md: no egui fork, no version bump.
+
+## HELD FOR OPERATOR DISCUSSION (2026-08-01) — do not claim, either fleet
+
+Operator verbatim: *"file a ball for this granularity task, but don't pick it up. it's a real discussion and I don't need to distract you with it."*
+
+The decision on the table is the Paths section above — A (upstream egui PR against #2550: granularity memory in TextCursorState), B (won't-fix), C (TextEdit-only partial). Coordinator recommendation on record: A, with B as the free fallback if the PR stalls; C skipped (fixes the composer, not the transcript where the report originated, and becomes deletion debt if A lands). No implementation until the operator closes the discussion.
