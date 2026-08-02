@@ -1,7 +1,7 @@
 +++
 title = "yog derives on the egui frame thread, so a 227-branch dispatch storm stalls the window — the 'non-responsiveness/kill flag' the operator saw was the desktop's, not yog's"
 created = 1785460448
-updated = 1785644902
+updated = 1785644989
 claimant = "Riffle"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
@@ -86,3 +86,17 @@ descent grew by N branches in the last sweep" — the drift instrumentation
 (`src/app/drift.rs`, §7.2) reports *that* a sweep found unannounced change, not the
 shape of it. A branch-count delta on the ops surface would have pointed the operator
 at lernie in one glance.
+
+## DECIDED (2026-08-01, operator): direction 1, strengthened to a standing principle
+
+Operator verbatim: *"ui and operations in the backend should be totally isolated. The UI should never freeze, which means that it should do as little as possible."*
+
+So not merely "move derivation off the paint thread" — **total isolation**: the frame thread does read-only rendering of the latest completed snapshot and input capture, nothing else. All derivation (dirty dispatch, sweeps, rederive, liveness probes) moves to a worker. The frame never blocks on the worker; staleness is surfaced honestly (the §7.2 drift instrumentation adapts to snapshot age). Direction 2 (per-frame work caps) is rejected — a roots-per-tick cap cannot bound the cost of re-deriving ONE root, and the observed storm was one root growing 227 branches.
+
+Also in scope per the body's "Also worth having, cheaply": a branch-count delta on the ops surface, so a storm names lernie, not yog.
+
+DESIGN.md §7.2's "the frame IS the derivation" simplicity claim must be rewritten as part of this ball — fix the doc, not around it.
+
+## Sequencing
+
+Ready for implementation, but HOLD dispatch until bl-52f8 (tree-wide decomposition sweep, claimed @Umber) lands — both touch src/app/* broadly and would collide at fold.
