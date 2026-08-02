@@ -1,7 +1,8 @@
 +++
 title = "raising a workspace opens an unrequested empty start-goal draft — and Send fires the empty goal onto the wire"
 created = 1785646992
-updated = 1785646992
+updated = 1785647374
+claimant = "Whin"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
