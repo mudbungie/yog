@@ -1,7 +1,8 @@
 +++
 title = "panel boundaries are not draggable — make them resizable"
 created = 1785645033
-updated = 1785645033
+updated = 1785645175
+claimant = "panel-fixer"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
