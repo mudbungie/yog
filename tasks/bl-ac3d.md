@@ -1,7 +1,8 @@
 +++
 title = "left panel width explodes to fit the project's absolute path and never shrinks back"
 created = 1785646879
-updated = 1785646879
+updated = 1785647094
+claimant = "Ferrick"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
