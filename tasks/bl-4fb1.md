@@ -1,7 +1,8 @@
 +++
 title = "<workspace> storm debris: 179 stale refs/lernie/budget-exhausted refs keep 220 compactor commits alive — cleanup procedure drafted, AWAITING OPERATOR SIGN-OFF"
 created = 1785460448
-updated = 1785460448
+updated = 1785644902
+claimant = "Riffle"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
 +++
