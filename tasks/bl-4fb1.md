@@ -1,7 +1,7 @@
 +++
 title = "<workspace> storm debris: 179 stale refs/lernie/budget-exhausted refs keep 220 compactor commits alive — cleanup procedure drafted, AWAITING OPERATOR SIGN-OFF"
 created = 1785460448
-updated = 1785644945
+updated = 1785644977
 claimant = "Riffle"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
@@ -112,3 +112,9 @@ a real storm-shaped run; hold step 3 indefinitely.
 - **Step 3 skipped** (racy, cosmetic).
 
 The depth census preserving the too-late-gate evidence (2/11/54/112 at depths 2–5) is recorded above and in the bundle. Nothing further pending in this task; a future disk reclaim is a one-line `gc --prune=now` against a bundled repo.
+
+## Resolution (2026-08-01, operator-approved)
+
+- **Step 0 done:** `~/<workspace>-storm-20260728.bundle` (877 KB). `git bundle verify`: complete history; `list-heads` confirmed all 179 `refs/lernie/budget-exhausted/*` present in the bundle before deletion. The depth census preserving the too-late-gate evidence (2/11/54/112 at depths 2–5) lives in this body and in the bundle.
+- **Step 1 done:** all 179 refs deleted via `update-ref --stdin`; 0 remained, the 2 surviving `refs/heads/agents/*` untouched.
+- **Steps 2–3 superseded:** the operator then authorized wiping all workspace state ("I don't have any useful work in yog"), and the entire <workspace> workspace was deleted under bl-8f17's resolution. The bundle is now the sole surviving artifact of the storm, including `1596809d…:summary/001.md`.
