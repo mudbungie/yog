@@ -1,7 +1,8 @@
 +++
 title = "transcript: tool-use row keeps pulsing 'running' after the tool finished — its result file doesn't retire the badge"
 created = 1785645745
-updated = 1785645745
+updated = 1785645752
+claimant = "pulse-fixer"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
