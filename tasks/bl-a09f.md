@@ -68,3 +68,7 @@ composed entry whose content carries a line beginning `<<<<<<< `, `=======` or
 refusal covers every composed file or only `summary/**`; bl-ebbd asked only for
 `summary/**`, but the reasoning (context that is not what it claims to be) is not
 specific to summaries.
+
+## Resolution (2026-08-01)
+
+Filed upstream as **lernie bl-c867**, carrying the verified-absent evidence, the write-path/read-path distinction, and the open scope question (summary/** only vs every composed file) as a design point to decide there. yog has no assembly path of its own; nothing further to do in this repo.
