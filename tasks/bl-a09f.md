@@ -1,7 +1,8 @@
 +++
 title = "lernie composes a summary/** carrying literal conflict markers straight into context: the write path refuses them in 0.0.3, the read path still trusts the bytes"
 created = 1785460447
-updated = 1785460447
+updated = 1785644891
+claimant = "Riffle"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["investigation"]
 +++
