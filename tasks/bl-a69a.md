@@ -1,7 +1,8 @@
 +++
 title = "composer draft bleeds across verbs and targets — a start goal becomes a message to whatever is selected next"
 created = 1785647005
-updated = 1785647005
+updated = 1785647200
+claimant = "Sedge"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
