@@ -1,7 +1,8 @@
 +++
 title = "every interactive control carries a hover explanation — operator had to ask what Scan means"
 created = 1785645595
-updated = 1785645595
+updated = 1785645603
+claimant = "hover-fixer"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
