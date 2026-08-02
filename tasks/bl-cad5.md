@@ -1,7 +1,8 @@
 +++
 title = "the 'recent' conversation sort isn't recent: it keys on last committed step and is outranked by attention/running tiers — sort by last action of any kind"
 created = 1785649466
-updated = 1785649466
+updated = 1785649488
+claimant = "recent-sort"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
