@@ -1,7 +1,7 @@
 +++
 title = "transient red on send: 'driver produced no response' then recovery — find the cause, fix or quiet it"
 created = 1785645675
-updated = 1785645675
+updated = 1785645864
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
