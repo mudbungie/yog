@@ -1,7 +1,8 @@
 +++
 title = "consecutive fires mint sibling names (recite-a, recite-b, recite-c): mint_seed never re-rolls after fire and the collision walk clusters on the first word"
 created = 1785649444
-updated = 1785649444
+updated = 1785649511
+claimant = "mint-reroll"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
