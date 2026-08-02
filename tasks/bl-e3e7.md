@@ -1,7 +1,8 @@
 +++
 title = "'internal clones' checkbox: unexplained jargon at the top of the balls section"
 created = 1785646896
-updated = 1785646896
+updated = 1785647759
+claimant = "Tansy"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
