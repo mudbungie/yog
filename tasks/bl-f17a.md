@@ -1,7 +1,8 @@
 +++
 title = "right-click a conversation → delete the agent"
 created = 1785645885
-updated = 1785645937
+updated = 1785648179
+claimant = "Hazel"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
