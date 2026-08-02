@@ -1,7 +1,8 @@
 +++
 title = "claimed ball renders a stray bare-id row ('bl-d0df') with no title or verbs in the balls section"
 created = 1785646890
-updated = 1785646890
+updated = 1785647648
+claimant = "Tansy"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
