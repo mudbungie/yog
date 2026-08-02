@@ -1,7 +1,8 @@
 +++
 title = "picker: selection applies immediately — drop the Set button; one control scoped to the selected role, not worker+compactor buttons"
 created = 1785645674
-updated = 1785645674
+updated = 1785645682
+claimant = "picker-fixer"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
