@@ -1,44 +1,26 @@
 +++
 title = "alignment watcher sidecar: cheap model streams agent thinking/output, scores intent alignment, drives graduated interventions"
 created = 1785652106
-updated = 1785718857
+updated = 1785718975
 claimant = "Evenly"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["safety"]
 +++
-Operator concept 2026-08-01, filed alongside the codex side-car safety-watcher replication work. This is design-first: the deliverable is a design ruling (VISION/DESIGN amendment) before any implementation ball.
+Operator concept 2026-08-01; design ruling DELIVERED 2026-08-02 (this ball's close lands it): VISION amended — new §4.9 (the alignment monitor), new story rung V6 (Invigilator), lernie ledger item 6, sequencing item 1, and two refusal-list updates (judging-supervisor bullet annotated; new "No silent guardian" refusal).
 
-## The mechanism
+## The ruling, compressed
 
-A second, cheaper model watches the agent live — its thinking and output token stream — and continuously answers three questions:
+A cheap model reads what an agent is doing and answers one question — does the recent work serve the stated goal? — with a graduated ladder on divergence. The suite's disciplines made the original design constraints dissolve:
 
-1. What is the user trying to do?
-2. What is the model trying to do?
-3. Are they aligned?
+- Intent needs no pinning mechanism: goal.md + principal messages are already committed per-branch (SSOT).
+- No wire tap: lernie streams every event to disk; the committed transcript carries thinking blocks; disk is the bus.
+- The check is one bounded tool-less brazen call (embedded adapter), level-triggered off the step spine by yog's clock; every check writes an ops.jsonl row (audit + level-trigger memory + tuning dataset). Policy/arming ride cadence.yaml — I2 holds at three artifacts.
+- The ladder is a logic-board tie-point, every rung an existing verb: flag (attention), notice (message — off by default, obfuscation cost recorded), escalate (judge dispatch, §4.4), stop (non-destructive, branch persists).
+- The revoke-auto-approval rung has no substrate until bl-0cea rules the capability boundary; division of labor recorded: capability boundary rules what an agent MAY do, monitor rules whether the doing SERVES the goal.
+- I7 held the fleet-mode way: arming per workspace is the explicit user action, continuing. Unarmed = the mechanism does not exist.
+- v1 reads committed transcript only (replayable verdicts); mid-step fast path is a permitted later increment, stop-rung-only.
 
-On detected misalignment, a graduated response ladder fires (cheapest first):
-- revoke tool auto-approval (further actions need review)
-- escalate to a stronger reviewer model
-- inject a system notice reminding the agent of the pinned user intent
-- kill the inference cycle outright
+## Implementation
 
-## Prior art (research exists; no known shipped implementation in an agent harness)
-
-- Redwood Research "AI Control: Improving Safety Despite Intentional Subversion" (2023): trusted-monitoring protocol — weak trusted model scores every action of a strong untrusted model, audit budget for escalation. This ball is a production instance of that.
-- OpenAI "Monitoring Reasoning Models for Misbehavior" (2025): weak model watching a frontier model's CoT catches reward hacking better than action-only monitoring. Negative result that matters here: optimizing the agent against the monitor teaches obfuscation. We don't train against it, but injected notices leak the monitor's existence — expect in-context adaptation; keep notices as a late rung, not the default.
-- Anthropic runs streaming classifiers that halt generation mid-stream (constitutional classifiers) — proves the kill mechanism, for harm categories not intent.
-- Llama Guard / NeMo Guardrails classify per-message *harm*, not alignment to this user's intent. Intent alignment is the underbuilt part and the actual novelty.
-
-## Design constraints (attack these in the ruling, don't assume)
-
-1. Enforcement point is the control boundary. Actions happen only at tool calls; thinking can only be read. The watcher's veto sits at the existing typed action chokepoint (bl-8aab control boundary); the token stream is early context, not an enforcement point. One cheap call per action, not per token chunk — this also bounds cost.
-2. Pin intent once per user message; store it. "What is the user trying to do" is extracted when the user speaks, not re-derived every check. Drift from the pinned intent is the signal. Single source of truth.
-3. The ladder is the audit-budget shape: cheap monitor everywhere, expensive review only on flags. Each rung must be a distinct, testable action on the existing surface.
-4. Watcher reads tool results, so prompt injection can target the watcher too — it treats the transcript strictly as data, never as instructions.
-5. Verify what the watcher can actually see per provider: API thinking blocks may be summarized, not raw.
-6. Testability: the watcher's verdict must be a pure function of (pinned intent, transcript window) so it can be replayed and regression-tested against recorded transcripts.
-
-## Verify before designing
-
-Check the then-current control boundary surface and the codex-watcher replication work's landed shape — this ball was filed before that landed and premises may have moved.
+Deliberately deferred by operator (2026-08-02). Follow-up implementation ball files at close, referencing VISION §4.9; DESIGN.md gets amended by that ball when the mechanics land (§4.2 ops row roster, cadence.yaml schema, §12 modules), per VISION §6's own pattern.
