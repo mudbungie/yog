@@ -1,7 +1,8 @@
 +++
 title = "alignment watcher sidecar: cheap model streams agent thinking/output, scores intent alignment, drives graduated interventions"
 created = 1785652106
-updated = 1785652106
+updated = 1785718857
+claimant = "Evenly"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["safety"]
