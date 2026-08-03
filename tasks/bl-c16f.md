@@ -1,7 +1,8 @@
 +++
 title = "the mark's thinking hue: gate violet is the dimmest in the palette and matches the wordmark beside it — sigil magenta"
 created = 1785736866
-updated = 1785736866
+updated = 1785736867
+claimant = "Dejectedly"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
