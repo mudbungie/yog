@@ -1,7 +1,7 @@
 +++
-title = "V2 Counterfactualist: fork from any notch, xN fan with per-variant model/config"
+title = "V2 Counterfactualist: N>=1 history attempts from any notch"
 created = 1785719120
-updated = 1785719120
+updated = 1785730548
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
@@ -13,4 +13,18 @@ on = "claim"
 id = "bl-5134"
 on = "claim"
 +++
-VERIFY docs/VISION.md and docs/DESIGN.md on main before editing — ball bodies drift; where this body and VISION disagree, VISION wins. VISION §5 V2. Needs V1's rail (fork-from-here is a pinned-notch affordance) and the lernie fork verbs REACHABLE FROM YOG — lernie bl-a693 landed (7c80dc9: --from <ref> on prompt/dispatch, --config <name> on prompt) but yog reaches them only after the release cuts (lernie bl-4c15, cross-store so wired here via bl-5134) and the pin bumps. Fire-time controls: model (existing §9.4 picker), config branch, skills; xN fires N forks off one ref. Fan renders as siblings-of-one-ref group with state/response/usage side by side. No capability theater: affordance does not render until the verbs resolve. Graduates as S11.
+VERIFY docs/VISION.md and docs/DESIGN.md on main before editing; VISION wins over this body.
+
+Implement VISION §5 V2 over agent history. Needs V1's pinned-notch rail and lernie's ref/config verbs after their releases and yog pin bumps.
+
+One attempt and a parallel cohort use one path:
+
+- Fork from here dispatches from the pinned agent ref.
+- Fire-time controls expose model, config branch, and skills.
+- N >= 1 repeats that dispatch with per-attempt overrides; N > 1 is an alternative candidate cohort.
+- Rows render state, terminal response, usage, and common ancestry side by side.
+- Cohort membership and provenance derive from refs/ancestry and committed execution facts; add no fan registry or winner field.
+
+This task delivers only the read-only/context surface. Do not expose project-mutating attempts: they require bl-2b8c's project contract and its resulting implementation tasks. No capability theater and no new fan verb.
+
+Graduates as S11.
