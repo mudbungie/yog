@@ -1,7 +1,8 @@
 +++
 title = "the mark in the top-left of the shell, medium size"
 created = 1785731170
-updated = 1785731170
+updated = 1785731189
+claimant = "mark-placer"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
