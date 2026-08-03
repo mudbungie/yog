@@ -1,7 +1,8 @@
 +++
 title = "agent names are one word: mint from a single wordlist, retry the live set on collision"
 created = 1785731178
-updated = 1785731178
+updated = 1785731191
+claimant = "name-cutter"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
