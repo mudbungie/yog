@@ -1,7 +1,8 @@
 +++
 title = "the mark becomes tangent circles on pinned arcs: endpoints fixed, swell the only knob"
 created = 1785730776
-updated = 1785730776
+updated = 1785730785
+claimant = "Quinces"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design", "icon"]
 +++
