@@ -1,7 +1,8 @@
 +++
 title = "in-flight strip gains elapsed: the call's start is in the structure (step/dispatch commits, landed tool inputs), not a file timestamp"
 created = 1785729860
-updated = 1785729860
+updated = 1785729873
+claimant = "strip-elapsed"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
