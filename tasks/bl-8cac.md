@@ -1,7 +1,8 @@
 +++
 title = "encode the icon PNGs properly; the encoder belongs in dev-dependencies"
 created = 1785730263
-updated = 1785730263
+updated = 1785730266
+claimant = "Quinces"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["icon"]
 +++
