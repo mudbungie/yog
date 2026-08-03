@@ -1,7 +1,8 @@
 +++
 title = "orbital-insertion mark: darker palette, constant gold rail, limbs that flatten into a ring"
 created = 1785719170
-updated = 1785719170
+updated = 1785719172
+claimant = "Quinces"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design", "icon"]
 +++
