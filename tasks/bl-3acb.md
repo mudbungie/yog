@@ -1,7 +1,8 @@
 +++
 title = "the eye must tell user input, model response, and other inbox-item kinds apart at a glance — one visual role language across transcript and pending queue"
 created = 1785733748
-updated = 1785733748
+updated = 1785734580
+claimant = "role-tinter"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
