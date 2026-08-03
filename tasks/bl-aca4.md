@@ -1,7 +1,8 @@
 +++
 title = "name is an exposed dispatch parameter; omission auto-mints a one-word name — rule the mint's one home and amend the naming contract"
 created = 1785736966
-updated = 1785736966
+updated = 1785736974
+claimant = "mint-arch"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
