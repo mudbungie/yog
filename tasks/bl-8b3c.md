@@ -1,7 +1,8 @@
 +++
 title = "turn-rollup aggregate states real token counts once the lernie pin carries committed usage"
 created = 1785729853
-updated = 1785729853
+updated = 1785731282
+claimant = "rollup-teller"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
