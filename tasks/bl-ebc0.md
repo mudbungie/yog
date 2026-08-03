@@ -1,7 +1,8 @@
 +++
 title = "bump embedded lernie pin to =0.0.6"
 created = 1785737508
-updated = 1785737508
+updated = 1785737509
+claimant = "lernie-bumper"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
