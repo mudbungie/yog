@@ -1,7 +1,8 @@
 +++
 title = "slash commands: the line serialization of the control boundary (parity in one text spelling)"
 created = 1785733833
-updated = 1785733833
+updated = 1785733834
+claimant = "Gangplank"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Operator ask (2026-08-02): "in pursuit of everything in yog being teleoperable,
