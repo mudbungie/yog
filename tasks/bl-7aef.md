@@ -1,7 +1,8 @@
 +++
 title = "§4.9 amendment: the floor grant is flag — signaling out is a tool call, never prose parsing"
 created = 1785731070
-updated = 1785731070
+updated = 1785731071
+claimant = "Evenly"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["safety"]
 +++
