@@ -1,7 +1,8 @@
 +++
 title = "round the insertion lobes, brighten the green, seat the beads on the inner curve"
 created = 1785719438
-updated = 1785719438
+updated = 1785719440
+claimant = "Quinces"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design", "icon"]
 +++
