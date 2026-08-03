@@ -1,7 +1,8 @@
 +++
 title = "chat scroll is sluggish and sticky — find the frame-time cost and make scrolling free"
 created = 1785733752
-updated = 1785733752
+updated = 1785733759
+claimant = "scroll-surgeon"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
