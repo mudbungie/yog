@@ -1,7 +1,7 @@
 +++
 title = "implement the alignment monitor: tier-0 check + ladder per VISION §4.9"
 created = 1785718992
-updated = 1785730596
+updated = 1785731024
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["safety"]
 +++
@@ -17,3 +17,10 @@ Scope, per the ruling:
 6. **DESIGN.md amendments** with the mechanics: §4.2 ops row roster, §7.2/cadence schema, §12 module rows, and the attention-model hook — per VISION §6's pattern.
 
 v1 reads the committed transcript only (replayable verdicts). The mid-step fast path is explicitly out of scope.
+
+## Concerns to verify at implementation (recorded at design close-out, 2026-08-02)
+
+- **Calibrate before arming rungs.** A false 'diverged' that fires visibly teaches the operator to distrust the monitor (the same alarm-fatigue rule DESIGN applies to banners). Ship flag-only as the default wiring; measure verdict quality against operator judgment via the ops-row dataset before recommending any direct stop wiring or responder hooks.
+- **The responder reopens the injection blast radius the tool-less check closed.** It reads the flagged window (attacker-influenced content) while holding real verbs. Floor the default grant at nothing (pure judge); treat every grant beyond that as the operator's deliberate wiring, and revisit once bl-0cea's capability policy can bound responder tools mechanically. Also decide explicitly whether armed monitoring covers responders themselves (they are ordinary agents in the workspace — the uniform answer is yes, and it should stay uniform).
+- **Thinking visibility varies by provider.** Some providers summarize or redact thinking blocks; the transcript may carry less early-warning signal than §4.9 implies. The check prompt must degrade gracefully to actions-and-output-only — verify per pinned provider, don't assume.
+- **The check prompt is policy, not code.** Severability: the verdict prompt text belongs with the cadence.yaml monitor entry (or a file it names), not a Rust string constant — it is a logic-board tie-point the operator tunes.
