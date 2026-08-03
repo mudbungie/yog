@@ -2,6 +2,7 @@
 title = "the live mark belongs to the conversation, not the window: move it out of the top bar into the altitude-1 header"
 created = 1785736969
 updated = 1785736969
+claimant = "Dejectedly"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
