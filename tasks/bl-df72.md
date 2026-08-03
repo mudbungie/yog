@@ -1,7 +1,8 @@
 +++
 title = "agent list at the top shows a raw timestamp id instead of the name — every agent-naming seat rides the display ladder"
 created = 1785731750
-updated = 1785731750
+updated = 1785731758
+claimant = "seat-namer"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
