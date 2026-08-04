@@ -1,7 +1,8 @@
 +++
 title = "delete the obsolete workspace tool-grant rewrite and correct its stale design"
 created = 1785649830
-updated = 1785649830
+updated = 1785823716
+claimant = "grant-cutter"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
