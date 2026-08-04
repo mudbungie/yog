@@ -1,7 +1,7 @@
 +++
 title = "V3 Adjudicator: judge, rework, and deliver an attempt"
 created = 1785719121
-updated = 1785823811
+updated = 1785823885
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
