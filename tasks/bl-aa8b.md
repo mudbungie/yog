@@ -1,7 +1,7 @@
 +++
 title = "freeze project instructions into agent context with visible provenance"
 created = 1785649815
-updated = 1785823807
+updated = 1785823883
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design"]
@@ -24,14 +24,12 @@ Claude Code does NOT normally auto-load `AGENTS.md`; this is evidence for a proj
 
 ## Deliverable
 
-After bl-2b8c names the authoritative target, make project instructions a frozen, inspectable spawn input:
+bl-2b8c ruled (VISION §4.10): the authoritative target is the bound attempt worktree, passed typed at fire by bl-6654 (this task's claim blocker). Make project instructions a frozen, inspectable spawn input:
 
 - filename set and precedence are yog policy/config, with a documented default that covers this repository's `AGENTS.md`;
-- discovery is deterministic from authority root to target;
-- exact bytes and source provenance are snapshotted before the first inference through lernie's generic pinned-document mechanism;
+- discovery is deterministic from authority root to the typed target;
+- exact bytes and source provenance are snapshotted before the first inference through lernie's generic pinned-document mechanism — **released and pinned** (bl-fb5c, lernie 0.0.4; yog pins 0.0.6), so no upstream wait remains beyond bl-6654;
 - the operator sees what was included; the user's goal remains their payload, not a hidden concatenation;
-- child inheritance follows the project-work ruling;
+- child inheritance follows VISION §4.10 (a write-capable child's instructions re-freeze against its own attempt, never inherit stale bytes);
 - size is bounded and unreadable files, traversal, external includes, and untrusted parent instructions have explicit fail/skip policy;
 - no opaque automatic memory or yog-side duplicate store.
-
-Upstream mechanism: the lernie pinned-documents ball filed by the same audit. Consumer work waits for its published release and an exact yog pin.
