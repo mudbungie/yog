@@ -1,7 +1,8 @@
 +++
 title = "capability control: the world tool-control shim classifies and adjudicates every drone tool call"
 created = 1785824590
-updated = 1785824590
+updated = 1785824741
+claimant = "shim-wright"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["capability"]
