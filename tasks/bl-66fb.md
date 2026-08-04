@@ -1,11 +1,15 @@
 +++
 title = "V4.2 armed-loop facts: cap, count, last/next tick, and every spawn/reap as an ops row"
 created = 1785824553
-updated = 1785824553
+updated = 1785824595
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
 [[blockers]]
 id = "bl-0cea"
+on = "claim"
+
+[[blockers]]
+id = "bl-765d"
 on = "claim"
 +++
 VISION §5 V4 item 2, split out of bl-9dd4 (which landed the board itself: the four derived columns, gates, drone rows, spend column and epic rollup — DESIGN §11's board paragraph, STORIES S13).
