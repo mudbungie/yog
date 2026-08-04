@@ -1,7 +1,8 @@
 +++
 title = "V1 Historian: the step spine is a commit spine — history rail, notch-pinned inspector"
 created = 1785719120
-updated = 1785823699
+updated = 1785823891
+claimant = "historian"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
