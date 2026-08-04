@@ -1,7 +1,7 @@
 +++
 title = "V3 Adjudicator: judge, rework, and deliver an attempt"
 created = 1785719121
-updated = 1785730549
+updated = 1785823811
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
@@ -11,6 +11,10 @@ on = "claim"
 
 [[blockers]]
 id = "bl-2b8c"
+on = "claim"
+
+[[blockers]]
+id = "bl-8746"
 on = "claim"
 +++
 VERIFY docs/VISION.md and docs/DESIGN.md on main before editing; VISION wins over this body.
