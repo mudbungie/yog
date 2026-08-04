@@ -1,13 +1,17 @@
 +++
 title = "freeze project instructions into agent context with visible provenance"
 created = 1785649815
-updated = 1785649815
+updated = 1785823807
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design"]
 
 [[blockers]]
 id = "bl-2b8c"
+on = "claim"
+
+[[blockers]]
+id = "bl-6654"
 on = "claim"
 +++
 Source: bl-e249's Claude Code comparison at snapshot 06d29efd02547a586a33cab60e8acf3dba2997e8.
