@@ -1,8 +1,7 @@
 +++
 title = "BLOCKED on lernie bl-b98d — composer send-and-interrupt: Ctrl+Enter (and a button) interrupts the agent and triggers on the new message"
 created = 1785650733
-updated = 1785824350
-claimant = "interrupter"
+updated = 1785824351
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Operator ruling (2026-08-01, codex-comparison follow-up), verbatim: "this is a good feature. obviously a knob. it seems pretty easy to implement, I think? just an interrupt into brazen and then a trigger. both ways have value. probably enter: send, ctrl+enter: send and interrupt? and a button to do the same. really, the key point is, 'interrupt and trigger', which just happens to also be a send control."
