@@ -1,7 +1,7 @@
 +++
-title = "composer send-and-interrupt: Ctrl+Enter (and a button) interrupts the agent and triggers on the new message"
+title = "BLOCKED on lernie bl-b98d — composer send-and-interrupt: Ctrl+Enter (and a button) interrupts the agent and triggers on the new message"
 created = 1785650733
-updated = 1785824346
+updated = 1785824350
 claimant = "interrupter"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
