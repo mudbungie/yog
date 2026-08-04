@@ -1,7 +1,8 @@
 +++
 title = "implement the alignment monitor: tier-0 check + ladder per VISION §4.9"
 created = 1785718992
-updated = 1785731115
+updated = 1785824373
+claimant = "invigilator"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["safety"]
 +++
