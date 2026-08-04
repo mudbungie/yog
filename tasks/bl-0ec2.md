@@ -1,7 +1,8 @@
 +++
 title = "help is a gesture: --help threads through every command at every seat"
 created = 1785812918
-updated = 1785812918
+updated = 1785812919
+claimant = "Gangplank"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Operator ask (2026-08-03), verbatim: "fix those gaps. Add a help option to
