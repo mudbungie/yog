@@ -1,7 +1,8 @@
 +++
 title = "design the capability boundary before unattended fleet execution"
 created = 1785649816
-updated = 1785824215
+updated = 1785824459
+claimant = "boundary-ruler"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design"]
