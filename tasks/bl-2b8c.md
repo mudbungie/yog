@@ -1,7 +1,8 @@
 +++
 title = "design one recursive project-delivery contract for agent attempts"
 created = 1785649814
-updated = 1785730546
+updated = 1785823707
+claimant = "contract-drafter"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["design"]
