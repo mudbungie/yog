@@ -1,7 +1,8 @@
 +++
 title = "V4 Admiral board: derived columns, loop facts, spend column, epic rollup"
 created = 1785719126
-updated = 1785719126
+updated = 1785824161
+claimant = "admiral"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
