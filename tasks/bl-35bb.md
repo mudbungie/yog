@@ -1,7 +1,8 @@
 +++
 title = "the pre-commit gate omits make lint, so clippy errors land on main"
 created = 1785891988
-updated = 1785891988
+updated = 1785891997
+claimant = "gate-mender"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
