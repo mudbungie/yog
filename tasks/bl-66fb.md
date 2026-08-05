@@ -1,7 +1,8 @@
 +++
 title = "V4.2 armed-loop facts: cap, count, last/next tick, and every spawn/reap as an ops row"
 created = 1785824553
-updated = 1785824595
+updated = 1785893224
+claimant = "loopwright"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
 [[blockers]]
