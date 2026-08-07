@@ -1,7 +1,7 @@
 +++
 title = "capability default to 11: open-world passes; only loss and credentials refuse"
 created = 1785997673
-updated = 1785997693
+updated = 1786064433
 claimant = "Sluice"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
