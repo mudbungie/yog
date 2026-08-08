@@ -1,7 +1,8 @@
 +++
 title = "re-baseline the ladder: drive every story script and the clean room on current main; one log, one ball per red"
 created = 1786161490
-updated = 1786161490
+updated = 1786162426
+claimant = "Ladderwright"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
