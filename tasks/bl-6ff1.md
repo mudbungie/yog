@@ -1,7 +1,8 @@
 +++
 title = "local CICD triggers on the close verb, not on main moving: rebuild+reinstall whenever refs/heads/main changes, however it changed"
 created = 1786162403
-updated = 1786162403
+updated = 1786162413
+claimant = "ref-trigger"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
