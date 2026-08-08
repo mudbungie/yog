@@ -1,7 +1,8 @@
 +++
 title = "the model picker states what it reaches, and a conversation states the config it is frozen at"
 created = 1786162399
-updated = 1786162399
+updated = 1786162764
+claimant = "Ptarmigan"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
