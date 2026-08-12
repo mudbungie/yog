@@ -1,7 +1,8 @@
 +++
 title = "run-s5s8 fixture dies at the bl-c3a9 birth gate: its scratch BRAZEN_CONFIG has no provider rows, but the seeded template names openai-chatgpt"
 created = 1786162686
-updated = 1786511432
+updated = 1786511508
+claimant = "Lintel"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["drive"]
