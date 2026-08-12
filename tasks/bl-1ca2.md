@@ -1,7 +1,8 @@
 +++
 title = "no full-cover overlays: Config and its kin become tab focus, not a toggle painted over everything"
 created = 1786508785
-updated = 1786508785
+updated = 1786509509
+claimant = "Mullion"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
