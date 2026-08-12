@@ -1,7 +1,8 @@
 +++
 title = "operator rescue ruling 2026-08-11: amend DESIGN/QUALITY in place — workspace blast radius, composer focus, per-agent task branches, keyboard everywhere with combos on hover, overlays become tabs, conversation settings at the bottom"
 created = 1786508775
-updated = 1786508775
+updated = 1786508811
+claimant = "Vellum"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
