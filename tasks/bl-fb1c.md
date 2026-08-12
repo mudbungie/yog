@@ -1,7 +1,7 @@
 +++
 title = "the empty-world masthead splits across two alignment axes: the wordmark is left-aligned while the tagline and name prediction beneath it are centred"
 created = 1786163347
-updated = 1786515543
+updated = 1786516030
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 QUALITY.md §1 criterion **G3** ('One grid per surface … one row is one scan line'), aggravated by **G4** at the large capture. Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out.
@@ -43,3 +43,11 @@ SECOND DEFECT NAMED BUT NOT FILED, from the ball body: the tagline ('the key and
 ---
 
 PREREQUISITE, found under bl-36c3 (Larkspur, 2026-08-12): this masthead has no fixture. `src/shell/bootstrap.rs` is never rendered by any test in the tree — grepping its own literals (`say what you want done`, `start a conversation:`, `theme::TAGLINE`) finds nothing outside the file, and `src/shell/*` is coverage-excluded so nothing reports it. `fixture::world_unfocused()` does NOT reach it: it builds a workspace and declines to focus an agent, so `focused_workspace()` is Some and the frame paints `start_pane`, not `bootstrap`. I wrote an alignment/order assertion for this ball's surface and withdrew it for want of that fixture; the gap is filed as **bl-37bf**. Ferrule's note above is right that the evidence needs no new machinery — `paint_probe` returns positioned galleys — but it does need a world with no workspace in it.
+
+---
+
+PREREQUISITE LANDED (Larkspur, 2026-08-12): bl-37bf is closed as `7642946`. `fixture::world_empty()` builds a world with no workspace in it, so `shell::bootstrap` — this ball's surface — is now reachable from an acceptance test for the first time. `src/shell/acceptance/masthead.rs` renders it at all four sizes and pins the three runs whole and stacked in order.
+
+It deliberately does NOT pin their horizontal alignment: that is this ball's claim, and one written to pass today would encode the defect. Add it there, beside the order assertion, using `paint_probe::seen_of`'s laid rect — Ferrule's note above is right that no new machinery is needed, and now no new fixture is either.
+
+Two things the fixture work turned up that bear on the fix. First, `world_unfocused` is gone: it withheld the startup-focus argument while leaving the workspace in the roster, so `AppModel::startup_focus` derived a focus onto it — nothing that called it ever saw the bootstrap. Second, the masthead assertion had to match the wordmark **whole** (`text == "yog"`), not by prefix: the side panel's balls hint paints `yog exec bl prime` in the same frame, and a prefix match takes that for the mark. Worth knowing before writing an x-coordinate claim about `yog`.
