@@ -1,7 +1,7 @@
 +++
 title = "the empty-world masthead splits across two alignment axes: the wordmark is left-aligned while the tagline and name prediction beneath it are centred"
 created = 1786163347
-updated = 1786514129
+updated = 1786515543
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 QUALITY.md §1 criterion **G3** ('One grid per surface … one row is one scan line'), aggravated by **G4** at the large capture. Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out.
@@ -39,3 +39,7 @@ FIX SHAPE: the row needs a known width before it is placed. Measure the heading 
 EVIDENCE NEEDS NO NEW MACHINERY: `paint_probe::collect` already returns `(String, Rect)` per galley — `Painted` — and `painted_of`/`painted_settled` hand back the positioned list. The ball's own witness is x-coordinates (wordmark x≈270 vs tagline x≈705), so the regression test is a direct assertion that the three galleys share a centre within a tolerance. `src/shell/acceptance/name_column.rs` is the precedent for measuring galley positions rather than asserting strings, and its reason is the same: a string assertion would pass on a tree that had deleted the element outright.
 
 SECOND DEFECT NAMED BUT NOT FILED, from the ball body: the tagline ('the key and the gate') and the name prediction ('will be named growing') are consecutive `ui.weak` labels in the same size and colour, so they read as one run-on sentence — 'the key and the gate will be named growing'. Both are `ui.weak` in `bootstrap.rs`'s `vertical_centered` block. Whoever takes this ball is in the file already; fixing the alignment while leaving two lines that misread as one sentence would be a half-delivery.
+
+---
+
+PREREQUISITE, found under bl-36c3 (Larkspur, 2026-08-12): this masthead has no fixture. `src/shell/bootstrap.rs` is never rendered by any test in the tree — grepping its own literals (`say what you want done`, `start a conversation:`, `theme::TAGLINE`) finds nothing outside the file, and `src/shell/*` is coverage-excluded so nothing reports it. `fixture::world_unfocused()` does NOT reach it: it builds a workspace and declines to focus an agent, so `focused_workspace()` is Some and the frame paints `start_pane`, not `bootstrap`. I wrote an alignment/order assertion for this ball's surface and withdrew it for want of that fixture; the gap is filed as **bl-37bf**. Ferrule's note above is right that the evidence needs no new machinery — `paint_probe` returns positioned galleys — but it does need a world with no workspace in it.
