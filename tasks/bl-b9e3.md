@@ -1,9 +1,13 @@
 +++
 title = "the conversation row's ⚑N: delete the count, move the flag to the right edge"
 created = 1786511500
-updated = 1786511500
+updated = 1786511516
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+
+[[blockers]]
+id = "bl-5c64"
+on = "close"
 +++
 **Operator ruling, 2026-08-11, verbatim:**
 
