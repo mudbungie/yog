@@ -1,7 +1,7 @@
 +++
 title = "sweep the drive beats for vacuous assertions: empty-variable and generic-string greps pass in runs where the gesture never happened"
 created = 1786513798
-updated = 1786514667
+updated = 1786515903
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["testing"]
@@ -89,3 +89,11 @@ That co-occurrence is a search strategy, not a coincidence. The reason is mechan
 Neither vacuous beat was in any ball. Both were found only because someone was already standing there.
 
 **Result of the repair, as the standard to hold this ball's sweep to:** `run-s3s4s6` went from 4 FAIL + 2 vacuous PASS to 18/18 real PASS — the first fully green run in that cluster.
+
+---
+
+The limit case of this ball's pattern, for the sweep: **a beat that never RAN**.
+
+Vacuity so far has meant an assertion that passes without measuring its subject. One rung worse is an assertion that is not evaluated at all and leaves no trace. bl-2d45's delivery gave a new function the name of an existing one in a file that is sourced into a flat namespace; bash's later-wins rule deleted three S6-T1 beats from every `run_s7`, and no verdict row, no drive log and no PASS/FAIL count could show it — the run reported ALL BEATS PASS for the beats that survived.
+
+So the sweep needs a second question beside 'does this assertion measure its subject?': **'did every beat this ladder claims to have run actually run?'** The answer is not in `verdicts.jsonl`; it has to come from the source. Fixed structurally in bl-0e44 (`stories.sh` refuses a duplicate top-level function name), but the general lesson stands for any harness where registration is by name: absence of a failure is not evidence of a test.
