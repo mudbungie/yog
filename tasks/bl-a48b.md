@@ -1,7 +1,8 @@
 +++
 title = "context-window percentage per conversation in the status bar"
 created = 1785650734
-updated = 1785650734
+updated = 1786513273
+claimant = "Ingot"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Operator request (2026-08-01, codex-comparison follow-up), verbatim: "I'd like to see context window percentage shown in the status bar for each chat."
