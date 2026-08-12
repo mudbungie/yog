@@ -1,7 +1,7 @@
 +++
 title = "the conversation list unfolds: a right-pinned subagent field (direct/total + arrow) expands the descent as indented rows"
 created = 1786511693
-updated = 1786512495
+updated = 1786515529
 claimant = "Fretwork"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -99,3 +99,9 @@ subtree members − 1; direct = `children_of` count.
 Subtasks: spec (doc first, rules the rest), nav derivation, shell paint,
 acceptance beats. Each verifies its cited paths against HEAD before editing
 (ball bodies drift).
+
+---
+
+Correction to a conclusion reached under child bl-89de (recorded here because a closed ball has no task file to comment on): **DESIGN §11 layout rules 6, 7 and 8 do exist on main.** Rule 6 'What the remainder cannot show, it scrolls (bl-9551)'; rule 7 'A control's width is a share of its row, never a constant (bl-76f8)'; rule 8 'A strip of peers wraps; none of them is dropped (bl-b531)'; plus the rule 5 amendment ('The ceiling is a budget over the stack, not a cap on each member') and rule 1b ('the control wins the row', src/shell/row.rs::control_last). The finding that they were absent — 'ball-body drift, nothing owed' — was read against the unmerged epic ref work/bl-fa82, which branched 17 commits before that wave landed. Nothing was owed by that ball's own work, but the premise was false; a 'verified against the tree' note verified against a stale ref is worse than no note.
+
+They did bite on merge. The conversation column truncates a title that does not fit (rule 1), and paint_probe::collect now returns laid-out glyphs rather than Galley::text (bl-bc06), so the epic's acceptance needles — the derivation's full display_name — stopped equalling the painted galley and six beats reddened. Judged for the landed rule: acceptance::unfold::drive::reads_as now matches a title by the head egui left on screen, guarded by one_title_each, which fails loudly if a head names more than one row. No assertion was loosened; both directions still bite (verified by mutation).
