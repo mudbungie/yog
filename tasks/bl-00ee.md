@@ -1,7 +1,7 @@
 +++
 title = "run-s5s8 fixture dies at the bl-c3a9 birth gate: its scratch BRAZEN_CONFIG has no provider rows, but the seeded template names openai-chatgpt"
 created = 1786162686
-updated = 1786162686
+updated = 1786510272
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["drive"]
@@ -57,3 +57,7 @@ Note the beat comment at `beats_s5.sh:19` claims the scratch config is "A tiny, 
 ## Not affected
 
 Sixteen beats in this script still pass, including the whole S8 nesting group and `S8-T1 severability: rm -rf the world, ambient intact`.
+
+---
+
+Reproduced on `96d5f4e` via `make drive DRIVE_ROOT=/tmp/yog-sparrow-nowire DRIVE_RUNS=run-s5s8`: 17 beats pass, the same 10 listed here fail. The diagnosis in this body is now stale after bl-c0e2: brazen no longer reads ambient `BRAZEN_CONFIG`; config and credentials live in each workspace wall. bl-49c6 now tracks repairing the harness at that new authority. Keep this ball as the exact red-table witness, but do not implement the retired ambient-provider fix.
