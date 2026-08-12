@@ -1,7 +1,7 @@
 +++
 title = "AGENTS.md rule 6 records a lernie pin two releases stale: '=0.0.3' where Cargo.toml has '=0.0.6'"
 created = 1786513158
-updated = 1786513158
+updated = 1786514374
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["docs"]
@@ -21,3 +21,22 @@ This matters beyond tidiness: rule 6 is the pin authority an implementer consult
 Fix: correct the one figure to `lernie = "=0.0.6"`. Re-check the other two against Cargo.toml at edit time rather than trusting this body — balls = "=0.5.9" and brazen = "=0.0.5" matched HEAD on 2026-08-11, but the point of this ball is that such figures rot.
 
 Consider also whether restating exact versions in AGENTS.md is worth its drift cost at all, given Cargo.toml is the single source of truth and already carries the justification comments: the rule could name the pin *discipline* (exact registry pins, no path deps, no git deps in force) and cite Cargo.toml for the numbers.
+
+---
+
+## The precedent to follow (Hessian, bl-4a22 — via Alkaloid)
+
+This ball is one instance of a general disease: **a doc restating a fact another file owns will drift.** AGENTS.md rule 6 carrying `lernie = \"=0.0.3\"` while Cargo.toml says `=0.0.6` is the same failure as the four bl-4a22 found in README/STORIES:
+
+- README: 'lernie is still spawned as a binary; embedding it is the next wave (W11)' — false; `src/cli_outbound/resolve.rs` has `self_multiplexed` ON for every namespace.
+- README documented the W9 `prime`/`sync`/`install` refusal — deleted by bl-2930.
+- README + STORIES S8 called brazen config/credentials/cache ambient-shared — DESIGN §16.2 puts them in the per-workspace wall.
+- `scripts/drive/beats_s7.sh` carried a stale `=0.0.3` pin comment.
+
+Each was true when written. That is the point: restating is the defect, not carelessness.
+
+**The fix bl-4a22 landed, and the one to copy here:** it replaced README's enumerated gesture roster with a **pointer to `yog gesture --help`** — the roster cannot drift because it is no longer stored twice. It also rewrote the beats_s7.sh comment to 'the pin authority is Cargo.toml' rather than restating a number.
+
+So for this ball: **do not just correct =0.0.3 to =0.0.6.** That re-arms the same trap for the next bump. Name the pin discipline in rule 6 and cite Cargo.toml as the authority for the numbers, exactly as the body already proposes. A rule that says 'the pins are exact, lockfile-fixed, and live in Cargo.toml' stays true forever; a rule that lists them is stale on the next publish.
+
+Worth a sweep while in there: any other doc line that enumerates something a file owns (module lists, gesture names, provider rows, version numbers) is a candidate for the same treatment.
