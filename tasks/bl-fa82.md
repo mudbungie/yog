@@ -1,7 +1,7 @@
 +++
 title = "the conversation list unfolds: a right-pinned subagent field (direct/total + arrow) expands the descent as indented rows"
 created = 1786511693
-updated = 1786511695
+updated = 1786511785
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
@@ -38,6 +38,13 @@ on = "close"
 > little chat-reply line. Handle this alongside bl-b9e3, the removal of the
 > notification flag."
 
+**Second operator ruling, 2026-08-11, verbatim (keyboard):**
+
+> "up down walks the list, left right expands/collapses the list (including
+> paging back up to the last level, if you hit left while on a child). don't
+> automatically expand just from going down; skip to the next thing at the
+> same level."
+
 **The reframe that makes this small:** today's conversation list (§11 altitude
 0) is "one row per root agent", each row aggregating its whole subtree
 (`src/nav/convs/row.rs` — state badge, attention, flight, members are already
@@ -55,6 +62,16 @@ and **total** descendants. Hover states what the numbers mean (operator
 requirement, verbatim above). Zero subagents ⇒ no field, exactly like today's
 `(N)`.
 
+**The keyboard (second ruling):** ↑/↓ moves the selection through the
+**visible** rows in list/paint order — a collapsed subtree is skipped, so
+down from a collapsed parent lands on the next row at the same level; the
+walk NEVER expands anything. → expands the selected row; ← collapses it, and
+← on a child (or a leaf) pages up to its parent. This is a semantics change
+to the current ↑/↓ roster walk (attention-ranked, every generation —
+`src/attention/roster.rs:89-109`); the spec subtask amends §6/§11
+accordingly and decides what a deliberate jump-to-attention does when its
+target is hidden.
+
 **Membership is §5.1 #8's strict descent-id rule** (`docs/DESIGN.md:1441`,
 `git_tree::descent_order` / `children_of`) — NOT the loose prefix test
 `actions::stop_children_offered` uses for the Stop menu seat. Total =
@@ -70,12 +87,13 @@ subtree members − 1; direct = `children_of` count.
   *provenance* tree (descent-id) at altitude 0. It does NOT draw the *context*
   edge (VISION V1.3) — bl-5cf8 stays open for that question; the spec subtask
   cross-references, nothing more.
-- **Out of scope, untouched:** altitude 1's compact descent tree
+- **Out of scope, untouched (operator: "I'm not really sure what to do about
+  this" — so the fences hold):** altitude 1's compact descent tree
   (`src/shell/members.rs`) — after this lands it is a second rendering of the
-  same membership; if the spec finds it indicted, SAY so in the doc and file a
-  follow-up ball, do not widen this one. The boundary `conversations` answer
-  (`src/boundary/reply/rows.rs`) stays root-rows; expansion state is viewport
-  ephemera (§13.1), never a boundary fact and never a ui.json field.
+  same membership; the spec SAYS so in the doc and files a follow-up ball for
+  the decision, it does not widen this one. The boundary `conversations`
+  answer (`src/boundary/reply/rows.rs`) stays root-rows; expansion state is
+  viewport ephemera (§13.1), never a boundary fact and never a ui.json field.
 
 Subtasks: spec (doc first, rules the rest), nav derivation, shell paint,
 acceptance beats. Each verifies its cited paths against HEAD before editing
