@@ -1,7 +1,8 @@
 +++
 title = "REGRESSION of bl-0ec2: subcommand help executes the command or mutates the world"
 created = 1786510240
-updated = 1786510240
+updated = 1786513023
+claimant = "Cinder"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["regression", "help"]
