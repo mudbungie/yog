@@ -1,7 +1,7 @@
 +++
 title = "the headless boundary has no wall: /config brazen through yog gesture refuses because no workspace is focused — the gesture must name its workspace"
 created = 1786509736
-updated = 1786509736
+updated = 1786510269
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
@@ -20,3 +20,7 @@ has no focus to fall back on.
 
 Verify against src/boundary/{config.rs,dispatch.rs} and §8.5 as amended by
 f34c43c before editing.
+
+---
+
+Runtime confirmation on `96d5f4e`: I wrote a valid `sample` provider to `<world>/walls/33c0b5f1/brazen/config.toml`. With `YOG_WALL` set directly, `yog bz --list-providers` returned `sample` plus the built-ins. Through the supported boundary, `yog gesture --ws <that workspace> /providers` returned `rows: []`, and `/config brazen` returned `no focused workspace`. Please cover `Query::Providers` and `/model` as well as `ConfigFile::Brazen`; all three discard or fail to lens the named workspace.
