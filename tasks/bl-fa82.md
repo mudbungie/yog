@@ -20,6 +20,10 @@ on = "close"
 [[blockers]]
 id = "bl-d5b9"
 on = "close"
+
+[[blockers]]
+id = "bl-89de"
+on = "close"
 +++
 **Operator ruling, 2026-08-11, verbatim:**
 
