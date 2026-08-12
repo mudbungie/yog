@@ -1,7 +1,8 @@
 +++
 title = "make run tracks main: launch the installed binary and relaunch it when a merge lands"
 created = 1786508786
-updated = 1786508786
+updated = 1786508787
+claimant = "waltzing"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 `make run` is `cargo run --quiet` — a debug build of the WORKING TREE, compiled once at launch. It never sees a merge: nothing rebuilds it and nothing restarts it when refs/heads/main moves. The CICD half that does track main (.githooks/reference-transaction -> scripts/install-main -> make install -> make reload) can only relaunch a pidfile-recorded instance, and `run` records no pid.
