@@ -1,7 +1,7 @@
 +++
 title = "run-s5s8 fixture dies at the bl-c3a9 birth gate: its scratch BRAZEN_CONFIG has no provider rows, but the seeded template names openai-chatgpt"
 created = 1786162686
-updated = 1786510272
+updated = 1786511432
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["drive"]
@@ -61,3 +61,24 @@ Sixteen beats in this script still pass, including the whole S8 nesting group an
 ---
 
 Reproduced on `96d5f4e` via `make drive DRIVE_ROOT=/tmp/yog-sparrow-nowire DRIVE_RUNS=run-s5s8`: 17 beats pass, the same 10 listed here fail. The diagnosis in this body is now stale after bl-c0e2: brazen no longer reads ambient `BRAZEN_CONFIG`; config and credentials live in each workspace wall. bl-49c6 now tracks repairing the harness at that new authority. Keep this ball as the exact red-table witness, but do not implement the retired ambient-provider fix.
+
+---
+
+Diagnosis correction from bl-49c6 (this ball's stated cause is retired; the failure is real and now named at preflight).
+
+This ball says the fixture's 'scratch BRAZEN_CONFIG has no provider rows'. There is no scratch BRAZEN_CONFIG any more — bl-c0e2 moved brazen's config, credentials and model cache inside the per-workspace wall (`<world>/walls/<name>/brazen/*`, DESIGN §16.2 as amended), `bz_host::run` injects the wall's path as BRAZEN_CONFIG so brazen never reaches its own fall-through, and `beats_s5.sh` was reseated onto the wall. An exported BRAZEN_CONFIG is inert.
+
+The 10-red table is still real, and the cause is one layer over: a NEWBORN workspace's wall is an empty directory, so its brazen table is brazen's seven shipped rows and nothing else. Measured, not assumed:
+
+    $ YOG_WALL=$(mktemp -d) yog bz --list-providers --json
+    anthropic, openai, mistral, openai-responses, google, ollama, claude-code
+
+The world seed copies the operator's `world/lernie/template/providers.yaml`, which names `openai-chatgpt` in both roles. That row lives only in the operator's ambient `~/.config/brazen/config.toml`, which no scratch wall inherits. `start::ensure::create_workspace` runs `template::gate` BEFORE `lernie new`, and against the TARGET workspace's wall (`boundary/dispatch.rs`: 'The §9.2 birth-template gate reads the **target** workspace's providers'). So the gate refuses with DeadRows, no workspace is created, and every beat goes red. template.rs's 'an empty provider table gates nothing' escape does not fire: the table is not empty, it is the defaults.
+
+The ordering is the crux and it is why bl-49c6 could only report it: the wall is keyed by the §3.1 leaf yog MINTS at the fire, so no harness fixture can exist before the gate reads it. `harness.sh`'s new `seed_wall` lays the wall (host config + credentials) right after each mint — which fixes every post-birth brazen surface and the wire — but cannot precede birth.
+
+Two exits, and this ball owns the choice:
+(a) FIXTURE — seed a birth template naming a row a fresh wall already carries. Workspaces are born and the world renders; the wire then depends on a credential for that row (the host has `google.json` and `openai-chatgpt.json`; `google` is a shipped row, `openai-chatgpt` is not). Cheapest, no Rust.
+(b) GATE — the §9.2 birth gate's premise died with the sharing it was designed under (bl-c3a9 predates the wall). It judges a template against a wall that cannot exist yet, so it refuses on the strength of a question that cannot have been answered — the same posture template.rs already takes for an unreadable file. This is a DESIGN §9.2 amendment plus a Rust change, not a silent tweak.
+
+Until one lands, `make drive-preflight` names it at step 0 with the fix in the message, instead of the ladder discovering it a beat at a time.
