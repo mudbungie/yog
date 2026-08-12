@@ -1,7 +1,8 @@
 +++
 title = "S4-T1 drive beat is stale: `w` opens the name-the-sphere modal, so `await verb_ge new 2` can never land"
 created = 1786162675
-updated = 1786162675
+updated = 1786513148
+claimant = "Dowel"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["drive"]
