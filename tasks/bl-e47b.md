@@ -1,7 +1,7 @@
 +++
 title = "per-agent task branches: each agent tracks on its own balls branch by default, settable at launch, inherited by subagents, amendable by the agent"
 created = 1786508785
-updated = 1786509919
+updated = 1786510248
 claimant = "Bract"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -94,3 +94,65 @@ world already founded tracker-less. Filed separately.
 Not fixed, not yog's file: this box's ~/.config/balls/default-config/plugins.toml
 is stale for the operator's OWN `bl prime`s too (same `tracker` name). Operator's
 to update; yog is out of its blast radius after this ball.
+
+---
+
+DESIGN DECISION, taken here because DESIGN 16.3 said it was mine: "how the
+per-agent key meets bl's per-checkout config". It does not — it meets bl's
+SPACE. The reasoning, so the next reader does not re-derive it:
+
+`bl conf set task-branch` is scope-keyed to the LANDING, and a landing belongs
+to a CLONE, which balls keys on (state home, invocation path). Three
+consequences kill "drive `bl conf set task-branch` per agent":
+ 1. two agents working one project share one landing (per project, not agent);
+ 2. one agent running `bl` in three directories has three landings;
+ 3. a clone holds ONE store worktree, so two branches in one clone thrash it
+    (`substrate::materialize` re-points the checkout every op) — and yog's board
+    reads exactly that checkout, so it would render whichever agent ran last.
+
+So the unit that can be per-agent is the space the clone lives in. One var,
+YOG_MARKS, naming balls' state home AND config home together; absent = the
+world's space (state stays <world>/state so every existing clone is still the
+one the board reads; config becomes <world>/config, which is finding 1's fix);
+present = <wall>/marks, the agent's own clone bundle and own balls config home.
+Keyed by the 3.1 name that is already the ball claimant (3.2), so claimant and
+space cannot disagree.
+
+The branch inside a space is `tasks_branch` in balls' own layer-2 config
+(<space>/balls/config.toml) — the one layer that covers every clone in a space,
+which is what "the agent's branch" means, and a layer balls ranks above the
+landing and names by layer on every read. yog writes that one key and nothing
+of its own shape. That is a deliberate reading of the ball's "drive bl conf,
+don't duplicate": the file is balls' file, balls' key, balls' precedence; the
+alternative (`bl conf set`) provably cannot express a per-agent binding at all.
+`bl conf` remains the authority on what a checkout resolves.
+
+WHAT IT COSTS, stated plainly: a `bl conf set task-branch` an agent runs itself
+writes the landing and is then shadowed by its own space's layer. Not silent —
+`bl conf task-branch` prints the winning layer by name (`xdg`) — and it is the
+intended relationship (the agent's space outranks any project binding), but it
+is the one wart, and it is recorded here rather than hidden.
+
+The seam: balls' library does no env reads (its bl-bfa8 rule) — the host builds
+the Edge with balls' two home directories — so yog folds the space in at
+`multiplex::bl::edge`, the one place it already folds YOG_NAME into balls'
+default actor. Same exit 16.2 takes for brazen's credential/cache seams.
+
+CLAUSE 2 needed no new mechanism. 3.4's payload ladder already distinguishes
+the case: the BALL rung was offered on a project's board and its `bl claim`
+landed there, so it carries no YOG_MARKS and its `bl` IS the board's own —
+instantly consistent, no sync hop. Every other rung is launched onto its own
+space. So "set at launch" and "amend" are one gesture differing only in when it
+fires, which is why no launch axis, flag or verb was added.
+
+VERIFIED END TO END against a scratch world (never the live one), with the
+operator's stale ~/.config/balls left untouched:
+ - `bl prime` in the world now wires bl-tracker at 8 phases + the `show` hook,
+   and pushes balls/tasks to the project's origin (it did neither before);
+   `clock-provider` reads `(none) default` instead of bleeding in from
+   ~/.config/balls/config.toml.
+ - `/marks --ws <ws>` reads `balls/tasks` beside the space root; `/marks
+   balls/agents/home` writes it; `/marks balls/config` refuses.
+ - with YOG_MARKS standing, the agent's `bl conf` reports `task-branch
+   balls/agents/home  xdg` in its OWN clone, while the board's space still
+   reports `balls/tasks  landing`. Four clauses, observable.
