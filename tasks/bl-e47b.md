@@ -1,7 +1,8 @@
 +++
 title = "per-agent task branches: each agent tracks on its own balls branch by default, settable at launch, inherited by subagents, amendable by the agent"
 created = 1786508785
-updated = 1786508785
+updated = 1786509746
+claimant = "Bract"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
