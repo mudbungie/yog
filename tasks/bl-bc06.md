@@ -1,7 +1,8 @@
 +++
 title = "a button's whole label elides to a bare '…' — including the Login button on the one provider that is not signed in"
 created = 1786163340
-updated = 1786163340
+updated = 1786512987
+claimant = "Ferrule"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 QUALITY.md §1 criteria **G1** ('deliberate elision shows an ellipsis and the full value is reachable') and **H2** ('never a bare blank or an unlabeled box'). Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out.
