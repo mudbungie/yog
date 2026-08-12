@@ -1,7 +1,7 @@
 +++
 title = "sweep the drive beats for vacuous assertions: empty-variable and generic-string greps pass in runs where the gesture never happened"
 created = 1786513798
-updated = 1786514426
+updated = 1786514667
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["testing"]
@@ -70,3 +70,22 @@ Two design constraints if it is mechanized:
 2. **A pattern with no id is not always wrong** — some beats legitimately assert on a shape. The check should demand the assertion name what distinguishes this run, or carry a one-line justification in a single reviewable place. Prefer the first.
 
 If mechanizing turns out to cost more than it saves, say so on the ball and land the sweep alone — but make that a decision with a recorded reason, not an omission.
+
+---
+
+## Where to look: drift and vacuity are neighbours (Dowel, via Alkaloid)
+
+Empirical result from repairing three stale beats (bl-d1af, bl-afa7, bl-2d45), 3 for 3:
+
+> A red drive beat after a quiet period was the beat that drifted, three times out of three — **and each drifted beat had a vacuous neighbour keeping it company.**
+
+That co-occurrence is a search strategy, not a coincidence. The reason is mechanical: a beat that drifts stops producing the state its *neighbours* assert on. A neighbour that keeps passing anyway is proving it never depended on that state. The red beat is the alarm; the green one beside it is the actual defect, and it is the one nobody would ever look at.
+
+**So: when repairing any red beat, audit the beats immediately around it in the same run before closing.** Do not stop at the one that failed. Concretely, in this cluster:
+
+- bl-afa7's `w` drift sat beside two beats whose `$minted` was empty, making `grep -q '""'` match nearly any row.
+- bl-2d45's dead ↓ sat beside an ack beat reading a watermark S3's selection had written ~40 beats earlier.
+
+Neither vacuous beat was in any ball. Both were found only because someone was already standing there.
+
+**Result of the repair, as the standard to hold this ball's sweep to:** `run-s3s4s6` went from 4 FAIL + 2 vacuous PASS to 18/18 real PASS — the first fully green run in that cluster.
