@@ -1,7 +1,7 @@
 +++
 title = "sweep the drive beats for vacuous assertions: empty-variable and generic-string greps pass in runs where the gesture never happened"
 created = 1786513798
-updated = 1786513798
+updated = 1786514413
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["testing"]
@@ -40,3 +40,15 @@ Sweep `scripts/drive/` and `tests/integration/stories_*.rs` for assertions that 
 - **bl-bb20** — S2 and S9-S18 have ZERO real-substrate beats. That is *absent* coverage; this ball is *fake* coverage. Do them separately; fake coverage is the more dangerous of the two because it reads as done.
 
 Verify all cited paths against HEAD first; ball bodies drift.
+
+---
+
+The canonical instance, for whoever runs the sweep: an assertion can be vacuous by measuring a DIFFERENT EVENT, not merely by being loose.
+
+`beats_s3s4s6.sh`'s S6 ack beat was `await seen_recorded "$ui"`, i.e. `grep -q '"seen"' ui.json`. Every run of that world selects a conversation at the S3 rung, ~40 beats earlier, and a selection IS an acknowledgement (§6, `focus_agent` -> `record_seen`) — so the `seen` key is in ui.json long before the stop this beat is about. The beat therefore reported PASS in the same two runs where its own predecessor reported `S6 stop: lernie stop dispatched FAIL - no stop verb`: nothing was stopped, nothing new was acknowledged, and the assertion could not tell, because it was reading a fact written by an unrelated gesture.
+
+Reproduced live twice in this session (2026-08-12 drives at 20260812T032053Z and T033533Z) before the repair, and both are in the run scroll: FAIL and PASS adjacent, on the same evidence.
+
+The repair shape that generalizes: assert on the IDENTITY of the thing the gesture was about, not on the presence of a shape. `seen_kind $ui $flight` (harness.sh) asks whether the watermark exists under THAT agent id; `stopped $flight` asks whether the stop argv names THAT conversation, where `verb_ge stop 1` counted rows and a stop of the wrong conversation satisfied it equally. Both predicates now live in harness.sh so the next beat reaches for them instead of a grep.
+
+Sweep heuristic worth applying: any predicate whose subject is a bare shape (`'"seen"'`, `'"balls"'`) or an interpolated variable that can be empty is suspect — grep the beats for `grep -q` with no id in the pattern, and for `"$var"` patterns whose var is set by a `find` that can return nothing (bl-afa7's `$minted` was the empty-string half of this same class).
