@@ -1,7 +1,8 @@
 +++
 title = "S5 brazen Apply beats are stale: §9.1's Apply/Reload moved inside the collapsed 'raw config.toml' fold (bl-2622), so (290,197) clicks nothing"
 created = 1786511802
-updated = 1786511802
+updated = 1786512126
+claimant = "Plumb"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Measured on the bl-00ee drive (release of work/bl-00ee, `make drive DRIVE_RUNS=run-s5s8`, scratch world). With the §9.2 birth gate retired the run goes from **10 red to 2 red**; these two are the residue, and they are a *different* cause from the gate.
