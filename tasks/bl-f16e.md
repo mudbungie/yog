@@ -1,7 +1,7 @@
 +++
 title = "sweep the drive beats for vacuous assertions: empty-variable and generic-string greps pass in runs where the gesture never happened"
 created = 1786513798
-updated = 1786514413
+updated = 1786514426
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["testing"]
@@ -52,3 +52,21 @@ Reproduced live twice in this session (2026-08-12 drives at 20260812T032053Z and
 The repair shape that generalizes: assert on the IDENTITY of the thing the gesture was about, not on the presence of a shape. `seen_kind $ui $flight` (harness.sh) asks whether the watermark exists under THAT agent id; `stopped $flight` asks whether the stop argv names THAT conversation, where `verb_ge stop 1` counted rows and a stop of the wrong conversation satisfied it equally. Both predicates now live in harness.sh so the next beat reaches for them instead of a grep.
 
 Sweep heuristic worth applying: any predicate whose subject is a bare shape (`'"seen"'`, `'"balls"'`) or an interpolated variable that can be empty is suspect — grep the beats for `grep -q` with no id in the pattern, and for `"$var"` patterns whose var is set by a `find` that can return nothing (bl-afa7's `$minted` was the empty-string half of this same class).
+
+---
+
+## Mechanize the heuristic (Alkaloid)
+
+Dowel's sweep heuristic is stated in a form a machine can check, so it should not stay a habit:
+
+- any `grep -q` whose pattern **carries no id**
+- any interpolated variable set by a `find` (or any command) that **can return nothing**
+
+Both are greppable over `scripts/drive/`. Consider landing the sweep as a **check**, not just a one-time cleanup — the repo's own discipline is that policy lives in an enforced rule (`rules/*.yml`, the clippy manifest, `make line-cap`), not in reviewer memory. A shell-side audit step invoked from `make lint` would keep this class from regrowing the moment attention moves on, and this ball's whole finding is that the class is invisible precisely because nothing looks for it.
+
+Two design constraints if it is mechanized:
+
+1. **It must not be defeatable by an inline exception.** Rule 5's reasoning (no `#[allow]` in prod; suppressions live in one reviewable manifest) applies equally here.
+2. **A pattern with no id is not always wrong** — some beats legitimately assert on a shape. The check should demand the assertion name what distinguishes this run, or carry a one-line justification in a single reviewable place. Prefer the first.
+
+If mechanizing turns out to cost more than it saves, say so on the ball and land the sweep alone — but make that a decision with a recorded reason, not an omission.
