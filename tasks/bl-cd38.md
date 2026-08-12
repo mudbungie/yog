@@ -1,7 +1,7 @@
 +++
 title = "consume lernie's mint: delete the local wordlist+draw, draw preview and fire through the crate"
 created = 1785737045
-updated = 1785737045
+updated = 1786513154
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
@@ -22,3 +22,16 @@ The change:
 - Exhaustion still lands the `["yog-step","mint"]` ops row (§4.2) — map the crate's exhausted error into `StartError` as today.
 
 Verify premises against the tree before editing (ball-bodies-drift rule).
+
+---
+
+GATE UNSATISFIED at 2026-08-11 — verified while working bl-6654 (Girder). DO NOT CLAIM YET.
+
+This ball's written gate reads "check crates.io for the release (> 0.0.5)". The crates.io index now lists lernie 0.0.6, so that phrasing reads as satisfied — but it is NOT satisfied in substance. Published 0.0.6 does not carry bl-404d:
+
+- `~/.cargo/registry/src/index.crates.io-*/lernie-0.0.6/src/` has no `mint` module (`ls src/` = archive, bin, cmd, config, e2e, harness_root.rs, install, install.rs, lib.rs, name.rs, prompt, provider, skill, skill.rs, template, test_support.rs, workspace, workspace.rs) and `find` turns up no `.txt` wordlist. There is no `lernie::mint`, no exported `Rng` trait, no `SplitMix64`, no `MintError` to call.
+- bl-404d is written but unreleased: ~/dev/lernie commit 9f74b8b "the mint moves in: every creation path auto-mints a one-word name on omission; the dispatch parameter is taught [bl-404d]", CHANGELOG entry under `[Unreleased]`, no tag contains it, and lernie `main` is 19 commits ahead of `origin/main` (unpushed, so no publish is even in flight).
+
+The real gate is therefore **lernie 0.0.7 published**, and the same release also carries bl-d0b4 (`--cwd`), which is bl-6654's gate. Both balls should take one pin bump to 0.0.7 together rather than racing two bumps of the same line.
+
+Suggested amendment to this body: replace "> 0.0.5" with "a published lernie whose vendored source under ~/.cargo/registry exports `lernie::mint`" — a version-number comparison was the wrong test, since 0.0.6 shipped between the filing and the mechanism.
