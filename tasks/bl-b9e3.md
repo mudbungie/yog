@@ -1,7 +1,8 @@
 +++
 title = "the conversation row's ⚑N: delete the count, move the flag to the right edge"
 created = 1786511500
-updated = 1786511517
+updated = 1786511712
+claimant = "Pennant"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
