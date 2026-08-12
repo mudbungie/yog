@@ -1,7 +1,8 @@
 +++
 title = "the conversation list unfolds: a right-pinned subagent field (direct/total + arrow) expands the descent as indented rows"
 created = 1786511693
-updated = 1786511785
+updated = 1786512495
+claimant = "Fretwork"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
