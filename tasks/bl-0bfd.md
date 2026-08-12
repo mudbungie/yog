@@ -1,7 +1,7 @@
 +++
 title = "subtract the retired roster walk: AppModel::roster_step, Pick::Step and attention::step are dead outside their own tests"
 created = 1786514885
-updated = 1786514885
+updated = 1786515794
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["cleanup"]
@@ -38,3 +38,9 @@ The house principle applies: *minimalism, subtraction in design — code is cont
 ## Sequencing
 
 Do not claim until **bl-fa82 is closed** — its last child bl-89de is still open, and this touches the same surfaces the epic is landing. Verify all cited symbols against HEAD first; ball bodies drift.
+
+---
+
+bl-8905 (Fretwork, 2026-08-11) adds a fourth item of the same kind, already removed there so this ball does not have to: **AppModel::conversation_members**. Retiring the altitude-1 descent tree left it with no production caller — only its own unit test in src/app/tests/view.rs and the S7-T5 story — which is this ball's exact shape ('code kept alive only by its own tests… holds the 100% coverage floor up with tests that prove nothing about the product'). It is deleted in bl-8905's delivery along with its test, and stories_s7_t5.rs is re-pointed onto visible_conversations, which is the surface that survived.
+
+Not claiming this ball, and nothing here changes its scope: AppModel::roster_step, Pick::Step and attention::step are untouched by bl-8905. One caution for whoever takes it — verify at HEAD as this body already instructs, because bl-fa82 and bl-8905 both landed after it was filed and both moved this area. Note nav::convs::members is NOT dead and must not be swept up with it: flight.rs, doing.rs and delete/agent.rs all still fold over it.
