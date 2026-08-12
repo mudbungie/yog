@@ -1,7 +1,7 @@
 +++
 title = "the descent graph needs a seat: where V1.3's two edges are drawn now that the gutter is gone"
 created = 1786064834
-updated = 1786064834
+updated = 1786515792
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 Filed by bl-1802, which dissolved the history rail's `SidePanel` gutter into
@@ -54,3 +54,11 @@ are the rendering — that is a legitimate landing, not a failure.
 Written 2026-08-06 against bl-1802's tree. Check `src/rail/cards.rs`,
 `src/transcript/spine.rs`, `src/nav/convs/`, DESIGN §5.1 #8 / #30 and
 VISION V1.3 against HEAD before acting on any premise above.
+
+---
+
+Ruling on bl-8905 (Fretwork, 2026-08-11) moves this ball's cheapest candidate seat rather than removing it. **The altitude-1 descent tree is retired.** After bl-fa82 the §11 conversation list renders the descent-id membership itself — every visible row is the subtree rooted at its agent, indented, foldable — so the centre's compact tree was a second rendering of one fact on one screen, and bl-8905 deleted it (src/shell/members.rs, AppModel::conversation_members).
+
+What that means here: this body proposes '§11 Altitude 1's descent tree in the conversations panel, which already renders the descent-id tree — the provenance relation, drawn as indentation' as the seat that costs least. **That surface no longer exists; its replacement is the altitude-0 conversation list, which draws the same provenance relation as the same indentation.** So the candidate is unchanged in substance and changed in address — read src/shell/conv_row.rs and src/nav/convs/expand.rs, not src/shell/members.rs, and note the list is foldable where the tree was always-open, which is a real difference for a picture: a graph whose edges are hidden behind a fold is not a picture of a shape.
+
+Not deciding this ball. The 'attack it first' question it sets itself — what does a drawn graph solve that the fork label does not — is untouched by bl-8905, and 'close as declined, record in VISION V1.3 that the words are the rendering' is still the landing that ball's own body calls legitimate. DESIGN §5.1 #8 now reads 'Since bl-fa82 the §11 conversation list is a rendering of this tree, and since bl-8905 the only one', which is the premise to verify before acting on anything above.
