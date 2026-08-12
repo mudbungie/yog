@@ -1,7 +1,8 @@
 +++
 title = "focus lands in the chat composer: on app open and on any agent selection, by pointer or keyboard"
 created = 1786508777
-updated = 1786508777
+updated = 1786509107
+claimant = "Fenwick"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
