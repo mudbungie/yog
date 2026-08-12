@@ -1,7 +1,7 @@
 +++
-title = "beat: drive the unfold — arrow toggles children into the list, per-depth title edge holds, hidden-member focus auto-reveals, hover names the numbers"
+title = "beat: drive the unfold — arrow toggles children into the list, the walk skips the hidden, left pages up, hover names the numbers"
 created = 1786511695
-updated = 1786511787
+updated = 1786512482
 parent = "bl-fa82"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -13,8 +13,10 @@ on = "claim"
 Subtask of the expander epic — the acceptance surface for the paint ball, in
 the bl-6b83 mold: assert through the real paint pipeline
 (src/shell/acceptance/, Screen/press/painted; fixture World::add_child at
-src/shell/acceptance/fixture.rs:95-99 already forks descent children). The
-parent body carries both operator rulings verbatim.
+src/shell/acceptance/fixture.rs:95-99 already forks descent children; the
+name-column geometry beat bl-6b83 landed is src/shell/acceptance/name_column.rs
+— extend it, don't duplicate it). The parent body carries both operator
+rulings verbatim.
 
 Beats:
 1. A collapsed parent row shows the subagent field (both numbers) and none of
@@ -23,8 +25,11 @@ Beats:
    segment (the existing naming.rs beat's ladder), indented, elbow present.
 2. Recursion: expanding a child reveals a grandchild; the collapsed child's
    badge speaks for its hidden subtree.
-3. Alignment: within a depth, title left edges are equal regardless of
-   attention/flight/verdict — extend bl-6b83's assertion to depth > 0.
+3. Alignment: within a depth, title left edges are equal for rows differing
+   only by ATTENTION — the name_column.rs assertion extended to depth > 0.
+   Do NOT assert it across flight/verdict differences: those prefix marks
+   still move the column today and that is bl-8257's open fight, not this
+   ball's.
 4. The walk skips the hidden (the operator's ruling): with a collapsed
    parent selected, ↓ lands on the next SAME-LEVEL row and the expanded set
    is unchanged — the walk never expands. After →, ↓ enters the first child.
