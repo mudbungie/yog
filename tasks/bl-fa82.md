@@ -12,6 +12,10 @@ on = "claim"
 [[blockers]]
 id = "bl-720a"
 on = "close"
+
+[[blockers]]
+id = "bl-27d9"
+on = "close"
 +++
 **Operator ruling, 2026-08-11, verbatim:**
 
