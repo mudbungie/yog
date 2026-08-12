@@ -1,7 +1,8 @@
 +++
 title = "workspace blast radius: providers and every setting live inside the wall — per-workspace brazen config, nothing ambient but the roster"
 created = 1786508776
-updated = 1786508776
+updated = 1786509105
+claimant = "Walling"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
