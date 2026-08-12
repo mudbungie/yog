@@ -1,7 +1,8 @@
 +++
 title = "logskel names the wrong binary: `command -v yog` resolves the operator's installed yog, not the build under drive"
 created = 1786163532
-updated = 1786163532
+updated = 1786512988
+claimant = "Dowel"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
