@@ -1,7 +1,8 @@
 +++
 title = "activity and inbox rows elide the informative tail of a path or agent id and keep the invariant prefix, so every row scans as the same string"
 created = 1786163347
-updated = 1786163347
+updated = 1786515013
+claimant = "Ferrule"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 QUALITY.md §1 criterion **L4** ('Ids are tamed. A machine id (ancestry chain, sha, absolute path) never dominates a row a human scans: floor to the terminal segment or middle-elide, with the full value one gesture away' — precedent bl-63a1, bl-ac3d). Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out.
