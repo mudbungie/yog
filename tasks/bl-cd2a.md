@@ -1,7 +1,8 @@
 +++
 title = "the conversation's model row becomes the selection itself: two live dropdowns, <provider> · <model>, and nothing else on the line"
 created = 1786511991
-updated = 1786511991
+updated = 1786511992
+claimant = "Disavow"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
