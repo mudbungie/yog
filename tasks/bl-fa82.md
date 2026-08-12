@@ -1,13 +1,17 @@
 +++
 title = "the conversation list unfolds: a right-pinned subagent field (direct/total + arrow) expands the descent as indented rows"
 created = 1786511693
-updated = 1786511693
+updated = 1786511694
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
 [[blockers]]
 id = "bl-b9e3"
 on = "claim"
+
+[[blockers]]
+id = "bl-720a"
+on = "close"
 +++
 **Operator ruling, 2026-08-11, verbatim:**
 
