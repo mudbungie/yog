@@ -1,7 +1,8 @@
 +++
 title = "the headless boundary has no wall: /config brazen through yog gesture refuses because no workspace is focused — the gesture must name its workspace"
 created = 1786509736
-updated = 1786510269
+updated = 1786514132
+claimant = "Cinder"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
