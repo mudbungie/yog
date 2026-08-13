@@ -1,0 +1,85 @@
+//! The conversation's **identity** (DESIGN §3.3): the mint that draws the name,
+//! the composer's pre-mint name preview, and the **legacy** stamp parse.
+//!
+//! The `You are <name>.` stamp no longer composes anywhere (bl-6920): the goal reaches the model exactly as the operator edited it, and
+//! identity rides `--name` alone — lernie states the stored name fact in its
+//! assembled context (lernie bl-d55f, released 0.0.4). What remains here is
+//! pure: the mint, the preview wording, and the two inverses of the retired
+//! compose ([`parse_identity_stamp`] / [`strip_identity_stamp`]), kept only to
+//! read pre-0.0.4 roots until lernie's 30-day retention ages them out. Parse
+//! and the shape it reads live together (PRINCIPLES "single source of truth"):
+//! [`IDENTITY_LEAD`] is the one record of what the compose used to write.
+
+use crate::names::{MintError, Rng};
+
+/// The retired stamp's fixed lead — what the pre-bl-6920 compose wrote as the
+/// goal's first line (`You are <name>.`), kept as the one shape
+/// [`parse_identity_stamp`] recognizes. No live path composes it.
+const IDENTITY_LEAD: &str = "You are ";
+
+/// The **legacy** name parse (§3.3, demoted by bl-08f2, orphaned by bl-6920):
+/// reads the `You are <x>.` first line the retired compose used to stamp, as
+/// the fallback rung of [`crate::git_tree::Agent::name_fact`] — the
+/// lernie-stored `name` blob is the name's home, and this covers pre-0.0.4
+/// roots (no blob) until lernie's 30-day retention ages them out, after which
+/// the rung is deleted. New roots never match: nothing composes the shape
+/// anymore. The stamp was always line one, so the read is that line and no
+/// scan. `None` for a foreign or hand-typed root, and for the pre-bl-df65
+/// goals whose `<name>` was a workspace — which parse identically and are the
+/// one accepted cosmetic misread, bounded by the same retention (§3.3).
+pub fn parse_identity_stamp(goal: &str) -> Option<String> {
+    let name = goal
+        .lines()
+        .next()?
+        .strip_prefix(IDENTITY_LEAD)?
+        .strip_suffix('.')?;
+    (!name.is_empty() && !name.contains(char::is_whitespace)).then(|| name.to_owned())
+}
+
+/// The goal's **payload** — the retired stamp's other inverse (§3.3): the very
+/// text the pre-bl-6920 compose prepended to, or the goal verbatim when no
+/// stamp leads it — which is every post-bl-6920 root, every foreign root, and
+/// every hand-typed one: the general path. Line-wise, exactly as the compose
+/// was: the first line leaves with the blank line that separated it. This is
+/// what keeps the display ladder's rungs mutually exclusive for legacy roots —
+/// rung two is drawn from the payload, so a stamped conversation never
+/// previews as its own identity line.
+pub fn strip_identity_stamp(goal: &str) -> String {
+    if parse_identity_stamp(goal).is_none() {
+        return goal.to_owned();
+    }
+    goal.split_once('\n')
+        .map_or_else(String::new, |(_stamp, payload)| {
+            payload.trim_start_matches('\n').to_owned()
+        })
+}
+
+/// Mint the conversation's own name (§3.3, bl-df65): `src/names`'s wordlist mint,
+/// one altitude down. `occupied` is the **per-workspace** set — the names the
+/// target workspace's living agents wear, each agent's
+/// [`crate::git_tree::Agent::name_fact`] (the lernie-stored blob, with this
+/// module's legacy stamp parse as fallback while pre-0.0.4 roots live). No
+/// cross-workspace enumeration: workspaces are isolation walls, so global
+/// uniqueness would buy nothing.
+pub(super) fn mint_conversation(
+    occupied: &[String],
+    rng: &mut dyn Rng,
+) -> Result<String, MintError> {
+    crate::names::mint(rng, &occupied.iter().cloned().collect())
+}
+
+/// The greyed name prediction the composer shows (§3.3, I7): the mint drawn over
+/// the target workspace's `occupied` set and `rng` — the same two inputs the fire
+/// re-derives from, so it predicts the name `--name` will carry. Worded as a
+/// prediction (`will be named <name>`), **not** as a line of the goal: since
+/// bl-6920 nothing is prepended to the payload — lernie states the name to the
+/// model from its stored fact. An exhausted pool yields an empty line (the
+/// prediction simply has no name — fire logs the abort, §8.1), which
+/// `unwrap_or_default` folds with no separate branch. The one entry point for a
+/// surface that has a resolved workspace but no [`StartInputs`](super::StartInputs)
+/// (the ball rung's composer, already past `prepare`).
+pub fn identity_preview(occupied: &[String], rng: &mut dyn Rng) -> String {
+    mint_conversation(occupied, rng)
+        .map(|name| format!("will be named {name}"))
+        .unwrap_or_default()
+}

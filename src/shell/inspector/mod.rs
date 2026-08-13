@@ -1,0 +1,153 @@
+//! The §11 Altitude-2 inspector's interaction glue: the tab strip (digit-key /
+//! click tab select), the per-tab controls (the Transcript Raw toggle, the
+//! Steps selection + drill-in tab), and the build of the focused agent's
+//! view-models handed to the tested [`crate::inspector::render`] dispatch.
+//!
+//! Coverage-excluded like the rest of `shell/*`: every decision it forwards —
+//! the tab select ([`AppModel::select_tab`]), the tab dispatch
+//! ([`crate::inspector::render`]), and each view-model build — is tested in its
+//! owning module. Only the active tab's VM is built — and the two heavy ones
+//! (steps, transcript) are memoized **per snapshot** (§7.2 [`SnapMemo`],
+//! bl-e90a): a frame pays a pointer compare, never a disk re-read, so pulse
+//! repaints and scroll frames cost no I/O. The steps view is built regardless
+//! of tab because the center's auth/wound banners read it every frame (it is
+//! the same memo slot [`super::workspace`] already filled this snapshot), and
+//! it feeds the transcript's crossing rules their commit ids.
+
+use crate::AppModel;
+use crate::cli_outbound::Cli;
+use crate::keymap::InspectorTab;
+use std::path::Path;
+
+mod controls;
+mod fork;
+mod rail;
+mod vms;
+mod work;
+
+/// The focused agent's transcript, memoized per snapshot — re-exported for
+/// the composer's prompt recall (bl-f908), which needs the operator's own
+/// past turns and must not open `messages/` a second time to get them.
+pub(in crate::shell) use vms::build_transcript;
+
+use super::ShellState;
+
+/// Render the inspector tab strip and the selected tab's content for the
+/// focused agent. No agent selected ⇒ a prompt; the digit keys and the tab
+/// strip both target [`AppModel::select_tab`]. Takes the whole [`ShellState`]
+/// (not just its inspector RAM) because the Config tab's foot carries the
+/// §3.6 per-conversation danger row, whose dialog lives beside the other
+/// modals' state.
+pub fn tabs_and_content(
+    ui: &mut egui::Ui,
+    model: &mut AppModel,
+    state: &mut ShellState,
+    ws: &Path,
+    lernie: &Cli,
+    bl: &Cli,
+) {
+    let active = model.inspector_tab();
+    // Wrapped, not laid in one line (§11 rule 8, bl-b531): at the documented
+    // 420x320 minimum the centre is narrower than six tabs in a row, and egui
+    // does not truncate a control that does not fit — it never lays it out, so
+    // Config and Work simply ceased to exist. One home: `super::row::peers`.
+    super::row::peers(ui, |ui| {
+        for tab in InspectorTab::all() {
+            if ui
+                .selectable_label(tab == active, tab.label())
+                .on_hover_text(format!(
+                    "{} Press ({}): the strip is (1) to (6) bare, Ctrl+1 to Ctrl+6 \
+                     from inside the composer.",
+                    tab_hint(tab),
+                    tab.digit(),
+                ))
+                .clicked()
+            {
+                model.select_tab(tab);
+            }
+        }
+    });
+    let Some(agent) = model.focused_agent() else {
+        ui.weak("select an agent to inspect");
+        return;
+    };
+    let focus = vms::Focus {
+        agent_id: agent.agent_id.clone(),
+        tip: agent.tip_oid.clone(),
+        state: agent.state,
+    };
+    let data = vms::tab_data(active, model, state, ws, &focus);
+    controls::per_tab_controls(
+        ui,
+        active,
+        model,
+        &mut state.inspector,
+        &data.steps,
+        lernie,
+        bl,
+    );
+    // The V2 fork composer, seated at the pin and nowhere else (bl-dc0c):
+    // above the tab content because it belongs to the pin banner's fact, not
+    // to whichever tab happens to be open — the pin reaches all four.
+    fork::seat(
+        ui,
+        model,
+        &mut state.inspector,
+        &fork::Seat {
+            ws: ws.to_path_buf(),
+            agent_id: focus.agent_id.clone(),
+            pin: data.pin.clone(),
+        },
+        lernie,
+        bl,
+    );
+    let follow = crate::inspector::render(ui, active, &data, &mut state.inspector.eph);
+    // Following a card is the ordinary selection gesture (§6 acknowledgement),
+    // the same one the descent-tree rows spend — so it lands the composer like
+    // every other selection (§11 focus discipline) — and the pin is the previous
+    // agent's notch index, so it is released with the target it belonged to.
+    if let Some(child) = follow {
+        state.inspector.eph.notch_sel = None;
+        super::focus::conversation(model, state, ws, &child);
+    }
+    // The §3.6 per-conversation danger row (bl-f17a): the delete verb's
+    // visible carrier, at the foot of the settings-shaped tab — mirroring the
+    // workspace verb's config-mode danger row.
+    if active == InspectorTab::Config {
+        super::delete_agent::danger_row(ui, model, state, lernie, ws);
+    }
+}
+
+/// What each Altitude-2 tab shows, in operator terms — exhaustive over the enum,
+/// so a new tab cannot ship without saying what it is (§11 discoverability
+/// invariant, the badge-seat pattern applied to a control). This is the tab
+/// strip's one seat, so the words live here rather than in `keymap`.
+fn tab_hint(tab: InspectorTab) -> &'static str {
+    match tab {
+        InspectorTab::Transcript => {
+            "What was said: one line per delivered message, model reply, thinking \
+             block, tool call and tool result, each folding open to its full text."
+        }
+        InspectorTab::Steps => {
+            "One row per model call — how it ended, when, how many attempts and \
+             tokens — and a drill-in showing the exact bytes of each record."
+        }
+        InspectorTab::Inbox => {
+            "Messages deposited for this agent that it has not picked up yet. Scan \
+             is what delivers them."
+        }
+        InspectorTab::Files => {
+            "This agent's worktree, read-only: its goal, notes, skills and work \
+             products, with a preview of whichever file you pick."
+        }
+        InspectorTab::Config => {
+            "The config commit this conversation is frozen on, and what it says. \
+             Changing it is the ⚙ Config editors, or the model line above."
+        }
+        InspectorTab::Work => {
+            "What this workspace's agents have actually changed in the project they work \
+             in: every ball it holds, the files that ball's branch has touched, and each \
+             file's changes."
+        }
+    }
+}

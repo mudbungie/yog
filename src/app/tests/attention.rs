@@ -1,0 +1,107 @@
+//! The §6 attention facts that ride on a derivation: what a conversation's
+//! classified rest does to the strip, and the acknowledgement the tick holds.
+//!
+//! These sat in `tests/derive.rs` under a "plus" in its module doc — the tell
+//! of a second responsibility. bl-2194 had to route the clean-rest test there
+//! because `tests/focus.rs` was at 294/300; this is the seam that debt was
+//! standing in for.
+
+use super::Harness;
+use super::derive::settle;
+use crate::git_tree::AgentState;
+use crate::watch::Mark;
+
+/// bl-2194: the strip is a **turn queue**. A conversation that ended its turn
+/// *cleanly* — a complete `response.json`, no wound, so §4.4 classifies it
+/// `Quiescent` — stirs the strip exactly as a stopped one does, and the ack
+/// clears it through the same tip watermark. The state badge says which rest it
+/// was; attention only says your turn has come.
+#[test]
+fn a_clean_rest_stirs_the_strip_just_as_a_wounded_one_does() {
+    let h = Harness::new();
+    h.write_response(
+        "c-1",
+        b"{\"type\":\"finish\",\"reason\":\"stop\"}\n{\"type\":\"end\"}\n",
+    );
+    let (_c, mut model) = h.model();
+    assert_eq!(
+        model.tree(&h.ws).map(|t| t.agents[0].state),
+        Some(AgentState::Quiescent),
+        "a complete response with no wound is a clean rest (§4.4)"
+    );
+    assert_eq!(model.strip_total(), 1, "your turn has come (§6 rule 2)");
+    model.focus_agent(&h.ws, "c-1");
+    assert_eq!(model.strip_total(), 0, "acked at the tip it rests on");
+}
+
+/// bl-aa1f: the §6 ack is a **state**, not a gesture. The tick re-stamps the
+/// focused agent's evidence, so a mark landing on the conversation the operator
+/// is reading never stirs the strip — and the same mark landing while they are
+/// looking elsewhere does.
+#[test]
+fn the_tick_holds_the_focused_agents_acknowledgement() {
+    let h = Harness::new();
+    let (clock, mut model) = h.model();
+    model.focus_agent(&h.ws, "c-1");
+    assert_eq!(model.strip_total(), 0, "focusing acked the unseen stop");
+
+    // A notify mark lands while c-1 is still the focused conversation.
+    h.fx.mark_ref("refs/lernie/notify/c-1");
+    model.dirty_handle().mark_all([(h.ws.clone(), Mark::Watch)]);
+    settle(&mut model, &clock);
+    assert!(
+        model
+            .focused_agent()
+            .is_some_and(|a| a.notify_oid.is_some())
+    );
+    assert_eq!(
+        model.strip_total(),
+        0,
+        "evidence that arrived while you were looking is already seen"
+    );
+
+    // The converse: look away (workspace focus acks nothing), and the next mark
+    // to land raises the flag.
+    model.focus_workspace(&h.ws);
+    h.fx.mark_ref("refs/lernie/budget-exhausted/c-1");
+    model.dirty_handle().mark_all([(h.ws.clone(), Mark::Watch)]);
+    settle(&mut model, &clock);
+    assert_eq!(
+        model.strip_total(),
+        1,
+        "evidence that arrived while you weren't looking stirs the strip"
+    );
+}
+
+/// bl-e160: the desktop escalation reads the **same** §6 derivation the strip
+/// counts, through the model's own queue query — so a conversation the strip
+/// counts is a conversation the desktop can name, and the ack that clears one
+/// clears the other. The knob it is gated on is armed by default.
+#[test]
+fn the_desktop_escalation_reads_the_strip_s_own_queue() {
+    let h = Harness::new();
+    h.write_response(
+        "c-1",
+        b"{\"type\":\"finish\",\"reason\":\"stop\"}\n{\"type\":\"end\"}\n",
+    );
+    let (_c, mut model) = h.model();
+    assert!(model.notify_unfocused(), "armed by default (§4.1)");
+
+    let alerts = crate::alert::of_queue(&model.decision_queue(0));
+    assert_eq!(
+        model.strip_total(),
+        alerts.len(),
+        "one alert per thing the strip counts"
+    );
+    let one = alerts
+        .first()
+        .expect("the resting conversation is announced");
+    // The wall's §3.1 leaf, then the conversation's §3.3 display name — the two
+    // words an operator glancing at a desktop popup needs to place it.
+    assert_eq!(one.summary, "ws · hello");
+    assert_eq!(one.body, "came to rest — your turn");
+
+    // The acknowledgement that empties the strip empties the desktop too.
+    model.focus_agent(&h.ws, "c-1");
+    assert!(crate::alert::of_queue(&model.decision_queue(0)).is_empty());
+}

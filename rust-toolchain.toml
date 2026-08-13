@@ -1,0 +1,13 @@
+# Pinned toolchain for every cargo invocation in this repo.
+#
+# Matches the currently-installed stable (rustc --version -> 1.95.0). CI's
+# dtolnay/rust-toolchain@stable resolves to the same pin; a mismatch here
+# means the pinned version is not installed locally and cargo will try to
+# download it. Bump this in lockstep with a deliberate toolchain upgrade.
+#
+# No `targets` key: yog is a native GL desktop app. The musl target is
+# deliberately not part of the toolchain (surfaced skip — no static-linked
+# build path exists or is wanted).
+[toolchain]
+channel = "1.95.0"
+components = ["clippy", "rustfmt"]

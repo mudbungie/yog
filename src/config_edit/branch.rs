@@ -1,0 +1,188 @@
+//! Per-workspace config-branch surface (DESIGN §9.3, §5.1 #17–#18).
+//!
+//! This is the **read-only browse half**. A lernie workspace's policy lives on
+//! `refs/heads/config/<name>` branches in the bare `<workspace>/repo.git`
+//! (ARCH §2.2 — there is no `main`). This module enumerates those branches,
+//! lists and reads any file from a config commit's tree, and derives an
+//! agent's *governing config*: the config commit its branch actually forks off
+//! — "policy frozen at `<short-oid>`" — which is an *ancestor* of the tip and
+//! generally **not** the current head of any config branch.
+//!
+//! Every git call routes through the env-scrubbed `git_tree::cmd` wrapper
+//! (extended with the config plumbing this needs); no git is spawned here.
+//!
+//! The `$EDITOR`-driven **edit half** (Y21, §9.3) appends to this file — the
+//! module map (§12) budgets `branch.rs` at 240 lines for browse + edit + the
+//! edit plan; tests live under `branch/` and do not count against it.
+
+use crate::git_tree::{
+    GitTreeError, REPO_DIR, for_each_ref_config, is_ancestor, ls_tree, merge_base, show_file,
+};
+use std::path::Path;
+
+pub mod edit;
+
+/// One config branch: `refs/heads/config/<name>` (§5.1 #18). `name` is the
+/// user-facing bare name (the `config/` prefix stripped) — exactly what a user
+/// passes to `lernie config <ws> <name>`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConfigBranch {
+    pub name: String,
+    pub tip_oid: String,
+    pub tip_short_oid: String,
+    pub tip_timestamp_unix: i64,
+}
+
+/// An agent's governing config commit (§5.1 #17): the config commit its branch
+/// forks off — an ancestor of the tip, rendered as "policy frozen at
+/// `<short-oid>`" in the inspector Config tab. A pure view-model; the egui
+/// wiring is a thin render over these fields, deferred to the shell.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GoverningConfig {
+    pub oid: String,
+    pub short_oid: String,
+    /// `Some(name)` iff the governing commit is the current tip of
+    /// `config/<name>` — the agent still runs that branch's head. `None` once
+    /// the branch has advanced past the fork point (the common, frozen case).
+    pub branch_name_if_tip_of_one: Option<String>,
+    /// Every path in the governing commit's tree (`souls/**`, `workflow.yaml`,
+    /// `manifest.yaml`, `providers.yaml`, `version`, `descriptions/**`).
+    pub files: Vec<String>,
+}
+
+impl GoverningConfig {
+    /// The inspector Config-tab label (§9.3): `policy frozen at <short-oid>`.
+    /// The one authoritative home for the wording.
+    pub fn frozen_label(&self) -> String {
+        format!("policy frozen at {}", self.short_oid)
+    }
+}
+
+/// First 8 hex of an oid (the repo-wide short-oid convention). `unwrap_or`
+/// evaluates its argument eagerly, so a shorter oid is a value, not a branch.
+fn short(oid: &str) -> String {
+    oid.get(..8).unwrap_or(oid).to_string()
+}
+
+/// Enumerate the workspace's config branches (§5.1 #18), in git
+/// `for-each-ref` order (ref name ascending) so two instances render
+/// identically without sharing ordering state (I9).
+pub fn config_branches(workspace: &Path) -> Result<Vec<ConfigBranch>, GitTreeError> {
+    parse_branches(&for_each_ref_config(&workspace.join(REPO_DIR))?)
+}
+
+fn parse_branches(stdout: &[u8]) -> Result<Vec<ConfigBranch>, GitTreeError> {
+    let text = String::from_utf8_lossy(stdout);
+    let mut out = Vec::new();
+    for line in text.lines() {
+        let mut it = line.splitn(3, ' ');
+        match (it.next(), it.next(), it.next()) {
+            (Some(refname), Some(oid), Some(ts)) => out.push(ConfigBranch {
+                // `for-each-ref refs/heads/config/` guarantees the prefix; the
+                // fallback is unreachable, so `unwrap_or` (eager) adds no arm.
+                name: refname
+                    .strip_prefix("config/")
+                    .unwrap_or(refname)
+                    .to_string(),
+                tip_short_oid: short(oid),
+                tip_oid: oid.to_string(),
+                tip_timestamp_unix: ts
+                    .parse()
+                    .map_err(|_| GitTreeError::LogFormat(line.to_string()))?,
+            }),
+            _ => return Err(GitTreeError::LogFormat(line.to_string())),
+        }
+    }
+    Ok(out)
+}
+
+/// The full file listing of a config commit's tree (`git ls-tree -r`, §5.1
+/// #18). `refspec` is any committish — a `config/<name>` ref or a commit oid.
+pub fn config_tree(workspace: &Path, refspec: &str) -> Result<Vec<String>, GitTreeError> {
+    tree_paths(&workspace.join(REPO_DIR), refspec)
+}
+
+fn tree_paths(repo: &Path, refspec: &str) -> Result<Vec<String>, GitTreeError> {
+    let out = ls_tree(repo, refspec)?;
+    Ok(String::from_utf8_lossy(&out)
+        .lines()
+        .map(str::to_string)
+        .collect())
+}
+
+/// Raw bytes of one file in a config commit's tree (`git show <ref>:<path>`,
+/// §9.3). Rendered as raw text by the inspector — YAML included, no YAML dep.
+pub fn config_file(workspace: &Path, refspec: &str, path: &str) -> Result<Vec<u8>, GitTreeError> {
+    show_file(&workspace.join(REPO_DIR), refspec, path)
+}
+
+/// Derive an agent's **governing config commit** from its branch tip
+/// (`agent_tip`, an oid): the nearest ancestor reachable from any `config/*`
+/// ref (§5.1 #17, ARCH §2.2). A faithful port of
+/// `lernie/src/workspace.rs::{governing_config, nearest}`.
+///
+/// For each config branch, `merge-base(agent_tip, config_tip)` is the shared
+/// ancestor on that lineage — or nothing, when an unrelated orphan config
+/// shares no history (it contributes no candidate and is skipped). The
+/// candidates are folded keeping, of any two, the **descendant** — the one
+/// nearer the agent tip ([`nearest`]).
+///
+/// The fold's tie-break is **order-independent in its result**: `nearest`
+/// returns the descendant whichever order its two arguments arrive in, and two
+/// equal candidates short-circuit. So `for-each-ref` order changes only which
+/// internal arm fires, never the governing commit. Declined **loudly** (never
+/// guessed) when no config lineage reaches the branch (`Governing`), and when
+/// two candidates are incomparable ancestors — both are defective workspaces.
+pub fn governing_config(
+    workspace: &Path,
+    agent_tip: &str,
+) -> Result<GoverningConfig, GitTreeError> {
+    let repo = workspace.join(REPO_DIR);
+    let branches = parse_branches(&for_each_ref_config(&repo)?)?;
+    let mut best: Option<String> = None;
+    for b in &branches {
+        // An unrelated config lineage yields no merge-base — skip it.
+        let Some(base) = merge_base(&repo, agent_tip, &b.tip_oid)? else {
+            continue;
+        };
+        best = Some(match best {
+            None => base,
+            Some(prev) if prev == base => prev,
+            Some(prev) => nearest(&repo, prev, base)?,
+        });
+    }
+    let oid = best.ok_or_else(|| {
+        GitTreeError::Governing(format!(
+            "no config/* ancestor for {agent_tip} — every agent forks off a config commit"
+        ))
+    })?;
+    let branch_name_if_tip_of_one = branches
+        .iter()
+        .find(|b| b.tip_oid == oid)
+        .map(|b| b.name.clone());
+    let files = tree_paths(&repo, &oid)?;
+    Ok(GoverningConfig {
+        short_oid: short(&oid),
+        oid,
+        branch_name_if_tip_of_one,
+        files,
+    })
+}
+
+/// Of two ancestor candidates of one branch tip, keep the descendant — the
+/// one nearer the tip (mirrors lernie `workspace.rs::nearest`). Incomparable
+/// candidates are declined loudly: a defective workspace (§2.2), not a guess.
+fn nearest(repo: &Path, a: String, b: String) -> Result<String, GitTreeError> {
+    if is_ancestor(repo, &a, &b)? {
+        return Ok(b);
+    }
+    if is_ancestor(repo, &b, &a)? {
+        return Ok(a);
+    }
+    Err(GitTreeError::Governing(format!(
+        "ambiguous governing config: {a} and {b} are incomparable ancestors — declined"
+    )))
+}
+
+#[cfg(test)]
+mod tests;

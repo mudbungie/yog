@@ -1,0 +1,38 @@
+#!/bin/sh
+# bl-push-main — balls close.post plugin: deliver main to origin.
+#
+# bl close seals its squash-merge to main itself, outside `git commit`, so the
+# repo's .githooks/post-commit hook never fires and upstream delivery stalls.
+# Wired into close.post, this plugin restores it: once close lands the squash
+# on main, push main to origin.
+#
+# Contract:
+#   * answers the balls plugin protocol handshake;
+#   * ignores stdin (drains a piped payload, never blocks);
+#   * ALWAYS exits 0 — a non-zero exit in close.post triggers plugin rollback,
+#     un-sealing a commit the remote may already hold; a push failure only
+#     warns on stderr;
+#   * acts on THIS project's repo, resolved from the plugin's own on-disk home
+#     (<repo>/scripts/bl-push-main -> <repo>), so it is right regardless of the
+#     dispatch working directory.
+
+# Plugin protocol handshake: declare the ops we serve.
+if [ "$1" = protocol ]; then
+  printf '{"protocol":[1],"ops":["close"]}\n'
+  exit 0
+fi
+
+# Ignore stdin: drain a piped payload, never block on a terminal.
+[ -t 0 ] || cat >/dev/null 2>&1
+
+# The repo is the plugin's own home: <repo>/scripts/bl-push-main -> <repo>.
+self="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+root="$(CDPATH= cd -- "$(dirname -- "$self")/.." && pwd)" || exit 0
+
+# Guard: no 'origin' remote -> nothing to deliver.
+git -C "$root" remote get-url origin >/dev/null 2>&1 || exit 0
+
+if ! git -C "$root" push --quiet origin main; then
+  echo "bl-push-main: push to origin/main failed; deliver manually with 'git push origin main'." >&2
+fi
+exit 0

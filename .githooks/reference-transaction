@@ -1,0 +1,49 @@
+#!/bin/sh
+# yog reference-transaction hook — the trigger for the local install (bl-6ff1).
+#
+# The fact that drives the local install is "refs/heads/main's tip is not what
+# is installed", so the trigger is main MOVING — however it moved. This is the
+# only hook that sees every route: `bl close`'s plumbing ref update, a
+# `git merge` / `git pull` on main, a push received into this repo, and a hand
+# repair (`git reset --hard`, `git revert`). `post-merge` sees only the merge;
+# `post-receive` only the push; the retired `close.post` plugin saw only the
+# VERB, so every other route silently left `~/.local/bin/yog` on an older tip.
+#
+# git runs this once per transaction STATE ($1 = prepared | committed |
+# aborted), feeding `<old-oid> <new-oid> <ref>` lines on stdin. `committed` is
+# the only state at which the move is a fact.
+#
+# Contract:
+#   * ALWAYS exits 0. A reference-transaction hook that fails on `prepared`
+#     ABORTS the ref update — a close that cannot land is far worse than a
+#     stale binary.
+#   * never blocks: all that happens here is a read of a few stdin lines; the
+#     build itself is detached by scripts/install-main.
+#
+# It cannot recurse. install-main builds in an ephemeral
+# `git worktree --detach main`, whose own ref writes DO re-enter this hook —
+# as `HEAD` and `ORIG_HEAD`, never `refs/heads/main` (measured; `worktree
+# remove` and `worktree prune` write no refs at all). The ref-name test below
+# is therefore the loop guard, and install-main's tip-vs-installed compare is
+# the second one behind it.
+
+[ "$1" = committed ] || exit 0
+
+moved=
+while read -r old new ref; do
+    [ "$ref" = refs/heads/main ] || continue
+    [ "$old" = "$new" ] && continue
+    # An all-zero new oid is a deletion: there is nothing to install.
+    case "$new" in *[!0]*) moved=yes ;; esac
+done
+[ -n "$moved" ] || exit 0
+
+# The repo whose ref moved — however this hook was seated, and wherever git ran
+# it from: a linked worktree shares the main repo's hooks, and git hands such a
+# run a GIT_DIR pointing at the WORKTREE, so cwd and $0 are both unreliable
+# here. `--git-common-dir` is the one answer that is right in every case.
+common=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0
+root=$(CDPATH= cd -- "$common/.." 2>/dev/null && pwd) || exit 0
+
+[ -x "$root/scripts/install-main" ] && "$root/scripts/install-main"
+exit 0

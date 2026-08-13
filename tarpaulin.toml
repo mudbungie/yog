@@ -1,0 +1,37 @@
+# Repo-wide tarpaulin defaults: applied by every `cargo tarpaulin` run,
+# including the pre-commit hook.
+#
+# Pinned tarpaulin version: 0.35.2 (same pin as the lernie repo).
+# 0.35.3 was yanked, and 0.35.4+ silently excludes inline `#[cfg(test)] mod
+# tests;` files from the coverable denominator. The 100% floor only means
+# the same thing on every machine if everyone is on the same tarpaulin —
+# upgrade in lockstep (this file + Makefile preflight) or the floor gets
+# quietly weaker on whichever side moves first.
+#
+# - `src/main.rs` is the thin eframe entry point (window bring-up); the
+#   view-model modules behind it are fully unit-tested. Excluding it keeps
+#   the 100% floor meaningful without a contrived windowed test.
+# - `src/shell/*` is the M2 shell's egui interaction glue (§11): the
+#   attention strip, roster, and center panel wire `.clicked()` branches —
+#   unreachable headless — to tested `AppModel`/`nav`/`attention` methods.
+#   Same precedent as main.rs; everything a click *calls* is covered.
+# - `ignore-panics` excludes branches that only fire on programmer-error
+#   panics (e.g. `.expect(...)` on infallible operations).
+#
+# Coverage runs serially (`args = ["--test-threads=1"]`): Y3's
+# `spawn_detached` (§8.1) forks `setsid` children that tarpaulin's
+# `--engine llvm` still follows under ptrace, and its state machine races
+# the parallel teardown of those detached processes ("Failed to find
+# process for pid: … → segfault" — the same failure lernie's tarpaulin
+# pins around). Serial coverage sidesteps the race; the 100% floor is
+# unchanged (coverage is the union of executed lines, order-independent).
+#
+# `cargo test` (i.e. `make test`) itself stays PARALLEL: the ETXTBSY fork
+# race that once also forced serial is fixed at its root in each suite (the
+# Makefile's `test:` target is the one account of how). Only tarpaulin's own
+# ptrace bookkeeping needs the pin.
+[default]
+exclude-files = ["src/main.rs", "src/shell/*"]
+ignore-panics = true
+timeout = "300s"
+args = ["--test-threads=1"]

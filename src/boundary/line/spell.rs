@@ -1,0 +1,167 @@
+//! The line writer (§8.5): a [`Gesture`] back to the line that spells it —
+//! what a seat echoes after a click ("you just typed `/close bl-1f2a`"), what a
+//! teleoperator logs, and, above all, **the compile gate**.
+//!
+//! The match below is exhaustive over [`Gesture`], so a variant added to the
+//! boundary does not build until it can be typed. That is the same law the
+//! codec applies to the envelope, and it is why the third serialization cannot
+//! silently fall behind the other two.
+//!
+//! What a line elides, this writes elided: a message's workspace and agent are
+//! the seat's selection, not the gesture's spelling. So the round trip holds
+//! **modulo context** — `parse(spell(g), ctx_of(g)) == g` — which is exactly
+//! the parity claim the line makes, and the tests read it that way.
+
+use crate::boundary::{Action, Gesture, Query};
+use crate::start::{BallSpec, Payload};
+
+/// Spell one gesture as its line (§8.5). Total over the surface.
+pub fn spell(gesture: &Gesture) -> String {
+    match gesture {
+        Gesture::Act(action) => spell_action(action),
+        Gesture::Ask(query) => spell_query(query),
+    }
+}
+
+fn spell_action(action: &Action) -> String {
+    match action {
+        Action::Message { content, .. } => format!("/message {content}"),
+        Action::Stop { children, .. } => match children {
+            true => "/stop children".to_owned(),
+            false => "/stop".to_owned(),
+        },
+        Action::Scan { .. } => "/scan".to_owned(),
+        Action::Close { id, .. } => format!("/close {id}"),
+        Action::Assign { id, .. } => format!("/assign {id}"),
+        Action::Release { id, .. } => format!("/release {id}"),
+        Action::Move { id, to, .. } => format!("/move {id} {to}"),
+        Action::Create { title, body, .. } => {
+            format!("/create {title}{}", flag("body", body.as_ref()))
+        }
+        Action::Update {
+            id,
+            title,
+            body,
+            note,
+            ..
+        } => format!(
+            "/update {id}{}{}{}",
+            flag("title", title.as_ref()),
+            flag("body", body.as_ref()),
+            flag("note", note.as_ref())
+        ),
+        Action::Prepare { payload, .. } => spell_payload(payload),
+        Action::Prompt { goal, .. } => format!("/prompt {goal}"),
+        Action::DeleteWorkspace { typed, .. } => format!("/delete-workspace {typed}"),
+        Action::DeleteAgent { typed, .. } if typed.is_empty() => "/delete-agent".to_owned(),
+        Action::DeleteAgent { typed, .. } => format!("/delete-agent {typed}"),
+        Action::Monitor(verb) => spell_monitor(verb),
+        Action::Fleet(verb) => spell_fleet(verb),
+        // The conversation is the seat's selection, exactly as `/seen`'s is;
+        // the held id is derived, so the verdict is the whole line.
+        Action::AnswerHold { ruling, .. } => format!("/answer {}", ruling.word()),
+        // Same address, same elision; the direction is the verb.
+        Action::Floor { raised, .. } => match raised {
+            true => "/revoke".to_owned(),
+            false => "/restore".to_owned(),
+        },
+        Action::ApplyConfig { file, text } => {
+            format!("/config {} {text}", super::config::target_words(file))
+        }
+        Action::SetMarks { branch, .. } => format!("/marks {branch}"),
+        Action::PickModel {
+            role,
+            provider,
+            model,
+            ..
+        } => format!("/model {role} {provider} {model}"),
+        Action::Fork { attempt, goal, .. } => super::fork::spell(attempt, goal),
+        Action::Ack => "/ack".to_owned(),
+        // The address is the seat's selection, exactly as `/message`'s is.
+        Action::MarkSeen { .. } => "/seen".to_owned(),
+        Action::ClearTrail => "/clear-trail".to_owned(),
+    }
+}
+
+/// The monitor family's three (VISION §4.9). Each spells as its own verb: the
+/// family is one variant at the boundary, never one word at the keyboard.
+fn spell_monitor(verb: &crate::monitor::Verb) -> String {
+    use crate::monitor::Verb;
+    match verb {
+        Verb::Arm { model, .. } => format!("/arm {model}"),
+        Verb::Disarm { .. } => "/disarm".to_owned(),
+        Verb::Flag { reason, .. } => format!("/flag {reason}"),
+    }
+}
+
+/// The armed loop's two (VISION §4.3). The project and the workspace are the
+/// seat's selection, exactly as they are for every `bl` verb, so the cap is the
+/// whole line.
+fn spell_fleet(verb: &crate::fleet::Verb) -> String {
+    use crate::fleet::Verb;
+    match verb {
+        Verb::Arm { cap, .. } => format!("/{} {cap}", crate::boundary::codec::FLEET_ARM),
+        Verb::Disarm { .. } => format!("/{}", crate::boundary::codec::FLEET_DISARM),
+    }
+}
+
+fn spell_query(query: &Query) -> String {
+    match query {
+        Query::Workspaces => "/workspaces".to_owned(),
+        Query::Conversations { .. } => "/conversations".to_owned(),
+        Query::Balls => "/balls".to_owned(),
+        // The workspace is the seat's, as it is for every other workspace-
+        // scoped line; the file, when one is asked for, is not.
+        Query::WorkDiff { file, .. } => match file {
+            Some(file) => format!("/work-diff {} {}", file.ball, file.path),
+            None => "/work-diff".to_owned(),
+        },
+        Query::Board => "/board".to_owned(),
+        Query::Attention => "/attention".to_owned(),
+        Query::Ops { max } => format!("/ops {max}"),
+        Query::Search { text } => format!("/search {text}"),
+        // Help spells as itself, never as the `--help` that also asks it: one
+        // gesture has one canonical line, and the flag is the *other* way to
+        // reach it (§8.5).
+        Query::Help { verb } => match verb {
+            Some(verb) => format!("/help {verb}"),
+            None => "/help".to_owned(),
+        },
+        // The read half of the config family (§8.5, bl-0164): the same verb
+        // as its write, spelled with nothing after the destination — the
+        // grammar `config::config` reads that shape back as a read.
+        Query::ReadConfig { file } => format!("/config {}", super::config::target_words(file)),
+        Query::Marks { .. } => "/marks".to_owned(),
+        // The workspace rides the seat's own context (`--ws`), exactly as
+        // `/marks` and `/conversations` spell theirs — a line states its
+        // targets through the context flags, never twice.
+        Query::Providers { .. } => "/providers".to_owned(),
+    }
+}
+
+/// The §3.4 rung, said outright — the reader never infers it, so neither does
+/// the writer.
+fn spell_payload(payload: &Payload) -> String {
+    match payload {
+        Payload::Bare => "/prepare".to_owned(),
+        Payload::Path { dir } => format!("/prepare dir {}", dir.display()),
+        Payload::Ball { ball, .. } => match ball {
+            // An existing ball is the seat's selection (its title, body and
+            // §3.5 join are roster facts no line states), so it spells as the
+            // rung alone; a new one is named by the line that mints it.
+            BallSpec::Existing { .. } => "/prepare ball".to_owned(),
+            BallSpec::New { title, body } => format!(
+                "/prepare ball --new {title}{}",
+                flag("body", Some(body).filter(|b| !b.is_empty()))
+            ),
+        },
+    }
+}
+
+/// An optional field as its flag, or nothing at all.
+fn flag(key: &str, value: Option<&String>) -> String {
+    match value {
+        Some(text) => format!(" --{key} {text}"),
+        None => String::new(),
+    }
+}

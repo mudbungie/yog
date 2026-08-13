@@ -1,0 +1,306 @@
+name: Release-plz
+
+# Build-gated, hands-off release. Four jobs:
+#
+#   * release-plz PR (every push to main) — opens/updates ONE "release PR" that
+#     bumps the version in Cargo.toml and stages the CHANGELOG.md entry for it.
+#     It never publishes; it just keeps the next release queued. Merging that PR
+#     is the human control point.
+#   * release (when the CI workflow concludes `success` on main) — releases any
+#     version on main that is not out yet: tags it `v<version>`, cuts a GitHub
+#     Release and publishes it to crates.io. Gated on `workflow_run` of CI, so a
+#     release only ever ships a GREEN build — never an untested commit.
+#   * release-binaries — builds the `yog` binary and attaches its linux-gnu archive to that
+#     Release. It runs in the SAME workflow run and `needs:` the release job,
+#     NOT as a separate `on: release` workflow — a Release created by the
+#     default GITHUB_TOKEN cannot trigger another workflow (GitHub's
+#     anti-recursion rule), so a separate binaries workflow would silently never
+#     fire without a PAT. `workflow_dispatch` with `binaries_tag` backfills an
+#     existing tag — and reaches ONLY this job (see the boundary below).
+#   * prune-release-branches (right after the release PR job) — deletes every
+#     `release-plz-*` branch that has no open PR. release-plz pushes a NEW
+#     timestamped branch each time it refreshes the release PR, and it pushes
+#     that branch BEFORE opening the PR, so superseded and orphaned branches
+#     otherwise pile up one per push to main. The repo's "Automatically delete
+#     head branches" setting only fires on MERGE and never sees them. Running
+#     immediately after the PR job means the current release PR is already
+#     open, which makes "has no open PR" an exact test for "superseded or
+#     orphaned".
+#
+# So the flow is: merge work to main -> CI runs -> the release PR is kept fresh;
+# merge the release PR -> CI runs -> on green the new version is released AND
+# its binaries build and upload.
+#
+# Bumps default to PATCH (0.0.1 -> 0.0.2). See release-plz.toml for the
+# `[minor]` / `[major]` opt-in markers.
+#
+# ---------------------------------------------------------------------------
+# The publishing boundary (bl-5ae6). The publish credential is the crown jewel
+# here: it can push arbitrary code to crates.io under this crate's name. Eight
+# rules hold it in, each one a line you can point at:
+#
+#   1. Only the release job sees CARGO_REGISTRY_TOKEN. The PR job opens a pull
+#      request and publishes nothing, so it is handed no registry authority.
+#   2. The release job declares `environment: publish`, so the token can live as
+#      an ENVIRONMENT secret with reviewers/branch rules attached rather than as
+#      a repo-wide secret every job could request. See "One-time repo setup".
+#   3. Every third-party action is pinned to a full commit SHA, with its tag in
+#      a trailing comment. A tag is mutable — the owner can repoint `v0.5` at
+#      new code between two runs; a commit SHA cannot be repointed.
+#   4. `permissions: {}` at the top means every job starts with NO token scopes
+#      and states its own. A job that only reads gets no write.
+#   5. The release job publishes the EXACT commit CI tested
+#      (`workflow_run.head_sha`), not whatever the branch points at now. Without
+#      this, code B can ship on code A's green build.
+#   6. A manual dispatch can no longer enter the release job at all — publishing
+#      requires a green CI verdict, full stop. Dispatch backfills binaries only.
+#   7. The dispatch input crosses into shell through an `env:` variable, never
+#      by `${{ }}` interpolation into a run block (that substitution happens
+#      before bash parses the line, so a crafted value would be executed as
+#      script, not read as data).
+#   8. Checkout does not persist its credentials into `.git/config` for the
+#      binaries job, which pushes nothing. Where a job DOES push (release-plz's
+#      branch and tag pushes, the prune job's deletes), persistence stays on and
+#      is annotated at the step.
+#
+# GitHub's guidance behind those rules:
+#   https://docs.github.com/en/actions/reference/security/secure-use
+#   https://docs.github.com/en/actions/concepts/security/script-injections
+# ---------------------------------------------------------------------------
+#
+# One-time repo setup:
+#   * Settings -> Actions -> General -> Workflow permissions: enable "Allow
+#     GitHub Actions to create and approve pull requests" — else the release-pr
+#     job 403s ("GitHub Actions is not permitted to create or approve pull
+#     requests").
+#   * An Actions ENVIRONMENT named `publish` (Settings -> Environments) holding
+#     CARGO_REGISTRY_TOKEN — a crates.io API token with publish scope, owned by
+#     the crate owner. REQUIRED for the release job to publish. Restrict its
+#     deployment branches to `main` and add a required reviewer if you want the
+#     publish to pause for a human. A repo-level secret of the same name still
+#     resolves for this job, so the workflow works before the move; moving it is
+#     what makes rule 2 real.
+#   * RELEASE_PLZ_TOKEN — OPTIONAL fine-grained PAT (contents + pull-requests
+#     write), so the release PR's own commits re-trigger CI. The default
+#     GITHUB_TOKEN cannot trigger workflows from its own pushes; the job falls
+#     back to it when RELEASE_PLZ_TOKEN is unset.
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      binaries_tag:
+        description: "Build + upload binaries for this EXISTING tag (e.g. v0.0.1). Backfill only — a dispatch never publishes."
+        required: true
+
+# No ambient scopes. Every job below states the token scopes it needs.
+permissions: {}
+
+jobs:
+  release-plz-pr:
+    name: release-plz PR
+    runs-on: ubuntu-latest
+    # Only a direct push to main maintains the release PR (not the CI
+    # workflow_run). Owner guard: never runs in a fork. Safe against fork-PR
+    # abuse because none of this workflow's triggers are reachable from a fork
+    # PR — a fork PR fires `pull_request` (not requested here), never
+    # `push`-to-main / `workflow_run` / `workflow_dispatch`, all of which need
+    # write access to upstream.
+    if: github.repository_owner == 'mudbungie' && github.event_name == 'push'
+    # Opens/updates a PR and pushes its branch; it never publishes, so it is
+    # handed no registry token (boundary rule 1).
+    permissions:
+      contents: write
+      pull-requests: write
+    # Never run two release-PR updates at once — they would race on the branch.
+    concurrency:
+      group: release-plz-pr-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          # Credentials stay in .git/config on purpose: release-plz pushes the
+          # timestamped release-plz-* branch with plain `git push`, which reads
+          # the auth header checkout leaves behind.
+          persist-credentials: true
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable branch @ 2026-08-05
+        with:
+          # The SHA pin erases the ref name this action normally reads the
+          # toolchain from, so name it. rust-toolchain.toml still pins the
+          # version actually used to build.
+          toolchain: stable
+      - name: Run release-plz
+        uses: release-plz/action@2eb1d8bcb770b4c48ccfaad919734b38b51958c9 # v0.5.131
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || secrets.GITHUB_TOKEN }}
+
+  release-plz-release:
+    name: release-plz release
+    runs-on: ubuntu-latest
+    # Release only on a GREEN build: a CI run that concluded `success` on main.
+    # There is no manual door into this job (boundary rule 6) — a dispatch with
+    # no CI verdict must not be able to publish, and `workflow_run` is the only
+    # trigger that carries the tested SHA rule 5 needs.
+    if: >-
+      github.repository_owner == 'mudbungie' &&
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success'
+    # The one job with publish authority. `environment:` is what lets
+    # CARGO_REGISTRY_TOKEN be an environment secret behind branch/reviewer rules
+    # instead of a repo-wide one (boundary rule 2).
+    environment: publish
+    permissions:
+      contents: write
+    concurrency:
+      group: release-plz-release
+      cancel-in-progress: false
+    # Tell the binaries job whether a release actually happened.
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          # Check out the BRANCH, not a bare SHA: release-plz runs `git rev-parse
+          # @{upstream}` to find the current branch, which fails on a detached
+          # HEAD. The next step then moves that branch back to the exact commit
+          # CI tested, so HEAD stays attached AND the tree is the tested one.
+          ref: ${{ github.event.workflow_run.head_branch }}
+          # release-plz pushes the v<version> tag with plain `git push`.
+          persist-credentials: true
+      - name: Publish only the commit CI proved green
+        # main may have moved between CI going green and this job starting.
+        # Releasing the branch tip would ship code B on code A's verdict, so
+        # rewind to workflow_run.head_sha — the exact commit that passed
+        # (boundary rule 5). The SHA is on this branch's history and fetch-depth
+        # 0 fetched all of it, so this cannot silently pick up something else.
+        env:
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          git reset --hard "$TESTED_SHA"
+          git --no-pager log -1 --format='releasing %H %s'
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable branch @ 2026-08-05
+        with:
+          toolchain: stable
+      - name: Run release-plz
+        id: release
+        uses: release-plz/action@2eb1d8bcb770b4c48ccfaad919734b38b51958c9 # v0.5.131
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  release-binaries:
+    name: yog x86_64-unknown-linux-gnu
+    needs: release-plz-release
+    # Two ways in, and neither one can publish:
+    #   * a release the job above just cut, or
+    #   * a manual backfill for an existing tag.
+    # `!cancelled()` is required for the backfill: a `needs:` job that was
+    # SKIPPED (the release job on a dispatch) skips its dependents unless the
+    # condition calls a status function. The owner guard rides along because a
+    # fork can reach neither trigger.
+    if: >-
+      !cancelled() && github.repository_owner == 'mudbungie' &&
+      (needs.release-plz-release.outputs.releases_created == 'true' ||
+       (github.event_name == 'workflow_dispatch' && github.event.inputs.binaries_tag != ''))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          # This job pushes nothing — it uploads through the API with an
+          # explicit token — so checkout leaves no credential in .git/config
+          # for a build script to find (boundary rule 8).
+          persist-credentials: false
+      - name: Resolve + check out the release tag
+        id: tag
+        shell: bash
+        # The dispatch input arrives as DATA in the environment, never as
+        # `${{ }}` text spliced into this script (boundary rule 7).
+        env:
+          BINARIES_TAG: ${{ github.event.inputs.binaries_tag }}
+        run: |
+          set -euo pipefail
+          tag="${BINARIES_TAG:-}"
+          [ -n "$tag" ] || tag="$(git describe --tags --abbrev=0)"
+          # Must name a real tag: that pins the checkout below to a tag object
+          # rather than a same-named branch or a path, whatever was typed.
+          git rev-parse -q --verify "refs/tags/$tag" >/dev/null
+          printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
+          # Build the tagged (released) code, not whatever main's tip is now.
+          git checkout "refs/tags/$tag"
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable branch @ 2026-08-05
+        with:
+          toolchain: stable
+      # Builds `cargo build --release`, archives the binaries as
+      # yog-x86_64-unknown-linux-gnu.tar.gz and uploads it to the Release
+      # for the resolved tag. Uploading assets with GITHUB_TOKEN is fine — only
+      # *triggering a new workflow* from a token-made event is what GitHub blocks.
+      - name: Build and upload yog
+        uses: taiki-e/upload-rust-binary-action@f0d45ae91ee7b8ee928de7a9d04d893a08bcbec6 # v1.30.2
+        with:
+          bin: yog
+          target: x86_64-unknown-linux-gnu
+          archive: yog-$target
+          ref: refs/tags/${{ steps.tag.outputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  prune-release-branches:
+    name: prune superseded release branches
+    # `needs` with no `if` means: only after the release-PR job actually ran and
+    # succeeded. On the workflow_run/dispatch triggers that job is skipped, so
+    # this one is too — pruning only ever follows a PR refresh.
+    needs: release-plz-pr
+    # release-plz pushes a NEW timestamped `release-plz-*` branch every time it
+    # refreshes the release PR and leaves the previous one behind. Worse, it
+    # pushes the branch BEFORE opening the PR, so if PR creation fails (as it
+    # did across brazen before "Allow GitHub Actions to create and approve pull
+    # requests" was enabled — 24 orphaned branches, zero PRs) the branch is
+    # stranded with no PR to ever close or merge. Unattended, that is one dead
+    # branch per push to main.
+    #
+    # The repo's "Automatically delete head branches" setting only fires on
+    # MERGE, which covers the happy path and nothing else. This job covers the
+    # rest: it runs immediately after the PR job, so the branch backing the
+    # CURRENT release PR is already open, and "has no open PR" is therefore an
+    # exact test for "superseded or orphaned". No allowlist, no age heuristic,
+    # no state to keep — the open-PR set is the single source of truth.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # Deleting a remote branch is a push: the credential has to stay.
+          persist-credentials: true
+      - name: Delete every release-plz-* branch with no open PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          open="$(gh pr list --state open --json headRefName -q '.[].headRefName')"
+          git ls-remote --heads origin 'refs/heads/release-plz-*' |
+            awk '{print $2}' | sed 's#refs/heads/##' |
+            while read -r branch; do
+              if grep -qxF "$branch" <<<"$open"; then
+                echo "keep    $branch (backs an open PR)"
+              else
+                echo "delete  $branch"
+                git push origin --delete "$branch"
+              fi
+            done

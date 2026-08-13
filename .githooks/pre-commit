@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# yog pre-commit hook. Two jobs, split deliberately (bl-1a5b):
+#
+#   1. The COMMIT-CONTEXT guard, which only a hook can do: no direct commits
+#      to mainline (main/master). Squash-merges from bl delivery are
+#      permitted; detected via presence of MERGE_MSG or SQUASH_MSG.
+#   2. The BUILD GATE — delegated whole to scripts/pre-commit, where it is
+#      content-addressable: bl-speculate's verdict cache (balls design
+#      bl-24e7) fingerprints the gate as the content of scripts/pre-commit,
+#      scripts/check-line-lengths.sh, scripts/check-coverage.sh and the
+#      Makefile plus `rustc -V`. The GH Actions speculate workflow and
+#      `bl-speculate run` build dirs run scripts/pre-commit directly — no
+#      commit context there, so nothing but the guard may live here. The
+#      gate's own history (fmt-check/lint/coverage as one make target each —
+#      bl-92e2, bl-35bb, bl-0dff) is documented in scripts/pre-commit.
+#
+# Bypass is intentionally not supported. If something is broken, fix it.
+
+set -euo pipefail
+
+branch="$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)"
+git_dir="$(git rev-parse --git-dir)"
+
+case "$branch" in
+  main|master)
+    if [ ! -f "$git_dir/MERGE_MSG" ] && [ ! -f "$git_dir/SQUASH_MSG" ]; then
+      echo "error: direct commits to '$branch' are not permitted." >&2
+      echo "       use 'bl claim <task>' to work in a worktree, then 'bl close'." >&2
+      exit 1
+    fi
+    ;;
+esac
+
+exec "$(git rev-parse --show-toplevel)/scripts/pre-commit"

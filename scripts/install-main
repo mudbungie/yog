@@ -1,0 +1,97 @@
+#!/bin/sh
+# install-main — local CICD: make the installed `yog` equal to main's tip.
+#
+# Compiles `main`, installs the `yog` binary into $PATH and `make reload`s a
+# running window, so a landed merge takes effect without a manual restart (a
+# no-op if yog wasn't running). This is the LOCAL half of delivery;
+# `scripts/bl-push-main` (a balls `close.post` plugin) is the remote half.
+#
+# It is a CONVERGENCE, not an event handler: it asks "is main's tip what is
+# installed?" and acts only if the answer is no. That is what lets its trigger
+# be the FACT rather than a verb — `.githooks/reference-transaction` runs it
+# whenever `refs/heads/main` moves, by any route (bl-6ff1). It was previously
+# registered as a balls `close.post` plugin, which fired on `bl close` alone
+# and so missed a pull, a received push and a hand repair; that registration is
+# retired, and this script is no longer a plugin (no protocol handshake — a
+# second path to one outcome is exactly the double build we removed).
+# Running it by hand at any time is safe and cheap.
+#
+# Why an ephemeral worktree, not the repo root: a delivery moves main by
+# plumbing and never refreshes the root working tree, so after a landing the
+# root is stale and may hold uncommitted work. The `main` REF is the single
+# source of truth for "what landed", so we build a throwaway
+# `git worktree --detach main` and tear it down. It shares the repo's target/
+# (CARGO_TARGET_DIR) so the release build stays incremental.
+#
+# Contract:
+#   * ALWAYS exits 0 on dispatch. Its caller is a git hook, and a hook that
+#     fails aborts the very ref update it was told about; a build or install
+#     failure lands in the log only.
+#   * IDEMPOTENT and cheap when nothing changed: main's tip is compared against
+#     the commit `make install` stamps beside the binary (`make
+#     print-install-stamp` names the file) BEFORE anything is built, so a ref
+#     write that installs nothing new costs one `rev-parse` and a string
+#     compare, never a release build.
+#   * DETACHES the build (setsid) so whatever moved main returns at once; the
+#     outcome lands in <repo>/target/cicd-install.log.
+#   * SCRUBS the ambient git environment first. git exports GIT_DIR and
+#     GIT_WORK_TREE into a hook run from a linked worktree, and they OUTRANK
+#     `-C <repo>`, so an unscrubbed `git worktree add` here would aim at that
+#     worktree instead of the repo. The list is src/git_env.rs's `INHERITED`,
+#     the crate's one vocabulary for this hazard.
+#   * acts on THIS project's repo, resolved from the script's own on-disk home
+#     (<repo>/scripts/install-main -> <repo>), right regardless of cwd.
+
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_PREFIX \
+  GIT_COMMON_DIR GIT_ALTERNATE_OBJECT_DIRECTORIES
+
+self="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+
+# Internal worker mode: build main's tip and install. Detached by dispatch;
+# runs synchronously when invoked directly (`install-main __build <repo>`),
+# which is how it is tested.
+if [ "$1" = __build ]; then
+  root="$2"
+  git -C "$root" worktree prune 2>/dev/null
+  wt="$(mktemp -d "${TMPDIR:-/tmp}/yog-cicd.XXXXXX")" || exit 1
+  echo "=== $(date '+%F %T') build+install main $(git -C "$root" rev-parse --short main 2>/dev/null) ==="
+  status=1
+  if git -C "$root" worktree add --quiet --detach "$wt" main; then
+    if CARGO_TARGET_DIR="$root/target" make -C "$wt" install; then
+      status=0
+      make -C "$root" reload
+    fi
+    git -C "$root" worktree remove --force "$wt" 2>/dev/null
+  else
+    echo "install-main: 'git worktree add main' failed; nothing built." >&2
+  fi
+  rm -rf "$wt" 2>/dev/null
+  echo "=== exit=$status ==="
+  exit "$status"
+fi
+
+root="$(CDPATH= cd -- "$(dirname -- "$self")/.." && pwd)" || exit 0
+
+# The idempotence gate. `make print-install-stamp` is the ONE definition of
+# where "the commit the installed binary was built from" is recorded — the
+# Makefile owns both the install and the stamp, so there is no second copy of
+# the path here.
+want="$(git -C "$root" rev-parse --verify --quiet refs/heads/main)" || exit 0
+stamp="$(make -C "$root" -s print-install-stamp 2>/dev/null)"
+if [ -n "$stamp" ] && [ "$want" = "$(cat "$stamp" 2>/dev/null)" ]; then
+  exit 0
+fi
+
+mkdir -p "$root/target" 2>/dev/null || exit 0
+log="$root/target/cicd-install.log"
+
+# setsid reparents the build into a new session so it survives its caller; nohup
+# is the fallback where setsid is absent.
+if command -v setsid >/dev/null 2>&1; then
+  setsid "$self" __build "$root" </dev/null >>"$log" 2>&1 &
+else
+  nohup "$self" __build "$root" </dev/null >>"$log" 2>&1 &
+fi
+
+echo "install-main: compiling + installing main in background -> $log" >&2
+exit 0

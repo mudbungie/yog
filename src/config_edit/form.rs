@@ -1,0 +1,166 @@
+//! The typed config pane's view-model (DESIGN §9.5) — **controls over facts**,
+//! not an editor over a file.
+//!
+//! The §9.1/§9.2 surfaces bound a whole file's text to a `TextEdit`, so every
+//! setting was edited blind and judged afterwards, at Apply. Here each setting a
+//! file declares is a [`Row`] carrying the [`Control`] it is edited through, the
+//! value the file currently spells, and — for a provider reference — the same
+//! judgement the §9.2 Apply gate and the §9.4 pick gate make
+//! ([`is_unknown_row`]). Validation happens at input, not after it.
+//!
+//! **The file stays the single fact.** A control does not write to disk and
+//! holds no copy of anything: [`write`] rewrites the *draft text* through the
+//! same anchored line edit §9.4's picker uses, and that draft Applies through
+//! the unchanged §9 pipeline (stage → gate → hash-guard → atomic rename). There
+//! is no second store to drift, and no second authority on the file's shape.
+//!
+//! **A new setting is a row, not a rebuild.** Which settings exist is
+//! [`schema`]'s table; this file is only how one is read and written. A file
+//! with no schema has none of its settings typed and keeps the raw editor —
+//! the general path with empty input, not a branch.
+
+use crate::model_pick::grammar::{
+    GrammarError, entry_field, entry_names, flow_members, flow_value, is_unknown_row, set_field,
+};
+
+mod schema;
+
+pub use schema::{
+    CADENCE_SCHEMA, Control, FieldSpec, MODELS_SCHEMA, ROLES_SCHEMA, Schema, schema_for,
+};
+
+/// One rendered setting: what it edits, what the file currently spells, and why
+/// that value is not usable.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Row {
+    pub entry: String,
+    pub field: &'static str,
+    pub control: Control,
+    pub help: &'static str,
+    /// The value as its control shows it — a flow sequence as its members.
+    pub value: String,
+    /// Why this value cannot be used as it stands, or `None`.
+    pub fault: Option<String>,
+}
+
+/// One block entry's settings: a model id's, or a role's.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Group {
+    pub entry: String,
+    pub rows: Vec<Row>,
+}
+
+/// Read a file's text as typed settings (§9.5). A field the entry does not
+/// declare yields no row: the pane shows the settings that exist, and lernie's
+/// own loader stays the authority on a half-written entry.
+///
+/// `provider_rows` is brazen's effective table; an empty one is no answer and
+/// faults nothing ([`is_unknown_row`]).
+pub fn read(schema: &Schema, text: &str, provider_rows: &[String]) -> Vec<Group> {
+    entry_names(text, schema.block)
+        .into_iter()
+        .map(|entry| {
+            let rows = schema
+                .fields
+                .iter()
+                .filter_map(|spec| row(schema, text, &entry, spec, provider_rows))
+                .collect();
+            Group { entry, rows }
+        })
+        .collect()
+}
+
+fn row(
+    schema: &Schema,
+    text: &str,
+    entry: &str,
+    spec: &FieldSpec,
+    provider_rows: &[String],
+) -> Option<Row> {
+    let raw = entry_field(text, schema.block, entry, spec.name)?;
+    let (value, fault) = present(spec.control, &raw, provider_rows);
+    Some(Row {
+        entry: entry.to_owned(),
+        field: spec.name,
+        control: spec.control,
+        help: spec.help,
+        value,
+        fault,
+    })
+}
+
+/// The stored value as its control shows it, plus why it is not usable.
+fn present(control: Control, raw: &str, provider_rows: &[String]) -> (String, Option<String>) {
+    match control {
+        Control::Provider => (
+            raw.to_owned(),
+            is_unknown_row(raw, provider_rows).then(|| {
+                format!(
+                    "brazen's table has no provider row `{raw}` — every dispatch \
+                     through it dies with `unknown provider`; pick a live row, or \
+                     add the row in the brazen config editor"
+                )
+            }),
+        ),
+        Control::List => match flow_members(raw) {
+            Some(members) => (members.join(", "), None),
+            None => (
+                raw.to_owned(),
+                Some(format!(
+                    "not the inline `[a, b]` form yog edits — fix `{raw}` in the \
+                     raw text below"
+                )),
+            ),
+        },
+        Control::Number { min, max } => (
+            raw.to_owned(),
+            match raw.parse::<u64>() {
+                Ok(n) if (min..=max).contains(&n) => None,
+                _ => Some(format!("expected a whole number from {min} to {max}")),
+            },
+        ),
+        Control::Text => (raw.to_owned(), None),
+    }
+}
+
+/// Write one control's value back into the draft text (§9.5) — the same
+/// anchored line edit the picker writes through, so an off-grammar file
+/// declines here exactly as it declines there. The caller Applies the returned
+/// text through the unchanged §9 pipeline; nothing here touches disk.
+pub fn write(schema: &Schema, text: &str, row: &Row, value: &str) -> Result<String, GrammarError> {
+    set_field(
+        schema.file,
+        text,
+        schema.block,
+        &row.entry,
+        row.field,
+        &normalize(row.control, value),
+    )
+}
+
+/// The value as the file spells it: a bounded number clamped into range, a list
+/// re-emitted as lernie's flow sequence, anything else trimmed. A number that
+/// does not parse falls to `min` — the control cannot produce one, and a
+/// keystroke mid-edit must never write a line the grammar cannot read back.
+fn normalize(control: Control, value: &str) -> String {
+    match control {
+        Control::Number { min, max } => value
+            .trim()
+            .parse::<u64>()
+            .unwrap_or(min)
+            .clamp(min, max)
+            .to_string(),
+        Control::List => flow_value(
+            &value
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(str::to_owned)
+                .collect::<Vec<String>>(),
+        ),
+        Control::Provider | Control::Text => value.trim().to_owned(),
+    }
+}
+
+#[cfg(test)]
+mod tests;

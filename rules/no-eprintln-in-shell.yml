@@ -1,0 +1,28 @@
+# INV-2 (STORIES.md), mechanized: `src/shell/` is the egui interaction glue —
+# a GUI process with no terminal, coverage-excluded (tarpaulin.toml). An
+# `eprintln!` there writes an error to a stderr nobody reads and drops it (the
+# proven wound: a failing seed step printed to stderr and the composer silently
+# never opened). Every shell error path must instead leave the durable
+# `ops.jsonl` line (§4.2) and re-derive the surface's ichor-red failure banner
+# from it (`AppModel::last_failure`, §7.3). So an `eprintln!` anywhere under
+# `src/shell/` is an error; the mechanized INV-2 count is zero.
+#
+# Scoped with `files` to the shell tree only — `eprintln!` is legitimate in the
+# CLI entry paths (`main.rs`, `config_edit/apply.rs`, the `yog exec`/`--editor-
+# apply` subcommands that DO own a terminal). The rules-audit scans `src`
+# (`ast-grep scan src`), so `files` matches the scanned `src/shell/**` paths;
+# `rules/fixtures/shell/eprintln.rs` proves the rule still bites.
+#
+# Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser:
+# `eprintln!(…)` is a `macro_invocation` whose `macro` field is an `identifier`.
+id: no-eprintln-in-shell
+language: rust
+severity: error
+message: "no eprintln! in src/shell/ — the GUI has no terminal; route errors into ops.jsonl + the surface failure view-model (INV-2; see rules/no-eprintln-in-shell.yml)"
+files:
+  - "**/shell/**"
+rule:
+  kind: macro_invocation
+  has:
+    field: macro
+    regex: "^eprintln$"

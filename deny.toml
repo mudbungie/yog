@@ -1,0 +1,96 @@
+# cargo-deny supply-chain policy for yog.
+#
+# Verified against cargo-deny 0.20.2 (pin CI to this exact version). The
+# allow-list below is empirically derived from `cargo deny list` over the
+# committed Cargo.lock — every license that actually appears in the tree,
+# nothing speculative. Re-run `cargo deny check` after any dependency change
+# and fix drift here by config, never by patching dependencies.
+
+[advisories]
+# Reject crates whose published version has been yanked from the registry.
+yanked = "deny"
+# Acknowledged advisories that cannot be resolved by config alone and whose
+# fix would require bumping the eframe 0.29 GUI stack (a dependency change
+# this repo forbids). Transitive and unreachable in yog's threat model.
+# Revisit when eframe is next upgraded. An entry that stops matching any crate
+# makes `cargo deny check` warn `advisory-not-detected` on every gate run —
+# drop it then, so this list stays exactly as long as the tree justifies.
+# Dropped when they stopped matching: RUSTSEC-2026-0194 / -0195 (quick-xml
+# < 0.41 XML DoS), reached only via wayland-scanner; wayland-scanner 0.31.11
+# moved to quick-xml 0.41.0, which is out of the advisories' range.
+ignore = [
+    # ttf-parser unmaintained. Pulled by egui's font rasterizer
+    # (ab_glyph -> owned_ttf_parser). The advisory itself states "No safe
+    # upgrade is available"; it is an unmaintained notice, not a vuln.
+    "RUSTSEC-2026-0192",
+]
+
+[licenses]
+# Exhaustive allow-list for the current dependency graph. The slash-form
+# "MIT OR Apache-2.0" style expressions are satisfied as long as at least
+# one arm is allowed; the AND-joined expressions (see epaint_default_fonts)
+# require every arm. LGPL-2.1-or-later appears only inside r-efi's
+# "MIT OR Apache-2.0 OR LGPL-2.1-or-later" OR-expression, so MIT/Apache-2.0
+# discharge it and no LGPL allow is needed.
+#
+# The embedded balls crate (§16.7 W8) added NO new license value: `balls`
+# itself is MIT, and its transitive additions — toml, toml_edit,
+# toml_datetime, toml_write, serde_spanned, winnow 0.7, getrandom 0.4 — are
+# each "MIT OR Apache-2.0", both arms already allowed below. The only new
+# finding is an informational duplicate (winnow 0.7 under balls' toml stack vs
+# winnow 1.0 under the eframe/winit stack), which `multiple-versions = "warn"`
+# already admits.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "Unicode-3.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "0BSD",
+    "BSL-1.0",
+    "CC0-1.0",
+    "Unlicense",
+    "OFL-1.1",
+    # webpki-roots: the Mozilla CA root store as DATA, which is why it carries a
+    # data licence rather than a code one. Entered the graph with brazen's
+    # rustls transport (§16.7 W10) — it IS the trust anchor set that makes the
+    # embedded adapter's TLS work with no OS/corporate store.
+    "CDLA-Permissive-2.0",
+]
+
+# epaint_default_fonts is "(MIT OR Apache-2.0) AND OFL-1.1 AND
+# LicenseRef-UFL-1.0". OFL-1.1 is allowed globally above; the Ubuntu Font
+# License is non-SPDX (LicenseRef), so it cannot go in `allow` and is
+# granted here as a per-crate exception scoped to exactly that crate.
+exceptions = [
+    { crate = "epaint_default_fonts", allow = ["LicenseRef-UFL-1.0"] },
+]
+
+[bans]
+# Duplicate versions are informational (the transitive graph legitimately
+# carries several); a bare "*" version requirement is a hard error.
+multiple-versions = "warn"
+wildcards = "deny"
+# TLS stack ban, rustls-only. **Amended by §16.7 W10 (batteries included):**
+# yog is no longer network-free — it embeds brazen, the LLM network adapter,
+# so `ureq`/`rustls`/`ring`/`webpki-roots` are now load-bearing and the old
+# "no TLS surface at all" adaptation is retired. What survives is the house
+# standard's actual rule: rustls ONLY. OpenSSL (`openssl-sys`) and the system
+# TLS bridge (`native-tls`) stay banned — a C toolchain dependency and a
+# non-portable one, either of which would break the single-binary
+# musl/macOS/Windows story rustls preserves.
+deny = [
+    { crate = "openssl-sys" },
+    { crate = "native-tls" },
+]
+
+[sources]
+# Every crate must come from a known registry (crates.io) — no unvetted
+# registries and no ad-hoc git sources. There is no `allow-git` list: the
+# embedded substrate crates (DESIGN §16.7 — W8 balls, W10 brazen, W11 lernie)
+# are exact registry pins (`=x.y.z`) since bl-89a4, so yog's whole graph comes
+# from crates.io and `cargo publish` is unblocked. Nothing goes back on this
+# list; a git dep is not the shape any more.

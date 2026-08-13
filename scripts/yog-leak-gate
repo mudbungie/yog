@@ -1,0 +1,100 @@
+#!/bin/sh
+# yog-leak-gate — balls plugin: run yog's leak rules over the TASK STORE, and
+# abort the op that would publish a finding (bl-1043).
+#
+# WHY THE STORE NEEDS ITS OWN GATE. `bl` keeps this project's balls in a
+# SEPARATE git repo (`<state>/balls/clones/<encoded-project>/tasks`, branch
+# `balls/tasks`) that it pushes to the SAME remote as the source. So the ball
+# bodies publish beside the crate, and yog's `.githooks/pre-commit` has never
+# seen a byte of them: it gates yog's index, and the store is not in it. Ball
+# bodies are unguarded prose, and prose is what leaks — other people's names,
+# pasted transcript, live machine state, provider auth state, session ids.
+#
+# WHY THIS PHASE. A `pre` plugin runs BEFORE `bl` writes the task file, so it
+# would scan the previous state and wave through the very body being added. At
+# `post` the store commit is sealed but nothing has left the box: `bl-tracker`
+# is the only plugin that talks to a remote and it runs LATER in the same list,
+# and a non-zero exit here aborts the op and rolls the prior plugins back in
+# reverse — un-sealing the commit before it can be pushed. That is the ONE
+# window between "the ball is written" and "the ball is published", which is
+# why the gate hangs here rather than in a hook inside the store clone (a
+# clone is disposable state `bl prime` re-founds — a gate there is absent on
+# every other checkout and silently absent after the next re-clone).
+#
+# WHAT IT CANNOT DO. It does not stop a determined author: the same agent can
+# `bl conf remove <op>.post yog-leak-gate`, or commit and push in the store
+# clone by hand. Nothing local can stop that, exactly as `--no-verify` defeats
+# the source hook. This gate is for the accident, which is the whole of the
+# observed problem; the check the author cannot switch off is
+# `.github/workflows/store-scan.yml`, and it runs after the push, so it detects
+# rather than prevents. Both halves read one table: `scripts/leak-rules.sh`.
+#
+# Contract (balls plugin protocol §6/§7):
+#   argv    `protocol` for the handshake, else `<op> <phase>`
+#   stdin   the §7 payload; `binding.store` names the store checkout
+#   stdout  forwarded verbatim to the user — kept empty, findings go to stderr
+#   exit    0 = ok, non-zero = abort the op + roll prior plugins back
+#
+# Wiring is one act per checkout, and it is NOT this repo's to perform — see
+# AGENTS.md, "The task store gate".
+
+# Handshake: the ops this plugin serves are exactly the ops `bl-tracker`
+# publishes on. A gate belongs immediately before the publisher, everywhere the
+# publisher runs.
+if [ "${1-}" = protocol ]; then
+  printf '{"protocol":[1],"ops":["create","update","claim","unclaim","close","drop"]}\n'
+  exit 0
+fi
+
+op="${1-op}"
+phase="${2-}"
+
+# Drain stdin whether or not we need it: never block on a terminal, never leave
+# a piped payload unread.
+payload=''
+[ -t 0 ] || payload="$(cat)"
+
+# Only `post` can see what the op wrote. Every other phase abstains.
+[ "$phase" = post ] || exit 0
+
+# `git` exports GIT_DIR/GIT_INDEX_FILE into its children and they OUTRANK
+# `cd`, so an inherited one would silently re-aim the scan at another
+# repository — the same hazard AGENTS.md pins for every yog spawn.
+unset $(git rev-parse --local-env-vars) 2>/dev/null || true
+
+# The store checkout, off the §7 payload. Fail CLOSED: a payload this plugin
+# cannot read is not a clean store, and a gate that shrugs is not a gate. The
+# message names its own removal, so a wire change can never wedge a box.
+store="$(printf '%s' "$payload" | tr -d '\n' |
+  sed -n 's/.*"store"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+if [ -z "$store" ] || [ ! -d "$store" ]; then
+  echo "yog-leak-gate: the $op payload named no readable store checkout, so the" >&2
+  echo "  task store went unscanned and this op is refused. If the plugin wire" >&2
+  echo "  changed, unwire it (bl conf remove $op.$phase yog-leak-gate) and file it." >&2
+  exit 1
+fi
+
+# The scanner is this plugin's neighbour in the yog checkout, reached through
+# the plugin's own on-disk home so the answer is right whatever `bl` set as the
+# working directory (the binary beside `bl` is a symlink to this file).
+self="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+scan="$(dirname "$self")/leak-scan.sh"
+if [ ! -x "$scan" ]; then
+  echo "yog-leak-gate: no leak scanner at $scan — refusing the $op rather than" >&2
+  echo "  passing an unscanned task store." >&2
+  exit 1
+fi
+
+cd "$store" || exit 1
+# Findings and the clean line both go to stderr: stdout is the user-facing
+# channel and this plugin has nothing to say there.
+if "$scan" >&2; then
+  exit 0
+fi
+
+echo "yog-leak-gate: the $op is REFUSED and the store commit rolled back — the" >&2
+echo "  ball body above would have published that material to the task ref." >&2
+echo "  Rewrite the text (cite the shape, not the instance: /home/u, not a real" >&2
+echo "  account path) and run the same command again. AGENTS.md, 'What may" >&2
+echo "  never enter a ball body', is the full list." >&2
+exit 1

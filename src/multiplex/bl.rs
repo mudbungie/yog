@@ -1,0 +1,125 @@
+//! The `bl` arm — **filled by W8**: balls' own thin bin, verbatim. The mutating
+//! verbs keep their subprocess (balls' change-worktree + ff-only-seal CAS and
+//! its plugin chain are process-shaped, §16.7), but the process on the other
+//! side is yog. Typed store *reads* never come here — they are in-process
+//! ([`crate::projects::runner::BlStore`]).
+//!
+//! **W9 adds the identity an agent tool needs** ([`crate::world::tools`] seeds
+//! the shim that reaches it): [`default_actor`] prefers `$YOG_NAME` over
+//! `$USER`, so a verb the caller left unstamped claims under the workspace
+//! name — §3.3's `--as` stamp, applied at the one place balls reads the
+//! default rather than by rewriting argv. An explicit `--as` still wins, and
+//! verbs with no `--as` are untouched. No argv parsing, no per-verb flag table.
+//!
+//! **The full verb surface runs (bl-2930; the W9 refusal is deleted).** balls
+//! binds its sibling plugin binaries (`bl-delivery`, `bl-tracker`) from
+//! `Edge::exe_dir` — so the arm converges the world's tool shims and names
+//! `world/tools/bl` as the running executable ([`targets`]): `exe_dir` is the
+//! tools dir, the seed's sibling rule (`exe_dir/<name>`) finds the plugin
+//! shims there, and a `prime` founds a checkout whose plugin chain re-enters
+//! yog ([`super::bl_delivery`]/[`super::bl_tracker`]) — the same
+//! converge-on-the-way-in the lernie arm does for its re-entry targets (W11).
+
+use balls::edge::Edge;
+use std::env;
+use std::io::IsTerminal;
+use std::io::Write as _;
+use std::path::PathBuf;
+
+use crate::world::tools;
+
+use super::landing;
+
+/// The workspace-identity env var yog stamps on every workspace-scoped
+/// spawn (§8, §3.3); it rides down the whole chain (detached driver → tool
+/// subprocess → the agent's bash → this shim), which is what makes it the
+/// right default actor.
+const YOG_NAME: &str = "YOG_NAME";
+
+/// `yog bl <argv…>` → `balls::run`. Reproduces `bl`'s `main` exactly: the
+/// host environment is read ONCE here, at the process boundary, into an
+/// [`Edge`] (balls' own rule — the library does no env reads), and the exit
+/// code rides back to [`super::dispatch`]. Because the whole env is read
+/// live, the nested world a spawn stands on (`XDG_STATE_HOME`, §16.2) lands
+/// on exactly the clones/worktrees yog reads. The world's tool shims are
+/// converged on the way in (one read, no write, in the steady state) so a
+/// `prime` — however reached — binds real sibling paths.
+pub(super) fn run(args: &[String]) -> i32 {
+    let bl_exe = match targets(args) {
+        Ok(p) => p,
+        Err(e) => {
+            let _ = writeln!(std::io::stderr(), "yog bl: seed world tool shims: {e}");
+            return 1;
+        }
+    };
+    let edge = edge(bl_exe);
+    if !super::help::is_discovery(args) {
+        let world = crate::world::layout(&crate::xdg::Env::from_env()).root;
+        landing::report(landing::converge(&edge, &world));
+    }
+    balls::run(&edge, args)
+}
+
+/// Converge the world's tool shims and return the world's `bl` — the path
+/// handed to balls as the running executable, so `Edge::exe_dir` is the
+/// tools dir where the `bl-delivery`/`bl-tracker` sibling shims live
+/// (bl-2930; the W11 lernie-arm mechanism). The tools dir derives from the
+/// ambient anchor (`$XDG_DATA_HOME/yog/world/tools`, §16.2 — never a world
+/// override, so every process in the chain resolves the same dir).
+///
+/// **A discovery probe converges nothing** (bl-52ed): `yog bl --help` reads
+/// balls' interface, not the world, so it must not materialize six shims under
+/// a fresh world root — nor fail outright before help on a read-only one. The
+/// exe is still the world's `bl`; for a probe it is only *computed*, and balls
+/// answers from argv before it resolves anything the path is used for.
+fn targets(args: &[String]) -> std::io::Result<PathBuf> {
+    let dir = crate::world::layout(&crate::xdg::Env::from_env()).tools;
+    if !super::help::is_discovery(args) {
+        tools::ensure_tools(&dir)?;
+    }
+    Ok(dir.join(tools::BL))
+}
+
+/// The default `--as` identity for an embedded `bl` op (§16.7 W9, §3.3):
+/// `$YOG_NAME` when the harness stamped one, else `$USER` (balls' own
+/// default), else balls' `"unknown"`. Empty reads as absent, the env
+/// convention the rest of yog follows. Pure over the two raw values so every
+/// branch is testable without mutating the process env.
+pub(super) fn default_actor(yog_name: Option<String>, user: Option<String>) -> Option<String> {
+    yog_name.filter(|n| !n.is_empty()).or(user)
+}
+
+/// The host inputs for one embedded `bl` invocation, resolved verbatim as
+/// balls' `bl` binary resolves them — except three folds, each at the one
+/// place balls reads the value rather than by rewriting argv: the default
+/// actor ([`default_actor`]'s `$YOG_NAME`-first fold); the executable, which
+/// is the world's `bl` shim ([`targets`]) rather than `current_exe()`, so
+/// the sibling-binding seam points at the world tools dir; and **balls' two
+/// home directories, which come from the §16.3 space
+/// ([`marks::space`](crate::world::marks::space)) rather than from
+/// `$XDG_CONFIG_HOME`/`$XDG_STATE_HOME`**.
+///
+/// That third fold is what makes a per-agent branch possible at all, and it is
+/// balls' own seam: balls' library does no env reads (its bl-bfa8 rule), so the
+/// host supplies the layout — the same exit §16.2 takes for brazen's
+/// credential/cache seams. Absent `YOG_MARKS` it resolves the world's space, so
+/// nothing about a project-bound agent, yog's own verbs, or the board's reads
+/// changes — except that balls' *config* home stops being the operator's
+/// ambient `~/.config/balls` and nests with the rest of the world (§16.3's
+/// module doc for what that leak cost).
+fn edge(bl_exe: PathBuf) -> Edge {
+    let space = crate::world::marks::space(&crate::xdg::Env::from_env());
+    Edge::resolve(
+        env::var_os("HOME").map(PathBuf::from).unwrap_or_default(),
+        Some(space.config.to_string_lossy().into_owned()),
+        Some(space.state.to_string_lossy().into_owned()),
+        env::current_dir().unwrap_or_default(),
+        default_actor(env::var(YOG_NAME).ok(), env::var("USER").ok()),
+        env::var("BALLS_PLUGIN_DEPTH").ok(),
+        Some(bl_exe),
+        env::var_os("PATH"),
+        env::var("NO_COLOR").ok(),
+        std::io::stdout().is_terminal(),
+        env::var("BALLS_CLOCK").ok(),
+    )
+}

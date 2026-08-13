@@ -1,0 +1,30 @@
+# Every child process is built by `crate::git_env::command` (or its `git`
+# spelling), never by a bare `Command::new`. `git` exports GIT_DIR /
+# GIT_INDEX_FILE and friends into every process it starts, and those OUTRANK
+# `-C <repo>` and `current_dir` — so a child yog spawns while such a variable is
+# set forks its OWN git against the hook's repo. bl-0dff closed that for yog's
+# direct git forks; bl-916a closed it for `bl`/`lernie`/`$EDITOR`/the fake
+# substrate scripts by moving the scrub to the spawn boundary, where one
+# `env_remove` clears the whole descendant process tree.
+#
+# A spawn site that "remembers" to scrub is the defect this rule exists to
+# prevent — nobody sees the omission until a hook runs the suite and it commits
+# onto the branch being committed. Need a new child? Call
+# `crate::git_env::command(<program>)`; there is deliberately no unscrubbed
+# alternative.
+#
+# Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser: a call
+# `Command::new(x)` / `std::process::Command::new(x)` is a `call_expression`
+# whose `function` field is a `scoped_identifier` whose text ends in
+# `Command::new` — so the regex catches every path spelling at once.
+id: no-bare-command
+language: rust
+severity: error
+message: "spawn children through crate::git_env::command (see rules/no-bare-command.yml)"
+ignores:
+  - "**/git_env.rs"
+rule:
+  kind: call_expression
+  has:
+    field: function
+    regex: 'Command::new$'

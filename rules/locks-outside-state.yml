@@ -1,0 +1,50 @@
+# Bootstrap rule 7: `Mutex`/`RwLock` live only in the crate's lock chokepoint,
+# `src/state.rs` (see its module doc). Every other shared-mutable lock in the
+# tree is an error — reach for the chokepoint so the whole-crate lock inventory
+# stays auditable in one file.
+#
+# Carve-outs (`ignores`):
+#   - Test scaffolding: the fork/env serialization locks (`SPAWN_LOCK`,
+#     `ENV_LOCK`) and test-double interior mutability are not app state.
+#   - `src/git_tree/probe_cache.rs`: the macOS 2 s TTL cache's `Mutex` is
+#     single-thread interior mutability local to the probe stack (uncontended,
+#     never shared across threads), not the cross-thread shared state `state.rs`
+#     audits. Folding this generic, monomorphized decorator into `state.rs`
+#     breaks llvm-cov's per-line coverage on its `impl` headers (the phantom-
+#     region hazard `lib.rs` documents), making the chokepoint's 100% floor
+#     fragile to the very growth the rule invites — so the cache stays local,
+#     with its lock declared here as the one sanctioned exception.
+#   - `src/fs_watcher/hub.rs`: the process's single `notify` instance and its
+#     fan-out registry (bl-908c). Both are `OnceLock` singletons — created once,
+#     never dropped, never handed to anyone — so they are not the cross-thread
+#     *handoff* `state.rs` inventories (a handle passed between the frame, the
+#     worker and the bridge); they are a process-global kernel resource with a
+#     process-global owner. Folding them in costs the chokepoint its 100 %
+#     coverage floor for exactly the reason above: adding the types shifts
+#     `state.rs`'s byte offsets and llvm-cov mis-attributes phantom uncovered
+#     regions onto its `impl` headers and type aliases (measured at three lines,
+#     on a file otherwise at 100 %). Second sanctioned exception, same shape.
+#
+# Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser
+# (`--debug-query`): a bare `Mutex`/`RwLock` is a `type_identifier` in type
+# position (`Mutex<T>`, a field or return type) and an `identifier` in path or
+# `use` position (`Mutex::new`, `use std::sync::Mutex`). Matching both kinds
+# catches every spelling; the anchored regex leaves `Arc`/`Atomic*` clear.
+id: locks-outside-state
+language: rust
+severity: error
+message: "Mutex/RwLock live only in src/state.rs, the crate lock chokepoint (see rules/locks-outside-state.yml)"
+ignores:
+  - "**/state.rs"
+  - "**/git_tree/probe_cache.rs"
+  - "**/fs_watcher/hub.rs"
+  - "**/test_support.rs"
+  - "**/tests/**"
+  - "**/tests.rs"
+  - "**/*tests.rs"
+rule:
+  any:
+    - kind: type_identifier
+      regex: '^(Mutex|RwLock)$'
+    - kind: identifier
+      regex: '^(Mutex|RwLock)$'

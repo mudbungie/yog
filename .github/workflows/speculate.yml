@@ -1,0 +1,94 @@
+# Remote builder for the bl-24e7 speculative merge queue (balls
+# docs/design/bl-24e7-speculative-merge-queue.md; adopted for yog in bl-1a5b).
+#
+# The contract is the verdict store's own file format — no workflow-specific
+# protocol exists. scripts/speculate-gate pushes a candidate commit to a
+# speculation/<sha> branch; this job runs yog's STOCK gate
+# (scripts/pre-commit) on it, the gate records the verdict into the runner's
+# local store exactly as it would on a laptop, and the store dir ships home
+# as an artifact named `verdicts`. scripts/speculate-gate downloads and
+# imports it and sweeps the branch; a crashed driver leaves the branch behind
+# — sweep by hand: git push origin --delete speculation/<sha>. A remote
+# builder must never become a close dependency: every failure here degrades
+# to the stock local gate at close.
+#
+# The gate fingerprint hashes `rustc -V`: a verdict recorded here HITS
+# locally only when the runner's toolchain matches yours. rust-toolchain.toml
+# pins 1.95.0 on both sides — bump it in lockstep with a deliberate upgrade,
+# or remote verdicts silently stop matching (that is the fingerprint refusing
+# to vouch across toolchains, not a bug).
+#
+# yog is a PRIVATE repo: these runs bill GitHub Actions minutes.
+name: speculate
+on:
+  push:
+    branches:
+      - 'speculation/**'
+
+# The gate reads the candidate tree and ships a verdict home as an artifact; it
+# writes nothing to the repo. Actions are pinned to full commit SHAs with their
+# tags in the trailing comments — a tag is repointable by its owner between two
+# runs, a commit SHA is not (bl-5ae6).
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # scripts/speculate-gate does the pushing, from the operator's box.
+          # Nothing in this job pushes, so leave no credential behind.
+          persist-credentials: false
+      # Bare `rustc -V` in the checkout makes rustup resolve and install the
+      # rust-toolchain.toml pin — the toolchain half of the fingerprint.
+      - name: toolchain half of the fingerprint (must match local rustc -V)
+        run: rustc -V
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: Cache cargo-tarpaulin 0.35.2
+        id: tarpaulin-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cargo/bin/cargo-tarpaulin
+          key: cargo-tarpaulin-0.35.2-${{ runner.os }}
+      - name: Install cargo-tarpaulin 0.35.2
+        if: steps.tarpaulin-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-tarpaulin --version 0.35.2 --locked
+      - name: Cache cargo-deny 0.20.2
+        id: deny-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cargo/bin/cargo-deny
+          key: cargo-deny-0.20.2-${{ runner.os }}
+      - name: Install cargo-deny 0.20.2
+        if: steps.deny-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-deny --version 0.20.2 --locked
+      - name: Cache ast-grep 0.44.1
+        id: astgrep-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cargo/bin/ast-grep
+          key: ast-grep-0.44.1-${{ runner.os }}
+      - name: Install ast-grep 0.44.1
+        if: steps.astgrep-cache.outputs.cache-hit != 'true'
+        run: cargo install ast-grep --version 0.44.1 --locked
+      - name: Cache bl-speculate (balls 0.5.10)
+        id: speculate-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cargo/bin/bl-speculate
+          key: bl-speculate-0.5.10-${{ runner.os }}
+      - name: Install bl-speculate (balls 0.5.10)
+        if: steps.speculate-cache.outputs.cache-hit != 'true'
+        run: cargo install balls --version 0.5.10 --locked --bin bl-speculate
+      - name: run the stock gate (it records the verdict on pass)
+        run: BALLS_IDENTITY=github-actions scripts/pre-commit
+      - name: record the failure the aborting gate cannot
+        if: failure()
+        run: BALLS_IDENTITY=github-actions bl-speculate record fail
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: verdicts
+          path: ~/.local/state/balls/plugins/bl-speculate/verdicts/
