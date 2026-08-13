@@ -1,7 +1,8 @@
 +++
 title = "the drive harness's other eight pinned pixels: beats_s6/s7/s8/s3res still measure clicks against a screenshot, the class bl-b9f2 retired for §9.1"
 created = 1786601146
-updated = 1786601146
+updated = 1786601366
+claimant = "Trestle"
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 bl-b9f2 retired the §9.1 pixels by DERIVING them per run (`scripts/drive/locate.sh`
