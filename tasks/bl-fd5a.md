@@ -1,7 +1,8 @@
 +++
 title = "nothing in the gate stops a credential, a routable IP, or a live session transcript from being committed"
 created = 1786602278
-updated = 1786602278
+updated = 1786602283
+claimant = "Abbrevs"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
