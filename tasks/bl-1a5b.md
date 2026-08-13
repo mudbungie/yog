@@ -1,7 +1,8 @@
 +++
 title = "adopt the bl-24e7 speculative merge queue with builds on GitHub Actions: gate conformance to the verdict-cache fingerprint + speculation/** remote builder"
 created = 1786601138
-updated = 1786601138
+updated = 1786601139
+claimant = "Fallowing"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
