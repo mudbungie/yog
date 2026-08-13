@@ -1,7 +1,8 @@
 +++
 title = "cargo deny fails on a webbrowser advisory, so the pre-commit hook is red and bl close aborts for every ball in the repo"
 created = 1786600116
-updated = 1786600116
+updated = 1786600123
+claimant = "Pintle"
 priority = 5
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
