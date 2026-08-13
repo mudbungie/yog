@@ -3,7 +3,7 @@ title = "MONITOR: verify the speculative merge queue delivers builds on GitHub A
 created = 1786601239
 updated = 1786678331
 priority = 2
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 You are monitoring, not building. Report what you observe; file a new ball per defect found (cite the literal command output in its body); do NOT fix anything, do NOT unclaim or touch anyone's claims, do NOT kill processes. Every command below is safe to run as-is from the repo root (~/dev/yog). No wait-loops: each check reads current state once; the only sanctioned wait is `gh run watch` on a run id you started.
 

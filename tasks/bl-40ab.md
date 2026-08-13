@@ -3,7 +3,7 @@ title = "attempt science projection: one derived headless query joining frozen i
 created = 1785823813
 updated = 1785823813
 priority = 3
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["implementation"]
 
 [[blockers]]

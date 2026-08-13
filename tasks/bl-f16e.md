@@ -3,7 +3,7 @@ title = "sweep the drive beats for vacuous assertions: empty-variable and generi
 created = 1786513798
 updated = 1786515903
 priority = 2
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["testing"]
 +++
 Filed by Alkaloid 2026-08-11 from concrete instances found by Dowel (bl-afa7, bl-2d45) and the parallel Rust-side finding in bl-bc06.

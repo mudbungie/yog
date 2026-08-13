@@ -3,7 +3,7 @@ title = "the model picker states what it reaches, and a conversation states the 
 created = 1786162399
 updated = 1786678330
 priority = 1
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 **Verified against the tree 2026-08-07 (Ptarmigan): both halves of this ball are already shipped. What is left is a weight question, not a missing fact.**
 

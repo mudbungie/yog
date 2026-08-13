@@ -3,7 +3,7 @@ title = "text selection: double-click-drag doesn't extend selection by word boun
 created = 1785645008
 updated = 1785646290
 priority = 2
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Operator report 2026-08-01: double-click-drag should extend selection by word boundaries (triple-click-drag by lines); egui reverts to character granularity. Investigation (2026-08-02, select-fixer) established: yog owns none of the selection path (all stock egui::Label / TextEdit), egui has never implemented this at any version, labels cannot be fixed from outside egui (LabelSelectionState has no public range access), and egui #2550 has been open since 2023-01 with no PR.
 

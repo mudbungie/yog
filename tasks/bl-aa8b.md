@@ -3,7 +3,7 @@ title = "freeze project instructions into agent context with visible provenance"
 created = 1785649815
 updated = 1785823883
 priority = 2
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design"]
 
 [[blockers]]

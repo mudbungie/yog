@@ -3,7 +3,7 @@ title = "AGENTS.md rule 6 records a lernie pin two releases stale: '=0.0.3' wher
 created = 1786513158
 updated = 1786514374
 priority = 3
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["docs"]
 +++
 Found while verifying bl-6654's premises (Girder, 2026-08-11).

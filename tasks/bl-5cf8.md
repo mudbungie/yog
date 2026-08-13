@@ -2,7 +2,7 @@
 title = "the descent graph needs a seat: where V1.3's two edges are drawn now that the gutter is gone"
 created = 1786064834
 updated = 1786515792
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Filed by bl-1802, which dissolved the history rail's `SidePanel` gutter into
 the chat (one horizontal rule per operable commit) and, in doing so, retired

@@ -3,7 +3,7 @@ title = "coverage debt: S2 and S9-S18 are graduated rungs with in-crate tests an
 created = 1786162702
 updated = 1786162702
 priority = 2
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["drive"]
 +++
 Filed by the 2026-08-07 re-baseline drive (bl-c63e), docs/drive-logs/2026-08-07-ladder-rebaseline.md.

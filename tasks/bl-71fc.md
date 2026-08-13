@@ -2,7 +2,7 @@
 title = "the Inbox tab's empty state is a bottom-anchored '(no deposits)' that names no paved path"
 created = 1786163412
 updated = 1786678330
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 QUALITY.md §1 criterion **H2** ('Absence is named. An empty region says what it is and names the paved path in full'). Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out. **This is the mildest violation in the audit** — filed for completeness, and it should be weighed against the cost of touching the surface.
 

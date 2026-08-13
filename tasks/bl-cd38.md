@@ -3,7 +3,7 @@ title = "BLOCKED on the lernie 0.0.7 publish (lernie bl-404d is unreleased; 0.0.
 created = 1785737045
 updated = 1786677458
 priority = 2
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
 [[blockers]]
 id = "bl-aca4"

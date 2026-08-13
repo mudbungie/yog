@@ -2,7 +2,7 @@
 title = "the empty-world masthead splits across two alignment axes: the wordmark is left-aligned while the tagline and name prediction beneath it are centred"
 created = 1786163347
 updated = 1786678332
-root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 QUALITY.md §1 criterion **G3** ('One grid per surface … one row is one scan line'), aggravated by **G4** at the large capture. Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out.
 
