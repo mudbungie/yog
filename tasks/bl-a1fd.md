@@ -1,8 +1,7 @@
 +++
 title = "the live mark's eye is bronze then sigil for most of a model call: blue means inference, so the eye must wear it for the whole call"
 created = 1786599900
-updated = 1786599917
-claimant = "Latchkey"
+updated = 1786600103
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
