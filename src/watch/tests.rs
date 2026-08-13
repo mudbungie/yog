@@ -111,9 +111,10 @@ fn reconcile_rebuilds_a_replaced_root_instead_of_keeping_a_deaf_watcher() {
     let mut set = WatchSet::new();
     set.reconcile(&desired);
     let armed = std::fs::metadata(&root).map(|m| std::os::unix::fs::MetadataExt::ino(&m));
-    // The root is re-primed: same path, new inode.
-    std::fs::remove_dir_all(&root).unwrap();
-    std::fs::create_dir_all(&root).unwrap();
+    // The root is re-primed: same path, new inode — guaranteed by construction
+    // rather than hoped for, or a filesystem that recycles the freed inode
+    // leaves this test reproducing nothing at all (bl-e492).
+    crate::test_support::replace_directory(&root);
     let replaced = std::fs::metadata(&root).map(|m| std::os::unix::fs::MetadataExt::ino(&m));
     assert_ne!(armed.ok(), replaced.ok(), "the inode really changed");
     set.reconcile(&desired);

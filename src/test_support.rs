@@ -243,6 +243,37 @@ pub(crate) fn authoring_new_arm() -> String {
     )
 }
 
+/// Re-prime the directory at `path`: **the same path, guaranteed a different
+/// inode** (bl-e492).
+///
+/// The obvious spelling — remove it, create it again — is a coin toss. A
+/// filesystem is free to hand the just-freed inode straight back, and the CI
+/// runners do: the two watcher tests that assert "a replaced root leaves a deaf
+/// watcher" were reproducing nothing there, because the inode they replaced was
+/// the inode they started with (`left: Some(9211169)  right: Some(9211169)`).
+///
+/// So the replacement is **allocated while the original is still linked** — two
+/// live directories cannot share an inode, so the new one differs by
+/// construction — and then renamed over the top. Nothing is left to the
+/// allocator. It is also the truer reproduction: a re-primed clone is
+/// materialized beside its target and moved into place, not built in the hole.
+pub(crate) fn replace_directory(path: &std::path::Path) {
+    let fresh = prepared_replacement(path);
+    std::fs::remove_dir_all(path).expect("the original is unlinked");
+    std::fs::rename(&fresh, path).expect("the replacement takes the path");
+}
+
+/// The first half of [`replace_directory`], for the test that must observe the
+/// hole between the two: the replacement directory, created beside `path` while
+/// `path` is still linked — which is the whole of what makes its inode differ.
+pub(crate) fn prepared_replacement(path: &std::path::Path) -> std::path::PathBuf {
+    let mut fresh = path.as_os_str().to_owned();
+    fresh.push(".replacement");
+    let fresh = std::path::PathBuf::from(fresh);
+    std::fs::create_dir_all(&fresh).expect("the replacement is created beside the original");
+    fresh
+}
+
 /// The hermetic fixture world and the workspace wall it stands in — its own
 /// file at §12's cap, on the seam between faking an *effect* and composing a
 /// *world* (bl-fcd5).

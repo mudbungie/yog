@@ -19,10 +19,22 @@ fn the_checked_in_svg_is_the_generated_one() {
     assert_eq!(svg(), include_str!("../../../../assets/yog.svg"));
 }
 
-/// Each checked-in PNG **decodes to exactly the pixels the generator makes**.
-/// Comparing the decoded image rather than the encoded bytes is deliberate:
-/// the encoder's settings — compression level, filter choice, even the encoder
-/// itself — may change freely, and only the picture is the contract.
+/// Each checked-in PNG **decodes to the pixels the generator makes**. Comparing
+/// the decoded image rather than the encoded bytes is deliberate: the encoder's
+/// settings — compression level, filter choice, even the encoder itself — may
+/// change freely, and only the picture is the contract.
+///
+/// The comparison is per-channel and admits a difference of one (bl-e492). The
+/// rasterizer picks its kernels by what the CPU offers at run time, so two
+/// machines round the edge of a shape differently in the last bit: this test
+/// failed on every CI run yog ever had because one channel of one pixel of
+/// yog-16.png came out `41` on the runner where the checked-in file holds `42`,
+/// at alpha 25. Bit-exactness across CPUs is not a promise the rasterizer makes
+/// and not one the icon needs; ±1 is invisible and still catches every real
+/// drift, because moved geometry or a changed palette shifts whole runs of
+/// pixels by far more than a bit.
+const TOLERANCE: u8 = 1;
+
 #[test]
 fn every_checked_in_png_decodes_to_the_pixels_the_generator_makes() {
     for (size, file) in checked() {
@@ -34,10 +46,22 @@ fn every_checked_in_png_decodes_to_the_pixels_the_generator_makes() {
             (u32::from(size), u32::from(size)),
             "yog-{size}.png is the wrong size"
         );
+        let made = rgba(size);
+        let file = decoded.into_raw();
         assert_eq!(
-            decoded.into_raw(),
-            rgba(size),
+            file.len(),
+            made.len(),
             "assets/yog-{size}.png has drifted from the mark"
+        );
+        let drifted: Vec<usize> = (0..file.len())
+            .filter(|&i| file[i].abs_diff(made[i]) > TOLERANCE)
+            .collect();
+        assert!(
+            drifted.is_empty(),
+            "assets/yog-{size}.png has drifted from the mark at {} of {} channels, first at {:?}",
+            drifted.len(),
+            file.len(),
+            drifted.first()
         );
     }
 }

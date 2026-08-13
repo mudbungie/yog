@@ -115,9 +115,13 @@ fn scenario_a_replaced_root_directory_leaves_a_deaf_watcher() {
     fs::create_dir_all(&root).unwrap();
     let watcher = Watcher::new(&root).unwrap();
     assert!(!watcher.is_stale(), "freshly armed on the live inode");
+    // Allocated while the root is still linked, so the path's second inode
+    // cannot be its first — a filesystem that recycles the freed one would
+    // otherwise re-arm the watch by accident and prove nothing (bl-e492).
+    let fresh = crate::test_support::prepared_replacement(&root);
     fs::remove_dir_all(&root).unwrap();
     assert!(watcher.is_stale(), "a deleted root is a deaf watcher");
-    fs::create_dir_all(&root).unwrap();
+    fs::rename(&fresh, &root).unwrap();
     assert!(
         watcher.is_stale(),
         "and re-creating the path does not re-arm the old inode"
