@@ -1,7 +1,8 @@
 +++
 title = "the wall does not ride 'lernie message', so every second message to a quiescent conversation dies at 'bz: no workspace in this environment'"
 created = 1786599898
-updated = 1786599898
+updated = 1786599911
+claimant = "Sconce"
 priority = 4
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
