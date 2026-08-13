@@ -1,7 +1,7 @@
 +++
 title = "nothing in the gate stops a credential, a routable IP, or a live session transcript from being committed"
 created = 1786602278
-updated = 1786602283
+updated = 1786602443
 claimant = "Abbrevs"
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -69,3 +69,48 @@ the binary — `Makefile`, `scripts/pre-commit`, `scripts/check-line-lengths.sh`
 not in it, so editing the scanner does not invalidate stored verdicts the way
 editing any other gate file does. The real fix is upstream in balls: read the
 gate file list from the repo instead of compiling it in. Filed separately.
+
+---
+
+DELIVERED as designed, with two corrections the tree forced.
+
+Landed: `scripts/leak-scan.sh` (8 content rules + `forbidden-path`),
+`scripts/leak-fixtures/` (a fixture per rule, `clean.txt`, `clean-paths.txt`),
+`make leak-scan` wired second in `make lint`, `.githooks/commit-msg`, and the
+`## The local gate` section of AGENTS.md.
+
+The tree scan found two false-positive classes the design did not predict, and
+both were fixed in the RULE, not the fixture:
+
+1. `src/config_edit/brazen/providers/tests.rs` carries the operator's real
+   `bz --list-providers --json` table, in which `credential` is a STATUS field:
+   `"credential":"not required"`. Fixed structurally rather than by
+   allowlisting the four values — a multi-word ALL-ALPHABETIC value is prose,
+   not a secret. A real credential carries a digit, a symbol, or no space.
+2. `src/world/mod.rs:59` records an empirical `bl claim` worktree path, in
+   which the operator's home appears MIRRORED mid-path
+   (`.../bl-delivery/home/<user>/dev/yog/bl-c68f`). Correctly flagged: it names
+   the operator just as a leading path does. Rewritten with the rest.
+
+Nine illustrative lines rewritten to `/home/u` across `docs/DESIGN.md` (2),
+`src/binding/tests.rs` (4), `src/opslog/tests.rs`, `src/opslog/line/tests.rs`,
+`src/world/mod.rs`. `docs/drive-logs/` untouched and exempt from that rule
+alone.
+
+Proof the regression test can fail (mutation-tested, three ways):
+  - broke ONE alternative inside the nine-way vendor-token pattern (AKIA) ->
+    self-test named lines 7 and 8 of the fixture unflagged;
+  - emptied ipv4-routable's EXCEPT list -> clean.txt flagged, "a rule is
+    over-broad";
+  - dropped `jsonl` from forbidden-path -> line 20 unflagged.
+Restored, all green. The commit-msg hook was exercised both directions: a
+message carrying a fabricated vendor token on a routable address exits 1
+naming both, a clean one exits 0.
+
+Gate: `make fmt-check`, `make lint` (line-cap 765 files, leak-scan 814 files
+clean, clippy, rules-audit, cargo-deny) and `cargo test` (2050 pass) all green
+on the merged tree. Scan cost ~5s.
+
+Operator actions: run `make install-hooks` in the main checkout once, to seat
+`.githooks/commit-msg`. The fixture tokens are fabricated but well-formed; if
+GitHub push protection ever objects, allowlist them there.
