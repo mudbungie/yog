@@ -1,7 +1,8 @@
 +++
 title = "S5 brazen Apply beats are stale AGAIN: bl-5410 gave every provider row a second wrapped line, so the raw-config fold moved ~119px below the click bl-f8dc measured"
 created = 1786600609
-updated = 1786600609
+updated = 1786600715
+claimant = "Rowel"
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["drive"]
