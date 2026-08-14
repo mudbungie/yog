@@ -4229,7 +4229,23 @@ the config-branch `for-each-ref` — are gone with it.
     spawn shim is `#[cfg(target_os = "macos")]`. lsof is slow, so macOS probe
     results carry a 2 s TTL cache (RAM, §5.3), refreshed eagerly on watcher
     events touching the agent, and re-probed only for Live/InFlight agents on
-    the sweep (§7.2).
+    the sweep (§7.2). **Those two evictions are complementary, not
+    overlapping** (bl-1015): the sweep evicts for a workspace that *holds* a
+    Live/InFlight agent, because only those can die silently; the watcher-driven
+    re-derivation evicts for a workspace that holds *none*, because that is the
+    only signal a driver has arrived. A streaming `response.json` storm is
+    neither, so it stays collapsed on the cache — which is what the cache is
+    for.
+  - **The target is resolved before it is asked about** (bl-1015): both sides
+    canonical, mirroring the procfs backends, because lsof prints the resolved
+    name of every fd it finds and on macOS the whole temp tree resolves
+    (`/var/folders/…` → `/private/var/…`). And **a target the filesystem does
+    not resolve is a definite `Free`, never `Unknown`** — nothing can hold a
+    path that is not there, which is exactly what the procfs backends answer for
+    one. lsof instead *errors* on an absent path, indistinguishable from lsof
+    being broken, so every agent with no inbox directory and every agent with no
+    step yet used to read `Unknown`: a "?" badge on its row and a refused §3.6
+    delete, on macOS only.
   - `lsof` missing/failing ⇒ `Unknown` ⇒ classification degrades to
     framing-only: closed-with-`end` = quiescent, closed-without = stopped,
     open-file undetectable ⇒ rendered with an explicit **uncertainty badge
@@ -4249,11 +4265,30 @@ the config-branch `for-each-ref` — are gone with it.
   itself /proc-based (Linux-only). On macOS yog surfaces the Stop failure
   verbatim in `ops.jsonl`; fixing stop portability is lernie's ball.
 - **CI:** Linux runs the full gate (fmt, clippy -D warnings, tarpaulin 100%
-  pinned 0.35.2). macOS (aarch64) job: `cargo build` + `cargo test`, no
-  tarpaulin (Linux sees every line because nothing but the lsof spawn shim is
-  cfg'd out). Known macOS test issues — `/tmp` vs `/private/tmp`
-  canonicalization in probe fixtures, FSEvents timing in fs_watcher tests —
-  are already filed as **bl-592b**.
+  pinned 0.35.2). macOS (aarch64) is `cargo build` + `make test`, no tarpaulin
+  (Linux sees every line because nothing but the lsof spawn shim is cfg'd out),
+  and it lives in a **workflow of its own** (`.github/workflows/macos.yml`,
+  bl-0158) on ci.yml's triggers: same visibility, but the release gate reads the
+  `CI` workflow's verdict, so macOS reports without holding the pipeline. Moving
+  it back under the name `CI` is a decision to let it block a release.
+- **The macOS suite is green, and what it took is recorded here because the
+  obvious reading was wrong** (bl-1015). Thirteen tests failed there from its
+  first run to 2026-08-14, and the standing hypothesis was two causes: a
+  Linux-shaped liveness probe *and* a text layout that came out narrower on
+  aarch64. Measured on a `macos-14` runner, every painted galley is
+  **byte-for-byte the width it is on Linux** — the acceptance harness runs
+  `egui::Context::default()`, so both platforms lay out through egui's own
+  embedded faces at the same `pixels_per_point`, and there is no per-platform
+  text metric to find. The narrower titles were the *first* cause wearing a
+  disguise: the probe answered `Unknown` for agents with no inbox directory, so
+  every such row grew a §10 "?" badge in its trailing group, and the title,
+  which fills what the trailing group leaves (§11), truncated 14 px earlier.
+  One defect, twelve tests. The thirteenth was the FSEvents arming race below.
+- **A watcher is not armed when its constructor returns** — on macOS. inotify
+  arms inside the syscall; FSEvents starts its stream on another thread, and a
+  write that lands first emits *no event at all*, which no downstream timeout
+  can recover. Tests therefore **prove** arming (rewrite a probe file until the
+  watcher reports it) rather than sleeping a guess at it.
 
 ---
 

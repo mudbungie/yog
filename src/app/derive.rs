@@ -32,7 +32,7 @@ use super::drift::{self, Drift};
 use super::snapshot::{Growth, Snapshot, growth_between};
 use crate::binding::Workspace;
 use crate::budgets::{Scope, StepBill};
-use crate::git_tree::{GitTree, ProbeStack};
+use crate::git_tree::{AgentState, GitTree, ProbeStack};
 use crate::opslog::OpRow;
 use crate::projects::balls::Ball;
 use crate::projects::join::JoinRow;
@@ -216,6 +216,9 @@ impl Deriver {
             // (`Unenumerated`); accusing it here as well made every newborn
             // workspace two findings for one event (bl-f726).
             let baseline = self.trees.contains_key(&root);
+            if mark == Mark::Watch || mark == Mark::Desync {
+                self.refresh_liveness(&root);
+            }
             if self.rederive(&root) && mark == Mark::Sweep && baseline {
                 found.push(Drift::Unannounced(root));
             }
@@ -257,6 +260,38 @@ impl Deriver {
                 fleet: self.fleet.clone(),
             }),
         );
+    }
+
+    /// §10's **eager liveness refresh**, the half the cheap sweep cannot do: a
+    /// filesystem change under an agent at rest may be a driver *arriving*, and
+    /// the macOS probe cache would answer from store for up to its 2 s TTL — so
+    /// the row stays at rest, and the §11 flight strip stays down, while a model
+    /// call is already running.
+    ///
+    /// **Exactly the agents the sweep does not take.** [`cheap_sweep`](sweeps)
+    /// re-probes the Live/InFlight ones, because only those can die *silently* —
+    /// a released flock emits no event for any watcher to carry. So this takes
+    /// the rest, on the signal that *is* an event. Between them every transition
+    /// is observed, and neither pays for the other's case: a streaming
+    /// `response.json` append storm is an agent already known live, so it evicts
+    /// nothing here and stays collapsed on the cache, which is the whole reason
+    /// the cache exists.
+    ///
+    /// A root with no tree is not a workspace (a root deriving for the first
+    /// time, or one whose read failed) — nothing observed yet, nothing to
+    /// forget. On Linux the eviction is a no-op: the `/proc` probes are
+    /// stateless and always definite (§10).
+    fn refresh_liveness(&self, root: &Path) {
+        let Some(tree) = self.trees.get(root) else {
+            return;
+        };
+        let resting: Vec<String> = tree
+            .agents
+            .iter()
+            .filter(|a| !matches!(a.state, AgentState::Live | AgentState::InFlight))
+            .map(|a| a.agent_id.clone())
+            .collect();
+        self.probes.invalidate_liveness(root, &resting);
     }
 
     /// Re-derive one workspace through the held probe stack, replacing its

@@ -395,9 +395,10 @@ workflow.
 
 macOS (Apple silicon) builds and runs `make test` in a workflow of its own
 (`.github/workflows/macos.yml`), on the same triggers, and is **reported but
-not gating**. It does not pass today — 14 tests fail there, from a liveness
-probe that reads `/proc` and a text layout that comes out narrower — so treat
-Linux as the supported platform until that is fixed.
+not gating**: it passes, and a release still waits only on Linux. The
+difference between the two is coverage — tarpaulin's 100% floor runs on Linux
+alone, which is where every line is compiled (nothing but the `lsof` spawn shim
+is `cfg`'d out).
 
 ## Publishing
 

@@ -9,11 +9,22 @@
 //! `/proc` probes (§10: always present, always definite), so holding them is
 //! free and the cache is not compiled at all.
 //!
-//! [`ProbeStack::invalidate_liveness`] is the §7.2 eager cache eviction: on the
-//! targeted liveness re-probe (only Live/InFlight agents, which alone can die
-//! *silently* — a released flock emits no fs event), it drops each agent's
-//! lock-probe target so the next derive re-observes the driver rather than
-//! trusting a within-TTL cached "still held". On Linux it is a no-op.
+//! [`ProbeStack::invalidate_liveness`] is the §10 eager cache eviction: it drops
+//! each named agent's lock-probe target so the next derive **observes** the
+//! driver rather than trusting a within-TTL answer. Two callers ask for it, on
+//! the two signals that can carry the two transitions, and their conditions are
+//! complementary so neither pays for the other's case:
+//!
+//! - the §7.2 cheap sweep, for a workspace that **does** hold a Live/InFlight
+//!   agent — only those can die *silently*, since a released flock emits no fs
+//!   event and no watcher will ever mention it;
+//! - the watcher-driven re-derivation, for a workspace that holds **none** — a
+//!   change under a quiet workspace may be a driver arriving, and nothing else
+//!   would notice for a whole TTL.
+//!
+//! A streaming `response.json` storm falls under neither (its workspace is
+//! already known live), which is what leaves the collapse above intact. On Linux
+//! the whole thing is a no-op.
 
 use super::{Agent, GitTree, GitTreeError, REPO_DIR, cmd, enumerate};
 use std::path::Path;
