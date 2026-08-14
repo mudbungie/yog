@@ -1,7 +1,8 @@
 +++
 title = "subtract the retired roster walk: AppModel::roster_step, Pick::Step and attention::step are dead outside their own tests"
 created = 1786514885
-updated = 1786515794
+updated = 1786684151
+claimant = "Kerf"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["cleanup"]
