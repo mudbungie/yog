@@ -1,7 +1,7 @@
 +++
 title = "scrub balls/tasks and publish it: content redaction across the ref's history, not a private remote"
 created = 1786677230
-updated = 1786678440
+updated = 1786678449
 claimant = "Ciabatta"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -91,7 +91,7 @@ Gates `bl-4f96`.
 
 **2. Live bodies scrubbed** (`bl update --body`, body edits only — nothing closed, unclaimed or retitled). Thirteen balls:
 
-- home paths `/home/u` -> `/home/u`: bl-0e44, bl-20cb, bl-3aa1, bl-3f70, bl-648a, bl-71fc, bl-9b52, bl-fb1c
+- absolute operator home paths, rewritten to the house synthetic root `/home/u`: bl-0e44, bl-20cb, bl-3aa1, bl-3f70, bl-648a, bl-71fc, bl-9b52, bl-fb1c
 - account/payment text from a CI annotation: bl-b7dc
 - provider auth state ("signed in" / "no credential stored" per row): bl-20cb
 - live process ids and wall-clock chronology: bl-a0d4
@@ -100,19 +100,15 @@ Gates `bl-4f96`.
 - the maintainer's given name: bl-4f96
 - this ball, whose evidence list quoted the material it exists to remove: classes now named, instances dropped
 
-**3. History rewritten** — `git filter-repo` (fb3de42e), `--replace-text` + `--replace-message` over the whole ref, `--prune-empty never`. No path was dropped: 426 task paths before and after, 1,506 commits before and after, 1,186 blobs before and after. 38 expressions covering: the maintainer's given name (with lookarounds so the Rust type `Mark` survives untouched), a third party's name, a second address of the maintainer's, `/home/u` and `/Users/u`, account/payment text, provider auth state, live process ids, conversation/agent ids, five private workspace names, one operator remark disclosing a live account's model roster, and the `bl-actor: mark` commit trailer.
+**3. History rewritten** — `git filter-repo` (fb3de42e), `--replace-text` + `--replace-message` over the whole ref, `--prune-empty never`. No path was dropped: 426 task paths before and after, 1,506 commits before and after, 1,186 blobs before and after. 38 expressions covering: the maintainer's given name (with lookarounds so the Rust type `Mark` survives untouched), a third party's name, a second address of the maintainer's, absolute home paths on both platform shapes, account/payment text, provider auth state, live process ids, conversation/agent ids, five private workspace names, one operator remark disclosing a live account's model roster, and the `bl-actor: mark` commit trailer.
 
 `mudbungie` and `mudbungie@gmail.com` were left everywhere by ruling: 976 of 1,506 commits still carry them as author, and the tree still carries them in 15 places.
 
 **4. Re-scan of the rewritten ref** — `scripts/leak-scan.sh` with `scripts/leak-rules.sh` at yog `58ddd17`, run over all 1,186 blobs of the rewritten history (not just the tip). **Zero findings.** The same scan over the 1,173 pre-scrub blobs produced 135. Every one of the 1,185 blobs with frontmatter still parses as TOML.
 
-Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's own EXCEPT, by ruling); four occurrences of `Mark` that are the Rust type `watch::Mark`; the agent codename `mark-placer`; `/home/u`, `/home/op`, `/home/x`, `/Users/u` synthetic roots.
+Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's own EXCEPT, by ruling); four occurrences of `Mark` that are the Rust type `watch::Mark`; the agent codename `mark-placer`; the house synthetic home roots, which the rule table exempts by name.
 
-**5. NOT DONE, awaiting go-ahead.** The rewritten ref sits in a throwaway clone under this session's scratch directory, never in the live store; its path was reported to the operator out of band. Rewritten tip `100989f6`, replacing `312b94e`. The command:
-
-    git -C <scrub-clone> push --force <project remote> refs/heads/balls/tasks:refs/heads/balls/tasks
-
-Re-run the filter first if the remote has moved off `312b94e` — the store is live and every commit since would otherwise be lost. Everyone with a clone must delete `$XDG_STATE_HOME/balls/clones/*/tasks` and re-prime; `bl prime` will not reconcile a rewritten ref.
+**5. NOT DONE, awaiting go-ahead.** The rewritten ref sits in a throwaway clone under this session's scratch directory, never in the live store; its path was reported to the operator out of band. The command is a single `git push --force` of `refs/heads/balls/tasks` from that clone to the project's own remote, spelled out in full in the handoff report. Re-run the filter first if the remote has moved off the base it was built on — the store is live and every commit since would otherwise be lost. Everyone with a clone must delete `$XDG_STATE_HOME/balls/clones/*/tasks` and re-prime; `bl prime` will not reconcile a rewritten ref.
 
 **Open questions the ruling does not settle** — three, all left as-is:
 
