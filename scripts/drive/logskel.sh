@@ -2,7 +2,7 @@
 # logskel.sh — emit the SKELETON of a drive log, pre-filled from the run's own
 # verdict rows (bl-56d5).
 #
-# Every report in docs/drive-logs/ used to be typed from a blank page: the sha
+# Every drive report used to be typed from a blank page: the sha
 # looked up by hand, the host tuple retyped, and the beat table transcribed from
 # a scrolled-past terminal — which is both the dullest part of a drive and the
 # part most likely to be quietly wrong, because a transcribed table is a claim
@@ -14,9 +14,11 @@
 #
 # Usage: logskel.sh <dir>
 #   <dir> is a ladder root (`drive.sh ladder` writes `<stamp>/<verb>/out/`) or a
-#   single run's out dir. Every `verdicts.jsonl` beneath it becomes a section.
-#   Writes markdown to stdout:
-#     scripts/drive/logskel.sh target/drive/<stamp> > docs/drive-logs/2026-08-07-<name>.md
+#   single run's out dir, under the evidence root `$DRIVE_ROOT` (default
+#   `$XDG_CACHE_HOME/yog-drive`). Every `verdicts.jsonl` beneath it becomes a
+#   section. Writes markdown to stdout, and the log is finished and kept THERE,
+#   beside its shots — never committed (QUALITY.md §3 step 6; bl-244f):
+#     scripts/drive/logskel.sh "$DRIVE_ROOT/<stamp>" > "$DRIVE_ROOT/<stamp>/drive-log.md"
 set -eu
 # pipefail because the emission below now ENDS in a pipe (`| home_fold`), and
 # without it a python3 that dies mid-table would exit 0 through sed and hand
@@ -181,9 +183,9 @@ PY
 cat <<'TAIL'
 ## What the screenshots show (the halves no assertion can reach)
 
-HAND-FINISH. Name the shot, then quote what is in it — the drive-logs are the
-model: evidence quoted, not summarized. Every beat asserting a *negative* is
-only as strong as its screenshot, so those are the ones to describe.
+HAND-FINISH. Name the shot, then quote what is in it: evidence quoted, not
+summarized, is the house style. Every beat asserting a *negative* is only as
+strong as its screenshot, so those are the ones to describe.
 
 ## ops.jsonl, in order
 

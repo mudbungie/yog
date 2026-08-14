@@ -646,9 +646,15 @@ four worlds above, 64 beats). What is left, and why:
   boundary gesture returns a verdict, so a negative asserted after one is not
   vacuous — which is the second reason to prefer a spelling over a coordinate.
 
-**Run logs** live in `docs/drive-logs/` — one file per real run, quoting the
-wire replies verbatim and recording pass/fail per beat plus any UI observation
-that becomes follow-up work.
+**Run logs** live with the run, not in this repository: `drive.sh` writes
+`<run>/drive-log.md` under `$DRIVE_ROOT` (default `$XDG_CACHE_HOME/yog-drive`),
+beside the shots and `verdicts.jsonl` it quotes. One file per real run, quoting
+the wire replies verbatim and recording pass/fail per beat plus any UI
+observation that becomes follow-up work. They used to be committed under
+`docs/drive-logs/`; bl-244f burned that directory — the logs were the largest
+carrier of operator-home paths in the repository's history — so what survives a
+run into the tree is the balls it filed and the claims below, each naming its
+run by date and verb. QUALITY.md §3 step 6 is the protocol.
 
 **Where the second half stands: S0 and S1 are GREEN.** The 2026-07-26 `run`
 drive passed all eight beats

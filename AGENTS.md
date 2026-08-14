@@ -330,9 +330,12 @@ demotion removes an internal API from the boundary's obligations. Reach for
   exemption keyed to the file's own name rather than an allowlist. **Fix the
   rule, not the coverage.**
 
-  Writing a drive log is still QUALITY.md §3 step 6, and it stays lawful
-  because `scripts/drive/logskel.sh` folds `$HOME` to `~` in every path it
-  emits, at the one place the text is written. Hand-finish a log the same way.
+  Writing a drive log is still QUALITY.md §3 step 6 — the log now stays where
+  it is written, beside its run's evidence under `$DRIVE_ROOT` and outside the
+  checkout, and what comes back into the tree is the balls it filed. It stays
+  lawful wherever it is quoted because `scripts/drive/logskel.sh` folds `$HOME`
+  to `~` in every path it emits, at the one place the text is written.
+  Hand-finish a log the same way.
 
   `.githooks/commit-msg` runs the same scanner over the commit MESSAGE, which
   `pre-commit` never sees. Run `make install-hooks` once to seat it.

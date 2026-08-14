@@ -9,8 +9,8 @@
 # reports the whole of it, so a box is made ready in one pass instead of four.
 #
 # It reports rather than guesses: every subject prints its resolved path or
-# version, which is also the "Host tool tuple" line every drive log carries
-# (docs/drive-logs/) — `logskel.sh` reads the same facts from the same probes.
+# version, which is also the "Host tool tuple" line every drive log carries —
+# `logskel.sh` reads the same facts from the same probes.
 #
 # THE SUBJECTS ARE WHAT THE SCRIPTS ACTUALLY CALL, verified against them, not
 # what an X11 harness is assumed to want. Capture is `ffmpeg -f x11grab`

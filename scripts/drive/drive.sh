@@ -82,7 +82,8 @@ stamp() { date -u +%Y%m%dT%H%M%SZ; }
 skeleton() {
   "$here/logskel.sh" "$1" >"$1/drive-log.md"
   echo "log skeleton: $1/drive-log.md"
-  echo "  hand-finish into docs/drive-logs/$(date -u +%Y-%m-%d)-<name>.md (QUALITY.md §3 step 6)"
+  echo "  hand-finish it IN PLACE (QUALITY.md §3 step 6): the log stays with its"
+  echo "  evidence, outside the checkout — what comes back is the balls it files"
 }
 
 # --- the verbs --------------------------------------------------------------
