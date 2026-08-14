@@ -1,7 +1,7 @@
 +++
 title = "a named sender's deposit still paints the raw id: header_line floors it at ladder rung three and never asks the name fact"
 created = 1786685252
-updated = 1786686261
+updated = 1786686327
 claimant = "Voussoir"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -9,3 +9,13 @@ root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 Surfaced by bl-45c7's value-derived naming scan (Lintel, 2026-08-13) — a live §3.3 leak the scan does not yet forbid. inboxview::header_line routes the deposit's sender through id_floor (rung THREE of the display ladder) and never through rung one, the name fact: a deposit from an agent that HAS a name paints the raw id while the name sits in the roster. Paint-layer repro with a named peer 'peregrine': the inbox row painted '✉ 20260731T101112Z-abcdef01 · t0' with 'peregrine' painted in the roster of the same frame.
 
 Seat: src/inboxview/mod.rs:151 (header_line), painted from render.rs::render_deposit and src/composer/mod.rs:91. Candidate fix: display_name_of(agents, from) instead of id_floor(from) — correct for 'user' too, no branch — but it threads the agents snapshot through composer::rows, shell/inbox_queue.rs and the inspector's plumbing, and it changes what §5.1 #11's '✉ from · at' MEANS. That semantic shift is the design half of this ball: rule on it in the body before implementing. bl-45c7's landed invariant ('no more of an id than the floor spells') stays true either way. Verify premises against the tree first.
+
+---
+
+RULING (the design half) — a deposit's sender deserves rung ONE, the whole ladder.
+
+WHY. `from:` is an agent id, and §3.3 rules exactly once what an agent is called on screen: `nav::convs::display_name` — *"What a conversation is called (DESIGN §3.3) — **the one function**, a ladder: the agent's name fact, else the first payload line (`preview`), else the id's `id_floor` — the terminal generation only (bl-63a1)."* The §11 invariant that scan holds is *"**no seat formats an agent id as a display name** ... its floor may be the id — an id is a fact — but only the ladder spells it, and the id's other seat is the hover"* (src/shell/acceptance/naming.rs). `header_line` does not ride that ladder: it *starts at its floor*, calling `id_floor` on the raw `from`. So a deposit from a named peer paints an id in a frame whose conversation list, centre header, composer target line and transcript speaker all paint that peer's name — four seats saying 'peregrine' and one saying 20260731T101112Z-abcdef01, about the same agent. bl-45c7's landed invariant ('no more of an id than the floor spells') is untouched: the floor stays the only id spelling reachable from a seat. It was never the claim that the floor is the right RUNG — only the right spelling once the ladder has fallen that far.
+
+WHAT §5.1 #11 NOW MEANS. The row's derivation cell ('count + parse ---from/deposited_at/epitaph--- frontmatter') keeps its source of truth: `from:` is the deposit's asserted fact and stays verbatim in the two places that are ABOUT the file — the §11 Raw toggle (the bytes) and the boundary's `inbox` JSON (`inboxview::wire`, which carries the envelope's fields and the raw bytes for a machine reader that wants the id). What shifts is only the PAINTED header: '✉ from · at' is that fact **resolved through the §3.3 ladder at paint time**, so the sender's name is what a human reads and the id is what the file says. Two readings of one fact would be the drift; one fact, one ladder, one paint is not.
+
+SHAPE (single source of truth + minimal interface). `display_name_of(agents, from)` — correct for 'user' too with no branch (no agent carries that id, so it falls to `id_floor`, which spells a stampless token whole), and correct for an unknown/foreign id (same floor as today). The name is **derived where painted, never stored on the deposit**: nothing is added to `Deposit`/`InboxEntry`, so the roster and the row can never disagree within a frame. The roster therefore rides in as a **borrowed paint-time input** (`&[Agent]` parameter on `inboxview::render` / `composer::rows` / `inspector::render`), not as a field on `TabData`/`QueueCtx` — those bundles are what the surface PAINTS, and a snapshot fact copied into one is a second copy of the roster per frame. DESIGN §5.1 #11 and the §11 Inbox/queue bullets are amended to state it (AGENTS: fix the doc, never deviate silently).
