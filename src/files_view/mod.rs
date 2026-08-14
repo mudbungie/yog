@@ -24,6 +24,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 mod render;
+pub(crate) mod wire;
 pub use render::render;
 
 /// Workspace subdir holding the per-agent worktrees (ARCH §2.3).

@@ -128,7 +128,7 @@ pub(super) fn op_row(row: &OpRow) -> Value {
 }
 
 /// The §5.1 agent-state tokens.
-pub(super) fn state_token(state: AgentState) -> &'static str {
+pub(crate) fn state_token(state: AgentState) -> &'static str {
     match state {
         AgentState::Live => "live",
         AgentState::InFlight => "in-flight",

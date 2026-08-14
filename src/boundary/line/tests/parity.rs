@@ -11,6 +11,7 @@ use crate::boundary::{Action, Gesture, Query};
 use crate::start::{BallSpec, Payload};
 use std::path::PathBuf;
 
+mod inspector;
 mod policy;
 
 /// The parity claim, mechanized: spell it, read it back at the seat it was

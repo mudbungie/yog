@@ -88,6 +88,73 @@ pub const QUERIES: &[HelpRow] = &[
                  cannot be asked, refuses with its own words rather than an empty list.",
     },
     HelpRow {
+        verb: "transcript",
+        usage: "/transcript",
+        summary: "the selected conversation, message by message",
+        detail: "The chat itself: every committed message of the selected conversation — what was \
+                 delivered to it, what the model said back (its reasoning, its answer and every \
+                 tool it called), and what each tool returned — in order, each row carrying the \
+                 file's own bytes beside the parse of them. A model call in flight right now is \
+                 folded on as a live trailing row, so this says what the window says about the \
+                 same moment. It is aimed at the seat's workspace and selected conversation; the \
+                 whole thing is a read of files on disk and changes nothing.",
+    },
+    HelpRow {
+        verb: "steps",
+        usage: "/steps",
+        summary: "every step this conversation has taken",
+        detail: "One row per model call: how it ended (complete, failed, killed), how many \
+                 attempts it took, what it spent, the branch tip it was assembled against, and \
+                 when it started and ended. A step whose driver produced nothing at all is marked \
+                 as such, with the adapter's own reason when it left one, and a step that failed \
+                 on credentials names the provider row to log in to. Read one step's actual \
+                 records with `/step <seq>`.",
+    },
+    HelpRow {
+        verb: "step",
+        usage: "/step <seq>",
+        summary: "one step's records — request, response, staging, tools",
+        detail: "The drill-in for a single step of the selected conversation, named by the \
+                 sequence the list shows (`001`). Answers that step's `meta`, the wire request \
+                 that was sent, the staged transcript entry, every event of the response stream, \
+                 and every tool call's input and output — each as parsed data with the bytes it \
+                 parsed from beside it. Records that are missing say so, and records that are not \
+                 JSON come back verbatim and framed as unparseable rather than dropped.",
+    },
+    HelpRow {
+        verb: "files",
+        usage: "/files [<path>]",
+        summary: "the conversation's working files, and one file's contents",
+        detail: "The agent's own worktree read-only: goal, soul, summaries, skills and whatever \
+                 work products it has written, as a sorted listing with each entry's size. Name a \
+                 path exactly as the listing gives it to read that file's contents instead; only \
+                 a file this same listing just named can be opened, and a large one comes back \
+                 truncated with its true size. The listing is bounded, and says when it hit the \
+                 bound. A conversation whose worktree has been torn down is said outright rather \
+                 than shown as an empty directory.",
+    },
+    HelpRow {
+        verb: "rail",
+        usage: "/rail",
+        summary: "the conversation's spine: every operable commit and what hangs off it",
+        detail: "One notch per step, each carrying the commit that step read against, its spend, \
+                 and where in the chat its rule sits — the points a conversation can be forked or \
+                 replayed from. Beside them, the children dispatched from this conversation: who \
+                 each is, where it forked from, what it is doing, what it has spent and the last \
+                 thing it said. A conversation nobody forked from answers notches and no children, \
+                 which is the honest empty case rather than an error.",
+    },
+    HelpRow {
+        verb: "inbox",
+        usage: "/inbox",
+        summary: "the mail deposited for this conversation but not yet delivered",
+        detail: "Every message sitting in the selected conversation's inbox: who sent it, when it \
+                 was deposited, the body, and — on a subagent's result message — how that agent \
+                 ended and the commit it ended at. A half-written or hand-edited deposit is \
+                 rendered rather than refused, with whatever fields it actually stated. Delivered \
+                 mail is not here; it has moved into the transcript.",
+    },
+    HelpRow {
         verb: "attention",
         usage: "/attention",
         summary: "everything waiting on you, across every workspace",

@@ -196,11 +196,25 @@ Each step is its own ball; boundary-surface work serializes (shared-surface
 merges cost more than the work). Steps 1–4 are pure boundary-completion,
 valuable with no network at all — they finish VISION V5 teleop parity.
 
-1. **Boundary-complete the reads.** The transcript/inspector surface
-   (transcript, steps, files, rail, inbox) reads disk on the frame thread and
-   has no boundary spelling — the chats themselves are unreachable by any
-   face but the window. Add the Query/Reply pairs; the inspector paints from
-   replies.
+1. **Boundary-complete the reads.** *(Landed, bl-6233.)* The
+   transcript/inspector surface read disk on the frame thread and had no
+   boundary spelling — the chats themselves were unreachable by any face but
+   the window. Six Query/Reply pairs now cover it: `Transcript`, `Steps`,
+   `Step`, `Files`, `Rail`, `Inbox`, each addressed by workspace + agent
+   (name-based addressing is step 3, not this one), in all three
+   serializations. Two rulings came out of it and belong here rather than in
+   a ball body:
+   - **The in-flight tail is folded, not dropped.** A live model call's tail
+     is the snapshot's own `Stream`, which the `Deps` already carry, so
+     folding it costs no read. Answering the committed half alone would have
+     been cheaper and wrong — the window folds it, so a headless seat that
+     did not would describe a different moment than the GUI does of the same
+     instant, which is the divergence §3's "one dispatch surface, N
+     serializations" exists to prevent.
+   - **The pin is not answered.** A pin is a viewport fold, and DESIGN §8.5
+     files folds under views, so `Rail` answers the notches and every
+     inspector read answers unpinned — the same ruling `Conversations`
+     already makes by answering the all-collapsed list.
 2. **`Reply` decode**, with encode↔decode round-trip tests over the whole
    reply surface.
 3. **Name-based addressing:** `PathBuf` leaves the boundary types.

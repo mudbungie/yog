@@ -1,11 +1,15 @@
-//! The boundary's typed answers (§8.5) and their one JSON spelling. A [`Reply`]
-//! is what [`dispatch`](super::dispatch::dispatch) and
+//! The boundary's typed answers (§8.5). A [`Reply`] is what
+//! [`dispatch`](super::dispatch::dispatch) and
 //! [`answer`](super::answer::answer) return — the datum both frontends consume:
 //! the GUI reads the variant in RAM, the headless transport writes
 //! [`encode`] to the deposit's reply file. Encode-only: a reply is yog's own
 //! statement, never an instruction it parses back — except the `prepare`
 //! reply's `prepared` body, which deliberately re-enters as the next
 //! [`Prompt`](super::Action::Prompt) gesture and shares its codec spelling.
+//!
+//! The spelling itself is [`encode`], split off at §12's budget (bl-6233): the
+//! answer and the way it is said are two subjects, and only one of them is what
+//! the window reads.
 
 use crate::actions::verbs::Outcome;
 use crate::binding::Workspace;
@@ -15,7 +19,6 @@ use crate::opslog::OpRow;
 use crate::projects::join::JoinRow;
 use crate::search::Found;
 use crate::start::Prepared;
-use serde_json::{Map, Value, json};
 use std::path::PathBuf;
 
 use super::codec::prepared_value;
@@ -24,17 +27,18 @@ use super::codec::prepared_value;
 /// board rows are the one reply whose rows carry derived sub-objects (gates,
 /// drones, two §3.5 figures).
 mod board;
+/// The whole surface's JSON spelling, and the envelope helpers it shares.
+mod encode;
 /// The §6 decision queue's row encoder — the other reply whose rows carry a
 /// derived list (its firing signals).
 mod queue;
-mod rows;
-use board::{board_row, fleet_facts};
-use queue::queue_row;
-use rows::{conv_row, join_row, lineage_row, op_row, ws_row};
-
+/// `pub(crate)` for the §5.1 agent-state token table, which the rail's own
+/// encoder reads rather than keeping a second copy of (bl-6233).
+pub(crate) mod rows;
 /// The search reply's own address-flattening — split at the same budget.
 mod search;
-use search::hit_row;
+
+pub use encode::{encode, refusal};
 
 /// One workspace row (§3.1 classification + the §6 rollups the tab bar shows):
 /// the [`Query::Workspaces`](super::Query::Workspaces) answer's element.
@@ -141,6 +145,32 @@ pub enum Reply {
         attempts: Vec<crate::workdiff::Attempt>,
         patch: Option<crate::files_view::Preview>,
     },
+    /// **The conversation** (§11, bl-6233) — [`Transcript`](super::Query::Transcript)'s
+    /// answer: the committed `messages/` entries with the in-flight tail folded
+    /// on, which is the whole of what the window's chat pane paints.
+    Transcript(crate::transcript::Transcript),
+    /// Every step the conversation has taken (§11) —
+    /// [`Steps`](super::Query::Steps)' answer, the Steps tab's list.
+    Steps(crate::steps_view::StepsView),
+    /// One step's records drilled in (§11) — [`Step`](super::Query::Step)'s
+    /// answer. A step the tree does not hold answers absent records rather
+    /// than refusing: "nothing was written there" is a reading, not an error.
+    Step(crate::steps_view::StepDetail),
+    /// The agent worktree's listing and, when the query named a listed file,
+    /// its bounded preview (§11) — [`Files`](super::Query::Files)' answer. The
+    /// [`WorkDiff`](Self::WorkDiff) shape, because it is the same question:
+    /// what is here, and what does this one say.
+    Files {
+        view: crate::files_view::FilesView,
+        preview: Option<crate::files_view::Preview>,
+    },
+    /// The step spine (VISION V1) — [`Rail`](super::Query::Rail)'s answer: the
+    /// notches and the child cards hanging off them, unpinned. The pin is the
+    /// viewport's, and §8.5 files a viewport's folds under views.
+    Rail(crate::rail::Rail),
+    /// One agent's undelivered deposits (§11, ARCH §2.11) —
+    /// [`Inbox`](super::Query::Inbox)' answer.
+    Inbox(Vec<crate::inboxview::InboxEntry>),
     /// One §9 destination's current bytes (§8.5, bl-0164) —
     /// [`ReadConfig`](super::Query::ReadConfig)'s answer, the file editors'
     /// Reload spelled.
@@ -162,89 +192,6 @@ pub enum Reply {
     Models(Vec<String>),
 }
 
-/// Encode a reply to its file body. `ok` is the one field every reply carries.
-pub fn encode(reply: &Reply) -> Value {
-    match reply {
-        Reply::Outcome(outcome) => json!({
-            "ok": outcome.ok(), "kind": "outcome", "exit": outcome.exit,
-            "stdout": outcome.stdout, "stderr": outcome.stderr,
-        }),
-        Reply::Prepared(prepared) => {
-            json!({ "ok": true, "kind": "prepared", "prepared": prepared_value(prepared) })
-        }
-        Reply::Started { conversation } => {
-            json!({ "ok": true, "kind": "started", "conversation": conversation })
-        }
-        Reply::Deleted => json!({ "ok": true, "kind": "deleted" }),
-        Reply::Armed { armed } => json!({ "ok": true, "kind": "armed", "armed": armed }),
-        Reply::Flagged => json!({ "ok": true, "kind": "flagged" }),
-        Reply::Answered {
-            tool_use,
-            tool,
-            ruling,
-            advanced,
-        } => json!({ "ok": true, "kind": "answered", "tool_use": tool_use, "tool": tool,
-                     "verdict": ruling.word(), "advanced": advanced }),
-        Reply::Floored { standing } => {
-            json!({ "ok": true, "kind": "floored", "standing": standing })
-        }
-        Reply::Nudged => json!({ "ok": true, "kind": "nudged" }),
-        Reply::Acked => json!({ "ok": true, "kind": "acked" }),
-        Reply::TrailCleared => json!({ "ok": true, "kind": "trail-cleared" }),
-        Reply::Applied { file } => json!({ "ok": true, "kind": "applied", "file": file }),
-        // Both halves of the one answer: the branch, and the space it is a
-        // branch of — the gesture's own two words, in the shape it sets them.
-        Reply::Marks { branch, space } => {
-            json!({ "ok": true, "kind": "marks", "branch": branch,
-                    "space": space.display().to_string() })
-        }
-        Reply::Workspaces(rows) => rows_reply("workspaces", rows.iter().map(ws_row)),
-        Reply::Conversations(rows) => rows_reply("conversations", rows.iter().map(conv_row)),
-        Reply::Balls(rows) => rows_reply("balls", rows.iter().map(join_row)),
-        // The board answers its rows and, when a §4.3 loop is armed over them,
-        // that loop's facts beside them. `fleet` is absent — not empty — in an
-        // unarmed world: a reader must not have to tell "no loop" from "a loop
-        // with nothing in it" (V4's burden check, in the wire shape).
-        Reply::Board(board) => {
-            let mut map = rows_map("board", board.rows.iter().map(board_row));
-            if !board.fleet.is_empty() {
-                map.insert(
-                    "fleet".to_owned(),
-                    json!(board.fleet.iter().map(fleet_facts).collect::<Vec<Value>>()),
-                );
-            }
-            Value::Object(map)
-        }
-        Reply::Attention(rows) => rows_reply("attention", rows.iter().map(queue_row)),
-        Reply::Ops(rows) => rows_reply("ops", rows.iter().map(op_row)),
-        Reply::Help(rows) => rows_reply("help", rows.iter().map(help_row)),
-        // The one encoder written beside its type rather than here: the rows'
-        // shape is `workdiff`'s own vocabulary (see that module's `wire`).
-        Reply::WorkDiff { attempts, patch } => {
-            crate::workdiff::wire::reply(attempts, patch.as_ref())
-        }
-        Reply::Search(found) => json!({
-            "ok": true, "kind": "search",
-            "rows": found.hits.iter().map(hit_row).collect::<Vec<Value>>(),
-            "unreadable": found.unreadable,
-        }),
-        Reply::Config { text } => json!({ "ok": true, "kind": "config", "text": text }),
-        Reply::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
-        Reply::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),
-        // The one listing whose row is a bare id: a model has no other fact
-        // yog knows — brazen publishes an id and a default flag, and which one
-        // is default is a `providers.yaml` question, not a roster one (§9.4).
-        Reply::Models(ids) => rows_reply("models", ids.iter().map(|id| json!(id))),
-    }
-}
-
-/// One provider row as the operator reads it (§8.3, §9.5): its name, the
-/// credential fact in words, and why `bz --login` cannot serve it — `null`
-/// exactly when it can.
-fn provider_row(row: &crate::config_edit::brazen::ProviderRowView) -> Value {
-    json!({ "name": row.name, "fact": row.fact, "blocked": row.blocked })
-}
-
 /// Whether a dispatch outcome was clean — the draft-clearing predicate the
 /// composer reads (§5.3: RAM until *sent*): a captured run must have exited 0;
 /// any other reply is its action's success by construction; a refusal is not.
@@ -254,32 +201,6 @@ pub fn cleared(result: &Result<Reply, String>) -> bool {
         Ok(_) => true,
         Err(_) => false,
     }
-}
-
-/// Encode a refusal — a gesture that never ran (decode failure, gate refusal,
-/// executor error). The error text is the §7.3 story; the ops trail carries
-/// whatever the executor logged before refusing.
-pub fn refusal(error: &str) -> Value {
-    json!({ "ok": false, "error": error })
-}
-
-fn rows_reply(kind: &str, rows: impl Iterator<Item = Value>) -> Value {
-    Value::Object(rows_map(kind, rows))
-}
-
-/// The same, still open for a family that carries one more key.
-fn rows_map(kind: &str, rows: impl Iterator<Item = Value>) -> Map<String, Value> {
-    let mut map = Map::new();
-    map.insert("ok".to_owned(), json!(true));
-    map.insert("kind".to_owned(), json!(kind));
-    map.insert("rows".to_owned(), json!(rows.collect::<Vec<Value>>()));
-    map
-}
-
-/// One help page as data — the same four facts every seat renders (§8.5).
-fn help_row(row: &crate::boundary::help::HelpRow) -> Value {
-    json!({ "verb": row.verb, "usage": row.usage,
-            "summary": row.summary, "detail": row.detail })
 }
 
 #[cfg(test)]

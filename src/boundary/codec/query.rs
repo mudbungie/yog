@@ -21,6 +21,10 @@ use super::start::{encode_path, opt_field, opt_of};
 use super::{obj, path_of, str_of, usize_of};
 use crate::boundary::Query;
 
+/// The §11 inspector family's own spelling (bl-6233) — the six queries
+/// addressed at a conversation rather than a workspace.
+mod inspector;
+
 /// Encode one query to its envelope. Total over [`Query`].
 pub(super) fn encode(query: &Query) -> Value {
     match query {
@@ -40,6 +44,22 @@ pub(super) fn encode(query: &Query) -> Value {
             }
             Value::Object(map)
         }
+        // The §11 inspector family (bl-6233): one address, written once —
+        // what differs between them rides beside it, never instead of it.
+        Query::Transcript { workspace, agent } => inspector::at("transcript", workspace, agent),
+        Query::Steps { workspace, agent } => inspector::at("steps", workspace, agent),
+        Query::Rail { workspace, agent } => inspector::at("rail", workspace, agent),
+        Query::Inbox { workspace, agent } => inspector::at("inbox", workspace, agent),
+        Query::Step {
+            workspace,
+            agent,
+            seq,
+        } => inspector::step(workspace, agent, seq),
+        Query::Files {
+            workspace,
+            agent,
+            path,
+        } => inspector::files(workspace, agent, path.as_ref()),
         Query::Board => json!({ "op": "board" }),
         Query::Attention => json!({ "op": "attention" }),
         Query::Ops { max } => json!({ "op": "ops", "max": max }),
@@ -88,6 +108,11 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Option<Result<Query, S
 
 /// The query table itself: `Ok(None)` is "some other family's op".
 fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
+    // The conversation-addressed six read first, in their own table (bl-6233);
+    // an op they do not claim falls through to this one unchanged.
+    if let Some(query) = inspector::read(op, o)? {
+        return Ok(Some(query));
+    }
     Ok(Some(match op {
         "workspaces" => Query::Workspaces,
         "conversations" => Query::Conversations {

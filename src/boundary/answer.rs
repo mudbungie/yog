@@ -20,10 +20,9 @@
 
 use crate::app::Snapshot;
 use crate::attention;
-use crate::delete::{self, Claim, Confirmation};
 use crate::git_tree::AgentState;
 use crate::nav::{self, convs::ConvBall, convs::ConvRow, ws_key};
-use crate::projects::join::{self, JoinState};
+use crate::projects::join;
 use crate::ui_state::UiState;
 use std::collections::HashSet;
 use std::path::Path;
@@ -32,9 +31,17 @@ use super::dispatch::Deps;
 use super::reply::{Reply, WsRow};
 use super::{Query, config, help};
 
+/// The §3.6 unmaking's own derivations — what a delete would destroy, read by
+/// the dialog and by the dispatch gate alike.
+mod confirm;
+/// The §11 inspector family (bl-6233): one conversation's transcript, steps,
+/// files, spine and mail — the derivations the frame's view-models delegate to.
+pub mod inspector;
 /// The §6 decision queue: the roster both frontends walk, the queue it filters
 /// to, and the acknowledgement that answers one row (VISION §5 V5.2).
 pub mod queue;
+
+pub use confirm::{agent_confirmation_of, confirmation_of};
 
 /// Answer one query (§8.5). Total over [`Query`]; `now_unix` is the caller's
 /// wall clock (minted at the process boundary, so the derivation stays
@@ -78,6 +85,36 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
                 .as_ref()
                 .and_then(|f| crate::workdiff::patch(&attempts, f));
             Reply::WorkDiff { attempts, patch }
+        }
+        // The §11 inspector family (bl-6233, REMOTE §9 step 1): the
+        // conversation's own reads, which had no headless spelling at all —
+        // so no seat but the window could read a chat. World-bytes queries
+        // like the two above, answered straight through for the same reason,
+        // over the derivations in [`inspector`] the frame delegates to.
+        Query::Transcript { workspace, agent } => {
+            Reply::Transcript(inspector::transcript(snap, workspace, agent))
+        }
+        Query::Steps { workspace, agent } => Reply::Steps(inspector::steps(snap, workspace, agent)),
+        Query::Step {
+            workspace,
+            agent,
+            seq,
+        } => Reply::Step(crate::steps_view::detail(workspace, agent, seq)),
+        Query::Files {
+            workspace,
+            agent,
+            path,
+        } => {
+            let (view, preview) = inspector::files(workspace, agent, path.as_deref());
+            Reply::Files { view, preview }
+        }
+        Query::Rail { workspace, agent } => {
+            let steps = inspector::steps(snap, workspace, agent);
+            let tx = inspector::transcript(snap, workspace, agent);
+            Reply::Rail(inspector::rail(snap, workspace, agent, &steps, &tx))
+        }
+        Query::Inbox { workspace, agent } => {
+            Reply::Inbox(crate::inboxview::list_inbox(workspace, agent))
         }
         Query::Ops { max } => {
             let skip = snap.ops.len().saturating_sub(*max);
@@ -208,56 +245,6 @@ pub fn names_in(snap: &Snapshot, ws: &Path) -> Vec<String> {
             t.agents
                 .iter()
                 .filter_map(crate::git_tree::Agent::name_fact)
-        })
-        .collect()
-}
-
-/// The §3.6 confirmation for `ws` — what dies, what is released, what is live.
-/// `None` for anything not one of yog's own named workspaces (§3.6 scope). One
-/// derivation for the dialog and the dispatch gate alike; re-derived at fire
-/// time, fail-closed.
-pub fn confirmation_of(snap: &Snapshot, ws: &Path) -> Option<Confirmation> {
-    let name = named_leaf(snap, ws)?;
-    let agents = snap.trees.get(ws).map_or(&[][..], |t| t.agents.as_slice());
-    Some(delete::confirmation(
-        &name,
-        ws,
-        &nav::convs::liveness(agents),
-        bound_claims(snap, ws),
-    ))
-}
-
-/// The §3.6 agent-delete confirmation for one conversation (bl-f17a): its
-/// display name and its live members. `None` outside yog's own named
-/// workspaces — the same scope as the workspace verb (§3.6: foreign
-/// workspaces are another driver's territory, replays read-only), and how
-/// every carrier decides whether to offer the verb. One derivation for the
-/// dialog and the dispatch gate alike; re-derived at fire time, fail-closed.
-pub fn agent_confirmation_of(
-    snap: &Snapshot,
-    ws: &Path,
-    root: &str,
-) -> Option<delete::agent::AgentConfirmation> {
-    named_leaf(snap, ws)?;
-    let agents = snap.trees.get(ws).map_or(&[][..], |t| t.agents.as_slice());
-    Some(delete::agent::confirmation(root, agents))
-}
-
-/// `ws`'s own name iff it is one of yog's own — [`crate::binding::named_of`]'s question,
-/// asked of this snapshot's workspace set.
-fn named_leaf(snap: &Snapshot, ws: &Path) -> Option<String> {
-    crate::binding::named_of(&snap.workspaces, ws)
-}
-
-/// The live bound balls the unmaking releases (§3.6 step 1): the join's
-/// [`Bound`](JoinState::Bound) rows for this workspace.
-fn bound_claims(snap: &Snapshot, ws: &Path) -> Vec<Claim> {
-    snap.join_rows
-        .iter()
-        .filter(|r| r.workspace.as_deref() == Some(ws) && r.state == JoinState::Bound)
-        .map(|r| Claim {
-            project: r.project.clone(),
-            id: r.ball_id.clone(),
         })
         .collect()
 }

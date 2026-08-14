@@ -122,6 +122,19 @@ fn spell_query(query: &Query) -> String {
             Some(file) => format!("/work-diff {} {}", file.ball, file.path),
             None => "/work-diff".to_owned(),
         },
+        // The §11 inspector family (bl-6233): the workspace *and* the
+        // conversation are the seat's selection, exactly as `/message`'s are —
+        // so four of the six are the verb alone, and the other two state only
+        // the thing no seat can supply (which step, which file).
+        Query::Transcript { .. } => "/transcript".to_owned(),
+        Query::Steps { .. } => "/steps".to_owned(),
+        Query::Step { seq, .. } => format!("/step {seq}"),
+        Query::Files { path, .. } => match path {
+            Some(path) => format!("/files {path}"),
+            None => "/files".to_owned(),
+        },
+        Query::Rail { .. } => "/rail".to_owned(),
+        Query::Inbox { .. } => "/inbox".to_owned(),
         Query::Board => "/board".to_owned(),
         Query::Attention => "/attention".to_owned(),
         Query::Ops { max } => format!("/ops {max}"),
