@@ -700,9 +700,26 @@ Machine state: a conversation with history worth walking.
    card's own fork label in words — `from here` / `from <Name>@<oid>` name an
    ancestry, `from config/<name>` names a clean child that has none — and the
    strokes are gone, because two renderings of one fact is one too many. The
-   taxonomy is unchanged and still derived; **drawing the descent as a graph
-   needs a seat that is not the chat**, and yog bl-5cf8 is where that is
-   decided rather than smuggled into a chat rule.
+   taxonomy is unchanged and still derived.
+   **Ruled by bl-5cf8: a drawn descent graph earns no seat — the words are
+   the rendering.** Each edge already has its one home. The *provenance*
+   relation is drawn, as the §11 conversation list's indentation (since
+   bl-fa82 the list renders the descent-id forest itself, and since bl-8905
+   that is its only rendering); the *context* edge is worded, on the child
+   card's fork label, at the moment an operator asks where a child came
+   from. A two-edge graph would therefore be a second rendering of both
+   facts at once — the exact debt bl-1802 paid down for one of them. Its
+   cheapest candidate seat, the conversation list, also folds: a picture
+   whose edges vanish behind a collapse is not a picture of a shape, and
+   pinning the list open to keep the picture honest would spend the fold on
+   a stroke nobody asked for. And it is unassertable: acceptance tests hold
+   the paint layer to account through its text (bl-bc06), so a
+   solid-vs-dashed stroke between rows is a fact no test could catch lying
+   — what can't be tested mustn't be built. If an operator one day asks the
+   question the labels cannot answer — the shape of a whole descent at a
+   glance, ancestry diverging from provenance across many children — that
+   is a new surface argued on its own evidence, not this taxonomy's missing
+   rendering.
 4. **The dispatch notch carries a live inline child card**: the child's name,
    its fork-point label ("from here" / "from config/default" /
    "from <Name>@<notch>"), a state chip, a spend figure, and a **streaming
