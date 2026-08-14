@@ -7384,12 +7384,27 @@ into a restatement of the label:
    tabs, the five step drill-ins — the sentences are one exhaustive match over
    the enum, so a new variant cannot ship wordless.
 
-The invariant is machine-held in `src/shell/acceptance/hover/`, in three halves
-that catch different failures. `every_interactive_control_carries_a_hover` reads
+The invariant is machine-held in `src/shell/acceptance/hover/`, in four halves
+that catch different failures.
+`every_click_sensing_control_the_window_paints_says_what_it_does` (`hover/live.rs`,
+bl-8e7a) asks it of the **running window**: it walks §11's own focus floor
+(Tab) around every surface the two tab strips can show — the tours are
+`CenterTab::all` / `InspectorTab::all`, so a new tab joins them by existing —
+and for each widget the cursor lands on asks egui itself whether the response
+senses a click (`Response::sense`) and whether a tooltip opened for it
+(`popup::was_tooltip_open_last_frame`, which egui keys on the widget's own id).
+**Nothing is enumerated**, so a control built by a constructor nobody listed is
+judged the day it is painted; an `Area`'s own click handle (`layer.id.with("move")`
+— a combo popup, a menu) is a surface rather than a control and is skipped by
+that construction, not by a shape heuristic.
+`every_interactive_control_carries_a_hover` reads
 the tree's own source (`hover/scan.rs` reduces a file to its call structure,
 then walks the method chain off each widget constructor), so a control shipped
 mute fails **even where no fixture can reach its seat** — a Move destination, a
-provider Login row, a workflow-file button.
+provider Login row, a workflow-file button. Its `CONTROLS` vocabulary is
+hand-listed and that is its known weakness (bl-45c7's shape: a call it does not
+know is not judged at all); the live half is what covers that wherever the
+window can be driven, leaving only *a new spelling in a seat no drive reaches*.
 `every_control_hover_names_its_keyboard_spelling` (bl-478d) is that same reading
 held to rule 3: the skeleton keeps each literal's **words**, so the scan reads
 what a control actually says and fails it for naming no spelling — following a
@@ -7688,6 +7703,7 @@ beside `main.rs`.
 | `src/shell/acceptance/{focus,walk}.rs` (excl.) | ≤250 each | the keyboard driver and the §11 focus-discipline drive it steers — `focus` its pointer/launch half, `walk` its keyboard half (bl-c21f: a roster step lands the composer in both directions, Ctrl+↓ continues the walk from inside the box, and Escape still releases to a live bare plane), each asserting the model's selection beside egui's `wants_keyboard_input` so a walk that never walked cannot pass |
 | `src/shell/acceptance/geometry.rs` (excl.) | ≤250 | the §11 panel-geometry regression |
 | `src/shell/acceptance/hover/mod.rs` (excl.) | ≤250 | the §11 discoverability invariant — the source scan that no control escapes, and its paint-layer proof under `everything_is_visible` |
+| `src/shell/acceptance/hover/live.rs` (excl.) | ≤250 | the same invariant read off the running window (bl-8e7a) — the focus-floor walk that judges every click-sensing response by behavior, naming no constructor |
 | `src/shell/acceptance/hover/lex.rs` (excl.) | ≤250 | the reduction split off at the cap — source to skeleton, comments dropped and each literal kept as its own words, its parens and semicolons escaped so a sentence cannot fake structure |
 | `src/shell/acceptance/hover/scan.rs` (excl.) | ≤250 | the walk over `lex`'s skeleton |
 | `src/shell/acceptance/hover/spelling.rs` (excl.) | ≤250 | the rule-3 half (bl-478d: a control's hover names its key, its §8.5 line, or the focus floor, against a vocabulary read from `keymap::spell` and `boundary::help` rather than restated) |
