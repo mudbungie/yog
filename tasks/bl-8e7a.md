@@ -1,7 +1,8 @@
 +++
 title = "hover::CONTROLS is a hand-listed scan with ID_IDENTS' failure mode: a new widget constructor is silently unpoliced"
 created = 1786685253
-updated = 1786685253
+updated = 1786686401
+claimant = "Tenon"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
