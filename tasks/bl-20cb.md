@@ -1,7 +1,8 @@
 +++
 title = "the ten brazen provider rows paint twice in the same frame: once in the Login pane and once in the Config pane's provider table"
 created = 1786163411
-updated = 1786678327
+updated = 1786684399
+claimant = "Marlin"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 QUALITY.md §1 criterion **H1** ('One fact, one rendering. A fact paints once per surface'). Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out.
