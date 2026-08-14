@@ -936,6 +936,22 @@ Tests:
   line lands in ops at exit.
 - **S0-T6 login-detection**: fixture workspace with an auth-failed step on
   disk → the step's view-model carries the Login affordance.
+- **S0-T7 unseeded-first-turn** (bl-9e10): step 5 driven rather than
+  fixtured. `scripts/drive/beats_unseeded.sh` runs a real yog against a
+  workspace wall left deliberately unfinished, in the two degrees `wall.sh`
+  names — nothing laid, so the template's row does not resolve (CONFIG-kind),
+  and the row table with no sign-ins (AUTH-kind, step 5 itself). Every other
+  wire beat seeds the wall before the launch (bl-1851) and so has only ever
+  driven step 3, which is why this went undriven. It asserts the start fires
+  anyway (§9.2's birth gate stays retired, bl-00ee), the first turn settles as
+  an error with no reply, the decline lands on the surface its own remedy is
+  derived from — the §7.3 trail for the config kind, the settled step for the
+  auth kind — and a conversation survives to be nudged (bl-9bef). It spends
+  nothing on the wire: both declines happen before the request leaves the
+  process. The painted halves are `src/shell/acceptance/remedies.rs`, which
+  pins those declines verbatim and reads the two ruled remedies — Login, and
+  the §9.1 editor route — out of the frame; the drive cannot read the glass,
+  so the words are the seam (the bl-55d8 split).
 
 ## S1 — Returner: the conversation continues
 

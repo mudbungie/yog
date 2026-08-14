@@ -49,19 +49,46 @@
 # `XDG_DATA_HOME` onto its own scratch, and a source that folded off those would
 # vanish inside the room it is meant to supply.
 #
+# A WALL HAS THREE DEGREES, AND EACH IS A DIFFERENT FIRST TURN (bl-9e10).
+# `seed_wall` lays both halves, which is the only degree every wire beat before
+# bl-9e10 had ever driven — and it is the reason S0 step 5 went undriven: a
+# fully-seeded wall's first turn SUCCEEDS, so the auth-failed step the story is
+# about could never occur. The halves are split apart here rather than copied
+# into the beat that needs one, because "where a wall's config lives" and "where
+# its credentials live" are §16.2 layout facts with one home:
+#
+#   nothing laid  → the template's row does not resolve at all → brazen's
+#                   CONFIG-kind decline, `unknown provider ...`, which is what
+#                   the §7.3 banner renders and what the §9.1 remedy answers.
+#   config only   → the row resolves and has no credential → brazen's AUTH-kind
+#                   decline, which is S0 step 5's own subject: the auth-failed
+#                   step with Login one click away (§8.3/§13.3).
+#   both          → the turn works. Every other run verb wants this one.
+#
 # DESIGN §3.1's bootstrap constant, `src/names/mod.rs::DEFAULT_NAME` in the tree.
 BOOTSTRAP_WS=home
 wall_dir() { printf '%s/yog/world/walls/%s/brazen' "$1" "$2"; }
-seed_wall() {
+# The row table alone: brazen's provider rows reach the wall through this file
+# and nowhere else (preflight says so of `openai-chatgpt`).
+seed_wall_config() {
   [ -n "${2:-}" ] || return 0
   wall=$(wall_dir "$1" "$2")
   mkdir -p "$wall"
   if [ -f "$HOME/.config/brazen/config.toml" ]; then
     cp "$HOME/.config/brazen/config.toml" "$wall/config.toml"
   fi
+  echo "wall: $wall"
+}
+# The sign-ins beside it — the half that makes a resolved row answerable.
+seed_wall_credential() {
+  [ -n "${2:-}" ] || return 0
+  wall=$(wall_dir "$1" "$2")
   if [ -d "$HOME/.local/share/brazen/credentials" ]; then
     mkdir -p "$wall/credentials"
     cp "$HOME"/.local/share/brazen/credentials/*.json "$wall/credentials/" 2>/dev/null || true
   fi
-  echo "wall: $wall"
+}
+seed_wall() {
+  seed_wall_config "$1" "${2:-}"
+  seed_wall_credential "$1" "${2:-}"
 }
