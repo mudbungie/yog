@@ -1,7 +1,7 @@
 +++
 title = "scrub balls/tasks and publish it: content redaction across the ref's history, not a private remote"
 created = 1786677230
-updated = 1786678475
+updated = 1786678489
 claimant = "Ciabatta"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -119,4 +119,4 @@ Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's
 
 ---
 
-Numbers above are as of base `45828f5` (1,510 commits), rewritten to `2334b1a`. Two rounds of self-scrub were needed first: this result note itself carried an operator home path, a scratch path, the literal rule strings it was describing, and an SSH remote URL — evidence for the standing guard this ball's last section asks for. A store that is only scrubbed by hand re-leaks in the act of recording the scrub.
+The store is live, so any base sha named here is stale the moment another agent commits. The rewrite is therefore scripted, not a one-off artifact: re-run the filter (and re-bundle) against whatever the remote tip is at the moment of the push, and compare commit counts, blob counts and the 426 task paths across the rewrite as the acceptance check. Two rounds of self-scrub were needed first: this result note itself carried an operator home path, a scratch path, the literal rule strings it was describing, and an SSH remote URL — evidence for the standing guard this ball's last section asks for. A store that is only scrubbed by hand re-leaks in the act of recording the scrub.
