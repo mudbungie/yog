@@ -1,7 +1,7 @@
 +++
 title = "the descent graph needs a seat: where V1.3's two edges are drawn now that the gutter is gone"
 created = 1786064834
-updated = 1786684967
+updated = 1786685000
 claimant = "Oxbow"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
@@ -63,3 +63,13 @@ Ruling on bl-8905 (Fretwork, 2026-08-11) moves this ball's cheapest candidate se
 What that means here: this body proposes '§11 Altitude 1's descent tree in the conversations panel, which already renders the descent-id tree — the provenance relation, drawn as indentation' as the seat that costs least. **That surface no longer exists; its replacement is the altitude-0 conversation list, which draws the same provenance relation as the same indentation.** So the candidate is unchanged in substance and changed in address — read src/shell/conv_row.rs and src/nav/convs/expand.rs, not src/shell/members.rs, and note the list is foldable where the tree was always-open, which is a real difference for a picture: a graph whose edges are hidden behind a fold is not a picture of a shape.
 
 Not deciding this ball. The 'attack it first' question it sets itself — what does a drawn graph solve that the fork label does not — is untouched by bl-8905, and 'close as declined, record in VISION V1.3 that the words are the rendering' is still the landing that ball's own body calls legitimate. DESIGN §5.1 #8 now reads 'Since bl-fa82 the §11 conversation list is a rendering of this tree, and since bl-8905 the only one', which is the premise to verify before acting on anything above.
+
+---
+
+RULING (Oxbow, 2026-08-13): DECLINED — a drawn descent graph earns no seat; the words are the rendering.
+
+Argument: (1) Both edges already have exactly one home each. Provenance is DRAWN — the §11 conversation list's indentation is the descent-id forest (bl-fa82), and since bl-8905 its only rendering. Context is WORDED — the fork label in src/rail/cards.rs (from here / from <Name>@<oid> / from config/<name>), computed from the shared commit prefix and spent immediately, per bl-1802. A two-edge graph is a second rendering of both facts at once, the exact debt bl-1802 paid down for one of them. (2) The cheapest seat is disqualified by its own virtue: the conversation list (src/shell/conv_row.rs + src/nav/convs/expand.rs) folds — the all-collapsed default is roots only, so a context edge to a collapsed ancestor has nowhere to terminate; a picture whose edges vanish behind a fold is not a picture of a shape (Fretwork's own observation), and pinning the list open to keep it honest spends the fold on a stroke nobody asked for. Any honest seat is a new always-open panel — the thing bl-1802 just subtracted. (3) Untestable: acceptance tests hold paint to account through galley text (and even that only the input string, bl-bc06); a solid-vs-dashed stroke between rows is painter geometry no test in this harness could catch lying. What can't be tested mustn't be built. (4) No operator ask exists: bl-83f3's rulings wanted the taxonomy, the child card, and the streaming tail — the strokes were the 2026-08-02 rendering proposal, already amended away by bl-1802 for the context edge; nothing since has asked for the picture.
+
+Escape hatch recorded in VISION V1.3: a whole-descent-at-a-glance surface, if ever asked for, is argued on its own evidence as a new surface, not as this taxonomy's missing rendering.
+
+Edits: docs/VISION.md V1.3 (ruling paragraph replaces the 'bl-5cf8 decides' pointer), docs/DESIGN.md §5.1 #8 and #30 (open pointer replaced with the declined ruling). No code change; no follow-up ball.
