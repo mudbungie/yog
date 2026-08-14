@@ -1,7 +1,8 @@
 +++
 title = "a named sender's deposit still paints the raw id: header_line floors it at ladder rung three and never asks the name fact"
 created = 1786685252
-updated = 1786685252
+updated = 1786686261
+claimant = "Voussoir"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
