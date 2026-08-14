@@ -11,6 +11,7 @@ mod alerts;
 mod bands;
 mod birth;
 mod drafts;
+mod drift;
 mod echo;
 mod elision;
 mod fixture;

@@ -56,3 +56,41 @@ pub(super) fn apply(
     picker.models_text = None;
     picker.frozen = None;
 }
+
+/// Fire the §9.4 drift clause's **keeping** exit (bl-2d19) and paint what came
+/// back, on the same status line the pick above it writes: one sentence per
+/// gesture, in one place, whichever of the two the operator spent.
+///
+/// The memos are deliberately **not** dropped here. A retarget writes a ref
+/// mark and nothing else — the conversation's own executor lands it at its next
+/// step — so the freeze this row states is still true at this instant, and
+/// re-deriving it would only re-read the same two oids. The clause goes when the
+/// branch moves, which is a snapshot change the memo key already answers.
+pub(super) fn retarget(
+    picker: &mut PickerState,
+    model: &mut AppModel,
+    ws: &Path,
+    clis: (&Cli, &Cli),
+    agent: &str,
+) {
+    let deps = model.boundary_deps(clis.0, clis.1);
+    let action = Action::Retarget {
+        workspace: ws.to_path_buf(),
+        agent: agent.to_owned(),
+    };
+    picker.status = match model.dispatch(&deps, &crate::shell::now_ts(), &action) {
+        // lernie's own confirmation is on stderr (the mark is a ref the operator
+        // did not name, taking effect at a moment they did not choose), so the
+        // receipt says when it lands rather than that it happened.
+        Ok(Reply::Outcome(outcome)) if outcome.ok() => {
+            format!("{agent} moves onto the current config at its next step")
+        }
+        Ok(Reply::Outcome(outcome)) => format!(
+            "⚠ lernie retarget: {} · {}",
+            crate::opslog::exit::ExitKind::of(outcome.exit, "lernie").label(),
+            outcome.stderr
+        ),
+        Ok(other) => format!("⚠ unexpected reply: {other:?}"),
+        Err(e) => format!("⚠ {e}"),
+    };
+}

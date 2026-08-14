@@ -59,6 +59,9 @@ fn encode_action(action: &Action) -> Value {
         Action::Scan { workspace } => {
             json!({ "op": "scan", "workspace": encode_path(workspace) })
         }
+        Action::Retarget { workspace, agent } => {
+            json!({ "op": "retarget", "workspace": encode_path(workspace), "agent": agent })
+        }
         Action::Close { project, id, name } => ball("close", project, id, name),
         Action::Assign { project, id, name } => ball("assign", project, id, name),
         Action::Release { project, id, name } => ball("release", project, id, name),
@@ -184,6 +187,10 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         })),
         "scan" => Ok(act(Action::Scan {
             workspace: path_of(o, "workspace")?,
+        })),
+        "retarget" => Ok(act(Action::Retarget {
+            workspace: path_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
         })),
         "close" => Ok(act(Action::Close {
             project: path_of(o, "project")?,

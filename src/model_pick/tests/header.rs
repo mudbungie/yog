@@ -3,7 +3,8 @@
 
 use super::TEMPLATE_PROVIDERS;
 use crate::model_pick::{
-    ConfigPoint, NEW_CONVERSATION_EXIT, birth_row, conversation_row, row_role,
+    ConfigPoint, NEW_CONVERSATION_EXIT, RETARGET_EXIT, RETARGET_HOVER, birth_row, conversation_row,
+    row_role,
 };
 
 /// The governing commit as the fixtures see it: lernie's own template, forked
@@ -101,12 +102,28 @@ fn a_row_for_an_undeclared_role_paints_the_absence() {
     assert_eq!(row.model, "(none)");
 }
 
-/// The exit says what it does, and what it does is the freeze's only lawful
-/// escape — a NEW conversation, never adoption by this one.
+/// The exit says what it does, and what it does is start over — a NEW
+/// conversation, never adoption by this one.
 #[test]
 fn the_exit_label_promises_a_new_conversation_not_adoption() {
     assert!(NEW_CONVERSATION_EXIT.contains("new conversation"));
     assert!(NEW_CONVERSATION_EXIT.contains("current config"));
+}
+
+/// The exit beside it (bl-2d19) is the one that keeps the conversation: it
+/// names the *move*, not a new start, and its hover carries the three facts an
+/// operator needs before spending it — the substrate verb, when it lands, and
+/// that nothing is discarded — plus the §8.5 line that fires it without a
+/// mouse (§11 discoverability rule 3).
+#[test]
+fn the_retarget_exit_moves_this_conversation_and_keeps_it() {
+    assert!(RETARGET_EXIT.contains("move this conversation"));
+    assert!(RETARGET_EXIT.contains("current config"));
+    assert!(!RETARGET_EXIT.contains("new conversation"));
+    assert!(RETARGET_HOVER.contains("lernie retarget"));
+    assert!(RETARGET_HOVER.contains("next step"));
+    assert!(RETARGET_HOVER.contains("keeps every message"));
+    assert!(RETARGET_HOVER.contains("/retarget"));
 }
 
 /// The birth row is the same pair on the same two dropdowns, minus a clause a

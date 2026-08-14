@@ -31,6 +31,9 @@ fn spell_action(action: &Action) -> String {
             false => "/stop".to_owned(),
         },
         Action::Scan { .. } => "/scan".to_owned(),
+        // The conversation is the seat's selection, as `/message`'s is, and the
+        // lineage is the workspace's one default — so the verb is the line.
+        Action::Retarget { .. } => "/retarget".to_owned(),
         Action::Close { id, .. } => format!("/close {id}"),
         Action::Assign { id, .. } => format!("/assign {id}"),
         Action::Release { id, .. } => format!("/release {id}"),

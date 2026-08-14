@@ -10,6 +10,7 @@
 //! | message | `lernie message <ws> <agent> <text>` | ws | conversation |
 //! | stop | `lernie stop <ws> <agent> [--stop-children]` | ws | conversation |
 //! | scan | `lernie scan <ws>` | ws | conversation |
+//! | retarget | `lernie retarget <ws> <agent>` | ws | conversation |
 //! | close | `bl close <id> --as <name>` | project | balls |
 //! | assign | `bl claim <id> --as <name>` | project | balls |
 //! | move | `bl unclaim <id> --as <from>` then `bl claim <id> --as <to>` | project | balls |
@@ -69,6 +70,7 @@ pub(crate) use dispatch::collect;
 const MESSAGE: &str = "message";
 const STOP: &str = "stop";
 const SCAN: &str = "scan";
+const RETARGET: &str = "retarget";
 const STOP_CHILDREN: &str = "--stop-children";
 
 /// `lernie message <ws> <agent> <content>` — the resume gesture (§8.2, ARCH
@@ -152,6 +154,29 @@ pub fn stop(
         ts,
         lernie.workspace(),
         &args,
+        Origin::Conversation,
+    )
+}
+
+/// `lernie retarget <ws> <agent>` — the §9.4 exit from the config freeze
+/// (bl-2d19). It writes a ref mark and returns; the conversation's **own**
+/// executor consumes it at its next step boundary, re-forking the branch onto
+/// the marked config commit and replaying its work on top. Piped, not detached,
+/// for `dispatch`'s reason: a refusal — an agent the workspace has not got, a
+/// role the target config does not describe — must come back in lernie's own
+/// words rather than as a click that did nothing.
+///
+/// No `--config`: lernie defaults to the `default` lineage, which is the one
+/// yog's picker writes and the one the drift this verb answers is measured
+/// against (§9.3, §9.4).
+pub fn retarget(lernie: &Bound, state_root: &Path, ts: &str, agent: &str) -> io::Result<Outcome> {
+    let ws_s = lernie.workspace_arg();
+    run_logged(
+        lernie.cli(),
+        state_root,
+        ts,
+        lernie.workspace(),
+        &[RETARGET, &ws_s, agent],
         Origin::Conversation,
     )
 }

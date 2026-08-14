@@ -45,6 +45,38 @@ fn the_frames_dispatch_is_the_boundary_chokepoint_with_its_own_ui() {
     assert_eq!(ops.last().map(|e| e.ts.clone()), Some("TS".to_owned()));
 }
 
+/// The §9.4 exit rides the same chokepoint (bl-2d19), and what reaches the
+/// substrate is the workspace-bound `lernie retarget <ws> <agent>` — asserted
+/// off the §4.2 trail, which records the argv actually spawned.
+#[test]
+fn the_retarget_exit_spawns_the_bound_lernie_verb() {
+    let bin = tempdir().unwrap();
+    let w = world();
+    let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
+    let _g = spawn_guard();
+    let lernie = fake_lernie(bin.path());
+    let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
+    let action = Action::Retarget {
+        workspace: w.ws_cobalt.clone(),
+        agent: "c-1".into(),
+    };
+    let Reply::Outcome(outcome) = m.dispatch(&deps, "TR", &action).unwrap() else {
+        panic!("a verb answers an outcome");
+    };
+    assert!(outcome.ok());
+    let ops = opslog::tail(&w.roots.yog_state, 4);
+    let last = ops.last().expect("the verb is on the trail");
+    assert_eq!(
+        last.argv[1..],
+        [
+            "retarget".to_owned(),
+            w.ws_cobalt.display().to_string(),
+            "c-1".to_owned()
+        ]
+    );
+    assert_eq!(last.cwd, w.ws_cobalt.display().to_string());
+}
+
 #[test]
 fn fire_prompt_launches_detached_and_holds_the_start_claim() {
     let bin = tempdir().unwrap();

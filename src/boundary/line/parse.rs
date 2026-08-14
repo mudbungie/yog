@@ -54,6 +54,10 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
                 workspace: args::workspace(ctx, verb)?,
             }))
         }
+        // The §9.4 exit from the config freeze (bl-2d19): the conversation is
+        // the seat's, the lineage is the workspace's one default, so the verb
+        // is the whole line.
+        "retarget" => verbs::retarget(tail, ctx, verb),
         // The §8.2 `bl` family: an id typed, or the focused ball's.
         "close" => Ok(act(Action::Close {
             project: args::project(ctx, verb)?,
