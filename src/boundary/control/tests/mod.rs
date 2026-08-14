@@ -52,8 +52,16 @@ impl World {
         }
     }
 
+    /// The fixture's own `git`, carrying **its own identity** (bl-e492). A
+    /// bare `commit-tree` takes the author from the machine's git config, and a
+    /// CI runner has none — it wrote nothing, [`World::policy`]'s `update-ref`
+    /// then got an empty oid, the policy never landed, and the confinement
+    /// tests read a workspace that declares nothing. The suite must not ask the
+    /// host who it is; every other fixture in the tree already says so itself
+    /// (`test_support::workspace`, `control::tests`).
     fn git(&self, args: &[&str]) -> std::process::Output {
         crate::git_env::git()
+            .args(["-c", "user.email=t@t.local", "-c", "user.name=T"])
             .arg("--git-dir")
             .arg(self.workspace().join("repo.git"))
             .args(args)
@@ -99,8 +107,14 @@ impl World {
         ]);
         let tree = self.git(&["write-tree"]);
         let tree = String::from_utf8_lossy(&tree.stdout).trim().to_owned();
-        let commit = self.git(&["commit-tree", &tree, "-m", "policy"]);
-        let commit = String::from_utf8_lossy(&commit.stdout).trim().to_owned();
+        let written = self.git(&["commit-tree", &tree, "-m", "policy"]);
+        let commit = String::from_utf8_lossy(&written.stdout).trim().to_owned();
+        // A fixture that half-worked is worse than one that failed: an empty
+        // oid here used to sail into `update-ref`, leave `config/default`
+        // unborn, and hand the tests a workspace that declares no policy — so
+        // the gate answered `Ok(())` and the assertion blamed the gate.
+        let why = String::from_utf8_lossy(&written.stderr).into_owned();
+        assert!(!commit.is_empty(), "commit-tree wrote nothing: {why}");
         self.git(&["update-ref", "refs/heads/config/default", &commit]);
     }
 }
