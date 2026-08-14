@@ -1,7 +1,8 @@
 +++
 title = "an explicit prompt gesture: fire inference from the current state — the lernie nudge; a failed first turn re-dispatches in place"
 created = 1786683728
-updated = 1786683728
+updated = 1786684419
+claimant = "Newel"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
