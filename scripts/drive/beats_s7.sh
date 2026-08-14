@@ -4,8 +4,10 @@
 # entry point of its own.
 #
 # World C is one bare conversation on the live wire, then a **laid** forensic
-# state around it: a child agent, a second (newer) root, two `refs/lernie/*`
-# marks, a pending inbox deposit, and a malformed step file. Every one of those is
+# state around it: a child agent carrying a `refs/lernie/*` mark, a second
+# (newer) root, a pending inbox deposit, and a malformed step file — plus the two
+# marks `s6_attention` lays for itself, one beat before it spends them, which is
+# where a fixture whose beat must WATCH it land belongs. Every one of those is
 # lernie's own on-disk representation written by hand — a branch one well-formed
 # descent segment below the root IS a child (§2.3, `CHILD_SEG` below), a ref IS a
 # mark (§6) — which is what makes S7/S6's rows drivable
@@ -40,9 +42,12 @@ lay_forensics() {
   # something to beat: by recency it would head the roster.
   second=$(git --git-dir="$g" commit-tree "$tree" -p "$tip" -m "yogdrive second root")
   git --git-dir="$g" update-ref "refs/heads/agents/$SECOND_ROOT" "$second"
-  # §6 rules 3 and 4: the marks are lernie's, laid here as the refs they are.
-  git --git-dir="$g" update-ref "refs/lernie/budget-exhausted/$ag" "$tip"
-  git --git-dir="$g" update-ref "refs/lernie/conflicted/$ag" "$tip"
+  # §6 rules 3 and 4 are NOT laid here: `s6_attention` (beats_s6.sh) lays its own
+  # two marks on this root, immediately before the walk that acknowledges them.
+  # Laid here they were ~30 s and three beats early, and `s7_steps`'s ↑ walks the
+  # selection back onto this agent in between — §6's ack is held on every frame a
+  # conversation stays focused, so that ↑ acknowledged both, and all three S6-T1
+  # rows passed on it with their own gesture deleted (bl-1061).
   # §6 rule 5: pending mail nobody is driving — a deposit file (§2.11) with the
   # lock free, the one signal that is deliberately NOT silenceable.
   # The file name is lernie's own framing — `<sender-agent-id>-NNN.md` (§2.11) —
