@@ -575,13 +575,16 @@ call `lernie::mint::mint(rng, occupied)` over the crate's `Rng` trait and its
 ARCHITECTURE §3.4. Yog's own seat in the seam is the **seed**: `shell::clock`'s
 `entropy_seed` is still the one home for "now" and feeds
 `SplitMix64::from_seed`, which is what makes the §3.3 preview and its fire
-agree and what bl-28ba's per-prediction seed lifetime is expressed in. The
+agree and what bl-28ba's per-prediction seed lifetime is expressed in — read
+**once per session**, every later seed being one stream step off the one a fire
+spent (bl-dd3d). The
 corpus that lands is lernie's clean-room 541-word list (lernie bl-b59c), which
 replaced an EFF-derived CC BY 4.0 list — the licence and the hostile-word
 problem left the tree with yog's copy of it, rather than moving into lernie.
-The acceptance fixture pins the pair `MINT_SEED`/`MINTED_FIRST`, so a corpus
-change in the crate fails loudly at `shell::acceptance::mint_seed` and names
-its cause.
+The acceptance fixture pins `MINT_SEED` and the whole word sequence it mints
+(`MINTED`, of which `MINTED_FIRST` is the opening preview), so a corpus change
+in the crate fails loudly at `shell::acceptance::mint_seed` and names its
+cause.
 
 **Scope: every creation names; the ladder names whatever lernie names.**
 Since bl-aca4 no creation path yields a nameless agent — a dispatch child, a
@@ -693,8 +696,18 @@ took the name between preview and Enter) the mint re-derives and passes
 the fresh name; the preview is a prediction, the fired mint is the truth.
 **A seed
 lives exactly as long as the prediction it backs** (bl-28ba): the RNG seed is
-held across frames so preview and fire agree, and re-rolled the instant a fire
-lands, because that prediction has been spent. Held longer — one seed per
+held across frames so preview and fire agree, and retired the instant a fire
+lands, because that prediction has been spent. **Its successor comes off the
+spent seed's own stream, not a second entropy read** (bl-dd3d): one
+`SplitMix64` step, so entropy enters a session exactly once — where the first
+seed is minted — and a *known* opening seed determines the whole run of names,
+not merely its first. That is what makes the acceptance drive assertable: with
+two clock reads, "the third name differs from the first" was a coin flip over
+lernie's 541-word pool (it flaked twice in one day, once failing an unrelated
+close gate); with one, the sequence is a fact of the pinned seed and is written
+down as words. Nothing operator-facing changes — a successor nobody can predict
+without the seed is as unpredictable as a successor nobody can predict without
+the clock. Held longer — one seed per
 session — every fire took the same single draw, so every start after the first
 landed on an occupied slot and walked forward off it; the pool is
 first-word-major, so the walk paid out siblings (`recite-a`, `recite-b`,

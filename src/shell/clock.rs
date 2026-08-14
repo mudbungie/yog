@@ -4,9 +4,12 @@
 //! parameters and stays testable; nothing here is derived, cached, or held.
 
 /// An entropy seed for the conversation-mint RNG (§3.3), held stable in
-/// [`StartState::mint_seed`] so the composer's preview and its fire agree —
-/// **per prediction, not per session**: a landed fire spends its seed and draws
-/// the next one here ([`StartState::spend_mint`], bl-28ba). Not
+/// [`StartState::mint_seed`] so the composer's preview and its fire agree. Read
+/// **once per session** (bl-dd3d): the seed still lives only as long as the
+/// prediction it backs, but a landed fire takes its successor off the spent
+/// seed's own stream ([`StartState::spend_mint`], bl-28ba) rather than reading
+/// this clock again — one entropy read per run is what lets a test pin a whole
+/// session's names by pinning its first seed. Not
 /// secret — the mint is collision-avoidance, and the occupied-set check is what
 /// guarantees uniqueness. Yog's own seat in the mint seam since bl-cd38: the
 /// draw is `lernie::mint`'s, but "now" has one home and it is here, so the seed

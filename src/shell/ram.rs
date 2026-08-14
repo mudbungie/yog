@@ -17,6 +17,7 @@ use crate::shell::ConfigState;
 use crate::start::Prepared;
 use crate::ui_state::Clock;
 use crate::xdg::Env;
+use lernie::mint::{Rng, SplitMix64};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -49,17 +50,28 @@ pub struct StartState {
 }
 
 impl StartState {
-    /// Retire the seed a landed fire just spent, re-rolling from entropy
-    /// (bl-28ba) — called at the one point the old prediction dies, so the next
-    /// preview predicts off a seed of its own. A refused or failed launch minted
-    /// nothing, so its prediction stands and its seed is not spent.
+    /// Retire the seed a landed fire just spent (bl-28ba) — called at the one
+    /// point the old prediction dies, so the next preview predicts off a seed of
+    /// its own. A refused or failed launch minted nothing, so its prediction
+    /// stands and its seed is not spent.
     ///
     /// Held past its fire, one seed served the whole session: the mint takes ONE
     /// draw (§3.3), so every later fire re-drew the same start index, landed on
-    /// the occupied slot and walked one forward — and `names::pair` is
+    /// the occupied slot and walked one forward — and the pool is
     /// first-word-major, so the walk paid out `recite-a`, `recite-b`, `recite-c`.
+    ///
+    /// The successor is **the seed's own stream**, not a second entropy read
+    /// (bl-dd3d): one `SplitMix64` step off the spent value. Entropy enters a
+    /// session exactly once, where the first seed is minted
+    /// ([`ShellState::new`]), which is what makes a *known* opening seed pin the
+    /// whole run of names rather than only its first — the acceptance world
+    /// pins that one read, and every later prediction follows from it. A second
+    /// clock read here bought nothing (the successor was already unpredictable
+    /// from a seed nobody publishes) and cost the suite determinism: it made
+    /// "the third name differs from the first" a probabilistic assertion over
+    /// lernie's 541-word pool instead of a fact of the pinned seed.
     pub fn spend_mint(&mut self) {
-        self.mint_seed = entropy_seed();
+        self.mint_seed = SplitMix64::from_seed(self.mint_seed).next_u64();
     }
 }
 

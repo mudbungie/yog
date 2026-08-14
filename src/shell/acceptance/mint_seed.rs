@@ -14,7 +14,7 @@
 //! prediction became the fired `--name`), and nothing else does — a launch that failed
 //! minted no name, so its prediction still stands and its seed with it.
 
-use super::fixture::{MINT_SEED, MINTED_FIRST, fake_lernie, seed_world, world};
+use super::fixture::{MINT_SEED, MINTED, MINTED_FIRST, fake_lernie, seed_world, world};
 use super::screen::{Screen, press};
 use crate::cli_outbound::Cli;
 use crate::start::Prepared;
@@ -64,16 +64,22 @@ fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
     );
     fire(&screen, &mut world, "open the gate");
 
-    // The seed is the assertable half — entropy itself is not. Its re-roll
-    // happens only on `Ok`, so a changed seed is also the proof the fire landed.
+    // The seed is the assertable half — the draw itself is not. Its successor is
+    // taken only on `Ok`, so a changed seed is also the proof the fire landed.
     let respun = world.state.start.mint_seed;
     assert_ne!(
         respun, seed,
         "a landed fire retires the seed it spent (bl-28ba)"
     );
-    let second = predicted(&screen.text(&mut world));
-    assert_ne!(
-        second, first,
+    // Named, not merely *different* (bl-dd3d): the successor comes off the spent
+    // seed's own stream, so with the opening seed pinned every later prediction
+    // is a known word too. `assert_ne!` here used to be a coin flip over
+    // lernie's 541-word pool — it flaked twice in one day, once taking an
+    // unrelated close gate with it. A repeat now fails every run, and names the
+    // word it repeated.
+    assert_eq!(
+        predicted(&screen.text(&mut world)),
+        format!("will be named {}", MINTED[1]),
         "so the next agent is predicted a fresh name, not the walk's next slot"
     );
 
@@ -84,9 +90,22 @@ fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
         world.state.start.mint_seed, respun,
         "and every fire after it retires its own"
     );
-    let third = predicted(&screen.text(&mut world));
-    assert_ne!(third, second, "three fires, three unrelated names");
-    assert_ne!(third, first);
+    assert_eq!(
+        predicted(&screen.text(&mut world)),
+        format!("will be named {}", MINTED[2]),
+        "three fires, three named-in-advance names"
+    );
+    // The rule the three names carry, stated over the pins themselves so it
+    // holds however the corpus moves: re-pinning a changed sequence cannot
+    // quietly re-admit a repeat.
+    assert_eq!(
+        MINTED
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len(),
+        MINTED.len(),
+        "three fires, three unrelated names"
+    );
 }
 
 #[test]
