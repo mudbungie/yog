@@ -19,10 +19,15 @@ fn an_unselected_workspace_paints_the_birth_config_block() {
     world.model.focus_workspace(&ws);
     let out = painted(&mut world, &lernie, &bl);
     assert!(out.contains("new conversation"), "block heading:\n{out}");
+    // What the branch head assigns, not a placeholder for it: since bl-a842 the
+    // fixture's `config/default` carries lernie's own template, so the pair a
+    // conversation started here would be born on is a real one. The `(none)`
+    // this used to read was the *absent* assignment — a state a `lernie new`
+    // workspace is never in, and one whose row is pinned where it belongs, in
+    // `model_pick::tests::header`.
     assert!(
-        out.contains("(none)"),
-        "the model dropdown shows what the branch head assigns — this world's head \
-         declares no worker role, and absence is a value:\n{out}"
+        out.contains("anthropic") && out.contains("claude-sonnet-5"),
+        "the two dropdowns show what the branch head assigns the worker role:\n{out}"
     );
     assert!(
         !out.contains("change…"),
