@@ -114,10 +114,19 @@ pub fn render(
 ) {
     // The wall first (§16.2 as amended): every brazen-shaped seam this frame
     // paints — the config editor's file, the login roster, the picker's
-    // providers — belongs to the focused workspace, so a focus change re-lenses
-    // them before anything reads them. A frame whose focus has not moved pays
-    // one comparison.
-    state.focus_wall(model.focused_workspace());
+    // providers — belongs to a workspace, so a focus change re-lenses them
+    // before anything reads them. A frame whose focus has not moved pays one
+    // comparison.
+    //
+    // **The sphere is the start's, not the focus's** (bl-3b62, §3.4's
+    // `start_workspace`). They are the same path whenever anything is focused;
+    // where they differ is the empty world, and there the focus answers `None`
+    // — which lensed the whole frame onto no wall and left the §8.3 roster
+    // empty for exactly the stranger who most needs it. A wall is path algebra
+    // over a name (§16.2), so the sphere the next Enter founds has one before
+    // it exists, and signing in there signs in the workspace that message will
+    // create.
+    state.focus_wall(Some(&model.start_workspace()));
     // The §6 escalation (bl-e160): folded where the frame reads its snapshot,
     // never inside a widget.
     alerts::escalate(ctx, model, state);

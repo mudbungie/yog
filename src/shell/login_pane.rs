@@ -60,6 +60,20 @@ pub(super) fn login_section(
     state_root: &Path,
 ) {
     ui.label("Login (bz browser sign-in)");
+    // **Which sphere a sign-in lands in, said outright** (bl-3b62). It was
+    // implicit while this surface only ever appeared for a focused workspace
+    // whose name is in the tab bar and the roster column; since the wall lens
+    // rides §3.4's `start_workspace`, the roster also paints in the empty world
+    // — against the wall of the sphere the first message founds, which nothing
+    // on screen would otherwise name. §16.2's whole ruling is that a credential
+    // belongs to one workspace and to no other, so the seat that writes one
+    // says where. Derived from the holder's own workspace, never a second fact.
+    if let Some(name) = sphere(login) {
+        ui.weak(format!(
+            "these rows and their credentials belong to the workspace {name} — a sign-in \
+             here signs in that sphere and no other"
+        ));
+    }
     if ui
         .button("↻ providers + credentials")
         .on_hover_text(
@@ -107,6 +121,15 @@ pub(super) fn login_section(
         run.poll();
         render_run(ui, run);
     }
+}
+
+/// The §3.1 leaf of the workspace this holder's wall belongs to — the name that
+/// **is** the wall (§16.2: "the name names this wall and nothing else"). `None`
+/// only for a holder with no workspace at all, which the frame no longer builds
+/// (bl-3b62) and the auth-failed banner never had.
+fn sphere(login: &LoginHolder) -> Option<String> {
+    let leaf = login.workspace.as_deref()?.file_name()?;
+    Some(leaf.to_string_lossy().into_owned())
 }
 
 /// One provider row: its name, its credential fact in words, and then the Login

@@ -42,7 +42,7 @@ pub(super) fn focus(model: &AppModel, state: &mut ShellState, tab: CenterTab) {
         // but the keyboard's Ctrl+Shift+2 is dispatched *before* the frame's
         // own `focus_wall`, and a re-read against the previous sphere's config
         // would be exactly the leak that ruling closed.
-        state.focus_wall(model.focused_workspace());
+        state.focus_wall(Some(&model.start_workspace()));
         state.wall.brazen.open();
         state.config.open(model.focused_workspace());
     }
