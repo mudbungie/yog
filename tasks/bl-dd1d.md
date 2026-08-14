@@ -1,7 +1,7 @@
 +++
 title = "scrub balls/tasks and publish it: content redaction across the ref's history, not a private remote"
 created = 1786677230
-updated = 1786678244
+updated = 1786678339
 claimant = "Ciabatta"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -20,35 +20,32 @@ operators, and any other address.
 
 ## What "scrub" has to reach
 
-Editing the 34 current task files is not the job. The scanned ref (`ed1fd13`)
-carries 1,461 commits and 417 task paths; closed balls have no file, so the
-record lives only in history, and the worst material named in the audit is in
-deleted blobs:
+Editing the current task files is not the job. The scanned ref carries ~1,500
+commits and 400-odd task paths; a closed ball has no file, so its record lives
+only in history, and the worst material the audit found is in DELETED blobs
+that no `bl update` can reach.
 
-- `tasks/bl-5426.md` — "Run against a live credential it returns seven",
-  plus the model inventory.
-- `tasks/bl-bd9d.md` — `/home/u/...`, private workspace names, conversation
-  ids, request paths, user/model messages, tool grants.
-- `tasks/bl-ebbd.md` — an operator report, an agent chat name, the branch-storm
-  incident, machine load, paths, lineage, OIDs.
-- `tasks/bl-4fb1.md` — "I don't have any useful work in yog".
+The classes, not the quotations (naming them here would re-commit them):
 
-Still live at the time of the audit:
+- an operator's live credential state and the model roster it returned;
+- an operator's home paths, private workspace names, conversation and agent
+  ids, wire request paths, and quoted user/model turns;
+- an operator report, machine load, branch lineage and object ids from a
+  live incident;
+- verbatim operator dialogue quoted as a design ruling;
+- account-level billing and payment text from a CI annotation;
+- provider auth state ("signed in", "no credential stored") and the host
+  config paths behind it;
+- live process ids alongside the commands they ran.
 
-- `tasks/bl-b7dc.md` — "[redacted: account-level scheduling annotation]"
-- `tasks/bl-9b52.md` — "the operator's own live world does exactly this", naming
-  `~/.local/share/yog/world/lernie/template/providers.yaml`, `openai-chatgpt`,
-  `~/.config/brazen/config.toml`.
-- `tasks/bl-20cb.md` — "openai-chatgpt auth oauth2 · <state>",
-  "anthropic auth api_key · <state>".
-- `tasks/bl-a0d4.md` — live process ids, provider/login commands, model changes.
-
-Aggregate at `ed1fd13`: 34 task paths contain `/home/u`, 105 carry operator
-report/ruling markers, 40 reference session artifacts, 22 carry
-live-auth/provider markers. No vendor token, private key, JWT, credential
-value, auth URL, routable IP, MAC, machine id, hardware serial or host
-credential was recovered — the exposure is private context, not a proven
-secret.
+At the audited ref, aggregates rather than instances: ~34 task paths carried an
+absolute operator home path, ~105 carried operator report/ruling markers, ~40
+referenced session artifacts, ~22 carried live-auth/provider markers. **No
+vendor token, private key, JWT, credential value, auth URL, routable IP, MAC,
+machine id, hardware serial or host credential was recovered** — the exposure
+is private context, not a proven secret. Store commit authorship is only
+`mudbungie` (public, stays) and the `balls` bot, so no author-metadata rewrite
+is needed.
 
 So publishing the ref means **rewriting its history**, not editing its tip.
 That is destructive: it invalidates every existing clone of the store,
@@ -58,18 +55,15 @@ including other agents' working clones under
 ## Required work, in order
 
 1. **Bundle the ref first** (`git bundle create` of `balls/tasks`, stored
-   outside the repo) — the pre-scrub record must survive somewhere private.
-2. **Scrub live task bodies** with ordinary `bl update --body` / `bl comment`:
-   account and payment text, other operators' and third parties' names and addresses,
-   `~/.config` and `~/.local/share` operator paths, provider auth state, live
-   process ids, conversation ids, and verbatim operator dialogue. Keep the
-   reasoning; drop the identity, the chronology and the machine state — the
-   same editorial rule bl-2368 applied to the source tree.
+   outside any repo) — the pre-scrub record must survive somewhere private.
+2. **Scrub live task bodies** with ordinary `bl update --body` / `bl comment`.
+   Keep the reasoning; drop the identity, the chronology and the machine
+   state — the same editorial rule bl-2368 applied to the source tree.
 3. **Rewrite history** so deleted blobs carry the same scrub. Content-based
-   redaction (`git filter-repo --replace-text`) over the whole ref, not a
-   path drop — the paths are the record.
-4. **Re-scan the rewritten ref** with the leak gate's rule table before any
-   push.
+   redaction (`git filter-repo --replace-text` plus `--replace-message`) over
+   the whole ref, not a path drop — the paths are the record.
+4. **Re-scan the rewritten ref** with the leak gate's rule table, over every
+   blob in the rewritten history rather than the tip, before any push.
 5. **Then, and only with a fresh operator go-ahead, force-push.** Everyone with
    a clone must re-clone; `bl prime` will not reconcile a rewritten ref for
    them.
