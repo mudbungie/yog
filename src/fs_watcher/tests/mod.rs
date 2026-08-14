@@ -36,9 +36,37 @@ pub(super) fn workspace() -> (TempDir, PathBuf) {
     (dir, root)
 }
 
-/// Drain startup events and let the backend arm before the test mutates.
+/// Wait until the backend is **provably** armed, then drain what arming made.
+///
+/// A watch is not live when `Watcher::new` returns. inotify arms inside the
+/// syscall, so a sleep of any length was indistinguishable from correctness on
+/// Linux; macOS FSEvents starts its stream on another thread, and a write that
+/// lands before the stream is running emits **no event at all** — no timeout
+/// downstream can recover it, which is why `detects_step_request_creation_at_
+/// conv_repo_root` was the CI's one flaky beat (bl-1015).
+///
+/// So arming is not slept on, it is *observed*: rewrite a probe file on every
+/// sample until the watcher reports it. The write is repeated rather than made
+/// once because the pre-arming writes are exactly the ones that vanish, and one
+/// event is all the evidence needed — the stream that delivered it is the same
+/// stream the test's own write will go through.
 fn wait_quiet(watcher: &Watcher) {
-    std::thread::sleep(Duration::from_millis(200));
+    let probe = watcher.repo_root.join("steps/.arming-probe");
+    fs::create_dir_all(probe.parent().unwrap()).unwrap();
+    let armed = poll_until(
+        || {
+            fs::write(&probe, b"x").ok()?;
+            watcher.tick().iter().any(|c| c.path == probe).then_some(())
+        },
+        WAIT_TIMEOUT,
+        POLL_INTERVAL,
+    );
+    assert!(armed.is_some(), "the watcher never armed");
+    // The probe file stays where it is: removing it would be one more event for
+    // the next beat to trip over, and an unread file under `steps/` is invisible
+    // to every assertion here. What is drained is the tail of arming's own
+    // events — now a settle *after* proof rather than in place of it.
+    std::thread::sleep(POLL_INTERVAL * 4);
     let _ = watcher.tick();
 }
 
