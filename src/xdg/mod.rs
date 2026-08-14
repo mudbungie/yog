@@ -14,10 +14,11 @@
 //!
 //! The discipline that makes it testable: **no fold reads the process
 //! environment.** They read only the [`Env`] handed to them, so a test drives
-//! every branch with a hermetic env and Linux tarpaulin covers the macOS
-//! path arms (the OS is a runtime [`Os`] parameter, never `#[cfg]`). The sole
-//! bridge to the real environment is [`Env::from_env`]; nothing else in the
-//! crate may read env for paths.
+//! every branch with a hermetic env and Linux tarpaulin covers all of them —
+//! and there is no per-OS arm left here to cover, the brazen folds that once
+//! carried one having gone per-wall (above). The sole bridge to the real
+//! environment is [`Env::from_env`]; nothing else in the crate may read env
+//! for paths.
 
 use balls::layout::Xdg as BallsXdg;
 use std::collections::HashMap;
