@@ -1,7 +1,7 @@
 +++
 title = "activity and inbox rows elide the informative tail of a path or agent id and keep the invariant prefix, so every row scans as the same string"
 created = 1786163347
-updated = 1786683870
+updated = 1786683964
 claimant = "Corbel"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
@@ -68,7 +68,7 @@ CORRECTION — the archive repository named in the comment above NO LONGER EXIST
 
 The earlier attempt on this ball survives in ONE place, a local bundle:
 
-    /home/u/yog-prepublication-20260813.bundle
+    ~/yog-prepublication-20260813.bundle
 
 Verified complete before the delete (`git bundle verify`: 'the bundle records a complete history'). To read the old attempt back:
 
