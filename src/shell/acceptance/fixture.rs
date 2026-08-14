@@ -28,17 +28,26 @@ use tempfile::{TempDir, tempdir};
 /// [`MINTED_FIRST`], so an assertion can name the word outright instead of
 /// dodging it, and a collision would be a reproducible failure rather than a
 /// one-in-ten flake. Arbitrary but not accidental: this value's word shares no
-/// substring with any needle the suite searches for.
+/// substring with any needle the suite searches for. Pinning it pins the
+/// **whole session** (bl-dd3d), not just its opening: a landed fire takes its
+/// next seed off this one's stream (`StartState::spend_mint`), never a second
+/// entropy read, so [`MINTED`] is a fact of this value, not a run of dice.
 pub(super) const MINT_SEED: u64 = 0xc0df;
 
-/// The word [`MINT_SEED`]'s one draw (§3.3 mints on a single draw) yields
-/// against an empty occupied set — what every acceptance world's opening
-/// preview paints. The pool is **lernie's** since bl-cd38 (yog deleted its own
-/// list and draws through [`lernie::mint`]), so this pair is also the seam
-/// check on that consumption: a corpus change in the crate moves it. Pinned in
-/// `mint_seed.rs`, so such a change fails *there*, naming the cause, instead of
-/// surfacing as a stray needle collision somewhere else in the suite.
-pub(super) const MINTED_FIRST: &str = "metronome";
+/// The words a [`MINT_SEED`] world mints, in fire order (§3.3 draws once
+/// apiece, each off the seed the fire before it spent) — three, the run the
+/// bl-28ba drive walks. Naming them is what retired that drive's probabilistic
+/// `assert_ne!` (bl-dd3d): "a fresh name each time" is read off the pinned
+/// sequence, so a mint regressing to repeats fails every run, not one in 541.
+/// The pool is **lernie's** since bl-cd38 (yog deleted its own list and draws
+/// through [`lernie::mint`]), so this is also the seam check on that
+/// consumption: a corpus change moves it, and fails in `mint_seed.rs` naming
+/// the cause instead of as a needle collision elsewhere in the suite.
+pub(super) const MINTED: [&str; 3] = ["metronome", "granola", "balmy"];
+
+/// [`MINTED`]'s opening — named alone because tests that merely *contain* a
+/// minted name, rather than walking the sequence, only ever see this one.
+pub(super) const MINTED_FIRST: &str = MINTED[0];
 
 /// A `lernie` whose `new` authors the workspace the real one does (ARCH §2.2);
 /// every other verb exits 0. Written executable into `dir`. Shared by every
