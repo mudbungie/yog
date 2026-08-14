@@ -20,9 +20,9 @@
 //!   fresh-file reset for robustness across GNU/BSD builds.
 //! - `a` — **file access mode** (`man lsof`, field `a`): `r` read, `w` write,
 //!   `u` read *and* write; space / `-` unknown. A *writer* is `a` = `w` or `u`.
-//! - `n` — **file name**. Compared against the canonicalized target (the shim
-//!   canonicalizes before spawning; lsof resolves its own name —
-//!   canonicalize-both-sides, mirroring the procfs backends).
+//! - `n` — **file name**. Compared against the canonicalized target
+//!   ([`LsofProbe::observe`] canonicalizes before it asks; lsof resolves its
+//!   own name — canonicalize-both-sides, mirroring the procfs backends).
 //!
 //! Within a file set `a` precedes `n`, so the access seen since the last file
 //! boundary (`f`, `p`, or the previous `n`) is that file's mode. **Confidence:**
@@ -37,6 +37,10 @@
 //! "no match" and real errors, so status alone cannot disambiguate: the shim
 //! maps a spawn failure and a non-empty stderr to Unknown, while empty stdout is
 //! the definite "no holder" ([`Probe::Free`]).
+//!
+//! The one error lsof reports that is **not** uncertainty is a target that does
+//! not exist, and [`LsofProbe::observe`] settles it before spawning anything —
+//! see its doc for why that and the canonical spelling are one question.
 
 use super::probe::{LockProbe, Probe, WriterProbe};
 use std::path::Path;
@@ -116,9 +120,31 @@ impl<R: LsofRunner> LsofProbe<R> {
     /// (the per-question predicate over [`Sightings`]). A runner that could not
     /// observe, or output that is not `-F` field data, is [`Probe::Unknown`]
     /// (§10 — never a false definite).
+    ///
+    /// The target is resolved **before** it is asked about, which decides two
+    /// things the probe was getting wrong on the platform it exists for
+    /// (bl-1015, measured on a `macos-14` runner):
+    ///
+    /// - **Both sides canonical.** lsof prints the fully-resolved name of every
+    ///   fd it finds, and on macOS every temp path resolves (`/var/folders/…` →
+    ///   `/private/var/folders/…`, `/tmp` → `/private/tmp`). Asking about the
+    ///   unresolved spelling made [`parse`]'s name comparison fail against the
+    ///   very fd it had just been handed, so a held `response.json` read
+    ///   [`Probe::Free`] and no model call ever showed as in flight there.
+    /// - **An unresolvable target is [`Probe::Free`], definitely.** Nothing can
+    ///   hold a path that is not there, which is exactly what the procfs
+    ///   backends answer for one (no fd points at it). lsof instead *errors* on
+    ///   an absent path, and an error is indistinguishable from lsof being
+    ///   broken — so every agent with no inbox directory and every agent with
+    ///   no step yet came back [`Probe::Unknown`], wearing the §10 "?" and
+    ///   counting as live at the §3.6 delete gate. Asking the filesystem first
+    ///   keeps the answer definite and costs one `stat`.
     fn observe(&self, target: &Path, held: impl FnOnce(&Sightings) -> bool) -> Probe {
-        let out = self.runner.run(target);
-        match out.as_deref().and_then(|o| parse(o, target)) {
+        let Ok(target) = std::fs::canonicalize(target) else {
+            return Probe::Free;
+        };
+        let out = self.runner.run(&target);
+        match out.as_deref().and_then(|o| parse(o, &target)) {
             Some(seen) if held(&seen) => Probe::Held,
             Some(_) => Probe::Free,
             None => Probe::Unknown,

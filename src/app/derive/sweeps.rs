@@ -10,9 +10,9 @@
 //! workspace, and those are exactly the costs that used to stall the window
 //! (bl-ee0a).
 
+use super::super::desired_watches;
 use super::super::drift::{self, Drift};
 use super::super::snapshot::growth_between;
-use super::super::{desired_watches, needs_liveness_reprobe};
 use super::Deriver;
 use crate::budgets::Scope;
 use crate::fs_watcher::RootKind;
@@ -114,17 +114,7 @@ impl Deriver {
     /// (§7.2).
     pub(super) fn cheap_sweep(&mut self) -> Vec<Drift> {
         let found = self.reconcile(Mark::Sweep);
-        let mut live: Vec<(PathBuf, Vec<String>)> = Vec::new();
-        for (path, tree) in &self.trees {
-            if needs_liveness_reprobe(tree) {
-                let ids = tree.agents.iter().map(|a| a.agent_id.clone()).collect();
-                live.push((path.clone(), ids));
-            }
-        }
-        for (path, ids) in live {
-            self.probes.invalidate_liveness(&path, &ids);
-            self.schedule.mark([(path, Mark::Poll)]);
-        }
+        self.reprobe_live();
         found
     }
 

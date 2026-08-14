@@ -46,7 +46,6 @@ mod view;
 
 use crate::binding::Workspace;
 use crate::fs_watcher::RootKind;
-use crate::git_tree::{AgentState, GitTree};
 use crate::keymap::InspectorTab;
 use crate::projects::runner::BlRunner;
 use crate::state::{
@@ -276,14 +275,6 @@ fn desired_watches(roots: &Roots, workspaces: &[Workspace]) -> Vec<(PathBuf, Roo
             .map(|w| (w.path.clone(), RootKind::Workspace)),
     );
     desired
-}
-
-/// Whether `tree` holds an agent that could have died *silently* — a Live/
-/// InFlight agent; a released flock emits no fs event (§7.2 targeted re-probe).
-fn needs_liveness_reprobe(tree: &GitTree) -> bool {
-    tree.agents
-        .iter()
-        .any(|a| matches!(a.state, AgentState::Live | AgentState::InFlight))
 }
 
 #[cfg(test)]
