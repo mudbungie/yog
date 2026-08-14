@@ -1,7 +1,8 @@
 +++
 title = "consume lernie's mint: delete the local wordlist+draw, draw preview and fire through the crate"
 created = 1785737045
-updated = 1786683098
+updated = 1786683123
+claimant = "Bobbin"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
