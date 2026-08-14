@@ -1,7 +1,7 @@
 +++
 title = "MONITOR: verify the speculative merge queue delivers builds on GitHub Actions end to end — first run blocked upstream at the account level; validate live once Actions accepts jobs"
 created = 1786601239
-updated = 1786601239
+updated = 1786678331
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
@@ -9,11 +9,11 @@ You are monitoring, not building. Report what you observe; file a new ball per d
 
 CONTEXT (presume nothing): yog adopted balls' speculative merge queue (bl-1a5b, 2026-08-13; design: balls repo docs/design/bl-24e7-speculative-merge-queue.md). The pieces: (1) scripts/pre-commit is the build gate; it first asks `bl-speculate check` whether this exact worktree tree already passed this exact gate (a "verdict cache" in ~/.local/state/balls/plugins/bl-speculate/verdicts/) and exits in seconds on a hit; (2) .github/workflows/speculate.yml runs that same gate on GitHub Actions for any branch named speculation/<sha> and uploads the verdict store as an artifact named `verdicts`; (3) scripts/speculate-gate, used as `bl-speculate run --gate scripts/speculate-gate`, pushes a candidate, waits on the workflow run, downloads and imports the verdict, deletes the branch. Everything is fail-open: any breakage anywhere degrades to the stock local gate — which is exactly why breakage is INVISIBLE without this monitoring.
 
-KNOWN BLOCKER at filing time: GitHub refuses to start jobs on this account — annotation on run 31669891074 reads "[redacted: account-level scheduling annotation]" CI on main fails identically. the account-level block must clear, or the repo must go public. Check 0 tells you whether that has happened.
+KNOWN BLOCKER at filing time: GitHub was refusing to start any job on this repository, for an account-level reason outside the code. Every run, including CI on main, failed within seconds with a scheduling annotation rather than a build failure. Check 0 tells you whether that has been resolved.
 
 CHECK 0 — is Actions accepting jobs yet?
     gh run list --limit 3 --json name,conclusion,createdAt --jq '.[] | .createdAt + " " + .name + " " + .conclusion'
-If the newest runs still fail in ~3 seconds with the scheduling annotation (read it via: gh api repos/mudbungie/yog/actions/runs/<RUN_ID>/jobs --jq '.jobs[0].id' then gh api repos/mudbungie/yog/check-runs/<JOB_ID>/annotations --jq '.[].message'), report "still blocked upstream" in this ball with `bl comment` and STOP — nothing below can pass.
+If the newest runs still fail in ~3 seconds without ever starting a job, read the scheduling annotation (gh api repos/mudbungie/yog/actions/runs/<RUN_ID>/jobs --jq '.jobs[0].id', then gh api repos/mudbungie/yog/check-runs/<JOB_ID>/annotations --jq '.[].message'), report "Actions still refusing to schedule" in this ball with `bl comment` and STOP — nothing below can pass.
 
 CHECK 1 — the fingerprint computes (cache not inert). From a CLAIMED worktree or the repo root:
     bl-speculate check; echo "exit: $?"
