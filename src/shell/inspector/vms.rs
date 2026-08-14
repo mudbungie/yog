@@ -11,12 +11,12 @@ use std::path::Path;
 use super::super::{InspectorState, ShellState};
 use super::{rail, work};
 use crate::AppModel;
+use crate::boundary::answer::inspector;
 use crate::files_view::{FilesView, Preview};
 use crate::git_tree::AgentState;
 use crate::inboxview::{InboxEntry, list_inbox};
 use crate::inspector::TabData;
 use crate::keymap::InspectorTab;
-use crate::nav::convs::{display_name_of, root_of};
 use crate::steps_view::{self, StepDetail, StepsView};
 use crate::transcript::{self, Transcript};
 
@@ -41,20 +41,16 @@ pub(super) fn tab_data(
     focus: &Focus,
 ) -> TabData {
     let (agent_id, tip, agent_state) = (&focus.agent_id, &focus.tip, focus.state);
-    let in_flight = agent_state == AgentState::InFlight;
     // Who the transcript's model turns are (bl-2335): the §3.3 ladder over the
-    // selection's *conversation root*, exactly as the composer's target line
-    // derives it — one function, never a second spelling. A selection the
-    // snapshot does not carry is its own root and lands on the ladder's last
-    // rung, which is the agent id.
-    let speaker = {
-        let agents = model
+    // selection's *conversation root*, through the boundary's own derivation —
+    // one function, never a second spelling (bl-6233).
+    let speaker = inspector::speaker(
+        &model
             .focused_tree()
             .map(|t| t.agents.clone())
-            .unwrap_or_default();
-        let root = root_of(&agents, agent_id).unwrap_or_else(|| agent_id.clone());
-        display_name_of(&agents, &root)
-    };
+            .unwrap_or_default(),
+        agent_id,
+    );
     // The heavy view-models, once per snapshot (§7.2 `SnapMemo`, bl-e90a).
     let steps = state
         .inspector
@@ -70,16 +66,8 @@ pub(super) fn tab_data(
     // every pinnable tab reads through — is a function of it. One memoized read
     // per snapshot, the same trade the steps view already makes, and one tab
     // arm fewer.
-    let live = build_transcript(model, &mut state.inspector, ws, agent_id, in_flight);
-    let history = rail::build(
-        model,
-        &mut state.inspector,
-        ws,
-        agent_id,
-        &speaker,
-        &steps,
-        &live,
-    );
+    let live = build_transcript(model, &mut state.inspector, ws, agent_id);
+    let history = rail::build(model, &mut state.inspector, ws, agent_id, &steps, &live);
     let pin = rail::pinned(&history, state.inspector.eph.notch_sel);
     let files = build_files(
         active,
@@ -175,29 +163,24 @@ fn build_file_preview(
 /// than a re-read of the conversation. Folding the two into one build is what
 /// made the tail as slow as the derivation.
 ///
-/// `in_flight` is the caller's `AgentState::InFlight`: a settled step's
-/// trailing text is already committed, so merging it would paint the last
-/// answer twice.
+/// **Which tail, and whether there is one at all, is the boundary's ruling**
+/// ([`inspector::live_tail`], bl-6233) — the same fold the headless answer
+/// makes, so the two seats cannot describe one moment differently. It is the
+/// only half the frame keeps for itself: the committed read is memoized here
+/// because a memo is a frame concern, and the answer chokepoint is off-frame
+/// and re-reads.
 pub(in crate::shell) fn build_transcript(
     model: &AppModel,
-    inspector: &mut InspectorState,
+    inspector_state: &mut InspectorState,
     ws: &Path,
     agent: &str,
-    in_flight: bool,
 ) -> std::sync::Arc<Transcript> {
-    let committed = std::sync::Arc::clone(inspector.tx_memo.read(
+    let committed = std::sync::Arc::clone(inspector_state.tx_memo.read(
         model.derivation(),
         (ws.to_path_buf(), agent.to_string()),
         &mut || std::sync::Arc::new(transcript::build(ws, agent)),
     ));
-    let stream = in_flight
-        .then(|| {
-            let tree = model.tree(ws)?;
-            tree.agents.iter().find(|a| a.agent_id == agent)
-        })
-        .flatten()
-        .map(|a| a.stream.clone());
-    match stream {
+    match inspector::live_tail(model.derivation(), ws, agent) {
         Some(stream) => std::sync::Arc::new(committed.with_live(&stream)),
         None => committed,
     }

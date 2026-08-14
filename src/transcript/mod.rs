@@ -39,6 +39,7 @@ mod parse;
 mod render;
 mod rows;
 mod spine;
+pub(crate) mod wire;
 use parse::{parse_model, parse_tool_result};
 pub use render::{Reading, render};
 pub(crate) use rows::key;

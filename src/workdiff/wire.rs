@@ -23,7 +23,10 @@ pub(crate) fn reply(attempts: &[Attempt], patch: Option<&Preview>) -> Value {
         Value::Array(attempts.iter().map(attempt_row).collect()),
     );
     if let Some(patch) = patch {
-        map.insert("patch".to_owned(), preview_value(patch));
+        map.insert(
+            "patch".to_owned(),
+            crate::files_view::wire::preview_value(patch),
+        );
     }
     Value::Object(map)
 }
@@ -82,16 +85,5 @@ fn file_row(file: &FileChurn) -> Value {
             json!({ "path": file.path, "added": added, "removed": removed })
         }
         Churn::Binary => json!({ "path": file.path, "binary": true }),
-    }
-}
-
-/// A bounded preview as data — the same three classes the seat renders.
-fn preview_value(preview: &Preview) -> Value {
-    match preview {
-        Preview::Text(text) => json!({ "kind": "text", "text": text }),
-        Preview::Truncated { text, size } => {
-            json!({ "kind": "truncated", "text": text, "size": size })
-        }
-        Preview::Binary { size } => json!({ "kind": "binary", "size": size }),
     }
 }

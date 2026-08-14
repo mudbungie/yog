@@ -23,6 +23,7 @@
 use std::path::Path;
 
 mod render;
+pub(crate) mod wire;
 pub use render::render;
 
 /// Workspace subdir holding per-agent inboxes (ARCH §2.11).

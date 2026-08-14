@@ -64,6 +64,7 @@ pub mod cohort;
 mod pin;
 mod place;
 pub(crate) mod tree;
+pub(crate) mod wire;
 
 pub use cohort::{Cohort, cohorts};
 pub use pin::{Pin, pin, transcript_as_of};

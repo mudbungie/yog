@@ -12,8 +12,8 @@
 //! spellings, one gesture — `/help`, `/help <verb>`, `<verb> --help|-h`, and a
 //! bare `/`, which is the question with nothing named.
 
-use super::verbs::{self, children, create, id, max, moved, payload, update, work_file};
-use super::{Context, args, config};
+use super::verbs::{self, children, create, id, moved, payload, update};
+use super::{Context, args, config, queries};
 use crate::boundary::{Action, Gesture, Query, help};
 
 /// Read one line into the gesture it spells (§8.5). `ctx` supplies what the
@@ -139,72 +139,7 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // are — a seat with no panes still has to be able to look. Split out
         // at the §12 line budget; an unknown verb refuses there too, so this
         // stays the whole grammar's one dead end.
-        other => queries(other, tail, ctx),
-    }
-}
-
-/// The populating reads' half of the grammar (§8.5) — a seat with no panes
-/// still has to be able to look. `verb` has already failed every mutating
-/// arm, so an unknown one here is unknown outright.
-fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
-    match verb {
-        "workspaces" => args::none(tail, verb).map(|()| ask(Query::Workspaces)),
-        "conversations" => {
-            args::none(tail, verb)?;
-            Ok(ask(Query::Conversations {
-                workspace: args::workspace(ctx, verb)?,
-            }))
-        }
-        "balls" => args::none(tail, verb).map(|()| ask(Query::Balls)),
-        // Bare, the listing; with two words, one file's patch out of the named
-        // ball's diff. A path alone would not say which attempt it belongs to
-        // when the workspace holds more than one, so both words or neither.
-        "work-diff" => Ok(ask(Query::WorkDiff {
-            workspace: args::workspace(ctx, verb)?,
-            file: work_file(tail, verb)?,
-        })),
-        "board" => args::none(tail, verb).map(|()| ask(Query::Board)),
-        // brazen's provider table + credential presence (§8.5, bl-0164): the
-        // §8.3 login pane's `↻`, spelled. Scoped to a workspace, not global
-        // (bl-fcd5): sign-ins live inside a wall, so the seat's own `--ws` is
-        // what makes the credential column mean anything.
-        "providers" => {
-            args::none(tail, verb)?;
-            Ok(ask(Query::Providers {
-                workspace: args::workspace(ctx, verb)?,
-            }))
-        }
-        // The §9.3 browse (bl-dff8): the lineages of the seat's own workspace
-        // and the files each tip holds — what `/config branch <lineage> <path>`
-        // then reads a file out of. Scoped by the seat like `/providers`.
-        "lineages" => {
-            args::none(tail, verb)?;
-            Ok(ask(Query::Lineages {
-                workspace: args::workspace(ctx, verb)?,
-            }))
-        }
-        // The §9.4 roster (bl-dff8): one word, and it is the provider row —
-        // the picker asks per row, and a roster with no row named is not a
-        // question. The wall it is asked in is the seat's, as `/providers`' is.
-        "models" => Ok(ask(Query::Models {
-            workspace: args::workspace(ctx, verb)?,
-            provider: match args::optional_word(tail, verb)? {
-                Some(provider) => provider,
-                None => return Err(format!("/{verb}: usage: /models <provider>")),
-            },
-        })),
-        "attention" => args::none(tail, verb).map(|()| ask(Query::Attention)),
-        "ops" => Ok(ask(Query::Ops { max: max(tail)? })),
-        // The whole tail is the needle — no flags, no bound. Search takes one
-        // parameter and it is the text, so there is nothing for a grammar to
-        // split off; how deep the answer goes is `search::MAX`, not a knob.
-        // An empty tail is **not** a refusal: an empty query matches nothing
-        // (the general path with no input), which is how a seat clears the last
-        // answer without a second verb to do it with.
-        "search" => Ok(ask(Query::Search {
-            text: tail.trim().to_owned(),
-        })),
-        other => Err(format!("unknown command /{other}\n{}", help::roster())),
+        other => queries::queries(other, tail, ctx),
     }
 }
 
@@ -236,6 +171,6 @@ fn act(action: Action) -> Gesture {
     Gesture::Act(action)
 }
 
-fn ask(query: Query) -> Gesture {
+pub(super) fn ask(query: Query) -> Gesture {
     Gesture::Ask(query)
 }

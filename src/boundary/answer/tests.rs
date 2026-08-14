@@ -7,6 +7,7 @@ use crate::boundary::tests::{agent, bound_row, snapshot};
 use crate::cli_outbound::Cli;
 use crate::git_tree::AgentState;
 use crate::opslog::{OpRow, Origin};
+use crate::projects::join::JoinState;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 

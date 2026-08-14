@@ -13,12 +13,10 @@ use std::path::Path;
 use std::sync::Arc;
 
 use crate::AppModel;
-use crate::budgets::{Scope, bills, total};
+use crate::boundary::answer::inspector;
 use crate::config_edit::branch::governing_config;
 use crate::files_view::{self, FilesView, Preview};
-use crate::git_tree::{Agent, children_of};
-use crate::nav::convs::display_name_of;
-use crate::rail::{self, ChildInput, Pin, Rail};
+use crate::rail::{self, Pin, Rail};
 use crate::steps_view::StepsView;
 use crate::transcript::Transcript;
 
@@ -30,53 +28,19 @@ use super::super::InspectorState;
 /// answers for the cut one too — the rules past the cut simply match no row.
 pub fn build(
     model: &AppModel,
-    inspector: &mut InspectorState,
+    inspector_state: &mut InspectorState,
     ws: &Path,
     agent_id: &str,
-    speaker: &str,
     steps: &StepsView,
     tx: &Transcript,
 ) -> Rail {
-    let agents = model
-        .focused_tree()
-        .map(|tree| tree.agents.clone())
-        .unwrap_or_default();
-    let parent_commits = agents
-        .iter()
-        .find(|a| a.agent_id == agent_id)
-        .map(|a| a.steps.clone())
-        .unwrap_or_default();
     let snap = Arc::clone(model.derivation());
-    inspector
+    inspector_state
         .rail_memo
         .read(&snap, (ws.to_path_buf(), agent_id.to_owned()), &mut || {
-            let children: Vec<ChildInput> = children_of(&agents, agent_id)
-                .into_iter()
-                .filter_map(|index| agents.get(index))
-                .map(|child| child_input(ws, &agents, child))
-                .collect();
-            rail::build(speaker, &parent_commits, steps, tx, &children)
+            inspector::rail(&snap, ws, agent_id, steps, tx)
         })
         .clone()
-}
-
-/// One child's card inputs. Its spend is the **per-agent** fold of
-/// `steps/<id>` (VISION V1.5), so a fork's shared prefix cost stays with the
-/// ancestor; its config label is the governing-config derivation (§5.1 #17),
-/// which names a branch only while the governing commit is still that
-/// branch's tip.
-fn child_input(ws: &Path, agents: &[Agent], child: &Agent) -> ChildInput {
-    ChildInput {
-        agent_id: child.agent_id.clone(),
-        name: display_name_of(agents, &child.agent_id),
-        state: child.state,
-        streaming_text: child.stream.text.clone(),
-        commits: child.steps.clone(),
-        tokens: total(&bills(ws, &Scope::Agent(child.agent_id.clone()))).total_tokens(),
-        config_label: governing_config(ws, &child.tip_oid)
-            .ok()
-            .and_then(|gov| gov.branch_name_if_tip_of_one),
-    }
 }
 
 /// The operator's pin, resolved against the rail. A selection the rail no

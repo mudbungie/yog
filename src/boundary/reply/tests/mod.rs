@@ -3,6 +3,7 @@
 
 mod board;
 mod config;
+mod inspector;
 mod queue;
 mod receipts;
 mod rows;

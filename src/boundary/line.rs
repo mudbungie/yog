@@ -42,6 +42,7 @@ mod args;
 mod config;
 mod fork;
 mod parse;
+mod queries;
 mod spell;
 #[cfg(test)]
 mod tests;

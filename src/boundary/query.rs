@@ -92,6 +92,58 @@ pub enum Query {
     /// (or an unprimed one) answers exactly as any other does, which is what
     /// makes the launched-then-pointed-at-a-project case askable.
     Marks { workspace: PathBuf },
+    /// **The conversation itself** (§11 Altitude-2 Transcript, bl-6233): every
+    /// committed `messages/` entry of one agent, with the live streaming tail
+    /// folded on when a call is in flight. The first of the §11 inspector
+    /// family — the five reads that were reachable from no seat but the window,
+    /// which is what made a chat unreadable headless (REMOTE §9 step 1).
+    ///
+    /// **The in-flight tail is folded, not dropped.** The tail is the
+    /// snapshot's own [`Stream`](crate::git_tree::Stream), already carried by
+    /// the [`Deps`](super::dispatch::Deps) this query is answered from, so
+    /// folding it costs no read and keeps one derivation behind both seats: a
+    /// headless answer that stopped at the committed half would say something
+    /// different from the window about the same moment, which is the exact
+    /// parity §8.5 exists to hold.
+    Transcript { workspace: PathBuf, agent: String },
+    /// **Every step one conversation has taken** (§11 Altitude-2 Steps): the
+    /// cheap per-step summary list — framing, attempts, tokens, timestamps, the
+    /// §8.3 login affordance and the §7.3 wound. The agent's liveness is read
+    /// off the snapshot rather than asked for, because it is a fact the world
+    /// already published and a parameter would let a seat contradict it.
+    Steps { workspace: PathBuf, agent: String },
+    /// **One step's records, drilled in** (§11 Altitude 2): `meta`, `request`,
+    /// `staging`, every `response.json` event and every tool call's
+    /// input/output, each as a jsonview doc. The second tier, asked by
+    /// sequence name exactly as the list answers it — a step the tree does not
+    /// hold answers absent records rather than refusing, the same forgiving
+    /// read the window makes (§10: never a false definite).
+    Step {
+        workspace: PathBuf,
+        agent: String,
+        seq: String,
+    },
+    /// **The agent worktree, read-only** (§11 Altitude-2 Files): the bounded
+    /// sorted listing, and — when `path` names one of its listed files — that
+    /// file's bounded preview. The [`WorkDiff`](Query::WorkDiff) shape, for the
+    /// same reason: a listing and one entry's bytes are one question asked at
+    /// two depths. `path` is **resolved against the listing yog just built**,
+    /// never joined blind, so this read can open nothing the same answer did
+    /// not already name.
+    Files {
+        workspace: PathBuf,
+        agent: String,
+        path: Option<String>,
+    },
+    /// **The step spine** (VISION V1, §11): one notch per operable commit and
+    /// the child cards hanging off them. The notches are answered; the
+    /// operator's *pin* is not — a pin is a viewport fold, and §8.5 files folds
+    /// under views, exactly as [`Conversations`](Query::Conversations) answers
+    /// the all-collapsed list.
+    Rail { workspace: PathBuf, agent: String },
+    /// **The undelivered mail** (§11 Inbox, ARCH §2.11): one agent's deposit
+    /// files, each parsed beside its verbatim bytes.
+    Inbox { workspace: PathBuf, agent: String },
     /// One workspace's effective provider table with the §5.1 #22 credential
     /// presence, rendered (§8.5, bl-0164): the same derivation the §8.3 login
     /// pane's `↻ providers + credentials` paints — one derivation, and since

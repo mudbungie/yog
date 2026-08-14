@@ -35,6 +35,7 @@ mod columns;
 mod detail;
 mod drill;
 mod render;
+pub(crate) mod wire;
 mod wound;
 pub use detail::{Doc, StepDetail, ToolIo, UNPARSED, detail};
 pub(crate) use drill::RECORDS;

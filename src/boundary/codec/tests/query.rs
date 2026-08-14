@@ -39,6 +39,68 @@ fn every_query_variant_round_trips() {
         workspace: p("/ws"),
         provider: "acme".into(),
     }));
+    inspector_family();
+}
+
+/// The §11 inspector family (bl-6233): six reads addressed at a conversation
+/// rather than a workspace, so each carries both halves of the address and
+/// only what no seat could supply beside them.
+fn inspector_family() {
+    let (workspace, agent) = (p("/ws"), "c-1".to_owned());
+    for query in [
+        Query::Transcript {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+        },
+        Query::Steps {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+        },
+        Query::Rail {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+        },
+        Query::Inbox {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+        },
+        Query::Step {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+            seq: "003".to_owned(),
+        },
+    ] {
+        rt(Gesture::Ask(query));
+    }
+    // The listing and one file's bytes are the same query at two depths — the
+    // `work-diff` shape, so the path is optional and both sides round-trip.
+    for path in [None, Some("src/a.rs".to_owned())] {
+        rt(Gesture::Ask(Query::Files {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+            path,
+        }));
+    }
+}
+
+/// A conversation read names its conversation, always: half an address would
+/// answer about a different chat, so the envelope refuses rather than guess.
+#[test]
+fn an_inspector_envelope_missing_half_its_address_is_refused() {
+    for op in ["transcript", "steps", "step", "files", "rail", "inbox"] {
+        assert!(
+            decode(&serde_json::json!({ "op": op, "workspace": "/ws" })).is_err(),
+            "{op} without an agent"
+        );
+        assert!(
+            decode(&serde_json::json!({ "op": op, "agent": "c-1" })).is_err(),
+            "{op} without a workspace"
+        );
+    }
+    // And a step names the step: "some step" is not a question.
+    assert!(
+        decode(&serde_json::json!({ "op": "step", "workspace": "/ws", "agent": "c-1" })).is_err()
+    );
 }
 
 /// A roster names its row, always: the envelope refuses rather than list some

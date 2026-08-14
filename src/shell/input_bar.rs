@@ -135,13 +135,11 @@ pub fn composer(
     let prompts = model
         .focused_agent()
         .map(|agent| {
-            let in_flight = agent.state == crate::git_tree::AgentState::InFlight;
             let tx = super::inspector::build_transcript(
                 model,
                 &mut state.inspector,
                 &ws,
                 &agent.agent_id,
-                in_flight,
             );
             crate::composer::prompts(&pending, &tx)
         })
