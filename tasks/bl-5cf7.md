@@ -1,7 +1,8 @@
 +++
 title = "the shared drive 'gesture' helper has no deadline: a yog that dies mid-run hangs every windowed verb forever instead of failing"
 created = 1786684957
-updated = 1786684957
+updated = 1786686045
+claimant = "Pintle"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
