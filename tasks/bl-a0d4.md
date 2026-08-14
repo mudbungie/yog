@@ -1,7 +1,8 @@
 +++
 title = "the model picker states what it reaches, and a conversation states the config it is frozen at"
 created = 1786162399
-updated = 1786678330
+updated = 1786683219
+claimant = "Halyard"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
