@@ -1,7 +1,8 @@
 +++
 title = "freeze project instructions into agent context with visible provenance"
 created = 1785649815
-updated = 1785823883
+updated = 1786685438
+claimant = "Rabbet"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design"]
