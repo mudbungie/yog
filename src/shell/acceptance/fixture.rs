@@ -74,7 +74,7 @@ pub(super) fn seed_world(world: &World) {
 pub(super) struct World {
     _root: TempDir,
     fx: Fixture,
-    /// Every extra sphere [`World::add_workspace`] minted, held only so their
+    /// Every extra sphere [`World::add_workspace`] created, held only so their
     /// temp dirs outlive the test — the §3.1 wall boundary is unobservable with
     /// one workspace, so a wall drive needs a second.
     spheres: Vec<Fixture>,

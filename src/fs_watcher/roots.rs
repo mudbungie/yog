@@ -128,5 +128,4 @@ fn matches_any(rel: &str, prefixes: &[&str]) -> bool {
 }
 
 #[cfg(test)]
-#[path = "roots_tests.rs"]
 mod tests;

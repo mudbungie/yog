@@ -117,7 +117,7 @@ pub fn reassign(
 
 /// `bl create <title> --as <name> [--body B]` in the project (§8.2). The new id
 /// is [`Outcome::stdout`] (bl prints it there for `id=$(bl create …)`); `name` is
-/// the authoring workspace (the start flow passes the minted/focused name).
+/// the authoring workspace (the start flow passes the resolved or focused name).
 pub fn create(
     bl: &Cli,
     state_root: &Path,

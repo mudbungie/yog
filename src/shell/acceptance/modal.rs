@@ -17,7 +17,7 @@ use crate::keymap::CenterTab;
 /// box swallowed the first, and the second reached `KeyAction::Cancel`, which
 /// only ever spoke to the §8.1 pending start goal underneath.
 #[test]
-fn escape_dismisses_the_new_workspace_form_and_mints_nothing() {
+fn escape_dismisses_the_new_workspace_form_and_creates_nothing() {
     let mut world = world();
     let screen = Screen::new();
     screen.idle(&mut world);
@@ -159,7 +159,7 @@ fn return_submits_a_valid_name_and_a_refused_one_keeps_the_form() {
     );
 }
 
-/// The sphere walls on disk — what "no workspace minted" is read against.
+/// The sphere walls on disk — what "no workspace created" is read against.
 fn spheres(world: &World) -> Vec<std::ffi::OsString> {
     let root = world.ws.parent().expect("the workspaces root");
     let mut names: Vec<std::ffi::OsString> = std::fs::read_dir(root)

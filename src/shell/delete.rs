@@ -183,7 +183,7 @@ fn fire(model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli, ws
     match model.delete_workspace(lernie, bl, ws, &state.delete.typed, &super::now_ts()) {
         Ok(()) => {
             // The sphere's settings die with the sphere (§16.2 removes its wall
-            // directory); its RAM dies on the same terms, or a workspace minted
+            // directory); its RAM dies on the same terms, or a workspace created
             // later under the same §3.1 name would inherit this one's box.
             state.forget_wall(ws);
             state.delete = DeleteState::default();

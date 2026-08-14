@@ -229,7 +229,7 @@ fn a_picker_opened_in_one_wall_is_not_open_in_the_next() {
 }
 
 /// A wall's RAM lives exactly as long as its wall (§3.6, §16.2). Unmaking a
-/// workspace removes its wall *directory* so a sphere minted later under the
+/// workspace removes its wall *directory* so a sphere created later under the
 /// same §3.1 name cannot inherit its credentials — and the box over that
 /// directory has to go on the same terms, because the key here is the workspace
 /// path and a same-named rebirth reoccupies it exactly.

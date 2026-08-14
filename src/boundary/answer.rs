@@ -243,7 +243,7 @@ pub fn agent_confirmation_of(
     Some(delete::agent::confirmation(root, agents))
 }
 
-/// `ws`'s minted name iff it is one of yog's own — [`crate::binding::named_of`]'s question,
+/// `ws`'s own name iff it is one of yog's own — [`crate::binding::named_of`]'s question,
 /// asked of this snapshot's workspace set.
 fn named_leaf(snap: &Snapshot, ws: &Path) -> Option<String> {
     crate::binding::named_of(&snap.workspaces, ws)
