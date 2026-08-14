@@ -75,8 +75,18 @@ fn the_worker_thread_derives_a_marked_root_and_wakes_the_window() {
     drop(worker); // clean stop + join
 }
 
+/// Every `yog-drift late` row on the trail, in order.
+fn late_rows(rig: &Rig) -> Vec<String> {
+    rig.ops_rows()
+        .iter()
+        .filter(|r| r.drift())
+        .map(|r| r.argv.clone())
+        .filter(|argv| argv.ends_with("late"))
+        .collect()
+}
+
 #[test]
-fn a_pass_that_outruns_its_cadence_names_itself_on_the_ops_surface() {
+fn a_pass_that_outruns_its_cadence_names_itself_once_however_long_it_lasts() {
     // §7.2 as rewritten: the frame renders the last *completed* derivation, so a
     // pass that takes longer than the cadence it promised means everything on
     // screen was that far behind. That is drift, and it is written down rather
@@ -92,14 +102,18 @@ fn a_pass_that_outruns_its_cadence_names_itself_on_the_ops_surface() {
     );
     let mut rig = Rig { model, deriver };
     rig.tick();
-    let late: Vec<String> = rig
-        .ops_rows()
-        .iter()
-        .filter(|r| r.drift())
-        .map(|r| r.argv.clone())
-        .filter(|argv| argv.ends_with("late"))
-        .collect();
-    assert_eq!(late.len(), 1, "one late-pass line: {late:?}");
+    assert_eq!(late_rows(&rig).len(), 1, "one late-pass line");
+    // bl-4b28 — and it stays one. This clock never speeds up, so every pass
+    // after it is late too; a row apiece is what turned a 4472-row trail into
+    // 4447 restatements of the same sentence and 25 rows of real history.
+    rig.tick();
+    rig.tick();
+    let late = late_rows(&rig);
+    assert_eq!(
+        late.len(),
+        1,
+        "a derivation that never keeps cadence is ONE event: {late:?}"
+    );
 }
 
 #[test]

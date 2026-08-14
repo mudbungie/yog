@@ -2,15 +2,19 @@
 //! the live `bl` projection and the ops tail (DESIGN §7.2, §5.1 #2/#4, §4.2).
 //!
 //! Split from [`super::derive`] per §12's budget — that file is the *pass*
-//! (what is dirty, what is due, what gets published), this one is the *work*.
+//! (what is dirty, what is due, what gets published), this one is the *work*:
+//! the sweeps, the fetches, and — since bl-4b28 — re-deriving one root, which
+//! is the work every one of them ends in.
 //! All of it runs on the derivation worker, never on the frame: the ball fetch
 //! is a directory walk per project and the full sweep re-derives every
 //! workspace, and those are exactly the costs that used to stall the window
 //! (bl-ee0a).
 
 use super::super::drift::{self, Drift};
+use super::super::snapshot::growth_between;
 use super::super::{desired_watches, needs_liveness_reprobe};
 use super::Deriver;
+use crate::budgets::Scope;
 use crate::fs_watcher::RootKind;
 use crate::opslog::{self, OpRow};
 use crate::projects;
@@ -144,6 +148,42 @@ impl Deriver {
             .collect();
         self.schedule.mark(all);
         found
+    }
+
+    /// Re-derive one workspace through the held probe stack, replacing its
+    /// snapshot iff it actually changed (`GitTree: PartialEq` suppresses no-op
+    /// repaints, §7.2) and recording what grew (§7.2 growth, bl-ee0a). A read
+    /// failure keeps the last good snapshot.
+    pub(super) fn rederive(&mut self, workspace: &Path) -> bool {
+        // The `steps/` fold first, and **outside the tree's equality gate**
+        // (bl-9dd4): a step's `response.json` growing is spend that changed
+        // while every git ref stood still, so a fold behind `old == tree` would
+        // freeze the spend column at whatever it read when the refs last moved.
+        let billed = self.refold_bills(workspace);
+        let Ok(tree) = self.probes.derive(workspace) else {
+            return billed;
+        };
+        let old = self.trees.get(workspace);
+        if old == Some(&tree) {
+            return billed;
+        }
+        self.growth.extend(growth_between(workspace, old, &tree));
+        self.trees.insert(workspace.to_path_buf(), tree);
+        self.changed = true;
+        true
+    }
+
+    /// Re-walk one workspace's `steps/` tree, replacing its bills iff they
+    /// actually changed — the same no-op-repaint discipline the tree read
+    /// keeps, so a quiet workspace publishes nothing.
+    fn refold_bills(&mut self, workspace: &Path) -> bool {
+        let bills = crate::budgets::bills(workspace, &Scope::Workspace);
+        if self.bills.get(workspace) == Some(&bills) {
+            return false;
+        }
+        self.bills.insert(workspace.to_path_buf(), bills);
+        self.changed = true;
+        true
     }
 
     /// Append this pass's findings to `ops.jsonl` and re-read the tail, so the

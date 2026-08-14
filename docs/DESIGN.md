@@ -2269,12 +2269,35 @@ loss of a real guarantee, so it is measured rather than assumed:
   below that, because a full sweep re-stamps the snapshot every 15 s even when
   nothing changed, so exceeding two of them means *passes are not completing*,
   not that the world is quiet.
-- A pass that itself takes ≥ the cheap-sweep period writes a `yog-drift late`
-  line (§4.2), attributed to the yog state root with the duration in `stderr`.
-  Everything rendered while it ran was that stale. This is the same
+- A pass that takes ≥ **the period of the sweep it ran** writes a `yog-drift
+  late` line (§4.2), attributed to the yog state root with the duration in
+  `stderr`. Everything rendered while it ran was that stale. This is the same
   instrumentation as the dropped-event kinds below, and for the same reason:
   **drift is divergence between what the frame renders and what is on disk**, and
   a late derivation is one way to get it.
+
+  **Two amendments, both from one storm (bl-4b28).** A 4472-row trail whose
+  4447 rows were this line — one every 15 s, unbroken for a day, burying the
+  operator's entire real history in 25 surviving rows — was not reporting an
+  anomaly. It was reporting the schedule working:
+
+  - *The bound is the pass's own promise, not one bound for every pass.* Every
+    row was a **full** sweep (they arrive on the full-sweep tick, and only
+    there): the pass that re-enumerates, re-fetches every project's balls and
+    re-derives every workspace. In a real workspace — 110 agent branches, a
+    `bl` fetch per project — that costs 2–3 s, and it was being judged against
+    the *cheap* sweep's 2 s, a period it neither owes nor was ever budgeted.
+    A full sweep is now held to the full-sweep period, which is what that
+    longer period is *for*; a cheap pass, and one that swept nothing, still owe
+    the 2 s poll cadence they ride.
+  - *Late is an edge, not a level.* The row is written on the pass that stops
+    keeping cadence and not again until one keeps it — so a permanently-late
+    derivation is one dated event to correlate against what changed, not a
+    restatement per sweep. Nothing records the recovery, because *are passes
+    late now* is already answered, derived and current, by the staleness line
+    above: a state belongs to a query, an event to the trail. The worker holds
+    one bool for the edge (its own observation about its own passes; a second
+    instance holds its own and reports its own).
 - Ingest stays its own thread rather than folding into the worker. An
   *announcement* and a *derivation* are the two halves the drift instrumentation
   compares; one thread doing both makes "disk moved and nothing said so"
@@ -2311,9 +2334,13 @@ strongest available explanation always wins:
 | `Poll` | the 2 s cheap sweep's targeted liveness re-probe | the poll working: no filesystem event exists for a released flock |
 | `Sweep` | the 15 s blanket mark | **nobody announced it — a dropped event** |
 
-A fourth kind carries no mark because no root announced it: `late`, one
-derivation pass exceeding the cadence it promised (above). Same log, same chip,
-same doctrine — evidence that the frame and the disk diverged.
+A fourth kind carries no mark because no root announced it: `late`, the pass on
+which derivation stopped keeping the cadence it promised (above). Same log, same
+chip, same doctrine — evidence that the frame and the disk diverged. It is the
+one kind counted **per run rather than per occurrence**, and that is not an
+exception to the doctrine but the doctrine applied: the other three name a root
+that diverged, of which there can be many; this one names the derivation itself,
+of which there is one, and it either keeps cadence or does not.
 
 **The 15 s full sweep is a deliberate backstop whose catches are alarms, not
 routine.** It stays because residual drop sources are genuinely outside yog's
@@ -7020,12 +7047,12 @@ beside `main.rs`.
 | `src/app/{mod,roots,knobs,view,ops}.rs` | 268+64+62+288+57 | AppModel — what a *frame* owns (§7.2): the held snapshot, ui-state integration, the per-frame refresh; `roots` the boot-time fold of the composed world and the four derived paths every root read goes through (bl-3f46); the §11 transcript-density knobs and the whole-UI zoom (§4.1); the per-conversation view-model assembly the shell paints, plus the snapshot's staleness and live-cadence reads; `ops` the frame's two *writes* to the trail — the operator's ack and the clear verb (§4.2 as amended, bl-c417), here rather than in the excluded shell so the gestures a click makes are covered |
 | `src/app/balls{,/starts,/targets,/convball}.rs` | 253+238+51+107 | the frame's read of the live `bl` projection — the §3.5 join, ops tail, and the two post-verb dirty marks (§5.1, §7.2); the §3.4/§8.1 start hand-off; the §8.2 stamp-target rule |
 | `src/app/line.rs` | 45 | the §8.5 line context: the seat's focus read as what a slash command elides — the §3.2 stamp a `bl` verb carries (the focused ball's claimant, else the workspace's own name), derived here so a typed verb and a clicked one cannot aim differently |
-| `src/app/cadence.rs` | 185 | the clock's periods (§7.2, bl-3381): the `Cadence` value, its `cadence.yaml` grammar (total parse, shared bounds), and the derived periods (wound grace, late pass, staleness) |
+| `src/app/cadence.rs` | 204 | the clock's periods (§7.2, bl-3381): the `Cadence` value, its `cadence.yaml` grammar (total parse, shared bounds), and the derived periods (wound grace, late pass, staleness) |
 | `src/app/deletes.rs` | 140 | the §3.6 hand-off, both altitudes: confirmation derivations, fire-time re-gates, post-delete convergence (bl-f17a: the agent delete's focus-off-the-dead-subtree move) |
-| `src/app/derive{,/route,/sweeps,/worker}.rs` | 245+75+205+70 | the derivation worker (§7.2): its state and one pass; the §7.1 dirty-root routing table; the two sweeps, reconcile and the fetch cadence; the thread that drives the pass |
+| `src/app/derive{,/route,/sweeps,/worker}.rs` | 273+127+279+71 | the derivation worker (§7.2): its state and one pass; the §7.1 dirty-root routing table; the two sweeps, reconcile, the fetch cadence and re-deriving one root — the work every sweep ends in, moved beside them at the budget (bl-4b28); the thread that drives the pass |
 | `src/app/dirty.rs` | 215 | Change→dirty-root mapping, debounce/sweep scheduling over the live `Cadence`, `watch::Mark` provenance (§7.2) |
 | `src/app/grace.rs` | 165 | the §7.3 wound banner's grace window (bl-90bf): the render-layer age gate over the same injected clock, so a wound that heals inside the snapshot's own catch-up bound never flashes |
-| `src/app/drift.rs` | 250 | the four drift kinds and their `ops.jsonl` fold, plus the late-pass and stale-snapshot thresholds (§7.2) |
+| `src/app/drift{,/tests}.rs` | 186+130 | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |
 | `src/app/echo.rs` | 195 | the pending echo (§7.2, §3.4, bl-915e): the §3.4 start claim's value, the landed-message reconciliation, the expiry bound, and the **one** fold of the derivation + every non-derived fact into the snapshot the frame paints (the echo, and the §7.2 live tail) |
 | `src/app/live{,/follow}.rs` | 130+185 | the §7.2 **live tail** (bl-54f7) under the in-memory carve-out: the value, its fold onto the painted snapshot, the model's side of the hand-off — and, in `follow`, the append-following read of the focused conversation's open `response.json` and the thread that drives it. The split is *what the tail promises* vs *how the bytes are gathered* |
 | `src/app/focus.rs` | 255 | the §6/§11 **selection**: the roster ladder (↑/↓, jump-to-attention), the pin/collapse writes, the seen-acknowledgement, and the §3.4 start claim a fire leaves for the first roster that carries its root. Not `shell/focus.rs`, which owns the keyboard |
