@@ -11,17 +11,33 @@
 
 use super::{Deposit, InboxEntry};
 
-/// Render the inbox listing, oldest-first. An empty inbox shows a placeholder
-/// (the common quiescent case, not an error). `raw` is the §11 Raw toggle:
+/// What an empty inbox **is** (QUALITY H2: "an empty region says what it is and
+/// names the paved path in full"). The old wording was a parenthesised
+/// `(no deposits)` and nothing else — true, and no use to an operator who has
+/// never seen mail arrive.
+pub(crate) const NO_DEPOSITS: &str = "no deposits — nothing is waiting for this agent to read.";
+
+/// …and how one ever gets here: the two ways a deposit is written (§2.11 — the
+/// operator's own message to a working agent, and a subagent's result message)
+/// and the verb on this tab that delivers one already queued.
+pub(crate) const HOW_MAIL_ARRIVES: &str = "mail arrives when you message this agent while it works, or a subagent \
+     reports back; Scan delivers any still queued.";
+
+/// Render the inbox listing, oldest-first. An empty inbox names itself and the
+/// paved path ([`empty`]) — the common quiescent case, not an error. `raw` is the §11 Raw toggle:
 /// each deposit file's name and its bytes exactly as they sit on disk —
 /// envelope included — instead of the parsed view that drops it.
 pub fn render(ui: &mut egui::Ui, entries: &[InboxEntry], raw: bool) {
     // §11 tail idiom: the listing is oldest-first, so the newest deposit is the
     // bottom row and the view sits on it — a lone deposit at the bottom edge,
-    // a backlog scrolled to it.
-    crate::tail::scroll(ui, true, |ui| {
+    // a backlog scrolled to it. **An empty inbox is not asking that question**
+    // (bl-71fc): there is no newest content, so the anchor's top pad had been
+    // pushing a one-line absence ~450 pt down an otherwise blank pane. The
+    // anchor is the answer to "is my bottom row my newest content?", and with
+    // no rows the honest answer is no.
+    crate::tail::scroll(ui, !entries.is_empty(), |ui| {
         if entries.is_empty() {
-            ui.label("(no deposits)");
+            empty(ui);
             return;
         }
         for entry in entries {
@@ -33,6 +49,12 @@ pub fn render(ui: &mut egui::Ui, entries: &[InboxEntry], raw: bool) {
             ui.separator();
         }
     });
+}
+
+/// The empty inbox, top-anchored: what the region is, then the paved path.
+fn empty(ui: &mut egui::Ui) {
+    ui.label(NO_DEPOSITS);
+    ui.weak(HOW_MAIL_ARRIVES);
 }
 
 /// Verbatim backing bytes under a filename header — the transcript tab's Raw
