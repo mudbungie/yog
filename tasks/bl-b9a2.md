@@ -2,6 +2,7 @@
 title = "design investigation: thin-client/backend split — one yog backend on the home server, multiple UI clients sharing chats, each client exposing its machine-local tools"
 created = 1786682408
 updated = 1786682743
+claimant = "Sicks"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
