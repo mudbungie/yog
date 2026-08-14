@@ -1,7 +1,8 @@
 +++
 title = "consecutive_fires beat is probabilistic: post-fire mint seeds re-roll from real entropy, so the acceptance fixture races lernie's word pool"
 created = 1786684759
-updated = 1786684759
+updated = 1786686258
+claimant = "Tenon"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
