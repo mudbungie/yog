@@ -13,8 +13,8 @@
 //!
 //! **yog already knows the row's real remedy, and says it in two other seats.**
 //! [`ProviderRow::login_blocked`] is the one home for "what this row needs",
-//! rendered by the §8.3 Login rows and the §9.5 config rows alike. This is a
-//! third seat at that same derivation and it invents no wording of its own: it
+//! rendered by the §8.3 Login rows. This is a second seat at that same
+//! derivation and it invents no wording of its own: it
 //! pairs that sentence with the §11 tab that acts on it, so the picker's fault
 //! ends in a control like every other auth seat in the tree.
 //!
@@ -31,8 +31,8 @@ use crate::login::auth::looks_auth;
 /// control that goes there, and the §11 tab it focuses.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Remedy {
-    /// Why this row cannot answer, in the words the Login and §9.5 config rows
-    /// already use, under its own name. `None` for an oauth2 row, where
+    /// Why this row cannot answer, in the words the §8.3 Login rows already
+    /// use, under its own name. `None` for an oauth2 row, where
     /// [`ProviderRow::login_blocked`] deliberately has no sentence because the
     /// verb is the entire answer.
     pub reason: Option<String>,

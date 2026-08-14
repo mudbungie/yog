@@ -93,9 +93,10 @@ pub enum Query {
     /// makes the launched-then-pointed-at-a-project case askable.
     Marks { workspace: PathBuf },
     /// One workspace's effective provider table with the §5.1 #22 credential
-    /// presence, rendered (§8.5, bl-0164): the §8.3 login pane's
-    /// `↻ providers + credentials` and the §9.5 config rows' capability read
-    /// — one derivation, every seat.
+    /// presence, rendered (§8.5, bl-0164): the same derivation the §8.3 login
+    /// pane's `↻ providers + credentials` paints — one derivation, and since
+    /// bl-20cb the window has exactly one seat at it, so this reply and that
+    /// pane are the whole set.
     ///
     /// **It names its workspace** (bl-fcd5). Providers and their sign-ins live
     /// inside a wall since the blast-radius ruling, so there is no global

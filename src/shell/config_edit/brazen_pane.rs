@@ -15,8 +15,9 @@
 
 use crate::config_edit::RealFileIo;
 use crate::config_edit::brazen::{
-    BUILT_IN_ROWS_HINT, BrazenEditor, BrazenPaths, BzRunner, ProviderRow, RealBzRunner, row_views,
+    BUILT_IN_ROWS_HINT, BrazenEditor, BrazenPaths, BzRunner, ProviderRow, RealBzRunner,
 };
+use crate::keymap::CenterTab;
 use crate::theme;
 use crate::xdg::Env;
 
@@ -30,10 +31,15 @@ use super::status::{describe_applied, reload_status, status_line};
 const NO_WALL_HINT: &str = "focus a workspace to edit its providers — brazen's config, sign-ins and \
      model cache live inside a workspace, not on the machine";
 
-/// The brazen pane's per-wall RAM (§5.3): the editor draft and the two answers
-/// the open gesture reads once — brazen's effective provider table and the
-/// credential presence beside it (§5.1 #20–#22) — plus the seams both go
-/// through, folded once from the wall's lensed env.
+/// The brazen pane's per-wall RAM (§5.3): the editor draft and the one answer
+/// the open gesture reads once — brazen's effective provider table (§5.1
+/// #20/#21) — plus the seams both go through, folded once from the wall's
+/// lensed env.
+///
+/// **No credential column** (bl-20cb). Presence (§5.1 #22) is the Login
+/// surface's fact and this pane no longer paints it, so it no longer reads it:
+/// a field kept for a rendering that moved is the drift the roster seat was
+/// reseated to end.
 pub struct BrazenPane {
     io: RealFileIo,
     bz: RealBzRunner,
@@ -45,7 +51,6 @@ pub struct BrazenPane {
     /// The rows every provider control in the Config tab offers, so what the
     /// pickers know is on screen.
     pub(crate) providers: Vec<ProviderRow>,
-    creds: Vec<(String, bool)>,
 }
 
 impl BrazenPane {
@@ -63,7 +68,6 @@ impl BrazenPane {
             status: String::new(),
             effective: String::new(),
             providers: Vec::new(),
-            creds: Vec::new(),
         }
     }
 
@@ -75,29 +79,48 @@ impl BrazenPane {
             let _ = editor.refresh(&self.io);
         }
         self.providers = self.bz.providers();
-        self.creds = self
-            .editor
-            .as_ref()
-            .map(|e| e.credential_presence(&self.providers, &self.io))
-            .unwrap_or_default();
     }
 }
 
-/// The pane: the effective provider table as read-only rows, and the raw TOML
-/// draft folded behind them — the §9.5 raw fallback, because `bz` is the only
-/// lawful parser of a versionless schema full of open valves, so a form over it
-/// would be a second authority corrupting what it cannot model. The rows are
-/// what makes the raw text no longer blind: they are the facts the file
-/// produces, beside the file.
-pub(crate) fn render(ui: &mut egui::Ui, pane: &mut BrazenPane) {
+/// The pane: what this file's rows add up to, and the raw TOML draft folded
+/// behind it — the §9.5 raw fallback, because `bz` is the only lawful parser of
+/// a versionless schema full of open valves, so a form over it would be a
+/// second authority corrupting what it cannot model. The tally is what makes
+/// the raw text no longer blind: it is the effect the file has, beside the
+/// file.
+///
+/// Returns the §11 tab the operator asked for, if any — the caller spends the
+/// focus, because the gesture is the target pane's freshness too
+/// ([`super::super::center::focus`]).
+pub(crate) fn render(ui: &mut egui::Ui, pane: &mut BrazenPane) -> Option<CenterTab> {
     ui.heading(egui::RichText::new("brazen config.toml").color(theme::integration_hue("bz")));
     if pane.editor.is_none() {
         ui.weak(NO_WALL_HINT);
-        return;
+        return None;
     }
-    provider_table(ui, pane);
+    let route = provider_reference(ui, pane);
     ui.weak(BUILT_IN_ROWS_HINT);
-    egui::CollapsingHeader::new("raw config.toml — validated by bz before it lands")
+    raw_fold(ui, pane);
+    route
+}
+
+/// The §9.5 raw fallback, folded away: the TOML draft, its three verbs, and the
+/// effective dump when one has been asked for.
+///
+/// **The header names the file and nothing else** (QUALITY G1). It read *"raw
+/// config.toml — validated by bz before it lands"*, which at the documented
+/// 420x320 minimum was laid 271 pt into a 194 pt pane and sliced there
+/// mid-glyph with no ellipsis. §11 rule 1 cannot reach it — egui lays a
+/// `CollapsingHeader`'s own text `Extend` whatever the style says — and it was
+/// the widest run this surface laid, so it also set the **content width** of the
+/// vertical `ScrollArea` around it and every row beneath then elided against a
+/// width the viewport never had (the lernie pane's `models.yaml` path came out
+/// truncated at 287 pt and clipped again at 194). Ten provider rows used to sit
+/// above it and push both off the bottom of that window, which is the only
+/// reason the audit never caught either. The clause it lost is a promise about
+/// Apply, so it lives on the hover with the rest of them.
+fn raw_fold(ui: &mut egui::Ui, pane: &mut BrazenPane) {
+    egui::CollapsingHeader::new("raw config.toml")
         .show(ui, |ui| {
             let Some(editor) = pane.editor.as_mut() else {
                 return;
@@ -139,40 +162,43 @@ pub(crate) fn render(ui: &mut egui::Ui, pane: &mut BrazenPane) {
         .header_response
         .on_hover_text(
             "Open brazen's config.toml raw — the providers and credentials every \
-             model call is routed through. Editing there changes nothing until Apply. \
-             Reachable by Tab, pressed with Space.",
+             model call is routed through. Editing there changes nothing until Apply, \
+             and bz validates it before it lands. Reachable by Tab, pressed with \
+             Space.",
         );
 }
 
-/// brazen's effective rows (§5.1 #20–#22), read at the open gesture: the row
-/// name, its credential fact in words — which its credential model phrases, and
-/// which is also its login capability (§8.3) — and, where `bz --login` cannot
-/// serve it, why. The words are [`row_views`], the same derivation the §8.3
-/// Login pane renders (bl-402f): one fact, two seats.
-fn provider_table(ui: &mut egui::Ui, pane: &BrazenPane) {
+/// What this file's rows add up to, and the one gesture that goes and reads
+/// them — **not the roster itself** (bl-20cb, QUALITY H1).
+///
+/// The pane used to paint every row here: name, credential fact and blocked
+/// reason, the identical `row_views` sentences the §8.3 Login pane paints. Ten
+/// rows rendered twice is one rendering too many, and this was the copy that
+/// could not be acted on — the seat that carries the sign-in verb is the seat
+/// that owns the roster, so the roster lives there and this pane references it.
+/// The two facts that survive here are the ones the *file* owns and Login does
+/// not state: how many rows it ends up routing, and that the table is bz's
+/// rather than this file's. What is gone was never this surface's fact —
+/// "signed in" is a credential-store answer, and a blocked row's own sentence
+/// (*"api-key provider — set the key in Config"*) was pointing at the very pane
+/// it was painted in.
+///
+/// Returns the tab the operator asked for.
+fn provider_reference(ui: &mut egui::Ui, pane: &BrazenPane) -> Option<CenterTab> {
     if pane.providers.is_empty() {
         ui.weak("brazen listed no provider rows — reopen the pane to ask again");
-        return;
+        return None;
     }
-    for row in row_views(&pane.providers, &pane.creds) {
-        ui.horizontal(|ui| {
-            super::super::row::bounded(ui);
-            ui.monospace(&row.name);
-            ui.weak(&row.fact);
-        });
-        if let Some(why) = &row.blocked {
-            // Its own **wrapped** line, not a third element on the row above
-            // (bl-5410). Three greedy runs on one line overflowed it, and an
-            // overflowing row in a vertical `ScrollArea` is a *ratchet*: the
-            // content it could not fit becomes the content width egui lays the
-            // next frame at, so the row spilled 15 pt further past the pane on
-            // every frame until it settled 74 pt outside it — every label on it
-            // then truncated against a width the pane never had, and was clipped
-            // mid-glyph with the `…` it had earned sitting off the edge.
-            ui.scope(|ui| {
-                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Wrap);
-                ui.colored_label(theme::ASH, why);
-            });
-        }
-    }
+    // Counted from brazen's own answer, never pinned: the number is what this
+    // file plus bz's built-ins come to, which is the whole of what the raw text
+    // below is blind about.
+    ui.weak(format!(
+        "{} provider rows are effective in this workspace — the Login tab names them \
+         and states each one's credential",
+        pane.providers.len()
+    ));
+    ui.button(CenterTab::Login.label())
+        .on_hover_text(CenterTab::Login.focus_hover())
+        .clicked()
+        .then_some(CenterTab::Login)
 }

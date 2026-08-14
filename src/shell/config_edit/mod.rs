@@ -156,8 +156,12 @@ pub fn center(
     // one surface (QUALITY H1). What the strip cannot say is the *stance*.
     ui.weak("every setting here edits the file that holds it");
     let rows = row_names(&state.wall.brazen.providers);
+    // The brazen pane's roster reference (bl-20cb) asks for a tab rather than
+    // taking it: the focus is spent after the scroll area closes, because it is
+    // also the target pane's freshness gesture and must not run mid-paint.
+    let mut route = None;
     egui::ScrollArea::vertical().show(ui, |ui| {
-        brazen_pane::render(ui, &mut state.wall.brazen);
+        route = brazen_pane::render(ui, &mut state.wall.brazen);
         ui.separator();
         lernie_pane::render(ui, &mut state.config, &rows);
         ui.separator();
@@ -168,4 +172,7 @@ pub fn center(
         branch_pane::render(ui, model, &mut state.config, &rows, lernie, bl);
         super::delete::danger_row(ui, model, state);
     });
+    if let Some(tab) = route {
+        super::center::focus(model, state, tab);
+    }
 }

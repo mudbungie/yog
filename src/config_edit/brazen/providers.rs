@@ -15,10 +15,11 @@
 //! reclassifies a row: it reads a column.
 //!
 //! **The rendered row is derived here too** ([`ProviderRowView`], bl-402f), not
-//! in either pane: `auth` plus the §5.1 #22 presence read is the whole of what a
+//! in the pane: `auth` plus the §5.1 #22 presence read is the whole of what a
 //! surface can say about a provider, so the words that say it live beside the
-//! columns they read. The Login pane and the §9.5 config rows are two seats at
-//! one derivation and cannot disagree about a provider.
+//! columns they read. The §8.3 Login pane is the one **painted** seat at it
+//! (bl-20cb retired the §9.5 config copy); the boundary's `Providers` reply and
+//! §9.4's remedy sentence read the same derivation without repainting the row.
 //!
 //! The projection carries no *device-endpoint* fact (`OAuthConfig::device_url`
 //! is not a listed column at the `brazen = "=0.0.5"` pin), and it does not need
@@ -97,9 +98,10 @@ impl ProviderRow {
 
 /// One provider row as the operator reads it: what it is called, its credential
 /// fact in words, and either the Login verb (`blocked == None`) or the reason
-/// there is none. **One derivation, two seats** — the §8.3 Login pane and the
-/// §9.5 config rows render this same struct, so the two surfaces cannot state
-/// different things about one provider.
+/// there is none. **One derivation, one painted seat** — the §8.3 Login pane
+/// renders this struct and, since bl-20cb, nothing else does: a second surface
+/// painting the same row was two renderings of one fact, and the seat that keeps
+/// it is the one whose verb the row is about.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProviderRowView {
     pub name: String,

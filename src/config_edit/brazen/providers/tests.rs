@@ -85,8 +85,8 @@ fn an_unrecognized_auth_spelling_names_itself_rather_than_guessing() {
 
 /// bl-402f: presence renders (STORIES S5 point 4). Every row states its
 /// credential fact in words, phrased by the credential model that makes it
-/// true — and the words are one derivation, shared by the Login pane and the
-/// §9.5 config rows.
+/// true — one derivation, painted by the §8.3 Login pane (bl-20cb: and by it
+/// alone) and read without repainting by the boundary and §9.4's remedy.
 #[test]
 fn row_views_state_the_credential_fact_in_words() {
     let rows = provider_rows(LIVE_LISTING);

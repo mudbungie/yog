@@ -3,8 +3,8 @@
 //! [`BrazenPaths`]. None of these touch the Apply pipeline — that is
 //! [`super`]'s half.
 
-use super::{FakeRunner, cfg, loaded};
-use crate::config_edit::brazen::{BUILT_IN_ROWS_HINT, BrazenPaths, BzRunner};
+use super::{FakeRunner, cfg, loaded, paths};
+use crate::config_edit::brazen::{BUILT_IN_ROWS_HINT, BrazenPaths, BzRunner, credential_presence};
 use crate::test_support::FakeFs;
 use crate::xdg::Env;
 use std::path::{Path, PathBuf};
@@ -25,12 +25,12 @@ fn credential_presence_stats_a_file_per_effective_provider() {
     // effective table (§16.7 W10), never from the draft text.
     fs.map()
         .insert(PathBuf::from("/creds/openai.json"), b"{}".to_vec());
-    let ed = loaded(&fs);
+    let _ = loaded(&fs);
     let runner = FakeRunner::listing(&["openai", "anthropic"]);
-    // The pane asks brazen once and hands the same table here (§9.5).
+    // The Login surface asks brazen once and hands the same table here (§8.3).
     let rows = runner.providers();
     assert_eq!(
-        ed.credential_presence(&rows, &fs),
+        credential_presence(&paths().credentials_dir, &rows, &fs),
         vec![
             ("openai".to_string(), true),
             ("anthropic".to_string(), false),

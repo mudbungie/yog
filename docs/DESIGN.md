@@ -1531,7 +1531,7 @@ not a special case.
 | 19 | brazen file config | `<wall>/brazen/config.toml`, the focused workspace's own (§16.2's wall layout) | raw text. No workspace in focus is **no path at all** (`BrazenPaths::of` answers `None`) — the surface renders its guard rather than falling back to the machine's `$BRAZEN_CONFIG`/`$XDG_CONFIG_HOME`, which is the whole of the blast-radius ruling in one row |
 | 20 | brazen effective config | `bz` itself | `bz --dump-config` stdout verbatim (bz is the authority on the value fold; yog never re-implements TOML semantics). *Since §16.7 W10 this is a **function call**, not a spawn — the linked `brazen` at yog's exact pin, driven through `src/bz_host.rs`; same bytes, same authority, no foreign binary* |
 | 21 | brazen built-in rows | compiled into bz | static read-only hint beside the dump (which drops the defaults operand and so can never show them). *Since W10 the rows are additionally **listed**: `bz --list-providers` keeps that operand, so the login surface offers built-ins and file rows alike — one in-process read (§5.1 #20's sibling), and the source of the credential-presence rows too*. **When** it is read: at the login surface's RAM construction (bl-e290), so the pane opens with its roster already in it; `↻ providers + credentials` is the re-ask for the two things a start-up read can go stale against — a config edit made since, and a credential written since (bl-402f: it re-reads #22 in the same gesture). Never on first click — a surface that shows nothing until you refresh it reads as a surface with nothing in it |
-| 22 | Credential presence | `<wall>/brazen/credentials/<provider>.json` existence — the focused workspace's own | existence only; contents never read, never written. Paired with #20's `auth` column it is the whole of what a surface may say about a provider, so the *words* are derived once (`brazen::row_views`) and rendered by both seats — the §9.5 config rows and the §8.3 Login rows (bl-402f). Read at the same gesture that asks #21, never per frame |
+| 22 | Credential presence | `<wall>/brazen/credentials/<provider>.json` existence — the focused workspace's own | existence only; contents never read, never written. Paired with #20's `auth` column it is the whole of what a surface may say about a provider, so the *words* are derived once (`brazen::row_views`). **One painted seat: the §8.3 Login rows** — bl-402f gave the §9.5 config pane a second copy of the same sentences and bl-20cb took it back, because the roster belongs to the surface that can act on a row and a verb-less duplicate of it is QUALITY H1's violation exactly. Read at the same gesture that asks #21, never per frame — and the §9.1 pane, painting no credential column, no longer reads it at all |
 | 23 | Model cache | `<wall>/brazen/models/*.json` — the focused workspace's own | read-only display; refresh = `bz --list-models`, whose write lands in the same wall because the caller carries it — the picker's spawn in its env, the in-process runner in its `Env` (bl-dff8) |
 | 24 | lernie global config | `<config-root>/models.yaml`, `workflows/*.yaml` | raw text |
 | 25 | Action history | `ops.jsonl` | tail + parse (§4.2); ambient error prominence is the §6 retirement projection over that tail — never a stored flag |
@@ -2747,9 +2747,11 @@ knows the workspace, and no downstream seat has to be told.*
        screen; there is nothing to click to discover it.
 
      Both come from **one derivation**, `brazen::row_views` beside the column
-     projection it reads (`src/config_edit/brazen/providers.rs`) — the §9.5
-     config rows render the identical struct, so the two surfaces cannot state
-     different things about one provider. The Login pane's `↻` re-asks brazen
+     projection it reads (`src/config_edit/brazen/providers.rs`) — and this pane
+     is its **one painted seat** (bl-20cb): the §9.1 config pane rendered the
+     identical struct verb-less until that ruling moved the roster to the
+     surface whose verb it is about, so there is no second surface that could
+     state a different thing about one provider. The Login pane's `↻` re-asks brazen
      *and* re-reads presence in one gesture (§7.2: never per frame), which is
      also how a just-completed sign-in becomes `signed in`.
   5. **The affordance beside a failed step names its row (bl-8e34).** Detection
@@ -3661,13 +3663,26 @@ earlier, never avoided it.
 
 ### 9.1 brazen `config.toml`
 
-**§9.5 amendment.** The pane around this editor is now controls over facts: the
-effective provider table (row name, `auth` — which is the login capability,
-§8.3 — and credential presence) is rendered as read-only rows, and the raw TOML
-draft is folded behind them. The editor below is unchanged and stays raw for the
-reason this section already gives, restated as §9.5's first justified fallback.
-The rows are what stop it being *blind*: they are the facts the file produces,
-beside the file.
+**§9.5 amendment.** The pane around this editor is now controls over facts, and
+the raw TOML draft is folded behind them. The editor below is unchanged and
+stays raw for the reason this section already gives, restated as §9.5's first
+justified fallback.
+
+**§9.1 amendment (bl-20cb): the pane references the roster, it does not paint
+it.** The §9.5 amendment first spelled that as the effective provider table
+itself — row name, `auth`, credential presence — rendered here as read-only
+rows. That put the same ten `row_views` sentences on two surfaces, and this was
+the copy that could not be acted on: *"signed in"* is an answer from the
+credential store, and a blocked row's own sentence (*"api-key provider — set the
+key in Config"*) was pointing at the very pane it was painted in. **The roster
+has one seat, the §8.3 Login tab** — the surface that carries the sign-in verb
+owns the rows the verb applies to. What stops this pane being *blind* is what
+the file itself owns and Login does not state: how many rows it ends up routing
+(counted from brazen's own answer, never pinned), and the standing hint that the
+built-ins are in that count and not in this file. The rest is one control that
+focuses the Login tab — the same "name the remedy, carry the thing that goes
+there" shape §9.4's credential fault takes (bl-91f1), spending the one tab-focus
+gesture and growing no second way to open Login.
 
 - Path: `<wall>/brazen/config.toml` — the focused workspace's own (§16.2's
   wall layout). brazen's ambient fold (`$BRAZEN_CONFIG` else
@@ -4222,8 +4237,8 @@ so there is nothing to derive and no third state to carry.
   that sent the operator to a config editor for a dead binary is a guess with a
   control on it.
 - **The sentence is the row's own**, `ProviderRow::login_blocked` — the same
-  derivation the §8.3 Login rows and the §9.5 config rows render, under the
-  row's name. This is a third seat at one wording, never a third wording. It
+  derivation the §8.3 Login rows render, under the row's name. This is a
+  second seat at one wording, never a second wording. It
   matters because `bz`'s own decline is *wrong here*: it is
   `resolved_secret`'s `None` arm, reachable from `StaticSecretAuth` alone, so
   it fires on `api_key`/`bearer` rows and leads them with `BRAZEN_API_KEY` and
@@ -4277,7 +4292,7 @@ this section did not touch.
 | Surface | Setting | Control |
 |---|---|---|
 | brazen `config.toml` (§9.1) | the whole versionless, open-valve schema | **raw TOML** + the `bz` gate — fallback 1 |
-| brazen (derived, §5.1 #20–#22) | provider row name / `auth` / credential present | read-only rows (facts, not settings) — the same `row_views` sentences the §8.3 Login rows carry |
+| brazen (derived, §5.1 #20/#21) | how many provider rows the file ends up routing | a counted line plus the control that focuses §8.3, where the rows themselves are (bl-20cb — the rows used to be re-rendered here, which was one rendering too many) |
 | `models.yaml` (§9.2) | `models.<id>.provider` | picker over brazen's live table |
 | | `models.<id>.model_id` | scalar field |
 | | `models.<id>.capabilities` | list over the inline flow sequence |
@@ -7312,6 +7327,7 @@ beside `main.rs`.
 | `src/shell/acceptance/mint_seed.rs` (excl.) | ≤250 | the bl-28ba drive that a landed fire retires the seed it spent and a failed one does not |
 | `src/shell/acceptance/modal.rs` (excl.) | ≤250 | the modal-ownership drive (Escape dismissal, the swallowed click and the Return submit, each asserted in two directions) |
 | `src/shell/acceptance/name_column.rs` (excl.) | ≤250 | the same painted-geometry discipline one altitude in — on the row rather than the panel (bl-b9e3: the title's left edge is the row's fixed prefix and nothing else, so two rows differing only in attention align — measured on the painted galleys, since a string assertion would pass on a tree that deleted the flag outright) |
+| `src/shell/acceptance/one_rendering.rs` (excl.) | ≤250 | the QUALITY H1 seat drives: a fact yog derives once reaches the glass in exactly one seat, proved in both directions — the non-owning surface is asserted **not** to say the fact's own words, and the owner is asserted to say them (bl-20cb's provider roster; the reference control's tab focus) |
 | `src/shell/acceptance/picker.rs` (excl.) | ≤250 | the bl-a842 drive that the §9.4 pane's **contents** reach the paint layer — the role strip the seeded `providers.yaml` declares, the blast-radius sentence a pick claims, and the §9.2 fault an undeclared model earns — all of it behind the "cannot read `roles:`" early return until the fixture carried a config lineage, and none of it asserted by the two picker beats that measure the seat's *height* |
 | `src/shell/acceptance/raise.rs` (excl.) | ≤250 | the bl-9acf raise drive (one goal box, and a blank one fires nothing) |
 | `src/shell/acceptance/recall.rs` (excl.) | ≤250 | the bl-f908 drive (↑ pages back through the operator's own turns — pending ahead of delivered — ↓ hands the half-typed draft back verbatim, and a caret below the top row keeps its arrow) |
