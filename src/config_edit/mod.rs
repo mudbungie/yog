@@ -31,6 +31,10 @@ mod pipeline;
 pub mod apply;
 pub mod branch;
 pub mod brazen;
+/// Where a **config-kind** failure is fixed (bl-dd7f): the classifier and the
+/// sentence the §7.3 banner pairs with a route to the §9.1 editor — beside the
+/// editor it points at, exactly as §8.3's auth classifier sits with Login.
+pub mod fault;
 pub mod form;
 pub mod lernie_global;
 

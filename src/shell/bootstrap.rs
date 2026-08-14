@@ -107,6 +107,6 @@ pub(super) fn render(
     // surface, and the two never paint in the same frame (this renders only when
     // nothing is focused, which is exactly when the composer is withheld).
     if let Some(failure) = model.last_failure(crate::opslog::Origin::Conversation) {
-        super::banner::failure_banner(ui, model, &failure);
+        super::banner::failure_banner(ui, model, state, &failure);
     }
 }

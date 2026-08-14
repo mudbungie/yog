@@ -81,6 +81,36 @@ fn is_plain_id(model: &str) -> bool {
     !model.is_empty() && !model.contains([' ', '\t', ':', '#'])
 }
 
+/// Where the picker's provider dropdown lands, **and what it had to leave
+/// behind to get there** (bl-bd89, amended by bl-dd7f).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Scoped {
+    /// The row the model list is asked of and a pick is written for.
+    pub row: String,
+    /// The role's own row, when brazen does not have it — the row the
+    /// conversation actually dispatched through, and the reason its first turn
+    /// died. `None` whenever the dropdown shows the role's own row, which is
+    /// every healthy case.
+    pub stranded: Option<String>,
+}
+
+impl Scoped {
+    /// The sentence the picker paints when it had to steer (bl-dd7f): the row
+    /// that failed, named, beside the live one now selected. The wording lives
+    /// here, beside the substitution that makes it true, so the dropdown and
+    /// the sentence cannot state different rows.
+    pub fn strand_note(&self) -> Option<String> {
+        self.stranded.as_ref().map(|was| {
+            format!(
+                "this conversation was dispatched through {was}, which brazen does not \
+                 have — {} is selected instead; add or rename the row in config.toml to \
+                 keep it",
+                self.row
+            )
+        })
+    }
+}
+
 /// The provider row the picker queries and writes for a role (bl-bd89): the
 /// role's own row when brazen has it, otherwise brazen's first row.
 ///
@@ -89,10 +119,24 @@ fn is_plain_id(model: &str) -> bool {
 /// asking a dead row for its models can only re-report the strand. An **empty**
 /// table is no answer rather than an empty one (brazen could not be asked), so
 /// it steers nothing and the role's own row stands.
-pub fn default_row(current: &str, rows: &[String]) -> String {
+///
+/// **The substitution is a fact the caller is told, not one it has to notice**
+/// (bl-dd7f, ruled at bl-9b52). It used to return the bare row, so a
+/// conversation whose first turn died on `unknown provider \`openai-chatgpt\``
+/// showed a picker reading `anthropic` — brazen's first row — and nothing said
+/// the swap had happened: the operator read the picker as a report of what ran.
+/// Steering is still right; steering silently was not. So the answer carries
+/// both halves ([`Scoped`]) and the seat says the second one.
+pub fn default_row(current: &str, rows: &[String]) -> Scoped {
     match rows.first() {
-        Some(first) if !rows.iter().any(|r| r == current) => first.clone(),
-        _ => current.to_owned(),
+        Some(first) if !rows.iter().any(|r| r == current) => Scoped {
+            row: first.clone(),
+            stranded: Some(current.to_owned()),
+        },
+        _ => Scoped {
+            row: current.to_owned(),
+            stranded: None,
+        },
     }
 }
 
