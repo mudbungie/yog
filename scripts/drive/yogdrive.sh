@@ -70,7 +70,7 @@ case $cmd in
 # blast-radius ruling (§16.2) brazen's credentials are the
 # WORKSPACE's — `<world>/walls/<name>/brazen/credentials` — so that link was a
 # path no driven process read, and its presence made a credential-less run look
-# ready (bl-49c6). The wall is laid by harness.sh's `seed_wall`, with the world
+# ready (bl-49c6). The wall is laid by wall.sh's `seed_wall`, with the world
 # seed and BEFORE this launch — §3.1 fixes the empty-world start's leaf at the
 # constant `home`, and the mint and the first model call are one gesture, so
 # there is no "after the mint" early enough to be a fixture (bl-1851).

@@ -63,14 +63,23 @@ s8_marks() {
   "$drive" shot "$wid" "$out/s8-02-marks-own-branch.png"
 
   # Non-vacuous in both directions: the gesture returned a verdict, so this
-  # negative is a statement about a write that certainly happened.
-  [ "$(md5of "$ui")" = "$ui_hash" ] \
+  # negative is a statement about a write that certainly happened — and the file
+  # it is about must EXIST for "unchanged" to mean anything, since two absences
+  # compare equal (bl-f16e).
+  { [ -f "$ui" ] && [ "$(md5of "$ui")" = "$ui_hash" ]; } \
     && pass "S8-T4 marks: no yog-owned file written" \
-    || fail "S8-T4 marks: no yog-owned file written" "ui.json moved"
+    || fail "S8-T4 marks: no yog-owned file written" "ui.json moved or absent"
 
   # An unlawful branch refuses in the space's own words rather than writing one.
-  gesture "$data" "/marks balls/config" --ws "$ws" \
-    || pass "S8-T4 marks: balls' landing branch is refused, not written"
+  # BOTH arms are spelled: as `… || pass …` this beat could only ever emit a PASS
+  # row, so the one outcome it exists to catch — the landing branch accepted —
+  # deleted the beat from the verdict instead of reddening it, and a ladder
+  # counts rows it has, never rows it should have had (bl-f16e).
+  if gesture "$data" "/marks balls/config" --ws "$ws"; then
+    fail "S8-T4 marks: balls' landing branch is refused, not written" "the boundary accepted it"
+  else
+    pass "S8-T4 marks: balls' landing branch is refused, not written"
+  fi
   grep -q 'tasks_branch = "balls/agents/drive"' "$branch_file" \
     && pass "S8-T4 marks: the refusal left the standing branch alone" \
     || fail "S8-T4 marks: the refusal left the standing branch alone" "the key moved"
@@ -130,9 +139,15 @@ s8_nesting() {
     && [ ! -d "$HOME/.local/state/balls/clones/$enc" ]; } \
     && pass "S8-T2 nesting: the project's balls clone is nested only" \
     || fail "S8-T2 nesting: the project's balls clone is nested only" "clone misplaced"
-  [ "$(md5of "$HOME/.local/share/yog/world/lernie/models.yaml")" = "$ambient_before" ] \
+  # The ambient seed must BE there for "never moved" to be a claim about yog
+  # rather than about an empty box: absent-then, absent-now compared equal, so
+  # this passed on a host with no ambient world at all (bl-f16e). The
+  # severability beat below already requires the ambient dirs, so demanding the
+  # seed itself is the same host contract, stated where it is spent.
+  { [ -f "$HOME/.local/share/yog/world/lernie/models.yaml" ] \
+    && [ "$(md5of "$HOME/.local/share/yog/world/lernie/models.yaml")" = "$ambient_before" ]; } \
     && pass "S8-T1 nesting: the ambient world's own seed never moved" \
-    || fail "S8-T1 nesting: the ambient world's own seed never moved" "ambient seed changed"
+    || fail "S8-T1 nesting: the ambient world's own seed never moved" "ambient seed changed or absent"
   rm -rf "$data/yog"
   { [ ! -e "$data/yog" ] && [ -d "$HOME/.local/state/balls" ] \
     && [ -d "$HOME/.local/share/yog" ]; } \

@@ -21,7 +21,7 @@
 
 # --- world A fixtures --------------------------------------------------------
 # The focused workspace's brazen config (§9.1, §16.2's wall layout), over
-# harness.sh's `wall_dir` so the layout has one spelling — and over its
+# wall.sh's `wall_dir` so the layout has one spelling — and over its
 # `BOOTSTRAP_WS`, because this world opens on zero workspaces and §3.1 fixes that
 # start's leaf at the constant `home` (bl-1851: it was a lazy `find` on the
 # premise that the leaf is minted, which is true of a §11 `w` sphere and of
@@ -37,9 +37,10 @@ brazen_scratch() {
 }
 
 # --- world-A predicates -----------------------------------------------------
-# Every §9 "cannot land" assertion is "these bytes did not move", so hash a file.
-md5of() { md5sum "$1" | cut -d' ' -f1; }
-file_has() { grep -q -- "$2" "$1" 2>/dev/null; }
+# `md5of` and `file_has` were here and are now in harness.sh: `beats_s8.sh`
+# spends the first and `beats_s6.sh` the second, and a predicate two runners
+# assert on has one home — the same rule that moved `seen_kind` (bl-2d45,
+# bl-f16e). Whoever files a beat here reaches for the shared spelling.
 # a `config/<name>` branch of the workspace's bare repo carries <file> with <text>
 config_branch_has() {
   git --git-dir="$1/repo.git" show "config/$2:$3" 2>/dev/null | grep -q -- "$4"
