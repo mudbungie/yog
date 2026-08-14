@@ -23,13 +23,15 @@ no dependency back.
 ## Architecture
 
 **`docs/DESIGN.md` is the authority** — the state inventory, the attention
-model, the write paths, the module map, and the line budgets live there. It is
+model, the write paths and the module map live there. It is
 the *architecture* authority, not a generated mirror: when code and DESIGN
 disagree, one of them is a bug, and the discipline is to fix the doc rather than
-code around it (AGENTS.md). Only its `§`-citations are machine-checked
+code around it (AGENTS.md). Two guards hold it to the tree: its `§`-citations
 (`tests/design_citations.rs` proves every cited section resolves to a real
-heading); the module map is maintained by hand and can lag a split. This section
-is only the map.
+heading) and its module map (`tests/design_module_map.rs` proves every source
+file has a row, every row names a live path, and every rule §12 states about
+its own table). The 300-line cap is `make line-cap`'s, and lives nowhere else.
+This section is only the map.
 
 yog is a stateless renderer: every frame is a pure function of on-disk state at
 that tick, so two instances against the same repos converge with no

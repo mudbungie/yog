@@ -8,7 +8,7 @@
 //! concurrently against the same repo without coordination.
 //!
 //! **`docs/DESIGN.md` is the authority** for the state inventory, the attention
-//! model, the module map, and line budgets; the module docs below stay terse
+//! model, and the module map; the module docs below stay terse
 //! and defer to it. The shape in brief: pure view-model modules (no egui) — the
 //! per-tick [`git_tree`], the [`nav`] roster, [`attention`], [`projects`]/
 //! [`binding`], [`start`], [`ui_state`], the inspector VMs ([`transcript`],
