@@ -201,6 +201,11 @@ fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, clis: (
     egui::ScrollArea::vertical()
         .id_salt("center-body")
         .show(ui, |ui| {
+            // The scroll area's inner rect is wider than its viewport whenever
+            // the content is, and with no horizontal scrolling that surplus is
+            // width nothing can ever reach — every row below would truncate to
+            // it and be hard-cut at the real edge, ellipsis and all (bl-7414).
+            super::row::shown_width(ui);
             super::center::render(ui, model, state, lernie, bl, bz);
         });
 }

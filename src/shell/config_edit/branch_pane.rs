@@ -128,7 +128,14 @@ fn tree(config: &ConfigState, ws: &Path) -> Vec<String> {
 fn lineage(ui: &mut egui::Ui, config: &mut ConfigState, ws: &Path) {
     let before = config.cb_name.clone();
     let known = config.branches.iter().any(|b| b.name == config.cb_name);
-    ui.horizontal(|ui| {
+    // §11 rule 8, not rule 1b (bl-7414): every member here is a control of its
+    // own — a dropdown, a revealed field, and the two origin peers — and none
+    // may be dropped, so the row grows a LINE when it cannot fit rather than
+    // running off the pane. Laid `horizontal` it could not fit at 480x1400 at
+    // all, and an over-full row ratchets the seat's `max_rect`, which is how the
+    // §9.5 no-reader sentence below it came to elide at 285 pt inside a 224 pt
+    // pane and be hard-cut with its ellipsis outside the clip.
+    crate::shell::row::peers(ui, |ui| {
         ui.label("lineage:");
         let shown = if known {
             config.cb_name.clone()
@@ -156,7 +163,10 @@ fn lineage(ui: &mut egui::Ui, config: &mut ConfigState, ws: &Path) {
             .response
             .on_hover_text(LINEAGE_HINT);
         if !known {
-            ui.text_edit_singleline(&mut config.cb_name)
+            // The remainder of the line it is on, never egui's fixed 280 pt
+            // `text_edit_width` — which is what forced this row wider than the
+            // pane whatever the pane had. The peers wrap below it (bl-7414).
+            ui.add(egui::TextEdit::singleline(&mut config.cb_name).desired_width(f32::INFINITY))
                 .on_hover_text(LINEAGE_HINT);
         }
         ui.selectable_value(&mut config.cb_origin, EditOrigin::Advance, "advance")
@@ -179,24 +189,31 @@ fn lineage(ui: &mut egui::Ui, config: &mut ConfigState, ws: &Path) {
 /// The file row: the paths the lineage's commit actually holds, and the Load
 /// that fills the body from it — an edit is over what is there, never a blank.
 fn file_row(ui: &mut egui::Ui, config: &mut ConfigState, ws: &Path) {
-    ui.horizontal(|ui| {
+    // §11 rule 8 (bl-7414): a dropdown, the free-path field it reveals and Load
+    // are each a control of their own, and a control that does not fit is not
+    // elided — egui simply never lays it out (`Load` measured 26 pt laid, 2 pt
+    // shown). So the row wraps to a second line rather than pushing the verb off
+    // the pane, and the field takes the remainder of its own line rather than
+    // egui's fixed 280 pt `text_edit_width`, which is what forced the row wider
+    // than the pane and ratcheted the seat's `max_rect` for every row below it.
+    let files = config.cb_files.clone();
+    let load_asked = crate::shell::row::peers(ui, |ui| {
         ui.label("file:").on_hover_text(FILE_HINT);
         egui::ComboBox::from_id_salt("config-branch-file")
-            .selected_text(&config.cb_path)
+            .selected_text(config.cb_path.as_str())
             .show_ui(ui, |ui| {
-                for path in &config.cb_files.clone() {
+                for path in &files {
                     ui.selectable_value(&mut config.cb_path, path.clone(), path)
                         .on_hover_text(FILE_HINT);
                 }
             })
             .response
             .on_hover_text(FILE_HINT);
-        if config.cb_files.is_empty() {
-            ui.text_edit_singleline(&mut config.cb_path)
+        if files.is_empty() {
+            ui.add(egui::TextEdit::singleline(&mut config.cb_path).desired_width(f32::INFINITY))
                 .on_hover_text(FILE_HINT);
         }
-        if ui
-            .button("Load")
+        ui.button("Load")
             .on_hover_text(
                 "Read this file out of the selected lineage's tip into the editor \
                  below, so the edit starts from what is actually there. \
@@ -204,10 +221,10 @@ fn file_row(ui: &mut egui::Ui, config: &mut ConfigState, ws: &Path) {
                  bytes, and `/lineages` lists what there is to read.",
             )
             .clicked()
-        {
-            config.cb_status = load(config, ws);
-        }
     });
+    if load_asked {
+        config.cb_status = load(config, ws);
+    }
 }
 
 /// Read the selected file out of the selected lineage's tip into the body.

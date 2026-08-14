@@ -64,22 +64,36 @@ pub(super) fn render(ui: &mut egui::Ui, config: &mut ConfigState, provider_rows:
         }
     });
     workflow_list(ui, config);
-    ui.horizontal(|ui| {
-        ui.label("new workflow:").on_hover_text(NEW_WORKFLOW_HINT);
-        ui.text_edit_singleline(&mut config.new_workflow)
-            .on_hover_text(NEW_WORKFLOW_HINT);
-        if ui
-            .button("Create")
-            .on_hover_text(
-                "Open an empty editor for a workflow file of that name. Nothing is \
-                 written to disk until you press Apply — `/config workflow <name> \
-                 <text…>` writes one outright.",
+    // Rule 1b, and the width half of it (bl-7414): the field is greedy and the
+    // verb is not, so the verb is laid first and the field takes what is left.
+    // Spelled the obvious way, `text_edit_singleline` claims egui's fixed 280 pt
+    // `text_edit_width` whatever the pane has — which at 480x1400 was 164 pt
+    // MORE than the pane, and an over-wide row does not merely overflow: it
+    // ratchets the seat's own `max_rect`, so every row after it truncated to a
+    // width the clip then cut, ellipsis and all.
+    let create = crate::shell::row::control_last(
+        ui,
+        |ui| {
+            ui.label("new workflow:").on_hover_text(NEW_WORKFLOW_HINT);
+            ui.add(
+                egui::TextEdit::singleline(&mut config.new_workflow).desired_width(f32::INFINITY),
             )
-            .clicked()
-        {
-            new_workflow(config);
-        }
-    });
+            .on_hover_text(NEW_WORKFLOW_HINT);
+        },
+        |ui| {
+            ui.button("Create")
+                .on_hover_text(
+                    "Open an empty editor for a workflow file of that name. Nothing is \
+                     written to disk until you press Apply — `/config workflow <name> \
+                     <text…>` writes one outright.",
+                )
+                .clicked()
+        },
+    )
+    .1;
+    if create {
+        new_workflow(config);
+    }
     status_line(ui, &config.lernie_status);
 }
 
@@ -119,40 +133,50 @@ fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema, provide
     if schema.block != crate::model_pick::grammar::MODELS {
         return;
     }
-    ui.horizontal(|ui| {
-        ui.label("declare model:");
-        ui.text_edit_singleline(&mut config.new_model)
-            .on_hover_text(DECLARE_HINT);
-        egui::ComboBox::from_id_salt("declare-model-row")
-            .selected_text(&config.new_model_row)
-            .show_ui(ui, |ui| {
-                for name in provider_rows {
-                    ui.selectable_value(&mut config.new_model_row, name.clone(), name)
-                        .on_hover_text(
-                            "The provider row this model calls through — one of the \
+    // Rule 1b again (bl-7414): the id field is the greedy half, the row it
+    // routes through and the verb are not. The two halves take **disjoint**
+    // borrows of the pane's RAM, since `control_last` holds both closures at
+    // once — the id is typed on the left, the row is picked on the right.
+    let (typed, picked) = (&mut config.new_model, &mut config.new_model_row);
+    let declare = crate::shell::row::control_last(
+        ui,
+        |ui| {
+            ui.label("declare model:");
+            ui.add(egui::TextEdit::singleline(typed).desired_width(f32::INFINITY))
+                .on_hover_text(DECLARE_HINT);
+        },
+        |ui| {
+            egui::ComboBox::from_id_salt("declare-model-row")
+                .selected_text(picked.as_str())
+                .show_ui(ui, |ui| {
+                    for name in provider_rows {
+                        ui.selectable_value(picked, name.clone(), name)
+                            .on_hover_text(
+                                "The provider row this model calls through — one of the \
                              rows brazen actually has. Typed, the pick is the middle \
                              word of `/model <role> <provider> <model-id>`.",
-                        );
-                }
-            })
-            .response
-            .on_hover_text(
-                "Which provider row the new model calls through — one of the rows \
+                            );
+                    }
+                })
+                .response
+                .on_hover_text(
+                    "Which provider row the new model calls through — one of the rows \
                  brazen actually has. Typed, the pick is the middle word of \
                  `/model <role> <provider> <model-id>`.",
-            );
-        if ui
-            .button("Declare")
-            .on_hover_text(
-                "Draft a `models:` entry for that id on the picked provider row — \
-                 the same write the model picker makes. Nothing lands until Apply; \
-                 `/model <role> <provider> <model-id>` does both halves at once.",
-            )
-            .clicked()
-        {
-            config.lernie_status = declared(config);
-        }
-    });
+                );
+            ui.button("Declare")
+                .on_hover_text(
+                    "Draft a `models:` entry for that id on the picked provider row — \
+                     the same write the model picker makes. Nothing lands until Apply; \
+                     `/model <role> <provider> <model-id>` does both halves at once.",
+                )
+                .clicked()
+        },
+    )
+    .1;
+    if declare {
+        config.lernie_status = declared(config);
+    }
 }
 
 /// Draft the new entry, or say why not. An id already on the picked row is

@@ -84,13 +84,25 @@ fn says(painted: &[Painted]) -> String {
     out
 }
 
-/// Nothing the row painted crosses the panel's right edge (§11 rule 1).
+/// Nothing the row painted leaves the panel — **either side of it** (§11 rule
+/// 1). Until bl-7414 this measured `rect.right()` alone, which is bl-36c3's
+/// vacuity shape 3 (right axis, one direction): a `right_to_left` row that is
+/// handed less width than it needs grows *leftwards* off its right edge, so
+/// under a rule that only ever watched the right edge, overflowing left was
+/// free. The panel is a span; the assertion is now the span.
 fn assert_inside_the_panel(painted: &[Painted]) {
     for (text, rect) in painted {
         assert!(
             rect.right() <= PANEL + 1.0,
-            "`{text}` is laid past the panel edge at {}",
+            "`{text}` is laid past the panel's right edge at {}",
             rect.right()
+        );
+        assert!(
+            rect.left() >= -1.0,
+            "`{text}` is laid past the panel's left edge at {} — a row that \
+             cannot fit grows off the edge it was laid from, and the operator \
+             gets a hard cut with no ellipsis to warn them",
+            rect.left()
         );
     }
 }

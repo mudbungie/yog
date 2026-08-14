@@ -78,7 +78,11 @@ pub fn render(
         "each agent tracks on a branch of its own; subagents inherit the space they were \
          dispatched from",
     );
-    ui.horizontal(|ui| {
+    // §11 rule 8 (bl-7414): two verbs of their own natural width, neither of
+    // which may be dropped, so the pair wraps to a second line in a narrow pane
+    // instead of running off it — and instead of ratcheting the seat's own
+    // `max_rect`, which is what cut the §9.5 sentence below with no ellipsis.
+    crate::shell::row::peers(ui, |ui| {
         if ui
             .button("Read current")
             .on_hover_text(
@@ -101,9 +105,12 @@ pub fn render(
             pane.status = apply_marks(model, pane, lernie, bl, &workspace, marks::SHARED_BRANCH);
         }
     });
-    ui.horizontal(|ui| {
+    // The same rule with a field in it: the branch name takes the remainder of
+    // its own line rather than egui's fixed 280 pt `text_edit_width`, and the
+    // verb wraps below rather than off (bl-7414).
+    crate::shell::row::peers(ui, |ui| {
         ui.label("branch:").on_hover_text(BRANCH_HINT);
-        ui.text_edit_singleline(&mut pane.input)
+        ui.add(egui::TextEdit::singleline(&mut pane.input).desired_width(f32::INFINITY))
             .on_hover_text(BRANCH_HINT);
         if ui
             .button("Set branch")
