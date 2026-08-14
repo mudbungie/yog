@@ -20,6 +20,8 @@
 //! [`crate::transcript`] parses them here rather than keeping a second
 //! truth about one format.
 
+use crate::git_tree::Agent;
+use crate::nav::convs::display_name_of;
 use std::path::Path;
 
 mod render;
@@ -142,22 +144,25 @@ impl InboxEntry {
 /// across altitudes. Absent fields read as `?` rather than vanishing, keeping a
 /// hand-edited deposit legible.
 ///
-/// **The sender is an agent id, so it wears the ladder's floor** — the terminal
-/// generation only ([`crate::nav::convs::id_floor`], bl-63a1; applied here by
-/// bl-3aa1). A descent child's id embeds its whole ancestry, one
-/// `<stamp>-<hash>` pair per generation, and these rows spelled all of it: a
-/// four-token chain, 52 characters, at the head of a row whose remaining
-/// content is a timestamp and a subject (QUALITY L4 names "ancestry chain"
-/// first among the things that must not dominate a row). The chain's leading
-/// generations are the part every sibling deposit shares, so they were both the
-/// longest and the least informative thing on the line. A sender that is not an
-/// agent id at all — `user`, the operator's own deposits — carries no stamp
-/// grammar and is spelled whole by the same call, no branch.
-pub fn header_line(deposit: &Deposit) -> String {
+/// **The sender is an agent, so it wears the §3.3 ladder — from rung one**
+/// (bl-b6d0, ruling in the ball): [`display_name_of`] over the frame's own
+/// roster, the same one function the conversation list's title, the centre
+/// header, the composer's target line and the transcript's speaker read. This
+/// seat called [`id_floor`](crate::nav::convs::id_floor) *directly* until then
+/// — the ladder's FLOOR as if it were the ladder — so a deposit from a named
+/// peer painted its raw id in a frame where four other seats painted its name.
+/// bl-63a1's floor spelling (the terminal generation only, never the whole
+/// ancestry chain) is unchanged and still reached: it is where the ladder lands
+/// for a sender no agent here carries — `user`, the operator's own deposits,
+/// spelled whole because a stampless token is its own terminal segment, and a
+/// foreign or deleted id alike. No branch, and nothing is stored on the deposit:
+/// the `from:` fact stays the file's, and the name is derived where it is
+/// painted, so the row and the roster cannot disagree within one frame.
+pub fn header_line(deposit: &Deposit, agents: &[Agent]) -> String {
     let from = deposit
         .sender
         .as_deref()
-        .map_or("?", crate::nav::convs::id_floor);
+        .map_or_else(|| "?".to_owned(), |id| display_name_of(agents, id));
     let at = deposit.deposited_at.as_deref().unwrap_or("?");
     format!("✉ {from} · {at}")
 }

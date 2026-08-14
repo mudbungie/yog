@@ -30,7 +30,7 @@ fn rows_project_the_listing_in_order_keyed_by_inbox_path() {
         entry("user-001.md", "user", "t0", "first line\nrest"),
         entry("p1-002.md", "p1", "t1", "steer"),
     ];
-    let out = rows("c-1", &pending, &HashSet::new());
+    let out = rows("c-1", &pending, &[], &HashSet::new());
     assert_eq!(out.len(), 2);
     assert_eq!(out[0].key, "inbox/c-1/user-001.md");
     assert_eq!(out[0].header, "✉ user · t0");
@@ -48,14 +48,19 @@ fn a_fold_override_flips_exactly_its_row_open() {
         entry("user-002.md", "user", "t1", "b"),
     ];
     let folds: HashSet<String> = ["inbox/c-1/user-002.md".to_string()].into();
-    let out = rows("c-1", &pending, &folds);
+    let out = rows("c-1", &pending, &[], &folds);
     assert!(!out[0].expanded);
     assert!(out[1].expanded);
 }
 
 #[test]
 fn an_empty_body_previews_empty_rather_than_panicking() {
-    let out = rows("c-1", &[entry("u-001.md", "u", "t", "")], &HashSet::new());
+    let out = rows(
+        "c-1",
+        &[entry("u-001.md", "u", "t", "")],
+        &[],
+        &HashSet::new(),
+    );
     assert_eq!(out[0].preview, "");
 }
 
@@ -75,7 +80,7 @@ fn a_pending_row_wears_the_role_its_deposit_asserts() {
         ended,
         nameless,
     ];
-    let out = rows("c-1", &pending, &HashSet::new());
+    let out = rows("c-1", &pending, &[], &HashSet::new());
     let roles: Vec<Role> = out.iter().map(|r| r.role).collect();
     assert_eq!(
         roles,
@@ -173,7 +178,7 @@ fn a_deposit_with_no_file_is_the_faded_one() {
     };
     assert!(!landed.in_memory(), "a listed deposit is its file");
     assert!(echo.in_memory(), "the echo has none");
-    let out = rows("c-1", &[landed, echo], &HashSet::new());
+    let out = rows("c-1", &[landed, echo], &[], &HashSet::new());
     assert_eq!(out[0].tone, crate::transcript::Tone::Plain);
     assert_eq!(
         out[1].tone,

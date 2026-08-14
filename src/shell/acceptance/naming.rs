@@ -43,6 +43,14 @@ const ROOT: &str = "20260803T045643Z-1e5f99d4";
 /// the operator called unparseable: the ladder's floor may spell its **terminal
 /// generation**, and no seat may spell more.
 const CHILD: &str = "20260803T045643Z-1e5f99d4-20260804T101112Z-abcdef01";
+/// A chained id **no branch carries** — a reaped subagent whose mail outlived
+/// it. Nothing above the floor exists for it, which is what keeps an id on
+/// screen at all now that a *resolvable* sender wears its name (bl-b6d0).
+const GONE: &str = "20260803T045643Z-1e5f99d4-20260805T220100Z-deadbeef";
+/// A **named peer** — a second root, and the sender bl-b6d0 was filed on. One
+/// generation, so its id and its floor spelling are the same string: anything
+/// the row paints in place of the name is the whole id.
+const PEER: &str = "20260731T101112Z-abcdef01";
 
 /// The separators a seat puts between an id and whatever sits beside it, so a
 /// run like `✉ <id> · t0` yields the id as its own token. Splitting on these is
@@ -64,16 +72,25 @@ fn id_runs(painted: &str) -> Vec<String> {
 }
 
 /// The whole window over a world built out of real lernie ids: a named root, a
-/// nameless chained child of it unfolded into the list, and an inbox deposit
-/// **from that child** — the §2.11 `from:` field, which is the carrier the
-/// vocabulary scan had never heard of until the defect had already shipped.
+/// chained child of it unfolded into the list, and three inbox deposits — the
+/// §2.11 `from:` field, which is the carrier the vocabulary scan had never heard
+/// of until the defect had already shipped.
+///
+/// **Three senders, because bl-b6d0 moved that header onto the ladder's first
+/// rung.** A deposit from an agent the roster carries paints that agent's name
+/// now, so [`CHILD`] and [`PEER`] spell no id at all and [`GONE`] — mail whose
+/// sender was reaped — is where the ladder still falls to the floor. Without it
+/// this scan would enumerate nothing, which its own guard calls a failure.
 fn painted_over_ids(tab: crate::keymap::InspectorTab) -> String {
     let (lernie, bl) = (Cli::new("yog-absent-lernie"), Cli::new("yog-absent-bl"));
     let mut world = super::inbox_composer::quick(super::fixture::world());
     let ws = world.ws.clone();
     world.add_root(ROOT, "cormorant");
+    world.add_root(PEER, "peregrine");
     world.add_child(ROOT, CHILD);
     deposit_from(&world, ROOT, CHILD);
+    deposit_from(&world, ROOT, GONE);
+    deposit_from(&world, ROOT, PEER);
     world.model.mark_dirty([ws.clone()]);
     world.converge();
     world.model.focus_agent(&ws, ROOT);
@@ -107,7 +124,7 @@ fn deposit_from(world: &World, agent: &str, sender: &str) {
 /// `✉ from · at` header has three seats and the `from` in it is an agent id.
 #[test]
 fn no_painted_run_spells_more_of_an_agent_id_than_the_ladder_does() {
-    let lawful = [ROOT, CHILD].map(|id| id_floor(id).to_owned());
+    let lawful = [ROOT, CHILD, GONE].map(|id| id_floor(id).to_owned());
     for tab in [
         crate::keymap::InspectorTab::Transcript,
         crate::keymap::InspectorTab::Inbox,
@@ -162,6 +179,32 @@ fn the_scan_indicts_the_defect_that_shipped() {
     // And a sender that is not an agent id at all carries no stamp grammar, so
     // the operator's own deposits are invisible to the scan — no branch.
     assert!(id_runs("✉ user · t0").is_empty());
+}
+
+/// **bl-b6d0, the paint half: a named sender's deposit paints the NAME.** The
+/// scan above forbids spelling more of an id than the ladder's floor and says
+/// nothing about which *rung* a seat is entitled to — and `header_line` sat on
+/// the floor unconditionally, so a deposit from a peer that HAS a name painted
+/// its raw id in a frame whose conversation list painted 'peregrine'. Ruled in
+/// the ball: the sender is an agent, §3.3's ladder is the one answer to what an
+/// agent is called, so this seat takes rung one and falls through like the rest.
+/// Both directions on the real window — the name is where the id was, and the
+/// id is nowhere, [`PEER`] being one generation and so unable to hide behind its
+/// own floor. The Inbox tab's frame also carries the §11 inbox-composer's
+/// pending row for the same deposit, `header_line`'s other painted seat.
+#[test]
+fn a_named_senders_deposit_paints_the_name_the_rest_of_the_frame_paints() {
+    let painted = painted_over_ids(crate::keymap::InspectorTab::Inbox);
+    assert!(
+        painted.contains("✉ peregrine · t0"),
+        "the header names its sender — what this very frame's roster calls \
+         it:\n{painted}"
+    );
+    assert!(
+        !painted.contains(PEER),
+        "and the id it used to spell is nowhere: a named agent's id has two \
+         seats, the ladder's floor and the hover, and this is neither:\n{painted}"
+    );
 }
 
 /// bl-63a1, the paint half. The operator's screenshot: agent skimmer's descent

@@ -90,11 +90,13 @@ fn s7_t4_deposits_parse_the_count_is_the_listing_and_progress_is_read_not_guesse
     );
     assert_eq!(bare.deposit.deposited_at, None);
     // The header renders what it has and marks what it does not — never a guess.
+    // The roster is empty here, so every sender lands on the §3.3 ladder's floor
+    // (bl-b6d0): `user` carries no stamp grammar and is spelled whole.
     assert_eq!(
-        inboxview::header_line(&user.deposit),
+        inboxview::header_line(&user.deposit, &[]),
         "✉ user · 2026-08-07T12:00:00Z"
     );
-    assert_eq!(inboxview::header_line(&bare.deposit), "✉ ? · ?");
+    assert_eq!(inboxview::header_line(&bare.deposit, &[]), "✉ ? · ?");
     let _ = first;
 
     // --- `✉n` IS the listing's length. Not a stored count, not a second read:

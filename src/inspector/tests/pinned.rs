@@ -92,7 +92,7 @@ fn clicking_the_banner_releases_the_pin_from_any_pinnable_tab() {
     let run = |input: egui::RawInput, eph: &mut Ephemera| {
         let _ = ctx.run(input, |ctx| {
             egui::CentralPanel::default().show(ctx, |ui| {
-                let _ = render(ui, InspectorTab::Files, &built, eph);
+                let _ = render(ui, InspectorTab::Files, &built, &[], eph);
             });
         });
     };
@@ -103,7 +103,7 @@ fn clicking_the_banner_releases_the_pin_from_any_pinnable_tab() {
         ..Ephemera::default()
     };
     let painted = crate::paint_probe::painted_settled(1024.0, 4096.0, |ui| {
-        let _ = render(ui, InspectorTab::Files, &built, &mut probe);
+        let _ = render(ui, InspectorTab::Files, &built, &[], &mut probe);
     });
     let pos = painted
         .iter()

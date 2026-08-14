@@ -57,11 +57,16 @@ pub(super) struct QueueCtx {
 /// Paint the queue region — pending rows oldest-first, then the input as the
 /// queue's last item — at the derived fold-line height, and return the input
 /// box's response for the caller's focus/Enter wiring.
+///
+/// `agents` is the frame's roster the pending headers' senders ride the §3.3
+/// ladder over (bl-b6d0) — a paint-time input, borrowed rather than copied into
+/// [`QueueCtx`], which carries what this region *paints*.
 pub(super) fn region(
     ui: &mut egui::Ui,
     ram: &mut ComposerRam,
     drafts: &mut Drafts,
     ctx: &QueueCtx,
+    agents: &[crate::git_tree::Agent],
 ) -> egui::Response {
     // Split the RAM into its independent facts up front: the body closure
     // below holds the folds while the box holds the recall, and one `&mut`
@@ -77,7 +82,7 @@ pub(super) fn region(
     let desired = snap.desired(ctx.cap, now);
     let settled = snap.settled();
     let agent = ctx.agent_id.clone().unwrap_or_default();
-    let queue = composer::rows(&agent, &ctx.pending, folds);
+    let queue = composer::rows(&agent, &ctx.pending, agents, folds);
     // The region's rect is allocated **exactly** at the derived height, and
     // the queue paints into a child bounded to it: an explicit allocation is
     // what lets the panel above shrink as well as grow (a `set_max_height`
