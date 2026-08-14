@@ -1,25 +1,28 @@
-//! The task-store gate's regression suite (bl-1043).
+//! The task-store gate's regression suite (bl-1043, rescoped bl-1007).
 //!
 //! `bl` keeps this project's balls in a SEPARATE repository — `tasks/*.md` on
 //! `balls/tasks`, pushed to the same remote as the source — so ball bodies are
 //! published prose that `make leak-scan` has never seen: it reads the index of
 //! *this* tree. `scripts/yog-leak-gate` closes that at the one moment the ball
 //! exists and has not been published (`<op>.post`, before `bl-tracker` pushes),
-//! by running the repo's own scanner over the store checkout.
+//! by running the repo's own scanner over WHAT THE OP WROTE — its own commit,
+//! blobs plus message. Not the store: bl-1043 scanned the whole checkout, and
+//! one polluted body then refused every agent's every `bl` op there, `create`
+//! included, so the defect about the wedge could not be filed (bl-1007). Tests
+//! 1 and 2 are the two halves of that scope.
 //!
 //! bl-167d's defect was a gate with no test that it caught anything. These
 //! tests drive the REAL plugin and the REAL scanner over throwaway stores, and
 //! the probe material is the scanner's own fixtures — never restated here, so
-//! examples of a leak still live in exactly one directory
-//! (`scripts/leak-fixtures/`, where `--self-test` holds every line to the
-//! `notreal` marker).
+//! examples of a leak live in exactly one directory (`scripts/leak-fixtures/`,
+//! where `--self-test` holds every line to the `notreal` marker).
 //!
-//! What is deliberately untested, because it is deliberately unpromised: that
-//! the gate cannot be bypassed. It can — `bl conf remove <op>.post
-//! yog-leak-gate`, or a hand `git push` in the store clone, exactly as
-//! `--no-verify` defeats the source hook. `.github/workflows/store-scan.yml` is
-//! the half the author cannot switch off, and it runs after the push; the last
-//! test pins that chain, and AGENTS.md states the boundary.
+//! Deliberately untested because deliberately unpromised: that the gate cannot
+//! be bypassed. It can — `bl conf remove <op>.post yog-leak-gate`, or a hand
+//! `git push` in the store clone, exactly as `--no-verify` defeats the source
+//! hook. `.github/workflows/store-scan.yml` is the half the author cannot
+//! switch off AND the half still asking the whole-ref question, and it runs
+//! after the push; test 8 pins that chain, AGENTS.md states the boundary.
 
 #![allow(clippy::unwrap_used)]
 
@@ -50,25 +53,44 @@ fn git(dir: &Path, args: &[&str]) {
     assert!(status.success(), "git {args:?}");
 }
 
-/// A throwaway task store: a git repository holding `tasks/<id>.md`, staged.
-/// It carries no `scripts/` — the store never does, which is the point: the
-/// scanner brings its own rule table and judges whatever tree it is run in.
-fn store(balls: &[(&str, Vec<u8>)]) -> TempDir {
+fn head(dir: &Path) -> String {
+    let out = yog::git_env::git()
+        .current_dir(dir)
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .unwrap();
+    String::from_utf8(out.stdout).unwrap().trim().to_owned()
+}
+
+/// An empty task store: a git repository on the store branch. It carries no
+/// `scripts/` — the store never does, which is the point: the scanner brings
+/// its own rule table and judges whatever tree it is run in.
+fn store() -> TempDir {
     let dir = tempfile::tempdir().unwrap();
     git(dir.path(), &["init", "-q", "-b", "balls/tasks", "."]);
-    for (id, body) in balls {
-        let at = dir.path().join("tasks").join(format!("{id}.md"));
-        fs::create_dir_all(at.parent().unwrap()).unwrap();
-        fs::write(at, body).unwrap();
-    }
-    git(dir.path(), &["add", "-A"]);
+    git(dir.path(), &["config", "user.email", "nobody@example.com"]);
+    git(dir.path(), &["config", "user.name", "nobody"]);
     dir
 }
 
-/// The §7 payload balls pipes to a plugin, carrying the store checkout.
-fn payload(store: &Path) -> String {
+/// One `bl` op: write a ball and seal it, the way every store commit is made.
+/// Returns the commit — the §7 `commit` field, and the whole of what this op
+/// publishes.
+fn op(dir: &Path, id: &str, body: &[u8], message: &str) -> String {
+    let at = dir.join("tasks").join(format!("{id}.md"));
+    fs::create_dir_all(at.parent().unwrap()).unwrap();
+    fs::write(at, body).unwrap();
+    git(dir, &["add", "-A"]);
+    git(dir, &["commit", "-q", "-m", message]);
+    head(dir)
+}
+
+/// The §7 post payload balls pipes to a plugin: the store checkout, and the
+/// commit the op just sealed there.
+fn payload(store: &Path, commit: &str) -> String {
     format!(
-        r#"{{"op":"update","phase":"post","actor":"tester",
+        r#"{{"op":"update","phase":"post","actor":"tester","commit":"{commit}",
+            "previous_commit":"0000000",
             "binding":{{"landing":"/nowhere","tasks_branch":"balls/tasks",
                         "store":"{}","invocation_path":"/nowhere"}}}}"#,
         store.display()
@@ -102,11 +124,13 @@ fn gate(args: &[&str], payload: &str) -> (bool, String, String) {
     )
 }
 
-/// The scanner's own verdict on the same store, for the no-drift comparison.
-fn scan_direct(store: &Path) -> String {
+/// The scanner's own verdict, for the no-drift comparison against the plugin's
+/// and for the whole-tree question the plugin no longer asks.
+fn scan_direct(store: &Path, args: &[&str]) -> String {
     let out = yog::git_env::command(Path::new("bash"))
         .current_dir(store)
         .arg(repo().join("scripts/leak-scan.sh"))
+        .args(args)
         .output()
         .unwrap();
     String::from_utf8(out.stderr).unwrap()
@@ -116,82 +140,117 @@ fn scan_direct(store: &Path) -> String {
 //    would publish it, and says which ball and which rule.
 #[test]
 fn a_leaking_ball_body_refuses_the_op_that_would_publish_it() {
-    let dir = store(&[
-        ("bl-0001", fixture("quoted-dialogue.txt")),
-        ("bl-0002", fixture("home-path.txt")),
-        ("bl-0003", fixture("clean.txt")),
-    ]);
-    let (ok, out, err) = gate(&["update", "post"], &payload(dir.path()));
-    assert!(!ok, "the gate passed a store it must refuse:\n{err}");
+    let dir = store();
+    op(dir.path(), "bl-0001", &fixture("clean.txt"), "a clean ball");
+    let leak = fixture("quoted-dialogue.txt");
+    let sealed = op(dir.path(), "bl-0002", &leak, "a ball with pasted talk");
+    let (ok, out, err) = gate(&["update", "post"], &payload(dir.path(), &sealed));
+    assert!(!ok, "the gate passed an op it must refuse:\n{err}");
     assert!(out.is_empty(), "stdout is the user channel: {out:?}");
-    for expected in [
-        "[quoted-dialogue]",
-        "[home-path]",
-        "tasks/bl-0001.md",
-        "tasks/bl-0002.md",
-        "REFUSED",
-        "rolled back",
-    ] {
+    for expected in ["[quoted-dialogue]", "tasks/bl-0002.md", "REFUSED", "own"] {
         assert!(err.contains(expected), "no {expected:?} in:\n{err}");
     }
-    assert!(!err.contains("bl-0003"), "a clean ball was flagged:\n{err}");
     // One table, one mechanism: the plugin's findings ARE the scanner's. A
     // second copy of the rules for the store would drift from this one.
-    for line in scan_direct(dir.path()).lines().filter(|l| l.contains(" [")) {
+    for line in scan_direct(dir.path(), &["--commit", &sealed])
+        .lines()
+        .filter(|l| l.contains(" ["))
+    {
         assert!(err.contains(line), "the plugin lost {line:?}:\n{err}");
     }
 }
 
-// 2. The other direction. A gate that cries wolf gets unwired, and an unwired
-//    gate is no gate.
+// 2. The bl-1007 half, and the reason this gate is scoped at all: the store
+//    checkout is shared and long-lived, so somebody ELSE's polluted body must
+//    not refuse your op. It refused every op in the checkout, `create`
+//    included — which is how a wedge outlives the attempt to file it.
 #[test]
-fn a_clean_store_passes() {
-    let dir = store(&[("bl-0004", fixture("clean.txt"))]);
-    let (ok, out, err) = gate(&["update", "post"], &payload(dir.path()));
-    assert!(ok, "a clean store was refused:\n{err}");
+fn another_agents_polluted_ball_does_not_refuse_this_op() {
+    let dir = store();
+    op(dir.path(), "bl-0003", &fixture("home-path.txt"), "not mine");
+    let mine = op(dir.path(), "bl-0004", &fixture("clean.txt"), "mine, clean");
+    let (ok, out, err) = gate(&["update", "post"], &payload(dir.path(), &mine));
+    assert!(ok, "a clean op was refused for another ball:\n{err}");
     assert!(out.is_empty(), "stdout is the user channel: {out:?}");
+    assert!(
+        !err.contains("bl-0003"),
+        "a foreign ball was judged:\n{err}"
+    );
+    // Not lost, reassigned: the standing state is the daily whole-ref scan's
+    // question (test 8), and the tree mode still answers it here.
+    let whole = scan_direct(dir.path(), &[]);
+    assert!(whole.contains("[home-path]"), "tree mode lost it:\n{whole}");
 }
 
-// 3. The store scan reads INDEX BLOBS, not the worktree — the property
-//    bl-167d landed for the source tree, inherited here because it is the same
-//    scanner. A leak staged behind a clean copy on disk is still caught.
+// 3. The scan reads the COMMIT, not the worktree and not the index — bl-167d's
+//    property for the source tree, and it matters more here: a store checkout
+//    is written by concurrent ops, so both hold other agents' in-flight text.
 #[test]
-fn the_store_scan_reads_what_is_committed_not_what_is_on_disk() {
-    let dir = store(&[("bl-0005", fixture("session-artifact.txt"))]);
+fn the_store_scan_reads_what_was_sealed_not_what_is_on_disk() {
+    let dir = store();
+    let artifact = fixture("session-artifact.txt");
+    let sealed = op(dir.path(), "bl-0005", &artifact, "a sealed ball");
+    // A clean copy on disk AND staged over it: neither is what publishes.
     fs::write(dir.path().join("tasks/bl-0005.md"), fixture("clean.txt")).unwrap();
-    let (ok, _, err) = gate(&["update", "post"], &payload(dir.path()));
-    assert!(!ok, "the worktree copy was scanned instead:\n{err}");
+    git(dir.path(), &["add", "-A"]);
+    let (ok, _, err) = gate(&["update", "post"], &payload(dir.path(), &sealed));
+    assert!(!ok, "the worktree or index copy was scanned:\n{err}");
     assert!(err.contains("[session-artifact]"), "{err}");
 }
 
-// 4. Fail CLOSED. A payload the plugin cannot read is not a clean store, and
-//    the refusal names its own removal so a wire change cannot wedge a box.
+// 4. A `-m` note is published prose that lands in NO FILE: it is the whole of
+//    what a close writes to the store's journal. AGENTS.md governs it like a
+//    body, and only the commit-scoped scan can read it.
 #[test]
-fn a_payload_naming_no_store_is_refused_not_waved_through() {
-    let (ok, _, err) = gate(&["update", "post"], r#"{"op":"update"}"#);
-    assert!(!ok, "an unscanned store passed:\n{err}");
-    assert!(err.contains("no readable store checkout"), "{err}");
-    assert!(err.contains("bl conf remove"), "no escape named:\n{err}");
-}
-
-// 5. Why `post` and not `pre`: at `pre` the task file is not written yet, so a
-//    gate there scans the previous state and passes the body being added.
-//    Every phase but `post` abstains — on the same store test 1 refuses.
-#[test]
-fn every_phase_but_post_abstains() {
-    let dir = store(&[("bl-0006", fixture("home-path.txt"))]);
-    for phase in ["pre", "abort"] {
-        let (ok, _, err) = gate(&["update", phase], &payload(dir.path()));
-        assert!(ok, "the {phase} phase judged a store it cannot see:\n{err}");
-    }
-    let (ok, _, _) = gate(&["update", "post"], &payload(dir.path()));
+fn a_note_that_lands_only_in_the_commit_message_is_caught() {
+    let dir = store();
+    let note = String::from_utf8(fixture("home-path.txt")).unwrap();
+    let note = note.lines().find(|l| !l.starts_with('#')).unwrap();
+    let sealed = op(dir.path(), "bl-0006", &fixture("clean.txt"), note);
+    let (ok, _, err) = gate(&["close", "post"], &payload(dir.path(), &sealed));
+    assert!(!ok, "the op's own message went unscanned:\n{err}");
     assert!(
-        !ok,
-        "the same store passed at post — the probe proves nothing"
+        err.contains("[home-path]") && err.contains("message"),
+        "{err}"
     );
 }
 
-// 6. The handshake, and the executable bit `bl install --bin` binds against.
+// 5. Fail CLOSED, on either half of the payload. A payload this plugin cannot
+//    read is not a clean store, and each refusal names its own removal so a
+//    wire change cannot wedge a box with no way out.
+#[test]
+fn an_unreadable_payload_is_refused_not_waved_through() {
+    let dir = store();
+    let sealed = op(dir.path(), "bl-0007", &fixture("clean.txt"), "clean");
+    let no_store = r#"{"op":"update"}"#.to_owned();
+    let no_commit = payload(dir.path(), &sealed).replace("\"commit\"", "\"commit_\"");
+    for (broken, expected) in [
+        (no_store, "no readable store checkout"),
+        (no_commit, "no store commit"),
+    ] {
+        let (ok, _, err) = gate(&["update", "post"], &broken);
+        assert!(!ok, "an unscanned op passed:\n{err}");
+        assert!(err.contains(expected), "no {expected:?} in:\n{err}");
+        assert!(err.contains("bl conf remove"), "no escape named:\n{err}");
+    }
+}
+
+// 6. Why `post` and not `pre`: at `pre` the task file is not written yet, so a
+//    gate there scans the previous state and passes the body being added.
+//    Every phase but `post` abstains — on the same op test 1 refuses.
+#[test]
+fn every_phase_but_post_abstains() {
+    let dir = store();
+    let sealed = op(dir.path(), "bl-0008", &fixture("home-path.txt"), "a body");
+    for phase in ["pre", "abort"] {
+        let (ok, _, err) = gate(&["update", phase], &payload(dir.path(), &sealed));
+        assert!(ok, "the {phase} phase judged an op it cannot see:\n{err}");
+    }
+    let (ok, _, _) = gate(&["update", "post"], &payload(dir.path(), &sealed));
+    assert!(!ok, "the same op passed at post — the probe proves nothing");
+}
+
+// 7. The handshake, and the executable bit `bl install --bin` binds against.
 #[test]
 fn the_handshake_declares_the_ops_the_publisher_runs_on() {
     let (ok, out, err) = gate(&["protocol"], "");
@@ -209,10 +268,10 @@ fn the_handshake_declares_the_ops_the_publisher_runs_on() {
     assert!(mode & 0o111 != 0, "the plugin is not executable: {mode:o}");
 }
 
-// 7. The remote half, and the rule the gate cannot enforce. The workflow is
-//    the only check the agent writing the ball cannot switch off; AGENTS.md is
-//    where the unmechanizable half of the rule lives, including the operator's
-//    standing permission for the maintainer's own identity.
+// 8. The remote half — also the half that still asks the whole-ref question
+//    this gate stopped asking — and the rule no gate can enforce. AGENTS.md is
+//    where the unmechanizable half lives, the operator's standing permission
+//    for the maintainer's own identity included.
 #[test]
 fn the_published_ref_and_the_stated_rule_are_both_pinned() {
     let flow = fs::read_to_string(repo().join(".github/workflows/store-scan.yml")).unwrap();
