@@ -1,7 +1,8 @@
 +++
 title = "REMOTE §9.4 — the shell paints only boundary payloads: retire the raw GitTree/Agent imports from paint code"
 created = 1786683979
-updated = 1786683979
+updated = 1786687639
+claimant = "Gudgeon"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
