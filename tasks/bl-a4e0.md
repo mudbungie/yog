@@ -1,7 +1,8 @@
 +++
 title = "README publication, reset, state, naming and installation claims contradict the code and the workflows"
 created = 1786677244
-updated = 1786677244
+updated = 1786677573
+claimant = "Stromboli"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["publication"]
