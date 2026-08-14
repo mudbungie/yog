@@ -100,6 +100,20 @@ wire, so "works against the real one" is a run you can re-run, not a claim.
     make drive-cleanroom                  # the same, in the §16.7 W14 room
     make drive-preflight                  # name every missing host tool at once
 
+**Not every run verb drives a window.** `run-headless` (bl-bb20) claims no X
+display, opens nothing and spends nothing on the wire: `yog headless` is the
+same engine with no face (§8.4), so the whole verb is `yog gesture` lines
+against a real world. It is the ladder's first verb — a world that is broken in
+its own shape reddens in seconds rather than after four windowed runs — it is
+the only verb drivable on a box with no X server, and it is where a graduated
+rung's real-substrate half lands when the rung has a headless spelling. Which
+rungs those are, and which are ruled out and why, is recorded rung by rung in
+`scripts/drive/beats_headless.sh`'s own head; the short of it is that a drive
+beat earns its keep only where the REAL substrate can falsify something a fake
+cannot — real balls state and its blocker resolution, real git, real lernie's
+on-disk shapes, the real window, the real wire — and that a rung whose claim is
+a derivation over yog's own structures is proved exactly by its in-crate test.
+
 `make drive` builds the release binary, preflights the host, gives each run verb
 its **own** scratch world under `$XDG_CACHE_HOME/yog-drive/<stamp>/<verb>/`, and
 emits a log skeleton at the tail. It is never the live world and cannot be
