@@ -400,12 +400,27 @@ Nothing here is automated on purpose: each item is a one-time judgement whose
 remedy is destructive (a history rewrite, a yank, a rotation), so a green
 checkbox would be a worse answer than a person looking.
 
+This list was RUN, once, on 2026-08-13 (bl-4f96). What it found and what that
+cost is recorded per item; the notes are the checklist's evidence that it works.
+
 1. **History.** The gate has only ever seen the tip. Sweep every reachable
    commit for the same material before the first public push —
    `git log -p --all` through `scripts/leak-scan.sh FILE...` on a checkout of
    each commit, or a purpose-built history scanner. A hit means a rewrite
    (`git filter-repo`) *and* rotation of whatever it named; the commit is
    public the moment the repo is.
+
+   The 2026-08-13 sweep read all 13,801 objects and hit: the operator address
+   in 241 blobs of `docs/DESIGN.md`, operator-home paths in 562 places over 22
+   files, and the drive logs bl-244f had deleted from the tip. **A filter was
+   the wrong remedy and a squash was the right one**, because the same blobs
+   also held verbatim operator dialogue and a third party's name — prose no
+   pattern can find, so a filtered history would have been unverifiable. A
+   squashed initial commit publishes exactly the tree the gate certifies. Its
+   one real cost is that balls binds a task to the repo's ROOT COMMIT: a new
+   root orphans every ball, `bl list` answers nothing while `bl list
+   --everywhere` answers in full, and every live `tasks/*.md` needs its
+   `root_commit` rewritten. Closed balls keep the old binding in store history.
 2. **Other refs.** Tags, `speculation/**` branches left by a crashed
    `scripts/speculate-gate` driver, and any `work/bl-*` branch that was pushed.
    Delete what should never have been pushed rather than scanning it twice.
@@ -415,6 +430,21 @@ checkbox would be a worse answer than a person looking.
    alive, and note that both the workflow and the store gate only ever see the
    TIP: the store's history is item 1's problem too, and rewriting it
    invalidates every existing clone.
+
+   **A rewrite of an existing GitHub repository does not clean it, so do not
+   plan one.** GitHub keeps `refs/pull/<n>/head` forever: closing the pull
+   request and deleting its branch leaves the ref, and every object it reaches
+   stays fetchable. Objects orphaned by a force-push stay reachable by sha as
+   well. The only publication that can be certified is into a **fresh object
+   store** — rename the private repository to an archive (nothing is deleted,
+   the old refs and branches stay where they are), create the public one under
+   the original name so `repository =` in Cargo.toml and balls' `task-remote`
+   stay correct, and push only the refs that were scanned.
+
+   Nothing about a repository travels with its NAME. The new one starts with no
+   secrets (`CARGO_REGISTRY_TOKEN` must be set again or the release job cannot
+   publish), and with "Allow GitHub Actions to create and approve pull
+   requests" off, which 403s release-plz's PR job.
 3. **Commit messages.** `.githooks/commit-msg` covers messages written with the
    hook seated (`make install-hooks`). Messages older than the hook, and any
    written elsewhere, are not covered.
@@ -424,10 +454,20 @@ checkbox would be a worse answer than a person looking.
 5. **Actions logs and artifacts.** A failed gate prints paths, hostnames and
    sometimes the offending line into a public log; `.github/workflows/
    speculate.yml` also uploads a `verdicts` artifact. Both survive the run.
-   yog is a private repo today — the audit is what makes that reversible.
+   A fresh repository starts with no run history, which is the other reason
+   item 2's rename-and-recreate is cheaper than it looks.
 6. **Already-published versions.** `cargo publish` is irreversible: a yanked
    version stays downloadable. Audit the packaged file list
    (`cargo package --list`) before `make publish CONFIRM=yes`, not after.
+
+   This is the item that was learned the hard way. **0.0.1 was published on
+   2026-07-26 carrying everything item 1 found** — the operator address, eleven
+   operator-home paths across `src/world/mod.rs`, `src/opslog/tests.rs`,
+   `src/binding/tests.rs` and `docs/DESIGN.md`, and three `docs/drive-logs/`
+   files — because `Cargo.toml` declares no `include`/`exclude` and so packages
+   the whole tree. It was yanked on 2026-08-13, which changes nothing about who
+   can download it. A private repository is not a private crate: the moment a
+   version ships, this checklist's items 1 and 6 are the same deadline.
 
 ## The merge queue — speculative closes, builds on GitHub Actions
 
