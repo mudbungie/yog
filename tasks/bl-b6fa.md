@@ -1,7 +1,8 @@
 +++
 title = "REMOTE §9.5 — the wire: mTLS listener in 'yog serve', client transport in the shell, the window becomes a seat of loopback"
 created = 1786684037
-updated = 1786684037
+updated = 1786688551
+claimant = "Binnacle"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
