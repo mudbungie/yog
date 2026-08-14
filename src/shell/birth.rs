@@ -83,6 +83,6 @@ pub(super) fn block(
     // The config-lineage tip from the §7 snapshot — the very commit `lernie
     // prompt` will fork. A workspace whose snapshot carries no lineage yet has
     // nothing to say here, and says nothing rather than a line about nothing.
-    let config_tip = model.focused_tree().and_then(|t| t.commits.last().cloned());
+    let config_tip = model.config_tip();
     super::model_pick::birth_seat(ui, model, state, ws, config_tip.as_ref(), (bz, lernie, bl));
 }

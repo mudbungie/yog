@@ -87,7 +87,7 @@ pub struct QueueRow {
 pub fn rows(
     agent_id: &str,
     pending: &[InboxEntry],
-    agents: &[crate::git_tree::Agent],
+    titles: &crate::nav::convs::Titles,
     folds: &HashSet<String>,
 ) -> Vec<QueueRow> {
     pending
@@ -95,7 +95,7 @@ pub fn rows(
         .map(|entry| {
             let key = format!("inbox/{agent_id}/{}", entry.name);
             QueueRow {
-                header: header_line(&entry.deposit, agents),
+                header: header_line(&entry.deposit, titles),
                 role: crate::theme::message_role(
                     entry.deposit.sender.as_deref().unwrap_or_default(),
                     entry.deposit.epitaph.is_some(),

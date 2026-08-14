@@ -23,6 +23,9 @@ mod rows;
 /// The §11 bottom in-flight strip's own tables, one budget below this one.
 mod strip;
 
+/// The §3.3 ladder as a seat holds it (REMOTE §9.4), one budget below.
+mod titles;
+
 /// An agent holding one tool call on its latest step, `name` being what
 /// `input.json` named it (`None` = a record yog could read no name from) and
 /// `start` its landing stamp (`None` = a record yog could not stat).

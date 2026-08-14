@@ -40,6 +40,7 @@ mod ops;
 mod panels;
 mod roots;
 mod search;
+mod seat;
 mod snapshot;
 mod spend;
 mod view;

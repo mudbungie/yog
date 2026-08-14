@@ -38,7 +38,7 @@ const STATES: [(&str, AgentState); 4] = [
     ("stopped", AgentState::Stopped),
 ];
 
-const FLIGHTS: [(&str, Flight); 3] = [
+pub(crate) const FLIGHTS: [(&str, Flight); 3] = [
     ("inference", Flight::Inference),
     ("tools", Flight::Tools),
     ("subagents", Flight::Subagents),
@@ -116,6 +116,8 @@ pub(crate) fn conv_row(v: &Value) -> Result<ConvRow, String> {
         members: usize_of(o, "members")?,
         depth: usize_of(o, "depth")?,
         direct: usize_of(o, "direct")?,
+        stoppable: bool_of(o, "stoppable")?,
+        stop_children: bool_of(o, "stop_children")?,
         ball: opt_val(o, "ball", conv_ball)?,
         name,
         name_display_only: display_only,

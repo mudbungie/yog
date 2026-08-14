@@ -12,6 +12,7 @@
 //! along** (`decode`'s `receipt`/`listing`/`inspector` chain), so a variant's
 //! fixture and its arm are found by the same reading of §8.5's taxonomy.
 
+mod agent;
 mod board;
 mod inspector;
 mod listings;
@@ -46,6 +47,7 @@ pub(super) fn surface() -> Vec<Reply> {
         receipts::receipts(),
         listings::listings(),
         inspector::inspector(),
+        agent::agent(),
     ]
     .concat()
 }

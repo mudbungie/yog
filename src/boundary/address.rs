@@ -127,6 +127,7 @@ impl Query {
             | Query::Files { workspace, .. }
             | Query::Rail { workspace, .. }
             | Query::Inbox { workspace, .. }
+            | Query::Agent { workspace, .. }
             | Query::Providers { workspace } => Some(workspace.clone()),
             Query::Workspaces
             | Query::Balls

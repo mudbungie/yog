@@ -11,22 +11,14 @@ use std::path::Path;
 use super::super::{InspectorState, ShellState};
 use super::{rail, work};
 use crate::AppModel;
+use crate::boundary::answer::agent::AgentView;
 use crate::boundary::answer::inspector;
 use crate::files_view::{FilesView, Preview};
-use crate::git_tree::AgentState;
 use crate::inboxview::{InboxEntry, list_inbox};
 use crate::inspector::TabData;
 use crate::keymap::InspectorTab;
 use crate::steps_view::{self, StepDetail, StepsView};
 use crate::transcript::{self, Transcript};
-
-/// The three facts about the focused agent every build below reads, lifted off
-/// the snapshot once so no builder re-borrows the model to ask again.
-pub(super) struct Focus {
-    pub(super) agent_id: String,
-    pub(super) tip: String,
-    pub(super) state: AgentState,
-}
 
 /// Every view-model the focused agent's inspector renders, built for the
 /// active tab and folded through the operator's pin. The **rail and the pin
@@ -38,16 +30,14 @@ pub(super) fn tab_data(
     model: &AppModel,
     state: &mut ShellState,
     ws: &Path,
-    focus: &Focus,
-    agents: &[crate::git_tree::Agent],
+    focus: &AgentView,
 ) -> TabData {
     let (agent_id, tip, agent_state) = (&focus.agent_id, &focus.tip, focus.state);
     // Who the transcript's model turns are (bl-2335): the §3.3 ladder over the
     // selection's *conversation root*, through the boundary's own derivation —
-    // one function, never a second spelling (bl-6233). The roster comes from
-    // the caller, which holds the frame's one clone of it (the Inbox tab's
-    // deposit senders ride the same ladder over the same slice, bl-b6d0).
-    let speaker = inspector::speaker(agents, agent_id);
+    // one function, never a second spelling (bl-6233). It rides the seat's own
+    // view since bl-1eb0, so this build reads a payload rather than a roster.
+    let speaker = focus.name.clone();
     // The heavy view-models, once per snapshot (§7.2 `SnapMemo`, bl-e90a).
     let steps = state
         .inspector

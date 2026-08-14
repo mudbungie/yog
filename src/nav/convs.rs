@@ -21,11 +21,14 @@ pub mod expand;
 pub mod flight;
 pub mod group;
 pub mod row;
+/// The §3.3 ladder as a seat holds it — id→title, no agent set (bl-1eb0).
+pub mod titles;
 
 pub use doing::{Doing, Seat, doing, seats};
 pub use expand::{ancestors, parent_of, step, visible_rows};
 pub use flight::{Flight, FlightStrip, STRIP_HOVER, conversation_flight, strip};
 pub use row::{ConvBall, ConvRow, age_label, build};
+pub use titles::Titles;
 
 /// A conversation reduced to what a **verb** needs (§3.6): its display name and
 /// whether it holds a driver. Deliberately not [`ConvRow`] — that one is the §11

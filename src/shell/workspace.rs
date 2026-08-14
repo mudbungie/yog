@@ -21,9 +21,8 @@
 //! doing, the roster on hover. Selecting a member is the list's gesture.
 
 use crate::AppModel;
+use crate::boundary::answer::agent::AgentView;
 use crate::cli_outbound::Cli;
-use crate::git_tree::Agent;
-use crate::nav::convs::root_of;
 use crate::theme;
 use std::path::{Path, PathBuf};
 
@@ -53,22 +52,17 @@ pub fn center(
     if model.focused_is_replay() {
         ui.weak("replay · read-only");
     }
-    let Some(agent) = model.focused_agent().cloned() else {
+    let Some(seat) = model.focused_conversation() else {
         // Nothing selected is not an empty seat — but what fills it is the
         // birth-config block down in the settings rows (bl-824e, re-seated by
         // bl-2e18), where every config-shaped row now lives.
         ui.weak("select a conversation — or start one below");
         return;
     };
-    let agent_id = agent.agent_id.clone();
-    let agent_state = agent.state;
-    let agent_marks = agent.marks();
-    let agents: Vec<Agent> = model
-        .focused_tree()
-        .map(|t| t.agents.clone())
-        .unwrap_or_default();
-    let root = root_of(&agents, &agent_id).unwrap_or_else(|| agent_id.clone());
-    header(ui, model, &ws, &agents, &root);
+    let agent_id = seat.agent_id.clone();
+    let agent_state = seat.state;
+    let agent_marks = seat.marks.clone();
+    header(ui, model, &ws, &seat);
     // The §6 marks the *focused* agent wears, said outright — this seat has the
     // room, and it is the one surface a jump-to-attention always lands on. It is
     // what answers "why was I sent here" after arriving acknowledged the signal:
@@ -140,19 +134,16 @@ pub fn center(
 /// is, so it stays on the identity side of the settings-seat ruling; what those
 /// balls have *spent* is a figure, and figures went to the bottom with the rest
 /// of the config-shaped rows ([`super::settings`], bl-2e18).
-fn header(ui: &mut egui::Ui, model: &AppModel, ws: &Path, agents: &[Agent], root: &str) {
+fn header(ui: &mut egui::Ui, model: &AppModel, ws: &Path, seat: &AgentView) {
     // §11 altitude 1: the id is the identifier, the name is the title — one
     // ladder (§3.3), the same one the §11 row and the §3.6 dialog read. The
     // live-activity indicator sits on that same line: the open conversation's
     // name is where the eye already rests, so the pane says what the list row
     // says, in the same seat, off the same derivation (§5.1 #28).
-    let flight = crate::nav::convs::conversation_flight(agents, root);
+    let root = seat.root.as_str();
     ui.horizontal(|ui| {
-        let heading = ui.heading(crate::nav::convs::display_name_of(agents, root));
-        if agents
-            .iter()
-            .any(|a| a.agent_id == root && a.name_display_only())
-        {
+        let heading = ui.heading(seat.name.clone());
+        if seat.display_only {
             // The headline is the legacy §3.3 rung — prose no lernie name
             // fact backs — so the pane says here what the list row hovers:
             // this name is not a message target (bl-8068).
@@ -174,7 +165,7 @@ fn header(ui: &mut egui::Ui, model: &AppModel, ws: &Path, agents: &[Agent], root
         // share the budget can decline, and because this line has the width the
         // strip's has not. The strip keeps what only it can say — the live
         // characteristics — and hovers the sentence.
-        if let Some(class) = flight {
+        if let Some(class) = seat.flight {
             let (glyph, hue, says) = theme::flight_badge(class);
             let time = ui.ctx().input(|i| i.time);
             ui.colored_label(theme::pulse(hue, time), format!("{glyph} {says}"));

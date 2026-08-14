@@ -48,9 +48,8 @@
 
 use super::ShellState;
 use crate::AppModel;
+use crate::boundary::answer::agent::AgentView;
 use crate::cli_outbound::Cli;
-use crate::git_tree::Agent;
-use crate::nav::convs::root_of;
 use crate::spend;
 use std::path::{Path, PathBuf};
 
@@ -84,8 +83,8 @@ pub(super) fn render(
         egui::ScrollArea::vertical()
             .id_salt("conversation-settings")
             .max_height(cap)
-            .show(ui, |ui| match model.focused_agent().cloned() {
-                Some(agent) => conversation(ui, model, state, &ws, &agent, (bz, lernie, bl)),
+            .show(ui, |ui| match model.focused_conversation() {
+                Some(seat) => conversation(ui, model, state, &ws, &seat, (bz, lernie, bl)),
                 None => super::birth::block(ui, model, state, &ws, bz, lernie, bl),
             });
     });
@@ -99,7 +98,7 @@ fn conversation(
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
-    agent: &Agent,
+    agent: &AgentView,
     clis: (&Cli, &Cli, &Cli),
 ) {
     let (bz, lernie, bl) = clis;
@@ -114,17 +113,13 @@ fn conversation(
             spend::render(ui, &model.ball_spend(ws, &ball.id));
         });
     }
-    let agents: Vec<Agent> = model
-        .focused_tree()
-        .map(|t| t.agents.clone())
-        .unwrap_or_default();
-    let root = root_of(&agents, &agent.agent_id).unwrap_or_else(|| agent.agent_id.clone());
-    spend::render(ui, &model.conversation_spend(ws, &root));
+    let root = agent.root.as_str();
+    spend::render(ui, &model.conversation_spend(ws, root));
     // The §5.1 #35 context figure, directly under the spend it is not: the
     // budget line above sums the whole descent's burn, this one states how full
     // *this* conversation's context is right now. Absent — no step, no model, or
     // no declared window — it paints nothing at all rather than a placeholder.
-    if let Some(full) = model.conversation_context(ws, &root) {
+    if let Some(full) = model.conversation_context(ws, root) {
         crate::context::render::render(ui, &full);
     }
     // The model row (§9.4): *what am I talking to, and how do I change it* is
@@ -141,7 +136,7 @@ fn conversation(
     //
     // The workspace's config-lineage tip (§7 snapshot, `HEAD` → `config/default`)
     // is the "workspace default" half of that drift.
-    let config_tip = model.focused_tree().and_then(|t| t.commits.last().cloned());
+    let config_tip = model.config_tip();
     if super::model_pick::conversation_seat(
         ui,
         model,

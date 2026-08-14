@@ -293,8 +293,7 @@ valuable with no network at all — they finish VISION V5 teleop parity.
      answer every seat already holds. An unknown verb refuses, naming it.
 3. **Name-based addressing:** `PathBuf` leaves the boundary types.
    *(Landed, bl-f5f6 — the rulings are in §8.)*
-4. **The shell paints only boundary payloads** — retire the remaining raw
-   `GitTree`/`Agent` imports from paint code.
+4. **The shell paints only boundary payloads.** *(Landed, bl-1eb0 — see §9.4.)*
 5. **The wire:** mTLS listener in `yog serve`, client transport in the shell,
    the window becomes a seat of loopback by default. The deposit inbox
    remains for in-world callers (§3).
@@ -302,6 +301,61 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    auto-registration on create, per-seat `ui.json` split (§7).
 7. **Tool hosts:** advertisement, rendering, routing, the lernie seam —
    after its own design pass (§5).
+
+### 9.4 Where orchestration stops and paint begins
+
+The line, stated once because §9's step 4 is where it had to be drawn:
+**`AppModel` may orchestrate; what crosses into paint is a payload the wire
+could carry.** Orchestration is holding the focus, resolving it against the
+published snapshot, memoizing a heavy build per derivation, handing a search
+off and painting whatever landed — none of it crosses the boundary, and all of
+it stays. What went is the frame deriving *out of* `GitTree`: names, marks,
+liveness, descent and verb gates folded on the render thread from the engine's
+own agent set, which is a thing no client will ever hold.
+
+Mechanized as `rules/no-engine-tree-in-paint.yml` over `src/shell/**` plus the
+three modules that render rather than derive (`inspector`, `composer`,
+`inboxview`). The test is **not which module a type lives in** — it is whether
+a `Reply` can say it: `AgentState`, `AgentMark`, `Flight` and `Tone` ride the
+wire today and are lawful in paint; `GitTree`, `Agent` and `CommitNode` ride
+nothing. Every other module under `src/` is engine and folds the agent set
+freely, because folding it is what the server does.
+
+Four rulings came out of it.
+
+- **The fat `Agent` gets a projection, not a diet.** `Query::Agent {workspace,
+  agent}` → `Reply::Agent(AgentView)` is the family's seventh member, sharing
+  the six inspector reads' address and envelope: the selection's id, its §2.3
+  conversation root and the ancestor chain above it, the §3.3 name with its
+  addressability rung, the tip the §5.1 #17 governing derivation takes, its own
+  §3.5 liveness, the §6 marks it wears with the parked invocation's own
+  sentence beside them, the §5.1 #28 class in flight anywhere in the
+  conversation, and the four §8.2 gates (present, nudgeable, stoppable,
+  children). Every field is a fold the boundary already owned; nothing was
+  derived here for the first time. That is the shape the rest of §9 wants:
+  **what was missing was never the derivation, it was the spelling.**
+- **A gate that is not derivable from a row goes ON the row.** `ConvRow` gained
+  `stoppable` and `stop_children`. Neither follows from what it already
+  carried: `state` is the badge aggregated over the whole subtree, so a quiet
+  root with a working child paints Live and has no driver to kill, and the
+  cascade's membership is the Stop menu's looser prefix test rather than the
+  strict §5.1 #8 descent `direct` counts. Deriving them per row against a
+  roster the seat had to be holding is what the ban forbids; deriving them once
+  where the row is built costs one pass instead of one per row.
+- **A name is resolved against a table, not a tree.** Painting a *third
+  party's* name — a deposit's sender, in the two seats mail appears in — was
+  `display_name_of` over `&[Agent]`. The ladder did not move (§3.3 still has
+  one home); its input narrowed to `nav::convs::Titles`, id→title, which is
+  buildable from the engine's agent set **or** from a conversations reply's own
+  `root_id`/`display` pairs. The second constructor is the claim made
+  executable: a face holding replies and no world resolves the same names.
+- **A residual is named rather than papered over.** The model picker's
+  config-lineage tip crosses as `model_pick::ConfigTip` — two strings, plainly
+  wire-carryable — but it is handed over by an `AppModel` accessor and has no
+  `Query` of its own. The §11 picker family (lineage browse, `providers.yaml`
+  reads at an oid, the write claims) is not wire-complete, and saying so is
+  worth more than a query minted to close a checklist. It belongs with §9.5's
+  transport, beside the path-typed reply fields §8 already lists as residual.
 
 ## 10. Open questions (living)
 

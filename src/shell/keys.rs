@@ -215,7 +215,7 @@ pub(super) fn new_conversation(model: &mut AppModel, state: &mut ShellState) {
 fn search_line(model: &AppModel, state: &mut ShellState) {
     let key = crate::actions::drafts::DraftKey::composer(
         model.focused_workspace().map(Path::to_path_buf),
-        model.focused_agent().map(|a| a.agent_id.clone()),
+        model.focused_agent_id(),
     );
     state.actions.drafts.set(key, "/search ".to_owned());
     super::focus::request(state);

@@ -93,6 +93,8 @@ fn every_conversation_row_token_survives_both_halves_of_its_table() {
         members: 1,
         depth: 0,
         direct: 0,
+        stoppable: false,
+        stop_children: false,
         ball: None,
         name: None,
         name_display_only: false,

@@ -61,7 +61,7 @@ pub(super) fn conversations(
     // above it; a root's chain is empty, so the ordinary case does nothing.
     // Idempotent because the two collapsing gestures carry the selection up to
     // the row they folded, so this can never re-open what was just shut.
-    super::focus::reveal_selection(model, state, &ws);
+    super::focus::reveal_selection(model, state);
     let ctx = super::conv_row::RowCtx::of(model, ws);
     egui::ScrollArea::vertical().show(ui, |ui| {
         // The rows are read once, before the loop that may mutate the expanded

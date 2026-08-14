@@ -110,6 +110,11 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
             let (workspace, agent) = at(verb, ctx)?;
             Ok(ask(Query::Inbox { workspace, agent }))
         }
+        "agent" => {
+            args::none(tail, verb)?;
+            let (workspace, agent) = at(verb, ctx)?;
+            Ok(ask(Query::Agent { workspace, agent }))
+        }
         "attention" => args::none(tail, verb).map(|()| ask(Query::Attention)),
         "ops" => Ok(ask(Query::Ops { max: max(tail)? })),
         // The whole tail is the needle — no flags, no bound. Search takes one

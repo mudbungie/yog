@@ -24,8 +24,7 @@
 use super::ram::{BirthMemo, FrozenMemo};
 use super::{BRANCH, PROVIDERS, PickerState};
 use crate::config_edit::branch::config_file;
-use crate::git_tree::CommitNode;
-use crate::model_pick::{ConfigPoint, ModelRow, birth_row, conversation_row, row_role};
+use crate::model_pick::{ConfigPoint, ConfigTip, ModelRow, birth_row, conversation_row, row_role};
 use std::path::Path;
 
 /// The conversation's model row, memoized: the pair the workspace default
@@ -39,7 +38,7 @@ use std::path::Path;
 pub(super) fn conversation_row_of(
     ws: &Path,
     tip_oid: &str,
-    config_tip: Option<&CommitNode>,
+    config_tip: Option<&ConfigTip>,
     picker: &mut PickerState,
 ) -> Option<(String, ModelRow)> {
     let key = (
@@ -63,7 +62,7 @@ pub(super) fn conversation_row_of(
 fn memoize(
     ws: &Path,
     tip_oid: &str,
-    config_tip: Option<&CommitNode>,
+    config_tip: Option<&ConfigTip>,
     key: (String, String, String),
 ) -> Option<FrozenMemo> {
     let gov = crate::config_edit::branch::governing_config(ws, tip_oid).ok()?;
@@ -87,7 +86,7 @@ fn memoize(
 /// config to fork paints nothing rather than a row about nothing.
 pub(super) fn birth_row_of(
     ws: &Path,
-    config_tip: Option<&CommitNode>,
+    config_tip: Option<&ConfigTip>,
     picker: &mut PickerState,
 ) -> Option<ModelRow> {
     let tip = config_tip?;

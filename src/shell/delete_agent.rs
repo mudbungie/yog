@@ -24,7 +24,6 @@
 use crate::AppModel;
 use crate::cli_outbound::Cli;
 use crate::delete::agent::{AgentConfirmation, Census};
-use crate::nav::convs::root_of;
 use crate::theme;
 use std::path::{Path, PathBuf};
 
@@ -68,14 +67,11 @@ pub(super) fn danger_row(
     lernie: &Cli,
     ws: &Path,
 ) {
-    let Some(agent) = model.focused_agent().map(|a| a.agent_id.clone()) else {
+    // The §2.3 descent root, off the seat's own view of its selection
+    // (REMOTE §9.4, bl-1eb0) — the gate is the conversation's, not the member's.
+    let Some(root) = model.focused_conversation().map(|seat| seat.root) else {
         return;
     };
-    let agents = model
-        .focused_tree()
-        .map(|t| t.agents.clone())
-        .unwrap_or_default();
-    let root = root_of(&agents, &agent).unwrap_or(agent);
     if model.agent_delete_confirmation(ws, &root).is_none() {
         return;
     }

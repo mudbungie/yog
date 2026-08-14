@@ -25,6 +25,7 @@ pub(super) fn decode(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply,
         "files" => files(o),
         "rail" => crate::rail::wire::rail_of(o).map(Reply::Rail),
         "inbox" => crate::inboxview::wire::entries_of(o).map(Reply::Inbox),
+        "agent" => super::super::agent::view_of(o).map(Reply::Agent),
         "work-diff" => work_diff(o),
         _ => return None,
     })

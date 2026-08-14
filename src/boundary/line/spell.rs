@@ -138,6 +138,7 @@ fn spell_query(query: &Query) -> String {
             None => "/files".to_owned(),
         },
         Query::Rail { .. } => "/rail".to_owned(),
+        Query::Agent { .. } => "/agent".to_owned(),
         Query::Inbox { .. } => "/inbox".to_owned(),
         Query::Board => "/board".to_owned(),
         Query::Attention => "/attention".to_owned(),

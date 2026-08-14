@@ -67,22 +67,17 @@ pub fn tabs_and_content(
             }
         }
     });
-    let Some(agent) = model.focused_agent() else {
+    // The selection as a seat sees it (REMOTE §9.4, bl-1eb0): the id, the tip
+    // the §5.1 #17 governing derivation reads, the §3.5 liveness the steps view
+    // is keyed on, and the §3.3 speaker — one payload, no agent set.
+    let Some(focus) = model.focused_conversation() else {
         ui.weak("select an agent to inspect");
         return;
     };
-    let focus = vms::Focus {
-        agent_id: agent.agent_id.clone(),
-        tip: agent.tip_oid.clone(),
-        state: agent.state,
-    };
-    // The frame's roster, cloned once: the §3.3 ladder's input for the
-    // transcript's speaker and for every Inbox-tab deposit's sender (bl-b6d0).
-    let agents = model
-        .focused_tree()
-        .map(|t| t.agents.clone())
-        .unwrap_or_default();
-    let data = vms::tab_data(active, model, state, ws, &focus, &agents);
+    // The frame's roster in the form a seat can hold: the §3.3 ladder's input
+    // for every Inbox-tab deposit's sender (bl-b6d0).
+    let titles = model.agent_titles();
+    let data = vms::tab_data(active, model, state, ws, &focus);
     controls::per_tab_controls(
         ui,
         active,
@@ -107,7 +102,7 @@ pub fn tabs_and_content(
         lernie,
         bl,
     );
-    let follow = crate::inspector::render(ui, active, &data, &agents, &mut state.inspector.eph);
+    let follow = crate::inspector::render(ui, active, &data, &titles, &mut state.inspector.eph);
     // Following a card is the ordinary selection gesture (§6 acknowledgement),
     // the same one the descent-tree rows spend — so it lands the composer like
     // every other selection (§11 focus discipline) — and the pin is the previous

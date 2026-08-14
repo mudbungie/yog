@@ -84,6 +84,8 @@ mod tests {
             members: 1,
             depth: 0,
             direct: 0,
+            stoppable: false,
+            stop_children: false,
             ball: ball.map(self::ball),
             name: None,
             name_display_only: false,

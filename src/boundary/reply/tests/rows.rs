@@ -72,6 +72,8 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
         members: 3,
         depth: 0,
         direct: 2,
+        stoppable: false,
+        stop_children: false,
         ball: Some(ConvBall {
             id: "bl-7".into(),
             state: Some(JoinState::Bound),
@@ -103,6 +105,8 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
         members: 1,
         depth: 0,
         direct: 0,
+        stoppable: false,
+        stop_children: false,
         ball: Some(ConvBall {
             id: "stray".into(),
             state: None,
@@ -159,6 +163,8 @@ fn a_display_only_name_is_withheld_from_the_boundary_as_a_message_target() {
         members: 1,
         depth: 0,
         direct: 0,
+        stoppable: false,
+        stop_children: false,
         ball: None,
         name: Some("marbling-lake".into()),
         name_display_only: true,

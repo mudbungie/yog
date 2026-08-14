@@ -83,7 +83,8 @@ fn the_conversation_rows_alignment_verdict_is_a_known_word() {
             json!({ "root_id": "c", "display": "c", "display_only": false,
                     "state": "live", "uncertain": false, "preview": "",
                     "age_secs": 0, "attention": 0, "members": 1, "depth": 0,
-                    "direct": 0, "tone": "plain",
+                    "direct": 0, "tone": "plain", "stoppable": false,
+                    "stop_children": false,
                     "alignment": { "workspace": "/w", "agent": "c",
                                    "verdict": "sideways", "sha": "a",
                                    "reason": "r", "model": "m" } }),
@@ -135,6 +136,23 @@ fn the_search_hit_addresses_and_fields_are_known_words() {
     };
     refuses(&hit("sideways", "name"), "unknown address \"sideways\"");
     refuses(&hit("ball", "sideways"), "unknown field \"sideways\"");
+}
+
+/// The §6 mark table is the one vocabulary the conversation seat owns, so an
+/// unknown mark refuses by name here rather than degrading to an unmarked
+/// conversation — a reply that dropped a mark would tell a seat nothing is
+/// waiting on the operator.
+#[test]
+fn an_unknown_agent_mark_refuses_by_name() {
+    let seat = |marks: Value| {
+        json!({ "ok": true, "kind": "agent", "agent": "c", "root": "c",
+                "display": "c", "display_only": false, "tip": "",
+                "state": "live", "marks": marks,
+                "stoppable": false, "stop_children": false })
+    };
+    refuses(&seat(json!(["sideways"])), "unknown mark \"sideways\"");
+    refuses(&seat(json!([7])), "non-string");
+    refuses(&seat(json!("notified")), "non-array");
 }
 
 #[test]

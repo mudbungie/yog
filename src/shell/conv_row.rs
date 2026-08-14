@@ -17,9 +17,7 @@
 //! the prefix group, which is what would break the name column (bl-b9e3).
 
 use crate::AppModel;
-use crate::actions::{stop_children_offered, stop_enabled};
 use crate::cli_outbound::Cli;
-use crate::git_tree::Agent;
 use crate::nav::convs::{ConvRow, age_label};
 use crate::nav::menu::Seat;
 use crate::theme;
@@ -30,10 +28,14 @@ use super::menus::Target;
 
 /// The per-frame facts every row derives its §11 seat from, bundled and owned
 /// (no borrow rides a struct, per the no-named-lifetimes rule): the focused
-/// workspace, its agent snapshot, and which agent is selected.
+/// workspace and which agent is selected.
+///
+/// **The agent snapshot is gone** (REMOTE §9.4, bl-1eb0). It rode here so each
+/// row could run the two §8.2 predicates against it; both answers are now
+/// fields of the [`ConvRow`] the row is painting, derived once where the row
+/// is, so nothing on this surface holds the engine's tree.
 pub(super) struct RowCtx {
     ws: PathBuf,
-    agents: Vec<Agent>,
     /// The selected agent — the row that highlights. It is the agent itself and
     /// not its conversation root: since the unfold, a selected member *has* a
     /// row of its own whenever it is visible, and §11's visible-selection
@@ -49,11 +51,7 @@ impl RowCtx {
     /// Gather the frame's row facts once, for `ws` — the focused workspace.
     pub(super) fn of(model: &AppModel, ws: PathBuf) -> Self {
         Self {
-            selected: model.focused_agent().map(|a| a.agent_id.clone()),
-            agents: model
-                .focused_tree()
-                .map(|t| t.agents.clone())
-                .unwrap_or_default(),
+            selected: model.focused_agent_id(),
             named: model.delete_confirmation(&ws).is_some(),
             ws,
         }
@@ -206,8 +204,8 @@ fn row_body(
                     super::focus::conversation(model, state, ws, &row.root_id);
                 }
                 let seat = Seat::ConversationRow {
-                    stoppable: stop_enabled(Some(&row.root_id), &ctx.agents),
-                    has_children: stop_children_offered(&row.root_id, &ctx.agents),
+                    stoppable: row.stoppable,
+                    has_children: row.stop_children,
                     named: ctx.named,
                 };
                 let target = Target::Conversation {

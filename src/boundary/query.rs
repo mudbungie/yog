@@ -146,6 +146,16 @@ pub enum Query {
     /// **The undelivered mail** (§11 Inbox, ARCH §2.11): one agent's deposit
     /// files, each parsed beside its verbatim bytes.
     Inbox { workspace: String, agent: String },
+    /// **One conversation as a seat sees it** (REMOTE §9.4, bl-1eb0): who is
+    /// selected, what the conversation is called, its own §3.5 liveness, the §6
+    /// marks it wears, what is in flight in it and the two §8.2 verb gates.
+    ///
+    /// The seventh member of the conversation-addressed family, and the one
+    /// that made the other six paintable by a face holding no world: the §11
+    /// centre pane derived all of this on the frame thread out of the engine's
+    /// agent set, which is not a thing a wire can carry. Every field is a fold
+    /// the boundary already owned; only the spelling is new.
+    Agent { workspace: String, agent: String },
     /// One workspace's effective provider table with the §5.1 #22 credential
     /// presence, rendered (§8.5, bl-0164): the same derivation the §8.3 login
     /// pane's `↻ providers + credentials` paints — one derivation, and since
