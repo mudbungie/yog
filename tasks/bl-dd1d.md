@@ -1,7 +1,7 @@
 +++
 title = "scrub balls/tasks and publish it: content redaction across the ref's history, not a private remote"
 created = 1786677230
-updated = 1786678489
+updated = 1786681019
 claimant = "Ciabatta"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -120,3 +120,7 @@ Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's
 ---
 
 The store is live, so any base sha named here is stale the moment another agent commits. The rewrite is therefore scripted, not a one-off artifact: re-run the filter (and re-bundle) against whatever the remote tip is at the moment of the push, and compare commit counts, blob counts and the 426 task paths across the rewrite as the acceptance check. Two rounds of self-scrub were needed first: this result note itself carried an operator home path, a scratch path, the literal rule strings it was describing, and an SSH remote URL — evidence for the standing guard this ball's last section asks for. A store that is only scrubbed by hand re-leaks in the act of recording the scrub.
+
+---
+
+PUSHED 2026-08-13 under operator go-ahead. The rewritten ref is live: forced update 18953c1 -> 0b29380 on the publication remote's balls/tasks. Rebuild was deterministic (same base, same result sha). Independent verification over all 1,192 blobs of the rewritten history: zero hits for the third party's name, the second address, operator home paths, and the billing text; the 14 residual 'Mark' matches are all the Rust type watch::Mark / Mark::Desync / a 'Mark table' heading, and the two residual bl-actor trailers are the agent codename mark-placer. The local store was re-materialized onto the rewritten ref (the store is a linked worktree of the landing repo, not a standalone clone, so the recipe is: git worktree prune in the landing, fetch the ref to a side ref from inside the tasks worktree, git reset --hard onto it, then bl prime). The bl-1043 gate plugin is now bound and scheduled on create/update/claim/unclaim/close/drop post.
