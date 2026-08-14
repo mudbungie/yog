@@ -112,12 +112,12 @@ report() {
 scan_rule() {
   local rule="$1"; shift
   [ "$#" -gt 0 ] || return 0
-  local hits
-  hits="$(grep -HIonE -e "${PATTERN[$rule]}" -- "$@" 2>/dev/null || true)"
+  local hits PATTERN EXCEPT WHY
+  rule_fields "$rule"
+  hits="$(grep -HIonE -e "$PATTERN" -- "$@" 2>/dev/null || true)"
   [ -n "$hits" ] || return 0
-  local ex="${EXCEPT[$rule]:-}"
-  if [ -n "$ex" ]; then
-    hits="$(printf '%s\n' "$hits" | grep -vE ":[0-9]+:(${ex})" || true)"
+  if [ -n "$EXCEPT" ]; then
+    hits="$(printf '%s\n' "$hits" | grep -vE ":[0-9]+:(${EXCEPT})" || true)"
   fi
   [ -n "$hits" ] || return 0
   printf '%s\n' "$hits" | report "$rule"
@@ -149,11 +149,12 @@ scan_binary() {
 scan() {
   local skip=''
   if [ "${1-}" = --skip ]; then skip="$2"; shift 2; fi
-  local rule found='' out
+  local rule found='' out PATTERN EXCEPT WHY
   for rule in "${RULES[@]}"; do
     [ "$rule" = "$skip" ] && continue
     out="$(scan_rule "$rule" "$@")"
-    [ -n "$out" ] && found+="$out"$'\n'"       ${WHY[$rule]}"$'\n'
+    rule_fields "$rule"
+    [ -n "$out" ] && found+="$out"$'\n'"       $WHY"$'\n'
   done
   for rule in forbidden-path binary-content; do
     [ "$rule" = "$skip" ] && continue
@@ -161,7 +162,8 @@ scan() {
       forbidden-path) out="$(scan_paths "$@")" ;;
       *)              out="$(scan_binary "$@")" ;;
     esac
-    [ -n "$out" ] && found+="$out"$'\n'"       ${WHY[$rule]}"$'\n'
+    rule_fields "$rule"
+    [ -n "$out" ] && found+="$out"$'\n'"       $WHY"$'\n'
   done
   if [ -n "$found" ]; then
     echo "error: leak-scan found material that must not be committed:" >&2

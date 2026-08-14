@@ -162,7 +162,10 @@ fn an_absent_target_is_a_definite_free_and_asks_lsof_nothing() {
     let gone = t.inbox.join("no-such-agent");
     let unknown = probe(None);
     assert_eq!(unknown.lock_state(&gone), Probe::Free);
-    assert_eq!(unknown.writer_state(&gone.join("response.json")), Probe::Free);
+    assert_eq!(
+        unknown.writer_state(&gone.join("response.json")),
+        Probe::Free
+    );
     assert_eq!(unknown.runner.calls.get(), 0, "nothing was spawned");
 }
 

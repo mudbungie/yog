@@ -12,6 +12,7 @@ use super::super::drift::{self, Drift};
 use super::super::{desired_watches, needs_liveness_reprobe};
 use super::Deriver;
 use crate::fs_watcher::RootKind;
+use crate::git_tree::AgentState;
 use crate::opslog::{self, OpRow};
 use crate::projects;
 use crate::projects::join;
@@ -122,6 +123,38 @@ impl Deriver {
             self.schedule.mark([(path, Mark::Poll)]);
         }
         found
+    }
+
+    /// §10's **eager liveness refresh**, the half the cheap sweep cannot do: a
+    /// filesystem change under an agent at rest may be a driver *arriving*, and
+    /// the macOS probe cache would answer from store for up to its 2 s TTL — so
+    /// the row stays at rest, and the §11 flight strip stays down, while a model
+    /// call is already running.
+    ///
+    /// **Exactly the agents the sweep does not take.** [`cheap_sweep`](sweeps)
+    /// re-probes the Live/InFlight ones, because only those can die *silently* —
+    /// a released flock emits no event for any watcher to carry. So this takes
+    /// the rest, on the signal that *is* an event. Between them every transition
+    /// is observed, and neither pays for the other's case: a streaming
+    /// `response.json` append storm is an agent already known live, so it evicts
+    /// nothing here and stays collapsed on the cache, which is the whole reason
+    /// the cache exists.
+    ///
+    /// A root with no tree is not a workspace (a root deriving for the first
+    /// time, or one whose read failed) — nothing observed yet, nothing to
+    /// forget. On Linux the eviction is a no-op: the `/proc` probes are
+    /// stateless and always definite (§10).
+    pub(super) fn refresh_liveness(&self, root: &Path) {
+        let Some(tree) = self.trees.get(root) else {
+            return;
+        };
+        let resting: Vec<String> = tree
+            .agents
+            .iter()
+            .filter(|a| !matches!(a.state, AgentState::Live | AgentState::InFlight))
+            .map(|a| a.agent_id.clone())
+            .collect();
+        self.probes.invalidate_liveness(root, &resting);
     }
 
     /// The 15 s full sweep (§7.2): reconcile, re-fetch every project's balls and
