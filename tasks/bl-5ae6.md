@@ -1,7 +1,8 @@
 +++
 title = "release workflow hands the crates.io token to jobs that do not publish, pins mutable action tags, and publishes a moving ref instead of the tested SHA"
 created = 1786677238
-updated = 1786677238
+updated = 1786677285
+claimant = "Marinara"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 tags = ["publication"]
