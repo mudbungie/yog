@@ -1,7 +1,7 @@
 +++
 title = "the model picker states what it reaches, and a conversation states the config it is frozen at"
 created = 1786162399
-updated = 1786162788
+updated = 1786678330
 priority = 1
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
@@ -9,7 +9,7 @@ root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
 ## What I filed, and why it was wrong
 
-Filed on the claim that the §9.4 picker "accepts an instruction it will never carry out and says nothing about it", and that a conversation never states the config it is frozen at. Reading the code, both were already answered — by bl-9786 and bl-824e, landed 2026-08-01, and present in the yog the operator was running (PID <redacted>, started 2026-08-07 09:57, from `target/debug/yog`; both commits predate it).
+Filed on the claim that the §9.4 picker "accepts an instruction it will never carry out and says nothing about it", and that a conversation never states the config it is frozen at. Reading the code, both were already answered — by bl-9786 and bl-824e, landed 2026-08-01, and present in the build the operator was running at the time (a debug binary from `target/debug/yog`; both commits predate it).
 
 **The picker states its scope.** `model_pick::scope_sentence` (`src/model_pick/mod.rs:165`), painted at the top of the pane (`shell/model_pick/mod.rs:109`), verbatim:
 
@@ -19,13 +19,13 @@ The `change…` button's hover says it again: *"A change here takes effect for t
 
 **The conversation states its frozen config, and its drift.** `model_pick::header::frozen_header` (`src/model_pick/header.rs:84`) composes the conversation header's model line as `model · <model> · frozen at <oid>`, and when the config lineage has advanced past it, appends `· workspace default is now <model> at <oid>` and sets `drifted`. Drifted additionally paints `NEW_CONVERSATION_EXIT` — the one exit that exists today.
 
-At 12:36:50 on 2026-08-07 that line would have read, in the open conversation:
+In the open conversation at that moment, that line would have read:
 
     model · claude-opus-4-6 · frozen at d93c2a9 · workspace default is now gpt-5.6-sol at a06b090
 
 ## What actually went wrong, from process evidence
 
-The operator was not under-informed about the freeze. They were mis-routed on the **credential**: PID <redacted>, started 12:37:14 — `yog bz --login --provider openai-chatgpt --browser` — one minute after the two failed steps, which failed on **claude-session-direct**. The auth affordance offered Login without naming the row, so the sign-in went to the wrong provider. That is bl-8e34, filed and landed the same session; this ball's evidence is the confirmation of that one.
+The operator was not under-informed about the freeze. They were mis-routed on the **credential**: about a minute after two steps failed on one provider row, they launched `yog bz --login --provider <row> --browser` against a *different* row. The auth affordance offered Login without naming the row, so the sign-in went to the wrong provider. That is bl-8e34, filed and landed the same session; this ball's evidence is the confirmation of that one.
 
 ## What is genuinely left here
 
