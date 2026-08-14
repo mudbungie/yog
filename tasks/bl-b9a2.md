@@ -1,7 +1,7 @@
 +++
 title = "design investigation: thin-client/backend split — one yog backend on the home server, multiple UI clients sharing chats, each client exposing its machine-local tools"
 created = 1786682408
-updated = 1786682490
+updated = 1786682743
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
@@ -27,3 +27,14 @@ MISSING, by cost:
 CLIENT-LOCAL TOOLS is the genuinely new element: tool execution lives in lernie's driver (bash on the engine host); yog only seeds PATH shims and adjudicates via 'yog tool-control' on stdio. Agents acting on a CLIENT machine = a reverse channel (per-client tool host the backend routes into) and an upstream lernie ask, not a yog-only change. Separate design.
 
 SEQUENCING: (1) ratify direction in DESIGN; (2) boundary-complete the reads — valuable standalone for teleop V5 even with no network; (3) Reply decode/serde ruling; (4) identity layer; (5) socket+auth; (6) ui.json split; (7) client-local tools as its own design with lernie. Steps 2–4 are pure boundary-completion and de-risk everything later.
+
+---
+
+the operator's rulings (2026-08-13), direction ADOPTED:
+1. The file religion stays authoritative for the SERVER side; the UI operates entirely via RPC. One method, one channel: even the local version does the hard split — no second execution path for the UI.
+2. Protocol wrapper: mTLS, strong enough to leave on the public internet. Starting assumption: operator administers both machines. Bootstrapping (cert provisioning) is explicitly out-of-channel.
+3. Conversations become aware of all registered clients and the tools they advertise.
+4. Client registration is PER-WORKSPACE — trust domains. A client registered in one workspace is invisible in another (work laptop in the corporate workspace only; personal stays off it, and vice versa).
+5. Agents run in the background on the server, independent of any client connection.
+6. Canonical use case: home server runs yog and keeps all logs; from the phone, talk to a session that teleoperates the work laptop.
+Deliverable now: the living design doc in docs/ + DESIGN §14 carve-out.
