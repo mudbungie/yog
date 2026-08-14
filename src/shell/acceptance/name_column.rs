@@ -124,6 +124,8 @@ fn one_conditional_each() -> [ConvRow; 4] {
         members: 1,
         depth: 0,
         direct: 0,
+        stoppable: false,
+        stop_children: false,
         ball: None,
         name: Some(name.to_owned()),
         name_display_only: false,

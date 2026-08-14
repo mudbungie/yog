@@ -155,6 +155,20 @@ pub const QUERIES: &[HelpRow] = &[
                  mail is not here; it has moved into the transcript.",
     },
     HelpRow {
+        verb: "agent",
+        usage: "/agent",
+        summary: "the selected conversation itself: what it is called, what it is doing, what may \
+                  be done to it",
+        detail: "One conversation's own facts, as any seat paints them: the id and the \
+                 conversation it belongs to, the name it goes by — and whether that name is one \
+                 peers can actually address it with — the commit its policy is frozen against, \
+                 whether it is running right now, the marks it wears (notified, over budget, in \
+                 conflict, holding a tool call, abandoned), what kind of work is in flight \
+                 anywhere beneath it, and whether Stop and its children cascade are offered. A \
+                 conversation this workspace does not carry answers as its own root, stopped and \
+                 unmarked, rather than refusing.",
+    },
+    HelpRow {
         verb: "attention",
         usage: "/attention",
         summary: "everything waiting on you, across every workspace",

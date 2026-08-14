@@ -14,8 +14,10 @@ use super::{
     refresh, roster_fault, row_names, select, settled, write,
 };
 use crate::AppModel;
-use crate::git_tree::{Agent, CommitNode};
-use crate::model_pick::{NEW_CONVERSATION_EXIT, Pick, RETARGET_EXIT, RETARGET_HOVER, row_role};
+use crate::boundary::answer::agent::AgentView;
+use crate::model_pick::{
+    ConfigTip, NEW_CONVERSATION_EXIT, Pick, RETARGET_EXIT, RETARGET_HOVER, row_role,
+};
 use std::path::Path;
 
 /// What a seat is **about**: the scope claim its write states, and the
@@ -52,12 +54,12 @@ pub(crate) fn conversation_seat(
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
-    agent: &Agent,
-    config_tip: Option<&CommitNode>,
+    agent: &AgentView,
+    config_tip: Option<&ConfigTip>,
     clis: (&Cli, &Cli, &Cli),
 ) -> bool {
     let Some((frozen_oid, row)) =
-        lines::conversation_row_of(ws, &agent.tip_oid, config_tip, &mut state.wall.picker)
+        lines::conversation_row_of(ws, &agent.tip, config_tip, &mut state.wall.picker)
     else {
         return false;
     };
@@ -77,7 +79,7 @@ pub(crate) fn birth_seat(
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
-    config_tip: Option<&CommitNode>,
+    config_tip: Option<&ConfigTip>,
     clis: (&Cli, &Cli, &Cli),
 ) -> bool {
     let Some(row) = lines::birth_row_of(ws, config_tip, &mut state.wall.picker) else {

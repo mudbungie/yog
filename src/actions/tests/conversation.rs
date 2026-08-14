@@ -70,12 +70,15 @@ fn stop_picks_correct_agent_among_several() {
 
 #[test]
 fn message_enabled_only_for_a_present_selection_with_text() {
-    let bs = vec![branch("foo", AgentState::Stopped)];
-    // Any state — Message is the resume gesture (contrast stop_enabled).
-    assert!(message_enabled(Some("foo"), "continue please", &bs));
-    assert!(!message_enabled(Some("foo"), "   ", &bs), "blank text");
-    assert!(!message_enabled(None, "hi", &bs), "no selection");
-    assert!(!message_enabled(Some("bar"), "hi", &bs), "absent id");
+    // Any state — Message is the resume gesture (contrast stop_enabled); the
+    // roster half is the §11 seat's own `present` since bl-1eb0, so this
+    // predicate is the text half and the conjunction, nothing more.
+    assert!(message_enabled(true, "continue please"));
+    assert!(!message_enabled(true, "   "), "blank text");
+    assert!(
+        !message_enabled(false, "hi"),
+        "no selection, or an absent id"
+    );
 }
 
 /// The nudge and Stop partition the four states between them (bl-9bef): every

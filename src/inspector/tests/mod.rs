@@ -16,6 +16,7 @@ use crate::config_edit::branch::GoverningConfig;
 use crate::files_view::FilesView;
 use crate::git_tree::GitTree;
 use crate::git_tree::tests::fixture::Fixture;
+use crate::nav::convs::Titles;
 
 /// The conversation's §3.3 display name — the transcript's sender label for
 /// every model turn (bl-2335).
@@ -25,7 +26,7 @@ pub(super) const SPEAKER: &str = "shudder-storeroom";
 pub(super) fn paint(tab: InspectorTab, data: &TabData) -> String {
     let mut eph = Ephemera::default();
     crate::paint_probe::paint(|ui| {
-        render(ui, tab, data, &[], &mut eph);
+        render(ui, tab, data, &Titles::default(), &mut eph);
     })
 }
 

@@ -132,7 +132,7 @@ pub fn render(
     ui: &mut egui::Ui,
     tab: InspectorTab,
     data: &TabData,
-    agents: &[crate::git_tree::Agent],
+    titles: &crate::nav::convs::Titles,
     eph: &mut Ephemera,
 ) -> Option<String> {
     // The banner claims the tab below it, so it paints only where the pin
@@ -141,7 +141,7 @@ pub fn render(
     if let Some(pin) = data.pin.as_ref().filter(|_| tab.pinnable()) {
         pinned_banner(ui, pin, &mut eph.notch_sel);
     }
-    render_tab(ui, tab, data, agents, eph)
+    render_tab(ui, tab, data, titles, eph)
 }
 
 /// What a pin is showing, said outright above whichever tab is open, **and the
@@ -184,7 +184,7 @@ fn render_tab(
     ui: &mut egui::Ui,
     tab: InspectorTab,
     data: &TabData,
-    agents: &[crate::git_tree::Agent],
+    titles: &crate::nav::convs::Titles,
     eph: &mut Ephemera,
 ) -> Option<String> {
     // Only the Transcript arm answers with a child to open: it is the tab the
@@ -216,7 +216,7 @@ fn render_tab(
             None
         }
         InspectorTab::Inbox => {
-            inboxview::render(ui, &data.inbox, agents, data.raw);
+            inboxview::render(ui, &data.inbox, titles, data.raw);
             None
         }
         InspectorTab::Files => {

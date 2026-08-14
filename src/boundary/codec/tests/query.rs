@@ -69,6 +69,10 @@ fn inspector_family() {
             agent: agent.clone(),
             seq: "003".to_owned(),
         },
+        Query::Agent {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+        },
     ] {
         rt(Gesture::Ask(query));
     }

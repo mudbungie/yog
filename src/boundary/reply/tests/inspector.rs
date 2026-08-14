@@ -1,6 +1,7 @@
 //! The §11 inspector family's wire shapes (bl-6233, REMOTE §9 step 1) — the
 //! five surfaces that had no headless spelling at all, so no seat but the
-//! window could read a conversation.
+//! window could read a conversation — and the seventh, the conversation seat
+//! itself (REMOTE §9.4, bl-1eb0).
 //!
 //! [`chat`] holds the two whose rows are messages (the transcript and the
 //! inbox), [`records`] the three whose rows are machinery (steps, one step's
@@ -45,7 +46,7 @@ fn ui() -> UiState {
 }
 
 /// **The ball's claim, end to end**: a conversation is readable with no window
-/// at all. Every one of the six reads is asked at the chokepoint over a real
+/// at all. Every one of the seven reads is asked at the chokepoint over a real
 /// workspace and answers its own `kind` — which is the whole of what "the chats
 /// are unreachable by any face but the window" was missing.
 #[test]
@@ -106,6 +107,16 @@ fn every_conversation_read_answers_from_the_chokepoint() {
                 path: Some("goal.md".to_owned()),
             },
             "files",
+        ),
+        // The family's seventh (REMOTE §9.4, bl-1eb0): the seat's own read of
+        // the selection, which is what made the six above paintable by a face
+        // holding no world.
+        (
+            Query::Agent {
+                workspace: crate::naming::leaf(&(address.0.clone())),
+                agent: address.1.clone(),
+            },
+            "agent",
         ),
     ] {
         let body = at(query);

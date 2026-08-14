@@ -34,6 +34,8 @@ fn conv_rows() -> Vec<ConvRow> {
         members: 3,
         depth: 2,
         direct: 2,
+        stoppable: false,
+        stop_children: false,
         ball: Some(ConvBall {
             id: "bl-7".into(),
             state: Some(JoinState::Bound),
@@ -65,6 +67,8 @@ fn conv_rows() -> Vec<ConvRow> {
         members: 1,
         depth: 0,
         direct: 0,
+        stoppable: false,
+        stop_children: false,
         ball: Some(ConvBall {
             id: "stray".into(),
             state: None,

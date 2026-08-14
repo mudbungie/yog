@@ -9,7 +9,7 @@
 //! [`super::dispatch`], shared with the §11 key bindings and the row menus.
 //!
 //! **The queue is the snapshot's** (§11: no frame-time IO): the pending items
-//! are [`crate::git_tree::Agent::pending`], gathered by the off-thread
+//! are the snapshot's own pending listing, gathered by the off-thread
 //! enumerate over the watched `inbox/` root — the frame renders it, adds no
 //! read, and notices no arrival event. The cut is lernie's: pending is what
 //! still sits in `inbox/<id>/`, crossed is what its delivery drain committed;
@@ -55,8 +55,6 @@
 use crate::AppModel;
 use crate::actions::DraftKey;
 use crate::cli_outbound::Cli;
-use crate::git_tree::Agent;
-use crate::nav::convs::{display_name_of, root_of};
 use crate::start;
 use lernie::mint::SplitMix64;
 use std::path::PathBuf;
@@ -80,23 +78,21 @@ pub fn composer(
     let Some(ws) = model.focused_workspace().map(PathBuf::from) else {
         return;
     };
-    let agents: Vec<Agent> = model
-        .focused_tree()
-        .map(|t| t.agents.clone())
-        .unwrap_or_default();
+    // The frame's roster in the form a seat can hold (REMOTE §9.4, bl-1eb0):
+    // the §3.3 ladder's input for the pending headers' senders, and nothing
+    // else — the target's own name rides its seat view below.
+    let titles = model.agent_titles();
     // The selection bridge (§11): the conversation list picks the target — at
     // any depth, since bl-fa82 made a member a row of it; the composer never
     // grows its own picker.
-    state.actions.selected_branch = model.focused_agent().map(|a| a.agent_id.clone());
+    let seat = model.focused_conversation();
+    state.actions.selected_branch = seat.as_ref().map(|s| s.agent_id.clone());
     let target = state.actions.selected_branch.clone();
     let mint_seed = state.start.mint_seed;
     // Derived ONCE for both spellings (§3.3, bl-2f30): the selection's
-    // conversation root, then the one ladder. An id the snapshot does not carry
-    // is its own root and lands on the ladder's third rung.
-    let conv_name = target.as_deref().map(|agent| {
-        let root = root_of(&agents, agent).unwrap_or_else(|| agent.to_owned());
-        display_name_of(&agents, &root)
-    });
+    // conversation root, then the one ladder — both folded into the seat's
+    // `name` at the boundary, so this reads it rather than re-deriving it.
+    let conv_name = seat.as_ref().map(|s| s.name.clone());
 
     if conv_name.is_none() {
         // A new conversation: the greyed identity preview (§3.3), stable
@@ -122,25 +118,17 @@ pub fn composer(
     // is the snapshot's (§5.1 #11) — the message target's inbox; a new
     // conversation has none, which is the same rule at zero items.
     let key = DraftKey::composer(Some(ws.clone()), target.clone());
-    let pending = model
-        .focused_agent()
-        .map(|a| a.pending.clone())
-        .unwrap_or_default();
+    let pending = model.focused_pending();
     // What ↑ pages back through (bl-f908): the operator's own turns in this
     // conversation, derived from the two seats already open here — the
     // snapshot's pending listing above and the delivered transcript, which
     // comes through the inspector's per-snapshot memo (§7.2), never a second
     // `messages/` read. A new conversation has neither, which is the same
     // derivation at zero items.
-    let prompts = model
-        .focused_agent()
+    let prompts = target
+        .as_deref()
         .map(|agent| {
-            let tx = super::inspector::build_transcript(
-                model,
-                &mut state.inspector,
-                &ws,
-                &agent.agent_id,
-            );
+            let tx = super::inspector::build_transcript(model, &mut state.inspector, &ws, agent);
             crate::composer::prompts(&pending, &tx)
         })
         .unwrap_or_default();
@@ -161,7 +149,7 @@ pub fn composer(
         &mut state.composer,
         &mut state.actions.drafts,
         &queue,
-        &agents,
+        &titles,
     );
     // A §8.5 line's answer belongs to the line that earned it: edit anything,
     // and what is on screen is about something you are no longer saying.
@@ -180,7 +168,11 @@ pub fn composer(
         edit.has_focus() && ui.input(|i| i.modifiers.is_none() && i.key_pressed(egui::Key::Enter));
     let ctx = VerbCtx {
         ws,
-        agents,
+        stoppable: seat.as_ref().is_some_and(|s| s.stoppable),
+        stop_children: seat.as_ref().is_some_and(|s| s.stop_children),
+        present: seat.as_ref().is_some_and(|s| s.present),
+        nudgeable: seat.as_ref().is_some_and(|s| s.nudgeable),
+        held: seat.and_then(|s| s.held),
         key: key.clone(),
         text: state.actions.drafts.text(&key),
         conv_name,

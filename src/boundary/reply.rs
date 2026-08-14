@@ -29,6 +29,9 @@ use std::path::PathBuf;
 
 use super::codec::prepared_value;
 
+/// The §11 conversation seat's own spelling, both directions (REMOTE §9.4,
+/// bl-1eb0) — cut off the roster at the budget like `search` and `queue`.
+mod agent;
 /// The V4 board row's own encoders — split at the §12 budget, on the seam that
 /// board rows are the one reply whose rows carry derived sub-objects (gates,
 /// drones, two §3.5 figures).
@@ -199,6 +202,11 @@ pub enum Reply {
     /// One agent's undelivered deposits (§11, ARCH §2.11) —
     /// [`Inbox`](super::Query::Inbox)' answer.
     Inbox(Vec<crate::inboxview::InboxEntry>),
+    /// One conversation as a seat sees it (REMOTE §9.4, bl-1eb0) —
+    /// [`Agent`](super::Query::Agent)'s answer: the §11 centre pane's identity
+    /// line, mark row, live badge and §8.2 gates, none of which had a spelling
+    /// any face but the window could read.
+    Agent(crate::boundary::answer::agent::AgentView),
     /// One §9 destination's current bytes (§8.5, bl-0164) —
     /// [`ReadConfig`](super::Query::ReadConfig)'s answer, the file editors'
     /// Reload spelled.

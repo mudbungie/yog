@@ -86,6 +86,19 @@ pub struct ConvRow {
     /// stored flag — so an unarmed workspace, or one whose verdicts have aged
     /// out of the rendered tail, simply carries `None` and renders nothing.
     pub verdict: Option<crate::monitor::Check>,
+    /// Whether §8.2's `Stop` is offered on this row — its agent holds a driver
+    /// right now ([`stop_enabled`](crate::actions::stop_enabled)). **Not
+    /// [`state`](ConvRow::state)**, which is the badge aggregated over the
+    /// row's whole subtree: a quiet root with a working child paints Live and
+    /// has nothing to kill. On the row since bl-1eb0, because a seat that
+    /// cannot answer it cannot paint the row's own menu.
+    pub stoppable: bool,
+    /// Whether the `+children` cascade is offered beside it — some other agent
+    /// id here descends from this one by the Stop menu's **looser prefix test**
+    /// ([`stop_children_offered`](crate::actions::stop_children_offered)),
+    /// which is `lernie stop --children`'s own rule and deliberately not the
+    /// strict §5.1 #8 descent [`members`](ConvRow::members) counts.
+    pub stop_children: bool,
     /// How solid the row paints (§11, bl-915e): [`Tone::Weak`] while this is
     /// §7.2's **pending conversation** — a start yog has fired whose driver has
     /// not written a branch, so the row is only yog's own word for it — and
@@ -204,6 +217,12 @@ pub(super) fn row(
         // The strict descent-id children (§5.1 #8) — the subagent field's
         // `direct`, read from the one home that answers it.
         direct: children_of(agents, &root_id).len(),
+        // The row's own §8.2 gates (bl-1eb0), through the same two predicates
+        // the composer's buttons and the key bindings run — one implementation,
+        // answered where the row is derived rather than re-derived per paint
+        // against a roster the seat had to be holding.
+        stoppable: crate::actions::stop_enabled(Some(&root_id), agents),
+        stop_children: crate::actions::stop_children_offered(&root_id, agents),
         depth: subtree.first().map_or(0, |r| r.depth),
         root_id,
         state,

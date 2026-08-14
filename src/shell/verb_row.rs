@@ -10,12 +10,9 @@
 //! that seat — no new control (bl-8aab), one re-labelled button.
 
 use crate::AppModel;
-use crate::actions::{
-    DraftKey, message_enabled, new_prompt_enabled, stop_children_offered, stop_enabled,
-};
+use crate::actions::{DraftKey, message_enabled, new_prompt_enabled};
 use crate::boundary::line;
 use crate::cli_outbound::Cli;
-use crate::git_tree::Agent;
 use std::path::PathBuf;
 
 use super::ShellState;
@@ -28,7 +25,21 @@ const STOP_HINT: &str = "Kill the driver running this conversation (`lernie stop
 /// the no-named-lifetimes rule) to keep the fns under the argument cap.
 pub(super) struct VerbCtx {
     pub ws: PathBuf,
-    pub agents: Vec<Agent>,
+    /// Whether §8.2's `Stop` is offered on the composer's target, and whether
+    /// the `+children` cascade rides beside it — the two gates off the §11
+    /// seat's own view (REMOTE §9.4, bl-1eb0). They were re-derived here from
+    /// the frame's agent set; a seat holding no tree cannot do that, and both
+    /// answers were already the boundary's.
+    pub stoppable: bool,
+    pub stop_children: bool,
+    /// Whether the world carries the target at all (§8.2's message gate's
+    /// roster half) and whether a nudge is offered on it — the same seat view's
+    /// facts, for the same reason.
+    pub present: bool,
+    pub nudgeable: bool,
+    /// The parked invocation the §8.6 answer controls act on (`None` for every
+    /// conversation nothing is holding, which is nearly all of them).
+    pub held: Option<crate::control::hold::Held>,
     /// The draft this composer is composing (bl-a69a) — so a clean send clears
     /// the target it deposited to and no other.
     pub key: DraftKey,
@@ -76,7 +87,7 @@ pub(super) fn verb_buttons(
             ui.weak(format!("→ message {name}"));
         }
         if let Some(agent) = selected.as_deref() {
-            let msg_on = message_enabled(Some(agent), &ctx.text, &ctx.agents);
+            let msg_on = message_enabled(ctx.present, &ctx.text);
             let send = ui
                 .add_enabled(msg_on, egui::Button::new("Message"))
                 .on_hover_text(
@@ -103,7 +114,7 @@ pub(super) fn verb_buttons(
             }
             nudge_control(ui, model, lernie, bl, ctx, agent);
             hold_controls(ui, model, lernie, bl, ctx, agent);
-            stop_controls(ui, model, state, lernie, bl, &ctx.agents);
+            stop_controls(ui, model, state, lernie, bl, ctx);
         } else {
             // Armed by both halves (bl-6191): something to say, and a work
             // directory the start can actually run in. The birth block's field
@@ -152,7 +163,7 @@ fn nudge_control(
     ctx: &VerbCtx,
     agent: &str,
 ) {
-    let on = crate::actions::nudge_enabled(Some(agent), &ctx.agents);
+    let on = ctx.nudgeable;
     if ui
         .add_enabled(on, egui::Button::new("Nudge"))
         .on_hover_text(
@@ -191,12 +202,7 @@ fn hold_controls(
     agent: &str,
 ) {
     use crate::control::judge::Ruling;
-    let Some(held) = ctx
-        .agents
-        .iter()
-        .find(|a| a.agent_id == agent)
-        .and_then(|a| a.held.as_ref())
-    else {
+    let Some(held) = ctx.held.as_ref() else {
         return;
     };
     // The control's own sentence — the tool, what it was about to do, the class
@@ -228,27 +234,26 @@ fn hold_controls(
 }
 
 /// Stop (+ the children cascade when descendants exist) for the selected agent.
+/// Both gates come off the §11 seat's own view (REMOTE §9.4, bl-1eb0) rather
+/// than being re-derived here against a roster; the caller reaches this only
+/// with a selection, which is what those gates are about.
 fn stop_controls(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
     bl: &Cli,
-    agents: &[Agent],
+    ctx: &VerbCtx,
 ) {
-    let Some(agent) = state.actions.selected_branch.clone() else {
-        return;
-    };
-    if stop_children_offered(&agent, agents) {
+    if ctx.stop_children {
         ui.checkbox(&mut state.actions.stop_children, "children")
             .on_hover_text(
                 "Stop the agents this conversation spawned too, not only the one at \
                  its root. Typed, it is `/stop children`.",
             );
     }
-    let stop_on = stop_enabled(Some(&agent), agents);
     if ui
-        .add_enabled(stop_on, egui::Button::new("Stop"))
+        .add_enabled(ctx.stoppable, egui::Button::new("Stop"))
         .on_hover_text(STOP_HINT)
         .on_disabled_hover_text(
             "nothing is running on this conversation — there is no driver to kill",

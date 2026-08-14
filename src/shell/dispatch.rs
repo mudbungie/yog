@@ -14,10 +14,8 @@
 //! `ops.jsonl` line the activity pane and the §7.3 banner read back per frame.
 
 use crate::AppModel;
-use crate::actions::stop_enabled;
 use crate::boundary::{Action, reply};
 use crate::cli_outbound::Cli;
-use crate::git_tree::Agent;
 use std::path::Path;
 
 use super::ShellState;
@@ -25,22 +23,27 @@ use super::ShellState;
 /// Stop the **selected conversation** (§8.2) — the §11 `x` binding and the Stop
 /// button's one implementation. Re-derives its target from the focus, so it is
 /// refused exactly where the button is disabled: no workspace, no selection, or
-/// an agent [`stop_enabled`] says is not stoppable.
+/// an agent the §11 seat's own `stoppable` gate says is not stoppable.
 pub(super) fn stop_selected(model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli) {
-    let (Some(ws), Some(agent)) = (
+    let (Some(ws), Some(seat)) = (
         model.focused_workspace().map(Path::to_path_buf),
-        model.focused_agent().map(|a| a.agent_id.clone()),
+        model.focused_conversation(),
     ) else {
         return;
     };
-    let agents: Vec<Agent> = model
-        .focused_tree()
-        .map(|t| t.agents.clone())
-        .unwrap_or_default();
-    if !stop_enabled(Some(&agent), &agents) {
+    // The gate the button paints is the gate this runs (REMOTE §9.4, bl-1eb0):
+    // one fact off the seat's own view, not a second reading of the tree.
+    if !seat.stoppable {
         return;
     }
-    stop_agent(model, lernie, bl, &ws, &agent, state.actions.stop_children);
+    stop_agent(
+        model,
+        lernie,
+        bl,
+        &ws,
+        &seat.agent_id,
+        state.actions.stop_children,
+    );
 }
 
 /// Stop **one named agent** (§8.2) — the body [`stop_selected`] runs once it has

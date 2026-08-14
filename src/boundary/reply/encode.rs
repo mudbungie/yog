@@ -89,6 +89,8 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Files { view, preview } => crate::files_view::wire::reply(view, preview.as_ref()),
         Reply::Rail(rail) => crate::rail::wire::reply(rail),
         Reply::Inbox(entries) => crate::inboxview::wire::reply(entries),
+        // The seat's read of its selection (REMOTE §9.4, bl-1eb0).
+        Reply::Agent(view) => super::agent::reply(view),
         // The needle rides with the hits (bl-7067). Without it the answer
         // could not say which question it answers -- the very fact bl-648a put
         // on the datum, because "was a search asked?" and "did anything

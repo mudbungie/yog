@@ -83,6 +83,10 @@ pub(super) fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, St
             let (workspace, agent) = address(o)?;
             Query::Inbox { workspace, agent }
         }
+        "agent" => {
+            let (workspace, agent) = address(o)?;
+            Query::Agent { workspace, agent }
+        }
         _ => return Ok(None),
     }))
 }

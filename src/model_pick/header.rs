@@ -25,6 +25,18 @@
 
 use super::{WORKER_ROLE, grammar};
 
+/// The workspace's config-lineage tip (§2.2) as a **seat** holds it (REMOTE
+/// §9.4, bl-1eb0): the commit `lernie prompt` forks the next conversation off.
+/// Two strings, because two strings are all the picker asks of it — the row
+/// labels with the short oid and reads `providers.yaml` at the full one — and
+/// because the `CommitNode` this replaced is a git-derivation record a face
+/// holding no repository cannot be handed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConfigTip {
+    pub oid: String,
+    pub short_oid: String,
+}
+
 /// One config commit as the row reads it: the oid it is, and the
 /// `providers.yaml` its tree carries. Two of these — the governing commit and
 /// the workspace default's tip — are the whole input to [`conversation_row`].

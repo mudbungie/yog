@@ -50,6 +50,7 @@ pub(super) fn encode(query: &Query) -> Value {
         Query::Transcript { workspace, agent } => inspector::at("transcript", workspace, agent),
         Query::Steps { workspace, agent } => inspector::at("steps", workspace, agent),
         Query::Rail { workspace, agent } => inspector::at("rail", workspace, agent),
+        Query::Agent { workspace, agent } => inspector::at("agent", workspace, agent),
         Query::Inbox { workspace, agent } => inspector::at("inbox", workspace, agent),
         Query::Step {
             workspace,

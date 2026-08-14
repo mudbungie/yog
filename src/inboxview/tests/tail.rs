@@ -3,6 +3,7 @@
 //! deposit sits on the same bottom edge that backlog ends on (bl-8c13).
 
 use crate::inboxview::{InboxEntry, parse_deposit, render::render};
+use crate::nav::convs::Titles;
 
 /// A viewport far shorter than `backlog()`.
 const NARROW: (f32, f32) = (600.0, 140.0);
@@ -28,7 +29,7 @@ fn deposits(n: usize) -> Vec<InboxEntry> {
 fn a_tall_inbox_shows_its_newest_deposits() {
     let entries = backlog();
     let painted = crate::paint_probe::paint_settled(NARROW.0, NARROW.1, |ui| {
-        render(ui, &entries, &[], false);
+        render(ui, &entries, &Titles::default(), false);
     });
     assert!(
         painted.contains("deposit-029"),
@@ -43,7 +44,7 @@ fn a_tall_inbox_shows_its_newest_deposits() {
 /// The bottommost pixel `entries` paint in the narrow viewport.
 fn bottom_of(entries: &[InboxEntry]) -> f32 {
     let painted = crate::paint_probe::painted_settled(NARROW.0, NARROW.1, |ui| {
-        render(ui, entries, &[], false);
+        render(ui, entries, &Titles::default(), false);
     });
     crate::paint_probe::span(&painted).1
 }

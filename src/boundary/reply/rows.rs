@@ -88,6 +88,13 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
     // re-derive the descent grammar. The *fold* state has no home here — the
     // answer stays root rows, and expansion is a viewport's (§13.1).
     map.insert("direct".to_owned(), json!(row.direct));
+    // The row's own §8.2 gates (REMOTE §9.4, bl-1eb0). Neither is derivable
+    // from anything else here: `state` is the badge aggregated over the whole
+    // subtree, so a quiet root with a working child reads Live and has no
+    // driver to kill; and the cascade's membership is the Stop menu's looser
+    // prefix test, not the strict §5.1 #8 descent `direct` counts.
+    map.insert("stoppable".to_owned(), json!(row.stoppable));
+    map.insert("stop_children".to_owned(), json!(row.stop_children));
     // How far the row hangs under its conversation root (§11's indent) and how
     // solidly it paints (§11, bl-915e) — both on the wire since bl-7067,
     // because a seat that reads rows and cannot indent them, or cannot tell

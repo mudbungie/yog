@@ -31,6 +31,9 @@ use super::dispatch::Deps;
 use super::reply::{Reply, WsRow};
 use super::{Query, config, help};
 
+/// One conversation as a seat sees it (REMOTE §9.4, bl-1eb0) — the
+/// [`Agent`](crate::git_tree::Agent)'s wire projection.
+pub mod agent;
 /// The §3.6 unmaking's own derivations — what a delete would destroy, read by
 /// the dialog and by the dispatch gate alike.
 mod confirm;
@@ -113,6 +116,10 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
             Reply::Rail(inspector::rail(snap, ws, agent, &steps, &tx))
         }
         Query::Inbox { agent, .. } => Reply::Inbox(crate::inboxview::list_inbox(ws, agent)),
+        // The seat's own read of its selection (REMOTE §9.4, bl-1eb0) — pure
+        // over the snapshot, unlike the five above, because everything it says
+        // was already derived when the tree was.
+        Query::Agent { agent: id, .. } => Reply::Agent(agent::agent(snap, ws, id)),
         Query::Ops { max } => {
             let skip = snap.ops.len().saturating_sub(*max);
             Reply::Ops(snap.ops.iter().skip(skip).cloned().collect())

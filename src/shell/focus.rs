@@ -141,20 +141,18 @@ pub(super) fn conversation(model: &mut AppModel, state: &mut ShellState, ws: &Pa
 /// case adds nothing. It cannot fight a fold, either, because both collapsing
 /// gestures ([`collapse_row`], [`toggle_row`]) carry the selection up to the row
 /// they shut — so by the time this runs the selection is never under it.
-pub(super) fn reveal_selection(model: &mut AppModel, state: &mut ShellState, ws: &Path) {
-    if let Some(id) = selected(model) {
-        state.expanded.extend(ancestors(model, ws, &id));
-    }
+pub(super) fn reveal_selection(model: &mut AppModel, state: &mut ShellState) {
+    state.expanded.extend(ancestors(model));
 }
 
-/// The descent-id chain above `agent` in `ws`, outermost first — read off the
-/// same [`nav::convs`](crate::nav::convs) derivation the list itself renders,
-/// never re-derived here. Empty for a root and for an id this snapshot has not
-/// got.
-fn ancestors(model: &AppModel, ws: &Path, agent: &str) -> Vec<String> {
+/// The descent-id chain above the **selected** agent, outermost first — read
+/// off the §11 seat's own view (REMOTE §9.4, bl-1eb0), which folds the same
+/// `nav::convs` derivation the list itself renders. Empty for a root and for an
+/// id this snapshot has not got.
+fn ancestors(model: &AppModel) -> Vec<String> {
     model
-        .tree(ws)
-        .map(|t| crate::nav::convs::ancestors(&t.agents, agent))
+        .focused_conversation()
+        .map(|seat| seat.ancestors)
         .unwrap_or_default()
 }
 
@@ -167,7 +165,7 @@ fn visible(model: &AppModel, state: &ShellState) -> Vec<crate::nav::convs::ConvR
 
 /// The focused agent, owned — the id every unfold gesture acts on.
 fn selected(model: &AppModel) -> Option<String> {
-    model.focused_agent().map(|a| a.agent_id.clone())
+    model.focused_agent_id()
 }
 
 /// The focused workspace, owned — every selection below is made inside it,
@@ -228,9 +226,9 @@ pub(super) fn collapse_row(model: &mut AppModel, state: &mut ShellState) {
 /// generations down is caught by the same one check.
 pub(super) fn toggle_row(model: &mut AppModel, state: &mut ShellState, ws: &Path, agent: &str) {
     crate::jsonview::toggle_path(&mut state.expanded, agent);
-    let hidden = selected(model).is_some_and(|id| {
-        !state.expanded.contains(agent) && ancestors(model, ws, &id).iter().any(|a| a == agent)
-    });
+    let hidden = !state.expanded.contains(agent)
+        && selected(model).is_some()
+        && ancestors(model).iter().any(|a| a == agent);
     if hidden {
         conversation(model, state, ws, agent);
     }

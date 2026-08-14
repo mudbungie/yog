@@ -20,8 +20,7 @@
 //! [`crate::transcript`] parses them here rather than keeping a second
 //! truth about one format.
 
-use crate::git_tree::Agent;
-use crate::nav::convs::display_name_of;
+use crate::nav::convs::Titles;
 use std::path::Path;
 
 mod render;
@@ -145,9 +144,12 @@ impl InboxEntry {
 /// hand-edited deposit legible.
 ///
 /// **The sender is an agent, so it wears the §3.3 ladder — from rung one**
-/// (bl-b6d0, ruling in the ball): [`display_name_of`] over the frame's own
-/// roster, the same one function the conversation list's title, the centre
-/// header, the composer's target line and the transcript's speaker read. This
+/// (bl-b6d0, ruling in the ball): the ladder's answer over the frame's own
+/// roster — the same one function the conversation list's title, the centre
+/// header, the composer's target line and the transcript's speaker read. Since
+/// bl-1eb0 the roster it reads is [`Titles`], the id→title table, rather than
+/// the engine's agent set: a name a seat paints must be one the wire can carry
+/// it (REMOTE §9.4). This
 /// seat called [`id_floor`](crate::nav::convs::id_floor) *directly* until then
 /// — the ladder's FLOOR as if it were the ladder — so a deposit from a named
 /// peer painted its raw id in a frame where four other seats painted its name.
@@ -158,11 +160,11 @@ impl InboxEntry {
 /// foreign or deleted id alike. No branch, and nothing is stored on the deposit:
 /// the `from:` fact stays the file's, and the name is derived where it is
 /// painted, so the row and the roster cannot disagree within one frame.
-pub fn header_line(deposit: &Deposit, agents: &[Agent]) -> String {
+pub fn header_line(deposit: &Deposit, titles: &Titles) -> String {
     let from = deposit
         .sender
         .as_deref()
-        .map_or_else(|| "?".to_owned(), |id| display_name_of(agents, id));
+        .map_or_else(|| "?".to_owned(), |id| titles.name(id));
     let at = deposit.deposited_at.as_deref().unwrap_or("?");
     format!("✉ {from} · {at}")
 }

@@ -181,12 +181,11 @@ pub fn stop_enabled(selected_branch: Option<&str>, agents: &[Agent]) -> bool {
 /// Message is the resume gesture (§8.2, ARCH §2.9: no resume verb — the
 /// deposit restarts a driver). Unlike [`stop_enabled`] it is *not* gated on
 /// agent state: a Quiescent or Stopped agent is precisely what you message to
-/// continue it. Enabled iff an agent is selected, present in `agents`, and the
-/// composer text is non-blank. `false` for no selection, an id absent from the
-/// set, or whitespace-only text.
-pub fn message_enabled(selected: Option<&str>, content: &str, agents: &[Agent]) -> bool {
-    !content.trim().is_empty()
-        && selected.is_some_and(|name| agents.iter().any(|a| a.agent_id == name))
+/// continue it. Enabled iff the target is a conversation the world carries
+/// (`present` — the §11 seat's own fact since bl-1eb0, so no caller re-walks
+/// the agent set to ask) and the composer text is non-blank.
+pub fn message_enabled(present: bool, content: &str) -> bool {
+    present && !content.trim().is_empty()
 }
 
 /// Nudge fires inference on the selected conversation from the state it is
