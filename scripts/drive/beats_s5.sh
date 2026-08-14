@@ -72,7 +72,7 @@ run_s5s8() {
   # file the run actually touches on that side of the wall.
   ambient_before=$(md5of "$HOME/.local/share/yog/world/lernie/models.yaml")
 
-  read -r pid wid < <("$drive" launch "$data")
+  launch_engine "$data" ; pid=$engine_pid ; wid=$engine_wid
   sleep 2
 
   # Bind the ball with NO wire spend: `s` is §11's ▶ Start on the balls section's
@@ -111,7 +111,7 @@ run_s5s8() {
   # coordinate whose landing nothing on disk can confirm (focus is per-instance
   # RAM, §13.1) and it drifts with the minted name's width; a restart cannot miss.
   "$drive" stop "$pid" ; sleep 2
-  read -r pid wid < <("$drive" launch "$data")
+  launch_engine "$data" ; pid=$engine_pid ; wid=$engine_wid
   sleep 2
 
   # The §9.1 fixture is laid HERE, before the pane is ever opened, and the

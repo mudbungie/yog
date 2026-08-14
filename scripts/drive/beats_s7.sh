@@ -96,7 +96,7 @@ run_s7() {
   seed "$data"
   ops="$data/yog/world/state/yog/ops.jsonl"
   ui="$data/yog/world/state/yog/ui.json"
-  read -r pid wid < <("$drive" launch "$data")
+  launch_engine "$data" ; pid=$engine_pid ; wid=$engine_wid
   sleep 1
   # One live conversation — the thing every forensic surface below reads. Escape
   # then `i` is §11's deterministic "put the cursor in the composer" idiom from

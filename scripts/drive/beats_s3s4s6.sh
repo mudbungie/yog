@@ -67,7 +67,7 @@ run_s3s4s6() {
   ball=$(seed_balls "$data")
   ops="$data/yog/world/state/yog/ops.jsonl"
   ui="$data/yog/world/state/yog/ui.json"
-  read -r pid wid < <("$drive" launch "$data")
+  launch_engine "$data" ; pid=$engine_pid ; wid=$engine_wid
   sleep 2
   "$drive" shot "$wid" "$out/s3-01-ready-ball.png"
 

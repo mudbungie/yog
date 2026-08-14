@@ -61,18 +61,25 @@
 # is, so the first gesture is the one that waits — `await`, never a sleep.
 boot_headless() {
   XDG_DATA_HOME="$1" yog headless >"$2/headless.log" 2>&1 &
-  hpid=$!
+  # THIS run's engine, recorded where it is launched — the same fact
+  # `launch_engine` records for a windowed run (`gesture.sh`), and what every
+  # `gesture` below watches alongside its reply, so a headless engine that dies
+  # mid-run reddens the next gesture instead of waiting out its deadline
+  # (bl-5cf7). It has no window, so `engine_wid` stays empty.
+  engine_pid=$!
   # PAIRED WITH THE BOOT, the way `verdict` is paired with `claim_seat`: `set
   # -e` can end this file anywhere between here and the tail, and a parked
   # engine survives to hold a scratch world nobody will look at again. One
   # aborted mutation run left exactly that behind.
-  trap 'kill "$hpid" 2>/dev/null || true' EXIT
+  trap 'kill "$engine_pid" 2>/dev/null || true' EXIT
   await consumer_up "$1"
 }
-# The probe is TIMED OUT and its reply is thrown away. `yog gesture` waits for a
-# consumer with no deadline of its own, so an engine that never boots would hang
-# this run rather than redden it — and the probe's own answers must not land in
-# `gestures.jsonl`, which every assertion below reads the tail of.
+# The probe is TIMED OUT and its reply is thrown away — 2 s, its own budget,
+# because this one is asked BEFORE there is an engine to watch and the answer it
+# wants is "not yet". `yog gesture`'s own budget is 60 s (`multiplex.rs`), so
+# without this the boot probe would spend a minute per attempt learning nothing;
+# the shared `gesture` helper's deadline is `gesture.sh`'s. Its answers must also
+# not land in `gestures.jsonl`, which every assertion below reads the tail of.
 consumer_up() { timeout 2 env XDG_DATA_HOME="$1" yog gesture /workspaces >/dev/null 2>&1; }
 
 # The LAST boundary reply, read as JSON and asked a python expression over `d`.
@@ -110,13 +117,24 @@ run_headless() {
   # S14-T8 — the premise, asserted rather than assumed: an engine with no face
   # booted, consumed a deposit and answered it. Every beat below rides on it, so
   # a boot that never answered ends the run HERE with a verdict row rather than
-  # leaving the next `yog gesture` to block on a consumer that will never come.
+  # leaving every gesture below to spend its deadline on a consumer that will
+  # never come.
   boot_headless "$data" "$out" || {
     fail "S14-T8 windowless engine: a deposit is consumed and answered" "no engine in 40s"
     verdict "$out" ; return 1
   }
+  # `|| true` ON EVERY BARE FIRE BELOW, and it says something: in this file the
+  # REPLY is the verdict — each gesture is followed by the `reply_is` that judges
+  # it — so the fire's own exit is not an assertion, and under `set -eu` an
+  # unguarded one ENDS THE RUN where a beat should have gone red. That was
+  # academic while a gesture only ever failed by being refused; since bl-5cf7 it
+  # also fails when the engine dies, which is precisely when the remaining rows
+  # are worth writing: each one now reddens on its own refusal row in
+  # milliseconds and the run still reaches `verdict`. Where the exit IS the
+  # claim — the S14-T5 refusal below — it is spelled `if gesture …` and both
+  # arms are written out.
   ws="$data/yog/workspaces/$BOOTSTRAP_WS"
-  gesture "$data" /prepare --ws "$ws" --project "$proj"
+  gesture "$data" /prepare --ws "$ws" --project "$proj" || true
   reply_is 'd["ok"] and d["prepared"]["workspace"].endswith("/'"$BOOTSTRAP_WS"'") and not d["prepared"].get("binding")' \
     && pass "S14-T8 windowless engine: a deposit is consumed and answered" \
     || fail "S14-T8 windowless engine: a deposit is consumed and answered" "no prepared reply"
@@ -131,14 +149,14 @@ run_headless() {
   # that pins prose a live ball is deleting is a beat filed red. The binding is
   # what the rung is for. Bracketed by the bare `/prepare` above, whose reply
   # carries no binding at all.
-  gesture "$data" "/prepare dir $proj" --ws "$ws" --project "$proj"
+  gesture "$data" "/prepare dir $proj" --ws "$ws" --project "$proj" || true
   reply_is 'd["ok"] and d["prepared"].get("binding")=="'"$proj"'"' \
     && pass "S2-T1 path-rung: the prepared binding is the named directory" \
     || fail "S2-T1 path-rung: the prepared binding is the named directory" "binding is not the dir"
   # …and the rung's negative clause, which is why it is a rung and not a flag:
   # naming a directory is not a ball, so nothing on the balls side is spawned.
   bl_rows=$(grep -c '"bl"' "$ops" 2>/dev/null) || true
-  gesture "$data" "/prepare dir $proj" --ws "$ws" --project "$proj"
+  gesture "$data" "/prepare dir $proj" --ws "$ws" --project "$proj" || true
   [ "$(grep -c '"bl"' "$ops" 2>/dev/null || true)" = "${bl_rows:-0}" ] \
     && pass "S2-T1 path-rung: preparing a directory spawns no bl" \
     || fail "S2-T1 path-rung: preparing a directory spawns no bl" "a bl verb fired"
@@ -146,7 +164,7 @@ run_headless() {
   # Bind one ball to the workspace. The reply's stdout is the worktree `bl
   # claim` cut — READ back rather than recomputed, so the S11 beat below reads
   # the path the boundary itself named.
-  gesture "$data" "/assign $claim" --ws "$ws" --project "$proj" --as "$BOOTSTRAP_WS"
+  gesture "$data" "/assign $claim" --ws "$ws" --project "$proj" --as "$BOOTSTRAP_WS" || true
   reply_is 'd["ok"] and d["exit"]==0' \
     && pass "S13 fixture: the ball is bound to the workspace" \
     || fail "S13 fixture: the ball is bound to the workspace" "assign refused"
@@ -223,7 +241,7 @@ s11_workdiff() {
   printf 'the agent wrote this\n' > "$wt/agent-wrote-this.txt"
   git -C "$wt" add -A
   git -C "$wt" commit -qm "agent work" --no-verify
-  gesture "$data" /work-diff --ws "$ws"
+  gesture "$data" /work-diff --ws "$ws" || true
   reply_is 'd["ok"] and [r for r in d["rows"] if r["ball_id"]=="'"$claim"'"
       and r["source"]=="work/'"$claim"'" and r["target"]=="main"
       and r["source_oid"] and r["target_oid"] and r["source_oid"]!=r["target_oid"]

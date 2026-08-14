@@ -131,6 +131,12 @@ PY
 # Sourced here rather than from stories.sh because everything else this file
 # defines is reached the same way, and `beats_s5.sh` spends `wall_dir` too.
 . "$(dirname "${BASH_SOURCE[0]}")/wall.sh"
+# The §8.5 boundary transport and the engine it is aimed at — `launch_engine`,
+# `engine_alive`, `gesture` (bl-5cf7). Reached the same way and for the same
+# reason: `gesture` is a WAITING PRIMITIVE like the two above it, spent by four
+# beats files, and its deadline watches a fact (which yog is up) that every run
+# verb records at its own launch.
+. "$(dirname "${BASH_SOURCE[0]}")/gesture.sh"
 
 # --- the verdict, machine-keyable (bl-56d5) ---------------------------------
 # Every PASS/FAIL line also lands as ONE JSONL row in `$out/verdicts.jsonl`,
@@ -236,7 +242,8 @@ until_landed() {
 # `phantom`, `bare_start`) is indented and local to its beat, and those names
 # repeat legitimately. `$1` is the script directory.
 one_name_one_definition() {
-  dupes=$(grep -h '^[a-z0-9_]*() {' "$1"/harness.sh "$1"/wall.sh "$1"/stories.sh "$1"/beats_*.sh \
+  dupes=$(grep -h '^[a-z0-9_]*() {' "$1"/harness.sh "$1"/wall.sh "$1"/gesture.sh \
+      "$1"/stories.sh "$1"/beats_*.sh \
     | sed 's/() {.*//' | sort | uniq -d)
   [ -z "$dupes" ] && return 0
   echo "drive: one beat function, two definitions — the later silently wins," >&2
