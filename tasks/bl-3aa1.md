@@ -1,7 +1,7 @@
 +++
 title = "activity and inbox rows elide the informative tail of a path or agent id and keep the invariant prefix, so every row scans as the same string"
 created = 1786163347
-updated = 1786678328
+updated = 1786681762
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 QUALITY.md §1 criterion **L4** ('Ids are tamed. A machine id (ancestry chain, sha, absolute path) never dominates a row a human scans: floor to the terminal segment or middle-elide, with the full value one gesture away' — precedent bl-63a1, bl-ac3d). Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out.
@@ -56,3 +56,7 @@ Six assertions, each proved to bite by reverting the fix.
 ## Remaining
 
 Merge current main, then close. **No separate `make check`** — `bl close` runs the same gate on the tree it delivers. Always `bl -C /home/u/dev/yog close bl-3aa1 --as <you>`. Another fleet is active on this repo, so expect ref-move races: a non-zero close exit after a green gate usually means re-merge and retry; `delivered, not sealed` means a bare re-run, no lock.
+
+---
+
+Prior work on this ball is STRANDED BY THE PUBLICATION MIGRATION (bl-4f96) and does not travel to the public repository. `work/bl-3aa1` (tip 2d64a162, a merge of main over 4d05c94a; 9 files, +407/-144, including 166 lines of new tests in src/opslog/rows/tests.rs) had its delivery worktree already gone. It merges into main cleanly EXCEPT `docs/DESIGN.md` — bl-2368 rewrote that file underneath it; src/inboxview/mod.rs, src/lib.rs, src/nav/convs.rs, src/opslog/rows.rs and src/shell/acceptance/naming.rs all auto-merge. Resolving the doc is this ball's work, so the branch stays in the PRIVATE ARCHIVE repository (mudbungie/yog-private-archive, branch `work/bl-3aa1`). Claim from a fresh worktree; fetch the archive if you want the earlier attempt.
