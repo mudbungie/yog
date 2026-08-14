@@ -28,13 +28,18 @@ impl AppModel {
     pub fn line_context(&self) -> Context {
         let join = self.focused_join().cloned();
         Context {
-            workspace: self.focused_workspace().map(std::path::Path::to_path_buf),
+            // The seam (REMOTE §8, bl-f5f6): a seat's *selection* is a path,
+            // a gesture's *address* is a name — this is where the one mapping
+            // is read forwards, and the chokepoint reads it back.
+            workspace: self.focused_workspace().map(|p| self.snap.ws_name(p)),
             agent: self.focused_agent().map(|a| a.agent_id.clone()),
-            project: join.as_ref().map(|row| row.project.clone()),
+            project: join
+                .as_ref()
+                .map(|row| self.snap.project_name(&row.project)),
             name: join
                 .as_ref()
                 .map(owner_name)
-                .or_else(|| self.focused_workspace().map(crate::start::leaf_name)),
+                .or_else(|| self.focused_workspace().map(crate::naming::leaf)),
             ball: join.as_ref().and_then(|row| self.ball_spec(row)),
             // Start-flow RAM, not a derivation (§5.3): the shell adds it.
             prepared: None,

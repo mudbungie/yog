@@ -37,65 +37,31 @@ use crate::config_edit::brazen::{
 use crate::config_edit::lernie_global::LernieGlobal;
 use crate::model_pick::{BRANCH, PROVIDERS, Pick};
 use crate::world::marks;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::dispatch::Deps;
 use super::reply::Reply;
 
+/// The destination datum and its addressing — split at §12's cap (bl-f5f6).
+mod file;
+pub use file::ConfigFile;
+
 pub(crate) mod read;
 pub(crate) mod write;
+use file::located;
 use read::{branch_text, text_at};
 use write::{cadence_path, commit, editor_at, saved};
-
-/// Where one [`ApplyConfig`](super::Action::ApplyConfig) lands (§9). The
-/// destination decides the pipeline, so the gesture carries no mode flag: a
-/// brazen draft is `bz`-validated, a lernie-global one is provider-gated, and a
-/// lineage file is committed by `lernie config`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ConfigFile {
-    /// One workspace's own brazen `config.toml` (§9.1, §16.2's wall) —
-    /// validated by the linked `bz` before it lands, because `bz` is the only
-    /// lawful parser of that schema.
-    ///
-    /// **It names its workspace, exactly as [`Branch`](ConfigFile::Branch)
-    /// does** (bl-fcd5). Since the blast-radius ruling this file lives inside a
-    /// wall, so the destination is not "brazen's config" but "*this sphere's*
-    /// brazen config" — a fact the gesture must carry, because a headless seat
-    /// has no focus to derive it from and a teleoperator could otherwise not
-    /// reach provider config at all. The seat states it (`--ws`, or the
-    /// envelope's `workspace`); the window fills it from focus; a gesture that
-    /// names neither is refused where every other missing target is, at the
-    /// edge.
-    Brazen { workspace: PathBuf },
-    /// lernie's global `models.yaml` (§9.2).
-    LernieModels,
-    /// One `workflows/<name>.yaml` (§9.2). The name must be a safe single-file
-    /// basename; anything else is refused before a byte is staged.
-    LernieWorkflow { name: String },
-    /// yog's own `cadence.yaml` — the clock's periods (§7.2), on the same §9
-    /// editor discipline because the file is a file.
-    Cadence,
-    /// One file on a per-workspace config lineage (§9.3): staged, then handed
-    /// to `lernie config`, whose `$EDITOR` callback re-enters this binary and
-    /// copies it over the checkout. lernie commits; yog never writes inside a
-    /// workspace.
-    Branch {
-        workspace: PathBuf,
-        /// The lineage's bare name — `lernie config <ws> <lineage>`.
-        lineage: String,
-        /// Advance it, fork it off a source, or start a fresh orphan (§9.3).
-        origin: EditOrigin,
-        /// The checkout-relative path this text is.
-        path: String,
-    },
-}
 
 /// Run one config apply (§9). The reply says what landed: a file destination
 /// answers with the path written, a lineage with `lernie config`'s captured run
 /// — the same distinction every other action makes between a write and a spawn.
 pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Result<Reply, String> {
+    // The destination's own address, resolved once (REMOTE §8, bl-f5f6): two of
+    // the five name a wall, three name no world at all, and the three that do
+    // not never read this.
+    let ws = &located(deps, file)?;
     match file {
-        ConfigFile::Brazen { workspace } => write::brazen(deps, workspace, text),
+        ConfigFile::Brazen { .. } => write::brazen(deps, ws, text),
         ConfigFile::LernieModels => {
             write::write_file(deps, LernieGlobal::resolve(&deps.world).models(), text)
         }
@@ -107,11 +73,11 @@ pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Res
         }
         ConfigFile::Cadence => write::write_file(deps, cadence_path(&deps.world), text),
         ConfigFile::Branch {
-            workspace,
             lineage,
             origin,
             path,
-        } => commit(deps, ts, workspace, lineage, origin, path, text),
+            ..
+        } => commit(deps, ts, ws, lineage, origin, path, text),
     }
 }
 
@@ -126,8 +92,9 @@ pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Res
 /// [`Query::Lineages`](super::Query::Lineages) is the browse that says which
 /// paths a lineage holds.
 pub(super) fn read(deps: &Deps, file: &ConfigFile) -> Result<Reply, String> {
+    let ws = &located(deps, file)?;
     let text = match file {
-        ConfigFile::Brazen { workspace } => text_at(&brazen_paths(deps, workspace).config)?,
+        ConfigFile::Brazen { .. } => text_at(&brazen_paths(deps, ws).config)?,
         ConfigFile::LernieModels => text_at(&LernieGlobal::resolve(&deps.world).models())?,
         ConfigFile::LernieWorkflow { name } => text_at(
             &LernieGlobal::resolve(&deps.world)
@@ -135,12 +102,7 @@ pub(super) fn read(deps: &Deps, file: &ConfigFile) -> Result<Reply, String> {
                 .map_err(|e| e.to_string())?,
         )?,
         ConfigFile::Cadence => text_at(&cadence_path(&deps.world))?,
-        ConfigFile::Branch {
-            workspace,
-            lineage,
-            path,
-            ..
-        } => branch_text(workspace, lineage, path)?,
+        ConfigFile::Branch { lineage, path, .. } => branch_text(ws, lineage, path)?,
     };
     Ok(Reply::Config { text })
 }

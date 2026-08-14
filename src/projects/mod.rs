@@ -87,41 +87,25 @@ pub fn enumerate(clones_dir: &Path) -> Vec<Project> {
 /// left panel is a column of names, and a name this long has stopped naming.
 const LABEL_MAX: usize = 32;
 
-/// The roster label for each of `paths`, in order (§11, bl-ac3d): the shortest
-/// trailing run of components that tells a project apart from every other one
-/// enumerated — its basename wherever that is already unique — elided at
+/// The roster label for each of `paths`, in order (§11, bl-ac3d): the
+/// project's **wire name** ([`crate::naming::name_of`]) elided at
 /// [`LABEL_MAX`] characters.
 ///
-/// The label is **cosmetic**: the path is the project's identity (§5.1 #1) and
-/// stays one hover away, so two labels that elide alike cost nothing. Rendering
-/// the path itself is what sized the whole left panel to the widest project a
-/// scratch directory could name.
+/// The label is elision over the name and nothing else (bl-f5f6). It used to
+/// be a private "shortest unique tail" derivation here, and the boundary now
+/// addresses a project by exactly that rule — two copies of one rule drift, so
+/// there is one, and what the operator reads off the left panel is the word
+/// they may type at `--project`.
+///
+/// The **elision** is cosmetic and belongs here rather than in the name: the
+/// path is the project's identity (§5.1 #1) and stays one hover away, so two
+/// labels that elide alike cost nothing, while two *names* that did would cost
+/// the addressing.
 pub fn labels(paths: &[PathBuf]) -> Vec<String> {
     paths
         .iter()
-        .map(|path| elide(&shortest_unique(path, paths)))
+        .map(|path| elide(&crate::naming::name_of(paths, path)))
         .collect()
-}
-
-/// The shortest trailing suffix of `path` that no *other* path in `paths`
-/// shares, falling back to the whole path when the set holds it twice — then
-/// nothing shorter could separate them, and nothing needs to.
-fn shortest_unique(path: &Path, paths: &[PathBuf]) -> String {
-    let depth = path.components().count();
-    (1..=depth)
-        .map(|k| (suffix(path, k), k))
-        .find(|(cand, k)| paths.iter().filter(|o| &suffix(o, *k) == cand).count() == 1)
-        .map_or_else(|| suffix(path, depth), |(cand, _)| cand)
-}
-
-/// `path`'s last `k` components, rendered — the whole path when it is shorter.
-fn suffix(path: &Path, k: usize) -> String {
-    let total = path.components().count();
-    path.components()
-        .skip(total.saturating_sub(k))
-        .collect::<PathBuf>()
-        .display()
-        .to_string()
 }
 
 /// `s` capped at [`LABEL_MAX`] characters, head kept and the cut marked — the

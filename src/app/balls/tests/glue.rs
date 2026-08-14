@@ -35,7 +35,7 @@ fn the_frames_dispatch_is_the_boundary_chokepoint_with_its_own_ui() {
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Scan {
-        workspace: w.ws_cobalt.clone(),
+        workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
     };
     let Reply::Outcome(outcome) = m.dispatch(&deps, "TS", &action).unwrap() else {
         panic!("a verb answers an outcome");
@@ -57,7 +57,7 @@ fn the_retarget_exit_spawns_the_bound_lernie_verb() {
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Retarget {
-        workspace: w.ws_cobalt.clone(),
+        workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
         agent: "c-1".into(),
     };
     let Reply::Outcome(outcome) = m.dispatch(&deps, "TR", &action).unwrap() else {
@@ -85,8 +85,7 @@ fn fire_prompt_launches_detached_and_holds_the_start_claim() {
     let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let prepared = Prepared {
-        name: "cobalt".into(),
-        workspace: w.ws_cobalt.clone(),
+        workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
         binding: Some(w.ws_cobalt.clone()),
         goal: "prefill".into(),
         origin: crate::opslog::Origin::Conversation,
@@ -136,8 +135,7 @@ fn the_spend_ceiling_refuses_the_fire_and_says_so_on_the_trail() {
     let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let prepared = Prepared {
-        name: "cobalt".into(),
-        workspace: w.ws_cobalt.clone(),
+        workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
         binding: Some(w.ws_cobalt.clone()),
         goal: "prefill".into(),
         origin: crate::opslog::Origin::Conversation,
@@ -175,7 +173,7 @@ fn an_attempt_dispatches_the_ordinary_fork_and_logs_its_whole_argv() {
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Fork {
-        workspace: w.ws_cobalt.clone(),
+        workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
         parent: "c-1".into(),
         attempt: crate::fork::Attempt {
             from: "aaaa1111".into(),

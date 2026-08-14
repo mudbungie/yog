@@ -18,8 +18,7 @@ pub(super) fn receipts() -> Vec<Reply> {
             stderr: "err".into(),
         }),
         Reply::Prepared(Prepared {
-            name: "alba".into(),
-            workspace: PathBuf::from("/ws"),
+            workspace: crate::naming::leaf(&(PathBuf::from("/ws"))),
             binding: Some(PathBuf::from("/target")),
             goal: "g".into(),
             origin: Origin::Balls,

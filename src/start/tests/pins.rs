@@ -31,8 +31,11 @@ fn prompt_pins_the_bound_projects_instructions_before_the_goal() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("cobalt-gecko", &ws, Some(&target)),
-        "do it",
+        &crate::start::Fire {
+            workspace: ws.clone(),
+            prepared: prepared("cobalt-gecko", Some(&target)).clone(),
+            goal: "do it".to_owned(),
+        },
         &[],
         &super::rng(),
     )
@@ -77,8 +80,11 @@ fn an_unbound_rung_freezes_no_instructions() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("cobalt-gecko", &ws, None),
-        "do it",
+        &crate::start::Fire {
+            workspace: ws.clone(),
+            prepared: prepared("cobalt-gecko", None).clone(),
+            goal: "do it".to_owned(),
+        },
         &[],
         &super::rng(),
     )

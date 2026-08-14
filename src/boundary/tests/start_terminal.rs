@@ -90,7 +90,7 @@ fn a_prepared_reply_fires_the_next_invocations_prompt() {
         state.path(),
         &[
             "--ws".to_owned(),
-            ws.to_string_lossy().into_owned(),
+            "alba".to_owned(),
             format!("/prepare dir {}", repo.path().display()),
         ],
         "p",

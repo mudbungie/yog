@@ -81,9 +81,10 @@ fn world(ws: &Path, agents: Vec<Agent>, live: Vec<Ball>, closed: Vec<Ball>) -> S
         workspaces: vec![Workspace {
             path: ws.to_path_buf(),
             kind: WorkspaceKind::Named {
-                name: crate::start::leaf_name(ws),
+                name: crate::naming::leaf(ws),
             },
         }],
+        projects: vec![project.clone()],
         trees,
         bills: HashMap::new(),
         windows: std::collections::BTreeMap::default(),

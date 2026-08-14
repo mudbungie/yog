@@ -57,6 +57,26 @@ pub(super) fn deps_at(root: &Path, lernie: &Path, bl: &Path) -> Deps {
     }
 }
 
+/// The same deps with `workspaces` **enumerated** (REMOTE §8, bl-f5f6): a
+/// gesture addresses a sphere by NAME, and a name resolves only against the
+/// workspace set the snapshot publishes — so a fixture acting on some other
+/// sphere must publish it, exactly as the worker publishes what it found on
+/// disk. Nothing else about the deps changes.
+pub(super) fn seeing(deps: &Deps, workspaces: &[&Path]) -> Deps {
+    let mut snap = (*deps.snapshot).clone();
+    snap.workspaces
+        .extend(workspaces.iter().map(|path| crate::binding::Workspace {
+            path: (*path).to_path_buf(),
+            kind: crate::binding::WorkspaceKind::Named {
+                name: crate::naming::leaf(path),
+            },
+        }));
+    Deps {
+        snapshot: Arc::new(snap),
+        ..deps.clone()
+    }
+}
+
 /// The common case: no spawn expected, so both binaries are unspawnable.
 pub(super) fn quiet(root: &Path) -> Deps {
     deps_at(
@@ -110,7 +130,7 @@ pub(super) fn seed_wall(deps: &Deps, workspace: &Path, text: &str) {
 /// fixture writes into (bl-fcd5: the gesture carries its sphere).
 pub(super) fn brazen_file() -> ConfigFile {
     ConfigFile::Brazen {
-        workspace: crate::test_support::fixture_workspace(),
+        workspace: crate::naming::leaf(&(crate::test_support::fixture_workspace())),
     }
 }
 

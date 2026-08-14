@@ -6,7 +6,6 @@
 use super::{ctx, prepared};
 use crate::boundary::line::{Context, parse};
 use crate::start::BallSpec;
-use std::path::PathBuf;
 
 /// Assert `line`, read at `ctx`, refuses with a reason containing `needle`.
 fn refuses(line: &str, ctx: &Context, needle: &str) {
@@ -155,7 +154,7 @@ fn the_prepare_rungs_refuse_what_they_cannot_mean() {
 #[test]
 fn the_delete_gate_is_not_the_readers_business() {
     assert!(parse("/delete-workspace not-the-name", &ctx()).is_ok());
-    assert_eq!(prepared().name, "koi");
+    assert_eq!(prepared().workspace, "ws");
 }
 
 /// A flag value keeps its inner spacing collapsed — the line's own rule — and
@@ -169,7 +168,7 @@ fn a_flag_value_is_the_words_after_it() {
         crate::boundary::line::spell(&gesture),
         "/create a title --body two words here"
     );
-    assert_eq!(PathBuf::from("/proj"), ctx().project.unwrap_or_default());
+    assert_eq!("proj", ctx().project.unwrap_or_default());
 }
 
 /// **S12-T5 three-spellings** (the refusal half): every parameter the attempt

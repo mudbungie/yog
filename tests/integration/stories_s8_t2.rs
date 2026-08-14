@@ -76,8 +76,9 @@ fn s8_t2_one_world_cli_nests_every_verb_it_spawns() {
     };
     let inputs = StartInputs {
         workspace: workspace.clone(),
+        repo: Some(project.path().to_path_buf()),
         payload: Payload::Ball {
-            project: project.path().to_path_buf(),
+            project: yog::naming::leaf(project.path()),
             ball: BallSpec::Existing {
                 id: "bl-7".to_owned(),
                 title: "Wire it".to_owned(),

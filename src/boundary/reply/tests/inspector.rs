@@ -65,35 +65,35 @@ fn every_conversation_read_answers_from_the_chokepoint() {
     for (query, kind) in [
         (
             Query::Transcript {
-                workspace: address.0.clone(),
+                workspace: crate::naming::leaf(&(address.0.clone())),
                 agent: address.1.clone(),
             },
             "transcript",
         ),
         (
             Query::Steps {
-                workspace: address.0.clone(),
+                workspace: crate::naming::leaf(&(address.0.clone())),
                 agent: address.1.clone(),
             },
             "steps",
         ),
         (
             Query::Rail {
-                workspace: address.0.clone(),
+                workspace: crate::naming::leaf(&(address.0.clone())),
                 agent: address.1.clone(),
             },
             "rail",
         ),
         (
             Query::Inbox {
-                workspace: address.0.clone(),
+                workspace: crate::naming::leaf(&(address.0.clone())),
                 agent: address.1.clone(),
             },
             "inbox",
         ),
         (
             Query::Step {
-                workspace: address.0.clone(),
+                workspace: crate::naming::leaf(&(address.0.clone())),
                 agent: address.1.clone(),
                 seq: "001".to_owned(),
             },
@@ -101,7 +101,7 @@ fn every_conversation_read_answers_from_the_chokepoint() {
         ),
         (
             Query::Files {
-                workspace: address.0.clone(),
+                workspace: crate::naming::leaf(&(address.0.clone())),
                 agent: address.1.clone(),
                 path: Some("goal.md".to_owned()),
             },
@@ -128,12 +128,12 @@ fn the_chokepoint_answers_the_bytes_and_not_just_a_kind() {
     let deps = deps(snapshot(ws, "alba", vec![], vec![]));
     let ask = |query| answer(&query, &deps, &ui(), 0).expect("a read never refuses");
     let chat = encode(&ask(Query::Transcript {
-        workspace: ws.to_path_buf(),
+        workspace: crate::naming::leaf(ws),
         agent: AGENT.to_owned(),
     }));
     assert_eq!(chat["rows"][0]["body"], "go");
     let files = encode(&ask(Query::Files {
-        workspace: ws.to_path_buf(),
+        workspace: crate::naming::leaf(ws),
         agent: AGENT.to_owned(),
         path: Some("goal.md".to_owned()),
     }));
@@ -141,7 +141,7 @@ fn the_chokepoint_answers_the_bytes_and_not_just_a_kind() {
     // And the reply the GUI holds is the same value, not a second derivation.
     assert!(matches!(
         ask(Query::Files {
-            workspace: ws.to_path_buf(),
+            workspace: crate::naming::leaf(ws),
             agent: AGENT.to_owned(),
             path: None,
         }),

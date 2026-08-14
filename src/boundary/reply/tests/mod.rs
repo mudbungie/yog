@@ -41,8 +41,7 @@ fn an_outcome_reply_carries_the_captured_run_and_its_verdict() {
 #[test]
 fn the_prepared_reply_is_the_prompt_gestures_own_spelling() {
     let prepared = Prepared {
-        name: "alba".into(),
-        workspace: PathBuf::from("/ws"),
+        workspace: crate::naming::leaf(&(PathBuf::from("/ws"))),
         binding: Some(PathBuf::from("/target")),
         goal: "g".into(),
         origin: Origin::Balls,
@@ -63,33 +62,27 @@ fn the_prepared_reply_is_the_prompt_gestures_own_spelling() {
 
 #[test]
 fn workspace_rows_carry_the_classification_and_rollups() {
-    use crate::binding::{Workspace, WorkspaceKind};
+    use crate::binding::WorkspaceKind;
     let rows = vec![
         WsRow {
-            workspace: Workspace {
-                path: PathBuf::from("/n/alba"),
-                kind: WorkspaceKind::Named {
-                    name: "alba".into(),
-                },
+            workspace: "alba".into(),
+            kind: WorkspaceKind::Named {
+                name: "alba".into(),
             },
             attention: 2,
             agents: 5,
             running: true,
         },
         WsRow {
-            workspace: Workspace {
-                path: PathBuf::from("/f"),
-                kind: WorkspaceKind::Foreign,
-            },
+            workspace: "f".into(),
+            kind: WorkspaceKind::Foreign,
             attention: 0,
             agents: 0,
             running: false,
         },
         WsRow {
-            workspace: Workspace {
-                path: PathBuf::from("/r"),
-                kind: WorkspaceKind::Replay,
-            },
+            workspace: "r".into(),
+            kind: WorkspaceKind::Replay,
             attention: 0,
             agents: 1,
             running: false,
@@ -99,11 +92,17 @@ fn workspace_rows_carry_the_classification_and_rollups() {
     assert_eq!(v["kind"], "workspaces");
     let rows = v["rows"].as_array().unwrap();
     assert_eq!(rows[0]["kind"], "named");
-    assert_eq!(rows[0]["name"], "alba");
+    // The row's identity is its NAME and there is no second copy of it
+    // (REMOTE §8, bl-f5f6) — the path it used to carry is gone with it.
+    assert_eq!(rows[0]["workspace"], "alba");
+    assert!(rows[0].get("name").is_none(), "the name is the identity");
     assert_eq!(rows[0]["attention"], 2);
     assert_eq!(rows[0]["running"], true);
     assert_eq!(rows[1]["kind"], "foreign");
-    assert!(rows[1].get("name").is_none(), "no name to claim");
+    assert_eq!(
+        rows[1]["workspace"], "f",
+        "a foreign leaf names it just as well"
+    );
     assert_eq!(rows[2]["kind"], "replay");
 }
 

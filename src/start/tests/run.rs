@@ -35,15 +35,17 @@ fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
     let bl = Cli::new("/no/bl"); // no ball rung → bl never runs
     let inputs = w.inputs(crate::names::DEFAULT_NAME, Payload::Bare);
     let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
-    assert_eq!(p.name, "home", "the bootstrap names without asking (§3.1)");
+    assert_eq!(
+        p.workspace, "home",
+        "the bootstrap names without asking (§3.1)"
+    );
     assert_eq!(p.binding, None, "the bare rung binds no work target");
     assert_eq!(p.goal, "", "the operator types the bare payload");
-    assert_eq!(p.workspace, workspace_path(w.yog.path(), &p.name));
     // Substrate only, in order — no `bl` mutation.
     assert_eq!(w.verbs(), vec!["prime", "new"]);
     assert_eq!(
         w.ops()[1].argv[2],
-        p.workspace.to_string_lossy(),
+        workspace_path(w.yog.path(), &p.workspace).to_string_lossy(),
         "`lernie new` targets `<names-root>/home`"
     );
 }
@@ -84,7 +86,7 @@ fn prepare_prompt_into_existing_skips_prime_new_and_mint() {
     let bl = Cli::new("/no/bl");
     let inputs = w.inputs(name, Payload::Bare);
     let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
-    assert_eq!(p.name, name);
+    assert_eq!(p.workspace, name);
     assert!(
         w.ops().is_empty(),
         "seeded + existing → nothing spawns (S1-T1)"
@@ -144,7 +146,7 @@ fn prepare_new_ball_creates_then_converges_to_one_claim() {
     let bl = Cli::new(fake_bl(w.bin.path(), "bl-mint", &canonical));
     let lernie = w.lernie();
     let payload = Payload::Ball {
-        project: w.project.path().to_path_buf(),
+        project: crate::naming::leaf(w.project.path()),
         ball: BallSpec::New {
             title: "Fresh".to_owned(),
             body: "New body".to_owned(),
@@ -200,9 +202,12 @@ fn a_fresh_workspace_keeps_the_templates_grant_with_no_extra_commit() {
     let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
     // No `config` step: the template's grant is already complete.
     assert_eq!(w.verbs(), vec!["prime", "new"]);
-    let committed =
-        crate::config_edit::branch::config_file(&p.workspace, "config/default", "providers.yaml")
-            .unwrap();
+    let committed = crate::config_edit::branch::config_file(
+        &workspace_path(w.yog.path(), &p.workspace),
+        "config/default",
+        "providers.yaml",
+    )
+    .unwrap();
     assert_eq!(
         String::from_utf8_lossy(&committed),
         crate::test_support::TEMPLATE_PROVIDERS,

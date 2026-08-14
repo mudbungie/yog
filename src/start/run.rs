@@ -26,18 +26,22 @@ use std::path::{Path, PathBuf};
 /// `~` (§3.4). `pub`: the story fixtures assert the resolution directly.
 pub fn resolve_worktree(
     payload: &Payload,
+    repo: Option<&Path>,
     balls_state_root: &Path,
     name: &str,
     claimed: Option<PathBuf>,
 ) -> Option<PathBuf> {
-    let Payload::Ball {
-        project,
-        ball: BallSpec::Existing { id, .. },
-    } = payload
+    let (
+        Payload::Ball {
+            ball: BallSpec::Existing { id, .. },
+            ..
+        },
+        Some(repo),
+    ) = (payload, repo)
     else {
         return None;
     };
-    Some(claimed.unwrap_or_else(|| existing_worktree(balls_state_root, project, id, name)))
+    Some(claimed.unwrap_or_else(|| existing_worktree(balls_state_root, repo, id, name)))
 }
 
 /// The on-disk worktree of an already-claimed ball for the resume path (§8.1): the
@@ -63,7 +67,7 @@ fn existing_worktree(balls_state_root: &Path, project: &Path, id: &str, name: &s
 /// ends at `Create`, which re-enters here; every other plan reaches the
 /// after-loop return.
 pub fn prepare(deps: &Deps, inputs: &StartInputs, ts: &str) -> Result<Prepared, StartError> {
-    let name = super::goal::leaf_name(&inputs.workspace);
+    let name = crate::naming::leaf(&inputs.workspace);
     // The §7.3 attribution for every row this flow writes (bl-48f8): the rung's
     // own, read once from the payload. The substrate steps below name no ball
     // and no conversation, so nothing downstream could recover it from the argv.
@@ -111,7 +115,7 @@ pub fn prepare(deps: &Deps, inputs: &StartInputs, ts: &str) -> Result<Prepared, 
                     &body,
                     &name,
                 )?;
-                return prepare(deps, &with_minted(inputs, &project, id, title, body), ts);
+                return prepare(deps, &with_minted(inputs, id, title, body), ts);
             }
             Step::Claim { project, id, name } => {
                 claimed = Some(
@@ -130,22 +134,25 @@ pub fn prepare(deps: &Deps, inputs: &StartInputs, ts: &str) -> Result<Prepared, 
             Step::Prompt { .. } => {}
         }
     }
-    let worktree = resolve_worktree(&inputs.payload, &inputs.balls_state_root, &name, claimed);
+    let worktree = resolve_worktree(
+        &inputs.payload,
+        inputs.repo.as_deref(),
+        &inputs.balls_state_root,
+        &name,
+        claimed,
+    );
     Ok(compose_prepared(inputs, worktree.as_deref()))
 }
 
 /// Re-plan a new ball as its freshly-minted existing self (§8.1): the Ready,
 /// unclaimed ball whose id `bl create` just returned — the convergence.
-fn with_minted(
-    inputs: &StartInputs,
-    project: &Path,
-    id: String,
-    title: String,
-    body: String,
-) -> StartInputs {
+fn with_minted(inputs: &StartInputs, id: String, title: String, body: String) -> StartInputs {
     StartInputs {
         payload: Payload::Ball {
-            project: project.to_path_buf(),
+            // The payload keeps the project **name** it came in with (REMOTE
+            // §8); only the ball changes. `inputs.repo` is that name already
+            // located, and stays as it is.
+            project: inputs.payload.project().unwrap_or_default(),
             ball: BallSpec::Existing {
                 id,
                 title,

@@ -71,7 +71,12 @@ fn act(
     match action {
         // The §8.1 start family through the frame's doors (see the module doc).
         Action::Prepare { workspace, payload } => {
-            let prepared = model.prepare_start(lernie, bl, workspace, payload, &ts);
+            // The line's address resolved at the seat's own door (REMOTE §8):
+            // the frame's typed door takes a path, the gesture carries a name.
+            let prepared = match model.snap.ws_path(workspace) {
+                Ok(ws) => model.prepare_start(lernie, bl, &ws, payload, &ts),
+                Err(e) => Err(e),
+            };
             if let Ok(ready) = prepared.as_ref() {
                 // The prepared start takes the composer's seat (bl-6ad8), so
                 // `/prompt` — or the goal box — fires exactly what was prepared.
@@ -98,7 +103,10 @@ fn act(
             let result = model.dispatch(&deps, &ts, action);
             // The after-verb refresh the buttons make, chosen by the action's
             // own answer to which substrate it touched (§8.2).
-            match action.project() {
+            match action
+                .project()
+                .and_then(|n| model.snap.project_path(&n).ok())
+            {
                 Some(project) => model.after_bl_verb(&project),
                 None => model.after_lernie_verb(),
             }

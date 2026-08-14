@@ -13,9 +13,9 @@
 
 use super::{Address, Field};
 use crate::app::Snapshot;
+use crate::naming::leaf as leaf_name;
 use crate::projects::balls::Ball;
 use crate::projects::join::JoinState;
-use crate::start::leaf_name;
 use std::path::{Path, PathBuf};
 
 /// The goal file inside an agent's worktree (§3.3) — the conversation's

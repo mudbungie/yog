@@ -26,11 +26,15 @@ pub fn prepare(
     deps: &Deps,
     ts: &str,
     workspace: &std::path::Path,
+    repo: &std::path::Path,
     payload: &crate::start::Payload,
 ) -> Result<crate::start::Prepared, String> {
     let inputs = StartInputs {
         conversation_names: answer::names_in(&deps.snapshot, workspace),
         workspace: workspace.to_path_buf(),
+        // The payload's project name, already located by the chokepoint
+        // (REMOTE §8) — `None` for the two rungs that name none.
+        repo: payload.project().map(|_| repo.to_path_buf()),
         payload: payload.clone(),
         home: deps.home.clone(),
         yog_data_root: deps.yog_data_root.clone(),
@@ -63,11 +67,12 @@ pub fn prompt(
     deps: &Deps,
     ui: &UiState,
     ts: &str,
+    workspace: &std::path::Path,
     prepared: &crate::start::Prepared,
     goal: &str,
 ) -> Result<String, String> {
-    control::confinement_gate(&prepared.workspace)?;
-    ceiling::gate(ui, &deps.state_root, ts, prepared)?;
+    control::confinement_gate(workspace)?;
+    ceiling::gate(ui, &deps.state_root, ts, workspace, prepared.origin)?;
     // The fired loop carries the target workspace's wall (§16.2 as amended):
     // lernie hands its own environment to every tool subprocess, and a bare
     // `bz` in an agent's bash is the world's shim re-entering yog — so this one
@@ -84,19 +89,22 @@ pub fn prompt(
     let own_space = prepared.origin != crate::opslog::Origin::Balls;
     let lernie = deps
         .lernie
-        .and_env(crate::world::wall::pairs(&deps.world, &prepared.workspace))
+        .and_env(crate::world::wall::pairs(&deps.world, workspace))
         .and_env(crate::world::marks::pairs(
             &deps.world,
-            &prepared.workspace,
+            workspace,
             own_space,
         ));
     start::execute_prompt(
         &lernie,
         &deps.state_root,
         ts,
-        prepared,
-        goal,
-        &answer::names_in(&deps.snapshot, &prepared.workspace),
+        &start::Fire {
+            workspace: workspace.to_path_buf(),
+            prepared: prepared.clone(),
+            goal: goal.to_owned(),
+        },
+        &answer::names_in(&deps.snapshot, workspace),
         &SplitMix64::from_seed(deps.mint_seed),
     )
     .map_err(|e| e.to_string())

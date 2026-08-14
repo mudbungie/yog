@@ -13,8 +13,12 @@ fn the_focus_is_what_a_line_elides() {
     let (_c, mut m) = model(&w);
     m.focus_workspace(&w.ws_cobalt);
     let ctx = m.line_context();
-    assert_eq!(ctx.workspace.as_deref(), Some(w.ws_cobalt.as_path()));
-    assert_eq!(ctx.project.as_deref(), Some(w.project.as_path()));
+    // The line elides *names* now (REMOTE §8, bl-f5f6), not paths.
+    assert_eq!(ctx.workspace.as_deref(), Some("cobalt"));
+    assert_eq!(
+        ctx.project.as_deref(),
+        Some(crate::naming::leaf(&w.project).as_str())
+    );
     // The §3.2 stamp is the focused ball's claimant, exactly as the ball row's
     // buttons stamp it.
     assert_eq!(ctx.name.as_deref(), Some("cobalt"));
@@ -31,7 +35,7 @@ fn the_focus_is_what_a_line_elides() {
     assert_eq!(
         parse("/close", &ctx),
         Ok(Gesture::Act(Action::Close {
-            project: w.project.clone(),
+            project: crate::naming::leaf(&(w.project.clone())),
             id: "bl-work".to_owned(),
             name: "cobalt".to_owned(),
         }))

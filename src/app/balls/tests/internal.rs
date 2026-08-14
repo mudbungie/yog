@@ -56,7 +56,7 @@ fn start_inputs_expose_the_ball_payload_and_roots() {
     assert_eq!(id, "bl-rdy");
     assert_eq!(body, "do it");
     assert_eq!(*join, JoinState::ReadyStartable);
-    assert_eq!(project, &w.project);
+    assert_eq!(project, &crate::naming::leaf(&w.project));
     assert_eq!(cards[0].home.as_path(), w.roots.home.as_path());
     assert_eq!(
         cards[0].balls_state_root.as_path(),

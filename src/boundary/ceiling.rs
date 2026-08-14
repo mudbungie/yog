@@ -28,7 +28,6 @@
 use std::path::Path;
 
 use crate::opslog::{self, OpEntry};
-use crate::start::Prepared;
 use crate::ui_state::UiState;
 
 /// The step name a refusal's `["yog-step", …]` ops row carries (§4.2).
@@ -39,16 +38,22 @@ const STEP: &str = "ceiling";
 /// `Ok(())` is the ungated world's only answer — no `ceiling` key, no price
 /// table, or a workspace still under the number. The `Err` is the operator's
 /// refusal text, already durable on the trail when it is returned.
-pub fn gate(ui: &UiState, state_root: &Path, ts: &str, prepared: &Prepared) -> Result<(), String> {
-    let Some(refusal) = ui.ceiling().refusal(&prepared.workspace, &ui.prices()) else {
+pub fn gate(
+    ui: &UiState,
+    state_root: &Path,
+    ts: &str,
+    workspace: &Path,
+    origin: crate::opslog::Origin,
+) -> Result<(), String> {
+    let Some(refusal) = ui.ceiling().refusal(workspace, &ui.prices()) else {
         return Ok(());
     };
     let entry = OpEntry::step_failure(
         ts.to_owned(),
         STEP,
-        prepared.workspace.display().to_string(),
+        workspace.display().to_string(),
         refusal.clone(),
-        prepared.origin,
+        origin,
     );
     // Best-effort like every other trail write whose product is not the write
     // (§7.2's drift lines, §9.3's editor line): the refusal is what the caller
@@ -62,7 +67,6 @@ pub fn gate(ui: &UiState, state_root: &Path, ts: &str, prepared: &Prepared) -> R
 mod tests {
     use super::gate;
     use crate::opslog::Origin;
-    use crate::start::Prepared;
     use crate::ui_state::UiState;
     use std::path::Path;
 
@@ -87,16 +91,6 @@ mod tests {
         std::fs::write(step.join("request.json"), r#"{"model":"opus"}"#).unwrap();
     }
 
-    fn prepared(ws: &Path) -> Prepared {
-        Prepared {
-            name: "home".to_owned(),
-            workspace: ws.to_path_buf(),
-            binding: None,
-            goal: "go".to_owned(),
-            origin: Origin::Balls,
-        }
-    }
-
     /// `$1/Mtok` input, so the fixture workspace has spent exactly $3.
     const PRICED: &str = r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":2}"#;
 
@@ -105,7 +99,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         spent(dir.path());
         let ui = ui(dir.path(), r#"{"v":1,"prices":{"opus":{"input":1}}}"#);
-        assert!(gate(&ui, dir.path(), "T1", &prepared(dir.path())).is_ok());
+        assert!(gate(&ui, dir.path(), "T1", dir.path(), Origin::Balls).is_ok());
         assert!(!dir.path().join("ops.jsonl").exists(), "nothing to log");
     }
 
@@ -117,7 +111,7 @@ mod tests {
             dir.path(),
             r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":5}"#,
         );
-        assert!(gate(&ui, dir.path(), "T1", &prepared(dir.path())).is_ok());
+        assert!(gate(&ui, dir.path(), "T1", dir.path(), Origin::Balls).is_ok());
         assert!(!dir.path().join("ops.jsonl").exists());
     }
 
@@ -126,7 +120,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         spent(dir.path());
         let ui = ui(dir.path(), PRICED);
-        let refusal = gate(&ui, dir.path(), "T1", &prepared(dir.path())).unwrap_err();
+        let refusal = gate(&ui, dir.path(), "T1", dir.path(), Origin::Balls).unwrap_err();
         assert!(refusal.contains("spend ceiling reached"), "{refusal}");
         let trail = std::fs::read_to_string(dir.path().join("ops.jsonl")).unwrap();
         assert!(trail.contains("yog-step"), "{trail}");
@@ -142,6 +136,6 @@ mod tests {
         // A state root that is not a directory: the append cannot land, and the
         // refusal is still what rides back.
         let wall = dir.path().join("ui.json");
-        assert!(gate(&ui, &wall, "T1", &prepared(dir.path())).is_err());
+        assert!(gate(&ui, &wall, "T1", dir.path(), Origin::Balls).is_err());
     }
 }

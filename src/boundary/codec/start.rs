@@ -8,7 +8,6 @@ use crate::opslog::Origin;
 use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Payload, Prepared};
 use serde_json::{Map, Value, json};
-use std::path::Path;
 
 use super::{opt_path_of, path_of, str_of};
 
@@ -20,7 +19,7 @@ pub(super) fn encode_payload(payload: &Payload) -> Value {
         Payload::Path { dir } => json!({ "rung": "path", "dir": dir.to_string_lossy() }),
         Payload::Ball { project, ball } => json!({
             "rung": "ball",
-            "project": project.to_string_lossy(),
+            "project": project,
             "ball": encode_ball(ball),
         }),
     }
@@ -36,7 +35,7 @@ pub(super) fn decode_payload(v: &Value) -> Result<Payload, String> {
             dir: path_of(obj, "dir")?,
         }),
         "ball" => Ok(Payload::Ball {
-            project: path_of(obj, "project")?,
+            project: str_of(obj, "project")?,
             ball: decode_ball(obj.get("ball").ok_or("payload: missing ball")?)?,
         }),
         other => Err(format!("payload: unknown rung {other:?}")),
@@ -77,8 +76,7 @@ fn decode_ball(v: &Value) -> Result<BallSpec, String> {
 /// one spelling, so a reply deposits back verbatim as the next gesture.
 pub(crate) fn encode_prepared(p: &Prepared) -> Value {
     json!({
-        "name": p.name,
-        "workspace": p.workspace.to_string_lossy(),
+        "workspace": p.workspace,
         // The §3.3 typed binding (bl-6654). `null` is the bare rung's "bind
         // nothing" — a real value of the field, not an omission, so a reply
         // deposits back as the same gesture it came from.
@@ -91,8 +89,7 @@ pub(crate) fn encode_prepared(p: &Prepared) -> Value {
 pub(crate) fn decode_prepared(v: &Value) -> Result<Prepared, String> {
     let obj = v.as_object().ok_or("prepared: not an object")?;
     Ok(Prepared {
-        name: str_of(obj, "name")?,
-        workspace: path_of(obj, "workspace")?,
+        workspace: str_of(obj, "workspace")?,
         binding: opt_path_of(obj, "binding")?,
         goal: str_of(obj, "goal")?,
         origin: parse_origin(&str_of(obj, "origin")?)?,
@@ -141,12 +138,6 @@ pub(crate) fn parse_origin(token: &str) -> Result<Origin, String> {
         "world" => Ok(Origin::World),
         other => Err(format!("unknown origin {other:?}")),
     }
-}
-
-/// A `PathBuf` field's one JSON spelling (lossy UTF-8 both ways — paths cross
-/// the boundary as text, exactly as they cross `ops.jsonl`).
-pub(super) fn encode_path(p: &Path) -> Value {
-    Value::String(p.to_string_lossy().into_owned())
 }
 
 /// An optional string field on the way OUT: present encodes, absent stays

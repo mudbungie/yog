@@ -36,7 +36,6 @@
 //! is whitespace-normalized: a line is a line.
 
 use crate::start::{BallSpec, Prepared};
-use std::path::PathBuf;
 
 mod args;
 mod config;
@@ -63,12 +62,16 @@ pub use verbs::ANSWER_USAGE;
 /// (argv, a fresh TUI) hands [`Context::default`] and spells its targets out.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Context {
-    /// The focused workspace (§3.1) — the lernie family's target.
-    pub workspace: Option<PathBuf>,
+    /// The focused workspace's **name** (§3.1) — the lernie family's target.
+    /// A name, not a path, because a line is a wire spelling like any other
+    /// (REMOTE §8, bl-f5f6): the seat that fills this from a focus spells the
+    /// name (`Snapshot::ws_name`), and the engine resolves it at the chokepoint.
+    pub workspace: Option<String>,
     /// The selected conversation's agent id (§11) — message/stop's target.
     pub agent: Option<String>,
-    /// The focused project (§3.5) — the `bl` family's repo.
-    pub project: Option<PathBuf>,
+    /// The focused project's **name** (§3.5, REMOTE §8) — the `bl` family's
+    /// repo, addressed the way every other gesture addresses one.
+    pub project: Option<String>,
     /// The `--as` stamp every `bl` verb carries (§3.2): the ball's bound
     /// workspace name, never the operator's `$USER`.
     pub name: Option<String>,

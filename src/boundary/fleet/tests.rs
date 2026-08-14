@@ -20,12 +20,12 @@ fn deps(state_root: &Path) -> Deps {
         balls_state_root: PathBuf::from("/balls"),
         yog_binary: PathBuf::from("/no/such/yog"),
         world: crate::xdg::Env::from_env(),
-        snapshot: Arc::new(snapshot(
-            Path::new("/names/alba"),
-            "alba",
-            Vec::new(),
-            Vec::new(),
-        )),
+        snapshot: Arc::new({
+            let mut snap = snapshot(Path::new("/names/alba"), "alba", Vec::new(), Vec::new());
+            // The set an arm's project name resolves over (REMOTE §8).
+            snap.projects = vec![PathBuf::from("/dev/yog")];
+            snap
+        }),
         mint_seed: 7,
     }
 }
@@ -36,8 +36,8 @@ fn settings(state_root: &Path) -> String {
 
 fn arm_verb(ws: &Path, cap: usize) -> Verb {
     Verb::Arm {
-        workspace: ws.to_path_buf(),
-        project: PathBuf::from("/dev/yog"),
+        workspace: crate::naming::leaf(ws),
+        project: crate::naming::leaf(&(PathBuf::from("/dev/yog"))),
         cap,
     }
 }
@@ -47,7 +47,7 @@ fn arming_writes_the_entry_and_logs_itself() {
     let root = tempdir().expect("tempdir");
     let ws = Path::new("/names/alba");
     let deps = deps(&root.path().join("state"));
-    let armed = dispatch(&deps, "1", &arm_verb(ws, 3));
+    let armed = dispatch(&deps, "1", ws, &arm_verb(ws, 3));
     assert_eq!(armed.expect("armed"), Reply::Armed { armed: true });
     let policy = arming::policy(&settings(&deps.state_root), &crate::nav::ws_key(ws))
         .expect("the entry is the arming");
@@ -70,12 +70,13 @@ fn disarming_removes_the_entry_and_logs_its_own_step() {
     let root = tempdir().expect("tempdir");
     let ws = Path::new("/names/alba");
     let deps = deps(&root.path().join("state"));
-    dispatch(&deps, "1", &arm_verb(ws, 2)).expect("armed");
+    dispatch(&deps, "1", ws, &arm_verb(ws, 2)).expect("armed");
     let off = dispatch(
         &deps,
         "2",
+        ws,
         &Verb::Disarm {
-            workspace: ws.to_path_buf(),
+            workspace: crate::naming::leaf(ws),
         },
     );
     assert_eq!(off.expect("disarmed"), Reply::Armed { armed: false });
@@ -101,7 +102,13 @@ fn arming_leaves_the_clocks_own_entry_byte_for_byte() {
     )
     .expect("seed");
     let deps = deps(&state);
-    dispatch(&deps, "1", &arm_verb(Path::new("/names/alba"), 1)).expect("armed");
+    dispatch(
+        &deps,
+        "1",
+        Path::new("/names/alba"),
+        &arm_verb(Path::new("/names/alba"), 1),
+    )
+    .expect("armed");
     let text = settings(&state);
     assert_eq!(
         crate::app::cadence::parse(&text),
@@ -118,7 +125,12 @@ fn an_inline_block_refuses_rather_than_rewriting_the_file() {
     let before = "fleet: {}\n";
     std::fs::write(state.join(crate::app::cadence::CADENCE_YAML), before).expect("seed");
     let deps = deps(&state);
-    let refused = dispatch(&deps, "1", &arm_verb(Path::new("/names/alba"), 1));
+    let refused = dispatch(
+        &deps,
+        "1",
+        Path::new("/names/alba"),
+        &arm_verb(Path::new("/names/alba"), 1),
+    );
     assert!(
         refused.is_err(),
         "an inline block is a refusal, not a rewrite"

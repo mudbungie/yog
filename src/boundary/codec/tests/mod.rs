@@ -32,40 +32,40 @@ pub(super) fn p(s: &str) -> PathBuf {
 #[test]
 fn every_action_variant_round_trips() {
     rt(Gesture::Act(Action::Message {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         agent: "c-1".into(),
         content: "hi there".into(),
     }));
     rt(Gesture::Act(Action::Stop {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         agent: "c-1".into(),
         children: true,
     }));
     rt(Gesture::Act(Action::Scan {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
     }));
     rt(Gesture::Act(Action::Nudge {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         agent: "c-1".into(),
     }));
     rt(Gesture::Act(Action::DeleteWorkspace {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         typed: "alba".into(),
     }));
     rt(Gesture::Act(Action::DeleteAgent {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         agent: "c-1".into(),
         typed: "the goal name".into(),
     }));
     rt(Gesture::Act(Action::Monitor(Verb::Arm {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         model: "claude-haiku-4-5".into(),
     })));
     rt(Gesture::Act(Action::Monitor(Verb::Disarm {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
     })));
     rt(Gesture::Act(Action::Monitor(Verb::Flag {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         agent: "c-1".into(),
         reason: "it is rewriting an unrelated crate".into(),
     })));
@@ -77,14 +77,14 @@ fn every_action_variant_round_trips() {
         crate::control::judge::Ruling::Refuse,
     ] {
         rt(Gesture::Act(Action::AnswerHold {
-            workspace: p("/ws"),
+            workspace: "ws".into(),
             agent: "c-1".into(),
             ruling,
         }));
     }
     rt(Gesture::Act(Action::Ack));
     rt(Gesture::Act(Action::MarkSeen {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         agent: "c-1".into(),
     }));
     rt(Gesture::Act(Action::ClearTrail));
@@ -96,40 +96,40 @@ fn every_action_variant_round_trips() {
 #[test]
 fn every_ball_action_variant_round_trips() {
     rt(Gesture::Act(Action::Close {
-        project: p("/proj"),
+        project: "proj".into(),
         id: "bl-1".into(),
         name: "alba".into(),
     }));
     rt(Gesture::Act(Action::Assign {
-        project: p("/proj"),
+        project: "proj".into(),
         id: "bl-1".into(),
         name: "alba".into(),
     }));
     rt(Gesture::Act(Action::Release {
-        project: p("/proj"),
+        project: "proj".into(),
         id: "bl-1".into(),
         name: "alba".into(),
     }));
     rt(Gesture::Act(Action::Move {
-        project: p("/proj"),
+        project: "proj".into(),
         id: "bl-1".into(),
         from: "alba".into(),
         to: "koi".into(),
     }));
     rt(Gesture::Act(Action::Create {
-        project: p("/proj"),
+        project: "proj".into(),
         title: "a title".into(),
         name: "alba".into(),
         body: Some("the body".into()),
     }));
     rt(Gesture::Act(Action::Create {
-        project: p("/proj"),
+        project: "proj".into(),
         title: "a title".into(),
         name: "alba".into(),
         body: None,
     }));
     rt(Gesture::Act(Action::Update {
-        project: p("/proj"),
+        project: "proj".into(),
         id: "bl-1".into(),
         name: "alba".into(),
         title: Some("t".into()),
@@ -137,7 +137,7 @@ fn every_ball_action_variant_round_trips() {
         note: Some("n".into()),
     }));
     rt(Gesture::Act(Action::Update {
-        project: p("/proj"),
+        project: "proj".into(),
         id: "bl-1".into(),
         name: "alba".into(),
         title: None,
@@ -152,7 +152,7 @@ fn every_payload_rung_round_trips_inside_prepare() {
         Payload::Bare,
         Payload::Path { dir: p("/work") },
         Payload::Ball {
-            project: p("/proj"),
+            project: "proj".into(),
             ball: BallSpec::New {
                 title: "t".into(),
                 body: "b".into(),
@@ -160,7 +160,7 @@ fn every_payload_rung_round_trips_inside_prepare() {
         },
     ] {
         rt(Gesture::Act(Action::Prepare {
-            workspace: p("/ws"),
+            workspace: "ws".into(),
             payload,
         }));
     }
@@ -178,9 +178,9 @@ fn every_join_state_round_trips_inside_an_existing_ball() {
         JoinState::OrphanedProject,
     ] {
         rt(Gesture::Act(Action::Prepare {
-            workspace: p("/ws"),
+            workspace: "ws".into(),
             payload: Payload::Ball {
-                project: p("/proj"),
+                project: "proj".into(),
                 ball: BallSpec::Existing {
                     id: "bl-9".into(),
                     title: "t".into(),
@@ -202,8 +202,7 @@ fn every_origin_round_trips_inside_a_prompt() {
         for binding in [None, Some(p("/target"))] {
             rt(Gesture::Act(Action::Prompt {
                 prepared: Prepared {
-                    name: "alba".into(),
-                    workspace: p("/ws"),
+                    workspace: "ws".into(),
                     binding,
                     goal: "the goal".into(),
                     origin,
@@ -217,12 +216,12 @@ fn every_origin_round_trips_inside_a_prompt() {
 #[test]
 fn a_stop_without_the_children_field_defaults_to_false() {
     let decoded = decode(&serde_json::json!({
-        "op": "stop", "workspace": "/ws", "agent": "c-1"
+        "op": "stop", "workspace": "ws", "agent": "c-1"
     }));
     assert_eq!(
         decoded,
         Ok(Gesture::Act(Action::Stop {
-            workspace: p("/ws"),
+            workspace: "ws".into(),
             agent: "c-1".into(),
             children: false,
         }))

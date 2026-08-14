@@ -21,7 +21,11 @@ use yog::opslog::{self, DETACHED_EXIT};
 use yog::start::{Payload, Prepared};
 use yog::ui_state::UiState;
 
-fn deps(lernie: &Cli, state_root: &Path) -> Deps {
+/// `workspaces` is the enumerated set a gesture's workspace NAME resolves
+/// against (REMOTE §8, bl-f5f6) — the wire carries no paths, so a fixture that
+/// acts on a sphere must publish it exactly as the worker publishes what it
+/// found on disk.
+fn deps(lernie: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
     Deps {
         lernie: lernie.clone(),
         bl: Cli::new("/no/bl"),
@@ -34,7 +38,16 @@ fn deps(lernie: &Cli, state_root: &Path) -> Deps {
         snapshot: Arc::new(Snapshot {
             bills: HashMap::default(),
             windows: std::collections::BTreeMap::default(),
-            workspaces: vec![],
+            workspaces: workspaces
+                .iter()
+                .map(|path| yog::binding::Workspace {
+                    path: (*path).to_path_buf(),
+                    kind: yog::binding::WorkspaceKind::Named {
+                        name: yog::naming::leaf(path),
+                    },
+                })
+                .collect(),
+            projects: vec![],
             trees: HashMap::new(),
             balls_by_project: HashMap::new(),
             closed_by_project: HashMap::new(),
@@ -52,8 +65,7 @@ fn deps(lernie: &Cli, state_root: &Path) -> Deps {
 
 fn prepared(ws: &Path, cwd: &Path) -> Prepared {
     Prepared {
-        name: "alba".into(),
-        workspace: ws.to_path_buf(),
+        workspace: yog::naming::leaf(ws),
         binding: Some(cwd.to_path_buf()),
         goal: "prefill".into(),
         origin: yog::opslog::Origin::Conversation,
@@ -67,7 +79,7 @@ fn the_prompt_action_fires_detached_and_returns_the_minted_name() {
     let ws = tempdir().unwrap();
     let rec = Recorder::new(bin.path(), "lernie");
     let lernie = Cli::new(rec.path());
-    let d = deps(&lernie, state.path());
+    let d = deps(&lernie, state.path(), &[ws.path()]);
 
     let action = Action::Prompt {
         prepared: prepared(ws.path(), ws.path()),
@@ -113,7 +125,7 @@ fn a_fork_that_never_lands_is_a_refusal_with_its_synthetic_row() {
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
     let lernie = Cli::new("/no/such/lernie");
-    let d = deps(&lernie, state.path());
+    let d = deps(&lernie, state.path(), &[ws.path()]);
     let action = Action::Prompt {
         prepared: prepared(ws.path(), ws.path()),
         goal: "g".into(),
@@ -138,9 +150,9 @@ fn a_prepare_that_cannot_seed_refuses_through_the_dispatch_arm() {
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
     let lernie = Cli::new("/no/such/lernie");
-    let d = deps(&lernie, state.path());
+    let d = deps(&lernie, state.path(), &[ws.path()]);
     let action = Action::Prepare {
-        workspace: ws.path().to_path_buf(),
+        workspace: yog::naming::leaf(ws.path()),
         payload: Payload::Bare,
     };
     let err = dispatch(

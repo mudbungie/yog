@@ -29,15 +29,16 @@ const DISARM_STEP: &str = "disarm-monitor";
 
 /// The family's one door (§8.5): the chokepoint hands the whole [`Verb`] here
 /// and this decides nothing but which of the two bodies below runs it.
-pub(super) fn dispatch(deps: &Deps, ts: &str, verb: &Verb) -> Result<Reply, String> {
+pub(super) fn dispatch(
+    deps: &Deps,
+    ts: &str,
+    workspace: &Path,
+    verb: &Verb,
+) -> Result<Reply, String> {
     match verb {
-        Verb::Arm { workspace, model } => arm(deps, ts, workspace, Some(model)),
-        Verb::Disarm { workspace } => arm(deps, ts, workspace, None),
-        Verb::Flag {
-            workspace,
-            agent,
-            reason,
-        } => flag(deps, ts, workspace, agent, reason),
+        Verb::Arm { model, .. } => arm(deps, ts, workspace, Some(model)),
+        Verb::Disarm { .. } => arm(deps, ts, workspace, None),
+        Verb::Flag { agent, reason, .. } => flag(deps, ts, workspace, agent, reason),
     }
 }
 

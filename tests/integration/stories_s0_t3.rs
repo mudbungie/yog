@@ -29,6 +29,7 @@ fn s0_t3_a_failed_prime_aborts_before_any_further_spawn() {
     };
     let inputs = StartInputs {
         workspace: workspace_path(yog.path(), DEFAULT_NAME),
+        repo: None,
         payload: Payload::Bare,
         home: home.path().to_path_buf(),
         yog_data_root: yog.path().to_path_buf(),

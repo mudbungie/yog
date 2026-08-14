@@ -18,7 +18,7 @@
 //! the window reads.
 
 use crate::actions::verbs::Outcome;
-use crate::binding::Workspace;
+use crate::binding::WorkspaceKind;
 use crate::board::Board;
 use crate::nav::convs::ConvRow;
 use crate::opslog::OpRow;
@@ -52,9 +52,18 @@ pub use encode::{encode, refusal};
 
 /// One workspace row (§3.1 classification + the §6 rollups the tab bar shows):
 /// the [`Query::Workspaces`](super::Query::Workspaces) answer's element.
+///
+/// **It names the workspace, it does not locate it** (REMOTE §8, bl-f5f6). It
+/// carried the whole [`Workspace`] — path and all — and a path is meaningless
+/// on a thin client and a disclosure besides. §3.1 makes the leaf the name, so
+/// the `name` this row used to carry *beside* the path became the row's whole
+/// identity and the path went.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WsRow {
-    pub workspace: Workspace,
+    /// The workspace's name (§3.1) — the token every gesture addresses it by.
+    pub workspace: String,
+    /// How §3.1 classifies it: yog's own, lernie's, or a read-only replay.
+    pub kind: WorkspaceKind,
     /// Attention-bearing agents in it (§6).
     pub attention: usize,
     /// Root-and-member agent count.

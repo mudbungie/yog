@@ -94,8 +94,7 @@ fn enter_on_a_blank_start_draft_fires_nothing_and_keeps_the_draft() {
     screen.release(&mut world);
     let ws = world.ws.clone();
     world.state.start.pending = Some(Prepared {
-        name: "ws".to_owned(),
-        workspace: ws.clone(),
+        workspace: crate::naming::leaf(&ws),
         binding: None,
         goal: "  \n\t ".to_owned(),
         origin: crate::opslog::Origin::Conversation,

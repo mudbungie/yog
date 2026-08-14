@@ -18,9 +18,9 @@ mod refusals;
 /// the facts the composer holds when its Enter fires.
 pub(super) fn ctx() -> Context {
     Context {
-        workspace: Some(PathBuf::from("/ws")),
+        workspace: Some("ws".to_owned()),
         agent: Some("c-1".to_owned()),
-        project: Some(PathBuf::from("/proj")),
+        project: Some("proj".to_owned()),
         name: Some("alba".to_owned()),
         ball: Some(existing()),
         prepared: Some(prepared()),
@@ -38,8 +38,7 @@ pub(super) fn existing() -> BallSpec {
 
 pub(super) fn prepared() -> Prepared {
     Prepared {
-        name: "koi".to_owned(),
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         binding: Some(PathBuf::from("/ws/work")),
         goal: String::new(),
         origin: Origin::Conversation,
@@ -83,14 +82,14 @@ fn the_table_and_the_reader_name_the_same_verbs() {
 #[test]
 fn the_seat_supplies_what_the_line_elides() {
     let elsewhere = Context {
-        workspace: Some(PathBuf::from("/other")),
+        workspace: Some("other".to_owned()),
         agent: Some("c-9".to_owned()),
         ..ctx()
     };
     assert_eq!(
         parse("/message ship it", &elsewhere),
         Ok(Gesture::Act(Action::Message {
-            workspace: PathBuf::from("/other"),
+            workspace: "other".to_owned(),
             agent: "c-9".to_owned(),
             content: "ship it".to_owned(),
         }))
@@ -138,7 +137,7 @@ fn a_ball_verb_defaults_to_the_focused_ball() {
     assert_eq!(
         parse("/close", &ctx()),
         Ok(Gesture::Act(Action::Close {
-            project: PathBuf::from("/proj"),
+            project: "proj".to_owned(),
             id: "bl-1".to_owned(),
             name: "alba".to_owned(),
         }))
@@ -146,7 +145,7 @@ fn a_ball_verb_defaults_to_the_focused_ball() {
     assert_eq!(
         parse("/move koi", &ctx()),
         Ok(Gesture::Act(Action::Move {
-            project: PathBuf::from("/proj"),
+            project: "proj".to_owned(),
             id: "bl-1".to_owned(),
             from: "alba".to_owned(),
             to: "koi".to_owned(),
@@ -155,7 +154,7 @@ fn a_ball_verb_defaults_to_the_focused_ball() {
     assert_eq!(
         parse("/update --note ping", &ctx()),
         Ok(Gesture::Act(Action::Update {
-            project: PathBuf::from("/proj"),
+            project: "proj".to_owned(),
             id: "bl-1".to_owned(),
             name: "alba".to_owned(),
             title: None,

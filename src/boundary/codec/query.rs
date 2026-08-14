@@ -18,8 +18,8 @@
 use serde_json::{Map, Value, json};
 
 use super::fields::opt_str_of;
-use super::start::{encode_path, opt_field};
-use super::{obj, path_of, str_of, usize_of};
+use super::start::opt_field;
+use super::{obj, str_of, usize_of};
 use crate::boundary::Query;
 
 /// The §11 inspector family's own spelling (bl-6233) — the six queries
@@ -31,12 +31,12 @@ pub(super) fn encode(query: &Query) -> Value {
     match query {
         Query::Workspaces => json!({ "op": "workspaces" }),
         Query::Conversations { workspace } => {
-            json!({ "op": "conversations", "workspace": encode_path(workspace) })
+            json!({ "op": "conversations", "workspace": workspace })
         }
         Query::Balls => json!({ "op": "balls" }),
         Query::WorkDiff { workspace, file } => {
             let mut map = obj(&[("op", "work-diff")]);
-            map.insert("workspace".to_owned(), encode_path(workspace));
+            map.insert("workspace".to_owned(), json!(workspace));
             if let Some(file) = file {
                 map.insert(
                     "file".to_owned(),
@@ -77,19 +77,19 @@ pub(super) fn encode(query: &Query) -> Value {
             json!({ "op": "config", "target": super::config::encode_file(file) })
         }
         Query::Marks { workspace } => {
-            json!({ "op": "marks", "workspace": encode_path(workspace) })
+            json!({ "op": "marks", "workspace": workspace })
         }
         Query::Providers { workspace } => {
-            json!({ "op": "providers", "workspace": encode_path(workspace) })
+            json!({ "op": "providers", "workspace": workspace })
         }
         Query::Lineages { workspace } => {
-            json!({ "op": "lineages", "workspace": encode_path(workspace) })
+            json!({ "op": "lineages", "workspace": workspace })
         }
         Query::Models {
             workspace,
             provider,
         } => {
-            json!({ "op": "models", "workspace": encode_path(workspace),
+            json!({ "op": "models", "workspace": workspace,
                     "provider": provider })
         }
     }
@@ -117,11 +117,11 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
     Ok(Some(match op {
         "workspaces" => Query::Workspaces,
         "conversations" => Query::Conversations {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
         },
         "balls" => Query::Balls,
         "work-diff" => Query::WorkDiff {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             file: work_file(o)?,
         },
         "board" => Query::Board,
@@ -148,19 +148,19 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
             file: super::config::decode_file(o.get("target").ok_or("config: missing target")?)?,
         },
         "marks" if !o.contains_key("branch") => Query::Marks {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
         },
         "providers" => Query::Providers {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
         },
         "lineages" => Query::Lineages {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
         },
         // The provider is required, with no default: a roster is a question
         // *about* one row, and guessing the row would answer about another
         // provider's models entirely.
         "models" => Query::Models {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             provider: str_of(o, "provider")?,
         },
         _ => return Ok(None),

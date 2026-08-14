@@ -25,8 +25,9 @@ fn inv3_plan_rederives_the_shrinking_remainder() {
     let (yog, balls, project) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let plan_inputs = |join| StartInputs {
         workspace: workspace_path(yog.path(), NAME),
+        repo: Some(project.path().to_path_buf()),
         payload: Payload::Ball {
-            project: project.path().to_path_buf(),
+            project: yog::naming::leaf(project.path()),
             ball: BallSpec::Existing {
                 id: "bl-9".to_owned(),
                 title: "T".to_owned(),
@@ -83,8 +84,9 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
     };
     let inputs = |join| StartInputs {
         workspace: workspace_path(yog.path(), NAME),
+        repo: Some(project.path().to_path_buf()),
         payload: Payload::Ball {
-            project: project.path().to_path_buf(),
+            project: yog::naming::leaf(project.path()),
             ball: BallSpec::Existing {
                 id: id.to_owned(),
                 title: "Wire".to_owned(),

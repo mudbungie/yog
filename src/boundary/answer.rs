@@ -50,11 +50,18 @@ pub use confirm::{agent_confirmation_of, confirmation_of};
 /// reason: the three config reads can fail exactly as their writes can.
 pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result<Reply, String> {
     let snap = &deps.snapshot;
+    // **The one resolution** (REMOTE §8, bl-f5f6). Every read that names a
+    // workspace names it by *name*; this turns that name into the path the
+    // derivations below read, once, ahead of the table — never once per arm.
+    // A query that names no workspace resolves to nothing and no arm reads it:
+    // the general path with no input, not a case of its own.
+    let ws: &std::path::Path = &match query.workspace() {
+        Some(name) => snap.ws_path(&name)?,
+        None => std::path::PathBuf::new(),
+    };
     Ok(match query {
         Query::Workspaces => Reply::Workspaces(ws_rows(snap, ui)),
-        Query::Conversations { workspace } => {
-            Reply::Conversations(conversations(snap, ui, workspace, now_unix))
-        }
+        Query::Conversations { .. } => Reply::Conversations(conversations(snap, ui, ws, now_unix)),
         Query::Balls => Reply::Balls(snap.join_rows.clone()),
         // The V4 board — the same snapshot, one altitude up. The window's
         // `AppModel::board` is this same call (§8.5's parity discipline).
@@ -79,8 +86,8 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // balls this workspace claims, the project repos say what changed.
         // Answered straight through for the same reason search is — every
         // seat reaching here is already off-frame.
-        Query::WorkDiff { workspace, file } => {
-            let attempts = crate::workdiff::read(snap, workspace);
+        Query::WorkDiff { file, .. } => {
+            let attempts = crate::workdiff::read(snap, ws);
             let patch = file
                 .as_ref()
                 .and_then(|f| crate::workdiff::patch(&attempts, f));
@@ -91,31 +98,21 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // so no seat but the window could read a chat. World-bytes queries
         // like the two above, answered straight through for the same reason,
         // over the derivations in [`inspector`] the frame delegates to.
-        Query::Transcript { workspace, agent } => {
-            Reply::Transcript(inspector::transcript(snap, workspace, agent))
+        Query::Transcript { agent, .. } => {
+            Reply::Transcript(inspector::transcript(snap, ws, agent))
         }
-        Query::Steps { workspace, agent } => Reply::Steps(inspector::steps(snap, workspace, agent)),
-        Query::Step {
-            workspace,
-            agent,
-            seq,
-        } => Reply::Step(crate::steps_view::detail(workspace, agent, seq)),
-        Query::Files {
-            workspace,
-            agent,
-            path,
-        } => {
-            let (view, preview) = inspector::files(workspace, agent, path.as_deref());
+        Query::Steps { agent, .. } => Reply::Steps(inspector::steps(snap, ws, agent)),
+        Query::Step { agent, seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
+        Query::Files { agent, path, .. } => {
+            let (view, preview) = inspector::files(ws, agent, path.as_deref());
             Reply::Files { view, preview }
         }
-        Query::Rail { workspace, agent } => {
-            let steps = inspector::steps(snap, workspace, agent);
-            let tx = inspector::transcript(snap, workspace, agent);
-            Reply::Rail(inspector::rail(snap, workspace, agent, &steps, &tx))
+        Query::Rail { agent, .. } => {
+            let steps = inspector::steps(snap, ws, agent);
+            let tx = inspector::transcript(snap, ws, agent);
+            Reply::Rail(inspector::rail(snap, ws, agent, &steps, &tx))
         }
-        Query::Inbox { workspace, agent } => {
-            Reply::Inbox(crate::inboxview::list_inbox(workspace, agent))
-        }
+        Query::Inbox { agent, .. } => Reply::Inbox(crate::inboxview::list_inbox(ws, agent)),
         Query::Ops { max } => {
             let skip = snap.ops.len().saturating_sub(*max);
             Reply::Ops(snap.ops.iter().skip(skip).cloned().collect())
@@ -123,17 +120,14 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // The §9 config family's reads (§8.5, bl-0164): asked of the world at
         // the moment they are asked, exactly as the writes beside them are.
         Query::ReadConfig { file } => return config::read(deps, file),
-        Query::Marks { workspace } => return Ok(config::read_marks(deps, workspace)),
-        Query::Providers { workspace } => config::providers(deps, workspace),
+        Query::Marks { .. } => return Ok(config::read_marks(deps, ws)),
+        Query::Providers { .. } => config::providers(deps, ws),
         // The §9.3 browse and the §9.4 roster (bl-dff8), on the same terms as
         // the three above: asked of the world — this workspace's git, this
         // wall's brazen — at the moment they are asked, and answered straight
         // through because every seat here is already off-frame.
-        Query::Lineages { workspace } => return config::lineages(workspace),
-        Query::Models {
-            workspace,
-            provider,
-        } => return config::models(deps, workspace, provider),
+        Query::Lineages { .. } => return config::lineages(ws),
+        Query::Models { provider, .. } => return config::models(deps, ws, provider),
     })
 }
 
@@ -222,7 +216,8 @@ pub fn ws_rows(snap: &Snapshot, ui: &UiState) -> Vec<WsRow> {
         .map(|w| {
             let (attention, agents, running) = workspace_stats(snap, ui, &w.path);
             WsRow {
-                workspace: w.clone(),
+                workspace: crate::naming::leaf(&w.path),
+                kind: w.kind.clone(),
                 attention,
                 agents,
                 running,

@@ -44,8 +44,9 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
     };
     let inputs = StartInputs {
         workspace: workspace_path(yog.path(), "cobalt-gecko"),
+        repo: Some(project.path().to_path_buf()),
         payload: Payload::Ball {
-            project: project.path().to_path_buf(),
+            project: yog::naming::leaf(project.path()),
             ball: BallSpec::Existing {
                 id: "bl-8".to_owned(),
                 title: "Ongoing".to_owned(),
@@ -61,7 +62,7 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
 
     let prepared = start::prepare(&deps, &inputs, "T0").unwrap();
     assert_eq!(
-        prepared.name, "cobalt-gecko",
+        prepared.workspace, "cobalt-gecko",
         "no mint — the claimant workspace"
     );
     assert_eq!(
@@ -78,8 +79,11 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
         &deps.lernie,
         state.path(),
         "T0",
-        &prepared,
-        &prepared.goal,
+        &start::Fire {
+            workspace: workspace_path(yog.path(), "cobalt-gecko").clone(),
+            prepared: prepared.clone(),
+            goal: prepared.goal.clone(),
+        },
         &[],
         &SplitMix64::from_seed(1),
     )

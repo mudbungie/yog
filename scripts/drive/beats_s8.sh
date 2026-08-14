@@ -44,7 +44,7 @@ s8_marks() {
   #
   # A bare `/marks` reads and changes nothing; balls' default answers a space
   # nothing has been written into.
-  gesture "$data" "/marks" --ws "$ws" \
+  gesture "$data" "/marks" --ws "$(basename "$ws")" \
     && grep -q '"branch":"balls/tasks"' "$out/gestures.jsonl" \
     && pass "S8-T4 marks: a bare line reads balls' default branch" \
     || fail "S8-T4 marks: a bare line reads balls' default branch" "no branch in the reply"
@@ -56,7 +56,7 @@ s8_marks() {
   "$drive" shot "$wid" "$out/s8-01-marks-read.png"
 
   # The amendment: one word, and it is the branch.
-  gesture "$data" "/marks balls/agents/drive" --ws "$ws" \
+  gesture "$data" "/marks balls/agents/drive" --ws "$(basename "$ws")" \
     && grep -q 'tasks_branch = "balls/agents/drive"' "$branch_file" \
     && pass "S8-T4 marks: an amendment writes balls' own tasks_branch key" \
     || fail "S8-T4 marks: an amendment writes balls' own tasks_branch key" "no key in $branch_file"
@@ -75,7 +75,7 @@ s8_marks() {
   # row, so the one outcome it exists to catch — the landing branch accepted —
   # deleted the beat from the verdict instead of reddening it, and a ladder
   # counts rows it has, never rows it should have had (bl-f16e).
-  if gesture "$data" "/marks balls/config" --ws "$ws"; then
+  if gesture "$data" "/marks balls/config" --ws "$(basename "$ws")"; then
     fail "S8-T4 marks: balls' landing branch is refused, not written" "the boundary accepted it"
   else
     pass "S8-T4 marks: balls' landing branch is refused, not written"
@@ -85,7 +85,7 @@ s8_marks() {
     || fail "S8-T4 marks: the refusal left the standing branch alone" "the key moved"
 
   # Back to the project's board, so the world is left as it was found.
-  gesture "$data" "/marks balls/tasks" --ws "$ws" \
+  gesture "$data" "/marks balls/tasks" --ws "$(basename "$ws")" \
     && grep -q 'tasks_branch = "balls/tasks"' "$branch_file" \
     && pass "S8-T4 marks: pointing at the project's board is the same one verb" \
     || fail "S8-T4 marks: pointing at the project's board is the same one verb" "no key"

@@ -37,7 +37,7 @@ impl AppModel {
     ) -> Result<(), String> {
         let deps = self.boundary_deps(lernie, bl);
         let action = crate::boundary::Action::DeleteWorkspace {
-            workspace: ws.to_path_buf(),
+            workspace: self.snap.ws_name(ws),
             typed: typed.to_owned(),
         };
         let result = crate::boundary::dispatch::dispatch(&deps, &mut self.ui, ts, &action);
@@ -75,7 +75,7 @@ impl AppModel {
     ) -> Result<(), String> {
         let deps = self.boundary_deps(lernie, bl);
         let action = crate::boundary::Action::DeleteAgent {
-            workspace: ws.to_path_buf(),
+            workspace: self.snap.ws_name(ws),
             agent: root.to_owned(),
             typed: typed.to_owned(),
         };

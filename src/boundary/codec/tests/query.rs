@@ -2,14 +2,14 @@
 //! production took (`codec/query.rs`): §4.8's taxonomy is a file boundary on
 //! both sides.
 
-use super::{p, rt};
+use super::rt;
 use crate::boundary::{Gesture, Query, codec::decode};
 
 #[test]
 fn every_query_variant_round_trips() {
     rt(Gesture::Ask(Query::Workspaces));
     rt(Gesture::Ask(Query::Conversations {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
     }));
     rt(Gesture::Ask(Query::Balls));
     rt(Gesture::Ask(Query::Board));
@@ -26,17 +26,17 @@ fn every_query_variant_round_trips() {
         }),
     ] {
         rt(Gesture::Ask(Query::WorkDiff {
-            workspace: p("/ws"),
+            workspace: "ws".into(),
             file,
         }));
     }
     // The §9 browse and roster (bl-dff8), each carrying the sphere it is asked
     // in — providers, sign-ins and lineages all live inside a workspace.
     rt(Gesture::Ask(Query::Lineages {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
     }));
     rt(Gesture::Ask(Query::Models {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         provider: "acme".into(),
     }));
     inspector_family();
@@ -46,7 +46,7 @@ fn every_query_variant_round_trips() {
 /// rather than a workspace, so each carries both halves of the address and
 /// only what no seat could supply beside them.
 fn inspector_family() {
-    let (workspace, agent) = (p("/ws"), "c-1".to_owned());
+    let (workspace, agent) = ("ws".to_owned(), "c-1".to_owned());
     for query in [
         Query::Transcript {
             workspace: workspace.clone(),

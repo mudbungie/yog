@@ -13,17 +13,11 @@ use serde_json::{Map, Value, json};
 use crate::boundary::Action;
 use crate::fork::Attempt;
 
-use super::start::encode_path;
-use super::{path_of, str_of};
+use super::str_of;
 
 /// Encode one attempt.
-pub(super) fn encode(
-    workspace: &std::path::Path,
-    parent: &str,
-    attempt: &Attempt,
-    goal: &str,
-) -> Value {
-    json!({ "op": "fork", "workspace": encode_path(workspace), "parent": parent,
+pub(super) fn encode(workspace: &str, parent: &str, attempt: &Attempt, goal: &str) -> Value {
+    json!({ "op": "fork", "workspace": workspace, "parent": parent,
             "from": attempt.from, "role": attempt.role, "skills": attempt.skills,
             "goal": goal })
 }
@@ -31,7 +25,7 @@ pub(super) fn encode(
 /// Decode one attempt, strictly.
 pub(super) fn decode(o: &Map<String, Value>) -> Result<Action, String> {
     Ok(Action::Fork {
-        workspace: path_of(o, "workspace")?,
+        workspace: str_of(o, "workspace")?,
         parent: str_of(o, "parent")?,
         attempt: Attempt {
             from: str_of(o, "from")?,

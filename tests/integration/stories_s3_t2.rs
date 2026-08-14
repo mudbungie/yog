@@ -40,8 +40,9 @@ fn s3_t2_new_ball_creates_then_converges_to_one_claim() {
     };
     let inputs = StartInputs {
         workspace: workspace_path(yog.path(), "cobalt-gecko"),
+        repo: Some(project.path().to_path_buf()),
         payload: Payload::Ball {
-            project: project.path().to_path_buf(),
+            project: yog::naming::leaf(project.path()),
             ball: BallSpec::New {
                 title: "Fresh".to_owned(),
                 body: "New body".to_owned(),

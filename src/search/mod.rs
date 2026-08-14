@@ -220,9 +220,9 @@ fn push(hits: &mut Vec<Hit>, needle: &str, at: Address, fields: &[(Field, String
 pub fn label(hit: &Hit) -> String {
     let at = match &hit.at {
         Address::Ball { id, .. } => format!("ball {id}"),
-        Address::Workspace { path } => format!("workspace {}", crate::start::leaf_name(path)),
+        Address::Workspace { path } => format!("workspace {}", crate::naming::leaf(path)),
         Address::Conversation { workspace, agent } => {
-            format!("{}/{agent}", crate::start::leaf_name(workspace))
+            format!("{}/{agent}", crate::naming::leaf(workspace))
         }
     };
     format!("{at} — {}", hit.excerpt)

@@ -26,7 +26,7 @@ fn reading(file: ConfigFile) -> Query {
 
 fn lineage_file(workspace: &Path, path: &str) -> ConfigFile {
     ConfigFile::Branch {
-        workspace: workspace.to_path_buf(),
+        workspace: crate::naming::leaf(workspace),
         lineage: "default".to_owned(),
         origin: EditOrigin::Advance,
         path: path.to_owned(),
@@ -39,8 +39,8 @@ fn lineage_file(workspace: &Path, path: &str) -> ConfigFile {
 #[test]
 fn a_lineage_read_answers_the_bytes_at_its_tip() {
     let root = tempdir().unwrap();
-    let deps = quiet(root.path());
     let fx = Fixture::new();
+    let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
     // The fixture seeds `version` = "1\n" on the first config commit.
     assert_eq!(
         ask(&deps, &reading(lineage_file(&fx.path, "version"))),
@@ -55,8 +55,8 @@ fn a_lineage_read_answers_the_bytes_at_its_tip() {
 #[test]
 fn a_path_the_lineage_does_not_hold_refuses_in_gits_words() {
     let root = tempdir().unwrap();
-    let deps = quiet(root.path());
     let fx = Fixture::new();
+    let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
     let err = ask(&deps, &reading(lineage_file(&fx.path, "no-such-file"))).unwrap_err();
     assert!(err.contains("no-such-file"), "{err}");
 }
@@ -66,14 +66,14 @@ fn a_path_the_lineage_does_not_hold_refuses_in_gits_words() {
 #[test]
 fn the_browse_lists_every_lineage_with_its_own_files() {
     let root = tempdir().unwrap();
-    let deps = quiet(root.path());
     let fx = Fixture::new();
+    let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
     fx.commit_other("workflow.yaml", "events: {}\n");
     fx.orphan_config("island");
     let Ok(Reply::Lineages(rows)) = ask(
         &deps,
         &Query::Lineages {
-            workspace: fx.path.clone(),
+            workspace: crate::naming::leaf(&(fx.path.clone())),
         },
     ) else {
         panic!("lineages answers lineages");
@@ -100,12 +100,13 @@ fn the_browse_lists_every_lineage_with_its_own_files() {
 #[test]
 fn a_workspace_with_no_repo_refuses_the_browse_rather_than_listing_nothing() {
     let root = tempdir().unwrap();
-    let deps = quiet(root.path());
+    let nowhere = root.path().join("nowhere");
+    let deps = super::seeing(&quiet(root.path()), &[nowhere.as_path()]);
     assert!(
         ask(
             &deps,
             &Query::Lineages {
-                workspace: root.path().join("nowhere"),
+                workspace: crate::naming::leaf(&nowhere),
             },
         )
         .is_err()
@@ -123,7 +124,7 @@ fn a_roster_for_a_row_this_wall_does_not_have_refuses_by_name() {
     let err = ask(
         &deps,
         &Query::Models {
-            workspace: crate::test_support::fixture_workspace(),
+            workspace: crate::naming::leaf(&(crate::test_support::fixture_workspace())),
             provider: "not-a-row".to_owned(),
         },
     )

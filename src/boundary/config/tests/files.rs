@@ -180,14 +180,17 @@ fn a_lineage_apply_stages_the_text_and_drives_lernie_config() {
             log.display()
         ),
     );
-    let deps = deps_at(root.path(), &lernie, Path::new("/no/bl"));
-    let ws = root.path().join("ws");
+    let ws = root.path().join("sphere");
+    let deps = super::seeing(
+        &deps_at(root.path(), &lernie, Path::new("/no/bl")),
+        &[ws.as_path()],
+    );
     let text = "roles:\n  worker:\n    provider: acme\n";
     let reply = fire(
         &deps,
         &applying(
             ConfigFile::Branch {
-                workspace: ws.clone(),
+                workspace: crate::naming::leaf(&ws),
                 lineage: "default".to_owned(),
                 origin: EditOrigin::Advance,
                 path: "providers.yaml".to_owned(),
@@ -217,14 +220,15 @@ fn a_lineage_apply_stages_the_text_and_drives_lernie_config() {
 #[test]
 fn a_lineage_apply_that_cannot_stage_says_so() {
     let root = tempdir().unwrap();
-    let deps = quiet(root.path());
+    let ws = root.path().join("sphere");
+    let deps = super::seeing(&quiet(root.path()), &[ws.as_path()]);
     // The staging root's own path is a file, so no nonce dir can be made.
     fs::write(deps.world.yog_stage_root(), b"in the way").unwrap();
     let err = fire(
         &deps,
         &applying(
             ConfigFile::Branch {
-                workspace: root.path().join("ws"),
+                workspace: crate::naming::leaf(&ws),
                 lineage: "default".to_owned(),
                 origin: EditOrigin::Orphan,
                 path: "workflow.yaml".to_owned(),

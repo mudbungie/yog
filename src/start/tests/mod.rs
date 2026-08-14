@@ -123,6 +123,9 @@ impl World {
     pub(super) fn inputs(&self, name: &str, payload: Payload) -> StartInputs {
         StartInputs {
             workspace: crate::binding::workspace_path(self.yog.path(), name),
+            // The payload's project name located (REMOTE §8) — this world has
+            // exactly one project, so that is where a ball rung's `bl` runs.
+            repo: payload.project().map(|_| self.project.path().to_path_buf()),
             payload,
             home: self.home.path().to_path_buf(),
             yog_data_root: self.yog.path().to_path_buf(),
@@ -141,7 +144,7 @@ pub(super) fn rng() -> SplitMix64 {
 /// An existing-ball payload at the given join state.
 pub(super) fn ball(project: &Path, id: &str, join: JoinState) -> Payload {
     Payload::Ball {
-        project: project.to_path_buf(),
+        project: crate::naming::leaf(project),
         ball: BallSpec::Existing {
             id: id.to_owned(),
             title: "T".to_owned(),

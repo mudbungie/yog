@@ -10,30 +10,28 @@
 
 use serde_json::{Map, Value, json};
 
-use std::path::{Path, PathBuf};
-
 use super::super::fields::opt_str_of;
-use super::super::start::{encode_path, opt_field};
-use super::super::{path_of, str_of};
+use super::super::start::opt_field;
+use super::super::str_of;
 use crate::boundary::Query;
 
 /// The address every one of the six carries: the workspace, and the
 /// conversation inside it.
-pub(super) fn at(op: &str, workspace: &Path, agent: &str) -> Value {
+pub(super) fn at(op: &str, workspace: &str, agent: &str) -> Value {
     Value::Object(at_map(op, workspace, agent))
 }
 
 /// The same, still open for the two that carry one more key.
-fn at_map(op: &str, workspace: &Path, agent: &str) -> Map<String, Value> {
+fn at_map(op: &str, workspace: &str, agent: &str) -> Map<String, Value> {
     let mut map = Map::new();
     map.insert("op".to_owned(), json!(op));
-    map.insert("workspace".to_owned(), encode_path(workspace));
+    map.insert("workspace".to_owned(), json!(workspace));
     map.insert("agent".to_owned(), json!(agent));
     map
 }
 
 /// One step's drill-in: the address, plus the sequence name that picks the step.
-pub(super) fn step(workspace: &Path, agent: &str, seq: &str) -> Value {
+pub(super) fn step(workspace: &str, agent: &str, seq: &str) -> Value {
     let mut map = at_map("step", workspace, agent);
     map.insert("seq".to_owned(), json!(seq));
     Value::Object(map)
@@ -41,7 +39,7 @@ pub(super) fn step(workspace: &Path, agent: &str, seq: &str) -> Value {
 
 /// The Files read: the address, plus the path when one file's bytes are asked
 /// for. Absent is the listing — the [`WorkDiff`](Query::WorkDiff) shape.
-pub(super) fn files(workspace: &Path, agent: &str, path: Option<&String>) -> Value {
+pub(super) fn files(workspace: &str, agent: &str, path: Option<&String>) -> Value {
     let mut map = at_map("files", workspace, agent);
     opt_field(&mut map, "path", path);
     Value::Object(map)
@@ -90,6 +88,6 @@ pub(super) fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, St
 }
 
 /// The shared address reader — both halves required.
-fn address(o: &Map<String, Value>) -> Result<(PathBuf, String), String> {
-    Ok((path_of(o, "workspace")?, str_of(o, "agent")?))
+fn address(o: &Map<String, Value>) -> Result<(String, String), String> {
+    Ok((str_of(o, "workspace")?, str_of(o, "agent")?))
 }

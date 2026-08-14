@@ -63,8 +63,7 @@ fn every_flat_receipt_says_what_happened() {
 #[test]
 fn the_fan_reply_rows_re_enter_as_prompt_gestures() {
     let prepared = Prepared {
-        name: "cobalt-gecko".into(),
-        workspace: PathBuf::from("/ws"),
+        workspace: crate::naming::leaf(&(PathBuf::from("/ws"))),
         binding: Some(PathBuf::from("/state/balls/attempts/dev/proj/at-0badcafe")),
         goal: "g".into(),
         origin: Origin::Balls,

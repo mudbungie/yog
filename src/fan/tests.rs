@@ -46,9 +46,9 @@ impl World {
         World { dir, project, xdg }
     }
 
-    fn obligation(&self, ball: Option<&str>) -> Obligation {
+    fn obligation(ball: Option<&str>) -> Obligation {
         Obligation {
-            project: self.project.clone(),
+            project: "proj".to_owned(),
             ball: ball.map(str::to_owned),
         }
     }
@@ -73,8 +73,7 @@ impl World {
 /// The ordinary prepared start a fan spreads.
 fn prepared(dir: &TempDir) -> Prepared {
     Prepared {
-        name: "cobalt-gecko".to_owned(),
-        workspace: dir.path().join("workspaces").join("cobalt-gecko"),
+        workspace: "cobalt-gecko".to_owned(),
         binding: Some(dir.path().join("claim")),
         goal: "Ball bl-1f2a: do the thing".to_owned(),
         origin: Origin::Balls,
@@ -84,7 +83,13 @@ fn prepared(dir: &TempDir) -> Prepared {
 #[test]
 fn a_ball_fan_forks_every_candidate_off_the_one_work_ref_tip() {
     let world = World::new();
-    let candidates = open(&world.obligation(Some(BALL)), &world.xdg, 3).unwrap();
+    let candidates = open(
+        &World::obligation(Some(BALL)),
+        &world.project,
+        &world.xdg,
+        3,
+    )
+    .unwrap();
     assert_eq!(candidates.len(), 3);
     // The target balls minted is the ball's own `work/<id>` — the very ref
     // `bl close` later delivers onto the integration branch (§4.10 item 1).
@@ -122,7 +127,7 @@ fn a_ball_fan_forks_every_candidate_off_the_one_work_ref_tip() {
 #[test]
 fn a_bare_obligation_targets_the_projects_own_integration_branch() {
     let world = World::new();
-    let candidates = open(&world.obligation(None), &world.xdg, 1).unwrap();
+    let candidates = open(&World::obligation(None), &world.project, &world.xdg, 1).unwrap();
     assert_eq!(candidates[0].base, world.tip(MAIN));
     assert!(
         !world.branch_exists(&format!("work/{BALL}")),
@@ -134,7 +139,13 @@ fn a_bare_obligation_targets_the_projects_own_integration_branch() {
 fn a_fan_of_none_materializes_nothing() {
     let world = World::new();
     assert_eq!(
-        open(&world.obligation(Some(BALL)), &world.xdg, 0).unwrap(),
+        open(
+            &World::obligation(Some(BALL)),
+            &world.project,
+            &world.xdg,
+            0
+        )
+        .unwrap(),
         vec![]
     );
 }
@@ -143,10 +154,13 @@ fn a_fan_of_none_materializes_nothing() {
 fn a_path_that_is_no_repo_is_refused_in_balls_own_voice() {
     let world = World::new();
     let nowhere = Obligation {
-        project: world.dir.path().join("not-a-repo"),
+        project: "not-a-repo".to_owned(),
         ball: None,
     };
-    let err = open(&nowhere, &world.xdg, 1).unwrap_err().to_string();
+    let repo = world.dir.path().join("not-a-repo");
+    let err = open(&nowhere, &repo, &world.xdg, 1)
+        .unwrap_err()
+        .to_string();
     assert!(!err.is_empty(), "the refusal says something");
 }
 
@@ -173,7 +187,14 @@ fn a_fan_of_one_is_the_ordinary_claim_binding_and_materializes_no_attempt() {
     let start = prepared(&world.dir);
     for n in [0, 1] {
         assert_eq!(
-            spread(&start, &world.obligation(Some(BALL)), &world.xdg, n).unwrap(),
+            spread(
+                &start,
+                &World::obligation(Some(BALL)),
+                &world.project,
+                &world.xdg,
+                n
+            )
+            .unwrap(),
             vec![start.clone()],
         );
     }
@@ -187,7 +208,14 @@ fn a_fan_of_one_is_the_ordinary_claim_binding_and_materializes_no_attempt() {
 fn above_one_every_variant_is_the_same_start_bound_to_its_own_worktree() {
     let world = World::new();
     let start = prepared(&world.dir);
-    let variants = spread(&start, &world.obligation(Some(BALL)), &world.xdg, 2).unwrap();
+    let variants = spread(
+        &start,
+        &World::obligation(Some(BALL)),
+        &world.project,
+        &world.xdg,
+        2,
+    )
+    .unwrap();
     assert_eq!(variants.len(), 2);
     let bindings: Vec<&PathBuf> = variants
         .iter()
@@ -214,23 +242,24 @@ fn above_one_every_variant_is_the_same_start_bound_to_its_own_worktree() {
 #[test]
 fn release_keeps_the_source_ref_and_discard_takes_it() {
     let world = World::new();
-    let obligation = world.obligation(Some(BALL));
-    let candidate = open(&obligation, &world.xdg, 1).unwrap().remove(0);
+    let obligation = World::obligation(Some(BALL));
+    let repo = world.project.clone();
+    let candidate = open(&obligation, &repo, &world.xdg, 1).unwrap().remove(0);
     let branch = attempt_branch(&candidate.handle);
 
-    release(&obligation, &world.xdg, &candidate.handle).unwrap();
+    release(&obligation, &repo, &world.xdg, &candidate.handle).unwrap();
     assert!(!candidate.worktree.exists(), "the worktree went");
     assert!(
         world.branch_exists(&branch),
         "a rejected candidate stays addressable"
     );
 
-    discard(&obligation, &world.xdg, &candidate.handle).unwrap();
+    discard(&obligation, &repo, &world.xdg, &candidate.handle).unwrap();
     assert!(!candidate.worktree.exists());
     assert!(!world.branch_exists(&branch), "retention expired: both go");
 
     // And a discarded handle is refused rather than quietly re-minted.
-    let err = release(&obligation, &world.xdg, &candidate.handle)
+    let err = release(&obligation, &repo, &world.xdg, &candidate.handle)
         .unwrap_err()
         .to_string();
     assert!(err.contains("unknown attempt handle"), "{err}");
@@ -239,10 +268,11 @@ fn release_keeps_the_source_ref_and_discard_takes_it() {
 #[test]
 fn a_resumed_attempt_is_the_same_candidate_re_materialized() {
     let world = World::new();
-    let obligation = world.obligation(Some(BALL));
-    let candidate = open(&obligation, &world.xdg, 1).unwrap().remove(0);
-    release(&obligation, &world.xdg, &candidate.handle).unwrap();
-    let again = resume(&obligation, &world.xdg, &candidate.handle).unwrap();
+    let obligation = World::obligation(Some(BALL));
+    let repo = world.project.clone();
+    let candidate = open(&obligation, &repo, &world.xdg, 1).unwrap().remove(0);
+    release(&obligation, &repo, &world.xdg, &candidate.handle).unwrap();
+    let again = resume(&obligation, &repo, &world.xdg, &candidate.handle).unwrap();
     assert_eq!(again.handle(), candidate.handle);
     assert_eq!(again.worktree(), candidate.worktree);
     assert_eq!(again.base(), candidate.base);

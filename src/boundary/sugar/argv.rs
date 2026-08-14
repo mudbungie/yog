@@ -30,7 +30,6 @@
 
 use crate::boundary::codec::prepared_from_value;
 use crate::boundary::line::Context;
-use std::path::PathBuf;
 
 /// One invocation: what to do, and the seat it is typed at.
 pub(super) struct Invocation {
@@ -62,9 +61,9 @@ pub(super) fn read(args: &[String]) -> Result<Invocation, String> {
             .ok_or_else(|| format!("--{flag} needs a value"))?
             .clone();
         match flag {
-            "ws" => context.workspace = Some(PathBuf::from(value)),
+            "ws" => context.workspace = Some(value),
             "agent" => context.agent = Some(value),
-            "project" => context.project = Some(PathBuf::from(value)),
+            "project" => context.project = Some(value),
             "as" => context.name = Some(value),
             "prepared" => {
                 let v = serde_json::from_str(&value)
@@ -89,6 +88,6 @@ pub(super) fn read(args: &[String]) -> Result<Invocation, String> {
 }
 
 /// The one usage line, so a refusal always says how to be right.
-pub(super) const USAGE: &str = "usage: yog gesture [--ws PATH] [--agent ID] [--project PATH] \
+pub(super) const USAGE: &str = "usage: yog gesture [--ws NAME] [--agent ID] [--project NAME] \
      [--as NAME] [--prepared JSON] '<json>' | '/line'\n       yog gesture --help [command] — every \
      gesture, or one command's page";

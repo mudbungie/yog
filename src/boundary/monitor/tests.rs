@@ -43,8 +43,9 @@ fn arming_writes_the_entry_seeds_the_policy_and_logs_itself() {
     let armed = dispatch(
         &deps,
         "1",
+        ws,
         &Verb::Arm {
-            workspace: ws.to_path_buf(),
+            workspace: crate::naming::leaf(ws),
             model: "haiku".to_owned(),
         },
     );
@@ -91,8 +92,9 @@ fn disarming_removes_the_entry_and_leaves_the_clock_alone() {
     let off = dispatch(
         &deps,
         "2",
+        ws,
         &Verb::Disarm {
-            workspace: ws.to_path_buf(),
+            workspace: crate::naming::leaf(ws),
         },
     );
     assert_eq!(off.expect("disarmed"), Reply::Armed { armed: false });
@@ -133,8 +135,9 @@ fn flagging_writes_one_row_and_does_nothing_else() {
     let raised = dispatch(
         &deps,
         "1",
+        ws,
         &Verb::Flag {
-            workspace: ws.to_path_buf(),
+            workspace: crate::naming::leaf(ws),
             agent: "c-1".to_owned(),
             reason: "this looks wrong".to_owned(),
         },
@@ -149,7 +152,7 @@ fn flagging_writes_one_row_and_does_nothing_else() {
         &mut ui,
         "2",
         &crate::boundary::Action::Monitor(Verb::Flag {
-            workspace: ws.to_path_buf(),
+            workspace: crate::naming::leaf(ws),
             agent: "c-1".to_owned(),
             reason: "again".to_owned(),
         }),

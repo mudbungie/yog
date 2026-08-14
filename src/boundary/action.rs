@@ -4,7 +4,6 @@
 //! Two rosters, and only one of them can ever be wrong about the world.
 
 use crate::start::{Payload, Prepared};
-use std::path::PathBuf;
 
 use super::config;
 
@@ -12,22 +11,30 @@ use super::config;
 /// parameter set, so the two frontends construct byte-identical intents. The
 /// §8.2 verb table is the argv each resolves to; the start family carries the
 /// §8.1 composite's two real gestures (prepare, then the deferred prompt).
+///
+/// **A gesture addresses by NAME, never by path** (REMOTE §8, bl-f5f6): a
+/// `workspace` is its §3.1 directory leaf, a `project` its derived
+/// [`naming`](crate::naming) name. Across machines a path is meaningless and a
+/// disclosure besides, so the world is reached by resolving the name **once**,
+/// at [`dispatch`](super::dispatch::dispatch), ahead of the table — the tables
+/// that say which name a variant carries are [`Action::workspace`] and
+/// [`Action::project`] (`src/boundary/address.rs`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
     /// `lernie message <ws> <agent> <content>` — the resume gesture (§8.2).
     Message {
-        workspace: PathBuf,
+        workspace: String,
         agent: String,
         content: String,
     },
     /// `lernie stop <ws> <agent> [--stop-children]` (§8.2).
     Stop {
-        workspace: PathBuf,
+        workspace: String,
         agent: String,
         children: bool,
     },
     /// `lernie scan <ws>` — flush inboxes, deposit died epitaphs (§8.2).
-    Scan { workspace: PathBuf },
+    Scan { workspace: String },
     /// **Fire inference on a conversation from the state it is already in**
     /// (§8.2's Nudge row, bl-9bef): `lernie advance <ws> <agent>`, detached.
     /// It carries no text, and that absence is the whole gesture — lernie
@@ -35,50 +42,50 @@ pub enum Action {
     /// first turn whose model call died re-dispatches **in place**. Never
     /// [`Message`](Self::Message) with an empty body: a deposit would put a
     /// second user turn on the wire saying what the first already said.
-    Nudge { workspace: PathBuf, agent: String },
+    Nudge { workspace: String, agent: String },
     /// `lernie retarget <ws> <agent>` — the §9.4 exit from the config freeze
     /// (bl-2d19): mark this conversation to be re-forked onto the config
     /// lineage's head, which its own executor lands at the next step boundary.
     /// **No config name on the wire**: yog's picker writes one lineage and the
     /// drift it offers this against is measured against that lineage's tip, so
     /// naming a branch here would be a knob with one lawful value (§9.3).
-    Retarget { workspace: PathBuf, agent: String },
+    Retarget { workspace: String, agent: String },
     /// `bl close <id> --as <name>` (§8.2) — `name` is the ball's bound
     /// workspace name (§3.2), never the operator `$USER`.
     Close {
-        project: PathBuf,
+        project: String,
         id: String,
         name: String,
     },
     /// `bl claim <id> --as <name>` — assign a ready ball (§8.2/§3.2).
     Assign {
-        project: PathBuf,
+        project: String,
         id: String,
         name: String,
     },
     /// `bl unclaim <id> --as <name>` — release (§8.2/§3.2).
     Release {
-        project: PathBuf,
+        project: String,
         id: String,
         name: String,
     },
     /// Re-home a bound ball: `bl unclaim --as <from>` then `claim --as <to>` (§8.2).
     Move {
-        project: PathBuf,
+        project: String,
         id: String,
         from: String,
         to: String,
     },
     /// `bl create <title> --as <name> [--body B]` (§8.2).
     Create {
-        project: PathBuf,
+        project: String,
         title: String,
         name: String,
         body: Option<String>,
     },
     /// `bl update <id> --as <name> [--title T][--body B][-m N]` (§8.2).
     Update {
-        project: PathBuf,
+        project: String,
         id: String,
         name: String,
         title: Option<String>,
@@ -89,10 +96,7 @@ pub enum Action {
     /// rung's `bl` steps, returning the composer's [`Prepared`] — the ▶ Start /
     /// Create-&-Start / raise gesture. The prompt is the separate, deferred
     /// [`Action::Prompt`], exactly as the GUI defers it to the composer.
-    Prepare {
-        workspace: PathBuf,
-        payload: Payload,
-    },
+    Prepare { workspace: String, payload: Payload },
     /// Fire the detached `lernie prompt` (§8.1): mint the conversation name,
     /// pass it via `--name`, spawn detached — the goal verbatim (bl-6920).
     /// `prepared` is the
@@ -135,14 +139,14 @@ pub enum Action {
     /// The §3.6 unmaking, gated exactly as the dialog gates it: refused unless
     /// the workspace is yog's own, nothing is live, and `typed` re-states its
     /// name — fail-closed at fire time, whichever frontend fires.
-    DeleteWorkspace { workspace: PathBuf, typed: String },
+    DeleteWorkspace { workspace: String, typed: String },
     /// `lernie delete <ws> <agent> [--children]` — the §3.6 class one
     /// conversation deep (bl-f17a). Gated on liveness here, fail-closed;
     /// `typed` re-stating the conversation's name is the one thing that arms
     /// `--children`, and an unarmed fire is the bare verb — lernie's own
     /// `HasDescendants` decline rides back for a subtree nobody confirmed.
     DeleteAgent {
-        workspace: PathBuf,
+        workspace: String,
         agent: String,
         typed: String,
     },
@@ -169,7 +173,7 @@ pub enum Action {
     /// typed, so the answer lands on exactly what is parked now and cannot
     /// race. **Nothing here ever calls stop** (lernie bl-b98d).
     AnswerHold {
-        workspace: PathBuf,
+        workspace: String,
         agent: String,
         /// `pass` releases it, `refuse` declines it in band, `hold` pins the
         /// park across a later policy edit — the control's own vocabulary,
@@ -193,7 +197,7 @@ pub enum Action {
     /// the families that own them — notice is `message`, stop is `stop` — and
     /// this rung belongs to the capability family.
     Floor {
-        workspace: PathBuf,
+        workspace: String,
         /// The conversation the floor is written for. It stands over that
         /// conversation **and its whole descent** — the fold matches by
         /// hyphenated prefix ([`crate::control::judge::Answers::floored`]) —
@@ -212,7 +216,7 @@ pub enum Action {
     /// definition, so the two frontends converge over one disk (I0). The
     /// windowed seat keeps its focus-tick entry (focus is a view and gains no
     /// spelling); this is the entry a seat with no focus needs.
-    MarkSeen { workspace: PathBuf, agent: String },
+    MarkSeen { workspace: String, agent: String },
     /// Start a fresh trail (§4.2 as amended): truncate `ops.jsonl`, logging
     /// the clear as the new trail's first row.
     ClearTrail,
@@ -230,7 +234,7 @@ pub enum Action {
     /// fires. It writes balls' own layer-2 config key in that space and stores
     /// nothing of yog's own shape; the reply is the branch **re-read** after
     /// the write.
-    SetMarks { workspace: PathBuf, branch: String },
+    SetMarks { workspace: String, branch: String },
     /// One **attempt** (VISION §5 V2, bl-dc0c): `lernie dispatch <role> <ws>
     /// <parent> --goal <goal> --from <ref> [--pin …]` — the ordinary fork,
     /// with the pinned notch's commit (or a `config/<name>` head) as its ref.
@@ -242,7 +246,7 @@ pub enum Action {
     /// records a fan. That is why the boundary grows one attempt-shaped verb
     /// instead of a fan verb: N=1 and N>1 are the same gesture, counted.
     Fork {
-        workspace: PathBuf,
+        workspace: String,
         /// The dispatching parent's agent id (== its branch name).
         parent: String,
         /// The attempt's fire-time overrides: fork point, role (the model),
@@ -256,7 +260,7 @@ pub enum Action {
     /// and neither is written — because lernie's cross-check makes the role
     /// assignment and the model declaration two halves of one fact.
     PickModel {
-        workspace: PathBuf,
+        workspace: String,
         role: String,
         provider: String,
         model: String,
