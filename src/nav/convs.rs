@@ -97,7 +97,7 @@ pub(crate) fn id_floor(id: &str) -> &str {
     let mut start = 0;
     let mut at = 0;
     for segment in id.split('-') {
-        if stamp_halves(segment).is_some() {
+        if is_stamp(segment) {
             start = at;
         }
         at += segment.len() + 1;
@@ -169,6 +169,18 @@ fn stamp_halves(segment: &str) -> Option<(&str, &str)> {
         && date.bytes().all(|b| b.is_ascii_digit())
         && time.bytes().all(|b| b.is_ascii_digit()))
     .then_some((date, time))
+}
+
+/// **Is this run of text a lernie stamp segment?** — [`stamp_halves`] asked for
+/// the answer alone, which is all [`id_floor`] ever wanted of it.
+///
+/// `pub(crate)` because the §3.3 naming invariant is asserted on *values* rather
+/// than on field names since bl-45c7: the acceptance scan reads the painted
+/// window and asks this of every token in it. Sharing the predicate with the
+/// floor is the point — what counts as an agent id has one definition in the
+/// tree, so the scan cannot come to disagree with the seats it polices.
+pub(crate) fn is_stamp(segment: &str) -> bool {
+    stamp_halves(segment).is_some()
 }
 
 /// The same ladder for a seat holding agents rather than a [`ConvRow`] (the §11
