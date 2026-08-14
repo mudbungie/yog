@@ -1,7 +1,7 @@
 +++
 title = "scrub balls/tasks and publish it: content redaction across the ref's history, not a private remote"
 created = 1786677230
-updated = 1786678339
+updated = 1786678435
 claimant = "Ciabatta"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -79,3 +79,45 @@ provider auth state. Without that, the store re-leaks within a week and this
 ball is a treadmill.
 
 Gates `bl-4f96`.
+
+---
+
+## Steps 1-4 done (Ciabatta). STOPPED before step 5 — the force-push awaits a fresh operator go-ahead. No remote was written.
+
+**1. Bundles (private, outside every repo, mode 0600).** Both verify "complete history".
+
+- `/home/u/balls-tasks-prescrub-20260813-7fda4b0.bundle` — 1,196,320 B, tip `7fda4b0`, 1,493 commits. The ref as the audit found it.
+- `/home/u/balls-tasks-prerewrite-20260813-312b94e.bundle` — 1,227,420 B, tip `312b94e`, 1,506 commits. The exact ref the force-push would replace, so the rewrite is reversible.
+
+**2. Live bodies scrubbed** (`bl update --body`, body edits only — nothing closed, unclaimed or retitled). Thirteen balls:
+
+- home paths `/home/u` -> `/home/u`: bl-0e44, bl-20cb, bl-3aa1, bl-3f70, bl-648a, bl-71fc, bl-9b52, bl-fb1c
+- account/payment text from a CI annotation: bl-b7dc
+- provider auth state ("signed in" / "no credential stored" per row): bl-20cb
+- live process ids and wall-clock chronology: bl-a0d4
+- an operator's own machine configuration, named as theirs: bl-9b52
+- verbatim operator dialogue, paraphrased to its substance: bl-a33d
+- the maintainer's given name: bl-4f96
+- this ball, whose evidence list quoted the material it exists to remove: classes now named, instances dropped
+
+**3. History rewritten** — `git filter-repo` (fb3de42e), `--replace-text` + `--replace-message` over the whole ref, `--prune-empty never`. No path was dropped: 426 task paths before and after, 1,506 commits before and after, 1,186 blobs before and after. 38 expressions covering: the maintainer's given name (with lookarounds so the Rust type `Mark` survives untouched), a third party's name, a second address of the maintainer's, `/home/u` and `/Users/u`, account/payment text, provider auth state, live process ids, conversation/agent ids, five private workspace names, one operator remark disclosing a live account's model roster, and the `bl-actor: mark` commit trailer.
+
+`mudbungie` and `mudbungie@gmail.com` were left everywhere by ruling: 976 of 1,506 commits still carry them as author, and the tree still carries them in 15 places.
+
+**4. Re-scan of the rewritten ref** — `scripts/leak-scan.sh` with `scripts/leak-rules.sh` at yog `58ddd17`, run over all 1,186 blobs of the rewritten history (not just the tip). **Zero findings.** The same scan over the 1,173 pre-scrub blobs produced 135. Every one of the 1,185 blobs with frontmatter still parses as TOML.
+
+Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's own EXCEPT, by ruling); four occurrences of `Mark` that are the Rust type `watch::Mark`; the agent codename `mark-placer`; `/home/u`, `/home/op`, `/home/x`, `/Users/u` synthetic roots.
+
+**5. NOT DONE, awaiting go-ahead.** Scratch clone (throwaway, not the live store):
+`/tmp/claude-1000/-home-mark-dev-yog/807a06bb-c82b-4efd-bf4d-a58f6d52c0fc/scratchpad/scrub-clone`
+rewritten tip `100989f6`, replacing `312b94e`. The command:
+
+    git -C <scrub-clone> push --force <project remote> refs/heads/balls/tasks:refs/heads/balls/tasks
+
+Re-run the filter first if the remote has moved off `312b94e` — the store is live and every commit since would otherwise be lost. Everyone with a clone must delete `$XDG_STATE_HOME/balls/clones/*/tasks` and re-prime; `bl prime` will not reconcile a rewritten ref.
+
+**Open questions the ruling does not settle** — three, all left as-is:
+
+1. **bl-b7dc's title** still carried the account-billing phrasing; a retitle was out of scope for this pass, so the content redaction reached it instead. The rewritten ref's title reads "blocked upstream at the account level".
+2. **The maintainer's own design dialogue** (the logo balls' quoted specs and rulings) was left as prose with the attribution genericized. It is the maintainer's own direction for a published artifact, not third-party content — but it is still verbatim dialogue, which the ruling says goes.
+3. **Agent codenames** (`Pizzeria`, `Fretwork`, ...) and **provider row names** (`openai-chatgpt`, `claude-session-direct`) were left. Neither is a person; the codenames are synthetic and the row names are vendor products yog's own source references. One sentence in a closed bl-5ae6-era blob still implies which of two rows held a credential, with the state value itself redacted.
