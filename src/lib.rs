@@ -51,6 +51,9 @@ pub mod context;
 /// tool-control seam consults before every granted tool invocation.
 pub mod control;
 pub mod delete;
+/// Where to cut a string that will not fit (QUALITY G1, L4) — one rule, cut
+/// where the information is not. Machine strings only; prose keeps its head.
+pub(crate) mod elide;
 /// The one assembly both faces boot (VISION §5 V5) — model, worker, bridge,
 /// gesture consumer; the window and `yog headless` differ only in what they add
 /// beside it.

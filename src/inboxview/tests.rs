@@ -238,3 +238,55 @@ fn raw_mode_paints_each_files_name_and_unaltered_bytes() {
     assert!(text.contains(bytes), "bytes not verbatim:\n{text}");
     assert!(!text.contains("✉ user"), "parsed header in raw:\n{text}");
 }
+
+/// bl-3aa1 / QUALITY L4: a deposit from a descent child must not lead its row
+/// with the child's whole ancestry chain. The witness verbatim — a four-token
+/// chain, 52 characters, at the head of a row whose other content is a
+/// timestamp and a subject.
+///
+/// Asserted on the **paint layer**, and in both directions: the terminal
+/// generation is on screen, and the chain that used to dominate the row is not.
+/// Since bl-bc06 the probe reports the glyphs a galley actually laid, so a
+/// needle matching here really is text the operator can read.
+#[test]
+fn a_deposit_row_floors_a_descent_chain_to_its_terminal_generation() {
+    const CHAIN: &str = "20260807T214551Z-2a1181a3-20260727T090100Z-c0ffeeba";
+    let e = entry(
+        "child-001.md",
+        &format!(
+            "---\nfrom: {CHAIN}\ndeposited_at: 2026-08-07T22:03:25Z\n---\nmail nobody is driving"
+        ),
+    );
+    assert_eq!(
+        e.deposit.sender.as_deref(),
+        Some(CHAIN),
+        "the fact is kept whole on the deposit"
+    );
+
+    let said = painted(std::slice::from_ref(&e), false);
+    assert!(
+        said.contains("✉ 20260727T090100Z-c0ffeeba · 2026-08-07T22:03:25Z"),
+        "the row leads with the child's own generation:\n{said}"
+    );
+    assert!(
+        !said.contains(CHAIN),
+        "and the ancestry chain no longer dominates the row:\n{said}"
+    );
+    assert!(
+        said.contains("mail nobody is driving"),
+        "the subject — what the row is actually about — is still there:\n{said}"
+    );
+}
+
+/// The same call must leave a sender that is not an agent id alone: `user` has
+/// no stamp grammar, so the floor spells it whole. The general path with input
+/// the rule does not recognise, not a special case.
+#[test]
+fn a_deposit_from_the_operator_is_not_floored() {
+    let e = entry(
+        "user-001.md",
+        "---\nfrom: user\ndeposited_at: 2026-08-07T22:03:25Z\n---\nfollow-up",
+    );
+    let said = painted(std::slice::from_ref(&e), false);
+    assert!(said.contains("✉ user · 2026-08-07T22:03:25Z"), "{said}");
+}
