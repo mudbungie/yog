@@ -25,7 +25,7 @@
 pub mod icon;
 
 mod mark;
-pub use mark::{live_mark, wordmark};
+pub use mark::{WORDMARK_LEAD, live_mark, wordmark};
 
 mod badges;
 

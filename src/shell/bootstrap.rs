@@ -11,6 +11,11 @@ use crate::cli_outbound::Cli;
 
 use super::ShellState;
 
+/// The gap that keeps the §3.3 name prediction from reading as the tail of the
+/// tagline (bl-fb1c) — a line's worth of air between two lines that are not
+/// one sentence.
+pub(crate) const SAID_APART: f32 = 8.0;
+
 /// The empty world's one box and its Start (§3.4): both say the whole gesture,
 /// because founding the first workspace is invisible until it has happened.
 const BOOTSTRAP_HINT: &str = "Say what you want done. This founds your first workspace (`home`) and starts \
@@ -36,9 +41,19 @@ pub(super) fn render(
     ui.vertical_centered(|ui| {
         crate::theme::wordmark(ui);
         ui.weak(crate::theme::TAGLINE);
+        // The prediction is not the rest of the tagline (bl-fb1c). Two `ui.weak`
+        // runs in the same size and colour on adjacent lines read as one
+        // wrapped sentence — "the key and the gate will be named growing" —
+        // so the line that says what the *Enter* would mint is set apart from
+        // the line that says what yog is: a gap, and italics.
+        ui.add_space(SAID_APART);
         let inputs = model.start_bare_inputs();
         ui.weak(
-            crate::start::preview(&inputs, &mut crate::names::SplitMix64::from_seed(seed)).preview,
+            egui::RichText::new(
+                crate::start::preview(&inputs, &mut crate::names::SplitMix64::from_seed(seed))
+                    .preview,
+            )
+            .italics(),
         );
     });
     // The empty world's own draft key (bl-a69a): a new conversation with no

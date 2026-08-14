@@ -40,15 +40,48 @@ const MARK_PT: f32 = 28.0;
 const NOTHING_OPEN: &str = "The mark carries what your agents are doing: the eye is the conversation you \
      have open, the outer circles its subagents. Nothing is open, so it rests.";
 
+/// The gap between the mark and the word it marks — tight enough that the two
+/// read as one lockup rather than two neighbours.
+const WORD_GAP: f32 = 3.0;
+
+/// What the mark and its gap add to the **left** of the word: the lockup's
+/// lead. Public because the word is the only half of the wordmark that reaches
+/// the paint layer as text — the mark is circles — so a test reading painted
+/// galleys can only find the lockup's true left edge by subtracting this from
+/// the word's, and the geometry has one home.
+pub const WORDMARK_LEAD: f32 = MARK_PT + WORD_GAP;
+
 /// The wordmark: the mark at rest, then "yog" in gate violet. The
 /// empty-workspace placeholder's seat (§11 altitude 1) — identity, with no
 /// agent's business on it.
+///
+/// **The row requests its own width** (bl-fb1c, QUALITY G3). A plain
+/// `ui.horizontal` claims all the width available to it, so a parent that
+/// centres its children by the width each one asks for — `vertical_centered`,
+/// which is exactly how the empty-world masthead places this — had nothing to
+/// centre: the mark and its word sat hard against the left edge while the
+/// tagline and the name prediction below them centred normally, one masthead
+/// on two alignment axes. So the word is measured before it is laid, and the
+/// row is allocated at exactly mark + gap + word. Then the lockup travels with
+/// the lines that belong to it, wherever the caller puts it.
 pub fn wordmark(ui: &mut egui::Ui) {
-    ui.horizontal(|ui| {
-        draw(ui, &icon::Tints::rest());
-        ui.add_space(3.0);
-        ui.heading(egui::RichText::new("yog").color(GATE).strong());
-    });
+    let font = egui::TextStyle::Heading.resolve(ui.style());
+    let word = ui.fonts(|fonts| fonts.layout_no_wrap("yog".to_owned(), font, GATE));
+    let size = egui::vec2(MARK_PT + WORD_GAP + word.rect.width(), MARK_PT);
+    ui.allocate_ui_with_layout(
+        size,
+        egui::Layout::left_to_right(egui::Align::Center),
+        |ui| {
+            // The measured width is the content's exact width, so the row must
+            // not spend any of it on item spacing, and must not truncate the
+            // word to fit a rect cut to its own measure.
+            ui.spacing_mut().item_spacing.x = 0.0;
+            ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+            draw(ui, &icon::Tints::rest());
+            ui.add_space(WORD_GAP);
+            ui.heading(egui::RichText::new("yog").color(GATE).strong());
+        },
+    );
 }
 
 /// The **live** mark (§11 altitude 1, the conversation's headline row): the same
