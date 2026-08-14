@@ -39,18 +39,15 @@ pub(super) fn tab_data(
     state: &mut ShellState,
     ws: &Path,
     focus: &Focus,
+    agents: &[crate::git_tree::Agent],
 ) -> TabData {
     let (agent_id, tip, agent_state) = (&focus.agent_id, &focus.tip, focus.state);
     // Who the transcript's model turns are (bl-2335): the §3.3 ladder over the
     // selection's *conversation root*, through the boundary's own derivation —
-    // one function, never a second spelling (bl-6233).
-    let speaker = inspector::speaker(
-        &model
-            .focused_tree()
-            .map(|t| t.agents.clone())
-            .unwrap_or_default(),
-        agent_id,
-    );
+    // one function, never a second spelling (bl-6233). The roster comes from
+    // the caller, which holds the frame's one clone of it (the Inbox tab's
+    // deposit senders ride the same ladder over the same slice, bl-b6d0).
+    let speaker = inspector::speaker(agents, agent_id);
     // The heavy view-models, once per snapshot (§7.2 `SnapMemo`, bl-e90a).
     let steps = state
         .inspector

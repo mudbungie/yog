@@ -122,10 +122,17 @@ pub struct TabData {
 /// every pinnable tab — carries the way back. That is one existing gesture
 /// given a second seat, not a second control: no new verb, no routing, and the
 /// banner's own sentence is true wherever it paints.
+///
+/// `agents` is the frame's roster — the Inbox tab's one use of it is the §3.3
+/// ladder over each deposit's sender (bl-b6d0). It is a parameter rather than a
+/// [`TabData`] field because that bundle is the *view-models* this paints; the
+/// roster is a snapshot fact the shell already holds, and copying it in would
+/// be a second per-frame clone of it.
 pub fn render(
     ui: &mut egui::Ui,
     tab: InspectorTab,
     data: &TabData,
+    agents: &[crate::git_tree::Agent],
     eph: &mut Ephemera,
 ) -> Option<String> {
     // The banner claims the tab below it, so it paints only where the pin
@@ -134,7 +141,7 @@ pub fn render(
     if let Some(pin) = data.pin.as_ref().filter(|_| tab.pinnable()) {
         pinned_banner(ui, pin, &mut eph.notch_sel);
     }
-    render_tab(ui, tab, data, eph)
+    render_tab(ui, tab, data, agents, eph)
 }
 
 /// What a pin is showing, said outright above whichever tab is open, **and the
@@ -177,6 +184,7 @@ fn render_tab(
     ui: &mut egui::Ui,
     tab: InspectorTab,
     data: &TabData,
+    agents: &[crate::git_tree::Agent],
     eph: &mut Ephemera,
 ) -> Option<String> {
     // Only the Transcript arm answers with a child to open: it is the tab the
@@ -208,7 +216,7 @@ fn render_tab(
             None
         }
         InspectorTab::Inbox => {
-            inboxview::render(ui, &data.inbox, data.raw);
+            inboxview::render(ui, &data.inbox, agents, data.raw);
             None
         }
         InspectorTab::Files => {

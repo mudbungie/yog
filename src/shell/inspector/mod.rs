@@ -76,7 +76,13 @@ pub fn tabs_and_content(
         tip: agent.tip_oid.clone(),
         state: agent.state,
     };
-    let data = vms::tab_data(active, model, state, ws, &focus);
+    // The frame's roster, cloned once: the §3.3 ladder's input for the
+    // transcript's speaker and for every Inbox-tab deposit's sender (bl-b6d0).
+    let agents = model
+        .focused_tree()
+        .map(|t| t.agents.clone())
+        .unwrap_or_default();
+    let data = vms::tab_data(active, model, state, ws, &focus, &agents);
     controls::per_tab_controls(
         ui,
         active,
@@ -101,7 +107,7 @@ pub fn tabs_and_content(
         lernie,
         bl,
     );
-    let follow = crate::inspector::render(ui, active, &data, &mut state.inspector.eph);
+    let follow = crate::inspector::render(ui, active, &data, &agents, &mut state.inspector.eph);
     // Following a card is the ordinary selection gesture (§6 acknowledgement),
     // the same one the descent-tree rows spend — so it lands the composer like
     // every other selection (§11 focus discipline) — and the pin is the previous

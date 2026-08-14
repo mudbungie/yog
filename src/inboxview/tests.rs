@@ -10,8 +10,12 @@ use tempfile::tempdir;
 
 mod tail;
 
+/// The widget over a roster with nothing in it: every sender then lands on the
+/// §3.3 ladder's floor, which is what these tables are about. The named rung is
+/// asserted where a name can exist at all — the §11 window (bl-b6d0,
+/// `shell::acceptance::naming`).
 fn painted(entries: &[InboxEntry], raw: bool) -> String {
-    crate::paint_probe::paint(|ui| render(ui, entries, raw))
+    crate::paint_probe::paint(|ui| render(ui, entries, &[], raw))
 }
 
 /// One listing entry carrying `body` as its parsed deposit and `raw` as the
@@ -154,7 +158,7 @@ const PANE: (f32, f32) = (1400.0, 400.0);
 fn an_empty_inbox_names_itself_and_the_paved_path_at_the_top_of_the_pane() {
     for raw in [false, true] {
         let painted =
-            crate::paint_probe::painted_settled(PANE.0, PANE.1, |ui| render(ui, &[], raw));
+            crate::paint_probe::painted_settled(PANE.0, PANE.1, |ui| render(ui, &[], &[], raw));
         let said: Vec<&str> = painted.iter().map(|(text, _)| text.as_str()).collect();
         for want in [NO_DEPOSITS, HOW_MAIL_ARRIVES] {
             assert!(

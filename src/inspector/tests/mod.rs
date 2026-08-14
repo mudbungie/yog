@@ -25,7 +25,7 @@ pub(super) const SPEAKER: &str = "shudder-storeroom";
 pub(super) fn paint(tab: InspectorTab, data: &TabData) -> String {
     let mut eph = Ephemera::default();
     crate::paint_probe::paint(|ui| {
-        render(ui, tab, data, &mut eph);
+        render(ui, tab, data, &[], &mut eph);
     })
 }
 

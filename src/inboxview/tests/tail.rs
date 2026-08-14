@@ -27,8 +27,9 @@ fn deposits(n: usize) -> Vec<InboxEntry> {
 #[test]
 fn a_tall_inbox_shows_its_newest_deposits() {
     let entries = backlog();
-    let painted =
-        crate::paint_probe::paint_settled(NARROW.0, NARROW.1, |ui| render(ui, &entries, false));
+    let painted = crate::paint_probe::paint_settled(NARROW.0, NARROW.1, |ui| {
+        render(ui, &entries, &[], false);
+    });
     assert!(
         painted.contains("deposit-029"),
         "newest deposit must be seen:\n{painted}"
@@ -41,8 +42,9 @@ fn a_tall_inbox_shows_its_newest_deposits() {
 
 /// The bottommost pixel `entries` paint in the narrow viewport.
 fn bottom_of(entries: &[InboxEntry]) -> f32 {
-    let painted =
-        crate::paint_probe::painted_settled(NARROW.0, NARROW.1, |ui| render(ui, entries, false));
+    let painted = crate::paint_probe::painted_settled(NARROW.0, NARROW.1, |ui| {
+        render(ui, entries, &[], false);
+    });
     crate::paint_probe::span(&painted).1
 }
 

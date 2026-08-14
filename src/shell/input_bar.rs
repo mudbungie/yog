@@ -156,7 +156,13 @@ pub fn composer(
         cap,
     };
     let before = state.actions.drafts.text(&key);
-    let edit = inbox_queue::region(ui, &mut state.composer, &mut state.actions.drafts, &queue);
+    let edit = inbox_queue::region(
+        ui,
+        &mut state.composer,
+        &mut state.actions.drafts,
+        &queue,
+        &agents,
+    );
     // A §8.5 line's answer belongs to the line that earned it: edit anything,
     // and what is on screen is about something you are no longer saying.
     if state.actions.drafts.text(&key) != before {

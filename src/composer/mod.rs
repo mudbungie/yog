@@ -81,14 +81,21 @@ pub struct QueueRow {
 /// Project an agent's pending listing into queue rows, oldest-first (the
 /// listing's own order). `folds` is the caller's RAM override set (§5.3):
 /// membership flips a row open — the jsonview discipline, an empty set means
-/// "everything as configured" (folded).
-pub fn rows(agent_id: &str, pending: &[InboxEntry], folds: &HashSet<String>) -> Vec<QueueRow> {
+/// "everything as configured" (folded). `agents` is the frame's roster, which
+/// the header's sender rides the §3.3 ladder over ([`header_line`], bl-b6d0) —
+/// derived here where the row is projected, never stored on the deposit.
+pub fn rows(
+    agent_id: &str,
+    pending: &[InboxEntry],
+    agents: &[crate::git_tree::Agent],
+    folds: &HashSet<String>,
+) -> Vec<QueueRow> {
     pending
         .iter()
         .map(|entry| {
             let key = format!("inbox/{agent_id}/{}", entry.name);
             QueueRow {
-                header: header_line(&entry.deposit),
+                header: header_line(&entry.deposit, agents),
                 role: crate::theme::message_role(
                     entry.deposit.sender.as_deref().unwrap_or_default(),
                     entry.deposit.epitaph.is_some(),
