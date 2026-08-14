@@ -21,6 +21,18 @@
 # clone is disposable state `bl prime` re-founds — a gate there is absent on
 # every other checkout and silently absent after the next re-clone).
 #
+# WHAT IT SCANS: the op's OWN commit — the blobs it adds or rewrites plus its
+# message — never the whole store (bl-1007). A store checkout is shared and
+# long-lived, so a tree scan judges every agent for every other agent's text:
+# one polluted body refused every `bl` op in the checkout, `create` included,
+# so the defect about the wedge could not be filed. It also read a checkout
+# other ops write concurrently, and reported an in-flight body no commit ever
+# carried. The `commit` field of the §7 post payload is the op's own text and
+# nothing else, and that is what the author can fix. The whole-ref question —
+# what the store carries in total, including whatever predates this gate — is
+# `.github/workflows/store-scan.yml`'s, daily, where a hit's remedy (a history
+# rewrite) lives anyway.
+#
 # WHAT IT CANNOT DO. It does not stop a determined author: the same agent can
 # `bl conf remove <op>.post yog-leak-gate`, or commit and push in the store
 # clone by hand. Nothing local can stop that, exactly as `--no-verify` defeats
@@ -62,15 +74,31 @@ payload=''
 # repository — the same hazard AGENTS.md pins for every yog spawn.
 unset $(git rev-parse --local-env-vars) 2>/dev/null || true
 
-# The store checkout, off the §7 payload. Fail CLOSED: a payload this plugin
-# cannot read is not a clean store, and a gate that shrugs is not a gate. The
-# message names its own removal, so a wire change can never wedge a box.
-store="$(printf '%s' "$payload" | tr -d '\n' |
-  sed -n 's/.*"store"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+# One §7 field, by name. `"commit"` cannot match inside `"previous_commit"` —
+# the pattern's leading quote is the anchor — and the paths `bl` writes carry
+# no escaped quote.
+field() {
+  printf '%s' "$payload" | tr -d '\n' |
+    sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p"
+}
+
+# The store checkout and the op's own commit, off the §7 payload. Fail CLOSED
+# on either: a payload this plugin cannot read is not a clean store, and a gate
+# that shrugs is not a gate. Both messages name the unwire, so a wire change
+# can never wedge a box with no way out.
+store="$(field store)"
 if [ -z "$store" ] || [ ! -d "$store" ]; then
   echo "yog-leak-gate: the $op payload named no readable store checkout, so the" >&2
   echo "  task store went unscanned and this op is refused. If the plugin wire" >&2
   echo "  changed, unwire it (bl conf remove $op.$phase yog-leak-gate) and file it." >&2
+  exit 1
+fi
+commit="$(field commit)"
+if [ -z "$commit" ]; then
+  echo "yog-leak-gate: the $op payload named no store commit, so what this op" >&2
+  echo "  publishes cannot be told from what the store already carried, and the" >&2
+  echo "  op is refused. If the plugin wire changed, unwire it (bl conf remove" >&2
+  echo "  $op.$phase yog-leak-gate) and file it." >&2
   exit 1
 fi
 
@@ -88,12 +116,13 @@ fi
 cd "$store" || exit 1
 # Findings and the clean line both go to stderr: stdout is the user-facing
 # channel and this plugin has nothing to say there.
-if "$scan" >&2; then
+if "$scan" --commit "$commit" >&2; then
   exit 0
 fi
 
 echo "yog-leak-gate: the $op is REFUSED and the store commit rolled back — the" >&2
-echo "  ball body above would have published that material to the task ref." >&2
+echo "  text above is THIS op's own, and it would have published that material" >&2
+echo "  to the task ref." >&2
 echo "  Rewrite the text (cite the shape, not the instance: /home/u, not a real" >&2
 echo "  account path) and run the same command again. AGENTS.md, 'What may" >&2
 echo "  never enter a ball body', is the full list." >&2

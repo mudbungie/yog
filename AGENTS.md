@@ -293,8 +293,22 @@ demotion removes an internal API from the boundary's obligations. Reach for
   name the scanner; not being cacheable dissolves that rather than waiting on
   upstream.)
 
-  Its regression half is `--self-test`, which the target runs first and which
-  is stricter than `rules-audit`'s: every rule owns a fixture in
+  **Two scopes, because they answer different questions (bl-1007).** Bare, it
+  scans the whole tracked tree — the right question for a commit hook (the tree
+  IS your change) and for CI over a published ref. `--commit REV` scans what
+  ONE commit publishes: the blobs it adds or rewrites, read out of that commit,
+  plus its MESSAGE. That is the store gate's question, and only it can read a
+  `-m` note, which lands in no file at all. A tree scan is wrong for a shared,
+  long-lived checkout many agents write: run at every store op it judged every
+  agent for every other agent's text, so one polluted ball body refused every
+  `bl` op in the checkout — `create` included, so the defect about the wedge
+  could not be filed. Prevention is per-author and local; the standing-state
+  question stays with `store-scan.yml`, daily, over the whole ref.
+
+  Its regression half is `--self-test` (the harness lives in
+  `scripts/leak-selftest.sh`, sourced so it exercises the same functions the
+  gate runs), which the target runs first and which is stricter than
+  `rules-audit`'s: every rule owns a fixture in
   `scripts/leak-fixtures/` where **every non-comment line** must be flagged
   **by that rule** — so one dead alternative inside a nine-way pattern cannot
   hide behind the eight still working — and must carry `FIXTURE_MARKER`
@@ -394,15 +408,36 @@ context.
 
 `scripts/yog-leak-gate` is a **balls plugin** that runs `scripts/leak-scan.sh`
 — the same script and the same `leak-rules.sh` table as `make leak-scan`,
-because two copies of the rules drift within a week — over the store checkout,
-and exits non-zero. A non-zero exit is the balls protocol's abort: the op is
-refused and the plugins that already ran roll back in reverse, so the store
-commit is un-sealed before `bl-tracker` can push it.
+because two copies of the rules drift within a week — over **the op's own store
+commit**, and exits non-zero. A non-zero exit is the balls protocol's abort: the
+op is refused and the plugins that already ran roll back in reverse, so the
+store commit is un-sealed before `bl-tracker` can push it.
 
 It hangs at `<op>.post`, not `pre`. A `pre` plugin runs **before** `bl` writes
 the task file, so it would scan the previous state and wave through the very
 body being added; `post` is the one window in which the ball exists and has not
 yet been published.
+
+**It scans the op's commit, not the store (bl-1007).** The §7 post payload
+carries `commit`; the gate hands it to `leak-scan.sh --commit`, which reads the
+blobs that commit adds or rewrites plus its message. The first version scanned
+the whole store checkout, and a store checkout is shared, long-lived and
+written by concurrent ops: one polluted ball body then refused every agent's
+every `bl` op — `create` included, so the defect about the wedge could not be
+filed — and reported findings in a body no commit had ever carried, off another
+op's in-flight worktree. The author who writes a bad body is now the one who is
+told, at the moment of writing; whether the store carries a finding in total is
+`store-scan.yml`'s question, and it is asked daily over the published ref.
+Fail-closed on either field: a payload naming no store, or no commit, refuses
+and names the unwire.
+
+**The machine layer runs the same scanner and must pass the same scope.**
+`bl-leak-gate` (the operator's `~/.config/balls/plugins.toml` entry, balls
+bl-053a) runs `<project>/scripts/leak-scan.sh` over the store of *every*
+opted-in project on the box. Bare, that is the whole-tree scan and the wedge
+above; it wants `--commit "$commit"` off the same payload field. That plugin is
+not a yog artifact and yog cannot edit it — this note is the record of what it
+needs.
 
 Wiring is one act per checkout, and this repo cannot perform it — the plugin
 schedule lives in the balls landing (`balls/config`), not in yog's tree:

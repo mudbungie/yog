@@ -11,8 +11,11 @@
 #
 #   scripts/leak-scan.sh              scan the whole tracked tree (the gate)
 #   scripts/leak-scan.sh FILE...      scan exactly these files (commit-msg)
+#   scripts/leak-scan.sh --commit REV scan what REV publishes: the blobs it
+#                                     adds or rewrites, plus its message
 #   scripts/leak-scan.sh --self-test  prove every rule still fires, and that
 #                                     none fires on the clean fixture
+#                                     (the harness lives in leak-selftest.sh)
 #
 # THE TREE IT SCANS IS THE ONE IT IS RUN IN, WHICH NEED NOT BE THIS REPO
 # (bl-1043). The rule table is resolved from the SCRIPT's own directory and the
@@ -24,6 +27,19 @@
 # rules for them would drift from this one inside a week. Its callers are
 # `scripts/yog-leak-gate` (the balls plugin, before the store is pushed) and
 # `.github/workflows/store-scan.yml` (the published ref, after).
+#
+# TWO SCOPES, BECAUSE THEY ANSWER DIFFERENT QUESTIONS (bl-1007). The tree mode
+# asks "does this checkout carry a finding" — the right question for a commit
+# hook (the tree IS your change) and for the workflow that judges the published
+# ref. It is the WRONG question for a shared, long-lived checkout written by
+# many agents: run at every store op, one polluted ball body refuses every
+# agent's every op — create included, so the defect about the wedge could not
+# be filed — and the author who wrote it is never the one who is told. The
+# `--commit` mode asks "does this OP publish a finding", which is the author's
+# own text at the moment of writing, and it is what a store gate wants. The
+# standing-state question is still asked, once a day, by
+# `.github/workflows/store-scan.yml` over the whole ref — where a hit's remedy
+# (a history rewrite) belongs anyway.
 #
 # THE TREE MODE READS INDEX BLOBS, NOT THE WORKTREE. That is the whole of
 # bl-167d's headline: this scan used to enumerate `git ls-files` and then hand
@@ -175,110 +191,89 @@ scan() {
 
 # --- modes -----------------------------------------------------------------
 
-# The index, materialized into SCAN_DIR. Everything the tree mode reads comes
-# from here, so "what the gate scanned" and "what the commit contains" are the
-# same bytes. Not a command substitution: the trap has to be set in THIS shell
-# or the scratch tree is deleted the moment the subshell returns it.
-checkout_index() {
-  SCAN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/leak-scan.XXXXXXXX")"
-  trap 'rm -rf "$SCAN_DIR"' EXIT
-  git checkout-index --all --force --prefix="$SCAN_DIR/"
-}
-
-scan_tree() {
+# scan_set FILE... -> 0 clean, 1 with findings. The file-list scan every mode
+# shares: a rule's own fixture is judged by every rule BUT its own (see the
+# header), so one file cannot mean two things depending on which mode read it.
+# `${a[@]+"${a[@]}"}`, not `"${a[@]}"`: under `set -u` bash 3.2 treats the
+# expansion of an EMPTY array as an unbound variable, kills the shell mid-scan
+# — and exits 0 doing it, so a tree full of findings passed the gate on macOS,
+# which ships 3.2 and always will (bl-1015). The guard is the portable idiom
+# for "expand this array, or nothing".
+scan_set() {
   local files=() fixtures=() f rc=0
-  while IFS= read -r f; do
+  for f in "$@"; do
     case "$f" in "$FIXTURES"/*) fixtures+=("$f"); continue ;; esac
     files+=("$f")
-  done < <(git ls-files)
-  if [ "${#files[@]}" -eq 0 ]; then
-    echo "leak-scan: enumerated 0 tracked files — the scan is broken, not the tree." >&2
-    exit 1
-  fi
-  checkout_index
-  cd "$SCAN_DIR"
-  scan "${files[@]}" || rc=1
-  # Each fixture, judged by every rule but its own (see the header).
-  # `${a[@]+"${a[@]}"}`, not `"${a[@]}"`: under `set -u` bash 3.2 treats the
-  # expansion of an EMPTY array as an unbound variable, kills the shell mid-scan
-  # — and exits 0 doing it, so a tree full of findings passed the gate on macOS,
-  # which ships 3.2 and always will (bl-1015). The guard is the portable idiom
-  # for "expand this array, or nothing".
+  done
+  if [ "${#files[@]}" -gt 0 ]; then scan "${files[@]}" || rc=1; fi
   for f in ${fixtures[@]+"${fixtures[@]}"}; do
     f="${f##*/}"
     scan --skip "${f%.*}" "$FIXTURES/$f" || rc=1
   done
-  [ "$rc" -eq 0 ] || exit 1
-  echo "leak-scan: $(( ${#files[@]} + ${#fixtures[@]} )) tracked files, no disclosure findings"
+  return "$rc"
 }
 
-# --- self-test -------------------------------------------------------------
-
-# Every non-blank, non-'#' line of a rule's fixture must be flagged BY THAT
-# RULE and must carry FIXTURE_MARKER; nothing in the clean fixtures may be
-# flagged by anything.
-fixture_lines() {
-  local rule="$1" fixture="$2" hit="$3" ln fails=0 n=0 content
-  while IFS= read -r ln; do
-    [ -n "$ln" ] || continue
-    n=$((n + 1))
-    content="$(sed -n "${ln}p" "$fixture")"
-    if [ "$rule" = forbidden-path ]; then
-      printf '%s\n' "$hit" | grep -qF "$content" || {
-        echo "self-test: [$rule] line $ln of $fixture was NOT flagged" >&2; fails=1; }
-      continue
-    fi
-    printf '%s\n' "$hit" | grep -qE ":$ln  \[" || {
-      echo "self-test: [$rule] line $ln of $fixture was NOT flagged" >&2; fails=1; }
-    printf '%s' "$content" | grep -qi "$FIXTURE_MARKER" || {
-      echo "self-test: [$rule] line $ln of $fixture carries no '$FIXTURE_MARKER' marker — a fixture value must be unmistakably fabricated" >&2
-      fails=1; }
-  done <<<"$(grep -nvE '^(#|$)' "$fixture" | cut -d: -f1)"
-  [ "$n" -gt 0 ] || { echo "self-test: $fixture has no cases" >&2; fails=1; }
-  return "$fails"
+# A scratch tree for a mode to materialize into. Not a command substitution:
+# the trap has to be set in THIS shell or the directory is deleted the moment
+# the subshell returns it.
+scratch() {
+  SCAN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/leak-scan.XXXXXXXX")"
+  trap 'rm -rf "$SCAN_DIR"' EXIT
 }
 
-self_test() {
-  local rule fixture fails=0 hit p
-  for rule in "${RULES[@]}" forbidden-path; do
-    fixture="$FIXTURES/$rule.txt"
-    if [ ! -f "$fixture" ]; then
-      echo "self-test: rule '$rule' has no fixture at $fixture" >&2; fails=1; continue
-    fi
-    if [ "$rule" = forbidden-path ]; then
-      hit="$(grep -vE '^(#|$)' "$fixture" | while IFS= read -r p; do scan_paths "$p"; done)"
-    else
-      hit="$(scan_rule "$rule" "$fixture")"
-    fi
-    fixture_lines "$rule" "$fixture" "$hit" || fails=1
-  done
-  # binary-content owns bytes, not lines: its fixture cannot carry a marker or
-  # be read at all, so it is capped instead. 512 bytes is far too small to
-  # smuggle a dump through the one file the scanner cannot look inside.
-  fixture="$FIXTURES/binary-content.bin"
-  [ -n "$(scan_binary "$fixture")" ] || {
-    echo "self-test: [binary-content] $fixture was NOT flagged" >&2; fails=1; }
-  [ "$(wc -c <"$fixture")" -le 512 ] || {
-    echo "self-test: $fixture is over the 512-byte cap on unreadable fixtures" >&2; fails=1; }
-  [ -z "$(scan_binary assets/yog-16.png)" ] || {
-    echo "self-test: a declared derivation (assets/yog-16.png) was flagged binary" >&2; fails=1; }
-  # The false-positive direction, and the half that keeps the gate usable: a
-  # near-miss for every rule, none of which may be flagged.
-  if ! scan "$FIXTURES/clean.txt"; then
-    echo "self-test: $FIXTURES/clean.txt was flagged above — a rule is over-broad" >&2
-    fails=1
+# The whole tracked tree, read from the INDEX: `git checkout-index`
+# materializes it into the scratch tree, so "what the gate scanned" and "what
+# the commit contains" are the same bytes.
+scan_tree() {
+  local files=() f
+  while IFS= read -r f; do files+=("$f"); done < <(git ls-files)
+  if [ "${#files[@]}" -eq 0 ]; then
+    echo "leak-scan: enumerated 0 tracked files — the scan is broken, not the tree." >&2
+    exit 1
   fi
-  while IFS= read -r p; do
-    case "$p" in '#'*|'') continue ;; esac
-    [ -z "$(scan_paths "$p")" ] || {
-      echo "self-test: clean path '$p' was flagged — forbidden-path is over-broad" >&2; fails=1; }
-  done <"$FIXTURES/clean-paths.txt"
-  [ "$fails" -eq 0 ] || exit 1
-  echo "leak-scan: self-test OK — ${#RULES[@]} content rules + forbidden-path + binary-content all live, clean fixtures unflagged"
+  scratch
+  git checkout-index --all --force --prefix="$SCAN_DIR/"
+  cd "$SCAN_DIR"
+  scan_set "${files[@]}" || exit 1
+  echo "leak-scan: ${#files[@]} tracked files, no disclosure findings"
+}
+
+# What one commit publishes: the blobs it adds or rewrites, plus its MESSAGE.
+# Blobs out of the commit, never the index or the worktree — in a checkout many
+# agents share, both of those carry other people's in-flight text, and a gate
+# must judge the author for what the author wrote. The message is scanned
+# because it is published prose that lands in no file at all: a `-m` note is
+# the whole of what `bl close` writes, and AGENTS.md governs it like a body.
+scan_commit() {
+  local rev="$1" files=() f rc=0
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    files+=("$f")
+  done < <(git diff-tree --no-commit-id --name-only -r -m --root \
+    --diff-filter=ACMR "$rev" | sort -u)
+  scratch
+  mkdir "$SCAN_DIR/tree"
+  # No blobs is not a broken scan here, unlike the tree mode: a commit that
+  # only deletes (an archived ball) publishes its message and nothing else.
+  if [ "${#files[@]}" -gt 0 ]; then
+    # `-m`: take the bytes, not the archive's timestamps — a clock skewed
+    # against the commit's date makes tar warn on stderr, and this scan's
+    # stderr is a plugin's user-facing channel.
+    git archive "$rev" -- "${files[@]}" | tar -xm -C "$SCAN_DIR/tree"
+  fi
+  git log -1 --format=%B "$rev" >"$SCAN_DIR/message"
+  cd "$SCAN_DIR"
+  scan message || rc=1
+  (cd tree && scan_set ${files[@]+"${files[@]}"}) || rc=1
+  [ "$rc" -eq 0 ] || exit 1
+  echo "leak-scan: ${#files[@]} file(s) and the message of $rev, no disclosure findings"
 }
 
 case "${1-}" in
-  --self-test) self_test ;;
+  # The harness is sourced, not re-implemented: it runs against the same
+  # functions above that the gate runs. See scripts/leak-selftest.sh.
+  --self-test) . "$HERE/leak-selftest.sh"; self_test ;;
+  --commit) scan_commit "${2:-HEAD}" ;;
   '') scan_tree ;;
   *) scan "$@" || exit 1 ;;
 esac
