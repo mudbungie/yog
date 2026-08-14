@@ -6,7 +6,7 @@ use crate::attention::*;
 use crate::git_tree::{Agent, AgentState};
 
 /// Wrap agents as roster keys all under one workspace path, each carrying its
-/// (unacknowledged) attention verdict — the raw order, unsorted, so the step
+/// (unacknowledged) attention verdict — the raw order, unsorted, so the jump
 /// tests exercise the walk over a known sequence.
 fn roster(ags: &[Agent]) -> Vec<RosterKey> {
     ags.iter()
@@ -129,45 +129,4 @@ fn jump_unknown_focus_starts_from_front() {
     let ags = jump_fixture();
     let hit = next_attention(&roster(&ags), Some(focus("ghost"))).unwrap();
     assert_eq!(hit.agent_id, "a1");
-}
-
-#[test]
-fn step_empty_roster_is_none() {
-    assert!(step(&[], None, 1).is_none());
-}
-
-#[test]
-fn step_from_none_lands_on_the_ends() {
-    let ags = jump_fixture();
-    let r = roster(&ags);
-    // +1 from nothing → first entry; -1 from nothing → last entry. Unlike the
-    // jump, calm entries are visited: a2 is not skipped.
-    assert_eq!(step(&r, None, 1).unwrap().agent_id, "a1");
-    assert_eq!(step(&r, None, -1).unwrap().agent_id, "a3");
-}
-
-#[test]
-fn step_moves_one_entry_each_way_visiting_calm_entries() {
-    let ags = jump_fixture();
-    let r = roster(&ags);
-    // Down from a1 → a2 (calm, not skipped); up from a2 → a1.
-    assert_eq!(step(&r, Some(focus("a1")), 1).unwrap().agent_id, "a2");
-    assert_eq!(step(&r, Some(focus("a2")), -1).unwrap().agent_id, "a1");
-}
-
-#[test]
-fn step_wraps_both_directions() {
-    let ags = jump_fixture();
-    let r = roster(&ags);
-    // Down past the last wraps to the first; up past the first wraps to last.
-    assert_eq!(step(&r, Some(focus("a3")), 1).unwrap().agent_id, "a1");
-    assert_eq!(step(&r, Some(focus("a1")), -1).unwrap().agent_id, "a3");
-}
-
-#[test]
-fn step_unknown_focus_starts_from_the_end_matching_direction() {
-    let ags = jump_fixture();
-    let r = roster(&ags);
-    assert_eq!(step(&r, Some(focus("ghost")), 1).unwrap().agent_id, "a1");
-    assert_eq!(step(&r, Some(focus("ghost")), -1).unwrap().agent_id, "a3");
 }

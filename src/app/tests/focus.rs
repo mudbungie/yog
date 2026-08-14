@@ -64,25 +64,6 @@ fn jump_to_next_attention_focuses_and_acknowledges_it() {
 }
 
 #[test]
-fn roster_step_moves_focus_through_agents_and_acknowledges() {
-    let h = Harness::new();
-    let (_c, mut model) = h.model();
-    // Startup: the workspace is focused with no agent, so the unseen stop draws
-    // attention. ↓ steps onto the first (only) roster entry via focus_agent.
-    assert_eq!(model.strip_total(), 1);
-    model.roster_step(1);
-    assert_eq!(model.focus().agent.as_deref(), Some("c-1"));
-    assert_eq!(
-        model.strip_total(),
-        0,
-        "stepping onto the agent acknowledges"
-    );
-    // ↑ wraps back to the same sole entry.
-    model.roster_step(-1);
-    assert_eq!(model.focus().agent.as_deref(), Some("c-1"));
-}
-
-#[test]
 fn inspector_tab_selection_is_sticky_across_focus_changes() {
     let h = Harness::new();
     let (_c, mut model) = h.model();

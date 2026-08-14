@@ -40,7 +40,7 @@
 
 mod roster;
 pub use roster::{
-    RosterKey, next_attention, roster_order, sorted_roster, step, strip_total, workspace_count,
+    RosterKey, next_attention, roster_order, sorted_roster, strip_total, workspace_count,
 };
 
 use crate::git_tree::{Agent, AgentState};

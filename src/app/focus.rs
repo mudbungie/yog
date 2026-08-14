@@ -26,14 +26,6 @@ use crate::nav::ws_key;
 use crate::ui_state::SeenKind;
 use std::path::{Path, PathBuf};
 
-/// Which roster entry a keyboard/jump gesture lands on (§6, §11): the next
-/// attention-bearing entry, or a plain ±`delta` step. Both share the roster
-/// build in [`AppModel::pick_roster`]; only the final selection differs.
-enum Pick {
-    NextAttention,
-    Step(isize),
-}
-
 impl AppModel {
     /// Focus a workspace (center-panel target) without selecting an agent — no
     /// acknowledgement (§6: focus records seen only for a *selected agent*). The
@@ -150,22 +142,6 @@ impl AppModel {
         self.focus.tab = tab;
     }
 
-    /// Step the focus ±`delta` entries through the roster's flattened
-    /// (workspace, agent) order — §6's attention rank — landing on and
-    /// acknowledging the target agent via the [`focus_agent`](Self::focus_agent)
-    /// path. An empty roster is a no-op.
-    ///
-    /// **The ↑/↓ keys left this walk with bl-fa82**: they now step the focused
-    /// workspace's *visible list rows in paint order* (§11's unfold ruling), so
-    /// no window seat binds this any more. What §6's rank still serves is
-    /// [`jump_next_attention`](Self::jump_next_attention) beside it and the §8.5
-    /// queue that shares the one roster build.
-    pub fn roster_step(&mut self, delta: isize) {
-        if let Some((ws, agent)) = self.pick_roster(Pick::Step(delta)) {
-            self.focus_agent(&ws, &agent);
-        }
-    }
-
     /// The agent with `id` in `ws`'s snapshot, if both are present.
     fn agent_in(&self, ws: &Path, id: &str) -> Option<&crate::git_tree::Agent> {
         self.snap
@@ -202,25 +178,17 @@ impl AppModel {
     /// Jump-to-next-attention (§6): advance focus to the next attention-bearing
     /// agent after the current focus (wrapping), and acknowledge it — the strip
     /// control that walks the operator through everything that needs them.
+    ///
+    /// The roster it walks is [`queue::roster`] — **one** build, shared with the
+    /// §8.5 decision queue, so what this control walks and what a headless seat
+    /// is handed can never be two orders. It is the sole consumer of §6's rank
+    /// in the window: the ↑/↓ keys left it with bl-fa82 and now step the focused
+    /// workspace's visible list rows in paint order (§11's unfold ruling).
     pub fn jump_next_attention(&mut self) {
-        if let Some((ws, agent)) = self.pick_roster(Pick::NextAttention) {
-            self.focus_agent(&ws, &agent);
-        }
-    }
-
-    /// Select one entry from the §6 flattened roster, returning owned ids. The
-    /// roster itself is [`queue::roster`] — **one** build, shared with the §8.5
-    /// decision queue, so what the ↓ key walks and what a headless seat is
-    /// handed can never be two orders. The [`Pick`] chooses the selector
-    /// (next-attention vs a ±step), the only difference between the jump
-    /// control and keyboard ↑/↓.
-    fn pick_roster(&self, pick: Pick) -> Option<(PathBuf, String)> {
         let roster = queue::roster(&self.snap, &self.ui);
-        let key = match pick {
-            Pick::NextAttention => attention::next_attention(&roster, self.focus_pos()),
-            Pick::Step(delta) => attention::step(&roster, self.focus_pos(), delta),
-        };
-        key.map(|k| (PathBuf::from(k.ws), k.agent_id))
+        if let Some(k) = attention::next_attention(&roster, self.focus_pos()) {
+            self.focus_agent(&PathBuf::from(k.ws), &k.agent_id);
+        }
     }
 
     /// The current focus as a `(ws, agent)` position (both a workspace and an
