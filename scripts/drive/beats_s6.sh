@@ -241,7 +241,7 @@ s6_stop_ack() {
 s6_converges() {
   data=$1 ; out=$2
   lines=$(wc -l < "$ops")
-  read -r bpid bwid < <("$drive" launch "$data")
+  launch_engine "$data" ; bpid=$engine_pid ; bwid=$engine_wid
   sleep 4
   "$drive" shot "$bwid" "$out/s6-06-second-instance.png"
   [ "$(wc -l < "$ops")" = "$lines" ] \

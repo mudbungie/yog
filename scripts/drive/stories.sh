@@ -27,7 +27,7 @@
 # NAMED spelling, and there are exactly two, in this order: (1) the DESIGN §11
 # keyboard binding, where the beat's subject is the window — its focus
 # discipline, its selection, the verb the operator presses; (2) the DESIGN §8.5
-# control boundary (`gesture` below), where it is not. That is VISION §4.8's
+# control boundary (`gesture`, in `gesture.sh`), where it is not. That is VISION §4.8's
 # last consequence — "the drive harness stops steering pixels: story beats
 # address the headless surface, and screenshots become what they always should
 # have been, visual confirmation, not the transport." A §11 rule-2 *pick*
@@ -100,29 +100,17 @@ seed() {
   seed_wall "$data" "$BOOTSTRAP_WS"
 }
 
-# --- the control boundary (DESIGN §8.5) -------------------------------------
-# One gesture across the boundary, in the line spelling: the same `Gesture` the
-# window's click-glue constructs, deposited into the running yog's gestures
-# inbox and run by its own consumer thread — one surface, one dispatch, no
-# second implementation. It needs NO SEAT: a boundary gesture is named, not
-# aimed, so there is no display, no window id and nothing to measure; and the
-# terminal holds no selection, so a line states its targets outright
-# (`--ws / --agent / --project / --as`), which is what those flags are for.
-#
-# It is also its OWN RECEIPT — `yog gesture` waits for the reply file and exits
-# on its verdict — which is why no `until_landed` wraps one: that primitive
-# exists because a click has no reply and may have hit blank panel, and a deposit
-# cannot miss. The reply JSON lands beside the screenshots as the audit half; the
-# SCREENSHOT after is the other half, and now proves what it never could — that
-# the window converged on a gesture it did not itself fire.
-gesture() { d=$1 ; shift ; XDG_DATA_HOME="$d" yog gesture "$@" >>"$out/gestures.jsonl" 2>&1; }
-
 # --- the shared harness tier ------------------------------------------------
 # The assertion helpers, the two waiting primitives (`await`, `until_landed`),
 # the per-run seat and the verdict all live in `harness.sh` — none of them is
 # about S0/S1, and every sourced beats_* file below calls them. It also carries
 # the verdict's machine-keyable half, the `verdicts.jsonl` row each PASS/FAIL
-# line now writes beside `gestures.jsonl` (bl-56d5).
+# line now writes beside `gestures.jsonl` (bl-56d5), and it sources the two
+# tiers of its own: the §16.2 wall fixture (`wall.sh`) and the §8.5 boundary
+# transport with the engine it is aimed at (`gesture.sh` — `launch_engine`,
+# `engine_alive`, `gesture`). The `gesture` helper lived HERE until bl-5cf7 gave
+# it a deadline; it is no more about S0/S1 than `await` is, and it could not
+# grow its watch where it sat, this file being at the 300-line cap.
 . "$here/harness.sh"
 
 # --- the run ----------------------------------------------------------------
@@ -135,7 +123,7 @@ run() {
   ops="$data/yog/world/state/yog/ops.jsonl"
 
   # S0 — bare start: launch, type a wire-check goal, Enter.
-  read -r pid wid < <("$drive" launch "$data")
+  launch_engine "$data" ; pid=$engine_pid ; wid=$engine_wid
   sleep 1
   "$drive" shot "$wid" "$out/s0-01-launch.png"
   # Escape then `i` — §11's composer-focus idiom (the STEERING RULE above): the
@@ -231,7 +219,7 @@ run() {
   # S1 restart-equivalence: kill, relaunch same world, state re-derives.
   "$drive" stop "$pid" ; sleep 1
   ops_lines_before=$(wc -l < "$ops")
-  read -r pid2 wid2 < <("$drive" launch "$data")
+  launch_engine "$data" ; pid2=$engine_pid ; wid2=$engine_wid
   sleep 2
   "$drive" shot "$wid2" "$out/s1-06-restart.png"
   [ "$(wc -l < "$ops")" = "$ops_lines_before" ] \
