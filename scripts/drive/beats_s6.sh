@@ -48,9 +48,17 @@ s6_attention() {
   "$drive" shot "$wid" "$out/s6-02-strip-acked.png"
   # Rule 5 is not silenceable: no `mail` watermark exists to write, in any
   # instance, ever — the screenshot shows the strip still carrying it.
-  ! grep -q '"mail"' "$ui" \
+  #
+  # BRACKETED, because the claim is a negative and a negative is satisfied by the
+  # ack never happening. A bare `! grep -q '"mail"' "$ui"` was true of a missing
+  # ui.json and of every run where the ↓ above landed on nothing: `grep` exits 2,
+  # the `!` turns that into a PASS, and the beat reported that mail survived an
+  # acknowledgement that was never made (bl-f16e). The first clause is the
+  # bracket — THIS agent was acknowledged — so the absence below is an absence
+  # measured against a write that certainly happened.
+  { seen_kind "$ui" "$agent" && ! grep -q '"mail"' "$ui"; } \
     && pass "S6-T1 mail: no watermark exists to silence it" \
-    || fail "S6-T1 mail: no watermark exists to silence it" "mail was seen-gated"
+    || fail "S6-T1 mail: no watermark exists to silence it" "mail was seen-gated, or no ack to measure"
 }
 
 # S4-T7 — the tab strip's overflow and pins. A **foreign** workspace (lernie's own

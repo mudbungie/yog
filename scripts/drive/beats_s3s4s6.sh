@@ -12,15 +12,19 @@ in_world() { d=$1; shift; XDG_DATA_HOME="$d" yog exec --cwd "$d/proj" "$@"; }
 # Ball-world predicates, shaped for `await` (stories.sh): each is a bare
 # true/false read of a real surface, never a sleep-and-hope.
 ball_gone() { [ "$(in_world "$1" bl list --json)" = "[]" ]; }
-closed_claims() { in_world "$1" bl list -s closed --json | grep -q "\"claimant\": \"$2\""; }
+closed_claims() { [ -n "$2" ] && in_world "$1" bl list -s closed --json | grep -q "\"claimant\": \"$2\""; }
 spheres_are() { [ "$(find "$1/yog/workspaces" -maxdepth 1 -mindepth 1 -type d | wc -l)" = "$2" ]; }
 # `stopped` and `other_root` — the two predicates this run shares with the S6
 # stage it hands off to — are in `harness.sh`, the tier every run shares: they
 # read `$ops` and `$ws_root` exactly as `verb_ge` and `agent_count` do.
 # the ball rung's whole point (§3.3): the detached driver runs *in the worktree*
 # `bl claim` cut, not in the project and not in the operator's cwd.
+# The ball id is required: interpolating an empty one leaves a pattern that is
+# about a trailing slash and not about a ball at all — the id-taking predicates
+# in this harness all refuse an empty subject rather than assert on its shape
+# (bl-f16e).
 prompt_cwd_is_worktree() {
-  grep '"lernie","prompt"' "$ops" 2>/dev/null | grep -q "\"cwd\":\"[^\"]*/$1\""
+  [ -n "$1" ] && grep '"lernie","prompt"' "$ops" 2>/dev/null | grep -q "\"cwd\":\"[^\"]*/$1\""
 }
 
 # The world seed plus a real git project primed INTO the world carrying one

@@ -56,8 +56,12 @@ lay_work() {
 row_failed_with() {
   grep "$1" "$ops" 2>/dev/null | grep -v '"exit":0' | grep -q "$2"
 }
-# the ball is still in the live set (a refused close leaves it claimed)
-ball_listed() { in_world "$1" bl list --json | grep -q "$2"; }
+# the ball is still in the live set (a refused close leaves it claimed). The id
+# is REQUIRED and matched as a quoted JSON token: an empty `$2` made this
+# `grep -q ""`, true of any non-empty listing, so the beat below passed
+# unconditionally in exactly the runs where its own predecessor found no refused
+# close to name (bl-f16e).
+ball_listed() { [ -n "$2" ] && in_world "$1" bl list --json | grep -q "\"$2\""; }
 claim_rows() { c=$(grep -c '"bl","claim"' "$ops" 2>/dev/null) || true; echo "${c:-0}"; }
 
 # The residual ball rows, driven in world A's window (the Config tab already left).
@@ -143,10 +147,16 @@ s3_close_gate() {
   "$drive" shot "$wid" "$out/s3r-04-gate-refused.png"
   # A refused close leaves the ball CLAIMED, not delivered — asserted on the very
   # ball that failed, read back out of the failed row's own argv.
+  # `$refused` is the SUBJECT, so its absence is a failure of this beat and not a
+  # licence to assert nothing: when the beat above found no failed close row the
+  # extraction yielded the empty string, and `ball_listed` was then asked whether
+  # the listing contains "" — which it always does (bl-f16e, the same shape as
+  # bl-afa7's `$minted`).
   refused=$(grep '"bl","close"' "$ops" | grep -v '"exit":0' | grep -o 'bl-[0-9a-f]*' | head -1)
   ball_listed "$data" "$refused" \
     && pass "S3-T4 close gate: the refused ball is still claimed" \
-    || fail "S3-T4 close gate: the refused ball is still claimed" "$refused left the live set"
+    || fail "S3-T4 close gate: the refused ball is still claimed" \
+           "${refused:-no refused close row to name} not in the live set"
   # S6-T5's `M ⚠` half: the chip's error count is a projection over the tail at
   # read time (§6), and there is now exactly one live failure to project. The
   # count itself is the screenshot's half — nothing on disk stores it — so the

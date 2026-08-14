@@ -23,7 +23,7 @@
 # model cache live inside the **per-workspace wall**,
 # `<world>/walls/<name>/brazen/*`, and a newborn workspace's wall is an EMPTY
 # DIRECTORY. So a scratch world's provider table is brazen's shipped defaults
-# until `seed_wall` (harness.sh) copies the host's config and credentials in —
+# until `seed_wall` (wall.sh) copies the host's config and credentials in —
 # which it does with the world seed, before the launch, keyed by §3.1's bootstrap
 # constant `home` (bl-1851). That is a *fixture* fact this file checks in under a
 # second and reports below.
@@ -64,7 +64,7 @@ seedfile() { # seedfile <path> <what it carries>
 real_world="$HOME/.local/share/yog/world/lernie"
 # The host's own brazen state, which is a FIXTURE SOURCE now and not a
 # destination: nothing yog spawns reads it since §16.2's ruling. The harness
-# copies out of it into each scratch workspace's wall (`seed_wall`, harness.sh),
+# copies out of it into each scratch workspace's wall (`seed_wall`, wall.sh),
 # so both paths are anchored on `$HOME` exactly as `real_world` is — the clean
 # room overrides the XDG roots onto its own scratch, and a source that folded
 # off those would vanish inside the room it is meant to supply.

@@ -76,7 +76,11 @@ CHILD_SEG=20260727T090100Z-c0ffeeba
 # `seen_kind` — the `seen[ws][agent].<kind>` watermark read — now lives in
 # harness.sh, the tier every run shares: the S6 beats read the same fact off the
 # same file, and a predicate two runners assert on has one home (bl-2d45).
-seen_agent() { grep -q "\"$2\"" "$1" 2>/dev/null; }
+# `seen_agent` — a bare `grep -q "\"$2\"" ui.json` — is GONE rather than kept for
+# convenience: it had no caller left after that move, and an unreached vacuous
+# predicate is a loaded gun on the shelf. It answered "this string appears
+# somewhere in ui.json", which is true of a focused agent, of a path component,
+# and (on an empty id) of every file (bl-f16e). `seen_kind` is the spelling.
 alive() { kill -0 "$1" 2>/dev/null; }
 
 # --- the run ----------------------------------------------------------------
