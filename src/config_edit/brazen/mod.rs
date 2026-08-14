@@ -93,12 +93,17 @@ pub enum Applied {
 }
 
 /// The static hint that provider rows are compiled into `bz` and never appear
-/// in the file or the dump (§5.1 row 21). Rendered beside the effective pane.
+/// in the file or the dump (§5.1 row 21). Rendered beside the §9.1 editor.
 /// Deliberately count-free: the number is brazen's, and pinning it here would
 /// be a second representation of a fact the crate already owns — the login
 /// surface's [`BzRunner::providers`] listing is where they are actually named.
-pub const BUILT_IN_ROWS_HINT: &str = "built-in provider rows are compiled into bz and are not shown in this file \
-     (the Login provider list shows them)";
+///
+/// It used to end *"(the Login provider list shows them)"*. Since bl-20cb the
+/// §9.1 pane states outright that the Login tab is where the rows are named, so
+/// the parenthetical was that same routing said twice on one surface
+/// (QUALITY H1) — this line is now only the fact the *file* is short of.
+pub const BUILT_IN_ROWS_HINT: &str =
+    "built-in provider rows are compiled into bz and are not shown in this file";
 
 /// brazen's three locations **inside one workspace's wall** (§5.1 rows
 /// 19/22/23, §16.2 as amended): the layout is yog's own, so it is the same
@@ -135,10 +140,13 @@ impl BrazenPaths {
 
 /// Credential presence for a table of rows, against a credentials dir (§5.1
 /// #22): does `<dir>/<provider>.json` exist? Booleans only — contents are never
-/// read, never written. Free of the editor because the §8.3 Login surface asks
-/// the same question without one (bl-402f): it holds no draft and no Apply
-/// pipeline, only the folded dir. [`BrazenEditor::credential_presence`] is this
-/// function at the editor's own path, so there is one presence read, not two.
+/// read, never written. Free of the editor because every caller asks the
+/// question without one: the §8.3 Login surface and the boundary's own
+/// `Providers` reply hold no draft and no Apply pipeline, only the folded dir.
+/// `BrazenEditor` used to
+/// wrap it at its own path as well; since bl-20cb the §9.1 pane paints no
+/// credential column at all, so the wrapper went with the seat and this is the
+/// one presence read there has ever been meant to be.
 pub fn credential_presence(
     dir: &Path,
     rows: &[ProviderRow],
@@ -255,23 +263,6 @@ impl BrazenEditor {
     /// [`BUILT_IN_ROWS_HINT`].
     pub fn effective(&self, runner: &dyn BzRunner) -> BzOutcome {
         runner.dump_config_effective()
-    }
-
-    /// Credential presence — booleans only (§5.1 row 22). For each row of the
-    /// **effective** table (the linked brazen's answer, §16.7 W10 — not a scan
-    /// of the draft, which may be unapplied or malformed), does
-    /// `<creds-dir>/<provider>.json` exist? Contents are never read.
-    ///
-    /// The table is passed in rather than re-queried: the §9.5 pane asks brazen
-    /// **once** per open and renders every column of that one answer, so the
-    /// rows it names and the credentials it reports can never be two different
-    /// tables.
-    pub fn credential_presence(
-        &self,
-        rows: &[ProviderRow],
-        io: &dyn FileIo,
-    ) -> Vec<(String, bool)> {
-        credential_presence(&self.paths.credentials_dir, rows, io)
     }
 
     /// The model cache for a provider (§5.1 row 23) — [`model_cache_at`] at

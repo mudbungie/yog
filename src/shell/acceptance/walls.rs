@@ -29,7 +29,7 @@ const DRAFT_A: &str = "yog-5894-unsaved-draft";
 
 /// The header the §9.1 raw editor folds behind — clicked open so the draft
 /// itself reaches the paint layer, rather than asserted from RAM alone.
-const RAW_HEADER: &str = "raw config.toml — validated by bz before it lands";
+const RAW_HEADER: &str = "raw config.toml";
 
 /// A fragment of the birth scope sentence the §9.4 pane paints under its
 /// heading — painted by the open picker and by nothing else, so its presence is

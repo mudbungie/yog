@@ -24,8 +24,9 @@
 //! ("keyless — nothing to log in", "api-key provider — set the key in Config").
 //! A dead button hiding its reason behind a hover was the defect; a row that
 //! could only exit 78 now renders no verb at all. Both facts come from
-//! [`ProviderRowView`] — the same derivation the §9.5 config rows render, so
-//! the two surfaces cannot say different things about one provider.
+//! [`ProviderRowView`] — the one derivation, and since bl-20cb this is its one
+//! painted seat: the §9.1 config pane used to render the identical sentences
+//! verb-less, and now counts the rows and points here instead.
 //!
 //! Everything it calls — the row derivation and its capability read, [`LoginRun`]
 //! poll/finalize — is covered; only these widgets are not.
