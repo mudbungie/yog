@@ -26,8 +26,8 @@
 //! id is the one thing that does not commit as it is chosen — it commits on
 //! confirm, because a half-typed id is not a choice.
 
-use super::{Marked, PickerState};
-use crate::model_pick::{ModelRow, WORKER_ROLE, default_row};
+use super::PickerState;
+use crate::model_pick::{ModelRow, default_row};
 
 /// The provider list's last entry: not a row, a route to the §9.1 brazen
 /// `config.toml` editor, which is the one place a row is authored.
@@ -91,10 +91,22 @@ pub(super) fn pair_row(
     candidates: &[String],
     in_flight: bool,
 ) -> PairChoice {
-    let provider = picker
+    // Where the dropdown lands, and what it had to leave behind to get there
+    // (bl-dd7f): a role stranded on a row brazen dropped is still steered off
+    // it, but the row it was stranded on is **named** — it is the row the
+    // conversation actually dispatched through, and so the reason its first
+    // turn died. Once the operator has picked something themselves there is no
+    // strand left to report: the selection is their own answer to it.
+    let scoped = default_row(&row.provider, rows);
+    let strand = picker
         .provider
-        .clone()
-        .unwrap_or_else(|| default_row(&row.provider, rows));
+        .is_none()
+        .then(|| scoped.strand_note())
+        .flatten();
+    let provider = picker.provider.clone().unwrap_or(scoped.row);
+    if let Some(note) = strand {
+        ui.colored_label(crate::theme::ICHOR, note);
+    }
     let shown = if picker.custom.is_some() {
         CUSTOM_MODEL.to_string()
     } else {
@@ -246,47 +258,4 @@ fn custom_entry(ui: &mut egui::Ui, picker: &mut PickerState) -> Option<String> {
     picker.model = Some(id.clone());
     picker.custom = None;
     Some(id)
-}
-
-/// The role strip (§9.4: whatever roles the file declares, not a worker/compactor
-/// special case), painted in the pane because a row cannot hold it. It defaults
-/// to the role that talks to you; a role whose model is unusable carries the
-/// warning glyph, its reason painted below. Choosing another role **re-scopes
-/// the row's two dropdowns** onto that role's own assignment — the strip is the
-/// scope, not an action (bl-fb6b), so there is no per-role apply.
-pub(super) fn select_role(
-    ui: &mut egui::Ui,
-    picker: &mut PickerState,
-    marked: &[Marked],
-) -> String {
-    let fallback = marked
-        .iter()
-        .find(|(r, _)| r.role == WORKER_ROLE)
-        .or_else(|| marked.first())
-        .map_or_else(String::new, |(r, _)| r.role.clone());
-    let selected = picker.role.clone().unwrap_or(fallback);
-    let mut chosen = selected.clone();
-    ui.horizontal(|ui| {
-        ui.label("role");
-        for (role, fault) in marked {
-            let mark = if fault.is_some() { " ⚠" } else { "" };
-            let label = format!("{} · {}{mark}", role.role, role.model);
-            if ui
-                .selectable_label(role.role == selected, label)
-                .on_hover_text(
-                    "Choose which role the dropdowns above are changing — the model \
-                     it runs on now is shown beside its name. Typed, it is the first \
-                     word of `/model <role> <provider> <model-id>`.",
-                )
-                .clicked()
-            {
-                chosen.clone_from(&role.role);
-            }
-        }
-    });
-    if chosen != selected {
-        picker.role = Some(chosen.clone());
-        picker.forget_choice();
-    }
-    chosen
 }

@@ -198,6 +198,6 @@ pub fn composer(
     // banners there, where it was offered (§11, bl-6ad8), not under a box the
     // operator was not using.
     if let Some(failure) = model.last_failure(crate::opslog::Origin::Conversation) {
-        super::banner::failure_banner(ui, model, &failure);
+        super::banner::failure_banner(ui, model, state, &failure);
     }
 }

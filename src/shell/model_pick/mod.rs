@@ -59,6 +59,9 @@ use std::path::Path;
 pub(super) mod lines;
 mod marks;
 mod ram;
+/// The §9.4 role strip — the *scope* over the pair row, split from
+/// [`select`] at §12's cap on the seam that file's own doc draws (bl-dd7f).
+mod role;
 mod seat;
 mod select;
 mod write;
@@ -125,7 +128,7 @@ pub(super) fn pane(
         );
         return None;
     }
-    select::select_role(ui, picker, &marked);
+    role::select_role(ui, picker, &marked);
     let (_, fault) = marked.iter().find(|(r, _)| r.role == role)?;
     if let Some(why) = fault {
         ui.colored_label(theme::ICHOR, format!("⚠ {why}"));

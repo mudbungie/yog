@@ -49,7 +49,7 @@ pub fn board(
     // composer accused the balls section too, and a clean `bl close` here wiped
     // the composer's live banner.
     if let Some(failure) = model.last_failure(crate::opslog::Origin::Balls) {
-        super::banner::failure_banner(ui, model, &failure);
+        super::banner::failure_banner(ui, model, state, &failure);
     }
     // STORIES S3-T5: with zero projects, the paved interim for adding one. The
     // two lines come from the covered view-model (bl-b491); the command gets

@@ -2793,6 +2793,39 @@ knows the workspace, and no downstream seat has to be told.*
      conversation's steps view costs exactly what it did before this rung. The
      per-step half (that step's `request.json`) is read for failing steps alone.
 
+  6. **The config-kind fault gets the same shape** (bl-dd7f, ruled at bl-9b52).
+     Rule 5 is about credentials; the other class an operator meets on their
+     first dispatch is a **provider row that does not resolve** — a name in the
+     workspace's `providers.yaml` that brazen's table has not got, which dies as
+     `lernie prompt: provider error (Config): unknown provider \`openai-chatgpt\``.
+     That rendered on the §7.3 banner with a **Dismiss and nothing else**, and
+     Dismiss puts the sentence down without touching the file. So the banner now
+     pairs it with one sentence and one control, additive above the Dismiss and
+     below brazen's verbatim words: the remedy names the row and routes to the
+     §9.1 raw-TOML editor, which is the one place a provider row is authored
+     (`config_edit::fault`, the §11 `Config` tab).
+
+     Three things this deliberately is **not**. It is not a birth gate: §9.2's
+     was retired (bl-00ee) for judging a workspace's providers against a wall
+     that did not exist yet, and this reads a failure that already happened —
+     the row's existence is brazen's fact, resolved at call time (lernie ARCH
+     §4.1), and this is that answer arriving. It is not a re-wording: the
+     classifier adds a sentence and changes none. And it is not a join: brazen
+     quotes the name it could not resolve, so the row is already in the words
+     being classified, and a second derivation could only disagree with them.
+
+     **The picker beside that step names the row that failed** (bl-dd7f's other
+     half). §9.4's dropdown steers off a row brazen has dropped (bl-bd89) — the
+     right call, since asking a dead row for its models is the dead end the
+     picker exists to leave — but it steered *silently*, so a conversation that
+     died on `openai-chatgpt` showed a picker reading `anthropic`, brazen's
+     first row, and the operator read it as a report of what ran. The
+     substitution is now a fact the caller is handed (`model_pick::Scoped`) and
+     the seat says it: *this conversation was dispatched through
+     `<row>`, which brazen does not have*. Steering is unchanged; steering
+     silently is what ended. The note retires the moment the operator picks a
+     row themselves — their selection is their own answer to it.
+
      **Both seats say it, and the pane still opens.** The wordings live on
      `AuthFailure` beside the classification that decides them (the
      `GoverningConfig::frozen_label` discipline, §9.3), so the §11 conversation
@@ -7233,6 +7266,7 @@ beside `main.rs`.
 | `src/config_edit/mod.rs` | 40 | §9's root: load → edit a RAM draft → Apply = stage → validate → hash-guard → atomic rename, one discipline across every file-editing surface |
 | `src/config_edit/apply.rs` | 100 | the `--editor-apply` copy — drafted files only (§9.3) |
 | `src/config_edit/branch.rs` | 215 | config-ref browse, governing-config derivation, edit plan (§9.3) |
+| `src/config_edit/fault.rs` | 87 | **where a config-kind failure is fixed** (§9.1, bl-dd7f): the narrow classifier over a failure's own words — lernie's `provider error (config)` wrapper and brazen's `unknown provider` — the row it quotes, read out of the sentence rather than joined from the tree, and the one line the §7.3 banner pairs with a route to the §9.1 editor. §8.3 rule 5's sibling on the other kind of fault, and it re-words nothing: brazen's and lernie's sentences stay verbatim above it |
 | `src/config_edit/branch/edit.rs` | 260 | the §9.3 edit half — the scripted-`$EDITOR` drive of `lernie config`, the only lawful writer of `config/*` (ARCH §2.2), re-entering the yog binary at `config_edit::apply` |
 | `src/config_edit/brazen/{mod,effects,providers}.rs` | 274+89+164 | the §9.1 editor (staged validation, hash guard) and the wall's `BrazenPaths` layout; the real BzRunner; the provider-row projection (§8.3) |
 | `src/config_edit/draft.rs` | 120 | the ONE staged-edit `Draft` both §9.1/§9.2 editors are built from — dirty tracking, revert, the hash guard |
@@ -7380,7 +7414,7 @@ beside `main.rs`.
 | `src/shell/acceptance/walls.rs` (excl.) | ≤250 | the bl-5894 drive over two spheres (an unsaved brazen draft survives a workspace round trip, a live `bz --login` stream paints only under the wall that started it and is parked rather than killed by leaving, and a picker opened in one wall is closed in the next) |
 | `src/shell/acceptance/wound.rs` (excl.) | ≤250 | the bl-55d8 drive (a conversation whose latest step has an empty `response.json` beside a non-empty `stderr.log`, rendered on the whole window: the adapter's own sentence is in the paint output, the retired *"activity trail below"* pointer is not, and the bl-90bf grace gate still withholds it on the frame before the window elapses — driven on a `FakeClock` swapped into `ShellState::wound_grace`, since the window is wall-clock time and a frame test must not sleep through it) |
 | `src/search/{mod,corpus,excerpt,worker}.rs` | 175+140+50+90 | the §8.5 global search: the `Address`/`Field`/`Hit` vocabulary, the answer that carries its own needle (`Found::asked`, the strip's offer predicate, beside `Found::is_empty`, the pane's — bl-648a) and the empty answer's wording, the deterministic rank and bound, and `run` — the one engine all three seats end in; the corpus (the snapshot half free, the conversation half re-read from disk and the half cancellation is checked between); the matched-line window at char boundaries; and the window's searcher thread |
-| `src/shell/model_pick/{mod,seat,lines,marks,ram,select,write}.rs` (excl.) | 200+217+112+58+134+292+96 | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its **two** exits (bl-9786's new conversation and bl-2d19's `retarget`, laid as a peer strip so neither is ever dropped), the write receipt, and the pane's extras while it is open, over one `Subject` value naming what the seat is about (its scope claim, and the conversation it belongs to when there is one) — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks; the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns and the pane's role strip; the two-file write plan |
+| `src/shell/model_pick/{mod,seat,lines,marks,ram,role,select,write}.rs` (excl.) | 202+217+112+58+134+45+259+96 | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its **two** exits (bl-9786's new conversation and bl-2d19's `retarget`, laid as a peer strip so neither is ever dropped), the write receipt, and the pane's extras while it is open, over one `Subject` value naming what the seat is about (its scope claim, and the conversation it belongs to when there is one) — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks; the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns — which since bl-dd7f **name the row they steered off** when brazen has no such row, so a picker reading `anthropic` can never be mistaken for a report of the `openai-chatgpt` the conversation actually dispatched through; `role` the strip that re-scopes them, split off at the cap on that same row-versus-scope seam; the two-file write plan |
 | `src/spend/{mod,prices,ceiling,render}.rs` | 215+120+150+177 | the §3.5 join, pure over the worker's pre-walked bills (bl-9dd4) — selection, attribution, the honest-granularity label, and the unpriced remainder, with `of_workspace` the one deliberate fresh walk because a gate compares against now; the price table's parse and its micro-USD arithmetic; the §3.5 spend ceiling's policy half — the operator's number and the at-or-over comparison against the workspace figure (bl-56d5); the one figure widget every spend seat paints — the board's ball rows and the conversation's settings rows (bl-2e18) — whose attribution clause is independent of the price table, so the honest-granularity label survives deleting the cost column (bl-1765) |
 | `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | 264+181+84+240+88+128+158 | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the §8.6 control authoring that runs outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire |
 | `src/state.rs` | 270 | the crate's lock chokepoint: the dirty hand-off, the snapshot cell, the §8.5 search cell and the §7.2 live-tail cell — the whole inter-thread interface (§7.2, §8.5, AGENTS rule 7). The tail cell is **appended whole below every line that was there before**, and takes the snapshot cell's *alias + free functions* spelling rather than a struct with an `impl` — including leaving the module doc's stale "three residents" line untouched. That is the hazard `rules/locks-outside-state.yml` records as the reason for both its carve-outs: llvm-cov mis-attributes phantom uncovered regions onto this file's `impl` headers when anything above them moves, and an added `impl` block draws one onto itself besides. This is genuine cross-thread hand-off state — what the chokepoint exists to inventory — so it belongs here and the spelling gives way instead of the rule. The watch hub's two singletons are its second declared carve-out (§7.1, `rules/locks-outside-state.yml`) |

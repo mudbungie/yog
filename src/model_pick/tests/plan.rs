@@ -213,12 +213,30 @@ fn an_unanswerable_brazen_gates_no_pick() {
 /// bl-bd89. The row the picker queries is the role's own while brazen has it,
 /// and brazen's first row once brazen does not — a role stranded on a renamed
 /// row is never left asking the dead row for its models.
+///
+/// bl-dd7f amends it: the substitution is **reported**, never silent. A picker
+/// that swapped `openai-chatgpt` for `anthropic` without a word read as a
+/// report of what the conversation ran on, which is the falsifying screenshot
+/// of bl-9b52 — so the answer carries the row it left, and the note names both.
 #[test]
-fn the_default_row_leaves_a_row_brazen_dropped() {
+fn the_default_row_leaves_a_row_brazen_dropped_and_says_so() {
     let live = vec!["openai-chatgpt".to_string(), "google".to_string()];
-    assert_eq!(default_row("codex", &live), "openai-chatgpt");
-    assert_eq!(default_row("google", &live), "google");
-    assert_eq!(default_row("codex", &[]), "codex");
+    let steered = default_row("codex", &live);
+    assert_eq!(steered.row, "openai-chatgpt");
+    assert_eq!(steered.stranded.as_deref(), Some("codex"));
+    let note = steered.strand_note().expect("a strand is named");
+    assert!(note.contains("codex"), "{note}");
+    assert!(note.contains("openai-chatgpt"), "{note}");
+    assert!(note.contains("config.toml"), "{note}");
+
+    // A row brazen has is no strand, and neither is an unaskable table: both
+    // stand on the role's own row, and neither has anything to report.
+    for scoped in [default_row("google", &live), default_row("codex", &[])] {
+        assert_eq!(scoped.stranded, None);
+        assert_eq!(scoped.strand_note(), None);
+    }
+    assert_eq!(default_row("google", &live).row, "google");
+    assert_eq!(default_row("codex", &[]).row, "codex");
 }
 
 /// The scope sentence must say all three things the operator would otherwise
