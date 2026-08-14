@@ -11,9 +11,9 @@
 
 use crate::actions::verbs;
 use crate::model_pick::Pick;
-use crate::names::SplitMix64;
 use crate::start::{self, StartInputs};
 use crate::ui_state::UiState;
+use lernie::mint::SplitMix64;
 
 use super::reply::Reply;
 use super::{Action, answer, config, control, fleet, monitor};
@@ -258,7 +258,7 @@ pub fn prompt(
         prepared,
         goal,
         &answer::names_in(&deps.snapshot, &prepared.workspace),
-        &mut SplitMix64::from_seed(deps.mint_seed),
+        &SplitMix64::from_seed(deps.mint_seed),
     )
     .map_err(|e| e.to_string())
 }

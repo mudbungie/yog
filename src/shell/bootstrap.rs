@@ -50,8 +50,7 @@ pub(super) fn render(
         let inputs = model.start_bare_inputs();
         ui.weak(
             egui::RichText::new(
-                crate::start::preview(&inputs, &mut crate::names::SplitMix64::from_seed(seed))
-                    .preview,
+                crate::start::preview(&inputs, &lernie::mint::SplitMix64::from_seed(seed)).preview,
             )
             .italics(),
         );

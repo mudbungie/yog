@@ -56,9 +56,9 @@ use crate::AppModel;
 use crate::actions::DraftKey;
 use crate::cli_outbound::Cli;
 use crate::git_tree::Agent;
-use crate::names::SplitMix64;
 use crate::nav::convs::{display_name_of, root_of};
 use crate::start;
+use lernie::mint::SplitMix64;
 use std::path::PathBuf;
 
 use super::ShellState;
@@ -108,7 +108,7 @@ pub fn composer(
         ui.weak(
             start::preview(
                 &model.start_bare_inputs(),
-                &mut SplitMix64::from_seed(mint_seed),
+                &SplitMix64::from_seed(mint_seed),
             )
             .preview,
         );
