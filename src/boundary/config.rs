@@ -251,8 +251,14 @@ pub(super) fn pick_model(
     let rows = crate::config_edit::brazen::row_names(
         &crate::config_edit::brazen::RealBzRunner::resolve(&wall_env(deps, workspace)).providers(),
     );
-    let planned = crate::model_pick::plan(editor.draft(), &assigned, &rows, pick)
-        .map_err(|e| e.to_string())?;
+    let planned = crate::model_pick::plan(
+        editor.draft(),
+        &assigned,
+        &rows,
+        pick,
+        served_window(deps, workspace, pick),
+    )
+    .map_err(|e| e.to_string())?;
     if let Some(text) = planned.models_yaml {
         editor.set_draft(text);
         saved(editor.apply(&rows, &RealFileIo))?;
@@ -266,6 +272,27 @@ pub(super) fn pick_model(
         PROVIDERS,
         &planned.providers_yaml,
     )
+}
+
+/// The context window brazen itself served for the picked model (bl-848f),
+/// read out of the model cache `bz --list-models` wholesale-writes inside
+/// **this workspace's** wall — the roster the picker offered the id from, still
+/// on disk, and the same one every other seat's pick would have read.
+///
+/// It seeds the declaration; it is not a second reader of the fact. bl-a48b's
+/// ruling stands — the §5.1 #35 fullness figure reads the declared window in
+/// `models.yaml` and nothing else. `None` (the provider serves no window, the
+/// cache was never written, or it names some other model) is the honest miss
+/// the §9.4 default is for.
+fn served_window(deps: &Deps, workspace: &Path, pick: &Pick) -> Option<u32> {
+    let cached = crate::config_edit::brazen::model_cache_at(
+        &brazen_paths(deps, workspace).models_cache_dir,
+        &pick.provider,
+        &RealFileIo,
+    )
+    .ok()
+    .flatten()?;
+    crate::model_pick::query::served_window(&cached, &pick.model)
 }
 
 #[cfg(test)]

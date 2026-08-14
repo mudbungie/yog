@@ -5,9 +5,11 @@
 //!
 //! Its whole reason to exist is lernie's cross-check — a role naming a model
 //! `models.yaml` does not declare is a hard load error, so the picker writes
-//! this half FIRST and the assignment second (§9.4). The two facts brazen does
-//! not publish are written as **declared defaults, not discoveries**, under a
-//! comment that says so.
+//! this half FIRST and the assignment second (§9.4). What brazen did not
+//! publish for the picked row is written as a **declared default, not a
+//! discovery**, under a comment that says so — and what it *did* publish is
+//! written as the provider's own number, under a comment that says that
+//! instead (bl-848f).
 //!
 //! The reader is the same anchored grammar as [`roles`](super::roles), applied
 //! to the other file: `provider:` on a model entry is a brazen provider-row
@@ -17,33 +19,49 @@
 
 use super::{BlockKey, GrammarError, MODELS, MODELS_YAML, block_key, entries, field, join};
 
-/// The context window yog declares for a model discovered from `bz`
+/// The context window yog declares for a model **whose provider served none**
 /// (§9.4). brazen publishes one only for the providers that serve it on their
-/// list GET (Google today; Anthropic, OpenAI and Ollama serve none), so for the
-/// rows the picker actually writes this is a **declared default, not a
-/// discovery** — deliberately conservative, because under-stating a window
-/// degrades to early compaction where over-stating it overflows the request.
+/// list GET (Google today; Anthropic, OpenAI and Ollama serve none), so this is
+/// a **declared default, not a discovery** — deliberately conservative, because
+/// under-stating a window degrades to early compaction where over-stating it
+/// overflows the request.
 ///
 /// **It is no longer unread.** Since bl-a48b the declared window is the
-/// denominator of §5.1 #35's context-fullness figure
-/// ([`context_windows`]), so a wrong default now shows up as a wrong
-/// percentage — which is the operator's cue to correct the line the generated
-/// note already tells them to edit. Seeding it from brazen's own
-/// `Model.context_window` wherever the roster carries one is the honest
-/// follow-up, and it belongs to the picker's write path, not to the reader.
+/// denominator of §5.1 #35's context-fullness figure ([`context_windows`]), so
+/// a wrong default shows up as a wrong percentage. Since bl-848f it is also no
+/// longer written over a number brazen had already served: the picker seeds the
+/// entry from `Model.context_window` wherever the roster carried one
+/// ([`crate::model_pick::query::served_window`]) and falls back to this only
+/// where nobody published a window at all.
 pub const DEFAULT_CONTEXT_WINDOW: u32 = 200_000;
 
-/// The comment yog writes above a generated entry, so the two declared-default
-/// fields are never mistaken for facts brazen published (§9.4).
-const GENERATED_NOTE: &str = "  # added by yog's model picker from `bz --list-models`.\n  \
-     # brazen publishes no capabilities or context window, so the two lines\n  \
-     # below are declared defaults, not discoveries — edit them here.";
+/// The comment yog writes above a generated entry whose window nobody served,
+/// so the two declared-default fields are never mistaken for facts brazen
+/// published (§9.4).
+const DECLARED_NOTE: &str = "  # added by yog's model picker from `bz --list-models`.\n  \
+     # this provider publishes no capabilities or context window, so the two\n  \
+     # lines below are declared defaults, not discoveries — edit them here.";
+
+/// The comment for an entry whose window **is** the provider's own, carried
+/// through the roster the pick was made from (bl-848f). A true number under the
+/// declared-default note would be the same defect one step over: the operator
+/// could not tell what was served from what was guessed.
+const SERVED_NOTE: &str = "  # added by yog's model picker from `bz --list-models`.\n  \
+     # context_window is the number this provider served; capabilities it does\n  \
+     # not publish, so that line is a declared default — edit either here.";
 
 /// The `models.yaml` entry for a model discovered live, at two-space indent.
-fn model_entry(model: &str, provider: &str) -> String {
+/// `served` is the provider's own context window where the roster carried one.
+fn model_entry(model: &str, provider: &str, served: Option<u32>) -> String {
+    let note = if served.is_some() {
+        SERVED_NOTE
+    } else {
+        DECLARED_NOTE
+    };
+    let window = served.unwrap_or(DEFAULT_CONTEXT_WINDOW);
     format!(
-        "{GENERATED_NOTE}\n  {model}:\n    provider: {provider}\n    model_id: {model}\n    \
-         capabilities: []\n    context_window: {DEFAULT_CONTEXT_WINDOW}"
+        "{note}\n  {model}:\n    provider: {provider}\n    model_id: {model}\n    \
+         capabilities: []\n    context_window: {window}"
     )
 }
 
@@ -63,10 +81,16 @@ fn model_entry(model: &str, provider: &str) -> String {
 /// a file that carries a later top-level key (`adapter:`) stays valid. A file
 /// with no `models:` key at all gets one appended; an inline `models: {}` is
 /// refused rather than transformed.
+///
+/// `served` is the context window the roster this pick was made from carried
+/// for `model`, `None` where the provider published none (bl-848f). It seeds a
+/// **new** entry only: a declaration that already exists keeps the window it
+/// carries, because an operator's edited value wins over any discovery.
 pub fn declare_model(
     models_yaml: &str,
     model: &str,
     provider: &str,
+    served: Option<u32>,
 ) -> Result<Option<String>, GrammarError> {
     let lines: Vec<&str> = models_yaml.lines().collect();
     let mut out: Vec<String> = lines.iter().map(|l| (*l).to_string()).collect();
@@ -77,7 +101,7 @@ pub fn declare_model(
         }),
         BlockKey::Absent => {
             out.push(format!("{MODELS}:"));
-            out.push(model_entry(model, provider));
+            out.push(model_entry(model, provider, served));
             Ok(Some(join(&out)))
         }
         BlockKey::At(at) => {
@@ -86,7 +110,7 @@ pub fn declare_model(
                 .find(|(name, _)| name == model)
                 .map(|(_, i)| i);
             let Some(entry) = declared else {
-                out.insert(at + 1, model_entry(model, provider));
+                out.insert(at + 1, model_entry(model, provider, served));
                 return Ok(Some(join(&out)));
             };
             let (row, at_line) =

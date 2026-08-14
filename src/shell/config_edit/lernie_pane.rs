@@ -157,11 +157,17 @@ fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema, provide
 
 /// Draft the new entry, or say why not. An id already on the picked row is
 /// nothing to write, which is a value and not a failure.
+///
+/// No served window (bl-848f): this seat is a typed id, not a pick off a
+/// roster, so nothing here asked a provider what its window is and the entry
+/// takes §9.4's declared default under the note that says so. The §9.4 picker
+/// is the seat that has a roster to seed from.
 fn declared(config: &mut ConfigState) -> String {
     match declare_model(
         config.lernie_editor.draft(),
         config.new_model.trim(),
         config.new_model_row.trim(),
+        None,
     ) {
         Ok(Some(text)) => {
             config.lernie_editor.set_draft(text);
