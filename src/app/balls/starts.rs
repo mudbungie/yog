@@ -85,7 +85,19 @@ impl AppModel {
     /// whenever the roster holds anything, §4.1). The bootstrap is that path not
     /// existing yet, which the planner's `EnsureWorkspace` founds: the empty case
     /// of the general path, never a wizard and never a name picker.
-    fn start_workspace(&self) -> PathBuf {
+    ///
+    /// **It is also the sphere the §16.2 wall lens rides** (bl-3b62). The wall is
+    /// pure path algebra over a workspace's leaf — no IO, nothing stored — so
+    /// "which sphere's settings is this window showing" and "which sphere would
+    /// the next Enter land in" are the same question, and keying the lens on the
+    /// *focused* workspace answered it with `None` in exactly the state a
+    /// stranger is in. That left the §8.3 Login roster empty on a fresh install:
+    /// sign-in was reachable only as derived state after an auth-failed step, so
+    /// discovering it cost a conversation and a dead first turn. Read through
+    /// this one method the empty world's roster is `home`'s — the very wall the
+    /// first Enter's workspace will use — and the ruling at bl-9b52 Q3 is one
+    /// call site, not a new verb.
+    pub fn start_workspace(&self) -> PathBuf {
         match self.focus.ws.as_deref() {
             Some(ws) => ws.to_path_buf(),
             None => workspace_path(&self.roots.yog_data, names::DEFAULT_NAME),
