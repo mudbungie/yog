@@ -1,7 +1,7 @@
 +++
 title = "the model picker states what it reaches, and a conversation states the config it is frozen at"
 created = 1786162399
-updated = 1786683219
+updated = 1786683221
 claimant = "Halyard"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -33,3 +33,7 @@ The operator was not under-informed about the freeze. They were mis-routed on th
 One question, and it is the operator's to rule on, not an implementer's to guess: **the true sentence is painted in the weakest style on screen.** The freeze and the drift are `ui.weak()` in a header row, while the gesture that misleads — the picker accepting a pick — is a bright, immediate interaction that reports success. The facts are present and correct; what is untested is whether they carry enough weight to be read at the moment they matter.
 
 Do not implement a restyle off this ball as filed. Either rule on the weight, or close this and let the real remaining gap carry it: there is no way to move a live conversation onto newer config at all — the only exit offered discards the conversation's whole history. That is lernie bl-22a5 (`retarget`) and yog bl-2d19.
+
+---
+
+Ruled by the operator 2026-08-13 (relayed via Healed): no restyle. Both facts are shipped and correct (bl-9786, bl-824e); the weight question is answered by giving the frozen sentence a verb, not more ink — bl-2d19 seats the retarget gesture beside the frozen-at header. Closing as answered; bl-2d19 carries the remaining gap.
