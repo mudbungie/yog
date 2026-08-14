@@ -109,12 +109,36 @@ is a transport for that surface, not a vocabulary:
 
 ## 5. Tools follow the client
 
-- A tool host **advertises** its tool set when it connects: name, description,
-  input schema. The advertisement is connection-scoped RAM, not world state —
-  a disconnected client's tools are visibly absent, not stale.
+- **Advertisement is durable; presence is live.** (Amended by bl-bc7c; the
+  original ruled advertisements connection-scoped RAM, which put a
+  connectivity-rate fact inside the model's cached context prefix.) A tool
+  host presents its tool set — name, description, input schema — when it
+  connects; the engine writes it into the client's registration (world, file)
+  when it differs from what is stored. **Presence** — connected right now —
+  is connection-scoped RAM. Two facts because two rates of change: a tool set
+  changes when the operator reconfigures a machine; presence changes with
+  every network blip.
+- **Context is structurally append-only, so client facts are point-in-time.**
+  The model's stable prefix carries exactly one client-facing surface: a
+  **client-management tool**. Its operations: `list` — the workspace's
+  registered clients and which are live, now; `get` — one client's detail and
+  the tools it advertises. Every reply is a dated observation appended to
+  context, free to go stale, never a prefix mutation — a presence flap
+  cannot touch what the model already read, and the prompt cache (keyed on
+  the prefix) survives every blip.
+- **Loading is the agent's own point-in-time act.** From a `get`, the agent
+  loads a client's tools; loaded definitions are callable from that turn on.
+  Whether the driver re-declares them in the tool block (one deliberate,
+  paid prefix rebuild at a moment the agent chose) or carries them
+  append-only is an implementation choice at the lernie seam; the invariant
+  is that nothing but an explicit load ever changes the tool surface.
+- **Use is attempt.** A loaded tool, when called, is attempted: routed to
+  the client if it is live, refused in-band if not — an error tool result is
+  an appended message the model reacts to, never a prefix change. The same
+  path corrects staleness: a client refuses a tool it no longer carries.
 - The workspace surface renders its registered clients — present or absent —
-  and each one's advertised tools; the same facts enter agent context, so the
-  model knows which machines it can reach and with what.
+  and each one's advertised tools, live: the seat sees the flap; the model's
+  prefix does not.
 - **Invocation path:** the agent's tool call hits lernie's tool seam →
   server-side adjudication (`yog tool-control`, unchanged, fails closed) →
   the engine routes the invocation down the tool host's live connection → the
@@ -194,8 +218,9 @@ valuable with no network at all — they finish VISION V5 teleop parity.
 
 - The follow/streaming frame shape, and when polling graduates to a
   subscription channel.
-- The tool-advertisement schema and exactly how client/tool availability is
-  spelled in agent context.
+- The tool-advertisement schema (the exact shape of name/description/input
+  schema). How availability is spelled is settled (§5, bl-bc7c): definitions
+  frozen in the prefix, presence answered at invocation.
 - Whether pins are world facts or pane facts (§7 defaults them to world).
 - Certificate hygiene: lifetime, rotation cadence, whether the CA distrusts
   or registrations carry the whole revocation load.
