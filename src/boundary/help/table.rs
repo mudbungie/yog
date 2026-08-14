@@ -139,6 +139,28 @@ pub const ACTIONS: &[HelpRow] = &[
                  whatever yog does.",
     },
     HelpRow {
+        verb: "fan",
+        usage: "/fan <n>",
+        summary: "spread the prepared start over n isolated candidate attempts",
+        detail: "Asks balls for `n` private attempt worktrees off one pinned tip of the focused \
+                 ball's delivery target, and answers with the prepared start once per candidate, \
+                 each bound to its own worktree — fire them with `/prompt`, one per candidate, \
+                 with whatever variation you want between them. `n` of 1 or 0 materializes \
+                 nothing and hands back the ordinary claim binding, which is the same path with \
+                 one candidate. Nothing records that the candidates belong together: they share \
+                 a target and a base commit, and that is what makes them siblings.",
+    },
+    HelpRow {
+        verb: "retire",
+        usage: "/retire <handle>",
+        summary: "release a candidate's worktree; keep its source ref unless retention says not to",
+        detail: "Releases the named candidate's worktree. Its source ref — and so its whole diff \
+                 — stays addressable, because a rejected candidate is one that was never \
+                 delivered and yog deletes nothing on an opinion. The ref goes too only when \
+                 `cadence.yaml`'s `retention:` block declares a `keep_min` for this project and \
+                 the candidate has outlived it. Retiring changes no delivery target, ever.",
+    },
+    HelpRow {
         verb: "fork",
         usage: "/fork --from <ref> --role <role> [--skills a,b] --goal <the goal…>",
         summary: "try this conversation again from a point in its history",

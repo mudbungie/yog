@@ -61,6 +61,15 @@ pub enum Reply {
     Outcome(Outcome),
     /// The `prepare` action's product: the composer's fire-time parameters.
     Prepared(Prepared),
+    /// The `fan` action's product (§3.8): one `prepare` reply per candidate,
+    /// rebound to its own attempt worktree and ready for the ordinary `prompt`.
+    Fanned(Vec<Prepared>),
+    /// The `retire` action's product: `discarded` says whether the retention
+    /// policy also took the source ref — what the policy *did*, never what was
+    /// asked, since an undeclared retention keeps it.
+    Retired {
+        discarded: bool,
+    },
     /// The `prompt` action's product: the minted conversation name (§3.3).
     Started {
         conversation: String,

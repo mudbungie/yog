@@ -10,7 +10,7 @@ use crate::app::Snapshot;
 use crate::binding::{Workspace, WorkspaceKind};
 use crate::git_tree::{Agent, AgentState, GitTree};
 use crate::projects::join::{JoinRow, JoinState};
-use crate::start::BallSpec;
+use crate::start::{BallSpec, Payload, Prepared};
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::Instant;
@@ -215,4 +215,34 @@ fn a_ball_rung_prepare_carries_its_project_and_the_other_rungs_none() {
         goal: "g".into(),
     };
     assert_eq!(prompt.project(), None);
+}
+
+/// The §4.10 fan's two act in a project's refs rather than on its board, and
+/// the §3.5 projection reads that project — so they name it too.
+#[test]
+fn the_fan_family_names_its_project() {
+    let p = Path::new("/p").to_path_buf();
+    let obligation = crate::fan::Obligation {
+        project: p.clone(),
+        ball: Some("b-1".into()),
+    };
+    for action in [
+        Action::Fan {
+            prepared: Prepared {
+                name: "n".into(),
+                workspace: Path::new("/ws").to_path_buf(),
+                binding: None,
+                goal: "g".into(),
+                origin: crate::opslog::Origin::Balls,
+            },
+            obligation: obligation.clone(),
+            n: 3,
+        },
+        Action::Retire {
+            obligation,
+            handle: "at-0badcafe".into(),
+        },
+    ] {
+        assert_eq!(action.project(), Some(p.clone()), "{action:?}");
+    }
 }

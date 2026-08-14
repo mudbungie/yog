@@ -158,9 +158,9 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "balls"
-version = "0.5.9"
+version = "0.5.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8ca7cc45cac67edf7e8f53f14248ebfdd284026a9f9f43045468ab5b195ed16"
+checksum = "87e0aac2a390348d947ae090741eb6d655771f8c1a1244807101276d46d49981"
 dependencies = [
  "getrandom 0.4.3",
  "serde",

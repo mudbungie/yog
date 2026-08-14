@@ -17,6 +17,12 @@ impl Action {
             | Action::Move { project, .. }
             | Action::Create { project, .. }
             | Action::Update { project, .. } => Some(project.clone()),
+            // A fan claims nothing and a retirement delivers nothing, but both
+            // act in a project's refs — and the §3.5 projection reads that
+            // project's board, so both refresh it.
+            Action::Fan { obligation, .. } | Action::Retire { obligation, .. } => {
+                Some(obligation.project.clone())
+            }
             Action::Prepare { payload, .. } => match payload {
                 Payload::Ball { project, .. } => Some(project.clone()),
                 Payload::Bare | Payload::Path { .. } => None,

@@ -215,6 +215,28 @@ fn an_attempt_refuses_every_parameter_it_cannot_invent() {
 /// A patch read names a ball **and** a path or neither: one word cannot say
 /// which attempt's diff it belongs to, and a reader that guessed would open
 /// the wrong file.
+/// The fan refuses every parameter it cannot invent: the count, a count that
+/// is not one, the prepared start, the project and the ball — and a retirement
+/// refuses a nameless handle. A line names what a seat has selected and never
+/// guesses at the rest.
+#[test]
+fn the_fan_refuses_every_parameter_it_cannot_invent() {
+    refuses("/fan", &ctx(), "how many candidates is required");
+    refuses("/fan lots", &ctx(), "is not a count");
+    refuses("/retire", &ctx(), "the candidate handle is required");
+    let mut seat = ctx();
+    seat.prepared = None;
+    refuses("/fan 3", &seat, "nothing is prepared");
+    let mut seat = ctx();
+    seat.project = None;
+    refuses("/fan 3", &seat, "no project in context");
+    refuses("/retire at-0badcafe", &seat, "no project in context");
+    let mut seat = ctx();
+    seat.ball = None;
+    refuses("/fan 3", &seat, "no ball id");
+    refuses("/retire at-0badcafe", &seat, "no ball id");
+}
+
 #[test]
 fn a_half_named_work_file_is_refused() {
     assert!(parse("/work-diff", &ctx()).is_ok());

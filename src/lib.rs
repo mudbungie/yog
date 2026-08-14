@@ -58,6 +58,9 @@ pub(crate) mod elide;
 /// gesture consumer; the window and `yog headless` differ only in what they add
 /// beside it.
 pub mod engine;
+/// The VISION §4.10 mutating fan — N isolated candidate attempts over one
+/// delivery obligation, materialized through balls' attempt capability.
+pub mod fan;
 pub mod files_view;
 /// The VISION §4.3 armed loop — off until the operator arms it per workspace.
 pub mod fleet;

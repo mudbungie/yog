@@ -171,18 +171,43 @@ pub fn bound_worktrees(
     balls_state_root: &Path,
     claimant: &str,
 ) -> Vec<PathBuf> {
+    claimed(entries, claimant)
+        .map(|(project, id)| {
+            vec![
+                work_worktree_path(balls_state_root, &project, &id, None),
+                work_worktree_path(balls_state_root, &project, &id, Some(claimant)),
+            ]
+        })
+        .unwrap_or_default()
+}
+
+/// The §4.10 **fan candidates'** worktrees for `claimant` — the other half of
+/// the writable root once a delivery obligation is fanned. With N > 1 no work
+/// happens in `work/<id>`: each candidate writes in its own attempt worktree,
+/// so a root that named the claim alone would classify every candidate's edit
+/// as open-world. Derived from the same two yog-owned facts the claim join
+/// uses — the trail's own claim row for the project, and its own fire rows for
+/// the bindings ([`crate::fan::cohort`]) — never from the agent's `cd` mark.
+/// Empty for an ordinary N = 1 start, which binds no attempt at all.
+pub fn candidate_worktrees(
+    entries: &[OpEntry],
+    balls: &balls::layout::Xdg,
+    workspace: &Path,
+    claimant: &str,
+) -> Vec<PathBuf> {
+    claimed(entries, claimant)
+        .map(|(project, _)| crate::fan::cohort::worktrees(entries, balls, &project, workspace))
+        .unwrap_or_default()
+}
+
+/// The claim this workspace last made: the project the row ran in and the ball
+/// id it named. The **last** matching row wins — a re-claim supersedes — and a
+/// workspace that never claimed through yog has none.
+fn claimed(entries: &[OpEntry], claimant: &str) -> Option<(PathBuf, String)> {
     entries
         .iter()
         .rev()
-        .find_map(|e| {
-            let id = claim_of(e, claimant)?;
-            let project = Path::new(&e.cwd);
-            Some(vec![
-                work_worktree_path(balls_state_root, project, &id, None),
-                work_worktree_path(balls_state_root, project, &id, Some(claimant)),
-            ])
-        })
-        .unwrap_or_default()
+        .find_map(|e| Some((PathBuf::from(&e.cwd), claim_of(e, claimant)?)))
 }
 
 /// The ball id a `bl claim <id> --as <claimant>` row names, when its claimant

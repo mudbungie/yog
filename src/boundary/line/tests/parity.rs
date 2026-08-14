@@ -179,6 +179,30 @@ fn every_start_rung_and_the_prompt_round_trip() {
     }));
 }
 
+/// The §4.10 fan's two: N is the whole line, the handle is the whole line, and
+/// the obligation is the seat's — so both round-trip **modulo context**, the
+/// parity claim the line makes everywhere.
+#[test]
+fn the_fan_and_the_retirement_round_trip() {
+    for n in [0, 1, 5] {
+        rt(Gesture::Act(Action::Fan {
+            prepared: prepared(),
+            obligation: crate::fan::Obligation {
+                project: PathBuf::from("/proj"),
+                ball: Some("bl-1".to_owned()),
+            },
+            n,
+        }));
+    }
+    rt(Gesture::Act(Action::Retire {
+        obligation: crate::fan::Obligation {
+            project: PathBuf::from("/proj"),
+            ball: Some("bl-1".to_owned()),
+        },
+        handle: "at-0badcafe".to_owned(),
+    }));
+}
+
 #[test]
 fn every_trail_verb_and_query_round_trips() {
     rt(Gesture::Act(Action::DeleteWorkspace {
