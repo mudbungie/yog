@@ -1,7 +1,8 @@
 +++
 title = "AGENTS.md rule 6 records a lernie pin two releases stale: '=0.0.3' where Cargo.toml has '=0.0.6'"
 created = 1786513158
-updated = 1786514374
+updated = 1786683124
+claimant = "Dredge"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["docs"]
