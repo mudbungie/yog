@@ -89,7 +89,7 @@ fn the_boundary_answer_is_the_frames_derivation_without_a_frame() {
     let Ok(Reply::Conversations(via_answer)) = model.answer(
         &deps,
         &Query::Conversations {
-            workspace: h.ws.clone(),
+            workspace: crate::naming::leaf(&(h.ws.clone())),
         },
         500,
     ) else {

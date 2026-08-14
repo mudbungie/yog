@@ -11,7 +11,6 @@ use super::rt;
 use crate::boundary::line::{Context, parse};
 use crate::boundary::{Action, Gesture, Query};
 use crate::monitor::Verb;
-use std::path::PathBuf;
 
 /// The §8.6 capability answer: aimed by the seat like `/seen`, and its whole
 /// tail is the verdict — the held `tool_use` id is derived at fire time, so
@@ -21,7 +20,7 @@ fn every_hold_answer_round_trips_and_a_bad_verdict_refuses() {
     use crate::control::judge::Ruling;
     for ruling in [Ruling::Pass, Ruling::Hold, Ruling::Refuse] {
         rt(Gesture::Act(Action::AnswerHold {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             agent: "c-1".to_owned(),
             ruling,
         }));
@@ -38,7 +37,7 @@ fn every_hold_answer_round_trips_and_a_bad_verdict_refuses() {
 fn the_capability_floor_round_trips_both_ways_and_takes_no_words() {
     for raised in [true, false] {
         rt(Gesture::Act(Action::Floor {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             agent: "c-1".to_owned(),
             raised,
         }));
@@ -50,7 +49,7 @@ fn the_capability_floor_round_trips_both_ways_and_takes_no_words() {
     let unselected = parse(
         "/restore",
         &Context {
-            workspace: Some(PathBuf::from("/ws")),
+            workspace: Some("ws".to_owned()),
             ..Context::default()
         },
     )
@@ -66,14 +65,14 @@ fn the_capability_floor_round_trips_both_ways_and_takes_no_words() {
 #[test]
 fn every_monitor_action_round_trips() {
     rt(Gesture::Act(Action::Monitor(Verb::Arm {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         model: "claude-haiku-4-5".to_owned(),
     })));
     rt(Gesture::Act(Action::Monitor(Verb::Disarm {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     })));
     rt(Gesture::Act(Action::Monitor(Verb::Flag {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         agent: "c-1".to_owned(),
         reason: "it is rewriting an unrelated crate".to_owned(),
     })));
@@ -86,15 +85,15 @@ fn every_monitor_action_round_trips() {
 #[test]
 fn every_fleet_action_round_trips() {
     rt(Gesture::Act(Action::Fleet(crate::fleet::Verb::Arm {
-        workspace: PathBuf::from("/ws"),
-        project: PathBuf::from("/proj"),
+        workspace: "ws".to_owned(),
+        project: "proj".to_owned(),
         cap: 4,
     })));
     rt(Gesture::Act(Action::Fleet(crate::fleet::Verb::Disarm {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     })));
     rt(Gesture::Ask(Query::Conversations {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }));
     rt(Gesture::Ask(Query::Balls));
     rt(Gesture::Ask(Query::Board));
@@ -115,7 +114,7 @@ fn every_fleet_action_round_trips() {
         }),
     ] {
         rt(Gesture::Ask(Query::WorkDiff {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             file,
         }));
     }

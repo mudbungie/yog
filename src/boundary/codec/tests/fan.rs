@@ -12,8 +12,7 @@ use crate::start::Prepared;
 
 fn prepared(binding: Option<&str>) -> Prepared {
     Prepared {
-        name: "cobalt-gecko".into(),
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         binding: binding.map(p),
         goal: "Ball bl-1f2a: do it".into(),
         origin: Origin::Balls,
@@ -22,7 +21,7 @@ fn prepared(binding: Option<&str>) -> Prepared {
 
 fn obligation(ball: Option<&str>) -> Obligation {
     Obligation {
-        project: p("/dev/proj"),
+        project: "dev/proj".into(),
         ball: ball.map(str::to_owned),
     }
 }
@@ -56,8 +55,8 @@ fn both_fan_envelopes_round_trip() {
 /// bare obligation says so by saying nothing, as `--body` does.
 #[test]
 fn a_fan_without_a_ball_field_is_the_bare_obligation() {
-    let envelope = json!({"op": "fan", "project": "/dev/proj", "n": 2,
-                          "prepared": {"name": "cobalt-gecko", "workspace": "/ws",
+    let envelope = json!({"op": "fan", "project": "dev/proj", "n": 2,
+                          "prepared": {"workspace": "ws",
                                        "binding": null, "goal": "g", "origin": "balls"}});
     assert_eq!(
         decode(&envelope),

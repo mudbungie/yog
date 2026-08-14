@@ -30,7 +30,7 @@ pub(super) fn apply(
 ) {
     let deps = model.boundary_deps(clis.0, clis.1);
     let action = Action::PickModel {
-        workspace: ws.to_path_buf(),
+        workspace: model.snap.ws_name(ws),
         role: pick.role.clone(),
         provider: pick.provider.clone(),
         model: pick.model.clone(),
@@ -75,7 +75,7 @@ pub(super) fn retarget(
 ) {
     let deps = model.boundary_deps(clis.0, clis.1);
     let action = Action::Retarget {
-        workspace: ws.to_path_buf(),
+        workspace: model.snap.ws_name(ws),
         agent: agent.to_owned(),
     };
     picker.status = match model.dispatch(&deps, &crate::shell::now_ts(), &action) {

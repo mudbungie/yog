@@ -125,7 +125,7 @@ pub(super) fn close_ball(
         bl,
         project,
         Action::Close {
-            project: project.to_path_buf(),
+            project: model.snap.project_name(project),
             id: id.to_owned(),
             name: owner.to_owned(),
         },
@@ -148,7 +148,7 @@ pub(super) fn release_ball(
         bl,
         project,
         Action::Release {
-            project: project.to_path_buf(),
+            project: model.snap.project_name(project),
             id: id.to_owned(),
             name: owner.to_owned(),
         },
@@ -172,7 +172,7 @@ pub(super) fn move_ball(
         bl,
         project,
         Action::Move {
-            project: project.to_path_buf(),
+            project: model.snap.project_name(project),
             id: id.to_owned(),
             from: owner.to_owned(),
             to: to.to_owned(),
@@ -196,7 +196,7 @@ pub(super) fn assign_ball(
         bl,
         project,
         Action::Assign {
-            project: project.to_path_buf(),
+            project: model.snap.project_name(project),
             id: id.to_owned(),
             name: to.to_owned(),
         },

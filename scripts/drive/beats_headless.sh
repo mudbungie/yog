@@ -133,9 +133,14 @@ run_headless() {
   # milliseconds and the run still reaches `verdict`. Where the exit IS the
   # claim — the S14-T5 refusal below — it is spelled `if gesture …` and both
   # arms are written out.
-  ws="$data/yog/workspaces/$BOOTSTRAP_WS"
-  gesture "$data" /prepare --ws "$ws" --project "$proj" || true
-  reply_is 'd["ok"] and d["prepared"]["workspace"].endswith("/'"$BOOTSTRAP_WS"'") and not d["prepared"].get("binding")' \
+  #
+  # The wire spells NAMES, never paths (REMOTE §8, bl-f5f6): `--ws` is the
+  # workspace's own name and `--project` the repo's, and the engine resolves
+  # each at the dispatch chokepoint.
+  ws="$BOOTSTRAP_WS"
+  proj_name=$(basename "$proj")
+  gesture "$data" /prepare --ws "$ws" --project "$proj_name" || true
+  reply_is 'd["ok"] and d["prepared"]["workspace"]=="'"$BOOTSTRAP_WS"'" and not d["prepared"].get("binding")' \
     && pass "S14-T8 windowless engine: a deposit is consumed and answered" \
     || fail "S14-T8 windowless engine: a deposit is consumed and answered" "no prepared reply"
 
@@ -149,14 +154,14 @@ run_headless() {
   # that pins prose a live ball is deleting is a beat filed red. The binding is
   # what the rung is for. Bracketed by the bare `/prepare` above, whose reply
   # carries no binding at all.
-  gesture "$data" "/prepare dir $proj" --ws "$ws" --project "$proj" || true
+  gesture "$data" "/prepare dir $proj" --ws "$ws" --project "$proj_name" || true
   reply_is 'd["ok"] and d["prepared"].get("binding")=="'"$proj"'"' \
     && pass "S2-T1 path-rung: the prepared binding is the named directory" \
     || fail "S2-T1 path-rung: the prepared binding is the named directory" "binding is not the dir"
   # …and the rung's negative clause, which is why it is a rung and not a flag:
   # naming a directory is not a ball, so nothing on the balls side is spawned.
   bl_rows=$(grep -c '"bl"' "$ops" 2>/dev/null) || true
-  gesture "$data" "/prepare dir $proj" --ws "$ws" --project "$proj" || true
+  gesture "$data" "/prepare dir $proj" --ws "$ws" --project "$proj_name" || true
   [ "$(grep -c '"bl"' "$ops" 2>/dev/null || true)" = "${bl_rows:-0}" ] \
     && pass "S2-T1 path-rung: preparing a directory spawns no bl" \
     || fail "S2-T1 path-rung: preparing a directory spawns no bl" "a bl verb fired"
@@ -164,7 +169,7 @@ run_headless() {
   # Bind one ball to the workspace. The reply's stdout is the worktree `bl
   # claim` cut — READ back rather than recomputed, so the S11 beat below reads
   # the path the boundary itself named.
-  gesture "$data" "/assign $claim" --ws "$ws" --project "$proj" --as "$BOOTSTRAP_WS" || true
+  gesture "$data" "/assign $claim" --ws "$ws" --project "$proj_name" --as "$BOOTSTRAP_WS" || true
   reply_is 'd["ok"] and d["exit"]==0' \
     && pass "S13 fixture: the ball is bound to the workspace" \
     || fail "S13 fixture: the ball is bound to the workspace" "assign refused"

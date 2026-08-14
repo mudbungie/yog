@@ -11,7 +11,7 @@ use crate::control::judge::Ruling;
 fn every_verdict_round_trips_and_the_id_is_never_on_the_wire() {
     for ruling in [Ruling::Pass, Ruling::Hold, Ruling::Refuse] {
         let gesture = Gesture::Act(Action::AnswerHold {
-            workspace: p("/ws"),
+            workspace: "ws".into(),
             agent: "c-1".into(),
             ruling,
         });
@@ -45,7 +45,7 @@ fn an_unknown_verdict_is_refused() {
 fn the_floor_round_trips_in_both_directions() {
     for raised in [true, false] {
         let gesture = Gesture::Act(Action::Floor {
-            workspace: p("/ws"),
+            workspace: "ws".into(),
             agent: "c-1".into(),
             raised,
         });

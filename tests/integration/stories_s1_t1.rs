@@ -36,6 +36,7 @@ fn s1_t1_focused_workspace_enter_is_prompt_only() {
     };
     let inputs = StartInputs {
         workspace: workspace_path(yog.path(), "cobalt-gecko"),
+        repo: None,
         payload: Payload::Bare,
         home: home.path().to_path_buf(),
         yog_data_root: yog.path().to_path_buf(),
@@ -45,7 +46,7 @@ fn s1_t1_focused_workspace_enter_is_prompt_only() {
 
     let prepared = start::prepare(&deps, &inputs, "T0").unwrap();
     assert_eq!(
-        prepared.name, "cobalt-gecko",
+        prepared.workspace, "cobalt-gecko",
         "no mint — the focused workspace"
     );
     assert!(
@@ -56,8 +57,11 @@ fn s1_t1_focused_workspace_enter_is_prompt_only() {
         &deps.lernie,
         state.path(),
         "T0",
-        &prepared,
-        "next step",
+        &start::Fire {
+            workspace: ws.clone(),
+            prepared: prepared.clone(),
+            goal: "next step".to_owned(),
+        },
         &[],
         &SplitMix64::from_seed(1),
     )

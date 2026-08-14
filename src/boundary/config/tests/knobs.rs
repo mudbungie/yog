@@ -16,10 +16,11 @@ fn set_marks_answers_with_the_branch_it_read_back_and_logs_the_write() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
     let ws = root.path().join("workspaces").join("home");
+    let deps = super::seeing(&deps, &[ws.as_path()]);
     let reply = fire(
         &deps,
         &Action::SetMarks {
-            workspace: ws.clone(),
+            workspace: crate::naming::leaf(&ws),
             branch: "balls/agents/home".to_owned(),
         },
     );
@@ -43,10 +44,11 @@ fn reading_marks_never_refuses_even_for_a_workspace_with_no_project() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
     let ws = root.path().join("nowhere");
+    let deps = super::seeing(&deps, &[ws.as_path()]);
     let reply = super::ask(
         &deps,
         &crate::boundary::Query::Marks {
-            workspace: ws.clone(),
+            workspace: crate::naming::leaf(&ws),
         },
     );
     // The launched-then-told-to-work-on-a-project case: nothing is primed,
@@ -63,11 +65,12 @@ fn reading_marks_never_refuses_even_for_a_workspace_with_no_project() {
 #[test]
 fn set_marks_refuses_an_unlawful_branch_rather_than_writing_one() {
     let root = tempdir().unwrap();
-    let deps = quiet(root.path());
+    let home = root.path().join("workspaces").join("home");
+    let deps = super::seeing(&quiet(root.path()), &[home.as_path()]);
     let err = fire(
         &deps,
         &Action::SetMarks {
-            workspace: root.path().join("workspaces").join("home"),
+            workspace: crate::naming::leaf(&home),
             branch: "balls/config".to_owned(),
         },
     )
@@ -85,7 +88,7 @@ fn workspace() -> Fixture {
 
 fn pick(role: &str, provider: &str, model: &str, ws: &Path) -> Action {
     Action::PickModel {
-        workspace: ws.to_path_buf(),
+        workspace: crate::naming::leaf(ws),
         role: role.to_owned(),
         provider: provider.to_owned(),
         model: model.to_owned(),
@@ -107,7 +110,10 @@ fn a_pick_declares_the_model_then_commits_the_assignment() {
         ),
     );
     let fx = workspace();
-    let deps = deps_at(root.path(), &lernie, Path::new("/no/bl"));
+    let deps = super::seeing(
+        &deps_at(root.path(), &lernie, Path::new("/no/bl")),
+        &[fx.path.as_path()],
+    );
     // The pick's provider gate reads the rows of the workspace being picked
     // for (bl-fcd5), so `acme` has to be live in *that* sphere's wall.
     seed_wall(&deps, &fx.path, ACME);
@@ -131,7 +137,7 @@ fn a_pick_declares_the_model_then_commits_the_assignment() {
 fn a_pick_on_a_row_brazen_lacks_writes_neither_half() {
     let root = tempdir().unwrap();
     let fx = workspace();
-    let deps = quiet(root.path());
+    let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
     let err = fire(&deps, &pick("worker", "nope", "m-9", &fx.path)).unwrap_err();
     assert!(err.contains("no provider row `nope`"), "{err}");
     assert!(!root.path().join("lernie/models.yaml").exists());
@@ -164,7 +170,10 @@ fn a_pick_declares_the_window_the_provider_served() {
     let bin = tempdir().unwrap();
     let lernie = script(bin.path(), "lernie", "exit 0\n");
     let fx = workspace();
-    let deps = deps_at(root.path(), &lernie, Path::new("/no/bl"));
+    let deps = super::seeing(
+        &deps_at(root.path(), &lernie, Path::new("/no/bl")),
+        &[fx.path.as_path()],
+    );
     seed_wall(&deps, &fx.path, ACME);
     seed_roster(
         &deps,
@@ -196,7 +205,10 @@ fn a_pick_with_no_served_window_declares_the_default() {
     let bin = tempdir().unwrap();
     let lernie = script(bin.path(), "lernie", "exit 0\n");
     let fx = workspace();
-    let deps = deps_at(root.path(), &lernie, Path::new("/no/bl"));
+    let deps = super::seeing(
+        &deps_at(root.path(), &lernie, Path::new("/no/bl")),
+        &[fx.path.as_path()],
+    );
     seed_wall(&deps, &fx.path, ACME);
     seed_roster(
         &deps,

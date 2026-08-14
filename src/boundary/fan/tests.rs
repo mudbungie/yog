@@ -71,22 +71,27 @@ impl World {
             home: self.dir.path().join("home"),
             yog_data_root: self.dir.path().join("data"),
             balls_state_root: self.dir.path().join("balls"),
-            snapshot: Arc::new(snapshot(&ws, "cobalt-gecko", Vec::new(), Vec::new())),
+            snapshot: Arc::new({
+                let mut snap = snapshot(&ws, "cobalt-gecko", Vec::new(), Vec::new());
+                // The enumerated set the obligation's project name resolves
+                // over (REMOTE §8).
+                snap.projects = vec![self.project.clone(), self.dir.path().join("not-a-repo")];
+                snap
+            }),
             mint_seed: 7,
         }
     }
 
-    fn obligation(&self) -> Obligation {
+    fn obligation() -> Obligation {
         Obligation {
-            project: self.project.clone(),
+            project: "proj".to_owned(),
             ball: Some(BALL.to_owned()),
         }
     }
 
     fn prepared(&self) -> Prepared {
         Prepared {
-            name: "cobalt-gecko".to_owned(),
-            workspace: self.workspace(),
+            workspace: "cobalt-gecko".to_owned(),
             binding: Some(self.dir.path().join("claim")),
             goal: "Ball bl-1f2a: do it".to_owned(),
             origin: Origin::Balls,
@@ -119,7 +124,7 @@ impl World {
 fn a_fan_answers_one_rebound_start_per_candidate_and_leaves_one_step() {
     let world = World::new();
     let deps = world.deps();
-    let reply = spread(&deps, TS, &world.prepared(), &world.obligation(), 2).unwrap();
+    let reply = spread(&deps, TS, &world.prepared(), &World::obligation(), 2).unwrap();
     let Reply::Fanned(variants) = reply else {
         panic!("a fan answers with its candidates");
     };
@@ -140,7 +145,7 @@ fn a_fan_that_balls_refuses_is_a_failure_line_and_a_refusal() {
     let world = World::new();
     let deps = world.deps();
     let nowhere = Obligation {
-        project: world.dir.path().join("not-a-repo"),
+        project: "not-a-repo".to_owned(),
         ball: None,
     };
     let refusal = spread(&deps, TS, &world.prepared(), &nowhere, 2).unwrap_err();
@@ -155,14 +160,19 @@ fn a_fan_that_balls_refuses_is_a_failure_line_and_a_refusal() {
 fn an_undeclared_retention_releases_the_worktree_and_keeps_the_source_ref() {
     let world = World::new();
     let deps = world.deps();
-    let candidate = crate::fan::open(&world.obligation(), &deps.world.balls_layout(), 1)
-        .unwrap()
-        .remove(0);
-    let reply = retire(&deps, TS, &world.obligation(), &candidate.handle).unwrap();
+    let candidate = crate::fan::open(
+        &World::obligation(),
+        &world.project,
+        &deps.world.balls_layout(),
+        1,
+    )
+    .unwrap()
+    .remove(0);
+    let reply = retire(&deps, TS, &World::obligation(), &candidate.handle).unwrap();
     assert_eq!(reply, Reply::Retired { discarded: false });
     assert!(!candidate.worktree.exists(), "the worktree went");
     // The ref stayed: a second retirement still finds the attempt.
-    assert!(retire(&deps, TS, &world.obligation(), &candidate.handle).is_ok());
+    assert!(retire(&deps, TS, &World::obligation(), &candidate.handle).is_ok());
     assert_eq!(
         world.steps(),
         vec![("retire".to_owned(), 0), ("retire".to_owned(), 0)],
@@ -174,14 +184,19 @@ fn a_declared_and_expired_retention_takes_the_source_ref_too() {
     let world = World::new();
     let deps = world.deps();
     world.retention("0");
-    let candidate = crate::fan::open(&world.obligation(), &deps.world.balls_layout(), 1)
-        .unwrap()
-        .remove(0);
-    let reply = retire(&deps, TS, &world.obligation(), &candidate.handle).unwrap();
+    let candidate = crate::fan::open(
+        &World::obligation(),
+        &world.project,
+        &deps.world.balls_layout(),
+        1,
+    )
+    .unwrap()
+    .remove(0);
+    let reply = retire(&deps, TS, &World::obligation(), &candidate.handle).unwrap();
     assert_eq!(reply, Reply::Retired { discarded: true });
     // The ref is gone, so the handle is refused rather than re-minted — and
     // that refusal is a failure line, not a silence.
-    let refusal = retire(&deps, TS, &world.obligation(), &candidate.handle).unwrap_err();
+    let refusal = retire(&deps, TS, &World::obligation(), &candidate.handle).unwrap_err();
     assert!(refusal.contains("unknown attempt handle"), "{refusal}");
     assert_eq!(
         world.steps(),
@@ -200,10 +215,15 @@ fn a_retention_that_has_not_expired_keeps_the_ref() {
     let deps = world.deps();
     // Ten years of keep over a fixture commit that is months old at most.
     world.retention("5256000");
-    let candidate = crate::fan::open(&world.obligation(), &deps.world.balls_layout(), 1)
-        .unwrap()
-        .remove(0);
-    let reply = retire(&deps, TS, &world.obligation(), &candidate.handle).unwrap();
+    let candidate = crate::fan::open(
+        &World::obligation(),
+        &world.project,
+        &deps.world.balls_layout(),
+        1,
+    )
+    .unwrap()
+    .remove(0);
+    let reply = retire(&deps, TS, &World::obligation(), &candidate.handle).unwrap();
     assert_eq!(reply, Reply::Retired { discarded: false });
 }
 
@@ -221,7 +241,7 @@ fn the_chokepoint_routes_a_fan_and_a_retirement_to_this_family() {
         TS,
         &crate::boundary::Action::Fan {
             prepared: world.prepared(),
-            obligation: world.obligation(),
+            obligation: World::obligation(),
             n: 2,
         },
     );
@@ -243,7 +263,7 @@ fn the_chokepoint_routes_a_fan_and_a_retirement_to_this_family() {
             &mut ui,
             TS,
             &crate::boundary::Action::Retire {
-                obligation: world.obligation(),
+                obligation: World::obligation(),
                 handle,
             },
         ),

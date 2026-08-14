@@ -140,7 +140,7 @@ fn the_query_answers_off_the_tabs_own_derivation() {
     let d = deps(snap);
     let Ok(Reply::WorkDiff { attempts, patch }) = answer(
         &Query::WorkDiff {
-            workspace: ws,
+            workspace: crate::naming::leaf(&(ws)),
             file: Some(WorkFile {
                 ball: "bl-1".to_owned(),
                 path: "src/a.rs".to_owned(),

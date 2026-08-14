@@ -85,27 +85,17 @@ fn path_preamble(dir: &Path) -> String {
 /// planner previews and the resume path falls back to. `None` for bare/path/new
 /// rungs. The executor overrides this with the claim's cross-checked worktree
 /// (the `<id>-<claimant>` variant when bl minted it — addendum: never a guess).
-pub(super) fn canonical_worktree(payload: &Payload, balls_state_root: &Path) -> Option<PathBuf> {
-    match payload {
-        Payload::Ball {
-            project,
-            ball: BallSpec::Existing { id, .. },
-        } => Some(work_worktree_path(balls_state_root, project, id, None)),
+pub(super) fn canonical_worktree(inputs: &StartInputs) -> Option<PathBuf> {
+    match (&inputs.payload, inputs.repo.as_deref()) {
+        (
+            Payload::Ball {
+                ball: BallSpec::Existing { id, .. },
+                ..
+            },
+            Some(repo),
+        ) => Some(work_worktree_path(&inputs.balls_state_root, repo, id, None)),
         _ => None,
     }
-}
-
-/// A workspace's name — its path leaf (§3.1): the `--as`/`YOG_NAME` stamp, for a
-/// named focus, a foreign one, or a raise. **The name is a query, not a field**
-/// (§3.1: the dir's existence is the registration), so this is the one place the
-/// start flow answers "what is this workspace called". It never reaches the goal
-/// text (§3.3, bl-df65) — the harness channel is its only one. Empty for a
-/// rootless path (never a real workspace).
-pub(crate) fn leaf_name(workspace: &Path) -> String {
-    workspace
-        .file_name()
-        .map(|s| s.to_string_lossy().into_owned())
-        .unwrap_or_default()
 }
 
 /// The §3.3 ball payload verbatim: the `Ball <id>: <title>` header and the body.
@@ -172,8 +162,7 @@ pub(super) fn target_binding(payload: &Payload, worktree: Option<&Path>) -> Opti
 /// driver simply stands in the workspace it drives.
 pub(super) fn compose_prepared(inputs: &StartInputs, worktree: Option<&Path>) -> super::Prepared {
     super::Prepared {
-        name: leaf_name(&inputs.workspace),
-        workspace: inputs.workspace.clone(),
+        workspace: crate::naming::leaf(&inputs.workspace),
         binding: target_binding(&inputs.payload, worktree),
         goal: prefill(&inputs.payload),
         origin: inputs.payload.origin(),

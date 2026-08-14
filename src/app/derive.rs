@@ -260,6 +260,7 @@ impl Deriver {
             &self.cell,
             Arc::new(Snapshot {
                 workspaces: self.workspaces.clone(),
+                projects: self.projects.clone(),
                 trees: self.trees.clone(),
                 bills: self.bills.clone(),
                 windows: self.windows.clone(),

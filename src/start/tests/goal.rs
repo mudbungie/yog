@@ -17,7 +17,7 @@ const PROJ: &str = "/proj";
 
 fn existing_ball() -> Payload {
     Payload::Ball {
-        project: PathBuf::from(PROJ),
+        project: "proj".to_owned(),
         ball: BallSpec::Existing {
             id: "bl-1".to_owned(),
             title: "T".to_owned(),
@@ -28,7 +28,7 @@ fn existing_ball() -> Payload {
 }
 fn new_ball() -> Payload {
     Payload::Ball {
-        project: PathBuf::from(PROJ),
+        project: "proj".to_owned(),
         ball: BallSpec::New {
             title: "Fresh".to_owned(),
             body: "do".to_owned(),
@@ -140,6 +140,7 @@ fn target_binding_is_the_per_rung_work_target() {
 fn compose_prepared_derives_the_fire_params() {
     let inputs = StartInputs {
         workspace: workspace_path(Path::new(YOG), "cobalt-gecko"),
+        repo: Some(PathBuf::from(PROJ)),
         payload: Payload::Bare,
         home: PathBuf::from(HOME),
         yog_data_root: PathBuf::from(YOG),
@@ -147,8 +148,8 @@ fn compose_prepared_derives_the_fire_params() {
         conversation_names: Vec::new(),
     };
     let p = compose_prepared(&inputs, None);
-    assert_eq!(p.name, "cobalt-gecko");
-    assert_eq!(p.workspace, workspace_path(Path::new(YOG), "cobalt-gecko"));
+    // §3.1: the name IS the address — one string, one fact (bl-f5f6).
+    assert_eq!(p.workspace, "cobalt-gecko");
     assert_eq!(p.binding, None, "the bare rung binds no work target");
     assert_eq!(p.goal, "");
     // **The work target is the binding and nothing else** (bl-6654): there is no
@@ -167,7 +168,7 @@ fn compose_prepared_derives_the_fire_params() {
         workspace: PathBuf::from("/lernie/workspaces/20260101T-aa"),
         ..inputs
     };
-    assert_eq!(compose_prepared(&foreign, None).name, "20260101T-aa");
+    assert_eq!(compose_prepared(&foreign, None).workspace, "20260101T-aa");
 }
 
 #[test]

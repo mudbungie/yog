@@ -42,7 +42,7 @@
 //! path in this module is the implementation of that rule.
 
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use balls::attempt::{Attempt, Target};
 use balls::delivery_repo::Project;
@@ -67,17 +67,22 @@ pub use cohort::{Member, members};
 /// obligation (§4.10 item 8): the target is the integration branch the project
 /// itself names, never a literal here.
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// **`project` is the wire name, not a path** (REMOTE §8, bl-f5f6): an
+/// obligation is a boundary datum — it rides in [`Action::Fan`] and
+/// [`Action::Retire`] — so it addresses its repo the way every other gesture
+/// does. The `repo` every function here takes beside it is that name resolved,
+/// once, at the dispatch chokepoint; nothing under this module resolves.
 pub struct Obligation {
-    pub project: PathBuf,
+    pub project: String,
     pub ball: Option<String>,
 }
 
 impl Obligation {
-    /// This obligation's delivery target, asked of balls. Opaque by
+    /// This obligation's delivery target in `repo`, asked of balls. Opaque by
     /// construction — yog cannot build one, only ask for one, which is what
     /// makes "callers never spell a ref name" mechanical.
-    fn target(&self) -> io::Result<Target> {
-        Project::at(&self.project).target(self.ball.as_deref())
+    fn target(&self, repo: &Path) -> io::Result<Target> {
+        Project::at(repo).target(self.ball.as_deref())
     }
 }
 
@@ -117,15 +122,16 @@ impl Candidate {
 /// value; the shared [`base`](Candidate::base) is then proved rather than
 /// assumed (see the module note). A fan of `0` materializes nothing, which is
 /// the same fold with no inputs.
-pub fn open(obligation: &Obligation, xdg: &Xdg, n: usize) -> io::Result<Vec<Candidate>> {
-    let target = obligation.target()?;
+pub fn open(
+    obligation: &Obligation,
+    repo: &Path,
+    xdg: &Xdg,
+    n: usize,
+) -> io::Result<Vec<Candidate>> {
+    let target = obligation.target(repo)?;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
-        out.push(Candidate::of(&Attempt::open(
-            &obligation.project,
-            xdg,
-            &target,
-        )?));
+        out.push(Candidate::of(&Attempt::open(repo, xdg, &target)?));
     }
     one_base(out)
 }
@@ -171,13 +177,14 @@ fn one_base(members: Vec<Candidate>) -> io::Result<Vec<Candidate>> {
 pub fn spread(
     prepared: &Prepared,
     obligation: &Obligation,
+    repo: &Path,
     xdg: &Xdg,
     n: usize,
 ) -> io::Result<Vec<Prepared>> {
     if n <= 1 {
         return Ok(vec![prepared.clone()]);
     }
-    Ok(open(obligation, xdg, n)?
+    Ok(open(obligation, repo, xdg, n)?
         .into_iter()
         .map(|c| Prepared {
             binding: Some(c.worktree),
@@ -194,23 +201,23 @@ pub fn spread(
 /// [`discard`] re-materializes the worktree it is about to remove: balls hangs
 /// cleanup off a live `Attempt` value and exposes no handle-only door. The act
 /// is idempotent either way (create-if-absent, then remove).
-fn resume(obligation: &Obligation, xdg: &Xdg, handle: &str) -> io::Result<Attempt> {
-    let target = obligation.target()?;
-    Attempt::resume(&obligation.project, xdg, &target, handle)
+fn resume(obligation: &Obligation, repo: &Path, xdg: &Xdg, handle: &str) -> io::Result<Attempt> {
+    let target = obligation.target(repo)?;
+    Attempt::resume(repo, xdg, &target, handle)
 }
 
 /// **Release** one candidate: the worktree goes, the source ref stays. A
 /// rejected attempt changed no target ref and remains fully addressable — its
 /// diff still reads, its ref still enumerates — which is what "losers stay
 /// inspectable" means mechanically (§4.10 item 6).
-pub fn release(obligation: &Obligation, xdg: &Xdg, handle: &str) -> io::Result<()> {
-    resume(obligation, xdg, handle)?.release()
+pub fn release(obligation: &Obligation, repo: &Path, xdg: &Xdg, handle: &str) -> io::Result<()> {
+    resume(obligation, repo, xdg, handle)?.release()
 }
 
 /// **Discard** one candidate: the worktree *and* the source ref. The attempt is
 /// gone and a later [`resume`] of its handle is refused. Spent only when
 /// [`retention`] says the retention has expired — balls never sweeps, and yog
 /// never discards on an opinion.
-pub fn discard(obligation: &Obligation, xdg: &Xdg, handle: &str) -> io::Result<()> {
-    resume(obligation, xdg, handle)?.discard()
+pub fn discard(obligation: &Obligation, repo: &Path, xdg: &Xdg, handle: &str) -> io::Result<()> {
+    resume(obligation, repo, xdg, handle)?.discard()
 }

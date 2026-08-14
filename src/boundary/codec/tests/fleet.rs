@@ -10,12 +10,12 @@ use crate::fleet::Verb as Fleet;
 #[test]
 fn arming_and_disbanding_round_trip() {
     rt(Gesture::Act(Action::Fleet(Fleet::Arm {
-        workspace: p("/ws"),
-        project: p("/proj"),
+        workspace: "ws".into(),
+        project: "proj".into(),
         cap: 4,
     })));
     rt(Gesture::Act(Action::Fleet(Fleet::Disarm {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
     })));
 }
 

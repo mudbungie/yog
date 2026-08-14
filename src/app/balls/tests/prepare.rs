@@ -73,25 +73,25 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
         )
         .unwrap();
 
-    assert_eq!(prepared.name, "ops", "the operator's own name (§3.1)");
-    assert_ne!(
-        prepared.workspace, w.ws_cobalt,
-        "the raise always raises a fresh wall"
+    assert_eq!(
+        prepared.workspace, "ops",
+        "the operator's own name (§3.1) — the address and the stamp are one"
     );
-    assert!(
-        prepared.workspace.join("repo.git").is_dir(),
-        "`lernie new` ran"
-    );
+    // The wall the raise just made: a name resolves against the *published*
+    // set, and this snapshot predates the `lernie new` that founded it.
+    let raised = crate::binding::workspace_path(&w.roots.yog_data, &prepared.workspace);
+    assert_ne!(raised, w.ws_cobalt, "the raise always raises a fresh wall");
+    assert!(raised.join("repo.git").is_dir(), "`lernie new` ran");
     assert_eq!(
         m.focused_workspace(),
-        Some(prepared.workspace.as_path()),
+        Some(raised.as_path()),
         "focus follows the raise — the tab bar and conversation list move with it"
     );
     // The bug's sharp end: the BOTTOM composer's bare rung derives from the focus,
     // so Enter now fires into the newly created workspace, not the abandoned one.
     assert_eq!(
         m.start_bare_inputs().workspace,
-        prepared.workspace,
+        raised,
         "the bare rung names the start's own workspace"
     );
 }
@@ -121,4 +121,31 @@ fn a_failed_prepare_moves_the_focus_nowhere() {
         Some(w.ws_cobalt.as_path()),
         "nothing was resolved, so nothing moved"
     );
+}
+
+/// The frame's door resolves the payload's project **name** exactly as the
+/// dispatch table's Prepare arm does (REMOTE §8, bl-f5f6) — and a name this
+/// snapshot enumerates no project for is a refusal saying so, before a `bl`
+/// runs. The click-glue and a deposit therefore fail the same way on the same
+/// token, which is the whole point of one resolution.
+#[test]
+fn a_ball_rung_whose_project_this_world_does_not_enumerate_refuses_by_name() {
+    let bin = tempdir().unwrap();
+    let w = world();
+    seed(&w.roots.yog_data);
+    let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
+    let _g = spawn_guard();
+
+    let inputs = m.new_ball_inputs(Path::new("/nowhere/at/all"), "Fresh", "do it");
+    let err = m
+        .prepare_start(
+            &fake_lernie(bin.path(), &news()),
+            &Cli::new("/no/bl"),
+            &inputs.workspace,
+            &inputs.payload,
+            "TS",
+        )
+        .unwrap_err();
+
+    assert_eq!(err, "unknown project \"/nowhere/at/all\"");
 }

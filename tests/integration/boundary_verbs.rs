@@ -21,11 +21,23 @@ use yog::cli_outbound::Cli;
 use yog::opslog;
 use yog::ui_state::UiState;
 
-fn empty_snapshot() -> Arc<Snapshot> {
+/// The enumerated sets a gesture's workspace/project NAME resolves against
+/// (REMOTE §8, bl-f5f6): the wire carries no paths, so a fixture publishes the
+/// spheres and repos it acts on exactly as the worker publishes what it found.
+fn snapshot_of(workspaces: &[&Path], projects: &[&Path]) -> Arc<Snapshot> {
     Arc::new(Snapshot {
         bills: HashMap::default(),
         windows: std::collections::BTreeMap::default(),
-        workspaces: vec![],
+        workspaces: workspaces
+            .iter()
+            .map(|path| yog::binding::Workspace {
+                path: (*path).to_path_buf(),
+                kind: yog::binding::WorkspaceKind::Named {
+                    name: yog::naming::leaf(path),
+                },
+            })
+            .collect(),
+        projects: projects.iter().map(|p| (*p).to_path_buf()).collect(),
         trees: HashMap::new(),
         balls_by_project: HashMap::new(),
         closed_by_project: HashMap::new(),
@@ -39,7 +51,7 @@ fn empty_snapshot() -> Arc<Snapshot> {
     })
 }
 
-fn deps(lernie: &Cli, bl: &Cli, state_root: &Path) -> Deps {
+fn deps(lernie: &Cli, bl: &Cli, state_root: &Path, snapshot: Arc<Snapshot>) -> Deps {
     Deps {
         lernie: lernie.clone(),
         bl: bl.clone(),
@@ -49,7 +61,7 @@ fn deps(lernie: &Cli, bl: &Cli, state_root: &Path) -> Deps {
         home: state_root.join("home"),
         yog_data_root: state_root.join("data"),
         balls_state_root: state_root.join("balls"),
-        snapshot: empty_snapshot(),
+        snapshot,
         mint_seed: 5,
     }
 }
@@ -67,21 +79,26 @@ fn the_lernie_actions_spawn_their_exact_argv_and_ops_rows() {
     let ws_s = ws.path().to_string_lossy().to_string();
     let rec = Recorder::new(bin.path(), "lernie");
     let lernie = Cli::new(rec.path());
-    let d = deps(&lernie, &Cli::new("/no/bl"), state.path());
+    let d = deps(
+        &lernie,
+        &Cli::new("/no/bl"),
+        state.path(),
+        snapshot_of(&[ws.path()], &[]),
+    );
 
     let actions = [
         Action::Message {
-            workspace: ws.path().into(),
+            workspace: yog::naming::leaf(ws.path()),
             agent: "c-1".into(),
             content: "ping".into(),
         },
         Action::Stop {
-            workspace: ws.path().into(),
+            workspace: yog::naming::leaf(ws.path()),
             agent: "c-1".into(),
             children: true,
         },
         Action::Scan {
-            workspace: ws.path().into(),
+            workspace: yog::naming::leaf(ws.path()),
         },
     ];
     for (i, action) in actions.iter().enumerate() {
@@ -119,34 +136,34 @@ fn the_lernie_actions_spawn_their_exact_argv_and_ops_rows() {
 fn bl_actions(proj: &Path) -> [Action; 6] {
     [
         Action::Close {
-            project: proj.into(),
+            project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
         },
         Action::Assign {
-            project: proj.into(),
+            project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
         },
         Action::Release {
-            project: proj.into(),
+            project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
         },
         Action::Move {
-            project: proj.into(),
+            project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             from: "alba".into(),
             to: "koi".into(),
         },
         Action::Create {
-            project: proj.into(),
+            project: yog::naming::leaf(proj),
             title: "the title".into(),
             name: "alba".into(),
             body: Some("body".into()),
         },
         Action::Update {
-            project: proj.into(),
+            project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
             title: Some("t2".into()),
@@ -164,7 +181,12 @@ fn the_bl_actions_spawn_their_exact_argv_and_ops_rows() {
     let proj = tempdir().unwrap();
     let rec = Recorder::new(bin.path(), "bl").on("create", "bl-77\n", 0);
     let bl = Cli::new(rec.path());
-    let d = deps(&Cli::new("/no/lernie"), &bl, state.path());
+    let d = deps(
+        &Cli::new("/no/lernie"),
+        &bl,
+        state.path(),
+        snapshot_of(&[], &[proj.path()]),
+    );
     let actions = bl_actions(proj.path());
     for (i, action) in actions.iter().enumerate() {
         match dispatch(&d, &mut ui(), &format!("T{i}"), action).unwrap() {
@@ -242,14 +264,14 @@ fn a_deposited_message_converges_to_the_same_spawn_and_a_reply() {
     let rec = Recorder::new(bin.path(), "lernie");
     let lernie = Cli::new(rec.path());
     let bl = Cli::new("/no/bl");
-    let d = deps(&lernie, &bl, state.path());
+    let d = deps(&lernie, &bl, state.path(), snapshot_of(&[ws.path()], &[]));
 
     deposit::deposit(
         state.path(),
         "g-msg",
         &json!({
             "op": "message",
-            "workspace": ws.path().to_string_lossy(),
+            "workspace": yog::naming::leaf(ws.path()),
             "agent": "c-1",
             "content": "from headless",
         }),

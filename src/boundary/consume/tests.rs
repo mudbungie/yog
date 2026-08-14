@@ -88,7 +88,7 @@ fn a_conversations_query_renders_the_same_rows_the_frame_would() {
     deposit::deposit(
         root.path(),
         "q-2",
-        &json!({"op": "conversations", "workspace": "/names/alba"}),
+        &json!({"op": "conversations", "workspace": "alba"}),
     )
     .unwrap();
     consume(&d, &mut ui(), "T1", 100);
@@ -123,7 +123,7 @@ fn a_spawn_failing_action_is_refused_and_its_ops_row_stands() {
     deposit::deposit(
         root.path(),
         "a-1",
-        &json!({"op": "scan", "workspace": "/names/alba"}),
+        &json!({"op": "scan", "workspace": "alba"}),
     )
     .unwrap();
     assert_eq!(consume(&d, &mut ui(), "T1", 100), 1);
@@ -192,7 +192,7 @@ fn the_decision_queue_reads_and_answers_over_the_one_ui_json() {
     deposit::deposit(
         root.path(),
         "a-seen",
-        &json!({"op": "seen", "workspace": "/names/alba", "agent": "c-1"}),
+        &json!({"op": "seen", "workspace": "alba", "agent": "c-1"}),
     )
     .unwrap();
     assert_eq!(consume(&d, &mut ui, "T2", 100), 1);

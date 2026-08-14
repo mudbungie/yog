@@ -14,10 +14,24 @@ use std::path::Path;
 /// typed work-target binding (`None` = the bare rung's "bind nothing", the
 /// shape most of these tests fire). There is no driver-cwd field since bl-6654
 /// — the detached driver stands in the workspace it drives.
-pub(super) fn prepared(name: &str, workspace: &Path, binding: Option<&Path>) -> Prepared {
+/// One fire, whole (§8.1): the located workspace, the prepared start and the
+/// edited goal — said once here rather than as a struct literal per case.
+pub(super) fn fire(
+    ws: &Path,
+    name: &str,
+    binding: Option<&Path>,
+    goal: &str,
+) -> crate::start::Fire {
+    crate::start::Fire {
+        workspace: ws.to_path_buf(),
+        prepared: prepared(name, binding),
+        goal: goal.to_owned(),
+    }
+}
+
+pub(super) fn prepared(name: &str, binding: Option<&Path>) -> Prepared {
     Prepared {
-        name: name.to_owned(),
-        workspace: workspace.to_path_buf(),
+        workspace: name.to_owned(),
         binding: binding.map(Path::to_path_buf),
         goal: String::new(),
         origin: Origin::Conversation,
@@ -60,8 +74,7 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("cobalt-gecko", &ws, None),
-        "do it",
+        &fire(&ws, "cobalt-gecko", None, "do it"),
         &[],
         &super::rng(),
     )
@@ -128,8 +141,7 @@ fn prompt_passes_the_typed_target_as_cwd_with_the_goal_still_last() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("cobalt-gecko", &ws, Some(&target)),
-        "do it",
+        &fire(&ws, "cobalt-gecko", Some(&target), "do it"),
         &[],
         &super::rng(),
     )
@@ -171,8 +183,7 @@ fn prompt_routes_the_drivers_stderr_to_its_per_spawn_sink() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("n", &ws, None),
-        "g",
+        &fire(&ws, "n", None, "g"),
         &[],
         &super::rng(),
     )
@@ -205,8 +216,7 @@ fn prompt_clips_a_large_logged_goal() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("n", &ws, None),
-        &big,
+        &fire(&ws, "n", None, &big),
         &[],
         &super::rng(),
     )
@@ -235,8 +245,7 @@ fn prompt_logs_the_spawn_failure_and_returns_err() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("n", &ws, None),
-        "g",
+        &fire(&ws, "n", None, "g"),
         &[],
         &super::rng(),
     )
@@ -267,8 +276,7 @@ fn a_nonexistent_work_directory_logs_failed_to_spawn_not_a_handoff() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("n", &missing, None),
-        "g",
+        &fire(&missing, "n", None, "g"),
         &[],
         &super::rng(),
     )

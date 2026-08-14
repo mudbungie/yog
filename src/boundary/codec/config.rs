@@ -14,14 +14,14 @@ use crate::boundary::config::ConfigFile;
 use crate::config_edit::branch::edit::EditOrigin;
 use serde_json::{Map, Value, json};
 
-use super::{path_of, str_of};
+use super::str_of;
 
 /// Encode a config destination. `file` is the discriminant; each destination
 /// carries exactly its own parameters.
 pub(super) fn encode_file(file: &ConfigFile) -> Value {
     match file {
         ConfigFile::Brazen { workspace } => {
-            json!({ "file": "brazen", "workspace": super::encode_path(workspace) })
+            json!({ "file": "brazen", "workspace": workspace })
         }
         ConfigFile::LernieModels => json!({ "file": "lernie-models" }),
         ConfigFile::LernieWorkflow { name } => {
@@ -36,7 +36,7 @@ pub(super) fn encode_file(file: &ConfigFile) -> Value {
         } => {
             let mut map = Map::new();
             map.insert("file".to_owned(), json!("branch"));
-            map.insert("workspace".to_owned(), super::encode_path(workspace));
+            map.insert("workspace".to_owned(), Value::String(workspace.clone()));
             map.insert("lineage".to_owned(), json!(lineage));
             map.insert("path".to_owned(), json!(path));
             for (k, v) in origin_fields(origin) {
@@ -75,14 +75,14 @@ fn decode_marks(o: &Map<String, Value>) -> Result<Action, String> {
         return Err(format!("marks: {}", crate::world::marks::REFUSAL));
     }
     Ok(Action::SetMarks {
-        workspace: path_of(o, "workspace")?,
+        workspace: str_of(o, "workspace")?,
         branch,
     })
 }
 
 fn decode_pick(o: &Map<String, Value>) -> Result<Action, String> {
     Ok(Action::PickModel {
-        workspace: path_of(o, "workspace")?,
+        workspace: str_of(o, "workspace")?,
         role: str_of(o, "role")?,
         provider: str_of(o, "provider")?,
         model: str_of(o, "model")?,
@@ -96,7 +96,7 @@ pub(super) fn decode_file(v: &Value) -> Result<ConfigFile, String> {
     let obj = v.as_object().ok_or("config: target is not an object")?;
     match str_of(obj, "file")?.as_str() {
         "brazen" => Ok(ConfigFile::Brazen {
-            workspace: path_of(obj, "workspace")?,
+            workspace: str_of(obj, "workspace")?,
         }),
         "lernie-models" => Ok(ConfigFile::LernieModels),
         "lernie-workflow" => Ok(ConfigFile::LernieWorkflow {
@@ -104,7 +104,7 @@ pub(super) fn decode_file(v: &Value) -> Result<ConfigFile, String> {
         }),
         "cadence" => Ok(ConfigFile::Cadence),
         "branch" => Ok(ConfigFile::Branch {
-            workspace: path_of(obj, "workspace")?,
+            workspace: str_of(obj, "workspace")?,
             lineage: str_of(obj, "lineage")?,
             origin: decode_origin(obj)?,
             path: str_of(obj, "path")?,

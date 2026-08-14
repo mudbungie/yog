@@ -52,6 +52,13 @@ pub struct Growth {
 pub struct Snapshot {
     /// Every enumerated workspace, classified (§3.1).
     pub workspaces: Vec<Workspace>,
+    /// Every enumerated project's decoded invocation path (§5.1 #1), internal
+    /// clones included — the set the §11 roster labels and the boundary's
+    /// project **names** are both derived over ([`names`], REMOTE §8). Ridden
+    /// out on the snapshot for the same reason the workspace set is: a name is
+    /// a query over the live enumeration, and neither frontend may readdir to
+    /// resolve one.
+    pub projects: Vec<PathBuf>,
     /// Per-workspace derived trees; a workspace absent here failed to derive.
     pub trees: HashMap<PathBuf, GitTree>,
     /// Per-workspace `steps/` walk (§3.5, bl-9dd4): every step's Usage fold and
@@ -98,6 +105,10 @@ pub struct Snapshot {
     pub fleet: BTreeMap<String, crate::fleet::Policy>,
 }
 
+/// The boundary's addressing, read off this snapshot in both directions
+/// (REMOTE §8, bl-f5f6) — its own file at §12's budget.
+mod names;
+
 impl Snapshot {
     /// The empty snapshot a model starts from, before the worker's first pass.
     /// Not a special case: it is the general shape with no inputs, so every
@@ -105,6 +116,7 @@ impl Snapshot {
     pub(crate) fn empty(now: Instant) -> Self {
         Self {
             workspaces: Vec::new(),
+            projects: Vec::new(),
             trees: HashMap::new(),
             bills: HashMap::new(),
             windows: BTreeMap::new(),

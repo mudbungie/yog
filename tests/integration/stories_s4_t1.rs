@@ -43,6 +43,7 @@ fn new_workspace(
         // The raise's whole content: the operator's name under the flat names
         // root. There is nothing else to decide (§3.1 — the dir is the registry).
         workspace: workspace_path(yog.path(), &name),
+        repo: None,
         payload: Payload::Bare,
         home: home.path().to_path_buf(),
         yog_data_root: yog.path().to_path_buf(),
@@ -53,11 +54,10 @@ fn new_workspace(
     };
     let prepared = start::prepare(&deps, &inputs, "T").unwrap();
     assert_eq!(
-        prepared.name, name,
+        prepared.workspace, name,
         "the name is the leaf, not a second fact"
     );
-    assert_eq!(prepared.workspace, workspace_path(yog.path(), &name));
-    assert!(prepared.workspace.starts_with(names_root(yog.path())));
+    assert!(workspace_path(yog.path(), &name).starts_with(names_root(yog.path())));
     assert!(bl.invocations().is_empty(), "a raise mutates no ball");
     let argv: Vec<Vec<String>> = lernie.invocations().into_iter().map(|i| i.argv).collect();
     Ok((name, argv))

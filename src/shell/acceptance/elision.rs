@@ -148,8 +148,9 @@ fn the_assign_verb_stays_whole_behind_a_ball_title_of_any_length() {
     let ws = world.ws.clone();
     let inputs = StartInputs {
         workspace: ws.clone(),
+        repo: Some(ws.clone()),
         payload: Payload::Ball {
-            project: ws.clone(),
+            project: crate::naming::leaf(&ws),
             ball: BallSpec::Existing {
                 id: "bl-b5ce".to_owned(),
                 title: "epic: the inspector rework".to_owned(),

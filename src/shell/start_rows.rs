@@ -17,7 +17,7 @@ use crate::cli_outbound::Cli;
 use crate::nav::menu::Seat;
 use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Payload, StartInputs};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// ▶ Start (§8.1 ball rung): claim, then the editable goal — nothing runs yet.
 const START_HINT: &str = "Claim this ball for the focused workspace and open its goal for editing. \
@@ -75,7 +75,14 @@ pub(super) fn ready_row(
         return;
     };
     if assign_clicked && let Some(to) = &to {
-        super::ball_bar::assign_ball(model, lernie, bl, &project, &id, to);
+        super::ball_bar::assign_ball(
+            model,
+            lernie,
+            bl,
+            &model.snap.project_path(&project).unwrap_or_default(),
+            &id,
+            to,
+        );
     }
     let seat = Seat::BallRow {
         state: join,
@@ -85,7 +92,11 @@ pub(super) fn ready_row(
         move_to: Vec::new(),
     };
     let target = Target::Ball(BallRef {
-        project,
+        // The menu target is a repo the seat acts in, so the name comes back
+        // through the one mapping (REMOTE §8); a project this snapshot does not
+        // enumerate resolves to nothing and the verbs refuse where they always
+        // did.
+        project: model.snap.project_path(&project).unwrap_or_default(),
         id,
         owner: String::new(),
     });
@@ -137,7 +148,20 @@ pub(super) fn continue_row(
 /// The (project, id, join state) of an existing-ball payload — the ball an
 /// Assign or the §11 ball-row menu acts on; `None` for a new-ball payload
 /// (nothing to assign yet).
-pub(super) fn ball_ref(payload: &Payload) -> Option<(PathBuf, String, JoinState)> {
+/// The id of an existing-ball payload — the key the board indexes its
+/// affordances by. Split from [`ball_ref`] because a key needs no repo, and
+/// resolving one to build a key would be a lookup the caller cannot use.
+pub(super) fn ball_id(payload: &Payload) -> Option<String> {
+    match payload {
+        Payload::Ball {
+            ball: BallSpec::Existing { id, .. },
+            ..
+        } => Some(id.clone()),
+        _ => None,
+    }
+}
+
+pub(super) fn ball_ref(payload: &Payload) -> Option<(String, String, JoinState)> {
     match payload {
         Payload::Ball {
             project,

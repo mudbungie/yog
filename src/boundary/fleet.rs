@@ -30,14 +30,18 @@ const DISARM_STEP: &str = "disarm-fleet";
 
 /// The family's one door (§8.5): the chokepoint hands the whole [`Verb`] here
 /// and this decides nothing but which way the one body runs.
-pub(super) fn dispatch(deps: &Deps, ts: &str, verb: &Verb) -> Result<Reply, String> {
+pub(super) fn dispatch(
+    deps: &Deps,
+    ts: &str,
+    workspace: &Path,
+    verb: &Verb,
+) -> Result<Reply, String> {
     match verb {
-        Verb::Arm {
-            workspace,
-            project,
-            cap,
-        } => arm(deps, ts, workspace, Some((project.as_path(), *cap))),
-        Verb::Disarm { workspace } => arm(deps, ts, workspace, None),
+        Verb::Arm { project, cap, .. } => {
+            let repo = deps.snapshot.project_path(project)?;
+            arm(deps, ts, workspace, Some((repo.as_path(), *cap)))
+        }
+        Verb::Disarm { .. } => arm(deps, ts, workspace, None),
     }
 }
 

@@ -38,7 +38,7 @@ pub(super) fn rt(gesture: Gesture) {
 fn the_attempt_round_trips_with_and_without_skills() {
     for skills in [Vec::new(), vec!["bash".to_owned(), "read_file".to_owned()]] {
         rt(Gesture::Act(Action::Fork {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             parent: "c-1".to_owned(),
             attempt: crate::fork::Attempt {
                 from: "config/strict".to_owned(),
@@ -53,24 +53,24 @@ fn the_attempt_round_trips_with_and_without_skills() {
 #[test]
 fn every_lernie_action_round_trips() {
     rt(Gesture::Act(Action::Message {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         agent: "c-1".to_owned(),
         content: "ship it".to_owned(),
     }));
     for children in [false, true] {
         rt(Gesture::Act(Action::Stop {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             agent: "c-1".to_owned(),
             children,
         }));
     }
     rt(Gesture::Act(Action::Scan {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }));
     // The nudge (bl-9bef): aimed by the seat, carrying nothing — the verb is
     // the whole line, because what it says is what is already there.
     rt(Gesture::Act(Action::Nudge {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         agent: "c-1".to_owned(),
     }));
     let extra = parse("/nudge again", &ctx()).expect_err("it takes no arguments");
@@ -84,14 +84,14 @@ fn every_lernie_action_round_trips() {
     // The §9.4 exit (bl-2d19): both its targets are the seat's, so the verb is
     // the whole line and the round trip holds modulo that context.
     rt(Gesture::Act(Action::Retarget {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         agent: "c-1".to_owned(),
     }));
 }
 
 #[test]
 fn every_ball_action_round_trips() {
-    let (project, id, name) = (PathBuf::from("/proj"), "bl-1".to_owned(), "alba".to_owned());
+    let (project, id, name) = ("proj".to_owned(), "bl-1".to_owned(), "alba".to_owned());
     rt(Gesture::Act(Action::Close {
         project: project.clone(),
         id: id.clone(),
@@ -150,18 +150,18 @@ fn every_start_rung_and_the_prompt_round_trip() {
             dir: PathBuf::from("/tmp/work"),
         },
         Payload::Ball {
-            project: PathBuf::from("/proj"),
+            project: "proj".to_owned(),
             ball: existing(),
         },
         Payload::Ball {
-            project: PathBuf::from("/proj"),
+            project: "proj".to_owned(),
             ball: BallSpec::New {
                 title: "a fresh ball".to_owned(),
                 body: String::new(),
             },
         },
         Payload::Ball {
-            project: PathBuf::from("/proj"),
+            project: "proj".to_owned(),
             ball: BallSpec::New {
                 title: "a fresh ball".to_owned(),
                 body: "with a body".to_owned(),
@@ -169,7 +169,7 @@ fn every_start_rung_and_the_prompt_round_trip() {
         },
     ] {
         rt(Gesture::Act(Action::Prepare {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             payload,
         }));
     }
@@ -188,7 +188,7 @@ fn the_fan_and_the_retirement_round_trip() {
         rt(Gesture::Act(Action::Fan {
             prepared: prepared(),
             obligation: crate::fan::Obligation {
-                project: PathBuf::from("/proj"),
+                project: "proj".to_owned(),
                 ball: Some("bl-1".to_owned()),
             },
             n,
@@ -196,7 +196,7 @@ fn the_fan_and_the_retirement_round_trip() {
     }
     rt(Gesture::Act(Action::Retire {
         obligation: crate::fan::Obligation {
-            project: PathBuf::from("/proj"),
+            project: "proj".to_owned(),
             ball: Some("bl-1".to_owned()),
         },
         handle: "at-0badcafe".to_owned(),
@@ -206,14 +206,14 @@ fn the_fan_and_the_retirement_round_trip() {
 #[test]
 fn every_trail_verb_and_query_round_trips() {
     rt(Gesture::Act(Action::DeleteWorkspace {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         typed: "alba".to_owned(),
     }));
     // Both arming moods of the one-conversation delete (bl-f17a): bare (the
     // leaf) and typed (the subtree).
     for typed in ["", "the goal name"] {
         rt(Gesture::Act(Action::DeleteAgent {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             agent: "c-1".to_owned(),
             typed: typed.to_owned(),
         }));
@@ -221,7 +221,7 @@ fn every_trail_verb_and_query_round_trips() {
     rt(Gesture::Act(Action::Ack));
     // The §6 queue's answer: aimed by the seat, exactly as `/message` is.
     rt(Gesture::Act(Action::MarkSeen {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         agent: "c-1".to_owned(),
     }));
     rt(Gesture::Act(Action::ClearTrail));
@@ -233,7 +233,7 @@ fn every_trail_verb_and_query_round_trips() {
 fn the_config_familys_reads_round_trip() {
     for file in [
         ConfigFile::Brazen {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
         },
         ConfigFile::LernieModels,
         ConfigFile::Cadence,
@@ -254,7 +254,7 @@ fn the_config_familys_reads_round_trip() {
     ] {
         rt(Gesture::Ask(Query::ReadConfig {
             file: ConfigFile::Branch {
-                workspace: PathBuf::from("/ws"),
+                workspace: "ws".to_owned(),
                 lineage: "strict".to_owned(),
                 origin,
                 path: "workflow.yaml".to_owned(),
@@ -262,17 +262,17 @@ fn the_config_familys_reads_round_trip() {
         }));
     }
     rt(Gesture::Ask(Query::Marks {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }));
     rt(Gesture::Ask(Query::Providers {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }));
     // The browse and the roster beside them (bl-dff8).
     rt(Gesture::Ask(Query::Lineages {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }));
     rt(Gesture::Ask(Query::Models {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         provider: "acme".to_owned(),
     }));
 }

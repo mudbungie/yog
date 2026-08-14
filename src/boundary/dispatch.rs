@@ -40,52 +40,56 @@ pub use doors::{prepare, prompt};
 /// `ui.json` the §3.6 unmaking prunes (write-through, either frontend's copy).
 pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Result<Reply, String> {
     let (bl, root) = (&deps.bl, deps.state_root.as_path());
+    // **The one resolution** (REMOTE §8, bl-f5f6): the wire spells names, the
+    // world is addressed by path. The two `Action` tables ([`super::address`])
+    // say which name this gesture carries, and it is turned into a path here —
+    // once, ahead of the table — so no arm below re-derives an address and an
+    // unresolvable name refuses naming the token before anything runs. A
+    // gesture that names neither resolves to nothing and no arm reads it: the
+    // general path with no input, not a case of its own.
+    let ws: &std::path::Path = &match action.workspace() {
+        Some(name) => deps.snapshot.ws_path(&name)?,
+        None => std::path::PathBuf::new(),
+    };
+    let project: &std::path::Path = &match action.project() {
+        Some(name) => deps.snapshot.project_path(&name)?,
+        None => std::path::PathBuf::new(),
+    };
     match action {
         // The §8.2 lernie arms spawn through [`Deps::bound`] and never through
         // `deps.lernie` itself (bl-bf79): a workspace verb's spawn owes its
         // workspace the wall and the name, stated at that one binding rather
         // than once per arm here — `Retarget` is the §9.4 exit (bl-2d19).
-        Action::Message {
-            workspace: ws,
-            agent,
-            content,
-        } => outcome(verbs::message(&deps.bound(ws), root, ts, agent, content)),
+        Action::Message { agent, content, .. } => {
+            outcome(verbs::message(&deps.bound(ws), root, ts, agent, content))
+        }
         Action::Stop {
-            workspace: ws,
-            agent,
-            children,
+            agent, children, ..
         } => outcome(verbs::stop(&deps.bound(ws), root, ts, agent, *children)),
-        Action::Scan { workspace: ws } => outcome(verbs::scan(&deps.bound(ws), root, ts)),
+        Action::Scan { .. } => outcome(verbs::scan(&deps.bound(ws), root, ts)),
         // The §8.2 nudge (bl-9bef): a detached `lernie advance`, which is the
         // §8.6 release's own launch — one body in [`control`], because "start a
         // driver on this conversation" is one act however it was asked for.
         // Detached and never piped: an advance runs the conversation until it
         // goes quiet, and no gesture may block a frame on that.
-        Action::Nudge {
-            workspace: ws,
-            agent,
-        } => control::advance(deps, ts, ws, agent).map(|()| Reply::Nudged),
-        Action::Retarget { workspace, agent } => outcome(retarget(deps, ts, workspace, agent)),
+        Action::Nudge { agent, .. } => {
+            control::advance(deps, ts, ws, agent).map(|()| Reply::Nudged)
+        }
+        Action::Retarget { agent, .. } => outcome(retarget(deps, ts, ws, agent)),
         Action::Fork {
-            workspace,
             parent,
             attempt,
             goal,
-        } => fork(deps, ts, workspace, parent, attempt, goal),
-        Action::Close { project, id, name } => spend(verbs::close, deps, ts, project, id, name),
-        Action::Assign { project, id, name } => spend(verbs::assign, deps, ts, project, id, name),
-        Action::Release { project, id, name } => spend(verbs::unclaim, deps, ts, project, id, name),
-        Action::Move {
-            project,
-            id,
-            from,
-            to,
-        } => outcome(verbs::reassign(bl, root, ts, project, id, from, to)),
+            ..
+        } => fork(deps, ts, ws, parent, attempt, goal),
+        Action::Close { id, name, .. } => spend(verbs::close, deps, ts, project, id, name),
+        Action::Assign { id, name, .. } => spend(verbs::assign, deps, ts, project, id, name),
+        Action::Release { id, name, .. } => spend(verbs::unclaim, deps, ts, project, id, name),
+        Action::Move { id, from, to, .. } => {
+            outcome(verbs::reassign(bl, root, ts, project, id, from, to))
+        }
         Action::Create {
-            project,
-            title,
-            name,
-            body,
+            title, name, body, ..
         } => outcome(verbs::create(
             bl,
             root,
@@ -96,66 +100,55 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             body.as_deref(),
         )),
         Action::Update {
-            project,
             id,
             name,
             title,
             body,
             note,
+            ..
         } => {
             let fields = verbs::Update::of(title, body, note);
             outcome(verbs::update(bl, root, ts, project, id, name, &fields))
         }
-        Action::Prepare { workspace, payload } => staged(deps, ts, workspace, payload),
-        Action::Prompt { prepared, goal } => {
-            prompt(deps, ui, ts, prepared, goal).map(|conversation| Reply::Started { conversation })
-        }
+        Action::Prepare { payload, .. } => staged(deps, ts, ws, project, payload),
+        Action::Prompt { prepared, goal } => prompt(deps, ui, ts, ws, prepared, goal)
+            .map(|conversation| Reply::Started { conversation }),
         Action::Fan {
             prepared,
             obligation,
             n,
         } => fan::spread(deps, ts, prepared, obligation, *n),
         Action::Retire { obligation, handle } => fan::retire(deps, ts, obligation, handle),
-        Action::DeleteWorkspace { workspace, typed } => unmake(deps, ui, ts, workspace, typed),
-        Action::DeleteAgent {
-            workspace,
-            agent,
-            typed,
-        } => delete_agent(deps, ui, ts, workspace, agent, typed),
-        Action::Monitor(verb) => monitor::dispatch(deps, ts, verb),
+        Action::DeleteWorkspace { typed, .. } => unmake(deps, ui, ts, ws, typed),
+        Action::DeleteAgent { agent, typed, .. } => delete_agent(deps, ui, ts, ws, agent, typed),
+        Action::Monitor(verb) => monitor::dispatch(deps, ts, ws, verb),
         // The §4.3 armed loop's family (bl-66fb): arming, which writes one
         // `cadence.yaml` entry. The loop itself is a thread, already running
         // and already finding nothing to do.
-        Action::Fleet(verb) => fleet::dispatch(deps, ts, verb),
+        Action::Fleet(verb) => fleet::dispatch(deps, ts, ws, verb),
         // The §8.6 capability family's one writer: the once-answer row, then
         // the releasing `advance`.
-        Action::AnswerHold {
-            workspace,
-            agent,
-            ruling,
-        } => control::answer_hold(deps, ts, workspace, agent, *ruling),
+        Action::AnswerHold { agent, ruling, .. } => {
+            control::answer_hold(deps, ts, ws, agent, *ruling)
+        }
         // The same family's other writer (VISION §4.9's fifth rung): standing
         // policy for a whole descent, one row, nothing launched.
-        Action::Floor {
-            workspace,
-            agent,
-            raised,
-        } => control::set_floor(deps, ts, workspace, agent, *raised),
+        Action::Floor { agent, raised, .. } => control::set_floor(deps, ts, ws, agent, *raised),
         // The trail's own two operator verbs (§4.2, bl-c417): the same one
         // bodies the frame's ops pane calls ([`crate::opslog::ack`]/[`clear`]).
         Action::Ack => wrote(crate::opslog::ack(root, ts), Reply::Acked),
-        Action::MarkSeen { workspace, agent } => acknowledge(deps, ui, ts, workspace, agent),
+        Action::MarkSeen { agent, .. } => acknowledge(deps, ui, ts, ws, agent),
         Action::ClearTrail => wrote(crate::opslog::clear(root, ts), Reply::TrailCleared),
         // The §9 config family (bl-3f46) — one executor module, because each of
         // the three is a composition of pipelines that already exist.
         Action::ApplyConfig { file, text } => config::apply(deps, ts, file, text),
-        Action::SetMarks { workspace, branch } => config::set_marks(deps, ts, workspace, branch),
+        Action::SetMarks { branch, .. } => config::set_marks(deps, ts, ws, branch),
         Action::PickModel {
-            workspace,
             role,
             provider,
             model,
-        } => config::pick_model(deps, ts, workspace, &Pick::of(role, provider, model)),
+            ..
+        } => config::pick_model(deps, ts, ws, &Pick::of(role, provider, model)),
     }
 }
 
@@ -190,9 +183,10 @@ fn staged(
     deps: &Deps,
     ts: &str,
     workspace: &std::path::Path,
+    repo: &std::path::Path,
     payload: &crate::start::Payload,
 ) -> Result<Reply, String> {
-    prepare(deps, ts, workspace, payload).map(Reply::Prepared)
+    prepare(deps, ts, workspace, repo, payload).map(Reply::Prepared)
 }
 
 /// A **short verb's** answer: its captured run as a reply, or its launch

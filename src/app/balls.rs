@@ -236,10 +236,12 @@ impl AppModel {
         // The chokepoint's typed door — the same body the dispatch match's
         // Prompt arm runs (§8.5), §3.5 spend gate included: the frame does not
         // get its own ceiling, it gets the one every seat crosses.
-        let conversation = crate::boundary::dispatch::prompt(&deps, &self.ui, ts, prepared, goal)?;
+        let workspace = self.snap.ws_path(&prepared.workspace)?;
+        let conversation =
+            crate::boundary::dispatch::prompt(&deps, &self.ui, ts, &workspace, prepared, goal)?;
         // Only on `Ok`, which is also §7.2's first expiry end: a fire that never
         // launched leaves the §4.2 synthetic-failure line and no echo at all.
-        self.await_conversation(&prepared.workspace, &conversation, goal);
+        self.await_conversation(&workspace, &conversation, goal);
         Ok(conversation)
     }
 }

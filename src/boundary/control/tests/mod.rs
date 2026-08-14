@@ -179,7 +179,7 @@ fn the_answer_is_reachable_from_the_chokepoint_every_seat_enters() {
         &mut ui,
         "1000",
         &crate::boundary::Action::AnswerHold {
-            workspace: world.workspace(),
+            workspace: crate::naming::leaf(&(world.workspace())),
             agent: "a-1".to_owned(),
             ruling: Ruling::Hold,
         },

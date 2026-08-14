@@ -63,8 +63,14 @@ impl AppModel {
         // every caller filled it from: one derivation. This is the
         // chokepoint's typed door, the same body the dispatch match's Prepare
         // arm runs (§8.5), so a click, a line and a deposit share it.
-        let prepared = crate::boundary::dispatch::prepare(&deps, ts, workspace, payload)?;
-        self.focus_workspace(&prepared.workspace);
+        // The payload's project name, located for the chokepoint (REMOTE §8) —
+        // the same resolution `dispatch`'s own Prepare arm makes.
+        let repo = match payload.project() {
+            Some(name) => self.snap.project_path(&name)?,
+            None => PathBuf::new(),
+        };
+        let prepared = crate::boundary::dispatch::prepare(&deps, ts, workspace, &repo, payload)?;
+        self.focus_workspace(workspace);
         Ok(prepared)
     }
 
@@ -121,9 +127,13 @@ impl AppModel {
     /// validated name ([`new_workspace_inputs`]). A workspace that does not exist
     /// yet simply has no stamped names — no branch (§3.3).
     fn start_inputs_at(&self, workspace: PathBuf, payload: Payload) -> StartInputs {
+        let repo = payload
+            .project()
+            .and_then(|name| self.snap.project_path(&name).ok());
         StartInputs {
             conversation_names: self.conversation_names(&workspace),
             workspace,
+            repo,
             payload,
             home: self.roots.home.clone(),
             yog_data_root: self.roots.yog_data.clone(),
@@ -208,7 +218,7 @@ impl AppModel {
     /// broken row drops rather than panics — both callers filter it out).
     fn ball_payload(&self, row: &JoinRow) -> Option<Payload> {
         Some(Payload::Ball {
-            project: row.project.clone(),
+            project: self.snap.project_name(&row.project),
             ball: self.ball_spec(row)?,
         })
     }
@@ -232,7 +242,7 @@ impl AppModel {
     /// operator's RAM-drafted title/body — the new-ball entry's hand-off.
     pub fn new_ball_inputs(&self, project: &Path, title: &str, body: &str) -> StartInputs {
         self.start_inputs(Payload::Ball {
-            project: project.to_path_buf(),
+            project: self.snap.project_name(project),
             ball: BallSpec::New {
                 title: title.to_owned(),
                 body: body.to_owned(),

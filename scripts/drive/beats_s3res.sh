@@ -84,7 +84,7 @@ s3_residuals() {
   # a `Prepared`, the goal is never said, and there is no draft to cancel.
   before=$(claim_rows)
   gesture "$data" "/prepare ball --new converge ball --body no tools" \
-      --ws "$ws" --project "$data/proj" \
+      --ws "$(basename "$ws")" --project proj \
     && row_ok '"bl","create"' \
     && pass "S3-T2 new ball: bl create from the boundary" \
     || fail "S3-T2 new ball: bl create from the boundary" "no clean create row"
@@ -107,7 +107,7 @@ s3_residuals() {
   # S3's ▶ Start and S4's mint-focus beat.
   mints=$(verb_count new)
   gesture "$data" "/assign $READY_BALL" \
-      --project "$data/proj" --as "$(basename "$ws")" \
+      --project proj --as "$(basename "$ws")" \
     && row_ok "\"bl\",\"claim\",\"$READY_BALL\",\"--as\"" \
     && pass "S4-T2 assign: claim --as the workspace name" \
     || fail "S4-T2 assign: claim --as the workspace name" "no clean claim row"

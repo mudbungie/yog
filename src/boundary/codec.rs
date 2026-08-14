@@ -26,9 +26,7 @@ mod query;
 mod start;
 use config::encode_file;
 use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, usize_of};
-use start::{
-    decode_payload, decode_prepared, encode_path, encode_payload, encode_prepared, opt_field,
-};
+use start::{decode_payload, decode_prepared, encode_payload, encode_prepared, opt_field};
 pub(crate) use start::{
     decode_prepared as prepared_from_value, encode_prepared as prepared_value, join_token,
     origin_token, parse_join, parse_origin,
@@ -48,15 +46,15 @@ fn encode_action(action: &Action) -> Value {
             workspace,
             agent,
             content,
-        } => json!({ "op": "message", "workspace": encode_path(workspace),
+        } => json!({ "op": "message", "workspace": workspace,
                      "agent": agent, "content": content }),
         Action::Stop {
             workspace,
             agent,
             children,
-        } => json!({ "op": "stop", "workspace": encode_path(workspace),
+        } => json!({ "op": "stop", "workspace": workspace,
                      "agent": agent, "children": children }),
-        Action::Scan { workspace } => json!({ "op": "scan", "workspace": encode_path(workspace) }),
+        Action::Scan { workspace } => json!({ "op": "scan", "workspace": workspace }),
         Action::Nudge { workspace, agent } => at_agent("nudge", workspace, agent),
         Action::Retarget { workspace, agent } => at_agent("retarget", workspace, agent),
         Action::Close { project, id, name } => ball("close", project, id, name),
@@ -67,7 +65,7 @@ fn encode_action(action: &Action) -> Value {
             id,
             from,
             to,
-        } => json!({ "op": "move", "project": encode_path(project),
+        } => json!({ "op": "move", "project": project,
                      "id": id, "from": from, "to": to }),
         Action::Create {
             project,
@@ -84,7 +82,7 @@ fn encode_action(action: &Action) -> Value {
             note,
         } => update(project, id, name, [title, body, note]),
         Action::Prepare { workspace, payload } => {
-            json!({ "op": "prepare", "workspace": encode_path(workspace),
+            json!({ "op": "prepare", "workspace": workspace,
                     "payload": encode_payload(payload) })
         }
         Action::Prompt { prepared, goal } => {
@@ -97,14 +95,14 @@ fn encode_action(action: &Action) -> Value {
         } => fan::encode(prepared, obligation, *n),
         Action::Retire { obligation, handle } => fan::encode_retire(obligation, handle),
         Action::DeleteWorkspace { workspace, typed } => {
-            json!({ "op": "delete-workspace", "workspace": encode_path(workspace),
+            json!({ "op": "delete-workspace", "workspace": workspace,
                     "typed": typed })
         }
         Action::DeleteAgent {
             workspace,
             agent,
             typed,
-        } => json!({ "op": "delete-agent", "workspace": encode_path(workspace),
+        } => json!({ "op": "delete-agent", "workspace": workspace,
                      "agent": agent, "typed": typed }),
         Action::Monitor(verb) => monitor::encode(verb),
         Action::Fleet(verb) => fleet::encode(verb),
@@ -125,14 +123,14 @@ fn encode_action(action: &Action) -> Value {
             json!({ "op": "config", "target": encode_file(file), "text": text })
         }
         Action::SetMarks { workspace, branch } => {
-            json!({ "op": "marks", "workspace": encode_path(workspace), "branch": branch })
+            json!({ "op": "marks", "workspace": workspace, "branch": branch })
         }
         Action::PickModel {
             workspace,
             role,
             provider,
             model,
-        } => json!({ "op": "model", "workspace": encode_path(workspace),
+        } => json!({ "op": "model", "workspace": workspace,
                      "role": role, "provider": provider, "model": model }),
         Action::Fork {
             workspace,
@@ -147,31 +145,31 @@ fn encode_action(action: &Action) -> Value {
 /// once rather than three times, for [`ball`]'s reason exactly: the gestures
 /// that name a conversation and carry nothing else are one shape, and a match
 /// arm that rebuilds it is a body pretending to be a row.
-fn at_agent(op: &str, workspace: &std::path::Path, agent: &str) -> Value {
-    json!({ "op": op, "workspace": encode_path(workspace), "agent": agent })
+fn at_agent(op: &str, workspace: &str, agent: &str) -> Value {
+    json!({ "op": op, "workspace": workspace, "agent": agent })
 }
 
 /// The three one-shape `bl` envelopes — op, project, id, `--as` name — said
 /// once rather than three times, which is also what keeps [`encode_action`]
 /// inside §12's per-function budget.
-fn ball(op: &str, project: &std::path::Path, id: &str, name: &str) -> Value {
-    json!({ "op": op, "project": encode_path(project), "id": id, "name": name })
+fn ball(op: &str, project: &str, id: &str, name: &str) -> Value {
+    json!({ "op": op, "project": project, "id": id, "name": name })
 }
 
 /// The two `bl` envelopes with **optional** fields, bodied out beside [`ball`]
 /// for the same reason: a match arm that builds a map is a body, and the arm
 /// roster stops reading as one once two of them are.
-fn create(project: &std::path::Path, title: &str, name: &str, body: Option<&String>) -> Value {
+fn create(project: &str, title: &str, name: &str, body: Option<&String>) -> Value {
     let mut map = obj(&[("op", "create"), ("title", title), ("name", name)]);
-    map.insert("project".to_owned(), encode_path(project));
+    map.insert("project".to_owned(), Value::String(project.to_owned()));
     opt_field(&mut map, "body", body);
     Value::Object(map)
 }
 
 /// `[title, body, note]` in the order `/update`'s own flags read.
-fn update(project: &std::path::Path, id: &str, name: &str, fields: [&Option<String>; 3]) -> Value {
+fn update(project: &str, id: &str, name: &str, fields: [&Option<String>; 3]) -> Value {
     let mut map = obj(&[("op", "update"), ("id", id), ("name", name)]);
-    map.insert("project".to_owned(), encode_path(project));
+    map.insert("project".to_owned(), Value::String(project.to_owned()));
     for (key, value) in ["title", "body", "note"].into_iter().zip(fields) {
         opt_field(&mut map, key, value.as_ref());
     }
@@ -185,55 +183,55 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
     let op = str_of(o, "op")?;
     match op.as_str() {
         "message" => Ok(act(Action::Message {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
             content: str_of(o, "content")?,
         })),
         "stop" => Ok(act(Action::Stop {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
             children: o.get("children").and_then(Value::as_bool).unwrap_or(false),
         })),
         "scan" => Ok(act(Action::Scan {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
         })),
         "nudge" => Ok(act(Action::Nudge {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
         })),
         "retarget" => Ok(act(Action::Retarget {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
         })),
         "close" => Ok(act(Action::Close {
-            project: path_of(o, "project")?,
+            project: str_of(o, "project")?,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
         })),
         "assign" => Ok(act(Action::Assign {
-            project: path_of(o, "project")?,
+            project: str_of(o, "project")?,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
         })),
         "release" => Ok(act(Action::Release {
-            project: path_of(o, "project")?,
+            project: str_of(o, "project")?,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
         })),
         "move" => Ok(act(Action::Move {
-            project: path_of(o, "project")?,
+            project: str_of(o, "project")?,
             id: str_of(o, "id")?,
             from: str_of(o, "from")?,
             to: str_of(o, "to")?,
         })),
         "create" => Ok(act(Action::Create {
-            project: path_of(o, "project")?,
+            project: str_of(o, "project")?,
             title: str_of(o, "title")?,
             name: str_of(o, "name")?,
             body: opt_str_of(o, "body")?,
         })),
         "update" => Ok(act(Action::Update {
-            project: path_of(o, "project")?,
+            project: str_of(o, "project")?,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
             title: opt_str_of(o, "title")?,
@@ -241,7 +239,7 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             note: opt_str_of(o, "note")?,
         })),
         "prepare" => Ok(act(Action::Prepare {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             payload: decode_payload(o.get("payload").ok_or("prepare: missing payload")?)?,
         })),
         "prompt" => Ok(act(Action::Prompt {
@@ -249,11 +247,11 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             goal: str_of(o, "goal")?,
         })),
         "delete-workspace" => Ok(act(Action::DeleteWorkspace {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             typed: str_of(o, "typed")?,
         })),
         "delete-agent" => Ok(act(Action::DeleteAgent {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
             typed: str_of(o, "typed")?,
         })),
@@ -270,7 +268,7 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         // the trail's alarm ack already wears that word, and these two quiet
         // different things.
         "seen" => Ok(act(Action::MarkSeen {
-            workspace: path_of(o, "workspace")?,
+            workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
         })),
         "clear-trail" => Ok(act(Action::ClearTrail)),

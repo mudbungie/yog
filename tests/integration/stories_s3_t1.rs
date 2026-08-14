@@ -33,8 +33,9 @@ fn s3_t1_ready_ball_claims_after_new_and_binds_the_worktree() {
     };
     let inputs = StartInputs {
         workspace: workspace_path(yog.path(), "cobalt-gecko"),
+        repo: Some(project.path().to_path_buf()),
         payload: Payload::Ball {
-            project: project.path().to_path_buf(),
+            project: yog::naming::leaf(project.path()),
             ball: BallSpec::Existing {
                 id: "bl-7".to_owned(),
                 title: "Wire it".to_owned(),

@@ -58,13 +58,26 @@ pub struct ClaimResolved {
 }
 
 /// The composer's fire-time parameters (§8.1): the resolved workspace `name` (for
-/// `YOG_NAME` alone — it never enters the goal text, §3.3), its `workspace` path,
-/// the per-rung `cwd`, and the editable `goal` prefill (the conversation's identity
-/// line is minted and stamped at fire, not carried here).
+/// `YOG_NAME` alone — it never enters the goal text, §3.3), the `workspace` it
+/// was prepared in, the per-rung binding, and the editable `goal` prefill (the
+/// conversation's identity line is minted and stamped at fire, not carried here).
+///
+/// **A prepare reply is also the next gesture** (§8.1), so it obeys the wire's
+/// own rule (REMOTE §8, bl-f5f6): `workspace` is the **name**, re-resolved when
+/// the deferred [`Prompt`](crate::boundary::Action::Prompt) lands. `binding` is
+/// the one path left, and it is not an identity — it is lernie's `--cwd`, a
+/// filesystem fact the engine minted and the engine consumes, carried back
+/// verbatim by a seat that never reads it.
+///
+/// It carried a separate `name` — the §3.2 `--as`/`YOG_NAME` stamp — until
+/// bl-f5f6. §3.1 makes a workspace's name its directory leaf and §3.2 makes
+/// that same leaf the claim identity, so once `workspace` became the name the
+/// two fields were one string twice, and the second went.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Prepared {
-    pub name: String,
-    pub workspace: PathBuf,
+    /// The workspace's name (§3.1: its leaf) — the boundary address **and**
+    /// the §3.2 `--as`/`YOG_NAME` stamp, which are one fact.
+    pub workspace: String,
     /// The §3.3 **typed work target** (bl-6654): the directory the fire passes
     /// as lernie's `--cwd`, seeding the agent's working-directory mark at
     /// creation so *every* tool step runs there — not just the first process.

@@ -53,22 +53,32 @@ pub mod window;
 pub enum Verb {
     /// Arm one workspace on `model`: write its `cadence.yaml` monitor entry and
     /// seed the policy file that entry names.
-    Arm {
-        workspace: std::path::PathBuf,
-        model: String,
-    },
+    Arm { workspace: String, model: String },
     /// Disarm it: delete that entry. Its own gesture rather than an arm with no
     /// pin — arming with no model is a different instruction, and a gesture is
     /// an instruction, never an absence to be read.
-    Disarm { workspace: std::path::PathBuf },
+    Disarm { workspace: String },
     /// Raise an attention item on one conversation, with its reason, as its own
     /// ops row. The responder's floor grant (bl-7aef): signalling out is a call
     /// whose schema types the signal, never prose yog would have to parse.
     Flag {
-        workspace: std::path::PathBuf,
+        workspace: String,
         agent: String,
         reason: String,
     },
+}
+
+impl Verb {
+    /// The workspace this verb names (REMOTE §8) — every one of the three does,
+    /// so the boundary's own table ([`Action::workspace`](crate::boundary::Action))
+    /// answers through here rather than re-matching the arms.
+    pub fn workspace(&self) -> String {
+        match self {
+            Verb::Arm { workspace, .. }
+            | Verb::Disarm { workspace }
+            | Verb::Flag { workspace, .. } => workspace.clone(),
+        }
+    }
 }
 
 pub use arming::Watch;

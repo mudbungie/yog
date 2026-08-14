@@ -64,7 +64,7 @@ pub fn root_under(world_root: &Path, name: &str) -> PathBuf {
 
 /// The wall root of the workspace at `workspace`, whose §3.1 leaf names it.
 pub fn root_of(world: &Env, workspace: &Path) -> PathBuf {
-    root(world, &crate::start::leaf_name(workspace))
+    root(world, &crate::naming::leaf(workspace))
 }
 
 /// The wall's spawn layer: the `(var, value)` pairs a workspace-bound child

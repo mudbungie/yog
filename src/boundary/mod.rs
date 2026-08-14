@@ -70,10 +70,11 @@ pub enum Gesture {
 mod action;
 pub use action::Action;
 
-/// The §8.2 after-verb ball-refresh target, one table over the action roster —
-/// split out at §12's cap (bl-dc0c), because it is a *query on* the enum rather
+/// What a gesture addresses (§8.2, REMOTE §8): the workspace table and the
+/// after-verb ball-refresh target, two tables over the action roster — split
+/// out at §12's cap (bl-dc0c), because each is a *query on* the enum rather
 /// than part of it.
-mod project;
+mod address;
 
 /// The populating-read roster, its own file at §12's cap (bl-765d). The seam is
 /// the §8.5 taxonomy the help table is already cut along: actions mutate,

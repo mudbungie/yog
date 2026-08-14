@@ -46,6 +46,7 @@ fn world(ws: &Path) -> Snapshot {
     std::fs::write(dir.join("messages").join("001-user.md"), b"it stirs").unwrap();
     Snapshot {
         workspaces: vec![],
+        projects: vec![],
         trees: HashMap::new(),
         bills: HashMap::new(),
         windows: std::collections::BTreeMap::default(),

@@ -77,6 +77,7 @@ pub mod model_pick;
 pub mod monitor;
 pub mod multiplex;
 pub mod names;
+pub mod naming;
 pub mod nav;
 pub mod opslog;
 pub mod projects;

@@ -23,7 +23,7 @@ fn a_nudge_launches_the_driver_and_writes_only_that_row() {
         &mut ui,
         "1000",
         &crate::boundary::Action::Nudge {
-            workspace: world.workspace(),
+            workspace: crate::naming::leaf(&(world.workspace())),
             agent: "a-1".to_owned(),
         },
     );

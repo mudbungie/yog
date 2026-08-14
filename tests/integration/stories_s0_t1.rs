@@ -33,6 +33,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
         // The empty world's target: the fixed default name (§3.1), a constant —
         // not a config, not a mint, and nothing the operator was asked for.
         workspace: workspace_path(yog.path(), DEFAULT_NAME),
+        repo: None,
         payload: Payload::Bare,
         home: home.path().to_path_buf(),
         yog_data_root: yog.path().to_path_buf(),
@@ -51,22 +52,26 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
 
     // Enter: seed + new, then the detached prompt with the typed text.
     let prepared = start::prepare(&deps, &inputs, "T0").unwrap();
-    let name = prepared.name.clone();
+    let name = prepared.workspace.clone();
     assert_eq!(
         name, DEFAULT_NAME,
         "the bootstrap names without asking (§3.1)"
     );
     assert_eq!(prepared.binding, None, "the bare rung binds no work target");
+    // §3.1: the workspace's name IS its address (bl-f5f6), so the path is the
+    // one derivation off it rather than a second field.
     let ws = workspace_path(yog.path(), &name);
-    assert_eq!(prepared.workspace, ws);
     // The conversation mint re-derives at fire off a fresh generator on the same
     // held seed the preview used — so the greyed prediction is the fired name (§3.3).
     let minted = start::execute_prompt(
         &deps.lernie,
         state.path(),
         "T0",
-        &prepared,
-        "make me a plan",
+        &start::Fire {
+            workspace: ws.clone(),
+            prepared: prepared.clone(),
+            goal: "make me a plan".to_owned(),
+        },
         &[],
         &SplitMix64::from_seed(7),
     )

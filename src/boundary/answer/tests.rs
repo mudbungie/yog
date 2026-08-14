@@ -126,9 +126,14 @@ fn the_four_query_families_answer_from_one_snapshot() {
     assert_eq!(rows[0].agents, 1);
     assert!(rows[0].running);
 
-    let Ok(Reply::Conversations(rows)) =
-        answer(&Query::Conversations { workspace: ws() }, &d, &ui(), 200)
-    else {
+    let Ok(Reply::Conversations(rows)) = answer(
+        &Query::Conversations {
+            workspace: crate::naming::leaf(&ws()),
+        },
+        &d,
+        &ui(),
+        200,
+    ) else {
         panic!("conversations answers conversations");
     };
     assert_eq!(rows.len(), 1);

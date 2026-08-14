@@ -12,23 +12,23 @@ use serde_json::{Map, Value, json};
 
 use crate::monitor::Verb;
 
-use super::{Action, Gesture, encode_path, path_of, str_of};
+use super::{Action, Gesture, str_of};
 
 /// One monitor gesture as its envelope. The `op` is the verb the help table
 /// and the line spell, so the three serializations name one thing.
 pub(super) fn encode(verb: &Verb) -> Value {
     match verb {
         Verb::Arm { workspace, model } => {
-            json!({ "op": "arm", "workspace": encode_path(workspace), "model": model })
+            json!({ "op": "arm", "workspace": workspace, "model": model })
         }
         Verb::Disarm { workspace } => {
-            json!({ "op": "disarm", "workspace": encode_path(workspace) })
+            json!({ "op": "disarm", "workspace": workspace })
         }
         Verb::Flag {
             workspace,
             agent,
             reason,
-        } => json!({ "op": "flag", "workspace": encode_path(workspace),
+        } => json!({ "op": "flag", "workspace": workspace,
                      "agent": agent, "reason": reason }),
     }
 }
@@ -36,7 +36,7 @@ pub(super) fn encode(verb: &Verb) -> Value {
 /// The inverse. `op` is already known to be one of the three; anything else
 /// never reaches here (the caller's table decides).
 pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Gesture, String> {
-    let workspace = path_of(o, "workspace")?;
+    let workspace = str_of(o, "workspace")?;
     let verb = match op {
         "arm" => Verb::Arm {
             workspace,

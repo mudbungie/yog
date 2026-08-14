@@ -282,7 +282,7 @@ s5_config_branch() {
   # has, so this is `lernie config`'s everyday ADVANCE of an existing lineage.
   "$drive" shot "$wid" "$out/s5-07-branch-before.png"
   gesture "$data" "/config branch default notes.md driven by yogdrive" \
-      --ws "$ws_root" \
+      --ws "$(basename "$ws_root")" \
     && row_ok '"lernie","config"' \
     && pass "S5-T5 config-branch: lernie config exit 0" \
     || fail "S5-T5 config-branch: lernie config exit 0" "no clean config row"

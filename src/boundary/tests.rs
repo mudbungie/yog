@@ -1,6 +1,9 @@
 //! Boundary-level tables ([`Action::project`]) and the shared fixtures the
 //! sibling test modules build snapshots from.
 
+/// What a gesture addresses (REMOTE §8, bl-f5f6): the workspace table and the
+/// query one, over the whole roster.
+mod address;
 /// The §8.1 start family driven the way a terminal must drive it — two real
 /// `yog gesture` invocations, the second carrying the first's reply (bl-44d8).
 mod start_terminal;
@@ -55,6 +58,9 @@ pub(crate) fn snapshot(ws: &Path, name: &str, agents: Vec<Agent>, join: Vec<Join
             agents,
         },
     );
+    let mut projects: Vec<std::path::PathBuf> = join.iter().map(|r| r.project.clone()).collect();
+    projects.sort();
+    projects.dedup();
     Snapshot {
         workspaces: vec![Workspace {
             path: ws.to_path_buf(),
@@ -62,6 +68,9 @@ pub(crate) fn snapshot(ws: &Path, name: &str, agents: Vec<Agent>, join: Vec<Join
                 name: name.to_owned(),
             },
         }],
+        // The enumerated project set a name resolves over (REMOTE §8): whatever
+        // this fixture's join rows name, which is what its gestures address.
+        projects,
         trees,
         bills: HashMap::new(),
         windows: std::collections::BTreeMap::default(),
@@ -91,8 +100,8 @@ pub(crate) fn bound_row(project: &Path, id: &str, ws: &Path, claimant: &str) -> 
 
 #[test]
 fn the_bl_family_names_its_project_and_nothing_else_does() {
-    let p = Path::new("/p").to_path_buf();
-    let ws = Path::new("/ws").to_path_buf();
+    let p = "p".to_owned();
+    let ws = "ws".to_owned();
     let bl_family = [
         Action::Close {
             project: p.clone(),
@@ -180,18 +189,18 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
 
 #[test]
 fn a_ball_rung_prepare_carries_its_project_and_the_other_rungs_none() {
-    let p = Path::new("/proj");
+    let p = "proj".to_owned();
     let ball = Action::Prepare {
-        workspace: Path::new("/ws").to_path_buf(),
+        workspace: "ws".to_owned(),
         payload: Payload::Ball {
-            project: p.to_path_buf(),
+            project: p.clone(),
             ball: BallSpec::New {
                 title: "t".into(),
                 body: String::new(),
             },
         },
     };
-    assert_eq!(ball.project(), Some(p.to_path_buf()));
+    assert_eq!(ball.project(), Some(p.clone()));
     for payload in [
         Payload::Bare,
         Payload::Path {
@@ -199,15 +208,14 @@ fn a_ball_rung_prepare_carries_its_project_and_the_other_rungs_none() {
         },
     ] {
         let a = Action::Prepare {
-            workspace: Path::new("/ws").to_path_buf(),
+            workspace: "ws".to_owned(),
             payload,
         };
         assert_eq!(a.project(), None, "{a:?}");
     }
     let prompt = Action::Prompt {
         prepared: Prepared {
-            name: "n".into(),
-            workspace: Path::new("/ws").to_path_buf(),
+            workspace: "ws".into(),
             binding: None,
             goal: "g".into(),
             origin: crate::opslog::Origin::Conversation,
@@ -221,7 +229,7 @@ fn a_ball_rung_prepare_carries_its_project_and_the_other_rungs_none() {
 /// the §3.5 projection reads that project — so they name it too.
 #[test]
 fn the_fan_family_names_its_project() {
-    let p = Path::new("/p").to_path_buf();
+    let p = "p".to_owned();
     let obligation = crate::fan::Obligation {
         project: p.clone(),
         ball: Some("b-1".into()),
@@ -229,8 +237,7 @@ fn the_fan_family_names_its_project() {
     for action in [
         Action::Fan {
             prepared: Prepared {
-                name: "n".into(),
-                workspace: Path::new("/ws").to_path_buf(),
+                workspace: "ws".into(),
                 binding: None,
                 goal: "g".into(),
                 origin: crate::opslog::Origin::Balls,

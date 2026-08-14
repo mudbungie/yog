@@ -42,7 +42,7 @@ fn every_workspace_bound_verb_spawns_inside_the_sphere() {
     // here from `world::wall`, so this asserts the same derivation the §9
     // config panes and the embedded `bz` read, not a second spelling of it.
     let env = Env::from_pairs([("XDG_DATA_HOME", w.state.path().display().to_string())]);
-    let leaf = crate::start::leaf_name(&w.cwd);
+    let leaf = crate::naming::leaf(&w.cwd);
     let expected = format!(
         "{}|{leaf}\n",
         crate::world::wall::root_of(&env, &w.cwd).display()

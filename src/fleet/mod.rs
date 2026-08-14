@@ -39,8 +39,6 @@ pub mod facts;
 pub mod pilot;
 pub mod row;
 
-use std::path::PathBuf;
-
 /// The loop's gestures, as the control boundary carries them (VISION §4.3,
 /// DESIGN §8.5). One boundary [`Action`](crate::boundary::Action) variant holds
 /// this enum rather than two holding its arms — the same fold the monitor's
@@ -51,14 +49,25 @@ pub enum Verb {
     /// Arm one workspace: write its `cadence.yaml` fleet entry, naming the
     /// project it takes work from and the cap it may hold.
     Arm {
-        workspace: PathBuf,
-        project: PathBuf,
+        workspace: String,
+        project: String,
         cap: usize,
     },
     /// Disarm it: delete that entry. Its own gesture rather than an arm with a
     /// cap of zero — a zero cap is an armed loop that spawns nothing and still
     /// reaps, which is a different instruction.
-    Disarm { workspace: PathBuf },
+    Disarm { workspace: String },
+}
+
+impl Verb {
+    /// The workspace this verb names (REMOTE §8) — both do, so the boundary's
+    /// own table ([`Action::workspace`](crate::boundary::Action)) answers
+    /// through here rather than re-matching the arms.
+    pub fn workspace(&self) -> String {
+        match self {
+            Verb::Arm { workspace, .. } | Verb::Disarm { workspace } => workspace.clone(),
+        }
+    }
 }
 
 pub use arming::Policy;

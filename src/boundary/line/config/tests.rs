@@ -8,7 +8,6 @@ use crate::boundary::line::tests::ctx;
 use crate::boundary::line::{Context, parse, spell};
 use crate::boundary::{Action, Gesture, Query, help};
 use crate::config_edit::branch::edit::EditOrigin;
-use std::path::PathBuf;
 
 /// The parity claim (§8.5), and the other direction of the single source: the
 /// verb the line names has a help page.
@@ -34,13 +33,13 @@ fn applying(file: ConfigFile) -> Gesture {
 /// the window's focus) supplies, and what [`ctx`] carries (bl-fcd5).
 fn brazen() -> ConfigFile {
     ConfigFile::Brazen {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }
 }
 
 fn branch(origin: EditOrigin) -> ConfigFile {
     ConfigFile::Branch {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         lineage: "default".to_owned(),
         origin,
         path: "providers.yaml".to_owned(),
@@ -70,12 +69,12 @@ fn every_config_destination_round_trips_as_a_line() {
 fn a_marks_amendment_and_a_pick_round_trip_as_lines() {
     for branch in ["balls/tasks", "balls/agents/corp"] {
         rt(Gesture::Act(Action::SetMarks {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             branch: branch.to_owned(),
         }));
     }
     rt(Gesture::Act(Action::PickModel {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         role: "worker".to_owned(),
         provider: "codex".to_owned(),
         model: "gpt-5.4".to_owned(),
@@ -103,7 +102,7 @@ fn a_lineage_destination_takes_its_workspace_from_the_seat() {
         read,
         Ok(Gesture::Act(Action::ApplyConfig {
             file: ConfigFile::Branch {
-                workspace: PathBuf::from("/ws"),
+                workspace: "ws".to_owned(),
                 lineage: "strict".to_owned(),
                 origin: EditOrigin::Advance,
                 path: "workflow.yaml".to_owned(),
@@ -135,7 +134,7 @@ fn a_wall_scoped_gesture_with_no_workspace_refuses_by_name() {
     assert_eq!(
         parse("/providers", &ctx()),
         Ok(Gesture::Ask(Query::Providers {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
         }))
     );
 }
@@ -182,7 +181,7 @@ fn a_lineage_with_no_text_reads_the_file_at_its_tip() {
             parse(line, &ctx()),
             Ok(Gesture::Ask(Query::ReadConfig {
                 file: ConfigFile::Branch {
-                    workspace: PathBuf::from("/ws"),
+                    workspace: "ws".to_owned(),
                     lineage: "strict".to_owned(),
                     origin,
                     path: "workflow.yaml".to_owned(),
@@ -247,7 +246,7 @@ fn a_bare_marks_line_reads_instead_of_refusing() {
     assert_eq!(
         parse("/marks", &ctx()),
         Ok(Gesture::Ask(Query::Marks {
-            workspace: PathBuf::from("/ws")
+            workspace: "ws".to_owned()
         }))
     );
 }

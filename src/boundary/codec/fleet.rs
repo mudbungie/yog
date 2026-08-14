@@ -13,7 +13,7 @@ use serde_json::{Map, Value, json};
 
 use crate::fleet::Verb;
 
-use super::{Action, Gesture, encode_path, path_of, usize_of};
+use super::{Action, Gesture, str_of, usize_of};
 
 /// The two loop `op`s. Named here because the codec, the line and the help
 /// table must spell one thing one way.
@@ -27,10 +27,10 @@ pub(super) fn encode(verb: &Verb) -> Value {
             workspace,
             project,
             cap,
-        } => json!({ "op": ARM, "workspace": encode_path(workspace),
-                     "project": encode_path(project), "cap": cap }),
+        } => json!({ "op": ARM, "workspace": workspace,
+                     "project": project, "cap": cap }),
         Verb::Disarm { workspace } => {
-            json!({ "op": DISARM, "workspace": encode_path(workspace) })
+            json!({ "op": DISARM, "workspace": workspace })
         }
     }
 }
@@ -38,11 +38,11 @@ pub(super) fn encode(verb: &Verb) -> Value {
 /// The inverse. `op` is already known to be one of the two; anything else never
 /// reaches here (the caller's table decides).
 pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Gesture, String> {
-    let workspace = path_of(o, "workspace")?;
+    let workspace = str_of(o, "workspace")?;
     let verb = match op {
         ARM => Verb::Arm {
             workspace,
-            project: path_of(o, "project")?,
+            project: str_of(o, "project")?,
             cap: usize_of(o, "cap")?,
         },
         _ => Verb::Disarm { workspace },

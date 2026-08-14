@@ -17,18 +17,18 @@ use serde_json::{Map, Value, json};
 
 use crate::control::judge::Ruling;
 
-use super::{Action, Gesture, encode_path, path_of, str_of};
+use super::{Action, Gesture, str_of};
 
 /// One hold answer as its envelope.
-pub(super) fn encode(workspace: &std::path::Path, agent: &str, ruling: Ruling) -> Value {
-    json!({ "op": "answer", "workspace": encode_path(workspace),
+pub(super) fn encode(workspace: &str, agent: &str, ruling: Ruling) -> Value {
+    json!({ "op": "answer", "workspace": workspace,
             "agent": agent, "verdict": ruling.word() })
 }
 
 /// The inverse. `op` is already known to be `answer`; the verdict is checked
 /// here, where the refusal can name what was said and what is allowed.
 pub(super) fn decode(o: &Map<String, Value>) -> Result<Gesture, String> {
-    let workspace = path_of(o, "workspace")?;
+    let workspace = str_of(o, "workspace")?;
     let agent = str_of(o, "agent")?;
     let word = str_of(o, "verdict")?;
     let ruling = Ruling::of(&word)
@@ -44,16 +44,16 @@ pub(super) fn decode(o: &Map<String, Value>) -> Result<Gesture, String> {
 /// one variant**, exactly as the monitor's arm and disarm are: raising and
 /// lowering are two instructions, and a boolean field would make the second one
 /// the absence of the first.
-pub(super) fn encode_floor(workspace: &std::path::Path, agent: &str, raised: bool) -> Value {
+pub(super) fn encode_floor(workspace: &str, agent: &str, raised: bool) -> Value {
     let op = if raised { "revoke" } else { "restore" };
-    json!({ "op": op, "workspace": encode_path(workspace), "agent": agent })
+    json!({ "op": op, "workspace": workspace, "agent": agent })
 }
 
 /// The inverse. `op` is already known to be one of the two; the direction it
 /// names is the whole difference between them.
 pub(super) fn decode_floor(op: &str, o: &Map<String, Value>) -> Result<Gesture, String> {
     Ok(Gesture::Act(Action::Floor {
-        workspace: path_of(o, "workspace")?,
+        workspace: str_of(o, "workspace")?,
         agent: str_of(o, "agent")?,
         raised: op == "revoke",
     }))

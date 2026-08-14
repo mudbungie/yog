@@ -18,6 +18,7 @@ const PROJ: &str = "/proj";
 fn inputs(payload: Payload) -> StartInputs {
     StartInputs {
         workspace: ws(),
+        repo: payload.project().map(|_| PathBuf::from(PROJ)),
         payload,
         home: PathBuf::from(HOME),
         yog_data_root: PathBuf::from(YOG),
@@ -30,7 +31,7 @@ fn ws() -> PathBuf {
 }
 fn ball_payload(join: JoinState) -> Payload {
     Payload::Ball {
-        project: PathBuf::from(PROJ),
+        project: "proj".to_owned(),
         ball: BallSpec::Existing {
             id: "bl-1".to_owned(),
             title: "T".to_owned(),
@@ -50,8 +51,7 @@ fn bare_plans_seed_new_prompt() {
             Step::EnsureSeeded,
             Step::EnsureWorkspace { workspace: ws() },
             Step::Prompt {
-                name: NAME.to_owned(),
-                workspace: ws(),
+                workspace: NAME.to_owned(),
                 binding: None,
                 goal: String::new(),
             },
@@ -68,14 +68,13 @@ fn path_rung_targets_the_dir_verbatim() {
     let Some(Step::Prompt {
         binding,
         goal,
-        name,
-        ..
+        workspace,
     }) = steps.last()
     else {
         panic!("path plan ends in a prompt");
     };
     assert_eq!(binding.as_ref(), Some(&dir), "the binding is the directory");
-    assert_eq!(name, NAME);
+    assert_eq!(workspace, NAME);
     assert!(
         goal.starts_with("Working directory: /work/here"),
         "the target preamble leads with the dir (§3.3 headline-first)"
@@ -130,7 +129,7 @@ fn ball_bound_drops_the_claim() {
 #[test]
 fn ball_new_defers_to_a_single_create_after_the_substrate() {
     let payload = Payload::Ball {
-        project: PathBuf::from(PROJ),
+        project: "proj".to_owned(),
         ball: BallSpec::New {
             title: "Fresh".to_owned(),
             body: "do".to_owned(),
@@ -193,7 +192,7 @@ fn the_rung_decides_which_surface_the_starts_failures_banner_on() {
         Origin::Conversation
     );
     let existing = Payload::Ball {
-        project: PathBuf::from(PROJ),
+        project: "proj".to_owned(),
         ball: BallSpec::Existing {
             id: "bl-7".to_owned(),
             title: "T".to_owned(),
@@ -203,7 +202,7 @@ fn the_rung_decides_which_surface_the_starts_failures_banner_on() {
     };
     assert_eq!(existing.origin(), Origin::Balls);
     let new = Payload::Ball {
-        project: PathBuf::from(PROJ),
+        project: "proj".to_owned(),
         ball: BallSpec::New {
             title: "T".to_owned(),
             body: "B".to_owned(),

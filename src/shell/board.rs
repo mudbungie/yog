@@ -9,7 +9,7 @@
 
 use super::ShellState;
 use super::menus::{BallRef, Target};
-use super::start_rows::{ball_ref, continue_row, new_ball_form, ready_row};
+use super::start_rows::{ball_id, continue_row, new_ball_form, ready_row};
 use crate::AppModel;
 use crate::board::Column;
 use crate::cli_outbound::Cli;
@@ -165,7 +165,7 @@ struct Affordances {
 fn keyed(inputs: Vec<StartInputs>) -> HashMap<String, StartInputs> {
     inputs
         .into_iter()
-        .filter_map(|i| Some((ball_ref(&i.payload)?.1, i)))
+        .filter_map(|i| Some((ball_id(&i.payload)?, i)))
         .collect()
 }
 

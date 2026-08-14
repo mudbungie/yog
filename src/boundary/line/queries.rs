@@ -129,6 +129,6 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
 /// selected in it, each refused by name when the seat has none — exactly as
 /// `/message`'s address is, and for the same reason. A read that guessed a
 /// conversation would answer about a different chat.
-fn at(verb: &str, ctx: &Context) -> Result<(std::path::PathBuf, String), String> {
+fn at(verb: &str, ctx: &Context) -> Result<(String, String), String> {
     Ok((args::workspace(ctx, verb)?, args::agent(ctx, verb)?))
 }

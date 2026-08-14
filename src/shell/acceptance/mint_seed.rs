@@ -117,8 +117,7 @@ fn a_launch_that_never_left_the_ground_keeps_its_prediction() {
     let absent = Cli::new("yog-absent-lernie");
     let ws = world.ws.clone();
     world.state.start.pending = Some(Prepared {
-        name: "ws".to_owned(),
-        workspace: ws.clone(),
+        workspace: crate::naming::leaf(&ws),
         binding: None,
         goal: "fix the gate".to_owned(),
         origin: crate::opslog::Origin::Balls,
@@ -160,8 +159,7 @@ fn the_ball_rungs_send_retires_the_seed_the_same_way() {
     let lernie = fake_lernie(bin.path());
     let ws = world.ws.clone();
     world.state.start.pending = Some(Prepared {
-        name: "ws".to_owned(),
-        workspace: ws.clone(),
+        workspace: crate::naming::leaf(&ws),
         binding: None,
         goal: "fix the gate".to_owned(),
         origin: crate::opslog::Origin::Balls,

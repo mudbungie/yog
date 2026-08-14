@@ -9,10 +9,9 @@
 
 use super::Context;
 use crate::start::BallSpec;
-use std::path::PathBuf;
 
-/// The focused workspace, or the refusal naming it.
-pub(super) fn workspace(ctx: &Context, verb: &str) -> Result<PathBuf, String> {
+/// The focused workspace's name, or the refusal naming it.
+pub(super) fn workspace(ctx: &Context, verb: &str) -> Result<String, String> {
     ctx.workspace
         .clone()
         .ok_or_else(|| format!("/{verb}: no workspace in context — focus one, or use the envelope"))
@@ -25,8 +24,8 @@ pub(super) fn agent(ctx: &Context, verb: &str) -> Result<String, String> {
         .ok_or_else(|| format!("/{verb}: no conversation is selected — there is nothing to act on"))
 }
 
-/// The focused project, or the refusal naming it.
-pub(super) fn project(ctx: &Context, verb: &str) -> Result<PathBuf, String> {
+/// The focused project's name, or the refusal naming it.
+pub(super) fn project(ctx: &Context, verb: &str) -> Result<String, String> {
     ctx.project
         .clone()
         .ok_or_else(|| format!("/{verb}: no project in context — this seat has no repo to act in"))

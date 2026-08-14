@@ -33,7 +33,7 @@ fn an_attempt_is_refused_by_the_same_gate_a_start_is() {
     let mut deps = world.deps();
     deps.lernie = Cli::new("/no/such/lernie");
     let attempt = crate::boundary::Action::Fork {
-        workspace: world.workspace(),
+        workspace: crate::naming::leaf(&(world.workspace())),
         parent: "a-1".to_owned(),
         attempt: crate::fork::Attempt {
             from: "config/default".to_owned(),

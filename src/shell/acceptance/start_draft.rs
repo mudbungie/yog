@@ -51,8 +51,7 @@ fn a_pending_start_draft_replaces_the_composer_and_cancel_restores_it() {
     // What ▶ Start on a ready ball leaves: a prefilled goal awaiting Send.
     let ws = world.ws.clone();
     world.state.start.pending = Some(Prepared {
-        name: "ws".to_owned(),
-        workspace: ws.clone(),
+        workspace: crate::naming::leaf(&ws),
         binding: None,
         goal: BALL_GOAL.to_owned(),
         origin: crate::opslog::Origin::Balls,

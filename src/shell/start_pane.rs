@@ -43,7 +43,7 @@ pub(super) fn run_prepare(
     bl: &Cli,
     inputs: StartInputs,
 ) {
-    let project = payload_project(&inputs.payload);
+    let project = payload_project(model, &inputs.payload);
     let ts = super::now_ts();
     let result = model.prepare_start(lernie, bl, &inputs.workspace, &inputs.payload, &ts);
     if let Ok(prepared) = result {
@@ -61,11 +61,10 @@ pub(super) fn run_prepare(
 
 /// The ball rung's project (for the after-verb ball refresh); `None` for the
 /// bare/path rungs, which mutate no ball.
-fn payload_project(payload: &Payload) -> Option<PathBuf> {
-    match payload {
-        Payload::Ball { project, .. } => Some(project.clone()),
-        Payload::Bare | Payload::Path { .. } => None,
-    }
+fn payload_project(model: &AppModel, payload: &Payload) -> Option<PathBuf> {
+    payload
+        .project()
+        .and_then(|name| model.snap.project_path(&name).ok())
 }
 
 /// The editable goal composer (§8.1, §3.3): the greyed name prediction, the
@@ -90,11 +89,12 @@ pub fn composer(
         return;
     };
     let (mut send, mut cancel) = (false, false);
+    let ws = model.snap.ws_path(&pending.workspace).unwrap_or_default();
     ui.weak(start::identity_preview(
-        &model.conversation_names(&pending.workspace),
+        &model.conversation_names(&ws),
         &SplitMix64::from_seed(mint_seed),
     ));
-    ui.label(format!("Start goal → {}", pending.workspace.display()));
+    ui.label(format!("Start goal → {}", pending.workspace));
     // The goal box fills the pane the operator sized (§4.1 `panels`), less the
     // Send/Cancel row below it. The reservation is the style's own row height
     // (so it scales with the §4.1 zoom) plus a spacing, and it deliberately

@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use super::super::super::super::{Reply, WsRow};
 use super::board::board;
-use crate::binding::{Workspace, WorkspaceKind};
+use crate::binding::WorkspaceKind;
 use crate::board::Board;
 use crate::config_edit::branch::{ConfigBranch, Lineage};
 use crate::config_edit::brazen::ProviderRowView;
@@ -161,18 +161,16 @@ fn found() -> Found {
 }
 
 fn workspaces() -> Vec<WsRow> {
-    let row = |path: &str, kind, attention, agents, running| WsRow {
-        workspace: Workspace {
-            path: PathBuf::from(path),
-            kind,
-        },
+    let row = |name: &str, kind, attention, agents, running| WsRow {
+        workspace: name.to_owned(),
+        kind,
         attention,
         agents,
         running,
     };
     vec![
         row(
-            "/n/alba",
+            "alba",
             WorkspaceKind::Named {
                 name: "alba".into(),
             },
@@ -180,8 +178,8 @@ fn workspaces() -> Vec<WsRow> {
             5,
             true,
         ),
-        row("/f", WorkspaceKind::Foreign, 0, 0, false),
-        row("/r", WorkspaceKind::Replay, 0, 1, false),
+        row("f", WorkspaceKind::Foreign, 0, 0, false),
+        row("r", WorkspaceKind::Replay, 0, 1, false),
     ]
 }
 

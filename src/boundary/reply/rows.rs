@@ -21,21 +21,18 @@ use super::super::codec::origin_token;
 /// The decoders, beside the tokens they undo (bl-7067).
 pub(crate) mod decode;
 
+/// One workspace row: its **name** and its §3.1 classification (REMOTE §8,
+/// bl-f5f6 — the path it used to carry beside them is neither meaningful nor
+/// safe on a thin client), then the §6 rollups.
 pub(super) fn ws_row(row: &WsRow) -> Value {
     let mut map = Map::new();
-    map.insert(
-        "workspace".to_owned(),
-        Value::String(row.workspace.path.to_string_lossy().into_owned()),
-    );
-    let (kind, name) = match &row.workspace.kind {
-        WorkspaceKind::Named { name } => ("named", Some(name.clone())),
-        WorkspaceKind::Foreign => ("foreign", None),
-        WorkspaceKind::Replay => ("replay", None),
+    map.insert("workspace".to_owned(), Value::String(row.workspace.clone()));
+    let kind = match &row.kind {
+        WorkspaceKind::Named { .. } => "named",
+        WorkspaceKind::Foreign => "foreign",
+        WorkspaceKind::Replay => "replay",
     };
     map.insert("kind".to_owned(), Value::String(kind.to_owned()));
-    if let Some(name) = name {
-        map.insert("name".to_owned(), Value::String(name));
-    }
     map.insert("attention".to_owned(), json!(row.attention));
     map.insert("agents".to_owned(), json!(row.agents));
     map.insert("running".to_owned(), json!(row.running));

@@ -57,7 +57,7 @@ impl Bound {
     /// nesting set, which [`Cli::and_env`] extends rather than replaces.
     pub fn at(lernie: &Cli, world: &crate::xdg::Env, workspace: &Path) -> Self {
         let mut layer = crate::world::wall::pairs(world, workspace);
-        layer.push((YOG_NAME.to_owned(), crate::start::leaf_name(workspace)));
+        layer.push((YOG_NAME.to_owned(), crate::naming::leaf(workspace)));
         Self {
             cli: lernie.and_env(layer),
             workspace: workspace.to_path_buf(),

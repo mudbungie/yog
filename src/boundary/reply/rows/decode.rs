@@ -11,7 +11,7 @@
 use serde_json::Value;
 
 use super::super::WsRow;
-use crate::binding::{Workspace, WorkspaceKind};
+use crate::binding::WorkspaceKind;
 use crate::boundary::codec::fields::{
     bool_of, i64_of, list_of, opt, opt_str_of, opt_val, path_of, pick, str_of, strings_of, u64_of,
     usize_of,
@@ -60,19 +60,20 @@ pub(crate) fn state_of(obj: &serde_json::Map<String, Value>) -> Result<AgentStat
 
 pub(crate) fn ws_row(v: &Value) -> Result<WsRow, String> {
     let o = v.as_object().ok_or("workspace row: not an object")?;
+    let workspace = str_of(o, "workspace")?;
+    // A named workspace's §3.1 name **is** the row's own, so the kind carries
+    // no second copy of it (REMOTE §8, bl-f5f6).
     let kind = match str_of(o, "kind")?.as_str() {
         "named" => WorkspaceKind::Named {
-            name: str_of(o, "name")?,
+            name: workspace.clone(),
         },
         "foreign" => WorkspaceKind::Foreign,
         "replay" => WorkspaceKind::Replay,
         other => return Err(format!("workspace row: unknown kind {other:?}")),
     };
     Ok(WsRow {
-        workspace: Workspace {
-            path: path_of(o, "workspace")?,
-            kind,
-        },
+        workspace,
+        kind,
         attention: usize_of(o, "attention")?,
         agents: usize_of(o, "agents")?,
         running: bool_of(o, "running")?,

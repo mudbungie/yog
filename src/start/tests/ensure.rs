@@ -160,24 +160,33 @@ fn resolve_worktree_prefers_the_claim_then_disk_then_canonical() {
     let (balls, project, name) = (w.balls.path(), w.project.path(), "cobalt-gecko");
     let existing = |id: &str| ball(project, id, JoinState::Bound);
     // A non-ball rung names no worktree.
-    assert_eq!(resolve_worktree(&Payload::Bare, balls, name, None), None);
+    assert_eq!(
+        resolve_worktree(&Payload::Bare, Some(project), balls, name, None),
+        None
+    );
     // The claim's cross-checked worktree wins verbatim (the `<id>-<claimant>`
     // variant when bl minted it — threaded from `ClaimResolved`).
     let claimed = PathBuf::from("/claimed/wt-suffixed");
     assert_eq!(
-        resolve_worktree(&existing("bl-1"), balls, name, Some(claimed.clone())),
+        resolve_worktree(
+            &existing("bl-1"),
+            Some(project),
+            balls,
+            name,
+            Some(claimed.clone())
+        ),
         Some(claimed),
     );
     // Resume (no claim), neither variant on disk → the canonical `<id>` formula.
     assert_eq!(
-        resolve_worktree(&existing("bl-2"), balls, name, None),
+        resolve_worktree(&existing("bl-2"), Some(project), balls, name, None),
         Some(work_worktree_path(balls, project, "bl-2", None)),
     );
     // Resume where only the `<id>-<claimant>` worktree exists → that suffixed path.
     let suffixed = work_worktree_path(balls, project, "bl-3", Some(name));
     std::fs::create_dir_all(&suffixed).unwrap();
     assert_eq!(
-        resolve_worktree(&existing("bl-3"), balls, name, None),
+        resolve_worktree(&existing("bl-3"), Some(project), balls, name, None),
         Some(suffixed),
     );
 }

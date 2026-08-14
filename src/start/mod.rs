@@ -52,10 +52,9 @@ pub use exec::{
     ClaimResolved, DETACHED_EXIT, Deps, Prepared, StartError, cross_check_claim, execute_claim,
     execute_create, on_mint,
 };
-pub(crate) use goal::leaf_name;
 pub use goal::{Composer, parse_ball_stamp, preview};
 pub use identity::{identity_preview, parse_identity_stamp, strip_identity_stamp};
-pub use prompt::execute_prompt;
+pub use prompt::{Fire, execute_prompt};
 pub use run::{prepare, resolve_worktree};
 
 /// The ball a start targets (§3.4 ball rung): an **existing** ball (id + join
@@ -82,7 +81,7 @@ pub enum Payload {
     /// path — a work directory; target preamble; driver cwd the directory.
     Path { dir: PathBuf },
     /// ball — a ball in `project`; `bl claim`/`create`; driver cwd the worktree.
-    Ball { project: PathBuf, ball: BallSpec },
+    Ball { project: String, ball: BallSpec },
 }
 
 impl Payload {
@@ -99,6 +98,16 @@ impl Payload {
     /// was offered … the surface the ▶ Start row itself is on"). The bare and
     /// path rungs are the composer's own Enter, the empty world's bootstrap box
     /// being the same box before a workspace exists.
+    /// The project this payload names (REMOTE §8), or `None` for the two rungs
+    /// that name none. The one home of that question — the boundary's
+    /// after-verb refresh table and the ball rung's own re-plan both ask here.
+    pub fn project(&self) -> Option<String> {
+        match self {
+            Self::Ball { project, .. } => Some(project.clone()),
+            Self::Bare | Self::Path { .. } => None,
+        }
+    }
+
     pub fn origin(&self) -> crate::opslog::Origin {
         match self {
             Self::Ball { .. } => crate::opslog::Origin::Balls,
@@ -116,7 +125,7 @@ impl Payload {
 /// carried a `Target` and an occupied set of workspace claimants, and
 /// [`prepare`] resolved those into a second, name-bearing struct; with workspace
 /// names chosen by the operator (§3.1) the target *is* the workspace path and its
-/// name *is* the leaf — a computed fact, so it is a query ([`goal::leaf_name`])
+/// name *is* the leaf — a computed fact, so it is a query ([`crate::naming::leaf`])
 /// and not a field.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StartInputs {
@@ -130,6 +139,14 @@ pub struct StartInputs {
     /// is what "raising a workspace" is.
     pub workspace: PathBuf,
     pub payload: Payload,
+    /// The ball rung's project **located** (REMOTE §8, bl-f5f6): where `bl`
+    /// runs. [`Payload::Ball`] addresses its project by *name*, because a
+    /// payload is a boundary datum and the wire carries no paths; this is that
+    /// name resolved once at the dispatch chokepoint, exactly as
+    /// [`workspace`](StartInputs::workspace) above is the resolved address of
+    /// [`Action::Prepare`](crate::boundary::Action::Prepare)'s own. `None` for
+    /// the bare and path rungs, which name no project at all.
+    pub repo: Option<PathBuf>,
     pub home: PathBuf,
     pub yog_data_root: PathBuf,
     pub balls_state_root: PathBuf,
@@ -171,13 +188,14 @@ pub enum Step {
         id: String,
         name: String,
     },
-    /// `lernie prompt <workspace> <goal>` fired detached, `YOG_NAME=<name>` (the
-    /// **workspace** name, §3.2), cwd per the §3.4 rung. `goal` is the editable
-    /// payload prefill; the conversation's identity line is minted and stamped at
-    /// fire, never carried here (§3.3).
+    /// `lernie prompt <workspace> <goal>` fired detached, `YOG_NAME=<workspace>`
+    /// (the §3.2 stamp *is* the name, §3.1), cwd per the §3.4 rung. `goal` is the
+    /// editable payload prefill; the conversation's identity line is minted and
+    /// stamped at fire, never carried here (§3.3).
     Prompt {
-        name: String,
-        workspace: PathBuf,
+        /// The workspace's name (REMOTE §8) — the preview of what the fire
+        /// re-resolves.
+        workspace: String,
         /// The §3.3 typed work target the fire will pass as lernie's `--cwd`
         /// (bl-6654) — the plan's preview of it, off the ball's *canonical*
         /// worktree formula; the executor re-derives it from the claim.
@@ -206,8 +224,9 @@ pub fn plan(inputs: &StartInputs) -> Vec<Step> {
         } => {
             // The id is unknown until `bl create` mints it: emit create alone and
             // re-plan the minted ball (the new→existing convergence, §8.1).
+            let _ = project;
             steps.push(Step::Create {
-                project: project.clone(),
+                project: inputs.repo.clone().unwrap_or_default(),
                 title: title.clone(),
                 body: body.clone(),
             });
@@ -217,10 +236,11 @@ pub fn plan(inputs: &StartInputs) -> Vec<Step> {
             project,
             ball: BallSpec::Existing { id, join, .. },
         } if claim_needed(*join) => {
+            let _ = project;
             steps.push(Step::Claim {
-                project: project.clone(),
+                project: inputs.repo.clone().unwrap_or_default(),
                 id: id.clone(),
-                name: goal::leaf_name(&inputs.workspace),
+                name: crate::naming::leaf(&inputs.workspace),
             });
         }
         _ => {}
@@ -229,10 +249,9 @@ pub fn plan(inputs: &StartInputs) -> Vec<Step> {
     // ball's *canonical* worktree formula (§3.3); the executor re-composes with
     // the claim's cross-checked worktree (canonical or `<id>-<claimant>`) once it
     // has run [`Step::Claim`] — the executor's return is authoritative.
-    let worktree = goal::canonical_worktree(&inputs.payload, &inputs.balls_state_root);
+    let worktree = goal::canonical_worktree(inputs);
     let prepared = goal::compose_prepared(inputs, worktree.as_deref());
     steps.push(Step::Prompt {
-        name: prepared.name,
         workspace: prepared.workspace,
         binding: prepared.binding,
         goal: prepared.goal,

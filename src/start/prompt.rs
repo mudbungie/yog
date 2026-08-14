@@ -28,6 +28,22 @@ const CWD_FLAG: &str = "--cwd";
 const PIN_FLAG: &str = "--pin";
 const YOG_NAME: &str = "YOG_NAME";
 
+/// One fire, whole (§8.1): the `Prepared` a `/prompt` carries, the edited
+/// `goal`, and `prepared.workspace` **located** (REMOTE §8, bl-f5f6) — the name
+/// is the identity, the path is where the driver stands and what `lernie
+/// prompt` is aimed at.
+///
+/// One value rather than three parameters, for
+/// [`fork::Fire`](crate::fork::Fire)'s reason exactly: a fire is all three or
+/// none, so the argv below is a pure function of one value and no caller can
+/// pass a goal for one workspace beside a `Prepared` from another.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Fire {
+    pub workspace: std::path::PathBuf,
+    pub prepared: Prepared,
+    pub goal: String,
+}
+
 /// `lernie prompt --name <minted> [--cwd <target>] <workspace> <goal>` fired
 /// **detached** (§8.1): own process
 /// group, stdin/stdout→null, stderr→the per-spawn sink ([`opslog::detached::sink`]),
@@ -75,28 +91,33 @@ pub fn execute_prompt(
     lernie: &Cli,
     state_root: &Path,
     ts: &str,
-    prepared: &Prepared,
-    goal: &str,
+    fire: &Fire,
     occupied: &[String],
     rng: &dyn Rng,
 ) -> Result<String, StartError> {
+    let Fire {
+        workspace,
+        prepared,
+        goal,
+    } = fire;
     let conversation = on_mint(
         mint_conversation(occupied, rng),
         state_root,
         ts,
-        &prepared.workspace,
+        workspace,
         prepared.origin,
     )?;
-    let ws_s = prepared.workspace.to_string_lossy();
+    let ws_s = workspace.to_string_lossy();
     let bound = prepared.binding.as_ref().map(|p| p.to_string_lossy());
     // The §3.7 freeze: one `--pin` per instruction document the binding's
     // project declares, discovered from the binding's own authority root. No
     // binding, no discovery — the bare rung reads no policy and stats no file.
-    let pins: Vec<String> = prepared.binding.as_deref().map_or_else(Vec::new, |target| {
-        specs(target, &names::names(&prepared.workspace))
-    });
-    let named = lernie.and_env(vec![(YOG_NAME.to_owned(), prepared.name.clone())]);
-    let sink = opslog::detached::sink(state_root, ts, &prepared.workspace);
+    let pins: Vec<String> = prepared
+        .binding
+        .as_deref()
+        .map_or_else(Vec::new, |target| specs(target, &names::names(workspace)));
+    let named = lernie.and_env(vec![(YOG_NAME.to_owned(), prepared.workspace.clone())]);
+    let sink = opslog::detached::sink(state_root, ts, workspace);
     // One argv, built once and spawned *and* logged from it — so the flag that
     // rides conditionally cannot ride in only one of them. The goal stays LAST
     // in both: `opslog::clip_goal` trims exactly the final element (§4.2), so
@@ -108,11 +129,11 @@ pub fn execute_prompt(
     for pin in &pins {
         args.extend([PIN_FLAG, pin.as_str()]);
     }
-    args.extend([ws_s.as_ref(), goal]);
+    args.extend([ws_s.as_ref(), goal.as_str()]);
     // The driver's own directory is the workspace it drives — the same for every
     // rung since bl-6654 retired the per-target `current_dir`. It is where the
     // process stands, not where the work is: the work target is `--cwd` above.
-    let spawn = named.spawn_detached(Some(&prepared.workspace), &sink, &args);
+    let spawn = named.spawn_detached(Some(workspace), &sink, &args);
     let argv: Vec<String> = std::iter::once(lernie.binary().display().to_string())
         .chain(args.iter().map(|a| (*a).to_owned()))
         .collect();

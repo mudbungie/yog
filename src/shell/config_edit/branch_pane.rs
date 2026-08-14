@@ -277,7 +277,7 @@ fn send_edit(
     let deps = model.boundary_deps(lernie, bl);
     let action = Action::ApplyConfig {
         file: ConfigFile::Branch {
-            workspace: ws.to_path_buf(),
+            workspace: model.snap.ws_name(ws),
             lineage: config.cb_name.clone(),
             origin: config.cb_origin.clone(),
             path: config.cb_path.clone(),

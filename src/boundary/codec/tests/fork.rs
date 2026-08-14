@@ -2,7 +2,7 @@
 //! itself, its list field reads strictly, and there is no cohort envelope to
 //! test — a fan is N of these.
 
-use super::{p, rt};
+use super::rt;
 use crate::boundary::codec::decode;
 use crate::boundary::{Action, Gesture};
 use crate::fork::Attempt;
@@ -21,13 +21,13 @@ fn attempt(from: &str, skills: Vec<String>) -> Attempt {
 #[test]
 fn the_attempt_round_trips_with_and_without_skills() {
     rt(Gesture::Act(Action::Fork {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         parent: "c-1".into(),
         attempt: attempt("aaaa1111", vec!["bash".into(), "read_file".into()]),
         goal: "try it  the other way\nagain".into(),
     }));
     rt(Gesture::Act(Action::Fork {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         parent: "c-1".into(),
         attempt: attempt("config/strict", Vec::new()),
         goal: "g".into(),
@@ -41,10 +41,10 @@ fn the_attempt_round_trips_with_and_without_skills() {
 fn a_fork_without_a_skills_field_pins_nothing() {
     use serde_json::json;
     assert_eq!(
-        decode(&json!({"op": "fork", "workspace": "/ws", "parent": "c-1",
+        decode(&json!({"op": "fork", "workspace": "ws", "parent": "c-1",
                        "from": "aaaa1111", "role": "worker", "goal": "g"})),
         Ok(Gesture::Act(Action::Fork {
-            workspace: p("/ws"),
+            workspace: "ws".into(),
             parent: "c-1".into(),
             attempt: crate::fork::Attempt {
                 from: "aaaa1111".into(),

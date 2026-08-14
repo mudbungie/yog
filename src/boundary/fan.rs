@@ -39,8 +39,11 @@ pub(super) fn spread(
     n: usize,
 ) -> Result<Reply, String> {
     let xdg = deps.world.balls_layout();
-    let spread = fan::spread(prepared, obligation, &xdg, n).map_err(|e| e.to_string());
-    logged(deps, ts, obligation, FAN_STEP, spread).map(Reply::Fanned)
+    // The one resolution (REMOTE §8): the obligation names its project, the
+    // chokepoint turns that name into the repo everything below works in.
+    let repo = deps.snapshot.project_path(&obligation.project)?;
+    let spread = fan::spread(prepared, obligation, &repo, &xdg, n).map_err(|e| e.to_string());
+    logged(deps, ts, &repo, FAN_STEP, spread).map(Reply::Fanned)
 }
 
 /// Retire one candidate (§4.10 items 4 and 6): release the worktree always, and
@@ -55,18 +58,18 @@ pub(super) fn retire(
     handle: &str,
 ) -> Result<Reply, String> {
     let xdg = deps.world.balls_layout();
-    let project = obligation.project.as_path();
-    let keep = retention::keep(&cadence(deps), project);
-    let discarded = retention::expired(keep, retention::age(project, handle, SystemTime::now()));
+    let repo = deps.snapshot.project_path(&obligation.project)?;
+    let keep = retention::keep(&cadence(deps), &repo);
+    let discarded = retention::expired(keep, retention::age(&repo, handle, SystemTime::now()));
     let spent = if discarded {
-        fan::discard(obligation, &xdg, handle)
+        fan::discard(obligation, &repo, &xdg, handle)
     } else {
-        fan::release(obligation, &xdg, handle)
+        fan::release(obligation, &repo, &xdg, handle)
     };
     logged(
         deps,
         ts,
-        obligation,
+        &repo,
         RETIRE_STEP,
         spent.map_err(|e| e.to_string()),
     )
@@ -86,11 +89,11 @@ fn cadence(deps: &Deps) -> String {
 fn logged<T>(
     deps: &Deps,
     ts: &str,
-    obligation: &Obligation,
+    repo: &std::path::Path,
     step: &str,
     outcome: Result<T, String>,
 ) -> Result<T, String> {
-    let cwd = obligation.project.display().to_string();
+    let cwd = repo.display().to_string();
     let entry = match outcome.as_ref().err() {
         Some(err) => OpEntry::step_failure(ts.to_owned(), step, cwd, err.clone(), Origin::Balls),
         None => OpEntry::step_done(ts.to_owned(), step, cwd, Origin::Balls),

@@ -6,18 +6,23 @@
 //! halves.
 
 use super::config;
-use std::path::PathBuf;
 
 /// One populating read (§8.5): a §2 I1 derivation over the published snapshot,
 /// answered by [`answer::answer`] — the same functions the frame's view-models
 /// delegate to, so both frontends render one derivation.
+///
+/// **A read addresses by NAME, never by path** (REMOTE §8, bl-f5f6), exactly as
+/// the mutating half does: a `workspace` is its §3.1 directory leaf, resolved
+/// **once** at [`answer`](super::answer::answer) ahead of the table, over the
+/// one table that says which reads name one ([`Query::workspace`],
+/// `src/boundary/address.rs`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Query {
     /// The enumerated workspaces (§3.1) with their §6 attention rollups.
     Workspaces,
     /// The §11 conversation list of one workspace: one row per root agent,
     /// subtree-aggregated, attention > running > recency.
-    Conversations { workspace: PathBuf },
+    Conversations { workspace: String },
     /// The §3.5 join rows — every ball⇄workspace binding fact.
     Balls,
     /// The V4 board (VISION §5 V4): the same balls, projected into the
@@ -41,7 +46,7 @@ pub enum Query {
     /// the snapshot's derivations: the snapshot says which balls this
     /// workspace claims, and the project repos are read for the rest.
     WorkDiff {
-        workspace: PathBuf,
+        workspace: String,
         file: Option<crate::workdiff::WorkFile>,
     },
     /// One text across the whole world (§8.5, [`search`](crate::search)): live
@@ -74,24 +79,21 @@ pub enum Query {
     /// [`ReadConfig`](Query::ReadConfig) of a lineage reads a path out of, so a
     /// headless operator picks a file it has seen rather than one it guessed.
     /// A third world-bytes query: the workspace's own git, never the snapshot.
-    Lineages { workspace: PathBuf },
+    Lineages { workspace: String },
     /// **The model ids one provider offers** (§9.4, §5.1 #26, bl-dff8): the
     /// picker's roster (`bz --list-models`), spelled. Never stored and never
     /// cached by yog — the roster is the provider's fact, so this is a query
     /// and not a field, asked in the named workspace's wall exactly as
     /// [`Providers`](Query::Providers) is: the same provider row is signed in
     /// (and therefore listable) in one sphere and not in another.
-    Models {
-        workspace: PathBuf,
-        provider: String,
-    },
+    Models { workspace: String, provider: String },
     /// **Which branch this agent tracks on** (§16.3, bl-0164): the marks
     /// pane's `Read current`, over the same space [`Action::SetMarks`] re-reads
     /// after it writes. It never refuses and never spawns — the value's one
     /// home is the space's own balls config, so a workspace with no project
     /// (or an unprimed one) answers exactly as any other does, which is what
     /// makes the launched-then-pointed-at-a-project case askable.
-    Marks { workspace: PathBuf },
+    Marks { workspace: String },
     /// **The conversation itself** (§11 Altitude-2 Transcript, bl-6233): every
     /// committed `messages/` entry of one agent, with the live streaming tail
     /// folded on when a call is in flight. The first of the §11 inspector
@@ -105,13 +107,13 @@ pub enum Query {
     /// headless answer that stopped at the committed half would say something
     /// different from the window about the same moment, which is the exact
     /// parity §8.5 exists to hold.
-    Transcript { workspace: PathBuf, agent: String },
+    Transcript { workspace: String, agent: String },
     /// **Every step one conversation has taken** (§11 Altitude-2 Steps): the
     /// cheap per-step summary list — framing, attempts, tokens, timestamps, the
     /// §8.3 login affordance and the §7.3 wound. The agent's liveness is read
     /// off the snapshot rather than asked for, because it is a fact the world
     /// already published and a parameter would let a seat contradict it.
-    Steps { workspace: PathBuf, agent: String },
+    Steps { workspace: String, agent: String },
     /// **One step's records, drilled in** (§11 Altitude 2): `meta`, `request`,
     /// `staging`, every `response.json` event and every tool call's
     /// input/output, each as a jsonview doc. The second tier, asked by
@@ -119,7 +121,7 @@ pub enum Query {
     /// hold answers absent records rather than refusing, the same forgiving
     /// read the window makes (§10: never a false definite).
     Step {
-        workspace: PathBuf,
+        workspace: String,
         agent: String,
         seq: String,
     },
@@ -131,7 +133,7 @@ pub enum Query {
     /// never joined blind, so this read can open nothing the same answer did
     /// not already name.
     Files {
-        workspace: PathBuf,
+        workspace: String,
         agent: String,
         path: Option<String>,
     },
@@ -140,10 +142,10 @@ pub enum Query {
     /// operator's *pin* is not — a pin is a viewport fold, and §8.5 files folds
     /// under views, exactly as [`Conversations`](Query::Conversations) answers
     /// the all-collapsed list.
-    Rail { workspace: PathBuf, agent: String },
+    Rail { workspace: String, agent: String },
     /// **The undelivered mail** (§11 Inbox, ARCH §2.11): one agent's deposit
     /// files, each parsed beside its verbatim bytes.
-    Inbox { workspace: PathBuf, agent: String },
+    Inbox { workspace: String, agent: String },
     /// One workspace's effective provider table with the §5.1 #22 credential
     /// presence, rendered (§8.5, bl-0164): the same derivation the §8.3 login
     /// pane's `↻ providers + credentials` paints — one derivation, and since
@@ -155,5 +157,5 @@ pub enum Query {
     /// table to answer: the same provider reads *signed in* in one sphere and
     /// not in another, and a query that named none could only answer for
     /// whichever wall happened to be standing.
-    Providers { workspace: PathBuf },
+    Providers { workspace: String },
 }

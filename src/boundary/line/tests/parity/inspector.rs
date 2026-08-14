@@ -10,10 +10,9 @@ use super::super::ctx;
 use super::rt;
 use crate::boundary::line::{Context, parse};
 use crate::boundary::{Gesture, Query};
-use std::path::PathBuf;
 
-fn at() -> (PathBuf, String) {
-    (PathBuf::from("/ws"), "c-1".to_owned())
+fn at() -> (String, String) {
+    ("ws".to_owned(), "c-1".to_owned())
 }
 
 /// Aimed by the seat, exactly as `/message` is — so four of the six are the
@@ -66,7 +65,7 @@ fn a_conversation_read_at_an_unaimed_seat_refuses_by_name() {
         let unselected = parse(
             &format!("/{verb}"),
             &Context {
-                workspace: Some(PathBuf::from("/ws")),
+                workspace: Some("ws".to_owned()),
                 ..Context::default()
             },
         )

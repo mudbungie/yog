@@ -2,14 +2,14 @@
 //! seam the rest of this directory is cut along, because the roster table
 //! beside it is at the function-length cap.
 
-use super::{p, rt};
+use super::rt;
 use crate::boundary::codec::encode;
 use crate::boundary::{Action, Gesture};
 use serde_json::json;
 
 fn gesture() -> Gesture {
     Gesture::Act(Action::Retarget {
-        workspace: p("/ws"),
+        workspace: "ws".into(),
         agent: "c-1".into(),
     })
 }
@@ -22,6 +22,6 @@ fn the_retarget_exit_round_trips_with_no_config_field() {
     rt(gesture());
     assert_eq!(
         encode(&gesture()),
-        json!({ "op": "retarget", "workspace": "/ws", "agent": "c-1" })
+        json!({ "op": "retarget", "workspace": "ws", "agent": "c-1" })
     );
 }

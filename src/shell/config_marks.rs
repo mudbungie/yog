@@ -145,7 +145,7 @@ fn read_marks(
 ) -> String {
     let deps = model.boundary_deps(lernie, bl);
     let query = Query::Marks {
-        workspace: workspace.to_path_buf(),
+        workspace: model.snap.ws_name(workspace),
     };
     match model.answer(&deps, &query, super::now_unix()) {
         Ok(reply) => landed(pane, workspace, &reply),
@@ -166,7 +166,7 @@ fn apply_marks(
 ) -> String {
     let deps = model.boundary_deps(lernie, bl);
     let action = Action::SetMarks {
-        workspace: workspace.to_path_buf(),
+        workspace: model.snap.ws_name(workspace),
         branch: branch.to_owned(),
     };
     match model.dispatch(&deps, &super::now_ts(), &action) {

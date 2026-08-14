@@ -121,7 +121,7 @@ impl PilotCtx {
                 since,
             } => {
                 let release = Action::Release {
-                    project: row.project.clone(),
+                    project: snapshot.project_name(&row.project),
                     id: row.id.clone(),
                     name: claimant.clone(),
                 };
@@ -158,7 +158,7 @@ impl PilotCtx {
             .iter()
             .find(|b| b.id == row.id)?;
         let payload = Payload::Ball {
-            project: row.project.clone(),
+            project: deps.snapshot.project_name(&row.project),
             ball: BallSpec::Existing {
                 id: ball.id.clone(),
                 title: ball.title.clone(),
@@ -166,11 +166,12 @@ impl PilotCtx {
                 join: row.state,
             },
         };
-        let prepared = dispatch::prepare(deps, ts, &fleet.workspace, &payload).ok()?;
+        let prepared =
+            dispatch::prepare(deps, ts, &fleet.workspace, &row.project, &payload).ok()?;
         // The composed goal verbatim (§3.3, bl-6920): there is no operator at
         // the composer to edit it, and the loop must not become a second author.
         let goal = prepared.goal.clone();
-        dispatch::prompt(deps, ui, ts, &prepared, &goal).ok()
+        dispatch::prompt(deps, ui, ts, &fleet.workspace, &prepared, &goal).ok()
     }
 
     /// This pass's [`Deps`]: the template plus the snapshot it just read and a

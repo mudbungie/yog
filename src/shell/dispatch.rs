@@ -57,7 +57,7 @@ pub(super) fn stop_agent(
 ) {
     let deps = model.boundary_deps(lernie, bl);
     let action = Action::Stop {
-        workspace: ws.to_path_buf(),
+        workspace: model.snap.ws_name(ws),
         agent: agent.to_owned(),
         children,
     };
@@ -80,7 +80,7 @@ pub(super) fn scan_focused(model: &mut AppModel, lernie: &Cli, bl: &Cli) {
 pub(super) fn scan_ws(model: &mut AppModel, lernie: &Cli, bl: &Cli, ws: &Path) {
     let deps = model.boundary_deps(lernie, bl);
     let action = Action::Scan {
-        workspace: ws.to_path_buf(),
+        workspace: model.snap.ws_name(ws),
     };
     let scanned = model.dispatch(&deps, &super::now_ts(), &action);
     after_lernie(&scanned, model);
@@ -99,7 +99,7 @@ pub(super) fn message(
 ) -> bool {
     let deps = model.boundary_deps(lernie, bl);
     let action = Action::Message {
-        workspace: ws.to_path_buf(),
+        workspace: model.snap.ws_name(ws),
         agent: agent.to_owned(),
         content: content.to_owned(),
     };
@@ -122,7 +122,7 @@ pub(super) fn message(
 pub(super) fn nudge(model: &mut AppModel, lernie: &Cli, bl: &Cli, ws: &Path, agent: &str) {
     let deps = model.boundary_deps(lernie, bl);
     let action = Action::Nudge {
-        workspace: ws.to_path_buf(),
+        workspace: model.snap.ws_name(ws),
         agent: agent.to_owned(),
     };
     let nudged = model.dispatch(&deps, &super::now_ts(), &action);
@@ -143,7 +143,7 @@ pub(super) fn answer_hold(
 ) {
     let deps = model.boundary_deps(lernie, bl);
     let action = Action::AnswerHold {
-        workspace: ws.to_path_buf(),
+        workspace: model.snap.ws_name(ws),
         agent: agent.to_owned(),
         ruling,
     };

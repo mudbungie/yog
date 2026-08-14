@@ -7,7 +7,6 @@ use crate::boundary::config::ConfigFile;
 use crate::boundary::{Action, Gesture, Query};
 use crate::config_edit::branch::edit::EditOrigin;
 use serde_json::json;
-use std::path::PathBuf;
 
 fn rt(gesture: Gesture) {
     let encoded = encode(&gesture);
@@ -27,19 +26,19 @@ fn applying(file: ConfigFile) -> Gesture {
 /// (bl-fcd5) — a wall-scoped gesture has no spelling without one.
 fn brazen() -> ConfigFile {
     ConfigFile::Brazen {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }
 }
 
 fn providers() -> Query {
     Query::Providers {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }
 }
 
 fn branch(origin: EditOrigin) -> ConfigFile {
     ConfigFile::Branch {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         lineage: "default".to_owned(),
         origin,
         path: "providers.yaml".to_owned(),
@@ -69,7 +68,7 @@ fn every_config_destination_round_trips() {
 fn a_marks_amendment_round_trips() {
     for branch in ["balls/tasks", "balls/agents/corp"] {
         rt(Gesture::Act(Action::SetMarks {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".to_owned(),
             branch: branch.to_owned(),
         }));
     }
@@ -78,7 +77,7 @@ fn a_marks_amendment_round_trips() {
 #[test]
 fn a_pick_round_trips_with_its_whole_triple() {
     rt(Gesture::Act(Action::PickModel {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         role: "worker".to_owned(),
         provider: "codex".to_owned(),
         model: "gpt-5.4".to_owned(),
@@ -128,7 +127,7 @@ fn a_field_left_out_reads_instead_of_writing() {
         rt(Gesture::Ask(Query::ReadConfig { file }));
     }
     rt(Gesture::Ask(Query::Marks {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }));
     rt(Gesture::Ask(providers()));
 
@@ -137,7 +136,7 @@ fn a_field_left_out_reads_instead_of_writing() {
     assert!(read.get("text").is_none(), "{read}");
 
     let marks = encode(&Gesture::Ask(Query::Marks {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
     }));
     assert_eq!(marks["op"], "marks");
     assert!(marks.get("branch").is_none(), "{marks}");
@@ -146,11 +145,11 @@ fn a_field_left_out_reads_instead_of_writing() {
 #[test]
 fn a_marks_envelope_names_the_workspace_and_the_branch() {
     let encoded = encode(&Gesture::Act(Action::SetMarks {
-        workspace: PathBuf::from("/ws"),
+        workspace: "ws".to_owned(),
         branch: "balls/agents/corp".to_owned(),
     }));
     assert_eq!(encoded["op"], "marks");
-    assert_eq!(encoded["workspace"], "/ws");
+    assert_eq!(encoded["workspace"], "ws");
     assert_eq!(encoded["branch"], "balls/agents/corp");
 }
 

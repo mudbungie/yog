@@ -102,7 +102,7 @@ fn fire(
     let ts = super::super::now_ts();
     for attempt in attempts {
         let action = Action::Fork {
-            workspace: ws.to_path_buf(),
+            workspace: model.snap.ws_name(ws),
             parent: agent_id.to_owned(),
             attempt: attempt.clone(),
             goal: goal.to_owned(),

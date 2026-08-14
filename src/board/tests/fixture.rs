@@ -141,6 +141,7 @@ pub(super) fn world(
                     name: "alfa".to_owned(),
                 },
             }],
+            projects: vec![PathBuf::from(PROJECT)],
             trees,
             bills,
             balls_by_project,

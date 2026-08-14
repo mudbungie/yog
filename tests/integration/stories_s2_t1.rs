@@ -35,6 +35,7 @@ fn s2_t1_path_rung_targets_the_directory() {
     };
     let inputs = StartInputs {
         workspace: workspace_path(yog.path(), "cobalt-gecko"),
+        repo: None,
         payload: Payload::Path { dir: dir.clone() },
         home: home.path().to_path_buf(),
         yog_data_root: yog.path().to_path_buf(),
@@ -58,8 +59,11 @@ fn s2_t1_path_rung_targets_the_directory() {
         &deps.lernie,
         state.path(),
         "T0",
-        &prepared,
-        &prepared.goal,
+        &start::Fire {
+            workspace: ws.clone(),
+            prepared: prepared.clone(),
+            goal: prepared.goal.clone(),
+        },
         &[],
         &SplitMix64::from_seed(1),
     )

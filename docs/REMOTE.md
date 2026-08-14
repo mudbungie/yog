@@ -184,11 +184,64 @@ script the local CA; that is operator tooling, not an in-channel protocol). A
 TUI or web seat later is another consumer of the same wire and needs nothing
 new from the engine.
 
-**Paths never cross the wire.** Boundary types today address workspaces and
-projects by absolute `PathBuf`; across machines those are meaningless and a
-disclosure besides. The wire spelling is the **name** (workspace name, project
-display name); the engine resolves names to paths at the dispatch chokepoint.
-This migration is a pre-wire refactor of the boundary types themselves (§9.3).
+**Paths never cross the wire.** *(Landed, bl-f5f6.)* Boundary types addressed
+workspaces and projects by absolute `PathBuf`; across machines those are
+meaningless and a disclosure besides. The wire spelling is now the **name**, on
+the types themselves — `Action`, `Query`, the nested payloads they carry
+(`monitor::Verb`, `fleet::Verb`, `fan::Obligation`, `config::ConfigFile`,
+`start::Payload`, `start::Prepared`), the line's `Context`, and the two `Reply`
+fields that identify rather than locate. The engine resolves a name to a path at
+the dispatch chokepoint. Four rulings came out of it and belong here rather than
+in a ball body.
+
+- **The name of a workspace is its directory leaf; the name of a project is
+  derived.** The rule differs because the nouns do (`src/naming`). §3.1 already
+  says a workspace's leaf *is* its name and §3.2 already makes that same leaf
+  the `--as` identity every ball claim is stamped with — so there is nothing to
+  invent, and **a foreign workspace needs no special case**: lernie's
+  `workspaces/`/`replays/` leaves are the auto-ids the tab strip already paints
+  as their identity. Two roots holding one leaf is a world whose §3.2 join is
+  already ambiguous — both would claim `--as home` — so the resolver refuses
+  naming the token instead of inventing a disambiguator for a world that is
+  broken one level down. A **project**, by contrast, has no name at all: its
+  identity is the decoded balls invocation path (§5.1 #1) and two checkouts of
+  one repo legitimately share a basename, so its name is the shortest trailing
+  run of components no other enumerated project shares — the basename wherever
+  that is already unique. The §11 roster label is that same name, elided, so
+  what the operator reads off the left panel is the word they may type at
+  `--project`.
+- **The resolution is one function, at the chokepoint, ahead of the table.**
+  `Action::workspace()` / `Action::project()` / `Query::workspace()`
+  (`src/boundary/address.rs`) are tables *on* the enums; `dispatch` and `answer`
+  each resolve once, before their match, so no arm re-derives an address and an
+  unresolvable name refuses — naming the token, the codec's own strict-decode
+  discipline — before anything runs. A gesture that names no workspace resolves
+  to nothing and no arm reads it: the general path with no input, not a case of
+  its own. The mapping is read backwards at exactly one place too — the frame
+  spells `Snapshot::ws_name` / `project_name` where a seat's *selection* becomes
+  a gesture (`AppModel::line_context`, the click-glue), over the same enumerated
+  sets the resolvers read. Two directions, one mapping.
+- **A reply speaks the name where it IDENTIFIES and the path where the path
+  IS the answer.** `WsRow` identified a workspace by carrying the whole
+  `Workspace` — path, kind and, for a named one, a `name` beside the path. It
+  now carries the name and the kind: §3.1 makes the leaf the name, so the field
+  that was already the identity became the whole of it and the path went. A
+  field whose *subject* is a filesystem location, by contrast, keeps path
+  semantics, because answering it by name would answer a different question:
+  `Reply::Applied { file }` (what was written), `Reply::Marks { space }` (which
+  balls space the branch is a branch of — the operator reads it to tell a
+  project's board from an agent's own universe), the worktree paths in
+  `WorkDiff`/`Files`, and `Prepared::binding` — lernie's `--cwd`, minted by the
+  engine and handed back to the engine verbatim by a seat that never reads it.
+  Those remain absolute paths on the wire and they are a residual, not a
+  ruling: they are unhelpful to a client on another machine and they disclose a
+  home root. Narrowing them — an opaque handle where the client only relays,
+  a workspace-relative path where it renders — belongs with the transport that
+  makes the distance real (§9.5), not with the addressing.
+- **`Prepared::name` is gone, not migrated.** It carried the §3.2
+  `--as`/`YOG_NAME` stamp beside a `workspace` path. Once `workspace` became the
+  name, §3.1 and §3.2 made the two fields one string twice — so the second went
+  rather than being kept in step.
 
 ## 9. Build sequence
 
@@ -239,6 +292,7 @@ valuable with no network at all — they finish VISION V5 teleop parity.
      help's subject is *the interface, not the world*, so the roster is an
      answer every seat already holds. An unknown verb refuses, naming it.
 3. **Name-based addressing:** `PathBuf` leaves the boundary types.
+   *(Landed, bl-f5f6 — the rulings are in §8.)*
 4. **The shell paints only boundary payloads** — retire the remaining raw
    `GitTree`/`Agent` imports from paint code.
 5. **The wire:** mTLS listener in `yog serve`, client transport in the shell,
