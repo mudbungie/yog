@@ -1,7 +1,8 @@
 +++
 title = "branch cleanup runs only where nothing leaks: trap speculate-gate's delete, and widen the prune to every branch with no open PR"
 created = 1786686041
-updated = 1786686041
+updated = 1786686042
+claimant = "Shuffler"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
