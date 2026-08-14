@@ -42,6 +42,14 @@ pub(super) fn pane(
     egui::ScrollArea::vertical()
         .id_salt("search-hits")
         .show(ui, |ui| {
+            // **An answer with no hits is an answer** (bl-648a, QUALITY H2):
+            // it says so, in the operator's own needle, and names the way on.
+            // Painted above any unreadable notes, because "nothing matched" is
+            // the headline and a source that could not be read is the caveat.
+            if !searching && found.hits.is_empty() {
+                ui.label(search::no_matches(&found.needle));
+                ui.weak(search::SEARCHED_EVERYTHING);
+            }
             for hit in &found.hits {
                 if ui
                     .button(egui::RichText::new(search::label(hit)).monospace())

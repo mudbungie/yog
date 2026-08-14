@@ -17,7 +17,7 @@
 //!
 //! Coverage-excluded glue like the rest of `src/shell/*`: the vocabulary is
 //! [`CenterTab`]'s (tested in `keymap`), the search predicate is
-//! [`Found::is_empty`](crate::search::Found::is_empty)'s, and the surfaces
+//! [`Found::asked`](crate::search::Found::asked)'s, and the surfaces
 //! themselves are their own modules'.
 
 use crate::AppModel;
@@ -65,7 +65,14 @@ pub(super) fn render(
 ) {
     let answer = model.found();
     let searching = model.searching();
-    let offered = searching || !answer.is_empty();
+    // Offered because a search was **asked**, never because it matched
+    // (bl-648a): emptiness was standing in for intent, so a needle that hit
+    // nothing retired the tab under the operator and dropped them back on
+    // Conversation — the frame after a zero-hit search was byte-identical to
+    // never having searched. An answer with no needle is still no search, so
+    // `/search` with no text clears the tab exactly as before, with no case
+    // of its own.
+    let offered = searching || answer.asked();
     if state.center == CenterTab::Search && !offered {
         super::focus::center(state, CenterTab::Conversation);
     }

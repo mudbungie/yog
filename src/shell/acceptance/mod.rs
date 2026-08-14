@@ -29,6 +29,7 @@ mod overlap;
 mod raise;
 mod recall;
 mod screen;
+mod search_tab;
 mod settings;
 mod slash;
 mod smoke;

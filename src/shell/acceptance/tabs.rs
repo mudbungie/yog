@@ -10,6 +10,10 @@
 //! keyboard rests (**keyboard-addressable**), Escape comes home
 //! (**dismissable**, QUALITY F3) losing nothing typed, and no tab paints over
 //! the conversation's own accessories.
+//!
+//! What is true of the Search tab **alone** — that it is offered and retired,
+//! and on which fact — lives in [`super::search_tab`], split off at §12's
+//! per-file budget on that seam.
 
 use super::fixture::world;
 use super::screen::{Screen, click, command_shift, locate, press, rect_of};
@@ -142,73 +146,6 @@ fn the_login_rows_paint_in_the_center_not_in_the_roster_column() {
         rows.left() > column,
         "the provider rows must sit right of the roster column ({} vs {column})",
         rows.left()
-    );
-}
-
-/// The §8.5 results are **a view of the published answer**, so the tab is
-/// offered exactly while there is one: a landed search focuses it without a
-/// second gesture, and an empty query clears the answer, retires the tab and
-/// drops the center home — the vanishing *is* the dismissal, and there is
-/// still no search mode to enter or leave.
-#[test]
-fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
-    let (lernie, bl) = (
-        crate::cli_outbound::Cli::new("lernie"),
-        crate::cli_outbound::Cli::new("bl"),
-    );
-    let mut world = world();
-    let quiet = super::painted(&mut world, &lernie, &bl);
-    assert!(
-        !quiet.lines().any(|line| line == "Search"),
-        "no answer, no tab:\n{quiet}"
-    );
-
-    // The ask, through the composer's own line seat — the same door Ctrl+F
-    // opens the sentence for.
-    let key = crate::actions::DraftKey::composer(Some(world.ws.clone()), None);
-    world
-        .state
-        .actions
-        .drafts
-        .set(key.clone(), "/search hello".to_owned());
-    assert!(crate::shell::slash::run(
-        &mut world.model,
-        &mut world.state,
-        &lernie,
-        &bl,
-        "/search hello"
-    ));
-    assert_eq!(
-        world.state.center,
-        CenterTab::Search,
-        "asking focuses the answer's tab — the ask is the operator's one gesture"
-    );
-    world.model.searcher().pass();
-    let answered = super::painted(&mut world, &lernie, &bl);
-    assert!(
-        answered.lines().any(|line| line == "Search"),
-        "the tab is offered while there is an answer:\n{answered}"
-    );
-
-    // The empty query: the answer clears, so the tab goes and the center falls
-    // back home rather than showing an empty peer.
-    assert!(crate::shell::slash::run(
-        &mut world.model,
-        &mut world.state,
-        &lernie,
-        &bl,
-        "/search"
-    ));
-    world.model.searcher().pass();
-    let cleared = super::painted(&mut world, &lernie, &bl);
-    assert!(
-        !cleared.lines().any(|line| line == "Search"),
-        "a cleared answer retires its tab:\n{cleared}"
-    );
-    assert_eq!(
-        world.state.center,
-        CenterTab::Conversation,
-        "and the center is home again"
     );
 }
 
