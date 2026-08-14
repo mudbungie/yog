@@ -107,7 +107,15 @@ s4_uncoloured() {
     "$drive" type "$wid" "Ball bl-9999: phantom. Respond with exactly: Phantom OK."
     "$drive" key "$wid" Return
   }
-  until_landed phantom agents_are $((before + 1)) \
+  # `>=`, not `=`. `phantom` is NOT a no-op when it misses — it starts a whole
+  # conversation — so under load the slow first attempt lands late, the retry
+  # starts a second, and an equality pinned to `before+1` is stepped straight
+  # over by the loop that was waiting for it. This beat burned all five attempts
+  # and reported "no new agent" against a world holding FIVE phantom
+  # conversations, while the neighbour below PASSED on the goal.md files they
+  # left: same evidence, opposite verdicts, and only the counting was wrong
+  # (bl-0e44). The invariant now lives on `until_landed` itself.
+  until_landed phantom agents_ge $((before + 1)) \
     && pass "S4-T4 uncoloured id: stamped conversation started" \
     || fail "S4-T4 uncoloured id: stamped conversation started" "no new agent"
   await goal_stamped "$ws_root" bl-9999 \
@@ -124,9 +132,13 @@ goal_stamped() {
   grep -lq "^Ball $2:" "$1"/agents/*/goal.md 2>/dev/null
 }
 
-# S6 attention in world 2 — Stop the in-flight root, then acknowledge it. Fired
-# from `run_s3s4s6` (beats_s3s4s6.sh), which lays the two roots and hands this
-# the in-flight one's id; it lives here with the other S6 stages rather than in
+# S6 stop-and-ack in world 2 — Stop the in-flight root, then acknowledge it.
+# **Not `s6_attention`**, which is world C's S6-T1 stage above: bash lets a later
+# definition silently replace an earlier one, so naming this that deleted three
+# S6-T1 beats from every `run_s7` and no verdict could show it — a beat that
+# never ran leaves no row (bl-0e44; `stories.sh` now refuses a duplicate name
+# outright). Fired from `run_s3s4s6` (beats_s3s4s6.sh), which lays the two roots
+# and hands this the in-flight one's id; it lives here with the other S6 stages rather than in
 # the middle of that run's body, which is also what put that file over the
 # 300-line cap (bl-2d45). `$1` is the window, `$2` the evidence dir, `$3` the
 # conversation to stop — empty when the start that should have made it never
@@ -145,7 +157,7 @@ goal_stamped() {
 # — DESIGN §11: "attention and liveness are badges here, not ranks" — so there
 # is no rank for a head to be the head of. `x` then correctly found a settled
 # conversation and stopped nothing, five times over (bl-2d45).
-s6_attention() {
+s6_stop_ack() {
   wid=$1 ; out=$2 ; flight=$3
   "$drive" shot "$wid" "$out/s6-07-inflight.png"
   if [ -z "$flight" ]; then

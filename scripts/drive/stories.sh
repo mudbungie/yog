@@ -248,7 +248,11 @@ run() {
     "$drive" type "$wid2" "Respond with exactly: Third wire OK."
     "$drive" key "$wid2" Return
   }
-  until_landed prompt_existing agents_are $((agents_before + 1)) \
+  # `>=`, not `=` — the same latent defect as S4-T4's, which reddened first only
+  # because the box was busier that hour (bl-0e44): this gesture starts a
+  # conversation, so a retry adds one and an equality is destroyed by its own
+  # loop. The claim that no second workspace was minted is the neighbour below.
+  until_landed prompt_existing agents_ge $((agents_before + 1)) \
     && pass "S1 prompt-existing: new root agent" \
     || fail "S1 prompt-existing: new root agent" "no new agent"
   sleep 2
@@ -270,6 +274,12 @@ run() {
 . "$here/beats_s7.sh"
 . "$here/beats_s6.sh"
 . "$here/beats_s3res.sh"
+
+# Everything above is now sourced into ONE flat bash namespace, so this is the
+# instant the namespace is complete and the only instant the collision guard can
+# run. The guard itself lives with the other shared primitives (harness.sh,
+# `one_name_one_definition`) — it is a property of that namespace, not of S0/S1.
+one_name_one_definition "$here"
 
 # The verb, kept for the verdict rows: one world per verb (STORIES.md's "Four
 # worlds, on purpose"), so the verb is what tells two runs' rows apart in a

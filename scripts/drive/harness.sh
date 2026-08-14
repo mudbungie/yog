@@ -63,7 +63,19 @@ PY
 no_dead_step() { ! find "$ws_root/steps" -name response.json -size 0 2>/dev/null | grep -q . ; }
 agent_count() { find "$ws_root/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l; }
 verb_ge() { [ "$(verb_count "$1")" -ge "$2" ]; }
-agents_are() { [ "$(agent_count)" = "$1" ]; }
+# A count predicate is `>=`, never `=`, and there is deliberately no equality
+# spelling left here to reach for. Every gesture that counts conversations
+# STARTS one, and `until_landed` re-fires — so an equality pinned to `before+1`
+# is destroyed by the retry that was meant to satisfy it: the slow first attempt
+# lands late, the retry starts a second, the count steps straight past `before+1`
+# to `before+2`, and the predicate can never be true again. All five attempts
+# burn and the beat reports "no new agent" about a gesture that worked every
+# time — five phantom conversations deep, with the very next beat PASSING on the
+# evidence they left (bl-0e44). What each of these beats means is "at least one
+# more conversation exists", which is what this says; the exactness they used to
+# claim is asserted by their own no-re-mint neighbours, which count a verb that
+# must NOT grow — the safe direction for an equality.
+agents_ge() { [ "$(agent_count)" -ge "$1" ]; }
 # a `lernie stop` row naming THIS conversation (argv: `lernie stop <ws> <id>`).
 # Identity, not a count: `verb_ge stop 1` is satisfied by a stop of the WRONG
 # conversation exactly as well as by the right one, and the S6 beat that spends
@@ -224,6 +236,17 @@ await() { for _ in $(seq 1 40); do "$@" && return 0; sleep 1; done; return 1; }
 # load average of 80) the target is not there yet and the click lands on blank
 # panel, silently. Every gesture passed here is a no-op when it misses, and the
 # predicate is re-read before each retry, so a landed gesture never re-fires.
+#
+# TWO REQUIREMENTS ON THE ARGUMENTS, and the second one cost a whole re-baseline
+# to learn (bl-0e44). (1) The GESTURE must be a no-op when it misses — the line
+# above. (2) The PREDICATE must be MONOTONE: once true it stays true, so `>=` and
+# set-membership, never `=`. A retry is not free of consequence for a gesture
+# that is not idempotent — `phantom` starts a whole conversation each time — so
+# an equality on a quantity the gesture ADDS to is destroyed by its own retry
+# loop, and the beat then fails five times about a gesture that succeeded five
+# times. `verb_ge`, `agents_ge`, `row_ok`, `stopped` and `seen_kind` are all
+# monotone by construction; there is no equality predicate in this file, and a
+# beat that wants exactness asserts it OUTSIDE this loop, where nothing re-fires.
 until_landed() {
   g=$1 ; shift
   for _ in 1 2 3 4 5; do
@@ -231,6 +254,30 @@ until_landed() {
     for _ in 1 2 3 4 5 6 7 8; do "$@" && return 0; sleep 1; done
   done
   return 1
+}
+
+# --- one name, one definition ----------------------------------------------
+# Every `beats_*.sh` is sourced into ONE flat namespace, and bash lets a later
+# `f() { … }` silently replace an earlier one. A second `s6_attention` added to
+# `beats_s6.sh` therefore DELETED the S6-T1 stage `run_s7` calls: three beats
+# stopped running, and nothing in the verdict could say so, because a beat that
+# never ran leaves no row and the run reported ALL BEATS PASS for what was left
+# (bl-0e44 — found by reading a ladder's rows against the ladder's own source,
+# which is not a thing anyone does twice).
+#
+# So the check is STRUCTURAL and fires before any verb runs — stories.sh calls
+# it at the one instant the namespace is complete, right after the last source.
+# Column-anchored on purpose: a nested helper (`stop_it`, `phantom`,
+# `bare_start`) is indented and local to its beat, and those names repeat
+# legitimately. `$1` is the script directory.
+one_name_one_definition() {
+  dupes=$(grep -h '^[a-z0-9_]*() {' "$1"/harness.sh "$1"/stories.sh "$1"/beats_*.sh \
+    | sed 's/() {.*//' | sort | uniq -d)
+  [ -z "$dupes" ] && return 0
+  echo "drive: one beat function, two definitions — the later silently wins," >&2
+  echo "  so whatever the earlier one asserted stops running and leaves no trace:" >&2
+  printf '    %s\n' $dupes >&2
+  exit 1
 }
 
 # --- the seat: claimed per RUN, torn down with the verdict ------------------
