@@ -1,7 +1,7 @@
 +++
-title = "BLOCKED on the lernie 0.0.7 publish (lernie bl-404d is unreleased; 0.0.6 satisfies the body's '> 0.0.5' test but exports no mint) — consume lernie's mint: delete the local wordlist+draw, draw preview and fire through the crate"
+title = "consume lernie's mint: delete the local wordlist+draw, draw preview and fire through the crate"
 created = 1785737045
-updated = 1786677458
+updated = 1786683098
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
