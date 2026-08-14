@@ -1,7 +1,8 @@
 +++
 title = "tool roster vs the prompt cache: advertisement becomes durable, the conversation freezes its roster at the root, absence answers at invocation — REMOTE.md §5 rework"
 created = 1786683026
-updated = 1786683026
+updated = 1786683027
+claimant = "Sicks"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
