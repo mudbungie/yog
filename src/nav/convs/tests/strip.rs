@@ -2,6 +2,12 @@
 //! bl-905f): exactly what each class states, the elapsed each derives from its
 //! own structural start (bl-9dfb) or honestly omits, the two ways a conversation
 //! reads as at rest, and the hover that explains the seat (bl-68ac).
+//!
+//! **The line is what the §11 header does not already say** (bl-3f70): the
+//! class's own words moved to the header's chip, and the `<who>` segment is
+//! painted only for a member that is not the conversation the strip sits under
+//! — the pane's heading names that one. So every expectation here is the
+//! characteristics alone.
 
 use super::*;
 use crate::git_tree::ToolCallState;
@@ -11,8 +17,9 @@ use crate::nav::convs::{Flight, STRIP_HOVER, age_label, conversation_flight, str
 /// as an offset from this, so a test reads as "the call began N seconds ago".
 const NOW: i64 = 1_800_000_000;
 
-/// A root that already carries its §3.3 minted name, so the strip's `<who>`
-/// segment is the ladder's first rung rather than a bare id.
+/// A root that already carries its §3.3 minted name. The strip does not paint
+/// a root's name (bl-3f70 — the pane's heading does), so this is what a child
+/// is built from and what proves the root's name stays *off* the line.
 fn stamped(id: &str, name: &str, state: AgentState) -> Agent {
     let mut a = agent(id, state, 1);
     a.goal_name = Some(name.to_owned());
@@ -30,7 +37,7 @@ fn streaming(text: &str, ago: Option<i64>) -> Agent {
 
 /// The strip's line for one tool-holding root, `name`/`start` being the two
 /// segments its `input.json` record feeds.
-fn tool_line(name: Option<&str>, start: Option<i64>) -> String {
+fn tool_line(name: Option<&str>, start: Option<i64>) -> Option<String> {
     let mut a = named_tool(
         "r-0",
         AgentState::Live,
@@ -39,14 +46,16 @@ fn tool_line(name: Option<&str>, start: Option<i64>) -> String {
         start,
     );
     a.goal_name = Some("stench-pug".into());
-    strip(&[a], "r-0", NOW).unwrap().facts
+    strip(&[a], "r-0", NOW).map(|s| s.facts)
 }
 
 #[test]
 fn inference_states_who_is_streaming_how_much_landed_and_how_long_it_has_run() {
     let s = strip(&[streaming("hello", Some(42))], "r-0", NOW).unwrap();
     assert_eq!(s.class, Flight::Inference);
-    assert_eq!(s.facts, "stench-pug · 5 chars streamed · 42s");
+    assert_eq!(s.facts, "5 chars streamed · 42s");
+    // The root's own name is the pane heading's, two lines above (bl-3f70).
+    assert!(!s.facts.contains("stench-pug"), "{}", s.facts);
 }
 
 #[test]
@@ -57,12 +66,12 @@ fn a_call_whose_first_token_has_not_arrived_says_so_rather_than_nothing() {
     root.call_start_unix = Some(NOW - 3);
     assert_eq!(
         strip(&[root], "r-0", NOW).unwrap().facts,
-        "stench-pug · 0 chars streamed · 3s"
+        "0 chars streamed · 3s"
     );
     // …and one character is one char, not "1 chars".
     assert_eq!(
         strip(&[streaming("h", Some(3))], "r-0", NOW).unwrap().facts,
-        "stench-pug · 1 char streamed · 3s"
+        "1 char streamed · 3s"
     );
 }
 
@@ -74,7 +83,7 @@ fn a_step_with_no_readable_request_stamp_drops_the_elapsed_not_the_line() {
         strip(&[streaming("hello", None)], "r-0", NOW)
             .unwrap()
             .facts,
-        "stench-pug · 5 chars streamed"
+        "5 chars streamed"
     );
 }
 
@@ -105,7 +114,7 @@ fn tools_states_the_running_tool_by_name_and_how_long_it_has_been_running() {
     a.goal_name = Some("stench-pug".into());
     let s = strip(&[a], "r-0", NOW).unwrap();
     assert_eq!(s.class, Flight::Tools);
-    assert_eq!(s.facts, "stench-pug · Bash · 7m");
+    assert_eq!(s.facts, "Bash · 7m");
 }
 
 #[test]
@@ -113,9 +122,12 @@ fn the_tool_name_and_the_tool_elapsed_are_independently_omitted() {
     // Two segments off one record: an unparsable name loses the name only, an
     // unstattable record loses the elapsed only. `toolu_01abc…` names nothing
     // to an operator, so the class's own words carry it.
-    assert_eq!(tool_line(None, Some(NOW - 9)), "stench-pug · 9s");
-    assert_eq!(tool_line(Some("Bash"), None), "stench-pug · Bash");
-    assert_eq!(tool_line(None, None), "stench-pug");
+    assert_eq!(tool_line(None, Some(NOW - 9)), Some("9s".to_owned()));
+    assert_eq!(tool_line(Some("Bash"), None), Some("Bash".to_owned()));
+    // Neither name nor stamp, on the conversation's own root: nothing this seat
+    // can add that the header's chip does not already say, so there is no strip
+    // rather than a bare glyph (bl-3f70).
+    assert_eq!(tool_line(None, None), None);
 }
 
 #[test]
@@ -157,10 +169,7 @@ fn the_elapsed_label_is_the_row_age_label_not_a_second_spelling() {
     // the list row would print for the same span, across every bucket.
     for ago in [0_i64, 42, 420, 7200, 200_000] {
         let s = strip(&[streaming("x", Some(ago))], "r-0", NOW).unwrap();
-        assert_eq!(
-            s.facts,
-            format!("stench-pug · 1 char streamed · {}", age_label(ago))
-        );
+        assert_eq!(s.facts, format!("1 char streamed · {}", age_label(ago)));
     }
     // Clock skew (a start stamped ahead of the frame) clamps to `0s` there
     // too — the strip inherits the clamp rather than restating it.
@@ -168,7 +177,7 @@ fn the_elapsed_label_is_the_row_age_label_not_a_second_spelling() {
     ahead.call_start_unix = Some(NOW + 90);
     assert_eq!(
         strip(&[ahead], "r-0", NOW).unwrap().facts,
-        "stench-pug · 1 char streamed · 0s"
+        "1 char streamed · 0s"
     );
 }
 
@@ -203,7 +212,7 @@ fn the_strip_is_the_third_seat_of_one_derivation_not_a_second_one() {
     let s = strip(&agents, "r-0", NOW).unwrap();
     assert_eq!(s.class, conversation_flight(&agents, "r-0").unwrap());
     assert_eq!(s.class, Flight::Inference);
-    assert_eq!(s.facts, "stench-pug · 2 chars streamed · 5s");
+    assert_eq!(s.facts, "2 chars streamed · 5s");
 }
 
 #[test]

@@ -106,3 +106,67 @@ fn below_the_heading(shapes: &[egui::epaint::ClippedShape], text: &str) -> Optio
         .find(|(said, rect)| said == text && rect.top() > heading)
         .map(|(_, rect)| rect.center())
 }
+
+/// The live-activity class had two seats on the one conversation surface
+/// (bl-3f70): the §11 altitude-1 header's chip and the bottom in-flight strip
+/// both printed `flight_badge`'s whole sentence, in the same hue, in the same
+/// frame. The header keeps the words — it is unconditional where the strip is a
+/// §11 rule 5 share the budget can decline — and the strip keeps what only it
+/// can say.
+#[test]
+fn the_live_activity_class_has_one_seat_and_the_strip_carries_only_what_it_adds() {
+    let (_, _, says) = crate::theme::flight_badge(crate::nav::convs::Flight::Inference);
+    let painted = in_flight_frame();
+    let runs: Vec<&String> = painted.iter().map(|(text, _)| text).collect();
+    assert_eq!(
+        runs.iter().filter(|run| run.contains(says)).count(),
+        1,
+        "the class's words paint once on this surface, not once per seat:\n{runs:#?}"
+    );
+    let strip = runs
+        .iter()
+        .find(|run| run.contains("chars streamed"))
+        .expect("the in-flight strip reaches the paint layer");
+    assert!(
+        !strip.contains(says),
+        "the strip carries the characteristics, never the sentence: {strip}"
+    );
+    for name in ["hello", "c-1"] {
+        assert!(
+            !strip.contains(name),
+            "nor the conversation's own name, which the pane's heading two lines \
+             above already carries: {strip}"
+        );
+    }
+}
+
+/// One settled frame of the real window with a model call **really** in flight
+/// in the open conversation — the §5.1 #28 probes as they actually read: the
+/// inbox-dir lock fd and the `response.json` writer fd, both held open by this
+/// process ([`super::bands`] reaches the same state the same way).
+fn in_flight_frame() -> Vec<crate::paint_probe::Painted> {
+    let (lernie, bl, bz) = (
+        crate::cli_outbound::Cli::new("yog-absent-lernie"),
+        crate::cli_outbound::Cli::new("yog-absent-bl"),
+        crate::cli_outbound::Cli::new("yog-absent-bz"),
+    );
+    let mut world = super::inbox_composer::quick(world());
+    let ws = world.ws.clone();
+    world.model.focus_agent(&ws, "c-1");
+    let _lock = std::fs::File::open(ws.join("inbox/c-1")).expect("the inbox dir");
+    let _writer = std::fs::OpenOptions::new()
+        .append(true)
+        .open(ws.join("steps/c-1/001/response.json"))
+        .expect("the step's response record");
+    super::inbox_composer::converge_ws(&mut world);
+    let ctx = egui::Context::default();
+    let mut frame = || {
+        ctx.run(super::input(), |ctx| {
+            crate::shell::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+        })
+    };
+    for _ in 0..4 {
+        let _ = frame();
+    }
+    crate::paint_probe::painted_of(&frame())
+}

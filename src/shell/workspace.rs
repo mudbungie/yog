@@ -166,6 +166,14 @@ fn header(ui: &mut egui::Ui, model: &AppModel, ws: &Path, agents: &[Agent], root
         // Unlike the width-bound list row, this seat has the room — so per the
         // §11 badge-seat pattern it states the class outright rather than
         // hovering it. Only a conversation actually working asks for a repaint.
+        //
+        // **And it is the surface's ONE seat for those words** (bl-3f70,
+        // QUALITY H1): the bottom in-flight strip printed the identical
+        // sentence in the same hue two lines below, and the words stayed here
+        // because this row is unconditional while the strip is a §11 rule 5
+        // share the budget can decline, and because this line has the width the
+        // strip's has not. The strip keeps what only it can say — the live
+        // characteristics — and hovers the sentence.
         if let Some(class) = flight {
             let (glyph, hue, says) = theme::flight_badge(class);
             let time = ui.ctx().input(|i| i.time);

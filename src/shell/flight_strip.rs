@@ -10,6 +10,21 @@
 //! screen while it runs, so that an operator looking down at the chat sees that
 //! it is working.
 //!
+//! **This seat carries the characteristics, never the class in words**
+//! (bl-3f70, QUALITY H1). It used to print `flight_badge`'s whole sentence in
+//! front of them — *"◐ inference — a model call is streaming · growing · 320
+//! chars streamed · 5s"* — which is the identical run the §11 header paints two
+//! lines above, on the same surface, in the same hue. Two things decided which
+//! of the two seats keeps the words. The header is **unconditional**: this
+//! panel asks the §11 rule 5 budget for its share and paints nothing when the
+//! answer is `None` ([`super::pane`]), so a fact seated only here is a fact
+//! that disappears at the documented 420x320 minimum. And this line is
+//! **width-bound** — it truncates at the pane's edge by its own rule below — so
+//! the duplicated prefix was pushing the one thing this seat exists to add off
+//! the right-hand end of it. What is left is the §11 badge-seat pattern the
+//! width-bound list row already follows: the glyph and its pulse state the
+//! class, and the words ride the hover.
+//!
 //! Coverage-excluded glue: the strip's whole content is
 //! [`AppModel::flight_strip`] and [`theme::flight_badge`], both tested — this
 //! file only chooses the seat and asks for the pulse.
@@ -37,9 +52,12 @@ pub(super) fn render(ui: &mut egui::Ui, model: &AppModel) {
         return;
     };
     // Glyph, hue and the class said in words all come from the one badge home
-    // (§11 glyph doctrine); this seat has a full pane row, so — like the
-    // altitude-1 header and unlike the width-bound list row — it states them
-    // outright and hovers only what the strip *is*.
+    // (§11 glyph doctrine). This seat paints the first two and hovers the third
+    // (see the module doc): the glyph is never the words' only carrier here —
+    // the characteristics beside it are the class stated concretely (`320 chars
+    // streamed` is a model call streaming, `Read` is a tool executing, `2
+    // children running` is a descent working), the hue is the class's own, and
+    // the sentence is one hover away.
     let (glyph, hue, says) = theme::flight_badge(strip.class);
     egui::TopBottomPanel::bottom("flight-strip").show_inside(ui, |ui| {
         // One line, always: a long name truncates at the pane's edge rather
@@ -47,11 +65,8 @@ pub(super) fn render(ui: &mut egui::Ui, model: &AppModel) {
         // (§11 rule 1, the same defect on the other axis).
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
         let time = ui.ctx().input(|i| i.time);
-        ui.colored_label(
-            theme::pulse(hue, time),
-            format!("{glyph} {says} · {}", strip.facts),
-        )
-        .on_hover_text(STRIP_HOVER);
+        ui.colored_label(theme::pulse(hue, time), format!("{glyph} {}", strip.facts))
+            .on_hover_text(format!("{says} — {STRIP_HOVER}"));
     });
     ui.ctx().request_repaint_after(theme::PULSE_REPAINT_DELAY);
 }
