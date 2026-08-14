@@ -29,9 +29,9 @@ pub mod worker;
 
 use super::Roots;
 use super::drift::{self, Drift};
-use super::snapshot::{Growth, Snapshot, growth_between};
+use super::snapshot::{Growth, Snapshot};
 use crate::binding::Workspace;
-use crate::budgets::{Scope, StepBill};
+use crate::budgets::StepBill;
 use crate::git_tree::{GitTree, ProbeStack};
 use crate::opslog::OpRow;
 use crate::projects::balls::Ball;
@@ -43,7 +43,7 @@ use crate::state::{
 use crate::ui_state::Clock;
 use crate::watch::Mark;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 /// The derivation half of yog, owned by one worker thread (§7.2).
@@ -96,6 +96,11 @@ pub struct Deriver {
     /// Set by every mutation a pass makes; consumed by [`Deriver::step`] to
     /// decide whether there is a new snapshot to publish at all.
     pub(super) changed: bool,
+    /// Whether the **last** pass missed the period it promised (bl-4b28): the
+    /// one bit that makes [`Drift::Late`] an edge rather than a level. This
+    /// worker's own observation about its own passes; a second instance holds
+    /// and reports its own.
+    late: bool,
     growth: Vec<Growth>,
     ui_bytes: Option<Vec<u8>>,
 }
@@ -134,6 +139,7 @@ impl Deriver {
             join_rows: Vec::new(),
             ops: Vec::new(),
             changed: false,
+            late: false,
             growth: Vec::new(),
             ui_bytes: None,
         }
@@ -220,9 +226,15 @@ impl Deriver {
                 found.push(Drift::Unannounced(root));
             }
         }
-        if let Some(secs) = drift::lateness(started, self.clock.now(), self.cadence.late_pass()) {
+        // Judged against the promise of the sweep this pass ran, and written on
+        // the EDGE into lateness (bl-4b28): a permanently late derivation is one
+        // event, not a row every sweep. Whether it is late *now* is the §11
+        // staleness line's question, derived from the snapshot's own age.
+        let late = drift::lateness(started, self.clock.now(), self.cadence.late_pass(sweep));
+        if let Some(secs) = drift::late_edge(late, self.late) {
             found.push(Drift::Late(self.roots.yog_state.clone(), secs));
         }
+        self.late = late.is_some();
         self.report_drift(&found);
         // A full sweep publishes even when it found nothing: it re-stamps the
         // snapshot's age, which is what makes the §11 staleness line mean
@@ -257,41 +269,5 @@ impl Deriver {
                 fleet: self.fleet.clone(),
             }),
         );
-    }
-
-    /// Re-derive one workspace through the held probe stack, replacing its
-    /// snapshot iff it actually changed (`GitTree: PartialEq` suppresses no-op
-    /// repaints, §7.2) and recording what grew (§7.2 growth, bl-ee0a). A read
-    /// failure keeps the last good snapshot.
-    pub(super) fn rederive(&mut self, workspace: &Path) -> bool {
-        // The `steps/` fold first, and **outside the tree's equality gate**
-        // (bl-9dd4): a step's `response.json` growing is spend that changed
-        // while every git ref stood still, so a fold behind `old == tree` would
-        // freeze the spend column at whatever it read when the refs last moved.
-        let billed = self.refold_bills(workspace);
-        let Ok(tree) = self.probes.derive(workspace) else {
-            return billed;
-        };
-        let old = self.trees.get(workspace);
-        if old == Some(&tree) {
-            return billed;
-        }
-        self.growth.extend(growth_between(workspace, old, &tree));
-        self.trees.insert(workspace.to_path_buf(), tree);
-        self.changed = true;
-        true
-    }
-
-    /// Re-walk one workspace's `steps/` tree, replacing its bills iff they
-    /// actually changed — the same no-op-repaint discipline the tree read
-    /// keeps, so a quiet workspace publishes nothing.
-    fn refold_bills(&mut self, workspace: &Path) -> bool {
-        let bills = crate::budgets::bills(workspace, &Scope::Workspace);
-        if self.bills.get(workspace) == Some(&bills) {
-            return false;
-        }
-        self.bills.insert(workspace.to_path_buf(), bills);
-        self.changed = true;
-        true
     }
 }

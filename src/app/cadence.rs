@@ -88,10 +88,23 @@ impl Cadence {
         self.cheap_sweep.saturating_add(self.debounce)
     }
 
-    /// How long one derivation pass may take before it is itself drift (§7.2):
-    /// the cheap-sweep cadence is the bound the worker promises to keep.
-    pub fn late_pass(&self) -> Duration {
-        self.cheap_sweep
+    /// How long one derivation pass may take before it is itself drift (§7.2)
+    /// — **the promise of the pass that just ran** (bl-4b28). A pass is judged
+    /// against the period of the sweep it did: one that swept nothing, or swept
+    /// cheaply, owes the 2 s poll cadence it rides; a *full* sweep re-derives
+    /// every workspace and is budgeted its own 15 s period, which is the whole
+    /// reason that period is longer.
+    ///
+    /// Judging every pass by the cheap bound was the storm: a full sweep of a
+    /// real workspace (110 branches, a `bl` fetch per project) cannot finish
+    /// inside 2 s, so every one of them reported itself late — 4447 of 4472
+    /// trail rows, one every 15 s, all of them the schedule working exactly as
+    /// designed.
+    pub fn late_pass(&self, sweep: super::dirty::Sweep) -> Duration {
+        match sweep {
+            super::dirty::Sweep::Full => self.full_sweep,
+            super::dirty::Sweep::Cheap | super::dirty::Sweep::None => self.cheap_sweep,
+        }
     }
 
     /// How stale a rendered snapshot may be before the §11 ops surface says so:
@@ -173,7 +186,15 @@ mod tests {
             full_sweep: Duration::from_secs(30),
         };
         assert_eq!(c.wound_grace(), Duration::from_millis(4200));
-        assert_eq!(c.late_pass(), Duration::from_secs(4));
+        // Both pass bounds are tuned bases, not one of them (bl-4b28).
+        assert_eq!(
+            c.late_pass(super::super::dirty::Sweep::Cheap),
+            Duration::from_secs(4)
+        );
+        assert_eq!(
+            c.late_pass(super::super::dirty::Sweep::Full),
+            Duration::from_secs(30)
+        );
         assert_eq!(c.stale_after(), Duration::from_mins(1));
         // And the defaults reproduce the pre-bl-3381 consts byte-for-byte.
         let d = Cadence::default();
