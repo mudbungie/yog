@@ -188,14 +188,25 @@ pub(super) fn locate(shapes: &[egui::epaint::ClippedShape], text: &str) -> Optio
     rect_of(shapes, text).map(|r| r.center())
 }
 
+/// Over [`paint_probe::collect`] — the ONE walk — and not a private copy of it.
+///
+/// This *was* a copy, and it was the copy bl-bc06 fixed and bl-36c3 swept for:
+/// it matched on `Galley::text()`, which is the string that went IN. A row egui
+/// truncated to `Login (bz browser…` still reports the whole label, so this
+/// found it, handed back its rect, and the pointer test clicked confidently at
+/// a seat whose painted text was not what it named — the one defect the paint
+/// layer is the only witness for, aiming a click instead of reading a dump.
+/// Both earlier balls fixed the homes they knew about; this copy was private to
+/// the acceptance harness and survived both, which is why the check that
+/// forbids the shape now lives in `rules/no-hand-rolled-paint-walk.yml` rather
+/// than in anyone's memory (bl-70b8).
 fn find(shape: &egui::Shape, text: &str) -> Option<egui::Rect> {
-    match shape {
-        egui::Shape::Text(t) if t.galley.text() == text => {
-            Some(t.galley.rect.translate(t.pos.to_vec2()))
-        }
-        egui::Shape::Vec(shapes) => shapes.iter().find_map(|s| find(s, text)),
-        _ => None,
-    }
+    let mut painted = Vec::new();
+    crate::paint_probe::collect(shape, &mut painted);
+    painted
+        .into_iter()
+        .find(|(seen, _)| seen == text)
+        .map(|(_, rect)| rect)
 }
 
 pub(super) fn press(key: egui::Key, modifiers: egui::Modifiers) -> egui::Event {

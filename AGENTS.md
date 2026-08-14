@@ -220,12 +220,12 @@ demotion removes an internal API from the boundary's obligations. Reach for
 
 `make check` is the complete local gate and mirrors CI exactly:
 
-    fmt-check → lint (line-cap + leak-scan + clippy + ast-grep scan + cargo-deny) → coverage
+    fmt-check → lint (line-cap + beat-audit + leak-scan + clippy + ast-grep scan + cargo-deny) → coverage
 
 - `make lint` — `make line-cap` (sub-second, so it fails first), then
-  `make leak-scan` (~5s), then `cargo clippy --all-targets -- -D warnings`
-  (picks up the manifest `[lints]`), then `make rules-audit`, then
-  `cargo deny check`.
+  `make beat-audit` (milliseconds), then `make leak-scan` (~5s), then
+  `cargo clippy --all-targets -- -D warnings` (picks up the manifest
+  `[lints]`), then `make rules-audit`, then `cargo deny check`.
 - `make line-cap` — the 300-line cap over every tracked non-exempt file. Prints
   every offender at once, and fails if it enumerates *nothing* (a broken
   pattern must not pass silently — the same two-direction discipline as
@@ -240,6 +240,24 @@ demotion removes an internal API from the boundary's obligations. Reach for
   line-cap LINE_CAP=n` for today's census rather than trusting a count written
   here** (this line has been wrong before: it named `transcript/rows.rs` at 266
   as the tree's one ≥250 file long after bl-2335 split that file in two).
+- `make beat-audit` — the two mechanically checkable shapes of a **drive beat
+  that proves nothing** (bl-70b8, `scripts/beat-audit.sh`). *(a)* Every label
+  handed to `pass` is also handed to `fail`: a `gesture … || pass "…"` emits a
+  row only when it succeeds, so the one outcome it exists to catch deletes the
+  beat from the verdict instead of reddening it, and a ladder counts the rows
+  it has rather than the rows it should have had. No allowlist — a one-armed
+  beat is never right. *(b)* No `grep -q` whose whole pattern is one
+  interpolation: an empty subject makes it `grep -q ""`, true of every stream,
+  and it bites hardest when the beat ABOVE it is the thing that failed to
+  produce the id. `grep -qx` is exempt structurally, not by allowlist — `-x`
+  anchors to a whole line, so an empty pattern matches only an empty line.
+  Two-direction, like `leak-scan`: the harness must be clean AND the script's
+  own fixture must still fire, so an edited pattern that matches nothing cannot
+  pass as green forever. The **third** shape of this family is structural and
+  lives in the harness itself — `one_name_one_definition` (`harness.sh`),
+  which refuses a duplicate top-level beat name outright, because bash's flat
+  sourced namespace lets a later definition silently delete an earlier stage
+  and a beat that never runs writes no row at all (bl-0e44).
 - `make leak-scan` — the disclosure gate (bl-fd5a, reworked bl-167d).
   `scripts/leak-rules.sh` is the one definition of what may not be committed:
   private keys, vendor API tokens, credential assignments, routable
@@ -312,6 +330,16 @@ demotion removes an internal API from the boundary's obligations. Reach for
   is how the task store is gated below without a second copy of the rules.
 - `make rules-audit` — `ast-grep scan src` (must be clean) AND a negative check
   that `ast-grep scan rules/fixtures` *fails* (proving every rule still bites).
+  Most rules govern production style; **`no-hand-rolled-paint-walk.yml` governs
+  the tests** — `Galley::text()` is the string that went IN, so a galley egui
+  truncated to `…` still reports the whole label and every assertion against it
+  is blind to elision, the one defect the paint layer is the only witness for.
+  Painted glyphs come from `crate::paint_probe`, the one walk. This has been
+  fixed three times (bl-bc06 found it in `paint_probe` itself, where **1815
+  tests passed while covering no truncation at all**; bl-36c3 found two copies;
+  bl-70b8 found a third still live, aiming every pointer test's click by input
+  text) — which is why it is a rule now and not a memory. Geometry off a galley
+  (`.size()`, `.rect`, `.rows`) is unaffected: it is the text that lies.
 - `make coverage` — pinned tarpaulin, `--fail-under 100`.
 
 **Tool pins (must match, or the gate/CI is not reproducible):** rustc `1.95.0`
