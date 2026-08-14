@@ -255,7 +255,10 @@ claim_seat() { YOG_SEAT=$("$drive" seat); export YOG_SEAT; echo "seat: $YOG_SEAT
 # The one tail every run shares: drop the seat, then the verdict. Pairing them
 # means a run cannot report PASS and leak its X server.
 verdict() {
-  "$drive" unseat
+  # A seatless run is not a special case, it is this one with an empty seat
+  # (bl-bb20's `run_headless` claims no display at all, and `yogdrive.sh`
+  # refuses outright without `YOG_SEAT`). Nothing else in the tail moves.
+  [ -z "${YOG_SEAT:-}" ] || "$drive" unseat
   echo "---"
   echo "screenshots: $1"
   echo "verdicts:    $1/verdicts.jsonl"
