@@ -193,12 +193,14 @@ fn the_in_flight_strip_follows_the_focused_conversation() {
     model.publish();
     let strip = model.flight_strip(now).unwrap();
     assert_eq!(strip.class, crate::nav::convs::Flight::Inference);
-    assert_eq!(strip.facts, "stench-pug · 2 chars streamed · 42s");
+    // No `stench-pug` segment: the streaming member IS the conversation, whose
+    // §11 heading names it two lines above the strip (bl-3f70).
+    assert_eq!(strip.facts, "2 chars streamed · 42s");
     // The elapsed is recomputed per frame off the same snapshot fact — a later
     // clock reads a longer call with nothing republished.
     assert_eq!(
         model.flight_strip(now + 18).unwrap().facts,
-        "stench-pug · 2 chars streamed · 1m"
+        "2 chars streamed · 1m"
     );
     // A selected id the tree does not carry roots no conversation, and an
     // unfetched workspace has no tree to ask.

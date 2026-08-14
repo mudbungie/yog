@@ -81,15 +81,24 @@ pub struct FlightStrip {
     pub facts: String,
 }
 
-/// One class's contribution to the strip: what it states, and **when the thing
-/// it names began** — `None` for a class no world record marks a start for
-/// (§5.1 #28: an omitted segment is lawful, an invented one is not).
+/// One class's contribution to the strip: its segments in order, and **when the
+/// thing they name began** — `None` for a class no world record marks a start
+/// for (§5.1 #28: an omitted segment is lawful, an invented one is not).
+///
+/// **A list, not a sentence** (bl-3f70). Every segment here is independently
+/// omittable — an unparsable tool name, an unstattable record, a `<who>` the
+/// pane's own heading already carries — and a joined string forced each omission
+/// to be spelled as a branch that also knew about the separator. The join is one
+/// call at the end, so an absent segment is simply absent and a class that
+/// contributes nothing at all is an empty list rather than a stray ` · `.
 struct Facts {
-    says: String,
+    says: Vec<String>,
     start_unix: Option<i64>,
 }
 
 /// What the strip *is*, for the hover every seat owes the operator (bl-68ac).
+/// Since bl-3f70 the class's own words are hovered here too, in front of it —
+/// see [`crate::shell::flight_strip`] for why they left the line.
 pub const STRIP_HOVER: &str = "what is in flight in the open conversation, right now — the strip is absent whenever \
      nothing is";
 
@@ -111,52 +120,68 @@ pub fn strip(agents: &[Agent], root_id: &str, now_unix: i64) -> Option<FlightStr
     let members: Vec<&Agent> = subtree.iter().filter_map(|r| agents.get(r.index)).collect();
     let class = flight(&members)?;
     let facts = match class {
-        Flight::Inference => inference_facts(&members),
-        Flight::Tools => tool_facts(&members),
+        Flight::Inference => inference_facts(&members, root_id),
+        Flight::Tools => tool_facts(&members, root_id),
         Flight::Subagents => children_facts(&members),
     };
-    Some(FlightStrip {
-        class,
-        facts: with_elapsed(facts, now_unix),
-    })
+    // **No characteristics, no strip.** The seat exists to add what the §11
+    // header's chip does not say (bl-905f), so a class that contributes no
+    // segment at all — a tool call this snapshot can neither name nor time, on
+    // the conversation's own root — has nothing to put here, and the strip's
+    // own rule is that the panel is conditional rather than its content. Not a
+    // case beside `flight`'s `None`: it is the same rule read one level in.
+    let facts = with_elapsed(facts, now_unix);
+    (!facts.is_empty()).then_some(FlightStrip { class, facts })
 }
 
-/// The strip's line: the class's characteristics, then ` · <elapsed>` when it
-/// carries a start. The label is [`super::age_label`]'s — the list row's age and
-/// the strip's elapsed are one spelling of "how long", reused rather than
-/// restated, so `42s`/`7m` cannot drift between the two seats.
+/// The strip's line: the class's segments, then the elapsed when it carries a
+/// start, ` · `-joined once. The label is [`super::age_label`]'s — the list
+/// row's age and the strip's elapsed are one spelling of "how long", reused
+/// rather than restated, so `42s`/`7m` cannot drift between the two seats.
 fn with_elapsed(facts: Facts, now_unix: i64) -> String {
-    match facts.start_unix {
-        Some(start) => format!("{} · {}", facts.says, super::age_label(now_unix - start)),
-        None => facts.says,
+    let mut says = facts.says;
+    if let Some(start) = facts.start_unix {
+        says.push(super::age_label(now_unix - start));
     }
+    says.join(" · ")
 }
 
-/// `<who> · <n> chars streamed` — how much of the answer has landed in the live
-/// tail, off the snapshot's own `Agent::stream` (no render-path disk read).
+/// The member doing the work, named — **unless it is the conversation itself**
+/// (bl-3f70). The strip sits inside the pane whose heading is that
+/// conversation's §3.3 display name, so naming the root here paints the same
+/// name twice on one surface (QUALITY H1). The segment is not "who" but *who
+/// inside this conversation*, and the conversation is never news about itself:
+/// what survives is the case the segment was added for — a dispatched child
+/// streaming under a quiescent root, which the heading cannot name.
+fn named(who: Option<&Agent>, root_id: &str) -> Option<String> {
+    who.filter(|a| a.agent_id != root_id)
+        .map(super::member_title)
+}
+
+/// `[<who> · ]<n> chars streamed` — how much of the answer has landed in the
+/// live tail, off the snapshot's own `Agent::stream` (no render-path disk read).
 /// Zero is the general path with an empty tail, not a case: a call whose first
 /// token has not arrived reads `0 chars streamed`, which is the true thing to
 /// say about it. The start is the streaming member's own `call_start_unix`.
-fn inference_facts(members: &[&Agent]) -> Facts {
+fn inference_facts(members: &[&Agent], root_id: &str) -> Facts {
     let who = members.iter().find(|a| doing(a).is_model_call()).copied();
     let chars = who
         .and_then(|a| a.stream.text.as_ref())
         .map_or(0, |t| t.chars().count());
     Facts {
-        says: format!(
-            "{} · {} streamed",
-            name_of(who),
-            plural(chars, "char", "chars")
-        ),
+        says: named(who, root_id)
+            .into_iter()
+            .chain([format!("{} streamed", plural(chars, "char", "chars"))])
+            .collect(),
         start_unix: who.and_then(|a| a.call_start_unix),
     }
 }
 
-/// `<who> · <tool>` — the running tool's name off the step record that already
+/// `[<who> · ]<tool>` — the running tool's name off the step record that already
 /// decided the class (§5.1 #10). A record with no parsable name drops the
 /// segment: `toolu_01abc…` names nothing to an operator. The start is that same
 /// record's stamp, so the name and the elapsed are one call's.
-fn tool_facts(members: &[&Agent]) -> Facts {
+fn tool_facts(members: &[&Agent], root_id: &str) -> Facts {
     let who = members.iter().find(|a| doing(a) == Doing::Tools).copied();
     let call = who.and_then(|a| {
         a.tool_calls
@@ -164,10 +189,10 @@ fn tool_facts(members: &[&Agent]) -> Facts {
             .find(|c| c.state == ToolCallState::InFlight)
     });
     Facts {
-        says: match call.and_then(|c| c.name.clone()) {
-            Some(tool) => format!("{} · {tool}", name_of(who)),
-            None => name_of(who),
-        },
+        says: named(who, root_id)
+            .into_iter()
+            .chain(call.and_then(|c| c.name.clone()))
+            .collect(),
         start_unix: call.and_then(|c| c.start_unix),
     }
 }
@@ -191,16 +216,9 @@ fn children_facts(members: &[&Agent]) -> Facts {
         .filter(|a| super::running(a.state))
         .count();
     Facts {
-        says: format!("{} running", plural(n, "child", "children")),
+        says: vec![format!("{} running", plural(n, "child", "children"))],
         start_unix: None,
     }
-}
-
-/// What to call the member doing the work — [`super::member_title`]'s §3.3
-/// ladder over its own rungs, so the strip names an agent exactly as the row
-/// title, the centre header, the descent-tree member row and the §3.6 dialog do.
-fn name_of(agent: Option<&Agent>) -> String {
-    agent.map(super::member_title).unwrap_or_default()
 }
 
 /// A count and its noun, so no seat prints "1 chars" or "1 childs".
