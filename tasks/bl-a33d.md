@@ -1,10 +1,10 @@
 +++
 title = "BLOCKED on lernie bl-b98d — composer send-and-interrupt: Ctrl+Enter (and a button) interrupts the agent and triggers on the new message"
 created = 1785650733
-updated = 1785824351
+updated = 1786678331
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
-Operator ruling (2026-08-01, codex-comparison follow-up), verbatim: "this is a good feature. obviously a knob. it seems pretty easy to implement, I think? just an interrupt into brazen and then a trigger. both ways have value. probably enter: send, ctrl+enter: send and interrupt? and a button to do the same. really, the key point is, 'interrupt and trigger', which just happens to also be a send control."
+Operator ruling (codex-comparison follow-up), in substance: build it, and make it a knob. The mechanism is an interrupt into brazen followed by a trigger; both send semantics have value, so keep both — Enter sends, Ctrl+Enter sends and interrupts, with a button doing the same. The point is 'interrupt and trigger', which happens to also be a send control.
 
 ## What
 Enter keeps today's semantics (deposit; a busy agent sees it at its next step boundary). Ctrl+Enter — and an equivalent button by the composer — is send-and-interrupt: stop the in-flight work, deposit the message, and the deposit's driver-start is the trigger (lernie's existing law: a deposit into a quiescent agent starts a driver — no new verb).
