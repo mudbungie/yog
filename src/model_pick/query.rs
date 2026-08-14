@@ -157,21 +157,52 @@ impl Roster {
     }
 }
 
-/// The `id` column of `bz --list-models --json`
-/// (`{"models":[{"id":…,"default":…},…]}`), in order — MEASURED against the
-/// live payload (§9.4): those two keys are all brazen publishes, which is why
-/// capabilities and context windows are declared rather than discovered. A
-/// shapeless or unparseable payload folds to no ids, never an error — the empty
-/// case is already named by [`EMPTY_ROSTER`].
+/// The `models:` array of a `{"models":[{"id":…,"default":…},…]}` document —
+/// `bz --list-models --json`'s payload, and the per-provider cache that verb
+/// wholesale-writes from it, which is the same array under the same key. A
+/// shapeless or unparseable document folds to no rows, never an error.
+fn rows(document: &str) -> Vec<serde_json::Value> {
+    serde_json::from_str::<serde_json::Value>(document.trim())
+        .ok()
+        .and_then(|listing| {
+            listing
+                .get("models")
+                .and_then(serde_json::Value::as_array)
+                .cloned()
+        })
+        .unwrap_or_default()
+}
+
+/// The `id` column of `bz --list-models --json`, in order. Every row carries
+/// `id` and `default`; the three metadata keys beside them
+/// (`context_window`, `max_output_tokens`, `display_name`) are OPTIONAL and
+/// per-provider — brazen carries what the provider's list GET served and omits
+/// the rest, so a payload with none of them is the ordinary case and not a
+/// short one. The empty case is named by [`EMPTY_ROSTER`], never by an error.
 pub fn model_ids(stdout: &str) -> Vec<String> {
-    let Ok(listing) = serde_json::from_str::<serde_json::Value>(stdout.trim()) else {
-        return Vec::new();
-    };
-    let Some(rows) = listing.get("models").and_then(serde_json::Value::as_array) else {
-        return Vec::new();
-    };
-    rows.iter()
+    rows(stdout)
+        .iter()
         .filter_map(|row| row.get("id").and_then(serde_json::Value::as_str))
         .map(str::to_owned)
         .collect()
+}
+
+/// The `context_window` brazen **served** for `model`, out of a roster document
+/// — the number the picker seeds its `models.yaml` declaration from (§9.4,
+/// bl-848f).
+///
+/// `None` where the provider published none (Anthropic, OpenAI and Ollama serve
+/// no window on their list GET; Google does), where the document names no such
+/// model, or where it is unreadable. Absent stays absent — brazen's own
+/// zero-vs-unknown rule — because the fallback is a *declared default* the
+/// entry's note says is one, and a fabricated number smuggled in here would be
+/// indistinguishable from a served one.
+pub fn served_window(document: &str, model: &str) -> Option<u32> {
+    rows(document)
+        .into_iter()
+        .find(|row| row.get("id").and_then(serde_json::Value::as_str) == Some(model))?
+        .get("context_window")?
+        .as_u64()?
+        .try_into()
+        .ok()
 }

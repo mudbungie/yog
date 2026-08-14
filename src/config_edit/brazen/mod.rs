@@ -152,6 +152,25 @@ pub fn credential_presence(
         .collect()
 }
 
+/// The raw model-cache document `bz --list-models` wholesale-wrote for
+/// `provider` under `dir` (§5.1 row 23), or `None` where it never ran there.
+/// Read-only and forgiving — no parse, no schema coupling.
+///
+/// Free of the editor for the same reason [`credential_presence`] is: the §9.4
+/// pick reads this very file to seed the context window it declares (bl-848f)
+/// and holds no `config.toml` draft to ask through. One naming of
+/// `<provider>.json`, so the file the picker reads and the file the §9.5 pane
+/// shows can never be two different files.
+pub fn model_cache_at(
+    dir: &Path,
+    provider: &str,
+    io: &dyn FileIo,
+) -> std::io::Result<Option<String>> {
+    Ok(io
+        .read(&dir.join(format!("{provider}.json")))?
+        .map(|b| String::from_utf8_lossy(&b).into_owned()))
+}
+
 /// The brazen config editor view-model. Holds only the RAM carve-out (the
 /// unsent draft, §5.3) and the loaded-content hash for the concurrent-edit
 /// guard; every other datum is derived through an injected effect on demand.
@@ -255,14 +274,10 @@ impl BrazenEditor {
         credential_presence(&self.paths.credentials_dir, rows, io)
     }
 
-    /// The model cache for a provider (§5.1 row 23): the raw text of
-    /// `<cache-dir>/models/<provider>.json`, or `None` if absent. Read-only
-    /// and forgiving — no parse, no schema coupling.
+    /// The model cache for a provider (§5.1 row 23) — [`model_cache_at`] at
+    /// this editor's own wall.
     pub fn model_cache(&self, provider: &str, io: &dyn FileIo) -> std::io::Result<Option<String>> {
-        let path = self.paths.models_cache_dir.join(format!("{provider}.json"));
-        Ok(io
-            .read(&path)?
-            .map(|b| String::from_utf8_lossy(&b).into_owned()))
+        model_cache_at(&self.paths.models_cache_dir, provider, io)
     }
 
     /// Refresh a provider's model cache: `bz --list-models` writes the cache

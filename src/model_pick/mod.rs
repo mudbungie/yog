@@ -137,11 +137,17 @@ impl Pick {
 ///
 /// `rows` is brazen's effective provider table; an empty one is no answer and
 /// gates nothing, on the same terms as [`grammar::unknown_rows`].
+///
+/// `served` is the context window brazen published for this model on this row
+/// (`None` where the provider publishes none) — the seed for the declaration,
+/// so a window the roster already carried is never overwritten with a guess
+/// (bl-848f). It reaches only the `models.yaml` half, and only a new entry.
 pub fn plan(
     models_yaml: &str,
     providers_yaml: &str,
     rows: &[String],
     pick: &Pick,
+    served: Option<u32>,
 ) -> Result<Plan, PickError> {
     if grammar::is_unknown_row(&pick.provider, rows) {
         return Err(PickError::UnknownProvider {
@@ -153,7 +159,7 @@ pub fn plan(
             model: pick.model.clone(),
         });
     }
-    let declared = grammar::declare_model(models_yaml, &pick.model, &pick.provider)
+    let declared = grammar::declare_model(models_yaml, &pick.model, &pick.provider, served)
         .map_err(PickError::Grammar)?;
     let assigned = grammar::set_role_model(providers_yaml, &pick.role, &pick.provider, &pick.model)
         .map_err(PickError::Grammar)?;
@@ -194,7 +200,10 @@ pub fn birth_sentence(workspace_leaf: &str, branch: &str) -> String {
 }
 
 /// The note beside the write, naming both files and their order (§9.4), so the
-/// operator can see what a click is about to do before it does it.
-pub const WRITE_NOTE: &str = "writes models.yaml first (capabilities and context window are declared \
-     defaults — brazen publishes neither), then providers.yaml through `lernie \
-     config`";
+/// operator can see what a click is about to do before it does it. It says
+/// which of the two generated fields is a guess and which is not (bl-848f): the
+/// context window is the provider's own wherever the roster served one, and a
+/// declared default only where none was.
+pub const WRITE_NOTE: &str = "writes models.yaml first (capabilities are a declared default; the \
+     context window is the number this provider served, or a declared default \
+     where it serves none), then providers.yaml through `lernie config`";
