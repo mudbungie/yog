@@ -52,3 +52,34 @@ fn deposit_value(deposit: &Deposit) -> Value {
     map.insert("body".to_owned(), json!(deposit.body));
     Value::Object(map)
 }
+
+/// The `inbox` reply body read back (bl-7067): one entry per deposit row.
+pub(crate) fn entries_of(obj: &serde_json::Map<String, Value>) -> Result<Vec<InboxEntry>, String> {
+    use crate::boundary::codec::fields::list_of;
+    list_of(obj, "rows", entry_of)
+}
+
+fn entry_of(v: &Value) -> Result<InboxEntry, String> {
+    use crate::boundary::codec::fields::{bytes_of, str_of};
+    let o = v.as_object().ok_or("inbox row: not an object")?;
+    Ok(InboxEntry {
+        name: str_of(o, "name")?,
+        raw: bytes_of(o, "raw")?,
+        deposit: deposit_of(o.get("deposit").ok_or("inbox row: missing deposit")?)?,
+    })
+}
+
+/// The frontmatter and body. An absent key is an absent field, exactly as the
+/// encoder's own note says: a forgiving parse of a hand-edited file said "this
+/// was not stated", and an empty `from:` would be a different claim.
+fn deposit_of(v: &Value) -> Result<Deposit, String> {
+    use crate::boundary::codec::fields::{opt_str_of, str_of};
+    let o = v.as_object().ok_or("deposit: not an object")?;
+    Ok(Deposit {
+        sender: opt_str_of(o, "from")?,
+        deposited_at: opt_str_of(o, "deposited_at")?,
+        epitaph: opt_str_of(o, "epitaph")?.map(|w| super::Epitaph::parse(&w)),
+        terminal_ref: opt_str_of(o, "terminal_ref")?,
+        body: str_of(o, "body")?,
+    })
+}

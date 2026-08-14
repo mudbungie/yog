@@ -13,6 +13,9 @@ use serde_json::{Map, Value, json};
 
 use super::{Block, Entry, EntryKind, Transcript, Usage};
 
+/// The decoders, beside the encoders they undo (bl-7067, REMOTE §9 step 2).
+pub(crate) mod decode;
+
 /// The `transcript` reply body: one row per entry, in message order, the live
 /// streaming tail among them when a call is in flight.
 pub(crate) fn reply(transcript: &Transcript) -> Value {

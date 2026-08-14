@@ -112,7 +112,7 @@ pub(crate) fn join_token(state: JoinState) -> &'static str {
     }
 }
 
-pub(super) fn parse_join(token: &str) -> Result<JoinState, String> {
+pub(crate) fn parse_join(token: &str) -> Result<JoinState, String> {
     match token {
         "ready" => Ok(JoinState::ReadyStartable),
         "blocked" => Ok(JoinState::Blocked),
@@ -134,7 +134,7 @@ pub(crate) fn origin_token(origin: Origin) -> &'static str {
     }
 }
 
-pub(super) fn parse_origin(token: &str) -> Result<Origin, String> {
+pub(crate) fn parse_origin(token: &str) -> Result<Origin, String> {
     match token {
         "balls" => Ok(Origin::Balls),
         "conversation" => Ok(Origin::Conversation),
@@ -149,21 +149,11 @@ pub(super) fn encode_path(p: &Path) -> Value {
     Value::String(p.to_string_lossy().into_owned())
 }
 
-/// An optional string field: present encodes, absent stays absent — `None`
-/// and `""` are different facts (`--body ""` is an explicit empty body).
+/// An optional string field on the way OUT: present encodes, absent stays
+/// absent — `None` and `""` are different facts (`--body ""` is an explicit
+/// empty body). Its reader is [`fields::opt_str_of`](super::fields::opt_str_of).
 pub(super) fn opt_field(map: &mut Map<String, Value>, key: &str, v: Option<&String>) {
     if let Some(s) = v {
         map.insert(key.to_owned(), Value::String(s.clone()));
-    }
-}
-
-pub(super) fn opt_of(obj: &Map<String, Value>, key: &str) -> Result<Option<String>, String> {
-    match obj.get(key) {
-        None => Ok(None),
-        Some(v) => Ok(Some(
-            v.as_str()
-                .ok_or_else(|| format!("{key}: not a string"))?
-                .to_owned(),
-        )),
     }
 }

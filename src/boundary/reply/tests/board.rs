@@ -86,14 +86,20 @@ fn board_rows_encode_the_column_the_gate_the_drones_and_the_figures() {
     assert_eq!(rows[0]["spend"]["usd"], "$1.50");
     assert_eq!(rows[0]["spend"]["micro_usd"], 1_500_000);
     assert_eq!(rows[0]["spend"]["unpriced_tokens"], 4);
-    assert_eq!(rows[0]["spend"]["attribution"], "workspace-wide");
-    assert_eq!(rows[0]["rollup"]["tokens"], 100);
+    // The attribution is the classification, with its rendered clause beside
+    // it — the shape bl-7067 widened it to, so the figure reads back as the
+    // figure that was answered rather than as its sentence.
+    assert_eq!(rows[0]["spend"]["attribution"]["kind"], "workspace");
+    assert_eq!(rows[0]["spend"]["attribution"]["label"], "workspace-wide");
+    assert_eq!(rows[0]["rollup"]["tokens"]["total"], 100);
     assert!(
         rows[0]["rollup"].get("usd").is_none(),
         "an unpriced world renders tokens and no money at all"
     );
+    assert_eq!(rows[0]["rollup"]["attribution"]["kind"], "conversations");
+    assert_eq!(rows[0]["rollup"]["attribution"]["count"], 1);
     assert!(
-        rows[0]["rollup"].get("attribution").is_none(),
+        rows[0]["rollup"]["attribution"].get("label").is_none(),
         "one stamped conversation is exactly what the seat already claims"
     );
     assert_eq!(rows[1]["column"], "ready");

@@ -1,0 +1,45 @@
+//! The §11 inspector family's decode arms (§8.5, REMOTE §9 step 2, bl-7067) —
+//! the six reads bl-6233 landed, split off [`super`] on the seam
+//! `codec/query/inspector` already draws: these are the replies addressed at a
+//! *conversation* rather than a workspace, and each one's rows are read by the
+//! `wire` module that spells them, beside its own type.
+//!
+//! Nothing is read here but the envelope. The bodies belong to
+//! `transcript::wire`, `steps_view::wire`, `files_view::wire`, `rail::wire`,
+//! `inboxview::wire` and `workdiff::wire` — the same modules that write them,
+//! for the same reason they write them: those rows' shape *is* each module's
+//! vocabulary.
+
+use serde_json::{Map, Value};
+
+use super::super::Reply;
+use crate::boundary::codec::fields::opt_val;
+
+/// The six §11 answers, plus the work diff that shares their shape. `None`
+/// when the kind is not one of them.
+pub(super) fn decode(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> {
+    Some(match kind {
+        "transcript" => crate::transcript::wire::decode::transcript(o).map(Reply::Transcript),
+        "steps" => crate::steps_view::wire::decode::steps(o).map(Reply::Steps),
+        "step" => crate::steps_view::wire::decode::detail(o).map(Reply::Step),
+        "files" => files(o),
+        "rail" => crate::rail::wire::rail_of(o).map(Reply::Rail),
+        "inbox" => crate::inboxview::wire::entries_of(o).map(Reply::Inbox),
+        "work-diff" => work_diff(o),
+        _ => return None,
+    })
+}
+
+fn files(o: &Map<String, Value>) -> Result<Reply, String> {
+    Ok(Reply::Files {
+        view: crate::files_view::wire::view_of(o)?,
+        preview: opt_val(o, "preview", crate::files_view::wire::preview_of)?,
+    })
+}
+
+fn work_diff(o: &Map<String, Value>) -> Result<Reply, String> {
+    Ok(Reply::WorkDiff {
+        attempts: crate::workdiff::wire::attempts_of(o)?,
+        patch: opt_val(o, "patch", crate::files_view::wire::preview_of)?,
+    })
+}

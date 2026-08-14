@@ -55,3 +55,44 @@ pub(crate) fn preview_value(preview: &Preview) -> Value {
         Preview::Binary { size } => json!({ "kind": "binary", "size": size }),
     }
 }
+
+/// The `files` reply body read back (bl-7067). `worktree` is the
+/// discriminant the encoder chose so a reader never has to tell a torn-down
+/// worktree from an empty one; it is read as exactly that.
+pub(crate) fn view_of(obj: &serde_json::Map<String, Value>) -> Result<FilesView, String> {
+    use crate::boundary::codec::fields::{bool_of, list_of};
+    if !bool_of(obj, "worktree")? {
+        return Ok(FilesView::AbsentWorktree);
+    }
+    Ok(FilesView::Present {
+        entries: list_of(obj, "rows", entry_of)?,
+        truncated: bool_of(obj, "truncated")?,
+    })
+}
+
+fn entry_of(v: &Value) -> Result<FileEntry, String> {
+    use crate::boundary::codec::fields::{bool_of, str_of, u64_of};
+    let o = v.as_object().ok_or("file row: not an object")?;
+    Ok(FileEntry {
+        rel_path: str_of(o, "path")?,
+        size: u64_of(o, "size")?,
+        is_dir: bool_of(o, "dir")?,
+    })
+}
+
+/// A bounded preview read back — the same three classes, in the same words.
+pub(crate) fn preview_of(v: &Value) -> Result<Preview, String> {
+    use crate::boundary::codec::fields::{str_of, u64_of};
+    let o = v.as_object().ok_or("preview: not an object")?;
+    match str_of(o, "kind")?.as_str() {
+        "text" => Ok(Preview::Text(str_of(o, "text")?)),
+        "truncated" => Ok(Preview::Truncated {
+            text: str_of(o, "text")?,
+            size: u64_of(o, "size")?,
+        }),
+        "binary" => Ok(Preview::Binary {
+            size: u64_of(o, "size")?,
+        }),
+        other => Err(format!("preview: unknown kind {other:?}")),
+    }
+}

@@ -10,6 +10,9 @@ use super::{Doc, StepDetail, StepSummary, StepsView, ToolIo, Wound};
 use crate::budgets::BudgetSpend;
 use crate::git_tree::Framing;
 
+/// The decoders, beside the encoders they undo (bl-7067, REMOTE §9 step 2).
+pub(crate) mod decode;
+
 /// The `steps` reply body: one row per step, in sequence order.
 pub(crate) fn steps(view: &StepsView) -> Value {
     json!({
@@ -63,7 +66,11 @@ fn framing_token(framing: Framing) -> &'static str {
 
 /// The four ARCH §6 counters and their total — the total is derived, and it is
 /// carried because every seat that reads a step reads it against a ceiling.
-fn spend_value(spend: &BudgetSpend) -> Value {
+///
+/// `pub(crate)` since bl-7067: the §3.5 board figure spells its token half in
+/// exactly this shape, the way `files_view::wire::preview_value` already serves
+/// the work diff's patch. One spelling of one thing, in one place.
+pub(crate) fn spend_value(spend: &BudgetSpend) -> Value {
     json!({
         "input": spend.input_tokens, "output": spend.output_tokens,
         "cache_read": spend.cache_read_tokens, "cache_write": spend.cache_write_tokens,

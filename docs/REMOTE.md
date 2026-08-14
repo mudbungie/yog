@@ -216,7 +216,28 @@ valuable with no network at all — they finish VISION V5 teleop parity.
      inspector read answers unpinned — the same ruling `Conversations`
      already makes by answering the all-collapsed list.
 2. **`Reply` decode**, with encode↔decode round-trip tests over the whole
-   reply surface.
+   reply surface. *(Landed, bl-7067.)* Strict, on the gesture codec's own
+   terms: an unknown `kind`, a missing field and an unknown token each refuse
+   naming the offender, and the refusal `{"ok": false, "error": …}` reads back
+   as the `Err` side. The discriminant is `kind`, **not** `ok` — a captured run
+   spells its own exit verdict there, so a `bl close` that failed its gate is
+   `ok: false` and is an answer, not a refusal. Three rulings came out of it:
+   - **Round-trip failures were fixed in the ENCODING, never in the test.**
+     Four facts left the window and never reached a headless seat: the search
+     answer's own needle (bl-648a's whole point), the conversation row's depth,
+     tone and standing alignment verdict, the display-only rung, and the §3.5
+     figure's four token counters and its attribution class. Each is now on the
+     wire. The reply file has no consumer that a widened object breaks — its
+     readers parse JSON forgivingly — and the alternative was a codec that
+     narrowed the answer silently.
+   - **Derived text rides beside the fact, never instead of it.** `usd` beside
+     `micro_usd` was already the tree's shape; the attribution clause and the
+     fleet label now follow it, and the decode reads the fact and re-derives
+     the text.
+   - **Help resolves against the seat's own roster.** A `HelpRow` is four
+     `&'static str`s out of a `const` table and no decoder can mint one — but
+     help's subject is *the interface, not the world*, so the roster is an
+     answer every seat already holds. An unknown verb refuses, naming it.
 3. **Name-based addressing:** `PathBuf` leaves the boundary types.
 4. **The shell paints only boundary payloads** — retire the remaining raw
    `GitTree`/`Agent` imports from paint code.

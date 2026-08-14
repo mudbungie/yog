@@ -18,7 +18,7 @@ use crate::boundary::Action;
 use crate::fan::Obligation;
 
 use super::start::{encode_path, encode_prepared};
-use super::{decode_prepared, opt_field, opt_of, path_of, str_of, usize_of};
+use super::{decode_prepared, opt_field, opt_str_of, path_of, str_of, usize_of};
 
 /// The fan's own `op` token — matched in [`super::decode`]'s roster.
 pub(super) const FAN: &str = "fan";
@@ -59,7 +59,7 @@ fn obligation_map(op: &str, obligation: &Obligation) -> Map<String, Value> {
 pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String> {
     let obligation = Obligation {
         project: path_of(o, "project")?,
-        ball: opt_of(o, "ball")?,
+        ball: opt_str_of(o, "ball")?,
     };
     if op == RETIRE {
         return Ok(Action::Retire {

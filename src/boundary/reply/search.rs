@@ -4,7 +4,7 @@
 
 use serde_json::{Map, Value, json};
 
-use crate::search::{Address, Hit};
+use crate::search::{Address, Field, Hit};
 
 /// One hit as data: the address it names, spread flat so a consumer reads the
 /// same `project`/`id`/`workspace`/`agent` keys the gestures take.
@@ -32,4 +32,37 @@ pub(super) fn hit_row(hit: &Hit) -> Value {
 
 fn path_text(path: &std::path::Path) -> String {
     path.to_string_lossy().into_owned()
+}
+
+/// One hit read back (bl-7067): the `at` token says which address shape the
+/// flat keys spell, which is why the token rides at all — the keys alone are
+/// ambiguous between a workspace hit and a conversation hit that named none.
+pub(super) fn hit_of(v: &Value) -> Result<Hit, String> {
+    use crate::boundary::codec::fields::{path_of, str_of, usize_of};
+    let o = v.as_object().ok_or("hit: not an object")?;
+    let at = match str_of(o, "at")?.as_str() {
+        "ball" => Address::Ball {
+            project: path_of(o, "project")?,
+            id: str_of(o, "id")?,
+        },
+        "workspace" => Address::Workspace {
+            path: path_of(o, "workspace")?,
+        },
+        "conversation" => Address::Conversation {
+            workspace: path_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+        },
+        other => return Err(format!("hit: unknown address {other:?}")),
+    };
+    let word = str_of(o, "field")?;
+    let field = [Field::Name, Field::Summary, Field::Text]
+        .into_iter()
+        .find(|f| f.token() == word)
+        .ok_or_else(|| format!("hit: unknown field {word:?}"))?;
+    Ok(Hit {
+        at,
+        field,
+        offset: usize_of(o, "offset")?,
+        excerpt: str_of(o, "excerpt")?,
+    })
 }

@@ -9,12 +9,17 @@ use serde_json::{Map, Value, json};
 use super::WsRow;
 use crate::binding::WorkspaceKind;
 use crate::git_tree::AgentState;
+use crate::monitor::Check;
 use crate::nav::convs::{ConvRow, Flight};
 use crate::opslog::OpRow;
 use crate::projects::join::JoinRow;
+use crate::transcript::Tone;
 
 use super::super::codec::join_token;
 use super::super::codec::origin_token;
+
+/// The decoders, beside the tokens they undo (bl-7067).
+pub(crate) mod decode;
 
 pub(super) fn ws_row(row: &WsRow) -> Value {
     let mut map = Map::new();
@@ -65,6 +70,13 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
     if let Some(name) = row.name.as_ref().filter(|_| !row.name_display_only) {
         map.insert("name".to_owned(), json!(name));
     }
+    // The display-only rung as its own fact (bl-7067). Withholding `name`
+    // said "you cannot message this" but not "there is a name" — so the row
+    // could not be read back as the row that was answered. The name itself is
+    // not re-added: `display` above already IS it whenever this is true
+    // (`display_name`'s first rung is the name, verbatim), and a second copy
+    // of one string is the thing this codec is not allowed to grow.
+    map.insert("display_only".to_owned(), json!(row.name_display_only));
     map.insert("state".to_owned(), json!(state_token(row.state)));
     map.insert("uncertain".to_owned(), json!(row.uncertain));
     map.insert("preview".to_owned(), json!(row.preview));
@@ -79,6 +91,18 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
     // re-derive the descent grammar. The *fold* state has no home here — the
     // answer stays root rows, and expansion is a viewport's (§13.1).
     map.insert("direct".to_owned(), json!(row.direct));
+    // How far the row hangs under its conversation root (§11's indent) and how
+    // solidly it paints (§11, bl-915e) — both on the wire since bl-7067,
+    // because a seat that reads rows and cannot indent them, or cannot tell
+    // yog's own pending word from the derivation's, paints a different list
+    // than the window does of the same instant.
+    map.insert("depth".to_owned(), json!(row.depth));
+    map.insert("tone".to_owned(), json!(tone_token(row.tone)));
+    // The standing alignment verdict (VISION §4.9 rung V6), absent — not
+    // null — for a conversation no armed monitor has ruled on.
+    if let Some(check) = &row.verdict {
+        map.insert("alignment".to_owned(), check_value(check));
+    }
     if let Some(ball) = &row.ball {
         let mut b = Map::new();
         b.insert("id".to_owned(), json!(ball.id));
@@ -135,6 +159,40 @@ pub(crate) fn state_token(state: AgentState) -> &'static str {
         AgentState::Quiescent => "quiescent",
         AgentState::Stopped => "stopped",
     }
+}
+
+/// The §11 row tone (bl-915e), in the words the two seats share.
+pub(super) fn tone_token(tone: Tone) -> &'static str {
+    match tone {
+        Tone::Plain => "plain",
+        Tone::Weak => "weak",
+        Tone::Good => "good",
+        Tone::Bad => "bad",
+        Tone::Live => "live",
+        Tone::InFlight => "in-flight",
+    }
+}
+
+/// One standing alignment check (VISION §4.9): the ruling, the tip it read,
+/// the sentence behind it, and the model that said so. The token counts are
+/// absent — not zero — when the adapter reported none.
+fn check_value(check: &Check) -> Value {
+    let mut map = Map::new();
+    map.insert("workspace".to_owned(), json!(check.workspace));
+    map.insert("agent".to_owned(), json!(check.agent));
+    map.insert("verdict".to_owned(), json!(check.verdict.token()));
+    map.insert("sha".to_owned(), json!(check.sha));
+    map.insert("reason".to_owned(), json!(check.reason));
+    map.insert("model".to_owned(), json!(check.model));
+    for (key, count) in [
+        ("input_tokens", check.input_tokens),
+        ("output_tokens", check.output_tokens),
+    ] {
+        if let Some(count) = count {
+            map.insert(key.to_owned(), json!(count));
+        }
+    }
+    Value::Object(map)
 }
 
 pub(super) fn flight_token(flight: Flight) -> &'static str {

@@ -60,3 +60,46 @@ fn card_row(card: &ChildCard) -> Value {
     }
     Value::Object(map)
 }
+
+/// The `rail` reply body read back (bl-7067): the notches, then the cards.
+pub(crate) fn rail_of(obj: &serde_json::Map<String, Value>) -> Result<Rail, String> {
+    use crate::boundary::codec::fields::list_of;
+    Ok(Rail {
+        notches: list_of(obj, "rows", notch_of)?,
+        cards: list_of(obj, "cards", card_of)?,
+    })
+}
+
+/// One notch. `short` is not read back — [`Notch::short`] is its one authority
+/// and the commit it clips IS its storage.
+fn notch_of(v: &Value) -> Result<Notch, String> {
+    use crate::boundary::codec::fields::{opt_str_of, str_of, u64_of, usize_of};
+    let o = v.as_object().ok_or("notch: not an object")?;
+    let place = match opt_str_of(o, "row")? {
+        None => None,
+        Some(row) => Some(super::Place {
+            row,
+            cut: usize_of(o, "cut")?,
+        }),
+    };
+    Ok(Notch {
+        seq: str_of(o, "seq")?,
+        commit: opt_str_of(o, "commit")?,
+        tokens: u64_of(o, "tokens")?,
+        place,
+    })
+}
+
+fn card_of(v: &Value) -> Result<ChildCard, String> {
+    use crate::boundary::codec::fields::{opt_str_of, str_of, u64_of, usize_of};
+    let o = v.as_object().ok_or("card: not an object")?;
+    Ok(ChildCard {
+        agent_id: str_of(o, "agent")?,
+        name: str_of(o, "name")?,
+        fork: str_of(o, "fork")?,
+        state: crate::boundary::reply::rows::decode::state_of(o)?,
+        tokens: u64_of(o, "tokens")?,
+        tail: opt_str_of(o, "tail")?,
+        provenance_notch: usize_of(o, "notch")?,
+    })
+}
