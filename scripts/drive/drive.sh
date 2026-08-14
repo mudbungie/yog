@@ -100,7 +100,7 @@ ladder() {
   # `run-headless` first: it is the only verb that claims no seat and spends
   # nothing on the wire (bl-bb20), so a ladder that is going to fail on the
   # world's own shape fails in seconds rather than after four windowed runs.
-  [ -n "$runs" ] || runs="run-headless run run-s3s4s6 run-s5s8 run-s7"
+  [ -n "$runs" ] || runs="run-headless run run-unseeded run-s3s4s6 run-s5s8 run-s7"
   # PATH first, THEN preflight: the preflight's `yog` row must name the binary
   # that is about to be driven, not whatever happens to be installed.
   use_release

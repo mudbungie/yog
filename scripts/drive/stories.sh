@@ -263,6 +263,7 @@ run() {
 . "$here/beats_s6.sh"
 . "$here/beats_s3res.sh"
 . "$here/beats_headless.sh"
+. "$here/beats_unseeded.sh"
 
 # Everything above is now sourced into ONE flat bash namespace, so this is the
 # instant the namespace is complete and the only instant the collision guard can
@@ -281,7 +282,8 @@ run-s3s4s6) shift; run_s3s4s6 "$1" "$2" ;;
 run-s5s8)   shift; run_s5s8 "$1" "$2" ;;
 run-s7)     shift; run_s7 "$1" "$2" ;;
 run-headless) shift; run_headless "$1" "$2" ;;
+run-unseeded) shift; run_unseeded "$1" "$2" ;;
 *) echo "usage: stories.sh seed <data> | run <data> <out> |" \
-        "run-s3s4s6|run-s5s8|run-s7|run-headless <data> <out>" >&2
+        "run-s3s4s6|run-s5s8|run-s7|run-headless|run-unseeded <data> <out>" >&2
    exit 1 ;;
 esac

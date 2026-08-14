@@ -32,6 +32,7 @@ mod overlap;
 mod picker;
 mod raise;
 mod recall;
+mod remedies;
 mod screen;
 mod search_tab;
 mod settings;
