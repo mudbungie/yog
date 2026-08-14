@@ -123,6 +123,28 @@ impl Screen {
         self.ctx.memory(egui::Memory::focused)
     }
 
+    /// Force every tooltip to paint, hover or no (`super::hover::live`'s drive
+    /// and the paint-layer half both need it): the operator's hover is a
+    /// pointer position no walk of the keyboard floor can be in two places for.
+    pub(super) fn reveal(&self) {
+        self.ctx.memory_mut(|m| m.set_everything_is_visible(true));
+    }
+
+    /// What the widget `id` **was** — egui's own record of the response it
+    /// handed the render site, sense and enablement included. The frame is over
+    /// by the time a test asks, which is exactly what `read_response` answers.
+    pub(super) fn response(&self, id: egui::Id) -> Option<egui::Response> {
+        self.ctx.read_response(id)
+    }
+
+    /// Whether widget `id` had a tooltip open on the frame just run — egui's
+    /// own association of a tooltip with the widget that owns it (the tooltip
+    /// area's id is derived from the widget's), so a test needs no list of
+    /// which controls are supposed to have one.
+    pub(super) fn tooltipped(&self, id: egui::Id) -> bool {
+        egui::popup::was_tooltip_open_last_frame(&self.ctx, id)
+    }
+
     /// A frame with no input.
     pub(super) fn idle(&self, world: &mut World) -> bool {
         self.frame(world, Vec::new())

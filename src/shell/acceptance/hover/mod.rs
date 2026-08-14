@@ -3,15 +3,23 @@
 //!
 //! A shipped window prompted the question *what does the Scan button mean?*,
 //! and the answer existed only in DESIGN. A per-button fix would have left the next control equally
-//! mute, so the rule is machine-held here, in two halves that check different
+//! mute, so the rule is machine-held here, in halves that check different
 //! things:
 //!
-//! - [`every_interactive_control_carries_a_hover`] is the invariant. It reads
-//!   the tree's own source, finds every widget constructor that yields
+//! - [`live`] asks the invariant of the **running window** (bl-8e7a): it walks
+//!   §11's focus floor around every surface the tab strips can show and
+//!   requires each click-sensing `Response` to have opened a tooltip. It names
+//!   no constructor at all — the set is whatever the window painted — so a
+//!   widget built by a call nobody listed is judged the day it ships. It sees
+//!   only what a fixture can reach, which is the half below.
+//! - [`every_interactive_control_carries_a_hover`] is the same invariant read
+//!   off the tree's own source: it finds every widget constructor that yields
 //!   something the operator can press, type into or toggle, and walks the
 //!   method chain hanging off it for an `on_hover_text`. A control shipped
 //!   without one fails here even when no fixture can reach its seat — the Move
-//!   destinations, a provider Login row, a workflow file button.
+//!   destinations, a provider Login row, a workflow file button. Its reach is
+//!   the whole tree and its vocabulary is [`CONTROLS`], hand-listed, which is
+//!   the blind spot [`live`] covers wherever the window can be driven.
 //! - [`spelling`] is the same reading held to §11's *other* half: a control
 //!   also says **how to press it without the mouse**, and the vocabulary it may
 //!   say that in is derived from the binding table and the §8.5 verb roster
@@ -23,6 +31,7 @@
 //!   galleys and is caught.
 
 pub(super) mod lex;
+mod live;
 pub(super) mod scan;
 mod spelling;
 
@@ -37,6 +46,14 @@ use std::path::Path;
 /// click-sensing `Label`; the builder entries (`ComboBox`, `CollapsingHeader`)
 /// are matched at their `new`, since the chain walk below carries the hover
 /// requirement all the way through `.show(…)` to `.response`.
+///
+/// **A hand-listed vocabulary, and it is the weak half** (bl-8e7a): a control
+/// built by a call absent from here is not judged mute, it is not judged — the
+/// bl-45c7 shape. It stays because it is what reads seats no fixture reaches,
+/// and it is no longer alone: [`live`] judges the same rule off behavior, so a
+/// new constructor in a seat the window can be driven to goes red whatever it
+/// is spelled. What is left uncovered is precisely a new spelling in a seat no
+/// drive reaches.
 pub(super) const CONTROLS: &[&str] = &[
     "ui.button(",
     "ui.small_button(",
