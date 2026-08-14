@@ -245,7 +245,7 @@ impl ShellState {
 
     /// Unmake a wall's RAM with its workspace (§3.6). A wall's RAM lives exactly
     /// as long as its wall: §16.2 deletes the wall *directory* with the sphere
-    /// precisely so a workspace minted later under the same §3.1 name cannot
+    /// precisely so a workspace created later under the same §3.1 name cannot
     /// inherit a dead one's credentials, and the box over that directory has to
     /// die on the same terms — the key here is the workspace path, which a
     /// same-named rebirth reoccupies exactly.

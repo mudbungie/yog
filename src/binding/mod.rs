@@ -3,7 +3,7 @@
 //! reads (roots come from `crate::xdg`), no writes.
 //!
 //! §3.1: a workspace is exactly a directory holding `repo.git`. Under yog's own
-//! **flat names root** its leaf *is* the minted name; under lernie's roots it is
+//! **flat names root** its leaf *is* the chosen name; under lernie's roots it is
 //! foreign (`workspaces/`, auto-id) or a read-only replay (`replays/`). Three
 //! roots, one shape, classification by path alone. The names root is flat by
 //! construction — names are direct children — so each root is one readdir.
@@ -34,7 +34,7 @@ pub struct Workspace {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WorkspaceKind {
     /// Under yog's flat names root (`<yog_data>/workspaces/`): the dir leaf is
-    /// the minted name — the workspace's identity **and** the `--as` identity of
+    /// the chosen name — the workspace's identity **and** the `--as` identity of
     /// every ball claim it makes (§3.1/§3.2).
     Named { name: String },
     /// Under `<lernie-data>/workspaces/` — lernie's auto-id territory, rendered
@@ -45,7 +45,7 @@ pub enum WorkspaceKind {
 }
 
 /// yog's flat names root (§3.1): `<yog_data>/workspaces/`, the directory whose
-/// leaf-named children are the minted workspaces. The single home of the
+/// leaf-named children are yog's own named workspaces. The single home of the
 /// `workspaces` path segment, shared by [`workspace_path`] and the app's
 /// NamesRoot watch (§7.1).
 pub fn names_root(yog_data_root: &Path) -> PathBuf {
@@ -125,7 +125,7 @@ pub fn workspaces(yog_data_root: &Path, lernie_data_root: &Path) -> Vec<Workspac
     out
 }
 
-/// The minted name of the workspace at `path`, iff it is one of yog's own
+/// The name of the workspace at `path`, iff it is one of yog's own
 /// (§3.1: the leaf *is* the name). `None` for a foreign, replay, or unknown
 /// path — none of which can carry a claimant identity, so none of which can
 /// bind a ball (§3.2). The one home of that question: the §3.6 delete gate,
@@ -161,7 +161,7 @@ fn enumerate_flat(dir: &Path, classify: fn(&str) -> WorkspaceKind, out: &mut Vec
         .filter(|p| p.is_dir() && is_workspace(p))
         .map(|path| {
             // A readdir entry always has a leaf; `_lossy` keeps a non-UTF-8 name
-            // (foreign/replay ids are ASCII, minted names UTF-8 by construction).
+            // (foreign/replay ids are ASCII, chosen names UTF-8 by construction).
             let leaf = path.file_name().unwrap_or_default().to_string_lossy();
             Workspace {
                 kind: classify(leaf.as_ref()),

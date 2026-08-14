@@ -88,7 +88,7 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
         "focus follows the raise — the tab bar and conversation list move with it"
     );
     // The bug's sharp end: the BOTTOM composer's bare rung derives from the focus,
-    // so Enter now fires into the minted workspace, not the abandoned one.
+    // so Enter now fires into the newly created workspace, not the abandoned one.
     assert_eq!(
         m.start_bare_inputs().workspace,
         prepared.workspace,
