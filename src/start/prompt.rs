@@ -19,14 +19,29 @@ use std::path::Path;
 
 const PROMPT: &str = "prompt";
 const NAME_FLAG: &str = "--name";
+/// lernie's creation-time working-directory parameter (upstream bl-d0b4,
+/// released 0.0.8): the §3.3 typed work-target binding's one channel.
+const CWD_FLAG: &str = "--cwd";
 const YOG_NAME: &str = "YOG_NAME";
 
-/// `lernie prompt --name <minted> <workspace> <goal>` fired **detached** (§8.1):
-/// own process
+/// `lernie prompt --name <minted> [--cwd <target>] <workspace> <goal>` fired
+/// **detached** (§8.1): own process
 /// group, stdin/stdout→null, stderr→the per-spawn sink ([`opslog::detached::sink`]),
 /// `YOG_NAME=<workspace name>` layered (§8, §3.2 — the harness channel the goal
-/// text no longer duplicates), cwd the §3.4 driver dir. `prepared` carries all
-/// three, composed once by [`goal::compose_prepared`](super::goal).
+/// text no longer duplicates), the driver standing in the workspace it drives.
+/// `prepared` carries all of it,
+/// composed once by [`goal::compose_prepared`](super::goal).
+///
+/// **`--cwd` is the work target's one channel** (§3.3, bl-6654 consuming
+/// bl-2b8c's ruling / VISION §4.10 item 2): the rung's typed binding — the ball
+/// rung's claim-derived `work/<id>` worktree, the path rung's directory — seeds
+/// the agent's working-directory mark at creation, so every tool step of every
+/// later turn runs there. It rides only when the rung binds something
+/// ([`Prepared::binding`](super::Prepared::binding)); an absent flag is lernie's
+/// own default, the agent's worktree, which is exactly what the bare rung
+/// means. It replaced a paragraph of goal prose naming the path, which reached
+/// the model as content it had to notice and obey, and the initial process's
+/// `current_dir`, which reached no tool step at all.
 ///
 /// The conversation name mints first ([`mint_conversation`] over `occupied` + the
 /// injected `rng`); an exhausted pool leaves a `["yog-step","mint"]` row and
@@ -65,28 +80,29 @@ pub fn execute_prompt(
         mint_conversation(occupied, rng),
         state_root,
         ts,
-        &prepared.cwd,
+        &prepared.workspace,
         prepared.origin,
     )?;
     let ws_s = prepared.workspace.to_string_lossy();
+    let bound = prepared.binding.as_ref().map(|p| p.to_string_lossy());
     let named = lernie.and_env(vec![(YOG_NAME.to_owned(), prepared.name.clone())]);
     let sink = opslog::detached::sink(state_root, ts, &prepared.workspace);
-    // The goal stays LAST in both the spawned and the logged argv:
-    // `opslog::clip_goal` trims exactly the final element (§4.2).
-    let spawn = named.spawn_detached(
-        Some(&prepared.cwd),
-        &sink,
-        &[PROMPT, NAME_FLAG, &conversation, ws_s.as_ref(), goal],
-    );
-    let argv = vec![
-        lernie.binary().display().to_string(),
-        PROMPT.to_owned(),
-        NAME_FLAG.to_owned(),
-        conversation.clone(),
-        ws_s.into_owned(),
-        goal.to_owned(),
-    ];
-    let cwd = prepared.cwd.display().to_string();
+    // One argv, built once and spawned *and* logged from it — so the flag that
+    // rides conditionally cannot ride in only one of them. The goal stays LAST
+    // in both: `opslog::clip_goal` trims exactly the final element (§4.2).
+    let mut args = vec![PROMPT, NAME_FLAG, conversation.as_str()];
+    if let Some(dir) = bound.as_deref() {
+        args.extend([CWD_FLAG, dir]);
+    }
+    args.extend([ws_s.as_ref(), goal]);
+    // The driver's own directory is the workspace it drives — the same for every
+    // rung since bl-6654 retired the per-target `current_dir`. It is where the
+    // process stands, not where the work is: the work target is `--cwd` above.
+    let spawn = named.spawn_detached(Some(&prepared.workspace), &sink, &args);
+    let argv: Vec<String> = std::iter::once(lernie.binary().display().to_string())
+        .chain(args.iter().map(|a| (*a).to_owned()))
+        .collect();
+    let cwd = ws_s.clone().into_owned();
     // Two outcomes, two lines — never one sentinel for both (bl-afa9). A fork
     // that never landed is the ordinary §4.2 synthetic-failure line every other
     // never-launched spawn writes; `DETACHED_EXIT` is reserved for a handoff

@@ -42,10 +42,11 @@ seed_balls() {
   git -C "$p" config user.name yogdrive
   : > "$p/README.md" ; git -C "$p" add -A ; git -C "$p" commit -qm init
   in_world "$data" bl prime --as yogdrive >/dev/null 2>&1
-  # The body is the goal's payload verbatim (§3.3), and the worktree preamble
-  # rides beside it — which reads as an invitation to work the repo, so the body
-  # forbids tools outright: the beat is about yog's argv and surfaces, not about
-  # an agent doing a job, and every tool round trip is wire spend.
+  # The body is the goal's payload verbatim (§3.3), and the fire binds the
+  # agent's working directory to the ball worktree (bl-6654) — which reads as an
+  # invitation to work the repo, so the body forbids tools outright: the beat is
+  # about yog's argv and surfaces, not about an agent doing a job, and every
+  # tool round trip is wire spend.
   in_world "$data" bl create "drive ball" \
     --body "Respond with exactly this text and nothing else: Ball wire OK. Run no commands and no tools." \
     --as yogdrive

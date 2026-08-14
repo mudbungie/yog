@@ -54,7 +54,7 @@ fn prepared(ws: &Path, cwd: &Path) -> Prepared {
     Prepared {
         name: "alba".into(),
         workspace: ws.to_path_buf(),
-        cwd: cwd.to_path_buf(),
+        binding: Some(cwd.to_path_buf()),
         goal: "prefill".into(),
         origin: yog::opslog::Origin::Conversation,
     }
@@ -90,10 +90,15 @@ fn the_prompt_action_fires_detached_and_returns_the_minted_name() {
         ["--name", conversation.as_str()],
         "the minted name rides --name to its lernie home (§3.3, bl-08f2)"
     );
-    assert_eq!(inv[0].argv[3], ws.path().to_string_lossy());
     assert_eq!(
-        inv[0].argv[4], "make me a plan",
-        "the edited goal rode the wire verbatim — no identity line (bl-6920)"
+        &inv[0].argv[3..5],
+        ["--cwd", ws.path().to_string_lossy().as_ref()],
+        "the typed work target rides --cwd (§3.3, bl-6654)"
+    );
+    assert_eq!(inv[0].argv[5], ws.path().to_string_lossy());
+    assert_eq!(
+        inv[0].argv[6], "make me a plan",
+        "the edited goal rode the wire verbatim, still last — no identity line (bl-6920)"
     );
     let ops = opslog::tail(state.path(), 8);
     assert_eq!(ops.len(), 1);

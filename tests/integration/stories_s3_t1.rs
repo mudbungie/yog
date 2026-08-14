@@ -49,15 +49,18 @@ fn s3_t1_ready_ball_claims_after_new_and_binds_the_worktree() {
     };
 
     let prepared = start::prepare(&deps, &inputs, "T0").unwrap();
-    assert_eq!(prepared.cwd, canonical, "driver cwd is the work worktree");
-    assert!(
-        prepared
-            .goal
-            .starts_with("Ball bl-7: Wire it\n\nDo the thing.")
+    assert_eq!(
+        prepared.binding.as_deref(),
+        Some(canonical.as_path()),
+        "the ball rung binds the claim's work worktree typed (§3.3, bl-6654)"
+    );
+    assert_eq!(
+        prepared.goal, "Ball bl-7: Wire it\n\nDo the thing.",
+        "the goal is payload: header and body, no location prose (bl-6654)"
     );
     assert!(
-        prepared.goal.contains(&canonical.display().to_string()),
-        "worktree preamble"
+        !prepared.goal.contains(&canonical.display().to_string()),
+        "the worktree path is the typed binding, never goal text"
     );
     assert_eq!(
         bl.invocations()[0].argv,

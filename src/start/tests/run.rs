@@ -36,7 +36,7 @@ fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
     let inputs = w.inputs(crate::names::DEFAULT_NAME, Payload::Bare);
     let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
     assert_eq!(p.name, "home", "the bootstrap names without asking (§3.1)");
-    assert_eq!(p.cwd, w.home.path(), "bare cwd is ~");
+    assert_eq!(p.binding, None, "the bare rung binds no work target");
     assert_eq!(p.goal, "", "the operator types the bare payload");
     assert_eq!(p.workspace, workspace_path(w.yog.path(), &p.name));
     // Substrate only, in order — no `bl` mutation.
@@ -100,7 +100,11 @@ fn prepare_path_rung_composes_the_target_and_runs_no_bl() {
     let dir = w.home.path().join("work");
     let inputs = w.inputs("cobalt-gecko", Payload::Path { dir: dir.clone() });
     let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
-    assert_eq!(p.cwd, dir, "driver cwd is the directory");
+    assert_eq!(
+        p.binding.as_ref(),
+        Some(&dir),
+        "the binding is the directory"
+    );
     assert!(p.goal.contains(&dir.display().to_string()));
     assert!(!w.verbs().iter().any(|v| v == "claim" || v == "create"));
 }
@@ -117,7 +121,11 @@ fn prepare_ball_ready_claims_after_new() {
         ball(w.project.path(), "bl-r", JoinState::ReadyStartable),
     );
     let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
-    assert_eq!(p.cwd, canonical, "ball cwd is the worktree");
+    assert_eq!(
+        p.binding.as_ref(),
+        Some(&canonical),
+        "the binding is the claim's worktree"
+    );
     assert!(p.goal.contains("Ball bl-r: T"));
     // The amended §8.1 order: seed → new → claim.
     assert_eq!(w.verbs(), vec!["prime", "new", "claim"]);
@@ -167,8 +175,13 @@ fn prepare_bound_ball_resumes_without_a_claim_or_mint() {
     );
     let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
     assert_eq!(
-        p.cwd,
-        work_worktree_path(w.balls.path(), w.project.path(), "bl-c", None)
+        p.binding,
+        Some(work_worktree_path(
+            w.balls.path(),
+            w.project.path(),
+            "bl-c",
+            None
+        ))
     );
     assert!(w.ops().is_empty(), "resume: no claim, no mint, no re-seed");
 }

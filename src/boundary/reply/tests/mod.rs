@@ -41,7 +41,7 @@ fn the_prepared_reply_is_the_prompt_gestures_own_spelling() {
     let prepared = Prepared {
         name: "alba".into(),
         workspace: PathBuf::from("/ws"),
-        cwd: PathBuf::from("/cwd"),
+        binding: Some(PathBuf::from("/target")),
         goal: "g".into(),
         origin: Origin::Balls,
     };

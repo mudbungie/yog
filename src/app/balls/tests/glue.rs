@@ -55,7 +55,7 @@ fn fire_prompt_launches_detached_and_holds_the_start_claim() {
     let prepared = Prepared {
         name: "cobalt".into(),
         workspace: w.ws_cobalt.clone(),
-        cwd: w.ws_cobalt.clone(),
+        binding: Some(w.ws_cobalt.clone()),
         goal: "prefill".into(),
         origin: crate::opslog::Origin::Conversation,
     };
@@ -106,7 +106,7 @@ fn the_spend_ceiling_refuses_the_fire_and_says_so_on_the_trail() {
     let prepared = Prepared {
         name: "cobalt".into(),
         workspace: w.ws_cobalt.clone(),
-        cwd: w.ws_cobalt.clone(),
+        binding: Some(w.ws_cobalt.clone()),
         goal: "prefill".into(),
         origin: crate::opslog::Origin::Conversation,
     };

@@ -46,7 +46,7 @@ pub fn gate(ui: &UiState, state_root: &Path, ts: &str, prepared: &Prepared) -> R
     let entry = OpEntry::step_failure(
         ts.to_owned(),
         STEP,
-        prepared.cwd.display().to_string(),
+        prepared.workspace.display().to_string(),
         refusal.clone(),
         prepared.origin,
     );
@@ -91,7 +91,7 @@ mod tests {
         Prepared {
             name: "home".to_owned(),
             workspace: ws.to_path_buf(),
-            cwd: ws.to_path_buf(),
+            binding: None,
             goal: "go".to_owned(),
             origin: Origin::Balls,
         }

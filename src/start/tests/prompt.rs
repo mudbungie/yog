@@ -1,7 +1,7 @@
 //! The detached `lernie prompt` (§8.1, §3.3): the fire-time conversation mint
 //! riding `--name`, the goal fired verbatim (bl-6920), the `YOG_NAME` layer, the
-//! per-rung cwd, and the spawn-only ops line. A fifo rendezvous proves the
-//! detached child ran and captures its argv + env.
+//! typed `--cwd` target binding, and the spawn-only ops line. A fifo rendezvous
+//! proves the detached child ran and captures its argv + env.
 
 use super::{World, write_exec};
 use crate::cli_outbound::Cli;
@@ -10,15 +10,26 @@ use crate::start::{DETACHED_EXIT, Prepared, execute_prompt};
 use crate::test_support::spawn_guard;
 use std::path::Path;
 
-/// The composer's fire-time params: workspace `name`, its path, the driver cwd.
-fn prepared(name: &str, cwd: &Path, workspace: &Path) -> Prepared {
+/// The composer's fire-time params: workspace `name`, its path, and the §3.3
+/// typed work-target binding (`None` = the bare rung's "bind nothing", the
+/// shape most of these tests fire). There is no driver-cwd field since bl-6654
+/// — the detached driver stands in the workspace it drives.
+fn prepared(name: &str, workspace: &Path, binding: Option<&Path>) -> Prepared {
     Prepared {
         name: name.to_owned(),
         workspace: workspace.to_path_buf(),
-        cwd: cwd.to_path_buf(),
+        binding: binding.map(Path::to_path_buf),
         goal: String::new(),
         origin: Origin::Conversation,
     }
+}
+
+/// The workspace the fire drives — created, because it is also the detached
+/// driver's own cwd (bl-6654) and a spawn into a missing directory fails.
+fn workspace(w: &World) -> std::path::PathBuf {
+    let ws = w.yog.path().join("ws");
+    std::fs::create_dir_all(&ws).expect("workspace dir");
+    ws
 }
 
 /// A blocking fifo — reading it rendezvous with the detached child's write.
@@ -44,13 +55,12 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
         fifo.display()
     );
     let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
-    let ws = w.yog.path().join("ws");
-    let cwd = w.balls.path(); // an existing dir → a valid detached cwd
+    let ws = workspace(&w);
     let conversation = execute_prompt(
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("cobalt-gecko", cwd, &ws),
+        &prepared("cobalt-gecko", &ws, None),
         "do it",
         &[],
         &super::rng(),
@@ -76,7 +86,7 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
     let e = &w.ops()[0];
     assert_eq!(e.argv[1], "prompt");
     assert_eq!(e.exit, DETACHED_EXIT);
-    assert_eq!(e.cwd, cwd.display().to_string());
+    assert_eq!(e.cwd, ws.display().to_string());
     assert!(e.stderr.is_empty(), "a clean launch logs no error");
     // bl-afa9: and it *renders* as the handoff it is — never a numeric exit,
     // never the wording a spawn failure gets.
@@ -94,6 +104,55 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
     );
 }
 
+/// **The work target is typed, not prose** (§3.3, bl-6654 / VISION §4.10 item
+/// 2): a bound rung's directory rides lernie's `--cwd` — the creation-time seed
+/// for the working-directory mark every later tool step reads — and the goal
+/// stays LAST so `clip_goal` still trims exactly the payload. The spawned argv
+/// and the logged one are built from one list, so they cannot disagree about a
+/// flag that rides conditionally.
+#[test]
+fn prompt_passes_the_typed_target_as_cwd_with_the_goal_still_last() {
+    let _g = spawn_guard();
+    let w = World::new();
+    let fifo = w.bin.path().join("report");
+    make_fifo(&fifo);
+    let body = format!(
+        "#!/bin/sh\nprintf '%s\\037%s\\037%s\\037%s\\037%s\\037%s\\037%s' \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" \"$6\" \"$7\" > '{}'\n",
+        fifo.display()
+    );
+    let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
+    let ws = workspace(&w);
+    let target = w.balls.path().join("work");
+    std::fs::create_dir_all(&target).unwrap();
+    let conversation = execute_prompt(
+        &lernie,
+        w.state.path(),
+        "TS",
+        &prepared("cobalt-gecko", &ws, Some(&target)),
+        "do it",
+        &[],
+        &super::rng(),
+    )
+    .unwrap();
+
+    let recorded = std::fs::read_to_string(&fifo).unwrap();
+    let fields: Vec<&str> = recorded.split('\u{1f}').collect();
+    assert_eq!(fields[0], "prompt");
+    assert_eq!(fields[1], "--name");
+    assert_eq!(fields[2], conversation);
+    assert_eq!(fields[3], "--cwd", "the binding is a parameter, not prose");
+    assert_eq!(fields[4], target.to_string_lossy());
+    assert_eq!(fields[5], ws.to_string_lossy());
+    assert_eq!(fields[6], "do it", "the goal is still the last argument");
+
+    let e = &w.ops()[0];
+    assert_eq!(&e.argv[4..6], ["--cwd", target.to_string_lossy().as_ref()]);
+    assert_eq!(e.argv[7], "do it");
+    // The driver's own cwd is NOT the target: it is the workspace it drives, the
+    // same for every rung. The binding is the whole work-target channel.
+    assert_eq!(e.cwd, ws.display().to_string());
+}
+
 #[test]
 fn prompt_routes_the_drivers_stderr_to_its_per_spawn_sink() {
     let _g = spawn_guard();
@@ -107,12 +166,12 @@ fn prompt_routes_the_drivers_stderr_to_its_per_spawn_sink() {
         fifo.display()
     );
     let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
-    let ws = w.yog.path().join("ws");
+    let ws = workspace(&w);
     execute_prompt(
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("n", w.balls.path(), &ws),
+        &prepared("n", &ws, None),
         "g",
         &[],
         &super::rng(),
@@ -137,7 +196,7 @@ fn prompt_clips_a_large_logged_goal() {
     let _g = spawn_guard();
     let w = World::new();
     let lernie = Cli::new(super::fake_lernie(w.bin.path()));
-    let ws = w.yog.path().join("ws");
+    let ws = workspace(&w);
     // Each byte JSON-escapes to `\u00XX` (6 bytes): a raw-byte clip would let this
     // serialize to ~54 KB. The clip must hold POST-escape or the `ops.jsonl` line
     // blows past CAP/PIPE_BUF and loses its two-instance atomic append (§4.2).
@@ -146,7 +205,7 @@ fn prompt_clips_a_large_logged_goal() {
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("n", w.balls.path(), &ws),
+        &prepared("n", &ws, None),
         &big,
         &[],
         &super::rng(),
@@ -171,12 +230,12 @@ fn prompt_logs_the_spawn_failure_and_returns_err() {
     let _g = spawn_guard();
     let w = World::new();
     let lernie = Cli::new("/definitely/not/a/real/lernie-prompt");
-    let ws = w.yog.path().join("ws");
+    let ws = workspace(&w);
     let err = execute_prompt(
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("n", w.balls.path(), &ws),
+        &prepared("n", &ws, None),
         "g",
         &[],
         &super::rng(),
@@ -203,13 +262,12 @@ fn a_nonexistent_work_directory_logs_failed_to_spawn_not_a_handoff() {
     let _g = spawn_guard();
     let w = World::new();
     let lernie = Cli::new(super::fake_lernie(w.bin.path()));
-    let ws = w.yog.path().join("ws");
     let missing = w.yog.path().join("no-such-dir");
     let err = execute_prompt(
         &lernie,
         w.state.path(),
         "TS",
-        &prepared("n", &missing, &ws),
+        &prepared("n", &missing, None),
         "g",
         &[],
         &super::rng(),

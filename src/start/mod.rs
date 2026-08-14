@@ -177,7 +177,10 @@ pub enum Step {
     Prompt {
         name: String,
         workspace: PathBuf,
-        cwd: PathBuf,
+        /// The §3.3 typed work target the fire will pass as lernie's `--cwd`
+        /// (bl-6654) — the plan's preview of it, off the ball's *canonical*
+        /// worktree formula; the executor re-derives it from the claim.
+        binding: Option<PathBuf>,
         goal: String,
     },
 }
@@ -230,7 +233,7 @@ pub fn plan(inputs: &StartInputs) -> Vec<Step> {
     steps.push(Step::Prompt {
         name: prepared.name,
         workspace: prepared.workspace,
-        cwd: prepared.cwd,
+        binding: prepared.binding,
         goal: prepared.goal,
     });
     steps

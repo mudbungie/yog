@@ -79,7 +79,7 @@ the survey found on disk.
 | G10 | Agents address each other by name | lernie resolves only `agents/*` ids; display names are yog prose. Already ruled: lernie bl-c8ed (`--name` at creation, `message` resolves id-or-unique-name), yog bl-50f3/bl-08f2 consume it | in flight upstream |
 | G11 | Policy out of the primitives | lernie ships `models.yaml` (a model catalog, in git — bl-35e2 rules it out), budget numbers, an opinionated soul, and a hardcoded default config ref | lernie extraction (§6) |
 | G12 | An agent in yog can operate yog (§4.8) | The dispatch layer is already `pub` and driven headlessly by every story test; but there is no headless entrypoint, no parity enforcement, and the drive harness steers pixels | yog (§4.8, V5) |
-| G13 | Project work is one forkable, deliverable fact | **Ruled (§4.10, bl-2b8c).** The gap stands on disk — the target still rides goal prose, and project edits stay outside agent refs, child inheritance, bundle/replay, and comparison — but the contract now exists; the implementation chain is lernie bl-d0b4 → yog bl-6654, balls bl-a1a4 → bl-4eac → yog bl-8746 | §4.10's filed balls |
+| G13 | Project work is one forkable, deliverable fact | **Ruled (§4.10, bl-2b8c); item 2 landed.** The target no longer rides goal prose — yog passes it typed as lernie's `--cwd` at fire (yog bl-6654 over lernie bl-d0b4) — but project edits still stay outside agent refs, child inheritance, bundle/replay, and comparison, so the rest of the chain stands: balls bl-a1a4 → bl-4eac → yog bl-8746 | §4.10's filed balls |
 
 ## 4. The execution model
 

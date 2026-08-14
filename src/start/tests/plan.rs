@@ -42,8 +42,8 @@ fn ball_payload(join: JoinState) -> Payload {
 
 #[test]
 fn bare_plans_seed_new_prompt() {
-    // The bootstrap-shaped plan: substrate then the deferred prompt, cwd `~`, an
-    // empty prefill (the operator types), no `bl` mutation.
+    // The bootstrap-shaped plan: substrate then the deferred prompt, binding
+    // nothing, an empty prefill (the operator types), no `bl` mutation.
     assert_eq!(
         plan(&inputs(Payload::Bare)),
         vec![
@@ -52,7 +52,7 @@ fn bare_plans_seed_new_prompt() {
             Step::Prompt {
                 name: NAME.to_owned(),
                 workspace: ws(),
-                cwd: PathBuf::from(HOME),
+                binding: None,
                 goal: String::new(),
             },
         ]
@@ -66,12 +66,15 @@ fn path_rung_targets_the_dir_verbatim() {
     assert!(matches!(steps[0], Step::EnsureSeeded));
     assert!(matches!(steps[1], Step::EnsureWorkspace { .. }));
     let Some(Step::Prompt {
-        cwd, goal, name, ..
+        binding,
+        goal,
+        name,
+        ..
     }) = steps.last()
     else {
         panic!("path plan ends in a prompt");
     };
-    assert_eq!(*cwd, dir, "driver cwd is the directory");
+    assert_eq!(binding.as_ref(), Some(&dir), "the binding is the directory");
     assert_eq!(name, NAME);
     assert!(
         goal.starts_with("Working directory: /work/here"),
@@ -99,14 +102,18 @@ fn ball_ready_claims_after_new_and_binds_the_worktree() {
         "claim stamped with the workspace name, after the substrate"
     );
     let wt = work_worktree_path(Path::new(BALLS), Path::new(PROJ), "bl-1", None);
-    let Step::Prompt { cwd, goal, .. } = &steps[3] else {
+    let Step::Prompt { binding, goal, .. } = &steps[3] else {
         panic!("ends in a prompt");
     };
-    assert_eq!(*cwd, wt, "driver cwd is the work worktree");
-    assert!(goal.contains("Ball bl-1: T"));
+    assert_eq!(
+        binding.as_ref(),
+        Some(&wt),
+        "the binding is the work worktree"
+    );
+    assert_eq!(goal, "Ball bl-1: T\n\nB");
     assert!(
-        goal.contains(&wt.display().to_string()),
-        "worktree preamble"
+        !goal.contains(&wt.display().to_string()),
+        "and the path is a parameter, never goal prose (bl-6654)"
     );
 }
 
