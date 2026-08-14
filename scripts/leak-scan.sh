@@ -112,12 +112,12 @@ report() {
 scan_rule() {
   local rule="$1"; shift
   [ "$#" -gt 0 ] || return 0
-  local hits
-  hits="$(grep -HIonE -e "${PATTERN[$rule]}" -- "$@" 2>/dev/null || true)"
+  local hits PATTERN EXCEPT WHY
+  rule_fields "$rule"
+  hits="$(grep -HIonE -e "$PATTERN" -- "$@" 2>/dev/null || true)"
   [ -n "$hits" ] || return 0
-  local ex="${EXCEPT[$rule]:-}"
-  if [ -n "$ex" ]; then
-    hits="$(printf '%s\n' "$hits" | grep -vE ":[0-9]+:(${ex})" || true)"
+  if [ -n "$EXCEPT" ]; then
+    hits="$(printf '%s\n' "$hits" | grep -vE ":[0-9]+:(${EXCEPT})" || true)"
   fi
   [ -n "$hits" ] || return 0
   printf '%s\n' "$hits" | report "$rule"
@@ -149,11 +149,12 @@ scan_binary() {
 scan() {
   local skip=''
   if [ "${1-}" = --skip ]; then skip="$2"; shift 2; fi
-  local rule found='' out
+  local rule found='' out PATTERN EXCEPT WHY
   for rule in "${RULES[@]}"; do
     [ "$rule" = "$skip" ] && continue
     out="$(scan_rule "$rule" "$@")"
-    [ -n "$out" ] && found+="$out"$'\n'"       ${WHY[$rule]}"$'\n'
+    rule_fields "$rule"
+    [ -n "$out" ] && found+="$out"$'\n'"       $WHY"$'\n'
   done
   for rule in forbidden-path binary-content; do
     [ "$rule" = "$skip" ] && continue
@@ -161,7 +162,8 @@ scan() {
       forbidden-path) out="$(scan_paths "$@")" ;;
       *)              out="$(scan_binary "$@")" ;;
     esac
-    [ -n "$out" ] && found+="$out"$'\n'"       ${WHY[$rule]}"$'\n'
+    rule_fields "$rule"
+    [ -n "$out" ] && found+="$out"$'\n'"       $WHY"$'\n'
   done
   if [ -n "$found" ]; then
     echo "error: leak-scan found material that must not be committed:" >&2
@@ -197,7 +199,12 @@ scan_tree() {
   cd "$SCAN_DIR"
   scan "${files[@]}" || rc=1
   # Each fixture, judged by every rule but its own (see the header).
-  for f in "${fixtures[@]}"; do
+  # `${a[@]+"${a[@]}"}`, not `"${a[@]}"`: under `set -u` bash 3.2 treats the
+  # expansion of an EMPTY array as an unbound variable, kills the shell mid-scan
+  # — and exits 0 doing it, so a tree full of findings passed the gate on macOS,
+  # which ships 3.2 and always will (bl-1015). The guard is the portable idiom
+  # for "expand this array, or nothing".
+  for f in ${fixtures[@]+"${fixtures[@]}"}; do
     f="${f##*/}"
     scan --skip "${f%.*}" "$FIXTURES/$f" || rc=1
   done

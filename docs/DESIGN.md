@@ -4371,7 +4371,23 @@ the config-branch `for-each-ref` — are gone with it.
     spawn shim is `#[cfg(target_os = "macos")]`. lsof is slow, so macOS probe
     results carry a 2 s TTL cache (RAM, §5.3), refreshed eagerly on watcher
     events touching the agent, and re-probed only for Live/InFlight agents on
-    the sweep (§7.2).
+    the sweep (§7.2). **Those two evictions are complementary, not
+    overlapping** (bl-1015): the sweep evicts for a workspace that *holds* a
+    Live/InFlight agent, because only those can die silently; the watcher-driven
+    re-derivation evicts for a workspace that holds *none*, because that is the
+    only signal a driver has arrived. A streaming `response.json` storm is
+    neither, so it stays collapsed on the cache — which is what the cache is
+    for.
+  - **The target is resolved before it is asked about** (bl-1015): both sides
+    canonical, mirroring the procfs backends, because lsof prints the resolved
+    name of every fd it finds and on macOS the whole temp tree resolves
+    (`/var/folders/…` → `/private/var/…`). And **a target the filesystem does
+    not resolve is a definite `Free`, never `Unknown`** — nothing can hold a
+    path that is not there, which is exactly what the procfs backends answer for
+    one. lsof instead *errors* on an absent path, indistinguishable from lsof
+    being broken, so every agent with no inbox directory and every agent with no
+    step yet used to read `Unknown`: a "?" badge on its row and a refused §3.6
+    delete, on macOS only.
   - `lsof` missing/failing ⇒ `Unknown` ⇒ classification degrades to
     framing-only: closed-with-`end` = quiescent, closed-without = stopped,
     open-file undetectable ⇒ rendered with an explicit **uncertainty badge
@@ -4391,11 +4407,38 @@ the config-branch `for-each-ref` — are gone with it.
   itself /proc-based (Linux-only). On macOS yog surfaces the Stop failure
   verbatim in `ops.jsonl`; fixing stop portability is lernie's ball.
 - **CI:** Linux runs the full gate (fmt, clippy -D warnings, tarpaulin 100%
-  pinned 0.35.2). macOS (aarch64) job: `cargo build` + `cargo test`, no
-  tarpaulin (Linux sees every line because nothing but the lsof spawn shim is
-  cfg'd out). Known macOS test issues — `/tmp` vs `/private/tmp`
-  canonicalization in probe fixtures, FSEvents timing in fs_watcher tests —
-  are already filed as **bl-592b**.
+  pinned 0.35.2). macOS (aarch64) is `cargo build` + `make test`, no tarpaulin
+  (Linux sees every line because nothing but the lsof spawn shim is cfg'd out),
+  and it lives in a **workflow of its own** (`.github/workflows/macos.yml`,
+  bl-0158) on ci.yml's triggers: same visibility, but the release gate reads the
+  `CI` workflow's verdict, so macOS reports without holding the pipeline. Moving
+  it back under the name `CI` is a decision to let it block a release.
+- **The macOS suite is green, and what it took is recorded here because the
+  obvious reading was wrong** (bl-1015). Thirteen tests failed there from its
+  first run to 2026-08-14, and the standing hypothesis was two causes: a
+  Linux-shaped liveness probe *and* a text layout that came out narrower on
+  aarch64. Measured on a `macos-14` runner, every painted galley is
+  **byte-for-byte the width it is on Linux** — the acceptance harness runs
+  `egui::Context::default()`, so both platforms lay out through egui's own
+  embedded faces at the same `pixels_per_point`, and there is no per-platform
+  text metric to find. The narrower titles were the *first* cause wearing a
+  disguise: the probe answered `Unknown` for agents with no inbox directory, so
+  every such row grew a §10 "?" badge in its trailing group, and the title,
+  which fills what the trailing group leaves (§11), truncated 14 px earlier.
+  One defect, twelve tests. The thirteenth was the FSEvents arming race below.
+- **A watcher is not armed when its constructor returns** — on macOS. inotify
+  arms inside the syscall; FSEvents starts its stream on another thread, and a
+  write that lands first emits *no event at all*, which no downstream timeout
+  can recover. Tests therefore **prove** arming (rewrite a probe file until the
+  watcher reports it) rather than sleeping a guess at it.
+- **The shell the gates are written in is bash 3.2**, because that is what
+  macOS ships and — the licence having changed under it — always will. Two of
+  its limits had made `scripts/leak-scan.sh` Linux-only: associative arrays
+  (bash 4) and, worse, `"${empty[@]}"` under `set -u`, which 3.2 treats as an
+  unbound variable, kills the shell on, **and exits 0 doing** — so a tree full
+  of findings passed the gate silently. Rules are a `case` and every array
+  expansion is guarded `${a[@]+"${a[@]}"}`; a new script is checked with
+  `bash -n` under a real 3.2, never against the host's bash.
 
 ---
 
@@ -7100,7 +7143,7 @@ beside `main.rs`.
 | `src/app/line.rs` | 45 | the §8.5 line context: the seat's focus read as what a slash command elides — the §3.2 stamp a `bl` verb carries (the focused ball's claimant, else the workspace's own name), derived here so a typed verb and a clicked one cannot aim differently |
 | `src/app/cadence.rs` | 204 | the clock's periods (§7.2, bl-3381): the `Cadence` value, its `cadence.yaml` grammar (total parse, shared bounds), and the derived periods (wound grace, late pass, staleness) |
 | `src/app/deletes.rs` | 140 | the §3.6 hand-off, both altitudes: confirmation derivations, fire-time re-gates, post-delete convergence (bl-f17a: the agent delete's focus-off-the-dead-subtree move) |
-| `src/app/derive{,/route,/sweeps,/worker}.rs` | 273+127+279+71 | the derivation worker (§7.2): its state and one pass; the §7.1 dirty-root routing table; the two sweeps, reconcile, the fetch cadence and re-deriving one root — the work every sweep ends in, moved beside them at the budget (bl-4b28); the thread that drives the pass |
+| `src/app/derive{,/route,/sweeps,/liveness,/worker}.rs` | 278+127+271+86+71 | the derivation worker (§7.2): its state and one pass; the §7.1 dirty-root routing table; the two sweeps, reconcile, the fetch cadence and re-deriving one root — the work every sweep ends in, moved beside them at the budget (bl-4b28); **which cached liveness observations are evicted and on which signal** — the sweep's poll for agents that can die silently and the watcher's refresh for agents that can come alive, complements by construction (§10, bl-1015); the thread that drives the pass |
 | `src/app/dirty.rs` | 215 | Change→dirty-root mapping, debounce/sweep scheduling over the live `Cadence`, `watch::Mark` provenance (§7.2) |
 | `src/app/grace.rs` | 165 | the §7.3 wound banner's grace window (bl-90bf): the render-layer age gate over the same injected clock, so a wound that heals inside the snapshot's own catch-up bound never flashes |
 | `src/app/drift{,/tests}.rs` | 186+130 | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |

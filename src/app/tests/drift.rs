@@ -9,6 +9,7 @@
 
 use super::super::*;
 use super::Harness;
+use crate::git_tree::{AgentState, GitTree};
 use crate::watch::Mark;
 use std::path::Path;
 use std::time::Duration;

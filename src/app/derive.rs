@@ -20,6 +20,8 @@
 //! re-derivation that changes a snapshot nobody announced is a dropped event,
 //! and so is a pass that took longer than the cadence it promised.
 
+/// Which cached liveness observations are thrown away, and on which signal.
+mod liveness;
 /// Which root means what — the §7.1 dirty-root routing table.
 mod route;
 /// The work one pass does — the sweeps, the reconcile, the fetch cadence.
@@ -222,6 +224,9 @@ impl Deriver {
             // (`Unenumerated`); accusing it here as well made every newborn
             // workspace two findings for one event (bl-f726).
             let baseline = self.trees.contains_key(&root);
+            if mark == Mark::Watch || mark == Mark::Desync {
+                self.refresh_liveness(&root);
+            }
             if self.rederive(&root) && mark == Mark::Sweep && baseline {
                 found.push(Drift::Unannounced(root));
             }

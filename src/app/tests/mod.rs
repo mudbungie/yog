@@ -9,7 +9,7 @@ mod deletes;
 pub(super) mod derive;
 mod drift;
 mod focus;
-mod harness;
+pub(crate) mod harness;
 mod knobs;
 mod panels;
 mod search;
@@ -21,7 +21,6 @@ mod worker;
 use super::*;
 use crate::binding::WorkspaceKind;
 use crate::fs_watcher::RootKind;
-use crate::git_tree::{AgentState, GitTree};
 use crate::test_support::FakeClock;
 pub(super) use harness::Harness;
 pub(crate) use harness::Rig;
@@ -150,26 +149,6 @@ fn construction_arms_the_workspace_and_enum_watchers() {
     assert!(ws.watches(&h.ws, RootKind::Workspace), "workspace armed");
     assert!(ws.watches(&h.roots.workspaces(), RootKind::WorkspacesRoot));
     assert!(ws.watches(&h.roots.yog_state, RootKind::YogState));
-}
-
-#[test]
-fn needs_liveness_reprobe_fires_only_on_live_or_in_flight() {
-    let live = GitTree {
-        commits: vec![],
-        agents: vec![agent("x", AgentState::Live)],
-    };
-    let inflight = GitTree {
-        commits: vec![],
-        agents: vec![agent("y", AgentState::InFlight)],
-    };
-    let quiescent = GitTree {
-        commits: vec![],
-        agents: vec![agent("z", AgentState::Quiescent)],
-    };
-    assert!(needs_liveness_reprobe(&live));
-    assert!(needs_liveness_reprobe(&inflight));
-    assert!(!needs_liveness_reprobe(&quiescent));
-    assert!(!needs_liveness_reprobe(&GitTree::default()));
 }
 
 #[test]
