@@ -388,9 +388,16 @@ and the stamp compare is the second one behind it.
 
 Arming it is `make install-hooks`, once per clone, in the main checkout.
 
-On every push to `main`, GitHub Actions (`.github/workflows/ci.yml`) runs
-`make ci` on Linux (fmt-check, clippy `-D warnings`, tarpaulin 100% floor)
-and `cargo build` + `make test` on macOS (Apple silicon).
+On every push to `main`, GitHub Actions runs `make ci` on Linux
+(`.github/workflows/ci.yml` — fmt-check, clippy `-D warnings`, tarpaulin 100%
+floor). **Linux is the gate**: a release publishes only on a green run of that
+workflow.
+
+macOS (Apple silicon) builds and runs `make test` in a workflow of its own
+(`.github/workflows/macos.yml`), on the same triggers, and is **reported but
+not gating**. It does not pass today — 14 tests fail there, from a liveness
+probe that reads `/proc` and a text layout that comes out narrower — so treat
+Linux as the supported platform until that is fixed.
 
 ## Publishing
 
