@@ -124,7 +124,7 @@ fn write_atomic(dest: &Path, bytes: &[u8], mode: u32) -> io::Result<()> {
         .file_name()
         .map_or_else(|| "cred".to_owned(), |n| n.to_string_lossy().into_owned());
     let dir = dest.parent().unwrap_or_else(|| Path::new("."));
-    let tmp = dir.join(format!(".{name}.yog-tmp-{}", std::process::id()));
+    let tmp = crate::scratch::temp_in(dir, &name);
     let mut f = fs::OpenOptions::new()
         .write(true)
         .create(true)

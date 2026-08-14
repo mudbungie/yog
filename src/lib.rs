@@ -81,6 +81,9 @@ pub mod nav;
 pub mod opslog;
 pub mod projects;
 pub mod rail;
+/// I3's scratch temp (§2, §5.2): its one naming, and the startup sweep of
+/// leftovers — internal, not library surface.
+pub(crate) mod scratch;
 pub mod search;
 pub mod shell;
 pub mod spend;
