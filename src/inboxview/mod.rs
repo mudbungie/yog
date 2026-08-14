@@ -136,8 +136,23 @@ impl InboxEntry {
 /// inbox-composer's pending rows, bl-929d), so "pending mail" reads identically
 /// across altitudes. Absent fields read as `?` rather than vanishing, keeping a
 /// hand-edited deposit legible.
+///
+/// **The sender is an agent id, so it wears the ladder's floor** — the terminal
+/// generation only ([`crate::nav::convs::id_floor`], bl-63a1; applied here by
+/// bl-3aa1). A descent child's id embeds its whole ancestry, one
+/// `<stamp>-<hash>` pair per generation, and these rows spelled all of it: a
+/// four-token chain, 52 characters, at the head of a row whose remaining
+/// content is a timestamp and a subject (QUALITY L4 names "ancestry chain"
+/// first among the things that must not dominate a row). The chain's leading
+/// generations are the part every sibling deposit shares, so they were both the
+/// longest and the least informative thing on the line. A sender that is not an
+/// agent id at all — `user`, the operator's own deposits — carries no stamp
+/// grammar and is spelled whole by the same call, no branch.
 pub fn header_line(deposit: &Deposit) -> String {
-    let from = deposit.sender.as_deref().unwrap_or("?");
+    let from = deposit
+        .sender
+        .as_deref()
+        .map_or("?", crate::nav::convs::id_floor);
     let at = deposit.deposited_at.as_deref().unwrap_or("?");
     format!("✉ {from} · {at}")
 }

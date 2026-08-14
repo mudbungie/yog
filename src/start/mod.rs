@@ -112,7 +112,7 @@ impl Payload {
 /// resolved from the env at the shell boundary).
 ///
 /// **One input type, because there is nothing left to resolve** (bl-d942). It
-/// carried a `Target` and the workspace mint's occupied-set claimants, and
+/// carried a `Target` and an occupied set of workspace claimants, and
 /// [`prepare`] resolved those into a second, name-bearing struct; with workspace
 /// names chosen by the operator (§3.1) the target *is* the workspace path and its
 /// name *is* the leaf — a computed fact, so it is a query ([`goal::leaf_name`])

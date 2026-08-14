@@ -64,7 +64,7 @@ impl Deriver {
             }
         }
         self.schedule.mark(missing);
-        // The workspace set is a join axis (§3.5): a fresh minted workspace (the
+        // The workspace set is a join axis (§3.5): a freshly named workspace (the
         // start flow's `lernie new`) that lands via a NamesRoot event must re-bind
         // the balls at once, else the just-claimed ball renders claimed-elsewhere
         // until the 15 s sweep. Rebuild the join over the already-fetched balls.

@@ -23,7 +23,7 @@ fn full_window_reaches_every_data_surface() {
     world.state.inspector.step_sel = Some(0);
 
     // Altitude 0/1 chrome renders regardless of tab: the attention strip, the
-    // tab bar's `new` mint and overflow (the fixture workspace is foreign), the
+    // tab bar's `new` verb and overflow (the fixture workspace is foreign), the
     // conversation list with its row, the balls section + Config entry, the
     // composer (message-targeted — an agent is focused), the activity chip,
     // and the budget-spent header.
