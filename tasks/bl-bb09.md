@@ -1,7 +1,7 @@
 +++
 title = "AGENTS.md rule 6 records a lernie pin two releases stale: '=0.0.3' where Cargo.toml has '=0.0.6'"
 created = 1786513158
-updated = 1786683124
+updated = 1786683152
 claimant = "Dredge"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -41,3 +41,11 @@ Each was true when written. That is the point: restating is the defect, not care
 So for this ball: **do not just correct =0.0.3 to =0.0.6.** That re-arms the same trap for the next bump. Name the pin discipline in rule 6 and cite Cargo.toml as the authority for the numbers, exactly as the body already proposes. A rule that says 'the pins are exact, lockfile-fixed, and live in Cargo.toml' stays true forever; a rule that lists them is stale on the next publish.
 
 Worth a sweep while in there: any other doc line that enumerates something a file owns (module lists, gesture names, provider rows, version numbers) is a candidate for the same treatment.
+
+---
+
+Premise re-verified at HEAD 41231aae: AGENTS.md rule 6 no longer restates any version — the publication-audit commit 4dca48ef already replaced the '=0.0.3' figures with '`Cargo.toml` is the pin authority and no version is restated here'. Cargo.toml now pins lernie =0.0.8 (balls =0.5.9, brazen =0.0.5 unchanged), so a correct-the-number fix would already have gone stale twice; the pointer form held.
+
+What was still live in the same paragraph is the SAME disease one clause over: rule 6 said 'three transitive advisories are ignored with recorded reasons (each unreachable, fixable only by bumping the eframe 0.29 stack)' while deny.toml now ignores exactly ONE (RUSTSEC-2026-0192, ttf-parser unmaintained, whose own note says 'No safe upgrade is available' — not an eframe bump). RUSTSEC-2026-0194/-0195 were dropped when wayland-scanner 0.31.11 moved to quick-xml 0.41. Applied the bl-4a22 precedent: rule 6 now names the discipline ('ignored only with a reason recorded beside the entry') and cites deny.toml as the authority for which ones and why.
+
+Left alone deliberately: DESIGN lines like 'Pinned lernie (=0.0.8) has no target-repo concept' and VISION's 'in the pin since 0.0.6' are claims ABOUT a specific version's behaviour/provenance, not restatements of the current pin — stripping the number destroys the meaning. docs/CLAUDE_CODE_GAP_ANALYSIS.md's 'reconciled through ... lernie 0.0.3' header is a dated evidence snapshot, likewise provenance.
