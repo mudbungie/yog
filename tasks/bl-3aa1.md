@@ -1,7 +1,7 @@
 +++
 title = "activity and inbox rows elide the informative tail of a path or agent id and keep the invariant prefix, so every row scans as the same string"
 created = 1786163347
-updated = 1786683785
+updated = 1786683870
 claimant = "Corbel"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
@@ -61,3 +61,17 @@ Merge current main, then close. **No separate `make check`** — `bl close` runs
 ---
 
 Prior work on this ball is STRANDED BY THE PUBLICATION MIGRATION (bl-4f96) and does not travel to the public repository. `work/bl-3aa1` (tip 2d64a162, a merge of main over 4d05c94a; 9 files, +407/-144, including 166 lines of new tests in src/opslog/rows/tests.rs) had its delivery worktree already gone. It merges into main cleanly EXCEPT `docs/DESIGN.md` — bl-2368 rewrote that file underneath it; src/inboxview/mod.rs, src/lib.rs, src/nav/convs.rs, src/opslog/rows.rs and src/shell/acceptance/naming.rs all auto-merge. Resolving the doc is this ball's work, so the branch stays in the PRIVATE ARCHIVE repository (mudbungie/yog-private-archive, branch `work/bl-3aa1`). Claim from a fresh worktree; fetch the archive if you want the earlier attempt.
+
+---
+
+CORRECTION — the archive repository named in the comment above NO LONGER EXISTS. `mudbungie/yog-private-archive` was deleted on the operator's instruction (2026-08-13); there is no GitHub copy of the pre-publication history any more.
+
+The earlier attempt on this ball survives in ONE place, a local bundle:
+
+    /home/u/yog-prepublication-20260813.bundle
+
+Verified complete before the delete (`git bundle verify`: 'the bundle records a complete history'). To read the old attempt back:
+
+    git fetch ~/yog-prepublication-20260813.bundle 'refs/remotes/archive/work/bl-3aa1:refs/heads/old-bl-3aa1'
+
+It merges into main cleanly except `docs/DESIGN.md`, as the comment above records. Nothing about this changes how to work the ball: claim it and start from a fresh worktree. The bundle is an option, not a dependency — and it is on one machine with no second copy, so treat it as such.
