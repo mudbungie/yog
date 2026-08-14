@@ -12,8 +12,8 @@
 use super::identity::mint_conversation;
 use super::{Prepared, StartError, on_mint};
 use crate::cli_outbound::Cli;
-use crate::names::Rng;
 use crate::opslog::{self, DETACHED_EXIT, OpEntry};
+use lernie::mint::Rng;
 use std::io;
 use std::path::Path;
 
@@ -59,7 +59,7 @@ pub fn execute_prompt(
     prepared: &Prepared,
     goal: &str,
     occupied: &[String],
-    rng: &mut dyn Rng,
+    rng: &dyn Rng,
 ) -> Result<String, StartError> {
     let conversation = on_mint(
         mint_conversation(occupied, rng),

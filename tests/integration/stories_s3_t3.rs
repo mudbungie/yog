@@ -6,10 +6,10 @@
 #![allow(clippy::unwrap_used)]
 
 use crate::support::Recorder;
+use lernie::mint::SplitMix64;
 use tempfile::tempdir;
 use yog::binding::{work_worktree_path, workspace_path};
 use yog::cli_outbound::Cli;
-use yog::names::SplitMix64;
 use yog::projects::join::JoinState;
 use yog::start::{self, BallSpec, Deps, Payload, StartInputs};
 use yog::world::layout_under;
@@ -77,7 +77,7 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
         &prepared,
         &prepared.goal,
         &[],
-        &mut SplitMix64::from_seed(1),
+        &SplitMix64::from_seed(1),
     )
     .unwrap();
     let inv = lernie.wait(1);

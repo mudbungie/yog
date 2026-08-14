@@ -9,10 +9,11 @@
 #![allow(clippy::unwrap_used)]
 
 use crate::support::Recorder;
+use lernie::mint::SplitMix64;
 use tempfile::tempdir;
 use yog::binding::{names_root, workspace_path};
 use yog::cli_outbound::Cli;
-use yog::names::{DEFAULT_NAME, SplitMix64};
+use yog::names::DEFAULT_NAME;
 use yog::start::{self, DETACHED_EXIT, Deps, Payload, StartInputs};
 
 #[test]
@@ -40,7 +41,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     };
 
     // Pre-submit: the greyed name prediction, a pure read (nothing spawned yet).
-    let composer = start::preview(&inputs, &mut SplitMix64::from_seed(7));
+    let composer = start::preview(&inputs, &SplitMix64::from_seed(7));
     assert!(composer.preview.starts_with("will be named "));
     assert_eq!(
         bl_rec.invocations().len(),
@@ -67,7 +68,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
         &prepared,
         "make me a plan",
         &[],
-        &mut SplitMix64::from_seed(7),
+        &SplitMix64::from_seed(7),
     )
     .unwrap();
 

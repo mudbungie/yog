@@ -11,7 +11,7 @@ use crate::start::{identity_preview, parse_identity_stamp, strip_identity_stamp}
 /// its wording must not read as one, and it still instructs nothing (§16.7 W9).
 #[test]
 fn the_preview_predicts_the_name_and_is_not_a_goal_line() {
-    let line = identity_preview(&[], &mut super::rng());
+    let line = identity_preview(&[], &super::rng());
     let name = line.strip_prefix("will be named ").expect("the prediction");
     assert!(!name.is_empty() && !name.contains(char::is_whitespace));
     assert!(
@@ -66,8 +66,31 @@ fn strip_identity_stamp_gives_back_the_payload_the_stamp_was_prepended_to() {
 /// wear (§3.3) — the occupied set is per-workspace, and nothing wider.
 #[test]
 fn mint_conversation_skips_the_workspaces_occupied_names() {
-    let first = mint_conversation(&[], &mut super::rng()).unwrap();
+    let first = mint_conversation(&[], &super::rng()).unwrap();
     assert!(!first.contains('-'), "one word, no compound (bl-d12f)");
-    let second = mint_conversation(std::slice::from_ref(&first), &mut super::rng()).unwrap();
+    let second = mint_conversation(std::slice::from_ref(&first), &super::rng()).unwrap();
     assert_ne!(second, first, "an occupied name is scanned past");
+}
+
+/// **Preview parity** (§3.3, bl-cd38): the composer's prediction and the fire's
+/// mint are the *same function* — `lernie::mint::mint`, drawn through the crate
+/// yog links rather than a second list of yog's own. Same seed, same occupied
+/// set, same word, at both altitudes; and calling the crate directly with those
+/// inputs lands the same word again, which is what says yog kept no draw of its
+/// own. This is the assertion a re-grown local wordlist would fail.
+#[test]
+fn preview_and_fire_draw_the_one_lernie_mint() {
+    let occupied = ["ash".to_owned(), "bay".to_owned()];
+    let fired = mint_conversation(&occupied, &super::rng()).unwrap();
+    assert_eq!(
+        identity_preview(&occupied, &super::rng()),
+        format!("will be named {fired}"),
+        "the prediction names the word the fire mints"
+    );
+    assert_eq!(
+        lernie::mint::mint(&super::rng(), &occupied.iter().cloned().collect()).unwrap(),
+        fired,
+        "and that word is the crate's own draw — yog holds no second list"
+    );
+    assert!(!occupied.contains(&fired));
 }

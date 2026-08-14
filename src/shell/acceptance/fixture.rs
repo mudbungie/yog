@@ -28,14 +28,16 @@ use tempfile::{TempDir, tempdir};
 /// dodging it, and a collision would be a reproducible failure rather than a
 /// one-in-ten flake. Arbitrary but not accidental: this value's word shares no
 /// substring with any needle the suite searches for.
-pub(super) const MINT_SEED: u64 = 0xcbb8;
+pub(super) const MINT_SEED: u64 = 0xc0df;
 
 /// The word [`MINT_SEED`]'s one draw (§3.3 mints on a single draw) yields
 /// against an empty occupied set — what every acceptance world's opening
-/// preview paints. Pinned in `mint_seed.rs`, so a wordlist edit that moves it
-/// fails *there*, naming the cause, instead of surfacing as a stray needle
-/// collision somewhere else in the suite.
-pub(super) const MINTED_FIRST: &str = "saddlebag";
+/// preview paints. The pool is **lernie's** since bl-cd38 (yog deleted its own
+/// list and draws through [`lernie::mint`]), so this pair is also the seam
+/// check on that consumption: a corpus change in the crate moves it. Pinned in
+/// `mint_seed.rs`, so such a change fails *there*, naming the cause, instead of
+/// surfacing as a stray needle collision somewhere else in the suite.
+pub(super) const MINTED_FIRST: &str = "metronome";
 
 /// A `lernie` whose `new` authors the workspace the real one does (ARCH §2.2);
 /// every other verb exits 0. Written executable into `dir`. Shared by every

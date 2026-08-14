@@ -53,7 +53,7 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
         &prepared("cobalt-gecko", cwd, &ws),
         "do it",
         &[],
-        &mut super::rng(),
+        &super::rng(),
     )
     .unwrap();
 
@@ -115,7 +115,7 @@ fn prompt_routes_the_drivers_stderr_to_its_per_spawn_sink() {
         &prepared("n", w.balls.path(), &ws),
         "g",
         &[],
-        &mut super::rng(),
+        &super::rng(),
     )
     .unwrap();
     assert_eq!(std::fs::read_to_string(&fifo).unwrap(), "done");
@@ -149,7 +149,7 @@ fn prompt_clips_a_large_logged_goal() {
         &prepared("n", w.balls.path(), &ws),
         &big,
         &[],
-        &mut super::rng(),
+        &super::rng(),
     )
     .unwrap();
     let entry = &w.ops()[0];
@@ -179,7 +179,7 @@ fn prompt_logs_the_spawn_failure_and_returns_err() {
         &prepared("n", w.balls.path(), &ws),
         "g",
         &[],
-        &mut super::rng(),
+        &super::rng(),
     )
     .is_err();
     assert!(err, "a missing binary is surfaced");
@@ -212,7 +212,7 @@ fn a_nonexistent_work_directory_logs_failed_to_spawn_not_a_handoff() {
         &prepared("n", &missing, &ws),
         "g",
         &[],
-        &mut super::rng(),
+        &super::rng(),
     )
     .is_err();
     assert!(err, "a bad cwd is surfaced");

@@ -16,9 +16,9 @@
 use crate::actions::verbs::{self, Outcome, log_step_failure};
 use crate::binding::work_worktree_path;
 use crate::cli_outbound::Cli;
-use crate::names::MintError;
 use crate::opslog::Origin;
 use crate::world::seed;
+use lernie::mint::MintError;
 use std::io;
 use std::path::{Path, PathBuf};
 

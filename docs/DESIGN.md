@@ -70,10 +70,10 @@ nowhere in yog code or UI. yog's vocabulary, exhaustively:
 | **project** | A repo path with a balls clone: one entry under `$XDG_STATE_HOME/balls/clones/<pct-enc-path>/`, percent-decoded | balls |
 | **ball** | A task: `tasks/<id>.md` in a project's store, read in-process through the linked balls crate (`reads::Catalog`, §16.7 W8); the closed listing alone is still `bl list -s closed --json` | balls |
 | **workspace** | A lernie workspace: a directory containing `repo.git`; yog-started workspaces live at `$XDG_DATA_HOME/yog/workspaces/<name>/` (§3.1) | lernie (contents), yog (location) |
-| **name** | Two names at two altitudes: a **workspace name** is operator-chosen at creation (validated shape, §3.1) — the sphere wall's label, the dir leaf, **and** the claimant stamped on every ball claim the workspace makes (§3.1, §3.2); a **conversation name** is minted (a single word from an embedded wordlist, bl-d12f) — yog draws it at preview and at fire and passes it via `--name` (§3.3, bl-08f2), **today from yog's own `src/names/words.txt`**, because the bl-aca4 ruling that moves the mint into lernie is not yet consumable at the pinned lernie (§3.3's "state of the move") — the context window's own identity, durably lernie's `name` blob beside `goal.md` | lernie (the stored fact); yog (the mint, the fire-time draw + preview) — the mint moves to lernie at bl-cd38 |
+| **name** | Two names at two altitudes: a **workspace name** is operator-chosen at creation (validated shape, §3.1) — the sphere wall's label, the dir leaf, **and** the claimant stamped on every ball claim the workspace makes (§3.1, §3.2); a **conversation name** is minted (a single word from an embedded wordlist, bl-d12f) — yog draws it at preview and at fire and passes it via `--name` (§3.3, bl-08f2), **from `lernie::mint`'s embedded list** since bl-cd38 consumed the bl-aca4 ruling (§3.3's "state of the move") — the context window's own identity, durably lernie's `name` blob beside `goal.md` | lernie (the stored fact, and the mint); yog (the seed, the fire-time draw + preview) |
 | **binding** | The derived association between a ball and a workspace: ball claimant = workspace name (§3.2). Balls-owned metadata, explicitly late-mutable via `bl claim`/`bl unclaim` — never a yog-stored fact | balls (claimant field); yog joins |
 | **agent** | `agents/<id>` branch; the id is a chain of `<ts>-<short>` descent segments (ARCH §2.3 — two hyphen-free tokens each), which is where the hierarchy lives | lernie |
-| **conversation** | A root agent plus its descent subtree — the §11 organizing unit. Its **identifier** is the root agent id; its **name** is a minted wordlist label lernie stores on the root's branch (§3.3, reversing bl-68d9's no-name rule) — minted for agent self-identity, rendered as the row title | lernie (the agents, the stored name); yog (the mint today, the derived view) |
+| **conversation** | A root agent plus its descent subtree — the §11 organizing unit. Its **identifier** is the root agent id; its **name** is a minted wordlist label lernie stores on the root's branch (§3.3, reversing bl-68d9's no-name rule) — minted for agent self-identity, rendered as the row title | lernie (the agents, the stored name, the mint); yog (the seed and the derived view) |
 | **exchange** | lernie's presentational span (ARCH §2.4: root agent's history between a user message and the terminal response) | lernie |
 | **attention** | A derived per-agent predicate (§6): unacked notify / stop / budget / conflict, or pending mail with no driver | yog (pure function) |
 | **seen / pin / collapse** | The operator's durable, converging UI facts (§4.1) | yog (`ui.json`) |
@@ -412,14 +412,15 @@ stays at the workspace altitude: §8.1's order claims before the root exists
 and never reads the root id back (§3.2); a conversation's name never becomes
 a claimant.
 
-The mint — **yog's `src/names`, today**; the bl-aca4 ruling below moves it into
-lernie and is mid-flight (see "state of the move"): a **single word** from the
-embedded wordlist (bl-d12f, retiring the two-word compound), a pure function
-over an injected RNG and an occupied set. On collision with the occupied set the
-candidate is discarded and the next word tried — the retry is bounded by the
-wordlist itself (one wraparound scan), erroring loudly on an exhausted pool
-rather than looping; the ~7.4k-word list keeps collisions rare at normal
-workspace sizes. Yog calls that one function at preview and at fire.
+The mint — **lernie's `lernie::mint`** since bl-aca4, consumed by bl-cd38 (see
+"state of the move"): a **single word** from a wordlist embedded in that crate
+(bl-d12f, retiring the two-word compound), a pure function over an injected RNG
+and an occupied set. On collision with the occupied set the candidate is
+discarded and the next word tried — the retry is bounded by the wordlist itself
+(one wraparound scan), erroring loudly on an exhausted pool rather than
+looping. The pool is 541 words, sized against the occupied set it actually
+races (one workspace's living agents — tens, recycled by retention), not
+against a birthday bound. Yog calls that one function at preview and at fire.
 
 - **The occupied set is per-workspace, and already derived (bl-08f2):** the
   names the target workspace's living agents wear, read off the same name
@@ -502,10 +503,10 @@ creatable one.
   `mint(rng, occupied) → name | exhausted`: RNG injected as a trait (tests
   script the draw; production seeds from entropy), the wordlist an
   implementation detail *behind* the function, never an exported surface.
-- **Yog is to become a consumer, not a second minter:** yog deletes its local
+- **Yog is a consumer, not a second minter:** yog deleted its local
   mint (wordlist and all; `src/names` keeps only the §3.1 workspace-name
   validation) and calls lernie's through the crate it already links (the
-  §16.7 multiplex proves the linkage). **This half has not landed** — see
+  §16.7 multiplex proves the linkage). **Landed at bl-cd38** — see
   "state of the move" below. Everything operator-facing is
   unchanged: the composer still previews the predicted name before anything
   spawns (I7), the seed lives exactly as long as the prediction it backs
@@ -544,17 +545,23 @@ creatable one.
   shape) and stays **derivable — no depth field anywhere**: not in a name,
   not in a blob, not in a schema.
 
-**State of the move (as of this writing).** The bl-aca4 ruling is a ruling, not
-a landing, and the tree does not yet obey its second half. Lernie's clean-room
-mint has landed upstream but is **unpublished**, so the exact-pinned `lernie`
-yog links exposes no mint to call; `src/names/mod.rs` therefore still holds the
-wordlist (`src/names/words.txt`), the `Rng` trait, `SplitMix64` and `mint`, and
-every yog preview and fire draws from them. **bl-cd38 is the consuming ball**:
-it bumps the pin to a lernie that exports the mint, routes yog's preview and
-fire through it, and deletes `src/names/words.txt` — at which point the
-paragraphs above become descriptions of the tree rather than of the plan. Until
-then, read every "the mint lives in lernie" sentence in this section as the
-ruling's destination, and this paragraph as where it actually is.
+**State of the move: landed (bl-cd38, on lernie 0.0.8).** The paragraphs above
+describe the tree, not a plan. Yog's wordlist and draw are **deleted** —
+`src/names/words.txt` is gone, and `src/names/mod.rs` holds the §3.1
+workspace-name validation and nothing else. Preview
+([`start::identity_preview`]) and fire ([`start::prompt::execute_prompt`]) both
+call `lernie::mint::mint(rng, occupied)` over the crate's `Rng` trait and its
+`SplitMix64`; the wordlist stays behind the function, unexported, per lernie
+ARCHITECTURE §3.4. Yog's own seat in the seam is the **seed**: `shell::clock`'s
+`entropy_seed` is still the one home for "now" and feeds
+`SplitMix64::from_seed`, which is what makes the §3.3 preview and its fire
+agree and what bl-28ba's per-prediction seed lifetime is expressed in. The
+corpus that lands is lernie's clean-room 541-word list (lernie bl-b59c), which
+replaced an EFF-derived CC BY 4.0 list — the licence and the hostile-word
+problem left the tree with yog's copy of it, rather than moving into lernie.
+The acceptance fixture pins the pair `MINT_SEED`/`MINTED_FIRST`, so a corpus
+change in the crate fails loudly at `shell::acceptance::mint_seed` and names
+its cause.
 
 **Scope: every creation names; the ladder names whatever lernie names.**
 Since bl-aca4 no creation path yields a nameless agent — a dispatch child, a
@@ -643,8 +650,7 @@ identity, the model reads it from lernie's assembled context, the operator
 never types it). The composer *previews* the predicted name greyed above the
 box (`will be named <name>` — worded as the prediction it is, never as a goal
 line) — the mint is a pure read (the target workspace's derived name facts +
-RNG, drawn today from yog's own `src/names` and from the lernie crate's mint
-once bl-cd38 lands the bl-aca4 move), so the predicted
+RNG, drawn through `lernie::mint` since bl-cd38 landed the bl-aca4 move), so the predicted
 name renders before submit with
 nothing spawned (I7 intact) — and on the rare lost race (another instance
 took the name between preview and Enter) the mint re-derives and passes
@@ -7003,7 +7009,7 @@ beside `main.rs`.
 | `src/monitor/{mod,arming,verdict,row}.rs` | 78+200+132+213 | the VISION §4.9 alignment monitor's data half: the anti-reinvention law stated where it must hold; the `cadence.yaml` `monitor:` block (arming, the model pin, the policy file it names) and the seed that file starts from; the three-valued verdict and the one reading of a model's reply; and the ops row that is audit trail, level-trigger memory and tuning dataset at once — with `latest`/`worst`, the queries that make a standing verdict a derivation rather than a field |
 | `src/monitor/{window,check,sentry}.rs` | 128+178+191 | its acting half: the evidence one check reads (`goal.md` verbatim + the transcript delta derived from the last-checked sha by `git diff`, tail-clipped); the one bounded tool-less call through the embedded brazen adapter (§16.7 W10) behind a `Caller` seam, and the NDJSON read that takes the verdict and the provider's own counters; and the level trigger and its thread (§7.2) — one check per tick, only when a tip moved, retry by re-firing |
 | `src/multiplex{.rs,/bl.rs,/lernie.rs,/help.rs,/landing.rs}` | 269+118+164+142+130 | the §16.7 namespace arms: each embedded crate's verb surface, dispatched from `main.rs` — plus the router's namespace table; `help` (bl-52ed): the argv seat's whole command table, the top-level roster rendered from it, every per-command page, and the discovery probe the `bl`/`bz` arms answer world-free (§8.5's every-command-answers-help rule at the argv surface); and `landing` (bl-7e54): the §16.3 repair the `bl` arm converges on the way in, re-deriving a pre-nesting landing's plugin schedule from balls' own seed |
-| `src/names/mod.rs` (+ `words.txt`) | 207 | the §3.1 workspace-name validation, and — still, until bl-cd38 consumes an unpublished lernie — the §3.3 conversation mint itself: the embedded wordlist, the injected-`Rng` seam and the bounded wraparound scan (§3.3 "state of the move"; bl-aca4 rules the mint into lernie, and this row is what that ball deletes) |
+| `src/names/mod.rs` | 101 | the §3.1 workspace-name validation, and only that. The §3.3 conversation mint left with bl-cd38 (bl-aca4's ruling, consumed at lernie 0.0.8): the wordlist, the injected-`Rng` seam and the bounded wraparound scan are `lernie::mint`'s, and `words.txt` is deleted |
 | `src/nav/{mod,tabs,convs,convs/row,convs/expand,convs/doing,convs/flight,convs/group,menu}.rs` | 38+171+254+243+191+117+212+133+235 | the §11 altitude-0 view-models: tab bar + `Kind` marks, conversation list + the §3.3 display ladder + the header's derived when-seat (bl-16da, assembled through the shared `ui_state::format_iso8601` — bl-61db) + the §3.5 ball overlay, the §5.1 #28b per-agent `Doing` and the §11 live mark's seat roster (`convs/doing`, bl-b768 — the finest live fact, which `convs/flight` then *folds* into the #28 class rather than re-reading the snapshot), the #28 live-activity class, its priority **and the bottom strip's characteristics** — including the per-class elapsed each derives from a §5.1 #28a structural start or honestly omits (bl-9dfb), in `convs/row`'s own `age_label` (its own file because all three §11 seats read it, not just the row — bl-905f), the grouped-by-ball partition, the context-menu seat roster; and `ConvRow::verdict`, the VISION §4.9 standing verdict derived per build from the published ops tail (bl-8da1). **`convs/expand` is the unfold** (bl-fa82): the visible-row flatten over `git_tree::descent_order` given the shell's expanded set — the jsonview `flatten`'s shape, one altitude out — plus the two pure walks the §11 keyboard rides (`step` over the visible rows, `parent_of` read off their depths) and the ancestor chain a jump reveals. `convs/row`'s builder generalized with it: it projects **any** member's subtree slice, so the root-only build is one call per depth-0 subtree rather than the only shape it knew |
 | `src/opslog/{mod,line,rows,exit,origin,live,detached,operator}.rs` | 272+168+260+142+106+166+114+131 | `ops.jsonl` append/tail + the sentinels (§4.2), the ≤4096 capper, OpRow's shape + its human-timestamp leading column (bl-61db) and collapsed summary (bl-0bf9), `exit` the one reading of the `exit` field — `ExitKind` and the `failed`/`drift`/`exit_label`/`detached` half of OpRow that asks it (bl-afa9, bl-8433), `origin` the §7.3 attribution — which surface an op came from, and the one thing a banner filters on so a failure renders once and on its own seat (bl-48f8) — the §6 retirement projection + activity summary + the `Detached` outcome (bl-8433), the stderr-sink fold (§8.1), `operator` the two lines the operator writes: the ack watermark every alarm derivation reads past and the clear that ends a trail by logging itself as the next one's first row (bl-c417) |
 | `src/paint_probe.rs` | 293 | the ONE headless egui paint harness (`collect` + `screen`/`input`) every render test drives, incl. the settled small-screen frame the §11 tail idiom is read on — as text (*what* is on screen), as positioned galleys (*where* it sits, bl-8c13), or as rect fills (*what hue* a glyphless mark painted — the §11 role stripes, bl-3acb). The text it reports is the galley's **glyphs**, row by row, not `Galley::text()` (bl-bc06): the text that went in survives truncation, so a dump read that way answers `contains("Login")` with yes about a button rendering a bare `…` — the one defect the paint layer is the only witness for. `Seen` also carries the run's **ink** (bl-7654) — its layout section's colour, or the shape's `fallback_color` where that section defers to it, which is what `Ui::set_opacity` dims — so "is this seat faded?" is a question of the frame rather than a guess about which widget drew it, and the §11 solidity is readable at the paint layer the way a role stripe's hue already was |
