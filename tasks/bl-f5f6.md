@@ -1,7 +1,8 @@
 +++
 title = "REMOTE §9.3 — name-based addressing: PathBuf leaves the boundary types; the wire spelling is the name, resolved at the dispatch chokepoint"
 created = 1786683972
-updated = 1786683972
+updated = 1786686537
+claimant = "Parrel"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
