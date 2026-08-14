@@ -1,7 +1,8 @@
 +++
 title = "run_s7's S6 stop beat asks an already-settled conversation to stop, so x correctly dispatches nothing — a fixture/ordering defect, NOT the wall and NOT the selection"
 created = 1786515941
-updated = 1786601813
+updated = 1786683366
+claimant = "Ingot"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["drive"]
