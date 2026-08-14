@@ -10,7 +10,7 @@ use crate::start::{BallSpec, Payload, Prepared};
 use serde_json::{Map, Value, json};
 use std::path::Path;
 
-use super::{path_of, str_of};
+use super::{opt_path_of, path_of, str_of};
 
 /// Encode the §3.4 payload rung. `rung` is the discriminant; each rung carries
 /// exactly its own inputs.
@@ -79,7 +79,10 @@ pub(crate) fn encode_prepared(p: &Prepared) -> Value {
     json!({
         "name": p.name,
         "workspace": p.workspace.to_string_lossy(),
-        "cwd": p.cwd.to_string_lossy(),
+        // The §3.3 typed binding (bl-6654). `null` is the bare rung's "bind
+        // nothing" — a real value of the field, not an omission, so a reply
+        // deposits back as the same gesture it came from.
+        "binding": p.binding.as_ref().map(|b| b.to_string_lossy()),
         "goal": p.goal,
         "origin": origin_token(p.origin),
     })
@@ -90,7 +93,7 @@ pub(crate) fn decode_prepared(v: &Value) -> Result<Prepared, String> {
     Ok(Prepared {
         name: str_of(obj, "name")?,
         workspace: path_of(obj, "workspace")?,
-        cwd: path_of(obj, "cwd")?,
+        binding: opt_path_of(obj, "binding")?,
         goal: str_of(obj, "goal")?,
         origin: parse_origin(&str_of(obj, "origin")?)?,
     })

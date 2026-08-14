@@ -53,7 +53,7 @@ fn a_pending_start_draft_replaces_the_composer_and_cancel_restores_it() {
     world.state.start.pending = Some(Prepared {
         name: "ws".to_owned(),
         workspace: ws.clone(),
-        cwd: ws,
+        binding: None,
         goal: BALL_GOAL.to_owned(),
         origin: crate::opslog::Origin::Balls,
     });

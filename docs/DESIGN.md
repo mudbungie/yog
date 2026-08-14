@@ -348,29 +348,43 @@ the ball; the `Ball <id>:` line in `goal.md`), stored nowhere by yog (I2).
 
 ### 3.3 Work-target and conversation identity ride in the goal — through an editable composer
 
-Pinned lernie (`=0.0.8`) has no target-repo concept, and its tools do **not**
-inherit the driver's cwd: the executor runs every tool subprocess in the
-agent's working directory — the agent worktree by default, movable only by
-the agent's own `cd` built-in, which writes the id-scoped mark
-(`refs/lernie/cwd/<agent-id>`) the executor reads back at every spawn. The
-pin now carries a creation-time seed for that mark (`--cwd` on `lernie
-prompt`/`lernie dispatch`, upstream bl-d0b4), but **no yog surface passes
-it** — that is bl-6654's delivery — so yog's `current_dir` still reaches only
-the initial `lernie prompt` process and the work target is **model-facing
-content only** today: the composed goal embeds its absolute path, and the
-model must use it explicitly. Edits there land in balls' external project
-worktree, outside lernie's agent branch, commit-per-side-effect history,
-child inheritance, bundle, and replay. This is the verified two-Git limit,
-not a target binding. **Ruled (bl-2b8c — VISION §4.10 is the
-cross-suite authority):** the operative channel becomes that same mark,
-seeded at creation (lernie bl-d0b4) and passed typed by the fire (bl-6654 —
-ball rung: the claim-derived `work/<id>` worktree; path rung: the directory
-box's value; bare rung: nothing), with per-step observed project OIDs
-joining project commits to agent history by pointer. The goal keeps payload
-(ball title and body — and the `Ball <id>:` headline stays, as the §3.2
-conversation→ball join) and loses the location preamble; attempt isolation
-and delivery ride balls (bl-a1a4/bl-4eac, consumed by bl-8746). Until those
-pins land, the prose preamble below is the shipped interim.
+Lernie has no target-repo concept, and its tools do **not** inherit the
+driver's cwd: the executor runs every tool subprocess in the agent's working
+directory — the agent worktree by default, movable only by the agent's own `cd`
+built-in, which writes the id-scoped mark (`refs/lernie/cwd/<agent-id>`) the
+executor reads back at every spawn. **The work target is a typed parameter
+(bl-6654, landed on lernie `=0.0.8`):** the fire passes the rung's binding as
+`lernie prompt --cwd <path>` (upstream bl-d0b4), which seeds that mark at
+creation — so *every* tool step of every later turn runs at the target, not
+just the initial process. One channel, per rung: **ball** binds the
+claim-derived `work/<id>` worktree, **path** binds the directory box's value,
+**bare** binds nothing and lets lernie's own default (the agent worktree)
+stand. Nothing is inherited by children.
+
+Two weaker spellings were retired with it, because a fact with three channels
+is three facts:
+
+- **The goal-prose preamble is gone.** The ball prefill used to trail its body
+  with "The project repository checkout for this work is the git worktree at:
+  …", an absolute path the *model* had to read and obey — a location channel
+  made of content. The goal is payload now: the ball's title and body, and the
+  `Ball <id>:` headline, which stays because it is the §3.2 conversation→ball
+  join, not a location. (The path rung's `Working directory: <dir>` first line
+  stays too: it is that rung's headline — the display ladder's rung two, §3.3 —
+  and the operator typed it.)
+- **The per-target `current_dir` is gone.** Yog set the initial `lernie prompt`
+  process's directory per rung. It reached that one process and no tool step,
+  which made it look like a binding while binding nothing; DESIGN recorded it
+  as misleading redundancy. `Prepared` carries no cwd field at all now — the
+  detached driver simply stands in the workspace it drives.
+
+Edits at the target still land in balls' external project worktree, outside
+lernie's agent branch, commit-per-side-effect history, child inheritance,
+bundle, and replay. That is the verified two-Git limit, and the binding does
+not dissolve it: **ruled (bl-2b8c — VISION §4.10 is the cross-suite
+authority)**, per-step observed project OIDs join project commits to agent
+history by pointer, and attempt isolation and delivery ride balls
+(bl-a1a4/bl-4eac, consumed by bl-8746).
 
 The start flow (§3.4) opens a **prompt composer prefilled** per payload rung.
 **The workspace stamp is the harness's, not the model's:** every
@@ -628,17 +642,14 @@ that takes no `--as` is untouched. One rule, no per-verb flag table.
 
 The path rung appends a target preamble whose first line is the headline —
 `Working directory: <dir>`, the directory verbatim — followed by the
-work-there-by-absolute-path sentence; the ball rung composes ball title, ball
-body verbatim, and the worktree preamble:
+work-there-by-absolute-path sentence; the ball rung composes the header and the
+ball body verbatim, and nothing else (bl-6654 retired the worktree preamble;
+the path is the typed `--cwd` binding now, not prose):
 
 ```
 Ball <id>: <title>
 
 <ball body verbatim>
-
-The project repository checkout for this work is the git worktree at:
-<abs worktree path>   (branch work/<id> of <project-path>)
-Do all repository work there, by absolute path. Do not rely on the current directory.
 ```
 
 **Transparency, scoped by ownership:**
@@ -666,13 +677,14 @@ first-word-major, so the walk paid out siblings (`recite-a`, `recite-b`,
 refused or failed launch minted nothing and keeps its seed. The
 binding mechanic stays transparent, and no goal-template config file exists
 (the visible editable prefill is the severable version; deleting nothing
-changes no code path). Yog also sets `current_dir` per the §3.4 cwd column on
-the initial spawn, but that is **not** a second work-target mechanism in
-pinned lernie: every later tool cwd is the agent's own working directory
-(the agent worktree, unless the agent's `cd` moved its mark). bl-2b8c ruled
-the resolution: the durable operative channel is the creation-seeded mark
-(VISION §4.10 item 2), and bl-6654 retires the per-target `current_dir`
-when it lands — one channel, no misleading redundancy.
+changes no code path). Yog sets **no** per-target `current_dir` on the initial
+spawn any more (bl-6654): it was never a work-target mechanism — every later
+tool cwd is the agent's own working directory (the agent worktree, unless its
+`cd` or the `--cwd` seed moved the mark) — so a second, weaker spelling of the
+target is deleted rather than kept beside the real one. `Prepared` carries no
+cwd field; the detached driver stands in the workspace it drives, the same for
+every rung, and the creation-seeded mark (VISION §4.10 item 2) is the one
+channel — no misleading redundancy.
 
 The worktree path is never stored (balls arch §11: "computed, never stored");
 it is recomputed by the bl-delivery formula
@@ -691,11 +703,11 @@ is the empty case of the general path**, never a wizard or a concept the new
 user meets. *What* it carries: the payload ladder, each rung the one below
 plus inputs.
 
-| Payload rung | Input | Extra steps | Composer prefill (the prefill fires verbatim, bl-6920; the name is previewed grey and passed via `--name`, §3.3) | Initial prompt-process cwd |
+| Payload rung | Input | Extra steps | Composer prefill (the prefill fires verbatim, bl-6920; the name is previewed grey and passed via `--name`, §3.3) | Typed work target (`--cwd`, §3.3) |
 |---|---|---|---|---|
-| **bare** | — | (none) | (none — the empty composer) | `~` |
-| **path** | a directory | (none) | target preamble, path verbatim | the path |
-| **ball** | a ball, picked or freshly created | `bl claim <id> --as <name>` | target preamble + ball title + body + worktree preamble | the work worktree |
+| **bare** | — | (none) | (none — the empty composer) | (none — lernie's default, the agent worktree) |
+| **path** | a directory | (none) | target preamble, path verbatim | the directory |
+| **ball** | a ball, picked or freshly created | `bl claim <id> --as <name>` | `Ball <id>: <title>` + body | the work worktree |
 
 - **Creating a workspace is the rare, deliberate verb** (New workspace,
   §11): raising a sphere wall — a client, corporate vs. personal — not a
@@ -740,13 +752,11 @@ plus inputs.
   a second pending concept beside it: the same value names the conversation,
   holds the goal, and is retired by the one predicate that also spends the
   focus.
-- The path rung's directory need **not** be a bl-primed project — it is only
-  the initial prompt-process cwd and model-facing intended target today, and
-  becomes the typed working-directory binding at fire once bl-6654 lands
-  (bl-2b8c's ruling, VISION §4.10 — a path start binds the directory but
-  carries no delivery obligation: no target, no attempts, no delivery).
-  Until that pin, pinned lernie tools still run in lernie's internal agent
-  worktree.
+- The path rung's directory need **not** be a bl-primed project — it is the
+  typed working-directory binding the fire passes as `--cwd` (bl-6654,
+  consuming bl-2b8c's ruling, VISION §4.10), and a path start binds the
+  directory while carrying no delivery obligation: no target, no attempts, no
+  delivery.
 - **The directory is a birth parameter, and it is pre-filled** (bl-7927): an
   editable text box with the default pre-chosen, at the top in the config
   block rather than at the bottom beside the message. Its one carrier is the §11 birth-config block's
@@ -1528,7 +1538,7 @@ not a special case.
 
 | 33 | A **cohort** — the candidates dispatched from one notch, and the ancestry they share (VISION V2.3, bl-dc0c) | #30's cards, grouped | `rail::cohort::cohorts`, a **pure** grouping of #30 by `provenance_notch` — the birth notch V1.7 reserved as the fan anchor. **Membership is not a fact anybody records.** Firing the fork twice from one mark *is* firing a cohort and firing it once *is* a cohort of one, so there is no fan registry, no fan verb and no winner field to keep: the group is a `group_by` over cards yog already derived. The **common ancestry** is the fork label when every member wears the same one and nothing when they differ — the same fact said once at whichever level owns it, and absence is a value (the columns then say their own). The four side-by-side facts a candidate is judged by need no new derivation either: state is #8's, usage is #16 folded per agent, and the **terminal response** is #10 — `Agent::stream.text` is the latest step's accumulated text re-read every tick, so while a candidate runs it is the live tail and once it settles the same bytes are the last thing it said. A second "terminal response" reader would be two readers of one open file, disagreeing at every moment it matters |
 | 34 | The **fire-time policy** a pinned notch may fork into — the fork points, and the model each role names at each of them (VISION V2.2, bl-dc0c) | #18's config branches + the pinned commit; #17 asked at each; `providers.yaml` from that commit's tree | `fork::choices`. The points are **here** (the pinned commit — a fork carrying the conversation's own history) then every `config/<name>` head (a clean start): one control with two kinds of value, which is VISION V1.3's *"one spawn gesture with one parameter — the fork point"*. Each point's roles are read from the `providers.yaml` of the config commit that will **govern** it — the very file lernie resolves the run against — through §9.4's own `grammar::roles`, so the picker and the fork composer can never disagree about what a config says. **That is what makes the model visible without yog owning a model list**: a role *is* a model binding, and giving an attempt a model no config declares is a config write (§9.4's `PickModel`), not a dispatch flag. A ref whose config yog cannot reach declares no roles and the point paints as offering nothing — a fact about the workspace, never a silence. Memoized per snapshot with the pinned commit in the key (it is `for-each-ref` + a `merge-base` walk + a `git show` per point), never per frame |
-| 35 | **How full a conversation's context is** — the percentage §11's settings rows state per chat (bl-a48b: the context-window percentage is shown per chat) | the **last `Usage` line** of the root agent's **latest** `steps/<root>/<NNN>/response.json`, the model that step's `request.json` names (#16's walk), and the `context_window` §9.2's global `models.yaml` declares for it (#24) | `context::of_conversation`, a pure filter over `Snapshot::bills` — no second disk pass, no stored counter, nothing cached. **Fullness is not spend, and the difference is load-bearing:** #16 sums every counter of every attempt of every step of a whole descent (what exhausts `max_total_tokens`, and what keeps growing after a compaction empties the context), while this is one number off ONE step — so the walk carries two extra columns, the step's own `seq` (making "which is the latest" an in-memory question, exactly as bl-9dd4 made scope one) and its **last** attempt segment's counters (a step retried three times must not read as a context three times its size). **The root's own latest step, never the descent's** — a dispatched child runs its own context in its own tree. **The prompt is `max(input, cache_read + cache_write)`**: brazen's canonical `Usage` is deliberately unnormalized about overlap because its providers disagree — Anthropic reports the three as **disjoint** slices of one prompt while OpenAI's `prompt_tokens` and Google's `promptTokenCount` already **contain** the cached slice beside them — so summing over-states one shape and taking `input_tokens` alone under-states the other by nearly everything (brazen marks Anthropic prompts for caching unconditionally). The maximum is exact where the slice is contained, degrades to plain `input_tokens` where no cache counters are reported at all, and is a **floor** where they are disjoint. It never over-states; normalizing that overlap is brazen's job, not yog's to guess at. **The denominator is the declaration, not a discovery:** brazen serves `Model.context_window` only for the providers that publish one (Google), which is its own empty-set rule — *"a harness hand-configures only what no provider serves"* — and `models.yaml` **is** that hand-configuration, written by the §9.4 picker and edited by the §9.5 form. Reading brazen's cache as well would be two representations of one fact. **No window, no figure** (no step, no model on the step, an undeclared or zero window): the row is absent, never a percentage of a default — the same no-capability-theater rule §3.5's unpriced remainder keeps. The windows ride the snapshot (`Snapshot::windows`), read at boot and on the 15 s full sweep like the ball fetch: one hand-edited world-global file, so a fifth watch root would buy latency nobody can perceive |
+| 35 | **How full a conversation's context is** — the percentage §11's settings rows state per chat (bl-a48b: the context-window percentage is shown per chat) | the **last `Usage` line** of the root agent's **latest** `steps/<root>/<NNN>/response.json`, the model that step's `request.json` names (#16's walk), and the `context_window` §9.2's global `models.yaml` declares for it (#24) | `context::of_conversation`, a pure filter over `Snapshot::bills` — no second disk pass, no stored counter, nothing cached. **Fullness is not spend, and the difference is load-bearing:** #16 sums every counter of every attempt of every step of a whole descent (what exhausts `max_total_tokens`, and what keeps growing after a compaction empties the context), while this is one number off ONE step — so the walk carries two extra columns, the step's own `seq` (making "which is the latest" an in-memory question, exactly as bl-9dd4 made scope one) and its **last** attempt segment's counters (a step retried three times must not read as a context three times its size). **The root's own latest step, never the descent's** — a dispatched child runs its own context in its own tree. **The prompt is `max(input, cache_read + cache_write)`**: brazen's canonical `Usage` is deliberately unnormalized about overlap because its providers disagree — Anthropic reports the three as **disjoint** slices of one prompt while OpenAI's `prompt_tokens` and Google's `promptTokenCount` already **contain** the cached slice beside them — so summing over-states one shape and taking `input_tokens` alone under-states the other by nearly everything (brazen marks Anthropic prompts for caching unconditionally). The maximum is exact where the slice is contained, degrades to plain `input_tokens` where no cache counters are reported at all, and is a **floor** where they are disjoint. It never over-states; normalizing that overlap is brazen's job, not yog's to guess at. **The denominator is the declaration, not a discovery:** brazen serves `Model.context_window` only for the providers that publish one (Google), which is its own empty-set rule — *"a harness hand-configures only what no provider serves"* — and `models.yaml` **is** that hand-configuration, written by the §9.4 picker and edited by the §9.5 form. Reading brazen's cache as well *here* would be two representations of one fact — which is why bl-848f moved the discovery to the WRITE path instead: the picker seeds the declaration from the `Model.context_window` its own roster carried, so the one authority this figure reads starts out true wherever a provider serves the number at all, and this reader still consults nothing but the declaration. **No window, no figure** (no step, no model on the step, an undeclared or zero window): the row is absent, never a percentage of a default — the same no-capability-theater rule §3.5's unpriced remainder keeps. The windows ride the snapshot (`Snapshot::windows`), read at boot and on the 15 s full sweep like the ball fetch: one hand-edited world-global file, so a fifth watch root would buy latency nobody can perceive |
 ### 5.2 Durable-on-disk, yog-owned
 
 Exactly `ui.json` (§4.1), `ops.jsonl` (§4.2), `cadence.yaml` (§7.2, bl-3381 —
@@ -2259,12 +2269,35 @@ loss of a real guarantee, so it is measured rather than assumed:
   below that, because a full sweep re-stamps the snapshot every 15 s even when
   nothing changed, so exceeding two of them means *passes are not completing*,
   not that the world is quiet.
-- A pass that itself takes ≥ the cheap-sweep period writes a `yog-drift late`
-  line (§4.2), attributed to the yog state root with the duration in `stderr`.
-  Everything rendered while it ran was that stale. This is the same
+- A pass that takes ≥ **the period of the sweep it ran** writes a `yog-drift
+  late` line (§4.2), attributed to the yog state root with the duration in
+  `stderr`. Everything rendered while it ran was that stale. This is the same
   instrumentation as the dropped-event kinds below, and for the same reason:
   **drift is divergence between what the frame renders and what is on disk**, and
   a late derivation is one way to get it.
+
+  **Two amendments, both from one storm (bl-4b28).** A 4472-row trail whose
+  4447 rows were this line — one every 15 s, unbroken for a day, burying the
+  operator's entire real history in 25 surviving rows — was not reporting an
+  anomaly. It was reporting the schedule working:
+
+  - *The bound is the pass's own promise, not one bound for every pass.* Every
+    row was a **full** sweep (they arrive on the full-sweep tick, and only
+    there): the pass that re-enumerates, re-fetches every project's balls and
+    re-derives every workspace. In a real workspace — 110 agent branches, a
+    `bl` fetch per project — that costs 2–3 s, and it was being judged against
+    the *cheap* sweep's 2 s, a period it neither owes nor was ever budgeted.
+    A full sweep is now held to the full-sweep period, which is what that
+    longer period is *for*; a cheap pass, and one that swept nothing, still owe
+    the 2 s poll cadence they ride.
+  - *Late is an edge, not a level.* The row is written on the pass that stops
+    keeping cadence and not again until one keeps it — so a permanently-late
+    derivation is one dated event to correlate against what changed, not a
+    restatement per sweep. Nothing records the recovery, because *are passes
+    late now* is already answered, derived and current, by the staleness line
+    above: a state belongs to a query, an event to the trail. The worker holds
+    one bool for the edge (its own observation about its own passes; a second
+    instance holds its own and reports its own).
 - Ingest stays its own thread rather than folding into the worker. An
   *announcement* and a *derivation* are the two halves the drift instrumentation
   compares; one thread doing both makes "disk moved and nothing said so"
@@ -2301,9 +2334,13 @@ strongest available explanation always wins:
 | `Poll` | the 2 s cheap sweep's targeted liveness re-probe | the poll working: no filesystem event exists for a released flock |
 | `Sweep` | the 15 s blanket mark | **nobody announced it — a dropped event** |
 
-A fourth kind carries no mark because no root announced it: `late`, one
-derivation pass exceeding the cadence it promised (above). Same log, same chip,
-same doctrine — evidence that the frame and the disk diverged.
+A fourth kind carries no mark because no root announced it: `late`, the pass on
+which derivation stopped keeping the cadence it promised (above). Same log, same
+chip, same doctrine — evidence that the frame and the disk diverged. It is the
+one kind counted **per run rather than per occurrence**, and that is not an
+exception to the doctrine but the doctrine applied: the other three name a root
+that diverged, of which there can be many; this one names the derivation itself,
+of which there is one, and it either keeps cadence or does not.
 
 **The 15 s full sweep is a deliberate backstop whose catches are alarms, not
 routine.** It stays because residual drop sources are genuinely outside yog's
@@ -3964,18 +4001,30 @@ inert. A role naming an undeclared model **bricks every step in the
 workspace** — the config load fails before the model is ever called. The order
 is chosen so the half that can land alone is the harmless one.
 
-**The two facts brazen does not publish.** `bz --list-models --json` returns
-`{"models":[{"id":…,"default":…}]}` and nothing else — *measured* against the
-operator's live codex credential, not assumed. `models.yaml` requires
-`capabilities` and `context_window` and neither serde-defaults. yog writes them
-as **declared defaults, not discoveries**: `capabilities: []` (claim nothing)
-and one named `context_window` constant, under a generated comment that says so
-and names the §9.2 editor. Defensible because both fields are
-declared-but-unconsumed in lernie today — only `model.provider` and
-`model.model_id` reach a dispatch (`prompt::resolve`, `prompt::dispatch`) — so
-the default is inert rather than a lie about behaviour, and the moment lernie
-starts consuming them the operator's own edit is the authority and yog's line
-was only the seed.
+**What brazen publishes, and what yog declares.** `bz --list-models --json`
+returns `{"models":[{"id":…,"default":…}]}` plus three OPTION-shaped metadata
+keys beside them — `context_window`, `max_output_tokens`, `display_name` —
+each carried only where that provider's list GET served it (Google serves all
+three, Anthropic only `display_name`, OpenAI and Ollama none: brazen's own
+empty-set rule). The codex measurement this section once recorded as "and
+nothing else" measured a row of the last kind; it was never the shape of the
+payload. `models.yaml` requires `capabilities` and `context_window` and neither
+serde-defaults, so the picker writes both — but not the same way (bl-848f):
+
+- **`context_window` is the number the provider served**, taken from the
+  roster the pick was made from, wherever there was one — §9.4's named constant
+  only where there was none;
+- **`capabilities: []` is always a declared default** — no provider publishes
+  capabilities, so there is nothing to seed it from.
+
+The generated comment above the entry says which of the two each line is, and
+names the §9.2 editor to correct it in. The distinction is the point: since
+bl-a48b the declared window is the denominator of §5.1 #35's fullness figure,
+so a fabricated 200 000 sitting beside a true number brazen served *in the same
+request* produced a wrong percentage that read exactly like a considered one — a
+default that looks declared is indistinguishable from a judgement. An entry that
+already exists is never re-seeded: the operator's own edit wins over any
+discovery, and yog's line was only ever the seed.
 
 Rejected, with reasons:
 
@@ -5802,9 +5851,10 @@ move content down.
   per-step OID, which nothing writes yet. It is the only tab whose subject is
   a repo other than the conversation's, which is why it sits last and why it
   is keyed on the workspace rather than on the selected agent — the
-  conversation-to-directory binding is lernie's working-directory mark, and
-  until yog passes it typed (bl-6654) a per-conversation answer would be a
-  guess. **Nothing here mutates**: it is a git read, and the range it prints
+  conversation-to-directory binding is lernie's working-directory mark, which
+  yog now seeds typed at creation (bl-6654) — but only per *conversation root*,
+  and an agent's own `cd` may move it after, so a per-conversation answer read
+  off this tab would still be a guess. **Nothing here mutates**: it is a git read, and the range it prints
   is the command an operator can run in a shell.
 
 **Bottom accessories (`TopBottomPanel::bottom`, stacked — innermost first
@@ -7040,12 +7090,12 @@ beside `main.rs`.
 | `src/app/{mod,roots,knobs,view,ops}.rs` | 268+64+62+288+57 | AppModel — what a *frame* owns (§7.2): the held snapshot, ui-state integration, the per-frame refresh; `roots` the boot-time fold of the composed world and the four derived paths every root read goes through (bl-3f46); the §11 transcript-density knobs and the whole-UI zoom (§4.1); the per-conversation view-model assembly the shell paints, plus the snapshot's staleness and live-cadence reads; `ops` the frame's two *writes* to the trail — the operator's ack and the clear verb (§4.2 as amended, bl-c417), here rather than in the excluded shell so the gestures a click makes are covered |
 | `src/app/balls{,/starts,/targets,/convball}.rs` | 253+238+51+107 | the frame's read of the live `bl` projection — the §3.5 join, ops tail, and the two post-verb dirty marks (§5.1, §7.2); the §3.4/§8.1 start hand-off; the §8.2 stamp-target rule |
 | `src/app/line.rs` | 45 | the §8.5 line context: the seat's focus read as what a slash command elides — the §3.2 stamp a `bl` verb carries (the focused ball's claimant, else the workspace's own name), derived here so a typed verb and a clicked one cannot aim differently |
-| `src/app/cadence.rs` | 185 | the clock's periods (§7.2, bl-3381): the `Cadence` value, its `cadence.yaml` grammar (total parse, shared bounds), and the derived periods (wound grace, late pass, staleness) |
+| `src/app/cadence.rs` | 204 | the clock's periods (§7.2, bl-3381): the `Cadence` value, its `cadence.yaml` grammar (total parse, shared bounds), and the derived periods (wound grace, late pass, staleness) |
 | `src/app/deletes.rs` | 140 | the §3.6 hand-off, both altitudes: confirmation derivations, fire-time re-gates, post-delete convergence (bl-f17a: the agent delete's focus-off-the-dead-subtree move) |
-| `src/app/derive{,/route,/sweeps,/worker}.rs` | 245+75+205+70 | the derivation worker (§7.2): its state and one pass; the §7.1 dirty-root routing table; the two sweeps, reconcile and the fetch cadence; the thread that drives the pass |
+| `src/app/derive{,/route,/sweeps,/worker}.rs` | 273+127+279+71 | the derivation worker (§7.2): its state and one pass; the §7.1 dirty-root routing table; the two sweeps, reconcile, the fetch cadence and re-deriving one root — the work every sweep ends in, moved beside them at the budget (bl-4b28); the thread that drives the pass |
 | `src/app/dirty.rs` | 215 | Change→dirty-root mapping, debounce/sweep scheduling over the live `Cadence`, `watch::Mark` provenance (§7.2) |
 | `src/app/grace.rs` | 165 | the §7.3 wound banner's grace window (bl-90bf): the render-layer age gate over the same injected clock, so a wound that heals inside the snapshot's own catch-up bound never flashes |
-| `src/app/drift.rs` | 250 | the four drift kinds and their `ops.jsonl` fold, plus the late-pass and stale-snapshot thresholds (§7.2) |
+| `src/app/drift{,/tests}.rs` | 186+130 | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |
 | `src/app/echo.rs` | 195 | the pending echo (§7.2, §3.4, bl-915e): the §3.4 start claim's value, the landed-message reconciliation, the expiry bound, and the **one** fold of the derivation + every non-derived fact into the snapshot the frame paints (the echo, and the §7.2 live tail) |
 | `src/app/live{,/follow}.rs` | 130+185 | the §7.2 **live tail** (bl-54f7) under the in-memory carve-out: the value, its fold onto the painted snapshot, the model's side of the hand-off — and, in `follow`, the append-following read of the focused conversation's open `response.json` and the thread that drives it. The split is *what the tail promises* vs *how the bytes are gathered* |
 | `src/app/focus.rs` | 255 | the §6/§11 **selection**: the roster ladder (↑/↓, jump-to-attention), the pin/collapse writes, the seen-acknowledgement, and the §3.4 start claim a fire leaves for the first roster that carries its root. Not `shell/focus.rs`, which owns the keyboard |
@@ -7198,7 +7248,7 @@ beside `main.rs`.
 | `src/search/{mod,corpus,excerpt,worker}.rs` | 175+140+50+90 | the §8.5 global search: the `Address`/`Field`/`Hit` vocabulary, the answer that carries its own needle (`Found::asked`, the strip's offer predicate, beside `Found::is_empty`, the pane's — bl-648a) and the empty answer's wording, the deterministic rank and bound, and `run` — the one engine all three seats end in; the corpus (the snapshot half free, the conversation half re-read from disk and the half cancellation is checked between); the matched-line window at char boundaries; and the window's searcher thread |
 | `src/shell/model_pick/{mod,seat,lines,marks,ram,select,write}.rs` (excl.) | 197+154+112+58+139+293+58 | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its exit (bl-9786), the write receipt, and the pane's extras while it is open — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks; the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns and the pane's role strip; the two-file write plan |
 | `src/spend/{mod,prices,ceiling,render}.rs` | 215+120+150+177 | the §3.5 join, pure over the worker's pre-walked bills (bl-9dd4) — selection, attribution, the honest-granularity label, and the unpriced remainder, with `of_workspace` the one deliberate fresh walk because a gate compares against now; the price table's parse and its micro-USD arithmetic; the §3.5 spend ceiling's policy half — the operator's number and the at-or-over comparison against the workspace figure (bl-56d5); the one figure widget every spend seat paints — the board's ball rows and the conversation's settings rows (bl-2e18) — whose attribution clause is independent of the price table, so the honest-granularity label survives deleting the cost column (bl-1765) |
-| `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | 261+177+86+235+88+112+158 | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the §8.6 control authoring that runs outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire |
+| `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | 264+181+84+240+88+128+158 | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the §8.6 control authoring that runs outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire |
 | `src/state.rs` | 270 | the crate's lock chokepoint: the dirty hand-off, the snapshot cell, the §8.5 search cell and the §7.2 live-tail cell — the whole inter-thread interface (§7.2, §8.5, AGENTS rule 7). The tail cell is **appended whole below every line that was there before**, and takes the snapshot cell's *alias + free functions* spelling rather than a struct with an `impl` — including leaving the module doc's stale "three residents" line untouched. That is the hazard `rules/locks-outside-state.yml` records as the reason for both its carve-outs: llvm-cov mis-attributes phantom uncovered regions onto this file's `impl` headers when anything above them moves, and an added `impl` block draws one onto itself besides. This is genuine cross-thread hand-off state — what the chokepoint exists to inventory — so it belongs here and the spelling gives way instead of the rule. The watch hub's two singletons are its second declared carve-out (§7.1, `rules/locks-outside-state.yml`) |
 | `src/steps_view/{mod,detail,columns,render,drill,wound}.rs` | 160+170+110+120+200+160 | the step inspector, incl. the §7.3 no-response wound (§11 Steps). Both tiers are cut twice, read from write: `mod`+`detail` are the list/drill-in **reads**, `render`+`drill` their **paints**, and `columns` is the §11 column table — header, hover explanation and cell in one home, so no field paints without its name (bl-3ffc) |
 | `src/tail.rs` | 75 | the §11 tail idiom in one home (bl-8c13): the `stick_to_bottom` anchor and the top pad that seats an underfull body on the bottom edge, taken together by every tail surface and restated by none; since bl-929d it also hands back the body height it already measures, so a content-sized region (the inbox-composer) derives its extent from the one measurement |

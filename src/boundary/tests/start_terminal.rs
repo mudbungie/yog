@@ -25,11 +25,13 @@ use std::sync::Arc;
 /// A fake `lernie` that materializes what the real one does — the seed marker
 /// and the workspace's config branch — and, on `prompt`, reports the goal it
 /// was fired with through a fifo, so the detached child is *observed* rather
-/// than assumed.
+/// than assumed. It reads the goal as the **last** argument rather than a fixed
+/// position, which is the §4.2 invariant `clip_goal` rests on and which the
+/// bl-6654 `--cwd` binding rides in front of.
 fn fake_lernie(dir: &Path, fifo: &Path) -> PathBuf {
     let body = format!(
         "#!/bin/sh\ncase \"$1\" in\nprime) [ -n \"$LERNIE_HOME\" ] && mkdir -p \"$LERNIE_HOME\" \
-         && : > \"$LERNIE_HOME/models.yaml\";;\n{arm}prompt) printf '%s' \"$5\" > '{fifo}';;\
+         && : > \"$LERNIE_HOME/models.yaml\";;\n{arm}prompt) for a; do last=\"$a\"; done; printf '%s' \"$last\" > '{fifo}';;\
          \nesac\nexit 0\n",
         arm = authoring_new_arm(),
         fifo = fifo.display(),
@@ -101,8 +103,9 @@ fn a_prepared_reply_fires_the_next_invocations_prompt() {
     let reply = deposit::read_reply(state.path(), "p-0").unwrap();
     assert_eq!(reply["kind"], "prepared");
     assert_eq!(
-        reply["prepared"]["cwd"].as_str(),
-        Some(repo.path().to_string_lossy().as_ref())
+        reply["prepared"]["binding"].as_str(),
+        Some(repo.path().to_string_lossy().as_ref()),
+        "the typed work target survives the process boundary (§3.3, bl-6654)"
     );
 
     // Invocation two: a different process, holding nothing but those bytes.

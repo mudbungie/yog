@@ -51,10 +51,15 @@ pub(super) fn stale_label(age: Duration, stale_after: Duration) -> Option<String
 /// A pass's own lateness, or `None` when it kept its cadence (§7.2). `started`
 /// and `finished` come from the injected clock, so the late branch is reachable
 /// in a test without a slow machine. `late_pass` is the live cadence's bound
-/// ([`Cadence::late_pass`](super::Cadence::late_pass), bl-3381): the
-/// cheap-sweep period is what the worker promises to keep, so a pass that eats
-/// the whole interval has already failed to keep it — not a threshold picked
-/// for feel, the schedule's own period.
+/// for **the sweep this pass ran**
+/// ([`Cadence::late_pass`](super::Cadence::late_pass), bl-3381, bl-4b28): the
+/// period that pass promised to keep, so a pass that eats its whole interval
+/// has already failed to keep it — not a threshold picked for feel, the
+/// schedule's own period.
+///
+/// Whether a *finding* is written is the caller's edge test, not this one's
+/// (bl-4b28): this answers "was this pass late", which is a fact about one
+/// pass; the trail records the transition into lateness.
 pub(super) fn lateness(
     started: std::time::Instant,
     finished: std::time::Instant,
@@ -62,6 +67,19 @@ pub(super) fn lateness(
 ) -> Option<u64> {
     let took = finished.saturating_duration_since(started);
     (took >= late_pass).then_some(took.as_secs())
+}
+
+/// The finding a pass's own lateness earns, given whether the pass before it
+/// was late (§7.2, bl-4b28) — the edge test [`Drift::Late`] is written on.
+///
+/// Four cases, one line: a pass that misses after one that kept cadence is the
+/// event ("passes stopped keeping cadence"); a pass that misses after one that
+/// already missed adds nothing a reader did not have; and a pass that keeps
+/// cadence is not a finding at either end. Recovery writes nothing on purpose —
+/// the trail is a record of what went wrong, and *is it late now* is the §11
+/// staleness line's derived answer, not a row anyone has to find.
+pub(super) fn late_edge(secs: Option<u64>, was_late: bool) -> Option<u64> {
+    secs.filter(|_| !was_late)
 }
 
 /// One thing a sweep or the watch backend found that the watcher should have
@@ -81,10 +99,19 @@ pub(super) enum Drift {
     /// and no enumeration-root event announced it (§7.1 NamesRoot /
     /// WorkspacesRoot).
     Unenumerated(PathBuf),
-    /// One derivation pass took `secs` — at or past [`LATE_PASS`], so the frame
-    /// rendered a snapshot that old while it ran (§7.2, bl-ee0a). Attributed to
-    /// the yog state root: the observation is yog's about itself, and it is the
-    /// root the `ops.jsonl` it lands in lives under.
+    /// Passes **stopped keeping cadence**: this one took `secs`, at or past the
+    /// period it promised, so the frame rendered a snapshot that old while it
+    /// ran (§7.2, bl-ee0a). Attributed to the yog state root: the observation is
+    /// yog's about itself, and it is the root the `ops.jsonl` it lands in lives
+    /// under.
+    ///
+    /// **An edge, not a level** (bl-4b28). It is raised on the pass that first
+    /// misses, and not again until one keeps cadence in between — a permanently
+    /// late derivation is one event with a timestamp the operator can correlate
+    /// against what changed, never a row per sweep. *Are* passes late right now
+    /// is a different question with a different answer already: the §11
+    /// staleness line, derived from the published snapshot's age
+    /// ([`stale_label`]). A state belongs to a query; the trail records events.
     Late(PathBuf, u64),
 }
 
@@ -156,99 +183,4 @@ pub(super) fn entries(ts: &str, cwd: &str, found: &[Drift]) -> Vec<OpEntry> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::opslog::{DRIFT_EXIT, YOG_DRIFT};
-
-    fn p(s: &str) -> PathBuf {
-        PathBuf::from(s)
-    }
-
-    #[test]
-    fn nothing_found_writes_nothing() {
-        assert!(entries("TS", "/state", &[]).is_empty());
-    }
-
-    #[test]
-    fn one_line_per_kind_carries_every_root_it_names() {
-        let found = [
-            Drift::Unannounced(p("/ws/b")),
-            Drift::Desync(p("/ws/a")),
-            Drift::Unannounced(p("/ws/a")),
-            Drift::Unannounced(p("/ws/b")), // a duplicate is one finding
-        ];
-        let out = entries("TS", "/state", &found);
-        assert_eq!(out.len(), 2, "two kinds, two lines: {out:?}");
-        assert_eq!(
-            out[0].argv,
-            vec![YOG_DRIFT.to_string(), "desync".to_string()]
-        );
-        assert_eq!(out[0].stderr, "/ws/a\n");
-        assert_eq!(out[0].cwd, "/state");
-        assert_eq!(out[0].ts, "TS");
-        assert_eq!(out[0].exit, DRIFT_EXIT);
-        assert_eq!(
-            out[1].argv,
-            vec![YOG_DRIFT.to_string(), "unannounced".to_string()]
-        );
-        assert_eq!(out[1].stderr, "/ws/a\n/ws/b\n", "both roots, deduped");
-    }
-
-    #[test]
-    fn every_kind_names_itself_and_its_root() {
-        let all = [
-            Drift::Desync(p("/a")),
-            Drift::Unannounced(p("/b")),
-            Drift::Unenumerated(p("/c")),
-            Drift::Late(p("/state"), 7),
-        ];
-        let kinds: Vec<&str> = all.iter().map(Drift::kind).collect();
-        assert_eq!(kinds, ["desync", "unannounced", "unenumerated", "late"]);
-        let roots: Vec<&Path> = all.iter().map(Drift::root).collect();
-        assert_eq!(
-            roots,
-            [
-                Path::new("/a"),
-                Path::new("/b"),
-                Path::new("/c"),
-                Path::new("/state")
-            ]
-        );
-        assert_eq!(entries("TS", "/state", &all).len(), 4);
-    }
-
-    #[test]
-    fn a_late_pass_carries_how_late_it_was() {
-        let out = entries("TS", "/state", &[Drift::Late(p("/state"), 12)]);
-        assert_eq!(out[0].argv, vec![YOG_DRIFT.to_string(), "late".to_string()]);
-        assert_eq!(out[0].stderr, "/state (12 s pass)\n");
-    }
-
-    #[test]
-    fn lateness_fires_only_at_the_cadence_it_promised() {
-        let late_pass = crate::app::Cadence::default().late_pass();
-        let t0 = std::time::Instant::now();
-        let a_hair_early = (t0 + late_pass)
-            .checked_sub(Duration::from_millis(1))
-            .unwrap();
-        assert_eq!(lateness(t0, a_hair_early, late_pass), None);
-        assert_eq!(
-            lateness(t0, t0 + late_pass, late_pass),
-            Some(late_pass.as_secs())
-        );
-        // A non-monotonic injected clock cannot underflow into a false alarm.
-        assert_eq!(lateness(t0 + late_pass, t0, late_pass), None);
-    }
-
-    #[test]
-    fn the_staleness_line_is_silent_until_two_full_sweeps_are_missed() {
-        let stale = crate::app::Cadence::default().stale_after();
-        assert_eq!(stale_label(Duration::from_secs(0), stale), None);
-        let a_hair_fresh = stale.checked_sub(Duration::from_millis(1)).unwrap();
-        assert_eq!(stale_label(a_hair_fresh, stale), None);
-        assert_eq!(
-            stale_label(stale, stale),
-            Some(format!("derivation {} s behind", stale.as_secs()))
-        );
-    }
-}
+mod tests;

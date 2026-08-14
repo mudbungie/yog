@@ -785,9 +785,10 @@ and can never be true again. The beat then burns all five attempts and reports
 started, while the beat beside it passes on the evidence they left (bl-0e44).
 Exactness is still assertable — outside the loop, where nothing re-fires, and
 best as a count that must NOT grow.
-Relatedly, a ball body rides *beside* the worktree preamble, so an agent reads it
-as a job — the drive fixture's body says "run no commands and no tools" to keep a
-beat about argv from becoming a beat about wire spend.
+Relatedly, a ball body IS the goal's payload and the fire binds the agent's
+working directory to the ball worktree (bl-6654), so an agent reads it as a job
+— the drive fixture's body says "run no commands and no tools" to keep a beat
+about argv from becoming a beat about wire spend.
 
 **A beat that cannot go red is worse than a missing one**, because a missing beat
 is visible and a vacuous one reads as coverage. Three shapes, all found in this
@@ -964,8 +965,9 @@ is `yog exec bl prime` in the repo — and the left panel's empty balls
 section renders exactly that hint (owned by Z4; tested by S3-T5).
 
 1. A ready ball's ▶ Start claims it `--as <workspace-name>` (§3.2) — *after*
-   the workspace exists (§8.1 order) — and the composer prefills ball title,
-   body verbatim, and the worktree preamble; driver cwd = the work worktree.
+   the workspace exists (§8.1 order) — and the composer prefills the ball
+   header and body verbatim; the work worktree is the typed `--cwd` binding
+   the fire passes, never goal prose (§3.3, bl-6654).
 2. A new ball from the composer is `bl create` then the existing-ball path —
    the new→existing transition is the convergence (§8.1).
 3. A ball already claimed by a local workspace name re-plans as a prompt
@@ -983,7 +985,7 @@ the §3.5 "unassigned workspace" row is the general case (no ball column).
 
 Tests:
 - **S3-T1 ball-rung**: ready ball → `bl claim <id> --as <name>` after
-  `lernie new`, goal carries title/body/worktree preamble, cwd = worktree.
+  `lernie new`, goal carries title/body only, the worktree rides `--cwd`.
 - **S3-T2 new-ball-converges**: create → re-planned as existing; one claim.
 - **S3-T3 resume-not-remint**: ball claimed by local name → prompt into
   that workspace; no mint, no claim.

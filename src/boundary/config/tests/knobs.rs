@@ -137,6 +137,91 @@ fn a_pick_on_a_row_brazen_lacks_writes_neither_half() {
     assert!(!root.path().join("lernie/models.yaml").exists());
 }
 
+/// Write the model cache `bz --list-models` wholesale-writes for `provider`
+/// inside `workspace`'s own wall — the roster the picker read to offer the id,
+/// which is where the pick's declared window is seeded from (bl-848f).
+fn seed_roster(
+    deps: &crate::boundary::dispatch::Deps,
+    workspace: &Path,
+    provider: &str,
+    doc: &str,
+) {
+    let dir = crate::config_edit::brazen::BrazenPaths::in_wall(&crate::world::wall::root_of(
+        &deps.world,
+        workspace,
+    ))
+    .models_cache_dir;
+    fs::create_dir_all(&dir).unwrap();
+    fs::write(dir.join(format!("{provider}.json")), doc).unwrap();
+}
+
+/// bl-848f. The declared window is the number brazen served for that id on that
+/// row — not the 200k default sitting next to a fact the roster already had.
+#[test]
+fn a_pick_declares_the_window_the_provider_served() {
+    let g = spawn_guard();
+    let root = tempdir().unwrap();
+    let bin = tempdir().unwrap();
+    let lernie = script(bin.path(), "lernie", "exit 0\n");
+    let fx = workspace();
+    let deps = deps_at(root.path(), &lernie, Path::new("/no/bl"));
+    seed_wall(&deps, &fx.path, ACME);
+    seed_roster(
+        &deps,
+        &fx.path,
+        "acme",
+        r#"{"models":[{"default":false,"id":"m-9","context_window":1048576}],"last_used":"m-9"}"#,
+    );
+    let reply = fire(&deps, &pick("worker", "acme", "m-9", &fx.path));
+    drop(g);
+    assert!(
+        matches!(&reply, Ok(Reply::Outcome(o)) if o.ok()),
+        "{reply:?}"
+    );
+    let models = fs::read_to_string(root.path().join("lernie/models.yaml")).unwrap();
+    assert!(models.contains("    context_window: 1048576"), "{models}");
+    assert!(
+        models.contains("the number this provider served"),
+        "{models}"
+    );
+}
+
+/// The honest miss: a row whose roster carries no window — or that was never
+/// listed in this wall at all — declares §9.4's default, under the note that
+/// says it is one.
+#[test]
+fn a_pick_with_no_served_window_declares_the_default() {
+    let g = spawn_guard();
+    let root = tempdir().unwrap();
+    let bin = tempdir().unwrap();
+    let lernie = script(bin.path(), "lernie", "exit 0\n");
+    let fx = workspace();
+    let deps = deps_at(root.path(), &lernie, Path::new("/no/bl"));
+    seed_wall(&deps, &fx.path, ACME);
+    seed_roster(
+        &deps,
+        &fx.path,
+        "acme",
+        r#"{"models":[{"default":false,"id":"m-9"}]}"#,
+    );
+    let reply = fire(&deps, &pick("worker", "acme", "m-9", &fx.path));
+    drop(g);
+    assert!(
+        matches!(&reply, Ok(Reply::Outcome(o)) if o.ok()),
+        "{reply:?}"
+    );
+    let models = fs::read_to_string(root.path().join("lernie/models.yaml")).unwrap();
+    let default = crate::model_pick::grammar::DEFAULT_CONTEXT_WINDOW;
+    assert!(
+        models.contains(&format!("    context_window: {default}")),
+        "{models}"
+    );
+    assert!(
+        models.contains("declared defaults, not discoveries"),
+        "{models}"
+    );
+}
+
 #[test]
 fn a_pick_needs_a_lineage_it_can_read_the_assignment_from() {
     let root = tempdir().unwrap();

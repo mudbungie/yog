@@ -9,13 +9,19 @@ use std::sync::mpsc;
 use tempfile::tempdir;
 
 use crate::cli_outbound::{Chunk, Cli, ExitInfo, Streamed};
-use crate::model_pick::query::{EMPTY_ROSTER, Roster, model_ids, start};
+use crate::model_pick::query::{EMPTY_ROSTER, Roster, model_ids, served_window, start};
 
 /// The exact payload `bz --list-models --provider codex --json` returns against
-/// a live codex credential (§9.4, measured): ids and a default flag, and NOTHING
-/// else — which is why capabilities and context windows are declared, not
-/// discovered. If brazen ever adds them, this fixture is where it shows.
+/// a live codex credential (§9.4, measured): ids and a default flag and nothing
+/// else, because OpenAI's list GET serves no metadata — which is why yog
+/// declares a default window for a row like this one.
 const LIVE_PAYLOAD: &str = r#"{"models":[{"default":false,"id":"gpt-5.6-sol"},{"default":false,"id":"gpt-5.6-terra"},{"default":false,"id":"gpt-5.4"}]}"#;
+
+/// The other shape, from a provider that DOES serve metadata (Google): the same
+/// two keys plus brazen's three option-shaped ones. Both are lawful `Model`
+/// rows — the keys are additive and per-provider, which is the whole reason the
+/// picker must read rather than assume (bl-848f).
+const SERVED_PAYLOAD: &str = r#"{"models":[{"default":false,"id":"gemini-3-pro","context_window":1048576,"max_output_tokens":65536,"display_name":"Gemini 3 Pro"},{"default":false,"id":"gemini-3-flash"}]}"#;
 
 /// Drive a roster to settlement over a hand-fed channel.
 fn settled(chunks: Vec<Chunk>) -> Roster {
@@ -56,6 +62,46 @@ fn model_ids_folds_every_unusable_payload_to_nothing() {
         r#"{"models":[{"slug":"x"}]}"#,
     ] {
         assert!(model_ids(payload).is_empty(), "{payload}");
+    }
+}
+
+/// A metadata-carrying roster reads back as ordinary ids — the extra keys are
+/// additive, so the picker's candidate list is the same list either way.
+#[test]
+fn model_ids_reads_a_metadata_carrying_roster_the_same_way() {
+    assert_eq!(
+        model_ids(SERVED_PAYLOAD),
+        ["gemini-3-pro", "gemini-3-flash"]
+    );
+}
+
+/// bl-848f. The seed for the declared window is the number the provider served
+/// for that one id — and nothing else in the document.
+#[test]
+fn served_window_reads_the_number_the_provider_published() {
+    assert_eq!(
+        served_window(SERVED_PAYLOAD, "gemini-3-pro"),
+        Some(1_048_576)
+    );
+}
+
+/// Every honest miss is `None`, never a fabricated number: the row that carries
+/// no window, a provider that serves none at all, an id the roster does not
+/// have, an unreadable document, and a window no `u32` can hold.
+#[test]
+fn served_window_is_none_wherever_nobody_published_one() {
+    for (document, model) in [
+        (SERVED_PAYLOAD, "gemini-3-flash"),
+        (LIVE_PAYLOAD, "gpt-5.6-sol"),
+        (SERVED_PAYLOAD, "no-such-model"),
+        ("not json", "gemini-3-pro"),
+        (r#"{"models":[{"id":"m","context_window":"wide"}]}"#, "m"),
+        (
+            r#"{"models":[{"id":"m","context_window":4294967296}]}"#,
+            "m",
+        ),
+    ] {
+        assert_eq!(served_window(document, model), None, "{document} / {model}");
     }
 }
 

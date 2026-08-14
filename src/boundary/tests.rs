@@ -204,7 +204,7 @@ fn a_ball_rung_prepare_carries_its_project_and_the_other_rungs_none() {
         prepared: Prepared {
             name: "n".into(),
             workspace: Path::new("/ws").to_path_buf(),
-            cwd: Path::new("/ws").to_path_buf(),
+            binding: None,
             goal: "g".into(),
             origin: crate::opslog::Origin::Conversation,
         },

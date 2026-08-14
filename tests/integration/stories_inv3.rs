@@ -126,7 +126,10 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
     let second = start::prepare(&deps, &inputs(JoinState::Bound), "T2").unwrap();
     assert_eq!(bl.invocations().len(), 1, "no second claim");
     assert_eq!(lernie.invocations().len(), 2, "no re-prime / re-new");
-    assert_eq!(first.cwd, second.cwd, "the same worktree either way");
+    assert_eq!(
+        first.binding, second.binding,
+        "the same worktree either way"
+    );
     assert_eq!(first.goal, second.goal, "the composed goal is stable");
     assert_eq!(
         opslog::tail(state.path(), 16).len(),

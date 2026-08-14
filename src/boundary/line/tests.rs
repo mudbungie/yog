@@ -40,7 +40,7 @@ pub(super) fn prepared() -> Prepared {
     Prepared {
         name: "koi".to_owned(),
         workspace: PathBuf::from("/ws"),
-        cwd: PathBuf::from("/ws/work"),
+        binding: Some(PathBuf::from("/ws/work")),
         goal: String::new(),
         origin: Origin::Conversation,
     }
