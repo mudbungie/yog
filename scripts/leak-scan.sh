@@ -199,7 +199,12 @@ scan_tree() {
   cd "$SCAN_DIR"
   scan "${files[@]}" || rc=1
   # Each fixture, judged by every rule but its own (see the header).
-  for f in "${fixtures[@]}"; do
+  # `${a[@]+"${a[@]}"}`, not `"${a[@]}"`: under `set -u` bash 3.2 treats the
+  # expansion of an EMPTY array as an unbound variable, kills the shell mid-scan
+  # — and exits 0 doing it, so a tree full of findings passed the gate on macOS,
+  # which ships 3.2 and always will (bl-1015). The guard is the portable idiom
+  # for "expand this array, or nothing".
+  for f in ${fixtures[@]+"${fixtures[@]}"}; do
     f="${f##*/}"
     scan --skip "${f%.*}" "$FIXTURES/$f" || rc=1
   done
