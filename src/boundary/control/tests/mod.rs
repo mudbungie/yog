@@ -279,3 +279,7 @@ mod confinement;
 /// The §4.9 fifth rung's floor, beside the answer it shares a fold with — its
 /// own file on the same seam its writer is split along (bl-94b4).
 mod floor;
+
+/// The §8.2 nudge over this family's own launch (bl-9bef): the same detached
+/// `advance`, with no park in front of it.
+mod nudge;

@@ -59,6 +59,9 @@ fn encode_action(action: &Action) -> Value {
         Action::Scan { workspace } => {
             json!({ "op": "scan", "workspace": encode_path(workspace) })
         }
+        Action::Nudge { workspace, agent } => {
+            json!({ "op": "nudge", "workspace": encode_path(workspace), "agent": agent })
+        }
         Action::Retarget { workspace, agent } => {
             json!({ "op": "retarget", "workspace": encode_path(workspace), "agent": agent })
         }
@@ -187,6 +190,10 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         })),
         "scan" => Ok(act(Action::Scan {
             workspace: path_of(o, "workspace")?,
+        })),
+        "nudge" => Ok(act(Action::Nudge {
+            workspace: path_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
         })),
         "retarget" => Ok(act(Action::Retarget {
             workspace: path_of(o, "workspace")?,

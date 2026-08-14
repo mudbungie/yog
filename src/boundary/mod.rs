@@ -77,6 +77,14 @@ pub enum Action {
     },
     /// `lernie scan <ws>` — flush inboxes, deposit died epitaphs (§8.2).
     Scan { workspace: PathBuf },
+    /// **Fire inference on a conversation from the state it is already in**
+    /// (§8.2's Nudge row, bl-9bef): `lernie advance <ws> <agent>`, detached.
+    /// It carries no text, and that absence is the whole gesture — lernie
+    /// derives what is due from the transcript tail (ARCH §6 *warrant*), so a
+    /// first turn whose model call died re-dispatches **in place**. Never
+    /// [`Message`](Self::Message) with an empty body: a deposit would put a
+    /// second user turn on the wire saying what the first already said.
+    Nudge { workspace: PathBuf, agent: String },
     /// `lernie retarget <ws> <agent>` — the §9.4 exit from the config freeze
     /// (bl-2d19): mark this conversation to be re-forked onto the config
     /// lineage's head, which its own executor lands at the next step boundary.

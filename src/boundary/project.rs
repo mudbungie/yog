@@ -29,6 +29,7 @@ impl Action {
             | Action::Message { .. }
             | Action::Stop { .. }
             | Action::Scan { .. }
+            | Action::Nudge { .. }
             | Action::Retarget { .. }
             | Action::Prompt { .. }
             | Action::DeleteWorkspace { .. }

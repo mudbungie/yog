@@ -100,11 +100,24 @@ pub(super) fn answer_hold(
 /// the §8.1 fire logs its own: [`DETACHED_EXIT`] for a handoff that happened, a
 /// §4.2 synthetic-failure line for a fork that never landed. The row is the
 /// receipt — the answer's own reply says only whether the launch was made.
-fn advance(deps: &Deps, ts: &str, workspace: &Path, agent: &str) -> Result<(), String> {
+///
+/// **Two callers, one body** (bl-9bef): the release above, and the §8.2 nudge —
+/// the operator's own "run it again from here", which is this launch and
+/// nothing else, since lernie derives what is due from the transcript tail
+/// (ARCH §6). Shared rather than re-written, so a driver launch has one home.
+///
+/// **The spawn is workspace-bound** ([`Deps::bound`], bl-bf79): what this
+/// launches is a *driver*, which makes model calls, so it owes its workspace
+/// the §16.2 wall — without it the driver's first `bz` dies with `no workspace
+/// in this environment` and the turn produces an empty reply. That is the same
+/// fold every §8.2 lernie verb takes, and it was missing here.
+pub(super) fn advance(deps: &Deps, ts: &str, workspace: &Path, agent: &str) -> Result<(), String> {
     let ws_s = workspace.to_string_lossy();
     let sink = opslog::detached::sink(&deps.state_root, ts, workspace);
+    let bound = deps.bound(workspace);
     let spawn =
-        deps.lernie
+        bound
+            .cli()
             .spawn_detached(Some(workspace), &sink, &[ADVANCE, ws_s.as_ref(), agent]);
     let argv = vec![
         deps.lernie.binary().display().to_string(),

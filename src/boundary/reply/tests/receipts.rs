@@ -17,6 +17,11 @@ fn every_flat_receipt_says_what_happened() {
     assert_eq!(deleted["kind"], "deleted");
     assert_eq!(deleted["ok"], true);
     assert_eq!(encode(&Reply::Acked)["kind"], "acked");
+    // The §8.2 nudge's receipt is the launch and nothing more: what the turn
+    // then does lands on the transcript, not here (bl-9bef).
+    let nudged = encode(&Reply::Nudged);
+    assert_eq!(nudged["kind"], "nudged");
+    assert_eq!(nudged["ok"], true);
     assert_eq!(encode(&Reply::TrailCleared)["kind"], "trail-cleared");
     // The VISION §4.9 monitor's two: arming says which way it went, so a seat
     // never has to re-read the config file to know what it just did.
