@@ -76,16 +76,17 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    `openssl-sys` AND `native-tls`, which was always the standard's point — a C
    toolchain dep and a non-portable system bridge, either of which breaks the
    single-binary musl/macOS/Windows story rustls keeps. The license allow-list
-   is exhaustive over the committed `Cargo.lock`; three transitive advisories
-   are ignored with recorded reasons (each unreachable, fixable only by bumping
-   the eframe 0.29 stack). **Zero new dependencies without explicit user
-   approval.** Sources are **registry-only, with no exception in force**: since
+   is exhaustive over the committed `Cargo.lock`; transitive advisories may be
+   ignored only with a reason recorded beside the entry, and **`deny.toml` is
+   the authority for which ones and why — no advisory, count or rationale is
+   restated here**, an entry that stops matching being a warning telling you to
+   drop it. **Zero new dependencies without explicit user approval.**
+   Sources are **registry-only, with no exception in force**: since
    bl-89a4 all three embedded substrate crates (`balls`, `brazen`, `lernie`)
    are plain crates.io pins — **`Cargo.toml` is the pin authority and no
-   version is restated here**, the restatement having gone stale once already
-   — `deny.toml`
-   has no `allow-git` list, and `make publish` works. The phase-2 ruling (DESIGN
-   §16.7) still permits ONE interim exception — an embedded substrate crate
+   version is restated here**, the restatement having gone stale once already —
+   `deny.toml` has no `allow-git` list, and `make publish` works. The phase-2
+   ruling (DESIGN §16.7) still permits ONE interim exception — an embedded substrate crate
    pinned `version = "=x.y.z"` **plus** an exact `git`/`rev` while an upstream
    publish is in flight — but taking it re-blocks `make publish` (crates.io
    refuses git deps) and re-exposes yog to a rewritten upstream history
