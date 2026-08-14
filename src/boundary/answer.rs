@@ -88,6 +88,15 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         Query::ReadConfig { file } => return config::read(deps, file),
         Query::Marks { workspace } => return Ok(config::read_marks(deps, workspace)),
         Query::Providers { workspace } => config::providers(deps, workspace),
+        // The §9.3 browse and the §9.4 roster (bl-dff8), on the same terms as
+        // the three above: asked of the world — this workspace's git, this
+        // wall's brazen — at the moment they are asked, and answered straight
+        // through because every seat here is already off-frame.
+        Query::Lineages { workspace } => return config::lineages(workspace),
+        Query::Models {
+            workspace,
+            provider,
+        } => return config::models(deps, workspace, provider),
     })
 }
 

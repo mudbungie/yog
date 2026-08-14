@@ -33,6 +33,17 @@ pub struct ConfigBranch {
     pub tip_timestamp_unix: i64,
 }
 
+/// One lineage as the §9.3 pane browses it: the branch and the files its tip
+/// commit holds. The pane reads the two in one pass so "the listing and the
+/// tree can never be of different commits"; this pairs them in the datum, so a
+/// seat with no pane gets the same guarantee (bl-dff8).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Lineage {
+    pub branch: ConfigBranch,
+    /// Every path in the tip's tree — `git ls-tree -r` at [`ConfigBranch::tip_oid`].
+    pub files: Vec<String>,
+}
+
 /// An agent's governing config commit (§5.1 #17): the config commit its branch
 /// forks off — an ancestor of the tip, rendered as "policy frozen at
 /// `<short-oid>`" in the inspector Config tab. A pure view-model; the egui
@@ -108,6 +119,22 @@ fn tree_paths(repo: &Path, refspec: &str) -> Result<Vec<String>, GitTreeError> {
         .lines()
         .map(str::to_string)
         .collect())
+}
+
+/// The whole browse in one answer (§9.3, bl-dff8): every config branch with the
+/// files its tip holds — [`config_branches`] and [`config_tree`] composed, which
+/// is what the pane does across two gestures and what a headless seat needs in
+/// one. Each tree is read **at the tip oid**, not at the ref, so a lineage
+/// advanced mid-read still answers files of the commit this listing names.
+pub fn lineages(workspace: &Path) -> Result<Vec<Lineage>, GitTreeError> {
+    let repo = workspace.join(REPO_DIR);
+    let branches = parse_branches(&for_each_ref_config(&repo)?)?;
+    let mut out = Vec::new();
+    for branch in branches {
+        let files = tree_paths(&repo, &branch.tip_oid)?;
+        out.push(Lineage { branch, files });
+    }
+    Ok(out)
 }
 
 /// Raw bytes of one file in a config commit's tree (`git show <ref>:<path>`,

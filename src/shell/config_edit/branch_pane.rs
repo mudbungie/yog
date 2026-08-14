@@ -200,7 +200,8 @@ fn file_row(ui: &mut egui::Ui, config: &mut ConfigState, ws: &Path) {
             .on_hover_text(
                 "Read this file out of the selected lineage's tip into the editor \
                  below, so the edit starts from what is actually there. \
-                 `/config branch <name>` with no text reads the same bytes.",
+                 `/config branch <name> <path>` with no text reads the same \
+                 bytes, and `/lineages` lists what there is to read.",
             )
             .clicked()
         {
