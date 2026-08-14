@@ -12,7 +12,8 @@ use serde_json::{Map, Value, json};
 
 use std::path::{Path, PathBuf};
 
-use super::super::start::{encode_path, opt_field, opt_of};
+use super::super::fields::opt_str_of;
+use super::super::start::{encode_path, opt_field};
 use super::super::{path_of, str_of};
 use crate::boundary::Query;
 
@@ -73,7 +74,7 @@ pub(super) fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, St
             Query::Files {
                 workspace,
                 agent,
-                path: opt_of(o, "path")?,
+                path: opt_str_of(o, "path")?,
             }
         }
         "rail" => {

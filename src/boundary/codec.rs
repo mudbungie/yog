@@ -17,7 +17,7 @@ use super::{Action, Gesture};
 mod config;
 mod control;
 mod fan;
-mod fields;
+pub(crate) mod fields;
 mod fleet;
 pub(crate) use fleet::{ARM as FLEET_ARM, DISARM as FLEET_DISARM};
 mod fork;
@@ -25,14 +25,13 @@ mod monitor;
 mod query;
 mod start;
 use config::encode_file;
-use fields::{act, obj, opt_path_of, path_of, str_of, usize_of};
+use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, usize_of};
 use start::{
     decode_payload, decode_prepared, encode_path, encode_payload, encode_prepared, opt_field,
-    opt_of,
 };
 pub(crate) use start::{
     decode_prepared as prepared_from_value, encode_prepared as prepared_value, join_token,
-    origin_token,
+    origin_token, parse_join, parse_origin,
 };
 
 /// Encode a gesture to its deposit envelope. Total over the surface.
@@ -231,15 +230,15 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             project: path_of(o, "project")?,
             title: str_of(o, "title")?,
             name: str_of(o, "name")?,
-            body: opt_of(o, "body")?,
+            body: opt_str_of(o, "body")?,
         })),
         "update" => Ok(act(Action::Update {
             project: path_of(o, "project")?,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
-            title: opt_of(o, "title")?,
-            body: opt_of(o, "body")?,
-            note: opt_of(o, "note")?,
+            title: opt_str_of(o, "title")?,
+            body: opt_str_of(o, "body")?,
+            note: opt_str_of(o, "note")?,
         })),
         "prepare" => Ok(act(Action::Prepare {
             workspace: path_of(o, "workspace")?,

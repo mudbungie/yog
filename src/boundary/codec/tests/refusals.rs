@@ -85,16 +85,18 @@ fn malformed_envelopes_refuse_with_a_reason() {
             "unknown origin",
         ),
         // The §3.3 binding is a path or `null`; a number is neither, and a
-        // strict edge names the field rather than reading it as unbound.
+        // strict edge names the field rather than reading it as unbound. The
+        // wording is `str_of`'s since bl-7067 folded every optional reader onto
+        // one `opt` — the promise was always that the refusal NAMES the field.
         (
             json!({"op": "prompt", "goal": "g",
                    "prepared": {"name": "n", "workspace": "/w", "binding": 7,
                                 "goal": "g", "origin": "balls"}}),
-            "field \"binding\" is not a string or null",
+            "field \"binding\"",
         ),
         (
             json!({"op": "update", "project": "/p", "id": "x", "name": "n", "title": 5}),
-            "title: not a string",
+            "field \"title\"",
         ),
     ];
     for (envelope, needle) in cases {

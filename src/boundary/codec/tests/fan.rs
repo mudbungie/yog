@@ -103,7 +103,9 @@ fn a_malformed_fan_or_retirement_refuses_with_a_reason() {
         ),
         (
             json!({"op": "fan", "project": "/p", "n": 2, "ball": 7, "prepared": prepared}),
-            "ball: not a string",
+            // `str_of`'s wording since bl-7067 folded every optional reader
+            // onto one `opt` — the promise was always that it NAMES the field.
+            "field \"ball\"",
         ),
         (
             json!({"op": "fan", "project": "/p", "n": -1, "prepared": prepared}),

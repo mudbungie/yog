@@ -89,8 +89,13 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Files { view, preview } => crate::files_view::wire::reply(view, preview.as_ref()),
         Reply::Rail(rail) => crate::rail::wire::reply(rail),
         Reply::Inbox(entries) => crate::inboxview::wire::reply(entries),
+        // The needle rides with the hits (bl-7067). Without it the answer
+        // could not say which question it answers -- the very fact bl-648a put
+        // on the datum, because "was a search asked?" and "did anything
+        // match?" are the same value exactly when a search found nothing,
+        // which is the one case that must be told apart.
         Reply::Search(found) => json!({
-            "ok": true, "kind": "search",
+            "ok": true, "kind": "search", "needle": found.needle,
             "rows": found.hits.iter().map(hit_row).collect::<Vec<Value>>(),
             "unreadable": found.unreadable,
         }),

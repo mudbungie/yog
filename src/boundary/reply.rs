@@ -2,10 +2,16 @@
 //! [`dispatch`](super::dispatch::dispatch) and
 //! [`answer`](super::answer::answer) return — the datum both frontends consume:
 //! the GUI reads the variant in RAM, the headless transport writes
-//! [`encode`] to the deposit's reply file. Encode-only: a reply is yog's own
-//! statement, never an instruction it parses back — except the `prepare`
-//! reply's `prepared` body, which deliberately re-enters as the next
-//! [`Prompt`](super::Action::Prompt) gesture and shares its codec spelling.
+//! [`encode`] to the deposit's reply file, and a seat that did not derive the
+//! answer reads it back with [`decode`] (REMOTE §9 step 2, bl-7067).
+//!
+//! It was **encode-only** until that step, on the argument that a reply is
+//! yog's own statement rather than an instruction it parses back — the one
+//! exception being the `prepare` reply's `prepared` body, which deliberately
+//! re-enters as the next [`Prompt`](super::Action::Prompt) gesture and shares
+//! its codec spelling. The client/server split (REMOTE §9) retires that
+//! argument: a thin seat holds no world, so every answer it renders is one it
+//! was told, and the exception has become the general path.
 //!
 //! The spelling itself is [`encode`], split off at §12's budget (bl-6233): the
 //! answer and the way it is said are two subjects, and only one of them is what
@@ -27,6 +33,9 @@ use super::codec::prepared_value;
 /// board rows are the one reply whose rows carry derived sub-objects (gates,
 /// drones, two §3.5 figures).
 mod board;
+/// The whole surface's JSON spelling read back into the type (bl-7067) -- the
+/// thin seat's half of the codec, cut on the same seam as the spelling itself.
+mod decode;
 /// The whole surface's JSON spelling, and the envelope helpers it shares.
 mod encode;
 /// The §6 decision queue's row encoder — the other reply whose rows carry a
@@ -38,6 +47,7 @@ pub(crate) mod rows;
 /// The search reply's own address-flattening — split at the same budget.
 mod search;
 
+pub use decode::decode;
 pub use encode::{encode, refusal};
 
 /// One workspace row (§3.1 classification + the §6 rollups the tab bar shows):

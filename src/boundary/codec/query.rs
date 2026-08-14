@@ -17,7 +17,8 @@
 
 use serde_json::{Map, Value, json};
 
-use super::start::{encode_path, opt_field, opt_of};
+use super::fields::opt_str_of;
+use super::start::{encode_path, opt_field};
 use super::{obj, path_of, str_of, usize_of};
 use crate::boundary::Query;
 
@@ -134,7 +135,7 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         // Strict here too: help *about* something must name a gesture, so the
         // answer is total and no seat renders an empty page.
         "help" => Query::Help {
-            verb: match opt_of(o, "verb")? {
+            verb: match opt_str_of(o, "verb")? {
                 Some(verb) if !crate::boundary::help::known(&verb) => {
                     return Err(format!("help: unknown verb {verb:?}"));
                 }

@@ -4,9 +4,12 @@
 use serde_json::{Map, Value, json};
 
 use crate::board::BoardRow;
-use crate::spend::Figure;
+use crate::spend::{Attribution, Figure};
 
 use super::super::codec::join_token;
+
+/// The decoders, beside the encoders they undo (bl-7067).
+pub(super) mod decode;
 
 /// One V4 board row. The column is the answer's headline fact, so it leads;
 /// `state` rides beside it because the two say different things (§3.5 binding
@@ -101,16 +104,47 @@ pub(super) fn fleet_facts(facts: &crate::fleet::Facts) -> Value {
 
 /// One §3.5 figure: tokens always, money when the price table has rates, and
 /// the granularity clause when the figure is honest at less than it claims.
+///
+/// **Two shapes widened for bl-7067**, both because the answer could not be
+/// read back as the answer that was given. `tokens` was the derived total
+/// alone, which four ARCH §6 counters do not fit in; it is now the same object
+/// the Steps rows already spell ([`spend_value`](crate::steps_view::wire::spend_value)),
+/// total included, so nothing a reader had is lost. `attribution` was the
+/// rendered clause alone — and `Conversations(1)` renders as no clause at all,
+/// so "one stamped conversation" and "workspace-wide" were the same absence.
+/// It is now the classification, with the clause riding beside it exactly as
+/// `usd` rides beside `micro_usd`: derived text next to the fact it derives
+/// from, never instead of it.
 fn figure_value(figure: &Figure) -> Value {
     let mut map = Map::new();
-    map.insert("tokens".to_owned(), json!(figure.tokens.total_tokens()));
+    map.insert(
+        "tokens".to_owned(),
+        crate::steps_view::wire::spend_value(&figure.tokens),
+    );
     if let Some(cost) = figure.cost {
         map.insert("usd".to_owned(), json!(cost.usd()));
         map.insert("micro_usd".to_owned(), json!(cost.micro_usd));
         map.insert("unpriced_tokens".to_owned(), json!(cost.unpriced_tokens));
     }
+    map.insert("attribution".to_owned(), attribution_value(figure));
+    Value::Object(map)
+}
+
+/// The §3.5 attribution: what the figure sums over, and the clause it says out
+/// loud when that is more than its seat already claims.
+fn attribution_value(figure: &Figure) -> Value {
+    let mut map = Map::new();
+    match figure.attribution {
+        Attribution::Conversations(count) => {
+            map.insert("kind".to_owned(), json!("conversations"));
+            map.insert("count".to_owned(), json!(count));
+        }
+        Attribution::Workspace => {
+            map.insert("kind".to_owned(), json!("workspace"));
+        }
+    }
     if let Some(note) = figure.attribution.note() {
-        map.insert("attribution".to_owned(), json!(note.label));
+        map.insert("label".to_owned(), json!(note.label));
     }
     Value::Object(map)
 }

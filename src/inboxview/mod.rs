@@ -47,7 +47,11 @@ pub enum Epitaph {
 impl Epitaph {
     /// The on-disk `epitaph:` value → typed variant (ARCH §2.6 hyphenated
     /// spellings); anything else rides through as [`Epitaph::Unknown`].
-    fn parse(value: &str) -> Epitaph {
+    ///
+    /// `pub(crate)` since bl-7067: it is also [`label`](Self::label)'s inverse,
+    /// which is what reads the ending back off the wire. One table both ways,
+    /// rather than a second one beside the codec.
+    pub(crate) fn parse(value: &str) -> Epitaph {
         match value {
             "final-response" => Epitaph::FinalResponse,
             "stopped" => Epitaph::Stopped,

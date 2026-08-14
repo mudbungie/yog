@@ -87,3 +87,56 @@ fn file_row(file: &FileChurn) -> Value {
         Churn::Binary => json!({ "path": file.path, "binary": true }),
     }
 }
+
+/// The `work-diff` reply body's attempts read back (bl-7067). The patch is
+/// the caller's, read through [`Preview`]'s own decoder — one wording for a
+/// bounded file, in both directions.
+pub(crate) fn attempts_of(obj: &serde_json::Map<String, Value>) -> Result<Vec<Attempt>, String> {
+    use crate::boundary::codec::fields::list_of;
+    list_of(obj, "rows", attempt_of)
+}
+
+fn attempt_of(v: &Value) -> Result<Attempt, String> {
+    use crate::boundary::codec::fields::{bool_of, list_of, str_of, strings_of};
+    let o = v.as_object().ok_or("attempt: not an object")?;
+    let change = match str_of(o, "state")?.as_str() {
+        "unreadable" => Change::Unreadable,
+        "absent" => Change::Absent {
+            target: str_of(o, "target")?,
+            source: str_of(o, "source")?,
+            missing: strings_of(o, "missing")?,
+        },
+        "diff" => Change::Diff {
+            target: str_of(o, "target")?,
+            source: str_of(o, "source")?,
+            target_oid: str_of(o, "target_oid")?,
+            source_oid: str_of(o, "source_oid")?,
+            files: list_of(o, "files", file_of)?,
+            truncated: bool_of(o, "truncated")?,
+        },
+        other => return Err(format!("attempt: unknown state {other:?}")),
+    };
+    Ok(Attempt {
+        project: crate::boundary::codec::fields::path_of(o, "project")?,
+        ball_id: str_of(o, "ball_id")?,
+        change,
+    })
+}
+
+/// One changed file: binary says so, and says nothing else — which is why the
+/// churn is read off the shape rather than a token.
+fn file_of(v: &Value) -> Result<FileChurn, String> {
+    use crate::boundary::codec::fields::{str_of, u64_of};
+    let o = v.as_object().ok_or("file churn: not an object")?;
+    let churn = match o.get("binary") {
+        Some(_) => Churn::Binary,
+        None => Churn::Text {
+            added: u64_of(o, "added")?,
+            removed: u64_of(o, "removed")?,
+        },
+    };
+    Ok(FileChurn {
+        path: str_of(o, "path")?,
+        churn,
+    })
+}
