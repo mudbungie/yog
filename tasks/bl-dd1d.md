@@ -1,7 +1,7 @@
 +++
 title = "scrub balls/tasks and publish it: content redaction across the ref's history, not a private remote"
 created = 1786677230
-updated = 1786678435
+updated = 1786678440
 claimant = "Ciabatta"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -86,8 +86,8 @@ Gates `bl-4f96`.
 
 **1. Bundles (private, outside every repo, mode 0600).** Both verify "complete history".
 
-- `/home/u/balls-tasks-prescrub-20260813-7fda4b0.bundle` — 1,196,320 B, tip `7fda4b0`, 1,493 commits. The ref as the audit found it.
-- `/home/u/balls-tasks-prerewrite-20260813-312b94e.bundle` — 1,227,420 B, tip `312b94e`, 1,506 commits. The exact ref the force-push would replace, so the rewrite is reversible.
+- `<operator-home>/balls-tasks-prescrub-20260813-7fda4b0.bundle` — 1,196,320 B, tip `7fda4b0`, 1,493 commits. The ref as the audit found it.
+- `<operator-home>/balls-tasks-prerewrite-20260813-312b94e.bundle` — 1,227,420 B, tip `312b94e`, 1,506 commits. The exact ref the force-push would replace, so the rewrite is reversible.
 
 **2. Live bodies scrubbed** (`bl update --body`, body edits only — nothing closed, unclaimed or retitled). Thirteen balls:
 
@@ -108,9 +108,7 @@ Gates `bl-4f96`.
 
 Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's own EXCEPT, by ruling); four occurrences of `Mark` that are the Rust type `watch::Mark`; the agent codename `mark-placer`; `/home/u`, `/home/op`, `/home/x`, `/Users/u` synthetic roots.
 
-**5. NOT DONE, awaiting go-ahead.** Scratch clone (throwaway, not the live store):
-`/tmp/claude-1000/-home-mark-dev-yog/807a06bb-c82b-4efd-bf4d-a58f6d52c0fc/scratchpad/scrub-clone`
-rewritten tip `100989f6`, replacing `312b94e`. The command:
+**5. NOT DONE, awaiting go-ahead.** The rewritten ref sits in a throwaway clone under this session's scratch directory, never in the live store; its path was reported to the operator out of band. Rewritten tip `100989f6`, replacing `312b94e`. The command:
 
     git -C <scrub-clone> push --force <project remote> refs/heads/balls/tasks:refs/heads/balls/tasks
 
@@ -120,4 +118,4 @@ Re-run the filter first if the remote has moved off `312b94e` — the store is l
 
 1. **bl-b7dc's title** still carried the account-billing phrasing; a retitle was out of scope for this pass, so the content redaction reached it instead. The rewritten ref's title reads "blocked upstream at the account level".
 2. **The maintainer's own design dialogue** (the logo balls' quoted specs and rulings) was left as prose with the attribution genericized. It is the maintainer's own direction for a published artifact, not third-party content — but it is still verbatim dialogue, which the ruling says goes.
-3. **Agent codenames** (`Pizzeria`, `Fretwork`, ...) and **provider row names** (`openai-chatgpt`, `claude-session-direct`) were left. Neither is a person; the codenames are synthetic and the row names are vendor products yog's own source references. One sentence in a closed bl-5ae6-era blob still implies which of two rows held a credential, with the state value itself redacted.
+3. **Agent codenames** (`Pizzeria`, `Fretwork`, ...) and **provider row names** (`openai-chatgpt`, `claude-session-direct`) were left. Neither is a person; the codenames are synthetic and the row names are vendor products yog's own source references. One sentence in closed ball bl-bc06 still implies which of two rows held a credential, with the state value itself redacted.
