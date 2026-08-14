@@ -1,7 +1,8 @@
 +++
 title = "I3/§5.2 promise a 24 h sweep of `.yog-tmp-<pid>` leftovers; only the stage-dir half was ever written"
 created = 1786686871
-updated = 1786686871
+updated = 1786687268
+claimant = "Wale"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["docs"]
