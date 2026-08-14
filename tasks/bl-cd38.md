@@ -1,7 +1,7 @@
 +++
 title = "BLOCKED on the lernie 0.0.7 publish (lernie bl-404d is unreleased; 0.0.6 satisfies the body's '> 0.0.5' test but exports no mint) — consume lernie's mint: delete the local wordlist+draw, draw preview and fire through the crate"
 created = 1785737045
-updated = 1786513164
+updated = 1786677254
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
@@ -35,3 +35,7 @@ This ball's written gate reads "check crates.io for the release (> 0.0.5)". The 
 The real gate is therefore **lernie 0.0.7 published**, and the same release also carries bl-d0b4 (`--cwd`), which is bl-6654's gate. Both balls should take one pin bump to 0.0.7 together rather than racing two bumps of the same line.
 
 Suggested amendment to this body: replace "> 0.0.5" with "a published lernie whose vendored source under ~/.cargo/registry exports `lernie::mint`" — a version-number comparison was the wrong test, since 0.0.6 shipped between the filing and the mechanism.
+
+---
+
+GATE (2026-08-13 publication follow-up, item 3): do NOT consume lernie's current mint corpus unchanged. It is the same EFF-derived 7,395-word list — CC BY 4.0 data inside an MIT-only package, and it mints hostile identities (carnage, chokehold, cruelty, deceit, depraved, despair, evil, hate, humiliate, stench, threaten, traitor, trash, wrath; 'humiliate' and 'wrath' have both been minted as real names in drive evidence). Consuming it moves neither the license nor the reputation problem into lernie — it just duplicates it. lernie bl-b59c replaces that corpus with a clean-room, independently authored neutral allowlist; this ball consumes the mint only after bl-b59c lands.
