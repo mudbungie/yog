@@ -1,7 +1,7 @@
 +++
 title = "BLOCKED on the lernie 0.0.7 publish (lernie bl-404d is unreleased; 0.0.6 satisfies the body's '> 0.0.5' test but exports no mint) — consume lernie's mint: delete the local wordlist+draw, draw preview and fire through the crate"
 created = 1785737045
-updated = 1786677254
+updated = 1786677458
 priority = 2
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 
@@ -39,3 +39,7 @@ Suggested amendment to this body: replace "> 0.0.5" with "a published lernie who
 ---
 
 GATE (2026-08-13 publication follow-up, item 3): do NOT consume lernie's current mint corpus unchanged. It is the same EFF-derived 7,395-word list — CC BY 4.0 data inside an MIT-only package, and it mints hostile identities (carnage, chokehold, cruelty, deceit, depraved, despair, evil, hate, humiliate, stench, threaten, traitor, trash, wrath; 'humiliate' and 'wrath' have both been minted as real names in drive evidence). Consuming it moves neither the license nor the reputation problem into lernie — it just duplicates it. lernie bl-b59c replaces that corpus with a clean-room, independently authored neutral allowlist; this ball consumes the mint only after bl-b59c lands.
+
+---
+
+UNGATED 2026-08-13: lernie bl-b59c landed as lernie 4e3208a — the EFF-derived corpus is gone, replaced by a 541-word clean-room list with an approval pin (len + FNV-1a digest) and a semantic-safety test. The consume surface is unchanged: lernie::mint::mint(rng: &dyn Rng, occupied: &HashSet<String>) -> Result<String, MintError>, with lernie::mint::{Rng, SplitMix64, MintError} alongside (SplitMix64::from_entropy() or ::from_seed(u64)); the wordlist stays behind the function per lernie docs/ARCHITECTURE.md 3.4. STILL BLOCKED on a lernie release: 4e3208a is unpublished and lernie 0.0.7 on crates.io still carries the old corpus. When this ball lands, yog's own src/names/words.txt must be DELETED, not merely bypassed — the CC BY 4.0 header rides in yog's copy too and lernie's fix does not reach it.
