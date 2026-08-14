@@ -12,7 +12,9 @@
 # drive log: the env IS the proof, so it lives in one executable place.
 #
 # Usage: cleanroom.sh <yog-binary> <scratch-root> <out-dir> [run|run-s3s4s6]
-#   e.g. cleanroom.sh target/release/yog /tmp/w14 docs/drive-logs/w14-shots
+#   e.g. cleanroom.sh target/release/yog /tmp/w14 "$DRIVE_ROOT/w14-shots"
+#   The out dir is evidence: it belongs under the drive root, outside the
+#   checkout, with every other run's (QUALITY.md §3 step 6; bl-244f).
 #
 # WHAT STAYS AMBIENT, AND WHY (§16.2, deliberately, not by omission):
 #   - `$HOME` alone — git's own identity, and the two FIXTURE SOURCES the room's

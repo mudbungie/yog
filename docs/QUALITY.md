@@ -185,26 +185,35 @@ What a dispatched model does, start to finish:
    criterion id, the shot, and the reproduction gestures. Search
    `bl list <needle> --all` first — a recurrence of a closed ball is filed as
    a regression naming it.
-6. **Record.** One log per run in `docs/drive-logs/`
-   (`YYYY-MM-DD-quality-audit.md`): build sha, host tuple, sheet coverage
-   (including named skips), the scorecard table, filed balls. **Start it
-   generated, not blank** — `make drive-log` emits the sha, the host tuple, the
-   load, the binary the run actually drove (read off its own verdict rows, not
-   re-resolved from the PATH of whoever is generating the log — that PATH
-   answers with the *installed* yog, bl-d1af) and any beat table the run
+6. **Record.** One log per run, **beside the run it is about**: `drive.sh`
+   writes `<run>/drive-log.md` under the evidence root `$DRIVE_ROOT` (default
+   `$XDG_CACHE_HOME/yog-drive`), with the shots, `gestures.jsonl` and
+   `verdicts.jsonl` it quotes. It carries the build sha, host tuple, sheet
+   coverage (including named skips), the scorecard table and the filed balls.
+   **Start it generated, not blank** — `make drive-log` emits the sha, the host
+   tuple, the load, the binary the run actually drove (read off its own verdict
+   rows, not re-resolved from the PATH of whoever is generating the log — that
+   PATH answers with the *installed* yog, bl-d1af) and any beat table the run
    produced; the scorecard and every judgement are written over that skeleton by
    hand. The house style is evidence quoted, not summarized — exactly the half
    no generator can supply.
 
-   **Quote the evidence, not the operator.** `logskel.sh` folds `$HOME` to `~`
-   in every path it emits, and `scripts/leak-scan.sh`'s `home-path` rule
-   refuses a commit that carries an absolute path under ANY home root — not
-   just the scanning account's (bl-167d), and with no exemption for this
-   directory, because bl-244f burned the eleven logs that had one. Fold the
-   same way in every line you add by hand, and mind the two other rules a
-   pasted log trips: `personal-email` and `quoted-dialogue`. Nothing else
-   about a log changes: an absolute path was never the evidence, the verdict
-   was.
+   **The log does not come back into the checkout.** It used to: one file per
+   run under `docs/drive-logs/`, exempt from the home-path rule because a log's
+   paths were its evidence. bl-244f burned all eleven and the exemption with
+   them — they were the single largest carrier of operator-home paths in this
+   repository's history, and they shipped inside the 0.0.1 crate. So the log
+   stays where it is written, outside the tree, and **what comes back is step
+   5's output: the balls filed.** A verdict worth keeping is a claim in
+   `docs/STORIES.md` citing the run by date and verb, not a file.
+
+   **Quote the evidence, not the operator**, even so — a log gets read aloud,
+   pasted into a ball, and quoted in a PR. `logskel.sh` folds `$HOME` to `~` in
+   every path it emits; fold the same way in every line you add by hand, and
+   mind the two other rules a quoted log trips if any of it reaches a commit or
+   a ball body: `personal-email` and `quoted-dialogue` (`scripts/leak-rules.sh`
+   is the table; AGENTS.md, "What may never enter a ball body", is the rule).
+   An absolute path was never the evidence, the verdict was.
 
 The audit is triage, not repair: it files, it does not fix. Fix balls are
 dispatched separately and re-audited by the next run.
