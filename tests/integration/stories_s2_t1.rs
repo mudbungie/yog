@@ -43,7 +43,11 @@ fn s2_t1_path_rung_targets_the_directory() {
     };
 
     let prepared = start::prepare(&deps, &inputs, "T0").unwrap();
-    assert_eq!(prepared.cwd, dir, "driver cwd is the directory");
+    assert_eq!(
+        prepared.binding.as_deref(),
+        Some(dir.as_path()),
+        "the path rung binds the directory typed (§3.3, bl-6654)"
+    );
     assert!(
         prepared
             .goal
@@ -64,9 +68,9 @@ fn s2_t1_path_rung_targets_the_directory() {
     let inv = lernie.wait(1);
     assert_eq!(inv[0].argv[0], "prompt");
     assert_eq!(
-        inv[0].cwd,
-        crate::support::canon(&dir),
-        "the prompt ran cwd = the dir"
+        inv[0].argv[3..5],
+        ["--cwd".to_owned(), dir.display().to_string()],
+        "the dir reaches lernie as the typed binding, not as the process cwd"
     );
     assert!(bl.invocations().is_empty(), "the path rung mutates no ball");
 }

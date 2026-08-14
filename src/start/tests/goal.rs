@@ -1,11 +1,11 @@
 //! Goal composition + the pre-mint preview (§3.3): the per-rung prefills and
-//! driver cwds, the ball header and its inverse, [`compose_prepared`] (whose
-//! workspace name is a query over the target path, §3.1), and [`preview`]. The
-//! name prediction's own tables are [`super::identity`].
+//! typed target bindings, the ball header and its inverse, [`compose_prepared`]
+//! (whose workspace name is a query over the target path, §3.1), and
+//! [`preview`]. The name prediction's own tables are [`super::identity`].
 
 use crate::binding::{work_worktree_path, workspace_path};
 use crate::projects::join::JoinState;
-use crate::start::goal::{compose_prepared, driver_cwd, prefill};
+use crate::start::goal::{compose_prepared, prefill, target_binding};
 use crate::start::identity::mint_conversation;
 use crate::start::{BallSpec, Payload, StartInputs, parse_ball_stamp, preview};
 use std::path::{Path, PathBuf};
@@ -38,7 +38,7 @@ fn new_ball() -> Payload {
 
 #[test]
 fn prefill_is_empty_for_bare() {
-    assert_eq!(prefill(&Payload::Bare, None), "");
+    assert_eq!(prefill(&Payload::Bare), "");
 }
 
 /// The path rung leads with its headline (§3.3): the directory is on line one,
@@ -46,12 +46,9 @@ fn prefill_is_empty_for_bare() {
 /// payload line. The prose that once buried it on line two follows.
 #[test]
 fn prefill_names_the_path_verbatim_on_line_one() {
-    let g = prefill(
-        &Payload::Path {
-            dir: PathBuf::from("/work/here"),
-        },
-        None,
-    );
+    let g = prefill(&Payload::Path {
+        dir: PathBuf::from("/work/here"),
+    });
     assert_eq!(
         g,
         "Working directory: /work/here\nDo all work there, by absolute path. Do not rely on the current directory.",
@@ -60,24 +57,28 @@ fn prefill_names_the_path_verbatim_on_line_one() {
     assert!(!g.contains("workspace"));
 }
 
+/// The ball rung's prefill is **payload and nothing else** (§3.3, bl-6654): the
+/// `Ball <id>: <title>` header — the §3.2 conversation→ball join — and the body
+/// verbatim. The worktree paragraph that used to trail it is retired; location
+/// is the typed `--cwd` binding now, so no absolute path and no
+/// do-the-work-there instruction may reappear in the goal text.
 #[test]
-fn prefill_is_the_ball_worktree_preamble() {
+fn prefill_for_a_ball_is_the_header_and_body_with_no_location_prose() {
     let wt = work_worktree_path(Path::new(BALLS), Path::new(PROJ), "bl-1", None);
-    let g = prefill(&existing_ball(), Some(&wt));
-    assert_eq!(
-        g,
-        format!(
-            "Ball bl-1: T\n\nB\n\nThe project repository checkout for this work is the git worktree at:\n{}   (branch work/bl-1 of {PROJ})\nDo all repository work there, by absolute path. Do not rely on the current directory.",
-            wt.display(),
-        )
-    );
+    let g = prefill(&existing_ball());
+    assert_eq!(g, "Ball bl-1: T\n\nB");
+    assert!(!g.contains(&wt.display().to_string()));
+    assert!(!g.contains(PROJ));
+    assert!(!g.contains("worktree"));
+    assert!(!g.contains("absolute path"));
 }
 
 #[test]
 fn prefill_for_a_new_ball_is_title_and_body_only() {
-    // Pre-create the id/worktree are unknown; the worktree preamble joins on the
-    // re-plan once `bl create` mints the id (§8.1).
-    assert_eq!(prefill(&new_ball(), None), "Ball (new): Fresh\n\ndo");
+    // Pre-create the id is unknown, so the header cannot carry it; the real
+    // `Ball <id>:` header joins on the re-plan once `bl create` mints the id
+    // (§8.1), and the binding joins with the claim that follows it.
+    assert_eq!(prefill(&new_ball()), "Ball (new): Fresh\n\ndo");
 }
 
 #[test]
@@ -85,8 +86,7 @@ fn parse_ball_stamp_is_the_inverse_of_the_composed_header() {
     // A modern goal.md is the prefill verbatim (bl-6920: nothing prepended); a
     // pre-0.0.4 root carries the legacy identity stamp above the header. The
     // parse reads the id back off the `Ball <id>:` line regardless.
-    let wt = work_worktree_path(Path::new(BALLS), Path::new(PROJ), "bl-1", None);
-    let modern = prefill(&existing_ball(), Some(&wt));
+    let modern = prefill(&existing_ball());
     assert_eq!(parse_ball_stamp(&modern).as_deref(), Some("bl-1"));
     let legacy = format!("You are cobalt-gecko.\n\n{modern}");
     assert_eq!(parse_ball_stamp(&legacy).as_deref(), Some("bl-1"));
@@ -110,24 +110,30 @@ fn parse_ball_stamp_rejects_non_ball_goals_and_malformed_headers() {
     );
 }
 
+/// The typed work target, per rung (§3.3, bl-6654 / VISION §4.10 item 2) — the
+/// value the fire passes as lernie's `--cwd`.
 #[test]
-fn driver_cwd_is_the_per_rung_directory() {
-    let home = Path::new(HOME);
+fn target_binding_is_the_per_rung_work_target() {
     let wt = work_worktree_path(Path::new(BALLS), Path::new(PROJ), "bl-1", None);
-    assert_eq!(driver_cwd(&Payload::Bare, home, None), PathBuf::from(HOME));
+    // The bare rung binds nothing: lernie's own default (the agent worktree)
+    // stands, which is what "no work target" means.
+    assert_eq!(target_binding(&Payload::Bare, None), None);
+    // The path rung binds the directory box's value.
     assert_eq!(
-        driver_cwd(
+        target_binding(
             &Payload::Path {
                 dir: PathBuf::from("/d")
             },
-            home,
             None,
         ),
-        PathBuf::from("/d"),
+        Some(PathBuf::from("/d")),
     );
-    assert_eq!(driver_cwd(&existing_ball(), home, Some(&wt)), wt);
-    // A not-yet-created ball has no worktree, so it falls back to `~`.
-    assert_eq!(driver_cwd(&new_ball(), home, None), PathBuf::from(HOME));
+    // The ball rung binds the claim's cross-checked work worktree, never the
+    // project root it lives beside.
+    assert_eq!(target_binding(&existing_ball(), Some(&wt)), Some(wt));
+    // A not-yet-created ball has no claim yet, so it binds nothing; the re-plan
+    // after `bl create` binds the worktree the claim mints (§8.1).
+    assert_eq!(target_binding(&new_ball(), None), None);
 }
 
 #[test]
@@ -143,8 +149,17 @@ fn compose_prepared_derives_the_fire_params() {
     let p = compose_prepared(&inputs, None);
     assert_eq!(p.name, "cobalt-gecko");
     assert_eq!(p.workspace, workspace_path(Path::new(YOG), "cobalt-gecko"));
-    assert_eq!(p.cwd, PathBuf::from(HOME));
+    assert_eq!(p.binding, None, "the bare rung binds no work target");
     assert_eq!(p.goal, "");
+    // **The work target is the binding and nothing else** (bl-6654): there is no
+    // per-rung driver cwd field left to disagree with it.
+    let wt = work_worktree_path(Path::new(BALLS), Path::new(PROJ), "bl-1", None);
+    let ball = StartInputs {
+        payload: existing_ball(),
+        ..inputs.clone()
+    };
+    let bound = compose_prepared(&ball, Some(&wt));
+    assert_eq!(bound.binding, Some(wt));
     // **The workspace name is a query, not a field** (§3.1, bl-d942): it is the
     // target path's leaf, for a foreign workspace outside the names root exactly
     // as for one of yog's own — nothing carries a second copy of it.

@@ -56,7 +56,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
         name, DEFAULT_NAME,
         "the bootstrap names without asking (§3.1)"
     );
-    assert_eq!(prepared.cwd, home.path(), "bare cwd is ~");
+    assert_eq!(prepared.binding, None, "the bare rung binds no work target");
     let ws = workspace_path(yog.path(), &name);
     assert_eq!(prepared.workspace, ws);
     // The conversation mint re-derives at fire off a fresh generator on the same
@@ -122,7 +122,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     let ops = yog::opslog::tail(state.path(), 16);
     assert_eq!(ops.len(), 3);
     assert_eq!(ops[2].exit, DETACHED_EXIT);
-    assert_eq!(ops[2].cwd, home.path().display().to_string());
+    assert_eq!(ops[2].cwd, ws.display().to_string());
     assert_eq!(
         ops[2].argv[5], "make me a plan",
         "the logged goal is verbatim"

@@ -100,7 +100,7 @@ fn a_launch_that_never_left_the_ground_keeps_its_prediction() {
     world.state.start.pending = Some(Prepared {
         name: "ws".to_owned(),
         workspace: ws.clone(),
-        cwd: ws,
+        binding: None,
         goal: "fix the gate".to_owned(),
         origin: crate::opslog::Origin::Balls,
     });
@@ -143,7 +143,7 @@ fn the_ball_rungs_send_retires_the_seed_the_same_way() {
     world.state.start.pending = Some(Prepared {
         name: "ws".to_owned(),
         workspace: ws.clone(),
-        cwd: ws,
+        binding: None,
         goal: "fix the gate".to_owned(),
         origin: crate::opslog::Origin::Balls,
     });

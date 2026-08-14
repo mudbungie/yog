@@ -30,6 +30,19 @@ pub(super) fn path_of(obj: &Map<String, Value>, key: &str) -> Result<PathBuf, St
     Ok(PathBuf::from(str_of(obj, key)?))
 }
 
+/// An **optional** path field: absent or `null` reads as `None`, a string as
+/// the path, anything else refuses by name. The one field shape where "not
+/// bound" is a value rather than a malformed gesture (§3.3's typed target
+/// binding, bl-6654), so it is a reader of its own rather than a `path_of`
+/// call the caller is free to swallow the error of.
+pub(super) fn opt_path_of(obj: &Map<String, Value>, key: &str) -> Result<Option<PathBuf>, String> {
+    match obj.get(key) {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(s)) => Ok(Some(PathBuf::from(s))),
+        Some(_) => Err(format!("field {key:?} is not a string or null")),
+    }
+}
+
 /// A required unsigned-integer field.
 pub(super) fn usize_of(obj: &Map<String, Value>, key: &str) -> Result<usize, String> {
     let n = obj

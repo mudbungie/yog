@@ -2,7 +2,7 @@
 //!
 //! Everything here is pure. The **payload prefill** ([`prefill`]) is the editable
 //! text the operator sees: empty (bare), a target preamble naming the directory
-//! verbatim (path), or the ball's title/body/worktree preamble (ball). What the
+//! verbatim (path), or the ball's header and body (ball). What the
 //! operator edits is exactly what fires (bl-6920: the goal reaches the model
 //! unmutated); identity is not text at all — the minted name rides `--name`, and
 //! lernie states the stored fact in its assembled context. The name is the
@@ -39,29 +39,28 @@ pub struct Composer {
 /// The pre-submit composer view-model (§3.3): the predicted name paired with
 /// the payload prefill. Nothing spawns (I7).
 pub fn preview(inputs: &StartInputs, rng: &dyn Rng) -> Composer {
-    let worktree = canonical_worktree(&inputs.payload, &inputs.balls_state_root);
     Composer {
         preview: identity_preview(&inputs.conversation_names, rng),
-        prefill: prefill(&inputs.payload, worktree.as_deref()),
+        prefill: prefill(&inputs.payload),
     }
 }
 
 /// The editable payload prefill (§3.3), per rung — since bl-6920 also exactly
-/// what fires: nothing is prepended. Bare is empty (the operator types); path and
-/// ball carry their target preambles verbatim. `worktree` is the resolved ball
-/// worktree the composer names (§3.3, threaded from the claim cross-check): the
-/// canonical `<id>` leaf or the `<id>-<claimant>` variant bl actually minted, so
-/// the preamble never names a nonexistent path. `None` for bare/path/new rungs.
-pub(super) fn prefill(payload: &Payload, worktree: Option<&Path>) -> String {
+/// what fires: nothing is prepended. Bare is empty (the operator types); path
+/// carries its target preamble; ball carries its header and body. **Payload
+/// only, since bl-6654:** the work target is no longer prose here — it rides
+/// the fire's typed `--cwd` binding ([`target_binding`]) — so the prefill is
+/// the model-facing content and nothing else.
+pub(super) fn prefill(payload: &Payload) -> String {
     match payload {
         Payload::Bare => String::new(),
         Payload::Path { dir } => path_preamble(dir),
         Payload::Ball {
-            project,
             ball: BallSpec::Existing {
                 id, title, body, ..
             },
-        } => ball_preamble(id, title, body, worktree.unwrap_or(project), project),
+            ..
+        } => ball_preamble(id, title, body),
         Payload::Ball {
             ball: BallSpec::New { title, body },
             ..
@@ -109,15 +108,17 @@ pub(crate) fn leaf_name(workspace: &Path) -> String {
         .unwrap_or_default()
 }
 
-/// The §3.3 ball worktree preamble verbatim: the ball header, the body, and the
-/// durable target-repo binding (the absolute work-worktree path rides in the
-/// goal *content* because lernie has no target-repo concept, §3.3).
-fn ball_preamble(id: &str, title: &str, body: &str, worktree: &Path, project: &Path) -> String {
-    format!(
-        "Ball {id}: {title}\n\n{body}\n\nThe project repository checkout for this work is the git worktree at:\n{worktree}   (branch work/{id} of {project})\nDo all repository work there, by absolute path. Do not rely on the current directory.",
-        worktree = worktree.display(),
-        project = project.display(),
-    )
+/// The §3.3 ball payload verbatim: the `Ball <id>: <title>` header and the body.
+/// The header stays because it is the §3.2 conversation→ball join, not a
+/// location channel — [`parse_ball_stamp`] reads it back. The worktree
+/// paragraph it used to trail ("The project repository checkout for this work
+/// is the git worktree at: …") is **gone** (bl-6654, VISION §4.10 item 2): an
+/// absolute path in prose was the interim channel while pinned lernie had no
+/// creation-time working directory, and a model had to notice and obey it. The
+/// binding is typed now — [`target_binding`] rides `--cwd` — so location is a
+/// parameter, and the goal is payload.
+fn ball_preamble(id: &str, title: &str, body: &str) -> String {
+    format!("Ball {id}: {title}\n\n{body}")
 }
 
 /// The ball id a conversation root's `goal.md` carries (§3.3): the inverse of
@@ -139,39 +140,42 @@ fn stamp_id(line: &str) -> Option<String> {
     (!id.is_empty() && !id.contains(char::is_whitespace)).then(|| id.to_owned())
 }
 
-/// The per-rung driver cwd (§3.4): `~` (bare / a not-yet-created ball), the given
-/// directory (path), or the resolved work worktree (an existing ball). `worktree`
-/// is the claim's cross-checked path (canonical or `<id>-<claimant>`); the
-/// existing-ball arm prefers it, falling back to `~` only defensively (the
-/// executor always resolves one). Belt-and-suspenders beside the goal-content
-/// binding (§3.3).
-pub(super) fn driver_cwd(payload: &Payload, home: &Path, worktree: Option<&Path>) -> PathBuf {
+/// The rung's **typed work target** (§3.3, bl-2b8c / VISION §4.10 item 2): what
+/// the fire passes as lernie's `--cwd`, seeding the agent's working-directory
+/// mark at creation. The path rung binds the directory box's value; the ball
+/// rung binds the claim's cross-checked `work/<id>` worktree; the bare rung and
+/// a not-yet-created ball bind nothing, and an absent `--cwd` is lernie's own
+/// default (the agent's worktree). Not a rung table: `worktree` is already
+/// `None` for every rung but an existing ball ([`super::resolve_worktree`]), so
+/// it *is* the ball rung's binding and the match has two arms, not four.
+pub(super) fn target_binding(payload: &Payload, worktree: Option<&Path>) -> Option<PathBuf> {
     match payload {
-        Payload::Path { dir } => dir.clone(),
-        Payload::Ball {
-            ball: BallSpec::Existing { .. },
-            ..
-        } => worktree.unwrap_or(home).to_path_buf(),
-        Payload::Bare
-        | Payload::Ball {
-            ball: BallSpec::New { .. },
-            ..
-        } => home.to_path_buf(),
+        Payload::Path { dir } => Some(dir.clone()),
+        _ => worktree.map(Path::to_path_buf),
     }
 }
 
 /// The composer's fire-time parameters as a [`Prepared`](super::Prepared): the
-/// resolved name, its workspace path, the per-rung driver cwd, and the editable
-/// goal prefill (fired verbatim, bl-6920). `worktree` is the resolved ball worktree
-/// (§3.3, addendum): the planner passes the canonical formula, the executor the
-/// claim's cross-checked path. The single source both [`super::plan`]'s `Prompt`
-/// step and [`super::prepare`]'s return derive from.
+/// resolved name, its workspace path, the typed target binding and the editable
+/// goal prefill (fired verbatim, bl-6920). `worktree` is the resolved ball
+/// worktree (§3.3, addendum): the planner passes the canonical formula, the
+/// executor the claim's cross-checked path. The single source both
+/// [`super::plan`]'s `Prompt` step and [`super::prepare`]'s return derive from.
+///
+/// **There is no per-rung driver cwd any more (bl-6654).** `Prepared` used to
+/// carry one — `~`, the given directory, or the work worktree — as the initial
+/// `lernie prompt` process's `current_dir`. It was a second, weaker spelling of
+/// the work target: it reached that one process and no tool step (every step
+/// runs at the agent's own working-directory mark), which DESIGN §3.3 recorded
+/// as misleading redundancy. [`target_binding`] is the one operative channel
+/// now, so the field is gone rather than pinned to a constant, and the detached
+/// driver simply stands in the workspace it drives.
 pub(super) fn compose_prepared(inputs: &StartInputs, worktree: Option<&Path>) -> super::Prepared {
     super::Prepared {
         name: leaf_name(&inputs.workspace),
         workspace: inputs.workspace.clone(),
-        cwd: driver_cwd(&inputs.payload, &inputs.home, worktree),
-        goal: prefill(&inputs.payload, worktree),
+        binding: target_binding(&inputs.payload, worktree),
+        goal: prefill(&inputs.payload),
         origin: inputs.payload.origin(),
     }
 }

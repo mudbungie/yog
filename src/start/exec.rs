@@ -65,7 +65,12 @@ pub struct ClaimResolved {
 pub struct Prepared {
     pub name: String,
     pub workspace: PathBuf,
-    pub cwd: PathBuf,
+    /// The §3.3 **typed work target** (bl-6654): the directory the fire passes
+    /// as lernie's `--cwd`, seeding the agent's working-directory mark at
+    /// creation so *every* tool step runs there — not just the first process.
+    /// `None` binds nothing and lets lernie's own default (the agent worktree)
+    /// stand: the bare rung, and a ball not yet created.
+    pub binding: Option<PathBuf>,
     pub goal: String,
     /// The §7.3 banner surface this start's ops rows carry (bl-48f8) — the
     /// rung's own ([`Payload::origin`](super::Payload::origin)), carried here so

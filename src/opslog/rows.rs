@@ -19,8 +19,8 @@ const SURFACE_STDERR_LINES: usize = 3;
 
 /// The one elision policy for [`OpRow::summary`] (bl-0bf9): a collapsed row is
 /// a scan surface, one row per op — a prompt op's `argv` carries an arbitrary-
-/// length, multi-line goal (identity preamble + payload + ball worktree
-/// preambles) that used to flow into the list unwrapped, breaking the scan.
+/// length, multi-line goal (a whole ball body is the ordinary case) that used
+/// to flow into the list unwrapped, breaking the scan.
 /// Past this many `char`s the summary is cut with a trailing `…`; this is the
 /// ONLY place `argv` elides — the expansion (`cwd`/`exit`/`stdout`/`stderr`,
 /// §4.2) always carries `argv` byte-exact.
@@ -199,8 +199,8 @@ mod tests {
         assert_eq!(OpRow::from(&entry(0, "")).summary(), "bl close bl-4db6");
     }
 
-    /// bl-0bf9 acceptance: a 500-char multi-line goal (a prompt op's identity
-    /// preamble + payload + ball worktree preambles) renders as ONE elided
+    /// bl-0bf9 acceptance: a 500-char multi-line goal (a prompt op's payload —
+    /// a ball body reaches this length routinely) renders as ONE elided
     /// single-line summary of bounded length — the collapsed row's whole point
     /// — while the row's own `argv` field stays byte-exact, because the
     /// expansion (§4.2) must never lose bytes, only the collapsed summary

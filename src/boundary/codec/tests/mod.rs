@@ -1,6 +1,7 @@
 //! Round-trip tables for the gesture codec (§8.5 deliverable 3): **every**
-//! variant re-enters as itself, and every malformed envelope refuses with a
-//! reason — never a guessed default.
+//! variant re-enters as itself. The other half of that deliverable — every
+//! malformed envelope refusing with a reason, never a guessed default — is
+//! [`refusals`], split out at §12's cap.
 
 use super::*;
 use crate::monitor::Verb;
@@ -13,6 +14,7 @@ mod control;
 mod fleet;
 mod fork;
 mod query;
+mod refusals;
 
 pub(super) fn rt(gesture: Gesture) {
     let encoded = encode(&gesture);
@@ -175,19 +177,25 @@ fn every_join_state_round_trips_inside_an_existing_ball() {
     }
 }
 
+/// Every origin **and both states of the §3.3 typed binding** (bl-6654): a
+/// bound rung and the bare rung's `None` are two values of one field, so both
+/// have to survive the wire — `null` decoding as "bind nothing" is the whole
+/// reason the bare rung can be deposited back as the gesture it was.
 #[test]
 fn every_origin_round_trips_inside_a_prompt() {
     for origin in [Origin::Balls, Origin::Conversation, Origin::World] {
-        rt(Gesture::Act(Action::Prompt {
-            prepared: Prepared {
-                name: "alba".into(),
-                workspace: p("/ws"),
-                cwd: p("/cwd"),
-                goal: "the goal".into(),
-                origin,
-            },
-            goal: "edited goal".into(),
-        }));
+        for binding in [None, Some(p("/target"))] {
+            rt(Gesture::Act(Action::Prompt {
+                prepared: Prepared {
+                    name: "alba".into(),
+                    workspace: p("/ws"),
+                    binding,
+                    goal: "the goal".into(),
+                    origin,
+                },
+                goal: "edited goal".into(),
+            }));
+        }
     }
 }
 
@@ -204,88 +212,4 @@ fn a_stop_without_the_children_field_defaults_to_false() {
             children: false,
         }))
     );
-}
-
-/// Every refusal names its offence — the depositor's only diagnostic.
-#[test]
-fn malformed_envelopes_refuse_with_a_reason() {
-    use serde_json::json;
-    let cases: Vec<(serde_json::Value, &str)> = vec![
-        (json!("not an object"), "not a JSON object"),
-        (json!({}), "missing or non-string field \"op\""),
-        (json!({"op": "warp"}), "unknown op \"warp\""),
-        (
-            json!({"op": "message", "workspace": "/ws"}),
-            "field \"agent\"",
-        ),
-        (
-            json!({"op": "message", "workspace": 7, "agent": "a", "content": "c"}),
-            "field \"workspace\"",
-        ),
-        (json!({"op": "ops"}), "non-integer field \"max\""),
-        (json!({"op": "seen", "workspace": "/ws"}), "field \"agent\""),
-        (
-            json!({"op": "ops", "max": "many"}),
-            "non-integer field \"max\"",
-        ),
-        (
-            json!({"op": "prepare", "workspace": "/ws"}),
-            "missing payload",
-        ),
-        (
-            json!({"op": "prepare", "workspace": "/ws", "payload": 3}),
-            "payload: not an object",
-        ),
-        (
-            json!({"op": "prepare", "workspace": "/ws", "payload": {"rung": "warp"}}),
-            "unknown rung",
-        ),
-        (
-            json!({"op": "prepare", "workspace": "/ws",
-                   "payload": {"rung": "ball", "project": "/p"}}),
-            "missing ball",
-        ),
-        (
-            json!({"op": "prepare", "workspace": "/ws",
-                   "payload": {"rung": "ball", "project": "/p", "ball": 4}}),
-            "ball: not an object",
-        ),
-        (
-            json!({"op": "prepare", "workspace": "/ws",
-                   "payload": {"rung": "ball", "project": "/p",
-                               "ball": {"id": 9, "title": "t", "body": "b"}}}),
-            "id not a string",
-        ),
-        (
-            json!({"op": "prepare", "workspace": "/ws",
-                   "payload": {"rung": "ball", "project": "/p",
-                               "ball": {"id": "x", "title": "t", "body": "b"}}}),
-            "field \"join\"",
-        ),
-        (
-            json!({"op": "prepare", "workspace": "/ws",
-                   "payload": {"rung": "ball", "project": "/p",
-                               "ball": {"id": "x", "title": "t", "body": "b", "join": "warp"}}}),
-            "unknown join state",
-        ),
-        (json!({"op": "prompt", "goal": "g"}), "missing prepared"),
-        (
-            json!({"op": "prompt", "prepared": [], "goal": "g"}),
-            "prepared: not an object",
-        ),
-        (
-            json!({"op": "prompt", "goal": "g",
-                   "prepared": {"name": "n", "workspace": "/w", "cwd": "/c",
-                                "goal": "g", "origin": "warp"}}),
-            "unknown origin",
-        ),
-        (
-            json!({"op": "update", "project": "/p", "id": "x", "name": "n", "title": 5}),
-            "title: not a string",
-        ),
-    ];
-    for (envelope, needle) in cases {
-        let err = decode(&envelope).expect_err(&envelope.to_string());
-        assert!(err.contains(needle), "{envelope} -> {err:?}");
-    }
 }

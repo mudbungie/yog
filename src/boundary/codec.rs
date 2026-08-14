@@ -24,7 +24,7 @@ mod monitor;
 mod query;
 mod start;
 use config::encode_file;
-use fields::{act, obj, path_of, str_of, usize_of};
+use fields::{act, obj, opt_path_of, path_of, str_of, usize_of};
 use start::{
     decode_payload, decode_prepared, encode_path, encode_payload, encode_prepared, opt_field,
     opt_of,

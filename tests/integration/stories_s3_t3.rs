@@ -64,7 +64,11 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
         prepared.name, "cobalt-gecko",
         "no mint — the claimant workspace"
     );
-    assert_eq!(prepared.cwd, worktree, "prompt into the bound worktree");
+    assert_eq!(
+        prepared.binding.as_deref(),
+        Some(worktree.as_path()),
+        "prompt bound to the bound worktree"
+    );
     assert!(
         bl.invocations().is_empty(),
         "no second claim (resume, §8.1)"

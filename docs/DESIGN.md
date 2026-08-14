@@ -348,29 +348,43 @@ the ball; the `Ball <id>:` line in `goal.md`), stored nowhere by yog (I2).
 
 ### 3.3 Work-target and conversation identity ride in the goal — through an editable composer
 
-Pinned lernie (`=0.0.8`) has no target-repo concept, and its tools do **not**
-inherit the driver's cwd: the executor runs every tool subprocess in the
-agent's working directory — the agent worktree by default, movable only by
-the agent's own `cd` built-in, which writes the id-scoped mark
-(`refs/lernie/cwd/<agent-id>`) the executor reads back at every spawn. The
-pin now carries a creation-time seed for that mark (`--cwd` on `lernie
-prompt`/`lernie dispatch`, upstream bl-d0b4), but **no yog surface passes
-it** — that is bl-6654's delivery — so yog's `current_dir` still reaches only
-the initial `lernie prompt` process and the work target is **model-facing
-content only** today: the composed goal embeds its absolute path, and the
-model must use it explicitly. Edits there land in balls' external project
-worktree, outside lernie's agent branch, commit-per-side-effect history,
-child inheritance, bundle, and replay. This is the verified two-Git limit,
-not a target binding. **Ruled (bl-2b8c — VISION §4.10 is the
-cross-suite authority):** the operative channel becomes that same mark,
-seeded at creation (lernie bl-d0b4) and passed typed by the fire (bl-6654 —
-ball rung: the claim-derived `work/<id>` worktree; path rung: the directory
-box's value; bare rung: nothing), with per-step observed project OIDs
-joining project commits to agent history by pointer. The goal keeps payload
-(ball title and body — and the `Ball <id>:` headline stays, as the §3.2
-conversation→ball join) and loses the location preamble; attempt isolation
-and delivery ride balls (bl-a1a4/bl-4eac, consumed by bl-8746). Until those
-pins land, the prose preamble below is the shipped interim.
+Lernie has no target-repo concept, and its tools do **not** inherit the
+driver's cwd: the executor runs every tool subprocess in the agent's working
+directory — the agent worktree by default, movable only by the agent's own `cd`
+built-in, which writes the id-scoped mark (`refs/lernie/cwd/<agent-id>`) the
+executor reads back at every spawn. **The work target is a typed parameter
+(bl-6654, landed on lernie `=0.0.8`):** the fire passes the rung's binding as
+`lernie prompt --cwd <path>` (upstream bl-d0b4), which seeds that mark at
+creation — so *every* tool step of every later turn runs at the target, not
+just the initial process. One channel, per rung: **ball** binds the
+claim-derived `work/<id>` worktree, **path** binds the directory box's value,
+**bare** binds nothing and lets lernie's own default (the agent worktree)
+stand. Nothing is inherited by children.
+
+Two weaker spellings were retired with it, because a fact with three channels
+is three facts:
+
+- **The goal-prose preamble is gone.** The ball prefill used to trail its body
+  with "The project repository checkout for this work is the git worktree at:
+  …", an absolute path the *model* had to read and obey — a location channel
+  made of content. The goal is payload now: the ball's title and body, and the
+  `Ball <id>:` headline, which stays because it is the §3.2 conversation→ball
+  join, not a location. (The path rung's `Working directory: <dir>` first line
+  stays too: it is that rung's headline — the display ladder's rung two, §3.3 —
+  and the operator typed it.)
+- **The per-target `current_dir` is gone.** Yog set the initial `lernie prompt`
+  process's directory per rung. It reached that one process and no tool step,
+  which made it look like a binding while binding nothing; DESIGN recorded it
+  as misleading redundancy. `Prepared` carries no cwd field at all now — the
+  detached driver simply stands in the workspace it drives.
+
+Edits at the target still land in balls' external project worktree, outside
+lernie's agent branch, commit-per-side-effect history, child inheritance,
+bundle, and replay. That is the verified two-Git limit, and the binding does
+not dissolve it: **ruled (bl-2b8c — VISION §4.10 is the cross-suite
+authority)**, per-step observed project OIDs join project commits to agent
+history by pointer, and attempt isolation and delivery ride balls
+(bl-a1a4/bl-4eac, consumed by bl-8746).
 
 The start flow (§3.4) opens a **prompt composer prefilled** per payload rung.
 **The workspace stamp is the harness's, not the model's:** every
@@ -628,17 +642,14 @@ that takes no `--as` is untouched. One rule, no per-verb flag table.
 
 The path rung appends a target preamble whose first line is the headline —
 `Working directory: <dir>`, the directory verbatim — followed by the
-work-there-by-absolute-path sentence; the ball rung composes ball title, ball
-body verbatim, and the worktree preamble:
+work-there-by-absolute-path sentence; the ball rung composes the header and the
+ball body verbatim, and nothing else (bl-6654 retired the worktree preamble;
+the path is the typed `--cwd` binding now, not prose):
 
 ```
 Ball <id>: <title>
 
 <ball body verbatim>
-
-The project repository checkout for this work is the git worktree at:
-<abs worktree path>   (branch work/<id> of <project-path>)
-Do all repository work there, by absolute path. Do not rely on the current directory.
 ```
 
 **Transparency, scoped by ownership:**
@@ -666,13 +677,14 @@ first-word-major, so the walk paid out siblings (`recite-a`, `recite-b`,
 refused or failed launch minted nothing and keeps its seed. The
 binding mechanic stays transparent, and no goal-template config file exists
 (the visible editable prefill is the severable version; deleting nothing
-changes no code path). Yog also sets `current_dir` per the §3.4 cwd column on
-the initial spawn, but that is **not** a second work-target mechanism in
-pinned lernie: every later tool cwd is the agent's own working directory
-(the agent worktree, unless the agent's `cd` moved its mark). bl-2b8c ruled
-the resolution: the durable operative channel is the creation-seeded mark
-(VISION §4.10 item 2), and bl-6654 retires the per-target `current_dir`
-when it lands — one channel, no misleading redundancy.
+changes no code path). Yog sets **no** per-target `current_dir` on the initial
+spawn any more (bl-6654): it was never a work-target mechanism — every later
+tool cwd is the agent's own working directory (the agent worktree, unless its
+`cd` or the `--cwd` seed moved the mark) — so a second, weaker spelling of the
+target is deleted rather than kept beside the real one. `Prepared` carries no
+cwd field; the detached driver stands in the workspace it drives, the same for
+every rung, and the creation-seeded mark (VISION §4.10 item 2) is the one
+channel — no misleading redundancy.
 
 The worktree path is never stored (balls arch §11: "computed, never stored");
 it is recomputed by the bl-delivery formula
@@ -691,11 +703,11 @@ is the empty case of the general path**, never a wizard or a concept the new
 user meets. *What* it carries: the payload ladder, each rung the one below
 plus inputs.
 
-| Payload rung | Input | Extra steps | Composer prefill (the prefill fires verbatim, bl-6920; the name is previewed grey and passed via `--name`, §3.3) | Initial prompt-process cwd |
+| Payload rung | Input | Extra steps | Composer prefill (the prefill fires verbatim, bl-6920; the name is previewed grey and passed via `--name`, §3.3) | Typed work target (`--cwd`, §3.3) |
 |---|---|---|---|---|
-| **bare** | — | (none) | (none — the empty composer) | `~` |
-| **path** | a directory | (none) | target preamble, path verbatim | the path |
-| **ball** | a ball, picked or freshly created | `bl claim <id> --as <name>` | target preamble + ball title + body + worktree preamble | the work worktree |
+| **bare** | — | (none) | (none — the empty composer) | (none — lernie's default, the agent worktree) |
+| **path** | a directory | (none) | target preamble, path verbatim | the directory |
+| **ball** | a ball, picked or freshly created | `bl claim <id> --as <name>` | `Ball <id>: <title>` + body | the work worktree |
 
 - **Creating a workspace is the rare, deliberate verb** (New workspace,
   §11): raising a sphere wall — a client, corporate vs. personal — not a
@@ -740,13 +752,11 @@ plus inputs.
   a second pending concept beside it: the same value names the conversation,
   holds the goal, and is retired by the one predicate that also spends the
   focus.
-- The path rung's directory need **not** be a bl-primed project — it is only
-  the initial prompt-process cwd and model-facing intended target today, and
-  becomes the typed working-directory binding at fire once bl-6654 lands
-  (bl-2b8c's ruling, VISION §4.10 — a path start binds the directory but
-  carries no delivery obligation: no target, no attempts, no delivery).
-  Until that pin, pinned lernie tools still run in lernie's internal agent
-  worktree.
+- The path rung's directory need **not** be a bl-primed project — it is the
+  typed working-directory binding the fire passes as `--cwd` (bl-6654,
+  consuming bl-2b8c's ruling, VISION §4.10), and a path start binds the
+  directory while carrying no delivery obligation: no target, no attempts, no
+  delivery.
 - **The directory is a birth parameter, and it is pre-filled** (bl-7927): an
   editable text box with the default pre-chosen, at the top in the config
   block rather than at the bottom beside the message. Its one carrier is the §11 birth-config block's
@@ -5771,9 +5781,10 @@ move content down.
   per-step OID, which nothing writes yet. It is the only tab whose subject is
   a repo other than the conversation's, which is why it sits last and why it
   is keyed on the workspace rather than on the selected agent — the
-  conversation-to-directory binding is lernie's working-directory mark, and
-  until yog passes it typed (bl-6654) a per-conversation answer would be a
-  guess. **Nothing here mutates**: it is a git read, and the range it prints
+  conversation-to-directory binding is lernie's working-directory mark, which
+  yog now seeds typed at creation (bl-6654) — but only per *conversation root*,
+  and an agent's own `cd` may move it after, so a per-conversation answer read
+  off this tab would still be a guess. **Nothing here mutates**: it is a git read, and the range it prints
   is the command an operator can run in a shell.
 
 **Bottom accessories (`TopBottomPanel::bottom`, stacked — innermost first
@@ -7167,7 +7178,7 @@ beside `main.rs`.
 | `src/search/{mod,corpus,excerpt,worker}.rs` | 175+140+50+90 | the §8.5 global search: the `Address`/`Field`/`Hit` vocabulary, the answer that carries its own needle (`Found::asked`, the strip's offer predicate, beside `Found::is_empty`, the pane's — bl-648a) and the empty answer's wording, the deterministic rank and bound, and `run` — the one engine all three seats end in; the corpus (the snapshot half free, the conversation half re-read from disk and the half cancellation is checked between); the matched-line window at char boundaries; and the window's searcher thread |
 | `src/shell/model_pick/{mod,seat,lines,marks,ram,select,write}.rs` (excl.) | 197+154+112+58+139+293+58 | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its exit (bl-9786), the write receipt, and the pane's extras while it is open — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks; the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns and the pane's role strip; the two-file write plan |
 | `src/spend/{mod,prices,ceiling,render}.rs` | 215+120+150+177 | the §3.5 join, pure over the worker's pre-walked bills (bl-9dd4) — selection, attribution, the honest-granularity label, and the unpriced remainder, with `of_workspace` the one deliberate fresh walk because a gate compares against now; the price table's parse and its micro-USD arithmetic; the §3.5 spend ceiling's policy half — the operator's number and the at-or-over comparison against the workspace figure (bl-56d5); the one figure widget every spend seat paints — the board's ball rows and the conversation's settings rows (bl-2e18) — whose attribution clause is independent of the price table, so the honest-granularity label survives deleting the cost column (bl-1765) |
-| `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | 261+177+86+235+88+112+158 | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the §8.6 control authoring that runs outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire |
+| `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | 264+181+84+240+88+128+158 | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the §8.6 control authoring that runs outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire |
 | `src/state.rs` | 270 | the crate's lock chokepoint: the dirty hand-off, the snapshot cell, the §8.5 search cell and the §7.2 live-tail cell — the whole inter-thread interface (§7.2, §8.5, AGENTS rule 7). The tail cell is **appended whole below every line that was there before**, and takes the snapshot cell's *alias + free functions* spelling rather than a struct with an `impl` — including leaving the module doc's stale "three residents" line untouched. That is the hazard `rules/locks-outside-state.yml` records as the reason for both its carve-outs: llvm-cov mis-attributes phantom uncovered regions onto this file's `impl` headers when anything above them moves, and an added `impl` block draws one onto itself besides. This is genuine cross-thread hand-off state — what the chokepoint exists to inventory — so it belongs here and the spelling gives way instead of the rule. The watch hub's two singletons are its second declared carve-out (§7.1, `rules/locks-outside-state.yml`) |
 | `src/steps_view/{mod,detail,columns,render,drill,wound}.rs` | 160+170+110+120+200+160 | the step inspector, incl. the §7.3 no-response wound (§11 Steps). Both tiers are cut twice, read from write: `mod`+`detail` are the list/drill-in **reads**, `render`+`drill` their **paints**, and `columns` is the §11 column table — header, hover explanation and cell in one home, so no field paints without its name (bl-3ffc) |
 | `src/tail.rs` | 75 | the §11 tail idiom in one home (bl-8c13): the `stick_to_bottom` anchor and the top pad that seats an underfull body on the bottom edge, taken together by every tail surface and restated by none; since bl-929d it also hands back the body height it already measures, so a content-sized region (the inbox-composer) derives its extent from the one measurement |
