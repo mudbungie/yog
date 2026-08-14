@@ -134,7 +134,11 @@ why binding lives there (§3.2).
 - **I3 — All yog file writes are temp-in-destination-directory + `rename`.**
   Never in-place truncation, never a temp on another filesystem (EXDEV). Temp
   names are dotfiles (`.<name>.yog-tmp-<pid>`) so no substrate reads them;
-  leftovers older than 24 h are swept at startup. `ops.jsonl` is the one
+  leftovers older than 24 h are swept at startup. The name and the sweep are
+  **one home** — `src/scratch.rs` — because a sweep that spelled the temp
+  differently from the writer would delete nothing, or delete something else
+  (bl-e47c: the write half had three sites and the sweep half was never
+  written). `ops.jsonl` is the one
   exception: O_APPEND lines ≤ 4096 bytes (PIPE_BUF), atomic per line.
 - **I4 — Watches are latency, polls are correctness.** fs-watch (notify:
   inotify/FSEvents) triggers re-derivation fast; a periodic sweep re-derives
@@ -1825,9 +1829,15 @@ authority for what that driver said, projected into its `-2` ops row at read
 time. Like `ops.jsonl` they are not rotated in v1.
 
 Plus two *transient scratch* artifacts that exist only inside an operation and
-are swept: config staging temps (`.<name>.yog-tmp-<pid>` in the destination dir)
-and the scripted-editor staging directory `$XDG_STATE_HOME/yog/stage/<nonce>/`
-(§9.3). Neither is an authority; leftovers >24 h old are swept at startup.
+are swept: I3 temps (`.<name>.yog-tmp-<pid>` in the destination dir — `ui.json`'s
+directory, the §9.2 config root and its `workflows/`, and each wall's three
+brazen destinations) and the scripted-editor staging directory
+`$XDG_STATE_HOME/yog/stage/<nonce>/` (§9.3). Neither is an authority; leftovers
+>24 h old are swept at startup — both halves off one clock read in
+`Engine::boot`, the temps by `scratch::sweep` over `scratch::dirs` and the
+staging dirs by `config_edit::branch::edit::sweep_staging`. The sweep takes only
+a regular file whose name yog itself would have written, directly in one of
+those directories: never a directory, never a symlink, never a walk.
 
 Five more yog-owned files exist and are deliberately **not state**: the world's
 tool shims `<yog-data-root>/world/tools/{bl,lernie,bz,bl-delivery,bl-tracker}`
@@ -7664,6 +7674,7 @@ beside `main.rs`.
 | `src/projects/join.rs` | the §3.5 join-state table (§3.2, §5.1 #7): the ball × workspace product enumerated once, bound iff the ball's claimant equals the workspace name — no operator identity, no stored fact |
 | `src/projects/runner.rs` | the `bl` effect behind `projects::balls` (§5.1 #2/#4, §16.7 W8): the three ball reads of one project, typed, in-process since W8 and faked in tests |
 | `src/rail/{mod,cards,cohort,pin,place,tree,wire}.rs` | the §11 step spine (VISION V1, bl-98da; re-seated into the chat by bl-1802), cut on five seams, all derivation and no paint — the seat is `src/transcript/spine.rs`: `mod` the spine's *shape* — the notch spine over the Steps view's `meta.commit` (§5.1 #29) and the row→notch lookup the chat renders through; `place` where each notch sits in the chat and how far its pin cuts, pairing one sealed model-output entry to each completed step (the ordinal alignment bl-929d and bl-98da both got wrong); `cards` a child's *placement* on it — the shared-commit-prefix fork point, the two edges, the fork label and the streaming tail, all pure over facts the snapshot already carries; `pin` the fold that threads one notch through the inspector (the transcript prefix, the budget as-of); `tree` the only new disk read — the Files tab out of `ls-tree`/`git show` at the pinned commit; `cohort` V2's fan, which is nothing but those cards grouped by the notch they were born at (§5.1 #33); and `wire` the spine's §8.5 spelling both ways, beside the type for the reason `workdiff::wire` gives — notches, seats and cards are this module's own vocabulary (bl-6233, decode bl-7067) |
+| `src/scratch.rs` | I3's scratch temp (§2 I3, §5.2, bl-e47c): the one spelling of `.<name>.yog-tmp-<pid>` every write site asks for, the exact predicate that recognizes one back, and the startup sweep — the pure 24 h decision, the best-effort per-directory removal, and `dirs`, the fold naming every destination yog writes a temp into. Name and sweep are one home because a sweep spelled differently from the writer deletes nothing, or something else |
 | `src/search/{mod,corpus,excerpt,worker}.rs` | the §8.5 global search: the `Address`/`Field`/`Hit` vocabulary, the answer that carries its own needle (`Found::asked`, the strip's offer predicate, beside `Found::is_empty`, the pane's — bl-648a) and the empty answer's wording, the deterministic rank and bound, and `run` — the one engine all three seats end in; the corpus (the snapshot half free, the conversation half re-read from disk and the half cancellation is checked between); the matched-line window at char boundaries; and the window's searcher thread |
 | `src/shell/mod.rs` (excl.) | the *window assembly* — which panel sits where, in what order (bl-e160): §11's three altitudes wired into egui panels, every surface below painted inside one |
 | `src/shell/acceptance/{mod,smoke,screen,fixture,naming,overlap}.rs` (excl.) | the excluded full-window smoke test, whose harness (`mod`: the window geometry, the three-frame settle) and whose claims (`smoke`: what that window must show) split at the cap on `screen`'s own seam — bl-bc06's `elision` and bl-9551's `overlap` each fit alone and together crossed it, so the seam is the parent's, not either ball's |

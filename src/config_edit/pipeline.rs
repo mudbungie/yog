@@ -78,7 +78,7 @@ fn temp_path(dest: &Path) -> PathBuf {
         .and_then(|n| n.to_str())
         .unwrap_or("config");
     let dir = dest.parent().unwrap_or_else(|| Path::new("."));
-    dir.join(format!(".{name}.yog-tmp-{}", std::process::id()))
+    crate::scratch::temp_in(dir, name)
 }
 
 /// The terminal state of a [`Staged::commit`].

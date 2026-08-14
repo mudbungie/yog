@@ -29,8 +29,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 const SUBCOMMAND_CONFIG: &str = "config";
 const ENV_EDITOR: &str = "EDITOR";
 const ENV_EDIT_SRC: &str = "YOG_EDIT_SRC";
-/// Staging dirs untouched for longer than this are swept at startup (§5.2).
-const STALE_SECS: i64 = 24 * 60 * 60;
+/// Staging dirs untouched for longer than this are swept at startup (§5.2) —
+/// the bound is [`crate::scratch::STALE_SECS`], one home for both halves of
+/// that sentence.
+use crate::scratch::STALE_SECS;
 
 /// Which config lineage an edit targets (mirrors lernie
 /// `template::authoring::Origin`, §2.2/§2.3): advance the existing branch,

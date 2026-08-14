@@ -229,8 +229,7 @@ impl UiState {
             .path
             .file_name()
             .ok_or(io::Error::other("no file name"))?;
-        let tmp_name = format!(".{}.yog-tmp-{}", name.to_string_lossy(), std::process::id());
-        let tmp = dir.join(tmp_name);
+        let tmp = crate::scratch::temp_in(dir, &name.to_string_lossy());
         fs::write(&tmp, bytes)?;
         fs::rename(&tmp, &self.path)
     }

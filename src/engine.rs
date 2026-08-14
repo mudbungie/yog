@@ -55,9 +55,12 @@ impl Engine {
     /// at a window, [`NoRepaint`](crate::watch::NoRepaint) without one.
     ///
     /// The §5.2 startup sweep runs here rather than at either caller: dropping
-    /// stale scripted-editor staging is the *engine's* housekeeping, and its
-    /// wall clock is the injected [`Clock`] every other timestamp already comes
-    /// from — so a test advances it like anything else.
+    /// stale scratch is the *engine's* housekeeping, and its wall clock is the
+    /// injected [`Clock`] every other timestamp already comes from — so a test
+    /// advances it like anything else. It is **both** of §5.2's transient
+    /// artifacts off one clock read: the scripted-editor staging dirs, and
+    /// (bl-e47c) the I3 temps left in the destination directories yog writes
+    /// through — the half the doc had promised since I3 and nobody had written.
     pub fn boot(
         world: &Env,
         overrides: &[(String, String)],
@@ -65,10 +68,9 @@ impl Engine {
         clock: Arc<dyn Clock>,
         repaint: Arc<dyn Repaint>,
     ) -> Self {
-        config_edit::branch::edit::sweep_staging(
-            &world.yog_stage_root(),
-            clock.stamp().parse().unwrap_or(0),
-        );
+        let now_secs = clock.stamp().parse().unwrap_or(0);
+        config_edit::branch::edit::sweep_staging(&world.yog_stage_root(), now_secs);
+        crate::scratch::sweep(&crate::scratch::dirs(world), now_secs);
         let roots = Roots::of(world);
         // Ball reads are IN-PROCESS (§16.7 W8): balls' own layout over the world
         // env resolves the nested store checkout, and the `bl` Cli rides along
