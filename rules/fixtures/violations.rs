@@ -99,3 +99,14 @@ fn suppresses_a_lint() -> u32 {
 fn bare_child() -> std::io::Result<std::process::Child> {
     std::process::Command::new("lernie").spawn()
 }
+
+// Violation 14: a hand-rolled paint walk (no-hand-rolled-paint-walk.yml — the
+// `call_expression` whose function is a `field_expression` reading `text` off a
+// `galley`, outside `src/paint_probe.rs`). `Galley::text()` is the string that
+// went IN, so an assertion on it is blind to the elision the paint layer is the
+// only witness for; 1815 tests once passed while covering no truncation at all
+// (bl-bc06), and two later balls each found another private copy (bl-36c3,
+// bl-70b8). Painted glyphs come from `crate::paint_probe`.
+fn reads_the_input_text(t: &egui::epaint::TextShape) -> bool {
+    t.galley.text() == "Login"
+}

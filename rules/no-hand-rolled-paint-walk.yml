@@ -1,0 +1,45 @@
+# A paint assertion reads PAINTED GLYPHS, and there is one walk that does that:
+# `crate::paint_probe`. `Galley::text()` is the string that went *in* — a galley
+# egui truncated to `…` still reports the whole thing — so every assertion made
+# against it is blind to elision, which is the one defect the paint layer is the
+# only witness for.
+#
+# This shape has now been fixed three times. bl-bc06 found `paint_probe` itself
+# reading `Galley::text()`: **1815 tests passed while covering no truncation at
+# all**, and the fix reddened nothing, which is what proved the blindness.
+# bl-36c3 then swept for copies and found two more. bl-70b8 found a THIRD, still
+# live, in `shell/acceptance/screen.rs` — a private `find()` that aimed every
+# pointer test's click by input text — and that is the point of this file: the
+# first two fixes were fixes, and a fix does not reach the copy nobody knows
+# about. `paint_probe::collect` hands back `(painted text, rect)` and
+# `painted_of`/`seen_of` project it; a caller needing something else adds a
+# projection THERE, so the walk stays one.
+#
+# NOT A BAN ON THE GALLEY. Geometry off a galley is fine and unaffected —
+# `t.galley.size()`, `.rect`, `.rows.len()` all say what they mean. It is the
+# TEXT that lies, so it is the text that is refused.
+#
+# Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser: a
+# method call `x.galley.text()` is a `call_expression` whose `function` field is
+# a `field_expression` with field `text` whose value ends in `galley`, so the
+# regex catches every receiver spelling (`t.galley`, `shape.galley`, `self.g`
+# does not, and does not need to — a galley reached under another name is
+# reached through `paint_probe`).
+id: no-hand-rolled-paint-walk
+language: rust
+severity: error
+message: "read painted glyphs through crate::paint_probe, never Galley::text() (see rules/no-hand-rolled-paint-walk.yml)"
+ignores:
+  - "**/paint_probe.rs"
+rule:
+  kind: call_expression
+  has:
+    field: function
+    kind: field_expression
+    all:
+      - has:
+          field: field
+          regex: '^text$'
+      - has:
+          field: value
+          regex: 'galley$'

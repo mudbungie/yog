@@ -83,10 +83,24 @@ coverage:
 # before the minute-scale tools start.
 lint:
 	$(MAKE) line-cap
+	$(MAKE) beat-audit
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
 	$(MAKE) rules-audit
 	$(MAKE) deny
+
+# The two mechanical shapes of a drive beat that proves nothing (bl-70b8): a
+# beat that reaches only `pass` or only `fail`, so the outcome it exists to
+# catch writes no verdict row at all; and an assertion whose whole pattern is
+# one interpolation, which is `grep -q ""` — true of everything — the moment its
+# subject is missing. Both directions, the discipline `leak-scan` and
+# `rules-audit` already hold: the harness must be clean AND the script's own
+# fixture must still be flagged, so an edited pattern that silently matches
+# nothing cannot pass as a green check forever. Milliseconds, so it sits beside
+# `line-cap` at the head of the gate.
+beat-audit:
+	@scripts/beat-audit.sh --self-test
+	@scripts/beat-audit.sh
 
 # The disclosure gate (bl-fd5a): no credential, routable address, home path,
 # address, pasted dialogue, agent-session artifact or unreadable blob in the
