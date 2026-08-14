@@ -1,7 +1,7 @@
 +++
 title = "scrub balls/tasks and publish it: content redaction across the ref's history, not a private remote"
 created = 1786677230
-updated = 1786678449
+updated = 1786678475
 claimant = "Ciabatta"
 priority = 3
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
@@ -87,7 +87,7 @@ Gates `bl-4f96`.
 **1. Bundles (private, outside every repo, mode 0600).** Both verify "complete history".
 
 - `<operator-home>/balls-tasks-prescrub-20260813-7fda4b0.bundle` — 1,196,320 B, tip `7fda4b0`, 1,493 commits. The ref as the audit found it.
-- `<operator-home>/balls-tasks-prerewrite-20260813-312b94e.bundle` — 1,227,420 B, tip `312b94e`, 1,506 commits. The exact ref the force-push would replace, so the rewrite is reversible.
+- `<operator-home>/balls-tasks-prerewrite-20260813-45828f5.bundle` — 1,233,415 B, tip `45828f5`, 1,510 commits. The exact ref the force-push would replace, so the rewrite is reversible. Re-bundle immediately before the push if the store has moved again.
 
 **2. Live bodies scrubbed** (`bl update --body`, body edits only — nothing closed, unclaimed or retitled). Thirteen balls:
 
@@ -100,13 +100,13 @@ Gates `bl-4f96`.
 - the maintainer's given name: bl-4f96
 - this ball, whose evidence list quoted the material it exists to remove: classes now named, instances dropped
 
-**3. History rewritten** — `git filter-repo` (fb3de42e), `--replace-text` + `--replace-message` over the whole ref, `--prune-empty never`. No path was dropped: 426 task paths before and after, 1,506 commits before and after, 1,186 blobs before and after. 38 expressions covering: the maintainer's given name (with lookarounds so the Rust type `Mark` survives untouched), a third party's name, a second address of the maintainer's, absolute home paths on both platform shapes, account/payment text, provider auth state, live process ids, conversation/agent ids, five private workspace names, one operator remark disclosing a live account's model roster, and the `bl-actor: mark` commit trailer.
+**3. History rewritten** — `git filter-repo` (fb3de42e), `--replace-text` + `--replace-message` over the whole ref, `--prune-empty never`. No path was dropped: 426 task paths before and after, 1,510 commits before and after, 1,190 blobs before and after. 39 expressions covering: the maintainer's given name (with lookarounds so the Rust type `Mark` survives untouched), a third party's name, a second address of the maintainer's, absolute home paths on both platform shapes, account/payment text, provider auth state, live process ids, conversation/agent ids, five private workspace names, one operator remark disclosing a live account's model roster, the `bl-actor: mark` commit trailer, and the project's SSH remote URL (which the `personal-email` rule reads as an address).
 
-`mudbungie` and `mudbungie@gmail.com` were left everywhere by ruling: 976 of 1,506 commits still carry them as author, and the tree still carries them in 15 places.
+`mudbungie` and `mudbungie@gmail.com` were left everywhere by ruling: 978 of 1,510 commits still carry them as author, and the history still carries them in 24 blobs.
 
-**4. Re-scan of the rewritten ref** — `scripts/leak-scan.sh` with `scripts/leak-rules.sh` at yog `58ddd17`, run over all 1,186 blobs of the rewritten history (not just the tip). **Zero findings.** The same scan over the 1,173 pre-scrub blobs produced 135. Every one of the 1,185 blobs with frontmatter still parses as TOML.
+**4. Re-scan of the rewritten ref** — `scripts/leak-scan.sh` with `scripts/leak-rules.sh` at yog `58ddd17`, run over all 1,190 blobs of the rewritten history (not just the tip). **Zero findings.** The same scan over the 1,173 pre-scrub blobs produced 135. Every one of the 1,189 blobs with frontmatter still parses as TOML.
 
-Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's own EXCEPT, by ruling); four occurrences of `Mark` that are the Rust type `watch::Mark`; the agent codename `mark-placer`; the house synthetic home roots, which the rule table exempts by name.
+Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's own EXCEPT, by ruling); the occurrences of `Mark` that are the Rust type `watch::Mark`; the agent codename `mark-placer`; the house synthetic home roots, which the rule table exempts by name.
 
 **5. NOT DONE, awaiting go-ahead.** The rewritten ref sits in a throwaway clone under this session's scratch directory, never in the live store; its path was reported to the operator out of band. The command is a single `git push --force` of `refs/heads/balls/tasks` from that clone to the project's own remote, spelled out in full in the handoff report. Re-run the filter first if the remote has moved off the base it was built on — the store is live and every commit since would otherwise be lost. Everyone with a clone must delete `$XDG_STATE_HOME/balls/clones/*/tasks` and re-prime; `bl prime` will not reconcile a rewritten ref.
 
@@ -115,3 +115,8 @@ Deliberate residuals, all reviewed: `mudbungie@gmail.com` (allowed by the rule's
 1. **bl-b7dc's title** still carried the account-billing phrasing; a retitle was out of scope for this pass, so the content redaction reached it instead. The rewritten ref's title reads "blocked upstream at the account level".
 2. **The maintainer's own design dialogue** (the logo balls' quoted specs and rulings) was left as prose with the attribution genericized. It is the maintainer's own direction for a published artifact, not third-party content — but it is still verbatim dialogue, which the ruling says goes.
 3. **Agent codenames** (`Pizzeria`, `Fretwork`, ...) and **provider row names** (`openai-chatgpt`, `claude-session-direct`) were left. Neither is a person; the codenames are synthetic and the row names are vendor products yog's own source references. One sentence in closed ball bl-bc06 still implies which of two rows held a credential, with the state value itself redacted.
+
+
+---
+
+Numbers above are as of base `45828f5` (1,510 commits), rewritten to `2334b1a`. Two rounds of self-scrub were needed first: this result note itself carried an operator home path, a scratch path, the literal rule strings it was describing, and an SSH remote URL — evidence for the standing guard this ball's last section asks for. A store that is only scrubbed by hand re-leaks in the act of recording the scrub.
