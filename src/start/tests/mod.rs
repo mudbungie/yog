@@ -10,6 +10,7 @@ mod ensure;
 mod exec;
 mod goal;
 mod identity;
+mod pins;
 mod plan;
 mod prompt;
 mod run;

@@ -378,6 +378,12 @@ is three facts:
   as misleading redundancy. `Prepared` carries no cwd field at all now — the
   detached driver simply stands in the workspace it drives.
 
+**The binding is also what the project's own standards are discovered from**
+(§3.7, bl-aa8b): the fire walks from the binding's authority root down to the
+binding, and freezes each instruction file it finds as a `--pin` on the same
+argv. One typed target, two consequences — where the work happens and which
+rules govern it — and neither is prose.
+
 Edits at the target still land in balls' external project worktree, outside
 lernie's agent branch, commit-per-side-effect history, child inheritance,
 bundle, and replay. That is the verified two-Git limit, and the binding does
@@ -1150,6 +1156,167 @@ Implementation: `delete::agent` (gate, arming, census parse, the two spawns),
 the `DeleteAgent` boundary action (§8.5 — gated in dispatch exactly as the
 dialog gates, whichever frontend fires), the §11 seats in `nav::menu` /
 `shell::delete_agent`.
+
+### 3.7 Project instructions freeze at the binding (bl-aa8b)
+
+**The verified gap (bl-e249's Claude Code comparison).** Claude Code discovers a
+project's instruction files from the hierarchy it is working in *before* the
+first inference. Yog did not, and neither does pinned lernie: lernie's shipped
+worker soul is harness mechanics only, and §3.3's goal is the operator's payload
+— so a drone born in this very repository met its `AGENTS.md` only if it thought
+to go looking. Repository standards were a thing the model might find, not a
+thing the harness handed it.
+
+The comparison is evidence for *a* project-context mechanism, **not** a licence
+to copy Claude's: no `CLAUDE.md` filename is hardcoded anywhere here, no memory
+system is imitated, and yog stores no copy of anything.
+
+**The whole feature is one sentence: the fire pins the instruction files the
+binding's project declares, and yog's `config/default` says the worker composes
+them.** Everything below is that sentence's five mechanical halves.
+
+#### 1. Discovery is a walk from the authority root to the binding
+
+The input is the §3.3 typed work target — [`Prepared::binding`], the one
+channel, already the ball rung's claim-derived `work/<id>` worktree and the path
+rung's directory. **No binding, no instructions**: the bare rung and a
+not-yet-created ball bind nothing, so they discover nothing — the general path
+with empty inputs, not a rung table (§3.3's own argument, one level up).
+
+- **The authority root is the nearest ancestor of the binding, inclusive, that
+  holds a `.git` entry** — a directory *or* a file, since a `work/<id>` worktree's
+  `.git` is a gitdir pointer file. No `.git` anywhere above it: the binding is
+  its own authority root.
+- **The walk never ascends above that root.** That single rule is the whole
+  answer to "untrusted parent instructions": a `$HOME/AGENTS.md`, a
+  `/srv/AGENTS.md`, anything outside the project is not *skipped by a check* —
+  it is unreachable by construction. Ambient material never enters a yog world
+  (§16); instruction bytes are not the exception.
+- **The chain is outermost → innermost**, root first, binding last, each
+  configured filename in the policy's declared order at each level. That total
+  order **is** the precedence: the most specific instructions arrive last.
+
+Each candidate is admitted only if `symlink_metadata` says **regular file** — a
+symlink is skipped, because the freeze is byte-exact and a link can point out of
+the root — and its length is within [`MAX_BYTES`]. An over-size file is
+**skipped whole, never truncated**: half a rule reads exactly like a whole rule,
+so a truncated instruction is worse than a missing one. At most [`MAX_DOCS`]
+documents ride. A path yog cannot spell — non-UTF-8, or carrying `=`, which is
+`--pin`'s own separator — is skipped rather than mangled.
+
+**No include resolution, ever.** A pinned document's `@other/file` line is text.
+Following it would make the frozen bytes a function of bytes nobody froze, and
+would re-open the escape the authority root just closed.
+
+#### 2. The freeze is lernie's, and yog reads no bytes
+
+The fire appends one `--pin <dest>=<src>` per discovered file to the *same*
+argv §3.3 already builds (lernie ARCH §2.5, released 0.0.4 as bl-fb5c, in the
+`=0.0.8` pin). lernie loads and validates every pin **in the CLI layer, before
+any branch, ref or inference exists**, writes the bytes into the fork's worktree
+and commits them on the dispatch commit beside `goal.md` and `soul.md`.
+
+So yog opens no instruction file. It stats candidates and names paths; the read,
+the validation, the snapshot and the commit are all one upstream mechanism with
+no filename policy of its own. A source that stats clean and then cannot be read
+fails the fire in lernie's own voice, pre-fork — loud, and nothing exists to
+clean up. That is the explicit policy for unreadable files: **skipped when the
+stat says so, refused loudly when the read says so, never silently partial.**
+
+#### 3. The destination *is* the provenance
+
+Each document freezes at `instructions/<NN>/<rel>` — `<NN>` the zero-padded
+discovery rank, `<rel>` the file's path relative to the authority root.
+
+- lernie frames every composed block with its worktree-relative path (ARCH §5.3
+  "file path as hint"), so the model reads *where* a rule came from with the rule.
+- lernie's assembler sorts **lexically within a category**, which plain relative
+  paths do not survive (`AAA/AGENTS.md` sorts before `AGENTS.md`). The rank
+  prefix is what makes precedence survive that sort — the same device lernie
+  uses on itself, where `summary/NNN.md`'s zero-padding is what makes lexical
+  order age order.
+- `instructions` is a legal pin destination: it is none of lernie's reserved
+  first segments (`goal.md`, `soul.md`, `name`, the control files,
+  `descriptions/`, `messages/`, `summary/`).
+
+#### 4. Freezing is not composing — so yog authors the manifest glob
+
+**The premise that would have shipped this broken:** that pinning puts a
+document in context. It does not. Whether a pinned blob composes into assembled
+context is the governing `manifest.yaml`'s question (lernie ARCH §5.2), and the
+shipped worker role pins `goal.md`, `soul.md`, `descriptions/**` and orders
+`summary/**`, `skills/**` — nothing else. A pin at `instructions/…` under the
+stock manifest is a committed file no model ever sees.
+
+So `roles.worker.pinned` gains one glob, `instructions/**`, authored onto
+`config/default` **at every start**, by the same fixed-point convergence §8.6
+already runs for `tool_control:` — read the committed file, compute the wanted
+file, stage only if they differ, and let the §9.3 scripted-`$EDITOR` drive of
+`lernie config` (the only lawful writer of `config/*`) commit it. Authoring an
+authored manifest reproduces it byte for byte, so the steady state reads one
+file out of git and spawns nothing.
+
+**One drive, not two.** §8.6's control block and this glob are two files of one
+policy, so `start::ensure` collects both drifts and converges them in a single
+`lernie config` pass — one checkout, one commit, one ops row. Each author owns
+its own file's fixed point and knows nothing of the other.
+
+`pinned:` rather than `order:` deliberately: pinned is included regardless of
+budget, so instructions cannot be silently shed. They still *count* toward the
+budget, which is what [`MAX_BYTES`] and [`MAX_DOCS`] bound. A manifest with no
+`roles.worker.pinned` anchor is an operator's own manifest, and yog leaves it
+alone rather than fighting it.
+
+#### 5. Policy is severable; provenance is derived
+
+**Filename policy.** The default is `AGENTS.md` and lives in code. The override
+is `instructions.yaml` in the workspace's config commit, beside
+`capability.yaml` and read the same way — at `config/default`'s **live tip**,
+never a governing commit, because it is the operator's policy and not the
+agent's structure (§8.6's own argument). The grammar is one line shape:
+
+```yaml
+- AGENTS.md
+- CONTRIBUTING.md
+```
+
+Reading is total, like §8.6's: a line that is not `- <bare filename>` is not a
+name. **The file, when it exists, is authoritative including when it names
+nothing** — that is the explicit opt-out. Deleting it restores the default, so
+severability is exact: removing policy deletes a file, it does not edit code.
+
+**Provenance stores nothing.** Three surfaces already carry all of it:
+
+| what | where | how |
+|---|---|---|
+| which files, from which absolute source | `ops.jsonl` row of the fire | the argv is logged whole; `clip_goal` trims only the final element (§4.2), so every `--pin dest=src` survives — the §11 activity trail opens each row to its full argv |
+| the exact frozen bytes | the dispatch commit | ordinary blobs: the §11 Files tab lists `instructions/**` in the agent worktree and previews them, and the pinned rail reads that same tab out of git |
+| what the model was told | assembled context | each block framed with its `instructions/<NN>/<rel>` destination (ARCH §5.3) |
+
+No yog registry, no manifest file, no second copy — the pins are the record, and
+the record is git's. **The operator's goal stays their payload** (bl-6920): the
+freeze is a spawn *parameter*, never a concatenation into the goal text.
+
+#### Children inherit the fork, which is the freeze
+
+VISION §4.10 forbids a child inheriting stale instruction bytes. Nothing does:
+
+- A child's dispatch commit forks its parent's tree, so it carries the parent's
+  frozen `instructions/**` verbatim — the same bytes, of the same lineage, for
+  the same target, because **a child born today binds no directory of its own**
+  (§4.10 items 2–3: "nothing is inherited … a child of a `--cwd` agent is back
+  in its own worktree"). There is no second target for the bytes to be stale
+  against; the divergence the rule guards has no way to exist yet.
+- When a child *does* gain a binding — bl-8746's attempt fan over balls
+  bl-4eac — it is created with one, so it freezes against it at creation. That
+  is this same section one level down, not a new rule (bl-a1a4's fractal law).
+- A child that walks out of its root with `cd` is §4.11's open-world
+  adjudication, an existing gate, not a hole here.
+
+**Implementation:** `start::instructions` (the walk, the rank, the pin specs),
+`start::instructions::names` (default + the `instructions.yaml` override),
+`start::instructions::manifest` (the glob's fixed point), the `--pin` arms in
+`start::prompt`'s one argv, and the single convergence in `start::ensure`.
 
 ---
 
@@ -3592,6 +3759,13 @@ to *be* that executable and to own every fact it reads.
   shim reads one file out of git and spawns nothing. A drive that fails
   aborts the start (`["yog-step","control"]`, Z5) rather than handing back a
   workspace whose drones nothing adjudicates.
+
+  **The drive is shared, the fixed points are not (§3.7).** This block and
+  §3.7's `instructions/**` manifest glob are two control files of one yog
+  policy, so `start::ensure` collects whichever drifted and converges them in a
+  **single** `lernie config` pass — one checkout, one commit, one ops row, and
+  the same abort. Each author owns only its own file's fixed point and knows
+  nothing of the other.
 - **A hold is a parked drone, not a deadlock; a deny is a decline, not a
   stop.** The parked branch is derived state (the mark plus the unpaired
   tail) surfaced as an attention item naming the tool, an input summary,
@@ -7298,7 +7472,7 @@ beside `main.rs`.
 | `src/cli_outbound/sys.rs` | 19 | the crate's single confined `unsafe` — `libc::kill` for the drop's best-effort SIGTERM, the one audited home `rules/unsafe-outside-sys.yml` leaves it (AGENTS.md rule 3) |
 | `src/composer/{mod,tests}.rs` | 185+160 | the §11 inbox-composer's derivations (bl-929d): the pending-queue row projection over the snapshot's §5.1 #11 listing (fold key = the deposit's inbox path, §5.3; each row's §11 role from the one `theme::role` mapping, bl-3acb), and `SnapState` — the derived fold-line height (settled content, capped at half the pane) plus the snap-down ease whose trigger is the pending count dropping, per target |
 | `src/composer/recall{.rs,/tests.rs}` | 155+220 | the §11 prompt recall (bl-f908): `prompts` — the operator's own turns in this conversation, newest first, folded from the pending listing (§5.1 #11) and the delivered transcript (§5.1 #12) through the one `theme::message_role` derivation and stored nowhere — plus `Caret`, the visual-row gate that decides whether ↑/↓ are the box's or the caret's, and `Recall`, the two-field walk whose *exit* is a derivation (the draft is no longer the entry we put there) rather than a reset call at each site |
-| `src/control/{mod,wire,classify,bash,lex,rules,policy,hold,root,judge,author}.rs` | 195+98+225+205+193+259+210+75+205+165+153 | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; lernie's two wire shapes; the effect vocabulary and the built-in intrinsic map; the bash ruleset over every program a command runs; the shell lexer that finds them; the shipped ruleset as data; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` lernie's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; the `config/default` authoring that makes a workspace born adjudicated |
+| `src/control/{mod,wire,classify,bash,lex,rules,policy,hold,root,judge,author}.rs` | 195+98+225+205+193+259+210+75+205+165+121 | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; lernie's two wire shapes; the effect vocabulary and the built-in intrinsic map; the bash ruleset over every program a command runs; the shell lexer that finds them; the shipped ruleset as data; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` lernie's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated — its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
 | `src/config_edit/mod.rs` | 40 | §9's root: load → edit a RAM draft → Apply = stage → validate → hash-guard → atomic rename, one discipline across every file-editing surface |
 | `src/config_edit/apply.rs` | 100 | the `--editor-apply` copy — drafted files only (§9.3) |
 | `src/config_edit/branch.rs` | 215 | config-ref browse, governing-config derivation, edit plan (§9.3) |
@@ -7453,7 +7627,8 @@ beside `main.rs`.
 | `src/search/{mod,corpus,excerpt,worker}.rs` | 175+140+50+90 | the §8.5 global search: the `Address`/`Field`/`Hit` vocabulary, the answer that carries its own needle (`Found::asked`, the strip's offer predicate, beside `Found::is_empty`, the pane's — bl-648a) and the empty answer's wording, the deterministic rank and bound, and `run` — the one engine all three seats end in; the corpus (the snapshot half free, the conversation half re-read from disk and the half cancellation is checked between); the matched-line window at char boundaries; and the window's searcher thread |
 | `src/shell/model_pick/{mod,seat,lines,marks,ram,role,select,write}.rs` (excl.) | 202+217+112+58+134+45+259+96 | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its **two** exits (bl-9786's new conversation and bl-2d19's `retarget`, laid as a peer strip so neither is ever dropped), the write receipt, and the pane's extras while it is open, over one `Subject` value naming what the seat is about (its scope claim, and the conversation it belongs to when there is one) — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks; the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns — which since bl-dd7f **name the row they steered off** when brazen has no such row, so a picker reading `anthropic` can never be mistaken for a report of the `openai-chatgpt` the conversation actually dispatched through; `role` the strip that re-scopes them, split off at the cap on that same row-versus-scope seam; the two-file write plan |
 | `src/spend/{mod,prices,ceiling,render}.rs` | 215+120+150+177 | the §3.5 join, pure over the worker's pre-walked bills (bl-9dd4) — selection, attribution, the honest-granularity label, and the unpriced remainder, with `of_workspace` the one deliberate fresh walk because a gate compares against now; the price table's parse and its micro-USD arithmetic; the §3.5 spend ceiling's policy half — the operator's number and the at-or-over comparison against the workspace figure (bl-56d5); the one figure widget every spend seat paints — the board's ball rows and the conversation's settings rows (bl-2e18) — whose attribution clause is independent of the price table, so the honest-granularity label survives deleting the cost column (bl-1765) |
-| `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | 264+181+84+240+88+128+158 | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the §8.6 control authoring that runs outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire |
+| `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | 265+181+84+240+140+142+158 | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the one convergence that authors §8.6's control block and §3.7's instruction glob onto `config/default` in a single `lernie config` drive, outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire, whose one argv carries `--name`, `--cwd` and every `--pin` |
+| `src/start/instructions.rs` + `src/start/instructions/{names,manifest}.rs` | 138+72+130 | the §3.7 project-instruction freeze (bl-aa8b): the walk from the binding's authority root down to the binding and the ranked `--pin` specs it yields — yog reads no instruction bytes, lernie's caller-supplied pinned documents do the loading, validation, snapshot and commit; `names` the severable filename policy (`AGENTS.md` in code, `instructions.yaml` at the live config tip overriding it, an existing file authoritative even when it names nothing); `manifest` the `instructions/**` glob's fixed point, without which a frozen document is a committed file no model ever sees |
 | `src/state.rs` | 270 | the crate's lock chokepoint: the dirty hand-off, the snapshot cell, the §8.5 search cell and the §7.2 live-tail cell — the whole inter-thread interface (§7.2, §8.5, AGENTS rule 7). The tail cell is **appended whole below every line that was there before**, and takes the snapshot cell's *alias + free functions* spelling rather than a struct with an `impl` — including leaving the module doc's stale "three residents" line untouched. That is the hazard `rules/locks-outside-state.yml` records as the reason for both its carve-outs: llvm-cov mis-attributes phantom uncovered regions onto this file's `impl` headers when anything above them moves, and an added `impl` block draws one onto itself besides. This is genuine cross-thread hand-off state — what the chokepoint exists to inventory — so it belongs here and the spelling gives way instead of the rule. The watch hub's two singletons are its second declared carve-out (§7.1, `rules/locks-outside-state.yml`) |
 | `src/steps_view/{mod,detail,columns,render,drill,wound,wire}.rs` | 206+169+111+127+209+158+115 | the step inspector, incl. the §7.3 no-response wound (§11 Steps). Both tiers are cut twice, read from write: `mod`+`detail` are the list/drill-in **reads**, `render`+`drill` their **paints**, and `columns` is the §11 column table — header, hover explanation and cell in one home, so no field paints without its name (bl-3ffc). `wire` is the §8.5 spelling of **both** tiers, cut along that same read seam (bl-6233) |
 | `src/tail.rs` | 75 | the §11 tail idiom in one home (bl-8c13): the `stick_to_bottom` anchor and the top pad that seats an underfull body on the bottom edge, taken together by every tail surface and restated by none; since bl-929d it also hands back the body height it already measures, so a content-sized region (the inbox-composer) derives its extent from the one measurement |

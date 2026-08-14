@@ -84,7 +84,14 @@ focused workspace (a fresh world bootstraps one automatically; creating more
 is a deliberate act, walling off spheres like clients or corporate vs.
 personal) and may carry a path or a ball payload (`bl create` + `bl claim
 --as <workspace-name>`), through an editable goal composer whose
-Send fires `lernie prompt` detached — and the **config editors** stage-and-validate
+Send fires `lernie prompt` detached. A start that binds a work target also
+**freezes that project's instruction files** into the agent's first commit
+(DESIGN §3.7): yog walks from the target's git root down to the target, pins
+each `AGENTS.md` it finds as exact bytes before the first inference, and
+authors the workspace's `config/default` so the worker composes them — the
+filename set is `AGENTS.md` unless a workspace's `instructions.yaml` says
+otherwise, and the goal you typed stays your payload, never a concatenation.
+Then the **config editors** stage-and-validate
 brazen `config.toml`, lernie global config, and per-workspace config branches
 (DESIGN §9). Replays (`<lernie-data>/replays/*`) render through the same view,
 read-only.

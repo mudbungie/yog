@@ -140,7 +140,9 @@ workspace; an armed loop's spawns are the user action, continuing.
 ### 4.4 Fork, fan, judge, consensus
 
 The **agent-history** experimentation verbs have shipped (G2/G3, pinned
-0.0.6); the **project-work** promise is ruled but not yet built (§4.10). G13
+0.0.6); the **project-work** promise is ruled, its binding and its frozen
+project instructions are built (§4.10 items 2 and 9, yog bl-6654 + bl-aa8b),
+and the attempt fan itself is not yet (§4.10 items 1, 3, 5–6). G13
 is the distinction the earliest version of this section missed: a lernie
 sibling ref carries agent context/transcript, while a yog ball's code edits
 live in a separate balls worktree. Those refs are not candidate project
@@ -510,10 +512,15 @@ presentation.
    case of the same path.
 
 9. **Implementation and release sequence.**
-   - lernie: bl-d0b4 (binding parameter, validation, per-step OID) →
+   - **Landed.** lernie: bl-d0b4 (binding parameter, validation, per-step OID) →
      publish → yog bl-6654 pins it, passes the binding typed, retires the
-     prose channel → unblocks bl-aa8b (frozen project instructions anchor
-     at the typed target).
+     prose channel → yog bl-aa8b freezes the binding's project instructions
+     as pinned documents on the dispatch commit and authors the manifest glob
+     that composes them (yog DESIGN §3.7). One correction the ruling did not
+     anticipate: lernie's pinned-document mechanism *freezes* but does not
+     *compose* — composition is the governing manifest's question — so the
+     yog side is a pin **and** a per-workspace manifest convergence, not a pin
+     alone.
    - balls: bl-a1a4 (source-owned reconciliation) → bl-4eac (the
      policy-blind attempt capability) → publish → yog bl-8746 pins it and
      builds the mutating fan → unblocks bl-c2bd (V3) and bl-40ab (the

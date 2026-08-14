@@ -1,19 +1,34 @@
-//! The workspace half of the start flow's executors (DESIGN §8.1, §8.6): the
-//! idempotent `lernie new` ensure and the capability-control authoring that
-//! runs **outside** the create skip so a
-//! workspace made a moment ago and one made last week both converge to a
-//! `config/default` naming the control shim.
+//! The workspace half of the start flow's executors (DESIGN §8.1, §8.6, §3.7):
+//! the idempotent `lernie new` ensure and the **policy convergence** that runs
+//! **outside** the create skip, so a workspace made a moment ago and one made
+//! last week both converge to a `config/default` naming the control shim and
+//! composing frozen project instructions.
 //!
 //! Split from [`super::exec`] at the seam the tests already used: the `bl`-facing
 //! executors (create / claim / cross-check) are that file's concern, the
 //! workspace's existence and its policy are this one's.
+//!
+//! **Two files, one drive** (§3.7 item 4). §8.6's `tool_control:` block and
+//! §3.7's `instructions/**` glob are two control files of one yog policy, and
+//! each owns its own fixed point ([`control::author::workflow_drift`],
+//! [`manifest::drift`]) and knows nothing of the other. This module collects
+//! whichever drifted and converges them in a **single** `lernie config` pass —
+//! one checkout, one commit, one ops row. With neither drifted nothing is
+//! staged and nothing spawns, which is the steady state of every start after
+//! the first.
 
 use super::exec::{CONTROL, Deps, MKDIR, NEW, REPO_MARK, StartError, verb_ok};
+use super::instructions::manifest;
 use crate::actions::verbs::{self, log_step_failure};
 use crate::cli_outbound::Cli;
+use crate::config_edit::branch::edit::{
+    DraftFile, EditOrigin, EditPlan, drive, next_nonce, stage_files,
+};
 use crate::control;
-use crate::opslog::Origin;
+use crate::opslog::{OpEntry, Origin};
 use crate::world::Layout;
+use crate::xdg::stage_root_under;
+use std::io;
 use std::path::Path;
 
 /// Ensure the bound workspace exists (§8.1, §3.1): skip when `<workspace>/repo.git`
@@ -39,26 +54,63 @@ pub fn execute_ensure_workspace(
 ) -> Result<bool, StartError> {
     let (lernie, state_root) = (&deps.lernie, deps.state_root.as_path());
     let created = create_workspace(lernie, state_root, ts, workspace, origin)?;
-    // The capability control is authored **after** the create and **outside**
-    // its skip (§8.6): a workspace made a moment ago and one made last week
-    // both converge to a `config/default` naming the control shim, so every
-    // agent forked from here on is adjudicated. Converged, not branched — the
-    // steady state reads one file out of git and spawns nothing.
+    // yog's policy is authored **after** the create and **outside** its skip
+    // (§8.6, §3.7): a workspace made a moment ago and one made last week both
+    // converge to a `config/default` naming the control shim and composing
+    // frozen instructions, so every agent forked from here on is adjudicated
+    // and instructed. Converged, not branched — the steady state reads two
+    // files out of git and spawns nothing.
     let shim = crate::world::tools::control_path(&layout.tools);
-    let authored = control::author::ensure_controlled(
-        lernie,
-        workspace,
-        &shim,
-        &deps.yog_binary,
-        state_root,
-        ts,
-        origin,
-    )?;
+    let drafts: Vec<DraftFile> = [
+        control::author::workflow_drift(workspace, &shim),
+        manifest::drift(workspace),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+    let authored = converge(deps, workspace, &drafts, state_root, ts, origin)?;
     if let Some(entry) = authored.filter(|e| e.exit != 0) {
         log_step_failure(state_root, ts, workspace, CONTROL, &entry.stderr, origin)?;
         return Err(StartError::Control(entry.stderr));
     }
     Ok(created)
+}
+
+/// Stage `drafts` and drive the one `lernie config <ws> default` pass that
+/// commits them (§9.3 — the only lawful writer of `config/*`, so yog never
+/// writes inside a workspace itself). `None` when nothing drifted: no staging
+/// dir, no spawn, no ops row.
+///
+/// Attributed to the surface that asked for the start (bl-48f8): being born
+/// uncontrolled or uninstructed is that start's failure, and it banners where
+/// the start was offered.
+fn converge(
+    deps: &Deps,
+    workspace: &Path,
+    drafts: &[DraftFile],
+    state_root: &Path,
+    ts: &str,
+    origin: Origin,
+) -> io::Result<Option<OpEntry>> {
+    if drafts.is_empty() {
+        return Ok(None);
+    }
+    let staging = stage_files(&stage_root_under(state_root), &next_nonce(), drafts)?;
+    let plan = EditPlan::compose(
+        &deps.yog_binary,
+        workspace,
+        control::author::DEFAULT_CONFIG,
+        &EditOrigin::Advance,
+        &staging,
+    );
+    Ok(Some(drive(
+        &deps.lernie,
+        workspace,
+        &plan,
+        ts,
+        state_root,
+        origin,
+    )))
 }
 
 /// The create half of [`execute_ensure_workspace`]: the parent chain and
