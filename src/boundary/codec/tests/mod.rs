@@ -11,6 +11,7 @@ use crate::start::{BallSpec, Payload, Prepared};
 use std::path::PathBuf;
 
 mod control;
+mod fan;
 mod fleet;
 mod fork;
 mod query;

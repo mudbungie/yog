@@ -118,6 +118,54 @@ fn only_a_bl_claim_row_stamped_with_this_claimant_joins() {
     }
 }
 
+/// The §4.10 fan's candidates are in the writable root too, and by the same
+/// two yog-owned facts: the claim row for the project, the fire rows for the
+/// bindings. Without them a fanned drone could not write in the only directory
+/// it has.
+#[test]
+fn a_fanned_candidates_own_worktree_is_writable_and_a_strangers_is_not() {
+    let xdg = balls::layout::Xdg::with(Path::new("/home/u"), None, Some("/home/u/.local/state"));
+    let ws = Path::new("/w/workspaces/cobalt-gecko");
+    let mine = balls::delivery_path::attempt_path(&xdg, "/dev/proj", "at-0badcafe");
+    let fire = |binding: &Path, cwd: &str| OpEntry {
+        ts: "TS".to_owned(),
+        argv: [
+            "lernie",
+            "prompt",
+            "--name",
+            "amber-1",
+            "--cwd",
+            &binding.to_string_lossy(),
+            "/w/workspaces/cobalt-gecko",
+            "goal",
+        ]
+        .iter()
+        .map(|s| (*s).to_owned())
+        .collect(),
+        cwd: cwd.to_owned(),
+        exit: 0,
+        stdout: String::new(),
+        stderr: String::new(),
+        origin: Origin::Balls,
+    };
+    let trail = vec![
+        claim_row("/dev/proj", "bl-1111", "cobalt-gecko"),
+        fire(&mine, "/w/workspaces/cobalt-gecko"),
+        // Another workspace's fan is another seat's root, never ours.
+        fire(
+            &balls::delivery_path::attempt_path(&xdg, "/dev/proj", "at-99999999"),
+            "/w/workspaces/other",
+        ),
+    ];
+    assert_eq!(
+        candidate_worktrees(&trail, &xdg, ws, "cobalt-gecko"),
+        vec![mine],
+    );
+    // A workspace that never claimed anything has no obligation, so it has no
+    // candidates either — the join starts at the claim, as the work one does.
+    assert!(candidate_worktrees(&trail, &xdg, ws, "somebody-else").is_empty());
+}
+
 #[test]
 fn the_cwd_mark_is_read_from_lernie_s_own_ref() {
     let _g = spawn_guard();

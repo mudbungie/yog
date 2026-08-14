@@ -14,7 +14,7 @@ use crate::model_pick::Pick;
 use crate::ui_state::UiState;
 
 use super::reply::Reply;
-use super::{Action, answer, config, control, fleet, monitor};
+use super::{Action, answer, config, control, fan, fleet, monitor};
 
 /// The §3.6 unmaking's two executors — the workspace and the one conversation
 /// — split off at §12's budget when the §4.11 capability arm landed (bl-765d).
@@ -72,15 +72,9 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             attempt,
             goal,
         } => fork(deps, ts, workspace, parent, attempt, goal),
-        Action::Close { project, id, name } => {
-            outcome(verbs::close(bl, root, ts, project, id, name))
-        }
-        Action::Assign { project, id, name } => {
-            outcome(verbs::assign(bl, root, ts, project, id, name))
-        }
-        Action::Release { project, id, name } => {
-            outcome(verbs::unclaim(bl, root, ts, project, id, name))
-        }
+        Action::Close { project, id, name } => spend(verbs::close, deps, ts, project, id, name),
+        Action::Assign { project, id, name } => spend(verbs::assign, deps, ts, project, id, name),
+        Action::Release { project, id, name } => spend(verbs::unclaim, deps, ts, project, id, name),
         Action::Move {
             project,
             id,
@@ -112,12 +106,16 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             let fields = verbs::Update::of(title, body, note);
             outcome(verbs::update(bl, root, ts, project, id, name, &fields))
         }
-        Action::Prepare { workspace, payload } => {
-            prepare(deps, ts, workspace, payload).map(Reply::Prepared)
-        }
+        Action::Prepare { workspace, payload } => staged(deps, ts, workspace, payload),
         Action::Prompt { prepared, goal } => {
             prompt(deps, ui, ts, prepared, goal).map(|conversation| Reply::Started { conversation })
         }
+        Action::Fan {
+            prepared,
+            obligation,
+            n,
+        } => fan::spread(deps, ts, prepared, obligation, *n),
+        Action::Retire { obligation, handle } => fan::retire(deps, ts, obligation, handle),
         Action::DeleteWorkspace { workspace, typed } => unmake(deps, ui, ts, workspace, typed),
         Action::DeleteAgent {
             workspace,
@@ -159,6 +157,42 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             model,
         } => config::pick_model(deps, ts, workspace, &Pick::of(role, provider, model)),
     }
+}
+
+/// One of the three one-shape §8.2 `bl` verbs — project, id, `--as` name —
+/// routed by the function that spells it. A bare `fn` pointer, not a generic:
+/// the table's three rows are one body with one instantiation, exactly as
+/// [`crate::binding`]'s classifier is, and three copies of it would be three
+/// places for the §3.2 identity rider to drift.
+fn spend(
+    verb: fn(
+        &crate::cli_outbound::Cli,
+        &std::path::Path,
+        &str,
+        &std::path::Path,
+        &str,
+        &str,
+    ) -> std::io::Result<verbs::Outcome>,
+    deps: &Deps,
+    ts: &str,
+    project: &std::path::Path,
+    id: &str,
+    name: &str,
+) -> Result<Reply, String> {
+    outcome(verb(&deps.bl, &deps.state_root, ts, project, id, name))
+}
+
+/// The §8.1 prepare door as a reply. A body beside the table for the reason
+/// [`retarget`] is one: the arm is a call, and the mapping onto a [`Reply`] is
+/// not table work — the door itself answers the frame's start glue in the raw
+/// [`Prepared`](crate::start::Prepared), which is what that seat needs.
+fn staged(
+    deps: &Deps,
+    ts: &str,
+    workspace: &std::path::Path,
+    payload: &crate::start::Payload,
+) -> Result<Reply, String> {
+    prepare(deps, ts, workspace, payload).map(Reply::Prepared)
 }
 
 /// A **short verb's** answer: its captured run as a reply, or its launch

@@ -40,6 +40,7 @@ use std::path::PathBuf;
 
 mod args;
 mod config;
+mod fan;
 mod fork;
 mod parse;
 mod queries;

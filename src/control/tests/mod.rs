@@ -35,7 +35,11 @@ impl World {
     fn consult(&self) -> Consult {
         Consult {
             workspace: self.workspace(),
-            balls_state_root: self.balls(),
+            balls: balls::layout::Xdg::with(
+                &self.dir.path().join("home"),
+                None,
+                Some(&self.dir.path().join("state").to_string_lossy()),
+            ),
             state_root: self.state(),
             home: self.dir.path().join("home"),
             cwd: None,

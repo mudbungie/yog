@@ -98,6 +98,10 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
             })?,
             goal: args::required(tail, verb, "the goal")?,
         })),
+        // The §4.10 mutating fan's two: spread a prepared start over N isolated
+        // candidates, and retire one of them.
+        "fan" => super::fan::fan(tail, ctx, verb),
+        "retire" => super::fan::retire(tail, ctx, verb),
         // The §3.6 unmaking: the typed name is the arming, and the gate is
         // dispatch's, not the reader's — fail-closed wherever it fires.
         "delete-workspace" => Ok(act(Action::DeleteWorkspace {

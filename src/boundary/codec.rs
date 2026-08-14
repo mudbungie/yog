@@ -16,6 +16,7 @@ use super::{Action, Gesture};
 
 mod config;
 mod control;
+mod fan;
 mod fields;
 mod fleet;
 pub(crate) use fleet::{ARM as FLEET_ARM, DISARM as FLEET_DISARM};
@@ -56,15 +57,9 @@ fn encode_action(action: &Action) -> Value {
             children,
         } => json!({ "op": "stop", "workspace": encode_path(workspace),
                      "agent": agent, "children": children }),
-        Action::Scan { workspace } => {
-            json!({ "op": "scan", "workspace": encode_path(workspace) })
-        }
-        Action::Nudge { workspace, agent } => {
-            json!({ "op": "nudge", "workspace": encode_path(workspace), "agent": agent })
-        }
-        Action::Retarget { workspace, agent } => {
-            json!({ "op": "retarget", "workspace": encode_path(workspace), "agent": agent })
-        }
+        Action::Scan { workspace } => json!({ "op": "scan", "workspace": encode_path(workspace) }),
+        Action::Nudge { workspace, agent } => at_agent("nudge", workspace, agent),
+        Action::Retarget { workspace, agent } => at_agent("retarget", workspace, agent),
         Action::Close { project, id, name } => ball("close", project, id, name),
         Action::Assign { project, id, name } => ball("assign", project, id, name),
         Action::Release { project, id, name } => ball("release", project, id, name),
@@ -96,6 +91,12 @@ fn encode_action(action: &Action) -> Value {
         Action::Prompt { prepared, goal } => {
             json!({ "op": "prompt", "prepared": encode_prepared(prepared), "goal": goal })
         }
+        Action::Fan {
+            prepared,
+            obligation,
+            n,
+        } => fan::encode(prepared, obligation, *n),
+        Action::Retire { obligation, handle } => fan::encode_retire(obligation, handle),
         Action::DeleteWorkspace { workspace, typed } => {
             json!({ "op": "delete-workspace", "workspace": encode_path(workspace),
                     "typed": typed })
@@ -119,9 +120,7 @@ fn encode_action(action: &Action) -> Value {
             raised,
         } => control::encode_floor(workspace, agent, *raised),
         Action::Ack => json!({ "op": "ack" }),
-        Action::MarkSeen { workspace, agent } => {
-            json!({ "op": "seen", "workspace": encode_path(workspace), "agent": agent })
-        }
+        Action::MarkSeen { workspace, agent } => at_agent("seen", workspace, agent),
         Action::ClearTrail => json!({ "op": "clear-trail" }),
         Action::ApplyConfig { file, text } => {
             json!({ "op": "config", "target": encode_file(file), "text": text })
@@ -143,6 +142,14 @@ fn encode_action(action: &Action) -> Value {
             goal,
         } => fork::encode(workspace, parent, attempt, goal),
     }
+}
+
+/// The three one-shape **conversation** envelopes — op, workspace, agent — said
+/// once rather than three times, for [`ball`]'s reason exactly: the gestures
+/// that name a conversation and carry nothing else are one shape, and a match
+/// arm that rebuilds it is a body pretending to be a row.
+fn at_agent(op: &str, workspace: &std::path::Path, agent: &str) -> Value {
+    json!({ "op": op, "workspace": encode_path(workspace), "agent": agent })
 }
 
 /// The three one-shape `bl` envelopes — op, project, id, `--as` name — said
@@ -257,6 +264,8 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         // The §4.9 fifth rung over the §4.11 fold: the floor's two directions.
         "revoke" | "restore" => control::decode_floor(op.as_str(), o),
         "fork" => fork::decode(o).map(act),
+        // The §4.10 fan's two: materialize N candidates, and retire one.
+        fan::FAN | fan::RETIRE => fan::decode(op.as_str(), o).map(act),
         "ack" => Ok(act(Action::Ack)),
         // The §6 decision queue's answer (VISION §5 V5.2): `seen`, not `ack` —
         // the trail's alarm ack already wears that word, and these two quiet

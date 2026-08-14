@@ -24,6 +24,11 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Prepared(prepared) => {
             json!({ "ok": true, "kind": "prepared", "prepared": prepared_value(prepared) })
         }
+        // The rows ARE `prepared` bodies, in the spelling `prompt` reads back.
+        Reply::Fanned(candidates) => rows_reply("fanned", candidates.iter().map(prepared_value)),
+        Reply::Retired { discarded } => {
+            json!({ "ok": true, "kind": "retired", "discarded": discarded })
+        }
         Reply::Started { conversation } => {
             json!({ "ok": true, "kind": "started", "conversation": conversation })
         }

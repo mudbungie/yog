@@ -14,12 +14,18 @@ categories = ["development-tools", "gui"]
 # and the multiplexed `yog bl <verb>` CLI entry. EXACT registry pin — the pin IS
 # the version mechanism (§16.5), and `=` makes the lockfile the single source of
 # the version yog links, independent of any machine's checkout or installed `bl`
-# (a `path` dep is never lawful, §16.7). 0.5.9 is the release that carries both
-# things the interim git revs were held for: the promoted typed read surface
+# (a `path` dep is never lawful, §16.7). 0.5.10 is the release that carries the
+# **attempt capability** (upstream bl-4eac) and the source-owned reconciliation
+# law it rides on (upstream bl-a1a4) — the two upstream sides VISION §4.10 item 9
+# sequences yog's mutating fan behind (§3.7, bl-8746): `attempt::Attempt` mints a
+# private source ref + index + worktree at an exact target commit, `Project::target`
+# resolves the delivery target opaquely, and `Attempt::release`/`discard` separate
+# worktree teardown from source-ref retention. It keeps everything 0.5.9 carried
+# and the interim git revs were held for: the promoted typed read surface
 # (`reads::Catalog`/`Entry`, `record::task_json`, W8) and the plugin-binary lib
 # seam (`delivery_bin::run`/`tracker::run`, U-balls-3) the bl-2930 multiplex
 # arms stand on — plus the current §7 plugin wire (`command.id`).
-balls = "=0.5.9"
+balls = "=0.5.10"
 # The embedded LLM adapter (DESIGN §16.7 W10). EXACT pin: `native-host` re-exposes
 # the `bz` bin's impure shim (ureq/rustls transport, XDG credential store + model
 # cache) with NO semver contract, so the version is the contract — and the lockfile

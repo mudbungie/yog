@@ -5,6 +5,9 @@
 //! and these encode a fact about the gesture that just ran.
 
 use super::*;
+use crate::opslog::Origin;
+use crate::start::Prepared;
+use std::path::PathBuf;
 
 #[test]
 fn every_flat_receipt_says_what_happened() {
@@ -52,4 +55,37 @@ fn every_flat_receipt_says_what_happened() {
         encode(&Reply::Floored { standing: false })["standing"],
         false
     );
+}
+
+/// The fan's reply rows **are** `prepared` bodies, so a headless fan is
+/// fan-then-N-prompts with nothing reshaped in between; the retirement answers
+/// what the policy did, not what was asked.
+#[test]
+fn the_fan_reply_rows_re_enter_as_prompt_gestures() {
+    let prepared = Prepared {
+        name: "cobalt-gecko".into(),
+        workspace: PathBuf::from("/ws"),
+        binding: Some(PathBuf::from("/state/balls/attempts/dev/proj/at-0badcafe")),
+        goal: "g".into(),
+        origin: Origin::Balls,
+    };
+    let v = encode(&Reply::Fanned(vec![prepared.clone()]));
+    assert_eq!(v["ok"], true);
+    assert_eq!(v["kind"], "fanned");
+    let back = serde_json::json!({ "op": "prompt", "prepared": v["rows"][0], "goal": "g2" });
+    assert_eq!(
+        crate::boundary::codec::decode(&back),
+        Ok(crate::boundary::Gesture::Act(
+            crate::boundary::Action::Prompt {
+                prepared,
+                goal: "g2".into(),
+            }
+        ))
+    );
+    for discarded in [false, true] {
+        let v = encode(&Reply::Retired { discarded });
+        assert_eq!(v["kind"], "retired");
+        assert_eq!(v["discarded"], discarded);
+        assert_eq!(v["ok"], true);
+    }
 }
