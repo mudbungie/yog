@@ -65,9 +65,15 @@ fn wait_quiet(watcher: &Watcher) {
     // The probe file stays where it is: removing it would be one more event for
     // the next beat to trip over, and an unread file under `steps/` is invisible
     // to every assertion here. What is drained is the tail of arming's own
-    // events — now a settle *after* proof rather than in place of it.
-    std::thread::sleep(POLL_INTERVAL * 4);
-    let _ = watcher.tick();
+    // events — bounded and re-entered, because one settle that happened to be
+    // short leaves the next beat reading this beat's noise.
+    while poll_until(
+        || (!watcher.tick().is_empty()).then_some(()),
+        POLL_INTERVAL * 4,
+        POLL_INTERVAL,
+    )
+    .is_some()
+    {}
 }
 
 /// Poll until a change satisfying `pred` surfaces, returning that tick's full

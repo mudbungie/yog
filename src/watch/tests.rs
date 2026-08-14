@@ -33,6 +33,36 @@ fn wait_until<T>(timeout: Duration, mut probe: impl FnMut() -> Option<T>) -> Opt
 /// Detection budget for the real-watcher paths.
 const DETECT: Duration = Duration::from_secs(5);
 
+/// Wait until the set's watchers are **provably** armed, then absorb what
+/// arming itself made.
+///
+/// The same discipline as `fs_watcher::tests::wait_quiet`, and for the same
+/// reason: a watch is not live when `reconcile` returns. inotify arms inside
+/// the syscall, so on Linux a bare drain was indistinguishable from
+/// correctness; macOS FSEvents starts its stream on another thread, and a write
+/// that lands before it is running emits **no event at all** — which no
+/// detection budget downstream can recover, because there is nothing left to
+/// detect. So arming is observed rather than slept on: rewrite a probe file
+/// until the set reports something, then drain until the set goes quiet.
+fn wait_armed(set: &mut WatchSet, root: &Path) {
+    let probe = root.join("steps/.arming-probe");
+    std::fs::create_dir_all(probe.parent().unwrap()).unwrap();
+    let armed = wait_until(DETECT, || {
+        std::fs::write(&probe, b"x").ok()?;
+        (!set.drain_dirty().is_empty()).then_some(())
+    });
+    assert!(armed.is_some(), "the watch set never armed");
+    // The probe file stays: removing it is one more event for the next beat to
+    // trip over, and a file under `steps/` nothing reads is invisible to every
+    // assertion here.
+    while wait_until(QUIET, || (!set.drain_dirty().is_empty()).then_some(())).is_some() {}
+}
+
+/// How long the set must say nothing for arming's own events to be counted
+/// spent. Bounded and re-entered, never a single sleep: one settle that
+/// happened to be short leaves the next beat reading this beat's noise.
+const QUIET: Duration = Duration::from_millis(150);
+
 #[test]
 fn wait_until_times_out_to_none() {
     assert!(wait_until(Duration::from_millis(20), || None::<()>).is_none());
@@ -123,6 +153,7 @@ fn reconcile_rebuilds_a_replaced_root_instead_of_keeping_a_deaf_watcher() {
         "re-armed, not kept"
     );
     // And the re-armed watcher actually hears the new inode.
+    wait_armed(&mut set, &root);
     std::fs::create_dir_all(root.join("steps/abc/001")).unwrap();
     std::fs::write(root.join("steps/abc/001/request.json"), b"{}").unwrap();
     let dirty = wait_until(DETECT, || {
@@ -164,8 +195,8 @@ fn drain_dirty_reports_the_changed_root() {
     let (_dir, root) = workspace();
     let mut set = WatchSet::new();
     set.reconcile(&[(root.clone(), RootKind::Workspace)]);
+    wait_armed(&mut set, &root);
     std::fs::create_dir_all(root.join("steps/abc/001")).unwrap();
-    let _ = set.drain_dirty(); // absorb the arming/creation events
     std::fs::write(root.join("steps/abc/001/request.json"), b"{}").unwrap();
     let dirty = wait_until(DETECT, || {
         let d = set.drain_dirty();
@@ -194,10 +225,10 @@ fn pump_is_false_without_a_change_and_marks_on_change() {
     let (_dir, root) = workspace();
     let mut set = WatchSet::new();
     set.reconcile(&[(root.clone(), RootKind::Workspace)]);
+    wait_armed(&mut set, &root);
     let watchset = Arc::new(Mutex::new(set));
     let dirty = DirtySet::default();
-    // Absorb arming events, then a quiet pump is false.
-    let _ = watchset.lock().unwrap().drain_dirty();
+    // Armed and quiet, so a pump with nothing under it is false.
     assert!(!pump(&watchset, &dirty));
     assert!(dirty.is_empty());
     // A change makes the next pump true and marks the root.
@@ -213,6 +244,7 @@ fn the_bridge_thread_marks_a_real_disk_change_dirty() {
     let (_dir, root) = workspace();
     let mut set = WatchSet::new();
     set.reconcile(&[(root.clone(), RootKind::Workspace)]);
+    wait_armed(&mut set, &root);
     let watchset = Arc::new(Mutex::new(set));
     let dirty = DirtySet::default();
     let bridge = Bridge::spawn(Arc::clone(&watchset), dirty.clone());
