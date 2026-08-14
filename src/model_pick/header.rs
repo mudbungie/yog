@@ -62,15 +62,16 @@ pub struct ModelRow {
     pub model: String,
     pub hover: String,
     /// Drift, derived (never stored): the sentence naming the frozen pair, and
-    /// with it the exit affordance, offered exactly here and nowhere else — an
-    /// undrifted conversation already runs the current config, so it has
+    /// with it the two exit affordances, offered exactly here and nowhere else
+    /// — an undrifted conversation already runs the current config, so it has
     /// nothing to escape.
     pub drift: Option<String>,
 }
 
 impl ModelRow {
     /// Whether the workspace default has parted from this conversation — the
-    /// one condition [`NEW_CONVERSATION_EXIT`] is offered under.
+    /// one condition [`NEW_CONVERSATION_EXIT`] and [`RETARGET_EXIT`] are
+    /// offered under.
     pub fn drifted(&self) -> bool {
         self.drift.is_some()
     }
@@ -80,11 +81,26 @@ impl ModelRow {
 /// role: the pair is absent, and absence is a value.
 const NO_ROW: &str = "(none)";
 
-/// The one honest exit (bl-9786), labelled with what it does rather than with
-/// where it goes: the affordance only focuses the composer's existing
+/// The exit that **discards** (bl-9786), labelled with what it does rather than
+/// with where it goes: the affordance only focuses the composer's existing
 /// new-conversation verb, so it is a pointer at a gesture, not a second way to
 /// start a conversation.
 pub const NEW_CONVERSATION_EXIT: &str = "new conversation uses the current config";
+
+/// The exit that **keeps** (bl-2d19), beside it: lernie's own `retarget` verb,
+/// which re-forks this conversation off the config commit the workspace runs
+/// now and replays every commit it has made onto that base — so its whole
+/// history survives the move. Offered under the same condition, because an
+/// undrifted conversation is already there.
+pub const RETARGET_EXIT: &str = "move this conversation onto the current config";
+
+/// What pressing that says (§11 discoverability rule 3, which is also where its
+/// keyboard spelling is named): the verb, its timing, and the one thing an
+/// operator must know before spending it — that nothing is thrown away.
+pub const RETARGET_HOVER: &str = "Mark this conversation to be re-forked onto the config \
+    this workspace runs now (lernie retarget). It keeps every message: the \
+    re-fork lands at the conversation's next step, with the work it has already \
+    done replayed on top. Type /retarget to do it without the mouse.";
 
 /// Compose the conversation's model row from its governing config and the
 /// workspace's current config-lineage tip. The dropdowns show `tip`, because

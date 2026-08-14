@@ -37,10 +37,10 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         r.map(Reply::Outcome).map_err(|e| e.to_string())
     };
     match action {
-        // The three §8.2 lernie arms spawn through [`Deps::bound`] and never
-        // through `deps.lernie` itself (bl-bf79): a workspace verb's spawn owes
-        // its workspace the wall and the name, and that is stated at the one
-        // binding rather than three times over here.
+        // The §8.2 lernie arms spawn through [`Deps::bound`] and never through
+        // `deps.lernie` itself (bl-bf79): a workspace verb's spawn owes its
+        // workspace the wall and the name, stated at that one binding rather
+        // than once per arm here — `Retarget` is the §9.4 exit (bl-2d19).
         Action::Message {
             workspace: ws,
             agent,
@@ -52,6 +52,7 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             children,
         } => outcome(verbs::stop(&deps.bound(ws), root, ts, agent, *children)),
         Action::Scan { workspace: ws } => outcome(verbs::scan(&deps.bound(ws), root, ts)),
+        Action::Retarget { workspace, agent } => outcome(retarget(deps, ts, workspace, agent)),
         Action::Fork {
             workspace,
             parent,
@@ -152,6 +153,20 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
 /// table above rather than two little bodies inside it.
 fn wrote(written: std::io::Result<()>, reply: Reply) -> Result<Reply, String> {
     written.map(|()| reply).map_err(|e| e.to_string())
+}
+
+/// The §9.4 exit from the config freeze (bl-2d19): mark this conversation to be
+/// re-forked onto the config lineage's head, which its own executor lands at
+/// the next step boundary. A body beside [`fork`]'s rather than an arm inside
+/// the table, because the table is at §12's per-function budget — the routing
+/// is one call, and it belongs to the bound family the arms above it do.
+fn retarget(
+    deps: &Deps,
+    ts: &str,
+    workspace: &std::path::Path,
+    agent: &str,
+) -> std::io::Result<verbs::Outcome> {
+    verbs::retarget(&deps.bound(workspace), &deps.state_root, ts, agent)
 }
 
 /// One **attempt** (VISION §5 V2): the §4.11 item-8 confinement refusal, then

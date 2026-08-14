@@ -4,18 +4,43 @@
 //!
 //! Two seats, one implementation (bl-824e, bl-2e18): an open conversation's
 //! settings rows and the §11 birth-config block are the same bottom seat, one
-//! branch on the selection apart. Only the scope claim and the drift clause
-//! differ, so the two entry points derive those and hand the rest to [`seat`] —
-//! a second painter would be a second authority on the same two files.
+//! branch on the selection apart. They differ in exactly one value — their
+//! [`Subject`] — so the two entry points derive that and hand the rest to
+//! [`seat`]; a second painter would be a second authority on the same two
+//! files.
 
 use super::{
     CenterTab, Cli, ModelRow, ShellState, birth_scope, conversation_scope, lines, marks, pane,
     refresh, roster_fault, row_names, select, settled, write,
 };
 use crate::AppModel;
-use crate::git_tree::CommitNode;
-use crate::model_pick::{NEW_CONVERSATION_EXIT, Pick, row_role};
+use crate::git_tree::{Agent, CommitNode};
+use crate::model_pick::{NEW_CONVERSATION_EXIT, Pick, RETARGET_EXIT, RETARGET_HOVER, row_role};
 use std::path::Path;
+
+/// What a seat is **about**: the scope claim its write states, and the
+/// conversation it belongs to when there is one. The birth block has no
+/// conversation — which is also why it can never reach the retarget exit, since
+/// the clause that offers it is a fact about a conversation's own freeze.
+struct Subject {
+    scope: String,
+    agent: Option<String>,
+}
+
+/// Which of the drift clause's two exits the operator took (§9.4, bl-2d19).
+/// The clause offers a way out that **discards** and a way out that **keeps**,
+/// and they are answered in different places — the composer owns one, the
+/// boundary owns the other — so the seat names the choice rather than
+/// performing both.
+enum Exit {
+    None,
+    /// Focus the composer's new-conversation verb — the caller's, since the
+    /// caller owns the composer.
+    NewConversation,
+    /// Fire `lernie retarget` on this conversation — the seat's own, since it
+    /// is a boundary gesture like the pick above it.
+    Retarget,
+}
 
 /// The **conversation's** settings seat (§11): the pair its two dropdowns show
 /// and write, the drift clause when this conversation has parted from the
@@ -27,17 +52,20 @@ pub(crate) fn conversation_seat(
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
-    tip_oid: &str,
+    agent: &Agent,
     config_tip: Option<&CommitNode>,
     clis: (&Cli, &Cli, &Cli),
 ) -> bool {
     let Some((frozen_oid, row)) =
-        lines::conversation_row_of(ws, tip_oid, config_tip, &mut state.wall.picker)
+        lines::conversation_row_of(ws, &agent.tip_oid, config_tip, &mut state.wall.picker)
     else {
         return false;
     };
-    let scope = conversation_scope(ws, &frozen_oid);
-    seat(ui, model, state, ws, &row, &scope, clis)
+    let subject = Subject {
+        scope: conversation_scope(ws, &frozen_oid),
+        agent: Some(agent.agent_id.clone()),
+    };
+    seat(ui, model, state, ws, &row, &subject, clis)
 }
 
 /// The **birth block's** seat (§11, bl-824e): the same row, asked of the config
@@ -55,8 +83,11 @@ pub(crate) fn birth_seat(
     let Some(row) = lines::birth_row_of(ws, config_tip, &mut state.wall.picker) else {
         return false;
     };
-    let scope = birth_scope(ws);
-    seat(ui, model, state, ws, &row, &scope, clis);
+    let subject = Subject {
+        scope: birth_scope(ws),
+        agent: None,
+    };
+    seat(ui, model, state, ws, &row, &subject, clis);
     true
 }
 
@@ -71,7 +102,7 @@ fn seat(
     state: &mut ShellState,
     ws: &Path,
     row: &ModelRow,
-    scope: &str,
+    subject: &Subject,
     clis: (&Cli, &Cli, &Cli),
 ) -> bool {
     let (bz, lernie_cli, bl) = clis;
@@ -116,7 +147,15 @@ fn seat(
         ui.label(&state.wall.picker.status);
     }
     let exit = drift_exit(ui, row);
-    route = route.or(pane(ui, &mut state.wall.picker, ws, scope, &role));
+    // The exit that keeps the conversation is a boundary gesture, so it fires
+    // where the pick above it fires — through the one chokepoint, with its
+    // receipt in the same sentence the pick writes. `agent` is `Some` exactly
+    // when a conversation is selected, which is exactly when a drift clause
+    // exists, so the birth block can never reach it.
+    if let (Exit::Retarget, Some(agent)) = (&exit, subject.agent.as_deref()) {
+        write::retarget(&mut state.wall.picker, model, ws, (lernie_cli, bl), agent);
+    }
+    route = route.or(pane(ui, &mut state.wall.picker, ws, &subject.scope, &role));
     if let Some(tab) = route {
         state.wall.picker.toggle();
         // The route spends the one tab-focus gesture (bl-1ca2), which is both
@@ -124,31 +163,55 @@ fn seat(
         // a read.
         crate::shell::center::focus(model, state, tab);
     }
-    exit
+    matches!(exit, Exit::NewConversation)
 }
 
-/// The drift clause and its exit, painted under the pair when — and only when —
-/// the workspace default has moved past this conversation (§9.4, bl-9786). A
-/// conversation already on the current config has nothing to escape, so it gets
-/// the bare pair the operator asked for and nothing else.
-fn drift_exit(ui: &mut egui::Ui, row: &ModelRow) -> bool {
+/// The drift clause and its two exits, painted under the pair when — and only
+/// when — the workspace default has moved past this conversation (§9.4,
+/// bl-9786). A conversation already on the current config has nothing to
+/// escape, so it gets the bare pair the operator asked for and nothing else.
+///
+/// **The frozen sentence is where the way out belongs** (bl-2d19): the operator
+/// reads *this conversation is frozen on …* and the verbs that answer it are
+/// the next thing on the row, not a fourth control somewhere else. Keeping the
+/// history leads, because discarding it is the larger act.
+fn drift_exit(ui: &mut egui::Ui, row: &ModelRow) -> Exit {
     let Some(clause) = &row.drift else {
-        return false;
+        return Exit::None;
     };
-    ui.horizontal(|ui| {
+    // **A strip of peers** (§11 rule 8, [`crate::shell::row::peers`]): the two
+    // exits are controls of their own natural width and neither may be dropped,
+    // so the row wraps rather than omitting one — which is what a plain
+    // `horizontal` does to the second button in the pane a 420x320 window
+    // leaves. Beside the sentence wherever there is room, under it where there
+    // is not; never absent.
+    crate::shell::row::peers(ui, |ui| {
         ui.weak(clause).on_hover_text(&row.hover);
-        // The one honest exit (§9.4): a conversation cannot adopt config
-        // mid-lineage — a new one forks the current config. The affordance
-        // points at the composer's own new-conversation verb rather than
-        // growing a second way to start one.
-        ui.button(NEW_CONVERSATION_EXIT)
+        // The exit that KEEPS (§9.4 as amended, bl-2d19): lernie's `retarget`
+        // re-forks this conversation onto the current config at its next step
+        // and replays its work on top, so the history survives the move.
+        if ui
+            .button(RETARGET_EXIT)
+            .on_hover_text(RETARGET_HOVER)
+            .clicked()
+        {
+            return Exit::Retarget;
+        }
+        // The exit that DISCARDS (§9.4, bl-9786): a new conversation forks the
+        // current config by the ordinary path. The affordance points at the
+        // composer's own new-conversation verb rather than growing a second way
+        // to start one.
+        if ui
+            .button(NEW_CONVERSATION_EXIT)
             .on_hover_text(
                 "Clear the selection and put the cursor in the composer, so the \
                  next thing you send starts a conversation on the config this \
-                 workspace has now. This one cannot move off the commit it \
-                 started from (n).",
+                 workspace has now — leaving this one where it is (n).",
             )
             .clicked()
+        {
+            return Exit::NewConversation;
+        }
+        Exit::None
     })
-    .inner
 }

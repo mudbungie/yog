@@ -19,13 +19,19 @@ pub mod table;
 #[cfg(test)]
 mod tests;
 
-/// The whole verb roster — the actions then the queries, in that order. A
-/// **function**, not a const, because the list outgrew one file at §12's cap
-/// (bl-dc0c) and two const slices cannot be concatenated in a const: the split
-/// is a line budget, so it must not become a second list anyone can read half
-/// of. Cheap: `HelpRow` is `Copy` over `'static` strs.
+/// The whole verb roster — the acts on a conversation or a ball, then the
+/// standing/settings verbs, then the queries, in that order. A **function**,
+/// not a const, because the list outgrew one file at §12's cap (bl-dc0c,
+/// bl-2d19) and const slices cannot be concatenated in a const: the split is a
+/// line budget, so it must not become a second list anyone can read half of.
+/// Cheap: `HelpRow` is `Copy` over `'static` strs.
 pub fn table() -> Vec<HelpRow> {
-    [table::ACTIONS, table::queries::QUERIES].concat()
+    [
+        table::ACTIONS,
+        table::standing::STANDING,
+        table::queries::QUERIES,
+    ]
+    .concat()
 }
 
 /// One command, as help states it: how it is typed, what it does in a line, and

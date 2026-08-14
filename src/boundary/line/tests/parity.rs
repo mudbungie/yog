@@ -66,6 +66,12 @@ fn every_lernie_action_round_trips() {
     rt(Gesture::Act(Action::Scan {
         workspace: PathBuf::from("/ws"),
     }));
+    // The §9.4 exit (bl-2d19): both its targets are the seat's, so the verb is
+    // the whole line and the round trip holds modulo that context.
+    rt(Gesture::Act(Action::Retarget {
+        workspace: PathBuf::from("/ws"),
+        agent: "c-1".to_owned(),
+    }));
 }
 
 #[test]

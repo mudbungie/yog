@@ -128,6 +128,16 @@ impl World {
         self.fx.name_agent(conv_id, name);
     }
 
+    /// **Advance the workspace's config lineage past every conversation in
+    /// it** (§9.4 drift): one ordinary config edit on `config/default`,
+    /// carrying `providers_yaml`. Every agent forked the lineage's previous
+    /// head, so the governing commit and the tip part the moment this lands —
+    /// which is the whole condition the drift clause and its exits are offered
+    /// under. Caller converges to fold it in.
+    pub(super) fn advance_config(&self, providers_yaml: &str) {
+        self.fx.commit_other("providers.yaml", providers_yaml);
+    }
+
     /// Mark `conv_id` **abandoned** — §6's will-not-retry assertion, the one
     /// gate that suppresses rule 2 (`attention::rest_evidence`). It is how a
     /// fixture gets a settled row bearing **no** attention beside one that

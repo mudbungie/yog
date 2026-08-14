@@ -77,6 +77,13 @@ pub enum Action {
     },
     /// `lernie scan <ws>` — flush inboxes, deposit died epitaphs (§8.2).
     Scan { workspace: PathBuf },
+    /// `lernie retarget <ws> <agent>` — the §9.4 exit from the config freeze
+    /// (bl-2d19): mark this conversation to be re-forked onto the config
+    /// lineage's head, which its own executor lands at the next step boundary.
+    /// **No config name on the wire**: yog's picker writes one lineage and the
+    /// drift it offers this against is measured against that lineage's tip, so
+    /// naming a branch here would be a knob with one lawful value (§9.3).
+    Retarget { workspace: PathBuf, agent: String },
     /// `bl close <id> --as <name>` (§8.2) — `name` is the ball's bound
     /// workspace name (§3.2), never the operator `$USER`.
     Close {

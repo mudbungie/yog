@@ -26,7 +26,8 @@ pub(crate) mod tests;
 
 pub use grammar::{GrammarError, RoleModel};
 pub use header::{
-    ConfigPoint, ModelRow, NEW_CONVERSATION_EXIT, birth_row, conversation_row, row_role,
+    ConfigPoint, ModelRow, NEW_CONVERSATION_EXIT, RETARGET_EXIT, RETARGET_HOVER, birth_row,
+    conversation_row, row_role,
 };
 pub use remedy::{Remedy, remedy};
 

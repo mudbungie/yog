@@ -147,6 +147,10 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
         Action::Scan {
             workspace: ws.clone(),
         },
+        Action::Retarget {
+            workspace: ws.clone(),
+            agent: "c".into(),
+        },
         Action::DeleteWorkspace {
             workspace: ws.clone(),
             typed: "n".into(),

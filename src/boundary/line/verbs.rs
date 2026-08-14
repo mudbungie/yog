@@ -21,6 +21,18 @@ pub(super) fn seen(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, Str
     }))
 }
 
+/// `/retarget` — the §9.4 exit from the config freeze (bl-2d19). It names
+/// nothing at all: the conversation is the seat's, exactly as `/seen`'s is, and
+/// the config it moves onto is the workspace's one lineage head (§9.3), which
+/// is the only thing the drift beside it is measured against.
+pub(super) fn retarget(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    args::none(tail, verb)?;
+    Ok(act(Action::Retarget {
+        workspace: args::workspace(ctx, verb)?,
+        agent: args::agent(ctx, verb)?,
+    }))
+}
+
 /// `/answer pass|hold|refuse` — the §4.11 capability answer. The conversation
 /// is the seat's, like `/seen`'s; the held `tool_use` id is derived at fire
 /// time, so the only word a line can carry is the verdict — and it is

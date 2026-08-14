@@ -126,6 +126,22 @@ fn scan_builds_argv() {
     );
 }
 
+/// The §9.4 exit (bl-2d19): the workspace, the conversation, and **no config
+/// flag** — lernie's own default lineage is the one yog's picker writes, so
+/// naming it would be a knob with one lawful value.
+#[test]
+fn retarget_builds_argv_for_one_conversation_with_no_config_flag() {
+    let (w, _g) = World::new("lernie", OK_BODY);
+    let ws = &w.cwd;
+    retarget(&w.bound(), w.state.path(), "TS", "a-1").unwrap();
+    let e = w.logged();
+    assert_eq!(
+        args_of(&e),
+        vec!["retarget", &ws.display().to_string(), "a-1"]
+    );
+    assert_eq!(e.cwd, ws.display().to_string());
+}
+
 #[test]
 fn close_and_unclaim_build_argv_in_the_project() {
     let (w, _g) = World::new("bl", OK_BODY);

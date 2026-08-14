@@ -15,6 +15,7 @@ mod fleet;
 mod fork;
 mod query;
 mod refusals;
+mod retarget;
 
 pub(super) fn rt(gesture: Gesture) {
     let encoded = encode(&gesture);
