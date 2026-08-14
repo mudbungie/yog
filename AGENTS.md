@@ -158,16 +158,24 @@ demotion removes an internal API from the boundary's obligations. Reach for
   - `balls/tasks` — the task store: structural, owned by `bl`, not a line of
     development. It publishes with the source (see "What may never enter a ball
     body").
-  - `release-plz-*` — machine-owned and machine-pruned. release-plz pushes a new
-    timestamped branch on every refresh, and `prune-release-branches`
-    (release-plz.yml) deletes every one with no open PR right afterwards. Leave
-    them alone; do not hand-delete the one with the open release PR.
+  - `release-plz-*` and `speculation/**` — machine-owned and machine-deleted.
+    release-plz pushes a new timestamped branch on every refresh;
+    `scripts/speculate-gate` pushes one candidate per build and deletes it in a
+    trap, on every path a signal can reach. Leave both alone.
   - **anything else is a PROBE, and the agent that pushed it deletes it.** The
-    only reason to push a branch at all is to buy a **runner verdict** — a
-    `workflow_dispatch` needs a ref that is already on the remote, and some
-    defects exist only there (bl-e492: 1969/1969 locally, five failures on CI).
-    That is legitimate; leaving it is not. Read the verdict, land through `bl
-    close`, then delete the branch and close its PR in the same breath.
+    only reason to push a branch at all is to buy a **runner verdict**, and some
+    defects exist only on a runner (bl-e492: 1969/1969 locally, five failures on
+    CI). That is legitimate; leaving it is not. Read the verdict, land through
+    `bl close`, then delete the branch and close its PR in the same breath.
+
+  **The machine collects what you forget, but do not lean on it.**
+  `prune-stale-branches` (release-plz.yml) runs after every push to `main` and
+  deletes every branch with no open PR, excepting `main`, `balls/tasks` and
+  `speculation/**`. That test is exact rather than a heuristic: `ci.yml`
+  triggers on `push: branches: [main]` and on `pull_request`, never on a push to
+  another branch, so a probe without a PR is getting no verdict and is therefore
+  not a live probe. It cannot save you from a SIGKILL'd `speculate-gate`, which
+  is the one leak nothing collects.
 
   **A probe is not free, and deleting it does not make it free.** GitHub keeps
   `refs/pull/<n>/head` forever: the public repo still serves the head refs of

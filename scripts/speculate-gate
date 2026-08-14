@@ -29,6 +29,30 @@ branch="speculation/$sha"
 echo "speculate-gate: pushing candidate $sha to $branch" >&2
 git push --force origin "HEAD:refs/heads/$branch" >&2
 
+# THE BRANCH IS OWNED BY THE TRAP FROM HERE ON (bl-1ea9). It is the only thing
+# this script puts on the PUBLIC remote, and it used to be deleted by two
+# hand-rolled calls on two of the paths out — so a SIGINT, a dropped network or
+# any `exit` added later between the push above and the delete below stranded
+# `speculation/<sha>` there. The header of this file conceded it: "sweep by
+# hand". A trap set on the line after the push cannot be outrun by a path
+# nobody thought of, which is the whole class the hand-rolled calls missed.
+#
+# `verdicts` is folded in here rather than trapped separately, because two traps
+# on EXIT would mean the second replacing the first — it is initialised empty so
+# the cleanup is valid from this line, before the mktemp far below.
+#
+# SIGKILL and a lost machine are NOT covered and cannot be: nothing runs. The
+# remote-side sweep in release-plz.yml (`prune stale branches`) is what collects
+# those, and it deliberately skips `speculation/**` so it cannot delete a branch
+# out from under a gate that is still running.
+verdicts=""
+cleanup() {
+  git push origin --delete "refs/heads/$branch" >&2 || true
+  [ -n "$verdicts" ] && rm -rf "$verdicts"
+  return 0
+}
+trap cleanup EXIT INT TERM HUP
+
 # The push just created the branch, so the run keyed to it is ours alone —
 # speculate.yml is the only workflow triggering on speculation/**. Keyed by
 # branch, not --workflow: gh cannot resolve a workflow by name until it has
@@ -43,7 +67,6 @@ for _ in $(seq 30); do
 done
 if [ -z "$run_id" ]; then
   echo "speculate-gate: no workflow run appeared for $branch" >&2
-  git push origin --delete "refs/heads/$branch" >&2 || true
   exit 1
 fi
 
@@ -51,14 +74,15 @@ echo "speculate-gate: watching run $run_id" >&2
 gh run watch "$run_id" -i 30 >/dev/null || true # the conclusion travels in the verdict
 
 verdicts="$(mktemp -d)"
-trap 'rm -rf "$verdicts"' EXIT
 if gh run download "$run_id" -n verdicts -D "$verdicts" >&2; then
   bl-speculate import "$verdicts"/*.toml >&2 || true
 else
   echo "speculate-gate: no verdicts artifact on run $run_id" >&2
 fi
 
-git push origin --delete "refs/heads/$branch" >&2 || true
-
 # The one answer: did this exact tree pass this exact gate, per the local key?
-exec bl-speculate check
+# NOT `exec`: exec REPLACES this shell, and a replaced shell runs no EXIT trap —
+# so the success path, the one that runs every time, would be the one path that
+# leaked the branch. Called plainly, the trap fires and the status is still the
+# check's, because `set -e` carries a failure straight out.
+bl-speculate check

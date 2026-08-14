@@ -17,15 +17,17 @@ name: Release-plz
 #     anti-recursion rule), so a separate binaries workflow would silently never
 #     fire without a PAT. `workflow_dispatch` with `binaries_tag` backfills an
 #     existing tag — and reaches ONLY this job (see the boundary below).
-#   * prune-release-branches (right after the release PR job) — deletes every
-#     `release-plz-*` branch that has no open PR. release-plz pushes a NEW
-#     timestamped branch each time it refreshes the release PR, and it pushes
-#     that branch BEFORE opening the PR, so superseded and orphaned branches
-#     otherwise pile up one per push to main. The repo's "Automatically delete
-#     head branches" setting only fires on MERGE and never sees them. Running
-#     immediately after the PR job means the current release PR is already
-#     open, which makes "has no open PR" an exact test for "superseded or
-#     orphaned".
+#   * prune-stale-branches (right after the release PR job) — deletes every
+#     branch that has no open PR, keeping only `main`, `balls/tasks` and any
+#     live `speculation/**`. release-plz pushes a NEW timestamped branch each
+#     time it refreshes the release PR, and it pushes that branch BEFORE opening
+#     the PR, so superseded and orphaned branches otherwise pile up one per push
+#     to main. The repo's "Automatically delete head branches" setting only
+#     fires on MERGE and never sees them. Running immediately after the PR job
+#     means the current release PR is already open, which makes "has no open PR"
+#     an exact test for "superseded or orphaned" — and, since CI runs on
+#     `pull_request` and not on branch pushes, the same test is exact for an
+#     agent's abandoned probe branch (bl-1ea9).
 #
 # So the flow is: merge work to main -> CI runs -> the release PR is kept fresh;
 # merge the release PR -> CI runs -> on green the new version is released AND
@@ -259,8 +261,8 @@ jobs:
           ref: refs/tags/${{ steps.tag.outputs.tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  prune-release-branches:
-    name: prune superseded release branches
+  prune-stale-branches:
+    name: prune stale branches
     # `needs` with no `if` means: only after the release-PR job actually ran and
     # succeeded. On the workflow_run/dispatch triggers that job is skipped, so
     # this one is too — pruning only ever follows a PR refresh.
@@ -279,6 +281,28 @@ jobs:
     # CURRENT release PR is already open, and "has no open PR" is therefore an
     # exact test for "superseded or orphaned". No allowlist, no age heuristic,
     # no state to keep — the open-PR set is the single source of truth.
+    #
+    # IT SWEEPS EVERY BRANCH, NOT JUST THE RELEASE ONES (bl-1ea9). The test above
+    # is exact for anything an agent pushes, for a reason that lives in ci.yml:
+    # CI triggers on `push: branches: [main]` and on `pull_request`, and NOT on
+    # a push to any other branch. A branch is therefore pushed here for exactly
+    # one purpose — to buy a runner verdict — and a verdict requires a PR. A
+    # branch with no open PR cannot be a live probe; it is debris by
+    # construction. AGENTS.md "Repo discipline" states the model this enforces.
+    #
+    # A false delete is cheap and that is why no age floor is needed: the work
+    # lives in the agent's claim worktree and lands by `bl close`, never off a
+    # branch, so the worst case is one re-push.
+    #
+    # Two exclusions, both load-bearing:
+    #   * `main` and `balls/tasks` are the durable refs — the trunk and the
+    #     balls task store. Neither ever has a PR.
+    #   * `speculation/**` is the ONE branch kind that is live without a PR:
+    #     speculate.yml triggers on `push: branches: 'speculation/**'`, so a
+    #     running gate has a branch and no pull request, and sweeping it would
+    #     kill the build it is waiting on. scripts/speculate-gate deletes its
+    #     own on every trappable path; a SIGKILL leaks one, and that is the
+    #     residual this job deliberately does not collect.
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -288,15 +312,19 @@ jobs:
         with:
           # Deleting a remote branch is a push: the credential has to stay.
           persist-credentials: true
-      - name: Delete every release-plz-* branch with no open PR
+      - name: Delete every branch with no open PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -uo pipefail
           open="$(gh pr list --state open --json headRefName -q '.[].headRefName')"
-          git ls-remote --heads origin 'refs/heads/release-plz-*' |
+          git ls-remote --heads origin |
             awk '{print $2}' | sed 's#refs/heads/##' |
             while read -r branch; do
+              case "$branch" in
+                main|balls/tasks)  echo "keep    $branch (durable)";        continue ;;
+                speculation/*)     echo "keep    $branch (gate may be live)"; continue ;;
+              esac
               if grep -qxF "$branch" <<<"$open"; then
                 echo "keep    $branch (backs an open PR)"
               else
