@@ -61,10 +61,30 @@ pub enum Query {
     /// One §9 destination's current bytes (§8.5, bl-0164): the file editors'
     /// Reload, spelled — the same [`ConfigFile`](config::ConfigFile) the write
     /// already carries, so a read and its write name the place the same way.
-    /// A destination that is not there yet answers empty text, the same "new
-    /// file" reading every editor's own load already gives; a lineage refuses
-    /// (its browse is the §9.3 pane's own gesture, bl-ee0a).
+    /// A **file** destination that is not there yet answers empty text, the
+    /// same "new file" reading every editor's own load already gives; a
+    /// **lineage** answers `git show config/<lineage>:<path>` — the §9.3 pane's
+    /// own Load — and a path the lineage does not hold refuses in git's words,
+    /// because a config commit's absence and a missing blob are one answer from
+    /// git and yog will not invent an empty file over a real one (bl-dff8).
     ReadConfig { file: config::ConfigFile },
+    /// **What lineages this workspace has, and what each holds** (§9.3,
+    /// bl-dff8): the config pane's own browse — `for-each-ref refs/heads/config/`
+    /// paired with each tip's `ls-tree`. The listing a
+    /// [`ReadConfig`](Query::ReadConfig) of a lineage reads a path out of, so a
+    /// headless operator picks a file it has seen rather than one it guessed.
+    /// A third world-bytes query: the workspace's own git, never the snapshot.
+    Lineages { workspace: PathBuf },
+    /// **The model ids one provider offers** (§9.4, §5.1 #26, bl-dff8): the
+    /// picker's roster (`bz --list-models`), spelled. Never stored and never
+    /// cached by yog — the roster is the provider's fact, so this is a query
+    /// and not a field, asked in the named workspace's wall exactly as
+    /// [`Providers`](Query::Providers) is: the same provider row is signed in
+    /// (and therefore listable) in one sphere and not in another.
+    Models {
+        workspace: PathBuf,
+        provider: String,
+    },
     /// **Which branch this agent tracks on** (§16.3, bl-0164): the marks
     /// pane's `Read current`, over the same space [`Action::SetMarks`] re-reads
     /// after it writes. It never refuses and never spawns — the value's one

@@ -30,6 +30,25 @@ fn every_query_variant_round_trips() {
             file,
         }));
     }
+    // The §9 browse and roster (bl-dff8), each carrying the sphere it is asked
+    // in — providers, sign-ins and lineages all live inside a workspace.
+    rt(Gesture::Ask(Query::Lineages {
+        workspace: p("/ws"),
+    }));
+    rt(Gesture::Ask(Query::Models {
+        workspace: p("/ws"),
+        provider: "acme".into(),
+    }));
+}
+
+/// A roster names its row, always: the envelope refuses rather than list some
+/// other provider's models (and, like every wall-scoped read, it names its
+/// workspace).
+#[test]
+fn a_roster_envelope_without_its_provider_is_refused() {
+    assert!(decode(&serde_json::json!({ "op": "models", "workspace": "/ws" })).is_err());
+    assert!(decode(&serde_json::json!({ "op": "models", "provider": "acme" })).is_err());
+    assert!(decode(&serde_json::json!({ "op": "lineages" })).is_err());
 }
 
 /// The work-diff's `file` is all-or-nothing: half of it is a patch read that

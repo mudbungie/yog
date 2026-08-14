@@ -30,7 +30,7 @@ mod queue;
 mod rows;
 use board::{board_row, fleet_facts};
 use queue::queue_row;
-use rows::{conv_row, join_row, op_row, ws_row};
+use rows::{conv_row, join_row, lineage_row, op_row, ws_row};
 
 /// The search reply's own address-flattening — split at the same budget.
 mod search;
@@ -145,6 +145,15 @@ pub enum Reply {
     /// presence (§8.5, bl-0164) — [`Providers`](super::Query::Providers)'
     /// answer, the §8.3 login pane's own rows.
     Providers(Vec<crate::config_edit::brazen::ProviderRowView>),
+    /// The workspace's config lineages with each tip's files (§9.3, bl-dff8) —
+    /// [`Lineages`](super::Query::Lineages)' answer, the config pane's two
+    /// dropdowns.
+    Lineages(Vec<crate::config_edit::branch::Lineage>),
+    /// The model ids one provider offers (§9.4, bl-dff8) —
+    /// [`Models`](super::Query::Models)' answer, the picker's roster. Never
+    /// empty: a provider that offered nothing is a refusal saying so, not a
+    /// list a seat would read as "no models exist".
+    Models(Vec<String>),
 }
 
 /// Encode a reply to its file body. `ok` is the one field every reply carries.
@@ -214,6 +223,11 @@ pub fn encode(reply: &Reply) -> Value {
         }),
         Reply::Config { text } => json!({ "ok": true, "kind": "config", "text": text }),
         Reply::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
+        Reply::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),
+        // The one listing whose row is a bare id: a model has no other fact
+        // yog knows — brazen publishes an id and a default flag, and which one
+        // is default is a `providers.yaml` question, not a roster one (§9.4).
+        Reply::Models(ids) => rows_reply("models", ids.iter().map(|id| json!(id))),
     }
 }
 

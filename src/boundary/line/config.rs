@@ -21,9 +21,13 @@ use crate::world::marks;
 
 /// `/config <destination…> <text…>` — the destination's words, then the file;
 /// `/config <destination…>` with nothing after them is the read (§8.5,
-/// bl-0164), never for a lineage, whose browse stays the §9.3 pane's own
-/// (bl-ee0a) — `ApplyConfig` already refuses an empty lineage text, so the
-/// shortcut costs no case a write already used.
+/// bl-0164), **a lineage included** since bl-dff8: `/config branch <lineage>
+/// <path>` answers that file's bytes out of the lineage tip, which is the pane's
+/// own Load and the very hint its button carries. It costs no case a write
+/// already used — `ApplyConfig` refuses an empty lineage text — and it is what
+/// makes an Apply on a lineage something other than a blind overwrite.
+/// `/lineages` is the browse beside it: which lineages exist, and what each
+/// holds.
 pub(super) fn config(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     let (target, rest) = args::first_word(tail);
     let (file, rest) = match target.as_str() {
@@ -57,7 +61,7 @@ pub(super) fn config(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
             "/{verb}: unknown destination {other:?}; usage: {USAGE}"
         ))?,
     };
-    if rest.trim().is_empty() && !matches!(file, ConfigFile::Branch { .. }) {
+    if rest.trim().is_empty() {
         return Ok(Gesture::Ask(Query::ReadConfig { file }));
     }
     Ok(Gesture::Act(Action::ApplyConfig {

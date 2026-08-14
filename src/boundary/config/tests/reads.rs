@@ -8,7 +8,6 @@ use crate::boundary::Query;
 use crate::boundary::config::ConfigFile;
 use crate::boundary::dispatch::Deps;
 use crate::boundary::reply::Reply;
-use crate::config_edit::branch::edit::EditOrigin;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
@@ -135,20 +134,6 @@ fn a_round_trip_apply_then_read_returns_the_same_bytes() {
             text: text.to_owned()
         })
     );
-}
-
-#[test]
-fn a_lineage_destination_refuses_the_boundary_read() {
-    let root = tempdir().unwrap();
-    let deps = quiet(root.path());
-    let file = ConfigFile::Branch {
-        workspace: root.path().to_path_buf(),
-        lineage: "default".to_owned(),
-        origin: EditOrigin::Advance,
-        path: "providers.yaml".to_owned(),
-    };
-    let err = ask(&deps, &reading(file)).unwrap_err();
-    assert!(err.contains("config pane's own browse"), "{err}");
 }
 
 #[test]

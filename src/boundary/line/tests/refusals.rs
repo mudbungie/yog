@@ -87,6 +87,9 @@ fn a_verb_that_needs_text_refuses_when_it_gets_none() {
     refuses("/create --body b", &ctx(), "a title is required");
     refuses("/prepare dir", &ctx(), "a work directory is required");
     refuses("/fleet", &ctx(), "the cap");
+    // The roster is a question about one row (§9.4, bl-dff8): with no row
+    // named there is nothing to ask, and yog picks no provider on its own.
+    refuses("/models", &ctx(), "usage: /models <provider>");
 }
 
 /// A cap yog cannot read is a refusal naming the word, never a guessed number:
@@ -106,6 +109,7 @@ fn a_verb_that_takes_nothing_refuses_arguments() {
         "/conversations here",
         "/balls mine",
         "/disband now",
+        "/lineages default",
     ] {
         refuses(line, &ctx(), "takes no arguments");
     }

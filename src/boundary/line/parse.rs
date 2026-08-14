@@ -160,6 +160,25 @@ fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
                 workspace: args::workspace(ctx, verb)?,
             }))
         }
+        // The §9.3 browse (bl-dff8): the lineages of the seat's own workspace
+        // and the files each tip holds — what `/config branch <lineage> <path>`
+        // then reads a file out of. Scoped by the seat like `/providers`.
+        "lineages" => {
+            args::none(tail, verb)?;
+            Ok(ask(Query::Lineages {
+                workspace: args::workspace(ctx, verb)?,
+            }))
+        }
+        // The §9.4 roster (bl-dff8): one word, and it is the provider row —
+        // the picker asks per row, and a roster with no row named is not a
+        // question. The wall it is asked in is the seat's, as `/providers`' is.
+        "models" => Ok(ask(Query::Models {
+            workspace: args::workspace(ctx, verb)?,
+            provider: match args::optional_word(tail, verb)? {
+                Some(provider) => provider,
+                None => return Err(format!("/{verb}: usage: /models <provider>")),
+            },
+        })),
         "attention" => args::none(tail, verb).map(|()| ask(Query::Attention)),
         "ops" => Ok(ask(Query::Ops { max: max(tail)? })),
         // The whole tail is the needle — no flags, no bound. Search takes one

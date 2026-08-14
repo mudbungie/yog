@@ -22,6 +22,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod browse;
 mod files;
 mod knobs;
 mod reads;
