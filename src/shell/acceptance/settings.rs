@@ -125,8 +125,8 @@ fn a_conversations_settings_rows_sit_below_the_composer_at_the_pane_foot() {
 
     // The §9.4 model row rides the same seat — and since bl-cd2a the row IS the
     // two dropdowns: the model one shows what the config branch tip assigns,
-    // which in this world is a tip that declares no worker role at all.
-    let model = one(&painted, "(none)");
+    // which since bl-a842 is the worker model lernie's own template declares.
+    let model = one(&painted, "claude-sonnet-5");
     assert!(
         model.top() >= seat.top() - 1.0,
         "the model dropdown sits in the bottom seat: {model:?} vs {seat:?}"
@@ -163,9 +163,9 @@ fn an_empty_selection_answers_the_same_question_in_the_same_seat() {
     // same two words as its own start affordance, and a needle that matches
     // two seats proves neither.
     // The birth block's own two rows: the work directory, and the §9.4 model
-    // row — since bl-cd2a the pair itself, whose model half reads `(none)` in a
-    // world whose config head declares no worker role.
-    for row in ["work directory:", "(none)"] {
+    // row — since bl-cd2a the pair itself, whose model half reads what the
+    // config head assigns the worker role (bl-a842 gave the fixture one).
+    for row in ["work directory:", "claude-sonnet-5"] {
         let rect = one(&painted, row);
         assert!(
             rect.top() >= seat.top() - 1.0,

@@ -27,6 +27,7 @@ mod modal;
 mod name_column;
 mod naming;
 mod overlap;
+mod picker;
 mod raise;
 mod recall;
 mod screen;

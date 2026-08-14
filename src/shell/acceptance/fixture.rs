@@ -8,6 +8,7 @@ use crate::AppModel;
 use crate::app::Roots;
 use crate::cli_outbound::Cli;
 use crate::git_tree::tests::fixture::Fixture;
+use crate::model_pick::PROVIDERS;
 use crate::projects::runner::BlStore;
 use crate::ui_state::SystemClock;
 use crate::xdg::Env;
@@ -211,6 +212,20 @@ fn build_world(title: &str, roster: &Roster) -> World {
     .unwrap();
     std::fs::create_dir_all(&roots.yog_state).unwrap();
     let fx = Fixture::new();
+    // The §9.4 picker's config lineage (bl-a842). Without a `providers.yaml` on
+    // `config/default` the pane takes its first early return — "cannot read
+    // `roles:`" — and everything below it (the role strip, the two dropdowns,
+    // the roster query and its remedy) is unreachable from any acceptance test.
+    // The text is `TEMPLATE_PROVIDERS`, the same bytes lernie's own
+    // `template/providers.yaml` commits and the `model_pick` unit tests pin, so
+    // the fixture and those tests read ONE shape.
+    //
+    // It is committed **before** the agent branch forks, which is the whole
+    // reason this seam moves no existing beat: `config/default`'s tip is then
+    // the conversation's own governing commit, so the §9.4 row claims no drift
+    // and grows no drift clause. Seeding it afterwards would advance the config
+    // past every conversation and paint one on every settings surface.
+    fx.commit_other(PROVIDERS, crate::test_support::TEMPLATE_PROVIDERS);
     fx.build_agent("c-1", title);
     let messages = fx.path.join("agents/c-1/messages");
     std::fs::create_dir_all(&messages).unwrap();
