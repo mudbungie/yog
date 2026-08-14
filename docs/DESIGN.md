@@ -4337,6 +4337,14 @@ the config-branch `for-each-ref` — are gone with it.
   write that lands first emits *no event at all*, which no downstream timeout
   can recover. Tests therefore **prove** arming (rewrite a probe file until the
   watcher reports it) rather than sleeping a guess at it.
+- **The shell the gates are written in is bash 3.2**, because that is what
+  macOS ships and — the licence having changed under it — always will. Two of
+  its limits had made `scripts/leak-scan.sh` Linux-only: associative arrays
+  (bash 4) and, worse, `"${empty[@]}"` under `set -u`, which 3.2 treats as an
+  unbound variable, kills the shell on, **and exits 0 doing** — so a tree full
+  of findings passed the gate silently. Rules are a `case` and every array
+  expansion is guarded `${a[@]+"${a[@]}"}`; a new script is checked with
+  `bash -n` under a real 3.2, never against the host's bash.
 
 ---
 
