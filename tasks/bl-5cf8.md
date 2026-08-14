@@ -1,7 +1,8 @@
 +++
 title = "the descent graph needs a seat: where V1.3's two edges are drawn now that the gutter is gone"
 created = 1786064834
-updated = 1786515792
+updated = 1786684967
+claimant = "Oxbow"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Filed by bl-1802, which dissolved the history rail's `SidePanel` gutter into
