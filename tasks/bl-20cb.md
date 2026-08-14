@@ -1,7 +1,7 @@
 +++
 title = "the ten brazen provider rows paint twice in the same frame: once in the Login pane and once in the Config pane's provider table"
 created = 1786163411
-updated = 1786163411
+updated = 1786678327
 root_commit = "805ddf08f8a13f1d0c2b0bf7b07d4a1bc438706c"
 +++
 QUALITY.md §1 criterion **H1** ('One fact, one rendering. A fact paints once per surface'). Audited sha 4b0e75c, run /home/u/.cache/yog-drive/quality-20260807T214407Z/out.
@@ -9,13 +9,13 @@ QUALITY.md §1 criterion **H1** ('One fact, one rendering. A fact paints once pe
 SYMPTOM. With config mode open and the side panel's Login section expanded, the same ten provider rows — same names, same auth state, same explanatory hint — render simultaneously about 350px apart, in one frame.
 
 WITNESS: `probe-s5-login.png` and `Q-S5-login-default.png`, crop `crop-s5-login.png`. Left panel, Login section:
-    openai-chatgpt  auth oauth2 · <state>  [Login]
+    <oauth-row>     auth oauth2 · <state>  [Login]
     local           auth none · no credential needed  keyless — noth…
-    anthropic       auth api_key · <state>  api-key p…
+    <api-key-row>   auth api_key · <state>  api-key p…
 Centre pane, 'brazen config.toml' section, in the same frame:
-    openai-chatgpt  auth oauth2 · <state>
+    <oauth-row>     auth oauth2 · <state>
     local           auth none · no credential needed  keyless — nothing to log in
-    anthropic       auth api_key · <state>  api-key provider — set the key in Config
+    <api-key-row>   auth api_key · <state>  api-key provider — set the key in Config
 Ten rows, two renderings each. The duplicate is also the WORSE copy: the left-panel one is width-starved, so its third field is elided on every row while the centre one is complete.
 
 The code already knows there are two lists — the centre pane's own hint reads *'built-in provider rows are compiled into bz and are not shown in this file (**the Login provider list shows them**)'*.
