@@ -66,6 +66,20 @@ fn every_lernie_action_round_trips() {
     rt(Gesture::Act(Action::Scan {
         workspace: PathBuf::from("/ws"),
     }));
+    // The nudge (bl-9bef): aimed by the seat, carrying nothing — the verb is
+    // the whole line, because what it says is what is already there.
+    rt(Gesture::Act(Action::Nudge {
+        workspace: PathBuf::from("/ws"),
+        agent: "c-1".to_owned(),
+    }));
+    let extra = parse("/nudge again", &ctx()).expect_err("it takes no arguments");
+    assert!(extra.contains("takes no arguments"), "{extra}");
+    let unselected = parse("/nudge", &crate::boundary::line::Context::default())
+        .expect_err("a nudge is fired at a conversation, and none is selected");
+    assert!(
+        unselected.contains("no workspace in context"),
+        "{unselected}"
+    );
     // The §9.4 exit (bl-2d19): both its targets are the seat's, so the verb is
     // the whole line and the round trip holds modulo that context.
     rt(Gesture::Act(Action::Retarget {

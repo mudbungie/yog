@@ -54,6 +54,16 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
                 workspace: args::workspace(ctx, verb)?,
             }))
         }
+        // Fire inference from where the conversation stands (bl-9bef). It takes
+        // no words at all: what it says is *what is already there*, so a tail
+        // would be a message, and a message is `/message`.
+        "nudge" => {
+            args::none(tail, verb)?;
+            Ok(act(Action::Nudge {
+                workspace: args::workspace(ctx, verb)?,
+                agent: args::agent(ctx, verb)?,
+            }))
+        }
         // The §9.4 exit from the config freeze (bl-2d19): the conversation is
         // the seat's, the lineage is the workspace's one default, so the verb
         // is the whole line.

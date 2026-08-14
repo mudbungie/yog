@@ -90,6 +90,12 @@ pub enum Reply {
     Floored {
         standing: bool,
     },
+    /// The nudge's driver was launched (§8.2, bl-9bef): `lernie advance` is
+    /// running detached against the conversation. It answers with nothing else
+    /// because there *is* nothing else yet — what the model does with the turn
+    /// arrives on the transcript and the §4.2 trail, at its own pace, and a
+    /// receipt that guessed at it here would be a receipt that lied.
+    Nudged,
     /// The §4.2 ack line landed — every current alarm is acknowledged.
     Acked,
     /// The trail was truncated; the clear is the fresh trail's first row.
@@ -182,6 +188,7 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Floored { standing } => {
             json!({ "ok": true, "kind": "floored", "standing": standing })
         }
+        Reply::Nudged => json!({ "ok": true, "kind": "nudged" }),
         Reply::Acked => json!({ "ok": true, "kind": "acked" }),
         Reply::TrailCleared => json!({ "ok": true, "kind": "trail-cleared" }),
         Reply::Applied { file } => json!({ "ok": true, "kind": "applied", "file": file }),

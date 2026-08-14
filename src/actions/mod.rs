@@ -11,8 +11,10 @@
 //! variant whose `Stream` drop would SIGTERM the loop on yog's exit).
 //!
 //! Predicate discipline (§8.2): **Stop** needs a Live/InFlight executor to
-//! signal ([`stop_enabled`]); **Message** is the resume gesture and works on
-//! *any* selected agent ([`message_enabled`], ARCH §2.9 — no resume verb);
+//! signal ([`stop_enabled`]); **Nudge** is its complement — the states with no
+//! driver holding the lease ([`nudge_enabled`]); **Message** is the resume
+//! gesture and works on *any* selected agent ([`message_enabled`], ARCH §2.9 —
+//! no resume verb);
 //! **Close** needs the ball bound to a local workspace ([`close_enabled`] =
 //! `JoinState::Bound`); **Unclaim**/release and **Move** need the same
 //! ([`unclaim_enabled`], [`move_enabled`]); **Assign** needs a ready, unclaimed
@@ -185,6 +187,26 @@ pub fn stop_enabled(selected_branch: Option<&str>, agents: &[Agent]) -> bool {
 pub fn message_enabled(selected: Option<&str>, content: &str, agents: &[Agent]) -> bool {
     !content.trim().is_empty()
         && selected.is_some_and(|name| agents.iter().any(|a| a.agent_id == name))
+}
+
+/// Nudge fires inference on the selected conversation from the state it is
+/// already in (§8.2, bl-9bef) — `lernie advance`, no text at all. So it is
+/// [`message_enabled`] without the content half, and [`stop_enabled`]'s
+/// **complement** on state: a driver already holds the lease of a Live or
+/// InFlight agent, and lernie's own hop would take the clean no-op branch
+/// (ARCH §2.11 Writer/driver totality). Offering it there would be a control
+/// that fires and does nothing, which QUALITY H4 calls theater — so the two
+/// verbs partition the states between them, Stop for the running ones and this
+/// for the rest.
+///
+/// Enabled iff an agent is selected, present in `agents`, and Quiescent or
+/// Stopped. `false` for no selection and for an id absent from the set.
+pub fn nudge_enabled(selected: Option<&str>, agents: &[Agent]) -> bool {
+    selected.is_some_and(|name| {
+        agents.iter().any(|a| {
+            a.agent_id == name && matches!(a.state, AgentState::Quiescent | AgentState::Stopped)
+        })
+    })
 }
 
 /// Stop offers `--stop-children` iff `agent_id` has a descendant in the id set

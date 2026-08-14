@@ -2,6 +2,8 @@ use super::*;
 use crate::git_tree::{Agent, AgentState};
 use crate::projects::join::JoinState;
 
+mod conversation;
+
 fn branch(name: &str, state: AgentState) -> Agent {
     Agent {
         branch_name: format!("agents/{name}"),
@@ -140,92 +142,6 @@ fn draft_clears_only_on_a_clean_send() {
         !draft_clears(&never_launched),
         "a spawn failure keeps the draft"
     );
-}
-
-#[test]
-fn stop_disabled_when_selection_is_none() {
-    let bs = vec![branch("foo", AgentState::InFlight)];
-    assert!(!stop_enabled(None, &bs));
-}
-
-#[test]
-fn stop_disabled_when_selection_not_in_agents() {
-    let bs = vec![branch("foo", AgentState::InFlight)];
-    assert!(!stop_enabled(Some("bar"), &bs));
-}
-
-#[test]
-fn stop_disabled_when_selected_agent_stopped() {
-    let bs = vec![branch("foo", AgentState::Stopped)];
-    assert!(!stop_enabled(Some("foo"), &bs));
-}
-
-#[test]
-fn stop_disabled_when_selected_agent_quiescent() {
-    // A finished-for-now agent has no executor to signal (§2.9).
-    let bs = vec![branch("foo", AgentState::Quiescent)];
-    assert!(!stop_enabled(Some("foo"), &bs));
-}
-
-#[test]
-fn stop_enabled_when_selection_is_in_flight() {
-    let bs = vec![branch("foo", AgentState::InFlight)];
-    assert!(stop_enabled(Some("foo"), &bs));
-}
-
-#[test]
-fn stop_enabled_when_selection_is_live() {
-    // A driver between model calls (running a tool) is stoppable — the
-    // very case §2.9's lock-fd discovery exists for.
-    let bs = vec![branch("foo", AgentState::Live)];
-    assert!(stop_enabled(Some("foo"), &bs));
-}
-
-#[test]
-fn stop_disabled_when_agents_empty() {
-    let bs: Vec<Agent> = vec![];
-    assert!(!stop_enabled(Some("foo"), &bs));
-}
-
-#[test]
-fn stop_picks_correct_agent_among_several() {
-    let bs = vec![
-        branch("a", AgentState::Stopped),
-        branch("b", AgentState::InFlight),
-        branch("c", AgentState::Quiescent),
-        branch("d", AgentState::Live),
-    ];
-    assert!(stop_enabled(Some("b"), &bs));
-    assert!(stop_enabled(Some("d"), &bs));
-    assert!(!stop_enabled(Some("a"), &bs));
-    assert!(!stop_enabled(Some("c"), &bs));
-}
-
-#[test]
-fn message_enabled_only_for_a_present_selection_with_text() {
-    let bs = vec![branch("foo", AgentState::Stopped)];
-    // Any state — Message is the resume gesture (contrast stop_enabled).
-    assert!(message_enabled(Some("foo"), "continue please", &bs));
-    assert!(!message_enabled(Some("foo"), "   ", &bs), "blank text");
-    assert!(!message_enabled(None, "hi", &bs), "no selection");
-    assert!(!message_enabled(Some("bar"), "hi", &bs), "absent id");
-}
-
-#[test]
-fn stop_children_offered_only_with_a_descendant() {
-    let bs = vec![
-        branch("root-x", AgentState::Live),
-        branch("root-x-c1", AgentState::Stopped),
-        branch("root-y", AgentState::Live),
-    ];
-    assert!(stop_children_offered("root-x", &bs), "has a child");
-    assert!(!stop_children_offered("root-y", &bs), "leaf agent");
-    // A hyphen-boundary miss: root-xx is not a descendant of root-x.
-    let bs2 = vec![
-        branch("root-x", AgentState::Live),
-        branch("root-xx", AgentState::Live),
-    ];
-    assert!(!stop_children_offered("root-x", &bs2));
 }
 
 #[test]

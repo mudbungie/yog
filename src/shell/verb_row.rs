@@ -101,6 +101,7 @@ pub(super) fn verb_buttons(
                     state.actions.drafts.set(ctx.key.clone(), String::new());
                 }
             }
+            nudge_control(ui, model, lernie, bl, ctx, agent);
             hold_controls(ui, model, lernie, bl, ctx, agent);
             stop_controls(ui, model, state, lernie, bl, &ctx.agents);
         } else {
@@ -133,6 +134,41 @@ pub(super) fn verb_buttons(
             }
         }
     });
+}
+
+/// **Nudge** (§8.2, bl-9bef): run the model on this conversation as it stands.
+/// It sits beside Message rather than replacing it because the two say
+/// different things — Message adds a turn, this one adds nothing and is exactly
+/// what a first turn that died before reaching the model needs: sign in, press
+/// it, and the same conversation continues with the goal it was born with.
+///
+/// It is deliberately **independent of the draft**: a nudge takes no text, so
+/// arming it on the box would make an empty composer mean "cannot re-dispatch".
+fn nudge_control(
+    ui: &mut egui::Ui,
+    model: &mut AppModel,
+    lernie: &Cli,
+    bl: &Cli,
+    ctx: &VerbCtx,
+    agent: &str,
+) {
+    let on = crate::actions::nudge_enabled(Some(agent), &ctx.agents);
+    if ui
+        .add_enabled(on, egui::Button::new("Nudge"))
+        .on_hover_text(
+            "Run the model on this conversation as it already stands — no new message, no \
+             goal retyped (`lernie advance`). It is the re-dispatch for a first turn that \
+             died before it reached the model: sign in, press this, and the same \
+             conversation carries on. Typed, it is `/nudge`.",
+        )
+        .on_disabled_hover_text(
+            "something is already running this conversation — a nudge would find the \
+             driver's lease taken and do nothing",
+        )
+        .clicked()
+    {
+        super::dispatch::nudge(model, lernie, bl, &ctx.ws, agent);
+    }
 }
 
 /// The §8.6 hold answer, offered **only while the selected conversation is

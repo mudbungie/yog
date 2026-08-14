@@ -23,6 +23,10 @@ fn malformed_envelopes_refuse_with_a_reason() {
             json!({"op": "message", "workspace": 7, "agent": "a", "content": "c"}),
             "field \"workspace\"",
         ),
+        (
+            json!({"op": "nudge", "workspace": "/ws"}),
+            "field \"agent\"",
+        ),
         (json!({"op": "ops"}), "non-integer field \"max\""),
         (json!({"op": "seen", "workspace": "/ws"}), "field \"agent\""),
         (

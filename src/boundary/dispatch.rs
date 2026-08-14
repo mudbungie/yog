@@ -11,9 +11,7 @@
 
 use crate::actions::verbs;
 use crate::model_pick::Pick;
-use crate::start::{self, StartInputs};
 use crate::ui_state::UiState;
-use lernie::mint::SplitMix64;
 
 use super::reply::Reply;
 use super::{Action, answer, config, control, fleet, monitor};
@@ -25,17 +23,23 @@ use super::{Action, answer, config, control, fleet, monitor};
 /// frontend fired.
 mod delete_exec;
 mod deps;
+/// The §8.1 start family's **two typed doors** — the other way into this
+/// chokepoint. Their own file at §12's cap, on the seam the module doc already
+/// draws: everything else here is the `Action` table, and these two are the
+/// entrances the frame's start glue walks in through, each gated in its own
+/// right (the §4.11 confinement refusal and the §3.5 spend ceiling ride
+/// `prompt`). The `Prepare`/`Prompt` arms delegate here, so a line, a deposit
+/// and a click all spend one body.
+mod doors;
 use delete_exec::{delete_agent, unmake};
 pub use deps::Deps;
+pub use doors::{prepare, prompt};
 
 /// Dispatch one action (§8.5). The `Err` is a refusal or executor failure —
 /// already a durable ops row wherever an executor ran; `ui` is the durable
 /// `ui.json` the §3.6 unmaking prunes (write-through, either frontend's copy).
 pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Result<Reply, String> {
     let (bl, root) = (&deps.bl, deps.state_root.as_path());
-    let outcome = |r: std::io::Result<verbs::Outcome>| -> Result<Reply, String> {
-        r.map(Reply::Outcome).map_err(|e| e.to_string())
-    };
     match action {
         // The §8.2 lernie arms spawn through [`Deps::bound`] and never through
         // `deps.lernie` itself (bl-bf79): a workspace verb's spawn owes its
@@ -52,6 +56,15 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             children,
         } => outcome(verbs::stop(&deps.bound(ws), root, ts, agent, *children)),
         Action::Scan { workspace: ws } => outcome(verbs::scan(&deps.bound(ws), root, ts)),
+        // The §8.2 nudge (bl-9bef): a detached `lernie advance`, which is the
+        // §8.6 release's own launch — one body in [`control`], because "start a
+        // driver on this conversation" is one act however it was asked for.
+        // Detached and never piped: an advance runs the conversation until it
+        // goes quiet, and no gesture may block a frame on that.
+        Action::Nudge {
+            workspace: ws,
+            agent,
+        } => control::advance(deps, ts, ws, agent).map(|()| Reply::Nudged),
         Action::Retarget { workspace, agent } => outcome(retarget(deps, ts, workspace, agent)),
         Action::Fork {
             workspace,
@@ -148,6 +161,14 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
     }
 }
 
+/// A **short verb's** answer: its captured run as a reply, or its launch
+/// failure as a refusal. A free function beside its twin [`wrote`] rather than
+/// a closure inside the table — the two fold the same shape and there is no
+/// reason for one of them to be a body and the other a local.
+fn outcome(ran: std::io::Result<verbs::Outcome>) -> Result<Reply, String> {
+    ran.map(Reply::Outcome).map_err(|e| e.to_string())
+}
+
 /// A write-only executor's answer: the reply it earns, or its failure as a
 /// refusal. Said once so the trail's two operator verbs stay *rows* in the
 /// table above rather than two little bodies inside it.
@@ -189,92 +210,6 @@ fn fork(
         &crate::fork::Fire::at(workspace, parent, attempt, goal, &deps.yog_data_root),
     )
     .map(Reply::Outcome)
-    .map_err(|e| e.to_string())
-}
-
-/// The §8.1 mutating half: seed → ensure-workspace → the ball rung's `bl`
-/// steps, the composer's [`Prepared`](crate::start::Prepared) back. The
-/// occupied names and roots re-derive here from [`Deps`] — the same sources
-/// every frontend fills them from, one derivation. `pub` as the chokepoint's
-/// typed door — the frame's start glue enters here, and the [`dispatch`]
-/// Prepare arm delegates here, so both spellings share this one body.
-pub fn prepare(
-    deps: &Deps,
-    ts: &str,
-    workspace: &std::path::Path,
-    payload: &crate::start::Payload,
-) -> Result<crate::start::Prepared, String> {
-    let inputs = StartInputs {
-        conversation_names: answer::names_in(&deps.snapshot, workspace),
-        workspace: workspace.to_path_buf(),
-        payload: payload.clone(),
-        home: deps.home.clone(),
-        yog_data_root: deps.yog_data_root.clone(),
-        balls_state_root: deps.balls_state_root.clone(),
-    };
-    let start_deps = start::Deps {
-        bl: deps.bl.clone(),
-        lernie: deps.lernie.clone(),
-        state_root: deps.state_root.clone(),
-        yog_binary: deps.yog_binary.clone(),
-    };
-    start::prepare(&start_deps, &inputs, ts).map_err(|e| e.to_string())
-}
-
-/// The deferred detached fire (§8.1): mint against the occupied set, spawn
-/// with `--name` and the goal verbatim (bl-6920) — the minted conversation
-/// name back. `pub`
-/// as [`prepare`]'s sibling typed door; the [`dispatch`] Prompt arm delegates.
-///
-/// **The §3.5 spend ceiling gates here and nowhere else** ([`super::ceiling`]):
-/// this is the one door every drone yog births passes through, so one gate
-/// covers every spawn path, and a birth is the only thing it can refuse — the
-/// ruling forbids touching a drone that is already running. `ui` is the durable
-/// `ui.json` the ceiling and the price table are read from.
-///
-/// The §4.11 item-8 **confinement refusal** rides the same door, and before the
-/// ceiling: a workspace that requires a confinement layer this platform does
-/// not have fires nothing at all, so there is no spend to judge.
-pub fn prompt(
-    deps: &Deps,
-    ui: &UiState,
-    ts: &str,
-    prepared: &crate::start::Prepared,
-    goal: &str,
-) -> Result<String, String> {
-    control::confinement_gate(&prepared.workspace)?;
-    super::ceiling::gate(ui, &deps.state_root, ts, prepared)?;
-    // The fired loop carries the target workspace's wall (§16.2 as amended):
-    // lernie hands its own environment to every tool subprocess, and a bare
-    // `bz` in an agent's bash is the world's shim re-entering yog — so this one
-    // layer is what puts the whole descendant tree inside the sphere's
-    // providers, sign-ins and model cache.
-    // …and, for a launch that was NOT raised onto a project, its own balls
-    // space (§16.3's launch clause): the ball rung is by construction pointed
-    // at a project's board — it was offered on that project's balls section and
-    // its `bl claim` already landed there — so it carries no `YOG_MARKS` and
-    // its `bl` is the board's own, instantly consistent with what yog renders.
-    // Every other rung tracks on a space of its own, which is the ruling's
-    // default. Nothing new decides this: `Payload::origin` is the rung, already
-    // carried on `Prepared` for the §7.3 banner.
-    let own_space = prepared.origin != crate::opslog::Origin::Balls;
-    let lernie = deps
-        .lernie
-        .and_env(crate::world::wall::pairs(&deps.world, &prepared.workspace))
-        .and_env(crate::world::marks::pairs(
-            &deps.world,
-            &prepared.workspace,
-            own_space,
-        ));
-    start::execute_prompt(
-        &lernie,
-        &deps.state_root,
-        ts,
-        prepared,
-        goal,
-        &answer::names_in(&deps.snapshot, &prepared.workspace),
-        &SplitMix64::from_seed(deps.mint_seed),
-    )
     .map_err(|e| e.to_string())
 }
 

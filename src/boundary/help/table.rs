@@ -43,6 +43,19 @@ pub const ACTIONS: &[HelpRow] = &[
                  workspace, not on the selection.",
     },
     HelpRow {
+        verb: "nudge",
+        usage: "/nudge",
+        summary: "prompt the selected conversation again from where it already stands",
+        detail: "Runs the model on the selected conversation as it is, with nothing added \
+                 (`lernie advance`): no new message, no goal retyped, the same conversation \
+                 continued. This is the fix for a first turn that died before it reached the \
+                 model — a missing sign-in, a provider row that was wrong — sign in, then nudge, \
+                 and the turn is dispatched again in place. The driver runs detached, so it \
+                 keeps going whatever yog does. Takes the workspace and the agent from the \
+                 seat; refuses when nothing is selected, and does nothing while a driver is \
+                 already running the conversation.",
+    },
+    HelpRow {
         verb: "retarget",
         usage: "/retarget",
         summary: "move the selected conversation onto the config this workspace runs now",

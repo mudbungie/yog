@@ -26,6 +26,8 @@ pub(super) fn p(s: &str) -> PathBuf {
     PathBuf::from(s)
 }
 
+/// The workspace-and-conversation half: the §8.2 lernie family, the §3.6
+/// deletes, the §4.9 monitor, the §4.11 answer and the trail's own verbs.
 #[test]
 fn every_action_variant_round_trips() {
     rt(Gesture::Act(Action::Message {
@@ -41,6 +43,57 @@ fn every_action_variant_round_trips() {
     rt(Gesture::Act(Action::Scan {
         workspace: p("/ws"),
     }));
+    rt(Gesture::Act(Action::Nudge {
+        workspace: p("/ws"),
+        agent: "c-1".into(),
+    }));
+    rt(Gesture::Act(Action::DeleteWorkspace {
+        workspace: p("/ws"),
+        typed: "alba".into(),
+    }));
+    rt(Gesture::Act(Action::DeleteAgent {
+        workspace: p("/ws"),
+        agent: "c-1".into(),
+        typed: "the goal name".into(),
+    }));
+    rt(Gesture::Act(Action::Monitor(Verb::Arm {
+        workspace: p("/ws"),
+        model: "claude-haiku-4-5".into(),
+    })));
+    rt(Gesture::Act(Action::Monitor(Verb::Disarm {
+        workspace: p("/ws"),
+    })));
+    rt(Gesture::Act(Action::Monitor(Verb::Flag {
+        workspace: p("/ws"),
+        agent: "c-1".into(),
+        reason: "it is rewriting an unrelated crate".into(),
+    })));
+    // The §8.6 capability answer, one envelope per verdict — the vocabulary is
+    // the control's own, so all three spell and read back.
+    for ruling in [
+        crate::control::judge::Ruling::Pass,
+        crate::control::judge::Ruling::Hold,
+        crate::control::judge::Ruling::Refuse,
+    ] {
+        rt(Gesture::Act(Action::AnswerHold {
+            workspace: p("/ws"),
+            agent: "c-1".into(),
+            ruling,
+        }));
+    }
+    rt(Gesture::Act(Action::Ack));
+    rt(Gesture::Act(Action::MarkSeen {
+        workspace: p("/ws"),
+        agent: "c-1".into(),
+    }));
+    rt(Gesture::Act(Action::ClearTrail));
+}
+
+/// The `bl` half, split from its sibling on the two substrates' own line — the
+/// same seam `line::tests::parity` cuts, so the two serializations' tables read
+/// as one pair rather than as one long list and one short one.
+#[test]
+fn every_ball_action_variant_round_trips() {
     rt(Gesture::Act(Action::Close {
         project: p("/proj"),
         id: "bl-1".into(),
@@ -90,46 +143,6 @@ fn every_action_variant_round_trips() {
         body: None,
         note: None,
     }));
-    rt(Gesture::Act(Action::DeleteWorkspace {
-        workspace: p("/ws"),
-        typed: "alba".into(),
-    }));
-    rt(Gesture::Act(Action::DeleteAgent {
-        workspace: p("/ws"),
-        agent: "c-1".into(),
-        typed: "the goal name".into(),
-    }));
-    rt(Gesture::Act(Action::Monitor(Verb::Arm {
-        workspace: p("/ws"),
-        model: "claude-haiku-4-5".into(),
-    })));
-    rt(Gesture::Act(Action::Monitor(Verb::Disarm {
-        workspace: p("/ws"),
-    })));
-    rt(Gesture::Act(Action::Monitor(Verb::Flag {
-        workspace: p("/ws"),
-        agent: "c-1".into(),
-        reason: "it is rewriting an unrelated crate".into(),
-    })));
-    // The §8.6 capability answer, one envelope per verdict — the vocabulary is
-    // the control's own, so all three spell and read back.
-    for ruling in [
-        crate::control::judge::Ruling::Pass,
-        crate::control::judge::Ruling::Hold,
-        crate::control::judge::Ruling::Refuse,
-    ] {
-        rt(Gesture::Act(Action::AnswerHold {
-            workspace: p("/ws"),
-            agent: "c-1".into(),
-            ruling,
-        }));
-    }
-    rt(Gesture::Act(Action::Ack));
-    rt(Gesture::Act(Action::MarkSeen {
-        workspace: p("/ws"),
-        agent: "c-1".into(),
-    }));
-    rt(Gesture::Act(Action::ClearTrail));
 }
 
 #[test]

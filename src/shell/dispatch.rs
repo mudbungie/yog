@@ -115,6 +115,20 @@ pub(super) fn message(
     cleared
 }
 
+/// Fire inference on one conversation from where it already stands (§8.2,
+/// bl-9bef) — the composer's Nudge button, one body. It carries no payload at
+/// all: the target is the parameter and the conversation's own state is the
+/// prompt, so there is nothing here to clear and nothing to echo.
+pub(super) fn nudge(model: &mut AppModel, lernie: &Cli, bl: &Cli, ws: &Path, agent: &str) {
+    let deps = model.boundary_deps(lernie, bl);
+    let action = Action::Nudge {
+        workspace: ws.to_path_buf(),
+        agent: agent.to_owned(),
+    };
+    let nudged = model.dispatch(&deps, &super::now_ts(), &action);
+    after_lernie(&nudged, model);
+}
+
 /// Answer the invocation parked at one conversation's capability boundary
 /// (§8.6) — the composer's two hold buttons, one body. The held `tool_use` id
 /// is the executor's to derive; this seat says only *which conversation* and
