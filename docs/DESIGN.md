@@ -599,8 +599,10 @@ member row (bl-df72 — that seat painted the raw id, the operator's
 foreign, hand-typed, and post-bl-6920 unnamed roots land on the payload
 line or the id. **No seat formats an agent id as a display name** — the id
 is a fact whose display seats are the ladder's own floor and the hover (the
-member row and the center header both keep it there); an acceptance source
-scan holds the rule the way the §11 hover invariant is held. **The floor
+member row and the center header both keep it there); an acceptance scan
+holds the rule **on values** (bl-45c7) — it reads the painted window and
+asks of every token whether it is stamp-shaped, so a seat leaks under any
+field name or none. **The floor
 spells the terminal generation only** (bl-63a1): a lernie child id embeds
 the full ancestry chain — one `<stamp>-<hash>` pair per generation — and
 the descent tree's indentation already states the lineage, so when the
@@ -614,9 +616,17 @@ whose other content is a timestamp and a subject — because the acceptance
 naming scan named `agent_id`/`root_id` and a deposit carries the fact under
 `sender`. That is bl-63a1's own lesson repeating verbatim, so the fix is
 both halves: `inboxview::header_line` reads `nav::convs::id_floor` like
-every other seat, and the scan's vocabulary is now every identifier the fact
-travels under, with a new carrier belonging in the change that introduces
-it. The strip is
+every other seat, and **the scan stopped enumerating names at all**
+(bl-45c7). A vocabulary is the wrong kind of strength — it decays on every
+rename and nothing fails when it does, so the scan went on passing on the
+subset it happened to know. It now asserts the rule over the *painted
+window*: every id-shaped run in it must be the ladder's own floor spelling,
+where id-shaped is `nav::convs::is_stamp`, the one grammar the floor itself
+reads. A carrier nobody has named yet is caught by the same sentence,
+because the sentence names no carrier. What that trades away is the seats a
+fixture cannot reach; §11's fixture reaches the window, and a guard that
+knows three of a fact's names is worth less than one that knows the fact.
+The strip is
 the retired compose's other inverse — parse and strip live in one module
 (`start::identity`), where the retired shape has its one written record.
 The legacy rung has **one** shape to recognize (bl-2706): `You are <x>.` A

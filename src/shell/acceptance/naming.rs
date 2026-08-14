@@ -4,82 +4,164 @@
 //! member row painting `agent_id` raw. The one naming rule is the display
 //! ladder (`crate::nav::convs::display_name` and its seats); its floor may be
 //! the id — an id is a fact — but only the ladder spells it, and the id's
-//! other seat is the hover. A per-seat fix would leave the next seat equally
-//! free to leak, so the rule is held here in the [`super::hover`] idiom: read
-//! the tree's own source and fail the seat, reachable by a fixture or not.
+//! other seat is the hover.
+//!
+//! **Held on values, not on field names** (bl-45c7). The scan this replaces
+//! read the tree's source and flagged a paint call whose argument span
+//! mentioned one of a hand-listed set of identifiers — `agent_id`, `root_id`,
+//! and, after bl-3aa1, `sender`. That list was the defect. bl-63a1 recorded the
+//! lesson verbatim — *"the first scan forbade only `agent_id`, so a seat
+//! painting the same fact under its other name would have passed"* — and the
+//! lesson still recurred: a deposit's `from` deserializes into `sender`, a
+//! third spelling, and the scan sat silent while a seat painted a four-token
+//! ancestry chain in plain sight. A scan whose strength is a vocabulary decays
+//! every time anyone renames the fact, and **nothing fails when it does** — it
+//! goes on passing, on the subset it happens to know. Vacuous by omission.
+//!
+//! So the question moved from the name to the value: an agent id has a shape
+//! ([`is_stamp`], the one stamp grammar the ladder itself reads), and the
+//! window is asked what it *painted*. A seat that leaks an id under
+//! `originator`, `author`, `who` or any name nobody has thought of yet is
+//! caught by the same sentence as one that leaks it under `agent_id`, because
+//! the scan never learns a name at all.
+//!
+//! What it costs: the source scan indicted a seat whether a fixture reached it
+//! or not, and this one sees only what the window paints. That is the trade the
+//! ball took deliberately — a guard over every seat that knows three of the
+//! fact's names is worth less than a guard over the reachable seats that knows
+//! the fact itself, and §11's fixture reaches the whole window.
 
-use super::hover::lex::skeleton;
-use super::hover::scan::{args_of, rust_files, sites};
+use super::fixture::World;
 use crate::cli_outbound::Cli;
-use std::path::Path;
+use crate::nav::convs::{id_floor, is_stamp};
 
-/// Constructors whose argument the operator reads as a title or label — the
-/// text-painting counterpart of the hover scan's interactive `CONTROLS`.
-const PAINTS: &[&str] = &[
-    "ui.label(",
-    "ui.heading(",
-    "ui.weak(",
-    "ui.strong(",
-    "ui.small(",
-    "ui.monospace(",
-    "ui.colored_label(",
-    "ui.selectable_label(",
-    "ui.selectable_value(",
-    "ui.button(",
-    "ui.small_button(",
-    "RichText::new(",
+/// A **named** root wearing a real lernie id — the shape every seat that wants
+/// a title must resolve past.
+const ROOT: &str = "20260803T045643Z-1e5f99d4";
+/// A nameless descent child of [`ROOT`], its id carrying the whole ancestry
+/// chain — one `<stamp>-<hash>` pair per generation (§2.3). This is the value
+/// the operator called unparseable: the ladder's floor may spell its **terminal
+/// generation**, and no seat may spell more.
+const CHILD: &str = "20260803T045643Z-1e5f99d4-20260804T101112Z-abcdef01";
+
+/// The separators a seat puts between an id and whatever sits beside it, so a
+/// run like `✉ <id> · t0` yields the id as its own token. Splitting on these is
+/// the whole of the scan's knowledge about layout; it knows nothing about which
+/// seat painted what.
+const BREAKS: &[char] = &[
+    ' ', '\n', '\t', '·', ':', ',', '(', ')', '[', ']', '"', '\'', '—', '→', '⟩', '⟨',
 ];
 
-/// The identifiers an id travels under in this tree — `agent_id` on the
-/// [`crate::git_tree::Agent`], `root_id` on the row and the ladder's own
-/// seats, `sender` on an inbox [`crate::inboxview::Deposit`]. bl-63a1's
-/// lesson: the first scan forbade only `agent_id`, so a seat painting the same
-/// fact under its other name would have passed.
-///
-/// That lesson then repeated exactly (bl-3aa1). The deposit rows led with a
-/// four-token ancestry chain and this scan was silent, because a deposit's
-/// `from` field is deserialized into `sender` — a third spelling of the one
-/// fact, and the scan named two. The set is therefore **every identifier an
-/// agent id travels under**, and a new carrier for it belongs here in the same
-/// change that introduces it; a seat is only as safe as the vocabulary this
-/// list knows.
-const ID_IDENTS: &[&str] = &["agent_id", "root_id", "sender"];
+/// Every id-shaped run in `painted`: a token one of whose `-` segments is a
+/// lernie stamp. **This is the derivation** — the scan asks the value what it
+/// is, never asks a field what it is called.
+fn id_runs(painted: &str) -> Vec<String> {
+    painted
+        .split(BREAKS)
+        .filter(|token| token.split('-').any(is_stamp))
+        .map(str::to_owned)
+        .collect()
+}
 
-/// **The invariant.** No paint call's argument span spells an id identifier: a
-/// seat that wants a name calls the ladder before it paints, so an id can only
-/// reach the screen as the ladder's own floor — which since bl-63a1 spells the
-/// terminal generation only (`nav::convs`'s `id_floor`; the floor rule itself
-/// is held by the ladder's unit tests). Enumerating nothing is itself a
-/// failure — the same two-direction discipline as the hover scan, so a rotted
-/// pattern list cannot pass by matching zero call sites.
+/// The whole window over a world built out of real lernie ids: a named root, a
+/// nameless chained child of it unfolded into the list, and an inbox deposit
+/// **from that child** — the §2.11 `from:` field, which is the carrier the
+/// vocabulary scan had never heard of until the defect had already shipped.
+fn painted_over_ids(tab: crate::keymap::InspectorTab) -> String {
+    let (lernie, bl) = (Cli::new("yog-absent-lernie"), Cli::new("yog-absent-bl"));
+    let mut world = super::inbox_composer::quick(super::fixture::world());
+    let ws = world.ws.clone();
+    world.add_root(ROOT, "cormorant");
+    world.add_child(ROOT, CHILD);
+    deposit_from(&world, ROOT, CHILD);
+    world.model.mark_dirty([ws.clone()]);
+    world.converge();
+    world.model.focus_agent(&ws, ROOT);
+    world.model.select_tab(tab);
+    // Unfold the root: since bl-fa82 a member is a row of the conversation
+    // list, and since bl-8905 that is the only place a child paints.
+    world.state.expanded.insert(ROOT.to_owned());
+    super::painted(&mut world, &lernie, &bl)
+}
+
+/// Land a deposit in `agent`'s inbox whose `from:` is another **agent id**
+/// (§2.11) — what one agent's `lernie message` to another leaves behind. The
+/// sibling helper in [`super::inbox_composer`] deposits from `user`, which is
+/// precisely the sender that carries no id and so proves nothing here.
+fn deposit_from(world: &World, agent: &str, sender: &str) {
+    let dir = world.ws.join("inbox").join(agent);
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join(format!("{sender}-001.md")),
+        format!("---\nfrom: {sender}\ndeposited_at: t0\n---\nreporting back"),
+    )
+    .unwrap();
+}
+
+/// **The invariant.** Every id-shaped run the window paints is one the display
+/// ladder put there — [`id_floor`]'s terminal generation, and never a syllable
+/// more. A seat that hands an id straight to a label is caught whatever the
+/// field it read it out of was called, because the sentence names no field.
+///
+/// Asserted on both inspector tabs that seat a deposit, since §5.1 #11's
+/// `✉ from · at` header has three seats and the `from` in it is an agent id.
 #[test]
-fn no_paint_seat_spells_an_agent_id_as_its_text() {
-    let mut leaks = Vec::new();
-    let mut seen = 0usize;
-    for file in rust_files(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src")) {
-        let source = std::fs::read_to_string(&file).unwrap();
-        let skeleton = skeleton(&source);
-        for (at, paint) in sites(&skeleton, PAINTS) {
-            seen += 1;
-            if ID_IDENTS
-                .iter()
-                .any(|ident| args_of(&skeleton, at).contains(ident))
-            {
-                leaks.push(format!("{}: {paint}", file.display()));
-            }
+fn no_painted_run_spells_more_of_an_agent_id_than_the_ladder_does() {
+    let lawful = [ROOT, CHILD].map(|id| id_floor(id).to_owned());
+    for tab in [
+        crate::keymap::InspectorTab::Transcript,
+        crate::keymap::InspectorTab::Inbox,
+    ] {
+        let painted = painted_over_ids(tab);
+        let runs = id_runs(&painted);
+        // Enumerating nothing is itself a failure: a world whose ids never
+        // reached the paint layer would let any seat pass, which is the exact
+        // shape of rot the vocabulary scan died of.
+        assert!(
+            !runs.is_empty(),
+            "the {tab:?} drive painted no id at all — the fixture no longer \
+             reaches a seat that spells one, so this scan is asserting nothing:\n{painted}"
+        );
+        for run in &runs {
+            assert!(
+                lawful.contains(run),
+                "a seat spells an agent id past the ladder's floor: {run:?} on \
+                 {tab:?}, where §3.3 allows only {lawful:?} — every title rides \
+                 the display ladder, and the id's seats are the ladder's floor \
+                 and the hover:\n{painted}"
+            );
         }
     }
-    assert!(
-        seen > 50,
-        "the scan matched {seen} paint calls — the pattern list has rotted"
+}
+
+/// **The scan cannot pass vacuously.** The bands drive's idiom (bl-58e4: show
+/// the reader a frame laid out the retired way), applied to a scan rather than
+/// a layout — the defect bl-3aa1 shipped is handed to [`id_runs`] verbatim and
+/// must come back indicted. Without this, a reduction that quietly stopped
+/// recognizing a stamp would turn the invariant above green and silent, which
+/// is precisely how its predecessor failed.
+#[test]
+fn the_scan_indicts_the_defect_that_shipped() {
+    let leaked = format!("✉ {CHILD} · t0");
+    let runs = id_runs(&leaked);
+    assert_eq!(
+        runs,
+        vec![CHILD.to_owned()],
+        "the whole chain is read out of the row as one run"
     );
     assert!(
-        leaks.is_empty(),
-        "these seats paint an agent id as display text — §3.3: every title rides \
-         the display ladder, and the id's seats are the ladder's floor and the \
-         hover:\n{}",
-        leaks.join("\n")
+        !runs.contains(&id_floor(CHILD).to_owned()),
+        "and it is not the floor's spelling, so the invariant above fails on it"
     );
+    // The floor's own spelling is lawful, so the scan indicts the leak rather
+    // than the seat that behaved: a check that flagged both would be no check.
+    assert_eq!(
+        id_runs(&format!("✉ {} · t0", id_floor(CHILD))),
+        vec![id_floor(CHILD).to_owned()]
+    );
+    // And a sender that is not an agent id at all carries no stamp grammar, so
+    // the operator's own deposits are invisible to the scan — no branch.
+    assert!(id_runs("✉ user · t0").is_empty());
 }
 
 /// bl-63a1, the paint half. The operator's screenshot: agent skimmer's descent
@@ -99,17 +181,8 @@ fn no_paint_seat_spells_an_agent_id_as_its_text() {
 #[test]
 fn a_nameless_chained_child_row_shows_its_terminal_segment_and_hovers_the_full_id() {
     let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
-    let mut world = super::fixture::world();
+    let mut world = super::inbox_composer::quick(super::fixture::world());
     let ws = world.ws.clone();
-    // Debounce off (a legal cadence — the bounds floor at zero), so the marked
-    // workspace derives on the very next pass instead of a wall-clock sleep.
-    std::fs::write(
-        world.model.state_root().join("cadence.yaml"),
-        "cadence:\n  watcher:\n    debounce_ms: 0\n",
-    )
-    .unwrap();
-    world.model.after_lernie_verb();
-    world.converge();
     // A descent child whose id embeds the ancestry chain, with no name blob,
     // no goal and no step record — nothing above the ladder's floor.
     world.add_child("c-1", "c-1-20260803T045643Z-1e5f99d4");
