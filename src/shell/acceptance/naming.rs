@@ -32,10 +32,18 @@ const PAINTS: &[&str] = &[
 
 /// The identifiers an id travels under in this tree — `agent_id` on the
 /// [`crate::git_tree::Agent`], `root_id` on the row and the ladder's own
-/// seats. bl-63a1's lesson: the first scan forbade only `agent_id`, so a seat
-/// painting the same fact under its other name would have passed; the set now
-/// names both spellings of the one fact.
-const ID_IDENTS: &[&str] = &["agent_id", "root_id"];
+/// seats, `sender` on an inbox [`crate::inboxview::Deposit`]. bl-63a1's
+/// lesson: the first scan forbade only `agent_id`, so a seat painting the same
+/// fact under its other name would have passed.
+///
+/// That lesson then repeated exactly (bl-3aa1). The deposit rows led with a
+/// four-token ancestry chain and this scan was silent, because a deposit's
+/// `from` field is deserialized into `sender` — a third spelling of the one
+/// fact, and the scan named two. The set is therefore **every identifier an
+/// agent id travels under**, and a new carrier for it belongs here in the same
+/// change that introduces it; a seat is only as safe as the vocabulary this
+/// list knows.
+const ID_IDENTS: &[&str] = &["agent_id", "root_id", "sender"];
 
 /// **The invariant.** No paint call's argument span spells an id identifier: a
 /// seat that wants a name calls the ladder before it paints, so an id can only

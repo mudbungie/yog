@@ -86,7 +86,14 @@ pub fn display_name(name: Option<&str>, preview: &str, root_id: &str) -> String 
 /// stamp grammar does not recognize (foreign, hand-made) is spelled whole —
 /// the general path, no special case. The full id's display seat stays the
 /// hover, exactly as before.
-fn id_floor(id: &str) -> &str {
+///
+/// `pub(crate)` rather than `pub` deliberately: it hands back a borrow of its
+/// argument, which the boundary forbids (AGENTS rule 2), and cloning to own it
+/// would buy nothing — every caller is in this crate. It is `pub(crate)` at
+/// all because the floor has **more than one seat**: a deposit's `from` is an
+/// agent id too, and the inbox rows spelled the whole ancestry chain until
+/// bl-3aa1 routed them here.
+pub(crate) fn id_floor(id: &str) -> &str {
     let mut start = 0;
     let mut at = 0;
     for segment in id.split('-') {
