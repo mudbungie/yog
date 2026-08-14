@@ -128,22 +128,3 @@ pub fn next_attention(roster: &[RosterKey], focus: Option<(&str, &str)>) -> Opti
         .find(|e| e.attention)
         .cloned()
 }
-
-/// Step `delta` entries (±1 for ↓/↑, §11 keyboard nav) from `focus` through the
-/// ordered `roster`, wrapping. Unlike [`next_attention`] this visits *every*
-/// entry, not only attention-bearing ones — it is plain roster traversal. A
-/// `None`/unknown focus starts before the front, so `+1` lands on the first
-/// entry and `-1` on the last; an empty roster yields `None`.
-pub fn step(roster: &[RosterKey], focus: Option<(&str, &str)>, delta: isize) -> Option<RosterKey> {
-    let n = roster.len();
-    if n == 0 {
-        return None;
-    }
-    let here = focus.and_then(|f| roster.iter().position(|e| e.is_at(f)));
-    let next = match here {
-        Some(i) => (i as isize + delta).rem_euclid(n as isize) as usize,
-        None if delta >= 0 => 0,
-        None => n - 1,
-    };
-    roster.get(next).cloned()
-}

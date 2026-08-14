@@ -116,12 +116,12 @@ fn startup_focus_falls_back_to_first_when_nothing_needs_attention() {
         AppModel::boot(roots, None, clock.arc(), Box::new(no_balls()), None);
     assert!(model.workspaces().is_empty());
     assert_eq!(model.focused_workspace(), None);
-    // With no focus and an empty roster, the read-only queries are empty and a
-    // keyboard step is a no-op (the general empty path, not a special case).
+    // With no focus and an empty roster, the read-only queries are empty and the
+    // jump is a no-op (the general empty path, not a special case).
     assert!(model.conversations(10).is_empty(), "no focus: no rows");
     assert!(!model.focused_is_replay());
-    model.roster_step(1);
-    assert_eq!(model.focused_workspace(), None, "nothing to step onto");
+    model.jump_next_attention();
+    assert_eq!(model.focused_workspace(), None, "nothing to jump onto");
 }
 
 #[test]
