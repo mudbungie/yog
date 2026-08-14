@@ -18,6 +18,7 @@ fn the_cell_answers_the_current_question_and_discards_a_superseded_one() {
 
     cell.ask("shoggoth");
     let stale = Found {
+        needle: "kraken".to_owned(),
         hits: vec![],
         unreadable: vec!["stale".to_owned()],
     };
@@ -31,6 +32,7 @@ fn the_cell_answers_the_current_question_and_discards_a_superseded_one() {
     let (seq, text) = cell.pending().unwrap();
     assert_eq!(text, "shoggoth");
     let fresh = Found {
+        needle: "shoggoth".to_owned(),
         hits: vec![],
         unreadable: vec!["fresh".to_owned()],
     };

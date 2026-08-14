@@ -13,6 +13,7 @@ fn a_search_reply_flattens_each_address_and_names_what_it_could_not_read() {
         excerpt: "…tekeli-li…".to_owned(),
     };
     let value = encode(&Reply::Search(Found {
+        needle: "tekeli-li".to_owned(),
         hits: vec![
             hit(
                 Address::Ball {
