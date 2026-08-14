@@ -20,6 +20,8 @@
 //! re-derivation that changes a snapshot nobody announced is a dropped event,
 //! and so is a pass that took longer than the cadence it promised.
 
+/// Which cached liveness observations are thrown away, and on which signal.
+mod liveness;
 /// Which root means what — the §7.1 dirty-root routing table.
 mod route;
 /// The work one pass does — the sweeps, the reconcile, the fetch cadence.
