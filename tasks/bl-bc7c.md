@@ -1,7 +1,7 @@
 +++
 title = "tool roster vs the prompt cache: advertisement becomes durable, the conversation freezes its roster at the root, absence answers at invocation — REMOTE.md §5 rework"
 created = 1786683026
-updated = 1786683027
+updated = 1786683147
 claimant = "Sicks"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -14,3 +14,7 @@ Resolution to write into §5 (+ prune the settled half of the §10 open question
 - Absence and staleness answer at invocation, in-band: routing to an absent client, or a client refusing a tool it no longer carries, returns an error tool result — an appended message, never a prefix change. Deadline unchanged.
 - A live conversation adopts a changed roster only by explicit gesture, knowingly paying one prefix rebuild; new conversations compose from current registrations.
 - The freeze point is context composition, which is lernie's — folds into the §5 lernie-seam ask.
+
+---
+
+Operator refinement (2026-08-13), supersedes the freeze-at-root resolution in this ball's body: context is structurally (mostly) append-only, so client facts are POINT-IN-TIME. The stable prefix carries exactly one client-facing surface — a client-management tool with list (who's registered/live now) and get (a client's detail + advertised tools). The agent LOADS a client's tools as its own point-in-time act; loaded tools are callable from that turn on; use is attempt (routed if live, refused in-band if not — same path corrects staleness). No frozen roster, no refresh gesture; nothing but an explicit load changes the tool surface. §5 rewritten accordingly; the durable-advertisement/live-presence split and invocation-path bullets stand. Also riding this ball: CLAUDE.md -> AGENTS.md symlink so the repo guide auto-loads.
