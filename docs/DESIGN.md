@@ -173,7 +173,8 @@ why binding lives there (§3.2).
 - **I8 — A probe never perturbs the observed.** Liveness probing is read-only
   observation (lsof / procfs scans), never lock acquisition (§10, §14).
 - **I9 — Determinism substitutes for persistence.** All ordering is derived:
-  projects sort by path, workspaces by ball id, agents by descent order. Two
+  projects sort by path, workspaces by path (the tab bar's named strip
+  by name), agents by descent order. Two
   instances render identical order without sharing any ordering state.
 
 ---
@@ -623,9 +624,9 @@ the full id's seat stays the hover. **The floor has more than one seat**
 with the depositor's whole four-token chain — 52 characters heading a row
 whose other content is a timestamp and a subject — because the acceptance
 naming scan named `agent_id`/`root_id` and a deposit carries the fact under
-`sender`. That is bl-63a1's own lesson repeating verbatim, so the fix is
-both halves: `inboxview::header_line` reads `nav::convs::id_floor` like
-every other seat, and **the scan stopped enumerating names at all**
+`sender`. That is bl-63a1's own lesson repeating verbatim, so the fix was
+both halves: `inboxview::header_line` stopped spelling the chain, and **the
+scan stopped enumerating names at all**
 (bl-45c7). A vocabulary is the wrong kind of strength — it decays on every
 rename and nothing fails when it does, so the scan went on passing on the
 subset it happened to know. It now asserts the rule over the *painted
@@ -1035,8 +1036,9 @@ convergent on re-run):**
    (balls' own semantics, e.g. a store race) surfaces from its ops row and
    aborts before the removal.
 2. Prune the workspace's `ui.json` keys — its `seen[ws]` map, `pinned` entry,
-   and `collapsed` override — yog's own file, one ordinary debounced write
-   (§4.1). Not mere hygiene: the name-reuse case below must not inherit a
+   and `collapsed` override — yog's own file, one ordinary write-through
+   save (§4.1: every mutation lands before the call returns; the debounce
+   this line used to name was retired by bl-b54e). Not mere hygiene: the name-reuse case below must not inherit a
    dead sphere's acknowledgement watermarks or pin.
 3. Remove the directory — logged as the non-spawn step
    `["yog-step","delete-workspace"]` (§4.2's sentinel convention).
@@ -1775,7 +1777,7 @@ not a special case.
 | 2 | Balls per project | project store | **in-process** typed catalog load — `balls::reads::Catalog::load` over the clone's store checkout, projected to `Ball` from `task::Task` (§16.7 W8; no spawn, no `--json`, no serde_json). **Unlistable ≠ empty:** a clone with no founded landing (`config/`) leaves the project *unkeyed* in the cache → the §3.5 orphaned-project row; a founded clone with no task files keys it to an empty vec → a listable project with no balls (the two are distinct states, not both "no balls"). Foundedness replaces "the `bl` process exited non-zero" as the unlistable test — the read no longer runs a process to fail |
 | 3 | Ball status | ball frontmatter | balls §3 ladder: claimant ⇒ claimed; else unresolved claim-blocker ⇒ blocked; else ready. Closed = absent from live set |
 | 4 | Delivered/closed balls | store history | `bl list -s closed --json` on demand — the ONE read still spawned (as `yog bl …`, §16.7 W12), because balls' dead-ball history walk is not on the promoted read surface; the live-ball detail (`show`) is the in-process `Catalog::get`. Its result is **published in the snapshot beside the live map** (bl-3c28), so the §3.5 Delivered rows and the §8.5 search corpus read one cache rather than each fetching: sparse by design, because the fetch is on demand and never on the cadence |
-| 5 | Work-worktree path | formula + git | bl-delivery formula recompute; `git worktree list` ground truth; `bl claim` stdout cross-check |
+| 5 | Work-worktree path | formula + `bl claim` | bl-delivery formula recompute (`binding::work_worktree_path`), cross-checked against `bl claim`'s own stdout (`start::exec::cross_check_claim`; a mismatch is a `Drift` refusal). **Two readings, not three:** `git worktree list` is git's registry of the same fact and yog does not read it — a third reading could only disagree with the two that already agree, and the claim's stdout is the authority balls itself prints |
 | 6 | Workspace list + names + foreign + replays | `$XDG_DATA_HOME/yog/workspaces/*`, `<lernie-data>/workspaces/*`, `replays/*` | readdir for `repo.git`; leaf = name per §3.1 |
 | 7 | Join state per (ball, workspace) | #2–#6 | the §3.5 claimant join, a pure function |
 | 8 | Agent set, descent, tips | `repo.git` refs | `git for-each-ref agents/*`, then the §2.3 grammar over the ids (existing `git_tree`): an id's parent is that id less its last **descent segment** — `<ts>-<short>`, exactly two hyphen-free tokens — and it is a child only if that derived parent is **present in the ref set**. Absent (an id outside the grammar, or a deleted intermediate) ⇒ a root row, never a re-attach to some shorter prefix; the registry intersection is lernie's own ruling (ARCH §8) and the two must not fork. **The id-derived tree is the *provenance* fact** — who dispatched whom; since lernie bl-a693 a `--from` child's *context* (git ancestry) can diverge from it, and the two are distinct edges, never conflated (VISION V1.3's two-edge taxonomy): §11 membership stays this descent-id tree, while V1's spine states the distinction in the child card's fork-label wording (`from here` / `from <Name>@<oid>` vs `from config/<name>`) — the solid/dashed strokes went with the gutter (bl-1802), and a drawn descent graph was **declined** (bl-5cf8): the words are the rendering — the list's indentation already draws provenance, the fork label already words context, and a stroke between rows is a fact the text-reading acceptance harness (bl-bc06) could never hold to account. **Since bl-fa82 the §11 conversation list is a rendering of this tree, and since bl-8905 the only one**: every visible row is the subtree rooted at its agent, `children_of` is the row's `direct` count and the subtree size less one is its `total`, and the all-collapsed case is the root-only list this seat had before. The strict rule is what the list obeys — the Stop menu's looser `+children` prefix test is a different question and stays where it is |
@@ -2148,7 +2150,7 @@ pack-refs`, which empties `repo.git/refs/` into `repo.git/packed-refs`; deleting
 a ref that is only packed then rewrites `packed-refs` **alone**, touching nothing
 under `repo.git/refs/`. Without the entry that deletion is invisible to the
 watcher and reaches yog only via the 15 s sweep — a reproducible dropped event
-(bl-49f4; proven in `src/fs_watcher/drift_tests.rs`).
+(bl-49f4; proven in `src/fs_watcher/tests/drift/`).
 
 Rejected: one recursive watcher over the whole lernie data root — an agent
 building a large tree in its worktree inflates the inotify watch count and
@@ -2673,7 +2675,7 @@ so a finding is reported once rather than re-accused every 2 s.
    for quiescent workspaces.
 
 **Fixed at the watcher layer instead of covered** (bl-49f4, each proven in
-`src/fs_watcher/drift_tests.rs` and `src/app/tests/drift.rs`): the backend's own
+`src/fs_watcher/tests/drift/` and `src/app/tests/drift.rs`): the backend's own
 loss announcements are no longer discarded (`Desynced` on the root → immediate
 whole-root re-derivation); `repo.git/packed-refs` is allowlisted (§7.1);
 `WatchSet::reconcile` rebuilds a watcher whose root inode was replaced; and
@@ -2899,8 +2901,11 @@ being copied into `ops.jsonl`. Consequences, each load-bearing:
 | Refresh models | `bz --list-models --provider <row> --json` | streamed-piped where a frame paints it (§9.4's picker, physically `yog bz …` since §16.7 W10 — the logical argv logged is unchanged); **in-process** through the linked brazen where nothing paints it, which is `RealBzRunner` and therefore every off-frame caller (§8.5's `Models`, bl-dff8) |
 | Login provider | `bz --login --provider <row> --browser` (Login pane; also offered beside an auth-failed step) | streamed-piped (§8.3); same physical retarget. `--browser` is unconditional and the row is offered only when brazen's table says `auth = "oauth2"` (§8.3 as amended, bl-b4e5) |
 
-Short verbs show a busy indicator (RAM — the underlying fact is the
-`ops.jsonl` line plus substrate state both instances see).
+A short verb is **piped inside the gesture** — `actions::verbs::run_logged`
+runs it to completion and appends its outcome — so there is no window for a
+busy state and none is kept: the feedback is the durable `ops.jsonl` line
+(§4.2) that the activity chip and the §7.3 banner read back per frame, the
+same fact both instances see. Only the long verbs detach (§8.1).
 
 **Claimant rider (Z4; "identity rider" pre-bl-68d9).** Every `bl` claim/close/unclaim yog issues is stamped
 `--as <workspace name>`, **not** the operator's `$USER` — the claimant delivers
@@ -3308,8 +3313,9 @@ implementations.
   line omits and the context cannot supply is a refusal naming it**, never a
   guess: a gesture is an instruction, and a guessed target mutates the wrong
   thing.
-- **The verb table is the single source.** `boundary::help::TABLE` (verb, usage,
-  summary, detail) is what refusals print, what a seat completes or helps from,
+- **The verb table is the single source.** `boundary::help::table()` — the three
+  consts `ACTIONS`, `STANDING` and `QUERIES` composed into one roster of
+  (verb, usage, summary, detail) — is what refusals print, what a seat completes or helps from,
   what `/help` answers, and what the parity tests hold against the reader in
   both directions: every advertised verb reads, and every gesture the
   hand-enumerated round-trip table spells has a page. *(This retracts bl-ec8f's
@@ -4689,8 +4695,10 @@ the config-branch `for-each-ref` — are gone with it.
 
 - **Already portable:** notify (inotify/FSEvents), eframe/glow, libc::kill,
   all git/CLI spawning, the XDG folds (balls/lernie/yog paths are pure-XDG on
-  both platforms, matching those tools; brazen's *per-OS* credential/cache
-  dirs are reproduced for the read-only displays).
+  both platforms, matching those tools; brazen's config, credentials and model
+  cache are **not** folded per-OS at all since the blast-radius ruling — they
+  resolve inside the focused workspace's wall, one yog-owned layout identical
+  on every target, §16.2 as amended and `config_edit::brazen::BrazenPaths`).
 - **The gap:** both probes scan `/proc/<pid>/fd` (Linux-only). The fix:
   - Probe traits return a **tri-state `Probe::{Held, Free, Unknown}`**
     (replacing bool).
@@ -4721,8 +4729,9 @@ the config-branch `for-each-ref` — are gone with it.
     delete, on macOS only.
   - `lsof` missing/failing ⇒ `Unknown` ⇒ classification degrades to
     framing-only: closed-with-`end` = quiescent, closed-without = stopped,
-    open-file undetectable ⇒ rendered with an explicit **uncertainty badge
-    ("live?")**, never a false definite state.
+    open-file undetectable ⇒ rendered with an explicit **uncertainty badge**
+    — a bare `?` beside the row's state, its words on hover
+    (`theme::STATE_UNCERTAIN`) — never a false definite state.
   - **Rejected: flock-acquire probing** (`flock(LOCK_SH|LOCK_NB)` then
     release) — portable and dependency-free but **perturbs the substrate**:
     during yog's transient hold, a `lernie message` writer's probe sees the
@@ -4730,10 +4739,14 @@ the config-branch `for-each-ref` — are gone with it.
     next scan (writer/driver totality, ARCH §2.11). A probe must never affect
     the observed (I8). Also rejected: the libproc crate (a dependency for one
     probe) and hand-rolled FFI (unsafe, untestable on Linux).
-- **Coverage mechanics:** brazen's per-OS creds/cache path folds take
-  **`target_os` as a runtime-injected parameter**, so the macOS branch is
-  exercised by Linux tarpaulin — no cfg-gated coverage hole. The same rule
-  applies to any future per-OS branch.
+- **Coverage mechanics:** there is **no per-OS path fold left to cover** —
+  the brazen folds that once carried one now resolve per wall (above), and
+  every fold in `src/xdg` reads only its injected `Env`, so Linux tarpaulin
+  covers all of them. The `#[cfg(target_os)]` split that remains is the probe
+  stack's (`git_tree::probe_stack`), whose macOS half is the pure `lsof -F`
+  parser — compiled and tested everywhere, which is what keeps it out of the
+  coverage hole. Any future per-OS branch takes the OS as a runtime parameter
+  rather than a `cfg`, for that reason.
 - **Known upstream limit, documented, not worked around:** `lernie stop` is
   itself /proc-based (Linux-only). On macOS yog surfaces the Stop failure
   verbatim in `ops.jsonl`; fixing stop portability is lernie's ball.
@@ -5434,8 +5447,8 @@ panel, not about any one row:
    text is the third case and rule 6 answers it: the §8.5 line's JSON reply
    scrolls on both axes, since truncating it leaves `{…` and wrapping it destroys
    the structure that was the value.
-2. **The floor is a sliver, not egui's 96 pt.** `min_width` is
-   `MIN_SIDE_PANEL_WIDTH` (24 pt) so the roster can be dragged out of the way;
+2. **The floor is a sliver, not egui's 96 pt.** `min_width` is the panel's own
+   `Panel::min_size()` (24 pt for the roster) so it can be dragged out of the way;
    what it settles at (~89 pt, measured) is the width of its own controls, and
    that is an honest floor rather than a stored default.
 
@@ -5694,7 +5707,7 @@ a `lernie message` turn holds nothing (§7.3's row). The whole sentence has one
 home (`steps_view::wound`, `Wound::banner`), so the alarm cannot drift from what
 the derivation found — the §11 badge-seat rule applied to a banner. That one
 banner paints through a **grace window** (§7.3's own row, bl-90bf): the wound
-must still read true after `WOUND_GRACE` has passed, so a healthy send whose
+must still read true after the wound grace (`Cadence::wound_grace`) has passed, so a healthy send whose
 driver the snapshot has not yet seen holding its lock never flashes red. The **model
 picker** (§9.4) opens here too, at the conversation's own model line in the
 bottom settings rows rather than in the Config tab: the question is asked
@@ -6862,7 +6875,7 @@ spelled twice.
 it goes to the **conversation**, not the workspace: the conversation is the
 everyday new (raising a sphere wall is not, §3.4/Altitude 0), so the workspace
 takes the standard "the other new" — `Ctrl+Shift+N`, new window / new incognito
-window / new folder. `Ctrl+1`–`Ctrl+5` is the browser and editor tab-select
+window / new folder. `Ctrl+1`–`Ctrl+6` is the browser and editor tab-select
 convention, matching the digits exactly — and `Ctrl+Shift+1`–`Ctrl+Shift+4` is
 that same convention applied to the *other* tab strip (bl-1ca2), the shifted
 plane doing here exactly what it does for the "other new". The window has two
@@ -7380,7 +7393,7 @@ into a restatement of the label:
    hence one mapping function — a control is one fact with **one** seat, so its
    sentence lives at the render site. A phrase genuinely worn twice (a field and
    its label; `move to:` and each destination) is a named `const` in that
-   module, never two spellings. Where the seats are a *set* — the five inspector
+   module, never two spellings. Where the seats are a *set* — the six inspector
    tabs, the five step drill-ins — the sentences are one exhaustive match over
    the enum, so a new variant cannot ship wordless.
 
@@ -8364,8 +8377,10 @@ window gets a refusal naming what it can drive instead (the gestures,
 it holds however yog was reached — including an agent that finds the operator's
 installed yog on the ambient `PATH`, which is the very drift the roster entry
 exists to end. The operator is never caught by it: `yog env` prints
-`LERNIE_HOME`, `XDG_STATE_HOME` and `PATH` and nothing else (§8.4), so a human
-who ran `eval "$(yog env)"` carries no `YOG_NAME`; and every yog-spawned child
+`LERNIE_HOME`, `XDG_STATE_HOME` and `PATH` — plus `YOG_WALL` when, and only
+when, it is asked for a workspace (`yog env --ws <name>`, §16.2's headless
+sign-in) — and never `YOG_NAME` (§8.4), so a human who ran
+`eval "$(yog env)"` carries no window seat; and every yog-spawned child
 names a namespace verb, so none reaches the window seat at all.
 
 **Version coherence is structural, not gated.** The phase-1 capability gate
