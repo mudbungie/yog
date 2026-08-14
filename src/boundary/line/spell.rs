@@ -136,6 +136,10 @@ fn spell_query(query: &Query) -> String {
         // `/marks` and `/conversations` spell theirs — a line states its
         // targets through the context flags, never twice.
         Query::Providers { .. } => "/providers".to_owned(),
+        // Same elision, same reason: the workspace is the seat's, and what the
+        // line states is the one thing it cannot supply — the provider row.
+        Query::Lineages { .. } => "/lineages".to_owned(),
+        Query::Models { provider, .. } => format!("/models {provider}"),
     }
 }
 

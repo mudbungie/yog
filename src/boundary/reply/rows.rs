@@ -37,6 +37,21 @@ pub(super) fn ws_row(row: &WsRow) -> Value {
     Value::Object(map)
 }
 
+/// One lineage as the §9.3 browse answers it (bl-dff8): the branch's bare name
+/// — the word `/config branch <lineage> …` takes — its tip, and the paths that
+/// tip holds. The tip is answered **both** short and full: the short oid is what
+/// the pane labels a lineage with, the full one is what a `git show` outside yog
+/// takes.
+pub(super) fn lineage_row(row: &crate::config_edit::branch::Lineage) -> Value {
+    json!({
+        "name": row.branch.name,
+        "oid": row.branch.tip_oid,
+        "short_oid": row.branch.tip_short_oid,
+        "committed": row.branch.tip_timestamp_unix,
+        "files": row.files,
+    })
+}
+
 pub(super) fn conv_row(row: &ConvRow) -> Value {
     let mut map = Map::new();
     map.insert("root_id".to_owned(), json!(row.root_id));

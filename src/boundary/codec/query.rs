@@ -61,6 +61,16 @@ pub(super) fn encode(query: &Query) -> Value {
         Query::Providers { workspace } => {
             json!({ "op": "providers", "workspace": encode_path(workspace) })
         }
+        Query::Lineages { workspace } => {
+            json!({ "op": "lineages", "workspace": encode_path(workspace) })
+        }
+        Query::Models {
+            workspace,
+            provider,
+        } => {
+            json!({ "op": "models", "workspace": encode_path(workspace),
+                    "provider": provider })
+        }
     }
 }
 
@@ -116,6 +126,16 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         },
         "providers" => Query::Providers {
             workspace: path_of(o, "workspace")?,
+        },
+        "lineages" => Query::Lineages {
+            workspace: path_of(o, "workspace")?,
+        },
+        // The provider is required, with no default: a roster is a question
+        // *about* one row, and guessing the row would answer about another
+        // provider's models entirely.
+        "models" => Query::Models {
+            workspace: path_of(o, "workspace")?,
+            provider: str_of(o, "provider")?,
         },
         _ => return Ok(None),
     }))

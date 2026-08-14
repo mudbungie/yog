@@ -10,7 +10,7 @@
 //! and the shape it reads live together (PRINCIPLES "single source of truth"):
 //! [`IDENTITY_LEAD`] is the one record of what the compose used to write.
 
-use crate::names::{MintError, Rng};
+use lernie::mint::{MintError, Rng};
 
 /// The retired stamp's fixed lead — what the pre-bl-6920 compose wrote as the
 /// goal's first line (`You are <name>.`), kept as the one shape
@@ -54,18 +54,17 @@ pub fn strip_identity_stamp(goal: &str) -> String {
         })
 }
 
-/// Mint the conversation's own name (§3.3, bl-df65): `src/names`'s wordlist mint,
-/// one altitude down. `occupied` is the **per-workspace** set — the names the
+/// Mint the conversation's own name (§3.3, bl-df65): **lernie's** mint
+/// ([`lernie::mint::mint`], the crate's one home for it since bl-aca4), drawn
+/// through the crate yog already links so preview and spawn cannot drift into
+/// two wordlists. `occupied` is the **per-workspace** set — the names the
 /// target workspace's living agents wear, each agent's
 /// [`crate::git_tree::Agent::name_fact`] (the lernie-stored blob, with this
 /// module's legacy stamp parse as fallback while pre-0.0.4 roots live). No
 /// cross-workspace enumeration: workspaces are isolation walls, so global
 /// uniqueness would buy nothing.
-pub(super) fn mint_conversation(
-    occupied: &[String],
-    rng: &mut dyn Rng,
-) -> Result<String, MintError> {
-    crate::names::mint(rng, &occupied.iter().cloned().collect())
+pub(super) fn mint_conversation(occupied: &[String], rng: &dyn Rng) -> Result<String, MintError> {
+    lernie::mint::mint(rng, &occupied.iter().cloned().collect())
 }
 
 /// The greyed name prediction the composer shows (§3.3, I7): the mint drawn over
@@ -78,7 +77,7 @@ pub(super) fn mint_conversation(
 /// `unwrap_or_default` folds with no separate branch. The one entry point for a
 /// surface that has a resolved workspace but no [`StartInputs`](super::StartInputs)
 /// (the ball rung's composer, already past `prepare`).
-pub fn identity_preview(occupied: &[String], rng: &mut dyn Rng) -> String {
+pub fn identity_preview(occupied: &[String], rng: &dyn Rng) -> String {
     mint_conversation(occupied, rng)
         .map(|name| format!("will be named {name}"))
         .unwrap_or_default()

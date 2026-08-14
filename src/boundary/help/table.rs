@@ -206,8 +206,8 @@ pub const ACTIONS: &[HelpRow] = &[
                  `lernie config` on the seat's workspace. The text is everything \
                  after the destination's words, verbatim — whitespace is part of a config file. \
                  With nothing after the destination, reads its current bytes instead — a file \
-                 not there yet answers empty text; a lineage destination refuses, since browsing \
-                 one stays the config pane's own read.",
+                 not there yet answers empty text, a lineage answers what its tip holds at that \
+                 path, and `/lineages` lists the lineages and the paths to ask for.",
     },
     HelpRow {
         verb: "marks",

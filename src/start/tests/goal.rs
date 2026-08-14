@@ -166,9 +166,9 @@ fn preview_pairs_the_predicted_identity_with_the_prefill() {
     );
     // The workspace's one live root already wears this name; the prediction
     // scans past it, exactly as fire will.
-    let taken = mint_conversation(&[], &mut super::rng()).unwrap();
+    let taken = mint_conversation(&[], &super::rng()).unwrap();
     inputs.conversation_names = vec![taken.clone()];
-    let c = preview(&inputs, &mut super::rng());
+    let c = preview(&inputs, &super::rng());
     assert_ne!(c.preview, format!("will be named {taken}"));
     assert!(c.preview.starts_with("will be named "));
     assert!(
@@ -182,12 +182,12 @@ fn preview_pairs_the_predicted_identity_with_the_prefill() {
 fn preview_predicts_a_minted_name() {
     let w = super::World::new();
     let inputs = w.inputs(crate::names::DEFAULT_NAME, Payload::Bare);
-    let c = preview(&inputs, &mut super::rng());
+    let c = preview(&inputs, &super::rng());
     assert_eq!(
         c.preview,
         format!(
             "will be named {}",
-            mint_conversation(&[], &mut super::rng()).unwrap()
+            mint_conversation(&[], &super::rng()).unwrap()
         )
     );
     assert_eq!(c.prefill, "", "bare has no prefill");

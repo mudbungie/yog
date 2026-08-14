@@ -25,7 +25,7 @@
 use super::identity::identity_preview;
 use super::{BallSpec, Payload, StartInputs};
 use crate::binding::work_worktree_path;
-use crate::names::Rng;
+use lernie::mint::Rng;
 use std::path::{Path, PathBuf};
 
 /// The composer view-model (§3.3): the greyed name-prediction `preview` line and
@@ -38,7 +38,7 @@ pub struct Composer {
 
 /// The pre-submit composer view-model (§3.3): the predicted name paired with
 /// the payload prefill. Nothing spawns (I7).
-pub fn preview(inputs: &StartInputs, rng: &mut dyn Rng) -> Composer {
+pub fn preview(inputs: &StartInputs, rng: &dyn Rng) -> Composer {
     let worktree = canonical_worktree(&inputs.payload, &inputs.balls_state_root);
     Composer {
         preview: identity_preview(&inputs.conversation_names, rng),

@@ -5,7 +5,6 @@
 use super::{World, ball, fake_fail, fake_lernie};
 use crate::binding::{work_worktree_path, workspace_path};
 use crate::cli_outbound::Cli;
-use crate::names::MintError;
 use crate::opslog::{Origin, SYNTHETIC_EXIT, YOG_STEP};
 use crate::projects::join::JoinState;
 use crate::start::{
@@ -13,6 +12,7 @@ use crate::start::{
 };
 use crate::test_support::spawn_guard;
 use crate::world::{Layout, layout_under};
+use lernie::mint::MintError;
 use std::path::PathBuf;
 
 /// The world layout anchored on this world's yog data root — where the §8.6

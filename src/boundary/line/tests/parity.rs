@@ -198,10 +198,36 @@ fn the_config_familys_reads_round_trip() {
     ] {
         rt(Gesture::Ask(Query::ReadConfig { file }));
     }
+    // A lineage destination reads too (bl-dff8), in all three of its origins:
+    // the same words the write takes, with nothing after them.
+    for origin in [
+        crate::config_edit::branch::edit::EditOrigin::Advance,
+        crate::config_edit::branch::edit::EditOrigin::Orphan,
+        crate::config_edit::branch::edit::EditOrigin::Fork {
+            source: "base".to_owned(),
+        },
+    ] {
+        rt(Gesture::Ask(Query::ReadConfig {
+            file: ConfigFile::Branch {
+                workspace: PathBuf::from("/ws"),
+                lineage: "strict".to_owned(),
+                origin,
+                path: "workflow.yaml".to_owned(),
+            },
+        }));
+    }
     rt(Gesture::Ask(Query::Marks {
         workspace: PathBuf::from("/ws"),
     }));
     rt(Gesture::Ask(Query::Providers {
         workspace: PathBuf::from("/ws"),
+    }));
+    // The browse and the roster beside them (bl-dff8).
+    rt(Gesture::Ask(Query::Lineages {
+        workspace: PathBuf::from("/ws"),
+    }));
+    rt(Gesture::Ask(Query::Models {
+        workspace: PathBuf::from("/ws"),
+        provider: "acme".to_owned(),
     }));
 }

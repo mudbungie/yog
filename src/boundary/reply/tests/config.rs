@@ -1,8 +1,10 @@
 //! The §9 config family's replies, encoded: what a write landed and what the
 //! §16.3 knob now reads (bl-3f46), and — bl-0164 — a destination's bytes and
-//! the provider table with its credential fact.
+//! the provider table with its credential fact, and — bl-dff8 — the §9.3
+//! lineage browse and the §9.4 model roster.
 
 use super::super::*;
+use crate::config_edit::branch::{ConfigBranch, Lineage};
 use crate::config_edit::brazen::ProviderRowView;
 
 #[test]
@@ -66,4 +68,38 @@ fn a_providers_reply_names_each_rows_credential_fact_and_login_block() {
     );
     assert_eq!(rows[1]["name"], "zinc");
     assert_eq!(rows[1]["blocked"], "keyless — nothing to log in");
+}
+
+/// The browse row (bl-dff8): the lineage's bare name — the word `/config
+/// branch <lineage> …` takes — its tip both short and full, and the paths that
+/// tip holds, which are the paths a read may ask for.
+#[test]
+fn a_lineages_reply_carries_each_tip_and_the_files_it_holds() {
+    let value = encode(&Reply::Lineages(vec![Lineage {
+        branch: ConfigBranch {
+            name: "default".to_owned(),
+            tip_oid: "0123456789abcdef0123456789abcdef01234567".to_owned(),
+            tip_short_oid: "01234567".to_owned(),
+            tip_timestamp_unix: 1_700_000_000,
+        },
+        files: vec!["providers.yaml".to_owned(), "version".to_owned()],
+    }]));
+    assert_eq!(value["kind"], "lineages");
+    let rows = value["rows"].as_array().expect("rows");
+    assert_eq!(rows[0]["name"], "default");
+    assert_eq!(rows[0]["oid"], "0123456789abcdef0123456789abcdef01234567");
+    assert_eq!(rows[0]["short_oid"], "01234567");
+    assert_eq!(rows[0]["committed"], 1_700_000_000);
+    assert_eq!(rows[0]["files"][0], "providers.yaml");
+}
+
+/// The roster's rows are bare ids, in the provider's own order — a model has
+/// no other fact yog knows (§9.4).
+#[test]
+fn a_models_reply_is_the_ids_in_the_order_the_provider_listed_them() {
+    let value = encode(&Reply::Models(vec!["m-9".to_owned(), "m-1".to_owned()]));
+    assert_eq!(value["ok"], true);
+    assert_eq!(value["kind"], "models");
+    assert_eq!(value["rows"][0], "m-9");
+    assert_eq!(value["rows"][1], "m-1");
 }

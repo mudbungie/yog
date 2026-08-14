@@ -2,8 +2,6 @@
 //! variant re-enters as itself, and every malformed envelope refuses with a
 //! reason — never a guessed default.
 
-mod queries;
-
 use super::*;
 use crate::monitor::Verb;
 use crate::opslog::Origin;

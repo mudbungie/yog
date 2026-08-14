@@ -74,8 +74,10 @@ fn the_bound_is_deterministic_and_caps_the_answer() {
 
 /// The answer's own "nothing to show" (bl-1ca2): both halves count, because
 /// an unreadable corner of the world is something the operator must be shown
-/// even when no hit survived. The §11 Search tab is offered on exactly this
-/// predicate, so a `false` here is a tab that does not appear.
+/// even when no hit survived. This is the **pane's** predicate — what it has
+/// to paint below its headline. What the §11 strip asks is
+/// [`Found::asked`](crate::search::Found::asked), which is a different
+/// question (bl-648a) and is pinned by the test below.
 #[test]
 fn an_answer_is_empty_only_when_both_halves_are() {
     assert!(Found::default().is_empty());
@@ -90,6 +92,7 @@ fn an_answer_is_empty_only_when_both_halves_are() {
         "no hit and no unreadable source is nothing to show"
     );
     let unreadable = Found {
+        needle: "gate".to_owned(),
         hits: vec![],
         unreadable: vec!["/w/x — permission denied".to_owned()],
     };
@@ -97,4 +100,35 @@ fn an_answer_is_empty_only_when_both_halves_are() {
         !unreadable.is_empty(),
         "a gap in the corpus is content of its own"
     );
+}
+
+/// **The answer carries its own question** (bl-648a): a search that matched
+/// nothing is still an answer, and says which needle it answers.
+///
+/// The two predicates are asserted apart on the one value that used to
+/// conflate them — a needle with no hits. `is_empty()` is true (the pane has
+/// no rows to paint) and `asked()` is true (a search was made), and it was the
+/// first standing in for the second that un-offered the §11 tab and dropped
+/// the operator back on Conversation mid-search.
+#[test]
+fn a_search_that_matched_nothing_still_knows_what_it_answered() {
+    let ws = PathBuf::from("/w/x");
+    let snap = world(&ws, vec![], vec![ball("b", "gate", "body")], vec![]);
+    let nothing = run(&snap, "  ZzzzNotAThing  ", &always());
+    assert!(nothing.is_empty(), "nothing to paint");
+    assert!(nothing.asked(), "but a search was asked");
+    assert_eq!(
+        nothing.needle, "ZzzzNotAThing",
+        "trimmed, and in the operator's own case — the match is folded, the \
+         word they typed is not"
+    );
+    assert_eq!(
+        crate::search::no_matches(&nothing.needle),
+        "no matches for `ZzzzNotAThing`"
+    );
+    // No search at all is the same value's empty reading, which is what makes
+    // `/search` with no text still clear the tab with no case of its own.
+    assert!(!Found::default().asked());
+    assert!(!run(&snap, "   ", &always()).asked());
+    assert!(run(&snap, "gate", &always()).asked());
 }

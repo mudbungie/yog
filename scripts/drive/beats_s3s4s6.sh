@@ -12,15 +12,19 @@ in_world() { d=$1; shift; XDG_DATA_HOME="$d" yog exec --cwd "$d/proj" "$@"; }
 # Ball-world predicates, shaped for `await` (stories.sh): each is a bare
 # true/false read of a real surface, never a sleep-and-hope.
 ball_gone() { [ "$(in_world "$1" bl list --json)" = "[]" ]; }
-closed_claims() { in_world "$1" bl list -s closed --json | grep -q "\"claimant\": \"$2\""; }
+closed_claims() { [ -n "$2" ] && in_world "$1" bl list -s closed --json | grep -q "\"claimant\": \"$2\""; }
 spheres_are() { [ "$(find "$1/yog/workspaces" -maxdepth 1 -mindepth 1 -type d | wc -l)" = "$2" ]; }
 # `stopped` and `other_root` — the two predicates this run shares with the S6
 # stage it hands off to — are in `harness.sh`, the tier every run shares: they
 # read `$ops` and `$ws_root` exactly as `verb_ge` and `agent_count` do.
 # the ball rung's whole point (§3.3): the detached driver runs *in the worktree*
 # `bl claim` cut, not in the project and not in the operator's cwd.
+# The ball id is required: interpolating an empty one leaves a pattern that is
+# about a trailing slash and not about a ball at all — the id-taking predicates
+# in this harness all refuse an empty subject rather than assert on its shape
+# (bl-f16e).
 prompt_cwd_is_worktree() {
-  grep '"lernie","prompt"' "$ops" 2>/dev/null | grep -q "\"cwd\":\"[^\"]*/$1\""
+  [ -n "$1" ] && grep '"lernie","prompt"' "$ops" 2>/dev/null | grep -q "\"cwd\":\"[^\"]*/$1\""
 }
 
 # The world seed plus a real git project primed INTO the world carrying one
@@ -139,9 +143,15 @@ run_s3s4s6() {
     "$drive" type "$wid" "Print the numbers 1 through 2000, one per line."
     "$drive" key "$wid" Return
   }
-  until_landed second_conversation agents_are 2 \
-    && pass "S4 second conversation: 2 roots, 1 workspace" \
-    || fail "S4 second conversation: 2 roots, 1 workspace" "agents=$(agent_count)"
+  # `>=`, not `=`: this gesture STARTS a conversation, so a retry adds one and an
+  # equality would be destroyed by its own loop (bl-0e44, harness.sh's
+  # `until_landed` contract). The label says what is now asserted — a second root
+  # under this one workspace — and the exactness that matters, that no second
+  # WORKSPACE was minted, is the neighbour below, which counts a verb that must
+  # not grow.
+  until_landed second_conversation agents_ge 2 \
+    && pass "S4 second conversation: a second root, same workspace" \
+    || fail "S4 second conversation: a second root, same workspace" "agents=$(agent_count)"
   [ "$(verb_count new)" = 1 ] \
     && pass "S4 second conversation: no re-mint" \
     || fail "S4 second conversation: no re-mint" "lernie new re-fired"
@@ -152,7 +162,7 @@ run_s3s4s6() {
   # other S6 stages (the same seam `run_s7` already reaches across for
   # `s6_converges`). It is handed the two roots by id, because naming them is
   # the whole of what bl-2d45 fixed.
-  s6_attention "$wid" "$out" "$(other_root "$settled_root")"
+  s6_stop_ack "$wid" "$out" "$(other_root "$settled_root")"
 
   # S4 by-ball toggle (S4-T5/§4.6): a pure re-ordering of rows already on
   # screen. `g` is §11's organizing view — one key, recent ⇄ by ball, so the

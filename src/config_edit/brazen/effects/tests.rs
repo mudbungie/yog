@@ -1,27 +1,23 @@
-//! The production runner's two halves (§16.7 W10): the **in-process** read
-//! verbs, driven against a hermetic `BRAZEN_CONFIG` so the linked brazen reads
-//! a temp file and never the operator's own config; and the one remaining
-//! **spawn** (`--list-models`), driven by a recorder script the way
-//! `cli_outbound`/`lock_probe` are. No network: `--dump-config` and
-//! `--list-providers` are offline by construction, and the recorder never is a
-//! real `bz`.
+//! The production runner's reads (§16.7 W10, bl-dff8), every one of them
+//! **in-process**: driven against a hermetic wall so the linked brazen reads a
+//! temp file and never the operator's own config. No network here —
+//! `--dump-config` and `--list-providers` are offline by construction, and the
+//! roster case names a provider row that does not exist, which brazen refuses
+//! at config resolution, before any request is composed.
 
 use super::*;
-use crate::test_support::spawn_guard;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::{TempDir, tempdir};
 
 /// A runner whose linked-brazen reads fold through a hermetic env standing in
 /// the wall at `wall` (§16.2 as amended — the wall, not an ambient config, is
-/// what names brazen's file). The `Cli` is a path that cannot spawn — these
-/// cases never take the spawn branch.
+/// what names brazen's file).
 fn in_process(wall: &Path) -> RealBzRunner {
-    RealBzRunner::new(
-        Cli::new("/definitely/not/a/real/bz-xyz"),
-        Env::from_pairs([(crate::world::wall::YOG_WALL, wall.display().to_string())]),
-    )
+    RealBzRunner::new(Env::from_pairs([(
+        crate::world::wall::YOG_WALL,
+        wall.display().to_string(),
+    )]))
 }
 
 /// A tempdir holding a wall whose `brazen/config.toml` is `body`, plus the
@@ -35,32 +31,10 @@ fn config_file(body: &str) -> (TempDir, PathBuf) {
     (dir, wall)
 }
 
-/// Write an executable recorder that logs argv to `log`, prints canned
-/// stdout/stderr, and exits `code`. Returns the script path; the caller
-/// holds `SPAWN_LOCK` across write+spawn (the ETXTBSY discipline).
-fn recorder(dir: &Path, log: &Path, code: i32) -> PathBuf {
-    let path = dir.join("bz");
-    let body = format!(
-        "#!/bin/sh\nfor a in \"$@\"; do printf '%s\\n' \"$a\" >> {}; done\n\
-         printf 'OUT'\nprintf 'ERR' 1>&2\nexit {}\n",
-        log.display(),
-        code
-    );
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
-    path
-}
-
 #[test]
-fn resolve_keeps_the_bz_logical_name_and_the_world_env() {
-    // `Binary::Bz` is self-multiplexed (§16.7 W10), so the physical target is
-    // yog's own exe — but the LOGICAL name the ops log records stays `bz`.
+fn resolve_keeps_the_world_env_the_reads_fold_through() {
     let world = Env::from_pairs([("HOME", "/h"), ("XDG_DATA_HOME", "/d")]);
     let runner = RealBzRunner::resolve(&world);
-    assert_eq!(runner.cli.binary(), Path::new("bz"));
-    // The world env rode along: the in-process reads fold through it.
     assert!(
         runner
             .env
@@ -126,28 +100,16 @@ fn a_malformed_config_yields_no_provider_rows() {
     assert_eq!(in_process(&path).providers(), Vec::new());
 }
 
+/// The roster read is in-process too (bl-dff8), and it refuses in brazen's own
+/// words: a provider row the effective table does not have is a config error,
+/// raised before a request exists — which is also why this case is offline.
 #[test]
-fn list_models_still_spawns_and_carries_its_argv() {
-    let g = spawn_guard();
-    let dir = tempdir().unwrap();
-    let log = dir.path().join("argv");
-    let bin = recorder(dir.path(), &log, 3);
-    let runner = RealBzRunner::new(Cli::new(bin), Env::from_pairs([("HOME", "/h")]));
-    let out = runner.list_models("openai");
-    drop(g);
-    assert_eq!(
-        fs::read_to_string(&log).unwrap(),
-        "--list-models\n--provider\nopenai\n--json\n"
+fn list_models_reads_in_process_and_refuses_an_unknown_row() {
+    let (_dir, wall) = config_file(
+        "[[provider]]\nname = \"acme\"\nprotocol = \"openai_chat\"\nbase_url = \"https://acme.test\"\nauth = \"none\"\n",
     );
+    let out = in_process(&wall).list_models("not-a-row");
     assert!(!out.success);
-    assert_eq!(out.stderr, "ERR");
-}
-
-#[test]
-fn list_models_spawn_failure_is_a_nonsuccess_outcome() {
-    let _g = spawn_guard();
-    let runner = in_process(Path::new("/definitely/not/a/wall"));
-    let out = runner.list_models("openai");
-    assert!(!out.success);
-    assert!(!out.stderr.is_empty());
+    assert!(out.stderr.contains("not-a-row"), "stderr: {}", out.stderr);
+    assert!(out.stdout.is_empty());
 }

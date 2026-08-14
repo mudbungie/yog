@@ -17,7 +17,7 @@
 # WHAT STAYS AMBIENT, AND WHY (§16.2, deliberately, not by omission):
 #   - `$HOME` alone — git's own identity, and the two FIXTURE SOURCES the room's
 #     scratch world is seeded from: the world seed below, and the bootstrap
-#     sphere's wall `seed_wall` lays beside it (harness.sh). A source is not a
+#     sphere's wall `seed_wall` lays beside it (wall.sh). A source is not a
 #     destination: nothing the room drives reads the host's brazen state.
 #   - NOTHING brazen-shaped is shared any more. The blast-radius
 #     ruling (§16.2) moved brazen's config, credentials and model cache inside

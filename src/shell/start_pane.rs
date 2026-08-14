@@ -14,8 +14,8 @@
 use super::{ShellState, StartState};
 use crate::AppModel;
 use crate::cli_outbound::Cli;
-use crate::names::SplitMix64;
 use crate::start::{self, Payload, StartInputs};
+use lernie::mint::SplitMix64;
 use std::path::PathBuf;
 
 /// Run `prepare` (seed?/new?/create?/claim?/compose) and, on success, open
@@ -92,7 +92,7 @@ pub fn composer(
     let (mut send, mut cancel) = (false, false);
     ui.weak(start::identity_preview(
         &model.conversation_names(&pending.workspace),
-        &mut SplitMix64::from_seed(mint_seed),
+        &SplitMix64::from_seed(mint_seed),
     ));
     ui.label(format!("Start goal → {}", pending.workspace.display()));
     // The goal box fills the pane the operator sized (§4.1 `panels`), less the

@@ -104,11 +104,19 @@ pub struct Hit {
     pub excerpt: String,
 }
 
-/// A whole answer: the ranked hits, and — never silently — the sources that
-/// could not be read. An unreadable corner of the world shrinks the corpus, it
-/// does not make the world unsearchable, so both halves ride back together.
+/// A whole answer: the question it answers, the ranked hits, and — never
+/// silently — the sources that could not be read. An unreadable corner of the
+/// world shrinks the corpus, it does not make the world unsearchable, so both
+/// halves ride back together.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Found {
+    /// The needle this answers, as the operator typed it (trimmed). **The
+    /// answer knows its own question** (bl-648a): without it, a seat can only
+    /// re-derive "was a search asked?" from "did anything match?", and those
+    /// two are the same value exactly when a search found nothing — which is
+    /// the one case that must be told apart. Empty means no search: the query
+    /// with no text, which is how a `/search` clears the answer.
+    pub needle: String,
     pub hits: Vec<Hit>,
     /// Each unreadable source, named with why — sorted, so two runs over one
     /// world say the same thing.
@@ -116,14 +124,34 @@ pub struct Found {
 }
 
 impl Found {
-    /// Nothing to show — no hits and nothing that could not be read. It is the
-    /// answer's own predicate rather than the seat's, because two seats now ask
-    /// it: the §11 center strip, deciding whether to offer the Search tab at
-    /// all, and the pane, deciding what to paint. Spelled twice it would drift.
+    /// Nothing to show — no hits and nothing that could not be read. The
+    /// **pane's** predicate: what it has to paint below the headline.
     pub fn is_empty(&self) -> bool {
         self.hits.is_empty() && self.unreadable.is_empty()
     }
+
+    /// A search was asked of this answer. The **strip's** predicate — whether
+    /// to offer the §8.5 tab at all — and deliberately not [`Self::is_empty`]'s
+    /// negation: an answer with no hits is still an answer, and treating it as
+    /// no search un-offered the tab and reseated the operator on Conversation
+    /// mid-search (bl-648a).
+    pub fn asked(&self) -> bool {
+        !self.needle.is_empty()
+    }
 }
+
+/// What the pane says when a search matched nothing (QUALITY H2: "an empty
+/// region says what it is and names the paved path in full"). It carries the
+/// needle because "no matches" alone cannot be told from a stale pane, and the
+/// operator's own word is the proof that *their* search is what ran.
+pub fn no_matches(needle: &str) -> String {
+    format!("no matches for `{needle}`")
+}
+
+/// …and the paved path out of it: what was read, and the gesture that asks
+/// again. Named in full, so an empty answer is never a dead end.
+pub const SEARCHED_EVERYTHING: &str = "every ball, workspace and conversation in this world was read. Ctrl+F asks \
+     another needle; `/search` with no text closes this tab.";
 
 /// Run the query (§8.5). `wanted` is the asker's liveness: it is consulted
 /// between conversations — where the disk work is — so a superseded search
@@ -135,10 +163,15 @@ impl Found {
 /// is the general path with no input, and every seat renders its own empty.
 pub fn run(snap: &Snapshot, text: &str, wanted: &dyn Fn() -> bool) -> Found {
     let needle = text.trim().to_ascii_lowercase();
-    let mut found = Found::default();
     if needle.is_empty() {
-        return found;
+        return Found::default();
     }
+    // The answer carries its question, in the operator's own case, so no seat
+    // has to guess whether one was asked (bl-648a).
+    let mut found = Found {
+        needle: text.trim().to_owned(),
+        ..Found::default()
+    };
     found.unreadable = corpus::unreadable(snap);
     for (at, fields) in corpus::from_snapshot(snap) {
         push(&mut found.hits, &needle, at, &fields);

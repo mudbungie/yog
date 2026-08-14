@@ -274,7 +274,7 @@ shared any more: since the blast-radius ruling a workspace's provider
 config, sign-ins and model cache live at `<world>/walls/<name>/brazen/*`, so a
 newborn workspace's wall is an **empty directory** and the `yogdrive.sh` symlink
 that used to point the scratch `brazen/credentials` at the ambient one fed
-nothing. `harness.sh`'s `seed_wall` copies the host's brazen config and
+nothing. `wall.sh`'s `seed_wall` copies the host's brazen config and
 credential files into that wall instead — **beside the world seed above, before
 the launch**, and that is the third file of one fixture rather than a later step.
 The template the seed lays names `openai-chatgpt`, which a newborn wall does not
@@ -734,7 +734,7 @@ argv rows stay logical by design (§8.2), so that physical proof comes from `ps`
 and from the seeded `world/tools/{bl,lernie,bz}` shims, each an `exec
 '<the driven yog>' '<namespace>' "$@"`. Nothing reaches in from the ambient
 world: the blast-radius ruling retired §16.2's brazen carve-out, so
-the wire's precondition is now a **copy** — `harness.sh`'s `seed_wall` lays the
+the wire's precondition is now a **copy** — `wall.sh`'s `seed_wall` lays the
 host's brazen config and credential files into the room's own
 `<world>/walls/home/brazen/` with the world seed, before the launch (bl-49c6,
 bl-1851).
@@ -775,10 +775,51 @@ predicate depends on**, not just the last one. The S1 message beat was already
 wrapped and still died five times over, because the ↓ *above* it had missed —
 selection is invisible RAM (§13.1), and an unselected instance renders no
 composer at all, so the click had nothing to hit. The precondition now lives
-inside the retried gesture.
+inside the retried gesture. A fifth red taught the **other** side of the same
+primitive: the predicate must be MONOTONE, `>=` and never `=`. A gesture that
+starts a conversation is not a no-op when it misses, so the retry ADDS to the
+very quantity the predicate counts — a slow first attempt lands late, the retry
+starts a second, and an equality pinned to `before + 1` is stepped straight over
+and can never be true again. The beat then burns all five attempts and reports
+"no new agent" against a world holding five conversations its gesture really
+started, while the beat beside it passes on the evidence they left (bl-0e44).
+Exactness is still assertable — outside the loop, where nothing re-fires, and
+best as a count that must NOT grow.
 Relatedly, a ball body rides *beside* the worktree preamble, so an agent reads it
 as a job — the drive fixture's body says "run no commands and no tools" to keep a
 beat about argv from becoming a beat about wire spend.
+
+**A beat that cannot go red is worse than a missing one**, because a missing beat
+is visible and a vacuous one reads as coverage. Three shapes, all found in this
+harness and all repaired (bl-afa7, bl-2d45, bl-f16e):
+
+1. **An interpolated subject that can be empty.** `grep -q "$id"` with an unset
+   `$id` is `grep -q ""`, which matches every non-empty stream. It bit twice —
+   `$minted` when the mint above it failed, `$refused` when the failed-close row
+   above it was never written — and in both cases the beat passed *because* its
+   own predecessor had failed. So an id-taking predicate REFUSES an empty
+   subject rather than interpolating it, in the predicate and not at one call
+   site, because a guard that lives at the call site is re-armed by the next
+   beat that copies the line.
+2. **A predicate satisfied by a different event.** `grep '"seen"' ui.json` is
+   true of any world where anything was ever focused, so the S6 ack beat passed
+   in the same runs where its own stop reported `no stop verb`. Assert on the
+   IDENTITY of the thing the gesture was about — `seen_kind <ui> <agent>`,
+   `stopped <conversation>` — never on the presence of a shape.
+3. **A negative with no positive bracket.** "the file did not move", "no mail
+   watermark exists", "no step died" are all satisfied by the gesture never
+   happening, by the file never existing, and by the world being empty. Every
+   negative here now carries a positive beside it that proves the subject was
+   there to be measured: a hash comparison requires the file to exist (two
+   absences used to compare EQUAL), the mail beat requires the ack it is the
+   exception to, `no_dead_step` requires that some step wrote a response at all.
+
+And the mechanical corollary, which is cheaper than any of them: **a beat writes
+both a PASS and a FAIL, or it is not a beat.** `gesture … || pass "…"` emits a
+row only when it succeeds, so the one outcome it existed to catch deleted the
+beat from the verdict instead of reddening it — the same blindness as bl-0e44's
+duplicate function name, reached by a different road. Every label in
+`scripts/drive/` now appears in both a `pass` and a `fail`.
 
 **Four more harness rules, learned the same way (2026-07-27), and every one is
 about the harness rather than yog.** *(1)* **A layout is a coordinate too.** An

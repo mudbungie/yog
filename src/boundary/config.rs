@@ -44,7 +44,7 @@ use super::reply::Reply;
 
 pub(crate) mod read;
 pub(crate) mod write;
-use read::text_at;
+use read::{branch_text, text_at};
 use write::{cadence_path, commit, editor_at, saved};
 
 /// Where one [`ApplyConfig`](super::Action::ApplyConfig) lands (§9). The
@@ -116,13 +116,15 @@ pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Res
 }
 
 /// Read one §9 destination's current bytes (§8.5, bl-0164): [`apply`]'s
-/// read-only twin, and the file editors' Reload spelled headless. A
+/// read-only twin, and the file editors' Reload spelled headless. A file
 /// destination that is not there yet answers empty text — the same "new
 /// file" reading every editor's own load already gives — so only a real I/O
-/// failure refuses. A lineage refuses outright: which files a config commit
-/// holds is the §9.3 pane's own browse (`git show`, bl-ee0a), asked of every
-/// file in the lineage at once, a fact this single-destination query does
-/// not carry.
+/// failure refuses. A **lineage** answers the pane's own Load (bl-dff8): `git
+/// show config/<lineage>:<path>`, the very bytes an Apply on that destination
+/// would be diffed against. It carries the write's `origin` and ignores it,
+/// because where the next commit lands is not where the current bytes are;
+/// [`Query::Lineages`](super::Query::Lineages) is the browse that says which
+/// paths a lineage holds.
 pub(super) fn read(deps: &Deps, file: &ConfigFile) -> Result<Reply, String> {
     let text = match file {
         ConfigFile::Brazen { workspace } => text_at(&brazen_paths(deps, workspace).config)?,
@@ -133,9 +135,27 @@ pub(super) fn read(deps: &Deps, file: &ConfigFile) -> Result<Reply, String> {
                 .map_err(|e| e.to_string())?,
         )?,
         ConfigFile::Cadence => text_at(&cadence_path(&deps.world))?,
-        ConfigFile::Branch { .. } => Err(read::BRANCH_REFUSAL)?,
+        ConfigFile::Branch {
+            workspace,
+            lineage,
+            path,
+            ..
+        } => branch_text(workspace, lineage, path)?,
     };
     Ok(Reply::Config { text })
+}
+
+/// The §9.3 browse (§8.5, bl-dff8): the workspace's lineages, each with the
+/// files its tip holds — the pane's dropdowns, as one answer.
+pub(super) fn lineages(workspace: &Path) -> Result<Reply, String> {
+    read::browse(workspace).map(Reply::Lineages)
+}
+
+/// The §9.4 roster (§8.5, bl-dff8): what `provider` offers **in this
+/// workspace's wall** — the picker's own read, aimed by the gesture rather
+/// than by a focus a headless seat does not have (bl-fcd5).
+pub(super) fn models(deps: &Deps, workspace: &Path, provider: &str) -> Result<Reply, String> {
+    read::models(&wall_env(deps, workspace), provider).map(Reply::Models)
 }
 
 /// **Which branch this agent tracks on** (§8.5, bl-0164): the marks pane's

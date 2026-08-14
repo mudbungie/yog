@@ -159,18 +159,36 @@ fn an_under_said_config_line_names_what_is_missing() {
         let err = parse(line, &ctx()).unwrap_err();
         assert!(err.contains(needle), "{line:?} refused with {err:?}");
     }
-    // A lineage's text is never optional — its browse is the pane's own read
-    // (§9.3, bl-ee0a), so `/config branch <lineage> <path>` alone still names
-    // the missing text rather than becoming a third read.
-    for line in [
-        "/config branch strict workflow.yaml",
-        "/config orphan strict workflow.yaml",
-        "/config fork strict base workflow.yaml",
-    ] {
-        let err = parse(line, &ctx()).unwrap_err();
-        assert!(
-            err.contains("the file's text is required"),
-            "{line:?}: {err:?}"
+}
+
+/// A lineage destination reads like every other one (bl-dff8): the destination's
+/// words with nothing after them are `git show config/<lineage>:<path>`, the
+/// pane's Load. All three origins spell a read, because the origin says where a
+/// *write* would land and a read lands nowhere.
+#[test]
+fn a_lineage_with_no_text_reads_the_file_at_its_tip() {
+    let cases = [
+        ("/config branch strict workflow.yaml", EditOrigin::Advance),
+        ("/config orphan strict workflow.yaml", EditOrigin::Orphan),
+        (
+            "/config fork strict base workflow.yaml",
+            EditOrigin::Fork {
+                source: "base".to_owned(),
+            },
+        ),
+    ];
+    for (line, origin) in cases {
+        assert_eq!(
+            parse(line, &ctx()),
+            Ok(Gesture::Ask(Query::ReadConfig {
+                file: ConfigFile::Branch {
+                    workspace: PathBuf::from("/ws"),
+                    lineage: "strict".to_owned(),
+                    origin,
+                    path: "workflow.yaml".to_owned(),
+                }
+            })),
+            "{line:?}"
         );
     }
 }

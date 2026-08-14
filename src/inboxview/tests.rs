@@ -4,7 +4,7 @@
 //! [`tail`] runs the same walk on a viewport too short for the backlog, where
 //! the §11 tail anchor decides which deposits are on screen.
 
-use super::render::render;
+use super::render::{HOW_MAIL_ARRIVES, NO_DEPOSITS, render};
 use super::*;
 use tempfile::tempdir;
 
@@ -135,10 +135,45 @@ fn list_inbox_carries_each_files_name_and_verbatim_bytes() {
     assert_eq!(entry.deposit.body, "the body\n");
 }
 
+/// A pane tall enough that a bottom anchor is unmistakable — the audit's
+/// witness had `(no deposits)` ~450 pt below the tab strip — and wide enough
+/// that neither sentence wraps, so each is asserted as one painted run.
+const PANE: (f32, f32) = (1400.0, 400.0);
+
+/// **An empty inbox says what it is and how a deposit arrives, at the top of
+/// the pane** (bl-71fc, QUALITY H2: "absence is named — an empty region says
+/// what it is and names the paved path in full").
+///
+/// Both halves are asserted, in both render modes. The string alone was the
+/// test this replaces, and it was vacuous against the complaint twice over: it
+/// passed on a bare `(no deposits)` that named no path, and it said nothing
+/// about *where* that run sat, which is the other half of the defect —
+/// `tail::scroll`'s anchor pads an underfull body down onto the bottom edge,
+/// so the one line an operator had was ~450 pt from the tab that produced it.
 #[test]
-fn empty_inbox_shows_placeholder() {
-    assert!(painted(&[], false).contains("(no deposits)"));
-    assert!(painted(&[], true).contains("(no deposits)"));
+fn an_empty_inbox_names_itself_and_the_paved_path_at_the_top_of_the_pane() {
+    for raw in [false, true] {
+        let painted =
+            crate::paint_probe::painted_settled(PANE.0, PANE.1, |ui| render(ui, &[], raw));
+        let said: Vec<&str> = painted.iter().map(|(text, _)| text.as_str()).collect();
+        for want in [NO_DEPOSITS, HOW_MAIL_ARRIVES] {
+            assert!(
+                said.contains(&want),
+                "raw={raw}: the empty inbox must paint `{want}` whole, got {said:?}"
+            );
+        }
+        let (top, bottom) = crate::paint_probe::span(&painted);
+        assert!(
+            top < 20.0,
+            "raw={raw}: the empty state is top-anchored, not pushed down the pane: \
+             it starts at y {top} of a {} pt pane",
+            PANE.1
+        );
+        assert!(
+            bottom < PANE.1 / 2.0,
+            "raw={raw}: and the whole of it sits in the pane's top half: ends at y {bottom}"
+        );
+    }
 }
 
 #[test]

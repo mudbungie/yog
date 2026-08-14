@@ -14,11 +14,11 @@ mod plan;
 mod prompt;
 mod run;
 
-use crate::names::SplitMix64;
 use crate::opslog::{self, OpEntry};
 use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Payload, StartInputs};
 use crate::test_support::authoring_new_arm;
+use lernie::mint::SplitMix64;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};

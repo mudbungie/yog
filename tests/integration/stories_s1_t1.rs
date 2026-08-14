@@ -7,10 +7,10 @@
 #![allow(clippy::unwrap_used)]
 
 use crate::support::Recorder;
+use lernie::mint::SplitMix64;
 use tempfile::tempdir;
 use yog::binding::workspace_path;
 use yog::cli_outbound::Cli;
-use yog::names::SplitMix64;
 use yog::start::{self, Deps, Payload, StartInputs};
 use yog::world::layout_under;
 
@@ -59,7 +59,7 @@ fn s1_t1_focused_workspace_enter_is_prompt_only() {
         &prepared,
         "next step",
         &[],
-        &mut SplitMix64::from_seed(1),
+        &SplitMix64::from_seed(1),
     )
     .unwrap();
 

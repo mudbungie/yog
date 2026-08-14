@@ -63,6 +63,31 @@ pub const QUERIES: &[HelpRow] = &[
                  a workspace, so the same row can read signed-in in one and not in another.",
     },
     HelpRow {
+        verb: "lineages",
+        usage: "/lineages",
+        summary: "this workspace's config lineages, and the files each one holds",
+        detail: "The policy branches of the seat's workspace — the lineages a conversation is \
+                 born on — each with its tip commit and every file that commit holds. It is the \
+                 listing `/config branch <lineage> <path>` then reads a file out of, and the same \
+                 two dropdowns the config pane fills: pick a lineage, pick a path, read the \
+                 bytes, then send an edit back with text after those same words. A workspace \
+                 whose repository cannot be read is said outright rather than shown as no \
+                 lineages at all.",
+    },
+    HelpRow {
+        verb: "models",
+        usage: "/models <provider>",
+        summary: "the model ids one provider is offering right now",
+        detail: "Asks the provider row what models it serves (`bz --list-models`) and answers \
+                 the ids it listed, in its order — the same roster the model picker fills when \
+                 you open it. Nothing is cached: the list belongs to the provider and can change \
+                 without yog. Name the row, as `/providers` lists it; the sign-in it is listed \
+                 against is the seat's workspace, so a row signed in elsewhere refuses here. Its \
+                 answer is what `/model <role> <provider> <model-id>` then assigns — this says \
+                 what exists, that says what a role uses. A provider that offers nothing, or \
+                 cannot be asked, refuses with its own words rather than an empty list.",
+    },
+    HelpRow {
         verb: "attention",
         usage: "/attention",
         summary: "everything waiting on you, across every workspace",
