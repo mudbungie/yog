@@ -150,6 +150,30 @@ demotion removes an internal API from the boundary's obligations. Reach for
   <id> --as ID` folds `main` in, runs the pre-commit gate, squash-delivers, and
   tears the worktree down. Always pass `--as ID` — never let the model invent a
   name. A stray edit on `main` is invisible to the squash and is left behind.
+- **`main` is the only durable line, and the remote says so.** Four kinds of ref
+  may exist on `origin`, each with an owner; anything else is a defect, and
+  which one it is should be answerable from this list alone (bl-7066).
+  - `main` — the trunk. **Work lands ONLY by `bl close` squashing a claim
+    worktree onto it.** A pushed branch is never how work lands.
+  - `balls/tasks` — the task store: structural, owned by `bl`, not a line of
+    development. It publishes with the source (see "What may never enter a ball
+    body").
+  - `release-plz-*` — machine-owned and machine-pruned. release-plz pushes a new
+    timestamped branch on every refresh, and `prune-release-branches`
+    (release-plz.yml) deletes every one with no open PR right afterwards. Leave
+    them alone; do not hand-delete the one with the open release PR.
+  - **anything else is a PROBE, and the agent that pushed it deletes it.** The
+    only reason to push a branch at all is to buy a **runner verdict** — a
+    `workflow_dispatch` needs a ref that is already on the remote, and some
+    defects exist only there (bl-e492: 1969/1969 locally, five failures on CI).
+    That is legitimate; leaving it is not. Read the verdict, land through `bl
+    close`, then delete the branch and close its PR in the same breath.
+
+  **A probe is not free, and deleting it does not make it free.** GitHub keeps
+  `refs/pull/<n>/head` forever: the public repo still serves the head refs of
+  two branches that no longer exist anywhere. Whatever you push is a permanent
+  public artifact of that tree even after the branch is gone — so push a probe
+  when you need a verdict, and not to "save work somewhere".
 - **Every child process is spawned through `git_env::command`.** `git` exports
   `GIT_DIR`/`GIT_INDEX_FILE` into every process it starts, and those OUTRANK
   `-C <repo>` and `current_dir` — so a child that inherits them forks its *own*
