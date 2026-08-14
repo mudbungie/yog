@@ -1,7 +1,8 @@
 +++
 title = "MONITOR: verify the speculative merge queue delivers builds on GitHub Actions end to end — first run blocked upstream at the account level; validate live once Actions accepts jobs"
 created = 1786601239
-updated = 1786678331
+updated = 1786684264
+claimant = "Gimbal"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
