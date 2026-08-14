@@ -72,19 +72,46 @@ pub fn render(
 /// one-line explanation on hover — then one aligned row per step. Absent
 /// values still take their cell, so every column stays under its own heading.
 fn render_table(ui: &mut egui::Ui, view: &StepsView, selected: Option<usize>) {
-    egui::Grid::new("steps-table").striped(true).show(ui, |ui| {
-        for column in COLUMNS {
-            ui.label(egui::RichText::new(column.header).strong())
-                .on_hover_text(column.hint);
-        }
-        ui.end_row();
-        for (i, step) in view.steps.iter().enumerate() {
+    egui::Grid::new("steps-table")
+        .striped(true)
+        .max_col_width(cell_cap(ui))
+        .show(ui, |ui| {
             for column in COLUMNS {
-                paint_cell(ui, (column.cell)(step, Some(i) == selected));
+                ui.label(egui::RichText::new(column.header).strong())
+                    .on_hover_text(column.hint);
             }
             ui.end_row();
-        }
-    });
+            for (i, step) in view.steps.iter().enumerate() {
+                for column in COLUMNS {
+                    paint_cell(ui, (column.cell)(step, Some(i) == selected));
+                }
+                ui.end_row();
+            }
+        });
+}
+
+/// §11 rule 1 reaching **inside** the table (bl-7414): an even share of the seat
+/// the table has, as a CAP and never a width.
+///
+/// A `Grid` lays every column at its content's natural width and simply
+/// overflows the pane when they do not fit, so at 480x1400 — a tiled left third
+/// of a portrait monitor, where the centre keeps 224 pt — the `Commit` heading
+/// was laid at x 440..478 against a clip that ends at 472. It elided, and the
+/// six points that got cut were its own `…`: the operator saw `Com`, an
+/// unmarked truncation, which is the one thing rule 1c forbids.
+///
+/// A cap rather than a width, because a table that fits must not be squeezed:
+/// every cell narrower than its share is left exactly as it was, so nothing
+/// changes at any size where the table already fits — which is every size but
+/// this one.
+fn cell_cap(ui: &egui::Ui) -> f32 {
+    // The column count as a divisor, via `u16` so the widening to `f32` is
+    // lossless by construction rather than by assertion — `COLUMNS` is a fixed
+    // array of six, and a table that outgrew 65 535 of them has a larger
+    // problem than its cell widths.
+    let columns = f32::from(u16::try_from(COLUMNS.len()).unwrap_or(u16::MAX));
+    let gaps = ui.spacing().item_spacing.x * (columns - 1.0);
+    ((ui.available_width() - gaps) / columns).max(1.0)
 }
 
 fn paint_cell(ui: &mut egui::Ui, cell: Cell) {

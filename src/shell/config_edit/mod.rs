@@ -161,6 +161,11 @@ pub fn center(
     // also the target pane's freshness gesture and must not run mid-paint.
     let mut route = None;
     egui::ScrollArea::vertical().show(ui, |ui| {
+        // Rule 1 restated where the scroll area takes it back (bl-7414): its
+        // inner rect is as wide as the widest thing in it, and with no
+        // horizontal scrolling none of that surplus is reachable — so a row
+        // below would elide to a width the clip then cuts, ellipsis and all.
+        super::row::shown_width(ui);
         route = brazen_pane::render(ui, &mut state.wall.brazen);
         ui.separator();
         lernie_pane::render(ui, &mut state.config, &rows);

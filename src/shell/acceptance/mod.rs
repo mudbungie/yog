@@ -84,8 +84,22 @@ fn painted(world: &mut World, lernie: &Cli, bl: &Cli) -> String {
 /// ordinary half-screen, and a maximized 4K pane — the small end and the large
 /// end of QUALITY §2's shot sheet plus the two in between. One list, because a
 /// property asserted at a size its sibling skips is a hole neither can see.
-pub(super) const SIZES: [(f32, f32); 4] = [
+///
+/// **480x1400 is a size *class*, not a fifth measurement** (bl-7414): a tiled
+/// left third of a portrait monitor. Every other entry is landscape, so until
+/// this one the suite had never rendered a window where height is abundant and
+/// width is scarce — and the four rules that only bite there had never been
+/// asked. It reddened `legible` on sight at three independent seats (the
+/// lernie-global pane's workflow and declare rows, the config-branch pane's
+/// lineage and file rows, and the marks pane's verb pair, each claiming egui's
+/// fixed 280 pt `text_edit_width` in a 224 pt centre) and a fourth in the Steps
+/// table, whose `Commit` heading was laid six points past the pane's clip so
+/// that the `…` marking its own truncation fell outside it. A row that
+/// overflows does not merely overflow: it ratchets the seat's `max_rect`, so
+/// every row beneath it elides to a width that is not there.
+pub(super) const SIZES: [(f32, f32); 5] = [
     (420.0, 320.0),
+    (480.0, 1400.0),
     (800.0, 500.0),
     (1150.0, 760.0),
     (2560.0, 1700.0),

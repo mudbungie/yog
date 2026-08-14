@@ -5081,6 +5081,29 @@ panel, not about any one row:
    transcript states both halves at the row — wrap for the payload a fold opens
    onto, truncate for the one-line chrome — and inherits neither, on the same
    discipline as 1b.
+   **Truncate to *what*? To the width the seat SHOWS** (bl-7414). Rule 1 decides
+   that a row elides; the width it elides to is `max_rect`, and two things put a
+   width in there that the operator can never see. A vertical `ScrollArea` whose
+   content is wider than its viewport must widen its inner rect to measure that
+   content, and with horizontal scrolling off none of the surplus is reachable —
+   `shell::row::shown_width` clamps it back, one call at the scroll body, the
+   same "state the rule where it stopped being true" discipline as `bounded`
+   itself. Worse, and the general form: **an over-wide row ratchets the seat's
+   `max_rect` for every row beneath it**, so one widget's overflow silently
+   re-bases the whole surface, and each row below elides to a width that is not
+   there and is then hard-cut — *taking its own `…` with it*, which is 1c's
+   silent form. That is the width-axis twin of the panel ratchet this section
+   opens with, one container in. The usual author is a bare
+   `text_edit_singleline`, which claims egui's fixed 280 pt `text_edit_width`
+   however narrow the pane is: a field is a greedy member and states so with
+   `desired_width(f32::INFINITY)`, inside `control_last` when its row pairs it
+   with one trailing verb (1b) and inside `peers` when the row is controls all
+   the way down (rule 8). **A table is a seat too**: `Grid` lays each column at
+   its content's natural width and overflows, so the steps table caps its
+   columns at an even share of the room it has — a cap, never a width, so a
+   table that fits is untouched. All four were invisible until the acceptance
+   suite rendered a window that was narrow *and* tall; the size class is
+   `acceptance::SIZES`'s 480x1400 row and it is the guard.
 1b. **The control wins the row** (bl-bc06). Rule 1 decides *that* a row
    truncates; this decides *what*. A row that pairs greedy text with a trailing
    control lays the **control first**, at its own natural width, and the text

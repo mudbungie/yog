@@ -40,6 +40,30 @@ pub(super) fn bounded(ui: &mut egui::Ui) {
     ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
 }
 
+/// §11 rule 1, the half a scroll area takes back (bl-7414): **a seat lays no
+/// wider than it shows.**
+///
+/// [`bounded`] makes a row truncate, but truncate *to what*? To `max_rect`, and
+/// a vertical `ScrollArea` whose content is wider than its viewport hands its
+/// inner `Ui` a `max_rect` wider than its `clip_rect` — it must, to measure the
+/// content it might have to scroll. With horizontal scrolling off there is
+/// nothing to scroll to, so the surplus is pure fiction: every row truncates to
+/// the fiction and the clip then cuts the result, **taking the ellipsis with
+/// it**. Measured on the Config surface at 480x1400, a narrow-tall window: the
+/// pane showed 224 pt and laid 388, so `the watcher-cycle cadence — worker
+/// sweeps, debounce, and every …` was elided at 387 pt and hard-cut at 224 with
+/// no mark on it at all. That is rule 1c's silent form, and it is the same
+/// defect [`bounded`] was written for, one container further in.
+///
+/// So the rule is restated where it stopped being true. Clamping is one-way —
+/// a seat whose clip is *wider* than its max rect (any ordinary row, whose
+/// parent clips generously) keeps the narrower bound it already had, because
+/// the fiction is only ever the surplus.
+pub(super) fn shown_width(ui: &mut egui::Ui) {
+    let width = ui.max_rect().width().min(ui.clip_rect().width());
+    ui.set_max_width(width);
+}
+
 /// Lay `text` and a trailing `control` on one line, control first.
 ///
 /// The control is allocated at its natural width against the row's full

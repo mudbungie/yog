@@ -37,8 +37,15 @@ const ORDER: [&str; 3] = ["flight-strip", "composer", "conversation-settings"];
 /// for all three bands, and the strip is the one §11 rule 5 declines to seat
 /// there. Reordering the stack did not move that line, which is the other half
 /// of "bl-905f is untouched" — the strip did not lose a seat it had.
-const CENSUS: [&str; 4] = [
+/// **The 480x1400 row is the narrow-tall size class** (bl-7414): a tiled left
+/// third of a portrait monitor, and the one size in the list where height is
+/// abundant and width is not. It seats all three bands — the strip's seat is a
+/// question of vertical budget (§11 rule 5), and 1400 pt has room to spare —
+/// which is the point of pinning it: the size was added to catch *width*
+/// defects, and this row states outright that it cost the stack nothing.
+const CENSUS: [&str; 5] = [
     "420x320: [\"composer\", \"conversation-settings\"]",
+    "480x1400: [\"flight-strip\", \"composer\", \"conversation-settings\"]",
     "800x500: [\"flight-strip\", \"composer\", \"conversation-settings\"]",
     "1150x760: [\"flight-strip\", \"composer\", \"conversation-settings\"]",
     "2560x1700: [\"flight-strip\", \"composer\", \"conversation-settings\"]",
