@@ -1,7 +1,8 @@
 +++
 title = "headless config discovery is incomplete: no lineage-file read or provider-model query"
 created = 1786510266
-updated = 1786510266
+updated = 1786683235
+claimant = "Jib"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["headless", "config"]
