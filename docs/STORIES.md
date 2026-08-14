@@ -775,7 +775,16 @@ predicate depends on**, not just the last one. The S1 message beat was already
 wrapped and still died five times over, because the ↓ *above* it had missed —
 selection is invisible RAM (§13.1), and an unselected instance renders no
 composer at all, so the click had nothing to hit. The precondition now lives
-inside the retried gesture.
+inside the retried gesture. A fifth red taught the **other** side of the same
+primitive: the predicate must be MONOTONE, `>=` and never `=`. A gesture that
+starts a conversation is not a no-op when it misses, so the retry ADDS to the
+very quantity the predicate counts — a slow first attempt lands late, the retry
+starts a second, and an equality pinned to `before + 1` is stepped straight over
+and can never be true again. The beat then burns all five attempts and reports
+"no new agent" against a world holding five conversations its gesture really
+started, while the beat beside it passes on the evidence they left (bl-0e44).
+Exactness is still assertable — outside the loop, where nothing re-fires, and
+best as a count that must NOT grow.
 Relatedly, a ball body rides *beside* the worktree preamble, so an agent reads it
 as a job — the drive fixture's body says "run no commands and no tools" to keep a
 beat about argv from becoming a beat about wire spend.
