@@ -10,6 +10,7 @@
 //! this mint is the truth.
 
 use super::identity::mint_conversation;
+use super::instructions::{names, specs};
 use super::{Prepared, StartError, on_mint};
 use crate::cli_outbound::Cli;
 use crate::opslog::{self, DETACHED_EXIT, OpEntry};
@@ -22,6 +23,9 @@ const NAME_FLAG: &str = "--name";
 /// lernie's creation-time working-directory parameter (upstream bl-d0b4,
 /// released 0.0.8): the §3.3 typed work-target binding's one channel.
 const CWD_FLAG: &str = "--cwd";
+/// lernie's caller-supplied pinned document (upstream bl-fb5c, released 0.0.4):
+/// the §3.7 project-instruction freeze's one channel.
+const PIN_FLAG: &str = "--pin";
 const YOG_NAME: &str = "YOG_NAME";
 
 /// `lernie prompt --name <minted> [--cwd <target>] <workspace> <goal>` fired
@@ -85,14 +89,24 @@ pub fn execute_prompt(
     )?;
     let ws_s = prepared.workspace.to_string_lossy();
     let bound = prepared.binding.as_ref().map(|p| p.to_string_lossy());
+    // The §3.7 freeze: one `--pin` per instruction document the binding's
+    // project declares, discovered from the binding's own authority root. No
+    // binding, no discovery — the bare rung reads no policy and stats no file.
+    let pins: Vec<String> = prepared.binding.as_deref().map_or_else(Vec::new, |target| {
+        specs(target, &names::names(&prepared.workspace))
+    });
     let named = lernie.and_env(vec![(YOG_NAME.to_owned(), prepared.name.clone())]);
     let sink = opslog::detached::sink(state_root, ts, &prepared.workspace);
     // One argv, built once and spawned *and* logged from it — so the flag that
     // rides conditionally cannot ride in only one of them. The goal stays LAST
-    // in both: `opslog::clip_goal` trims exactly the final element (§4.2).
+    // in both: `opslog::clip_goal` trims exactly the final element (§4.2), so
+    // every pin survives into the trail and *is* the provenance record (§3.7).
     let mut args = vec![PROMPT, NAME_FLAG, conversation.as_str()];
     if let Some(dir) = bound.as_deref() {
         args.extend([CWD_FLAG, dir]);
+    }
+    for pin in &pins {
+        args.extend([PIN_FLAG, pin.as_str()]);
     }
     args.extend([ws_s.as_ref(), goal]);
     // The driver's own directory is the workspace it drives — the same for every

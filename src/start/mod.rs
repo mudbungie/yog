@@ -41,6 +41,7 @@ mod ensure;
 mod exec;
 mod goal;
 mod identity;
+pub mod instructions;
 mod prompt;
 mod run;
 #[cfg(test)]

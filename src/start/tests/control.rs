@@ -11,6 +11,11 @@ use crate::start::{Deps, StartError, execute_ensure_workspace};
 use crate::test_support::spawn_guard;
 use crate::world::{Layout, layout_under};
 
+/// lernie 0.0.8's shipped worker manifest, reduced: it composes no
+/// `instructions/**`, which is exactly why §3.7 authors the glob.
+const MANIFEST: &str = "roles:\n  worker:\n    pinned:\n      - goal.md\n\
+    order: []\n    budget_tokens: 150000\n    overflow: drop\n";
+
 /// The world layout anchored on this world's yog data root.
 fn layout(w: &World) -> Layout {
     layout_under(w.yog.path())
@@ -60,6 +65,71 @@ fn ensure_leaves_an_already_controlled_workspace_alone() {
     let shim = crate::world::tools::control_path(&layout(&w).tools);
     let authored = crate::control::author::authored("events: {}\n", &shim);
     crate::test_support::workspace::seed_workspace_workflow(&ws, &authored);
+    let lernie = Cli::new("/definitely/not/a/real/lernie");
+    assert!(
+        !execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
+            .unwrap()
+    );
+    assert!(w.ops().is_empty(), "converged: nothing ran, nothing logged");
+}
+
+/// §3.7 item 4 — **two files, one drive.** The `tool_control:` block and the
+/// `instructions/**` glob are two control files of one yog policy, so a
+/// workspace missing both converges in a *single* `lernie config` pass: one
+/// checkout, one commit, one ops row, both files staged whole.
+#[test]
+fn ensure_converges_the_control_and_the_instruction_glob_in_one_drive() {
+    let _g = spawn_guard();
+    let w = World::new();
+    let ws = workspace_path(w.yog.path(), "cobalt-gecko");
+    crate::test_support::workspace::seed_workspace_config(
+        &ws,
+        &[
+            ("workflow.yaml", "events: {}\n"),
+            ("manifest.yaml", MANIFEST),
+        ],
+    );
+    // A `lernie` that records the staging dir the scripted editor is pointed at.
+    let record = w.bin.path().join("staged");
+    let lernie = Cli::new(super::write_exec(
+        w.bin.path(),
+        "lernie",
+        &format!(
+            "#!/bin/sh\nprintf '%s\\n' \"$YOG_EDIT_SRC\" > '{}'\nexit 0\n",
+            record.display()
+        ),
+    ));
+    execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls).unwrap();
+    assert_eq!(w.ops().len(), 1, "one drive, one row: {:?}", w.verbs());
+    let staged = std::path::PathBuf::from(std::fs::read_to_string(&record).unwrap().trim());
+    let workflow = std::fs::read_to_string(staged.join("workflow.yaml")).unwrap();
+    assert!(workflow.contains("tool_control:"), "{workflow}");
+    let manifest = std::fs::read_to_string(staged.join("manifest.yaml")).unwrap();
+    assert!(manifest.contains("- instructions/**"), "{manifest}");
+    assert!(manifest.contains("budget_tokens: 150000"), "{manifest}");
+}
+
+/// The other half of the same rung: a tip already carrying both stages nothing
+/// and spawns nothing — the steady state of every start after the first.
+#[test]
+fn ensure_leaves_an_already_converged_workspace_alone() {
+    let _g = spawn_guard();
+    let w = World::new();
+    let ws = workspace_path(w.yog.path(), "cobalt-gecko");
+    let shim = crate::world::tools::control_path(&layout(&w).tools);
+    crate::test_support::workspace::seed_workspace_config(
+        &ws,
+        &[
+            (
+                "workflow.yaml",
+                &crate::control::author::authored("events: {}\n", &shim),
+            ),
+            (
+                "manifest.yaml",
+                &crate::start::instructions::manifest::authored(MANIFEST),
+            ),
+        ],
+    );
     let lernie = Cli::new("/definitely/not/a/real/lernie");
     assert!(
         !execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)

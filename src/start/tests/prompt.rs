@@ -14,7 +14,7 @@ use std::path::Path;
 /// typed work-target binding (`None` = the bare rung's "bind nothing", the
 /// shape most of these tests fire). There is no driver-cwd field since bl-6654
 /// — the detached driver stands in the workspace it drives.
-fn prepared(name: &str, workspace: &Path, binding: Option<&Path>) -> Prepared {
+pub(super) fn prepared(name: &str, workspace: &Path, binding: Option<&Path>) -> Prepared {
     Prepared {
         name: name.to_owned(),
         workspace: workspace.to_path_buf(),
@@ -26,14 +26,14 @@ fn prepared(name: &str, workspace: &Path, binding: Option<&Path>) -> Prepared {
 
 /// The workspace the fire drives — created, because it is also the detached
 /// driver's own cwd (bl-6654) and a spawn into a missing directory fails.
-fn workspace(w: &World) -> std::path::PathBuf {
+pub(super) fn workspace(w: &World) -> std::path::PathBuf {
     let ws = w.yog.path().join("ws");
     std::fs::create_dir_all(&ws).expect("workspace dir");
     ws
 }
 
 /// A blocking fifo — reading it rendezvous with the detached child's write.
-fn make_fifo(path: &Path) {
+pub(super) fn make_fifo(path: &Path) {
     let status = crate::git_env::command(Path::new("mkfifo"))
         .args(["-m", "600"])
         .arg(path)

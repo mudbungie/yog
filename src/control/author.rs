@@ -34,20 +34,14 @@
 //! so a tip that already carries the block computes to itself and nothing is
 //! staged, nothing is spawned, and no commit is authored.
 
-use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use crate::cli_outbound::Cli;
 use crate::config_edit::branch::config_file;
-use crate::config_edit::branch::edit::{
-    DraftFile, EditOrigin, EditPlan, drive, next_nonce, stage_files,
-};
-use crate::opslog::{OpEntry, Origin};
-use crate::xdg::stage_root_under;
+use crate::config_edit::branch::edit::DraftFile;
 
 /// The config lineage every workspace is born on and every fresh agent forks
 /// off (lernie ARCH §2.2).
-const DEFAULT_CONFIG: &str = "default";
+pub const DEFAULT_CONFIG: &str = "default";
 /// Its refspec in the bare workspace repo.
 const DEFAULT_REF: &str = "refs/heads/config/default";
 /// The control file inside a config commit.
@@ -59,12 +53,13 @@ const KEY: &str = "tool_control:";
 /// survived its own block would accrete one copy per start.
 const MARK: &str = "# yog authors this block";
 
-/// The workspace's committed workflow, as `config/default` carries it — the
-/// base every authoring starts from. `None` when the workspace has no config
-/// commit yet or the file cannot be read: nothing to author onto, which is not
-/// an error, only nothing to do.
-pub fn committed(workspace: &Path) -> Option<String> {
-    let bytes = config_file(workspace, DEFAULT_REF, WORKFLOW_YAML).ok()?;
+/// One committed control file, as `config/default` carries it — the base every
+/// authoring starts from. `None` when the workspace has no config commit yet or
+/// the file cannot be read: nothing to author onto, which is not an error, only
+/// nothing to do. Shared with §3.7's `manifest.yaml` author: two files, one
+/// read of the same lineage tip.
+pub fn committed(workspace: &Path, file: &str) -> Option<String> {
+    let bytes = config_file(workspace, DEFAULT_REF, file).ok()?;
     String::from_utf8(bytes).ok()
 }
 
@@ -104,49 +99,22 @@ fn block(shim: &Path) -> String {
     )
 }
 
-/// Converge `workspace`'s `config/default` onto a workflow naming `shim`.
-/// Returns the drive's ops entry, or `None` when the tip already carries the
-/// block — the steady state, which reads one file from git and spawns nothing.
+/// `workspace`'s `workflow.yaml` drift against a tip naming `shim`, or `None`
+/// when the tip already carries the block — the steady state, which reads one
+/// file from git and stages nothing.
 ///
-/// The staged file is the **whole** `workflow.yaml`: the scripted editor copies
-/// files over the checkout, so a fragment would truncate the policy.
-pub fn ensure_controlled(
-    lernie: &Cli,
-    workspace: &Path,
-    shim: &Path,
-    yog_binary: &Path,
-    state_root: &Path,
-    ts: &str,
-    origin: Origin,
-) -> io::Result<Option<OpEntry>> {
-    let Some(base) = committed(workspace) else {
-        return Ok(None);
-    };
+/// The drafted file is the **whole** `workflow.yaml`: the scripted editor
+/// copies files over the checkout, so a fragment would truncate the policy.
+/// Who *drives* the commit is [`crate::start::execute_ensure_workspace`], which
+/// converges this drift and §3.7's `manifest.yaml` drift in one `lernie config`
+/// pass — two files of one policy, one checkout, one commit, one ops row.
+pub fn workflow_drift(workspace: &Path, shim: &Path) -> Option<DraftFile> {
+    let base = committed(workspace, WORKFLOW_YAML)?;
     let want = authored(&base, shim);
-    if want == base {
-        return Ok(None);
-    }
-    let staging: PathBuf = stage_files(
-        &stage_root_under(state_root),
-        &next_nonce(),
-        &[DraftFile {
-            rel_path: WORKFLOW_YAML.to_owned(),
-            bytes: want.into_bytes(),
-        }],
-    )?;
-    let plan = EditPlan::compose(
-        yog_binary,
-        workspace,
-        DEFAULT_CONFIG,
-        &EditOrigin::Advance,
-        &staging,
-    );
-    // Attributed to the surface that asked for the start (bl-48f8): being born
-    // uncontrolled is that start's failure, and it banners where the start was
-    // offered.
-    Ok(Some(drive(
-        lernie, workspace, &plan, ts, state_root, origin,
-    )))
+    (want != base).then(|| DraftFile {
+        rel_path: WORKFLOW_YAML.to_owned(),
+        bytes: want.into_bytes(),
+    })
 }
 
 #[cfg(test)]
