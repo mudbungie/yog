@@ -4,9 +4,12 @@ use std::time::{Duration, Instant};
 use tempfile::{TempDir, tempdir};
 
 /// Detection budget for filesystem-watcher latency: poll up to `WAIT_TIMEOUT`,
-/// sampling every `POLL_INTERVAL`. Generous enough for the higher-latency macOS
-/// FSEvents backend; on Linux inotify the event lands on the first sample.
-const WAIT_TIMEOUT: Duration = Duration::from_secs(5);
+/// sampling every `POLL_INTERVAL`. On Linux inotify the event lands on the first
+/// sample; the budget exists for macOS FSEvents, and twenty seconds is what it
+/// measured at (bl-1015) — delivery past five was reproducible on a three-core
+/// `macos-14` runner carrying ~2000 tests in parallel. A healthy beat never
+/// spends it, so the cost falls only on a beat that is about to fail anyway.
+const WAIT_TIMEOUT: Duration = Duration::from_secs(20);
 const POLL_INTERVAL: Duration = Duration::from_millis(50);
 
 /// Poll `probe` until it yields `Some`, or `timeout` elapses. Pure over an
@@ -80,7 +83,18 @@ fn wait_quiet(watcher: &Watcher) {
 /// change set (so callers can also assert on siblings, e.g. a coalesced
 /// rename's dropped source). Empty on timeout.
 fn wait_for(watcher: &Watcher, pred: impl Fn(&Change) -> bool) -> Vec<Change> {
+    wait_for_with(watcher, || {}, pred)
+}
+
+/// [`wait_for`] with a mutation re-made on every sample — for a beat whose
+/// claim is *that* a change surfaces rather than how many times it was made.
+fn wait_for_with(
+    watcher: &Watcher,
+    mut make: impl FnMut(),
+    pred: impl Fn(&Change) -> bool,
+) -> Vec<Change> {
     let probe = || {
+        make();
         let changes = watcher.tick();
         let found = changes.iter().any(&pred);
         found.then_some(changes)
@@ -93,8 +107,14 @@ fn expect_touch(root: &Path, target: &Path) {
     fs::create_dir_all(target.parent().unwrap()).unwrap();
     let watcher = Watcher::new(root).unwrap();
     wait_quiet(&watcher);
-    fs::write(target, b"x").unwrap();
-    let changes = wait_for(&watcher, |c| c.path == *target);
+    // Written on every sample, not once: the claim is that a write under the
+    // root surfaces, and re-making the write costs nothing while making the
+    // beat immune to a single delivery the backend drops under load (bl-1015).
+    let changes = wait_for_with(
+        &watcher,
+        || fs::write(target, b"x").unwrap(),
+        |c| c.path == *target,
+    );
     let hit = changes.iter().find(|c| c.path == *target).expect("event");
     assert_eq!(hit.kind, ChangeKind::Touched);
 }

@@ -31,7 +31,14 @@ fn wait_until<T>(timeout: Duration, mut probe: impl FnMut() -> Option<T>) -> Opt
 }
 
 /// Detection budget for the real-watcher paths.
-const DETECT: Duration = Duration::from_secs(5);
+///
+/// Twenty seconds, not five, and the number is a **platform** measurement
+/// rather than a guess (bl-1015): on a three-core `macos-14` runner carrying
+/// ~2000 tests in parallel, FSEvents delivery past five seconds was reproducible
+/// — two different beats, two different runs. Nothing here polls for twenty
+/// seconds in the healthy case; the budget is only ever spent by a beat that is
+/// about to fail, so raising it costs a red run time and a green run nothing.
+const DETECT: Duration = Duration::from_secs(20);
 
 /// Wait until the set's watchers are **provably** armed, then absorb what
 /// arming itself made.
@@ -154,9 +161,10 @@ fn reconcile_rebuilds_a_replaced_root_instead_of_keeping_a_deaf_watcher() {
     );
     // And the re-armed watcher actually hears the new inode.
     wait_armed(&mut set, &root);
-    std::fs::create_dir_all(root.join("steps/abc/001")).unwrap();
-    std::fs::write(root.join("steps/abc/001/request.json"), b"{}").unwrap();
+    let target = root.join("steps/abc/001/request.json");
+    std::fs::create_dir_all(target.parent().unwrap()).unwrap();
     let dirty = wait_until(DETECT, || {
+        std::fs::write(&target, b"{}").ok()?;
         let d = set.drain_dirty();
         (!d.is_empty()).then_some(d)
     })
@@ -196,9 +204,13 @@ fn drain_dirty_reports_the_changed_root() {
     let mut set = WatchSet::new();
     set.reconcile(&[(root.clone(), RootKind::Workspace)]);
     wait_armed(&mut set, &root);
-    std::fs::create_dir_all(root.join("steps/abc/001")).unwrap();
-    std::fs::write(root.join("steps/abc/001/request.json"), b"{}").unwrap();
+    let target = root.join("steps/abc/001/request.json");
+    std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+    // Written on every sample, not once: the claim is that a change under the
+    // root surfaces, and re-making the change costs nothing while making the
+    // beat immune to a single delivery the backend drops under load (bl-1015).
     let dirty = wait_until(DETECT, || {
+        std::fs::write(&target, b"{}").ok()?;
         let d = set.drain_dirty();
         (!d.is_empty()).then_some(d)
     })
@@ -232,9 +244,12 @@ fn pump_is_false_without_a_change_and_marks_on_change() {
     assert!(!pump(&watchset, &dirty));
     assert!(dirty.is_empty());
     // A change makes the next pump true and marks the root.
-    std::fs::create_dir_all(root.join("inbox/a")).unwrap();
-    std::fs::write(root.join("inbox/a/user-001.md"), b"hi").unwrap();
-    let marked = wait_until(DETECT, || pump(&watchset, &dirty).then_some(()));
+    let deposit = root.join("inbox/a/user-001.md");
+    std::fs::create_dir_all(deposit.parent().unwrap()).unwrap();
+    let marked = wait_until(DETECT, || {
+        std::fs::write(&deposit, b"hi").ok()?;
+        pump(&watchset, &dirty).then_some(())
+    });
     assert!(marked.is_some());
     assert!(dirty.drain().contains_key(&root));
 }
@@ -248,9 +263,12 @@ fn the_bridge_thread_marks_a_real_disk_change_dirty() {
     let watchset = Arc::new(Mutex::new(set));
     let dirty = DirtySet::default();
     let bridge = Bridge::spawn(Arc::clone(&watchset), dirty.clone());
-    std::fs::create_dir_all(root.join("steps/abc/001")).unwrap();
-    std::fs::write(root.join("steps/abc/001/request.json"), b"{}").unwrap();
-    let seen = wait_until(DETECT, || (!dirty.is_empty()).then_some(()));
+    let target = root.join("steps/abc/001/request.json");
+    std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+    let seen = wait_until(DETECT, || {
+        std::fs::write(&target, b"{}").ok()?;
+        (!dirty.is_empty()).then_some(())
+    });
     assert!(seen.is_some(), "the bridge marked the root dirty");
     drop(bridge); // clean stop + join
 }
