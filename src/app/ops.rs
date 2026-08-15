@@ -44,14 +44,4 @@ impl AppModel {
         let _ = opslog::clear(&self.roots.yog_state, &self.clock.stamp());
         self.mark_dirty([self.roots.yog_state.clone()]);
     }
-
-    /// Whether anything on the trail is still alarming — the §11 predicate that
-    /// decides whether the ops pane offers its Dismiss at all (a control that
-    /// would write a line and change nothing is a control that should not be
-    /// there). Derived from the same [`activity`](Self::activity) summary the
-    /// chip paints, so the button and the chip's ichor appear together.
-    pub fn has_alarms(&self) -> bool {
-        let summary = self.activity();
-        summary.errors > 0 || summary.drifts > 0
-    }
 }

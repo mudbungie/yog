@@ -66,7 +66,8 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
     // --- Before: the row is Bound and the conversation's badge is the bound hue.
     let row = m.focused_join().expect("cobalt binds bl-7").clone();
     assert_eq!(row.state, JoinState::Bound);
-    let before = m.conversation_ball("c-001").expect("the goal stamps bl-7");
+    let before =
+        crate::support::conversation_ball(&m, "c-001", 1000).expect("the goal stamps bl-7");
     assert_eq!(before.id, "bl-7");
     assert_eq!(before.state, Some(JoinState::Bound));
     assert_eq!(
@@ -129,9 +130,8 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
     );
 
     // The conversation's badge turns ash — same stamp, new join (§3.5).
-    let after = m
-        .conversation_ball("c-001")
-        .expect("the stamp is unchanged");
+    let after =
+        crate::support::conversation_ball(&m, "c-001", 1000).expect("the stamp is unchanged");
     assert_eq!(
         after.id, "bl-7",
         "the stamp is the fact; the colour is the join"

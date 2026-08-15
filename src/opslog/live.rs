@@ -93,6 +93,19 @@ pub fn activity(rows: &[OpRow]) -> Activity {
 }
 
 impl Activity {
+    /// **Whether anything on the trail is still alarming** — the §11 predicate
+    /// that decides whether the ops pane offers its Dismiss at all (a control
+    /// that would write a line and change nothing is a control that should not
+    /// be there), and the same test the chip's ichor is painted by.
+    ///
+    /// It lives on the summary rather than beside the pane (bl-296f, moved off
+    /// `AppModel`) because it is a reading of these two counts and nothing
+    /// else: the button and the ichor cannot come apart if there is one home
+    /// for what "alarming" means.
+    pub fn alarming(&self) -> bool {
+        self.errors > 0 || self.drifts > 0
+    }
+
     /// The chip label: `activity · N ops`, with `· M failed ⚠` appended when
     /// live failures are present (the shell paints that count in ichor) and
     /// `· K drift` when the tail holds drift observations. Drift is its own

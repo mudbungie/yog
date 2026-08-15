@@ -129,7 +129,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // The seat's own read of its selection (REMOTE §9.4, bl-1eb0) — pure
         // over the snapshot, unlike the five above, because everything it says
         // was already derived when the tree was.
-        Query::Agent { agent: id, .. } => Reply::Agent(agent::agent(snap, ws, id)),
+        Query::Agent { agent: id, .. } => Reply::Agent(agent::agent(snap, ws, id, now_unix)),
         Query::Ops { max } => {
             let skip = snap.ops.len().saturating_sub(*max);
             Reply::Ops(snap.ops.iter().skip(skip).cloned().collect())
@@ -229,16 +229,22 @@ pub fn workspace_stats(snap: &Snapshot, ui: &UiState, ws: &Path) -> (usize, usiz
 
 /// Every enumerated workspace with its rollup — the `workspaces` answer.
 pub fn ws_rows(snap: &Snapshot, ui: &UiState) -> Vec<WsRow> {
+    // The §4.1 pin list, read once for the whole listing rather than per row.
+    // Its keys are paths (durable state whose re-keying is its own migration,
+    // bl-7407), which is exactly why the *rank* crosses and the key does not.
+    let pinned = ui.pinned();
     snap.workspaces
         .iter()
         .map(|w| {
             let (attention, agents, running) = workspace_stats(snap, ui, &w.path);
+            let key = ws_key(&w.path);
             WsRow {
                 workspace: crate::naming::leaf(&w.path),
                 kind: w.kind.clone(),
                 attention,
                 agents,
                 running,
+                pinned: pinned.iter().position(|k| *k == key),
             }
         })
         .collect()

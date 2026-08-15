@@ -6,9 +6,9 @@
 //! derived on the frame thread out of `GitTree::agents` — the engine's fat,
 //! disk-derived tree, which a thin client will never hold. Nothing was missing
 //! from the *derivations*; what was missing was a **spelling**, so this is that
-//! and nothing more: ten scalars off the published snapshot, each one a call
-//! into the module that already owns it (§2.3 descent, §3.3 naming, §3.5
-//! liveness, §6 marks, §8.2 enablement).
+//! and nothing more: scalars and two small lists off the published snapshot,
+//! each one a call into the module that already owns it (§2.3 descent, §3.3
+//! naming, §3.5 liveness, §6 marks, §8.2 enablement, §5.1 #28/#28b activity).
 //!
 //! It is the seventh member of the conversation-addressed family
 //! ([`super::inspector`]'s six), so it shares their address and their envelope
@@ -27,10 +27,14 @@ use crate::actions::{nudge_enabled, stop_children_offered, stop_enabled};
 use crate::app::Snapshot;
 use crate::control::hold::Held;
 use crate::git_tree::{Agent, AgentMark, AgentState};
-use crate::nav::convs::{Flight, ancestors, conversation_flight, display_name_of, root_of};
+use crate::nav::convs::{
+    Flight, ancestors, conversation_flight, display_name_of, root_of, seats, strip,
+};
 
 /// One conversation's seat facts: who is selected, what its conversation is
-/// called, what it is doing, what it wears and what may be done to it.
+/// called, what it is doing, what it wears and what may be done to it — plus,
+/// since bl-296f, the two §11 accessories that describe the same subtree's live
+/// activity (the mark's seats and the in-flight strip).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AgentView {
     /// The agent asked about — echoed back, so a reply identifies itself.
@@ -83,12 +87,38 @@ pub struct AgentView {
     /// Whether the `+children` cascade is offered beside it — the Stop menu's
     /// looser prefix test, not the strict §5.1 #8 descent.
     pub stop_children: bool,
+    /// **The §11 live mark's seats** (§5.1 #28b, bl-296f): the eye — the agent
+    /// the operator is talking to — then its subagents in §2.3 descent order,
+    /// each with what it is doing right now. Empty for an id this workspace
+    /// does not carry, which is the mark at rest and not a case of its own.
+    ///
+    /// It rides here rather than on a [`ConvRow`](crate::nav::convs::ConvRow)
+    /// for the reason bl-48ae gave for `marks` and `held`: it is a fact about
+    /// **one conversation's** agents, one per circle, and putting a per-agent
+    /// activity list on every row of a workspace's forest to serve the one row
+    /// that is selected is the altitude mistake `ConvRow`'s own definition
+    /// exists to prevent.
+    pub seats: Vec<crate::nav::convs::Seat>,
+    /// **The §11 bottom in-flight strip** (§5.1 #28, bl-905f): the live
+    /// characteristics of what is running in this conversation, `None` at rest
+    /// — which is what makes an idle window paint no strip at all.
+    ///
+    /// Its elapsed segment is stamped at the moment the answer is derived
+    /// rather than re-rendered per frame, so it advances at the asker's cadence
+    /// (REMOTE §9.7's live-tail ruling, taken again at a coarser unit): the
+    /// segment is a compact `5s`/`2m` label, and half a second of lag in a
+    /// figure that ticks in seconds is not a difference a reader can feel.
+    pub strip: Option<crate::nav::convs::FlightStrip>,
 }
 
 /// Derive one conversation's seat facts off the published snapshot. Pure: every
 /// field is a fold over the workspace's agent set, so this costs no disk read
 /// and answers the same thing at the chokepoint as it does on a frame.
-pub fn agent(snap: &Snapshot, ws: &Path, agent: &str) -> AgentView {
+///
+/// `now_unix` is the caller's wall clock, and only the §11
+/// [`strip`](AgentView::strip)'s elapsed segment spends it — everything else
+/// here is structural.
+pub fn agent(snap: &Snapshot, ws: &Path, agent: &str, now_unix: i64) -> AgentView {
     let agents = snap
         .trees
         .get(ws)
@@ -111,6 +141,8 @@ pub fn agent(snap: &Snapshot, ws: &Path, agent: &str) -> AgentView {
         stoppable: stop_enabled(Some(agent), &agents),
         stop_children: stop_children_offered(agent, &agents),
         ancestors: ancestors(&agents, agent),
+        seats: seats(&agents, &root),
+        strip: strip(&agents, &root, now_unix),
         agent_id: agent.to_owned(),
         root,
     }

@@ -25,7 +25,7 @@ fn a_member_reads_its_own_state_and_its_conversations_name() {
     child.tip_oid = "b".repeat(40);
     let snap = snapshot(ws, "alba", vec![root, child], vec![]);
 
-    let view = agent(&snap, ws, CHILD);
+    let view = agent(&snap, ws, CHILD, 0);
     assert_eq!(view.agent_id, CHILD);
     assert_eq!(view.root, ROOT);
     // The chain §11's visible-selection invariant unfolds, outermost first.
@@ -42,7 +42,7 @@ fn a_member_reads_its_own_state_and_its_conversations_name() {
 
     // The root of the same conversation: at rest itself, and the cascade is
     // offered because something below it is not.
-    let at_root = agent(&snap, ws, ROOT);
+    let at_root = agent(&snap, ws, ROOT, 0);
     assert_eq!(at_root.state, AgentState::Quiescent);
     assert!(at_root.ancestors.is_empty(), "a root opens nothing");
     assert!(at_root.present && at_root.nudgeable && at_root.held.is_none());
@@ -66,7 +66,7 @@ fn the_marks_and_the_legacy_naming_rung_are_stated() {
     });
     let snap = snapshot(ws, "alba", vec![root], vec![]);
 
-    let view = agent(&snap, ws, ROOT);
+    let view = agent(&snap, ws, ROOT, 0);
     assert_eq!(view.name, "relic");
     assert!(view.display_only);
     assert_eq!(view.marks, vec![AgentMark::Notified, AgentMark::Held]);
@@ -98,7 +98,7 @@ fn the_forest_answers_every_fact_the_seat_reads_off_the_selection() {
         100,
     );
     for id in [ROOT, CHILD, "20260801T000000Z-gh0"] {
-        let view = agent(&snap, ws, id);
+        let view = agent(&snap, ws, id, 0);
         let seat = crate::nav::convs::selection(&rows, id);
         assert_eq!(seat.agent_id, view.agent_id, "{id}");
         assert_eq!(seat.root, view.root, "{id}");
@@ -125,7 +125,7 @@ fn an_agent_the_snapshot_does_not_carry_is_answered_not_refused() {
         vec![],
     );
     for (at, id) in [(ws, "who"), (Path::new("/elsewhere"), ROOT)] {
-        let view = agent(&snap, at, id);
+        let view = agent(&snap, at, id, 0);
         assert_eq!(view.root, id);
         assert_eq!(view.name, crate::nav::convs::id_floor(id));
         assert_eq!(view.tip, "");

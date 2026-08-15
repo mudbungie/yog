@@ -67,7 +67,7 @@ fn s4_t3_balls_section_groups_all_bound_balls_under_their_workspace() {
     );
 
     // Both named workspaces are wall tabs (§11), in name order.
-    let bar = m.tab_bar();
+    let bar = crate::support::tab_bar(&m);
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(names, ["cobalt", "spare"], "named workspaces tab the wall");
 

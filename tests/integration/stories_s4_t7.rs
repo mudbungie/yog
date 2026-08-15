@@ -4,9 +4,10 @@
 //! overflow (real, but not regimes), and the overflow button carries their
 //! aggregate (STORIES S4.7, DESIGN §3.1, §11).
 //!
-//! Driven off `AppModel::tab_bar`, which is where the three inputs meet: the
-//! §3.1 workspace classification (which root a directory sits under), the §6
-//! per-workspace rollup, and the `ui.json` pin order.
+//! Driven the way the top bar drives it (REMOTE §9.7, bl-296f): the
+//! `Query::Workspaces` answer — §3.1 classification, §6 per-workspace rollup
+//! and §4.1 pin *rank*, all three meeting at the boundary — folded by
+//! `nav::tabs::build`, which is the whole of what the seat does.
 
 #![allow(clippy::unwrap_used)]
 
@@ -74,7 +75,7 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     );
 
     // --- Unpinned: the wall is the named workspaces in NAME order.
-    let bar = m.tab_bar();
+    let bar = crate::support::tab_bar(&m);
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(
         names,
@@ -108,7 +109,7 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     // The strip total spans EVERY workspace, overflow included — the wall hides
     // rows, never facts (§6).
     assert_eq!(
-        m.strip_total(),
+        crate::support::strip_total(&m),
         5,
         "2 alpha + 1 delta + 1 foreign + 1 replay"
     );
@@ -116,7 +117,7 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     // --- Pinned: hoisted in PIN order, ahead of the name-ordered remainder.
     m.toggle_pin("delta");
     m.toggle_pin("charlie");
-    let bar = m.tab_bar();
+    let bar = crate::support::tab_bar(&m);
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(
         names,

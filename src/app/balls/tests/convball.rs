@@ -114,24 +114,29 @@ fn the_conversation_mint_reads_its_occupied_set_off_the_stamped_roots() {
 }
 
 #[test]
-fn conversation_ball_and_groups_expose_the_same_derived_join() {
+fn the_header_ball_and_the_groups_are_one_answers_own_field() {
     let (_root, _fx, m) = model();
-    // The header accessor mirrors the row derivation.
-    let header = m.conversation_ball("conv1").expect("conv1 header ball");
+    let rows = crate::test_support::convs::conversations(&m, 1000);
+    // The §11 header's ball is the *selection's* field off the answered forest
+    // (bl-296f) — the same `ConvRow::ball` the grouped view heads with, so the
+    // header and the group can never name two balls for one conversation.
+    let header = crate::nav::convs::selection(&rows, "conv1")
+        .ball
+        .expect("conv1 header ball");
     assert_eq!(header.id, "bl-work");
     assert_eq!(header.state, Some(JoinState::Bound));
     assert!(
-        m.conversation_ball("bare").is_none(),
+        crate::nav::convs::selection(&rows, "bare").ball.is_none(),
         "no stamp, no header ball"
     );
     assert!(
-        m.conversation_ball("nonexistent").is_none(),
+        crate::nav::convs::selection(&rows, "nonexistent")
+            .ball
+            .is_none(),
         "an unknown root has no ball"
     );
     // The grouped view heads each ball over its conversations, unassociated last.
-    let groups = crate::nav::convs::group::group_by_ball(
-        crate::test_support::convs::conversations(&m, 1000),
-    );
+    let groups = crate::nav::convs::group::group_by_ball(rows);
     let work = groups
         .iter()
         .find(|g| g.ball.as_ref().map(|b| b.id.as_str()) == Some("bl-work"))

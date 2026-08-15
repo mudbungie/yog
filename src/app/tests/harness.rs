@@ -197,6 +197,24 @@ impl Rig {
     ) -> Vec<crate::nav::convs::ConvRow> {
         crate::test_support::convs::visible(&self.model, now_unix, expanded)
     }
+
+    /// The §6 attention-strip total, asked through the boundary (bl-296f) — the
+    /// model holds no rollup accessor any more, the top bar folding
+    /// `Query::Workspaces` for both the strip and the tabs.
+    pub(crate) fn strip_total(&self) -> usize {
+        crate::test_support::chrome::strip_total(&self.model)
+    }
+
+    /// The §11 workspace tab bar, folded off the same answer.
+    pub(crate) fn tab_bar(&self) -> crate::nav::tabs::TabBar {
+        crate::test_support::chrome::tab_bar(&self.model)
+    }
+
+    /// The §11 activity chip's counts, folded off the `Query::Ops` answer the
+    /// expanded trail paints.
+    pub(crate) fn activity(&self) -> crate::opslog::Activity {
+        crate::test_support::chrome::activity(&self.model)
+    }
 }
 
 impl std::ops::Deref for Rig {

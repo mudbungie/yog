@@ -58,8 +58,12 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
 
     a.focus_workspace(&yog::naming::leaf(&ws));
     b.focus_workspace(&yog::naming::leaf(&ws));
-    assert_eq!(a.strip_total(), 2, "both stir, in both instances");
-    assert_eq!(b.strip_total(), 2);
+    assert_eq!(
+        crate::support::strip_total(&a),
+        2,
+        "both stir, in both instances"
+    );
+    assert_eq!(crate::support::strip_total(&b), 2);
 
     // B is looking at n-002 — its viewport, and nobody else's.
     b.focus_agent(&ws, "n-002");
@@ -71,25 +75,29 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
     a.refresh();
     for _ in 0..200 {
         a_worker.step();
-        if a.refresh() && a.strip_total() == 1 {
+        if a.refresh() && crate::support::strip_total(&a) == 1 {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
-    assert_eq!(a.strip_total(), 1, "A's own landing quieted n-001");
+    assert_eq!(
+        crate::support::strip_total(&a),
+        1,
+        "A's own landing quieted n-001"
+    );
 
     // B adopts the same `ui.json` and stops flagging n-001 too — nothing was
     // sent between them.
     for _ in 0..200 {
         b_worker.step();
         b.refresh();
-        if b.strip_total() == 1 {
+        if crate::support::strip_total(&b) == 1 {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
     assert_eq!(
-        b.strip_total(),
+        crate::support::strip_total(&b),
         1,
         "the acknowledgement converged through the file"
     );

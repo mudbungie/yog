@@ -1086,7 +1086,7 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9, bl-7407, bl-48ae)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9, bl-7407, bl-48ae, bl-296f)
 
 Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
 transport questions settled. It could not move the read path, because §1.2 and
@@ -1469,7 +1469,9 @@ and §8.4 fire-time gates (`delete_confirmation`, `agent_delete_confirmation`,
 is blocked and none of them is a ruling — each is a `Reply` that does not exist
 yet — but a residual that says *three surfaces plus scope* while thirty
 accessors fold the snapshot on the paint thread is a doc that has stopped being
-true. The **affordance** half is deliberately not on that list: `startable` /
+true. (**Seven of that list crossed in bl-296f and needed no new query at all;
+that block, and what is left of this list, are below.**) The **affordance**
+half is deliberately not on that list: `startable` /
 `resumable` and the composer's fire-time inputs are the acts side of bl-adcb's
 own line (*what crosses is the read, not the affordance*).
 
@@ -1631,6 +1633,112 @@ holding*.
   scoped parent's path is `Query` or `Reply`, so `crate::git_tree::Agent` is
   still flagged everywhere it appears; the fixtures still bite and `src` is
   clean, which is the two-direction check.
+
+**The accessory tail, part one: the folds that needed no question (bl-296f).**
+Seven of the tail's accessors are gone and the boundary gained **no new
+query**, which is the finding rather than the scope. The tail was filed as
+*"each a `Reply` that does not exist yet"*, and for these seven that reading was
+wrong: the facts were already on answers this window had landed, and what was
+missing was a seat willing to read them there. Where a payload grew it grew by
+**one field on an existing answer**, never by a question of its own.
+
+- **The §11 tab bar and the attention strip are one `Query::Workspaces`, and
+  class 2 is closed.** `WsRow` gained the §4.1 **pin rank** — `pinned:
+  Option<usize>`, its place in the durable pin list, absent-not-null so rank 0
+  is not read as unpinned — and `nav::tabs::build` now folds the answered rows
+  rather than a snapshot: `Item` is deleted, the bar has no path in it anywhere,
+  and `strip_total` beside it is the same rows summed. The **rank** rather than
+  a flag is the whole of why no join is left at the seat: hoisting in pin order
+  off a boolean would mean re-reading `ui.json` to sort, which is the seat
+  joining an answer back against the engine's own document — bl-7407's refused
+  shape reappearing at the field it was refused for. A pin is lawful on the wire
+  where the §11 expanded set is not, and the test is DESIGN §5.3's own: a pin is
+  **durable operator state**, living in the document whose §6 acknowledgements
+  this row's `attention` already folds, where a fold is a viewport's.
+  A **stale pin key dissolves** rather than being skipped — a key naming no
+  enumerated workspace ranks no row, so the seat has nothing to drop.
+- **The §3.4 raise claim needed a second projection, exactly as the echo did.**
+  Migrating the bar re-opened bl-9acf on the first run: a wall `lernie new` has
+  just founded is in no answer for as long as one derivation takes, so it wore
+  no tab and its name resolved to nothing, and the composer's bare Enter would
+  fire into the previous wall. bl-44e9's ruling covers it verbatim — *a seat's
+  optimism reaches whatever that seat actually reads* — so `AppModel::raised_rows`
+  is `echo::rows::with_echo`'s shape one noun up, folding the claim into an
+  answered listing. It cannot double-count: the claim is retired against the
+  same derivation the answer is made from.
+- **The activity chip and its Dismiss fold the trail they summarize.** The chip's
+  counts were an in-process fold over the window's own snapshot while the rows
+  under them came off the wire — two readings of one tail, and the one number an
+  operator could catch lying. `activity`/`has_alarms` are gone; the seat folds
+  `Query::Ops` with `opslog::activity`, and *alarming* is now a method on the
+  summary so the ichor and the button cannot come apart. The question therefore
+  stands whenever the chip paints, which is every frame; expanding the trail
+  asks nothing new, a standing question being keyed by its own envelope.
+- **The live mark and the in-flight strip are fields on `Query::Agent`.**
+  `AgentView` gained `seats` (§5.1 #28b, one entry per agent in the conversation
+  with what it is doing) and `strip` (§5.1 #28's characteristics), so the §11
+  header's marks, its mark and the bottom strip are **one ask**. They ride the
+  per-agent answer rather than `ConvRow` for bl-48ae's own reason: a per-agent
+  activity list on every row of a workspace's forest, to serve the one row that
+  is selected, is the altitude mistake `ConvRow`'s definition exists to prevent.
+  The **cost is stated**: the strip's elapsed segment is stamped when the answer
+  is derived rather than re-rendered per frame, so it advances at `ASK_PERIOD`
+  — bl-13f9's live-tail ruling at a coarser unit, a figure that ticks in seconds
+  read at half-second cadence.
+- **The header's conversation ball was already on the row.** `ConvRow::ball` has
+  carried the §3.3 stamp resolved through the §3.5 join since the list was
+  written, so `conversation_ball` and the `resolve_conv_ball` behind it were a
+  second read of an answered fact. It is `Selection::ball` now — the one field
+  of that fold with no `AgentView` twin, deliberately, since a second copy on the
+  per-agent answer is precisely the disagreement the parity test exists to catch.
+  It lands in the frame the selection changes, which is where the ball line
+  belongs: it sits under the name, and arriving late would read as belonging to
+  the previous conversation.
+- **One more bespoke driver learned the harness ruling** (`acceptance::bands`),
+  for bl-48ae's reason at the fifth site: it counted frames and censused which
+  bands each window size seats, and the strip's subject is an answer now, so the
+  band it exists to place was missing for the transport's reason. It drains to a
+  fixed point like the rest.
+
+**The residual, as bl-296f leaves it, and it is the accessory tail minus the
+seven above** — filed whole as **bl-b4b5**. None of it is blocked and none of it
+needs a ruling; each is a `Reply` that still does not exist, and the groups are
+separable exactly as bl-48ae filed them.
+
+- **The §3.2/§3.5 ball-and-spend family** — `ws_balls`, `roster_ball_rows`,
+  `bound_ball`, `focused_join`, `ball_spend`, `conversation_spend`,
+  `conversation_context`. The altitude is the open question and it is worth
+  taking as one: `Query::Balls` already answers the join rows, but it answers
+  them **path-typed** (`JoinRow` carries `project` and `workspace` as
+  `PathBuf`s — §8.1's list did not reach them), so a seat holding a §3.1 *name*
+  cannot select its workspace's balls out of that answer without the join
+  bl-7407 refused. So this group is one workspace-addressed question answering
+  the bound balls with their figures, not eight small ones, and the §8.1
+  narrowing of `JoinRow` rides with it. The two conversation-scoped figures
+  (`conversation_spend`, `conversation_context`) are `AgentView`'s shape — facts
+  about one conversation's subtree, like `flight` and now `strip`.
+- **The §3.6/§8.4 fire-time gates** — `delete_confirmation`,
+  `agent_delete_confirmation`, `move_targets`, `conversation_names`. The
+  rendering split is already exact and must stay so: the chokepoint re-derives
+  every confirmation **fail-closed** at fire (§9.8, bl-1747), so the seat's copy
+  is a painted affordance and may land an ask period late — which is what makes
+  these ordinary reads rather than a class of their own.
+- **The misc singles** — `focused_pending` (the composer's §5.1 #11 queue),
+  `agent_titles` (the §3.3 table a seat resolves a *third party* against), and
+  `config_tip` (the §2.2 lineage tip the §9.4 row's drift clause reads).
+- **`staleness`, and the one thing in the tail that is not scope.** The §7.2
+  staleness line is the age of `Snapshot::derived_at`, an `Instant`; the
+  chokepoint takes `now_unix`, an `i64` minted at the process boundary
+  precisely so every derivation is deterministic under test. So this read cannot
+  be answered without the snapshot carrying its completion as a **wall-clock
+  stamp**, which is a payload-and-clock change rather than a read migration, and
+  `growth_note` beside it is painted in the same two-line loop and moves with it.
+- The three residuals bl-44e9 and bl-13f9 left are **unchanged**: the §9 config
+  editors' own loads (bl-f297's ruling — pointing them at `ReadConfig`/
+  `Lineages`/`Models`/`Providers` changes what a config editor *is*), and
+  `Prepared::binding` staying a path (§8.1's ruling, affordable to dissolve only
+  once one seat's read path is the only read path — and the composer's own reads
+  are in the list above).
 
 - ~~Gestures are still dispatched in process~~ — **the design and the first
   group landed, §9.8** (bl-4841). An act is a declaration whose receipt lands

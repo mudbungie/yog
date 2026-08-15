@@ -64,8 +64,8 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
     // diverge by wall clock).
     assert_eq!(first.tree(&ws), second.tree(&ws), "snapshots diverged");
     assert_eq!(
-        first.tab_bar(),
-        second.tab_bar(),
+        crate::support::tab_bar(&first),
+        crate::support::tab_bar(&second),
         "tab bars diverged across a restart"
     );
     let (mut a, mut b) = (first, second);

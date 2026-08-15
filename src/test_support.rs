@@ -223,6 +223,11 @@ pub(crate) mod engine;
 /// (REMOTE §9.7, bl-44e9) — there is no model accessor left to ask instead.
 pub(crate) mod convs;
 
+/// The §11 accessories that crossed with bl-296f — the altitude-0 chrome and
+/// the selection's own detail — asked through the boundary, there being no
+/// model accessor left to ask instead.
+pub(crate) mod chrome;
+
 /// The deterministic [`Clock`] every debounce and sweep branch is exercised
 /// against — its own file at §12's cap, on the seam this file already had:
 /// faking a *value* the crate reads, rather than the spawn discipline above.

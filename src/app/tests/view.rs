@@ -1,9 +1,12 @@
-//! Tests for the model's read surface (`app/view.rs`): the roster rollups,
-//! the tab bar, the conversation rows and the focused-agent lookup.
+//! Tests for the model's read surface (`app/view.rs`): the roster rollups, the
+//! focused-agent lookup, and the §11 accessories that crossed to the boundary
+//! with bl-296f — the altitude-0 chrome and the selection's own live detail,
+//! asked here through `test_support::chrome` exactly as the seat asks them.
 //!
 //! Split from `tests/focus.rs` alongside the production split — those are
 //! reads; `tests/focus.rs` keeps the focus and seen-acknowledgement gestures.
 
+use super::harness::Rig;
 use super::{Harness, agent};
 use crate::git_tree::AgentState;
 
@@ -127,19 +130,16 @@ fn the_boundary_answer_is_the_frames_derivation_without_a_frame() {
 }
 
 #[test]
-fn the_live_mark_seats_the_focused_conversation_root_first() {
+fn the_live_mark_seats_the_conversation_root_first() {
     let h = Harness::new();
     let (_c, mut model) = h.model();
-    // Nothing selected is no seats — which the mark paints as itself at rest,
-    // never as a case it branches on.
-    assert!(model.mark_seats().is_empty(), "nothing selected, no seats");
-    model.focus_agent(&h.ws, "c-1");
+    let seats = |m: &Rig, ws: &std::path::Path, id: &str| {
+        crate::test_support::chrome::detail(m, ws, id, 0)
+            .map(|view| view.seats.iter().map(|s| s.doing).collect::<Vec<_>>())
+            .unwrap_or_default()
+    };
     assert_eq!(
-        model
-            .mark_seats()
-            .iter()
-            .map(|s| s.doing)
-            .collect::<Vec<_>>(),
+        seats(&model, &h.ws, "c-1"),
         vec![crate::nav::convs::Doing::Idle],
         "a settled conversation seats its root, idle"
     );
@@ -157,39 +157,35 @@ fn the_live_mark_seats_the_focused_conversation_root_first() {
     model.deriver.trees.get_mut(&h.ws).unwrap().agents = vec![streaming, kid];
     model.publish();
     assert_eq!(
-        model
-            .mark_seats()
-            .iter()
-            .map(|s| s.doing)
-            .collect::<Vec<_>>(),
+        seats(&model, &h.ws, "c-1"),
         vec![
             crate::nav::convs::Doing::Thinking,
             crate::nav::convs::Doing::Tools
         ]
     );
-    // A selected id the tree does not carry roots no conversation, and an
-    // unfetched workspace has no tree to ask.
-    model.focus_agent(&h.ws, "ghost");
-    assert!(model.mark_seats().is_empty());
-    model.focus_agent(std::path::Path::new("/no/such"), "c-1");
-    assert!(model.mark_seats().is_empty());
+    // An id the tree does not carry roots no conversation, and an unfetched
+    // workspace has no tree to ask — no seats either way, which is the mark at
+    // rest rather than a case it branches on.
+    assert!(seats(&model, &h.ws, "ghost").is_empty());
+    assert!(seats(&model, std::path::Path::new("/no/such"), "c-1").is_empty());
 }
 
 #[test]
-fn the_in_flight_strip_follows_the_focused_conversation() {
-    // The frame's wall clock, minted by the shell and handed in (§5.1 #28's
-    // elapsed ticks off it, so the model itself stays clock-free).
+fn the_in_flight_strip_follows_the_conversation() {
+    // The clock the elapsed segment is stamped against — the answer takes it,
+    // so the derivation itself stays clock-free.
     let now = 1_800_000_000;
     let h = Harness::new();
     let (_c, mut model) = h.model();
+    let strip = |m: &Rig, ws: &std::path::Path, id: &str, now| {
+        crate::test_support::chrome::detail(m, ws, id, now).and_then(|view| view.strip)
+    };
+    // A settled conversation: answered, and still no strip — §7.2's promise
+    // that an idle window pays nothing.
     assert!(
-        model.flight_strip(now).is_none(),
-        "nothing selected, no strip"
+        strip(&model, &h.ws, "c-1", now).is_none(),
+        "at rest, no strip"
     );
-    // A settled conversation: selected, snapshotted, and still no strip —
-    // §7.2's promise that an idle window pays nothing.
-    model.focus_agent(&h.ws, "c-1");
-    assert!(model.flight_strip(now).is_none(), "at rest, no strip");
     // The same conversation with a model call open. The state needs a held
     // flock no fixture can take, so the row is injected and published exactly
     // as a real derivation would have handed it over.
@@ -199,21 +195,22 @@ fn the_in_flight_strip_follows_the_focused_conversation() {
     streaming.call_start_unix = Some(now - 42);
     model.deriver.trees.get_mut(&h.ws).unwrap().agents = vec![streaming];
     model.publish();
-    let strip = model.flight_strip(now).unwrap();
-    assert_eq!(strip.class, crate::nav::convs::Flight::Inference);
+    let open = strip(&model, &h.ws, "c-1", now).expect("a call is open");
+    assert_eq!(open.class, crate::nav::convs::Flight::Inference);
     // No `stench-pug` segment: the streaming member IS the conversation, whose
     // §11 heading names it two lines above the strip (bl-3f70).
-    assert_eq!(strip.facts, "2 chars streamed · 42s");
-    // The elapsed is recomputed per frame off the same snapshot fact — a later
-    // clock reads a longer call with nothing republished.
+    assert_eq!(open.facts, "2 chars streamed · 42s");
+    // The elapsed is recomputed off the same snapshot fact at whatever clock
+    // the answer is derived on — a later ask reads a longer call with nothing
+    // republished.
     assert_eq!(
-        model.flight_strip(now + 18).unwrap().facts,
+        strip(&model, &h.ws, "c-1", now + 18)
+            .expect("still open")
+            .facts,
         "2 chars streamed · 1m"
     );
-    // A selected id the tree does not carry roots no conversation, and an
-    // unfetched workspace has no tree to ask.
-    model.focus_agent(&h.ws, "ghost");
-    assert!(model.flight_strip(now).is_none());
-    model.focus_agent(std::path::Path::new("/no/such"), "c-1");
-    assert!(model.flight_strip(now).is_none());
+    // An id the tree does not carry roots no conversation, and an unfetched
+    // workspace has no tree to ask.
+    assert!(strip(&model, &h.ws, "ghost", now).is_none());
+    assert!(strip(&model, std::path::Path::new("/no/such"), "c-1", now).is_none());
 }

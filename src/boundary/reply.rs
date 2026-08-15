@@ -18,7 +18,6 @@
 //! the window reads.
 
 use crate::actions::verbs::Outcome;
-use crate::binding::WorkspaceKind;
 use crate::board::Board;
 use crate::nav::convs::ConvRow;
 use crate::opslog::OpRow;
@@ -49,30 +48,13 @@ pub(crate) mod rows;
 /// The search reply's own address-flattening — split at the same budget.
 mod search;
 
+/// The one listing row the boundary itself owns — its own file at §12's budget
+/// (bl-296f), for the reason its own doc gives.
+mod ws_row;
+
 pub use decode::decode;
 pub use encode::{encode, refusal};
-
-/// One workspace row (§3.1 classification + the §6 rollups the tab bar shows):
-/// the [`Query::Workspaces`](super::Query::Workspaces) answer's element.
-///
-/// **It names the workspace, it does not locate it** (REMOTE §8, bl-f5f6). It
-/// carried the whole [`Workspace`] — path and all — and a path is meaningless
-/// on a thin client and a disclosure besides. §3.1 makes the leaf the name, so
-/// the `name` this row used to carry *beside* the path became the row's whole
-/// identity and the path went.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct WsRow {
-    /// The workspace's name (§3.1) — the token every gesture addresses it by.
-    pub workspace: String,
-    /// How §3.1 classifies it: yog's own, lernie's, or a read-only replay.
-    pub kind: WorkspaceKind,
-    /// Attention-bearing agents in it (§6).
-    pub attention: usize,
-    /// Root-and-member agent count.
-    pub agents: usize,
-    /// Whether anything in it is Live/InFlight right now.
-    pub running: bool,
-}
+pub use ws_row::WsRow;
 
 /// The typed answer a gesture earns. Exhaustive over the boundary's outcomes;
 /// an error path is the `Err(String)` beside it, encoded by [`refusal`].

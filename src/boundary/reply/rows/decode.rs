@@ -77,6 +77,7 @@ pub(crate) fn ws_row(v: &Value) -> Result<WsRow, String> {
         attention: usize_of(o, "attention")?,
         agents: usize_of(o, "agents")?,
         running: bool_of(o, "running")?,
+        pinned: opt(o, "pinned", usize_of)?,
     })
 }
 

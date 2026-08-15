@@ -72,7 +72,7 @@ fn s6_t4_rollups_sum_and_jump_to_next_wraps_without_sticking() {
     assert!(m.workspace_stats(&alpha).0 > 0);
     assert!(m.workspace_stats(&charlie).0 == 0);
     // The strip total is their sum across every workspace.
-    assert_eq!(m.strip_total(), 3, "2 + 1 + 0");
+    assert_eq!(crate::support::strip_total(&m), 3, "2 + 1 + 0");
 
     // --- Jump-to-next walks the derived order across workspaces. The control
     // **acknowledges what it lands on** (§6.3: landing is acknowledging), so it
@@ -86,7 +86,7 @@ fn s6_t4_rollups_sum_and_jump_to_next_wraps_without_sticking() {
             m.focused_workspace().unwrap().clone(),
             m.focused_agent().unwrap().agent_id.clone(),
         ));
-        remaining.push(m.strip_total());
+        remaining.push(crate::support::strip_total(&m));
     }
     let mut names: Vec<&str> = visited.iter().map(|(_, a)| a.as_str()).collect();
     // Each flagged agent is visited exactly once — no repeats, nothing missed.
@@ -117,6 +117,6 @@ fn s6_t4_rollups_sum_and_jump_to_next_wraps_without_sticking() {
     // moving — which is not "sticking": there is no next signal to stick past.
     let before = m.focused_agent().map(|a| a.agent_id.clone());
     m.jump_next_attention();
-    assert_eq!(m.strip_total(), 0);
+    assert_eq!(crate::support::strip_total(&m), 0);
     assert_eq!(m.focused_agent().map(|a| a.agent_id.clone()), before);
 }

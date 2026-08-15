@@ -36,6 +36,12 @@ pub(super) fn ws_row(row: &WsRow) -> Value {
     map.insert("attention".to_owned(), json!(row.attention));
     map.insert("agents".to_owned(), json!(row.agents));
     map.insert("running".to_owned(), json!(row.running));
+    // The §4.1 pin rank, **absent** rather than null for an unpinned workspace
+    // (bl-296f) — a reader must never have to tell "rank 0" from "not pinned",
+    // and rank 0 is the first hoisted tab.
+    if let Some(rank) = row.pinned {
+        map.insert("pinned".to_owned(), json!(rank));
+    }
     Value::Object(map)
 }
 

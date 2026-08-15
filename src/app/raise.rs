@@ -83,6 +83,46 @@ impl AppModel {
         self.focus_workspace(&naming::leaf(ws));
     }
 
+    /// **The claim at the ROW altitude** (REMOTE §9.7, bl-296f) — the same
+    /// optimism [`fold`] puts into a snapshot, folded instead into an answered
+    /// `Query::Workspaces` listing.
+    ///
+    /// Two projections of one fact, for [`rows::with_echo`](super::echo::rows)'
+    /// own reason and not a second one: the §11 tab bar reads a `Reply` now, so
+    /// it never sees the composed snapshot, and bl-adcb's *"a seat that reads
+    /// over a wire has no optimism"* taken as the last word would re-open
+    /// bl-9acf exactly — the bare Enter after a raise firing into the previous
+    /// wall, because the wall it was raised in has no tab and no resolvable
+    /// name. **A seat's optimism reaches whatever that seat actually reads**
+    /// (bl-44e9's ruling), and what this one reads is rows.
+    ///
+    /// The claim is retired against the same derivation this answer is made
+    /// from ([`adopt_raised`](Self::adopt_raised) reads `derived`), so the
+    /// listing can never carry one wall twice.
+    pub fn raised_rows(
+        &self,
+        mut rows: Vec<crate::boundary::reply::WsRow>,
+    ) -> Vec<crate::boundary::reply::WsRow> {
+        let Some(raised) = self.raised.as_ref() else {
+            return rows;
+        };
+        let name = naming::leaf(raised);
+        if rows.iter().any(|r| r.workspace == name) {
+            return rows;
+        }
+        rows.push(crate::boundary::reply::WsRow {
+            workspace: name.clone(),
+            kind: WorkspaceKind::Named { name },
+            // A wall raised one instant ago holds nothing and is pinned
+            // nowhere: the zeros are what it honestly has, not a placeholder.
+            attention: 0,
+            agents: 0,
+            running: false,
+            pinned: None,
+        });
+        rows
+    }
+
     /// Retire the claim once the derivation carries the wall — the echo's
     /// retirement predicate one noun up, asked every frame and free with
     /// nothing claimed. Run **before** the fold, so the painted snapshot can
