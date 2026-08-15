@@ -24,6 +24,7 @@
 use super::frame;
 use super::material::Material;
 use crate::registry::Client;
+use crate::registry::presence::Presence;
 use rustls::pki_types::CertificateDer;
 use rustls::{ServerConfig, ServerConnection, StreamOwned};
 use serde_json::Value;
@@ -61,7 +62,11 @@ pub struct Listener {
 
 impl Listener {
     /// Bind `m`'s address and serve `answerer` over mTLS until dropped.
-    pub fn bind(m: &Material, answerer: Arc<dyn Answerer>) -> Result<Self, String> {
+    pub fn bind(
+        m: &Material,
+        answerer: Arc<dyn Answerer>,
+        presence: Presence,
+    ) -> Result<Self, String> {
         let config = super::tls::server_config(m)?;
         let tcp = TcpListener::bind(&m.address).map_err(|e| format!("bind {}: {e}", m.address))?;
         // The bound address, not the requested one: a `:0` in the file is a
@@ -75,7 +80,8 @@ impl Listener {
             .map_err(|e| format!("bind {address}: {e}"))?;
         let stop = Arc::new(AtomicBool::new(false));
         let flag = Arc::clone(&stop);
-        let handle = std::thread::spawn(move || accept_loop(&tcp, &config, &answerer, &flag));
+        let handle =
+            std::thread::spawn(move || accept_loop(&tcp, &config, &answerer, &presence, &flag));
         Ok(Self {
             address,
             stop,
@@ -106,6 +112,7 @@ fn accept_loop(
     tcp: &TcpListener,
     config: &Arc<ServerConfig>,
     answerer: &Arc<dyn Answerer>,
+    presence: &Presence,
     stop: &Arc<AtomicBool>,
 ) {
     while !stop.load(Ordering::Relaxed) {
@@ -113,9 +120,10 @@ fn accept_loop(
             Ok((stream, _)) => {
                 let config = Arc::clone(config);
                 let answerer = Arc::clone(answerer);
+                let presence = presence.clone();
                 std::thread::spawn(move || {
                     let _ = stream.set_nonblocking(false);
-                    serve(stream, &config, answerer.as_ref());
+                    serve(stream, &config, answerer.as_ref(), &presence);
                 });
             }
             Err(_) => std::thread::sleep(ACCEPT_POLL),
@@ -125,11 +133,24 @@ fn accept_loop(
 
 /// One connection: handshake (inside the first read), then request → reply
 /// stream → terminator, until the peer goes away or a frame refuses.
-pub(crate) fn serve(tcp: TcpStream, config: &Arc<ServerConfig>, answerer: &dyn Answerer) {
+pub(crate) fn serve(
+    tcp: TcpStream,
+    config: &Arc<ServerConfig>,
+    answerer: &dyn Answerer,
+    presence: &Presence,
+) {
     let Ok(conn) = ServerConnection::new(Arc::clone(config)) else {
         return;
     };
     let mut tls = StreamOwned::new(conn, tcp);
+    // **Presence is this scope** (REMOTE §5, bl-4e08): the guard is taken when
+    // the connection first names its client and released when this function
+    // leaves, however it leaves — a clean close, a refused frame, a peer that
+    // vanished. There is no leave verb to forget, which is what makes
+    // "connected right now" true rather than aspirational. It cannot be taken
+    // any earlier: the handshake completes inside the first read, so before it
+    // there is no certificate to read an identity off.
+    let mut live = None;
     while let Ok(Some(request)) = frame::read_value(&mut tls) {
         // **The identity is derived per request, not held** (REMOTE §4,
         // bl-8bbc): the handshake completes inside the first read, so there is
@@ -141,6 +162,7 @@ pub(crate) fn serve(tcp: TcpStream, config: &Arc<ServerConfig>, answerer: &dyn A
         let Some(client) = peer_client(tls.conn.peer_certificates()) else {
             return;
         };
+        let _ = live.get_or_insert_with(|| presence.enter(&client));
         for chunk in answerer.answer(&client, request) {
             if frame::write_value(&mut tls, &chunk).is_err() {
                 return;

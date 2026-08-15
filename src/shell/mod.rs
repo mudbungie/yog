@@ -24,6 +24,7 @@ mod birth;
 mod board;
 mod bootstrap;
 mod center;
+mod clients;
 mod clock;
 mod config_edit;
 mod config_marks;

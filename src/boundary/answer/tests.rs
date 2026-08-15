@@ -35,6 +35,7 @@ fn deps(snap: Snapshot) -> Deps {
         yog_data_root: PathBuf::from("/data"),
         balls_state_root: PathBuf::from("/balls"),
         snapshot: Arc::new(snap),
+        caller: crate::boundary::dispatch::Caller::default(),
         mint_seed: 0,
     }
 }

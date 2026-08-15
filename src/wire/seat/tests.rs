@@ -1,6 +1,7 @@
 //! The terminal seat: what it sends, what it prints, and what it refuses.
 
 use super::*;
+use crate::registry::presence::Presence;
 use crate::test_support::wire::{material as fixture, mint};
 use crate::wire::server::{Answerer, Listener};
 use serde_json::json;
@@ -26,6 +27,7 @@ fn engine(ok: bool) -> (TempDir, crate::xdg::Env, Listener) {
     let listener = Listener::bind(
         &fixture(&dir, Role::Server, crate::test_support::wire::EPHEMERAL),
         Arc::new(Verdict(ok)),
+        Presence::default(),
     )
     .expect("bind");
     std::fs::write(dir.join(material::ADDRESS), listener.address()).expect("address");

@@ -39,6 +39,10 @@ fn every_query_variant_round_trips() {
         workspace: "ws".into(),
         provider: "acme".into(),
     }));
+    // REMOTE §5's roster (bl-4e08).
+    rt(Gesture::Ask(Query::Clients {
+        workspace: "ws".into(),
+    }));
     inspector_family();
 }
 

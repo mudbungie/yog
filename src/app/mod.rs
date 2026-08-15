@@ -142,6 +142,12 @@ pub struct AppModel {
     /// Which tail [`snap`](Self::snap) was folded from — the fold's other memo,
     /// beside [`folded`](Self::folded) and for the same reason.
     followed: Option<Arc<LiveTail>>,
+    /// Which clients hold a live wire connection right now (REMOTE §5,
+    /// bl-4e08) — the listener's own RAM, held by handle so the §11 clients
+    /// section paints the flap. Default until the engine hands the real one
+    /// over: a model with no engine behind it has no connections, which is the
+    /// same posture as a box with no wire.
+    presence: crate::registry::presence::Presence,
 }
 
 impl AppModel {
@@ -187,6 +193,7 @@ impl AppModel {
             started: None,
             tail: TailCell::default(),
             followed: None,
+            presence: crate::registry::presence::Presence::default(),
         };
         model.focus = model.startup_focus(initial_focus, &Arc::clone(&model.snap).workspaces);
         (model, deriver)

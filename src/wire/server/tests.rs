@@ -2,12 +2,17 @@
 //! gets instead of an answer.
 
 use super::*;
+use crate::registry::presence::Presence;
 use crate::test_support::wire::{material, mint};
 use crate::wire::client::Seat;
 use crate::wire::material::Role;
 use serde_json::json;
 use std::sync::atomic::AtomicUsize;
 use tempfile::TempDir;
+
+/// REMOTE §5's live half (bl-4e08), split off at §12's cap: everything here is
+/// the listener's own contract, and that is the presence it keeps beside it.
+mod presence;
 
 /// An answerer that counts what it was asked and echoes it back inside a
 /// reply-shaped envelope — the boundary's own shape without the boundary.
@@ -45,6 +50,7 @@ fn wired(chunks: usize) -> (TempDir, Listener, Seat, Arc<AtomicUsize>) {
             asked: Arc::clone(&asked),
             chunks,
         }),
+        Presence::default(),
     )
     .expect("bind");
     let seat = Seat::open(&material(tmp.path(), Role::Client, &listener.address())).expect("seat");
@@ -94,6 +100,7 @@ fn an_uncertificated_peer_is_refused_by_tls() {
             asked: Arc::clone(&asked),
             chunks: 1,
         }),
+        Presence::default(),
     )
     .expect("bind");
     // A plain TCP peer speaking JSON at a TLS socket: the bytes are never a
@@ -128,6 +135,7 @@ fn a_foreign_certificate_is_refused() {
             asked: Arc::clone(&asked),
             chunks: 1,
         }),
+        Presence::default(),
     )
     .expect("bind");
     // The stranger's own CA and leaf: a complete, valid, wrong identity. Its
@@ -177,6 +185,7 @@ fn an_unusable_config_drops_the_connection() {
                 asked: Arc::new(AtomicUsize::new(0)),
                 chunks: 1,
             },
+            &Presence::default(),
         );
     });
     drop(TcpStream::connect(address).expect("connect"));
@@ -204,6 +213,7 @@ fn an_unbindable_address_refuses() {
             asked: Arc::new(AtomicUsize::new(0)),
             chunks: 1,
         }),
+        Presence::default(),
     )
     .err()
     .expect("refused");
@@ -227,6 +237,7 @@ fn unusable_material_refuses_before_binding() {
                 asked: Arc::new(AtomicUsize::new(0)),
                 chunks: 1,
             }),
+            Presence::default(),
         )
         .is_err()
     );

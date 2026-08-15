@@ -202,6 +202,7 @@ impl AppModel {
             // machine-facing query may not be decided by a fact that is only
             // optimistic.
             snapshot: std::sync::Arc::clone(&self.derived),
+            caller: crate::boundary::dispatch::Caller::default(),
             mint_seed: 0,
         }
     }

@@ -41,6 +41,15 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
                 workspace: args::workspace(ctx, verb)?,
             }))
         }
+        // REMOTE §5's roster (bl-4e08): who is registered in the seat's own
+        // workspace, who is live, and what each advertises. Scoped by the seat
+        // exactly as `/providers` is.
+        "clients" => {
+            args::none(tail, verb)?;
+            Ok(ask(Query::Clients {
+                workspace: args::workspace(ctx, verb)?,
+            }))
+        }
         // The §9.3 browse (bl-dff8): the lineages of the seat's own workspace
         // and the files each tip holds — what `/config branch <lineage> <path>`
         // then reads a file out of. Scoped by the seat like `/providers`.

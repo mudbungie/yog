@@ -34,6 +34,11 @@ pub fn side_panel(
     super::conv_list::conversations(ui, model, state, lernie, bl);
     ui.separator();
     balls_section(ui, model, state, lernie, bl);
+    // The workspace's registered clients (REMOTE §5, bl-4e08): who participates
+    // in it, who is connected right now, and what each offers. It sits with the
+    // balls section because both answer "what does this workspace have", and it
+    // paints nothing at all where nothing is registered.
+    super::clients::section(ui, model, state);
     ui.separator();
     // The entries that focus the center's Config and Login tabs (§11, §8.3).
     // They **focus**, never toggle: since bl-1ca2 both are tab focuses — named

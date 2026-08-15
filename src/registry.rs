@@ -9,6 +9,7 @@
 //!
 //! ```text
 //! <yog-state-root>/clients/<client>/pane.json          the §7 pane-of-glass facts
+//! <yog-state-root>/clients/<client>/tools.json         the §5 advertised set (bl-4e08)
 //! <yog-state-root>/clients/<client>/workspaces/<name>   one empty file per registration
 //! ```
 //!
@@ -38,6 +39,14 @@ use std::path::{Path, PathBuf};
 
 /// The certificate leaf name → client identity fold (REMOTE §2).
 pub mod leaf;
+/// Which clients hold a live connection right now (REMOTE §5) — RAM, never a
+/// file, because presence changes with every network blip.
+pub mod presence;
+/// The workspace's registered clients joined with their presence and their
+/// advertised sets (REMOTE §5) — the one derivation both seats render.
+pub mod roster;
+/// What a tool host advertises, and the document it lands in (REMOTE §5).
+pub mod tools;
 
 /// The reserved identity of the window and every other in-world caller.
 pub const LOCAL: &str = "local";
@@ -55,6 +64,15 @@ pub const WORKSPACES: &str = "workspaces";
 /// contain a separator would let a certificate address the filesystem.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Client(String);
+
+/// **The default caller is the in-world one.** Every intake that carries no
+/// certificate is `local` (§3), so the default is the identity rather than an
+/// empty string nothing could resolve — a gesture always has a caller.
+impl Default for Client {
+    fn default() -> Self {
+        Self::local()
+    }
+}
 
 impl Client {
     /// The in-world identity: the window, the deposit inbox, `yog gesture`.

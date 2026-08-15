@@ -17,6 +17,7 @@
 use std::path::Path;
 use std::sync::Arc;
 use yog::multiplex::dispatch;
+use yog::registry::presence::Presence;
 use yog::wire::server::{Answerer, Listener};
 
 fn set(key: &str, value: &Path) {
@@ -75,7 +76,7 @@ fn yog_seat_sends_over_the_wire_and_exits_on_the_reply() {
     let material = yog::wire::material::read(&world, yog::wire::material::Role::Server)
         .unwrap()
         .unwrap();
-    let listener = Listener::bind(&material, Arc::new(Yes)).unwrap();
+    let listener = Listener::bind(&material, Arc::new(Yes), Presence::default()).unwrap();
     std::fs::write(dir.join("address"), listener.address()).unwrap();
 
     // A bad envelope never reaches the wire.

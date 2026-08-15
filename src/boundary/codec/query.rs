@@ -83,6 +83,9 @@ pub(super) fn encode(query: &Query) -> Value {
         Query::Providers { workspace } => {
             json!({ "op": "providers", "workspace": workspace })
         }
+        Query::Clients { workspace } => {
+            json!({ "op": "clients", "workspace": workspace })
+        }
         Query::Lineages { workspace } => {
             json!({ "op": "lineages", "workspace": workspace })
         }
@@ -152,6 +155,11 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
             workspace: str_of(o, "workspace")?,
         },
         "providers" => Query::Providers {
+            workspace: str_of(o, "workspace")?,
+        },
+        // REMOTE §5's roster (bl-4e08): who is registered here, who is live,
+        // and what each advertises.
+        "clients" => Query::Clients {
             workspace: str_of(o, "workspace")?,
         },
         "lineages" => Query::Lineages {

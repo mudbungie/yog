@@ -49,6 +49,7 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Acked => json!({ "ok": true, "kind": "acked" }),
         Reply::TrailCleared => json!({ "ok": true, "kind": "trail-cleared" }),
         Reply::Applied => json!({ "ok": true, "kind": "applied" }),
+        Reply::Advertised => json!({ "ok": true, "kind": "advertised" }),
         // The branch, and only the branch (REMOTE §8, bl-ccf7): the space it is
         // a branch of is a pure function of the workspace the gesture named, so
         // saying it here would be that name spelled a second time, as a path.
@@ -106,6 +107,9 @@ pub fn encode(reply: &Reply) -> Value {
         // yog knows — brazen publishes an id and a default flag, and which one
         // is default is a `providers.yaml` question, not a roster one (§9.4).
         Reply::Models(ids) => rows_reply("models", ids.iter().map(|id| json!(id))),
+        // The tool set rides in its ONE spelling (`registry::tools::encode`),
+        // the same bytes the client's own document holds (REMOTE §5, bl-4e08).
+        Reply::Clients(rows) => rows_reply("clients", rows.iter().map(client_row)),
     }
 }
 
@@ -127,6 +131,13 @@ fn provider_row(row: &crate::config_edit::brazen::ProviderRowView) -> Value {
 fn help_row(row: &crate::boundary::help::HelpRow) -> Value {
     json!({ "verb": row.verb, "usage": row.usage,
             "summary": row.summary, "detail": row.detail })
+}
+
+/// One registered client as every seat renders it (REMOTE §5): its identity,
+/// whether it is connected right now, and what it advertises.
+fn client_row(row: &crate::registry::roster::ClientRow) -> Value {
+    json!({ "client": row.client, "present": row.present,
+            "tools": crate::registry::tools::encode(&row.tools) })
 }
 
 fn rows_reply(kind: &str, rows: impl Iterator<Item = Value>) -> Value {

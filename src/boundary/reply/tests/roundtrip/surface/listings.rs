@@ -248,5 +248,28 @@ pub(super) fn listings() -> Vec<Reply> {
             files: vec!["workflow.yaml".into()],
         }]),
         Reply::Models(vec!["opus".into(), "sonnet".into()]),
+        // REMOTE §5's roster (bl-4e08): both presence arms, a client that
+        // advertises and one that has not, and a schema deep enough that a
+        // codec rebuilding it rather than carrying it verbatim would show.
+        Reply::Clients(vec![
+            crate::registry::roster::ClientRow {
+                client: "laptop".into(),
+                present: true,
+                tools: vec![crate::registry::tools::Tool {
+                    name: "Bash".into(),
+                    description: "run a command".into(),
+                    input_schema: serde_json::json!({
+                        "type": "object",
+                        "properties": {"command": {"type": "string", "minLength": 1}},
+                        "required": ["command"],
+                    }),
+                }],
+            },
+            crate::registry::roster::ClientRow {
+                client: "phone".into(),
+                present: false,
+                tools: Vec::new(),
+            },
+        ]),
     ]
 }

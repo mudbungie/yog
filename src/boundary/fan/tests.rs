@@ -78,6 +78,7 @@ impl World {
                 snap.projects = vec![self.project.clone(), self.dir.path().join("not-a-repo")];
                 snap
             }),
+            caller: crate::boundary::dispatch::Caller::default(),
             mint_seed: 7,
         }
     }
