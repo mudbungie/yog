@@ -143,14 +143,21 @@ fn the_hovers_reach_the_paint_layer() {
     world.model.select_tab(crate::keymap::InspectorTab::Inbox);
     let ctx = egui::Context::default();
     ctx.memory_mut(|m| m.set_everything_is_visible(true));
-    let mut frame = || {
+    let frame = |world: &mut super::fixture::World| {
         let out = ctx.run(super::input(), |ctx| {
             render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
         });
         crate::paint_probe::text_of(&out)
     };
-    frame();
-    let painted = frame();
+    // The wire settled between frames (bl-44e9): a hover on a row of a migrated
+    // list only exists once that list's answer has landed.
+    frame(&mut world);
+    world.settle();
+    frame(&mut world);
+    world.settle();
+    frame(&mut world);
+    world.settle();
+    let painted = frame(&mut world);
     for phrase in [
         // The composer verbs — the question that opened this ball first. The
         // fixture's conversation is settled, so Stop is painted disabled and it

@@ -1,11 +1,21 @@
-//! The §11 **unfold** (bl-fa82): the conversation list's visible rows over the
-//! descent forest, given the shell's expanded set.
+//! The §11 **unfold** (bl-fa82; re-cut at the boundary's altitude by bl-44e9):
+//! the conversation list's rows over the descent forest, and the seat-side fold
+//! that picks the visible ones out of them.
 //!
 //! The reframe this module is: **a list row is the subtree rooted at its
 //! agent**, and the root-only list every earlier version painted is the
-//! all-collapsed case — [`super::build`] is literally this call with an empty
-//! set. Expansion reveals a row's direct children as rows of the same anatomy,
-//! recursively, so there is no second row kind and no child-rendering path.
+//! all-collapsed case — [`super::build`] is literally [`visible`] over the whole
+//! forest with an empty set. Expansion reveals a row's direct children as rows
+//! of the same anatomy, recursively, so there is no second row kind and no
+//! child-rendering path.
+//!
+//! **The derivation and the fold are two functions, and that is REMOTE §9.7's
+//! altitude ruling** (bl-44e9). [`forest_rows`] answers the whole forest with
+//! its per-row rollups — the shape a `Reply::Conversations` carries — and
+//! [`visible`] is the *seat's* pure selection out of that answer, over rows
+//! rather than over a snapshot. So the fold never crosses the boundary (DESIGN
+//! §8.5: *views gain no boundary representation*), one derivation still serves
+//! every seat, and a seat with no fold at all selects the root subset.
 //!
 //! Shaped after [`crate::jsonview::flatten`] one altitude out: a pre-order walk
 //! that stops descending at a node the caller's set does not name, with the set
@@ -30,30 +40,30 @@ use crate::git_tree::{Agent, DescentRow, descent_order};
 use crate::monitor::Check;
 use crate::ui_state::SeenKind;
 
-/// The §11 list as it is painted: every **visible** member of the workspace's
-/// descent forest, each projected over its own subtree.
+/// The §11 list at its **whole altitude**: every member of the workspace's
+/// descent forest, each projected over its own subtree, in paint order. The
+/// answer a `Reply::Conversations` carries (REMOTE §9.7) — no fold reaches it,
+/// because the fold is the seat's ([`visible`]).
 ///
 /// Order is §11's, both halves of it: depth-0 subtrees by **recency alone,
 /// descending, then root id** for the deterministic tail (I9, bl-cad5), and
 /// within a subtree the §2.3 descent order [`descent_order`] already yields
-/// (id-sorted siblings, each one's children directly beneath it).
-///
-/// `expanded` holds the agent ids whose children are shown; an empty set is the
-/// whole list collapsed, which is exactly [`super::build`].
-pub fn visible_rows(
+/// (id-sorted siblings, each one's children directly beneath it). Every fold of
+/// it is therefore a contiguous *subsequence*, which is what makes [`visible`] a
+/// selection rather than a second sort.
+pub fn forest_rows(
     agents: &[Agent],
     ws: &str,
     seen: &dyn Fn(SeenKind, &str, &str, &str) -> bool,
     now_unix: i64,
     ball: &dyn Fn(&str) -> ConvBall,
     checks: &[Check],
-    expanded: &HashSet<String>,
 ) -> Vec<ConvRow> {
     let mut convs: Vec<(i64, Vec<ConvRow>)> = Vec::new();
     for subtree in conversations(agents) {
         let mut rows = Vec::new();
         let mut last_active = 0;
-        for at in visible_indices(&subtree, agents, expanded) {
+        for at in 0..subtree.len() {
             let (t, r) = row(
                 agents,
                 slice_at(&subtree, at),
@@ -77,38 +87,36 @@ pub fn visible_rows(
     convs.into_iter().flat_map(|(_, rows)| rows).collect()
 }
 
-/// A conversation's root id — the sort's deterministic tie-break. Empty for the
-/// unreachable rowless conversation ([`conversations`] emits none).
-fn head_id(rows: &[ConvRow]) -> String {
-    rows.first().map(|r| r.root_id.clone()).unwrap_or_default()
-}
-
-/// Which positions of one conversation's pre-order `subtree` are visible: the
-/// root always, and a row's children only while the row's id is in `expanded`.
-/// A collapsed row hides its whole descent — the cut is by **depth**, so one
-/// pass over the pre-order walk needs no recursion and no stack.
-fn visible_indices(
-    subtree: &[DescentRow],
-    agents: &[Agent],
-    expanded: &HashSet<String>,
-) -> Vec<usize> {
+/// **The seat's fold** (REMOTE §9.7): the rows of an answered forest that this
+/// viewport's `expanded` set makes visible, in the order the answer gave them.
+///
+/// A row is painted unless some ancestor of it is shut, and the cut is by
+/// **depth** — pre-order says a row's ancestors are exactly the shallower rows
+/// above it — so one pass needs no recursion, no stack and no snapshot. A row
+/// whose id the set does not name closes over its whole descent; an empty set is
+/// therefore the root subset, which is the all-collapsed list a seat with no
+/// viewport at all reads.
+pub fn visible(rows: &[ConvRow], expanded: &HashSet<String>) -> Vec<ConvRow> {
     let mut out = Vec::new();
     // The depth of the collapsed row we are currently skipping beneath, if any.
     let mut cut: Option<usize> = None;
-    for (at, r) in subtree.iter().enumerate() {
+    for r in rows {
         match cut {
             Some(depth) if r.depth > depth => continue,
             _ => cut = None,
         }
-        out.push(at);
-        if !agents
-            .get(r.index)
-            .is_some_and(|a| expanded.contains(&a.agent_id))
-        {
+        out.push(r.clone());
+        if !expanded.contains(&r.root_id) {
             cut = Some(r.depth);
         }
     }
     out
+}
+
+/// A conversation's root id — the sort's deterministic tie-break. Empty for the
+/// unreachable rowless conversation ([`conversations`] emits none).
+fn head_id(rows: &[ConvRow]) -> String {
+    rows.first().map(|r| r.root_id.clone()).unwrap_or_default()
 }
 
 /// The contiguous pre-order slice rooted at `subtree[at]`: that row, then every

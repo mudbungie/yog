@@ -1,6 +1,12 @@
 //! Tables for the query chokepoint (§8.5): each family answered from a
 //! hand-built snapshot, the same derivations the frame's view-models delegate
 //! to — parity is the shared implementation, and these pin its behaviour.
+//!
+//! The §3.6 unmaking's own derivations are in [`confirm`], beside the module
+//! they exercise — split off at §12's cap on the seam this directory already
+//! has (`answer::confirm` is its own file).
+
+mod confirm;
 
 use super::*;
 use crate::boundary::tests::{agent, bound_row, snapshot};
@@ -39,8 +45,11 @@ fn deps(snap: Snapshot) -> Deps {
     }
 }
 
+/// REMOTE §9.7's altitude ruling (bl-44e9): the answer is the whole descent
+/// forest with its per-row rollups, and the all-collapsed list every seat used
+/// to be handed is the **root subset** a seat selects out of it.
 #[test]
-fn conversations_are_the_frames_own_rows_aimed_by_parameter() {
+fn conversations_answer_the_whole_forest_and_the_seat_folds_it() {
     let snap = snapshot(
         &ws(),
         "alba",
@@ -52,9 +61,25 @@ fn conversations_are_the_frames_own_rows_aimed_by_parameter() {
         vec![],
     );
     let rows = conversations(&snap, &ui(), &ws(), 200);
-    assert_eq!(rows.len(), 2, "one row per root");
-    assert_eq!(rows[0].root_id, "c-1");
-    assert_eq!(rows[0].members, 2);
+    assert_eq!(
+        rows.iter().map(|r| r.root_id.as_str()).collect::<Vec<_>>(),
+        ["c-1", "c-1-w-1", "c-2"],
+        "every member of the forest, in paint order"
+    );
+    assert_eq!(
+        rows[0].members, 2,
+        "the rollup is the subtree's, not the fold's"
+    );
+    // No expanded set crosses, so the answer carries none: a seat holding no
+    // fold selects the roots, which is the list this query used to answer.
+    let collapsed = crate::nav::convs::visible(&rows, &std::collections::HashSet::new());
+    assert_eq!(
+        collapsed
+            .iter()
+            .map(|r| r.root_id.as_str())
+            .collect::<Vec<_>>(),
+        ["c-1", "c-2"]
+    );
     assert!(conversations(&snap, &ui(), Path::new("/other"), 200).is_empty());
 }
 
@@ -188,39 +213,6 @@ fn names_in_reads_the_name_fact_children_included() {
         ["pale-otter", "brave-fox", "quiet-heron"]
     );
     assert!(names_in(&snap, Path::new("/other")).is_empty());
-}
-
-#[test]
-fn the_confirmation_derives_for_yogs_own_and_refuses_the_rest() {
-    let project = PathBuf::from("/proj");
-    let mut delivered = bound_row(&project, "bl-2", &ws(), "alba");
-    delivered.state = JoinState::Delivered;
-    let snap = snapshot(
-        &ws(),
-        "alba",
-        vec![agent("c-1", AgentState::Stopped, 1)],
-        vec![bound_row(&project, "bl-1", &ws(), "alba"), delivered],
-    );
-    let confirm = confirmation_of(&snap, &ws()).expect("named");
-    assert_eq!(confirm.name, "alba");
-    assert_eq!(
-        confirm.ball_ids(),
-        ["bl-1"],
-        "only the live Bound claim releases — the Delivered row is the obituary"
-    );
-    assert!(!confirm.refused(), "a stopped conversation is not live");
-    assert!(confirmation_of(&snap, Path::new("/other")).is_none());
-}
-
-#[test]
-fn a_foreign_workspace_earns_no_confirmation() {
-    use crate::binding::{Workspace, WorkspaceKind};
-    let mut snap = snapshot(&ws(), "alba", vec![], vec![]);
-    snap.workspaces = vec![Workspace {
-        path: ws(),
-        kind: WorkspaceKind::Foreign,
-    }];
-    assert!(confirmation_of(&snap, &ws()).is_none());
 }
 
 /// Help is answered from the interface, not the world: the same rows come back

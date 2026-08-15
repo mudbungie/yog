@@ -77,7 +77,8 @@ impl Screen {
         self.run(world, events)
     }
 
-    /// One frame of the real window, **with the acts it fired settled**.
+    /// One frame of the real window, **with the wire it spoke on settled** —
+    /// the acts it fired *and* the reads it declared.
     ///
     /// Since bl-1747 a gesture is posted rather than run (REMOTE §9.8), so its
     /// frame-side aftermath — a draft clearing, a workspace adopted, a seed
@@ -86,25 +87,46 @@ impl Screen {
     /// the first one's receipt arrives. A window pays that in ask periods; a
     /// drive would have to pay it in counted frames, at every call site, which
     /// is a fact about the transport leaking into every test that has nothing
-    /// to do with it. So it is paid here, once: answer what the frame posted,
-    /// paint again, and repeat while anything was answered. The loop terminates
-    /// because only a receipt can post an act, and nothing in the window posts
-    /// one unprompted.
+    /// to do with it. So it is paid here, once.
+    ///
+    /// **bl-44e9 extended it to the read half, which is the same ruling one
+    /// door over.** A migrated surface paints an answer that landed a round
+    /// trip later, so a drive that only settled acts saw every such surface
+    /// blank — and a beat asserting a row is *there* would have been failing
+    /// for the transport's reason rather than the window's. The loop settles
+    /// both to a fixed point: `World::settle` answers what is outstanding and
+    /// says whether anything **moved**, which for reads is the standing set
+    /// changing (every call answers the whole set, so "I answered something"
+    /// would never go false). It terminates for the acts' own reason — only a
+    /// receipt can post an act, and nothing posts one unprompted — and for the
+    /// reads' equivalent: a surface's questions are a function of state, and a
+    /// frame that changed no state declares the set it declared before.
     fn run(&self, world: &mut World, events: Vec<egui::Event>) -> egui::FullOutput {
         // The engine's spawns are the ones a posted act runs (REMOTE §9.8), so
         // this drive's fakes have to be the world's — a seat carries the
         // gesture and never a binary.
         world.substrate(&self.lernie, &self.bl);
         let mut out = self.paint(world, events);
-        while world.acts() {
-            // The receipts reach the model through its own frame duty
-            // (`AppModel::refresh` → `settle_acts`), which the app runs once
-            // per `update` — so a driven frame runs it too, or the answers sit
-            // in a channel nobody drained.
+        loop {
+            // The frame's own duty, which the app runs once per `update`: hand
+            // over what this frame declared and posted, and take what came back.
+            world.model.refresh();
+            let waiting = world.model.awaiting();
+            world.reads();
+            let acted = world.acts();
+            if !waiting && !acted {
+                return out;
+            }
+            // A landed **answer** reaches the frame on the refresh after the
+            // frame that kept its question standing — a `Link` may never be
+            // settled twice without a frame between, or the second settle
+            // declares nothing and drops the lot — so a read costs two passes
+            // where a **receipt** costs one. Paying both is the cheaper half
+            // idling, and the frame this returns is the settled one.
+            let _ = self.paint(world, Vec::new());
             world.model.refresh();
             out = self.paint(world, Vec::new());
         }
-        out
     }
 
     /// One frame, and nothing else.

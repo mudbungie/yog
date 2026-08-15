@@ -43,9 +43,7 @@ fn say(screen: &Screen, world: &mut World) {
 /// The §11 conversation rows `name` would paint right now — the list as the
 /// frame just built it, filtered to the one conversation under test.
 fn rows_named(world: &World, name: &str) -> Vec<crate::nav::convs::ConvRow> {
-    world
-        .model
-        .conversations(0)
+    crate::test_support::convs::conversations(&world.model, 0)
         .into_iter()
         .filter(|r| r.display_name() == name)
         .collect()

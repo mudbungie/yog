@@ -9,10 +9,11 @@
 //! windowless arm — in the one file `tarpaulin.toml` excludes, so the two
 //! copies were free to drift and no test could notice. Now there is one
 //! [`Engine::boot`] and two callers, and what a face adds beside it is exactly
-//! what the window is: an event loop to repaint ([`Repaint`]), a search thread
-//! ([`AppModel::searcher`] — the windowless face needs none, since every
-//! headless seat already answers a search off-frame), and the §5.3 RAM
-//! surfaces a pointer needs.
+//! what the window is: an event loop to repaint ([`Repaint`]), the three
+//! off-frame wire halves ([`Engine::window_wire`] — asker, poster and the §8.5
+//! searcher, which the windowless face needs none of, since every headless seat
+//! already answers in place and off-frame), and the §5.3 RAM surfaces a pointer
+//! needs.
 //!
 //! The engine spawns six threads and **no frame** — which is the §7.2
 //! invariant stated from the other side: everything yog does other than paint

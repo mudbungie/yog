@@ -22,10 +22,10 @@ use crate::transcript::Transcript;
 /// stated directly here because what this half tests is the seam, not the
 /// build.
 fn rail() -> Rail {
-    let notch = |seq: &str, oid: &str, tokens, cut| Notch {
+    let notch = |seq: &str, oid: &str, budget, cut| Notch {
         seq: seq.to_owned(),
         commit: Some(oid.to_owned()),
-        tokens,
+        budget,
         place: Some(Place {
             row: format!("tx/{seq}-user.md#0"),
             cut,
@@ -33,8 +33,11 @@ fn rail() -> Rail {
     };
     Rail {
         notches: vec![
+            // The notch's own figure is the ROLLUP as of it (bl-44e9): 5 spent
+            // by the first, 12 by the second — so a pin selects rather than
+            // sums.
             notch("001", "aaaa1111", 5, 1),
-            notch("002", "bbbb2222", 7, 3),
+            notch("002", "bbbb2222", 12, 3),
         ],
         cards: vec![],
     }

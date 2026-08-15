@@ -2,8 +2,9 @@
 //! the one thing a result is for — going there.
 //!
 //! The window's seat is asynchronous and the other two are not, and that is not
-//! two implementations: all three end in [`search::run`](crate::search::run).
-//! A frame derives nothing (§7.2), so here the query is *handed over* and the
+//! two implementations: all three end in [`search::run`](crate::search::run) —
+//! the window's by way of the wire since bl-44e9, the other two in place. A
+//! frame derives nothing (§7.2), so here the query is *handed over* and the
 //! frame renders whatever answer has landed — the same contract it already has
 //! with the derivation worker's snapshot. `yog gesture` and the deposit
 //! consumer are already off-frame and simply run it.
@@ -16,7 +17,7 @@
 
 use super::AppModel;
 use crate::keymap::InspectorTab;
-use crate::search::{Address, Found, Searcher};
+use crate::search::{Address, Found};
 
 impl AppModel {
     /// Ask (§8.5). Returns immediately: the searcher takes it, and a search
@@ -36,11 +37,13 @@ impl AppModel {
         self.search.searching()
     }
 
-    /// This instance's [`Searcher`], for the shell to spawn — the model never
-    /// starts its own thread, so a test can drive `pass()` by hand (the same
-    /// reason [`boot`](AppModel::boot) hands back a `Deriver`).
-    pub fn searcher(&self) -> Searcher {
-        Searcher::new(self.cell.clone(), self.search.clone())
+    /// This instance's ask cell, for the engine to build its
+    /// [`Searcher`](crate::search::Searcher) around (REMOTE §9.7, bl-44e9). The
+    /// searcher needs a **seat on the wire** now, which is the engine's to mint,
+    /// so the model hands over the half it owns and starts no thread — the same
+    /// reason [`boot`](AppModel::boot) hands back a `Deriver`.
+    pub(crate) fn search_cell(&self) -> crate::state::SearchCell {
+        self.search.clone()
     }
 
     /// Go to a hit: the selection a click on that thing would have made.

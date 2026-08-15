@@ -154,10 +154,16 @@ fn spell_query(query: &Query) -> String {
         Query::Transcript { .. } => "/transcript".to_owned(),
         Query::Steps { .. } => "/steps".to_owned(),
         Query::Step { seq, .. } => format!("/step {seq}"),
-        Query::Files { path, .. } => match path {
-            Some(path) => format!("/files {path}"),
-            None => "/files".to_owned(),
-        },
+        Query::Files { path, at, .. } => {
+            let pinned = at
+                .as_ref()
+                .map(|c| format!(" --at {c}"))
+                .unwrap_or_default();
+            match path {
+                Some(path) => format!("/files {path}{pinned}"),
+                None => format!("/files{pinned}"),
+            }
+        }
         Query::Rail { .. } => "/rail".to_owned(),
         Query::Agent { .. } => "/agent".to_owned(),
         Query::Inbox { .. } => "/inbox".to_owned(),

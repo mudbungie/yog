@@ -47,23 +47,20 @@ pub struct Pin {
 /// chat gave no seat — leaves the inspector on today's transcript. A notch
 /// with no commit names no tree, so it cannot pin: absence declines rather
 /// than guessing a neighbour's.
+///
+/// **Every field is read off the notch, none is derived here** (REMOTE §9.7,
+/// bl-44e9). The budget used to be summed over the prefix at this call; it is a
+/// rollup on the notch now, so a seat resolving a pin against an answered
+/// [`Rail`] *selects* and does not fold. That is the same move
+/// `Reply::Conversations` made one surface over, and it is what lets the pin
+/// stay a view (DESIGN §8.5) while everything it reads is answered.
 pub fn pin(rail: &Rail, selected: Option<usize>) -> Option<Pin> {
-    let index = selected?;
-    let notch = rail.notches.get(index)?;
-    let commit = notch.commit.clone()?;
-    let cut = notch.place.as_ref()?.cut;
-    let tokens = rail
-        .notches
-        .get(..=index)
-        .unwrap_or(&rail.notches)
-        .iter()
-        .map(|n| n.tokens)
-        .sum();
+    let notch = rail.notches.get(selected?)?;
     Some(Pin {
-        commit,
+        commit: notch.commit.clone()?,
         short: notch.short(),
-        tokens,
-        cut,
+        tokens: notch.budget,
+        cut: notch.place.as_ref()?.cut,
     })
 }
 

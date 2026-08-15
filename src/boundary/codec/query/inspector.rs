@@ -38,10 +38,17 @@ pub(super) fn step(workspace: &str, agent: &str, seq: &str) -> Value {
 }
 
 /// The Files read: the address, plus the path when one file's bytes are asked
-/// for. Absent is the listing — the [`WorkDiff`](Query::WorkDiff) shape.
-pub(super) fn files(workspace: &str, agent: &str, path: Option<&String>) -> Value {
+/// for and the commit when a tree other than the worktree is. Absent is the
+/// listing of the live worktree — the [`WorkDiff`](Query::WorkDiff) shape.
+pub(super) fn files(
+    workspace: &str,
+    agent: &str,
+    path: Option<&String>,
+    at: Option<&String>,
+) -> Value {
     let mut map = at_map("files", workspace, agent);
     opt_field(&mut map, "path", path);
+    opt_field(&mut map, "at", at);
     Value::Object(map)
 }
 
@@ -73,6 +80,7 @@ pub(super) fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, St
                 workspace,
                 agent,
                 path: opt_str_of(o, "path")?,
+                at: opt_str_of(o, "at")?,
             }
         }
         "rail" => {

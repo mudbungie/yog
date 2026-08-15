@@ -11,8 +11,9 @@
 //! after bl-fa82 the conversation list renders that same membership itself, so
 //! the tree was a second rendering of one fact on the same screen. The story is
 //! unchanged — it is about the descent being derived rather than registered —
-//! and it now reads the surface that survived, `visible_conversations` over the
-//! expanded set, instead of the one that was deleted.
+//! and it now reads the surface that survived — the boundary's forest answer
+//! folded by an expanded set (`support::conversations`, REMOTE §9.7) — instead
+//! of the one that was deleted.
 
 #![allow(clippy::unwrap_used)]
 
@@ -29,7 +30,7 @@ use yog::{AppModel, Roots};
 /// title of its own.
 fn subtree_rows(m: &AppModel, root: &str, open: &[&str]) -> Vec<convs::ConvRow> {
     let open: std::collections::HashSet<String> = open.iter().map(|s| (*s).to_owned()).collect();
-    m.visible_conversations(9000, &open)
+    crate::support::conversations(m, 9000, &open)
         .into_iter()
         .filter(|r| r.root_id.starts_with(root))
         .collect()
@@ -75,7 +76,7 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
     m.focus_workspace(&ws);
 
     // --- Before: two lone roots. Neither grows a tree.
-    let rows = m.conversations(9000);
+    let rows = crate::support::conversation_rows(&m, 9000);
     assert_eq!(rows.len(), 2);
     for row in &rows {
         assert_eq!(row.members, 1, "{} is alone", row.root_id);
@@ -88,7 +89,7 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
         .into_iter()
         .collect();
     assert_eq!(
-        m.visible_conversations(9000, &all_open).len(),
+        crate::support::conversations(&m, 9000, &all_open).len(),
         2,
         "two lone roots stay two rows however wide the fold is opened"
     );
@@ -109,7 +110,7 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
 
     let mut m = boot(roots);
     m.focus_workspace(&ws);
-    let rows = m.conversations(9000);
+    let rows = crate::support::conversation_rows(&m, 9000);
     // Still TWO conversations — the descendants are members of b-001's, never
     // rows of their own.
     assert_eq!(rows.len(), 2, "descendants are members, not conversations");

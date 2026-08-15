@@ -68,7 +68,7 @@ fn model() -> (tempfile::TempDir, Fixture, AppModel) {
 
 /// The `ConvRow` for a given conversation root.
 fn ball_of(m: &AppModel, root: &str) -> Option<crate::nav::convs::ConvBall> {
-    m.conversations(1000)
+    crate::test_support::convs::conversations(m, 1000)
         .into_iter()
         .find(|r| r.root_id == root)
         .and_then(|r| r.ball)
@@ -132,7 +132,9 @@ fn conversation_ball_and_groups_expose_the_same_derived_join() {
         "an unknown root has no ball"
     );
     // The grouped view heads each ball over its conversations, unassociated last.
-    let groups = m.conversation_groups(1000, &std::collections::HashSet::new());
+    let groups = crate::nav::convs::group::group_by_ball(
+        crate::test_support::convs::conversations(&m, 1000),
+    );
     let work = groups
         .iter()
         .find(|g| g.ball.as_ref().map(|b| b.id.as_str()) == Some("bl-work"))

@@ -50,11 +50,14 @@ fn every_conversation_read_round_trips() {
         rt(Gesture::Ask(query));
     }
     for path in [None, Some("src/a.rs".to_owned())] {
-        rt(Gesture::Ask(Query::Files {
-            workspace: workspace.clone(),
-            agent: agent.clone(),
-            path,
-        }));
+        for at in [None, Some("abcdef1234".to_owned())] {
+            rt(Gesture::Ask(Query::Files {
+                workspace: workspace.clone(),
+                agent: agent.clone(),
+                path: path.clone(),
+                at,
+            }));
+        }
     }
 }
 

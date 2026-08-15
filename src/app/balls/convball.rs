@@ -65,20 +65,6 @@ impl AppModel {
         self.ws_balls(ws).into_iter().find(|b| b.id == id)
     }
 
-    /// The §11 grouped-by-ball conversation view: the flat conversation list
-    /// ([`Self::visible_conversations`]) partitioned so each start-flow ball
-    /// heads its conversations, unassociated last (§3.5, §15 Z9). The shell's
-    /// grouping toggle picks this or the flat list. It partitions the **visible**
-    /// rows and asserts no order of its own, so the unfold (bl-fa82) reaches
-    /// both organizing views without a second mechanism.
-    pub fn conversation_groups(
-        &self,
-        now_unix: i64,
-        expanded: &std::collections::HashSet<String>,
-    ) -> Vec<crate::nav::convs::group::ConvGroup> {
-        crate::nav::convs::group::group_by_ball(self.visible_conversations(now_unix, expanded))
-    }
-
     /// The ball a conversation `root_id` stamped in its `goal.md` (§3.3), resolved
     /// through the §3.5 join — the header's ball (title/status, a link to ball
     /// detail). `None` for a root with no stamp (bare/path) or one absent from the

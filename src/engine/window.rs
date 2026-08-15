@@ -29,6 +29,13 @@ use std::sync::Arc;
 pub struct WindowWire {
     _asker: crate::wire::asker::AskerThread,
     _poster: std::thread::JoinHandle<()>,
+    /// The §8.5 searcher, here since bl-44e9 because its read crosses the wire
+    /// too (REMOTE §9.7) — a third half of one hand-over, on the same seat mint
+    /// and the same failure condition. Its own thread, and §9.7 ruled that it
+    /// stays one: a search walks every transcript in the world, so riding the
+    /// asker would make a once-per-ask walk a 2 Hz one and put it in front of
+    /// every other surface's answer.
+    _searcher: crate::search::SearchThread,
 }
 
 impl Engine {
@@ -39,6 +46,7 @@ impl Engine {
         Some(WindowWire {
             _asker: self.asker(world)?.spawn(),
             _poster: self.poster(world)?.spawn(),
+            _searcher: self.searcher(world)?.spawn(),
         })
     }
 
@@ -82,6 +90,20 @@ impl Engine {
             self.window_seat(world)?,
             self.post_end.take()?,
             Arc::clone(&self.repaint),
+        ))
+    }
+
+    /// **The window's searcher** (§8.5; REMOTE §9.7, bl-44e9): the third thread
+    /// on the same mint, asking `Query::Search` over the wire instead of walking
+    /// this instance's own snapshot.
+    ///
+    /// It takes nothing, unlike the two above: the ask cell is a value the model
+    /// shares rather than an end handed over once, because a search has no
+    /// exactly-once obligation — a superseded answer is discarded on publish.
+    pub fn searcher(&mut self, world: &Env) -> Option<crate::search::Searcher> {
+        Some(crate::search::Searcher::new(
+            self.window_seat(world)?,
+            self.model.search_cell(),
         ))
     }
 

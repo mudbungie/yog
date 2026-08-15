@@ -105,6 +105,7 @@ fn every_conversation_read_answers_from_the_chokepoint() {
                 workspace: crate::naming::leaf(&(address.0.clone())),
                 agent: address.1.clone(),
                 path: Some("goal.md".to_owned()),
+                at: None,
             },
             "files",
         ),
@@ -147,6 +148,7 @@ fn the_chokepoint_answers_the_bytes_and_not_just_a_kind() {
         workspace: crate::naming::leaf(ws),
         agent: AGENT.to_owned(),
         path: Some("goal.md".to_owned()),
+        at: None,
     }));
     assert_eq!(files["preview"]["text"], "ship it");
     // And the reply the GUI holds is the same value, not a second derivation.
@@ -155,6 +157,7 @@ fn the_chokepoint_answers_the_bytes_and_not_just_a_kind() {
             workspace: crate::naming::leaf(ws),
             agent: AGENT.to_owned(),
             path: None,
+            at: None,
         }),
         Reply::Files { preview: None, .. }
     ));

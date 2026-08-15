@@ -117,8 +117,15 @@ fn startup_focus_falls_back_to_first_when_nothing_needs_attention() {
     assert_eq!(model.focused_workspace(), None);
     // With no focus and an empty roster, the read-only queries are empty and the
     // jump is a no-op (the general empty path, not a special case).
-    assert!(model.conversations(10).is_empty(), "no focus: no rows");
+    assert!(
+        crate::test_support::convs::conversations(&model, 10).is_empty(),
+        "no focus: no rows"
+    );
     assert!(!model.focused_is_replay());
+    // An unfocused window echoes nothing onto an answered list either: an echo
+    // belongs to the workspace it was fired in, and there is none to compare
+    // against (REMOTE §9.7, bl-44e9).
+    assert!(model.echoed(Vec::new(), 10).is_empty());
     model.jump_next_attention();
     assert_eq!(model.focused_workspace(), None, "nothing to jump onto");
 }

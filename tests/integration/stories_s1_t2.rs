@@ -72,8 +72,8 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
     a.focus_workspace(&ws);
     b.focus_workspace(&ws);
     assert_eq!(
-        a.conversations(1000),
-        b.conversations(1000),
+        crate::support::conversation_rows(&a, 1000),
+        crate::support::conversation_rows(&b, 1000),
         "conversation lists diverged across a restart"
     );
 }

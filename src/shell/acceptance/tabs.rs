@@ -169,7 +169,7 @@ fn no_tab_lays_off_window_at_either_capture() {
         // With an answer landed the strip is at its widest — all four peers —
         // which is the case the minimum window has to hold.
         world.model.search("hello");
-        world.model.searcher().pass();
+        world.searches();
         let ctx = egui::Context::default();
         let raw = crate::paint_probe::screen_sized(w, h);
         let mut out = None;

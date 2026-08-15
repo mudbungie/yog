@@ -136,6 +136,14 @@ impl super::AppModel {
         self.wire.ask(question)
     }
 
+    /// Whether any standing question is still unanswered — a **driven** frame's
+    /// settle condition and nothing else's (bl-44e9); the window itself never
+    /// asks, because a surface paints what it has.
+    #[cfg(test)]
+    pub fn awaiting(&self) -> bool {
+        self.wire.awaiting()
+    }
+
     /// This instance's [`Follower`], for the engine to spawn — the model never
     /// starts its own thread, so a test drives [`Follower::pass`] by hand (the
     /// same reason [`boot`](Self::boot) hands back a `Deriver`).

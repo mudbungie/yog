@@ -29,9 +29,13 @@ fn the_frame_hands_search_over_and_renders_the_landed_answer() {
     assert_eq!(ask("ws"), Found::default(), "nothing has landed yet");
     assert!(model.searching(), "the ask is outstanding");
 
-    // The searcher this instance hands out, driven by hand — the model spawns
-    // no thread of its own.
-    assert!(model.searcher().pass(), "the pass answered the ask");
+    // The answer lands through the cell — which is where the searcher puts it
+    // and the only thing this seat can see of it. The searcher's own leg (it
+    // asks the *engine* now, REMOTE §9.7) is `search::worker`'s to prove; from
+    // here what matters is that the frame ran no walk and rendered what landed.
+    let cell = model.search_cell();
+    let (seq, text) = cell.pending().expect("the ask is outstanding");
+    cell.publish(seq, crate::search::run(model.derivation(), &text, &|| true));
     assert!(!model.searching());
     let found = model.found();
     assert!(

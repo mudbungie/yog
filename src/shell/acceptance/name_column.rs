@@ -54,16 +54,20 @@ fn the_titles_left_edge_is_the_same_on_a_flagged_row_and_a_quiet_one() {
     // Three frames: a panel is its default size on the frame it first appears,
     // so the settled third is the one the operator sees (as `super::painted`).
     let painted = {
-        let mut frame = || {
+        let frame = |world: &mut super::fixture::World| {
             ctx.run(input(), |ctx| {
                 render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
             })
         };
-        let _ = frame();
-        let _ = frame();
-        crate::paint_probe::painted_of(&frame())
+        // The wire settled between frames (bl-44e9): the column is painted off
+        // a `Reply::Conversations`, which lands a round trip later.
+        let _ = frame(&mut world);
+        world.settle();
+        let _ = frame(&mut world);
+        world.settle();
+        crate::paint_probe::painted_of(&frame(&mut world))
     };
-    let rows = world.model.conversations(now_unix());
+    let rows = crate::test_support::convs::conversations(&world.model, now_unix());
 
     // The fixture is honest: two rows, exactly one of them flagged.
     assert_eq!(rows.len(), 2, "two roots must reach the list: {rows:?}");

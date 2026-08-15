@@ -17,11 +17,9 @@
 //! snapshot back out of the config commit lernie just authored).
 
 use crate::config_edit::FileIo;
-use crate::ui_state::Clock;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, PoisonError};
-use std::time::{Duration, Instant};
+use std::sync::{Mutex, PoisonError};
 
 pub(crate) static SPAWN_LOCK: Mutex<()> = Mutex::new(());
 
@@ -60,81 +58,6 @@ pub(crate) fn spawn_guard() -> SpawnGuard {
     }
     SpawnGuard {
         lock: Some(SPAWN_LOCK.lock().unwrap_or_else(PoisonError::into_inner)),
-    }
-}
-
-/// Deterministic [`Clock`] over a shared instant the test advances by hand, so
-/// every debounce/sweep branch (§7.2) is exercised without sleeping. Handles
-/// cloned via [`FakeClock::handle`] (or `Clone`) share one instant — advancing
-/// any handle moves the clock every holder sees (a model and the test both read
-/// it, and an [`AppModel`](crate::AppModel) hands one to its sweep schedule).
-#[derive(Clone)]
-pub(crate) struct FakeClock {
-    at: Arc<Mutex<Instant>>,
-    /// How far each [`Clock::now`] read moves the clock **by itself**. Zero for
-    /// an ordinary fake, where only [`advance`](FakeClock::advance) moves time.
-    /// Non-zero makes the work *between* two reads take real time — the one way
-    /// to exercise §7.2's late-pass drift without a slow machine, since that
-    /// branch is precisely "the clock moved while a pass ran".
-    lurch: Duration,
-}
-
-impl FakeClock {
-    pub(crate) fn new() -> Self {
-        Self {
-            at: Arc::new(Mutex::new(Instant::now())),
-            lurch: Duration::ZERO,
-        }
-    }
-
-    /// A clock where every read costs `lurch` — a machine under load, in a
-    /// deterministic form.
-    pub(crate) fn lurching(lurch: Duration) -> Self {
-        Self {
-            lurch,
-            ..Self::new()
-        }
-    }
-
-    /// A second handle sharing this clock's instant.
-    pub(crate) fn handle(&self) -> Self {
-        Self {
-            at: Arc::clone(&self.at),
-            lurch: self.lurch,
-        }
-    }
-
-    /// This clock as a shared trait object for the `Arc<dyn Clock>` seam
-    /// ([`AppModel`](crate::AppModel), `Schedule`). Shares the instant, so
-    /// advancing the original still moves the clock the model holds.
-    pub(crate) fn arc(&self) -> Arc<dyn Clock> {
-        Arc::new(self.handle())
-    }
-
-    pub(crate) fn advance(&self, delta: Duration) {
-        *self
-            .at
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner) += delta;
-    }
-}
-
-impl Clock for FakeClock {
-    fn now(&self) -> Instant {
-        let mut at = self
-            .at
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let read = *at;
-        *at += self.lurch;
-        read
-    }
-
-    /// A fixed wall-clock stamp. `ops.jsonl` treats `ts` as opaque (§4.2), so a
-    /// constant is the deterministic reading — and it is the literal every
-    /// drift/ops assertion in the suite already spells.
-    fn stamp(&self) -> String {
-        "TS".to_string()
     }
 }
 
@@ -295,3 +218,13 @@ pub(crate) mod wire;
 /// The engine's own dispatch, for a test that drives a gesture (REMOTE §9.8) —
 /// its own file so the reason it exists is stated where it is read.
 pub(crate) mod engine;
+
+/// The §11 conversation list, asked through the boundary as every seat asks it
+/// (REMOTE §9.7, bl-44e9) — there is no model accessor left to ask instead.
+pub(crate) mod convs;
+
+/// The deterministic [`Clock`] every debounce and sweep branch is exercised
+/// against — its own file at §12's cap, on the seam this file already had:
+/// faking a *value* the crate reads, rather than the spawn discipline above.
+pub(crate) mod clock;
+pub(crate) use clock::FakeClock;

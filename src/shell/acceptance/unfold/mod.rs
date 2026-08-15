@@ -73,14 +73,19 @@ fn nested_world() -> World {
 fn painted(world: &mut World) -> Vec<Painted> {
     let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
     let ctx = egui::Context::default();
-    let mut frame = || {
+    let frame = |world: &mut World| {
         ctx.run(input(), |ctx| {
             render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
         })
     };
-    let _ = frame();
-    let _ = frame();
-    let out = crate::paint_probe::painted_of(&frame());
+    // The wire settled between frames (bl-44e9): the list is a `Reply` now, so
+    // the frame that declares the question and the frame that paints its answer
+    // are two, and this harness renders the settled one.
+    let _ = frame(world);
+    world.settle();
+    let _ = frame(world);
+    world.settle();
+    let out = crate::paint_probe::painted_of(&frame(world));
     drive::one_title_each(&out, &drive::visible(world));
     out
 }
@@ -109,12 +114,14 @@ fn elbows(painted: &[Painted]) -> usize {
 /// off the derivation the paint reads, so the beat names no title of its own
 /// and cannot drift from the §3.3 ladder.
 fn rows(world: &World) -> Vec<(usize, String)> {
-    world
-        .model
-        .visible_conversations(super::super::now_unix(), &world.state.expanded)
-        .iter()
-        .map(|r| (r.depth, r.display_name()))
-        .collect()
+    crate::test_support::convs::visible(
+        &world.model,
+        super::super::now_unix(),
+        &world.state.expanded,
+    )
+    .iter()
+    .map(|r| (r.depth, r.display_name()))
+    .collect()
 }
 
 /// The title the list paints for `id` — read off the same derivation with the
@@ -132,9 +139,7 @@ pub(super) fn name_of(world: &World, id: &str) -> String {
         .tree(&world.ws)
         .map(|t| t.agents.iter().map(|a| a.agent_id.clone()).collect())
         .unwrap_or_default();
-    world
-        .model
-        .visible_conversations(super::super::now_unix(), &open)
+    crate::test_support::convs::visible(&world.model, super::super::now_unix(), &open)
         .iter()
         .find(|r| r.root_id == id)
         .map_or_else(

@@ -100,6 +100,20 @@ impl Link {
         landed
     }
 
+    /// **Whether anything the frame is standing on has yet to be answered** —
+    /// the read path's own "still outstanding", read off the two maps that
+    /// already hold it rather than counted anywhere.
+    ///
+    /// Nothing in the window asks: a surface paints what it has and says nothing
+    /// about what it has not (`shell::wire`'s four arms), which is the whole
+    /// reason there is no spinner. It exists for a **driven** frame (bl-44e9),
+    /// which has to know when to stop settling, and stating it here is what lets
+    /// that driver be exact instead of counting passes.
+    #[cfg(test)]
+    pub fn awaiting(&self) -> bool {
+        self.asked.iter().any(|key| !self.landed.contains_key(key))
+    }
+
     /// One frame's whole duty: take what landed, tell the asker what is
     /// standing if that changed, and start the next frame's declaration empty.
     /// Answers for questions no longer standing are dropped here, which is the

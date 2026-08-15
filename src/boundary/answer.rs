@@ -24,7 +24,7 @@ use crate::git_tree::AgentState;
 use crate::nav::{self, convs::ConvBall, convs::ConvRow, ws_key};
 use crate::projects::join;
 use crate::ui_state::UiState;
-use std::collections::HashSet;
+
 use std::path::Path;
 
 use super::dispatch::Deps;
@@ -106,8 +106,10 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         }
         Query::Steps { agent, .. } => Reply::Steps(inspector::steps(snap, ws, agent)),
         Query::Step { agent, seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
-        Query::Files { agent, path, .. } => {
-            let (view, preview) = inspector::files(ws, agent, path.as_deref());
+        Query::Files {
+            agent, path, at, ..
+        } => {
+            let (view, preview) = inspector::files(ws, agent, path.as_deref(), at.as_deref());
             Reply::Files { view, preview }
         }
         Query::Rail { agent, .. } => {
@@ -155,25 +157,17 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
     })
 }
 
-/// The §11 conversation list of one workspace, **root rows only** — the
-/// all-collapsed case, which is the answer a machine reader gets (§8.5: a
-/// viewport's folds are not a boundary fact) and the shape this list had before
-/// it unfolded. Aimed by parameter instead of focus; a workspace with no
-/// derived tree is simply empty (§3.3's general path).
+/// The §11 conversation list of one workspace, at the **forest** altitude
+/// (REMOTE §9.7, bl-44e9): every member of the descent forest with its own
+/// per-row rollups, in paint order. Aimed by parameter instead of focus; a
+/// workspace with no derived tree is simply empty (§3.3's general path).
+///
+/// **This is the whole answer and it carries no fold.** A viewport's expanded
+/// set is a view (§8.5: *views gain no boundary representation*), so it never
+/// crosses and never rides a row — each seat selects its own visible rows out of
+/// this with [`nav::convs::visible`], and a seat holding no fold at all selects
+/// the root subset, which is the all-collapsed list this query used to answer.
 pub fn conversations(snap: &Snapshot, ui: &UiState, ws: &Path, now_unix: i64) -> Vec<ConvRow> {
-    visible_conversations(snap, ui, ws, now_unix, &HashSet::new())
-}
-
-/// The same list as the frame paints it (§11, bl-fa82): every **visible** row
-/// of the workspace's descent forest given the viewport's `expanded` set. One
-/// derivation for both — [`conversations`] is this call with nothing expanded.
-pub fn visible_conversations(
-    snap: &Snapshot,
-    ui: &UiState,
-    ws: &Path,
-    now_unix: i64,
-    expanded: &HashSet<String>,
-) -> Vec<ConvRow> {
     let Some(tree) = snap.trees.get(ws) else {
         return Vec::new();
     };
@@ -183,15 +177,7 @@ pub fn visible_conversations(
     // The standing verdicts, read off the same published ops tail the §11 pane
     // renders (VISION §4.9): a derivation per build, not a field on the world.
     let checks = crate::monitor::row::of_rows(&snap.ops);
-    nav::convs::visible_rows(
-        &tree.agents,
-        &key,
-        &seen,
-        now_unix,
-        &ball,
-        &checks,
-        expanded,
-    )
+    nav::convs::forest_rows(&tree.agents, &key, &seen, now_unix, &ball, &checks)
 }
 
 /// Resolve a conversation's goal-stamp ball `id` to its render facts (§3.3,

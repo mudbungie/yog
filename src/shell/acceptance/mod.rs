@@ -70,14 +70,21 @@ fn painted(world: &mut World, lernie: &Cli, bl: &Cli) -> String {
     // pane only shells to bz on an explicit click, unreachable headless.
     let bz = Cli::new("bz");
     let ctx = egui::Context::default();
-    let mut frame = || {
+    let frame = |world: &mut World| {
         ctx.run(input(), |ctx| {
             render(ctx, &mut world.model, &mut world.state, lernie, bl, &bz);
         })
     };
-    let _ = frame();
-    let _ = frame();
-    let out = frame();
+    // Each frame's own wire duty between them (REMOTE §9.8's harness ruling as
+    // bl-44e9 extended it): the first declares this window's standing questions,
+    // the settle after it answers them, the settle after the second carries the
+    // answers back — so the third frame, the one the operator sees, is also the
+    // first that has anything migrated to paint.
+    let _ = frame(world);
+    world.settle();
+    let _ = frame(world);
+    world.settle();
+    let out = frame(world);
     crate::paint_probe::text_of(&out)
 }
 
@@ -131,13 +138,17 @@ pub(super) fn window(
     world.state.activity_open = trail;
     let ctx = egui::Context::default();
     super::center::focus(&world.model, &mut world.state, tab);
-    let mut frame = || {
+    let frame = |world: &mut World| {
         ctx.run(crate::paint_probe::screen_sized(w, h), |ctx| {
             render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
         })
     };
+    // The wire settled between frames, for `painted`'s reason: a migrated
+    // surface has nothing to lay out until its answer has landed, and a geometry
+    // property asserted over a blank column is a property asserted over nothing.
     for _ in 0..4 {
-        let _ = frame();
+        let _ = frame(&mut world);
+        world.settle();
     }
-    frame()
+    frame(&mut world)
 }

@@ -100,23 +100,60 @@ fn files_opens_only_what_its_own_listing_named() {
     let ws = dir.path();
     let work = ws.join("agents").join(AGENT);
     std::fs::write(work.join("goal.md"), b"ship it").unwrap();
-    let (view, none) = files(ws, AGENT, None);
+    let (view, none) = files(ws, AGENT, None, None);
     let crate::files_view::FilesView::Present { entries, .. } = &view else {
         unreachable!("the worktree is on disk")
     };
     assert!(entries.iter().any(|e| e.rel_path == "goal.md"));
     assert!(none.is_none(), "no path named, no bytes read");
     assert_eq!(
-        files(ws, AGENT, Some("goal.md")).1,
+        files(ws, AGENT, Some("goal.md"), None).1,
         Some(crate::files_view::Preview::Text("ship it".to_owned()))
     );
     // A path outside the listing, a directory, and a torn-down worktree: each
     // answers no preview rather than opening something the listing never named.
-    assert!(files(ws, AGENT, Some("../../etc/passwd")).1.is_none());
-    assert!(files(ws, AGENT, Some("messages")).1.is_none());
-    let (absent, preview) = files(ws, "gone", Some("goal.md"));
+    assert!(files(ws, AGENT, Some("../../etc/passwd"), None).1.is_none());
+    assert!(files(ws, AGENT, Some("messages"), None).1.is_none());
+    let (absent, preview) = files(ws, "gone", Some("goal.md"), None);
     assert_eq!(absent, crate::files_view::FilesView::AbsentWorktree);
     assert!(preview.is_none());
+}
+
+/// **`at` names the tree, and the same read answers either one** (REMOTE §9.7,
+/// bl-44e9): with it, the listing is that commit's blobs and a named path's
+/// bytes come out of `git show`; without it, the live worktree. One derivation
+/// with a parameter rather than two reads — which is what makes the window's
+/// pinned Files tab and a headless `/files --at <commit>` one implementation.
+#[test]
+fn files_reads_the_commits_tree_when_one_is_named() {
+    let fx = crate::git_tree::tests::fixture::Fixture::new();
+    let conv = "20260427T120000Z-aaaa";
+    fx.build_agent(conv, "walk the rail");
+    let at = format!("agents/{conv}");
+
+    let (pinned, bytes) = files(&fx.path, conv, Some("goal.md"), Some(&at));
+    let crate::files_view::FilesView::Present { entries, .. } = &pinned else {
+        unreachable!("a real commit lists")
+    };
+    assert!(entries.iter().any(|e| e.rel_path == "goal.md"));
+    assert_eq!(
+        bytes,
+        Some(crate::files_view::Preview::Text("walk the rail".to_owned())),
+        "the bytes come out of that commit's tree"
+    );
+    // The containment rule is the same rule over either tree: a path the pinned
+    // listing does not name opens nothing.
+    assert!(
+        files(&fx.path, conv, Some("../etc/passwd"), Some(&at))
+            .1
+            .is_none()
+    );
+    // A commit git does not have lists nothing, exactly as a torn-down worktree
+    // does — the general path with the tree absent.
+    assert_eq!(
+        files(&fx.path, conv, None, Some("deadbeef")).0,
+        crate::files_view::FilesView::AbsentWorktree
+    );
 }
 
 /// The spine's inputs come off the snapshot — the parent's own commits and its

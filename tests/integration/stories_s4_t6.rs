@@ -79,7 +79,7 @@ fn s4_t6_rows_aggregate_their_subtree_and_order_by_recency_alone() {
         None,
     );
     m.focus_workspace(&ws);
-    let rows = m.conversations(10_000);
+    let rows = crate::support::conversation_rows(&m, 10_000);
 
     // Four conversations — the child is a member of a-001's, never a row of its
     // own (§2.3 descent).

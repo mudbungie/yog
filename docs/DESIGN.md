@@ -2253,6 +2253,16 @@ The frame's whole interface to everything that does is the cells in
   "what does a frame see that disk does not say?" has one answer to read and a
   third such fact would be a third argument there rather than a third
   mechanism. The first is below; the second is **The live tail** further down.
+
+  **A migrated surface reads rows, not a snapshot, so the echo has a second
+  projection** (REMOTE §9.7, bl-44e9): `echo::rows::with_echo` folds the same
+  value onto an answered §11 conversation list. Two projections of one fact is
+  not two sources — both live in `src/app/echo*`, so the sentence above still has
+  one place to read — and the ruling behind it is that **a seat's optimism reaches
+  whatever that seat actually reads**. Without it, migrating the §11 list would
+  have deleted §3.4 from the one surface it exists for. As more surfaces migrate
+  the snapshot projection shrinks toward nothing; neither is the other's
+  fallback.
 - **The pending echo: the operator's own last send** (`src/app/echo.rs`,
   bl-915e). A snapshot is what a
   completed derivation read off disk, and that was the *only* source — so
@@ -3269,16 +3279,26 @@ an identity — a written file's location, a worktree the operator opens, and th
   snapshot's own `Stream`, so `Transcript` folds it on exactly as the window
   does. Answering the committed half alone would have been cheaper and wrong
   — two seats describing one moment differently is the divergence this
-  chokepoint exists to prevent. The *pin*, by contrast, is not answered at
-  all: a pin is a viewport fold, and folds are views (below), which is why
-  `Rail` answers notches and `Conversations` answers the all-collapsed list. The §9 config family's reads (bl-0164, extended by bl-dff8 to the
+  chokepoint exists to prevent. The *pin* is not answered at all, and
+  neither is any other fold: a fold is a view (below), so what changed with
+  bl-44e9 is the **altitude of the answer**, never the rule. `Conversations`
+  answers the whole descent forest with its per-row rollups and each seat selects
+  the rows its own expanded set makes visible (`nav::convs::visible`); `Rail`
+  answers notches carrying the budget **as of** each of them, so resolving a pin
+  is reading one field off the notch the operator picked rather than folding a
+  prefix. A commit, by contrast, *is* a selection where a query's subject is a
+  tree — which is why `Query::Files` carries `at` and the pinned listing has a
+  headless spelling, on the same footing as `Step { seq }`. The §9 config family's reads (bl-0164, extended by bl-dff8 to the
   lineage browse and the §9.4 roster) read the world through the
   same `Deps` `dispatch` takes instead, exactly as their writes already do
   (§8.5 below), which is why `answer` returns a `Result` and can refuse as
   `dispatch` can. The frame's view-models delegate to these same functions
-  (`AppModel::conversations`, `workspace_stats`, `conversation_names`,
-  `delete_confirmation` are thin delegations), which is the parity mechanism:
-  one implementation, two serializations.
+  (`workspace_stats`, `conversation_names`, `delete_confirmation` are thin
+  delegations), which is the parity mechanism: one implementation, two
+  serializations. **`AppModel::conversations` is not among them any more**
+  (bl-44e9): the §11 list is a `Reply::Conversations` the window reads over the
+  wire like any other seat, so what the frame holds is a payload and a fold of
+  it, not a delegation.
 - **Views** never cross it: they are exactly §5.3's closed RAM whitelist (I6)
   — focus, scroll, tab selection, drafts — **and the §4.1 presentation
   durables beside them** (pins, collapse, zoom, panel sizes, seen
@@ -5043,6 +5063,13 @@ already carried — the state badge, the attention flag, the flight class, the a
 conversation to fold. Expansion reveals a row's direct children as rows of the
 **same anatomy**, recursively. There is no second row kind and no child-rendering
 path: with the expanded set empty the list is byte-for-byte what it was.
+
+**Where the fold happens moved, and the seat kept it** (REMOTE §9.7, bl-44e9).
+The boundary answers the whole forest — every member, with its own rollups, in
+paint order — and the seat selects the visible rows out of that answer. So the
+expanded set never crosses (§8.5: views gain no boundary representation), the
+seat derives nothing, and a reader holding no viewport at all reads the root
+subset, which is this list's own all-collapsed rendering.
 
 - **Membership is §5.1 #8's strict descent-id rule** (`git_tree::descent_order` /
   `children_of`), never the loose prefix test the Stop menu's `+children` seat
@@ -7670,6 +7697,7 @@ beside `main.rs`.
 | `src/app/dirty.rs` | Change→dirty-root mapping, debounce/sweep scheduling over the live `Cadence`, `watch::Mark` provenance (§7.2) |
 | `src/app/drift.rs` | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |
 | `src/app/echo.rs` | the pending echo (§7.2, §3.4, bl-915e): the §3.4 start claim's value, the landed-message reconciliation, the expiry bound, and the **one** fold of the derivation + every non-derived fact into the snapshot the frame paints (the echo, and the §7.2 live tail) |
+| `src/app/echo/rows.rs` | the **same** echo at the ROW altitude (REMOTE §9.7, bl-44e9): the §11 list reads a `Reply::Conversations` now, so the fold that reached it through the composed snapshot has to reach it through the answer instead — a start's pending conversation leads the list, a follow-up freshens the row it named, and a target the answer no longer carries adds nothing. Beside `echo.rs` rather than anywhere convenient, for that file's own single-source reason: one module owns every projection of the echo |
 | `src/app/focus.rs` | the §6/§11 **selection**: the roster ladder (↑/↓, jump-to-attention), the pin/collapse writes, the seen-acknowledgement, and the §3.4 start claim a fire leaves for the first roster that carries its root. Not `shell/focus.rs`, which owns the keyboard |
 | `src/app/grace.rs` | the §7.3 wound banner's grace window (bl-90bf): the render-layer age gate over the same injected clock, so a wound that heals inside the snapshot's own catch-up bound never flashes |
 | `src/app/line.rs` | the §8.5 line context: the seat's focus read as what a slash command elides — the §3.2 stamp a `bl` verb carries (the focused ball's claimant, else the workspace's own name), derived here so a typed verb and a clicked one cannot aim differently |
@@ -7838,6 +7866,7 @@ beside `main.rs`.
 | `src/shell/conv_list.rs` (excl.) | §11 altitude 0 — the list frame (the new-conversation affordance, the organizing toggle, the scroll and the visible-row iteration both organizing views share) with `conv_row` split off at the budget when the unfold landed (bl-fa82) |
 | `src/shell/conv_row.rs` (excl.) | §11 altitude 0 — one row's whole paint: the prefix group, the depth indent and its `↳` elbow, the trailing metadata including the ▶/▼ subagent field whose click toggles the id in the shell's expanded set, the row menu, and the §11 tone scope a §7.2 pending row is painted inside (bl-915e) |
 | `src/shell/conv_row/cells.rs` (excl.) | split off `conv_row` in turn at the budget on that file's own seam: `conv_row` assembles a row and wires its gestures, `cells` paints the three seats that carry a §11 shape rule of their own (the depth elbow, the state badge that is the whole prefix, the subagent field) |
+| `src/shell/convs.rs` (excl.) | **the §11 list's one read** (REMOTE §9.7, bl-44e9): the standing `Query::Conversations`, the seat's own §3.4 echo folded onto what landed, and `nav::convs::visible` selecting the rows this viewport's expanded set makes visible. Every reader goes through it — the paint, the ↑/↓ walk, the ← that pages to a parent — so the rows on the glass and the rows the keyboard steps are one answer folded once |
 | `src/shell/delete.rs` (excl.) | §3.6 |
 | `src/shell/delete_agent.rs` (excl.) | the §3.6 one-conversation dialog + its inspector danger row (bl-f17a) |
 | `src/shell/dispatch.rs` (excl.) | the intent→body table |
@@ -7879,6 +7908,8 @@ beside `main.rs`.
 | `src/steps_view/{mod,detail,columns,render,drill,wound,wire,wire/decode}.rs` | the step inspector, incl. the §7.3 no-response wound (§11 Steps). Both tiers are cut twice, read from write: `mod`+`detail` are the list/drill-in **reads**, `render`+`drill` their **paints**, and `columns` is the §11 column table — header, hover explanation and cell in one home, so no field paints without its name (bl-3ffc). `wire` is the §8.5 spelling of **both** tiers, cut along that same read seam (bl-6233), with `wire/decode` its other direction at the §12 budget (bl-7067) — also the one home of the `BudgetSpend` shape, which the §3.5 board figure spends rather than keeping a second wording of four counters |
 | `src/tail.rs` | the §11 tail idiom in one home (bl-8c13): the `stick_to_bottom` anchor and the top pad that seats an underfull body on the bottom edge, taken together by every tail surface and restated by none; since bl-929d it also hands back the body height it already measures, so a content-sized region (the inbox-composer) derives its extent from the one measurement |
 | `src/test_support{.rs,/wire.rs,/workspace.rs,/world.rs}` | the test-only scaffolding every test module in this binary shares: the spawn/env serialization locks (AGENTS.md rule 7's sanctioned carve-out), the REMOTE §9.5 wire's key material minted at test runtime by the same `openssl` act an operator performs (a certificate fixture is never committed — bl-b6fa), a real lernie workspace on disk for §8.6 control authoring, and the §16.2 fixture world every test that touches a §9 destination or a §16.3 space reads and writes through |
+| `src/test_support/clock.rs` | the suite's deterministic `Clock` — a shared instant a test advances by hand, plus the *lurching* variant whose every read costs time (the one way to exercise §7.2's late-pass drift without a slow machine). Split from `test_support.rs` at §12's cap on the seam that file already had: the spawn discipline is about forking, this is a value the crate reads |
+| `src/test_support/convs.rs` | **the §11 list, asked the way a seat asks it** (REMOTE §9.7, bl-44e9): `AppModel` holds no conversation accessor since the migration, so a test asks `Query::Conversations` through the same chokepoint and folds the answer with the same two functions the window uses. One spelling of that, so a test cannot assert against a derivation nobody paints |
 | `src/test_support/engine.rs` | **where the engine stands, for a test that drives a gesture** (REMOTE §9.8, bl-1747): one gesture through `boundary::dispatch::dispatch` over a `ui.json` opened fresh, which is what the wire's listener does. The window holds no dispatch of its own any more, so a unit test that used to reach `AppModel::dispatch` was standing in the window's shoes and stands in the engine's now — one spelling of that, so a test cannot quietly re-acquire the second execution path §1.2 refuses. The fresh `UiState` is the point: a helper handing out `&mut model.ui` would be testing a path that no longer exists |
 | `src/theme/{mod,badges,mark,role}.rs` | the single colour/visuals/font authority + the §11 badge mappings (glyph + hue + words in one home, `doing_badge` the mark's hue-and-words pair, `verdict_badge` the VISION §4.9 standing verdict's) + the two mark seats: the resting wordmark and the live mark's tint assembly and worded roster (bl-b768) + `role` the §11 role stripe's one home (bl-3acb): the byte-derived `Role` vocabulary, its hue-and-words pair, and the stripe painter both message seats draw through |
 | `src/theme/icon.rs` | the mark's constants, its compass geometry and the `deep` hue derivation; assembles the layer order (§11), tinted or at rest. Its corpus (`icon/tests/*`, covered by this row) is cut three ways — what the pixels say, what the compass guarantees, and that every checked-in artifact still decodes to the mark; `icon/paint/tests.rs` reads the painted layer back the same way |

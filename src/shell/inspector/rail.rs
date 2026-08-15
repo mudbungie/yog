@@ -63,6 +63,11 @@ pub fn transcript(live: &Arc<Transcript>, pin: Option<&Pin>) -> Arc<Transcript> 
 
 /// The Files listing, live or as of the pin — one memo slot for both, keyed on
 /// the commit so a re-pin re-reads and a scroll does not.
+///
+/// The **branch is the boundary's** since bl-44e9: `Query::Files` carries the
+/// tree as a selection, so live-or-pinned is decided once, in
+/// [`inspector::files`], and this is the memo around that one answer rather than
+/// a second spelling of the same two arms.
 pub fn files(
     model: &AppModel,
     inspector: &mut InspectorState,
@@ -75,9 +80,8 @@ pub fn files(
     let (root, id) = (ws.to_path_buf(), agent_id.to_owned());
     inspector
         .files_memo
-        .read(&snap, (root, id, commit.clone()), &mut || match &commit {
-            Some(oid) => rail::files_at(ws, oid),
-            None => files_view::build(ws, agent_id),
+        .read(&snap, (root, id, commit.clone()), &mut || {
+            inspector::files(ws, agent_id, None, commit.as_deref()).0
         })
         .clone()
 }

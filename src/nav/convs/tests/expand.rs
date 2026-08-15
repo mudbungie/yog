@@ -5,7 +5,7 @@
 //! it must not disturb, in [`super::rows`].
 
 use super::*;
-use crate::nav::convs::expand::{ancestors, parent_of, step, visible_rows};
+use crate::nav::convs::expand::{ancestors, forest_rows, parent_of, step, visible};
 use std::collections::HashSet;
 
 /// The expanded set, spelled as the shell hands it over.
@@ -30,7 +30,45 @@ fn ids(rows: &[crate::nav::convs::ConvRow]) -> Vec<&str> {
 }
 
 fn rows_with(agents: &[Agent], expanded: &HashSet<String>) -> Vec<crate::nav::convs::ConvRow> {
-    visible_rows(agents, "/ws", &unseen, 100, &plain, &[], expanded)
+    visible(&forest(agents), expanded)
+}
+
+/// The boundary's own answer — the whole forest, no fold (REMOTE §9.7).
+fn forest(agents: &[Agent]) -> Vec<crate::nav::convs::ConvRow> {
+    forest_rows(agents, "/ws", &unseen, 100, &plain, &[])
+}
+
+/// REMOTE §9.7's altitude ruling (bl-44e9): the answer is the whole forest, and
+/// every fold is a *selection* out of it — so the fold of the answer and the
+/// answer of the fold are the same rows, for every set a seat could hold.
+#[test]
+fn the_answer_is_the_whole_forest_and_a_fold_selects_out_of_it() {
+    let agents = family();
+    let all = forest(&agents);
+    assert_eq!(
+        ids(&all),
+        ["s-0", "r-0", "r-0-a-1", "r-0-b-1", "r-0-b-1-x-2"],
+        "every member, in paint order, with no set consulted"
+    );
+    assert_eq!(
+        ids(&visible(&all, &HashSet::new())),
+        ["s-0", "r-0"],
+        "no fold selects the root subset"
+    );
+    // The rollups are the answer's, not the fold's: a row carries the same
+    // numbers whether or not the seat has it open.
+    let open_all = open(&["r-0", "r-0-b-1"]);
+    assert_eq!(
+        visible(&all, &open_all),
+        all,
+        "everything open is everything"
+    );
+    for set in [HashSet::new(), open(&["r-0"]), open_all] {
+        for row in visible(&all, &set) {
+            let answered = all.iter().find(|r| r.root_id == row.root_id);
+            assert_eq!(answered, Some(&row), "a fold changes no row it keeps");
+        }
+    }
 }
 
 #[test]

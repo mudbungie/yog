@@ -50,7 +50,7 @@ fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
         CenterTab::Search,
         "asking focuses the answer's tab — the ask is the operator's one gesture"
     );
-    world.model.searcher().pass();
+    world.searches();
     let answered = super::painted(&mut world, &lernie, &bl);
     assert!(
         answered.lines().any(|line| line == "Search"),
@@ -67,7 +67,7 @@ fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
         &key,
         "/search"
     ));
-    world.model.searcher().pass();
+    world.searches();
     let cleared = super::painted(&mut world, &lernie, &bl);
     assert!(
         !cleared.lines().any(|line| line == "Search"),
@@ -109,7 +109,7 @@ fn a_search_that_matches_nothing_says_so_and_keeps_its_tab() {
         &key,
         "/search zzzznotathing"
     ));
-    world.model.searcher().pass();
+    world.searches();
     let painted = super::painted(&mut world, &lernie, &bl);
     assert_eq!(
         world.state.center,

@@ -68,7 +68,7 @@ fn s4_t5_grouping_is_a_stable_partition_of_the_sorted_rows() {
     );
     m.focus_workspace(&ws);
 
-    let flat = m.conversations(9000);
+    let flat = crate::support::conversation_rows(&m, 9000);
     let flat_ids: Vec<&str> = flat.iter().map(|r| r.root_id.as_str()).collect();
     assert_eq!(
         flat_ids,
@@ -76,7 +76,7 @@ fn s4_t5_grouping_is_a_stable_partition_of_the_sorted_rows() {
         "the default `recent` ordering is the input to the partition"
     );
 
-    let groups = m.conversation_groups(9000, &std::collections::HashSet::new());
+    let groups = group_by_ball(crate::support::conversation_rows(&m, 9000));
     let heads: Vec<Option<&str>> = groups
         .iter()
         .map(|g| g.ball.as_ref().map(|b| b.id.as_str()))

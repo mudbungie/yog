@@ -180,19 +180,15 @@ fn main() -> eframe::Result<()> {
             // loopback mTLS, presenting the window leaf — reading through the
             // asker and firing through the poster. The only face that takes
             // them: a `yog serve` has no frame to feed.
+            // The §8.5 searcher rides with them since bl-44e9: its read crosses
+            // the wire too, so it is on the same seat and the same mint.
             let wire = engine.window_wire(&world);
-            // The §8.5 searcher: the window's own searches run here, never on
-            // the frame (a search walks every transcript in the world). The
-            // windowless face needs none — `yog gesture` and the consumer both
-            // answer a search in place, already off-frame.
-            let searcher = engine.model.searcher().spawn();
             // The shell's RAM surfaces, incl. the config editors folded from the
             // world env (§9) — their `bz`/`bl conf` runners nest too. A load
             // error here is fatal at bring-up only.
             let state = ShellState::new(&world, clock)?;
             Ok(Box::new(App {
                 engine,
-                _searcher: searcher,
                 _wire: wire,
                 state,
                 lernie: Cli::resolve_in_world(Binary::Lernie, &overrides),
@@ -248,11 +244,10 @@ struct App {
     // plus the derivation worker, watch bridge and gesture consumer it holds —
     // dropped on exit, which stops and joins each.
     engine: Engine,
-    // The §8.5 searcher thread — the window's half of the search query.
-    _searcher: yog::search::SearchThread,
-    // The window's off-frame wire threads (REMOTE §1.2, §9.8) — the asker
+    // The window's off-frame wire threads (REMOTE §1.2, §9.7, §9.8) — the asker
     // landing decoded replies where the frame reads them, the poster sending
-    // what it fires. `None` only where the mint failed.
+    // what it fires, the searcher asking the §8.5 walk. `None` only where the
+    // mint failed.
     _wire: Option<yog::engine::window::WindowWire>,
     // Every RAM surface the shell owns: the action/start drafts, the inspector
     // ephemera, and the config editors (§3.5 — discarded on exit).
