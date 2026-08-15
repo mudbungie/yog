@@ -1,21 +1,33 @@
 //! The balls section as the **V4 board** (VISION §5 V4, DESIGN §11): the four
 //! derived columns, and each row's gate, drones and spend.
 //!
-//! Coverage-excluded glue, like every other file here. [`AppModel::board`] is
+//! Coverage-excluded glue, like every other file here. `crate::board::build` is
 //! the covered derivation — the columns, the gates, the drones and the figures
 //! are all decided there — and this lays it out. The per-row affordances stay
 //! where they were built ([`super::start_rows`]); the board only decides which
 //! one a row earns and what facts hang beneath it.
+//!
+//! **The columns come over the wire** (REMOTE §1.2 and its read-path residual;
+//! bl-adcb): the board painted here is a `Reply::Board` that crossed loopback
+//! mTLS and was decoded by `reply::decode`, the clients section's shape
+//! (bl-ae05) applied to the §11 balls fold. The model's own `board()` went with
+//! it — an answer *is* the cached derivation, refreshed at human cadence.
+//!
+//! **The affordances are not a read and did not move.** `startable` /
+//! `resumable` build the composer's fire-time inputs, which the click-glue
+//! consumes synchronously — the acts path, and its own ball.
 
 use super::ShellState;
-use super::menus::{BallRef, Target};
-use super::start_rows::{ball_id, continue_row, new_ball_form, ready_row};
+use super::start_rows::new_ball_form;
 use crate::AppModel;
 use crate::board::Column;
+
+mod rows;
+
+use crate::boundary::Query;
+use crate::boundary::reply::Reply;
 use crate::cli_outbound::Cli;
-use crate::nav::menu::Seat;
-use crate::start::StartInputs;
-use std::collections::HashMap;
+use rows::{Affordances, board_row};
 
 /// The balls section, **as the V4 board** (VISION §5 V4): the empty-project
 /// hint, then one fold per column — ready / gated / claimed / blocked, each
@@ -27,8 +39,8 @@ use std::collections::HashMap;
 /// [`crate::board::BoardRow`] — the gate that holds a row (and the ball whose
 /// close mints it), the drones working a claimed one, and its spend.
 ///
-/// Coverage-excluded glue, as ever: [`AppModel::board`] is the covered
-/// derivation and this file only lays it out.
+/// Coverage-excluded glue, as ever: `crate::board::build` is the covered
+/// derivation, reached over the wire, and this file only lays it out.
 pub fn board(
     ui: &mut egui::Ui,
     model: &mut AppModel,
@@ -89,7 +101,16 @@ fn columns(
     lernie: &Cli,
     bl: &Cli,
 ) {
-    let board = model.board();
+    let landed = super::wire::ask(model, Query::Board, |reply| match reply {
+        Reply::Board(board) => Some(board),
+        _ => None,
+    });
+    // A refusal is painted, not swallowed: the wire is how this fold reads now,
+    // so what the engine said is the section's honest content.
+    if let Some(said) = &landed.refused {
+        ui.colored_label(crate::theme::ICHOR, said);
+    }
+    let board = landed.value.unwrap_or_default();
     // **The armed loop's facts, and only when one is armed** (VISION §5 V4
     // item 2). `board.fleet` is empty in every unarmed world, so this loop
     // paints nothing at all and the section is byte-for-byte what it was —
@@ -114,10 +135,7 @@ fn columns(
     }
     // The affordances, addressed by ball id: a row renders the one its own
     // column earns, and a row the planner cannot enter renders as a read.
-    let affordances = Affordances {
-        starts: keyed(model.startable()),
-        resumes: keyed(model.resumable()),
-    };
+    let affordances = Affordances::of(model);
     for column in Column::ALL {
         let rows = board.in_column(column);
         if rows.is_empty() {
@@ -152,111 +170,4 @@ fn column_hint(column: Column) -> &'static str {
         }
         Column::Blocked => "not claimable yet: a dependency is still open.",
     }
-}
-
-/// The planner's entry points, indexed by the ball each enters — the join
-/// between the board's rows and the start flow. Held together because a row
-/// asks both questions at once ("can I start it, can I resume it").
-struct Affordances {
-    starts: HashMap<String, StartInputs>,
-    resumes: HashMap<String, StartInputs>,
-}
-
-fn keyed(inputs: Vec<StartInputs>) -> HashMap<String, StartInputs> {
-    inputs
-        .into_iter()
-        .filter_map(|i| Some((ball_id(&i.payload)?, i)))
-        .collect()
-}
-
-/// One board row: its affordance (or a plain read), then the facts the row
-/// carries — its gate, its drones, its spend and, for an epic, its rollup.
-fn board_row(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-    row: &crate::board::BoardRow,
-    affordances: &Affordances,
-) {
-    match (
-        row.column,
-        affordances.starts.get(&row.id),
-        affordances.resumes.get(&row.id),
-    ) {
-        (Column::Claimed, _, Some(inputs)) => {
-            continue_row(ui, model, state, lernie, bl, inputs.clone());
-        }
-        (Column::Ready | Column::Gated, Some(inputs), _) => {
-            ready_row(ui, model, state, lernie, bl, inputs.clone());
-        }
-        _ => read_row(ui, model, state, lernie, bl, row),
-    }
-    ui.indent(("board-facts", row.id.as_str()), |ui| {
-        for gate in &row.gates {
-            ui.weak(format!("⊣ gate {}: {}", gate.id, gate.title))
-                .on_hover_text(
-                    "This ball cannot close until that one does. Closing it is what mints \
-                     the gate — nothing here releases it.",
-                );
-        }
-        for drone in &row.drones {
-            ui.weak(format!("↳ {}", drone.name)).on_hover_text(
-                "The conversation working this ball — the same object the conversation list \
-                 above shows. Its goal names this ball.",
-            );
-        }
-        if let Some(figure) = &row.spend {
-            ui.horizontal(|ui| {
-                ui.weak("spend:");
-                crate::spend::render(ui, figure);
-            });
-        }
-        if let Some(figure) = &row.rollup {
-            ui.horizontal(|ui| {
-                ui.weak("epic:");
-                crate::spend::render(ui, figure);
-            })
-            .response
-            .on_hover_text(
-                "This ball plus its live subtree, summed across every workspace those balls \
-                 are claimed in. A closed child leaves the live set, and its spend leaves \
-                 this figure with it.",
-            );
-        }
-    });
-}
-
-/// A row with no start affordance — blocked, or claimed by someone this
-/// machine has no workspace for. Still a full row: id, title, and the §11
-/// ball-row menu.
-fn read_row(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-    row: &crate::board::BoardRow,
-) {
-    let label = ui
-        .add(
-            egui::Label::new(egui::RichText::new(format!("{}: {}", row.id, row.title)).weak())
-                .sense(egui::Sense::click()),
-        )
-        .on_hover_text(
-            "Right-click for this ball's actions — Close, Release, Move. Each is also \
-             a key or a line: (c), (r), `/move [id] <to>`.",
-        );
-    let seat = Seat::BallRow {
-        state: row.state,
-        assign_to: model.focused_ws_name(),
-        move_to: model.move_targets(row.claimant.as_deref().unwrap_or_default()),
-    };
-    let target = Target::Ball(BallRef {
-        project: row.project.clone(),
-        id: row.id.clone(),
-        owner: row.claimant.clone().unwrap_or_default(),
-    });
-    super::menus::attach(&label, seat, &target, model, state, lernie, bl);
 }

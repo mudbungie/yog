@@ -47,6 +47,14 @@ pub const CAP: usize = 4096;
 /// The log's leaf name under the yog state root (§4.2).
 const FILENAME: &str = "ops.jsonl";
 
+/// How many `ops.jsonl` lines the trail carries (§4.2, §11 accessory) — **one
+/// bound, named once**. The derivation tails this many into the snapshot, and
+/// the §11 activity accessory asks [`Query::Ops`](crate::boundary::Query::Ops)
+/// for this many, so the pane and the fold behind it cannot disagree about how
+/// much trail there is. It lives here rather than beside either reader because
+/// it is a fact about the log.
+pub const OPS_TAIL: usize = 256;
+
 /// `exit` sentinel for a piped verb whose status was unobservable
 /// (`ExitInfo::Unknown`, [`crate::cli_outbound::ExitInfo::shell_code`]): the
 /// process **ran** — not a rendered failure ([`rows::OpRow::failed`]).

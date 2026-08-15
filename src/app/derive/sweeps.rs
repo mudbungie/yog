@@ -23,9 +23,6 @@ use crate::watch::Mark;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-/// How many `ops.jsonl` lines the ops pane tails (§4.2, §11 accessory).
-const OPS_TAIL: usize = 256;
-
 impl Deriver {
     /// Re-enumerate the workspace set, reconcile the watch set to it, prune
     /// snapshots for vanished workspaces, and mark newly-appeared workspaces for
@@ -259,7 +256,7 @@ impl Deriver {
     /// surfaces more on the next pass.
     pub(super) fn refresh_ops(&mut self) {
         let root = self.roots.yog_state.clone();
-        let rows: Vec<OpRow> = opslog::tail(&root, OPS_TAIL)
+        let rows: Vec<OpRow> = opslog::tail(&root, opslog::OPS_TAIL)
             .iter()
             .map(|entry| OpRow::from(&opslog::detached::fold(&root, entry)))
             .collect();

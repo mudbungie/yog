@@ -57,6 +57,7 @@ mod start_pane;
 mod start_rows;
 mod top_bar;
 mod verb_row;
+mod wire;
 mod workspace;
 
 #[cfg(test)]

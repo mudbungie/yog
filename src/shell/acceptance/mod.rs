@@ -44,6 +44,7 @@ mod tabs;
 mod unfold;
 mod walk;
 mod walls;
+mod wire;
 mod wound;
 
 use super::render;

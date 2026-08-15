@@ -15,7 +15,7 @@ mod convball;
 
 use super::AppModel;
 use crate::cli_outbound::Cli;
-use crate::opslog::{OpRow, SurfaceFailure};
+use crate::opslog::SurfaceFailure;
 use crate::projects::join::{self, JoinRow};
 use crate::projects::runner;
 use std::path::{Path, PathBuf};
@@ -40,11 +40,6 @@ impl AppModel {
     /// — not a workspace — is the reporter.
     pub fn identity(&self) -> String {
         runner::identity(self.ui.identity_last_used(), self.identity_user.clone())
-    }
-
-    /// The ops-pane rows, oldest-first (§11 accessory; the shell renders these).
-    pub(crate) fn ops_rows(&self) -> &[OpRow] {
-        &self.snap.ops
     }
 
     /// **One surface's** last-failure view-model (§5.3, §7.3): the most recent

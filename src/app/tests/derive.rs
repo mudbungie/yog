@@ -216,6 +216,15 @@ fn adopting_our_own_ui_json_echo_is_suppressed() {
     );
 }
 
+/// The armed loops the published snapshot carries — the same `board::build` the
+/// §8.5 `Query::Board` answers and the §11 fold now paints over the wire
+/// (bl-adcb retired the model's own `board()` with that migration). Spelled here
+/// because the subject of the test below is the **worker's** side: what the
+/// derivation adopted, read through the derivation that reads it.
+fn fleet(model: &crate::AppModel) -> Vec<crate::fleet::Facts> {
+    crate::board::build(&model.snap, &model.ui, model.now_unix()).fleet
+}
+
 /// The §4.3 fleet arming rides the clock's own file and the clock's own
 /// announcement (bl-66fb): an entry published on the snapshot the board reads,
 /// deleted the same way. The **burden check from the worker's side** — with no
@@ -226,7 +235,7 @@ fn a_fleet_entry_is_adopted_and_deleted_on_the_clocks_own_announcement() {
     let file = h.roots.yog_state.join(crate::app::cadence::CADENCE_YAML);
     let (_c, mut model) = h.model();
     assert!(
-        model.board().fleet.is_empty(),
+        fleet(&model).is_empty(),
         "unarmed: the board is today's balls section"
     );
     std::fs::write(
@@ -238,7 +247,7 @@ fn a_fleet_entry_is_adopted_and_deleted_on_the_clocks_own_announcement() {
         .dirty_handle()
         .mark_all([(h.roots.yog_state.clone(), Mark::Watch)]);
     assert!(model.tick(), "an arming publishes");
-    let armed = model.board().fleet;
+    let armed = fleet(&model);
     assert_eq!(armed.len(), 1);
     assert_eq!(armed[0].cap, 3);
     assert_eq!(armed[0].project, std::path::PathBuf::from("/dev/yog"));
@@ -248,7 +257,7 @@ fn a_fleet_entry_is_adopted_and_deleted_on_the_clocks_own_announcement() {
         .mark_all([(h.roots.yog_state.clone(), Mark::Watch)]);
     assert!(model.tick(), "the disarming publishes too");
     assert!(
-        model.board().fleet.is_empty(),
+        fleet(&model).is_empty(),
         "deleting the entry deletes the loop, not a code path"
     );
 }

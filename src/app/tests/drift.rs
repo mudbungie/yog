@@ -17,7 +17,8 @@ use std::time::Duration;
 /// The drift lines the ops tail holds, as `(kind, roots-text)` pairs.
 fn drift_rows(model: &AppModel) -> Vec<(String, String)> {
     model
-        .ops_rows()
+        .snap
+        .ops
         .iter()
         .filter(|r| r.drift())
         .map(|r| {

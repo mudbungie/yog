@@ -124,5 +124,5 @@ fn the_unmaking_removes_the_wall_moves_the_focus_and_leaves_the_trail() {
         ops.last().map(|e| e.argv.clone()),
         Some(vec![YOG_STEP.to_owned(), "delete-workspace".to_owned()])
     );
-    assert!(model.ops_rows().iter().any(|r| !r.failed()));
+    assert!(model.snap.ops.iter().any(|r| !r.failed()));
 }

@@ -77,14 +77,4 @@ impl AppModel {
     pub(crate) fn stamped_roots(&self, ws: &Path, ball_id: &str) -> Vec<String> {
         crate::board::stamped_roots(&self.snap.trees, ws, ball_id)
     }
-
-    /// The V4 board (VISION §5 V4) over this instance's snapshot, price table
-    /// and ceiling — the frame's delegation to the same [`crate::board::build`]
-    /// the §8.5 `Query::Board` answers. One derivation, two serializations.
-    ///
-    /// The wall clock is this model's injected one (§7.2), so the loop facts'
-    /// ages are the same clock every other age on screen is measured against.
-    pub fn board(&self) -> crate::board::Board {
-        crate::board::build(&self.snap, &self.ui, self.now_unix())
-    }
 }

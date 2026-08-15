@@ -125,7 +125,7 @@ fn a_clean_run_clears_only_its_own_surfaces_banner() {
     m.after_lernie_verb();
     m.tick();
     assert!(m.last_failure(Origin::Conversation).is_none());
-    assert_eq!(m.ops_rows().len(), 3, "the log keeps every line");
+    assert_eq!(m.snap.ops.len(), 3, "the log keeps every line");
 }
 
 #[test]
@@ -150,7 +150,7 @@ fn a_re_run_green_verb_retires_its_stale_failure_from_the_chip() {
             drifts: 0
         }
     );
-    assert_eq!(m.ops_rows().len(), 2, "the log keeps both lines");
+    assert_eq!(m.snap.ops.len(), 2, "the log keeps both lines");
     // An unrelated later failure is the one the operator sees.
     append_op(&m); // clean `bl close bl-work`
     prime(&m, "/other", 3, Origin::Balls);
@@ -187,8 +187,8 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     m.after_lernie_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
     assert!(m.last_failure(Origin::Conversation).is_none());
-    assert!(!m.ops_rows().last().unwrap().failed());
-    assert!(!m.ops_rows().last().unwrap().has_output());
+    assert!(!m.snap.ops.last().unwrap().failed());
+    assert!(!m.snap.ops.last().unwrap().has_output());
 
     // The driver then refuses and dies, leaving its cry in the sink file.
     let sink = opslog::detached::sink(m.state_root(), "17", ws);
@@ -200,7 +200,7 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     // gets its ichor-red banner (§7.3). No new ops line.
     m.after_lernie_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
-    let row = m.ops_rows().last().unwrap();
+    let row = m.snap.ops.last().unwrap();
     assert!(
         row.failed(),
         "the dead driver's stderr makes the row a failure"
