@@ -179,4 +179,25 @@ pub enum Query {
     /// seat sees the flap and the model's cached prefix never does, which is
     /// why presence is answered here rather than declared anywhere durable.
     Clients { workspace: String },
+    /// **A tool host's next work** (REMOTE §3, §5; bl-024b) — *the*
+    /// follow-class read, and the first with a consumer. The answer stays
+    /// pending until this client has an invocation or the engine's hold
+    /// expires, which is why it is a read and not a poll: a machine waiting on
+    /// a machine is the ask rate REMOTE §10 set as the criterion for minting
+    /// one.
+    ///
+    /// **The identity is the intake's**, exactly as an advertisement's is: a
+    /// connection drains its own queue, and a `client` field here would let one
+    /// connection take another's work. An intake carrying no client identity —
+    /// the deposit inbox, `yog gesture`, the window — refuses in band.
+    ///
+    /// It names no workspace: a tool set is a fact about a machine (REMOTE
+    /// §5.1) and so is the queue of calls to it.
+    Invocations,
+    /// **What one routed invocation captured** (REMOTE §5): the asking side's
+    /// poll, answered `null` while the far machine still runs it. Bounded by
+    /// the *asker's* patience rather than the engine's — a vanished client is
+    /// this read answering nothing until its caller gives up and says so, which
+    /// is the visible in-band refusal §5 asks for and never a hang.
+    Capture { invocation: String },
 }

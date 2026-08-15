@@ -123,6 +123,11 @@ impl Engine {
             cell: model.snapshot_cell(),
             clock: Arc::clone(&clock),
             presence: presence.clone(),
+            // The routing leg's mailbox (REMOTE §5, bl-024b), minted here
+            // beside presence and for its reason: the listener's connections
+            // drain it while the deposit inbox's callers fill it, so one
+            // handle, held by the one context both intakes answer through.
+            mailbox: crate::registry::mailbox::Mailbox::default(),
         });
         let consumer = Consumer::spawn(Arc::clone(&intake));
         // The REMOTE §9.5 wire listener (bl-b6fa), beside the consumer and for

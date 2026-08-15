@@ -146,6 +146,12 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
             &deps.caller.presence,
             workspace,
         )),
+        // REMOTE §3's routing leg (bl-024b): the follow-class read that waits
+        // for this client's next work, and the asker's poll for what one
+        // captured. Neither names a world, so neither reads the resolution
+        // above.
+        Query::Invocations => return super::routing::invocations(deps),
+        Query::Capture { invocation } => return super::routing::capture(deps, invocation),
     })
 }
 

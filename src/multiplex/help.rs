@@ -53,6 +53,23 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  `yog gesture` instead from inside the world: disk is the bus there.",
     },
     HelpRow {
+        verb: crate::wire::HOST_SUBCMD,
+        usage: "yog tool-host",
+        summary: "be a tool host: run this machine's tools for an engine over the wire",
+        detail: "Presents what `<yog-data-root>/tools.json` says this machine can run — the \
+                 same document, with `command`/`cwd` dropped, so what is offered and what can \
+                 actually be run cannot drift — then waits for work and runs it. Each element \
+                 is `{\"name\", \"description\", \"input_schema\", \"command\": [argv…], \
+                 \"cwd\"?}`; the argv is spawned directly, never through a shell, and the \
+                 invocation's JSON arrives on the command's stdin exactly as a local tool's \
+                 does. One invocation at a time; a tool that has not answered in two minutes \
+                 is terminated and the capture says so. The engine, the certificate this \
+                 machine presents and the CA both ends verify against come from the wire \
+                 material an operator provisioned (`make wire-certs`); with none, or with no \
+                 config, this refuses and says which. When the channel fails it exits, naming \
+                 the failure — restarting it is the supervision this machine already has.",
+    },
+    HelpRow {
         verb: crate::world::hatch::ENV_SUBCMD,
         usage: "yog env [--ws WORKSPACE]",
         summary: "print the world's environment (`eval \"$(yog env)\"`)",

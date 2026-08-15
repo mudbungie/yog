@@ -271,6 +271,15 @@ pub enum Action {
     Advertise {
         tools: Vec<crate::registry::tools::Tool>,
     },
+    /// **The routing leg's two acts** (REMOTE §5, §9 step 7; bl-024b): queue
+    /// one tool call for the machine that advertised it, and post back what
+    /// running it captured. One variant over
+    /// [`mailbox::Verb`](crate::registry::mailbox::Verb) rather than two here,
+    /// exactly as the monitor's and the fleet's families fold — one subject,
+    /// one mailbox, one pair of ends, and that type's own doc says what each
+    /// end costs.
+    Route(crate::registry::mailbox::Verb),
+
     /// The §9.4 model pick: give `role` this `model` on this provider row, for
     /// `workspace`. §9.2 and §9.3 composed by one gesture — refuse either half
     /// and neither is written — because lernie's cross-check makes the role

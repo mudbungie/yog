@@ -248,6 +248,15 @@ pub(super) fn listings() -> Vec<Reply> {
             files: vec!["workflow.yaml".into()],
         }]),
         Reply::Models(vec!["opus".into(), "sonnet".into()]),
+        // The follow-class read's answer at both of its arms (bl-024b): a hold
+        // that ended with nothing, and one carrying work whose input must
+        // survive the trip verbatim.
+        Reply::Invocations(Vec::new()),
+        Reply::Invocations(vec![crate::registry::mailbox::Invocation {
+            id: "inv-1".into(),
+            tool: "Bash".into(),
+            input: serde_json::json!({"command": "ls -l", "timeout": 30}),
+        }]),
         // REMOTE §5's roster (bl-4e08): both presence arms, a client that
         // advertises and one that has not, and a schema deep enough that a
         // codec rebuilding it rather than carrying it verbatim would show.

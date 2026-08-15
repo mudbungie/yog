@@ -59,7 +59,11 @@ impl Action {
             // An advertisement names its CLIENT, never a workspace (REMOTE §5,
             // bl-4e08): a tool set is a fact about the machine, and which
             // workspaces see it is the registration listing that already exists.
+            // The routing leg's two, for the advertisement's reason exactly
+            // (bl-024b): a call addresses a MACHINE, and the queue of calls to
+            // one is a fact about that machine, not about a workspace.
             Action::Advertise { .. }
+            | Action::Route(_)
             // The §9 config family answers through its destination instead
             // ([`config::ConfigFile::workspace`](super::config::ConfigFile)):
             // two of the five name a wall and three name no world at all, so
@@ -119,6 +123,7 @@ impl Action {
             | Action::ClearTrail
             | Action::ApplyConfig { .. }
             | Action::Advertise { .. }
+            | Action::Route(_)
             | Action::PickModel { .. } => None,
         }
     }
@@ -158,7 +163,11 @@ impl Query {
             | Query::Ops { .. }
             | Query::Search { .. }
             | Query::Help { .. }
-            | Query::ReadConfig { .. } => None,
+            | Query::ReadConfig { .. }
+            // The routing leg's two reads: one is answered to the intake's own
+            // identity, the other to a handle — neither names a world.
+            | Query::Invocations
+            | Query::Capture { .. } => None,
         }
     }
 }

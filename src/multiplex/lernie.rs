@@ -69,6 +69,7 @@ pub(super) fn run(args: &[String]) -> i32 {
     let injection = tool_host::Injection::new(
         crate::xdg::Env::from_env().yog_state_root(),
         tool_host::ask::Budget::default(),
+        tool_host::remote::patience(),
         Arc::new(SystemClock),
         driving(&cli.command),
     );

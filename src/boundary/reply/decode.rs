@@ -32,8 +32,9 @@ use super::board::decode::board;
 use super::queue::queue_row_of;
 use super::rows::decode::{conv_row, join_row, lineage_row, op_row, provider_row, rows_of, ws_row};
 use super::search::hit_of;
-use crate::boundary::codec::fields::{bool_of, list_of, str_of, strings_of};
+use crate::boundary::codec::fields::{bool_of, list_of, opt_val, str_of, strings_of};
 use crate::boundary::codec::prepared_from_value;
+use crate::registry::mailbox::{capture_of, invocation_of};
 
 mod inspector;
 
@@ -78,6 +79,10 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "trail-cleared" => Ok(Reply::TrailCleared),
         "applied" => Ok(Reply::Applied),
         "advertised" => Ok(Reply::Advertised),
+        // The routing leg's asking side (bl-024b): the handle always, the
+        // capture only once there is one — `opt_val` is what makes "absent"
+        // and "answered nothing" two readings rather than one.
+        "routed" => routed(o),
         "marks" => str_of(o, "branch").map(|branch| Reply::Marks { branch }),
         "config" => str_of(o, "text").map(|text| Reply::Config { text }),
         _ => return None,
@@ -131,7 +136,16 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "lineages" => rows_of(o, lineage_row).map(Reply::Lineages),
         "models" => strings_of(o, "rows").map(Reply::Models),
         "clients" => rows_of(o, client_row).map(Reply::Clients),
+        "invocations" => rows_of(o, invocation_of).map(Reply::Invocations),
         _ => return None,
+    })
+}
+
+/// One invocation's standing, read back (bl-024b).
+fn routed(o: &Map<String, Value>) -> Result<Reply, String> {
+    Ok(Reply::Routed {
+        invocation: str_of(o, "invocation")?,
+        capture: opt_val(o, "capture", capture_of)?,
     })
 }
 

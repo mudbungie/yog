@@ -46,6 +46,9 @@ mod queries;
 mod spell;
 #[cfg(test)]
 mod tests;
+/// REMOTE §5's routing leg, typed (bl-024b) — the two acts that carry an
+/// invocation to a tool host and its capture back.
+mod tools;
 mod verbs;
 
 pub use config::USAGE as CONFIG_USAGE;

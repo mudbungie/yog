@@ -117,6 +117,8 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
             typed: tail.trim().to_owned(),
         })),
         // The VISION §4.9 monitor's three, read in `verbs` like every other tail.
+        // REMOTE §5's routing leg (bl-024b), in the tool-host family's file.
+        "invoke" | "complete" => super::tools::route(verb, tail),
         "arm" | "disarm" | "flag" => verbs::monitor(verb, tail, ctx),
         // The VISION §4.3 armed loop's two, read the same way.
         crate::boundary::codec::FLEET_ARM | crate::boundary::codec::FLEET_DISARM => {
@@ -182,7 +184,7 @@ fn asks_help(verb: &str, tail: &str) -> Result<Option<Query>, String> {
     }
 }
 
-fn act(action: Action) -> Gesture {
+pub(super) fn act(action: Action) -> Gesture {
     Gesture::Act(action)
 }
 

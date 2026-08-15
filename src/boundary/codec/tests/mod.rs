@@ -94,6 +94,25 @@ fn every_action_variant_round_trips() {
     for tools in [Vec::new(), vec![advertised()]] {
         rt(Gesture::Act(Action::Advertise { tools }));
     }
+    // The routing leg's two acts (bl-024b): the model's arguments and the
+    // program's own output, each carried verbatim.
+    rt(Gesture::Act(Action::Route(
+        crate::registry::mailbox::Verb::Invoke(crate::registry::mailbox::Call {
+            client: "laptop".into(),
+            tool: "Bash".into(),
+            input: serde_json::json!({"command": "ls -l", "timeout": 30}),
+        }),
+    )));
+    rt(Gesture::Act(Action::Route(
+        crate::registry::mailbox::Verb::Complete(crate::registry::mailbox::Completion {
+            invocation: "inv-1".into(),
+            capture: crate::registry::mailbox::Capture {
+                stdout: "hello\n".into(),
+                stderr: "warned\n".into(),
+                exit_code: 3,
+            },
+        }),
+    )));
 }
 
 /// One advertised tool with a schema deep enough that a codec which rebuilt it

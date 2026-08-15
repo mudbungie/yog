@@ -214,6 +214,31 @@ pub const QUERIES: &[HelpRow] = &[
                  results are clickable; a search with no text clears the last one.",
     },
     HelpRow {
+        verb: "invocations",
+        usage: "/invocations",
+        summary: "a tool host's next work: wait for what this machine has been asked to run",
+        detail: "The follow-class read. It does not answer until this machine has an invocation \
+                 or the engine's hold expires — thirty seconds — so a tool host waits here \
+                 rather than polling, and asks again the moment it is answered. It names \
+                 nothing: the queue it drains is the one addressed to the certificate this \
+                 connection presented, which is why a caller inside the world (`yog gesture`, \
+                 the deposit inbox, the window) is refused rather than handed somebody's work. \
+                 An empty answer is the ordinary answer of a hold that ended quietly, not a \
+                 failure. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run \
+                 it and post the result with `/complete`.",
+    },
+    HelpRow {
+        verb: "capture",
+        usage: "/capture <invocation>",
+        summary: "what one routed invocation captured, if the far machine has answered yet",
+        detail: "The asking side's poll, and the other half of `/invoke`. It never waits: \
+                 `capture` is absent while the machine is still running the tool, present once \
+                 it has answered — and the answer is read exactly once, so the second ask reads \
+                 as absent. How long to keep asking is yours to decide, and that deadline is \
+                 what makes an offline machine a refusal you can see rather than a wait with no \
+                 end. A handle you did not invoke reads as absent too.",
+    },
+    HelpRow {
         verb: "help",
         usage: "/help [verb]",
         summary: "what any command does — this list, or one command's page",

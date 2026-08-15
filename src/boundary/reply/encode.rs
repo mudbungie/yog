@@ -13,6 +13,7 @@ use super::queue::queue_row;
 use super::rows::{conv_row, join_row, lineage_row, op_row, ws_row};
 use super::search::hit_row;
 use super::{Reply, prepared_value};
+use crate::registry::mailbox::{capture_value, invocation_value};
 
 /// Encode a reply to its file body. `ok` is the one field every reply carries.
 pub fn encode(reply: &Reply) -> Value {
@@ -50,6 +51,23 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::TrailCleared => json!({ "ok": true, "kind": "trail-cleared" }),
         Reply::Applied => json!({ "ok": true, "kind": "applied" }),
         Reply::Advertised => json!({ "ok": true, "kind": "advertised" }),
+        // The routing leg's asking side (bl-024b): the handle, and the capture
+        // once there is one. `capture` is **absent** rather than empty while
+        // the far machine still runs it — a reader must not have to tell "not
+        // finished" from "finished saying nothing".
+        Reply::Routed {
+            invocation,
+            capture,
+        } => {
+            let mut map = obj_reply("routed");
+            map.insert("invocation".to_owned(), json!(invocation));
+            if let Some(capture) = capture {
+                map.insert("capture".to_owned(), capture_value(capture));
+            }
+            Value::Object(map)
+        }
+        // The follow-class read's rows, in the one invocation spelling.
+        Reply::Invocations(rows) => rows_reply("invocations", rows.iter().map(invocation_value)),
         // The branch, and only the branch (REMOTE §8, bl-ccf7): the space it is
         // a branch of is a pure function of the workspace the gesture named, so
         // saying it here would be that name spelled a second time, as a path.
@@ -140,15 +158,22 @@ fn client_row(row: &crate::registry::roster::ClientRow) -> Value {
             "tools": crate::registry::tools::encode(&row.tools) })
 }
 
+/// The envelope every reply opens with, before its own fields — the shape
+/// [`rows_map`] builds a listing on and the one a keyed answer builds itself on.
+fn obj_reply(kind: &str) -> Map<String, Value> {
+    let mut map = Map::new();
+    map.insert("ok".to_owned(), json!(true));
+    map.insert("kind".to_owned(), json!(kind));
+    map
+}
+
 fn rows_reply(kind: &str, rows: impl Iterator<Item = Value>) -> Value {
     Value::Object(rows_map(kind, rows))
 }
 
 /// The same, still open for a family that carries one more key.
 fn rows_map(kind: &str, rows: impl Iterator<Item = Value>) -> Map<String, Value> {
-    let mut map = Map::new();
-    map.insert("ok".to_owned(), json!(true));
-    map.insert("kind".to_owned(), json!(kind));
+    let mut map = obj_reply(kind);
     map.insert("rows".to_owned(), json!(rows.collect::<Vec<Value>>()));
     map
 }

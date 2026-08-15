@@ -14,7 +14,7 @@ use crate::model_pick::Pick;
 use crate::ui_state::UiState;
 
 use super::reply::Reply;
-use super::{Action, answer, config, control, fan, fleet, monitor};
+use super::{Action, answer, config, control, fan, fleet, monitor, routing};
 
 /// The §3.6 unmaking's two executors — the workspace and the one conversation
 /// — split off at §12's budget when the §4.11 capability arm landed (bl-765d).
@@ -158,6 +158,10 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // identity the INTAKE carries, so the gate is who is asking rather than
         // what was named — an in-world caller has no client and is refused.
         Action::Advertise { tools } => advertise::advertise(deps, tools),
+        // REMOTE §5's routing leg (bl-024b): queue a call for the machine that
+        // advertised it, and take a tool host's answer to one. Neither waits —
+        // the intake here is one thread for the whole world.
+        Action::Route(verb) => routing::route(deps, ts, verb),
     }
 }
 

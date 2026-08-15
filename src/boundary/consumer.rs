@@ -49,6 +49,9 @@ pub struct ConsumerCtx {
     /// bl-4e08) — the listener's own RAM, shared by handle so the roster read
     /// answers this instant rather than a copy.
     pub presence: crate::registry::presence::Presence,
+    /// What is queued for each client and what came back (REMOTE §5, bl-024b)
+    /// — the routing leg's own RAM, shared by handle beside the presence map.
+    pub mailbox: crate::registry::mailbox::Mailbox,
 }
 
 impl ConsumerCtx {
@@ -145,6 +148,7 @@ impl ConsumerCtx {
             caller: crate::boundary::dispatch::Caller {
                 client: client.clone(),
                 presence: self.presence.clone(),
+                mailbox: self.mailbox.clone(),
             },
         };
         (deps, ts, now_unix)

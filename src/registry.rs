@@ -155,3 +155,14 @@ pub fn register(state_root: &Path, client: &Client, workspace: &str) -> io::Resu
 
 #[cfg(test)]
 mod tests;
+
+/// The engine-side invocation hand-off (REMOTE §5, bl-024b) — a queue per
+/// client and a slot per invocation, RAM beside [`presence`] for its reason.
+///
+/// **Declared last, and out of order on purpose.** Every other `mod` sits at
+/// the top, and adding a fifth there shifted every byte below it — which cost
+/// this file its 100 % coverage floor, llvm-cov attributing a phantom
+/// uncovered region to `impl Client {`. That is the hazard
+/// `rules/locks-outside-state.yml` records twice over, met here by the remedy
+/// `state.rs` already uses: append below every line that was here before.
+pub mod mailbox;
