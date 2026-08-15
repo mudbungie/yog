@@ -91,12 +91,31 @@ pub(super) fn converge(edge: &Edge, world: &Path) -> io::Result<bool> {
     if !substrate::is_landing(&landing) {
         return Ok(false);
     }
-    let referenced = Hooks::load(&landing)?.referenced();
+    // Sited like every other step, but it is the one that can be ruled OUT of a
+    // `NotFound`: `Hooks::load` answers the empty schedule for an absent
+    // `plugins.toml` rather than erring, so an ENOENT reaching the operator
+    // came from the re-seed or one of the forks below, never from here.
+    let referenced =
+        sited("read the landing schedule", &landing, Hooks::load(&landing))?.referenced();
     if PROVIDED.iter().all(|name| referenced.contains_key(*name)) {
         return Ok(false);
     }
     reseed(edge, &landing)?;
     Ok(true)
+}
+
+/// Name the site an [`io::Error`] came out of, keeping its `kind` so a caller
+/// can still match on it and its own words so nothing is lost.
+///
+/// Every fallible step of this convergence is a read or a fork against a path,
+/// and each of them can answer the *same* bare `NotFound` — which is exactly
+/// what a rare macOS failure did answer (bl-1ce0), naming neither the step nor
+/// the path, so a one-line warning out of [`report`] was undiagnosable. This
+/// takes an already-evaluated `Result` rather than a closure on purpose: one
+/// arm, one test, and a site label at each call instead of a per-site error
+/// type nobody would match on.
+fn sited<T>(site: &str, path: &Path, result: io::Result<T>) -> io::Result<T> {
+    result.map_err(|e| io::Error::new(e.kind(), format!("{site} ({}): {e}", path.display())))
 }
 
 /// Re-derive the landing's capability schedule from balls' embedded default,
@@ -106,9 +125,17 @@ pub(super) fn converge(edge: &Edge, world: &Path) -> io::Result<bool> {
 fn reseed(edge: &Edge, landing: &Path) -> io::Result<()> {
     let scalars = landing.join("config").join("balls.toml");
     let keep = fs::read(&scalars).ok();
-    seed::seed_landing(&edge.xdg, landing, edge.exe_dir.as_deref())?;
+    sited(
+        "re-seed the landing",
+        landing,
+        seed::seed_landing(&edge.xdg, landing, edge.exe_dir.as_deref()),
+    )?;
     if let Some(body) = keep {
-        fs::write(&scalars, body)?;
+        sited(
+            "restore the scalar config",
+            &scalars,
+            fs::write(&scalars, body),
+        )?;
     }
     commit(landing, &edge.default_actor)
 }
@@ -122,7 +149,8 @@ fn commit(landing: &Path, actor: &str) -> io::Result<()> {
         return Ok(());
     }
     git(landing, &["add", "-A"])?;
-    let message = Message::checkout(Verb::Prime, actor, SUBJECT.to_owned()).render()?;
+    let rendered = Message::checkout(Verb::Prime, actor, SUBJECT.to_owned()).render();
+    let message = sited("render the landing commit message", landing, rendered)?;
     git(landing, &["commit", "-q", "-m", &message])?;
     Ok(())
 }
@@ -149,11 +177,24 @@ pub(super) fn report(outcome: io::Result<bool>) {
     }
 }
 
-/// Run one `git` in `cwd` through the crate's scrubbing constructor, answering
-/// its stdout. A non-zero exit becomes the error carrying git's own stderr —
-/// the caller reports it and the verb proceeds, since a repair that cannot run
-/// must never fail the op it rode in on.
+/// Run one `git` in `cwd`, answering its stdout under a site naming the
+/// subcommand — so a failure to *spawn* (an ENOENT off the `PATH` lookup or an
+/// absent `cwd`, indistinguishable from a failed read in a bare error) reads
+/// the same way as a failure to *succeed*, and both say which of the three
+/// forks it was.
 fn git(cwd: &Path, args: &[&str]) -> io::Result<String> {
+    // The subcommand alone, never the whole argument vector: one of these forks
+    // carries the rendered commit message, and a site label is for locating a
+    // failure, not for reprinting its input.
+    let site = format!("git {}", args.first().copied().unwrap_or_default());
+    sited(&site, cwd, run(cwd, args))
+}
+
+/// The fork itself, through the crate's scrubbing constructor. A non-zero exit
+/// becomes the error carrying git's own stderr — the caller reports it and the
+/// verb proceeds, since a repair that cannot run must never fail the op it rode
+/// in on.
+fn run(cwd: &Path, args: &[&str]) -> io::Result<String> {
     let out = git_env::git().current_dir(cwd).args(args).output()?;
     if !out.status.success() {
         return Err(io::Error::other(

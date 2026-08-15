@@ -1,124 +1,11 @@
 //! The landing repair (§16.3, bl-7e54), against **real balls landings** on
 //! disk — founded by `balls::substrate::found_landing`, damaged the way this
-//! box's live world was damaged, then converged.
-//!
-//! The damage fixture is copied from the live world rather than invented: a
-//! schedule wiring only `bl-delivery`, over an OLDER balls' phase vocabulary
-//! (`drop.post`, `claim.pre`, `unclaim.pre` — three keys balls 0.5.9's default
-//! does not contain) and with no `show` hook at all. That is what the operator's
-//! stale seed template actually produced, and it is why the repair has to
-//! re-derive the whole schedule instead of patching two names into it.
+//! box's live world was damaged (see [`world`]), then converged.
+
+mod world;
 
 use super::*;
-use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
-use tempfile::TempDir;
-
-/// The live world's damaged schedule, verbatim (see the ball's premise-check
-/// comment): only `bl-delivery`, on phase keys from a retired balls, and no
-/// `show`.
-const STALE: &str = r#"[hooks]
-"claim.post" = ["bl-delivery"]
-"claim.pre" = ["bl-delivery"]
-"close.post" = ["bl-delivery"]
-"close.pre" = ["bl-delivery"]
-"drop.post" = ["bl-delivery"]
-"prime.post" = ["bl-delivery"]
-"unclaim.post" = ["bl-delivery"]
-"unclaim.pre" = ["bl-delivery"]
-"#;
-
-/// A scratch world: balls' two homes, a tools dir carrying the `bl` sibling
-/// roster yog's world always seeds, and a project directory to address.
-struct World {
-    _dir: TempDir,
-    edge: Edge,
-    landing: PathBuf,
-    /// `<yog-data-root>/world` — the containment gate's subject.
-    root: PathBuf,
-}
-
-impl World {
-    /// Lay the scratch world. Nothing is founded yet — the landing path is
-    /// computed by balls' own `clone_dir` fold, never spelled here.
-    fn new() -> World {
-        let dir = tempfile::tempdir().expect("scratch world");
-        // The real shape: balls' two homes live INSIDE the world subtree, which
-        // is what earns the repair the right to rewrite a landing there.
-        let anchor = dir.path();
-        let root = anchor.join("yog").join("world");
-        std::fs::create_dir_all(&root).expect("world root");
-        let tools = root.join("tools");
-        std::fs::create_dir_all(&tools).expect("tools dir");
-        // The sibling binaries balls' seed binds and prunes against. Content is
-        // irrelevant — `seed::sibling` only asks whether the path exists — but
-        // they must be present or the seed prunes the very entries under test.
-        for name in [tools::BL, tools::BL_DELIVERY, tools::BL_TRACKER] {
-            let path = tools.join(name);
-            std::fs::write(&path, "#!/bin/sh\nexit 0\n").expect("sibling");
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))
-                .expect("sibling mode");
-        }
-        let project = anchor.join("proj");
-        std::fs::create_dir_all(&project).expect("project dir");
-        let edge = Edge::resolve(
-            anchor.to_path_buf(),
-            Some(root.join("config").to_string_lossy().into_owned()),
-            Some(root.join("state").to_string_lossy().into_owned()),
-            project,
-            Some("tester".to_owned()),
-            None,
-            Some(tools.join(tools::BL)),
-            None,
-            None,
-            false,
-            None,
-        );
-        let landing = edge.xdg.clone_dir(&edge.invocation_path).landing();
-        World {
-            _dir: dir,
-            edge,
-            landing,
-            root,
-        }
-    }
-
-    /// Found the landing the way `bl prime` does — balls' own seed, against
-    /// this world's tools dir, so it comes up HEALTHY.
-    fn found(&self) {
-        substrate::found_landing(
-            &self.landing,
-            &self.edge.xdg,
-            self.edge.exe_dir.as_deref(),
-            "tester",
-        )
-        .expect("found landing");
-    }
-
-    /// Overwrite the founded landing's schedule with the live world's damage
-    /// and commit it, reproducing a landing seeded from the stale template.
-    fn damage(&self) {
-        std::fs::write(self.plugins(), STALE).expect("write stale schedule");
-        git(&self.landing, &["add", "-A"]).expect("stage");
-        git(&self.landing, &["commit", "-q", "-m", "stale seed"]).expect("commit");
-    }
-
-    fn plugins(&self) -> PathBuf {
-        self.landing.join("config").join("plugins.toml")
-    }
-
-    fn scalars(&self) -> PathBuf {
-        self.landing.join("config").join("balls.toml")
-    }
-
-    fn schedule(&self) -> String {
-        std::fs::read_to_string(self.plugins()).unwrap_or_default()
-    }
-
-    fn head(&self) -> String {
-        git(&self.landing, &["rev-parse", "HEAD"]).expect("head")
-    }
-}
+use world::World;
 
 #[test]
 fn an_unfounded_clone_is_left_alone() {
@@ -256,6 +143,41 @@ fn a_failing_git_becomes_an_error_carrying_its_stderr() {
     let err = git(&world.landing, &["rev-parse", "--verify", "no/such/ref"])
         .expect_err("a missing ref fails");
     assert!(!err.to_string().is_empty(), "git's own words ride along");
+    // …under the site, so the three forks are told apart in a warning line.
+    let said = err.to_string();
+    assert!(said.starts_with("git rev-parse ("), "sited: {said}");
+    assert!(
+        said.contains(&world.landing.display().to_string()),
+        "the cwd is named: {said}"
+    );
+}
+
+/// The instrumentation bl-1ce0 asked for, on the failure shape it was filed
+/// from: a bare `NotFound` out of any of converge's reads or forks used to
+/// reach the operator as one word, naming neither the step nor the path.
+#[test]
+fn a_sited_error_keeps_its_kind_and_names_the_step_and_the_path() {
+    let bare = io::Error::new(io::ErrorKind::NotFound, "No such file or directory");
+    let err = sited(
+        "read the landing schedule",
+        Path::new("/home/u/w"),
+        Err::<(), _>(bare),
+    )
+    .expect_err("the error survives");
+    assert_eq!(err.kind(), io::ErrorKind::NotFound, "matchable as before");
+    assert_eq!(
+        err.to_string(),
+        "read the landing schedule (/home/u/w): No such file or directory"
+    );
+}
+
+/// The pass-through half: a site costs nothing on the path everything takes.
+#[test]
+fn a_sited_success_is_the_value_itself() {
+    assert_eq!(
+        sited("read the landing schedule", Path::new("/home/u/w"), Ok(7)).expect("ok"),
+        7
+    );
 }
 
 #[test]
