@@ -70,10 +70,11 @@ pub fn tabs_and_content(
             }
         }
     });
-    // The selection as a seat sees it (REMOTE §9.4, bl-1eb0): the id, the tip
-    // the §5.1 #17 governing derivation reads, the §3.5 liveness the steps view
-    // is keyed on, and the §3.3 speaker — one payload, no agent set.
-    let Some(focus) = model.focused_conversation() else {
+    // The selection as a seat sees it (REMOTE §9.4, bl-1eb0; §9.7, bl-48ae):
+    // the id every question below is addressed at, and the §3.3 speaker the
+    // transcript's model turns wear — both off the **landed forest**, so the
+    // pane's own subject never lags the row the operator picked.
+    let Some(focus) = super::seat::selection(model) else {
         ui.weak("select an agent to inspect");
         return;
     };

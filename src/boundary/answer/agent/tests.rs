@@ -75,6 +75,43 @@ fn the_marks_and_the_legacy_naming_rung_are_stated() {
     assert_eq!(view.held.map(|h| h.tool), Some("Bash".to_owned()));
 }
 
+/// **The forest already answers everything the §11 seat reads synchronously**
+/// (REMOTE §9.7, bl-48ae) — the pin the migration off `focused_conversation`
+/// rests on. `Query::Conversations` lands the whole descent forest, and
+/// [`nav::convs::selection`](crate::nav::convs::selection) is a pure fold out of
+/// it, so a seat pays no second ask for the composer's target line, §11's
+/// ancestor unfold or either §8.2 gate. Every fact both projections carry is
+/// asserted equal here, over a member, a root and an id nothing carries —
+/// because two projections of one derivation that nothing holds together are
+/// two facts waiting to disagree.
+#[test]
+fn the_forest_answers_every_fact_the_seat_reads_off_the_selection() {
+    let ws = Path::new("/w");
+    let mut root = agent_row(ROOT, AgentState::Quiescent, 1);
+    root.name = Some("pennant".to_owned());
+    let child = agent_row(CHILD, AgentState::InFlight, 2);
+    let snap = snapshot(ws, "alba", vec![root, child], vec![]);
+    let rows = crate::boundary::answer::conversations(
+        &snap,
+        &crate::ui_state::UiState::open("/nonexistent/ui.json".into()),
+        ws,
+        100,
+    );
+    for id in [ROOT, CHILD, "20260801T000000Z-gh0"] {
+        let view = agent(&snap, ws, id);
+        let seat = crate::nav::convs::selection(&rows, id);
+        assert_eq!(seat.agent_id, view.agent_id, "{id}");
+        assert_eq!(seat.root, view.root, "{id}");
+        assert_eq!(seat.ancestors, view.ancestors, "{id}");
+        assert_eq!(seat.name, view.name, "{id}");
+        assert_eq!(seat.display_only, view.display_only, "{id}");
+        assert_eq!(seat.flight, view.flight, "{id}");
+        assert_eq!(seat.present, view.present, "{id}");
+        assert_eq!(seat.stoppable, view.stoppable, "{id}");
+        assert_eq!(seat.stop_children, view.stop_children, "{id}");
+    }
+}
+
 /// Absence is a value: an id this workspace does not carry, and a workspace
 /// with no derived tree at all, both read as their own root — unnamed,
 /// stopped, unmarked, nothing offered — rather than refusing.

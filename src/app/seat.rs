@@ -9,10 +9,17 @@
 //! `GitTree` on the frame thread; a thin client holds no `GitTree` and never
 //! will, so every one of those seats was window-only by construction.
 //!
-//! Nothing here derives anything. Each accessor resolves the focus and calls
-//! the boundary answer that already owns the question ([`answer::agent`]), so
-//! the window and a decoded `/agent` reply paint the same frame — §8.5's parity
-//! discipline in the one place it had never reached.
+//! Nothing here derives anything. Each accessor resolves the focus and folds
+//! the snapshot the frame is already holding.
+//!
+//! **`focused_conversation` is gone** (bl-48ae). It was the last in-process read
+//! of REMOTE §11's residual — the whole seat view, re-derived per frame off the
+//! window's own snapshot — and it did not become a standing question but a
+//! *split*: the facts that name the target or gate a gesture are picked out of
+//! the landed `Query::Conversations` forest, and the selection's own detail is a
+//! standing `Query::Agent`. Both halves live at the seat
+//! ([`crate::shell::seat`]), which is where the ruling about what each may cost
+//! is written.
 //!
 //! The two facts that stay in RAM rather than crossing: the focus itself (§13.1
 //! — per-instance, never durable) and the viewport's folds (§5.3). A seat's
@@ -20,7 +27,6 @@
 //! answers take rather than something the boundary is asked for.
 
 use super::AppModel;
-use crate::boundary::answer::agent::{AgentView, agent};
 use crate::inboxview::InboxEntry;
 use crate::model_pick::ConfigTip;
 use crate::nav::convs::Titles;
@@ -32,18 +38,6 @@ impl AppModel {
     /// unfetched tree).
     pub fn focused_agent_id(&self) -> Option<String> {
         self.focused_agent().map(|a| a.agent_id.clone())
-    }
-
-    /// The selected conversation as a seat sees it — the §11 centre pane's
-    /// whole input off the tree: identity, name, tip, liveness, §6 marks, the
-    /// live class and the two §8.2 gates. `None` only when nothing is selected;
-    /// an agent the snapshot does not carry is *answered* (as its own root,
-    /// stopped, unmarked) rather than withheld, exactly as the boundary
-    /// answers it.
-    pub fn focused_conversation(&self) -> Option<AgentView> {
-        let ws = self.focused_workspace()?;
-        let id = self.focus.agent.as_deref()?;
-        Some(agent(&self.snap, &ws, id))
     }
 
     /// The selected conversation's undelivered deposits (§5.1 #11), oldest

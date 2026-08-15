@@ -33,11 +33,13 @@ use super::ShellState;
 /// refused exactly where the button is disabled: no workspace, no selection, or
 /// an agent the §11 seat's own `stoppable` gate says is not stoppable.
 pub(super) fn stop_selected(model: &mut AppModel, state: &mut ShellState) {
-    let (Some(ws), Some(seat)) = (model.focused_workspace(), model.focused_conversation()) else {
+    let (Some(ws), Some(seat)) = (model.focused_workspace(), super::seat::selection(model)) else {
         return;
     };
-    // The gate the button paints is the gate this runs (REMOTE §9.4, bl-1eb0):
-    // one fact off the seat's own view, not a second reading of the tree.
+    // The gate the button paints is the gate this runs (REMOTE §9.4, bl-1eb0;
+    // §9.7, bl-48ae): one fact off the **landed forest**, read in the frame the
+    // click happened, not a second reading of the tree and not an answer that
+    // arrives an ask period after the key.
     if !seat.stoppable {
         return;
     }

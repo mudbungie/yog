@@ -38,6 +38,17 @@
 # `Agent` type position, the name is a `type_identifier` in type position and an
 # `identifier` in path/use position — matching both kinds catches every
 # spelling. `rules/fixtures/shell/engine_tree.rs` proves it still bites.
+#
+# **`Query::Agent` and `Reply::Agent` are excepted, and that is the rule's own
+# line rather than a hole in it** (bl-48ae). The boundary spells one query per
+# conversation-addressed read, and the seventh of that family is named for its
+# subject — so a seat declaring it writes the word `Agent` while naming a
+# *payload the codec spells in both directions*, which is precisely what this
+# rule exists to permit. The carve-out is keyed to the enum path, not to a file:
+# an identifier is excepted only when its `scoped_identifier`/
+# `scoped_type_identifier` parent's path is `Query` or `Reply`, so
+# `crate::git_tree::Agent` — whose path is neither — is still flagged wherever it
+# appears, `use` line and type position alike.
 id: no-engine-tree-in-paint
 language: rust
 severity: error
@@ -52,8 +63,17 @@ ignores:
   - "**/tests.rs"
   - "**/*tests.rs"
 rule:
-  any:
-    - kind: type_identifier
-      regex: '^(GitTree|Agent|CommitNode)$'
-    - kind: identifier
-      regex: '^(GitTree|Agent|CommitNode)$'
+  all:
+    - any:
+        - kind: type_identifier
+          regex: '^(GitTree|Agent|CommitNode)$'
+        - kind: identifier
+          regex: '^(GitTree|Agent|CommitNode)$'
+    - not:
+        inside:
+          any:
+            - kind: scoped_type_identifier
+            - kind: scoped_identifier
+          has:
+            field: path
+            regex: '(^|::)(Query|Reply)$'

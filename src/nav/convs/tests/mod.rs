@@ -20,6 +20,10 @@ mod name;
 /// The §11 row projection's own tables, one budget below this one.
 mod rows;
 
+/// The **selection's** fold out of the answered forest (REMOTE §9.7), one
+/// budget below this one.
+mod select;
+
 /// The §11 bottom in-flight strip's own tables, one budget below this one.
 mod strip;
 

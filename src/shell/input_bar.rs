@@ -84,14 +84,24 @@ pub fn composer(
     // The selection bridge (§11): the conversation list picks the target — at
     // any depth, since bl-fa82 made a member a row of it; the composer never
     // grows its own picker.
-    let seat = model.focused_conversation();
+    let seat = super::seat::selection(model);
     state.actions.selected_branch = seat.as_ref().map(|s| s.agent_id.clone());
     let target = state.actions.selected_branch.clone();
     let mint_seed = state.start.mint_seed;
     // Derived ONCE for both spellings (§3.3, bl-2f30): the selection's
     // conversation root, then the one ladder — both folded into the seat's
     // `name` at the boundary, so this reads it rather than re-deriving it.
+    // Off the **landed forest** since bl-48ae, which is what keeps it: a name
+    // that blinked to "start a conversation" for an ask period after every
+    // selection would be a regression, not a cost (REMOTE §9.7).
     let conv_name = seat.as_ref().map(|s| s.name.clone());
+    // The selection's own detail, an ask period behind (REMOTE §9.7, bl-48ae):
+    // the §8.6 park the answer controls act on and the `Nudge` gate. Both paint
+    // an affordance rather than judging one, so an unanswered frame simply does
+    // not offer them — and an unpainted button cannot refuse a click.
+    let detail = target
+        .as_deref()
+        .and_then(|agent| super::seat::detail(model, &ws, agent).value);
 
     if conv_name.is_none() {
         // A new conversation: the greyed identity preview (§3.3), stable
@@ -177,8 +187,8 @@ pub fn composer(
         stoppable: seat.as_ref().is_some_and(|s| s.stoppable),
         stop_children: seat.as_ref().is_some_and(|s| s.stop_children),
         present: seat.as_ref().is_some_and(|s| s.present),
-        nudgeable: seat.as_ref().is_some_and(|s| s.nudgeable),
-        held: seat.and_then(|s| s.held),
+        nudgeable: detail.as_ref().is_some_and(|d| d.nudgeable),
+        held: detail.and_then(|d| d.held),
         key: key.clone(),
         text: state.actions.drafts.text(&key),
         conv_name,

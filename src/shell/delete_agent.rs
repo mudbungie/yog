@@ -75,14 +75,17 @@ pub(super) fn open(state: &mut ShellState, lernie: &Cli, ws: &Path, root: &str) 
 /// yog-named workspace (§3.6 scope), exactly what a `None` confirmation says.
 pub(super) fn danger_row(
     ui: &mut egui::Ui,
-    model: &AppModel,
+    model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
     ws: &Path,
 ) {
     // The §2.3 descent root, off the seat's own view of its selection
     // (REMOTE §9.4, bl-1eb0) — the gate is the conversation's, not the member's.
-    let Some(root) = model.focused_conversation().map(|seat| seat.root) else {
+    // Since bl-48ae that view is a selection out of the landed forest, so the
+    // row this click arms is aimed at the conversation the operator is looking
+    // at rather than at whichever one an answer had caught up to.
+    let Some(root) = super::seat::selection(model).map(|seat| seat.root) else {
         return;
     };
     if model.agent_delete_confirmation(ws, &root).is_none() {
