@@ -139,7 +139,7 @@ pub(super) fn staged(
     prepared: &Prepared,
     goal: Option<String>,
 ) -> bool {
-    model.focus_workspace(&acting.ws);
+    model.adopt_workspace(&acting.ws);
     let Some(text) = goal else {
         // A draft opens only when the rung composed one (bl-9acf): one
         // predicate, not a rung match — the prefill's blankness is the fact,

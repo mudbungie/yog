@@ -16,7 +16,7 @@ fn an_unselected_workspace_paints_the_birth_config_block() {
     let mut world = world();
     let ws = world.ws.clone();
     // `focus_workspace` selects no agent — the very state the block is for.
-    world.model.focus_workspace(&ws);
+    world.model.focus_workspace(&crate::naming::leaf(&ws));
     let out = painted(&mut world, &lernie, &bl);
     assert!(out.contains("new conversation"), "block heading:\n{out}");
     // What the branch head assigns, not a placeholder for it: since bl-a842 the
@@ -43,7 +43,7 @@ fn the_work_directory_box_rides_the_block_pre_filled_and_leaves_the_composer() {
     let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
     let mut world = world();
     let ws = world.ws.clone();
-    world.model.focus_workspace(&ws);
+    world.model.focus_workspace(&crate::naming::leaf(&ws));
     // What the fixture's env resolves `~` to — the bare rung's driver cwd
     // (§3.4), which is exactly what the box is seeded with.
     let home = world.state.actions.path_dir.clone();
@@ -70,7 +70,7 @@ fn a_work_directory_that_is_not_there_flags_red_at_the_field() {
     let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
     let mut world = world();
     let ws = world.ws.clone();
-    world.model.focus_workspace(&ws);
+    world.model.focus_workspace(&crate::naming::leaf(&ws));
     // The pre-filled default is a real directory, so the field says nothing.
     let clean = painted(&mut world, &lernie, &bl);
     assert!(
@@ -101,7 +101,7 @@ fn expanding_the_block_opens_the_one_picker_scoped_to_the_workspace_default() {
     let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
     let mut world = world();
     let ws = world.ws.clone();
-    world.model.focus_workspace(&ws);
+    world.model.focus_workspace(&crate::naming::leaf(&ws));
     // The picker is the **wall's** RAM (bl-5894), and the frame is what seats a
     // wall — so the flag is set on the sphere's own picker, after one paint, not
     // on the no-wall bundle a launch starts holding.

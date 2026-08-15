@@ -19,7 +19,7 @@ fn focused_agent_resolves_the_selected_row_else_none() {
     let h = Harness::new();
     let (_c, mut model) = h.model();
     // No agent selected → None; a focused workspace alone is not enough.
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     assert!(model.focused_agent().is_none());
     // Selecting the agent resolves its snapshot row (the inspector target).
     model.focus_agent(&h.ws, "c-1");
@@ -50,7 +50,7 @@ fn the_tab_bar_and_conversation_list_carry_the_derived_facts() {
     assert_eq!(entry.kind, crate::nav::tabs::Kind::Foreign);
     // The focused workspace's conversation list: one row per root agent (§11),
     // its unseen stop counted as attention.
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     let rows = model.conversations(10);
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].root_id, "c-1");
@@ -64,7 +64,7 @@ fn the_tab_bar_and_conversation_list_carry_the_derived_facts() {
     let expanded = std::collections::HashSet::from(["c-1".to_owned()]);
     assert_eq!(model.visible_conversations(10, &expanded), rows);
     // No focus → the empty list (the general empty path, not a special case).
-    model.focus_workspace(std::path::Path::new("/no/such"));
+    model.focus_workspace("no-such-workspace");
     assert!(model.conversations(10).is_empty(), "unfetched ws: no rows");
     assert!(model.visible_conversations(10, &expanded).is_empty());
 }
@@ -80,7 +80,7 @@ fn the_boundary_answer_is_the_frames_derivation_without_a_frame() {
 
     let h = Harness::new();
     let (_c, mut model) = h.model();
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     let deps = model.boundary_deps(&Cli::new("/no/lernie"), &Cli::new("/no/bl"));
 
     // What the chokepoint answers, and what a seat then paints from it. Since

@@ -40,7 +40,7 @@ use super::wire::{self, Landed};
 /// must see the same list: a start's pending row is a row the ↓ key steps and
 /// the ← key pages out of, not a decoration the paint adds.
 pub(super) fn forest(model: &mut AppModel) -> Landed<Vec<ConvRow>> {
-    let Some(workspace) = model.focused_workspace().map(crate::naming::leaf) else {
+    let Some(workspace) = model.focused_ws_name() else {
         return Landed::default();
     };
     let mut landed = wire::ask(

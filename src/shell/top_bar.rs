@@ -10,7 +10,6 @@ use crate::AppModel;
 use crate::cli_outbound::Cli;
 use crate::nav::menu::Seat;
 use crate::nav::tabs::{Kind, Tab};
-use crate::nav::ws_key;
 use crate::theme;
 
 use super::ShellState;
@@ -125,7 +124,7 @@ fn workspace_tab(
     if label.clicked() {
         // A pointer picked the workspace; the keyboard's next job is the
         // composer it just re-aimed (§11 focus discipline).
-        super::focus::workspace(model, state, &tab.ws);
+        super::focus::workspace(model, state, &tab.name);
     }
     super::menus::attach(
         &label,
@@ -178,7 +177,7 @@ fn overflow_menu(
                     .on_hover_text(TAB_HINT)
                     .clicked()
                 {
-                    super::focus::workspace(model, state, &entry.ws);
+                    super::focus::workspace(model, state, &entry.name);
                     ui.close_menu();
                 }
                 // The ★ toggle is the pin's visible carrier (bl-7e32); it takes
@@ -194,7 +193,7 @@ fn overflow_menu(
                     .on_hover_text(hint)
                     .clicked()
                 {
-                    model.toggle_pin(&ws_key(&entry.ws));
+                    model.toggle_pin(&entry.name);
                 }
             });
         }

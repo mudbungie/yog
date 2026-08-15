@@ -69,8 +69,8 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
         "tab bars diverged across a restart"
     );
     let (mut a, mut b) = (first, second);
-    a.focus_workspace(&ws);
-    b.focus_workspace(&ws);
+    a.focus_workspace(&yog::naming::leaf(&ws));
+    b.focus_workspace(&yog::naming::leaf(&ws));
     assert_eq!(
         crate::support::conversation_rows(&a, 1000),
         crate::support::conversation_rows(&b, 1000),

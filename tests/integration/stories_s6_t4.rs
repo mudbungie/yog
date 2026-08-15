@@ -83,7 +83,7 @@ fn s6_t4_rollups_sum_and_jump_to_next_wraps_without_sticking() {
     for _ in 0..3 {
         m.jump_next_attention();
         visited.push((
-            m.focused_workspace().unwrap().to_path_buf(),
+            m.focused_workspace().unwrap().clone(),
             m.focused_agent().unwrap().agent_id.clone(),
         ));
         remaining.push(m.strip_total());

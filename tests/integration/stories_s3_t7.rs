@@ -61,7 +61,7 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
         }),
         None,
     );
-    m.focus_workspace(&ws);
+    m.focus_workspace(&yog::naming::leaf(&ws));
 
     // --- Before: the row is Bound and the conversation's badge is the bound hue.
     let row = m.focused_join().expect("cobalt binds bl-7").clone();

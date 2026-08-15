@@ -57,7 +57,6 @@ use crate::actions::DraftKey;
 use crate::cli_outbound::Cli;
 use crate::start;
 use lernie::mint::SplitMix64;
-use std::path::PathBuf;
 
 use super::ShellState;
 use super::inbox_queue;
@@ -75,7 +74,7 @@ pub fn composer(
     bl: &Cli,
     cap: f32,
 ) {
-    let Some(ws) = model.focused_workspace().map(PathBuf::from) else {
+    let Some(ws) = model.focused_workspace() else {
         return;
     };
     // The frame's roster in the form a seat can hold (REMOTE §9.4, bl-1eb0):

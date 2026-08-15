@@ -57,7 +57,7 @@ fn s6_t3_the_ack_quiets_the_signal_and_keeps_every_fact() {
         Box::new(FakeBl::default()),
         None,
     );
-    m.focus_workspace(&ws);
+    m.focus_workspace(&yog::naming::leaf(&ws));
 
     // --- Before: it stirs.
     assert_eq!(m.strip_total(), 1, "a failed latest step stirs (rule 2)");

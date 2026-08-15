@@ -48,7 +48,9 @@ impl AppModel {
     /// root ([`settle_acts`](Self::settle_acts)), so neither is marked twice.
     pub(crate) fn deleted_agent(&mut self, ws: &Path, root: &str) {
         let inside = |a: &str| a == root || a.starts_with(&format!("{root}-"));
-        if self.focus.ws.as_deref() == Some(ws) && self.focus.agent.as_deref().is_some_and(inside) {
+        if self.focus.ws.as_deref() == Some(crate::naming::leaf(ws).as_str())
+            && self.focus.agent.as_deref().is_some_and(inside)
+        {
             self.focus.agent = None;
         }
     }
@@ -64,7 +66,7 @@ impl AppModel {
     /// answered, not what it answered.
     pub(crate) fn deleted_workspace(&mut self, ws: &Path) {
         self.mark_dirty([self.roots.names(), self.roots.balls_clones.clone()]);
-        if self.focus.ws.as_deref() == Some(ws) {
+        if self.focus.ws.as_deref() == Some(crate::naming::leaf(ws).as_str()) {
             let survivors: Vec<crate::binding::Workspace> = self
                 .snap
                 .workspaces

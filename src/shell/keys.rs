@@ -23,7 +23,6 @@
 
 use crate::AppModel;
 use crate::keymap::{self, Held, Key, KeyAction, Mods};
-use std::path::Path;
 
 use super::ShellState;
 
@@ -196,7 +195,7 @@ fn cancel_pending(model: &AppModel, state: &mut ShellState) {
 /// a new root — and hand it the keyboard. A no-op with no workspace focused,
 /// where there is no composer to target.
 pub(super) fn new_conversation(model: &mut AppModel, state: &mut ShellState) {
-    let Some(ws) = model.focused_workspace().map(Path::to_path_buf) else {
+    let Some(ws) = model.focused_ws_name() else {
         return;
     };
     super::focus::workspace(model, state, &ws);
@@ -207,7 +206,7 @@ pub(super) fn new_conversation(model: &mut AppModel, state: &mut ShellState) {
 /// already the typed way in, so the key only starts the sentence.
 fn search_line(model: &AppModel, state: &mut ShellState) {
     let key = crate::actions::drafts::DraftKey::composer(
-        model.focused_workspace().map(Path::to_path_buf),
+        model.focused_workspace(),
         model.focused_agent_id(),
     );
     state.actions.drafts.set(key, "/search ".to_owned());

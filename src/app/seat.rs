@@ -41,9 +41,9 @@ impl AppModel {
     /// stopped, unmarked) rather than withheld, exactly as the boundary
     /// answers it.
     pub fn focused_conversation(&self) -> Option<AgentView> {
-        let ws = self.focus.ws.as_deref()?;
+        let ws = self.focused_workspace()?;
         let id = self.focus.agent.as_deref()?;
-        Some(agent(&self.snap, ws, id))
+        Some(agent(&self.snap, &ws, id))
     }
 
     /// The selected conversation's undelivered deposits (§5.1 #11), oldest

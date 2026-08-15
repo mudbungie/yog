@@ -2,7 +2,7 @@
 //! [`super`] at the 300-line cap — same move as `menu/tests.rs`.
 
 use super::*;
-use std::path::Path;
+use std::path::PathBuf;
 
 fn item(path: &str, kind: WorkspaceKind, attention: usize) -> Item {
     Item {
@@ -30,7 +30,7 @@ fn named_workspaces_tab_in_name_order_and_carry_facts() {
         named("/y/zeta-pug", "zeta-pug", 2),
         named("/y/alba-koi", "alba-koi", 0),
     ];
-    let bar = build(&items, &[], Some(Path::new("/y/zeta-pug")));
+    let bar = build(&items, &[], Some("zeta-pug"));
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(names, ["alba-koi", "zeta-pug"]);
     assert!(bar.overflow.is_empty());

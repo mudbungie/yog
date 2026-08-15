@@ -24,7 +24,7 @@ use crate::AppModel;
 use crate::boundary::answer::agent::AgentView;
 use crate::cli_outbound::Cli;
 use crate::theme;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::ShellState;
 
@@ -42,7 +42,7 @@ pub fn center(
     lernie: &Cli,
     bz: &Cli,
 ) {
-    let Some(ws) = model.focused_workspace().map(PathBuf::from) else {
+    let Some(ws) = model.focused_workspace() else {
         super::bootstrap::render(ui, model, state);
         return;
     };

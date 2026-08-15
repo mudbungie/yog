@@ -120,7 +120,7 @@ fn the_unmaking_removes_the_wall_moves_the_focus_and_leaves_the_trail() {
     let h = Harness::new();
     let named = add_named(&h, "alba-koi", "c-1");
     let (_c, mut model) = h.model_focused(Some(named.clone()));
-    assert_eq!(model.focused_workspace(), Some(named.as_path()));
+    assert_eq!(model.focused_workspace(), Some(named.clone()));
 
     unmake(&mut model, &named, "alba-koi").unwrap();
     // The unmaking names the roots it changed; the worker re-enumerates on its
@@ -134,7 +134,7 @@ fn the_unmaking_removes_the_wall_moves_the_focus_and_leaves_the_trail() {
     );
     assert_ne!(
         model.focused_workspace(),
-        Some(named.as_path()),
+        Some(named.clone()),
         "focus never points at a gone directory"
     );
     // The trail survives its subject (§3.6, §4.2).

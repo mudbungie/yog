@@ -9,7 +9,6 @@
 
 use crate::binding::{Workspace, WorkspaceKind};
 use crate::nav::ws_key;
-use std::path::PathBuf;
 
 /// The per-workspace facts a tab is built from — derived by the caller
 /// ([`AppModel::tab_bar`](crate::AppModel::tab_bar)) from the classification +
@@ -63,13 +62,19 @@ impl Kind {
     }
 }
 
-/// One tab or overflow entry (§11): the workspace path (the focus target), its
-/// display name (the operator's own name, or the auto-id leaf for foreign/replay), its
-/// attention count, whether it is the focused workspace, whether it is pinned
-/// (hoisted), and which §3.1 [`Kind`] it is.
+/// One tab or overflow entry (§11): the workspace **name** — the operator's own
+/// name, or the auto-id leaf for foreign/replay, which §3.1 makes the identity
+/// either way — its attention count, whether it is the focused workspace,
+/// whether it is pinned (hoisted), and which §3.1 [`Kind`] it is.
+///
+/// **It carries no path** (REMOTE §9.7 class 2, bl-7407). The name is what a
+/// click hands back to the focus, what a gesture addresses and what a reply
+/// would spell, so a tab that also carried a path would be a second source for
+/// one fact the moment these rows come off the wire. The two doors that need a
+/// path resolve at the click: the focus ([`AppModel::focus_workspace`]) and
+/// the pin key ([`AppModel::toggle_pin`], which resolves it).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Tab {
-    pub ws: PathBuf,
     pub name: String,
     pub attention: usize,
     pub selected: bool,
@@ -122,7 +127,7 @@ impl TabBar {
 /// listing it with `pinned` set — that is what makes the menu's ★ the visible
 /// pin/unpin toggle and the tab's context-menu unpin a mere accelerator (§11
 /// context-menu doctrine, which a menu-only unpin violated).
-pub fn build(items: &[Item], pinned: &[String], focused: Option<&std::path::Path>) -> TabBar {
+pub fn build(items: &[Item], pinned: &[String], focused: Option<&str>) -> TabBar {
     let mut tabs: Vec<Tab> = Vec::new();
     for key in pinned {
         if let Some(it) = items.iter().find(|it| ws_key(&it.ws.path) == *key) {
@@ -148,20 +153,16 @@ fn is_pinned(it: &Item, pinned: &[String]) -> bool {
     pinned.iter().any(|k| *k == ws_key(&it.ws.path))
 }
 
-/// Project one [`Item`] to a [`Tab`]. The display name is the path leaf — for
-/// a named workspace this *is* its name (§3.1: the leaf is the name).
-fn tab(it: &Item, focused: Option<&std::path::Path>, pinned: bool) -> Tab {
-    let name = it
-        .ws
-        .path
-        .file_name()
-        .map(|s| s.to_string_lossy().into_owned())
-        .unwrap_or_default();
+/// Project one [`Item`] to a [`Tab`]. The name is the path leaf, which §3.1
+/// makes the workspace's identity — [`crate::naming::leaf`] is the one
+/// spelling of that, shared with the boundary's addressing so a tab and a
+/// gesture cannot disagree about what this workspace is called.
+fn tab(it: &Item, focused: Option<&str>, pinned: bool) -> Tab {
+    let name = crate::naming::leaf(&it.ws.path);
     Tab {
-        ws: it.ws.path.clone(),
+        selected: focused == Some(name.as_str()),
         name,
         attention: it.attention,
-        selected: focused == Some(it.ws.path.as_path()),
         pinned,
         kind: Kind::of(&it.ws.kind),
     }

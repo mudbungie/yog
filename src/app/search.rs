@@ -57,10 +57,10 @@ impl AppModel {
         match at {
             Address::Ball { project, id } => {
                 if let Some(ws) = self.ball_workspace(project, id) {
-                    self.focus_workspace(&ws);
+                    self.focus_workspace(&crate::naming::leaf(&ws));
                 }
             }
-            Address::Workspace { path } => self.focus_workspace(path),
+            Address::Workspace { path } => self.focus_workspace(&crate::naming::leaf(path)),
             Address::Conversation { workspace, agent } => {
                 self.focus_agent(workspace, agent);
                 self.select_tab(InspectorTab::Transcript);

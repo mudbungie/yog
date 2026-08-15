@@ -89,17 +89,32 @@ impl AppModel {
         self.snap.trees.get(ws)
     }
 
-    /// The focused workspace path (center-panel target), if any.
-    pub fn focused_workspace(&self) -> Option<&Path> {
-        self.focus.ws.as_deref()
+    /// **The one door from a §3.1 name to a path** (bl-7407): `name` resolved
+    /// against the painted enumeration — which carries the §3.4 raise claim's
+    /// wall ([`raise`](super::raise)), so a start's own workspace resolves from
+    /// the frame the receipt lands rather than one derivation later.
+    ///
+    /// One resolver rather than a lookup per reader, so "what does this window
+    /// mean by that workspace" has a single answer, and it is the same
+    /// [`by_leaf`](crate::naming::by_leaf) rule the engine resolves a gesture's
+    /// address by — a name nothing answers resolves to nothing rather than to a
+    /// guess. Every seat that still needs a path (the §3.6 delete dialog, the
+    /// pin key, the spawn cwd) reaches it through here or through
+    /// [`focused_workspace`](Self::focused_workspace) above it.
+    pub fn workspace_path(&self, name: &str) -> Option<std::path::PathBuf> {
+        self.snap.ws_path(name).ok()
+    }
+
+    /// The focused workspace as a path — the focus's name through the one door.
+    /// `None` for a name the enumeration does not answer, which is what an
+    /// unfetched or deleted workspace already read as.
+    pub fn focused_workspace(&self) -> Option<std::path::PathBuf> {
+        self.workspace_path(self.focus.ws.as_deref()?)
     }
 
     /// The focused workspace's snapshot (the center panel renders this tree).
     pub fn focused_tree(&self) -> Option<&GitTree> {
-        self.focus
-            .ws
-            .as_deref()
-            .and_then(|w| self.snap.trees.get(w))
+        self.snap.trees.get(&self.focused_workspace()?)
     }
 
     /// Whether the focused workspace is a read-only replay (§3.1
@@ -107,7 +122,7 @@ impl AppModel {
     /// view renders it through the same tree renderer — this query only gates
     /// the mutating composer off, so a replay offers no write surface.
     pub fn focused_is_replay(&self) -> bool {
-        let Some(ws) = self.focus.ws.as_deref() else {
+        let Some(ws) = self.focused_workspace() else {
             return false;
         };
         self.snap

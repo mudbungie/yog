@@ -154,7 +154,7 @@ fn an_empty_selection_answers_the_same_question_in_the_same_seat() {
     let mut world = world();
     let ws = world.ws.clone();
     // `focus_workspace` selects no agent — the very state the block is for.
-    world.model.focus_workspace(&ws);
+    world.model.focus_workspace(&crate::naming::leaf(&ws));
     let win = Window::new();
     let painted = win.settled(&mut world);
 

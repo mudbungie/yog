@@ -86,7 +86,7 @@ fn balls_section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState
         // badge: the delivered ones. A *bound* ball is rendered in full by the
         // ▶ Continue row above, so it is not repeated here as a bare id
         // (bl-abbe) — [`AppModel::roster_ball_rows`] is the covered partition.
-        if let Some(ws) = model.focused_workspace().map(std::path::Path::to_path_buf) {
+        if let Some(ws) = model.focused_workspace() {
             for ball in model.roster_ball_rows(&ws) {
                 bound_ball_row(ui, model, state, lernie, &ball);
             }

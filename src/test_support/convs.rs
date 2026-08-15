@@ -25,7 +25,7 @@ use crate::nav::convs::{self, ConvRow};
 /// snapshot cannot resolve — the refusal a seat would paint, which is no rows
 /// either way.
 pub(crate) fn forest(model: &AppModel, now_unix: i64) -> Vec<ConvRow> {
-    let Some(workspace) = model.focused_workspace().map(crate::naming::leaf) else {
+    let Some(workspace) = model.focused_ws_name() else {
         return Vec::new();
     };
     let deps: Deps = model.boundary_deps(&Cli::new("lernie"), &Cli::new("bl"));

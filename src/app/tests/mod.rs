@@ -64,13 +64,14 @@ fn replays_enumerate_into_the_tab_overflow_and_render_read_only() {
     assert!(
         bar.overflow
             .iter()
-            .any(|t| t.ws == replay && t.kind == crate::nav::tabs::Kind::Replay),
+            .any(|t| t.name == crate::naming::leaf(&replay)
+                && t.kind == crate::nav::tabs::Kind::Replay),
         "overflow carries the replay: {bar:?}"
     );
     // Focused, it is read-only; the ad-hoc workspace beside it is writable.
-    model.focus_workspace(&replay);
+    model.focus_workspace(&crate::naming::leaf(&replay));
     assert!(model.focused_is_replay(), "a focused replay is read-only");
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     assert!(
         !model.focused_is_replay(),
         "the ad-hoc workspace is writable"
@@ -82,7 +83,7 @@ fn startup_focus_is_the_attention_bearing_workspace() {
     let h = Harness::new();
     let (_c, model) = h.model();
     // The one workspace has an unseen stop → attention → it is the startup focus.
-    assert_eq!(model.focused_workspace(), Some(h.ws.as_path()));
+    assert_eq!(model.focused_workspace(), Some(h.ws.clone()));
     assert!(
         model.focus().agent.is_none(),
         "no agent selected at startup"
@@ -93,9 +94,11 @@ fn startup_focus_is_the_attention_bearing_workspace() {
 #[test]
 fn startup_focus_override_wins() {
     let h = Harness::new();
-    let forced = PathBuf::from("/somewhere/else");
-    let (_c, model) = h.model_focused(Some(forced.clone()));
-    assert_eq!(model.focused_workspace(), Some(forced.as_path()));
+    // The override names a workspace (§4.1); the focus holds its §3.1 name and
+    // resolves it against the enumeration like any other (bl-7407).
+    let (_c, model) = h.model_focused(Some(h.ws.clone()));
+    assert_eq!(model.focused_ws_name().as_deref(), Some("ws"));
+    assert_eq!(model.focused_workspace(), Some(h.ws.clone()));
 }
 
 #[test]

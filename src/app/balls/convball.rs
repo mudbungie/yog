@@ -70,8 +70,7 @@ impl AppModel {
     /// detail). `None` for a root with no stamp (bare/path) or one absent from the
     /// focused tree. The covered derivation the header paints.
     pub fn conversation_ball(&self, root_id: &str) -> Option<crate::nav::convs::ConvBall> {
-        let ws = self.focus.ws.as_deref()?;
-        let tree = self.snap.trees.get(ws)?;
+        let tree = self.snap.trees.get(&self.focused_workspace()?)?;
         let id = tree
             .agents
             .iter()

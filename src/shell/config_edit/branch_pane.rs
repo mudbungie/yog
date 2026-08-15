@@ -23,7 +23,7 @@ use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::branch::{config_branches, config_file, config_tree};
 use crate::config_edit::form::{self, Schema};
 use status::status_line;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// The dropdown's escape: a lineage the workspace does not have yet, named in
 /// the text field the choice reveals. Every list ends in its own escape (§9.4).
@@ -49,7 +49,7 @@ pub(super) fn render(
     provider_rows: &[String],
 ) {
     ui.heading("workspace config branches");
-    let Some(ws) = model.focused_workspace().map(PathBuf::from) else {
+    let Some(ws) = model.focused_workspace() else {
         ui.weak("focus a workspace to edit its config branches");
         return;
     };

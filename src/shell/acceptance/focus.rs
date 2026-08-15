@@ -109,7 +109,11 @@ fn switching_workspace_by_pointer_hands_over_the_keyboard() {
     let screen = Screen::new();
     screen.idle(&mut world);
     screen.release(&mut world);
-    focus::workspace(&mut world.model, &mut world.state, &ws);
+    focus::workspace(
+        &mut world.model,
+        &mut world.state,
+        &crate::naming::leaf(&ws),
+    );
     assert!(screen.idle(&mut world), "and the tab click does too");
 }
 
@@ -189,7 +193,7 @@ fn a_dismissed_modal_hands_the_keyboard_back() {
         "the fixture workspace is foreign — §3.6 offers no confirmation on it, \
          which is what makes its dialog close on the frame it opens"
     );
-    super::super::delete::open(&mut world.state, &ws);
+    super::super::delete::open(&world.model, &mut world.state, &crate::naming::leaf(&ws));
     assert!(
         !screen.idle(&mut world),
         "the modals paint last, so the frame that dismisses one has already \

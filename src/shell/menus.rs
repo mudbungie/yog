@@ -23,7 +23,6 @@ use crate::AppModel;
 use crate::cli_outbound::Cli;
 use crate::nav::menu::{self, Action, Entry, Seat, Verb};
 use crate::nav::tabs::Tab;
-use crate::nav::ws_key;
 use std::path::PathBuf;
 
 use super::ShellState;
@@ -112,8 +111,8 @@ fn accelerates(carrier: &str) -> String {
 /// the UI loses clicks, never capabilities).
 fn fire(verb: &Verb, target: &Target, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
     match (verb, target) {
-        (Verb::DeleteWorkspace, Target::Tab(tab)) => super::delete::open(state, &tab.ws),
-        (Verb::Unpin, Target::Tab(tab)) => model.toggle_pin(&ws_key(&tab.ws)),
+        (Verb::DeleteWorkspace, Target::Tab(tab)) => super::delete::open(model, state, &tab.name),
+        (Verb::Unpin, Target::Tab(tab)) => model.toggle_pin(&tab.name),
         (Verb::Stop { children }, Target::Conversation { ws, agent }) => {
             super::dispatch::stop_agent(model, ws, agent, *children);
         }

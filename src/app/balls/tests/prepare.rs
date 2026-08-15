@@ -84,7 +84,7 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     // reentrant). The guard covers only what needs it: the fake script's
     // write-then-exec window (the ETXTBSY race `test_support` documents).
     let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
-    assert_eq!(m.focused_workspace(), Some(w.ws_cobalt.as_path()));
+    assert_eq!(m.focused_workspace(), Some(w.ws_cobalt.clone()));
     let _g = spawn_guard();
 
     let inputs = m.new_workspace_inputs("ops");
@@ -103,8 +103,17 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     // — asserted here as the *input* to the retarget below, which is this
     // file's own claim: whether the seat really makes it is the raise drive's
     // (`shell::acceptance::raise`), end to end through the real window.
-    m.focus_workspace(&raised);
-    assert_eq!(m.focused_workspace(), Some(raised.as_path()));
+    m.adopt_workspace(&raised);
+    assert_eq!(
+        m.focused_ws_name().as_deref(),
+        Some("ops"),
+        "the focus is the §3.1 name (bl-7407)"
+    );
+    assert_eq!(
+        m.focused_workspace(),
+        Some(raised.clone()),
+        "and it resolves through the raise claim, on the frame the receipt landed"
+    );
     // The bug's sharp end: the BOTTOM composer's bare rung derives from the focus,
     // so Enter now fires into the newly created workspace, not the abandoned one.
     assert_eq!(
@@ -128,7 +137,7 @@ fn a_failed_prepare_moves_the_focus_nowhere() {
     assert!(err.contains("boom"), "the refusal rode back");
     assert_eq!(
         m.focused_workspace(),
-        Some(w.ws_cobalt.as_path()),
+        Some(w.ws_cobalt.clone()),
         "nothing was resolved, so nothing moved"
     );
 }

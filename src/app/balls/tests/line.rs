@@ -11,7 +11,7 @@ use crate::start::BallSpec;
 fn the_focus_is_what_a_line_elides() {
     let w = world();
     let (_c, mut m) = model(&w);
-    m.focus_workspace(&w.ws_cobalt);
+    m.focus_workspace(&crate::naming::leaf(&w.ws_cobalt));
     let ctx = m.line_context();
     // The line elides *names* now (REMOTE §8, bl-f5f6), not paths.
     assert_eq!(ctx.workspace.as_deref(), Some("cobalt"));
@@ -49,7 +49,7 @@ fn the_focus_is_what_a_line_elides() {
 fn a_workspace_with_no_ball_stamps_its_own_name() {
     let w = world();
     let (_c, mut m) = model(&w);
-    m.focus_workspace(&w.ws_spare);
+    m.focus_workspace(&crate::naming::leaf(&w.ws_spare));
     let ctx = m.line_context();
     assert_eq!(ctx.name.as_deref(), Some("spare"));
     assert_eq!(ctx.project, None);

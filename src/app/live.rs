@@ -105,7 +105,7 @@ impl super::AppModel {
     /// only ever a preview of what the next derivation commits, and nobody is
     /// watching a conversation they navigated away from at character rate.
     pub(super) fn followed_subject(&self) -> Option<(PathBuf, String)> {
-        Some((self.focus.ws.clone()?, self.focus.agent.clone()?))
+        Some((self.focused_workspace()?, self.focus.agent.clone()?))
     }
 
     /// The worker's derivation, for the **memos** (§7.2 `SnapMemo`): a memo

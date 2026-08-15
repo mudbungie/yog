@@ -50,8 +50,8 @@ impl AppModel {
     /// first Enter's workspace will use — and the ruling at bl-9b52 Q3 is one
     /// call site, not a new verb.
     pub fn start_workspace(&self) -> PathBuf {
-        match self.focus.ws.as_deref() {
-            Some(ws) => ws.to_path_buf(),
+        match self.focused_workspace() {
+            Some(ws) => ws,
             None => workspace_path(&self.roots.yog_data, names::DEFAULT_NAME),
         }
     }
