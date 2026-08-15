@@ -26,7 +26,7 @@ pub(super) fn load(bytes: &[u8]) -> UiState {
 /// client's glass rather than about the world.
 pub(super) fn load_pane(bytes: &[u8]) -> UiState {
     let d = tempdir().unwrap();
-    let pane = crate::registry::pane(d.path(), &crate::registry::Client::local());
+    let pane = crate::registry::pane(d.path(), &crate::registry::window());
     std::fs::create_dir_all(pane.parent().unwrap()).unwrap();
     std::fs::write(&pane, bytes).unwrap();
     UiState::open(d.path().join("ui.json"))
@@ -59,7 +59,7 @@ fn corrupt_or_nonobject_load_is_default() {
 fn every_mutation_is_on_disk_when_it_returns() {
     let d = tempdir().unwrap();
     let p = d.path().join("ui.json");
-    let pane = crate::registry::pane(d.path(), &crate::registry::Client::local());
+    let pane = crate::registry::pane(d.path(), &crate::registry::window());
     let mut ui = UiState::open(p.clone());
     // After each gesture the file already holds exactly this document —
     // `is_echo` over the bytes read back is the byte-identity assertion.

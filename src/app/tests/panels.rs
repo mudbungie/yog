@@ -99,7 +99,7 @@ fn a_too_wide_stored_width_recovers_at_the_next_launch() {
     let ui = h.roots.ui_json();
     // A panel size is a PANE fact (REMOTE §7, bl-8bbc): the local window's own
     // document, not the shared `ui.json`.
-    let pane = crate::registry::pane(ui.parent().unwrap(), &crate::registry::Client::local());
+    let pane = crate::registry::pane(ui.parent().unwrap(), &crate::registry::window());
     std::fs::create_dir_all(pane.parent().unwrap()).unwrap();
     std::fs::write(&pane, br#"{"panels":{"conversations":690}}"#).unwrap();
     let (_c, mut model) = h.model();

@@ -44,18 +44,45 @@ pub const REMEDY: &str = "make wire-certs";
 /// Which end of the wire is asking. One certificate is one client identity
 /// (REMOTE §2), and the server's is its own — so the leaf names differ and
 /// nothing else does.
+///
+/// **[`Window`](Role::Window) is the local window's own end** (REMOTE §1.2 as
+/// executed, bl-ae05). The window is a wire client of loopback like any other
+/// client: it presents a leaf, is identified by that leaf's common name, and is
+/// scoped by its registrations. It is a role of its own rather than the
+/// [`Client`](Role::Client) leaf because one certificate is one identity — the
+/// window and a terminal seat sharing a leaf would be one client holding two
+/// pane documents' worth of facts under one name.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {
     Server,
     Client,
+    Window,
 }
 
+/// Every role a mint issues a leaf for, in the order it issues them.
+pub const LEAVES: [Role; 3] = [Role::Server, Role::Client, Role::Window];
+
 impl Role {
-    /// This role's leaf basename: `server` or `client`.
+    /// This role's leaf basename: `server`, `client` or `window`.
     pub fn leaf(self) -> String {
         match self {
             Role::Server => "server".to_owned(),
             Role::Client => "client".to_owned(),
+            Role::Window => "window".to_owned(),
+        }
+    }
+
+    /// The subject common name this role's certificate carries — which **is**
+    /// the client identity the engine reads off it (REMOTE §2,
+    /// [`leaf::common_name`](crate::registry::leaf::common_name)). Spelled here
+    /// so the mint and the identity that seats a registration are one fact: the
+    /// window's is [`registry::WINDOW`](crate::registry::WINDOW), because a
+    /// client identity's home is the registry.
+    pub fn common_name(self) -> String {
+        match self {
+            Role::Server => "yog-server".to_owned(),
+            Role::Client => "yog-client".to_owned(),
+            Role::Window => crate::registry::WINDOW.to_owned(),
         }
     }
 }

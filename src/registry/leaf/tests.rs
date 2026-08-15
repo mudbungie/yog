@@ -74,9 +74,16 @@ fn a_real_leaf_names_its_own_subject_and_not_its_issuer() {
     let der = CertificateDer::from_pem_file(tmp.path().join("client.pem")).expect("pem");
     assert_eq!(common_name(&der).as_deref(), Some("yog-client"));
     let ca = CertificateDer::from_pem_file(tmp.path().join("ca.pem")).expect("pem");
-    assert_eq!(common_name(&ca).as_deref(), Some("yog-test-ca"));
+    assert_eq!(common_name(&ca).as_deref(), Some("yog-ca"));
     let server = CertificateDer::from_pem_file(tmp.path().join("server.pem")).expect("pem");
     assert_eq!(common_name(&server).as_deref(), Some("yog-server"));
+    // The window's leaf is the identity the registry seats (REMOTE §4.1 as
+    // narrowed, bl-ae05): one const, spent by the mint and by the seating.
+    let window = CertificateDer::from_pem_file(tmp.path().join("window.pem")).expect("pem");
+    assert_eq!(
+        common_name(&window).as_deref(),
+        Some(crate::registry::WINDOW)
+    );
 }
 
 /// A certificate long enough to need the long-form length — every real one is

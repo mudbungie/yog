@@ -2,8 +2,8 @@
 
 Status: normative for the split; direction adopted by operator ruling
 2026-08-13 (bl-b9a2). §9 is the build sequence and each step lands under its
-own ball; steps 1–7 are in the tree, and §9.7 records what step 5's own
-residual is now waiting on. `docs/DESIGN.md` remains the
+own ball; steps 1–8 are in the tree, and §9.7 records what step 8 opened and
+what it left. `docs/DESIGN.md` remains the
 architecture authority for the engine; this document governs the wire, the
 client, and the trust model. Where the two collide, DESIGN wins until DESIGN is
 amended. The same amendment doctrine applies here: prose is replaced, the ball
@@ -23,6 +23,18 @@ id is cited, the path to the ruling is not narrated.
    engine over the same wire a remote seat uses. There is no in-process face
    and no file-transport fallback for a seat; a second execution path would be
    a second implementation, which VISION §8 refuses.
+
+   **Executed rather than aspirational, by operator ruling 2026-08-14
+   (bl-ae05): the local window is a wire client of localhost.** The real
+   socket, the real handshake, the real certificate — everything through the
+   front door. The cheaper option §9.7 offered, an in-process *transport* to
+   the one `Answerer`, was weighed and declined, so §11's rejection of a second
+   in-process face stands unlifted and nothing in-process was added. What the
+   ruling costs is §1.4's *absence is the off switch*, and §8 records how that
+   is paid: the engine's boot performs the same out-of-channel mint the
+   operator's own act performs, on the operator's own box, before anything has
+   been dialled. Nothing crosses a wire unauthenticated, and yog still links no
+   certificate library.
 3. **The channel is mTLS**, and the wrapper must be strong enough to leave on
    the public internet. Both ends authenticate with certificates.
 4. **Bootstrapping is explicitly out-of-channel.** The starting assumption is
@@ -189,10 +201,31 @@ and no face.
 presented leaf by a structural DER walk — yog links no certificate library.
 A fingerprint would have been cheaper and wrong twice over: unreadable in a
 `clients/` listing, and changed by a renewal, silently de-scoping every
-registration the operator wrote. `local` is **reserved** for the window and
-every other in-world caller (§3), which hold no certificate but do own a pane
-document; a certificate claiming it is refused on the same rule that refuses
-`.` and `..`, so the reservation is one rule and not three special cases.
+registration the operator wrote. `local` is **reserved** for the
+**certificate-less in-world callers** (§3) — the `gestures/` deposit inbox and
+`yog gesture` — which hold no certificate but do own a pane document; a
+certificate claiming it is refused on the same rule that refuses `.` and `..`,
+so the reservation is one rule and not three special cases.
+
+**The window is no longer among them** (bl-ae05). §1.2's ruling gives it a leaf
+of its own, `yog-window` (`registry::WINDOW` — one const, spent by the mint that
+puts the name on the certificate and by the seating that writes its
+registrations), so it is identified exactly as a phone seat is: by the common
+name on the certificate it presented. It is scoped like any client, it appears
+in its own workspaces' rosters, and its §7 pane document keys on that leaf. The
+reservation narrowed rather than dissolving, because the deposit inbox and
+`yog gesture` still hold no certificate and still must not be scoped — each
+intake the religion of its domain.
+
+**Seating the window is the engine's own act, and it is the general path.** §4
+already has the first registration on a fresh server performed out-of-channel by
+the operator; this is that act, performed by the engine for the one client it
+*is*. The asker seats `yog-window` in every workspace the published derivation
+enumerates, on every pass — idempotent, one directory read when nothing is new —
+so a workspace founded while the window is up is registered within one cadence
+period. No create to detect, no bootstrap flow, and the same `mkdir`/`touch` an
+operator performs for a remote client, performed by the process that already
+holds the enumeration.
 
 **Scoping is one filter, not twenty checks.** The engine narrows the published
 derivation (`Snapshot::scoped`) to the client's registered workspaces before
@@ -324,7 +357,8 @@ is the **intake's** — the connection's certificate common name, read exactly
 where §4's scoping reads it. A `client` field on the wire would let any
 connection overwrite any other's set, which is the authorization the certificate
 has already decided. An intake carrying no client identity — the `gestures/`
-deposit inbox, `yog gesture`, the window (all `local`, §4.1) — **refuses in
+deposit inbox and `yog gesture` (both `local`, §4.1; the window carries a leaf
+of its own since bl-ae05 and is not among them) — **refuses in
 band**, with a sentence: a caller who typed this at a terminal made a category
 error worth naming, not an authentication failure worth hiding. The threading is
 the act-side twin of `ConsumerCtx::answer_as`: one `caller` on the dispatch
@@ -501,7 +535,8 @@ enforced it.
 advertisement's is (§5.1): a connection drains its own queue, answers its own
 invocations, and collects its own captures. A `client` field on the read would
 let one connection take another's work. An intake carrying no client identity —
-the `gestures/` deposit inbox, `yog gesture`, the window — **refuses in band**
+the `gestures/` deposit inbox and `yog gesture` (§4.1; the window is a
+certificate-bearing client since bl-ae05) — **refuses in band**
 on the two that are a tool host's, with a sentence. `invoke` is the exception
 and names its client, because there the identity is the **addressee** rather
 than the author.
@@ -581,11 +616,15 @@ Which document owns which key:
 | world (`ui.json`) | `seen`, `pinned`, `identity_last_used`, `ceiling`, `prices` | assertions about the world, or operator policy over it. `identity_last_used` is the §3.2 name the operator last claimed a ball under — a thing they did to the world, and two seats claiming under different names is worse than converging. §10 keeps *whether a pin is a world or a pane fact* open; §7's default to world is kept. |
 | pane (`pane.json`) | `panels`, `collapsed`, `zoom`, the two transcript-density knobs, `notify_unfocused` | how one piece of glass is arranged. A phone that puts the roster away must not put it away on the desktop; a desktop notifier is a fact about a desktop. |
 
-**The local window is a client called `local`** (§4.1's reserved identity), and
-that is the whole of its spelling: it is not scoped — it is an in-world caller
-(§3) — but it owns a pane document like any other seat, so the window's panel
-sizes and the phone's are two documents from the first frame rather than one
-that grows a second reader later.
+**The local window is a client called `yog-window`** (§4.1 as narrowed by
+bl-ae05), and that is the whole of its spelling: it presents a certificate
+carrying that common name, it is scoped by its registrations, and it owns a pane
+document like any other seat — so the window's panel sizes and the phone's are
+two documents rather than one that grows a second reader later. The path is
+derived from the identity at both ends, so the document the frame writes through
+in process and the one a gesture the window sends over the wire lands in are the
+same file. It was `local` until the ruling; the one visible cost of the move is
+that a window's stored panel sizes reset once, on the boot that mints its leaf.
 
 Both documents are read through **one handle**, so which file owns a key is
 stated once, at that key's own accessor, and no caller knows there are two. The
@@ -599,8 +638,20 @@ sweep buying nothing.
 One crate, one multi-call binary, as today: `yog serve` runs the engine (the
 former `headless` boot plus the wire listener); bare `yog` runs the window;
 `yog seat` and `yog tool-host` are the two **client** modes, the second landed
-with §5.3. A TUI or web seat later is another consumer of the same wire and
-needs nothing new from the engine.
+with §5.3; `yog wire-certs` is the operator's mint (below). A TUI or web seat
+later is another consumer of the same wire and needs nothing new from the
+engine.
+
+**Two roles in one process, one boundary between them** *(bl-ae05)*. Bare `yog`
+boots the engine in its own process exactly as it always has — the listener
+rides `Engine::boot`, one world one engine, and that ruling is untouched — and
+then talks to it over **nothing but the wire**: a seat presenting the window
+leaf, dialling `127.0.0.1` at the port the listener actually bound. The address
+is handed over in RAM rather than read back out of a file, because the two roles
+share a process and only the listener knows what a `:0` became. The two
+alternatives §8 already rejected stay rejected and neither is needed: nothing
+spawns a second engine, and nothing refuses a desktop launch with a terminal
+instruction.
 
 **`headless` is now `serve`, and the rename is the point** *(bl-b6fa)*. The
 face did not change — it is still the one `Engine::boot` with no window — but
@@ -622,21 +673,52 @@ world two engines (two pilots, two sentries, two derivation workers — the
 instance-coordination shape DESIGN §14 rejects), and *refusing with a remedy*
 puts a terminal instruction in front of a desktop launch that has no terminal.
 
-**Absence is the off switch.** With no material provisioned there is no
-listener and nothing is said about it — removing the directory deletes config,
-not code (the severability test). A *half*-provisioned wire is warned about and
-still does not listen, because silently degrading to no encryption is the one
-failure this design exists to exclude.
+**Absence WAS the off switch, and bl-ae05 is why it no longer is.** It could
+not survive §1.2's ruling: the window reads over this listener now, so a box
+with no material would be a window that paints nothing — the outcome §8 had
+already rejected in both its other spellings. The engine's boot therefore
+**founds its own material** when it finds none (`provision::ensure`), and what
+it writes is aimed at loopback. Severability is unchanged in substance: delete
+the directory and the next boot writes a fresh loopback root; nothing about the
+channel, the codec or the boundary is conditional on a file.
 
-**Certificates are minted out of channel, by `make wire-certs`** *(bl-b6fa,
-`scripts/wire-certs.sh`)*. It shells to `openssl` — yog links no certificate
-library and mints nothing itself, ever (§1.4) — writing a private CA and a
-server/client leaf pair into `<yog-data-root>/wire`, plus one `address` file.
+**What still distinguishes loopback from wider listening is the address, and
+nothing else.** Self-provisioning writes `127.0.0.1:<port>`, so material yog
+minted for itself serves exactly the window that minted it. A host that is not
+loopback is written by an operator — by `yog wire-certs WIRE_HOST=…`, or by
+editing `address` — and *that* is the statement of intent. One fact with one
+home (below), no flag, and no ladder deciding how far a listener reaches.
+
+A *half*-provisioned wire the mint **cannot heal** is still warned about and
+still does not listen, because silently degrading to no encryption is the one
+failure this design exists to exclude — and because replacing an operator's
+trust root is the other. The mint issues only what is missing and only what it
+can issue: a box holding an operator's `ca.pem` with no CA key beside it (a
+client machine) is left exactly as it was.
+
+**Certificates are minted out of channel, by `yog wire-certs` and by the
+engine's own boot** *(bl-b6fa; amended bl-ae05)*. It shells to `openssl` — yog
+links no certificate library and mints nothing *in channel*, ever (§1.4) —
+writing a private CA and the server, client and **window** leaves into
+`<yog-data-root>/wire`, plus one `address` file.
+
+There is **one recipe** (`src/wire/provision.rs`) and two callers: the boot,
+which mints what a box lacks aimed at loopback, and the verb, which is the
+operator's own act for a server another machine dials by name and for a
+rotation. `scripts/wire-certs.sh` was the recipe until bl-ae05 and is retired —
+an installed binary has no repository to find a script in, and two spellings of
+one act drift within a week; `make wire-certs` runs the verb, and its
+`WIRE_DIR`/`WIRE_HOST`/`WIRE_PORT`/`FORCE` interface is unchanged. The server
+leaf always carries `IP:127.0.0.1` beside whatever host it is minted for,
+because the window is a client of loopback unconditionally and a certificate
+that named only an operator's public host would refuse the one seat certain to
+be there.
 `WIRE_HOST`/`WIRE_PORT` name what the server binds and a seat dials; the SAN
 and the address file are derived from the same `WIRE_HOST`, because two
 spellings of one host is the drift §8's name resolution removed from the
-boundary. It refuses to overwrite: a rotation distrusts every certificate
-already issued, so it is `FORCE=1` and never a silent re-mint. Test material is
+boundary. The verb refuses to overwrite: a rotation distrusts every
+certificate already issued, so it is `FORCE=1` and never a silent re-mint. (The
+boot's call cannot rotate at all — it only ever adds what is absent.) Test material is
 minted the same way at test runtime (`src/test_support/wire.rs`) — **a
 certificate fixture is never committed**, which `make leak-scan` would refuse
 anyway and which would be a private key in a public repository whether or not
@@ -848,6 +930,11 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    in-band non-zero result is what a vanished endpoint had to produce anyway
    (lernie's §3.3), so the seam was complete and honest before the transport
    existed.
+8. **The window becomes a client.** *(Opened, bl-ae05 — see §9.7.)* The
+   operator ruling that settled §1.2 against §4.1, the boot's own mint, the
+   window's leaf and its seating, the off-frame asker, and the first surface
+   painted from a decoded reply. Its residual is the migration of the remaining
+   reads and of the acts, and §9.7 names it.
 
    **Two rulings came out of it and belong here rather than in a ball body.**
    *Presence is not the routing predicate* (§5, amended): a tool host holds a
@@ -928,18 +1015,18 @@ function the gestures inbox calls, which decodes with the one codec and runs
 the one `dispatch`/`answer`. The listener never sees an `Action` or a `Query`,
 so there is no place a wire-only verb could be added.
 
-**The residual, stated plainly: the window is not a client yet.** §1.2 rules
-that the UI operates entirely via RPC and that even the local case does the
-hard split. What landed is the channel, the server and a *terminal* seat; the
-window still holds the engine it serves. So the arrangement today is
-**server-and-seat in one process**, not seat-over-wire — which is the honest
-half of §1.2, because the half that is missing is the **read path**, and it is
-the larger half:
+**The residual, as it stood: the window was not a client.** §1.2 rules that
+the UI operates entirely via RPC and that even the local case does the hard
+split. What bl-b6fa landed was the channel, the server and a *terminal* seat;
+the window still held the engine it serves and read it in process. **bl-ae05
+opened the read path** (§9.7) — the window now dials its own listener with its
+own leaf — and what remains of this bullet is scope rather than architecture:
 
-- A frame paints the published snapshot (§7.2), not replies. §9.4 finished the
-  *taxonomy* — paint may name only what a `Reply` can say — but the delivery is
-  still an in-process derivation, and a window pointed at a foreign engine
-  would have to derive a world it does not have.
+- A frame still paints the published snapshot (§7.2) for every surface but one.
+  §9.4 finished the *taxonomy* — paint may name only what a `Reply` can say —
+  and bl-ae05 built the delivery, but only the clients section (§5) is fed by
+  it so far. The rest is a migration, surface by surface, with the transport
+  already under it.
 - ~~Per-seat UI state (§7) is undivided~~ — split by bl-8bbc (§7, §9.6).
 - ~~The path-typed reply fields §8 lists as residual are still absolute
   paths~~ — closed by bl-ccf7 (§8.1): three carried a fact the address already
@@ -976,78 +1063,76 @@ workspace still reads the trail of every workspace.
 
 **Two residuals, named rather than papered over.**
 
-- **The window is not scoped, because the window is not a client yet.** It is
-  an in-world caller (§3) holding the engine it serves, so §9.5's larger
-  residual — the read path — is also what keeps the local seat outside the
-  registry. The window's *pane* is already a client document (`local`), which
-  is the half that could land ahead of it.
+- ~~The window is not scoped, because the window is not a client yet~~ —
+  **closed by bl-ae05** (§9.7). It carries `yog-window`'s leaf, it is scoped by
+  its registrations like any client, and the engine seats it in every workspace
+  it enumerates (§4.1). Its pane document moved with the identity.
 - **A workspace name is a global namespace.** Creation refuses on a collision,
   including with a workspace the creator cannot see, so two clients cannot both
   hold a workspace called `home`. Per-client name spaces would dissolve it and
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling it is waiting on (bl-ccf7)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05)
 
-Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's
-two transport questions settled. **The read path did not move, and the reason
-is not that it is large.** It is that §1.2 and §4.1 cannot both be executed,
-and the tree has already executed §4.1.
+Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
+transport questions settled. It could not move the read path, because §1.2 and
+§4.1 could not both be executed and the tree had already executed §4.1 — a
+window that dialled the wire would present a leaf, be identified by *that* name,
+be scoped like any remote client and read a different pane document, and on an
+unprovisioned box would have no read path at all.
 
-**The collision, stated so it is not rediscovered.**
+**The ruling, 2026-08-14: neither of §9.7's cheap options — the window is a wire
+client of localhost.** One boundary, everything through the front door: the real
+socket, the real handshake, the real certificate. The in-process transport
+bl-ccf7 recommended was declined, so §11's rejection stands unlifted; §4.1 was
+narrowed rather than kept, so the collision is dissolved rather than deferred;
+and the unprovisioned box is answered by the engine's boot performing the same
+out-of-channel act the operator's own verb performs, on the operator's own box,
+before anything is dialled (§8). Every consequence is recorded where it belongs
+— §1.2, §4.1, §7, §8 — rather than here.
 
-- §1.2 rules that the window *is* a client of the boundary, over the same wire
-  a remote seat uses, with no in-process face and no fallback.
-- §1.3 and §3 make that wire mTLS, and only mTLS: a connection presents a
-  certificate or it gets a TLS refusal.
-- §1.4 and §8 make the certificates the **operator's out-of-channel act**. yog
-  mints nothing, ever — it links no certificate library, `make wire-certs`
-  shells to `openssl`, and *absence is the off switch*: with no material there
-  is no listener and nothing is said about it.
-- §4.1, as landed by bl-8bbc, reserves `local` for "the window and every other
-  in-world caller", which **hold no certificate**, are not scoped, and own a
-  pane document. `Client::parse` refuses the name `local` outright, so no
-  certificate can ever claim it.
+**What bl-ae05 landed.**
 
-Put together: a window that dialled the wire would present the one client leaf
-the operator minted, be identified by *that* name, be scoped like any remote
-client, and read a different pane document — it would stop being `local`, and
-§4.1 would be wrong. And on a box with no material it would have no read path
-at all: a window that paints nothing. §8 has already rejected both ways around
-that second half — refusing with a remedy "puts a terminal instruction in front
-of a desktop launch that has no terminal", and minting is §1.4.
+- `src/wire/provision.rs` — the one `openssl` recipe, and `scripts/wire-certs.sh`
+  retired into it. The engine's boot mints what a box lacks; `yog wire-certs` is
+  the operator's act over the same function.
+- `Role::Window` and `registry::WINDOW` — the window's leaf and the identity on
+  it, one const spent by the mint and by the seating.
+- `src/wire/asker.rs` + `src/wire/link.rs` — the off-frame asker and the frame's
+  half of it. The frame declares standing questions and paints what has landed;
+  the asker seats the window, dials loopback once per ask at human cadence,
+  decodes with `reply::decode` and publishes. Two channels, no lock, and no
+  frame-side wait: a dead engine costs a surface its content and the window
+  nothing.
+- `Engine::asker` — a window takes it, `yog serve` never does. One asker per
+  engine, because the link end is taken rather than shared.
+- The **clients section** (§5) is the first surface painted from a wire reply:
+  the roster it renders crossed loopback mTLS, was scoped against the window's
+  own registrations, and was decoded like any seat's. Its per-derivation memo
+  and the model's in-process `clients()` derivation both went — with the model's
+  copy of the presence map, which nothing reads any more.
 
-**Nothing was half-landed, deliberately.** The obvious increment — land the
-off-frame asker, have the window paint decoded replies where a wire exists and
-the in-process snapshot where it does not — is exactly the second execution
-path §1.2 exists to refuse, and §11 records it as a rejection. A residual costs
-nothing while it stands; a fork costs every frame after it. So this ball
-narrowed what it could narrow and wrote down what it could not decide.
+**The residual, stated plainly: one surface reads over the wire, and the acts do
+not.** This is scope, not architecture — the transport is under the whole frame
+now — but it is the larger half by volume and saying so is worth more than
+implying otherwise.
 
-**Three ways the ruling can go**, none of which a builder may take alone:
-
-1. **Amend §1.2 and §11: one boundary, N *transports*.** The window keeps
-   `local`, keeps its certificate-less in-world standing, and its read path
-   becomes envelope-shaped all the same — a `Query` encoded with the one codec,
-   handed to the one `Answerer`, decoded with `reply::decode`. Byte-identical to
-   the remote path minus the socket, so flipping a local seat onto the real wire
-   is a constructor change. It costs the letter of §1.2 ("no in-process face"),
-   and its defence is that a transport is not a face: §3 already blesses two
-   intakes into one boundary, and this is the third with no verb of its own.
-2. **Amend §4.1: the window is provisioned like any client.** `local` stops
-   being the window's identity, and an unprovisioned box gets a window that
-   cannot read — which is the refusal-with-a-remedy §8 already turned down,
-   arriving by another door.
-3. **Leave it.** Then §1.2's "even the local case does the hard split" is
-   aspirational prose about a case that will not happen, and saying so is worth
-   more than leaving it stated as a rule.
-
-Option 1 is this ball's recommendation. It is filed as **bl-ae05** rather than
-taken here, because §11 exists so its entries are not relitigated by whoever is
-holding the keyboard. That ball carries the read path itself — the off-frame
-asker, the frame that never blocks on the transport — and `Prepared::binding`
-(§8.1) with it, since the shape that dissolves that field is only affordable
-once one seat's read path is the only read path.
+- **Every other read still paints the published snapshot** (§7.2). Migrating a
+  surface is: declare the `Query`, paint the `Reply`, delete the in-process
+  accessor and its memo. Nothing further is needed from the engine, the codec or
+  the wire. **bl-adcb.**
+- **Gestures are still dispatched in process** (`AppModel::dispatch`). They
+  cannot simply be re-pointed: the click-glue reads each act's `Reply`
+  *synchronously*, and a frame may never wait on a socket, so every act becomes
+  a declaration whose receipt lands later — the asker's shape applied to writes,
+  and a design pass before a build. **bl-4841.**
+- **`Prepared::binding` stays a path** (§8.1's ruling, unchanged). The shape
+  that dissolves it — `Prepared` becoming opaque to the seat — is affordable
+  only once one seat's read path is the *only* read path, and the composer is
+  not migrated yet. It is a disclosure of an engine-side directory name to a
+  seat already told the workspace it belongs to, and it stays bounded and
+  stated.
 
 ## 10. Open questions (living)
 
@@ -1068,6 +1153,16 @@ once one seat's read path is the only read path.
   precisely so none of that exists — in exchange for a handshake nobody is
   paying yet. The criterion for revisiting is stated rather than felt: **when a
   seat's ask rate exceeds human cadence.**
+
+  **Re-asked and kept by bl-ae05, now that a poller exists.** The window is that
+  seat, and its rate is one pass per 500 ms over its standing set — which is
+  human cadence by construction rather than by luck, and the criterion is
+  therefore still unmet. Nothing was added to hold a connection: a handshake per
+  ask on loopback is microseconds, and the reconnect ladder, the liveness
+  question and the connection-scoped identity a held connection buys are all
+  still costs with no payer. Revisit when a surface needs a rate an operator
+  could not read at — which is what a follow-class read is for, and it holds its
+  own connection by asking (§3).
 - ~~When polling graduates to a follow-class query~~ — **settled and built by
   bl-024b**: `Query::Invocations` is the first follow-class read with a
   consumer, and it needed no wire change. What stays open is only whether the
@@ -1106,10 +1201,11 @@ once one seat's read path is the only read path.
 Recorded so they are not relitigated:
 
 - **A second in-process face for the local window** — the split is the point;
-  one method, one channel (§1.2). **Under challenge, not lifted** (§9.7,
-  bl-ccf7): the challenge is that an in-process *transport* to the one
-  `Answerer` is not a face, and it is filed as its own ball because an entry
-  here is not relitigated by whoever is holding the keyboard.
+  one method, one channel (§1.2). Challenged by bl-ccf7 (§9.7) and **upheld by
+  operator ruling 2026-08-14 (bl-ae05)**: the challenge was that an in-process
+  *transport* to the one `Answerer` is not a face, and the answer was to take
+  the front door instead. The window is a wire client of localhost, nothing
+  in-process was added, and this entry stands as written.
 - **Any in-channel authentication besides the client certificate** —
   passwords, bearer tokens, OAuth flows: each is an enrollment or secret
   surface §1.3–§1.4 exist to exclude.

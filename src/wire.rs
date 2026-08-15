@@ -24,15 +24,21 @@
 //! otherwise have to start a second engine to reach, and `yog serve` is the
 //! same engine with no window.
 //!
-//! **Absence is the off switch.** With no material provisioned there is no
-//! listener and nothing said about it: removing the directory deletes config,
-//! not code. A *half*-provisioned wire is warned about, because silently
-//! degrading to no encryption is the one failure this design exists to
-//! exclude.
+//! **Absence WAS the off switch, and is not since bl-ae05.** REMOTE §1.2's
+//! window is a client of this listener now, so a box with no material would be
+//! a window that paints nothing — and REMOTE §8 had already rejected both ways
+//! around that. A boot therefore founds its own loopback trust root
+//! ([`provision`]), which is the operator's own out-of-channel act performed on
+//! the operator's own box. A *half*-provisioned wire the mint cannot heal is
+//! still warned about and still refuses, because silently degrading to no
+//! encryption is the one failure this design exists to exclude.
 
 use crate::xdg::Env;
 use std::sync::Arc;
 
+/// The window's off-frame asker (REMOTE §1.2, bl-ae05) — the thread that makes
+/// the local window a wire client of its own engine.
+pub mod asker;
 pub mod client;
 pub mod frame;
 /// The tool-host client mode (REMOTE §5, bl-024b) — the wire's second shipped
@@ -40,7 +46,12 @@ pub mod frame;
 /// for its next invocation, and posts each capture back.
 pub mod host;
 pub mod intake;
+/// The frame's half of that read path: the standing questions and what landed.
+pub mod link;
 pub mod material;
+/// The mint (REMOTE §1.4, §8; bl-ae05) — the one `openssl` recipe, spent by the
+/// engine's boot and by `yog wire-certs` alike.
+pub mod provision;
 pub mod seat;
 pub mod server;
 pub mod tls;
@@ -53,15 +64,42 @@ pub const SEAT_SUBCMD: &str = "seat";
 /// bl-024b). Named here beside [`SEAT_SUBCMD`] and for its reason exactly.
 pub const HOST_SUBCMD: &str = "tool-host";
 
-/// Bring the engine's listener up, or explain why there is none. `None` is the
-/// ordinary answer on a box with no wire provisioned; a refusal is written to
-/// stderr and is never fatal — an engine with no wire is the engine yog has
-/// always been, and a seat that cannot reach it says so at the seat.
+/// **The address the local window dials** (REMOTE §1.2, §8; bl-ae05): loopback
+/// at the port the listener actually bound.
+///
+/// The window is a client of `127.0.0.1` and of nothing else, whatever
+/// `address` names the engine to the rest of the world — which is why
+/// [`provision`] always puts loopback on the server leaf. The **bound** port
+/// rather than the requested one, for the reason
+/// [`Listener::address`](server::Listener::address) exists: a `:0` in the file
+/// is a request, and only the listener knows what it became.
+pub fn loopback(bound: &str) -> String {
+    let port = bound.rsplit_once(':').map_or("", |(_, port)| port);
+    format!("{}:{port}", provision::LOOPBACK)
+}
+
+/// Bring the engine's listener up, or explain why there is none.
+///
+/// **It founds its own trust root first** (REMOTE §8 as amended, bl-ae05).
+/// Absence of material used to be the off switch; it cannot be any more,
+/// because REMOTE §1.2 makes the window a client of this listener and a window
+/// with no listener paints nothing. So [`provision::ensure`] performs the
+/// out-of-channel mint — on this box, before anything is dialled — and what it
+/// writes is aimed at loopback. Wider listening is still the operator's own
+/// act: `address` is one fact with one home, and only an operator ever writes
+/// a host that is not loopback into it.
+///
+/// A refusal is written to stderr and is never fatal — a box with no `openssl`
+/// gets the engine yog has always been, and a seat that cannot reach it says so
+/// at the seat.
 pub fn listen(
     world: &Env,
     answerer: Arc<dyn server::Answerer>,
     presence: crate::registry::presence::Presence,
 ) -> Option<server::Listener> {
+    if let Err(e) = provision::ensure(&material::dir(world)) {
+        eprintln!("yog: wire: {e}");
+    }
     let material = match material::read(world, material::Role::Server) {
         Ok(Some(m)) => m,
         Ok(None) => return None,

@@ -82,9 +82,13 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    below so a manifest edit that dropped the flag fails the gate instead of
    quietly re-acquiring a C toolchain. And **no `tokio` and no `rcgen`**: the
    listener is synchronous `std::net` (rule 8 stays vacuous — do not add tokio
-   to satisfy it), and certificates are the operator's out-of-channel act
-   (REMOTE §1.4), minted by `make wire-certs` shelling to `openssl`, never by
-   yog. `deny.toml` still bans
+   to satisfy it), and certificates are minted by shelling to `openssl`
+   (`src/wire/provision.rs`, the one recipe) rather than by a library yog
+   links. **Since bl-ae05 the engine's own boot performs that mint** when a box
+   has none, which is not an in-channel bootstrap and does not lift REMOTE
+   §1.4: the act is the operator's tooling, run on the operator's box, before
+   anything is dialled. `yog wire-certs` is the same recipe reached by a verb.
+   `deny.toml` still bans
    `openssl-sys` AND `native-tls`, which was always the standard's point — a C
    toolchain dep and a non-portable system bridge, either of which breaks the
    single-binary musl/macOS/Windows story rustls keeps. The license allow-list

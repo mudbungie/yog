@@ -142,12 +142,13 @@ pub struct AppModel {
     /// Which tail [`snap`](Self::snap) was folded from — the fold's other memo,
     /// beside [`folded`](Self::folded) and for the same reason.
     followed: Option<Arc<LiveTail>>,
-    /// Which clients hold a live wire connection right now (REMOTE §5,
-    /// bl-4e08) — the listener's own RAM, held by handle so the §11 clients
-    /// section paints the flap. Default until the engine hands the real one
-    /// over: a model with no engine behind it has no connections, which is the
-    /// same posture as a box with no wire.
-    presence: crate::registry::presence::Presence,
+    /// **The window's read path over the wire** (REMOTE §1.2 as executed,
+    /// bl-ae05): the standing questions this frame declares and the decoded
+    /// replies that have landed for them. Default until the engine hands over
+    /// the live end — a model with no listener behind it asks into a link
+    /// nobody answers, which is the same posture, and the same code path, as a
+    /// surface whose answer has not arrived yet.
+    wire: crate::wire::link::Link,
 }
 
 impl AppModel {
@@ -193,7 +194,7 @@ impl AppModel {
             started: None,
             tail: TailCell::default(),
             followed: None,
-            presence: crate::registry::presence::Presence::default(),
+            wire: crate::wire::link::Link::default(),
         };
         model.focus = model.startup_focus(initial_focus, &Arc::clone(&model.snap).workspaces);
         (model, deriver)
@@ -237,6 +238,11 @@ impl AppModel {
                 self.followed.as_deref(),
             );
         }
+        // The wire read path's one frame duty (REMOTE §1.2, bl-ae05): take the
+        // answers the asker landed and tell it what this window is standing on
+        // if that changed. Two channel drains and one set compare — no lock, no
+        // dial, and nothing here can wait on a socket.
+        self.wire.settle();
         // The §6 ack is a state, not a gesture (bl-aa1f): re-stamp the focused
         // agent's evidence every frame, so a signal that landed on the
         // conversation the operator is reading is already seen. Free — §4.1

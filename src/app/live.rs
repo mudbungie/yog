@@ -118,26 +118,22 @@ impl super::AppModel {
         &self.derived
     }
 
-    /// Take the engine's live-connection map (REMOTE §5, bl-4e08). Handed over
-    /// rather than taken at [`boot`](Self::boot), for [`follower`](Self::follower)'s
-    /// reason exactly: the model owns no thread and mints no handle the engine
-    /// is the one owner of.
-    pub fn adopt_presence(&mut self, presence: crate::registry::presence::Presence) {
-        self.presence = presence;
+    /// Take the engine's end of the wire read path (REMOTE §1.2, bl-ae05).
+    /// Handed over rather than taken at [`boot`](Self::boot), for
+    /// [`follower`](Self::follower)'s reason exactly: the model owns no thread
+    /// and mints no handle the engine is the one owner of.
+    pub fn adopt_wire(&mut self, link: crate::wire::link::Link) {
+        self.wire = link;
     }
 
-    /// This workspace's registered clients, their presence and their advertised
-    /// sets (REMOTE §5) — the **one** derivation, the same one
-    /// [`Query::Clients`](crate::boundary::Query::Clients) answers, so the
-    /// window and a headless seat render identical rows.
-    pub fn clients(&self, workspace: &str) -> Vec<crate::registry::roster::ClientRow> {
-        crate::registry::roster::roster(&self.roots.yog_state, &self.presence, workspace)
-    }
-
-    /// The identities holding a connection right now — the memo key the §11
-    /// clients section invalidates on, since a flap moves no derivation.
-    pub fn live_clients(&self) -> std::collections::BTreeSet<String> {
-        self.presence.live()
+    /// **Ask the wire** (REMOTE §1.2, §3): declare `question` standing and read
+    /// whatever answer has landed for it. Never blocks and never dials — the
+    /// [`Asker`](crate::wire::asker::Asker) does both, off-frame, at human
+    /// cadence — so a surface built on this paints one cadence period behind
+    /// the world and the frame stays at its rate no matter what the engine is
+    /// doing.
+    pub fn wire_ask(&mut self, question: &serde_json::Value) -> Option<crate::wire::link::Landed> {
+        self.wire.ask(question)
     }
 
     /// This instance's [`Follower`], for the engine to spawn — the model never

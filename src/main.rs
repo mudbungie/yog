@@ -119,6 +119,11 @@ fn main() -> eframe::Result<()> {
         // (§4.1 state is write-through; nothing pends at exit, exactly as the
         // GUI's no-`on_exit` rule).
         Some(yog::boundary::SERVE_SUBCMD) => serve(&ambient, &overrides),
+        // `yog wire-certs` (REMOTE §8, bl-ae05): the operator's explicit mint —
+        // a server another machine dials by name, or a rotation. The boot's own
+        // mint covers this box aimed at loopback, so this is the act for
+        // everything else, and it is the same recipe reached by a verb.
+        Some(yog::wire::provision::verb::SUBCMD) => wire_certs(&ambient),
         _ => {}
     }
     // §16.4 (bl-3ff4): a window is the operator's own act. The world seeds a
@@ -163,13 +168,19 @@ fn main() -> eframe::Result<()> {
             let clock: Arc<dyn Clock> = Arc::new(SystemClock);
             // The engine — the same one `yog serve` boots. Everything below
             // it is what a *window* is and a windowless face is not.
-            let engine = Engine::boot(
+            let mut engine = Engine::boot(
                 &world,
                 &overrides,
                 args.workspace,
                 Arc::clone(&clock),
                 Arc::new(EguiRepaint(cc.egui_ctx.clone())),
             );
+            // The REMOTE §1.2 read path (bl-ae05): the window is a client of
+            // the engine it just booted, over loopback mTLS, presenting the
+            // window leaf. This is the only face that takes an asker — a
+            // `yog serve` has no frame to feed — and it is what a search
+            // thread is beside it: the window's own off-frame worker.
+            let asker = engine.asker(&world).map(yog::wire::asker::Asker::spawn);
             // The §8.5 searcher: the window's own searches run here, never on
             // the frame (a search walks every transcript in the world). The
             // windowless face needs none — `yog gesture` and the consumer both
@@ -182,6 +193,7 @@ fn main() -> eframe::Result<()> {
             Ok(Box::new(App {
                 engine,
                 _searcher: searcher,
+                _asker: asker,
                 state,
                 lernie: Cli::resolve_in_world(Binary::Lernie, &overrides),
                 bl: Cli::resolve_in_world(Binary::Bl, &overrides),
@@ -189,6 +201,24 @@ fn main() -> eframe::Result<()> {
             }))
         }),
     )
+}
+
+/// `yog wire-certs` (REMOTE §8, bl-ae05): the operator's explicit mint — the
+/// same recipe the engine's boot performs, reached by a verb. The four
+/// environment readings happen here because the process edge is where every
+/// other environment read in this crate happens (the xdg discipline); the
+/// decision they fold into is `verb::plan`, which is pure and tested.
+fn wire_certs(ambient: &Env) -> ! {
+    use yog::wire::provision::verb;
+    let read = |key: &str| std::env::var(key).ok();
+    let world = yog::world::compose(ambient);
+    std::process::exit(verb::perform(&verb::plan(
+        &world,
+        read(verb::READS[0]),
+        read(verb::READS[1]),
+        read(verb::READS[2]),
+        read(verb::READS[3]),
+    )));
 }
 
 /// `yog serve` (§8.5, VISION §4.8, REMOTE §8): **the same engine with no
@@ -220,6 +250,10 @@ struct App {
     engine: Engine,
     // The §8.5 searcher thread — the window's half of the search query.
     _searcher: yog::search::SearchThread,
+    // The REMOTE §1.2 asker thread (bl-ae05) — the window's half of the wire
+    // read path: it dials loopback at human cadence and lands decoded replies
+    // where the frame reads them. `None` only where the mint failed.
+    _asker: Option<yog::wire::asker::AskerThread>,
     // Every RAM surface the shell owns: the action/start drafts, the inspector
     // ephemera, and the config editors (§3.5 — discarded on exit).
     state: ShellState,
