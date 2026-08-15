@@ -172,6 +172,6 @@ fn focused_join_is_none_without_a_focused_workspace() {
     // An empty world: no workspaces ⇒ no startup focus ⇒ focused_join None.
     let (_root, m) = empty_model();
     assert!(m.focused_join().is_none());
-    assert!(m.ops_rows().is_empty());
+    assert!(m.snap.ops.is_empty());
     assert_eq!(m.identity(), "", "no recorded identity, no user ⇒ empty");
 }

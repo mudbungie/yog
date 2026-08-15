@@ -266,7 +266,7 @@ impl AppModel {
 
     /// The §11 activity-accessory summary over the cached ops tail — the
     /// collapsed chip's counts, its ⚠ being the **live** failures only (§6's
-    /// retirement rule); the expansion renders [`ops_rows`](Self::ops_rows).
+    /// retirement rule); the expansion renders the trail over the wire (`Query::Ops`).
     pub fn activity(&self) -> crate::opslog::Activity {
         crate::opslog::activity(&self.snap.ops)
     }

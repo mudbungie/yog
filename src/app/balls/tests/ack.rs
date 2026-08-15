@@ -69,7 +69,7 @@ fn an_ack_quiets_the_banners_and_the_chip_without_hiding_a_row() {
         4,
         "three rows plus the ack — the chip's op count is the trail's"
     );
-    let rows = m.ops_rows();
+    let rows = &m.snap.ops;
     assert_eq!(rows.len(), 4, "ack quiets alarms; it hides no history");
     assert!(
         rows.iter().filter(|r| r.failed()).count() == 2,
@@ -117,11 +117,11 @@ fn clear_leaves_a_one_row_trail_whose_row_is_the_clear() {
     drift(&m);
     m.after_lernie_verb();
     m.tick();
-    assert_eq!(m.ops_rows().len(), 2);
+    assert_eq!(m.snap.ops.len(), 2);
 
     m.clear_trail();
     m.tick();
-    let rows = m.ops_rows();
+    let rows = &m.snap.ops;
     assert_eq!(rows.len(), 1);
     let row = rows.first().unwrap();
     assert_eq!(row.argv, "yog-step clear-trail");

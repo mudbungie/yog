@@ -58,20 +58,20 @@ fn after_bl_verb_reflects_a_closed_ball_as_delivered() {
     assert_eq!(delivered.len(), 1);
     assert_eq!(delivered[0].badge, Some("delivered".to_string()));
     // The op appended before the refresh is now tailed.
-    assert_eq!(m.ops_rows().len(), 1);
-    assert_eq!(m.ops_rows()[0].argv, "bl close bl-work");
+    assert_eq!(m.snap.ops.len(), 1);
+    assert_eq!(m.snap.ops[0].argv, "bl close bl-work");
 }
 
 #[test]
 fn after_lernie_verb_refreshes_only_the_ops_tail() {
     let w = world();
     let (_c, mut m) = model(&w);
-    assert!(m.ops_rows().is_empty());
+    assert!(m.snap.ops.is_empty());
     assert_eq!(m.activity().total, 0, "the §11 chip reads the same cache");
     append_op(&m);
     m.after_lernie_verb();
     m.tick();
-    assert_eq!(m.ops_rows().len(), 1);
+    assert_eq!(m.snap.ops.len(), 1);
     assert_eq!(m.activity().total, 1);
 }
 
@@ -89,7 +89,7 @@ fn full_sweep_refetches_balls_and_ops() {
         m.row_for(&w.ws_cobalt).unwrap().state,
         JoinState::UnassignedWorkspace
     );
-    assert_eq!(m.ops_rows().len(), 1, "ops re-read on the full sweep");
+    assert_eq!(m.snap.ops.len(), 1, "ops re-read on the full sweep");
 }
 
 #[test]
@@ -114,7 +114,7 @@ fn yog_state_dirtiness_refreshes_the_ops_tail() {
     m.dirty_handle()
         .mark_all([(w.roots.yog_state.clone(), Mark::Watch)]);
     m.tick();
-    assert_eq!(m.ops_rows().len(), 1);
+    assert_eq!(m.snap.ops.len(), 1);
 }
 
 #[test]

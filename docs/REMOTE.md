@@ -1073,7 +1073,7 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb)
 
 Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
 transport questions settled. It could not move the read path, because §1.2 and
@@ -1113,15 +1113,72 @@ before anything is dialled (§8). Every consequence is recorded where it belongs
   and the model's in-process `clients()` derivation both went — with the model's
   copy of the presence map, which nothing reads any more.
 
-**The residual, stated plainly: one surface reads over the wire, and the acts do
-not.** This is scope, not architecture — the transport is under the whole frame
-now — but it is the larger half by volume and saying so is worth more than
-implying otherwise.
+**What bl-adcb landed, and what it found.**
 
-- **Every other read still paints the published snapshot** (§7.2). Migrating a
-  surface is: declare the `Query`, paint the `Reply`, delete the in-process
-  accessor and its memo. Nothing further is needed from the engine, the codec or
-  the wire. **bl-adcb.**
+- Two more surfaces read over the wire. The **ops trail** (§4.2, the §11
+  activity accessory's expanded pane) is a `Reply::Ops` bounded by
+  `opslog::OPS_TAIL`, which is now the log's one number rather than the
+  derivation's private one; the **V4 board** (the §11 balls fold) is a
+  `Reply::Board`. `AppModel::ops_rows` and `AppModel::board` went with them —
+  neither had a memo, an answer already being the cached fold.
+- `src/shell/wire.rs` is the shell's **one spelling** of a wire read. bl-ae05's
+  four arms — the answer, the refusal, the honest not-yet, and the wrong-kind
+  reply that is a codec defect rather than a state — were written by hand for
+  the clients section; restating them per pane would restate the third one
+  wrong. A surface now declares its query and picks its payload out of one
+  reply variant.
+- `src/shell/acceptance/wire.rs` is the **acceptance world's own answerer**: the
+  frame's standing questions taken off the `LinkEnd` exactly as the asker takes
+  them, decoded by the one codec and answered by `AppModel::answer` — the
+  transport stood in for, never a second dispatch, because a fixture mints no
+  certificate and binds no port. Without it a migrated surface paints nothing in
+  every test, which is a surface with no witness. It pays the **settle-then-render
+  shape** out in full: paint (ask), settle, answer, paint (re-declare), settle
+  (land), paint. Three passes, and it cannot be fewer — a settle whose frame
+  declared nothing drops the answers as no longer standing, which is the same
+  rule that makes a collapsed pane free.
+- **A migrated read paints the derivation, never the frame's fold** — and that
+  is §7.2's own partition (*paint reads the fold, gestures read the derivation*)
+  landing on the other side of the line, because a wire read is answered from
+  the engine's published snapshot like any seat's. The cost is stated rather
+  than discovered: the §3.4 pending **echo** and the §7.2 live tail are folds
+  the window makes for itself, so a just-fired conversation no longer shows as a
+  drone row on the board until the derivation carries it. Optimism is a seat's,
+  and a seat that reads over a wire has none — which is a fact bl-4841 inherits
+  whole, since an act's receipt is what the echo exists to stand in for.
+- **What crosses is the read, not the affordance.** The board's rows crossed;
+  `startable`/`resumable`, which build the composer's fire-time inputs the
+  click-glue consumes synchronously, did not. That line is the acts ball's, and
+  a surface that mixes the two migrates its read half only.
+
+**The residual: three surfaces read over the wire, the rest do not, and the acts
+do not.** This is still scope rather than architecture, but the remaining reads
+are **not** more of the same three moves — each is blocked on one of three named
+things, and bl-adcb's audit is what found that. **bl-f297** carries the list; the
+shape of it:
+
+- **A read whose subject is a viewport fold the boundary deliberately does not
+  carry.** `Query::Conversations` answers the *all-collapsed* list by ruling
+  (§8.5 files folds under views) while the frame paints the expanded one, and
+  the whole §11 inspector family folds through the rail **pin** — `Query::Rail`
+  answers unpinned by the same ruling, and no query spells a pinned `Files`
+  listing. Migrating either as written would delete the fold.
+- **A read the window addresses by path while the boundary addresses by name**
+  (§8, bl-f5f6). `Reply::Workspaces` carries no path, and the tab bar is built
+  from the snapshot's workspace values with focus held as a path.
+- **A read with nowhere to paint a refusal, or a consumer that reads it
+  synchronously.** The §6 decision queue behind the desktop escalation is
+  exactly `Query::Attention`, but its consumer folds a baseline every frame and
+  an unanswered frame would read as everything having departed; the §9 config
+  family is answered at *click* time, which is the acts shape and belongs with
+  bl-4841.
+
+  Two candidates are blocked on none of it and are the next ones to take: the
+  **Work tab** (`Query::WorkDiff` is exact, and it retires two memos that fork
+  `git` against a project repo) and **search** (already off-frame through the
+  model's own searcher, so riding the asker retires a second asynchronous
+  mechanism).
+
 - **Gestures are still dispatched in process** (`AppModel::dispatch`). They
   cannot simply be re-pointed: the click-glue reads each act's `Reply`
   *synchronously*, and a frame may never wait on a socket, so every act becomes

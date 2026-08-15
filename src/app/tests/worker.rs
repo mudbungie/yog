@@ -77,7 +77,8 @@ fn the_worker_thread_derives_a_marked_root_and_wakes_the_window() {
 
 /// Every `yog-drift late` row on the trail, in order.
 fn late_rows(rig: &Rig) -> Vec<String> {
-    rig.ops_rows()
+    rig.snap
+        .ops
         .iter()
         .filter(|r| r.drift())
         .map(|r| r.argv.clone())

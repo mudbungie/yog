@@ -272,8 +272,13 @@ fn the_activity_trail_paints_the_tail_that_tells_two_ops_apart() {
     world.converge();
     world.converge();
     let mut open = true;
-    let painted = crate::paint_probe::paint(|ui| {
-        crate::shell::activity::accessory(ui, &mut world.model, &mut open);
+    // The trail is a `Reply::Ops` since bl-adcb, so the rows exist only once
+    // something has answered — [`super::wire::wired`] is the settle-then-render
+    // dance the window does over half a second, paid out here in three passes.
+    let painted = super::wire::wired(&mut world, &mut |model, _| {
+        crate::paint_probe::paint(|ui| {
+            crate::shell::activity::accessory(ui, model, &mut open);
+        })
     });
     let rows: Vec<&str> = painted
         .lines()

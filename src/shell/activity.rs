@@ -1,12 +1,29 @@
 //! The activity accessory (§11): the demoted ops pane, a collapsed bottom
 //! chip that expands on demand to the `ops.jsonl` tail — never inline rows in
 //! conversation space. Coverage-excluded glue: the chip counts
-//! ([`AppModel::activity`]) and the rows ([`AppModel::ops_rows`]) are tested
-//! view-models; this file only wires the collapsing header and the two verbs
-//! over the trail itself ([`AppModel::ack_failures`] / [`AppModel::clear_trail`],
-//! bl-c417 — both tested, both `ops.jsonl` writes rather than widget state).
+//! ([`AppModel::activity`]) are a tested view-model; this file only wires the
+//! collapsing header and the two verbs over the trail itself
+//! ([`AppModel::ack_failures`] / [`AppModel::clear_trail`], bl-c417 — both
+//! tested, both `ops.jsonl` writes rather than widget state).
+//!
+//! **The rows come over the wire** (REMOTE §1.2 and its read-path residual;
+//! bl-adcb). The expanded
+//! trail is a `Reply::Ops` that crossed loopback mTLS and was decoded by
+//! `reply::decode`, exactly as the clients section beside it is (bl-ae05): the
+//! window is a client of its own engine, so the tail it paints is the tail the
+//! boundary answers, asked once per [`asker`](crate::wire::asker) pass rather
+//! than derived per frame. There is nothing left to memoize — an answer *is*
+//! the cached read — and there is no in-process accessor either, the model's
+//! `ops_rows` having gone with the derivation.
+//!
+//! **The frame never waits**, so a trail opened on the frame that first asked
+//! paints its rows one cadence period later; until then it is honestly empty,
+//! and a refusal is painted rather than swallowed.
 
 use crate::AppModel;
+use crate::boundary::Query;
+use crate::boundary::reply::Reply;
+use crate::opslog::{OPS_TAIL, OpRow};
 use crate::theme;
 
 /// The collapsed chip (`activity · N ops · M failed ⚠ · K drift`, ichor whenever
@@ -27,6 +44,21 @@ pub fn accessory(ui: &mut egui::Ui, model: &mut AppModel, open: &mut bool) {
     {
         ui.colored_label(theme::ICHOR, note);
     }
+    // **Asked only while the pane is open** (REMOTE §1.2): a question is keyed
+    // by its own envelope, so a collapsed trail simply stops declaring one and
+    // the asker drops it — no unsubscribe, and a chip nobody expanded costs the
+    // wire nothing. The bound is the log's own ([`OPS_TAIL`]), never a second
+    // number this seat picked.
+    let trail = if *open {
+        super::wire::ask(model, Query::Ops { max: OPS_TAIL }, |reply| match reply {
+            Reply::Ops(rows) => Some(rows),
+            _ => None,
+        })
+    } else {
+        super::wire::Landed::default()
+    };
+    let rows: Vec<OpRow> = trail.value.unwrap_or_default();
+    let refused = trail.refused;
     let summary = model.activity();
     let heading = if summary.errors > 0 || summary.drifts > 0 {
         egui::RichText::new(summary.chip()).color(theme::ICHOR)
@@ -50,9 +82,14 @@ pub fn accessory(ui: &mut egui::Ui, model: &mut AppModel, open: &mut bool) {
             // fit content that overflows); an explicit `max_height` of that same
             // available height used to say so twice.
             crate::tail::scroll(ui, true, |ui| {
+                // A refusal is painted, not swallowed: the wire is how this
+                // pane reads, so what it was told is the trail's honest content.
+                if let Some(said) = &refused {
+                    ui.colored_label(theme::ICHOR, said);
+                }
                 // Outcomes are positional over the same rows (§6 retirement).
-                let outcomes = crate::opslog::outcomes(model.ops_rows());
-                for (i, (row, outcome)) in model.ops_rows().iter().zip(outcomes).enumerate() {
+                let outcomes = crate::opslog::outcomes(&rows);
+                for (i, (row, outcome)) in rows.iter().zip(outcomes).enumerate() {
                     ui.push_id(i, |ui| ops_row(ui, row, outcome));
                 }
             });
