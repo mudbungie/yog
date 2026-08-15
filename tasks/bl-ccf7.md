@@ -1,7 +1,8 @@
 +++
 title = "REMOTE §9.5 residual — the window becomes a seat: the frame's read path rides the wire"
 created = 1786756326
-updated = 1786756326
+updated = 1786757176
+claimant = "Sheave"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
