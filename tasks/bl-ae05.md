@@ -1,7 +1,8 @@
 +++
 title = "REMOTE 1.2 vs 4.1 RULED: the local window is a wire client of localhost — implement the read path over loopback mTLS"
 created = 1786757471
-updated = 1786763150
+updated = 1786763172
+claimant = "Kevel"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
