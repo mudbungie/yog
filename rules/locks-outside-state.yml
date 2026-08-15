@@ -40,6 +40,17 @@
 #     bought back by naming this file here and by that module's own doc; what a
 #     third carve-out costs is the single reading of `state.rs`, and what it
 #     buys is the chokepoint keeping the coverage floor the whole gate rests on.
+#   - `src/registry/mailbox/slots.rs`: the REMOTE §5 invocation mailbox
+#     (bl-024b) — the queue per client and slot per invocation a routed tool
+#     call crosses through. Fourth sanctioned exception, and it is the third's
+#     map in every respect that matters: same lifetime, same client key, same
+#     connection rate of change, and RAM for the same reason (an invocation in
+#     flight is a fact about this process, not about the world). It sits beside
+#     `presence` rather than in the chokepoint because the measurement above
+#     already settled where a second `Arc<Mutex<…>>` alias costs `state.rs` its
+#     100 % floor, and a fifth phantom-region hunt buys nothing the fourth did
+#     not already pay for. Auditability is bought back the same way: named here,
+#     and its module doc says what it holds.
 #
 # Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser
 # (`--debug-query`): a bare `Mutex`/`RwLock` is a `type_identifier` in type
@@ -55,6 +66,7 @@ ignores:
   - "**/git_tree/probe_cache.rs"
   - "**/fs_watcher/hub.rs"
   - "**/registry/presence.rs"
+  - "**/registry/mailbox/slots.rs"
   - "**/test_support.rs"
   - "**/tests/**"
   - "**/tests.rs"

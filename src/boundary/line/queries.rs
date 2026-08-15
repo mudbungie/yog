@@ -124,6 +124,14 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
             let (workspace, agent) = at(verb, ctx)?;
             Ok(ask(Query::Agent { workspace, agent }))
         }
+        // REMOTE §3's follow-class read and the poll beside it (bl-024b). The
+        // first names nothing: the queue it drains is the intake's own, so a
+        // line seat typing it drains nothing and is told why at dispatch.
+        "invocations" => args::none(tail, verb).map(|()| ask(Query::Invocations)),
+        "capture" => match args::optional_word(tail, verb)? {
+            Some(invocation) => Ok(ask(Query::Capture { invocation })),
+            None => Err(format!("/{verb}: usage: /{verb} <invocation>")),
+        },
         "attention" => args::none(tail, verb).map(|()| ask(Query::Attention)),
         "ops" => Ok(ask(Query::Ops { max: max(tail)? })),
         // The whole tail is the needle — no flags, no bound. Search takes one

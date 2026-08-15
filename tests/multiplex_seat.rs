@@ -1,4 +1,5 @@
-//! End-to-end drive of the REMOTE §9.5 `seat` multiplex arm through
+//! End-to-end drive of the REMOTE §9.5 `seat` and §5 `tool-host` multiplex arms
+//! through
 //! `yog::multiplex::dispatch` — `yog seat '<json>'` composes the world, reads
 //! this machine's wire material out of it, and sends the envelope to an engine
 //! over mTLS.
@@ -87,5 +88,16 @@ fn yog_seat_sends_over_the_wire_and_exits_on_the_reply() {
         dispatch(&argv(&["yog", "seat", r#"{"op":"balls"}"#])),
         Some(0),
         "the reply's verdict is the exit"
+    );
+
+    // The other wire client mode (REMOTE §5, bl-024b) composes the same world
+    // through the same arm. This machine is provisioned but carries no
+    // tool-host config, so it refuses before it dials anything — which is the
+    // point: a tool host with nothing to offer has nothing to do.
+    assert_eq!(dispatch(&argv(&["yog", "tool-host"])), Some(1));
+    assert_eq!(
+        dispatch(&argv(&["yog", "tool-host", "--follow"])),
+        Some(2),
+        "the mode takes no arguments"
     );
 }

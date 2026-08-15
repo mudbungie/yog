@@ -35,6 +35,10 @@ use std::sync::Arc;
 
 pub mod client;
 pub mod frame;
+/// The tool-host client mode (REMOTE §5, bl-024b) — the wire's second shipped
+/// client: it advertises what this machine can run, rides a follow-class read
+/// for its next invocation, and posts each capture back.
+pub mod host;
 pub mod intake;
 pub mod material;
 pub mod seat;
@@ -44,6 +48,10 @@ pub mod tls;
 /// The argv seat's leading word: `yog seat`. Named once, here, because the arm
 /// that routes it and the help that advertises it would otherwise be two facts.
 pub const SEAT_SUBCMD: &str = "seat";
+
+/// The tool-host client mode's leading word: `yog tool-host` (REMOTE §5,
+/// bl-024b). Named here beside [`SEAT_SUBCMD`] and for its reason exactly.
+pub const HOST_SUBCMD: &str = "tool-host";
 
 /// Bring the engine's listener up, or explain why there is none. `None` is the
 /// ordinary answer on a box with no wire provisioned; a refusal is written to

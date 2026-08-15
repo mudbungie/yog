@@ -96,8 +96,18 @@ pub(super) fn encode(query: &Query) -> Value {
             json!({ "op": "models", "workspace": workspace,
                     "provider": provider })
         }
+        // The routing leg's two reads (bl-024b). The follow-class one names
+        // nothing at all: the queue it drains is the intake's own.
+        Query::Invocations => json!({ "op": INVOCATIONS }),
+        Query::Capture { invocation } => {
+            json!({ "op": CAPTURE, "invocation": invocation })
+        }
     }
 }
+
+/// The routing leg's read tokens, named once for the encoder and the arm.
+pub(super) const INVOCATIONS: &str = "invocations";
+pub(super) const CAPTURE: &str = "capture";
 
 /// Decode `op` as a query, or `None` when it names none — the signal
 /// [`super::decode`] chains on before it refuses an unknown op, exactly as it
@@ -161,6 +171,11 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         // and what each advertises.
         "clients" => Query::Clients {
             workspace: str_of(o, "workspace")?,
+        },
+        // The tool host's follow-class read, and the asker's poll (bl-024b).
+        INVOCATIONS => Query::Invocations,
+        CAPTURE => Query::Capture {
+            invocation: str_of(o, "invocation")?,
         },
         "lineages" => Query::Lineages {
             workspace: str_of(o, "workspace")?,

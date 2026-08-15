@@ -95,6 +95,22 @@ fn spell_action(action: &Action) -> String {
         Action::Advertise { tools } => {
             format!("/advertise {}", crate::registry::tools::encode(tools))
         }
+        Action::Route(verb) => spell_route(verb),
+    }
+}
+
+/// The routing leg's two (bl-024b): each states what no seat can supply — the
+/// addressee and the model's arguments, the handle and the bytes that came
+/// back — and both end in their document, verbatim.
+fn spell_route(verb: &crate::registry::mailbox::Verb) -> String {
+    use crate::registry::mailbox::{Verb, capture_value};
+    match verb {
+        Verb::Invoke(call) => format!("/invoke {} {} {}", call.client, call.tool, call.input),
+        Verb::Complete(done) => format!(
+            "/complete {} {}",
+            done.invocation,
+            capture_value(&done.capture)
+        ),
     }
 }
 
@@ -171,6 +187,10 @@ fn spell_query(query: &Query) -> String {
         Query::Models { provider, .. } => format!("/models {provider}"),
         // The workspace is the seat's, as `/providers`' is.
         Query::Clients { .. } => "/clients".to_owned(),
+        // The follow-class read names nothing at all; its sibling names the
+        // handle, which is the one thing a seat cannot hold.
+        Query::Invocations => "/invocations".to_owned(),
+        Query::Capture { invocation } => format!("/capture {invocation}"),
     }
 }
 

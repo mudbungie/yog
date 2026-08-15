@@ -49,6 +49,7 @@ fn over(
         ui_path: state_root.join("ui.json"),
         cell: crate::state::new_snapshot_cell(std::sync::Arc::new(snap)),
         presence: crate::registry::presence::Presence::default(),
+        mailbox: crate::registry::mailbox::Mailbox::default(),
         clock: Arc::new(SystemClock),
     }
 }

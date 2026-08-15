@@ -56,6 +56,10 @@ pub mod line;
 /// The VISION §4.9 monitor's two executors — arming and flagging.
 pub mod monitor;
 pub mod reply;
+/// REMOTE §5's routing leg (bl-024b): the two acts and two reads that carry an
+/// invocation to a tool host and its capture back — one module for both
+/// chokepoints' arms, because they are one mechanism read from four sides.
+mod routing;
 pub mod sugar;
 /// `pub(crate)` so the board's own corpus shares this one `Agent`/`Snapshot`
 /// fixture rather than standing up a second of the same shape.

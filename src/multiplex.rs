@@ -101,6 +101,7 @@ const NAMESPACES: &[(&str, Namespace)] = &[
     ("bl-tracker", Namespace::BlTracker),
     ("gesture", Namespace::Gesture),
     (crate::wire::SEAT_SUBCMD, Namespace::Seat),
+    (crate::wire::HOST_SUBCMD, Namespace::ToolHost),
 ];
 
 /// The embedded-tool namespaces yog multiplexes to (§16.7 W12): the three
@@ -116,6 +117,7 @@ enum Namespace {
     BlTracker,
     Gesture,
     Seat,
+    ToolHost,
 }
 
 impl Namespace {
@@ -137,7 +139,8 @@ impl Namespace {
             Namespace::BlDelivery => bl_delivery::run(args),
             Namespace::BlTracker => bl_tracker::run(args),
             Namespace::Gesture => gesture::run(args),
-            Namespace::Seat => seat::run(args),
+            Namespace::Seat => wire::seat(args),
+            Namespace::ToolHost => wire::tool_host(args),
         }
     }
 }
@@ -171,18 +174,14 @@ mod gesture {
     }
 }
 
-/// The `seat` arm (REMOTE §8, bl-b6fa): the terminal seat over the §9.5 wire —
-/// the same gesture surface `gesture` types, sent to an engine over mTLS
-/// instead of deposited into this world's inbox. The world is composed here at
-/// the process edge exactly as the `gesture` arm composes it, because the
-/// *material* is a fact of this machine's yog data root (§16.2) even when the
-/// engine it dials is on another box.
-mod seat {
-    pub(super) fn run(args: &[String]) -> i32 {
-        let world = crate::world::compose(&crate::xdg::Env::from_env());
-        crate::wire::seat::run(&world, args)
-    }
-}
+/// The two **wire client** arms (REMOTE §8, §5; bl-b6fa, bl-024b): `seat`
+/// types one gesture over mTLS instead of depositing it into this world's
+/// inbox; `tool-host` offers this machine's own tools to an engine and runs
+/// what it is asked to. Both compose the world here at the process edge as the
+/// `gesture` arm does, for one reason: the certificate and the tool config are
+/// facts of *this* machine's yog data root (§16.2) even when the engine they
+/// reach is elsewhere.
+mod wire;
 
 /// The `lernie` arm — **filled by W11**: lernie's own thin exec binding, in
 /// yog's process (see the module doc in `multiplex/lernie.rs`).

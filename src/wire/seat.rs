@@ -66,10 +66,12 @@ pub fn run(world: &Env, args: &[String]) -> i32 {
     }
 }
 
-/// This machine's seat, or why it has none. Absent material is a refusal here
+/// This machine's seat, or why it has none — shared with the tool-host client
+/// mode (bl-024b), which is provisioned by the same out-of-channel act and
+/// refuses in the same words. Absent material is a refusal here
 /// rather than the silence it is at the engine: a seat with nothing to present
 /// has nothing to do, and the remedy is the same out-of-channel act (§1.4).
-fn open(world: &Env) -> Result<Seat, String> {
+pub(crate) fn open(world: &Env) -> Result<Seat, String> {
     match material::read(world, Role::Client)? {
         Some(m) => Seat::open(&m),
         None => Err(format!(

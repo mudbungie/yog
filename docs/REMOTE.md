@@ -2,8 +2,7 @@
 
 Status: normative for the split; direction adopted by operator ruling
 2026-08-13 (bl-b9a2). §9 is the build sequence and each step lands under its
-own ball; steps 1–6 are in the tree, step 7 is two thirds landed with its one
-remaining leg named there, and §9.7 records what step 5's own
+own ball; steps 1–7 are in the tree, and §9.7 records what step 5's own
 residual is now waiting on. `docs/DESIGN.md` remains the
 architecture authority for the engine; this document governs the wire, the
 client, and the trust model. Where the two collide, DESIGN wins until DESIGN is
@@ -85,7 +84,7 @@ is a transport for that surface, not a vocabulary:
   client is in-crate (§8), so the hand-codec discipline extends to decode;
   serde derive stays a non-dependency (existing stance, `src/ui_state`).
 - **Routing does NOT invert the ask, and that is the ruling** *(decided,
-  bl-c907; unbuilt, bl-024b)*. §5 has the engine route an invocation *down* a
+  bl-c907; landed, bl-024b — §5.3)*. §5 has the engine route an invocation *down* a
   tool host's live connection, which reads like the one place a server must
   speak first. It is not, and making it one would cost the property this whole
   section exists to keep. **The tool host stays the asker**: it rides a
@@ -111,6 +110,18 @@ is a transport for that surface, not a vocabulary:
   one. The verbs it needs are boundary verbs like any other — a read that drains
   this client's pending invocations, an act that posts a capture — so every face
   gains them and the wire still adds nothing.
+
+  **As built (bl-024b) it is four verbs, not two, and the second pair is the
+  reason.** A tool host's two are what this bullet describes: `invocations`, the
+  follow-class read, and `complete`, the act. But the *asking* side needed two
+  as well — `invoke` and `capture` — because the engine's intake is **one
+  thread for the whole world** (§8.5's deposit consumer), so a gesture that
+  waited for a tool to finish would stop every other deposit converging for as
+  long as the tool ran. `invoke` therefore queues and answers a handle at once,
+  and the waiting is a poll the *driver* does, in a child process that has
+  nothing else to do and is the only party that knows how long its call is
+  worth waiting for. The follow-class read blocks a **connection** thread, which
+  is a thread per tool host and nothing else's.
 - **Cadence: the seat polls.** The window today adopts a snapshot per frame;
   a remote seat asks at human cadence and rides the follow stream for the hot
   path. A push/subscription channel is deliberately deferred (§10) — it is an
@@ -244,18 +255,31 @@ makes absent stays absent.
   injection reads at every assembly, so the rebuild happens once, at the step
   after the load, and the agent chose it.
 - **Use is attempt.** A loaded tool, when called, is attempted: routed to
-  the client if it is live, refused in-band if not — an error tool result is
+  the client, and refused in band when it cannot be — an error tool result is
   an appended message the model reacts to, never a prefix change. The same
   path corrects staleness: a client refuses a tool it no longer carries.
+
+  **Presence is NOT the routing predicate, and that is bl-024b's amendment.**
+  This bullet used to say *"routed to the client if it is live"*. It cannot be:
+  a tool host dials per ask (§10) and holds a connection only while it is
+  *waiting*, so it is absent for the whole time it is executing something — and
+  a presence test would therefore refuse the second call of a busy host, which
+  is the one host that is certainly there. The queue is the predicate instead:
+  an invocation waits in the client's mailbox, and what makes a vanished client
+  visible is the **caller's own deadline**, in band, never a hang. What *is*
+  checked at the invoke is the staleness correction above — that the named
+  machine advertises the named tool right now.
 - The workspace surface renders its registered clients — present or absent —
   and each one's advertised tools, live: the seat sees the flap; the model's
   prefix does not.
 - **Invocation path:** the agent's tool call hits lernie's tool seam →
   server-side adjudication (`yog tool-control`, unchanged, fails closed) →
-  the engine routes the invocation down the tool host's live connection → the
-  client executes locally → the result returns up the same channel. A routed
-  invocation carries a deadline; a vanished client is a visible refusal, not a
-  hang.
+  the driver queues the invocation in that client's engine-side mailbox → the
+  tool host, waiting on its follow-class read, is handed it → the client
+  executes locally → the client posts the capture back as an ordinary act →
+  the driver's poll collects it. A routed invocation carries a deadline; a
+  vanished client is a visible refusal, not a hang. **Nothing in that path is
+  the engine speaking first** (§3).
 - **Honesty about containment:** execution happens on a machine the
   adjudicator cannot inspect. Adjudication judges the invocation exactly as
   today; any containment beyond that is whatever the client enforces locally,
@@ -430,7 +454,9 @@ cannot enforce.
 
 **The tool host's own config, and why the advertisement is derived from it.**
 The far end of the wire holds one operator-authored document, out-of-world
-because it describes *that machine*:
+because it describes *that machine* — `<yog-data-root>/tools.json`, the sibling
+of `wire/` and of the world subtree, for the same reason the key material is
+(§8): a reseed must not take an operator's file with it.
 
 ```json
 [{"name": "Bash",
@@ -460,9 +486,65 @@ capture that comes back is the same three facts.
 JSON rather than TOML for one reason: `input_schema` is JSON Schema carried
 verbatim (§5.1), and any other syntax would make the operator transcribe it.
 
-**What is not built.** The leg that carries an invocation from the engine down a
-tool host's live connection, and the client-side executor above — see §3's
-routing frame and §9 step 7.
+### 5.3 The routing leg and the client-side executor, as landed (bl-024b)
+
+**Four boundary verbs, and the wire gained none of them** (§3). Two are the
+tool host's — `invocations`, the follow-class read that waits for this
+machine's next work, and `complete`, the act that answers one — and two are the
+asking side's: `invoke`, which queues a call for the machine that advertised
+the tool, and `capture`, which polls for what came back. All four are ordinary
+gestures in all three serializations, typable at any seat, and the compile
+gates (`codec`, `line::spell`, the dispatch and answer matches) are what
+enforced it.
+
+**The identity is the intake's at three of the four**, exactly as the
+advertisement's is (§5.1): a connection drains its own queue, answers its own
+invocations, and collects its own captures. A `client` field on the read would
+let one connection take another's work. An intake carrying no client identity —
+the `gestures/` deposit inbox, `yog gesture`, the window — **refuses in band**
+on the two that are a tool host's, with a sentence. `invoke` is the exception
+and names its client, because there the identity is the **addressee** rather
+than the author.
+
+**A handle that is not yours is absent, not forbidden** (§4). A completion
+quoting an invocation addressed to another machine, and a poll on a handle this
+caller never posted, both earn the sentence a handle nobody minted earns. A
+refusal that confirmed existence would be the disclosure §4 excludes.
+
+**One reply for one subject.** `invoke`, `complete` and `capture` all answer
+`Reply::Routed { invocation, capture? }` — the slot **as it stands after the
+call**, which is the `Marks` discipline (a receipt is a re-read, never an echo).
+`capture` is absent rather than empty while the far machine still runs it, so a
+reader never has to tell "not finished" from "finished saying nothing".
+
+**The mailbox is RAM, beside the presence refcount, and swept.** An invocation
+in flight is a fact about *this process for the seconds a tool takes*, not a
+fact about the world, so it is not a file (`src/registry/mailbox/slots.rs`, the
+fourth lock carve-out). A slot lives from the post until the capture is read,
+and a post older than an hour is swept — a driver that died mid-invocation
+costs one entry rather than a leak.
+
+**A capture is text, and the transcode happens once.** A capture ends as a
+model's tool result and a model's message is text, so the *executor* transcodes
+its child's bytes at the one place bytes stop being bytes, and nothing
+downstream carries an encoding case. A tool whose output is not UTF-8 loses
+exactly the bytes no string can name, which is the trade every other §11 file
+read already makes.
+
+**The executor is `yog tool-host`, a client mode beside `yog seat`.** It reads
+the §5.2 config, advertises the projection of it, and then loops: `invocations`
+→ run → `complete`. It runs **serially** (one invocation at a time, which is
+what makes a busy host absent) and it **does not reconnect** — a channel that
+fails is an exit naming the failure, because restart policy belongs to the
+supervision the operator's machine already has, and inventing one here would be
+yog deciding how a box it does not administer runs a program.
+
+**A tool runs under two deadlines, and they measure different things.** The
+host's own bound terminates the child (SIGTERM then SIGKILL, the cascade the
+crate already owns) and answers the shell's `timeout` verdict with a sentence;
+the driver's longer patience stands behind it for the case where the whole host
+process went away. Neither is a knob: an engine that has not answered is down,
+and a tool that has not answered is working.
 
 ## 6. What lives where
 
@@ -515,9 +597,10 @@ sweep buying nothing.
 ## 8. Shape of the code
 
 One crate, one multi-call binary, as today: `yog serve` runs the engine (the
-former `headless` boot plus the wire listener); bare `yog` runs the window. A
-TUI or web seat later is another consumer of the same wire and needs nothing
-new from the engine.
+former `headless` boot plus the wire listener); bare `yog` runs the window;
+`yog seat` and `yog tool-host` are the two **client** modes, the second landed
+with §5.3. A TUI or web seat later is another consumer of the same wire and
+needs nothing new from the engine.
 
 **`headless` is now `serve`, and the rename is the point** *(bl-b6fa)*. The
 face did not change — it is still the one `Engine::boot` with no window — but
@@ -742,7 +825,7 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    workspace absent, auto-registration on create, and the per-seat `ui.json`
    split.
 7. **Tool hosts:** advertisement, rendering, routing, the lernie seam —
-   after its own design pass (§5). Two of its three parts are landed.
+   after its own design pass (§5). **Landed, in three parts.**
    - bl-4e08 (§5.1): the `advertise` gesture in all three serializations, the
      per-client `tools.json`, connection-scoped presence, and the
      `Query::Clients` roster the workspace surface renders.
@@ -752,19 +835,27 @@ valuable with no network at all — they finish VISION V5 teleop parity.
      model-facing half is complete: an agent can see this workspace's machines,
      read what they advertise, and make named tools callable.
 
-   **The residual is one leg, and it is exact.** A loaded remote name is
-   declared to the model, adjudicated by the tool control, and routed — and the
-   routing answers a non-zero in-band capture saying this engine carries no leg
-   yet. Everything above that point is built; nothing below it is. What is left:
-   the transport §3's routing-frame ruling designs (the tool host's follow-class
-   read and the act that posts a capture, plus the two boundary verbs they
-   are), the engine-side mailbox beside the presence refcount, and the
-   client-side executor with the config §5.2 spells. Filed as **bl-024b**.
+   - bl-024b (§5.3): the routing leg and the client-side executor — the four
+     boundary verbs (`invocations`/`complete` for the tool host,
+     `invoke`/`capture` for the asking side), the engine-side mailbox beside
+     the presence refcount, and `yog tool-host`, the client mode that reads the
+     §5.2 config, advertises the projection of it, and runs what it is handed.
+     An agent's call on a loaded remote name now crosses to the machine that
+     advertised it and the capture comes back, verbatim.
 
-   Landing a half-built success path would have been worse than the refusal: an
-   in-band non-zero result is the shape a vanished endpoint already had to
-   produce (lernie's §3.3), so the seam is complete and honest, and the day the
-   leg lands the same call succeeds with nothing above it changing.
+   The day the leg landed the same call succeeded with nothing above it
+   changing, which is what the interim refusal was shaped to make true: an
+   in-band non-zero result is what a vanished endpoint had to produce anyway
+   (lernie's §3.3), so the seam was complete and honest before the transport
+   existed.
+
+   **Two rulings came out of it and belong here rather than in a ball body.**
+   *Presence is not the routing predicate* (§5, amended): a tool host holds a
+   connection only while it is waiting, so a busy one is absent and a presence
+   test would refuse exactly the calls that would have succeeded — the queue is
+   the predicate, and the caller's deadline is what makes a vanished machine
+   visible. And *the asking side needs two verbs, not one* (§3): the engine's
+   intake is one thread for the world, so no gesture may wait on a tool.
 
 ### 9.4 Where orchestration stops and paint begins
 
@@ -977,8 +1068,10 @@ once one seat's read path is the only read path.
   precisely so none of that exists — in exchange for a handshake nobody is
   paying yet. The criterion for revisiting is stated rather than felt: **when a
   seat's ask rate exceeds human cadence.**
-- **When polling graduates to a follow-class query.** Narrowed twice and now
-  answered from an unexpected direction. bl-ccf7 said there was one candidate —
+- ~~When polling graduates to a follow-class query~~ — **settled and built by
+  bl-024b**: `Query::Invocations` is the first follow-class read with a
+  consumer, and it needed no wire change. What stays open is only whether the
+  *transcript* tail follows it. The reasoning, kept: bl-ccf7 said there was one candidate —
   the live model-call tail (§9 step 1's folded `Stream`), the one read whose
   subject changes faster than an operator looks, every other read being a
   projection of a snapshot the derivation worker republishes on its own
@@ -986,14 +1079,17 @@ once one seat's read path is the only read path.
   tool host waiting for its next invocation** (§3's routing-frame ruling). It
   needs no wire change either, and unlike the tail it has a caller that cannot
   be written any other way — a poll would be a machine asking a machine, which
-  is the ask rate the bullet above set as the criterion. So the gate is met, and
-  what is left open is only whether the *transcript* tail follows it.
-- **Whether a tool host is a seat.** New with bl-c907. A client may be both (§2
-  says the work laptop usually is), and today the two are one identity holding
-  two connections, which the presence refcount already handles. Whether the
-  invocation stream should ride a *dedicated* connection — so a seat's ordinary
-  ask is never queued behind a long-running tool — is unsettled and belongs with
-  bl-024b's transport, not ahead of it.
+  is the ask rate the bullet above set as the criterion.
+- **Whether a tool host is a seat**, and whether it should run more than one
+  invocation at a time. New with bl-c907, sharpened by bl-024b. A client may be
+  both (§2 says the work laptop usually is), and the two are one identity
+  holding connections at different moments, which the presence refcount already
+  handles. What bl-024b found is that the question is not really about a
+  *dedicated* connection: `yog tool-host` executes **serially**, so it holds no
+  connection at all while a tool runs, and a second invocation simply waits in
+  the mailbox. Concurrency there would want a worker pool on the client and
+  nothing on the engine — the mailbox already hands out every queued
+  invocation at once. Deferred until a host has two tools worth overlapping.
 - ~~The tool-advertisement schema (the exact shape of name/description/input
   schema)~~ — settled by bl-4e08 (§5.1): three fields, `name` a single path
   component, `description` one string, `input_schema` the JSON Schema verbatim,

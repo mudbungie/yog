@@ -172,6 +172,21 @@ pub enum Reply {
     /// said twice — the [`Applied`](Self::Applied) shape. Whether the write
     /// actually touched the file is an optimization, not an answer.
     Advertised,
+    /// **One routed invocation, and its capture if it has one yet** (REMOTE §5,
+    /// bl-024b) — the answer to all three gestures of the routing leg's asking
+    /// side, because they are one subject at three moments: `invoke` has just
+    /// queued it (`capture` absent), `complete` has just answered it, and
+    /// `capture` is the poll in between. One variant rather than three, on
+    /// [`Marks`](Self::Marks)' own terms: what is answered is the slot **as it
+    /// stands after the call**, never an echo of what was asked.
+    Routed {
+        invocation: String,
+        capture: Option<crate::registry::mailbox::Capture>,
+    },
+    /// What this tool host has been asked to run (REMOTE §3) — the
+    /// follow-class read's answer. Empty is the ordinary answer of a hold that
+    /// expired with no work, not a failure: the host asks again.
+    Invocations(Vec<crate::registry::mailbox::Invocation>),
     Workspaces(Vec<WsRow>),
     Conversations(Vec<ConvRow>),
     Balls(Vec<JoinRow>),

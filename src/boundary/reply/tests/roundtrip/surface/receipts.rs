@@ -47,5 +47,21 @@ pub(super) fn receipts() -> Vec<Reply> {
             text: "roles: []".into(),
         },
         Reply::Advertised,
+        // The routing leg's one answer at both of its moments (bl-024b): the
+        // handle alone while the far machine runs it, and the capture once it
+        // has answered — including a non-zero verdict and text on stderr, which
+        // is the arm a tool that failed takes.
+        Reply::Routed {
+            invocation: "inv-1".into(),
+            capture: None,
+        },
+        Reply::Routed {
+            invocation: "inv-2".into(),
+            capture: Some(crate::registry::mailbox::Capture {
+                stdout: "hello\n".into(),
+                stderr: "warned\n".into(),
+                exit_code: 3,
+            }),
+        },
     ]
 }

@@ -30,12 +30,15 @@
 //! invocation is judged exactly as a local one — and lernie is honest that what
 //! happens on the far machine is beyond the adjudicator's reach (REMOTE §5).
 //!
-//! **The residual, stated where it is felt.** The leg that carries an
-//! invocation down a tool host's live connection is not built (REMOTE §9 step
-//! 7, filed as bl-024b). A loaded name is declared, adjudicated and routed —
-//! and the routing answers a non-zero in-band capture naming the missing leg,
-//! which is the shape a vanished endpoint already had to produce (lernie's
-//! §3.3: *"A vanished endpoint is an in-band error result, never a hang"*).
+//! **A loaded remote name runs where it lives** (REMOTE §9 step 7, bl-024b).
+//! [`remote`] is the driver's end of the routing leg: two ordinary gestures
+//! through the same inbox door — one that queues the call in the engine's
+//! mailbox and one that polls for what came back — and the far machine's own
+//! stdout, stderr and exit code passed through untouched, so the model cannot
+//! tell a routed tool from a local one. Only a *transport* failure is a
+//! sentence of yog's own, and it is in band and non-zero, which is the shape a
+//! vanished endpoint already had to produce (lernie's §3.3: *"A vanished
+//! endpoint is an in-band error result, never a hang"*).
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -50,6 +53,8 @@ pub mod ask;
 pub mod clients;
 /// The agent's durable loaded set.
 pub mod loaded;
+/// The driver's end of the routing leg (REMOTE §5, bl-024b).
+pub mod remote;
 /// The dated observations the tool appends to context.
 pub mod render;
 
@@ -68,6 +73,10 @@ pub struct Site {
     pub agent: String,
     /// How long an engine ask may take.
     pub budget: ask::Budget,
+    /// How long a *tool* on another machine may take (REMOTE §5, bl-024b) — a
+    /// second bound because it measures a second thing: an engine that has not
+    /// answered is down, a tool that has not answered is working.
+    pub patience: ask::Budget,
     /// The observation stamp's source.
     pub clock: Arc<dyn Clock>,
 }
@@ -85,6 +94,7 @@ impl Site {
 pub struct Injection {
     state_root: PathBuf,
     budget: ask::Budget,
+    patience: ask::Budget,
     clock: Arc<dyn Clock>,
     /// The `(workspace, agent)` this driver process was launched to drive, when
     /// its verb names one. [`ToolInjection::tools`] has no call to read them
@@ -97,16 +107,21 @@ pub struct Injection {
 }
 
 impl Injection {
-    /// Install an injection for a driver process.
+    /// Install an injection for a driver process. Two bounds, because they
+    /// measure two things: `budget` is how long the engine may take to answer
+    /// one deposit, `patience` how long a tool on another machine may take to
+    /// run ([`remote::patience`]).
     pub fn new(
         state_root: PathBuf,
         budget: ask::Budget,
+        patience: ask::Budget,
         clock: Arc<dyn Clock>,
         driving: Option<(String, String)>,
     ) -> Self {
         Self {
             state_root,
             budget,
+            patience,
             clock,
             driving,
         }
@@ -119,6 +134,7 @@ impl Injection {
             workspace: crate::naming::leaf(workspace),
             agent: agent.to_owned(),
             budget: self.budget,
+            patience: self.patience,
             clock: Arc::clone(&self.clock),
         }
     }
@@ -152,18 +168,21 @@ fn capture(name: &str, answered: Result<String, String>) -> RoutedCapture {
     }
 }
 
-/// What a loaded remote name earns today (REMOTE §9 step 7, bl-024b): the
-/// refusal a vanished endpoint would earn, with the honest reason. The
-/// declaration, the adjudication and the load are all real; the leg is not.
-fn unrouted(entry: &loaded::Entry) -> Result<String, String> {
-    Err(format!(
-        "this engine cannot yet carry an invocation to client {:?}. \
-         The advertisement, the roster and the load are in place; the leg that \
-         takes an invocation down a tool host's live connection and brings the \
-         capture back is not built yet (yog task bl-024b). \
-         Nothing on {:?} was contacted.",
-        entry.client, entry.client
-    ))
+/// **A loaded remote name, run where it lives** (REMOTE §9 step 7, bl-024b):
+/// the routing leg's capture, passed through exactly as it came back — the
+/// far machine's own stdout, stderr and exit code, so the model cannot tell a
+/// routed tool from a local one and neither can the transcript. A *transport*
+/// failure is the in-band refusal [`capture`] spells, which is the shape a
+/// vanished endpoint already had to produce (lernie's §3.3).
+fn routed(site: &Site, entry: &loaded::Entry, call: &RoutedCall<'_>) -> RoutedCapture {
+    match remote::invoke(site, entry, call.input, call.stop) {
+        Ok(got) => RoutedCapture {
+            stdout: got.stdout.into_bytes(),
+            stderr: got.stderr.into_bytes(),
+            exit_code: got.exit_code,
+        },
+        Err(reason) => capture(call.name, Err(reason)),
+    }
 }
 
 impl ToolInjection for Injection {
@@ -199,7 +218,7 @@ impl ToolInjection for Injection {
         let entry = loaded::read(&site.state_root, &site.workspace, &site.agent)
             .into_iter()
             .find(|entry| entry.presented() == call.name)?;
-        Some(capture(call.name, unrouted(&entry)))
+        Some(routed(&site, &entry, &call))
     }
 }
 

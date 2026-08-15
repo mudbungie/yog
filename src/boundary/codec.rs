@@ -140,6 +140,7 @@ fn encode_action(action: &Action) -> Value {
             goal,
         } => fork::encode(workspace, parent, attempt, goal),
         Action::Advertise { tools } => tools::encode(tools),
+        Action::Route(verb) => tools::encode_route(verb),
     }
 }
 
@@ -274,8 +275,11 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             agent: str_of(o, "agent")?,
         })),
         "clear-trail" => Ok(act(Action::ClearTrail)),
-        // REMOTE §5's tool-host presentation (bl-4e08).
-        tools::ADVERTISE => tools::decode(o).map(act),
+        // REMOTE §5's tool-host family (bl-4e08, bl-024b): the presentation,
+        // and the routing leg's two halves.
+        tools::ADVERTISE | tools::INVOKE | tools::COMPLETE => {
+            tools::decode(op.as_str(), o).map(act)
+        }
         // The two families that read in their own modules (bl-3f46, bl-3746):
         // every query — `config`/`marks` read-shaped among them, bl-0164 —
         // then the §9 config verbs. This match stays the action roster rather

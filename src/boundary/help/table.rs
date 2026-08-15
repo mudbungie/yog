@@ -191,6 +191,31 @@ pub const ACTIONS: &[HelpRow] = &[
                  the window — has none and is refused.",
     },
     HelpRow {
+        verb: "invoke",
+        usage: "/invoke <client> <tool> <json input>",
+        summary: "route one tool call to the machine that advertised it",
+        detail: "Queues one call in a tool host's mailbox and answers the handle it is known \
+                 by. It does NOT wait: the engine's intake is one thread for the whole world, \
+                 so what a tool takes is waited out by the caller, with `/capture <handle>` \
+                 until an answer lands. The client must advertise that tool right now, or this \
+                 refuses saying so — the same correction a machine that dropped a tool earns. \
+                 The tool name is the one the host advertised, never the prefixed name a model \
+                 sees. Whether the machine is connected is deliberately not checked: a tool \
+                 host holds its connection only while it is waiting, so a busy one looks \
+                 absent — what makes a vanished machine visible is your own deadline.",
+    },
+    HelpRow {
+        verb: "complete",
+        usage: "/complete <invocation> <json capture>",
+        summary: "answer one routed invocation with what running it captured",
+        detail: "The tool host's half of the routing leg. The capture is \
+                 `{\"stdout\": …, \"stderr\": …, \"exit_code\": …}` — lernie's own tool \
+                 contract, one for one. Only the machine the invocation was addressed to may \
+                 answer it; a handle addressed to anyone else reads as absent, which is the \
+                 same sentence a handle nobody minted earns. A caller inside the world has no \
+                 certificate and therefore no invocations, and is refused.",
+    },
+    HelpRow {
         verb: "delete-workspace",
         usage: "/delete-workspace <typed name>",
         summary: "unmake the focused workspace; the typed name is the arming",

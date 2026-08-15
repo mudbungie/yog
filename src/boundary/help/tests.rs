@@ -15,7 +15,14 @@ fn every_row_describes_a_real_gesture() {
         assert!(known(row.verb), "{} is not known to itself", row.verb);
         assert!(
             line::parse(&format!("/{}", row.verb), &line::Context::default()).is_ok()
-                || line::parse(&format!("/{} x", row.verb), &line::Context::default()).is_err(),
+                || line::parse(&format!("/{} x", row.verb), &line::Context::default()).is_err()
+                // A verb whose whole grammar is ONE word satisfies neither of
+                // the two above — bare is the refusal naming what is missing,
+                // and one word is the gesture (`/capture <invocation>`, whose
+                // subject is a handle no seat's context can hold, bl-024b). It
+                // must still refuse *something*, or the page describes a
+                // control that swallows every line.
+                || line::parse(&format!("/{} x y", row.verb), &line::Context::default()).is_err(),
             "{} must be readable as a line",
             row.verb
         );

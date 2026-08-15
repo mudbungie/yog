@@ -37,15 +37,25 @@ pub struct Deps {
     pub caller: Caller,
 }
 
-/// **The connection facts a gesture runs under** (REMOTE §4, §5, bl-4e08) —
-/// the two things that are true of the *caller* rather than of the world, which
-/// is why they ride here together and not on the snapshot: a derivation is
-/// republished on the worker's cadence, and both of these change on a peer's.
+/// **The connection facts a gesture runs under** (REMOTE §4, §5; bl-4e08,
+/// bl-024b) — what is true of the *caller* rather than of the world, which is
+/// why these ride here together and not on the snapshot: a derivation is
+/// republished on the worker's cadence, and every one of these changes on a
+/// peer's. Who is asking, who else is connected, and what is queued for whom.
 ///
-/// The default is the in-world posture (§3): the reserved `local` identity, and
-/// a presence map nobody has entered — which is exactly right for a box with no
-/// wire provisioned, the deposit inbox and every test. The general path with no
-/// input, not a case of its own.
+/// The default is the in-world posture (§3): the reserved `local` identity, a
+/// presence map nobody has entered and a mailbox nobody has posted to — which
+/// is exactly right for a box with no wire provisioned, the deposit inbox and
+/// every test. The general path with no input, not a case of its own.
+///
+/// **A face that builds its own `Deps` gets that default, and it is not the
+/// engine's.** The window's click-glue and the §4.3 pilot each construct one,
+/// so a gesture fired there reaches a presence map and a mailbox no listener
+/// touches. That is right for every gesture they *can* fire — none names a
+/// client — and it is the trap to know about before wiring
+/// [`Action::Route`](crate::boundary::Action::Route) to a control: the routing
+/// leg is answered through [`ConsumerCtx`](crate::boundary::consumer::ConsumerCtx),
+/// which holds the engine's own handles, and nothing else may.
 #[derive(Clone, Default)]
 pub struct Caller {
     /// The identity the intake carries: a connection's certificate common name
@@ -56,6 +66,11 @@ pub struct Caller {
     /// server's own RAM, shared by handle so an answer reads this instant's
     /// truth rather than a copy taken when the gesture arrived.
     pub presence: crate::registry::presence::Presence,
+    /// What is queued for each client and what came back (REMOTE §5, bl-024b)
+    /// — the engine's own RAM, shared by handle for presence's reason exactly:
+    /// an invocation posted through one intake is drained through another, and
+    /// a copy taken when the gesture arrived would be a hand-off to nobody.
+    pub mailbox: crate::registry::mailbox::Mailbox,
 }
 
 impl Deps {

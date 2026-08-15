@@ -69,13 +69,44 @@ pub(super) fn site(root: &Path, budget: ask::Budget) -> Site {
         workspace: "home".to_owned(),
         agent: "dulcet-mongoose".to_owned(),
         budget,
+        patience: budget,
         clock: FakeClock::new().arc(),
     }
+}
+
+/// A stand-in engine that answers `replies` in order, one per deposit — the
+/// routing leg needs two round trips (queue, then poll) and [`engine`] answers
+/// exactly one. Hands every request back over the channel.
+pub(super) fn scripted(root: &Path, replies: &[Value]) -> (JoinHandle<()>, Receiver<Value>) {
+    let root = root.to_path_buf();
+    let replies = replies.to_vec();
+    let (tx, rx) = std::sync::mpsc::channel();
+    let handle = std::thread::spawn(move || {
+        let mut said = 0;
+        for _ in 0..40_000 {
+            let Some(reply) = replies.get(said) else {
+                return;
+            };
+            if let Some((id, path)) = deposit::pending(&root).into_iter().next() {
+                let request = std::fs::read(&path)
+                    .ok()
+                    .and_then(|b| serde_json::from_slice(&b).ok())
+                    .unwrap_or(Value::Null);
+                let _ = deposit::claim(&root, &id);
+                let _ = deposit::write_reply(&root, &id, reply);
+                let _ = tx.send(request);
+                said += 1;
+            }
+            std::thread::sleep(Duration::from_millis(1));
+        }
+    });
+    (handle, rx)
 }
 
 fn injection(root: &Path, driving: Option<(String, String)>) -> Injection {
     Injection::new(
         root.to_path_buf(),
+        impatient(),
         impatient(),
         FakeClock::new().arc(),
         driving,
@@ -200,6 +231,7 @@ fn a_clients_op_answers_as_a_zero_exit_capture() {
     let capture = Injection::new(
         root.path().to_path_buf(),
         budget(),
+        budget(),
         FakeClock::new().arc(),
         None,
     )
@@ -237,34 +269,7 @@ fn a_refusal_is_an_in_band_non_zero_capture() {
     assert!(said.contains("unknown op"), "{said}");
 }
 
-/// **The residual, asserted** (REMOTE §9 step 7, bl-024b): a loaded name is
-/// owned and routed, and the routing says — in band, non-zero — that the leg
-/// carrying it to the host is not built. Nothing hangs, and nothing lies.
-#[test]
-fn a_loaded_remote_name_is_routed_and_refused_in_band() {
-    let root = TempDir::new().expect("tmp");
-    loaded::add(
-        root.path(),
-        "home",
-        "dulcet-mongoose",
-        &[loaded::Entry {
-            client: "laptop".to_owned(),
-            tool: tool("Bash"),
-        }],
-    )
-    .expect("loaded");
-
-    let input = json!({"command": "ls"});
-    let stop = AtomicBool::new(false);
-    let capture = injection(root.path(), None)
-        .route(call!("laptop_Bash", &input, &stop))
-        .expect("owned");
-    assert_eq!(capture.exit_code, 1);
-    let said = String::from_utf8_lossy(&capture.stderr).into_owned();
-    assert!(said.starts_with("laptop_Bash: "), "{said}");
-    assert!(said.contains("bl-024b"), "{said}");
-    assert!(
-        said.contains("Nothing on \"laptop\" was contacted"),
-        "{said}"
-    );
-}
+/// The routing leg through the injection (bl-024b) — its own file at §12's
+/// per-file budget, on the seam the module itself is cut on: the `clients`
+/// tool is one subject and a loaded remote name is another.
+mod routing;

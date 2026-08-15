@@ -51,6 +51,10 @@ pub use streamed::{
 /// The `yog exec` world escape hatch spawn (§8.4): [`Cli::exec_in_world`].
 mod exec;
 
+/// The stdin-piped spawn (REMOTE §5, bl-024b): [`Cli::run_input`], the shape a
+/// tool host's own child is run under.
+mod piped;
+
 /// The fire-and-forget detached spawn (§8.1): [`Cli::spawn_detached`] and its
 /// per-spawn stderr sink. Split out to hold [`self`] under the 300-line cap.
 mod detach;
@@ -142,13 +146,13 @@ impl Cli {
     /// stderr piped, stdin closed. Dropping the `Stream` terminates the
     /// child (SIGTERM, then SIGKILL after a short grace).
     pub fn run(&self, args: &[&str]) -> Result<Stream, CliError> {
-        self.run_streaming(None, &[], args)
+        self.run_streaming(None, &[], args, None)
     }
 
     /// Like [`run`](Self::run) but with the child's working directory set
     /// to `dir` — bl verbs run cwd = project (§8.2).
     pub fn run_in(&self, dir: &Path, args: &[&str]) -> Result<Stream, CliError> {
-        self.run_streaming(Some(dir), &[], args)
+        self.run_streaming(Some(dir), &[], args, None)
     }
 
     /// Like [`run`](Self::run) but layering explicit env vars over the
@@ -156,14 +160,19 @@ impl Cli {
     /// `--editor-apply` shim re-entry) and `YOG_EDIT_SRC` (the staging dir),
     /// §9.3. Nothing is scrubbed; the child otherwise inherits yog's env.
     pub fn run_env(&self, env: &[(&str, &str)], args: &[&str]) -> Result<Stream, CliError> {
-        self.run_streaming(None, env, args)
+        self.run_streaming(None, env, args, None)
     }
 
+    /// `stdin` is the fourth spawn shape's one difference (bl-024b): `None`
+    /// closes the child's stdin, `Some(bytes)` pipes them in and closes it —
+    /// the tool contract lernie's executor already speaks (its ARCH §3.3), and
+    /// therefore the one a tool host's own child speaks too.
     fn run_streaming(
         &self,
         cwd: Option<&Path>,
         env: &[(&str, &str)],
         args: &[&str],
+        stdin: Option<&[u8]>,
     ) -> Result<Stream, CliError> {
         // Physical spawn (§16.7 W12): `program` + the namespace `prefix` (empty
         // in host mode), then the caller's args. Built through `git_env` like
@@ -175,7 +184,10 @@ impl Cli {
             .args(args)
             .envs(self.standing_env())
             .envs(env.iter().copied())
-            .stdin(Stdio::null())
+            .stdin(match stdin {
+                Some(_) => Stdio::piped(),
+                None => Stdio::null(),
+            })
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
         if let Some(dir) = cwd {
@@ -185,6 +197,13 @@ impl Cli {
         let mut child = cmd
             .spawn()
             .map_err(|e| CliError::spawn(&self.program, cwd, e))?;
+        // Written and closed at once: the child reads its whole input and sees
+        // EOF, which is what "the input on stdin" means. A write that fails is
+        // a child that closed the pipe or died — not a spawn failure, and its
+        // own capture is what says so.
+        if let (Some(bytes), Some(mut pipe)) = (stdin, child.stdin.take()) {
+            let _ = std::io::Write::write_all(&mut pipe, bytes);
+        }
         let stdout = child.stdout.take().ok_or(CliError::Stdio("stdout"))?;
         let stderr = child.stderr.take().ok_or(CliError::Stdio("stderr"))?;
         let (tx, rx) = mpsc::channel();

@@ -43,6 +43,12 @@ fn every_query_variant_round_trips() {
     rt(Gesture::Ask(Query::Clients {
         workspace: "ws".into(),
     }));
+    // The routing leg's two reads (bl-024b): one names a handle, the other
+    // names nothing — the queue it drains is the intake's own.
+    rt(Gesture::Ask(Query::Invocations));
+    rt(Gesture::Ask(Query::Capture {
+        invocation: "inv-1".into(),
+    }));
     inspector_family();
 }
 
