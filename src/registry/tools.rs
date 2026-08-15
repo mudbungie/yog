@@ -70,15 +70,16 @@ pub fn path(state_root: &Path, client: &Client) -> PathBuf {
 /// the file alike (§8.5's single-source discipline: a stored set and a
 /// presented one that were spelled twice would drift within a week).
 pub fn encode(tools: &[Tool]) -> Value {
-    Value::Array(
-        tools
-            .iter()
-            .map(|t| {
-                json!({ "name": t.name, "description": t.description,
-                        "input_schema": t.input_schema })
-            })
-            .collect(),
-    )
+    Value::Array(tools.iter().map(one).collect())
+}
+
+/// **One element**, spelled once. The set encoder above spends it, and so does
+/// the loaded set (`src/tool_host/loaded.rs`, bl-c907), which stores the
+/// definition frozen at the load act beside the client it came from — a second
+/// spelling of these three keys is exactly the drift this module's doc refuses.
+pub fn one(t: &Tool) -> Value {
+    json!({ "name": t.name, "description": t.description,
+            "input_schema": t.input_schema })
 }
 
 /// Read a set back, strictly — a missing field or a mistyped one refuses with
@@ -88,18 +89,22 @@ pub fn decode(v: &Value) -> Result<Vec<Tool>, String> {
     v.as_array()
         .ok_or_else(|| "tools: not an array".to_owned())?
         .iter()
-        .map(|row| {
-            let o = row.as_object().ok_or("tool: not a JSON object")?;
-            Ok(Tool {
-                name: str_of(o, "name")?,
-                description: str_of(o, "description")?,
-                input_schema: o
-                    .get("input_schema")
-                    .cloned()
-                    .ok_or("tool: missing field \"input_schema\"")?,
-            })
-        })
+        .map(of_one)
         .collect()
+}
+
+/// **One element**, read back — [`one`]'s inverse, and the same single spelling
+/// the loaded set reads its frozen definitions with.
+pub fn of_one(row: &Value) -> Result<Tool, String> {
+    let o = row.as_object().ok_or("tool: not a JSON object")?;
+    Ok(Tool {
+        name: str_of(o, "name")?,
+        description: str_of(o, "description")?,
+        input_schema: o
+            .get("input_schema")
+            .cloned()
+            .ok_or("tool: missing field \"input_schema\"")?,
+    })
 }
 
 /// What `client` advertises now. A client that has advertised nothing, whose

@@ -56,3 +56,18 @@ fn perform_maps_each_outcome_to_its_exit() {
     let cmd = crate::git_env::command(Path::new("/nonexistent/yog-successor"));
     assert_eq!(perform(Outcome::Exec(cmd)), 1);
 }
+
+/// The injection's per-process context (REMOTE §5, bl-c907): `advance` names
+/// the agent it drives, so its loaded set is declared; every other verb names
+/// none — `prompt` and `dispatch` *mint* their agent, and an agent that does
+/// not exist yet has loaded nothing.
+#[test]
+fn driving_names_an_agent_only_for_the_driver_verb() {
+    let advance = parse(&args(&["advance", "/w/home", "dulcet-mongoose"])).unwrap();
+    assert_eq!(
+        driving(&advance.command),
+        Some(("home".to_owned(), "dulcet-mongoose".to_owned()))
+    );
+    let prompt = parse(&args(&["prompt", "/w/home", "hello"])).unwrap();
+    assert_eq!(driving(&prompt.command), None);
+}

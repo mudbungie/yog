@@ -1327,9 +1327,9 @@ dependencies = [
 
 [[package]]
 name = "lernie"
-version = "0.0.8"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75d1a94e71d8339425d366bb95de0f2336af527bab36d8e00a8b357fb5bedf28"
+checksum = "4d63071dd1ee1d60fd0f72df48da33573305baea0f8d4f2957ced9f8c546d3d1"
 dependencies = [
  "brazen",
  "chrono",

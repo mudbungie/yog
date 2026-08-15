@@ -2,7 +2,8 @@
 
 Status: normative for the split; direction adopted by operator ruling
 2026-08-13 (bl-b9a2). §9 is the build sequence and each step lands under its
-own ball; steps 1–6 are in the tree, and §9.7 records what step 5's own
+own ball; steps 1–6 are in the tree, step 7 is two thirds landed with its one
+remaining leg named there, and §9.7 records what step 5's own
 residual is now waiting on. `docs/DESIGN.md` remains the
 architecture authority for the engine; this document governs the wire, the
 client, and the trust model. Where the two collide, DESIGN wins until DESIGN is
@@ -83,6 +84,33 @@ is a transport for that surface, not a vocabulary:
 - **`Reply` gains a decode side.** Today the reply codec is encode-only. The
   client is in-crate (§8), so the hand-codec discipline extends to decode;
   serde derive stays a non-dependency (existing stance, `src/ui_state`).
+- **Routing does NOT invert the ask, and that is the ruling** *(decided,
+  bl-c907; unbuilt, bl-024b)*. §5 has the engine route an invocation *down* a
+  tool host's live connection, which reads like the one place a server must
+  speak first. It is not, and making it one would cost the property this whole
+  section exists to keep. **The tool host stays the asker**: it rides a
+  follow-class read for its next invocation — the general path with more frames,
+  which the framing already carries — and posts each capture back as an ordinary
+  act on the same surface. Nothing about the framing, the listener or a client's
+  socket posture changes; the engine's *work* flows down a stream the client
+  asked for.
+
+  The alternative was weighed and refused. A true inversion — the server writing
+  a request frame down an established connection — makes the channel
+  bidirectional-symmetric: a second reader at both ends, a correlation id
+  because two request streams now share one socket, and an `Answerer` **on the
+  client**, which is a second dispatch implementation. VISION §8 refuses that,
+  and §3's own "one dispatch surface, N serializations" refuses it here. The
+  long poll buys the same capability with the readers that already exist.
+
+  What it costs is a held connection and a thread parked on it per tool host,
+  which is exactly the case the bullet below leaves open ("when a seat's ask rate
+  exceeds human cadence") arriving from the other side: a tool host is not
+  polling faster than a human, it is waiting. And it is the **first**
+  follow-class read to have a consumer, which §10 named as the gate on minting
+  one. The verbs it needs are boundary verbs like any other — a read that drains
+  this client's pending invocations, an act that posts a capture — so every face
+  gains them and the wire still adds nothing.
 - **Cadence: the seat polls.** The window today adopts a snapshot per frame;
   a remote seat asks at human cadence and rides the follow stream for the hot
   path. A push/subscription channel is deliberately deferred (§10) — it is an
@@ -210,8 +238,11 @@ makes absent stays absent.
   loads a client's tools; loaded definitions are callable from that turn on.
   Whether the driver re-declares them in the tool block (one deliberate,
   paid prefix rebuild at a moment the agent chose) or carries them
-  append-only is an implementation choice at the lernie seam; the invariant
+  append-only was left to the lernie seam; the invariant
   is that nothing but an explicit load ever changes the tool surface.
+  **Settled by bl-c907 (§5.2): re-declared.** The set is a durable document the
+  injection reads at every assembly, so the rebuild happens once, at the step
+  after the load, and the agent chose it.
 - **Use is attempt.** A loaded tool, when called, is attempted: routed to
   the client if it is live, refused in-band if not — an error tool result is
   an appended message the model reacts to, never a prefix change. The same
@@ -229,10 +260,17 @@ makes absent stays absent.
   adjudicator cannot inspect. Adjudication judges the invocation exactly as
   today; any containment beyond that is whatever the client enforces locally,
   and the design must not claim otherwise.
-- **The driver-side seam is a lernie ask.** lernie's driver executes tools;
-  routing a designated tool to a remote executor needs an upstream seam. yog
-  owns the registry, the advertisement, the routing, and the adjudication
-  chokepoint. This piece gets its own design pass before its ball is filed.
+- **The driver-side seam was a lernie ask, and it landed.** lernie's driver
+  executes tools; routing a designated tool to a remote executor needed an
+  upstream seam. It is lernie 0.0.9's `Fx::tool_injection` (its
+  `docs/DESIGN_TOOL_INJECTION.md`): **one** object carrying both halves — the
+  definitions prompt assembly and the grant gate read, and the router the
+  executor consults ahead of binary resolution — so a tool declared and not
+  permitted, or permitted and not declared, is unrepresentable. An injected
+  name outranks an elected one, the per-invocation disk record stays the
+  executor's, and adjudication is untouched. yog owns the registry, the
+  advertisement, the routing and the adjudication chokepoint; §5.2 is what it
+  filled the seam with.
 
 ### 5.1 The advertisement, as landed (bl-4e08)
 
@@ -303,7 +341,128 @@ every other read: an unregistered workspace earns the resolver's own
 `unknown workspace "x"`. The window paints those same rows from the same
 function (`registry::roster`), memoized per derivation with the live set in the
 key. The §5 **client-management tool** the model reads is a separate surface and
-is not this — it is the next step, and it will be built on this read.
+is not this — it is §5.2, and it is built on this read.
+
+### 5.2 The tool, the load, and the client's own config (bl-c907)
+
+**One tool, named `clients`, three ops.** Its subject is the roster, which is
+why it is one tool rather than one per op — and why loaded remote tools still
+surface as individually named definitions of their own. lernie's
+`docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too: a generic
+`call {client, tool, arguments}` would collapse the role grant, the grant gate,
+the tool control and every future policy into one bit. The declared schema:
+
+```json
+{"name": "clients",
+ "input_schema": {
+   "type": "object",
+   "properties": {
+     "op": {"type": "string", "enum": ["list", "get", "load"]},
+     "client": {"type": "string"},
+     "tools": {"type": "array", "items": {"type": "string"}}},
+   "required": ["op"]}}
+```
+
+- **`list`** — every client registered in this workspace, which hold a live
+  connection *right now*, and how much each advertises.
+- **`get {client}`** — one client's detail: its presence, each advertised tool
+  with its description, and the name that tool would become callable under.
+- **`load {client, tools}`** — those definitions become callable from the next
+  step on.
+
+Every answer opens with the instant it was observed at, because presence is true
+only then and a line that did not say when it was read would be a claim about
+now. Every refusal is in band and non-zero: an unknown op, an identity this
+workspace has not registered (**absent**, §4 — the same sentence a name nobody
+seated earns), a tool the client does not advertise, an engine that did not
+answer. Nothing here ever mutates the prefix.
+
+**A load resolves whole or not at all.** Every named tool must be advertised
+right now; one miss refuses the whole act, because a partial load leaves the
+model believing it holds a tool it does not.
+
+**The presented name is `<client>_<tool>`, always.** §5.1 leaves the
+cross-client collision — two laptops both advertising `Bash` — to the act that
+loads one. Prefixing *conditionally* would make a tool's own name depend on what
+some other machine advertises, so a name the model already learned could change
+under it; one rule and no case. A composed name a provider's tool block would
+refuse declines at the load, naming it.
+
+**The loaded set is durable, and its document is**
+
+```text
+<yog-state-root>/loaded/<workspace>/<agent>.json
+```
+
+Durable because a driver is not: each step is a fresh process, so a set held in
+RAM would be unloaded by the next hop and "callable from that turn on" would be
+false. It sits under yog's own state root rather than in the workspace, which is
+the conversation's git repository.
+
+**The definition is frozen at the load act**, name, description and schema
+together, and re-read from that document at every assembly — never from the
+client's live `tools.json`. That is §5's own rule (bl-bc7c) rather than a
+shortcut: a prefix that changed when a client reconnected would put a
+connectivity-rate fact inside the model's cached context, which is the defect §5
+was amended to remove. The staleness freezing admits is corrected where §5
+already corrects it — *"a client refuses a tool it no longer carries"*, in band,
+at the call.
+
+**There is no unload in v1, and no inheritance.** The set belongs to the agent
+that loaded it; a fresh conversation, and a freshly dispatched subagent, starts
+clean and loads what it needs through the `clients` tool every agent always has.
+Subtraction is a second act on the one surface §5 says nothing but an explicit
+load may change, and nothing has yet needed it.
+
+**Where the injection runs, and what it may touch.** It is installed by the
+`yog lernie` arm (DESIGN §16.7 W11) at `Fx::tool_injection`, which puts it
+inside the **driver** — a child process, not the engine. Two consequences, both
+load-bearing. Declaring touches nothing but disk, so a slow or absent engine can
+never change the prefix. Answering a `clients` op needs presence, which is
+engine RAM by ruling, so it asks through the door §3 already reserves for the
+world's own residents: `Query::Clients` deposited into the `gestures/` inbox and
+its reply read back with the one reply codec. **No verb and no transport were
+added** — the roster read is the one bl-4e08 landed. The child folds the same
+state root the engine writes, because the world hands `XDG_STATE_HOME` down to
+every process it spawns (DESIGN §16.2). Every wait carries a bound and ends
+early on lernie's stop flag, which is the router obligation lernie states and
+cannot enforce.
+
+**The tool host's own config, and why the advertisement is derived from it.**
+The far end of the wire holds one operator-authored document, out-of-world
+because it describes *that machine*:
+
+```json
+[{"name": "Bash",
+  "description": "run a command in a shell",
+  "input_schema": {"type": "object",
+                   "properties": {"command": {"type": "string"}},
+                   "required": ["command"]},
+  "command": ["/usr/local/libexec/yog-tools/bash-tool"],
+  "cwd": "/srv/work"}]
+```
+
+The first three keys **are** §5.1's advertised element, verbatim; `command` and
+the optional `cwd` are the local half. The client presents the advertisement by
+reading this file and dropping the local half — one document, two readings — so
+what a host offers and what it can actually run cannot drift, which is the whole
+of why the config is not a second list beside the advertisement.
+
+`command` is an **argv, spawned directly**. There is no shell and no
+interpolation of the invocation's input into it: a shell would make the declared
+schema advisory and turn an operator's config into a command-injection surface
+for anything the model can type. The invocation reaches the command exactly as
+lernie's own tool contract already delivers one (its ARCH §3.3): the
+`tool_use.input` JSON on stdin, bytes on stdout, the exit code the verdict. So a
+tool host's executable is the same kind of program a local pool tool is, and the
+capture that comes back is the same three facts.
+
+JSON rather than TOML for one reason: `input_schema` is JSON Schema carried
+verbatim (§5.1), and any other syntax would make the operator transcribe it.
+
+**What is not built.** The leg that carries an invocation from the engine down a
+tool host's live connection, and the client-side executor above — see §3's
+routing frame and §9 step 7.
 
 ## 6. What lives where
 
@@ -583,11 +742,29 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    workspace absent, auto-registration on create, and the per-seat `ui.json`
    split.
 7. **Tool hosts:** advertisement, rendering, routing, the lernie seam —
-   after its own design pass (§5). Its first half is landed (bl-4e08 — see
-   §5.1): the `advertise` gesture in all three serializations, the per-client
-   `tools.json`, connection-scoped presence, and the `Query::Clients` roster the
-   workspace surface renders. What is left is the client-management tool,
-   loading, routing and the driver-side seam.
+   after its own design pass (§5). Two of its three parts are landed.
+   - bl-4e08 (§5.1): the `advertise` gesture in all three serializations, the
+     per-client `tools.json`, connection-scoped presence, and the
+     `Query::Clients` roster the workspace surface renders.
+   - bl-c907 (§5.2): the lernie seam filled (`Fx::tool_injection`, lernie
+     0.0.9), the `clients` tool with its three ops, the durable per-agent
+     loaded set, and the frozen definitions the prefix declares. The
+     model-facing half is complete: an agent can see this workspace's machines,
+     read what they advertise, and make named tools callable.
+
+   **The residual is one leg, and it is exact.** A loaded remote name is
+   declared to the model, adjudicated by the tool control, and routed — and the
+   routing answers a non-zero in-band capture saying this engine carries no leg
+   yet. Everything above that point is built; nothing below it is. What is left:
+   the transport §3's routing-frame ruling designs (the tool host's follow-class
+   read and the act that posts a capture, plus the two boundary verbs they
+   are), the engine-side mailbox beside the presence refcount, and the
+   client-side executor with the config §5.2 spells. Filed as **bl-024b**.
+
+   Landing a half-built success path would have been worse than the refusal: an
+   in-band non-zero result is the shape a vanished endpoint already had to
+   produce (lernie's §3.3), so the seam is complete and honest, and the day the
+   leg lands the same call succeeds with nothing above it changing.
 
 ### 9.4 Where orchestration stops and paint begins
 
@@ -800,15 +977,23 @@ once one seat's read path is the only read path.
   precisely so none of that exists — in exchange for a handshake nobody is
   paying yet. The criterion for revisiting is stated rather than felt: **when a
   seat's ask rate exceeds human cadence.**
-- **When polling graduates to a follow-class query.** Still open, and bl-ccf7
-  narrows what "graduates" would mean, because there is one candidate and only
-  one: the live model-call tail (§9 step 1's folded `Stream`), which is the one
-  read whose subject changes faster than an operator looks. Every other read is
-  a projection of a snapshot the derivation worker republishes on its own
-  schedule, so polling it faster answers the same bytes. A follow-class
-  `Query::Transcript` is therefore the first and possibly the only one, it needs
-  no wire change (§3), and it wants a *consumer that polls* to exist before it
-  is worth minting — which is the same gate the bullet above is behind.
+- **When polling graduates to a follow-class query.** Narrowed twice and now
+  answered from an unexpected direction. bl-ccf7 said there was one candidate —
+  the live model-call tail (§9 step 1's folded `Stream`), the one read whose
+  subject changes faster than an operator looks, every other read being a
+  projection of a snapshot the derivation worker republishes on its own
+  schedule. **bl-c907 found the second, and it is the one with a consumer: a
+  tool host waiting for its next invocation** (§3's routing-frame ruling). It
+  needs no wire change either, and unlike the tail it has a caller that cannot
+  be written any other way — a poll would be a machine asking a machine, which
+  is the ask rate the bullet above set as the criterion. So the gate is met, and
+  what is left open is only whether the *transcript* tail follows it.
+- **Whether a tool host is a seat.** New with bl-c907. A client may be both (§2
+  says the work laptop usually is), and today the two are one identity holding
+  two connections, which the presence refcount already handles. Whether the
+  invocation stream should ride a *dedicated* connection — so a seat's ordinary
+  ask is never queued behind a long-running tool — is unsettled and belongs with
+  bl-024b's transport, not ahead of it.
 - ~~The tool-advertisement schema (the exact shape of name/description/input
   schema)~~ — settled by bl-4e08 (§5.1): three fields, `name` a single path
   component, `description` one string, `input_schema` the JSON Schema verbatim,
