@@ -6,13 +6,14 @@
 //! Coverage-excluded like the rest of `shell/*`: every decision it forwards —
 //! the tab select ([`AppModel::select_tab`]), the tab dispatch
 //! ([`crate::inspector::render`]), and each view-model build — is tested in its
-//! owning module. Only the active tab's VM is built — and the two heavy ones
-//! (steps, transcript) are memoized **per snapshot** (§7.2 [`SnapMemo`],
-//! bl-e90a): a frame pays a pointer compare, never a disk re-read, so pulse
-//! repaints and scroll frames cost no I/O. The steps view is built regardless
-//! of tab because the center's auth/wound banners read it every frame (it is
-//! the same memo slot [`super::workspace`] already filled this snapshot), and
-//! it feeds the transcript's crossing rules their commit ids.
+//! owning module. Since bl-13f9 every one of those view-models is a **standing
+//! wire question** ([`reads`]) rather than a disk build, so a pulse repaint or
+//! a scroll frame declares the set it declared before and asks nothing new; the
+//! four per-snapshot memos went with the builds, an answer already being the
+//! cached fold refreshed at the asker's cadence. Only the active tab declares
+//! its own question — except the steps view and the transcript, which are asked
+//! on every tab because the centre's auth/wound banners read the first and the
+//! spine (and so the pin) is a function of the second.
 
 use crate::AppModel;
 use crate::cli_outbound::Cli;
@@ -22,13 +23,16 @@ use std::path::Path;
 mod controls;
 mod fork;
 mod rail;
+mod reads;
 mod vms;
 mod work;
 
-/// The focused agent's transcript, memoized per snapshot — re-exported for
-/// the composer's prompt recall (bl-f908), which needs the operator's own
-/// past turns and must not open `messages/` a second time to get them.
-pub(in crate::shell) use vms::build_transcript;
+/// The family's asks, re-exported for the two seats outside this module that
+/// declare one: the centre's auth/wound banners (the steps view) and the
+/// composer's prompt recall (the transcript, bl-f908). Two callers of one
+/// question are **one ask** — the standing set is keyed by the encoded envelope
+/// — so neither pays for the other (REMOTE §9.7, bl-13f9).
+pub(in crate::shell) use reads::{steps, transcript};
 
 use super::ShellState;
 
@@ -77,10 +81,12 @@ pub fn tabs_and_content(
     // for every Inbox-tab deposit's sender (bl-b6d0).
     let titles = model.agent_titles();
     let (data, refused) = vms::tab_data(active, model, state, ws, &focus);
-    // A refusal is painted, not swallowed (REMOTE §9.7, bl-f297): the Work
-    // tab reads over the wire now, so what the engine said is the honest
-    // content of this seat — and an empty listing must not stand in for it.
-    if let Some(said) = &refused {
+    // A refusal is painted, not swallowed (REMOTE §9.7, bl-f297): every tab
+    // reads over the wire now, so what the engine said is the honest content
+    // of this seat — and an empty listing must not stand in for it. Distinct
+    // sentences only: the family shares one address, so an unresolvable
+    // workspace would otherwise say the same thing five times.
+    for said in &refused {
         ui.colored_label(crate::theme::ICHOR, said);
     }
     controls::per_tab_controls(ui, active, model, &mut state.inspector, &data.steps);

@@ -1,16 +1,22 @@
 //! The §11 Altitude-2 inspector's cross-frame RAM (§5.3, per-instance viewport
 //! state — *which data you look at*, never durable), its own file per §12's line
-//! budget: the selections the inspector's render writes back to, and the
-//! per-snapshot memos that keep its disk and `git` reads off the paint path
-//! (§7.2). Inert data; the tabs themselves live in `shell/inspector/*`.
+//! budget: the selections the inspector's render writes back to, and the fork
+//! composer's own draft beside them. Inert data; the tabs themselves live in
+//! `shell/inspector/*`.
+//!
+//! **The four view-model memos are gone** (REMOTE §9.7, bl-13f9). Transcript,
+//! steps, rail and files were memoized per published snapshot because each
+//! built itself off disk on the paint path; every one of them is a standing
+//! wire question now, and an answer *is* the cached fold — refreshed at the
+//! asker's cadence rather than the derivation's — so the memo was a second
+//! cache in front of one that already existed. What remains is
+//! [`fork_memo`](InspectorState::fork_memo), whose subject is the V2 composer's
+//! choices and not a §11 tab.
 
 use crate::app::SnapMemo;
-use crate::git_tree::AgentState;
 use crate::inspector::Ephemera;
-use crate::steps_view::{StepTab, StepsView};
-use crate::transcript::Transcript;
+use crate::steps_view::StepTab;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 /// The §11 Altitude-2 inspector's RAM ephemera (§5.3, per-instance viewport
 /// state — *which data you look at*, never durable): the Raw toggle (one flag,
@@ -28,24 +34,6 @@ pub struct InspectorState {
     /// fold overrides, the rail's pinned notch and the Work tab's picked file.
     /// One bundle, handed to [`crate::inspector::render`] whole.
     pub eph: Ephemera,
-    /// Per-snapshot memo of the focused agent's steps view (§7.2 `SnapMemo`,
-    /// bl-e90a): read by the center's auth/wound banners every frame and by the
-    /// Steps tab and the transcript's crossing rules — one disk build per
-    /// snapshot, shared by all of them, never one per frame.
-    pub(crate) steps_memo: SnapMemo<(PathBuf, String, AgentState), StepsView>,
-    /// Per-snapshot memo of the focused agent's transcript (bl-e90a). `Arc` so
-    /// a frame hands the view-model on without copying the payload bytes.
-    pub(crate) tx_memo: SnapMemo<(PathBuf, String), Arc<Transcript>>,
-    /// Per-snapshot memo of the focused agent's rail (§7.2 `SnapMemo`). The
-    /// build folds each child's `steps/<id>` spend and asks its governing
-    /// config, so it is a disk read and must never run per frame.
-    pub(crate) rail_memo: SnapMemo<(PathBuf, String), crate::rail::Rail>,
-    /// Per-snapshot memo of the Files listing, live or pinned. The pinned arm
-    /// is a `git ls-tree`, which is exactly the per-frame git read STORIES
-    /// §S7 point 3 refused; the commit rides the key so a re-pin re-reads and
-    /// nothing else does.
-    pub(crate) files_memo:
-        SnapMemo<(PathBuf, String, Option<String>), crate::files_view::FilesView>,
     /// The fork composer at the pinned notch (VISION V2), and the choices it
     /// offers. RAM by the same §13.1 argument as `notch_sel` beside it: a
     /// half-typed counterfactual is a draft, and drafts are ephemera until
@@ -63,10 +51,6 @@ impl Default for InspectorState {
             step_sel: None,
             step_tab: StepTab::Meta,
             eph: Ephemera::default(),
-            steps_memo: SnapMemo::default(),
-            tx_memo: SnapMemo::default(),
-            rail_memo: SnapMemo::default(),
-            files_memo: SnapMemo::default(),
             fork: None,
             fork_memo: SnapMemo::default(),
         }

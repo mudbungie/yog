@@ -14,6 +14,12 @@ use crate::boundary::{Gesture, Query, help};
 
 /// Read one populating verb's line, or refuse with the roster attached.
 pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
+    // The conversation-addressed family reads first, in its own table — the
+    // seam `codec::query::inspector` already draws, and for the same reason: a
+    // verb it does not claim falls through to this one unchanged.
+    if let Some(gesture) = conversation(verb, tail, ctx) {
+        return gesture;
+    }
     match verb {
         "workspaces" => args::none(tail, verb).map(|()| ask(Query::Workspaces)),
         "conversations" => {
@@ -69,64 +75,6 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
                 None => return Err(format!("/{verb}: usage: /models <provider>")),
             },
         })),
-        // The §11 inspector family (bl-6233, REMOTE §9 step 1): the
-        // conversation's own reads. Every one is aimed by the seat — the
-        // workspace *and* the selected conversation, exactly as `/message` is
-        // aimed — because a line states its targets through the context, never
-        // twice. What each states is the one thing no seat can supply.
-        "transcript" => {
-            args::none(tail, verb)?;
-            let (workspace, agent) = at(verb, ctx)?;
-            Ok(ask(Query::Transcript { workspace, agent }))
-        }
-        "steps" => {
-            args::none(tail, verb)?;
-            let (workspace, agent) = at(verb, ctx)?;
-            Ok(ask(Query::Steps { workspace, agent }))
-        }
-        // A step is picked by its sequence name (`001`), as the Steps list
-        // spells it. No default: "some step" is not a question.
-        "step" => {
-            let Some(seq) = args::optional_word(tail, verb)? else {
-                return Err(format!("/{verb}: usage: /step <seq>"));
-            };
-            let (workspace, agent) = at(verb, ctx)?;
-            Ok(ask(Query::Step {
-                workspace,
-                agent,
-                seq,
-            }))
-        }
-        // Bare, the listing; with one word, that listed file's bytes — the
-        // `/work-diff` shape, and for the same reason: a listing and one
-        // entry's content are one question at two depths.
-        "files" => {
-            let (positional, flags) = args::split_flags(tail);
-            args::only(&flags, &["at"], verb)?;
-            let path = args::optional_word(&positional, verb)?;
-            let (workspace, agent) = at(verb, ctx)?;
-            Ok(ask(Query::Files {
-                workspace,
-                agent,
-                path,
-                at: args::flag(&flags, "at", verb)?,
-            }))
-        }
-        "rail" => {
-            args::none(tail, verb)?;
-            let (workspace, agent) = at(verb, ctx)?;
-            Ok(ask(Query::Rail { workspace, agent }))
-        }
-        "inbox" => {
-            args::none(tail, verb)?;
-            let (workspace, agent) = at(verb, ctx)?;
-            Ok(ask(Query::Inbox { workspace, agent }))
-        }
-        "agent" => {
-            args::none(tail, verb)?;
-            let (workspace, agent) = at(verb, ctx)?;
-            Ok(ask(Query::Agent { workspace, agent }))
-        }
         // REMOTE §3's follow-class read and the poll beside it (bl-024b). The
         // first names nothing: the queue it drains is the intake's own, so a
         // line seat typing it drains nothing and is told why at dispatch.
@@ -148,6 +96,101 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         })),
         other => Err(format!("unknown command /{other}\n{}", help::roster())),
     }
+}
+
+/// The §11 inspector family's lines (bl-6233, REMOTE §9 step 1; extended
+/// bl-13f9): the conversation's own reads. `None` when `verb` names none of
+/// them — the signal [`queries`] chains on before its own table.
+///
+/// Every one is aimed by the seat — the workspace *and* the selected
+/// conversation, exactly as `/message` is aimed — because a line states its
+/// targets through the context, never twice. What each states is the one thing
+/// no seat can supply.
+fn conversation(verb: &str, tail: &str, ctx: &Context) -> Option<Result<Gesture, String>> {
+    Some(match verb {
+        "transcript" => bare(verb, tail, ctx, &|workspace, agent| Query::Transcript {
+            workspace,
+            agent,
+        }),
+        "steps" => bare(verb, tail, ctx, &|workspace, agent| Query::Steps {
+            workspace,
+            agent,
+        }),
+        "rail" => bare(verb, tail, ctx, &|workspace, agent| Query::Rail {
+            workspace,
+            agent,
+        }),
+        "inbox" => bare(verb, tail, ctx, &|workspace, agent| Query::Inbox {
+            workspace,
+            agent,
+        }),
+        "agent" => bare(verb, tail, ctx, &|workspace, agent| Query::Agent {
+            workspace,
+            agent,
+        }),
+        // A step is picked by its sequence name (`001`), as the Steps list
+        // spells it. No default: "some step" is not a question.
+        "step" => step(verb, tail, ctx),
+        // Bare, the listing; with one word, that listed file's bytes — the
+        // `/work-diff` shape, and for the same reason: a listing and one
+        // entry's content are one question at two depths.
+        "files" => files(verb, tail, ctx),
+        // Config-frozen-at (VISION V1.2, bl-13f9): the `/files` shape at the
+        // other tab whose subject is a commit's tree. Bare it is the
+        // conversation's own tip, so a seat that has pinned nothing types the
+        // one word the window paints unpinned.
+        "governing" => governing(verb, tail, ctx),
+        _ => return None,
+    })
+}
+
+/// The five that take no argument at all: the address, and nothing else.
+fn bare(
+    verb: &str,
+    tail: &str,
+    ctx: &Context,
+    build: &dyn Fn(String, String) -> Query,
+) -> Result<Gesture, String> {
+    args::none(tail, verb)?;
+    let (workspace, agent) = at(verb, ctx)?;
+    Ok(ask(build(workspace, agent)))
+}
+
+fn step(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
+    let Some(seq) = args::optional_word(tail, verb)? else {
+        return Err(format!("/{verb}: usage: /step <seq>"));
+    };
+    let (workspace, agent) = at(verb, ctx)?;
+    Ok(ask(Query::Step {
+        workspace,
+        agent,
+        seq,
+    }))
+}
+
+fn files(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
+    let (positional, flags) = args::split_flags(tail);
+    args::only(&flags, &["at"], verb)?;
+    let path = args::optional_word(&positional, verb)?;
+    let (workspace, agent) = at(verb, ctx)?;
+    Ok(ask(Query::Files {
+        workspace,
+        agent,
+        path,
+        at: args::flag(&flags, "at", verb)?,
+    }))
+}
+
+fn governing(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
+    let (positional, flags) = args::split_flags(tail);
+    args::none(&positional, verb)?;
+    args::only(&flags, &["at"], verb)?;
+    let (workspace, agent) = at(verb, ctx)?;
+    Ok(ask(Query::Governing {
+        workspace,
+        agent,
+        at: args::flag(&flags, "at", verb)?,
+    }))
 }
 
 /// The §11 family's shared address: the seat's workspace and the conversation

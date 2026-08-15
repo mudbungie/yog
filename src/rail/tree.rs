@@ -4,9 +4,10 @@
 //! (`files_view`). Pinned, the same tab reads the same shape out of git —
 //! `ls-tree -r -l` for the listing, `git show <commit>:<path>` for one file's
 //! bytes — through the env-scrubbed `git_tree::cmd` doorway, and never per
-//! frame: the shell memoizes it per snapshot like every other tab build
-//! (§7.2 `SnapMemo`), which is the cost STORIES §S7 point 3 declined to pay
-//! per-frame ("the per-frame git read this repo already removed once").
+//! frame: since bl-13f9 the seat asks `Query::Files` with the commit as its
+//! `at`, so this runs at the engine once per ask period rather than per paint,
+//! which is the cost STORIES §S7 point 3 declined to pay per-frame ("the
+//! per-frame git read this repo already removed once").
 //!
 //! Two differences from the live walk, both honest rather than incidental:
 //! `ls-tree -r` names blobs, so the pinned listing has no directory rows; and

@@ -107,26 +107,11 @@ impl Screen {
         // gesture and never a binary.
         world.substrate(&self.lernie, &self.bl);
         let mut out = self.paint(world, events);
-        loop {
-            // The frame's own duty, which the app runs once per `update`: hand
-            // over what this frame declared and posted, and take what came back.
-            world.model.refresh();
-            let waiting = world.model.awaiting();
-            world.reads();
-            let acted = world.acts();
-            if !waiting && !acted {
-                return out;
-            }
-            // A landed **answer** reaches the frame on the refresh after the
-            // frame that kept its question standing — a `Link` may never be
-            // settled twice without a frame between, or the second settle
-            // declares nothing and drops the lot — so a read costs two passes
-            // where a **receipt** costs one. Paying both is the cheaper half
-            // idling, and the frame this returns is the settled one.
-            let _ = self.paint(world, Vec::new());
-            world.model.refresh();
-            out = self.paint(world, Vec::new());
-        }
+        // The fixed point itself is `World::drain` (bl-13f9), one definition
+        // for both drivers; what is this driver's own is the context the
+        // repaints run on, so the loop takes the painting as a parameter.
+        world.drain(&mut |world| out = self.paint(world, Vec::new()));
+        out
     }
 
     /// One frame, and nothing else.

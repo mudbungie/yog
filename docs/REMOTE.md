@@ -1086,7 +1086,7 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9)
 
 Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
 transport questions settled. It could not move the read path, because §1.2 and
@@ -1394,24 +1394,10 @@ mechanism for an optimisation.
 surfaces crossed; what is left is scope with one exception, and the exception is
 named rather than open.
 
-- **The §11 inspector family is still read in process** — transcript, steps, step
-  detail, files, rail, inbox, and the seat's own `Query::Agent`. Every one of
-  them has a query, every one is answered by the same `answer::inspector`
-  functions the frame delegates to, and the pin they fold through is now
-  *selection over an answer* rather than a derivation — so this is bl-adcb's
-  three moves again, with the per-snapshot memos (`tx_memo`, `steps_memo`,
-  `rail_memo`, `files_memo`) coming out as the Work tab's two did. It is scope,
-  and it is the next ball.
-- **Config-frozen-at has no query.** The §11 Config tab reads
-  `config_edit::branch::governing_config(ws, at)` in process, which is the second
-  read whose subject is a tree the pin names. When it is spelled it takes `at`
-  the way `Query::Files` does; it is not a residual of the fold class, because it
-  was never answered at all.
-- **The Files preview reads its own two arms.** The listing delegates to
-  `answer::inspector::files`; the preview beside it still branches on the pin in
-  `shell::inspector::rail`, because building a whole listing to read one file's
-  bytes is what the query's own containment rule costs a memoized seat. It
-  dissolves with the inspector migration above, which asks one question for both.
+- ~~The §11 inspector family is still read in process~~ — **landed, bl-13f9**,
+  below.
+- ~~Config-frozen-at has no query~~ — **spelled, bl-13f9**, below.
+- ~~The Files preview reads its own two arms~~ — **dissolved, bl-13f9**, below.
 - **The workspace tab bar** (class 2), blocked on the raise's unenumerated focus
   as recorded above.
 - **The §9 config editors' own loads**, which were never one of the three classes
@@ -1420,6 +1406,96 @@ named rather than open.
 
 Nothing in that list is blocked on a decision that has not now been taken; each
 is blocked on work whose shape is named.
+
+**The §11 inspector family crossed, and config-frozen-at got its query
+(bl-13f9).** Six tab reads — transcript, steps, one step's records, the worktree
+listing, the spine, the mail — plus the seventh the pin needed and nobody had
+spelled. The window's Altitude-2 pane derives nothing at all now; what is left in
+`shell/inspector` is which tab is open and the pin.
+
+- **The four memos went with the accessors** (`tx_memo`, `steps_memo`,
+  `rail_memo`, `files_memo`), which is bl-adcb's rule paid in full: an answer
+  *is* the cached fold, refreshed at the asker's cadence rather than the
+  derivation's, so a memo in front of one is a second cache over one fact. Two
+  seats outside the inspector read the same two questions — the centre's
+  auth/wound banners want the steps view, the composer's ↑ recall wants the
+  transcript — and pay nothing for them: a standing question is keyed by its own
+  encoded envelope, so two callers are one ask. What is left in
+  `shell/ram/inspector.rs` is the V2 fork composer's choices, whose subject is a
+  draft's input rather than a §11 read.
+- **The Files preview's seat-side branch dissolved rather than moving.**
+  `Query::Files` carries the path *and* the tree, so one ask answers the listing
+  and the picked file's bytes at whichever commit the pin names. Its cost was a
+  **selection change**: `Ephemera::files_sel` is the entry's path now, not its
+  row index, because the number would index a listing that landed a round trip
+  ago. That is `work_sel`'s own shape one tab over, and it is the general rule
+  for a selection that is a query's parameter.
+- **Config-frozen-at is `Query::Governing { workspace, agent, at }`**, all three
+  serializations plus a help page, answered by `answer::inspector::governing`.
+  `at` is the `Files` shape and for the same reason — it names *which commit*,
+  which is the question and not the view — and absent it is the agent's own tip,
+  resolved engine-side off the published snapshot so no seat has to know one
+  before it may ask. It is the family's one read that **refuses** where its
+  siblings answer absent: the derivation is a walk of the workspace's git and
+  fails as `Lineages` fails, and "this conversation has no policy" is never a
+  reading. Headless it is `/governing [--at <commit>]`.
+- **The pin stayed seat-side and §8.5 is still unamended.** Every field it shows
+  is on an answer (bl-44e9's altitude work), so `shell/inspector/rail.rs` is two
+  selections and nothing else: pick a notch out of the landed spine, cut the
+  landed transcript in front of it. Of VISION V1.2's four pinnable tabs, the two
+  whose subject really is a *different tree* now name that tree as a query
+  parameter; the other two fold over answers the seat already holds.
+- **A pane declares several questions, so refusals are collected distinct**
+  (`shell::wire::Said`). The family shares one address, so an unresolvable
+  workspace refuses every one of them in the same sentence — five copies of which
+  is a report about the transport, where one is content.
+
+**The live tail is now half a second old at the seat, and the follow-stream
+graduation was declined.** bl-ccf7 named the §7.2 live tail the one follow-class
+candidate, and this is the migration where it would have paid. It does not, and
+the reasoning is the ruling rather than the scope. The fold itself is unmoved —
+`inspector::live_tail` is still the boundary's (bl-6233), so the two seats cannot
+describe one moment differently — but the frame used to re-fold it off the
+rendered snapshot every paint and now reads it at `ASK_PERIOD`, so streamed text
+arrives as one row per half second rather than as characters. That is legible:
+500 ms is the cadence the whole window already reads at, and a model's output is
+prose a person reads, not a machine polling a machine — which is REMOTE §10's own
+criterion for minting a held connection, and it is not met. Taking the
+graduation would cost a **second lane on the asker**, because the asker's pass is
+serial over the standing set and a held read would stall every other surface for
+its duration — which is the poster, renamed (§9.7 already refused exactly that
+for `Query::Search`). A mechanism for a legibility optimisation is the wrong
+trade; if the tail ever needs to be smoother, the lane is the ball, not the
+migration.
+
+**A drive settles to a fixed point in one place now** (`World::drain`). bl-44e9
+put that loop in `Screen::run`; the whole-window paint driver (`acceptance::mod`'s
+`painted`) still counted three passes, and three stopped being enough the moment a
+read *chained* — the step drill-in's sequence name is picked out of the step list
+that landed, so its own question is not even declared until the pass that answers
+the list. Two facts came out of writing it and both are stated rather than
+rediscovered: a `Link` may never be settled twice without a frame between (the
+second declares nothing and drops every answer), and a **fresh** `egui::Context`
+measures before it paints — it sizes a content-sized panel and culls a scroll area
+against the previous frame's rect, so the §11 chat read off the frame its answer
+arrived on is read off an unmeasured layout. `painted` therefore pre-rolls two
+frames, drains, and reads the frame after; `Screen` needs no pre-roll, its context
+being persistent across the drive.
+
+**What bl-13f9 did NOT take, and why it is a ruling and not scope.** The seat's
+own `Query::Agent` — `AppModel::focused_conversation` — stays in process. It is
+not a §11 tab read: it is the *selection's* own view, and its consumers are
+frame-synchronous in a way the tab reads are not. The composer's target line names
+the conversation off it (a name that blinked between "start a conversation" and
+the real one for a round trip would be a regression, not a cost), the §11 focus
+walk unfolds a selected member's ancestors off it (an unfold that lags the
+selection by an ask period is the visible-selection invariant broken), and two act
+gates read it at click time (`x` stops the selection iff `seat.stoppable`). Three
+of its seven callers hold `&AppModel` rather than `&mut`, so migrating it is a
+signature cascade *and* a rendering ruling about what a seat shows between the
+click and the answer. That is bl-f297's dissolved class 3 — *a consumer that reads
+it synchronously* — reappearing at a different noun, and it wants the ruling
+first. It is the residual this ball leaves, and it is filed as **bl-48ae**.
 
 - ~~Gestures are still dispatched in process~~ — **the design and the first
   group landed, §9.8** (bl-4841). An act is a declaration whose receipt lands

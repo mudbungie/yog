@@ -25,26 +25,28 @@ use crate::boundary::Query;
 use crate::boundary::reply::Reply;
 use crate::files_view::Preview;
 use crate::keymap::InspectorTab;
+use crate::shell::wire::Said;
 use crate::workdiff::{Attempt, WorkFile};
 use std::path::Path;
 
-/// What the Work tab paints: the workspace's attempts, the picked file's patch,
-/// and the engine's sentence if it refused. All three empty is the resting
-/// state of a tab whose question was asked a moment ago.
+/// What the Work tab paints: the workspace's attempts and the picked file's
+/// patch. Both empty is the resting state of a tab whose question was asked a
+/// moment ago; the engine's sentence, if it refused, goes to the caller's
+/// [`Said`] beside every other read's (bl-13f9).
 #[derive(Default)]
 pub(super) struct Work {
     pub(super) attempts: Vec<Attempt>,
     pub(super) patch: Option<Preview>,
-    pub(super) refused: Option<String>,
 }
 
 /// Declare the tab's question and read whatever has landed. An inactive tab
-/// reads nothing at all — the same rule the Files and Transcript builds keep.
+/// reads nothing at all — the same rule the Files and Transcript reads keep.
 pub(super) fn read(
     tab: InspectorTab,
     model: &mut AppModel,
     ws: &Path,
     picked: Option<WorkFile>,
+    said: &mut Said,
 ) -> Work {
     if tab != InspectorTab::Work {
         return Work::default();
@@ -57,10 +59,6 @@ pub(super) fn read(
         Reply::WorkDiff { attempts, patch } => Some((attempts, patch)),
         _ => None,
     });
-    let (attempts, patch) = landed.value.unwrap_or_default();
-    Work {
-        attempts,
-        patch,
-        refused: landed.refused,
-    }
+    let (attempts, patch) = said.take(landed).unwrap_or_default();
+    Work { attempts, patch }
 }

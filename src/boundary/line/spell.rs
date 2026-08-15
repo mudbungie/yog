@@ -149,8 +149,8 @@ fn spell_query(query: &Query) -> String {
         },
         // The §11 inspector family (bl-6233): the workspace *and* the
         // conversation are the seat's selection, exactly as `/message`'s are —
-        // so four of the six are the verb alone, and the other two state only
-        // the thing no seat can supply (which step, which file).
+        // so most of them are the verb alone, and the rest state only the
+        // thing no seat can supply (which step, which file, which commit).
         Query::Transcript { .. } => "/transcript".to_owned(),
         Query::Steps { .. } => "/steps".to_owned(),
         Query::Step { seq, .. } => format!("/step {seq}"),
@@ -164,6 +164,12 @@ fn spell_query(query: &Query) -> String {
                 None => format!("/files{pinned}"),
             }
         }
+        // Config-frozen-at (bl-13f9): the `/files` elision, one flag wide —
+        // the commit is the only thing the seat's selection cannot supply.
+        Query::Governing { at, .. } => match at {
+            Some(commit) => format!("/governing --at {commit}"),
+            None => "/governing".to_owned(),
+        },
         Query::Rail { .. } => "/rail".to_owned(),
         Query::Agent { .. } => "/agent".to_owned(),
         Query::Inbox { .. } => "/inbox".to_owned(),

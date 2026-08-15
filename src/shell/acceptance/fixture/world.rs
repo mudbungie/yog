@@ -163,6 +163,42 @@ impl World {
         self.searches();
     }
 
+    /// **Settle the wire to a fixed point**, painting `frame` between passes
+    /// (REMOTE §9.8's harness ruling as bl-44e9 extended it to reads; the one
+    /// definition of it since bl-13f9, when a second driver needed it too).
+    ///
+    /// A landed **answer** reaches the frame on the refresh after the frame that
+    /// kept its question standing — a `Link` may never be settled twice without
+    /// a frame between, or the second settle declares nothing and drops the lot
+    /// — so a read costs two passes where a **receipt** costs one. It terminates
+    /// for the acts' own reason (only a receipt can post an act, and nothing
+    /// posts one unprompted) and for the reads' equivalent: a surface's
+    /// questions are a function of state, and a frame that changed no state
+    /// declares the set it declared before. A **chain** — the §11 inspector's
+    /// step drill-in, whose sequence name is picked out of the step list that
+    /// landed — is why counting passes was never enough.
+    pub(in crate::shell::acceptance) fn drain(&mut self, frame: &mut dyn FnMut(&mut Self)) {
+        loop {
+            self.model.refresh();
+            let waiting = self.model.awaiting();
+            self.reads();
+            let acted = self.acts();
+            self.searches();
+            if !waiting && !acted {
+                return;
+            }
+            // A landed **answer** reaches the frame on the refresh after the
+            // frame that kept its question standing — a `Link` may never be
+            // settled twice without a frame between, or the second settle
+            // declares nothing and drops the lot — so a read costs two passes
+            // where a **receipt** costs one. Paying both is the cheaper half
+            // idling.
+            frame(self);
+            self.model.refresh();
+            frame(self);
+        }
+    }
+
     /// Mint a **second sphere** under the same lernie root: another workspace
     /// with one conversation, symlinked where the model enumerates it. Its §3.1
     /// leaf names its own wall (§16.2 as amended), so this is what a wall drive

@@ -1,17 +1,24 @@
 //! Per-snapshot memo for frame-side view-model builds (§7.2, bl-e90a).
 //!
-//! The frame renders snapshots and derives nothing per frame — but the
-//! Altitude-2 inspector's view-models (transcript, steps) are functions of
-//! disk *and* of frame-owned selection (§5.3), so the worker cannot build
-//! them ahead: it does not know which agent is focused or which tab is open.
-//! The honest middle is this memo: the frame builds such a view-model **at
-//! most once per published snapshot per key**, because every disk fact those
-//! builds read is change-tracked by the snapshot itself (`last_action_unix`
-//! folds the newest `messages/` mtime, `Agent::stream` the live tail — a
-//! change that matters forces a publish, §7.2). A pulse repaint or a scroll
-//! frame therefore re-reads nothing: the 60 Hz cost is a pointer compare,
-//! and the rebuild cadence is the snapshot's own (debounce-bounded, ≤10/s
-//! under a storm).
+//! The frame renders snapshots and derives nothing per frame — but a build that
+//! is a function of disk *and* of frame-owned selection (§5.3) cannot be made
+//! ahead by the worker: it does not know which agent is focused or which notch
+//! is pinned. The honest middle is this memo: the frame builds such a
+//! view-model **at most once per published snapshot per key**, because every
+//! disk fact those builds read is change-tracked by the snapshot itself
+//! (`last_action_unix` folds the newest `messages/` mtime, `Agent::stream` the
+//! live tail — a change that matters forces a publish, §7.2). A pulse repaint
+//! or a scroll frame therefore re-reads nothing: the 60 Hz cost is a pointer
+//! compare, and the rebuild cadence is the snapshot's own (debounce-bounded,
+//! ≤10/s under a storm).
+//!
+//! **Most of its callers are gone, and the reason is the ruling** (REMOTE
+//! §9.7). A surface that reads over the wire needs no memo — an answer *is* the
+//! cached fold, refreshed at the asker's cadence rather than the derivation's,
+//! so a memo in front of one is a second cache over the same fact. bl-adcb took
+//! the ops trail and the board, bl-f297 the Work tab's two, and bl-13f9 the §11
+//! inspector's four (transcript, steps, rail, files). What is left is the V2
+//! fork composer's choices, which is a *draft's* input rather than a §11 read.
 //!
 //! **The snapshot a memo keys on is the *derivation*, never the fold**
 //! (bl-54f7, [`AppModel::derivation`](crate::AppModel::derivation)). A memo
@@ -107,42 +114,25 @@ mod tests {
         assert_eq!(*memo.read(&b, "agent-1", &mut bump), 2, "new snapshot");
     }
 
-    /// The shell's two live shapes hold the same contract — the structural
-    /// assertion that the steps view and the transcript are each built once
-    /// per snapshot, exercised on the exact key/value types the shell keys
-    /// (each generic instantiation carries its own coverable copy of `read`).
+    /// The shell's one live shape holds the same contract — the structural
+    /// assertion that the V2 fork composer's choices are derived once per
+    /// snapshot, exercised on the exact key/value types the shell keys (each
+    /// generic instantiation carries its own coverable copy of `read`).
     #[test]
-    fn the_shells_two_memo_shapes_build_once_per_snapshot() {
-        use crate::git_tree::AgentState;
-        use crate::steps_view::StepsView;
-        use crate::transcript::Transcript;
+    fn the_shells_live_memo_shape_builds_once_per_snapshot() {
+        use crate::fork::Choices;
         use std::path::PathBuf;
         let snap = snap();
-        let key = || (PathBuf::from("/ws"), "agent-1".to_string(), true);
+        let key = || (PathBuf::from("/ws"), "agent-1".to_string());
         let mut builds = 0;
-        let mut steps: SnapMemo<(PathBuf, String, AgentState), StepsView> = SnapMemo::default();
+        let mut fork: SnapMemo<(PathBuf, String), Choices> = SnapMemo::default();
         for _ in 0..2 {
-            let _ = steps.read(
-                &snap,
-                (
-                    PathBuf::from("/ws"),
-                    "agent-1".into(),
-                    AgentState::Quiescent,
-                ),
-                &mut || {
-                    builds += 1;
-                    StepsView::default()
-                },
-            );
-        }
-        let mut tx: SnapMemo<(PathBuf, String, bool), Arc<Transcript>> = SnapMemo::default();
-        for _ in 0..2 {
-            let _ = tx.read(&snap, key(), &mut || {
+            let _ = fork.read(&snap, key(), &mut || {
                 builds += 1;
-                Arc::new(Transcript::default())
+                Choices::default()
             });
         }
-        assert_eq!(builds, 2, "one steps build + one transcript build");
+        assert_eq!(builds, 1, "one derivation of the fork's choices");
     }
 
     #[test]

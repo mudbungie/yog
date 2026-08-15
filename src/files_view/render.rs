@@ -13,14 +13,18 @@ use super::{FileEntry, FilesView, Preview};
 /// Two spaces of indent per path level (matches jsonview / the tree view).
 const INDENT: &str = "  ";
 
-/// Render the Files tab. `sel` is the caller-owned selected-entry index (RAM
-/// ephemera); clicking a file row sets it, and the caller rebuilds `preview`
-/// from it on the next frame.
+/// Render the Files tab. `sel` is the caller-owned selection (RAM ephemera) and
+/// it names the entry by its **path**, not by a row number: since bl-13f9 the
+/// listing is a wire answer and the preview beside it is the same question
+/// asked one depth down, so the selection is what the next ask carries. A row
+/// number would index a listing that arrived a round trip ago — the Work tab's
+/// `work_sel` holds a `WorkFile` for exactly this reason. Clicking a file row
+/// sets it, and the caller's next ask brings `preview` back.
 pub fn render(
     ui: &mut egui::Ui,
     view: &FilesView,
     preview: Option<&Preview>,
-    sel: &mut Option<usize>,
+    sel: &mut Option<String>,
 ) {
     match view {
         FilesView::AbsentWorktree => {
@@ -37,14 +41,14 @@ fn render_present(
     entries: &[FileEntry],
     truncated: bool,
     preview: Option<&Preview>,
-    sel: &mut Option<usize>,
+    sel: &mut Option<String>,
 ) {
     egui::ScrollArea::vertical().show(ui, |ui| {
         if entries.is_empty() {
             ui.weak("(empty worktree)");
         }
-        for (i, entry) in entries.iter().enumerate() {
-            render_row(ui, i, entry, sel);
+        for entry in entries {
+            render_row(ui, entry, sel);
         }
         if truncated {
             ui.weak("… (listing truncated)");
@@ -56,7 +60,7 @@ fn render_present(
 
 /// One entry: dirs are inert `name/` labels; files are selectable `name (N B)`
 /// rows. Indent is the entry's path depth (root entries flush-left).
-fn render_row(ui: &mut egui::Ui, index: usize, entry: &FileEntry, sel: &mut Option<usize>) {
+fn render_row(ui: &mut egui::Ui, entry: &FileEntry, sel: &mut Option<String>) {
     let depth = entry.rel_path.matches('/').count();
     let name = entry.rel_path.rsplit('/').next().unwrap_or(&entry.rel_path);
     ui.horizontal(|ui| {
@@ -68,14 +72,14 @@ fn render_row(ui: &mut egui::Ui, index: usize, entry: &FileEntry, sel: &mut Opti
         } else {
             let label = format!("{name}  ({} B)", entry.size);
             if ui
-                .selectable_label(*sel == Some(index), label)
+                .selectable_label(sel.as_deref() == Some(entry.rel_path.as_str()), label)
                 .on_hover_text(
                     "Preview this file's contents below, read-only. No key of its own: \
                      Tab reaches it, Space presses it.",
                 )
                 .clicked()
             {
-                *sel = Some(index);
+                *sel = Some(entry.rel_path.clone());
             }
         }
     });
@@ -128,7 +132,7 @@ mod tests {
         }
     }
 
-    fn paint(view: &FilesView, preview: Option<&Preview>, sel: &mut Option<usize>) -> String {
+    fn paint(view: &FilesView, preview: Option<&Preview>, sel: &mut Option<String>) -> String {
         crate::paint_probe::paint(|ui| render(ui, view, preview, sel))
     }
 
@@ -198,9 +202,9 @@ mod tests {
             entries: vec![file("a.txt", 5), file("b.txt", 5)],
             truncated: false,
         };
-        let mut sel: Option<usize> = None;
+        let mut sel: Option<String> = None;
         let ctx = egui::Context::default();
-        let run = |input: egui::RawInput, sel: &mut Option<usize>| {
+        let run = |input: egui::RawInput, sel: &mut Option<String>| {
             let _ = ctx.run(input, |ctx| {
                 egui::CentralPanel::default().show(ctx, |ui| render(ui, &view, None, sel));
             });
@@ -226,6 +230,10 @@ mod tests {
             ..screen()
         };
         run(click, &mut sel);
-        assert_eq!(sel, Some(0), "the first file row should select on click");
+        assert_eq!(
+            sel.as_deref(),
+            Some("a.txt"),
+            "the first file row should select on click, by the path the next ask carries"
+        );
     }
 }

@@ -151,6 +151,7 @@ impl Query {
             | Query::Steps { workspace, .. }
             | Query::Step { workspace, .. }
             | Query::Files { workspace, .. }
+            | Query::Governing { workspace, .. }
             | Query::Rail { workspace, .. }
             | Query::Inbox { workspace, .. }
             | Query::Agent { workspace, .. }

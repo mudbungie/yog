@@ -148,6 +148,22 @@ pub const QUERIES: &[HelpRow] = &[
                  a commit this conversation never recorded simply holds no files.",
     },
     HelpRow {
+        verb: "governing",
+        usage: "/governing [--at <commit>]",
+        summary: "the config commit this conversation is frozen on, and what it holds",
+        detail: "Every conversation forks off a commit of a `config/*` lineage and keeps running \
+                 that commit's policy however far the lineage moves on afterwards. This answers \
+                 which commit that is — short and full — whether it is still some lineage's own \
+                 tip (named if so, and absent once the branch has advanced past it, which is the \
+                 ordinary frozen case), and every path its tree holds: the souls, the workflow, \
+                 the manifest, the provider table and the descriptions the conversation is \
+                 actually running under. `--at` asks the same question of a different commit — \
+                 the same policy-as-of the window's notch pin shows — and bare it is the \
+                 conversation's own branch tip, so a seat need not know one to ask. A workspace \
+                 that cannot be read, and a commit that forks off no config lineage at all, are \
+                 each said outright: a conversation with no policy is not a reading.",
+    },
+    HelpRow {
         verb: "rail",
         usage: "/rail",
         summary: "the conversation's spine: every operable commit and what hangs off it",

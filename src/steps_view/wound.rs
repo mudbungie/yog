@@ -150,9 +150,9 @@ pub(super) fn driven(state: AgentState) -> bool {
 /// The agent's **latest** step's wound — the §11 Altitude-1 banner's input,
 /// read off an already-built [`super::StepsView`] (the one owner of the
 /// per-step reading) exactly as the Login banner reads its own. It takes the
-/// view, not the disk: the shell builds that view once per snapshot (§7.2
-/// `SnapMemo`, bl-e90a), and a predicate that re-read the whole steps tree per
-/// frame was the chat pane's frame-time cost.
+/// view, not the disk: the shell declares one standing `Query::Steps` that this
+/// banner and the Steps tab share (REMOTE §9.7, bl-13f9), and a predicate that
+/// re-read the whole steps tree per frame was the chat pane's frame-time cost.
 pub fn latest_wound(steps: &super::StepsView) -> Wound {
     steps.steps.last().map_or(Wound::None, |s| s.wound.clone())
 }

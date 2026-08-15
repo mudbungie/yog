@@ -55,6 +55,37 @@ impl<T> Default for Landed<T> {
     }
 }
 
+/// **What a surface's questions were refused with**, in the order they were
+/// first said and never twice (REMOTE §9.7, bl-13f9).
+///
+/// One surface, several standing questions: the §11 inspector declares up to
+/// five at once, and when the refusal is the address resolution's — an
+/// unregistered or unresolvable workspace — every one of them refuses in the
+/// *same* sentence. Five copies of one sentence is a report about the
+/// transport; one is content, which is the whole reason a refusal is painted
+/// rather than swallowed.
+#[derive(Default)]
+pub(super) struct Said {
+    sentences: Vec<String>,
+}
+
+impl Said {
+    /// Take a landed payload, keeping its refusal if it had one.
+    pub(super) fn take<T>(&mut self, landed: Landed<T>) -> Option<T> {
+        if let Some(said) = landed.refused
+            && !self.sentences.contains(&said)
+        {
+            self.sentences.push(said);
+        }
+        landed.value
+    }
+
+    /// The distinct sentences, oldest first.
+    pub(super) fn sentences(self) -> Vec<String> {
+        self.sentences
+    }
+}
+
 /// Declare `query` standing and read whatever has landed for it, `take` picking
 /// the payload out of the one [`Reply`] variant that query answers.
 ///
