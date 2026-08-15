@@ -19,9 +19,6 @@
 
 use super::{ConfigState, form_ui, status};
 use crate::AppModel;
-use crate::boundary::Action;
-use crate::boundary::config::ConfigFile;
-use crate::cli_outbound::Cli;
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::branch::{config_branches, config_file, config_tree};
 use crate::config_edit::form::{self, Schema};
@@ -50,8 +47,6 @@ pub(super) fn render(
     model: &mut AppModel,
     config: &mut ConfigState,
     provider_rows: &[String],
-    lernie: &Cli,
-    bl: &Cli,
 ) {
     ui.heading("workspace config branches");
     let Some(ws) = model.focused_workspace().map(PathBuf::from) else {
@@ -63,6 +58,10 @@ pub(super) fn render(
     for b in &config.branches {
         ui.monospace(format!("config/{} @ {}", b.name, b.tip_short_oid));
     }
+    // The send below is a post (REMOTE §9.8, bl-4841), so its receipt is folded
+    // here, on the frame it lands — and the re-read it triggers happens then
+    // too: until the engine answers, the pre-write branch is still the branch.
+    super::send::settle(model, config, &ws);
     lineage(ui, config, &ws);
     file_row(ui, config, &ws);
     match schema_of(&config.cb_path) {
@@ -91,11 +90,9 @@ pub(super) fn render(
         )
         .clicked()
     {
-        config.cb_status = send_edit(model, config, &ws, lernie, bl);
-        // The pane caused the advance, so the pane re-reads it (§7.2).
-        reread(config, Some(&ws));
+        super::send::edit(model, config, &ws);
     }
-    status_line(ui, &config.cb_status);
+    status_line(ui, &config.cb_act.line());
 }
 
 /// Read the workspace's lineages and the selected one's file listing — the
@@ -223,7 +220,8 @@ fn file_row(ui: &mut egui::Ui, config: &mut ConfigState, ws: &Path) {
             .clicked()
     });
     if load_asked {
-        config.cb_status = load(config, ws);
+        let said = load(config, ws);
+        config.cb_act.say(said);
     }
 }
 
@@ -257,42 +255,12 @@ fn settings(
         match form::write(schema, &config.cb_body, &row, &value) {
             Ok(text) => {
                 config.cb_body = text;
-                config.cb_status = format!("{}.{} drafted — Send to commit", row.entry, row.field);
+                config.cb_act.say(format!(
+                    "{}.{} drafted — Send to commit",
+                    row.entry, row.field
+                ));
             }
-            Err(e) => config.cb_status = e.to_string(),
+            Err(e) => config.cb_act.say(e.to_string()),
         }
-    }
-}
-
-/// Send the drafted file through the boundary (§8.5): the variant carries the
-/// destination — this workspace, this lineage, this path, this origin — and the
-/// full staged text, and the chokepoint stages it and drives `lernie config`.
-fn send_edit(
-    model: &mut AppModel,
-    config: &ConfigState,
-    ws: &Path,
-    lernie: &Cli,
-    bl: &Cli,
-) -> String {
-    let deps = model.boundary_deps(lernie, bl);
-    let action = Action::ApplyConfig {
-        file: ConfigFile::Branch {
-            workspace: model.snap.ws_name(ws),
-            lineage: config.cb_name.clone(),
-            origin: config.cb_origin.clone(),
-            path: config.cb_path.clone(),
-        },
-        text: config.cb_body.clone(),
-    };
-    match model.dispatch(&deps, &crate::shell::now_ts(), &action) {
-        // The exit in words, through the one projection (bl-afa9): a piped
-        // drive can land on the §4.2 `-1` sentinel, and "exit -1" reads as
-        // a signal death rather than "ran, status not observable".
-        Ok(crate::boundary::reply::Reply::Outcome(outcome)) => format!(
-            "lernie config: {}",
-            crate::opslog::exit::ExitKind::of(outcome.exit, "lernie").label()
-        ),
-        Ok(other) => format!("unexpected reply: {other:?}"),
-        Err(e) => e,
     }
 }

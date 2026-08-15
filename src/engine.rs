@@ -18,6 +18,10 @@
 //! invariant stated from the other side: everything yog does other than paint
 //! happens here, so nothing that runs long has a frame to block.
 
+/// The engine's hand-overs to a window's off-frame threads (REMOTE §1.2, §9.8)
+/// — split out of this file at §12's budget when the act path landed (bl-4841).
+pub mod window;
+
 use crate::AppModel;
 use crate::app::{FollowThread, Roots, Worker};
 use crate::boundary::consumer::{Consumer, ConsumerCtx};
@@ -57,6 +61,11 @@ pub struct Engine {
     /// and a `yog serve` never does, which is the whole difference between the
     /// two faces here.
     wire_end: Option<crate::wire::link::LinkEnd>,
+    /// The poster's half of the window's **act** path (REMOTE §9.8, bl-4841),
+    /// minted beside the read path's end and taken the same way — by
+    /// [`poster`](Self::poster), which a window calls and `yog serve` never
+    /// does.
+    post_end: Option<crate::wire::post::Outbox>,
     /// The face's wake hook, kept so the asker can wake a window when an answer
     /// lands — the same reason the follower holds one.
     repaint: Arc<dyn Repaint>,
@@ -127,6 +136,11 @@ impl Engine {
         // code path as a surface whose answer has not landed yet.
         let (link, wire_end) = crate::wire::link::pair();
         model.adopt_wire(link);
+        // The act path's two ends (REMOTE §9.8, bl-4841), minted here for the
+        // read path's reason exactly: both ends of a loopback wire belong to
+        // this one assembly, and a face takes the far one or does not.
+        let (post, post_end) = crate::wire::post::pair();
+        model.adopt_post(post);
         // The §8.5 gestures-inbox consumer: both faces are one consumer surface,
         // so a deposit converges whichever is up (I0).
         let intake = Arc::new(ConsumerCtx {
@@ -208,43 +222,9 @@ impl Engine {
             _pilot: pilot,
             _follower: follower,
             wire_end: Some(wire_end),
+            post_end: Some(post_end),
             repaint: face,
         }
-    }
-
-    /// **The window's asker** (REMOTE §1.2 as ruled 2026-08-14, bl-ae05): a
-    /// seat on this engine's own listener, over loopback, presenting the window
-    /// leaf.
-    ///
-    /// Two roles in one process and one boundary between them — which is §8's
-    /// *one world, one engine* ruling kept intact. The window boots the engine
-    /// it serves, exactly as before, and then talks to it over nothing but the
-    /// wire: it is a client of `127.0.0.1` at the port the listener actually
-    /// bound, so the address is handed over in RAM rather than read back out of
-    /// a file, and a `:0` in `address` is a request nobody has to resolve
-    /// twice.
-    ///
-    /// `None` when this box got no listener up or has no window leaf — both
-    /// meaning a broken mint, which [`listen`](crate::wire::listen) has already
-    /// said so about on stderr. It takes the link end, so a second call answers
-    /// `None`: there is one asker per engine.
-    pub fn asker(&mut self, world: &Env) -> Option<crate::wire::asker::Asker> {
-        let bound = self.wire.as_ref()?.address();
-        let material = crate::wire::material::read(world, crate::wire::material::Role::Window)
-            .ok()
-            .flatten()?;
-        let seat = crate::wire::client::Seat::open(&crate::wire::material::Material {
-            address: crate::wire::loopback(&bound),
-            ..material
-        })
-        .ok()?;
-        Some(crate::wire::asker::Asker::new(
-            seat,
-            self.wire_end.take()?,
-            self.model.snapshot_cell(),
-            world.yog_state_root(),
-            Arc::clone(&self.repaint),
-        ))
     }
 }
 

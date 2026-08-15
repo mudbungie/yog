@@ -36,13 +36,7 @@ const OVERFLOW_HINT: &str = "Workspaces that are real but not regimes — checko
 /// The §11 top bar: left, the attention strip (totals + jump-to-next); right,
 /// the workspace tab bar — named tabs, the slim `new` name form, and the
 /// foreign/replay overflow menu.
-pub fn render(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
     ui.horizontal(|ui| {
         let total = model.strip_total();
         if total > 0 {
@@ -87,7 +81,7 @@ pub fn render(
                 super::new_ws::open(state);
             }
             for tab in bar.tabs.iter().rev() {
-                workspace_tab(ui, model, state, lernie, bl, tab);
+                workspace_tab(ui, model, state, lernie, tab);
             }
             // The row's own name, painted LAST because this layout lays
             // right-to-left — so it lands immediately left of the leftmost tab
@@ -107,7 +101,6 @@ fn workspace_tab(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     tab: &Tab,
 ) {
     let badge = if tab.attention > 0 {
@@ -144,7 +137,6 @@ fn workspace_tab(
         model,
         state,
         lernie,
-        bl,
     );
 }
 

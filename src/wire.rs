@@ -49,6 +49,12 @@ pub mod intake;
 /// The frame's half of that read path: the standing questions and what landed.
 pub mod link;
 pub mod material;
+/// The frame's half of the **act** path (REMOTE §9.8, bl-4841): what the window
+/// has sent, and the minted ticket its receipt lands under.
+pub mod post;
+/// The window's off-frame poster (bl-4841) — the asker's twin on the write
+/// side, pushed rather than polled and on a thread of its own.
+pub mod poster;
 /// The mint (REMOTE §1.4, §8; bl-ae05) — the one `openssl` recipe, spent by the
 /// engine's boot and by `yog wire-certs` alike.
 pub mod provision;

@@ -32,11 +32,15 @@ use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::mpsc::{Receiver, Sender, channel};
 
-/// What one question earned: the typed reply, or the reason there is none.
+/// What one gesture earned: the typed reply, or the reason there is none.
 ///
 /// **One `Err`, not two.** A refusal the engine sent and a channel that failed
 /// are the same fact to a frame — the answer cannot be painted, and here is the
 /// sentence — so a reader carries no case for which layer said so.
+///
+/// Named here and spent by both directions: since bl-4841 an act's receipt is
+/// this too ([`post`](super::post)), a receipt being an answer to a gesture the
+/// frame did not wait for, exactly as a landed reply is.
 pub type Landed = Result<Reply, String>;
 
 /// The window's end: the questions it is standing on and the answers it holds.

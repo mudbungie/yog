@@ -49,15 +49,14 @@ use crate::cli_outbound::Cli;
 use std::path::Path;
 
 /// Paint the block for the focused workspace. `bz` drives the §9.4 roster
-/// query, `lernie` the §9.3 staged write the picker's selection fires.
+/// query; the §9.3 write the picker's selection fires is a posted gesture and
+/// carries no binary of its own (REMOTE §9.8).
 pub(super) fn block(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
     bz: &Cli,
-    lernie: &Cli,
-    bl: &Cli,
 ) {
     ui.strong("new conversation");
     ui.horizontal(|ui| {
@@ -84,5 +83,5 @@ pub(super) fn block(
     // prompt` will fork. A workspace whose snapshot carries no lineage yet has
     // nothing to say here, and says nothing rather than a line about nothing.
     let config_tip = model.config_tip();
-    super::model_pick::birth_seat(ui, model, state, ws, config_tip.as_ref(), (bz, lernie, bl));
+    super::model_pick::birth_seat(ui, model, state, ws, config_tip.as_ref(), bz);
 }

@@ -118,3 +118,25 @@ fn a_booted_engine_hands_its_window_a_seat_on_its_own_wire() {
     assert!(rows.is_empty(), "an empty world enumerates nothing");
     drop(engine);
 }
+
+/// **The window's two halves are one hand-over** (REMOTE §9.8, bl-4841): a boot
+/// spawns both or neither, and a second call answers `None` — one asker and one
+/// poster per engine, which for the act path is load-bearing, an act having to
+/// be sent exactly once.
+#[test]
+fn a_window_takes_both_halves_of_the_wire_once() {
+    let _guard = spawn_guard();
+    let root = tempdir().unwrap();
+    let world = world_under(root.path());
+    let mut engine = Engine::boot(
+        &world,
+        &[],
+        None,
+        Arc::new(AtClock(0)),
+        std::sync::Arc::new(NoRepaint),
+    );
+    let wire = engine.window_wire(&world).expect("both halves");
+    assert!(engine.window_wire(&world).is_none(), "taken, never shared");
+    drop(wire);
+    drop(engine);
+}

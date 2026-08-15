@@ -1,8 +1,10 @@
 //! The action chokepoint (§8.5): one exhaustive match from [`Action`] to the
-//! §8 executors. Both frontends land here — the GUI's click-glue constructs a
-//! variant and calls [`dispatch`]; the deposit consumer decodes one and calls
-//! the same function — so every mutating gesture has exactly one
-//! implementation, and every attempt leaves its `ops.jsonl` line through the
+//! §8 executors. Every frontend lands here — the deposit consumer decodes a
+//! gesture and calls [`dispatch`]; the wire's listener decodes one and calls the
+//! same function; the window's click-glue constructs a variant and, since
+//! bl-4841, mostly **posts** it over that wire (REMOTE §9.8) rather than calling
+//! in process. So every mutating gesture has exactly one implementation however
+//! it was asked for, and every attempt leaves its `ops.jsonl` line through the
 //! executors' own §4.2 logging (nothing is logged twice here).
 //!
 //! [`Deps`] — the environment a gesture executes in — lives in its own file

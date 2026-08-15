@@ -29,6 +29,7 @@ use crate::AppModel;
 use crate::boundary::{Gesture, codec};
 use crate::cli_outbound::Cli;
 use crate::wire::link::LinkEnd;
+use crate::wire::post::Outbox;
 
 /// Paint `f` with the wire answered — the whole settle-then-render dance, which
 /// is three passes and cannot be fewer.
@@ -44,21 +45,27 @@ pub(super) fn wired(
     paint: &mut dyn FnMut(&mut AppModel, &mut ShellState) -> String,
 ) -> String {
     let (link, mut end) = crate::wire::link::pair();
+    let (post, outbox) = crate::wire::post::pair();
     world.model.adopt_wire(link);
+    world.model.adopt_post(post);
     let _ = paint(&mut world.model, &mut world.state);
     world.model.refresh();
-    pump(&mut world.model, &mut end);
+    pump(&mut world.model, &mut end, &outbox);
     let _ = paint(&mut world.model, &mut world.state);
     world.model.refresh();
     paint(&mut world.model, &mut world.state)
 }
 
-/// Answer every question standing on `end`, through the boundary chokepoint the
-/// wire's own answerer runs. A gesture that is not an ask cannot reach here —
-/// [`Link::ask`](crate::wire::link::Link::ask) is the only writer of the
-/// standing set — so one is answered with the refusal that says so rather than
-/// silently dropped.
-fn pump(model: &mut AppModel, end: &mut LinkEnd) {
+/// Answer everything the frame has said this pass — the standing questions on
+/// `end` and the acts posted to `outbox` — through the boundary chokepoints the
+/// wire's own answerer runs.
+///
+/// The two halves are one function because they are one pass of one transport;
+/// what differs is only which chokepoint answers. A read that reaches the act
+/// queue, or an act that reaches the standing set, is a defect in the halves
+/// that write them, so each is refused with the sentence saying so rather than
+/// silently answered by the other.
+fn pump(model: &mut AppModel, end: &mut LinkEnd, outbox: &Outbox) {
     let deps = model.boundary_deps(&Cli::new("lernie"), &Cli::new("bl"));
     let now = super::super::clock::now_unix();
     for question in end.standing() {
@@ -68,6 +75,15 @@ fn pump(model: &mut AppModel, end: &mut LinkEnd) {
             Err(said) => Err(said),
         };
         end.publish(&question, landed);
+    }
+    let ts = super::super::now_ts();
+    while let Some((ticket, envelope)) = outbox.try_next() {
+        let landed = match codec::decode(&envelope) {
+            Ok(Gesture::Act(action)) => model.dispatch(&deps, &ts, &action),
+            Ok(Gesture::Ask(_)) => Err("the act path carries no reads".to_owned()),
+            Err(said) => Err(said),
+        };
+        outbox.publish(ticket, landed);
     }
 }
 

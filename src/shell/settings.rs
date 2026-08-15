@@ -65,8 +65,6 @@ pub(super) fn render(
     cap: f32,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
     bz: &Cli,
 ) {
     let Some(ws) = model.focused_workspace().map(PathBuf::from) else {
@@ -84,8 +82,8 @@ pub(super) fn render(
             .id_salt("conversation-settings")
             .max_height(cap)
             .show(ui, |ui| match model.focused_conversation() {
-                Some(seat) => conversation(ui, model, state, &ws, &seat, (bz, lernie, bl)),
-                None => super::birth::block(ui, model, state, &ws, bz, lernie, bl),
+                Some(seat) => conversation(ui, model, state, &ws, &seat, bz),
+                None => super::birth::block(ui, model, state, &ws, bz),
             });
     });
 }
@@ -99,9 +97,8 @@ fn conversation(
     state: &mut ShellState,
     ws: &Path,
     agent: &AgentView,
-    clis: (&Cli, &Cli, &Cli),
+    bz: &Cli,
 ) {
-    let (bz, lernie, bl) = clis;
     // The §3.5 per-ball figure, one row per bound ball (§3.2's claimant join):
     // the Usage fold joined with the price table, each carrying the
     // granularity it is honest at — a ball claimed mid-conversation attributes
@@ -137,15 +134,7 @@ fn conversation(
     // The workspace's config-lineage tip (§7 snapshot, `HEAD` → `config/default`)
     // is the "workspace default" half of that drift.
     let config_tip = model.config_tip();
-    if super::model_pick::conversation_seat(
-        ui,
-        model,
-        state,
-        ws,
-        agent,
-        config_tip.as_ref(),
-        (bz, lernie, bl),
-    ) {
+    if super::model_pick::conversation_seat(ui, model, state, ws, agent, config_tip.as_ref(), bz) {
         super::keys::new_conversation(model, state);
     }
 }

@@ -49,6 +49,12 @@ const FOREIGN: &[&str] = &[
     // the scanner is deliberately prefix-blind, and DESIGN §1 has no
     // subsections at all (bl-b6fa).
     "1.2", "1.3", "1.4", "1.5",
+    // REMOTE.md's build-sequence residuals — §9.7 (the read path, bl-ae05) and
+    // §9.8 (the act path, bl-4841) — cited the same prefixed way. DESIGN's own
+    // §9 stops short of both today, which
+    // [`foreign_keys_are_not_design_headings`] is what keeps honest: the day it
+    // grows one, this entry fails rather than masking it.
+    "9.7", "9.8",
 ];
 
 /// Parse a section key (`digits`, optionally `.digits`) starting at `i`;

@@ -9,7 +9,6 @@
 
 use super::super::InspectorState;
 use crate::AppModel;
-use crate::cli_outbound::Cli;
 use crate::keymap::InspectorTab;
 use crate::steps_view::StepsView;
 
@@ -38,8 +37,6 @@ pub(super) fn per_tab_controls(
     model: &mut AppModel,
     inspector: &mut InspectorState,
     steps: &StepsView,
-    lernie: &Cli,
-    bl: &Cli,
 ) {
     match tab {
         InspectorTab::Transcript => {
@@ -91,7 +88,7 @@ pub(super) fn per_tab_controls(
                     )
                     .clicked()
                 {
-                    crate::shell::dispatch::scan_focused(model, lernie, bl);
+                    crate::shell::dispatch::scan_focused(model);
                 }
             });
         }

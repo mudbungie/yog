@@ -6,9 +6,17 @@
 //! pointer path never touches the focus.
 //!
 //! Coverage-excluded glue like the rest of `src/shell/*`: every body here
-//! **constructs a boundary [`Action`] and dispatches it** (§8.5) — the
-//! chokepoint ([`AppModel::dispatch`]) and the enablement predicates it
-//! honours are tested; this file only routes.
+//! **constructs a boundary [`Action`] and posts it** (§8.5, REMOTE §9.8) — the
+//! chokepoint and the enablement predicates it honours are tested; this file
+//! only routes.
+//!
+//! **Four of the five cross the wire** (bl-4841). Stop, Scan, Nudge and the §8.6
+//! hold answer read no receipt and never did — their durable record is the
+//! `ops.jsonl` line — so they post and hold nothing, and the `Cli` pair went
+//! with the dispatch. [`message`] is the one that stays in process for now: its
+//! reply gates two frame-side facts in the same breath, the draft clearing and
+//! the §3.4 pending echo, and moving those onto a receipt is REMOTE §9.8's
+//! named residual.
 //!
 //! No error is ever printed and dropped (INV-2): every outcome is the durable
 //! `ops.jsonl` line the activity pane and the §7.3 banner read back per frame.
@@ -24,7 +32,7 @@ use super::ShellState;
 /// button's one implementation. Re-derives its target from the focus, so it is
 /// refused exactly where the button is disabled: no workspace, no selection, or
 /// an agent the §11 seat's own `stoppable` gate says is not stoppable.
-pub(super) fn stop_selected(model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli) {
+pub(super) fn stop_selected(model: &mut AppModel, state: &mut ShellState) {
     let (Some(ws), Some(seat)) = (
         model.focused_workspace().map(Path::to_path_buf),
         model.focused_conversation(),
@@ -36,57 +44,43 @@ pub(super) fn stop_selected(model: &mut AppModel, state: &mut ShellState, lernie
     if !seat.stoppable {
         return;
     }
-    stop_agent(
-        model,
-        lernie,
-        bl,
-        &ws,
-        &seat.agent_id,
-        state.actions.stop_children,
-    );
+    stop_agent(model, &ws, &seat.agent_id, state.actions.stop_children);
 }
 
 /// Stop **one named agent** (§8.2) — the body [`stop_selected`] runs once it has
 /// resolved the selection, and the same call the §11 conversation-row menu makes
 /// on the row under the pointer (`super::menus`). The target is a parameter, not
 /// a re-derivation, so the pointer path never touches the focus.
-pub(super) fn stop_agent(
-    model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
-    ws: &Path,
-    agent: &str,
-    children: bool,
-) {
-    let deps = model.boundary_deps(lernie, bl);
-    let action = Action::Stop {
-        workspace: model.snap.ws_name(ws),
-        agent: agent.to_owned(),
-        children,
-    };
-    let stopped = model.dispatch(&deps, &super::now_ts(), &action);
-    after_lernie(&stopped, model);
+pub(super) fn stop_agent(model: &mut AppModel, ws: &Path, agent: &str, children: bool) {
+    super::act::fire(
+        model,
+        &Action::Stop {
+            workspace: model.snap.ws_name(ws),
+            agent: agent.to_owned(),
+            children,
+        },
+    );
 }
 
 /// Flush the focused workspace's inbox — `lernie scan` (§8.2): the §11 `f`
 /// binding and the Scan button's one implementation.
-pub(super) fn scan_focused(model: &mut AppModel, lernie: &Cli, bl: &Cli) {
+pub(super) fn scan_focused(model: &mut AppModel) {
     let Some(ws) = model.focused_workspace().map(Path::to_path_buf) else {
         return;
     };
-    scan_ws(model, lernie, bl, &ws);
+    scan_ws(model, &ws);
 }
 
 /// Flush **one named workspace's** inbox (§8.2) — [`scan_focused`]'s body, shared
 /// with the conversation-row menu's Flush, which names the row's workspace rather
 /// than the focus.
-pub(super) fn scan_ws(model: &mut AppModel, lernie: &Cli, bl: &Cli, ws: &Path) {
-    let deps = model.boundary_deps(lernie, bl);
-    let action = Action::Scan {
-        workspace: model.snap.ws_name(ws),
-    };
-    let scanned = model.dispatch(&deps, &super::now_ts(), &action);
-    after_lernie(&scanned, model);
+pub(super) fn scan_ws(model: &mut AppModel, ws: &Path) {
+    super::act::fire(
+        model,
+        &Action::Scan {
+            workspace: model.snap.ws_name(ws),
+        },
+    );
 }
 
 /// Send one message (§8.2's resume gesture) — the composer's Message button and
@@ -122,14 +116,14 @@ pub(super) fn message(
 /// bl-9bef) — the composer's Nudge button, one body. It carries no payload at
 /// all: the target is the parameter and the conversation's own state is the
 /// prompt, so there is nothing here to clear and nothing to echo.
-pub(super) fn nudge(model: &mut AppModel, lernie: &Cli, bl: &Cli, ws: &Path, agent: &str) {
-    let deps = model.boundary_deps(lernie, bl);
-    let action = Action::Nudge {
-        workspace: model.snap.ws_name(ws),
-        agent: agent.to_owned(),
-    };
-    let nudged = model.dispatch(&deps, &super::now_ts(), &action);
-    after_lernie(&nudged, model);
+pub(super) fn nudge(model: &mut AppModel, ws: &Path, agent: &str) {
+    super::act::fire(
+        model,
+        &Action::Nudge {
+            workspace: model.snap.ws_name(ws),
+            agent: agent.to_owned(),
+        },
+    );
 }
 
 /// Answer the invocation parked at one conversation's capability boundary
@@ -138,20 +132,18 @@ pub(super) fn nudge(model: &mut AppModel, lernie: &Cli, bl: &Cli, ws: &Path, age
 /// *which verdict*, exactly as the line does.
 pub(super) fn answer_hold(
     model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
     ws: &Path,
     agent: &str,
     ruling: crate::control::judge::Ruling,
 ) {
-    let deps = model.boundary_deps(lernie, bl);
-    let action = Action::AnswerHold {
-        workspace: model.snap.ws_name(ws),
-        agent: agent.to_owned(),
-        ruling,
-    };
-    let answered = model.dispatch(&deps, &super::now_ts(), &action);
-    after_lernie(&answered, model);
+    super::act::fire(
+        model,
+        &Action::AnswerHold {
+            workspace: model.snap.ws_name(ws),
+            agent: agent.to_owned(),
+            ruling,
+        },
+    );
 }
 
 /// Fold a `lernie` verb's aftermath: refresh the ops tail; return whether it

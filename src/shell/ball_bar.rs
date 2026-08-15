@@ -9,11 +9,17 @@
 //! and the §11 `c`/`r` keys reach them through the focus; the §11 ball-row
 //! context menu (`super::menus`) reaches them with the row under the pointer.
 //! One implementation per gesture, whichever hand fires it.
+//!
+//! **Every verb here crosses the wire** (REMOTE §9.8, bl-4841): it posts the
+//! gesture and holds no receipt, because none was ever read — the durable record
+//! is the ball verb's own `ops.jsonl` line and the pane re-reads the store the
+//! §7.1 routing refreshes. The `lernie`/`bl` pair went with the dispatch: a
+//! posted act carries the gesture and nothing else, the binaries being the
+//! engine's.
 
 use crate::AppModel;
 use crate::actions::{close_enabled, move_enabled, unclaim_enabled};
 use crate::boundary::Action;
-use crate::cli_outbound::Cli;
 use crate::projects::join::{JoinRow, owner_name};
 use std::path::Path;
 
@@ -34,13 +40,7 @@ const MOVE_HINT: &str = "Re-home this ball to that workspace — released here, 
 /// The focused ball's Close / Release / Move, gated by its §3.5 join state (§8.2).
 /// Every `bl` verb stamps `--as` the ball's **bound workspace name** (its claimant,
 /// via [`owner_name`]) — the §3.2 ownership line, never the operator `$USER`.
-pub(super) fn actions(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
-    join: Option<&JoinRow>,
-) {
+pub(super) fn actions(ui: &mut egui::Ui, model: &mut AppModel, join: Option<&JoinRow>) {
     let Some(row) = join else {
         return;
     };
@@ -55,7 +55,7 @@ pub(super) fn actions(
             .on_disabled_hover_text("only the workspace holding a ball can close it")
             .clicked()
         {
-            close_row(model, lernie, bl, row);
+            close_row(model, row);
         }
         if ui
             .add_enabled(unclaim_enabled(row.state), egui::Button::new("Release"))
@@ -65,7 +65,7 @@ pub(super) fn actions(
             )
             .clicked()
         {
-            release_row(model, lernie, bl, row);
+            release_row(model, row);
         }
     });
     // Move (§8.2): re-home a bound ball to another workspace — one button per
@@ -75,7 +75,7 @@ pub(super) fn actions(
             ui.label("move to:").on_hover_text(MOVE_HINT);
             for to in &targets {
                 if ui.button(to).on_hover_text(MOVE_HINT).clicked() {
-                    move_ball(model, lernie, bl, &row.project, &row.ball_id, &owner, to);
+                    move_ball(model, &row.project, &row.ball_id, &owner, to);
                 }
             }
         });
@@ -84,47 +84,23 @@ pub(super) fn actions(
 
 /// `bl close <id> --as <owner>` for one join row (§8.2) — the Close button's
 /// body, shared with the §11 `c` binding so the gesture has one implementation.
-fn close_row(model: &mut AppModel, lernie: &Cli, bl: &Cli, row: &JoinRow) {
-    close_ball(
-        model,
-        lernie,
-        bl,
-        &row.project,
-        &row.ball_id,
-        &owner_name(row),
-    );
+fn close_row(model: &mut AppModel, row: &JoinRow) {
+    close_ball(model, &row.project, &row.ball_id, &owner_name(row));
 }
 
 /// `bl unclaim <id> --as <owner>` for one join row (§8.2) — the Release
 /// button's body, shared with the §11 `r` binding.
-fn release_row(model: &mut AppModel, lernie: &Cli, bl: &Cli, row: &JoinRow) {
-    release_ball(
-        model,
-        lernie,
-        bl,
-        &row.project,
-        &row.ball_id,
-        &owner_name(row),
-    );
+fn release_row(model: &mut AppModel, row: &JoinRow) {
+    release_ball(model, &row.project, &row.ball_id, &owner_name(row));
 }
 
 /// `bl close <id> --as <owner>` (§8.2) named outright — the one body the Close
 /// button, the `c` binding and the §11 ball-row menu all reach (`super::menus`),
 /// which is why the menu can never mean something else by "close".
-pub(super) fn close_ball(
-    model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
-    project: &Path,
-    id: &str,
-    owner: &str,
-) {
-    fire(
+pub(super) fn close_ball(model: &mut AppModel, project: &Path, id: &str, owner: &str) {
+    super::act::fire(
         model,
-        lernie,
-        bl,
-        project,
-        Action::Close {
+        &Action::Close {
             project: model.snap.project_name(project),
             id: id.to_owned(),
             name: owner.to_owned(),
@@ -134,20 +110,10 @@ pub(super) fn close_ball(
 
 /// `bl unclaim <id> --as <owner>` (§8.2) — Release's one body, shared with the
 /// `r` binding and the ball-row menu.
-pub(super) fn release_ball(
-    model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
-    project: &Path,
-    id: &str,
-    owner: &str,
-) {
-    fire(
+pub(super) fn release_ball(model: &mut AppModel, project: &Path, id: &str, owner: &str) {
+    super::act::fire(
         model,
-        lernie,
-        bl,
-        project,
-        Action::Release {
+        &Action::Release {
             project: model.snap.project_name(project),
             id: id.to_owned(),
             name: owner.to_owned(),
@@ -157,21 +123,10 @@ pub(super) fn release_ball(
 
 /// `bl unclaim` then `bl claim --as <to>` (§8.2) — Move's one body, shared with
 /// the ball-row menu's destination submenu.
-pub(super) fn move_ball(
-    model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
-    project: &Path,
-    id: &str,
-    owner: &str,
-    to: &str,
-) {
-    fire(
+pub(super) fn move_ball(model: &mut AppModel, project: &Path, id: &str, owner: &str, to: &str) {
+    super::act::fire(
         model,
-        lernie,
-        bl,
-        project,
-        Action::Move {
+        &Action::Move {
             project: model.snap.project_name(project),
             id: id.to_owned(),
             from: owner.to_owned(),
@@ -182,20 +137,10 @@ pub(super) fn move_ball(
 
 /// `bl claim <id> --as <to>` (§8.2) — Assign's one body: the ready ball row's
 /// `assign → <workspace>` button ([`super::start_pane`]) and the ball-row menu.
-pub(super) fn assign_ball(
-    model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
-    project: &Path,
-    id: &str,
-    to: &str,
-) {
-    fire(
+pub(super) fn assign_ball(model: &mut AppModel, project: &Path, id: &str, to: &str) {
+    super::act::fire(
         model,
-        lernie,
-        bl,
-        project,
-        Action::Assign {
+        &Action::Assign {
             project: model.snap.project_name(project),
             id: id.to_owned(),
             name: to.to_owned(),
@@ -203,34 +148,25 @@ pub(super) fn assign_ball(
     );
 }
 
-/// The one dispatch tail every ball verb above shares (§8.5): construct →
-/// chokepoint → the `bl`-verb aftermath. The result itself is discarded — the
-/// ops line is the durable fact the pane and banner read (INV-2).
-fn fire(model: &mut AppModel, lernie: &Cli, bl: &Cli, project: &Path, action: Action) {
-    let deps = model.boundary_deps(lernie, bl);
-    let _ = model.dispatch(&deps, &super::now_ts(), &action);
-    model.after_bl_verb(project);
-}
-
 /// Release the **focused conversation's bound ball** (§8.2): the §11 `r`
 /// binding, refused exactly where the button is disabled.
-pub(super) fn release_focused(model: &mut AppModel, lernie: &Cli, bl: &Cli) {
+pub(super) fn release_focused(model: &mut AppModel) {
     let Some(row) = model.focused_join().cloned() else {
         return;
     };
     if unclaim_enabled(row.state) {
-        release_row(model, lernie, bl, &row);
+        release_row(model, &row);
     }
 }
 
 /// Close the **focused conversation's bound ball** (§8.2): the §11 `c` binding.
 /// Re-derives its target from the focus and honours [`close_enabled`], so it is
 /// refused exactly where the button is disabled.
-pub(super) fn close_focused(model: &mut AppModel, lernie: &Cli, bl: &Cli) {
+pub(super) fn close_focused(model: &mut AppModel) {
     let Some(row) = model.focused_join().cloned() else {
         return;
     };
     if close_enabled(row.state) {
-        close_row(model, lernie, bl, &row);
+        close_row(model, &row);
     }
 }

@@ -1,0 +1,103 @@
+//! **The engine's hand-overs to a window** (REMOTE §1.2 as ruled 2026-08-14,
+//! §9.8): the two off-frame threads that make the local window a wire client of
+//! the engine it just booted, and the one seat they are both minted from.
+//!
+//! Two roles in one process and one boundary between them — which is REMOTE
+//! §8's *one world, one engine* ruling kept intact. The window boots the engine
+//! it serves, exactly as before, and then talks to it over nothing but the wire:
+//! it is a client of `127.0.0.1` at the port the listener actually bound, so the
+//! address is handed over in RAM rather than read back out of a file, and a `:0`
+//! in `address` is a request nobody has to resolve twice.
+//!
+//! Both ends are **taken**, not shared: a second call answers `None`. There is
+//! one asker and one poster per engine, and for the act path that is load
+//! bearing — an act must be sent exactly once.
+
+use super::Engine;
+use crate::xdg::Env;
+use std::sync::Arc;
+
+/// **Both of a window's off-frame halves**, taken together because they are one
+/// hand-over and one lifetime: the [`asker`](crate::wire::asker) polling the
+/// standing reads at human cadence, and the [`poster`](crate::wire::poster)
+/// sending what the frame fires.
+///
+/// Held by the face so they live as long as the window. They stop differently
+/// and each in its own right: the asker is a poll, so its handle signals, unparks
+/// and joins; the poster is parked on a channel, so it ends when the model's
+/// outbox drops and its handle is only a way to wait for that.
+pub struct WindowWire {
+    _asker: crate::wire::asker::AskerThread,
+    _poster: std::thread::JoinHandle<()>,
+}
+
+impl Engine {
+    /// Spawn both halves for a window. `None` on a box whose mint failed — the
+    /// same condition for both, there being one seat behind them — and on a
+    /// second call, the two ends being taken rather than shared.
+    pub fn window_wire(&mut self, world: &Env) -> Option<WindowWire> {
+        Some(WindowWire {
+            _asker: self.asker(world)?.spawn(),
+            _poster: self.poster(world)?.spawn(),
+        })
+    }
+
+    /// **The window's asker** (REMOTE §1.2 as ruled 2026-08-14, bl-ae05): a
+    /// seat on this engine's own listener, over loopback, presenting the window
+    /// leaf.
+    ///
+    /// Two roles in one process and one boundary between them — which is §8's
+    /// *one world, one engine* ruling kept intact. The window boots the engine
+    /// it serves, exactly as before, and then talks to it over nothing but the
+    /// wire: it is a client of `127.0.0.1` at the port the listener actually
+    /// bound, so the address is handed over in RAM rather than read back out of
+    /// a file, and a `:0` in `address` is a request nobody has to resolve
+    /// twice.
+    ///
+    /// `None` when this box got no listener up or has no window leaf — both
+    /// meaning a broken mint, which [`listen`](crate::wire::listen) has already
+    /// said so about on stderr. It takes the link end, so a second call answers
+    /// `None`: there is one asker per engine.
+    pub fn asker(&mut self, world: &Env) -> Option<crate::wire::asker::Asker> {
+        Some(crate::wire::asker::Asker::new(
+            self.window_seat(world)?,
+            self.wire_end.take()?,
+            self.model.snapshot_cell(),
+            world.yog_state_root(),
+            Arc::clone(&self.repaint),
+        ))
+    }
+
+    /// **The window's poster** (REMOTE §9.8, bl-4841): the asker's twin on the
+    /// write side, on its own seat and its own thread.
+    ///
+    /// A second seat rather than a shared one, because the two threads dial
+    /// independently and a seat is a configuration and an address (REMOTE §6) —
+    /// nothing is held to share. It takes the outbox end, so there is one
+    /// poster per engine for the reason there is one asker: an act must be sent
+    /// exactly once, and two posters draining one queue would be two windows'
+    /// worth of gestures with no way to tell whose is whose.
+    pub fn poster(&mut self, world: &Env) -> Option<crate::wire::poster::Poster> {
+        Some(crate::wire::poster::Poster::new(
+            self.window_seat(world)?,
+            self.post_end.take()?,
+            Arc::clone(&self.repaint),
+        ))
+    }
+
+    /// A seat on this engine's own listener presenting the window leaf — the
+    /// one mint both off-frame threads take theirs from. `None` on a box with
+    /// no listener or no window leaf, which is a broken mint
+    /// [`listen`](crate::wire::listen) has already said so about.
+    fn window_seat(&self, world: &Env) -> Option<crate::wire::client::Seat> {
+        let bound = self.wire.as_ref()?.address();
+        let material = crate::wire::material::read(world, crate::wire::material::Role::Window)
+            .ok()
+            .flatten()?;
+        crate::wire::client::Seat::open(&crate::wire::material::Material {
+            address: crate::wire::loopback(&bound),
+            ..material
+        })
+        .ok()
+    }
+}

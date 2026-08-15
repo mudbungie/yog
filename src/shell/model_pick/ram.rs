@@ -53,7 +53,10 @@ pub struct PickerState {
     pub(super) model: Option<String>,
     pub(super) custom: Option<String>,
     pub(super) roster: Option<Roster>,
-    pub(super) status: String,
+    /// The last write's sentence and the ticket its receipt lands under
+    /// (REMOTE §9.8, bl-4841) — the pick and the drift exit share it, because
+    /// they are one line: whichever the operator spent, this is what it means.
+    pub(super) act: crate::shell::act::Held,
     /// The model line memoized on the two oids it is derived from (§5.3
     /// memoized derived snapshots). Without it the header would re-run
     /// `governing_config` (several git spawns) on every repaint.
@@ -97,7 +100,7 @@ impl PickerState {
             model: None,
             custom: None,
             roster: None,
-            status: String::new(),
+            act: crate::shell::act::Held::default(),
             frozen: None,
             birth: None,
             tip_providers: None,
@@ -120,7 +123,7 @@ impl PickerState {
         self.tip_providers = None;
         self.rows = None;
         self.models_text = None;
-        self.status.clear();
+        self.act.forget();
     }
 
     /// Drop the provider row and model chosen for the previous role, so the

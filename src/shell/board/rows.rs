@@ -66,7 +66,7 @@ pub(super) fn board_row(
         (Column::Ready | Column::Gated, Some(inputs), _) => {
             ready_row(ui, model, state, lernie, bl, inputs.clone());
         }
-        _ => read_row(ui, model, state, lernie, bl, row),
+        _ => read_row(ui, model, state, lernie, row),
     }
     ui.indent(("board-facts", row.id.as_str()), |ui| {
         for gate in &row.gates {
@@ -111,7 +111,6 @@ fn read_row(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     row: &crate::board::BoardRow,
 ) {
     let label = ui
@@ -133,5 +132,5 @@ fn read_row(
         id: row.id.clone(),
         owner: row.claimant.clone().unwrap_or_default(),
     });
-    super::super::menus::attach(&label, seat, &target, model, state, lernie, bl);
+    super::super::menus::attach(&label, seat, &target, model, state, lernie);
 }

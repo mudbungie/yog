@@ -31,7 +31,7 @@ pub fn side_panel(
     // frame and the splitter can no longer shrink it. Truncation makes the
     // width the operator sets the width they get.
     ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
-    super::conv_list::conversations(ui, model, state, lernie, bl);
+    super::conv_list::conversations(ui, model, state, lernie);
     ui.separator();
     balls_section(ui, model, state, lernie, bl);
     // The workspace's registered clients (REMOTE §5, bl-4e08): who participates
@@ -100,7 +100,7 @@ fn balls_section(
         // (bl-abbe) — [`AppModel::roster_ball_rows`] is the covered partition.
         if let Some(ws) = model.focused_workspace().map(std::path::Path::to_path_buf) {
             for ball in model.roster_ball_rows(&ws) {
-                bound_ball_row(ui, model, state, lernie, bl, &ball);
+                bound_ball_row(ui, model, state, lernie, &ball);
             }
         }
     });
@@ -116,7 +116,6 @@ fn bound_ball_row(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     ball: &crate::nav::BoundBall,
 ) {
     let text = match &ball.badge {
@@ -140,5 +139,5 @@ fn bound_ball_row(
         id: ball.id.clone(),
         owner: ball.owner.clone(),
     });
-    super::menus::attach(&row, seat, &target, model, state, lernie, bl);
+    super::menus::attach(&row, seat, &target, model, state, lernie);
 }

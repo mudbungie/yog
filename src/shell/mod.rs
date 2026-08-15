@@ -16,6 +16,7 @@
 //! lives in tested modules (`AppModel`, `nav`, `attention`, `actions`,
 //! `opslog`); this tree only wires widgets.
 
+mod act;
 mod activity;
 mod alerts;
 mod ball_bar;
@@ -143,7 +144,7 @@ pub fn render(
     let window = ctx.screen_rect().size();
     egui::TopBottomPanel::top("top-bar").show(ctx, |ui| {
         row::bounded(ui);
-        top_bar::render(ui, model, state, lernie, bl);
+        top_bar::render(ui, model, state, lernie);
     });
     // The one window-level bottom accessory (§11, bl-c038): the activity
     // accessory is world-level ops chrome, so it alone spans the window. The

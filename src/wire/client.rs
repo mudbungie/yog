@@ -50,6 +50,24 @@ impl Seat {
         self.address.clone()
     }
 
+    /// Ask once and decode the answer — **the last frame of the stream**, which
+    /// today is the only frame and tomorrow is a follow-class read's newest
+    /// state.
+    ///
+    /// One `Err` for a refusal, an unreadable answer and a socket that never
+    /// opened alike (REMOTE §9.7): all three are the same fact to a caller —
+    /// this cannot be painted, and here is the sentence. Spent by both of the
+    /// window's off-frame threads, the [`asker`](super::asker) reading and the
+    /// [`poster`](super::poster) acting, because "what one gesture earned" is
+    /// one function and not one per direction.
+    pub fn answered(&self, request: &Value) -> crate::wire::link::Landed {
+        let stream = self.ask(request)?;
+        let last = stream
+            .last()
+            .ok_or_else(|| "the engine ended the stream without answering".to_owned())?;
+        crate::boundary::reply::decode(last).unwrap_or_else(Err)
+    }
+
     /// Send one request envelope and read its whole reply stream — every frame
     /// up to the terminator. A stream of one is today's every answer.
     pub fn ask(&self, request: &Value) -> Result<Vec<Value>, String> {

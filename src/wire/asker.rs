@@ -35,10 +35,9 @@
 //! within one pass, with no create to detect.
 
 use super::client::Seat;
-use super::link::{Landed, LinkEnd};
+use super::link::LinkEnd;
 use crate::state::{SnapshotCell, latest_snapshot};
 use crate::watch::Repaint;
-use serde_json::Value;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -88,7 +87,7 @@ impl Asker {
         self.seat_window();
         let mut landed = 0;
         for question in self.end.standing() {
-            let answer = self.one(&question);
+            let answer = self.seat.answered(&question);
             if !self.end.publish(&question, answer) {
                 break;
             }
@@ -98,17 +97,6 @@ impl Asker {
             self.repaint.request();
         }
         landed
-    }
-
-    /// Ask one question over the wire and decode its answer. The **last** frame
-    /// of the stream is the answer: today every stream is one frame long, and a
-    /// follow-class read's last frame is its newest state.
-    fn one(&self, question: &Value) -> Landed {
-        let stream = self.seat.ask(question)?;
-        let last = stream
-            .last()
-            .ok_or_else(|| "the engine ended the stream without answering".to_owned())?;
-        crate::boundary::reply::decode(last).unwrap_or_else(Err)
     }
 
     /// Register the window's identity in every workspace the published
