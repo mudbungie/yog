@@ -76,7 +76,13 @@ pub fn tabs_and_content(
     // The frame's roster in the form a seat can hold: the §3.3 ladder's input
     // for every Inbox-tab deposit's sender (bl-b6d0).
     let titles = model.agent_titles();
-    let data = vms::tab_data(active, model, state, ws, &focus);
+    let (data, refused) = vms::tab_data(active, model, state, ws, &focus);
+    // A refusal is painted, not swallowed (REMOTE §9.7, bl-f297): the Work
+    // tab reads over the wire now, so what the engine said is the honest
+    // content of this seat — and an empty listing must not stand in for it.
+    if let Some(said) = &refused {
+        ui.colored_label(crate::theme::ICHOR, said);
+    }
     controls::per_tab_controls(ui, active, model, &mut state.inspector, &data.steps);
     // The V2 fork composer, seated at the pin and nowhere else (bl-dc0c):
     // above the tab content because it belongs to the pin banner's fact, not

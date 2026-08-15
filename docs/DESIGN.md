@@ -2018,14 +2018,33 @@ already exists, since a row leaves the queue exactly when the operator focuses
 the conversation or spends `/seen`. A ref that moves puts the row back and so
 re-announces for free (§4.1's "a moved ref re-notifies", one layer out).
 
-*The baseline is per window, and it advances unconditionally.* What has been
-announced is §5.3 RAM (a desktop belongs to a window; two instances each own
-theirs and neither converges), and the fold runs on **every** frame — focused or
-not, knob on or off — with only the announcing gated. That is what stops a burst
-of stale news the moment a window loses focus or the knob is switched on. It
-also dissolves the first-boot flood one level up: a window that has just opened
-has witnessed no *arrival*, so its first fold is the baseline and says nothing —
-the general path with no prior observation, not a first-run branch.
+*The baseline is per window, and it advances on every frame that was told
+something.* What has been announced is §5.3 RAM (a desktop belongs to a window;
+two instances each own theirs and neither converges), and the fold runs
+regardless of focus and regardless of the knob — with only the announcing gated.
+That is what stops a burst of stale news the moment a window loses focus or the
+knob is switched on. It also dissolves the first-boot flood one level up: a
+window that has just opened has witnessed no *arrival*, so its first fold is the
+baseline and says nothing — the general path with no prior observation, not a
+first-run branch.
+
+**Since bl-f297 the queue crosses the wire** (REMOTE §9.7): the window asks
+`Query::Attention` on the asker's standing set like every other migrated read,
+so the count the strip paints, the ask the desktop names and the list a headless
+`/attention` hands back are one answer rather than one derivation run twice.
+What that changed is the word *unconditionally*: **an unanswered frame is not a
+reading of the queue**, and neither is a refusal. A frame the wire has not
+answered holds no queue at all, so folding one would read as everything having
+departed and then, on the next answer, as everything arriving at once — the
+first-boot flood, re-armed twice a second. The baseline therefore moves only on
+a frame that was told something, which is the *same* rule that makes a freshly
+opened window silent: no observation, no arrival. A refusal is the engine
+declining to say, and this seat has no surface to paint that on (a notification
+is output, not a pane), so the window stays quiet rather than announcing on a
+guess. The cost, stated: the fold runs at the asker's cadence rather than the
+frame's, and the focus gate is read on the frame the answer lands — a window
+buried and re-focused inside one ask period folds once instead of thirty times,
+which is a difference no difference detector can feel.
 
 *The mechanism is a spawned binary, and had to be.* AGENTS.md rule 6 forbids a
 new dependency, and every Rust crate that raises a freedesktop notification
@@ -7791,7 +7810,7 @@ beside `main.rs`.
 | `src/shell/acceptance/wound.rs` (excl.) | the bl-55d8 drive (a conversation whose latest step has an empty `response.json` beside a non-empty `stderr.log`, rendered on the whole window: the adapter's own sentence is in the paint output, the retired *"activity trail below"* pointer is not, and the bl-90bf grace gate still withholds it on the frame before the window elapses — driven on a `FakeClock` swapped into `ShellState::wound_grace`, since the window is wall-clock time and a frame test must not sleep through it) |
 | `src/shell/act.rs` (excl.) | the shell's one spelling of a wire **act** (REMOTE §1.2, §9.8; bl-4841) — `src/shell/wire.rs`'s twin on the write side. Two shapes and no more: the act whose receipt is *nothing* (every §8.2 verb whose durable record is its own `ops.jsonl` line — it posts and holds no ticket, because nobody read the reply before either), and the act whose receipt is a *sentence* (the four surfaces that paint what came back — they gain a ticket beside the status line they already held). The in-flight state is that same line with an ellipsis on it rather than a second phrasing to learn, and a clean landing simply drops the mark. The `lernie`/`bl` pair does not come here: a posted act carries the gesture and nothing else, the verb binaries being the engine's |
 | `src/shell/activity.rs` (excl.) | §4.2 — the chip's counts still off the snapshot, the expanded trail a `Reply::Ops` off the wire since bl-adcb (REMOTE §1.2), asked only while the pane is open and bounded by `opslog::OPS_TAIL`, the log's own one number |
-| `src/shell/alerts.rs` (excl.) | the §6 desktop escalation's whole shell face (bl-e160) — one call into the pure `crate::alert` decision, plus the two things only a window can supply: the OS's answer to *do I have focus*, and a thread to spawn the notifier on so the frame never waits for a desktop |
+| `src/shell/alerts.rs` (excl.) | the §6 desktop escalation's whole shell face (bl-e160) — one standing `Query::Attention` (REMOTE §9.7, bl-f297) into the pure `crate::alert` decision, plus the two things only a window can supply: the OS's answer to *do I have focus*, and a thread to spawn the notifier on so the frame never waits for a desktop. The one branch it owns is §6's ruling that an unanswered or refused frame is not a reading of the queue, so the baseline does not move |
 | `src/shell/banner.rs` (excl.) | the §7.3 last-failure widget every failing surface paints and the one ack that quiets them all, split out of `mod` at the cap on a real seam (bl-e160: `mod` is the *window assembly* — which panel sits where, in what order — while a banner is a widget painted inside one) |
 | `src/shell/birth.rs` (excl.) | the §11 birth-config block the settings seat holds when nothing is selected: the work-directory box (bl-7927) + the same §9.4 model row, bl-824e |
 | `src/shell/board.rs` (excl.) | the §11 balls section as the V4 board — the empty-project hint, the armed-loop facts, and the four column folds with their derived counts. The board itself is a `Reply::Board` off the wire since bl-adcb (REMOTE §1.2); the model's own `board()` went with the migration, the affordances beside it did not — those are acts |
@@ -7808,7 +7827,7 @@ beside `main.rs`.
 | `src/shell/config_edit/send.rs` (excl.) | the lineage pane's **write half** (§9.3, REMOTE §9.8; bl-4841): the one gesture that surface fires and the receipt it earns. Posted rather than dispatched — the frame may not wait on a socket — so the click writes what a clean landing means and the fold, one frame or several later, drops the in-flight mark or appends the reason. The pane's re-read of the lineage moved with it: the advance is what just happened, so it is read when the engine says so and not when the operator asked. Split from `branch_pane.rs` at §12's budget, on the seam the act path draws everywhere — browsing and drafting is one thing, firing and folding another |
 | `src/shell/config_edit/status.rs` (excl.) | the config editors' status sentences (§9) — each Apply / Reload outcome as the one line the pane paints |
 | `src/shell/config_edit/yog_pane.rs` (excl.) | the §7.2 clock surface (bl-3381) |
-| `src/shell/config_marks.rs` (excl.) | the §16.3 tracking-branch pane, split from `config_edit` at the cap: `world::marks` carries every decision, this only wires controls to it |
+| `src/shell/config_marks.rs` (excl.) | the §16.3 tracking-branch pane, split from `config_edit` at the cap: `world::marks` carries every decision, this only wires controls to it. Both halves cross the wire — the Set is a posted act (REMOTE §9.8) and `Read current` is the **latched standing question** §9.8 ruled a click-time read to be (bl-f297), the latch naming the workspace it was thrown for so a focus change stops the ask |
 | `src/shell/conv_ball.rs` (excl.) | the ball-badge painters the conversation surfaces share (§3.5, §11), split from `navigator` at the cap: the ids, states and badges come from the tested `nav::convs`/`AppModel` derivations, so this only chooses the hue and lays the widgets |
 | `src/shell/conv_list.rs` (excl.) | §11 altitude 0 — the list frame (the new-conversation affordance, the organizing toggle, the scroll and the visible-row iteration both organizing views share) with `conv_row` split off at the budget when the unfold landed (bl-fa82) |
 | `src/shell/conv_row.rs` (excl.) | §11 altitude 0 — one row's whole paint: the prefix group, the depth indent and its `↳` elbow, the trailing metadata including the ▶/▼ subagent field whose click toggles the id in the shell's expanded set, the row menu, and the §11 tone scope a §7.2 pending row is painted inside (bl-915e) |
@@ -7826,7 +7845,7 @@ beside `main.rs`.
 | `src/shell/inspector/fork.rs` (excl.) | the V2 composer's glue — the choices memo, the seat that lives and dies with the pin, and the one boundary gesture per candidate |
 | `src/shell/inspector/rail.rs` (excl.) | the rail's own glue — the per-snapshot memo around `answer::inspector::rail` (the gather itself moved to the boundary in bl-6233, so the frame and a headless seat cannot build two different spines), and the pin applied to the transcript / files / preview / governing builds |
 | `src/shell/inspector/vms.rs` (excl.) | the per-tab view-model assembly split off at the budget when the pin landed (bl-98da); since bl-6233 each build is the boundary's own derivation wrapped in the §7.2 `SnapMemo` — including which live tail is folded, which is `answer::inspector`'s ruling and not the frame's |
-| `src/shell/inspector/work.rs` (excl.) | the Work tab's two per-snapshot memos (§5.1 #32), which is where that tab's every `git` fork against a project repo is held to once per published snapshot |
+| `src/shell/inspector/work.rs` (excl.) | the Work tab's read (§5.1 #32), a standing `Query::WorkDiff` on the asker since bl-f297 (REMOTE §9.7). The two per-snapshot memos it used to be went with the migration — an answer *is* the cached fold — and the listing and the picked file's patch became one question rather than two memo keys |
 | `src/shell/keys.rs` (excl.) | the §11 binding lift |
 | `src/shell/login_pane.rs` (excl.) | §8.3 — the Login tab's content and the auth-failed banner's, one machinery in two seats since it stopped being a fold in the roster column (bl-1ca2) |
 | `src/shell/menus.rs` (excl.) | the §11 context-menu attach/dispatch |
@@ -7836,7 +7855,7 @@ beside `main.rs`.
 | `src/shell/new_ws.rs` (excl.) | §3.1 |
 | `src/shell/pane.rs` | the conversation pane's own column (§11, bl-9551), split from `shell/mod.rs` at the cap on a real seam: the window divides itself between a top bar, a roster column, one world-level accessory and a remainder — this divides *that* remainder between the conversation's docked accessories (each drawing from the §11 rule 5 budget, painting nothing when it cannot be paid) and the bounded, clipped viewport that is the conversation itself |
 | `src/shell/ram.rs` (excl.) | the shell's own cross-frame RAM, split by **lifetime**: what belongs to the window sits on `ShellState`, what belongs to a workspace sits in `ram/wall`'s `WallRam` and a focus change *swaps that bundle whole* |
-| `src/shell/ram/inspector.rs` (excl.) | the altitude-2 viewport ephemera and its per-snapshot memos |
+| `src/shell/ram/inspector.rs` (excl.) | the altitude-2 viewport ephemera and the per-snapshot memos of the builds still made in process (the Work tab's two went with its migration onto the wire, bl-f297) |
 | `src/shell/ram/login.rs` (excl.) | the §8.3 holder's own file — the wall-bound `bz` runner, credentials dir and sign-in spawn layer, §16.2 |
 | `src/shell/ram/wall.rs` (excl.) | the workspace-lifetime bundle (brazen's config pane, the §8.3 Login holder, the §9.4 picker) that a focus change swaps whole, parking the outgoing wall's under the workspace it was typed in — so a draft survives A → B → A and no stream, roster or open picker crosses a wall (bl-5894, §16.2 as amended) |
 | `src/shell/row.rs` (excl.) | §11 rule 1b — `control_last`, the one lawful spelling of a row that pairs greedy text with a trailing control, so the verb is allocated before the words that would otherwise eat it (bl-bc06) |

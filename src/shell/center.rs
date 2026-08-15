@@ -79,7 +79,7 @@ pub(super) fn render(
     strip(ui, model, state, offered);
     match state.center {
         CenterTab::Conversation => super::workspace::center(ui, model, state, lernie, bl, bz),
-        CenterTab::Config => super::config_edit::center(ui, model, state, lernie, bl),
+        CenterTab::Config => super::config_edit::center(ui, model, state),
         CenterTab::Login => {
             let state_root = model.state_root().to_path_buf();
             super::login_pane::login_section(ui, &mut state.wall.login, bz, &state_root);

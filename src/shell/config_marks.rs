@@ -10,11 +10,27 @@
 //! headless `/marks` reaches (bl-3f46, bl-0164), one implementation, two
 //! serializations.
 //!
-//! **The write is posted; the read is not, yet** (REMOTE §9.8, bl-4841). Set
-//! crosses the wire and paints its receipt — which carries the branch re-read
-//! after the write, so the pane states what landed. `Read current` is still
-//! answered in process at the click, which is the click-time-read shape §9.8
-//! hands to bl-f297: a standing question with a latch, not a receipt.
+//! **Both halves cross the wire now** (REMOTE §9.7/§9.8, bl-4841 + bl-f297).
+//! Set is posted and paints its receipt — which carries the branch re-read
+//! after the write, so the pane states what landed. `Read current` is the
+//! **standing question with a latch** §9.8 ruled a click-time read to be: the
+//! click turns the latch on, the pane declares [`Query::Marks`] while it paints,
+//! and the branch appears when the answer lands one ask-period later. The latch
+//! is the workspace it was thrown for, so a focus change stops the question
+//! being declared and the asker drops its answer — no unsubscribe, and no way
+//! to show one workspace's branch under another's name.
+//!
+//! **The latch does not fall on the first answer.** A read that turned itself
+//! off would be a one-shot with a socket behind it: the same bytes on screen
+//! whether the branch moved a second later or not. Left on, the pane's reading
+//! stays live for as long as the operator is looking at that workspace, which
+//! costs one ask per period and is what makes the write's own confirmation
+//! arrive twice by two honest routes rather than once by a lucky one.
+//!
+//! **The `Cli` pair evaporated with the read** (REMOTE §9.8): the pane had them
+//! only to build `boundary_deps` for the in-process answer. A posted act carries
+//! the gesture and a standing question carries the query; neither carries this
+//! box's verb binaries, so a remote seat could drive this whole pane.
 //!
 //! **It asks about the focused WORKSPACE, not the focused project** (the
 //! per-agent ruling): the branch is the agent's, so a workspace that
@@ -24,7 +40,6 @@
 use crate::AppModel;
 use crate::boundary::reply::Reply;
 use crate::boundary::{Action, Query};
-use crate::cli_outbound::Cli;
 use crate::world::marks;
 use std::path::{Path, PathBuf};
 
@@ -34,12 +49,19 @@ const BRANCH_HINT: &str = "The balls branch this agent records its tasks on. `ba
      existing project. Anything else is this agent's own task space, which no other agent's \
      churn reaches. Typed, it is `/marks <branch>`.";
 
-/// The pane's RAM state (§3.5): the last-read branch and the workspace it was
-/// read for, the branch input, and the status line. Nothing is held that the
-/// space itself answers — both halves ask at the gesture, never per frame.
+/// The pane's RAM state (§3.5): the last-landed branch and the workspace it was
+/// read for, the reading latch, the branch input, and the status line. Nothing
+/// is held that the space itself answers — the branch on screen is whatever the
+/// wire last said.
 pub struct MarksPane {
     workspace: Option<PathBuf>,
     branch: String,
+    /// **The read's latch** (REMOTE §9.8): the workspace whose branch the
+    /// operator asked for, or `None` before anyone asked. Not a bare `bool`,
+    /// because the question names a workspace and the focus can move under it —
+    /// a latch that could not say which workspace it was thrown for would show
+    /// one wall's branch beside another wall's name.
+    reading: Option<PathBuf>,
     input: String,
     /// The last gesture's sentence and the ticket its receipt lands under
     /// (REMOTE §9.8, bl-4841). The read and the write share it: one line, and
@@ -53,6 +75,7 @@ impl MarksPane {
         Self {
             workspace: None,
             branch: String::new(),
+            reading: None,
             input: String::new(),
             act: crate::shell::act::Held::default(),
         }
@@ -61,13 +84,7 @@ impl MarksPane {
 
 /// Render the knob for the focused workspace. Reads on demand (never per-frame)
 /// and states what landed.
-pub fn render(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    pane: &mut MarksPane,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub fn render(ui: &mut egui::Ui, model: &mut AppModel, pane: &mut MarksPane) {
     ui.heading(
         egui::RichText::new("task branch (this agent's balls space)")
             .color(crate::theme::integration_hue("bl")),
@@ -77,8 +94,11 @@ pub fn render(
         return;
     };
     // The writes below are posted (REMOTE §9.8), so their receipt is folded
-    // here, at the top of the pane, on the frame it lands.
+    // here, at the top of the pane, on the frame it lands — and the read is a
+    // standing question, declared here while the latch is thrown for this
+    // workspace, so its answer lands the same way.
     settle(model, pane);
+    read_marks(model, pane, &workspace);
     ui.monospace(workspace.display().to_string());
     if pane.workspace.as_ref() == Some(&workspace) && !pane.branch.is_empty() {
         ui.label(format!("branch: {}", pane.branch));
@@ -100,8 +120,9 @@ pub fn render(
             )
             .clicked()
         {
-            let said = read_marks(model, pane, lernie, bl, &workspace);
-            pane.act.say(said);
+            // Throwing the latch is the whole gesture: the declaration is the
+            // paint above, and the answer lands one ask-period later.
+            pane.reading = Some(workspace.clone());
         }
         if ui
             .button("Point at the project's board")
@@ -143,23 +164,31 @@ pub fn render(
     }
 }
 
-/// Read the focused workspace's branch into the pane (keyed by workspace so a
-/// focus change never shows a stale one) — through the boundary (§8.5): the
-/// same [`Query::Marks`] a headless `/marks` reaches.
-fn read_marks(
-    model: &AppModel,
-    pane: &mut MarksPane,
-    lernie: &Cli,
-    bl: &Cli,
-    workspace: &Path,
-) -> String {
-    let deps = model.boundary_deps(lernie, bl);
+/// Declare the latched read and fold whatever has landed for it — the same
+/// [`Query::Marks`] a headless `/marks` reaches (§8.5), asked over the wire
+/// (REMOTE §9.7). Nothing is declared until the operator throws the latch, and
+/// nothing is declared for a workspace other than the one it was thrown for, so
+/// the pane can never paint one wall's branch under another wall's name.
+fn read_marks(model: &mut AppModel, pane: &mut MarksPane, workspace: &Path) {
+    if pane.reading.as_deref() != Some(workspace) {
+        return;
+    }
     let query = Query::Marks {
         workspace: model.snap.ws_name(workspace),
     };
-    match model.answer(&deps, &query, super::now_unix()) {
-        Ok(reply) => landed(pane, workspace, &reply),
-        Err(e) => e,
+    let landed_branch = crate::shell::wire::ask(model, query, |reply| match reply {
+        Reply::Marks { branch } => Some(branch),
+        _ => None,
+    });
+    // A refusal is painted, not swallowed: it takes the pane's one status line,
+    // which is the only surface this read has.
+    if let Some(said) = landed_branch.refused {
+        pane.act.say(said);
+        return;
+    }
+    if let Some(branch) = landed_branch.value {
+        pane.workspace = Some(workspace.to_path_buf());
+        pane.branch = branch;
     }
 }
 
@@ -196,15 +225,4 @@ fn settle(model: &mut AppModel, pane: &mut MarksPane) {
         (None, Ok(other)) => pane.act.say(format!("unexpected reply: {other:?}")),
         (why, _) => pane.act.say(why.unwrap_or_default()),
     }
-}
-
-/// Fold one [`Reply::Marks`] into the pane and say it in a line. Any other reply
-/// is a boundary contract break and says so rather than rendering nothing.
-fn landed(pane: &mut MarksPane, workspace: &Path, reply: &Reply) -> String {
-    let Reply::Marks { branch } = reply else {
-        return format!("unexpected reply: {reply:?}");
-    };
-    pane.workspace = Some(workspace.to_path_buf());
-    pane.branch.clone_from(branch);
-    format!("tracking on {branch}")
 }

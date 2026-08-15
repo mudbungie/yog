@@ -8,8 +8,22 @@
 
 use super::Harness;
 use super::derive::settle;
+use crate::boundary::Query;
+use crate::boundary::dispatch::Deps;
+use crate::boundary::reply::Reply;
+use crate::cli_outbound::Cli;
 use crate::git_tree::AgentState;
 use crate::watch::Mark;
+use crate::{AppModel, boundary::answer::queue::QueueRow};
+
+/// The §6 decision queue as the escalation now reads it (REMOTE §9.7): the
+/// boundary chokepoint's answer, which is what stands on the wire.
+fn queue(model: &AppModel, deps: &Deps) -> Vec<QueueRow> {
+    let Ok(Reply::Attention(rows)) = model.answer(deps, &Query::Attention, 0) else {
+        panic!("attention answers attention");
+    };
+    rows
+}
 
 /// bl-2194: the strip is a **turn queue**. A conversation that ended its turn
 /// *cleanly* — a complete `response.json`, no wound, so §4.4 classifies it
@@ -74,9 +88,14 @@ fn the_tick_holds_the_focused_agents_acknowledgement() {
 }
 
 /// bl-e160: the desktop escalation reads the **same** §6 derivation the strip
-/// counts, through the model's own queue query — so a conversation the strip
-/// counts is a conversation the desktop can name, and the ack that clears one
-/// clears the other. The knob it is gated on is armed by default.
+/// counts — so a conversation the strip counts is a conversation the desktop
+/// can name, and the ack that clears one clears the other. The knob it is gated
+/// on is armed by default.
+///
+/// Asked through the boundary chokepoint since bl-f297: the escalation's queue
+/// is `Query::Attention` over the wire now, and the model's own
+/// `decision_queue` accessor went with the migration, so this reads what that
+/// seat reads.
 #[test]
 fn the_desktop_escalation_reads_the_strip_s_own_queue() {
     let h = Harness::new();
@@ -87,7 +106,8 @@ fn the_desktop_escalation_reads_the_strip_s_own_queue() {
     let (_c, mut model) = h.model();
     assert!(model.notify_unfocused(), "armed by default (§4.1)");
 
-    let alerts = crate::alert::of_queue(&model.decision_queue(0));
+    let deps = model.boundary_deps(&Cli::new("/no/lernie"), &Cli::new("/no/bl"));
+    let alerts = crate::alert::of_queue(&queue(&model, &deps));
     assert_eq!(
         model.strip_total(),
         alerts.len(),
@@ -103,5 +123,5 @@ fn the_desktop_escalation_reads_the_strip_s_own_queue() {
 
     // The acknowledgement that empties the strip empties the desktop too.
     model.focus_agent(&h.ws, "c-1");
-    assert!(crate::alert::of_queue(&model.decision_queue(0)).is_empty());
+    assert!(crate::alert::of_queue(&queue(&model, &deps)).is_empty());
 }

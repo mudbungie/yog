@@ -25,13 +25,20 @@ use crate::transcript::{self, Transcript};
 /// come first**: each build below reads through the pin (VISION V1.2 — one
 /// mechanism, four tabs), so the pin must be resolved before anything asks
 /// disk what to show. A caller with no focused agent never reaches here.
+///
+/// The second half of the answer is **the engine's sentence when a migrated
+/// read was refused** (REMOTE §9.7, bl-f297). It rides beside [`TabData`]
+/// rather than in it: `TabData` is what the tested renderer paints, and a
+/// refusal is a fact about this seat's transport, which the caller paints
+/// above the tab. Today exactly one of these reads crosses the wire (Work),
+/// so there is one sentence and no need to say which.
 pub(super) fn tab_data(
     active: InspectorTab,
-    model: &AppModel,
+    model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
     focus: &AgentView,
-) -> TabData {
+) -> (TabData, Option<String>) {
     let (agent_id, tip, agent_state) = (&focus.agent_id, &focus.tip, focus.state);
     // Who the transcript's model turns are (bl-2335): the §3.3 ladder over the
     // selection's *conversation root*, through the boundary's own derivation —
@@ -64,12 +71,13 @@ pub(super) fn tab_data(
         agent_id,
         pin.as_ref(),
     );
-    // The Work tab's subject is the *project* repo, so it is keyed on the
-    // workspace rather than the agent and the pin never reaches it.
+    // The Work tab's subject is the *project* repo, so its question is
+    // addressed at the workspace rather than the agent and the pin never
+    // reaches it. One ask answers the listing and the picked file's patch
+    // together (REMOTE §9.7, bl-f297).
     let picked = state.inspector.eph.work_sel.clone();
-    let work = work::build(active, model, &mut state.inspector, ws);
-    let work_patch = work::patch(model, &mut state.inspector, ws, &work, picked.as_ref());
-    TabData {
+    let work = work::read(active, model, ws, picked);
+    let data = TabData {
         transcript: rail::transcript(&live, pin.as_ref()),
         speaker,
         raw: state.inspector.raw,
@@ -88,14 +96,15 @@ pub(super) fn tab_data(
             pin.as_ref(),
         ),
         files,
-        work,
-        work_patch,
+        work: work.attempts,
+        work_patch: work.patch,
         governing: (active == InspectorTab::Config)
             .then(|| rail::governing(ws, tip, pin.as_ref()))
             .flatten(),
         rail: history,
         pin,
-    }
+    };
+    (data, work.refused)
 }
 
 fn build_files(
