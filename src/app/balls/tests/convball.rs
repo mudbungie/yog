@@ -100,10 +100,7 @@ fn a_conversation_row_carries_its_goal_stamp_ball_coloured_by_the_join() {
 #[test]
 fn the_conversation_mint_reads_its_occupied_set_off_the_stamped_roots() {
     let (root, _fx, m) = model();
-    let ws = m
-        .focused_workspace()
-        .expect("cobalt is focused")
-        .to_path_buf();
+    let ws = m.focused_workspace().expect("cobalt is focused").clone();
     let mut names = m.conversation_names(&ws);
     names.sort();
     assert_eq!(names, ["jade-vole", "ochre-tern", "slate-newt"]);

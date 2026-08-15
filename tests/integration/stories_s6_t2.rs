@@ -56,8 +56,8 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
     // One file, two instances (I0) — the convergence is the disk, not a channel.
     assert_eq!(a.ui_json_path(), b.ui_json_path());
 
-    a.focus_workspace(&ws);
-    b.focus_workspace(&ws);
+    a.focus_workspace(&yog::naming::leaf(&ws));
+    b.focus_workspace(&yog::naming::leaf(&ws));
     assert_eq!(a.strip_total(), 2, "both stir, in both instances");
     assert_eq!(b.strip_total(), 2);
 
@@ -101,5 +101,5 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
         Some("n-002".to_owned()),
         "B's focus is B's"
     );
-    assert_eq!(b.focused_workspace(), Some(ws.as_path()));
+    assert_eq!(b.focused_workspace(), Some(ws.clone()));
 }

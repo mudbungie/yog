@@ -31,7 +31,7 @@ fn a_fired_start_focuses_the_conversation_it_started() {
     let (clock, mut model) = h.model();
     // Where the operator stands the instant Enter is pressed: the workspace is
     // focused (`prepare_start`'s adoption), nothing is selected.
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     assert!(model.focus().agent.is_none(), "the placeholder's state");
 
     model.await_conversation(&h.ws, "stench-pug", "fix the gate");
@@ -144,7 +144,7 @@ fn a_message_echoes_without_claiming_the_focus() {
     assert_eq!(echoed.pending[0].deposit.body, "and again");
 
     // The operator walks off it while the driver is still cold.
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     model.refresh();
     assert!(
         model.focus().agent.is_none(),

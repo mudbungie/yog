@@ -14,7 +14,6 @@ use crate::support::{AgentFixture, FakeBl, build_agents};
 use std::sync::Arc;
 use tempfile::tempdir;
 use yog::nav::tabs::Kind;
-use yog::nav::ws_key;
 use yog::ui_state::SystemClock;
 use yog::{AppModel, Roots};
 
@@ -115,8 +114,8 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     );
 
     // --- Pinned: hoisted in PIN order, ahead of the name-ordered remainder.
-    m.toggle_pin(&ws_key(&named("delta")));
-    m.toggle_pin(&ws_key(&named("charlie")));
+    m.toggle_pin("delta");
+    m.toggle_pin("charlie");
     let bar = m.tab_bar();
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(

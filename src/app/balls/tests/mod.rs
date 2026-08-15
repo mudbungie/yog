@@ -69,7 +69,7 @@ fn construction_fetches_balls_and_builds_the_claimant_join() {
 fn focused_join_targets_the_focused_workspace_ball() {
     let w = world();
     let (_c, mut m) = model(&w);
-    m.focus_workspace(&w.ws_cobalt);
+    m.focus_workspace(&crate::naming::leaf(&w.ws_cobalt));
     let row = m.focused_join().unwrap();
     assert_eq!(row.ball_id, "bl-work");
     assert!(close_enabled(row.state), "Bound ⇒ Close offered");
@@ -80,7 +80,7 @@ fn focused_join_targets_the_focused_workspace_ball() {
     // must not hand that row out — the ball row and the marks knob both read it
     // as a ball ("ball " with an empty id) and a project (a `bl conf` spawned
     // with cwd "", which fails as "no such file", reading as a missing binary).
-    m.focus_workspace(&w.ws_spare);
+    m.focus_workspace(&crate::naming::leaf(&w.ws_spare));
     assert!(
         m.focused_join().is_none(),
         "a workspace with no ball focuses no ball"

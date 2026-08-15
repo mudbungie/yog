@@ -54,7 +54,7 @@ fn a_draft_belongs_to_the_target_it_was_typed_for() {
 
     // Back to the new conversation: the goal is still there, and the message
     // stayed behind with the agent it was written to.
-    world.model.focus_workspace(&ws);
+    world.model.focus_workspace(&crate::naming::leaf(&ws));
     let back = screen.text(&mut world);
     assert!(
         back.contains("ship the goal"),

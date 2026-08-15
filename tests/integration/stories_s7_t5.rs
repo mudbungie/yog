@@ -73,7 +73,7 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
         .0
     };
     let mut m = boot(roots.clone());
-    m.focus_workspace(&ws);
+    m.focus_workspace(&yog::naming::leaf(&ws));
 
     // --- Before: two lone roots. Neither grows a tree.
     let rows = crate::support::conversation_rows(&m, 9000);
@@ -109,7 +109,7 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
     );
 
     let mut m = boot(roots);
-    m.focus_workspace(&ws);
+    m.focus_workspace(&yog::naming::leaf(&ws));
     let rows = crate::support::conversation_rows(&m, 9000);
     // Still TWO conversations — the descendants are members of b-001's, never
     // rows of their own.

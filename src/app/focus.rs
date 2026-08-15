@@ -27,12 +27,18 @@ use crate::ui_state::SeenKind;
 use std::path::{Path, PathBuf};
 
 impl AppModel {
-    /// Focus a workspace (center-panel target) without selecting an agent — no
-    /// acknowledgement (§6: focus records seen only for a *selected agent*). The
-    /// selected inspector tab is sticky across the move (§11).
-    pub fn focus_workspace(&mut self, ws: &Path) {
+    /// Focus a workspace by its §3.1 **name** (center-panel target) without
+    /// selecting an agent — no acknowledgement (§6: focus records seen only for
+    /// a *selected agent*). The selected inspector tab is sticky across the
+    /// move (§11).
+    ///
+    /// The name rather than a path since bl-7407: the wire spelling, so a
+    /// selection and the gesture it becomes say the same word. A name nothing
+    /// enumerates simply resolves to nothing at the doors — the general path
+    /// with an empty set, exactly as an unfetched path did.
+    pub fn focus_workspace(&mut self, name: &str) {
         self.focus = Focus {
-            ws: Some(ws.to_path_buf()),
+            ws: Some(name.to_owned()),
             agent: None,
             tab: self.focus.tab,
         };
@@ -43,9 +49,13 @@ impl AppModel {
     /// instances (§13.1). The selected inspector tab is sticky (§11). The ack
     /// does not end here: [`ack_focused`](Self::ack_focused) keeps it stamped
     /// for as long as the agent stays focused.
+    /// It takes the workspace **path** because the acknowledgement it writes is
+    /// keyed by one (§4.1 `seen`, durable): the path is the caller's already —
+    /// off the §6 roster, off the echo, off a search hit — so resolving it back
+    /// out of a name here would be a join over a fact the caller holds.
     pub fn focus_agent(&mut self, ws: &Path, agent_id: &str) {
         self.focus = Focus {
-            ws: Some(ws.to_path_buf()),
+            ws: Some(crate::naming::leaf(ws)),
             agent: Some(agent_id.to_string()),
             tab: self.focus.tab,
         };
@@ -125,7 +135,7 @@ impl AppModel {
     /// frame the evidence actually lands. A focused workspace with no agent
     /// selected acks nothing (the general empty path).
     pub(super) fn ack_focused(&mut self) {
-        if let (Some(ws), Some(agent)) = (self.focus.ws.clone(), self.focus.agent.clone()) {
+        if let (Some(ws), Some(agent)) = (self.focused_workspace(), self.focus.agent.clone()) {
             self.record_seen(&ws, &agent);
         }
     }
@@ -186,22 +196,30 @@ impl AppModel {
     /// workspace's visible list rows in paint order (§11's unfold ruling).
     pub fn jump_next_attention(&mut self) {
         let roster = queue::roster(&self.snap, &self.ui);
-        if let Some(k) = attention::next_attention(&roster, self.focus_pos()) {
+        // The current position, when both halves are selected — the jump starts
+        // from the front otherwise. The roster keys workspaces by **path**, so
+        // the focused name resolves here, at the door that needs it.
+        let here = self.focused_workspace().map(|p| ws_key(&p));
+        let agent = self.focus.agent.clone();
+        let at = here.as_deref().zip(agent.as_deref());
+        if let Some(k) = attention::next_attention(&roster, at) {
             self.focus_agent(&PathBuf::from(k.ws), &k.agent_id);
         }
     }
 
-    /// The current focus as a `(ws, agent)` position (both a workspace and an
-    /// agent selected), else `None` — the jump then starts from the front.
-    fn focus_pos(&self) -> Option<(&str, &str)> {
-        let ws = self.focus.ws.as_deref()?.to_str()?;
-        let agent = self.focus.agent.as_deref()?;
-        Some((ws, agent))
-    }
-
-    /// Toggle `key`'s pin (§4.1 `pinned`, user order): appended when unpinned,
-    /// removed when pinned. Durable, converging via `ui.json`.
-    pub fn toggle_pin(&mut self, key: &str) {
+    /// Toggle the pin on the workspace `name` addresses (§4.1 `pinned`, user
+    /// order): appended when unpinned, removed when pinned. Durable, converging
+    /// via `ui.json`. A name the enumeration does not answer pins nothing.
+    ///
+    /// **The pin toggle is a door** (bl-7407): the tab bar hands back a §3.1
+    /// name, and `ui.json` keys pins by **path** — durable state whose
+    /// re-keying is its own migration — so the resolution stands here, once, at
+    /// the click, rather than on every painted tab.
+    pub fn toggle_pin(&mut self, name: &str) {
+        let Some(key) = self.workspace_path(name).map(|p| ws_key(&p)) else {
+            return;
+        };
+        let key = key.as_str();
         let mut pins = self.ui.pinned();
         match pins.iter().position(|k| k == key) {
             Some(i) => {
@@ -237,24 +255,31 @@ impl AppModel {
         over: &[crate::binding::Workspace],
     ) -> Focus {
         if let Some(ws) = initial {
+            // `--workspace` may be spelled either way and means one thing: the
+            // §3.1 name is the leaf, and the leaf of a bare name is itself.
             return Focus {
-                ws: Some(ws),
+                ws: Some(crate::naming::leaf(&ws)),
                 ..Focus::default()
             };
         }
-        let mut roster: Vec<String> = over.iter().map(|w| ws_key(&w.path)).collect();
-        roster.sort();
+        // Ranked by **path** and answered as a name (§4.1's "derived (path)
+        // order" is unchanged; only the answer's spelling moved).
+        let mut ranked: Vec<(String, String)> = over
+            .iter()
+            .map(|w| (ws_key(&w.path), crate::naming::leaf(&w.path)))
+            .collect();
+        ranked.sort();
+        let roster: Vec<String> = ranked.into_iter().map(|(_, name)| name).collect();
         let mut attention: Vec<String> = Vec::new();
         for w in over {
             if self.workspace_stats(&w.path).0 > 0 {
-                attention.push(ws_key(&w.path));
+                attention.push(crate::naming::leaf(&w.path));
             }
         }
         let roster_refs: Vec<&str> = roster.iter().map(String::as_str).collect();
         let attention_refs: Vec<&str> = attention.iter().map(String::as_str).collect();
         Focus {
-            ws: crate::ui_state::derive_startup_focus(&roster_refs, &attention_refs)
-                .map(std::path::PathBuf::from),
+            ws: crate::ui_state::derive_startup_focus(&roster_refs, &attention_refs),
             ..Focus::default()
         }
     }

@@ -11,8 +11,8 @@ use crate::watch::Mark;
 fn focus_workspace_selects_no_agent_and_records_nothing() {
     let h = Harness::new();
     let (_c, mut model) = h.model();
-    model.focus_workspace(&h.ws);
-    assert_eq!(model.focused_workspace(), Some(h.ws.as_path()));
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
+    assert_eq!(model.focused_workspace(), Some(h.ws.clone()));
     assert!(model.focus().agent.is_none());
     assert_eq!(model.strip_total(), 1, "focusing a workspace acks nothing");
 }
@@ -75,7 +75,7 @@ fn inspector_tab_selection_is_sticky_across_focus_changes() {
     model.select_tab(InspectorTab::Steps);
     assert_eq!(model.inspector_tab(), InspectorTab::Steps);
     // The selection survives both a workspace focus and an agent focus (§11).
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     assert_eq!(model.inspector_tab(), InspectorTab::Steps);
     model.focus_agent(&h.ws, "c-1");
     assert_eq!(
@@ -89,7 +89,9 @@ fn inspector_tab_selection_is_sticky_across_focus_changes() {
 fn toggle_pin_hoists_and_unhoists_the_workspace_tab() {
     let h = Harness::new();
     let (_c, mut model) = h.model();
-    let key = ws_key(&h.ws);
+    // The pin toggle takes the §3.1 NAME (bl-7407) and resolves the `ui.json`
+    // path key behind it — the durable key did not move, the door did.
+    let key = crate::naming::leaf(&h.ws);
     // The foreign workspace starts in the overflow; pinning hoists it (§11).
     assert!(model.tab_bar().tabs.is_empty());
     model.toggle_pin(&key);
@@ -139,7 +141,7 @@ fn an_auth_failed_conversation_stirs_the_strip_and_flags_login() {
         1,
         "the dead conversation stirs (§6 rule 2)"
     );
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     let rows = model.conversations(10);
     assert_eq!(rows[0].state, crate::git_tree::AgentState::Stopped);
     assert_eq!(rows[0].attention, 1);
@@ -162,9 +164,10 @@ fn an_auth_failed_conversation_stirs_the_strip_and_flags_login() {
 fn a_gesture_is_on_disk_when_it_returns() {
     let h = Harness::new();
     let (_c, mut model) = h.model();
-    model.toggle_pin("k");
+    let key = crate::nav::ws_key(&h.ws);
+    model.toggle_pin(&crate::naming::leaf(&h.ws));
     let back = std::fs::read_to_string(h.roots.ui_json()).unwrap();
-    assert!(back.contains("\"k\""), "the pin is already durable: {back}");
+    assert!(back.contains(&key), "the pin is already durable: {back}");
 }
 
 /// **M2 milestone (§15 Y11):** two instances against one fixture set converge

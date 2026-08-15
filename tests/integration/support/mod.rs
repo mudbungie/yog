@@ -205,7 +205,7 @@ pub fn conversations(
     now_unix: i64,
     expanded: &HashSet<String>,
 ) -> Vec<yog::nav::convs::ConvRow> {
-    let Some(workspace) = model.focused_workspace().map(yog::naming::leaf) else {
+    let Some(workspace) = model.focused_ws_name() else {
         return Vec::new();
     };
     let deps = model.boundary_deps(

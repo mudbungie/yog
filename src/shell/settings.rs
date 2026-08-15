@@ -51,7 +51,7 @@ use crate::AppModel;
 use crate::boundary::answer::agent::AgentView;
 use crate::cli_outbound::Cli;
 use crate::spend;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Paint the seat as the conversation pane's own bottom panel. **Created first
 /// of the stack, so it holds the pane's bottom edge** — below the goal box,
@@ -67,7 +67,7 @@ pub(super) fn render(
     state: &mut ShellState,
     bz: &Cli,
 ) {
-    let Some(ws) = model.focused_workspace().map(PathBuf::from) else {
+    let Some(ws) = model.focused_workspace() else {
         return;
     };
     egui::TopBottomPanel::bottom("conversation-settings").show_inside(ui, |ui| {

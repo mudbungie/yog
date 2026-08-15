@@ -171,7 +171,7 @@ fn selected(model: &AppModel) -> Option<String> {
 /// The focused workspace, owned — every selection below is made inside it,
 /// since the walk stopped crossing walls with bl-fa82.
 fn wall(model: &AppModel) -> Option<PathBuf> {
-    model.focused_workspace().map(Path::to_path_buf)
+    model.focused_workspace()
 }
 
 /// ↑/↓ — step the selection ±`delta` through the **visible** list rows in paint
@@ -237,7 +237,7 @@ pub(super) fn toggle_row(model: &mut AppModel, state: &mut ShellState, ws: &Path
 /// Select a workspace and hand the keyboard over — the tab bar, the overflow
 /// menu, and `new conversation`, which is the same move with the agent
 /// selection cleared (the keyboard's `n` rides here, rule 2).
-pub(super) fn workspace(model: &mut AppModel, state: &mut ShellState, ws: &Path) {
-    model.focus_workspace(ws);
+pub(super) fn workspace(model: &mut AppModel, state: &mut ShellState, name: &str) {
+    model.focus_workspace(name);
     request(state);
 }

@@ -30,7 +30,7 @@ use crate::boundary::Action;
 use crate::delete::Confirmation;
 use crate::theme;
 use crate::wire::post::Ticket;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use super::ShellState;
 
@@ -48,10 +48,15 @@ pub struct DeleteState {
     pub ticket: Option<Ticket>,
 }
 
-/// Open the §3.6 confirmation on `ws` — the one entry **both** carriers call.
-pub(super) fn open(state: &mut ShellState, ws: &Path) {
+/// Open the §3.6 confirmation on the workspace `name` addresses — the one
+/// entry **both** carriers call, and one of bl-7407's **doors**: what a
+/// pointer-targeted tab menu and the config-mode danger row both hand over is a
+/// §3.1 name, and the dialog holds the path it resolves to for as long as it is
+/// open. A name the enumeration does not answer opens nothing — there is no
+/// workspace to unmake.
+pub(super) fn open(model: &AppModel, state: &mut ShellState, name: &str) {
     state.delete = DeleteState {
-        target: Some(ws.to_path_buf()),
+        target: model.workspace_path(name),
         ..DeleteState::default()
     };
 }
@@ -61,7 +66,7 @@ pub(super) fn open(state: &mut ShellState, ws: &Path) {
 /// surface. Rendered only where the verb exists — a yog-named focused workspace
 /// (§3.6 scope), which is exactly what a `None` confirmation says.
 pub(super) fn danger_row(ui: &mut egui::Ui, model: &AppModel, state: &mut ShellState) {
-    let Some(ws) = model.focused_workspace().map(Path::to_path_buf) else {
+    let (Some(name), Some(ws)) = (model.focused_ws_name(), model.focused_workspace()) else {
         return;
     };
     if model.delete_confirmation(&ws).is_none() {
@@ -75,7 +80,7 @@ pub(super) fn danger_row(ui: &mut egui::Ui, model: &AppModel, state: &mut ShellS
         )
         .clicked()
     {
-        open(state, &ws);
+        open(model, state, &name);
     }
 }
 

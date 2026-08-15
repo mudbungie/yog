@@ -31,7 +31,7 @@ impl AppModel {
             // The seam (REMOTE §8, bl-f5f6): a seat's *selection* is a path,
             // a gesture's *address* is a name — this is where the one mapping
             // is read forwards, and the chokepoint reads it back.
-            workspace: self.focused_workspace().map(|p| self.snap.ws_name(p)),
+            workspace: self.focused_ws_name(),
             agent: self.focused_agent().map(|a| a.agent_id.clone()),
             project: join
                 .as_ref()
@@ -39,7 +39,7 @@ impl AppModel {
             name: join
                 .as_ref()
                 .map(owner_name)
-                .or_else(|| self.focused_workspace().map(crate::naming::leaf)),
+                .or_else(|| self.focused_ws_name()),
             ball: join.as_ref().and_then(|row| self.ball_spec(row)),
             // Start-flow RAM, not a derivation (§5.3): the shell adds it.
             prepared: None,

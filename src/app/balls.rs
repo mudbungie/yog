@@ -92,7 +92,7 @@ impl AppModel {
     /// empty cwd, and a `ball ` row with no id. `None` is the truthful answer,
     /// and each surface already renders its own empty state for it.
     pub fn focused_join(&self) -> Option<&JoinRow> {
-        self.row_for(self.focus.ws.as_deref()?)
+        self.row_for(&self.focused_workspace()?)
             .filter(|r| !r.ball_id.is_empty())
     }
 
@@ -194,7 +194,10 @@ impl AppModel {
             bl: bl.clone(),
             state_root: self.state_root().to_path_buf(),
             yog_binary: std::env::current_exe().unwrap_or_default(),
-            world: crate::world::wall::env_opt(&self.roots.world, self.focused_workspace()),
+            world: crate::world::wall::env_opt(
+                &self.roots.world,
+                self.focused_workspace().as_deref(),
+            ),
             home: self.roots.home.clone(),
             yog_data_root: self.roots.yog_data.clone(),
             balls_state_root: self.balls_state_root(),

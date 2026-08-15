@@ -32,6 +32,11 @@ impl crate::AppModel {
         // pointer swap — so it is asked every frame, and free with nothing
         // pending.
         self.adopt_started();
+        // The §3.4 raise claim retires on its own noun's predicate (bl-7407):
+        // the derivation enumerating the wall the start founded. Asked here,
+        // ahead of the fold, so the painted snapshot never carries the same
+        // workspace twice.
+        self.adopt_raised();
         // Tell the follower which conversation is on screen and take whatever
         // it has folded since the last frame (§7.2 live tail). Both are one
         // lock and one compare, which is what a frame is allowed to cost.
@@ -40,14 +45,13 @@ impl crate::AppModel {
         // The one fold of derivation + the non-derived facts (§7.2), run only
         // when one of its inputs moved so the rendered `Arc` stays stable under
         // `SnapMemo`.
-        if landed || self.started != self.folded || followed != self.followed {
-            self.folded = self.started.clone();
+        if landed
+            || self.started != self.folded
+            || followed != self.followed
+            || self.raised != self.folded_raise
+        {
             self.followed = followed;
-            self.snap = echo::compose(
-                &self.derived,
-                self.started.as_ref(),
-                self.followed.as_deref(),
-            );
+            self.refold();
         }
         // The wire read path's one frame duty (REMOTE §1.2, bl-ae05): take the
         // answers the asker landed and tell it what this window is standing on
@@ -65,6 +69,26 @@ impl crate::AppModel {
         // elides a write whose bytes are unchanged.
         self.ack_focused();
         landed
+    }
+
+    /// **The §7.2 fold, run** (`echo::compose`) — with the three memos it keys
+    /// on brought up to date, so the rendered `Arc` stays stable while its
+    /// inputs are.
+    ///
+    /// A method rather than the tail of [`refresh`](Self::refresh) because the
+    /// §3.4 raise claim needs it a second time: the claim is taken on the frame
+    /// the receipt lands ([`adopt_workspace`](Self::adopt_workspace)), and a
+    /// claim the rest of that same frame cannot see is a claim the composer it
+    /// exists for would miss.
+    pub(super) fn refold(&mut self) {
+        self.folded = self.started.clone();
+        self.folded_raise = self.raised.clone();
+        self.snap = echo::compose(
+            &self.derived,
+            self.started.as_ref(),
+            self.followed.as_deref(),
+            self.raised.as_deref(),
+        );
     }
 
     /// Adopt an external `ui.json` change the worker read for us (§4.1, I5):

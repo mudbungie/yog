@@ -202,9 +202,10 @@ fn index_of(snap: &Snapshot, ws: &Path, target: &Target) -> Option<usize> {
 }
 
 /// **The one place the derivation and the non-derived facts meet** (§7.2): the
-/// snapshot a frame paints is the worker's, with the pending `echo` and the
-/// focused conversation's live `tail` folded in. Every render seat reads the
-/// result and none of them knows either exists.
+/// snapshot a frame paints is the worker's, with the pending `echo`, the
+/// focused conversation's live `tail` and the §3.4 `raised` wall
+/// ([`super::raise`]) folded in. Every render seat reads the result and none of
+/// them knows any of the three exists.
 ///
 /// The two are folded here rather than each somewhere convenient because that
 /// is the whole partition: **one function writes the painted snapshot**, so
@@ -220,13 +221,17 @@ pub(crate) fn compose(
     derived: &Arc<Snapshot>,
     echo: Option<&Echo>,
     tail: Option<&super::live::LiveTail>,
+    raised: Option<&Path>,
 ) -> Arc<Snapshot> {
-    if echo.is_none() && tail.is_none() {
+    if echo.is_none() && tail.is_none() && raised.is_none() {
         return Arc::clone(derived);
     }
     let mut snap = (**derived).clone();
     if let Some(tail) = tail {
         super::live::overlay(&mut snap, tail);
+    }
+    if let Some(ws) = raised {
+        super::raise::fold(&mut snap, ws);
     }
     let Some(echo) = echo else {
         return Arc::new(snap);
@@ -270,10 +275,10 @@ impl super::AppModel {
         rows: Vec<crate::nav::convs::ConvRow>,
         now_unix: i64,
     ) -> Vec<crate::nav::convs::ConvRow> {
-        let Some(ws) = self.focus.ws.as_deref() else {
+        let Some(ws) = self.focused_workspace() else {
             return rows;
         };
-        rows::with_echo(self.started.as_ref(), ws, rows, now_unix)
+        rows::with_echo(self.started.as_ref(), &ws, rows, now_unix)
     }
 }
 

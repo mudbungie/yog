@@ -1086,7 +1086,7 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9, bl-7407)
 
 Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
 transport questions settled. It could not move the read path, because §1.2 and
@@ -1357,6 +1357,50 @@ not a refactor, so it is its own ball. Note that it is **not** dissolved by
 migrating the tab bar: the engine resolves the same name against the same
 snapshot and refuses for the same reason.
 
+**Class 2's prerequisite landed, and the raise was answered by the claim
+(bl-7407).** `Focus::ws` is the §3.1 name — the wire spelling — `nav::tabs::Tab`
+carries no path at all, and `selected` compares names. The synchronous re-derive
+was refused: it puts a disk walk on the receipt path, and it is a special case
+where a general shape already exists.
+
+- **The claim is the §3.4 start claim's shape one noun up, and it is one
+  mechanism rather than two** (`src/app/raise.rs`). Same holder — per-instance
+  RAM on the model (§13.1) — same retirement predicate, *the derivation shows
+  it*, and the **same seam**: `echo::compose` is *"the one place snapshot and the
+  non-derived facts meet… a third such fact is a third argument here rather than
+  a third mechanism"*, and the raised wall is that third argument. The two stay
+  two *values* because a raise carries no message and a send raises no wall.
+  Every landed `Prepare` claims — the raise, ▶ Continue's own claimant wall, the
+  bootstrap — and a start into an enumerated workspace is simply the claim
+  retired the instant it is made, which is one rule instead of a raise/re-focus
+  branch. bl-9acf's invariant is held by
+  `app::balls::tests::prepare::a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung`
+  (the bare rung resolves into the wall just raised) and, end to end through the
+  real window, by `shell::acceptance::raise`.
+- **Folding beats resolving per door, and that is what keeps it one source.**
+  The claim is folded into the snapshot the frame paints, so `ws_path`, the tab
+  bar, the centre pane and the composer read the *same* enumerated set and none
+  of them knows a claim exists. It is retired ahead of the fold, so the painted
+  set can never carry one workspace twice — which matters, `by_leaf` refusing an
+  ambiguous name.
+- **The doors that still need a path are named and few**:
+  `AppModel::workspace_path` (the one resolver, `by_leaf` over the painted
+  enumeration — the engine's own rule, so the two directions cannot disagree),
+  `focused_workspace` above it, the pin toggle (`ui.json` keys pins by path,
+  durable state whose re-keying is its own migration, so `toggle_pin` takes a
+  name and resolves at the click), and the §3.6 delete dialog. `focus_agent`
+  keeps taking a path because the acknowledgement it writes is keyed by one and
+  the caller holds it already.
+- **Two things dissolved rather than moved.** `focused_ws_name` was a leaf
+  derivation off a held path and is now the focus verbatim; `startup_focus`
+  answers a name while still *ranking* by path, so §4.1's derived-path order is
+  unchanged.
+- **What this does not do**: the tab bar still paints from the in-process
+  enumeration. The refused shape — painting off a `Reply::Workspaces` while
+  joining each name back through the engine's own table — is now the only thing
+  standing between it and the wire, and the join is gone from the seat, so the
+  migration is scope.
+
 `Prepared::binding` stays named for the condition it always had (*once one seat's
 read path is the only read path*), which bl-44e9 does not reach — the composer's
 own reads are not migrated.
@@ -1398,8 +1442,9 @@ named rather than open.
   below.
 - ~~Config-frozen-at has no query~~ — **spelled, bl-13f9**, below.
 - ~~The Files preview reads its own two arms~~ — **dissolved, bl-13f9**, below.
-- **The workspace tab bar** (class 2), blocked on the raise's unenumerated focus
-  as recorded above.
+- **The workspace tab bar** (class 2) — ~~blocked on the raise's unenumerated
+  focus~~ **unblocked, bl-7407**: focus is a name and the raise holds a claim, so
+  what is left is the migration itself.
 - **The §9 config editors' own loads**, which were never one of the three classes
   (bl-f297's ruling: pointing them at `ReadConfig`/`Lineages`/`Models`/
   `Providers` changes what a config editor *is*, and is a separate design).

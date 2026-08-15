@@ -203,7 +203,7 @@ fn adopting_our_own_ui_json_echo_is_suppressed() {
     let (_c, mut model) = h.model();
     // Pin the real workspace (write-through to ui.json), then let the state
     // root fire.
-    let key = crate::nav::ws_key(&h.ws);
+    let key = crate::naming::leaf(&h.ws);
     model.toggle_pin(&key);
     model
         .dirty_handle()

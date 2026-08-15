@@ -146,7 +146,7 @@ fn nothing_focused_and_nothing_opened_are_the_same_empty_answer() {
     assert!(follower.pass(), "the tail retiring is news too");
     assert!(!follower.pass(), "and then there is nothing to say");
     // And leaving the conversation entirely is that same resting state.
-    rig.focus_workspace(&h.ws);
+    rig.focus_workspace(&crate::naming::leaf(&h.ws));
     rig.refresh();
     assert!(!follower.pass());
 }

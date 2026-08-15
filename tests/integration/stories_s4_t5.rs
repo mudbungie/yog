@@ -66,7 +66,7 @@ fn s4_t5_grouping_is_a_stable_partition_of_the_sorted_rows() {
         }),
         None,
     );
-    m.focus_workspace(&ws);
+    m.focus_workspace(&yog::naming::leaf(&ws));
 
     let flat = crate::support::conversation_rows(&m, 9000);
     let flat_ids: Vec<&str> = flat.iter().map(|r| r.root_id.as_str()).collect();

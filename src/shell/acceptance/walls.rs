@@ -65,7 +65,7 @@ fn two_spheres(screen: &Screen) -> (World, std::path::PathBuf, std::path::PathBu
     let a = world.ws.clone();
     let b = world.add_workspace("other", "c-2");
     world.converge();
-    world.model.focus_workspace(&a);
+    world.model.focus_workspace(&crate::naming::leaf(&a));
     screen.idle(&mut world);
     (world, a, b)
 }
@@ -114,7 +114,7 @@ fn an_unsaved_brazen_draft_survives_a_workspace_round_trip() {
 
     // Workspace B. Its own brazen pane paints — a different file, its own empty
     // draft — and A's unapplied text is nowhere on screen.
-    world.model.focus_workspace(&b);
+    world.model.focus_workspace(&crate::naming::leaf(&b));
     let under_b = screen.text(&mut world);
     assert!(
         under_b.contains("brazen config.toml"),
@@ -126,7 +126,7 @@ fn an_unsaved_brazen_draft_survives_a_workspace_round_trip() {
     );
 
     // Back to A: verbatim, because it never went anywhere.
-    world.model.focus_workspace(&a);
+    world.model.focus_workspace(&crate::naming::leaf(&a));
     let back = screen.text(&mut world);
     assert!(
         back.contains(DRAFT_A),
@@ -163,7 +163,7 @@ fn a_sign_in_stream_paints_only_under_the_wall_that_started_it() {
         "A's sign-in prints where it was started:\n{under_a}"
     );
 
-    world.model.focus_workspace(&b);
+    world.model.focus_workspace(&crate::naming::leaf(&b));
     let under_b = screen.text(&mut world);
     assert!(
         under_b.contains("Login (bz browser sign-in)"),
@@ -174,7 +174,7 @@ fn a_sign_in_stream_paints_only_under_the_wall_that_started_it() {
         "but A's authorize line is not on it — a device code is for one sphere:\n{under_b}"
     );
 
-    world.model.focus_workspace(&a);
+    world.model.focus_workspace(&crate::naming::leaf(&a));
     let back = screen.text(&mut world);
     assert!(
         back.contains(line),
@@ -202,7 +202,7 @@ fn a_picker_opened_in_one_wall_is_not_open_in_the_next() {
         "the picker pane is open on A:\n{under_a}"
     );
 
-    world.model.focus_workspace(&b);
+    world.model.focus_workspace(&crate::naming::leaf(&b));
     world.converge();
     let under_b = settle_for(&screen, &mut world, "work directory:");
     assert!(
@@ -218,7 +218,7 @@ fn a_picker_opened_in_one_wall_is_not_open_in_the_next() {
         "and none of what a pick would write:\n{under_b}"
     );
 
-    world.model.focus_workspace(&a);
+    world.model.focus_workspace(&crate::naming::leaf(&a));
     world.converge();
     let back = settle_for(&screen, &mut world, PICKER_SCOPE);
     assert!(
@@ -257,9 +257,9 @@ fn unmaking_a_workspace_unmakes_its_ram_too() {
     // What §3.6's fire does once the unmaking landed.
     world.state.forget_wall(&a);
 
-    world.model.focus_workspace(&b);
+    world.model.focus_workspace(&crate::naming::leaf(&b));
     screen.idle(&mut world);
-    world.model.focus_workspace(&a);
+    world.model.focus_workspace(&crate::naming::leaf(&a));
     let reborn = screen.text(&mut world);
     assert!(
         !reborn.contains(DRAFT_A),

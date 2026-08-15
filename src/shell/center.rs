@@ -44,7 +44,7 @@ pub(super) fn focus(model: &AppModel, state: &mut ShellState, tab: CenterTab) {
         // would be exactly the leak that ruling closed.
         state.focus_wall(Some(&model.start_workspace()));
         state.wall.brazen.open();
-        state.config.open(model.focused_workspace());
+        state.config.open(model.focused_workspace().as_deref());
     }
 }
 

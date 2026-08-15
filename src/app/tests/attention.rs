@@ -76,7 +76,7 @@ fn the_tick_holds_the_focused_agents_acknowledgement() {
 
     // The converse: look away (workspace focus acks nothing), and the next mark
     // to land raises the flag.
-    model.focus_workspace(&h.ws);
+    model.focus_workspace(&crate::naming::leaf(&h.ws));
     h.fx.mark_ref("refs/lernie/budget-exhausted/c-1");
     model.dirty_handle().mark_all([(h.ws.clone(), Mark::Watch)]);
     settle(&mut model, &clock);

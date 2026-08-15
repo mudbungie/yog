@@ -9,18 +9,17 @@
 
 use super::AppModel;
 use crate::binding::WorkspaceKind;
-use std::path::Path;
 
 impl AppModel {
-    /// The focused workspace's name — its path leaf (§3.1): the **target** an
-    /// Assign (`bl claim <id> --as <name>`) or a Move's claim stamps (§8.2/§3.2).
+    /// The focused workspace's name (§3.1): the **target** an Assign
+    /// (`bl claim <id> --as <name>`) or a Move's claim stamps (§8.2/§3.2).
     /// `None` when no workspace is focused (the affordance is then withheld).
+    ///
+    /// **The focus verbatim since bl-7407** — it holds the name — where it was
+    /// a leaf derivation off a held path. The derivation did not move, it
+    /// dissolved: one fact, one home.
     pub fn focused_ws_name(&self) -> Option<String> {
-        self.focus
-            .ws
-            .as_deref()
-            .and_then(Path::file_name)
-            .map(|s| s.to_string_lossy().into_owned())
+        self.focus.ws.clone()
     }
 
     /// The local **named** workspaces' names (§3.1), the Move affordance's target

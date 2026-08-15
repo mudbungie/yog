@@ -33,10 +33,7 @@ use super::ShellState;
 /// refused exactly where the button is disabled: no workspace, no selection, or
 /// an agent the §11 seat's own `stoppable` gate says is not stoppable.
 pub(super) fn stop_selected(model: &mut AppModel, state: &mut ShellState) {
-    let (Some(ws), Some(seat)) = (
-        model.focused_workspace().map(Path::to_path_buf),
-        model.focused_conversation(),
-    ) else {
+    let (Some(ws), Some(seat)) = (model.focused_workspace(), model.focused_conversation()) else {
         return;
     };
     // The gate the button paints is the gate this runs (REMOTE §9.4, bl-1eb0):
@@ -65,7 +62,7 @@ pub(super) fn stop_agent(model: &mut AppModel, ws: &Path, agent: &str, children:
 /// Flush the focused workspace's inbox — `lernie scan` (§8.2): the §11 `f`
 /// binding and the Scan button's one implementation.
 pub(super) fn scan_focused(model: &mut AppModel) {
-    let Some(ws) = model.focused_workspace().map(Path::to_path_buf) else {
+    let Some(ws) = model.focused_workspace() else {
         return;
     };
     scan_ws(model, &ws);

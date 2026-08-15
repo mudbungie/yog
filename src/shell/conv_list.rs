@@ -29,7 +29,7 @@ pub(super) fn conversations(
     state: &mut ShellState,
     lernie: &Cli,
 ) {
-    let Some(ws) = model.focused_workspace().map(std::path::Path::to_path_buf) else {
+    let Some(ws) = model.focused_workspace() else {
         ui.weak("no workspace yet — say the word");
         return;
     };

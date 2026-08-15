@@ -35,7 +35,7 @@ use crate::theme;
 /// section is a question ("is this broken?"), and the one thing worth saying is
 /// a refusal, which is said.
 pub fn section(ui: &mut egui::Ui, model: &mut AppModel) {
-    let Some(ws) = model.focused_workspace().map(std::path::Path::to_path_buf) else {
+    let Some(ws) = model.focused_workspace() else {
         return;
     };
     let question = codec::encode(&Gesture::Ask(Query::Clients {

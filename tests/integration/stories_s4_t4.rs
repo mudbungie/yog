@@ -68,7 +68,7 @@ fn s4_t4_conversation_badges_are_honest_about_what_the_join_knows() {
         }),
         None,
     );
-    m.focus_workspace(&ws);
+    m.focus_workspace(&yog::naming::leaf(&ws));
     // The closed listing is **on demand** (§5.1 #4) — never on the fetch cadence,
     // so at boot the dead set is empty and the delivered badge has nothing to
     // colour by. A landed `bl` verb is its one trigger, which is also the only

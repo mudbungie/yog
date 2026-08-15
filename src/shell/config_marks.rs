@@ -89,7 +89,7 @@ pub fn render(ui: &mut egui::Ui, model: &mut AppModel, pane: &mut MarksPane) {
         egui::RichText::new("task branch (this agent's balls space)")
             .color(crate::theme::integration_hue("bl")),
     );
-    let Some(workspace) = model.focused_workspace().map(Path::to_path_buf) else {
+    let Some(workspace) = model.focused_workspace() else {
         ui.weak("focus a workspace to read or amend the branch it tracks on");
         return;
     };

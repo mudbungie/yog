@@ -41,6 +41,9 @@ mod live;
 mod memo;
 mod ops;
 mod panels;
+/// The §3.4 raise claim (REMOTE §9.7 class 2, bl-7407): the wall a landed start
+/// founded, held until the derivation reads it.
+mod raise;
 /// One frame's model duty (§7.2) — split out of this root at §12's budget when
 /// the act path landed (bl-4841).
 mod refresh;
@@ -88,9 +91,17 @@ pub struct Args {
 /// mirrored). A focused workspace drives the center panel; a focused agent is
 /// the inspector target and the seen-acknowledgement subject (§6); `tab` is the
 /// selected §11 Altitude-2 inspector tab (sticky across focus changes).
+///
+/// **`ws` is the §3.1 NAME, not a path** (REMOTE §9.7 class 2, bl-7407): the
+/// wire spelling, so what this window is looking at is said the same way a
+/// gesture addresses it and a reply answers it. A path is resolved at the doors
+/// that need one — [`AppModel::focused_workspace`], the pin key, the §3.6
+/// delete seat — off the one enumeration
+/// ([`Snapshot::ws_path`](snapshot::Snapshot::ws_path)), never joined per paint
+/// against a second table.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Focus {
-    pub ws: Option<PathBuf>,
+    pub ws: Option<String>,
     pub agent: Option<String>,
     pub tab: InspectorTab,
 }
@@ -139,6 +150,18 @@ pub struct AppModel {
     /// retired by the single predicate that also spends the focus. Per-instance
     /// RAM (§13.1), like the focus it becomes.
     started: Option<echo::Echo>,
+    /// The §3.4 **raise claim** (REMOTE §9.7 class 2, bl-7407): the wall a
+    /// landed start just founded, held until the derivation enumerates it. The
+    /// start claim's own shape one noun up — an optimistic claim on a thing yog
+    /// made, held by what yog knows about it, retired by the derivation showing
+    /// it ([`AppModel::adopt_raised`]) and folded into the painted snapshot at the
+    /// one seam the echo is ([`echo::compose`]). Without it the focus names a
+    /// workspace no enumeration carries for one derivation, and the composer's
+    /// bare Enter resolves into the *previous* wall (bl-9acf).
+    raised: Option<PathBuf>,
+    /// Which raise [`snap`](Self::snap) was folded from — the fold's third
+    /// memo, beside [`folded`](Self::folded) and for its reason exactly.
+    folded_raise: Option<PathBuf>,
     /// The §7.2 **live tail** hand-off (bl-54f7): the frame asks this for the
     /// focused conversation every refresh and folds whatever the
     /// [`Follower`] has published. Purely display, under the
@@ -204,6 +227,8 @@ impl AppModel {
             identity_user: user,
             search: SearchCell::default(),
             started: None,
+            raised: None,
+            folded_raise: None,
             tail: TailCell::default(),
             followed: None,
             wire: crate::wire::link::Link::default(),

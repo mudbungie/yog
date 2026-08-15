@@ -54,7 +54,7 @@ fn opening_a_hit_is_the_selection_a_click_on_that_thing_would_have_made() {
     let (_c, mut model) = h.model();
 
     model.open(&Address::Workspace { path: h.ws.clone() });
-    assert_eq!(model.focused_workspace(), Some(h.ws.as_path()));
+    assert_eq!(model.focused_workspace(), Some(h.ws.clone()));
     assert!(model.focused_agent().is_none());
 
     model.open(&Address::Conversation {
@@ -94,7 +94,7 @@ fn a_ball_hit_routes_through_its_workspace_and_an_unheld_one_moves_nothing() {
         project: project.clone(),
         id: "bl-held".to_owned(),
     });
-    assert_eq!(model.focused_workspace(), Some(h.ws.as_path()));
+    assert_eq!(model.focused_workspace(), Some(h.ws.clone()));
 
     model.open(&Address::Ball {
         project,
@@ -102,7 +102,7 @@ fn a_ball_hit_routes_through_its_workspace_and_an_unheld_one_moves_nothing() {
     });
     assert_eq!(
         model.focused_workspace(),
-        Some(h.ws.as_path()),
+        Some(h.ws.clone()),
         "an unheld ball has no selection to route to, so nothing moves"
     );
 }

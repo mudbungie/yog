@@ -87,8 +87,11 @@ fn bare_target_is_the_focused_workspace_named_or_foreign() {
     assert_eq!(m.start_bare_inputs().workspace, w.ws_cobalt);
     // A foreign workspace is a real lernie workspace, so §3.4's "prompt into the
     // focused workspace" applies — its own path, never a redirect into yog's
-    // names root (the addendum-3 fix).
+    // names root (the addendum-3 fix). Really on disk, because the focus is a
+    // §3.1 name now and a name resolves against the enumeration (bl-7407) — a
+    // directory the walk never saw was never a state this could be in.
     let foreign = w.roots.lernie_data.join("workspaces/foreign");
+    std::fs::create_dir_all(foreign.join("repo.git")).unwrap();
     let (_c2, mf) = model_focused(&w, &foreign);
     assert_eq!(mf.start_bare_inputs().workspace, foreign);
 }
@@ -112,7 +115,7 @@ fn new_workspace_inputs_take_the_typed_name_over_any_focus() {
     // operator's own name under the names root, regardless of what is focused.
     let w = world();
     let (_c, mut m) = model(&w);
-    m.focus_workspace(&w.ws_cobalt);
+    m.focus_workspace(&crate::naming::leaf(&w.ws_cobalt));
     let inputs = m.new_workspace_inputs("ops");
     assert_eq!(
         inputs.workspace,
@@ -135,7 +138,7 @@ fn start_path_inputs_carries_the_path_payload_at_the_focused_target() {
     // STORIES S2 path rung: the optional work directory, on the focused target.
     let w = world();
     let (_c, mut m) = model(&w);
-    m.focus_workspace(&w.ws_cobalt);
+    m.focus_workspace(&crate::naming::leaf(&w.ws_cobalt));
     let inputs = m.start_path_inputs(std::path::Path::new("/work/here"));
     assert_eq!(inputs.workspace, w.ws_cobalt);
     let Payload::Path { dir } = inputs.payload else {
@@ -198,7 +201,7 @@ fn focused_ws_name_is_the_focused_leaf_else_none() {
     // The Assign/Move target name (§8.2/§3.2): the focused workspace's leaf.
     let w = world();
     let (_c, mut m) = model(&w);
-    m.focus_workspace(&w.ws_cobalt);
+    m.focus_workspace(&crate::naming::leaf(&w.ws_cobalt));
     assert_eq!(m.focused_ws_name(), Some("cobalt".to_owned()));
     let (_root, empty) = empty_model();
     assert_eq!(empty.focused_ws_name(), None, "no focus ⇒ no target");
