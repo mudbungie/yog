@@ -19,10 +19,13 @@ struct Echo {
 }
 
 impl Answerer for Echo {
-    fn answer(&self, request: Value) -> Vec<Value> {
+    fn answer(&self, client: &Client, request: Value) -> Vec<Value> {
         self.asked.fetch_add(1, Ordering::Relaxed);
         (0..self.chunks)
-            .map(|n| json!({"ok": true, "kind": "echo", "seq": n, "asked": request}))
+            .map(|n| {
+                json!({"ok": true, "kind": "echo", "seq": n,
+                       "asked": request, "client": client.name()})
+            })
             .collect()
     }
 }
@@ -227,4 +230,25 @@ fn unusable_material_refuses_before_binding() {
         )
         .is_err()
     );
+}
+
+/// **The connection carries an identity** (REMOTE §2, §4; bl-8bbc): the
+/// answerer is handed the certificate's own leaf name, which is what the engine
+/// resolves registrations against. `make wire-certs` mints `yog-client`.
+#[test]
+fn the_answerer_is_handed_the_certificates_leaf_name() {
+    let (_tmp, _listener, seat, _asked) = wired(1);
+    let stream = seat.ask(&json!({"op": "workspaces"})).expect("answered");
+    assert_eq!(stream[0]["client"], "yog-client");
+}
+
+/// A chain that names no usable identity is no connection at all: no chain, an
+/// empty one, a leaf with no common name, and a leaf claiming the reserved
+/// `local` name every in-world caller owns.
+#[test]
+fn a_chain_naming_no_usable_identity_is_nobody() {
+    assert!(peer_client(None).is_none());
+    assert!(peer_client(Some(&[])).is_none());
+    let nameless = CertificateDer::from(vec![0x30, 0x00]);
+    assert!(peer_client(Some(&[nameless])).is_none());
 }

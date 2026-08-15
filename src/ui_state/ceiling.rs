@@ -16,7 +16,7 @@ impl UiState {
     /// The §3.5 spend ceiling. Absent, or of the wrong shape, reads as *no
     /// ceiling* — deleting the key deletes the gate, not a code path.
     pub fn ceiling(&self) -> crate::spend::Ceiling {
-        crate::spend::Ceiling::from_json(self.root.get(CEILING))
+        crate::spend::Ceiling::from_json(self.world.root.get(CEILING))
     }
 }
 

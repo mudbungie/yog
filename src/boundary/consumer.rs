@@ -18,7 +18,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use super::consume::{consume, run_value};
+use super::consume::{consume, run_gesture, run_value};
 use super::deposit;
 use super::dispatch::Deps;
 use serde_json::Value;
@@ -55,26 +55,61 @@ impl ConsumerCtx {
         if deposit::pending(&self.state_root).is_empty() {
             return 0;
         }
-        let (deps, ts, now_unix) = self.deps();
+        let (deps, ts, now_unix) = self.deps(None);
         let mut ui = UiState::open(self.ui_path.clone());
         consume(&deps, &mut ui, &ts, now_unix)
     }
 
-    /// One gesture envelope, answered where a deposit is answered. **This is
-    /// the wire's whole engine-side surface** (REMOTE §3, §9.5; bl-b6fa): a
-    /// connection reads a frame and calls this, so the listener is a second
-    /// intake to the same chokepoints and never a second implementation.
+    /// One gesture envelope, answered where a deposit is answered — **for an
+    /// in-world caller**, which is unscoped (REMOTE §3: the inbox is the
+    /// world's own residents' door, and they hold no certificate).
     pub fn answer(&self, request: &Value) -> Value {
-        let (deps, ts, now_unix) = self.deps();
+        let (deps, ts, now_unix) = self.deps(None);
         let mut ui = UiState::open(self.ui_path.clone());
         run_value(&deps, &mut ui, &ts, now_unix, request)
     }
 
-    /// The per-gesture [`Deps`] both intakes build — freshly against whatever
-    /// the worker has published, with this moment's stamp beside it.
-    fn deps(&self) -> (Deps, String, i64) {
+    /// The same gesture, answered **for a wire client** (REMOTE §4, bl-8bbc):
+    /// the world narrowed to that client's registrations, and that client's own
+    /// pane document (§7) beside the shared one.
+    ///
+    /// **Auto-registration on create needs no create-detection.** Under scope a
+    /// gesture can name only a workspace the client is registered in — or one
+    /// it just founded, which is the single case
+    /// [`ws_path`](crate::app::Snapshot::ws_path) could not resolve and the
+    /// raise founded anyway. So a *successful* answer naming a workspace
+    /// outside the scope is, by construction, a creation, and registering it is
+    /// the general path rather than a branch: §4's "a workspace created over
+    /// the wire auto-registers its creating client", with nothing to detect.
+    pub fn answer_as(&self, client: &crate::registry::Client, request: &Value) -> Value {
+        let scope = crate::registry::registered(&self.state_root, client);
+        let (deps, ts, now_unix) = self.deps(Some(&scope));
+        let mut ui = UiState::open_at(
+            self.ui_path.clone(),
+            crate::registry::pane(&self.state_root, client),
+        );
+        let Ok(gesture) = super::codec::decode(request) else {
+            return run_value(&deps, &mut ui, &ts, now_unix, request);
+        };
+        let named = gesture.workspace();
+        let answered = run_gesture(&deps, &mut ui, &ts, now_unix, &gesture);
+        if let Some(name) = named
+            && answered.get("kind").is_some()
+            && !scope.contains(&name)
+        {
+            let _ = crate::registry::register(&self.state_root, client, &name);
+        }
+        answered
+    }
+
+    /// The per-gesture [`Deps`] every intake builds — freshly against whatever
+    /// the worker has published, with this moment's stamp beside it. `scope`
+    /// is the REMOTE §4 narrowing: `None` for an in-world caller, the client's
+    /// registered workspace names for a connection.
+    fn deps(&self, scope: Option<&std::collections::BTreeSet<String>>) -> (Deps, String, i64) {
         let ts = self.clock.stamp();
         let now_unix: i64 = ts.parse().unwrap_or(0);
+        let published = crate::state::latest_snapshot(&self.cell);
         let deps = Deps {
             lernie: self.lernie.clone(),
             bl: self.bl.clone(),
@@ -84,7 +119,14 @@ impl ConsumerCtx {
             home: self.home.clone(),
             yog_data_root: self.yog_data_root.clone(),
             balls_state_root: self.balls_state_root.clone(),
-            snapshot: crate::state::latest_snapshot(&self.cell),
+            // **The one filter** (REMOTE §4): scoping is a narrowing of the
+            // published derivation, so every enumeration answers the registered
+            // set and every resolution refuses an unregistered name in the same
+            // words a name nobody founded earns. Absence, never a scope error.
+            snapshot: match scope {
+                Some(allowed) => Arc::new(published.scoped(allowed)),
+                None => published,
+            },
             // No held preview to agree with headlessly — any seed is a fair
             // mint draw; the ts keeps successive passes distinct.
             mint_seed: content_hash(ts.as_bytes()),

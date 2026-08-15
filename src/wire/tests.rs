@@ -8,7 +8,7 @@ use tempfile::TempDir;
 struct Silent;
 
 impl server::Answerer for Silent {
-    fn answer(&self, _request: Value) -> Vec<Value> {
+    fn answer(&self, _client: &crate::registry::Client, _request: Value) -> Vec<Value> {
         vec![json!({"ok": true})]
     }
 }

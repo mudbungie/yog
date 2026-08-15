@@ -94,7 +94,8 @@ impl UiState {
     /// all read as never-dragged (the forgiving read, §4.1). The default and
     /// the floor are the model's fold, not this accessor's: one home each.
     pub fn panel_size(&self, panel: Panel) -> Option<f32> {
-        self.root
+        self.pane
+            .root
             .get(PANELS)
             .and_then(Value::as_object)
             .and_then(|m| m.get(panel.key()))
@@ -107,9 +108,9 @@ impl UiState {
     /// the document's bytes churn without moving anything the eye can see.
     pub fn set_panel_size(&mut self, panel: Panel, size: f32) {
         let snapped = f64::from(size).round();
-        let slot = descend(&mut self.root, PANELS.to_string());
+        let slot = descend(&mut self.pane.root, PANELS.to_string());
         slot.insert(panel.key().to_string(), Value::from(snapped));
-        self.save();
+        self.pane.save();
     }
 }
 

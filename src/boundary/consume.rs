@@ -76,15 +76,32 @@ pub(crate) fn run_value(
     parsed: &Value,
 ) -> Value {
     match codec::decode(parsed) {
-        Ok(Gesture::Act(action)) => match dispatch(deps, ui, ts, &action) {
-            Ok(r) => reply::encode(&r),
-            Err(e) => reply::refusal(&e),
-        },
-        Ok(Gesture::Ask(query)) => match answer::answer(&query, deps, ui, now_unix) {
-            Ok(r) => reply::encode(&r),
-            Err(e) => reply::refusal(&e),
-        },
+        Ok(gesture) => run_gesture(deps, ui, ts, now_unix, &gesture),
         Err(e) => reply::refusal(&e),
+    }
+}
+
+/// One **decoded** gesture, run to its reply value — the chokepoint pair
+/// themselves, with the decode lifted out. Split from [`run_value`] by bl-8bbc
+/// so the wire's scoped intake can read the gesture's address
+/// ([`Gesture::workspace`](super::Gesture::workspace)) off the one decode
+/// rather than decoding a second time to ask.
+pub(crate) fn run_gesture(
+    deps: &Deps,
+    ui: &mut UiState,
+    ts: &str,
+    now_unix: i64,
+    gesture: &Gesture,
+) -> Value {
+    match gesture {
+        Gesture::Act(action) => match dispatch(deps, ui, ts, action) {
+            Ok(r) => reply::encode(&r),
+            Err(e) => reply::refusal(&e),
+        },
+        Gesture::Ask(query) => match answer::answer(query, deps, ui, now_unix) {
+            Ok(r) => reply::encode(&r),
+            Err(e) => reply::refusal(&e),
+        },
     }
 }
 

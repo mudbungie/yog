@@ -17,13 +17,21 @@ impl UiState {
     /// override (§4.1). Absent keys are left absent — the prune adds nothing to
     /// the document, so pruning a workspace that owned none writes nothing at all
     /// (the §4.1 content-hash elision).
+    /// **It spans both documents** (REMOTE §7, bl-8bbc): `seen` and `pinned`
+    /// are world facts and the collapse override is this seat's client's own,
+    /// so the unmake subtracts from each and saves each. Another client's pane
+    /// keeps its `ws:<path>` entry — a collapse override for a section that no
+    /// longer renders is inert by the §4.1 forgiving read, and readdir'ing
+    /// every registered client to delete an inert key would be a sweep buying
+    /// nothing.
     pub fn prune_workspace(&mut self, key: &str) {
-        if let Some(Value::Object(seen)) = self.root.get_mut("seen") {
+        if let Some(Value::Object(seen)) = self.world.root.get_mut("seen") {
             seen.remove(key);
         }
-        self.drop_from("pinned", key);
-        self.drop_from("collapsed", &format!("ws:{key}"));
-        self.save();
+        drop_from(&mut self.world.root, "pinned", key);
+        drop_from(&mut self.pane.root, "collapsed", &format!("ws:{key}"));
+        self.world.save();
+        self.pane.save();
     }
 
     /// Drop a deleted conversation's acknowledgement watermarks: `seen[key][id]`
@@ -32,23 +40,25 @@ impl UiState {
     /// hyphen boundary is load-bearing: `a-bb` is not pruned by `a-b`'s delete
     /// (a shared byte prefix is nothing, §2.3's whole-token rule).
     pub fn prune_agent(&mut self, key: &str, root: &str) {
-        if let Some(Value::Object(seen)) = self.root.get_mut("seen")
+        if let Some(Value::Object(seen)) = self.world.root.get_mut("seen")
             && let Some(Value::Object(by_agent)) = seen.get_mut(key)
         {
             let prefix = format!("{root}-");
             by_agent.retain(|id, _| id != root && !id.starts_with(&prefix));
         }
-        self.save();
+        self.world.save();
     }
+}
 
-    /// Remove `value` from the string array at `field`, leaving an absent or
-    /// non-array field untouched (the forgiving read, §4.1).
-    fn drop_from(&mut self, field: &str, value: &str) {
-        let Some(Value::Array(arr)) = self.root.get_mut(field) else {
-            return;
-        };
-        arr.retain(|v| v.as_str() != Some(value));
-    }
+/// Remove `value` from the string array at `field` of `root`, leaving an absent
+/// or non-array field untouched (the forgiving read, §4.1). A free function
+/// rather than a method since the prune spans two documents: the borrow is of
+/// one map, not of the whole handle.
+fn drop_from(root: &mut serde_json::Map<String, Value>, field: &str, value: &str) {
+    let Some(Value::Array(arr)) = root.get_mut(field) else {
+        return;
+    };
+    arr.retain(|v| v.as_str() != Some(value));
 }
 
 #[cfg(test)]

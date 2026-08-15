@@ -43,11 +43,12 @@ const FOREIGN: &[&str] = &[
     // scanner is deliberately prefix-blind.
     "4.8", "4.9", "4.10", "4.11",
     // REMOTE.md's own rulings — §1.2 (one method, one channel), §1.3 (the
-    // channel is mTLS) and §1.4 (bootstrapping is out-of-channel) — always
-    // cited with their doc prefix ("REMOTE §1.4"), foreign here for the same
-    // reason VISION's are: the scanner is deliberately prefix-blind, and
-    // DESIGN §1 has no subsections at all (bl-b6fa).
-    "1.2", "1.3", "1.4",
+    // channel is mTLS), §1.4 (bootstrapping is out-of-channel) and §1.5 (the
+    // workspace is the trust domain, bl-8bbc) — always cited with their doc
+    // prefix ("REMOTE §1.4"), foreign here for the same reason VISION's are:
+    // the scanner is deliberately prefix-blind, and DESIGN §1 has no
+    // subsections at all (bl-b6fa).
+    "1.2", "1.3", "1.4", "1.5",
 ];
 
 /// Parse a section key (`digits`, optionally `.digits`) starting at `i`;

@@ -12,7 +12,7 @@ use tempfile::TempDir;
 struct Verdict(bool);
 
 impl Answerer for Verdict {
-    fn answer(&self, request: Value) -> Vec<Value> {
+    fn answer(&self, _client: &crate::registry::Client, request: Value) -> Vec<Value> {
         vec![json!({"ok": self.0, "kind": "echo", "asked": request})]
     }
 }

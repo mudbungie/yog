@@ -2,7 +2,7 @@
 
 Status: normative for the split; direction adopted by operator ruling
 2026-08-13 (bl-b9a2). §9 is the build sequence and each step lands under its
-own ball; steps 1–5 are in the tree. `docs/DESIGN.md` remains the
+own ball; steps 1–6 are in the tree. `docs/DESIGN.md` remains the
 architecture authority for the engine; this document governs the wire, the
 client, and the trust model. Where the two collide, DESIGN wins until DESIGN is
 amended. The same amendment doctrine applies here: prose is replaced, the ball
@@ -120,6 +120,72 @@ is a transport for that surface, not a vocabulary:
   distrust the certificate at the CA (per-client). A lost phone costs a
   certificate, never data — the client holds nothing durable (§6).
 
+### 4.1 The registry, as landed (bl-8bbc)
+
+**A registration is a file, and its existence is the fact.**
+
+```text
+<yog-state-root>/clients/<client>/pane.json          the §7 pane-of-glass facts
+<yog-state-root>/clients/<client>/workspaces/<name>   one empty file per registration
+```
+
+Registering writes the file, **revocation deletes it**, and the registered set
+is the directory listing — nothing stored that the path already says. It sits
+at yog's own state root beside `ui.json`, not under `wire/`: `wire/` holds what
+yog can never mint (§8) and this holds what only yog ever writes. The operator's
+bootstrap is therefore `mkdir -p` and `touch`, which is the same out-of-channel
+act §1.4 already requires for the certificates.
+
+**No gesture manages registrations, and none was added.** §3's ban is absolute
+— a capability that exists on the wire and nowhere else is forbidden — and the
+whole management surface here is the operator's own file acts, which are the
+same out-of-channel acts §1.4 already requires. Seating a *second* client in a
+workspace is one `touch`; de-scoping one is one `rm`. The read side is §5's
+client-management tool, and that belongs to step 7 with the advertisements it
+lists. Minting a boundary verb before that step would be a verb with one caller
+and no face.
+
+**The identity is the certificate's subject common name** (§2), read off the
+presented leaf by a structural DER walk — yog links no certificate library.
+A fingerprint would have been cheaper and wrong twice over: unreadable in a
+`clients/` listing, and changed by a renewal, silently de-scoping every
+registration the operator wrote. `local` is **reserved** for the window and
+every other in-world caller (§3), which hold no certificate but do own a pane
+document; a certificate claiming it is refused on the same rule that refuses
+`.` and `..`, so the reservation is one rule and not three special cases.
+
+**Scoping is one filter, not twenty checks.** The engine narrows the published
+derivation (`Snapshot::scoped`) to the client's registered workspaces before
+anything runs, at the same chokepoint §8's name resolution already stands at.
+That is what makes absence *structural*: the roster maps the narrowed set, and
+`ws_path` resolves over it, so an unregistered name earns the resolver's own
+`unknown workspace "x"` — the identical bytes a name nobody ever founded earns.
+There is no scope branch to write, so there is no scope error to leak. The
+narrowing is exactly the workspace-keyed facts, because §1.5 makes the workspace
+the whole trust domain and §11 keeps finer policy rejected.
+
+**Auto-registration needs no create-detection.** Under scope a gesture can name
+only a workspace the client is registered in — or one it just founded, which is
+the single case the resolver could not resolve and the raise founded anyway. So
+a *successful* answer naming a workspace outside the scope is, by construction,
+a creation, and seating the client in it is the general path rather than a
+branch.
+
+**The raise, and what it costs.** `Action::Prepare` names a workspace that need
+not exist: the resolution falls back to `<names-root>/<name>` (§3.1) and
+`Step::EnsureWorkspace` founds it — which is what the window has always done by
+handing `prepare` a path directly, and what no other seat could do while the
+resolution refused every name the enumeration lacked. It can only **found**,
+never join: a directory already at that path refuses with the resolver's own
+sentence, so a create is never a way into a workspace the scope hides.
+
+That refusal is the one place existence is observable to a scoped client, and
+the ruling is that this is acceptable and bounded: **a namespace with creation
+*by name* cannot also make a name's availability unknowable**, and §4 chose
+creation. What a collision reveals is that a name is taken. It reveals no
+workspace's contents, conversations, clients or registrations — everything §4
+makes absent stays absent.
+
 ## 5. Tools follow the client
 
 - **Advertisement is durable; presence is live.** (Amended by bl-bc7c; the
@@ -177,8 +243,8 @@ client loses nothing; the server's disk remains the single history.
 
 ## 7. Per-seat UI state
 
-`ui.json` today is one last-writer-wins document holding two kinds of fact.
-The split cuts along that line:
+`ui.json` was one last-writer-wins document holding two kinds of fact. The
+split cuts along that line:
 
 - **Facts about the world** — seen watermarks, pins, acks — are operator
   facts, shared across every seat: one document, as today. (Attention answered
@@ -186,6 +252,34 @@ The split cuts along that line:
 - **Facts about the pane of glass** — panel sizes, collapsed sets, view knobs
   — become per-client documents keyed by client identity, held server-side so
   the client stays stateless and any two seats of the same client converge.
+
+**As landed (bl-8bbc).** The world document stays exactly where it is,
+`<yog-state-root>/ui.json`, so the §7.2 worker's watch, the whole-file `adopt`
+and every external editor are untouched. The pane document is
+`<yog-state-root>/clients/<client>/pane.json` — §4.1's layout, because a pane
+document and a registration are both *this client's*, and one home for a client
+beats two. The pane path is **derived, never stored**: `ui.json` sits at the
+state root and `clients/` is its sibling.
+
+Which document owns which key:
+
+| Document | Keys | Why |
+|---|---|---|
+| world (`ui.json`) | `seen`, `pinned`, `identity_last_used`, `ceiling`, `prices` | assertions about the world, or operator policy over it. `identity_last_used` is the §3.2 name the operator last claimed a ball under — a thing they did to the world, and two seats claiming under different names is worse than converging. §10 keeps *whether a pin is a world or a pane fact* open; §7's default to world is kept. |
+| pane (`pane.json`) | `panels`, `collapsed`, `zoom`, the two transcript-density knobs, `notify_unfocused` | how one piece of glass is arranged. A phone that puts the roster away must not put it away on the desktop; a desktop notifier is a fact about a desktop. |
+
+**The local window is a client called `local`** (§4.1's reserved identity), and
+that is the whole of its spelling: it is not scoped — it is an in-world caller
+(§3) — but it owns a pane document like any other seat, so the window's panel
+sizes and the phone's are two documents from the first frame rather than one
+that grows a second reader later.
+
+Both documents are read through **one handle**, so which file owns a key is
+stated once, at that key's own accessor, and no caller knows there are two. The
+§3.6 unmake subtracts from both; another client's pane keeps its now-inert
+collapse override, because a collapse override for a section that no longer
+renders costs nothing and readdir'ing every client to delete one would be a
+sweep buying nothing.
 
 ## 8. Shape of the code
 
@@ -360,8 +454,10 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    transport, the framing, the certificate bootstrap, and `yog seat` — the
    wire's first shipped consumer. The deposit inbox remains for in-world
    callers (§3).
-6. **Registration and scoping:** the per-workspace registry, reply filtering,
-   auto-registration on create, per-seat `ui.json` split (§7).
+6. **Registration and scoping.** *(Landed, bl-8bbc — see §4.1, §7 and §9.6.)*
+   The per-workspace registry, the one scope filter that makes an unregistered
+   workspace absent, auto-registration on create, and the per-seat `ui.json`
+   split.
 7. **Tool hosts:** advertisement, rendering, routing, the lernie seam —
    after its own design pass (§5).
 
@@ -448,9 +544,7 @@ the larger half:
   *taxonomy* — paint may name only what a `Reply` can say — but the delivery is
   still an in-process derivation, and a window pointed at a foreign engine
   would have to derive a world it does not have.
-- Per-seat UI state (§7) is undivided: `ui.json` is still one document holding
-  both operator facts and pane-of-glass facts, so two seats of one client have
-  nowhere to converge.
+- ~~Per-seat UI state (§7) is undivided~~ — split by bl-8bbc (§7, §9.6).
 - The path-typed reply fields §8 lists as residual are still absolute paths —
   `Reply::Applied { file }`, `Reply::Marks { space }`, the worktree paths, and
   `Prepared::binding`. The transport that makes the distance real now exists,
@@ -459,11 +553,44 @@ the larger half:
   a chunked stream already (§3), so the live tail needs a query, not a wire
   change.
 
-Registration, scoping and reply filtering are deliberately **not** here: a
-connection is trusted at certificate grade this step, and per-workspace scoping
-is §9.6 (bl-8bbc). Until it lands, a valid client certificate sees the whole
-world — which is the correct posture for a one-operator box and the wrong one
-for the second human, exactly as §1.5 says.
+Registration, scoping and reply filtering were deliberately **not** here: a
+connection was trusted at certificate grade this step. §9.6 (bl-8bbc) closed
+that, and the per-seat `ui.json` bullet above with it — the two remaining
+residuals in this list are the read path and the path-typed reply fields.
+
+### 9.6 Registration and scoping, and what the trust domain still is not
+
+Landed (bl-8bbc): `src/registry/*` — the file-per-registration store, the
+reserved `local` identity, and the certificate → common-name walk;
+`Snapshot::scoped`, the one filter; `ConsumerCtx::answer_as`, the scoped
+chokepoint; the raise in `dispatch`; and the two-document `UiState`. The
+rulings live in §4.1 and §7 rather than in a ball body: the registry layout,
+the identity spelling, the one-filter scoping, auto-registration without
+create-detection, the raise-cannot-join rule and the existence-is-observable-at-
+creation ruling, plus §7's key-by-key split and the `local` window's spelling.
+
+**What the workspace-grade trust domain still is not.** §1.5 divides
+workspaces and nothing else, and the landing divides exactly the
+workspace-keyed facts. The **project** set, the balls projection, the §3.5 join
+and the `ops.jsonl` trail are world-wide and every registered client sees all of
+them. That is §11's standing rejection of per-tool and per-verb ACLs in force,
+not an oversight — a finer policy layer is speculative until a second human
+exists — but it is worth stating plainly, because "the workspace is the trust
+domain" reads like more isolation than it buys: a client registered in one
+workspace still reads the trail of every workspace.
+
+**Two residuals, named rather than papered over.**
+
+- **The window is not scoped, because the window is not a client yet.** It is
+  an in-world caller (§3) holding the engine it serves, so §9.5's larger
+  residual — the read path — is also what keeps the local seat outside the
+  registry. The window's *pane* is already a client document (`local`), which
+  is the half that could land ahead of it.
+- **A workspace name is a global namespace.** Creation refuses on a collision,
+  including with a workspace the creator cannot see, so two clients cannot both
+  hold a workspace called `home`. Per-client name spaces would dissolve it and
+  would also break §3.2's `--as` identity, which is the same leaf; the collision
+  refusal is the cheaper answer and §4.1 records what it discloses.
 
 ## 10. Open questions (living)
 
@@ -477,7 +604,8 @@ for the second human, exactly as §1.5 says.
 - The tool-advertisement schema (the exact shape of name/description/input
   schema). How availability is spelled is settled (§5, bl-bc7c): definitions
   frozen in the prefix, presence answered at invocation.
-- Whether pins are world facts or pane facts (§7 defaults them to world).
+- Whether pins are world facts or pane facts (§7 defaults them to world, and
+  bl-8bbc landed that default — moving a pin is one accessor, not a migration).
 - Certificate hygiene: lifetime, rotation cadence, whether the CA distrusts
   or registrations carry the whole revocation load.
 

@@ -23,6 +23,8 @@
 
 use super::frame;
 use super::material::Material;
+use crate::registry::Client;
+use rustls::pki_types::CertificateDer;
 use rustls::{ServerConfig, ServerConnection, StreamOwned};
 use serde_json::Value;
 use std::net::{TcpListener, TcpStream};
@@ -39,8 +41,14 @@ const ACCEPT_POLL: Duration = Duration::from_millis(20);
 /// What answers a request frame: the reply stream it becomes, one [`Value`] per
 /// frame. Today every answer is one element long; a follow-class read is the
 /// same signature with more of them (see [`frame`](super::frame)).
+///
+/// **`client` is the connection's authorization** (REMOTE §4, bl-8bbc): the
+/// identity read off the certificate the peer presented, which the engine
+/// resolves to the workspaces that client is registered in. It is a parameter
+/// rather than connection state because the answer is the only thing that ever
+/// needs it, and a field would be a second copy of what the certificate says.
 pub trait Answerer: Send + Sync {
-    fn answer(&self, request: Value) -> Vec<Value>;
+    fn answer(&self, client: &Client, request: Value) -> Vec<Value>;
 }
 
 /// The listener thread. Owns its join handle and a stop flag; [`Drop`] signals
@@ -123,7 +131,17 @@ pub(crate) fn serve(tcp: TcpStream, config: &Arc<ServerConfig>, answerer: &dyn A
     };
     let mut tls = StreamOwned::new(conn, tcp);
     while let Ok(Some(request)) = frame::read_value(&mut tls) {
-        for chunk in answerer.answer(request) {
+        // **The identity is derived per request, not held** (REMOTE §4,
+        // bl-8bbc): the handshake completes inside the first read, so there is
+        // no earlier moment to read a certificate at, and re-reading it is a
+        // DER walk over bytes already in memory. A peer whose certificate
+        // carries no name yog can use is dropped without a reply, on exactly
+        // the terms an unauthenticated peer is — a connection that cannot be
+        // authorized gets nothing said to it.
+        let Some(client) = peer_client(tls.conn.peer_certificates()) else {
+            return;
+        };
+        for chunk in answerer.answer(&client, request) {
             if frame::write_value(&mut tls, &chunk).is_err() {
                 return;
             }
@@ -132,6 +150,15 @@ pub(crate) fn serve(tcp: TcpStream, config: &Arc<ServerConfig>, answerer: &dyn A
             return;
         }
     }
+}
+
+/// The client identity a presented chain names (REMOTE §2): the **leaf's**
+/// subject common name. The leaf is the first certificate — TLS sends the end
+/// entity first and the chain toward the anchor after it, so the issuer's own
+/// common name is never mistaken for the peer's.
+pub(crate) fn peer_client(chain: Option<&[CertificateDer<'_>]>) -> Option<Client> {
+    let name = crate::registry::leaf::common_name(chain?.first()?)?;
+    Client::parse(&name).ok()
 }
 
 #[cfg(test)]
