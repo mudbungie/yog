@@ -1,20 +1,22 @@
 //! The activity accessory (§11): the demoted ops pane, a collapsed bottom
 //! chip that expands on demand to the `ops.jsonl` tail — never inline rows in
 //! conversation space. Coverage-excluded glue: the chip counts
-//! ([`AppModel::activity`]) are a tested view-model; this file only wires the
+//! ([`crate::opslog::activity`]) are a tested fold; this file only wires the
 //! collapsing header and the two verbs over the trail itself
 //! ([`AppModel::ack_failures`] / [`AppModel::clear_trail`], bl-c417 — both
 //! tested, both `ops.jsonl` writes rather than widget state).
 //!
-//! **The rows come over the wire** (REMOTE §1.2 and its read-path residual;
-//! bl-adcb). The expanded
+//! **The chip and the rows are one answer** (REMOTE §1.2 and its read-path
+//! residual; bl-adcb, bl-296f). The expanded
 //! trail is a `Reply::Ops` that crossed loopback mTLS and was decoded by
 //! `reply::decode`, exactly as the clients section beside it is (bl-ae05): the
 //! window is a client of its own engine, so the tail it paints is the tail the
 //! boundary answers, asked once per [`asker`](crate::wire::asker) pass rather
 //! than derived per frame. There is nothing left to memoize — an answer *is*
-//! the cached read — and there is no in-process accessor either, the model's
-//! `ops_rows` having gone with the derivation.
+//! the cached read — and there is no in-process accessor either: `ops_rows`
+//! went with the derivation (bl-adcb), and `activity`/`has_alarms` went with
+//! the chip (bl-296f), which used to summarize the window's own snapshot while
+//! the rows under it came off the wire — two readings of one tail.
 //!
 //! **The frame never waits**, so a trail opened on the frame that first asked
 //! paints its rows one cadence period later; until then it is honestly empty,
@@ -44,23 +46,25 @@ pub fn accessory(ui: &mut egui::Ui, model: &mut AppModel, open: &mut bool) {
     {
         ui.colored_label(theme::ICHOR, note);
     }
-    // **Asked only while the pane is open** (REMOTE §1.2): a question is keyed
-    // by its own envelope, so a collapsed trail simply stops declaring one and
-    // the asker drops it — no unsubscribe, and a chip nobody expanded costs the
-    // wire nothing. The bound is the log's own ([`OPS_TAIL`]), never a second
-    // number this seat picked.
-    let trail = if *open {
-        super::wire::ask(model, Query::Ops { max: OPS_TAIL }, |reply| match reply {
-            Reply::Ops(rows) => Some(rows),
-            _ => None,
-        })
-    } else {
-        super::wire::Landed::default()
-    };
+    // **One question, both surfaces** (bl-296f). The chip's counts used to be
+    // an in-process fold over the window's own snapshot while the rows beside
+    // them came over the wire, so the summary and the trail it summarized were
+    // two readings of one tail. `activity` is a pure fold over the rows
+    // (`opslog::activity`), so the chip is now folded off the *answer* — which
+    // means the question stands whenever the chip paints, which is every frame.
+    // The collapsed pane costs the wire nothing extra: the ask is keyed by its
+    // own envelope, so opening the trail asks nothing new.
+    //
+    // The bound is the log's own ([`OPS_TAIL`]), never a second number this
+    // seat picked.
+    let trail = super::wire::ask(model, Query::Ops { max: OPS_TAIL }, |reply| match reply {
+        Reply::Ops(rows) => Some(rows),
+        _ => None,
+    });
     let rows: Vec<OpRow> = trail.value.unwrap_or_default();
     let refused = trail.refused;
-    let summary = model.activity();
-    let heading = if summary.errors > 0 || summary.drifts > 0 {
+    let summary = crate::opslog::activity(&rows);
+    let heading = if summary.alarming() {
         egui::RichText::new(summary.chip()).color(theme::ICHOR)
     } else {
         egui::RichText::new(summary.chip()).weak()
@@ -69,7 +73,7 @@ pub fn accessory(ui: &mut egui::Ui, model: &mut AppModel, open: &mut bool) {
         .id_salt("activity-accessory")
         .open(Some(*open))
         .show(ui, |ui| {
-            trail_controls(ui, model);
+            trail_controls(ui, model, summary);
             // §11 tail idiom: `ops.jsonl` is chronological, so the newest op is
             // the bottom row and the trail opens on it — the newest line on the
             // bottom edge whether the trail is two ops or two hundred.
@@ -106,7 +110,8 @@ pub fn accessory(ui: &mut egui::Ui, model: &mut AppModel, open: &mut bool) {
 }
 
 /// The expanded pane's two verbs over the trail itself (bl-c417): **Dismiss**,
-/// offered only while something is actually alarming ([`AppModel::has_alarms`] —
+/// offered only while something is actually alarming
+/// ([`Activity::alarming`](crate::opslog::Activity::alarming) —
 /// a control that would write a line and change nothing should not be there),
 /// and **Clear trail**.
 ///
@@ -116,10 +121,10 @@ pub fn accessory(ui: &mut egui::Ui, model: &mut AppModel, open: &mut bool) {
 /// frame can end a trail. Each explains itself on hover (bl-68ac), and the
 /// words come from `opslog::operator` so the banner's Dismiss and this one are
 /// spelled once.
-fn trail_controls(ui: &mut egui::Ui, model: &mut AppModel) {
+fn trail_controls(ui: &mut egui::Ui, model: &mut AppModel, summary: crate::opslog::Activity) {
     use crate::opslog::operator;
     ui.horizontal(|ui| {
-        if model.has_alarms()
+        if summary.alarming()
             && ui
                 .small_button(operator::ACK_LABEL)
                 .on_hover_text(operator::ACK_HOVER)

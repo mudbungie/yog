@@ -40,7 +40,7 @@ fn the_raised_wall_resolves_before_the_derivation_reads_it() {
             .is_some_and(|t| t.agents.is_empty()),
         "and the centre pane paints an empty workspace, not a blank frame"
     );
-    let bar = rig.model.tab_bar();
+    let bar = rig.tab_bar();
     assert!(
         bar.tabs
             .iter()
@@ -96,4 +96,37 @@ fn a_start_into_an_enumerated_workspace_claims_nothing() {
         "nothing was folded: the derivation already showed it"
     );
     assert_eq!(rig.model.focused_workspace(), Some(h.ws.clone()));
+}
+
+/// The claim's **row** projection (bl-296f), and the one thing it protects: the
+/// §11 tab bar folds an answered listing now, and an answer that reaches the
+/// seat *after* the derivation caught up — the asker's cadence is not the
+/// frame's — must not put the wall in twice. `by_leaf` refuses an ambiguous
+/// name, so a duplicated row would stop the focus resolving at the very moment
+/// the world agreed with it.
+#[test]
+fn the_claim_never_doubles_a_wall_the_answer_already_carries() {
+    let mut h = Harness::new();
+    let (_c, mut rig) = h.model();
+    let raised = h.mint_named("ops", "c-9");
+    rig.model.adopt_workspace(&raised);
+
+    // The listing as it stands with the derivation still behind: one row for
+    // the claim, minted here because nothing else carries the wall.
+    let claimed = crate::test_support::chrome::ws_rows(&rig.model);
+    assert_eq!(
+        claimed.iter().filter(|r| r.workspace == "ops").count(),
+        1,
+        "the claim leads the wall into the listing"
+    );
+
+    // The same claim against an answer that already enumerates the wall — the
+    // ordinary shape of a landed answer newer than the last retirement pass.
+    let answered = rig.model.raised_rows(claimed.clone());
+    assert_eq!(
+        answered.iter().filter(|r| r.workspace == "ops").count(),
+        1,
+        "and adds nothing to a listing that already has it"
+    );
+    assert_eq!(answered.len(), claimed.len(), "no row moved either");
 }

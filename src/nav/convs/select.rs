@@ -44,10 +44,14 @@ use crate::nav::convs::Flight;
 /// what the conversation is called, what is in flight in it, and the three gates
 /// the composer's verbs read.
 ///
-/// Every field is [`AgentView`](crate::boundary::answer::agent::AgentView)'s
-/// under the same name — the parity is pinned in
-/// `boundary::answer::agent::tests`, so the two projections of one derivation
-/// cannot come to disagree.
+/// Every field but [`ball`](Self::ball) is
+/// [`AgentView`](crate::boundary::answer::agent::AgentView)'s under the same
+/// name — the parity is pinned in `boundary::answer::agent::tests`, so the two
+/// projections of one derivation cannot come to disagree. `ball` has no twin
+/// on purpose: it is the **row's** own field (bl-296f), carried by the forest
+/// since the §11 list has always painted it, so pushing a second copy onto the
+/// per-agent answer would mint exactly the disagreement that test exists to
+/// prevent.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Selection {
     /// The agent asked about — echoed back, so a seat holding this needs
@@ -75,6 +79,17 @@ pub struct Selection {
     pub stoppable: bool,
     /// Whether the `+children` cascade is offered beside it.
     pub stop_children: bool,
+    /// **The conversation's start-flow ball** (§3.3/§3.5, bl-296f): the root
+    /// row's own [`ConvBall`] — the goal stamp resolved through the §3.5 join —
+    /// which the §11 header paints under the name. `None` for a bare or
+    /// hand-typed conversation and for an id this forest does not carry.
+    ///
+    /// It lands in the frame the selection changes rather than an ask period
+    /// later, which is why it is folded here and not asked for: the header's
+    /// ball line sits directly under the name, and a line that arrived half a
+    /// second after the title it belongs to would read as belonging to the
+    /// previous conversation.
+    pub ball: Option<crate::nav::convs::ConvBall>,
 }
 
 /// Read `agent_id`'s seat facts out of an answered forest. Pure and total: no
@@ -97,6 +112,7 @@ pub fn selection(rows: &[ConvRow], agent_id: &str) -> Selection {
         ),
         display_only: root_row.is_some_and(|r| r.name_display_only),
         flight: root_row.and_then(|r| r.flight),
+        ball: root_row.and_then(|r| r.ball.clone()),
         present: own.is_some(),
         stoppable: own.is_some_and(|r| r.stoppable),
         stop_children: own.is_some_and(|r| r.stop_children),

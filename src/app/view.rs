@@ -13,7 +13,6 @@ use super::Focus;
 use crate::binding::Workspace;
 use crate::binding::WorkspaceKind;
 use crate::git_tree::GitTree;
-use crate::nav;
 use std::path::Path;
 
 impl AppModel {
@@ -65,6 +64,16 @@ impl AppModel {
     #[cfg(test)]
     pub(crate) fn workspaces(&self) -> &[Workspace] {
         &self.snap.workspaces
+    }
+
+    /// **The `Query::Workspaces` answer** (bl-296f) — a test-only reader over
+    /// the **derivation** the chokepoint answers from, which is the one thing
+    /// `boundary::answer::answer` does for that query. The window asks it over
+    /// the wire; a test asks here, through `test_support::chrome`, and the two
+    /// cannot be two derivations because this is that one call.
+    #[cfg(test)]
+    pub(crate) fn ws_listing(&self) -> Vec<crate::boundary::reply::WsRow> {
+        crate::boundary::answer::ws_rows(&self.derived, &self.ui)
     }
 
     /// The frame→worker dirty hand-off (§7.2) — a test-only reader, so a test
@@ -148,42 +157,22 @@ impl AppModel {
     }
 }
 
-/// The derived projections a frame renders — the roster rollups, the tab
-/// bar, the conversation rows and the activity chip. Split out of
-/// `app/focus.rs` at the cap: those are *reads*, and focus.rs is the focus
+/// The derived projections a frame renders — what is left of them. Split out
+/// of `app/focus.rs` at the cap: those are *reads*, and focus.rs is the focus
 /// and seen-acknowledgement **state machine** (§6). Same surface, one home.
+///
+/// The §11 altitude-0 chrome that used to live here — the tab bar, the strip
+/// total, the activity chip's counts, the live mark's seats and the in-flight
+/// strip — is gone (bl-296f): every one of them is now a fold at the seat over
+/// an answer the boundary landed (`Query::Workspaces`, `Query::Ops`,
+/// `Query::Agent`), which is REMOTE §9.7's three-move discipline with the third
+/// move being a subtraction rather than a new question.
 impl AppModel {
     /// Per-workspace roster facts (§6 rollup): attention-bearing agent count,
     /// total agent count, and whether any agent is running (Live/InFlight). An
     /// unfetched workspace contributes zeros.
     pub fn workspace_stats(&self, ws: &Path) -> (usize, usize, bool) {
         crate::boundary::answer::workspace_stats(&self.snap, &self.ui, ws)
-    }
-
-    /// The §6 attention-strip total: attention-bearing agents across every
-    /// workspace.
-    pub fn strip_total(&self) -> usize {
-        self.snap
-            .workspaces
-            .iter()
-            .map(|w| self.workspace_stats(&w.path).0)
-            .sum()
-    }
-
-    /// The §11 workspace tab bar (pinned hoists + named tabs; foreign/replay in
-    /// the overflow), built from the classification + attention rollups + the
-    /// `ui.json` pin order.
-    pub fn tab_bar(&self) -> nav::tabs::TabBar {
-        let items: Vec<nav::tabs::Item> = self
-            .snap
-            .workspaces
-            .iter()
-            .map(|w| nav::tabs::Item {
-                ws: w.clone(),
-                attention: self.workspace_stats(&w.path).0,
-            })
-            .collect();
-        nav::tabs::build(&items, &self.ui.pinned(), self.focus.ws.as_deref())
     }
 
     /// The frame-side query chokepoint (§8.5): the same [`answer`]
@@ -210,47 +199,6 @@ impl AppModel {
             return Ok(crate::boundary::reply::Reply::Search(self.found()));
         }
         crate::boundary::answer::answer(query, deps, &self.ui, now_unix)
-    }
-
-    /// The §11 **bottom in-flight strip** for the open conversation (bl-905f):
-    /// the third seat of the one §5.1 #28 derivation, carrying the live
-    /// characteristics of what is running. `None` — no strip painted, no
-    /// repaint scheduled (§7.2) — whenever nothing is selected or nothing in
-    /// the selection's conversation is in flight.
-    /// `now_unix` is the caller's wall clock (the shell boundary mints it, as it
-    /// does for the list's ages), so the elapsed segment ticks per frame off the
-    /// snapshot's structural start with nothing stored (§5.1 #28).
-    pub fn flight_strip(&self, now_unix: i64) -> Option<nav::convs::FlightStrip> {
-        let agent = self.focus.agent.as_deref()?;
-        let tree = self.focused_tree()?;
-        let root = nav::convs::root_of(&tree.agents, agent)?;
-        nav::convs::strip(&tree.agents, &root, now_unix)
-    }
-
-    /// The §11 **live mark's** seats for the open conversation (§5.1 #28b): the
-    /// eye — the agent the operator is talking to — then its subagents in §2.3
-    /// descent order, each with what it is doing right now.
-    ///
-    /// Empty whenever nothing is selected, which is not a case the mark
-    /// branches on: no seats is every circle at rest, which is the logo.
-    pub fn mark_seats(&self) -> Vec<nav::convs::Seat> {
-        let Some(agent) = self.focus.agent.as_deref() else {
-            return Vec::new();
-        };
-        let Some(tree) = self.focused_tree() else {
-            return Vec::new();
-        };
-        let Some(root) = nav::convs::root_of(&tree.agents, agent) else {
-            return Vec::new();
-        };
-        nav::convs::seats(&tree.agents, &root)
-    }
-
-    /// The §11 activity-accessory summary over the cached ops tail — the
-    /// collapsed chip's counts, its ⚠ being the **live** failures only (§6's
-    /// retirement rule); the expansion renders the trail over the wire (`Query::Ops`).
-    pub fn activity(&self) -> crate::opslog::Activity {
-        crate::opslog::activity(&self.snap.ops)
     }
 
     /// Whether a left-panel section carries a persisted collapse override

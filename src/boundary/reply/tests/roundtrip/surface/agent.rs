@@ -5,16 +5,24 @@
 //! envelope of scalars, never a `rows` array.
 //!
 //! Two fixtures each, because every optional key on both payloads is
-//! absent-not-null: an agent wearing every §6 mark with a class in flight and
-//! one at rest wearing none (the arm where `marks` and `flight` are keys the
-//! encoder declines to write at all), and a governing config still standing at
+//! absent-not-null: an agent wearing every §6 mark with a class in flight, a
+//! full live mark and a strip, and one at rest wearing none (the arm where
+//! `marks`, `flight`, `seats` and `strip` are keys the encoder declines to
+//! write at all), and a governing config still standing at
 //! a lineage's tip beside the ordinary frozen one that has been left behind.
 
 use super::super::super::super::Reply;
 use crate::boundary::answer::agent::AgentView;
 use crate::config_edit::branch::GoverningConfig;
 use crate::git_tree::{AgentMark, AgentState};
-use crate::nav::convs::Flight;
+use crate::nav::convs::{Doing, Flight, FlightStrip, Seat};
+
+fn seat(name: &str, doing: Doing) -> Seat {
+    Seat {
+        name: name.to_owned(),
+        doing,
+    }
+}
 
 pub(super) fn agent() -> Vec<Reply> {
     vec![
@@ -44,6 +52,19 @@ pub(super) fn agent() -> Vec<Reply> {
             nudgeable: false,
             stoppable: true,
             stop_children: true,
+            // Every arm of the §5.1 #28b doing table, so a transposed token
+            // cannot pass here either.
+            seats: vec![
+                seat("pennant", Doing::Waiting),
+                seat("kid-a", Doing::Thinking),
+                seat("kid-b", Doing::Inference),
+                seat("kid-c", Doing::Tools),
+                seat("kid-d", Doing::Idle),
+            ],
+            strip: Some(FlightStrip {
+                class: Flight::Tools,
+                facts: "Bash · 5s".to_owned(),
+            }),
         }),
         Reply::Agent(AgentView {
             agent_id: "r-0".to_owned(),
@@ -60,6 +81,8 @@ pub(super) fn agent() -> Vec<Reply> {
             nudgeable: false,
             stoppable: false,
             stop_children: false,
+            seats: vec![],
+            strip: None,
         }),
         Reply::Governing(GoverningConfig {
             oid: "b".repeat(40),

@@ -25,6 +25,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             attention: 2,
             agents: 5,
             running: true,
+            pinned: Some(3),
         },
         WsRow {
             workspace: "f".into(),
@@ -32,6 +33,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             attention: 0,
             agents: 0,
             running: false,
+            pinned: None,
         },
         WsRow {
             workspace: "r".into(),
@@ -39,6 +41,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             attention: 0,
             agents: 1,
             running: false,
+            pinned: Some(0),
         },
     ];
     let v = encode(&Reply::Workspaces(rows));
@@ -57,6 +60,14 @@ fn workspace_rows_carry_the_classification_and_rollups() {
         "a foreign leaf names it just as well"
     );
     assert_eq!(rows[2]["kind"], "replay");
+    // The §4.1 pin rank (bl-296f): stated where there is one, **absent** where
+    // there is not — rank 0 is a real hoist and must not read as "unpinned".
+    assert_eq!(rows[0]["pinned"], 3);
+    assert!(rows[1].get("pinned").is_none(), "unpinned states nothing");
+    assert_eq!(
+        rows[2]["pinned"], 0,
+        "the first hoist is a rank, not a flag"
+    );
 }
 
 #[test]

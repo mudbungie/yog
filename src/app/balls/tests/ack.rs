@@ -48,7 +48,7 @@ fn an_ack_quiets_the_banners_and_the_chip_without_hiding_a_row() {
     assert!(m.last_failure(Origin::Conversation).is_some());
     assert_eq!(m.activity().errors, 2);
     assert_eq!(m.activity().drifts, 1);
-    assert!(m.has_alarms(), "and the pane offers its Dismiss");
+    assert!(m.activity().alarming(), "and the pane offers its Dismiss");
 
     m.ack_failures();
     m.tick();
@@ -63,7 +63,10 @@ fn an_ack_quiets_the_banners_and_the_chip_without_hiding_a_row() {
         0,
         "drift is an alarm too, and is acknowledged with the rest (§7.2)"
     );
-    assert!(!m.has_alarms(), "so the Dismiss control retires with them");
+    assert!(
+        !m.activity().alarming(),
+        "so the Dismiss control retires with them"
+    );
     assert_eq!(
         m.activity().total,
         4,
@@ -129,7 +132,7 @@ fn clear_leaves_a_one_row_trail_whose_row_is_the_clear() {
     assert!(!row.failed());
     assert_eq!(row.exit_label(), "exit 0");
     assert!(m.last_failure(Origin::Balls).is_none());
-    assert!(!m.has_alarms());
+    assert!(!m.activity().alarming());
     assert_eq!(m.activity().total, 1, "the chip counts the new trail only");
     assert_eq!(
         opslog::tail(m.state_root(), 64).len(),

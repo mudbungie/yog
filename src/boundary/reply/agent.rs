@@ -3,10 +3,11 @@
 //! seam [`search`](super::search) and [`queue`](super::queue) already take: one
 //! payload whose rows are its own vocabulary.
 //!
-//! The one token table this reply owns is the §6 **mark** set. The §5.1 agent
-//! state and the §11 flight class are the conversation list's already
-//! ([`rows`](super::rows)), read from there rather than restated — a second
-//! spelling of one vocabulary is the drift the round-trip test exists to catch.
+//! The token tables this reply owns are the §6 **mark** set and the §5.1 #28b
+//! **doing** set (bl-296f). The §5.1 agent state and the §11 flight class are
+//! the conversation list's already ([`rows`](super::rows)), read from there
+//! rather than restated — a second spelling of one vocabulary is the drift the
+//! round-trip test exists to catch.
 //!
 //! Absent-not-null throughout: an unmarked conversation carries no `marks` key
 //! and one at rest no `flight`, because a reader must never have to tell an
@@ -15,9 +16,10 @@
 use serde_json::{Map, Value, json};
 
 use crate::boundary::answer::agent::AgentView;
-use crate::boundary::codec::fields::{bool_of, opt, opt_val, pick, str_of, strings_of};
+use crate::boundary::codec::fields::{bool_of, list_of, opt, opt_val, pick, str_of, strings_of};
 use crate::control::hold::Held;
 use crate::git_tree::AgentMark;
+use crate::nav::convs::{Doing, FlightStrip, Seat};
 
 use super::rows::decode::{FLIGHTS, state_of};
 use super::rows::{flight_token, state_token};
@@ -29,6 +31,19 @@ const MARKS: [(&str, AgentMark); 5] = [
     ("conflicted", AgentMark::Conflicted),
     ("held", AgentMark::Held),
     ("abandoned", AgentMark::Abandoned),
+];
+
+/// The §5.1 #28b per-agent activity vocabulary — the live mark's whole
+/// alphabet, and the one place it is spelled for the wire. It is **not**
+/// [`FLIGHTS`]: that is the §5.1 #28 class of a *conversation*, and this is one
+/// agent's own state, of which the three model-call rungs fold into that
+/// class's `inference`.
+const DOINGS: [(&str, Doing); 5] = [
+    ("waiting", Doing::Waiting),
+    ("thinking", Doing::Thinking),
+    ("inference", Doing::Inference),
+    ("tools", Doing::Tools),
+    ("idle", Doing::Idle),
 ];
 
 /// The whole seat as one object: the identity it echoes back, the §3.3 name and
@@ -70,6 +85,30 @@ pub(super) fn reply(view: &AgentView) -> Value {
     map.insert("nudgeable".to_owned(), json!(view.nudgeable));
     map.insert("stoppable".to_owned(), json!(view.stoppable));
     map.insert("stop_children".to_owned(), json!(view.stop_children));
+    // The §11 live mark (bl-296f): one entry per agent in the conversation,
+    // named and with what it is doing. Absent for the resting mark, for this
+    // file's absent-not-null rule.
+    if !view.seats.is_empty() {
+        let seats: Vec<Value> = view
+            .seats
+            .iter()
+            .map(|seat| json!({ "name": seat.name, "doing": doing_token(seat.doing) }))
+            .collect();
+        map.insert("seats".to_owned(), json!(seats));
+    }
+    // The §11 in-flight strip (bl-296f): the class the §5.1 #28 vocabulary
+    // above already spells, and the live characteristics as the one rendered
+    // run the seat paints. The characteristics cross as **text** rather than as
+    // their segments because they are prose assembled by one derivation
+    // (`nav::convs::strip`) with per-segment omission rules of its own; a wire
+    // spelling of the parts would be a second place that decides what a strip
+    // says.
+    if let Some(strip) = &view.strip {
+        map.insert(
+            "strip".to_owned(),
+            json!({ "class": flight_token(strip.class), "facts": strip.facts }),
+        );
+    }
     Value::Object(map)
 }
 
@@ -96,7 +135,37 @@ pub(super) fn view_of(o: &Map<String, Value>) -> Result<AgentView, String> {
         nudgeable: bool_of(o, "nudgeable")?,
         stoppable: bool_of(o, "stoppable")?,
         stop_children: bool_of(o, "stop_children")?,
+        seats: opt(o, "seats", |o, k| list_of(o, k, seat_of))?.unwrap_or_default(),
+        strip: opt_val(o, "strip", strip_of)?,
     })
+}
+
+/// One live-mark seat, read back on the two keys the encoder writes.
+fn seat_of(v: &Value) -> Result<Seat, String> {
+    let o = v.as_object().ok_or("seat: not an object")?;
+    Ok(Seat {
+        name: str_of(o, "name")?,
+        doing: pick(o, "doing", &DOINGS)?,
+    })
+}
+
+/// The in-flight strip, read back on its class and its rendered characteristics.
+fn strip_of(v: &Value) -> Result<FlightStrip, String> {
+    let o = v.as_object().ok_or("strip: not an object")?;
+    Ok(FlightStrip {
+        class: pick(o, "class", &FLIGHTS)?,
+        facts: str_of(o, "facts")?,
+    })
+}
+
+fn doing_token(doing: Doing) -> &'static str {
+    match doing {
+        Doing::Waiting => "waiting",
+        Doing::Thinking => "thinking",
+        Doing::Inference => "inference",
+        Doing::Tools => "tools",
+        Doing::Idle => "idle",
+    }
 }
 
 /// The parked invocation, read back on lernie's own three keys.

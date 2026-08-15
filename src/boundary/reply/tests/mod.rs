@@ -73,6 +73,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             attention: 2,
             agents: 5,
             running: true,
+            pinned: None,
         },
         WsRow {
             workspace: "f".into(),
@@ -80,6 +81,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             attention: 0,
             agents: 0,
             running: false,
+            pinned: None,
         },
         WsRow {
             workspace: "r".into(),
@@ -87,6 +89,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             attention: 0,
             agents: 1,
             running: false,
+            pinned: None,
         },
     ];
     let v = encode(&Reply::Workspaces(rows));

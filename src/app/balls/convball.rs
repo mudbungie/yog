@@ -1,6 +1,11 @@
 //! The conversation↔ball join surface (§3.5): which balls a workspace has
-//! bound, the ball-grouped conversation list, and the per-conversation ball
-//! badge each row renders.
+//! bound.
+//!
+//! The **per-conversation** badge left with bl-296f: `conversation_ball` and the
+//! `resolve_conv_ball` behind it were a second read of a fact
+//! `Query::Conversations` has always answered on the row (`ConvRow::ball`), so
+//! the §11 header folds it off the landed forest through `Selection::ball` and
+//! the boundary's `answer::conv_ball` is the one derivation left.
 //!
 //! Split out of `app/balls.rs` at the cap. The parent owns the live `bl`
 //! projection — the fetch cadence, the join rebuild, the ops tail and the
@@ -63,30 +68,5 @@ impl AppModel {
     /// verbs stamp `--as` (§3.2). `None` when the workspace binds no such ball.
     pub fn bound_ball(&self, ws: &Path, id: &str) -> Option<crate::nav::BoundBall> {
         self.ws_balls(ws).into_iter().find(|b| b.id == id)
-    }
-
-    /// The ball a conversation `root_id` stamped in its `goal.md` (§3.3), resolved
-    /// through the §3.5 join — the header's ball (title/status, a link to ball
-    /// detail). `None` for a root with no stamp (bare/path) or one absent from the
-    /// focused tree. The covered derivation the header paints.
-    pub fn conversation_ball(&self, root_id: &str) -> Option<crate::nav::convs::ConvBall> {
-        let tree = self.snap.trees.get(&self.focused_workspace()?)?;
-        let id = tree
-            .agents
-            .iter()
-            .find(|a| a.agent_id == root_id)?
-            .goal_ball
-            .as_deref()?;
-        Some(self.resolve_conv_ball(id))
-    }
-
-    /// Resolve a conversation's goal-stamp ball `id` to its render facts (§3.3,
-    /// §3.5): the id always renders (source 1 — the stamp); the §3.5 join supplies
-    /// status/title/badge when a live or closed ball matches it here, else those
-    /// stay `None` (the project may be unfetched, or the id a stray). A pure read
-    /// over the cached join, so a per-conversation badge never re-lists `bl`.
-    /// `pub(crate)`: [`super::focus`]'s `conversations` closure resolves each row.
-    pub(crate) fn resolve_conv_ball(&self, id: &str) -> crate::nav::convs::ConvBall {
-        crate::boundary::answer::conv_ball(&self.snap, id)
     }
 }

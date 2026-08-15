@@ -6,17 +6,27 @@
 //! live behind the overflow menu rather than widening the wall row; pinning
 //! hoists one into the tabs. Pure over injected facts; the shell paints the
 //! [`TabBar`] and the `new` name form beside it.
+//!
+//! **It folds an answer; it derives nothing** (REMOTE §9.7 class 2, bl-296f).
+//! The bar is built out of [`WsRow`] — the `Query::Workspaces` reply, which has
+//! carried the §6 rollups since bl-6233 and the §4.1 pin *rank* since this ball
+//! — so the altitude-0 chrome is `nav::convs::visible`'s own shape one surface
+//! over: the derivation is the boundary's, the ordering and the folding are the
+//! seat's. It is the shape bl-7407 named as the one thing left between this bar
+//! and the wire, and the reason it was refused until now was the join it would
+//! have cost: painting off a reply while resolving each name back through the
+//! engine's own table is two sources for one fact. Nothing here resolves
+//! anything — a row arrives named, classified, counted and ranked.
 
-use crate::binding::{Workspace, WorkspaceKind};
-use crate::nav::ws_key;
+use crate::binding::WorkspaceKind;
+use crate::boundary::reply::WsRow;
 
-/// The per-workspace facts a tab is built from — derived by the caller
-/// ([`AppModel::tab_bar`](crate::AppModel::tab_bar)) from the classification +
-/// attention rollup.
-#[derive(Debug, Clone)]
-pub struct Item {
-    pub ws: Workspace,
-    pub attention: usize,
+/// The §6 attention-strip total (§11 altitude 0): attention-bearing agents
+/// across every workspace, summed off the **same answer** the bar beside it is
+/// built from — one standing question, two surfaces, and no chance of a strip
+/// that counts a workspace the tabs do not show.
+pub fn strip_total(rows: &[WsRow]) -> usize {
+    rows.iter().map(|r| r.attention).sum()
 }
 
 /// Which of the §3.1 kinds a tab stands for — [`WorkspaceKind`] without its
@@ -127,44 +137,38 @@ impl TabBar {
 /// listing it with `pinned` set — that is what makes the menu's ★ the visible
 /// pin/unpin toggle and the tab's context-menu unpin a mere accelerator (§11
 /// context-menu doctrine, which a menu-only unpin violated).
-pub fn build(items: &[Item], pinned: &[String], focused: Option<&str>) -> TabBar {
-    let mut tabs: Vec<Tab> = Vec::new();
-    for key in pinned {
-        if let Some(it) = items.iter().find(|it| ws_key(&it.ws.path) == *key) {
-            tabs.push(tab(it, focused, true));
-        }
-    }
-    let mut named: Vec<Tab> = items
+/// **A stale pin dissolves rather than being dropped** (bl-296f): a key naming
+/// no enumerated workspace ranks no row, so there is nothing here to skip.
+pub fn build(rows: &[WsRow], focused: Option<&str>) -> TabBar {
+    let mut hoisted: Vec<&WsRow> = rows.iter().filter(|r| r.pinned.is_some()).collect();
+    hoisted.sort_by_key(|r| r.pinned);
+    let mut tabs: Vec<Tab> = hoisted.iter().map(|r| tab(r, focused)).collect();
+    let mut named: Vec<Tab> = rows
         .iter()
-        .filter(|it| !is_pinned(it, pinned) && Kind::of(&it.ws.kind) == Kind::Named)
-        .map(|it| tab(it, focused, false))
+        .filter(|r| r.pinned.is_none() && Kind::of(&r.kind) == Kind::Named)
+        .map(|r| tab(r, focused))
         .collect();
     named.sort_by(|a, b| a.name.cmp(&b.name));
     tabs.extend(named);
-    let overflow = items
+    let overflow = rows
         .iter()
-        .filter(|it| Kind::of(&it.ws.kind) != Kind::Named)
-        .map(|it| tab(it, focused, is_pinned(it, pinned)))
+        .filter(|r| Kind::of(&r.kind) != Kind::Named)
+        .map(|r| tab(r, focused))
         .collect();
     TabBar { tabs, overflow }
 }
 
-fn is_pinned(it: &Item, pinned: &[String]) -> bool {
-    pinned.iter().any(|k| *k == ws_key(&it.ws.path))
-}
-
-/// Project one [`Item`] to a [`Tab`]. The name is the path leaf, which §3.1
-/// makes the workspace's identity — [`crate::naming::leaf`] is the one
-/// spelling of that, shared with the boundary's addressing so a tab and a
-/// gesture cannot disagree about what this workspace is called.
-fn tab(it: &Item, focused: Option<&str>, pinned: bool) -> Tab {
-    let name = crate::naming::leaf(&it.ws.path);
+/// Project one answered row to a [`Tab`]. The name is the row's own — §3.1's
+/// leaf, minted once at the boundary ([`crate::naming::leaf`]) and shared with
+/// the addressing every gesture uses, so a tab and a gesture cannot disagree
+/// about what this workspace is called.
+fn tab(row: &WsRow, focused: Option<&str>) -> Tab {
     Tab {
-        selected: focused == Some(name.as_str()),
-        name,
-        attention: it.attention,
-        pinned,
-        kind: Kind::of(&it.ws.kind),
+        selected: focused == Some(row.workspace.as_str()),
+        name: row.workspace.clone(),
+        attention: row.attention,
+        pinned: row.pinned.is_some(),
+        kind: Kind::of(&row.kind),
     }
 }
 

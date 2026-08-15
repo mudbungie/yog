@@ -108,20 +108,26 @@ fn stack(w: f32, h: f32) -> Vec<(&'static str, egui::Rect)> {
         .unwrap();
     super::inbox_composer::converge_ws(&mut world);
     let ctx = egui::Context::default();
-    let mut frame = || {
+    let mut frame = |world: &mut super::fixture::World| {
         let _ = ctx.run(crate::paint_probe::screen_sized(w, h), |ctx| {
             render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
         });
     };
     for _ in 0..5 {
-        frame();
+        frame(&mut world);
     }
+    // **The wire settled to a fixed point** (REMOTE §9.7's harness ruling): the
+    // in-flight strip's own subject is a field on `Query::Agent`'s answer since
+    // bl-296f, so a driver that only counted frames would census a window that
+    // had not been told what was in flight — and the band it exists to place
+    // would be missing for the transport's reason rather than the layout's.
+    world.drain(&mut frame);
     ctx.data_mut(|data| {
         for id in ORDER {
             data.remove::<egui::containers::panel::PanelState>(egui::Id::new(id));
         }
     });
-    frame();
+    frame(&mut world);
     seats(&ctx)
 }
 

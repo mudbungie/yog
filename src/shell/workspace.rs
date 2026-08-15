@@ -64,11 +64,16 @@ pub fn center(
     // ride the standing `Query::Agent` and land an ask period after the name
     // above them. A frame the engine has not answered wears no marks, which is
     // the same honest empty state the transcript below already paints.
-    let agent_marks = super::seat::detail(model, &ws, &agent_id)
-        .value
-        .map(|view| view.marks)
+    let detail = super::seat::detail(model, &ws, &agent_id).value;
+    let agent_marks = detail
+        .as_ref()
+        .map(|view| view.marks.clone())
         .unwrap_or_default();
-    header(ui, model, &ws, &seat);
+    // The live mark's seats ride the same landed answer (bl-296f) — one ask,
+    // two facts on it, and no second question for a mark that is about the very
+    // conversation the marks above are.
+    let live = detail.map(|view| view.seats).unwrap_or_default();
+    header(ui, model, &ws, &seat, &live);
     // The §6 marks the *focused* agent wears, said outright — this seat has the
     // room, and it is the one surface a jump-to-attention always lands on. It is
     // what answers "why was I sent here" after arriving acknowledged the signal:
@@ -142,7 +147,13 @@ pub fn center(
 /// is, so it stays on the identity side of the settings-seat ruling; what those
 /// balls have *spent* is a figure, and figures went to the bottom with the rest
 /// of the config-shaped rows ([`super::settings`], bl-2e18).
-fn header(ui: &mut egui::Ui, model: &AppModel, ws: &Path, seat: &Selection) {
+fn header(
+    ui: &mut egui::Ui,
+    model: &AppModel,
+    ws: &Path,
+    seat: &Selection,
+    live: &[crate::nav::convs::Seat],
+) {
     // §11 altitude 1: the id is the identifier, the name is the title — one
     // ladder (§3.3), the same one the §11 row and the §3.6 dialog read. The
     // live-activity indicator sits on that same line: the open conversation's
@@ -187,12 +198,15 @@ fn header(ui: &mut egui::Ui, model: &AppModel, ws: &Path, seat: &Selection) {
         // beside it says the subtree's ONE class in words; the mark says every
         // agent's own state at a glance. Different questions, one row.
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            theme::live_mark(ui, &model.mark_seats());
+            theme::live_mark(ui, live);
         });
     });
-    // The per-conversation ball (source 1: the goal stamp), its title and status.
-    if let Some(ball) = model.conversation_ball(root) {
-        super::conv_ball::header_ball(ui, &ball);
+    // The per-conversation ball (source 1: the goal stamp), its title and
+    // status — the selection's own field off the landed forest (bl-296f), which
+    // is the row the §11 list is already painting rather than a second read of
+    // the same stamp.
+    if let Some(ball) = &seat.ball {
+        super::conv_ball::header_ball(ui, ball);
     }
     // Workspace-level balls (§3.2): the claimant join, all the balls this
     // workspace's agents bound — the "one or more" per workspace, distinct from

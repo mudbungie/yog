@@ -165,12 +165,13 @@ fn found() -> Found {
 }
 
 fn workspaces() -> Vec<WsRow> {
-    let row = |name: &str, kind, attention, agents, running| WsRow {
+    let row = |name: &str, kind, attention, agents, running, pinned| WsRow {
         workspace: name.to_owned(),
         kind,
         attention,
         agents,
         running,
+        pinned,
     };
     vec![
         row(
@@ -181,9 +182,12 @@ fn workspaces() -> Vec<WsRow> {
             2,
             5,
             true,
+            // Both arms of the §4.1 pin rank ride the round trip: an absent one
+            // must not read back as rank 0, which is the first hoisted tab.
+            Some(1),
         ),
-        row("f", WorkspaceKind::Foreign, 0, 0, false),
-        row("r", WorkspaceKind::Replay, 0, 1, false),
+        row("f", WorkspaceKind::Foreign, 0, 0, false, None),
+        row("r", WorkspaceKind::Replay, 0, 1, false, Some(0)),
     ]
 }
 

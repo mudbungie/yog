@@ -5,8 +5,19 @@
 //! the jump and the tab-bar build are all tested `AppModel`/`nav` bodies; this
 //! file only wires widgets. Its sibling [`super::navigator`] paints the other
 //! altitude-0 surface, the conversation-list side panel.
+//!
+//! **Both halves read one answer** (REMOTE §9.7 class 2, bl-296f). The strip's
+//! total and the tab bar were two in-process derivations over the window's own
+//! snapshot; they are now one standing `Query::Workspaces` — the reply has
+//! carried the §6 rollups since bl-6233 and gained the §4.1 pin rank here — and
+//! the seat only folds it (`nav::tabs::strip_total`, `nav::tabs::build`). A
+//! frame the engine has not answered paints `nothing stirs` and no tabs, which
+//! is the honest empty state and is what a window looks like for its first ask
+//! period.
 
 use crate::AppModel;
+use crate::boundary::Query;
+use crate::boundary::reply::Reply;
 use crate::cli_outbound::Cli;
 use crate::nav::menu::Seat;
 use crate::nav::tabs::{Kind, Tab};
@@ -36,8 +47,23 @@ const OVERFLOW_HINT: &str = "Workspaces that are real but not regimes — checko
 /// the workspace tab bar — named tabs, the slim `new` name form, and the
 /// foreign/replay overflow menu.
 pub fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
+    // One ask for the whole altitude-0 row. A refusal has no seat here — the
+    // top bar is chrome, and a sentence in place of the wall row would be a
+    // report about the transport where the panes below already paint the
+    // engine's own words.
+    let answered = super::wire::ask(model, Query::Workspaces, |reply| match reply {
+        Reply::Workspaces(rows) => Some(rows),
+        _ => None,
+    })
+    .value
+    .unwrap_or_default();
+    // The §3.4 raise claim folded on (`AppModel::raised_rows`), which is the
+    // echo's own shape one noun up: a wall `lernie new` has just founded wears
+    // its tab from the frame the receipt lands, rather than a derivation later
+    // with the composer's bare Enter aimed at the previous wall (bl-9acf).
+    let rows = model.raised_rows(answered);
     ui.horizontal(|ui| {
-        let total = model.strip_total();
+        let total = crate::nav::tabs::strip_total(&rows);
         if total > 0 {
             ui.colored_label(theme::BRAZEN, format!("⚑ {total} need attention"));
         } else {
@@ -70,7 +96,7 @@ pub fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, l
         // regime walls, almost invisible. Laid right-to-left, so paint the
         // overflow first, then `new`, then the tabs reversed (leftmost last).
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let bar = model.tab_bar();
+            let bar = crate::nav::tabs::build(&rows, model.focused_ws_name().as_deref());
             overflow_menu(ui, model, state, &bar);
             if ui
                 .button("new")

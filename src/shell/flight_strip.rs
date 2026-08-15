@@ -25,9 +25,17 @@
 //! width-bound list row already follows: the glyph and its pulse state the
 //! class, and the words ride the hover.
 //!
-//! Coverage-excluded glue: the strip's whole content is
-//! [`AppModel::flight_strip`] and [`theme::flight_badge`], both tested — this
-//! file only chooses the seat and asks for the pulse.
+//! **The strip is a field on an answer** (REMOTE §9.7, bl-296f). It was
+//! `AppModel::flight_strip`, a per-frame fold over the window's own snapshot;
+//! it rides `Query::Agent` now — the same standing question the marks two lines
+//! above it already declare, so the seat asks nothing extra for it. What that
+//! costs is one ask period of lag on the elapsed segment, which ticks in
+//! seconds and is read at half-second cadence: the same trade bl-13f9 took for
+//! the live tail, at a coarser unit.
+//!
+//! Coverage-excluded glue: the strip's whole content is `nav::convs::strip` and
+//! [`theme::flight_badge`], both tested — this file only chooses the seat and
+//! asks for the pulse.
 
 use crate::AppModel;
 use crate::nav::convs::STRIP_HOVER;
@@ -47,8 +55,14 @@ use crate::theme;
 /// Called last of the pane's bottom stack for exactly that stacking, with its
 /// §11 rule 5 share already checked by the stack that owns the arithmetic
 /// ([`super::pane`]).
-pub(super) fn render(ui: &mut egui::Ui, model: &AppModel) {
-    let Some(strip) = model.flight_strip(super::now_unix()) else {
+pub(super) fn render(ui: &mut egui::Ui, model: &mut AppModel) {
+    let (Some(ws), Some(agent)) = (model.focused_workspace(), model.focused_agent_id()) else {
+        return;
+    };
+    let Some(strip) = super::seat::detail(model, &ws, &agent)
+        .value
+        .and_then(|view| view.strip)
+    else {
         return;
     };
     // Glyph, hue and the class said in words all come from the one badge home

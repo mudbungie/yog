@@ -60,21 +60,29 @@ fn s6_t3_the_ack_quiets_the_signal_and_keeps_every_fact() {
     m.focus_workspace(&yog::naming::leaf(&ws));
 
     // --- Before: it stirs.
-    assert_eq!(m.strip_total(), 1, "a failed latest step stirs (rule 2)");
+    assert_eq!(
+        crate::support::strip_total(&m),
+        1,
+        "a failed latest step stirs (rule 2)"
+    );
 
     // --- The ack: landing on the conversation is the acknowledgement (§6.3).
     m.focus_agent(&ws, "d-001");
     m.refresh();
     for _ in 0..200 {
         worker.step();
-        if m.refresh() && m.strip_total() == 0 {
+        if m.refresh() && crate::support::strip_total(&m) == 0 {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
 
     // --- After: quiet in the strip …
-    assert_eq!(m.strip_total(), 0, "the signal is acknowledged");
+    assert_eq!(
+        crate::support::strip_total(&m),
+        0,
+        "the signal is acknowledged"
+    );
 
     // … and every fact intact. The state badge still says the conversation is
     // dead — an ack is "I have seen this", never "this did not happen".
