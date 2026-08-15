@@ -183,7 +183,10 @@ fn a_server_leaf_always_names_loopback_and_never_twice() {
 }
 
 /// Every file the mint writes is named once, and the list is what a rotation
-/// deletes and a report prints.
+/// deletes and a report prints. Both directions: nothing named is missing, and
+/// nothing unnamed survives — the request, the extension file and the serial
+/// counter a signature needs are issuance scratch, and a rotation that did not
+/// know about them would leave them behind.
 #[test]
 fn the_artifact_list_is_the_whole_of_what_is_written() {
     let _guard = spawn_guard();
@@ -193,10 +196,19 @@ fn the_artifact_list_is_the_whole_of_what_is_written() {
         assert!(tmp.path().join(&name).is_file(), "{name} was not written");
     }
     assert_eq!(artifacts().len(), 9, "a CA pair, an address, three leaves");
+    let mut left: Vec<String> = std::fs::read_dir(tmp.path())
+        .expect("read the mint's directory")
+        .filter_map(|entry| Some(entry.ok()?.file_name().to_string_lossy().into_owned()))
+        .collect();
+    left.sort();
+    let mut named = artifacts();
+    named.sort();
+    assert_eq!(left, named, "scratch was left behind");
 }
 
-/// A directory that cannot be made, and an address that cannot be written, are
-/// both the mint saying so rather than half-provisioning a box.
+/// A directory that cannot be made, an extension file that cannot be written,
+/// and an address that cannot be written are all the mint saying so rather than
+/// half-provisioning a box.
 #[test]
 fn an_unwritable_target_refuses() {
     let _guard = spawn_guard();
@@ -204,6 +216,13 @@ fn an_unwritable_target_refuses() {
     let blocked = tmp.path().join("file");
     std::fs::write(&blocked, b"not a directory").expect("file");
     assert!(mint(&blocked, "127.0.0.1:0", false).is_err(), "no dir");
+
+    // The first leaf's extension file, with a directory standing where it goes.
+    let extless = tmp.path().join("extless");
+    let ext = extless.join(format!("{}.ext", Role::Server.leaf()));
+    std::fs::create_dir_all(&ext).expect("a directory where the file goes");
+    let refusal = mint(&extless, "127.0.0.1:0", false).expect_err("cannot write the extensions");
+    assert!(refusal.contains("server.ext"), "{refusal}");
 
     let dir = tmp.path().join("wire");
     std::fs::create_dir_all(dir.join(ADDRESS)).expect("a directory where the file goes");

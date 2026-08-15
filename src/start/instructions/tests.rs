@@ -150,13 +150,26 @@ fn a_destination_that_cannot_be_spelled_is_skipped_rather_than_mangled() {
     );
 }
 
+/// A path whose bytes are not UTF-8 cannot be spelled as a `--pin` destination,
+/// so nothing under it is frozen.
+///
+/// **Whether such a name can exist at all is the filesystem's business, and the
+/// verdict must not depend on the answer** (bl-8626). ext4 stores the bytes;
+/// APFS refuses them outright with `EILSEQ`, so a bare `unwrap` on the
+/// directory made this test a macOS-only panic rather than a claim about the
+/// walk. Where the name can be made, the document beside it is real and the
+/// empty answer can only be the spelling rule — delete `to_str()?` from
+/// `admissible` and this fails. Where it cannot, the path is unreachable one
+/// layer down and the walk must reach the same verdict rather than falling over
+/// on the way.
 #[test]
 fn a_non_utf8_path_is_skipped() {
     use std::os::unix::ffi::OsStrExt;
     let t = tree(&[".git"]);
     let odd = t.path().join(std::ffi::OsStr::from_bytes(b"sub\xff"));
-    fs::create_dir_all(&odd).unwrap();
-    fs::write(odd.join("AGENTS.md"), "x").unwrap();
+    if fs::create_dir_all(&odd).is_ok() {
+        fs::write(odd.join("AGENTS.md"), "x").unwrap();
+    }
     assert!(specs(&odd, &agents()).is_empty());
 }
 
