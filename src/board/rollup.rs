@@ -84,7 +84,10 @@ struct Slice {
 fn fold(snap: &Snapshot, prices: &Prices, members: &[String]) -> Option<Figure> {
     let mut slices: BTreeMap<PathBuf, Slice> = BTreeMap::new();
     for row in &snap.join_rows {
-        let Some(ws) = row.workspace.clone() else {
+        // The binding names its workspace (bl-b4b5); the bills and trees below
+        // are keyed by path, so the name is resolved through the snapshot's own
+        // round trip and a name it cannot answer contributes no slice.
+        let Some(ws) = row.workspace.as_deref().and_then(|n| snap.ws_path(n).ok()) else {
             continue;
         };
         if !members.contains(&row.ball_id) {

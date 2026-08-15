@@ -13,8 +13,7 @@ use serde_json::Value;
 use super::super::WsRow;
 use crate::binding::WorkspaceKind;
 use crate::boundary::codec::fields::{
-    bool_of, i64_of, list_of, opt, opt_str_of, opt_val, path_of, pick, str_of, strings_of, u64_of,
-    usize_of,
+    bool_of, i64_of, list_of, opt, opt_str_of, opt_val, pick, str_of, strings_of, u64_of, usize_of,
 };
 use crate::boundary::codec::{parse_join, parse_origin};
 use crate::config_edit::branch::{ConfigBranch, Lineage};
@@ -78,6 +77,16 @@ pub(crate) fn ws_row(v: &Value) -> Result<WsRow, String> {
         agents: usize_of(o, "agents")?,
         running: bool_of(o, "running")?,
         pinned: opt(o, "pinned", usize_of)?,
+        config_tip: opt_val(o, "config_tip", config_tip)?,
+    })
+}
+
+/// The §2.2 lineage tip, read back on the two oids the encoder writes.
+fn config_tip(v: &Value) -> Result<crate::model_pick::ConfigTip, String> {
+    let o = v.as_object().ok_or("config tip: not an object")?;
+    Ok(crate::model_pick::ConfigTip {
+        oid: str_of(o, "oid")?,
+        short_oid: str_of(o, "short_oid")?,
     })
 }
 
@@ -155,10 +164,10 @@ fn check(v: &Value) -> Result<Check, String> {
 pub(crate) fn join_row(v: &Value) -> Result<JoinRow, String> {
     let o = v.as_object().ok_or("ball row: not an object")?;
     Ok(JoinRow {
-        project: path_of(o, "project")?,
+        project: str_of(o, "project")?,
         ball_id: str_of(o, "ball_id")?,
         state: parse_join(&str_of(o, "state")?)?,
-        workspace: opt(o, "workspace", path_of)?,
+        workspace: opt_str_of(o, "workspace")?,
         claimant: opt_str_of(o, "claimant")?,
         title: opt_str_of(o, "title")?,
     })

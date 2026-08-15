@@ -270,7 +270,7 @@ impl Deriver {
                 ops: self.ops.clone(),
                 growth: std::mem::take(&mut self.growth),
                 ui_bytes: self.ui_bytes.take(),
-                derived_at: self.clock.now(),
+                derived_at_unix: self.clock.unix(),
                 cadence: self.cadence,
                 fleet: self.fleet.clone(),
             }),

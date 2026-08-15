@@ -22,15 +22,9 @@ pub(super) fn board_row(row: &BoardRow) -> Value {
     map.insert("state".to_owned(), json!(join_token(row.state)));
     map.insert("title".to_owned(), json!(row.title));
     map.insert("priority".to_owned(), json!(row.priority));
-    map.insert(
-        "project".to_owned(),
-        json!(row.project.to_string_lossy().into_owned()),
-    );
+    map.insert("project".to_owned(), json!(row.project));
     if let Some(ws) = &row.workspace {
-        map.insert(
-            "workspace".to_owned(),
-            json!(ws.to_string_lossy().into_owned()),
-        );
+        map.insert("workspace".to_owned(), json!(ws));
     }
     if let Some(claimant) = &row.claimant {
         map.insert("claimant".to_owned(), json!(claimant));
@@ -115,7 +109,7 @@ pub(super) fn fleet_facts(facts: &crate::fleet::Facts) -> Value {
 /// It is now the classification, with the clause riding beside it exactly as
 /// `usd` rides beside `micro_usd`: derived text next to the fact it derives
 /// from, never instead of it.
-fn figure_value(figure: &Figure) -> Value {
+pub(crate) fn figure_value(figure: &Figure) -> Value {
     let mut map = Map::new();
     map.insert(
         "tokens".to_owned(),

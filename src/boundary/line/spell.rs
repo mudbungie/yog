@@ -141,6 +141,7 @@ fn spell_query(query: &Query) -> String {
         Query::Workspaces => "/workspaces".to_owned(),
         Query::Conversations { .. } => "/conversations".to_owned(),
         Query::Balls => "/balls".to_owned(),
+        Query::WorkspaceBalls { .. } => "/workspace-balls".to_owned(),
         // The workspace is the seat's, as it is for every other workspace-
         // scoped line; the file, when one is asked for, is not.
         Query::WorkDiff { file, .. } => match file {

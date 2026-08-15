@@ -78,8 +78,10 @@ impl World {
     /// The plan for this world's workspace, carrying `claims`.
     fn steps(&self, claims: Vec<Claim>) -> Vec<Step> {
         plan(
-            &confirmation(NAME, &self.workspace(), &[], claims),
+            &confirmation(NAME, &[], claims),
+            &self.workspace(),
             &self.wall_root(),
+            &[self.project.path().to_path_buf()],
         )
     }
 }
@@ -92,7 +94,7 @@ fn execute_releases_prunes_and_removes_leaving_one_step_row() {
     let mut ui = w.ui();
     ui.set_pinned(vec![key.clone()]);
 
-    let claims = vec![claim(&w.project.path().to_string_lossy(), "bl-7")];
+    let claims = vec![claim(&crate::naming::leaf(w.project.path()), "bl-7")];
     execute(&w.steps(claims), &w.bl(0), &mut ui, w.state.path(), "TS").unwrap();
 
     assert!(!w.workspace().exists(), "the sphere wall is down");
@@ -155,7 +157,7 @@ fn a_refused_release_aborts_before_the_removal() {
     let _g = spawn_guard();
     let w = World::new();
     let mut ui = w.ui();
-    let claims = vec![claim(&w.project.path().to_string_lossy(), "bl-7")];
+    let claims = vec![claim(&crate::naming::leaf(w.project.path()), "bl-7")];
     let err = execute(&w.steps(claims), &w.bl(3), &mut ui, w.state.path(), "TS").unwrap_err();
 
     assert!(matches!(err, DeleteError::ReleaseFailed { ref id, .. } if id == "bl-7"));
@@ -176,8 +178,10 @@ fn a_failed_removal_leaves_a_synthetic_step_row() {
     let w = World::new();
     let mut ui = w.ui();
     let steps = plan(
-        &confirmation(NAME, &w.names.path().join("never-minted"), &[], Vec::new()),
+        &confirmation(NAME, &[], Vec::new()),
+        &w.names.path().join("never-minted"),
         &w.wall_root(),
+        &[],
     );
     let err = execute(&steps, &w.bl(0), &mut ui, w.state.path(), "TS").unwrap_err();
 
@@ -193,7 +197,7 @@ fn a_spawn_failure_rides_back_as_io() {
     let _g = spawn_guard();
     let w = World::new();
     let mut ui = w.ui();
-    let claims = vec![claim(&w.project.path().to_string_lossy(), "bl-7")];
+    let claims = vec![claim(&crate::naming::leaf(w.project.path()), "bl-7")];
     let bl = Cli::new(w.bin.path().join("no-such-bl"));
     let err = execute(&w.steps(claims), &bl, &mut ui, w.state.path(), "TS").unwrap_err();
 

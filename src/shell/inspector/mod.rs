@@ -32,7 +32,7 @@ mod work;
 /// composer's prompt recall (the transcript, bl-f908). Two callers of one
 /// question are **one ask** — the standing set is keyed by the encoded envelope
 /// — so neither pays for the other (REMOTE §9.7, bl-13f9).
-pub(in crate::shell) use reads::{steps, transcript};
+pub(in crate::shell) use reads::{inbox, steps, transcript};
 
 use super::ShellState;
 
@@ -79,8 +79,12 @@ pub fn tabs_and_content(
         return;
     };
     // The frame's roster in the form a seat can hold: the §3.3 ladder's input
-    // for every Inbox-tab deposit's sender (bl-b6d0).
-    let titles = model.agent_titles();
+    // for every Inbox-tab deposit's sender (bl-b6d0). **Off the landed forest**
+    // (bl-b4b5): a row's `display` *is* the ladder's answer for its own agent,
+    // so the answered list carries this whole table and `Titles::of_rows` is a
+    // projection of it rather than a second read of the engine's agent set.
+    let titles =
+        crate::nav::convs::Titles::of_rows(&super::convs::forest(model).value.unwrap_or_default());
     let (data, refused) = vms::tab_data(active, model, state, ws, &focus);
     // A refusal is painted, not swallowed (REMOTE §9.7, bl-f297): every tab
     // reads over the wire now, so what the engine said is the honest content

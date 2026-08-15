@@ -119,10 +119,14 @@ fn a_pass_that_outruns_its_cadence_names_itself_once_however_long_it_lasts() {
 
 #[test]
 fn the_ops_surface_says_how_stale_the_rendered_derivation_is() {
+    // **The `Query::Workspaces` answer carries it** (bl-b4b5): the seat folds
+    // the same standing question the tab bar stands on, and the age is the
+    // caller's own `now_unix` against the snapshot's wall-clock completion
+    // stamp — which is the whole reason the stamp stopped being an `Instant`.
     let h = Harness::new();
     let (clock, model) = h.model();
     assert_eq!(
-        model.staleness(),
+        crate::test_support::chrome::notes(&model).0,
         None,
         "a snapshot the worker just published is not stale"
     );
@@ -130,7 +134,7 @@ fn the_ops_surface_says_how_stale_the_rendered_derivation_is() {
     // and the frame says so instead of pretending it is current.
     clock.advance(Duration::from_secs(40));
     assert_eq!(
-        model.staleness().as_deref(),
+        crate::test_support::chrome::notes(&model).0.as_deref(),
         Some("derivation 40 s behind"),
         "the age of what is on screen, not a claim about what it should be"
     );
@@ -143,14 +147,18 @@ fn a_conversation_whose_descent_grows_is_named_on_the_ops_surface() {
     // it is, which points the operator at lernie in one glance.
     let h = Harness::new();
     let (clock, mut model) = h.model();
-    assert_eq!(model.growth_note(), None, "a quiet workspace says nothing");
+    assert_eq!(
+        crate::test_support::chrome::notes(&model).1,
+        None,
+        "a quiet workspace says nothing"
+    );
     // Two children dispatched under the fixture's root conversation.
     h.build_more("c-1-kid-1", "sub one");
     h.build_more("c-1-kid-2", "sub two");
     model.dirty_handle().mark_all([(h.ws.clone(), Mark::Watch)]);
     super::derive::settle(&mut model, &clock);
     assert_eq!(
-        model.growth_note().as_deref(),
+        crate::test_support::chrome::notes(&model).1.as_deref(),
         Some("hello +2 branches"),
         "named by the §3.3 display name the roster shows"
     );

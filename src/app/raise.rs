@@ -111,6 +111,9 @@ impl AppModel {
             return rows;
         }
         rows.push(crate::boundary::reply::WsRow {
+            // A wall the derivation has not read has no lineage derived
+            // either — the claim's own empty shape, not a case of its own.
+            config_tip: None,
             workspace: name.clone(),
             kind: WorkspaceKind::Named { name },
             // A wall raised one instant ago holds nothing and is pinned

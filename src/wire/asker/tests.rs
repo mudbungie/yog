@@ -35,7 +35,7 @@ fn frame(link: &mut Link, question: &serde_json::Value) -> Option<crate::wire::l
 
 /// A snapshot enumerating `names` as yog-named workspaces under `root`.
 fn snapshot_of(root: &Path, names: &[&str]) -> SnapshotCell {
-    let mut snap = crate::app::Snapshot::empty(std::time::Instant::now());
+    let mut snap = crate::app::Snapshot::empty(0);
     snap.workspaces = names
         .iter()
         .map(|name| Workspace {

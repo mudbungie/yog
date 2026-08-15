@@ -3,10 +3,9 @@
 use crate::app::Snapshot;
 use crate::binding::{Workspace, WorkspaceKind};
 use std::path::{Path, PathBuf};
-use std::time::Instant;
 
 fn snap(workspaces: &[(&str, WorkspaceKind)], projects: &[&str]) -> Snapshot {
-    let mut s = Snapshot::empty(Instant::now());
+    let mut s = Snapshot::empty(0);
     s.workspaces = workspaces
         .iter()
         .map(|(p, kind)| Workspace {

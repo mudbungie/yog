@@ -119,12 +119,16 @@ fn the_boundary_answer_is_the_frames_derivation_without_a_frame() {
     );
 
     // The workspace rollups agree the same way.
-    let Ok(Reply::Workspaces(rows)) = model.answer(&deps, &Query::Workspaces, 500) else {
+    let Ok(Reply::Workspaces(view)) = model.answer(&deps, &Query::Workspaces, 500) else {
         panic!("workspaces answers workspaces");
     };
-    assert_eq!(rows.len(), 1);
+    assert_eq!(view.rows.len(), 1);
     assert_eq!(
-        (rows[0].attention, rows[0].agents, rows[0].running),
+        (
+            view.rows[0].attention,
+            view.rows[0].agents,
+            view.rows[0].running
+        ),
         model.workspace_stats(&h.ws)
     );
 }

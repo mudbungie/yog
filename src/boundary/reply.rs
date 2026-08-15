@@ -30,6 +30,9 @@ use super::codec::prepared_value;
 /// The §11 conversation seat's own spelling, both directions (REMOTE §9.4,
 /// bl-1eb0) — cut off the roster at the budget like `search` and `queue`.
 mod agent;
+/// The §11 balls section's row — its own file at the budget (bl-b4b5), for
+/// the reason its own doc gives.
+mod balls;
 /// The V4 board row's own encoders — split at the §12 budget, on the seam that
 /// board rows are the one reply whose rows carry derived sub-objects (gates,
 /// drones, two §3.5 figures).
@@ -54,7 +57,7 @@ mod ws_row;
 
 pub use decode::decode;
 pub use encode::{encode, refusal};
-pub use ws_row::WsRow;
+pub use ws_row::{Workspaces, WsRow};
 
 /// The typed answer a gesture earns. Exhaustive over the boundary's outcomes;
 /// an error path is the `Err(String)` beside it, encoded by [`refusal`].
@@ -169,9 +172,18 @@ pub enum Reply {
     /// follow-class read's answer. Empty is the ordinary answer of a hold that
     /// expired with no work, not a failure: the host asks again.
     Invocations(Vec<crate::registry::mailbox::Invocation>),
-    Workspaces(Vec<WsRow>),
+    /// The altitude-0 chrome (REMOTE §9.7, bl-b4b5): the enumerated workspaces
+    /// with their §6 rollups and §4.1 pin ranks, and the §7.2 currency of the
+    /// derivation they came off.
+    Workspaces(Workspaces),
     Conversations(Vec<ConvRow>),
     Balls(Vec<JoinRow>),
+    /// **One workspace's bound balls with their §3.5 figures** (§3.2, §11
+    /// balls section) — [`WorkspaceBalls`](super::Query::WorkspaceBalls)'
+    /// answer. The §11 strip, the roster rows, the ▶ Continue menu's object and
+    /// the settings band's per-ball figures are all selections out of this one
+    /// listing (`nav::balls`), which is what makes them one ask.
+    WorkspaceBalls(Vec<crate::nav::BoundBall>),
     /// The V4 board (VISION §5 V4) — the columns, their rows, and each row's
     /// gates, drones and figures.
     Board(Board),

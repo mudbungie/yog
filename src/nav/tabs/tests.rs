@@ -12,6 +12,7 @@ fn row(name: &str, kind: WorkspaceKind, attention: usize, pinned: Option<usize>)
         agents: 0,
         running: false,
         pinned,
+        config_tip: None,
     }
 }
 

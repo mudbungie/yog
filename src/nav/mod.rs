@@ -6,6 +6,7 @@
 //! facts from the snapshot map + attention + the §3.5 join, and the shell
 //! renders the outputs. Every branch is table-tested with plain data.
 
+pub mod balls;
 pub mod convs;
 pub mod menu;
 pub mod tabs;
@@ -22,13 +23,24 @@ use std::path::Path;
 /// §3.5 state the enablement predicates read. A row that can be right-clicked
 /// must name its own object — re-deriving it from the focus is exactly what a
 /// pointer-targeted menu may not do.
+///
+/// **It is `Query::WorkspaceBalls`' answer row since bl-b4b5**, not a
+/// frame-side projection: `project` is the §5.1 #1 wire name a `bl` verb takes
+/// rather than the clone's path, and the §3.5 [`spend`](Self::spend) figure
+/// rides here rather than being asked per row — one workspace's balls and what
+/// each has cost are one question, and the seat that paints the strip and the
+/// seat that paints the figures were two reads of it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoundBall {
     pub id: String,
     pub badge: Option<String>,
-    pub project: std::path::PathBuf,
+    pub project: String,
     pub owner: String,
     pub state: crate::projects::join::JoinState,
+    /// The ball's priced figure as this workspace can attribute it (§3.5's
+    /// ruling): the conversations whose goal stamps it when any does, else the
+    /// whole workspace, the figure's own `attribution` saying which.
+    pub spend: crate::spend::Figure,
 }
 
 /// The ui_state key for a workspace (its path) — the pin key, collapse key

@@ -165,6 +165,23 @@ fn a_ball_verb_defaults_to_the_focused_ball() {
 }
 
 /// `/ops` with no count reads the trail's working tail.
+/// The §11 balls section's own read is a line like any other (bl-b4b5): the
+/// workspace is the seat's, so the verb is the whole of it, and it spells back
+/// as itself.
+#[test]
+fn the_workspace_balls_read_takes_its_address_from_the_seat() {
+    let Ok(gesture) = parse("/workspace-balls", &ctx()) else {
+        panic!("should read");
+    };
+    assert_eq!(
+        gesture,
+        Gesture::Ask(Query::WorkspaceBalls {
+            workspace: "ws".to_owned()
+        })
+    );
+    assert_eq!(crate::boundary::line::spell(&gesture), "/workspace-balls");
+}
+
 #[test]
 fn ops_without_a_count_reads_the_default_depth() {
     assert_eq!(

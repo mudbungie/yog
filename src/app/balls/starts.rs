@@ -56,15 +56,6 @@ impl AppModel {
         }
     }
 
-    /// The conversation mint's occupied set for a workspace (§3.3): the names its
-    /// live roots stamped on their goals, already parsed into the tree the §11
-    /// list renders — the mint re-reads nothing. A workspace with no derived tree
-    /// (never swept, or one that does not exist yet) is simply empty: the general
-    /// path with no inputs.
-    pub fn conversation_names(&self, workspace: &Path) -> Vec<String> {
-        crate::boundary::answer::names_in(&self.snap, workspace)
-    }
-
     /// The common [`StartInputs`] shape at an **explicit** workspace (§3.4): the
     /// roots, `~`, and that workspace's occupied conversation names around
     /// `workspace` + `payload`. The bare / ball / new-ball entries resolve the
@@ -77,7 +68,11 @@ impl AppModel {
             .project()
             .and_then(|name| self.snap.project_path(&name).ok());
         StartInputs {
-            conversation_names: self.conversation_names(&workspace),
+            // The §3.3 occupied set the mint may not re-use — the boundary's own
+            // fold, read here because a `Prepare` is composed in process and its
+            // refusal is re-derived at fire (bl-b4b5 retired the accessor over
+            // it; the §11 preview reads the same fact off the answered forest).
+            conversation_names: crate::boundary::answer::names_in(&self.snap, &workspace),
             workspace,
             repo,
             payload,
@@ -153,7 +148,7 @@ impl AppModel {
             .iter()
             .filter(|r| start::is_resume_eligible(r.state))
             .filter_map(|row| {
-                let workspace = row.workspace.clone()?;
+                let workspace = self.snap.ws_path(row.workspace.as_deref()?).ok()?;
                 Some(self.start_inputs_at(workspace, self.ball_payload(row)?))
             })
             .collect()
@@ -164,7 +159,9 @@ impl AppModel {
     /// broken row drops rather than panics — both callers filter it out).
     fn ball_payload(&self, row: &JoinRow) -> Option<Payload> {
         Some(Payload::Ball {
-            project: self.snap.project_name(&row.project),
+            // The row already says the name (bl-b4b5) — the payload's `project`
+            // and the join's are one word now, not a path spelled back down.
+            project: row.project.clone(),
             ball: self.ball_spec(row)?,
         })
     }
@@ -175,7 +172,8 @@ impl AppModel {
     /// readers, and a ball the live projection does not carry is `None` for
     /// both (a broken row drops rather than panics).
     pub(crate) fn ball_spec(&self, row: &JoinRow) -> Option<BallSpec> {
-        let ball = self.ball_of(&row.project, &row.ball_id)?;
+        let project = self.snap.project_path(&row.project).ok()?;
+        let ball = self.ball_of(&project, &row.ball_id)?;
         Some(BallSpec::Existing {
             id: row.ball_id.clone(),
             title: ball.title.clone(),

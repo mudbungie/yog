@@ -73,31 +73,42 @@ fn s4_t3_balls_section_groups_all_bound_balls_under_their_workspace() {
 
     // cobalt groups BOTH its bound balls — the multi-ball fix (§3.5); each Bound
     // needs no badge.
-    let cobalt = m.ws_balls(&m.workspace_path(&bar.tabs[0].name).expect("tab 0 resolves"));
+    let cobalt = crate::support::ws_balls(
+        &m,
+        &m.workspace_path(&bar.tabs[0].name).expect("tab 0 resolves"),
+    );
     let ids: Vec<&str> = cobalt.iter().map(|b| b.id.as_str()).collect();
     assert_eq!(ids, vec!["bl-1", "bl-2"], "all bound balls, grouped");
     assert!(cobalt.iter().all(|b| b.badge.is_none()));
 
     // spare is the §3.5 unassigned-workspace row — full rendering, no ball column.
     assert!(
-        m.ws_balls(&m.workspace_path(&bar.tabs[1].name).expect("tab 1 resolves"))
-            .is_empty(),
+        crate::support::ws_balls(
+            &m,
+            &m.workspace_path(&bar.tabs[1].name).expect("tab 1 resolves"),
+        )
+        .is_empty(),
         "unassigned workspace has no ball"
     );
-    // The negative beat (bl-9cb0): focusing that workspace focuses NO ball, so
-    // the composer's ball row (§8.2) and the per-project marks knob (§16.3) —
-    // both `focused_join` consumers — render their empty state instead of a row
-    // naming an empty ball and an empty project.
+    // The negative beat (bl-9cb0): focusing that workspace answers NO ball, so
+    // the composer's ball row (§8.2) and the per-project marks knob (§16.3)
+    // render their empty state instead of a row naming an empty ball and an
+    // empty project.
+    let ball_row = |m: &yog::AppModel| {
+        crate::support::ws_balls(m, &m.focused_workspace().expect("a focus"))
+            .first()
+            .cloned()
+    };
     m.focus_workspace(&bar.tabs[1].name);
     assert!(
-        m.focused_join().is_none(),
+        ball_row(&m).is_none(),
         "no ball claims spare ⇒ no ball row, no marks knob"
     );
     m.focus_workspace(&bar.tabs[0].name);
     assert_eq!(
-        m.focused_join().map(|r| r.ball_id.clone()),
+        ball_row(&m).map(|r| r.id),
         Some("bl-1".to_owned()),
-        "a bound workspace still focuses its ball"
+        "a bound workspace still answers its ball"
     );
 
     // The ready, unclaimed ball is startable; the claimed-elsewhere one is not

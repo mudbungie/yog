@@ -12,7 +12,6 @@ use crate::projects::balls::{Ball, Blocker};
 use crate::projects::join::{JoinRow, JoinState};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::time::Instant;
 
 pub(super) const PROJECT: &str = "/proj";
 pub(super) const WS_A: &str = "/ws/alfa";
@@ -48,10 +47,10 @@ pub(super) fn join(
     claimant: Option<&str>,
 ) -> JoinRow {
     JoinRow {
-        project: PathBuf::from(PROJECT),
+        project: crate::naming::leaf(Path::new(PROJECT)),
         ball_id: id.to_owned(),
         state,
-        workspace: ws.map(PathBuf::from),
+        workspace: ws.map(|w| crate::naming::leaf(Path::new(w))),
         claimant: claimant.map(str::to_owned),
         title: Some(format!("{id} title")),
     }
@@ -135,12 +134,18 @@ pub(super) fn world(
     World {
         snap: Snapshot {
             windows: std::collections::BTreeMap::default(),
-            workspaces: vec![Workspace {
-                path: PathBuf::from(WS_A),
-                kind: WorkspaceKind::Named {
-                    name: "alfa".to_owned(),
-                },
-            }],
+            // Both walls are enumerated: a join row addresses its workspace
+            // by §3.1 name since bl-b4b5, and the board resolves that name back
+            // through the snapshot's own round trip.
+            workspaces: [WS_A, WS_B]
+                .into_iter()
+                .map(|path| Workspace {
+                    path: PathBuf::from(path),
+                    kind: WorkspaceKind::Named {
+                        name: crate::naming::leaf(Path::new(path)),
+                    },
+                })
+                .collect(),
             projects: vec![PathBuf::from(PROJECT)],
             trees,
             bills,
@@ -150,7 +155,7 @@ pub(super) fn world(
             ops: vec![],
             growth: vec![],
             ui_bytes: None,
-            derived_at: Instant::now(),
+            derived_at_unix: 0,
             cadence: crate::app::Cadence::default(),
             fleet: std::collections::BTreeMap::new(),
         },

@@ -196,7 +196,8 @@ fn no_conditional_mark_moves_the_name_column_and_all_of_them_ride_right() {
     let mut frame = || {
         ctx.run(crate::paint_probe::screen_sized(360.0, 400.0), |c| {
             egui::CentralPanel::default().show(c, |ui| {
-                let row_ctx = super::super::conv_row::RowCtx::of(&world.model, world.ws.clone());
+                let row_ctx =
+                    super::super::conv_row::RowCtx::of(&mut world.model, world.ws.clone());
                 for row in &rows {
                     super::super::conv_row::conversation_row(
                         ui,

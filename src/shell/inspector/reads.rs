@@ -156,7 +156,11 @@ pub(super) fn rail(model: &mut AppModel, ws: &Path, agent: &str) -> Landed<Rail>
 }
 
 /// **The undelivered mail** (§11 Inbox).
-pub(super) fn inbox(model: &mut AppModel, ws: &Path, agent: &str) -> Landed<Vec<InboxEntry>> {
+pub(in crate::shell) fn inbox(
+    model: &mut AppModel,
+    ws: &Path,
+    agent: &str,
+) -> Landed<Vec<InboxEntry>> {
     let (workspace, agent) = at(model, ws, agent);
     ask(
         model,

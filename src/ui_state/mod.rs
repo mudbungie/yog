@@ -80,6 +80,15 @@ pub trait Clock: Send + Sync {
     /// The wall-clock `ops.jsonl` timestamp (§4.2) — unix seconds as a string,
     /// the crate's timestamp convention.
     fn stamp(&self) -> String;
+    /// The same wall clock as an integer — the unit every boundary derivation
+    /// dates against (`now_unix`) and the one a snapshot stamps its completion
+    /// in (bl-b4b5). A default method rather than a second implementation,
+    /// because there is one clock reading and this is only how it is spelled:
+    /// an unparsable stamp is epoch zero, which is what every reader of a
+    /// missing timestamp already treats it as.
+    fn unix(&self) -> i64 {
+        self.stamp().parse().unwrap_or(0)
+    }
 }
 
 #[derive(Clone, Copy)]

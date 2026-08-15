@@ -189,7 +189,7 @@ fn a_dismissed_modal_hands_the_keyboard_back() {
     screen.idle(&mut world);
     screen.release(&mut world);
     assert!(
-        world.model.delete_confirmation(&ws).is_none(),
+        crate::boundary::answer::confirmation_of(&world.model.snap, &ws).is_none(),
         "the fixture workspace is foreign — §3.6 offers no confirmation on it, \
          which is what makes its dialog close on the frame it opens"
     );

@@ -795,7 +795,7 @@ in a ball body.
   name, §3.1 and §3.2 made the two fields one string twice — so the second went
   rather than being kept in step.
 
-### 8.1 The path-typed reply residuals, closed (bl-ccf7)
+### 8.1 The path-typed reply residuals, closed (bl-ccf7, bl-b4b5)
 
 The list was four items and it was wrong about one of them; three narrowed, and
 the fourth is now a ruling rather than a residual. **The question each answers
@@ -834,6 +834,16 @@ rather than carrying a relative spelling.
   since it was written, and `Preview` carries no path at all. The absolute
   worktree root exists only engine-side. Nothing was narrowed here because
   nothing crossed.
+- **The join row's own two paths were the residual this list missed, and they
+  are closed** (bl-b4b5). `JoinRow::project` and `JoinRow::workspace` rode
+  `Reply::Balls` — and, copied off it, `BoardRow`'s two — as absolute paths
+  under the engine's home, which is neither usable nor unseeable on a thin
+  client. They are the §5.1 #1 project name and the §3.1 workspace leaf now, the
+  same two words the `bl` family's actions already take, so a seat holding a
+  focus can select its own workspace's rows without joining the answer back
+  against the engine's table (bl-7407's refused shape). The engine resolves
+  either back at the one seam that owns the round trip
+  (`Snapshot::project_path` / `ws_path`).
 - **`Prepared::binding` stays a path, and that is now the ruling.** It is
   lernie's `--cwd`: minted by the engine at `Prepare`, relayed back verbatim
   inside `Action::Prompt` by a seat that never reads it, and read again by the
@@ -848,9 +858,9 @@ rather than carrying a relative spelling.
   it discloses is bounded and stated: an engine-side directory name, to a seat
   that was already told the workspace it belongs to.
 
-  It is worth being exact about what remains. This is the only path-typed field
-  left on the reply surface, and it is one a **remote seat cannot use and does
-  not read** — which makes it a disclosure and not an interop defect. Closing
+  It is worth being exact about what remains. Since bl-b4b5 this is the only
+  path-typed field left on the reply surface, and it is one a **remote seat
+  cannot use and does not read** — which makes it a disclosure and not an interop defect. Closing
   it wants the thing §9.5's residual wants: a ruling about what the local
   window *is*, because the shape that dissolves it (`Prepared` becoming opaque
   to the seat entirely) is only affordable once one seat's read path is the
@@ -1086,7 +1096,7 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9, bl-7407, bl-48ae, bl-296f)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9, bl-7407, bl-48ae, bl-296f, bl-b4b5)
 
 Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
 transport questions settled. It could not move the read path, because §1.2 and
@@ -1701,9 +1711,7 @@ missing was a seat willing to read them there. Where a payload grew it grew by
   fixed point like the rest.
 
 **The residual, as bl-296f leaves it, and it is the accessory tail minus the
-seven above** — filed whole as **bl-b4b5**. None of it is blocked and none of it
-needs a ruling; each is a `Reply` that still does not exist, and the groups are
-separable exactly as bl-48ae filed them.
+seven above** — filed whole as **bl-b4b5**, and closed by it below.
 
 - **The §3.2/§3.5 ball-and-spend family** — `ws_balls`, `roster_ball_rows`,
   `bound_ball`, `focused_join`, `ball_spend`, `conversation_spend`,
@@ -1733,12 +1741,104 @@ separable exactly as bl-48ae filed them.
   be answered without the snapshot carrying its completion as a **wall-clock
   stamp**, which is a payload-and-clock change rather than a read migration, and
   `growth_note` beside it is painted in the same two-line loop and moves with it.
-- The three residuals bl-44e9 and bl-13f9 left are **unchanged**: the §9 config
-  editors' own loads (bl-f297's ruling — pointing them at `ReadConfig`/
-  `Lineages`/`Models`/`Providers` changes what a config editor *is*), and
-  `Prepared::binding` staying a path (§8.1's ruling, affordable to dissolve only
-  once one seat's read path is the only read path — and the composer's own reads
-  are in the list above).
+
+**The accessory tail, part two: the tail is empty (bl-b4b5).** Every accessor
+above is gone, the boundary gained **one** query, and the finding is the ratio:
+of four groups, three were folds over answers this window was already holding
+and only one was a question nobody had asked. Where a payload grew it grew by a
+field, which is bl-296f's own rule applied a second time.
+
+- **The ball-and-spend family is one workspace-addressed question**
+  (`Query::WorkspaceBalls { workspace }`), and the eight accessors were never
+  eight questions. The answer is the §11 balls section's whole content — every
+  ball the workspace holds, with its badge, its project, its claimant and **its
+  §3.5 figure** — and `roster_ball_rows` / `bound_ball` are pure selections out
+  of it (`nav::balls`), exactly as `visible` and `selection` are selections out
+  of the forest. The figure rides the row rather than earning a read of its own
+  because it is a filter over the very `Snapshot::bills` walk the listing is made
+  from: asking separately would be the two-readings-of-one-derivation defect
+  bl-296f closed at the activity chip. The two conversation-scoped figures are
+  fields on `AgentView`, for `seats`/`strip`'s reason, and they land an ask
+  period after the name like everything else on that answer.
+- **`JoinRow` says names now, and the last path-typed payload field but one is
+  gone** (§8.1). `project` is the §5.1 #1 wire name and `workspace` the §3.1
+  leaf — the *same two words* `Action::Close`/`Assign`/`Move` already take — so
+  the seat's ball row hands its verbs a name it was answered rather than a path
+  it resolved, and `Reply::Balls` is finally readable by a client that holds no
+  world. `BoardRow` narrowed with it (it copies both fields off the join), and
+  `delete::Claim` did too, which is what let the §3.6 confirmation become
+  buildable by a seat at all. The engine resolves either back through
+  `Snapshot::project_path` / `ws_path`, the one seam that owns the round trip.
+- **The fire-time gates needed no query, and that is the finding.** Every one
+  was already answered: `move_targets` is the enumeration minus the holder
+  (`nav::tabs::move_targets`), the §3.6 scope is `WsRow`'s own `kind`, the
+  workspace confirmation is the enumeration + the descent forest + the balls
+  listing folded into the *same* `Confirmation` type the chokepoint gates on
+  (`delete::confirmation_of_rows`), the conversation one is the forest's own
+  subtree run (`delete::agent::confirmation_of_rows`), and the §3.3 occupied set
+  is every answered row's stored name. Two constructors, one type, one
+  `armed`/`refused` — a second type would have been two representations of one
+  gate. **The chokepoint's re-derivation is untouched and stays authoritative**;
+  what moved is the painted affordance, and it may be an ask period behind
+  because an unpainted button cannot refuse a click.
+- **The misc singles split the same way.** `agent_titles` is `Titles::of_rows`
+  over the landed forest — a row's `display` *is* the ladder's answer for its own
+  agent, so the answered list already carried the table. `focused_pending` is
+  `Query::Inbox`' answer, which is the §11 Inbox tab's own standing question, so
+  the composer and the tab are one ask; it re-reads the deposit directory where
+  the accessor folded the tree's gathered copy, which is the same rows one
+  derivation fresher. And `config_tip` — bl-1eb0's named residual — became a
+  **field on `WsRow`**: the §2.2 lineage tip is a fact about a *workspace*
+  exactly as `running` is, and `Query::Workspaces` is the question that answers
+  those. Its altitude objection does not apply, since this is not a per-agent
+  fact pushed onto every row of a list to serve one.
+- **The §3.4 echo needed a third projection, for bl-44e9's reason a third
+  time.** The composer's queue reads an answer now, and `echo::compose`'s fold
+  lands on the *snapshot* — so a typed message would have vanished for an ask
+  period between Enter and the deposit file, which is the §11 faded-send ruling
+  deleted at the one surface it exists for. `AppModel::echoed_pending` folds the
+  echo's deposit onto the answered listing; all three projections stay in the one
+  module, which is `compose`'s own single-source argument kept.
+- **The staleness stamp is the payload-and-clock change the ball named, and it
+  is a subtraction.** `Snapshot::derived_at` was an `Instant`; it is
+  `derived_at_unix` now — one stamp, in the unit both ends of the wire speak
+  (DESIGN §7.2). The two §7.2 lines then ride `Query::Workspaces`' answer beside
+  the rows, because that is the one read every window makes every frame and the
+  currency of an answer costs it nothing to say; a question of its own would have
+  bought a round trip per ask period for two lines that are usually absent. They
+  cross as the **rendered** lines for `FlightStrip::facts`' reason: the wording
+  is one derivation's, over a bound the operator tunes in `cadence.yaml`, and a
+  wire spelling of the parts would be a second place that decides when a
+  derivation is late.
+- **A test double had to grow a wall clock, and the reason is the ruling.**
+  `FakeClock::stamp` is the opaque `"TS"` sentinel every ops assertion spells, so
+  the default `Clock::unix` would have pinned every derivation's completion at
+  epoch zero and no §7.2 staleness line could ever be observed under a clock the
+  test moves. The fake answers `unix` from its own advanceable instant instead —
+  epoch-relative, because every reader of it computes a *difference*.
+- **One more driver pair learned the harness ruling, and a second kind of
+  settle appeared beside it.** `acceptance::painted` and `inbox_composer::Frames`
+  both drain the wire already; what they did not settle is the composer's fold
+  line, which is last frame's *painted* content height eased over `i.time`
+  (bl-929d) and therefore changes on the frame the inbox answer lands — after
+  the drain's fixed point. Both now run trailing **clock** frames. `Frames`
+  settles the wire between them because its beats deposit between settles;
+  `painted` deliberately does not, because a settle on a frame the steps answer
+  has not reached reads as *not wounded* and closes the §7.3 grace window
+  (`app::grace`).
+
+**What is left of §9.7, in full.** Two residuals, and neither is scope:
+
+- **The §9 config editors' own loads**, which were never one of the three
+  classes (bl-f297's ruling: pointing them at `ReadConfig`/`Lineages`/`Models`/
+  `Providers` changes what a config editor *is*, and is a separate design).
+- **`Prepared::binding` stays a path** (§8.1's ruling, unchanged), affordable to
+  dissolve only once one seat's read path is the *only* read path — and the
+  composer's own fire-time inputs (`startable`/`resumable`, the §8.5 line
+  context) are the acts side of bl-adcb's line, which no read ball reaches.
+
+Everything else the read path ever named has crossed, been folded, or been
+ruled on.
 
 - ~~Gestures are still dispatched in process~~ — **the design and the first
   group landed, §9.8** (bl-4841). An act is a declaration whose receipt lands

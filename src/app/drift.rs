@@ -44,7 +44,7 @@ use std::time::Duration;
 /// full-sweep period — the worker re-stamps the snapshot on every full sweep
 /// even when nothing changed, so exceeding two of them means passes are not
 /// completing, not that the world is quiet.
-pub(super) fn stale_label(age: Duration, stale_after: Duration) -> Option<String> {
+pub fn stale_label(age: Duration, stale_after: Duration) -> Option<String> {
     (age >= stale_after).then(|| format!("derivation {} s behind", age.as_secs()))
 }
 

@@ -101,16 +101,22 @@ fn a_conversation_row_carries_its_goal_stamp_ball_coloured_by_the_join() {
 fn the_conversation_mint_reads_its_occupied_set_off_the_stamped_roots() {
     let (root, _fx, m) = model();
     let ws = m.focused_workspace().expect("cobalt is focused").clone();
-    let mut names = m.conversation_names(&ws);
+    let mut names = crate::boundary::answer::names_in(&m.snap, &ws);
     names.sort();
     assert_eq!(names, ["jade-vole", "ochre-tern", "slate-newt"]);
     // A workspace yog has no tree for — never swept, or the `Target::Mint` one
     // that does not exist yet — contributes nothing: the general path, empty.
     assert!(
-        m.conversation_names(&root.path().join("nowhere"))
-            .is_empty(),
+        crate::boundary::answer::names_in(&m.snap, &root.path().join("nowhere")).is_empty(),
         "no tree, no occupied names"
     );
+    // **The seat reads the same set off the answered forest** (bl-b4b5): the
+    // §11 preview folds `Query::Conversations`' rows rather than the engine's
+    // agent set, and the two must be one derivation projected twice.
+    let mut seat =
+        crate::nav::convs::names_in_rows(&crate::test_support::convs::conversations(&m, 1000));
+    seat.sort();
+    assert_eq!(seat, names, "one occupied set, two projections");
 }
 
 #[test]

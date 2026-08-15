@@ -91,6 +91,20 @@ fn painted(world: &mut World, lernie: &Cli, bl: &Cli) -> String {
     world.drain(&mut |world| {
         let _ = frame(world);
     });
+    // **Then the queue region's own measurement, which the wire cannot settle**
+    // (bl-b4b5, `Frames::settle`'s trailing frames for the same reason). The
+    // composer's fold line is last frame's *painted* content height eased over
+    // `i.time` (bl-929d), and since the pending listing became `Query::Inbox`'
+    // answer that content changes on the frame the answer lands — so the fixed
+    // point the drain reaches is a frame where the region is still easing.
+    //
+    // These are **clock** frames, not wire passes, and deliberately settle
+    // nothing: an animation settles by time passing, and a settle between them
+    // would close the §7.3 wound gate's window, which reads `false` for any
+    // frame the steps answer has not reached (`app::grace`).
+    for _ in 0..4 {
+        let _ = frame(world);
+    }
     // And one last frame, laid out against the settled one: that is the frame
     // the test reads, exactly as the operator's eye reads the repaint after the
     // answer rather than the one it arrived on. **Nothing is settled between

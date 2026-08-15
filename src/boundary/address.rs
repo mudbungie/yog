@@ -156,6 +156,7 @@ impl Query {
             | Query::Inbox { workspace, .. }
             | Query::Agent { workspace, .. }
             | Query::Providers { workspace }
+            | Query::WorkspaceBalls { workspace }
             | Query::Clients { workspace } => Some(workspace.clone()),
             Query::Workspaces
             | Query::Balls

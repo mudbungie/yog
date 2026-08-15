@@ -94,15 +94,16 @@ fn the_confirmation_is_offered_only_inside_named_workspaces() {
     let replay = h.add_replay("20260101T-rr", "c-9");
     let (_c, model) = h.model();
 
-    let confirm = model.agent_delete_confirmation(&named, "c-1").unwrap();
+    let confirm =
+        crate::boundary::answer::agent_confirmation_of(&model.snap, &named, "c-1").unwrap();
     assert_eq!(confirm.name, "hi", "the display ladder names the dialog");
     assert!(!confirm.refused());
     assert!(
-        model.agent_delete_confirmation(&h.ws, "c-1").is_none(),
+        crate::boundary::answer::agent_confirmation_of(&model.snap, &h.ws, "c-1").is_none(),
         "foreign"
     );
     assert!(
-        model.agent_delete_confirmation(&replay, "c-9").is_none(),
+        crate::boundary::answer::agent_confirmation_of(&model.snap, &replay, "c-9").is_none(),
         "replay"
     );
 }

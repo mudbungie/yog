@@ -80,7 +80,11 @@ pub fn composer(
     // The frame's roster in the form a seat can hold (REMOTE §9.4, bl-1eb0):
     // the §3.3 ladder's input for the pending headers' senders, and nothing
     // else — the target's own name rides its seat view below.
-    let titles = model.agent_titles();
+    // The §3.3 ladder for a *third party's* id — a deposit's sender — off the
+    // landed forest (bl-b4b5): a row's `display` is that ladder's answer for
+    // its own agent, so the answered list is the table.
+    let titles =
+        crate::nav::convs::Titles::of_rows(&super::convs::forest(model).value.unwrap_or_default());
     // The selection bridge (§11): the conversation list picks the target — at
     // any depth, since bl-fa82 made a member a row of it; the composer never
     // grows its own picker.
@@ -127,7 +131,24 @@ pub fn composer(
     // is the snapshot's (§5.1 #11) — the message target's inbox; a new
     // conversation has none, which is the same rule at zero items.
     let key = DraftKey::composer(Some(ws.clone()), target.clone());
-    let pending = model.focused_pending();
+    // The target's undelivered deposits (§5.1 #11) — the composer's queue and
+    // the `✉n` badge's listing. **`Query::Inbox`'s answer** (bl-b4b5), which is
+    // the §11 Inbox tab's own standing question, so the two seats are one ask;
+    // it re-reads the deposit directory where the accessor folded the tree's
+    // gathered copy, which is the same rows one derivation fresher.
+    let pending = target
+        .as_deref()
+        .map(|agent| {
+            let landed = super::inspector::inbox(model, &ws, agent)
+                .value
+                .unwrap_or_default();
+            // This window's own §3.4 echo folded on (`AppModel::echoed_pending`)
+            // — the third projection of one optimism, for bl-44e9's reason: a
+            // seat's optimism reaches whatever that seat actually reads, and
+            // what this one reads is now an answer.
+            model.echoed_pending(agent, landed)
+        })
+        .unwrap_or_default();
     // What ↑ pages back through (bl-f908): the operator's own turns in this
     // conversation, derived from the two seats already open here — the
     // snapshot's pending listing above and the delivered transcript, which is
@@ -201,8 +222,15 @@ pub fn composer(
     // the §11 Search tab focus, not a scroller growing out of the composer.
     super::slash::note_ui(ui, state);
 
-    let join = model.focused_join().cloned();
-    super::ball_bar::actions(ui, model, join.as_ref());
+    // The focused workspace's first bound ball and where it may be re-homed —
+    // both selections out of answers this frame already holds (REMOTE §9.7,
+    // bl-b4b5): the §11 balls listing and the altitude-0 enumeration.
+    let ball = super::chrome::focused_balls(model).first().cloned();
+    let targets = match &ball {
+        Some(ball) => crate::nav::tabs::move_targets(&super::chrome::ws_rows(model), &ball.owner),
+        None => Vec::new(),
+    };
+    super::ball_bar::actions(ui, model, ball.as_ref(), &targets);
     // Derived per frame, never cached at dispatch (§7.3, bl-4895): a detached
     // driver that dies after launch lands in the model on a later sweep. Scoped
     // to this surface's own gestures (bl-48f8) — the message/stop verbs and the

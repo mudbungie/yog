@@ -13,7 +13,6 @@ pub(crate) mod harness;
 mod knobs;
 mod panels;
 mod search;
-mod spend;
 mod started;
 mod view;
 mod worker;
@@ -129,6 +128,9 @@ fn startup_focus_falls_back_to_first_when_nothing_needs_attention() {
     // belongs to the workspace it was fired in, and there is none to compare
     // against (REMOTE §9.7, bl-44e9).
     assert!(model.echoed(Vec::new(), 10).is_empty());
+    // Nor onto an answered inbox listing, which is the echo's third projection
+    // (REMOTE §9.7, bl-b4b5) and takes the same door.
+    assert!(model.echoed_pending("c-1", Vec::new()).is_empty());
     model.jump_next_attention();
     assert_eq!(model.focused_workspace(), None, "nothing to jump onto");
 }

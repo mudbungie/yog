@@ -110,12 +110,12 @@ fn a_booted_engine_hands_its_window_a_seat_on_its_own_wire() {
     engine.model.wire_ask(&question);
     assert_eq!(asker.pass(), 1, "one standing question, asked");
     engine.model.refresh();
-    let Some(Ok(crate::boundary::reply::Reply::Workspaces(rows))) =
+    let Some(Ok(crate::boundary::reply::Reply::Workspaces(view))) =
         engine.model.wire_ask(&question)
     else {
         panic!("the frame paints a decoded reply that crossed the wire");
     };
-    assert!(rows.is_empty(), "an empty world enumerates nothing");
+    assert!(view.rows.is_empty(), "an empty world enumerates nothing");
     drop(engine);
 }
 

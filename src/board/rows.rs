@@ -42,8 +42,12 @@ pub(super) fn row(
     by_id: &HashMap<&str, &Ball>,
 ) -> BoardRow {
     let gates = gates(ball, by_id);
+    // The binding is a §3.1 **name** since bl-b4b5; the derivations below read
+    // the tree map, which is keyed by path, so the round trip is spelled once
+    // here at the one seam that owns it (`Snapshot::ws_path`).
     let ws = join.workspace.clone();
-    let roots = ws
+    let path = ws.as_deref().and_then(|name| snap.ws_path(name).ok());
+    let roots = path
         .as_deref()
         .map(|ws| stamped_roots(&snap.trees, ws, &ball.id))
         .unwrap_or_default();
@@ -54,11 +58,11 @@ pub(super) fn row(
         priority: ball.priority,
         column: super::column(ladder(ball, live), !gates.is_empty()),
         state: join.state,
-        drones: ws
+        drones: path
             .as_deref()
             .map(|ws| drones(&snap.trees, ws, &roots))
             .unwrap_or_default(),
-        spend: ws
+        spend: path
             .as_deref()
             .map(|ws| crate::spend::of_ball(&bills_of(snap, ws), &roots, prices)),
         rollup: super::rollup::of(snap, prices, &ball.id, by_id),

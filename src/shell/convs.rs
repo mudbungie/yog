@@ -43,18 +43,29 @@ pub(super) fn forest(model: &mut AppModel) -> Landed<Vec<ConvRow>> {
     let Some(workspace) = model.focused_ws_name() else {
         return Landed::default();
     };
-    let mut landed = wire::ask(
+    let mut landed = of(model, workspace);
+    landed.value = landed
+        .value
+        .map(|rows| model.echoed(rows, super::now_unix()));
+    landed
+}
+
+/// The descent forest of a **named** workspace, which need not be the focused
+/// one: the §3.6 delete dialog is opened from a tab menu and confirms whatever
+/// wall that menu named (bl-b4b5). No echo — the echo is this window's optimism
+/// about its own next start, and a dialog about another wall is not that seat.
+///
+/// Aimed at the focused workspace it is the *same envelope* [`forest`] declares,
+/// so the two are one ask.
+pub(super) fn of(model: &mut AppModel, workspace: String) -> Landed<Vec<ConvRow>> {
+    wire::ask(
         model,
         Query::Conversations { workspace },
         |reply| match reply {
             Reply::Conversations(rows) => Some(rows),
             _ => None,
         },
-    );
-    landed.value = landed
-        .value
-        .map(|rows| model.echoed(rows, super::now_unix()));
-    landed
+    )
 }
 
 /// The rows this seat's fold makes visible — the one derivation every gesture

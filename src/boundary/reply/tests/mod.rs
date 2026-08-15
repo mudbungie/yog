@@ -74,6 +74,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             agents: 5,
             running: true,
             pinned: None,
+            config_tip: None,
         },
         WsRow {
             workspace: "f".into(),
@@ -82,6 +83,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             agents: 0,
             running: false,
             pinned: None,
+            config_tip: None,
         },
         WsRow {
             workspace: "r".into(),
@@ -90,9 +92,14 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             agents: 1,
             running: false,
             pinned: None,
+            config_tip: None,
         },
     ];
-    let v = encode(&Reply::Workspaces(rows));
+    let v = encode(&Reply::Workspaces(crate::boundary::reply::Workspaces {
+        rows,
+        stale: None,
+        growth: None,
+    }));
     assert_eq!(v["kind"], "workspaces");
     let rows = v["rows"].as_array().unwrap();
     assert_eq!(rows[0]["kind"], "named");
@@ -210,15 +217,15 @@ fn the_agent_state_and_flight_tokens_are_total() {
 #[test]
 fn join_rows_encode_the_binding_facts() {
     let full = JoinRow {
-        project: PathBuf::from("/p"),
+        project: "p".into(),
         ball_id: "bl-1".into(),
         state: JoinState::Delivered,
-        workspace: Some(PathBuf::from("/ws")),
+        workspace: Some("ws".into()),
         claimant: Some("alba".into()),
         title: Some("t".into()),
     };
     let bare = JoinRow {
-        project: PathBuf::from("/p"),
+        project: "p".into(),
         ball_id: "bl-2".into(),
         state: JoinState::ReadyStartable,
         workspace: None,
@@ -228,7 +235,9 @@ fn join_rows_encode_the_binding_facts() {
     let v = encode(&Reply::Balls(vec![full, bare]));
     let rows = v["rows"].as_array().unwrap();
     assert_eq!(rows[0]["state"], "delivered");
-    assert_eq!(rows[0]["workspace"], "/ws");
+    // Both addresses are §8.1 names now (bl-b4b5), not paths.
+    assert_eq!(rows[0]["project"], "p");
+    assert_eq!(rows[0]["workspace"], "ws");
     assert_eq!(rows[0]["claimant"], "alba");
     assert_eq!(rows[1]["state"], "ready");
     assert!(rows[1].get("workspace").is_none());

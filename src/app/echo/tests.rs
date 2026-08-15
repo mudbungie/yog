@@ -8,7 +8,6 @@ use crate::app::Snapshot;
 use crate::git_tree::{Agent, AgentState, GitTree};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Instant;
 
 const WS: &str = "/ws";
 
@@ -47,7 +46,7 @@ fn agent(id: &str, name: Option<&str>, messages: usize) -> Agent {
 
 /// A published derivation carrying `agents` under [`WS`].
 fn snap(agents: Vec<Agent>) -> Arc<Snapshot> {
-    let mut s = Snapshot::empty(Instant::now());
+    let mut s = Snapshot::empty(0);
     s.trees.insert(
         ws(),
         GitTree {
@@ -173,7 +172,7 @@ fn nothing_pending_folds_nothing_and_an_absent_target_invents_nothing() {
 fn a_start_into_a_workspace_with_no_tree_still_paints_its_row() {
     // The §3.4 bootstrap: the first conversation of a workspace the worker has
     // never derived. The general path with an empty tree, not a special case.
-    let derived = Arc::new(Snapshot::empty(Instant::now()));
+    let derived = Arc::new(Snapshot::empty(0));
     let echo = Echo::started(Path::new(WS), "stench-pug", "found the world", 7);
     let rendered = compose(&derived, Some(&echo), None, None);
     assert_eq!(rendered.trees[&ws()].agents.len(), 1);

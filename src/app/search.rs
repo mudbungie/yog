@@ -70,10 +70,14 @@ impl AppModel {
 
     /// The workspace holding this ball, per the §3.5 join.
     fn ball_workspace(&self, project: &std::path::Path, id: &str) -> Option<std::path::PathBuf> {
+        // A join row addresses by name since bl-b4b5, so the hit's path is
+        // named first and the answer resolved back — both directions through
+        // the snapshot's one round trip.
+        let project = self.snap.project_name(project);
         self.snap
             .join_rows
             .iter()
             .find(|r| r.project == project && r.ball_id == id)
-            .and_then(|r| r.workspace.clone())
+            .and_then(|r| self.snap.ws_path(r.workspace.as_deref()?).ok())
     }
 }

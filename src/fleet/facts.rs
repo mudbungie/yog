@@ -135,8 +135,12 @@ pub fn of(
 /// it. One ball is one drone by construction — the loop spawns one conversation
 /// per ball — so this is the drone count the cap governs.
 pub fn held(rows: &[BoardRow], workspace: &std::path::Path) -> usize {
+    // A board row names its workspace since bl-b4b5; the `cadence.yaml` entry
+    // this loop was armed from names a directory, and §3.1 makes the leaf the
+    // name, so the comparison is made in the vocabulary the answer speaks.
+    let name = crate::naming::leaf(workspace);
     rows.iter()
-        .filter(|r| r.column == Column::Claimed && r.workspace.as_deref() == Some(workspace))
+        .filter(|r| r.column == Column::Claimed && r.workspace.as_deref() == Some(name.as_str()))
         .count()
 }
 

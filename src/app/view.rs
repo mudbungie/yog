@@ -34,19 +34,7 @@ impl AppModel {
     /// same fact for the view-models that do not, and it is the injected seam,
     /// so a test advances it like anything else.
     pub(crate) fn now_unix(&self) -> i64 {
-        self.clock.stamp().parse().unwrap_or(0)
-    }
-
-    /// The §11 ops-surface staleness line, or `None` while the rendered
-    /// snapshot is current (§7.2). Honest by construction: it is the age of the
-    /// derivation on screen, not a claim about how fresh it ought to be.
-    pub fn staleness(&self) -> Option<String> {
-        super::drift::stale_label(
-            self.clock
-                .now()
-                .saturating_duration_since(self.snap.derived_at),
-            self.snap.cadence.stale_after(),
-        )
+        self.clock.unix()
     }
 
     /// The clock's live periods off the rendered snapshot (bl-3381): what the
@@ -72,8 +60,8 @@ impl AppModel {
     /// the wire; a test asks here, through `test_support::chrome`, and the two
     /// cannot be two derivations because this is that one call.
     #[cfg(test)]
-    pub(crate) fn ws_listing(&self) -> Vec<crate::boundary::reply::WsRow> {
-        crate::boundary::answer::ws_rows(&self.derived, &self.ui)
+    pub(crate) fn ws_listing(&self) -> crate::boundary::reply::Workspaces {
+        crate::boundary::answer::workspaces(&self.derived, &self.ui, self.now_unix())
     }
 
     /// The frame→worker dirty hand-off (§7.2) — a test-only reader, so a test
@@ -82,15 +70,6 @@ impl AppModel {
     #[cfg(test)]
     pub(crate) fn dirty_handle(&self) -> crate::state::DirtySet {
         self.dirty.clone()
-    }
-
-    /// What grew since the last derivation (§7.2), as the §11 ops accessory
-    /// says it — `None` when nothing did. A dispatch storm is a fact about a
-    /// *conversation*, and before bl-ee0a yog had no way to say it: 227 branches
-    /// under one root read as yog being slow, so the operator's one signal
-    /// pointed at the wrong layer.
-    pub fn growth_note(&self) -> Option<String> {
-        super::snapshot::growth_label(&self.snap.growth)
     }
 
     /// The current snapshot for `ws`, if derived.
@@ -112,6 +91,19 @@ impl AppModel {
     /// [`focused_workspace`](Self::focused_workspace) above it.
     pub fn workspace_path(&self, name: &str) -> Option<std::path::PathBuf> {
         self.snap.ws_path(name).ok()
+    }
+
+    /// The focused workspace's name (§3.1): the **target** an Assign
+    /// (`bl claim <id> --as <name>`) or a Move's claim stamps (§8.2/§3.2).
+    /// `None` when no workspace is focused (the affordance is then withheld).
+    ///
+    /// **The focus verbatim since bl-7407** — it holds the name — where it was
+    /// a leaf derivation off a held path. The derivation did not move, it
+    /// dissolved: one fact, one home. It sits here since bl-b4b5, beside the
+    /// resolver and the path below it, `app/balls/targets.rs` having emptied
+    /// out when the Move picker became a fold over the landed enumeration.
+    pub fn focused_ws_name(&self) -> Option<String> {
+        self.focus.ws.clone()
     }
 
     /// The focused workspace as a path — the focus's name through the one door.
@@ -166,7 +158,10 @@ impl AppModel {
 /// strip — is gone (bl-296f): every one of them is now a fold at the seat over
 /// an answer the boundary landed (`Query::Workspaces`, `Query::Ops`,
 /// `Query::Agent`), which is REMOTE §9.7's three-move discipline with the third
-/// move being a subtraction rather than a new question.
+/// move being a subtraction rather than a new question. **The §7.2 staleness
+/// and growth lines went the same way with bl-b4b5**, once the snapshot carried
+/// its completion as a wall-clock stamp: they are two fields on the
+/// `Query::Workspaces` answer the tab bar above them already stands on.
 impl AppModel {
     /// Per-workspace roster facts (§6 rollup): attention-bearing agent count,
     /// total agent count, and whether any agent is running (Live/InFlight). An

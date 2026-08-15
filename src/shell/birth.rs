@@ -79,9 +79,12 @@ pub(super) fn block(
     if let Some(refusal) = crate::actions::work_dir_refusal(&state.actions.path_dir) {
         ui.colored_label(crate::theme::ICHOR, refusal);
     }
-    // The config-lineage tip from the §7 snapshot — the very commit `lernie
-    // prompt` will fork. A workspace whose snapshot carries no lineage yet has
-    // nothing to say here, and says nothing rather than a line about nothing.
-    let config_tip = model.config_tip();
+    // The §2.2 config-lineage tip — the very commit `lernie prompt` will fork.
+    // Off the landed enumeration (bl-b4b5): it is a fact about a *workspace*,
+    // so it rides `Query::Workspaces`' row beside the §6 rollups rather than
+    // being folded out of the window's own tree. A workspace with no lineage
+    // derived yet says nothing rather than a line about nothing.
+    let config_tip =
+        crate::nav::tabs::config_tip(&super::chrome::ws_rows(model), &model.snap.ws_name(ws));
     super::model_pick::birth_seat(ui, model, state, ws, config_tip.as_ref(), bz);
 }

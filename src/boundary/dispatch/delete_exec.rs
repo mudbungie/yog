@@ -35,7 +35,9 @@ pub(super) fn unmake(
     delete::execute(
         &delete::plan(
             &confirm,
+            workspace,
             &crate::world::layout_under(&deps.yog_data_root).root,
+            &deps.snapshot.projects,
         ),
         &deps.bl,
         ui,

@@ -7,7 +7,7 @@
 use crate::AppModel;
 use crate::cli_outbound::Cli;
 use crate::keymap::CenterTab;
-use crate::nav::menu::Seat;
+use crate::nav::{self, menu::Seat};
 
 use super::ShellState;
 use super::menus::{BallRef, Target};
@@ -85,11 +85,11 @@ fn balls_section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState
         // The focused workspace's remaining ball rows (§3.5 claimant join), id +
         // badge: the delivered ones. A *bound* ball is rendered in full by the
         // ▶ Continue row above, so it is not repeated here as a bare id
-        // (bl-abbe) — [`AppModel::roster_ball_rows`] is the covered partition.
-        if let Some(ws) = model.focused_workspace() {
-            for ball in model.roster_ball_rows(&ws) {
-                bound_ball_row(ui, model, state, lernie, &ball);
-            }
+        // (bl-abbe) — `nav::balls::roster` is the covered partition, now a
+        // selection out of the landed listing rather than a second derivation.
+        let targets = nav::tabs::move_targets(&super::chrome::ws_rows(model), "");
+        for ball in nav::balls::roster(&super::chrome::focused_balls(model)) {
+            bound_ball_row(ui, model, state, lernie, &ball, &targets);
         }
     });
 }
@@ -105,6 +105,7 @@ fn bound_ball_row(
     state: &mut ShellState,
     lernie: &Cli,
     ball: &crate::nav::BoundBall,
+    targets: &[String],
 ) {
     let text = match &ball.badge {
         Some(b) => format!("{} · {b}", ball.id),
@@ -120,7 +121,13 @@ fn bound_ball_row(
     let seat = Seat::BallRow {
         state: ball.state,
         assign_to: model.focused_ws_name(),
-        move_to: model.move_targets(&ball.owner),
+        // The destinations minus this row's own holder — the same rule the
+        // composer's `move to:` buttons read, folded once for the section.
+        move_to: targets
+            .iter()
+            .filter(|n| **n != ball.owner)
+            .cloned()
+            .collect(),
     };
     let target = Target::Ball(BallRef {
         project: ball.project.clone(),

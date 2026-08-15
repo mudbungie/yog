@@ -44,50 +44,68 @@ mod glue;
 // world's focus read as a seat.
 mod line;
 
+/// The §3.5 join row for one workspace, off the **answered** binding table
+/// (`Query::Balls`) — the rows are addressed by name since bl-b4b5, so a test
+/// asks the boundary rather than a deleted accessor.
+fn row_for(m: &AppModel, ws: &Path) -> Option<crate::projects::join::JoinRow> {
+    let name = crate::naming::leaf(ws);
+    m.snap
+        .join_rows
+        .iter()
+        .find(|r| r.workspace.as_deref() == Some(name.as_str()))
+        .cloned()
+}
+
 #[test]
 fn construction_fetches_balls_and_builds_the_claimant_join() {
     let w = world();
     let (_c, m) = model(&w);
     // bl-work claims the local name "cobalt" → the workspace is Bound.
-    let bound = m.row_for(&w.ws_cobalt).unwrap();
+    let bound = row_for(&m, &w.ws_cobalt).unwrap();
     assert_eq!(bound.state, JoinState::Bound, "claimant = workspace name");
     assert_eq!(bound.ball_id, "bl-work");
     // "spare" is claimed by nothing → an unassigned workspace.
-    let spare = m.row_for(&w.ws_spare).unwrap();
+    let spare = row_for(&m, &w.ws_spare).unwrap();
     assert_eq!(spare.state, JoinState::UnassignedWorkspace);
     // Bound cobalt renders its one ball, unbadged (Bound needs none); spare and an
     // unknown workspace render no ball at all.
-    let cobalt_balls = m.ws_balls(&w.ws_cobalt);
+    let cobalt_balls = crate::test_support::chrome::ws_balls(&m, &w.ws_cobalt);
     assert_eq!(cobalt_balls.len(), 1);
     assert_eq!(cobalt_balls[0].id, "bl-work");
     assert_eq!(cobalt_balls[0].badge, None);
-    assert!(m.ws_balls(&w.ws_spare).is_empty());
-    assert!(m.ws_balls(Path::new("/nope")).is_empty());
+    assert!(crate::test_support::chrome::ws_balls(&m, &w.ws_spare).is_empty());
+    assert!(crate::test_support::chrome::ws_balls(&m, Path::new("/nope")).is_empty());
 }
 
 #[test]
-fn focused_join_targets_the_focused_workspace_ball() {
+fn the_focused_workspaces_ball_row_is_the_one_the_verbs_aim_at() {
     let w = world();
     let (_c, mut m) = model(&w);
     m.focus_workspace(&crate::naming::leaf(&w.ws_cobalt));
-    let row = m.focused_join().unwrap();
-    assert_eq!(row.ball_id, "bl-work");
+    // The seat's own row: the first of the focused workspace's answered
+    // listing, which is what `shell::ball_bar` paints and what `c`/`r` fire on.
+    let ws = m.focused_workspace().unwrap();
+    let row = crate::test_support::chrome::ws_balls(&m, &ws)
+        .first()
+        .cloned()
+        .unwrap();
+    assert_eq!(row.id, "bl-work");
     assert!(close_enabled(row.state), "Bound ⇒ Close offered");
     assert!(unclaim_enabled(row.state));
 
     // "spare" is a named workspace no ball claims: its only row is the §3.5
-    // UnassignedWorkspace one, which names no ball and no project. focused_join
-    // must not hand that row out — the ball row and the marks knob both read it
-    // as a ball ("ball " with an empty id) and a project (a `bl conf` spawned
-    // with cwd "", which fails as "no such file", reading as a missing binary).
+    // UnassignedWorkspace one, which names no ball and no project. The listing
+    // must not hand that row out — the ball row and the marks knob would read
+    // it as a ball ("ball " with an empty id) and as a project.
     m.focus_workspace(&crate::naming::leaf(&w.ws_spare));
+    let ws = m.focused_workspace().unwrap();
     assert!(
-        m.focused_join().is_none(),
-        "a workspace with no ball focuses no ball"
+        crate::test_support::chrome::ws_balls(&m, &ws).is_empty(),
+        "a workspace with no ball answers no ball"
     );
-    // The row itself still exists — the roster renders the workspace; it is only
-    // "the focused ball" that is absent.
-    let spare = m.row_for(&w.ws_spare).unwrap().state;
+    // The join row itself still exists — the roster renders the workspace; it
+    // is only "the focused ball" that is absent.
+    let spare = row_for(&m, &w.ws_spare).unwrap().state;
     assert_eq!(spare, JoinState::UnassignedWorkspace);
     assert!(!close_enabled(spare), "unassigned workspace ⇒ no Close");
     assert!(!unclaim_enabled(spare));
@@ -100,18 +118,19 @@ fn a_bound_ball_gets_one_roster_row_not_two() {
     // not also emit it as a bare id with no title, state or verb.
     let w = world();
     let (_c, m) = model(&w);
-    assert_eq!(m.ws_balls(&w.ws_cobalt).len(), 1, "cobalt holds bl-work");
+    let rows = crate::test_support::chrome::ws_balls(&m, &w.ws_cobalt);
+    assert_eq!(rows.len(), 1, "cobalt holds bl-work");
     assert_eq!(m.resumable().len(), 1, "▶ Continue renders it in full");
     assert!(
-        m.roster_ball_rows(&w.ws_cobalt).is_empty(),
+        crate::nav::balls::roster(&rows).is_empty(),
         "one ball, one row"
     );
     // The Continue row carries the ball's own object, so its §11 accelerator
     // menu acts on the ball without re-deriving anything from the focus.
-    let ball = m.bound_ball(&w.ws_cobalt, "bl-work").unwrap();
+    let ball = crate::nav::balls::bound(&rows, "bl-work").unwrap();
     assert_eq!(ball.owner, "cobalt");
     assert_eq!(ball.state, JoinState::Bound);
-    assert!(m.bound_ball(&w.ws_cobalt, "bl-nope").is_none());
+    assert!(crate::nav::balls::bound(&rows, "bl-nope").is_none());
 }
 
 #[test]
@@ -140,7 +159,7 @@ fn an_unlistable_clone_renders_orphaned() {
         .snap
         .join_rows
         .iter()
-        .find(|r| r.project == bad)
+        .find(|r| r.project == crate::naming::leaf(&bad))
         .expect("the unlistable clone has a row");
     assert_eq!(orphan.state, JoinState::OrphanedProject);
 }
@@ -168,10 +187,10 @@ pub(super) fn empty_model() -> (TempDir, AppModel) {
 }
 
 #[test]
-fn focused_join_is_none_without_a_focused_workspace() {
-    // An empty world: no workspaces ⇒ no startup focus ⇒ focused_join None.
+fn the_seats_ball_row_is_none_without_a_focused_workspace() {
+    // An empty world: no workspaces ⇒ no startup focus ⇒ nothing to answer.
     let (_root, m) = empty_model();
-    assert!(m.focused_join().is_none());
+    assert!(m.focused_workspace().is_none());
     assert!(m.snap.ops.is_empty());
     assert_eq!(m.identity(), "", "no recorded identity, no user ⇒ empty");
 }

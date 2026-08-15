@@ -88,7 +88,10 @@ pub(super) fn danger_row(
     let Some(root) = super::seat::selection(model).map(|seat| seat.root) else {
         return;
     };
-    if model.agent_delete_confirmation(ws, &root).is_none() {
+    // The §3.6 scope, off the landed enumeration (bl-b4b5): the verb exists for
+    // yog's own named workspaces and nowhere else.
+    let name = model.snap.ws_name(ws);
+    if !crate::nav::tabs::is_named(&super::chrome::ws_rows(model), &name) {
         return;
     }
     ui.separator();
@@ -126,10 +129,18 @@ fn window(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     };
     // The workspace left the named roster (deleted here or elsewhere): the
     // dialog has no subject left, so it closes rather than naming a ghost.
-    let Some(confirm) = model.agent_delete_confirmation(&ws, &root) else {
+    //
+    // **Folded off two landed answers** (REMOTE §9.7, bl-b4b5): the enumeration
+    // for the §3.6 scope, the descent forest for the name and the live members.
+    // The chokepoint re-derives the gate fail-closed at fire (§9.8), so this
+    // copy paints the affordance and never decides.
+    let name = model.snap.ws_name(&ws);
+    if !crate::nav::tabs::is_named(&super::chrome::ws_rows(model), &name) {
         state.delete_agent = DeleteAgentState::default();
         return;
-    };
+    }
+    let rows = super::convs::of(model, name).value.unwrap_or_default();
+    let confirm = crate::delete::agent::confirmation_of_rows(&rows, &root);
     let mut shown = true;
     egui::Window::new(format!("delete conversation {}", confirm.name))
         .collapsible(false)

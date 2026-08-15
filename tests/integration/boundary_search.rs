@@ -12,7 +12,6 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
-use std::time::Instant;
 use tempfile::tempdir;
 use yog::app::Snapshot;
 use yog::boundary::reply::{Reply, encode};
@@ -62,7 +61,7 @@ fn world(ws: &Path) -> Snapshot {
         ops: vec![],
         growth: vec![],
         ui_bytes: None,
-        derived_at: Instant::now(),
+        derived_at_unix: 0,
         cadence: yog::app::Cadence::default(),
         fleet: std::collections::BTreeMap::new(),
     }

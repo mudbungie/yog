@@ -7,11 +7,10 @@ use crate::ui_state::SystemClock;
 use crate::wire::server::Answerer;
 use serde_json::json;
 use std::path::PathBuf;
-use std::time::Instant;
 use tempfile::tempdir;
 
 fn intake(state_root: &std::path::Path) -> Intake {
-    let snap = Arc::new(crate::app::Snapshot::empty(Instant::now()));
+    let snap = Arc::new(crate::app::Snapshot::empty(0));
     Intake::new(Arc::new(ConsumerCtx {
         yog_binary: PathBuf::from("/no/such/yog"),
         world: crate::test_support::no_world(),

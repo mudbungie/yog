@@ -5,9 +5,14 @@
 
 use std::path::PathBuf;
 
-use super::super::super::super::{Reply, WsRow};
+use super::super::super::super::Reply;
+
+/// The §11 altitude-0 answers — the enumeration with its §7.2 notes, and one
+/// workspace's ball listing — cut off this file at §12's per-file budget
+/// (bl-b4b5) on the seam the surface itself draws: those two are what the
+/// chrome asks, and everything left here is what a pane asks.
+mod chrome;
 use super::board::board;
-use crate::binding::WorkspaceKind;
 use crate::board::Board;
 use crate::config_edit::branch::{ConfigBranch, Lineage};
 use crate::config_edit::brazen::ProviderRowView;
@@ -135,7 +140,7 @@ fn found() -> Found {
         hits: vec![
             Hit {
                 at: Address::Ball {
-                    project: PathBuf::from("/p"),
+                    project: "p".into(),
                     id: "bl-1".into(),
                 },
                 field: Field::Name,
@@ -164,48 +169,22 @@ fn found() -> Found {
     }
 }
 
-fn workspaces() -> Vec<WsRow> {
-    let row = |name: &str, kind, attention, agents, running, pinned| WsRow {
-        workspace: name.to_owned(),
-        kind,
-        attention,
-        agents,
-        running,
-        pinned,
-    };
-    vec![
-        row(
-            "alba",
-            WorkspaceKind::Named {
-                name: "alba".into(),
-            },
-            2,
-            5,
-            true,
-            // Both arms of the §4.1 pin rank ride the round trip: an absent one
-            // must not read back as rank 0, which is the first hoisted tab.
-            Some(1),
-        ),
-        row("f", WorkspaceKind::Foreign, 0, 0, false, None),
-        row("r", WorkspaceKind::Replay, 0, 1, false, Some(0)),
-    ]
-}
-
 pub(super) fn listings() -> Vec<Reply> {
-    vec![
-        Reply::Workspaces(workspaces()),
+    let mut out = chrome::chrome();
+    out.extend([
+        // The §11 altitude-0 answers, in their own file at the budget.
         Reply::Conversations(conv_rows()),
         Reply::Balls(vec![
             JoinRow {
-                project: PathBuf::from("/p"),
+                project: "p".into(),
                 ball_id: "bl-1".into(),
                 state: JoinState::Delivered,
-                workspace: Some(PathBuf::from("/ws")),
+                workspace: Some("ws".into()),
                 claimant: Some("alba".into()),
                 title: Some("t".into()),
             },
             JoinRow {
-                project: PathBuf::from("/p"),
+                project: "p".into(),
                 ball_id: "bl-2".into(),
                 state: JoinState::ReadyStartable,
                 workspace: None,
@@ -284,5 +263,6 @@ pub(super) fn listings() -> Vec<Reply> {
                 tools: Vec::new(),
             },
         ]),
-    ]
+    ]);
+    out
 }

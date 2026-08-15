@@ -20,9 +20,8 @@ pub fn confirmation_of(snap: &Snapshot, ws: &Path) -> Option<Confirmation> {
     let agents = snap.trees.get(ws).map_or(&[][..], |t| t.agents.as_slice());
     Some(delete::confirmation(
         &name,
-        ws,
         &nav::convs::liveness(agents),
-        bound_claims(snap, ws),
+        bound_claims(snap, &name),
     ))
 }
 
@@ -49,10 +48,10 @@ fn named_leaf(snap: &Snapshot, ws: &Path) -> Option<String> {
 
 /// The live bound balls the unmaking releases (§3.6 step 1): the join's
 /// [`Bound`](JoinState::Bound) rows for this workspace.
-fn bound_claims(snap: &Snapshot, ws: &Path) -> Vec<Claim> {
+fn bound_claims(snap: &Snapshot, name: &str) -> Vec<Claim> {
     snap.join_rows
         .iter()
-        .filter(|r| r.workspace.as_deref() == Some(ws) && r.state == JoinState::Bound)
+        .filter(|r| r.workspace.as_deref() == Some(name) && r.state == JoinState::Bound)
         .map(|r| Claim {
             project: r.project.clone(),
             id: r.ball_id.clone(),

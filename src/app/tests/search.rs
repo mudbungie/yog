@@ -80,11 +80,12 @@ fn a_ball_hit_routes_through_its_workspace_and_an_unheld_one_moves_nothing() {
     let (_c, mut model) = h.model();
     let project = std::path::PathBuf::from("/proj");
     let mut snap = (*model.snap).clone();
+    snap.projects = vec![project.clone()];
     snap.join_rows = vec![crate::projects::join::JoinRow {
-        project: project.clone(),
+        project: crate::naming::leaf(&project),
         ball_id: "bl-held".to_owned(),
         state: crate::projects::join::JoinState::Bound,
-        workspace: Some(h.ws.clone()),
+        workspace: Some(crate::naming::leaf(&h.ws)),
         claimant: Some("ws".to_owned()),
         title: None,
     }];

@@ -14,7 +14,7 @@ use crate::projects::join::JoinState;
 use crate::ui_state::SystemClock;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tempfile::tempdir;
 
 const NOW: i64 = 1_000_000;
@@ -33,7 +33,7 @@ fn ctx(state_root: &Path, snapshot: Snapshot) -> PilotCtx {
             home: state_root.join("home"),
             yog_data_root: state_root.join("data"),
             balls_state_root: state_root.join("balls"),
-            snapshot: Arc::new(Snapshot::empty(Instant::now())),
+            snapshot: Arc::new(Snapshot::empty(0)),
             caller: crate::boundary::dispatch::Caller::default(),
         },
         cell,
@@ -48,7 +48,7 @@ fn ctx(state_root: &Path, snapshot: Snapshot) -> PilotCtx {
 #[test]
 fn an_unarmed_tick_acts_on_nothing_and_writes_nothing() {
     let root = tempdir().expect("tempdir");
-    let ctx = ctx(root.path(), Snapshot::empty(Instant::now()));
+    let ctx = ctx(root.path(), Snapshot::empty(0));
     assert!(!ctx.pass());
     assert!(
         !root.path().join("ops.jsonl").exists(),
@@ -62,7 +62,7 @@ fn an_unarmed_tick_acts_on_nothing_and_writes_nothing() {
 #[test]
 fn an_armed_tick_with_no_work_does_nothing() {
     let root = tempdir().expect("tempdir");
-    let mut snapshot = Snapshot::empty(Instant::now());
+    let mut snapshot = Snapshot::empty(0);
     snapshot.fleet.insert(
         WS.to_owned(),
         crate::fleet::Policy {
@@ -79,7 +79,7 @@ fn an_armed_tick_with_no_work_does_nothing() {
 #[test]
 fn the_thread_ticks_and_stops_on_drop() {
     let root = tempdir().expect("tempdir");
-    let pilot = Pilot::spawn(ctx(root.path(), Snapshot::empty(Instant::now())));
+    let pilot = Pilot::spawn(ctx(root.path(), Snapshot::empty(0)));
     drop(pilot); // joins cleanly — the Drop is the shutdown
 }
 
@@ -95,14 +95,14 @@ fn armed_world(ws: &Path, project: &Path, claimed: bool, lease: Option<Duration>
         agents.push(drone);
     }
     let join = crate::projects::join::JoinRow {
-        project: project.to_path_buf(),
+        project: crate::naming::leaf(project),
         ball_id: "bl-1".to_owned(),
         state: if claimed {
             JoinState::Bound
         } else {
             JoinState::ReadyStartable
         },
-        workspace: claimed.then(|| ws.to_path_buf()),
+        workspace: claimed.then(|| crate::naming::leaf(ws)),
         claimant: claimed.then(|| name.to_owned()),
         title: Some("the one ball".to_owned()),
     };
@@ -120,6 +120,9 @@ fn armed_world(ws: &Path, project: &Path, claimed: bool, lease: Option<Duration>
         root_commit: None,
     };
     let mut snap = crate::boundary::tests::snapshot(ws, name, agents, vec![join]);
+    // The §5.1 #1 naming set the row's project name was derived over — the
+    // round trip the board and the start flow both spend (bl-b4b5).
+    snap.projects = vec![project.to_path_buf()];
     snap.balls_by_project
         .insert(project.to_path_buf(), vec![ball]);
     snap.fleet.insert(

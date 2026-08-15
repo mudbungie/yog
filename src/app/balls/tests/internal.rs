@@ -168,32 +168,29 @@ fn empty_project_hint_only_with_zero_projects() {
 }
 
 #[test]
-fn workspace_names_lists_the_named_workspaces_excluding_foreign() {
-    // The Move affordance's target picker (§8.2): only the local *named*
-    // workspaces. A foreign (lernie auto-id) workspace carries no yog identity, so
-    // it is excluded — the non-Named arm.
+fn move_targets_are_the_named_workspaces_minus_the_one_holding_the_ball() {
+    // §8.2 Move: one destination rule for the composer's `move to:` buttons,
+    // the §11 ball-row menu's submenu and the board row's — and never a move to
+    // where the ball already is. **Off the landed enumeration** since bl-b4b5,
+    // so the destinations and the tab bar are one answer; a foreign (lernie
+    // auto-id) workspace carries no yog identity and is excluded, which is the
+    // non-Named arm.
     let w = world();
     fs::create_dir_all(w.roots.lernie_data.join("workspaces/adhoc/repo.git")).unwrap();
     let (_c, m) = model(&w);
-    let mut names = m.workspace_names();
-    names.sort();
+    let rows = crate::test_support::chrome::ws_rows(&m);
     assert_eq!(
-        names,
-        vec!["cobalt".to_owned(), "spare".to_owned()],
-        "foreign 'adhoc' excluded",
+        crate::nav::tabs::move_targets(&rows, "cobalt"),
+        vec!["spare".to_owned()],
+        "foreign 'adhoc' excluded, and never where it already is",
     );
-}
-
-#[test]
-fn move_targets_are_the_named_workspaces_minus_the_one_holding_the_ball() {
-    // §8.2 Move: one destination rule for the composer's `move to:` buttons and
-    // the §11 ball-row menu's submenu — and never a move to where it already is.
-    let w = world();
-    let (_c, m) = model(&w);
-    assert_eq!(m.move_targets("cobalt"), vec!["spare".to_owned()]);
-    let mut all = m.move_targets("nobody");
+    let mut all = crate::nav::tabs::move_targets(&rows, "nobody");
     all.sort();
     assert_eq!(all, vec!["cobalt".to_owned(), "spare".to_owned()]);
+    // The §3.6 scope gate off the same rows: yog's own named walls only.
+    assert!(crate::nav::tabs::is_named(&rows, "cobalt"));
+    assert!(!crate::nav::tabs::is_named(&rows, "adhoc"), "foreign");
+    assert!(!crate::nav::tabs::is_named(&rows, "nowhere"), "absent");
 }
 
 #[test]

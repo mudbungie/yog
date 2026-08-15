@@ -9,7 +9,6 @@ use crate::git_tree::{AgentState, GitTree};
 use crate::monitor::{Called, Verdict};
 use crate::ui_state::SystemClock;
 use std::sync::Mutex;
-use std::time::Instant;
 use tempfile::tempdir;
 
 /// A caller that counts its calls and answers a canned `bz` stdout.
@@ -73,7 +72,7 @@ fn agent(id: &str, tip: &str) -> crate::git_tree::Agent {
 
 /// A world with one workspace holding one agent at `tip`, published.
 fn published(ws: &std::path::Path, tip: &str) -> SnapshotCell {
-    let mut snap = Snapshot::empty(Instant::now());
+    let mut snap = Snapshot::empty(0);
     snap.workspaces = vec![Workspace {
         path: ws.to_path_buf(),
         kind: WorkspaceKind::Named {
@@ -218,7 +217,7 @@ fn an_armed_key_with_nothing_behind_it_checks_nothing() {
 fn an_armed_workspace_with_no_derived_tree_checks_nothing() {
     let root = tempdir().expect("tempdir");
     let rig = rig(root.path(), "tip1", "aligned", 0, true);
-    let mut snap = Snapshot::empty(Instant::now());
+    let mut snap = Snapshot::empty(0);
     snap.workspaces = vec![Workspace {
         path: rig.ws.clone(),
         kind: WorkspaceKind::Named {

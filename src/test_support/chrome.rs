@@ -32,11 +32,31 @@ fn ask(model: &AppModel, query: &Query, now_unix: i64) -> Option<Reply> {
 /// The enumerated workspaces with their §6 rollups and §4.1 pin ranks — the one
 /// answer both altitude-0 surfaces below are folded from.
 pub(crate) fn ws_rows(model: &AppModel) -> Vec<WsRow> {
-    // With the §3.4 raise claim folded on, exactly as `shell::top_bar` does it.
+    // With the §3.4 raise claim folded on, exactly as `shell::chrome` does it.
     // The listing itself comes off `AppModel::ws_listing`, which is the one
     // call `answer` makes for this query: it names no workspace and reads no
     // world, so unlike the reads below it has no refusal to stand in for.
-    model.raised_rows(model.ws_listing())
+    model.raised_rows(model.ws_listing().rows)
+}
+
+/// The §7.2 instrumentation the same answer carries (bl-b4b5): how stale the
+/// derivation behind it is, and what grew in it — the two lines the §11
+/// activity accessory paints above its chip.
+pub(crate) fn notes(model: &AppModel) -> (Option<String>, Option<String>) {
+    let view = model.ws_listing();
+    (view.stale, view.growth)
+}
+
+/// One workspace's bound balls with their §3.5 figures — the §11 balls
+/// section's whole content, asked the way a seat asks it.
+pub(crate) fn ws_balls(model: &AppModel, ws: &Path) -> Vec<crate::nav::BoundBall> {
+    let query = Query::WorkspaceBalls {
+        workspace: model.snap.ws_name(ws),
+    };
+    match ask(model, &query, 0) {
+        Some(Reply::WorkspaceBalls(rows)) => rows,
+        _ => Vec::new(),
+    }
 }
 
 /// The §6 attention-strip total, as the top bar folds it.

@@ -9,10 +9,15 @@
 //!
 //! Two fields exist because the derivation moved off the frame thread:
 //!
-//! - [`derived_at`](Snapshot::derived_at) is when this snapshot **completed**.
-//!   Age against the injected clock is the honest staleness number (§7.2) —
-//!   there is no longer a structural "the frame IS the derivation" guarantee to
-//!   assert instead.
+//! - [`derived_at_unix`](Snapshot::derived_at_unix) is when this snapshot
+//!   **completed**, on the wall clock. Age against the caller's own `now_unix`
+//!   is the honest staleness number (§7.2) — there is no longer a structural
+//!   "the frame IS the derivation" guarantee to assert instead. It was an
+//!   `Instant` until bl-b4b5, which made the number unaskable at the boundary:
+//!   an `Instant` is a process-local monotonic reading with no spelling, while
+//!   the chokepoint takes an `i64` minted at the process boundary precisely so
+//!   every derivation is deterministic under test. One stamp, in the unit both
+//!   ends of the wire speak.
 //! - [`growth`](Snapshot::growth) names what got bigger since the previous
 //!   snapshot. A dispatch storm is a fact about the *workspace*, and yog had no
 //!   way to say it: 227 branches appearing under one conversation rendered as
@@ -32,7 +37,6 @@ use crate::projects::balls::Ball;
 use crate::projects::join::JoinRow;
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
-use std::time::Instant;
 
 /// One conversation's descent growing between two derivations (§7.2) — the
 /// storm signal. `added` is branches, not agents-in-total: a conversation that
@@ -90,8 +94,10 @@ pub struct Snapshot {
     pub growth: Vec<Growth>,
     /// Externally-changed `ui.json` bytes for the frame to adopt (§4.1).
     pub ui_bytes: Option<Vec<u8>>,
-    /// When this derivation completed — the staleness datum (§7.2).
-    pub derived_at: Instant,
+    /// When this derivation completed, in unix seconds off the injected clock
+    /// — the staleness datum (§7.2), and the one the `workspaces` answer dates
+    /// its `stale` line against.
+    pub derived_at_unix: i64,
     /// The clock's live periods (bl-3381): the worker's read of `cadence.yaml`
     /// (or the defaults), ridden out so every frame-side derived period — the
     /// wound grace, the staleness bound, the I4 poll floor — follows the
@@ -116,7 +122,7 @@ impl Snapshot {
     /// The empty snapshot a model starts from, before the worker's first pass.
     /// Not a special case: it is the general shape with no inputs, so every
     /// read surface answers its own empty state without a bootstrap branch.
-    pub(crate) fn empty(now: Instant) -> Self {
+    pub(crate) fn empty(now_unix: i64) -> Self {
         Self {
             workspaces: Vec::new(),
             projects: Vec::new(),
@@ -129,7 +135,7 @@ impl Snapshot {
             ops: Vec::new(),
             growth: Vec::new(),
             ui_bytes: None,
-            derived_at: now,
+            derived_at_unix: now_unix,
             cadence: super::Cadence::default(),
             fleet: BTreeMap::new(),
         }
@@ -140,7 +146,7 @@ impl Snapshot {
 /// case, which must render nothing at all). Names the biggest grower — a storm
 /// has one — and counts the rest, so one glance says which conversation is
 /// spawning and, by implication, that the spawning is lernie's, not yog's.
-pub(crate) fn growth_label(growth: &[Growth]) -> Option<String> {
+pub fn growth_label(growth: &[Growth]) -> Option<String> {
     let worst = growth.first()?;
     let rest = growth.len() - 1;
     let more = match rest {

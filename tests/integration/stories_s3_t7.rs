@@ -64,7 +64,15 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
     m.focus_workspace(&yog::naming::leaf(&ws));
 
     // --- Before: the row is Bound and the conversation's badge is the bound hue.
-    let row = m.focused_join().expect("cobalt binds bl-7").clone();
+    // The seat's own row: the first of the focused workspace's answered listing
+    // (`Query::WorkspaceBalls`, bl-b4b5), which is what the composer's ball row
+    // paints and what `c`/`r` fire on.
+    let ball_row = |m: &yog::AppModel| {
+        crate::support::ws_balls(m, &m.focused_workspace().expect("cobalt is focused"))
+            .first()
+            .cloned()
+    };
+    let row = ball_row(&m).expect("cobalt binds bl-7");
     assert_eq!(row.state, JoinState::Bound);
     let before =
         crate::support::conversation_ball(&m, "c-001", 1000).expect("the goal stamps bl-7");
@@ -79,7 +87,7 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
     // --- Close: one verb, stamped with the ball's BOUND WORKSPACE name (§8.2).
     // The name is derived, never typed: `owner_name` reads the claimant off the
     // row, which for a Bound row IS the workspace's name (§3.2's equality).
-    let owner = join::owner_name(&row);
+    let owner = row.owner.clone();
     assert_eq!(owner, "cobalt", "the claimant delivers its own ball");
     let bl = Recorder::new(bin.path(), "bl").on("close", "", 0);
     let out = verbs::close(
@@ -87,7 +95,7 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
         &root.path().join("state"),
         "T0",
         project.path(),
-        &row.ball_id,
+        &row.id,
         &owner,
     )
     .unwrap();
@@ -108,20 +116,17 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
     for _ in 0..200 {
         deriver.step();
         m.refresh();
-        if m.focused_join().map(|r| r.state) == Some(JoinState::Delivered) {
+        if ball_row(&m).map(|r| r.state) == Some(JoinState::Delivered) {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
 
-    let after_row = m
-        .focused_join()
-        .expect("the delivered row groups under cobalt");
+    let after_row = ball_row(&m).expect("the delivered row groups under cobalt");
     assert_eq!(after_row.state, JoinState::Delivered);
-    assert_eq!(after_row.ball_id, "bl-7");
+    assert_eq!(after_row.id, "bl-7");
     assert_eq!(
-        after_row.workspace.as_deref(),
-        Some(ws.as_path()),
+        after_row.owner, "cobalt",
         "grouped under the same workspace"
     );
     assert_eq!(

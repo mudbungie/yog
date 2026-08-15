@@ -54,9 +54,18 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
         return;
     };
     let (mut send, mut cancel) = (false, false);
-    let ws = model.snap.ws_path(&pending.workspace).unwrap_or_default();
+    // The §3.3 occupied set off the landed forest (bl-b4b5): every member's own
+    // stored name, which is what the mint may not re-use. A frame the engine
+    // has not answered predicts against an empty set — the same reading a
+    // workspace with no conversations gives, and the mint's own `--name` is
+    // re-derived at fire where the refusal actually lives.
+    let names = crate::nav::convs::names_in_rows(
+        &super::convs::of(model, pending.workspace.clone())
+            .value
+            .unwrap_or_default(),
+    );
     ui.weak(start::identity_preview(
-        &model.conversation_names(&ws),
+        &names,
         &SplitMix64::from_seed(mint_seed),
     ));
     ui.label(format!("Start goal → {}", pending.workspace));

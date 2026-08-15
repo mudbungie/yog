@@ -83,6 +83,32 @@ pub fn confirmation(root: &str, agents: &[Agent]) -> AgentConfirmation {
     }
 }
 
+/// **The same census off an answered forest** (REMOTE §9.7, bl-b4b5) —
+/// [`confirmation`]'s seat-side twin, over `Query::Conversations`' rows.
+///
+/// The answer is pre-order and carries every member's own §3.5 state and §10
+/// uncertainty, so the conversation's members are the run of deeper rows below
+/// its root and the gate is that run's disjunction — the same fail-closed
+/// reading, from what a seat holds. A root the forest does not carry answers
+/// its own id for a name and nothing live, which is [`confirmation`]'s own
+/// empty-input arm rather than a case of its own.
+pub fn confirmation_of_rows(rows: &[crate::nav::convs::ConvRow], root: &str) -> AgentConfirmation {
+    let at = rows.iter().position(|r| r.root_id == root);
+    AgentConfirmation {
+        name: crate::nav::convs::selection(rows, root).name,
+        live: at
+            .map(|at| {
+                crate::nav::convs::census::subtree(rows, at)
+                    .filter(|r| {
+                        matches!(r.state, AgentState::Live | AgentState::InFlight) || r.uncertain
+                    })
+                    .map(|r| r.root_id.clone())
+                    .collect()
+            })
+            .unwrap_or_default(),
+    }
+}
+
 /// The gate's refusal wording — the live members named so the operator can
 /// stop them first (Stop stays its own verb).
 pub fn live_refusal(live: &[String]) -> String {

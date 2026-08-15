@@ -4,7 +4,6 @@
 
 use super::super::*;
 use crate::projects::join::JoinState;
-use std::path::PathBuf;
 
 /// The V4 board's spelling: the column leads, the binding state rides beside
 /// it, and every optional field is present or absent rather than nulled — both
@@ -24,13 +23,13 @@ fn board_rows_encode_the_column_the_gate_the_drones_and_the_figures() {
         attribution,
     };
     let full = BoardRow {
-        project: PathBuf::from("/p"),
+        project: "p".into(),
         id: "bl-1".into(),
         title: "t".into(),
         priority: 2,
         column: Column::Gated,
         state: JoinState::Bound,
-        workspace: Some(PathBuf::from("/ws")),
+        workspace: Some("ws".into()),
         claimant: Some("alba".into()),
         parent: Some("bl-epic".into()),
         gates: vec![Gate {
@@ -51,7 +50,7 @@ fn board_rows_encode_the_column_the_gate_the_drones_and_the_figures() {
         rollup: Some(figure(None, Attribution::Conversations(1))),
     };
     let bare = BoardRow {
-        project: PathBuf::from("/p"),
+        project: "p".into(),
         id: "bl-2".into(),
         title: "u".into(),
         priority: 0,
@@ -77,7 +76,7 @@ fn board_rows_encode_the_column_the_gate_the_drones_and_the_figures() {
     );
     assert_eq!(rows[0]["column"], "gated");
     assert_eq!(rows[0]["state"], "bound");
-    assert_eq!(rows[0]["workspace"], "/ws");
+    assert_eq!(rows[0]["workspace"], "ws");
     assert_eq!(rows[0]["claimant"], "alba");
     assert_eq!(rows[0]["parent"], "bl-epic");
     assert_eq!(rows[0]["gates"][0]["id"], "bl-gate");

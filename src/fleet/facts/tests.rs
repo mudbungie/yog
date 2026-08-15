@@ -9,14 +9,13 @@ use crate::projects::join::JoinState;
 use crate::spend::Prices;
 use serde_json::json;
 use std::path::Path;
-use std::time::Instant;
 
 const WS: &str = "/names/otter";
 const PROJECT: &str = "/dev/yog";
 const NOW: i64 = 1_000_000;
 
 fn snap(fleet: Vec<(&str, super::super::Policy)>) -> Snapshot {
-    let mut snap = Snapshot::empty(Instant::now());
+    let mut snap = Snapshot::empty(0);
     snap.fleet = fleet.into_iter().map(|(k, p)| (k.to_owned(), p)).collect();
     snap
 }
@@ -31,13 +30,13 @@ fn policy(cap: usize, lease: Option<Duration>) -> super::super::Policy {
 
 fn row(id: &str, column: Column, workspace: Option<&str>) -> BoardRow {
     BoardRow {
-        project: PathBuf::from(PROJECT),
+        project: crate::naming::leaf(Path::new(PROJECT)),
         id: id.to_owned(),
         title: format!("title of {id}"),
         priority: 0,
         column,
         state: JoinState::Bound,
-        workspace: workspace.map(PathBuf::from),
+        workspace: workspace.map(|w| crate::naming::leaf(Path::new(w))),
         claimant: workspace.map(|_| "otter".to_owned()),
         parent: None,
         gates: vec![],

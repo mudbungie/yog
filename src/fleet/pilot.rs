@@ -34,12 +34,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use super::{Facts, facts, row};
+use super::{Facts, row};
 use crate::app::Snapshot;
-use crate::board::{BoardRow, Column};
+use crate::board::BoardRow;
 use crate::boundary::Action;
 use crate::boundary::dispatch::{self, Deps};
-use crate::git_tree::{AgentState, GitTree};
 use crate::opslog;
 use crate::start::{BallSpec, Payload};
 use crate::state::SnapshotCell;
@@ -121,7 +120,7 @@ impl PilotCtx {
                 since,
             } => {
                 let release = Action::Release {
-                    project: snapshot.project_name(&row.project),
+                    project: row.project.clone(),
                     id: row.id.clone(),
                     name: claimant.clone(),
                 };
@@ -151,14 +150,18 @@ impl PilotCtx {
     /// [`dispatch::prompt`], so a loop spawn is gated by construction rather
     /// than by this module remembering to ask.
     fn birth(deps: &Deps, ui: &UiState, ts: &str, fleet: &Facts, row: &BoardRow) -> Option<String> {
+        // The row names its project (bl-b4b5); the live cache is keyed by the
+        // clone's path and the `prepare` door takes one, so the name resolves
+        // here through the snapshot's own round trip.
+        let project = deps.snapshot.project_path(&row.project).ok()?;
         let ball = deps
             .snapshot
             .balls_by_project
-            .get(&row.project)?
+            .get(&project)?
             .iter()
             .find(|b| b.id == row.id)?;
         let payload = Payload::Ball {
-            project: deps.snapshot.project_name(&row.project),
+            project: row.project.clone(),
             ball: BallSpec::Existing {
                 id: ball.id.clone(),
                 title: ball.title.clone(),
@@ -166,8 +169,7 @@ impl PilotCtx {
                 join: row.state,
             },
         };
-        let prepared =
-            dispatch::prepare(deps, ts, &fleet.workspace, &row.project, &payload).ok()?;
+        let prepared = dispatch::prepare(deps, ts, &fleet.workspace, &project, &payload).ok()?;
         // The composed goal verbatim (§3.3, bl-6920): there is no operator at
         // the composer to edit it, and the loop must not become a second author.
         let goal = prepared.goal.clone();
@@ -185,79 +187,19 @@ impl PilotCtx {
     }
 }
 
+/// **What one tick decides** — the level-triggered decision, split off at
+/// §12's per-file budget (bl-b4b5) on the seam this module's own doc draws:
+/// above is the thread and the acts it runs through the boundary, `plan` is the
+/// pure function over a published snapshot that says which act, if any.
+mod plan;
+
+pub use plan::plan;
+
 /// Whether a released claim actually came back: the verb ran *and* exited
 /// clean. Anything else leaves the ball where it was, and the next tick decides
 /// again against the world as it then is.
 fn released(reply: Result<crate::boundary::reply::Reply, String>) -> bool {
     matches!(reply, Ok(crate::boundary::reply::Reply::Outcome(o)) if o.ok())
-}
-
-/// One workspace's move, or `None` when its loop has nothing to do. Pure over
-/// the published snapshot and the board built from it — which is what lets the
-/// whole decision be a table test.
-pub fn plan(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Option<Move> {
-    reap(snap, fleet, rows, now).or_else(|| spawn(fleet, rows))
-}
-
-/// The reap: the first claimed ball of this workspace whose conversations have
-/// all been quiet past the lease. No lease, no reap — releasing a claim is not
-/// something yog does on a default (see [`arming`]).
-fn reap(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Option<Move> {
-    let lease = i64::try_from(fleet.lease?.as_secs()).ok()?;
-    let tree = snap.trees.get(&fleet.workspace)?;
-    rows.iter().filter(|r| held_here(r, fleet)).find_map(|row| {
-        // A row that names nobody cannot be released from anyone.
-        let claimant = row.claimant.clone()?;
-        let idle = quiet_for(tree, row, now)?;
-        (idle >= lease).then(move || Move::Reap {
-            row: row.clone(),
-            claimant,
-            // The comparison itself, never a diagnosis (§4.3): how far past
-            // the operator's own number this ball has gone, and nothing
-            // about why.
-            since: format!("lease expired {} ago", facts::secs_label(idle - lease)),
-        })
-    })
-}
-
-/// The spawn: the board's top ready ball in this loop's project, when the
-/// workspace has room under its cap and the ceiling would not refuse the birth
-/// anyway. **Ready only** — a gated ball can be started but cannot be
-/// delivered, and a loop that fills its cap with undeliverable work has stopped
-/// being a fleet.
-fn spawn(fleet: &Facts, rows: &[BoardRow]) -> Option<Move> {
-    if !fleet.has_room() {
-        return None;
-    }
-    rows.iter()
-        .find(|r| r.column == Column::Ready && r.project == fleet.project)
-        .map(|row| Move::Spawn { row: row.clone() })
-}
-
-/// Whether this row is a ball the armed workspace holds right now.
-fn held_here(row: &BoardRow, fleet: &Facts) -> bool {
-    row.column == Column::Claimed && row.workspace.as_deref() == Some(&fleet.workspace)
-}
-
-/// How long every conversation on this ball has been quiet, or `None` when one
-/// of them is still running (or the ball has no conversation at all).
-///
-/// **Nothing running is ever reaped**, whatever its age: the ceiling's own
-/// ruling — killing mid-ball destroys uncommitted work — applies to a claim as
-/// much as to a spend, and a live drone's claim is not idle by any reading.
-fn quiet_for(tree: &GitTree, row: &BoardRow, now: i64) -> Option<i64> {
-    let mut newest: Option<i64> = None;
-    for agent in &tree.agents {
-        let root = crate::nav::convs::root_of(&tree.agents, &agent.agent_id)?;
-        if !row.drones.iter().any(|d| d.root_id == root) {
-            continue;
-        }
-        if matches!(agent.state, AgentState::Live | AgentState::InFlight) {
-            return None;
-        }
-        newest = Some(newest.unwrap_or(i64::MIN).max(agent.last_action_unix));
-    }
-    newest.map(|last| now.saturating_sub(last))
 }
 
 /// The pilot thread. The worker's shutdown shape (§7.2): stop flag, unpark,

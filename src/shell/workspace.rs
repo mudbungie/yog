@@ -24,7 +24,6 @@ use crate::AppModel;
 use crate::cli_outbound::Cli;
 use crate::nav::convs::Selection;
 use crate::theme;
-use std::path::Path;
 
 use super::ShellState;
 
@@ -73,7 +72,10 @@ pub fn center(
     // two facts on it, and no second question for a mark that is about the very
     // conversation the marks above are.
     let live = detail.map(|view| view.seats).unwrap_or_default();
-    header(ui, model, &ws, &seat, &live);
+    // The §3.2 workspace balls, off the landed listing (bl-b4b5) — the strip
+    // the header paints under the conversation's own ball.
+    let ws_balls = super::chrome::focused_balls(model);
+    header(ui, &seat, &live, &ws_balls);
     // The §6 marks the *focused* agent wears, said outright — this seat has the
     // room, and it is the one surface a jump-to-attention always lands on. It is
     // what answers "why was I sent here" after arriving acknowledged the signal:
@@ -149,10 +151,9 @@ pub fn center(
 /// of the config-shaped rows ([`super::settings`], bl-2e18).
 fn header(
     ui: &mut egui::Ui,
-    model: &AppModel,
-    ws: &Path,
     seat: &Selection,
     live: &[crate::nav::convs::Seat],
+    ws_balls: &[crate::nav::BoundBall],
 ) {
     // §11 altitude 1: the id is the identifier, the name is the title — one
     // ladder (§3.3), the same one the §11 row and the §3.6 dialog read. The
@@ -211,11 +212,10 @@ fn header(
     // Workspace-level balls (§3.2): the claimant join, all the balls this
     // workspace's agents bound — the "one or more" per workspace, distinct from
     // the single per-conversation goal stamp above.
-    let ws_balls = model.ws_balls(ws);
     if !ws_balls.is_empty() {
         ui.horizontal(|ui| {
             ui.weak("workspace balls:");
-            for ball in &ws_balls {
+            for ball in ws_balls {
                 match &ball.badge {
                     Some(b) => ui.weak(format!("{} · {b}", ball.id)),
                     None => ui.weak(&ball.id),

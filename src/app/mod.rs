@@ -51,7 +51,6 @@ mod roots;
 mod search;
 mod seat;
 mod snapshot;
-mod spend;
 mod view;
 
 use crate::binding::Workspace;
@@ -70,10 +69,16 @@ use std::sync::Arc;
 pub use self::cadence::Cadence;
 pub use self::derive::Deriver;
 pub use self::derive::worker::Worker;
+/// The §7.2 instrumentation lines the `workspaces` answer carries (bl-b4b5):
+/// how late the derivation is, and what grew in it. Re-exported here because
+/// the boundary says them and this module derives them — one wording, read at
+/// the chokepoint rather than restated for a seat.
+pub use self::drift::stale_label;
 pub use self::grace::WoundGrace;
 pub use self::live::{FollowThread, Follower, LiveTail};
 pub(crate) use self::memo::SnapMemo;
 pub use self::roots::Roots;
+pub use self::snapshot::growth_label;
 pub use self::snapshot::{Growth, Snapshot};
 
 #[derive(Parser, Debug, Clone, PartialEq, Eq)]
@@ -204,7 +209,7 @@ impl AppModel {
     ) -> (Self, Deriver) {
         let ui = UiState::open(roots.ui_json());
         let dirty = DirtySet::default();
-        let cell = new_snapshot_cell(Arc::new(Snapshot::empty(clock.now())));
+        let cell = new_snapshot_cell(Arc::new(Snapshot::empty(clock.unix())));
         let mut deriver = Deriver::new(
             roots.clone(),
             Arc::clone(&clock),

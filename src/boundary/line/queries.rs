@@ -29,6 +29,15 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
             }))
         }
         "balls" => args::none(tail, verb).map(|()| ask(Query::Balls)),
+        // The §11 balls section's own read (bl-b4b5): the same binding facts
+        // one workspace deep, with each ball's figure. Aimed by the seat like
+        // `/conversations`, because that is the whole of what it takes.
+        "workspace-balls" => {
+            args::none(tail, verb)?;
+            Ok(ask(Query::WorkspaceBalls {
+                workspace: args::workspace(ctx, verb)?,
+            }))
+        }
         // Bare, the listing; with two words, one file's patch out of the named
         // ball's diff. A path alone would not say which attempt it belongs to
         // when the workspace holds more than one, so both words or neither.

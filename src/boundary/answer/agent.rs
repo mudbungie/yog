@@ -30,6 +30,7 @@ use crate::git_tree::{Agent, AgentMark, AgentState};
 use crate::nav::convs::{
     Flight, ancestors, conversation_flight, display_name_of, root_of, seats, strip,
 };
+use crate::ui_state::UiState;
 
 /// One conversation's seat facts: who is selected, what its conversation is
 /// called, what it is doing, what it wears and what may be done to it — plus,
@@ -109,6 +110,22 @@ pub struct AgentView {
     /// segment is a compact `5s`/`2m` label, and half a second of lag in a
     /// figure that ticks in seconds is not a difference a reader can feel.
     pub strip: Option<crate::nav::convs::FlightStrip>,
+    /// **The conversation's priced whole-tree figure** (§3.5, bl-b4b5): the
+    /// root agent and its descent (ARCH §6), attributed to itself. It rides
+    /// here for [`seats`](Self::seats)' reason exactly — a fact about **one
+    /// conversation's** subtree, like the strip beside it — and its workspace
+    /// twin is `Query::WorkspaceBalls`' per-ball figure, the other half of the
+    /// §3.5 pair the §11 settings band paints.
+    pub spend: crate::spend::Figure,
+    /// **How full its context is** (§5.1 #35): the prompt its root agent's
+    /// latest step sent, against the window `models.yaml` declares for the
+    /// model that sent it. `None` when nothing measured can be said, which is
+    /// the ordinary answer for a conversation that has not run yet.
+    ///
+    /// Deliberately apart from [`spend`](Self::spend) in what it answers:
+    /// spend is the whole descent's cumulative burn, fullness is this
+    /// conversation's one current prompt.
+    pub context: Option<crate::context::Fullness>,
 }
 
 /// Derive one conversation's seat facts off the published snapshot. Pure: every
@@ -117,8 +134,10 @@ pub struct AgentView {
 ///
 /// `now_unix` is the caller's wall clock, and only the §11
 /// [`strip`](AgentView::strip)'s elapsed segment spends it — everything else
-/// here is structural.
-pub fn agent(snap: &Snapshot, ws: &Path, agent: &str, now_unix: i64) -> AgentView {
+/// here is structural. `ui` is the durable document, read for the §3.5 price
+/// table alone (bl-b4b5): a figure's money column is `ui.json`'s severability
+/// gate, so an empty table renders tokens and nothing else.
+pub fn agent(snap: &Snapshot, ui: &UiState, ws: &Path, agent: &str, now_unix: i64) -> AgentView {
     let agents = snap
         .trees
         .get(ws)
@@ -126,7 +145,13 @@ pub fn agent(snap: &Snapshot, ws: &Path, agent: &str, now_unix: i64) -> AgentVie
         .unwrap_or_default();
     let root = root_of(&agents, agent).unwrap_or_else(|| agent.to_owned());
     let found = agents.iter().find(|a| a.agent_id == agent);
+    // The §3.5/§5.1 #35 pair, over the worker's already-walked bills — the same
+    // fold every other figure is a filter over (bl-9dd4), so a conversation's
+    // budget line costs this answer no disk read.
+    let bills = snap.bills.get(ws).cloned().unwrap_or_default();
     AgentView {
+        spend: crate::spend::of_conversation(&bills, &root, &ui.prices()),
+        context: crate::context::of_conversation(&bills, &root, &snap.windows),
         name: display_name_of(&agents, &root),
         display_only: agents
             .iter()
