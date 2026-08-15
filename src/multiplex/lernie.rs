@@ -26,11 +26,14 @@
 use std::io;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
-use ::lernie::cmd::{self, Fx, Outcome, prelude};
+use ::lernie::cmd::{self, Command, Fx, Outcome, prelude};
 use clap::Parser as _;
 
 use crate::cli_outbound::{Binary, Cli};
+use crate::tool_host;
+use crate::ui_state::SystemClock;
 use crate::world::tools;
 
 /// One `lernie` invocation, exactly as the upstream exec binding performs it.
@@ -58,6 +61,17 @@ pub(super) fn run(args: &[String]) -> i32 {
     // reads it at spawn time; same value, earlier read).
     let editor_cmd = std::env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
     let editor = move |dir: &Path| edit_with(&editor_cmd, dir);
+    // **yog's tool injection** (REMOTE §5, bl-c907), built here for the same
+    // reason `$EDITOR` is: the state root is a process fact, read at the
+    // binding and never inside the surface. It resolves to the very directory
+    // the engine writes — the world hands `XDG_STATE_HOME` down to every child
+    // (§16.2), so parent and child fold to one `<world>/state/yog`.
+    let injection = tool_host::Injection::new(
+        crate::xdg::Env::from_env().yog_state_root(),
+        tool_host::ask::Budget::default(),
+        Arc::new(SystemClock),
+        driving(&cli.command),
+    );
     // Stdio is locked for the whole verb (the `tool` verb writes raw bytes into
     // it) and released before the outcome is performed — holding the lock
     // across the product `writeln!` would deadlock.
@@ -73,6 +87,7 @@ pub(super) fn run(args: &[String]) -> i32 {
             tool_stdout: &mut stdout,
             tool_stderr: &mut stderr,
             stop: prelude::stop_flag(),
+            tool_injection: Some(&injection),
         };
         cli.command.run(&mut fx)
     };
@@ -89,6 +104,21 @@ fn parse(args: &[String]) -> Result<cmd::Cli, i32> {
         let _ = e.print();
         e.exit_code()
     })
+}
+
+/// The `(workspace name, agent id)` this invocation drives, when its verb names
+/// one (REMOTE §5, bl-c907). `advance` is the driver verb and the only one that
+/// names an existing agent; `prompt` and `dispatch` *mint* their agent, and an
+/// agent that does not exist yet has loaded nothing — so `None` is the honest
+/// answer rather than a case. It feeds
+/// [`Injection::tools`](crate::tool_host::Injection), which the seam gives no
+/// per-call context (lernie's `docs/DESIGN_TOOL_INJECTION.md` §7: the injection
+/// is per-process, not per-agent).
+fn driving(command: &Command) -> Option<(String, String)> {
+    match command {
+        Command::Advance(args) => Some((crate::naming::leaf(&args.workspace), args.agent.clone())),
+        _ => None,
+    }
 }
 
 /// Converge the world's `lernie`/`bz` re-exec shims and return them as the

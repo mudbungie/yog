@@ -98,6 +98,9 @@ pub mod steps_view;
 /// library surface.
 pub(crate) mod tail;
 pub mod theme;
+/// yog's lernie tool injection (REMOTE §5, bl-c907) — the `clients` tool, the
+/// agent's durable loaded set, and the router the executor consults.
+pub mod tool_host;
 pub mod transcript;
 pub mod ui_state;
 pub mod watch;
