@@ -82,7 +82,6 @@ fn a_prepared_reply_fires_the_next_invocations_prompt() {
         balls_state_root: balls.path().to_path_buf(),
         snapshot: Arc::new(snapshot(&ws, "alba", vec![], vec![])),
         caller: crate::boundary::dispatch::Caller::default(),
-        mint_seed: 7,
     };
     let mut ui = UiState::open(PathBuf::from("/nonexistent/ui.json"));
 

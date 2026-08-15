@@ -27,7 +27,7 @@ mod start;
 mod tools;
 use config::encode_file;
 use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, usize_of};
-use start::{decode_payload, decode_prepared, encode_payload, encode_prepared, opt_field};
+use start::{decode_payload, decode_prepared, encode_start, opt_field};
 pub(crate) use start::{
     decode_prepared as prepared_from_value, encode_prepared as prepared_value, join_token,
     origin_token, parse_join, parse_origin,
@@ -82,13 +82,8 @@ fn encode_action(action: &Action) -> Value {
             body,
             note,
         } => update(project, id, name, [title, body, note]),
-        Action::Prepare { workspace, payload } => {
-            json!({ "op": "prepare", "workspace": workspace,
-                    "payload": encode_payload(payload) })
-        }
-        Action::Prompt { prepared, goal } => {
-            json!({ "op": "prompt", "prepared": encode_prepared(prepared), "goal": goal })
-        }
+        // The §8.1 start family's two, beside the `Prepared` body they share.
+        Action::Prepare { .. } | Action::Prompt { .. } => encode_start(action),
         Action::Fan {
             prepared,
             obligation,
@@ -248,6 +243,7 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         "prompt" => Ok(act(Action::Prompt {
             prepared: decode_prepared(o.get("prepared").ok_or("prompt: missing prepared")?)?,
             goal: str_of(o, "goal")?,
+            seed: fields::opt(o, "seed", fields::u64_of)?,
         })),
         "delete-workspace" => Ok(act(Action::DeleteWorkspace {
             workspace: str_of(o, "workspace")?,

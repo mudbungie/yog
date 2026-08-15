@@ -63,7 +63,6 @@ fn deps(lernie: &Cli, bl: &Cli, state_root: &Path, snapshot: Arc<Snapshot>) -> D
         balls_state_root: state_root.join("balls"),
         snapshot,
         caller: yog::boundary::dispatch::Caller::default(),
-        mint_seed: 5,
     }
 }
 

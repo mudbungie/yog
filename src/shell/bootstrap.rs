@@ -7,7 +7,6 @@
 
 use crate::AppModel;
 use crate::actions::DraftKey;
-use crate::cli_outbound::Cli;
 
 use super::ShellState;
 
@@ -27,13 +26,7 @@ const BOOTSTRAP_HINT: &str = "Say what you want done. This founds your first wor
 /// and pass via `--name`, §3.3), and one box whose Enter runs the bare-rung bootstrap —
 /// `lernie new <names-root>/home` (§3.1's default name) and the detached prompt —
 /// through the same planner. No wizard, no dead end, and no name picker.
-pub(super) fn render(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub(super) fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) {
     // The preview's own read of the held seed (§3.3); the fire below reads —
     // and retires — it through [`ShellState`] itself (bl-28ba), so the
     // prediction and the stamp still come off one fact.
@@ -94,9 +87,9 @@ pub(super) fn render(
         // attempt: a bootstrap that fails banners below, and the operator's
         // retry is a keystroke away rather than a click.
         super::focus::request(state);
-        if super::fire::fire_bare(model, state, lernie, bl, &text) {
-            state.actions.drafts.set(key, String::new());
-        }
+        // The box empties when the launch lands, not when it is asked for
+        // (§5.3, REMOTE §9.8): the draft rides the ticket this post holds.
+        super::fire::fire_bare(model, state, &key, &text);
     }
     // Per-frame, from the model (§7.3, bl-4895) — the bootstrap's first prompt is
     // exactly the one whose driver most often dies on a stale config.

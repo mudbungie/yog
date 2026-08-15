@@ -3,7 +3,14 @@
 //!
 //! Coverage-excluded glue like the rest of `shell/*`: the confirmation, the
 //! census parse, the dispatch gate and the prune are the tested
-//! [`crate::delete::agent`] / [`AppModel`] surface; this file paints them.
+//! [`crate::delete::agent`] / [`crate::boundary`] surface; this file paints them.
+//!
+//! **The delete is posted, not run** (REMOTE §9.8, bl-1747), exactly as its
+//! workspace-wide twin is (`super::delete`): the dialog holds a [`Ticket`]
+//! beside the sentence it already held, says so while the engine has not
+//! answered, closes on a clean receipt and keeps the reason otherwise. The gate
+//! is unmoved — re-derived at fire time inside the chokepoint, fail-closed —
+//! and the `ui.json` prune is the engine's write, adopted back by §7.1.
 //!
 //! **One dialog, two doors.** The visible carrier is [`danger_row`] — the
 //! worded, ichor `delete this conversation…` row at the foot of the
@@ -22,9 +29,11 @@
 //! typed name, which is also the only thing that fires `--children`.
 
 use crate::AppModel;
+use crate::boundary::Action;
 use crate::cli_outbound::Cli;
 use crate::delete::agent::{AgentConfirmation, Census};
 use crate::theme;
+use crate::wire::post::Ticket;
 use std::path::{Path, PathBuf};
 
 use super::ShellState;
@@ -38,6 +47,10 @@ pub struct DeleteAgentState {
     pub census: Option<Census>,
     pub typed: String,
     pub error: String,
+    /// The posted delete this dialog is waiting on (REMOTE §9.8): `Some`
+    /// disarms the button and marks the line, and the receipt it names either
+    /// closes the dialog or leaves its reason here.
+    pub ticket: Option<Ticket>,
 }
 
 /// Open the confirmation on `ws`/`root` — the one entry **both** carriers
@@ -51,8 +64,8 @@ pub(super) fn open(state: &mut ShellState, lernie: &Cli, ws: &Path, root: &str) 
     state.delete_agent = DeleteAgentState {
         target: Some((ws.to_path_buf(), root.to_owned())),
         census,
-        typed: String::new(),
         error,
+        ..DeleteAgentState::default()
     };
 }
 
@@ -90,17 +103,12 @@ pub(super) fn danger_row(
 
 /// The confirmation window. The gate is re-derived from the model every frame,
 /// so a driver that wakes while the dialog sits open re-arms the refusal.
-pub(super) fn dialog(
-    ctx: &egui::Context,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub(super) fn dialog(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     if state.delete_agent.target.is_none() {
         return;
     }
-    window(ctx, model, state, lernie, bl);
+    settle(model, state);
+    window(ctx, model, state);
     // Dismissed by any door — the ✕, a clean removal, or the workspace
     // vanishing — hands the keyboard back to the composer (§11).
     if state.delete_agent.target.is_none() {
@@ -109,13 +117,7 @@ pub(super) fn dialog(
 }
 
 /// The window itself, painted while a target stands.
-fn window(
-    ctx: &egui::Context,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+fn window(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     let Some((ws, root)) = state.delete_agent.target.clone() else {
         return;
     };
@@ -130,7 +132,7 @@ fn window(
         .collapsible(false)
         .resizable(false)
         .open(&mut shown)
-        .show(ctx, |ui| body(ui, model, state, lernie, bl, &confirm));
+        .show(ctx, |ui| body(ui, model, state, &confirm));
     if !shown {
         state.delete_agent = DeleteAgentState::default();
     }
@@ -143,8 +145,6 @@ fn body(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
     confirm: &AgentConfirmation,
 ) {
     ui.colored_label(
@@ -178,7 +178,7 @@ fn body(
     }
     // The §3.6 arming, scaled to blast radius: typed-name iff the verb
     // destroys objects beyond the one named on screen.
-    let armed = if census.descendants.is_empty() {
+    let confirmed = if census.descendants.is_empty() {
         true
     } else {
         ui.horizontal(|ui| {
@@ -192,6 +192,12 @@ fn body(
         });
         confirm.subtree_armed(&state.delete_agent.typed)
     };
+    // Disarmed while one is outstanding (§9.8 ruling 2), for `super::delete`'s
+    // reason: a second press would post a second delete of what the first one
+    // is already removing. It is the *button* that disarms and never the form
+    // above it — a typed name that vanished mid-flight would read as the dialog
+    // having forgotten what the operator confirmed.
+    let armed = confirmed && state.delete_agent.ticket.is_none();
     if ui
         .add_enabled(armed, egui::Button::new("Delete conversation"))
         .on_hover_text(
@@ -201,22 +207,48 @@ fn body(
         .on_disabled_hover_text("Type the conversation's name above to enable this.")
         .clicked()
     {
-        fire(model, state, lernie, bl);
+        fire(model, state);
+    }
+    if state.delete_agent.ticket.is_some() {
+        ui.weak("removing the conversation …");
     }
     if !state.delete_agent.error.is_empty() {
         ui.colored_label(theme::ICHOR, &state.delete_agent.error);
     }
 }
 
-/// Fire through the one tested entry point; a refusal stays on the dialog
-/// (the trail's own record is the `ops.jsonl` line either way).
-fn fire(model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli) {
+/// Post the delete (REMOTE §1.2) and mark the dialog as waiting. `typed` rides
+/// the gesture unchanged: it is what arms the `--children` form, and the
+/// executor re-derives its own gate rather than trusting this dialog.
+fn fire(model: &mut AppModel, state: &mut ShellState) {
     let Some((ws, root)) = state.delete_agent.target.clone() else {
         return;
     };
-    let typed = state.delete_agent.typed.clone();
-    match model.delete_agent(lernie, bl, &ws, &root, &typed, &super::now_ts()) {
-        Ok(()) => state.delete_agent = DeleteAgentState::default(),
-        Err(e) => state.delete_agent.error = e,
+    let action = Action::DeleteAgent {
+        workspace: model.snap.ws_name(&ws),
+        agent: root,
+        typed: state.delete_agent.typed.clone(),
+    };
+    state.delete_agent.ticket = Some(model.post_act(&action));
+}
+
+/// Fold the delete's receipt: the dialog closes on a clean removal and keeps
+/// the refusal otherwise (the trail's own record is the `ops.jsonl` line either
+/// way — a declined `lernie delete` rides back as the executor's non-zero
+/// outcome, which [`super::act::trouble`] spells).
+fn settle(model: &mut AppModel, state: &mut ShellState) {
+    let (Some(ticket), Some((ws, root))) =
+        (state.delete_agent.ticket, state.delete_agent.target.clone())
+    else {
+        return;
+    };
+    let Some(landed) = model.act_receipt(ticket) else {
+        return;
+    };
+    state.delete_agent.ticket = None;
+    model.deleted_agent(&ws, &root);
+    match super::act::trouble(&landed) {
+        Some(reason) => state.delete_agent.error = reason,
+        None => state.delete_agent = DeleteAgentState::default(),
     }
 }

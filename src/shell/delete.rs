@@ -3,7 +3,17 @@
 //!
 //! Coverage-excluded glue like the rest of `shell/*`: the confirmation, the
 //! gate, the plan and the executor are the tested [`crate::delete`] /
-//! [`AppModel`] surface; this file paints them.
+//! [`crate::boundary`] surface; this file paints them.
+//!
+//! **The unmaking is posted, not run** (REMOTE §9.8, bl-1747). It was the last
+//! §3.6 act still dispatched in process, because its answer closed the dialog
+//! in the same frame. Now the dialog holds a [`Ticket`] beside the sentence it
+//! already held: it says so while the engine has not answered, closes on a
+//! clean receipt and keeps the reason otherwise. The gate is unmoved — it is
+//! re-derived at fire time and fail-closed inside the chokepoint, whichever
+//! frontend fires — and the `ui.json` prune is the **engine's** write now,
+//! adopted back by §7.1 like any external change rather than made against this
+//! window's own copy.
 //!
 //! **One dialog, two doors.** The visible carrier is [`danger_row`] — the
 //! worded, ichor `delete this workspace…` row on config mode's per-workspace
@@ -16,9 +26,10 @@
 //! modal owes the operator that door (§11).
 
 use crate::AppModel;
-use crate::cli_outbound::Cli;
+use crate::boundary::Action;
 use crate::delete::Confirmation;
 use crate::theme;
+use crate::wire::post::Ticket;
 use std::path::{Path, PathBuf};
 
 use super::ShellState;
@@ -31,6 +42,10 @@ pub struct DeleteState {
     pub target: Option<PathBuf>,
     pub typed: String,
     pub error: String,
+    /// The posted unmaking this dialog is waiting on (REMOTE §9.8): `Some`
+    /// disarms the button and marks the line, and the receipt it names either
+    /// closes the dialog or leaves its reason here.
+    pub ticket: Option<Ticket>,
 }
 
 /// Open the §3.6 confirmation on `ws` — the one entry **both** carriers call.
@@ -66,17 +81,12 @@ pub(super) fn danger_row(ui: &mut egui::Ui, model: &AppModel, state: &mut ShellS
 
 /// The typed-name confirmation window (§3.6). Re-derived every frame from the
 /// model, so a driver that wakes while it sits open re-arms the refusal.
-pub(super) fn dialog(
-    ctx: &egui::Context,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub(super) fn dialog(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     if state.delete.target.is_none() {
         return;
     }
-    window(ctx, model, state, lernie, bl);
+    settle(model, state);
+    window(ctx, model, state);
     // Dismissed by *any* of its three doors — the ✕, a clean unmaking, or the
     // subject vanishing under us — hands the keyboard back to the composer
     // (§11 focus discipline). Read as one edge here rather than restated at
@@ -87,13 +97,7 @@ pub(super) fn dialog(
 }
 
 /// The window itself, painted while a target stands.
-fn window(
-    ctx: &egui::Context,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+fn window(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     let Some(ws) = state.delete.target.clone() else {
         return;
     };
@@ -108,7 +112,7 @@ fn window(
         .collapsible(false)
         .resizable(false)
         .open(&mut shown)
-        .show(ctx, |ui| body(ui, model, state, lernie, bl, &confirm));
+        .show(ctx, |ui| body(ui, model, state, &confirm));
     if !shown {
         state.delete = DeleteState::default();
     }
@@ -117,14 +121,7 @@ fn window(
 /// The dialog body: what dies, what is released, and either the refusal or the
 /// typed-name arming (§3.6 — the dialog *states* irrecoverability, since no
 /// archival verb exists to offer until `lernie bundle` lands, §8.3).
-fn body(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-    confirm: &Confirmation,
-) {
+fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, confirm: &Confirmation) {
     ui.colored_label(
         theme::ICHOR,
         "this destroys the workspace and everything inside it — irrecoverably",
@@ -149,7 +146,11 @@ fn body(
                  same name `/delete-workspace <typed name>` carries.",
             );
     });
-    let armed = confirm.armed(&state.delete.typed);
+    // Disarmed while one is outstanding (§9.8 ruling 2: the fire writes what a
+    // clean landing means and marks it until the receipt lands) — a second
+    // press would post a second unmaking of a workspace the first one is
+    // already taking down.
+    let armed = confirm.armed(&state.delete.typed) && state.delete.ticket.is_none();
     if ui
         .add_enabled(armed, egui::Button::new("Delete workspace"))
         .on_hover_text(
@@ -160,7 +161,10 @@ fn body(
         .on_disabled_hover_text("type the workspace's name above to arm this")
         .clicked()
     {
-        fire(model, state, lernie, bl, &confirm.workspace);
+        fire(model, state, &confirm.name);
+    }
+    if state.delete.ticket.is_some() {
+        ui.weak("taking the wall down …");
     }
     if !state.delete.error.is_empty() {
         ui.colored_label(theme::ICHOR, &state.delete.error);
@@ -177,17 +181,37 @@ fn enumerate(ui: &mut egui::Ui, items: &[String], empty: &str) {
     }
 }
 
-/// Fire the unmaking through the one tested entry point; a refusal stays on the
-/// dialog (the trail's own record is the `ops.jsonl` line either way).
-fn fire(model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli, ws: &Path) {
-    match model.delete_workspace(lernie, bl, ws, &state.delete.typed, &super::now_ts()) {
-        Ok(()) => {
-            // The sphere's settings die with the sphere (§16.2 removes its wall
-            // directory); its RAM dies on the same terms, or a workspace created
-            // later under the same §3.1 name would inherit this one's box.
-            state.forget_wall(ws);
-            state.delete = DeleteState::default();
-        }
-        Err(e) => state.delete.error = e,
+/// Post the unmaking (REMOTE §1.2) and mark the dialog as waiting. The `typed`
+/// name rides the gesture: it is what arms the executor's own re-derived gate,
+/// which is fail-closed and does not trust this dialog.
+fn fire(model: &mut AppModel, state: &mut ShellState, name: &str) {
+    let action = Action::DeleteWorkspace {
+        workspace: name.to_owned(),
+        typed: state.delete.typed.clone(),
+    };
+    state.delete.ticket = Some(model.post_act(&action));
+}
+
+/// Fold the unmaking's receipt: the dialog closes on a clean removal and keeps
+/// the refusal otherwise (the trail's own record is the `ops.jsonl` line either
+/// way). The convergence runs on **both** arms, for the reason it always did —
+/// the releases that did land are already real.
+fn settle(model: &mut AppModel, state: &mut ShellState) {
+    let (Some(ticket), Some(ws)) = (state.delete.ticket, state.delete.target.clone()) else {
+        return;
+    };
+    let Some(landed) = model.act_receipt(ticket) else {
+        return;
+    };
+    state.delete.ticket = None;
+    model.deleted_workspace(&ws);
+    if let Some(reason) = super::act::trouble(&landed) {
+        state.delete.error = reason;
+        return;
     }
+    // The sphere's settings die with the sphere (§16.2 removes its wall
+    // directory); its RAM dies on the same terms, or a workspace created later
+    // under the same §3.1 name would inherit this one's box.
+    state.forget_wall(&ws);
+    state.delete = DeleteState::default();
 }

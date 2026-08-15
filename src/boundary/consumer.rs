@@ -11,7 +11,7 @@
 //! give it.
 
 use crate::state::SnapshotCell;
-use crate::ui_state::{Clock, UiState, content_hash};
+use crate::ui_state::{Clock, UiState};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -140,7 +140,6 @@ impl ConsumerCtx {
             },
             // No held preview to agree with headlessly — any seed is a fair
             // mint draw; the ts keeps successive passes distinct.
-            mint_seed: content_hash(ts.as_bytes()),
             // **Who is asking, and who else is connected** (REMOTE §4, §5).
             // The identity is the intake's — `local` for the world's own
             // residents, the certificate's common name for a connection — and

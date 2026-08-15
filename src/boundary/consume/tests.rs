@@ -30,7 +30,6 @@ fn deps(state_root: &Path) -> Deps {
             vec![],
         )),
         caller: crate::boundary::dispatch::Caller::default(),
-        mint_seed: 7,
     }
 }
 

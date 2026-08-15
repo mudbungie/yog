@@ -11,21 +11,19 @@
 //! Create-&-Start paths route through the ball rung; the bare rung is the input
 //! bar's Enter ([`super::input_bar`]); the path rung's picker is Z4's.
 
-use super::{ShellState, StartState};
+use super::ShellState;
 use crate::AppModel;
-use crate::cli_outbound::Cli;
-use crate::start::{self, Payload, StartInputs};
+use crate::start::{self, StartInputs};
 use lernie::mint::SplitMix64;
-use std::path::PathBuf;
 
-/// Run `prepare` (seed?/new?/create?/claim?/compose) and, on success, open
-/// the composer with its editable goal. The run goes through
-/// [`AppModel::prepare_start`], so the workspace it resolved is the focused one
-/// before the composer opens (§3.4) — the tab bar, the conversation list and the
-/// bottom composer all name the start's own workspace. On either outcome refresh the affected
-/// project's balls + the ops tail so the mutations and their log lines are
-/// visible at once (§8.2). `pub(super)`: the tab bar's `new` form
-/// ([`super::new_ws`]) rides the same path.
+/// Post `prepare` (seed?/new?/create?/claim?/compose). Its **receipt** focuses
+/// the workspace it resolved (§3.4) and opens the composer on the goal it
+/// composed — both frames later, since the act crosses the wire (REMOTE §9.8,
+/// bl-1747), and both in one place ([`super::acting::start`]) so a rung cannot
+/// forget one of them. The affected project's balls and the ops tail re-derive
+/// off the same receipt, through the act's own root, so nothing is marked here
+/// either. `pub(super)`: the tab bar's `new` form ([`super::new_ws`]) rides the
+/// same path.
 ///
 /// **A draft opens only when the rung composed one** (bl-9acf): §3.4's table
 /// gives the ball and path rungs a prefill and the bare rung none, and a draft
@@ -36,35 +34,8 @@ use std::path::PathBuf;
 /// goal box (§11: one box, one Enter). One predicate
 /// ([`goal_present`](crate::actions::goal_present)), not a rung match — the
 /// prefill's blankness is the fact, and the fire sites below read the same one.
-pub(super) fn run_prepare(
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-    inputs: StartInputs,
-) {
-    let project = payload_project(model, &inputs.payload);
-    let ts = super::now_ts();
-    let result = model.prepare_start(lernie, bl, &inputs.workspace, &inputs.payload, &ts);
-    if let Ok(prepared) = result {
-        if crate::actions::goal_present(&prepared.goal) {
-            state.start.pending = Some(prepared);
-        } else {
-            super::focus::request(state);
-        }
-    }
-    match project {
-        Some(p) => model.after_bl_verb(&p),
-        None => model.after_lernie_verb(),
-    }
-}
-
-/// The ball rung's project (for the after-verb ball refresh); `None` for the
-/// bare/path rungs, which mutate no ball.
-fn payload_project(model: &AppModel, payload: &Payload) -> Option<PathBuf> {
-    payload
-        .project()
-        .and_then(|name| model.snap.project_path(&name).ok())
+pub(super) fn run_prepare(model: &mut AppModel, state: &mut ShellState, inputs: StartInputs) {
+    super::acting::start::prepare(model, state, &inputs);
 }
 
 /// The editable goal composer (§8.1, §3.3): the greyed name prediction, the
@@ -77,13 +48,7 @@ fn payload_project(model: &AppModel, payload: &Payload) -> Option<PathBuf> {
 /// Dismissing the pane — a clean fire, or Cancel — hands the keyboard back to
 /// the message composer beneath it (§11 focus discipline). A failed launch
 /// keeps the pane and the edited goal, so it is not a dismissal.
-pub fn composer(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) {
     let mint_seed = state.start.mint_seed;
     let Some(pending) = state.start.pending.as_mut() else {
         return;
@@ -140,8 +105,8 @@ pub fn composer(
             )
             .clicked();
     });
-    if send && send_pending(model, &mut state.start, lernie, bl) {
-        super::focus::request(state);
+    if send {
+        send_pending(model, state);
     }
     if cancel {
         state.start.pending = None;
@@ -150,44 +115,34 @@ pub fn composer(
 }
 
 /// Fire the pending start goal as a detached `lernie prompt` (§8.1) — the Send
-/// button's body, shared with the §11 Enter binding. The spawn (success or
-/// failure) rode its own ops line; the banner reads it back. A failed launch
-/// keeps the composer open with the edited goal so the operator can retry (RAM
-/// until sent). Nothing pending is a no-op.
+/// button's body, shared with the §11 Enter binding. Nothing pending is a
+/// no-op.
 ///
-/// Returns whether the pane closed — a clean launch. That is the same edge the
-/// composer reports, so the §11 focus hand-back reads one fact whichever hand
-/// fired it, and neither a retry-able failure nor an empty press moves focus.
+/// **It reads nothing back** (REMOTE §9.8, bl-1747): the act is posted and the
+/// pane, the goal and the §3.3 seed all stand until the receipt says the engine
+/// launched something. A failed launch therefore keeps the composer open with
+/// the edited goal by doing nothing at all, and the §11 focus hand-back rides
+/// the same receipt — neither a retry-able failure nor an empty press moves the
+/// keyboard.
 ///
 /// **A blank goal is not a goal** ([`goal_present`](crate::actions::goal_present),
-/// bl-9acf): it is taken only if it fires, so a blank draft stays standing with
-/// the cursor in it instead of spawning `lernie prompt` with the identity
-/// preamble and nothing after it. The guard lives here, not only on the button,
-/// because the §11 Enter binding is the other hand on the same trigger.
-pub(super) fn send_pending(
-    model: &mut AppModel,
-    start: &mut StartState,
-    lernie: &Cli,
-    bl: &Cli,
-) -> bool {
-    let Some(p) = start
+/// bl-9acf): the pending start is *read* rather than taken here, so a blank
+/// draft stays standing with the cursor in it instead of spawning `lernie
+/// prompt` with the identity preamble and nothing after it. The guard lives
+/// here, not only on the button, because the §11 Enter binding is the other
+/// hand on the same trigger.
+pub(super) fn send_pending(model: &mut AppModel, state: &mut ShellState) {
+    let Some(p) = state
+        .start
         .pending
-        .take_if(|p| crate::actions::goal_present(&p.goal))
+        .clone()
+        .filter(|p| crate::actions::goal_present(&p.goal))
     else {
-        return false;
+        return;
     };
-    // The boundary's Prompt action (§8.5); the §3.4 start claim — the same
-    // one the bare rung's fire makes ([`super::fire`]) — rides its success and
-    // retires the same spent seed (bl-28ba): one rule, both hands. A failed
-    // launch below keeps the pane, the goal AND the seed — nothing was minted,
-    // so that prediction still stands.
-    let fired = model.fire_prompt(lernie, bl, &p, &p.goal, start.mint_seed, &super::now_ts());
-    model.after_lernie_verb();
-    let ok = fired.is_ok();
-    if ok {
-        start.spend_mint();
-    } else {
-        start.pending = Some(p);
-    }
-    ok
+    // The boundary's Prompt action (§8.5), carrying the seat's own §3.3 seed;
+    // the §3.4 start claim and the seed's retirement (bl-28ba) both ride its
+    // receipt — one rule, and every hand that fires a start spends it there.
+    let ws = model.snap.ws_path(&p.workspace).unwrap_or_default();
+    super::acting::start::prompt(model, state, &ws, &p, &p.goal);
 }

@@ -22,7 +22,6 @@
 //! the one target already selected.
 
 use crate::AppModel;
-use crate::cli_outbound::Cli;
 use crate::keymap::{self, Held, Key, KeyAction, Mods};
 use std::path::Path;
 
@@ -77,13 +76,7 @@ const SIGN_KEYS: [(egui::Key, Key); 3] = [
 /// a bare key under a modal reaches nothing but that modal's own Escape, and a
 /// combo is never suppressed at all. `Modifiers::command` is ⌘ on macOS and Ctrl
 /// elsewhere, so the lift spells each combo once for both §10 targets.
-pub(super) fn handle(
-    ctx: &egui::Context,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub(super) fn handle(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     // Text size is derived, never held: `ui.json` is the authority (§4.1) and
     // the context is its projection, re-asserted every frame. That is what
     // makes the size survive a relaunch — and what keeps a second instance's
@@ -140,12 +133,12 @@ pub(super) fn handle(
         .into_iter()
         .filter_map(|(key, mods)| keymap::keymap(key, mods, held))
     {
-        effect(action, model, state, lernie, bl);
+        effect(action, model, state);
     }
 }
 
 /// One intent's effect — the same call the matching widget makes.
-fn effect(action: KeyAction, model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli) {
+fn effect(action: KeyAction, model: &mut AppModel, state: &mut ShellState) {
     match action {
         KeyAction::ListPrev => super::focus::list_step(model, state, -1),
         KeyAction::ListNext => super::focus::list_step(model, state, 1),
@@ -156,7 +149,7 @@ fn effect(action: KeyAction, model: &mut AppModel, state: &mut ShellState, lerni
         KeyAction::FocusComposer => super::focus::request(state),
         KeyAction::NewConversation => new_conversation(model, state),
         KeyAction::NewWorkspace => super::new_ws::open(state),
-        KeyAction::StartHead => start_head(model, state, lernie, bl),
+        KeyAction::StartHead => start_head(model, state),
         KeyAction::Stop => super::dispatch::stop_selected(model, state),
         KeyAction::Scan => super::dispatch::scan_focused(model),
         KeyAction::Search => search_line(model, state),
@@ -167,18 +160,18 @@ fn effect(action: KeyAction, model: &mut AppModel, state: &mut ShellState, lerni
         KeyAction::ToggleGrouping => state.group_by_ball = !state.group_by_ball,
         KeyAction::ToggleActivity => state.activity_open = !state.activity_open,
         KeyAction::Zoom(step) => model.zoom_nudge(step),
-        KeyAction::Fire => fire_pending(model, state, lernie, bl),
+        KeyAction::Fire => fire_pending(model, state),
         KeyAction::Cancel => cancel_pending(model, state),
         KeyAction::DismissModal => super::modal::dismiss(state),
     }
 }
 
-/// Enter — fire the pending start goal (§8.1), then hand the keyboard back to
-/// the message composer if it actually launched (§11 focus discipline).
-fn fire_pending(model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli) {
-    if super::start_pane::send_pending(model, &mut state.start, lernie, bl) {
-        super::focus::request(state);
-    }
+/// Enter — fire the pending start goal (§8.1). The keyboard comes back to the
+/// message composer when the launch **lands** (§11 focus discipline), on the
+/// receipt rather than here: a failed launch keeps the pane, and over the wire
+/// which one happened is not knowable at the keystroke (REMOTE §9.8).
+fn fire_pending(model: &mut AppModel, state: &mut ShellState) {
+    super::start_pane::send_pending(model, state);
 }
 
 /// Esc — put down whatever is up, nearest first: the pending start goal, else
@@ -224,11 +217,11 @@ fn search_line(model: &AppModel, state: &mut ShellState) {
 /// ▶ Start the balls section's **first ready row** — the row it paints at its
 /// top, which is the one the keyboard can name (§11 rule 2 leaves the pick
 /// among several to the pointer). Nothing ready is a no-op.
-fn start_head(model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli) {
+fn start_head(model: &mut AppModel, state: &mut ShellState) {
     let Some(inputs) = model.startable().into_iter().next() else {
         return;
     };
-    super::start_pane::run_prepare(model, state, lernie, bl, inputs);
+    super::start_pane::run_prepare(model, state, inputs);
 }
 
 /// Fold / unfold the balls section — the persisted §4.1 collapse override, the

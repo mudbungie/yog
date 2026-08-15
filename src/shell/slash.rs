@@ -7,12 +7,14 @@
 //! pending [`Prepared`](crate::start::Prepared) is start-flow RAM (§5.3), so it
 //! is folded in here and nowhere else.
 //!
-//! **The start family goes through the frame's own doors** ([`AppModel::
-//! prepare_start`], [`AppModel::fire_prompt`]) rather than the raw dispatch
-//! match — not a second implementation (both doors *are* the chokepoint's typed
-//! entrances, §8.5) but the frame-only aftermath beside it: the §3.4 workspace
-//! adoption, the held start claim, and the §3.3 mint seed a landed fire spends.
-//! A headless consumer must not do those; a window must.
+//! **The start family needs no door of its own any more** (bl-1747). It had
+//! two, because the frame-only aftermath rode their answers — the §3.4
+//! workspace adoption, the held start claim, the §3.3 mint seed a landed fire
+//! spends — and a headless consumer must not do those while a window must. Over
+//! the wire the answer is a **receipt**, and a receipt is already the window's
+//! own: `/prepare` and `/prompt` post the ordinary gestures and the aftermath
+//! hangs off what came back ([`super::acting`]), beside the note this seat
+//! paints. Same two facts, one mechanism, and no second entrance.
 //!
 //! Every answer renders as the reply's own JSON ([`reply::encode`]) — the same
 //! bytes the deposit's reply file carries, because a line typed at the window
@@ -21,8 +23,10 @@
 //! boundary exists to prevent.
 
 use crate::AppModel;
+use crate::actions::DraftKey;
 use crate::boundary::{Action, Gesture, help, line, reply::Reply, reply::encode};
 use crate::cli_outbound::Cli;
+use std::path::PathBuf;
 
 use super::ShellState;
 
@@ -31,14 +35,18 @@ const RUN_HINT: &str = "Run this slash command — the same gesture the buttons 
      instead of clicked. Its answer, or the reason it was refused, appears below. \
      Enter runs it without leaving the box.";
 
-/// Run the drafted command. Returns whether the draft clears — a refusal keeps
-/// it, so the operator fixes the line they typed instead of retyping it (§5.3:
-/// a draft is RAM until *sent*).
+/// Run the drafted command. Returns whether the draft clears **on this frame**
+/// — an answered *query* does, the answer being in hand; an **act** never does,
+/// because whether it landed is its receipt's to say and the clear rides the
+/// ticket instead (REMOTE §9.8, bl-1747). A refusal keeps the line either way,
+/// so the operator fixes what they typed instead of retyping it (§5.3: a draft
+/// is RAM until *sent*).
 pub(super) fn run(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
     bl: &Cli,
+    key: &DraftKey,
     typed: &str,
 ) -> bool {
     let ctx = line::Context {
@@ -55,68 +63,52 @@ pub(super) fn run(
             let answer = model.answer(&deps, &query, super::now_unix());
             note(state, answer)
         }
-        Ok(Gesture::Act(action)) => act(model, state, lernie, bl, &action),
+        Ok(Gesture::Act(action)) => {
+            act(model, state, key, &seeded(state, action));
+            // The line is RAM until it lands: whether it clears is the
+            // receipt's answer, so nothing clears here.
+            false
+        }
     }
 }
 
-/// Fire one action at this seat and report what came back.
-fn act(
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-    action: &Action,
-) -> bool {
-    let ts = super::now_ts();
+/// **This seat's own §3.3 prediction, carried onto the gesture** (bl-1747).
+/// [`line::parse`] reads a `/prompt` off the typed text and predicts no name;
+/// the composer above this box has been painting one all along, off
+/// `start.mint_seed`, so the line fires that seed and the preview and the
+/// minted `--name` are one draw. Every other action passes through untouched.
+fn seeded(state: &ShellState, action: Action) -> Action {
     match action {
-        // The §8.1 start family through the frame's doors (see the module doc).
-        Action::Prepare { workspace, payload } => {
-            // The line's address resolved at the seat's own door (REMOTE §8):
-            // the frame's typed door takes a path, the gesture carries a name.
-            let prepared = match model.snap.ws_path(workspace) {
-                Ok(ws) => model.prepare_start(lernie, bl, &ws, payload, &ts),
-                Err(e) => Err(e),
-            };
-            if let Ok(ready) = prepared.as_ref() {
-                // The prepared start takes the composer's seat (bl-6ad8), so
-                // `/prompt` — or the goal box — fires exactly what was prepared.
-                state.start.pending = Some(ready.clone());
-            }
-            note(state, prepared.map(Reply::Prepared))
-        }
-        Action::Prompt { prepared, goal } => {
-            let seed = state.start.mint_seed;
-            let fired = model.fire_prompt(lernie, bl, prepared, goal, seed, &ts);
-            if fired.is_ok() {
-                // The prediction this seed backed is a stamp now (bl-28ba), and
-                // the prepared start it fired is spent.
-                state.start.spend_mint();
-                state.start.pending = None;
-            }
-            note(
-                state,
-                fired.map(|conversation| Reply::Started { conversation }),
-            )
-        }
-        _ => {
-            let deps = model.boundary_deps(lernie, bl);
-            let result = model.dispatch(&deps, &ts, action);
-            // The after-verb refresh the buttons make, chosen by the action's
-            // own answer to which substrate it touched (§8.2).
-            match action
-                .project()
-                .and_then(|n| model.snap.project_path(&n).ok())
-            {
-                Some(project) => model.after_bl_verb(&project),
-                None => model.after_lernie_verb(),
-            }
-            note(state, result)
-        }
+        Action::Prompt { prepared, goal, .. } => Action::Prompt {
+            prepared,
+            goal,
+            seed: Some(state.start.mint_seed),
+        },
+        other => other,
     }
+}
+
+/// Fire one action at this seat: post it, and hold the draft it was typed in
+/// (REMOTE §9.8). Every consequence — the note, whether the line clears, and
+/// the start family's own adoption/claim/seed — rides the receipt, so this arm
+/// makes no decision the buttons do not make.
+fn act(model: &mut AppModel, state: &mut ShellState, key: &DraftKey, action: &Action) {
+    // The line's address resolved at the seat's own door (REMOTE §8): the
+    // aftermath is about a workspace **path**, the gesture carries a name, and
+    // a gesture naming none is about none. A name the roster does not carry is
+    // one a `/prepare` is about to found, so it resolves the §3.1 way — the
+    // same path the §11 raise's own inputs name.
+    let ws = action.workspace().map_or_else(PathBuf::new, |name| {
+        model
+            .snap
+            .ws_path(&name)
+            .unwrap_or_else(|_| model.new_workspace_inputs(&name).workspace)
+    });
+    super::acting::line(model, state, key, &ws, action);
 }
 
 /// Show the boundary's own answer, and say whether the line landed.
-fn note(state: &mut ShellState, result: Result<Reply, String>) -> bool {
+pub(super) fn note(state: &mut ShellState, result: Result<Reply, String>) -> bool {
     match result {
         // Help renders as help (§8.5): the typed rows are the answer, and this
         // seat prints them the way a reader reads them — the same rendering the
@@ -174,7 +166,7 @@ pub(super) fn seat(
         // A run keeps the keyboard (§11 focus discipline), asked on the attempt
         // and not the outcome — a refused line is fixed where it was typed.
         super::focus::request(state);
-        if run(model, state, lernie, bl, &ctx.text) {
+        if run(model, state, lernie, bl, &ctx.key, &ctx.text) {
             state.actions.drafts.set(ctx.key.clone(), String::new());
         }
     }

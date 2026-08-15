@@ -56,6 +56,7 @@ fn the_prepared_reply_is_the_prompt_gestures_own_spelling() {
         Ok(super::super::Gesture::Act(super::super::Action::Prompt {
             prepared,
             goal: "g2".into(),
+            seed: None,
         }))
     );
 }

@@ -43,7 +43,6 @@ pub(super) fn ready_row(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     inputs: StartInputs,
 ) {
     let ball = ball_ref(&inputs.payload);
@@ -68,7 +67,7 @@ pub(super) fn ready_row(
         },
     );
     if start_button.clicked() {
-        run_prepare(model, state, lernie, bl, inputs);
+        run_prepare(model, state, inputs);
         return;
     }
     let Some((project, id, join)) = ball else {
@@ -115,7 +114,6 @@ pub(super) fn continue_row(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     inputs: StartInputs,
 ) {
     let ball =
@@ -124,7 +122,7 @@ pub(super) fn continue_row(
         .button(format!("▶ Continue {}", start_label(&inputs)))
         .on_hover_text(CONTINUE_HINT);
     if button.clicked() {
-        run_prepare(model, state, lernie, bl, inputs);
+        run_prepare(model, state, inputs);
         return;
     }
     let Some(ball) = ball else {
@@ -200,8 +198,6 @@ pub(super) fn new_ball_form(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
     project: &Path,
     label: &str,
 ) {
@@ -251,7 +247,7 @@ pub(super) fn new_ball_form(
     if create {
         let inputs = model.new_ball_inputs(project, &title, &body);
         state.start.new_ball.remove(project);
-        run_prepare(model, state, lernie, bl, inputs);
+        run_prepare(model, state, inputs);
     } else {
         state
             .start

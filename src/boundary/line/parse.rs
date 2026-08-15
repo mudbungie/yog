@@ -92,12 +92,7 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
             workspace: args::workspace(ctx, verb)?,
             payload: payload(tail, ctx, verb)?,
         })),
-        "prompt" => Ok(act(Action::Prompt {
-            prepared: ctx.prepared.clone().ok_or_else(|| {
-                format!("/{verb}: nothing is prepared — /prepare first, then say the goal")
-            })?,
-            goal: args::required(tail, verb, "the goal")?,
-        })),
+        "prompt" => verbs::prompt(tail, ctx, verb),
         // The §4.10 mutating fan's two: spread a prepared start over N isolated
         // candidates, and retire one of them.
         "fan" => super::fan::fan(tail, ctx, verb),

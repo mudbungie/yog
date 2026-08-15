@@ -35,7 +35,6 @@ fn ctx(state_root: &Path, snapshot: Snapshot) -> PilotCtx {
             balls_state_root: state_root.join("balls"),
             snapshot: Arc::new(Snapshot::empty(Instant::now())),
             caller: crate::boundary::dispatch::Caller::default(),
-            mint_seed: 0,
         },
         cell,
         clock: Arc::new(SystemClock),

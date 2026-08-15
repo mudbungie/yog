@@ -13,9 +13,9 @@ use crate::projects::runner::BlStore;
 use crate::ui_state::SystemClock;
 use crate::xdg::Env;
 use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
-use tempfile::{TempDir, tempdir};
+use tempfile::tempdir;
 
 /// The mint seed every acceptance world starts from (bl-cba6). The shell rolls
 /// this from [`entropy_seed`](crate::shell::clock) at construction, which made
@@ -78,85 +78,10 @@ pub(super) fn seed_world(world: &World) {
     std::fs::write(lernie_home.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
-/// A workspace populated across every inspector surface (transcript, steps +
-/// tool i/o, inbox), symlinked under the lernie workspaces root so the model
-/// enumerates it.
-pub(super) struct World {
-    _root: TempDir,
-    fx: Fixture,
-    /// Every extra sphere [`World::add_workspace`] created, held only so their
-    /// temp dirs outlive the test — the §3.1 wall boundary is unobservable with
-    /// one workspace, so a wall drive needs a second.
-    spheres: Vec<Fixture>,
-    pub(super) model: AppModel,
-    /// The §7.2 derivation, driven by hand: in the app a `Worker` thread runs
-    /// it, and the frame renders only what it publishes (bl-ee0a).
-    deriver: crate::app::Deriver,
-    pub(super) state: ShellState,
-    pub(super) ws: PathBuf,
-    /// yog's own data root — where the §16 nested world and the §3.1 names root
-    /// live. A raise mints under it, so a test that drives one needs to seed the
-    /// world here and read the raised sphere back.
-    pub(super) yog_data: PathBuf,
-    /// Where a second sphere is symlinked from ([`World::add_workspace`]).
-    lernie_workspaces: PathBuf,
-}
-
-impl World {
-    /// One derivation pass and the frame's take of it — what the smoke test
-    /// does whenever it has just changed something on disk.
-    pub(super) fn converge(&mut self) {
-        self.deriver.step();
-        self.model.refresh();
-    }
-
-    /// Mint a **second sphere** under the same lernie root: another workspace
-    /// with one conversation, symlinked where the model enumerates it. Its §3.1
-    /// leaf names its own wall (§16.2 as amended), so this is what a wall drive
-    /// switches to. Caller converges to fold it in.
-    pub(super) fn add_workspace(&mut self, name: &str, agent: &str) -> PathBuf {
-        let fx = Fixture::new();
-        fx.build_agent(agent, name);
-        let ws = self.lernie_workspaces.join(name);
-        std::os::unix::fs::symlink(&fx.path, &ws).unwrap();
-        self.spheres.push(fx);
-        ws
-    }
-
-    /// Fork a nameless descent child off `parent_id` (§2.3) — the bl-63a1
-    /// chained-id shape: no name blob, no goal on disk, no step record, so the
-    /// §3.3 ladder bottoms out at its floor. Caller converges to fold it in.
-    pub(super) fn add_child(&self, parent_id: &str, child_id: &str) {
-        self.fx.build_child(parent_id, child_id);
-    }
-
-    /// A **second root** conversation (§2.3) wearing `name` as its §3.3 name
-    /// fact — a second row in the list, so a test can compare two rows of the
-    /// same list rather than two worlds. Caller converges to fold it in.
-    pub(super) fn add_root(&self, conv_id: &str, name: &str) {
-        self.fx.build_agent(conv_id, name);
-        self.fx.name_agent(conv_id, name);
-    }
-
-    /// **Advance the workspace's config lineage past every conversation in
-    /// it** (§9.4 drift): one ordinary config edit on `config/default`,
-    /// carrying `providers_yaml`. Every agent forked the lineage's previous
-    /// head, so the governing commit and the tip part the moment this lands —
-    /// which is the whole condition the drift clause and its exits are offered
-    /// under. Caller converges to fold it in.
-    pub(super) fn advance_config(&self, providers_yaml: &str) {
-        self.fx.commit_other("providers.yaml", providers_yaml);
-    }
-
-    /// Mark `conv_id` **abandoned** — §6's will-not-retry assertion, the one
-    /// gate that suppresses rule 2 (`attention::rest_evidence`). It is how a
-    /// fixture gets a settled row bearing **no** attention beside one that
-    /// does, without focusing anything and so without spending an ack.
-    pub(super) fn quiet(&self, conv_id: &str) {
-        self.fx
-            .mark_ref(&format!("refs/lernie/abandoned/{conv_id}"));
-    }
-}
+/// The world a test drives, and the wire behind it — its own file per §12's
+/// budget.
+mod world;
+pub(in crate::shell::acceptance) use world::World;
 
 /// **Whether the fixture's world has a workspace in it** — the one axis these
 /// builders differ on. Named rather than spelled as a bool because the state it
@@ -275,7 +200,7 @@ fn build_world(title: &str, roster: &Roster) -> World {
     }
     let env = Env::from_pairs([("HOME", root.path().display().to_string())]);
     let balls = Box::new(BlStore::new(env.balls_layout(), Cli::new("bl")));
-    let (model, deriver) = AppModel::boot(
+    let (mut model, deriver) = AppModel::boot(
         roots,
         (*roster == Roster::One).then(|| ws.clone()),
         Arc::new(SystemClock),
@@ -286,6 +211,16 @@ fn build_world(title: &str, roster: &Roster) -> World {
     // The one entropy read the acceptance suite refuses to inherit (bl-cba6):
     // pinned so the §3.3 preview paints a known word every run.
     state.start.mint_seed = MINT_SEED;
+    // **The wire the window is a client of** (REMOTE §1.2 as ruled 2026-08-14,
+    // §9.8): a fixture mints no certificate and binds no port, so the transport
+    // is stood in for — but the ENDS are the real ones, taken here at boot
+    // exactly as `Engine::window_wire` hands them over. Without them every act
+    // this world fires answers "this window has no wire behind it", which is a
+    // window whose every gesture is refused.
+    let (link, link_end) = crate::wire::link::pair();
+    let (post, outbox) = crate::wire::post::pair();
+    model.adopt_wire(link);
+    model.adopt_post(post);
     World {
         _root: root,
         fx,
@@ -296,5 +231,9 @@ fn build_world(title: &str, roster: &Roster) -> World {
         ws,
         yog_data,
         lernie_workspaces,
+        link: link_end,
+        outbox,
+        lernie: Cli::new("yog-absent-lernie"),
+        bl: Cli::new("yog-absent-bl"),
     }
 }

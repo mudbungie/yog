@@ -86,6 +86,31 @@ pub(crate) fn encode_prepared(p: &Prepared) -> Value {
     })
 }
 
+/// **The §8.1 start family's two envelopes** — the staging gesture and the
+/// deferred fire — beside the prepared body they share, rather than spelled in
+/// the action table: they are the one pair whose payloads are each other's,
+/// and the table stays one row per gesture. `seed` is the firing seat's own
+/// §3.3 prediction (bl-1747), `null` for a caller that predicted no name.
+///
+/// Anything but those two is unreachable — the table's arm names them — and
+/// answers `null`, which decode refuses as an envelope with no `op`.
+pub(crate) fn encode_start(action: &crate::boundary::Action) -> Value {
+    use crate::boundary::Action;
+    match action {
+        Action::Prepare { workspace, payload } => {
+            json!({ "op": "prepare", "workspace": workspace,
+                    "payload": encode_payload(payload) })
+        }
+        Action::Prompt {
+            prepared,
+            goal,
+            seed,
+        } => json!({ "op": "prompt", "prepared": encode_prepared(prepared),
+                     "goal": goal, "seed": seed }),
+        _ => Value::Null,
+    }
+}
+
 pub(crate) fn decode_prepared(v: &Value) -> Result<Prepared, String> {
     let obj = v.as_object().ok_or("prepared: not an object")?;
     Ok(Prepared {

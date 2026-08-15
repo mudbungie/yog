@@ -50,6 +50,7 @@ fn nested() -> Vec<Action> {
         Action::Prompt {
             prepared: prepared(),
             goal: "g".into(),
+            seed: None,
         },
         Action::Fan {
             prepared: prepared(),

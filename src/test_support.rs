@@ -291,3 +291,7 @@ pub(crate) mod workspace;
 /// file because a certificate fixture is never committed and the minting is a
 /// self-contained seeder, not part of the spawn discipline above.
 pub(crate) mod wire;
+
+/// The engine's own dispatch, for a test that drives a gesture (REMOTE §9.8) —
+/// its own file so the reason it exists is stated where it is read.
+pub(crate) mod engine;

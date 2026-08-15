@@ -54,7 +54,6 @@ pub(super) fn deps_at(root: &Path, lernie: &Path, bl: &Path) -> Deps {
         balls_state_root: root.join("state/balls"),
         snapshot: Arc::new(snapshot(Path::new("/ws"), "alba", vec![], vec![])),
         caller: crate::boundary::dispatch::Caller::default(),
-        mint_seed: 3,
     }
 }
 

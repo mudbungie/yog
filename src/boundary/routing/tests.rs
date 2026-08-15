@@ -38,7 +38,6 @@ fn deps(state_root: &Path, client: &str, mailbox: &Mailbox) -> Deps {
             Vec::new(),
             Vec::new(),
         )),
-        mint_seed: 0,
         caller: Caller {
             client: Client::parse(client).unwrap_or_default(),
             mailbox: mailbox.clone(),

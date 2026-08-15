@@ -85,7 +85,6 @@ fn deps(snap: Snapshot, state: &Path) -> yog::boundary::dispatch::Deps {
         balls_state_root: state.join("balls"),
         snapshot: Arc::new(snap),
         caller: yog::boundary::dispatch::Caller::default(),
-        mint_seed: 5,
     }
 }
 

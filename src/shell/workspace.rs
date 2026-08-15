@@ -40,11 +40,10 @@ pub fn center(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     bz: &Cli,
 ) {
     let Some(ws) = model.focused_workspace().map(PathBuf::from) else {
-        super::bootstrap::render(ui, model, state, lernie, bl);
+        super::bootstrap::render(ui, model, state);
         return;
     };
     // "Replay is not a mode": the same view renders it, only the mutating

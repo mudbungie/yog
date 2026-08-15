@@ -79,7 +79,6 @@ impl World {
                 snap
             }),
             caller: crate::boundary::dispatch::Caller::default(),
-            mint_seed: 7,
         }
     }
 

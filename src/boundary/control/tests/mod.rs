@@ -49,7 +49,6 @@ impl World {
             world: crate::xdg::Env::from_env(),
             snapshot: Arc::new(snapshot(&self.workspace(), "alba", Vec::new(), Vec::new())),
             caller: crate::boundary::dispatch::Caller::default(),
-            mint_seed: 7,
         }
     }
 

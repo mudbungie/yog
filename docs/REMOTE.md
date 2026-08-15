@@ -35,6 +35,14 @@ id is cited, the path to the ruling is not narrated.
    operator's own act performs, on the operator's own box, before anything has
    been dialled. Nothing crosses a wire unauthenticated, and yog still links no
    certificate library.
+
+   **Closed to the letter for the window's acts (bl-1747).** The reads crossed
+   in bl-ae05/bl-adcb/bl-f297 and the acts in bl-4841/bl-1747; with the last
+   four gestures posted, `AppModel::dispatch` — the frame's own way into the
+   chokepoint — is deleted, and the only callers of `boundary::dispatch` left
+   are the engine's own intakes. The residual is on the read side and is scope
+   rather than architecture (§9.7): three standing classes, each blocked on
+   named work, none on a decision.
 3. **The channel is mTLS**, and the wrapper must be strong enough to leave on
    the public internet. Both ends authenticate with certificates.
 4. **Bootstrapping is explicitly out-of-channel.** The starting assumption is
@@ -930,12 +938,16 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    in-band non-zero result is what a vanished endpoint had to produce anyway
    (lernie's §3.3), so the seam was complete and honest before the transport
    existed.
-8. **The window becomes a client.** *(Opened, bl-ae05 — see §9.7; the act path
-   §9.8, bl-4841.)* The operator ruling that settled §1.2 against §4.1, the
+8. **The window becomes a client.** *(Landed. Opened bl-ae05 — see §9.7; the act
+   path §9.8, designed and half-migrated in bl-4841 and **completed in
+   bl-1747**, which deleted `AppModel::dispatch` and with it the window's last
+   in-process gesture. Its read residual is §9.7's, and is scope rather than
+   architecture.)* The operator ruling that settled §1.2 against §4.1, the
    boot's own mint, the window's leaf and its seating, the off-frame asker, and
    the first surface painted from a decoded reply. Its residual was the
-   migration of the remaining reads and of the acts: the acts have a design and
-   a first group (§9.8), and the reads are bl-f297's list (§9.7).
+   migration of the remaining reads and of the acts: **the acts are done**
+   (§9.8 — every one of them crosses, and the second execution path §1.2 exists
+   to refuse no longer exists), and the reads are bl-f297's list (§9.7).
 
    **Two rulings came out of it and belong here rather than in a ball body.**
    *Presence is not the routing predicate* (§5, amended): a tool host holds a
@@ -1294,7 +1306,8 @@ been taken; each is blocked on work whose shape is named.
   group landed, §9.8** (bl-4841). An act is a declaration whose receipt lands
   later, under a ticket the frame mints; thirteen gestures cross the wire and
   four are left, each named there with the frame-side fact its receipt gates.
-  `AppModel::dispatch` stays until those four move.
+  `AppModel::dispatch` stayed until those four moved; **bl-1747 moved them and
+  deleted it** (§9.8), so the window's dialogue is wire-only in full.
 - **`Prepared::binding` stays a path** (§8.1's ruling, unchanged). The shape
   that dissolves it — `Prepared` becoming opaque to the seat — is affordable
   only once one seat's read path is the *only* read path, and the composer is
@@ -1302,7 +1315,7 @@ been taken; each is blocked on work whose shape is named.
   seat already told the workspace it belongs to, and it stays bounded and
   stated.
 
-### 9.8 The acts, and the receipt that lands later (bl-4841)
+### 9.8 The acts, and the receipt that lands later (bl-4841, closed bl-1747)
 
 §9.7 moved the window's *reads* onto the wire and left its *acts* where they
 were: every gesture still went through `AppModel::dispatch`, the in-process
@@ -1376,10 +1389,14 @@ What remains is the window's own direct writes (the per-frame §6 ack, panel
 sizes) landing between the engine's write and the window's adopt, where a
 re-save carries the older copy back. That race is **not new** — it is exactly
 the one the `gestures/` inbox consumer already has with the frame — and it is
-bounded by the derivation cadence. It is also untouched by this landing: no act
-that crosses the wire here writes `ui.json` at all. The four that do —
-`MarkSeen`, the two §3.6 deletes, and `Prompt` — are all in the residual below,
-so the next ball inherits the ordering stated rather than discovered.
+bounded by the derivation cadence. It was untouched by bl-4841's landing — no
+act that crossed there wrote `ui.json` at all — so the ordering was stated
+rather than discovered, and **bl-1747 paid the check**. The writers turned out
+to be three, not four: `MarkSeen` and the two §3.6 deletes. `Prompt` reads the
+§3.5 ceiling out of the document and writes nothing, so the file it opens is
+one it never dirties. All three cross now, and the residual's own entry records
+what the check found: the prune lands whole on the next pass and nothing
+fights.
 
 **4. Fire-and-hold is the precedent in structure, and not the mechanism.** The
 start claim and the pending echo already hold state across frames awaiting a
@@ -1416,9 +1433,11 @@ the gesture and nothing else, because the engine owns the binaries and a seat
 never did. Ten click-glue files lost the parameter in this landing and none
 gained one. A remote seat could fire every act listed below.
 
-**What crosses now**, by the line that decides it — *an act whose receipt is
-nothing, or a sentence, crossed; an act whose receipt gates a frame-side state
-change did not*:
+**What crossed in bl-4841**, by the line that decided it then — *an act whose
+receipt is nothing, or a sentence, crossed; an act whose receipt gates a
+frame-side state change did not*. That line is retired: bl-1747 crossed the
+other side of it too, so **everything crosses** and the list below is history
+rather than a boundary.
 
 - the §8.2 short verbs — `Stop`, `Scan`, `Nudge`, `AnswerHold`;
 - the ball verbs — `Close`, `Release`, `Move`, `Assign`;
@@ -1426,26 +1445,61 @@ change did not*:
 - the four that paint a sentence — `SetMarks`, `PickModel`, `Retarget`,
   `ApplyConfig`.
 
-**The residual, named rather than papered over.** Four, and none of them is more
-of the same move:
+**The residual, closed (bl-1747): none.** Four were left, and none of them was
+more of the same move — each is recorded here with what its receipt turned out
+to owe, because the answers are the ruling and the code is only where they live.
 
-- **`Action::Message`.** Its reply gates two frame-side facts in one breath: the
+- **`Action::Message`.** Its reply gated two frame-side facts in one breath: the
   draft clearing (a refused send leaves the words on screen to be fixed) and the
-  §3.4 pending echo. Putting both behind a receipt asks whether a draft stays up
-  for one round trip, which is a rendering ruling and not a mechanical move.
-- **`Prepare` / `Prompt`**, the §8.1 typed doors rather than the dispatch match.
-  The frame-only aftermath rides their answer — the §3.4 workspace adoption, the
-  held start claim, the §3.3 mint seed a landed fire spends — and `Prepared`
-  crosses back into the composer, whose `binding` §8.1 rules stays a path.
-- **`DeleteWorkspace` / `DeleteAgent`.** A modal that closes on a clean answer
-  and holds its sentence otherwise, and the only two acts here that prune
-  `ui.json` — answer 3's ordering, in the one place it is load-bearing.
-- **The slash line's act arm.** `run` answers whether the draft clears, and
-  today a boundary refusal keeps the typed line; over the wire that answer is
-  not available at the moment the question is asked.
+  §3.4 pending echo. The rendering question — *does a draft stay up for one
+  round trip?* — is answered **yes**: it stays until the receipt, and a refusal
+  keeps it for good. That is §5.3's own sentence read literally (*a draft is RAM
+  until sent*) with "sent" meaning what the engine says rather than what the
+  click hoped, and it is the only answer that cannot lose typed text. The echo
+  moves with it, by ruling 3: same fact, same rate, new trigger.
+- **`Prepare` / `Prompt`.** The frame-only aftermath — the §3.4 workspace
+  adoption, the held start claim, the §3.3 mint seed a landed fire spends —
+  rides the receipt now, and the typed doors the window used to enter through
+  are gone from the seat side (the chokepoint still has them; the `Prepare` and
+  `Prompt` arms are their one caller). **The seed forced a reframe and got the
+  right one.** It was a `Deps` field, which is the engine's to fill — but the
+  window's greyed §3.3 preview is drawn off it, and a seat that predicts a name
+  must be able to fire *that* name. It rides `Action::Prompt` as
+  `seed: Option<u64>`: a parameter of the gesture, not of the environment, with
+  `None` for a caller that predicted nothing and one stamp-derived default at
+  the one door that mints. `Deps::mint_seed` is deleted, and with it the three
+  intakes that each spelled the same default. **The composer's Enter is two
+  acts**, the `Prompt` posted when the `Prepared` lands; that chain is held in
+  one place so the draft it composed empties when the *second* one lands, and
+  the gesture is judged once exactly as the synchronous pair was.
+- **`DeleteWorkspace` / `DeleteAgent`.** The modal holds a ticket beside the
+  sentence it already held, disarms while one is outstanding, closes on a clean
+  receipt and keeps the reason otherwise. The fire-time re-derivation stays
+  fail-closed and unmoved — it is inside the chokepoint, so it now runs where
+  every other seat's does. **Answer 3's ordering was checked here and holds.**
+  These are the only acts left that write `ui.json` (`Prompt` reads the ceiling
+  and writes nothing), so this is where the check was owed: the engine opens the
+  file fresh and prunes, the window keeps its own copy inside the frame, and the
+  §7.2 worker carries the pruned bytes back as an ordinary external change that
+  `adopt_ui` takes wholesale — the window's own last write being a different
+  document, so the echo test never suppresses it. Nothing fights, and the
+  regression naming that is
+  `app::tests::deletes::the_engines_prune_reaches_the_window_as_an_ordinary_external_change`.
+- **The slash line's act arm.** Same shape as `Message` and answered the same
+  way: the typed line clears on a clean receipt and is kept, with the reason
+  under it, otherwise. Its **query** arm is untouched — a read is answered in
+  place or latched (§9.7), and only the act arm had a receipt to wait for.
 
-`AppModel::dispatch` therefore stays, and is exactly the size of that list: it
-goes when the four do.
+**`AppModel::dispatch` is deleted, and the subtraction is the proof.** It was
+exactly the size of that list. With it went `AppModel::fire_prompt`,
+`prepare_start`, `delete_workspace` and `delete_agent` — the frame's four
+private entrances into the chokepoint — and `Deps::mint_seed`. The window's
+dialogue is **wire-only in full**, and §1.2 is closed to the letter: the engine's
+own intakes (the deposit consumer, the listener) are the only callers of
+`boundary::dispatch::dispatch` that remain, which is what having one execution
+path means. The `Cli` pair went on evaporating as it was always going to
+(§9.8's own observation): eleven more click-glue files lost it, and what still
+carries it does so for the §8.5 line's *query* arm and nothing else.
 
 **What it unblocks for bl-f297.** That ball's third blocked class — *a read with
 nowhere to paint a refusal, or a consumer that reads it synchronously* — put the
@@ -1458,12 +1512,26 @@ already carries it: `Reply::Marks` is the branch re-read after the write, which
 is §5.3's receipt discipline (*a receipt is a re-read, never an echo*). One
 fewer blocked class.
 
-**The acceptance world answers acts too** (`src/shell/acceptance/wire.rs`): one
-pump, two chokepoints — the standing questions through `AppModel::answer` and
-the posted acts through `AppModel::dispatch`, the transport stood in for and no
-second dispatch added. A read that reaches the act queue, or an act that reaches
-the standing set, is refused with the sentence saying so rather than quietly
-answered by the other half.
+**The acceptance world answers acts too**, and since bl-1747 it does so for
+*every* world rather than the wired ones: the two channel ends are taken at the
+fixture's own boot (`shell::acceptance::fixture::world`), because a fixture with
+nothing behind its end of the channel is a window whose every gesture is refused.
+Two chokepoints — the standing questions through `AppModel::answer`, the posted
+acts through `boundary::dispatch::dispatch` over a `ui.json` opened fresh per
+gesture — with the transport stood in for and no second dispatch added. A read
+that reaches the act queue, or an act that reaches the standing set, is refused
+with the sentence saying so rather than quietly answered by the other half.
+
+**A driven frame settles its own acts**, and that is a harness ruling worth
+stating. A gesture's aftermath lands on a *later* frame reading the receipt, and
+the start family is two acts deep. A window pays that in ask periods; a drive
+would have to pay it in counted frames at every call site, which is a fact about
+the transport leaking into every test that has nothing to do with it. So
+`Screen::run` pays it once — answer what the frame posted, repaint, repeat while
+anything was answered — and the loop terminates because only a receipt can post
+an act and nothing in the window posts one unprompted. The engine's substrate
+binaries live on the **world**, not on the driver, for the same reason a posted
+act carries no `Cli`: they are the engine's, and a seat never had them.
 
 ## 10. Open questions (living)
 

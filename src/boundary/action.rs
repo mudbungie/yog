@@ -99,9 +99,16 @@ pub enum Action {
     Prepare { workspace: String, payload: Payload },
     /// Fire the detached `lernie prompt` (§8.1): mint the conversation name,
     /// pass it via `--name`, spawn detached — the goal verbatim (bl-6920).
-    /// `prepared` is the
-    /// [`Action::Prepare`] reply (or a re-composed equal); `goal` the edited text.
-    Prompt { prepared: Prepared, goal: String },
+    /// `prepared` is the [`Action::Prepare`] reply (or a re-composed equal);
+    /// `goal` the edited text. **`seed` is the firing seat's own §3.3
+    /// prediction** (bl-1747): a seat that painted a greyed name fires the seed
+    /// it painted, and `None` predicted nothing (a deposited line, the §4.3
+    /// loop) so the door draws off the stamp. A `Deps` field until acts crossed.
+    Prompt {
+        prepared: Prepared,
+        goal: String,
+        seed: Option<u64>,
+    },
     /// **Fan one delivery obligation into N isolated candidates** (VISION
     /// §4.10, bl-8746): pin the target once, ask balls for N attempts off that
     /// exact commit, and hand back the same [`Prepare`](Self::Prepare) reply

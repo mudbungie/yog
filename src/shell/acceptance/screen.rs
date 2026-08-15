@@ -77,8 +77,38 @@ impl Screen {
         self.run(world, events)
     }
 
-    /// One frame of the real window.
+    /// One frame of the real window, **with the acts it fired settled**.
+    ///
+    /// Since bl-1747 a gesture is posted rather than run (REMOTE §9.8), so its
+    /// frame-side aftermath — a draft clearing, a workspace adopted, a seed
+    /// spent, a dialog closing — lands on a *later* frame reading the receipt.
+    /// And the §8.1 start family is two acts: the second is posted only when
+    /// the first one's receipt arrives. A window pays that in ask periods; a
+    /// drive would have to pay it in counted frames, at every call site, which
+    /// is a fact about the transport leaking into every test that has nothing
+    /// to do with it. So it is paid here, once: answer what the frame posted,
+    /// paint again, and repeat while anything was answered. The loop terminates
+    /// because only a receipt can post an act, and nothing in the window posts
+    /// one unprompted.
     fn run(&self, world: &mut World, events: Vec<egui::Event>) -> egui::FullOutput {
+        // The engine's spawns are the ones a posted act runs (REMOTE §9.8), so
+        // this drive's fakes have to be the world's — a seat carries the
+        // gesture and never a binary.
+        world.substrate(&self.lernie, &self.bl);
+        let mut out = self.paint(world, events);
+        while world.acts() {
+            // The receipts reach the model through its own frame duty
+            // (`AppModel::refresh` → `settle_acts`), which the app runs once
+            // per `update` — so a driven frame runs it too, or the answers sit
+            // in a channel nobody drained.
+            world.model.refresh();
+            out = self.paint(world, Vec::new());
+        }
+        out
+    }
+
+    /// One frame, and nothing else.
+    fn paint(&self, world: &mut World, events: Vec<egui::Event>) -> egui::FullOutput {
         let input = egui::RawInput {
             // The held modifiers ride `RawInput` beside the events, not only on
             // them — `keys::handle` reads `i.modifiers`, so a combo spelled only

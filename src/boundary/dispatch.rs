@@ -118,7 +118,11 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             outcome(verbs::update(bl, root, ts, project, id, name, &fields))
         }
         Action::Prepare { payload, .. } => staged(deps, ts, ws, project, payload),
-        Action::Prompt { prepared, goal } => prompt(deps, ui, ts, ws, prepared, goal)
+        Action::Prompt {
+            prepared,
+            goal,
+            seed,
+        } => prompt(deps, ui, ts, ws, prepared, goal, *seed)
             .map(|conversation| Reply::Started { conversation }),
         Action::Fan {
             prepared,
