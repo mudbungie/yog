@@ -1,7 +1,8 @@
 +++
 title = "REMOTE 9.7 residual: migrate the window's remaining reads onto the wire, surface by surface"
 created = 1786763797
-updated = 1786763797
+updated = 1786764088
+claimant = "Taffrail"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 bl-ae05 built the read path (REMOTE 1.2, 9.7) and pointed exactly one surface at it: the clients section, whose rows are a Reply::Clients that crossed loopback mTLS, was scoped against the window's own registrations and was decoded by reply::decode. Every other read still paints the published snapshot in process.
