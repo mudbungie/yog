@@ -2,7 +2,7 @@
 //! [`consume`](super::consume::consume) pass, driven beside the derivation
 //! worker — never on the frame (§7.2: a gesture spawns verbs, and the window
 //! must stay live through them). Both run modes spawn it: the GUI window and
-//! `yog headless` are one consumer surface, so a deposit converges whichever
+//! `yog serve` are one consumer surface, so a deposit converges whichever
 //! face is up (I0).
 //!
 //! The shell is deliberately the [`Worker`](crate::app::Worker) shape: a stop
@@ -18,9 +18,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use super::consume::consume;
+use super::consume::{consume, run_value};
 use super::deposit;
 use super::dispatch::Deps;
+use serde_json::Value;
 
 /// How often the consumer looks for deposits. A latency knob, not a
 /// correctness one: an unconsumed deposit waits, it never rots (I0).
@@ -54,6 +55,24 @@ impl ConsumerCtx {
         if deposit::pending(&self.state_root).is_empty() {
             return 0;
         }
+        let (deps, ts, now_unix) = self.deps();
+        let mut ui = UiState::open(self.ui_path.clone());
+        consume(&deps, &mut ui, &ts, now_unix)
+    }
+
+    /// One gesture envelope, answered where a deposit is answered. **This is
+    /// the wire's whole engine-side surface** (REMOTE §3, §9.5; bl-b6fa): a
+    /// connection reads a frame and calls this, so the listener is a second
+    /// intake to the same chokepoints and never a second implementation.
+    pub fn answer(&self, request: &Value) -> Value {
+        let (deps, ts, now_unix) = self.deps();
+        let mut ui = UiState::open(self.ui_path.clone());
+        run_value(&deps, &mut ui, &ts, now_unix, request)
+    }
+
+    /// The per-gesture [`Deps`] both intakes build — freshly against whatever
+    /// the worker has published, with this moment's stamp beside it.
+    fn deps(&self) -> (Deps, String, i64) {
         let ts = self.clock.stamp();
         let now_unix: i64 = ts.parse().unwrap_or(0);
         let deps = Deps {
@@ -70,8 +89,7 @@ impl ConsumerCtx {
             // mint draw; the ts keeps successive passes distinct.
             mint_seed: content_hash(ts.as_bytes()),
         };
-        let mut ui = UiState::open(self.ui_path.clone());
-        consume(&deps, &mut ui, &ts, now_unix)
+        (deps, ts, now_unix)
     }
 }
 
@@ -83,8 +101,10 @@ pub struct Consumer {
 }
 
 impl Consumer {
-    /// Run [`ConsumerCtx::pass`] forever, parked between looks.
-    pub fn spawn(ctx: ConsumerCtx) -> Self {
+    /// Run [`ConsumerCtx::pass`] forever, parked between looks. The context is
+    /// **shared, not owned**: the §9.5 wire listener answers connections
+    /// through the very same one (bl-b6fa).
+    pub fn spawn(ctx: Arc<ConsumerCtx>) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
         let flag = Arc::clone(&stop);
         let handle = std::thread::spawn(move || {

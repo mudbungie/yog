@@ -4,7 +4,7 @@
 #
 # Every other run verb in this family drives a WINDOW: it claims an X display,
 # launches yog on it and presses §11 keys. This one claims nothing. `yog
-# headless` is "the same engine with no window: worker, watcher, gesture
+# serve` is "the same engine with no window: worker, watcher, gesture
 # consumer" (§8.4), so the whole run is `yog gesture` lines against a real
 # world — which makes it the cheapest real-substrate verb there is: **no seat,
 # no window, no wire spend, and no model call anywhere in it.** It is also the
@@ -56,11 +56,11 @@
 #                      S13 beats below assert on the real substrate.
 
 # --- the seatless world -----------------------------------------------------
-# `yog headless` parks until a signal, so it is backgrounded and its pid is the
+# `yog serve` parks until a signal, so it is backgrounded and its pid is the
 # run's one piece of teardown. The consumer is not up the instant the process
 # is, so the first gesture is the one that waits — `await`, never a sleep.
 boot_headless() {
-  XDG_DATA_HOME="$1" yog headless >"$2/headless.log" 2>&1 &
+  XDG_DATA_HOME="$1" yog serve >"$2/headless.log" 2>&1 &
   # THIS run's engine, recorded where it is launched — the same fact
   # `launch_engine` records for a windowed run (`gesture.sh`), and what every
   # `gesture` below watches alongside its reply, so a headless engine that dies

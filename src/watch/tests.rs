@@ -280,7 +280,7 @@ fn egui_repaint_requests_without_panicking() {
 
 #[test]
 fn the_windowless_repaint_does_nothing_by_contract() {
-    // §8.5: `yog headless` has no event loop to wake — the whole impl.
+    // §8.5: `yog serve` has no event loop to wake — the whole impl.
     NoRepaint.request();
 }
 

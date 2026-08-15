@@ -40,7 +40,7 @@ fn main() -> eframe::Result<()> {
     // …`) and exits with its code, and `yog <command> --help` is answered from
     // the interface before any command below composes a world, spawns, parks or
     // writes a shim (§8.5's every-command-answers-help rule). Anything else (no
-    // args, `--editor-apply`, `env`, `exec`, `headless`, `tool-control`, the GUI
+    // args, `--editor-apply`, `env`, `exec`, `serve`, `tool-control`, the GUI
     // below) is not a namespace and falls through unchanged. All routing lives
     // in `multiplex` (tested); main stays a thin call.
     if let Some(code) = yog::multiplex::dispatch(&argv) {
@@ -63,7 +63,7 @@ fn main() -> eframe::Result<()> {
     match argv.get(1).map(String::as_str) {
         // `eval "$(yog env)"` drops the caller's shell into the world — and
         // `yog env --ws <workspace>` drops it into that workspace's **wall**
-        // besides (§8.4 as amended, bl-b589), which is the supported headless
+        // besides (§8.4 as amended, bl-b589), which is the supported windowless
         // spelling for every wall-needing command, sign-in included.
         Some(hatch::ENV_SUBCMD) => match hatch::parse_env(argv.get(2..).unwrap_or_default()) {
             Ok(plan) => {
@@ -112,19 +112,20 @@ fn main() -> eframe::Result<()> {
             let ws = yog::control::workspace_of(&world);
             std::process::exit(yog::control::run(&mut i, &mut o, &world, &ws));
         }
-        // `yog headless` (§8.5, VISION §4.8): the same engine with no window —
-        // the world composed, the derivation worker and watch bridge up, and
-        // the gestures-inbox consumer answering deposits — parked until a
-        // signal ends the process (§4.1 state is write-through; nothing
-        // pends at exit, exactly as the GUI's no-`on_exit` rule).
-        Some(yog::boundary::HEADLESS_SUBCMD) => headless(&ambient, &overrides),
+        // `yog serve` (§8.5, REMOTE §8): the same engine with no window — the
+        // world composed, the derivation worker and watch bridge up, the
+        // gestures-inbox consumer answering deposits and the §9.5 wire
+        // listener answering seats — parked until a signal ends the process
+        // (§4.1 state is write-through; nothing pends at exit, exactly as the
+        // GUI's no-`on_exit` rule).
+        Some(yog::boundary::SERVE_SUBCMD) => serve(&ambient, &overrides),
         _ => {}
     }
     // §16.4 (bl-3ff4): a window is the operator's own act. The world seeds a
     // `yog` shim so an agent's bash can drive the §8.5 boundary, and that shim
     // passes argv through verbatim — so this is where an agent seat asking for
-    // a window is refused and pointed at the headless surface instead. It
-    // stands below every namespace arm, hatch, `headless` and `tool-control`,
+    // a window is refused and pointed at the windowless surface instead. It
+    // stands below every namespace arm, hatch, `serve` and `tool-control`,
     // so it judges only argv that would really have painted.
     if let Some(refusal) = yog::world::seat::window_refusal(std::env::var("YOG_NAME").ok()) {
         eprintln!("{refusal}");
@@ -160,7 +161,7 @@ fn main() -> eframe::Result<()> {
             // One time source for the whole window (§7.2): the derivation
             // worker's schedule and the shell's §7.3 banner grace both read it.
             let clock: Arc<dyn Clock> = Arc::new(SystemClock);
-            // The engine — the same one `yog headless` boots. Everything below
+            // The engine — the same one `yog serve` boots. Everything below
             // it is what a *window* is and a windowless face is not.
             let engine = Engine::boot(
                 &world,
@@ -190,13 +191,15 @@ fn main() -> eframe::Result<()> {
     )
 }
 
-/// `yog headless` (§8.5, VISION §4.8): **the same engine with no window** —
-/// one [`Engine::boot`], no face beside it, parked until a signal ends the
-/// process (§4.1 state is write-through; nothing pends at exit, exactly as the
-/// GUI's no-`on_exit` rule). The window's arm above and this one are the same
-/// call with a different repaint hook, which is the whole of VISION V5.4's
-/// "nothing here is a second implementation".
-fn headless(ambient: &Env, overrides: &[(String, String)]) -> ! {
+/// `yog serve` (§8.5, VISION §4.8, REMOTE §8): **the same engine with no
+/// window** — one [`Engine::boot`], no face beside it, parked until a signal
+/// ends the process (§4.1 state is write-through; nothing pends at exit,
+/// exactly as the GUI's no-`on_exit` rule). The window's arm above and this one
+/// are the same call with a different repaint hook, which is the whole of
+/// VISION V5.4's "nothing here is a second implementation" — and since bl-b6fa
+/// that one call also carries the REMOTE §9.5 wire listener, so a seat reaches
+/// whichever face is up exactly as a deposit does.
+fn serve(ambient: &Env, overrides: &[(String, String)]) -> ! {
     seed_world_tools(ambient);
     let _engine = Engine::boot(
         &yog::world::compose(ambient),

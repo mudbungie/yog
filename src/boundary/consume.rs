@@ -60,7 +60,22 @@ fn run(deps: &Deps, ui: &mut UiState, ts: &str, now_unix: i64, bytes: &[u8]) -> 
         Ok(v) => v,
         Err(e) => return reply::refusal(&format!("deposit is not JSON: {e}")),
     };
-    match codec::decode(&parsed) {
+    run_value(deps, ui, ts, now_unix, &parsed)
+}
+
+/// One already-parsed gesture envelope, run to its reply value. **This is the
+/// one room both intakes open onto** (REMOTE §3, bl-b6fa): the deposit above
+/// reaches it after reading a file, and a wire connection
+/// ([`crate::wire::intake`]) reaches it after reading a frame — same codec,
+/// same chokepoints, so the wire can add no verb.
+pub(crate) fn run_value(
+    deps: &Deps,
+    ui: &mut UiState,
+    ts: &str,
+    now_unix: i64,
+    parsed: &Value,
+) -> Value {
+    match codec::decode(parsed) {
         Ok(Gesture::Act(action)) => match dispatch(deps, ui, ts, &action) {
             Ok(r) => reply::encode(&r),
             Err(e) => reply::refusal(&e),

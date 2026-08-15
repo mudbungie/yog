@@ -72,7 +72,19 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    yog being a native GL desktop app with no network — died when the
    batteries-included wave embedded `brazen`, the LLM network adapter: yog's
    own process now makes the HTTPS calls, so `ureq`/`rustls`/`ring`/
-   `webpki-roots` are load-bearing, not incidental. `deny.toml` still bans
+   `webpki-roots` are load-bearing, not incidental. **`rustls` is a DIRECT
+   dependency since bl-b6fa** — approved by operator ruling 2026-08-13 for
+   REMOTE §9.5's wire, and cheap because it was already in the graph behind
+   `ureq`: the lockfile gained one line, no crate, no license and no advisory.
+   Two conditions came with it and both are load-bearing. `default-features =
+   false` with `ring`, because rustls' defaults select `aws-lc-rs`, whose
+   `aws-lc-sys` builds C — `deny.toml` now bans that sys crate beside the two
+   below so a manifest edit that dropped the flag fails the gate instead of
+   quietly re-acquiring a C toolchain. And **no `tokio` and no `rcgen`**: the
+   listener is synchronous `std::net` (rule 8 stays vacuous — do not add tokio
+   to satisfy it), and certificates are the operator's out-of-channel act
+   (REMOTE §1.4), minted by `make wire-certs` shelling to `openssl`, never by
+   yog. `deny.toml` still bans
    `openssl-sys` AND `native-tls`, which was always the standard's point — a C
    toolchain dep and a non-portable system bridge, either of which breaks the
    single-binary musl/macOS/Windows story rustls keeps. The license allow-list

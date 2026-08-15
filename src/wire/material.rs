@@ -1,0 +1,132 @@
+//! Where the wire's key material lives, and what its absence means (REMOTE
+//! §1.4, §8; bl-b6fa).
+//!
+//! **yog never mints a certificate.** Provisioning is an act the operator
+//! performs on the boxes, out-of-channel by ruling — so this module only ever
+//! *reads*, and the three answers it can give are the whole trust bootstrap:
+//!
+//! - **Nothing provisioned** — `Ok(None)`. The wire is simply off: the engine
+//!   listens on nothing and a seat has nowhere to dial. Removing the directory
+//!   deletes config, not code (the severability test), which is why absence is
+//!   an answer and not an error.
+//! - **Partly provisioned** — `Err(remedy)`, naming what is missing and the
+//!   target that mints it. Half a trust store is a misconfiguration, and a
+//!   misconfiguration that silently degrades to *no encryption* is the failure
+//!   mode this design exists to exclude.
+//! - **Provisioned** — `Ok(Some(Material))`: the anchors, this role's leaf and
+//!   key, and the one address.
+//!
+//! **The address is one fact with one home.** A server binds `address` and a
+//! local seat dials it; a seat on another machine has its own `wire/address`
+//! naming the server it belongs to. There is no second file and no flag: two
+//! spellings of one address is exactly the drift §8's name-resolution ruling
+//! removed from the boundary.
+//!
+//! **It sits beside the world, not inside it** (`<yog-data-root>/wire`, the
+//! sibling of `<yog-data-root>/world`). The world subtree is a *generated*
+//! artifact — yog seeds it, and it is wiped and reseeded — while key material
+//! is operator-provisioned and irreplaceable by anything yog can do. Nesting it
+//! under a directory yog rebuilds would make a reseed a revocation.
+
+use crate::xdg::Env;
+use std::path::{Path, PathBuf};
+
+/// The material directory's leaf under the yog data root.
+pub const DIR: &str = "wire";
+/// The operator CA both ends verify against — one anchor set, both directions.
+pub const ANCHORS: &str = "ca.pem";
+/// The file naming the address the engine binds and a seat dials.
+pub const ADDRESS: &str = "address";
+/// The target that mints the lot, named in every refusal so a seat that cannot
+/// start says how to make it start.
+pub const REMEDY: &str = "make wire-certs";
+
+/// Which end of the wire is asking. One certificate is one client identity
+/// (REMOTE §2), and the server's is its own — so the leaf names differ and
+/// nothing else does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Role {
+    Server,
+    Client,
+}
+
+impl Role {
+    /// This role's leaf basename: `server` or `client`.
+    pub fn leaf(self) -> String {
+        match self {
+            Role::Server => "server".to_owned(),
+            Role::Client => "client".to_owned(),
+        }
+    }
+}
+
+/// One end's provisioned material.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Material {
+    /// The operator CA, PEM.
+    pub anchors: PathBuf,
+    /// This end's certificate chain, PEM.
+    pub chain: PathBuf,
+    /// This end's private key, PEM.
+    pub key: PathBuf,
+    /// `host:port` — bound by the engine, dialled by a seat.
+    pub address: String,
+}
+
+/// The material directory for a composed world.
+pub fn dir(world: &Env) -> PathBuf {
+    world.yog_data_root().join(DIR)
+}
+
+/// Read `role`'s material out of `world`. See the module doc for the three
+/// answers; the `Err` names every missing file at once, because a remedy that
+/// reveals one gap per run is a remedy run four times.
+pub fn read(world: &Env, role: Role) -> Result<Option<Material>, String> {
+    read_dir(&dir(world), role)
+}
+
+/// [`read`] against a directory outright — the world-free core, so a test names
+/// its own scratch tree the way the folds elsewhere do.
+pub fn read_dir(dir: &Path, role: Role) -> Result<Option<Material>, String> {
+    let leaf = role.leaf();
+    let wanted = [
+        ANCHORS.to_owned(),
+        format!("{leaf}.pem"),
+        format!("{leaf}.key"),
+        ADDRESS.to_owned(),
+    ];
+    let missing: Vec<&String> = wanted.iter().filter(|f| !dir.join(f).is_file()).collect();
+    if missing.len() == wanted.len() {
+        return Ok(None);
+    }
+    if !missing.is_empty() {
+        let names: Vec<&str> = missing.iter().map(|f| f.as_str()).collect();
+        return Err(format!(
+            "the wire is half-provisioned at {}: missing {} — run `{REMEDY}`",
+            dir.display(),
+            names.join(", ")
+        ));
+    }
+    // A file that will not read yields no address, and no address is the same
+    // refusal an empty one earns: one branch, because "unreadable" and "empty"
+    // are one fact about what this box can be told to dial.
+    let address = std::fs::read_to_string(dir.join(ADDRESS))
+        .unwrap_or_default()
+        .trim()
+        .to_owned();
+    if address.is_empty() {
+        return Err(format!(
+            "{} names no address; it must hold one host:port — run `{REMEDY}`",
+            dir.join(ADDRESS).display()
+        ));
+    }
+    Ok(Some(Material {
+        anchors: dir.join(ANCHORS),
+        chain: dir.join(format!("{leaf}.pem")),
+        key: dir.join(format!("{leaf}.key")),
+        address,
+    }))
+}
+
+#[cfg(test)]
+mod tests;

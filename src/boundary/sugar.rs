@@ -24,14 +24,16 @@
 use serde_json::Value;
 use std::path::Path;
 
-use super::{Gesture, Query, codec, deposit, help, line};
+use super::{Gesture, Query, deposit, help};
 
-mod argv;
+pub(crate) mod argv;
 
 /// The no-consumer exit (the shell's timeout convention).
 pub const TIMEOUT_EXIT: i32 = 124;
 /// The never-deposited exit: bad usage, bad JSON, an unknown gesture.
 pub const USAGE_EXIT: i32 = 2;
+/// This seat's own word, for the usage line its refusals carry.
+const VERB: &str = "gesture";
 
 /// Run the sugar verb: `args` is the multiplexed tail (exactly one JSON
 /// envelope), `seed` the legibility hint the deposit id is minted from
@@ -48,7 +50,7 @@ pub fn run(
     // Read, then validate, then deposit: a gesture either spelling refuses must
     // never enter the inbox — the refusal belongs to the depositor, not the
     // trail.
-    let (gesture, value) = match argv::read(args).and_then(|it| envelope(&it)) {
+    let (gesture, value) = match argv::read_gesture(VERB, args) {
         Ok(read) => read,
         Err(e) => {
             eprintln!("yog gesture: {e}");
@@ -88,24 +90,6 @@ pub fn run(
         deposited.display()
     );
     TIMEOUT_EXIT
-}
-
-/// The deposit envelope this invocation means: a line read at the seat its
-/// flags describe, or the JSON envelope validated as written. Either way what
-/// is deposited is the codec's own encoding — the line is a serialization of
-/// the boundary, never a second inbox format.
-fn envelope(invocation: &argv::Invocation) -> Result<(Gesture, Value), String> {
-    if line::is_command(&invocation.payload) {
-        let gesture = line::parse(&invocation.payload, &invocation.context)?;
-        let value = codec::encode(&gesture);
-        return Ok((gesture, value));
-    }
-    let value: Value =
-        serde_json::from_str(&invocation.payload).map_err(|e| format!("not JSON: {e}"))?;
-    // The envelope is deposited **as written**, not as re-encoded: the audit
-    // keeps the operator's own bytes. Decoding is the validation and the read
-    // the help short-circuit above needs.
-    Ok((codec::decode(&value)?, value))
 }
 
 #[cfg(test)]

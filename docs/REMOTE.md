@@ -1,8 +1,8 @@
 # yog — The Remote Seat (client/server split)
 
 Status: normative for the split; direction adopted by operator ruling
-2026-08-13 (bl-b9a2). Nothing in the tree implements this yet — §9 is the build
-sequence, and each step lands under its own ball. `docs/DESIGN.md` remains the
+2026-08-13 (bl-b9a2). §9 is the build sequence and each step lands under its
+own ball; steps 1–5 are in the tree. `docs/DESIGN.md` remains the
 architecture authority for the engine; this document governs the wire, the
 client, and the trust model. Where the two collide, DESIGN wins until DESIGN is
 amended. The same amendment doctrine applies here: prose is replaced, the ball
@@ -66,9 +66,19 @@ is a transport for that surface, not a vocabulary:
   is added to the boundary — every face gains it — never to the wire alone.
   One dispatch surface, N serializations, never two implementations (VISION
   §8).
-- **Framing** is length-delimited JSON request/reply over the TLS stream, with
-  one streaming form for follow-class reads (the live tail), same envelope,
-  chunked. The exact framing is an implementation-ball decision, not doctrine.
+- **Framing** *(decided and landed, bl-b6fa — `src/wire/frame.rs`)*: **a
+  big-endian `u32` byte length, then that many bytes of JSON.** A request is
+  one frame; an answer is **N ≥ 1 reply frames followed by a zero-length
+  frame**, which is the terminator. Length-delimited rather than newline: a
+  reader never scans, so no property of the *encoder* is load-bearing in the
+  *framing*; the allocation is bounded before it is made, so a peer on the open
+  internet cannot make a reader grow to meet it; and a zero-length frame is not
+  a JSON value, so nothing a payload can say collides with the terminator.
+  **The streaming form is not a second form.** Every answer is a stream, so a
+  follow-class read is the general path with more than one frame in it — no
+  flag, no version, no second reader, and nothing to add when the first
+  follow-class `Query` lands. Today N is always 1, because none is
+  follow-class: the seat polls (below).
 - **`Reply` gains a decode side.** Today the reply codec is encode-only. The
   client is in-crate (§8), so the hand-codec discipline extends to decode;
   serde derive stays a non-dependency (existing stance, `src/ui_state`).
@@ -81,7 +91,10 @@ is a transport for that surface, not a vocabulary:
   world, disk is the bus. The wire is for cross-trust-domain callers; the
   inbox is for the world's own residents. One boundary, two intakes, each the
   religion of its domain. (Certificates for every spawned agent would be an
-  enrollment surface §1.4 forbids.)
+  enrollment surface §1.4 forbids.) *(Landed, bl-b6fa: the two intakes are
+  `yog gesture` and `yog seat`, and they share one argv reader and one
+  answering function — `ConsumerCtx::answer` — so the second door opens onto
+  the same room and can add no verb.)*
 
 ## 4. Identity, authentication, authorization
 
@@ -177,12 +190,61 @@ The split cuts along that line:
 ## 8. Shape of the code
 
 One crate, one multi-call binary, as today: `yog serve` runs the engine (the
-current headless boot plus the wire listener); bare `yog` runs the window as a
-pure client. Local desktop use is two processes on one box over loopback mTLS,
-certificates provisioned by the same out-of-channel act (a make target may
-script the local CA; that is operator tooling, not an in-channel protocol). A
+former `headless` boot plus the wire listener); bare `yog` runs the window. A
 TUI or web seat later is another consumer of the same wire and needs nothing
 new from the engine.
+
+**`headless` is now `serve`, and the rename is the point** *(bl-b6fa)*. The
+face did not change — it is still the one `Engine::boot` with no window — but
+the engine now carries the listener, so what it is to anything off the box is a
+server. Two spellings of one face is the drift the const exists to prevent, so
+there is one word and §8's is it.
+
+**The listener rides the ENGINE, not one face** *(decided, bl-b6fa)*. §8.5
+already runs the deposit consumer on both faces, for I0's reason: *a deposit
+converges whichever face is up*. A seat wants the identical guarantee, so the
+listener boots beside the consumer in `Engine::boot`, and a windowed yog serves
+the wire exactly as `yog serve` does. That decides the local boot question §9.5
+was asked to settle, and it decides it by **dissolving it**: nothing spawns
+anything, nothing refuses with a remedy, and there is no ladder — because there
+is never a second engine to arrange. One world, one engine, whichever face
+started it; every other seat is a client of that one. The alternatives were both
+worse and both were considered: bare `yog` *spawning* `yog serve` gives one
+world two engines (two pilots, two sentries, two derivation workers — the
+instance-coordination shape DESIGN §14 rejects), and *refusing with a remedy*
+puts a terminal instruction in front of a desktop launch that has no terminal.
+
+**Absence is the off switch.** With no material provisioned there is no
+listener and nothing is said about it — removing the directory deletes config,
+not code (the severability test). A *half*-provisioned wire is warned about and
+still does not listen, because silently degrading to no encryption is the one
+failure this design exists to exclude.
+
+**Certificates are minted out of channel, by `make wire-certs`** *(bl-b6fa,
+`scripts/wire-certs.sh`)*. It shells to `openssl` — yog links no certificate
+library and mints nothing itself, ever (§1.4) — writing a private CA and a
+server/client leaf pair into `<yog-data-root>/wire`, plus one `address` file.
+`WIRE_HOST`/`WIRE_PORT` name what the server binds and a seat dials; the SAN
+and the address file are derived from the same `WIRE_HOST`, because two
+spellings of one host is the drift §8's name resolution removed from the
+boundary. It refuses to overwrite: a rotation distrusts every certificate
+already issued, so it is `FORCE=1` and never a silent re-mint. Test material is
+minted the same way at test runtime (`src/test_support/wire.rs`) — **a
+certificate fixture is never committed**, which `make leak-scan` would refuse
+anyway and which would be a private key in a public repository whether or not
+it guarded anything.
+
+**The material sits BESIDE the world, not inside it** — `<yog-data-root>/wire`,
+the sibling of `<yog-data-root>/world`. The world subtree is a generated
+artifact yog seeds, wipes and reseeds; key material is operator-provisioned and
+irreplaceable by anything yog can do. Nesting it under a directory yog rebuilds
+would make a reseed a revocation.
+
+**The address is one fact with one home.** A server binds `address` and a local
+seat dials it; a seat on another machine has its own `wire/address` naming the
+server it belongs to. There is no second file and no flag — and no server-name
+knob either, because the name a client verifies is read off the address it
+dialled (an IP literal is an IP identity, anything else a DNS one).
 
 **Paths never cross the wire.** *(Landed, bl-f5f6.)* Boundary types addressed
 workspaces and projects by absolute `PathBuf`; across machines those are
@@ -294,9 +356,10 @@ valuable with no network at all — they finish VISION V5 teleop parity.
 3. **Name-based addressing:** `PathBuf` leaves the boundary types.
    *(Landed, bl-f5f6 — the rulings are in §8.)*
 4. **The shell paints only boundary payloads.** *(Landed, bl-1eb0 — see §9.4.)*
-5. **The wire:** mTLS listener in `yog serve`, client transport in the shell,
-   the window becomes a seat of loopback by default. The deposit inbox
-   remains for in-world callers (§3).
+5. **The wire.** *(Landed, bl-b6fa — see §9.5.)* The mTLS listener, the seat
+   transport, the framing, the certificate bootstrap, and `yog seat` — the
+   wire's first shipped consumer. The deposit inbox remains for in-world
+   callers (§3).
 6. **Registration and scoping:** the per-workspace registry, reply filtering,
    auto-registration on create, per-seat `ui.json` split (§7).
 7. **Tool hosts:** advertisement, rendering, routing, the lernie seam —
@@ -357,10 +420,60 @@ Four rulings came out of it.
   worth more than a query minted to close a checklist. It belongs with §9.5's
   transport, beside the path-typed reply fields §8 already lists as residual.
 
+### 9.5 The wire, and what it does not yet carry
+
+Landed (bl-b6fa): `src/wire/*` — the framing (§3), the two rustls
+configurations, the engine's synchronous accept loop, a seat's transport, the
+material reader, and `yog seat`. `rustls` is a direct dependency by operator
+ruling; **no tokio** (the listener is `std::net` and blocking threads, so
+AGENTS.md rule 8 stays vacuous) and **no rcgen** (§8's make target). Four
+rulings are in §3 and §8 rather than in a ball body: the framing, the
+listener riding the engine, the material's home, and the address as one fact.
+
+**What the wire adds to the boundary: nothing** — and that is structural, not
+a promise. A connection's request goes to `ConsumerCtx::answer`, the same
+function the gestures inbox calls, which decodes with the one codec and runs
+the one `dispatch`/`answer`. The listener never sees an `Action` or a `Query`,
+so there is no place a wire-only verb could be added.
+
+**The residual, stated plainly: the window is not a client yet.** §1.2 rules
+that the UI operates entirely via RPC and that even the local case does the
+hard split. What landed is the channel, the server and a *terminal* seat; the
+window still holds the engine it serves. So the arrangement today is
+**server-and-seat in one process**, not seat-over-wire — which is the honest
+half of §1.2, because the half that is missing is the **read path**, and it is
+the larger half:
+
+- A frame paints the published snapshot (§7.2), not replies. §9.4 finished the
+  *taxonomy* — paint may name only what a `Reply` can say — but the delivery is
+  still an in-process derivation, and a window pointed at a foreign engine
+  would have to derive a world it does not have.
+- Per-seat UI state (§7) is undivided: `ui.json` is still one document holding
+  both operator facts and pane-of-glass facts, so two seats of one client have
+  nowhere to converge.
+- The path-typed reply fields §8 lists as residual are still absolute paths —
+  `Reply::Applied { file }`, `Reply::Marks { space }`, the worktree paths, and
+  `Prepared::binding`. The transport that makes the distance real now exists,
+  so narrowing them has a consumer to be narrowed for; it did not land here.
+- One connection per gesture, and no follow-class `Query`. The framing carries
+  a chunked stream already (§3), so the live tail needs a query, not a wire
+  change.
+
+Registration, scoping and reply filtering are deliberately **not** here: a
+connection is trusted at certificate grade this step, and per-workspace scoping
+is §9.6 (bl-8bbc). Until it lands, a valid client certificate sees the whole
+world — which is the correct posture for a one-operator box and the wrong one
+for the second human, exactly as §1.5 says.
+
 ## 10. Open questions (living)
 
-- The follow/streaming frame shape, and when polling graduates to a
-  subscription channel.
+- ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer
+  is a frame stream terminated by a zero-length frame, so a follow-class read
+  is the general path with more frames. What remains open is **when polling
+  graduates to a subscription channel**, and beside it whether a seat should
+  hold one connection across gestures rather than dialling per ask (today it
+  dials; the seat polls at human cadence, so the connection cost is not yet a
+  cost).
 - The tool-advertisement schema (the exact shape of name/description/input
   schema). How availability is spelled is settled (§5, bl-bc7c): definitions
   frozen in the prefix, presence answered at invocation.
