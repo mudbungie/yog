@@ -25,9 +25,16 @@
 #![allow(clippy::unwrap_used)]
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use yog::multiplex::dispatch;
+
+// The scaffolding seam (bl-ff85). `#[path]` because this file IS the test
+// target's crate root, so a bare `mod` would resolve to `tests/fixtures.rs` —
+// and a second top-level `tests/*.rs` is a second test binary, not a module.
+#[path = "multiplex_bl/fixtures.rs"]
+mod fixtures;
+use fixtures::{IDENT, fixture_gitconfig, found_project, git, plugin_wrapper, sole_child};
 
 // git vars a hook-invoked test may inherit. This binary scrubs them from its
 // OWN env rather than a child's — the balls it drives runs in-process — but the
@@ -42,65 +49,6 @@ fn set(key: &str, value: &Path) {
 
 fn argv(parts: &[&str]) -> Vec<String> {
     parts.iter().map(|s| (*s).to_string()).collect()
-}
-
-/// A wrapper program answering a sibling plugin's contract by exec'ing the
-/// built yog under that namespace (module doc).
-fn plugin_wrapper(dir: &Path, namespace: &str) -> PathBuf {
-    use std::os::unix::fs::PermissionsExt;
-    let path = dir.join(namespace);
-    fs::write(
-        &path,
-        format!(
-            "#!/bin/sh\nexec '{}' '{namespace}' \"$@\"\n",
-            env!("CARGO_BIN_EXE_yog")
-        ),
-    )
-    .unwrap();
-    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
-    path
-}
-
-/// The scratch global gitconfig: identity for the store commits balls seals,
-/// and the wall against every other ambient global setting.
-fn fixture_gitconfig(dir: &Path) -> PathBuf {
-    let path = dir.join("gitconfig");
-    fs::write(
-        &path,
-        "[user]\n\tname = Tester\n\temail = t@test.invalid\n[commit]\n\tgpgsign = false\n",
-    )
-    .unwrap();
-    path
-}
-
-fn git(dir: &Path, args: &[&str]) -> String {
-    let out = yog::git_env::git()
-        .current_dir(dir)
-        .args(args)
-        .output()
-        .unwrap();
-    assert!(
-        out.status.success(),
-        "git {args:?}: {}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-    String::from_utf8(out.stdout).unwrap()
-}
-
-/// The one dir entry of `dir` (the percent-encoded clone key, the worktree id
-/// dir, …) — asserting there is exactly one.
-fn sole_child(dir: &Path) -> PathBuf {
-    let mut entries: Vec<_> = fs::read_dir(dir)
-        .unwrap()
-        .map(|e| e.unwrap().path())
-        .collect();
-    assert_eq!(
-        entries.len(),
-        1,
-        "one entry under {}: {entries:?}",
-        dir.display()
-    );
-    entries.remove(0)
 }
 
 /// bl-52ed — a **discovery probe** (an argv that is exactly the flag) reads
@@ -140,6 +88,15 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
         "BZ_BINARY",
         "YOG_NAME",
         "BALLS_CLOCK",
+        // The six balls lets cross the delivery boundary as author input:
+        // exporting one satisfies the commit for the wrong reason, hiding a
+        // repository that carries no identity of its own (bl-ff85).
+        "GIT_AUTHOR_NAME",
+        "GIT_AUTHOR_EMAIL",
+        "GIT_AUTHOR_DATE",
+        "GIT_COMMITTER_NAME",
+        "GIT_COMMITTER_EMAIL",
+        "GIT_COMMITTER_DATE",
     ] {
         // SAFETY: as `set` — the arm must run the default (self-multiplex)
         // resolution, not a machine-local override or identity.
@@ -163,24 +120,7 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
     // converge error *instead of* printing help.
     probes_answer_and_found_nothing(&tmp.path().join("data").join("yog"));
 
-    // The project repo the store binds to, and the arm's cwd (balls'
-    // invocation path is where `bl` runs).
-    let proj = tmp.path().join("proj");
-    fs::create_dir(&proj).unwrap();
-    git(&proj, &["init", "-q", "-b", "main"]);
-    fs::write(proj.join("README.md"), "seed\n").unwrap();
-    git(&proj, &["add", "-A"]);
-    git(&proj, &["commit", "-qm", "seed"]);
-    std::env::set_current_dir(&proj).unwrap();
-    // Re-read the invocation path from the source balls reads it from. balls
-    // keys its store — and bl-delivery mirrors its territory — on the
-    // directory the process runs in, which the kernel (`getcwd`) hands back
-    // fully *resolved*: on macOS the tempdir's `/var/folders/…` is a symlink
-    // to `/private/var/folders/…`, so bl-delivery mirrors the `/private/…`
-    // spelling while `tmp.path()` still says `/var/…`. Deriving the expected
-    // paths from the same source keeps both sides in one spelling on every
-    // platform (a no-op on Linux, where nothing resolves away).
-    let proj = std::env::current_dir().unwrap();
+    let proj = found_project(tmp.path());
 
     // The W12 slice/exit plumbing the unit tests can no longer drive without
     // writing shims under the ambient anchor: balls' own exits ride back.
@@ -256,10 +196,15 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
         dispatch(&argv(&["yog", "bl", "close", &id, "--as", "seam"])),
         Some(0)
     );
-    let subject = git(&proj, &["log", "-1", "--format=%s", "main"]);
+    // The delivery tag, and the AUTHOR that signed the squash: the seeded
+    // repository-local identity — the half of bl-ff85 a dev box can check,
+    // where a populated passwd entry would still let git guess one.
+    let (name, email) = IDENT;
+    let head = git(&proj, &["log", "-1", "--format=%s%n%an <%ae>", "main"]);
+    assert!(head.contains(&format!("[{id}]")), "delivery tag: {head}");
     assert!(
-        subject.contains(&format!("[{id}]")),
-        "delivery tag on main: {subject}"
+        head.contains(&format!("{name} <{email}>")),
+        "author: {head}"
     );
     assert!(!task.exists(), "closed ball's file is gone");
     let delivered = git(&proj, &["show", "main:work.txt"]);
