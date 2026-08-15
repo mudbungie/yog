@@ -155,14 +155,6 @@ impl AppModel {
             .sum()
     }
 
-    /// The §6 decision queue over this instance's snapshot (VISION §5 V5.2) —
-    /// the frame's delegation to the same derivation the §8.5 `Query::Attention`
-    /// answers, so the window's desktop escalation (bl-e160) and a headless
-    /// reader see one list of what needs the operator.
-    pub fn decision_queue(&self, now_unix: i64) -> Vec<crate::boundary::answer::queue::QueueRow> {
-        crate::boundary::answer::queue::queue(&self.snap, &self.ui, now_unix)
-    }
-
     /// The §11 workspace tab bar (pinned hoists + named tabs; foreign/replay in
     /// the overflow), built from the classification + attention rollups + the
     /// `ui.json` pin order.

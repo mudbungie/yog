@@ -46,14 +46,6 @@ pub struct InspectorState {
     /// nothing else does.
     pub(crate) files_memo:
         SnapMemo<(PathBuf, String, Option<String>), crate::files_view::FilesView>,
-    /// Per-snapshot memo of the §11 Work tab's read (§5.1 #32). Every arm of
-    /// it forks `git` against a *project* repo, so it must never run per frame
-    /// — the same discipline the pinned Files listing beside it keeps.
-    pub(crate) work_memo: SnapMemo<PathBuf, Vec<crate::workdiff::Attempt>>,
-    /// Per-snapshot memo of the selected file's patch, keyed on the file so
-    /// picking another re-reads and scrolling does not.
-    pub(crate) work_patch_memo:
-        SnapMemo<(PathBuf, Option<crate::workdiff::WorkFile>), Option<crate::files_view::Preview>>,
     /// The fork composer at the pinned notch (VISION V2), and the choices it
     /// offers. RAM by the same §13.1 argument as `notch_sel` beside it: a
     /// half-typed counterfactual is a draft, and drafts are ephemera until
@@ -75,8 +67,6 @@ impl Default for InspectorState {
             tx_memo: SnapMemo::default(),
             rail_memo: SnapMemo::default(),
             files_memo: SnapMemo::default(),
-            work_memo: SnapMemo::default(),
-            work_patch_memo: SnapMemo::default(),
             fork: None,
             fork_memo: SnapMemo::default(),
         }

@@ -25,7 +25,6 @@
 //! [`form`]: crate::config_edit::form
 
 use crate::AppModel;
-use crate::cli_outbound::Cli;
 use crate::config_edit::RealFileIo;
 use crate::config_edit::branch::ConfigBranch;
 use crate::config_edit::branch::edit::EditOrigin;
@@ -152,13 +151,7 @@ impl ConfigState {
 /// Render the Config tab's content: the three surfaces, scrollable, and — at
 /// the foot of the per-workspace surface — the §3.6 danger row (§11's visible
 /// carrier for workspace deletion, the settings-danger-zone convention).
-pub fn center(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut super::ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub fn center(ui: &mut egui::Ui, model: &mut AppModel, state: &mut super::ShellState) {
     // No `Config` heading: the tab strip directly above already names this
     // surface, and a heading restating its own tab is the same fact twice on
     // one surface (QUALITY H1). What the strip cannot say is the *stance*.
@@ -180,7 +173,7 @@ pub fn center(
         ui.separator();
         yog_pane::render(ui, &mut state.config);
         ui.separator();
-        config_marks::render(ui, model, &mut state.config.marks, lernie, bl);
+        config_marks::render(ui, model, &mut state.config.marks);
         ui.separator();
         branch_pane::render(ui, model, &mut state.config, &rows);
         super::delete::danger_row(ui, model, state);

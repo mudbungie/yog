@@ -1074,7 +1074,7 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297)
 
 Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
 transport questions settled. It could not move the read path, because §1.2 and
@@ -1152,34 +1152,143 @@ before anything is dialled (§8). Every consequence is recorded where it belongs
   click-glue consumes synchronously, did not. That line is the acts ball's, and
   a surface that mixes the two migrates its read half only.
 
-**The residual: three surfaces read over the wire, the rest do not, and the acts
-do not.** This is still scope rather than architecture, but the remaining reads
-are **not** more of the same three moves — each is blocked on one of three named
-things, and bl-adcb's audit is what found that. **bl-f297** carries the list; the
-shape of it:
+**The residual, as bl-adcb left it: three surfaces read over the wire, the rest
+do not, and the acts do not.** This was still scope rather than architecture,
+but the remaining reads were **not** more of the same three moves — each was
+blocked on one of three named things, and bl-adcb's audit is what found that.
+**bl-f297** took the list; what follows is what it landed and what it ruled, and
+the three classes are stated in its terms rather than in the audit's, because
+two of them dissolved.
 
-- **A read whose subject is a viewport fold the boundary deliberately does not
-  carry.** `Query::Conversations` answers the *all-collapsed* list by ruling
-  (§8.5 files folds under views) while the frame paints the expanded one, and
-  the whole §11 inspector family folds through the rail **pin** — `Query::Rail`
-  answers unpinned by the same ruling, and no query spells a pinned `Files`
-  listing. Migrating either as written would delete the fold.
-- **A read the window addresses by path while the boundary addresses by name**
-  (§8, bl-f5f6). `Reply::Workspaces` carries no path, and the tab bar is built
-  from the snapshot's workspace values with focus held as a path.
-- **A read with nowhere to paint a refusal, or a consumer that reads it
-  synchronously.** The §6 decision queue behind the desktop escalation is
-  exactly `Query::Attention`, but its consumer folds a baseline every frame and
-  an unanswered frame would read as everything having departed; the §9 config
-  family is answered at *click* time, which looked like the acts shape and is
-  **answered by §9.8** — a click-time read is a standing question with a latch,
-  and where it is a write's own re-read the act's receipt already carries it.
+**What bl-f297 landed.** Three more surfaces: one of bl-adcb's two unblocked
+candidates, one the acts ruling had just unblocked, and one out of a class the
+audit had called blocked and which turned out to need a sentence rather than a
+mechanism.
 
-  Two candidates are blocked on none of it and are the next ones to take: the
-  **Work tab** (`Query::WorkDiff` is exact, and it retires two memos that fork
-  `git` against a project repo) and **search** (already off-frame through the
-  model's own searcher, so riding the asker retires a second asynchronous
-  mechanism).
+- The **§11 Work tab** (§5.1 #32) is a standing `Query::WorkDiff`. Its *two*
+  per-snapshot memos went with it — every arm of that read forks `git` against
+  a project repo, which is why the in-process version was memoized, and an
+  answer is that cached fold refreshed at the asker's cadence instead. The
+  listing and the picked file's patch were two reads with two memo keys and are
+  now **one question**: the query carries the file, so re-picking asks a
+  different question and scrolling asks nothing. An inactive tab declares
+  nothing at all, which is the collapsed-pane rule.
+- The **marks pane's `Read current`** is the click-time read §9.8 handed back:
+  **a standing question with a latch**. The click throws the latch, the pane
+  declares `Query::Marks` while it paints, and the branch lands one ask-period
+  later. The latch names the *workspace* it was thrown for, never a bare
+  `bool` — the focus can move under it, and a latch that could not say which
+  wall it meant would paint one wall's branch under another's name. It does
+  **not** fall on the first answer: a read that switched itself off would be a
+  one-shot with a socket behind it, showing the same bytes whether the branch
+  moved a second later or not. The `Cli` pair evaporated from the pane and from
+  `config_edit::center` above it, which is §9.8's observation reaching the read
+  side.
+- The **§6 decision queue** behind the desktop escalation is `Query::Attention`,
+  and `AppModel::decision_queue` went with it — one accessor fewer, and the
+  strip's count, the desktop's ask and a headless `/attention` are now one
+  answer rather than one derivation run twice.
+
+**Class 3 dissolved, and the rule it needed is one sentence.** The audit's third
+class — *a read with nowhere to paint a refusal, or a consumer that reads it
+synchronously* — is empty now, and neither half needed a mechanism.
+
+- The **alert baseline** was the hard half: `alert::announce` folded the queue
+  on every frame, and a frame the wire has not answered holds no queue, so
+  folding one would read as everything having departed and then, on the next
+  answer, as everything arriving at once — the first-boot flood re-armed twice a
+  second. The rule: **an unanswered frame is not a reading of the queue, and
+  neither is a refusal.** The baseline moves only on a frame that was told
+  something, which is the *same* rule that already makes a freshly-opened window
+  silent — no observation, no arrival — so the special case dissolved into the
+  general path rather than earning a branch. The refusal half answers itself
+  with it: this seat has no surface to paint a refusal on, because a
+  notification is output and not a pane, so the window stays quiet rather than
+  announcing on a guess. Recorded in DESIGN §6, where the baseline's ruling
+  lives. What it costs is stated: the fold runs at the asker's cadence rather
+  than the frame's, and the focus gate is read on the frame the answer lands.
+  A window buried and re-focused inside one ask period folds once instead of
+  thirty times, which is a difference no difference detector can feel.
+  Its witness is **both directions** (`shell/acceptance/alerts.rs`), because the
+  positive one alone would have passed against a seat that never asked: each
+  test seeds the baseline with an empty fold first, since with no prior
+  observation `announce` returns nothing whatever the frames did.
+- The **§9 config family** was smaller than the audit read it as, and that is
+  worth recording rather than quietly acting on. Of the five queries the audit
+  named (`ReadConfig`, `Lineages`, `Models`, `Providers`, `Marks`) exactly
+  **one** was ever a frame-side read: the marks pane's, migrated above. The
+  §9.1/§9.2/§9.3 editors do not reach those queries at all — they load their
+  bytes directly and their *writes* are the boundary's — so "the config family
+  is answered at click time" was true of one surface and a projection onto four.
+  Pointing the editors at `ReadConfig`/`Lineages`/`Models`/`Providers` is a real
+  and separate migration: it would replace `Editor::load` with an answer, which
+  is a change to what a config editor *is* (§9.5's "controls over facts"), not a
+  read moved onto a wire.
+
+**Class 1 stands, and the ruling is that it stands.** The viewport folds —
+`Query::Conversations`' expanded set and the §11 inspector family's rail **pin**
+— stay in process, and §8.5 is **not** amended. Three shapes were weighed:
+
+- **The fold as a query parameter.** It preserves the letter of the ruling — the
+  boundary would still *store* no viewport state, the seat spelling its own fold
+  in its ask — and it is the shape `visible_conversations(now, expanded)`
+  already has. It is refused on §8.5's own sentence: *"Views gain no boundary
+  representation, by design."* The parameter **is** the representation; the
+  question of whether the engine keeps it is a different question, and answering
+  the second does not answer the first. The precedent that looks like a
+  counter-example is not one: `Query::Files { path }`, `Query::Step { seq }` and
+  `Query::WorkDiff { file }` carry a *selection*, and a selection names **which
+  thing you are asking about** — it is the question. A fold names **which
+  answers you have open**, which is the rendering of an answer already given.
+- **The fold becomes a durable pane fact.** Closed already, by DESIGN §5.3's own
+  entry on the expanded set: it is keyed one-per-conversation and would accrete
+  a stale key for every conversation that ever existed, and mirroring it would
+  drag a second instance's list open under the operator's hands. Not re-argued
+  here.
+- **The answer moves altitude.** The one shape that could work: the boundary
+  answers the whole descent **forest** with its per-row rollups, all-collapsed
+  being the root subset of it, and each seat renders the rows its own fold makes
+  visible. The fold then never crosses, the seat derives nothing (it *selects*),
+  and one derivation still serves both seats. This is not smuggled in with a
+  migration, because it is a change to `Reply::Conversations`' payload that
+  every seat and the codec read — a headless `/conversations` included — and the
+  same move on `Reply::Rail` for the pin, plus the pinned `Files` listing that
+  no query spells at all. It is a payload ball, not a read-path one, and it is
+  where this class goes next.
+
+**Class 2 stands unchanged.** `Reply::Workspaces` carries no path (§8.1's
+ruling), and the tab bar's every entry is a **focus target** — `nav::tabs::Tab`
+holds the `PathBuf` a click, a pin toggle and the §3.6 delete seat all spend. It
+could be made to *paint* off a reply tomorrow by resolving each name through
+`Snapshot::ws_name`/`ws_path` at the seat's door, and that is exactly the shape
+to refuse: the seat would be joining a wire answer back against the engine's own
+in-process table, which is two sources for one fact and worse than not having
+migrated. The honest change is the wide one — focus held by **name**, resolved
+at the doors that need a path — and it is its own ball for the same reason
+`Prepared::binding` is: it is affordable once a seat's read path is the *only*
+read path.
+
+**Search was re-assessed and is no longer an unblocked candidate.** bl-adcb
+named it one, and that reading predates §9.8. The asker's pass is **serial over
+the standing set**, and §9.8 put acts on a thread of their own precisely because
+*"an act runs as long as the verb behind it, so posting it on the asker's thread
+would stall every standing read for the duration"*. `Query::Search` walks every
+transcript in the world; a standing question is re-asked every `ASK_PERIOD`, so
+riding the asker as written turns a once-per-ask walk into a 2 Hz one **and**
+puts it in front of every other surface's answer. That is the poster's own
+ruling pointed at a read. Two shapes remain and neither is "retire a mechanism":
+give the asker a second lane for long reads (which is the poster, renamed), or
+point the existing `Searcher` thread at the wire — it stays a thread, justified
+by exactly the argument above, and what changes is that its read crosses the
+boundary instead of running in process. The second is the smaller and is the one
+to take; the win is `§1.2` compliance, not one fewer thread.
+
+**The residual, then.** The reads still in process are the two standing classes
+above — the conversation list and the whole §11 inspector family behind the rail
+pin (class 1), and the workspace tab bar (class 2) — plus `search` on the
+re-assessment above, and the §9 config editors' own loads, which were never one
+of the three. Nothing in that list is blocked on a decision that has not now
+been taken; each is blocked on work whose shape is named.
 
 - ~~Gestures are still dispatched in process~~ — **the design and the first
   group landed, §9.8** (bl-4841). An act is a declaration whose receipt lands
