@@ -1086,7 +1086,7 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9)
 
 Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
 transport questions settled. It could not move the read path, because §1.2 and
@@ -1268,17 +1268,98 @@ synchronously* — is empty now, and neither half needed a mechanism.
   no query spells at all. It is a payload ball, not a read-path one, and it is
   where this class goes next.
 
-**Class 2 stands unchanged.** `Reply::Workspaces` carries no path (§8.1's
-ruling), and the tab bar's every entry is a **focus target** — `nav::tabs::Tab`
-holds the `PathBuf` a click, a pin toggle and the §3.6 delete seat all spend. It
-could be made to *paint* off a reply tomorrow by resolving each name through
-`Snapshot::ws_name`/`ws_path` at the seat's door, and that is exactly the shape
-to refuse: the seat would be joining a wire answer back against the engine's own
-in-process table, which is two sources for one fact and worse than not having
-migrated. The honest change is the wide one — focus held by **name**, resolved
-at the doors that need a path — and it is its own ball for the same reason
-`Prepared::binding` is: it is affordable once a seat's read path is the *only*
-read path.
+**Class 1's payload landed, and the class is closed (bl-44e9).** The third shape
+was built, and §8.5 is still not amended — the fold stayed seat-side, so *views
+gain no boundary representation* is true of the letter and of the spirit.
+
+- **`Reply::Conversations` is the whole descent forest.** `answer::conversations`
+  answers every member with its own per-subtree rollups, in paint order, and
+  `nav::convs::visible(rows, expanded)` is the seat's pure selection out of it —
+  a one-pass depth cut over rows, no snapshot, no recursion. `visible_rows` split
+  into `forest_rows` (the derivation) and `visible` (the fold), which is the
+  altitude ruling made structural. A seat holding no fold selects the **root
+  subset**, which is byte for byte the list this query used to answer, so a
+  machine reader that wants the old shape filters `depth == 0` and every existing
+  consumer keeps working.
+- **The §11 list reads it over the wire**, and `AppModel::conversations`,
+  `visible_conversations` and `conversation_groups` are gone with it. One seat
+  read (`shell::convs`) serves the paint, the ↑/↓ walk and the ← that pages to a
+  parent, so the rows on the glass and the rows the keyboard steps cannot be two
+  answers. The grouped-by-ball view is `nav::convs::group::group_by_ball` over
+  the same folded rows — a partition of a selection, not a second derivation.
+- **`Reply::Rail`'s notches carry the budget as a rollup**, not their own spend
+  (`Notch::budget`, wire key `budget`), so `rail::pin` reads one field off the
+  notch the operator picked instead of summing the prefix. Every field a pin
+  shows is now on the answer: the commit and the cut were already, the transcript
+  is a prefix of the chat the seat was answered, and the budget is this. The pin
+  is a *view* that derives nothing.
+- **The pinned `Files` listing is spelled**: `Query::Files` gained
+  `at: Option<String>`, and it is a **selection, not a fold** — it names which
+  *tree* you are asking about, exactly as `Step { seq }` names which step. Of
+  VISION V1.2's four pinnable tabs this is the one whose subject is a different
+  tree; the other three read something the seat already holds. Headless it is
+  `/files [<path>] [--at <commit>]`, and the window's own pinned tab is the memo
+  around that one answer rather than a second spelling of the same two arms.
+  **Config-frozen-at is the same shape and has no query at all yet** — when it
+  gets one it takes `at` for this reason, and that is a residual below rather
+  than a decision left open.
+
+**And the §3.4 echo needed an altitude of its own, which is the finding.**
+bl-adcb's *"optimism is a seat's, and a seat that reads over a wire has none"* is
+true of the board and would have been a silent regression here: the §11 list is
+the surface §3.4 exists for, and migrating it read as deleting `bl-915e` — the
+operator's typed goal with no representation anywhere in yog until the driver
+wrote a branch. The sentence is narrower than it looked, and the ruling is:
+**a seat's optimism reaches whatever that seat actually reads.** So the echo has
+a second projection beside `echo::compose`'s — `echo::rows::with_echo`, over an
+answered list — and both live in the one module, which is `compose`'s own
+single-source argument kept. A start with no row yet leads the list, faded, in
+the operator's own words; a target already in the answer is *freshened* to the
+echo's own age and nothing else moves (the reorder `compose` earns by bumping
+`last_action_unix` is deliberately not made — the answer arrives sorted, and a
+seat that re-sorted it would be deriving). A `Target::Agent` the answer no longer
+carries adds nothing.
+
+**A driven frame settles its own reads, too** (the harness half). §9.8 ruled that
+`Screen::run` pays an act's round trip once so the transport does not leak into
+every call site; bl-44e9 extended it to the read half for the same reason — a
+migrated surface paints an answer that landed a round trip later, so a drive that
+only settled acts saw every such surface blank and a beat asserting a row is
+*there* would have been red for the transport's reason rather than the window's.
+The loop settles to a fixed point on `AppModel::awaiting` — *is any standing
+question still unanswered* — because a `Link` may never be settled twice without
+a frame between (the second declares nothing and drops every answer), so a landed
+read costs the two extra passes `wire::wired` spells out and cannot cost fewer.
+A frame that asked nothing new pays none of it.
+
+**Class 2 stands unchanged, and bl-44e9 found what it is really blocked on.**
+`Reply::Workspaces` carries no path (§8.1's ruling), and the tab bar's every
+entry is a **focus target** — `nav::tabs::Tab` holds the `PathBuf` a click, a pin
+toggle and the §3.6 delete seat all spend. It could be made to *paint* off a
+reply tomorrow by resolving each name through `Snapshot::ws_name`/`ws_path` at
+the seat's door, and that is exactly the shape to refuse: the seat would be
+joining a wire answer back against the engine's own in-process table, which is
+two sources for one fact and worse than not having migrated. The honest change is
+the wide one — focus held by **name**, resolved at the doors that need a path.
+
+It was attacked and put down, and the reason is worth more than the refactor
+would have been. **A name resolves against the enumeration, and the §3.4 raise
+focuses a workspace the enumeration does not carry yet.** `Snapshot::ws_path`
+answers over the published `workspaces` set; a `lernie new` that has just
+returned is a wall the derivation has not read. Today the frame holds the path
+and the composer's bare rung fires into the wall that was just raised
+(bl-9acf's whole fix); name-keyed, that focus would be unresolvable for as long
+as one derivation takes, and Enter in that window would fire into the *previous*
+workspace. Re-deriving the enumeration synchronously at the raise, or holding the
+raised wall as a claim until the world catches up (the §3.4 start claim's own
+shape, one noun up), are the two answers — and picking between them is design,
+not a refactor, so it is its own ball. Note that it is **not** dissolved by
+migrating the tab bar: the engine resolves the same name against the same
+snapshot and refuses for the same reason.
+
+`Prepared::binding` stays named for the condition it always had (*once one seat's
+read path is the only read path*), which bl-44e9 does not reach — the composer's
+own reads are not migrated.
 
 **Search was re-assessed and is no longer an unblocked candidate.** bl-adcb
 named it one, and that reading predates §9.8. The asker's pass is **serial over
@@ -1295,12 +1376,50 @@ by exactly the argument above, and what changes is that its read crosses the
 boundary instead of running in process. The second is the smaller and is the one
 to take; the win is `§1.2` compliance, not one fewer thread.
 
-**The residual, then.** The reads still in process are the two standing classes
-above — the conversation list and the whole §11 inspector family behind the rail
-pin (class 1), and the workspace tab bar (class 2) — plus `search` on the
-re-assessment above, and the §9 config editors' own loads, which were never one
-of the three. Nothing in that list is blocked on a decision that has not now
-been taken; each is blocked on work whose shape is named.
+**Landed (bl-44e9), as ruled.** `Searcher` holds a seat rather than a snapshot
+cell and asks `Query::Search` over the wire; it is minted by `Engine::searcher`
+beside the asker and the poster, on the same window leaf and the same failure
+condition, and rides `WindowWire` as its third half. Two consequences are stated
+rather than discovered. **A refusal is an unreadable source** — `Found` already
+carries *"each unreadable source, named with why"*, which is exactly what the
+engine's sentence is, so a refused search paints the reason and never reads as
+*no matches*; no new state and no second pane. And **the abandon predicate went
+with the walk**: in process a superseded search stopped mid-walk, and over the
+wire the engine finishes what it was asked while the answer for a question nobody
+is asking any more is dropped on publish. The cost is one wasted walk on the
+engine; the alternative is a cancel the boundary would have to carry, which is a
+mechanism for an optimisation.
+
+**The residual, as bl-44e9 leaves it.** The payload work is done and two more
+surfaces crossed; what is left is scope with one exception, and the exception is
+named rather than open.
+
+- **The §11 inspector family is still read in process** — transcript, steps, step
+  detail, files, rail, inbox, and the seat's own `Query::Agent`. Every one of
+  them has a query, every one is answered by the same `answer::inspector`
+  functions the frame delegates to, and the pin they fold through is now
+  *selection over an answer* rather than a derivation — so this is bl-adcb's
+  three moves again, with the per-snapshot memos (`tx_memo`, `steps_memo`,
+  `rail_memo`, `files_memo`) coming out as the Work tab's two did. It is scope,
+  and it is the next ball.
+- **Config-frozen-at has no query.** The §11 Config tab reads
+  `config_edit::branch::governing_config(ws, at)` in process, which is the second
+  read whose subject is a tree the pin names. When it is spelled it takes `at`
+  the way `Query::Files` does; it is not a residual of the fold class, because it
+  was never answered at all.
+- **The Files preview reads its own two arms.** The listing delegates to
+  `answer::inspector::files`; the preview beside it still branches on the pin in
+  `shell::inspector::rail`, because building a whole listing to read one file's
+  bytes is what the query's own containment rule costs a memoized seat. It
+  dissolves with the inspector migration above, which asks one question for both.
+- **The workspace tab bar** (class 2), blocked on the raise's unenumerated focus
+  as recorded above.
+- **The §9 config editors' own loads**, which were never one of the three classes
+  (bl-f297's ruling: pointing them at `ReadConfig`/`Lineages`/`Models`/
+  `Providers` changes what a config editor *is*, and is a separate design).
+
+Nothing in that list is blocked on a decision that has not now been taken; each
+is blocked on work whose shape is named.
 
 - ~~Gestures are still dispatched in process~~ — **the design and the first
   group landed, §9.8** (bl-4841). An act is a declaration whose receipt lands
@@ -1308,12 +1427,14 @@ been taken; each is blocked on work whose shape is named.
   four are left, each named there with the frame-side fact its receipt gates.
   `AppModel::dispatch` stayed until those four moved; **bl-1747 moved them and
   deleted it** (§9.8), so the window's dialogue is wire-only in full.
-- **`Prepared::binding` stays a path** (§8.1's ruling, unchanged). The shape
-  that dissolves it — `Prepared` becoming opaque to the seat — is affordable
-  only once one seat's read path is the *only* read path, and the composer is
-  not migrated yet. It is a disclosure of an engine-side directory name to a
-  seat already told the workspace it belongs to, and it stays bounded and
-  stated.
+- **`Prepared::binding` stays a path** (§8.1's ruling, unchanged, re-checked
+  bl-44e9). The shape that dissolves it — `Prepared` becoming opaque to the seat
+  — is affordable only once one seat's read path is the *only* read path, and the
+  composer is not migrated yet. It is a disclosure of an engine-side directory
+  name to a seat already told the workspace it belongs to, and it stays bounded
+  and stated.
+- ~~Search rides a snapshot of its own~~ — **landed, bl-44e9**: the `Searcher`
+  asks the engine.
 
 ### 9.8 The acts, and the receipt that lands later (bl-4841, closed bl-1747)
 

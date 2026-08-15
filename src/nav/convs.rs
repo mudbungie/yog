@@ -25,7 +25,7 @@ pub mod row;
 pub mod titles;
 
 pub use doing::{Doing, Seat, doing, seats};
-pub use expand::{ancestors, parent_of, step, visible_rows};
+pub use expand::{ancestors, forest_rows, parent_of, step, visible};
 pub use flight::{Flight, FlightStrip, STRIP_HOVER, conversation_flight, strip};
 pub use row::{ConvBall, ConvRow, age_label, build};
 pub use titles::Titles;

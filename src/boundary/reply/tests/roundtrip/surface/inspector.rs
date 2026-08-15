@@ -145,7 +145,7 @@ fn rail() -> Rail {
             Notch {
                 seq: "001".into(),
                 commit: Some("abcdef1234567890".into()),
-                tokens: 120,
+                budget: 120,
                 place: Some(Place {
                     row: "003-claude.json".into(),
                     cut: 2,
@@ -154,7 +154,7 @@ fn rail() -> Rail {
             Notch {
                 seq: "002".into(),
                 commit: None,
-                tokens: 0,
+                budget: 120,
                 place: None,
             },
         ],

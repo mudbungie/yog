@@ -44,12 +44,24 @@ fn spoken(name: &str) -> Entry {
     }
 }
 
-/// A pinned notch names its commit, folds the budget to that point, and
+/// A pinned notch names its commit, states the budget as of that point, and
 /// carries the cut its chat seat decided — so the line in the chat and the
 /// prefix behind it can never disagree.
+///
+/// **The fold is the BUILD's, and the pin only selects** (REMOTE §9.7,
+/// bl-44e9): the running rollup is on every notch of the answer, so what a seat
+/// resolving a pin does is read one field off the notch it picked. Both halves
+/// are asserted, because a pin that summed the prefix itself would pass the
+/// second alone.
 #[test]
-fn a_pinned_notch_names_its_commit_and_folds_the_budget_to_it() {
+fn a_pinned_notch_names_its_commit_and_states_the_budget_as_of_it() {
     let rail = rail();
+    let budgets: Vec<u64> = rail.notches.iter().map(|n| n.budget).collect();
+    assert_eq!(
+        budgets,
+        [5, 12, 23],
+        "every notch carries the spend up to and including itself"
+    );
     let pinned = pin(&rail, Some(1)).expect("notch 1 pins");
     assert_eq!(pinned.commit, "bbbb2222");
     assert_eq!(pinned.short, "bbbb222");

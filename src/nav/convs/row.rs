@@ -9,7 +9,8 @@
 //! The subtree is **any** member's, not only a root's (bl-fa82): a row is the
 //! subtree rooted at its agent, and the depth-0 case is the whole conversation.
 //! [`build`] is the all-collapsed list — one row per root — which is
-//! [`expand::visible_rows`](super::expand::visible_rows) with an empty set.
+//! [`expand::visible`](super::expand::visible) over
+//! [`expand::forest_rows`](super::expand::forest_rows) with an empty set.
 
 use super::display_name;
 use super::flight::{Flight, flight};
@@ -151,13 +152,8 @@ pub fn build(
     ball: &dyn Fn(&str) -> ConvBall,
     checks: &[crate::monitor::Check],
 ) -> Vec<ConvRow> {
-    super::expand::visible_rows(
-        agents,
-        ws,
-        seen,
-        now_unix,
-        ball,
-        checks,
+    super::expand::visible(
+        &super::expand::forest_rows(agents, ws, seen, now_unix, ball, checks),
         &std::collections::HashSet::new(),
     )
 }

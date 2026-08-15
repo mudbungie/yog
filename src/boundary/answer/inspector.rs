@@ -74,18 +74,36 @@ pub fn steps(snap: &Snapshot, ws: &Path, agent: &str) -> StepsView {
 }
 
 /// The agent worktree's listing, and the named path's preview when the listing
-/// carries it as a file.
+/// carries it as a file — **live, or as of the commit `at` names** (VISION V1.2
+/// config-frozen-at's sibling; REMOTE §9.7, bl-44e9).
+///
+/// One derivation with the tree as a parameter, rather than two reads: pinned
+/// and live differ only in *which* tree is enumerated, and the containment rule
+/// below is the same rule over either. The window's own pinned Files tab used to
+/// reach `rail::files_at` in process because no query spelled this; it is
+/// answered here now, so the two seats read one implementation.
 ///
 /// **The path is resolved against the listing, never joined blind.** A boundary
 /// caller names a path and yog opens only what this same answer just enumerated
 /// — the containment `workdiff::patch` already gives the work diff. A path that
 /// is not there, or names a directory, answers `None` rather than refusing: the
 /// listing beside it already says why.
-pub fn files(ws: &Path, agent: &str, path: Option<&str>) -> (FilesView, Option<Preview>) {
-    let view = files_view::build(ws, agent);
+pub fn files(
+    ws: &Path,
+    agent: &str,
+    path: Option<&str>,
+    at: Option<&str>,
+) -> (FilesView, Option<Preview>) {
+    let view = match at {
+        Some(commit) => rail::files_at(ws, commit),
+        None => files_view::build(ws, agent),
+    };
     let preview = path
         .filter(|path| listed(&view, path))
-        .map(|path| files_view::preview(&files_view::agent_worktree(ws, agent).join(path)));
+        .map(|path| match at {
+            Some(commit) => rail::preview_at(ws, commit, path),
+            None => files_view::preview(&files_view::agent_worktree(ws, agent).join(path)),
+        });
     (view, preview)
 }
 

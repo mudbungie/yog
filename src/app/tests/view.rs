@@ -58,7 +58,7 @@ fn the_tab_bar_and_conversation_list_carry_the_derived_facts() {
     assert_eq!(rows[0].members, 1);
     assert_eq!(rows[0].depth, 0);
     assert_eq!(rows[0].direct, 0, "a lone root dispatched nobody");
-    // The unfold is plumbed through the frame's own accessor (bl-fa82), and
+    // The unfold is the SEAT's fold over the boundary's answer (bl-44e9), and
     // naming a childless row in the set reveals nothing — the flat list is the
     // all-collapsed case, so the two agree wherever there is no descent.
     let expanded = std::collections::HashSet::from(["c-1".to_owned()]);
@@ -83,10 +83,12 @@ fn the_boundary_answer_is_the_frames_derivation_without_a_frame() {
     model.focus_workspace(&h.ws);
     let deps = model.boundary_deps(&Cli::new("/no/lernie"), &Cli::new("/no/bl"));
 
-    // The frame's rows, and the same query answered through the chokepoint.
-    let frame_rows = model.conversations(500);
-    assert_eq!(frame_rows.len(), 1, "the fixture's one conversation");
-    let Ok(Reply::Conversations(via_answer)) = model.answer(
+    // What the chokepoint answers, and what a seat then paints from it. Since
+    // bl-44e9 the frame has no derivation of its own to compare against — it
+    // reads this reply like every other seat — so what parity means here is
+    // that the *frameless* spelling and the chokepoint's are one value, and
+    // that the seat's fold of it is the all-collapsed list.
+    let Ok(Reply::Conversations(answered)) = model.answer(
         &deps,
         &Query::Conversations {
             workspace: crate::naming::leaf(&(h.ws.clone())),
@@ -95,7 +97,6 @@ fn the_boundary_answer_is_the_frames_derivation_without_a_frame() {
     ) else {
         panic!("conversations answers conversations");
     };
-    assert_eq!(via_answer, frame_rows, "one derivation, two callers");
 
     // The truly frameless spelling: the published snapshot + a fresh read of
     // the durable ui.json — what the deposit consumer does.
@@ -103,8 +104,15 @@ fn the_boundary_answer_is_the_frames_derivation_without_a_frame() {
     let ui = UiState::open(model.ui_json_path());
     assert_eq!(
         answer::conversations(&snap, &ui, &h.ws, 500),
-        frame_rows,
+        answered,
         "the snapshot derivation run without a frame"
+    );
+    let painted = model.conversations(500);
+    assert_eq!(painted.len(), 1, "the fixture's one conversation");
+    assert_eq!(
+        painted,
+        crate::nav::convs::visible(&answered, &std::collections::HashSet::new()),
+        "a seat holding no fold paints the answer's root subset"
     );
 
     // The workspace rollups agree the same way.

@@ -252,5 +252,30 @@ pub(crate) fn compose(
     Arc::new(snap)
 }
 
+/// **The echo at the row altitude** (REMOTE §9.7, bl-44e9) — the same fold, over
+/// an answered §11 list instead of over a snapshot, because that surface reads a
+/// `Reply` now. Its own file at §12's cap; the reasoning is its own doc.
+pub(crate) mod rows;
+
+impl super::AppModel {
+    /// The §11 list **as this seat paints it**: what the boundary answered for
+    /// the focused workspace, with this window's own pending echo folded on
+    /// (§3.4, §7.2). Orchestration, never derivation (§8.5's paint-side line):
+    /// the rows are the engine's and the optimism is the seat's.
+    ///
+    /// An unfocused window echoes nothing, because an echo belongs to the
+    /// workspace it was fired in and there is none to compare against.
+    pub fn echoed(
+        &self,
+        rows: Vec<crate::nav::convs::ConvRow>,
+        now_unix: i64,
+    ) -> Vec<crate::nav::convs::ConvRow> {
+        let Some(ws) = self.focus.ws.as_deref() else {
+            return rows;
+        };
+        rows::with_echo(self.started.as_ref(), ws, rows, now_unix)
+    }
+}
+
 #[cfg(test)]
 mod tests;

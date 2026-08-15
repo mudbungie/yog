@@ -135,7 +135,7 @@ pub const QUERIES: &[HelpRow] = &[
     },
     HelpRow {
         verb: "files",
-        usage: "/files [<path>]",
+        usage: "/files [<path>] [--at <commit>]",
         summary: "the conversation's working files, and one file's contents",
         detail: "The agent's own worktree read-only: goal, soul, summaries, skills and whatever \
                  work products it has written, as a sorted listing with each entry's size. Name a \
@@ -143,7 +143,9 @@ pub const QUERIES: &[HelpRow] = &[
                  a file this same listing just named can be opened, and a large one comes back \
                  truncated with its true size. The listing is bounded, and says when it hit the \
                  bound. A conversation whose worktree has been torn down is said outright rather \
-                 than shown as an empty directory.",
+                 than shown as an empty directory. `--at` reads a commit's tree instead of the \
+                 worktree — the same agent-context-files-as-of the window's notch pin shows — and \
+                 a commit this conversation never recorded simply holds no files.",
     },
     HelpRow {
         verb: "rail",

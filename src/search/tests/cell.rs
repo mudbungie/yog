@@ -41,26 +41,3 @@ fn the_cell_answers_the_current_question_and_discards_a_superseded_one() {
     assert!(!cell.searching());
     assert_eq!(cell.pending(), None);
 }
-
-/// The thread is the one thing only a real thread can test (the `Consumer`
-/// pattern): spawn it, ask, and see the answer land — then drop it, which is
-/// the shutdown path.
-#[test]
-fn the_searcher_thread_answers_an_ask_and_stops_on_drop() {
-    let ws = PathBuf::from("/w/x");
-    let snap = world(&ws, vec![], vec![ball("bl-thread", "t", "body")], vec![]);
-    let cell = crate::state::new_snapshot_cell(std::sync::Arc::new(snap));
-    let asks = SearchCell::default();
-    let searcher = Searcher::new(cell, asks.clone());
-    assert!(!searcher.pass(), "nothing asked, nothing answered");
-    let thread = searcher.spawn();
-    asks.ask("bl-thread");
-    for _ in 0..200 {
-        if !asks.searching() {
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-    assert_eq!(asks.found().hits.len(), 1, "the thread answered");
-    drop(thread);
-}

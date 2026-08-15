@@ -180,6 +180,23 @@ impl Rig {
         self.deriver.publish();
         self.model.refresh();
     }
+
+    /// The §11 all-collapsed list, asked through the boundary as every seat asks
+    /// it (REMOTE §9.7, bl-44e9) — the model holds no conversation accessor any
+    /// more, so the rig carries the seat's own door rather than each test
+    /// spelling `Query::Conversations` for itself.
+    pub(crate) fn conversations(&self, now_unix: i64) -> Vec<crate::nav::convs::ConvRow> {
+        crate::test_support::convs::conversations(&self.model, now_unix)
+    }
+
+    /// The same answer, folded by a viewport holding `expanded`.
+    pub(crate) fn visible_conversations(
+        &self,
+        now_unix: i64,
+        expanded: &std::collections::HashSet<String>,
+    ) -> Vec<crate::nav::convs::ConvRow> {
+        crate::test_support::convs::visible(&self.model, now_unix, expanded)
+    }
 }
 
 impl std::ops::Deref for Rig {

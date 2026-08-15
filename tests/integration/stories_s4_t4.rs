@@ -83,7 +83,7 @@ fn s4_t4_conversation_badges_are_honest_about_what_the_join_knows() {
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
 
-    let rows = m.conversations(1000);
+    let rows = crate::support::conversation_rows(&m, 1000);
     assert_eq!(rows.len(), 4, "four conversations: {rows:?}");
     let by_root: HashMap<&str, &yog::nav::convs::ConvRow> =
         rows.iter().map(|r| (r.root_id.as_str(), r)).collect();

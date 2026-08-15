@@ -132,10 +132,24 @@ pub enum Query {
     /// two depths. `path` is **resolved against the listing yog just built**,
     /// never joined blind, so this read can open nothing the same answer did
     /// not already name.
+    ///
+    /// **`at` names the tree, and a tree is a selection, not a fold** (REMOTE
+    /// §9.7, bl-44e9). VISION V1.2's pin folds four tabs to one commit, and
+    /// three of them read something the seat already holds — the transcript is a
+    /// prefix of the chat it was answered, the budget is a rollup on the notch,
+    /// the spine is the answer itself. This one is the tab whose *subject* is a
+    /// different tree, so it is the one the commit has to reach, and it reaches
+    /// it the way [`Step`](Query::Step)'s `seq` and
+    /// [`WorkDiff`](Query::WorkDiff)'s `file` do: as a parameter naming **which
+    /// thing you are asking about**. `None` is the live worktree. Nothing about
+    /// the operator's *selection* crosses — a seat that has pinned nothing asks
+    /// nothing different, which is what keeps DESIGN §8.5's "views gain no
+    /// boundary representation" true of this.
     Files {
         workspace: String,
         agent: String,
         path: Option<String>,
+        at: Option<String>,
     },
     /// **The step spine** (VISION V1, §11): one notch per operable commit and
     /// the child cards hanging off them. The notches are answered; the

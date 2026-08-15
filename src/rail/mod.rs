@@ -88,9 +88,14 @@ pub struct Notch {
     pub seq: String,
     /// `meta.json`'s `commit` — the branch tip at step-start (§5.1 #29).
     pub commit: Option<String>,
-    /// This step's own token spend, so a pinned budget folds without a
-    /// second read.
-    pub tokens: u64,
+    /// **The budget as of this notch** (VISION V1.2): every notch's spend up to
+    /// and including this one — a per-row **rollup**, not this step's own
+    /// figure. REMOTE §9.7's altitude ruling (bl-44e9): the pin is a *selection*
+    /// out of an answer, so what a pinned tab shows has to be on the notch the
+    /// operator picked rather than summed by whoever picked it. A seat that
+    /// folded the prefix itself would be deriving over a reply, which is the one
+    /// thing the read path exists to stop.
+    pub budget: u64,
     /// Where in the chat this notch's rule paints, and what its pin cuts to
     /// ([`place`]). `None` for a notch the chat has no seat for — a call that
     /// sealed no output and was superseded — which is therefore a notch no
@@ -203,11 +208,14 @@ pub fn build(
         .steps
         .iter()
         .zip(places)
-        .map(|(step, place)| Notch {
-            seq: step.seq.clone(),
-            commit: step.commit.clone(),
-            tokens: step.tokens.total_tokens(),
-            place,
+        .scan(0u64, |spent, (step, place)| {
+            *spent += step.tokens.total_tokens();
+            Some(Notch {
+                seq: step.seq.clone(),
+                commit: step.commit.clone(),
+                budget: *spent,
+                place,
+            })
         })
         .collect();
     let cards = children

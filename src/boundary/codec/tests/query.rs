@@ -87,13 +87,17 @@ fn inspector_family() {
         rt(Gesture::Ask(query));
     }
     // The listing and one file's bytes are the same query at two depths — the
-    // `work-diff` shape, so the path is optional and both sides round-trip.
+    // `work-diff` shape, so the path is optional and both sides round-trip. The
+    // tree is the third selection on it (bl-44e9): live, or as of one commit.
     for path in [None, Some("src/a.rs".to_owned())] {
-        rt(Gesture::Ask(Query::Files {
-            workspace: workspace.clone(),
-            agent: agent.clone(),
-            path,
-        }));
+        for at in [None, Some("abcdef1234".to_owned())] {
+            rt(Gesture::Ask(Query::Files {
+                workspace: workspace.clone(),
+                agent: agent.clone(),
+                path: path.clone(),
+                at,
+            }));
+        }
     }
 }
 

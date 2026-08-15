@@ -132,9 +132,11 @@ pub(super) fn elbows(painted: &[Painted]) -> usize {
 
 /// The rows the frame is painting, from the derivation the frame itself reads.
 pub(super) fn visible(world: &World) -> Vec<ConvRow> {
-    world
-        .model
-        .visible_conversations(crate::shell::now_unix(), &world.state.expanded)
+    crate::test_support::convs::visible(
+        &world.model,
+        crate::shell::now_unix(),
+        &world.state.expanded,
+    )
 }
 
 /// The galleys sharing one row with `rect` — everything whose vertical centre
@@ -231,14 +233,21 @@ fn the_fields_hover_states_both_numbers_and_the_keys_that_press_it() {
     // proves its own wiring with: a hover hung on the neighbouring widget
     // rather than the control never reaches the galleys.
     ctx.memory_mut(|m| m.set_everything_is_visible(true));
-    let mut frame = || {
+    let frame = |world: &mut World| {
         let out = ctx.run(super::super::input(), |ctx| {
             super::super::super::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
         });
         crate::paint_probe::text_of(&out)
     };
-    frame();
-    let painted = frame();
+    // The wire settled between frames (bl-44e9): the field this beat hovers is
+    // painted off a `Reply::Conversations`, which lands a round trip later.
+    frame(&mut world);
+    world.settle();
+    frame(&mut world);
+    world.settle();
+    frame(&mut world);
+    world.settle();
+    let painted = frame(&mut world);
     for phrase in [
         "1 dispatched by this agent itself",
         "2 under it altogether at any depth",

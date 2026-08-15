@@ -171,31 +171,6 @@ impl AppModel {
         nav::tabs::build(&items, &self.ui.pinned(), self.focus.ws.as_deref())
     }
 
-    /// The §11 conversation list for the focused workspace with nothing
-    /// unfolded: one row per root agent, subtree-aggregated, sorted by last
-    /// action of any kind, newest first (§11 as amended by bl-cad5).
-    /// `now_unix` is the caller's wall clock (the shell boundary mints it, so
-    /// the derivation stays clock-free here).
-    pub fn conversations(&self, now_unix: i64) -> Vec<nav::convs::ConvRow> {
-        self.visible_conversations(now_unix, &std::collections::HashSet::new())
-    }
-
-    /// The same list as the frame paints it (§11, bl-fa82): the **visible** rows
-    /// of the focused workspace's descent forest, given the viewport's
-    /// `expanded` set of agent ids (§5.3 — the shell owns that set, the model
-    /// only reads it). [`conversations`](Self::conversations) is this call with
-    /// nothing expanded.
-    pub fn visible_conversations(
-        &self,
-        now_unix: i64,
-        expanded: &std::collections::HashSet<String>,
-    ) -> Vec<nav::convs::ConvRow> {
-        let Some(ws) = self.focus.ws.as_deref() else {
-            return Vec::new();
-        };
-        crate::boundary::answer::visible_conversations(&self.snap, &self.ui, ws, now_unix, expanded)
-    }
-
     /// The frame-side query chokepoint (§8.5): the same [`answer`]
     /// (crate::boundary::answer::answer) the deposit consumer runs, over
     /// `deps` — one derivation, two serializations (VISION §4.8). `deps` is

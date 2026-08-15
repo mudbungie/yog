@@ -5,7 +5,13 @@
 #
 # Carve-outs (`ignores`):
 #   - Test scaffolding: the fork/env serialization locks (`SPAWN_LOCK`,
-#     `ENV_LOCK`) and test-double interior mutability are not app state.
+#     `ENV_LOCK`) and test-double interior mutability are not app state. The
+#     glob covers the whole `test_support` **subtree** (bl-44e9): the module was
+#     one file when this carve-out was written and is a directory now, and a
+#     fake clock's shared instant is the same "test-double interior mutability"
+#     wherever §12's cap happens to put it. Widening the path is not a new
+#     exception — it is the existing one addressed to the module it always
+#     named.
 #   - `src/git_tree/probe_cache.rs`: the macOS 2 s TTL cache's `Mutex` is
 #     single-thread interior mutability local to the probe stack (uncontended,
 #     never shared across threads), not the cross-thread shared state `state.rs`
@@ -68,6 +74,7 @@ ignores:
   - "**/registry/presence.rs"
   - "**/registry/mailbox/slots.rs"
   - "**/test_support.rs"
+  - "**/test_support/**"
   - "**/tests/**"
   - "**/tests.rs"
   - "**/*tests.rs"

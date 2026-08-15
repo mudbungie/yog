@@ -163,7 +163,7 @@ fn a_rail_reply_omits_what_makes_a_notch_unpinnable() {
             Notch {
                 seq: "001".to_owned(),
                 commit: Some("abcdef1234".to_owned()),
-                tokens: 7,
+                budget: 7,
                 place: Some(Place {
                     row: "001-user.md".to_owned(),
                     cut: 1,
@@ -172,7 +172,7 @@ fn a_rail_reply_omits_what_makes_a_notch_unpinnable() {
             Notch {
                 seq: "002".to_owned(),
                 commit: None,
-                tokens: 0,
+                budget: 7,
                 place: None,
             },
         ],
@@ -191,7 +191,7 @@ fn a_rail_reply_omits_what_makes_a_notch_unpinnable() {
     assert_eq!(body["rows"][0]["short"], "abcdef1");
     assert_eq!(body["rows"][0]["row"], "001-user.md");
     assert_eq!(body["rows"][0]["cut"], 1);
-    assert_eq!(body["rows"][0]["tokens"], 7);
+    assert_eq!(body["rows"][0]["budget"], 7);
     for key in ["commit", "short", "row", "cut"] {
         assert!(body["rows"][1].get(key).is_none(), "{key} unpinnable");
     }

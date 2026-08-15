@@ -101,12 +101,15 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         // `/work-diff` shape, and for the same reason: a listing and one
         // entry's content are one question at two depths.
         "files" => {
-            let path = args::optional_word(tail, verb)?;
+            let (positional, flags) = args::split_flags(tail);
+            args::only(&flags, &["at"], verb)?;
+            let path = args::optional_word(&positional, verb)?;
             let (workspace, agent) = at(verb, ctx)?;
             Ok(ask(Query::Files {
                 workspace,
                 agent,
                 path,
+                at: args::flag(&flags, "at", verb)?,
             }))
         }
         "rail" => {

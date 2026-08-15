@@ -62,7 +62,7 @@ pub struct Asker {
 impl Asker {
     /// Assemble the asker. Built by [`Engine::asker`](crate::engine::Engine::asker)
     /// so a test can drive [`pass`](Self::pass) by hand — the same reason
-    /// `AppModel::searcher` hands back a value rather than spawning.
+    /// `Engine::searcher` hands back a value rather than spawning.
     pub fn new(
         seat: Seat,
         end: LinkEnd,

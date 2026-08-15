@@ -156,11 +156,11 @@ fn ancestors(model: &AppModel) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// The list as the frame paints it — the one derivation every gesture below
-/// reads, so the walk, the fold and the paint can never disagree about which
-/// rows exist (§11, `nav::convs::expand`).
-fn visible(model: &AppModel, state: &ShellState) -> Vec<crate::nav::convs::ConvRow> {
-    model.visible_conversations(super::now_unix(), &state.expanded)
+/// The list as the frame paints it — [`super::convs::visible`], the one read
+/// every gesture below and the paint itself share, so the walk, the fold and the
+/// glass can never disagree about which rows exist (§11, REMOTE §9.7).
+fn visible(model: &mut AppModel, state: &ShellState) -> Vec<crate::nav::convs::ConvRow> {
+    super::convs::visible(model, &state.expanded)
 }
 
 /// The focused agent, owned — the id every unfold gesture acts on.

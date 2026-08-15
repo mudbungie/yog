@@ -26,7 +26,7 @@ use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use yog::projects::balls::{Ball, parse_list};
 use yog::projects::runner::BlRunner;
@@ -187,4 +187,42 @@ pub fn build_workspace(ws: &Path) {
     fs::write(wt.join("goal.md"), "hello\n").unwrap();
     run_git(&wt, &["add", "goal.md"]);
     run_git(&wt, &["commit", "-q", "-m", "dispatch [c-001]"]);
+}
+
+/// **The §11 conversation list, asked the way a seat asks it** (REMOTE §9.7,
+/// bl-44e9).
+///
+/// `AppModel` carries no conversation accessor any more: the derivation is the
+/// engine's — `Query::Conversations` answers the whole descent forest with its
+/// per-row rollups — and the fold is the seat's (`nav::convs::visible`). So a
+/// story test asks the boundary the same question the window asks it, and
+/// cannot assert against a second derivation nobody paints.
+///
+/// Empty for no focus and for a workspace name the snapshot cannot resolve —
+/// the refusal a seat would paint, which is no rows either way.
+pub fn conversations(
+    model: &yog::AppModel,
+    now_unix: i64,
+    expanded: &HashSet<String>,
+) -> Vec<yog::nav::convs::ConvRow> {
+    let Some(workspace) = model.focused_workspace().map(yog::naming::leaf) else {
+        return Vec::new();
+    };
+    let deps = model.boundary_deps(
+        &yog::cli_outbound::Cli::new("lernie"),
+        &yog::cli_outbound::Cli::new("bl"),
+    );
+    let query = yog::boundary::Query::Conversations { workspace };
+    match model.answer(&deps, &query, now_unix) {
+        Ok(yog::boundary::reply::Reply::Conversations(rows)) => {
+            yog::nav::convs::visible(&rows, expanded)
+        }
+        _ => Vec::new(),
+    }
+}
+
+/// The all-collapsed list: the root subset of the forest above, which is what a
+/// seat holding no viewport reads.
+pub fn conversation_rows(model: &yog::AppModel, now_unix: i64) -> Vec<yog::nav::convs::ConvRow> {
+    conversations(model, now_unix, &HashSet::new())
 }

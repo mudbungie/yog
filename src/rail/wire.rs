@@ -17,15 +17,16 @@ pub(crate) fn reply(rail: &Rail) -> Value {
     })
 }
 
-/// One notch: its step, the read-state commit it pins to, its spend, and its
-/// seat in the chat. `commit` and `row`/`cut` are absent — not empty — when the
+/// One notch: its step, the read-state commit it pins to, the **budget as of
+/// it** (the rollup a pinned tab shows, not this step's own figure — bl-44e9),
+/// and its seat in the chat. `commit` and `row`/`cut` are absent — not empty — when the
 /// step recorded no `meta.json` or the chat gave the call no seat: both are
 /// exactly what makes a notch unpinnable, and a reader must not have to tell
 /// that from a notch pinned at the empty string.
 fn notch_row(notch: &Notch) -> Value {
     let mut map = Map::new();
     map.insert("seq".to_owned(), json!(notch.seq));
-    map.insert("tokens".to_owned(), json!(notch.tokens));
+    map.insert("budget".to_owned(), json!(notch.budget));
     if let Some(commit) = &notch.commit {
         map.insert("commit".to_owned(), json!(commit));
         map.insert("short".to_owned(), json!(notch.short()));
@@ -85,7 +86,7 @@ fn notch_of(v: &Value) -> Result<Notch, String> {
     Ok(Notch {
         seq: str_of(o, "seq")?,
         commit: opt_str_of(o, "commit")?,
-        tokens: u64_of(o, "tokens")?,
+        budget: u64_of(o, "budget")?,
         place,
     })
 }
