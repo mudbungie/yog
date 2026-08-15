@@ -43,7 +43,7 @@ use crate::git_tree::{AgentState, GitTree};
 use crate::opslog;
 use crate::start::{BallSpec, Payload};
 use crate::state::SnapshotCell;
-use crate::ui_state::{Clock, UiState, content_hash};
+use crate::ui_state::{Clock, UiState};
 
 /// What the pilot thread needs: a [`Deps`] template (everything but the
 /// per-pass snapshot and mint seed), the cell the worker publishes to, the
@@ -113,7 +113,7 @@ impl PilotCtx {
         fleet: &Facts,
         one: &Move,
     ) -> bool {
-        let deps = self.deps(snapshot, ts);
+        let deps = self.deps(snapshot);
         let entry = match one {
             Move::Reap {
                 row,
@@ -171,15 +171,15 @@ impl PilotCtx {
         // The composed goal verbatim (§3.3, bl-6920): there is no operator at
         // the composer to edit it, and the loop must not become a second author.
         let goal = prepared.goal.clone();
-        dispatch::prompt(deps, ui, ts, &fleet.workspace, &prepared, &goal).ok()
+        // No preview, so no seed (bl-1747): the mint draws off the stamp.
+        dispatch::prompt(deps, ui, ts, &fleet.workspace, &prepared, &goal, None).ok()
     }
 
-    /// This pass's [`Deps`]: the template plus the snapshot it just read and a
-    /// seed from its own stamp, exactly as the gestures consumer builds one.
-    fn deps(&self, snapshot: &Arc<Snapshot>, ts: &str) -> Deps {
+    /// This pass's [`Deps`]: the template plus the snapshot it just read,
+    /// exactly as the gestures consumer builds one.
+    fn deps(&self, snapshot: &Arc<Snapshot>) -> Deps {
         Deps {
             snapshot: Arc::clone(snapshot),
-            mint_seed: content_hash(ts.as_bytes()),
             ..self.deps.clone()
         }
     }

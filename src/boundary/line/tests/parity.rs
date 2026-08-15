@@ -177,6 +177,9 @@ fn every_start_rung_and_the_prompt_round_trip() {
     rt(Gesture::Act(Action::Prompt {
         prepared: prepared(),
         goal: "do the thing".to_owned(),
+        // A typed line predicts no name (bl-1747), so the round trip is the
+        // seedless one — the seat that has a prediction fills it after the read.
+        seed: None,
     }));
 }
 

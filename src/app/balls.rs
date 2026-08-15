@@ -174,9 +174,14 @@ impl AppModel {
     }
 
     /// The boundary [`Deps`](crate::boundary::dispatch::Deps) this instance
-    /// dispatches with (§8.5): its roots, its composed world, its published
-    /// snapshot, its verb binaries. `mint_seed` is zeroed here — the fire site
-    /// that owns the §3.3 preview fills it.
+    /// answers with (§8.5): its roots, its composed world, its published
+    /// snapshot, its verb binaries.
+    ///
+    /// **No gesture executes through it any more** (REMOTE §9.8, bl-1747): the
+    /// window posts every act over the wire and the engine builds the `Deps`
+    /// the act runs in. What is left here is the §8.5 line's *query* arm, which
+    /// is answered in place, and the acceptance world's stand-in for the
+    /// transport — both reads.
     ///
     /// The world it carries is **lensed on the focused workspace's wall**
     /// (§16.2 as amended): a §9 config gesture folds brazen's destinations out
@@ -198,47 +203,7 @@ impl AppModel {
             // optimistic.
             snapshot: std::sync::Arc::clone(&self.derived),
             caller: crate::boundary::dispatch::Caller::default(),
-            mint_seed: 0,
         }
-    }
-
-    /// The frame-side action chokepoint (§8.5): the same
-    /// [`dispatch`](crate::boundary::dispatch::dispatch) the deposit consumer
-    /// runs, over this instance's `ui.json` — the GUI's click-glue constructs
-    /// the variant and lands here, one implementation per gesture.
-    pub fn dispatch(
-        &mut self,
-        deps: &crate::boundary::dispatch::Deps,
-        ts: &str,
-        action: &crate::boundary::Action,
-    ) -> Result<crate::boundary::reply::Reply, String> {
-        crate::boundary::dispatch::dispatch(deps, &mut self.ui, ts, action)
-    }
-
-    /// Fire the deferred prompt (§8.1) through the boundary and hold the §3.4
-    /// start claim on success: the composer's Send and the bare rung's Enter
-    /// are both this call, with their own edited `goal` and held `seed`.
-    pub fn fire_prompt(
-        &mut self,
-        lernie: &Cli,
-        bl: &Cli,
-        prepared: &crate::start::Prepared,
-        goal: &str,
-        seed: u64,
-        ts: &str,
-    ) -> Result<String, String> {
-        let mut deps = self.boundary_deps(lernie, bl);
-        deps.mint_seed = seed;
-        // The chokepoint's typed door — the same body the dispatch match's
-        // Prompt arm runs (§8.5), §3.5 spend gate included: the frame does not
-        // get its own ceiling, it gets the one every seat crosses.
-        let workspace = self.snap.ws_path(&prepared.workspace)?;
-        let conversation =
-            crate::boundary::dispatch::prompt(&deps, &self.ui, ts, &workspace, prepared, goal)?;
-        // Only on `Ok`, which is also §7.2's first expiry end: a fire that never
-        // launched leaves the §4.2 synthetic-failure line and no echo at all.
-        self.await_conversation(&workspace, &conversation, goal);
-        Ok(conversation)
     }
 }
 

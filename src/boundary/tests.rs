@@ -221,6 +221,7 @@ fn a_ball_rung_prepare_carries_its_project_and_the_other_rungs_none() {
             origin: crate::opslog::Origin::Conversation,
         },
         goal: "g".into(),
+        seed: None,
     };
     assert_eq!(prompt.project(), None);
 }

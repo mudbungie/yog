@@ -42,6 +42,7 @@ fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
         &mut world.state,
         &lernie,
         &bl,
+        &key,
         "/search hello"
     ));
     assert_eq!(
@@ -63,6 +64,7 @@ fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
         &mut world.state,
         &lernie,
         &bl,
+        &key,
         "/search"
     ));
     world.model.searcher().pass();
@@ -98,11 +100,13 @@ fn a_search_that_matches_nothing_says_so_and_keeps_its_tab() {
         crate::cli_outbound::Cli::new("bl"),
     );
     let mut world = world();
+    let key = crate::actions::DraftKey::composer(Some(world.ws.clone()), None);
     assert!(crate::shell::slash::run(
         &mut world.model,
         &mut world.state,
         &lernie,
         &bl,
+        &key,
         "/search zzzznotathing"
     ));
     world.model.searcher().pass();

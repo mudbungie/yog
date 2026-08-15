@@ -17,6 +17,7 @@
 //! `opslog`); this tree only wires widgets.
 
 mod act;
+mod acting;
 mod activity;
 mod alerts;
 mod ball_bar;
@@ -115,6 +116,12 @@ pub fn render(
     bl: &Cli,
     bz: &Cli,
 ) {
+    // The frame's own receipt duty (REMOTE §9.8, bl-1747), ahead of every
+    // surface that reads what it settles: the model drains the poster's channel
+    // in `refresh`, and this is where the window's held acts — the composer's
+    // box and the §8.5 line — fold the ones that landed. The §3.6 dialogs fold
+    // theirs inside their own frames, a dialog's answer being a dialog's.
+    acting::settle(model, state);
     // The wall first (§16.2 as amended): every brazen-shaped seam this frame
     // paints — the config editor's file, the login roster, the picker's
     // providers — belongs to a workspace, so a focus change re-lenses them
@@ -133,7 +140,7 @@ pub fn render(
     // The §6 escalation (bl-e160): folded where the frame reads its snapshot,
     // never inside a widget.
     alerts::escalate(ctx, model, state);
-    keys::handle(ctx, model, state, lernie, bl);
+    keys::handle(ctx, model, state);
     // One gesture is one write (§4.1): a boundary is *settled* when the pointer
     // is up, so a drag lands on disk once, where it came to rest, instead of
     // once per frame of the drag.
@@ -164,7 +171,7 @@ pub fn render(
         .default_width(model.panel_size(Panel::Conversations, window.x))
         .width_range(Panel::Conversations.min_size()..=Panel::Conversations.max_size(window.x))
         .show(ctx, |ui| {
-            navigator::side_panel(ui, model, state, lernie, bl);
+            navigator::side_panel(ui, model, state, lernie);
         })
         .response
         .rect
@@ -183,9 +190,9 @@ pub fn render(
     // what "shown before them, after the panels" means to egui's layer order
     // (`modal`, bl-d921).
     modal::backdrop(ctx, state);
-    delete::dialog(ctx, model, state, lernie, bl);
-    delete_agent::dialog(ctx, model, state, lernie, bl);
-    new_ws::dialog(ctx, model, state, lernie, bl);
+    delete::dialog(ctx, model, state);
+    delete_agent::dialog(ctx, model, state);
+    new_ws::dialog(ctx, model, state);
 }
 
 /// The activity accessory's panel (§11) — **two** panels, not one, because a

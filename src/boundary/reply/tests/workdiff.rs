@@ -29,7 +29,6 @@ fn deps(snap: crate::app::Snapshot) -> Deps {
         balls_state_root: PathBuf::from("/balls"),
         snapshot: Arc::new(snap),
         caller: crate::boundary::dispatch::Caller::default(),
-        mint_seed: 0,
     }
 }
 

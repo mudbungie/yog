@@ -33,6 +33,21 @@ pub(super) fn retarget(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture,
     }))
 }
 
+/// `/prompt <goal…>` — the §8.1 deferred fire, against whatever this seat has
+/// prepared. **It carries no §3.3 seed** (bl-1747): a seed is the firing
+/// seat's own prediction and this reader paints none, so the door draws off
+/// the stamp — the window's line, which *does* have a preview above it, fills
+/// the seed in after the read.
+pub(super) fn prompt(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    Ok(act(Action::Prompt {
+        prepared: ctx.prepared.clone().ok_or_else(|| {
+            format!("/{verb}: nothing is prepared — /prepare first, then say the goal")
+        })?,
+        goal: args::required(tail, verb, "the goal")?,
+        seed: None,
+    }))
+}
+
 /// `/answer pass|hold|refuse` — the §4.11 capability answer. The conversation
 /// is the seat's, like `/seen`'s; the held `tool_use` id is derived at fire
 /// time, so the only word a line can carry is the verdict — and it is

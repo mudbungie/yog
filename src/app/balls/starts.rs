@@ -1,79 +1,25 @@
 //! The start-flow's hand-off from [`AppModel`] (DESIGN §3.4, §3.5, §8.1): the
 //! instance's start axes resolved into the [`StartInputs`] the composer's ▶ Start,
-//! ▶ Continue, new-ball, and bare Enter entry points hand [`crate::start::prepare`].
+//! ▶ Continue, new-ball, and bare Enter entry points compose an
+//! [`Action::Prepare`](crate::boundary::Action::Prepare) from.
 //! Split from [`super`] per §12's 300-line budget — the ball fetch + join live
-//! there, the start-input construction here. The input constructions are pure over
-//! the pre-fetched caches; [`AppModel::prepare_start`] is the one effectful entry —
-//! it runs the flow and **adopts the prepared workspace as the focus** (§3.4), so
-//! the tab bar, the conversation list and both composers derive from one fact.
+//! there, the start-input construction here.
+//!
+//! **Everything here is pure over the pre-fetched caches** (bl-1747). It had one
+//! effectful entry, `prepare_start`, which ran the flow in process and adopted
+//! the workspace it resolved; the run crossed the wire with the rest of the acts
+//! and the adoption went with it, onto the receipt — the seat that posts the
+//! gesture is the seat that knows what its landing means (REMOTE §9.8).
 
 use super::AppModel;
 use crate::binding::workspace_path;
-use crate::cli_outbound::Cli;
 use crate::names::{self, NameError};
 use crate::projects::balls::Ball;
 use crate::projects::join::JoinRow;
-use crate::start::{self, BallSpec, Payload, Prepared, StartInputs};
+use crate::start::{self, BallSpec, Payload, StartInputs};
 use std::path::{Path, PathBuf};
 
 impl AppModel {
-    /// Run the start flow (§8.1) and **focus the workspace it resolved** (§3.4) —
-    /// the single entry every start rung fires through, so a start never leaves the
-    /// surfaces naming two different workspaces.
-    ///
-    /// Focus is unconditional because it is never a second decision: `prepare`
-    /// resolves exactly one target workspace, and every rung's is the one the
-    /// operator is now working in. ▶ Start / Create-&-Start target the focused
-    /// workspace ([`start_workspace`](Self::start_workspace)), so the adoption is
-    /// a no-op — except in the bootstrap empty case, where the founded `home` *is*
-    /// the new focus.
-    /// ▶ Continue and the New workspace raise name a workspace that is deliberately
-    /// **not** the focused one ([`resumable`](Self::resumable),
-    /// [`new_workspace_inputs`](Self::new_workspace_inputs)), and there the adoption
-    /// is the correction: without it the raise left the tab bar, the conversation
-    /// list and the bottom composer's bare rung ([`start_bare_inputs`](
-    /// Self::start_bare_inputs)) pointed at the workspace the operator just walked
-    /// away from, and Enter silently prompted it (bl-2826). A failed prepare
-    /// resolved nothing, so it moves nothing.
-    ///
-    /// This is only the *workspace* half of §3.4's "a start focuses what it
-    /// started". The **conversation** half cannot be decided here — the mint
-    /// happens at the fire, one step later — so it rides
-    /// [`AppModel::await_conversation`](Self::await_conversation), which the fire
-    /// leaves for the first roster carrying the started root (bl-49cb).
-    ///
-    /// **Birth gates on nothing brazen knows** (bl-00ee): bl-c3a9 judged the
-    /// world's birth template against brazen's table here, and §16.2's wall made
-    /// that table the workspace's own — born with it, filled after it — so the
-    /// gate is retired rather than moved. A dead provider row is faulted in the
-    /// §9.5 pane and surfaced at the first dispatch (§8.3), both against a wall
-    /// that exists.
-    pub(crate) fn prepare_start(
-        &mut self,
-        lernie: &Cli,
-        bl: &Cli,
-        workspace: &Path,
-        payload: &Payload,
-        ts: &str,
-    ) -> Result<Prepared, String> {
-        let deps = self.boundary_deps(lernie, bl);
-        // It takes the two §3.4 axes and nothing else — the same pair the
-        // boundary's Prepare variant carries — because the rest (roots,
-        // occupied names) re-derives inside the chokepoint from the sources
-        // every caller filled it from: one derivation. This is the
-        // chokepoint's typed door, the same body the dispatch match's Prepare
-        // arm runs (§8.5), so a click, a line and a deposit share it.
-        // The payload's project name, located for the chokepoint (REMOTE §8) —
-        // the same resolution `dispatch`'s own Prepare arm makes.
-        let repo = match payload.project() {
-            Some(name) => self.snap.project_path(&name)?,
-            None => PathBuf::new(),
-        };
-        let prepared = crate::boundary::dispatch::prepare(&deps, ts, workspace, &repo, payload)?;
-        self.focus_workspace(workspace);
-        Ok(prepared)
-    }
-
     /// The live ball with `id` in `project`, from the cached projection (§5.1 #2).
     fn ball_of(&self, project: &Path, id: &str) -> Option<&Ball> {
         self.snap

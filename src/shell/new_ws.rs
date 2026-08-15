@@ -17,7 +17,6 @@
 //! reachable while it stands.
 
 use crate::AppModel;
-use crate::cli_outbound::Cli;
 use crate::theme;
 
 use super::ShellState;
@@ -42,13 +41,7 @@ pub(super) fn open(state: &mut ShellState) {
 /// The §11 name form, painted last over every panel like the §3.6 dialog.
 /// Submit (the button or Enter in the box) raises the workspace through the one
 /// planner and focuses it (§3.4).
-pub(super) fn dialog(
-    ctx: &egui::Context,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub(super) fn dialog(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     if !state.new_ws.open {
         return;
     }
@@ -57,7 +50,7 @@ pub(super) fn dialog(
         .collapsible(false)
         .resizable(false)
         .open(&mut shown)
-        .show(ctx, |ui| body(ui, model, state, lernie, bl));
+        .show(ctx, |ui| body(ui, model, state));
     if !shown {
         // Dismissed by the ✕ — the same verb Escape and the scrim spend
         // (`super::modal`, bl-d921): the draft dies and the keyboard goes back
@@ -70,7 +63,7 @@ pub(super) fn dialog(
 }
 
 /// The body: the invitation, the field, §3.1's verdict inline, and Create.
-fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli, bl: &Cli) {
+fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) {
     ui.label("name this sphere — a client, an employer, personal vs. work:");
     let edit = ui
         .add(
@@ -127,6 +120,6 @@ fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie:
     {
         let inputs = model.new_workspace_inputs(&name);
         state.new_ws = NewWsState::default();
-        super::start_pane::run_prepare(model, state, lernie, bl, inputs);
+        super::start_pane::run_prepare(model, state, inputs);
     }
 }

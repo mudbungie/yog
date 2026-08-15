@@ -1,19 +1,24 @@
-//! The start flow's focus adoption ([`AppModel::prepare_start`], §3.4/§8.1 step 1):
-//! a start focuses the workspace it resolved, so the tab bar, the conversation list
-//! and both composers derive from one fact.
+//! The start flow's first act (§8.1 step 1): `Action::Prepare` through the one
+//! chokepoint — what it resolves, what it refuses, and by which name.
 //!
-//! The regression these pin (bl-2826): New workspace raised a workspace and left
-//! the focus on the previous one, so the bottom composer's bare rung still resolved
-//! to the workspace the operator had just walked away from — Enter fired the goal
-//! into the wrong sphere, silently, with the new workspace left an unprompted husk.
+//! **The §3.4 focus adoption is no longer here** (bl-1747). It rode
+//! `prepare_start`'s synchronous `Ok`; the act crosses the wire now, so the
+//! adoption hangs off the receipt (`shell::acting::start::staged`) and its
+//! witness is the end-to-end raise drive in `shell::acceptance::raise`, which
+//! pins the same regression (bl-2826: New workspace raised a sphere and left the
+//! focus on the previous one, so the bottom composer's bare rung still resolved
+//! to the workspace the operator had just walked away from). What a *failed*
+//! prepare moves is likewise the receipt's business — it answers no `Prepared`,
+//! so nothing is adopted.
 //!
 //! Hermetic: the world is pre-seeded (`models.yaml` present ⇒ `lernie prime` skips,
 //! §16.6 W3), so the only spawn is `lernie new` — a fake that materializes the same
 //! `<ws>/repo.git` marker the real one does, or fails, per test.
 
 use super::{model_focused, world};
+use crate::boundary::{Action, reply::Reply};
 use crate::cli_outbound::Cli;
-use crate::test_support::{authoring_new_arm, spawn_guard};
+use crate::test_support::{authoring_new_arm, engine, spawn_guard};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -40,6 +45,26 @@ fn fake_lernie(dir: &Path, body: &str) -> Cli {
     Cli::new(path)
 }
 
+/// The prepare as a start rung fires it (bl-1747): `Action::Prepare` carrying
+/// §3.4's two axes, through the engine's own chokepoint, answering the
+/// composer's [`Prepared`](crate::start::Prepared) or the refusal.
+fn staged(
+    m: &mut crate::AppModel,
+    lernie: &Cli,
+    inputs: &crate::start::StartInputs,
+) -> Result<crate::start::Prepared, String> {
+    // `bl` is never spawned here: no rung under test mutates a ball.
+    let deps = m.boundary_deps(lernie, &Cli::new("/no/bl"));
+    let action = Action::Prepare {
+        workspace: m.snap.ws_name(&inputs.workspace),
+        payload: inputs.payload.clone(),
+    };
+    match engine::act(m, &deps, "TS", &action)? {
+        Reply::Prepared(prepared) => Ok(prepared),
+        other => panic!("the prepare door answers a Prepared, not {other:?}"),
+    }
+}
+
 /// Lay the world's seed marker so `prime` short-circuits (§16.6 W3) — the ordinary
 /// case, and the one that keeps the fake `lernie` to a single verb.
 fn seed(yog_data_root: &Path) {
@@ -63,15 +88,7 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     let _g = spawn_guard();
 
     let inputs = m.new_workspace_inputs("ops");
-    let prepared = m
-        .prepare_start(
-            &fake_lernie(bin.path(), &news()),
-            &Cli::new("/no/bl"), // the bare rung mutates no ball
-            &inputs.workspace,
-            &inputs.payload,
-            "TS",
-        )
-        .unwrap();
+    let prepared = staged(&mut m, &fake_lernie(bin.path(), &news()), &inputs).unwrap();
 
     assert_eq!(
         prepared.workspace, "ops",
@@ -82,11 +99,12 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     let raised = crate::binding::workspace_path(&w.roots.yog_data, &prepared.workspace);
     assert_ne!(raised, w.ws_cobalt, "the raise always raises a fresh wall");
     assert!(raised.join("repo.git").is_dir(), "`lernie new` ran");
-    assert_eq!(
-        m.focused_workspace(),
-        Some(raised.as_path()),
-        "focus follows the raise — the tab bar and conversation list move with it"
-    );
+    // The adoption the receipt makes (`shell::acting::start::staged`, bl-1747)
+    // — asserted here as the *input* to the retarget below, which is this
+    // file's own claim: whether the seat really makes it is the raise drive's
+    // (`shell::acceptance::raise`), end to end through the real window.
+    m.focus_workspace(&raised);
+    assert_eq!(m.focused_workspace(), Some(raised.as_path()));
     // The bug's sharp end: the BOTTOM composer's bare rung derives from the focus,
     // so Enter now fires into the newly created workspace, not the abandoned one.
     assert_eq!(
@@ -105,15 +123,7 @@ fn a_failed_prepare_moves_the_focus_nowhere() {
     let _g = spawn_guard(); // after the model, per the note above
 
     let inputs = m.new_workspace_inputs("ops");
-    let err = m
-        .prepare_start(
-            &fake_lernie(bin.path(), FAILS),
-            &Cli::new("/no/bl"),
-            &inputs.workspace,
-            &inputs.payload,
-            "TS",
-        )
-        .unwrap_err();
+    let err = staged(&mut m, &fake_lernie(bin.path(), FAILS), &inputs).unwrap_err();
 
     assert!(err.contains("boom"), "the refusal rode back");
     assert_eq!(
@@ -137,15 +147,7 @@ fn a_ball_rung_whose_project_this_world_does_not_enumerate_refuses_by_name() {
     let _g = spawn_guard();
 
     let inputs = m.new_ball_inputs(Path::new("/nowhere/at/all"), "Fresh", "do it");
-    let err = m
-        .prepare_start(
-            &fake_lernie(bin.path(), &news()),
-            &Cli::new("/no/bl"),
-            &inputs.workspace,
-            &inputs.payload,
-            "TS",
-        )
-        .unwrap_err();
+    let err = staged(&mut m, &fake_lernie(bin.path(), &news()), &inputs).unwrap_err();
 
     assert_eq!(err, "unknown project \"/nowhere/at/all\"");
 }

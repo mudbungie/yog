@@ -60,7 +60,6 @@ pub(super) fn render(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     bz: &Cli,
 ) {
     let answer = model.found();
@@ -78,7 +77,7 @@ pub(super) fn render(
     }
     strip(ui, model, state, offered);
     match state.center {
-        CenterTab::Conversation => super::workspace::center(ui, model, state, lernie, bl, bz),
+        CenterTab::Conversation => super::workspace::center(ui, model, state, lernie, bz),
         CenterTab::Config => super::config_edit::center(ui, model, state),
         CenterTab::Login => {
             let state_root = model.state_root().to_path_buf();

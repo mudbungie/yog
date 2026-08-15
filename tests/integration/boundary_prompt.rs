@@ -60,7 +60,6 @@ fn deps(lernie: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
             fleet: std::collections::BTreeMap::new(),
         }),
         caller: yog::boundary::dispatch::Caller::default(),
-        mint_seed: 7,
     }
 }
 
@@ -85,6 +84,8 @@ fn the_prompt_action_fires_detached_and_returns_the_minted_name() {
     let action = Action::Prompt {
         prepared: prepared(ws.path(), ws.path()),
         goal: "make me a plan".into(),
+        // The seat's own §3.3 prediction, carried on the gesture (bl-1747).
+        seed: Some(7),
     };
     let Reply::Started { conversation } = dispatch(
         &d,
@@ -130,6 +131,7 @@ fn a_fork_that_never_lands_is_a_refusal_with_its_synthetic_row() {
     let action = Action::Prompt {
         prepared: prepared(ws.path(), ws.path()),
         goal: "g".into(),
+        seed: Some(7),
     };
     let err = dispatch(
         &d,

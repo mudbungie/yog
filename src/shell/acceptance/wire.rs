@@ -16,6 +16,11 @@
 //! dispatch implementation is added** — REMOTE §11's rejection is about a face,
 //! and this is a wire with the socket taken out for a test that cannot have one.
 //!
+//! **The answering itself lives on the fixture** (`fixture::world`, bl-1747),
+//! because every world needs it now that acts are posted; what is left here is
+//! the settle-then-render *dance* a migrated READ costs, and the witness that a
+//! migrated fold really reads a reply.
+//!
 //! Two things it deliberately does not reproduce, both stated rather than
 //! implied: the answers are **unscoped** (there is no registration to narrow
 //! them against, and the fixture registers no client), and they are **prompt**
@@ -26,10 +31,7 @@
 use super::super::ShellState;
 use super::fixture::World;
 use crate::AppModel;
-use crate::boundary::{Gesture, codec};
 use crate::cli_outbound::Cli;
-use crate::wire::link::LinkEnd;
-use crate::wire::post::Outbox;
 
 /// Paint `f` with the wire answered — the whole settle-then-render dance, which
 /// is three passes and cannot be fewer.
@@ -44,47 +46,13 @@ pub(super) fn wired(
     world: &mut World,
     paint: &mut dyn FnMut(&mut AppModel, &mut ShellState) -> String,
 ) -> String {
-    let (link, mut end) = crate::wire::link::pair();
-    let (post, outbox) = crate::wire::post::pair();
-    world.model.adopt_wire(link);
-    world.model.adopt_post(post);
     let _ = paint(&mut world.model, &mut world.state);
     world.model.refresh();
-    pump(&mut world.model, &mut end, &outbox);
+    world.reads();
+    world.acts();
     let _ = paint(&mut world.model, &mut world.state);
     world.model.refresh();
     paint(&mut world.model, &mut world.state)
-}
-
-/// Answer everything the frame has said this pass — the standing questions on
-/// `end` and the acts posted to `outbox` — through the boundary chokepoints the
-/// wire's own answerer runs.
-///
-/// The two halves are one function because they are one pass of one transport;
-/// what differs is only which chokepoint answers. A read that reaches the act
-/// queue, or an act that reaches the standing set, is a defect in the halves
-/// that write them, so each is refused with the sentence saying so rather than
-/// silently answered by the other.
-fn pump(model: &mut AppModel, end: &mut LinkEnd, outbox: &Outbox) {
-    let deps = model.boundary_deps(&Cli::new("lernie"), &Cli::new("bl"));
-    let now = super::super::clock::now_unix();
-    for question in end.standing() {
-        let landed = match codec::decode(&question) {
-            Ok(Gesture::Ask(query)) => model.answer(&deps, &query, now),
-            Ok(Gesture::Act(_)) => Err("the read path carries no acts".to_owned()),
-            Err(said) => Err(said),
-        };
-        end.publish(&question, landed);
-    }
-    let ts = super::super::now_ts();
-    while let Some((ticket, envelope)) = outbox.try_next() {
-        let landed = match codec::decode(&envelope) {
-            Ok(Gesture::Act(action)) => model.dispatch(&deps, &ts, &action),
-            Ok(Gesture::Ask(_)) => Err("the act path carries no reads".to_owned()),
-            Err(said) => Err(said),
-        };
-        outbox.publish(ticket, landed);
-    }
 }
 
 /// Arm a §4.3 loop on the fixture's own state root and fold it in — the one
@@ -109,10 +77,10 @@ fn arm(world: &mut World) {
 /// witness, so the assertion below is about the *wire* and not about a fixture
 /// that happens to hold no balls.
 fn painted_board(world: &mut World, answered: bool) -> String {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let lernie = Cli::new("lernie");
     let mut paint = |model: &mut AppModel, state: &mut ShellState| {
         crate::paint_probe::paint(|ui| {
-            super::super::board::board(ui, model, state, &lernie, &bl);
+            super::super::board::board(ui, model, state, &lernie);
         })
     };
     if answered {

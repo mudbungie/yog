@@ -9,8 +9,17 @@ use crate::config_edit::brazen::BzRunner;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-/// What a gesture needs to execute (§8.5). `mint_seed` feeds only the start
-/// family — it drives the §3.3 conversation mint.
+/// What a gesture needs to execute (§8.5).
+///
+/// **The §3.3 mint seed is not here** (bl-1747). It was, and it was the one
+/// field a *seat* filled: the window reached into `Deps` to hand over the seed
+/// its greyed prediction had already been drawn off, so the preview and the
+/// fired `--name` agreed. A window that posts its acts over the wire can reach
+/// into nothing — the engine builds `Deps`, one per gesture — so the seed rides
+/// [`Action::Prompt`](super::super::Action::Prompt) instead, which is where it
+/// always belonged: it is a parameter of the gesture, not of the environment,
+/// and a caller that predicted nothing carries `None` and takes the door's own
+/// stamp-derived draw.
 #[derive(Clone)]
 pub struct Deps {
     pub lernie: Cli,
@@ -30,9 +39,6 @@ pub struct Deps {
     /// The published derivation the start/delete families read (§7.2): the
     /// occupied conversation names, the §3.6 confirmation's liveness + claims.
     pub snapshot: Arc<Snapshot>,
-    /// The §3.3 mint's seed — the GUI passes its held preview seed so the
-    /// greyed prediction and the fire agree; headless callers derive one.
-    pub mint_seed: u64,
     /// Who is asking, and who else is connected (REMOTE §4, §5).
     pub caller: Caller,
 }

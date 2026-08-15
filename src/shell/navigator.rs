@@ -18,13 +18,7 @@ use super::menus::{BallRef, Target};
 /// tabs. Nothing here paints a surface of its own — the Login pane used to
 /// fold open *inside* this column, which is how ten provider rows came to
 /// share a 200 pt panel with the roster (bl-1ca2).
-pub fn side_panel(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub fn side_panel(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
     // Every row here truncates rather than extends (bl-9669): a row that
     // overflows widens the panel's `min_rect`, and egui *stores that rect as
     // the panel width*, so one long title ratchets the left column wider every
@@ -33,7 +27,7 @@ pub fn side_panel(
     ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
     super::conv_list::conversations(ui, model, state, lernie);
     ui.separator();
-    balls_section(ui, model, state, lernie, bl);
+    balls_section(ui, model, state, lernie);
     // The workspace's registered clients (REMOTE §5, bl-4e08): who participates
     // in it, who is connected right now, and what each offers. It sits with the
     // balls section because both answer "what does this workspace have", and it
@@ -70,13 +64,7 @@ fn entry_mark(tab: CenterTab) -> &'static str {
 /// The minimal collapsible balls section (§11): the start affordances and the
 /// focused workspace's bound-ball rows; the full per-project views return in
 /// the ball-views wave. The fold is the persisted §4.1 collapse override.
-fn balls_section(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+fn balls_section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
     let collapsed = model.is_collapsed("balls");
     let arrow = if collapsed { "▶" } else { "▼" };
     if ui
@@ -93,7 +81,7 @@ fn balls_section(
         return;
     }
     ui.indent("balls", |ui| {
-        super::board::board(ui, model, state, lernie, bl);
+        super::board::board(ui, model, state, lernie);
         // The focused workspace's remaining ball rows (§3.5 claimant join), id +
         // badge: the delivered ones. A *bound* ball is rendered in full by the
         // ▶ Continue row above, so it is not repeated here as a bare id

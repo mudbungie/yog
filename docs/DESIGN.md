@@ -945,9 +945,9 @@ worse than none. §8.5 supplied it.
 
 - **The seat is the `Prompt` door** (`boundary::dispatch::prompt`, gate in
   `boundary::ceiling`). Every drone yog ever births is fired by that one
-  function — the §8.5 dispatch match's `Prompt` arm delegates to it and the
-  frame's `fire_prompt` calls it directly — so one gate covers the click, the
-  slash line, the deposit and `yog gesture` at once. **There is no second
+  function — the §8.5 dispatch match's `Prompt` arm delegates to it, and since
+  bl-1747 the frame's own fire *is* that arm, posted over the wire — so one
+  gate covers the click, the slash line, the deposit and `yog gesture` at once. **There is no second
   gate anywhere**, which is the whole point of seating it at a chokepoint.
 - **A birth is the only thing gateable, and that is a ruling, not an
   omission.** `Message` is *not* gated: refusing to answer a drone that is
@@ -3305,14 +3305,14 @@ the config-lineage tip's two strings. The rule is not *which module a type lives
 in* — it is **whether the wire can say it**, so a `pub` engine type is fine
 wherever the codec spells it and banned where it does not.
 
-**The GUI is one serialization of this surface.** The shell's click-glue
-constructs variants and reaches the chokepoint; its serialization is the in-RAM
-variant itself for as long as it stays in process. **Since bl-4841 the window's
-acts mostly do not**: REMOTE §1.2 makes it a wire client of its own engine, so a
-click *posts* the codec envelope over loopback and the receipt lands frames
-later (REMOTE §9.8) — the same `boundary::dispatch`, reached the way a phone
-seat reaches it. `AppModel::dispatch` (the thin covered wrapper) remains for the
-four gestures whose reply still gates a frame-side fact, and goes when they do. **The headless serialization is the `boundary::codec` JSON
+**The GUI is one serialization of this surface, and it is a WIRE one.** The
+shell's click-glue constructs variants and reaches the chokepoint — but since
+bl-4841/bl-1747 it never reaches it in process: REMOTE §1.2 makes the window a
+wire client of its own engine, so a click *posts* the codec envelope over
+loopback and the receipt lands frames later (REMOTE §9.8), against the same
+`boundary::dispatch` a phone seat reaches. `AppModel::dispatch` is **gone**: it
+existed for the four gestures whose reply gated a frame-side fact, and those
+facts hang off the receipt now (`shell::acting`). **The headless serialization is the `boundary::codec` JSON
 envelope** — one flat object, `op` the discriminant — and both codec
 directions plus the dispatch match are exhaustive over the enums, so **a new
 gesture without a headless spelling fails to compile**, never review.
@@ -3429,11 +3429,12 @@ implementations.
 **Its seats.** The composer (§11): a draft starting with `/` is a command, and
 Enter runs it — **no new control** (bl-8aab), one re-labelled button, and the
 answer rendered as the reply's own JSON (`reply::encode`), the same bytes the
-deposit's reply file carries. The start family goes through the frame's typed
-doors (`prepare_start`, `fire_prompt`) rather than the raw dispatch match — not
-a second implementation, but the frame-only aftermath beside it: the §3.4
-workspace adoption, the held start claim, the §3.3 mint seed a landed fire
-spends. A headless consumer must not do those; a window must. And the terminal:
+deposit's reply file carries. The start family needed the frame's own typed
+doors until bl-1747, for the aftermath rather than the act: the §3.4 workspace
+adoption, the held start claim, the §3.3 mint seed a landed fire spends — which
+a headless consumer must not do and a window must. It posts the ordinary
+`Prepare`/`Prompt` gestures now and hangs all three off the **receipt**
+(`shell::acting`), so the seat keeps its aftermath without keeping a door. And the terminal:
 `yog gesture` takes a line as readily as an envelope, with `--ws / --agent /
 --project / --as / --prepared` stating the context a seat with no selection
 lacks — the line
@@ -3638,8 +3639,8 @@ the composed world at the moment of use rather than carrying a stored copy —
 one home, no drift, and both faces gate identically. The consumer's interim
 (leave the table empty because brazen was unasked) is retired. bl-3f46 wrote
 this for the §9.2 workspace-birth gate as well; that gate is gone (§9.2,
-bl-00ee) and the seat-side plumbing that handed the GUI's cached rows into
-`prepare_start` went with it, so what asks today is the §9 config family, each
+bl-00ee) and the seat-side plumbing that handed the GUI's cached rows into the
+start flow went with it, so what asks today is the §9 config family, each
 against the wall of the workspace whose file it judges.
 
 **Two frame-only entries remain, and they are the §8.1 pattern, not exceptions.**
@@ -3649,11 +3650,13 @@ RAM draft** with a load-time snapshot and the §9 hash guard is over that draft:
 it refuses when the file moved under the operator. A deposit has no such draft —
 it states its whole text in one atomic instruction, so load and apply are
 microseconds apart and the guard degenerates to the must-not-exist check a new
-file wants. Both enter the same §9 pipeline, exactly as `prepare_start` /
-`fire_prompt` enter the same chokepoint the `Prepare`/`Prompt` arms do: one
-implementation, two entries, the frame-only state beside it. Every other config
-seat — the lineage Send, the marks buttons, the picker's selection — now
-constructs a variant and calls `AppModel::dispatch`.
+file wants. Both enter the same §9 pipeline, exactly as the §8.1 start
+family's two typed doors are the arms the `Prepare`/`Prompt` gestures delegate
+to: one implementation, whichever spelling asked for it, with the frame-only
+state beside it rather than inside it (REMOTE §9.8: the window posts both
+gestures like any other and holds their aftermath on the receipt). Every other
+config seat — the lineage Send, the marks buttons, the picker's selection —
+constructs a variant and posts it.
 
 **§8.3 login stays as it is.** Its headless spelling already exists verbatim as
 `yog bz --login` (§16.7 W10), so a variant would be a second spelling of a
@@ -3792,7 +3795,7 @@ stating *I have handled this*, and it changes what every other seat is told
 needs attention. That does something, so it crosses. The window keeps its
 focus-tick entry and gains no widget (V5's burden check: "headless mode adds no
 widget anywhere"); the two entries share one implementation, exactly as
-`prepare_start`/`fire_prompt` share the `Prepare`/`Prompt` bodies.
+every seat's start shares the `Prepare`/`Prompt` bodies.
 
 **Forwarding needs no verb.** "Read, answer, or forward" is three things to do
 with a row and two gestures: forwarding an escalation is `Action::Message`
@@ -7775,6 +7778,7 @@ beside `main.rs`.
 | `src/shell/acceptance/echo.rs` (excl.) | the bl-915e drive (a start and a follow-up each read on the frame *immediately* after Enter, with the substrate pinned to prove no derivation ran, then landed and re-read to prove the echo gave its seat up rather than doubling it) |
 | `src/shell/acceptance/elision.rs` (excl.) | the §11 rule 1b regression on the two witness rows (the Login verb behind the longest provider name, `assign → <ws>` behind an arbitrary ball title), each asserted in both directions and against the panel's own edge, on painted glyphs rather than galley text — and beside them L4's other question, *where* a row cuts (bl-3aa1): two activity ops sharing the audit's invariant path prefix are laid in the real trail, and the glyphs show each row ending in the leaf and agent id that tell it from the other, where the head-keeping cut painted both rows as one identical line |
 | `src/shell/acceptance/first_run.rs` (excl.) | the bl-3b62 drive that a stranger reaches a **populated** §8.3 roster from the empty world before spending a turn — Ctrl+Shift+3 from inside the bootstrap box, every row on the glass with its credential fact, the sphere named (and named *derived*, since a focused world names its own), and the wall those rows and any sign-in are bound to proved to be the one the first message founds |
+| `src/shell/acceptance/fixture/world.rs` (excl.) | the acceptance `World` and **the wire standing behind it** (REMOTE §9.8, bl-1747): the populated fixture a test drives, its derivation stepped by hand, and the two channel ends the frame's reads and acts are answered on — every act the window fires is posted now, so a fixture with nothing behind its end of the channel is a window whose every gesture is refused. It stands in for the transport and nothing else: the questions go through `AppModel::answer` and the acts through `boundary::dispatch::dispatch` over a `ui.json` opened fresh per gesture, which is answer 3's *engine writes, window adopts* paid in full. Split from `fixture.rs` at §12's budget on the seam the two halves already had — the builder mints the world's bytes once, this holds what a test then does to it |
 | `src/shell/acceptance/floor.rs` (excl.) | the §11 **focus floor** (bl-478d: Tab steps the frame's focus control by control, and Space presses what it reached — driven onto the balls fold, whose press is a durable §4.1 fact) |
 | `src/shell/acceptance/{focus,walk}.rs` (excl.) | the keyboard driver and the §11 focus-discipline drive it steers — `focus` its pointer/launch half, `walk` its keyboard half (bl-c21f: a roster step lands the composer in both directions, Ctrl+↓ continues the walk from inside the box, and Escape still releases to a live bare plane), each asserting the model's selection beside egui's `wants_keyboard_input` so a walk that never walked cannot pass |
 | `src/shell/acceptance/geometry.rs` (excl.) | the §11 panel-geometry regression |
@@ -7809,6 +7813,8 @@ beside `main.rs`.
 | `src/shell/acceptance/wire.rs` (excl.) | the acceptance world's own answerer (bl-adcb): the frame's standing questions taken off the `LinkEnd` exactly as the asker takes them, decoded by the one codec and answered by `AppModel::answer` — the transport stood in for, never a second dispatch, because a fixture mints no certificate and binds no port. Its `wired` helper pays the settle-then-render shape out in three paint passes, which is what the window does over half a second; and its own two-direction witness pins that the balls fold paints the board a reply carries and **nothing** with nobody answering |
 | `src/shell/acceptance/wound.rs` (excl.) | the bl-55d8 drive (a conversation whose latest step has an empty `response.json` beside a non-empty `stderr.log`, rendered on the whole window: the adapter's own sentence is in the paint output, the retired *"activity trail below"* pointer is not, and the bl-90bf grace gate still withholds it on the frame before the window elapses — driven on a `FakeClock` swapped into `ShellState::wound_grace`, since the window is wall-clock time and a frame test must not sleep through it) |
 | `src/shell/act.rs` (excl.) | the shell's one spelling of a wire **act** (REMOTE §1.2, §9.8; bl-4841) — `src/shell/wire.rs`'s twin on the write side. Two shapes and no more: the act whose receipt is *nothing* (every §8.2 verb whose durable record is its own `ops.jsonl` line — it posts and holds no ticket, because nobody read the reply before either), and the act whose receipt is a *sentence* (the four surfaces that paint what came back — they gain a ticket beside the status line they already held). The in-flight state is that same line with an ellipsis on it rather than a second phrasing to learn, and a clean landing simply drops the mark. The `lernie`/`bl` pair does not come here: a posted act carries the gesture and nothing else, the verb binaries being the engine's |
+| `src/shell/acting.rs` (excl.) | **the act whose receipt gates a frame-side state change** (REMOTE §1.2, §9.8; bl-1747) — the third kind, beside `act.rs`'s two, and the last four gestures `AppModel::dispatch` existed for: `Message`, the §8.1 `Prepare`/`Prompt` doors and the §8.5 line's act arm. Two orthogonal axes, because a receipt owes two different parties: `Owes` is what the *act* re-derives (a fact about the gesture, the same however it was asked for — the §3.4 echo, the workspace adoption, the mint-seed spend and the start claim), `Seat` is what the *hand that fired* shows for it (a draft to empty, a reply to render, or neither). One hold at a time and the newest wins, which is `act::Held`'s rule for its reason: an act is never unsent |
+| `src/shell/acting/start.rs` (excl.) | the §8.1 start family's two doors, posted and held — split at §12's budget on the seam its parent's doc draws: everything there is the hold, and this is the one `Owes` pair whose landing is itself a step in a longer gesture. The composer's own Enter carries its typed text through the `Prepare` into a chained `Prompt`, so the box empties when the *second* act lands and the whole gesture is judged once, exactly as the synchronous pair was; every other rung stops at the goal box, which is §3.4's own table |
 | `src/shell/activity.rs` (excl.) | §4.2 — the chip's counts still off the snapshot, the expanded trail a `Reply::Ops` off the wire since bl-adcb (REMOTE §1.2), asked only while the pane is open and bounded by `opslog::OPS_TAIL`, the log's own one number |
 | `src/shell/alerts.rs` (excl.) | the §6 desktop escalation's whole shell face (bl-e160) — one standing `Query::Attention` (REMOTE §9.7, bl-f297) into the pure `crate::alert` decision, plus the two things only a window can supply: the OS's answer to *do I have focus*, and a thread to spawn the notifier on so the frame never waits for a desktop. The one branch it owns is §6's ruling that an unanswered or refused frame is not a reading of the queue, so the baseline does not move |
 | `src/shell/banner.rs` (excl.) | the §7.3 last-failure widget every failing surface paints and the one ack that quiets them all, split out of `mod` at the cap on a real seam (bl-e160: `mod` is the *window assembly* — which panel sits where, in what order — while a banner is a widget painted inside one) |
@@ -7873,6 +7879,7 @@ beside `main.rs`.
 | `src/steps_view/{mod,detail,columns,render,drill,wound,wire,wire/decode}.rs` | the step inspector, incl. the §7.3 no-response wound (§11 Steps). Both tiers are cut twice, read from write: `mod`+`detail` are the list/drill-in **reads**, `render`+`drill` their **paints**, and `columns` is the §11 column table — header, hover explanation and cell in one home, so no field paints without its name (bl-3ffc). `wire` is the §8.5 spelling of **both** tiers, cut along that same read seam (bl-6233), with `wire/decode` its other direction at the §12 budget (bl-7067) — also the one home of the `BudgetSpend` shape, which the §3.5 board figure spends rather than keeping a second wording of four counters |
 | `src/tail.rs` | the §11 tail idiom in one home (bl-8c13): the `stick_to_bottom` anchor and the top pad that seats an underfull body on the bottom edge, taken together by every tail surface and restated by none; since bl-929d it also hands back the body height it already measures, so a content-sized region (the inbox-composer) derives its extent from the one measurement |
 | `src/test_support{.rs,/wire.rs,/workspace.rs,/world.rs}` | the test-only scaffolding every test module in this binary shares: the spawn/env serialization locks (AGENTS.md rule 7's sanctioned carve-out), the REMOTE §9.5 wire's key material minted at test runtime by the same `openssl` act an operator performs (a certificate fixture is never committed — bl-b6fa), a real lernie workspace on disk for §8.6 control authoring, and the §16.2 fixture world every test that touches a §9 destination or a §16.3 space reads and writes through |
+| `src/test_support/engine.rs` | **where the engine stands, for a test that drives a gesture** (REMOTE §9.8, bl-1747): one gesture through `boundary::dispatch::dispatch` over a `ui.json` opened fresh, which is what the wire's listener does. The window holds no dispatch of its own any more, so a unit test that used to reach `AppModel::dispatch` was standing in the window's shoes and stands in the engine's now — one spelling of that, so a test cannot quietly re-acquire the second execution path §1.2 refuses. The fresh `UiState` is the point: a helper handing out `&mut model.ui` would be testing a path that no longer exists |
 | `src/theme/{mod,badges,mark,role}.rs` | the single colour/visuals/font authority + the §11 badge mappings (glyph + hue + words in one home, `doing_badge` the mark's hue-and-words pair, `verdict_badge` the VISION §4.9 standing verdict's) + the two mark seats: the resting wordmark and the live mark's tint assembly and worded roster (bl-b768) + `role` the §11 role stripe's one home (bl-3acb): the byte-derived `Role` vocabulary, its hue-and-words pair, and the stripe painter both message seats draw through |
 | `src/theme/icon.rs` | the mark's constants, its compass geometry and the `deep` hue derivation; assembles the layer order (§11), tinted or at rest. Its corpus (`icon/tests/*`, covered by this row) is cut three ways — what the pixels say, what the compass guarantees, and that every checked-in artifact still decodes to the mark; `icon/paint/tests.rs` reads the painted layer back the same way |
 | `src/theme/icon/arc.rs` | the compass: an arc from two endpoints and a sagitta, and the stroke and lune built on it |

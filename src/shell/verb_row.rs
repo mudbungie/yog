@@ -105,12 +105,11 @@ pub(super) fn verb_buttons(
                 // refused send leaves the draft in place to be fixed and
                 // re-sent.
                 super::focus::request(state);
-                // The draft is RAM until *sent*: clear only on a clean
-                // deposit (§5.3).
-                let cleared = super::dispatch::message(model, lernie, bl, &ctx.ws, agent, &said);
-                if cleared {
-                    state.actions.drafts.set(ctx.key.clone(), String::new());
-                }
+                // The draft is RAM until *sent*: it clears on a clean deposit
+                // and no sooner (§5.3), which over the wire is a fact the
+                // **receipt** carries — so the clear rides the ticket this post
+                // holds (REMOTE §9.8, bl-1747) rather than a reply read here.
+                super::dispatch::message(model, state, &ctx.key, &ctx.ws, agent, &said);
             }
             nudge_control(ui, model, ctx, agent);
             hold_controls(ui, model, ctx, agent);
@@ -134,14 +133,14 @@ pub(super) fn verb_buttons(
                 // The bare / path rung (§3.4): Enter → prompt into the focused
                 // workspace. A non-empty dir fires the path rung; the whole
                 // flow rides the one planner (§8.1), read back below.
-                if super::fire::fire_start(model, state, lernie, bl, &said) {
-                    // Only the draft clears (§5.3), and only **this** target's
-                    // (bl-a69a). The work directory survives a send: it is a
-                    // birth parameter the block states, not a message being
-                    // composed, and an operator working in one tree starts
-                    // their next conversation there too (bl-7927).
-                    state.actions.drafts.set(ctx.key.clone(), String::new());
-                }
+                // Only the draft clears (§5.3), and only **this** target's
+                // (bl-a69a) — carried on the ticket, because the launch is two
+                // posted acts and the box empties when the second one lands.
+                // The work directory survives a send: it is a birth parameter
+                // the block states, not a message being composed, and an
+                // operator working in one tree starts their next conversation
+                // there too (bl-7927).
+                super::fire::fire_start(model, state, &ctx.key, &said);
             }
         }
     });

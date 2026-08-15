@@ -114,7 +114,7 @@ pub(super) fn render(
         super::settings::render(ui, cap, model, state, bz);
     }
     if let Some(cap) = crate::layout::share(pane, ui.available_height(), 0.0).filter(|_| goal) {
-        if let Some(height) = start_box(ui, model, state, (lernie, bl), (cap, window.y)) {
+        if let Some(height) = start_box(ui, model, state, (cap, window.y)) {
             model.settle_panel_size(Panel::StartGoal, height, window.y, settled);
         } else {
             // The share is also the fold line's ceiling (§11 inbox-composer,
@@ -142,7 +142,7 @@ pub(super) fn render(
     if conversation && crate::layout::share(pane, ui.available_height(), 0.0).is_some() {
         super::flight_strip::render(ui, model);
     }
-    body(ui, model, state, clis);
+    body(ui, model, state, (lernie, bz));
 }
 
 /// The §3.4 start draft in the goal box's seat, when one is pending — `None`
@@ -157,10 +157,8 @@ fn start_box(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    clis: (&Cli, &Cli),
     bounds: (f32, f32),
 ) -> Option<f32> {
-    let (lernie, bl) = clis;
     let (cap, window_y) = bounds;
     state.start.pending.as_ref()?;
     Some(
@@ -170,7 +168,7 @@ fn start_box(
             .height_range(Panel::StartGoal.min_size().min(cap)..=cap)
             .show_inside(ui, |ui| {
                 super::pin_to_panel(ui);
-                super::start_pane::composer(ui, model, state, lernie, bl);
+                super::start_pane::composer(ui, model, state);
             })
             .response
             .rect
@@ -195,8 +193,8 @@ fn start_box(
 /// deliberate slack for anti-aliasing; against an accessory docked hard beneath
 /// it, those points are the bottom of a banner glyph painted over the
 /// composer's first row. The viewport is the pane's, so the clip is too.
-fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, clis: (&Cli, &Cli, &Cli)) {
-    let (lernie, bl, bz) = clis;
+fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, clis: (&Cli, &Cli)) {
+    let (lernie, bz) = clis;
     ui.set_clip_rect(ui.clip_rect().intersect(ui.available_rect_before_wrap()));
     egui::ScrollArea::vertical()
         .id_salt("center-body")
@@ -206,6 +204,6 @@ fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, clis: (
             // width nothing can ever reach — every row below would truncate to
             // it and be hard-cut at the real edge, ellipsis and all (bl-7414).
             super::row::shown_width(ui);
-            super::center::render(ui, model, state, lernie, bl, bz);
+            super::center::render(ui, model, state, lernie, bz);
         });
 }

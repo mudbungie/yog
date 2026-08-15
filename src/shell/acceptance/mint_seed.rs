@@ -16,7 +16,6 @@
 
 use super::fixture::{MINT_SEED, MINTED, MINTED_FIRST, fake_lernie, seed_world, world};
 use super::screen::{Screen, press};
-use crate::cli_outbound::Cli;
 use crate::start::Prepared;
 use crate::test_support::spawn_guard;
 use tempfile::tempdir;
@@ -114,7 +113,6 @@ fn a_launch_that_never_left_the_ground_keeps_its_prediction() {
     // `Screen::new`'s deliberately absent `lernie`: the spawn fails, so the fire
     // minted nothing and stamped nothing.
     let screen = Screen::new();
-    let absent = Cli::new("yog-absent-lernie");
     let ws = world.ws.clone();
     world.state.start.pending = Some(Prepared {
         workspace: crate::naming::leaf(&ws),
@@ -125,15 +123,10 @@ fn a_launch_that_never_left_the_ground_keeps_its_prediction() {
 
     let before = predicted(&screen.text(&mut world));
     let seed = world.state.start.mint_seed;
-    assert!(
-        !super::super::start_pane::send_pending(
-            &mut world.model,
-            &mut world.state.start,
-            &absent,
-            &absent
-        ),
-        "the absent binary fails the launch"
-    );
+    // The Send posts (REMOTE §9.8) and the next frame folds what came back —
+    // here, a spawn that never launched.
+    super::super::start_pane::send_pending(&mut world.model, &mut world.state);
+    let after = predicted(&screen.text(&mut world));
 
     assert_eq!(
         world.state.start.mint_seed, seed,
@@ -144,8 +137,7 @@ fn a_launch_that_never_left_the_ground_keeps_its_prediction() {
         "the goal stands, so the prediction over it must too"
     );
     assert_eq!(
-        predicted(&screen.text(&mut world)),
-        before,
+        after, before,
         "and the retry is offered the same name the first attempt promised"
     );
 }
@@ -168,13 +160,12 @@ fn the_ball_rungs_send_retires_the_seed_the_same_way() {
 
     // The §8.1 pane's Send — the other hand on the same trigger (the §11 Enter
     // binding calls this too). One rule, both hands: the ball rung's fire spends
-    // its prediction exactly as the composer's does.
-    assert!(super::super::start_pane::send_pending(
-        &mut world.model,
-        &mut world.state.start,
-        &lernie,
-        &lernie
-    ));
+    // its prediction exactly as the composer's does, and both spend it on the
+    // **receipt** the frame after (REMOTE §9.8).
+    let screen = Screen::with_lernie(lernie);
+    screen.idle(&mut world);
+    super::super::start_pane::send_pending(&mut world.model, &mut world.state);
+    screen.idle(&mut world);
     assert_ne!(
         world.state.start.mint_seed, seed,
         "a landed ball-rung fire retires its seed too"

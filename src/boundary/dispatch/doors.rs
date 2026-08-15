@@ -63,6 +63,12 @@ pub fn prepare(
 /// The §4.11 item-8 **confinement refusal** rides the same door, and before the
 /// ceiling: a workspace that requires a confinement layer this platform does
 /// not have fires nothing at all, so there is no spend to judge.
+///
+/// **`seed` is the firing seat's own §3.3 prediction** (bl-1747), and `None` is
+/// a caller that made none — a deposited line, the §4.3 loop — for which this
+/// moment's stamp is the draw. One default, at the one door that mints, rather
+/// than a `Deps` field every intake filled the same way and one seat filled
+/// differently.
 pub fn prompt(
     deps: &Deps,
     ui: &UiState,
@@ -70,6 +76,7 @@ pub fn prompt(
     workspace: &std::path::Path,
     prepared: &crate::start::Prepared,
     goal: &str,
+    seed: Option<u64>,
 ) -> Result<String, String> {
     control::confinement_gate(workspace)?;
     ceiling::gate(ui, &deps.state_root, ts, workspace, prepared.origin)?;
@@ -105,7 +112,9 @@ pub fn prompt(
             goal: goal.to_owned(),
         },
         &answer::names_in(&deps.snapshot, workspace),
-        &SplitMix64::from_seed(deps.mint_seed),
+        &SplitMix64::from_seed(
+            seed.unwrap_or_else(|| crate::ui_state::content_hash(ts.as_bytes())),
+        ),
     )
     .map_err(|e| e.to_string())
 }

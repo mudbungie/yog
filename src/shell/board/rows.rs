@@ -51,7 +51,6 @@ pub(super) fn board_row(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     row: &crate::board::BoardRow,
     affordances: &Affordances,
 ) {
@@ -61,10 +60,10 @@ pub(super) fn board_row(
         affordances.resumes.get(&row.id),
     ) {
         (Column::Claimed, _, Some(inputs)) => {
-            continue_row(ui, model, state, lernie, bl, inputs.clone());
+            continue_row(ui, model, state, lernie, inputs.clone());
         }
         (Column::Ready | Column::Gated, Some(inputs), _) => {
-            ready_row(ui, model, state, lernie, bl, inputs.clone());
+            ready_row(ui, model, state, lernie, inputs.clone());
         }
         _ => read_row(ui, model, state, lernie, row),
     }

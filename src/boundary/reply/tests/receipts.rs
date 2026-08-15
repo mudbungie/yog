@@ -78,6 +78,7 @@ fn the_fan_reply_rows_re_enter_as_prompt_gestures() {
             crate::boundary::Action::Prompt {
                 prepared,
                 goal: "g2".into(),
+                seed: None,
             }
         ))
     );

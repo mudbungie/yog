@@ -10,20 +10,20 @@
 //! chokepoint and the enablement predicates it honours are tested; this file
 //! only routes.
 //!
-//! **Four of the five cross the wire** (bl-4841). Stop, Scan, Nudge and the §8.6
-//! hold answer read no receipt and never did — their durable record is the
-//! `ops.jsonl` line — so they post and hold nothing, and the `Cli` pair went
-//! with the dispatch. [`message`] is the one that stays in process for now: its
-//! reply gates two frame-side facts in the same breath, the draft clearing and
-//! the §3.4 pending echo, and moving those onto a receipt is REMOTE §9.8's
-//! named residual.
+//! **All five cross the wire** (bl-4841, completed bl-1747). Stop, Scan, Nudge
+//! and the §8.6 hold answer read no receipt and never did — their durable
+//! record is the `ops.jsonl` line — so they post and hold nothing. `Message`
+//! was the last one held back, because its reply gated two frame-side facts in
+//! the same breath: the draft clearing and the §3.4 pending echo. Both now hang
+//! off the **receipt** ([`super::acting`]) rather than a synchronous `Ok`, so
+//! this file constructs the variant and hands it over like every other verb,
+//! and the `Cli` pair went with the last dispatch.
 //!
 //! No error is ever printed and dropped (INV-2): every outcome is the durable
 //! `ops.jsonl` line the activity pane and the §7.3 banner read back per frame.
 
 use crate::AppModel;
-use crate::boundary::{Action, reply};
-use crate::cli_outbound::Cli;
+use crate::boundary::Action;
 use std::path::Path;
 
 use super::ShellState;
@@ -83,33 +83,21 @@ pub(super) fn scan_ws(model: &mut AppModel, ws: &Path) {
     );
 }
 
-/// Send one message (§8.2's resume gesture) — the composer's Message button and
-/// Enter, one body: the boundary variant, dispatched, then the ordinary
-/// lernie-verb aftermath. Returns whether the draft clears (a clean send only).
+/// Send one message (§8.2's resume gesture) — the composer's Message button
+/// and Enter, one body: the boundary variant, posted, with the draft `key` it
+/// was composed in held for the receipt. **Whether the words leave the screen
+/// is the engine's answer, not the click's** (§5.3, REMOTE §9.8): a clean
+/// deposit clears the draft and raises the §3.4 echo; anything else leaves them
+/// where they can be fixed.
 pub(super) fn message(
     model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
+    state: &mut ShellState,
+    key: &crate::actions::DraftKey,
     ws: &Path,
     agent: &str,
     content: &str,
-) -> bool {
-    let deps = model.boundary_deps(lernie, bl);
-    let action = Action::Message {
-        workspace: model.snap.ws_name(ws),
-        agent: agent.to_owned(),
-        content: content.to_owned(),
-    };
-    let sent = model.dispatch(&deps, &super::now_ts(), &action);
-    let cleared = after_lernie(&sent, model);
-    // A clean send holds §7.2's pending echo — the deposit is piped and its
-    // `NNN-user.md` only appears on the driver's next step boundary, so without
-    // this the operator's own words leave the screen with the draft. Gated on
-    // the same predicate the draft clear is: a refused send has nothing to echo.
-    if cleared {
-        model.await_message(ws, agent, content);
-    }
-    cleared
+) {
+    super::acting::message(model, state, key, ws, agent, content);
 }
 
 /// Fire inference on one conversation from where it already stands (§8.2,
@@ -144,13 +132,4 @@ pub(super) fn answer_hold(
             ruling,
         },
     );
-}
-
-/// Fold a `lernie` verb's aftermath: refresh the ops tail; return whether it
-/// cleanly succeeded ([`reply::cleared`], the covered predicate) so a draft
-/// clears only on a clean send. The banner is not touched here — it is derived
-/// per frame from the refreshed tail (§7.3).
-pub(super) fn after_lernie(result: &Result<reply::Reply, String>, model: &mut AppModel) -> bool {
-    model.after_lernie_verb();
-    reply::cleared(result)
 }

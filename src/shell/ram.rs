@@ -140,6 +140,12 @@ pub struct ShellState {
     /// The §11 `new` form's RAM: the workspace name being typed (§3.1). The
     /// tab and the `w` binding open this one form.
     pub new_ws: NewWsState,
+    /// **The act this window has fired and not yet heard back about** (REMOTE
+    /// §9.8, bl-1747): one hold, for the composer's box and the §8.5 line —
+    /// the two seats whose receipt gates a frame-side fact rather than a
+    /// sentence. `None` on every frame but the handful after a gesture, and the
+    /// §3.6 dialogs hold their own beside their own confirmations.
+    pub(super) acting: Option<super::acting::Acting>,
     /// The last §8.5 line's answer or refusal, verbatim (§5.3 RAM, per
     /// instance): a reply's own JSON, or the reason the line was not a gesture.
     /// It is what a typed control says back — the composer's counterpart of the
@@ -213,6 +219,7 @@ impl ShellState {
             delete: DeleteState::default(),
             delete_agent: DeleteAgentState::default(),
             new_ws: NewWsState::default(),
+            acting: None,
             slash: None,
             alerts: crate::alert::Announced::default(),
             wound_grace: WoundGrace::new(clock),

@@ -202,11 +202,9 @@ impl Engine {
                 home: world.home_dir(),
                 yog_data_root: world.yog_data_root(),
                 balls_state_root: model.balls_state_root(),
-                // Both are replaced per tick — the snapshot by what the worker
-                // has published, the seed by that tick's own stamp.
+                // Replaced per tick by what the worker has published.
                 snapshot: crate::state::latest_snapshot(&model.snapshot_cell()),
                 caller: crate::boundary::dispatch::Caller::default(),
-                mint_seed: 0,
             },
             cell: model.snapshot_cell(),
             clock: pilot_clock,

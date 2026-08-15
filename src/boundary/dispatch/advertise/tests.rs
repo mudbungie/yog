@@ -39,7 +39,6 @@ fn deps(state_root: &Path, client: Client) -> Deps {
             client,
             ..Caller::default()
         },
-        mint_seed: 7,
     }
 }
 

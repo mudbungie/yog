@@ -239,15 +239,21 @@ fn every_join_state_round_trips_inside_an_existing_ball() {
 fn every_origin_round_trips_inside_a_prompt() {
     for origin in [Origin::Balls, Origin::Conversation, Origin::World] {
         for binding in [None, Some(p("/target"))] {
-            rt(Gesture::Act(Action::Prompt {
-                prepared: Prepared {
-                    workspace: "ws".into(),
-                    binding,
-                    goal: "the goal".into(),
-                    origin,
-                },
-                goal: "edited goal".into(),
-            }));
+            // Both halves of the §3.3 seed (bl-1747): a seat that predicted a
+            // name carries it, and one that predicted none carries `None` —
+            // absent and present are different facts, so both cross.
+            for seed in [None, Some(0xc0df)] {
+                rt(Gesture::Act(Action::Prompt {
+                    prepared: Prepared {
+                        workspace: "ws".into(),
+                        binding: binding.clone(),
+                        goal: "the goal".into(),
+                        origin,
+                    },
+                    goal: "edited goal".into(),
+                    seed,
+                }));
+            }
         }
     }
 }
@@ -265,4 +271,17 @@ fn a_stop_without_the_children_field_defaults_to_false() {
             children: false,
         }))
     );
+}
+
+/// **The start family's envelope builder answers `null` to anything else**
+/// (bl-1747). Its one caller is the action table's `Prepare | Prompt` arm, so
+/// nothing else can reach it in production — but a fallback nobody can reach is
+/// still one somebody could widen that arm onto, and `null` is the honest
+/// answer: an envelope with no `op`, which decode refuses by name. Pinned here
+/// rather than assumed, so the pair and its fallback are read together.
+#[test]
+fn the_start_envelope_answers_null_to_anything_but_its_own_two() {
+    let value = encode_start(&Action::Ack);
+    assert!(value.is_null(), "not a start gesture, so not an envelope");
+    assert!(decode(&value).is_err(), "and decode refuses it");
 }
