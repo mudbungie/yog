@@ -83,7 +83,7 @@ fn badge_labels_each_join_state() {
 /// caller reads its fields without holding the `rows` borrow).
 fn find(rows: &[JoinRow], project: &str, ball: &str) -> JoinRow {
     rows.iter()
-        .find(|r| r.project.as_path() == Path::new(project) && r.ball_id == ball)
+        .find(|r| r.project == crate::naming::leaf(Path::new(project)) && r.ball_id == ball)
         .cloned()
         .unwrap_or_else(|| panic!("no row for {project}/{ball}"))
 }
@@ -134,12 +134,12 @@ fn join_enumerates_every_row_state() {
     let workspaces = vec![named("cobalt", "/w/cobalt"), named("spare", "/w/spare")];
     // p1 is cloned + listable; "/gone" is cloned but absent from `live` → orphan.
     let cloned = vec![PathBuf::from(p1), PathBuf::from("/gone")];
-    let rows = join(&cloned, &live, &closed, &workspaces);
+    let rows = join(&cloned, &cloned, &live, &closed, &workspaces);
 
     // Bound: grouped under its workspace, live detail carried.
     let bound = find(&rows, p1, "bl-bound");
     assert_eq!(bound.state, JoinState::Bound);
-    assert_eq!(bound.workspace.as_deref(), Some(Path::new("/w/cobalt")));
+    assert_eq!(bound.workspace.as_deref(), Some("cobalt"));
     assert_eq!(bound.claimant.as_deref(), Some("cobalt"));
     assert_eq!(bound.title.as_deref(), Some("t-bl-bound"));
     // Ready / blocked: unclaimed, no workspace.
@@ -154,18 +154,18 @@ fn join_enumerates_every_row_state() {
     // Delivered: the closed ball under "cobalt", no live detail.
     let done = find(&rows, p1, "bl-done");
     assert_eq!(done.state, JoinState::Delivered);
-    assert_eq!(done.workspace.as_deref(), Some(Path::new("/w/cobalt")));
+    assert_eq!(done.workspace.as_deref(), Some("cobalt"));
     assert_eq!(done.title, None);
     // The closed ball claimed elsewhere contributes no row.
     assert!(!rows.iter().any(|r| r.ball_id == "bl-gone"));
     // Unassigned workspace: "spare", no ball, no project.
     let spare = rows
         .iter()
-        .find(|r| r.workspace.as_deref() == Some(Path::new("/w/spare")))
+        .find(|r| r.workspace.as_deref() == Some("spare"))
         .unwrap();
     assert_eq!(spare.state, JoinState::UnassignedWorkspace);
     assert_eq!(spare.ball_id, "");
-    assert_eq!(spare.project, PathBuf::new());
+    assert_eq!(spare.project, "");
     // Orphaned project: cloned but unlistable.
     let orphan = find(&rows, "/gone", "");
     assert_eq!(orphan.state, JoinState::OrphanedProject);
@@ -182,7 +182,13 @@ fn a_reopened_ball_keeps_only_its_live_row_not_a_stale_delivered() {
     let mut closed = HashMap::new();
     closed.insert(PathBuf::from(p1), vec![claimed("bl-back", "cobalt")]);
     let workspaces = vec![named("cobalt", "/w/cobalt")];
-    let rows = join(&[PathBuf::from(p1)], &live, &closed, &workspaces);
+    let rows = join(
+        &[PathBuf::from(p1)],
+        &[PathBuf::from(p1)],
+        &live,
+        &closed,
+        &workspaces,
+    );
 
     let back: Vec<JoinState> = rows
         .iter()
@@ -201,10 +207,10 @@ fn owner_name_is_the_bound_ball_claimant() {
     // The name close/release/move-from stamps `--as` (§8.2 rider): the claimant,
     // which for a Bound row is the local workspace's own name.
     let row = JoinRow {
-        project: PathBuf::from("/p"),
+        project: "p".into(),
         ball_id: "bl-1".to_owned(),
         state: JoinState::Bound,
-        workspace: Some(PathBuf::from("/yog/workspaces/cobalt")),
+        workspace: Some("yog/workspaces/cobalt".into()),
         claimant: Some("cobalt".to_owned()),
         title: None,
     };

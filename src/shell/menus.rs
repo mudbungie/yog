@@ -40,7 +40,11 @@ pub(super) enum Target {
 /// in, the ball, and the claimant it stamps `--as` (§3.2 — empty for a ball no
 /// workspace holds yet, which only Assign can act on).
 pub(super) struct BallRef {
-    pub project: PathBuf,
+    /// The project's §5.1 #1 wire **name** — what a `bl` verb's gesture takes,
+    /// and what the answered ball row carries since bl-b4b5. It was the clone's
+    /// path, resolved back to a name at each fire; the answer says the name, so
+    /// nothing here resolves anything.
+    pub project: String,
     pub id: String,
     pub owner: String,
 }

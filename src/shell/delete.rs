@@ -65,11 +65,15 @@ pub(super) fn open(model: &AppModel, state: &mut ShellState, name: &str) {
 /// `delete this workspace…` row at the foot of config mode's per-workspace
 /// surface. Rendered only where the verb exists — a yog-named focused workspace
 /// (§3.6 scope), which is exactly what a `None` confirmation says.
-pub(super) fn danger_row(ui: &mut egui::Ui, model: &AppModel, state: &mut ShellState) {
-    let (Some(name), Some(ws)) = (model.focused_ws_name(), model.focused_workspace()) else {
+pub(super) fn danger_row(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) {
+    let Some(name) = model.focused_ws_name() else {
         return;
     };
-    if model.delete_confirmation(&ws).is_none() {
+    // The §3.6 scope, off the landed enumeration (bl-b4b5): the verb exists for
+    // yog's own named workspaces and nowhere else, which is what a `named` row
+    // says. A frame the engine has not answered offers nothing, which is the
+    // collapsed-pane rule and never a delete offered on a guess.
+    if !crate::nav::tabs::is_named(&super::chrome::ws_rows(model), &name) {
         return;
     }
     if ui
@@ -108,10 +112,22 @@ fn window(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     };
     // The workspace vanished (deleted here, or by the other instance): the
     // dialog has no subject left, so it closes rather than naming a ghost.
-    let Some(confirm) = model.delete_confirmation(&ws) else {
+    //
+    // **Folded off three landed answers** (REMOTE §9.7, bl-b4b5): the
+    // enumeration says whether this is one of yog's own, the forest says what
+    // dies and what is live, the balls listing says what is released. The
+    // engine re-derives all of it fail-closed at fire (§9.8), so this copy is
+    // the painted affordance and may be an ask period behind.
+    let name = model.snap.ws_name(&ws);
+    if !crate::nav::tabs::is_named(&super::chrome::ws_rows(model), &name) {
         state.delete = DeleteState::default();
         return;
-    };
+    }
+    let rows = super::convs::of(model, name.clone())
+        .value
+        .unwrap_or_default();
+    let balls = super::chrome::balls(model, &name).value.unwrap_or_default();
+    let confirm = crate::delete::confirmation_of_rows(&name, &rows, &balls);
     let mut shown = true;
     egui::Window::new(format!("delete workspace {}", confirm.name))
         .collapsible(false)

@@ -16,11 +16,16 @@
 use serde_json::{Map, Value, json};
 
 use crate::boundary::answer::agent::AgentView;
-use crate::boundary::codec::fields::{bool_of, list_of, opt, opt_val, pick, str_of, strings_of};
+use crate::boundary::codec::fields::{
+    bool_of, list_of, opt, opt_val, pick, str_of, strings_of, u64_of,
+};
+use crate::context::Fullness;
 use crate::control::hold::Held;
 use crate::git_tree::AgentMark;
 use crate::nav::convs::{Doing, FlightStrip, Seat};
 
+use super::board::decode::figure;
+use super::board::figure_value;
 use super::rows::decode::{FLIGHTS, state_of};
 use super::rows::{flight_token, state_token};
 
@@ -109,6 +114,22 @@ pub(super) fn reply(view: &AgentView) -> Value {
             json!({ "class": flight_token(strip.class), "facts": strip.facts }),
         );
     }
+    // The §3.5 figure in the board's own spelling (bl-b4b5) — always present,
+    // because a conversation that has spent nothing has spent zero and that is
+    // a reading. The §5.1 #35 fullness beside it is absent when nothing
+    // measured can be said, which is not the same as a context at 0%.
+    map.insert("spend".to_owned(), figure_value(&view.spend));
+    if let Some(full) = &view.context {
+        map.insert(
+            "context".to_owned(),
+            json!({
+                "model": full.model,
+                "prompt_tokens": full.prompt_tokens,
+                "window": full.window,
+                "percent": full.percent(),
+            }),
+        );
+    }
     Value::Object(map)
 }
 
@@ -137,6 +158,20 @@ pub(super) fn view_of(o: &Map<String, Value>) -> Result<AgentView, String> {
         stop_children: bool_of(o, "stop_children")?,
         seats: opt(o, "seats", |o, k| list_of(o, k, seat_of))?.unwrap_or_default(),
         strip: opt_val(o, "strip", strip_of)?,
+        spend: figure(o.get("spend").ok_or("agent: missing spend")?)?,
+        context: opt_val(o, "context", context_of)?,
+    })
+}
+
+/// The §5.1 #35 fullness, read back. `percent` is dropped for the reason the
+/// figure's `usd` is: it is [`Fullness::percent`]'s rendering of the two
+/// numbers beside it, which ride here in full.
+fn context_of(v: &Value) -> Result<Fullness, String> {
+    let o = v.as_object().ok_or("context: not an object")?;
+    Ok(Fullness {
+        model: str_of(o, "model")?,
+        prompt_tokens: u64_of(o, "prompt_tokens")?,
+        window: u64_of(o, "window")?,
     })
 }
 

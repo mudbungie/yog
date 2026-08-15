@@ -44,7 +44,6 @@ use crate::projects::balls::{Ball, Status};
 use crate::projects::join::JoinState;
 use crate::spend::{Figure, Prices};
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
 
 /// A board column — the operator's four buckets. `Ready`/`Blocked`/`Claimed`
 /// are balls' ladder rungs verbatim; `Gated` is the ladder's `Ready` split by
@@ -105,7 +104,10 @@ pub fn column(status: Status, gated: bool) -> Column {
 /// a value, never a record.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardRow {
-    pub project: PathBuf,
+    /// The project's §5.1 #1 wire name and the workspace's §3.1 leaf — both
+    /// paths until bl-b4b5, and narrowed with the [`JoinRow`] they are copied
+    /// off (REMOTE §8.1): the board is a reply, and a reply says names.
+    pub project: String,
     pub id: String,
     pub title: String,
     pub priority: i64,
@@ -114,7 +116,7 @@ pub struct BoardRow {
     /// the column is the ladder, the state is the *binding* (bound here,
     /// claimed elsewhere, project missing).
     pub state: JoinState,
-    pub workspace: Option<PathBuf>,
+    pub workspace: Option<String>,
     pub claimant: Option<String>,
     pub parent: Option<String>,
     /// The unresolved close-blockers, each naming the ball whose close mints
@@ -188,12 +190,18 @@ pub fn build(snap: &Snapshot, ui: &crate::ui_state::UiState, now_unix: i64) -> B
 
 /// The rows alone — the board's original derivation, unchanged.
 fn rows_of(snap: &Snapshot, prices: &Prices) -> Vec<BoardRow> {
-    let index: HashMap<&PathBuf, (HashSet<&str>, HashMap<&str, &Ball>)> = snap
+    // Keyed by the project's wire **name**, because that is what a join row
+    // says since bl-b4b5 — resolved once for the whole index rather than per
+    // row, which is the same rule `answer` follows for a query's address.
+    let index: HashMap<String, (HashSet<&str>, HashMap<&str, &Ball>)> = snap
         .balls_by_project
         .iter()
         .map(|(project, balls)| {
             let by_id: HashMap<&str, &Ball> = balls.iter().map(|b| (b.id.as_str(), b)).collect();
-            (project, (by_id.keys().copied().collect(), by_id))
+            (
+                snap.project_name(project),
+                (by_id.keys().copied().collect(), by_id),
+            )
         })
         .collect();
     let mut rows = Vec::new();

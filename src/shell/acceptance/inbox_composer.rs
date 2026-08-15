@@ -66,7 +66,15 @@ impl Frames {
         world.drain(&mut |world| {
             self.run(world, t);
         });
+        // The queue's own measurement, which the drain cannot settle: the fold
+        // line is last frame's painted content height eased over `i.time`
+        // (bl-929d), and since the pending listing became `Query::Inbox`'
+        // answer (bl-b4b5) that content lands on a frame the drain's fixed
+        // point has already passed. Each of these settles the wire *and*
+        // advances the clock, because the drain returns on the pass that
+        // answers rather than on a frame that has read the answer.
         for i in 0..4 {
+            world.settle();
             self.run(world, t + f64::from(i) * 0.01);
         }
     }

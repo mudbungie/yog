@@ -34,6 +34,11 @@ pub(super) fn encode(query: &Query) -> Value {
             json!({ "op": "conversations", "workspace": workspace })
         }
         Query::Balls => json!({ "op": "balls" }),
+        // The same facts one workspace deep (bl-b4b5) — the address is the
+        // whole difference, so the envelope says only that.
+        Query::WorkspaceBalls { workspace } => {
+            json!({ "op": WORKSPACE_BALLS, "workspace": workspace })
+        }
         Query::WorkDiff { workspace, file } => {
             let mut map = obj(&[("op", "work-diff")]);
             map.insert("workspace".to_owned(), json!(workspace));
@@ -111,6 +116,9 @@ pub(super) fn encode(query: &Query) -> Value {
     }
 }
 
+/// The §11 balls section's own read (bl-b4b5), named once for both directions.
+const WORKSPACE_BALLS: &str = "workspace-balls";
+
 /// The routing leg's read tokens, named once for the encoder and the arm.
 pub(super) const INVOCATIONS: &str = "invocations";
 pub(super) const CAPTURE: &str = "capture";
@@ -140,6 +148,9 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
             workspace: str_of(o, "workspace")?,
         },
         "balls" => Query::Balls,
+        WORKSPACE_BALLS => Query::WorkspaceBalls {
+            workspace: str_of(o, "workspace")?,
+        },
         "work-diff" => Query::WorkDiff {
             workspace: str_of(o, "workspace")?,
             file: work_file(o)?,

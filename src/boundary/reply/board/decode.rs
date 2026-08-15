@@ -38,13 +38,13 @@ pub(crate) fn board(obj: &serde_json::Map<String, Value>) -> Result<Board, Strin
 fn board_row(v: &Value) -> Result<BoardRow, String> {
     let o = v.as_object().ok_or("board row: not an object")?;
     Ok(BoardRow {
-        project: path_of(o, "project")?,
+        project: str_of(o, "project")?,
         id: str_of(o, "id")?,
         title: str_of(o, "title")?,
         priority: i64_of(o, "priority")?,
         column: pick(o, "column", &COLUMNS)?,
         state: parse_join(&str_of(o, "state")?)?,
-        workspace: opt(o, "workspace", path_of)?,
+        workspace: opt_str_of(o, "workspace")?,
         claimant: opt_str_of(o, "claimant")?,
         parent: opt_str_of(o, "parent")?,
         gates: list_of(o, "gates", gate)?,
@@ -96,7 +96,7 @@ fn fleet_facts(v: &Value) -> Result<Facts, String> {
 
 /// One §3.5 figure. `usd` is dropped for the reason `room` is: it is
 /// [`Cost::usd`]'s rendering of `micro_usd`, which rides beside it.
-fn figure(v: &Value) -> Result<Figure, String> {
+pub(crate) fn figure(v: &Value) -> Result<Figure, String> {
     let o = v.as_object().ok_or("figure: not an object")?;
     let cost = match o.get("micro_usd") {
         None => None,

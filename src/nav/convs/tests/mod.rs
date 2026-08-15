@@ -50,7 +50,7 @@ fn named_tool(
     a
 }
 
-fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
+pub(crate) fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
     Agent {
         branch_name: format!("agents/{id}"),
         agent_id: id.to_string(),
@@ -79,13 +79,13 @@ fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
 }
 
 /// The all-unseen closure: every watermark reads unacknowledged.
-fn unseen(_: SeenKind, _: &str, _: &str, _: &str) -> bool {
+pub(crate) fn unseen(_: SeenKind, _: &str, _: &str, _: &str) -> bool {
     false
 }
 
 /// A ball resolver that knows nothing: any stamped id renders from source 1 only
 /// (no join facts). Never actually invoked by the goal_ball-`None` fixtures.
-fn plain(id: &str) -> ConvBall {
+pub(crate) fn plain(id: &str) -> ConvBall {
     ConvBall {
         id: id.to_owned(),
         state: None,

@@ -65,6 +65,23 @@ pub(super) fn agent() -> Vec<Reply> {
                 class: Flight::Tools,
                 facts: "Bash · 5s".to_owned(),
             }),
+            // The §3.5 figure and the §5.1 #35 fullness (bl-b4b5), both stated.
+            spend: crate::spend::Figure {
+                tokens: crate::budgets::BudgetSpend {
+                    input_tokens: 120,
+                    ..crate::budgets::BudgetSpend::default()
+                },
+                cost: Some(crate::spend::Cost {
+                    micro_usd: 4_000_000,
+                    unpriced_tokens: 1,
+                }),
+                attribution: crate::spend::Attribution::Conversations(3),
+            },
+            context: Some(crate::context::Fullness {
+                model: "claude-x".to_owned(),
+                prompt_tokens: 4_000,
+                window: 200_000,
+            }),
         }),
         Reply::Agent(AgentView {
             agent_id: "r-0".to_owned(),
@@ -83,6 +100,14 @@ pub(super) fn agent() -> Vec<Reply> {
             stop_children: false,
             seats: vec![],
             strip: None,
+            // The other arm of each: an unpriced figure, and a conversation
+            // nothing measured can be said about.
+            spend: crate::spend::Figure {
+                tokens: crate::budgets::BudgetSpend::default(),
+                cost: None,
+                attribution: crate::spend::Attribution::Workspace,
+            },
+            context: None,
         }),
         Reply::Governing(GoverningConfig {
             oid: "b".repeat(40),

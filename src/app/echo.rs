@@ -134,7 +134,7 @@ impl Echo {
     /// name is its file, and this one has no file. The seats paint it faded off
     /// that one fact and brighten when the derivation replaces it (§11, the
     /// faded-send ruling).
-    fn deposit(&self) -> InboxEntry {
+    pub(crate) fn deposit(&self) -> InboxEntry {
         InboxEntry {
             name: String::new(),
             raw: self.text.clone().into_bytes(),
@@ -262,25 +262,11 @@ pub(crate) fn compose(
 /// `Reply` now. Its own file at §12's cap; the reasoning is its own doc.
 pub(crate) mod rows;
 
-impl super::AppModel {
-    /// The §11 list **as this seat paints it**: what the boundary answered for
-    /// the focused workspace, with this window's own pending echo folded on
-    /// (§3.4, §7.2). Orchestration, never derivation (§8.5's paint-side line):
-    /// the rows are the engine's and the optimism is the seat's.
-    ///
-    /// An unfocused window echoes nothing, because an echo belongs to the
-    /// workspace it was fired in and there is none to compare against.
-    pub fn echoed(
-        &self,
-        rows: Vec<crate::nav::convs::ConvRow>,
-        now_unix: i64,
-    ) -> Vec<crate::nav::convs::ConvRow> {
-        let Some(ws) = self.focused_workspace() else {
-            return rows;
-        };
-        rows::with_echo(self.started.as_ref(), &ws, rows, now_unix)
-    }
-}
+/// **What the frame asks of the echo** (bl-b4b5) — the two `AppModel` doors the
+/// shell folds an answer through, cut off this file at §12's budget on the seam
+/// it already had: above is what an echo *is* and how it retires, and there is
+/// what a seat does with one.
+mod seat;
 
 #[cfg(test)]
 mod tests;

@@ -72,7 +72,22 @@ pub fn encode(reply: &Reply) -> Value {
         // a branch of is a pure function of the workspace the gesture named, so
         // saying it here would be that name spelled a second time, as a path.
         Reply::Marks { branch } => json!({ "ok": true, "kind": "marks", "branch": branch }),
-        Reply::Workspaces(rows) => rows_reply("workspaces", rows.iter().map(ws_row)),
+        // The enumeration, and how current the derivation behind it is
+        // (bl-b4b5). Both notes are **absent** rather than null in the ordinary
+        // case, which is what makes "fresh" and "the engine declined to say"
+        // two readings rather than one.
+        Reply::Workspaces(view) => {
+            let mut map = rows_map("workspaces", view.rows.iter().map(ws_row));
+            for (key, note) in [("stale", &view.stale), ("growth", &view.growth)] {
+                if let Some(note) = note {
+                    map.insert(key.to_owned(), json!(note));
+                }
+            }
+            Value::Object(map)
+        }
+        Reply::WorkspaceBalls(rows) => {
+            rows_reply("workspace-balls", rows.iter().map(super::balls::bound_ball))
+        }
         Reply::Conversations(rows) => rows_reply("conversations", rows.iter().map(conv_row)),
         Reply::Balls(rows) => rows_reply("balls", rows.iter().map(join_row)),
         // The board answers its rows and, when a §4.3 loop is armed over them,

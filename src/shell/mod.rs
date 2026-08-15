@@ -26,6 +26,7 @@ mod birth;
 mod board;
 mod bootstrap;
 mod center;
+mod chrome;
 mod clients;
 mod clock;
 mod config_edit;

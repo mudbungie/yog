@@ -16,10 +16,10 @@ fn the_confirmation_names_the_bound_balls_and_the_plan_releases_them() {
     let (_c, mut m) = model(&w);
     m.after_bl_verb(&w.project);
 
-    let confirm = m.delete_confirmation(&w.ws_cobalt).unwrap();
+    let confirm = crate::boundary::answer::confirmation_of(&m.snap, &w.ws_cobalt).unwrap();
     assert_eq!(confirm.ball_ids(), ["bl-work"], "live bound balls only");
     assert!(
-        m.delete_confirmation(&w.ws_spare)
+        crate::boundary::answer::confirmation_of(&m.snap, &w.ws_spare)
             .unwrap()
             .ball_ids()
             .is_empty(),
@@ -28,7 +28,12 @@ fn the_confirmation_names_the_bound_balls_and_the_plan_releases_them() {
     // Stamped with the workspace's own name — the claimant releases its own ball
     // (§3.2's ownership line, §8.2's rider).
     assert_eq!(
-        plan(&confirm, std::path::Path::new("/w"))[0],
+        plan(
+            &confirm,
+            std::path::Path::new("/w"),
+            std::path::Path::new("/world"),
+            &m.snap.projects,
+        )[0],
         Step::Release {
             project: w.project.clone(),
             id: "bl-work".to_owned(),

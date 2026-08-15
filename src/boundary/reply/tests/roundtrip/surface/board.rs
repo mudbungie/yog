@@ -30,13 +30,13 @@ pub(super) fn board() -> Board {
     Board {
         rows: vec![
             BoardRow {
-                project: PathBuf::from("/p"),
+                project: "p".into(),
                 id: "bl-1".into(),
                 title: "t".into(),
                 priority: 2,
                 column: Column::Gated,
                 state: JoinState::Bound,
-                workspace: Some(PathBuf::from("/ws")),
+                workspace: Some("ws".into()),
                 claimant: Some("alba".into()),
                 parent: Some("bl-epic".into()),
                 gates: vec![Gate {
@@ -51,7 +51,7 @@ pub(super) fn board() -> Board {
                 rollup: Some(unpriced),
             },
             BoardRow {
-                project: PathBuf::from("/p"),
+                project: "p".into(),
                 id: "bl-2".into(),
                 title: "u".into(),
                 priority: 0,
@@ -68,7 +68,7 @@ pub(super) fn board() -> Board {
         ],
         fleet: vec![crate::fleet::Facts {
             workspace: PathBuf::from("/ws"),
-            project: PathBuf::from("/p"),
+            project: "p".into(),
             cap: 4,
             count: 1,
             tick: Duration::from_secs(90),

@@ -114,7 +114,10 @@ fn s4_t4_conversation_badges_are_honest_about_what_the_join_knows() {
     assert_eq!(ball_of("c-004"), None, "bare conversations show no badge");
 
     // The claimed-but-unstamped ball: in the workspace's bound rows …
-    let ws_ids: Vec<String> = m.ws_balls(&ws).into_iter().map(|b| b.id).collect();
+    let ws_ids: Vec<String> = crate::support::ws_balls(&m, &ws)
+        .into_iter()
+        .map(|b| b.id)
+        .collect();
     assert!(
         ws_ids.contains(&"bl-9".to_owned()),
         "a ball the workspace claims is a workspace row: {ws_ids:?}"

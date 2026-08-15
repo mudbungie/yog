@@ -240,10 +240,27 @@ pub fn ws_rows(model: &yog::AppModel) -> Vec<yog::boundary::reply::WsRow> {
         &yog::cli_outbound::Cli::new("bl"),
     );
     let answered = match model.answer(&deps, &yog::boundary::Query::Workspaces, 0) {
-        Ok(yog::boundary::reply::Reply::Workspaces(rows)) => rows,
+        Ok(yog::boundary::reply::Reply::Workspaces(view)) => view.rows,
         _ => Vec::new(),
     };
     model.raised_rows(answered)
+}
+
+/// One workspace's bound balls with their §3.5 figures — the §11 balls
+/// section's whole content (`Query::WorkspaceBalls`, bl-b4b5), asked the way a
+/// seat asks it.
+pub fn ws_balls(model: &yog::AppModel, ws: &std::path::Path) -> Vec<yog::nav::BoundBall> {
+    let deps = model.boundary_deps(
+        &yog::cli_outbound::Cli::new("lernie"),
+        &yog::cli_outbound::Cli::new("bl"),
+    );
+    let query = yog::boundary::Query::WorkspaceBalls {
+        workspace: yog::naming::leaf(ws),
+    };
+    match model.answer(&deps, &query, 0) {
+        Ok(yog::boundary::reply::Reply::WorkspaceBalls(rows)) => rows,
+        _ => Vec::new(),
+    }
 }
 
 /// The §6 attention-strip total, as the top bar folds it.

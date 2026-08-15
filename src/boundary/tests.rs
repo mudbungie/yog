@@ -16,7 +16,6 @@ use crate::projects::join::{JoinRow, JoinState};
 use crate::start::{BallSpec, Payload, Prepared};
 use std::collections::HashMap;
 use std::path::Path;
-use std::time::Instant;
 
 /// One agent row, the conversation-list fixture shape (§2.3).
 pub(crate) fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
@@ -58,9 +57,11 @@ pub(crate) fn snapshot(ws: &Path, name: &str, agents: Vec<Agent>, join: Vec<Join
             agents,
         },
     );
-    let mut projects: Vec<std::path::PathBuf> = join.iter().map(|r| r.project.clone()).collect();
-    projects.sort();
-    projects.dedup();
+    // The §5.1 #1 naming set is the caller's: a join row says a project *name*
+    // since bl-b4b5, and only the fixture that minted the row knows which
+    // directory that name was derived over. Empty is the ordinary case — most
+    // tables here never resolve one.
+    let projects: Vec<std::path::PathBuf> = Vec::new();
     Snapshot {
         workspaces: vec![Workspace {
             path: ws.to_path_buf(),
@@ -80,7 +81,7 @@ pub(crate) fn snapshot(ws: &Path, name: &str, agents: Vec<Agent>, join: Vec<Join
         ops: vec![],
         growth: vec![],
         ui_bytes: None,
-        derived_at: Instant::now(),
+        derived_at_unix: 0,
         cadence: crate::app::Cadence::default(),
         fleet: std::collections::BTreeMap::new(),
     }
@@ -89,10 +90,10 @@ pub(crate) fn snapshot(ws: &Path, name: &str, agents: Vec<Agent>, join: Vec<Join
 /// A join row bound to `ws` — the §3.5 fixture cell.
 pub(crate) fn bound_row(project: &Path, id: &str, ws: &Path, claimant: &str) -> JoinRow {
     JoinRow {
-        project: project.to_path_buf(),
+        project: crate::naming::leaf(project),
         ball_id: id.to_owned(),
         state: JoinState::Bound,
-        workspace: Some(ws.to_path_buf()),
+        workspace: Some(crate::naming::leaf(ws)),
         claimant: Some(claimant.to_owned()),
         title: Some(format!("title of {id}")),
     }

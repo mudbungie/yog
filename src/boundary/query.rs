@@ -25,6 +25,23 @@ pub enum Query {
     Conversations { workspace: String },
     /// The §3.5 join rows — every ball⇄workspace binding fact.
     Balls,
+    /// **What one workspace holds** (§3.2/§3.5, §11 balls section; REMOTE §9.7,
+    /// bl-b4b5): every ball bound to it, with its badge, the project its `bl`
+    /// verbs run in, the claimant they stamp `--as`, and its priced figure.
+    ///
+    /// Distinct from [`Balls`](Query::Balls) by **address**, not by source, the
+    /// way [`Board`](Query::Board) is distinct by altitude: that answers the
+    /// world's whole binding table, this answers the one workspace a seat is
+    /// looking at — which is what every §11 balls surface actually paints, and
+    /// what a seat holding a §3.1 name could not select out of the table
+    /// without the engine-side join bl-7407 refused.
+    ///
+    /// **The figure rides the row rather than earning a query.** A ball's spend
+    /// is a filter over the same `Snapshot::bills` walk the listing is made
+    /// from (§3.5, bl-9dd4), so asking for it separately would be a second read
+    /// of one derivation — the two-readings-of-one-tail defect bl-296f closed
+    /// at the activity chip.
+    WorkspaceBalls { workspace: String },
     /// The V4 board (VISION §5 V4): the same balls, projected into the
     /// operator's four columns with their gates, drones, spend and epic
     /// rollups. Distinct from [`Balls`](Query::Balls) by *altitude*, not by

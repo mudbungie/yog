@@ -74,12 +74,7 @@ pub(super) fn ready_row(
         return;
     };
     if assign_clicked && let Some(to) = &to {
-        super::ball_bar::assign_ball(
-            model,
-            &model.snap.project_path(&project).unwrap_or_default(),
-            &id,
-            to,
-        );
+        super::ball_bar::assign_ball(model, &project, &id, to);
     }
     let seat = Seat::BallRow {
         state: join,
@@ -89,11 +84,7 @@ pub(super) fn ready_row(
         move_to: Vec::new(),
     };
     let target = Target::Ball(BallRef {
-        // The menu target is a repo the seat acts in, so the name comes back
-        // through the one mapping (REMOTE §8); a project this snapshot does not
-        // enumerate resolves to nothing and the verbs refuse where they always
-        // did.
-        project: model.snap.project_path(&project).unwrap_or_default(),
+        project,
         id,
         owner: String::new(),
     });
@@ -116,8 +107,14 @@ pub(super) fn continue_row(
     lernie: &Cli,
     inputs: StartInputs,
 ) {
+    // The ball's **own** claimant workspace, not the focused one (a resume
+    // reaches a wall the operator is not looking at), so the listing is asked
+    // for that workspace by name — `nav::balls::bound` is then a selection out
+    // of it, never a second derivation (REMOTE §9.7, bl-b4b5).
+    let ws = model.snap.ws_name(&inputs.workspace);
+    let rows = super::chrome::balls(model, &ws).value.unwrap_or_default();
     let ball =
-        ball_ref(&inputs.payload).and_then(|(_, id, _)| model.bound_ball(&inputs.workspace, &id));
+        ball_ref(&inputs.payload).and_then(|(_, id, _)| crate::nav::balls::bound(&rows, &id));
     let button = ui
         .button(format!("▶ Continue {}", start_label(&inputs)))
         .on_hover_text(CONTINUE_HINT);
@@ -131,7 +128,7 @@ pub(super) fn continue_row(
     let seat = Seat::BallRow {
         state: ball.state,
         assign_to: model.focused_ws_name(),
-        move_to: model.move_targets(&ball.owner),
+        move_to: crate::nav::tabs::move_targets(&super::chrome::ws_rows(model), &ball.owner),
     };
     let target = Target::Ball(BallRef {
         project: ball.project,

@@ -16,7 +16,6 @@ use crate::projects::join::{JoinRow, JoinState};
 use crate::state::SearchCell;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::time::Instant;
 use tempfile::tempdir;
 
 const AGENT: &str = "20260427T120000Z-aaaa";
@@ -94,7 +93,7 @@ fn world(ws: &Path, agents: Vec<Agent>, live: Vec<Ball>, closed: Vec<Ball>) -> S
         ops: vec![],
         growth: vec![],
         ui_bytes: None,
-        derived_at: Instant::now(),
+        derived_at_unix: 0,
         cadence: Cadence::default(),
         fleet: std::collections::BTreeMap::new(),
     }

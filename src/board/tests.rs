@@ -16,8 +16,7 @@ use crate::app::Snapshot;
 use crate::projects::balls::Status;
 use crate::projects::join::{JoinRow, JoinState};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::time::Instant;
+use std::path::Path;
 
 /// The column table, exhaustively — the two axes crossed. The three ladder
 /// rungs are balls' words verbatim, which is the "no second status model"
@@ -136,10 +135,10 @@ fn the_board_is_the_join_filtered_to_live_balls_and_ordered() {
             join("bl-aaa", JoinState::ReadyStartable, None, None),
             join("bl-dead", JoinState::Delivered, Some(WS_A), Some("alfa")),
             JoinRow {
-                project: PathBuf::new(),
+                project: String::new(),
                 ball_id: String::new(),
                 state: JoinState::UnassignedWorkspace,
-                workspace: Some(PathBuf::from(WS_A)),
+                workspace: Some(crate::naming::leaf(Path::new(WS_A))),
                 claimant: None,
                 title: None,
             },
@@ -154,7 +153,7 @@ fn the_board_is_the_join_filtered_to_live_balls_and_ordered() {
 /// state, and a workspace with no derived tree contributes no drones.
 #[test]
 fn an_empty_world_is_an_empty_board() {
-    let snap = Snapshot::empty(Instant::now());
+    let snap = Snapshot::empty(0);
     assert_eq!(build(&snap, &ui_doc("{}"), NOW), Board::default());
     assert_eq!(
         super::stamped_roots(&HashMap::new(), Path::new(WS_A), "bl-x"),

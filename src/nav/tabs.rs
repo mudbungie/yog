@@ -29,6 +29,44 @@ pub fn strip_total(rows: &[WsRow]) -> usize {
     rows.iter().map(|r| r.attention).sum()
 }
 
+/// **Where a bound ball can be re-homed** (§8.2 Move, REMOTE §9.7 bl-b4b5): the
+/// answered enumeration's **named** workspaces minus the one that already holds
+/// it. Foreign and replay workspaces carry no yog identity, so they are not move
+/// targets.
+///
+/// One rule for the composer's `move to:` buttons, the §11 ball-row menu's
+/// destination submenu and the board row's — so the visible carrier and its
+/// accelerator can never offer different destinations, and neither ever offers a
+/// move to where the ball already is. It was `AppModel::move_targets` over the
+/// window's own workspace set; the fact is on this answer, so it is a selection
+/// out of the same ask the tab bar above it already stands on.
+pub fn move_targets(rows: &[WsRow], owner: &str) -> Vec<String> {
+    rows.iter()
+        .filter(|r| matches!(r.kind, WorkspaceKind::Named { .. }) && r.workspace != owner)
+        .map(|r| r.workspace.clone())
+        .collect()
+}
+
+/// **Whether the enumeration calls this workspace one of yog's own** (§3.1) —
+/// the §3.6 scope gate every delete carrier reads before offering the verb.
+/// `false` for a name the answer does not carry, which is what an unfetched or
+/// deleted workspace already read as.
+pub fn is_named(rows: &[WsRow], workspace: &str) -> bool {
+    rows.iter()
+        .any(|r| r.workspace == workspace && matches!(r.kind, WorkspaceKind::Named { .. }))
+}
+
+/// **The §2.2 config-lineage tip of one workspace** (§9.4) — the commit the next
+/// conversation started here forks off, off the same answer. `None` for a name
+/// the enumeration does not carry and for a workspace with no lineage derived
+/// yet: both paint nothing, which is the same reading.
+pub fn config_tip(rows: &[WsRow], workspace: &str) -> Option<crate::model_pick::ConfigTip> {
+    rows.iter()
+        .find(|r| r.workspace == workspace)?
+        .config_tip
+        .clone()
+}
+
 /// Which of the §3.1 kinds a tab stands for — [`WorkspaceKind`] without its
 /// payload (the tab's `name` already carries the minted name). **One field, not
 /// a pair of `named`/`replay` bools**: bools admit a state that cannot exist and

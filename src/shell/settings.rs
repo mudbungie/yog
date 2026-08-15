@@ -104,20 +104,31 @@ fn conversation(
     // granularity it is honest at — a ball claimed mid-conversation attributes
     // workspace-wide, and the row says so. Each row names its own ball, so the
     // figures read as themselves down here, away from the header's ball line.
-    for ball in model.ws_balls(ws) {
+    //
+    // **The figure rides the row** (REMOTE §9.7, bl-b4b5): the listing and the
+    // figures are one answer, so the row and the number under it cannot come
+    // off two derivations of two ages.
+    for ball in super::chrome::focused_balls(model) {
         ui.horizontal(|ui| {
             ui.weak(format!("{}:", ball.id));
-            spend::render(ui, &model.ball_spend(ws, &ball.id));
+            spend::render(ui, &ball.spend);
         });
     }
-    let root = agent.root.as_str();
-    spend::render(ui, &model.conversation_spend(ws, root));
-    // The §5.1 #35 context figure, directly under the spend it is not: the
-    // budget line above sums the whole descent's burn, this one states how full
-    // *this* conversation's context is right now. Absent — no step, no model, or
-    // no declared window — it paints nothing at all rather than a placeholder.
-    if let Some(full) = model.conversation_context(ws, root) {
-        crate::context::render::render(ui, &full);
+    // The conversation's own figure and its §5.1 #35 context fullness are two
+    // fields of the selection's standing `Query::Agent` (bl-b4b5): facts about
+    // one conversation's subtree, like the strip and the marks beside them, and
+    // they paint an ask period after the name exactly as those do. An
+    // unanswered frame paints neither, which is the collapsed-pane rule.
+    let detail = super::seat::detail(model, ws, &agent.agent_id).value;
+    if let Some(view) = &detail {
+        spend::render(ui, &view.spend);
+        // Directly under the spend it is not: the budget line above sums the
+        // whole descent's burn, this one states how full *this* conversation's
+        // context is right now. Absent — no step, no model, or no declared
+        // window — it paints nothing at all rather than a placeholder.
+        if let Some(full) = &view.context {
+            crate::context::render::render(ui, full);
+        }
     }
     // The model row (§9.4): *what am I talking to, and how do I change it* is
     // asked while looking at a conversation, so it is answered on the
@@ -133,7 +144,13 @@ fn conversation(
     //
     // The workspace's config-lineage tip (§7 snapshot, `HEAD` → `config/default`)
     // is the "workspace default" half of that drift.
-    let config_tip = model.config_tip();
+    // The §2.2 lineage tip off the landed enumeration (bl-b4b5) — the
+    // *workspace default* half of the §9.4 drift clause, which is a fact about
+    // this workspace and rides the answer the tab bar above already stands on.
+    let config_tip = crate::nav::tabs::config_tip(
+        &super::chrome::ws_rows(model),
+        &model.focused_ws_name().unwrap_or_default(),
+    );
     let agent_id = agent.agent_id.clone();
     if super::model_pick::conversation_seat(
         ui,

@@ -32,7 +32,7 @@ use super::board::decode::board;
 use super::queue::queue_row_of;
 use super::rows::decode::{conv_row, join_row, lineage_row, op_row, provider_row, rows_of, ws_row};
 use super::search::hit_of;
-use crate::boundary::codec::fields::{bool_of, list_of, opt_val, str_of, strings_of};
+use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, opt_val, str_of, strings_of};
 use crate::boundary::codec::prepared_from_value;
 use crate::registry::mailbox::{capture_of, invocation_of};
 
@@ -124,7 +124,8 @@ fn answered(o: &Map<String, Value>) -> Result<Reply, String> {
 /// The listings (§8.5): what a populating read answered.
 fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> {
     Some(match kind {
-        "workspaces" => rows_of(o, ws_row).map(Reply::Workspaces),
+        "workspaces" => workspaces(o),
+        "workspace-balls" => rows_of(o, super::balls::bound_ball_of).map(Reply::WorkspaceBalls),
         "conversations" => rows_of(o, conv_row).map(Reply::Conversations),
         "balls" => rows_of(o, join_row).map(Reply::Balls),
         "board" => board(o).map(Reply::Board),
@@ -139,6 +140,16 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "invocations" => rows_of(o, invocation_of).map(Reply::Invocations),
         _ => return None,
     })
+}
+
+/// The altitude-0 chrome, read back (bl-b4b5): the rows, and the two §7.2
+/// notes when the engine had one to say.
+fn workspaces(o: &Map<String, Value>) -> Result<Reply, String> {
+    Ok(Reply::Workspaces(crate::boundary::reply::Workspaces {
+        rows: rows_of(o, ws_row)?,
+        stale: opt_str_of(o, "stale")?,
+        growth: opt_str_of(o, "growth")?,
+    }))
 }
 
 /// One invocation's standing, read back (bl-024b).

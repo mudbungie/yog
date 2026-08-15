@@ -11,12 +11,10 @@
 //! next pass instead of inside the click's own frame, which is what stops a
 //! `bl` listing from happening on the paint thread at all.
 
-mod convball;
-
 use super::AppModel;
 use crate::cli_outbound::Cli;
 use crate::opslog::SurfaceFailure;
-use crate::projects::join::{self, JoinRow};
+use crate::projects::join;
 use crate::projects::runner;
 use std::path::{Path, PathBuf};
 
@@ -77,31 +75,6 @@ impl AppModel {
     /// shell passes to [`crate::actions::verbs`] (§4.2).
     pub(crate) fn state_root(&self) -> &Path {
         &self.roots.yog_state
-    }
-
-    /// The join row of the focused workspace **that names a ball** — the
-    /// (project, ball, state) the Close/Release/Move actions (§8.2) and the
-    /// per-project marks knob (§16.3) target. The first bound row wins; the
-    /// live-ball loop emits Bound before Delivered, so a closed ball never
-    /// shadows an active one here.
-    ///
-    /// The `!ball_id.is_empty()` predicate is [`Self::ws_balls`]'s, for the same
-    /// reason: an UnassignedWorkspace row is the *absence* of a ball, carrying
-    /// an empty ball id and an empty project. Returning it as "the focused ball"
-    /// handed both consumers a row naming neither — a `bl conf` spawned with an
-    /// empty cwd, and a `ball ` row with no id. `None` is the truthful answer,
-    /// and each surface already renders its own empty state for it.
-    pub fn focused_join(&self) -> Option<&JoinRow> {
-        self.row_for(&self.focused_workspace()?)
-            .filter(|r| !r.ball_id.is_empty())
-    }
-
-    /// The join row whose bound workspace is `ws` (the first — see [`focused_join`]).
-    fn row_for(&self, ws: &Path) -> Option<&JoinRow> {
-        self.snap
-            .join_rows
-            .iter()
-            .find(|r| r.workspace.as_deref() == Some(ws))
     }
 
     /// The empty-project roster hint (STORIES S3-T5) as its two rendered lines.
@@ -214,11 +187,7 @@ impl AppModel {
 /// split out per §12's 300-line budget.
 mod starts;
 
-/// The §8.2 verbs' workspace-name targets (`focused_ws_name`/`workspace_names`/
-/// `move_targets`) — split out per §12's 300-line budget.
-mod targets;
-
-/// `pub(crate)` so the sibling `app/tests/spend.rs` shares this corpus's one
-/// `FakeBl` rather than standing up a second fake of the same runner.
+/// `pub(crate)` so a sibling test corpus shares this one `FakeBl` rather than
+/// standing up a second fake of the same runner.
 #[cfg(test)]
 pub(crate) mod tests;

@@ -124,7 +124,10 @@ fn read_row(
     let seat = Seat::BallRow {
         state: row.state,
         assign_to: model.focused_ws_name(),
-        move_to: model.move_targets(row.claimant.as_deref().unwrap_or_default()),
+        move_to: crate::nav::tabs::move_targets(
+            &super::super::chrome::ws_rows(model),
+            row.claimant.as_deref().unwrap_or_default(),
+        ),
     };
     let target = Target::Ball(BallRef {
         project: row.project.clone(),

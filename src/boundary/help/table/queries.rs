@@ -29,6 +29,16 @@ pub const QUERIES: &[HelpRow] = &[
                  same derivation the roster's balls section renders.",
     },
     HelpRow {
+        verb: "workspace-balls",
+        usage: "/workspace-balls",
+        summary: "the balls the focused workspace holds, with what each has cost",
+        detail: "Every ball bound to the focused workspace: its id, its \u{a7}3.5 badge, the \
+                 project its `bl` verbs run in, the workspace name they stamp `--as`, and the \
+                 tokens and money its conversations have spent on it. `/balls` answers the \
+                 whole world's binding table; this answers one workspace, which is what the \
+                 window's balls section paints.",
+    },
+    HelpRow {
         verb: "work-diff",
         usage: "/work-diff [<ball> <path>]",
         summary: "what this workspace's agents changed in their project",

@@ -9,38 +9,23 @@
 //! seat's does, and the `ui.json` prune is the **engine's** write, adopted back
 //! by §7.1 like any external change rather than made here.
 //!
-//! What stays is the pair a receipt still owes the frame: the derivations both
-//! §11 carriers read ([`AppModel::delete_confirmation`],
-//! [`AppModel::agent_delete_confirmation`]) and the two convergences a clean
-//! removal earns — the roots to re-derive, and a focus that must not point at a
-//! gone directory.
+//! **The derivations left too** (bl-b4b5). `delete_confirmation` and
+//! `agent_delete_confirmation` re-derived the §3.6 gate off the window's own
+//! snapshot so the two §11 carriers could paint it; both are folds over landed
+//! answers now (`delete::confirmation_of_rows`,
+//! `delete::agent::confirmation_of_rows` over the enumeration, the descent
+//! forest and the balls listing). The chokepoint's own re-derivation at fire is
+//! unmoved and unchanged — a painted affordance may be an ask period behind, a
+//! gate may not.
+//!
+//! What stays is the pair a receipt still owes the frame: the two convergences
+//! a clean removal earns — the roots to re-derive, and a focus that must not
+//! point at a gone directory.
 
 use super::AppModel;
-use crate::delete::Confirmation;
 use std::path::Path;
 
 impl AppModel {
-    /// The §3.6 confirmation for `ws` — what dies, what is released, and what is
-    /// live. `None` for anything that is **not** one of yog's own named
-    /// workspaces (§3.6 scope: foreign workspaces are lernie's retention-governed
-    /// territory and replays are read-only), which is also how both carriers
-    /// decide whether to offer the verb at all.
-    pub fn delete_confirmation(&self, ws: &Path) -> Option<Confirmation> {
-        crate::boundary::answer::confirmation_of(&self.snap, ws)
-    }
-
-    /// The §3.6 agent-delete confirmation for one conversation (bl-f17a) —
-    /// its display name and live members. `None` outside yog's own named
-    /// workspaces, which is also how the two §11 carriers (the row menu, the
-    /// inspector's danger row) decide whether to offer the verb at all.
-    pub fn agent_delete_confirmation(
-        &self,
-        ws: &Path,
-        root: &str,
-    ) -> Option<crate::delete::agent::AgentConfirmation> {
-        crate::boundary::answer::agent_confirmation_of(&self.snap, ws, root)
-    }
-
     /// Converge after an agent-delete **receipt**: a focus inside the deleted
     /// subtree — the root or a `<root>-*` descendant — clears rather than
     /// pointing at a gone branch. The workspace's own tree re-derives through

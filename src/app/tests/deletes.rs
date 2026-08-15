@@ -69,13 +69,19 @@ fn the_verb_is_offered_only_on_yogs_own_named_workspaces() {
     let replay = h.add_replay("20260101T-rr", "c-9");
     let (_c, model) = h.model();
 
-    let confirm = model.delete_confirmation(&named).unwrap();
+    let confirm = crate::boundary::answer::confirmation_of(&model.snap, &named).unwrap();
     assert_eq!(confirm.name, "alba-koi");
     assert_eq!(confirm.conversations, ["hi"], "named by its preview (§11)");
     assert!(confirm.ball_ids().is_empty());
-    assert!(model.delete_confirmation(&h.ws).is_none(), "foreign");
-    assert!(model.delete_confirmation(&replay).is_none(), "replay");
-    assert!(model.delete_confirmation(&named.join("nope")).is_none());
+    assert!(
+        crate::boundary::answer::confirmation_of(&model.snap, &h.ws).is_none(),
+        "foreign"
+    );
+    assert!(
+        crate::boundary::answer::confirmation_of(&model.snap, &replay).is_none(),
+        "replay"
+    );
+    assert!(crate::boundary::answer::confirmation_of(&model.snap, &named.join("nope")).is_none());
 }
 
 #[test]

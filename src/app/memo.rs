@@ -78,10 +78,9 @@ impl<K: PartialEq, V> SnapMemo<K, V> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Instant;
 
     fn snap() -> Arc<Snapshot> {
-        Arc::new(Snapshot::empty(Instant::now()))
+        Arc::new(Snapshot::empty(0))
     }
 
     /// The caching contract: one build per (snapshot, key), however many

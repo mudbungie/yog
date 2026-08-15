@@ -144,12 +144,18 @@ fn the_four_query_families_answer_from_one_snapshot() {
     let board_snap = snap.clone();
     let d = deps(snap);
 
-    let Ok(Reply::Workspaces(rows)) = answer(&Query::Workspaces, &d, &ui(), 200) else {
+    let Ok(Reply::Workspaces(view)) = answer(&Query::Workspaces, &d, &ui(), 200) else {
         panic!("workspaces answers workspaces");
     };
-    assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0].agents, 1);
-    assert!(rows[0].running);
+    assert_eq!(view.rows.len(), 1);
+    assert_eq!(view.rows[0].agents, 1);
+    assert!(view.rows[0].running);
+    // The §7.2 notes ride the same answer (bl-b4b5): the fixture's derivation
+    // is stamped at epoch and the caller's clock reads 200, so the answer says
+    // how far behind what it is showing is — a subtraction the boundary can
+    // make only because the stamp is wall-clock.
+    assert_eq!(view.stale.as_deref(), Some("derivation 200 s behind"));
+    assert_eq!(view.growth, None, "a quiet world says nothing");
 
     let Ok(Reply::Conversations(rows)) = answer(
         &Query::Conversations {

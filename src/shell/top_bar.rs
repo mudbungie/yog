@@ -16,8 +16,6 @@
 //! period.
 
 use crate::AppModel;
-use crate::boundary::Query;
-use crate::boundary::reply::Reply;
 use crate::cli_outbound::Cli;
 use crate::nav::menu::Seat;
 use crate::nav::tabs::{Kind, Tab};
@@ -47,21 +45,11 @@ const OVERFLOW_HINT: &str = "Workspaces that are real but not regimes — checko
 /// the workspace tab bar — named tabs, the slim `new` name form, and the
 /// foreign/replay overflow menu.
 pub fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
-    // One ask for the whole altitude-0 row. A refusal has no seat here — the
-    // top bar is chrome, and a sentence in place of the wall row would be a
-    // report about the transport where the panes below already paint the
-    // engine's own words.
-    let answered = super::wire::ask(model, Query::Workspaces, |reply| match reply {
-        Reply::Workspaces(rows) => Some(rows),
-        _ => None,
-    })
-    .value
-    .unwrap_or_default();
-    // The §3.4 raise claim folded on (`AppModel::raised_rows`), which is the
-    // echo's own shape one noun up: a wall `lernie new` has just founded wears
-    // its tab from the frame the receipt lands, rather than a derivation later
-    // with the composer's bare Enter aimed at the previous wall (bl-9acf).
-    let rows = model.raised_rows(answered);
+    // One ask for the whole altitude-0 row, with the §3.4 raise claim folded on
+    // (`super::chrome`). A refusal has no seat here — the top bar is chrome, and
+    // a sentence in place of the wall row would be a report about the transport
+    // where the panes below already paint the engine's own words.
+    let rows = super::chrome::ws_rows(model);
     ui.horizontal(|ui| {
         let total = crate::nav::tabs::strip_total(&rows);
         if total > 0 {

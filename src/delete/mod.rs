@@ -36,21 +36,32 @@ pub mod agent;
 mod exec;
 pub use exec::{DELETE_STEP, DeleteError, execute};
 
-/// One live bound ball the unmaking releases (§3.6 step 1) — the ball's id and the
-/// project whose store holds it (the `bl` cwd, §8.2).
+/// One live bound ball the unmaking releases (§3.6 step 1) — the ball's id and
+/// the §5.1 #1 **name** of the project whose store holds it.
+///
+/// A name rather than the `bl` cwd since bl-b4b5, for the reason the join row
+/// it is copied off carries one (REMOTE §8.1): a confirmation is what a *seat*
+/// states, and a seat holding an answer must be able to build the same object
+/// the engine gates on. [`plan`] resolves it back to the clone the verb runs
+/// in, at the one seam that owns the round trip.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Claim {
-    pub project: PathBuf,
+    pub project: String,
     pub id: String,
 }
 
 /// What the §3.6 dialog states and the plan runs — derived, never stored: the
-/// workspace's name and path, every conversation that dies (by display name),
-/// the live ones (the gate), and the claims the unmaking releases.
+/// workspace's name, every conversation that dies (by display name), the live
+/// ones (the gate), and the claims the unmaking releases.
+///
+/// **It no longer carries the workspace's path** (bl-b4b5). The path was the
+/// address the gesture had already named, spelled a second time as an
+/// engine-side directory — §8.1's own test — and it made the object
+/// unbuildable by a seat that reads over a wire. [`plan`] takes the path from
+/// the caller that resolved the address, which is where it already was.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Confirmation {
     pub name: String,
-    pub workspace: PathBuf,
     pub conversations: Vec<String>,
     /// The conversations that hold (or may hold) a driver — the §3.6 gate. Empty
     /// ⇒ the verb may proceed; non-empty ⇒ it refuses, naming them so the
@@ -84,17 +95,40 @@ impl Confirmation {
     }
 }
 
+/// **The same object off answers alone** (REMOTE §9.7, bl-b4b5) — what the §3.6
+/// dialog derives at a seat that holds no world: the workspace's own name, the
+/// landed `Query::Conversations` forest, and the landed `Query::WorkspaceBalls`
+/// listing.
+///
+/// It is [`confirmation`] with its two inputs read from the other end, and it
+/// answers the *same type*: one `armed`, one `refused`, one `ball_ids`,
+/// whichever side asks. The engine's own re-derivation at fire is unmoved and
+/// stays authoritative (§9.8, bl-1747) — this is the painted affordance, which
+/// may land an ask period late and may never be the thing that decides.
+pub fn confirmation_of_rows(
+    name: &str,
+    rows: &[crate::nav::convs::ConvRow],
+    balls: &[crate::nav::BoundBall],
+) -> Confirmation {
+    confirmation(
+        name,
+        &crate::nav::convs::liveness_of_rows(rows),
+        balls
+            .iter()
+            .filter(|b| b.state == crate::projects::join::JoinState::Bound)
+            .map(|b| Claim {
+                project: b.project.clone(),
+                id: b.id.clone(),
+            })
+            .collect(),
+    )
+}
+
 /// Derive the §3.6 confirmation for a workspace from its conversations
 /// ([`crate::nav::convs::liveness`]) and the claims the §3.5 join binds to it.
-pub fn confirmation(
-    name: &str,
-    workspace: &Path,
-    convs: &[Conversation],
-    claims: Vec<Claim>,
-) -> Confirmation {
+pub fn confirmation(name: &str, convs: &[Conversation], claims: Vec<Claim>) -> Confirmation {
     Confirmation {
         name: name.to_owned(),
-        workspace: workspace.to_path_buf(),
         conversations: convs.iter().map(|c| c.name.clone()).collect(),
         live: convs
             .iter()
@@ -132,21 +166,33 @@ pub enum Step {
 /// The §3.6 plan for a confirmed unmaking: every release, then the prune, then the
 /// removal. The gate is **not** re-checked here — [`plan`] is pure, and the one
 /// place a delete is armed is [`Confirmation::armed`] at the entry point.
-pub fn plan(confirm: &Confirmation, world_root: &Path) -> Vec<Step> {
+/// `workspace` is the path the caller already resolved the gesture's address
+/// to, and `projects` the §5.1 #1 naming set each claim's project resolves
+/// against — the same enumeration the name was minted over, so a claim always
+/// resolves and one that somehow does not releases nothing rather than running
+/// `bl` in a directory nobody named.
+pub fn plan(
+    confirm: &Confirmation,
+    workspace: &Path,
+    world_root: &Path,
+    projects: &[PathBuf],
+) -> Vec<Step> {
     let mut steps: Vec<Step> = confirm
         .claims
         .iter()
-        .map(|c| Step::Release {
-            project: c.project.clone(),
-            id: c.id.clone(),
-            name: confirm.name.clone(),
+        .filter_map(|c| {
+            Some(Step::Release {
+                project: crate::naming::resolve(projects, &c.project).ok()?,
+                id: c.id.clone(),
+                name: confirm.name.clone(),
+            })
         })
         .collect();
     steps.push(Step::Prune {
-        key: crate::nav::ws_key(&confirm.workspace),
+        key: crate::nav::ws_key(workspace),
     });
     steps.push(Step::Remove {
-        workspace: confirm.workspace.clone(),
+        workspace: workspace.to_path_buf(),
         wall: crate::world::wall::root_under(world_root, &confirm.name),
     });
     steps

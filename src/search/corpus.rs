@@ -135,6 +135,6 @@ pub(super) fn unreadable(snap: &Snapshot) -> Vec<String> {
         .join_rows
         .iter()
         .filter(|r| r.state == JoinState::OrphanedProject)
-        .map(|r| format!("{}: balls unlistable", r.project.display()));
+        .map(|r| format!("{}: balls unlistable", r.project));
     workspaces.chain(projects).collect()
 }

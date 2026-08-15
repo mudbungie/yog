@@ -14,7 +14,6 @@ mod read;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::time::Instant;
 
 use tempfile::{TempDir, tempdir};
 
@@ -100,7 +99,7 @@ pub(super) fn close_gate(mut parent: Ball, child: &str) -> Ball {
 /// A snapshot carrying one named workspace and one project's live balls —
 /// the two facts [`crate::workdiff::read`] joins.
 pub(super) fn snap(ws: &Path, name: &str, project: &Path, balls: Vec<Ball>) -> Snapshot {
-    let mut snap = Snapshot::empty(Instant::now());
+    let mut snap = Snapshot::empty(0);
     snap.workspaces = vec![Workspace {
         path: ws.to_path_buf(),
         kind: WorkspaceKind::Named {

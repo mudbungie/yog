@@ -49,10 +49,15 @@ pub(super) struct RowCtx {
 
 impl RowCtx {
     /// Gather the frame's row facts once, for `ws` — the focused workspace.
-    pub(super) fn of(model: &AppModel, ws: PathBuf) -> Self {
+    pub(super) fn of(model: &mut AppModel, ws: PathBuf) -> Self {
+        // The §3.6 scope off the landed enumeration (bl-b4b5) — one fold per
+        // frame, not per row, and the same answer the tab bar above is built
+        // from rather than a second reading of the window's own workspace set.
+        let named =
+            crate::nav::tabs::is_named(&super::chrome::ws_rows(model), &model.snap.ws_name(&ws));
         Self {
             selected: model.focused_agent_id(),
-            named: model.delete_confirmation(&ws).is_some(),
+            named,
             ws,
         }
     }

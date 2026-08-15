@@ -23,7 +23,7 @@ use tempfile::tempdir;
 fn ctx(state_root: &std::path::Path) -> ConsumerCtx {
     over(
         state_root,
-        crate::app::Snapshot::empty(Instant::now()),
+        crate::app::Snapshot::empty(0),
         PathBuf::from("/data"),
         Cli::new("/no/such/lernie"),
     )
@@ -56,7 +56,7 @@ fn over(
 
 /// A snapshot holding one named workspace per element of `names`, under `root`.
 fn world_of(root: &std::path::Path, names: &[&str]) -> crate::app::Snapshot {
-    let mut snap = crate::app::Snapshot::empty(Instant::now());
+    let mut snap = crate::app::Snapshot::empty(0);
     snap.workspaces = names
         .iter()
         .map(|name| crate::binding::Workspace {

@@ -16,6 +16,10 @@ use std::time::{Duration, Instant};
 #[derive(Clone)]
 pub(crate) struct FakeClock {
     at: Arc<Mutex<Instant>>,
+    /// Where [`at`](Self::at) stood when this clock was minted — the origin
+    /// [`Clock::unix`] counts whole seconds from, so the wall reading moves with
+    /// [`advance`](FakeClock::advance) exactly as the monotonic one does.
+    origin: Instant,
     /// How far each [`Clock::now`] read moves the clock **by itself**. Zero for
     /// an ordinary fake, where only [`advance`](FakeClock::advance) moves time.
     /// Non-zero makes the work *between* two reads take real time — the one way
@@ -26,8 +30,10 @@ pub(crate) struct FakeClock {
 
 impl FakeClock {
     pub(crate) fn new() -> Self {
+        let origin = Instant::now();
         Self {
-            at: Arc::new(Mutex::new(Instant::now())),
+            at: Arc::new(Mutex::new(origin)),
+            origin,
             lurch: Duration::ZERO,
         }
     }
@@ -45,6 +51,7 @@ impl FakeClock {
     pub(crate) fn handle(&self) -> Self {
         Self {
             at: Arc::clone(&self.at),
+            origin: self.origin,
             lurch: self.lurch,
         }
     }
@@ -80,5 +87,21 @@ impl Clock for FakeClock {
     /// drift/ops assertion in the suite already spells.
     fn stamp(&self) -> String {
         "TS".to_string()
+    }
+
+    /// **The wall reading this fake does advance** (bl-b4b5). The default
+    /// method parses [`stamp`](Self::stamp), which is deliberately the opaque
+    /// `"TS"` sentinel above and would pin every derivation's completion at
+    /// epoch zero — so a §7.2 staleness line could never be observed under a
+    /// clock the test moves. This counts whole seconds from the origin instead:
+    /// the same advance the monotonic reading takes, said in the unit the
+    /// boundary speaks. Epoch-relative rather than a real date, because what
+    /// every reader of it computes is a *difference*.
+    fn unix(&self) -> i64 {
+        let at = *self
+            .at
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        i64::try_from(at.saturating_duration_since(self.origin).as_secs()).unwrap_or(i64::MAX)
     }
 }

@@ -110,7 +110,7 @@ fn unreadable_sources_are_named_and_the_rest_of_the_world_still_answers() {
         kind: WorkspaceKind::Foreign,
     });
     snap.join_rows.push(JoinRow {
-        project: PathBuf::from("/gone"),
+        project: "gone".to_owned(),
         ball_id: String::new(),
         state: JoinState::OrphanedProject,
         workspace: None,
@@ -134,7 +134,7 @@ fn unreadable_sources_are_named_and_the_rest_of_the_world_still_answers() {
         found
             .unreadable
             .iter()
-            .any(|u| u == "/gone: balls unlistable")
+            .any(|u| u == "gone: balls unlistable")
     );
     let mut sorted = found.unreadable.clone();
     sorted.sort();

@@ -24,7 +24,6 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Instant;
 use tempfile::{TempDir, tempdir};
 
 /// The engine, as small as one can be and still be the real thing: the deposit
@@ -40,9 +39,7 @@ fn ctx(state_root: &Path, mailbox: &Mailbox) -> Arc<ConsumerCtx> {
         yog_data_root: PathBuf::from("/data"),
         balls_state_root: PathBuf::from("/balls"),
         ui_path: state_root.join("ui.json"),
-        cell: crate::state::new_snapshot_cell(Arc::new(
-            crate::app::Snapshot::empty(Instant::now()),
-        )),
+        cell: crate::state::new_snapshot_cell(Arc::new(crate::app::Snapshot::empty(0))),
         presence: Presence::default(),
         mailbox: mailbox.clone(),
         clock: Arc::new(SystemClock),

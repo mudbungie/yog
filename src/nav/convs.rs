@@ -16,6 +16,9 @@
 use crate::git_tree::{Agent, AgentState, DescentRow, descent_order};
 use row::preview;
 
+/// The **census** folds a §3.6 gate and the §3.3 mint read off an answered
+/// forest (REMOTE §9.7, bl-b4b5) — [`expand`]'s and [`select`]'s third sibling.
+pub mod census;
 pub mod doing;
 pub mod expand;
 pub mod flight;
@@ -27,6 +30,7 @@ pub mod select;
 /// The §3.3 ladder as a seat holds it — id→title, no agent set (bl-1eb0).
 pub mod titles;
 
+pub use census::{liveness_of_rows, names_in_rows};
 pub use doing::{Doing, Seat, doing, seats};
 pub use expand::{ancestors, forest_rows, parent_of, step, visible};
 pub use flight::{Flight, FlightStrip, STRIP_HOVER, conversation_flight, strip};

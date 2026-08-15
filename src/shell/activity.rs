@@ -37,13 +37,17 @@ use crate::theme;
 /// `open`, so the header's click and the §11 `a` binding move one fact.
 pub fn accessory(ui: &mut egui::Ui, model: &mut AppModel, open: &mut bool) {
     // What the derivation itself is doing (§7.2, bl-ee0a): how stale the
-    // rendered snapshot is, and what grew since the last one. Both are `None`
-    // in the ordinary case and render nothing; both are tested view-models
-    // ([`AppModel::staleness`], [`AppModel::growth_note`]).
-    for note in [model.staleness(), model.growth_note()]
-        .into_iter()
-        .flatten()
-    {
+    // answered snapshot is, and what grew since the last one. Both are `None`
+    // in the ordinary case and render nothing.
+    //
+    // **Two fields on `Query::Workspaces`** (REMOTE §9.7, bl-b4b5), not two
+    // in-process accessors and not a question of their own: the tab bar above
+    // stands on that answer every frame, so the currency of what this window
+    // is showing costs the wire nothing to say — and it is the engine's own
+    // wording, dated against the snapshot's wall-clock completion stamp rather
+    // than against an `Instant` no seat could hold.
+    let chrome = super::chrome::workspaces(model).value.unwrap_or_default();
+    for note in [chrome.stale, chrome.growth].into_iter().flatten() {
         ui.colored_label(theme::ICHOR, note);
     }
     // **One question, both surfaces** (bl-296f). The chip's counts used to be

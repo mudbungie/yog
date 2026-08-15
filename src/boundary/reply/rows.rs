@@ -42,6 +42,16 @@ pub(super) fn ws_row(row: &WsRow) -> Value {
     if let Some(rank) = row.pinned {
         map.insert("pinned".to_owned(), json!(rank));
     }
+    // The §2.2 lineage tip (bl-b4b5), both oids: short is what the §9.4 picker
+    // labels the freeze with, full is what a `git show` outside yog takes — the
+    // lineage row's own shape one noun over. Absent for a workspace with no
+    // lineage derived yet.
+    if let Some(tip) = &row.config_tip {
+        map.insert(
+            "config_tip".to_owned(),
+            json!({ "oid": tip.oid, "short_oid": tip.short_oid }),
+        );
+    }
     Value::Object(map)
 }
 
@@ -130,19 +140,18 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
     Value::Object(map)
 }
 
+/// One §3.5 binding fact. **Both addresses are names** since bl-b4b5 (REMOTE
+/// §8.1): the project's §5.1 #1 wire name and the workspace's §3.1 leaf, which
+/// is what the row carries now rather than two absolute paths under the
+/// engine's home — the last payload residual on that list after
+/// `Prepared::binding`.
 pub(super) fn join_row(row: &JoinRow) -> Value {
     let mut map = Map::new();
-    map.insert(
-        "project".to_owned(),
-        json!(row.project.to_string_lossy().into_owned()),
-    );
+    map.insert("project".to_owned(), json!(row.project));
     map.insert("ball_id".to_owned(), json!(row.ball_id));
     map.insert("state".to_owned(), json!(join_token(row.state)));
     if let Some(ws) = &row.workspace {
-        map.insert(
-            "workspace".to_owned(),
-            json!(ws.to_string_lossy().into_owned()),
-        );
+        map.insert("workspace".to_owned(), json!(ws));
     }
     if let Some(claimant) = &row.claimant {
         map.insert("claimant".to_owned(), json!(claimant));

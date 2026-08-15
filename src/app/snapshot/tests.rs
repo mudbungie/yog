@@ -96,8 +96,7 @@ fn the_growth_line_leads_with_the_biggest_grower_and_counts_the_rest() {
 
 #[test]
 fn the_empty_snapshot_is_the_general_shape_with_no_inputs() {
-    let now = std::time::Instant::now();
-    let empty = Snapshot::empty(now);
+    let empty = Snapshot::empty(1_700_000_000);
     assert!(empty.workspaces.is_empty());
     assert!(empty.trees.is_empty());
     assert!(empty.balls_by_project.is_empty());
@@ -105,6 +104,6 @@ fn the_empty_snapshot_is_the_general_shape_with_no_inputs() {
     assert!(empty.ops.is_empty());
     assert!(empty.growth.is_empty());
     assert_eq!(empty.ui_bytes, None);
-    assert_eq!(empty.derived_at, now);
+    assert_eq!(empty.derived_at_unix, 1_700_000_000);
     assert_eq!(empty.clone(), empty, "cheap to hand out, compares by value");
 }

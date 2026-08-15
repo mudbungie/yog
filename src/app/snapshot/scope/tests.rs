@@ -6,7 +6,6 @@ use crate::app::snapshot::Growth;
 use crate::binding::{Workspace, WorkspaceKind};
 use crate::git_tree::GitTree;
 use std::path::PathBuf;
-use std::time::Instant;
 
 const MINE: &str = "/d/yog/workspaces/home";
 const THEIRS: &str = "/d/yog/workspaces/corp";
@@ -18,7 +17,7 @@ fn allowed(names: &[&str]) -> BTreeSet<String> {
 /// A derivation holding two workspaces, every workspace-keyed field populated
 /// for both.
 fn snap() -> Snapshot {
-    let mut s = Snapshot::empty(Instant::now());
+    let mut s = Snapshot::empty(0);
     for path in [MINE, THEIRS] {
         s.workspaces.push(Workspace {
             path: PathBuf::from(path),

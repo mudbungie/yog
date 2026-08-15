@@ -19,8 +19,6 @@
 //! read — the delete gate is one derivation wherever it is asked.
 
 use crate::app::Snapshot;
-use crate::attention;
-use crate::git_tree::AgentState;
 use crate::nav::{self, convs::ConvBall, convs::ConvRow, ws_key};
 use crate::projects::join;
 use crate::ui_state::UiState;
@@ -28,12 +26,17 @@ use crate::ui_state::UiState;
 use std::path::Path;
 
 use super::dispatch::Deps;
-use super::reply::{Reply, WsRow};
+use super::reply::Reply;
 use super::{Query, config, help};
 
 /// One conversation as a seat sees it (REMOTE §9.4, bl-1eb0) — the
 /// [`Agent`](crate::git_tree::Agent)'s wire projection.
 pub mod agent;
+/// One workspace's bound balls with their §3.5 figures (REMOTE §9.7, bl-b4b5).
+pub mod balls;
+/// The §11 altitude-0 chrome: the enumeration, its §6 rollups, and how current
+/// the derivation behind them is.
+mod chrome;
 /// The §3.6 unmaking's own derivations — what a delete would destroy, read by
 /// the dialog and by the dispatch gate alike.
 mod confirm;
@@ -44,6 +47,7 @@ pub mod inspector;
 /// to, and the acknowledgement that answers one row (VISION §5 V5.2).
 pub mod queue;
 
+pub use chrome::{workspace_stats, workspaces, ws_rows};
 pub use confirm::{agent_confirmation_of, confirmation_of};
 
 /// Answer one query (§8.5). Total over [`Query`]; `now_unix` is the caller's
@@ -63,9 +67,12 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         None => std::path::PathBuf::new(),
     };
     Ok(match query {
-        Query::Workspaces => Reply::Workspaces(ws_rows(snap, ui)),
+        Query::Workspaces => Reply::Workspaces(workspaces(snap, ui, now_unix)),
         Query::Conversations { .. } => Reply::Conversations(conversations(snap, ui, ws, now_unix)),
         Query::Balls => Reply::Balls(snap.join_rows.clone()),
+        // The same binding facts one workspace deep, with each ball's figure
+        // (REMOTE §9.7, bl-b4b5) — the §11 balls section's whole content.
+        Query::WorkspaceBalls { .. } => Reply::WorkspaceBalls(balls::ws_balls(snap, ui, ws)),
         // The V4 board — the same snapshot, one altitude up. The window's
         // `AppModel::board` is this same call (§8.5's parity discipline).
         Query::Board => Reply::Board(crate::board::build(snap, ui, now_unix)),
@@ -129,7 +136,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // The seat's own read of its selection (REMOTE §9.4, bl-1eb0) — pure
         // over the snapshot, unlike the five above, because everything it says
         // was already derived when the tree was.
-        Query::Agent { agent: id, .. } => Reply::Agent(agent::agent(snap, ws, id, now_unix)),
+        Query::Agent { agent: id, .. } => Reply::Agent(agent::agent(snap, ui, ws, id, now_unix)),
         Query::Ops { max } => {
             let skip = snap.ops.len().saturating_sub(*max);
             Reply::Ops(snap.ops.iter().skip(skip).cloned().collect())
@@ -206,48 +213,6 @@ pub fn conv_ball(snap: &Snapshot, id: &str) -> ConvBall {
             badge: None,
         },
     }
-}
-
-/// One workspace's §6 rollup: attention-bearing agents, agent count, whether
-/// anything runs — the tab bar's numbers, by parameter.
-pub fn workspace_stats(snap: &Snapshot, ui: &UiState, ws: &Path) -> (usize, usize, bool) {
-    let Some(tree) = snap.trees.get(ws) else {
-        return (0, 0, false);
-    };
-    let key = ws_key(ws);
-    let seen = |k, w: &str, a: &str, o: &str| ui.is_seen(k, w, a, o);
-    let mut count = 0;
-    let mut running = false;
-    for a in &tree.agents {
-        if attention::attention(a, &key, &seen).any() {
-            count += 1;
-        }
-        running |= matches!(a.state, AgentState::Live | AgentState::InFlight);
-    }
-    (count, tree.agents.len(), running)
-}
-
-/// Every enumerated workspace with its rollup — the `workspaces` answer.
-pub fn ws_rows(snap: &Snapshot, ui: &UiState) -> Vec<WsRow> {
-    // The §4.1 pin list, read once for the whole listing rather than per row.
-    // Its keys are paths (durable state whose re-keying is its own migration,
-    // bl-7407), which is exactly why the *rank* crosses and the key does not.
-    let pinned = ui.pinned();
-    snap.workspaces
-        .iter()
-        .map(|w| {
-            let (attention, agents, running) = workspace_stats(snap, ui, &w.path);
-            let key = ws_key(&w.path);
-            WsRow {
-                workspace: crate::naming::leaf(&w.path),
-                kind: w.kind.clone(),
-                attention,
-                agents,
-                running,
-                pinned: pinned.iter().position(|k| *k == key),
-            }
-        })
-        .collect()
 }
 
 /// The conversation mint's occupied set for a workspace (§3.3): the names its

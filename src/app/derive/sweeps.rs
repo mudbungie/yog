@@ -234,6 +234,7 @@ impl Deriver {
     /// (§3.2); no operator identity enters. Pure over the pre-fetched caches.
     fn rebuild_join(&mut self, cloned: &[PathBuf]) {
         let rows = join::join(
+            &self.projects,
             cloned,
             &self.balls_by_project,
             &self.closed_by_project,

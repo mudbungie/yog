@@ -9,10 +9,11 @@
 
 use super::*;
 use crate::app::Snapshot;
+use crate::board::Column;
 use crate::boundary::tests::agent;
 use crate::git_tree::GitTree;
 use crate::projects::join::JoinState;
-use std::time::Instant;
+use std::path::Path;
 
 pub(super) const WS: &str = "/names/otter";
 pub(super) const PROJECT: &str = "/dev/yog";
@@ -34,7 +35,7 @@ fn facts(cap: usize, count: usize, lease: Option<Duration>) -> Facts {
 fn row(id: &str, column: Column, drones: Vec<&str>) -> BoardRow {
     let mine = column == Column::Claimed;
     BoardRow {
-        project: PathBuf::from(PROJECT),
+        project: crate::naming::leaf(Path::new(PROJECT)),
         id: id.to_owned(),
         title: format!("title of {id}"),
         priority: 0,
@@ -44,7 +45,7 @@ fn row(id: &str, column: Column, drones: Vec<&str>) -> BoardRow {
         } else {
             JoinState::ReadyStartable
         },
-        workspace: mine.then(|| PathBuf::from(WS)),
+        workspace: mine.then(|| crate::naming::leaf(Path::new(WS))),
         claimant: mine.then(|| "otter".to_owned()),
         parent: None,
         gates: vec![],
@@ -63,7 +64,11 @@ fn row(id: &str, column: Column, drones: Vec<&str>) -> BoardRow {
 /// A snapshot whose one workspace tree holds `agents` — the liveness a reap
 /// compares against.
 fn snap(agents: Vec<crate::git_tree::Agent>) -> Snapshot {
-    let mut snap = Snapshot::empty(Instant::now());
+    let mut snap = Snapshot::empty(0);
+    // The armed entry names a clone directory and a board row names the
+    // project (bl-b4b5), so the naming set has to hold it for the two to be
+    // put into one vocabulary — which is what an armed world always is.
+    snap.projects = vec![PathBuf::from(PROJECT)];
     snap.trees.insert(
         PathBuf::from(WS),
         GitTree {
@@ -116,7 +121,7 @@ fn a_full_workspace_a_gated_ball_and_a_bound_ceiling_all_spawn_nothing() {
 #[test]
 fn a_ready_ball_in_another_project_is_not_this_loops_work() {
     let mut elsewhere = row("bl-2", Column::Ready, vec![]);
-    elsewhere.project = PathBuf::from("/dev/lernie");
+    elsewhere.project = "lernie".to_owned();
     assert_eq!(
         plan(&snap(vec![]), &facts(3, 0, None), &[elsewhere], NOW),
         None
@@ -246,7 +251,7 @@ fn a_claim_with_no_conversation_is_not_reapable_and_reaps_go_first() {
 /// claims is knowable — and an unknowable comparison is not a reap.
 #[test]
 fn a_workspace_with_no_derived_tree_reaps_nothing() {
-    let mut none = Snapshot::empty(Instant::now());
+    let mut none = Snapshot::empty(0);
     none.trees.clear();
     let rows = vec![row("bl-1", Column::Claimed, vec!["root-1"])];
     assert_eq!(

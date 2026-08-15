@@ -10,7 +10,6 @@ use crate::support::Recorder;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
-use std::time::Instant;
 use tempfile::tempdir;
 use yog::app::Snapshot;
 use yog::boundary::Action;
@@ -55,7 +54,7 @@ fn deps(lernie: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
             ops: vec![],
             growth: vec![],
             ui_bytes: None,
-            derived_at: Instant::now(),
+            derived_at_unix: 0,
             cadence: yog::app::Cadence::default(),
             fleet: std::collections::BTreeMap::new(),
         }),

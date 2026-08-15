@@ -104,13 +104,25 @@ pub fn owner_name(row: &JoinRow) -> String {
 
 /// One classified row of the ball × workspace join (§3.5). `title`/`claimant`
 /// carry live-ball detail; both are absent for a delivered/unassigned/orphaned
-/// row. `workspace` is the bound workspace path when one matches, else `None`.
+/// row. `workspace` is the bound workspace's name when one matches, else `None`.
+///
+/// **Both addresses are NAMES** (REMOTE §8.1, bl-b4b5). They were a project
+/// `PathBuf` and a workspace `PathBuf` — the last two path-typed fields on a
+/// reply payload after `Prepared::binding`, and the ones §8.1's own list did
+/// not reach. `Reply::Balls` therefore answered a thin seat two absolute paths
+/// under the engine's home: unusable there and a disclosure besides. They are
+/// the §5.1 #1 project name and the §3.1 workspace leaf now — the *same* two
+/// words `Action::Close`/`Assign`/`Move` already take — so a seat holding a
+/// name can select its own workspace's rows out of the answer without joining
+/// it back against the engine's table (the shape bl-7407 refused). The engine
+/// resolves either back through [`Snapshot::project_path`](crate::app::Snapshot)
+/// / [`ws_path`](crate::app::Snapshot) at the one seam that owns the round trip.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct JoinRow {
-    pub project: PathBuf,
+    pub project: String,
     pub ball_id: String,
     pub state: JoinState,
-    pub workspace: Option<PathBuf>,
+    pub workspace: Option<String>,
     pub claimant: Option<String>,
     pub title: Option<String>,
 }
@@ -136,7 +148,13 @@ fn named_map(workspaces: &[Workspace]) -> BTreeMap<&str, &Path> {
 /// no ball engages, and an OrphanedProject row per cloned project absent from
 /// `live_by_project` (unlistable). `closed_by_project` is on-demand (§5.1 #4):
 /// empty on the fetch cadence, populated per project after a `bl close`.
+///
+/// `projects` is the **naming set** (§5.1 #1, the snapshot's whole enumeration,
+/// internal clones included) that each row's project name is derived over —
+/// which is a superset of `cloned`, because a name is unique against everything
+/// that exists and not merely against what listed cleanly.
 pub fn join(
+    projects: &[PathBuf],
     cloned: &[PathBuf],
     live_by_project: &HashMap<PathBuf, Vec<Ball>>,
     closed_by_project: &HashMap<PathBuf, Vec<Ball>>,
@@ -148,8 +166,9 @@ pub fn join(
     let mut engaged: HashSet<String> = HashSet::new();
 
     for project in cloned {
+        let name = crate::naming::name_of(projects, project);
         let Some(live) = live_by_project.get(project) else {
-            rows.push(orphaned_row(project));
+            rows.push(orphaned_row(name));
             continue;
         };
         let live_ids: HashSet<&str> = live.iter().map(|b| b.id.as_str()).collect();
@@ -157,7 +176,7 @@ pub fn join(
             let bound = bind(&names, ball, &mut engaged);
             let js = live_status(ladder(ball, &live_ids));
             rows.push(JoinRow {
-                project: project.clone(),
+                project: name.clone(),
                 ball_id: ball.id.clone(),
                 state: classify(js, bound.is_some()),
                 workspace: bound,
@@ -173,12 +192,12 @@ pub fn join(
             }
             // A closed ball is a roster row only when it groups under a local
             // workspace; otherwise it lives in the raw on-demand closed listing.
-            if let Some(path) = bind(&names, ball, &mut engaged) {
+            if let Some(bound) = bind(&names, ball, &mut engaged) {
                 rows.push(JoinRow {
-                    project: project.clone(),
+                    project: name.clone(),
                     ball_id: ball.id.clone(),
                     state: classify(JoinStatus::Closed, true),
-                    workspace: Some(path),
+                    workspace: Some(bound),
                     claimant: ball.claimant.clone(),
                     title: None,
                 });
@@ -186,13 +205,13 @@ pub fn join(
         }
     }
 
-    for (name, path) in &names {
+    for name in names.keys() {
         if !engaged.contains(*name) {
             rows.push(JoinRow {
-                project: PathBuf::new(),
+                project: String::new(),
                 ball_id: String::new(),
                 state: JoinState::UnassignedWorkspace,
-                workspace: Some(path.to_path_buf()),
+                workspace: Some((*name).to_owned()),
                 claimant: None,
                 title: None,
             });
@@ -201,25 +220,27 @@ pub fn join(
     rows
 }
 
-/// Resolve a ball's binding: the local workspace path whose name equals the
-/// ball's claimant (§3.2), marking that name engaged. `None` when the ball is
-/// unclaimed or claimed by a non-local name.
+/// Resolve a ball's binding: the local workspace **name** equal to the ball's
+/// claimant (§3.2), marking it engaged. `None` when the ball is unclaimed or
+/// claimed by a non-local name. The claimant *is* the workspace's §3.1 name —
+/// the join binds on that equality — so the binding and the address it answers
+/// are one string rather than a path derived from it.
 fn bind(
     names: &BTreeMap<&str, &Path>,
     ball: &Ball,
     engaged: &mut HashSet<String>,
-) -> Option<PathBuf> {
+) -> Option<String> {
     let claimant = ball.claimant.as_deref()?;
-    let path = names.get(claimant)?;
+    names.get(claimant)?;
     engaged.insert(claimant.to_owned());
-    Some(path.to_path_buf())
+    Some(claimant.to_owned())
 }
 
 /// A project-driven orphaned row: its clone is present but unlistable, so no
 /// ball detail is available (§3.5).
-fn orphaned_row(project: &Path) -> JoinRow {
+fn orphaned_row(project: String) -> JoinRow {
     JoinRow {
-        project: project.to_path_buf(),
+        project,
         ball_id: String::new(),
         state: JoinState::OrphanedProject,
         workspace: None,

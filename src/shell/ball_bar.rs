@@ -20,8 +20,7 @@
 use crate::AppModel;
 use crate::actions::{close_enabled, move_enabled, unclaim_enabled};
 use crate::boundary::Action;
-use crate::projects::join::{JoinRow, owner_name};
-use std::path::Path;
+use crate::nav::BoundBall;
 
 /// `Close` (§8.2): the delivery, said in what it actually does to the repo.
 const CLOSE_HINT: &str = "Deliver this ball (`bl close`): folds `main` into its worktree, runs the \
@@ -38,17 +37,27 @@ const MOVE_HINT: &str = "Re-home this ball to that workspace — released here, 
      `/move [id] <to>`.";
 
 /// The focused ball's Close / Release / Move, gated by its §3.5 join state (§8.2).
-/// Every `bl` verb stamps `--as` the ball's **bound workspace name** (its claimant,
-/// via [`owner_name`]) — the §3.2 ownership line, never the operator `$USER`.
-pub(super) fn actions(ui: &mut egui::Ui, model: &mut AppModel, join: Option<&JoinRow>) {
-    let Some(row) = join else {
+/// Every `bl` verb stamps `--as` the ball's **bound workspace name** (its
+/// claimant, which the answered row carries as `owner`) — the §3.2 ownership
+/// line, never the operator `$USER`.
+///
+/// `ball` is the first row of the focused workspace's landed listing
+/// (REMOTE §9.7, bl-b4b5), and `targets` the move destinations folded off the
+/// landed enumeration — both selections out of answers this frame already
+/// holds, so the row and its submenu are one ask apiece rather than two reads
+/// of the window's own snapshot.
+pub(super) fn actions(
+    ui: &mut egui::Ui,
+    model: &mut AppModel,
+    ball: Option<&BoundBall>,
+    targets: &[String],
+) {
+    let Some(row) = ball else {
         return;
     };
-    let owner = owner_name(row);
-    // Move targets: the other named workspaces this bound ball can be re-homed to.
-    let targets = model.move_targets(&owner);
+    let owner = row.owner.clone();
     ui.horizontal(|ui| {
-        ui.label(format!("ball {}", row.ball_id));
+        ui.label(format!("ball {}", row.id));
         if ui
             .add_enabled(close_enabled(row.state), egui::Button::new("Close"))
             .on_hover_text(CLOSE_HINT)
@@ -73,35 +82,36 @@ pub(super) fn actions(ui: &mut egui::Ui, model: &mut AppModel, join: Option<&Joi
     if move_enabled(row.state) && !targets.is_empty() {
         ui.horizontal(|ui| {
             ui.label("move to:").on_hover_text(MOVE_HINT);
-            for to in &targets {
+            for to in targets {
                 if ui.button(to).on_hover_text(MOVE_HINT).clicked() {
-                    move_ball(model, &row.project, &row.ball_id, &owner, to);
+                    move_ball(model, &row.project, &row.id, &owner, to);
                 }
             }
         });
     }
 }
 
-/// `bl close <id> --as <owner>` for one join row (§8.2) — the Close button's
-/// body, shared with the §11 `c` binding so the gesture has one implementation.
-fn close_row(model: &mut AppModel, row: &JoinRow) {
-    close_ball(model, &row.project, &row.ball_id, &owner_name(row));
+/// `bl close <id> --as <owner>` for one answered ball row (§8.2) — the Close
+/// button's body, shared with the §11 `c` binding so the gesture has one
+/// implementation.
+fn close_row(model: &mut AppModel, row: &BoundBall) {
+    close_ball(model, &row.project, &row.id, &row.owner);
 }
 
-/// `bl unclaim <id> --as <owner>` for one join row (§8.2) — the Release
-/// button's body, shared with the §11 `r` binding.
-fn release_row(model: &mut AppModel, row: &JoinRow) {
-    release_ball(model, &row.project, &row.ball_id, &owner_name(row));
+/// `bl unclaim <id> --as <owner>` for one answered ball row (§8.2) — the
+/// Release button's body, shared with the §11 `r` binding.
+fn release_row(model: &mut AppModel, row: &BoundBall) {
+    release_ball(model, &row.project, &row.id, &row.owner);
 }
 
 /// `bl close <id> --as <owner>` (§8.2) named outright — the one body the Close
 /// button, the `c` binding and the §11 ball-row menu all reach (`super::menus`),
 /// which is why the menu can never mean something else by "close".
-pub(super) fn close_ball(model: &mut AppModel, project: &Path, id: &str, owner: &str) {
+pub(super) fn close_ball(model: &mut AppModel, project: &str, id: &str, owner: &str) {
     super::act::fire(
         model,
         &Action::Close {
-            project: model.snap.project_name(project),
+            project: project.to_owned(),
             id: id.to_owned(),
             name: owner.to_owned(),
         },
@@ -110,11 +120,11 @@ pub(super) fn close_ball(model: &mut AppModel, project: &Path, id: &str, owner: 
 
 /// `bl unclaim <id> --as <owner>` (§8.2) — Release's one body, shared with the
 /// `r` binding and the ball-row menu.
-pub(super) fn release_ball(model: &mut AppModel, project: &Path, id: &str, owner: &str) {
+pub(super) fn release_ball(model: &mut AppModel, project: &str, id: &str, owner: &str) {
     super::act::fire(
         model,
         &Action::Release {
-            project: model.snap.project_name(project),
+            project: project.to_owned(),
             id: id.to_owned(),
             name: owner.to_owned(),
         },
@@ -123,11 +133,11 @@ pub(super) fn release_ball(model: &mut AppModel, project: &Path, id: &str, owner
 
 /// `bl unclaim` then `bl claim --as <to>` (§8.2) — Move's one body, shared with
 /// the ball-row menu's destination submenu.
-pub(super) fn move_ball(model: &mut AppModel, project: &Path, id: &str, owner: &str, to: &str) {
+pub(super) fn move_ball(model: &mut AppModel, project: &str, id: &str, owner: &str, to: &str) {
     super::act::fire(
         model,
         &Action::Move {
-            project: model.snap.project_name(project),
+            project: project.to_owned(),
             id: id.to_owned(),
             from: owner.to_owned(),
             to: to.to_owned(),
@@ -137,11 +147,11 @@ pub(super) fn move_ball(model: &mut AppModel, project: &Path, id: &str, owner: &
 
 /// `bl claim <id> --as <to>` (§8.2) — Assign's one body: the ready ball row's
 /// `assign → <workspace>` button ([`super::start_pane`]) and the ball-row menu.
-pub(super) fn assign_ball(model: &mut AppModel, project: &Path, id: &str, to: &str) {
+pub(super) fn assign_ball(model: &mut AppModel, project: &str, id: &str, to: &str) {
     super::act::fire(
         model,
         &Action::Assign {
-            project: model.snap.project_name(project),
+            project: project.to_owned(),
             id: id.to_owned(),
             name: to.to_owned(),
         },
@@ -151,7 +161,7 @@ pub(super) fn assign_ball(model: &mut AppModel, project: &Path, id: &str, to: &s
 /// Release the **focused conversation's bound ball** (§8.2): the §11 `r`
 /// binding, refused exactly where the button is disabled.
 pub(super) fn release_focused(model: &mut AppModel) {
-    let Some(row) = model.focused_join().cloned() else {
+    let Some(row) = focused_ball(model) else {
         return;
     };
     if unclaim_enabled(row.state) {
@@ -160,13 +170,26 @@ pub(super) fn release_focused(model: &mut AppModel) {
 }
 
 /// Close the **focused conversation's bound ball** (§8.2): the §11 `c` binding.
-/// Re-derives its target from the focus and honours [`close_enabled`], so it is
+/// Aims at the same row the button does and honours [`close_enabled`], so it is
 /// refused exactly where the button is disabled.
 pub(super) fn close_focused(model: &mut AppModel) {
-    let Some(row) = model.focused_join().cloned() else {
+    let Some(row) = focused_ball(model) else {
         return;
     };
     if close_enabled(row.state) {
         close_row(model, &row);
     }
+}
+
+/// The row both key bindings act on: the **first** of the focused workspace's
+/// landed ball rows, which is the very row [`actions`] paints above the
+/// composer.
+///
+/// **Read off the landed answer, never awaited at the click** (REMOTE §9.7,
+/// bl-b4b5). The question is already standing — the ball row painted this
+/// frame declared it — so this is a map read, and a key pressed before the
+/// first answer simply does nothing, exactly as a key pressed with no ball
+/// bound does. The authoritative gate is the engine's, re-derived at fire.
+fn focused_ball(model: &mut AppModel) -> Option<BoundBall> {
+    super::chrome::focused_balls(model).first().cloned()
 }
