@@ -1,7 +1,8 @@
 +++
 title = "REMOTE read path: the seat's own Query::Agent — the last in-process read, and the rendering ruling it needs"
 created = 1786768626
-updated = 1786769175
+updated = 1786769792
+claimant = "Baggywrinkle"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 `AppModel::focused_conversation` is the last §11 read still derived in process. bl-13f9 migrated the whole inspector *tab* family — transcript, steps, step detail, files (listing and preview in one ask), rail, inbox — and spelled config-frozen-at as `Query::Governing`, and it deliberately left this one, because it is not more of the same three moves.
