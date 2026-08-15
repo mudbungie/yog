@@ -1086,7 +1086,7 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
-### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9, bl-7407)
+### 9.7 The read path, and the ruling that opened it (bl-ccf7, bl-ae05, bl-adcb, bl-f297, bl-44e9, bl-13f9, bl-7407, bl-48ae)
 
 Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's two
 transport questions settled. It could not move the read path, because §1.2 and
@@ -1448,9 +1448,30 @@ named rather than open.
 - **The §9 config editors' own loads**, which were never one of the three classes
   (bl-f297's ruling: pointing them at `ReadConfig`/`Lineages`/`Models`/
   `Providers` changes what a config editor *is*, and is a separate design).
+- ~~The seat's own `Query::Agent`~~ — **closed, bl-48ae**, below.
 
 Nothing in that list is blocked on a decision that has not now been taken; each
 is blocked on work whose shape is named.
+
+**And the list is a list of NAMED SURFACES, which is worth saying out loud**
+(bl-48ae). Every one bl-adcb's audit enumerated has now crossed or been ruled
+on, and it would be easy to read that as *the window reads over the wire*. It is
+not what any of these balls established. What is still derived in process is the
+§11 **accessory** tail nobody put on the list: the header's live mark
+(`mark_seats`) and the bottom in-flight strip (`flight_strip`), the §3.2/§3.5
+ball and spend family (`conversation_ball`, `ws_balls`, `ball_spend`,
+`conversation_spend`, `conversation_context`, `focused_join`, `bound_ball`,
+`roster_ball_rows`), the composer's pending listing (`focused_pending`) and its
+§3.3 title table (`agent_titles`), the §2.2 lineage tip (`config_tip`), the §3.6
+and §8.4 fire-time gates (`delete_confirmation`, `agent_delete_confirmation`,
+`move_targets`, `conversation_names`), and the altitude-0 chrome
+(`tab_bar`, `strip_total`, `activity`, `staleness`, `has_alarms`). None of them
+is blocked and none of them is a ruling — each is a `Reply` that does not exist
+yet — but a residual that says *three surfaces plus scope* while thirty
+accessors fold the snapshot on the paint thread is a doc that has stopped being
+true. The **affordance** half is deliberately not on that list: `startable` /
+`resumable` and the composer's fire-time inputs are the acts side of bl-adcb's
+own line (*what crosses is the read, not the affordance*).
 
 **The §11 inspector family crossed, and config-frozen-at got its query
 (bl-13f9).** Six tab reads — transcript, steps, one step's records, the worktree
@@ -1527,8 +1548,9 @@ arrived on is read off an unmeasured layout. `painted` therefore pre-rolls two
 frames, drains, and reads the frame after; `Screen` needs no pre-roll, its context
 being persistent across the drive.
 
-**What bl-13f9 did NOT take, and why it is a ruling and not scope.** The seat's
-own `Query::Agent` — `AppModel::focused_conversation` — stays in process. It is
+**What bl-13f9 did NOT take, and why it is a ruling and not scope** — *closed
+by bl-48ae, below.* The seat's own `Query::Agent` —
+`AppModel::focused_conversation` — stayed in process. It is
 not a §11 tab read: it is the *selection's* own view, and its consumers are
 frame-synchronous in a way the tab reads are not. The composer's target line names
 the conversation off it (a name that blinked between "start a conversation" and
@@ -1539,8 +1561,76 @@ gates read it at click time (`x` stops the selection iff `seat.stoppable`). Thre
 of its seven callers hold `&AppModel` rather than `&mut`, so migrating it is a
 signature cascade *and* a rendering ruling about what a seat shows between the
 click and the answer. That is bl-f297's dissolved class 3 — *a consumer that reads
-it synchronously* — reappearing at a different noun, and it wants the ruling
-first. It is the residual this ball leaves, and it is filed as **bl-48ae**.
+it synchronously* — reappearing at a different noun, and it wanted the ruling
+first. It was the residual that ball left, and it was filed as **bl-48ae**.
+
+**The seat's own read is gone, and it did not become a question (bl-48ae).**
+The ruling is a **split by who needs it when**, and the two shapes bl-48ae
+weighed against it are recorded as declined: a *latch* (bl-f297's marks-pane
+shape) answers the gates and answers neither the name nor the unfold, both of
+which are wanted on the frame the selection changes; and a seat *holding its
+last answer* under the new selection's name — a surface that lies for half a
+second — is worse than one that is blank. What made a third shape available is
+that the payload work had already been done: since bl-44e9 `Query::Conversations`
+lands the **whole descent forest** with per-row rollups, and a `ConvRow` has
+carried the §8.2 gates since bl-1eb0. So the frame-synchronous half was never a
+wire read at all — it is a *selection out of an answer the §11 list is already
+holding*.
+
+- **`nav::convs::selection` is `visible`'s sibling** and the same kind of thing:
+  a pure fold over an answered forest, `visible` keyed by which rows are open and
+  this one by which row is picked. The composer's `→ message <name>` line, §11's
+  ancestor unfold (`shell::focus::ancestors`), `x`'s `stoppable` and the §3.6
+  danger row's root all come off it, in the frame the selection changed, with no
+  new ask and nothing latched. Depth *is* the parentage — the answer is
+  pre-order, so a row's ancestors are exactly the shallower rows above it, which
+  is `parent_of`'s own rule iterated to the root — and `answer::agent`'s
+  *absence is a value, not a refusal* ruling is kept verbatim at this altitude.
+- **Nothing was added to `ConvRow`, and nothing was taken off `AgentView`.** The
+  ball's fallback was a payload move; it was not needed for the four consumers
+  that forced the ruling, and it would have been wrong for the residue. What the
+  forest does not answer is `tip`, `marks`, `held` and `nudgeable` — facts about
+  **one agent** rather than about the list, one of them a git oid and one a
+  parked invocation blob, and putting either on every row of a workspace's forest
+  to serve the one row that is selected is the altitude mistake `ConvRow`'s own
+  definition (*the projection of one subtree to what the list paints*) exists to
+  prevent. They ride a standing `Query::Agent` at the seat — the first window
+  consumer that query has ever had.
+- **The parity is pinned, because two projections of one derivation are two
+  facts waiting to disagree.**
+  `boundary::answer::agent::tests::the_forest_answers_every_fact_the_seat_reads_off_the_selection`
+  asserts all nine shared fields equal between `answer::agent` and
+  `nav::convs::selection` over a root, a member and an id nothing carries. That
+  is what licenses the split: the two answers are one derivation, projected
+  twice, and a change to either that moved them apart reddens.
+- **The rendering ruling, stated once so no later reader re-derives it: a fact
+  that gates a gesture is read off the forest; a fact that only paints may land
+  an ask period later.** Everything on the `Query::Agent` side paints an
+  affordance rather than judging one — an unpainted button cannot refuse a
+  click — so a freshly-selected conversation shows its §6 marks, its §9.4 model
+  row and its `Nudge` button half a second after its name. That is the same beat
+  the transcript beside them has kept since bl-13f9, and it is the general rule
+  at one more surface rather than a case of its own.
+- **`AppModel::focused_conversation` is deleted, and the subtraction is the
+  proof** (bl-1747's precedent). Its seven callers took the split; three of them
+  (`shell::{focus,delete_agent,settings}`) took `&mut AppModel` with it, which is
+  what a read that crosses the boundary costs a signature and is the cascade the
+  ball named. `src/shell/seat.rs` is the one place either half is spelled.
+- **Four bespoke acceptance drivers learned the harness ruling** (§9.8's, as
+  bl-44e9 extended it to reads): `settings`, `drift`, `inbox_composer` and
+  `one_rendering` each ran their own counted frames and settled no wire, so a
+  seat whose subject is now an answer painted nothing in them. They pre-roll and
+  then `World::drain` to a fixed point like `acceptance::painted` does. A driver
+  that counts frames is fine; one that counts frames *and* reads a migrated
+  surface is not.
+- **One ast-grep rule gained a carve-out, keyed to the enum path rather than to
+  a file.** `no-engine-tree-in-paint` forbids paint code naming `GitTree`/`Agent`/
+  `CommitNode`; `Query::Agent` and `Reply::Agent` are the words a seat writes to
+  declare *a payload the codec spells in both directions*, which is exactly what
+  the rule exists to permit. The exception matches only an identifier whose
+  scoped parent's path is `Query` or `Reply`, so `crate::git_tree::Agent` is
+  still flagged everywhere it appears; the fixtures still bite and `src` is
+  clean, which is the two-direction check.
 
 - ~~Gestures are still dispatched in process~~ — **the design and the first
   group landed, §9.8** (bl-4841). An act is a declaration whose receipt lands

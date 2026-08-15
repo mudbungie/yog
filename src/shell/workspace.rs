@@ -21,8 +21,8 @@
 //! doing, the roster on hover. Selecting a member is the list's gesture.
 
 use crate::AppModel;
-use crate::boundary::answer::agent::AgentView;
 use crate::cli_outbound::Cli;
+use crate::nav::convs::Selection;
 use crate::theme;
 use std::path::Path;
 
@@ -51,7 +51,7 @@ pub fn center(
     if model.focused_is_replay() {
         ui.weak("replay · read-only");
     }
-    let Some(seat) = model.focused_conversation() else {
+    let Some(seat) = super::seat::selection(model) else {
         // Nothing selected is not an empty seat — but what fills it is the
         // birth-config block down in the settings rows (bl-824e, re-seated by
         // bl-2e18), where every config-shaped row now lives.
@@ -59,7 +59,15 @@ pub fn center(
         return;
     };
     let agent_id = seat.agent_id.clone();
-    let agent_marks = seat.marks.clone();
+    // The selection's own detail, over the wire (REMOTE §9.7, bl-48ae): the §6
+    // marks are a fact about this one agent rather than about the list, so they
+    // ride the standing `Query::Agent` and land an ask period after the name
+    // above them. A frame the engine has not answered wears no marks, which is
+    // the same honest empty state the transcript below already paints.
+    let agent_marks = super::seat::detail(model, &ws, &agent_id)
+        .value
+        .map(|view| view.marks)
+        .unwrap_or_default();
     header(ui, model, &ws, &seat);
     // The §6 marks the *focused* agent wears, said outright — this seat has the
     // room, and it is the one surface a jump-to-attention always lands on. It is
@@ -134,7 +142,7 @@ pub fn center(
 /// is, so it stays on the identity side of the settings-seat ruling; what those
 /// balls have *spent* is a figure, and figures went to the bottom with the rest
 /// of the config-shaped rows ([`super::settings`], bl-2e18).
-fn header(ui: &mut egui::Ui, model: &AppModel, ws: &Path, seat: &AgentView) {
+fn header(ui: &mut egui::Ui, model: &AppModel, ws: &Path, seat: &Selection) {
     // §11 altitude 1: the id is the identifier, the name is the title — one
     // ladder (§3.3), the same one the §11 row and the §3.6 dialog read. The
     // live-activity indicator sits on that same line: the open conversation's

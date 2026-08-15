@@ -13,7 +13,7 @@
 //! value of this beat is that the exit is readable where it is offered.
 
 use super::super::render;
-use super::fixture::world;
+use super::fixture::{World, world};
 use super::input;
 use crate::cli_outbound::Cli;
 use crate::model_pick::tests::TEMPLATE_PROVIDERS;
@@ -55,13 +55,25 @@ fn painted_seat(drifted: bool) -> (Vec<Painted>, egui::Rect) {
         Cli::new("yog-absent-bl"),
         Cli::new("yog-absent-bz"),
     );
+    let frame = |world: &mut World| {
+        ctx.run(input(), |ctx| {
+            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+        })
+    };
+    // Two frames, then the **wire settled to a fixed point** (REMOTE §9.7's
+    // harness ruling): the freeze clause reads the conversation's own tip off a
+    // standing `Query::Agent` since bl-48ae, and its seat is only rendered at
+    // all once the answered forest says something is selected.
+    let _ = frame(&mut world);
+    let _ = frame(&mut world);
+    world.drain(&mut |world| {
+        let _ = frame(world);
+    });
     let mut out = None;
     // Four frames: panels adopt their content height a frame late, and the
     // composer's queue region settles one after that.
     for _ in 0..4 {
-        out = Some(ctx.run(input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
-        }));
+        out = Some(frame(&mut world));
     }
     let painted = crate::paint_probe::painted_of(&out.expect("four frames ran"));
     let seat =

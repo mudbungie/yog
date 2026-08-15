@@ -50,9 +50,8 @@ impl Window {
 
     /// The same settle on a window of the caller's own size.
     fn settled_on(&self, world: &mut World, raw: egui::RawInput) -> Vec<Painted> {
-        let mut out = None;
-        for _ in 0..4 {
-            out = Some(self.ctx.run(raw.clone(), |ctx| {
+        let frame = |world: &mut World| {
+            self.ctx.run(raw.clone(), |ctx| {
                 render(
                     ctx,
                     &mut world.model,
@@ -61,7 +60,20 @@ impl Window {
                     &self.bl,
                     &self.bz,
                 );
-            }));
+            })
+        };
+        // Two frames, then the **wire settled to a fixed point** (REMOTE §9.7's
+        // harness ruling): this seat's rows are a selection out of an answered
+        // forest and a standing `Query::Agent` since bl-48ae, so a driver that
+        // only ran frames would measure a panel holding nothing.
+        let _ = frame(world);
+        let _ = frame(world);
+        world.drain(&mut |world| {
+            let _ = frame(world);
+        });
+        let mut out = None;
+        for _ in 0..4 {
+            out = Some(frame(world));
         }
         crate::paint_probe::painted_of(&out.expect("four frames ran"))
     }

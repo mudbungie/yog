@@ -54,6 +54,7 @@ mod pane;
 mod ram;
 pub(super) mod row;
 mod search_pane;
+mod seat;
 mod settings;
 mod slash;
 mod start_pane;

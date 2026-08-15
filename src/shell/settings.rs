@@ -48,8 +48,8 @@
 
 use super::ShellState;
 use crate::AppModel;
-use crate::boundary::answer::agent::AgentView;
 use crate::cli_outbound::Cli;
+use crate::nav::convs::Selection;
 use crate::spend;
 use std::path::Path;
 
@@ -81,7 +81,7 @@ pub(super) fn render(
         egui::ScrollArea::vertical()
             .id_salt("conversation-settings")
             .max_height(cap)
-            .show(ui, |ui| match model.focused_conversation() {
+            .show(ui, |ui| match super::seat::selection(model) {
                 Some(seat) => conversation(ui, model, state, &ws, &seat, bz),
                 None => super::birth::block(ui, model, state, &ws, bz),
             });
@@ -96,7 +96,7 @@ fn conversation(
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
-    agent: &AgentView,
+    agent: &Selection,
     bz: &Cli,
 ) {
     // The §3.5 per-ball figure, one row per bound ball (§3.2's claimant join):
@@ -134,7 +134,16 @@ fn conversation(
     // The workspace's config-lineage tip (§7 snapshot, `HEAD` → `config/default`)
     // is the "workspace default" half of that drift.
     let config_tip = model.config_tip();
-    if super::model_pick::conversation_seat(ui, model, state, ws, agent, config_tip.as_ref(), bz) {
+    let agent_id = agent.agent_id.clone();
+    if super::model_pick::conversation_seat(
+        ui,
+        model,
+        state,
+        ws,
+        &agent_id,
+        config_tip.as_ref(),
+        bz,
+    ) {
         super::keys::new_conversation(model, state);
     }
 }

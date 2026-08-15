@@ -10,7 +10,7 @@
 //! absent from it, then paint the owner and assert they are there. Asserting
 //! only the second half would pass on the defect.
 
-use super::fixture::world;
+use super::fixture::{World, world};
 use super::screen::{Screen, click};
 use crate::keymap::CenterTab;
 
@@ -160,13 +160,22 @@ fn in_flight_frame() -> Vec<crate::paint_probe::Painted> {
         .expect("the step's response record");
     super::inbox_composer::converge_ws(&mut world);
     let ctx = egui::Context::default();
-    let mut frame = || {
+    let frame = |world: &mut World| {
         ctx.run(super::input(), |ctx| {
             crate::shell::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
         })
     };
+    // Two frames, then the **wire settled to a fixed point** (REMOTE §9.7's
+    // harness ruling): the §11 strip's own subject is a selection read out of
+    // an answered forest since bl-48ae, so a driver that only ran frames would
+    // paint a window that had not been told what it was looking at.
+    let _ = frame(&mut world);
+    let _ = frame(&mut world);
+    world.drain(&mut |world| {
+        let _ = frame(world);
+    });
     for _ in 0..4 {
-        let _ = frame();
+        let _ = frame(&mut world);
     }
-    crate::paint_probe::painted_of(&frame())
+    crate::paint_probe::painted_of(&frame(&mut world))
 }

@@ -22,9 +22,9 @@ use super::super::ShellState;
 use super::super::wire::Said;
 use super::{rail, reads, work};
 use crate::AppModel;
-use crate::boundary::answer::agent::AgentView;
 use crate::inspector::TabData;
 use crate::keymap::InspectorTab;
+use crate::nav::convs::Selection;
 use crate::steps_view::StepsView;
 
 /// Every view-model the focused agent's inspector renders, built for the
@@ -45,12 +45,13 @@ pub(super) fn tab_data(
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
-    focus: &AgentView,
+    focus: &Selection,
 ) -> (TabData, Vec<String>) {
     let agent_id = focus.agent_id.clone();
     // Who the transcript's model turns are (bl-2335): the §3.3 ladder over the
     // selection's *conversation root*, folded into the seat's own view since
-    // bl-1eb0, so this reads a payload rather than a roster.
+    // bl-1eb0 and picked out of the landed forest since bl-48ae, so this reads
+    // an answer rather than a roster.
     let speaker = focus.name.clone();
     let mut said = Said::default();
     // The two asked on every tab: the steps view because the centre's auth and

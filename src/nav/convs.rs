@@ -21,6 +21,9 @@ pub mod expand;
 pub mod flight;
 pub mod group;
 pub mod row;
+/// The **selection's** own facts, picked out of the answered forest (REMOTE
+/// §9.7, bl-48ae) — [`expand::visible`]'s sibling fold.
+pub mod select;
 /// The §3.3 ladder as a seat holds it — id→title, no agent set (bl-1eb0).
 pub mod titles;
 
@@ -28,6 +31,7 @@ pub use doing::{Doing, Seat, doing, seats};
 pub use expand::{ancestors, forest_rows, parent_of, step, visible};
 pub use flight::{Flight, FlightStrip, STRIP_HOVER, conversation_flight, strip};
 pub use row::{ConvBall, ConvRow, age_label, build};
+pub use select::{Selection, selection};
 pub use titles::Titles;
 
 /// A conversation reduced to what a **verb** needs (§3.6): its display name and

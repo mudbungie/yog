@@ -14,7 +14,6 @@ use super::{
     refresh, roster_fault, row_names, select, settled, write,
 };
 use crate::AppModel;
-use crate::boundary::answer::agent::AgentView;
 use crate::model_pick::{
     ConfigTip, NEW_CONVERSATION_EXIT, Pick, RETARGET_EXIT, RETARGET_HOVER, row_role,
 };
@@ -49,23 +48,36 @@ enum Exit {
 /// workspace default, and the pane's extras while it is open. Returns whether
 /// the operator took the §9.4 drift exit — the caller owns the composer, so the
 /// seat names the request rather than performing it.
+///
+/// The branch tip this conversation is frozen on is the **selection's own
+/// detail** and is asked for here (REMOTE §9.7, bl-48ae): it is a fact about one
+/// agent rather than about the §11 list, so it rides the standing
+/// `Query::Agent` rather than a row. A frame the engine has not answered has no
+/// pair to offer and offers none — the collapsed-pane rule at one row, and the
+/// same beat the transcript above it keeps.
 pub(crate) fn conversation_seat(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
-    agent: &AgentView,
+    agent_id: &str,
     config_tip: Option<&ConfigTip>,
     bz: &Cli,
 ) -> bool {
+    let Some(tip) = crate::shell::seat::detail(model, ws, agent_id)
+        .value
+        .map(|view| view.tip)
+    else {
+        return false;
+    };
     let Some((frozen_oid, row)) =
-        lines::conversation_row_of(ws, &agent.tip, config_tip, &mut state.wall.picker)
+        lines::conversation_row_of(ws, &tip, config_tip, &mut state.wall.picker)
     else {
         return false;
     };
     let subject = Subject {
         scope: conversation_scope(ws, &frozen_oid),
-        agent: Some(agent.agent_id.clone()),
+        agent: Some(agent_id.to_owned()),
     };
     seat(ui, model, state, ws, &row, &subject, bz)
 }

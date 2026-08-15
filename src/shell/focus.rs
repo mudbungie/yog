@@ -146,12 +146,14 @@ pub(super) fn reveal_selection(model: &mut AppModel, state: &mut ShellState) {
 }
 
 /// The descent-id chain above the **selected** agent, outermost first — read
-/// off the §11 seat's own view (REMOTE §9.4, bl-1eb0), which folds the same
-/// `nav::convs` derivation the list itself renders. Empty for a root and for an
-/// id this snapshot has not got.
-fn ancestors(model: &AppModel) -> Vec<String> {
-    model
-        .focused_conversation()
+/// off the §11 seat's own view (REMOTE §9.4, bl-1eb0), which since bl-48ae is a
+/// selection out of the **landed forest** rather than an in-process derivation.
+/// It has to be: the unfold keeps the selection visible, so a chain that arrived
+/// an ask period late would leave the operator on a row nobody can see, which is
+/// the invariant this exists for. Empty for a root and for an id the answer has
+/// not got.
+fn ancestors(model: &mut AppModel) -> Vec<String> {
+    super::seat::selection(model)
         .map(|seat| seat.ancestors)
         .unwrap_or_default()
 }
