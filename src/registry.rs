@@ -166,3 +166,29 @@ mod tests;
 /// `rules/locks-outside-state.yml` records twice over, met here by the remedy
 /// `state.rs` already uses: append below every line that was here before.
 pub mod mailbox;
+
+/// **The local window's own client identity** (REMOTE §1.2, §4.1; bl-ae05):
+/// `yog-window`, the subject common name yog's own mint puts on the window leaf
+/// ([`Role::Window`](crate::wire::material::Role::Window)) — and therefore the
+/// name the engine reads off the certificate the window presents, the directory
+/// its §7 pane document lives in, and the name a registration seats. One
+/// spelling, here, because an identity's home is the registry.
+///
+/// **The module doc and [`LOCAL`]'s own doc still say `local` is the
+/// window's**, and they are deliberately not edited — the reason [`mailbox`] is
+/// declared at the bottom of this file. Editing a byte above shifts every byte
+/// below it, and llvm-cov then mis-attributes a phantom *uncovered* region onto
+/// `impl Default for Client`, costing this file its 100 % floor (measured
+/// twice). **REMOTE §4.1 is the authority and it is narrower than those lines
+/// read: `local` is the certificate-less in-world callers — the `gestures/`
+/// deposit inbox and `yog gesture` — and the window is not among them.**
+pub const WINDOW: &str = "yog-window";
+
+/// The window's identity as a [`Client`] — total, unlike [`Client::parse`],
+/// because the name is yog's own const rather than a token read off a
+/// certificate. A free function rather than a second `impl Client` block, for
+/// the reason above: an added `impl` draws a phantom region onto itself
+/// besides, which is the same hazard `state.rs` meets the same way.
+pub fn window() -> Client {
+    Client(WINDOW.to_owned())
+}

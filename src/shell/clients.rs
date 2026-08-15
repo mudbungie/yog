@@ -1,42 +1,55 @@
-//! The workspace's **registered clients** section (REMOTE §5, bl-4e08).
-//! Coverage-excluded glue beside the balls section it sits under: the rows come
-//! from `registry::roster`, the one derivation `Query::Clients` answers, so this
-//! file only chooses a glyph and lays the widgets.
+//! The workspace's **registered clients** section (REMOTE §5, bl-4e08) — and,
+//! since bl-ae05, **the first surface yog paints from a wire reply**.
 //!
-//! REMOTE §5: *"The workspace surface renders its registered clients — present
-//! or absent — and each one's advertised tools, live: the seat sees the flap;
-//! the model's prefix does not."* Both halves are here. **Live** is what the
-//! per-derivation memo's key buys: presence moves without a derivation, so the
-//! live set is *in* the key and a flap rebuilds exactly the rows it changed
-//! (§7.2 — the frame still reads no disk per frame).
+//! REMOTE §1.2 rules the window a client of the boundary over the same wire a
+//! remote seat uses, and the operator ruling of 2026-08-14 chose the front
+//! door: this section's rows are a `Reply::Clients` that crossed loopback mTLS,
+//! was scoped against the window's own registrations, and was decoded by
+//! `reply::decode`. Nothing here reads disk, joins presence or holds a memo any
+//! more — the fold that built these rows is the engine's, and the frame's whole
+//! part is to declare the question and paint what landed.
+//!
+//! **The frame never waits.** [`AppModel::wire_ask`](crate::AppModel::wire_ask)
+//! returns whatever the [`asker`](crate::wire::asker) has landed for this
+//! question — `None` until the first answer arrives, then the newest one — so a
+//! slow or dead engine costs this section its content and the window nothing.
+//! There is no memo because there is nothing to memoize: an answer *is* the
+//! cached fold, refreshed at human cadence rather than per derivation, and
+//! presence rides it (REMOTE §5's *"the seat sees the flap"*) with no key to
+//! invalidate.
 //!
 //! The section is deliberately a **read**. There is no gesture on it and none
 //! is coming: a registration is the operator's own file act on the server
-//! (REMOTE §4.1), and an advertisement is the tool host's, arriving over its
-//! own connection. Nothing a click here could do would be yog's to do.
+//! (REMOTE §4.1) or the engine's own act for its window, and an advertisement
+//! is the tool host's, arriving over its own connection.
 
 use crate::AppModel;
+use crate::boundary::reply::Reply;
+use crate::boundary::{Gesture, Query, codec};
 use crate::registry::roster::ClientRow;
 use crate::theme;
 
-use super::ShellState;
-
 /// The collapsible clients section (§11), painted beside the balls one and
-/// folded by the same persisted §4.1 collapse override. Absent entirely when
-/// no client is registered here — an empty section is a question ("is this
-/// broken?") on the overwhelming majority of boxes, which have no wire at all.
-pub fn section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) {
+/// folded by the same persisted §4.1 collapse override. Absent entirely while
+/// the wire has answered nothing and when the answer is empty — an empty
+/// section is a question ("is this broken?"), and the one thing worth saying is
+/// a refusal, which is said.
+pub fn section(ui: &mut egui::Ui, model: &mut AppModel) {
     let Some(ws) = model.focused_workspace().map(std::path::Path::to_path_buf) else {
         return;
     };
-    let name = crate::naming::leaf(&ws);
-    let rows = state
-        .clients
-        .read(model.derivation(), (ws, model.live_clients()), &mut || {
-            model.clients(&name)
-        })
-        .clone();
-    if rows.is_empty() {
+    let question = codec::encode(&Gesture::Ask(Query::Clients {
+        workspace: crate::naming::leaf(&ws),
+    }));
+    let (rows, refused) = match model.wire_ask(&question) {
+        Some(Ok(Reply::Clients(rows))) => (rows, None),
+        Some(Err(said)) => (Vec::new(), Some(said)),
+        // An answer of another kind is a codec that has drifted from the
+        // query it answers, which is a defect rather than a state — and one
+        // the round-trip tests are the witness for. Nothing to paint.
+        Some(Ok(_)) | None => (Vec::new(), None),
+    };
+    if rows.is_empty() && refused.is_none() {
         return;
     }
     let collapsed = model.is_collapsed("clients");
@@ -45,8 +58,8 @@ pub fn section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) 
         .selectable_label(false, format!("{arrow} clients"))
         .on_hover_text(
             "show or hide the clients section — the machines registered in this workspace, \
-             whether each is connected right now, and the tools each one offers. The same \
-             rows are `/clients`.",
+             whether each is connected right now, and the tools each one offers. Read over the \
+             wire, like every seat's: the same rows are `/clients`.",
         )
         .clicked()
     {
@@ -56,6 +69,11 @@ pub fn section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) 
         return;
     }
     ui.indent("clients", |ui| {
+        // A refusal is painted, not swallowed: the wire is how this window
+        // reads now, so what it was told is the honest content of the section.
+        if let Some(said) = &refused {
+            ui.colored_label(theme::ICHOR, said);
+        }
         for row in &rows {
             client_row(ui, row);
         }

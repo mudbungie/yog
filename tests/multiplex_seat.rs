@@ -61,16 +61,16 @@ fn yog_seat_sends_over_the_wire_and_exits_on_the_reply() {
         Some(2)
     );
 
-    // The operator's act, scripted: the very target the refusal names.
-    let mint = yog::git_env::command(Path::new("scripts/wire-certs.sh"))
-        .env("WIRE_DIR", &dir)
-        .env("WIRE_PORT", "0")
-        .output()
-        .unwrap();
-    assert!(
-        mint.status.success(),
-        "wire-certs: {}",
-        String::from_utf8_lossy(&mint.stderr)
+    // The operator's act, the very verb the refusal names (bl-ae05): one
+    // recipe, reached here exactly as `make wire-certs` reaches it.
+    assert_eq!(
+        yog::wire::provision::verb::perform(&yog::wire::provision::verb::Plan {
+            dir: dir.clone(),
+            address: "127.0.0.1:0".to_owned(),
+            force: false,
+        }),
+        0,
+        "the mint runs"
     );
 
     // An engine on the other end, bound where the material says.

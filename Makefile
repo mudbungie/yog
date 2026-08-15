@@ -126,17 +126,19 @@ beat-audit:
 # the bytes committed. Until bl-167d it enumerated `git ls-files` and grepped
 # the WORKTREE files those names pointed at, which passed any leak that was
 # staged and then overwritten with a clean copy on disk.
-# Mint the wire's local CA and its server/client leaves (REMOTE §1.4, §8;
-# bl-b6fa). **Operator tooling, never an in-channel protocol**: yog mints no
-# certificate of its own, and this is the out-of-channel act scripted. Nothing
-# it writes is in the repo — `WIRE_DIR` is under the yog data root, beside the
-# world. Refuses to overwrite; `FORCE=1` rotates, which distrusts every
-# certificate already issued.
+# Mint the wire's local CA and its server/client/window leaves (REMOTE §1.4,
+# §8; bl-b6fa, amended bl-ae05). **Operator tooling, never an in-channel
+# protocol** — but no longer a script: the recipe is `yog wire-certs`, because
+# an installed binary has no repository to find a script in and the engine's own
+# boot performs the same act on an unprovisioned box. One recipe, two callers.
+# Nothing it writes is in the repo — `WIRE_DIR` is under the yog data root,
+# beside the world. Refuses to overwrite; `FORCE=1` rotates, which distrusts
+# every certificate already issued.
 #   make wire-certs
 #   make wire-certs WIRE_HOST=engine.example.com WIRE_PORT=7737
 wire-certs:
 	@WIRE_DIR="$(WIRE_DIR)" WIRE_HOST="$(WIRE_HOST)" WIRE_PORT="$(WIRE_PORT)" \
-		scripts/wire-certs.sh
+		cargo run --quiet -- wire-certs
 
 leak-scan:
 	@scripts/leak-scan.sh --self-test

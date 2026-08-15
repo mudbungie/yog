@@ -70,6 +70,21 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  the failure — restarting it is the supervision this machine already has.",
     },
     HelpRow {
+        verb: crate::wire::provision::verb::SUBCMD,
+        usage: "yog wire-certs",
+        summary: "mint this box's wire certificates: a local CA and its server/client leaves",
+        detail: "Write a private CA and the server, client and window leaves into the wire \
+                 material directory, plus the one `address` file naming what the engine binds \
+                 and a seat dials. The engine's own boot already does this for a box that has \
+                 none, aimed at loopback, so this is the act for everything else: a server \
+                 another machine dials by name (`WIRE_HOST=engine.example.com WIRE_PORT=7737`), \
+                 a different directory (`WIRE_DIR`), or a rotation (`FORCE=1`). It refuses to \
+                 overwrite otherwise, because a rotation distrusts every certificate already \
+                 issued and every seat holding one stops connecting. It shells to `openssl`: \
+                 provisioning is the operator's out-of-channel act and yog links no \
+                 certificate library.",
+    },
+    HelpRow {
         verb: crate::world::hatch::ENV_SUBCMD,
         usage: "yog env [--ws WORKSPACE]",
         summary: "print the world's environment (`eval \"$(yog env)\"`)",

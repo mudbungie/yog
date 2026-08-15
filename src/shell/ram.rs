@@ -157,16 +157,6 @@ pub struct ShellState {
     /// restart is a new window, which is exactly why a fresh one announces
     /// nothing it merely inherited.
     pub alerts: crate::alert::Announced,
-    /// The §11 clients section's per-derivation memo (REMOTE §5, bl-4e08): the
-    /// focused workspace's registered clients, built at most once per (
-    /// derivation, workspace, live set). Presence is *in the key* rather than
-    /// beside it, because a flap moves no derivation and the section must
-    /// repaint on one — which is the whole of what "the seat sees the flap"
-    /// costs the frame.
-    pub(crate) clients: crate::app::SnapMemo<
-        (PathBuf, std::collections::BTreeSet<String>),
-        Vec<crate::registry::roster::ClientRow>,
-    >,
     /// The composed world (§16.2) each wall's RAM is folded from the first time
     /// its workspace takes focus ([`ShellState::focus_wall`]).
     world: Env,
@@ -225,7 +215,6 @@ impl ShellState {
             new_ws: NewWsState::default(),
             slash: None,
             alerts: crate::alert::Announced::default(),
-            clients: crate::app::SnapMemo::default(),
             wound_grace: WoundGrace::new(clock),
             world: env.clone(),
             wall_at: None,

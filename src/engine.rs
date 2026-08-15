@@ -42,14 +42,24 @@ pub struct Engine {
     _bridge: Bridge,
     _worker: Worker,
     _consumer: Consumer,
-    /// The REMOTE §9.5 wire listener (bl-b6fa) — `None` on a box with no
-    /// certificates provisioned, which is every box until an operator performs
-    /// the out-of-channel act (REMOTE §1.4). Held only so it lives as long as
-    /// the engine and stops when it drops.
-    _wire: Option<crate::wire::server::Listener>,
+    /// The REMOTE §9.5 wire listener (bl-b6fa) — `None` only where the mint
+    /// itself failed, since bl-ae05 made an unprovisioned box found its own
+    /// loopback material rather than go without a listener. Held so it lives as
+    /// long as the engine and stops when it drops, and **read** by
+    /// [`asker`](Self::asker): the window dials the port this actually bound.
+    wire: Option<crate::wire::server::Listener>,
     _sentry: Sentry,
     _pilot: Pilot,
     _follower: FollowThread,
+    /// The asker's half of the window's read path (REMOTE §1.2, bl-ae05),
+    /// minted here beside the listener because both ends of a loopback wire are
+    /// this one assembly's. Taken by [`asker`](Self::asker) — a window takes it
+    /// and a `yog serve` never does, which is the whole difference between the
+    /// two faces here.
+    wire_end: Option<crate::wire::link::LinkEnd>,
+    /// The face's wake hook, kept so the asker can wake a window when an answer
+    /// lands — the same reason the follower holds one.
+    repaint: Arc<dyn Repaint>,
 }
 
 impl Engine {
@@ -100,14 +110,23 @@ impl Engine {
         // `response.json`, followed at frame cadence. It rides the engine
         // beside the worker because a *reader* of one file is not a face's
         // concern — the windowless seat simply has a `NoRepaint` to wake.
+        let face = Arc::clone(&repaint);
         let follower = model.follower().spawn(repaint);
         // Which clients hold a live connection right now (REMOTE §5, bl-4e08):
         // one handle, minted here because the listener fills it while every
-        // answer — and the frame's own clients section — reads it. RAM by
-        // ruling: presence changes with every network blip, so it never
-        // reaches the world.
+        // answer reads it. RAM by ruling: presence changes with every network
+        // blip, so it never reaches the world. **The model no longer holds a
+        // copy** (bl-ae05): the frame reads presence off a `Reply` like any
+        // other client does, so the second reader went with the second read
+        // path.
         let presence = crate::registry::presence::Presence::default();
-        model.adopt_presence(presence.clone());
+        // The window's read path (REMOTE §1.2 as ruled, bl-ae05): the frame's
+        // half goes to the model, the asker's half is held for whichever face
+        // takes it. Minted unconditionally — a `yog serve` simply never asks
+        // for the other end, and a model whose link nobody answers is the same
+        // code path as a surface whose answer has not landed yet.
+        let (link, wire_end) = crate::wire::link::pair();
+        model.adopt_wire(link);
         // The §8.5 gestures-inbox consumer: both faces are one consumer surface,
         // so a deposit converges whichever is up (I0).
         let intake = Arc::new(ConsumerCtx {
@@ -184,11 +203,48 @@ impl Engine {
             _bridge: bridge,
             _worker: worker,
             _consumer: consumer,
-            _wire: wire,
+            wire,
             _sentry: sentry,
             _pilot: pilot,
             _follower: follower,
+            wire_end: Some(wire_end),
+            repaint: face,
         }
+    }
+
+    /// **The window's asker** (REMOTE §1.2 as ruled 2026-08-14, bl-ae05): a
+    /// seat on this engine's own listener, over loopback, presenting the window
+    /// leaf.
+    ///
+    /// Two roles in one process and one boundary between them — which is §8's
+    /// *one world, one engine* ruling kept intact. The window boots the engine
+    /// it serves, exactly as before, and then talks to it over nothing but the
+    /// wire: it is a client of `127.0.0.1` at the port the listener actually
+    /// bound, so the address is handed over in RAM rather than read back out of
+    /// a file, and a `:0` in `address` is a request nobody has to resolve
+    /// twice.
+    ///
+    /// `None` when this box got no listener up or has no window leaf — both
+    /// meaning a broken mint, which [`listen`](crate::wire::listen) has already
+    /// said so about on stderr. It takes the link end, so a second call answers
+    /// `None`: there is one asker per engine.
+    pub fn asker(&mut self, world: &Env) -> Option<crate::wire::asker::Asker> {
+        let bound = self.wire.as_ref()?.address();
+        let material = crate::wire::material::read(world, crate::wire::material::Role::Window)
+            .ok()
+            .flatten()?;
+        let seat = crate::wire::client::Seat::open(&crate::wire::material::Material {
+            address: crate::wire::loopback(&bound),
+            ..material
+        })
+        .ok()?;
+        Some(crate::wire::asker::Asker::new(
+            seat,
+            self.wire_end.take()?,
+            self.model.snapshot_cell(),
+            world.yog_state_root(),
+            Arc::clone(&self.repaint),
+        ))
     }
 }
 

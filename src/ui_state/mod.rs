@@ -188,14 +188,20 @@ pub struct UiState {
 
 impl UiState {
     /// The window's own handle: the world document at `path`, with the
-    /// [`local`](crate::registry::Client::local) client's pane beside it.
+    /// **window client's** pane beside it (REMOTE §7 as amended, bl-ae05).
+    ///
+    /// The pane keys on [`WINDOW`](crate::registry::WINDOW) rather than on
+    /// `local` because the window carries its own certificate now and is a
+    /// client like any other — so the document the frame writes through here
+    /// and the one a gesture the window sends over the wire lands in are the
+    /// same file, which is the whole of what keying it on the leaf buys.
     ///
     /// **The pane path is derived, never stored** — `ui.json` lives at yog's
     /// state root and `clients/` is its sibling, so the layout answers where
     /// the pane is rather than a second field carrying it.
     pub fn open(path: PathBuf) -> Self {
         let state_root = path.parent().unwrap_or(&path).to_path_buf();
-        let pane = crate::registry::pane(&state_root, &crate::registry::Client::local());
+        let pane = crate::registry::pane(&state_root, &crate::registry::window());
         Self::open_at(path, pane)
     }
 

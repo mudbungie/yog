@@ -73,3 +73,48 @@ fn a_windowless_engine_answers_a_deposit_and_stops_on_drop() {
     );
     drop(engine); // every thread stops and joins — the Drop is the shutdown
 }
+
+/// **The window's read path, end to end through the engine** (REMOTE §1.2 as
+/// ruled 2026-08-14, bl-ae05). A boot on an unprovisioned box founds its own
+/// loopback trust root, and the face it hands an asker to is a client of that
+/// listener presenting the window leaf — a real socket, a real handshake, a
+/// real certificate.
+#[test]
+fn a_booted_engine_hands_its_window_a_seat_on_its_own_wire() {
+    let _guard = spawn_guard();
+    let root = tempdir().unwrap();
+    let world = world_under(root.path());
+    let mut engine = Engine::boot(
+        &world,
+        &[],
+        None,
+        Arc::new(AtClock(0)),
+        std::sync::Arc::new(NoRepaint),
+    );
+    let mut asker = engine
+        .asker(&world)
+        .expect("a seat on the engine's own wire");
+    assert!(
+        engine.asker(&world).is_none(),
+        "one asker per engine: the link end is taken, not shared"
+    );
+
+    // The frame's own call, in `refresh`'s order: settle, then ask. The second
+    // frame declares it, the asker answers it, the third paints it.
+    let question = crate::boundary::codec::encode(&crate::boundary::Gesture::Ask(
+        crate::boundary::Query::Workspaces,
+    ));
+    engine.model.refresh();
+    assert!(engine.model.wire_ask(&question).is_none());
+    engine.model.refresh();
+    engine.model.wire_ask(&question);
+    assert_eq!(asker.pass(), 1, "one standing question, asked");
+    engine.model.refresh();
+    let Some(Ok(crate::boundary::reply::Reply::Workspaces(rows))) =
+        engine.model.wire_ask(&question)
+    else {
+        panic!("the frame paints a decoded reply that crossed the wire");
+    };
+    assert!(rows.is_empty(), "an empty world enumerates nothing");
+    drop(engine);
+}
