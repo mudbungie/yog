@@ -48,13 +48,11 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Nudged => json!({ "ok": true, "kind": "nudged" }),
         Reply::Acked => json!({ "ok": true, "kind": "acked" }),
         Reply::TrailCleared => json!({ "ok": true, "kind": "trail-cleared" }),
-        Reply::Applied { file } => json!({ "ok": true, "kind": "applied", "file": file }),
-        // Both halves of the one answer: the branch, and the space it is a
-        // branch of — the gesture's own two words, in the shape it sets them.
-        Reply::Marks { branch, space } => {
-            json!({ "ok": true, "kind": "marks", "branch": branch,
-                    "space": space.display().to_string() })
-        }
+        Reply::Applied => json!({ "ok": true, "kind": "applied" }),
+        // The branch, and only the branch (REMOTE §8, bl-ccf7): the space it is
+        // a branch of is a pure function of the workspace the gesture named, so
+        // saying it here would be that name spelled a second time, as a path.
+        Reply::Marks { branch } => json!({ "ok": true, "kind": "marks", "branch": branch }),
         Reply::Workspaces(rows) => rows_reply("workspaces", rows.iter().map(ws_row)),
         Reply::Conversations(rows) => rows_reply("conversations", rows.iter().map(conv_row)),
         Reply::Balls(rows) => rows_reply("balls", rows.iter().map(join_row)),

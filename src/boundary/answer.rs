@@ -93,7 +93,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
             let attempts = crate::workdiff::read(snap, ws);
             let patch = file
                 .as_ref()
-                .and_then(|f| crate::workdiff::patch(&attempts, f));
+                .and_then(|f| crate::workdiff::patch(snap, &attempts, f));
             Reply::WorkDiff { attempts, patch }
         }
         // The §11 inspector family (bl-6233, REMOTE §9 step 1): the

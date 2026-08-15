@@ -45,10 +45,10 @@ fn a_brazen_apply_lands_only_what_bz_accepts() {
     let dest = crate::test_support::wall_paths(root.path()).config;
     assert_eq!(
         fire(&deps, &applying(brazen_file(), &good)),
-        Ok(Reply::Applied {
-            file: dest.display().to_string()
-        })
+        Ok(Reply::Applied)
     );
+    // The receipt says only that it landed (REMOTE §8, bl-ccf7); *where* is the
+    // destination's own fact, and the file on disk is what proves it.
     assert_eq!(fs::read_to_string(&dest).unwrap(), good);
     // A draft bz refuses never lands, and its own stderr is the reason.
     let err = fire(&deps, &applying(brazen_file(), "not toml = = =\n")).unwrap_err();
@@ -80,9 +80,7 @@ fn a_lernie_global_apply_is_gated_on_brazens_effective_rows() {
     let good = "models:\n  m-1:\n    provider: acme\n";
     assert_eq!(
         fire(&deps, &applying(ConfigFile::LernieModels, good)),
-        Ok(Reply::Applied {
-            file: root.path().join("lernie/models.yaml").display().to_string()
-        })
+        Ok(Reply::Applied)
     );
     assert_eq!(
         fs::read_to_string(root.path().join("lernie/models.yaml")).unwrap(),
@@ -129,13 +127,11 @@ fn a_workflow_destination_must_name_one_file_and_lands_under_workflows() {
                 "events: {}\n",
             ),
         ),
-        Ok(Reply::Applied {
-            file: root
-                .path()
-                .join("lernie/workflows/review.yaml")
-                .display()
-                .to_string()
-        })
+        Ok(Reply::Applied)
+    );
+    assert_eq!(
+        fs::read_to_string(root.path().join("lernie/workflows/review.yaml")).unwrap(),
+        "events: {}\n"
     );
 }
 
@@ -147,9 +143,7 @@ fn a_cadence_apply_writes_the_clocks_own_file() {
     let dest = write::cadence_path(&deps.world);
     assert_eq!(
         fire(&deps, &applying(ConfigFile::Cadence, text)),
-        Ok(Reply::Applied {
-            file: dest.display().to_string()
-        })
+        Ok(Reply::Applied)
     );
     assert_eq!(fs::read_to_string(&dest).unwrap(), text);
 }

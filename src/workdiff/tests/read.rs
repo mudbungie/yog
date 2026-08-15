@@ -42,6 +42,16 @@ fn the_diff_is_target_dot_dot_source_of_the_bound_claim() {
     );
     let attempt = only(read(&snap, Path::new(WS)));
     assert_eq!(attempt.ball_id, "bl-1");
+    // **It names the project, it does not locate it** (REMOTE §8, bl-ccf7):
+    // the §5.1 #1 wire name, which is the word `--project` takes and which
+    // resolves back to the repository the patch read runs in — and never the
+    // absolute path, which a client on another machine could not use.
+    assert_eq!(attempt.project, snap.project_name(&project.path));
+    assert!(!attempt.project.contains(std::path::MAIN_SEPARATOR));
+    assert_eq!(
+        snap.project_path(&attempt.project),
+        Ok(project.path.clone())
+    );
     assert_eq!(attempt.range().as_deref(), Some("main..work/bl-1"));
     let Change::Diff {
         target,
@@ -148,6 +158,7 @@ fn a_ref_that_is_not_there_is_named() {
     // No patch can be read at a range that does not resolve.
     assert!(
         patch(
+            &snap,
             std::slice::from_ref(&attempt),
             &WorkFile {
                 ball: "bl-1".to_owned(),
@@ -175,6 +186,7 @@ fn a_project_that_is_not_a_repo_is_unreadable() {
     assert_eq!(attempt.range(), None, "there is no range to state");
     assert!(
         patch(
+            &snap,
             &[attempt],
             &WorkFile {
                 ball: "bl-1".to_owned(),
@@ -244,12 +256,12 @@ fn a_picked_file_reads_its_patch() {
         ball: ball.to_owned(),
         path: path.to_owned(),
     };
-    let Some(Preview::Text(text)) = patch(&attempts, &file("bl-1", "src/a.rs")) else {
+    let Some(Preview::Text(text)) = patch(&snap, &attempts, &file("bl-1", "src/a.rs")) else {
         panic!("a changed file has a patch");
     };
     assert!(text.contains("+fn a() {}"), "{text}");
     assert!(text.contains("src/a.rs"), "{text}");
-    assert!(patch(&attempts, &file("bl-other", "src/a.rs")).is_none());
+    assert!(patch(&snap, &attempts, &file("bl-other", "src/a.rs")).is_none());
 }
 
 /// A workspace that holds no ball owes no work anywhere, and neither does a

@@ -4,7 +4,6 @@
 //! decode arm.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
 
 use super::super::super::super::Reply;
 use super::{preview, spend};
@@ -208,7 +207,7 @@ fn inbox() -> Vec<InboxEntry> {
 /// One attempt per [`Change`] arm, and both churn classes inside the diff.
 fn attempts() -> Vec<Attempt> {
     let attempt = |id: &str, change| Attempt {
-        project: PathBuf::from("/p"),
+        project: "p".to_owned(),
         ball_id: id.into(),
         change,
     };

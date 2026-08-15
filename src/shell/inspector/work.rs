@@ -51,7 +51,7 @@ pub fn patch(
     inspector
         .work_patch_memo
         .read(&snap, key, &mut || {
-            picked.and_then(|file| workdiff::patch(attempts, file))
+            picked.and_then(|file| workdiff::patch(&snap, attempts, file))
         })
         .clone()
 }

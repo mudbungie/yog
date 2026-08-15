@@ -2,7 +2,8 @@
 
 Status: normative for the split; direction adopted by operator ruling
 2026-08-13 (bl-b9a2). §9 is the build sequence and each step lands under its
-own ball; steps 1–6 are in the tree. `docs/DESIGN.md` remains the
+own ball; steps 1–6 are in the tree, and §9.7 records what step 5's own
+residual is now waiting on. `docs/DESIGN.md` remains the
 architecture authority for the engine; this document governs the wire, the
 client, and the trust model. Where the two collide, DESIGN wins until DESIGN is
 amended. The same amendment doctrine applies here: prose is replaced, the ball
@@ -383,22 +384,74 @@ in a ball body.
   now carries the name and the kind: §3.1 makes the leaf the name, so the field
   that was already the identity became the whole of it and the path went. A
   field whose *subject* is a filesystem location, by contrast, keeps path
-  semantics, because answering it by name would answer a different question:
-  `Reply::Applied { file }` (what was written), `Reply::Marks { space }` (which
-  balls space the branch is a branch of — the operator reads it to tell a
-  project's board from an agent's own universe), the worktree paths in
-  `WorkDiff`/`Files`, and `Prepared::binding` — lernie's `--cwd`, minted by the
-  engine and handed back to the engine verbatim by a seat that never reads it.
-  Those remain absolute paths on the wire and they are a residual, not a
-  ruling: they are unhelpful to a client on another machine and they disclose a
-  home root. Narrowing them — an opaque handle where the client only relays,
-  a workspace-relative path where it renders — belongs with the transport that
-  makes the distance real (§9.5), not with the addressing.
+  semantics, because answering it by name would answer a different question.
+  bl-f5f6 listed four such fields as a residual to be narrowed once a transport
+  made the distance real. **§8.1 is what became of that list.**
 - **`Prepared::name` is gone, not migrated.** It carried the §3.2
   `--as`/`YOG_NAME` stamp beside a `workspace` path. Once `workspace` became the
   name, §3.1 and §3.2 made the two fields one string twice — so the second went
   rather than being kept in step.
 
+### 8.1 The path-typed reply residuals, closed (bl-ccf7)
+
+The list was four items and it was wrong about one of them; three narrowed, and
+the fourth is now a ruling rather than a residual. **The question each answers
+is "what does this field's subject actually make computable?"** — not "can a
+path be shortened", which is why three of the four ended up carrying *less*
+rather than carrying a relative spelling.
+
+- **`Reply::Applied { file }` carries nothing at all.** It said the absolute
+  path that now held the staged text. But a `ConfigFile` **determines its own
+  location** — the named workspace's wall `config.toml`, `models.yaml`,
+  `workflows/<name>.yaml`, `cadence.yaml` — so the field was the destination
+  the gesture had just named, respelled as the engine's home root. One
+  computable fact said twice, and the second saying was the disclosure. The
+  receipt is now `Reply::Applied`, the `Nudged`/`Acked`/`TrailCleared` shape:
+  *it landed* is the whole of what a write adds to the address it was given.
+- **`Reply::Marks { space }` is gone for the same reason, one level deeper.**
+  It was answered on the argument that "which branch" and "whose branch" are
+  one question. That argument expired at the §16.3 per-agent ruling: a
+  workspace's marks space is now *always* its own (`<wall>/marks`), so the read
+  is a pure function of the workspace the gesture named and the field could
+  never have answered anything else. `Reply::Marks { branch }` — the branch,
+  re-read after the write, exactly as before.
+- **`WorkDiff`'s `Attempt::project` is the project's §5.1 #1 wire name.** This
+  one identifies rather than locates, so it took the *name* this section's
+  first bullet already rules for a project: the shortest unique trailing run,
+  the word the §11 roster labels it with and the word `--project` takes. The
+  patch read that needs a real repository (`workdiff::patch`) now takes the
+  snapshot and resolves the name at that one seam — the same round trip
+  `Snapshot::project_name` / `project_path` already owns, read in both
+  directions rather than a path carried so one caller need not ask. Its one
+  visible cost is the Work tab's copy-paste hint, which was `git -C <abs> diff
+  …` and is now the range beside the project's name: a `-C` a remote seat could
+  not have run anyway.
+- **`Files` was never a residual, and the list was wrong to name it.**
+  `FilesView` is `FileEntry { rel_path, … }`, `/`-joined from the worktree root
+  since it was written, and `Preview` carries no path at all. The absolute
+  worktree root exists only engine-side. Nothing was narrowed here because
+  nothing crossed.
+- **`Prepared::binding` stays a path, and that is now the ruling.** It is
+  lernie's `--cwd`: minted by the engine at `Prepare`, relayed back verbatim
+  inside `Action::Prompt` by a seat that never reads it, and read again by the
+  engine to seed the working-directory mark and to discover the §3.7
+  instruction pins. Both narrowings §8 imagined are worse than the disclosure.
+  An **opaque handle** needs a mint→resolve table, which is durable state for a
+  fact that is already computed — the one thing the file religion and the
+  single-source rule both refuse — and it would be state whose lifetime is a
+  composer draft's. **Re-deriving it at the fire** means a second derivation of
+  the work target beside the executor's cross-checked worktree, and §3.3's
+  whole point is that there is one. So the binding crosses as a path, and what
+  it discloses is bounded and stated: an engine-side directory name, to a seat
+  that was already told the workspace it belongs to.
+
+  It is worth being exact about what remains. This is the only path-typed field
+  left on the reply surface, and it is one a **remote seat cannot use and does
+  not read** — which makes it a disclosure and not an interop defect. Closing
+  it wants the thing §9.5's residual wants: a ruling about what the local
+  window *is*, because the shape that dissolves it (`Prepared` becoming opaque
+  to the seat entirely) is only affordable once one seat's read path is the
+  only read path.
 ## 9. Build sequence
 
 Each step is its own ball; boundary-surface work serializes (shared-surface
@@ -545,18 +598,17 @@ the larger half:
   still an in-process derivation, and a window pointed at a foreign engine
   would have to derive a world it does not have.
 - ~~Per-seat UI state (§7) is undivided~~ — split by bl-8bbc (§7, §9.6).
-- The path-typed reply fields §8 lists as residual are still absolute paths —
-  `Reply::Applied { file }`, `Reply::Marks { space }`, the worktree paths, and
-  `Prepared::binding`. The transport that makes the distance real now exists,
-  so narrowing them has a consumer to be narrowed for; it did not land here.
-- One connection per gesture, and no follow-class `Query`. The framing carries
-  a chunked stream already (§3), so the live tail needs a query, not a wire
-  change.
+- ~~The path-typed reply fields §8 lists as residual are still absolute
+  paths~~ — closed by bl-ccf7 (§8.1): three carried a fact the address already
+  made computable and now carry nothing, and the fourth is a ruling.
+- ~~One connection per gesture~~ — kept, and ruled rather than deferred
+  (§10, bl-ccf7). No follow-class `Query` yet; the framing carries a chunked
+  stream already (§3), so the live tail needs a query, not a wire change.
 
 Registration, scoping and reply filtering were deliberately **not** here: a
 connection was trusted at certificate grade this step. §9.6 (bl-8bbc) closed
-that, and the per-seat `ui.json` bullet above with it — the two remaining
-residuals in this list are the read path and the path-typed reply fields.
+that, and the per-seat `ui.json` bullet above with it. **One residual in this
+list is left, it is the read path, and §9.7 is why it is still here.**
 
 ### 9.6 Registration and scoping, and what the trust domain still is not
 
@@ -592,15 +644,96 @@ workspace still reads the trail of every workspace.
   would also break §3.2's `--as` identity, which is the same leaf; the collision
   refusal is the cheaper answer and §4.1 records what it discloses.
 
+### 9.7 The read path, and the ruling it is waiting on (bl-ccf7)
+
+Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's
+two transport questions settled. **The read path did not move, and the reason
+is not that it is large.** It is that §1.2 and §4.1 cannot both be executed,
+and the tree has already executed §4.1.
+
+**The collision, stated so it is not rediscovered.**
+
+- §1.2 rules that the window *is* a client of the boundary, over the same wire
+  a remote seat uses, with no in-process face and no fallback.
+- §1.3 and §3 make that wire mTLS, and only mTLS: a connection presents a
+  certificate or it gets a TLS refusal.
+- §1.4 and §8 make the certificates the **operator's out-of-channel act**. yog
+  mints nothing, ever — it links no certificate library, `make wire-certs`
+  shells to `openssl`, and *absence is the off switch*: with no material there
+  is no listener and nothing is said about it.
+- §4.1, as landed by bl-8bbc, reserves `local` for "the window and every other
+  in-world caller", which **hold no certificate**, are not scoped, and own a
+  pane document. `Client::parse` refuses the name `local` outright, so no
+  certificate can ever claim it.
+
+Put together: a window that dialled the wire would present the one client leaf
+the operator minted, be identified by *that* name, be scoped like any remote
+client, and read a different pane document — it would stop being `local`, and
+§4.1 would be wrong. And on a box with no material it would have no read path
+at all: a window that paints nothing. §8 has already rejected both ways around
+that second half — refusing with a remedy "puts a terminal instruction in front
+of a desktop launch that has no terminal", and minting is §1.4.
+
+**Nothing was half-landed, deliberately.** The obvious increment — land the
+off-frame asker, have the window paint decoded replies where a wire exists and
+the in-process snapshot where it does not — is exactly the second execution
+path §1.2 exists to refuse, and §11 records it as a rejection. A residual costs
+nothing while it stands; a fork costs every frame after it. So this ball
+narrowed what it could narrow and wrote down what it could not decide.
+
+**Three ways the ruling can go**, none of which a builder may take alone:
+
+1. **Amend §1.2 and §11: one boundary, N *transports*.** The window keeps
+   `local`, keeps its certificate-less in-world standing, and its read path
+   becomes envelope-shaped all the same — a `Query` encoded with the one codec,
+   handed to the one `Answerer`, decoded with `reply::decode`. Byte-identical to
+   the remote path minus the socket, so flipping a local seat onto the real wire
+   is a constructor change. It costs the letter of §1.2 ("no in-process face"),
+   and its defence is that a transport is not a face: §3 already blesses two
+   intakes into one boundary, and this is the third with no verb of its own.
+2. **Amend §4.1: the window is provisioned like any client.** `local` stops
+   being the window's identity, and an unprovisioned box gets a window that
+   cannot read — which is the refusal-with-a-remedy §8 already turned down,
+   arriving by another door.
+3. **Leave it.** Then §1.2's "even the local case does the hard split" is
+   aspirational prose about a case that will not happen, and saying so is worth
+   more than leaving it stated as a rule.
+
+Option 1 is this ball's recommendation. It is filed as **bl-ae05** rather than
+taken here, because §11 exists so its entries are not relitigated by whoever is
+holding the keyboard. That ball carries the read path itself — the off-frame
+asker, the frame that never blocks on the transport — and `Prepared::binding`
+(§8.1) with it, since the shape that dissolves that field is only affordable
+once one seat's read path is the only read path.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer
   is a frame stream terminated by a zero-length frame, so a follow-class read
-  is the general path with more frames. What remains open is **when polling
-  graduates to a subscription channel**, and beside it whether a seat should
-  hold one connection across gestures rather than dialling per ask (today it
-  dials; the seat polls at human cadence, so the connection cost is not yet a
-  cost).
+  is the general path with more frames.
+- ~~Whether a seat holds one connection across gestures~~ — **settled by
+  bl-ccf7: it dials per ask, and the server already loops.** Two facts decide
+  it. The listener's connection thread is `while let Ok(Some(request)) =
+  read_value(…)` — request, reply stream, terminator, again — so a held
+  connection is not a wire change, a framing change or a server change: it is
+  `Seat::ask` keeping the `StreamOwned` it currently drops, and it can be taken
+  the day it pays. And it does not pay yet: nothing polls. `yog seat` is
+  one-shot by construction, and the seat that *would* poll is the window, which
+  §9.7 says is not a seat until a ruling lands. Holding a connection ahead of a
+  poller would buy a reconnect ladder, a liveness question and a
+  connection-scoped identity — REMOTE §4 derives the client per request
+  precisely so none of that exists — in exchange for a handshake nobody is
+  paying yet. The criterion for revisiting is stated rather than felt: **when a
+  seat's ask rate exceeds human cadence.**
+- **When polling graduates to a follow-class query.** Still open, and bl-ccf7
+  narrows what "graduates" would mean, because there is one candidate and only
+  one: the live model-call tail (§9 step 1's folded `Stream`), which is the one
+  read whose subject changes faster than an operator looks. Every other read is
+  a projection of a snapshot the derivation worker republishes on its own
+  schedule, so polling it faster answers the same bytes. A follow-class
+  `Query::Transcript` is therefore the first and possibly the only one, it needs
+  no wire change (§3), and it wants a *consumer that polls* to exist before it
+  is worth minting — which is the same gate the bullet above is behind.
 - The tool-advertisement schema (the exact shape of name/description/input
   schema). How availability is spelled is settled (§5, bl-bc7c): definitions
   frozen in the prefix, presence answered at invocation.
@@ -614,7 +747,10 @@ workspace still reads the trail of every workspace.
 Recorded so they are not relitigated:
 
 - **A second in-process face for the local window** — the split is the point;
-  one method, one channel (§1.2).
+  one method, one channel (§1.2). **Under challenge, not lifted** (§9.7,
+  bl-ccf7): the challenge is that an in-process *transport* to the one
+  `Answerer` is not a face, and it is filed as its own ball because an entry
+  here is not relitigated by whoever is holding the keyboard.
 - **Any in-channel authentication besides the client certificate** —
   passwords, bearer tokens, OAuth flows: each is an enrollment or secret
   surface §1.3–§1.4 exist to exclude.

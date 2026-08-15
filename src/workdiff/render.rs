@@ -41,8 +41,8 @@ pub fn render(
 fn render_attempt(ui: &mut egui::Ui, attempt: &Attempt, sel: &mut Option<WorkFile>) {
     ui.horizontal(|ui| {
         ui.strong(&attempt.ball_id);
-        ui.weak(attempt.project.display().to_string())
-            .on_hover_text("The repository this ball's work is delivered into.");
+        ui.weak(&attempt.project)
+            .on_hover_text("The project this ball's work is delivered into.");
     });
     match &attempt.change {
         Change::Unreadable => {
@@ -75,8 +75,8 @@ fn render_attempt(ui: &mut egui::Ui, attempt: &Attempt, sel: &mut Option<WorkFil
                 ui.monospace(format!("{target}..{source}"))
                     .on_hover_text(format!(
                         "Everything on this ball's branch that is not yet on its delivery \
-                         target. Run it yourself: git -C {} diff {target}..{source}",
-                        attempt.project.display()
+                         target. Run it yourself, in {}: git diff {target}..{source}",
+                        attempt.project
                     ));
                 ui.weak(format!("{} … {}", short(target_oid), short(source_oid)));
             });

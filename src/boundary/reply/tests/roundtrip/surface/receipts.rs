@@ -39,12 +39,9 @@ pub(super) fn receipts() -> Vec<Reply> {
         Reply::Nudged,
         Reply::Acked,
         Reply::TrailCleared,
-        Reply::Applied {
-            file: "/ws/config/workflow.yaml".into(),
-        },
+        Reply::Applied,
         Reply::Marks {
             branch: "marks/alba".into(),
-            space: PathBuf::from("/ws"),
         },
         Reply::Config {
             text: "roles: []".into(),

@@ -34,7 +34,6 @@ pub(super) const CONFLICT: &str =
 /// is judging rather than another workspace's, or none.
 pub(super) fn brazen(deps: &Deps, workspace: &Path, text: &str) -> Result<Reply, String> {
     let paths = super::brazen_paths(deps, workspace);
-    let dest = paths.config.clone();
     let io = RealFileIo;
     let mut editor = BrazenEditor::load(paths, &io).map_err(|e| e.to_string())?;
     editor.set_draft(text.to_owned());
@@ -42,7 +41,7 @@ pub(super) fn brazen(deps: &Deps, workspace: &Path, text: &str) -> Result<Reply,
         &RealBzRunner::resolve(&super::wall_env(deps, workspace)),
         &io,
     ))?;
-    Ok(landed(&dest))
+    Ok(Reply::Applied)
 }
 
 /// Fold a §9.1 Apply outcome into the boundary's verdict.
@@ -62,7 +61,7 @@ pub(super) fn write_file(deps: &Deps, dest: PathBuf, text: &str) -> Result<Reply
     let mut editor = editor_at(&dest)?;
     editor.set_draft(text.to_owned());
     saved(editor.apply(&deps.provider_rows(), &RealFileIo))?;
-    Ok(landed(&dest))
+    Ok(Reply::Applied)
 }
 
 /// Load one §9.2 editor — the single read both the file apply and the §9.4
@@ -128,11 +127,4 @@ pub(super) fn commit(
         stdout: entry.stdout,
         stderr: entry.stderr,
     }))
-}
-
-/// The receipt a file destination earns: the path that now holds the text.
-pub(super) fn landed(dest: &Path) -> Reply {
-    Reply::Applied {
-        file: dest.display().to_string(),
-    }
 }

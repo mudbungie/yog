@@ -2,14 +2,12 @@
 //! reading, each changed file's churn, the click that picks one, and the three
 //! declines said in words rather than shown as an empty list.
 
-use std::path::PathBuf;
-
 use crate::files_view::{PREVIEW_CAP, Preview};
 use crate::workdiff::{Attempt, Change, Churn, FileChurn, WorkFile, render};
 
 fn diffed() -> Vec<Attempt> {
     vec![Attempt {
-        project: PathBuf::from("/home/u/proj"),
+        project: "proj".to_owned(),
         ball_id: "bl-1".to_owned(),
         change: Change::Diff {
             target: "main".to_owned(),
@@ -47,7 +45,7 @@ fn painted(attempts: &[Attempt], patch: Option<&Preview>) -> String {
 fn the_tab_names_the_range_and_every_changed_file() {
     let text = painted(&diffed(), None);
     assert!(text.contains("bl-1"), "{text}");
-    assert!(text.contains("/home/u/proj"), "{text}");
+    assert!(text.contains("proj"), "{text}");
     assert!(text.contains("main..work/bl-1"), "{text}");
     assert!(text.contains("aaaa111"), "the target commit, short: {text}");
     assert!(text.contains("cccc222"), "the source commit, short: {text}");
@@ -136,7 +134,7 @@ fn every_decline_is_said_in_words() {
 
     let attempt = |change| {
         vec![Attempt {
-            project: PathBuf::from("/home/u/proj"),
+            project: "proj".to_owned(),
             ball_id: "bl-1".to_owned(),
             change,
         }]

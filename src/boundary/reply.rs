@@ -25,7 +25,6 @@ use crate::opslog::OpRow;
 use crate::projects::join::JoinRow;
 use crate::search::Found;
 use crate::start::Prepared;
-use std::path::PathBuf;
 
 use super::codec::prepared_value;
 
@@ -135,21 +134,37 @@ pub enum Reply {
     Acked,
     /// The trail was truncated; the clear is the fresh trail's first row.
     TrailCleared,
-    /// A §9 config file landed: the path that now holds the staged text
-    /// (bl-3f46). A lineage write answers with its `lernie config` run
-    /// ([`Outcome`](Self::Outcome)) instead — a write and a spawn earn
-    /// different receipts, here as everywhere else on the boundary.
-    Applied {
-        file: String,
-    },
+    /// The §9 config file the gesture named landed (bl-3f46). A lineage write
+    /// answers with its `lernie config` run ([`Outcome`](Self::Outcome))
+    /// instead — a write and a spawn earn different receipts, here as
+    /// everywhere else on the boundary.
+    ///
+    /// **It carries nothing** (REMOTE §8, bl-ccf7). It used to carry the
+    /// absolute path that now held the text, which was the last of §8's
+    /// path-typed residuals to have a computable answer: a
+    /// [`ConfigFile`](super::config::ConfigFile) determines its own location
+    /// exactly — the wall's `config.toml`, `models.yaml`,
+    /// `workflows/<name>.yaml`, `cadence.yaml` — so the field was a second
+    /// representation of the destination the gesture had just named, spelled
+    /// as an operator's home root a client on another machine could neither
+    /// use nor unsee. The receipt says *that* it landed, which is the whole of
+    /// what a write can add to the address it was given — the
+    /// [`Nudged`](Self::Nudged) / [`Acked`](Self::Acked) /
+    /// [`TrailCleared`](Self::TrailCleared) shape.
+    Applied,
     /// The agent's tracking branch (§16.3), **re-read after the write**: what
-    /// actually landed, beside the space root it landed in, never an echo of
-    /// what was asked. The space is answered too because "which branch" and
-    /// "whose branch" are one question — a branch name alone cannot tell the
-    /// project's board from an agent's own universe of the same name.
+    /// actually landed, never an echo of what was asked.
+    ///
+    /// **The space it landed in is not answered** (REMOTE §8, bl-ccf7). It was,
+    /// on the argument that "which branch" and "whose branch" are one question
+    /// — but since the §16.3 per-agent ruling a workspace's marks space is
+    /// always its own (`<wall>/marks`), so
+    /// [`marks::read`](crate::world::marks::read) is a pure function of the
+    /// workspace the gesture already named and the field could answer nothing
+    /// else. One computable fact, spelled twice, and the second spelling was an
+    /// absolute path.
     Marks {
         branch: String,
-        space: PathBuf,
     },
     Workspaces(Vec<WsRow>),
     Conversations(Vec<ConvRow>),

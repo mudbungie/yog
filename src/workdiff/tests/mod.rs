@@ -107,6 +107,12 @@ pub(super) fn snap(ws: &Path, name: &str, project: &Path, balls: Vec<Ball>) -> S
             name: name.to_owned(),
         },
     }];
+    // The enumerated project set, beside the ball map it keys — the production
+    // shape (`refresh_balls` fills `projects` from every clone and
+    // `balls_by_project` from the visible ones), and what makes an
+    // [`Attempt`](crate::workdiff::Attempt)'s project NAME resolve back to a
+    // repository a `git` read can run in (REMOTE §8, bl-ccf7).
+    snap.projects = vec![project.to_path_buf()];
     snap.balls_by_project = HashMap::from([(project.to_path_buf(), balls)]);
     snap
 }
