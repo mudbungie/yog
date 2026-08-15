@@ -35,7 +35,6 @@ pub struct MarksPane {
     workspace: Option<PathBuf>,
     branch: String,
     input: String,
-    space: String,
     status: String,
 }
 
@@ -46,7 +45,6 @@ impl MarksPane {
             workspace: None,
             branch: String::new(),
             input: String::new(),
-            space: String::new(),
             status: String::new(),
         }
     }
@@ -72,7 +70,6 @@ pub fn render(
     ui.monospace(workspace.display().to_string());
     if pane.workspace.as_ref() == Some(&workspace) && !pane.branch.is_empty() {
         ui.label(format!("branch: {}", pane.branch));
-        ui.weak(format!("space: {}", pane.space));
     }
     ui.weak(
         "each agent tracks on a branch of its own; subagents inherit the space they were \
@@ -178,11 +175,10 @@ fn apply_marks(
 /// Fold one [`Reply::Marks`] into the pane and say it in a line. Any other reply
 /// is a boundary contract break and says so rather than rendering nothing.
 fn landed(pane: &mut MarksPane, workspace: &Path, reply: &Reply) -> String {
-    let Reply::Marks { branch, space } = reply else {
+    let Reply::Marks { branch } = reply else {
         return format!("unexpected reply: {reply:?}");
     };
     pane.workspace = Some(workspace.to_path_buf());
     pane.branch.clone_from(branch);
-    pane.space = space.display().to_string();
     format!("tracking on {branch}")
 }

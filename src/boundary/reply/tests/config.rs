@@ -9,22 +9,22 @@ use crate::config_edit::brazen::ProviderRowView;
 
 #[test]
 fn the_config_family_says_what_landed_and_what_the_knob_now_reads() {
-    let applied = encode(&Reply::Applied {
-        file: "/cfg/models.yaml".into(),
-    });
+    // The receipt says that it landed and nothing else (REMOTE §8, bl-ccf7):
+    // a destination determines its own location, so a path here would be the
+    // address the gesture just gave, respelled as the engine's home root.
+    let applied = encode(&Reply::Applied);
     assert_eq!(applied["ok"], true);
     assert_eq!(applied["kind"], "applied");
-    assert_eq!(applied["file"], "/cfg/models.yaml");
-    // The knob reads back as both halves of the one answer: the branch, and
-    // the space it is a branch of.
+    assert_eq!(applied.get("file"), None);
+    // The knob reads back as the branch alone — the space it is a branch of is
+    // a pure function of the workspace the gesture named (bl-ccf7).
     let marks = encode(&Reply::Marks {
         branch: "balls/agents/corp".into(),
-        space: std::path::PathBuf::from("/d/yog/world/walls/corp/marks"),
     });
     assert_eq!(marks["ok"], true);
     assert_eq!(marks["kind"], "marks");
     assert_eq!(marks["branch"], "balls/agents/corp");
-    assert_eq!(marks["space"], "/d/yog/world/walls/corp/marks");
+    assert_eq!(marks.get("space"), None);
 }
 
 #[test]

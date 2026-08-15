@@ -24,12 +24,10 @@ fn set_marks_answers_with_the_branch_it_read_back_and_logs_the_write() {
             branch: "balls/agents/home".to_owned(),
         },
     );
-    let space = crate::world::marks::read(&deps.world, &ws);
     assert_eq!(
         reply,
         Ok(Reply::Marks {
             branch: "balls/agents/home".to_owned(),
-            space: space.state.clone(),
         })
     );
     // The write is on the trail (§4.2) as the non-spawn step it is — no `bl`
@@ -57,7 +55,6 @@ fn reading_marks_never_refuses_even_for_a_workspace_with_no_project() {
         reply,
         Ok(Reply::Marks {
             branch: crate::world::marks::SHARED_BRANCH.to_owned(),
-            space: crate::world::marks::read(&deps.world, &ws).state,
         })
     );
 }

@@ -32,7 +32,7 @@ use super::board::decode::board;
 use super::queue::queue_row_of;
 use super::rows::decode::{conv_row, join_row, lineage_row, op_row, provider_row, rows_of, ws_row};
 use super::search::hit_of;
-use crate::boundary::codec::fields::{bool_of, list_of, path_of, str_of, strings_of};
+use crate::boundary::codec::fields::{bool_of, list_of, str_of, strings_of};
 use crate::boundary::codec::prepared_from_value;
 
 mod inspector;
@@ -76,8 +76,8 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "nudged" => Ok(Reply::Nudged),
         "acked" => Ok(Reply::Acked),
         "trail-cleared" => Ok(Reply::TrailCleared),
-        "applied" => str_of(o, "file").map(|file| Reply::Applied { file }),
-        "marks" => marks(o),
+        "applied" => Ok(Reply::Applied),
+        "marks" => str_of(o, "branch").map(|branch| Reply::Marks { branch }),
         "config" => str_of(o, "text").map(|text| Reply::Config { text }),
         _ => return None,
     })
@@ -112,13 +112,6 @@ fn answered(o: &Map<String, Value>) -> Result<Reply, String> {
         ruling: crate::control::judge::Ruling::of(&word)
             .ok_or_else(|| format!("unknown verdict {word:?}"))?,
         advanced: bool_of(o, "advanced")?,
-    })
-}
-
-fn marks(o: &Map<String, Value>) -> Result<Reply, String> {
-    Ok(Reply::Marks {
-        branch: str_of(o, "branch")?,
-        space: path_of(o, "space")?,
     })
 }
 

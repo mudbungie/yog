@@ -178,7 +178,6 @@ fn marks_read_answers_the_branch_and_the_space_it_is_a_branch_of() {
         reply,
         Ok(Reply::Marks {
             branch: crate::world::marks::SHARED_BRANCH.to_owned(),
-            space: crate::world::marks::read(&deps.world, &ws).state,
         })
     );
 }

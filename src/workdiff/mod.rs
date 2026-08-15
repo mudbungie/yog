@@ -33,7 +33,7 @@
 //! [`Preview`] vocabulary the Files tab already uses. Both reads are memoized
 //! per snapshot by the seat that asks (§7.2), never per frame.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use balls::delivery_path::work_branch;
 
@@ -96,7 +96,14 @@ pub enum Change {
 /// says about the two ends.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Attempt {
-    pub project: PathBuf,
+    /// The project's **wire name** (REMOTE §8, bl-ccf7) — the §5.1 #1 identity
+    /// [`Snapshot::project_name`](crate::app::Snapshot::project_name) derives,
+    /// which is the same word the §11 roster labels it with and the same word
+    /// `--project` takes. It carried the absolute repository path until this
+    /// ball: the last row of §8's residual list that identifies rather than
+    /// locates, and the one a client on another machine could neither resolve
+    /// nor unsee.
+    pub project: String,
     pub ball_id: String,
     pub change: Change,
 }
@@ -134,16 +141,19 @@ pub fn read(snap: &Snapshot, workspace: &Path) -> Vec<Attempt> {
     };
     plan::plans(&snap.balls_by_project, &name)
         .into_iter()
-        .map(resolve)
+        .map(|plan| {
+            let named = snap.project_name(&plan.project);
+            resolve(plan, named)
+        })
         .collect()
 }
 
 /// Resolve one plan against its project repo: name the target, resolve both
 /// ends, then count the churn between them.
-fn resolve(plan: plan::Plan) -> Attempt {
+fn resolve(plan: plan::Plan, project: String) -> Attempt {
     let source = work_branch(&plan.ball_id);
     let attempt = |change| Attempt {
-        project: plan.project.clone(),
+        project: project.clone(),
         ball_id: plan.ball_id.clone(),
         change,
     };
@@ -185,13 +195,19 @@ fn resolve(plan: plan::Plan) -> Attempt {
 /// `Text`/`Truncated`/`Binary` vocabulary the Files tab's preview uses.
 /// `None` when no attempt here carries that ball, or its ends never resolved:
 /// there is no range to read at, and an empty patch would read as "unchanged".
-pub fn patch(attempts: &[Attempt], file: &WorkFile) -> Option<Preview> {
+///
+/// It takes the snapshot because an [`Attempt`] names its project rather than
+/// locating it (REMOTE §8, bl-ccf7), and the enumeration is where that name
+/// becomes the repository a `git` read can run in — the same resolution
+/// [`read`] spells in the other direction, at the same one place.
+pub fn patch(snap: &Snapshot, attempts: &[Attempt], file: &WorkFile) -> Option<Preview> {
     let attempt = attempts.iter().find(|a| a.ball_id == file.ball)?;
     let range = attempt.range()?;
     if matches!(attempt.change, Change::Absent { .. }) {
         return None;
     }
-    let bytes = file_patch(&attempt.project, &range, &file.path).unwrap_or_default();
+    let project = snap.project_path(&attempt.project).ok()?;
+    let bytes = file_patch(&project, &range, &file.path).unwrap_or_default();
     let size = u64::try_from(bytes.len()).unwrap_or(u64::MAX);
     Some(classify(&bytes, size))
 }

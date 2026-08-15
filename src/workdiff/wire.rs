@@ -36,10 +36,7 @@ pub(crate) fn reply(attempts: &[Attempt], patch: Option<&Preview>) -> Value {
 /// absent ref stay distinguishable on the wire exactly as they do on screen.
 fn attempt_row(attempt: &Attempt) -> Value {
     let mut map = Map::new();
-    map.insert(
-        "project".to_owned(),
-        json!(attempt.project.to_string_lossy().into_owned()),
-    );
+    map.insert("project".to_owned(), json!(attempt.project));
     map.insert("ball_id".to_owned(), json!(attempt.ball_id));
     match &attempt.change {
         Change::Unreadable => {
@@ -117,7 +114,7 @@ fn attempt_of(v: &Value) -> Result<Attempt, String> {
         other => return Err(format!("attempt: unknown state {other:?}")),
     };
     Ok(Attempt {
-        project: crate::boundary::codec::fields::path_of(o, "project")?,
+        project: str_of(o, "project")?,
         ball_id: str_of(o, "ball_id")?,
         change,
     })

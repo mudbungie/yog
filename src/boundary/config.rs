@@ -125,10 +125,8 @@ pub(super) fn models(deps: &Deps, workspace: &Path, provider: &str) -> Result<Re
 /// Infallible — a space with nothing written reads as balls' own default, which
 /// is the general path with no input rather than a refusal to render.
 pub(super) fn read_marks(deps: &Deps, workspace: &Path) -> Reply {
-    let space = marks::read(&deps.world, workspace);
     Reply::Marks {
-        branch: space.branch(),
-        space: space.state,
+        branch: marks::read(&deps.world, workspace).branch(),
     }
 }
 
@@ -181,10 +179,7 @@ pub(super) fn set_marks(
 ) -> Result<Reply, String> {
     let space = marks::read(&deps.world, workspace);
     let landed = marks::apply(&space, &deps.state_root, ts, branch).map_err(|e| e.to_string())?;
-    Ok(Reply::Marks {
-        branch: landed,
-        space: space.state,
-    })
+    Ok(Reply::Marks { branch: landed })
 }
 
 /// The §9.4 pick: §9.2 and §9.3 composed by one gesture, because lernie's

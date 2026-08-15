@@ -34,7 +34,7 @@ fn deps(snap: crate::app::Snapshot) -> Deps {
 
 fn attempt(change: Change) -> Attempt {
     Attempt {
-        project: PathBuf::from("/proj"),
+        project: "proj".to_owned(),
         ball_id: "bl-1".to_owned(),
         change,
     }
@@ -74,7 +74,7 @@ fn a_diff_row_carries_the_range_the_commits_and_the_files() {
     assert_eq!(v["ok"], true);
     assert_eq!(v["kind"], "work-diff");
     let row = &v["rows"][0];
-    assert_eq!(row["project"], "/proj");
+    assert_eq!(row["project"], "proj");
     assert_eq!(row["ball_id"], "bl-1");
     assert_eq!(row["state"], "diff");
     assert_eq!(row["target"], "main");
