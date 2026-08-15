@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4](https://github.com/mudbungie/yog/compare/v0.0.3...v0.0.4) - 2026-08-15
+
+### Changes
+
+- V3 Adjudicator core: Deliver candidate, the derived acceptance mark, and the fan's candidates on the work-diff; judge/synthesize ride V2 [bl-c2bd]
+- CI-only coverage red on main since the lernie 0.0.10 lockfile change: tarpaulin misattributes transcript/spine.rs's multi-line hline call (87-88) as uncovered — bind the stroke, one-line the call [bl-914f]
+- consume lernie 0.0.10: the chat-wedge fixes (alternation-wide unpaired decline, crash settlement at the drive boundary) [bl-4c1f]
+- REGRESSION of bl-52ed: tool-host is the only top-level command that rejects --help [bl-4667]
+- three engine/wire tests bind the fixed loopback port, so the suite cannot pass on a box where yog is running [bl-4c50]
+- an unanswered delivered message with no live driver paints nothing: the chat just stops — derive the dead-driver banner, and finally read driver.log [bl-ace6]
+- BLOCKED on lernie bl-b98d — composer send-and-interrupt: Ctrl+Enter (and a button) interrupts the agent and triggers on the new message [bl-a33d]
+- :remote a_stop_ends_the_wait_on_the_tool flakes under full-suite load: a sleep/poll race, seen three times across three gates in one day [bl-3a88]
+- the speculate/CI runner intermittently dies with 'cargo_tarpaulin: Failed to run tests: Attempting to handle tarpaulin being signaled' — a runner-side kill that reads as FAIL and poisons the verdict cache for that tree [bl-673a]
+- the Actions token cannot write refs, so release-plz publishes to crates.io and then fails to tag: v0.0.3 shipped untagged (403 'Resource not accessible by integration') [bl-1e88]
+- world tools: add the yog shim — a responder (and any world agent) cannot call 'yog gesture' today [bl-8398]
+- speculate.yml restates the balls pin and a dead billing premise: derive the version from Cargo.toml, bump the substrate to 0.5.11 [bl-71c4]
+
 ## [0.0.3](https://github.com/mudbungie/yog/compare/v0.0.2...v0.0.3) - 2026-08-15
 
 ### Changes
