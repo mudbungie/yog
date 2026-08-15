@@ -1,7 +1,8 @@
 +++
 title = "REMOTE §9.6 — registration and scoping: the per-workspace client registry, reply filtering, auto-registration on create, per-seat ui.json split"
 created = 1786684039
-updated = 1786684039
+updated = 1786756341
+claimant = "Trunnion"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
