@@ -234,6 +234,77 @@ makes absent stays absent.
   owns the registry, the advertisement, the routing, and the adjudication
   chokepoint. This piece gets its own design pass before its ball is filed.
 
+### 5.1 The advertisement, as landed (bl-4e08)
+
+**The gesture is a boundary verb, and the wire adds nothing** (§3). `advertise`
+carries one field, `tools`, an array whose element is exactly three facts:
+
+```json
+{"op": "advertise", "tools": [
+  {"name": "Bash", "description": "run a command",
+   "input_schema": {"type": "object", "properties": {"command": {"type": "string"}}}}
+]}
+```
+
+- **`name` is a single path component.** It is the handle the later load act
+  addresses one tool by, and a name carrying a separator is a name that
+  addresses a filesystem.
+- **`description` is one string**, the tool host's own words.
+- **`input_schema` is the JSON Schema, verbatim.** yog neither validates nor
+  rewrites it: it is the host's statement to a model, and any narrowing here
+  would be yog inventing a contract it does not own.
+
+Nothing else. There is no version, no enable flag and no per-workspace list —
+each would be a fact yog stores and cannot check.
+
+**It names no client, and that is the gesture.** The identity a set lands under
+is the **intake's** — the connection's certificate common name, read exactly
+where §4's scoping reads it. A `client` field on the wire would let any
+connection overwrite any other's set, which is the authorization the certificate
+has already decided. An intake carrying no client identity — the `gestures/`
+deposit inbox, `yog gesture`, the window (all `local`, §4.1) — **refuses in
+band**, with a sentence: a caller who typed this at a terminal made a category
+error worth naming, not an authentication failure worth hiding. The threading is
+the act-side twin of `ConsumerCtx::answer_as`: one `caller` on the dispatch
+`Deps`, carrying who is asking and who else is connected.
+
+**A name collision inside one client's set declines loudly**, naming the token;
+a collision *across* clients is legal and ordinary — two laptops both offering
+`Bash` — and disambiguating them belongs to the act that loads one.
+
+**The document.** One file per client, beside its §7 pane document:
+
+```text
+<yog-state-root>/clients/<client>/tools.json   the advertised set, one JSON array
+```
+
+One document per **client**, not one per registration: a tool set is a fact
+about a machine, and §2's registration listing already says which workspaces see
+it, so writing the array under every registration would be one fact stored N
+times. Its element spelling **is** the wire's — one encoder, spent by the codec
+and the file alike, because a stored set and a presented one spelled twice drift
+within a week. The engine writes it only when it differs from what is stored, so
+a re-presentation on every reconnect touches no mtime. An unreadable or
+undecodable document reads as the empty set, which is also what a client that
+has never advertised reads as — no reader carries two cases.
+
+**Presence lives in RAM and has no leave verb.** The listener takes a
+connection-scoped guard the first time a connection names its client and drops
+it when that connection ends, however it ends; the map is a **refcount** per
+identity, because one client may hold two seats and the second closing must not
+unsay the first. The `Mutex` sits in `src/state.rs` (the crate's lock
+chokepoint) and the operations beside it in `registry::presence`.
+
+**The roster is the read.** `Query::Clients {workspace}` →
+`Reply::Clients([{client, present, tools}])` joins the three at the moment it is
+asked — the §4.1 registration listing, the presence map, each client's stored
+set — so nothing is cached and a flap needs no invalidation. It is scoped like
+every other read: an unregistered workspace earns the resolver's own
+`unknown workspace "x"`. The window paints those same rows from the same
+function (`registry::roster`), memoized per derivation with the live set in the
+key. The §5 **client-management tool** the model reads is a separate surface and
+is not this — it is the next step, and it will be built on this read.
+
 ## 6. What lives where
 
 Everything durable is the server's: the world, the logs (`ops.jsonl`), the
@@ -512,7 +583,11 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    workspace absent, auto-registration on create, and the per-seat `ui.json`
    split.
 7. **Tool hosts:** advertisement, rendering, routing, the lernie seam —
-   after its own design pass (§5).
+   after its own design pass (§5). Its first half is landed (bl-4e08 — see
+   §5.1): the `advertise` gesture in all three serializations, the per-client
+   `tools.json`, connection-scoped presence, and the `Query::Clients` roster the
+   workspace surface renders. What is left is the client-management tool,
+   loading, routing and the driver-side seam.
 
 ### 9.4 Where orchestration stops and paint begins
 
@@ -734,9 +809,12 @@ once one seat's read path is the only read path.
   `Query::Transcript` is therefore the first and possibly the only one, it needs
   no wire change (§3), and it wants a *consumer that polls* to exist before it
   is worth minting — which is the same gate the bullet above is behind.
-- The tool-advertisement schema (the exact shape of name/description/input
-  schema). How availability is spelled is settled (§5, bl-bc7c): definitions
-  frozen in the prefix, presence answered at invocation.
+- ~~The tool-advertisement schema (the exact shape of name/description/input
+  schema)~~ — settled by bl-4e08 (§5.1): three fields, `name` a single path
+  component, `description` one string, `input_schema` the JSON Schema verbatim,
+  in a `tools.json` document per client. How availability is spelled was already
+  settled (§5, bl-bc7c): definitions frozen in the prefix, presence answered at
+  invocation.
 - Whether pins are world facts or pane facts (§7 defaults them to world, and
   bl-8bbc landed that default — moving a pin is one accessor, not a migration).
 - Certificate hygiene: lifetime, rotation cadence, whether the CA distrusts

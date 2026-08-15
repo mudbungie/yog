@@ -56,11 +56,15 @@ impl Action {
             }
             Action::Monitor(verb) => Some(verb.workspace()),
             Action::Fleet(verb) => Some(verb.workspace()),
+            // An advertisement names its CLIENT, never a workspace (REMOTE §5,
+            // bl-4e08): a tool set is a fact about the machine, and which
+            // workspaces see it is the registration listing that already exists.
+            Action::Advertise { .. }
             // The §9 config family answers through its destination instead
             // ([`config::ConfigFile::workspace`](super::config::ConfigFile)):
             // two of the five name a wall and three name no world at all, so
             // the table would have to read the file to answer here anyway.
-            Action::ApplyConfig { .. }
+            | Action::ApplyConfig { .. }
             | Action::Close { .. }
             | Action::Assign { .. }
             | Action::Release { .. }
@@ -114,6 +118,7 @@ impl Action {
             | Action::MarkSeen { .. }
             | Action::ClearTrail
             | Action::ApplyConfig { .. }
+            | Action::Advertise { .. }
             | Action::PickModel { .. } => None,
         }
     }
@@ -144,7 +149,8 @@ impl Query {
             | Query::Rail { workspace, .. }
             | Query::Inbox { workspace, .. }
             | Query::Agent { workspace, .. }
-            | Query::Providers { workspace } => Some(workspace.clone()),
+            | Query::Providers { workspace }
+            | Query::Clients { workspace } => Some(workspace.clone()),
             Query::Workspaces
             | Query::Balls
             | Query::Board

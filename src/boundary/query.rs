@@ -168,4 +168,15 @@ pub enum Query {
     /// not in another, and a query that named none could only answer for
     /// whichever wall happened to be standing.
     Providers { workspace: String },
+    /// **This workspace's registered clients** (REMOTE §5, bl-4e08): who
+    /// participates in it, which of them holds a live connection right now, and
+    /// what each advertises. Three reads joined at the moment they are asked —
+    /// the §4.1 registration listing, the wire server's presence RAM, and each
+    /// client's own advertised set — so nothing is stored that could go stale
+    /// and a flap needs no invalidation.
+    ///
+    /// **It is a point-in-time observation, deliberately** (REMOTE §5): the
+    /// seat sees the flap and the model's cached prefix never does, which is
+    /// why presence is answered here rather than declared anywhere durable.
+    Clients { workspace: String },
 }

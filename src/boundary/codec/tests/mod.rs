@@ -88,6 +88,26 @@ fn every_action_variant_round_trips() {
         agent: "c-1".into(),
     }));
     rt(Gesture::Act(Action::ClearTrail));
+    // REMOTE §5's presentation (bl-4e08). The empty set is a set — a host that
+    // stops offering everything says so with this gesture, not by silence —
+    // and the schema must survive the trip verbatim.
+    for tools in [Vec::new(), vec![advertised()]] {
+        rt(Gesture::Act(Action::Advertise { tools }));
+    }
+}
+
+/// One advertised tool with a schema deep enough that a codec which rebuilt it
+/// rather than carrying it would show.
+fn advertised() -> crate::registry::tools::Tool {
+    crate::registry::tools::Tool {
+        name: "Bash".into(),
+        description: "run a command".into(),
+        input_schema: serde_json::json!({
+            "type": "object",
+            "properties": {"command": {"type": "string", "minLength": 1}},
+            "required": ["command"],
+        }),
+    }
 }
 
 /// The `bl` half, split from its sibling on the two substrates' own line — the

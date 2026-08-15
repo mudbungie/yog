@@ -135,6 +135,17 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // through because every seat here is already off-frame.
         Query::Lineages { .. } => return config::lineages(ws),
         Query::Models { provider, .. } => return config::models(deps, ws, provider),
+        // REMOTE §5's roster (bl-4e08): the §4.1 registration listing, the
+        // wire's presence RAM and each client's advertised set, joined at the
+        // moment they are asked. It reads the *name* rather than the resolved
+        // path, because a registration is keyed by name — and the resolution
+        // above still stands, so an unregistered workspace refuses in the
+        // resolver's own words before this runs.
+        Query::Clients { workspace } => Reply::Clients(crate::registry::roster::roster(
+            &deps.state_root,
+            &deps.caller.presence,
+            workspace,
+        )),
     })
 }
 

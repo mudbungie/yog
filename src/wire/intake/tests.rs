@@ -23,6 +23,7 @@ fn intake(state_root: &std::path::Path) -> Intake {
         balls_state_root: PathBuf::from("/balls"),
         ui_path: state_root.join("ui.json"),
         cell: crate::state::new_snapshot_cell(snap),
+        presence: crate::registry::presence::Presence::default(),
         clock: Arc::new(SystemClock),
     }))
 }

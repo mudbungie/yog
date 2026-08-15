@@ -63,6 +63,18 @@ pub const QUERIES: &[HelpRow] = &[
                  a workspace, so the same row can read signed-in in one and not in another.",
     },
     HelpRow {
+        verb: "clients",
+        usage: "/clients",
+        summary: "the machines registered in this workspace, who is connected, and what they offer",
+        detail: "One row per client registered in the seat's workspace: its name, whether it \
+                 holds a live connection right now, and the tools it has advertised. Presence \
+                 is read at the moment you ask and is true only then — a client that answers \
+                 here may be gone a second later, which is why nothing durable records it. \
+                 What each client advertises, by contrast, was written when it last presented \
+                 its set and stands whether or not it is connected. A machine is registered by \
+                 an operator's own act on the server, never over the wire.",
+    },
+    HelpRow {
         verb: "lineages",
         usage: "/lineages",
         summary: "this workspace's config lineages, and the files each one holds",

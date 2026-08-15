@@ -90,6 +90,11 @@ fn spell_action(action: &Action) -> String {
         // The address is the seat's selection, exactly as `/message`'s is.
         Action::MarkSeen { .. } => "/seen".to_owned(),
         Action::ClearTrail => "/clear-trail".to_owned(),
+        // The set is the whole line, in its one spelling (REMOTE §5, bl-4e08);
+        // the client is the intake's and is never typed.
+        Action::Advertise { tools } => {
+            format!("/advertise {}", crate::registry::tools::encode(tools))
+        }
     }
 }
 
@@ -164,6 +169,8 @@ fn spell_query(query: &Query) -> String {
         // line states is the one thing it cannot supply — the provider row.
         Query::Lineages { .. } => "/lineages".to_owned(),
         Query::Models { provider, .. } => format!("/models {provider}"),
+        // The workspace is the seat's, as `/providers`' is.
+        Query::Clients { .. } => "/clients".to_owned(),
     }
 }
 

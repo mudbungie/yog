@@ -7,6 +7,9 @@
 /// own file at §12's cap — a real seam, because everything above is the
 /// in-world intake and everything there is the wire's.
 mod scope;
+/// The REMOTE §5 half (bl-4e08): the intake threading its identity to the ACT
+/// side, and the roster read that joins the three facts back.
+mod tools;
 
 use super::*;
 use crate::boundary::deposit;
@@ -45,6 +48,7 @@ fn over(
         balls_state_root: PathBuf::from("/balls"),
         ui_path: state_root.join("ui.json"),
         cell: crate::state::new_snapshot_cell(std::sync::Arc::new(snap)),
+        presence: crate::registry::presence::Presence::default(),
         clock: Arc::new(SystemClock),
     }
 }

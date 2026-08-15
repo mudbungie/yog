@@ -139,6 +139,17 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         "ack" => args::none(tail, verb).map(|()| act(Action::Ack)),
         "seen" => verbs::seen(tail, ctx, verb),
         "clear-trail" => args::none(tail, verb).map(|()| act(Action::ClearTrail)),
+        // REMOTE §5's tool-host presentation (bl-4e08): the whole tail is the
+        // set, as JSON — a document spelled verbatim, exactly as `--body` and a
+        // goal are. It names no client: the identity is the intake's, and a
+        // line seat has none, so this refuses at dispatch rather than here.
+        "advertise" => {
+            let text = args::required(tail, verb, "the tool set, as JSON")?;
+            let set = serde_json::from_str(&text).map_err(|e| format!("/{verb}: {e}"))?;
+            Ok(act(Action::Advertise {
+                tools: crate::registry::tools::decode(&set)?,
+            }))
+        }
         // The queries (§8.5): populating reads, spellable exactly as actions
         // are — a seat with no panes still has to be able to look. Split out
         // at the §12 line budget; an unknown verb refuses there too, so this

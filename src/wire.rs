@@ -49,7 +49,11 @@ pub const SEAT_SUBCMD: &str = "seat";
 /// ordinary answer on a box with no wire provisioned; a refusal is written to
 /// stderr and is never fatal — an engine with no wire is the engine yog has
 /// always been, and a seat that cannot reach it says so at the seat.
-pub fn listen(world: &Env, answerer: Arc<dyn server::Answerer>) -> Option<server::Listener> {
+pub fn listen(
+    world: &Env,
+    answerer: Arc<dyn server::Answerer>,
+    presence: crate::registry::presence::Presence,
+) -> Option<server::Listener> {
     let material = match material::read(world, material::Role::Server) {
         Ok(Some(m)) => m,
         Ok(None) => return None,
@@ -58,7 +62,7 @@ pub fn listen(world: &Env, answerer: Arc<dyn server::Answerer>) -> Option<server
             return None;
         }
     };
-    match server::Listener::bind(&material, answerer) {
+    match server::Listener::bind(&material, answerer, presence) {
         Ok(listener) => Some(listener),
         Err(e) => {
             eprintln!("yog: wire: {e}");

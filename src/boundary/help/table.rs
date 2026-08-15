@@ -176,6 +176,21 @@ pub const ACTIONS: &[HelpRow] = &[
                  verbatim. Takes the workspace and the conversation from the seat.",
     },
     HelpRow {
+        verb: "advertise",
+        usage: "/advertise <json array>",
+        summary: "present this machine's tool set into the workspaces it is registered in",
+        detail: "A tool host says what it can do. The whole tail is the set, as a JSON array \
+                 whose elements are `{\"name\": …, \"description\": …, \"input_schema\": …}` — \
+                 the name a single path component, the description one string, the schema a \
+                 JSON Schema carried through untouched. The set replaces whatever this client \
+                 advertised before, and it is stored only when it differs, so re-presenting an \
+                 unchanged set on every reconnect writes nothing. Two elements sharing a name \
+                 is refused outright; two machines both offering `Bash` is ordinary. It names \
+                 no client: the identity it lands under is the certificate the connection \
+                 presented, so a caller inside the world — the deposit inbox, `yog gesture`, \
+                 the window — has none and is refused.",
+    },
+    HelpRow {
         verb: "delete-workspace",
         usage: "/delete-workspace <typed name>",
         summary: "unmake the focused workspace; the typed name is the arming",

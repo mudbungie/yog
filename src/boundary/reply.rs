@@ -166,6 +166,12 @@ pub enum Reply {
     Marks {
         branch: String,
     },
+    /// A tool host's set landed (REMOTE §5, bl-4e08). **It carries nothing**,
+    /// on §8.1's own test: the stored set after the write *is* the set the
+    /// gesture carried, so a count or an echo here would be one computable fact
+    /// said twice — the [`Applied`](Self::Applied) shape. Whether the write
+    /// actually touched the file is an optimization, not an answer.
+    Advertised,
     Workspaces(Vec<WsRow>),
     Conversations(Vec<ConvRow>),
     Balls(Vec<JoinRow>),
@@ -241,6 +247,10 @@ pub enum Reply {
     /// empty: a provider that offered nothing is a refusal saying so, not a
     /// list a seat would read as "no models exist".
     Models(Vec<String>),
+    /// The workspace's registered clients with their presence and advertised
+    /// sets (REMOTE §5, bl-4e08) — [`Clients`](super::Query::Clients)' answer,
+    /// and the payload the navigator's clients section paints.
+    Clients(Vec<crate::registry::roster::ClientRow>),
 }
 
 /// Whether a dispatch outcome was clean — the draft-clearing predicate the

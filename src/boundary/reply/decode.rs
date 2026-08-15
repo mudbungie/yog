@@ -77,6 +77,7 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "acked" => Ok(Reply::Acked),
         "trail-cleared" => Ok(Reply::TrailCleared),
         "applied" => Ok(Reply::Applied),
+        "advertised" => Ok(Reply::Advertised),
         "marks" => str_of(o, "branch").map(|branch| Reply::Marks { branch }),
         "config" => str_of(o, "text").map(|text| Reply::Config { text }),
         _ => return None,
@@ -129,7 +130,19 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "providers" => rows_of(o, provider_row).map(Reply::Providers),
         "lineages" => rows_of(o, lineage_row).map(Reply::Lineages),
         "models" => strings_of(o, "rows").map(Reply::Models),
+        "clients" => rows_of(o, client_row).map(Reply::Clients),
         _ => return None,
+    })
+}
+
+/// One registered client, read back (REMOTE §5, bl-4e08) — the tools through
+/// `registry::tools`, the same decoder the gesture and the document spend.
+fn client_row(v: &Value) -> Result<crate::registry::roster::ClientRow, String> {
+    let o = v.as_object().ok_or("client row: not an object")?;
+    Ok(crate::registry::roster::ClientRow {
+        client: str_of(o, "client")?,
+        present: bool_of(o, "present")?,
+        tools: crate::registry::tools::decode(o.get("tools").ok_or("client row: missing tools")?)?,
     })
 }
 

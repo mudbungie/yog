@@ -59,6 +59,7 @@ fn deps(lernie: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
             cadence: yog::app::Cadence::default(),
             fleet: std::collections::BTreeMap::new(),
         }),
+        caller: yog::boundary::dispatch::Caller::default(),
         mint_seed: 7,
     }
 }

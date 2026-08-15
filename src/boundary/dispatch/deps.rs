@@ -33,6 +33,29 @@ pub struct Deps {
     /// The §3.3 mint's seed — the GUI passes its held preview seed so the
     /// greyed prediction and the fire agree; headless callers derive one.
     pub mint_seed: u64,
+    /// Who is asking, and who else is connected (REMOTE §4, §5).
+    pub caller: Caller,
+}
+
+/// **The connection facts a gesture runs under** (REMOTE §4, §5, bl-4e08) —
+/// the two things that are true of the *caller* rather than of the world, which
+/// is why they ride here together and not on the snapshot: a derivation is
+/// republished on the worker's cadence, and both of these change on a peer's.
+///
+/// The default is the in-world posture (§3): the reserved `local` identity, and
+/// a presence map nobody has entered — which is exactly right for a box with no
+/// wire provisioned, the deposit inbox and every test. The general path with no
+/// input, not a case of its own.
+#[derive(Clone, Default)]
+pub struct Caller {
+    /// The identity the intake carries: a connection's certificate common name
+    /// (REMOTE §4, read exactly where scoping reads it), or `local` for the
+    /// window, the `gestures/` inbox and `yog gesture`.
+    pub client: crate::registry::Client,
+    /// Which clients hold a live connection right now (REMOTE §5) — the wire
+    /// server's own RAM, shared by handle so an answer reads this instant's
+    /// truth rather than a copy taken when the gesture arrived.
+    pub presence: crate::registry::presence::Presence,
 }
 
 impl Deps {

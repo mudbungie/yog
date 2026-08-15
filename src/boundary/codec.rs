@@ -24,6 +24,7 @@ mod fork;
 mod monitor;
 mod query;
 mod start;
+mod tools;
 use config::encode_file;
 use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, usize_of};
 use start::{decode_payload, decode_prepared, encode_payload, encode_prepared, opt_field};
@@ -138,6 +139,7 @@ fn encode_action(action: &Action) -> Value {
             attempt,
             goal,
         } => fork::encode(workspace, parent, attempt, goal),
+        Action::Advertise { tools } => tools::encode(tools),
     }
 }
 
@@ -272,6 +274,8 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             agent: str_of(o, "agent")?,
         })),
         "clear-trail" => Ok(act(Action::ClearTrail)),
+        // REMOTE §5's tool-host presentation (bl-4e08).
+        tools::ADVERTISE => tools::decode(o).map(act),
         // The two families that read in their own modules (bl-3f46, bl-3746):
         // every query — `config`/`marks` read-shaped among them, bl-0164 —
         // then the §9 config verbs. This match stays the action roster rather

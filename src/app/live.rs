@@ -118,6 +118,28 @@ impl super::AppModel {
         &self.derived
     }
 
+    /// Take the engine's live-connection map (REMOTE §5, bl-4e08). Handed over
+    /// rather than taken at [`boot`](Self::boot), for [`follower`](Self::follower)'s
+    /// reason exactly: the model owns no thread and mints no handle the engine
+    /// is the one owner of.
+    pub fn adopt_presence(&mut self, presence: crate::registry::presence::Presence) {
+        self.presence = presence;
+    }
+
+    /// This workspace's registered clients, their presence and their advertised
+    /// sets (REMOTE §5) — the **one** derivation, the same one
+    /// [`Query::Clients`](crate::boundary::Query::Clients) answers, so the
+    /// window and a headless seat render identical rows.
+    pub fn clients(&self, workspace: &str) -> Vec<crate::registry::roster::ClientRow> {
+        crate::registry::roster::roster(&self.roots.yog_state, &self.presence, workspace)
+    }
+
+    /// The identities holding a connection right now — the memo key the §11
+    /// clients section invalidates on, since a flap moves no derivation.
+    pub fn live_clients(&self) -> std::collections::BTreeSet<String> {
+        self.presence.live()
+    }
+
     /// This instance's [`Follower`], for the engine to spawn — the model never
     /// starts its own thread, so a test drives [`Follower::pass`] by hand (the
     /// same reason [`boot`](Self::boot) hands back a `Deriver`).

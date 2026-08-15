@@ -29,6 +29,7 @@ fn deps(state_root: &Path) -> Deps {
             vec![crate::boundary::tests::agent("c-1", AgentState::Live, 9)],
             vec![],
         )),
+        caller: crate::boundary::dispatch::Caller::default(),
         mint_seed: 7,
     }
 }

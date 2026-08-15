@@ -46,5 +46,6 @@ pub(super) fn receipts() -> Vec<Reply> {
         Reply::Config {
             text: "roles: []".into(),
         },
+        Reply::Advertised,
     ]
 }

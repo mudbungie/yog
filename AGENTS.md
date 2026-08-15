@@ -106,16 +106,21 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    always be exact and lockfile-fixed; a `path` dependency is never lawful.
 
 7. **`Mutex`/`RwLock` only in `src/state.rs`; no `Rc`/`RefCell` anywhere. yog
-   ADAPTATION:** the lock chokepoint (`state.rs`) has three sanctioned
+   ADAPTATION:** the lock chokepoint (`state.rs`) has four sanctioned
    carve-outs — the test scaffolding locks (`SPAWN_LOCK`/`ENV_LOCK` in
    `test_support`), `src/git_tree/probe_cache.rs` (a macOS 2 s TTL cache whose
-   `Mutex` is uncontended single-thread interior mutability), and
+   `Mutex` is uncontended single-thread interior mutability),
    `src/fs_watcher/hub.rs` (the process's one `notify` instance and its fan-out
    registry, `OnceLock` singletons that are never dropped or handed out —
-   bl-908c). Both code carve-outs share one reason: folding them into
-   `state.rs` breaks llvm-cov's per-line coverage there, shifting the file's
-   byte offsets and mis-attributing phantom uncovered regions onto its `impl`
-   headers and type aliases. `Rc`/`RefCell` are banned everywhere, tests
+   bl-908c), and `src/registry/presence.rs` (REMOTE §5's live-connection map,
+   bl-4e08). All three code carve-outs share one reason: folding them into
+   `state.rs` breaks llvm-cov's per-line coverage there, mis-attributing
+   phantom uncovered regions onto its `impl` headers and type aliases. The
+   third is the one to read closely — it *is* cross-thread hand-off state, so
+   the rule says it belongs in the chokepoint, and it was written there first;
+   it moved out only because it cost `state.rs` the 100% floor (four phantom
+   lines, measured, and not dissolved by moving the addition to the end of the
+   file). `Rc`/`RefCell` are banned everywhere, tests
    included (bare `Cell` counters are fine). Enforced:
    `rules/locks-outside-state.yml`, `rules/no-rc-refcell.yml`.
 

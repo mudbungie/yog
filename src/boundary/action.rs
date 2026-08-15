@@ -255,6 +255,22 @@ pub enum Action {
         /// The goal, verbatim (§3.3, bl-6920).
         goal: String,
     },
+    /// **A tool host presents its set** (REMOTE §5, bl-4e08): the three facts
+    /// per element — name, description, JSON Schema verbatim — which the engine
+    /// writes into that client's registration when they differ from what is
+    /// stored ([`registry::tools`](crate::registry::tools)).
+    ///
+    /// **It names no client, and that is the gesture.** The identity it lands
+    /// under is the *intake's* — a connection's certificate common name, read
+    /// exactly where scoping reads it (REMOTE §4) — because a client field
+    /// would let any connection overwrite any other client's set, which is the
+    /// authorization the certificate already decided. An intake carrying no
+    /// client identity (the `gestures/` inbox, `yog gesture`, the window)
+    /// therefore refuses in band: it is a boundary verb like any other, and the
+    /// wire gains nothing it does not (REMOTE §3).
+    Advertise {
+        tools: Vec<crate::registry::tools::Tool>,
+    },
     /// The §9.4 model pick: give `role` this `model` on this provider row, for
     /// `workspace`. §9.2 and §9.3 composed by one gesture — refuse either half
     /// and neither is written — because lernie's cross-check makes the role

@@ -45,6 +45,10 @@ pub struct ConsumerCtx {
     pub ui_path: PathBuf,
     pub cell: SnapshotCell,
     pub clock: Arc<dyn Clock>,
+    /// Which clients hold a live wire connection right now (REMOTE §5,
+    /// bl-4e08) — the listener's own RAM, shared by handle so the roster read
+    /// answers this instant rather than a copy.
+    pub presence: crate::registry::presence::Presence,
 }
 
 impl ConsumerCtx {
@@ -55,7 +59,7 @@ impl ConsumerCtx {
         if deposit::pending(&self.state_root).is_empty() {
             return 0;
         }
-        let (deps, ts, now_unix) = self.deps(None);
+        let (deps, ts, now_unix) = self.deps(&crate::registry::Client::local(), None);
         let mut ui = UiState::open(self.ui_path.clone());
         consume(&deps, &mut ui, &ts, now_unix)
     }
@@ -64,7 +68,7 @@ impl ConsumerCtx {
     /// in-world caller**, which is unscoped (REMOTE §3: the inbox is the
     /// world's own residents' door, and they hold no certificate).
     pub fn answer(&self, request: &Value) -> Value {
-        let (deps, ts, now_unix) = self.deps(None);
+        let (deps, ts, now_unix) = self.deps(&crate::registry::Client::local(), None);
         let mut ui = UiState::open(self.ui_path.clone());
         run_value(&deps, &mut ui, &ts, now_unix, request)
     }
@@ -83,7 +87,7 @@ impl ConsumerCtx {
     /// the wire auto-registers its creating client", with nothing to detect.
     pub fn answer_as(&self, client: &crate::registry::Client, request: &Value) -> Value {
         let scope = crate::registry::registered(&self.state_root, client);
-        let (deps, ts, now_unix) = self.deps(Some(&scope));
+        let (deps, ts, now_unix) = self.deps(client, Some(&scope));
         let mut ui = UiState::open_at(
             self.ui_path.clone(),
             crate::registry::pane(&self.state_root, client),
@@ -106,7 +110,11 @@ impl ConsumerCtx {
     /// the worker has published, with this moment's stamp beside it. `scope`
     /// is the REMOTE §4 narrowing: `None` for an in-world caller, the client's
     /// registered workspace names for a connection.
-    fn deps(&self, scope: Option<&std::collections::BTreeSet<String>>) -> (Deps, String, i64) {
+    fn deps(
+        &self,
+        client: &crate::registry::Client,
+        scope: Option<&std::collections::BTreeSet<String>>,
+    ) -> (Deps, String, i64) {
         let ts = self.clock.stamp();
         let now_unix: i64 = ts.parse().unwrap_or(0);
         let published = crate::state::latest_snapshot(&self.cell);
@@ -130,6 +138,14 @@ impl ConsumerCtx {
             // No held preview to agree with headlessly — any seed is a fair
             // mint draw; the ts keeps successive passes distinct.
             mint_seed: content_hash(ts.as_bytes()),
+            // **Who is asking, and who else is connected** (REMOTE §4, §5).
+            // The identity is the intake's — `local` for the world's own
+            // residents, the certificate's common name for a connection — and
+            // it is what the §5 advertisement lands under.
+            caller: crate::boundary::dispatch::Caller {
+                client: client.clone(),
+                presence: self.presence.clone(),
+            },
         };
         (deps, ts, now_unix)
     }

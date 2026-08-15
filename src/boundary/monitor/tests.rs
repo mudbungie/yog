@@ -26,6 +26,7 @@ fn deps(state_root: &std::path::Path) -> Deps {
             Vec::new(),
             Vec::new(),
         )),
+        caller: crate::boundary::dispatch::Caller::default(),
         mint_seed: 7,
     }
 }

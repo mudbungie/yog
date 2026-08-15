@@ -26,6 +26,7 @@ fn deps(state_root: &Path) -> Deps {
             snap.projects = vec![PathBuf::from("/dev/yog")];
             snap
         }),
+        caller: crate::boundary::dispatch::Caller::default(),
         mint_seed: 7,
     }
 }

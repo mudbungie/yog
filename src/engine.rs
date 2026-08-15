@@ -87,7 +87,7 @@ impl Engine {
         // `boot` takes the first derivation synchronously — every workspace
         // enumerated and snapshotted, the watches armed, the startup focus
         // derived — and hands back the `Deriver` the worker then owns forever.
-        let (model, deriver) = AppModel::boot(
+        let (mut model, deriver) = AppModel::boot(
             roots,
             initial_focus,
             Arc::clone(&clock),
@@ -101,6 +101,13 @@ impl Engine {
         // beside the worker because a *reader* of one file is not a face's
         // concern — the windowless seat simply has a `NoRepaint` to wake.
         let follower = model.follower().spawn(repaint);
+        // Which clients hold a live connection right now (REMOTE §5, bl-4e08):
+        // one handle, minted here because the listener fills it while every
+        // answer — and the frame's own clients section — reads it. RAM by
+        // ruling: presence changes with every network blip, so it never
+        // reaches the world.
+        let presence = crate::registry::presence::Presence::default();
+        model.adopt_presence(presence.clone());
         // The §8.5 gestures-inbox consumer: both faces are one consumer surface,
         // so a deposit converges whichever is up (I0).
         let intake = Arc::new(ConsumerCtx {
@@ -115,6 +122,7 @@ impl Engine {
             ui_path: model.ui_json_path(),
             cell: model.snapshot_cell(),
             clock: Arc::clone(&clock),
+            presence: presence.clone(),
         });
         let consumer = Consumer::spawn(Arc::clone(&intake));
         // The REMOTE §9.5 wire listener (bl-b6fa), beside the consumer and for
@@ -127,6 +135,7 @@ impl Engine {
             world,
             Arc::new(crate::wire::intake::Intake::new(intake))
                 as Arc<dyn crate::wire::server::Answerer>,
+            presence,
         );
         // The VISION §4.9 alignment monitor's level trigger. Spawned
         // unconditionally and free when unarmed: with no `cadence.yaml` monitor
@@ -158,6 +167,7 @@ impl Engine {
                 // Both are replaced per tick — the snapshot by what the worker
                 // has published, the seed by that tick's own stamp.
                 snapshot: crate::state::latest_snapshot(&model.snapshot_cell()),
+                caller: crate::boundary::dispatch::Caller::default(),
                 mint_seed: 0,
             },
             cell: model.snapshot_cell(),
