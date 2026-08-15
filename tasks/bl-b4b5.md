@@ -1,7 +1,8 @@
 +++
 title = "REMOTE read path: the accessory tail, part two — the ball-and-spend family, the fire-time gates, the misc singles, and staleness's clock"
 created = 1786770804
-updated = 1786770804
+updated = 1786771043
+claimant = "Scupper"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 bl-296f took the first seven of bl-48ae's accessory tail and found they needed no new query at all: the facts were already on landed answers (Query::Workspaces, Query::Ops, Query::Agent) or wanted one field on one of them. What is left does need spelling. REMOTE 9.7's bl-296f block is the authority; this is the work.
