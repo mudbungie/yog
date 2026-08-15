@@ -75,17 +75,29 @@ fn painted(world: &mut World, lernie: &Cli, bl: &Cli) -> String {
             render(ctx, &mut world.model, &mut world.state, lernie, bl, &bz);
         })
     };
-    // Each frame's own wire duty between them (REMOTE §9.8's harness ruling as
-    // bl-44e9 extended it): the first declares this window's standing questions,
-    // the settle after it answers them, the settle after the second carries the
-    // answers back — so the third frame, the one the operator sees, is also the
-    // first that has anything migrated to paint.
+    // Two frames before anything is settled, because a **fresh** `egui::Context`
+    // measures before it paints: egui sizes a content-sized panel and culls a
+    // scroll area against the *previous* frame's rect, so a surface read off
+    // the first frame on a new context is read off an unmeasured layout.
+    // [`Screen`](screen::Screen) needs no such pre-roll — its context is
+    // persistent across the whole drive, which is the point of it.
     let _ = frame(world);
-    world.settle();
     let _ = frame(world);
-    world.settle();
-    let out = frame(world);
-    crate::paint_probe::text_of(&out)
+    // Then the wire settled to a **fixed point** (`World::drain`, REMOTE §9.8's
+    // harness ruling as bl-44e9 extended it to reads): every migrated surface
+    // paints an answer that landed a round trip later, and the §11 step
+    // drill-in two — its sequence name is picked out of the step list that
+    // landed, which is why counting passes stopped being enough (bl-13f9).
+    world.drain(&mut |world| {
+        let _ = frame(world);
+    });
+    // And one last frame, laid out against the settled one: that is the frame
+    // the test reads, exactly as the operator's eye reads the repaint after the
+    // answer rather than the one it arrived on. **Nothing is settled between
+    // the two** — a `Link` settled twice without a frame between it declares
+    // nothing and drops every answer, which is the same rule that makes a
+    // collapsed pane free.
+    crate::paint_probe::text_of(&frame(world))
 }
 
 /// The window sizes the paint-layer properties are asserted at: yog's

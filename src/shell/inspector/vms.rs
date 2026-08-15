@@ -3,203 +3,129 @@
 //!
 //! Split from [`super`] at §12's per-file budget for the shell, on the seam
 //! between *painting the inspector* and *assembling what it paints*.
-//! Coverage-excluded like the rest of `shell/*`: each build below is one call
-//! into a module that tests it.
+//! Coverage-excluded like the rest of `shell/*`: each field below is one
+//! [`reads`] ask and one selection out of what landed.
+//!
+//! **Nothing here reads disk any more** (REMOTE §9.7, bl-13f9). Every subject
+//! this file used to build in process is a standing question now, so what is
+//! left is the two things that are genuinely the *seat's*: which tab is open,
+//! and the pin. The pin stayed seat-side and §8.5 stayed unamended — a viewport
+//! fold gains no boundary representation — because bl-44e9 moved the answers to
+//! the altitude that makes it a **selection**: the rail's notches carry their
+//! own budget rollups, the pinned transcript is a prefix of the chat that was
+//! answered, and the two reads whose subject really is a different *tree*
+//! (Files, config-frozen-at) take that tree as a query parameter.
 
 use std::path::Path;
 
-use super::super::{InspectorState, ShellState};
-use super::{rail, work};
+use super::super::ShellState;
+use super::super::wire::Said;
+use super::{rail, reads, work};
 use crate::AppModel;
 use crate::boundary::answer::agent::AgentView;
-use crate::boundary::answer::inspector;
-use crate::files_view::{FilesView, Preview};
-use crate::inboxview::{InboxEntry, list_inbox};
 use crate::inspector::TabData;
 use crate::keymap::InspectorTab;
-use crate::steps_view::{self, StepDetail, StepsView};
-use crate::transcript::{self, Transcript};
+use crate::steps_view::StepsView;
 
 /// Every view-model the focused agent's inspector renders, built for the
 /// active tab and folded through the operator's pin. The **rail and the pin
-/// come first**: each build below reads through the pin (VISION V1.2 — one
-/// mechanism, four tabs), so the pin must be resolved before anything asks
-/// disk what to show. A caller with no focused agent never reaches here.
+/// come first**: the pinnable tabs are asked at the pin's commit (VISION V1.2 —
+/// one mechanism, four tabs), so the pin must be resolved out of the landed
+/// spine before their questions are declared. A caller with no focused agent
+/// never reaches here.
 ///
-/// The second half of the answer is **the engine's sentence when a migrated
-/// read was refused** (REMOTE §9.7, bl-f297). It rides beside [`TabData`]
-/// rather than in it: `TabData` is what the tested renderer paints, and a
-/// refusal is a fact about this seat's transport, which the caller paints
-/// above the tab. Today exactly one of these reads crosses the wire (Work),
-/// so there is one sentence and no need to say which.
+/// The second half of the answer is **the engine's sentences for whatever this
+/// frame's questions were refused with** (REMOTE §9.7). They ride beside
+/// [`TabData`] rather than in it: `TabData` is what the tested renderer paints,
+/// and a refusal is a fact about this seat's transport, which the caller paints
+/// above the tab. [`Said`] keeps them distinct, because the whole family
+/// refuses in one sentence when what failed was the address.
 pub(super) fn tab_data(
     active: InspectorTab,
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
     focus: &AgentView,
-) -> (TabData, Option<String>) {
-    let (agent_id, tip, agent_state) = (&focus.agent_id, &focus.tip, focus.state);
+) -> (TabData, Vec<String>) {
+    let agent_id = focus.agent_id.clone();
     // Who the transcript's model turns are (bl-2335): the §3.3 ladder over the
-    // selection's *conversation root*, through the boundary's own derivation —
-    // one function, never a second spelling (bl-6233). It rides the seat's own
-    // view since bl-1eb0, so this build reads a payload rather than a roster.
+    // selection's *conversation root*, folded into the seat's own view since
+    // bl-1eb0, so this reads a payload rather than a roster.
     let speaker = focus.name.clone();
-    // The heavy view-models, once per snapshot (§7.2 `SnapMemo`, bl-e90a).
-    let steps = state
-        .inspector
-        .steps_memo
-        .read(
-            model.derivation(),
-            (ws.to_path_buf(), agent_id.clone(), agent_state),
-            &mut || steps_view::build(ws, agent_id, agent_state),
-        )
-        .clone();
-    // The transcript is built on **every** tab since bl-1802, not just its own:
-    // a notch's seat is a row in the chat, so the spine — and therefore the pin
-    // every pinnable tab reads through — is a function of it. One memoized read
-    // per snapshot, the same trade the steps view already makes, and one tab
-    // arm fewer.
-    let live = build_transcript(model, &mut state.inspector, ws, agent_id);
-    let history = rail::build(model, &mut state.inspector, ws, agent_id, &steps, &live);
-    let pin = rail::pinned(&history, state.inspector.eph.notch_sel);
-    let files = build_files(
-        active,
-        model,
-        &mut state.inspector,
-        ws,
-        agent_id,
-        pin.as_ref(),
+    let mut said = Said::default();
+    // The two asked on every tab: the steps view because the centre's auth and
+    // wound banners read it beside the Steps tab, and the transcript because a
+    // notch's seat is a row in the chat — so the spine, and therefore the pin
+    // every pinnable tab reads through, is a function of it (bl-1802).
+    let steps: StepsView = said
+        .take(reads::steps(model, ws, &agent_id))
+        .unwrap_or_default();
+    let live = std::sync::Arc::new(
+        said.take(reads::transcript(model, ws, &agent_id))
+            .unwrap_or_default(),
     );
+    let history = said
+        .take(reads::rail(model, ws, &agent_id))
+        .unwrap_or_default();
+
+    let pin = rail::pinned(&history, state.inspector.eph.notch_sel);
+    let commit = pin.as_ref().map(|p| p.commit.clone());
+    // One question answers the listing and the picked file's bytes together,
+    // live or as of the pin — so the seat-side branch the preview used to make
+    // dissolves rather than moving (REMOTE §9.7's own residual, closed).
+    let files = (active == InspectorTab::Files)
+        .then(|| {
+            said.take(reads::files(
+                model,
+                ws,
+                &agent_id,
+                state.inspector.eph.files_sel.clone(),
+                commit.clone(),
+            ))
+        })
+        .flatten()
+        .unwrap_or_default();
+    let step_detail = detail_seq(active, &steps, state.inspector.step_sel)
+        .and_then(|seq| said.take(reads::detail(model, ws, &agent_id, &seq)));
+    let inbox = (active == InspectorTab::Inbox)
+        .then(|| said.take(reads::inbox(model, ws, &agent_id)))
+        .flatten()
+        .unwrap_or_default();
+    let governing = (active == InspectorTab::Config)
+        .then(|| said.take(reads::governing(model, ws, &agent_id, commit)))
+        .flatten();
     // The Work tab's subject is the *project* repo, so its question is
     // addressed at the workspace rather than the agent and the pin never
-    // reaches it. One ask answers the listing and the picked file's patch
-    // together (REMOTE §9.7, bl-f297).
+    // reaches it (bl-f297).
     let picked = state.inspector.eph.work_sel.clone();
-    let work = work::read(active, model, ws, picked);
+    let work = work::read(active, model, ws, picked, &mut said);
     let data = TabData {
         transcript: rail::transcript(&live, pin.as_ref()),
         speaker,
         raw: state.inspector.raw,
         auto: model.transcript_auto_expand(),
         step_sel: state.inspector.step_sel,
-        step_detail: build_detail(active, ws, agent_id, &steps, state.inspector.step_sel),
+        step_detail,
         step_tab: state.inspector.step_tab,
         steps,
-        inbox: build_inbox(active, ws, agent_id),
-        file_preview: build_file_preview(
-            active,
-            ws,
-            agent_id,
-            &files,
-            state.inspector.eph.files_sel,
-            pin.as_ref(),
-        ),
-        files,
+        inbox,
+        file_preview: files.1,
+        files: files.0,
         work: work.attempts,
         work_patch: work.patch,
-        governing: (active == InspectorTab::Config)
-            .then(|| rail::governing(ws, tip, pin.as_ref()))
-            .flatten(),
+        governing,
         rail: history,
         pin,
     };
-    (data, work.refused)
+    (data, said.sentences())
 }
 
-fn build_files(
-    tab: InspectorTab,
-    model: &AppModel,
-    inspector: &mut crate::shell::InspectorState,
-    ws: &Path,
-    agent: &str,
-    pin: Option<&crate::rail::Pin>,
-) -> FilesView {
-    if tab == InspectorTab::Files {
-        rail::files(model, inspector, ws, agent, pin)
-    } else {
-        FilesView::default()
-    }
-}
-
-/// The selected file's preview, when the Files tab is active and the selection
-/// points at a file entry (a dir or a stale index yields `None`). Pinned, the
-/// bytes come out of that commit's tree instead of the worktree.
-fn build_file_preview(
-    tab: InspectorTab,
-    ws: &Path,
-    agent: &str,
-    files: &FilesView,
-    sel: Option<usize>,
-    pin: Option<&crate::rail::Pin>,
-) -> Option<Preview> {
-    if tab != InspectorTab::Files {
-        return None;
-    }
-    let FilesView::Present { entries, .. } = files else {
-        return None;
-    };
-    let entry = entries.get(sel?)?;
-    if entry.is_dir {
-        return None;
-    }
-    Some(rail::preview(ws, agent, &entry.rel_path, pin))
-}
-
-/// The transcript: **the committed half once per derivation, the live tail
-/// every frame** (§7.2, bl-e90a + bl-54f7).
-///
-/// The `messages/` read + parse used to run on every frame, which is the cost
-/// the operator felt as sluggish, sticky chat scroll — so it is memoized, and
-/// the memo is keyed on the derivation ([`AppModel::derivation`]) because that
-/// is what tracks the files it read. The **live tail moves on its own clock**
-/// and is folded on here from the rendered snapshot's own
-/// [`Stream`](crate::git_tree::Stream), which the §7.2 follower keeps fresh: no
-/// disk read, so a growing answer costs a clone of the committed entries rather
-/// than a re-read of the conversation. Folding the two into one build is what
-/// made the tail as slow as the derivation.
-///
-/// **Which tail, and whether there is one at all, is the boundary's ruling**
-/// ([`inspector::live_tail`], bl-6233) — the same fold the headless answer
-/// makes, so the two seats cannot describe one moment differently. It is the
-/// only half the frame keeps for itself: the committed read is memoized here
-/// because a memo is a frame concern, and the answer chokepoint is off-frame
-/// and re-reads.
-pub(in crate::shell) fn build_transcript(
-    model: &AppModel,
-    inspector_state: &mut InspectorState,
-    ws: &Path,
-    agent: &str,
-) -> std::sync::Arc<Transcript> {
-    let committed = std::sync::Arc::clone(inspector_state.tx_memo.read(
-        model.derivation(),
-        (ws.to_path_buf(), agent.to_string()),
-        &mut || std::sync::Arc::new(transcript::build(ws, agent)),
-    ));
-    match inspector::live_tail(model.derivation(), ws, agent) {
-        Some(stream) => std::sync::Arc::new(committed.with_live(&stream)),
-        None => committed,
-    }
-}
-
-fn build_detail(
-    tab: InspectorTab,
-    ws: &Path,
-    agent: &str,
-    steps: &StepsView,
-    sel: Option<usize>,
-) -> Option<StepDetail> {
-    if tab != InspectorTab::Steps {
-        return None;
-    }
-    let seq = &steps.steps.get(sel?)?.seq;
-    Some(steps_view::detail(ws, agent, seq))
-}
-
-fn build_inbox(tab: InspectorTab, ws: &Path, agent: &str) -> Vec<InboxEntry> {
-    if tab == InspectorTab::Inbox {
-        list_inbox(ws, agent)
-    } else {
-        Vec::new()
-    }
+/// Which step the drill-in is about: the selected row of the list that landed,
+/// resolved in the frame that has it. `None` on any other tab, and for a
+/// selection the answer no longer carries — a re-derivation that drops steps
+/// can never strand the drill-in on a step that is gone.
+fn detail_seq(tab: InspectorTab, steps: &StepsView, sel: Option<usize>) -> Option<String> {
+    (tab == InspectorTab::Steps)
+        .then(|| steps.steps.get(sel?).map(|step| step.seq.clone()))
+        .flatten()
 }

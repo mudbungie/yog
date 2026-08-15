@@ -151,6 +151,29 @@ pub enum Query {
         path: Option<String>,
         at: Option<String>,
     },
+    /// **The config commit this conversation is frozen on** (§9.3, §5.1 #17;
+    /// VISION V1.2's *config-frozen-at*; REMOTE §9.7, bl-13f9): the nearest
+    /// `config/*` ancestor of a commit, whether that ancestor is still a
+    /// lineage's own tip, and every path its tree holds.
+    ///
+    /// **`at` names the commit, and a commit is a selection** — the
+    /// [`Files`](Query::Files) shape, and for the same reason: this is the
+    /// *second* of VISION V1.2's four pinnable tabs whose subject is a tree the
+    /// pin names rather than something the seat already holds. `None` is the
+    /// agent's own branch tip, resolved off the published snapshot, so a seat
+    /// that has pinned nothing asks nothing different and no seat has to know a
+    /// tip before it may ask. Nothing about the operator's *selection* crosses.
+    ///
+    /// It **refuses** rather than answering absent, unlike its siblings: the
+    /// derivation is a walk of the workspace's own git and it fails the way
+    /// [`Lineages`](Query::Lineages) fails — a defective or unfetched
+    /// workspace, or a commit that forks off no config lineage at all. Absence
+    /// would read as *this conversation has no policy*, which is never true.
+    Governing {
+        workspace: String,
+        agent: String,
+        at: Option<String>,
+    },
     /// **The step spine** (VISION V1, §11): one notch per operable commit and
     /// the child cards hanging off them. The notches are answered; the
     /// operator's *pin* is not — a pin is a viewport fold, and §8.5 files folds

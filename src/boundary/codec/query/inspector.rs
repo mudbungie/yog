@@ -1,8 +1,8 @@
-//! The §11 inspector family's envelope spelling (§8.5, bl-6233) — split from
-//! [`super`] at §12's per-file budget on the seam the family itself draws:
-//! these six are the only queries addressed at a **conversation** rather than a
-//! workspace, so the address they share is written once here and every other
-//! query's spelling stays where it was.
+//! The §11 inspector family's envelope spelling (§8.5, bl-6233; extended
+//! bl-13f9) — split from [`super`] at §12's per-file budget on the seam the
+//! family itself draws: these are the only queries addressed at a
+//! **conversation** rather than a workspace, so the address they share is
+//! written once here and every other query's spelling stays where it was.
 //!
 //! Both directions stay under the §4.8 compile gate: [`super::encode`] names
 //! each variant by hand, and [`read`] is chained ahead of the sibling table so
@@ -15,7 +15,7 @@ use super::super::start::opt_field;
 use super::super::str_of;
 use crate::boundary::Query;
 
-/// The address every one of the six carries: the workspace, and the
+/// The address every one of the family carries: the workspace, and the
 /// conversation inside it.
 pub(super) fn at(op: &str, workspace: &str, agent: &str) -> Value {
     Value::Object(at_map(op, workspace, agent))
@@ -52,7 +52,16 @@ pub(super) fn files(
     Value::Object(map)
 }
 
-/// Decode one of the six, or `Ok(None)` when `op` names none of them — the
+/// The config-frozen-at read (bl-13f9): the address, plus the commit when one
+/// other than the agent's own tip is asked about. Absent is the tip — the
+/// [`files`] shape at the other tab whose subject is a tree.
+pub(super) fn governing(workspace: &str, agent: &str, at: Option<&String>) -> Value {
+    let mut map = at_map("governing", workspace, agent);
+    opt_field(&mut map, "at", at);
+    Value::Object(map)
+}
+
+/// Decode one of the family, or `Ok(None)` when `op` names none of them — the
 /// signal [`super::read`] chains on before its own table. Strict: the address
 /// is required in full on every one of them, because a conversation read that
 /// guessed either half would answer about a different chat entirely.
@@ -80,6 +89,14 @@ pub(super) fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, St
                 workspace,
                 agent,
                 path: opt_str_of(o, "path")?,
+                at: opt_str_of(o, "at")?,
+            }
+        }
+        "governing" => {
+            let (workspace, agent) = address(o)?;
+            Query::Governing {
+                workspace,
+                agent,
                 at: opt_str_of(o, "at")?,
             }
         }

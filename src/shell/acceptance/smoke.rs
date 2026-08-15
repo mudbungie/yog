@@ -121,7 +121,7 @@ fn full_window_reaches_every_data_surface() {
 
     // Files tab: the agent worktree listing and the selected file's preview.
     world.model.select_tab(InspectorTab::Files);
-    world.state.inspector.eph.files_sel = Some(0);
+    world.state.inspector.eph.files_sel = Some("goal.md".to_owned());
     let files = painted(&mut world, &lernie, &bl);
     assert!(
         files.contains("goal.md"),

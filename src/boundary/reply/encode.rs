@@ -105,6 +105,16 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Step(detail) => crate::steps_view::wire::detail(detail),
         Reply::Files { view, preview } => crate::files_view::wire::reply(view, preview.as_ref()),
         Reply::Rail(rail) => crate::rail::wire::reply(rail),
+        // Flat rather than a row list (bl-13f9): a governing config is one
+        // object, so it wears the `config` reply's shape and not `lineages`'.
+        // The oid rides both ways — short is what a pane labels the freeze
+        // with, full is what a `git show` outside yog takes — exactly as a
+        // lineage row's tip does.
+        Reply::Governing(gov) => json!({
+            "ok": true, "kind": "governing",
+            "oid": gov.oid, "short_oid": gov.short_oid,
+            "branch": gov.branch_name_if_tip_of_one, "files": gov.files,
+        }),
         Reply::Inbox(entries) => crate::inboxview::wire::reply(entries),
         // The seat's read of its selection (REMOTE §9.4, bl-1eb0).
         Reply::Agent(view) => super::agent::reply(view),

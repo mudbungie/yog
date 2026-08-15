@@ -6,6 +6,11 @@
 
 use std::path::Path;
 
+/// Config-frozen-at's own drive (bl-13f9) — its own file, because it is the
+/// one read here that needs a real config lineage on disk rather than a
+/// tempdir and a hand-built snapshot.
+mod governing;
+
 use super::*;
 use crate::boundary::tests::{agent, snapshot};
 use crate::git_tree::{AgentState, Stream};

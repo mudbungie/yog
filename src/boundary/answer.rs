@@ -118,6 +118,14 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
             Reply::Rail(inspector::rail(snap, ws, agent, &steps, &tx))
         }
         Query::Inbox { agent, .. } => Reply::Inbox(crate::inboxview::list_inbox(ws, agent)),
+        // Config-frozen-at (VISION V1.2, bl-13f9): the §5.1 #17 derivation
+        // asked at whichever commit the seat named, the agent's tip when it
+        // named none. It **refuses** where its siblings answer absent, because
+        // its walk is the workspace's own git and a conversation with no
+        // policy at all is not a reading (the `Lineages` shape).
+        Query::Governing { agent, at, .. } => {
+            return inspector::governing(snap, ws, agent, at.as_deref()).map(Reply::Governing);
+        }
         // The seat's own read of its selection (REMOTE §9.4, bl-1eb0) — pure
         // over the snapshot, unlike the five above, because everything it says
         // was already derived when the tree was.

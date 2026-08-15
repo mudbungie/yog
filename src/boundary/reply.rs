@@ -231,6 +231,13 @@ pub enum Reply {
         view: crate::files_view::FilesView,
         preview: Option<crate::files_view::Preview>,
     },
+    /// The config commit a conversation is frozen on (§9.3, §5.1 #17) —
+    /// [`Governing`](super::Query::Governing)'s answer, the §11 Config tab's
+    /// whole content and VISION V1.2's *config-frozen-at* spelled. The one
+    /// member of the family that answers a **derivation over the workspace's
+    /// git** rather than a listing, so it refuses where the others answer
+    /// absent: a conversation always has a policy, and "none" would be a lie.
+    Governing(crate::config_edit::branch::GoverningConfig),
     /// The step spine (VISION V1) — [`Rail`](super::Query::Rail)'s answer: the
     /// notches and the child cards hanging off them, unpinned. The pin is the
     /// viewport's, and §8.5 files a viewport's folds under views.

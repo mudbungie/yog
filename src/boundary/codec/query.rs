@@ -22,7 +22,7 @@ use super::start::opt_field;
 use super::{obj, str_of, usize_of};
 use crate::boundary::Query;
 
-/// The §11 inspector family's own spelling (bl-6233) — the six queries
+/// The §11 inspector family's own spelling (bl-6233, bl-13f9) — the queries
 /// addressed at a conversation rather than a workspace.
 mod inspector;
 
@@ -63,6 +63,11 @@ pub(super) fn encode(query: &Query) -> Value {
             path,
             at,
         } => inspector::files(workspace, agent, path.as_ref(), at.as_ref()),
+        Query::Governing {
+            workspace,
+            agent,
+            at,
+        } => inspector::governing(workspace, agent, at.as_ref()),
         Query::Board => json!({ "op": "board" }),
         Query::Attention => json!({ "op": "attention" }),
         Query::Ops { max } => json!({ "op": "ops", "max": max }),
@@ -124,8 +129,8 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Option<Result<Query, S
 
 /// The query table itself: `Ok(None)` is "some other family's op".
 fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
-    // The conversation-addressed six read first, in their own table (bl-6233);
-    // an op they do not claim falls through to this one unchanged.
+    // The conversation-addressed family reads first, in its own table
+    // (bl-6233); an op it does not claim falls through to this one unchanged.
     if let Some(query) = inspector::read(op, o)? {
         return Ok(Some(query));
     }

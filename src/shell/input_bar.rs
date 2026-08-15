@@ -121,14 +121,21 @@ pub fn composer(
     let pending = model.focused_pending();
     // What ↑ pages back through (bl-f908): the operator's own turns in this
     // conversation, derived from the two seats already open here — the
-    // snapshot's pending listing above and the delivered transcript, which
-    // comes through the inspector's per-snapshot memo (§7.2), never a second
-    // `messages/` read. A new conversation has neither, which is the same
-    // derivation at zero items.
+    // snapshot's pending listing above and the delivered transcript, which is
+    // the inspector's own standing question and therefore **one ask** shared
+    // with the chat pane (REMOTE §9.7, bl-13f9), never a second `messages/`
+    // read. A new conversation has neither, and a question not yet answered is
+    // the same derivation at zero items: the recall fills a round trip after
+    // the chat it pages back through, which is the honest empty state and not a
+    // case of its own. There is nowhere here to paint a refusal — the composer
+    // is a box, not a pane — so one reads as no past turns, exactly as an
+    // unanswered frame does.
     let prompts = target
         .as_deref()
         .map(|agent| {
-            let tx = super::inspector::build_transcript(model, &mut state.inspector, &ws, agent);
+            let tx = super::inspector::transcript(model, &ws, agent)
+                .value
+                .unwrap_or_default();
             crate::composer::prompts(&pending, &tx)
         })
         .unwrap_or_default();

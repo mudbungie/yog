@@ -59,7 +59,6 @@ pub fn center(
         return;
     };
     let agent_id = seat.agent_id.clone();
-    let agent_state = seat.state;
     let agent_marks = seat.marks.clone();
     header(ui, model, &ws, &seat);
     // The §6 marks the *focused* agent wears, said outright — this seat has the
@@ -70,18 +69,20 @@ pub fn center(
         let (_, hue, phrase) = theme::mark_badge(mark);
         ui.colored_label(hue, phrase);
     }
-    // The focused agent's steps view, once per snapshot (§7.2 `SnapMemo`,
-    // bl-e90a): the auth and wound banners below read it every frame, and
-    // re-building it from disk per frame — twice — was the chat pane's
-    // sluggish-scroll cost (every step's whole `response.json` re-read and
-    // re-parsed on each paint).
-    let steps = state.inspector.steps_memo.read(
-        model.derivation(),
-        (ws.clone(), agent_id.clone(), agent_state),
-        &mut || crate::steps_view::build(&ws, &agent_id, agent_state),
-    );
-    let auth_failed = crate::login::auth::latest_step_auth_failed(steps);
-    let wound = crate::steps_view::latest_wound(steps);
+    // The focused agent's steps view — the **same standing question** the
+    // inspector's own Steps tab declares (REMOTE §9.7, bl-13f9), keyed by its
+    // encoded envelope, so two seats reading it are one ask and this pane pays
+    // nothing for the tab's. The auth and wound banners below read it every
+    // frame and no frame reads disk; a frame the engine has not answered yet
+    // banners nothing, which is what an unread step honestly is. A refusal has
+    // no seat here either — a banner that is not offered is silence, never a
+    // claim — so it is dropped, and the tab beside it is where the engine's
+    // sentence is painted.
+    let steps = super::inspector::steps(model, &ws, &agent_id)
+        .value
+        .unwrap_or_default();
+    let auth_failed = crate::login::auth::latest_step_auth_failed(&steps);
+    let wound = crate::steps_view::latest_wound(&steps);
     // A conversation whose latest step is an auth-shaped failure banners Login
     // inline (§11/§8.3) — the Z8 machinery, one click away where the wound is.
     //

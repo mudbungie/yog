@@ -1,16 +1,21 @@
-//! The §11 **inspector family's** derivations (bl-6233, REMOTE §9 step 1) —
-//! one conversation's transcript, steps, files, spine and mail.
+//! The §11 **inspector family's** derivations (bl-6233, REMOTE §9 step 1;
+//! extended bl-13f9) — one conversation's transcript, steps, files, spine,
+//! mail and the policy it is frozen on.
 //!
-//! These five surfaces were reachable from no seat but the window: the frame's
+//! These surfaces were reachable from no seat but the window: the frame's
 //! view-models read disk directly, so the chats themselves had no headless
 //! spelling. What was missing was never the reading — every read below is one
 //! call into a module that already tests it — but a *shared home* for the two
 //! things the frame did on its own: folding the live tail onto the committed
 //! transcript, and gathering the spine's inputs off the snapshot. Both live
-//! here now, at the boundary's altitude, and the shell calls them through its
-//! per-snapshot memo (§7.2 `SnapMemo`) rather than keeping a second copy.
-//! That is §8.5's parity discipline in its literal form: one implementation,
-//! two serializations.
+//! here now, at the boundary's altitude.
+//!
+//! **And now the window reads them the same way any seat does** (REMOTE §9.7,
+//! bl-13f9): the shell declares each as a standing wire question rather than
+//! calling in and memoizing, so the last §11 surface that had two paths has
+//! one. That is §8.5's parity discipline in its literal form — one
+//! implementation, two serializations — with nothing left on the window's side
+//! of it but the pin, which is a fold.
 //!
 //! Everything here is a pure function of the published snapshot plus the
 //! workspace's own bytes, answered straight through at the chokepoint because
@@ -54,10 +59,14 @@ pub fn transcript(snap: &Snapshot, ws: &Path, agent: &str) -> Transcript {
 
 /// The live streaming tail this agent is producing right now, off the
 /// snapshot — `None` unless the agent is [`InFlight`](AgentState::InFlight),
-/// and `None` for an agent the snapshot does not carry. The frame reads this
-/// beside its memoized committed half (the two have different clocks, §7.2);
-/// [`transcript`] reads it beside a fresh one.
-pub fn live_tail(snap: &Snapshot, ws: &Path, agent: &str) -> Option<Stream> {
+/// and `None` for an agent the snapshot does not carry.
+///
+/// **[`transcript`] is its only caller** since bl-13f9. The frame used to read
+/// it beside a memoized committed half, the two having different clocks (§7.2);
+/// the frame now asks for the whole conversation over the wire and this fold
+/// happens once, here, at the boundary that already owned the ruling — so it is
+/// `pub(crate)` and the two clocks became one, the asker's.
+pub(crate) fn live_tail(snap: &Snapshot, ws: &Path, agent: &str) -> Option<Stream> {
     let found = agent_of(snap, ws, agent)?;
     (found.state == AgentState::InFlight).then(|| found.stream.clone())
 }
@@ -117,11 +126,38 @@ fn listed(view: &FilesView, path: &str) -> bool {
     }
 }
 
+/// The config commit this conversation is frozen on (§9.3, §5.1 #17) —
+/// **at the commit `at` names, or at the agent's own branch tip** (VISION V1.2
+/// config-frozen-at; REMOTE §9.7, bl-13f9).
+///
+/// One derivation with the commit as a parameter, the [`files`] shape: pinned
+/// and unpinned differ only in *which* commit the walk starts from, and the
+/// window's Config tab used to make that choice in process because no query
+/// spelled it. `None` resolves to the tip off the published snapshot, so a seat
+/// asks without knowing one — and an agent the snapshot does not carry has an
+/// empty tip, which the derivation refuses in git's own words rather than
+/// answering about some other commit.
+pub fn governing(
+    snap: &Snapshot,
+    ws: &Path,
+    agent: &str,
+    at: Option<&str>,
+) -> Result<crate::config_edit::branch::GoverningConfig, String> {
+    let tip = at.map_or_else(
+        || {
+            agent_of(snap, ws, agent)
+                .map(|a| a.tip_oid)
+                .unwrap_or_default()
+        },
+        str::to_owned,
+    );
+    governing_config(ws, &tip).map_err(|e| e.to_string())
+}
+
 /// The step spine (VISION V1) for one conversation: its notches, and the child
-/// cards hanging off them. `steps` and `transcript` are passed in because both
-/// callers already hold them — the frame off its memo, the chokepoint off the
-/// two calls above — and re-reading either here would double the disk cost of
-/// one inspector build.
+/// cards hanging off them. `steps` and `transcript` are passed in because the
+/// chokepoint already holds them, off the two calls above — re-reading either
+/// here would double the disk cost of answering one conversation.
 pub fn rail(snap: &Snapshot, ws: &Path, agent: &str, steps: &StepsView, tx: &Transcript) -> Rail {
     let agents = snap
         .trees

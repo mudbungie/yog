@@ -52,9 +52,9 @@ fn every_query_variant_round_trips() {
     inspector_family();
 }
 
-/// The §11 inspector family (bl-6233): six reads addressed at a conversation
-/// rather than a workspace, so each carries both halves of the address and
-/// only what no seat could supply beside them.
+/// The §11 inspector family (bl-6233, bl-13f9): the reads addressed at a
+/// conversation rather than a workspace, so each carries both halves of the
+/// address and only what no seat could supply beside them.
 fn inspector_family() {
     let (workspace, agent) = ("ws".to_owned(), "c-1".to_owned());
     for query in [
@@ -99,13 +99,30 @@ fn inspector_family() {
             }));
         }
     }
+    // Config-frozen-at (bl-13f9): the same optional commit, at the family's
+    // other tree-subject read — bare is the conversation's own tip.
+    for at in [None, Some("abcdef1234".to_owned())] {
+        rt(Gesture::Ask(Query::Governing {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+            at,
+        }));
+    }
 }
 
 /// A conversation read names its conversation, always: half an address would
 /// answer about a different chat, so the envelope refuses rather than guess.
 #[test]
 fn an_inspector_envelope_missing_half_its_address_is_refused() {
-    for op in ["transcript", "steps", "step", "files", "rail", "inbox"] {
+    for op in [
+        "transcript",
+        "steps",
+        "step",
+        "files",
+        "governing",
+        "rail",
+        "inbox",
+    ] {
         assert!(
             decode(&serde_json::json!({ "op": op, "workspace": "/ws" })).is_err(),
             "{op} without an agent"

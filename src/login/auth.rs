@@ -153,9 +153,9 @@ pub fn row_of_model(model: &str, roles: &[RoleModel]) -> Option<String> {
 /// already-built steps view-model ([`crate::steps_view::StepsView`] — the one
 /// owner of the per-step Login flag), so the banner, the Steps tab, and the
 /// Login pane all derive from the same classification. It takes the view, not
-/// the disk: the shell builds that view once per snapshot (§7.2 `SnapMemo`,
-/// bl-e90a), and a predicate that re-read the whole steps tree per frame was
-/// the chat pane's frame-time cost.
+/// the disk: the shell declares one standing `Query::Steps` that this banner
+/// and the Steps tab share (REMOTE §9.7, bl-13f9), and a predicate that re-read
+/// the whole steps tree per frame was the chat pane's frame-time cost.
 pub fn latest_step_auth_failed(steps: &crate::steps_view::StepsView) -> AuthFailure {
     steps
         .steps
