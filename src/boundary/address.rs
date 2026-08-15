@@ -11,7 +11,23 @@
 //! after-verb refresh reads, so "which project did that touch" has one answer
 //! wherever it is asked.
 
-use super::{Action, Query};
+use super::{Action, Gesture, Query};
+
+impl Gesture {
+    /// The workspace this gesture names, whichever half it is — the two tables
+    /// below, read as one (bl-8bbc).
+    ///
+    /// The wire's scoped intake asks it: a gesture's address is what
+    /// authorization is decided over (REMOTE §4), and asking it here means the
+    /// scope and the dispatch chokepoint read the **same** table rather than
+    /// two that could disagree about which workspace a variant names.
+    pub fn workspace(&self) -> Option<String> {
+        match self {
+            Gesture::Act(action) => action.workspace(),
+            Gesture::Ask(query) => query.workspace(),
+        }
+    }
+}
 
 impl Action {
     /// The **workspace** this gesture names (§3.1), or `None` when it names

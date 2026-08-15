@@ -20,7 +20,7 @@ impl UiState {
     /// forgiving read every `ui.json` key gets, so a typo costs a column and
     /// never the window.
     pub fn prices(&self) -> crate::spend::Prices {
-        match self.root.get(PRICES) {
+        match self.world.root.get(PRICES) {
             Some(value) => crate::spend::Prices::from_json(value),
             None => crate::spend::Prices::default(),
         }

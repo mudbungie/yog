@@ -1,6 +1,12 @@
 //! The consumer thread's tables (§8.5): the pass over the latest published
 //! snapshot, and the one thing only a real thread can prove — spawn, consume,
-//! stop.
+//! stop. The fixtures the REMOTE §4 half builds its worlds from live here too.
+
+/// The scoped intake (REMOTE §4, bl-8bbc): what a connection enumerates, what
+/// an unregistered name earns, and the create that seats its own client. Its
+/// own file at §12's cap — a real seam, because everything above is the
+/// in-world intake and everything there is the wire's.
+mod scope;
 
 use super::*;
 use crate::boundary::deposit;
@@ -12,20 +18,66 @@ use std::time::{Duration, Instant};
 use tempfile::tempdir;
 
 fn ctx(state_root: &std::path::Path) -> ConsumerCtx {
-    let snap = std::sync::Arc::new(crate::app::Snapshot::empty(Instant::now()));
+    over(
+        state_root,
+        crate::app::Snapshot::empty(Instant::now()),
+        PathBuf::from("/data"),
+        Cli::new("/no/such/lernie"),
+    )
+}
+
+/// A context over a stated snapshot, world root and `lernie` — everything the
+/// REMOTE §4 tests below vary.
+fn over(
+    state_root: &std::path::Path,
+    snap: crate::app::Snapshot,
+    yog_data_root: PathBuf,
+    lernie: Cli,
+) -> ConsumerCtx {
     ConsumerCtx {
         yog_binary: PathBuf::from("/no/such/yog"),
         world: crate::test_support::no_world(),
-        lernie: Cli::new("/no/such/lernie"),
+        lernie,
         bl: Cli::new("/no/such/bl"),
         state_root: state_root.to_path_buf(),
         home: PathBuf::from("/home/x"),
-        yog_data_root: PathBuf::from("/data"),
+        yog_data_root,
         balls_state_root: PathBuf::from("/balls"),
         ui_path: state_root.join("ui.json"),
-        cell: crate::state::new_snapshot_cell(snap),
+        cell: crate::state::new_snapshot_cell(std::sync::Arc::new(snap)),
         clock: Arc::new(SystemClock),
     }
+}
+
+/// A snapshot holding one named workspace per element of `names`, under `root`.
+fn world_of(root: &std::path::Path, names: &[&str]) -> crate::app::Snapshot {
+    let mut snap = crate::app::Snapshot::empty(Instant::now());
+    snap.workspaces = names
+        .iter()
+        .map(|name| crate::binding::Workspace {
+            path: crate::binding::workspace_path(root, name),
+            kind: crate::binding::WorkspaceKind::Named {
+                name: (*name).to_owned(),
+            },
+        })
+        .collect();
+    snap
+}
+
+/// The workspace names a `workspaces` reply lists.
+fn listed(reply: &serde_json::Value) -> Vec<String> {
+    reply["rows"]
+        .as_array()
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|r| r["workspace"].as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn client(name: &str) -> crate::registry::Client {
+    crate::registry::Client::parse(name).expect("a usable identity")
 }
 
 #[test]

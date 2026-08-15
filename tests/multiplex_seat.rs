@@ -33,7 +33,11 @@ fn argv(parts: &[&str]) -> Vec<String> {
 struct Yes;
 
 impl Answerer for Yes {
-    fn answer(&self, request: serde_json::Value) -> Vec<serde_json::Value> {
+    fn answer(
+        &self,
+        _client: &yog::registry::Client,
+        request: serde_json::Value,
+    ) -> Vec<serde_json::Value> {
         vec![serde_json::json!({"ok": true, "kind": "balls", "asked": request})]
     }
 }

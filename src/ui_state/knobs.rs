@@ -25,15 +25,16 @@ impl UiState {
     /// A boolean knob: the stored value, else `default` when absent or of the
     /// wrong type (the forgiving read, §4.1). One home for every flag below.
     fn flag(&self, key: &str, default: bool) -> bool {
-        self.root
+        self.pane
+            .root
             .get(key)
             .and_then(Value::as_bool)
             .unwrap_or(default)
     }
 
     fn set_flag(&mut self, key: &str, value: bool) {
-        self.root.insert(key.to_string(), Value::Bool(value));
-        self.save();
+        self.pane.root.insert(key.to_string(), Value::Bool(value));
+        self.pane.save();
     }
 
     /// §11 transcript-density knob: does the conversation (delivered
@@ -74,7 +75,8 @@ impl UiState {
     /// absent or non-numeric (the forgiving read), always inside the domain,
     /// so a hand-edited `ui.json` can never open a window nobody can read.
     pub fn zoom(&self) -> f32 {
-        self.root
+        self.pane
+            .root
             .get(ZOOM)
             .and_then(Value::as_f64)
             .map_or(1.0, |z| (z as f32).clamp(ZOOM_MIN, ZOOM_MAX))
@@ -85,7 +87,9 @@ impl UiState {
     /// round-trip exact, so a relaunch reopens at the size it closed at.
     pub fn set_zoom(&mut self, zoom: f32) {
         let snapped = (f64::from(zoom.clamp(ZOOM_MIN, ZOOM_MAX)) * 100.0).round() / 100.0;
-        self.root.insert(ZOOM.to_string(), Value::from(snapped));
-        self.save();
+        self.pane
+            .root
+            .insert(ZOOM.to_string(), Value::from(snapped));
+        self.pane.save();
     }
 }

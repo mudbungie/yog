@@ -97,7 +97,11 @@ fn only_a_settled_move_writes() {
 fn a_too_wide_stored_width_recovers_at_the_next_launch() {
     let h = Harness::new();
     let ui = h.roots.ui_json();
-    std::fs::write(&ui, br#"{"panels":{"conversations":690}}"#).unwrap();
+    // A panel size is a PANE fact (REMOTE §7, bl-8bbc): the local window's own
+    // document, not the shared `ui.json`.
+    let pane = crate::registry::pane(ui.parent().unwrap(), &crate::registry::Client::local());
+    std::fs::create_dir_all(pane.parent().unwrap()).unwrap();
+    std::fs::write(&pane, br#"{"panels":{"conversations":690}}"#).unwrap();
     let (_c, mut model) = h.model();
     // An 800 pt window: 690 would leave ~110 pt of centre — the filed defect.
     assert!(

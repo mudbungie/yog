@@ -82,6 +82,9 @@ pub mod nav;
 pub mod opslog;
 pub mod projects;
 pub mod rail;
+/// The REMOTE §4 client registry (bl-8bbc): who participates in which
+/// workspace, and each client's own per-seat home.
+pub mod registry;
 /// I3's scratch temp (§2, §5.2): its one naming, and the startup sweep of
 /// leftovers — internal, not library surface.
 pub(crate) mod scratch;

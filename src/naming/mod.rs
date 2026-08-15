@@ -53,6 +53,25 @@ pub fn leaf(workspace: &Path) -> String {
         .unwrap_or_default()
 }
 
+/// True iff `name` is a **plain path component** — non-empty, no separator of
+/// either platform, and not one of the two directory names every filesystem
+/// already spends (`.`, `..`).
+///
+/// The one home of that question (bl-8bbc), because two nouns now become
+/// directory names off a wire: a §4 client identity, which is a *certificate's*
+/// text and therefore an untrusted peer's, and the §3.1 workspace name a raise
+/// founds. A name that could carry a separator is a name that could address the
+/// filesystem, and the check belongs beside [`leaf`] — the inverse operation —
+/// rather than at each caller.
+pub fn is_component(name: &str) -> bool {
+    !name.is_empty()
+        && name != "."
+        && name != ".."
+        && !name.contains('/')
+        && !name.contains('\\')
+        && !name.contains('\0')
+}
+
 /// The workspace in `set` whose [`leaf`] is `name`, or the refusal naming the
 /// token. Ambiguity refuses too, and says so: a leaf two roots both hold cannot
 /// address one workspace, and a guess would act on the wrong world.

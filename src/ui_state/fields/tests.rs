@@ -4,7 +4,7 @@
 //! mechanics they end on — forgiving load, echo/adopt, the atomic write — are
 //! `super::super`'s.
 
-use super::super::tests::{load, mark, mk};
+use super::super::tests::{load, load_pane, mark, mk};
 use super::*;
 use tempfile::tempdir;
 
@@ -79,8 +79,12 @@ fn pinned_and_collapsed_roundtrip() {
 
 #[test]
 fn getters_filter_wrong_types() {
-    let mut ui = load(br#"{"pinned":["/a",7],"collapsed":["k",3]}"#);
-    assert_eq!(ui.pinned(), vec!["/a".to_string()]); // number dropped
+    assert_eq!(
+        load(br#"{"pinned":["/a",7]}"#).pinned(),
+        vec!["/a".to_string()]
+    ); // number dropped
+    // The collapse set is the PANE's (REMOTE §7), and forgiving on its own terms.
+    let mut ui = load_pane(br#"{"collapsed":["k",3]}"#);
     assert!(ui.is_collapsed("k"));
     ui.set_collapsed("m", true); // rebuilds set, dropping the non-string 3
     assert!(ui.is_collapsed("m"));

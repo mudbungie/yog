@@ -21,6 +21,17 @@ pub(super) fn load(bytes: &[u8]) -> UiState {
     UiState::open(p)
 }
 
+/// [`load`], but into the **pane** document (REMOTE §7, bl-8bbc) — the
+/// panels, the collapse overrides and the view knobs, which are facts about one
+/// client's glass rather than about the world.
+pub(super) fn load_pane(bytes: &[u8]) -> UiState {
+    let d = tempdir().unwrap();
+    let pane = crate::registry::pane(d.path(), &crate::registry::Client::local());
+    std::fs::create_dir_all(pane.parent().unwrap()).unwrap();
+    std::fs::write(&pane, bytes).unwrap();
+    UiState::open(d.path().join("ui.json"))
+}
+
 /// One seen mark as [`UiState::record_seen`] takes them.
 pub(super) fn mark(kind: SeenKind, oid: &str) -> Vec<(SeenKind, String)> {
     vec![(kind, oid.to_string())]
@@ -48,20 +59,29 @@ fn corrupt_or_nonobject_load_is_default() {
 fn every_mutation_is_on_disk_when_it_returns() {
     let d = tempdir().unwrap();
     let p = d.path().join("ui.json");
+    let pane = crate::registry::pane(d.path(), &crate::registry::Client::local());
     let mut ui = UiState::open(p.clone());
     // After each gesture the file already holds exactly this document —
     // `is_echo` over the bytes read back is the byte-identity assertion.
     ui.set_pinned(vec!["/w".into()]);
     assert!(ui.is_echo(&std::fs::read(&p).unwrap()), "pin");
-    ui.set_collapsed("proj:/x", true);
-    assert!(ui.is_echo(&std::fs::read(&p).unwrap()), "collapse");
     ui.set_identity("me");
     assert!(ui.is_echo(&std::fs::read(&p).unwrap()), "identity");
     ui.record_seen("/w", "a", &mark(SeenKind::Notify, "n1"));
     assert!(ui.is_echo(&std::fs::read(&p).unwrap()), "seen");
+    // A pane mutation lands on the pane document, and the same instant.
+    ui.set_collapsed("proj:/x", true);
+    assert!(pane.is_file(), "the collapse is on disk when it returned");
 
-    let back = std::fs::read_to_string(&p).unwrap();
-    assert!(back.contains("/w") && back.contains("proj:/x") && back.contains("\"me\""));
+    let world = std::fs::read_to_string(&p).unwrap();
+    assert!(world.contains("/w") && world.contains("\"me\""));
+    // **The split is real** (REMOTE §7): a pane fact never reaches the shared
+    // document, so a second seat's glass cannot arrange this one's.
+    assert!(!world.contains("proj:/x"), "{world}");
+    assert!(
+        std::fs::read_to_string(&pane).unwrap().contains("proj:/x"),
+        "the collapse is the pane's"
+    );
 }
 
 /// The coalescing the debounce used to buy: a gesture that changes no byte
@@ -128,7 +148,7 @@ fn transcript_density_knobs_roundtrip_with_the_operator_defaults() {
     assert!(!ui.transcript_expand_responses());
     assert!(ui.transcript_expand_others());
     // Non-bool values fall back to the defaults (the forgiving read).
-    let junk = load(br#"{"transcript_expand_responses":1,"transcript_expand_others":"y"}"#);
+    let junk = load_pane(br#"{"transcript_expand_responses":1,"transcript_expand_others":"y"}"#);
     assert!(junk.transcript_expand_responses());
     assert!(!junk.transcript_expand_others());
 }
@@ -141,9 +161,9 @@ fn transcript_density_knobs_roundtrip_with_the_operator_defaults() {
 fn the_desktop_escalation_knob_is_armed_by_default_and_switched_off_by_one_key() {
     let d = tempdir().unwrap();
     assert!(mk(d.path()).notify_unfocused());
-    assert!(!load(br#"{"notify_unfocused":false}"#).notify_unfocused());
+    assert!(!load_pane(br#"{"notify_unfocused":false}"#).notify_unfocused());
     // A hand-edited non-bool is the forgiving read's default, not a refusal.
-    assert!(load(br#"{"notify_unfocused":"loud"}"#).notify_unfocused());
+    assert!(load_pane(br#"{"notify_unfocused":"loud"}"#).notify_unfocused());
 }
 
 #[test]
