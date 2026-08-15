@@ -236,11 +236,11 @@ which one. It is the same flag, spelled the same way, as `yog gesture --ws`. Bot
 Beyond the hatches, **every operator gesture is drivable headlessly** through
 the control boundary (DESIGN §8.5, VISION §4.8). A gesture is a JSON envelope
 deposited create-only into `<yog-state>/gestures/`; any running yog — the GUI
-window, or `yog headless`, the same engine with no window — consumes it and
+window, or `yog serve`, the same engine with no window — consumes it and
 writes `gestures/replies/<id>.json`:
 
 ```
-yog headless &                          # a windowless consumer (worker + watcher + inbox)
+yog serve &                             # the windowless engine (worker + watcher + inbox + wire)
 yog gesture '{"op":"scan","workspace":"/path/to/ws"}'      # deposit-and-wait sugar
 yog gesture '{"op":"conversations","workspace":"/path"}'   # queries answer typed JSON
 ```
@@ -287,7 +287,7 @@ In the window, a draft of `/help`, `/help close`, `/close --help` or a bare `/`
 answers identically. Help reads the interface rather than the world, so the
 terminal answers it in place — no running yog required, and it exits 0. That
 holds for every command, not just the gestures: `yog env --help` prints its
-page instead of the export lines, `yog headless --help` prints instead of
+page instead of the export lines, `yog serve --help` prints instead of
 booting, and `yog bl --help` / `yog bz --help` are balls' and brazen's own
 pages, reached without founding a world or needing a workspace.
 

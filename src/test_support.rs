@@ -285,3 +285,9 @@ pub(crate) use world::{fixture_workspace, no_wall, no_world, wall_paths, world_u
 /// tree-wide invariant, and this seeder is a self-contained fixture rather than
 /// part of the spawn discipline above.
 pub(crate) mod workspace;
+
+/// The §9.5 wire's key material, minted at test runtime by the same
+/// out-of-channel act an operator performs (REMOTE §1.4, bl-b6fa) — its own
+/// file because a certificate fixture is never committed and the minting is a
+/// self-contained seeder, not part of the spawn discipline above.
+pub(crate) mod wire;

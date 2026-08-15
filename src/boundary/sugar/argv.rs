@@ -28,19 +28,49 @@
 //! a seat with no roster spells that one gesture as an envelope, which carries
 //! them in full. Everything else is typable here.
 
-use crate::boundary::codec::prepared_from_value;
-use crate::boundary::line::Context;
+use crate::boundary::Gesture;
+use crate::boundary::codec::{self, prepared_from_value};
+use crate::boundary::line::{self, Context};
+use serde_json::Value;
 
 /// One invocation: what to do, and the seat it is typed at.
-pub(super) struct Invocation {
-    pub(super) context: Context,
+struct Invocation {
+    context: Context,
     /// The envelope or the line, verbatim.
-    pub(super) payload: String,
+    payload: String,
+}
+
+/// What one argv-seat invocation means: the gesture, and the envelope that
+/// carries it. **Two argv seats share this one reader** — `yog gesture`, which
+/// deposits into the world's inbox, and `yog seat`, which sends over the wire
+/// (REMOTE §3's two intakes, bl-b6fa) — so the flags, the refusals and the
+/// `--help` rewrite are one implementation and cannot drift apart. `verb` is
+/// the seat's own name, which is all a usage line differs by.
+pub(crate) fn read_gesture(verb: &str, args: &[String]) -> Result<(Gesture, Value), String> {
+    envelope(&read(verb, args)?)
+}
+
+/// The deposit envelope this invocation means: a line read at the seat its
+/// flags describe, or the JSON envelope validated as written. Either way what
+/// is carried is the codec's own encoding — the line is a serialization of
+/// the boundary, never a second inbox format.
+fn envelope(invocation: &Invocation) -> Result<(Gesture, Value), String> {
+    if line::is_command(&invocation.payload) {
+        let gesture = line::parse(&invocation.payload, &invocation.context)?;
+        let value = codec::encode(&gesture);
+        return Ok((gesture, value));
+    }
+    let value: Value =
+        serde_json::from_str(&invocation.payload).map_err(|e| format!("not JSON: {e}"))?;
+    // The envelope is carried **as written**, not as re-encoded: the audit
+    // keeps the operator's own bytes. Decoding is the validation and the read
+    // the help short-circuit above needs.
+    Ok((codec::decode(&value)?, value))
 }
 
 /// Read the multiplexed tail. Refuses — naming the offender — on an unknown
 /// flag, a flag with no value, or anything other than exactly one payload.
-pub(super) fn read(args: &[String]) -> Result<Invocation, String> {
+fn read(verb: &str, args: &[String]) -> Result<Invocation, String> {
     let mut context = Context::default();
     let mut payload: Option<String> = None;
     let mut asked_help = false;
@@ -70,7 +100,7 @@ pub(super) fn read(args: &[String]) -> Result<Invocation, String> {
                     .map_err(|e| format!("--prepared: not JSON: {e}"))?;
                 context.prepared = Some(prepared_from_value(&v)?);
             }
-            other => return Err(format!("unknown flag --{other}; {USAGE}")),
+            other => return Err(format!("unknown flag --{other}; {}", usage(verb))),
         }
     }
     // The rewrite: whatever else was typed, help is what was asked. A word
@@ -83,11 +113,17 @@ pub(super) fn read(args: &[String]) -> Result<Invocation, String> {
             payload: format!("/help {about}").trim_end().to_owned(),
         });
     }
-    let payload = payload.ok_or_else(|| format!("nothing to do; {USAGE}"))?;
+    let payload = payload.ok_or_else(|| format!("nothing to do; {}", usage(verb)))?;
     Ok(Invocation { context, payload })
 }
 
-/// The one usage line, so a refusal always says how to be right.
-pub(super) const USAGE: &str = "usage: yog gesture [--ws NAME] [--agent ID] [--project NAME] \
-     [--as NAME] [--prepared JSON] '<json>' | '/line'\n       yog gesture --help [command] — every \
-     gesture, or one command's page";
+/// The one usage line, so a refusal always says how to be right. It differs
+/// between the two argv seats by the verb alone, which is the whole reason
+/// this is a function rather than a second const.
+fn usage(verb: &str) -> String {
+    format!(
+        "usage: yog {verb} [--ws NAME] [--agent ID] [--project NAME] [--as NAME] \
+         [--prepared JSON] '<json>' | '/line'\n       yog {verb} --help [command] — every \
+         gesture, or one command's page"
+    )
+}

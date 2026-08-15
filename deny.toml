@@ -82,9 +82,18 @@ wildcards = "deny"
 # TLS bridge (`native-tls`) stay banned — a C toolchain dependency and a
 # non-portable one, either of which would break the single-binary
 # musl/macOS/Windows story rustls preserves.
+#
+# **`aws-lc-sys` joins them (bl-b6fa).** The REMOTE §9.5 wire made `rustls` a
+# DIRECT dependency, and rustls' default features select `aws-lc-rs` — whose
+# `aws-lc-sys` builds C. `Cargo.toml` takes `default-features = false` with
+# `ring` for exactly that reason, but a manifest edit that dropped the flag
+# would pull the C toolchain back in silently and no other gate would say so.
+# Banning the sys crate makes that edit fail here instead, which is where the
+# other two of these live. It matches nothing today, by design.
 deny = [
     { crate = "openssl-sys" },
     { crate = "native-tls" },
+    { crate = "aws-lc-sys" },
 ]
 
 [sources]

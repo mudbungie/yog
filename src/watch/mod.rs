@@ -241,7 +241,7 @@ impl Repaint for EguiRepaint {
     }
 }
 
-/// The windowless [`Repaint`] (§8.5): `yog headless` has no event loop to
+/// The windowless [`Repaint`] (§8.5): `yog serve` has no event loop to
 /// wake — a published snapshot is simply the next thing the gesture consumer
 /// reads. Doing nothing is the whole contract.
 pub struct NoRepaint;

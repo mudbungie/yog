@@ -3446,6 +3446,7 @@ dependencies = [
  "lernie",
  "libc",
  "notify",
+ "rustls",
  "serde_json",
  "tempfile",
  "thiserror 2.0.19",

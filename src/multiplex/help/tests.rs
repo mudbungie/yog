@@ -48,7 +48,7 @@ fn a_command_is_asked_about_from_either_end() {
 #[test]
 fn every_yog_subcommand_answers_at_the_command() {
     for verb in [
-        crate::boundary::HEADLESS_SUBCMD,
+        crate::boundary::SERVE_SUBCMD,
         crate::world::hatch::ENV_SUBCMD,
         crate::world::hatch::EXEC_SUBCMD,
         crate::control::SUBCMD,

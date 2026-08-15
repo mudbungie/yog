@@ -49,11 +49,25 @@ fn a_pass_answers_from_the_latest_published_snapshot() {
     );
 }
 
+/// The wire's intake is this same context (REMOTE §3, bl-b6fa): an envelope
+/// handed straight in is answered exactly as a deposited one is, which is what
+/// makes the listener a second intake rather than a second implementation.
+#[test]
+fn one_envelope_is_answered_where_a_deposit_is() {
+    let root = tempdir().unwrap();
+    let reply = ctx(root.path()).answer(&json!({"op": "workspaces"}));
+    assert_eq!(reply["ok"], true);
+    assert_eq!(reply["kind"], "workspaces");
+    // And a torn envelope refuses in-band rather than wedging the caller.
+    let refusal = ctx(root.path()).answer(&json!({"op": "enhance"}));
+    assert_eq!(refusal["ok"], false);
+}
+
 #[test]
 fn the_thread_consumes_a_deposit_and_stops_on_drop() {
     let root = tempdir().unwrap();
     deposit::deposit(root.path(), "q-t", &json!({"op": "balls"})).unwrap();
-    let consumer = Consumer::spawn(ctx(root.path()));
+    let consumer = Consumer::spawn(Arc::new(ctx(root.path())));
     let deadline = Instant::now() + Duration::from_secs(10);
     while deposit::read_reply(root.path(), "q-t").is_none() {
         assert!(Instant::now() < deadline, "the consumer never answered");

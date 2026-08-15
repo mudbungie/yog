@@ -101,7 +101,7 @@ wire, so "works against the real one" is a run you can re-run, not a claim.
     make drive-preflight                  # name every missing host tool at once
 
 **Not every run verb drives a window.** `run-headless` (bl-bb20) claims no X
-display, opens nothing and spends nothing on the wire: `yog headless` is the
+display, opens nothing and spends nothing on the wire: `yog serve` is the
 same engine with no face (§8.4), so the whole verb is `yog gesture` lines
 against a real world. It is the ladder's first verb — a world that is broken in
 its own shape reddens in seconds rather than after four windowed runs — it is
@@ -1835,7 +1835,7 @@ Tests:
 Machine state: the operator is not at the machine — a phone, a peer fleet's
 coordinator, an agent. Some conversations are waiting on somebody.
 
-1. **`yog headless` is the same binary minus the window, and now literally the
+1. **`yog serve` is the same binary minus the window, and now literally the
    same code.** One `Engine::boot` (`src/engine.rs`) is the whole of a running
    yog minus its face: the §5.2 startup sweep, the §7.1 roots, the model's first
    synchronous derivation, and the derivation worker + watch bridge + gesture

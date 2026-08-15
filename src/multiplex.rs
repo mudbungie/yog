@@ -100,6 +100,7 @@ const NAMESPACES: &[(&str, Namespace)] = &[
     ("bl-delivery", Namespace::BlDelivery),
     ("bl-tracker", Namespace::BlTracker),
     ("gesture", Namespace::Gesture),
+    (crate::wire::SEAT_SUBCMD, Namespace::Seat),
 ];
 
 /// The embedded-tool namespaces yog multiplexes to (§16.7 W12): the three
@@ -114,6 +115,7 @@ enum Namespace {
     BlDelivery,
     BlTracker,
     Gesture,
+    Seat,
 }
 
 impl Namespace {
@@ -135,6 +137,7 @@ impl Namespace {
             Namespace::BlDelivery => bl_delivery::run(args),
             Namespace::BlTracker => bl_tracker::run(args),
             Namespace::Gesture => gesture::run(args),
+            Namespace::Seat => seat::run(args),
         }
     }
 }
@@ -165,6 +168,19 @@ mod gesture {
         crate::boundary::sugar::run(&world.yog_state_root(), args, &seed, WAITS, &mut || {
             std::thread::sleep(POLL);
         })
+    }
+}
+
+/// The `seat` arm (REMOTE §8, bl-b6fa): the terminal seat over the §9.5 wire —
+/// the same gesture surface `gesture` types, sent to an engine over mTLS
+/// instead of deposited into this world's inbox. The world is composed here at
+/// the process edge exactly as the `gesture` arm composes it, because the
+/// *material* is a fact of this machine's yog data root (§16.2) even when the
+/// engine it dials is on another box.
+mod seat {
+    pub(super) fn run(args: &[String]) -> i32 {
+        let world = crate::world::compose(&crate::xdg::Env::from_env());
+        crate::wire::seat::run(&world, args)
     }
 }
 

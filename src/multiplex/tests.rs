@@ -145,7 +145,7 @@ fn the_top_level_answers_help_in_every_spelling() {
 fn the_top_level_page_states_the_whole_surface() {
     let page = usage();
     for word in [
-        crate::boundary::HEADLESS_SUBCMD,
+        crate::boundary::SERVE_SUBCMD,
         crate::world::hatch::ENV_SUBCMD,
         crate::world::hatch::EXEC_SUBCMD,
         "gesture",

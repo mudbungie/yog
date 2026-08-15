@@ -42,6 +42,11 @@ pub struct Engine {
     _bridge: Bridge,
     _worker: Worker,
     _consumer: Consumer,
+    /// The REMOTE §9.5 wire listener (bl-b6fa) — `None` on a box with no
+    /// certificates provisioned, which is every box until an operator performs
+    /// the out-of-channel act (REMOTE §1.4). Held only so it lives as long as
+    /// the engine and stops when it drops.
+    _wire: Option<crate::wire::server::Listener>,
     _sentry: Sentry,
     _pilot: Pilot,
     _follower: FollowThread,
@@ -98,7 +103,7 @@ impl Engine {
         let follower = model.follower().spawn(repaint);
         // The §8.5 gestures-inbox consumer: both faces are one consumer surface,
         // so a deposit converges whichever is up (I0).
-        let consumer = Consumer::spawn(ConsumerCtx {
+        let intake = Arc::new(ConsumerCtx {
             lernie: Cli::resolve_in_world(Binary::Lernie, overrides),
             bl: Cli::resolve_in_world(Binary::Bl, overrides),
             state_root: world.yog_state_root(),
@@ -111,6 +116,18 @@ impl Engine {
             cell: model.snapshot_cell(),
             clock: Arc::clone(&clock),
         });
+        let consumer = Consumer::spawn(Arc::clone(&intake));
+        // The REMOTE §9.5 wire listener (bl-b6fa), beside the consumer and for
+        // its reason exactly: a seat must reach whichever face is up, so the
+        // channel rides the ENGINE and not a face. It is the same intake — the
+        // context above, handed to a connection instead of to a poll — so the
+        // wire adds no verb and no second dispatch. With no material
+        // provisioned there is no listener and nothing said about it.
+        let wire = crate::wire::listen(
+            world,
+            Arc::new(crate::wire::intake::Intake::new(intake))
+                as Arc<dyn crate::wire::server::Answerer>,
+        );
         // The VISION §4.9 alignment monitor's level trigger. Spawned
         // unconditionally and free when unarmed: with no `cadence.yaml` monitor
         // entry a tick finds no workspace to check and makes no call. It rides
@@ -152,6 +169,7 @@ impl Engine {
             _bridge: bridge,
             _worker: worker,
             _consumer: consumer,
+            _wire: wire,
             _sentry: sentry,
             _pilot: pilot,
             _follower: follower,

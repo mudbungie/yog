@@ -38,15 +38,15 @@ pub const REFUSED: i32 = 64;
 /// rest of yog follows.
 ///
 /// Called at the one place a window is actually opened — after the namespace
-/// arms, the hatches, `headless` and `tool-control` have all had their say — so
+/// arms, the hatches, `serve` and `tool-control` have all had their say — so
 /// it judges only argv that would really have painted.
 pub fn window_refusal(yog_name: Option<String>) -> Option<String> {
     let name = yog_name.filter(|n| !n.is_empty())?;
     Some(format!(
         "yog: no window from an agent seat (this is {name}'s). A window is the \
-         operator's own act; what you can drive from here is yog's headless \
+         operator's own act; what you can drive from here is yog's windowless \
          surface — `yog gesture '/attention'` and every other gesture (`yog \
-         gesture --help` lists them), `yog headless` for a windowless consumer, \
+         gesture --help` lists them), `yog serve` for a windowless engine, \
          and the `bl` / `lernie` / `bz` namespaces."
     ))
 }
@@ -74,6 +74,6 @@ mod tests {
         let refusal = window_refusal(Some("cobalt".to_owned())).expect("refused");
         assert!(refusal.contains("cobalt"), "names the seat: {refusal}");
         assert!(refusal.contains("yog gesture"), "paved path: {refusal}");
-        assert!(refusal.contains("headless"), "paved path: {refusal}");
+        assert!(refusal.contains("yog serve"), "paved path: {refusal}");
     }
 }

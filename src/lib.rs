@@ -55,7 +55,7 @@ pub mod delete;
 /// where the information is not. Machine strings only; prose keeps its head.
 pub(crate) mod elide;
 /// The one assembly both faces boot (VISION §5 V5) — model, worker, bridge,
-/// gesture consumer; the window and `yog headless` differ only in what they add
+/// gesture consumer; the window and `yog serve` differ only in what they add
 /// beside it.
 pub mod engine;
 /// The VISION §4.10 mutating fan — N isolated candidate attempts over one
@@ -98,6 +98,9 @@ pub mod theme;
 pub mod transcript;
 pub mod ui_state;
 pub mod watch;
+/// The client/server wire (REMOTE §9.5, bl-b6fa) — the engine's mTLS listener,
+/// a seat's transport, and the framing between them.
+pub mod wire;
 pub mod workdiff;
 pub mod world;
 pub mod xdg;

@@ -1,5 +1,5 @@
 .PHONY: all build release test coverage lint fmt fmt-check check run ux reload icon icon-seats install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny \
-        drive drive-preflight drive-cleanroom drive-seat drive-unseat drive-seed drive-log
+        drive drive-preflight drive-cleanroom drive-seat drive-unseat drive-seed drive-log wire-certs
 
 # Install location for `make install`. Defaults to the XDG-ish user-local
 # convention; override for system-wide installs or packaging:
@@ -41,6 +41,13 @@ export CARGO_TARGET_DIR
 # isolated seat with zero stderr).
 YOG_DATA_HOME := $(or $(XDG_DATA_HOME),$(HOME)/.local/share)/yog
 YOG_PIDFILE   := $(YOG_DATA_HOME)/yog.pid
+# The REMOTE §9.5 wire's key material (bl-b6fa). BESIDE the world subtree, not
+# inside it: the world is a generated artifact yog reseeds, and a reseed must
+# not be a revocation. Same `yog_data_root` fold as everything above, so the
+# directory the engine reads and the directory this mints into are one path.
+WIRE_DIR      ?= $(YOG_DATA_HOME)/wire
+WIRE_HOST     ?= 127.0.0.1
+WIRE_PORT     ?= 7737
 
 all: check
 
@@ -119,6 +126,18 @@ beat-audit:
 # the bytes committed. Until bl-167d it enumerated `git ls-files` and grepped
 # the WORKTREE files those names pointed at, which passed any leak that was
 # staged and then overwritten with a clean copy on disk.
+# Mint the wire's local CA and its server/client leaves (REMOTE §1.4, §8;
+# bl-b6fa). **Operator tooling, never an in-channel protocol**: yog mints no
+# certificate of its own, and this is the out-of-channel act scripted. Nothing
+# it writes is in the repo — `WIRE_DIR` is under the yog data root, beside the
+# world. Refuses to overwrite; `FORCE=1` rotates, which distrusts every
+# certificate already issued.
+#   make wire-certs
+#   make wire-certs WIRE_HOST=engine.example.com WIRE_PORT=7737
+wire-certs:
+	@WIRE_DIR="$(WIRE_DIR)" WIRE_HOST="$(WIRE_HOST)" WIRE_PORT="$(WIRE_PORT)" \
+		scripts/wire-certs.sh
+
 leak-scan:
 	@scripts/leak-scan.sh --self-test
 	@scripts/leak-scan.sh
