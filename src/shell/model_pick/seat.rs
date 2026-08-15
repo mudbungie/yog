@@ -56,7 +56,7 @@ pub(crate) fn conversation_seat(
     ws: &Path,
     agent: &AgentView,
     config_tip: Option<&ConfigTip>,
-    clis: (&Cli, &Cli, &Cli),
+    bz: &Cli,
 ) -> bool {
     let Some((frozen_oid, row)) =
         lines::conversation_row_of(ws, &agent.tip, config_tip, &mut state.wall.picker)
@@ -67,7 +67,7 @@ pub(crate) fn conversation_seat(
         scope: conversation_scope(ws, &frozen_oid),
         agent: Some(agent.agent_id.clone()),
     };
-    seat(ui, model, state, ws, &row, &subject, clis)
+    seat(ui, model, state, ws, &row, &subject, bz)
 }
 
 /// The **birth block's** seat (§11, bl-824e): the same row, asked of the config
@@ -80,7 +80,7 @@ pub(crate) fn birth_seat(
     state: &mut ShellState,
     ws: &Path,
     config_tip: Option<&ConfigTip>,
-    clis: (&Cli, &Cli, &Cli),
+    bz: &Cli,
 ) -> bool {
     let Some(row) = lines::birth_row_of(ws, config_tip, &mut state.wall.picker) else {
         return false;
@@ -89,7 +89,7 @@ pub(crate) fn birth_seat(
         scope: birth_scope(ws),
         agent: None,
     };
-    seat(ui, model, state, ws, &row, &subject, clis);
+    seat(ui, model, state, ws, &row, &subject, bz);
     true
 }
 
@@ -105,9 +105,8 @@ fn seat(
     ws: &Path,
     row: &ModelRow,
     subject: &Subject,
-    clis: (&Cli, &Cli, &Cli),
+    bz: &Cli,
 ) -> bool {
-    let (bz, lernie_cli, bl) = clis;
     let role = row_role(state.wall.picker.role.as_deref());
     let rows = marks::provider_rows(&mut state.wall.picker);
     let view = settled(&mut state.wall.picker);
@@ -143,10 +142,14 @@ fn seat(
             provider: choice.provider,
             model: chosen,
         };
-        write::apply(&mut state.wall.picker, model, ws, (lernie_cli, bl), &pick);
+        write::apply(&mut state.wall.picker, model, ws, &pick);
     }
-    if !state.wall.picker.status.is_empty() {
-        ui.label(&state.wall.picker.status);
+    // The receipt, folded once on the frame it lands (REMOTE §9.8): the write
+    // above is a post, so what is painted here is the sentence the click wrote,
+    // marked while the engine has not answered it.
+    write::settle(&mut state.wall.picker, model);
+    if !state.wall.picker.act.quiet() {
+        ui.label(state.wall.picker.act.line());
     }
     let exit = drift_exit(ui, row);
     // The exit that keeps the conversation is a boundary gesture, so it fires
@@ -155,7 +158,7 @@ fn seat(
     // when a conversation is selected, which is exactly when a drift clause
     // exists, so the birth block can never reach it.
     if let (Exit::Retarget, Some(agent)) = (&exit, subject.agent.as_deref()) {
-        write::retarget(&mut state.wall.picker, model, ws, (lernie_cli, bl), agent);
+        write::retarget(&mut state.wall.picker, model, ws, agent);
     }
     route = route.or(pane(ui, &mut state.wall.picker, ws, &subject.scope, &role));
     if let Some(tab) = route {

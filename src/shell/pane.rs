@@ -111,7 +111,7 @@ pub(super) fn render(
     if let Some(cap) =
         crate::layout::share(pane, ui.available_height(), GOAL_FLOOR).filter(|_| conversation)
     {
-        super::settings::render(ui, cap, model, state, lernie, bl, bz);
+        super::settings::render(ui, cap, model, state, bz);
     }
     if let Some(cap) = crate::layout::share(pane, ui.available_height(), 0.0).filter(|_| goal) {
         if let Some(height) = start_box(ui, model, state, (lernie, bl), (cap, window.y)) {

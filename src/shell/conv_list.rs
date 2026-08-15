@@ -27,7 +27,6 @@ pub(super) fn conversations(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
 ) {
     let Some(ws) = model.focused_workspace().map(std::path::Path::to_path_buf) else {
         ui.weak("no workspace yet — say the word");
@@ -71,12 +70,12 @@ pub(super) fn conversations(
             for group in model.conversation_groups(now_unix(), &state.expanded) {
                 super::conv_ball::group_header(ui, &group);
                 for row in &group.convs {
-                    super::conv_row::conversation_row(ui, model, state, lernie, bl, row, &ctx);
+                    super::conv_row::conversation_row(ui, model, state, lernie, row, &ctx);
                 }
             }
         } else {
             for row in &model.visible_conversations(now_unix(), &state.expanded) {
-                super::conv_row::conversation_row(ui, model, state, lernie, bl, row, &ctx);
+                super::conv_row::conversation_row(ui, model, state, lernie, row, &ctx);
             }
         }
     });

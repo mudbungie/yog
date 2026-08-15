@@ -23,6 +23,9 @@
 //! declaration-light so the `pub mod` list carries no coverable `impl` header
 //! (llvm-cov phantom).
 
+/// The frame's act half (REMOTE §9.8, bl-4841): a gesture posted over the wire
+/// and the receipt that lands frames later.
+mod acts;
 mod balls;
 pub mod cadence;
 mod deletes;
@@ -38,6 +41,9 @@ mod live;
 mod memo;
 mod ops;
 mod panels;
+/// One frame's model duty (§7.2) — split out of this root at §12's budget when
+/// the act path landed (bl-4841).
+mod refresh;
 mod roots;
 mod search;
 mod seat;
@@ -149,6 +155,12 @@ pub struct AppModel {
     /// nobody answers, which is the same posture, and the same code path, as a
     /// surface whose answer has not arrived yet.
     wire: crate::wire::link::Link,
+    /// **The window's act path over the wire** (REMOTE §1.2, §9.8; bl-4841):
+    /// what this frame has fired and not yet heard back about. Default until
+    /// the engine hands over the live end, for [`wire`](Self::wire)'s reason
+    /// exactly — a window with nothing behind it earns the sentence saying so
+    /// rather than a branch.
+    acts: acts::Acts,
 }
 
 impl AppModel {
@@ -195,71 +207,10 @@ impl AppModel {
             tail: TailCell::default(),
             followed: None,
             wire: crate::wire::link::Link::default(),
+            acts: acts::Acts::default(),
         };
         model.focus = model.startup_focus(initial_focus, &Arc::clone(&model.snap).workspaces);
         (model, deriver)
-    }
-
-    /// One frame's whole model duty (§7.2): take the newest completed snapshot
-    /// if the worker published one, adopt an externally-changed `ui.json` from
-    /// it, and hold the §6 acknowledgement. Returns whether the render source
-    /// moved.
-    ///
-    /// It never blocks on a derivation — the only wait is the pointer swap in
-    /// [`crate::state`] — and it never *starts* one. A frame that arrives
-    /// mid-pass renders the previous snapshot, which is the whole point.
-    pub fn refresh(&mut self) -> bool {
-        let latest = latest_snapshot(&self.cell);
-        let landed = !Arc::ptr_eq(&self.derived, &latest);
-        if landed {
-            self.derived = latest;
-            self.adopt_ui();
-        }
-        // A fired start focuses the conversation it started (§3.4), the first
-        // frame whose roster carries its root, and the pending echo it carries
-        // retires on the same predicate (§7.2). Over the roster, not the
-        // pointer swap — so it is asked every frame, and free with nothing
-        // pending.
-        self.adopt_started();
-        // Tell the follower which conversation is on screen and take whatever
-        // it has folded since the last frame (§7.2 live tail). Both are one
-        // lock and one compare, which is what a frame is allowed to cost.
-        crate::state::follow(&self.tail, self.followed_subject());
-        let followed = crate::state::taken_tail(&self.tail);
-        // The one fold of derivation + the non-derived facts (§7.2), run only
-        // when one of its inputs moved so the rendered `Arc` stays stable under
-        // `SnapMemo`.
-        if landed || self.started != self.folded || followed != self.followed {
-            self.folded = self.started.clone();
-            self.followed = followed;
-            self.snap = echo::compose(
-                &self.derived,
-                self.started.as_ref(),
-                self.followed.as_deref(),
-            );
-        }
-        // The wire read path's one frame duty (REMOTE §1.2, bl-ae05): take the
-        // answers the asker landed and tell it what this window is standing on
-        // if that changed. Two channel drains and one set compare — no lock, no
-        // dial, and nothing here can wait on a socket.
-        self.wire.settle();
-        // The §6 ack is a state, not a gesture (bl-aa1f): re-stamp the focused
-        // agent's evidence every frame, so a signal that landed on the
-        // conversation the operator is reading is already seen. Free — §4.1
-        // elides a write whose bytes are unchanged.
-        self.ack_focused();
-        landed
-    }
-
-    /// Adopt an external `ui.json` change the worker read for us (§4.1, I5):
-    /// unless it is our own echo (content-hash match), wholesale-adopt it — the
-    /// converging seen/pins path both instances share.
-    fn adopt_ui(&mut self) {
-        if let Some(bytes) = self.derived.ui_bytes.clone()
-            && !self.ui.is_echo(&bytes)
-        {
-            self.ui.adopt(&bytes);
-        }
     }
 
     /// Tell the worker a root changed (§7.2). The frame's *only* outbound

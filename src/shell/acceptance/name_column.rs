@@ -183,7 +183,7 @@ fn no_conditional_mark_moves_the_name_column_and_all_of_them_ride_right() {
     let built = one_conditional_each();
     let rows: Vec<&ConvRow> = built.iter().collect();
 
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let lernie = Cli::new("lernie");
     let mut world = world_titled("hello");
     world.converge();
     let ctx = egui::Context::default();
@@ -199,7 +199,6 @@ fn no_conditional_mark_moves_the_name_column_and_all_of_them_ride_right() {
                         &mut world.model,
                         &mut world.state,
                         &lernie,
-                        &bl,
                         row,
                         &row_ctx,
                     );

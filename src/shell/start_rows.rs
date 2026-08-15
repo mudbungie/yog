@@ -77,8 +77,6 @@ pub(super) fn ready_row(
     if assign_clicked && let Some(to) = &to {
         super::ball_bar::assign_ball(
             model,
-            lernie,
-            bl,
             &model.snap.project_path(&project).unwrap_or_default(),
             &id,
             to,
@@ -100,7 +98,7 @@ pub(super) fn ready_row(
         id,
         owner: String::new(),
     });
-    super::menus::attach(&start_button, seat, &target, model, state, lernie, bl);
+    super::menus::attach(&start_button, seat, &target, model, state, lernie);
 }
 
 /// One bound ball: ▶ Continue `<id>: <title>` into the ball's **own** claimant
@@ -142,7 +140,7 @@ pub(super) fn continue_row(
         id: ball.id,
         owner: ball.owner,
     });
-    super::menus::attach(&button, seat, &target, model, state, lernie, bl);
+    super::menus::attach(&button, seat, &target, model, state, lernie);
 }
 
 /// The (project, id, join state) of an existing-ball payload — the ball an

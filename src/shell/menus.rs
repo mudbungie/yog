@@ -55,13 +55,12 @@ pub(super) fn attach(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
 ) {
     let entries = menu::entries(seat);
     if entries.is_empty() {
         return;
     }
-    response.context_menu(|ui| paint(ui, &entries, target, model, state, lernie, bl));
+    response.context_menu(|ui| paint(ui, &entries, target, model, state, lernie));
 }
 
 /// Render one roster level: a firing row is a button, a submenu row is a nested
@@ -73,7 +72,6 @@ fn paint(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
 ) {
     for entry in entries {
         // §11 discoverability: an accelerator says what it accelerates, and the
@@ -84,13 +82,13 @@ fn paint(
         match &entry.action {
             Action::Fire(verb) => {
                 if ui.button(&entry.label).on_hover_text(hint).clicked() {
-                    fire(verb, target, model, state, lernie, bl);
+                    fire(verb, target, model, state, lernie);
                     ui.close_menu();
                 }
             }
             Action::Submenu(children) => {
                 ui.menu_button(&entry.label, |ui| {
-                    paint(ui, children, target, model, state, lernie, bl);
+                    paint(ui, children, target, model, state, lernie);
                 })
                 .response
                 .on_hover_text(hint);
@@ -112,37 +110,30 @@ fn accelerates(carrier: &str) -> String {
 /// One menu verb's effect — the same call its visible carrier makes, never a
 /// second implementation (the doctrine's teeth: delete every context menu and
 /// the UI loses clicks, never capabilities).
-fn fire(
-    verb: &Verb,
-    target: &Target,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+fn fire(verb: &Verb, target: &Target, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
     match (verb, target) {
         (Verb::DeleteWorkspace, Target::Tab(tab)) => super::delete::open(state, &tab.ws),
         (Verb::Unpin, Target::Tab(tab)) => model.toggle_pin(&ws_key(&tab.ws)),
         (Verb::Stop { children }, Target::Conversation { ws, agent }) => {
-            super::dispatch::stop_agent(model, lernie, bl, ws, agent, *children);
+            super::dispatch::stop_agent(model, ws, agent, *children);
         }
         (Verb::Flush, Target::Conversation { ws, .. }) => {
-            super::dispatch::scan_ws(model, lernie, bl, ws);
+            super::dispatch::scan_ws(model, ws);
         }
         (Verb::DeleteAgent, Target::Conversation { ws, agent }) => {
             super::delete_agent::open(state, lernie, ws, agent);
         }
         (Verb::Assign(to), Target::Ball(ball)) => {
-            super::ball_bar::assign_ball(model, lernie, bl, &ball.project, &ball.id, to);
+            super::ball_bar::assign_ball(model, &ball.project, &ball.id, to);
         }
         (Verb::MoveTo(to), Target::Ball(ball)) => {
-            super::ball_bar::move_ball(model, lernie, bl, &ball.project, &ball.id, &ball.owner, to);
+            super::ball_bar::move_ball(model, &ball.project, &ball.id, &ball.owner, to);
         }
         (Verb::Release, Target::Ball(ball)) => {
-            super::ball_bar::release_ball(model, lernie, bl, &ball.project, &ball.id, &ball.owner);
+            super::ball_bar::release_ball(model, &ball.project, &ball.id, &ball.owner);
         }
         (Verb::CloseBall, Target::Ball(ball)) => {
-            super::ball_bar::close_ball(model, lernie, bl, &ball.project, &ball.id, &ball.owner);
+            super::ball_bar::close_ball(model, &ball.project, &ball.id, &ball.owner);
         }
         // The roster pairs each verb with its own seat's target, so no other
         // combination is reachable; ignoring it is the panic-free way to say so.

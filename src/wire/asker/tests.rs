@@ -11,7 +11,7 @@ use crate::watch::NoRepaint;
 use crate::wire::link::{Link, LinkEnd, pair};
 use crate::wire::material::Role;
 use crate::wire::server::{Answerer, Listener};
-use serde_json::json;
+use serde_json::{Value, json};
 use std::path::Path;
 use tempfile::TempDir;
 

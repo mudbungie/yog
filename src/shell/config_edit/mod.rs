@@ -39,6 +39,11 @@ mod branch_pane;
 pub(crate) mod brazen_pane;
 mod form_ui;
 mod lernie_pane;
+/// The lineage pane's **write half** (REMOTE §9.8, bl-4841) — the posted
+/// gesture and the receipt it earns, split off at §12's budget on the seam the
+/// act path draws everywhere: browsing and drafting is one thing, firing a
+/// gesture and folding what came back is another.
+mod send;
 mod status;
 mod yog_pane;
 
@@ -77,7 +82,10 @@ pub struct ConfigState {
     cb_origin: EditOrigin,
     cb_path: String,
     cb_body: String,
-    cb_status: String,
+    /// The lineage send's sentence and the ticket its receipt lands under
+    /// (REMOTE §9.8, bl-4841) — shared with the pane's own local notes (a
+    /// drafted field, a failed load), which is one status line and always was.
+    cb_act: crate::shell::act::Held,
     /// The per-project no-marks knob (§16.3), its own pane in [`config_marks`].
     ///
     /// [`config_marks`]: super::config_marks
@@ -117,7 +125,7 @@ impl ConfigState {
             cb_origin: EditOrigin::Advance,
             cb_path: String::new(),
             cb_body: String::new(),
-            cb_status: String::new(),
+            cb_act: crate::shell::act::Held::default(),
             marks: MarksPane::resolve(),
         })
     }
@@ -174,7 +182,7 @@ pub fn center(
         ui.separator();
         config_marks::render(ui, model, &mut state.config.marks, lernie, bl);
         ui.separator();
-        branch_pane::render(ui, model, &mut state.config, &rows, lernie, bl);
+        branch_pane::render(ui, model, &mut state.config, &rows);
         super::delete::danger_row(ui, model, state);
     });
     if let Some(tab) = route {

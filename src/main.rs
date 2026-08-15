@@ -175,12 +175,12 @@ fn main() -> eframe::Result<()> {
                 Arc::clone(&clock),
                 Arc::new(EguiRepaint(cc.egui_ctx.clone())),
             );
-            // The REMOTE §1.2 read path (bl-ae05): the window is a client of
-            // the engine it just booted, over loopback mTLS, presenting the
-            // window leaf. This is the only face that takes an asker — a
-            // `yog serve` has no frame to feed — and it is what a search
-            // thread is beside it: the window's own off-frame worker.
-            let asker = engine.asker(&world).map(yog::wire::asker::Asker::spawn);
+            // The window's two halves of the wire (REMOTE §1.2 bl-ae05, §9.8
+            // bl-4841): it is a client of the engine it just booted, over
+            // loopback mTLS, presenting the window leaf — reading through the
+            // asker and firing through the poster. The only face that takes
+            // them: a `yog serve` has no frame to feed.
+            let wire = engine.window_wire(&world);
             // The §8.5 searcher: the window's own searches run here, never on
             // the frame (a search walks every transcript in the world). The
             // windowless face needs none — `yog gesture` and the consumer both
@@ -193,7 +193,7 @@ fn main() -> eframe::Result<()> {
             Ok(Box::new(App {
                 engine,
                 _searcher: searcher,
-                _asker: asker,
+                _wire: wire,
                 state,
                 lernie: Cli::resolve_in_world(Binary::Lernie, &overrides),
                 bl: Cli::resolve_in_world(Binary::Bl, &overrides),
@@ -250,10 +250,10 @@ struct App {
     engine: Engine,
     // The §8.5 searcher thread — the window's half of the search query.
     _searcher: yog::search::SearchThread,
-    // The REMOTE §1.2 asker thread (bl-ae05) — the window's half of the wire
-    // read path: it dials loopback at human cadence and lands decoded replies
-    // where the frame reads them. `None` only where the mint failed.
-    _asker: Option<yog::wire::asker::AskerThread>,
+    // The window's off-frame wire threads (REMOTE §1.2, §9.8) — the asker
+    // landing decoded replies where the frame reads them, the poster sending
+    // what it fires. `None` only where the mint failed.
+    _wire: Option<yog::engine::window::WindowWire>,
     // Every RAM surface the shell owns: the action/start drafts, the inspector
     // ephemera, and the config editors (§3.5 — discarded on exit).
     state: ShellState,

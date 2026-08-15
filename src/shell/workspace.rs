@@ -121,7 +121,7 @@ pub fn center(
         ui.colored_label(theme::ICHOR, wound.banner());
     }
     ui.separator();
-    super::inspector::tabs_and_content(ui, model, state, &ws, lernie, bl);
+    super::inspector::tabs_and_content(ui, model, state, &ws, lernie);
 }
 
 /// The conversation header (§11): the identity line — the display name, when it

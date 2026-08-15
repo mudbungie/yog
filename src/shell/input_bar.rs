@@ -186,7 +186,7 @@ pub fn composer(
     super::slash::note_ui(ui, state);
 
     let join = model.focused_join().cloned();
-    super::ball_bar::actions(ui, model, lernie, bl, join.as_ref());
+    super::ball_bar::actions(ui, model, join.as_ref());
     // Derived per frame, never cached at dispatch (§7.3, bl-4895): a detached
     // driver that dies after launch lands in the model on a later sweep. Scoped
     // to this surface's own gestures (bl-48f8) — the message/stop verbs and the

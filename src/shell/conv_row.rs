@@ -81,7 +81,6 @@ pub(super) fn conversation_row(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     row: &ConvRow,
     ctx: &RowCtx,
 ) {
@@ -93,7 +92,7 @@ pub(super) fn conversation_row(
     // than a repaint into a second palette.
     ui.scope(|ui| {
         ui.set_opacity(theme::tone_solidity(row.tone));
-        row_body(ui, model, state, lernie, bl, row, ctx);
+        row_body(ui, model, state, lernie, row, ctx);
     });
 }
 
@@ -103,7 +102,6 @@ fn row_body(
     model: &mut AppModel,
     state: &mut ShellState,
     lernie: &Cli,
-    bl: &Cli,
     row: &ConvRow,
     ctx: &RowCtx,
 ) {
@@ -212,7 +210,7 @@ fn row_body(
                     ws: ctx.ws.clone(),
                     agent: row.root_id.clone(),
                 };
-                super::menus::attach(&label, seat, &target, model, state, lernie, bl);
+                super::menus::attach(&label, seat, &target, model, state, lernie);
                 // §11: the name is the title, the first payload line rides weak
                 // beside it. Empty when the ladder already spent that line as
                 // the title, so an unstamped row never says it twice.

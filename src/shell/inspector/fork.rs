@@ -20,7 +20,6 @@ use std::path::Path;
 
 use crate::AppModel;
 use crate::boundary::Action;
-use crate::cli_outbound::Cli;
 use crate::fork::{self, Choices};
 use crate::rail::Pin;
 
@@ -39,14 +38,7 @@ pub struct Seat {
 /// Seat the composer under the pin banner and fire what it composes. Nothing
 /// pinned, or a workspace whose config declares no role anywhere, paints
 /// nothing at all — no button that cannot work.
-pub fn seat(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    inspector: &mut InspectorState,
-    at: &Seat,
-    lernie: &Cli,
-    bl: &Cli,
-) {
+pub fn seat(ui: &mut egui::Ui, model: &mut AppModel, inspector: &mut InspectorState, at: &Seat) {
     let (ws, agent_id, pin) = (at.ws.as_path(), at.agent_id.as_str(), at.pin.as_ref());
     let Some(pin) = pin else {
         // The pin is the seat: releasing it discards the draft, exactly as
@@ -68,7 +60,7 @@ pub fn seat(
     let attempts = composer.attempts.clone();
     let goal = composer.goal.clone();
     inspector.fork = None;
-    fire(model, ws, agent_id, &goal, &attempts, lernie, bl);
+    fire(model, ws, agent_id, &goal, &attempts);
 }
 
 /// What this pinned notch may fork into, memoized per snapshot: the derivation
@@ -85,21 +77,15 @@ fn choices(model: &AppModel, inspector: &mut InspectorState, ws: &Path, pin: &Pi
         .clone()
 }
 
-/// One boundary gesture per candidate (§8.5). Each is the ordinary
-/// [`Action::Fork`]; a refusal rides back as that attempt's own `ops.jsonl`
-/// row, which the per-frame banner reads (§7.3) — so a cohort with one bad
-/// candidate says which one, and the others still fly.
-fn fire(
-    model: &mut AppModel,
-    ws: &Path,
-    agent_id: &str,
-    goal: &str,
-    attempts: &[fork::Attempt],
-    lernie: &Cli,
-    bl: &Cli,
-) {
-    let deps = model.boundary_deps(lernie, bl);
-    let ts = super::super::now_ts();
+/// One boundary gesture per candidate (§8.5), **posted** (REMOTE §9.8). Each is
+/// the ordinary [`Action::Fork`]; a refusal rides back as that attempt's own
+/// `ops.jsonl` row, which the per-frame banner reads (§7.3) — so a cohort with
+/// one bad candidate says which one, and the others still fly.
+///
+/// The cohort keeps its order over the wire: posted acts are sent one at a time
+/// in the order they were fired, so the fork that was listed first is the fork
+/// the engine sees first.
+fn fire(model: &mut AppModel, ws: &Path, agent_id: &str, goal: &str, attempts: &[fork::Attempt]) {
     for attempt in attempts {
         let action = Action::Fork {
             workspace: model.snap.ws_name(ws),
@@ -107,7 +93,6 @@ fn fire(
             attempt: attempt.clone(),
             goal: goal.to_owned(),
         };
-        let _ = model.dispatch(&deps, &ts, &action);
+        super::super::act::fire(model, &action);
     }
-    model.after_lernie_verb();
 }

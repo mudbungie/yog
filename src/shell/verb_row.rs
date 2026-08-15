@@ -112,9 +112,9 @@ pub(super) fn verb_buttons(
                     state.actions.drafts.set(ctx.key.clone(), String::new());
                 }
             }
-            nudge_control(ui, model, lernie, bl, ctx, agent);
-            hold_controls(ui, model, lernie, bl, ctx, agent);
-            stop_controls(ui, model, state, lernie, bl, ctx);
+            nudge_control(ui, model, ctx, agent);
+            hold_controls(ui, model, ctx, agent);
+            stop_controls(ui, model, state, ctx);
         } else {
             // Armed by both halves (bl-6191): something to say, and a work
             // directory the start can actually run in. The birth block's field
@@ -155,14 +155,7 @@ pub(super) fn verb_buttons(
 ///
 /// It is deliberately **independent of the draft**: a nudge takes no text, so
 /// arming it on the box would make an empty composer mean "cannot re-dispatch".
-fn nudge_control(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
-    ctx: &VerbCtx,
-    agent: &str,
-) {
+fn nudge_control(ui: &mut egui::Ui, model: &mut AppModel, ctx: &VerbCtx, agent: &str) {
     let on = ctx.nudgeable;
     if ui
         .add_enabled(on, egui::Button::new("Nudge"))
@@ -178,7 +171,7 @@ fn nudge_control(
         )
         .clicked()
     {
-        super::dispatch::nudge(model, lernie, bl, &ctx.ws, agent);
+        super::dispatch::nudge(model, &ctx.ws, agent);
     }
 }
 
@@ -193,14 +186,7 @@ fn nudge_control(
 /// Neither button stops anything: a decline is the model's own in-band tool
 /// result, which it reads and steps past (lernie bl-b98d — a stop here would
 /// wedge the branch for good).
-fn hold_controls(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    lernie: &Cli,
-    bl: &Cli,
-    ctx: &VerbCtx,
-    agent: &str,
-) {
+fn hold_controls(ui: &mut egui::Ui, model: &mut AppModel, ctx: &VerbCtx, agent: &str) {
     use crate::control::judge::Ruling;
     let Some(held) = ctx.held.as_ref() else {
         return;
@@ -218,7 +204,7 @@ fn hold_controls(
         )
         .clicked()
     {
-        super::dispatch::answer_hold(model, lernie, bl, &ctx.ws, agent, Ruling::Pass);
+        super::dispatch::answer_hold(model, &ctx.ws, agent, Ruling::Pass);
     }
     if ui
         .button("Decline")
@@ -229,7 +215,7 @@ fn hold_controls(
         )
         .clicked()
     {
-        super::dispatch::answer_hold(model, lernie, bl, &ctx.ws, agent, Ruling::Refuse);
+        super::dispatch::answer_hold(model, &ctx.ws, agent, Ruling::Refuse);
     }
 }
 
@@ -237,14 +223,7 @@ fn hold_controls(
 /// Both gates come off the §11 seat's own view (REMOTE §9.4, bl-1eb0) rather
 /// than being re-derived here against a roster; the caller reaches this only
 /// with a selection, which is what those gates are about.
-fn stop_controls(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    state: &mut ShellState,
-    lernie: &Cli,
-    bl: &Cli,
-    ctx: &VerbCtx,
-) {
+fn stop_controls(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, ctx: &VerbCtx) {
     if ctx.stop_children {
         ui.checkbox(&mut state.actions.stop_children, "children")
             .on_hover_text(
@@ -260,6 +239,6 @@ fn stop_controls(
         )
         .clicked()
     {
-        super::dispatch::stop_selected(model, state, lernie, bl);
+        super::dispatch::stop_selected(model, state);
     }
 }

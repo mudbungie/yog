@@ -44,7 +44,6 @@ pub fn tabs_and_content(
     state: &mut ShellState,
     ws: &Path,
     lernie: &Cli,
-    bl: &Cli,
 ) {
     let active = model.inspector_tab();
     // Wrapped, not laid in one line (§11 rule 8, bl-b531): at the documented
@@ -78,15 +77,7 @@ pub fn tabs_and_content(
     // for every Inbox-tab deposit's sender (bl-b6d0).
     let titles = model.agent_titles();
     let data = vms::tab_data(active, model, state, ws, &focus);
-    controls::per_tab_controls(
-        ui,
-        active,
-        model,
-        &mut state.inspector,
-        &data.steps,
-        lernie,
-        bl,
-    );
+    controls::per_tab_controls(ui, active, model, &mut state.inspector, &data.steps);
     // The V2 fork composer, seated at the pin and nowhere else (bl-dc0c):
     // above the tab content because it belongs to the pin banner's fact, not
     // to whichever tab happens to be open — the pin reaches all four.
@@ -99,8 +90,6 @@ pub fn tabs_and_content(
             agent_id: focus.agent_id.clone(),
             pin: data.pin.clone(),
         },
-        lernie,
-        bl,
     );
     let follow = crate::inspector::render(ui, active, &data, &titles, &mut state.inspector.eph);
     // Following a card is the ordinary selection gesture (§6 acknowledgement),
