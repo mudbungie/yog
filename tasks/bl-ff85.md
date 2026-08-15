@@ -1,7 +1,8 @@
 +++
 title = "the runner has no git identity, so multiplex_bl's close leg fails on every CI/speculate build"
 created = 1786688515
-updated = 1786688515
+updated = 1786763188
+claimant = "Thimble"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Every GitHub Actions build of the gate fails one test — `tests/multiplex_bl.rs::the_bl_arm_runs_the_whole_rung_on_the_embedded_balls`, at the `bl close` assertion. The cause is environmental, not a defect in the code under test: `bl-delivery` runs `git commit --no-verify` in the test's throwaway project and git refuses with `empty ident name` / `Please tell me who you are`, because no workflow configures `user.name`/`user.email` and a runner image ships none.
