@@ -120,6 +120,22 @@ s8_hatches() {
   [ "$seen" = "$data/yog/world/lernie|$data/proj" ] \
     && pass "S8-T3 yog exec: argv runs in the world, at --cwd" \
     || fail "S8-T3 yog exec: argv runs in the world, at --cwd" "$seen"
+  # The beat above reads the PATH head as a STRING; this one resolves through it.
+  # `yog` is on the shim roster itself (bl-3ff4), so an agent's bash inside the
+  # world reaches the §8.5 boundary — and reaches THIS build, not the operator's
+  # installed yog, whose sha drifts against the binary under drive (bl-d1af).
+  # Both halves need the shipped binary composing a real world: no in-crate test
+  # can resolve a name on a PATH, and a clean room has no host `yog` for a
+  # fallthrough to hide behind. `-ef` rather than a string compare, because
+  # `current_exe` resolves the symlink `cleanroom.sh` puts `yog` behind.
+  shim="$data/yog/world/tools/yog"
+  seen=$(XDG_DATA_HOME="$data" yog exec sh -c 'command -v yog' || true)
+  target=$(sed -n 's/^exec .\(.*\). "\$@"$/\1/p' "$shim" 2>/dev/null || true)
+  { [ "$seen" = "$shim" ] && [ -n "$target" ] \
+    && [ "$target" -ef "$(driven_binary)" ]; } \
+    && pass "S8-T3 yog shim: the world's PATH resolves yog's own binary" \
+    || fail "S8-T3 yog shim: the world's PATH resolves yog's own binary" \
+      "$seen -> ${target:-no shim}"
 }
 
 # --- S8-T1/T2: one nested world, severable ----------------------------------

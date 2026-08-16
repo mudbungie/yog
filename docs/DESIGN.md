@@ -1839,10 +1839,14 @@ staging dirs by `config_edit::branch::edit::sweep_staging`. The sweep takes only
 a regular file whose name yog itself would have written, directly in one of
 those directories: never a directory, never a symlink, never a walk.
 
-Five more yog-owned files exist and are deliberately **not state**: the world's
-tool shims `<yog-data-root>/world/tools/{bl,lernie,bz,bl-delivery,bl-tracker}`
-(§16.7 W9, extended to all three agent tools at W11 and to balls' two sibling
-plugin binaries at bl-2930). Each is a *generated artifact* — a pure function
+One more *class* of yog-owned file exists and is deliberately **not state**: the
+world's tool shims, `<yog-data-root>/world/tools/<name>`, one per
+`world::tools::ROSTER` entry (§16.7 W9's `bl`, extended to all three agent tools
+at W11, to balls' two sibling plugin binaries at bl-2930, to the §8.6 capability
+control at bl-fec8, and to `yog` itself at bl-3ff4). **The roster is the
+authority and the set is not restated here** — this line said "five" and named
+five while the tree seeded seven, which is what a second copy of a list buys.
+Each is a *generated artifact* — a pure function
 of the `Cli` yog resolves that tool through — re-derived and rewritten on any
 drift at every start and every hatch (bl-44a5), holding no fact yog cannot
 recompute.
