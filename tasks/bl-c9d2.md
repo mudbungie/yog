@@ -1,7 +1,8 @@
 +++
 title = "a workspace whose birth died mid-way can never be prepared again: the name is wedged and the refusal names the wrong reason"
 created = 1786845530
-updated = 1786845530
+updated = 1786845807
+claimant = "Dills"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "boundary"]
