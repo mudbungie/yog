@@ -47,10 +47,18 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
 
 3. **`unsafe` is confined, not forbidden. yog ADAPTATION:** the standard's
    `unsafe_code = "forbid"` is replaced by an ast-grep *location* rule pinning
-   every `unsafe` to `src/cli_outbound/sys.rs` — one irreducible SIGTERM syscall
-   in `Stream`'s drop. `forbid` is unoverridable and reaches test code, and a
-   `nix`/`rustix` dependency or a crate split for ~10 lines of FFI is worse than
-   a confinement rule. Enforced: `rules/unsafe-outside-sys.yml`.
+   every `unsafe` to `src/cli_outbound/sys.rs`. **Two raw process effects live
+   there**, both irreducible and neither wrapped safely by std: the SIGTERM in
+   `Stream`'s drop, and `set_env` — the process-env fold a §16.7 substrate arm
+   stands in, because the linked balls/lernie read `getenv` themselves and spawn
+   children that do too, so no injected `Env` can reach them (DESIGN §16.2's
+   value-and-place ruling, bl-81c9). Its soundness argument is the file's: every
+   caller is at the process edge, single-threaded, above clap and above eframe.
+   `forbid` is unoverridable and reaches test code, and a `nix`/`rustix`
+   dependency or a crate split for ~10 lines of FFI is worse than a confinement
+   rule. **The rule's `ignores` list is the one location authority** — add a
+   site to `sys.rs` rather than widening it. Enforced:
+   `rules/unsafe-outside-sys.yml`.
 
 4. **No panic paths outside tests.** `unwrap`/`expect`/`panic!`/`todo!`/
    `unimplemented!`/`dbg!` and unchecked `indexing_slicing`/`string_slice` are

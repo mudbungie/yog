@@ -98,7 +98,11 @@ fn layout_names_the_world_subtree() {
 /// leads with the world's tools dir (§16.7 W9) rather than replacing the ambient
 /// search path. Re-deriving the set from the **composed world** `Env` — which
 /// `marks`/`config_edit` do — reproduces it byte-for-byte: the composition is
-/// idempotent, so no re-entry stacks a second tools entry.
+/// idempotent, so no re-entry stacks a second tools entry. That fixed point is
+/// also what makes [`inhabit`](super::inhabit) safe to call on an
+/// already-folded process (bl-81c9), and the set being exactly these three is
+/// why the fold can displace neither an agent's own space (`YOG_MARKS`) nor a
+/// workspace's wall (`YOG_WALL`): both ride one layer in, and neither is here.
 #[test]
 fn the_override_set_nests_two_state_vars_and_fronts_the_tool_path() {
     let amb = ambient();

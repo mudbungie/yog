@@ -1,9 +1,10 @@
-# `unsafe` is confined to the single audited FFI wrapper
-# `src/cli_outbound/sys.rs` (the SIGTERM in Stream's drop). Every other
-# `unsafe` block or `unsafe fn` in the tree is an error: reach for safe std
-# first, and if an irreducible FFI call is genuinely needed, add it to
-# sys.rs (or extend this rule's `ignores`) so the whole-crate unsafe
-# inventory stays auditable at one place.
+# `unsafe` is confined to the single audited raw-process-effect file
+# `src/cli_outbound/sys.rs` — the SIGTERM in Stream's drop, and the process
+# env fold a §16.7 substrate arm stands in (DESIGN §16.2, bl-81c9). Every
+# other `unsafe` block or `unsafe fn` in the tree is an error: reach for safe
+# std first, and if an irreducible raw call is genuinely needed, add it to
+# sys.rs (rather than extending this rule's `ignores`) so the whole-crate
+# unsafe inventory stays auditable at one place.
 #
 # Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser:
 #   - `unsafe { ... }`        -> node kind `unsafe_block`

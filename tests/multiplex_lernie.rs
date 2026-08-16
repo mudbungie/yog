@@ -17,6 +17,14 @@
 //! unsafe-location rule confines `unsafe` in `src/` (the scan target), and
 //! this env control has no safe in-process alternative — which is also why
 //! this coverage cannot live beside the arm's unit tests.
+//!
+//! **It is also the isolation proof (bl-81c9).** `LERNIE_HOME` is set to a
+//! scratch *ambient* root that must stay empty: the arm stands the process in
+//! the world first (`world::inhabit`), so every verb below seeds and reads
+//! `<anchor>/yog/world/lernie` and the ambient root the operator's own `lernie`
+//! would use is never written. This file asserted the opposite until bl-81c9 —
+//! the arm was resolving whatever `LERNIE_HOME` the caller happened to carry,
+//! which for a bare `yog lernie` at a shell is the operator's own harness.
 
 // clippy's allow-*-in-tests reaches `#[test]` fns, not the free fixture
 // helpers of an integration-test crate — those unwrap freely like any test
@@ -85,28 +93,67 @@ fn the_lernie_arm_is_the_thin_binding_end_to_end() {
         // (self-multiplex) resolution, not a machine-local override.
         unsafe { std::env::remove_var(var) };
     }
-    set("LERNIE_HOME", &tmp.path().join("lernie-home"));
+    // The AMBIENT harness root — a conflicting one, deliberately: it stands for
+    // the operator's own `~/.config/lernie`, and nothing below may write it.
+    let ambient_home = tmp.path().join("lernie-home");
+    set("LERNIE_HOME", &ambient_home);
     set("XDG_DATA_HOME", &tmp.path().join("xdg-data"));
+    // …and the nested one every verb must actually reach (§16.2's fold).
+    let world_home = tmp.path().join("xdg-data/yog/world/lernie");
     set("EDITOR", Path::new("true"));
     // git reads exactly one config file: the scratch fixture. `/dev/null` is
     // the empty system config (git skips a system file it cannot read as one).
     set("GIT_CONFIG_GLOBAL", &fixture_gitconfig(tmp.path()));
     set("GIT_CONFIG_SYSTEM", Path::new("/dev/null"));
 
-    // Parse short-circuits return before any prelude, env read, or disk write.
+    // Parse short-circuits return before any prelude, env read, world fold, or
+    // disk write — which is why bl-81c9's fold sits *below* the parse and a
+    // probe still touches nothing (`std::env` is proof: `LERNIE_HOME` is still
+    // the ambient one after both of these).
     assert_eq!(dispatch(&argv(&["yog", "lernie", "--help"])), Some(0));
     assert_eq!(dispatch(&argv(&["yog", "lernie", "no-such-verb"])), Some(2));
+    assert_eq!(
+        std::env::var("LERNIE_HOME").unwrap(),
+        ambient_home.display().to_string()
+    );
 
-    // `prime` — the full run path: no preludes, both re-entry shims converged
-    // into the world tools dir under the ambient anchor, Fx built over the
-    // locked stdio, `Outcome::Quiet` (silent seed-if-absent success).
+    // `prime` — the full run path: the world folded into this process's env, no
+    // preludes, both re-entry shims converged into the world tools dir under the
+    // ambient anchor, Fx built over the locked stdio, `Outcome::Quiet` (silent
+    // seed-if-absent success). It seeds the WORLD's harness root and leaves the
+    // conflicting ambient one absent (bl-81c9).
     assert_eq!(dispatch(&argv(&["yog", "lernie", "prime"])), Some(0));
-    assert!(tmp.path().join("lernie-home/models.yaml").is_file());
+    assert!(world_home.join("models.yaml").is_file());
+    assert!(
+        !ambient_home.exists(),
+        "ambient harness root written: {}",
+        ambient_home.display()
+    );
     let tools = tmp.path().join("xdg-data/yog/world/tools");
     for shim in ["lernie", "bz"] {
         let body = fs::read_to_string(tools.join(shim)).unwrap();
         assert!(body.contains(&format!("'{shim}' \"$@\"")), "shim: {body}");
     }
+
+    // **Re-entry is a no-op** (bl-81c9): this process now stands in the world,
+    // which is the state every *spawned* `yog lernie` starts in. A second verb
+    // re-folds the identical set — the harness root is unmoved and the tools dir
+    // appears on `PATH` exactly once, never stacked.
+    assert_eq!(dispatch(&argv(&["yog", "lernie", "prime"])), Some(0));
+    assert_eq!(
+        std::env::var("LERNIE_HOME").unwrap(),
+        world_home.display().to_string()
+    );
+    let tools_s = tools.display().to_string();
+    assert_eq!(
+        std::env::var("PATH")
+            .unwrap()
+            .split(':')
+            .filter(|p| *p == tools_s)
+            .count(),
+        1,
+        "world tools dir stacked on PATH"
+    );
 
     // `new` — `Outcome::Line`: the destination path is the one stdout product.
     let ws = tmp.path().join("ws");

@@ -7934,7 +7934,7 @@ beside `main.rs`.
 | `src/cli_outbound/resolve.rs` | binary resolution (§16.7 W12, the self-multiplex spine): which executable a `Cli` execs and under what leading argv — the one switch point, a per-namespace `self_multiplexed` const |
 | `src/cli_outbound/stream.rs` | the live-handle half: the running-subprocess handle whose iteration yields chunks (final item always the exit) and whose drop terminates the child — SIGTERM, then SIGKILL after a short grace (§2.9) |
 | `src/cli_outbound/streamed.rs` | the **streamed-piped** spawn class (§8, §8.3): both output streams line-buffered off a running child, each line tagged with the stream it came from, plus the terminal exit — the shape `bz --login` renders through (§5.3) |
-| `src/cli_outbound/sys.rs` | the crate's single confined `unsafe` — `libc::kill` for the drop's best-effort SIGTERM, the one audited home `rules/unsafe-outside-sys.yml` leaves it (AGENTS.md rule 3) |
+| `src/cli_outbound/sys.rs` | the crate's confined `unsafe` — `libc::kill` for the drop's best-effort SIGTERM, and `set_env` for the world fold a substrate arm stands in (§16.2, bl-81c9); the one audited home `rules/unsafe-outside-sys.yml` leaves it (AGENTS.md rule 3) |
 | `src/composer/mod.rs` | the §11 inbox-composer's derivations (bl-929d): the pending-queue row projection over the snapshot's §5.1 #11 listing (fold key = the deposit's inbox path, §5.3; each row's §11 role from the one `theme::role` mapping, bl-3acb), and `SnapState` — the derived fold-line height (settled content, capped at half the pane) plus the snap-down ease whose trigger is the pending count dropping, per target |
 | `src/composer/recall.rs` | the §11 prompt recall (bl-f908): `prompts` — the operator's own turns in this conversation, newest first, folded from the pending listing (§5.1 #11) and the delivered transcript (§5.1 #12) through the one `theme::message_role` derivation and stored nowhere — plus `Caret`, the visual-row gate that decides whether ↑/↓ are the box's or the caret's, and `Recall`, the two-field walk whose *exit* is a derivation (the draft is no longer the entry we put there) rather than a reset call at each site |
 | `src/config_edit/mod.rs` | §9's root: load → edit a RAM draft → Apply = stage → validate → hash-guard → atomic rename, one discipline across every file-editing surface |
@@ -8607,6 +8607,40 @@ either way), and the world's own editors — lernie's global config, the yog
 clock's `cadence.yaml` — deliberately stay out of that bundle, since one file
 with one draft must not become one draft per sphere.
 
+**The world is a value AND a place (bl-81c9).** `world::compose` makes the world
+an `Env`, which is enough for every yog fold and for every child yog *spawns*
+(the override set rides the `Command`, W2). It is not enough for the §16.7
+namespaces, whose whole point is that the substrate runs **in yog's own
+process**: the linked balls takes its two homes from the `Edge` the arm hands it,
+but its plugin chain spawns `bl-delivery`, `bl-tracker` and `git` as children
+that fold `$XDG_STATE_HOME` out of their own environment, and the linked lernie
+resolves its harness root from `getenv("LERNIE_HOME")` with no injection seam at
+all. So a substrate arm **stands the process in the world** before the embedded
+crate runs — one `set_env` of the same override set, at the process edge
+(`world::inhabit`) — and every read, spawn and descendant follows from it.
+
+Until this ruling a bare `yog bl` / `yog lernie` at an ambient shell drove the
+operator's OWN landing and harness while advertising the nested one: `yog bl
+prime` founded its clone under the ambient `$XDG_STATE_HOME`, `yog bl claim` cut
+its worktree in the ambient plugin territory, `yog lernie prime` seeded the
+ambient `LERNIE_HOME`, and `yog exec bl …` was the only spelling that meant what
+both spellings say. **One command spelling must not address two universes**, and
+`yog exec` is a hatch for a human's shell (§8.4), never the repair for yog's own
+verbs.
+
+The fold is **idempotent for the same reason the override set is** (above): every
+value is a pure function of the anchor, which the world never overrides, and the
+`PATH` prepend recognizes its own entry — so the spawned case, where the parent
+folded already, re-derives an identical set and stacks nothing. That dissolves
+"already composed" rather than testing for it, and because the set is exactly
+the §16.2 three, the fold displaces neither an agent's space (`YOG_MARKS`, §16.3)
+nor a workspace's wall (`YOG_WALL`) — both ride one layer in. Two arms fold
+nothing, by one test — *does this arm's substrate read the process env?* A
+**discovery probe** (`--help`/`-h`/`--version`/`-V`/`--skill`, §8.5's narrow
+form) does not, and asking what a verb does must not depend on a world existing;
+`bz` does not either, because since the blast-radius ruling brazen's state is
+per-wall rather than per-XDG, so the world's three vars name nothing it reads.
+
 **I1/I2 hold against the nested disk:** every §5.1 derivation resolves through
 the world `Env`, so "disk is the app" means yog's world; two instances compose
 the identical world from the identical ambient env and converge exactly as
@@ -8934,7 +8968,7 @@ bind: foundedness-not-exit-code and the in-process catalog read at §5.1 #2,
 the shim roster and the `Edge::exe_dir` plugin seam at §16.4, the `--as`
 default at §3.3, the logical-vs-physical ops argv at §8.2. The wave labels
 (W1–W14) survive in citations as historical labels git history resolves.
-Two facts live only here:
+Three facts live only here:
 
 - **lernie's `Fx` re-entry targets are spelled as the world's shims**
   (`world/tools/{lernie,bz}`), never the bare yog executable: both targets
@@ -8943,6 +8977,12 @@ Two facts live only here:
   the way into every verb — one read, no write in the steady state — so the
   first invocation has valid re-entry targets with no ordering dependence on
   a start.
+- **The `bl` and `lernie` arms fold the world into their own process env** on
+  the way in (`world::inhabit`, §16.2's value-and-place ruling), which is what
+  makes a bare `yog bl` at an ambient shell the same world `yog exec bl …`
+  hands out. The other arms do not: `bz` is per-wall, the plugin arms are
+  spawned by a balls that folded already, and `gesture`/`seat`/`tool-host` are
+  yog's own code over a composed `Env`.
 - **One read is still a subprocess: the closed listing** (`yog bl list -s
   closed --json`, §5.1 #4) — balls' dead-set history walk is not on the
   promoted read surface. **Residual upstream ask, U-balls-2: promote the

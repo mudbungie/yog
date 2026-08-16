@@ -22,6 +22,17 @@
 //! switch, so spawns target `yog <namespace>` and reach the filled arm. The
 //! two edits are the whole of a wave's spine work.
 //!
+//! **A substrate arm stands its process in the world** ([`crate::world::inhabit`],
+//! §16.2, bl-81c9): the `bl` and `lernie` arms fold the override set into their
+//! own env, because the embedded crate reads `getenv` itself and spawns children
+//! that do too, so no `Env` value reaches either — one spelling, one world. The
+//! rest need no fold: `bz`'s state is per-**wall**, not per XDG (§16.2 as
+//! amended); the plugin arms are spawned by a balls that folded already; and
+//! `gesture`/`seat`/`tool-host` are yog's own code over a composed `Env`. It is
+//! each arm's own act, not the router's, because the fold must land after that
+//! arm's "touches nothing yet" point — for `lernie` that is below the clap
+//! parse, which is what keeps a probe and a bad verb world-free.
+//!
 //! `main.rs` (coverage-excluded) stays a thin call: `dispatch(&argv)` returns
 //! `Some(code)` (the process exits with it) or `None` (the GUI/hatch path,
 //! unchanged). All routing logic lives here, under test.

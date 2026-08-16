@@ -171,6 +171,31 @@ pub fn overrides(ambient: &Env) -> Vec<(String, String)> {
     ]
 }
 
+/// **Stand this process in the world** (§16.2, bl-81c9): apply [`overrides`] to
+/// the process's OWN environment, so a caller that cannot be handed an [`Env`]
+/// still resolves the nested roots.
+///
+/// [`compose`] is the world as a *value* — enough for every yog fold, and for
+/// every child yog spawns (the overrides ride the `Command`). It is not enough
+/// for an **in-process substrate arm** (§16.7): `yog bl` hands balls an `Edge`
+/// but balls' plugin chain spawns children that resolve `$XDG_STATE_HOME`
+/// through their own `getenv`, and the linked lernie reads `LERNIE_HOME` with
+/// no injection seam at all. For those the world has to *be* the environment —
+/// so the arm folds it in once, at the process edge, and every read and every
+/// descendant follows. A bare `yog bl` / `yog lernie` typed at an ambient shell
+/// is then the same world `yog exec bl …` hands out, which is what the
+/// namespaces advertise.
+///
+/// **Idempotent, by the same property [`overrides`] has:** every value is a
+/// pure function of the ambient anchor, which the world never overrides, and
+/// the `PATH` prepend recognizes its own entry — so re-entry (the spawned case,
+/// where the parent already folded) reproduces the identical set and stacks
+/// nothing. That dissolves the "already composed" case rather than testing for
+/// it.
+pub(crate) fn inhabit() {
+    crate::cli_outbound::sys::set_env(&overrides(&Env::from_env()));
+}
+
 /// Compose the world `Env`: the ambient snapshot plus the nesting
 /// [`overrides`] (§16.2). `XDG_DATA_HOME` is left ambient — it is the anchor,
 /// and nothing else is shared. The result is itself an [`Env`]; pass it to any

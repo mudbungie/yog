@@ -40,12 +40,24 @@ use crate::world::tools;
 /// The host environment is read here, at the process boundary (`$EDITOR`, the
 /// world layout's ambient anchor), never inside the surface — lernie's own
 /// §3.4 rule ("process effects stay at the binding"), kept by the arm that
-/// replaces the binding.
+/// replaces the binding. Folding the world into that environment is the same
+/// rule's other half ([`crate::world::inhabit`], bl-81c9): the binding is the
+/// only place that can put a linked lernie in the nested world, because every
+/// root lernie resolves comes from its own `getenv`.
 pub(super) fn run(args: &[String]) -> i32 {
     let cli = match parse(args) {
         Ok(cli) => cli,
         Err(code) => return code,
     };
+    // The process STANDS in the world before lernie resolves anything
+    // (bl-81c9, §16.2): `LERNIE_HOME` is read by the linked lernie's own
+    // `getenv` (`harness_root::resolve`) and there is no injection seam for it
+    // — so a bare `yog lernie prime` seeded the operator's ambient harness
+    // root instead of the world's. It also puts the tool injection below and
+    // every tool subprocess lernie fires on the same `<world>/state`. Placed
+    // after the parse, so a `--help`/`--version` probe — which clap answers
+    // above — still touches no world.
+    crate::world::inhabit();
     // The §2.9 binding preludes, before the surface is invoked. Which ones the
     // verb needs is lernie's own tested map (`Command::preludes`); performing
     // them is this binding's act.

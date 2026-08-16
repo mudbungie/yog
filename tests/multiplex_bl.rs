@@ -75,6 +75,22 @@ fn an_unusable_anchor_fails_every_verb_but_a_probe(tmp: &Path) {
     assert_eq!(dispatch(&argv(&["yog", "bl", "--help"])), Some(0));
 }
 
+/// bl-81c9 — **the rung runs in the WORLD's balls state and no other.** The arm
+/// stands the process in the world before balls reads a byte of env, so the
+/// conflicting ambient `$XDG_STATE_HOME` this binary set — standing for the
+/// operator's own landing — keeps whatever was there, which is nothing. Returns
+/// the world's balls state root, the anchor of every store and territory path
+/// below. Until bl-81c9 this file asserted the mirror image of both halves.
+fn the_world_state_and_no_other(tmp: &Path) -> std::path::PathBuf {
+    let ambient = tmp.join("state");
+    assert!(
+        !ambient.exists(),
+        "ambient balls state written: {}",
+        ambient.display()
+    );
+    tmp.join("data/yog/world/state/balls")
+}
+
 #[test]
 fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
     let tmp = tempfile::TempDir::new().unwrap();
@@ -148,7 +164,8 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
     for shim in ["bl", "lernie", "bz", "bl-delivery", "bl-tracker"] {
         assert!(tools.join(shim).is_file(), "shim {shim} converged");
     }
-    let clone = sole_child(&tmp.path().join("state/balls/clones"));
+    let balls_state = the_world_state_and_no_other(tmp.path());
+    let clone = sole_child(&balls_state.join("clones"));
     assert!(clone.join("config").is_dir(), "landing founded");
     for plugin in ["bl-delivery", "bl-tracker"] {
         // The landing checkout (`<clone>/config`) holds the config tree, so
@@ -181,7 +198,12 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
         dispatch(&argv(&["yog", "bl", "claim", &id, "--as", "seam"])),
         Some(0)
     );
-    let territory = tmp.path().join("state/balls/plugins/bl-delivery");
+    // The worktree lands in the world's plugin territory too — the half an
+    // `Edge` alone could never fix: `bl-delivery` is a real subprocess that
+    // folds `$XDG_STATE_HOME` out of its OWN env, so before bl-81c9 a bare `yog
+    // bl claim` sealed the ball in the world and cut the worktree in the
+    // operator's ambient territory.
+    let territory = balls_state.join("plugins/bl-delivery");
     let worktree = territory.join(proj.strip_prefix("/").unwrap()).join(&id);
     assert!(
         worktree.join("README.md").is_file(),

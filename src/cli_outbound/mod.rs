@@ -16,7 +16,9 @@
 //! - [`Streamed`] consumes a [`Cli::run`] child non-blocking and line-buffered,
 //!   live (§8's streamed-piped class: `bz --login`, [`crate::login`]).
 //!
-//! The crate's one remaining `unsafe` is the SIGTERM in [`sys`]. Which binary a
+//! The crate's `unsafe` is confined to [`sys`] — the SIGTERM above, and the
+//! process-env fold an in-process substrate arm stands in ([`sys::set_env`],
+//! §16.2). Which binary a
 //! [`Cli`] execs — and under what leading argv — is [`resolve`]'s concern: a
 //! host PATH name / `*_BINARY` override, or (§16.7 W12) yog's own `current_exe`
 //! under a namespace prefix. A [`Cli`] carries the *physical* `program` +
@@ -221,8 +223,9 @@ impl Cli {
         self.env.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
 }
-/// The crate's one confined `unsafe`: raw `SIGTERM` in [`Stream`]'s drop.
-mod sys;
+/// The crate's confined `unsafe`: raw `SIGTERM` in [`Stream`]'s drop, and the
+/// process-env fold the nested world stands on ([`crate::world::inhabit`]).
+pub(crate) mod sys;
 
 #[cfg(test)]
 mod tests;
