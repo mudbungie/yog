@@ -1,7 +1,8 @@
 +++
 title = "wire bootstrap failure opens an inert window; a second instance reliably triggers it"
 created = 1786843450
-updated = 1786843759
+updated = 1786844986
+claimant = "Wire-dc14"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "wire", "gui", "drive", "design"]
