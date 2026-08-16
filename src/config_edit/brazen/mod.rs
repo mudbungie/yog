@@ -45,7 +45,9 @@ mod effects;
 pub use effects::RealBzRunner;
 
 mod providers;
-pub use providers::{ProviderRow, ProviderRowView, provider_rows, row_names, row_views};
+pub use providers::{
+    CONTEXT_REMEDY, ProviderRow, ProviderRowView, provider_rows, row_names, row_views,
+};
 
 #[cfg(test)]
 mod tests;

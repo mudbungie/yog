@@ -95,6 +95,32 @@ fn an_unanswerable_table_and_a_capable_row_both_pass() {
     );
 }
 
+/// The caveat is NOT a gate (bl-671d). An `ollama_chat` row answers
+/// [`ProviderRow::context_caveat`] — its request declares no context size — and
+/// the pick is still written, because yog cannot see what the server chose and
+/// no surface may refuse on the strength of a question that went unanswered.
+/// Refusing here would refuse a correctly-raised server; the operator is told
+/// the fact instead, at the seat where the row is picked.
+#[test]
+fn a_dialect_that_leaves_the_context_to_the_server_is_stated_not_refused() {
+    let rows = rows_on(&["local"], "ollama_chat");
+    assert!(
+        rows[0].context_caveat().is_some(),
+        "the fixture is the dialect that carries the caveat"
+    );
+    assert_eq!(rows[0].tools_blocked(), None, "the tools read is separate");
+    assert!(
+        plan(
+            SEEDED_MODELS,
+            TEMPLATE_PROVIDERS,
+            &rows,
+            &pick("local"),
+            None
+        )
+        .is_ok()
+    );
+}
+
 /// The custom-id entry is the one seat that can name a model brazen never
 /// listed, and §9.4 used to reason it could declare an unserved model *"but
 /// never an unroutable one, because the row beside it is still brazen's"*. The

@@ -4623,6 +4623,43 @@ warned, and the warning was the dead end:
   custom entry can produce one; a listed candidate is a string brazen itself
   printed.
 
+**And one thing the same column says that is NOT a refusal** (bl-671d). A
+dialect can be tool-capable and still leave a fact the turn depends on to the
+server. `ollama_chat` is the case: brazen's encoder maps the output cap to
+`options.num_predict` and emits **no `options.num_ctx` at all**, so the Ollama
+server's own default context governs every yog turn — not the model's capacity,
+and not the `context_window` the pick declares in `models.yaml` (which is the
+§5.1 #35 denominator and reaches no request). A drive through the offered row
+reached local inference and produced nothing usable: 4095 input tokens on the
+platform payload, one generated token, `finish_reason: length`, against a model
+whose own context was 262144.
+
+This is **stated, not gated**, and the difference is the whole ruling. yog cannot
+see what the server was started with, so a refusal would be a refusal on the
+strength of a question that went unanswered — the same discipline
+`is_unknown_row` applies to an unanswerable table — and it would refuse a
+correctly-raised server. `ProviderRow::context_caveat` is therefore a caveat
+beside a **selectable** row, with the remedy on its hover, and `plan` does not
+consult it. That is not the dead-end warning this section retired, because it
+carries the operator's next move: the row gets an explicit context in the
+workspace's own brazen `config.toml` — `unsupported_body_keys = ["max_tokens"]`
+plus `body_defaults = { options = { num_ctx = …, num_predict = … } }` — which is
+config in the file that authors a row, and the operator's number rather than a
+default yog guessed.
+
+**Both halves of that recipe are load-bearing, and the reason is the second half
+of the defect.** The encoder inserts its typed `options` first and folds config
+passthrough with `or_insert`, so a `body_defaults` `options` beside a typed
+`max_tokens` is dropped **whole and silently** — the obvious fix does nothing and
+says nothing. Clearing the typed cap is what opens the valve, which is why the
+cap is restated inside the object handed over. All three facts — the missing
+`num_ctx`, the silent drop, the recipe landing both limits — are asserted against
+the linked brazen in `tests/brazen_ollama_context.rs`, so the caveat is true
+because a test says so and dies the day brazen changes. **The upstream ask is
+brazen bl-f19d** (a first-class context declaration, or a passthrough that
+composes with the typed `options`); when it lands, the caveat and the remedy are
+deleted together.
+
 **One gesture, two files, in that order.** lernie's cross-check
 (`config::cross::check_roles_against_models`) refuses to load any config whose
 `roles.<r>.model` is not declared in the global `models.yaml`, and refuses one
@@ -7965,7 +8002,8 @@ beside `main.rs`.
 | `src/config_edit/apply.rs` | the `--editor-apply` copy — drafted files only (§9.3) |
 | `src/config_edit/branch.rs` | config-ref browse, governing-config derivation, edit plan (§9.3) |
 | `src/config_edit/branch/edit.rs` | the §9.3 edit half — the scripted-`$EDITOR` drive of `lernie config`, the only lawful writer of `config/*` (ARCH §2.2), re-entering the yog binary at `config_edit::apply` |
-| `src/config_edit/brazen/{mod,effects,providers}.rs` | the §9.1 editor (staged validation, hash guard) and the wall's `BrazenPaths` layout; the real BzRunner; the provider-row projection (§8.3) — three columns and the two capability reads over them: `auth` → `login_blocked` (§8.3), and `protocol` → `tools_blocked` (§9.4, bl-3d22), a total match over brazen's own public `ProtocolId` so a new upstream dialect fails to compile rather than being guessed at |
+| `src/config_edit/brazen/{mod,effects,providers}.rs` | the §9.1 editor (staged validation, hash guard) and the wall's `BrazenPaths` layout; the real BzRunner; the provider-row projection (§8.3) — the three consumed columns, `auth` → `login_blocked` (§8.3), and the rendered row every surface paints |
+| `src/config_edit/brazen/providers/capability.rs` | what the `protocol` column says about a yog turn (§9.4), split off `providers.rs` at the §12 pre-split band along the seam it already had: the parent owns the columns, this owns the dialect judgement over one of them. Two reads, both a total match over brazen's own public `ProtocolId` so a new upstream dialect fails to compile rather than being guessed at — `tools_blocked` (bl-3d22), which `plan` refuses on, and `context_caveat` (bl-671d), which nothing refuses on: a dialect that leaves the context size to the server is stated beside a selectable row, with `CONTEXT_REMEDY` as the operator's next move, because yog cannot see what the server chose |
 | `src/config_edit/draft.rs` | the ONE staged-edit `Draft` both §9.1/§9.2 editors are built from — dirty tracking, revert, the hash guard |
 | `src/config_edit/effects.rs` | the production `FileIo` — the thin `std::fs` shell behind every editor's pure view-model, covered against a real tempdir with no fakes |
 | `src/config_edit/fault.rs` | **where a config-kind failure is fixed** (§9.1, bl-dd7f): the narrow classifier over a failure's own words — lernie's `provider error (config)` wrapper and brazen's `unknown provider` — the row it quotes, read out of the sentence rather than joined from the tree, and the one line the §7.3 banner pairs with a route to the §9.1 editor. §8.3 rule 5's sibling on the other kind of fault, and it re-words nothing: brazen's and lernie's sentences stay verbatim above it |
@@ -8121,7 +8159,7 @@ beside `main.rs`.
 | `src/shell/login_pane.rs` (excl.) | §8.3 — the Login tab's content and the auth-failed banner's, one machinery in two seats since it stopped being a fold in the roster column (bl-1ca2) |
 | `src/shell/menus.rs` (excl.) | the §11 context-menu attach/dispatch |
 | `src/shell/modal.rs` (excl.) | the §11 modal-owns-the-frame invariant (the backdrop layer + the one dismissal the ✕ and Escape both spend, bl-d921) |
-| `src/shell/model_pick/{mod,seat,lines,marks,ram,role,select,write}.rs` (excl.) | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its **two** exits (bl-9786's new conversation and bl-2d19's `retarget`, laid as a peer strip so neither is ever dropped), the write receipt, and the pane's extras while it is open, over one `Subject` value naming what the seat is about (its scope claim, and the conversation it belongs to when there is one) — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks; the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns — which since bl-dd7f **name the row they steered off** when brazen has no such row, so a picker reading `anthropic` can never be mistaken for a report of the `openai-chatgpt` the conversation actually dispatched through; `role` the strip that re-scopes them, split off at the cap on that same row-versus-scope seam; the two-file write plan |
+| `src/shell/model_pick/{mod,seat,lines,marks,ram,role,select,select/notes,write}.rs` (excl.) | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its **two** exits (bl-9786's new conversation and bl-2d19's `retarget`, laid as a peer strip so neither is ever dropped), the write receipt, and the pane's extras while it is open, over one `Subject` value naming what the seat is about (its scope claim, and the conversation it belongs to when there is one) — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks; the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns — which since bl-dd7f **name the row they steered off** when brazen has no such row, so a picker reading `anthropic` can never be mistaken for a report of the `openai-chatgpt` the conversation actually dispatched through; `role` the strip that re-scopes them, split off at the cap on that same row-versus-scope seam; `select/notes` everything **said** above the pair rather than chosen in it, split off `select` at the cap on that seam (bl-671d) — the strand the steering left behind, the tool refusal `plan` would make, and the context caveat it would not: a dialect that leaves the context size to the server stays selectable and is stated, with the remedy on its hover; the two-file write plan |
 | `src/shell/navigator.rs` (excl.) | §11 altitude 0 — reduced to the roster, the balls section and the two entries that FOCUS the center's Config and Login tabs, painting no surface of its own (bl-1ca2) |
 | `src/shell/new_ws.rs` (excl.) | §3.1 |
 | `src/shell/pane.rs` | the conversation pane's own column (§11, bl-9551), split from `shell/mod.rs` at the cap on a real seam: the window divides itself between a top bar, a roster column, one world-level accessory and a remainder — this divides *that* remainder between the conversation's docked accessories (each drawing from the §11 rule 5 budget, painting nothing when it cannot be paid) and the bounded, clipped viewport that is the conversation itself |
@@ -8191,6 +8229,7 @@ beside `main.rs`.
 | `src/world/{mod,seed,marks,hatch,tools,seat}.rs` | the composed world (§16.2): env + overrides, `lernie prime` seeding, the §16.3 **agent balls space** (the `YOG_MARKS` fold, balls' two home directories per space, and the one `tasks_branch` write/read — bl-e47b), the §8.4 hatches, the §16.4 shim roster (the §8.6 control shim and, since bl-3ff4, `yog` itself among them), and `seat` — which seat may open a window, the guard that keeps that `yog` shim from becoming an agent's way to paint on the operator's desktop. `template.rs` — the §9.2 gate over the workspace-birth template — is deleted with the gate (bl-00ee): yog reads that file nowhere now |
 | `src/world/wall.rs` | the per-workspace wall (§16.2, §3.1): the `YOG_WALL` layer, its layout and its read lens |
 | `src/xdg/mod.rs` | env folds: balls layout (delegated to `balls::layout::Xdg`, over the §16.3 space's two home directories), lernie roots, yog roots, the wall (§16.2), percent-decode. brazen's ambient per-OS fold was deleted with the sharing it served |
+| `tests/brazen_ollama_context.rs` | the Ollama context pin (bl-671d, §9.4): drives the LINKED brazen with a capturing `Transport` — no network, no server — and asserts the three facts the §9.4 caveat and its remedy rest on. A yog turn reaches an `ollama_chat` row with the output cap and **no** `options.num_ctx`, so the server's own default governs; a row's `body_defaults` `options` beside that typed cap is dropped whole and silently; and clearing the typed cap lets an explicit `num_ctx`/`num_predict` pair through. A caveat about upstream behaviour that nothing measures outlives the behaviour, so this fails the day brazen bl-f19d lands and names what to delete |
 | `tests/design_citations.rs` | the citation guard: every cited `§N`/`§N.M` resolves to a DESIGN heading (the header's retirement doctrine, machine-checked) |
 | `tests/design_module_map.rs` | the module-map guard (bl-9f72, widened by bl-273c to every rule §12 states about itself): both path directions, the sort, the no-test-module rule, the two-cell row shape and single-entry — brace lists expanded, test corpora excluded from the file sweep per the rule above. The guard is the mechanism; the prose rule alone had already failed three times over |
 | `tests/integration/glyph_coverage{.rs,/scan.rs}` | the tofu guard (§11): every non-ASCII `src` literal has a glyph in both font families — the assertion, and the tree scan + font probe behind it |

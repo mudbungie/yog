@@ -7,43 +7,11 @@
 //! `protocol` column names its wire dialect — all three spelled by brazen's own
 //! serde renames.
 //!
-//! **`protocol` is the TOOL capability** (bl-3d22). The column carries brazen's
-//! own `ProtocolId` spelling, and `ProtocolId` is a public, closed enum on
-//! brazen's library surface — so [`ProviderRow::tools_blocked`] parses the
-//! column back into that enum through brazen's own serde rename and answers
-//! over a **total match**, which a new upstream dialect fails to compile until
-//! its arm is added. That is the whole reason the judgement is here rather than
-//! a table of row NAMES: `claude-code` is a name, `claude_code` is a protocol,
-//! and only the second is a fact about request shape.
-//!
-//! It exists because row EXISTENCE never established request-shape
-//! compatibility, which §9.4 used to claim it did: `/model worker claude-code
-//! <id>` passed the row gate, advanced both config halves, and the next worker
-//! start died at brazen's encoder before any network call — *"claude_code
-//! carries no tool declarations; use the `anthropic` row for tools"*. Every yog
-//! turn declares at least the `clients` tool
-//! ([`crate::tool_host::Injection::tools`] returns it unconditionally, and
-//! lernie splices the injection into every canonical request), so a
-//! tool-less dialect can serve no lernie ROLE at all.
-//!
-//! **The upstream ask is already filed, and is brazen bl-5053** ("publish
-//! per-row capability declines (tools, multi-turn) on the read surface"): brazen
-//! projects no capability column — `--list-providers` serves `name`/`protocol`/
-//! `auth`/`credential`, and the `Protocol` trait that owns the rejection is
-//! crate-private, so the authoritative answer cannot be asked for. That ball was
-//! filed off THIS defect seen once before, and its own words name the cost:
-//! *"yog's model picker validated provider=claude-code for a tool-bearing worker
-//! role (it only checks the row exists in `bz --list-providers`), and every
-//! session call then died at encode"*. It was never gated on yog's side, so it
-//! recurred. When brazen serves the column, the match below is deleted and the
-//! column read in its place — that is the whole migration.
-//!
-//! **The refusal is per-ROLE, and removes nothing from the catalog.** The VISION
-//! §4.9 alignment monitor's check is structurally tool-less
-//! ([`crate::monitor::check`]: *"`bz` takes no tool flag, so tool-lessness here
-//! is structural rather than a promise"*) and pins a MODEL rather than a provider
-//! row, so a tool-less dialect is a legitimate target for it. What cannot be a
-//! lernie role's row is not thereby useless.
+//! **What the `protocol` column judges lives beside it** in
+//! [`capability`]: the tool-capability refusal (bl-3d22) and the context caveat
+//! (bl-671d), both keyed on brazen's own public `ProtocolId` over a total match.
+//! This module owns the columns; that one owns what a dialect does to a yog
+//! turn.
 //!
 //! **`auth` is the login capability.** brazen's `Provider::oauth` is documented
 //! `present exactly when auth = "oauth2"` — resolution pairs the two or fails
@@ -86,8 +54,8 @@ pub struct ProviderRow {
     /// file's stem.
     pub name: String,
     /// The wire dialect the row speaks, in brazen's own `ProtocolId` spelling
-    /// (`anthropic_messages`, `claude_code`, …) — the tool-capability fact
-    /// [`Self::tools_blocked`] reads.
+    /// (`anthropic_messages`, `claude_code`, …) — the column
+    /// [`capability`]'s two reads judge.
     pub protocol: String,
     /// brazen's credential model for the row: `oauth2` / `api_key` / `bearer` /
     /// `none`.
@@ -95,41 +63,6 @@ pub struct ProviderRow {
 }
 
 impl ProviderRow {
-    /// Why this row can carry no lernie **role**, or `None` when it can
-    /// (bl-3d22). Read by the §9.4 pick gate
-    /// ([`plan`](crate::model_pick::plan)) and by the picker's provider control,
-    /// which offers the row unselectably with this sentence beside it.
-    ///
-    /// Three answers, and the third is the load-bearing one. A dialect that
-    /// declines tools is refused, naming its protocol. A dialect that carries
-    /// them is fine. A spelling **this build's brazen does not know** is *no
-    /// answer* rather than a refusal — the same discipline
-    /// [`is_unknown_row`](crate::model_pick::grammar::is_unknown_row) applies to
-    /// an unanswerable table: no surface may refuse on the strength of a
-    /// question that went unanswered.
-    pub fn tools_blocked(&self) -> Option<String> {
-        match self.protocol_id()? {
-            brazen::ProtocolId::ClaudeCode => Some(format!(
-                "{} declares no tools — every yog turn carries at least the \
-                 `clients` tool, so this row can serve no role",
-                self.protocol
-            )),
-            brazen::ProtocolId::AnthropicMessages
-            | brazen::ProtocolId::OpenAiChat
-            | brazen::ProtocolId::OpenAiResponses
-            | brazen::ProtocolId::GoogleGenAi
-            | brazen::ProtocolId::OllamaChat => None,
-        }
-    }
-
-    /// The `protocol` column parsed back into brazen's own registry key, through
-    /// brazen's own serde rename — never a second table of spellings beside it.
-    /// `None` for a spelling this build cannot name, which is a *newer* brazen
-    /// or a degraded column, and in both cases an unanswered question.
-    fn protocol_id(&self) -> Option<brazen::ProtocolId> {
-        serde_json::from_value(serde_json::Value::String(self.protocol.clone())).ok()
-    }
-
     /// Why `bz --login` cannot serve this row, or `None` when it can (§8.3).
     /// The Login surface renders the button exactly when this is `None`, and
     /// **this sentence instead of a button** otherwise (bl-402f): a row that
@@ -241,6 +174,10 @@ fn column(row: &serde_json::Value, key: &str) -> String {
         .unwrap_or_default()
         .to_owned()
 }
+
+mod capability;
+
+pub use capability::CONTEXT_REMEDY;
 
 #[cfg(test)]
 mod tests;

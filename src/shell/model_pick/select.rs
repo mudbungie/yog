@@ -2,7 +2,7 @@
 //! routed through, which model, and — while the pane is open — which role is
 //! being changed at all. Coverage-excluded glue like the rest of `src/shell/*`;
 //! the judgements are [`default_row`](crate::model_pick::default_row) and
-//! [`plan`](crate::model_pick::plan)'s two refusals.
+//! [`plan`](crate::model_pick::plan)'s refusals.
 //!
 //! **The two dropdowns ARE the settings row** (bl-cd2a): the whole line becomes
 //! `<provider> - <model>` and nothing else. [`pair_row`] paints exactly that — two combo boxes and
@@ -20,15 +20,22 @@
 //! editor to add a row, and a free-entry id for a model brazen does not list —
 //! so neither dropdown is itself a dead end.
 //!
+//! **What is said above the pair is [`notes`]**, and one of its three sentences
+//! is a caveat rather than a refusal (bl-671d): a dialect that declines tools is
+//! shown unselectable because `plan` would reject the pick, while a dialect that
+//! leaves the context size to the server stays selectable and is merely stated.
+//!
 //! **Selection is the gesture (bl-fb6b).** There is no Set button: the model
 //! dropdown's click is the write, scoped to whichever role the row reports
 //! (`worker`, or whatever the pane's strip has re-scoped it to). The free-entry
 //! id is the one thing that does not commit as it is chosen — it commits on
 //! confirm, because a half-typed id is not a choice.
 
+mod notes;
+
 use super::PickerState;
-use crate::config_edit::brazen::{ProviderRow, row_names};
-use crate::model_pick::{ModelRow, default_row};
+use crate::config_edit::brazen::ProviderRow;
+use crate::model_pick::ModelRow;
 
 /// The provider list's last entry: not a row, a route to the §9.1 brazen
 /// `config.toml` editor, which is the one place a row is authored.
@@ -92,34 +99,10 @@ pub(super) fn pair_row(
     candidates: &[String],
     in_flight: bool,
 ) -> PairChoice {
-    // Where the dropdown lands, and what it had to leave behind to get there
-    // (bl-dd7f): a role stranded on a row brazen dropped is still steered off
-    // it, but the row it was stranded on is **named** — it is the row the
-    // conversation actually dispatched through, and so the reason its first
-    // turn died. Once the operator has picked something themselves there is no
-    // strand left to report: the selection is their own answer to it.
-    let scoped = default_row(&row.provider, &row_names(rows));
-    let strand = picker
-        .provider
-        .is_none()
-        .then(|| scoped.strand_note())
-        .flatten();
-    let provider = picker.provider.clone().unwrap_or(scoped.row);
-    if let Some(note) = strand {
-        ui.colored_label(crate::theme::ICHOR, note);
-    }
-    // The standing state, named where it can be left (bl-3d22): a role already
-    // sitting on a row whose protocol declines tools is a config whose next step
-    // dies at brazen's encoder, and the operator is looking at the one control
-    // that repairs it. `default_row` above still steers over the WHOLE table, so
-    // this row is reported rather than mistaken for one brazen dropped.
-    if let Some(why) = rows
-        .iter()
-        .find(|r| r.name == provider)
-        .and_then(ProviderRow::tools_blocked)
-    {
-        ui.colored_label(crate::theme::ICHOR, format!("⚠ {provider} {why}"));
-    }
+    // Where the dropdown lands, and everything standing that is worth saying
+    // about it ([`notes`]) — the strand it was steered off, a protocol that
+    // declines tools, a dialect that leaves the context size to the server.
+    let provider = notes::scoped_with_notes(ui, picker, row, rows);
     let shown = if picker.custom.is_some() {
         CUSTOM_MODEL.to_string()
     } else {

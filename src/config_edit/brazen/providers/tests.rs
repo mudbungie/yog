@@ -1,8 +1,8 @@
 //! The provider-table projection (§5.1 #20/#21, §8.3): listing order, the three
-//! consumed columns, the two capability reads over them — login off `auth`
-//! (§8.3) and tools off `protocol` (§9.4, bl-3d22) — the row view every surface
-//! renders (name · credential fact · offer), and the shapeless payload folding
-//! to no rows.
+//! consumed columns, the capability reads over them — login off `auth` (§8.3),
+//! and off `protocol` both the tool refusal (§9.4, bl-3d22) and the context
+//! caveat (bl-671d) — the row view every surface renders (name · credential
+//! fact · offer), and the shapeless payload folding to no rows.
 
 use super::{ProviderRow, provider_rows, row_views};
 
@@ -54,6 +54,69 @@ fn an_unspellable_protocol_answers_nothing_about_tools() {
         None,
         "an absent column asks nothing"
     );
+}
+
+/// bl-671d. The context caveat is the same column read the same way, and its
+/// answer is the *other* kind: `ollama_chat` — the `local` row here — states a
+/// fact and stays pickable, and no other shipped dialect answers at all. What
+/// the sentence claims about the wire is not asserted here but in
+/// `tests/brazen_ollama_context.rs`, which drives the linked brazen; this pins
+/// the words and the protocol they are keyed on.
+#[test]
+fn the_context_caveat_is_read_off_the_same_column() {
+    let rows = provider_rows(LIVE_LISTING);
+    assert_eq!(rows[1].protocol, "ollama_chat");
+    let caveat = rows[1]
+        .context_caveat()
+        .expect("ollama_chat declares no context size");
+    assert!(
+        caveat.starts_with("ollama_chat declares no context size"),
+        "{caveat}"
+    );
+    assert!(
+        caveat.contains("the server's own default governs"),
+        "{caveat}"
+    );
+    assert!(
+        caveat.contains("tool payload alone can exhaust it"),
+        "{caveat}"
+    );
+    for i in [0, 2, 3, 4] {
+        assert_eq!(
+            rows[i].context_caveat(),
+            None,
+            "row {i} carries its own context size"
+        );
+    }
+}
+
+/// The remedy is the operator's next move, not yog's: the two config lines that
+/// make an `ollama_chat` row carry a context, in the file that authors a row.
+/// Both halves are asserted because leaving either out silently loses — the
+/// nested `options` is dropped whole beside a typed cap, so the recipe must
+/// clear the typed cap AND restate the output limit inside the object.
+#[test]
+fn the_context_remedy_carries_both_halves() {
+    let remedy = super::CONTEXT_REMEDY;
+    assert!(
+        remedy.contains("unsupported_body_keys = [\"max_tokens\"]"),
+        "{remedy}"
+    );
+    assert!(remedy.contains("num_ctx = <your context>"), "{remedy}");
+    assert!(
+        remedy.contains("num_predict = <your output cap>"),
+        "{remedy}"
+    );
+    assert!(remedy.contains("dropped whole and silently"), "{remedy}");
+}
+
+/// An unnameable spelling answers nothing about the context either — the same
+/// discipline as the tool read, on the same parse.
+#[test]
+fn an_unspellable_protocol_answers_nothing_about_context() {
+    let rows =
+        provider_rows(r#"{"providers":[{"name":"x","protocol":"mystery_wire","auth":"none"}]}"#);
+    assert_eq!(rows[0].context_caveat(), None);
 }
 
 #[test]
