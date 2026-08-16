@@ -1,7 +1,8 @@
 +++
 title = "consume lernie 0.0.10: the chat-wedge fixes (alternation-wide unpaired decline, crash settlement at the drive boundary)"
 created = 1786844653
-updated = 1786844653
+updated = 1786845082
+claimant = "Dills"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
