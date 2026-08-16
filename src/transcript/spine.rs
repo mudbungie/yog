@@ -79,15 +79,16 @@ pub(super) fn rule(ui: &mut egui::Ui, index: usize, notch: &Notch, selected: &mu
                             .sense(egui::Sense::click()),
                     )
                     .on_hover_text(hover);
-                let (rect, line) = ui.allocate_exact_size(
-                    egui::vec2(ui.available_width(), RULE_HEIGHT),
-                    egui::Sense::click(),
-                );
-                ui.painter().hline(
-                    rect.x_range(),
-                    rect.center().y,
-                    egui::Stroke::new(1.0, hue.gamma_multiply(RULE_FAINT)),
-                );
+                // Same binding discipline as the rule below (bl-914f).
+                let size = egui::vec2(ui.available_width(), RULE_HEIGHT);
+                let (rect, line) = ui.allocate_exact_size(size, egui::Sense::click());
+                // Bound and one-lined rather than a multi-line call: tarpaulin's
+                // llvm engine misattributes a call's interior argument lines as
+                // uncovered, and which lines it picks moves with the dependency
+                // graph — this exact call went CI-red on a lockfile-only change
+                // (bl-914f, the steps_view "bound rather than chained" hazard).
+                let rule = egui::Stroke::new(1.0, hue.gamma_multiply(RULE_FAINT));
+                ui.painter().hline(rect.x_range(), rect.center().y, rule);
                 id.clicked() || line.on_hover_text(hover).clicked()
             })
             .inner
