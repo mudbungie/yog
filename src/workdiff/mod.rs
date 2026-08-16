@@ -42,6 +42,7 @@ use crate::binding::named_of;
 use crate::files_view::{MAX_ENTRIES, Preview, classify};
 use crate::git_tree::{file_patch, head_branch, numstat, rev_parse};
 
+mod candidates;
 mod plan;
 mod render;
 pub(crate) mod wire;
@@ -105,15 +106,27 @@ pub struct Attempt {
     /// nor unsee.
     pub project: String,
     pub ball_id: String,
+    /// balls' opaque attempt handle when this row is a §3.8 fan candidate
+    /// (bl-c2bd); `None` is the ordinary claim attempt, whose source is
+    /// `work/<id>` rather than `attempt/<handle>`.
+    pub handle: Option<String>,
+    /// The delivery commit the target's history records for this attempt — the
+    /// **derived acceptance mark** (VISION V3.2), never a stored winner. `None`
+    /// is one fact covering pending and rejected alike, because rejection is
+    /// the absence of a delivery (§4.10 item 6).
+    pub delivered: Option<String>,
     pub change: Change,
 }
 
 /// One file of one attempt — what a patch read is asked for. The ball id
 /// rides along because a workspace may hold more than one attempt and a bare
-/// path would not say which diff it belongs to.
+/// path would not say which diff it belongs to; the handle rides for the same
+/// reason one row deeper — a fan's candidates all carry the obligation's ball,
+/// and only the handle says which candidate's diff the path belongs to.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorkFile {
     pub ball: String,
+    pub handle: Option<String>,
     pub path: String,
 }
 
@@ -132,62 +145,82 @@ impl Attempt {
 }
 
 /// Every attempt the workspace at `workspace` holds, read against its project
-/// repo. An empty vec is the honest answer for a workspace that claims no ball
-/// — a bare or path start has no delivery obligation (VISION §4.10 item 8),
-/// which is the general path with no inputs rather than an arm of its own.
-pub fn read(snap: &Snapshot, workspace: &Path) -> Vec<Attempt> {
+/// repo: the claim attempts (the §3.2 claimant join), then the §3.8 fan
+/// candidates the workspace's own trail binds (bl-c2bd) — claims first, so a
+/// [`WorkFile`] naming no handle finds the claim row it always found. An empty
+/// vec is the honest answer for a workspace that claims no ball — a bare or
+/// path start has no delivery obligation (VISION §4.10 item 8), which is the
+/// general path with no inputs rather than an arm of its own.
+pub fn read(
+    snap: &Snapshot,
+    workspace: &Path,
+    entries: &[crate::opslog::OpEntry],
+    xdg: &balls::layout::Xdg,
+) -> Vec<Attempt> {
     let Some(name) = named_of(&snap.workspaces, workspace) else {
         return Vec::new();
     };
-    plan::plans(&snap.balls_by_project, &name)
+    let mut out: Vec<Attempt> = plan::plans(&snap.balls_by_project, &name)
         .into_iter()
         .map(|plan| {
             let named = snap.project_name(&plan.project);
             resolve(plan, named)
         })
-        .collect()
+        .collect();
+    out.extend(candidates::candidates(snap, workspace, entries, xdg, &name));
+    out
 }
 
-/// Resolve one plan against its project repo: name the target, resolve both
-/// ends, then count the churn between them.
+/// Resolve one plan against its project repo: name the target, then read the
+/// churn between the two ends ([`diff_change`]).
 fn resolve(plan: plan::Plan, project: String) -> Attempt {
     let source = work_branch(&plan.ball_id);
     let attempt = |change| Attempt {
         project: project.clone(),
         ball_id: plan.ball_id.clone(),
+        handle: None,
+        delivered: None,
         change,
     };
     let Ok(Some(head)) = head_branch(&plan.project) else {
         return attempt(Change::Unreadable);
     };
     let target = plan.target_ball.as_deref().map_or(head, work_branch);
-    let resolved = |spec: &str| rev_parse(&plan.project, spec).ok().flatten();
+    attempt(diff_change(&plan.project, target, source))
+}
+
+/// The git half of one attempt's read, shared by the claim rows and the fan
+/// candidates (bl-c2bd): resolve both ends of `target..source`, then count the
+/// churn between them. Pure over the repo — which ref plays which part is
+/// entirely the caller's derivation.
+fn diff_change(project: &Path, target: String, source: String) -> Change {
+    let resolved = |spec: &str| rev_parse(project, spec).ok().flatten();
     let (Some(target_oid), Some(source_oid)) = (resolved(&target), resolved(&source)) else {
         let missing = [&target, &source]
             .into_iter()
             .filter(|spec| resolved(spec).is_none())
             .cloned()
             .collect();
-        return attempt(Change::Absent {
+        return Change::Absent {
             target,
             source,
             missing,
-        });
+        };
     };
-    let Ok(out) = numstat(&plan.project, &format!("{target}..{source}")) else {
-        return attempt(Change::Unreadable);
+    let Ok(out) = numstat(project, &format!("{target}..{source}")) else {
+        return Change::Unreadable;
     };
     let mut files = plan::parse_numstat(&out);
     let truncated = files.len() > MAX_ENTRIES;
     files.truncate(MAX_ENTRIES);
-    attempt(Change::Diff {
+    Change::Diff {
         target,
         source,
         target_oid,
         source_oid,
         files,
         truncated,
-    })
+    }
 }
 
 /// One file's patch, out of the attempt `file.ball` names — the bounded bytes
@@ -201,7 +234,9 @@ fn resolve(plan: plan::Plan, project: String) -> Attempt {
 /// becomes the repository a `git` read can run in — the same resolution
 /// [`read`] spells in the other direction, at the same one place.
 pub fn patch(snap: &Snapshot, attempts: &[Attempt], file: &WorkFile) -> Option<Preview> {
-    let attempt = attempts.iter().find(|a| a.ball_id == file.ball)?;
+    let attempt = attempts
+        .iter()
+        .find(|a| a.ball_id == file.ball && a.handle == file.handle)?;
     let range = attempt.range()?;
     if matches!(attempt.change, Change::Absent { .. }) {
         return None;

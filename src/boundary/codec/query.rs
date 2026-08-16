@@ -43,10 +43,15 @@ pub(super) fn encode(query: &Query) -> Value {
             let mut map = obj(&[("op", "work-diff")]);
             map.insert("workspace".to_owned(), json!(workspace));
             if let Some(file) = file {
-                map.insert(
-                    "file".to_owned(),
-                    json!({ "ball": file.ball, "path": file.path }),
-                );
+                let mut f = obj(&[]);
+                f.insert("ball".to_owned(), json!(file.ball));
+                // Absent for the ordinary claim attempt (bl-c2bd): only a fan
+                // candidate's patch needs the row named one level deeper.
+                if let Some(handle) = &file.handle {
+                    f.insert("handle".to_owned(), json!(handle));
+                }
+                f.insert("path".to_owned(), json!(file.path));
+                map.insert("file".to_owned(), Value::Object(f));
             }
             Value::Object(map)
         }
@@ -218,6 +223,7 @@ fn work_file(obj: &Map<String, Value>) -> Result<Option<crate::workdiff::WorkFil
     let file = value.as_object().ok_or("file: not a JSON object")?;
     Ok(Some(crate::workdiff::WorkFile {
         ball: str_of(file, "ball")?,
+        handle: opt_str_of(file, "handle")?,
         path: str_of(file, "path")?,
     }))
 }

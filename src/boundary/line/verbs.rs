@@ -199,8 +199,10 @@ fn spec(rest: &str, ctx: &Context, verb: &str) -> Result<BallSpec, String> {
     }
 }
 
-/// `/work-diff [<ball> <path>]` — the file a patch read names, or nothing at
-/// all for the listing.
+/// `/work-diff [<ball> [<handle>] <path>]` — the file a patch read names, or
+/// nothing at all for the listing. Three words name a fan candidate's file
+/// (bl-c2bd): its cohort's candidates all carry the obligation's ball, so only
+/// the handle says whose diff the path belongs to.
 pub(super) fn work_file(
     tail: &str,
     verb: &str,
@@ -209,9 +211,17 @@ pub(super) fn work_file(
         [] => Ok(None),
         [ball, path] => Ok(Some(crate::workdiff::WorkFile {
             ball: (*ball).to_owned(),
+            handle: None,
             path: (*path).to_owned(),
         })),
-        _ => Err(format!("/{verb}: usage: /work-diff [<ball> <path>]")),
+        [ball, handle, path] => Ok(Some(crate::workdiff::WorkFile {
+            ball: (*ball).to_owned(),
+            handle: Some((*handle).to_owned()),
+            path: (*path).to_owned(),
+        })),
+        _ => Err(format!(
+            "/{verb}: usage: /work-diff [<ball> [<handle>] <path>]"
+        )),
     }
 }
 

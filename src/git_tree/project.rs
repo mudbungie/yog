@@ -7,10 +7,11 @@
 //! `GIT_DIR`/`GIT_INDEX_FILE`, §16), and a second fork site would be a second
 //! place for that scrub to be forgotten.
 //!
-//! Four reads, all pure: name the integration branch, resolve a ref to a
-//! commit, count the churn between two commits, and read one file's patch.
-//! Nothing here writes, and nothing here spends a balls or lernie verb — the
-//! project diff is a pure git read (VISION §4.10 item 4).
+//! Five reads, all pure: name the integration branch, resolve a ref to a
+//! commit, count the churn between two commits, read one file's patch, and
+//! find the delivery commit a subject tag names. Nothing here writes, and
+//! nothing here spends a balls or lernie verb — the project diff is a pure
+//! git read (VISION §4.10 item 4).
 
 use super::GitTreeError;
 use super::cmd::{git, git_optional};
@@ -53,4 +54,29 @@ pub(crate) fn numstat(repo: &Path, range: &str) -> Result<Vec<u8>, GitTreeError>
 /// operator asks for that file.
 pub(crate) fn file_patch(repo: &Path, range: &str, path: &str) -> Result<Vec<u8>, GitTreeError> {
     git(repo, &["diff", range, "--", path])
+}
+
+/// The newest commit on `refspec` whose message carries `needle` **verbatim**
+/// (`--fixed-strings`, so a `[bl-…]`/`[at-…]` delivery tag is a string, never a
+/// pattern) — balls' own tag-scan, read from yog's side (VISION §4.10 item 6:
+/// acceptance is the target's history, never a stored mark). `None` covers a
+/// refspec that does not resolve here and a history that carries no such tag:
+/// both are "this target records no such delivery".
+pub(crate) fn log_marker(
+    repo: &Path,
+    refspec: &str,
+    needle: &str,
+) -> Result<Option<String>, GitTreeError> {
+    let grep = format!("--grep={needle}");
+    let args = [
+        "log",
+        "--fixed-strings",
+        &grep,
+        "--format=%H",
+        "-n1",
+        refspec,
+    ];
+    Ok(git_optional(repo, &args)?
+        .map(|out| String::from_utf8_lossy(&out).trim().to_owned())
+        .filter(|oid| !oid.is_empty()))
 }

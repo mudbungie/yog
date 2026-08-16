@@ -76,6 +76,10 @@ pub enum Reply {
     Retired {
         discarded: bool,
     },
+    /// The `deliver` action's product (VISION V3.2): the identities one
+    /// candidate's delivery acted on — a receipt, never a stored winner; the
+    /// standing fact is the tagged squash the target's history now carries.
+    Delivered(crate::fan::Delivery),
     /// The `prompt` action's product: the minted conversation name (§3.3).
     Started {
         conversation: String,

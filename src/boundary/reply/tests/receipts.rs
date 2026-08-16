@@ -89,3 +89,20 @@ fn the_fan_reply_rows_re_enter_as_prompt_gestures() {
         assert_eq!(v["ok"], true);
     }
 }
+
+/// The delivery receipt says absence by saying nothing (bl-c2bd): an unmade
+/// source ref and a delivery that landed nothing are **absent** fields, never
+/// nulls — upstream's own meaning kept on the wire.
+#[test]
+fn a_delivery_receipt_says_absence_by_saying_nothing() {
+    let v = encode(&Reply::Delivered(crate::fan::Delivery {
+        target: "work/bl-1".into(),
+        base: "aaa1".into(),
+        source: None,
+        commit: None,
+    }));
+    assert_eq!(v["kind"], "delivered");
+    assert_eq!(v["target"], "work/bl-1");
+    assert!(v.get("source").is_none(), "{v}");
+    assert!(v.get("commit").is_none(), "{v}");
+}

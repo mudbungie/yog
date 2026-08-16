@@ -202,8 +202,10 @@ pub fn candidate_worktrees(
 
 /// The claim this workspace last made: the project the row ran in and the ball
 /// id it named. The **last** matching row wins — a re-claim supersedes — and a
-/// workspace that never claimed through yog has none.
-fn claimed(entries: &[OpEntry], claimant: &str) -> Option<(PathBuf, String)> {
+/// workspace that never claimed through yog has none. `pub(crate)` since
+/// bl-c2bd: the work-diff's candidate rows read the fan's obligation from this
+/// same rule rather than keeping a second copy of it.
+pub(crate) fn claimed(entries: &[OpEntry], claimant: &str) -> Option<(PathBuf, String)> {
     entries
         .iter()
         .rev()

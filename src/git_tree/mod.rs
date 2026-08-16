@@ -75,7 +75,7 @@ pub use probe::Probe;
 pub use probe_stack::ProbeStack;
 // The **project** repo's reads (§5.1 #32), consumed by [`crate::workdiff`] —
 // the same doorway discipline one repo over.
-pub(crate) use project::{file_patch, head_branch, numstat, rev_parse};
+pub(crate) use project::{file_patch, head_branch, log_marker, numstat, rev_parse};
 pub use state::AgentState;
 // The live-tail fold and the file it folds, shared with the §7.2 follower
 // (`app::live`) so the JSONL delta parser is never duplicated (§15 Y12:

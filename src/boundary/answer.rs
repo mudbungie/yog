@@ -97,7 +97,13 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // Answered straight through for the same reason search is — every
         // seat reaching here is already off-frame.
         Query::WorkDiff { file, .. } => {
-            let attempts = crate::workdiff::read(snap, ws);
+            // The claim rows come off the snapshot; the fan's candidate rows
+            // (bl-c2bd) come off the same two yog-owned facts the §8.6
+            // writable root reads — the trail's claim row and its fire rows —
+            // so the trail is read here, where the question is asked.
+            let entries = crate::opslog::tail(&deps.state_root, usize::MAX);
+            let xdg = deps.world.balls_layout();
+            let attempts = crate::workdiff::read(snap, ws, &entries, &xdg);
             let patch = file
                 .as_ref()
                 .and_then(|f| crate::workdiff::patch(snap, &attempts, f));

@@ -37,12 +37,26 @@ pub fn render(
     });
 }
 
-/// One attempt: what it is, then what git says about it.
+/// One attempt: what it is, then what git says about it. A fan candidate
+/// (bl-c2bd) additionally wears its handle, and — when the target's history
+/// records its delivery — the derived acceptance mark, which is the only kind
+/// of "winner" there is (VISION V3.2).
 fn render_attempt(ui: &mut egui::Ui, attempt: &Attempt, sel: &mut Option<WorkFile>) {
     ui.horizontal(|ui| {
         ui.strong(&attempt.ball_id);
+        if let Some(handle) = &attempt.handle {
+            ui.monospace(handle)
+                .on_hover_text("A fan candidate: one isolated attempt on this ball's target.");
+        }
         ui.weak(&attempt.project)
             .on_hover_text("The project this ball's work is delivered into.");
+        if let Some(delivered) = &attempt.delivered {
+            ui.strong(format!("delivered {}", short(delivered)))
+                .on_hover_text(
+                    "The target's own history records this attempt's delivery — derived from \
+                     the tagged squash, stored nowhere.",
+                );
+        }
     });
     match &attempt.change {
         Change::Unreadable => {
@@ -80,15 +94,18 @@ fn render_attempt(ui: &mut egui::Ui, attempt: &Attempt, sel: &mut Option<WorkFil
                     ));
                 ui.weak(format!("{} … {}", short(target_oid), short(source_oid)));
             });
-            render_files(ui, &attempt.ball_id, files, *truncated, sel);
+            render_files(ui, attempt, files, *truncated, sel);
         }
     }
 }
 
-/// The changed-file rows, or the plain fact that there are none.
+/// The changed-file rows, or the plain fact that there are none. The pick
+/// carries the whole row identity — ball *and* handle — because a fan's
+/// candidates all wear the obligation's ball and only the handle says whose
+/// diff a path belongs to (bl-c2bd).
 fn render_files(
     ui: &mut egui::Ui,
-    ball: &str,
+    attempt: &Attempt,
     files: &[FileChurn],
     truncated: bool,
     sel: &mut Option<WorkFile>,
@@ -98,9 +115,9 @@ fn render_files(
         return;
     }
     for file in files {
-        let picked = sel
-            .as_ref()
-            .is_some_and(|s| s.ball == ball && s.path == file.path);
+        let picked = sel.as_ref().is_some_and(|s| {
+            s.ball == attempt.ball_id && s.handle == attempt.handle && s.path == file.path
+        });
         let label = format!("{}  {}", churn_label(&file.churn), file.path);
         if ui
             .selectable_label(picked, label)
@@ -111,7 +128,8 @@ fn render_files(
             .clicked()
         {
             *sel = Some(WorkFile {
-                ball: ball.to_owned(),
+                ball: attempt.ball_id.clone(),
+                handle: attempt.handle.clone(),
                 path: file.path.clone(),
             });
         }

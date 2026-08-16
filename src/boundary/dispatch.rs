@@ -131,16 +131,11 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             seed,
         } => prompt(deps, ui, ts, ws, prepared, goal, *seed)
             .map(|conversation| Reply::Started { conversation }),
-        // The §3.8 mutating fan's two (bl-8746), one family variant since
-        // bl-a33d: spread N candidates off one pinned target, or retire one.
-        Action::Fan(crate::fan::Verb::Spread {
-            prepared,
-            obligation,
-            n,
-        }) => fan::spread(deps, ts, prepared, obligation, *n),
-        Action::Fan(crate::fan::Verb::Retire { obligation, handle }) => {
-            fan::retire(deps, ts, obligation, handle)
-        }
+        // The §3.8 mutating fan's family (bl-8746; V3's delivery, bl-c2bd),
+        // one variant since bl-a33d: spread N candidates off one pinned
+        // target, retire one, or deliver one — routed as the monitor's and
+        // the fleet's families are.
+        Action::Fan(verb) => fan::dispatch(deps, ts, verb),
         Action::DeleteWorkspace { typed, .. } => unmake(deps, ui, ts, ws, typed),
         Action::DeleteAgent { agent, typed, .. } => delete_agent(deps, ui, ts, ws, agent, typed),
         Action::Monitor(verb) => monitor::dispatch(deps, ts, ws, verb),

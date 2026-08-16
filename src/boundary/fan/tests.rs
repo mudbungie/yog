@@ -1,6 +1,8 @@
 //! The two boundary executors against a real project repo and a real trail:
 //! what each answers, and the `ops.jsonl` line each leaves either way.
 
+mod deliver;
+
 use std::path::PathBuf;
 use std::sync::Arc;
 

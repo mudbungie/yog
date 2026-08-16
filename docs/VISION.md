@@ -870,7 +870,30 @@ Machine state: V2's fan, finished.
 Burden check: judging is a dispatch the operator can also simply not do;
 reading the fan costs nothing.
 
-### V4 — Admiral: the board runs the fleet
+**Mechanism landed (bl-c2bd); the seat and the story graduate as bl-77bc.**
+Three implementation rulings amend the items above and are the authority over
+their first wording:
+
+- **Item 2 landed as the fan family's third boundary gesture**,
+  `Fan(fan::Verb::Deliver)` — `/deliver <handle> <summary…>`,
+  `{"op":"deliver"}` — balls' one delivery law spent by handle, nothing added
+  to it. The mark is `fan::delivered_commit`: the `[<handle>]` tag-scan over
+  the target ref's own history, so "the UI's mark is a rendered consequence of
+  the target's history" is literal — the same absence covers pending and
+  rejected, because rejection is the absence of a delivery, and no reject verb
+  exists anywhere.
+- **Item 1 needed no code at all**, and that absence is its implementation:
+  Judge and Synthesize are V2's fire path with a goal carrying the candidates'
+  exact terminal refs, which the work-diff rows state per candidate
+  (`source_oid` of `work/<id>..attempt/<handle>`). Adding any fan-in carrier
+  would have stored a group the refs already imply.
+- **Item 3's ruled project diff renders on the Work surface** (DESIGN §5.1
+  #32, `workdiff::candidates`): one row per cohort member at the ruled range,
+  wearing the derived mark, on both frontends through the existing
+  `Query::WorkDiff` — the patch drill-in addressed by ball *and* handle. The
+  group card itself — N picked in a seat, response diff and wall time side by
+  side, Judge/Synthesize/Deliver as clicks — is bl-77bc's, composed with
+  bl-40ab's per-attempt projection; neither owns the other's surface.
 
 Machine state: a project with a decomposed backlog; fleet mode armed.
 

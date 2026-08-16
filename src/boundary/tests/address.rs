@@ -163,6 +163,14 @@ fn the_actions_that_name_no_workspace_say_so() {
             },
             handle: "at-0badcafe".into(),
         }),
+        Action::Fan(Verb::Deliver {
+            obligation: crate::fan::Obligation {
+                project: "p".into(),
+                ball: None,
+            },
+            handle: "at-0badcafe".into(),
+            summary: "take it".into(),
+        }),
         Action::ApplyConfig {
             file: super::super::config::ConfigFile::Cadence,
             text: String::new(),

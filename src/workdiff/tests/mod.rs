@@ -8,6 +8,7 @@
 //! invocation path is. It is not the workspace fixture: nothing here reads a
 //! lernie workspace.
 
+mod candidates;
 mod paint;
 mod plan;
 mod read;
@@ -94,6 +95,23 @@ pub(super) fn close_gate(mut parent: Ball, child: &str) -> Ball {
         on: "close".to_owned(),
     });
     parent
+}
+
+/// The balls layout the candidate rows resolve attempt paths under — pointed
+/// at a throwaway root, because a test with no fire rows reads nothing off it.
+pub(super) fn xdg(root: &Path) -> balls::layout::Xdg {
+    balls::layout::Xdg::with(
+        &root.join("home"),
+        None,
+        Some(&root.join("state").to_string_lossy()),
+    )
+}
+
+/// [`crate::workdiff::read`] with an empty trail: the claim rows alone, which
+/// is every read that predates the fan's candidate rows (bl-c2bd).
+pub(super) fn read0(snap: &Snapshot, ws: &Path) -> Vec<crate::workdiff::Attempt> {
+    let dir = tempfile::tempdir().unwrap();
+    crate::workdiff::read(snap, ws, &[], &xdg(dir.path()))
 }
 
 /// A snapshot carrying one named workspace and one project's live balls —

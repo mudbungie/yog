@@ -1,17 +1,18 @@
-//! The mutating fan's two boundary executors (VISION §4.10, bl-8746): spread a
-//! prepared start over N candidates, and retire one of them. Split out of
+//! The mutating fan's three boundary executors (VISION §4.10, bl-8746; V3's
+//! delivery, bl-c2bd): spread a prepared start over N candidates, retire one
+//! of them, and deliver one of them. Split out of
 //! [`dispatch`](super::dispatch) for the reason every other family is — the
 //! chokepoint is a table, and a table stops being one when arms carry bodies.
 //!
-//! **Both are in-process calls into the linked balls crate, not spawns**, and
-//! that is upstream's own ruling rather than a yog shortcut: balls' attempt
+//! **All three are in-process calls into the linked balls crate, not spawns**,
+//! and that is upstream's own ruling rather than a yog shortcut: balls' attempt
 //! capability has no `bl` verb and *must not* have one, because a verb would be
 //! a second entry point to a capability whose whole point is that the N = 1 ball
 //! path and the N > 1 candidate paths are one mechanism. So the §4.2 trail
-//! records them as **steps** (`["yog-step","fan"]` / `["yog-step","retire"]`)
-//! rather than as argv rows — the same shape the arming writes and the start
-//! flow's mint use, and the same rule: an attempted action always leaves a
-//! durable line, whichever kind it was.
+//! records them as **steps** (`["yog-step","fan"]` / `["yog-step","retire"]` /
+//! `["yog-step","deliver"]`) rather than as argv rows — the same shape the
+//! arming writes and the start flow's mint use, and the same rule: an attempted
+//! action always leaves a durable line, whichever kind it was.
 
 use std::time::SystemTime;
 
@@ -22,16 +23,36 @@ use crate::start::Prepared;
 use super::dispatch::Deps;
 use super::reply::Reply;
 
-/// The step names the two gestures log under.
+/// The step names the three gestures log under.
 const FAN_STEP: &str = "fan";
 const RETIRE_STEP: &str = "retire";
+const DELIVER_STEP: &str = "deliver";
+
+/// Route one fan-family verb to its executor — the chokepoint's whole arm
+/// (`Action::Fan(verb)`), the fold the monitor's and the fleet's families
+/// already take on their side of the table.
+pub(super) fn dispatch(deps: &Deps, ts: &str, verb: &fan::Verb) -> Result<Reply, String> {
+    match verb {
+        fan::Verb::Spread {
+            prepared,
+            obligation,
+            n,
+        } => spread(deps, ts, prepared, obligation, *n),
+        fan::Verb::Retire { obligation, handle } => retire(deps, ts, obligation, handle),
+        fan::Verb::Deliver {
+            obligation,
+            handle,
+            summary,
+        } => deliver(deps, ts, obligation, handle, summary),
+    }
+}
 
 /// Materialize N candidates and answer with the prepared start rebound to each
 /// (§4.10 item 1). Nothing is fired here: each element is spent by the ordinary
 /// [`Prompt`](super::Action::Prompt) gesture, so the §3.5 spend ceiling gates
 /// every birth exactly as it gates a single start and this door needs no gate
 /// of its own.
-pub(super) fn spread(
+fn spread(
     deps: &Deps,
     ts: &str,
     prepared: &Prepared,
@@ -51,12 +72,7 @@ pub(super) fn spread(
 /// expired. The two are separate balls calls and the policy is world config, so
 /// deleting the `retention:` entry restores the standing default — keep the ref
 /// — without touching a line of this.
-pub(super) fn retire(
-    deps: &Deps,
-    ts: &str,
-    obligation: &Obligation,
-    handle: &str,
-) -> Result<Reply, String> {
+fn retire(deps: &Deps, ts: &str, obligation: &Obligation, handle: &str) -> Result<Reply, String> {
     let xdg = deps.world.balls_layout();
     let repo = deps.snapshot.project_path(&obligation.project)?;
     let keep = retention::keep(&cadence(deps), &repo);
@@ -74,6 +90,26 @@ pub(super) fn retire(
         spent.map_err(|e| e.to_string()),
     )
     .map(|()| Reply::Retired { discarded })
+}
+
+/// **Deliver candidate** (VISION V3.2, §4.10 items 5–6): accept one candidate
+/// by the ordinary recursive source-to-target delivery. Everything that gates
+/// it is upstream's one law — a stale source refuses before anything merges,
+/// the repo's own hook gates the exact source tree — and everything it answers
+/// is what the delivery itself computed ([`fan::Delivery`]). No winner is
+/// stored anywhere: the reply is a receipt, and the standing fact is the tagged
+/// squash the target's history now carries.
+fn deliver(
+    deps: &Deps,
+    ts: &str,
+    obligation: &Obligation,
+    handle: &str,
+    summary: &str,
+) -> Result<Reply, String> {
+    let xdg = deps.world.balls_layout();
+    let repo = deps.snapshot.project_path(&obligation.project)?;
+    let spent = fan::deliver(obligation, &repo, &xdg, handle, summary).map_err(|e| e.to_string());
+    logged(deps, ts, &repo, DELIVER_STEP, spent).map(Reply::Delivered)
 }
 
 /// The world's clock-settings file, which is where every yog policy block lives

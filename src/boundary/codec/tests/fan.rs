@@ -40,6 +40,11 @@ fn both_fan_envelopes_round_trip() {
             obligation: obligation(ball),
             handle: "at-0badcafe".into(),
         })));
+        rt(Gesture::Act(Action::Fan(Verb::Deliver {
+            obligation: obligation(ball),
+            handle: "at-0badcafe".into(),
+            summary: "take the winner — spaces stay".into(),
+        })));
     }
     // N of one is a lawful fan (the ordinary path), and so is N of none.
     for n in [0, 1] {
@@ -84,7 +89,7 @@ fn encoded(envelope: &serde_json::Value) -> String {
 }
 
 #[test]
-fn a_malformed_fan_or_retirement_refuses_with_a_reason() {
+fn a_malformed_fan_retirement_or_delivery_refuses_with_a_reason() {
     let prepared = json!({"name": "n", "workspace": "/ws", "binding": null,
                           "goal": "g", "origin": "balls"});
     let cases: Vec<(serde_json::Value, &str)> = vec![
@@ -113,6 +118,14 @@ fn a_malformed_fan_or_retirement_refuses_with_a_reason() {
         (
             json!({"op": "retire", "project": "/dev/proj"}),
             "field \"handle\"",
+        ),
+        (
+            json!({"op": "deliver", "project": "/dev/proj", "summary": "s"}),
+            "field \"handle\"",
+        ),
+        (
+            json!({"op": "deliver", "project": "/dev/proj", "handle": "at-1"}),
+            "field \"summary\"",
         ),
     ];
     for (envelope, needle) in cases {

@@ -191,27 +191,35 @@ fn every_start_rung_and_the_prompt_round_trip() {
     }));
 }
 
-/// The §4.10 fan's two: N is the whole line, the handle is the whole line, and
-/// the obligation is the seat's — so both round-trip **modulo context**, the
-/// parity claim the line makes everywhere.
+/// The seat's own delivery obligation, as every fan-family line reads it.
+fn obligation() -> crate::fan::Obligation {
+    crate::fan::Obligation {
+        project: "proj".to_owned(),
+        ball: Some("bl-1".to_owned()),
+    }
+}
+
+/// The §4.10 fan's three: N is the whole line, the handle is the whole line,
+/// the delivery's summary is the verbatim tail after its handle, and the
+/// obligation is the seat's — so all round-trip **modulo context**, the parity
+/// claim the line makes everywhere.
 #[test]
-fn the_fan_and_the_retirement_round_trip() {
+fn the_fan_family_round_trips() {
     for n in [0, 1, 5] {
         rt(Gesture::Act(Action::Fan(Verb::Spread {
             prepared: prepared(),
-            obligation: crate::fan::Obligation {
-                project: "proj".to_owned(),
-                ball: Some("bl-1".to_owned()),
-            },
+            obligation: obligation(),
             n,
         })));
     }
     rt(Gesture::Act(Action::Fan(Verb::Retire {
-        obligation: crate::fan::Obligation {
-            project: "proj".to_owned(),
-            ball: Some("bl-1".to_owned()),
-        },
+        obligation: obligation(),
         handle: "at-0badcafe".to_owned(),
+    })));
+    rt(Gesture::Act(Action::Fan(Verb::Deliver {
+        obligation: obligation(),
+        handle: "at-0badcafe".to_owned(),
+        summary: "take the winner — internal  spaces stay".to_owned(),
     })));
 }
 

@@ -23,6 +23,29 @@ pub(super) fn receipts() -> Vec<Reply> {
             goal: "g".into(),
             origin: Origin::Balls,
         }),
+        // The fan family's three receipts (§3.8; V3's delivery). The fanned
+        // rows are `prepared` bodies; the delivery is taken at both of its
+        // shapes — the landed squash, and upstream's "the target already
+        // contained everything the source had", whose two fields are absent.
+        Reply::Fanned(vec![Prepared {
+            workspace: crate::naming::leaf(&(PathBuf::from("/ws"))),
+            binding: Some(PathBuf::from("/candidate")),
+            goal: "g".into(),
+            origin: Origin::Balls,
+        }]),
+        Reply::Retired { discarded: true },
+        Reply::Delivered(crate::fan::Delivery {
+            target: "work/bl-1f2a".into(),
+            base: "aaa1".into(),
+            source: Some("bbb2".into()),
+            commit: Some("ccc3".into()),
+        }),
+        Reply::Delivered(crate::fan::Delivery {
+            target: "main".into(),
+            base: "aaa1".into(),
+            source: None,
+            commit: None,
+        }),
         Reply::Started {
             conversation: "brave-fox".into(),
         },

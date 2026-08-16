@@ -177,6 +177,19 @@ pub const ACTIONS: &[HelpRow] = &[
                  the candidate has outlived it. Retiring changes no delivery target, ever.",
     },
     HelpRow {
+        verb: "deliver",
+        usage: "/deliver <handle> <summary…>",
+        summary: "accept one candidate: the ordinary source-to-target delivery of its attempt",
+        detail: "Delivers the named candidate onto the focused ball's own `work/<id>` ref — the \
+                 same recursive delivery `bl close` later performs one level up, so accepting \
+                 neither closes the ball nor changes what its close delivers. The summary is \
+                 the whole tail, verbatim: it becomes the delivery subject, which balls tags \
+                 with the handle — the only acceptance mark there is, derived from the target's \
+                 history rather than stored. A stale candidate refuses before anything merges: \
+                 message its agent to incorporate the current target in its own worktree and \
+                 deliver again. Rejection has no verb — a loser is simply never delivered.",
+    },
+    HelpRow {
         verb: "fork",
         usage: "/fork --from <ref> --role <role> [--skills a,b] --goal <the goal…>",
         summary: "try this conversation again from a point in its history",

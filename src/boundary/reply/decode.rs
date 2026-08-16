@@ -68,6 +68,12 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
     Some(match kind {
         "outcome" => outcome(o),
         "prepared" => prepared(o),
+        // The fan family's three receipts (§3.8; V3's delivery, bl-c2bd): the
+        // rebound prepared bodies, the retirement's one fact, and the
+        // delivery's four identities.
+        "fanned" => fanned(o),
+        "retired" => bool_of(o, "discarded").map(|discarded| Reply::Retired { discarded }),
+        "delivered" => delivered(o),
         "started" => str_of(o, "conversation").map(|conversation| Reply::Started { conversation }),
         "deleted" => Ok(Reply::Deleted),
         "armed" => bool_of(o, "armed").map(|armed| Reply::Armed { armed }),
@@ -92,6 +98,24 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
 fn prepared(o: &Map<String, Value>) -> Result<Reply, String> {
     let body = o.get("prepared").ok_or("prepared: missing prepared")?;
     prepared_from_value(body).map(Reply::Prepared)
+}
+
+/// The fan's rows ARE `prepared` bodies, read by the same reader `prompt`
+/// spends — one spelling in both directions.
+fn fanned(o: &Map<String, Value>) -> Result<Reply, String> {
+    list_of(o, "rows", prepared_from_value).map(Reply::Fanned)
+}
+
+/// The delivery's four identities (V3.2). The two options read back as the
+/// absences they were written as — an unmade source ref and a delivery that
+/// landed nothing are facts, not empty strings.
+fn delivered(o: &Map<String, Value>) -> Result<Reply, String> {
+    Ok(Reply::Delivered(crate::fan::Delivery {
+        target: str_of(o, "target")?,
+        base: str_of(o, "base")?,
+        source: opt_str_of(o, "source")?,
+        commit: opt_str_of(o, "commit")?,
+    }))
 }
 
 /// The captured run. `ok` is read back from `exit` rather than from the key

@@ -3,11 +3,14 @@
 //! a fake would test the fake. The fixture is a project (an integration branch
 //! with one commit), which is what a balls invocation path is.
 
+mod delivery;
+
 use std::path::PathBuf;
 
 use tempfile::{TempDir, tempdir};
 
-use super::{Candidate, Obligation, discard, one_base, open, release, resume, spread};
+use super::spread::one_base;
+use super::{Candidate, Obligation, discard, open, release, resume, spread};
 use crate::git_tree::tests::git::{git_out, run_git};
 use crate::opslog::Origin;
 use crate::start::Prepared;

@@ -233,7 +233,7 @@ fn a_ball_rung_prepare_carries_its_project_and_the_other_rungs_none() {
     assert_eq!(prompt.project(), None);
 }
 
-/// The §4.10 fan's two act in a project's refs rather than on its board, and
+/// The §4.10 fan's three act in a project's refs rather than on its board, and
 /// the §3.5 projection reads that project — so they name it too.
 #[test]
 fn the_fan_family_names_its_project() {
@@ -254,8 +254,13 @@ fn the_fan_family_names_its_project() {
             n: 3,
         }),
         Action::Fan(Verb::Retire {
+            obligation: obligation.clone(),
+            handle: "at-0badcafe".into(),
+        }),
+        Action::Fan(Verb::Deliver {
             obligation,
             handle: "at-0badcafe".into(),
+            summary: "take it".into(),
         }),
     ] {
         assert_eq!(action.project(), Some(p.clone()), "{action:?}");
