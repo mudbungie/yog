@@ -61,6 +61,10 @@ mod piped;
 /// per-spawn stderr sink. Split out to hold [`self`] under the 300-line cap.
 mod detach;
 
+/// The confinement wrapper seam (§8.6): [`Cli::and_wrapper`] and the
+/// wrapper-aware spawn base every shape starts from.
+mod wrap;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cli {
     /// The **physical** executable this `Cli` execs. Host mode: the resolved
@@ -83,6 +87,14 @@ pub struct Cli {
     /// This crate stays generic: it layers whatever pairs it is handed, knowing
     /// nothing of *which* vars nest (that fact lives in [`crate::world`]).
     env: Vec<(String, String)>,
+    /// The **physical** argv words standing *in front of* `program` — the OS
+    /// confinement backend and its flags for a spawn a workspace policy
+    /// confines (§8.6, [`wrap`]), empty otherwise. Generic here like `env`:
+    /// whatever words are handed prepend; which backend they name lives in
+    /// [`crate::control::confine`]. Invisible to the *logical*
+    /// [`binary`](Self::binary) and to [`exec_words`](Self::exec_words) — the
+    /// trail and the W9 shim record the act, not its envelope.
+    wrapper: Vec<String>,
 }
 
 impl Cli {
@@ -119,7 +131,9 @@ impl Cli {
     }
 
     /// The **physical** argv words that exec this tool: `program` followed by
-    /// the namespace `prefix` (empty in host mode). One spawn of this `Cli` is
+    /// the namespace `prefix` (empty in host mode) — deliberately blind to any
+    /// confinement [`wrap`]per, which the shim must never re-enter (the shim
+    /// already runs *inside* the sandbox). One unwrapped spawn of this `Cli` is
     /// exactly these words plus the caller's args — which is why the world's
     /// tool shim (§16.7 W9) is written from them: the shim an agent runs can
     /// never name a different target than yog's own spawns. Owned (rule 2).
@@ -176,14 +190,13 @@ impl Cli {
         args: &[&str],
         stdin: Option<&[u8]>,
     ) -> Result<Stream, CliError> {
-        // Physical spawn (§16.7 W12): `program` + the namespace `prefix` (empty
-        // in host mode), then the caller's args. Built through `git_env` like
-        // every child: the ambient git env is scrubbed for the whole descendant
-        // tree, so a `bl`/`lernie` that forks git of its own accord cannot be
-        // re-aimed at a hook's repo (bl-916a).
-        let mut cmd = crate::git_env::command(&self.program);
-        cmd.args(&self.prefix)
-            .args(args)
+        // Physical spawn (§16.7 W12): the wrapper when one stands (§8.6), then
+        // `program` + the namespace `prefix` (empty in host mode), then the
+        // caller's args — [`wrap`]'s spawn base, built through `git_env` like
+        // every child so the ambient git env is scrubbed for the whole
+        // descendant tree (bl-916a).
+        let mut cmd = self.spawn_base();
+        cmd.args(args)
             .envs(self.standing_env())
             .envs(env.iter().copied())
             .stdin(match stdin {
@@ -198,7 +211,7 @@ impl Cli {
         // Callers hold `SPAWN_LOCK` across the spawn so no fork lands while a peer holds a not-yet-closed write fd (ETXTBSY; test_support).
         let mut child = cmd
             .spawn()
-            .map_err(|e| CliError::spawn(&self.program, cwd, e))?;
+            .map_err(|e| CliError::spawn(self.exec_target(), cwd, e))?;
         // Written and closed at once: the child reads its whole input and sees
         // EOF, which is what "the input on stdin" means. A write that fails is
         // a child that closed the pipe or died — not a spawn failure, and its

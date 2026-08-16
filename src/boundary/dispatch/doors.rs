@@ -101,7 +101,12 @@ pub fn prompt(
             &deps.world,
             workspace,
             own_space,
-        ));
+        ))
+        // The §8.6 confinement wrapper, when the workspace's live policy
+        // requires one: unconditional under the policy — the gate above proved
+        // availability, and a backend that vanished since fails this spawn
+        // loudly rather than running bare. Empty otherwise.
+        .and_wrapper(crate::control::confine::wrapper(&deps.world, workspace));
     start::execute_prompt(
         &lernie,
         &deps.state_root,

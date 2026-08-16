@@ -148,30 +148,20 @@ pub(super) fn advance(deps: &Deps, ts: &str, workspace: &Path, agent: &str) -> R
     spawn.map(|_pid| ()).map_err(|e| e.to_string())
 }
 
-/// The §4.11 item-8 **confinement refusal**: a workspace whose live policy
-/// declares `confinement: required` fires no drone on a platform that provides
-/// no confinement layer.
-///
-/// yog provides none today — lernie's sandbox seam is reserved for its v1.1
-/// (its ARCH §3.6) and no platform facility is wired — so a workspace that
-/// declares the requirement refuses every birth, loudly. That is the whole
-/// point: *never a silent fallback, never a promised wall that isn't there*. It
-/// is also why no UI affordance renders for the layer (no capability theatre) —
-/// the only surface a missing layer earns is this refusal.
+/// The §4.11 item-8 **confinement gate**: a workspace whose live policy
+/// declares `confinement: required` fires a drone only where the platform's
+/// one backend proves itself at this very birth — the derivation, the probe
+/// and the refusal all live in [`crate::control::confine`]; this is the doors'
+/// name for them. On Linux the backend is bubblewrap and a passing probe means
+/// the fired spawn runs wrapped (the doors fold the wrapper on); everywhere
+/// else, and wherever the probe fails, the standing refusal names exactly why.
+/// Never a silent fallback, and no UI affordance for an absent layer — the
+/// only surface it earns is the refusal.
 ///
 /// Severable in both directions: absent, the gate is a no-op with nothing
 /// configured; present, removing the line removes the policy, not the code.
 pub(super) fn confinement_gate(workspace: &Path) -> Result<(), String> {
-    if crate::control::policy::Policy::read(workspace).confinement_required {
-        return Err(format!(
-            "{}: its capability policy declares `confinement: required`, and this platform \
-             provides no confinement layer — no drone is fired. Remove the line from \
-             {} on config/default to fire without one.",
-            workspace.display(),
-            crate::control::policy::CAPABILITY_YAML,
-        ));
-    }
-    Ok(())
+    crate::control::confine::gate(workspace)
 }
 
 #[cfg(test)]

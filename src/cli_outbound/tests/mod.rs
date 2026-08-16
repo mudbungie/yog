@@ -30,6 +30,7 @@ mod run;
 mod spawn;
 mod stream;
 mod streamed;
+mod wrap;
 
 fn write_script(dir: &Path, name: &str, body: &str) -> (PathBuf, SpawnGuard) {
     let guard = spawn_guard();

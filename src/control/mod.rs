@@ -44,6 +44,7 @@ use crate::xdg::Env;
 pub mod author;
 pub mod bash;
 pub mod classify;
+pub mod confine;
 pub mod hold;
 pub mod judge;
 pub mod lex;

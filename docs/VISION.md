@@ -643,10 +643,12 @@ mediation.
    executes arbitrary `build.rs` under a pass. The defense is layered by
    design: unmatched effects fail to a hold (this section), sustained drift
    is the monitor's job (§4.9), and evasion is the OS-confinement layer's —
-   lernie's reserved v1.1 sandbox seam (ARCH §3.6) or platform facilities,
-   later and platform-explicit. A workspace policy may declare confinement
-   *required*, and arming then refuses where the platform cannot provide it
-   — never a silent fallback, never a promised wall that isn't there.
+   platform facilities, platform-explicit (Linux's bubblewrap landed as
+   yog's per-drone envelope, DESIGN §8.6/bl-bca4; lernie's reserved v1.1
+   sandbox seam, ARCH §3.6, remains the later, finer per-tool clamp). A
+   workspace policy may declare confinement *required*, and arming then
+   refuses where the platform cannot provide it — never a silent fallback,
+   never a promised wall that isn't there.
 
 9. **Implementation** (yog only — lernie, balls, and brazen file nothing):
    bl-fec8 (the control shim, classifier, judgment fold, template

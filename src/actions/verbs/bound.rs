@@ -54,12 +54,19 @@ pub struct Bound {
 impl Bound {
     /// Bind `lernie` to `workspace` inside `world`: `YOG_WALL` (§16.2) and
     /// `YOG_NAME` (§3.3) layered **on top of** the world `Cli`'s standing
-    /// nesting set, which [`Cli::and_env`] extends rather than replaces.
+    /// nesting set, which [`Cli::and_env`] extends rather than replaces — and
+    /// the §8.6 confinement wrapper when the workspace's live policy requires
+    /// one, folded here for the same reason the wall is: stated once, at the
+    /// edge that knows the workspace, so no verb — including one written later
+    /// — can spawn a workspace-bound child outside the sandbox its policy
+    /// demands. Empty when the policy states nothing (severability).
     pub fn at(lernie: &Cli, world: &crate::xdg::Env, workspace: &Path) -> Self {
         let mut layer = crate::world::wall::pairs(world, workspace);
         layer.push((YOG_NAME.to_owned(), crate::naming::leaf(workspace)));
         Self {
-            cli: lernie.and_env(layer),
+            cli: lernie
+                .and_env(layer)
+                .and_wrapper(crate::control::confine::wrapper(world, workspace)),
             workspace: workspace.to_path_buf(),
         }
     }

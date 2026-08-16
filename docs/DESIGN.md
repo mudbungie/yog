@@ -4169,21 +4169,44 @@ to *be* that executable and to own every fact it reads.
   goal; the boundary rules what an agent may ever do. That is why this is a
   capability action beside the answer rather than an arm of the monitor family
   — §4.9's ladder spends existing verbs from the families that own them.
-- **The confinement refusal is a birth gate, at the two doors a drone is born
+- **The confinement gate is a birth gate, at the two doors a drone is born
   through** (VISION §4.11 item 8): `dispatch::prompt` (every start, above the
   §3.5 spend ceiling — a birth that will not happen has no spend to judge) and
-  the `Fork` arm (every attempt). yog wires no confinement layer today, so a
-  workspace declaring `confinement: required` refuses every birth, by name.
-  That is the point: never a silent fallback. It is also why the missing layer
-  gets no affordance anywhere — the only surface an absent capability earns is
-  the refusal that names it. V4's armed loop (bl-66fb) reads this same gate.
-- **What this is not.** Not confinement: the ambient PATH, network, and the
-  deliberately-shared brazen credentials (§16.2) stay reachable by an
-  *allowed* invocation, and rule classification bounds accident, not
-  adversarial evasion — VISION §4.11 item 8 carries the honest threat
-  model, the alignment monitor covers drift, and the OS layer (lernie's
-  reserved v1.1 sandbox seam) is later and platform-explicit, with
-  confinement-required workspaces refusing to arm where it is absent.
+  the `Fork` arm (every attempt). Since bl-bca4 yog wires **one
+  platform-explicit backend**: Linux's bubblewrap (`bwrap`), shelled as a
+  subprocess exactly as §16.7 mints certificates by shelling to `openssl` —
+  no crate, no `unsafe`, and its absence on a box *is* the derived
+  unavailability. The gate's availability is **derived at each birth, never
+  stored**: a probe runs the exact sandbox shape a wrap spends, and a
+  `confinement: required` workspace fires only when it passes — on any other
+  OS, or under a failing probe, the standing refusal names exactly why. Past
+  the gate the fire is **wrapped**: the backend argv rides yog's own lernie
+  spawn seam (`Bound::at` and the prompt door — the same two folds the §16.2
+  wall takes, so every workspace-bound lernie spawn a policy confines is
+  confined by construction, revived drivers included), and the wrap is
+  *unconditional under the policy*, so a backend that vanishes between gate
+  and spawn fails the exec loudly, naming `bwrap` — never a silent fallback.
+  The **support boundary** is explicit: *filesystem writes* are clamped — the
+  host tree re-bound read-only, writable exactly the derived set (the
+  workspace, the composed world root, the host `/tmp`; a project repo outside
+  the world is read-only to a confined drone, so its own `bl close` cannot
+  deliver — a stated v1 bound). *Process access*, *environment* and *network*
+  are **not** clamped, each for a named reason: a pid namespace dies with its
+  init and lernie's short verbs detach drivers that must outlive them (its
+  ARCH §2.9; `lernie stop` also signals by host pid); the env is already
+  composed explicitly at yog's spawn boundary; and the drone's model calls
+  are HTTPS from its own tree — unsharing the net severs the loop from its
+  brain. An absent layer still gets no affordance anywhere — the only surface
+  it earns is the refusal that names it. V4's armed loop (bl-66fb) reads this
+  same gate.
+- **What this is not.** Not total confinement: the host tree stays *readable*,
+  the network stays open, and the deliberately-shared brazen credentials
+  (§16.2) stay reachable by an *allowed* invocation — the OS layer bounds the
+  write-accident class, rule classification bounds the rest of accident, not
+  adversarial evasion. VISION §4.11 item 8 carries the honest threat model,
+  the alignment monitor covers drift, and lernie's reserved v1.1 sandbox seam
+  (its ARCH §3.6 — a per-tool capability clamp, finer than this per-drone
+  envelope) remains later and lernie's own.
 
 Shipped-state landed with bl-fec8 (shim, classifier, fold, authoring), bl-765d
 (policy config, the hold-answer variant, the sixth attention signal, the
@@ -7935,6 +7958,7 @@ beside `main.rs`.
 | `src/cli_outbound/stream.rs` | the live-handle half: the running-subprocess handle whose iteration yields chunks (final item always the exit) and whose drop terminates the child — SIGTERM, then SIGKILL after a short grace (§2.9) |
 | `src/cli_outbound/streamed.rs` | the **streamed-piped** spawn class (§8, §8.3): both output streams line-buffered off a running child, each line tagged with the stream it came from, plus the terminal exit — the shape `bz --login` renders through (§5.3) |
 | `src/cli_outbound/sys.rs` | the crate's confined `unsafe` — `libc::kill` for the drop's best-effort SIGTERM, and `set_env` for the world fold a substrate arm stands in (§16.2, bl-81c9); the one audited home `rules/unsafe-outside-sys.yml` leaves it (AGENTS.md rule 3) |
+| `src/cli_outbound/wrap.rs` | the **confinement wrapper** seam (§8.6): a physical argv prefix standing in front of `program` the way the namespace `prefix` stands behind it, generic here like the standing env — which backend the words name lives in `control/confine`. The logical `binary()`, the ops-log argv and the W9 shim stay wrapper-blind: the trail records the act, and the shim runs *inside* the sandbox, where re-wrapping would nest a second one |
 | `src/composer/mod.rs` | the §11 inbox-composer's derivations (bl-929d): the pending-queue row projection over the snapshot's §5.1 #11 listing (fold key = the deposit's inbox path, §5.3; each row's §11 role from the one `theme::role` mapping, bl-3acb), and `SnapState` — the derived fold-line height (settled content, capped at half the pane) plus the snap-down ease whose trigger is the pending count dropping, per target |
 | `src/composer/recall.rs` | the §11 prompt recall (bl-f908): `prompts` — the operator's own turns in this conversation, newest first, folded from the pending listing (§5.1 #11) and the delivered transcript (§5.1 #12) through the one `theme::message_role` derivation and stored nowhere — plus `Caret`, the visual-row gate that decides whether ↑/↓ are the box's or the caret's, and `Recall`, the two-field walk whose *exit* is a derivation (the draft is no longer the entry we put there) rather than a reset call at each site |
 | `src/config_edit/mod.rs` | §9's root: load → edit a RAM draft → Apply = stage → validate → hash-guard → atomic rename, one discipline across every file-editing surface |
@@ -7950,6 +7974,7 @@ beside `main.rs`.
 | `src/config_edit/pipeline.rs` | the write pipeline every §9 editor shares: the one home for how a draft reaches disk without a torn write or a silent last-writer-wins over a concurrent edit |
 | `src/context/{mod,render}.rs` | §5.1 #35 — the context-fullness query (the root's latest step's prompt against the window `models.yaml` declares, `None` wherever nothing measured can be said) and the one line §11's settings rows paint from it. Pure over `Snapshot::bills`; the prompt reading's two-provider rule lives in its header and nowhere else |
 | `src/control/{mod,wire,classify,bash,lex,rules,policy,hold,root,judge,author}.rs` | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; lernie's two wire shapes; the effect vocabulary and the built-in intrinsic map; the bash ruleset over every program a command runs; the shell lexer that finds them; the shipped ruleset as data; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` lernie's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated — its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
+| `src/control/confine.rs` | the **OS confinement backend** (§8.6, VISION §4.11 item 8, bl-bca4): the platform switch (Linux is bubblewrap, shelled like §16.7's openssl mint — no crate, no `unsafe`; every other OS an explicit refusal naming itself), the availability probe that runs the exact sandbox shape a wrap spends (derived at each birth, never stored), the birth-gate refusal both drone doors call, and the wrapper argv — the fixed shape plus the derived writable set (workspace, world root, host `/tmp`), unconditional under a `confinement: required` policy so an absent backend fails the spawn loudly rather than falling back bare |
 | `src/delete/{mod,exec}.rs` | the §3.6 unmake: pure confirmation + plan; the logged runner |
 | `src/delete/agent.rs` | the §3.6 one-conversation delete (bl-f17a): the member-scoped gate, the blast-radius arming, the `DeleteReport` census parse, the dry-run and removal spawns |
 | `src/elide.rs` | **where to cut a string that will not fit** (QUALITY G1, L4; bl-3aa1) — one rule, *cut where the information is not*. Prose is written front-first and keeps its head, so the eight prose sites (previews, reasons, titles) are correct as they stand and are deliberately NOT routed here — a module claiming every cut while they kept their own would be a false claim. A **machine string** (absolute path, spawned `argv`, ancestry chain) is invariant at the front and distinguishing at the back, and that is `middle`'s case and the only one: the activity rows all opened with the same `/home/<user>/.cache/…/data/yog/` run, over half the row, while the workspace leaf and agent id that told two operations apart were exactly what the old head-keeping cut discarded. Carries a legibility FLOOR a tighter cap is raised to, since `…e` names nothing. The other half of L4 — an **id**, whose distinguishing end is a whole terminal segment rather than a character count — is a floor and not a cut, and keeps its one home in `nav::convs::id_floor` (bl-63a1) |

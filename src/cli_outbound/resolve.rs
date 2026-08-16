@@ -125,6 +125,7 @@ impl Cli {
             program: binary.into(),
             prefix: Vec::new(),
             env: Vec::new(),
+            wrapper: Vec::new(),
         }
     }
 
@@ -137,6 +138,7 @@ impl Cli {
             program: current_exe,
             prefix: vec![namespace.to_string()],
             env: Vec::new(),
+            wrapper: Vec::new(),
         }
     }
 

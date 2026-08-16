@@ -44,11 +44,11 @@ impl Cli {
         args: &[&str],
     ) -> Result<u32, CliError> {
         use std::os::unix::process::CommandExt;
-        // Physical spawn (§16.7 W12): `program` + the namespace `prefix`,
-        // scrubbed of the ambient git env like every child (`crate::git_env`).
-        let mut cmd = crate::git_env::command(&self.program);
-        cmd.args(&self.prefix)
-            .args(args)
+        // Physical spawn (§16.7 W12): the wrapper when one stands (§8.6), then
+        // `program` + the namespace `prefix` — the shared spawn base, scrubbed
+        // of the ambient git env like every child (`crate::git_env`).
+        let mut cmd = self.spawn_base();
+        cmd.args(args)
             // The detached driver nests too (§16.6 W2): the standing world env
             // rides the long-lived `lernie prompt` so its agents' own tool
             // subprocesses inherit the nested `$XDG_STATE_HOME` (§16.4).
@@ -67,7 +67,7 @@ impl Cli {
         // not-yet-closed recorder write fd (ETXTBSY, `crate::test_support`).
         let child = cmd
             .spawn()
-            .map_err(|e| CliError::spawn(&self.program, cwd, e))?;
+            .map_err(|e| CliError::spawn(self.exec_target(), cwd, e))?;
         let pid = child.id();
         reap(child);
         Ok(pid)
