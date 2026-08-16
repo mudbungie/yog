@@ -18,7 +18,11 @@
 # or remote verdicts silently stop matching (that is the fingerprint refusing
 # to vouch across toolchains, not a bug).
 #
-# yog is a PRIVATE repo: these runs bill GitHub Actions minutes.
+# yog is a PUBLIC repo (2026-08-13 publication): standard hosted runners are
+# free with no minutes quota. What remains bounded is concurrency and GitHub's
+# fair-use backstop (balls design bl-24e7, Remote builders) — merge-queue CI
+# for the project itself is squarely the intended use; keep hedge-build volume
+# bounded anyway.
 name: speculate
 on:
   push:
@@ -73,15 +77,21 @@ jobs:
       - name: Install ast-grep 0.44.1
         if: steps.astgrep-cache.outputs.cache-hit != 'true'
         run: cargo install ast-grep --version 0.44.1 --locked
-      - name: Cache bl-speculate (balls 0.5.10)
+      # Cargo.toml is the pin authority (CLAUDE.md rule 6) — the balls version
+      # is READ from it, never restated here, so the workflow cannot go stale
+      # against the manifest the way a copied version already has once.
+      - name: resolve the balls pin from Cargo.toml
+        id: balls-pin
+        run: echo "version=$(sed -n 's/^balls = "=\(.*\)"$/\1/p' Cargo.toml)" >> "$GITHUB_OUTPUT"
+      - name: Cache bl-speculate (balls, pinned by Cargo.toml)
         id: speculate-cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cargo/bin/bl-speculate
-          key: bl-speculate-0.5.10-${{ runner.os }}
-      - name: Install bl-speculate (balls 0.5.10)
+          key: bl-speculate-${{ steps.balls-pin.outputs.version }}-${{ runner.os }}
+      - name: Install bl-speculate (balls, pinned by Cargo.toml)
         if: steps.speculate-cache.outputs.cache-hit != 'true'
-        run: cargo install balls --version 0.5.10 --locked --bin bl-speculate
+        run: cargo install balls --version "${{ steps.balls-pin.outputs.version }}" --locked --bin bl-speculate
       - name: run the stock gate (it records the verdict on pass)
         run: BALLS_IDENTITY=github-actions scripts/pre-commit
       - name: record the failure the aborting gate cannot

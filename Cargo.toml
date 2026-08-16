@@ -25,7 +25,7 @@ categories = ["development-tools", "gui"]
 # (`reads::Catalog`/`Entry`, `record::task_json`, W8) and the plugin-binary lib
 # seam (`delivery_bin::run`/`tracker::run`, U-balls-3) the bl-2930 multiplex
 # arms stand on — plus the current §7 plugin wire (`command.id`).
-balls = "=0.5.10"
+balls = "=0.5.11"
 # The embedded LLM adapter (DESIGN §16.7 W10). EXACT pin: `native-host` re-exposes
 # the `bz` bin's impure shim (ureq/rustls transport, XDG credential store + model
 # cache) with NO semver contract, so the version is the contract — and the lockfile
