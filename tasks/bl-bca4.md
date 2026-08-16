@@ -1,7 +1,8 @@
 +++
 title = "wire the missing OS confinement backend for unattended agents"
 created = 1786843679
-updated = 1786843679
+updated = 1786845815
+claimant = "Confine-bca4"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["missing", "security", "confinement", "agentic"]
