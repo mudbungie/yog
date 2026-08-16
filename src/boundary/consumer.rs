@@ -56,8 +56,11 @@ pub struct ConsumerCtx {
 
 impl ConsumerCtx {
     /// One pass: skip cheaply when the inbox is empty, else consume it against
-    /// the latest published snapshot and a freshly-opened `ui.json` (the §4.1
-    /// write-through copy — the frame adopts any change it makes, §7.1).
+    /// the environment [`deps`](Self::deps) builds — the latest published
+    /// snapshot over the live workspace enumeration — and a freshly-opened
+    /// `ui.json` (the §4.1 write-through copy — the frame adopts any change it
+    /// makes, §7.1). The empty-inbox skip is ahead of all of it, so a quiet
+    /// world costs one directory listing per poll and not two.
     pub fn pass(&self) -> usize {
         if deposit::pending(&self.state_root).is_empty() {
             return 0;
@@ -110,8 +113,10 @@ impl ConsumerCtx {
     }
 
     /// The per-gesture [`Deps`] every intake builds — freshly against whatever
-    /// the worker has published, with this moment's stamp beside it. `scope`
-    /// is the REMOTE §4 narrowing: `None` for an in-world caller, the client's
+    /// the worker has published, with this moment's stamp beside it, and with
+    /// the **workspace set re-asked of disk** rather than taken off that
+    /// derivation (bl-6c9e: birth is a barrier, see below). `scope` is the
+    /// REMOTE §4 narrowing: `None` for an in-world caller, the client's
     /// registered workspace names for a connection.
     fn deps(
         &self,
@@ -120,7 +125,16 @@ impl ConsumerCtx {
     ) -> (Deps, String, i64) {
         let ts = self.clock.stamp();
         let now_unix: i64 = ts.parse().unwrap_or(0);
-        let published = crate::state::latest_snapshot(&self.cell);
+        // **The workspace set is asked, not remembered** (bl-6c9e,
+        // [`addressable`](crate::app::addressable)): a `Prepare` that founds a
+        // wall answers before the worker has enumerated it, so a resolution over
+        // the *cached* set refused the very name the last reply made
+        // addressable. Three readdirs (§3.1) on this off-frame intake are what
+        // make a success reply a barrier for the call after it.
+        let published = crate::app::addressable(
+            crate::state::latest_snapshot(&self.cell),
+            crate::binding::workspaces(&self.yog_data_root, &self.world.lernie_data_root()),
+        );
         let deps = Deps {
             lernie: self.lernie.clone(),
             bl: self.bl.clone(),

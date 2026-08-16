@@ -260,6 +260,14 @@ resolution refused every name the enumeration lacked. It can only **found**,
 never join: a directory already at that path refuses with the resolver's own
 sentence, so a create is never a way into a workspace the scope hides.
 
+**Since bl-6c9e that refusal is about SCOPE and nothing else.** The enumeration
+the resolution reads is now the live one (§8), so "exists but is not in my set"
+no longer includes *the wall this very caller founded a millisecond ago* — the
+case that made a second `Prepare` refuse, and made every non-`Prepare` gesture
+naming the newborn refuse with it, since no raise fallback covers a gesture that
+founds nothing. What the guard still catches is another client's workspace hidden
+by scope, and a directory that is not a §3.1 workspace at all.
+
 That refusal is the one place existence is observable to a scoped client, and
 the ruling is that this is acceptable and bounded: **a namespace with creation
 *by name* cannot also make a name's availability unknowable**, and §4 chose
@@ -795,6 +803,25 @@ in a ball body.
   spells `Snapshot::ws_name` / `project_name` where a seat's *selection* becomes
   a gesture (`AppModel::line_context`, the click-glue), over the same enumerated
   sets the resolvers read. Two directions, one mapping.
+- **The set it resolves over is the live enumeration, so a birth is a barrier**
+  *(bl-6c9e)*. The intake builds each gesture's environment with the §3.1
+  enumeration as disk holds it — three readdirs, folded over the published
+  derivation's cached copy by `app::addressable` — and only then narrows it by
+  scope. Resolving over the *cached* set meant an act that founds a workspace
+  answered before the worker had enumerated it, so the very next call refused the
+  name that reply had just made addressable: `/prepare` then `/prompt` could not
+  compose two processes deep, and the window's own posted receipt earned `unknown
+  workspace` for the wall its previous act had founded. **When an action returns a
+  newly addressable resource, its success reply is a barrier for every boundary
+  call after it** — kept as a *query*, not a claim: nothing stored, nothing
+  republished, no wait. Three consequences, all of them wanted. Scope is
+  untouched, because it still narrows by **registration** and the create's
+  auto-registration writes that in the same breath — the live set makes a wall
+  *enumerable*, never *authorized*, and a certificate nobody seated still gets
+  `unknown workspace "x"` for a workspace it can prove exists. The steady state
+  allocates nothing (the two sets agree; the published `Arc` is handed straight
+  back). And the rule runs backwards for free: a workspace §3.6 deleted stops
+  resolving at once rather than at the next sweep.
 - **A reply speaks the name where it IDENTIFIES and the path where the path
   IS the answer.** `WsRow` identified a workspace by carrying the whole
   `Workspace` — path, kind and, for a named one, a `name` beside the path. It

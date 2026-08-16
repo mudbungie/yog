@@ -18,10 +18,20 @@ use super::{Action, Deps};
 /// name it founds is the operator's typed name exactly as at bootstrap.
 ///
 /// **It can only ever found, never join.** A directory already at that path is
-/// a workspace this caller's enumeration does not hold — a stale snapshot, or
-/// the REMOTE §4 scope hiding another client's — and joining it would be the
-/// privilege escalation the scope exists to prevent, so it refuses with the
-/// resolver's own sentence. That refusal is also the one place existence is
+/// something this caller's enumeration does not hold, and joining it would be
+/// the privilege escalation the scope exists to prevent, so it refuses with the
+/// resolver's own sentence.
+///
+/// **Since bl-6c9e that is a statement about SCOPE and nothing else.** The
+/// enumeration the intake hands over is now the live one
+/// ([`addressable`](crate::app::addressable)), so "exists but is not in my set"
+/// no longer includes *a wall this very caller founded a millisecond ago* — the
+/// case that made a second `Prepare` refuse, and that made every non-`Prepare`
+/// gesture naming the newborn refuse with it. What is left is the REMOTE §4
+/// scope hiding another client's workspace, and a directory that is not a §3.1
+/// workspace at all (no `repo.git`, so no root enumerates it).
+///
+/// That refusal is also the one place existence is
 /// observable to a scoped client, which REMOTE §4 records as a ruling: a
 /// namespace with creation *by name* cannot also make a name's availability
 /// unknowable, and what leaks is a name, never a workspace's contents.

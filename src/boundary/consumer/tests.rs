@@ -2,6 +2,10 @@
 //! snapshot, and the one thing only a real thread can prove — spawn, consume,
 //! stop. The fixtures the REMOTE §4 half builds its worlds from live here too.
 
+/// **Birth is a barrier** (bl-6c9e): the two-call composition every documented
+/// start flow is, at both intakes. Its own file beside [`scope`] for that
+/// file's reason — a real seam, and the one the drive reproduced on.
+mod birth;
 /// The scoped intake (REMOTE §4, bl-8bbc): what a connection enumerates, what
 /// an unregistered name earns, and the create that seats its own client. Its
 /// own file at §12's cap — a real seam, because everything above is the
@@ -54,19 +58,51 @@ fn over(
     }
 }
 
-/// A snapshot holding one named workspace per element of `names`, under `root`.
+/// A world holding one named workspace per element of `names` under `root` —
+/// **on disk and in the snapshot both**, because since bl-6c9e the intake
+/// resolves over the §3.1 enumeration rather than over the cached copy. A
+/// fixture that claimed a workspace no root holds was claiming something no
+/// gesture could ever have addressed.
 fn world_of(root: &std::path::Path, names: &[&str]) -> crate::app::Snapshot {
     let mut snap = crate::app::Snapshot::empty(0);
     snap.workspaces = names
         .iter()
-        .map(|name| crate::binding::Workspace {
-            path: crate::binding::workspace_path(root, name),
-            kind: crate::binding::WorkspaceKind::Named {
-                name: (*name).to_owned(),
-            },
+        .map(|name| {
+            let path = crate::binding::workspace_path(root, name);
+            std::fs::create_dir_all(path.join("repo.git")).expect("a workspace on disk");
+            crate::binding::Workspace {
+                path,
+                kind: crate::binding::WorkspaceKind::Named {
+                    name: (*name).to_owned(),
+                },
+            }
         })
         .collect();
     snap
+}
+
+/// A `lernie` that materializes what the real one does for a start's substrate
+/// steps — the world's seed marker and the workspace's config branch — and
+/// nothing else. `prime` is short-circuited by [`seed`] ahead of it.
+fn fake_lernie(dir: &std::path::Path) -> Cli {
+    use std::os::unix::fs::PermissionsExt;
+    let body = format!(
+        "#!/bin/sh\ncase \"$1\" in\n{arm}esac\nexit 0\n",
+        arm = crate::test_support::authoring_new_arm()
+    );
+    let path = dir.join("lernie");
+    std::fs::write(&path, body).unwrap();
+    let mut perms = std::fs::metadata(&path).unwrap().permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(&path, perms).unwrap();
+    Cli::new(path)
+}
+
+/// Lay the world's seed marker so `prime` short-circuits (§16.6 W3).
+fn seed(yog_data_root: &std::path::Path) {
+    let lernie = crate::world::layout_under(yog_data_root).lernie;
+    std::fs::create_dir_all(&lernie).unwrap();
+    std::fs::write(lernie.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
 /// The workspace names a `workspaces` reply lists.

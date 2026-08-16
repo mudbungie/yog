@@ -25,10 +25,12 @@ fn a_wire_client_enumerates_only_its_registrations() {
     assert_eq!(listed(&reply), ["home".to_owned()]);
 
     // An in-world caller holds no certificate and is not scoped (§3): the
-    // deposit inbox is the world's own residents' door.
+    // deposit inbox is the world's own residents' door. Sorted by path, because
+    // the set is the §3.1 enumeration (I9's stable roster) and not the order a
+    // fixture happened to name them in.
     assert_eq!(
         listed(&ctx.answer(&json!({"op": "workspaces"}))),
-        ["home".to_owned(), "corp".to_owned()]
+        ["corp".to_owned(), "home".to_owned()]
     );
     // A certificate the operator has not seated sees no workspace at all —
     // the general path with no registrations, not a bootstrap case.
@@ -78,30 +80,6 @@ fn a_torn_envelope_refuses_over_the_wire_too() {
             .unwrap_or_default()
             .contains("enhance")
     );
-}
-
-/// A `lernie` that materializes what the real one does for a start's substrate
-/// steps — the world's seed marker and the workspace's config branch — and
-/// nothing else. `prime` is short-circuited by seeding ahead of it.
-fn fake_lernie(dir: &std::path::Path) -> Cli {
-    use std::os::unix::fs::PermissionsExt;
-    let body = format!(
-        "#!/bin/sh\ncase \"$1\" in\n{arm}esac\nexit 0\n",
-        arm = crate::test_support::authoring_new_arm()
-    );
-    let path = dir.join("lernie");
-    std::fs::write(&path, body).unwrap();
-    let mut perms = std::fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    std::fs::set_permissions(&path, perms).unwrap();
-    Cli::new(path)
-}
-
-/// Lay the world's seed marker so `prime` short-circuits (§16.6 W3).
-fn seed(yog_data_root: &std::path::Path) {
-    let lernie = crate::world::layout_under(yog_data_root).lernie;
-    std::fs::create_dir_all(&lernie).unwrap();
-    std::fs::write(lernie.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
 /// **A workspace created over the wire auto-registers its creating client**

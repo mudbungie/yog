@@ -2312,6 +2312,16 @@ The frame's whole interface to everything that does is the cells in
   retired **before** the fold runs, so the painted set can never carry one
   workspace twice.
 
+  **The engine does not hold this claim, and must not** (bl-6c9e). The same
+  ordering ran backwards at the *boundary* — where it refused gestures rather
+  than mis-aiming a focus — and the answer there is the opposite one: the
+  intake **asks disk** for the §3.1 enumeration per gesture (§8.5,
+  `app::addressable`), because it is off-frame and the authority is three
+  readdirs. So the two are not two mechanisms for one fact. A frame does no IO,
+  which is exactly why it needs an optimistic claim; an intake does, which is
+  why it needs none, and why a gesture is still decided by *the derivation,
+  never the fold*.
+
   **A migrated surface reads rows, not a snapshot, so the echo has a second
   projection** (REMOTE §9.7, bl-44e9): `echo::rows::with_echo` folds the same
   value onto an answered §11 conversation list. Two projections of one fact is
@@ -3279,6 +3289,33 @@ gesture (`Snapshot::ws_name`/`project_name`). Two directions, one mapping,
 nothing stored. A path still crosses where the path **is** the fact rather than
 an identity — a written file's location, a worktree the operator opens, and the
 `--cwd` binding a `Prepared` carries back to the engine that minted it.
+
+**The set that resolution reads is the live enumeration, and that is what makes
+a birth a barrier** (bl-6c9e). The engine's intake builds each gesture's
+environment with the §3.1 enumeration as disk holds it — three readdirs, folded
+in at `ConsumerCtx::deps` through `app::addressable` — in place of the workspace
+set the last derivation cached. Without it, an act that **founds** a workspace
+answered before the worker had read it, so the very next boundary call refused
+the name that reply had just made addressable: the documented `/prepare` →
+`/prompt` flow could not compose two processes deep (`{"error":"unknown
+workspace \"home\""}` immediately after a prepared reply for `home`), and the
+window's own posted receipt earned the same refusal for the wall its previous act
+had founded, so a first turn reached `lernie new` and `lernie config` and never
+`lernie prompt`. **When an action returns a newly addressable resource, its
+success reply is a barrier for every boundary call after it** — and the way that
+is kept is a *query*, not a claim: nothing is stored, nothing is republished, and
+no sleep is spent waiting for a derivation. Three properties come with the shape
+and each is load-bearing. It costs nothing in the steady state (the two sets
+agree, so the published `Arc` is handed straight back rather than cloned). It
+runs backwards for free (a workspace the §3.6 unmaking deleted stops resolving
+at once instead of at the next sweep). And it does not touch §7.2's partition:
+the enumeration is disk answering, never the frame's optimistic fold, so
+`boundary_deps`' rule — *the derivation, never the §7.2 fold* — is intact, and
+the frame keeps both its cached copy and its §3.4 raise claim because a frame
+does no IO. The *derived* per-workspace facts (trees, bills, the §3.5 join) stay
+exactly as published: those are the walks that are not cheap, every read of them
+is aimed by the path this resolution produced, and a newborn wall answers with
+the zeros it honestly has.
 
 **The taxonomy is the existing invariants, not a new concept.**
 
@@ -7802,7 +7839,7 @@ beside `main.rs`.
 | `src/app/panels.rs` | the model's panel-size fold (§11 rule 5's clamp on read and on settle) and the settle rule (one drag, one write) |
 | `src/app/raise.rs` | the §3.4 **raise claim** (REMOTE §9.7 class 2, bl-7407): the wall a landed start founded, held until the derivation enumerates it, and its fold onto the painted snapshot. The start claim's own shape one noun up — same holder (per-instance RAM), same retirement predicate (*the derivation shows it*), same seam (`echo::compose`) — so focus-by-name resolves the workspace a start just made without a second claim mechanism and without a disk walk on the receipt path. Beside `echo.rs` rather than inside it: a raise carries no message and a send raises no wall |
 | `src/app/search.rs` | the frame's §8.5 search seat: the ask handed to this instance's `Searcher` (the frame runs no search), the landed answer it renders, and `open` — a hit routed into the existing selection, never a new navigation path |
-| `src/app/snapshot{,/names,/scope}.rs` | the published derivation the frame renders, its age, the per-conversation branch-growth diff (§7.2), the per-workspace `steps/` fold every spend figure filters (§3.5, bl-9dd4), and the `models.yaml` context windows every fullness figure divides by (§5.1 #35, bl-a48b); `names` is the boundary's addressing read off it in **both** directions (REMOTE §8, bl-f5f6), so the two cannot disagree about what a name means; `scope` is the REMOTE §4 narrowing to one client's registered workspaces (bl-8bbc) — **one** filter over every workspace-keyed field, which is what makes an unregistered workspace ABSENT rather than forbidden: the roster simply does not list it and the resolver refuses it in the identical bytes a name nobody founded earns |
+| `src/app/snapshot{,/names,/scope}.rs` | the published derivation the frame renders, its age, the per-conversation branch-growth diff (§7.2), the per-workspace `steps/` fold every spend figure filters (§3.5, bl-9dd4), and the `models.yaml` context windows every fullness figure divides by (§5.1 #35, bl-a48b); `names` is the boundary's addressing read off it in **both** directions (REMOTE §8, bl-f5f6), so the two cannot disagree about what a name means, **plus `addressable`** — which set that addressing reads at the intake (bl-6c9e): the live §3.1 enumeration in place of the derivation's cached copy, `Arc` in and out so an unchanged set is handed straight back, which is what makes a workspace's birth a barrier for the gesture after it (§8.5); `scope` is the REMOTE §4 narrowing to one client's registered workspaces (bl-8bbc) — **one** filter over every workspace-keyed field, which is what makes an unregistered workspace ABSENT rather than forbidden: the roster simply does not list it and the resolver refuses it in the identical bytes a name nobody founded earns |
 | `src/attention/{mod,roster}.rs` | the §7.3 attention flag: the ack state machine (incl. `evidence` — the **one** definition of what an acknowledgement writes, read by the window's focus tick and by the §8.5 `seen` action, and naming neither of the two signals no watermark may answer: mail, and the §8.6 park) and `AttentionKind::says`, the one home for each rule **in words** (bl-e160's desktop alert states it where the badges glyph it); the per-conversation roster it is raised against |
 | `src/binding/mod.rs` | names-root enumeration (§3.1), claimant join (§3.2), worktree formula, workspace classification |
 | `src/board/{mod,rows,rollup}.rs` | the V4 board (§11, VISION §5 V4): the four columns as balls' ladder crossed with its close-gate predicate, and the whole board built pure over one snapshot — its rows, and (bl-66fb) the facts of any §4.3 loop armed over them, empty in every unarmed world; one row's gate, drones and figure; the epic rollup that crosses workspaces, one slice apiece |

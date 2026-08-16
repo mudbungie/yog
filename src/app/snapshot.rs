@@ -114,6 +114,7 @@ pub struct Snapshot {
 /// The boundary's addressing, read off this snapshot in both directions
 /// (REMOTE §8, bl-f5f6) — its own file at §12's budget.
 mod names;
+pub(crate) use names::addressable;
 /// The REMOTE §4 scope filter (bl-8bbc): this derivation narrowed to one
 /// client's registered workspaces, so absence is structural.
 mod scope;
