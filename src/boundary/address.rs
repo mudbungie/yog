@@ -77,7 +77,9 @@ impl Action {
             | Action::Move { .. }
             | Action::Create { .. }
             | Action::Update { .. }
-            | Action::Fan(crate::fan::Verb::Retire { .. })
+            | Action::Fan(
+                crate::fan::Verb::Retire { .. } | crate::fan::Verb::Deliver { .. },
+            )
             | Action::Ack
             | Action::ClearTrail => None,
         }
@@ -93,12 +95,14 @@ impl Action {
             | Action::Move { project, .. }
             | Action::Create { project, .. }
             | Action::Update { project, .. } => Some(project.clone()),
-            // A fan claims nothing and a retirement delivers nothing, but both
-            // act in a project's refs — and the §3.5 projection reads that
-            // project's board, so both refresh it.
+            // A fan claims nothing, a retirement delivers nothing, and a
+            // delivery closes nothing — but all three act in a project's refs,
+            // and the §3.5 projection reads that project's board, so all three
+            // refresh it.
             Action::Fan(
                 crate::fan::Verb::Spread { obligation, .. }
-                | crate::fan::Verb::Retire { obligation, .. },
+                | crate::fan::Verb::Retire { obligation, .. }
+                | crate::fan::Verb::Deliver { obligation, .. },
             ) => Some(obligation.project.clone()),
             Action::Prepare { payload, .. } => payload.project(),
             // `SetMarks` named a project until the per-agent ruling re-keyed

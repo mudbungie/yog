@@ -110,6 +110,13 @@ fn every_fleet_action_round_trips() {
         None,
         Some(crate::workdiff::WorkFile {
             ball: "bl-1".to_owned(),
+            handle: None,
+            path: "src/a.rs".to_owned(),
+        }),
+        // The three-word form: a fan candidate's file (bl-c2bd).
+        Some(crate::workdiff::WorkFile {
+            ball: "bl-1".to_owned(),
+            handle: Some("at-1a2b3c4d".to_owned()),
             path: "src/a.rs".to_owned(),
         }),
     ] {

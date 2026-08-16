@@ -9,6 +9,8 @@ fn diffed() -> Vec<Attempt> {
     vec![Attempt {
         project: "proj".to_owned(),
         ball_id: "bl-1".to_owned(),
+        handle: None,
+        delivered: None,
         change: Change::Diff {
             target: "main".to_owned(),
             source: "work/bl-1".to_owned(),
@@ -96,6 +98,7 @@ fn clicking_a_file_picks_it_for_its_patch() {
         sel,
         Some(WorkFile {
             ball: "bl-1".to_owned(),
+            handle: None,
             path: "src/a.rs".to_owned(),
         })
     );
@@ -125,6 +128,61 @@ fn the_picked_files_patch_paints_bounded() {
     );
 }
 
+/// A fan candidate's row wears its handle and, once the target's history
+/// records its delivery, the derived acceptance mark (VISION V3.2, bl-c2bd) —
+/// and a click on its file carries the handle, so the patch read opens this
+/// candidate's diff and not a sibling's.
+#[test]
+fn a_candidate_wears_its_handle_and_its_delivered_mark() {
+    let mut candidate = diffed().remove(0);
+    candidate.handle = Some("at-0badcafe".to_owned());
+    candidate.delivered = Some("eeee3333ffff".to_owned());
+    let text = painted(std::slice::from_ref(&candidate), None);
+    assert!(text.contains("at-0badcafe"), "{text}");
+    assert!(
+        text.contains("delivered eeee333"),
+        "the mark, short: {text}"
+    );
+
+    let painted = crate::paint_probe::painted_settled(1024.0, 4096.0, |ui| {
+        render(ui, std::slice::from_ref(&candidate), None, &mut None);
+    });
+    let pos = painted
+        .iter()
+        .find(|(text, _)| text == "+12 -3  src/a.rs")
+        .map(|(_, rect)| rect.center())
+        .expect("the row is on screen");
+    let ctx = egui::Context::default();
+    let mut sel: Option<WorkFile> = None;
+    let button = |pressed| egui::Event::PointerButton {
+        pos,
+        button: egui::PointerButton::Primary,
+        pressed,
+        modifiers: egui::Modifiers::default(),
+    };
+    for input in [
+        crate::paint_probe::screen(),
+        egui::RawInput {
+            events: vec![egui::Event::PointerMoved(pos), button(true), button(false)],
+            ..crate::paint_probe::screen()
+        },
+    ] {
+        let _ = ctx.run(input, |ctx| {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                render(ui, std::slice::from_ref(&candidate), None, &mut sel);
+            });
+        });
+    }
+    assert_eq!(
+        sel,
+        Some(WorkFile {
+            ball: "bl-1".to_owned(),
+            handle: Some("at-0badcafe".to_owned()),
+            path: "src/a.rs".to_owned(),
+        })
+    );
+}
+
 /// The four things that are not a diff are four sentences, and none of them is
 /// a blank list: no claim at all, an unreadable project, an absent ref, and a
 /// branch that has changed nothing yet.
@@ -136,6 +194,8 @@ fn every_decline_is_said_in_words() {
         vec![Attempt {
             project: "proj".to_owned(),
             ball_id: "bl-1".to_owned(),
+            handle: None,
+            delivered: None,
             change,
         }]
     };

@@ -65,6 +65,11 @@ fn spell_action(action: &Action) -> String {
         // seat's, exactly as `/prompt`'s prepared is.
         Action::Fan(crate::fan::Verb::Spread { n, .. }) => format!("/fan {n}"),
         Action::Fan(crate::fan::Verb::Retire { handle, .. }) => format!("/retire {handle}"),
+        Action::Fan(crate::fan::Verb::Deliver {
+            handle, summary, ..
+        }) => {
+            format!("/deliver {handle} {summary}")
+        }
         Action::DeleteWorkspace { typed, .. } => format!("/delete-workspace {typed}"),
         Action::DeleteAgent { typed, .. } if typed.is_empty() => "/delete-agent".to_owned(),
         Action::DeleteAgent { typed, .. } => format!("/delete-agent {typed}"),
@@ -148,7 +153,10 @@ fn spell_query(query: &Query) -> String {
         // The workspace is the seat's, as it is for every other workspace-
         // scoped line; the file, when one is asked for, is not.
         Query::WorkDiff { file, .. } => match file {
-            Some(file) => format!("/work-diff {} {}", file.ball, file.path),
+            Some(file) => match &file.handle {
+                Some(handle) => format!("/work-diff {} {handle} {}", file.ball, file.path),
+                None => format!("/work-diff {} {}", file.ball, file.path),
+            },
             None => "/work-diff".to_owned(),
         },
         // The §11 inspector family (bl-6233): the workspace *and* the

@@ -215,14 +215,26 @@ fn an_attempt_refuses_every_parameter_it_cannot_invent() {
 /// which attempt's diff it belongs to, and a reader that guessed would open
 /// the wrong file.
 /// The fan refuses every parameter it cannot invent: the count, a count that
-/// is not one, the prepared start, the project and the ball — and a retirement
-/// refuses a nameless handle. A line names what a seat has selected and never
-/// guesses at the rest.
+/// is not one, the prepared start, the project and the ball — a retirement
+/// refuses a nameless handle, and a delivery refuses a nameless handle, a
+/// missing summary, and a summary of nothing but whitespace. A line names what
+/// a seat has selected and never guesses at the rest.
 #[test]
 fn the_fan_refuses_every_parameter_it_cannot_invent() {
     refuses("/fan", &ctx(), "how many candidates is required");
     refuses("/fan lots", &ctx(), "is not a count");
     refuses("/retire", &ctx(), "the candidate handle is required");
+    refuses("/deliver", &ctx(), "the candidate handle is required");
+    refuses(
+        "/deliver at-0badcafe",
+        &ctx(),
+        "the delivery summary is required",
+    );
+    refuses(
+        "/deliver at-0badcafe   ",
+        &ctx(),
+        "the delivery summary is required",
+    );
     let mut seat = ctx();
     seat.prepared = None;
     refuses("/fan 3", &seat, "nothing is prepared");
@@ -230,18 +242,29 @@ fn the_fan_refuses_every_parameter_it_cannot_invent() {
     seat.project = None;
     refuses("/fan 3", &seat, "no project in context");
     refuses("/retire at-0badcafe", &seat, "no project in context");
+    refuses(
+        "/deliver at-0badcafe take it",
+        &seat,
+        "no project in context",
+    );
     let mut seat = ctx();
     seat.ball = None;
     refuses("/fan 3", &seat, "no ball id");
     refuses("/retire at-0badcafe", &seat, "no ball id");
+    refuses("/deliver at-0badcafe take it", &seat, "no ball id");
 }
 
 #[test]
 fn a_half_named_work_file_is_refused() {
     assert!(parse("/work-diff", &ctx()).is_ok());
     assert!(parse("/work-diff bl-1 src/a.rs", &ctx()).is_ok());
+    // Three words name a fan candidate's file (bl-c2bd).
+    assert!(parse("/work-diff bl-1 at-0badcafe src/a.rs", &ctx()).is_ok());
     let Err(reason) = parse("/work-diff src/a.rs", &ctx()) else {
         panic!("one word names no attempt");
     };
-    assert!(reason.contains("/work-diff [<ball> <path>]"), "{reason}");
+    assert!(
+        reason.contains("/work-diff [<ball> [<handle>] <path>]"),
+        "{reason}"
+    );
 }

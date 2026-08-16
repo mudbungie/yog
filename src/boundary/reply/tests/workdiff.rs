@@ -36,6 +36,8 @@ fn attempt(change: Change) -> Attempt {
     Attempt {
         project: "proj".to_owned(),
         ball_id: "bl-1".to_owned(),
+        handle: None,
+        delivered: None,
         change,
     }
 }
@@ -143,6 +145,7 @@ fn the_query_answers_off_the_tabs_own_derivation() {
             workspace: crate::naming::leaf(&(ws)),
             file: Some(WorkFile {
                 ball: "bl-1".to_owned(),
+                handle: None,
                 path: "src/a.rs".to_owned(),
             }),
         },

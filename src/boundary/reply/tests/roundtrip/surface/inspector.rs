@@ -5,6 +5,8 @@
 
 use std::collections::BTreeMap;
 
+mod workdiff;
+
 use super::super::super::super::Reply;
 use super::{preview, spend};
 use crate::files_view::{FileEntry, FilesView, Preview};
@@ -14,7 +16,7 @@ use crate::login::auth::AuthFailure;
 use crate::rail::{ChildCard, Notch, Place, Rail};
 use crate::steps_view::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
 use crate::transcript::{Block, Entry, EntryKind, Transcript};
-use crate::workdiff::{Attempt, Change, Churn, FileChurn};
+use workdiff::attempts;
 
 /// One entry per [`EntryKind`] arm, the epitaph present and absent.
 fn transcript() -> Transcript {
@@ -204,49 +206,6 @@ fn inbox() -> Vec<InboxEntry> {
             raw: b"bare".to_vec(),
             deposit: Deposit::default(),
         },
-    ]
-}
-
-/// One attempt per [`Change`] arm, and both churn classes inside the diff.
-fn attempts() -> Vec<Attempt> {
-    let attempt = |id: &str, change| Attempt {
-        project: "p".to_owned(),
-        ball_id: id.into(),
-        change,
-    };
-    vec![
-        attempt("bl-1", Change::Unreadable),
-        attempt(
-            "bl-2",
-            Change::Absent {
-                target: "main".into(),
-                source: "work/bl-2".into(),
-                missing: vec!["work/bl-2".into()],
-            },
-        ),
-        attempt(
-            "bl-3",
-            Change::Diff {
-                target: "main".into(),
-                source: "work/bl-3".into(),
-                target_oid: "aaa".into(),
-                source_oid: "bbb".into(),
-                files: vec![
-                    FileChurn {
-                        path: "src/a.rs".into(),
-                        churn: Churn::Text {
-                            added: 3,
-                            removed: 1,
-                        },
-                    },
-                    FileChurn {
-                        path: "assets/x.png".into(),
-                        churn: Churn::Binary,
-                    },
-                ],
-                truncated: true,
-            },
-        ),
     ]
 }
 

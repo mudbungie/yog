@@ -30,6 +30,7 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Retired { discarded } => {
             json!({ "ok": true, "kind": "retired", "discarded": discarded })
         }
+        Reply::Delivered(delivery) => delivered(delivery),
         Reply::Started { conversation } => {
             json!({ "ok": true, "kind": "started", "conversation": conversation })
         }
@@ -185,6 +186,22 @@ fn client_row(row: &crate::registry::roster::ClientRow) -> Value {
 
 /// The envelope every reply opens with, before its own fields — the shape
 /// [`rows_map`] builds a listing on and the one a keyed answer builds itself on.
+/// The delivery's four identities (V3.2, bl-c2bd). The two options are
+/// **absent** rather than null, upstream's own meaning kept: an unmade source
+/// ref and a delivery that landed nothing are absences, not empty strings.
+fn delivered(delivery: &crate::fan::Delivery) -> Value {
+    let mut map = obj_reply("delivered");
+    map.insert("target".to_owned(), json!(delivery.target));
+    map.insert("base".to_owned(), json!(delivery.base));
+    if let Some(source) = &delivery.source {
+        map.insert("source".to_owned(), json!(source));
+    }
+    if let Some(commit) = &delivery.commit {
+        map.insert("commit".to_owned(), json!(commit));
+    }
+    Value::Object(map)
+}
+
 fn obj_reply(kind: &str) -> Map<String, Value> {
     let mut map = Map::new();
     map.insert("ok".to_owned(), json!(true));

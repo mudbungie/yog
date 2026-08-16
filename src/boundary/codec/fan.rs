@@ -1,5 +1,5 @@
-//! The mutating fan's two envelopes (VISION §4.10, bl-8746): `{"op":"fan", …}`
-//! and `{"op":"retire", …}`.
+//! The mutating fan's three envelopes (VISION §4.10, bl-8746; V3's delivery,
+//! bl-c2bd): `{"op":"fan", …}`, `{"op":"retire", …}` and `{"op":"deliver", …}`.
 //!
 //! Its own module for the reason the §9 config family and the attempt have one
 //! — both envelopes carry the **optional** `ball`, whose absence is a value (the
@@ -24,6 +24,25 @@ use super::{decode_prepared, opt_field, opt_str_of, str_of, usize_of};
 pub(super) const FAN: &str = "fan";
 /// The retirement's.
 pub(super) const RETIRE: &str = "retire";
+/// The delivery's — **Deliver candidate**, never Adopt (VISION V3.2).
+pub(super) const DELIVER: &str = "deliver";
+
+/// Encode any of the family's three — the chokepoint's one `Fan` arm.
+pub(super) fn encode_verb(verb: &Verb) -> Value {
+    match verb {
+        Verb::Spread {
+            prepared,
+            obligation,
+            n,
+        } => encode(prepared, obligation, *n),
+        Verb::Retire { obligation, handle } => encode_retire(obligation, handle),
+        Verb::Deliver {
+            obligation,
+            handle,
+            summary,
+        } => encode_deliver(obligation, handle, summary),
+    }
+}
 
 /// Encode a fan: the prepared start to spend, the obligation, and N.
 pub(super) fn encode(
@@ -41,6 +60,15 @@ pub(super) fn encode(
 pub(super) fn encode_retire(obligation: &Obligation, handle: &str) -> Value {
     let mut map = obligation_map(RETIRE, obligation);
     map.insert("handle".to_owned(), json!(handle));
+    Value::Object(map)
+}
+
+/// Encode a delivery: the obligation, the handle to accept, and the delivery
+/// subject's text.
+pub(super) fn encode_deliver(obligation: &Obligation, handle: &str, summary: &str) -> Value {
+    let mut map = obligation_map(DELIVER, obligation);
+    map.insert("handle".to_owned(), json!(handle));
+    map.insert("summary".to_owned(), json!(summary));
     Value::Object(map)
 }
 
@@ -68,6 +96,13 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String>
         return Ok(Action::Fan(Verb::Retire {
             obligation,
             handle: str_of(o, "handle")?,
+        }));
+    }
+    if op == DELIVER {
+        return Ok(Action::Fan(Verb::Deliver {
+            obligation,
+            handle: str_of(o, "handle")?,
+            summary: str_of(o, "summary")?,
         }));
     }
     Ok(Action::Fan(Verb::Spread {

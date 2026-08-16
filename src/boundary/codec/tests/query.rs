@@ -22,6 +22,13 @@ fn every_query_variant_round_trips() {
         None,
         Some(crate::workdiff::WorkFile {
             ball: "bl-1".into(),
+            handle: None,
+            path: "src/a.rs".into(),
+        }),
+        // The three-word form: a fan candidate's file (bl-c2bd).
+        Some(crate::workdiff::WorkFile {
+            ball: "bl-1".into(),
+            handle: Some("at-1a2b3c4d".into()),
             path: "src/a.rs".into(),
         }),
     ] {

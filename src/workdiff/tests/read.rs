@@ -4,9 +4,9 @@
 
 use std::path::{Path, PathBuf};
 
-use super::{MAIN, Project, ball, close_gate, snap};
+use super::{MAIN, Project, ball, close_gate, read0, snap};
 use crate::files_view::Preview;
-use crate::workdiff::{Attempt, Change, Churn, WorkFile, patch, read};
+use crate::workdiff::{Attempt, Change, Churn, WorkFile, patch};
 
 const WS: &str = "/data/workspaces/storeroom";
 const NAME: &str = "storeroom";
@@ -40,7 +40,7 @@ fn the_diff_is_target_dot_dot_source_of_the_bound_claim() {
         &project.path,
         vec![ball("bl-1", Some(NAME), None)],
     );
-    let attempt = only(read(&snap, Path::new(WS)));
+    let attempt = only(read0(&snap, Path::new(WS)));
     assert_eq!(attempt.ball_id, "bl-1");
     // **It names the project, it does not locate it** (REMOTE §8, bl-ccf7):
     // the §5.1 #1 wire name, which is the word `--project` takes and which
@@ -97,7 +97,7 @@ fn a_close_gated_child_reads_against_its_parents_branch() {
             ball("bl-kid", Some(NAME), Some("bl-parent")),
         ],
     );
-    let attempt = only(read(&snap, Path::new(WS)));
+    let attempt = only(read0(&snap, Path::new(WS)));
     assert_eq!(
         attempt.range().as_deref(),
         Some("work/bl-parent..work/bl-kid")
@@ -126,7 +126,7 @@ fn a_branch_with_no_work_diffs_to_nothing() {
         &project.path,
         vec![ball("bl-1", Some(NAME), None)],
     );
-    let Change::Diff { files, .. } = only(read(&snap, Path::new(WS))).change else {
+    let Change::Diff { files, .. } = only(read0(&snap, Path::new(WS))).change else {
         panic!("both ends resolve");
     };
     assert!(files.is_empty());
@@ -143,7 +143,7 @@ fn a_ref_that_is_not_there_is_named() {
         &project.path,
         vec![ball("bl-1", Some(NAME), None)],
     );
-    let attempt = only(read(&snap, Path::new(WS)));
+    let attempt = only(read0(&snap, Path::new(WS)));
     let Change::Absent {
         target,
         source,
@@ -162,6 +162,7 @@ fn a_ref_that_is_not_there_is_named() {
             std::slice::from_ref(&attempt),
             &WorkFile {
                 ball: "bl-1".to_owned(),
+                handle: None,
                 path: "src/a.rs".to_owned(),
             }
         )
@@ -181,7 +182,7 @@ fn a_project_that_is_not_a_repo_is_unreadable() {
         &project,
         vec![ball("bl-1", Some(NAME), None)],
     );
-    let attempt = only(read(&snap, Path::new(WS)));
+    let attempt = only(read0(&snap, Path::new(WS)));
     assert_eq!(attempt.change, Change::Unreadable);
     assert_eq!(attempt.range(), None, "there is no range to state");
     assert!(
@@ -190,6 +191,7 @@ fn a_project_that_is_not_a_repo_is_unreadable() {
             &[attempt],
             &WorkFile {
                 ball: "bl-1".to_owned(),
+                handle: None,
                 path: "x".to_owned(),
             }
         )
@@ -213,14 +215,14 @@ fn a_repo_that_cannot_diff_is_unreadable() {
         target_oid,
         source_oid,
         ..
-    } = only(read(&snap, Path::new(WS))).change
+    } = only(read0(&snap, Path::new(WS))).change
     else {
         panic!("the repo reads before it is damaged");
     };
     // Keep the two commits the refs name and remove every other object: both
     // ends still resolve, and there are no trees left to compare.
     keep_only(&project.path, &[target_oid, source_oid]);
-    assert_eq!(only(read(&snap, Path::new(WS))).change, Change::Unreadable);
+    assert_eq!(only(read0(&snap, Path::new(WS))).change, Change::Unreadable);
 }
 
 /// Delete every loose object in `repo` except the named oids.
@@ -251,9 +253,10 @@ fn a_picked_file_reads_its_patch() {
         &project.path,
         vec![ball("bl-1", Some(NAME), None)],
     );
-    let attempts = read(&snap, Path::new(WS));
+    let attempts = read0(&snap, Path::new(WS));
     let file = |ball: &str, path: &str| WorkFile {
         ball: ball.to_owned(),
+        handle: None,
         path: path.to_owned(),
     };
     let Some(Preview::Text(text)) = patch(&snap, &attempts, &file("bl-1", "src/a.rs")) else {
@@ -271,8 +274,8 @@ fn a_workspace_with_no_claim_has_no_attempt() {
     let project = Project::new();
     let ws = PathBuf::from(WS);
     let unclaimed = snap(&ws, NAME, &project.path, vec![ball("bl-1", None, None)]);
-    assert!(read(&unclaimed, &ws).is_empty());
+    assert!(read0(&unclaimed, &ws).is_empty());
     // A path the snapshot does not carry as one of yog's own named workspaces
     // cannot claim anything, so it has nothing to compare.
-    assert!(read(&unclaimed, Path::new("/data/workspaces/other")).is_empty());
+    assert!(read0(&unclaimed, Path::new("/data/workspaces/other")).is_empty());
 }

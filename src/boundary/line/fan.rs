@@ -6,6 +6,18 @@ use super::{Context, args, verbs};
 use crate::boundary::{Action, Gesture};
 use crate::fan::Verb;
 
+/// The family's one door from the reader's roster: which of the three a verb
+/// word names. The roster matched the word already, so the fallthrough arm is
+/// the delivery — the same shape [`codec::balls`](crate::boundary::codec)'s
+/// reader keeps.
+pub(super) fn read(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
+    match verb {
+        "fan" => fan(tail, ctx, verb),
+        "retire" => retire(tail, ctx, verb),
+        _ => deliver(tail, ctx, verb),
+    }
+}
+
 /// `/fan <n>` — the §4.10 mutating fan. The obligation is the seat's own: the
 /// focused project and the focused ball, exactly as `/close`'s is, so the only
 /// word a line carries is **N**, which is the one thing that is yog's policy
@@ -18,7 +30,7 @@ use crate::fan::Verb;
 /// has selected and refuses what it cannot, and reading "no ball selected" as
 /// "fan the integration branch" would be a guess at a different gesture. The
 /// envelope stays the spelling for that.
-pub(super) fn fan(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+fn fan(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     let n = args::required(tail, verb, "how many candidates")?;
     Ok(Gesture::Act(Action::Fan(Verb::Spread {
         prepared: prepared(ctx, verb)?,
@@ -31,10 +43,34 @@ pub(super) fn fan(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, Stri
 /// `/retire <handle>` — release one candidate, per the project's retention
 /// policy. The handle is balls' own opaque name, read off the cohort, and it is
 /// required: there is no "the current candidate" for a seat to mean.
-pub(super) fn retire(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+fn retire(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     Ok(Gesture::Act(Action::Fan(Verb::Retire {
         obligation: obligation(ctx, verb)?,
         handle: args::required(tail, verb, "the candidate handle")?,
+    })))
+}
+
+/// `/deliver <handle> <summary…>` — **Deliver candidate** (VISION V3.2): accept
+/// one candidate by the ordinary source-to-target delivery. The summary is the
+/// whole tail after the handle, verbatim — it becomes the delivery subject,
+/// which balls tags `[<handle>]` — and it is required: a delivery subject is
+/// the operator's statement of what landed, and yog does not invent one.
+fn deliver(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    let tail = tail.trim();
+    let missing =
+        |what: &str| format!("/{verb}: {what} is required; usage: /deliver <handle> <summary…>");
+    if tail.is_empty() {
+        return Err(missing("the candidate handle"));
+    }
+    let (handle, summary) = tail
+        .split_once(char::is_whitespace)
+        .map(|(h, s)| (h, s.trim_start()))
+        .filter(|(_, s)| !s.is_empty())
+        .ok_or_else(|| missing("the delivery summary"))?;
+    Ok(Gesture::Act(Action::Fan(Verb::Deliver {
+        obligation: obligation(ctx, verb)?,
+        handle: handle.to_owned(),
+        summary: summary.to_owned(),
     })))
 }
 

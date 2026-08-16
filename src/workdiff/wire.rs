@@ -38,6 +38,15 @@ fn attempt_row(attempt: &Attempt) -> Value {
     let mut map = Map::new();
     map.insert("project".to_owned(), json!(attempt.project));
     map.insert("ball_id".to_owned(), json!(attempt.ball_id));
+    // Both **absent** rather than null (bl-c2bd): the ordinary claim attempt
+    // has no handle, and an undelivered candidate has no acceptance mark —
+    // absences, not empty strings.
+    if let Some(handle) = &attempt.handle {
+        map.insert("handle".to_owned(), json!(handle));
+    }
+    if let Some(delivered) = &attempt.delivered {
+        map.insert("delivered".to_owned(), json!(delivered));
+    }
     match &attempt.change {
         Change::Unreadable => {
             map.insert("state".to_owned(), json!("unreadable"));
@@ -94,7 +103,7 @@ pub(crate) fn attempts_of(obj: &serde_json::Map<String, Value>) -> Result<Vec<At
 }
 
 fn attempt_of(v: &Value) -> Result<Attempt, String> {
-    use crate::boundary::codec::fields::{bool_of, list_of, str_of, strings_of};
+    use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, str_of, strings_of};
     let o = v.as_object().ok_or("attempt: not an object")?;
     let change = match str_of(o, "state")?.as_str() {
         "unreadable" => Change::Unreadable,
@@ -116,6 +125,8 @@ fn attempt_of(v: &Value) -> Result<Attempt, String> {
     Ok(Attempt {
         project: str_of(o, "project")?,
         ball_id: str_of(o, "ball_id")?,
+        handle: opt_str_of(o, "handle")?,
+        delivered: opt_str_of(o, "delivered")?,
         change,
     })
 }
