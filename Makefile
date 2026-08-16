@@ -231,7 +231,15 @@ fmt:
 fmt-check:
 	cargo fmt --check
 
-check: fmt-check lint coverage
+# The complete gate, and the exact target CI runs (`ci`). Coverage goes through
+# `scripts/check-coverage.sh` rather than the bare `coverage` target so the
+# pre-commit hook, `make check` and CI share ONE coverage step: the held-and-
+# replayed output and the signaled-tarpaulin retry (bl-673a) belonged to the
+# hook alone while this line named `coverage`, so a runner-side kill reddened a
+# release-PR CI run where the same kill was survivable at close. `make coverage`
+# stays the bare, always-verbose invocation for a hand-run.
+check: fmt-check lint
+	@scripts/check-coverage.sh
 
 # Launch the window over every enumerated workspace, ON MAIN'S TIP, and keep it
 # there: when a merge lands on main the window closes and reopens on a binary

@@ -254,7 +254,7 @@ demotion removes an internal API from the boundary's obligations. Reach for
 
 `make check` is the complete local gate and mirrors CI exactly:
 
-    fmt-check → lint (line-cap + beat-audit + leak-scan + clippy + ast-grep scan + cargo-deny) → coverage
+    fmt-check → lint (line-cap + beat-audit + leak-scan + clippy + ast-grep scan + cargo-deny) → scripts/check-coverage.sh
 
 - `make lint` — `make line-cap` (sub-second, so it fails first), then
   `make beat-audit` (milliseconds), then `make leak-scan` (~5s), then
@@ -391,7 +391,31 @@ demotion removes an internal API from the boundary's obligations. Reach for
   bl-70b8 found a third still live, aiming every pointer test's click by input
   text) — which is why it is a rule now and not a memory. Geometry off a galley
   (`.size()`, `.rect`, `.rows`) is unaffected: it is the text that lies.
-- `make coverage` — pinned tarpaulin, `--fail-under 100`.
+- `make coverage` — pinned tarpaulin, `--fail-under 100`. The bare invocation,
+  always verbose; `check` does not call it directly.
+- `scripts/check-coverage.sh` — the coverage STEP, and the one every caller
+  shares: the hook, `make check` and therefore CI (`make ci`). It holds
+  tarpaulin's stdout and replays it only on a failure (bl-0dff), and since
+  bl-673a it answers with **three outcomes, not two**, because the gate's exit
+  code is what two callers write a cached verdict from:
+  - **0** — the tree passed. `scripts/pre-commit` records a PASS for
+    `(tree, gate)`.
+  - **75** (`EX_TEMPFAIL`) — **no verdict.** tarpaulin reported *being signaled*
+    on both of its two attempts, so something outside the gate killed the run.
+    `.github/workflows/speculate.yml` records NOTHING on this code.
+  - **any other non-zero** — the gate failed on the tree's own merits, and that
+    is recorded as a FAIL. **A FAIL is permanent**: balls' `speculate_run` stops
+    the candidate chain at a stored FAIL on every later pass *without
+    rebuilding*, and no re-run can dislodge it because the tree is unchanged.
+    That is why an infrastructure death must not borrow this code — five
+    sightings of a runner signalling tarpaulin mid-suite became five permanently
+    false-negative trees (one of them with the macOS leg of the same tree green).
+  The retry is once and only for the signaled class — a real failure is never
+  re-run, and neither is an interrupt (tarpaulin *catches* SIGINT and exits with
+  the same message, so the script traps INT/TERM/HUP into 75 itself). The
+  runner evidence the five sightings lacked — memory, top-RSS processes, the
+  kernel log's OOM lines when it is readable and a statement that it is not when
+  it is not — prints from the signaled arm, on every caller.
 
 **Tool pins (must match, or the gate/CI is not reproducible):** rustc `1.95.0`
 (`rust-toolchain.toml`), ast-grep `0.44.1` (`sgconfig.yml`), cargo-deny `0.20.2`
@@ -615,6 +639,21 @@ Facts the queue derives from (do not fight them):
   whole eviction mechanism.
 - **A conflict or FAIL verdict ahead of you stops the chain** — the fix belongs
   to that branch's owner. Your close still works; it just pays the stock gate.
+- **A FAIL verdict is forever, so an infrastructure death must never become
+  one** (bl-673a). `speculate_run` reads a stored FAIL and stops the chain there
+  on every later pass *without rebuilding*; the key is the tree, so re-running
+  answers from cache and only a new commit escapes. Two writers exist and each
+  is guarded on its own side. `.github/workflows/speculate.yml` records a FAIL
+  only when the gate's exit code says it judged the tree (see "The local gate":
+  75 means no verdict, and a job killed outright writes no output at all).
+  `scripts/speculate-gate` cannot be guarded that way, because
+  **`speculate_run::build` takes `status.success()` and writes `pass = false`
+  from anything else** — the gate has no third answer to give it. So it does the
+  only thing it can: an empty `verdicts` artifact is a REBUILD, not an answer,
+  and it pushes the candidate a second time rather than answering. **The
+  residual is upstream's**: two consecutive infrastructure deaths still store a
+  FAIL, and what balls would need is a gate exit code meaning *no verdict,
+  record nothing* — the same 75 the workflow already honors.
 - **Everything degrades to the stock local gate.** No binary, no verdict, no
   network, no runner: the cache misses honestly and `bl close` builds locally.
   Never wait on the remote to close.

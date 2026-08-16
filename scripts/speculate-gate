@@ -17,6 +17,19 @@
 #      reported as failure here so the chain stops instead of vouching blind
 #      (rust-toolchain.toml pins both sides; see the workflow header).
 #
+# AN EMPTY ARTIFACT IS A REBUILD, NOT AN ANSWER (bl-673a). A run whose gate
+# died of something outside the tree — five sightings of a runner signalling
+# tarpaulin mid-suite — records no verdict at all, by the workflow's own guard.
+# That is the one case worth spending a second build on, because THIS SCRIPT'S
+# EXIT CODE IS BINARY AND THE CALLER WRITES A VERDICT FROM IT EITHER WAY: balls
+# `speculate_run::build` takes `status.success()` and stores `pass = false` on
+# anything else, and a stored FAIL stops the candidate chain forever without
+# ever rebuilding (`speculate_run`: "fail <id> <tree> — chain stops"). There is
+# no third answer to give it, so the only lever this repo owns is to not answer
+# until a build has actually judged the tree. Two attempts; if the second also
+# comes home empty the poison is unavoidable and upstream's to fix — a gate exit
+# code meaning "no verdict, record nothing" is what balls would need.
+#
 # Usage:    bl-speculate run --gate scripts/speculate-gate [--builds N]
 # Requires: gh (authenticated) and push access to origin.
 
@@ -26,16 +39,13 @@ cd "$(git rev-parse --show-toplevel)" # the build dir is its own toplevel
 sha="$(git rev-parse HEAD)"
 branch="speculation/$sha"
 
-echo "speculate-gate: pushing candidate $sha to $branch" >&2
-git push --force origin "HEAD:refs/heads/$branch" >&2
-
 # THE BRANCH IS OWNED BY THE TRAP FROM HERE ON (bl-1ea9). It is the only thing
 # this script puts on the PUBLIC remote, and it used to be deleted by two
 # hand-rolled calls on two of the paths out — so a SIGINT, a dropped network or
-# any `exit` added later between the push above and the delete below stranded
+# any `exit` added later between the push below and the delete stranded
 # `speculation/<sha>` there. The header of this file conceded it: "sweep by
-# hand". A trap set on the line after the push cannot be outrun by a path
-# nobody thought of, which is the whole class the hand-rolled calls missed.
+# hand". A trap set BEFORE the push cannot be outrun by a path nobody thought
+# of, which is the whole class the hand-rolled calls missed.
 #
 # `verdicts` is folded in here rather than trapped separately, because two traps
 # on EXIT would mean the second replacing the first — it is initialised empty so
@@ -53,31 +63,63 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM HUP
 
-# The push just created the branch, so the run keyed to it is ours alone —
-# speculate.yml is the only workflow triggering on speculation/**. Keyed by
-# branch, not --workflow: gh cannot resolve a workflow by name until it has
-# registered, which the first-ever push is still causing. Bounded wait for
-# GitHub to mint the run.
-run_id=""
-for _ in $(seq 30); do
-  run_id="$(gh run list --branch "$branch" \
-    --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
-  [ -n "$run_id" ] && break
-  sleep 5
-done
-if [ -z "$run_id" ]; then
-  echo "speculate-gate: no workflow run appeared for $branch" >&2
-  exit 1
-fi
-
-echo "speculate-gate: watching run $run_id" >&2
-gh run watch "$run_id" -i 30 >/dev/null || true # the conclusion travels in the verdict
-
 verdicts="$(mktemp -d)"
-if gh run download "$run_id" -n verdicts -D "$verdicts" >&2; then
+
+# The newest run on our branch that is not `$1`. speculate.yml is the only
+# workflow triggering on speculation/**, and the push that precedes each call
+# mints a run, so "newest, and not the one we already watched" identifies ours
+# on a retry as well as on the first push. Keyed by branch rather than
+# --workflow: gh cannot resolve a workflow by name until it has registered,
+# which the first-ever push is still causing. Bounded wait.
+await_run() {
+  for _ in $(seq 30); do
+    id="$(gh run list --branch "$branch" \
+      --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
+    if [ -n "$id" ] && [ "$id" != "$1" ]; then
+      printf '%s' "$id"
+      return 0
+    fi
+    sleep 5
+  done
+  return 1
+}
+
+# One remote build: push, watch, fetch its verdict store. 0 iff a verdict for
+# some (tree, gate) came home — the workflow records exactly one on any run that
+# judged the tree, and nothing at all on a run that did not.
+remote_build() {
+  echo "speculate-gate: pushing candidate $sha to $branch" >&2
+  # Explicitly, not by errexit: a function called in an `&&` list runs with
+  # errexit suspended for its whole body, so an unreported push failure would
+  # fall through into a 150-second wait for a run that can never appear.
+  git push --force origin "HEAD:refs/heads/$branch" >&2 || return 1
+  run_id="$(await_run "$watched")" || {
+    echo "speculate-gate: no workflow run appeared for $branch" >&2
+    return 1
+  }
+  watched="$run_id"
+  echo "speculate-gate: watching run $run_id" >&2
+  gh run watch "$run_id" -i 30 >/dev/null || true # the conclusion travels in the verdict
+  rm -rf "$verdicts"
+  mkdir -p "$verdicts"
+  gh run download "$run_id" -n verdicts -D "$verdicts" >&2 || {
+    echo "speculate-gate: no verdicts artifact on run $run_id" >&2
+    return 1
+  }
+  compgen -G "$verdicts/*.toml" >/dev/null
+}
+
+watched=""
+attempts=2
+for attempt in $(seq "$attempts"); do
+  remote_build && break
+  echo "speculate-gate: attempt $attempt of $attempts judged nothing about" >&2
+  echo "  this tree — no verdict came home, so the gate died of something that" >&2
+  echo "  is not the tree (bl-673a)." >&2
+done
+
+if compgen -G "$verdicts/*.toml" >/dev/null; then
   bl-speculate import "$verdicts"/*.toml >&2 || true
-else
-  echo "speculate-gate: no verdicts artifact on run $run_id" >&2
 fi
 
 # The one answer: did this exact tree pass this exact gate, per the local key?
