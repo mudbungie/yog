@@ -1,7 +1,8 @@
 +++
 title = "a second yog on one box gets no wire, and only stderr says so"
 created = 1786844346
-updated = 1786844346
+updated = 1786846436
+claimant = "Wire-dc14"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
