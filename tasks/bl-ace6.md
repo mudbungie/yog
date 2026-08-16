@@ -1,7 +1,8 @@
 +++
 title = "an unanswered delivered message with no live driver paints nothing: the chat just stops — derive the dead-driver banner, and finally read driver.log"
 created = 1786843880
-updated = 1786843880
+updated = 1786843886
+claimant = "Dills"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
