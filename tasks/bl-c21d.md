@@ -1,7 +1,8 @@
 +++
 title = "an agent's own marks space keeps its store but not its worktrees: bl-delivery territory folds off the world's XDG_STATE_HOME"
 created = 1786845626
-updated = 1786845626
+updated = 1786846297
+claimant = "Marks-c21d"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "world", "balls", "design"]
