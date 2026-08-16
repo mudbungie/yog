@@ -36,6 +36,11 @@ fn every_action_variant_round_trips() {
         agent: "c-1".into(),
         content: "hi there".into(),
     }));
+    rt(Gesture::Act(Action::Interrupt {
+        workspace: "ws".into(),
+        agent: "c-1".into(),
+        content: "no, this".into(),
+    }));
     rt(Gesture::Act(Action::Stop {
         workspace: "ws".into(),
         agent: "c-1".into(),

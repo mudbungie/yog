@@ -4,6 +4,7 @@
 
 use super::{Context, args, verbs};
 use crate::boundary::{Action, Gesture};
+use crate::fan::Verb;
 
 /// `/fan <n>` — the §4.10 mutating fan. The obligation is the seat's own: the
 /// focused project and the focused ball, exactly as `/close`'s is, so the only
@@ -19,22 +20,22 @@ use crate::boundary::{Action, Gesture};
 /// envelope stays the spelling for that.
 pub(super) fn fan(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     let n = args::required(tail, verb, "how many candidates")?;
-    Ok(Gesture::Act(Action::Fan {
+    Ok(Gesture::Act(Action::Fan(Verb::Spread {
         prepared: prepared(ctx, verb)?,
         obligation: obligation(ctx, verb)?,
         n: n.parse()
             .map_err(|_| format!("/{verb}: {n:?} is not a count; usage: /fan <n>"))?,
-    }))
+    })))
 }
 
 /// `/retire <handle>` — release one candidate, per the project's retention
 /// policy. The handle is balls' own opaque name, read off the cohort, and it is
 /// required: there is no "the current candidate" for a seat to mean.
 pub(super) fn retire(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
-    Ok(Gesture::Act(Action::Retire {
+    Ok(Gesture::Act(Action::Fan(Verb::Retire {
         obligation: obligation(ctx, verb)?,
         handle: args::required(tail, verb, "the candidate handle")?,
-    }))
+    })))
 }
 
 /// The seat's delivery obligation: its focused project and its focused ball.

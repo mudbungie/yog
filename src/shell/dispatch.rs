@@ -96,7 +96,34 @@ pub(super) fn message(
     agent: &str,
     content: &str,
 ) {
-    super::acting::message(model, state, key, ws, agent, content);
+    let action = Action::Message {
+        workspace: model.snap.ws_name(ws),
+        agent: agent.to_owned(),
+        content: content.to_owned(),
+    };
+    super::acting::deposit(model, state, key, ws, &action);
+}
+
+/// Send **and interrupt** (§8.2, bl-a33d) — the composer's Interrupt button and
+/// Ctrl+Enter, one body. The seat says only which conversation and what to say;
+/// that the stop goes first, and that the deposit's own driver-start is the
+/// trigger, are the executor's ([`crate::boundary::interrupt`]). The aftermath
+/// is `message`'s exactly, because this deposits too: a clean landing clears
+/// **this** draft and raises the §3.4 echo.
+pub(super) fn interrupt(
+    model: &mut AppModel,
+    state: &mut ShellState,
+    key: &crate::actions::DraftKey,
+    ws: &Path,
+    agent: &str,
+    content: &str,
+) {
+    let action = Action::Interrupt {
+        workspace: model.snap.ws_name(ws),
+        agent: agent.to_owned(),
+        content: content.to_owned(),
+    };
+    super::acting::deposit(model, state, key, ws, &action);
 }
 
 /// Fire inference on one conversation from where it already stands (§8.2,

@@ -11,6 +11,7 @@ mod start_terminal;
 use super::*;
 use crate::app::Snapshot;
 use crate::binding::{Workspace, WorkspaceKind};
+use crate::fan::Verb;
 use crate::git_tree::{Agent, AgentState, GitTree};
 use crate::projects::join::{JoinRow, JoinState};
 use crate::start::{BallSpec, Payload, Prepared};
@@ -154,6 +155,11 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
             agent: "c".into(),
             children: false,
         },
+        Action::Interrupt {
+            workspace: ws.clone(),
+            agent: "c".into(),
+            content: "hi".into(),
+        },
         Action::Scan {
             workspace: ws.clone(),
         },
@@ -237,7 +243,7 @@ fn the_fan_family_names_its_project() {
         ball: Some("b-1".into()),
     };
     for action in [
-        Action::Fan {
+        Action::Fan(Verb::Spread {
             prepared: Prepared {
                 workspace: "ws".into(),
                 binding: None,
@@ -246,11 +252,11 @@ fn the_fan_family_names_its_project() {
             },
             obligation: obligation.clone(),
             n: 3,
-        },
-        Action::Retire {
+        }),
+        Action::Fan(Verb::Retire {
             obligation,
             handle: "at-0badcafe".into(),
-        },
+        }),
     ] {
         assert_eq!(action.project(), Some(p.clone()), "{action:?}");
     }

@@ -39,6 +39,7 @@ impl Action {
         match self {
             Action::Message { workspace, .. }
             | Action::Stop { workspace, .. }
+            | Action::Interrupt { workspace, .. }
             | Action::Scan { workspace }
             | Action::Nudge { workspace, .. }
             | Action::Retarget { workspace, .. }
@@ -51,7 +52,8 @@ impl Action {
             | Action::PickModel { workspace, .. }
             | Action::AnswerHold { workspace, .. }
             | Action::Floor { workspace, .. } => Some(workspace.clone()),
-            Action::Prompt { prepared, .. } | Action::Fan { prepared, .. } => {
+            Action::Prompt { prepared, .. }
+            | Action::Fan(crate::fan::Verb::Spread { prepared, .. }) => {
                 Some(prepared.workspace.clone())
             }
             Action::Monitor(verb) => Some(verb.workspace()),
@@ -75,7 +77,7 @@ impl Action {
             | Action::Move { .. }
             | Action::Create { .. }
             | Action::Update { .. }
-            | Action::Retire { .. }
+            | Action::Fan(crate::fan::Verb::Retire { .. })
             | Action::Ack
             | Action::ClearTrail => None,
         }
@@ -94,9 +96,10 @@ impl Action {
             // A fan claims nothing and a retirement delivers nothing, but both
             // act in a project's refs — and the §3.5 projection reads that
             // project's board, so both refresh it.
-            Action::Fan { obligation, .. } | Action::Retire { obligation, .. } => {
-                Some(obligation.project.clone())
-            }
+            Action::Fan(
+                crate::fan::Verb::Spread { obligation, .. }
+                | crate::fan::Verb::Retire { obligation, .. },
+            ) => Some(obligation.project.clone()),
             Action::Prepare { payload, .. } => payload.project(),
             // `SetMarks` named a project until the per-agent ruling re-keyed
             // it to the agent (§16.3): it now repoints one agent's OWN space,
@@ -105,6 +108,7 @@ impl Action {
             Action::SetMarks { .. }
             | Action::Message { .. }
             | Action::Stop { .. }
+            | Action::Interrupt { .. }
             | Action::Scan { .. }
             | Action::Nudge { .. }
             | Action::Retarget { .. }

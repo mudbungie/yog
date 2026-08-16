@@ -198,11 +198,21 @@ pub fn composer(
     // and a dismissed modal all arrive here as the same bit.
     super::focus::take(state, ui, &edit);
     // Enter alone sends (bl-4515). Bare only: Shift+Enter was the widget's
-    // newline (the region's box), and any other modified Enter is deliberately
-    // inert here so a combo send (bl-a33d's Ctrl+Enter send-and-interrupt) can
-    // land as its own arm without reworking this one.
-    let entered =
-        edit.has_focus() && ui.input(|i| i.modifiers.is_none() && i.key_pressed(egui::Key::Enter));
+    // newline (the region's box), and Ctrl+Enter is the third member of the
+    // box-owned family below — send-and-interrupt (bl-a33d). Every other
+    // modified Enter stays inert.
+    //
+    // **Both are the box's, not the §11 table's.** Neither press reaches
+    // `src/keymap` at all, so rule 3 ("a combo may never fire a verb at the
+    // selection") is not being spent here: the target of this combo *is* the
+    // composer's own addressee, which is the thing the operator is looking at.
+    let returned = edit.has_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+    let (bare, command) = ui.input(|i| (i.modifiers.is_none(), i.modifiers.command_only()));
+    let entered = returned && bare;
+    // `command`, not `ctrl`: it is Ctrl on Linux and ⌘ on macOS, one gesture on
+    // both platforms §10 ships — the same read `super::keys` takes for the §11
+    // combo plane, so the two never disagree about what Ctrl means.
+    let interrupted = returned && command;
     let ctx = VerbCtx {
         ws,
         stoppable: seat.as_ref().is_some_and(|s| s.stoppable),
@@ -214,6 +224,7 @@ pub fn composer(
         text: state.actions.drafts.text(&key),
         conv_name,
         entered,
+        interrupted,
     };
     verb_buttons(ui, model, state, lernie, bl, &ctx);
 

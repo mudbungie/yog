@@ -11,7 +11,7 @@ use crate::boundary::dispatch::Deps;
 use crate::boundary::reply::Reply;
 use crate::boundary::tests::snapshot;
 use crate::cli_outbound::Cli;
-use crate::fan::Obligation;
+use crate::fan::{Obligation, Verb};
 use crate::git_tree::tests::git::run_git;
 use crate::opslog::{self, Origin};
 use crate::start::Prepared;
@@ -239,11 +239,11 @@ fn the_chokepoint_routes_a_fan_and_a_retirement_to_this_family() {
         &deps,
         &mut ui,
         TS,
-        &crate::boundary::Action::Fan {
+        &crate::boundary::Action::Fan(Verb::Spread {
             prepared: world.prepared(),
             obligation: World::obligation(),
             n: 2,
-        },
+        }),
     );
     let Ok(Reply::Fanned(variants)) = fanned else {
         panic!("the table's Fan arm answers with candidates, got {fanned:?}");
@@ -262,10 +262,10 @@ fn the_chokepoint_routes_a_fan_and_a_retirement_to_this_family() {
             &deps,
             &mut ui,
             TS,
-            &crate::boundary::Action::Retire {
+            &crate::boundary::Action::Fan(Verb::Retire {
                 obligation: World::obligation(),
                 handle,
-            },
+            }),
         ),
         Ok(Reply::Retired { discarded: false }),
     );

@@ -8,6 +8,7 @@ use crate::boundary::config::ConfigFile;
 use crate::boundary::help;
 use crate::boundary::line::{parse, spell};
 use crate::boundary::{Action, Gesture, Query};
+use crate::fan::Verb;
 use crate::start::{BallSpec, Payload};
 use std::path::PathBuf;
 
@@ -57,6 +58,13 @@ fn every_lernie_action_round_trips() {
         workspace: "ws".to_owned(),
         agent: "c-1".to_owned(),
         content: "ship it".to_owned(),
+    }));
+    // Send-and-interrupt (bl-a33d): the deposit's own grammar, so the tail
+    // survives the trip with its inner spacing exactly as `/message`'s does.
+    rt(Gesture::Act(Action::Interrupt {
+        workspace: "ws".to_owned(),
+        agent: "c-1".to_owned(),
+        content: "stop  and do this".to_owned(),
     }));
     for children in [false, true] {
         rt(Gesture::Act(Action::Stop {
@@ -189,22 +197,22 @@ fn every_start_rung_and_the_prompt_round_trip() {
 #[test]
 fn the_fan_and_the_retirement_round_trip() {
     for n in [0, 1, 5] {
-        rt(Gesture::Act(Action::Fan {
+        rt(Gesture::Act(Action::Fan(Verb::Spread {
             prepared: prepared(),
             obligation: crate::fan::Obligation {
                 project: "proj".to_owned(),
                 ball: Some("bl-1".to_owned()),
             },
             n,
-        }));
+        })));
     }
-    rt(Gesture::Act(Action::Retire {
+    rt(Gesture::Act(Action::Fan(Verb::Retire {
         obligation: crate::fan::Obligation {
             project: "proj".to_owned(),
             ball: Some("bl-1".to_owned()),
         },
         handle: "at-0badcafe".to_owned(),
-    }));
+    })));
 }
 
 #[test]

@@ -16,6 +16,11 @@ use super::{Action, Gesture};
 
 mod config;
 mod control;
+/// The two **depositing** envelopes (bl-a33d), one family file on the seam
+/// every other family here is cut on: a plain send and send-and-interrupt carry
+/// the same three fields, and the only difference is what the engine does once
+/// the deposit lands.
+mod deposit;
 mod fan;
 pub(crate) mod fields;
 mod fleet;
@@ -26,6 +31,7 @@ mod query;
 mod start;
 mod tools;
 use config::encode_file;
+use deposit::{INTERRUPT, MESSAGE, deposit, deposited};
 use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, usize_of};
 use start::{decode_payload, decode_prepared, encode_start, opt_field};
 pub(crate) use start::{
@@ -47,8 +53,12 @@ fn encode_action(action: &Action) -> Value {
             workspace,
             agent,
             content,
-        } => json!({ "op": "message", "workspace": workspace,
-                     "agent": agent, "content": content }),
+        } => deposit(MESSAGE, workspace, agent, content),
+        Action::Interrupt {
+            workspace,
+            agent,
+            content,
+        } => deposit(INTERRUPT, workspace, agent, content),
         Action::Stop {
             workspace,
             agent,
@@ -84,12 +94,14 @@ fn encode_action(action: &Action) -> Value {
         } => update(project, id, name, [title, body, note]),
         // The §8.1 start family's two, beside the `Prepared` body they share.
         Action::Prepare { .. } | Action::Prompt { .. } => encode_start(action),
-        Action::Fan {
+        Action::Fan(crate::fan::Verb::Spread {
             prepared,
             obligation,
             n,
-        } => fan::encode(prepared, obligation, *n),
-        Action::Retire { obligation, handle } => fan::encode_retire(obligation, handle),
+        }) => fan::encode(prepared, obligation, *n),
+        Action::Fan(crate::fan::Verb::Retire { obligation, handle }) => {
+            fan::encode_retire(obligation, handle)
+        }
         Action::DeleteWorkspace { workspace, typed } => {
             json!({ "op": "delete-workspace", "workspace": workspace,
                     "typed": typed })
@@ -180,11 +192,7 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
     let o = v.as_object().ok_or("gesture: not a JSON object")?;
     let op = str_of(o, "op")?;
     match op.as_str() {
-        "message" => Ok(act(Action::Message {
-            workspace: str_of(o, "workspace")?,
-            agent: str_of(o, "agent")?,
-            content: str_of(o, "content")?,
-        })),
+        MESSAGE | INTERRUPT => Ok(act(deposited(&op, o)?)),
         "stop" => Ok(act(Action::Stop {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,

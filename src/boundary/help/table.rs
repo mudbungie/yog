@@ -27,6 +27,22 @@ pub const ACTIONS: &[HelpRow] = &[
                  the workspace and the agent from the seat; refuses when nothing is selected.",
     },
     HelpRow {
+        verb: "interrupt",
+        usage: "/interrupt <text…>",
+        summary: "cut the selected conversation off mid-work and send it this text",
+        detail: "Stops whatever is running the selected conversation and then deposits the text \
+                 (`lernie stop`, then `lernie message`), so the model reads it now instead of at \
+                 the end of what it is doing. The deposit is what restarts the conversation — \
+                 there is no separate resume — so this leaves it running on your new text. Work \
+                 already committed is kept, and a tool call cut off mid-flight is reported to the \
+                 model in band as having produced no result. With nothing running it is simply a \
+                 send. Two lines on the trail, one for each half, because the stop can be \
+                 declined while the text still lands. The text is the whole tail, verbatim; no \
+                 flag is read out of it, `children` included — use `/stop children` for a \
+                 subtree. Takes the workspace and the agent from the seat; refuses when nothing \
+                 is selected. Ctrl+Enter in the composer is this gesture.",
+    },
+    HelpRow {
         verb: "stop",
         usage: "/stop [children]",
         summary: "kill the selected conversation's driver; `children` cascades",

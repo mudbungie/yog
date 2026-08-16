@@ -33,6 +33,25 @@ pub enum Action {
         agent: String,
         children: bool,
     },
+    /// **Send and interrupt** (§8.2, bl-a33d): stop whatever is running this
+    /// conversation, then deposit `content` — and the deposit's own
+    /// driver-start is the trigger, lernie's standing law (ARCH §2.9: there is
+    /// no resume verb, a deposit into a quiescent branch starts a driver). One
+    /// gesture, because the operator's act is one; **two ops rows**, because
+    /// the interrupt and the deposit are independently observable mutations and
+    /// a composite row would hide that a stop fired (§4.2).
+    ///
+    /// It gates on nothing the seat has to know: a stop landing on a branch with
+    /// nothing in flight is declined in band and the deposit still lands — the
+    /// same gesture at zero work, not a case of its own. What it *does* rest on
+    /// is lernie bl-b98d, which the pin carries; [`interrupt`](super::interrupt)
+    /// records what that settling is and why nothing here may be built on a
+    /// yog-side guess at lernie's step state.
+    Interrupt {
+        workspace: String,
+        agent: String,
+        content: String,
+    },
     /// `lernie scan <ws>` — flush inboxes, deposit died epitaphs (§8.2).
     Scan { workspace: String },
     /// **Fire inference on a conversation from the state it is already in**
@@ -109,40 +128,14 @@ pub enum Action {
         goal: String,
         seed: Option<u64>,
     },
-    /// **Fan one delivery obligation into N isolated candidates** (VISION
-    /// §4.10, bl-8746): pin the target once, ask balls for N attempts off that
-    /// exact commit, and hand back the same [`Prepare`](Self::Prepare) reply
-    /// once per candidate, each rebound to its own attempt worktree. Every
-    /// element is then fired by the ordinary [`Prompt`](Self::Prompt) gesture —
-    /// so per-variant overrides are the caller's, the §3.5 ceiling gates each
-    /// birth exactly as it gates a single start, and the trail carries N
-    /// ordinary fire rows rather than one row for N.
-    ///
-    /// **This is not the fan's group** ([`crate::fan::cohort`]): nothing here
-    /// names a cohort, and none is recorded. It is the one act that *must* be
-    /// one gesture — N attempts off one pinned target tip cannot be N separate
-    /// gestures without losing the shared base that makes them siblings.
-    /// `n <= 1` materializes nothing at all and answers with the ordinary
-    /// claim binding, which is why there is no separate single-start path.
-    Fan {
-        prepared: Prepared,
-        /// The project and the ball whose `work/<id>` ref is the target — one
-        /// value, because a target is both or neither ([`crate::fan::Obligation`]).
-        obligation: crate::fan::Obligation,
-        n: usize,
-    },
-    /// **Retire one candidate** (VISION §4.10 items 4 and 6): release its
-    /// worktree, and delete its source ref only when this project's retention
-    /// policy says the keep has expired ([`crate::fan::retention`]). Two
-    /// separate balls calls, never one — a rejected candidate stays inspectable
-    /// by default, and a rejection changes no target ref at all, here or
-    /// anywhere: there is no reject verb, because rejection is the *absence* of
-    /// a delivery.
-    Retire {
-        obligation: crate::fan::Obligation,
-        /// balls' opaque attempt handle, as the cohort read it back.
-        handle: String,
-    },
+    /// The §3.8 mutating fan's family (VISION §4.10, bl-8746): spread one
+    /// delivery obligation into N isolated candidates, or retire one of them.
+    /// One variant over [`fan::Verb`](crate::fan::Verb) rather than two here —
+    /// the fold the monitor's, the fleet's and the routing leg's families take,
+    /// for the same reason and on a seam every layer beneath already draws:
+    /// `boundary::fan` holds both executors, `codec::fan` both spellings,
+    /// `line::fan` both readers. That type's own doc says what each end costs.
+    Fan(crate::fan::Verb),
     /// The §3.6 unmaking, gated exactly as the dialog gates it: refused unless
     /// the workspace is yog's own, nothing is live, and `typed` re-states its
     /// name — fail-closed at fire time, whichever frontend fires.
@@ -178,7 +171,11 @@ pub enum Action {
     /// boundary** (VISION §4.11 items 5–6, §8.6). The held `tool_use` id is
     /// *derived* — read off `refs/lernie/held/<agent>` at fire time — never
     /// typed, so the answer lands on exactly what is parked now and cannot
-    /// race. **Nothing here ever calls stop** (lernie bl-b98d).
+    /// race. **Nothing here ever calls stop** — a decline is the model's own
+    /// in-band tool result, which it reads and steps past, and that is a
+    /// property of what an answer *means* rather than of what a stop costs: the
+    /// cost changed when lernie bl-b98d landed ([`Interrupt`](Self::Interrupt)),
+    /// and this is unaffected by it.
     AnswerHold {
         workspace: String,
         agent: String,

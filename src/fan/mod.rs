@@ -57,6 +57,58 @@ mod tests;
 
 pub use cohort::{Member, members};
 
+/// The fan's **two gestures**, as the control boundary carries them (VISION
+/// §4.10, DESIGN §3.8/§8.5). One boundary [`Action`](crate::boundary::Action)
+/// variant holds this enum rather than two holding its arms — the fold the
+/// monitor's and the fleet's families already take, and for the same reasons:
+/// one subject (a delivery obligation's candidates), one pair of ends, one
+/// trail. Every layer under the boundary was already cut this way and calls
+/// them "the fan's two" — `boundary::fan` holds both executors,
+/// `boundary::codec::fan` both spellings, `boundary::line::fan` both readers —
+/// so the carrier now says what those tables were already saying, and
+/// [`action`](crate::boundary::action) is one row wider instead of two.
+///
+/// Every gesture still carries its whole parameter set, and each still spells
+/// as its own slash verb, envelope `op` and help page: the fold is in the
+/// carrier, never in the surface.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Verb {
+    /// **Fan one delivery obligation into N isolated candidates** (VISION
+    /// §4.10, bl-8746): pin the target once, ask balls for N attempts off that
+    /// exact commit, and hand back the same
+    /// [`Prepare`](crate::boundary::Action::Prepare) reply once per candidate,
+    /// each rebound to its own attempt worktree. Every element is then fired by
+    /// the ordinary [`Prompt`](crate::boundary::Action::Prompt) gesture — so
+    /// per-variant overrides are the caller's, the §3.5 ceiling gates each
+    /// birth exactly as it gates a single start, and the trail carries N
+    /// ordinary fire rows rather than one row for N.
+    ///
+    /// **This is not the fan's group** ([`cohort`]): nothing here names a
+    /// cohort, and none is recorded. It is the one act that *must* be one
+    /// gesture — N attempts off one pinned target tip cannot be N separate
+    /// gestures without losing the shared base that makes them siblings.
+    /// `n <= 1` materializes nothing at all and answers with the ordinary claim
+    /// binding, which is why there is no separate single-start path.
+    Spread {
+        prepared: Prepared,
+        /// The project and the ball whose `work/<id>` ref is the target — one
+        /// value, because a target is both or neither ([`Obligation`]).
+        obligation: Obligation,
+        n: usize,
+    },
+    /// **Retire one candidate** (VISION §4.10 items 4 and 6): release its
+    /// worktree, and delete its source ref only when this project's retention
+    /// policy says the keep has expired ([`retention`]). Two separate balls
+    /// calls, never one — a rejected candidate stays inspectable by default,
+    /// and a rejection changes no target ref at all, here or anywhere: there is
+    /// no reject verb, because rejection is the *absence* of a delivery.
+    Retire {
+        obligation: Obligation,
+        /// balls' opaque attempt handle, as the cohort read it back.
+        handle: String,
+    },
+}
+
 /// The delivery obligation a fan spreads over (§4.10 item 1) — a project repo
 /// and, when there is one, the ball whose `work/<id>` ref is the target.
 ///

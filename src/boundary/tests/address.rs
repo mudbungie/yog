@@ -9,6 +9,7 @@
 //! against the empty path instead of refusing.
 
 use super::super::{Action, Query};
+use crate::fan::Verb;
 use crate::start::{Payload, Prepared};
 
 const WS: &str = "alba";
@@ -52,14 +53,14 @@ fn nested() -> Vec<Action> {
             goal: "g".into(),
             seed: None,
         },
-        Action::Fan {
+        Action::Fan(Verb::Spread {
             prepared: prepared(),
             obligation: crate::fan::Obligation {
                 project: "p".into(),
                 ball: None,
             },
             n: 2,
-        },
+        }),
     ]
 }
 
@@ -78,6 +79,11 @@ fn every_workspace_bearing_action_answers_with_its_name() {
             workspace: WS.into(),
             agent: "c".into(),
             children: false,
+        },
+        Action::Interrupt {
+            workspace: WS.into(),
+            agent: "c".into(),
+            content: "hi".into(),
         },
         Action::Scan {
             workspace: WS.into(),
@@ -150,13 +156,13 @@ fn the_actions_that_name_no_workspace_say_so() {
             id: "bl-1".into(),
             name: "n".into(),
         },
-        Action::Retire {
+        Action::Fan(Verb::Retire {
             obligation: crate::fan::Obligation {
                 project: "p".into(),
                 ball: None,
             },
             handle: "at-0badcafe".into(),
-        },
+        }),
         Action::ApplyConfig {
             file: super::super::config::ConfigFile::Cadence,
             text: String::new(),

@@ -49,6 +49,10 @@ pub(super) struct VerbCtx {
     /// bounds the pending queue above it.
     pub conv_name: Option<String>,
     pub entered: bool,
+    /// Ctrl+Enter, the box's third Enter (bl-a33d): send-and-interrupt. Its own
+    /// bit beside `entered` rather than a modifier read here — the box owns the
+    /// key family, and this row only spends what it decided.
+    pub interrupted: bool,
 }
 
 /// Send (Enter or click; message when an agent is selected, else new
@@ -111,6 +115,7 @@ pub(super) fn verb_buttons(
                 // holds (REMOTE §9.8, bl-1747) rather than a reply read here.
                 super::dispatch::message(model, state, &ctx.key, &ctx.ws, agent, &said);
             }
+            interrupt_control(ui, model, state, ctx, agent, &said, msg_on);
             nudge_control(ui, model, ctx, agent);
             hold_controls(ui, model, ctx, agent);
             stop_controls(ui, model, state, ctx);
@@ -144,6 +149,42 @@ pub(super) fn verb_buttons(
             }
         }
     });
+}
+
+/// **Send and interrupt** (§8.2, bl-a33d): the button beside Message, and the
+/// click half of Ctrl+Enter. Armed by the **same** gate Message is — something
+/// to say, and a conversation the world carries — and deliberately *not* by
+/// `stoppable`: a stop with nothing in flight is declined in band and the text
+/// still lands, so the operator never has to know whether a driver is up before
+/// deciding to cut in. That is one gate for two buttons rather than a second
+/// rule to keep in step.
+fn interrupt_control(
+    ui: &mut egui::Ui,
+    model: &mut AppModel,
+    state: &mut ShellState,
+    ctx: &VerbCtx,
+    agent: &str,
+    said: &str,
+    armed: bool,
+) {
+    let clicked = ui
+        .add_enabled(armed, egui::Button::new("Interrupt"))
+        .on_hover_text(
+            "Cut this conversation off mid-work and send it this text instead: it stops what is \
+             running and then deposits the message (`lernie stop`, then `lernie message`), and \
+             the deposit is what starts it going again. Work already committed is kept, and a \
+             tool call cut off mid-flight is reported to the model as having produced no result. \
+             Ctrl+Enter does the same; typed whole, it is `/interrupt <text…>`.",
+        )
+        .on_disabled_hover_text("type something first — an interrupt with nothing to say is a stop")
+        .clicked();
+    if armed && (clicked || ctx.interrupted) {
+        // A send keeps the keyboard, exactly as Message's does (§11 focus
+        // discipline): the whole point of this gesture is the next thing you
+        // type.
+        super::focus::request(state);
+        super::dispatch::interrupt(model, state, &ctx.key, &ctx.ws, agent, said);
+    }
 }
 
 /// **Nudge** (§8.2, bl-9bef): run the model on this conversation as it stands.
