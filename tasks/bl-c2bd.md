@@ -1,7 +1,7 @@
 +++
-title = "V3 Adjudicator: judge, rework, and deliver an attempt"
+title = "V3 Adjudicator core: Deliver candidate, the derived acceptance mark, and the fan's candidates on the work-diff; judge/synthesize ride V2"
 created = 1785719121
-updated = 1786844744
+updated = 1786845308
 claimant = "Adjudicator-c2bd"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
