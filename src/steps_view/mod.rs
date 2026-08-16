@@ -34,11 +34,13 @@ use crate::login::auth::{AuthFailure, row_of_model};
 mod columns;
 mod detail;
 mod drill;
+mod orphan;
 mod render;
 pub(crate) mod wire;
 mod wound;
 pub use detail::{Doc, StepDetail, ToolIo, UNPARSED, detail};
 pub(crate) use drill::RECORDS;
+pub use orphan::{ORPHANED_MAIL, Orphan};
 pub use render::{StepTab, render};
 pub use wound::{NO_RESPONSE, Wound, latest_wound};
 
@@ -88,10 +90,14 @@ pub struct StepSummary {
     pub wound: Wound,
 }
 
-/// The ordered per-step summaries for one agent's `steps/<agent-id>/` tree.
+/// The ordered per-step summaries for one agent's `steps/<agent-id>/` tree,
+/// plus the view-level **orphaned-mail state** (bl-ace6, the `orphan`
+/// module): a delivered message nobody is answering, which no per-step
+/// field can carry because the driver that died never created a step.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct StepsView {
     pub steps: Vec<StepSummary>,
+    pub orphan: Orphan,
 }
 
 /// Summarize every step of `agent_id` in `workspace`, in sequence order. A
@@ -113,7 +119,10 @@ pub fn build(workspace: &Path, agent_id: &str, state: AgentState) -> StepsView {
         newest.wound = Wound::None;
     }
     route_auth(workspace, agent_id, &mut steps);
-    StepsView { steps }
+    StepsView {
+        steps,
+        orphan: orphan::read(workspace, agent_id, state),
+    }
 }
 
 /// Upgrade every auth-shaped step from `Unrouted` to the provider row it failed

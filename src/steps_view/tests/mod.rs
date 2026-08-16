@@ -12,6 +12,7 @@
 
 use std::path::{Path, PathBuf};
 
+mod orphan;
 mod raw;
 mod render;
 mod tail;

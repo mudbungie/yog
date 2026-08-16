@@ -15,7 +15,7 @@ mod tree;
 use crate::budgets::BudgetSpend;
 use crate::git_tree::{AgentState, Framing, StepCommit};
 use crate::rail::ChildInput;
-use crate::steps_view::{StepSummary, StepsView, Wound};
+use crate::steps_view::{Orphan, StepSummary, StepsView, Wound};
 use crate::transcript::{Block, Entry, EntryKind, Transcript, Usage};
 
 /// A commit on a branch; oid and timestamp are the only fields the rail reads.
@@ -48,7 +48,10 @@ pub(super) fn step(seq: &str, oid: Option<&str>, tokens: u64) -> StepSummary {
 }
 
 pub(super) fn steps(rows: Vec<StepSummary>) -> StepsView {
-    StepsView { steps: rows }
+    StepsView {
+        steps: rows,
+        orphan: Orphan::default(),
+    }
 }
 
 /// One delivered message and one model reply per step — the settled shape a

@@ -10,7 +10,7 @@ use crate::files_view::{FileEntry, FilesView, Preview};
 use crate::git_tree::{AgentState, Framing};
 use crate::login::auth::AuthFailure;
 use crate::rail::{ChildCard, Notch, Place, Rail};
-use crate::steps_view::{Doc, StepDetail, StepSummary, StepsView, ToolIo, UNPARSED, Wound};
+use crate::steps_view::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, UNPARSED, Wound};
 
 fn step(seq: &str, framing: Framing) -> StepSummary {
     StepSummary {
@@ -48,6 +48,7 @@ fn a_step_row_states_what_was_recorded_and_omits_what_was_not() {
     killed.wound = Wound::Spoke("no credentials".to_owned());
     let rows = encode(&Reply::Steps(StepsView {
         steps: vec![settled, failed, killed],
+        orphan: Orphan::default(),
     }));
     assert_eq!(rows["kind"], "steps");
     let at = |i: usize| rows["rows"][i].clone();

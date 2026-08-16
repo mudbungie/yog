@@ -12,7 +12,7 @@ use crate::git_tree::{AgentState, Framing};
 use crate::inboxview::{Deposit, Epitaph, InboxEntry};
 use crate::login::auth::AuthFailure;
 use crate::rail::{ChildCard, Notch, Place, Rail};
-use crate::steps_view::{Doc, StepDetail, StepSummary, StepsView, ToolIo, Wound};
+use crate::steps_view::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
 use crate::transcript::{Block, Entry, EntryKind, Transcript};
 use crate::workdiff::{Attempt, Change, Churn, FileChurn};
 
@@ -113,6 +113,9 @@ fn steps() -> StepsView {
                 ..base
             },
         ],
+        // The view-level orphaned-mail pair (bl-ace6): the Spoke arm here,
+        // the Mute and None arms as their own replies below.
+        orphan: Orphan::Spoke("driver died".into()),
     }
 }
 
@@ -259,6 +262,11 @@ pub(super) fn inspector() -> Vec<Reply> {
         },
         Reply::Transcript(transcript()),
         Reply::Steps(steps()),
+        Reply::Steps(StepsView {
+            steps: vec![],
+            orphan: Orphan::Mute,
+        }),
+        Reply::Steps(StepsView::default()),
         Reply::Step(step_detail()),
         Reply::Files {
             view: FilesView::Present {

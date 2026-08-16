@@ -135,6 +135,25 @@ pub fn center(
     ) {
         ui.colored_label(theme::ICHOR, wound.banner());
     }
+    // A conversation whose newest transcript entry is delivered mail while
+    // nobody holds the driver lock banners the **orphaned-mail** state
+    // (bl-ace6, `steps_view::orphan`): the driver that should be answering
+    // died before creating a step — an unpaired-tail decline, a lease
+    // fault, a crashed launch — so the wound above has no step to hang on
+    // and the ops trail says `exit 0` (the deposit succeeded; the failure
+    // was a grandchild lernie launched). The sentence carries the tail of
+    // `steps/<agent>/driver.log`, the one copy of that driver's words.
+    // Same grace discipline as the wound: delivery happens under the
+    // driver's own lock, so the healthy shape of this pair is only ever
+    // the relaunch gap, and a pair that outlives the grace window is real.
+    if state.orphan_grace.paints(
+        &ws,
+        &agent_id,
+        steps.orphan.orphaned(),
+        model.cadence().wound_grace(),
+    ) {
+        ui.colored_label(theme::ICHOR, steps.orphan.banner());
+    }
     ui.separator();
     super::inspector::tabs_and_content(ui, model, state, &ws, lernie);
 }

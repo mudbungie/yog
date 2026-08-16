@@ -28,6 +28,7 @@ mod modal;
 mod name_column;
 mod naming;
 mod one_rendering;
+mod orphan;
 mod overlap;
 mod picker;
 mod raise;

@@ -7879,6 +7879,7 @@ beside `main.rs`.
 | `src/shell/acceptance/modal.rs` (excl.) | the modal-ownership drive (Escape dismissal, the swallowed click and the Return submit, each asserted in two directions) |
 | `src/shell/acceptance/name_column.rs` (excl.) | the same painted-geometry discipline one altitude in — on the row rather than the panel (bl-b9e3: the title's left edge is the row's fixed prefix and nothing else, so two rows differing only in attention align — measured on the painted galleys, since a string assertion would pass on a tree that deleted the flag outright) |
 | `src/shell/acceptance/one_rendering.rs` (excl.) | the QUALITY H1 seat drives: a fact yog derives once reaches the glass in exactly one seat, proved in both directions — the non-owning surface is asserted **not** to say the fact's own words, and the owner is asserted to say them (bl-20cb's provider roster; the reference control's tab focus) |
+| `src/shell/acceptance/orphan.rs` (excl.) | the bl-ace6 drive (a conversation whose newest transcript entry is delivered mail while no driver holds the lock, rendered on the whole window: the dead driver's own `driver.log` sentence is in the paint output, the mute variant says outright that nothing on disk explains it, and the grace gate still withholds the alarm on the frame before the window elapses — the `acceptance/wound.rs` harness, on `ShellState::orphan_grace`) |
 | `src/shell/acceptance/picker.rs` (excl.) | the bl-a842 drive that the §9.4 pane's **contents** reach the paint layer — the role strip the seeded `providers.yaml` declares, the blast-radius sentence a pick claims, and the §9.2 fault an undeclared model earns — all of it behind the "cannot read `roles:`" early return until the fixture carried a config lineage, and none of it asserted by the two picker beats that measure the seat's *height* |
 | `src/shell/acceptance/raise.rs` (excl.) | the bl-9acf raise drive (one goal box, and a blank one fires nothing) |
 | `src/shell/acceptance/recall.rs` (excl.) | the bl-f908 drive (↑ pages back through the operator's own turns — pending ahead of delivered — ↓ hands the half-typed draft back verbatim, and a caret below the top row keeps its arrow) |
@@ -7965,6 +7966,7 @@ beside `main.rs`.
 | `src/start/instructions.rs` + `src/start/instructions/{names,manifest}.rs` | the §3.7 project-instruction freeze (bl-aa8b): the walk from the binding's authority root down to the binding and the ranked `--pin` specs it yields — yog reads no instruction bytes, lernie's caller-supplied pinned documents do the loading, validation, snapshot and commit; `names` the severable filename policy (`AGENTS.md` in code, `instructions.yaml` at the live config tip overriding it, an existing file authoritative even when it names nothing); `manifest` the `instructions/**` glob's fixed point, without which a frozen document is a committed file no model ever sees |
 | `src/state.rs` | the crate's lock chokepoint: the dirty hand-off, the snapshot cell, the §8.5 search cell and the §7.2 live-tail cell — the whole inter-thread interface (§7.2, §8.5, AGENTS rule 7). The tail cell is **appended whole below every line that was there before**, and takes the snapshot cell's *alias + free functions* spelling rather than a struct with an `impl` — including leaving the module doc's stale "three residents" line untouched. That is the hazard `rules/locks-outside-state.yml` records as the reason for both its carve-outs: llvm-cov mis-attributes phantom uncovered regions onto this file's `impl` headers when anything above them moves, and an added `impl` block draws one onto itself besides. This is genuine cross-thread hand-off state — what the chokepoint exists to inventory — so it belongs here and the spelling gives way instead of the rule. The watch hub's two singletons are its second declared carve-out (§7.1, `rules/locks-outside-state.yml`) |
 | `src/steps_view/{mod,detail,columns,render,drill,wound,wire,wire/decode}.rs` | the step inspector, incl. the §7.3 no-response wound (§11 Steps). Both tiers are cut twice, read from write: `mod`+`detail` are the list/drill-in **reads**, `render`+`drill` their **paints**, and `columns` is the §11 column table — header, hover explanation and cell in one home, so no field paints without its name (bl-3ffc). `wire` is the §8.5 spelling of **both** tiers, cut along that same read seam (bl-6233), with `wire/decode` its other direction at the §12 budget (bl-7067) — also the one home of the `BudgetSpend` shape, which the §3.5 board figure spends rather than keeping a second wording of four counters |
+| `src/steps_view/orphan.rs` | the **orphaned-mail state** (bl-ace6): a delivered message on the transcript tail with nobody holding the driver lock — the class the §7.3 wound cannot see because the driver that died (an unpaired-tail decline, a lease fault, a crashed launch) never created a step. Derived per reading from the messages listing plus the already-derived §3.5 liveness, nothing stored; the reason is the tail of `steps/<agent>/driver.log`, lernie's binding of every launched driver's stderr (the file yog pinned lernie 0.0.9 for and, until this, never read), read only when the state holds |
 | `src/tail.rs` | the §11 tail idiom in one home (bl-8c13): the `stick_to_bottom` anchor and the top pad that seats an underfull body on the bottom edge, taken together by every tail surface and restated by none; since bl-929d it also hands back the body height it already measures, so a content-sized region (the inbox-composer) derives its extent from the one measurement |
 | `src/test_support{.rs,/wire.rs,/workspace.rs,/world.rs}` | the test-only scaffolding every test module in this binary shares: the spawn/env serialization locks (AGENTS.md rule 7's sanctioned carve-out), the REMOTE §9.5 wire's key material minted at test runtime by the same `openssl` act an operator performs (a certificate fixture is never committed — bl-b6fa), a real lernie workspace on disk for §8.6 control authoring, and the §16.2 fixture world every test that touches a §9 destination or a §16.3 space reads and writes through |
 | `src/test_support/chrome.rs` | **the §11 accessories that crossed with bl-296f, asked the way a seat asks them** (REMOTE §9.7): the altitude-0 chrome is a fold over `Query::Workspaces` and `Query::Ops`, and the live mark and in-flight strip are fields on `Query::Agent`'s answer, so `AppModel` holds none of them. `convs.rs`' door for the surfaces beside the list |
@@ -8169,6 +8171,26 @@ file of the record (lernie ARCH §2.3). So the conversation surface owes *both*
 halves for this class, and the wound states the reason instead of pointing
 across at a trail that may hold nothing. The ops sink is unchanged and still
 answers for the spawns yog itself fires.
+
+**And one class had no step to hang either half on (bl-ace6).** The wound is a
+fact *about a step*; a driver that dies **at the boundary** — an unpaired-tail
+decline, a lease fault, a launch that crashed before its model call — has
+delivered the mail and created nothing else. The deposit's own ops row says
+`exit 0` (the deposit succeeded; the failure was a grandchild lernie launched),
+the steps tree is unchanged, and the transcript simply stops — the exact shape
+an operator reads as "the chat stopped working". The **orphaned-mail state**
+(`steps_view::orphan`) is that class's vocabulary: the newest transcript entry
+is a delivered `NNN-<sender>.md` while nobody holds the agent's lock — a pair
+that is derivable, stored nowhere, and on a healthy branch exists only for the
+relaunch gap, because delivery only ever happens under the driver's own lock
+(lernie §2.11). It banners at Altitude 1 through the wound's own grace window,
+and its sentence carries the tail of `steps/<agent>/driver.log` — where lernie
+has bound every launched driver's stderr since 0.0.9 (its bl-55f9), the file
+yog pinned that release for and, until this, never read. The log is append-only
+across launches, so its *content* is never the trigger — a stale line from a
+healed crash must not alarm — only the diagnosis. The badge vocabulary and
+attention's rest-not-wound rule are deliberately untouched (bl-d816 tracks
+whether they ever should not be).
 
 ---
 
@@ -8636,8 +8658,12 @@ chain is the yog binary those pins built — a skewed pair is not guarded
 against, it is unrepresentable. The lockfile is the version (§16.5); a gate
 every tool passes by construction is dead code, so the gate is gone (§16.6).
 After-the-fact rendering stays for a different reason — the §7.3 no-response
-wound and the §8.1 driver-stderr sink surface *any* dead driver, embedded or
-ambient, and neither was ever gate machinery.
+wound, the §8.1 driver-stderr sink and the §13.3 orphaned-mail banner
+(bl-ace6) together surface a dead driver wherever it died — mid-step, in a
+yog spawn, or at the boundary of a driver lernie launched — and none of
+them was ever gate machinery. (Until bl-ace6 this sentence claimed the first
+two alone covered *any* dead driver; the boundary class — no step, no yog
+spawn — was invisible, which is the gap that ball closed.)
 
 **The discovery mechanism is bash, not lernie's tool slot (W9).** lernie
 discovers `lernie-tool-<name>` under its own data root with a JSON-on-stdin

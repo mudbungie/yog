@@ -6,19 +6,29 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{Doc, StepDetail, StepSummary, StepsView, ToolIo, Wound};
+use super::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
 use crate::budgets::BudgetSpend;
 use crate::git_tree::Framing;
 
 /// The decoders, beside the encoders they undo (bl-7067, REMOTE §9 step 2).
 pub(crate) mod decode;
 
-/// The `steps` reply body: one row per step, in sequence order.
+/// The `steps` reply body: one row per step, in sequence order, and the
+/// view-level orphaned-mail state (bl-ace6) — the wound's key-pair shape,
+/// at the top because it is not any one step's fact.
 pub(crate) fn steps(view: &StepsView) -> Value {
-    json!({
-        "ok": true, "kind": "steps",
-        "rows": Value::Array(view.steps.iter().map(step_row).collect()),
-    })
+    let mut map = Map::new();
+    map.insert("ok".to_owned(), json!(true));
+    map.insert("kind".to_owned(), json!("steps"));
+    map.insert(
+        "rows".to_owned(),
+        Value::Array(view.steps.iter().map(step_row).collect()),
+    );
+    map.insert("orphaned".to_owned(), json!(view.orphan.orphaned()));
+    if let Orphan::Spoke(reason) = &view.orphan {
+        map.insert("orphan_reason".to_owned(), json!(reason));
+    }
+    Value::Object(map)
 }
 
 /// One step's summary. The timestamps and the read-state commit are absent
