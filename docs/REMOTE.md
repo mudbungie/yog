@@ -256,9 +256,10 @@ branch.
 not exist: the resolution falls back to `<names-root>/<name>` (§3.1) and
 `Step::EnsureWorkspace` founds it — which is what the window has always done by
 handing `prepare` a path directly, and what no other seat could do while the
-resolution refused every name the enumeration lacked. It can only **found**,
-never join: a directory already at that path refuses with the resolver's own
-sentence, so a create is never a way into a workspace the scope hides.
+resolution refused every name the enumeration lacked. It can **found or resume**,
+never join: a directory already at that path that IS a workspace (§3.1 — it
+holds `repo.git`) refuses with the resolver's own sentence, so a create is
+never a way into a workspace the scope hides.
 
 **Since bl-6c9e that refusal is about SCOPE and nothing else.** The enumeration
 the resolution reads is now the live one (§8), so "exists but is not in my set"
@@ -266,7 +267,12 @@ no longer includes *the wall this very caller founded a millisecond ago* — the
 case that made a second `Prepare` refuse, and made every non-`Prepare` gesture
 naming the newborn refuse with it, since no raise fallback covers a gesture that
 founds nothing. What the guard still catches is another client's workspace hidden
-by scope, and a directory that is not a §3.1 workspace at all.
+by scope — and only that, since bl-c9d2: a directory that is not a §3.1
+workspace at all is a birth that died between making the directory and making
+the marker, enumerated by no root and inside nobody's scope, and refusing it
+wedged the name forever behind an addressing sentence. The raise resolves past
+it and the idempotent ensure's own `lernie new` decides — finishing the dead
+birth, or refusing in lernie's own words with a logged ops row.
 
 That refusal is the one place existence is observable to a scoped client, and
 the ruling is that this is acceptable and bounded: **a namespace with creation

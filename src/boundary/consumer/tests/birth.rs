@@ -90,3 +90,41 @@ fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
     );
     assert_eq!(refusal["error"], "unknown workspace \"home\"", "{refusal}");
 }
+
+/// **A birth that died mid-way is resumable, not a wedge** (bl-c9d2):
+/// `lernie new` makes the directory before it makes the `repo.git` marker, so
+/// a killed birth leaves a marker-less directory no root enumerates. The
+/// resolver used to refuse that name forever — `unknown workspace`, a
+/// sentence about addressing for a half-written filesystem — with no in-band
+/// exit. Now the raise resolves past debris that is not a workspace, and the
+/// idempotent ensure's `lernie new` finishes what the dead one started.
+#[test]
+fn a_half_born_directory_is_resumed_not_wedged() {
+    let _g = crate::test_support::spawn_guard();
+    let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
+    let ctx = newborn_world(root.path(), data.path(), bin.path());
+    // The debris: the directory exists, the marker does not.
+    let debris = crate::binding::workspace_path(data.path(), "home");
+    std::fs::create_dir_all(&debris).unwrap();
+    let born = ctx.answer(&prepare("home"));
+    assert_eq!(born["kind"], "prepared", "{born}");
+    assert!(
+        debris.join("repo.git").is_dir(),
+        "the resume finished the dead birth"
+    );
+}
+
+/// The scope half stands (REMOTE §4): a directory that IS a workspace and is
+/// not in the caller's scope still refuses with the resolver's sentence — the
+/// raise can found or resume, never join another client's wall.
+#[test]
+fn a_scoped_clients_prepare_never_joins_anothers_wall() {
+    let _g = crate::test_support::spawn_guard();
+    let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
+    let ctx = newborn_world(root.path(), data.path(), bin.path());
+    let window = crate::registry::window();
+    let born = ctx.answer_as(&window, &prepare("home"));
+    assert_eq!(born["kind"], "prepared", "{born}");
+    let refusal = ctx.answer_as(&client("stranger"), &prepare("home"));
+    assert_eq!(refusal["error"], "unknown workspace \"home\"", "{refusal}");
+}

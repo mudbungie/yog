@@ -141,8 +141,11 @@ pub fn named_of(workspaces: &[Workspace], path: &Path) -> Option<String> {
         })
 }
 
-/// True when `dir` directly contains the `repo.git` marker.
-fn is_workspace(dir: &Path) -> bool {
+/// True when `dir` directly contains the `repo.git` marker — the §3.1
+/// definition, callable wherever "is this directory a workspace at all"
+/// is the question (the Prepare raise asks it of half-born debris,
+/// bl-c9d2).
+pub(crate) fn is_workspace(dir: &Path) -> bool {
     dir.join(REPO_MARK).exists()
 }
 
