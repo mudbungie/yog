@@ -5,13 +5,15 @@
 //! command's page. Nothing routes, composes, spawns, parks or writes first.
 //!
 //! **Which commands answer here, and which answer themselves.** yog's own
-//! subcommands ([`crate::world::hatch`]'s two, `headless`, `tool-control`) have
-//! no interface of their own to consult, so their page is [`COMMANDS`] and this
-//! module prints it. A §16.7 *namespace* (`gesture`, `lernie`, `bl`, `bz`) owns
-//! its argv: its `--help` is the embedded tool's own answer, so the ask is
-//! passed through to the arm, which must reach it **world-free** — that is why
-//! [`is_discovery`] exists and why `bl`'s shim converge and `bz`'s wall gate
-//! both step aside for a probe.
+//! subcommands ([`crate::world::hatch`]'s two, `headless`, `tool-control` —
+//! and `tool-host`, which routes as a namespace but takes no argv, bl-4667)
+//! have no interface of their own to consult, so their page is [`COMMANDS`]
+//! and this module prints it. A namespace that owns its argv
+//! ([`super::Namespace::owns_argv`]: `gesture`, `lernie`, `bl`, `bz`, `seat`,
+//! balls' two plugin seams): its `--help` is the embedded tool's own answer,
+//! so the ask is passed through to the arm, which must reach it **world-free**
+//! — that is why [`is_discovery`] exists and why `bl`'s shim converge and
+//! `bz`'s wall gate both step aside for a probe.
 //!
 //! [`COMMANDS`] is the single source: the top-level roster ([`super::usage`]),
 //! every per-command page, and the parity tests all read this one list. A row
@@ -155,16 +157,19 @@ pub(super) const COMMANDS: &[HelpRow] = &[
 ];
 
 /// Answer a help ask at the argv surface, or `None` when this argv is not one
-/// — the two shapes of the module doc, read above the router. A namespace's
-/// `--help` is deliberately **not** answered here: its argv is the tool's, and
-/// the arm answers it (world-free) with the tool's own page.
+/// — the two shapes of the module doc, read above the router. A namespace
+/// that **owns its argv** ([`super::Namespace::owns_argv`]) has its `--help`
+/// deliberately **not** answered here: its argv is the tool's, and the arm
+/// answers it (world-free) with the tool's own page. One that does not
+/// (`tool-host`, bl-4667) is answered from [`COMMANDS`] like any of yog's own
+/// subcommands.
 pub(super) fn answer(argv: &[String]) -> Option<String> {
     let word = argv.get(1)?.as_str();
     if matches!(word, "--help" | "-h" | "help") {
         let about = argv.get(2).map(String::as_str);
         return Some(about.and_then(page).unwrap_or_else(super::usage));
     }
-    if super::Namespace::from_arg(word).is_some() {
+    if super::Namespace::from_arg(word).is_some_and(super::Namespace::owns_argv) {
         return None;
     }
     matches!(argv.get(2).map(String::as_str), Some("--help" | "-h"))

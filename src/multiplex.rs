@@ -89,61 +89,10 @@ fn usage() -> String {
     )
 }
 
-/// Every namespace and its arm — the router's whole table (§16.7 W12,
-/// bl-2930). What a word *means* is [`help::COMMANDS`]'s business; balls' two
-/// plugin binaries are absent from it because balls' own plugin chain spawns
-/// them and no operator types one.
-const NAMESPACES: &[(&str, Namespace)] = &[
-    ("lernie", Namespace::Lernie),
-    ("bl", Namespace::Bl),
-    ("bz", Namespace::Bz),
-    ("bl-delivery", Namespace::BlDelivery),
-    ("bl-tracker", Namespace::BlTracker),
-    ("gesture", Namespace::Gesture),
-    (crate::wire::SEAT_SUBCMD, Namespace::Seat),
-    (crate::wire::HOST_SUBCMD, Namespace::ToolHost),
-];
-
-/// The embedded-tool namespaces yog multiplexes to (§16.7 W12): the three
-/// agent tools, plus balls' two sibling plugin binaries (bl-2930) — spawned
-/// not by yog but by the embedded balls' own plugin chain, through the
-/// `world/tools/` shims a `yog bl prime` binds.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Namespace {
-    Lernie,
-    Bl,
-    Bz,
-    BlDelivery,
-    BlTracker,
-    Gesture,
-    Seat,
-    ToolHost,
-}
-
-impl Namespace {
-    /// The namespace a leading verb names, or `None` — the signal that `arg` is
-    /// not a multiplex target (the GUI/hatch path).
-    fn from_arg(arg: &str) -> Option<Self> {
-        NAMESPACES
-            .iter()
-            .find(|(word, _)| *word == arg)
-            .map(|(_, namespace)| *namespace)
-    }
-
-    /// Route to the namespace's arm with the sliced verb args (§16.7 W12).
-    fn run(self, args: &[String]) -> i32 {
-        match self {
-            Namespace::Lernie => lernie::run(args),
-            Namespace::Bl => bl::run(args),
-            Namespace::Bz => bz::run(args),
-            Namespace::BlDelivery => bl_delivery::run(args),
-            Namespace::BlTracker => bl_tracker::run(args),
-            Namespace::Gesture => gesture::run(args),
-            Namespace::Seat => wire::seat(args),
-            Namespace::ToolHost => wire::tool_host(args),
-        }
-    }
-}
+/// The router's table and its exhaustive per-namespace classification
+/// (bl-4667) — split to its own file at §12's budget.
+mod namespace;
+use namespace::Namespace;
 
 /// The `gesture` arm (§8.5): the control boundary's deposit-and-wait sugar —
 /// `yog gesture '<json>'` deposits into the composed world's gestures inbox
