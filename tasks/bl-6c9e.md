@@ -1,7 +1,8 @@
 +++
 title = "workspace birth success is not a barrier: GUI Prepare-to-Prompt and headless continuations race"
 created = 1786843305
-updated = 1786843542
+updated = 1786844875
+claimant = "Birth6c9e"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "headless", "drive", "gui"]
