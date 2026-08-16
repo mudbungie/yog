@@ -732,6 +732,20 @@ certificate fixture is never committed**, which `make leak-scan` would refuse
 anyway and which would be a private key in a public repository whether or not
 it guarded anything.
 
+**No test binds the default port** *(bl-4c50)*. The port is one machine's, and
+the machine a test runs on is the one the operator's own yog is running on: the
+window under development already holds it. So a fixture world **names its own
+address before it boots** — `127.0.0.1:0`, a kernel-chosen port
+(`test_support::wire::ephemeral`) — and the mint takes the address the directory
+already names, exactly as it does for an operator who wrote one. Three tests
+that let it fall back to the default instead (two engine boots and the
+unprovisioned-wire rung) failed `bind 127.0.0.1:<port>: Address already in use`
+on **every** run while yog was up, so the local gate could not pass while the
+app was, and a close had to lean on an imported remote verdict. Nothing about
+the default moved: it is still what a real box writes when nothing names an
+address, and it is still proved — in the one place where nothing binds, by
+reading it back out of the file the mint wrote.
+
 **The material sits BESIDE the world, not inside it** — `<yog-data-root>/wire`,
 the sibling of `<yog-data-root>/world`. The world subtree is a generated
 artifact yog seeds, wipes and reseeds; key material is operator-provisioned and
