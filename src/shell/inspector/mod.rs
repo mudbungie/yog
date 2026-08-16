@@ -94,7 +94,14 @@ pub fn tabs_and_content(
     for said in &refused {
         ui.colored_label(crate::theme::ICHOR, said);
     }
-    controls::per_tab_controls(ui, active, model, &mut state.inspector, &data.steps);
+    controls::per_tab_controls(
+        ui,
+        active,
+        model,
+        &mut state.inspector,
+        &data.steps,
+        data.step_detail.as_ref(),
+    );
     // The V2 fork composer, seated at the pin and nowhere else (bl-dc0c):
     // above the tab content because it belongs to the pin banner's fact, not
     // to whichever tab happens to be open — the pin reaches all four.

@@ -218,8 +218,9 @@ pub enum Reply {
     /// [`Steps`](super::Query::Steps)' answer, the Steps tab's list.
     Steps(crate::steps_view::StepsView),
     /// One step's records drilled in (§11) — [`Step`](super::Query::Step)'s
-    /// answer. A step the tree does not hold answers absent records rather
-    /// than refusing: "nothing was written there" is a reading, not an error.
+    /// answer, the parsed records and the capture logs that had bytes. A step
+    /// the tree does not hold answers absent records rather than refusing:
+    /// "nothing was written there" is a reading, not an error.
     Step(crate::steps_view::StepDetail),
     /// The agent worktree's listing and, when the query named a listed file,
     /// its bounded preview (§11) — [`Files`](super::Query::Files)' answer. The

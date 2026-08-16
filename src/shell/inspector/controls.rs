@@ -10,7 +10,7 @@
 use super::super::InspectorState;
 use crate::AppModel;
 use crate::keymap::InspectorTab;
-use crate::steps_view::StepsView;
+use crate::steps_view::{StepDetail, StepsView};
 
 /// The Raw toggle's label — the same words wherever it appears, because it is
 /// the same knob (§5.3 ephemera, one `InspectorState::raw` behind all of them).
@@ -37,6 +37,7 @@ pub(super) fn per_tab_controls(
     model: &mut AppModel,
     inspector: &mut InspectorState,
     steps: &StepsView,
+    detail: Option<&StepDetail>,
 ) {
     match tab {
         InspectorTab::Transcript => {
@@ -72,7 +73,7 @@ pub(super) fn per_tab_controls(
         InspectorTab::Steps => {
             ui.checkbox(&mut inspector.raw, RAW_LABEL)
                 .on_hover_text(RAW_HINT);
-            step_controls(ui, inspector, steps);
+            step_controls(ui, inspector, steps, detail);
         }
         InspectorTab::Inbox => {
             ui.horizontal(|ui| {
@@ -97,9 +98,19 @@ pub(super) fn per_tab_controls(
 }
 
 /// The Steps tab's selection controls: a clickable step seq per row (sets the
-/// drill-in target), and the drill-in tab picker (§11 meta/request/staging/
-/// response/tools). Selection is RAM ephemera the caller owns.
-fn step_controls(ui: &mut egui::Ui, inspector: &mut InspectorState, steps: &StepsView) {
+/// drill-in target), and the drill-in record picker. Selection is RAM ephemera
+/// the caller owns.
+///
+/// The picker's rows are the landed drill-in's own answer
+/// ([`crate::steps_view::seats`], bl-83d6) — the five JSON records plus each
+/// capture log that has bytes — so the clickable strip here and the labelled
+/// `Records:` row inside the tab can never offer different seats.
+fn step_controls(
+    ui: &mut egui::Ui,
+    inspector: &mut InspectorState,
+    steps: &StepsView,
+    detail: Option<&StepDetail>,
+) {
     ui.horizontal(|ui| {
         ui.weak("step:");
         for (i, step) in steps.steps.iter().enumerate() {
@@ -131,7 +142,7 @@ fn step_controls(ui: &mut egui::Ui, inspector: &mut InspectorState, steps: &Step
     ui.horizontal(|ui| {
         // The words are steps_view's (bl-3ffc's record table), read from its one
         // home rather than spelled a second time here (§11).
-        for (which, label, hint) in crate::steps_view::RECORDS {
+        for (which, label, hint) in crate::steps_view::seats(detail) {
             if ui
                 .selectable_label(inspector.step_tab == which, label)
                 .on_hover_text(hint)

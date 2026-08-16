@@ -122,7 +122,8 @@ fn steps() -> StepsView {
 }
 
 /// One record per [`Doc`] arm: parsed with its bytes, absent, and bytes that
-/// are not JSON.
+/// are not JSON — plus one capture log present and one absent (bl-83d6), the
+/// pair the picker's row set is derived from.
 fn step_detail() -> StepDetail {
     StepDetail {
         seq: "001".into(),
@@ -139,6 +140,11 @@ fn step_detail() -> StepDetail {
             output: Doc::Unparsed(b"raw".to_vec()),
             is_error: false,
         }],
+        stderr: Some(crate::files_view::Preview::Truncated {
+            text: "the adapter's last words".into(),
+            size: 999_999,
+        }),
+        driver: None,
     }
 }
 

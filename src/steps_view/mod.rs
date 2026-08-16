@@ -35,12 +35,13 @@ mod columns;
 mod detail;
 mod drill;
 mod orphan;
+mod records;
 mod render;
 pub(crate) mod wire;
 mod wound;
 pub use detail::{Doc, StepDetail, ToolIo, UNPARSED, detail};
-pub(crate) use drill::RECORDS;
 pub use orphan::{ORPHANED_MAIL, Orphan};
+pub(crate) use records::seats;
 pub use render::{StepTab, render};
 pub use wound::{NO_RESPONSE, Wound, latest_wound};
 

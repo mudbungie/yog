@@ -8,10 +8,12 @@ use std::path::Path;
 
 use serde_json::Value;
 
+use super::records::{DRIVER_LOG_FILE, STDERR_FILE};
 use super::{
     INPUT_FILE, META_FILE, OUTPUT_FILE, REQUEST_FILE, RESPONSE_FILE, STAGING_FILE, STEPS_DIR,
     TOOLS_SUBDIR,
 };
+use crate::files_view::Preview;
 
 /// The sentence yog renders above an unparseable record — the §11 "error row"
 /// for this class, held beside [`NO_RESPONSE`] for the same reason: one
@@ -84,8 +86,9 @@ pub struct ToolIo {
 }
 
 /// One step's drill-in: the four record files as jsonview docs, `response
-/// .json` split per JSONL event, and every tool call's input/output. Built
-/// on demand for the selected step only.
+/// .json` split per JSONL event, every tool call's input/output, and the two
+/// capture logs when they carry anything. Built on demand for the selected step
+/// only.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StepDetail {
     pub seq: String,
@@ -96,6 +99,17 @@ pub struct StepDetail {
     /// line kept raw.
     pub response: Vec<Doc>,
     pub tools: Vec<ToolIo>,
+    /// This step's `stderr.log` as bounded bytes — the adapter's own words in
+    /// full, where the §7.3 wound banner quotes three lines of them (bl-83d6).
+    /// `None` is a file with nothing in it, which is the ordinary run: the
+    /// picker then seats no `stderr.log` row at all, so the absence is one fact
+    /// with one encoding (`Some(Preview::Text(""))` would be a second).
+    pub stderr: Option<Preview>,
+    /// The **agent's** `driver.log` as bounded bytes — not this step's file, the
+    /// conversation's, read here because the drill-in is the surface that shows
+    /// a whole file and this is the only tier built on demand. `None` when it
+    /// has nothing in it, exactly as `stderr` above.
+    pub driver: Option<Preview>,
 }
 
 /// Build the drill-in for one step of `agent_id`. Every file is read
@@ -103,7 +117,8 @@ pub struct StepDetail {
 /// malformed ([`UNPARSED`]), absent content says so; neither aborts the build,
 /// so the sibling tabs still render (S7-T2).
 pub fn detail(workspace: &Path, agent_id: &str, seq: &str) -> StepDetail {
-    let step = workspace.join(STEPS_DIR).join(agent_id).join(seq);
+    let agent = workspace.join(STEPS_DIR).join(agent_id);
+    let step = agent.join(seq);
     StepDetail {
         seq: seq.to_string(),
         meta: Doc::of_file(&step.join(META_FILE)),
@@ -111,7 +126,26 @@ pub fn detail(workspace: &Path, agent_id: &str, seq: &str) -> StepDetail {
         staging: Doc::of_file(&step.join(STAGING_FILE)),
         response: response_events(&step.join(RESPONSE_FILE)),
         tools: tool_ios(&step.join(TOOLS_SUBDIR)),
+        stderr: log(&step.join(STDERR_FILE)),
+        driver: log(&agent.join(DRIVER_LOG_FILE)),
     }
+}
+
+/// A capture log as bounded bytes, or `None` when there is nothing to read —
+/// absent, unstattable, or empty, which are one fact for a file nobody promised
+/// to write (bl-83d6). This single read **is** the picker's presence rule
+/// ([`super::records::seats`]): nothing stats these files twice, so a seat can
+/// never be offered over bytes that are not there.
+///
+/// The bound is [`crate::files_view::preview`]'s, not a new one: 64 KiB of a
+/// file with the cap said outright, a NUL-bearing capture declared binary
+/// rather than mangled. A driver that chattered for hours is exactly the case
+/// that bound exists for, and the §7.3 banners' three-line tail
+/// ([`crate::opslog::rows::stderr_tail`]) is the *other* bound — how much a
+/// one-line sentence quotes, not how much a reading surface shows.
+fn log(path: &Path) -> Option<Preview> {
+    let size = std::fs::symlink_metadata(path).ok()?.len();
+    (size > 0).then(|| crate::files_view::preview(path))
 }
 
 /// Split `response.json` into per-line docs (empty lines dropped). A missing

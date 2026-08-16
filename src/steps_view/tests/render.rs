@@ -166,6 +166,9 @@ fn detail_fixture() -> StepDetail {
                 is_error: true,
             },
         ],
+        // The capture logs are [`super::logs`]'s half of this walk.
+        stderr: None,
+        driver: None,
     }
 }
 
@@ -231,6 +234,8 @@ fn empty_drill_ins_and_absent_docs_show_their_placeholders() {
         staging: Doc::Absent,
         response: Vec::new(),
         tools: Vec::new(),
+        stderr: None,
+        driver: None,
     };
     // Absent doc under the Meta tab — "(absent)", and pointedly NOT the
     // malformed error row: a missing file is not a broken one (S7-T2).

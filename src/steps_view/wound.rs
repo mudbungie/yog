@@ -74,9 +74,6 @@ const SPOKE: &str = "its stderr.log says:";
 /// it states the fact in words (§11 glyph doctrine).
 const ALARM: &str = "⚠";
 
-/// The adapter subprocess's captured stderr, per step (lernie ARCH §2.3).
-const STDERR_FILE: &str = "stderr.log";
-
 /// The §7.3 no-response wound **and its reason** — three readings of one
 /// derivation, never a stored flag (§5.1 #13).
 ///
@@ -132,7 +129,7 @@ pub(super) fn read(step: &Path, response: &[u8], meta_present: bool) -> Wound {
     if !response.is_empty() || meta_present {
         return Wound::None;
     }
-    let captured = crate::opslog::detached::captured(&step.join(STDERR_FILE));
+    let captured = crate::opslog::detached::captured(&step.join(super::records::STDERR_FILE));
     let words = crate::opslog::rows::stderr_tail(captured.trim());
     if words.is_empty() {
         Wound::Mute

@@ -58,10 +58,6 @@ const SPOKE: &str = "the last driver's words (driver.log):";
 /// doctrine); the sentence beside it states the fact in words.
 const ALARM: &str = "⚠";
 
-/// Where lernie binds a launched driver's stderr (ARCH §2.11; lernie
-/// bl-55f9): beside the step dirs, one per agent, append-only.
-const DRIVER_LOG_FILE: &str = "driver.log";
-
 /// The orphaned-mail state **and its reason** — the [`super::Wound`]
 /// shape, for the wound's own reason: an orphan with nothing to say is
 /// a real, distinct answer, and `Some("")` would be one fact with two
@@ -110,7 +106,7 @@ pub(super) fn read(workspace: &Path, agent_id: &str, state: AgentState) -> Orpha
     // llvm engine mis-attributes a multi-line method chain's tail as
     // uncovered.
     let dir = workspace.join(super::STEPS_DIR).join(agent_id);
-    let captured = crate::opslog::detached::captured(&dir.join(DRIVER_LOG_FILE));
+    let captured = crate::opslog::detached::captured(&dir.join(super::records::DRIVER_LOG_FILE));
     let words = crate::opslog::rows::stderr_tail(captured.trim());
     if words.is_empty() {
         Orphan::Mute

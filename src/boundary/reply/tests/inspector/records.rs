@@ -99,6 +99,10 @@ fn a_records_reply_keeps_parsed_absent_and_malformed_apart() {
             output: Doc::Unparsed(b"boom".to_vec()),
             is_error: true,
         }],
+        // The step's own adapter stderr rode along; the agent's driver log had
+        // nothing in it, so it is an absent key rather than an empty text.
+        stderr: Some(Preview::Text("adapter died".to_owned())),
+        driver: None,
     }));
     assert_eq!(body["kind"], "step");
     assert_eq!(body["seq"], "001");
@@ -113,6 +117,12 @@ fn a_records_reply_keeps_parsed_absent_and_malformed_apart() {
     assert_eq!(body["tools"][0]["tool_id"], "t-1");
     assert_eq!(body["tools"][0]["is_error"], true);
     assert_eq!(body["tools"][0]["output"]["raw"], "boom");
+    // bl-83d6: a capture log is bounded bytes, not a record parse — and a log
+    // with nothing in it is a key that is not there, which is what the picker
+    // reads as "no seat".
+    assert_eq!(body["stderr"]["kind"], "text");
+    assert_eq!(body["stderr"]["text"], "adapter died");
+    assert!(body.get("driver").is_none(), "an empty log is no key");
 }
 
 /// A torn-down worktree is a fact, not an empty listing (§3.5) — so `rows` is

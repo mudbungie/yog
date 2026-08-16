@@ -9,49 +9,18 @@
 //! (ARCH §2.3), which say nothing to an operator who has never read the spec —
 //! so each carries its meaning on hover, the `Workspaces:` label's idiom
 //! (bl-2d87, bl-3ffc).
+//!
+//! **What the picker offers is [`super::records`]'s answer**, not this file's
+//! (bl-83d6): the five JSON records always, and each capture log the step has
+//! bytes in. A log renders as bounded bytes rather than a tree, through the one
+//! painter the Files tab's preview already uses — nothing parsed a log, so Raw
+//! has nothing to escape from and paints it identically.
 
 use std::collections::HashSet;
 
-use super::{Doc, StepDetail, StepTab, ToolIo};
+use super::{Doc, StepDetail, StepTab, ToolIo, records};
+use crate::files_view::Preview;
 use crate::theme;
-
-/// The five records a step leaves behind — the picker's word, and what that
-/// word means for someone reading it cold. `pub(crate)`: the §11
-/// discoverability invariant (bl-68ac) makes the shell's own step-tab control
-/// carry the same explanation, and two spellings of one fact drift — this is
-/// its one home, the same argument the column table makes for a heading.
-pub(crate) const RECORDS: [(StepTab, &str, &str); 5] = [
-    (
-        StepTab::Meta,
-        "meta",
-        "The step's own note about itself: the commit it started from and the \
-         times it began and ended.",
-    ),
-    (
-        StepTab::Request,
-        "request",
-        "Exactly what was sent to the model to open this step — the prompt, the \
-         history and the settings, as they went over the wire.",
-    ),
-    (
-        StepTab::Staging,
-        "staging",
-        "The conversation entry being assembled out of this step's reply, caught \
-         mid-write before it became part of the transcript.",
-    ),
-    (
-        StepTab::Response,
-        "response",
-        "The model's reply as it streamed back, one event per line — text, tool \
-         calls, usage and the end of each attempt.",
-    ),
-    (
-        StepTab::Tools,
-        "tools",
-        "Every tool this step called, each with the arguments it was handed and \
-         what it gave back.",
-    ),
-];
 
 /// What a tool call's opaque id is for.
 const TOOL_ID_HINT: &str = "The provider's id for this call — it is what ties this \
@@ -74,10 +43,11 @@ pub(super) fn render_detail(
 ) {
     ui.horizontal(|ui| {
         ui.label("Records:").on_hover_text(
-            "The five files this step wrote. Pick one to read it in full — \
-             nothing here is summarized away.",
+            "The files behind this step. Pick one to read it in full — nothing \
+             here is summarized away. A `.log` seat appears when something was \
+             written to it.",
         );
-        for (which, label, hint) in RECORDS {
+        for (which, label, hint) in records::seats(Some(detail)) {
             let text = egui::RichText::new(label);
             ui.label(if which == tab { text.strong() } else { text })
                 .on_hover_text(hint);
@@ -107,6 +77,26 @@ pub(super) fn render_detail(
         ),
         StepTab::Response => render_response(ui, &detail.response, &detail.seq, collapsed, raw),
         StepTab::Tools => render_tools(ui, &detail.tools, &detail.seq, collapsed, raw),
+        StepTab::Stderr => render_log(ui, detail.stderr.as_ref()),
+        StepTab::Driver => render_log(ui, detail.driver.as_ref()),
+    }
+}
+
+/// A capture log's bytes, bounded (bl-83d6). The painter is the Files tab's own
+/// ([`crate::files_view::preview_body`]) — one wording for "this is all of it",
+/// "truncated at 64 KiB of N bytes" and "binary file", because a second
+/// spelling of a bound is how two surfaces come to disagree about it.
+///
+/// `None` is a log with no bytes, which is also a log the picker did not offer
+/// a seat for: reachable only by holding a selection across a step that has one
+/// to a step that does not, and it says [`ABSENT`] — the same word every other
+/// empty record says, rather than a blank the reader has to interpret.
+fn render_log(ui: &mut egui::Ui, log: Option<&Preview>) {
+    match log {
+        Some(preview) => crate::files_view::preview_body(ui, preview),
+        None => {
+            ui.weak(ABSENT);
+        }
     }
 }
 

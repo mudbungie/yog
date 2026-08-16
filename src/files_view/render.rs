@@ -93,6 +93,15 @@ fn render_preview(ui: &mut egui::Ui, preview: Option<&Preview>) {
         ui.weak("select a file to preview");
         return;
     };
+    preview_body(ui, preview);
+}
+
+/// The three classes of bounded bytes, in the one wording every seat that shows
+/// a whole file says them in. `pub(crate)` since bl-83d6: the Steps drill-in's
+/// capture-log seats (§11 Altitude 2) show `stderr.log` and `driver.log` through
+/// this, so "truncated at 64 KiB of N bytes" has one spelling — the same
+/// argument [`super::classify`] makes for the reading itself.
+pub(crate) fn preview_body(ui: &mut egui::Ui, preview: &Preview) {
     match preview {
         Preview::Text(text) => {
             ui.monospace(text);

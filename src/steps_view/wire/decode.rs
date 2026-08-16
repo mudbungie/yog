@@ -13,7 +13,7 @@ use serde_json::Value;
 
 use super::super::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
 use crate::boundary::codec::fields::{
-    bool_of, bytes_of, list_of, opt_str_of, pick, str_of, u64_of, usize_of,
+    bool_of, bytes_of, list_of, opt_str_of, opt_val, pick, str_of, u64_of, usize_of,
 };
 use crate::budgets::BudgetSpend;
 use crate::git_tree::Framing;
@@ -82,7 +82,8 @@ pub(crate) fn spend(v: &Value) -> Result<BudgetSpend, String> {
 }
 
 /// The `step` reply body read back: one step's four record files, its
-/// `response.json` events and every tool call's input and output.
+/// `response.json` events, every tool call's input and output, and each capture
+/// log the encoder had bytes for.
 pub(crate) fn detail(obj: &serde_json::Map<String, Value>) -> Result<StepDetail, String> {
     Ok(StepDetail {
         seq: str_of(obj, "seq")?,
@@ -91,6 +92,10 @@ pub(crate) fn detail(obj: &serde_json::Map<String, Value>) -> Result<StepDetail,
         staging: doc(obj.get("staging").ok_or("step: missing staging")?)?,
         response: list_of(obj, "response", doc)?,
         tools: list_of(obj, "tools", tool)?,
+        // An absent key is a log with nothing in it — the encoder's own
+        // spelling of "no seat for this", read back as exactly that.
+        stderr: opt_val(obj, "stderr", crate::files_view::wire::preview_of)?,
+        driver: opt_val(obj, "driver", crate::files_view::wire::preview_of)?,
     })
 }
 

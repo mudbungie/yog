@@ -71,6 +71,8 @@ fn detail_of(seq: &str) -> StepDetail {
         staging: Doc::Absent,
         response: Vec::new(),
         tools: Vec::new(),
+        stderr: None,
+        driver: None,
     }
 }
 

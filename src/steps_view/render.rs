@@ -24,6 +24,11 @@ use crate::theme;
 /// Which drill-in tab is showing. Selection is viewport ephemera the caller
 /// owns (§5.3); the widget renders the chosen tab, and tab-switch clicks live
 /// in the shell.
+///
+/// The first five are the JSON records lernie contracts to write; the last two
+/// are the capture logs (bl-83d6), which the picker seats only when they have
+/// bytes ([`super::records::seats`]) — a variant is a thing the operator can be
+/// looking at, not a claim that the file exists.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StepTab {
     Meta,
@@ -31,6 +36,11 @@ pub enum StepTab {
     Staging,
     Response,
     Tools,
+    /// The step's own `stderr.log` — the model adapter's words.
+    Stderr,
+    /// The agent's `driver.log` — every driver's words, one file for the whole
+    /// conversation.
+    Driver,
 }
 
 /// Render the step table, then — when the caller supplies the selected step's

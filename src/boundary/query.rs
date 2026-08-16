@@ -133,7 +133,10 @@ pub enum Query {
     Steps { workspace: String, agent: String },
     /// **One step's records, drilled in** (§11 Altitude 2): `meta`, `request`,
     /// `staging`, every `response.json` event and every tool call's
-    /// input/output, each as a jsonview doc. The second tier, asked by
+    /// input/output, each as a jsonview doc — plus each **capture log** that has
+    /// bytes (bl-83d6): the step's own `stderr.log` and the agent's
+    /// `driver.log`, as bounded previews rather than docs, because nothing
+    /// parsed them. The second tier, asked by
     /// sequence name exactly as the list answers it — a step the tree does not
     /// hold answers absent records rather than refusing, the same forgiving
     /// read the window makes (§10: never a false definite).

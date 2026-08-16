@@ -89,16 +89,39 @@ pub(crate) fn spend_value(spend: &BudgetSpend) -> Value {
 }
 
 /// The `step` reply body: one step's four record files, its `response.json`
-/// events and every tool call's input and output.
+/// events, every tool call's input and output, and each capture log that has
+/// bytes (bl-83d6) — an absent key for a log with nothing in it, the same way
+/// the `files` reply omits a preview nobody asked for. A key carrying an empty
+/// text would be a second encoding of "there is nothing there".
 pub(crate) fn detail(detail: &StepDetail) -> Value {
-    json!({
-        "ok": true, "kind": "step", "seq": detail.seq,
-        "meta": doc_value(&detail.meta),
-        "request": doc_value(&detail.request),
-        "staging": doc_value(&detail.staging),
-        "response": Value::Array(detail.response.iter().map(doc_value).collect()),
-        "tools": Value::Array(detail.tools.iter().map(tool_value).collect()),
-    })
+    let mut map = Map::new();
+    for (key, value) in [
+        ("ok", json!(true)),
+        ("kind", json!("step")),
+        ("seq", json!(detail.seq)),
+        ("meta", doc_value(&detail.meta)),
+        ("request", doc_value(&detail.request)),
+        ("staging", doc_value(&detail.staging)),
+        (
+            "response",
+            Value::Array(detail.response.iter().map(doc_value).collect()),
+        ),
+        (
+            "tools",
+            Value::Array(detail.tools.iter().map(tool_value).collect()),
+        ),
+    ] {
+        map.insert(key.to_owned(), value);
+    }
+    for (key, log) in [("stderr", &detail.stderr), ("driver", &detail.driver)] {
+        if let Some(preview) = log {
+            map.insert(
+                key.to_owned(),
+                crate::files_view::wire::preview_value(preview),
+            );
+        }
+    }
+    Value::Object(map)
 }
 
 /// One record file as data: parsed, absent, or bytes that are not JSON. The
