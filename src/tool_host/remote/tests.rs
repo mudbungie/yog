@@ -84,9 +84,14 @@ fn a_machine_that_never_answers_runs_out_and_says_so() {
 
 /// A stop landing mid-run ends the wait, which is the router obligation lernie
 /// states and cannot enforce. The flag is raised by the stand-in engine
-/// **before** it writes the answer the driver is waiting on, so the arm under
-/// test is the one that matters: a poll that succeeded, on a drive that has
-/// since been torn down.
+/// **before** it writes the answer the driver is waiting on — the hostile
+/// order, and the one this test used to be flaky on (bl-3a88): the driver may
+/// read the flag inside that window, or read the reply and come back around to
+/// the next round trip and read it there. Both are the same fact and now say so
+/// in the same sentence, so the assertion no longer depends on which of two
+/// nested waits won a race no test can observe. Verified by widening the window
+/// with a sleep between the flag and the reply, which reddened this assertion
+/// every run before the fix and passes every run after it.
 #[test]
 fn a_stop_ends_the_wait_on_the_tool() {
     let root = TempDir::new().expect("tmp");
@@ -121,9 +126,10 @@ fn a_stop_ends_the_wait_on_the_tool() {
         });
         invoke(&s, &entry(), &json!({}), &stop)
     });
+    let said = format!("{got:?}");
     assert!(
-        got.is_err_and(|e| e.contains("stopped while laptop")),
-        "the stop is named"
+        got.is_err_and(|e| e == "stopped while waiting on laptop"),
+        "the stop is named, and named the one way: {said}"
     );
 }
 
