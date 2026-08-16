@@ -11,7 +11,7 @@
 
 use serde_json::Value;
 
-use super::super::{Doc, StepDetail, StepSummary, StepsView, ToolIo, Wound};
+use super::super::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
 use crate::boundary::codec::fields::{
     bool_of, bytes_of, list_of, opt_str_of, pick, str_of, u64_of, usize_of,
 };
@@ -27,10 +27,18 @@ const FRAMINGS: [(&str, Framing); 3] = [
     ("killed", Framing::Killed),
 ];
 
-/// The `steps` reply body read back: one summary per row, in sequence order.
+/// The `steps` reply body read back: one summary per row, in sequence order,
+/// and the view-level orphaned-mail pair (bl-ace6) — the wound's bijection,
+/// one tier up.
 pub(crate) fn steps(obj: &serde_json::Map<String, Value>) -> Result<StepsView, String> {
+    let orphan = match (bool_of(obj, "orphaned")?, opt_str_of(obj, "orphan_reason")?) {
+        (false, _) => Orphan::None,
+        (true, None) => Orphan::Mute,
+        (true, Some(reason)) => Orphan::Spoke(reason),
+    };
     Ok(StepsView {
         steps: list_of(obj, "rows", step_row)?,
+        orphan,
     })
 }
 

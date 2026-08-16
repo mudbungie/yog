@@ -89,6 +89,7 @@ fn spine(oids: [Option<&str>; 2], children: Vec<ChildInput>) -> Rail {
         &[commit("0123456789abcdef", 10), commit("bbbb2222", 20)],
         &crate::steps_view::StepsView {
             steps: vec![step("001", oids[0]), step("002", oids[1])],
+            orphan: crate::steps_view::Orphan::default(),
         },
         &chat(),
         &children,

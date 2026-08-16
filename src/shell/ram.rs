@@ -157,6 +157,12 @@ pub struct ShellState {
     /// outlive the snapshot's liveness lag. Clock-gated RAM, so it lives here
     /// rather than in the pure predicate ([`crate::app::WoundGrace`]).
     pub wound_grace: WoundGrace,
+    /// The orphaned-mail banner's grace window (bl-ace6): the same age gate
+    /// over the same liveness lag — a delivered message whose driver simply
+    /// has not been seen yet must not alarm. Its own instance, because the
+    /// two predicates share an (workspace, agent) key and one gate's timer
+    /// must not answer for the other's.
+    pub orphan_grace: WoundGrace,
     /// What this window has already told the desktop (§6 as amended, bl-e160).
     /// Viewport ephemera by construction: a desktop belongs to a window, so two
     /// instances each announce their own and neither converges (§13.1) — and a
@@ -222,7 +228,8 @@ impl ShellState {
             acting: None,
             slash: None,
             alerts: crate::alert::Announced::default(),
-            wound_grace: WoundGrace::new(clock),
+            wound_grace: WoundGrace::new(clock.clone()),
+            orphan_grace: WoundGrace::new(clock),
             world: env.clone(),
             wall_at: None,
             parked: HashMap::new(),

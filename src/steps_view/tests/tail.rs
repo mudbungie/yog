@@ -10,7 +10,7 @@ use std::collections::HashSet;
 
 use crate::git_tree::Framing;
 use crate::steps_view::render::{StepTab, render};
-use crate::steps_view::{Doc, StepDetail, StepSummary, StepsView, Wound};
+use crate::steps_view::{Doc, Orphan, StepDetail, StepSummary, StepsView, Wound};
 
 /// A viewport far shorter than `many()`, so the anchor decides what is seen.
 const NARROW: (f32, f32) = (900.0, 160.0);
@@ -42,7 +42,10 @@ fn steps(seqs: std::ops::RangeInclusive<u32>) -> StepsView {
             wound: Wound::None,
         })
         .collect();
-    StepsView { steps }
+    StepsView {
+        steps,
+        orphan: Orphan::default(),
+    }
 }
 
 fn settled(view: &StepsView, detail: Option<&StepDetail>) -> String {

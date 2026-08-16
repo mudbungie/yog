@@ -9,7 +9,7 @@ use std::collections::HashSet;
 
 use crate::git_tree::Framing;
 use crate::steps_view::render::{StepTab, render};
-use crate::steps_view::{Doc, StepDetail, StepSummary, StepsView, ToolIo, UNPARSED, Wound};
+use crate::steps_view::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, UNPARSED, Wound};
 
 pub(super) fn painted(
     view: &StepsView,
@@ -48,6 +48,7 @@ fn empty_view_shows_placeholder() {
 #[test]
 fn list_paints_badges_selection_and_figures() {
     let view = StepsView {
+        orphan: Orphan::default(),
         steps: vec![
             summary("001", Framing::Complete),
             summary("002", Framing::Failed),
@@ -85,6 +86,7 @@ fn every_column_is_headed_and_explained() {
     use crate::steps_view::columns::COLUMNS;
     let view = StepsView {
         steps: vec![summary("001", Framing::Complete)],
+        orphan: Orphan::default(),
     };
     let text = painted(&view, Some(0), None, StepTab::Meta);
     // bl-3ffc: the list was seven bare values with nothing saying which was
@@ -171,6 +173,7 @@ fn detail_fixture() -> StepDetail {
 fn detail_tabs_render_their_records() {
     let view = StepsView {
         steps: vec![summary("001", Framing::Complete)],
+        orphan: Orphan::default(),
     };
     let d = detail_fixture();
     // Every tab header is always present; the active one is still text.
@@ -219,6 +222,7 @@ fn detail_tabs_render_their_records() {
 fn empty_drill_ins_and_absent_docs_show_their_placeholders() {
     let view = StepsView {
         steps: vec![summary("001", Framing::Complete)],
+        orphan: Orphan::default(),
     };
     let empty = StepDetail {
         seq: "001".into(),
