@@ -29,9 +29,12 @@
 //! a window that paints nothing — and REMOTE §8 had already rejected both ways
 //! around that. A boot therefore founds its own loopback trust root
 //! ([`provision`]), which is the operator's own out-of-channel act performed on
-//! the operator's own box. A *half*-provisioned wire the mint cannot heal is
-//! still warned about and still refuses, because silently degrading to no
-//! encryption is the one failure this design exists to exclude.
+//! the operator's own box — aimed at `127.0.0.1:0`, so no two engines contend
+//! for a process-global port (I0, bl-dc14). A *half*-provisioned wire the mint
+//! cannot heal still refuses, because silently degrading to no encryption is
+//! the one failure this design exists to exclude — and the refusal is a
+//! *returned sentence* now, painted by the window it starves
+//! (`shell::refusal`) rather than lost on a desktop launch's stderr.
 
 use crate::xdg::Env;
 use std::sync::Arc;
@@ -95,32 +98,32 @@ pub fn loopback(bound: &str) -> String {
 /// act: `address` is one fact with one home, and only an operator ever writes
 /// a host that is not loopback into it.
 ///
-/// A refusal is written to stderr and is never fatal — a box with no `openssl`
-/// gets the engine yog has always been, and a seat that cannot reach it says so
-/// at the seat.
+/// A refusal is *returned*, never fatal — a box with no `openssl` gets the
+/// engine yog has always been. The caller owns the saying (bl-dc14): the
+/// engine's boot writes it to stderr for the windowless face and hands it to
+/// the model for the windowed one, because a window whose every read and act
+/// crosses this wire must paint the refusal, not open inert with one line on a
+/// stream a desktop launch has nowhere to show.
 pub fn listen(
     world: &Env,
     answerer: Arc<dyn server::Answerer>,
     presence: crate::registry::presence::Presence,
-) -> Option<server::Listener> {
-    if let Err(e) = provision::ensure(&material::dir(world)) {
-        eprintln!("yog: wire: {e}");
-    }
+) -> Result<server::Listener, String> {
+    let minted = provision::ensure(&material::dir(world));
     let material = match material::read(world, material::Role::Server) {
         Ok(Some(m)) => m,
-        Ok(None) => return None,
-        Err(e) => {
-            eprintln!("yog: wire: {e}");
-            return None;
-        }
+        // Nothing readable at all is exactly a box whose mint failed —
+        // `ensure` writes `address` on every success — so the mint's own words
+        // are the refusal. The half-provisioned read (`Err`) speaks for itself.
+        Ok(None) => return Err(minted.err().unwrap_or_default()),
+        Err(e) => return Err(e),
     };
-    match server::Listener::bind(&material, answerer, presence) {
-        Ok(listener) => Some(listener),
-        Err(e) => {
-            eprintln!("yog: wire: {e}");
-            None
-        }
+    // A mint failure that still left readable material is a warning, not a
+    // refusal: the wire the box already had is the wire it keeps.
+    if let Err(e) = minted {
+        eprintln!("yog: wire: {e}");
     }
+    server::Listener::bind(&material, answerer, presence)
 }
 
 #[cfg(test)]

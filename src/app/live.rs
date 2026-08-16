@@ -126,6 +126,21 @@ impl super::AppModel {
         self.wire = link;
     }
 
+    /// Record why this window's wire is absent (bl-dc14), keeping the FIRST
+    /// reason: the engine's own bind refusal outranks the "no seat" that
+    /// follows from it, and a wired window never records one at all.
+    pub fn refuse_wire(&mut self, reason: String) {
+        self.wire_refusal.get_or_insert(reason);
+    }
+
+    /// Why this window has no wire — `None` on a wired window. The frame
+    /// paints this INSTEAD of the shell (`shell::refusal`): every read and act
+    /// crosses the wire (REMOTE §1.2), so controls painted without one only
+    /// look actionable, which is the inert window bl-dc14 refuses.
+    pub fn wire_refusal(&self) -> Option<String> {
+        self.wire_refusal.clone()
+    }
+
     /// **Ask the wire** (REMOTE §1.2, §3): declare `question` standing and read
     /// whatever answer has landed for it. Never blocks and never dials — the
     /// [`Asker`](crate::wire::asker::Asker) does both, off-frame, at human

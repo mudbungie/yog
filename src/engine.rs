@@ -168,14 +168,23 @@ impl Engine {
         // its reason exactly: a seat must reach whichever face is up, so the
         // channel rides the ENGINE and not a face. It is the same intake — the
         // context above, handed to a connection instead of to a poll — so the
-        // wire adds no verb and no second dispatch. With no material
-        // provisioned there is no listener and nothing said about it.
-        let wire = crate::wire::listen(
+        // wire adds no verb and no second dispatch. A refusal is said twice,
+        // once per face (bl-dc14): stderr for `yog serve`, and the model for a
+        // window — whose every read and act crosses this wire, so it must
+        // paint the refusal (`shell::refusal`) instead of opening inert.
+        let wire = match crate::wire::listen(
             world,
             Arc::new(crate::wire::intake::Intake::new(intake))
                 as Arc<dyn crate::wire::server::Answerer>,
             presence,
-        );
+        ) {
+            Ok(listener) => Some(listener),
+            Err(reason) => {
+                eprintln!("yog: wire: {reason}");
+                model.refuse_wire(reason);
+                None
+            }
+        };
         // The VISION §4.9 alignment monitor's level trigger. Spawned
         // unconditionally and free when unarmed: with no `cadence.yaml` monitor
         // entry a tick finds no workspace to check and makes no call. It rides

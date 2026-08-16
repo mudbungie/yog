@@ -73,6 +73,16 @@ pub fn run(world: &Env, args: &[String]) -> i32 {
 /// has nothing to do, and the remedy is the same out-of-channel act (§1.4).
 pub(crate) fn open(world: &Env) -> Result<Seat, String> {
     match material::read(world, Role::Client)? {
+        // A `:0` is self-provisioning's request for a kernel-chosen port
+        // (bl-dc14): only the engine that bound it knows what it became, and
+        // it tells its own window in RAM — so there is nothing here to dial,
+        // and saying so beats the raw connect error a port 0 earns.
+        Some(m) if m.address.ends_with(":0") => Err(format!(
+            "{} names {} — a kernel-chosen port only that engine's own window \
+             is told; a seat wants a stated address: run `{REMEDY}`",
+            material::dir(world).join(material::ADDRESS).display(),
+            m.address
+        )),
         Some(m) => Seat::open(&m),
         None => Err(format!(
             "no wire provisioned at {} — run `{REMEDY}`",

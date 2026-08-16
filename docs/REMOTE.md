@@ -699,11 +699,27 @@ the directory and the next boot writes a fresh loopback root; nothing about the
 channel, the codec or the boundary is conditional on a file.
 
 **What still distinguishes loopback from wider listening is the address, and
-nothing else.** Self-provisioning writes `127.0.0.1:<port>`, so material yog
-minted for itself serves exactly the window that minted it. A host that is not
-loopback is written by an operator — by `yog wire-certs WIRE_HOST=…`, or by
-editing `address` — and *that* is the statement of intent. One fact with one
-home (below), no flag, and no ladder deciding how far a listener reaches.
+nothing else.** Self-provisioning writes `127.0.0.1:0` *(amended bl-dc14; it
+wrote a fixed `127.0.0.1:<port>` until then)*, so material yog minted for
+itself serves exactly the window that minted it — and, since the port is the
+kernel's answer rather than a process-global number, **no two engines ever
+contend for it**. That is DESIGN I0 kept at the wire: two yog instances
+side-by-side — two worlds, or two windows on one — each bind their own port
+and each get a live window, converging over the world's files exactly as
+instances always have (instance coordination stays disk-only, DESIGN §14; the
+wire is a seat's transport to ONE engine, never the bus between two). The `:0`
+in the file is a **request**, and the request is the fact the file is the one
+home of; what it *became* is runtime, held by the listener and handed to the
+one seat that needs it — the window, in RAM (above). Nothing publishes the
+bound port anywhere else, so a remote seat's known port is never a moving
+target: a host that is not loopback is written by an operator — by `yog
+wire-certs WIRE_HOST=…` (whose *stated* default port stays `7737`: an explicit
+mint is a statement another machine will be told to dial), or by editing
+`address` — and *that* is the statement of intent. One fact with one home
+(below), no flag, and no ladder deciding how far a listener reaches. A local
+`yog seat` on a self-provisioned world is refused legibly at the seat — a `:0`
+names no dialable port, and the remedy is the operator's stated address —
+which is the scope self-provisioned material always had.
 
 A *half*-provisioned wire the mint **cannot heal** is still warned about and
 still does not listen, because silently degrading to no encryption is the one
@@ -740,19 +756,44 @@ certificate fixture is never committed**, which `make leak-scan` would refuse
 anyway and which would be a private key in a public repository whether or not
 it guarded anything.
 
-**No test binds the default port** *(bl-4c50)*. The port is one machine's, and
-the machine a test runs on is the one the operator's own yog is running on: the
-window under development already holds it. So a fixture world **names its own
-address before it boots** — `127.0.0.1:0`, a kernel-chosen port
-(`test_support::wire::ephemeral`) — and the mint takes the address the directory
-already names, exactly as it does for an operator who wrote one. Three tests
-that let it fall back to the default instead (two engine boots and the
-unprovisioned-wire rung) failed `bind 127.0.0.1:<port>: Address already in use`
-on **every** run while yog was up, so the local gate could not pass while the
-app was, and a close had to lean on an imported remote verdict. Nothing about
-the default moved: it is still what a real box writes when nothing names an
-address, and it is still proved — in the one place where nothing binds, by
-reading it back out of the file the mint wrote.
+**Nothing implicit binds a fixed port** *(bl-4c50, dissolved into the default
+by bl-dc14)*. bl-4c50 found the suite contending: three tests that let the
+mint fall back to the then-fixed default failed `bind 127.0.0.1:<port>:
+Address already in use` on **every** run while yog was up, and the fix was a
+fixture seed (`test_support::wire::ephemeral`) writing `127.0.0.1:0` before a
+boot. bl-dc14 found the **app** contending the same way — a second bare `yog`
+lost the bind and opened an inert window — and the two were one defect: the
+fixture seed was a special case standing in for the right default. The seed is
+deleted and `127.0.0.1:0` **is** the fallback `provision::ensure` mints when
+nothing names an address, so the bare boot the suite exercises is the bare
+boot a real box performs, and neither takes a port any running yog holds. The
+default is still proved where nothing binds, by reading it back out of the
+file the mint wrote — and the *bound* answer is proved by two listeners on one
+world holding distinct ports (`wire::tests`). A world provisioned before the
+amendment keeps whatever its `address` file names, the file being the
+operator's; the second instance on such a world refuses **visibly** now
+(below), and pointing the file at `127.0.0.1:0` is the stated remedy.
+
+**A wire the engine cannot get up is a refusal the window PAINTS** *(bl-dc14)*.
+Until then the whole failure family — a bind an operator-stated port lost, a
+mint the box cannot perform, a half-provisioned directory, a window seat the
+material cannot open — collapsed to one stderr line and an engine with no
+listener, and `main.rs` kept the window anyway: a frame with no asker, no
+poster and no searcher, accepting text and firing nothing, with the one
+diagnostic on a stream a desktop launch has nowhere to show. This section had
+already rejected refusing-with-a-terminal-instruction, and the missing half of
+that ruling is that the refusal therefore has to be *paintable*:
+`wire::listen` now returns the sentence instead of swallowing it, the engine's
+boot says it once per face — stderr for `yog serve`, `AppModel::refuse_wire`
+for a window (kept at the FIRST reason, so the cause outranks the "no seat"
+derived from it) — and `shell::refusal` paints it INSTEAD of the shell: the
+engine's own words verbatim, the same headline every wireless act receipt
+carries (`wire::post::NO_WIRE`), the remedy naming the port-zero path, and
+**no composer, tab or roster beside it**, because a control painted without a
+wire only looks actionable. One early return in `shell::render` is the whole
+gating; there is no per-control enablement to drift. Recovery is a relaunch —
+the listener is a boot-time fact, and a retry loop inside a refused window
+would be a second boot path.
 
 **The material sits BESIDE the world, not inside it** — `<yog-data-root>/wire`,
 the sibling of `<yog-data-root>/world`. The world subtree is a generated

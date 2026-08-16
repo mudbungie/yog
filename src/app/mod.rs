@@ -187,6 +187,11 @@ pub struct AppModel {
     /// nobody answers, which is the same posture, and the same code path, as a
     /// surface whose answer has not arrived yet.
     wire: crate::wire::link::Link,
+    /// **Why this window has no wire, when it has none** (bl-dc14): the
+    /// engine's refusal — a bind another process beat it to, a mint the box
+    /// cannot perform — held so the frame paints it (`shell::refusal`) instead
+    /// of controls that only look actionable. `None` is a wired window.
+    wire_refusal: Option<String>,
     /// **The window's act path over the wire** (REMOTE §1.2, §9.8; bl-4841):
     /// what this frame has fired and not yet heard back about. Default until
     /// the engine hands over the live end, for [`wire`](Self::wire)'s reason
@@ -241,6 +246,7 @@ impl AppModel {
             tail: TailCell::default(),
             followed: None,
             wire: crate::wire::link::Link::default(),
+            wire_refusal: None,
             acts: acts::Acts::default(),
         };
         model.focus = model.startup_focus(initial_focus, &Arc::clone(&model.snap).workspaces);

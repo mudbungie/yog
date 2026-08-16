@@ -42,7 +42,18 @@ impl Engine {
     /// Spawn both halves for a window. `None` on a box whose mint failed — the
     /// same condition for both, there being one seat behind them — and on a
     /// second call, the two ends being taken rather than shared.
+    ///
+    /// **A `None` is never silent** (bl-dc14): a seat that cannot open puts
+    /// its reason on the model, where the frame paints it instead of controls
+    /// (`shell::refusal`) — the model keeps the *first* reason, so the boot's
+    /// own bind refusal outranks the "no listener" that follows from it. A
+    /// seat that CAN open but whose ends are already taken records nothing:
+    /// a taken end means a wired window exists, and this call is the second.
     pub fn window_wire(&mut self, world: &Env) -> Option<WindowWire> {
+        if let Err(reason) = self.window_seat(world) {
+            self.model.refuse_wire(reason);
+            return None;
+        }
         Some(WindowWire {
             _asker: self.asker(world)?.spawn(),
             _poster: self.poster(world)?.spawn(),
@@ -68,7 +79,7 @@ impl Engine {
     /// `None`: there is one asker per engine.
     pub fn asker(&mut self, world: &Env) -> Option<crate::wire::asker::Asker> {
         Some(crate::wire::asker::Asker::new(
-            self.window_seat(world)?,
+            self.window_seat(world).ok()?,
             self.wire_end.take()?,
             self.model.snapshot_cell(),
             world.yog_state_root(),
@@ -87,7 +98,7 @@ impl Engine {
     /// worth of gestures with no way to tell whose is whose.
     pub fn poster(&mut self, world: &Env) -> Option<crate::wire::poster::Poster> {
         Some(crate::wire::poster::Poster::new(
-            self.window_seat(world)?,
+            self.window_seat(world).ok()?,
             self.post_end.take()?,
             Arc::clone(&self.repaint),
         ))
@@ -102,24 +113,32 @@ impl Engine {
     /// exactly-once obligation — a superseded answer is discarded on publish.
     pub fn searcher(&mut self, world: &Env) -> Option<crate::search::Searcher> {
         Some(crate::search::Searcher::new(
-            self.window_seat(world)?,
+            self.window_seat(world).ok()?,
             self.model.search_cell(),
         ))
     }
 
     /// A seat on this engine's own listener presenting the window leaf — the
-    /// one mint both off-frame threads take theirs from. `None` on a box with
-    /// no listener or no window leaf, which is a broken mint
-    /// [`listen`](crate::wire::listen) has already said so about.
-    fn window_seat(&self, world: &Env) -> Option<crate::wire::client::Seat> {
-        let bound = self.wire.as_ref()?.address();
-        let material = crate::wire::material::read(world, crate::wire::material::Role::Window)
-            .ok()
-            .flatten()?;
+    /// one mint both off-frame threads take theirs from. The `Err` is why a
+    /// box has none (bl-dc14): no listener (whose cause the boot already
+    /// recorded, and outranks this derived sentence), no window leaf, or a
+    /// seat the material cannot open.
+    fn window_seat(&self, world: &Env) -> Result<crate::wire::client::Seat, String> {
+        let Some(wire) = self.wire.as_ref() else {
+            return Err("this engine has no listener".to_owned());
+        };
+        let bound = wire.address();
+        let material = crate::wire::material::read(world, crate::wire::material::Role::Window)?
+            .ok_or_else(|| {
+                format!(
+                    "no window leaf at {} — run `{}`",
+                    crate::wire::material::dir(world).display(),
+                    crate::wire::material::REMEDY
+                )
+            })?;
         crate::wire::client::Seat::open(&crate::wire::material::Material {
             address: crate::wire::loopback(&bound),
             ..material
         })
-        .ok()
     }
 }

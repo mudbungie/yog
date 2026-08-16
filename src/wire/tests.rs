@@ -20,19 +20,23 @@ impl server::Answerer for Silent {
 /// is a window that paints nothing, and REMOTE §8 has already rejected both
 /// ways around that.
 ///
-/// The world names its own port ([`ephemeral`](crate::test_support::wire::ephemeral))
-/// and no certificate, so the mint is what is under test and the operator's
-/// running window keeps the one port the constant names.
+/// Nothing is seeded first (bl-dc14 dissolved bl-4c50's fixture seed): the
+/// default request is `127.0.0.1:0` — a kernel-chosen port — so the bare boot
+/// under test is the same bare boot a real box performs, and neither takes the
+/// port any running yog holds.
 #[test]
 fn an_unprovisioned_box_founds_its_own_loopback_wire() {
     let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
-    crate::test_support::wire::ephemeral(&world);
     let listener = listen(&world, Arc::new(Silent), Presence::default()).expect("listening");
     assert!(
         listener.address().starts_with("127.0.0.1:"),
         "loopback only"
+    );
+    assert!(
+        !listener.address().ends_with(":0"),
+        "the bound answer to the `:0` request, never the request itself"
     );
     // Every end the box needs, the window's among them.
     for role in material::LEAVES {
@@ -41,6 +45,46 @@ fn an_unprovisioned_box_founds_its_own_loopback_wire() {
             "{role:?} is provisioned"
         );
     }
+}
+
+/// **Two engines on one box each get their own wire** (I0, bl-dc14): the
+/// default request is `:0`, so a second listener — a second world, or a second
+/// window on this one — binds its own kernel-chosen port instead of losing a
+/// race for a process-global one. Same world here, which is the harder case:
+/// one address file, two live listeners, two distinct ports.
+#[test]
+fn two_engines_on_one_box_each_get_their_own_wire() {
+    let _guard = crate::test_support::spawn_guard();
+    let tmp = TempDir::new().expect("tmp");
+    let world = crate::test_support::world_under(tmp.path());
+    let first = listen(&world, Arc::new(Silent), Presence::default()).expect("the first wire");
+    let second = listen(&world, Arc::new(Silent), Presence::default()).expect("the second wire");
+    assert_ne!(
+        first.address(),
+        second.address(),
+        "each instance owns a distinct endpoint"
+    );
+}
+
+/// A *stated* port another process holds is a refusal that names the bind
+/// (bl-dc14): an operator-written address is intent, so the engine does not
+/// slide to another port behind it — it says exactly what could not be had,
+/// and the window paints that sentence rather than opening inert.
+#[test]
+fn a_stated_port_another_process_holds_is_a_refusal_that_names_it() {
+    let _guard = crate::test_support::spawn_guard();
+    let tmp = TempDir::new().expect("tmp");
+    let world = crate::test_support::world_under(tmp.path());
+    let dir = material::dir(&world);
+    mint(&dir);
+    // A throwaway listener this test owns stands in for the other instance.
+    let holder = std::net::TcpListener::bind("127.0.0.1:0").expect("a port of our own");
+    let held = holder.local_addr().expect("bound").to_string();
+    std::fs::write(dir.join(material::ADDRESS), format!("{held}\n")).expect("write");
+    let refusal = listen(&world, Arc::new(Silent), Presence::default())
+        .err()
+        .expect("the held port refuses");
+    assert!(refusal.contains(&format!("bind {held}")), "{refusal}");
 }
 
 /// A box whose material directory cannot even be MADE keeps its engine and
@@ -54,7 +98,10 @@ fn a_box_the_mint_cannot_provision_keeps_its_engine() {
     let dir = material::dir(&world);
     std::fs::create_dir_all(dir.parent().expect("root")).expect("root");
     std::fs::write(&dir, b"a file where the directory goes").expect("block it");
-    assert!(listen(&world, Arc::new(Silent), Presence::default()).is_none());
+    let refusal = listen(&world, Arc::new(Silent), Presence::default())
+        .err()
+        .expect("a box the mint cannot provision refuses");
+    assert!(refusal.contains("wire"), "{refusal}");
 }
 
 /// A leaf the mint can replace is replaced: the CA key is here, so a box that
@@ -67,7 +114,7 @@ fn a_leaf_the_mint_can_replace_is_replaced() {
     let dir = material::dir(&world);
     mint(&dir);
     std::fs::remove_file(dir.join("server.key")).expect("rm");
-    assert!(listen(&world, Arc::new(Silent), Presence::default()).is_some());
+    assert!(listen(&world, Arc::new(Silent), Presence::default()).is_ok());
 }
 
 /// A provisioned box listens, on the address its material names.
@@ -94,7 +141,10 @@ fn a_half_provisioned_box_the_mint_cannot_heal_does_not_listen() {
     mint(&dir);
     std::fs::remove_file(dir.join(crate::wire::provision::CA_KEY)).expect("rm");
     std::fs::remove_file(dir.join("server.key")).expect("rm");
-    assert!(listen(&world, Arc::new(Silent), Presence::default()).is_none());
+    let refusal = listen(&world, Arc::new(Silent), Presence::default())
+        .err()
+        .expect("half-provisioned refuses");
+    assert!(refusal.contains("half-provisioned"), "{refusal}");
 }
 
 /// The address the window dials: loopback at the port the listener really
@@ -116,5 +166,23 @@ fn an_unbindable_address_leaves_the_engine_running() {
     let dir = material::dir(&world);
     mint(&dir);
     std::fs::write(dir.join(material::ADDRESS), "256.256.256.256:1").expect("write");
-    assert!(listen(&world, Arc::new(Silent), Presence::default()).is_none());
+    assert!(listen(&world, Arc::new(Silent), Presence::default()).is_err());
+}
+
+/// A mint failure on a box whose server material is already readable is a
+/// warning, not a refusal: the wire the box had is the wire it keeps. The
+/// failure is manufactured by seating a directory where a missing leaf's key
+/// goes, so the re-mint of that one leaf cannot write.
+#[test]
+fn a_mint_failure_with_readable_material_keeps_the_wire() {
+    let _guard = crate::test_support::spawn_guard();
+    let tmp = TempDir::new().expect("tmp");
+    let world = crate::test_support::world_under(tmp.path());
+    let dir = material::dir(&world);
+    mint(&dir);
+    std::fs::remove_file(dir.join("client.pem")).expect("rm");
+    std::fs::remove_file(dir.join("client.key")).expect("rm");
+    std::fs::create_dir(dir.join("client.key")).expect("a directory where the key goes");
+    let listener = listen(&world, Arc::new(Silent), Presence::default()).expect("the wire is kept");
+    assert!(listener.address().starts_with("127.0.0.1:"));
 }

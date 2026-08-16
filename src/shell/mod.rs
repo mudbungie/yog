@@ -53,6 +53,7 @@ mod navigator;
 mod new_ws;
 mod pane;
 mod ram;
+mod refusal;
 pub(super) mod row;
 mod search_pane;
 mod seat;
@@ -119,6 +120,15 @@ pub fn render(
     bl: &Cli,
     bz: &Cli,
 ) {
+    // A window with no wire refuses BEFORE presenting operable-looking
+    // controls (bl-dc14): every read and act crosses the wire (REMOTE §1.2),
+    // so the shell below would be chrome around nothing. One surface, painted
+    // instead of everything, and the return is the whole of the gating — no
+    // per-control enablement can drift out of step with it.
+    if let Some(reason) = model.wire_refusal() {
+        refusal::render(ctx, &reason);
+        return;
+    }
     // The frame's own receipt duty (REMOTE §9.8, bl-1747), ahead of every
     // surface that reads what it settles: the model drains the poster's channel
     // in `refresh`, and this is where the window's held acts — the composer's

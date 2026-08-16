@@ -169,3 +169,27 @@ fn idle_tick_changes_nothing() {
     let (_c, mut model) = h.model();
     assert!(!model.tick(), "no dirt, no due sweep → no change");
 }
+
+/// **The wire refusal is a model fact the frame paints** (bl-dc14): kept at
+/// the FIRST reason — the engine's own bind refusal outranks the derived "no
+/// seat" recorded after it — and `None` on a wired window, which is what lets
+/// `shell::refusal` gate the whole shell on one read.
+#[test]
+fn the_first_wire_refusal_is_the_one_the_frame_paints() {
+    let h = Harness::new();
+    let (_clock, mut rig) = h.model();
+    assert_eq!(
+        rig.model.wire_refusal(),
+        None,
+        "a wired window says nothing"
+    );
+    rig.model
+        .refuse_wire("bind 127.0.0.1:1: Address already in use".to_owned());
+    rig.model
+        .refuse_wire("this engine has no listener".to_owned());
+    assert_eq!(
+        rig.model.wire_refusal().as_deref(),
+        Some("bind 127.0.0.1:1: Address already in use"),
+        "the cause, never the consequence recorded after it"
+    );
+}

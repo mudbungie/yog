@@ -33,7 +33,11 @@ fn an_unprovisioned_box_founds_its_own_loopback_trust_root() {
     let ends = provisioned(&dir);
     assert_eq!(ends.len(), 3, "server, client and window");
     for end in &ends {
-        assert_eq!(end.address, format!("{LOOPBACK}:{PORT}"), "loopback only");
+        assert_eq!(
+            end.address,
+            format!("{LOOPBACK}:0"),
+            "loopback only, and a kernel-chosen port: the request, not a fixed number (bl-dc14)"
+        );
     }
     // The window's leaf carries the identity the registry seats (REMOTE §4.1).
     let der = std::fs::read(dir.join("window.pem")).expect("leaf");
@@ -82,7 +86,7 @@ fn a_box_with_an_anchor_and_no_ca_key_is_left_alone() {
         std::fs::read_to_string(dir.join(ADDRESS))
             .expect("address")
             .trim(),
-        format!("{LOOPBACK}:{PORT}"),
+        format!("{LOOPBACK}:0"),
         "the address is still written: it is not certificate material"
     );
 }

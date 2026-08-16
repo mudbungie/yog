@@ -82,6 +82,24 @@ fn an_unprovisioned_machine_refuses_with_the_remedy() {
     );
 }
 
+/// A self-provisioned `:0` address refuses legibly at the seat (bl-dc14):
+/// only the engine that bound it knows what the kernel chose, and it tells its
+/// own window in RAM — a seat wants a stated address, and the raw connect
+/// error a port 0 earns says none of that.
+#[test]
+fn a_kernel_chosen_address_refuses_with_the_remedy() {
+    let (_tmp, world, _listener) = engine(true);
+    std::fs::write(
+        material::dir(&world).join(material::ADDRESS),
+        crate::test_support::wire::EPHEMERAL,
+    )
+    .expect("write");
+    assert_eq!(
+        run(&world, &[r#"{"op":"workspaces"}"#.to_owned()]),
+        USAGE_EXIT
+    );
+}
+
 /// Half a provisioning refuses the same way rather than degrading.
 #[test]
 fn a_half_provisioned_machine_refuses() {

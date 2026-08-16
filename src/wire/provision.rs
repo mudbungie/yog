@@ -23,12 +23,17 @@
 //! itself.
 //!
 //! **What still distinguishes wider listening is the address, and nothing
-//! else.** Self-provisioning writes `127.0.0.1:<port>` — loopback only, which
-//! is the safe default: material yog minted itself grants exactly the window
-//! that minted it. An operator who wants a seat on another machine performs the
-//! explicit act (`yog wire-certs WIRE_HOST=…`, [`verb`]), and *that* address is
-//! the operator's statement of intent. One fact with one home (§8), no second
-//! knob, and no flag deciding how far a listener reaches.
+//! else.** Self-provisioning writes `127.0.0.1:0` — loopback on a kernel-chosen
+//! port, which is the safe default twice over: material yog minted itself
+//! grants exactly the window that minted it, and a port nobody names is a port
+//! no two engines contend for (I0 — two yog instances side-by-side, whether
+//! two worlds or two windows on one, each get their own wire; a process-global
+//! number contradicts that, bl-dc14). The `:0` is a REQUEST: only the listener
+//! knows what it became, and the one seat that needs the answer — the window —
+//! is handed it in RAM. An operator who wants a seat on another machine
+//! performs the explicit act (`yog wire-certs WIRE_HOST=…`, [`verb`]), and
+//! *that* address is the operator's statement of intent. One fact with one
+//! home (§8), no second knob, and no flag deciding how far a listener reaches.
 //!
 //! **Nothing complete is ever overwritten.** Every step here asks whether its
 //! artifact is already there, so a second call mints nothing — which is what
@@ -47,8 +52,11 @@ mod openssl;
 pub const CA_KEY: &str = "ca.key";
 /// The host self-provisioning binds and writes into `address`.
 pub const LOOPBACK: &str = "127.0.0.1";
-/// The port self-provisioning binds. A default, not a knob — `address` is the
-/// one home of what is bound, and an operator who wants another edits it.
+/// The port the operator's explicit mint ([`verb`], `yog wire-certs`) defaults
+/// to — a *stated* endpoint another machine can be told to dial. Never the
+/// boot's: an implicit mint requests `:0` ([`ensure`]), because a
+/// process-global number makes two engines on one box contend for one port
+/// (bl-dc14), and only a stated address has a consumer who needs it fixed.
 pub const PORT: &str = "7737";
 /// How long a minted certificate is good for.
 pub(super) const DAYS: &str = "825";
@@ -59,9 +67,14 @@ pub(super) const CURVE: &str = "ec_paramgen_curve:P-256";
 /// Mint whatever `dir` is missing, taking the address it already names — the
 /// boot's call, and idempotent by construction. A box provisioned by an
 /// operator gains only the leaves it lacks; a box with nothing gains the lot,
-/// aimed at loopback.
+/// aimed at loopback on a kernel-chosen port: `127.0.0.1:0` is a request the
+/// listener answers with whatever was free, so no two engines — two worlds, or
+/// two windows on one — ever contend for a process-global number (I0,
+/// bl-dc14). The window is told what the `:0` became in RAM
+/// ([`crate::wire::loopback`]); a seat on another machine wants a *stated*
+/// address, which is [`verb`]'s job and defaults to [`PORT`].
 pub fn ensure(dir: &Path) -> Result<(), String> {
-    let address = address_at(dir).unwrap_or_else(|| format!("{LOOPBACK}:{PORT}"));
+    let address = address_at(dir).unwrap_or_else(|| format!("{LOOPBACK}:0"));
     mint(dir, &address, false)
 }
 

@@ -39,7 +39,10 @@ pub const RECEIPTS_KEPT: usize = 64;
 
 /// What a window with nothing behind it says. The same one `Err` a refusal is
 /// (REMOTE §9.8): a frame cannot paint the act's answer, and here is why.
-const NO_WIRE: &str = "this window has no wire behind it";
+/// `pub(crate)` since bl-dc14: the wireless window's whole-frame refusal
+/// (`shell::refusal`) heads itself with the same sentence every act receipt
+/// carries — one sentence, one home.
+pub(crate) const NO_WIRE: &str = "this window has no wire behind it";
 
 /// **An act's receipt identity** — minted at the send, spent at the read.
 ///
