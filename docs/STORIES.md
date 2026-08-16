@@ -413,7 +413,10 @@ advisory beside the credentials.
 - **S8 the hatches** (S8-T3) — `yog env` prints exactly the world's three
   override lines (`LERNIE_HOME`, `XDG_STATE_HOME`, both nested, then the `PATH`
   prepend of `world/tools/`) and no others; `yog exec --cwd` runs its argv under
-  them at the requested cwd.
+  them at the requested cwd; and resolving *through* that `PATH` finds `yog`
+  itself — `command -v yog` inside the world is the world's own shim, and the
+  shim execs the binary under drive rather than an installed one (bl-3ff4,
+  bl-8398).
 - **S8 the nesting, severable** (S8-T1/T2) — the project's balls clone exists in
   the nested store and **not** in the ambient one, the ambient world's own seed
   file is byte-identical across the run, and `rm -rf <scratch>/yog` takes the
