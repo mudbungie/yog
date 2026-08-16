@@ -1,7 +1,7 @@
 +++
-title = "wire bootstrap failure opens an inert window; a second instance reliably triggers it"
+title = "self-provision requests 127.0.0.1:0 so instances never contend, and a wireless window paints its refusal instead of opening inert"
 created = 1786843450
-updated = 1786844986
+updated = 1786845265
 claimant = "Wire-dc14"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
