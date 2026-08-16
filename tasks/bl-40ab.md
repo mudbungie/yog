@@ -1,7 +1,8 @@
 +++
 title = "attempt science projection: one derived headless query joining frozen inputs, refs, usage, and outcome"
 created = 1785823813
-updated = 1785823813
+updated = 1786845682
+claimant = "Science40ab"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["implementation"]
