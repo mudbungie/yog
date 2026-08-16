@@ -1,21 +1,24 @@
 +++
-title = "start replies with a display name that most agent verbs cannot address"
+title = "a started receipt returns a name that only message can address; every other agent surface needs the root id"
 created = 1786843631
-updated = 1786843631
+updated = 1786843688
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
-tags = ["bug", "headless", "boundary", "addressing"]
+tags = ["bug", "headless", "boundary", "addressing", "design"]
 +++
-A successful `/prompt` replies with `{"conversation":"<display>","kind":"started","ok":true}`. This is the only agent identity in the start receipt.
+A successful `/prompt` answers `{"ok":true,"kind":"started","conversation":"<minted-name>"}`. The terminal contract says `--agent ID`. Feeding the receipt only handle back composes with `/message` alone; every other conversation action and inspector read treats it as an ID.
 
-Feeding that returned `<display>` back through `--agent` gives inconsistent results:
+Observed examples:
 
 - `/agent` reports `present:false`.
 - `/steps` and `/transcript` return empty rows.
-- `/stop` reports that the branch does not exist.
-- `/retarget` reports that no agent exists.
-- `/message` is the exception and succeeds by display name.
+- `/stop` and `/retarget` refuse.
+- `/message` succeeds because it is the sole lernie verb that resolves a unique stored name.
 
-A later `/conversations` query reveals a separate `<root-id>`. Supplying that root ID makes all tested inspectors and controls work.
+The code contract states: `This is the one verb that resolves a display name`. Yog separately says: `The prompt action product: the minted conversation name`, while its command usage says `--agent ID`. These deliberate local contracts became non-composable when exposed as one headless API.
 
-Expected: the start receipt returns the general agent address, with display text separate if useful, or every `--agent` consumer resolves the returned identity consistently. An action receipt must compose directly with the next boundary call; discovering an undisclosed identifier through a roster query cannot be required.
+The split is more dangerous than empty reads. Name-targeted `/delete-agent`, `/flag`, and `/revoke` or `/restore` can report success or write policy against the name while leaving the real conversation untouched. The only recovery is to wait for `/conversations`, match `name == started.conversation`, and take `root_id`.
+
+Decide one universal address contract and amend DESIGN before code. Prefer one engine-boundary resolution of exact ID, otherwise unique stored name, for every agent-addressed Action and Query; alternatively, delay or widen Started until it can return the root ID. Do not add per-verb lookups. Coordinate immediate post-start visibility with bl-6c9e; this mismatch persists after derivation catches up.
+
+Acceptance: using only the Started handle, an immediate `/agent` read and representative `/message`, `/stop`, and `/seen` actions address the started root; exact IDs remain unchanged; unknown and legacy display-only names refuse; no delete, floor, or flag operation can succeed against the display name while missing the real root.
