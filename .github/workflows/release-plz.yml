@@ -75,6 +75,14 @@ name: Release-plz
 #     GitHub Actions to create and approve pull requests" — else the release-pr
 #     job 403s ("GitHub Actions is not permitted to create or approve pull
 #     requests").
+#   * Same page: set Workflow permissions to "Read and write permissions"
+#     (default_workflow_permissions: write). Seen live on the 0.0.3 release
+#     (bl-1e88): with the fresh repo's read-only default, the release job
+#     published to crates.io and then 403'd creating refs/tags/v0.0.3
+#     ("Resource not accessible by integration") — despite this workflow's own
+#     job-level `permissions: contents: write` — so the tag was hand-pushed
+#     and no GitHub Release object was cut. cargo publish is irreversible, so
+#     this setting must be verified BEFORE merging a release PR, not after.
 #   * An Actions ENVIRONMENT named `publish` (Settings -> Environments) holding
 #     CARGO_REGISTRY_TOKEN — a crates.io API token with publish scope, owned by
 #     the crate owner. REQUIRED for the release job to publish. Restrict its
