@@ -36,7 +36,16 @@ clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog lernie
 # <argv…>` reproduces lernie's own thin exec binding over `lernie::cmd`, and the
 # driver every spawn re-enters is yog itself. EXACT registry pin — track the
-# published latest (0.0.9), which carries the **tool-injection seam** REMOTE §5
+# published latest (0.0.10), which carries the two **chat-wedge fixes**
+# (bl-4c1f): upstream bl-15f0 judges the §2.3 tool pairing over the WHOLE
+# alternation when deriving a hop's warrant, so delivered mail behind a
+# crash-orphaned tool window declines loudly instead of sending an orphan
+# `tool_use` the provider 400s forever — the class yog's own bl-ace6
+# orphaned-mail banner renders; and upstream bl-4187 settles a markless
+# unpaired trailing window at the drive boundary (one in-band died
+# `tool_result` per unanswered id, committed BEFORE delivery), so an ordinary
+# deposit REVIVES a crashed chat and fork-from-history stops being the only
+# recovery. Atop 0.0.9's **tool-injection seam** REMOTE §5
 # stands on (upstream bl-9001, its `docs/DESIGN_TOOL_INJECTION.md`):
 # `Fx::tool_injection` is one optional object holding both halves — the extra
 # tool definitions prompt assembly and the grant gate read, and the router the
@@ -65,10 +74,10 @@ clap = { version = "4", features = ["derive"] }
 # and 0.0.3's `Fx::adapter_target` (the injection W11 consumes); the interim git
 # rev is retired (a git pin also cost yog its publishability, and cost it the
 # rev itself once upstream rewrote `main`; the registry has neither failure
-# mode). The lockfile is also the brazen parity check: lernie 0.0.9 links
+# mode). The lockfile is also the brazen parity check: lernie 0.0.10 links
 # `brazen =0.0.5`, the same exact version yog pins, so exactly ONE brazen
 # resolves — skew death is structural otherwise (§16.7).
-lernie = "=0.0.9"
+lernie = "=0.0.10"
 eframe = { version = "0.29", default-features = false, features = ["default_fonts", "glow"] }
 egui = "0.29"
 # Not used in code — present only to turn ON `egui-winit`'s `wayland` feature,
