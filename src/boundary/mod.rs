@@ -52,6 +52,11 @@ pub mod fan;
 /// The VISION §4.3 armed loop's one executor — arming, which is a config write.
 pub mod fleet;
 pub mod help;
+/// The §8.2 send-and-interrupt's one executor (bl-a33d) — a stop and a deposit,
+/// in that order, leaving the two ops rows they each already leave. Its own
+/// module beside [`control`]'s and [`fan`]'s: everything in the dispatch table
+/// routes one act, and this arm is the only one that composes two.
+pub mod interrupt;
 pub mod line;
 /// The VISION §4.9 monitor's two executors — arming and flagging.
 pub mod monitor;

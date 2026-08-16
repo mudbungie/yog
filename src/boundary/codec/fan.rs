@@ -15,7 +15,7 @@ use serde_json::{Map, Value, json};
 
 use crate::boundary::Action;
 
-use crate::fan::Obligation;
+use crate::fan::{Obligation, Verb};
 
 use super::start::encode_prepared;
 use super::{decode_prepared, opt_field, opt_str_of, str_of, usize_of};
@@ -65,14 +65,14 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String>
         ball: opt_str_of(o, "ball")?,
     };
     if op == RETIRE {
-        return Ok(Action::Retire {
+        return Ok(Action::Fan(Verb::Retire {
             obligation,
             handle: str_of(o, "handle")?,
-        });
+        }));
     }
-    Ok(Action::Fan {
+    Ok(Action::Fan(Verb::Spread {
         prepared: decode_prepared(o.get("prepared").ok_or("fan: missing prepared")?)?,
         obligation,
         n: usize_of(o, "n")?,
-    })
+    }))
 }

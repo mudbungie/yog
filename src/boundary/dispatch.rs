@@ -16,7 +16,7 @@ use crate::model_pick::Pick;
 use crate::ui_state::UiState;
 
 use super::reply::Reply;
-use super::{Action, answer, config, control, fan, fleet, monitor, routing};
+use super::{Action, answer, config, control, fan, fleet, interrupt, monitor, routing};
 
 /// The §3.6 unmaking's two executors — the workspace and the one conversation
 /// — split off at §12's budget when the §4.11 capability arm landed (bl-765d).
@@ -73,6 +73,13 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Action::Stop {
             agent, children, ..
         } => outcome(verbs::stop(&deps.bound(ws), root, ts, agent, *children)),
+        // Send-and-interrupt (bl-a33d): the one arm that composes two acts, so
+        // it has a body of its own ([`interrupt`]) and leaves the two rows those
+        // acts each leave. The deposit's driver-start is the trigger — lernie's
+        // standing law (ARCH §2.9), not a verb yog adds.
+        Action::Interrupt { agent, content, .. } => {
+            interrupt::interrupt(deps, ts, ws, agent, content)
+        }
         Action::Scan { .. } => outcome(verbs::scan(&deps.bound(ws), root, ts)),
         // The §8.2 nudge (bl-9bef): a detached `lernie advance`, which is the
         // §8.6 release's own launch — one body in [`control`], because "start a
@@ -124,12 +131,16 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             seed,
         } => prompt(deps, ui, ts, ws, prepared, goal, *seed)
             .map(|conversation| Reply::Started { conversation }),
-        Action::Fan {
+        // The §3.8 mutating fan's two (bl-8746), one family variant since
+        // bl-a33d: spread N candidates off one pinned target, or retire one.
+        Action::Fan(crate::fan::Verb::Spread {
             prepared,
             obligation,
             n,
-        } => fan::spread(deps, ts, prepared, obligation, *n),
-        Action::Retire { obligation, handle } => fan::retire(deps, ts, obligation, handle),
+        }) => fan::spread(deps, ts, prepared, obligation, *n),
+        Action::Fan(crate::fan::Verb::Retire { obligation, handle }) => {
+            fan::retire(deps, ts, obligation, handle)
+        }
         Action::DeleteWorkspace { typed, .. } => unmake(deps, ui, ts, ws, typed),
         Action::DeleteAgent { agent, typed, .. } => delete_agent(deps, ui, ts, ws, agent, typed),
         Action::Monitor(verb) => monitor::dispatch(deps, ts, ws, verb),

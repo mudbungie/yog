@@ -95,34 +95,32 @@ pub(super) struct Acting {
     owes: Owes,
 }
 
-/// Deposit one message (§8.2's resume gesture) from the composer's box: a clean
-/// deposit clears the draft and raises the echo, and a refusal leaves the
+/// Deposit the composer's box into an inbox — **either depositing gesture**
+/// (§8.2's resume send, and bl-a33d's send-and-interrupt behind it): a clean
+/// landing clears the draft and raises the §3.4 echo, and a refusal leaves the
 /// operator's words exactly where they can be fixed and re-sent (§5.3 — a draft
 /// is RAM until *sent*, and over the wire "sent" is not knowable at the click).
-pub(super) fn message(
+///
+/// One body for the two, because the aftermath is a fact about depositing and
+/// not about which verb ran ahead of it: the caller constructs the variant, and
+/// which one it is decides what the substrate does, never what the box shows.
+pub(super) fn deposit(
     model: &mut AppModel,
     state: &mut ShellState,
     key: &DraftKey,
     ws: &Path,
-    agent: &str,
-    content: &str,
+    action: &Action,
 ) {
-    let action = Action::Message {
-        workspace: model.snap.ws_name(ws),
-        agent: agent.to_owned(),
-        content: content.to_owned(),
+    let owes = match action {
+        Action::Message { agent, content, .. } | Action::Interrupt { agent, content, .. } => {
+            Owes::Message {
+                agent: agent.clone(),
+                content: content.clone(),
+            }
+        }
+        _ => Owes::Nothing,
     };
-    hold(
-        model,
-        state,
-        ws,
-        &action,
-        Seat::Draft(key.clone()),
-        Owes::Message {
-            agent: agent.to_owned(),
-            content: content.to_owned(),
-        },
-    );
+    hold(model, state, ws, action, Seat::Draft(key.clone()), owes);
 }
 
 /// Fire one §8.5 line's **act** arm: the note under the box and whether the

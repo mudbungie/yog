@@ -26,6 +26,9 @@ pub fn spell(gesture: &Gesture) -> String {
 fn spell_action(action: &Action) -> String {
     match action {
         Action::Message { content, .. } => format!("/message {content}"),
+        // The tail is the text, verbatim, exactly as `/message`'s is: the same
+        // deposit, with the stop ahead of it (bl-a33d).
+        Action::Interrupt { content, .. } => format!("/interrupt {content}"),
         Action::Stop { children, .. } => match children {
             true => "/stop children".to_owned(),
             false => "/stop".to_owned(),
@@ -60,8 +63,8 @@ fn spell_action(action: &Action) -> String {
         Action::Prompt { goal, .. } => format!("/prompt {goal}"),
         // N is the whole line: the obligation and the prepared start are the
         // seat's, exactly as `/prompt`'s prepared is.
-        Action::Fan { n, .. } => format!("/fan {n}"),
-        Action::Retire { handle, .. } => format!("/retire {handle}"),
+        Action::Fan(crate::fan::Verb::Spread { n, .. }) => format!("/fan {n}"),
+        Action::Fan(crate::fan::Verb::Retire { handle, .. }) => format!("/retire {handle}"),
         Action::DeleteWorkspace { typed, .. } => format!("/delete-workspace {typed}"),
         Action::DeleteAgent { typed, .. } if typed.is_empty() => "/delete-agent".to_owned(),
         Action::DeleteAgent { typed, .. } => format!("/delete-agent {typed}"),

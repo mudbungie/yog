@@ -132,3 +132,55 @@ fn shift_enter_newlines_the_draft_and_enter_alone_sends() {
         "the send really dispatched (the absent binary leaves its ops row)"
     );
 }
+
+/// The box's **third** Enter (§11, bl-a33d): **Ctrl+Enter is send-and-interrupt,
+/// and its first act is the stop.** Driven through the real keyboard beside its
+/// two siblings, because the whole family is the box's own and the only way to
+/// tell the three apart is which verb reached the substrate. The absent lernie
+/// is the witness: the attempted argv is what a refused spawn records, so the
+/// leading verb says which gesture fired.
+#[test]
+fn ctrl_enter_interrupts_where_plain_enter_only_deposits() {
+    let mut world = world();
+    let ws = world.ws.clone();
+    let screen = Screen::new();
+    assert!(screen.idle(&mut world), "the cursor starts in the composer");
+    world.model.focus_agent(&ws, "c-1");
+
+    // Plain Enter first, for the contrast: the deposit, and nothing ahead of it.
+    screen.frame(&mut world, vec![egui::Event::Text("carry on".into())]);
+    screen.frame(
+        &mut world,
+        vec![press(egui::Key::Enter, egui::Modifiers::NONE)],
+    );
+    world.converge();
+    let sent = world
+        .model
+        .last_failure(crate::opslog::Origin::Conversation)
+        .expect("Enter reached the deposit");
+    assert!(
+        sent.argv.contains(" message "),
+        "a bare Enter is the deposit alone: {}",
+        sent.argv
+    );
+
+    // Now the combo, on the same box and the same target. The stop goes first —
+    // and because the absent binary refuses that spawn, the stop is also the
+    // last thing the trail saw, which is exactly what distinguishes this
+    // gesture from the one above.
+    screen.frame(&mut world, vec![egui::Event::Text("no, do this".into())]);
+    screen.frame(
+        &mut world,
+        vec![press(egui::Key::Enter, egui::Modifiers::COMMAND)],
+    );
+    world.converge();
+    let cut = world
+        .model
+        .last_failure(crate::opslog::Origin::Conversation)
+        .expect("Ctrl+Enter reached the substrate");
+    assert!(
+        cut.argv.contains(" stop "),
+        "Ctrl+Enter interrupts before it deposits: {}",
+        cut.argv
+    );
+}

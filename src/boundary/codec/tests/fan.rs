@@ -6,7 +6,7 @@ use serde_json::json;
 use super::{p, rt};
 use crate::boundary::codec::decode;
 use crate::boundary::{Action, Gesture};
-use crate::fan::Obligation;
+use crate::fan::{Obligation, Verb};
 use crate::opslog::Origin;
 use crate::start::Prepared;
 
@@ -31,23 +31,23 @@ fn obligation(ball: Option<&str>) -> Obligation {
 #[test]
 fn both_fan_envelopes_round_trip() {
     for ball in [Some("bl-1f2a"), None] {
-        rt(Gesture::Act(Action::Fan {
+        rt(Gesture::Act(Action::Fan(Verb::Spread {
             prepared: prepared(Some("/claim")),
             obligation: obligation(ball),
             n: 3,
-        }));
-        rt(Gesture::Act(Action::Retire {
+        })));
+        rt(Gesture::Act(Action::Fan(Verb::Retire {
             obligation: obligation(ball),
             handle: "at-0badcafe".into(),
-        }));
+        })));
     }
     // N of one is a lawful fan (the ordinary path), and so is N of none.
     for n in [0, 1] {
-        rt(Gesture::Act(Action::Fan {
+        rt(Gesture::Act(Action::Fan(Verb::Spread {
             prepared: prepared(None),
             obligation: obligation(Some("bl-1f2a")),
             n,
-        }));
+        })));
     }
 }
 
@@ -60,14 +60,14 @@ fn a_fan_without_a_ball_field_is_the_bare_obligation() {
                                        "binding": null, "goal": "g", "origin": "balls"}});
     assert_eq!(
         decode(&envelope),
-        Ok(Gesture::Act(Action::Fan {
+        Ok(Gesture::Act(Action::Fan(Verb::Spread {
             prepared: Prepared {
                 goal: "g".into(),
                 ..prepared(None)
             },
             obligation: obligation(None),
             n: 2,
-        })),
+        }))),
     );
     assert!(
         !encoded(&envelope).contains("\"ball\""),

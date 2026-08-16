@@ -43,6 +43,14 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
             // newlines included — only the line's own ends are trimmed.
             content: args::required(tail, verb, "text to send")?,
         })),
+        // Send-and-interrupt (bl-a33d): `/message`'s grammar exactly — the tail
+        // is the content, verbatim — with the stop ahead of the deposit. It
+        // reads no flag out of the tail for that reason, `children` included.
+        "interrupt" => Ok(act(Action::Interrupt {
+            workspace: args::workspace(ctx, verb)?,
+            agent: args::agent(ctx, verb)?,
+            content: args::required(tail, verb, "text to send")?,
+        })),
         "stop" => Ok(act(Action::Stop {
             workspace: args::workspace(ctx, verb)?,
             agent: args::agent(ctx, verb)?,
