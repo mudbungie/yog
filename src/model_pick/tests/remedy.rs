@@ -18,6 +18,7 @@ const NO_CREDENTIAL: &str = "no credential for this provider: set BRAZEN_API_KEY
 fn row(name: &str, auth: &str) -> ProviderRow {
     ProviderRow {
         name: name.to_owned(),
+        protocol: "anthropic_messages".to_owned(),
         auth: auth.to_owned(),
     }
 }

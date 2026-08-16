@@ -38,14 +38,16 @@ impl FakeRunner {
         }
     }
 
-    /// The same fake with a preset effective provider table (keyless rows —
-    /// only the `name` column is read here).
+    /// The same fake with a preset effective provider table (keyless rows on a
+    /// tool-carrying dialect — the `name` column is what this file reads, and
+    /// the `protocol` column has to be one the §9.4 gate does not refuse).
     fn listing(names: &[&str]) -> Self {
         Self {
             providers: names
                 .iter()
                 .map(|n| ProviderRow {
                     name: (*n).to_string(),
+                    protocol: "openai_chat".to_owned(),
                     auth: "none".to_owned(),
                 })
                 .collect(),

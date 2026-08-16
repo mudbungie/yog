@@ -4502,8 +4502,9 @@ a second add-a-provider form over the same file would be a second authority on
 it. The model list's last entry is *custom model id…*, a free-entry field for a
 model brazen does not list. That entry can declare an *unserved* model — the
 operator's own call, and `models.yaml` is already the operator's authority
-(§9.2) — but never an unroutable one, because the row beside it is still
-brazen's.
+(§9.2). It cannot declare an unroutable one, but **not because the row beside it
+is brazen's** — that was the reasoning, and bl-3d22 falsified it. The row's
+existence is checked *and so is its protocol's capability*, below.
 
 **Selection is the gesture (bl-fb6b).** There is no Set button. Choosing a
 model writes, and the pane holds no button at all. The ruling: the Set button
@@ -4547,11 +4548,53 @@ warned, and the warning was the dead end:
   listed for a row brazen has, so the `models.yaml` entry a pick writes can
   never name a row the §9.2 Apply gate would reject, and the role mark it
   produces can never be faulted.
+
+  **Row existence is not request-shape compatibility, and this claim used to
+  assume it was** (bl-3d22). `bz --list-providers` ships `claude-code`, whose
+  `claude_code` dialect is single-turn and **tool-less by contract**: its encoder
+  rejects every request with nonempty `tools`. Every yog turn has nonempty tools
+  — `tool_host::Injection::tools` declares the `clients` tool unconditionally and
+  lernie splices the host injection into every canonical request — so
+  `/model worker claude-code <id>` advanced both config halves and then failed
+  the next worker start before any network call, on
+  *"claude_code carries no tool declarations; use the `anthropic` row for
+  tools"*. A role's own `tools: []` buys no exemption, because the injection is
+  not the role's election.
+
+  The capability is therefore judged too, and **from the protocol, never from a
+  row name**: the effective table's `protocol` column carries brazen's own
+  `ProtocolId` spelling, `ProviderRow::tools_blocked` parses it back into that
+  public closed enum through brazen's serde rename and answers over a **total
+  match**, so a new upstream dialect fails to compile until its arm is added, and
+  a spelling this build cannot name is *no answer* rather than a refusal. The
+  picker's provider list shows such a row with its reason and does not offer it,
+  which is how this invariant is kept true rather than weakened; the row is
+  **not** removed from the catalog, because the VISION §4.9 alignment monitor's
+  check is structurally tool-less and pins a model rather than a role.
+
+  brazen projects no capability column of its own — `--list-providers` serves
+  `name`/`protocol`/`auth`/`credential`, and the `Protocol` trait that owns the
+  rejection is crate-private. **The upstream ask is already filed as brazen
+  bl-5053** (per-row capability declines on the read surface, derived from the
+  protocol's own reject arms and never a config field); until it lands, the total
+  match over `ProtocolId` is the closest derivable thing, and it is keyed on
+  brazen's enum rather than on a table of names yog invented. That ball was filed
+  off this same defect seen once before and yog never gated on its own side,
+  which is why it recurred — the local gate is not a stand-in for the column, it
+  is the half yog owns.
 - **`plan` refuses a row brazen lacks** (`PickError::UnknownProvider`), before
   either file is touched. The §9.2 Apply gate could not cover this alone: it
   runs only when the `models.yaml` half needs writing, so re-picking an
   already-declared model would have carried a dead row into `providers.yaml`
-  ungated.
+  ungated. Since bl-3d22 it takes the effective table **whole** rather than its
+  name column, because the row gate asks two questions and only one of them is
+  answerable from a name.
+- **`plan` refuses a row whose protocol cannot carry a yog turn**
+  (`PickError::Incapable`, bl-3d22), in the row's own words, at the same point
+  and for the same reason: a config that would die at the next step's encode is
+  refused instead of written. A row the table does not carry is an unknown row,
+  not an incapable one — there is no protocol to judge — so the gate needs no
+  case of its own for it, and an unanswerable table gates nothing.
 - **`plan` refuses an id the block grammar cannot hold**
   (`PickError::NotAnId` — blank, or carrying whitespace / `:` / `#`). Only the
   custom entry can produce one; a listed candidate is a string brazen itself
@@ -7898,7 +7941,7 @@ beside `main.rs`.
 | `src/config_edit/apply.rs` | the `--editor-apply` copy — drafted files only (§9.3) |
 | `src/config_edit/branch.rs` | config-ref browse, governing-config derivation, edit plan (§9.3) |
 | `src/config_edit/branch/edit.rs` | the §9.3 edit half — the scripted-`$EDITOR` drive of `lernie config`, the only lawful writer of `config/*` (ARCH §2.2), re-entering the yog binary at `config_edit::apply` |
-| `src/config_edit/brazen/{mod,effects,providers}.rs` | the §9.1 editor (staged validation, hash guard) and the wall's `BrazenPaths` layout; the real BzRunner; the provider-row projection (§8.3) |
+| `src/config_edit/brazen/{mod,effects,providers}.rs` | the §9.1 editor (staged validation, hash guard) and the wall's `BrazenPaths` layout; the real BzRunner; the provider-row projection (§8.3) — three columns and the two capability reads over them: `auth` → `login_blocked` (§8.3), and `protocol` → `tools_blocked` (§9.4, bl-3d22), a total match over brazen's own public `ProtocolId` so a new upstream dialect fails to compile rather than being guessed at |
 | `src/config_edit/draft.rs` | the ONE staged-edit `Draft` both §9.1/§9.2 editors are built from — dirty tracking, revert, the hash guard |
 | `src/config_edit/effects.rs` | the production `FileIo` — the thin `std::fs` shell behind every editor's pure view-model, covered against a real tempdir with no fakes |
 | `src/config_edit/fault.rs` | **where a config-kind failure is fixed** (§9.1, bl-dd7f): the narrow classifier over a failure's own words — lernie's `provider error (config)` wrapper and brazen's `unknown provider` — the row it quotes, read out of the sentence rather than joined from the tree, and the one line the §7.3 banner pairs with a route to the §9.1 editor. §8.3 rule 5's sibling on the other kind of fault, and it re-words nothing: brazen's and lernie's sentences stay verbatim above it |
@@ -7943,7 +7986,7 @@ beside `main.rs`.
 | `src/lib.rs` | module decls, Args, test_support (`src/test_support{,/world,/workspace}.rs` — the fake effects, the hermetic fixture world and its wall, and the real on-disk lernie workspace, each its own file at §12's cap) |
 | `src/login/{mod,auth}.rs` | §8.3 as amended (§15 M6 Z8): the streamed-piped `bz --login` flow, whose lines render verbatim and whose exit lands ONE outcome row, and the pure auth-shaped step-failure predicate that puts the affordance one click from the failure |
 | `src/main.rs` (excl.) | entry, multi-call/namespace dispatch, the two `Engine::boot` faces (window and `yog serve`) and what a window adds beside the engine |
-| `src/model_pick/{mod,header,grammar/mod,grammar/fields,grammar/models,grammar/roles,grammar/tools,query,remedy}.rs` | the §9.4 picker: pure plan + the provider-row gate and default (bl-bd89), the **two** scope sentences the one pane is handed (conversation vs. birth, bl-824e) and the **two** config lines — the conversation's freeze + derived drift clause with the two exits it earns (bl-9786, bl-2d19) and the birth block's pair-and-branch-head line, the anchored block grammars (no YAML dep) — `fields` the generic locate/read/replace every rewrite and the §9.5 pane share — the ONE row judgement (`is_unknown_row`) every §9 gate calls, and `remedy` the way out of a credential-shaped roster failure (bl-91f1, §9.4): §8.3's own `looks_auth` as the gate, `ProviderRow::login_blocked` as the words, a §11 tab as the destination — no wording and no classifier of its own, and no `Unrouted` state, because the picker named the row in the query it just fired |
+| `src/model_pick/{mod,header,grammar/mod,grammar/fields,grammar/models,grammar/roles,grammar/tools,query,remedy}.rs` | the §9.4 picker: pure plan + the provider-row gate and default (bl-bd89), the **two** scope sentences the one pane is handed (conversation vs. birth, bl-824e) and the **two** config lines — the conversation's freeze + derived drift clause with the two exits it earns (bl-9786, bl-2d19) and the birth block's pair-and-branch-head line, the anchored block grammars (no YAML dep) — `fields` the generic locate/read/replace every rewrite and the §9.5 pane share — the ONE row judgement (`is_unknown_row`) every §9 gate calls, the protocol-capability gate beside it (`PickError::Incapable`, bl-3d22 — the effective table is carried whole because a row name cannot answer whether the dialect takes tools), and `remedy` the way out of a credential-shaped roster failure (bl-91f1, §9.4): §8.3's own `looks_auth` as the gate, `ProviderRow::login_blocked` as the words, a §11 tab as the destination — no wording and no classifier of its own, and no `Unrouted` state, because the picker named the row in the query it just fired |
 | `src/monitor/{mod,arming,verdict,row}.rs` | the VISION §4.9 alignment monitor's data half: the anti-reinvention law stated where it must hold; the `cadence.yaml` `monitor:` block (arming, the model pin, the policy file it names) and the seed that file starts from; the three-valued verdict and the one reading of a model's reply; and the ops row that is audit trail, level-trigger memory and tuning dataset at once — with `latest`/`worst`, the queries that make a standing verdict a derivation rather than a field |
 | `src/monitor/{window,check,sentry}.rs` | its acting half: the evidence one check reads (`goal.md` verbatim + the transcript delta derived from the last-checked sha by `git diff`, tail-clipped); the one bounded tool-less call through the embedded brazen adapter (§16.7 W10) behind a `Caller` seam, and the NDJSON read that takes the verdict and the provider's own counters; and the level trigger and its thread (§7.2) — one check per tick, only when a tip moved, retry by re-firing |
 | `src/multiplex{.rs,/bl.rs,/lernie.rs,/help.rs,/landing.rs,/namespace.rs,/wire.rs}` | the §16.7 namespace arms: each embedded crate's verb surface, dispatched from `main.rs` — plus the router's namespace table and its exhaustive `owns_argv` classification (`namespace`, bl-4667 — which arms own their argv and answer `--help` themselves, and which are answered from the command table like `serve`); `help` (bl-52ed): the argv seat's whole command table, the top-level roster rendered from it, every per-command page, and the discovery probe the `bl`/`bz` arms answer world-free (§8.5's every-command-answers-help rule at the argv surface); and `landing` (bl-7e54): the §16.3 repair the `bl` arm converges on the way in, re-deriving a pre-nesting landing's plugin schedule from balls' own seed; and `wire` (bl-b6fa, bl-024b): the two wire CLIENT arms — `yog seat` and `yog tool-host` — which compose the world at the process edge because the certificate and the tool config are facts of *this* machine's data root even when the engine is elsewhere |

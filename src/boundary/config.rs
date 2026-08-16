@@ -195,6 +195,12 @@ pub(super) fn set_marks(
 /// another, so judging with the wrong wall would refuse a valid pick — or,
 /// headless with no wall at all, gate on an empty table and let anything
 /// through.
+///
+/// The table is handed to [`plan`](crate::model_pick::plan) **whole** since
+/// bl-3d22: the gate asks whether the row exists AND whether its protocol can
+/// carry a yog turn, and the second question is not answerable from a name. The
+/// name projection is still what the §9.2 Apply pipeline consumes, so it is
+/// derived at that one call rather than read twice.
 pub(super) fn pick_model(
     deps: &Deps,
     ts: &str,
@@ -205,20 +211,19 @@ pub(super) fn pick_model(
         .map(|b| String::from_utf8_lossy(&b).into_owned())
         .map_err(|e| e.to_string())?;
     let mut editor = editor_at(&LernieGlobal::resolve(&deps.world).models())?;
-    let rows = crate::config_edit::brazen::row_names(
-        &crate::config_edit::brazen::RealBzRunner::resolve(&wall_env(deps, workspace)).providers(),
-    );
+    let table =
+        crate::config_edit::brazen::RealBzRunner::resolve(&wall_env(deps, workspace)).providers();
     let planned = crate::model_pick::plan(
         editor.draft(),
         &assigned,
-        &rows,
+        &table,
         pick,
         served_window(deps, workspace, pick),
     )
     .map_err(|e| e.to_string())?;
     if let Some(text) = planned.models_yaml {
         editor.set_draft(text);
-        saved(editor.apply(&rows, &RealFileIo))?;
+        saved(editor.apply(&crate::config_edit::brazen::row_names(&table), &RealFileIo))?;
     }
     commit(
         deps,

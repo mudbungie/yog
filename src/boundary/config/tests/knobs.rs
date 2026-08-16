@@ -247,3 +247,19 @@ fn a_pick_whose_models_file_cannot_be_read_refuses_before_planning() {
     let fx = workspace();
     assert!(fire(&deps, &pick("worker", "acme", "m-9", &fx.path)).is_err());
 }
+
+/// bl-3d22, at the executor every seat crosses — `/model`, a deposit and the
+/// pane's click are one implementation. `claude-code` is a row brazen SHIPS, so
+/// the row gate passed it and both config halves advanced; the next worker start
+/// then died inside brazen's encoder before any network call. Neither half is
+/// written now, and the refusal names the protocol rather than the row name.
+#[test]
+fn a_pick_on_a_tool_less_protocol_writes_neither_half() {
+    let root = tempdir().unwrap();
+    let fx = workspace();
+    let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
+    let err = fire(&deps, &pick("worker", "claude-code", "sonnet", &fx.path)).unwrap_err();
+    assert!(err.contains("`claude-code` cannot serve a role"), "{err}");
+    assert!(err.contains("claude_code declares no tools"), "{err}");
+    assert!(!root.path().join("lernie/models.yaml").exists());
+}

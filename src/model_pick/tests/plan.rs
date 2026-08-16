@@ -1,6 +1,6 @@
 //! The composed one-pick plan (§9.4) and the sentences the surface paints.
 
-use super::{SEEDED_MODELS, TEMPLATE_PROVIDERS};
+use super::{SEEDED_MODELS, TEMPLATE_PROVIDERS, table};
 use crate::model_pick::grammar::{GrammarError, MODELS_YAML, roles};
 use crate::model_pick::{
     Pick, PickError, WORKER_ROLE, WRITE_NOTE, birth_sentence, default_row, plan, scope_sentence,
@@ -15,8 +15,8 @@ fn pick(model: &str) -> Pick {
 }
 
 /// brazen's table with the row every fixture pick names — the ordinary case.
-fn rows() -> Vec<String> {
-    vec!["codex".to_string(), "google".to_string()]
+fn rows() -> Vec<crate::config_edit::brazen::ProviderRow> {
+    table(&["codex", "google"])
 }
 
 /// A model the provider offers but `models.yaml` has never heard of produces
@@ -139,7 +139,7 @@ fn an_unreadable_providers_yaml_refuses_the_plan() {
 /// dies at the first dispatch with `unknown provider`.
 #[test]
 fn a_pick_on_a_row_brazen_lacks_is_refused_before_either_file() {
-    let live = vec!["openai-chatgpt".to_string()];
+    let live = table(&["openai-chatgpt"]);
     let refused = plan(
         SEEDED_MODELS,
         TEMPLATE_PROVIDERS,

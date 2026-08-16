@@ -21,6 +21,8 @@ pub mod header;
 pub mod query;
 pub mod remedy;
 
+use crate::config_edit::brazen::{ProviderRow, row_names};
+
 #[cfg(test)]
 pub(crate) mod tests;
 
@@ -47,9 +49,10 @@ pub const BRANCH: &str = "default";
 /// The file the role assignment lives in, relative to the config checkout.
 pub const PROVIDERS: &str = "providers.yaml";
 
-/// Why a pick was declined (§9.4). Two kinds, because two things can be wrong:
-/// a file is not the block shape yog edits ([`GrammarError`]), or the pick
-/// names a provider row brazen does not have.
+/// Why a pick was declined (§9.4). Three kinds, because three things can be
+/// wrong: a file is not the block shape yog edits ([`GrammarError`]), the pick
+/// names a provider row brazen does not have, or it names a row brazen HAS whose
+/// protocol cannot carry a yog turn.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum PickError {
     #[error("{0}")]
@@ -63,6 +66,18 @@ pub enum PickError {
          or add the row to brazen's own config"
     )]
     UnknownProvider { provider: String },
+    /// bl-3d22. The row EXISTS and still cannot serve the role: its protocol
+    /// declines the request shape every yog turn has. Row existence never
+    /// established compatibility — §9.4 used to reason that a custom id could be
+    /// unserved *"but never an unroutable one, because the row beside it is
+    /// still brazen's"*, and `/model worker claude-code <id>` falsified that by
+    /// advancing both files and then failing the next worker start before any
+    /// network call. `why` is
+    /// [`ProviderRow::tools_blocked`](crate::config_edit::brazen::ProviderRow::tools_blocked)'s
+    /// own sentence, so the verb and the picker's dropdown cannot phrase the
+    /// same incapability differently.
+    #[error("provider row `{provider}` cannot serve a role: {why} — pick a tool-capable row")]
+    Incapable { provider: String, why: String },
     /// The model id is not a plain block key, so neither file's block form
     /// (§9.4's grammar) can hold it. Reachable only from the custom-id entry —
     /// every listed candidate is a string brazen itself printed.
@@ -180,8 +195,12 @@ impl Pick {
 /// dead row nor a file the grammar cannot read leaves half-written state to
 /// recover from.
 ///
-/// `rows` is brazen's effective provider table; an empty one is no answer and
-/// gates nothing, on the same terms as [`grammar::unknown_rows`].
+/// `rows` is brazen's effective provider table, carried **whole** since bl-3d22:
+/// the row gate asks two questions of it, and only one of them is answerable
+/// from a name. An empty table is no answer and gates nothing, on the same terms
+/// as [`grammar::unknown_rows`] — and a row the table does not carry has no
+/// protocol to judge, so the capability gate dissolves into the same rule with
+/// no case of its own.
 ///
 /// `served` is the context window brazen published for this model on this row
 /// (`None` where the provider publishes none) — the seed for the declaration,
@@ -190,13 +209,23 @@ impl Pick {
 pub fn plan(
     models_yaml: &str,
     providers_yaml: &str,
-    rows: &[String],
+    rows: &[ProviderRow],
     pick: &Pick,
     served: Option<u32>,
 ) -> Result<Plan, PickError> {
-    if grammar::is_unknown_row(&pick.provider, rows) {
+    if grammar::is_unknown_row(&pick.provider, &row_names(rows)) {
         return Err(PickError::UnknownProvider {
             provider: pick.provider.clone(),
+        });
+    }
+    if let Some(why) = rows
+        .iter()
+        .find(|row| row.name == pick.provider)
+        .and_then(ProviderRow::tools_blocked)
+    {
+        return Err(PickError::Incapable {
+            provider: pick.provider.clone(),
+            why,
         });
     }
     if !is_plain_id(&pick.model) {

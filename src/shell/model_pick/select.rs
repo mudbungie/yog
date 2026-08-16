@@ -27,6 +27,7 @@
 //! confirm, because a half-typed id is not a choice.
 
 use super::PickerState;
+use crate::config_edit::brazen::{ProviderRow, row_names};
 use crate::model_pick::{ModelRow, default_row};
 
 /// The provider list's last entry: not a row, a route to the §9.1 brazen
@@ -87,7 +88,7 @@ pub(super) fn pair_row(
     ui: &mut egui::Ui,
     picker: &mut PickerState,
     row: &ModelRow,
-    rows: &[String],
+    rows: &[ProviderRow],
     candidates: &[String],
     in_flight: bool,
 ) -> PairChoice {
@@ -97,7 +98,7 @@ pub(super) fn pair_row(
     // conversation actually dispatched through, and so the reason its first
     // turn died. Once the operator has picked something themselves there is no
     // strand left to report: the selection is their own answer to it.
-    let scoped = default_row(&row.provider, rows);
+    let scoped = default_row(&row.provider, &row_names(rows));
     let strand = picker
         .provider
         .is_none()
@@ -106,6 +107,18 @@ pub(super) fn pair_row(
     let provider = picker.provider.clone().unwrap_or(scoped.row);
     if let Some(note) = strand {
         ui.colored_label(crate::theme::ICHOR, note);
+    }
+    // The standing state, named where it can be left (bl-3d22): a role already
+    // sitting on a row whose protocol declines tools is a config whose next step
+    // dies at brazen's encoder, and the operator is looking at the one control
+    // that repairs it. `default_row` above still steers over the WHOLE table, so
+    // this row is reported rather than mistaken for one brazen dropped.
+    if let Some(why) = rows
+        .iter()
+        .find(|r| r.name == provider)
+        .and_then(ProviderRow::tools_blocked)
+    {
+        ui.colored_label(crate::theme::ICHOR, format!("⚠ {provider} {why}"));
     }
     let shown = if picker.custom.is_some() {
         CUSTOM_MODEL.to_string()
@@ -153,12 +166,25 @@ pub(super) fn pair_row(
 /// brazen's first row once brazen does not, so the row never asks a provider
 /// that cannot answer; brazen unanswerable (an empty table) offers only the
 /// route.
-fn provider_combo(ui: &mut egui::Ui, selected: &str, rows: &[String], chosen: &mut String) {
+///
+/// **A row whose protocol declines tools is listed and not offered** (bl-3d22):
+/// it is shown with the reason, unselectable, because *"nothing offered is
+/// unroutable"* is the §9.4 invariant and omitting the row outright would leave
+/// an operator reading `bz --list-providers` with no answer at all. The sentence
+/// is the row's own
+/// ([`ProviderRow::tools_blocked`](crate::config_edit::brazen::ProviderRow::tools_blocked)),
+/// never a second phrasing beside `plan`'s refusal.
+fn provider_combo(ui: &mut egui::Ui, selected: &str, rows: &[ProviderRow], chosen: &mut String) {
     egui::ComboBox::from_id_salt("model-pick-provider")
         .selected_text(selected)
         .show_ui(ui, |ui| {
             for row in rows {
-                ui.selectable_value(chosen, row.clone(), row)
+                if let Some(why) = row.tools_blocked() {
+                    ui.weak(format!("{} — {why}", row.name))
+                        .on_hover_text(PROVIDER_HINT);
+                    continue;
+                }
+                ui.selectable_value(chosen, row.name.clone(), &row.name)
                     .on_hover_text(PROVIDER_HINT);
             }
             ui.selectable_value(chosen, ADD_PROVIDER.to_string(), ADD_PROVIDER)

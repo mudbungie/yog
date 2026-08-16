@@ -1,7 +1,8 @@
-//! The provider-table projection (§5.1 #20/#21, §8.3): listing order, the two
-//! consumed columns, the login-capability read off `auth`, the row view every
-//! surface renders (name · credential fact · offer), and the shapeless payload
-//! folding to no rows.
+//! The provider-table projection (§5.1 #20/#21, §8.3): listing order, the three
+//! consumed columns, the two capability reads over them — login off `auth`
+//! (§8.3) and tools off `protocol` (§9.4, bl-3d22) — the row view every surface
+//! renders (name · credential fact · offer), and the shapeless payload folding
+//! to no rows.
 
 use super::{ProviderRow, provider_rows, row_views};
 
@@ -15,6 +16,45 @@ const LIVE_LISTING: &str = r#"{"providers":[
     {"auth":"oauth2","credential":"ambient","name":"claude-session-direct","protocol":"anthropic_messages"},
     {"auth":"api_key","credential":"missing","name":"anthropic","protocol":"anthropic_messages"}
 ]}"#;
+
+/// bl-3d22. The tool capability is read off the `protocol` column through
+/// brazen's own `ProtocolId` rename, over a TOTAL match — so the answer is a
+/// fact about the dialect, never about a row NAME. `claude-code` is the one
+/// shipped row whose dialect declines tools; every other dialect in the table
+/// carries them.
+#[test]
+fn the_tool_capability_is_read_off_the_protocol_column() {
+    let rows = provider_rows(LIVE_LISTING);
+    assert_eq!(rows[2].protocol, "claude_code");
+    let why = rows[2].tools_blocked().expect("claude_code declines tools");
+    assert!(why.starts_with("claude_code declares no tools"), "{why}");
+    assert!(why.contains("`clients` tool"), "{why}");
+    assert!(why.contains("can serve no role"), "{why}");
+    // The other four dialects in the live table carry tools — including
+    // `claude-session-direct`, which is the same vendor over `anthropic_messages`
+    // and is the row a role belongs on.
+    for i in [0, 1, 3, 4] {
+        assert_eq!(rows[i].tools_blocked(), None, "row {i} carries tools");
+    }
+}
+
+/// A protocol spelling this build's brazen cannot name — a newer dialect, or a
+/// degraded column — is **no answer**, not a refusal: no surface may refuse on
+/// the strength of a question that went unanswered. The compile-time half of
+/// this guarantee is the total match itself, which a new upstream variant breaks
+/// until its arm is added.
+#[test]
+fn an_unspellable_protocol_answers_nothing_about_tools() {
+    let rows = provider_rows(
+        r#"{"providers":[{"name":"x","protocol":"mystery_wire","auth":"none"},{"name":"y","auth":"none"}]}"#,
+    );
+    assert_eq!(rows[0].tools_blocked(), None);
+    assert_eq!(
+        rows[1].tools_blocked(),
+        None,
+        "an absent column asks nothing"
+    );
+}
 
 #[test]
 fn provider_rows_reads_name_and_auth_in_listing_order() {
@@ -159,10 +199,12 @@ fn a_row_missing_a_column_degrades_to_empty_not_loginable() {
         [
             ProviderRow {
                 name: String::new(),
+                protocol: String::new(),
                 auth: String::new(),
             },
             ProviderRow {
                 name: String::new(),
+                protocol: String::new(),
                 auth: "oauth2".to_owned(),
             },
         ]

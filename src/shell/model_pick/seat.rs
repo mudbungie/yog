@@ -11,7 +11,7 @@
 
 use super::{
     CenterTab, Cli, ModelRow, ShellState, birth_scope, conversation_scope, lines, marks, pane,
-    refresh, roster_fault, row_names, select, settled, write,
+    refresh, roster_fault, select, settled, write,
 };
 use crate::AppModel;
 use crate::model_pick::{
@@ -129,7 +129,7 @@ fn seat(
         ui,
         &mut state.wall.picker,
         row,
-        &row_names(&rows),
+        &rows,
         &models,
         view.is_none(),
     );

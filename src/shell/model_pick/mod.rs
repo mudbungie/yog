@@ -46,7 +46,7 @@
 
 use crate::cli_outbound::Cli;
 use crate::config_edit::branch::config_file;
-use crate::config_edit::brazen::{ProviderRow, row_names};
+use crate::config_edit::brazen::ProviderRow;
 use crate::keymap::CenterTab;
 use crate::model_pick::query::{self, RosterView};
 use crate::model_pick::{
