@@ -19,11 +19,16 @@ impl server::Answerer for Silent {
 /// day the window became a client of this listener: a window with no listener
 /// is a window that paints nothing, and REMOTE §8 has already rejected both
 /// ways around that.
+///
+/// The world names its own port ([`ephemeral`](crate::test_support::wire::ephemeral))
+/// and no certificate, so the mint is what is under test and the operator's
+/// running window keeps the one port the constant names.
 #[test]
 fn an_unprovisioned_box_founds_its_own_loopback_wire() {
     let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
+    crate::test_support::wire::ephemeral(&world);
     let listener = listen(&world, Arc::new(Silent), Presence::default()).expect("listening");
     assert!(
         listener.address().starts_with("127.0.0.1:"),

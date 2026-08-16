@@ -6,7 +6,7 @@
 
 use super::*;
 use crate::boundary::deposit;
-use crate::test_support::{spawn_guard, world_under};
+use crate::test_support::{spawn_guard, wire::ephemeral, world_under};
 use crate::ui_state::Clock;
 use crate::watch::NoRepaint;
 use serde_json::json;
@@ -34,6 +34,10 @@ fn a_windowless_engine_answers_a_deposit_and_stops_on_drop() {
     let _guard = spawn_guard();
     let root = tempdir().unwrap();
     let world = world_under(root.path());
+    // A boot listens, so this world names the port it listens on: the constant
+    // is the operator's box's, and a test that took it would take the port the
+    // operator's own window is holding ([`ephemeral`]).
+    ephemeral(&world);
     // A staging dir older than the §5.2 horizon: the sweep is the engine's, so
     // booting one is what drops it.
     let stale = world.yog_stage_root().join("nonce");
@@ -75,15 +79,16 @@ fn a_windowless_engine_answers_a_deposit_and_stops_on_drop() {
 }
 
 /// **The window's read path, end to end through the engine** (REMOTE §1.2 as
-/// ruled 2026-08-14, bl-ae05). A boot on an unprovisioned box founds its own
-/// loopback trust root, and the face it hands an asker to is a client of that
-/// listener presenting the window leaf — a real socket, a real handshake, a
-/// real certificate.
+/// ruled 2026-08-14, bl-ae05). A boot on a box with no certificates founds its
+/// own loopback trust root, and the face it hands an asker to is a client of
+/// that listener presenting the window leaf — a real socket, a real handshake,
+/// a real certificate, on the port this world named ([`ephemeral`]).
 #[test]
 fn a_booted_engine_hands_its_window_a_seat_on_its_own_wire() {
     let _guard = spawn_guard();
     let root = tempdir().unwrap();
     let world = world_under(root.path());
+    ephemeral(&world);
     let mut engine = Engine::boot(
         &world,
         &[],
@@ -128,6 +133,7 @@ fn a_window_takes_both_halves_of_the_wire_once() {
     let _guard = spawn_guard();
     let root = tempdir().unwrap();
     let world = world_under(root.path());
+    ephemeral(&world);
     let mut engine = Engine::boot(
         &world,
         &[],
