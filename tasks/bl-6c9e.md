@@ -1,7 +1,7 @@
 +++
-title = "workspace birth success is not a barrier: GUI Prepare-to-Prompt and headless continuations race"
+title = "workspace birth IS a barrier: the boundary's intake resolves names over the live enumeration, not the derivation's cached copy"
 created = 1786843305
-updated = 1786844875
+updated = 1786845213
 claimant = "Birth6c9e"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
