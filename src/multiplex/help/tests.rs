@@ -43,16 +43,26 @@ fn a_command_is_asked_about_from_either_end() {
 
 /// Every one of yog's own subcommands answers — including the two that used to
 /// do their work first (`env` printed exports, `exec` tried to spawn a program
-/// called `--help`) and the two that never returned or refused (`headless`
-/// parked; `tool-control` waited on stdin).
+/// called `--help`), the two that never returned or refused (`headless`
+/// parked; `tool-control` waited on stdin), and `tool-host`, which routed as a
+/// namespace and rejected the flag as an argument (bl-4667). The roster is
+/// derived from [`COMMANDS`] minus the [`SELF_ANSWERING`] set — the
+/// authoritative definitions — so a later command cannot fall outside the
+/// invariant silently, which is how `tool-host` regressed bl-52ed.
 #[test]
 fn every_yog_subcommand_answers_at_the_command() {
-    for verb in [
-        crate::boundary::SERVE_SUBCMD,
-        crate::world::hatch::ENV_SUBCMD,
-        crate::world::hatch::EXEC_SUBCMD,
-        crate::control::SUBCMD,
-    ] {
+    let owed: Vec<&str> = COMMANDS
+        .iter()
+        .map(|row| row.verb)
+        .filter(|verb| {
+            !super::super::Namespace::from_arg(verb).is_some_and(super::super::Namespace::owns_argv)
+        })
+        .collect();
+    assert!(
+        owed.contains(&crate::wire::HOST_SUBCMD),
+        "the regression's own verb is in the derived roster"
+    );
+    for verb in owed {
         let page = answer(&argv(&["yog", verb, "--help"])).unwrap_or_default();
         assert!(page.starts_with(&format!("yog {verb}")), "{verb}: {page}");
     }
@@ -62,8 +72,16 @@ fn every_yog_subcommand_answers_at_the_command() {
 /// and the tool prints its own page — yog never answers over it.
 #[test]
 fn a_namespace_help_is_the_tools_own_and_falls_through() {
-    for word in ["gesture", "lernie", "bl", "bz", "bl-delivery", "bl-tracker"] {
-        assert_eq!(answer(&argv(&["yog", word, "--help"])), None, "{word}");
+    // The roster is derived from the router's own table and its exhaustive
+    // owns_argv classification (bl-4667), so a namespace added later is
+    // judged here without this list being touched.
+    for (word, namespace) in super::super::namespace::NAMESPACES {
+        if namespace.owns_argv() {
+            assert_eq!(answer(&argv(&["yog", word, "--help"])), None, "{word}");
+        } else {
+            let page = answer(&argv(&["yog", word, "--help"])).unwrap_or_default();
+            assert!(page.starts_with(&format!("yog {word}")), "{word}: {page}");
+        }
     }
     // Asked from the top, though, yog does have a page for the three a human
     // types — what the namespace is, and that its own `--help` is the tool's.

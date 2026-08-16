@@ -100,4 +100,12 @@ fn yog_seat_sends_over_the_wire_and_exits_on_the_reply() {
         Some(2),
         "the mode takes no arguments"
     );
+    // …but `--help` is not an argument, it is the bl-52ed invariant: the page
+    // is answered above the router, exit 0, no world composed and nothing
+    // dialled (bl-4667 — this exact ask used to be the Some(2) refusal above).
+    assert_eq!(
+        dispatch(&argv(&["yog", "tool-host", "--help"])),
+        Some(0),
+        "every command answers --help"
+    );
 }

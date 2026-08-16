@@ -168,7 +168,7 @@ fn the_top_level_page_states_the_whole_surface() {
 /// unadvertised ones still do.
 #[test]
 fn every_table_word_routes_to_its_arm() {
-    for (word, namespace) in NAMESPACES {
+    for (word, namespace) in namespace::NAMESPACES {
         assert_eq!(Namespace::from_arg(word), Some(*namespace), "{word}");
     }
     assert_eq!(Namespace::from_arg("nope"), None);
