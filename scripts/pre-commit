@@ -18,6 +18,16 @@
 #   2. make lint     — line-cap, leak-scan, clippy -D warnings, rules-audit,
 #                      cargo-deny
 #   3. coverage      — scripts/check-coverage.sh (tarpaulin --fail-under 100)
+#
+# THE EXIT CODE IS A CONTRACT, because two callers write a cached verdict from
+# it (bl-673a):
+#   0        the tree passed this gate — recorded as a PASS for (tree, gate).
+#   75       NO VERDICT. scripts/check-coverage.sh saw tarpaulin signaled on
+#            both of its attempts, so something outside the gate killed the run.
+#            .github/workflows/speculate.yml records nothing on this code.
+#   nonzero  the gate failed on the tree's own merits — a FAIL, and FAIL is
+#            permanent: balls' `speculate_run` stops the candidate chain at a
+#            stored FAIL on every later pass without rebuilding.
 
 set -euo pipefail
 

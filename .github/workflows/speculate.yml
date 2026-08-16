@@ -92,10 +92,33 @@ jobs:
       - name: Install bl-speculate (balls, pinned by Cargo.toml)
         if: steps.speculate-cache.outputs.cache-hit != 'true'
         run: cargo install balls --version "${{ steps.balls-pin.outputs.version }}" --locked --bin bl-speculate
+      # A FAIL is recorded ONLY when the gate reached a conclusion about the
+      # tree, and the gate's exit code is what says so (bl-673a). 75 is
+      # scripts/check-coverage.sh reporting that this runner signaled tarpaulin
+      # on both attempts: an infrastructure death, five times sighted, once with
+      # the macOS leg of the same tree green. It is not a verdict, and recording
+      # it as one is permanent — a verdict is keyed by (tree, gate), a stored
+      # FAIL makes balls' `speculate_run` stop the candidate chain there on
+      # every later pass WITHOUT rebuilding, and no re-run can dislodge it
+      # because the tree is unchanged. A run that is killed outright writes no
+      # output here at all, which lands in the same safe place: no verdict.
       - name: run the stock gate (it records the verdict on pass)
-        run: BALLS_IDENTITY=github-actions scripts/pre-commit
+        id: gate
+        run: |
+          set +e
+          BALLS_IDENTITY=github-actions scripts/pre-commit
+          code=$?
+          if [ "$code" -ne 0 ] && [ "$code" -ne 75 ]; then
+            echo "verdict=fail" >>"$GITHUB_OUTPUT"
+          fi
+          if [ "$code" -eq 75 ]; then
+            echo "the gate produced NO verdict about this tree: it was killed" >&2
+            echo "from outside (bl-673a). Nothing is recorded; the driver" >&2
+            echo "rebuilds rather than reading a failure into this." >&2
+          fi
+          exit "$code"
       - name: record the failure the aborting gate cannot
-        if: failure()
+        if: failure() && steps.gate.outputs.verdict == 'fail'
         run: BALLS_IDENTITY=github-actions bl-speculate record fail
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()

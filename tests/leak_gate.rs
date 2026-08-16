@@ -260,7 +260,7 @@ fn ci_reaches_the_leak_scan_from_its_own_entry_point() {
     );
     for link in [
         "\nci: check\n",
-        "\ncheck: fmt-check lint coverage\n",
+        "\ncheck: fmt-check lint\n\t@scripts/check-coverage.sh\n",
         "\t$(MAKE) leak-scan\n",
     ] {
         assert!(
