@@ -1,7 +1,8 @@
 +++
 title = "a fired start is not selected until its branch lands: the echo mints a row nothing focuses, so the operator's own new chat sits unhighlighted behind the birth placeholder"
 created = 1786936785
-updated = 1786936785
+updated = 1786936786
+claimant = "Sift"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
