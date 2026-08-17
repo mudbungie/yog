@@ -1,7 +1,8 @@
 +++
 title = "drive harness decay: the S5 collapse and S8-T4 no-write beats still read ui.json for the collapsed set, which bl-8bbc moved to the per-seat pane document"
 created = 1786936114
-updated = 1786936114
+updated = 1786936115
+claimant = "Dills"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
