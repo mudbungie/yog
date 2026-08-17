@@ -1,7 +1,7 @@
 +++
-title = "the models: table's provider and capabilities columns have no reader left: the §9.2 gate judges a field only the gate consumes"
+title = "the models: entry collapses to the id and its context_window: two columns with no reader and the §9.2 gate over one of them are gone — write less, read the same"
 created = 1786937632
-updated = 1786937925
+updated = 1786938201
 claimant = "Columns3ffa"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
