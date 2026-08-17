@@ -1,7 +1,7 @@
 +++
-title = "an agent's own marks space keeps its store but not its worktrees: bl-delivery territory folds off the world's XDG_STATE_HOME"
+title = "an agent's own marks space owns its worktrees too: the bl arm stands its process in the space, so bl-delivery's territory folds off the space's XDG_STATE_HOME"
 created = 1786845626
-updated = 1786846297
+updated = 1786936159
 claimant = "Marks-c21d"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
