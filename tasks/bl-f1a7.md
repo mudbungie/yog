@@ -1,7 +1,8 @@
 +++
 title = "DECISION: docs/CLAUDE_CODE_GAP_ANALYSIS.md is now published — keep it, trim it, or unship it"
 created = 1786683106
-updated = 1786683106
+updated = 1786937249
+claimant = "Unship-f1a7"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["publication"]
