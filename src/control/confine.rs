@@ -24,12 +24,13 @@
 //!
 //! **The support boundary — what the shape clamps and what it leaves.**
 //! - *Filesystem writes*: the whole host tree is re-bound read-only; writable
-//!   is exactly the derived set — the workspace, the composed world root
-//!   (§16.2: lernie home, nested balls state, walls, tools), and the host
-//!   `/tmp` (world-writable on the host by design; a private tmpfs would break
-//!   cross-process temp coordination for nothing). A project repo outside the
-//!   world is **read-only** to a confined drone — its own `bl close` cannot
-//!   deliver; that is a stated v1 bound, not an accident.
+//!   is exactly the derived set ([`writable`]) — the workspace, the composed
+//!   world root (§16.2: lernie home, nested balls state, walls, tools), the
+//!   host `/tmp` (world-writable on the host by design; a private tmpfs would
+//!   break cross-process temp coordination for nothing), and the **bound
+//!   project repo** when the §3.2 claimant join names one ([`bound_project`],
+//!   bl-34b1) — without which a ball-rung drone could not run its own `bl
+//!   close`.
 //! - *Process access*: **not clamped.** A pid namespace dies with its init,
 //!   and lernie's short verbs detach-launch drivers that must outlive them
 //!   (its ARCH §2.9), so `--unshare-pid` would kill every revived driver at
@@ -47,7 +48,7 @@
 //! `--die-with-parent` is deliberately absent: it would tie every driver to
 //! yog's own lifetime, which §8.1 forbids.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// The Linux backend's program name, PATH-resolved at exec like every host
 /// tool. Its presence on a box is the derived fact — never a stored one.
@@ -136,21 +137,74 @@ fn refusal(workspace: &Path, why: &str) -> String {
 /// config tip, availability is the exec itself.
 pub(crate) fn wrapper(world: &crate::xdg::Env, workspace: &Path) -> Vec<String> {
     if super::policy::Policy::read(workspace).confinement_required {
-        argv(&crate::world::layout(world).root, workspace)
+        argv(&writable(world, workspace))
     } else {
         Vec::new()
     }
 }
 
+/// The **derived writable set**: yog's own two places — the workspace and the
+/// composed world root (§16.2, which is where the nested balls state, and so
+/// every `work/<id>` checkout and every clone, already lives) — plus the bound
+/// project repo when this workspace claimed one. `/tmp` is not here: it rides
+/// [`SHAPE`], because it is a fact about the host and not about the birth.
+///
+/// **What is not there is not bound.** `bwrap` refuses a `--bind` whose source
+/// is absent, so an orphaned project (§3.5's "project clone gone" — legitimate,
+/// and leaving workspaces unaffected) would otherwise fail every birth in the
+/// workspace that claimed it. One rule over the whole set rather than a case
+/// for the one member that can vanish, and it can only ever *narrow* the set.
+fn writable(world: &crate::xdg::Env, workspace: &Path) -> Vec<PathBuf> {
+    [workspace.to_path_buf(), crate::world::layout(world).root]
+        .into_iter()
+        .chain(bound_project(world, workspace))
+        .filter(|dir| dir.is_dir())
+        .collect()
+}
+
+/// The **bound project repo** (bl-34b1) — the one member of the writable set
+/// that is not one of yog's own places, and the one a ball-rung drone cannot
+/// finish without: `bl close` advances a ref in the project it claimed from,
+/// and the `work/<id>` checkout's gitdir lives inside that repo's
+/// `.git/worktrees/`. Read-only, the rung's own delivery fails.
+///
+/// **Derived, never stored, and the same derivation at both doors.** It is the
+/// §3.2 claimant join the §4.11 writable *root* already spends
+/// ([`super::root::claimed`]): the last `bl claim <id> --as <name>` row on
+/// yog's own ops trail, stamped with this workspace's leaf, whose `cwd` **is**
+/// the project the claim ran in. A workspace encodes no project path (§3.5) and
+/// a revived driver carries no payload — `lernie message` and `lernie advance`
+/// reach [`wrapper`] with the workspace and nothing else — so a project taken
+/// off a *birth parameter* would have confined every revival more tightly than
+/// the fire it resumes. The trail is durable, so both doors derive the
+/// identical set, with nothing carried and no field to go stale.
+///
+/// A workspace that never claimed through yog yields `None` — the general path
+/// with an empty join — and so does a ball an agent claimed for *itself*
+/// mid-conversation, which leaves no yog-side row (§3.2's stated limit): the
+/// same bound the writable root already draws, in one place rather than two.
+///
+/// **A fact yog owns, not one yog trusts.** The trail lives under the world
+/// root, which is itself writable here, so a forged claim row could name any
+/// directory. That is the writable root's standing hazard, unchanged — a drone
+/// that can write the trail already owns its own adjudication — and VISION
+/// §4.11 item 8 scopes it out by construction: this layer bounds the
+/// write-*accident* class. The invariant that holds is the root's own: no fact
+/// the agent is *meant* to control is read here. No `cd` mark, no payload.
+fn bound_project(world: &crate::xdg::Env, workspace: &Path) -> Option<PathBuf> {
+    let entries = crate::opslog::tail(&world.yog_state_root(), usize::MAX);
+    super::root::claimed(&entries, &crate::naming::leaf(workspace)).map(|(project, _)| project)
+}
+
 /// The backend argv: [`BACKEND`], the fixed [`SHAPE`], one writable bind per
-/// member of the derived set (the workspace, the world root), then `--` so the
-/// wrapped program can never be read as a flag. Pure over its inputs.
-fn argv(world_root: &Path, workspace: &Path) -> Vec<String> {
+/// member of the derived set, then `--` so the wrapped program can never be
+/// read as a flag. Pure over its inputs.
+fn argv(writable: &[PathBuf]) -> Vec<String> {
     let mut words: Vec<String> = std::iter::once(BACKEND)
         .chain(SHAPE)
         .map(str::to_owned)
         .collect();
-    for dir in [workspace, world_root] {
+    for dir in writable {
         let d: String = dir.to_string_lossy().into_owned();
         words.extend(["--bind".to_owned(), d.clone(), d]);
     }

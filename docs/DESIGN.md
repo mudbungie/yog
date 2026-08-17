@@ -4407,10 +4407,9 @@ to *be* that executable and to own every fact it reads.
   *unconditional under the policy*, so a backend that vanishes between gate
   and spawn fails the exec loudly, naming `bwrap` — never a silent fallback.
   The **support boundary** is explicit: *filesystem writes* are clamped — the
-  host tree re-bound read-only, writable exactly the derived set (the
-  workspace, the composed world root, the host `/tmp`; a project repo outside
-  the world is read-only to a confined drone, so its own `bl close` cannot
-  deliver — a stated v1 bound). *Process access*, *environment* and *network*
+  host tree re-bound read-only, writable exactly the derived set: the
+  workspace, the composed world root, the host `/tmp`, and the **bound project
+  repo** (the paragraph below). *Process access*, *environment* and *network*
   are **not** clamped, each for a named reason: a pid namespace dies with its
   init and lernie's short verbs detach drivers that must outlive them (its
   ARCH §2.9; `lernie stop` also signals by host pid); the env is already
@@ -4419,6 +4418,45 @@ to *be* that executable and to own every fact it reads.
   brain. An absent layer still gets no affordance anywhere — the only surface
   it earns is the refusal that names it. V4's armed loop (bl-66fb) reads this
   same gate.
+
+  **The bound project repo is the set's fourth member, and it is the §3.2
+  claimant join** (bl-34b1). bl-bca4 shipped the first three and stated the
+  consequence as a v1 bound: a project repo lives outside the world, so a
+  confined drone found it read-only and the ball rung's own `bl close` — which
+  advances a ref *in that repo*, and whose `work/<id>` checkout keeps its gitdir
+  inside that repo's `.git/worktrees/` — could not deliver. The bound is lifted
+  and nothing is stored to lift it. A workspace encodes no project path (§3.5),
+  and only the prompt door ever sees a payload — `lernie message` and `lernie
+  advance` detach-launch a driver through the same `Bound::at` fold with the
+  workspace and nothing else — so a project carried as a *birth parameter*
+  would have confined every revival more tightly than the fire it resumes,
+  which is the shape that produced the bound in the first place. Instead the
+  set reads the derivation the §4.11 writable **root** already spends
+  (`control::root::claimed`): the last `bl claim <id> --as <name>` row on yog's
+  own ops trail, stamped with this workspace's leaf, whose `cwd` **is** the
+  project the claim ran in. The trail is durable, so both doors derive the
+  identical set — one rule, no payload, no field to go stale, and a third
+  consumer of one claim rule rather than a second copy of it. Two bounds
+  survive, both inherited from that same rule and stated once for both readers:
+  a workspace that never claimed through yog has no project in its set, and a
+  ball an agent claimed **for itself** mid-conversation leaves no yog-side row
+  (§3.2's limit), so its project stays read-only. And one rule joins the set:
+  **what is not there is not bound** — `bwrap` refuses a `--bind` whose source
+  is absent, so §3.5's legitimate *orphaned-project* state (the clone gone,
+  workspaces unaffected) narrows the set instead of failing every birth in the
+  workspace that claimed it. It can only ever narrow.
+
+  **And it is a fact yog owns, not one yog trusts** — a distinction worth
+  spelling here, because `ops.jsonl` lives under the world root and the world
+  root is *in* the writable set, so a drone that forged a `bl claim` row could
+  name any directory as its next birth's project. That is not this member's
+  hazard and not a regression: the §4.11 writable **root** has read the same
+  rows out of the same writable place since bl-fec8, so a drone that can write
+  the trail already owns its own adjudication — and the threat model above says
+  exactly this, the OS layer bounding the write-*accident* class with
+  adversarial evasion out of scope by construction. What does hold is the
+  invariant the root states: the derivation reads no fact the agent is *meant*
+  to control. No `cd` mark and no payload is in it.
 - **What this is not.** Not total confinement: the host tree stays *readable*,
   the network stays open, and the deliberately-shared brazen credentials
   (§16.2) stay reachable by an *allowed* invocation — the OS layer bounds the
@@ -4430,8 +4468,10 @@ to *be* that executable and to own every fact it reads.
 
 Shipped-state landed with bl-fec8 (shim, classifier, fold, authoring), bl-765d
 (policy config, the hold-answer variant, the sixth attention signal, the
-confinement refusal) and bl-94b4 (the floor writer above — the monitor's revoke
-rung over the same fold, whose *reader* `Answers::floored` came with the shim).
+confinement refusal), bl-94b4 (the floor writer above — the monitor's revoke
+rung over the same fold, whose *reader* `Answers::floored` came with the shim),
+bl-bca4 (the Linux backend behind that refusal — probe, gate and wrap) and
+bl-34b1 (the writable set's fourth member).
 
 ---
 
@@ -8243,7 +8283,7 @@ beside `main.rs`.
 | `src/config_edit/pipeline.rs` | the write pipeline every §9 editor shares: the one home for how a draft reaches disk without a torn write or a silent last-writer-wins over a concurrent edit |
 | `src/context/{mod,render}.rs` | §5.1 #35 — the context-fullness query (the root's latest step's prompt against the window `models.yaml` declares, `None` wherever nothing measured can be said) and the one line §11's settings rows paint from it. Pure over `Snapshot::bills`; the prompt reading's two-provider rule lives in its header and nowhere else |
 | `src/control/{mod,wire,classify,bash,lex,rules,policy,hold,root,judge,author}.rs` | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; lernie's two wire shapes; the effect vocabulary and the built-in intrinsic map; the bash ruleset over every program a command runs; the shell lexer that finds them; the shipped ruleset as data; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` lernie's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated — its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
-| `src/control/confine.rs` | the **OS confinement backend** (§8.6, VISION §4.11 item 8, bl-bca4): the platform switch (Linux is bubblewrap, shelled like §16.7's openssl mint — no crate, no `unsafe`; every other OS an explicit refusal naming itself), the availability probe that runs the exact sandbox shape a wrap spends (derived at each birth, never stored), the birth-gate refusal both drone doors call, and the wrapper argv — the fixed shape plus the derived writable set (workspace, world root, host `/tmp`), unconditional under a `confinement: required` policy so an absent backend fails the spawn loudly rather than falling back bare |
+| `src/control/confine.rs` | the **OS confinement backend** (§8.6, VISION §4.11 item 8, bl-bca4): the platform switch (Linux is bubblewrap, shelled like §16.7's openssl mint — no crate, no `unsafe`; every other OS an explicit refusal naming itself), the availability probe that runs the exact sandbox shape a wrap spends (derived at each birth, never stored), the birth-gate refusal both drone doors call, and the wrapper argv — the fixed shape plus the derived writable set, unconditional under a `confinement: required` policy so an absent backend fails the spawn loudly rather than falling back bare. The set is four members and each is a derivation: the workspace and the composed world root off the env, the host `/tmp` off the fixed shape, and the **bound project repo** off the §3.2 claimant join `control::root::claimed` already owns (bl-34b1) — so a revived driver, which carries no payload, confines exactly as the fire it resumes did. A member that is not on disk drops out rather than failing the spawn on `bwrap`'s own refusal (§3.5's orphaned project), which can only narrow the set |
 | `src/delete/{mod,exec}.rs` | the §3.6 unmake: pure confirmation + plan; the logged runner |
 | `src/delete/agent.rs` | the §3.6 one-conversation delete (bl-f17a): the member-scoped gate, the blast-radius arming, the `DeleteReport` census parse, the dry-run and removal spawns |
 | `src/elide.rs` | **where to cut a string that will not fit** (QUALITY G1, L4; bl-3aa1) — one rule, *cut where the information is not*. Prose is written front-first and keeps its head, so the eight prose sites (previews, reasons, titles) are correct as they stand and are deliberately NOT routed here — a module claiming every cut while they kept their own would be a false claim. A **machine string** (absolute path, spawned `argv`, ancestry chain) is invariant at the front and distinguishing at the back, and that is `middle`'s case and the only one: the activity rows all opened with the same `/home/<user>/.cache/…/data/yog/` run, over half the row, while the workspace leaf and agent id that told two operations apart were exactly what the old head-keeping cut discarded. Carries a legibility FLOOR a tighter cap is raised to, since `…e` names nothing. The other half of L4 — an **id**, whose distinguishing end is a whole terminal segment rather than a character count — is a floor and not a cut, and keeps its one home in `nav::convs::id_floor` (bl-63a1) |

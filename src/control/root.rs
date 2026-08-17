@@ -204,7 +204,10 @@ pub fn candidate_worktrees(
 /// id it named. The **last** matching row wins — a re-claim supersedes — and a
 /// workspace that never claimed through yog has none. `pub(crate)` since
 /// bl-c2bd: the work-diff's candidate rows read the fan's obligation from this
-/// same rule rather than keeping a second copy of it.
+/// same rule rather than keeping a second copy of it, and since bl-34b1 so does
+/// the §8.6 confinement backend's writable set — the project half of this pair
+/// is the one member of that set outside the world, and a revived driver has no
+/// other way to know it.
 pub(crate) fn claimed(entries: &[OpEntry], claimant: &str) -> Option<(PathBuf, String)> {
     entries
         .iter()
