@@ -46,7 +46,8 @@ pub use effects::RealBzRunner;
 
 mod providers;
 pub use providers::{
-    CONTEXT_REMEDY, ProviderRow, ProviderRowView, provider_rows, row_names, row_views,
+    CONTEXT_REMEDY, ProviderRow, ProviderRowView, dialect_decline, provider_rows, row_names,
+    row_views,
 };
 
 #[cfg(test)]

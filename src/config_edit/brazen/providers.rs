@@ -8,10 +8,10 @@
 //! serde renames.
 //!
 //! **What the `protocol` column judges lives beside it** in
-//! [`capability`]: the tool-capability refusal (bl-3d22) and the context caveat
-//! (bl-671d), both keyed on brazen's own public `ProtocolId` over a total match.
-//! This module owns the columns; that one owns what a dialect does to a yog
-//! turn.
+//! [`capability`]: the tool-capability refusal (bl-3d22), the context caveat
+//! (bl-671d) and the dead step's route back to the first of them (bl-5252) — all
+//! keyed on brazen's own public `ProtocolId` over one total match. This module
+//! owns the columns; that one owns what a dialect does to a yog turn.
 //!
 //! **`auth` is the login capability.** brazen's `Provider::oauth` is documented
 //! `present exactly when auth = "oauth2"` — resolution pairs the two or fails
@@ -177,7 +177,7 @@ fn column(row: &serde_json::Value, key: &str) -> String {
 
 mod capability;
 
-pub use capability::CONTEXT_REMEDY;
+pub use capability::{CONTEXT_REMEDY, dialect_decline};
 
 #[cfg(test)]
 mod tests;

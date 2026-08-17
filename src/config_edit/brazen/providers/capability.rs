@@ -23,6 +23,15 @@
 //! lernie splices the injection into every canonical request), so a
 //! tool-less dialect can serve no lernie ROLE at all.
 //!
+//! **The same judgement answers the failure that already happened** (bl-5252).
+//! Gating the picker never reached a config written BEFORE the gate, or written
+//! by hand through the §9.1 editor, which is the operator's own authority: that
+//! step still dies at encode, and the §7.3 banner offered it Dismiss and nothing
+//! else, because [`crate::config_edit::fault`] keyed on lernie's `Config`-kind
+//! wrapper and brazen stamps every dialect decline `ErrorKind::ParseInput`. So
+//! [`dialect_decline`] reads the dead step's own words into the same match a row
+//! is read into — the route, not a second table.
+//!
 //! **The upstream ask is already filed, and is brazen bl-5053** ("publish
 //! per-row capability declines (tools, multi-turn) on the read surface"): brazen
 //! projects no capability column — `--list-providers` serves `name`/`protocol`/
@@ -91,19 +100,11 @@ impl ProviderRow {
     /// [`is_unknown_row`](crate::model_pick::grammar::is_unknown_row) applies to
     /// an unanswerable table: no surface may refuse on the strength of a
     /// question that went unanswered.
+    ///
+    /// It is a column read into [`dialect_blocked`], which is the judgement
+    /// itself and is also what [`dialect_decline`] reads a dead step into.
     pub fn tools_blocked(&self) -> Option<String> {
-        match self.protocol_id()? {
-            brazen::ProtocolId::ClaudeCode => Some(format!(
-                "{} declares no tools — every yog turn carries at least the \
-                 `clients` tool, so this row can serve no role",
-                self.protocol
-            )),
-            brazen::ProtocolId::AnthropicMessages
-            | brazen::ProtocolId::OpenAiChat
-            | brazen::ProtocolId::OpenAiResponses
-            | brazen::ProtocolId::GoogleGenAi
-            | brazen::ProtocolId::OllamaChat => None,
-        }
+        dialect_blocked(&self.protocol)
     }
 
     /// What this row's dialect leaves to the server that a yog turn needs, or
@@ -119,7 +120,7 @@ impl ProviderRow {
     /// whose own context was two hundred times larger. The same total match as
     /// [`Self::tools_blocked`], for the same reason.
     pub fn context_caveat(&self) -> Option<String> {
-        match self.protocol_id()? {
+        match protocol_id(&self.protocol)? {
             brazen::ProtocolId::OllamaChat => Some(format!(
                 "{} declares no context size — the request carries the output cap and \
                  nothing else, so the server's own default governs rather than the \
@@ -133,12 +134,55 @@ impl ProviderRow {
             | brazen::ProtocolId::ClaudeCode => None,
         }
     }
+}
 
-    /// The `protocol` column parsed back into brazen's own registry key, through
-    /// brazen's own serde rename — never a second table of spellings beside it.
-    /// `None` for a spelling this build cannot name, which is a *newer* brazen
-    /// or a degraded column, and in both cases an unanswered question.
-    fn protocol_id(&self) -> Option<brazen::ProtocolId> {
-        serde_json::from_value(serde_json::Value::String(self.protocol.clone())).ok()
+/// Why a dialect can carry no lernie role, keyed on the `protocol` **spelling**
+/// rather than on a row — the one match, which [`ProviderRow::tools_blocked`]
+/// reads a column into and [`dialect_decline`] reads a dead step's own words
+/// into. Two callers, one arm per dialect: a second table would be the thing
+/// bl-3d22 refused to build.
+fn dialect_blocked(protocol: &str) -> Option<String> {
+    match protocol_id(protocol)? {
+        brazen::ProtocolId::ClaudeCode => Some(format!(
+            "{protocol} declares no tools — every yog turn carries at least the \
+             `clients` tool, so this row can serve no role"
+        )),
+        brazen::ProtocolId::AnthropicMessages
+        | brazen::ProtocolId::OpenAiChat
+        | brazen::ProtocolId::OpenAiResponses
+        | brazen::ProtocolId::GoogleGenAi
+        | brazen::ProtocolId::OllamaChat => None,
     }
+}
+
+/// Why the dialect a **failed step's own words** name can serve no role, or
+/// `None` when they name none (bl-5252) — the route from a dead step back to
+/// [`dialect_blocked`], which [`crate::config_edit::fault`] pairs with the §9.1
+/// route.
+///
+/// **The signal is the dialect naming ITSELF, and that is brazen's own habit.**
+/// Every decline the `claude_code` encoder writes leads with its `ProtocolId`
+/// spelling — *"`claude_code` carries no tool declarations…"*, *"…cannot express
+/// a tool_choice"*, *"…is single-turn"*, *"…accepts only text content in
+/// {slot}"* — one family from one `reject` helper, all four stamped
+/// `ErrorKind::ParseInput`, so no error KIND separates them from a malformed
+/// image block. So the scan is over whole `[a-z0-9_]` tokens, judged by the
+/// match above, which makes it narrow in the only way that matters: it is
+/// **exact and case-sensitive on brazen's spelling**, so the row NAME
+/// `claude-code` — hyphen, the thing an operator's config and every other
+/// failure line carry — answers nothing, and a tool-capable dialect that names
+/// itself (*"anthropic_messages requires max_tokens"*) answers nothing either.
+/// A dialect this build cannot name is an unanswered question, as everywhere
+/// else here.
+pub fn dialect_decline(text: &str) -> Option<String> {
+    text.split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+        .find_map(dialect_blocked)
+}
+
+/// A `protocol` spelling parsed back into brazen's own registry key, through
+/// brazen's own serde rename — never a second table of spellings beside it.
+/// `None` for a spelling this build cannot name, which is a *newer* brazen
+/// or a degraded column, and in both cases an unanswered question.
+fn protocol_id(protocol: &str) -> Option<brazen::ProtocolId> {
+    serde_json::from_value(serde_json::Value::String(protocol.to_owned())).ok()
 }

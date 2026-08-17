@@ -3326,6 +3326,39 @@ knows the workspace, and no downstream seat has to be told.*
      quotes the name it could not resolve, so the row is already in the words
      being classified, and a second derivation could only disagree with them.
 
+     **The class is wider than lernie's `Config` wrapper, and a marker table
+     cannot find all of it** (bl-5252). The other failure whose only remedy is a
+     config file is a row that resolves fine and whose **dialect** cannot carry a
+     yog turn: `/model worker claude-code <id>` written before §9.4's capability
+     gate existed, or written by hand through the §9.1 editor — which is the
+     operator's own authority and gates nothing — dies at brazen's *encoder*.
+     That whole family (no tools, no `tool_choice`, no multi-turn transcript, no
+     non-text block) leaves one `reject` helper stamped `ErrorKind::ParseInput`,
+     so lernie wraps it `provider error (ParseInput) …`: the two markers match
+     nothing in it, and the banner offered Dismiss for a failure a file fixes.
+     The error KIND cannot be the key either — it is the same `ParseInput` a
+     malformed image block gets, and keying on it would hand a config remedy to
+     every one of them.
+
+     So the second way in is keyed on **the dialect the decline names**. brazen's
+     habit is to lead with its own `ProtocolId` spelling (*"`claude_code`
+     carries no tool declarations…"*), so `dialect_decline` scans the failure's
+     own words for a whole `[a-z0-9_]` token and hands it to the **same match**
+     `ProviderRow::tools_blocked` reads the `protocol` column into — the
+     judgement bl-3d22 landed, not a second table, so the banner and §9.4's
+     provider control cannot disagree about why the row is unusable. The match is
+     exact and case-sensitive on brazen's spelling, which is the whole of its
+     narrowness: the row NAME `claude-code` carries a hyphen and rides every
+     other failure line through that row, and a tool-capable dialect that names
+     itself (*"`anthropic_messages` requires max_tokens"*) is not refused. The
+     added sentence is the next move — a tool-carrying row, chosen in §9.4's
+     picker or authored in the §9.1 editor — and brazen's words stay verbatim
+     above it. When brazen bl-5053 serves the capability column, this route
+     follows `tools_blocked` to it; it holds no dialect fact of its own.
+     `tests/brazen_claude_code_decline.rs` drives the **linked** brazen to earn
+     the sentence it keys on, so a rewording upstream reddens rather than
+     silently un-classifying the family.
+
      **The picker beside that step names the row that failed** (bl-dd7f's other
      half). §9.4's dropdown steers off a row brazen has dropped (bl-bd89) — the
      right call, since asking a dead row for its models is the dead end the
@@ -4792,6 +4825,17 @@ warned, and the warning was the dead end:
   off this same defect seen once before and yog never gated on its own side,
   which is why it recurred — the local gate is not a stand-in for the column, it
   is the half yog owns.
+
+  **The gate is not the whole remedy, because a config can predate it** (bl-5252).
+  This bullet gates the picker; it reaches no `models.yaml` written before the
+  gate existed, and none written by hand through the §9.1 editor, which is the
+  operator's own authority. Such a step still dies at encode — and it did so with
+  a §7.3 banner offering Dismiss and nothing else, because the classifier there
+  keyed on lernie's `Config` wrapper while brazen stamps every dialect decline
+  `ErrorKind::ParseInput`. The same `tools_blocked` judgement now answers that
+  failure too, reached from the dialect the decline names rather than from a
+  column (§8.3 rule 6): one match, two ways in, so the banner's reason is the
+  sentence this control paints.
 - **`plan` refuses a row brazen lacks** (`PickError::UnknownProvider`), before
   either file is touched. The §9.2 Apply gate could not cover this alone: it
   runs only when the `models.yaml` half needs writing, so re-picking an
@@ -8190,10 +8234,10 @@ beside `main.rs`.
 | `src/config_edit/branch.rs` | config-ref browse, governing-config derivation, edit plan (§9.3) |
 | `src/config_edit/branch/edit.rs` | the §9.3 edit half — the scripted-`$EDITOR` drive of `lernie config`, the only lawful writer of `config/*` (ARCH §2.2), re-entering the yog binary at `config_edit::apply` |
 | `src/config_edit/brazen/{mod,effects,providers}.rs` | the §9.1 editor (staged validation, hash guard) and the wall's `BrazenPaths` layout; the real BzRunner; the provider-row projection (§8.3) — the three consumed columns, `auth` → `login_blocked` (§8.3), and the rendered row every surface paints |
-| `src/config_edit/brazen/providers/capability.rs` | what the `protocol` column says about a yog turn (§9.4), split off `providers.rs` at the §12 pre-split band along the seam it already had: the parent owns the columns, this owns the dialect judgement over one of them. Two reads, both a total match over brazen's own public `ProtocolId` so a new upstream dialect fails to compile rather than being guessed at — `tools_blocked` (bl-3d22), which `plan` refuses on, and `context_caveat` (bl-671d), which nothing refuses on: a dialect that leaves the context size to the server is stated beside a selectable row, with `CONTEXT_REMEDY` as the operator's next move, because yog cannot see what the server chose |
+| `src/config_edit/brazen/providers/capability.rs` | what the `protocol` column says about a yog turn (§9.4), split off `providers.rs` at the §12 pre-split band along the seam it already had: the parent owns the columns, this owns the dialect judgement over one of them. Two reads, both a total match over brazen's own public `ProtocolId` so a new upstream dialect fails to compile rather than being guessed at — `tools_blocked` (bl-3d22), which `plan` refuses on, and `context_caveat` (bl-671d), which nothing refuses on: a dialect that leaves the context size to the server is stated beside a selectable row, with `CONTEXT_REMEDY` as the operator's next move, because yog cannot see what the server chose. `dialect_decline` (bl-5252) is a third **way in** and not a third read: a dead step's own words scanned for the protocol spelling brazen's declines lead with, handed to the same `tools_blocked` match, so §7.3's banner and §9.4's control share one judgement |
 | `src/config_edit/draft.rs` | the ONE staged-edit `Draft` both §9.1/§9.2 editors are built from — dirty tracking, revert, the hash guard |
 | `src/config_edit/effects.rs` | the production `FileIo` — the thin `std::fs` shell behind every editor's pure view-model, covered against a real tempdir with no fakes |
-| `src/config_edit/fault.rs` | **where a config-kind failure is fixed** (§9.1, bl-dd7f): the narrow classifier over a failure's own words — lernie's `provider error (config)` wrapper and brazen's `unknown provider` — the row it quotes, read out of the sentence rather than joined from the tree, and the one line the §7.3 banner pairs with a route to the §9.1 editor. §8.3 rule 5's sibling on the other kind of fault, and it re-words nothing: brazen's and lernie's sentences stay verbatim above it |
+| `src/config_edit/fault.rs` | **where a config-kind failure is fixed** (§9.1, bl-dd7f): the narrow classifier over a failure's own words — lernie's `provider error (config)` wrapper and brazen's `unknown provider` — the row it quotes, read out of the sentence rather than joined from the tree, and the one line the §7.3 banner pairs with a route to the §9.1 editor. §8.3 rule 5's sibling on the other kind of fault, and it re-words nothing: brazen's and lernie's sentences stay verbatim above it. **Two ways in since bl-5252**, because brazen's dialect declines carry no config-kind word at all: a marker hit, or the request-shape family reached through `brazen::dialect_decline` — the same `tools_blocked` judgement §9.4's picker refuses on, so no dialect fact is written down here |
 | `src/config_edit/form{,/schema}.rs` | the §9.5 typed pane: a setting read from and written back into the draft through the §9.4 grammar, with the shared provider judgement; and the enumeration itself — which settings exist, and the control each gets |
 | `src/config_edit/lernie_global/mod.rs` | the §9.2 editors and provider gate |
 | `src/config_edit/pipeline.rs` | the write pipeline every §9 editor shares: the one home for how a draft reaches disk without a torn write or a silent last-writer-wins over a concurrent edit |
@@ -8418,6 +8462,7 @@ beside `main.rs`.
 | `src/world/{mod,seed,marks,hatch,tools,seat}.rs` | the composed world (§16.2): env + overrides, `lernie prime` seeding, the §16.3 **agent balls space** (the `YOG_MARKS` fold, balls' two home directories per space, and the one `tasks_branch` write/read — bl-e47b), the §8.4 hatches, the §16.4 shim roster (the §8.6 control shim and, since bl-3ff4, `yog` itself among them), and `seat` — which seat may open a window, the guard that keeps that `yog` shim from becoming an agent's way to paint on the operator's desktop. `template.rs` — the §9.2 gate over the workspace-birth template — is deleted with the gate (bl-00ee): yog reads that file nowhere now |
 | `src/world/wall.rs` | the per-workspace wall (§16.2, §3.1): the `YOG_WALL` layer, its layout and its read lens |
 | `src/xdg/mod.rs` | env folds: balls layout (delegated to `balls::layout::Xdg`, over the §16.3 space's two home directories), lernie roots, yog roots, the wall (§16.2), percent-decode. brazen's ambient per-OS fold was deleted with the sharing it served |
+| `tests/brazen_claude_code_decline.rs` | the dialect-decline pin (bl-5252, §8.3 rule 6): drives the LINKED brazen with the request a yog turn is — one user message and the unconditional `clients` tool — and takes the sentence its `claude_code` encoder declines with, before any transport. Three legs: the decline names no config fault (so lernie's `Config` wrapper cannot carry it, which is why the marker table missed the family); yog's classifier routes it, wrapped exactly as lernie's `AdapterError` renders it, to the §9.1 editor; and the same turn through a tool-carrying row reaches the wire, so what is classified is the dialect and never the request. A classifier keyed on another crate's words that nothing measures outlives the words |
 | `tests/brazen_ollama_context.rs` | the Ollama context pin (bl-671d, §9.4): drives the LINKED brazen with a capturing `Transport` — no network, no server — and asserts the three facts the §9.4 caveat and its remedy rest on. A yog turn reaches an `ollama_chat` row with the output cap and **no** `options.num_ctx`, so the server's own default governs; a row's `body_defaults` `options` beside that typed cap is dropped whole and silently; and clearing the typed cap lets an explicit `num_ctx`/`num_predict` pair through. A caveat about upstream behaviour that nothing measures outlives the behaviour, so this fails the day brazen bl-f19d lands and names what to delete |
 | `tests/design_citations.rs` | the citation guard: every cited `§N`/`§N.M` resolves to a DESIGN heading (the header's retirement doctrine, machine-checked) |
 | `tests/design_module_map.rs` | the module-map guard (bl-9f72, widened by bl-273c to every rule §12 states about itself): both path directions, the sort, the no-test-module rule, the two-cell row shape and single-entry — brace lists expanded, test corpora excluded from the file sweep per the rule above. The guard is the mechanism; the prose rule alone had already failed three times over |
