@@ -1,7 +1,8 @@
 +++
 title = "V3 seat: the fan group in the window — pick N, compare candidates, judge/synthesize/deliver affordances; graduates the Adjudicator story"
 created = 1786845247
-updated = 1786845247
+updated = 1786936786
+claimant = "Seat77bc"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Source: VISION §5 V3 (bl-c2bd landed the mechanism; this ball is the §11 seat and the graduation). Verify VISION/DESIGN on main before editing; VISION wins over this body.
