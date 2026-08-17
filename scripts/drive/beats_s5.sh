@@ -3,7 +3,9 @@
 # entry point of its own), plus the world-A runner `run_s5s8` that fires them and
 # the S8 beats in `beats_s8.sh`. Split for the repo's 300-line cap; it uses
 # stories.sh's seat handle (`$drive`), world seed and assertion helpers, and
-# beats_s3s4s6.sh's `in_world` / `seed_balls` project fixture.
+# beats_s3s4s6.sh's `in_world` / `seed_balls` project fixture. Its own
+# world-A fixtures and predicates live in beats_s5_fixture.sh (bl-9df2),
+# sourced just before this file.
 #
 # World A holds what S5/S8/the residual ball rows need and neither S0/S1's world
 # nor the ball world has: a workspace with a real `config/default` lineage bound to
@@ -19,36 +21,6 @@
 # never reaches its own fall-through). A fresh wall's config is an empty file,
 # which keeps the draft inside `desired_rows(6)` and the editor unscrolled.
 
-# --- world A fixtures --------------------------------------------------------
-# The focused workspace's brazen config (§9.1, §16.2's wall layout), over
-# wall.sh's `wall_dir` so the layout has one spelling — and over its
-# `BOOTSTRAP_WS`, because this world opens on zero workspaces and §3.1 fixes that
-# start's leaf at the constant `home` (bl-1851: it was a lazy `find` on the
-# premise that the leaf is minted, which is true of a §11 `w` sphere and of
-# nothing this harness drives). A tiny, VALID body is seeded because
-# `bz --config <tmp> --dump-config` is the Apply gate and the beats below need it
-# to say yes once and no once — which is why world A OVERWRITES what the world
-# seed laid: the host's real config is ~90 lines, and a draft that long makes the
-# raw editor scroll, which is a wheel gesture nothing here wants to own.
-wall_config() { printf '%s/config.toml' "$(wall_dir "$1" "$BOOTSTRAP_WS")"; }
-brazen_scratch() {
-  mkdir -p "$(dirname "$1")"
-  printf '# yogdrive scratch brazen config (the workspace wall)\n' > "$1"
-}
-
-# --- world-A predicates -----------------------------------------------------
-# `md5of` and `file_has` were here and are now in harness.sh: `beats_s8.sh`
-# spends the first and `beats_s6.sh` the second, and a predicate two runners
-# assert on has one home — the same rule that moved `seen_kind` (bl-2d45,
-# bl-f16e). Whoever files a beat here reaches for the shared spelling.
-# a `config/<name>` branch of the workspace's bare repo carries <file> with <text>
-config_branch_has() {
-  git --git-dir="$1/repo.git" show "config/$2:$3" 2>/dev/null | grep -q -- "$4"
-}
-# The collapse override is a SET in ui.json (§4.1): expanding removes the key, so
-# the expand is as landable as the collapse — the entry is simply gone.
-balls_expanded() { ! grep -q '"balls"' "$ui" 2>/dev/null; }
-
 # --- the run ----------------------------------------------------------------
 run_s5s8() {
   data=$1 ; out=$2
@@ -57,6 +29,9 @@ run_s5s8() {
   ball=$(seed_balls "$data")
   ops="$data/yog/world/state/yog/ops.jsonl"
   ui="$data/yog/world/state/yog/ui.json"
+  # The window's per-seat pane document (REMOTE §7, bl-8bbc): where the
+  # collapse below actually lands. `ui` above keeps the WORLD keys' path.
+  pane="$data/yog/world/state/yog/clients/yog-window/pane.json"
   # Trim the world's seeded `models.yaml` to the one model row it names. The seed
   # ships a 40-line comment banner, and that banner is the whole reason config
   # mode SCROLLS: with it, the §9.2 editor's box pushes the marks pane and the
@@ -96,13 +71,14 @@ run_s5s8() {
   # wide instead of its 260 default and every centre-panel coordinate below moves
   # with the length of the scratch directory's name. Collapsed, that label is
   # never painted. The collapse is the one persisted (§4.1) piece of this layout,
-  # so it is a landable gesture: `ui.json` records it and the next launch starts
-  # narrow. `b` is §11's balls-section fold — one key, both directions, so the
-  # re-expand below is the same key and neither has a y to drift.
+  # so it is a landable gesture: the pane document records it (bl-8bbc) and the
+  # next launch starts narrow. `b` is §11's balls-section fold — one key,
+  # both directions, so the re-expand below is the same key and neither has
+  # a y to drift.
   collapse_balls() { "$drive" bare "$wid" b; }
-  until_landed collapse_balls file_has "$ui" '"balls"' \
-    && pass "S5 fixture: balls collapsed (ui.json)" \
-    || fail "S5 fixture: balls collapsed (ui.json)" "no collapse record"
+  until_landed collapse_balls file_has "$pane" '"balls"' \
+    && pass "S5 fixture: balls collapsed (pane.json)" \
+    || fail "S5 fixture: balls collapsed (pane.json)" "no collapse record"
   # Then RELAUNCH rather than click a tab. Three things fall out of one restart:
   # the un-sent goal draft dies with the instance (RAM until sent, §8.1 — so the
   # ball is bound with nothing spent on the wire), startup DERIVES the focus onto

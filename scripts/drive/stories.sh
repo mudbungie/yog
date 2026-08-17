@@ -257,6 +257,7 @@ run() {
 # `seed`, and every assertion helper above (and `in_world`/`seed_balls`, laid by
 # the first). One file per world, because this file is at the 300-line cap.
 . "$here/beats_s3s4s6.sh"
+. "$here/beats_s5_fixture.sh"
 . "$here/beats_s5.sh"
 . "$here/beats_s8.sh"
 . "$here/beats_s7.sh"

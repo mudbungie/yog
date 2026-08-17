@@ -29,7 +29,12 @@ s8_marks() {
   ws=$(ls -d "$data"/yog/workspaces/*/ | head -1)
   ws=${ws%/}
   branch_file="$data/yog/world/walls/$(basename "$ws")/marks/balls/config.toml"
-  ui_hash=$(md5of "$ui")
+  # Both yog-owned documents (REMOTE §7, bl-8bbc): the world doc and the
+  # window's pane doc. The pane doc EXISTS here (the S5 collapse landed in
+  # it), so it is the bl-f16e non-vacuity witness; the world doc may
+  # legitimately not exist yet in this run, and `md5of`'s absent-stable
+  # string compares its state either way (bl-9df2).
+  ui_hash=$(md5of "$ui") ; pane_hash=$(md5of "$pane")
 
   # NO CLICK. `Read current` used to be pressed here at a measured (308,511),
   # tagged "NO SPELLING AT ALL — kept only as the visual half". That tag expired
@@ -66,9 +71,11 @@ s8_marks() {
   # negative is a statement about a write that certainly happened — and the file
   # it is about must EXIST for "unchanged" to mean anything, since two absences
   # compare equal (bl-f16e).
-  { [ -f "$ui" ] && [ "$(md5of "$ui")" = "$ui_hash" ]; } \
+  { [ -f "$pane" ] && [ "$(md5of "$pane")" = "$pane_hash" ] \
+      && [ "$(md5of "$ui")" = "$ui_hash" ]; } \
     && pass "S8-T4 marks: no yog-owned file written" \
-    || fail "S8-T4 marks: no yog-owned file written" "ui.json moved or absent"
+    || fail "S8-T4 marks: no yog-owned file written" \
+        "pane.json moved or absent, or ui.json state changed"
 
   # An unlawful branch refuses in the space's own words rather than writing one.
   # BOTH arms are spelled: as `… || pass …` this beat could only ever emit a PASS
