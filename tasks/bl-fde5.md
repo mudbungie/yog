@@ -1,7 +1,7 @@
 +++
-title = "compaction shrinks the science verdicts, the search corpus, the monitor window and the message count, and none of them says so"
+title = "compaction now says so at every secondary reader: science states the compacted bound, search names the deleted span, the monitor window quotes the summary (the VISION 4.9 ruling), and the message count is the counter's high-water"
 created = 1786936978
-updated = 1786937893
+updated = 1786938203
 claimant = "Compact-fde5"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
