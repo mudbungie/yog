@@ -145,6 +145,20 @@ fn a_start_is_a_row_in_the_operators_own_words_on_the_next_frame() {
         painted.contains(SAID),
         "the frame immediately after Enter carries what was typed:\n{painted}"
     );
+    // And it is the conversation the operator is now *in* (bl-2e8f). The claim
+    // used to wait for the branch, so the one row the operator had just made was
+    // the one nothing highlighted, with the birth placeholder still filling the
+    // centre — operator: "you start a new chat, start typing, and the new chat
+    // isn't immediately selected."
+    assert_eq!(
+        world.model.focus().agent.as_deref(),
+        Some(MINTED_FIRST),
+        "the start selected what it started, by the minted name its row wears"
+    );
+    assert!(
+        !painted.contains("select a conversation"),
+        "so the centre is that conversation, not the placeholder:\n{painted}"
+    );
     let pending = rows_named(&world, MINTED_FIRST);
     assert_eq!(
         pending.len(),

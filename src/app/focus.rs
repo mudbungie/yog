@@ -76,8 +76,20 @@ impl AppModel {
     /// row left the operator's text with no representation anywhere in yog
     /// until the driver wrote it, which is what read as the UI waiting for the
     /// send. The claim and the echo are one value with one lifetime.
+    ///
+    /// **And it focuses that name at once** (bl-2e8f, DESIGN §3.4): the echo
+    /// mints a row keyed by this very name and the seat folds it into the
+    /// answered forest ahead of every reader, so the name is a selection like
+    /// any other — the ordinary [`focus_agent`](Self::focus_agent), the same
+    /// path ↓ takes onto that row by hand and the same one the spend takes a
+    /// write later. Focusing only on the spend left the operator's own new
+    /// conversation the one row nothing highlighted, behind the birth
+    /// placeholder, for as long as the driver took. Nothing durable is written
+    /// for a name: §6 records the evidence an agent *has*, and a conversation
+    /// with no branch has none.
     pub(crate) fn await_conversation(&mut self, ws: &Path, conversation: &str, goal: &str) {
         self.started = Some(Echo::started(ws, conversation, goal, self.now_unix()));
+        self.focus_agent(ws, conversation);
     }
 
     /// Hold the echo a §8.2 `message` leaves (§7.2): the same mechanism one

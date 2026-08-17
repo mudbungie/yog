@@ -782,12 +782,28 @@ plus inputs.
   claims the conversation by the **minted §3.3 name** — the name fact the
   derivation reads back off every root (lernie-stored, legacy goal stamp as
   fallback), unique per workspace by the
-  mint's own occupied set — and the frame spends that claim through the
-  ordinary `focus_agent` path (the one ↓ takes, acknowledging §6 identically)
-  on the first roster that carries it. A claim whose root never appears is
-  inert, and no claim survives being spent, so the operator's own later
-  selection stands. The claim is per-instance RAM like the focus it becomes
-  (§13.1); nothing about it is written down.
+  mint's own occupied set — and **that name is a selection at once**
+  (bl-2e8f): the §7.2 echo below mints a row keyed by it, the seat folds that
+  row into the answered forest ahead of every reader, and ↓ could already land
+  on it by hand — so the claim is spent through the ordinary `focus_agent` path
+  (the one ↓ takes, acknowledging §6 identically) on the frame of the fire, and
+  again on the first roster that carries the root, when the conversation swaps
+  the name it was born under for the id it acquired. Until bl-2e8f only the
+  second of those happened, which left the operator's own new conversation the
+  one row in the §11 list nothing highlighted, behind the birth placeholder,
+  for as long as the driver took to write a branch — *"you start a new chat,
+  start typing, and the new chat isn't immediately selected."* The **timing was
+  the defect and not merely the wait**: with the selection arriving whenever the
+  driver got round to it, whether the operator's *next* Enter started a second
+  conversation or messaged the first was a race. It is now always the second,
+  and `new conversation` (§11's button, `n`) is how they say otherwise.
+  A claim whose root never appears is
+  inert — the conversation it selected stays selected and stays faded, which is
+  what a start whose driver died honestly is — and no claim survives being
+  spent, so the operator's own later selection stands. The claim is per-instance
+  RAM like the focus it becomes (§13.1); nothing about it is written down, the
+  §6 acknowledgement included: that records the evidence an agent *has*, and a
+  conversation with no branch has none.
   **The claim carries the operator's text with it** (bl-915e): a handle that
   paints no row left the message with no representation anywhere in yog between
   Enter and the driver's first write, which is what the operator saw as the UI

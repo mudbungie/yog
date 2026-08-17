@@ -35,9 +35,13 @@ fn a_fired_start_focuses_the_conversation_it_started() {
     assert!(model.focus().agent.is_none(), "the placeholder's state");
 
     model.await_conversation(&h.ws, "stench-pug", "fix the gate");
-    assert!(
-        model.focus().agent.is_none(),
-        "the driver has not written the branch yet — nothing to focus"
+    // The driver has not written the branch yet, and the claim focuses anyway
+    // (bl-2e8f): the echo's own row wears the minted name, so there IS something
+    // to select the instant Enter lands.
+    assert_eq!(
+        model.focus().agent.as_deref(),
+        Some("stench-pug"),
+        "the start selects what it started, by the name it minted"
     );
 
     // The detached driver writes the root, wearing the minted name blob.
@@ -90,7 +94,7 @@ fn the_claim_is_spent_once_and_leaves_later_focus_alone() {
 }
 
 #[test]
-fn a_claim_whose_root_never_appears_moves_nothing() {
+fn a_claim_whose_root_never_appears_stays_on_the_name_it_minted() {
     let h = Harness::new();
     let (_c, mut model) = h.model();
     model.focus_agent(&h.ws, "c-1");
@@ -98,6 +102,12 @@ fn a_claim_whose_root_never_appears_moves_nothing() {
     // no tree at all — both are the general path with the name fact absent.
     model.await_conversation(&h.ws, "never-written", "fix the gate");
     model.refresh();
+    assert_eq!(
+        model.focus().agent.as_deref(),
+        Some("never-written"),
+        "the claim's own selection stands: a root that never lands is a faded \
+         row (§7.2), not a focus that snaps back to the conversation before it"
+    );
     model.await_conversation(
         std::path::Path::new("/no/such/ws"),
         "stench-pug",
@@ -106,8 +116,9 @@ fn a_claim_whose_root_never_appears_moves_nothing() {
     model.refresh();
     assert_eq!(
         model.focus().agent.as_deref(),
-        Some("c-1"),
-        "an unresolvable claim is inert, never a focus reset"
+        Some("stench-pug"),
+        "an unresolvable claim is inert — nothing spends it, and nothing \
+         re-aims the focus it made"
     );
 }
 

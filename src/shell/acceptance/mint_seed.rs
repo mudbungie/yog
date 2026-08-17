@@ -40,6 +40,21 @@ fn fire(screen: &Screen, world: &mut super::fixture::World, goal: &str) {
     world.converge();
 }
 
+/// Ask for a new conversation — Escape puts the keyboard down and `n` clears the
+/// target (§11), which is what the button beside the list does.
+///
+/// **It is what a second start now costs** (bl-2e8f): a fire selects what it
+/// started the instant Enter lands, so the box is then aimed at *that*
+/// conversation, its next Enter is a follow-up, and the §3.3 prediction — which
+/// only paints where an Enter would mint a name — is off screen until the
+/// operator says they want another. Before that fix the selection arrived
+/// whenever the detached driver got round to writing a branch, so which of the
+/// two a second Enter did was a race.
+fn fresh(screen: &Screen, world: &mut super::fixture::World) {
+    screen.release(world);
+    screen.frame(world, vec![press(egui::Key::N, egui::Modifiers::NONE)]);
+}
+
 #[test]
 fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
     let bin = tempdir().unwrap();
@@ -76,6 +91,7 @@ fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
     // lernie's 541-word pool — it flaked twice in one day, once taking an
     // unrelated close gate with it. A repeat now fails every run, and names the
     // word it repeated.
+    fresh(&screen, &mut world);
     assert_eq!(
         predicted(&screen.text(&mut world)),
         format!("will be named {}", MINTED[1]),
@@ -89,6 +105,7 @@ fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
         world.state.start.mint_seed, respun,
         "and every fire after it retires its own"
     );
+    fresh(&screen, &mut world);
     assert_eq!(
         predicted(&screen.text(&mut world)),
         format!("will be named {}", MINTED[2]),
