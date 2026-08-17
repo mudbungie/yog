@@ -1,7 +1,7 @@
 +++
 title = "V3 seat: the fan group in the window — pick N, compare candidates, judge/synthesize/deliver affordances; graduates the Adjudicator story"
 created = 1786845247
-updated = 1786936786
+updated = 1786937394
 claimant = "Seat77bc"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
