@@ -1,8 +1,7 @@
 +++
 title = "messages/ is not append-only: compaction deletes entries and the transcript renders the rewritten record as whole — a real latent defect, NOT the vanished-first-prompt sighting"
 created = 1786936867
-updated = 1786937014
-claimant = "Gapwright7bd2"
+updated = 1786937015
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
