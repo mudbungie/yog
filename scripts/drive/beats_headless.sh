@@ -44,9 +44,17 @@
 #                      files surfaces have NO headless spelling at all
 #                      (bl-6233), so a beat could only screenshot them, and a
 #                      screenshot proves nothing about a spine.
-#   S12 (counterfactualist) OUT — the N>1 fan is bl-8746, still open and
-#                      blocked; a beat written against a half-landed mechanism
-#                      is a beat that will be rewritten.
+#   S12 (counterfactualist) OUT — its ×N is a read-only fork off a pinned
+#                      notch, which needs a LIVE conversation with history:
+#                      a model call, which this verb refuses to spend.
+#   S19 (adjudicator) IN (PART) — the fan's spread, the delivery law, the
+#                      staleness refusal and the retirement are real balls +
+#                      real git with no model call anywhere (`beats_s19.sh`).
+#                      What stays OUT is cohort membership on the read
+#                      surfaces: membership is derived from real FIRE rows and
+#                      a fire is a detached `lernie prompt` — a model call —
+#                      so that join is the in-crate tests' half, over fixture
+#                      trails.
 #   S15/S16/S17 (warden, releaser) OUT — a real adjudication needs a real agent
 #                      really attempting a real tool, then a real decision:
 #                      wire spend, nondeterminism, and the response ladder is
@@ -180,6 +188,7 @@ print(json.loads(line).get('stdout','').strip())")
 
   s13_board "$data" "$ready" "$claim"
   s11_workdiff "$data" "$ws" "$claim" "$wt"
+  s19_adjudicator "$data" "$ws" "$claim" "$proj"
 
   # S14-T5 — an answer aimed at nothing refuses. A refusal beat spells BOTH
   # arms: as `gesture … || pass` it could only ever emit a PASS row, and the one

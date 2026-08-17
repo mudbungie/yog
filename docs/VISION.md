@@ -913,8 +913,15 @@ their first wording:
   wearing the derived mark, on both frontends through the existing
   `Query::WorkDiff` — the patch drill-in addressed by ball *and* handle. The
   group card itself — N picked in a seat, response diff and wall time side by
-  side, Judge/Synthesize/Deliver as clicks — is bl-77bc's, composed with
-  bl-40ab's per-attempt projection; neither owns the other's surface.
+  side, Judge/Synthesize/Deliver as clicks — **landed as bl-77bc**, composed
+  with bl-40ab's per-attempt projection (yog DESIGN §3.8's landing note and the
+  §11 Work-tab paragraph are the record): the card renders the science rows on
+  the Work tab, N is a ×N stepper on the pending start's pane whose Send posts
+  one `Fan(Spread)` and prompts each rebound start through the ordinary door,
+  and every affordance *composes* a dispatch into the composer — a judge goal
+  carrying the exact refs, `/deliver <handle> ` awaiting the operator's
+  summary — so the operator's Enter is always the fire. The Adjudicator story
+  is STORIES S19.
 
 Machine state: a project with a decomposed backlog; fleet mode armed.
 

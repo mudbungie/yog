@@ -264,6 +264,7 @@ run() {
 . "$here/beats_s6.sh"
 . "$here/beats_s3res.sh"
 . "$here/beats_headless.sh"
+. "$here/beats_s19.sh"
 . "$here/beats_unseeded.sh"
 
 # Everything above is now sourced into ONE flat bash namespace, so this is the

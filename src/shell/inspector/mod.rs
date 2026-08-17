@@ -116,6 +116,14 @@ pub fn tabs_and_content(
         },
     );
     let follow = crate::inspector::render(ui, active, &data, &titles, &mut state.inspector.eph);
+    // The fan group card's affordances (bl-77bc): the click composed a
+    // dispatch, the composer fires it — Judge/Synthesize seed the
+    // new-conversation goal (V2's fire path, VISION V3.1), Deliver/Retire seed
+    // the line the boundary already spells (V3.2). Either way the operator's
+    // Enter is the fire, so the affordance adds no door of its own.
+    if let Some(intent) = state.inspector.eph.group.intent.take() {
+        seed_intent(model, state, ws, &intent, &data.science);
+    }
     // Following a card is the ordinary selection gesture (§6 acknowledgement),
     // the same one the descent-tree rows spend — so it lands the composer like
     // every other selection (§11 focus discipline) — and the pin is the previous
@@ -130,6 +138,35 @@ pub fn tabs_and_content(
     if active == InspectorTab::Config {
         super::delete_agent::danger_row(ui, model, state, lernie, ws);
     }
+}
+
+/// Spend one fan group affordance (bl-77bc): compose the dispatch
+/// ([`crate::science::compose::draft`], the tested half) and seed it into the
+/// composer it belongs in. A goal is a **new conversation**, so the selection
+/// clears first — the §11 `new conversation` gesture, reused — and a line runs
+/// in whichever composer is open, its leading `/` making the mode irrelevant.
+/// Either way the keyboard lands in the box (§11 focus discipline) and nothing
+/// fires until the operator's Enter.
+fn seed_intent(
+    model: &mut AppModel,
+    state: &mut ShellState,
+    ws: &Path,
+    intent: &crate::science::compose::Intent,
+    rows: &[crate::science::Attempt],
+) {
+    let Some(draft) = crate::science::compose::draft(intent, rows) else {
+        return;
+    };
+    let key = if draft.new_conversation {
+        if let Some(name) = model.focused_ws_name() {
+            super::focus::workspace(model, state, &name);
+        }
+        crate::actions::DraftKey::NewConversation(Some(ws.to_path_buf()))
+    } else {
+        crate::actions::DraftKey::composer(model.focused_workspace(), model.focused_agent_id())
+    };
+    state.actions.drafts.set(key, draft.text);
+    super::focus::request(state);
 }
 
 /// What each Altitude-2 tab shows, in operator terms — exhaustive over the enum,

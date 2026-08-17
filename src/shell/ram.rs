@@ -47,6 +47,11 @@ pub struct StartState {
     /// the pure preview read and the fire's own mint. **A seed lives exactly as
     /// long as the prediction it backs** ([`StartState::spend_mint`]).
     pub mint_seed: u64,
+    /// The §3.8 fan's **N picker** (bl-77bc): how many isolated candidates the
+    /// pending start fires as. `0` reads as 1 — the ordinary single start, the
+    /// same fold with one input — and a landed fan resets it, so N is a fact
+    /// about the *next* fire, never a sticky mode.
+    pub fan_n: usize,
 }
 
 impl StartState {

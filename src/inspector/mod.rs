@@ -22,10 +22,11 @@ use crate::files_view::{self, FilesView, Preview};
 use crate::inboxview::{self, InboxEntry};
 use crate::keymap::InspectorTab;
 use crate::rail::{Pin, Rail};
+use crate::science;
 use crate::steps_view::{self, StepDetail, StepTab, StepsView};
 use crate::theme;
 use crate::transcript::{self, AutoExpand, Transcript};
-use crate::workdiff::{self, Attempt, WorkFile};
+use crate::workdiff::{self, WorkFile};
 
 /// The caller-owned viewport ephemera the inspector mutates (§5.3) — the
 /// jsonview collapse set, the Files selection, the transcript's per-row fold
@@ -45,6 +46,10 @@ pub struct Ephemera {
     pub tx_folded: HashSet<String>,
     pub notch_sel: Option<usize>,
     pub work_sel: Option<WorkFile>,
+    /// The Work tab's fan group card seat (bl-77bc): the compare picks — the
+    /// `work_sel` shape again — and the affordance clicked this frame, which
+    /// the shell takes and spends as composer text.
+    pub group: science::render::Seat,
 }
 
 /// The pre-built view-models + RAM ephemera the inspector renders for one
@@ -87,9 +92,11 @@ pub struct TabData {
     /// The Files tab's selected-file preview, answered beside the listing for
     /// `files_sel`; `None` when nothing is selected.
     pub file_preview: Option<Preview>,
-    /// The §11 Work tab's view-model (§5.1 #32): every delivery attempt this
-    /// workspace holds, read `target..source` against its project repo.
-    pub work: Vec<Attempt>,
+    /// The §11 Work tab's view-model (§5.1 #32, §3.9): every delivery attempt
+    /// this workspace holds, **as science reads it** (bl-77bc) — each row
+    /// carries the `target..source` diff row plus the agent side the fan group
+    /// card compares by, so the listing and the card read one answer.
+    pub science: Vec<science::Attempt>,
     /// The Work tab's selected file's patch, built by the shell from
     /// `work_sel`; `None` when nothing is selected.
     pub work_patch: Option<Preview>,
@@ -237,7 +244,12 @@ fn render_tab(
             None
         }
         InspectorTab::Work => {
-            workdiff::render(ui, &data.work, data.work_patch.as_ref(), &mut eph.work_sel);
+            // The fan group card first (bl-77bc), over the same answer the
+            // attempt rows below drill into — with no fan it paints nothing.
+            science::render::group(ui, &data.science, &mut eph.group);
+            let diffs: Vec<workdiff::Attempt> =
+                data.science.iter().map(|a| a.diff.clone()).collect();
+            workdiff::render(ui, &diffs, data.work_patch.as_ref(), &mut eph.work_sel);
             None
         }
     }

@@ -107,7 +107,7 @@ pub(super) fn empty_tab_data(
         inbox,
         files,
         file_preview: None,
-        work: Vec::new(),
+        science: Vec::new(),
         work_patch: None,
         governing,
         rail: Rail::default(),

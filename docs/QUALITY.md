@@ -142,6 +142,7 @@ silently absent.
 | Q-S12 | fork composer from a pinned notch; a ×N fan group | S12 |
 | Q-S13 | balls board, four columns, spend column | S13 |
 | Q-S18 | the board armed: cap, count, last/next tick, spawn/reap rows | S18 |
+| Q-S19 | work tab's fan group card: candidate columns, marks, response diff; the ×N stepper on a pending ball start | S19 |
 | Q-M | new-workspace modal; new-ball form | S4/S13 |
 
 New rung lands → new row lands with it; this table is edited like code.

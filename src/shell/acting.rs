@@ -36,6 +36,9 @@ use crate::boundary::Action;
 use crate::wire::post::Ticket;
 use std::path::{Path, PathBuf};
 
+/// The §3.8 fan's door and aftermath (bl-77bc) — the start family's N-wide
+/// sibling, split on the same seam.
+pub(super) mod fan;
 /// The §8.1 start family's two aftermaths — split per §12's budget, on the seam
 /// this file's own doc draws: everything here is the hold, and that is the one
 /// [`Owes`] pair whose landing is itself a step in a longer gesture.
@@ -61,6 +64,10 @@ enum Owes {
     /// A landed §8.1 `Prompt`: the §3.3 seed the prediction spent, the pane the
     /// fire consumed, and the §3.4 start claim on the minted name.
     Started { goal: String },
+    /// A landed §3.8 `Fan(Spread)` (bl-77bc): the N rebound starts it answered,
+    /// each owed its ordinary `Prompt` — the gesture hands off N times, and the
+    /// last of them carries this seat's own aftermath.
+    Fanned { goal: String },
 }
 
 /// What the **seat** that fired shows for the receipt. A fact about the hand:
@@ -219,6 +226,9 @@ fn acted(
         (Owes::Started { goal }, Ok(Reply::Started { conversation })) => {
             start::fired(model, state, &acting.ws, conversation, goal);
             false
+        }
+        (Owes::Fanned { goal }, Ok(Reply::Fanned(candidates))) => {
+            fan::fanned(model, state, &acting.ws, candidates, goal)
         }
         // A clean reply of a kind this fire cannot read — a codec defect rather
         // than a state, and the seat below still says what came back.

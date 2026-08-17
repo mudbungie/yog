@@ -69,6 +69,27 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
         &SplitMix64::from_seed(mint_seed),
     ));
     ui.label(format!("Start goal → {}", pending.workspace));
+    let mut fan_n = state.start.fan_n.max(1);
+    // The §3.8 fan's N picker (bl-77bc), offered only where a fan can aim: the
+    // focused ball's delivery obligation, the same context read `/fan` makes.
+    // ×1 is the ordinary single start — one code path, counted.
+    let ctx = model.line_context();
+    if ctx.project.is_some() && ctx.ball.is_some() {
+        const N_HOVER: &str = "How many isolated candidates to fire on this ball's target. Each writes in \
+             its own attempt worktree off one shared base; delivering one advances the \
+             ball's branch and the rest must rework. ×1 is the ordinary single start. \
+             Typed, it is `/fan <n>` after a `/prepare`.";
+        ui.horizontal(|ui| {
+            if ui.small_button("−").on_hover_text(N_HOVER).clicked() {
+                fan_n = fan_n.saturating_sub(1).max(1);
+            }
+            ui.weak(format!("×{fan_n} candidates"))
+                .on_hover_text(N_HOVER);
+            if ui.small_button("+").on_hover_text(N_HOVER).clicked() {
+                fan_n += 1;
+            }
+        });
+    }
     // The goal box fills the pane the operator sized (§4.1 `panels`), less the
     // Send/Cancel row below it. The reservation is the style's own row height
     // (so it scales with the §4.1 zoom) plus a spacing, and it deliberately
@@ -114,11 +135,13 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
             )
             .clicked();
     });
+    state.start.fan_n = fan_n;
     if send {
         send_pending(model, state);
     }
     if cancel {
         state.start.pending = None;
+        state.start.fan_n = 1;
         super::focus::request(state);
     }
 }
@@ -152,6 +175,13 @@ pub(super) fn send_pending(model: &mut AppModel, state: &mut ShellState) {
     // The boundary's Prompt action (§8.5), carrying the seat's own §3.3 seed;
     // the §3.4 start claim and the seed's retirement (bl-28ba) both ride its
     // receipt — one rule, and every hand that fires a start spends it there.
+    // With N > 1 picked, the same Enter is the §3.8 fan (bl-77bc): one
+    // `Fan(Spread)` whose receipt walks the rebound starts back through this
+    // very door, so the ceiling gates every birth exactly as it gates one.
     let ws = model.snap.ws_path(&p.workspace).unwrap_or_default();
+    if state.start.fan_n > 1 {
+        super::acting::fan::fan(model, state, &ws, &p, state.start.fan_n);
+        return;
+    }
     super::acting::start::prompt(model, state, &ws, &p, &p.goal);
 }

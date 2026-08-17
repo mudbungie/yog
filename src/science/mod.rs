@@ -37,8 +37,10 @@
 //! disk reads it adds are the frozen inputs of each row and, when a sibling has
 //! landed, one ancestry probe per superseded attempt.
 //!
-//! **Nothing here renders.** The §11 fan-group seat is bl-77bc's, over this
-//! projection and V3's rows; neither owns the other's surface.
+//! **The §11 fan-group seat renders this projection** (bl-77bc): [`render`]
+//! is the group card, [`compose`] turns its affordance clicks into composer
+//! text, and [`respdiff`] is V3.3's response comparison — all consumers of the
+//! rows above, owning no fact of their own.
 
 use std::path::Path;
 
@@ -49,8 +51,11 @@ use crate::budgets::BudgetSpend;
 use crate::opslog::OpEntry;
 
 mod bound;
+pub mod compose;
 mod observed;
 mod outcome;
+pub mod render;
+pub mod respdiff;
 pub(crate) mod wire;
 
 pub use outcome::Outcome;

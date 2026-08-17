@@ -2184,6 +2184,75 @@ Tests:
   the executor writes one entry and one step row while leaving the clock's own
   entry byte-for-byte.
 
+## S19 — Adjudicator: the fan resolves (VISION §5 V3)
+
+Machine state: a claimed ball whose work was fanned — N isolated candidates
+over one delivery obligation (S12 gave the read-only cohort; bl-8746/bl-c2bd
+gave the mutating fan and its delivery law). Graduated from VISION V3
+(bl-77bc); the rung's authority is that section, as amended by the
+implementation rulings recorded there and in DESIGN §3.8/§3.9.
+
+1. **N is picked at fire, and it is not a second gesture.** The pending
+   start's pane wears a ×N stepper wherever the focused ball's delivery
+   obligation can aim a fan; Send with N > 1 posts one `Fan(Spread)` whose
+   receipt fires each rebound start through `Prompt`'s ordinary door — the
+   ceiling gates every birth exactly as it gates one, and the trail carries N
+   ordinary fire rows. ×1 is the ordinary single start, the same path walked
+   once. Typed, the whole picker is `/fan <n>` after a `/prepare`.
+2. **The group card renders the comparison the operator actually judges by**
+   (V3.3), on the Work tab, over the science rows (`Query::Science`, §3.9 —
+   the same answer the attempt rows below drill into): per candidate its
+   handle, the derived acceptance mark in words, steps · wall · tokens off the
+   step records, the one-line project churn, and the clipped terminal
+   response; the cohort's shared base said once, and not at all when members
+   disagree.
+3. **The response diff is a pick, and a pair compares itself.** Two picked
+   candidates' terminal responses diff line against line under the columns; a
+   cohort of exactly two compares unasked — the only pair there is — and a
+   third pick replaces the elder. Past the comparison's line cap the diff says
+   so rather than silently clipping.
+4. **Every affordance composes a dispatch; the operator's Enter is the fire.**
+   Judge and Synthesize seed the ordinary new-conversation composer with a
+   goal carrying each candidate's exact refs (handle, attempt tip, base,
+   target — V2's fire path, no fan-in primitive anywhere); Deliver seeds
+   `/deliver <handle> ` awaiting the operator's summary, because a delivery
+   subject is the operator's statement of what landed; Retire seeds
+   `/retire <handle>`. Nothing fires on the click.
+5. **The mark is derived, and there is no other kind** (V3.2). "delivered
+   <oid>" is the target history's own tagged squash read back at render;
+   "stale — <handle> delivered" is a sibling's win plus balls' staleness rule;
+   "discarded" is a retired ref; "pending" is the honest absence of all three.
+   No winner field, no reject verb, nothing stored.
+
+Burden check: never fan and the Work tab is exactly S11's — the card does not
+exist, the picker shows only where an obligation could aim it, and reading a
+fan costs nothing.
+
+Tests:
+- **S19-T1 group-paint** (`science/tests/render.rs`): the card states the
+  cohort once and each candidate's mark, figures, churn and response side by
+  side; every outcome and absence is words; a long response is clipped in
+  code; a mixed-base cohort hoists nothing; no candidates paints nothing at
+  all.
+- **S19-T2 affordance-composes-dispatch** (`science/tests/compose.rs`, the
+  click half in `render.rs`): each affordance answers its intent from the
+  paint, and one pure function turns it into composer text — the judge and
+  synthesizer goals carry every candidate's exact refs and refuse to compose
+  over nothing; deliver stops at the trailing space; retire is complete.
+- **S19-T3 response-diff** (`science/tests/respdiff.rs`, the picks half in
+  `render.rs`): equal inputs all-same, one-sided inputs one-sided, a
+  replacement reads remove-then-add, the cap is declared, two members compare
+  unasked, and picks walk.
+- **S19-D real-substrate drive** (`scripts/drive/beats_s19.sh`, the headless
+  verb): a real fan spread over a real balls store answers N rebound starts
+  with distinct attempt worktrees off one base; real work committed in one
+  candidate delivers by handle and the target's history carries the tagged
+  squash; the stale sibling's delivery is **refused** by balls' own law before
+  anything merges; retiring it releases the worktree and keeps the ref. No
+  model call anywhere — what the beats cannot reach without one (the fire rows
+  that make candidates *cohort members* on the read surfaces) is exactly what
+  the in-crate joins prove against fixture trails.
+
 ## Invariant tests (every rung)
 
 - **INV-1 idle-is-pure**: constructing AppModel + N ticks with no user
@@ -2221,9 +2290,11 @@ you cannot organize a board you cannot triage), P3 = S5+S7+S8, P4 = S9 (phase
 2, each beat gated on its own upstream, §16.7). S10+ are the VISION rungs,
 graduating one at a time as their enabling verbs land — S10 (Historian),
 S11 (Auditor), S12 (Counterfactualist), S13 (Admiral), S14 (Teleoperator),
-S15 (Warden), S16 (Releaser), S17 (Warden, again) and S18 (Admiral, armed)
-are here, and none of them needed a verb below yog: S12's fork is `lernie
-dispatch --from`, shipped upstream and already pinned, and the rest needed no
+S15 (Warden), S16 (Releaser), S17 (Warden, again), S18 (Admiral, armed) and
+S19 (Adjudicator) are here, and none of them needed a verb below yog: S12's
+fork is `lernie dispatch --from`, shipped upstream and already pinned, S19's
+fan rides balls' attempt capability (bl-8746/bl-c2bd, no `bl` verb by
+upstream's own ruling), and the rest needed no
 verb at all. S13 and S14 each landed minus the armed-loop half they refused to
 fake; S18 is that half, landed once its preconditions closed (bl-66fb) — and
 armed by nobody, because arming is the operator's act. Implementation

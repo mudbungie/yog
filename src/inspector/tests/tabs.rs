@@ -49,7 +49,7 @@ fn every_tab_paints_its_signature_from_a_populated_fixture() {
         inbox,
         files,
         file_preview: Some(preview),
-        work: Vec::new(),
+        science: Vec::new(),
         work_patch: None,
         governing: Some(governing),
         rail,

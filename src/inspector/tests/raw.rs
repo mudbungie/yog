@@ -36,7 +36,7 @@ fn raw_toggle_yields_each_parsing_tabs_underlying_bytes() {
         inbox: list_inbox(ws, &agent),
         files: FilesView::default(),
         file_preview: None,
-        work: Vec::new(),
+        science: Vec::new(),
         work_patch: None,
         governing: None,
         rail: Rail::default(),

@@ -112,7 +112,7 @@ pub(super) fn tab_data(
         inbox,
         file_preview: files.1,
         files: files.0,
-        work: work.attempts,
+        science: work.science,
         work_patch: work.patch,
         governing,
         rail: history,
