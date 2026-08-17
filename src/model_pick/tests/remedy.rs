@@ -8,7 +8,8 @@ use crate::keymap::CenterTab;
 use crate::model_pick::remedy;
 
 /// brazen's own decline, verbatim — `resolved_secret`'s `None` arm at the
-/// `brazen = "=0.0.5"` pin, which is the line the operator actually read off
+/// brazen pin (`Cargo.toml` is the pin authority; no version is restated
+/// here), which is the line the operator actually read off
 /// the picker. The remedy is gated on classifying *this* string, so a reworded
 /// upstream decline that stops looking auth-shaped fails here rather than
 /// silently retiring the affordance.

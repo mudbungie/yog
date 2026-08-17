@@ -237,9 +237,22 @@ pub(super) fn click(screen: &Screen, world: &mut World, pos: egui::Pos2) {
 
 /// The rect of the galley reading exactly `text` — how a pointer test names a
 /// seat without an `egui::Id` it has no way to know, and how a geometry test
-/// asks which panel a row landed in.
+/// asks which panel a row landed in. The **first**, in paint order; a word one
+/// window paints twice needs [`rects_of`].
 pub(super) fn rect_of(shapes: &[egui::epaint::ClippedShape], text: &str) -> Option<egui::Rect> {
-    shapes.iter().find_map(|clipped| find(&clipped.shape, text))
+    rects_of(shapes, text).into_iter().next()
+}
+
+/// **Every** rect a galley reading exactly `text` landed on. A label is not a
+/// seat: `Login` is on this window three times — the navigator entry, the §11
+/// tab strip's entry and the §8.3 row's verb — so a beat about the verb has to
+/// tell them apart by where they landed, which it cannot do from the first
+/// match alone.
+pub(super) fn rects_of(shapes: &[egui::epaint::ClippedShape], text: &str) -> Vec<egui::Rect> {
+    shapes
+        .iter()
+        .flat_map(|clipped| find(&clipped.shape, text))
+        .collect()
 }
 
 /// The centre of that rect — the coordinate a click is aimed at.
@@ -259,13 +272,14 @@ pub(super) fn locate(shapes: &[egui::epaint::ClippedShape], text: &str) -> Optio
 /// the acceptance harness and survived both, which is why the check that
 /// forbids the shape now lives in `rules/no-hand-rolled-paint-walk.yml` rather
 /// than in anyone's memory (bl-70b8).
-fn find(shape: &egui::Shape, text: &str) -> Option<egui::Rect> {
+fn find(shape: &egui::Shape, text: &str) -> Vec<egui::Rect> {
     let mut painted = Vec::new();
     crate::paint_probe::collect(shape, &mut painted);
     painted
         .into_iter()
-        .find(|(seen, _)| seen == text)
+        .filter(|(seen, _)| seen == text)
         .map(|(_, rect)| rect)
+        .collect()
 }
 
 pub(super) fn press(key: egui::Key, modifiers: egui::Modifiers) -> egui::Event {

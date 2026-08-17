@@ -29,7 +29,8 @@
 //! §9.4's remedy sentence read the same derivation without repainting the row.
 //!
 //! The projection carries no *device-endpoint* fact (`OAuthConfig::device_url`
-//! is not a listed column at the `brazen = "=0.0.5"` pin), and it does not need
+//! is not a listed column at the brazen pin — `Cargo.toml` is the pin
+//! authority and no version is restated here), and it does not need
 //! to: `authorize_url`/`token_url` are required fields of every `oauth` block
 //! while `device_url` is `Option`, so the **browser** flow is the one flow every
 //! oauth row can serve — see [`crate::login`] for the flow rule.

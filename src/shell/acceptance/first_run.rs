@@ -14,9 +14,18 @@
 //! pass on the defect: the roster **reaches the glass with rows on it**, and
 //! the wall those rows and any sign-in are bound to is the one the founded
 //! workspace will read.
+//!
+//! **And what a stranger's row can DO** (bl-8c2d): reaching the roster was only
+//! half of "sign the sphere in". Every row of the table brazen used to ship was
+//! keyed or keyless, so the honest answer on all of them was *set the key in
+//! Config* — the pane opened, and nobody got a browser sign-in out of it. The
+//! operator ruled that browser login should ship; brazen's default table now
+//! carries an oauth2 row, and the beat below is the yog side of that consume.
+//! It asserts the *verb*, not the row: a row is only a sentence until something
+//! on the glass can be pressed.
 
 use super::fixture::{world, world_empty};
-use super::screen::{Screen, command_shift, press};
+use super::screen::{Screen, command_shift, press, rect_of, rects_of};
 use crate::keymap::CenterTab;
 use crate::names::DEFAULT_NAME;
 
@@ -67,6 +76,82 @@ fn the_empty_world_reaches_a_populated_roster_from_inside_the_box() {
     assert!(
         painted.contains(DEFAULT_NAME),
         "and the pane names the sphere a sign-in here lands in:\n{painted}"
+    );
+}
+
+/// The one **login-capable** row a default install carries: brazen's shipped
+/// oauth2 row (its bl-77fa, the answer to bl-8c2d's ruling). Named outright
+/// because naming it is the consume — an upstream that renames it, drops it, or
+/// re-spells its `auth` fails here, in the file about the stranger's first
+/// move, instead of somewhere downstream of a sentence that quietly changed.
+const BROWSER_ROW: &str = "openai-chatgpt";
+
+/// **A stranger gets a browser sign-in, not only an edit** (bl-8c2d's ruling,
+/// consumed with the brazen pin at bl-0219).
+///
+/// Every row of the table brazen used to ship was keyed or keyless, so
+/// `login_blocked` answered *set the key in Config* on all of them and the §8.3
+/// pane a stranger opened had no verb anywhere on it. The roster reaching the
+/// glass (above) was necessary and not sufficient: what "sign the sphere in"
+/// means is a thing that can be pressed.
+///
+/// Asserted in both directions, because either alone passes on a defect. The
+/// oauth2 row carries the Login verb **and** the keyed rows still carry the
+/// editor sentence where their verb would be — a table that had gone
+/// login-capable everywhere would be wrong in the other direction, and the
+/// ruling did not ask for it.
+///
+/// The verb is read off the **paint layer, by seat**: `Login` is painted three
+/// times on this window — the navigator's entry, the §11 tab strip's entry, and
+/// the row's button — and the first two are there whether or not any row can be
+/// signed in, so a beat that merely found the string would have passed on the
+/// very window the ruling was filed about. Only the galley on the row's own
+/// line, to the right of its name, says the row can be pressed.
+#[test]
+fn the_default_rosters_oauth_row_offers_the_browser_login_beside_its_name() {
+    let mut world = world_empty();
+    let screen = Screen::new();
+    screen.idle(&mut world);
+    screen.frame(&mut world, vec![press(egui::Key::Num3, command_shift())]);
+    let rows = world.state.wall.login.rows.clone();
+
+    let loginable: Vec<&str> = rows
+        .iter()
+        .filter(|row| row.blocked.is_none())
+        .map(|row| row.name.as_str())
+        .collect();
+    assert_eq!(
+        loginable,
+        [BROWSER_ROW],
+        "a default install's table carries the shipped oauth2 row and no other \
+         login-capable one"
+    );
+    let row = rows
+        .iter()
+        .find(|row| row.name == BROWSER_ROW)
+        .expect("the row just named");
+    assert_eq!(
+        row.fact, "auth oauth2 · not signed in",
+        "and it says so in the words only a login can change"
+    );
+    assert!(
+        rows.iter()
+            .any(|other| other.blocked.as_deref()
+                == Some("api-key provider — set the key in Config")),
+        "the keyed rows still answer with the editor — the ruling added a path, \
+         it did not reclassify the table: {rows:?}"
+    );
+
+    let shapes = screen.shapes(&mut world, Vec::new());
+    let name = rect_of(&shapes, BROWSER_ROW).expect("the row's name is on the glass");
+    let verb = rects_of(&shapes, "Login")
+        .into_iter()
+        .find(|rect| (rect.center().y - name.center().y).abs() < name.height())
+        .expect("the row carries the Login verb, not a reason to have none");
+    assert!(
+        verb.left() >= name.right(),
+        "and it is the control at the end of that row (§11 rule 1b), not the tab \
+         strip's entry: name {name:?}, verb {verb:?}"
     );
 }
 

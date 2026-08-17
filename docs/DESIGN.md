@@ -3330,6 +3330,19 @@ knows the workspace, and no downstream seat has to be told.*
      state a different thing about one provider. The Login pane's `↻` re-asks brazen
      *and* re-reads presence in one gesture (§7.2: never per frame), which is
      also how a just-completed sign-in becomes `signed in`.
+
+     **A default install has a browser sign-in, and yog spends no code on it**
+     (ruled at bl-8c2d, consumed at bl-0219). Every row brazen used to ship was
+     keyed or keyless, so the rule above — correctly — put the *reason* where the
+     button goes on all of them, and a stranger's only path was authoring a key
+     in the §9.1 editor. That was §8.3 working as written and it was not the
+     intent, so the fix was brazen's: its default table now carries an oauth2
+     row, and `row_views` renders the verb for it the moment the crate is
+     pinned. Nothing here reclassifies a row (the keyed rows still name the
+     editor); the whole consume is a beat pinning that the empty world's roster
+     paints a pressable Login **beside that row's name** rather than a sentence
+     — `shell/acceptance/first_run.rs`, which is where an upstream that renames
+     or drops the row will fail.
   5. **The affordance beside a failed step names its row (bl-8e34).** Detection
      alone offers a verb without its object: `bz --login` takes a provider row,
      and the error line yog classifies carries none — brazen's canonical error
@@ -8536,7 +8549,7 @@ beside `main.rs`.
 | `src/shell/acceptance/drift.rs` (excl.) | the §9.4 drift drive (bl-2d19): a conversation whose config lineage advanced past it states its freeze and offers **both** exits — the one that keeps it (`retarget`) and the one that starts over — on that sentence's own row inside the settings seat, read off painted glyphs rather than the strings handed to the widgets; and the other direction, an undrifted conversation offered neither, which is what makes the first beat evidence |
 | `src/shell/acceptance/echo.rs` (excl.) | the bl-915e drive (a start and a follow-up each read on the frame *immediately* after Enter, with the substrate pinned to prove no derivation ran, then landed and re-read to prove the echo gave its seat up rather than doubling it) |
 | `src/shell/acceptance/elision.rs` (excl.) | the §11 rule 1b regression on the two witness rows (the Login verb behind the longest provider name, `assign → <ws>` behind an arbitrary ball title), each asserted in both directions and against the panel's own edge, on painted glyphs rather than galley text — and beside them L4's other question, *where* a row cuts (bl-3aa1): two activity ops sharing the audit's invariant path prefix are laid in the real trail, and the glyphs show each row ending in the leaf and agent id that tell it from the other, where the head-keeping cut painted both rows as one identical line |
-| `src/shell/acceptance/first_run.rs` (excl.) | the bl-3b62 drive that a stranger reaches a **populated** §8.3 roster from the empty world before spending a turn — Ctrl+Shift+3 from inside the bootstrap box, every row on the glass with its credential fact, the sphere named (and named *derived*, since a focused world names its own), and the wall those rows and any sign-in are bound to proved to be the one the first message founds |
+| `src/shell/acceptance/first_run.rs` (excl.) | the bl-3b62 drive that a stranger reaches a **populated** §8.3 roster from the empty world before spending a turn — Ctrl+Shift+3 from inside the bootstrap box, every row on the glass with its credential fact, the sphere named (and named *derived*, since a focused world names its own), and the wall those rows and any sign-in are bound to proved to be the one the first message founds — plus bl-8c2d's consume, that a default install's roster carries a pressable Login on the shipped oauth2 row (found by seat, not by string: `Login` is painted three times on that window) while the keyed rows still name the config editor |
 | `src/shell/acceptance/fixture/world.rs` (excl.) | the acceptance `World` and **the wire standing behind it** (REMOTE §9.8, bl-1747): the populated fixture a test drives, its derivation stepped by hand, and the two channel ends the frame's reads and acts are answered on — every act the window fires is posted now, so a fixture with nothing behind its end of the channel is a window whose every gesture is refused. It stands in for the transport and nothing else: the questions go through `AppModel::answer` and the acts through `boundary::dispatch::dispatch` over a `ui.json` opened fresh per gesture, which is answer 3's *engine writes, window adopts* paid in full. Split from `fixture.rs` at §12's budget on the seam the two halves already had — the builder mints the world's bytes once, this holds what a test then does to it. `World::drain` is the **one** definition of settling the wire to a fixed point (bl-13f9), spent by both drivers: a chained read — the §11 step drill-in, whose sequence name is picked out of the step list that landed — is why counting passes stopped being enough |
 | `src/shell/acceptance/floor.rs` (excl.) | the §11 **focus floor** (bl-478d: Tab steps the frame's focus control by control, and Space presses what it reached — driven onto the balls fold, whose press is a durable §4.1 fact) |
 | `src/shell/acceptance/{focus,walk}.rs` (excl.) | the keyboard driver and the §11 focus-discipline drive it steers — `focus` its pointer/launch half, `walk` its keyboard half (bl-c21f: a roster step lands the composer in both directions, Ctrl+↓ continues the walk from inside the box, and Escape still releases to a live bare plane), each asserting the model's selection beside egui's `wants_keyboard_input` so a walk that never walked cannot pass |
