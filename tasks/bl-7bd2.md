@@ -1,7 +1,8 @@
 +++
 title = "the transcript is a readdir of a directory compaction DELETES from, and yog reads no summary/**, so a squashed span is silent — derive the gap, paint what replaced it"
 created = 1786936867
-updated = 1786937185
+updated = 1786937197
+claimant = "Seam7bd2"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
