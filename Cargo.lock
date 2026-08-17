@@ -206,9 +206,9 @@ dependencies = [
 
 [[package]]
 name = "brazen"
-version = "0.0.5"
+version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c37111a41b80d496ba37b02179f22af0e7eec0a9336799059b86a5122818b55"
+checksum = "044ee2e2829866ef02d8377a4ce9ff3efcf6ca0cedd8b557f2db6f603783f3a4"
 dependencies = [
  "base64",
  "libc",
@@ -1327,9 +1327,9 @@ dependencies = [
 
 [[package]]
 name = "lernie"
-version = "0.0.10"
+version = "0.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40005552df4ffb7a245407e49b7f77c3d723312fd317cf79af6c844837a15e40"
+checksum = "292fa0e2fe909c856b792279161ff50656487a58eaf93f12a7d3b9bda83b8f23"
 dependencies = [
  "brazen",
  "chrono",
@@ -2463,7 +2463,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.4",
  "windows-sys 0.61.2",

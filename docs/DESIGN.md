@@ -70,7 +70,7 @@ nowhere in yog code or UI. yog's vocabulary, exhaustively:
 | **project** | A repo path with a balls clone: one entry under `$XDG_STATE_HOME/balls/clones/<pct-enc-path>/`, percent-decoded | balls |
 | **ball** | A task: `tasks/<id>.md` in a project's store, read in-process through the linked balls crate (`reads::Catalog`, §16.7 W8); the closed listing alone is still `bl list -s closed --json` | balls |
 | **workspace** | A lernie workspace: a directory containing `repo.git`; yog-started workspaces live at `$XDG_DATA_HOME/yog/workspaces/<name>/` (§3.1) | lernie (contents), yog (location) |
-| **name** | Two names at two altitudes: a **workspace name** is operator-chosen at creation (validated shape, §3.1) — the sphere wall's label, the dir leaf, **and** the claimant stamped on every ball claim the workspace makes (§3.1, §3.2); a **conversation name** is minted (a single word from an embedded wordlist, bl-d12f) — yog draws it at preview and at fire and passes it via `--name` (§3.3, bl-08f2), **from `lernie::mint`'s embedded list** since bl-cd38 consumed the bl-aca4 ruling (§3.3's "state of the move") — the context window's own identity, durably lernie's `name` blob beside `goal.md` | lernie (the stored fact, and the mint); yog (the seed, the fire-time draw + preview) |
+| **name** | Two names at two altitudes: a **workspace name** is operator-chosen at creation (validated shape, §3.1) — the sphere wall's label, the dir leaf, **and** the claimant stamped on every ball claim the workspace makes (§3.1, §3.2); a **conversation name** is minted (two words in PascalCase from an embedded wordlist — lernie bl-79a2, consumed by bl-0219) — yog draws it at preview and at fire and passes it via `--name` (§3.3, bl-08f2), **from `lernie::mint`'s embedded list** since bl-cd38 consumed the bl-aca4 ruling (§3.3's "state of the move") — the context window's own identity, durably lernie's `name` blob beside `goal.md` | lernie (the stored fact, and the mint); yog (the seed, the fire-time draw + preview) |
 | **binding** | The derived association between a ball and a workspace: ball claimant = workspace name (§3.2). Balls-owned metadata, explicitly late-mutable via `bl claim`/`bl unclaim` — never a yog-stored fact | balls (claimant field); yog joins |
 | **agent** | `agents/<id>` branch; the id is a chain of `<ts>-<short>` descent segments (ARCH §2.3 — two hyphen-free tokens each), which is where the hierarchy lives | lernie |
 | **conversation** | A root agent plus its descent subtree — the §11 organizing unit. Its **identifier** is the root agent id; its **name** is a minted wordlist label lernie stores on the root's branch (§3.3, reversing bl-68d9's no-name rule) — minted for agent self-identity, rendered as the row title | lernie (the agents, the stored name, the mint); yog (the seed and the derived view) |
@@ -438,14 +438,25 @@ and never reads the root id back (§3.2); a conversation's name never becomes
 a claimant.
 
 The mint — **lernie's `lernie::mint`** since bl-aca4, consumed by bl-cd38 (see
-"state of the move"): a **single word** from a wordlist embedded in that crate
-(bl-d12f, retiring the two-word compound), a pure function over an injected RNG
-and an occupied set. On collision with the occupied set the candidate is
-discarded and the next word tried — the retry is bounded by the wordlist itself
-(one wraparound scan), erroring loudly on an exhausted pool rather than
-looping. The pool is 541 words, sized against the occupied set it actually
-races (one workspace's living agents — tens, recycled by retention), not
-against a birthday bound. Yog calls that one function at preview and at fire.
+"state of the move"): **two words in PascalCase** (`PeachHollow`) drawn from a
+wordlist embedded in that crate, a pure function over an injected RNG and an
+occupied set. On collision with the occupied set the candidate is discarded and
+the next drawn — the retry is bounded by the index space itself (one wraparound
+scan), erroring loudly on exhaustion rather than looping. Yog calls that one
+function at preview and at fire, and holds no wordlist of its own.
+
+The shape has moved twice and yog inherited both with no code change, because
+`lernie::mint::mint` is the only draw it makes: bl-d12f retired an early
+two-word compound for a single lowercase word, and lernie's bl-79a2 — consumed
+here by bl-0219 with the 0.0.11 pin — went to the ordered PascalCase pair,
+because one lowercase word read as a word and not as a name. One RNG draw
+apiece, the same pure scan, the same exhaustion bound; the space widened from
+541 words to 541 × 540 = 292,140 ordered distinct pairs. It was never sized
+against a birthday bound in either shape — the occupied set it actually races
+is one workspace's living agents, tens of them, recycled by retention. **The
+one thing that changed for yog is width on the glass**: a §11 row lays the
+title and the weak subtitle on one truncating line, so a two-word title spends
+more of that line (`shell/acceptance/echo.rs`).
 
 - **The occupied set is per-workspace, and already derived (bl-08f2):** the
   names the target workspace's living agents wear, read off the same name

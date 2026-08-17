@@ -23,7 +23,18 @@ use tempfile::tempdir;
 /// The operator's words. Deliberately unlike anything the fixture, the theme or
 /// the §3.3 wordlist paints, so `Screen::text` containing it can only be this
 /// send (bl-f16e's rule: assert on what identifies *this* run).
-const SAID: &str = "unbar the postern";
+///
+/// **Short, because the row it lands in is a column** (bl-0219). The subtitle
+/// shares one `left_to_right` line with the §3.3 title inside the conversation
+/// panel, whose wrap mode is `Truncate` (§11 rule 1), so the title's width is
+/// the subtitle's budget — and lernie's mint went from one lowercase word to a
+/// PascalCase pair, which is most of that budget. `unbar the postern` painted
+/// as `unbar the po…` and the beat read the glyphs, correctly, as not carrying
+/// what was typed. Elision there is §11 working (`super::elision`); the beat
+/// under test is the *immediacy* of the echo, so the phrase it echoes is one
+/// that fits beside a two-word name. The verbatim claim is still made, on
+/// `ConvRow::subtitle` below, where nothing elides.
+const SAID: &str = "unbar it";
 
 /// Type `SAID` into the docked composer and press Enter — the whole gesture,
 /// and the last thing that happens before the frame under test.

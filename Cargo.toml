@@ -73,13 +73,26 @@ balls = "=0.5.11"
 # the `bz` bin's impure shim (ureq/rustls transport, XDG credential store + model
 # cache) with NO semver contract, so the version is the contract — and the lockfile
 # is the parity check that yog and lernie resolve ONE brazen (§16.7 "skew death is
-# structural").
-brazen = { version = "=0.0.5", features = ["native-host"] }
+# structural"). 0.0.6 ships an eighth default provider row, `openai-chatgpt`
+# (oauth2, no model prefixes, last in the table), so a bare install has a
+# browser-login-capable provider with no config file authored (brazen bl-77fa,
+# the ruling on yog bl-8c2d).
+brazen = { version = "=0.0.6", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog lernie
 # <argv…>` reproduces lernie's own thin exec binding over `lernie::cmd`, and the
 # driver every spawn re-enters is yog itself. EXACT registry pin — track the
-# published latest (0.0.10), which carries the two **chat-wedge fixes**
+# published latest (0.0.11), which carries the **two-word PascalCase mint**
+# (bl-0219): upstream bl-79a2 draws an agent name as one ordered pair from a
+# widened index space instead of the single lowercase word that read as a word
+# and not a name — yog links `lernie::mint::mint` directly
+# (`src/start/identity.rs`) at both preview and fire, so it inherits the new
+# shape with no code change. It also ships the workflow template with **budgets
+# off by default** (upstream bl-8dea — the shipped whole-tree spend ceilings
+# bound far too early on ordinary chats), and stops the compactor `git rm`ing
+# the opening prompt the operator reads (upstream bl-898f: the prompt was
+# written twice, as `goal.md` and as `messages/001-user.md`, so compaction saw
+# duplication). Atop 0.0.10's two **chat-wedge fixes**
 # (bl-4c1f): upstream bl-15f0 judges the §2.3 tool pairing over the WHOLE
 # alternation when deriving a hop's warrant, so delivered mail behind a
 # crash-orphaned tool window declines loudly instead of sending an orphan
@@ -117,10 +130,11 @@ clap = { version = "4", features = ["derive"] }
 # and 0.0.3's `Fx::adapter_target` (the injection W11 consumes); the interim git
 # rev is retired (a git pin also cost yog its publishability, and cost it the
 # rev itself once upstream rewrote `main`; the registry has neither failure
-# mode). The lockfile is also the brazen parity check: lernie 0.0.10 links
-# `brazen =0.0.5`, the same exact version yog pins, so exactly ONE brazen
-# resolves — skew death is structural otherwise (§16.7).
-lernie = "=0.0.10"
+# mode). The lockfile is also the brazen parity check: lernie 0.0.11 links
+# `brazen =0.0.6`, the same exact version yog pins, so exactly ONE brazen
+# resolves — skew death is structural otherwise (§16.7). The two pins move
+# TOGETHER, in one change, for that reason.
+lernie = "=0.0.11"
 eframe = { version = "0.29", default-features = false, features = ["default_fonts", "glow"] }
 egui = "0.29"
 # Not used in code — present only to turn ON `egui-winit`'s `wayland` feature,

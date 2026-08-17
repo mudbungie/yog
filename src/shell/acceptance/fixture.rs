@@ -38,12 +38,16 @@ pub(super) const MINT_SEED: u64 = 0xc0df;
 /// apiece, each off the seed the fire before it spent) — three, the run the
 /// bl-28ba drive walks. Naming them is what retired that drive's probabilistic
 /// `assert_ne!` (bl-dd3d): "a fresh name each time" is read off the pinned
-/// sequence, so a mint regressing to repeats fails every run, not one in 541.
+/// sequence, so a mint regressing to repeats fails every run, not once in the
+/// pool's size.
 /// The pool is **lernie's** since bl-cd38 (yog deleted its own list and draws
 /// through [`lernie::mint`]), so this is also the seam check on that
 /// consumption: a corpus change moves it, and fails in `mint_seed.rs` naming
-/// the cause instead of as a needle collision elsewhere in the suite.
-pub(super) const MINTED: [&str; 3] = ["metronome", "granola", "balmy"];
+/// the cause instead of as a needle collision elsewhere in the suite. It has
+/// moved once, and that is the check working: lernie's bl-79a2 widened the draw
+/// from one lowercase word to an ordered PascalCase **pair** (yog bl-0219's
+/// consume), so these three re-pinned words are two-word names now.
+pub(super) const MINTED: [&str; 3] = ["CourtyardRooftop", "AxolotlHeadland", "XylophoneAzure"];
 
 /// [`MINTED`]'s opening — named alone because tests that merely *contain* a
 /// minted name, rather than walking the sequence, only ever see this one.
