@@ -8,6 +8,49 @@ repository = "https://github.com/mudbungie/yog"
 readme = "README.md"
 keywords = ["lernie", "agents", "egui", "balls"]
 categories = ["development-tools", "gui"]
+# What ships to crates.io (bl-8340). An ALLOWLIST, and never an `exclude`: with
+# `exclude`, every file class added tomorrow ships by DEFAULT, and that default
+# is exactly how 0.0.1 published the operator's home paths across four files
+# and three `docs/drive-logs/` transcripts — the manifest declared neither key,
+# so `cargo publish` packaged the whole tree (AGENTS.md, "Before making the repo
+# or a crate version public", item 6: *"`cargo publish` is irreversible: a
+# yanked version stays downloadable"*). The asymmetry decides the shape: a
+# missing entry here costs a build nobody can complete, which is loud and
+# reversible; a missing `exclude` entry costs a publication that cannot be
+# recalled.
+#
+# The list is the crate's own build inputs and the three files crates.io
+# renders, and nothing else. `src/**` is the lib and the bin. The six PNGs and
+# the SVG are what `src/theme/icon/tests/artifacts.rs` pins with
+# `include_bytes!`/`include_str!`, so they are compile inputs of the published
+# crate's own test build, not decoration. Cargo adds `Cargo.toml`/`Cargo.lock`
+# itself.
+#
+# Deliberately absent, each because it is commentary or apparatus rather than
+# source: `docs/**` (DESIGN, VISION, QUALITY, REMOTE, STORIES — architecture
+# commentary on a private world, addressed to agents working in this repo, not
+# documentation of a dependency), `tests/**`, `examples/**`, `scripts/**`
+# (which includes `leak-fixtures/`, a directory of deliberately fabricated
+# secrets), `rules/**`, `.github/**`, `.githooks/**`, `Makefile`, the four gate
+# configs, and the agent guide (`AGENTS.md` and its `CLAUDE.md` symlink).
+# `tests/packaged_files.rs` holds this shape in both directions, over the real
+# `cargo package --list`.
+#
+# The leading `/` on the three bare filenames is load-bearing, and its absence
+# was measured here: these are **gitignore-style** patterns, so a pattern with
+# no slash matches that basename at ANY depth, and `README.md` alone shipped
+# `scripts/leak-fixtures/README.md` — the index of the fabricated-secret corpus
+# — out of a list that names no `scripts` entry. `src/**` and the two `assets/`
+# patterns contain a slash and are therefore already anchored to the package
+# root; only a bare basename needs the `/`.
+include = [
+    "src/**",
+    "assets/yog-*.png",
+    "assets/yog.svg",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+]
 
 [dependencies]
 # The embedded balls substrate (DESIGN §16.7 W8): typed store reads in-process

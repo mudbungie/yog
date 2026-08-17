@@ -621,10 +621,26 @@ cost is recorded per item; the notes are the checklist's evidence that it works.
    2026-07-26 carrying everything item 1 found** — the operator address, eleven
    operator-home paths across `src/world/mod.rs`, `src/opslog/tests.rs`,
    `src/binding/tests.rs` and `docs/DESIGN.md`, and three `docs/drive-logs/`
-   files — because `Cargo.toml` declares no `include`/`exclude` and so packages
+   files — because `Cargo.toml` declared no `include`/`exclude` and so packaged
    the whole tree. It was yanked on 2026-08-13, which changes nothing about who
    can download it. A private repository is not a private crate: the moment a
    version ships, this checklist's items 1 and 6 are the same deadline.
+
+   **This is the one item on the list a gate has since reached** (bl-8340).
+   `Cargo.toml` now declares an `include` **allowlist** — the crate's own
+   source, the icon artifacts `src/theme/icon/tests/artifacts.rs` embeds, and
+   the three files crates.io renders — so `docs/**` (DESIGN, VISION, QUALITY,
+   REMOTE, STORIES), `tests/**`, `examples/**`, `scripts/**` (its
+   fabricated-secret `leak-fixtures/` included), `rules/**`, `.github/**`,
+   `.githooks/**`, the gate configs and this file no longer ship. An allowlist
+   and not an `exclude` because the two failure modes are not symmetric: a
+   missing `include` entry costs a build, which is loud and reversible, while a
+   missing `exclude` entry costs a publication that cannot be recalled — the
+   manifest states that reasoning beside the key.
+   `tests/packaged_files.rs` reads the real `cargo package --list` and fails on
+   any path outside those classes, in both directions. **Auditing the list is
+   still yours**: the guard judges file classes, never content, and every one of
+   item 1's eleven home paths lived inside `src`.
 
 ## The merge queue — speculative closes, builds on GitHub Actions
 
