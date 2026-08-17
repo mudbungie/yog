@@ -129,7 +129,9 @@ pub fn layout_under(yog_data_root: &Path) -> Layout {
 
 /// `LERNIE_HOME` — nests lernie config **and** data onto [`Layout::lernie`].
 const LERNIE_HOME: &str = "LERNIE_HOME";
-/// `XDG_STATE_HOME` — nests balls state **and** yog's artifacts onto [`Layout::state`].
+/// `XDG_STATE_HOME` — nests balls state **and** yog's artifacts onto
+/// [`Layout::state`], and is re-pointed one layer in by [`inhabit_space`] when
+/// an agent's own §16.3 space is the balls state this process addresses.
 const XDG_STATE_HOME: &str = "XDG_STATE_HOME";
 /// `PATH` — puts [`Layout::tools`] in front of the ambient search path, so an
 /// agent's bare `bl` is the world's shim (§16.7 W9, [`tools::prepend_path`]).
@@ -194,6 +196,32 @@ pub fn overrides(ambient: &Env) -> Vec<(String, String)> {
 /// it.
 pub(crate) fn inhabit() {
     crate::cli_outbound::sys::set_env(&overrides(&Env::from_env()));
+}
+
+/// **Stand this process in a §16.3 space** (bl-c21d): re-point
+/// [`XDG_STATE_HOME`] at the space's own state home, layered on [`inhabit`]'s
+/// override set exactly as [`marks::pairs`] and [`wall::pairs`] layer onto it
+/// for a spawn — one layer in, last write wins.
+///
+/// It is [`inhabit`]'s ruling one layer down, and it exists for the identical
+/// reason. balls folds its clone bundle **and** its plugin territories
+/// (`bl-delivery`'s `work/<id>` worktrees, `bl-tracker`'s mirror) and its
+/// attempts tree off ONE fact — its state home — so a host that supplies that
+/// fact through an [`Edge`](balls::edge::Edge) alone supplies it to the linked
+/// crate and to nothing balls spawns: `bl-delivery` rebuilds its own
+/// `balls::layout::Xdg` from `$XDG_STATE_HOME` in its process env and holds no
+/// `Edge` at all. So an own space kept its store and lost its worktrees, into
+/// whatever state home the process happened to stand in.
+///
+/// **Unconditional, and that is the point:** an absent `YOG_MARKS` resolves the
+/// *world's* space, whose state home is the value [`inhabit`] just wrote — so the
+/// fold is a no-op there rather than a case, and there is no "own or not" branch
+/// to keep in step with [`marks::space`].
+pub(crate) fn inhabit_space(space: &marks::Space) {
+    crate::cli_outbound::sys::set_env(&[(
+        XDG_STATE_HOME.to_owned(),
+        space.state.to_string_lossy().into_owned(),
+    )]);
 }
 
 /// Compose the world `Env`: the ambient snapshot plus the nesting

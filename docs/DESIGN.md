@@ -8700,7 +8700,10 @@ value is a pure function of the anchor, which the world never overrides, and the
 folded already, re-derives an identical set and stacks nothing. That dissolves
 "already composed" rather than testing for it, and because the set is exactly
 the §16.2 three, the fold displaces neither an agent's space (`YOG_MARKS`, §16.3)
-nor a workspace's wall (`YOG_WALL`) — both ride one layer in. Two arms fold
+nor a workspace's wall (`YOG_WALL`) — both ride one layer in, and the `bl` arm
+folds the space in **after** this set for exactly that reason (§16.3's
+worktree ruling: balls' plugin children read `$XDG_STATE_HOME`, so a space has to
+be a place there too). Two arms fold
 nothing, by one test — *does this arm's substrate read the process env?* A
 **discovery probe** (`--help`/`-h`/`--version`/`-V`/`--skill`, §8.5's narrow
 form) does not, and asking what a verb does must not depend on a world existing;
@@ -8777,6 +8780,41 @@ clone lives in:
   its own balls config home, keyed by the §3.1 name that is already the ball
   claimant (§3.2) — one name, one wall, one claimant, one branch, so the
   claimant and the space it claims into can never disagree.
+
+**A space is a value AND a place too, and it owns its worktrees (bl-c21d).** The
+definition above is exact where it says *worktrees*: a space IS balls' state
+home, and balls folds its clone bundle, its plugin territories (`bl-delivery`'s
+`work/<id>` code worktrees, `bl-tracker`'s push mirror) and its attempts tree off
+that one fact. Supplying the fact through the `Edge` alone supplies it to the
+*linked* balls and to nothing balls **spawns** — `bl-delivery` is a real
+subprocess that rebuilds its own `balls::layout::Xdg` from `$XDG_STATE_HOME` in
+its process env and holds no `Edge` at all — so an own space kept its store and
+left its worktrees in whatever state home the process happened to stand in (the
+world's since §16.2's place ruling, the operator's ambient territory before it).
+So the `bl` arm stands the process in the **space** as well as in the world: one
+more `set_env` of `XDG_STATE_HOME`, layered on the §16.2 override set exactly as
+`YOG_MARKS` and `YOG_WALL` layer onto it for a spawn, one var deep and last write
+wins. It is **unconditional, and that dissolves the case rather than branching on
+it**: an absent `YOG_MARKS` resolves the world's own space, whose state home is
+the value the world fold just wrote, so the no-marks path re-writes one identical
+value and nothing needs to ask "own or not".
+
+**The rejected answer was the other one this defect offered** — *worktrees are
+deliberately world-wide, one code territory per project whoever claims, and this
+section drops the word.* It cannot be said in balls' terms: balls has ONE state
+home, so "clones in the space, territories in the world" is yog injecting two
+different values for one fact forever, and every further fold off that home lands
+on whichever side its reader happens to sit. balls' attempts tree
+(`balls/attempts/<invocation-path>/<handle>`, the private worktree its own
+attempt capability cuts — the one §3.8's fan consumes in process) already
+demonstrates the split it would institutionalize: balls computes it **in-process
+from the `Edge`**, so it would land in the space while the `work/<id>` worktree
+beside it landed in the
+world, two sibling territories of one `balls/` state dir straddling two roots for
+no reason anybody chose. It would also falsify this section's own severability
+clause — *delete the space and the policy is gone* — because an agent's code
+worktrees would outlive its space, and §3.6's unmaking (which takes `<wall>/marks`
+with the wall) would strand them under the world.
 
 The branch **inside** a space is `tasks_branch` in balls' own §4 layer-2 config
 (`<space>/balls/config.toml`) — the one layer that covers every clone in a

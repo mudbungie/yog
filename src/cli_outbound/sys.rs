@@ -25,8 +25,10 @@ pub(super) fn sigterm(pid: i32) {
 /// mutation in the tree, and the only way the world can reach an in-process
 /// substrate arm (§16.7): the linked `balls`/`lernie` read `getenv` themselves
 /// and spawn children that do the same, so there is no `Env` to inject — the
-/// process has to stand in the world. Its one production caller is
-/// [`crate::world::inhabit`].
+/// process has to stand in the world. Its production callers are the `world`
+/// module's two place-folds and nothing else: [`crate::world::inhabit`] (the
+/// §16.2 override set) and [`crate::world::inhabit_space`] (the §16.3 space,
+/// layered on it one var deep — bl-c21d).
 pub(crate) fn set_env(pairs: &[(String, String)]) {
     for (key, value) in pairs {
         // SAFETY: `setenv(3)` is not thread-safe — a concurrent `getenv` in

@@ -8,6 +8,14 @@
 //! clone bundle — landing, store checkout, worktrees) and balls' config home
 //! (the §4 layer-2 `config.toml` that names the store branch), together.
 //!
+//! **A space is a value AND a place** (§16.3 as amended, bl-c21d): balls folds
+//! its clone bundle, its plugin territories (every `work/<id>` worktree) and its
+//! attempts tree off the one state home a [`Space`] names, but only the *linked*
+//! balls is handed it — `bl-delivery` is a subprocess that rebuilds its own
+//! layout from `$XDG_STATE_HOME` and holds no `Edge`. So the `bl` arm stands its
+//! process in the space ([`inhabit_space`](super::inhabit_space)) as well as in
+//! the world, and the worktrees follow the store.
+//!
 //! **One var carries it: `YOG_MARKS`**, layered onto an agent's spawn exactly
 //! as [`YOG_WALL`](super::wall::YOG_WALL) is, so the whole descendant tree
 //! inherits it — that IS the subagent clause, with no mechanism of its own.

@@ -36,6 +36,12 @@ use yog::multiplex::dispatch;
 mod fixtures;
 use fixtures::{IDENT, fixture_gitconfig, found_project, git, plugin_wrapper, sole_child};
 
+/// The §16.3 space half of the same drive (bl-c21d), split at the 300-line cap:
+/// the rung above runs in the world's space (no `YOG_MARKS`), this one in an
+/// agent's own, where the worktree must follow the store.
+#[path = "multiplex_bl/marks.rs"]
+mod marks;
+
 // git vars a hook-invoked test may inherit. This binary scrubs them from its
 // OWN env rather than a child's — the balls it drives runs in-process — but the
 // list is `yog::git_env`'s, the one the spawn sites use.
@@ -231,6 +237,11 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
     assert!(!task.exists(), "closed ball's file is gone");
     let delivered = git(&proj, &["show", "main:work.txt"]);
     assert_eq!(delivered, "delivered\n");
+
+    // The same rung again in an agent's OWN space (§16.3), which owns its
+    // worktrees as well as its store — and it runs before the anchor check,
+    // which deliberately leaves `$XDG_DATA_HOME` unusable.
+    marks::an_own_space_owns_its_worktrees(tmp.path(), &proj, &balls_state);
 
     an_unusable_anchor_fails_every_verb_but_a_probe(tmp.path());
 }

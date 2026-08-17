@@ -26,6 +26,7 @@ use std::io::IsTerminal;
 use std::io::Write as _;
 use std::path::PathBuf;
 
+use crate::world::marks::Space;
 use crate::world::tools;
 
 use super::landing;
@@ -40,24 +41,16 @@ const YOG_NAME: &str = "YOG_NAME";
 /// host environment is read ONCE here, at the process boundary, into an
 /// [`Edge`] (balls' own rule — the library does no env reads), and the exit
 /// code rides back to [`super::dispatch`]. The env that is read live is the
-/// **world's**, because the arm stands the process in it first
-/// ([`crate::world::inhabit`], bl-81c9) — so a bare `yog bl` at an ambient
-/// shell reaches exactly the clones/worktrees yog's board reads, and a spawned
+/// **world's, and then the space's** — [`stand`] puts the process where the
+/// `Edge` names before balls reads a byte (bl-81c9, bl-c21d) — so a bare `yog
+/// bl` at an ambient shell reaches exactly the clones and worktrees yog's board
+/// reads, an own space's `claim` cuts its worktree in that space, and a spawned
 /// one re-folds the identical set. The world's tool shims are converged on the
 /// way in (one read, no write, in the steady state) so a `prime` — however
 /// reached — binds real sibling paths.
 pub(super) fn run(args: &[String]) -> i32 {
     let probe = super::help::is_discovery(args);
-    if !probe {
-        // The process STANDS in the world before balls reads anything
-        // (bl-81c9). The `Edge` below would nest balls' own two homes on its
-        // own, but balls' plugin chain spawns `bl-delivery`/`bl-tracker` and
-        // `git` as children that resolve `$XDG_STATE_HOME` through their own
-        // env — so a bare `yog bl claim` cut its worktree in the operator's
-        // ambient territory while sealing the ball in yog's world. One fold at
-        // the edge is the whole descendant tree; re-entry is a no-op.
-        crate::world::inhabit();
-    }
+    let space = stand(probe);
     let bl_exe = match targets(probe) {
         Ok(p) => p,
         Err(e) => {
@@ -65,12 +58,43 @@ pub(super) fn run(args: &[String]) -> i32 {
             return 1;
         }
     };
-    let edge = edge(bl_exe);
+    let edge = edge(bl_exe, &space);
     if !probe {
         let world = crate::world::layout(&crate::xdg::Env::from_env()).root;
         landing::report(landing::converge(&edge, &world));
     }
     balls::run(&edge, args)
+}
+
+/// **Stand this process where the [`Edge`] will name**, and answer the §16.3
+/// space it stood in — the arm's whole "which balls state is this?" act, in one
+/// place, so the space the `Edge` carries and the state home balls' plugin
+/// children read can never be two answers (bl-c21d).
+///
+/// Two folds, one layer apart, each closing the same hole from its own side: the
+/// world ([`crate::world::inhabit`], bl-81c9) because balls' plugin chain spawns
+/// `bl-delivery`/`bl-tracker`/`git` as children that resolve `$XDG_STATE_HOME`
+/// out of their own env — so a bare `yog bl claim` used to cut its worktree in
+/// the operator's ambient territory while sealing the ball in yog's world — and
+/// then the space ([`crate::world::inhabit_space`]), because those same children
+/// hold no `Edge` either, so an own space kept its store and left its worktrees
+/// in the world's plugin territory.
+///
+/// **A discovery probe folds nothing** (bl-52ed, the reason `probe` is threaded
+/// rather than re-asked): `yog bl --help` reads balls' interface, and asking what
+/// a verb does must not depend on a world existing. The space is still resolved —
+/// [`edge`] needs one — but from the ambient env, and balls answers from argv
+/// before it resolves anything that space names.
+fn stand(probe: bool) -> Space {
+    if probe {
+        return crate::world::marks::space(&crate::xdg::Env::from_env());
+    }
+    crate::world::inhabit();
+    // Read AFTER the world fold: an absent `YOG_MARKS` resolves the world's own
+    // space, which is the world's state home — the value just written.
+    let space = crate::world::marks::space(&crate::xdg::Env::from_env());
+    crate::world::inhabit_space(&space);
+    space
 }
 
 /// Converge the world's tool shims and return the world's `bl` — the path
@@ -114,9 +138,11 @@ pub(super) fn default_actor(yog_name: Option<String>, user: Option<String>) -> O
 /// ([`marks::space`](crate::world::marks::space)) rather than from
 /// `$XDG_CONFIG_HOME`/`$XDG_STATE_HOME`**.
 ///
-/// The env those three read is the world's, [`run`] having folded it in
+/// The env those three read is the world's, [`stand`] having folded it in
 /// already (bl-81c9) — so `space`'s absent-`YOG_MARKS` arm resolves the
-/// *world's* space and not the ambient one it used to.
+/// *world's* space and not the ambient one it used to. The `space` is taken
+/// rather than re-resolved for the same reason: it is the one [`stand`] stood
+/// this process in, and a second reading could answer differently (bl-c21d).
 ///
 /// That third fold is what makes a per-agent branch possible at all, and it is
 /// balls' own seam: balls' library does no env reads (its bl-bfa8 rule), so the
@@ -126,8 +152,7 @@ pub(super) fn default_actor(yog_name: Option<String>, user: Option<String>) -> O
 /// changes — except that balls' *config* home stops being the operator's
 /// ambient `~/.config/balls` and nests with the rest of the world (§16.3's
 /// module doc for what that leak cost).
-fn edge(bl_exe: PathBuf) -> Edge {
-    let space = crate::world::marks::space(&crate::xdg::Env::from_env());
+fn edge(bl_exe: PathBuf, space: &Space) -> Edge {
     Edge::resolve(
         env::var_os("HOME").map(PathBuf::from).unwrap_or_default(),
         Some(space.config.to_string_lossy().into_owned()),
