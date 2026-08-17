@@ -3,6 +3,14 @@
 //! own file at §12's 300-line cap (bl-dc0c, widened to both nouns by bl-f5f6);
 //! each was always a query on the enum rather than a part of it.
 //!
+//! **The third noun is the conversation, and it lives in [`agent`]** (bl-49bc):
+//! the same shape — one table over each enum, resolved once ahead of the match —
+//! but the rule differs because the noun does, so it is its own file rather
+//! than a third table here. A workspace and a project are addressed over an
+//! *enumerated set of paths*; a conversation is addressed by **an agent id, or
+//! the unique stored name a living agent wears**, which is the vocabulary the
+//! `Started` receipt speaks and the one lernie already resolves by.
+//!
 //! Both answer **names**, because that is what the boundary now carries: a
 //! path is meaningless across machines and a disclosure besides (REMOTE §8).
 //! One table per noun means the resolution stands **once, ahead of the
@@ -12,6 +20,11 @@
 //! wherever it is asked.
 
 use super::{Action, Gesture, Query};
+
+/// The conversation noun's own table and resolution (bl-49bc) — see the module
+/// doc above for why it is a file rather than a third table here.
+mod agent;
+pub(super) use agent::resolve_agent;
 
 impl Gesture {
     /// The workspace this gesture names, whichever half it is — the two tables

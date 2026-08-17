@@ -13,6 +13,12 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tempfile::{TempDir, tempdir};
 
+/// The conversation every beat here addresses. **Id-shaped** (ARCH §2.3's
+/// compact stamp) because the §8.5 chokepoint resolves the conversation a
+/// gesture names (bl-49bc), and an id reads as one on its own rather than
+/// through an enumeration.
+pub(super) const AGENT: &str = "20260101T000000Z-a1";
+
 /// A world with a bare workspace repo the mark can be written into, and a
 /// state root the row lands in.
 struct World {
@@ -123,13 +129,13 @@ impl World {
 fn an_answer_writes_the_row_the_control_folds_and_launches_the_release() {
     let world = World::new();
     world.repo();
-    world.park("a-1", "toolu_42");
+    world.park(AGENT, "toolu_42");
     let guard = crate::test_support::spawn_guard();
     let reply = answer_hold(
         &world.deps(),
         "1000",
         &world.workspace(),
-        "a-1",
+        AGENT,
         Ruling::Pass,
     )
     .expect("something is parked");
@@ -153,7 +159,7 @@ fn an_answer_writes_the_row_the_control_folds_and_launches_the_release() {
     assert_eq!(
         Answers::fold(&rows).ruling(
             "toolu_42",
-            "a-1",
+            AGENT,
             crate::control::classify::Effect::Destructive,
             &crate::control::policy::Policy::default(),
         ),
@@ -172,7 +178,7 @@ fn an_answer_writes_the_row_the_control_folds_and_launches_the_release() {
 fn the_answer_is_reachable_from_the_chokepoint_every_seat_enters() {
     let world = World::new();
     world.repo();
-    world.park("a-1", "toolu_1");
+    world.park(AGENT, "toolu_1");
     let mut ui = crate::ui_state::UiState::open(PathBuf::from("/nonexistent/ui.json"));
     let through = crate::boundary::dispatch::dispatch(
         &world.deps(),
@@ -180,7 +186,7 @@ fn the_answer_is_reachable_from_the_chokepoint_every_seat_enters() {
         "1000",
         &crate::boundary::Action::AnswerHold {
             workspace: crate::naming::leaf(&(world.workspace())),
-            agent: "a-1".to_owned(),
+            agent: AGENT.to_owned(),
             ruling: Ruling::Hold,
         },
     );
@@ -191,12 +197,12 @@ fn the_answer_is_reachable_from_the_chokepoint_every_seat_enters() {
 fn keeping_it_parked_writes_the_row_and_launches_nothing() {
     let world = World::new();
     world.repo();
-    world.park("a-1", "toolu_7");
+    world.park(AGENT, "toolu_7");
     let reply = answer_hold(
         &world.deps(),
         "1000",
         &world.workspace(),
-        "a-1",
+        AGENT,
         Ruling::Hold,
     )
     .expect("something is parked");
@@ -216,13 +222,13 @@ fn keeping_it_parked_writes_the_row_and_launches_nothing() {
 fn a_refusal_releases_too_because_a_decline_is_in_band() {
     let world = World::new();
     world.repo();
-    world.park("a-1", "toolu_8");
+    world.park(AGENT, "toolu_8");
     let guard = crate::test_support::spawn_guard();
     let reply = answer_hold(
         &world.deps(),
         "1000",
         &world.workspace(),
-        "a-1",
+        AGENT,
         Ruling::Refuse,
     )
     .expect("something is parked");
@@ -234,11 +240,11 @@ fn a_refusal_releases_too_because_a_decline_is_in_band() {
 fn a_failed_launch_is_still_an_answer_and_still_a_row() {
     let world = World::new();
     world.repo();
-    world.park("a-1", "toolu_9");
+    world.park(AGENT, "toolu_9");
     let mut deps = world.deps();
     deps.lernie = Cli::new("/no/such/lernie");
     let guard = crate::test_support::spawn_guard();
-    let reply = answer_hold(&deps, "1000", &world.workspace(), "a-1", Ruling::Pass)
+    let reply = answer_hold(&deps, "1000", &world.workspace(), AGENT, Ruling::Pass)
         .expect("the answer is durable whatever the launch does");
     drop(guard);
     assert!(matches!(
@@ -263,7 +269,7 @@ fn answering_where_nothing_is_parked_refuses_and_writes_nothing() {
         &world.deps(),
         "1000",
         &world.workspace(),
-        "a-1",
+        AGENT,
         Ruling::Pass,
     )
     .expect_err("an answer aimed at nothing says so");

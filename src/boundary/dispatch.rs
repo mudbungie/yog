@@ -62,40 +62,38 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Some(name) => deps.snapshot.project_path(&name)?,
         None => std::path::PathBuf::new(),
     };
+    // …and the third noun, on the same terms (bl-49bc): the conversation table
+    // ([`super::address`]) says which agent this gesture names and the resolver
+    // turns it into the **id** every executor keys on — an id untouched, a
+    // stored name resolved, anything else refused before an arm runs. Its own
+    // doc holds the ruling; a gesture naming no conversation resolves to
+    // nothing and no arm reads it.
+    let agent: &str = &super::address::resolve_agent(&deps.snapshot, ws, action.agent())?;
     match action {
         // The §8.2 lernie arms spawn through [`Deps::bound`] and never through
         // `deps.lernie` itself (bl-bf79): a workspace verb's spawn owes its
         // workspace the wall and the name, stated at that one binding rather
         // than once per arm here — `Retarget` is the §9.4 exit (bl-2d19).
-        Action::Message { agent, content, .. } => {
+        Action::Message { content, .. } => {
             outcome(verbs::message(&deps.bound(ws), root, ts, agent, content))
         }
-        Action::Stop {
-            agent, children, ..
-        } => outcome(verbs::stop(&deps.bound(ws), root, ts, agent, *children)),
+        Action::Stop { children, .. } => {
+            outcome(verbs::stop(&deps.bound(ws), root, ts, agent, *children))
+        }
         // Send-and-interrupt (bl-a33d): the one arm that composes two acts, so
         // it has a body of its own ([`interrupt`]) and leaves the two rows those
         // acts each leave. The deposit's driver-start is the trigger — lernie's
         // standing law (ARCH §2.9), not a verb yog adds.
-        Action::Interrupt { agent, content, .. } => {
-            interrupt::interrupt(deps, ts, ws, agent, content)
-        }
+        Action::Interrupt { content, .. } => interrupt::interrupt(deps, ts, ws, agent, content),
         Action::Scan { .. } => outcome(verbs::scan(&deps.bound(ws), root, ts)),
         // The §8.2 nudge (bl-9bef): a detached `lernie advance`, which is the
         // §8.6 release's own launch — one body in [`control`], because "start a
         // driver on this conversation" is one act however it was asked for.
         // Detached and never piped: an advance runs the conversation until it
         // goes quiet, and no gesture may block a frame on that.
-        Action::Nudge { agent, .. } => {
-            control::advance(deps, ts, ws, agent).map(|()| Reply::Nudged)
-        }
-        Action::Retarget { agent, .. } => outcome(retarget(deps, ts, ws, agent)),
-        Action::Fork {
-            parent,
-            attempt,
-            goal,
-            ..
-        } => fork(deps, ts, ws, parent, attempt, goal),
+        Action::Nudge { .. } => control::advance(deps, ts, ws, agent).map(|()| Reply::Nudged),
+        Action::Retarget { .. } => outcome(retarget(deps, ts, ws, agent)),
+        Action::Fork { attempt, goal, .. } => fork(deps, ts, ws, agent, attempt, goal),
         Action::Close { id, name, .. } => spend(verbs::close, deps, ts, project, id, name),
         Action::Assign { id, name, .. } => spend(verbs::assign, deps, ts, project, id, name),
         Action::Release { id, name, .. } => spend(verbs::unclaim, deps, ts, project, id, name),
@@ -137,24 +135,22 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // the fleet's families are.
         Action::Fan(verb) => fan::dispatch(deps, ts, verb),
         Action::DeleteWorkspace { typed, .. } => unmake(deps, ui, ts, ws, typed),
-        Action::DeleteAgent { agent, typed, .. } => delete_agent(deps, ui, ts, ws, agent, typed),
-        Action::Monitor(verb) => monitor::dispatch(deps, ts, ws, verb),
+        Action::DeleteAgent { typed, .. } => delete_agent(deps, ui, ts, ws, agent, typed),
+        Action::Monitor(verb) => monitor::dispatch(deps, ts, ws, agent, verb),
         // The §4.3 armed loop's family (bl-66fb): arming, which writes one
         // `cadence.yaml` entry. The loop itself is a thread, already running
         // and already finding nothing to do.
         Action::Fleet(verb) => fleet::dispatch(deps, ts, ws, verb),
         // The §8.6 capability family's one writer: the once-answer row, then
         // the releasing `advance`.
-        Action::AnswerHold { agent, ruling, .. } => {
-            control::answer_hold(deps, ts, ws, agent, *ruling)
-        }
+        Action::AnswerHold { ruling, .. } => control::answer_hold(deps, ts, ws, agent, *ruling),
         // The same family's other writer (VISION §4.9's fifth rung): standing
         // policy for a whole descent, one row, nothing launched.
-        Action::Floor { agent, raised, .. } => control::set_floor(deps, ts, ws, agent, *raised),
+        Action::Floor { raised, .. } => control::set_floor(deps, ts, ws, agent, *raised),
         // The trail's own two operator verbs (§4.2, bl-c417): the same one
         // bodies the frame's ops pane calls ([`crate::opslog::ack`]/[`clear`]).
         Action::Ack => wrote(crate::opslog::ack(root, ts), Reply::Acked),
-        Action::MarkSeen { agent, .. } => acknowledge(deps, ui, ts, ws, agent),
+        Action::MarkSeen { .. } => acknowledge(deps, ui, ts, ws, agent),
         Action::ClearTrail => wrote(crate::opslog::clear(root, ts), Reply::TrailCleared),
         // The §9 config family (bl-3f46) — one executor module, because each of
         // the three is a composition of pipelines that already exist.

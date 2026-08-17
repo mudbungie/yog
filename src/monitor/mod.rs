@@ -79,6 +79,18 @@ impl Verb {
             | Verb::Flag { workspace, .. } => workspace.clone(),
         }
     }
+
+    /// The **conversation** this verb names (REMOTE §8 as amended, bl-49bc) —
+    /// only the flag does, arming and disarming being facts about a workspace.
+    /// The boundary's own conversation table
+    /// ([`Action::agent`](crate::boundary::Action)) answers through here for
+    /// [`workspace`](Self::workspace)'s reason exactly.
+    pub fn agent(&self) -> Option<String> {
+        match self {
+            Verb::Flag { agent, .. } => Some(agent.clone()),
+            Verb::Arm { .. } | Verb::Disarm { .. } => None,
+        }
+    }
 }
 
 pub use arming::Watch;

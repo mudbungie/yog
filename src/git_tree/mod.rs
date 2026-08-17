@@ -29,6 +29,9 @@
 //! fact, bl-cad5), and its branch commits with their subjects (delivery /
 //! work-product-transfer commits surface by subject).
 
+/// The live conversation-name enumeration the boundary addresses over (REMOTE
+/// §8 as amended, bl-49bc) — two facts per agent, asked of disk per gesture.
+mod addressing;
 mod cmd;
 mod descent;
 mod detect;
@@ -58,6 +61,10 @@ mod streaming;
 mod terminal;
 mod tools;
 
+// The boundary's own doorway into this module (bl-49bc): which conversation a
+// name addresses, read live rather than off the derivation — the same doorway
+// discipline every other consumer here gets.
+pub(crate) use addressing::living_agents;
 pub use descent::{DescentRow, children_of, descent_order};
 // The view-model types themselves (§7.1), re-exported so `git_tree::Agent` and
 // friends stay the one spelling every consumer already uses.

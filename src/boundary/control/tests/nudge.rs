@@ -24,7 +24,7 @@ fn a_nudge_launches_the_driver_and_writes_only_that_row() {
         "1000",
         &crate::boundary::Action::Nudge {
             workspace: crate::naming::leaf(&(world.workspace())),
-            agent: "a-1".to_owned(),
+            agent: AGENT.to_owned(),
         },
     );
     drop(guard);
@@ -33,7 +33,7 @@ fn a_nudge_launches_the_driver_and_writes_only_that_row() {
     assert_eq!(rows.len(), 1, "the launch is the whole trail");
     let advance = rows.first().expect("the advance row");
     assert_eq!(advance.argv.get(1).map(String::as_str), Some("advance"));
-    assert_eq!(advance.argv.get(3).map(String::as_str), Some("a-1"));
+    assert_eq!(advance.argv.get(3).map(String::as_str), Some(AGENT));
     assert_eq!(advance.exit, DETACHED_EXIT);
 }
 
@@ -47,7 +47,7 @@ fn a_nudge_whose_fork_never_landed_refuses_and_leaves_the_row() {
         lernie: Cli::new("/no/such/lernie"),
         ..world.deps()
     };
-    let refused = advance(&deps, "1000", &world.workspace(), "a-1");
+    let refused = advance(&deps, "1000", &world.workspace(), AGENT);
     assert!(refused.is_err(), "{refused:?}");
     let rows = tail(&world.state(), usize::MAX);
     assert_eq!(rows.len(), 1);

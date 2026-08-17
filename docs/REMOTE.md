@@ -820,8 +820,10 @@ the types themselves — `Action`, `Query`, the nested payloads they carry
 (`monitor::Verb`, `fleet::Verb`, `fan::Obligation`, `config::ConfigFile`,
 `start::Payload`, `start::Prepared`), the line's `Context`, and the two `Reply`
 fields that identify rather than locate. The engine resolves a name to a path at
-the dispatch chokepoint. Four rulings came out of it and belong here rather than
-in a ball body.
+the dispatch chokepoint. The rulings below belong here rather than in a ball
+body, and they have accumulated rather than arrived at once: bl-f5f6's four, the
+live-enumeration barrier bl-6c9e added, and the conversation noun bl-49bc added
+— so they are listed rather than counted.
 
 - **The name of a workspace is its directory leaf; the name of a project is
   derived.** The rule differs because the nouns do (`src/naming`). §3.1 already
@@ -839,6 +841,30 @@ in a ball body.
   that is already unique. The §11 roster label is that same name, elided, so
   what the operator reads off the left panel is the word they may type at
   `--project`.
+- **The third noun is the CONVERSATION, and the rule differs again** *(bl-49bc)*.
+  A workspace and a project are resolved over an enumerated set of *paths*; a
+  conversation's identity is a **pair** — lernie's id (its branch name, and the
+  only half that addresses a path) beside the §3.3 name it wears — so it is
+  addressed by **an agent id, or the unique stored name a living agent wears**.
+  That is not a vocabulary yog invented: it is lernie's own
+  (`workspace::agent_name::resolve`, "an exact id match first, else the unique
+  living agent wearing that name"), and the two spaces are disjoint by
+  construction, every id opening with the compact `YYYYMMDDTHHMMSSZ` stamp and a
+  name that reads like one being refused at creation — so the resolution never
+  guesses which reading was meant. It had to become a contract because a
+  `/prompt` receipt answers with the **minted name** (the root has no id until
+  its detached driver writes `agents/<id>`) while the terminal's usage said
+  `--agent ID`: the handle composed with `message`, lernie's one name-resolving
+  verb, and with nothing else — empty inspector reads, refusals from `stop` and
+  `retarget`, and, worse, *successes* from `floor`, `flag` and `seen`, which
+  write yog's own id-keyed rows and so left policy that governed nothing. One
+  vocabulary rather than a translation table: the receipt keeps publishing the
+  name and every agent-addressed `Action` and `Query` accepts it. `Action::agent`
+  / `Query::agent` (`src/boundary/address/agent.rs`) are the tables; the ladder is
+  id-shape → the published derivation (the same set every read answers from) →
+  disk, that last rung being the bullet below's barrier one noun down. Unknown
+  and ambiguous refuse, and so does the ladder's legacy display-only rung, which
+  is a title no ref answers to and never was an address.
 - **The resolution is one function, at the chokepoint, ahead of the table.**
   `Action::workspace()` / `Action::project()` / `Query::workspace()`
   (`src/boundary/address.rs`) are tables *on* the enums; `dispatch` and `answer`

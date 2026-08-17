@@ -22,7 +22,10 @@ use crate::boundary::{Query, tests::snapshot};
 use crate::cli_outbound::Cli;
 use crate::ui_state::UiState;
 
-const AGENT: &str = "c-1";
+/// Id-shaped (ARCH §2.3), because the §8.5 chokepoint resolves the conversation
+/// a gesture names now (bl-49bc) and this workspace has no `agents/*` ref for a
+/// derivation to hold — the on-disk records are written directly.
+const AGENT: &str = "20260101T000000Z-c1";
 
 /// A `Deps` wrapping `snap` — the inspector family reads the world's bytes and
 /// the snapshot, never a substrate binary.

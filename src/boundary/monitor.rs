@@ -29,16 +29,22 @@ const DISARM_STEP: &str = "disarm-monitor";
 
 /// The family's one door (§8.5): the chokepoint hands the whole [`Verb`] here
 /// and this decides nothing but which of the two bodies below runs it.
+///
+/// `workspace` and `agent` both arrive **already resolved** by the chokepoint's
+/// two addressings (REMOTE §8; bl-49bc for the conversation), which is why the
+/// verb's own name fields are not read here: the flag lands on the agent id the
+/// resolution produced, never on the display name a peer may have spelled.
 pub(super) fn dispatch(
     deps: &Deps,
     ts: &str,
     workspace: &Path,
+    agent: &str,
     verb: &Verb,
 ) -> Result<Reply, String> {
     match verb {
         Verb::Arm { model, .. } => arm(deps, ts, workspace, Some(model)),
         Verb::Disarm { .. } => arm(deps, ts, workspace, None),
-        Verb::Flag { agent, reason, .. } => flag(deps, ts, workspace, agent, reason),
+        Verb::Flag { reason, .. } => flag(deps, ts, workspace, agent, reason),
     }
 }
 

@@ -66,6 +66,12 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         Some(name) => snap.ws_path(&name)?,
         None => std::path::PathBuf::new(),
     };
+    // **And the conversation's** (bl-49bc), on the same terms one noun down:
+    // the §11 inspector family and the seat's own read are aimed at an agent
+    // **id**, and a `Started` receipt hands back a *name* — so the resolution
+    // stands here too, once, ahead of the table. A read naming no conversation
+    // resolves to nothing and no arm reads it.
+    let agent: &str = &super::address::resolve_agent(snap, ws, query.agent())?;
     Ok(match query {
         Query::Workspaces => Reply::Workspaces(workspaces(snap, ui, now_unix)),
         Query::Conversations { .. } => Reply::Conversations(conversations(snap, ui, ws, now_unix)),
@@ -130,35 +136,31 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // so no seat but the window could read a chat. World-bytes queries
         // like the two above, answered straight through for the same reason,
         // over the derivations in [`inspector`] the frame delegates to.
-        Query::Transcript { agent, .. } => {
-            Reply::Transcript(inspector::transcript(snap, ws, agent))
-        }
-        Query::Steps { agent, .. } => Reply::Steps(inspector::steps(snap, ws, agent)),
-        Query::Step { agent, seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
-        Query::Files {
-            agent, path, at, ..
-        } => {
+        Query::Transcript { .. } => Reply::Transcript(inspector::transcript(snap, ws, agent)),
+        Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent)),
+        Query::Step { seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
+        Query::Files { path, at, .. } => {
             let (view, preview) = inspector::files(ws, agent, path.as_deref(), at.as_deref());
             Reply::Files { view, preview }
         }
-        Query::Rail { agent, .. } => {
+        Query::Rail { .. } => {
             let steps = inspector::steps(snap, ws, agent);
             let tx = inspector::transcript(snap, ws, agent);
             Reply::Rail(inspector::rail(snap, ws, agent, &steps, &tx))
         }
-        Query::Inbox { agent, .. } => Reply::Inbox(crate::inboxview::list_inbox(ws, agent)),
+        Query::Inbox { .. } => Reply::Inbox(crate::inboxview::list_inbox(ws, agent)),
         // Config-frozen-at (VISION V1.2, bl-13f9): the §5.1 #17 derivation
         // asked at whichever commit the seat named, the agent's tip when it
         // named none. It **refuses** where its siblings answer absent, because
         // its walk is the workspace's own git and a conversation with no
         // policy at all is not a reading (the `Lineages` shape).
-        Query::Governing { agent, at, .. } => {
+        Query::Governing { at, .. } => {
             return inspector::governing(snap, ws, agent, at.as_deref()).map(Reply::Governing);
         }
         // The seat's own read of its selection (REMOTE §9.4, bl-1eb0) — pure
         // over the snapshot, unlike the five above, because everything it says
         // was already derived when the tree was.
-        Query::Agent { agent: id, .. } => Reply::Agent(agent::agent(snap, ui, ws, id, now_unix)),
+        Query::Agent { .. } => Reply::Agent(agent::agent(snap, ui, ws, agent, now_unix)),
         Query::Ops { max } => {
             let skip = snap.ops.len().saturating_sub(*max);
             Reply::Ops(snap.ops.iter().skip(skip).cloned().collect())

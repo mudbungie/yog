@@ -152,7 +152,8 @@ pub const ACTIONS: &[HelpRow] = &[
                  composer to hold it — a terminal, where each `yog gesture` is its own process — \
                  hand the `/prepare` reply's own `prepared` object back with `yog gesture \
                  --prepared '<that object>' '/prompt <goal…>'`. The conversation keeps running \
-                 whatever yog does.",
+                 whatever yog does. The receipt's `conversation` is the minted name, and a name \
+                 is an address: hand it back at `--agent` to any conversation verb or read.",
     },
     HelpRow {
         verb: "fan",

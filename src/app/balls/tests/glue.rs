@@ -17,6 +17,11 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tempfile::tempdir;
 
+/// The conversation the retarget and the fork address. **Id-shaped** (ARCH
+/// §2.3's compact stamp): the §8.5 chokepoint resolves the conversation a
+/// gesture names (bl-49bc), and an id reads as one on its own.
+const AGENT: &str = "20260101T000000Z-c1";
+
 /// An everything-succeeds fake `lernie`.
 fn fake_lernie(dir: &Path) -> Cli {
     let path = dir.join("lernie");
@@ -69,7 +74,7 @@ fn the_retarget_exit_spawns_the_bound_lernie_verb() {
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Retarget {
         workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
-        agent: "c-1".into(),
+        agent: AGENT.into(),
     };
     let Reply::Outcome(outcome) = engine::act(&m, &deps, "TR", &action).unwrap() else {
         panic!("a verb answers an outcome");
@@ -82,7 +87,7 @@ fn the_retarget_exit_spawns_the_bound_lernie_verb() {
         [
             "retarget".to_owned(),
             w.ws_cobalt.display().to_string(),
-            "c-1".to_owned()
+            AGENT.to_owned()
         ]
     );
     assert_eq!(last.cwd, w.ws_cobalt.display().to_string());
@@ -201,7 +206,7 @@ fn an_attempt_dispatches_the_ordinary_fork_and_logs_its_whole_argv() {
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Fork {
         workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
-        parent: "c-1".into(),
+        parent: AGENT.into(),
         attempt: crate::fork::Attempt {
             from: "aaaa1111".into(),
             role: "worker".into(),
@@ -219,7 +224,7 @@ fn an_attempt_dispatches_the_ordinary_fork_and_logs_its_whole_argv() {
         .unwrap_or_default();
     assert!(argv.contains(&"dispatch".to_owned()), "{argv:?}");
     assert!(argv.contains(&"worker".to_owned()), "{argv:?}");
-    assert!(argv.contains(&"c-1".to_owned()), "{argv:?}");
+    assert!(argv.contains(&AGENT.to_owned()), "{argv:?}");
     assert!(argv.contains(&"--from".to_owned()), "{argv:?}");
     assert!(argv.contains(&"aaaa1111".to_owned()), "{argv:?}");
     assert!(

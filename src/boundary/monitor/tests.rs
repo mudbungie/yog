@@ -30,6 +30,10 @@ fn deps(state_root: &std::path::Path) -> Deps {
     }
 }
 
+/// An id-shaped agent needle (ARCH §2.3's compact stamp), which the §8.5
+/// conversation resolution passes through with no enumeration (bl-49bc).
+const AGENT: &str = "20260101T000000Z-c1";
+
 fn settings(state_root: &std::path::Path) -> String {
     std::fs::read_to_string(state_root.join(crate::app::cadence::CADENCE_YAML)).unwrap_or_default()
 }
@@ -44,6 +48,7 @@ fn arming_writes_the_entry_seeds_the_policy_and_logs_itself() {
         &deps,
         "1",
         ws,
+        "",
         &Verb::Arm {
             workspace: crate::naming::leaf(ws),
             model: "haiku".to_owned(),
@@ -93,6 +98,7 @@ fn disarming_removes_the_entry_and_leaves_the_clock_alone() {
         &deps,
         "2",
         ws,
+        "",
         &Verb::Disarm {
             workspace: crate::naming::leaf(ws),
         },
@@ -136,9 +142,10 @@ fn flagging_writes_one_row_and_does_nothing_else() {
         &deps,
         "1",
         ws,
+        AGENT,
         &Verb::Flag {
             workspace: crate::naming::leaf(ws),
-            agent: "c-1".to_owned(),
+            agent: AGENT.to_owned(),
             reason: "this looks wrong".to_owned(),
         },
     );
@@ -153,7 +160,9 @@ fn flagging_writes_one_row_and_does_nothing_else() {
         "2",
         &crate::boundary::Action::Monitor(Verb::Flag {
             workspace: crate::naming::leaf(ws),
-            agent: "c-1".to_owned(),
+            // Id-shaped, because the chokepoint resolves the conversation now
+            // (bl-49bc): a needle that reads as an id passes through untouched.
+            agent: AGENT.to_owned(),
             reason: "again".to_owned(),
         }),
     );

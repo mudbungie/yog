@@ -54,7 +54,7 @@ fn an_attempt_is_gated_and_a_permitted_fire_is_wrapped() {
     deps.world = crate::xdg::Env::from_pairs([("XDG_DATA_HOME", data.to_string_lossy())]);
     let attempt = crate::boundary::Action::Fork {
         workspace: crate::naming::leaf(&(world.workspace())),
-        parent: "a-1".to_owned(),
+        parent: AGENT.to_owned(),
         attempt: crate::fork::Attempt {
             from: "config/default".to_owned(),
             role: "worker".to_owned(),

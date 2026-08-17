@@ -122,7 +122,7 @@ fn read(verb: &str, args: &[String]) -> Result<Invocation, String> {
 /// this is a function rather than a second const.
 fn usage(verb: &str) -> String {
     format!(
-        "usage: yog {verb} [--ws NAME] [--agent ID] [--project NAME] [--as NAME] \
+        "usage: yog {verb} [--ws NAME] [--agent ID|NAME] [--project NAME] [--as NAME] \
          [--prepared JSON] '<json>' | '/line'\n       yog {verb} --help [command] — every \
          gesture, or one command's page"
     )
