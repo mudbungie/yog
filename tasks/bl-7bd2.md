@@ -1,7 +1,8 @@
 +++
 title = "the transcript is a readdir of a directory compaction DELETES from, so a squashed opening question just vanishes — derive the gap and paint what replaced it"
 created = 1786936867
-updated = 1786936867
+updated = 1786936877
+claimant = "Gapwright7bd2"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
