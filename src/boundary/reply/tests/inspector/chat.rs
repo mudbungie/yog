@@ -75,6 +75,15 @@ fn every_transcript_entry_class_says_which_it_is() {
                     text: "half".to_owned(),
                 },
             ),
+            entry(
+                "«006–008»",
+                "cut",
+                EntryKind::Compacted {
+                    first: 6,
+                    last: 8,
+                    summary: "cut".to_owned(),
+                },
+            ),
             entry("notes.txt", "\u{fffd}", EntryKind::Raw),
         ],
     }));
@@ -100,7 +109,13 @@ fn every_transcript_entry_class_says_which_it_is() {
     assert_eq!(at(3)["is_error"], true);
     assert_eq!(at(4)["kind"], "streaming");
     assert_eq!(at(4)["text"], "half");
-    assert_eq!(at(5)["kind"], "raw");
+    // The counter values cross; the sentence a seat paints from them does not
+    // (bl-7bd2 — a headless seat runs the same row projection over these).
+    assert_eq!(at(5)["kind"], "compacted");
+    assert_eq!(at(5)["first"], 6);
+    assert_eq!(at(5)["last"], 8);
+    assert_eq!(at(5)["summary"], "cut");
+    assert_eq!(at(6)["kind"], "raw");
 }
 
 /// A deposit says what it stated and nothing more: a forgiving parse of a

@@ -80,6 +80,19 @@ fn kind_fields(kind: &EntryKind, map: &mut Map<String, Value>) {
             map.insert("text".to_owned(), json!(text));
             "streaming"
         }
+        // The counter values cross, not the sentence built from them: the
+        // prefix a seat paints is the row projection's, and a headless seat
+        // runs that same projection over this decoded entry.
+        EntryKind::Compacted {
+            first,
+            last,
+            summary,
+        } => {
+            map.insert("first".to_owned(), json!(first));
+            map.insert("last".to_owned(), json!(last));
+            map.insert("summary".to_owned(), json!(summary));
+            "compacted"
+        }
         EntryKind::Raw => "raw",
     };
     map.insert("kind".to_owned(), json!(word));

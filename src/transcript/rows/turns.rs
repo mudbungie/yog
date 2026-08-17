@@ -45,7 +45,7 @@ const TERM_SEP: &str = " · ";
 /// came from ([`step_of`]) — nothing new is stored on the row.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Step {
-    /// A delivered message: a turn boundary.
+    /// A delivered message, or a compaction marker: a turn boundary.
     Boundary,
     /// Model-authored output with no term of its own — an intermediate text
     /// block, or the one row an entry that committed no blocks gets. It still
@@ -63,7 +63,12 @@ pub(super) enum Step {
 /// one-row-per-block correspondence [`super::project`] emits.
 pub(super) fn step_of(kind: &EntryKind, block: usize) -> Step {
     match kind {
-        EntryKind::Delivered { .. } => Step::Boundary,
+        // A compaction marker is a **boundary** for the same reason a
+        // delivered message is: it is not something the agent did between two
+        // things it said. It says the record was rewritten here, and a turn
+        // that swallowed it into its aggregate would hide the one row saying
+        // so behind a fold — which is the very silence bl-7bd2 closed.
+        EntryKind::Delivered { .. } | EntryKind::Compacted { .. } => Step::Boundary,
         EntryKind::Model { blocks, .. } => match blocks.get(block) {
             Some(Block::Thinking(_)) => Step::Thinking,
             Some(Block::ToolUse { .. }) => Step::ToolCall,

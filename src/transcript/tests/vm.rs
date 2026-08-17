@@ -4,7 +4,9 @@ use super::{AGENT, write_msg};
 use crate::transcript::{Block, EntryKind, build};
 use tempfile::tempdir;
 
-/// Build a one-file transcript and return that entry's classified kind.
+/// Build a one-file transcript and return that entry's classified kind. Every
+/// name here opens the counter at `001`, so the listing holds nothing but the
+/// file — a higher one also reveals a compaction mark ([`super::compaction`]).
 fn kind_of(name: &str, bytes: &[u8]) -> EntryKind {
     let dir = tempdir().unwrap();
     write_msg(dir.path(), name, bytes);
@@ -50,7 +52,7 @@ fn delivered_result_message_with_no_content_has_an_empty_body() {
     // asserted, the child never spoke.
     assert_eq!(
         kind_of(
-            "004-kid.md",
+            "001-kid.md",
             b"---\nfrom: kid\ndeposited_at: t\nepitaph: died\nterminal_ref: sha\n---\n"
         ),
         EntryKind::Delivered {
@@ -63,7 +65,7 @@ fn delivered_result_message_with_no_content_has_an_empty_body() {
 
 #[test]
 fn delivered_sender_keeps_internal_hyphens() {
-    let EntryKind::Delivered { sender, .. } = kind_of("002-claude-fable.md", b"x") else {
+    let EntryKind::Delivered { sender, .. } = kind_of("001-claude-fable.md", b"x") else {
         panic!("expected delivered");
     };
     assert_eq!(sender, "claude-fable");

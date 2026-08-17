@@ -19,6 +19,12 @@
 //! — two answers left every real `NNN-tool.json` in the Raw bucket (bl-47ec).
 //! | other / unparseable name / unparseable bytes | — | Raw bucket (never dropped) |
 //!
+//! **The directory is not append-only.** lernie's compactor deletes message
+//! files and squashes the span they lived in, so a hole in the `NNN` counter
+//! is entries that were *removed* — [`compaction`] derives each one and seats
+//! a virtual [`EntryKind::Compacted`] marker in it, carrying whatever
+//! `summary/**` the compactor wrote in their place.
+//!
 //! Everything is a pure function of the on-disk bytes (§3.5 stateless
 //! re-read): no field caches a fact the files already carry. "Tool in
 //! progress" is a *query* over the entries (a committed `tool_use` with no
@@ -35,6 +41,7 @@
 
 use std::path::{Path, PathBuf};
 
+mod compaction;
 mod parse;
 mod render;
 mod rows;
@@ -112,6 +119,19 @@ pub enum EntryKind {
     /// a model that has only thought so far, or one that answered without
     /// reasoning, and an empty half is simply no row.
     Streaming { thinking: String, text: String },
+    /// A span of entries lernie's compactor **deleted** — a hole in the `NNN`
+    /// counter, standing where they were. `first` and `last` are the missing
+    /// counter values, inclusive, and are the only thing this entry asserts.
+    /// `summary` is the conversation's whole compaction record, which rides
+    /// the earliest gap and is empty on every other one *and* wherever the
+    /// compactor left none — the pairing is unavailable on disk and is not
+    /// guessed ([`compaction`]). Virtual: no file backs it, exactly as none
+    /// backs [`Streaming`](Self::Streaming).
+    Compacted {
+        first: usize,
+        last: usize,
+        summary: String,
+    },
     /// Unparseable filename or unparseable bytes — surfaced verbatim rather
     /// than dropped (§15 Y12: "surface them in a Raw bucket").
     Raw,
@@ -177,13 +197,16 @@ impl Transcript {
 }
 
 /// Build the **committed** transcript for `agent_id` in `workspace`: the
-/// `messages/` directory and nothing else. The live tail is
-/// [`Transcript::with_live`] — see the module doc for why the two are not one
-/// call.
+/// `messages/` directory, with a marker seated in every hole compaction left
+/// in its counter ([`compaction`] — the directory is not append-only, and a
+/// readdir alone renders a rewritten record as if it were the whole record).
+/// The live tail is [`Transcript::with_live`] — see the module doc for why
+/// the two are not one call.
 pub fn build(workspace: &Path, agent_id: &str) -> Transcript {
-    let dir = workspace.join(AGENTS_DIR).join(agent_id).join(MESSAGES_DIR);
+    let agent = workspace.join(AGENTS_DIR).join(agent_id);
+    let read = read_messages(&agent.join(MESSAGES_DIR));
     Transcript {
-        entries: read_messages(&dir),
+        entries: compaction::splice(&agent, read),
     }
 }
 
@@ -230,7 +253,7 @@ fn read_messages(dir: &Path) -> Vec<Entry> {
 /// filename, the timestamp by the file order), but nothing else carries the
 /// ending, and on a body-less result deposit it is the whole message (bl-71e8).
 fn classify(name: &str, raw: &[u8]) -> EntryKind {
-    let Some((origin, ext)) = parse_name(name) else {
+    let Some((_, origin, ext)) = parse_name(name) else {
         return EntryKind::Raw;
     };
     match ext {
@@ -248,16 +271,20 @@ fn classify(name: &str, raw: &[u8]) -> EntryKind {
     }
 }
 
-/// Split `NNN-<origin>.<ext>` into `(origin, ext)`. The `NNN` is validated
-/// (leading digit run) but not returned — filename order already carries it.
-/// Anything not matching the shape is `None` (→ Raw bucket).
-fn parse_name(name: &str) -> Option<(&str, &str)> {
+/// Split `NNN-<origin>.<ext>` into `(NNN, origin, ext)`. Anything not matching
+/// the shape is `None` (→ Raw bucket).
+///
+/// The counter is **returned** since bl-7bd2: filename order carries where an
+/// entry sits, but only its value says which entries are *not there*
+/// ([`compaction`]), and one parse of this shape is the whole of what either
+/// caller may know about it.
+fn parse_name(name: &str) -> Option<(&str, &str, &str)> {
     let (stem, ext) = name.rsplit_once('.')?;
     let (num, origin) = stem.split_once('-')?;
     if num.is_empty() || !num.bytes().all(|b| b.is_ascii_digit()) || origin.is_empty() {
         return None;
     }
-    Some((origin, ext))
+    Some((num, origin, ext))
 }
 
 #[cfg(test)]

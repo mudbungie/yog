@@ -76,6 +76,14 @@ fn transcript() -> Transcript {
                     text: "partial".into(),
                 },
             ),
+            entry(
+                "«006–008»",
+                EntryKind::Compacted {
+                    first: 6,
+                    last: 8,
+                    summary: "what the compactor cut".into(),
+                },
+            ),
             entry("005-junk.json", EntryKind::Raw),
         ],
     }

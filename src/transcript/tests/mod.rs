@@ -4,6 +4,9 @@
 //! `messages/` directories, exercising every origin-classification and
 //! forgiving-parse branch through the public API. [`flow`] covers
 //! enumeration order, skipping, the in-progress query, and the live tail.
+//! [`compaction`] pins the one thing a readdir cannot see — the entries
+//! lernie's compactor deleted, derived from the hole they left in the `NNN`
+//! counter, and the `summary/` prose that replaced them.
 //! [`rows`] pins the §11 one-line projection — classification, the derived
 //! auto-state, the override flip — and [`turns`] the rollup over it: a
 //! finished turn's machinery as one aggregate line, a live turn's steps
@@ -19,6 +22,7 @@ use std::path::Path;
 
 use super::{AutoExpand, Reading, Transcript};
 
+mod compaction;
 mod flow;
 mod folds;
 mod legible;
@@ -67,6 +71,15 @@ pub(super) fn write_msg(ws: &Path, name: &str, bytes: &[u8]) {
     let dir = ws.join("agents").join(AGENT).join("messages");
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join(name), bytes).unwrap();
+}
+
+/// Write one compactor summary into `<ws>/agents/<AGENT>/summary/` — a
+/// **sibling** of `messages/`, which is the whole reason it needs its own
+/// helper (bl-7bd2).
+pub(super) fn write_summary(ws: &Path, name: &str, text: &str) {
+    let dir = ws.join("agents").join(AGENT).join("summary");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join(name), text).unwrap();
 }
 
 /// Write the latest step's `response.json` the live-tail fold reads.

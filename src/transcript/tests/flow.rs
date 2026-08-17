@@ -89,8 +89,10 @@ fn array_shaped_result_with_opaque_id_retires_the_pulse() {
         br#"[{"type":"tool_result","tool_use_id":"call_QxWh5oDZm5GNM4nbnIFVb7Ou","content":[{"type":"text","text":"/ops\n"}],"is_error":false}]"#,
     );
     let t = build(dir.path(), AGENT);
+    // The listing opens at `020`, so it also carries the compaction mark for
+    // the counter values below it (bl-7bd2) — the result is the last entry.
     assert!(matches!(
-        &t.entries[1].kind,
+        &t.entries.last().unwrap().kind,
         EntryKind::ToolResult { tool_use_id, content, is_error: false }
             if tool_use_id == "call_QxWh5oDZm5GNM4nbnIFVb7Ou" && content == "/ops\n"
     ));
@@ -101,7 +103,12 @@ fn array_shaped_result_with_opaque_id_retires_the_pulse() {
         AutoExpand::default(),
         &HashSet::new(),
     );
-    assert_eq!(call[0].prefix, "⚙ bash");
+    // Ahead of it sits the mark for the counter values `020` opens above.
+    assert!(
+        call.iter().any(|r| r.prefix == "⚙ bash"),
+        "got: {:?}",
+        call.iter().map(|r| r.prefix.clone()).collect::<Vec<_>>()
+    );
 }
 
 #[test]

@@ -68,12 +68,19 @@ pub fn pin(rail: &Rail, selected: Option<usize>) -> Option<Pin> {
 /// when that model call was assembled — everything ahead of its own model
 /// output, and none of what the call went on to produce.
 ///
-/// This is a **prefix**, not a second read, and that is exact rather than
-/// convenient: lernie's `messages/` entries are append-only files under a
-/// monotonic `NNN` counter (§5.1 #12), so the entries in the pinned tree and
-/// the leading entries of today's are the same bytes. The Raw toggle therefore
-/// keeps showing verbatim bytes of the pinned tree, with no `git show` per
-/// message.
+/// This is a **prefix**, not a second read. What that buys is exact and what
+/// it costs is now stated (bl-7bd2, DESIGN §5.1 #31): a surviving
+/// `messages/NNN-*` file is never rewritten, so every entry this prefix shows
+/// **is** the pinned tree's bytes, and the Raw toggle keeps showing them with
+/// no `git show` per message. What is *not* exact is the prefix's extent —
+/// `messages/` is not append-only, because lernie's compactor deletes from it
+/// (`crate::transcript::compaction`), so entries the pinned tree held may be
+/// gone from today's listing and the cut lands short of where that call really
+/// read to. The compaction markers spliced into the listing are what makes the
+/// difference visible instead of silent: a pinned view whose prefix crosses
+/// one is showing a record that was rewritten after the pin was minted. A cut
+/// is never *wrong about an entry* — only, after a compaction, about how many
+/// there were.
 ///
 /// The cut arrives already derived on the notch ([`super::Place`]) — the same
 /// walk that decided where the notch's rule paints, so the line in the chat and

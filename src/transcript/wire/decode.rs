@@ -13,7 +13,7 @@
 use serde_json::Value;
 
 use super::super::{Block, Entry, EntryKind, Transcript, Usage};
-use crate::boundary::codec::fields::{bool_of, bytes_of, list_of, opt_val, str_of};
+use crate::boundary::codec::fields::{bool_of, bytes_of, list_of, opt_val, str_of, usize_of};
 use crate::inboxview::Epitaph;
 
 /// The `transcript` reply body read back: one entry per row, in message order.
@@ -44,6 +44,11 @@ fn entry_row(v: &Value) -> Result<Entry, String> {
         "streaming" => EntryKind::Streaming {
             thinking: str_of(o, "thinking")?,
             text: str_of(o, "text")?,
+        },
+        "compacted" => EntryKind::Compacted {
+            first: usize_of(o, "first")?,
+            last: usize_of(o, "last")?,
+            summary: str_of(o, "summary")?,
         },
         "raw" => EntryKind::Raw,
         other => return Err(format!("transcript row: unknown kind {other:?}")),

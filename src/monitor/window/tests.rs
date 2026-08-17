@@ -59,6 +59,15 @@ fn every_entry_kind_folds_to_its_quotation() {
                 },
             },
             Entry {
+                name: "«004»".to_owned(),
+                raw: Vec::new(),
+                kind: EntryKind::Compacted {
+                    first: 4,
+                    last: 4,
+                    summary: "squashed".to_owned(),
+                },
+            },
+            Entry {
                 name: "junk".to_owned(),
                 raw: Vec::new(),
                 kind: EntryKind::Raw,
@@ -71,6 +80,10 @@ fn every_entry_kind_folds_to_its_quotation() {
     assert!(all.contains("(tool bash) ls"));
     assert!(all.contains("[tool result (error)]\nboom"));
     assert!(!all.contains("partial"), "no streaming text in a v1 window");
+    assert!(
+        !all.contains("squashed"),
+        "a compaction mark is yog's own statement about the record, not the agent's"
+    );
 }
 
 #[test]

@@ -93,10 +93,14 @@ fn say(entry: &Entry) -> String {
             let mark = if *is_error { " (error)" } else { "" };
             format!("[tool result{mark}]\n{content}\n")
         }
-        // Neither reaches a v1 check: the streaming tail is excluded by
-        // construction (`build(.., false)`), and a Raw entry is bytes yog could
-        // not classify, which is not evidence about the agent's judgement.
-        EntryKind::Streaming { .. } | EntryKind::Raw => String::new(),
+        // None reaches a v1 check: the streaming tail is excluded by
+        // construction (`build(.., false)`), a Raw entry is bytes yog could
+        // not classify, and a compaction marker is yog's own statement about
+        // the record rather than anything the agent said — quoting it would
+        // put the window's own words into the evidence it is the window onto.
+        // **What the marker replaced is still missing from this window**, and
+        // that is bl-fde5's, not this arm's.
+        EntryKind::Streaming { .. } | EntryKind::Raw | EntryKind::Compacted { .. } => String::new(),
     }
 }
 
