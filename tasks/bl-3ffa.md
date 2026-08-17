@@ -1,7 +1,8 @@
 +++
 title = "the models: table's provider and capabilities columns have no reader left: the §9.2 gate judges a field only the gate consumes"
 created = 1786937632
-updated = 1786937632
+updated = 1786937925
+claimant = "Columns3ffa"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design", "config", "subtraction"]
