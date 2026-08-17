@@ -25,18 +25,18 @@ use crate::projects::balls::{Ball, Blocker};
 
 /// The integration branch every fixture repo is founded on — `bl close`'s
 /// target for a flat ball, and what `git symbolic-ref HEAD` names.
-pub(super) const MAIN: &str = "main";
+pub(crate) const MAIN: &str = "main";
 
 /// A tempdir-backed project repo: a real git working repo, because the read
 /// under test *is* the git CLI's answer and mocking it would test the mock.
-pub(super) struct Project {
+pub(crate) struct Project {
     _dir: TempDir,
-    pub(super) path: PathBuf,
+    pub(crate) path: PathBuf,
 }
 
 impl Project {
     /// A repo on [`MAIN`] with one commit.
-    pub(super) fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let dir = tempdir().unwrap();
         let path = dir.path().to_path_buf();
         run_git(&path, &["init", "-q", "-b", MAIN]);
@@ -49,7 +49,7 @@ impl Project {
     }
 
     /// Write `file` and commit it on the current branch.
-    pub(super) fn commit(&self, file: &str, body: &str) {
+    pub(crate) fn commit(&self, file: &str, body: &str) {
         let full = self.path.join(file);
         if let Some(parent) = full.parent() {
             std::fs::create_dir_all(parent).unwrap();
@@ -60,18 +60,18 @@ impl Project {
     }
 
     /// Branch to `name` off the current HEAD and check it out.
-    pub(super) fn switch(&self, name: &str) {
+    pub(crate) fn switch(&self, name: &str) {
         run_git(&self.path, &["checkout", "-q", "-b", name]);
     }
 
     /// Check out an existing branch.
-    pub(super) fn checkout(&self, name: &str) {
+    pub(crate) fn checkout(&self, name: &str) {
         run_git(&self.path, &["checkout", "-q", name]);
     }
 }
 
 /// A live ball, claimed by `claimant`, optionally a child of `parent`.
-pub(super) fn ball(id: &str, claimant: Option<&str>, parent: Option<&str>) -> Ball {
+pub(crate) fn ball(id: &str, claimant: Option<&str>, parent: Option<&str>) -> Ball {
     Ball {
         id: id.to_owned(),
         title: format!("ball {id}"),
@@ -99,7 +99,7 @@ pub(super) fn close_gate(mut parent: Ball, child: &str) -> Ball {
 
 /// The balls layout the candidate rows resolve attempt paths under — pointed
 /// at a throwaway root, because a test with no fire rows reads nothing off it.
-pub(super) fn xdg(root: &Path) -> balls::layout::Xdg {
+pub(crate) fn xdg(root: &Path) -> balls::layout::Xdg {
     balls::layout::Xdg::with(
         &root.join("home"),
         None,
@@ -116,7 +116,7 @@ pub(super) fn read0(snap: &Snapshot, ws: &Path) -> Vec<crate::workdiff::Attempt>
 
 /// A snapshot carrying one named workspace and one project's live balls —
 /// the two facts [`crate::workdiff::read`] joins.
-pub(super) fn snap(ws: &Path, name: &str, project: &Path, balls: Vec<Ball>) -> Snapshot {
+pub(crate) fn snap(ws: &Path, name: &str, project: &Path, balls: Vec<Ball>) -> Snapshot {
     let mut snap = Snapshot::empty(0);
     snap.workspaces = vec![Workspace {
         path: ws.to_path_buf(),

@@ -8,6 +8,7 @@ mod queue;
 mod receipts;
 mod roundtrip;
 mod rows;
+mod science;
 mod search;
 mod workdiff;
 

@@ -37,6 +37,10 @@ fn every_query_variant_round_trips() {
             file,
         }));
     }
+    // The §3.9 projection (bl-40ab): the address is its whole envelope.
+    rt(Gesture::Ask(Query::Science {
+        workspace: "ws".into(),
+    }));
     // The §9 browse and roster (bl-dff8), each carrying the sphere it is asked
     // in — providers, sign-ins and lineages all live inside a workspace.
     rt(Gesture::Ask(Query::Lineages {

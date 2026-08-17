@@ -5,6 +5,7 @@
 
 use std::collections::BTreeMap;
 
+mod science;
 mod workdiff;
 
 use super::super::super::super::Reply;
@@ -16,6 +17,7 @@ use crate::login::auth::AuthFailure;
 use crate::rail::{ChildCard, Notch, Place, Rail};
 use crate::steps_view::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
 use crate::transcript::{Block, Entry, EntryKind, Transcript};
+use science::science;
 use workdiff::attempts;
 
 /// One entry per [`EntryKind`] arm, the epitaph present and absent.
@@ -225,6 +227,11 @@ pub(super) fn inspector() -> Vec<Reply> {
             attempts: vec![],
             patch: None,
         },
+        // The §3.9 projection over those same attempts (bl-40ab): one row with
+        // every optional column populated, one with none of them, so a decoder
+        // that dropped either reading would not pass on the other.
+        Reply::Science(science()),
+        Reply::Science(vec![]),
         Reply::Transcript(transcript()),
         Reply::Steps(steps()),
         Reply::Steps(StepsView {

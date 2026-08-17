@@ -34,7 +34,11 @@ pub(crate) fn reply(attempts: &[Attempt], patch: Option<&Preview>) -> Value {
 /// One attempt: its identity, its `state` token, and whatever that state can
 /// say. The tokens are the [`Change`] arms — an unreadable project and an
 /// absent ref stay distinguishable on the wire exactly as they do on screen.
-fn attempt_row(attempt: &Attempt) -> Value {
+///
+/// `pub(crate)` since bl-40ab: the §3.9 science projection *composes* this row
+/// rather than restating its fields, so the diff column is spelled here, in
+/// both directions, and there is still one place a diff row's shape is decided.
+pub(crate) fn attempt_row(attempt: &Attempt) -> Value {
     let mut map = Map::new();
     map.insert("project".to_owned(), json!(attempt.project));
     map.insert("ball_id".to_owned(), json!(attempt.ball_id));
@@ -102,7 +106,7 @@ pub(crate) fn attempts_of(obj: &serde_json::Map<String, Value>) -> Result<Vec<At
     list_of(obj, "rows", attempt_of)
 }
 
-fn attempt_of(v: &Value) -> Result<Attempt, String> {
+pub(crate) fn attempt_of(v: &Value) -> Result<Attempt, String> {
     use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, str_of, strings_of};
     let o = v.as_object().ok_or("attempt: not an object")?;
     let change = match str_of(o, "state")?.as_str() {

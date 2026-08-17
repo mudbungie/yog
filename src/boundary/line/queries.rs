@@ -45,6 +45,15 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
             workspace: args::workspace(ctx, verb)?,
             file: work_file(tail, verb)?,
         })),
+        // The §3.9 projection over those same attempts (bl-40ab): aimed by the
+        // seat like `/conversations`, and taking nothing else — the join has no
+        // parameter, because what it answers about is every attempt there is.
+        "science" => {
+            args::none(tail, verb)?;
+            Ok(ask(Query::Science {
+                workspace: args::workspace(ctx, verb)?,
+            }))
+        }
         "board" => args::none(tail, verb).map(|()| ask(Query::Board)),
         // brazen's provider table + credential presence (§8.5, bl-0164): the
         // §8.3 login pane's `↻`, spelled. Scoped to a workspace, not global

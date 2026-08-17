@@ -109,6 +109,22 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
                 .and_then(|f| crate::workdiff::patch(snap, &attempts, f));
             Reply::WorkDiff { attempts, patch }
         }
+        // The projection over those same attempts (§3.9, bl-40ab): the diff
+        // rows joined with the conversation each attempt was bound to. It reads
+        // the trail for the same reason the work diff does — the binding
+        // pointer is a fire row — and the step-record columns off the
+        // snapshot's own pre-walked bills, so the join costs no second pass.
+        Query::Science { .. } => {
+            let entries = crate::opslog::tail(&deps.state_root, usize::MAX);
+            let xdg = deps.world.balls_layout();
+            Reply::Science(crate::science::project(
+                snap,
+                ws,
+                &entries,
+                &xdg,
+                &deps.balls_state_root,
+            ))
+        }
         // The §11 inspector family (bl-6233, REMOTE §9 step 1): the
         // conversation's own reads, which had no headless spelling at all —
         // so no seat but the window could read a chat. World-bytes queries

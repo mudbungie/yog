@@ -281,4 +281,4 @@ fn running(state: AgentState) -> bool {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

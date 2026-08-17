@@ -501,6 +501,25 @@ presentation.
    outcome — all derived at read time from lernie step records, balls
    delivery identities, and git ancestry. Nothing stored.
 
+   **Landed** as `Query::Science` (yog DESIGN §3.9), with three corrections the
+   ruling did not anticipate. *Rework is ancestry, not chronology*: "the source
+   advanced after a refusal" needs three clocks yog does not share — the ops
+   trail's unix seconds, a `messages/` filename counter, a commit date in the
+   project repo — while item 5's own definition of rework, incorporating the
+   new target, is exactly `merge-base --is-ancestor`: the test balls' delivery
+   already makes, so the projection asks git one question instead of ordering a
+   trail against a message counter. And *the terminal response is
+   committed-only*: an in-flight tail is not a terminal anything, so this reads
+   the settled transcript where §4.8's transcript query folds the live tail. And
+   *the base OID is a formula, not an answer balls hands over*: item 6 names
+   balls the authority for the base/source/target identities, but the only way to
+   ask balls is to resume the attempt — which re-materializes a worktree, and a
+   read must not write — so yog spells balls' own documented formula,
+   `merge-base(target, source)`, as the pure git read it already is.
+   One thing the projection needed and item 6 had left half-derived: the
+   acceptance mark now rides the **claim** attempt too, since an N = 1 start
+   whose acceptance cannot be read would be item 8's "not a case" made a case.
+
 8. **Bare, path, and ball.** A bare start binds nothing — tools run in the
    agent worktree, the general path with empty inputs. A path start binds
    the named directory (typed, not prose) with no delivery obligation — no

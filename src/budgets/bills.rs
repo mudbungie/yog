@@ -19,6 +19,8 @@ use super::{BudgetSpend, RESPONSE_FILE, STEP_SEQ_WIDTH, STEPS_DIR, last_usage, s
 /// The wire-request snapshot of one step (ARCH §2.3) — where the model that
 /// billed the step is named.
 const REQUEST_FILE: &str = "request.json";
+/// Per-step metadata (ARCH §2.3) — where the `started_at`/`ended_at` span is.
+const META_FILE: &str = "meta.json";
 
 /// Which conv-id dirs of a workspace's `steps/` tree a fold counts — the
 /// three real granularities of the one id-namespaced tree, made mechanical:
@@ -84,6 +86,18 @@ pub struct StepBill {
     /// step cost, `last_usage` is how big its final prompt was — and only the
     /// second describes the context as it now stands.
     pub last_usage: BudgetSpend,
+    /// This step's `meta.json` span in seconds — `started_at` → `ended_at`
+    /// (§3.9, bl-40ab), the wall half of the science projection's step-record
+    /// columns. It rides the bill for bl-9dd4's own reason: the tree is walked
+    /// once, so wall time is a fold over the result rather than a second disk
+    /// pass over the same `steps/` tree.
+    ///
+    /// **Wall is wall** (lernie ARCH §6, whose `budget::derive::wall_seconds`
+    /// this mirrors): the span covers the backoff sleeps between a step's
+    /// attempts, so it counts waiting as well as streaming. Zero when
+    /// `meta.json` is missing, unparseable, still unsettled, or reports an end
+    /// before its start — an honest unknown, never a fabricated duration.
+    pub wall_secs: u64,
 }
 
 /// Every step under the conv-id dirs `scope` selects. A missing `steps/` tree
@@ -112,6 +126,15 @@ pub fn total(bills: &[StepBill]) -> BudgetSpend {
     total
 }
 
+/// Sum of every bill's `meta.json` span — the wall figure (§3.9, bl-40ab),
+/// beside [`total`] and over the same walk. Summed per step rather than taken
+/// as the first-to-last span, exactly as lernie's own `wall_seconds` is: a
+/// conversation that sat idle for an hour between two calls spent no wall time
+/// on them, and it is the calls a budget bounds.
+pub fn wall(bills: &[StepBill]) -> u64 {
+    bills.iter().map(|b| b.wall_secs).sum()
+}
+
 /// Append every 3-digit step subdir of one conv-id dir. A conv-id entry that
 /// is not a readable directory contributes nothing.
 fn conv_bills(conv_dir: &Path, conv: &str, out: &mut Vec<StepBill>) {
@@ -138,7 +161,26 @@ fn step_bill(step_dir: &Path, conv: &str, seq: &str) -> StepBill {
         model: step_model(step_dir),
         spend: spend_from_bytes(&bytes),
         last_usage: last_usage(&bytes),
+        wall_secs: step_wall(step_dir),
     }
+}
+
+/// One step's `started_at` → `ended_at` span in seconds (§2.3 `meta.json`).
+/// Zero on any read, parse or ordering failure — the same forgiving reading
+/// every other field here takes, and the reason a still-running step
+/// contributes nothing rather than a negative.
+fn step_wall(step_dir: &Path) -> u64 {
+    let bytes = fs::read(step_dir.join(META_FILE)).unwrap_or_default();
+    let Ok(meta) = serde_json::from_slice::<serde_json::Value>(&bytes) else {
+        return 0;
+    };
+    let at = |key: &str| {
+        crate::ui_state::epoch_from_iso8601(meta.get(key).and_then(serde_json::Value::as_str)?)
+    };
+    let (Some(start), Some(end)) = (at("started_at"), at("ended_at")) else {
+        return 0;
+    };
+    u64::try_from(end - start).unwrap_or(0)
 }
 
 /// The model named in a step's `request.json` — the wire request's own

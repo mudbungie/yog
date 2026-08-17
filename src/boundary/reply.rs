@@ -37,6 +37,8 @@ mod balls;
 /// board rows are the one reply whose rows carry derived sub-objects (gates,
 /// drones, two §3.5 figures).
 mod board;
+/// The composer's draft-clearing predicate — its own file at the budget.
+mod cleared;
 /// The whole surface's JSON spelling read back into the type (bl-7067) -- the
 /// thin seat's half of the codec, cut on the same seam as the spelling itself.
 mod decode;
@@ -55,6 +57,7 @@ mod search;
 /// (bl-296f), for the reason its own doc gives.
 mod ws_row;
 
+pub use cleared::cleared;
 pub use decode::decode;
 pub use encode::{encode, refusal};
 pub use ws_row::{Workspaces, WsRow};
@@ -210,6 +213,12 @@ pub enum Reply {
         attempts: Vec<crate::workdiff::Attempt>,
         patch: Option<crate::files_view::Preview>,
     },
+    /// **The attempt science projection** (§3.9, VISION §4.10 item 7) —
+    /// [`Science`](super::Query::Science)'s answer: one row per delivery
+    /// attempt, each carrying the [`WorkDiff`](Self::WorkDiff) row it composes
+    /// plus the agent-side join — frozen inputs, usage, wall time, verdicts and
+    /// the derived outcome. Nothing in it is stored anywhere.
+    Science(Vec<crate::science::Attempt>),
     /// **The conversation** (§11, bl-6233) — [`Transcript`](super::Query::Transcript)'s
     /// answer: the committed `messages/` entries with the in-flight tail folded
     /// on, which is the whole of what the window's chat pane paints.
@@ -272,17 +281,6 @@ pub enum Reply {
     /// sets (REMOTE §5, bl-4e08) — [`Clients`](super::Query::Clients)' answer,
     /// and the payload the navigator's clients section paints.
     Clients(Vec<crate::registry::roster::ClientRow>),
-}
-
-/// Whether a dispatch outcome was clean — the draft-clearing predicate the
-/// composer reads (§5.3: RAM until *sent*): a captured run must have exited 0;
-/// any other reply is its action's success by construction; a refusal is not.
-pub fn cleared(result: &Result<Reply, String>) -> bool {
-    match result {
-        Ok(Reply::Outcome(outcome)) => outcome.ok(),
-        Ok(_) => true,
-        Err(_) => false,
-    }
 }
 
 #[cfg(test)]

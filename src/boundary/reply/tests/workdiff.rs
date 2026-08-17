@@ -17,7 +17,10 @@ use crate::ui_state::UiState;
 use crate::workdiff::{Attempt, Change, Churn, FileChurn, WorkFile};
 
 /// A `Deps` wrapping `snap` — this query never touches the rest of it.
-fn deps(snap: crate::app::Snapshot) -> Deps {
+/// `pub(super)` since bl-40ab: the §3.9 projection's own arm is answered from
+/// the same chokepoint over the same environment, and a second copy of this
+/// would be a second answer to what a boundary read runs in.
+pub(super) fn deps(snap: crate::app::Snapshot) -> Deps {
     Deps {
         lernie: Cli::new("/no/such/lernie"),
         bl: Cli::new("/no/such/bl"),

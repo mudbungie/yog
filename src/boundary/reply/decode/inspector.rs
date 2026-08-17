@@ -6,7 +6,8 @@
 //!
 //! Nothing is read here but the envelope. The bodies belong to
 //! `transcript::wire`, `steps_view::wire`, `files_view::wire`, `rail::wire`,
-//! `inboxview::wire` and `workdiff::wire` — the same modules that write them,
+//! `inboxview::wire`, `workdiff::wire` and `science::wire` — the same modules
+//! that write them,
 //! for the same reason they write them: those rows' shape *is* each module's
 //! vocabulary.
 
@@ -28,6 +29,7 @@ pub(super) fn decode(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply,
         "inbox" => crate::inboxview::wire::entries_of(o).map(Reply::Inbox),
         "agent" => super::super::agent::view_of(o).map(Reply::Agent),
         "work-diff" => work_diff(o),
+        "science" => crate::science::wire::rows_of(o).map(Reply::Science),
         _ => return None,
     })
 }

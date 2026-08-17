@@ -20,7 +20,7 @@
 //! table; the tree walk both share is [`bills`].
 
 mod bills;
-pub use bills::{Scope, StepBill, bills, total};
+pub use bills::{Scope, StepBill, bills, total, wall};
 
 /// Conv-repo subdir of per-conversation step records (ARCH §2.2).
 const STEPS_DIR: &str = "steps";

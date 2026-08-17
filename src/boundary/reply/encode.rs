@@ -115,6 +115,10 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::WorkDiff { attempts, patch } => {
             crate::workdiff::wire::reply(attempts, patch.as_ref())
         }
+        // The projection over those rows (§3.9, bl-40ab), spelled beside its
+        // own type for the same reason — and its `diff` object is the work
+        // diff's own row, so an attempt's identity has one spelling anywhere.
+        Reply::Science(rows) => crate::science::wire::reply(rows),
         // The §11 inspector family (bl-6233) — the conversation's own reads.
         Reply::Transcript(transcript) => crate::transcript::wire::reply(transcript),
         Reply::Steps(view) => crate::steps_view::wire::steps(view),
@@ -126,11 +130,7 @@ pub fn encode(reply: &Reply) -> Value {
         // The oid rides both ways — short is what a pane labels the freeze
         // with, full is what a `git show` outside yog takes — exactly as a
         // lineage row's tip does.
-        Reply::Governing(gov) => json!({
-            "ok": true, "kind": "governing",
-            "oid": gov.oid, "short_oid": gov.short_oid,
-            "branch": gov.branch_name_if_tip_of_one, "files": gov.files,
-        }),
+        Reply::Governing(gov) => governing(gov),
         Reply::Inbox(entries) => crate::inboxview::wire::reply(entries),
         // The seat's read of its selection (REMOTE §9.4, bl-1eb0).
         Reply::Agent(view) => super::agent::reply(view),
@@ -200,6 +200,17 @@ fn delivered(delivery: &crate::fan::Delivery) -> Value {
         map.insert("commit".to_owned(), json!(commit));
     }
     Value::Object(map)
+}
+
+/// The config-frozen-at answer (bl-13f9). The oid rides both ways — short is
+/// what a pane labels the freeze with, full is what a `git show` outside yog
+/// takes — exactly as a lineage row's tip does.
+fn governing(gov: &crate::config_edit::branch::GoverningConfig) -> Value {
+    json!({
+        "ok": true, "kind": "governing",
+        "oid": gov.oid, "short_oid": gov.short_oid,
+        "branch": gov.branch_name_if_tip_of_one, "files": gov.files,
+    })
 }
 
 fn obj_reply(kind: &str) -> Map<String, Value> {

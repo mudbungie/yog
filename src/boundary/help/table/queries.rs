@@ -51,6 +51,23 @@ pub const QUERIES: &[HelpRow] = &[
                  outright rather than shown as an empty list.",
     },
     HelpRow {
+        verb: "science",
+        usage: "/science",
+        summary: "every delivery attempt of this workspace, with what it cost and how it ended",
+        detail: "One row per attempt — the ordinary claim and each fan candidate alike: the goal \
+                 it was fired with, the instruction documents frozen onto its dispatch commit, \
+                 the config commit it is governed by (which is where its model and skills are \
+                 named), the two refs of its project diff with both commits, the commit those \
+                 two ends departed from, the delivery commit \
+                 when its target's history records one, its tokens and wall seconds, what it \
+                 last said, every message delivered into it, and its outcome: accepted when the \
+                 target records its own delivery, rejected when a sibling's landed instead or it \
+                 was discarded, reworked when it has since incorporated the target and could \
+                 deliver again, pending when none of that has happened. Everything is derived \
+                 when you ask — nothing here is stored, so the same row a minute later is a \
+                 statement about the world a minute later.",
+    },
+    HelpRow {
         verb: "board",
         usage: "/board",
         summary: "the fleet board — every live ball in its column",

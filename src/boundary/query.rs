@@ -66,6 +66,24 @@ pub enum Query {
         workspace: String,
         file: Option<crate::workdiff::WorkFile>,
     },
+    /// **Every delivery attempt this workspace holds, as science reads it**
+    /// (§3.9, VISION §4.10 item 7; bl-40ab): per attempt, the frozen inputs
+    /// (goal, pinned documents, governing config commit — model and skills ride
+    /// it), the base/source/target OIDs and the delivered commit when one
+    /// exists, the terminal response, usage and wall time, the project diff, the
+    /// verdicts, and the accepted/rejected/reworked outcome.
+    ///
+    /// **It composes [`WorkDiff`](Query::WorkDiff), it does not replace it.**
+    /// The diff row is one derivation with one home, and a science row carries
+    /// that row rather than restating its fields — so the two answers agree by
+    /// construction and the §11 fan-group seat can read the churn from either.
+    /// What this adds is the agent side of the join: the conversation each
+    /// attempt was bound to, and everything only that conversation can be
+    /// asked. The third world-bytes read of the pair, and the reason it is a
+    /// query rather than a table is VISION §4.5's join discipline — nothing is
+    /// stored and nothing is cached, so a row is a statement about the world as
+    /// it is now.
+    Science { workspace: String },
     /// One text across the whole world (§8.5, [`search`](crate::search)): live
     /// and closed ball title+body, workspace and conversation identity+goal,
     /// and transcript text. The **asynchronous** query — its subject is the

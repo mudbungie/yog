@@ -12,6 +12,12 @@
 //! find the delivery commit a subject tag names. Nothing here writes, and
 //! nothing here spends a balls or lernie verb — the project diff is a pure
 //! git read (VISION §4.10 item 4).
+//!
+//! **The two ancestry questions §3.9 asks of a project repo are NOT here**
+//! (bl-40ab): `merge-base` and `merge-base --is-ancestor` were already spelled
+//! once, in [`cmd`](super::cmd), for the §9.3 config fold. A second spelling of
+//! one git command is the drift this file exists to prevent, so `science` spends
+//! those two directly and states its own degradation at the call.
 
 use super::GitTreeError;
 use super::cmd::{git, git_optional};

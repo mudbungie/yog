@@ -159,6 +159,9 @@ fn spell_query(query: &Query) -> String {
             },
             None => "/work-diff".to_owned(),
         },
+        // The projection takes no parameter at all (§3.9): its subject is every
+        // attempt the seat's own workspace holds.
+        Query::Science { .. } => "/science".to_owned(),
         // The §11 inspector family (bl-6233): the workspace *and* the
         // conversation are the seat's selection, exactly as `/message`'s are —
         // so most of them are the verb alone, and the rest state only the

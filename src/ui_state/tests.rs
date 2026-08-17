@@ -248,3 +248,33 @@ fn iso8601_extended_covers_the_epoch_and_a_leap_day() {
     // year-end rollover — `date -u -d @1735689599`.
     assert_eq!(iso8601_extended(1_735_689_599), "2024-12-31 23:59:59Z");
 }
+
+/// The calendar routine's inverse (§3.9, bl-40ab): the one timestamp yog reads
+/// back rather than prints, round-tripped against `iso8601_extended` at the
+/// epoch, a leap day and a year-end rollover — the same three oracles the
+/// forward direction is pinned on.
+#[test]
+fn epoch_from_iso8601_inverts_the_extended_rendering() {
+    for secs in [0_i64, 951_868_799, 1_735_689_599, 1_785_630_266] {
+        let rendered = iso8601_extended(secs).replace(' ', "T");
+        assert_eq!(epoch_from_iso8601(&rendered), Some(secs), "{rendered}");
+    }
+}
+
+/// It accepts exactly lernie's clock shape and nothing else — a tolerant parse
+/// would invent an answer for bytes no lernie wrote.
+#[test]
+fn epoch_from_iso8601_refuses_every_other_shape() {
+    for bad in [
+        "",
+        "2026-04-22T06:54:32",       // no zone
+        "2026-04-22T06:54:32+00:00", // an offset, not Z
+        "2026-04-22 06:54:32Z",      // a space where the T belongs
+        "2026/04/22T06:54:32Z",      // the wrong date separators
+        "2026-04-22T06.54.32Z",      // the wrong time separators
+        "20xx-04-22T06:54:32Z",      // not digits
+        "2026-04-22T06:54:3Z",       // short by one
+    ] {
+        assert_eq!(epoch_from_iso8601(bad), None, "{bad:?}");
+    }
+}

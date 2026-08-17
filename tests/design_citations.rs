@@ -36,12 +36,13 @@ const FOREIGN: &[&str] = &[
     // lernie ARCH coordinates, cited bare. §2.5 is caller-supplied pinned
     // documents — the mechanism DESIGN §3.7's instruction freeze rides.
     "2.2", "2.3", "2.4", "2.5", "2.6", "2.9", "2.10", "2.11", "4.3", "4.4", "5.5",
-    // VISION.md's §4.8 (the control-boundary ruling), §4.9 (the alignment
+    // VISION.md's §4.5 (spend attribution's join discipline, bl-afc4), §4.8
+    // (the control-boundary ruling), §4.9 (the alignment
     // monitor, bl-af1a), §4.10 (the project-delivery contract, bl-2b8c) and
     // §4.11 (the capability boundary, bl-0cea), always cited with their doc
     // prefix ("VISION §4.8", "VISION §4.9", …) — foreign here because the
     // scanner is deliberately prefix-blind.
-    "4.8", "4.9", "4.10", "4.11",
+    "4.5", "4.8", "4.9", "4.10", "4.11",
     // REMOTE.md's own rulings — §1.2 (one method, one channel), §1.3 (the
     // channel is mTLS), §1.4 (bootstrapping is out-of-channel) and §1.5 (the
     // workspace is the trust domain, bl-8bbc) — always cited with their doc

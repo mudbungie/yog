@@ -68,6 +68,10 @@ pub use marks::AgentMark;
 // Config-branch browse plumbing (§9.3 / §5.1 #17–#18), consumed by
 // [`crate::config_edit::branch`]. Every config-ref git call routes through
 // the env-scrubbed `cmd` wrapper; these re-exports are the only doorway.
+// **`merge_base`/`is_ancestor` are not only that fold's** (bl-40ab): they are
+// plain reachability reads over any repo, and §3.9's science projection asks
+// them of a *project* repo — the base two ends departed from, and whether a
+// source has incorporated its target. One spelling of one git command.
 pub(crate) use cmd::{
     diff_names, for_each_ref_config, is_ancestor, ls_tree, ls_tree_long, merge_base, show_file,
 };

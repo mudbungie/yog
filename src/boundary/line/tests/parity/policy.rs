@@ -125,6 +125,10 @@ fn every_fleet_action_round_trips() {
             file,
         }));
     }
+    // The §3.9 projection: the address is the seat's and it takes nothing else.
+    rt(Gesture::Ask(Query::Science {
+        workspace: "ws".to_owned(),
+    }));
     rt(Gesture::Ask(Query::Help { verb: None }));
     rt(Gesture::Ask(Query::Help {
         verb: Some("prepare".to_owned()),

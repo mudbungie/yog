@@ -122,3 +122,38 @@ fn the_agent_scope_counts_one_id_and_never_its_descent() {
         "a byte prefix is not an id"
     );
 }
+
+/// The `meta.json` span rides the one walk (§3.9, bl-40ab), and every way it
+/// cannot be read contributes zero rather than a fabricated duration: no meta
+/// at all, unparseable bytes, a settled record with no timestamps, a still-open
+/// step, and an end before its start.
+#[test]
+fn the_wall_span_rides_the_walk_and_degrades_to_zero() {
+    let dir = tempdir().unwrap();
+    let meta = |conv: &str, seq: &str, body: &str| {
+        write_step(dir.path(), conv, seq, 1, None);
+        let step = dir.path().join("steps").join(conv).join(seq);
+        std::fs::write(step.join("meta.json"), body).unwrap();
+    };
+    // A settled step: 61 seconds, across a minute boundary.
+    meta(
+        ROOT,
+        "001",
+        r#"{"started_at":"2026-04-22T06:54:32Z","ended_at":"2026-04-22T06:55:33Z"}"#,
+    );
+    // Unparseable, no timestamps, an unfinished step, and time running backwards.
+    meta(ROOT, "002", "not json");
+    meta(ROOT, "003", r#"{"commit":"abc"}"#);
+    meta(ROOT, "004", r#"{"started_at":"2026-04-22T06:54:32Z"}"#);
+    meta(
+        ROOT,
+        "005",
+        r#"{"started_at":"2026-04-22T06:55:33Z","ended_at":"2026-04-22T06:54:32Z"}"#,
+    );
+    // And a step with no `meta.json` at all.
+    write_step(dir.path(), ROOT, "006", 1, None);
+
+    let bills = bills(dir.path(), &Scope::Tree(ROOT.to_owned()));
+    assert_eq!(bills.len(), 6);
+    assert_eq!(super::wall(&bills), 61, "only the settled span counts");
+}

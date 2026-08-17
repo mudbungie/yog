@@ -152,6 +152,7 @@ impl Query {
         match self {
             Query::Conversations { workspace }
             | Query::WorkDiff { workspace, .. }
+            | Query::Science { workspace }
             | Query::Lineages { workspace }
             | Query::Models { workspace, .. }
             | Query::Marks { workspace }

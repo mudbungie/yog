@@ -36,6 +36,43 @@ const PROMPT: &str = "prompt";
 const NAME: &str = "--name";
 /// bl-6654's typed work-target binding — the pointer this join follows.
 const CWD: &str = "--cwd";
+/// §3.7's instruction freeze, one per frozen document (bl-aa8b).
+const PIN: &str = "--pin";
+
+/// One **bound fire** as the trail records it (§3.9, bl-40ab): the
+/// conversation yog minted, the directory it was bound to, and the instruction
+/// documents that fire froze.
+///
+/// It is the row [`members`] filters and the row the science projection joins
+/// on, which is why the argv is parsed once here rather than twice: a fire's
+/// `--name`/`--cwd`/`--pin` triple is one reading of one row, and the two
+/// consumers differ only in what they then ask of the directory — the cohort
+/// asks whether it is an *attempt* ([`handle_of`]), the projection asks which
+/// attempt of any kind it is (`science::bound`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Fire {
+    /// The minted conversation name the fire passed as `--name` (§3.3).
+    pub conversation: String,
+    /// The typed work-target binding the fire passed as `--cwd` (bl-6654).
+    pub worktree: PathBuf,
+    /// The `<dest>=<src>` specs the fire froze onto its dispatch commit (§3.7)
+    /// — *"every pin survives into the trail and IS the provenance record"*, so
+    /// this list is the frozen-input column and not a second copy of one.
+    pub pins: Vec<String>,
+}
+
+/// Every bound fire in `workspace`, oldest first — the one parse of the §4.2
+/// trail's fire rows. A row that is not a `lernie prompt`, or one that named no
+/// `--cwd`, contributes nothing: it bound no work target, so there is no
+/// attempt for it to be about.
+pub fn fires(entries: &[OpEntry], workspace: &Path) -> Vec<Fire> {
+    let here = workspace.to_string_lossy();
+    entries
+        .iter()
+        .filter(|e| e.cwd == here)
+        .filter_map(fire_of)
+        .collect()
+}
 
 /// One candidate of a cohort, as the trail records it: the conversation yog
 /// fired and the attempt it was bound to. Held nowhere — re-derived on each
@@ -61,12 +98,10 @@ pub struct Member {
 /// reproduce. That is the derivation stating "no fan here", not an empty
 /// special case.
 pub fn members(entries: &[OpEntry], xdg: &Xdg, project: &Path, workspace: &Path) -> Vec<Member> {
-    let here = workspace.to_string_lossy();
     let mut out: Vec<Member> = Vec::new();
-    for member in entries
-        .iter()
-        .filter(|e| e.cwd == here)
-        .filter_map(|e| member_of(e, xdg, project))
+    for member in fires(entries, workspace)
+        .into_iter()
+        .filter_map(|fire| member_of(fire, xdg, project))
     {
         out.retain(|m| m.handle != member.handle);
         out.push(member);
@@ -83,10 +118,9 @@ pub fn worktrees(entries: &[OpEntry], xdg: &Xdg, project: &Path, workspace: &Pat
         .collect()
 }
 
-/// The member one trail row names, when it is a fire bound to a candidate of
-/// `project`. Any other row — a `bl` verb, an unbound fire, a fire bound to the
-/// ordinary `work/<id>` claim — contributes nothing.
-fn member_of(entry: &OpEntry, xdg: &Xdg, project: &Path) -> Option<Member> {
+/// The bound fire one trail row names. Any other row — a `bl` verb, a fire
+/// that bound no work target — contributes nothing.
+fn fire_of(entry: &OpEntry) -> Option<Fire> {
     let argv: Vec<&str> = entry.argv.iter().map(String::as_str).collect();
     let [bin, verb, rest @ ..] = argv.as_slice() else {
         return None;
@@ -94,11 +128,21 @@ fn member_of(entry: &OpEntry, xdg: &Xdg, project: &Path) -> Option<Member> {
     if *bin != LERNIE || *verb != PROMPT {
         return None;
     }
-    let worktree = PathBuf::from(flag(rest, CWD)?);
-    Some(Member {
+    Some(Fire {
         conversation: flag(rest, NAME)?,
-        handle: handle_of(xdg, project, &worktree)?,
-        worktree,
+        worktree: PathBuf::from(flag(rest, CWD)?),
+        pins: flags(rest, PIN),
+    })
+}
+
+/// The member one bound fire names, when its directory is a candidate of
+/// `project`. A fire bound to the ordinary `work/<id>` claim contributes
+/// nothing here — that is the projection's row, not the cohort's.
+fn member_of(fire: Fire, xdg: &Xdg, project: &Path) -> Option<Member> {
+    Some(Member {
+        handle: handle_of(xdg, project, &fire.worktree)?,
+        conversation: fire.conversation,
+        worktree: fire.worktree,
     })
 }
 
@@ -106,10 +150,18 @@ fn member_of(entry: &OpEntry, xdg: &Xdg, project: &Path) -> Option<Member> {
 /// way out (rule 1): the tail is borrowed, elided, and what comes back names
 /// nothing of it.
 fn flag(argv: &[&str], name: &str) -> Option<String> {
+    flags(argv, name).into_iter().next()
+}
+
+/// **Every** value following `name`, in argv order — the repeating-flag
+/// reading, which `--pin` needs and which [`flag`] is the first element of. One
+/// scan, so a flag that may repeat and one that may not are read by one rule.
+fn flags(argv: &[&str], name: &str) -> Vec<String> {
     argv.windows(2)
-        .find(|w| w.first() == Some(&name))
-        .and_then(|w| w.get(1))
+        .filter(|w| w.first() == Some(&name))
+        .filter_map(|w| w.get(1))
         .map(|value| (*value).to_owned())
+        .collect()
 }
 
 /// The handle `bound` belongs to, iff balls' own [`attempt_path`] over that

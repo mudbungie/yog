@@ -24,6 +24,7 @@ fn bill(conv: &str, seq: &str, model: Option<&str>, last: BudgetSpend) -> StepBi
         model: model.map(str::to_owned),
         spend: usage(999, 999, 999),
         last_usage: last,
+        wall_secs: 0,
     }
 }
 

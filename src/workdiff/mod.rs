@@ -173,20 +173,31 @@ pub fn read(
 
 /// Resolve one plan against its project repo: name the target, then read the
 /// churn between the two ends ([`diff_change`]).
+///
+/// **The claim attempt wears the derived acceptance mark too** (bl-40ab). The
+/// scan is `fan::delivered_commit`'s, unchanged — its own doc says the tag it
+/// reads is *"an attempt handle or a ball id: both deliver under the same
+/// `[<id>]` subject tag, so one scan reads both"* — and for a claim the id is
+/// the ball, so what the mark answers here is the ball's own delivery onto the
+/// branch it closes into. bl-c2bd filled this for candidates only because V3's
+/// surface was about candidates; leaving it `None` at N = 1 would have made the
+/// ordinary single start the one attempt whose acceptance could not be read,
+/// and N = 1 is not a case (VISION §4.10 item 8).
 fn resolve(plan: plan::Plan, project: String) -> Attempt {
     let source = work_branch(&plan.ball_id);
-    let attempt = |change| Attempt {
+    let attempt = |change, delivered| Attempt {
         project: project.clone(),
         ball_id: plan.ball_id.clone(),
         handle: None,
-        delivered: None,
+        delivered,
         change,
     };
     let Ok(Some(head)) = head_branch(&plan.project) else {
-        return attempt(Change::Unreadable);
+        return attempt(Change::Unreadable, None);
     };
     let target = plan.target_ball.as_deref().map_or(head, work_branch);
-    attempt(diff_change(&plan.project, target, source))
+    let mark = crate::fan::delivered_commit(&plan.project, &target, &plan.ball_id);
+    attempt(diff_change(&plan.project, target, source), mark)
 }
 
 /// The git half of one attempt's read, shared by the claim rows and the fan
@@ -248,4 +259,4 @@ pub fn patch(snap: &Snapshot, attempts: &[Attempt], file: &WorkFile) -> Option<P
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

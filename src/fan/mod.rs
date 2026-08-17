@@ -57,7 +57,7 @@ pub mod spread;
 #[cfg(test)]
 mod tests;
 
-pub use cohort::{Member, members};
+pub use cohort::{Fire, Member, fires, members};
 pub use delivery::{Delivery, deliver, delivered_commit};
 pub use spread::{Candidate, open, spread};
 

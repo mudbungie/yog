@@ -78,6 +78,10 @@ pub(super) fn encode(query: &Query) -> Value {
             agent,
             at,
         } => inspector::governing(workspace, agent, at.as_ref()),
+        // The projection over the work-diff's attempts (§3.9, bl-40ab): one
+        // address and nothing else, because the join takes no parameter — what
+        // it answers about is every attempt the workspace holds.
+        Query::Science { workspace } => json!({ "op": SCIENCE, "workspace": workspace }),
         Query::Board => json!({ "op": "board" }),
         Query::Attention => json!({ "op": "attention" }),
         Query::Ops { max } => json!({ "op": "ops", "max": max }),
@@ -124,6 +128,9 @@ pub(super) fn encode(query: &Query) -> Value {
 /// The §11 balls section's own read (bl-b4b5), named once for both directions.
 const WORKSPACE_BALLS: &str = "workspace-balls";
 
+/// The §3.9 projection's op token (bl-40ab), named once for both directions.
+pub(super) const SCIENCE: &str = "science";
+
 /// The routing leg's read tokens, named once for the encoder and the arm.
 pub(super) const INVOCATIONS: &str = "invocations";
 pub(super) const CAPTURE: &str = "capture";
@@ -159,6 +166,9 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         "work-diff" => Query::WorkDiff {
             workspace: str_of(o, "workspace")?,
             file: work_file(o)?,
+        },
+        SCIENCE => Query::Science {
+            workspace: str_of(o, "workspace")?,
         },
         "board" => Query::Board,
         "attention" => Query::Attention,

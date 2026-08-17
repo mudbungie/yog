@@ -159,6 +159,46 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
     (year, month, day)
 }
 
+/// The inverse of [`iso8601_extended`], for the one timestamp yog reads back
+/// rather than prints: lernie's step `meta.json` `started_at`/`ended_at`
+/// (§3.9, bl-40ab). `2026-04-22T06:54:32Z` → epoch seconds.
+///
+/// **Deliberately not an RFC 3339 parser.** It accepts exactly the shape
+/// lernie's clock writes (`prompt/clock.rs`) — four digits, `-`, two, `-`,
+/// two, `T`, two, `:`, two, `:`, two, `Z`, and nothing else — because that
+/// clock is the only writer this crate ever reads, and a tolerant parser would
+/// invent an answer for bytes no lernie produced. Anything else is `None`, the
+/// same honest unknown a missing `meta.json` gives.
+pub fn epoch_from_iso8601(stamp: &str) -> Option<i64> {
+    let b = stamp.as_bytes();
+    if b.len() != 20 || b.last() != Some(&b'Z') {
+        return None;
+    }
+    let at = |a: usize, z: usize| stamp.get(a..z)?.parse::<i64>().ok();
+    let sep = |i: usize, c: u8| (b.get(i) == Some(&c)).then_some(());
+    sep(4, b'-')?;
+    sep(7, b'-')?;
+    sep(10, b'T')?;
+    sep(13, b':')?;
+    sep(16, b':')?;
+    let secs = at(11, 13)? * 3600 + at(14, 16)? * 60 + at(17, 19)?;
+    Some(days_from_civil(at(0, 4)?, at(5, 7)?, at(8, 10)?) * 86_400 + secs)
+}
+
+/// `(year, month, day)` → days since the Unix epoch, proleptic Gregorian.
+/// Hinnant's `days_from_civil` (public domain), the exact inverse of
+/// [`civil_from_days`] and the second half of the crate's one calendar
+/// routine — both directions here so neither grows a `chrono` dependency.
+fn days_from_civil(year: i64, month: i64, day: i64) -> i64 {
+    let y = if month <= 2 { year - 1 } else { year };
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = y - era * 400; // [0, 399]
+    let mp = if month > 2 { month - 3 } else { month + 9 }; // [0, 11]
+    let doy = (153 * mp + 2) / 5 + day - 1; // [0, 365]
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy; // [0, 146096]
+    era * 146_097 + doe - 719_468
+}
+
 /// Stable content hash of file bytes — the echo-suppression identity (§4.1).
 pub fn content_hash(bytes: &[u8]) -> u64 {
     let mut h = std::collections::hash_map::DefaultHasher::new();

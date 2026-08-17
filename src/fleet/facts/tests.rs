@@ -117,6 +117,7 @@ fn the_ceiling_renders_where_it_will_bind_and_closes_the_room() {
                 ..BudgetSpend::default()
             },
             last_usage: BudgetSpend::default(),
+            wall_secs: 0,
         }],
     );
     let prices = Prices::from_json(&json!({ "opus": { "input": 1 } }));
