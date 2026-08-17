@@ -94,9 +94,9 @@ fn s5_t4_lernie_global_apply_refuses_a_file_that_moved_and_lands_after_a_reload(
 
     std::fs::write(&models, "models: [theirs]\n").unwrap();
 
-    // No provider gate fires (an empty provider slice is *no answer* and gates
-    // nothing), so the only thing that can refuse here is the guard.
-    assert_eq!(editor.apply(&[], &io), Saved::Conflict);
+    // The guard is the only thing that can refuse here — this editor judges no
+    // content at all since bl-3ffa (§9.2).
+    assert_eq!(editor.apply(&io), Saved::Conflict);
     assert_eq!(
         std::fs::read_to_string(&models).unwrap(),
         "models: [theirs]\n"
@@ -104,7 +104,7 @@ fn s5_t4_lernie_global_apply_refuses_a_file_that_moved_and_lands_after_a_reload(
 
     editor.reload(&io).unwrap();
     editor.set_draft("models: [mine]\n".to_owned());
-    assert_eq!(editor.apply(&[], &io), Saved::Ok);
+    assert_eq!(editor.apply(&io), Saved::Ok);
     assert_eq!(
         std::fs::read_to_string(&models).unwrap(),
         "models: [mine]\n"
@@ -126,7 +126,7 @@ fn s5_t4_creating_a_file_that_now_exists_is_the_same_refusal() {
 
     std::fs::write(&path, "someone: else\n").unwrap();
     assert_eq!(
-        editor.apply(&[], &io),
+        editor.apply(&io),
         Saved::Conflict,
         "must-not-exist is the empty case of the same guard"
     );

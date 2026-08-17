@@ -31,14 +31,6 @@ pub(super) fn describe_applied(applied: Applied) -> String {
 pub(super) fn describe_saved(saved: Saved) -> String {
     match saved {
         Saved::Ok => "saved".to_string(),
-        Saved::Rejected { unknown } => format!(
-            "rejected: brazen has no such provider row — {}",
-            unknown
-                .iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(", ")
-        ),
         Saved::Conflict => "conflict — reload to re-diff".to_string(),
         Saved::Io { error } => format!("io error: {error}"),
     }

@@ -55,22 +55,20 @@ fn cadence_yaml_reads_as_the_watcher_entry_and_writes_in_place() {
     );
 }
 
+/// `models.yaml` has **two** settings since bl-3ffa: the wire id and the window.
+/// The fixture is a legacy entry carrying `provider:` and `capabilities:` beside
+/// them, and neither gets a row — a control over a fact nothing consumes is a
+/// setting that cannot matter, and the pane shows the settings that exist.
 #[test]
 fn models_yaml_reads_as_one_group_per_declared_id() {
     let groups = read(&MODELS_SCHEMA, SEEDED_MODELS, &rows());
     assert_eq!(groups.len(), 1);
     assert_eq!(groups[0].entry, "gpt-5.4");
     let fields: Vec<&str> = groups[0].rows.iter().map(|r| r.field).collect();
-    assert_eq!(
-        fields,
-        vec!["provider", "model_id", "capabilities", "context_window"]
-    );
-    // A flow sequence shows its members, not its brackets.
-    let caps = row_of(&groups, "gpt-5.4", "capabilities");
-    assert_eq!(caps.value, "tool_use_native, streaming");
-    assert_eq!(caps.fault, None);
+    assert_eq!(fields, vec!["model_id", "context_window"]);
+    assert_eq!(row_of(&groups, "gpt-5.4", "model_id").value, "gpt-5.4");
     assert_eq!(row_of(&groups, "gpt-5.4", "context_window").value, "400000");
-    assert!(!row_of(&groups, "gpt-5.4", "provider").help.is_empty());
+    assert!(!row_of(&groups, "gpt-5.4", "context_window").help.is_empty());
 }
 
 #[test]
@@ -96,25 +94,32 @@ fn a_file_with_no_block_has_no_settings() {
     assert!(read(&ROLES_SCHEMA, "", &rows()).is_empty());
 }
 
+/// The provider control faults where the pointer actually lives —
+/// `roles.<r>.provider`, the whole of a role's binding. It read
+/// `models.<id>.provider` too until bl-3ffa, which is the field the retired §9.2
+/// gate judged; nothing dispatched through it.
 #[test]
 fn a_provider_row_brazen_lacks_is_faulted_where_it_is_read() {
-    let dead = "models:\n  m:\n    provider: gone\n";
-    let fault = row_of(&read(&MODELS_SCHEMA, dead, &rows()), "m", "provider").fault;
+    let dead = "roles:\n  worker:\n    provider: gone\n    model: m\n";
+    let fault = row_of(&read(&ROLES_SCHEMA, dead, &rows()), "worker", "provider").fault;
     assert!(fault.is_some_and(|f| f.contains("`gone`")));
     // An empty table is no answer, so it faults nothing.
     assert_eq!(
-        row_of(&read(&MODELS_SCHEMA, dead, &[]), "m", "provider").fault,
+        row_of(&read(&ROLES_SCHEMA, dead, &[]), "worker", "provider").fault,
         None
     );
 }
 
 #[test]
 fn an_off_shape_list_and_an_off_range_number_fault_rather_than_render_typed() {
-    let odd = "models:\n  m:\n    provider: codex\n    capabilities:\n    context_window: lots\n";
+    // The list control's own file is `providers.yaml` now (bl-3ffa): a role's
+    // `tools:` is the one inline flow sequence a surface edits.
+    let odd_list = "roles:\n  worker:\n    provider: codex\n    model: m\n    tools:\n";
+    let tools = row_of(&read(&ROLES_SCHEMA, odd_list, &rows()), "worker", "tools");
+    assert_eq!(tools.value, "");
+    assert!(tools.fault.is_some_and(|f| f.contains("inline")));
+    let odd = "models:\n  m:\n    context_window: lots\n";
     let groups = read(&MODELS_SCHEMA, odd, &rows());
-    let caps = row_of(&groups, "m", "capabilities");
-    assert_eq!(caps.value, "");
-    assert!(caps.fault.is_some_and(|f| f.contains("inline")));
     let window = row_of(&groups, "m", "context_window");
     assert_eq!(window.value, "lots");
     assert!(window.fault.is_some_and(|f| f.contains("whole number")));
@@ -130,12 +135,13 @@ fn an_off_shape_list_and_an_off_range_number_fault_rather_than_render_typed() {
 #[test]
 fn writing_a_control_rewrites_one_line_and_nothing_else() {
     let groups = read(&MODELS_SCHEMA, SEEDED_MODELS, &rows());
-    let row = row_of(&groups, "gpt-5.4", "provider");
-    let out = write(&MODELS_SCHEMA, SEEDED_MODELS, &row, " anthropic ").unwrap();
-    assert!(out.contains("    provider: anthropic\n"));
-    // Every other byte survives: the comment header and the sibling fields.
+    let row = row_of(&groups, "gpt-5.4", "model_id");
+    let out = write(&MODELS_SCHEMA, SEEDED_MODELS, &row, " gpt-5.4-mini ").unwrap();
+    assert!(out.contains("    model_id: gpt-5.4-mini\n"));
+    // Every other byte survives: the comment header, and the legacy fields yog
+    // neither writes nor offers a control over.
     assert!(out.starts_with("# Global config-root models.yaml"));
-    assert!(out.contains("    model_id: gpt-5.4\n"));
+    assert!(out.contains("    provider: codex\n"));
     assert!(out.contains("    capabilities: [tool_use_native, streaming]\n"));
 }
 
@@ -148,11 +154,12 @@ fn a_number_is_clamped_and_a_list_is_re_emitted_as_a_flow_sequence() {
     // Unparseable falls to the floor rather than writing a line yog cannot read.
     let out = write(&MODELS_SCHEMA, SEEDED_MODELS, &window, "").unwrap();
     assert!(out.contains("    context_window: 1\n"));
-    let caps = row_of(&groups, "gpt-5.4", "capabilities");
-    let out = write(&MODELS_SCHEMA, SEEDED_MODELS, &caps, " a , ,b ").unwrap();
-    assert!(out.contains("    capabilities: [a, b]\n"));
-    let out = write(&MODELS_SCHEMA, SEEDED_MODELS, &caps, "").unwrap();
-    assert!(out.contains("    capabilities: []\n"));
+    let roles = read(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &rows());
+    let tools = row_of(&roles, "worker", "tools");
+    let out = write(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &tools, " a , ,b ").unwrap();
+    assert!(out.contains("    tools: [a, b]\n"));
+    let out = write(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &tools, "").unwrap();
+    assert!(out.contains("    tools: []\n"));
 }
 
 #[test]

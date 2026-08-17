@@ -160,7 +160,8 @@ pub fn provider_rows(listing_json: &str) -> Vec<ProviderRow> {
 }
 
 /// The `name` column alone, in listing order — the whole answer a caller that
-/// only asks "which rows exist" needs (§9.2's provider gate). Kept here so the
+/// only asks "which rows exist" needs (§9.4's pick gate, §9.5's provider
+/// control). Kept here so the
 /// projection has one home: a caller that mapped the rows itself would be a
 /// second place that knows which column names a row.
 pub fn row_names(rows: &[ProviderRow]) -> Vec<String> {

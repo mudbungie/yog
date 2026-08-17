@@ -162,17 +162,17 @@ mod tests {
     /// A row whose value is longer than any fixed column.
     fn long_row() -> Vec<Group> {
         vec![Group {
-            entry: "claude-sonnet-5".into(),
+            entry: "worker".into(),
             rows: vec![Row {
-                entry: "claude-sonnet-5".into(),
-                field: "capabilities",
+                entry: "worker".into(),
+                field: "tools",
                 control: Control::List,
-                help: "what this model can do",
+                help: "the tool names this role may call",
                 // Long enough that a 700 pt pane genuinely cannot show it and
                 // a 2560 pt one can — the two ends of QUALITY §2's shot sheet.
-                value: "tool_use_native, prompt_caching, streaming, stop_sequences, vision, \
-                        parallel_tool_use, structured_output, extended_thinking, \
-                        citations, pdf_input, batch_api"
+                value: "bash, read_file, write_file, load_skill, edit_file, list_dir, \
+                        search_files, run_tests, git_status, git_commit, fetch_url, \
+                        dispatch, message"
                     .into(),
                 fault: None,
             }],
@@ -213,9 +213,10 @@ mod tests {
 
     /// **A value box is a share of its row, not a constant** (bl-76f8, the
     /// width-axis twin of §11 rule 5). egui's `text_edit_width` is a fixed
-    /// 280 pt column, so at a maximized 2560 pt window the `capabilities`
-    /// value read `tool_use_native, prompt_caching, streaming, stop_` — cut
-    /// mid-token, with ~1700 pt of pane unused beside it. Measured, because
+    /// 280 pt column, so at a maximized 2560 pt window the then-`capabilities`
+    /// row (a `models:` field until bl-3ffa) read `tool_use_native,
+    /// prompt_caching, streaming, stop_` — cut mid-token, with ~1700 pt of pane
+    /// unused beside it. Measured, because
     /// the same characters go INTO the galley either way: what changes is how
     /// much of it the box lets through.
     #[test]

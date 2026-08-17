@@ -58,7 +58,7 @@ pub(super) fn render(ui: &mut egui::Ui, config: &mut ConfigState) {
             )
             .clicked()
         {
-            config.cadence_status = describe_saved(config.cadence_editor.apply(&[], &config.io));
+            config.cadence_status = describe_saved(config.cadence_editor.apply(&config.io));
         }
         if ui.button("Reload").on_hover_text(RELOAD_HINT).clicked() {
             config.cadence_status = reload_status(config.cadence_editor.reload(&config.io));

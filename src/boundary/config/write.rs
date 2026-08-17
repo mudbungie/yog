@@ -1,6 +1,6 @@
 //! The pipelines each §9 destination runs (bl-3f46), split from the gestures
 //! that name them per §12's line budget: the §9.1 `bz`-validated brazen write,
-//! the §9.2 provider-gated file write, the §9.3 staged `lernie config` commit,
+//! the §9.2 hash-guarded file write, the §9.3 staged `lernie config` commit,
 //! and the two verdict folds that turn an editor's terminal state into the
 //! boundary's `Ok`/`Err`.
 //!
@@ -54,18 +54,19 @@ pub(super) fn applied(applied: Applied) -> Result<(), String> {
     }
 }
 
-/// The §9.2 pipeline over any plain config file: brazen's effective provider
-/// table gates it, then the shared hash-guard + atomic rename. A file that
-/// declares no models is clean by construction, so no destination is special.
-pub(super) fn write_file(deps: &Deps, dest: PathBuf, text: &str) -> Result<Reply, String> {
+/// The §9.2 pipeline over any plain config file: the shared hash-guard + atomic
+/// rename, and nothing else. It judged the draft's `models.<id>.provider` fields
+/// until bl-3ffa; that gate is retired with the field's last reader, so a
+/// deposit's bytes are the operator's — the same risk the §11 pane's raw editor
+/// carries, said once for both faces.
+pub(super) fn write_file(dest: PathBuf, text: &str) -> Result<Reply, String> {
     let mut editor = editor_at(&dest)?;
     editor.set_draft(text.to_owned());
-    saved(editor.apply(&deps.provider_rows(), &RealFileIo))?;
+    saved(editor.apply(&RealFileIo))?;
     Ok(Reply::Applied)
 }
 
-/// Load one §9.2 editor — the single read both the file apply and the §9.4
-/// pick's `models.yaml` half enter through.
+/// Load one §9.2 editor — the single read every file apply enters through.
 pub(super) fn editor_at(dest: &Path) -> Result<Editor, String> {
     Editor::load(dest.to_path_buf(), &RealFileIo).map_err(|e| e.to_string())
 }
@@ -75,14 +76,6 @@ pub(super) fn editor_at(dest: &Path) -> Result<Editor, String> {
 pub(super) fn saved(saved: Saved) -> Result<(), String> {
     match saved {
         Saved::Ok => Ok(()),
-        Saved::Rejected { unknown } => Err(format!(
-            "brazen has no provider row for {}",
-            unknown
-                .iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(", ")
-        )),
         Saved::Conflict => Err(CONFLICT.to_owned()),
         Saved::Io { error } => Err(error),
     }

@@ -1,7 +1,7 @@
 //! Every §9 config *destination*, driven through the chokepoint (bl-3f46): the
-//! `bz`-validated brazen write, the provider-gated lernie-global one, the
-//! workflow name gate, the clock's own file, and the staged lineage commit —
-//! plus the two verdict folds that name every refusal.
+//! `bz`-validated brazen write, the unjudged lernie-global one (bl-3ffa retired
+//! its provider gate), the workflow-name gate, the clock's own file, and the
+//! staged lineage commit — plus the two verdict folds that name every refusal.
 
 use super::{ACME, applying, brazen_file, deps_at, fire, quiet, script};
 use crate::actions::verbs::Outcome;
@@ -15,27 +15,6 @@ use crate::test_support::{spawn_guard, world_under};
 use std::fs;
 use std::path::Path;
 use tempfile::tempdir;
-
-#[test]
-fn provider_rows_are_asked_of_brazen_at_the_gesture_never_stored() {
-    let root = tempdir().unwrap();
-    let deps = quiet(root.path());
-    assert!(
-        deps.provider_rows().iter().any(|r| r == "acme"),
-        "{:?}",
-        deps.provider_rows()
-    );
-    // The same `Deps` answers differently once the file does — which is the
-    // whole claim: the rows are brazen's fact, read at the moment of use, and
-    // the headless "empty table gates nothing" interim is retired.
-    fs::write(
-        crate::test_support::wall_paths(root.path()).config,
-        ACME.replace("acme", "zinc"),
-    )
-    .unwrap();
-    assert!(deps.provider_rows().iter().any(|r| r == "zinc"));
-    assert!(!deps.provider_rows().iter().any(|r| r == "acme"));
-}
 
 #[test]
 fn a_brazen_apply_lands_only_what_bz_accepts() {
@@ -73,31 +52,34 @@ fn a_brazen_apply_that_cannot_write_says_so() {
     assert!(!err.is_empty(), "the io error rides back verbatim");
 }
 
+/// The §9.2 destination lands the bytes it is handed and judges none of them
+/// (bl-3ffa): the gate that read `models.<id>.provider` is retired with the
+/// field's last reader, so a row brazen has never heard of is the operator's
+/// business, exactly as it is in `vi`.
 #[test]
-fn a_lernie_global_apply_is_gated_on_brazens_effective_rows() {
+fn a_lernie_global_apply_lands_the_text_it_is_handed() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
-    let good = "models:\n  m-1:\n    provider: acme\n";
+    let text = "models:\n  m-1:\n    context_window: 200000\n";
     assert_eq!(
-        fire(&deps, &applying(ConfigFile::LernieModels, good)),
+        fire(&deps, &applying(ConfigFile::LernieModels, text)),
         Ok(Reply::Applied)
     );
     assert_eq!(
         fs::read_to_string(root.path().join("lernie/models.yaml")).unwrap(),
-        good
+        text
     );
-    // A model declared on a row brazen does not have is the §9.2 refusal —
-    // the failure an operator would otherwise only meet mid-conversation.
-    let err = fire(
-        &deps,
-        &applying(
-            ConfigFile::LernieModels,
-            "models:\n  m-2:\n    provider: nope\n",
-        ),
-    )
-    .unwrap_err();
-    assert!(err.contains("brazen has no provider row for"), "{err}");
-    assert!(err.contains("m-2"), "{err}");
+    // A legacy entry naming a row brazen does not have lands too — refusing it
+    // would refuse an Apply that is correcting the one line anything reads.
+    let legacy = "models:\n  m-2:\n    provider: nope\n    context_window: 400000\n";
+    assert_eq!(
+        fire(&deps, &applying(ConfigFile::LernieModels, legacy)),
+        Ok(Reply::Applied)
+    );
+    assert_eq!(
+        fs::read_to_string(root.path().join("lernie/models.yaml")).unwrap(),
+        legacy
+    );
 }
 
 #[test]
@@ -115,8 +97,8 @@ fn a_workflow_destination_must_name_one_file_and_lands_under_workflows() {
     )
     .unwrap_err();
     assert_eq!(err, "name must be a single file, no path");
-    // A workflow declares no models, so the provider gate has nothing to say —
-    // the general path with nothing to judge, not an exemption.
+    // A safe name lands under `workflows/`, on the same unjudged pipeline every
+    // other file destination runs.
     assert_eq!(
         fire(
             &deps,

@@ -1,6 +1,12 @@
 //! View-model transitions driven by the shared in-memory [`FakeFs`] — no real
 //! disk. Enumeration, name validation, load new-vs-existing, the copy-from and
 //! must-not-exist affordances, and every [`Saved`] Apply outcome.
+//!
+//! Two tests went with the §9.2 provider gate (bl-3ffa): the refusal of a model
+//! on a row brazen lacked, and the proof that the same gate ran clean over a
+//! workflow file. Apply judges no content now, so there is no third outcome to
+//! drive and no per-file difference to prove — every test here holds for every
+//! file the editor opens.
 
 use super::*;
 use crate::test_support::FakeFs;
@@ -92,11 +98,11 @@ fn apply_edits_an_existing_file_and_tracks_the_snapshot() {
     let fs = FakeFs::seed(&lg().models(), b"a");
     let mut ed = Editor::load(lg().models(), &fs).unwrap();
     ed.set_draft("b".into());
-    assert_eq!(ed.apply(&[], &fs), Saved::Ok);
+    assert_eq!(ed.apply(&fs), Saved::Ok);
     assert_eq!(fs.get(&lg().models()), Some(b"b".to_vec()));
     // A repeat Apply lands — the loaded snapshot tracked the rename.
     ed.set_draft("c".into());
-    assert_eq!(ed.apply(&[], &fs), Saved::Ok);
+    assert_eq!(ed.apply(&fs), Saved::Ok);
     assert_eq!(fs.get(&lg().models()), Some(b"c".to_vec()));
 }
 
@@ -107,13 +113,13 @@ fn seeded_creates_a_new_workflow_guarded_must_not_exist() {
     let mut ed = Editor::seeded(path.clone(), b"steps: []\n");
     assert!(ed.is_new());
     assert_eq!(ed.draft(), "steps: []\n");
-    assert_eq!(ed.apply(&[], &fs), Saved::Ok);
+    assert_eq!(ed.apply(&fs), Saved::Ok);
     assert_eq!(fs.get(&path), Some(b"steps: []\n".to_vec()));
     // Now it exists; is_new flips.
     assert!(!ed.is_new());
     // A second seeded editor for the same name refuses — must-not-exist.
     let mut clash = Editor::seeded(path.clone(), b"other\n");
-    assert_eq!(clash.apply(&[], &fs), Saved::Conflict);
+    assert_eq!(clash.apply(&fs), Saved::Conflict);
     assert_eq!(fs.get(&path), Some(b"steps: []\n".to_vec()));
 }
 
@@ -134,13 +140,13 @@ fn apply_refuses_a_concurrent_edit_and_reload_recovers() {
     ed.set_draft("mine".into());
     // Another writer changes the file after load.
     fs.map().insert(lg().models(), b"theirs".to_vec());
-    assert_eq!(ed.apply(&[], &fs), Saved::Conflict);
+    assert_eq!(ed.apply(&fs), Saved::Conflict);
     assert_eq!(fs.get(&lg().models()), Some(b"theirs".to_vec()));
     // Reload re-diffs against the concurrent content; Apply then lands.
     ed.reload(&fs).unwrap();
     assert_eq!(ed.draft(), "theirs");
     ed.set_draft("merged".into());
-    assert_eq!(ed.apply(&[], &fs), Saved::Ok);
+    assert_eq!(ed.apply(&fs), Saved::Ok);
 }
 
 #[test]
@@ -170,51 +176,5 @@ fn apply_maps_a_filesystem_error_to_io() {
     };
     let mut ed = Editor::load(lg().models(), &fs).unwrap();
     ed.set_draft("x".into());
-    assert!(matches!(ed.apply(&[], &fs), Saved::Io { .. }));
-}
-
-/// The bl-53be defect, at the write surface: `models.yaml` shipped two Claude
-/// entries on `provider: anthropic` while brazen's table had no such row. The
-/// draft is refused, every offending entry is named, and **nothing lands** —
-/// the §9.1 posture, so a dead model can never be authored by Apply.
-#[test]
-fn apply_refuses_a_model_on_a_provider_row_brazen_does_not_have() {
-    let fs = FakeFs::seed(&lg().models(), b"models:\n");
-    let rows = vec!["codex".to_string(), "claude-session-direct".to_string()];
-    let mut ed = Editor::load(lg().models(), &fs).unwrap();
-    ed.set_draft(
-        "models:\n  claude-sonnet-5:\n    provider: anthropic\n  gpt-5.4:\n    \
-         provider: codex\n  claude-haiku-4-5:\n    provider: anthropic\n"
-            .into(),
-    );
-    let Saved::Rejected { unknown } = ed.apply(&rows, &fs) else {
-        panic!("a dead provider row must be refused");
-    };
-    assert_eq!(
-        unknown
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>()
-            .join(", "),
-        "claude-sonnet-5 → anthropic, claude-haiku-4-5 → anthropic"
-    );
-    // The draft is kept in RAM and the file is untouched: no torn, no landed.
-    assert_eq!(fs.get(&lg().models()), Some(b"models:\n".to_vec()));
-    // Re-pointing both at a row brazen actually has lands the same draft.
-    ed.set_draft(ed.draft().replace("anthropic", "claude-session-direct"));
-    assert_eq!(ed.apply(&rows, &fs), Saved::Ok);
-    let landed = String::from_utf8(fs.get(&lg().models()).unwrap()).unwrap();
-    assert!(!landed.contains("provider: anthropic"));
-}
-
-/// The gate is the general path, not a models.yaml special case: a workflow
-/// file declares no `models:` block, so it has nothing to check and applies
-/// unchanged — no branch on which file the editor holds.
-#[test]
-fn the_gate_runs_over_every_file_and_a_workflow_has_nothing_to_check() {
-    let fs = FakeFs::default();
-    let rows = vec!["codex".to_string()];
-    let mut ed = Editor::seeded(wf("deploy.yaml"), b"steps:\n  - run: provider: nope\n");
-    assert_eq!(ed.apply(&rows, &fs), Saved::Ok);
-    assert!(fs.get(&wf("deploy.yaml")).is_some());
+    assert!(matches!(ed.apply(&fs), Saved::Io { .. }));
 }

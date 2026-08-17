@@ -11,15 +11,16 @@
 //!
 //! **A config apply is a destination plus the full staged text.** That is the
 //! whole reframe: [`ConfigFile`] enumerates *where* the bytes land, and the
-//! pipeline follows from it — `bz` validates a brazen draft (§9.1), brazen's
-//! provider table gates a lernie-global one (§9.2), and a per-workspace lineage
-//! is staged and committed by `lernie config` (§9.3, the only lawful writer of
-//! `config/*`). One variant, no per-file gesture.
+//! pipeline follows from it — `bz` validates a brazen draft (§9.1), a
+//! lernie-global one is hash-guarded and renamed (§9.2), and a per-workspace
+//! lineage is staged and committed by `lernie config` (§9.3, the only lawful
+//! writer of `config/*`). One variant, no per-file gesture.
 //!
-//! **The gate runs over every file destination, with no branch on which.** A
-//! `workflows/*.yaml` and yog's own `cadence.yaml` declare no `models:` block,
-//! so the §9.2 provider gate is always clean there — the general path with
-//! nothing to judge, rather than three files' worth of special case.
+//! **One validator, at the one destination whose contents yog can judge.** §9.2
+//! held a second between bl-53be and bl-3ffa, over `models.<id>.provider`; it is
+//! retired with the field's last reader, so the three plain-file destinations run
+//! the same unjudged pipeline rather than one of them being gated on a table's
+//! shape (§9.2).
 //!
 //! **A deposit carries no hash guard, and needs none.** The §9 editors' guard
 //! protects a *long-lived* RAM draft against a file that moved under it; a
@@ -63,15 +64,15 @@ pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Res
     match file {
         ConfigFile::Brazen { .. } => write::brazen(deps, ws, text),
         ConfigFile::LernieModels => {
-            write::write_file(deps, LernieGlobal::resolve(&deps.world).models(), text)
+            write::write_file(LernieGlobal::resolve(&deps.world).models(), text)
         }
         ConfigFile::LernieWorkflow { name } => {
             let path = LernieGlobal::resolve(&deps.world)
                 .new_workflow(name)
                 .map_err(|e| e.to_string())?;
-            write::write_file(deps, path, text)
+            write::write_file(path, text)
         }
-        ConfigFile::Cadence => write::write_file(deps, cadence_path(&deps.world), text),
+        ConfigFile::Cadence => write::write_file(cadence_path(&deps.world), text),
         ConfigFile::Branch {
             lineage,
             origin,

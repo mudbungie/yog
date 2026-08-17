@@ -275,8 +275,8 @@ fn a_row_missing_a_column_degrades_to_empty_not_loginable() {
     assert!(rows[0].login_blocked().is_some());
 }
 
-/// The name-only projection the §9.2 provider gate consumes: the same rows,
-/// the same order, one column.
+/// The name-only projection every row judgement consumes (§9.4, §9.5): the same
+/// rows, the same order, one column.
 #[test]
 fn row_names_projects_the_name_column_in_listing_order() {
     let rows = provider_rows(

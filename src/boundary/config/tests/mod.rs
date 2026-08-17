@@ -1,6 +1,6 @@
 //! The §9 config family's executors (bl-3f46), driven end to end against a
 //! hermetic world: a real `config.toml` validated by the **linked** brazen, a
-//! real `models.yaml` gated on brazen's own rows, a recorder `lernie`/`bl` for
+//! real `models.yaml` written unjudged (bl-3ffa), a recorder `lernie`/`bl` for
 //! the two spawning halves, and a real-git workspace for the §9.4 pick.
 //!
 //! Nothing here mocks a pipeline — every case writes the file the gesture

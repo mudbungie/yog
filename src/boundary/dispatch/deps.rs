@@ -5,7 +5,6 @@
 
 use crate::app::Snapshot;
 use crate::cli_outbound::Cli;
-use crate::config_edit::brazen::BzRunner;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -29,8 +28,15 @@ pub struct Deps {
     /// yog's own binary — the `$EDITOR` shim the §9.3 lineage write re-enters.
     pub yog_binary: PathBuf,
     /// The composed world (§16.2): what the §9 config family folds its
-    /// destinations from, and the snapshot the **linked** brazen answers
-    /// [`provider_rows`](Self::provider_rows) through.
+    /// destinations from, and the snapshot the **linked** brazen is resolved
+    /// against wherever a gesture needs its answer.
+    ///
+    /// **A provider table is read per gesture, inside the wall the gesture
+    /// names** — never off this field alone. `Deps` carried a `provider_rows()`
+    /// convenience until bl-3ffa; its one prod caller was the retired §9.2 gate,
+    /// and the surviving readers (§5.1 #20's query, §9.4's pick) each resolve
+    /// brazen through `wall_env(deps, workspace)` because a row that is dead in
+    /// one workspace may be live in another (bl-fcd5).
     pub world: crate::xdg::Env,
     /// The bare rung's driver cwd (`~`), resolved at the process boundary.
     pub home: PathBuf,
@@ -87,18 +93,5 @@ impl Deps {
     /// [`verbs::Bound`](crate::actions::verbs::Bound)).
     pub fn bound(&self, workspace: &std::path::Path) -> crate::actions::verbs::Bound {
         crate::actions::verbs::Bound::at(&self.lernie, &self.world, workspace)
-    }
-
-    /// brazen's effective provider table, by name (§5.1 #20) — **asked, never
-    /// stored**: the rows are brazen's fact, so every gate that needs them
-    /// (§9.2's apply, §9.4's pick, §9.5's provider control) reads the
-    /// one answer at the moment it acts, against the wall of the workspace
-    /// whose file it is judging (§16.2). This retires the headless interim §8.5
-    /// recorded, where the consumer left the table empty and rode "empty gates
-    /// nothing" because brazen was unasked; both faces now ask.
-    pub fn provider_rows(&self) -> Vec<String> {
-        crate::config_edit::brazen::row_names(
-            &crate::config_edit::brazen::RealBzRunner::resolve(&self.world).providers(),
-        )
     }
 }

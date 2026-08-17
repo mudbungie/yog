@@ -47,8 +47,11 @@ pub(crate) fn rows_on(
 pub(crate) const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: codex\n    model: gpt-5.4\n    \
      tools: [bash, read_file, load_skill]\n  compactor:\n    provider: codex\n    model: gpt-5.4-mini\n";
 
-/// `models.yaml` as lernie's `install/models.yaml` seeds it: a comment header,
-/// a top-level `models:` block, two-space entries.
+/// `models.yaml` carrying the block's **legacy four-field entry** — the shape
+/// lernie's `install/models.yaml` seeded before it retired the table (bl-35e2),
+/// and the shape an operator's file still has on disk. yog writes the id and
+/// `context_window` alone since bl-3ffa; every read here is over this fuller
+/// shape on purpose, because writing less changed no reader.
 pub(crate) const SEEDED_MODELS: &str = "# Global config-root models.yaml (ARCH §4.2).\n\nmodels:\n  \
      gpt-5.4:\n    provider: codex\n    model_id: gpt-5.4\n    capabilities: [tool_use_native, streaming]\n    \
      context_window: 400000\n";

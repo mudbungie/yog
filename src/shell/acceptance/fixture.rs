@@ -138,7 +138,8 @@ fn build_world(title: &str, roster: &Roster) -> World {
     std::fs::create_dir_all(roots.lernie_data.join("workspaces")).unwrap();
     // The §9.2 global `models.yaml` a founded world carries, declaring the
     // §5.1 #35 context window of `m` — the model the fixture's step records
-    // name in their own `request.json` (`write_step_record`).
+    // name in their own `request.json` (`write_step_record`). Written in the
+    // block's legacy shape, which the read still takes whole (bl-3ffa).
     std::fs::write(
         roots.lernie_data.join("models.yaml"),
         b"models:\n  m:\n    provider: anthropic\n    model_id: m\n    context_window: 200000\n",

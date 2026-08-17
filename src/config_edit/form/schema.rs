@@ -50,24 +50,20 @@ pub struct Schema {
     pub fields: &'static [FieldSpec],
 }
 
+/// `models.yaml`'s two settings — **the id, and the one fact anything reads out
+/// of the block** (bl-3ffa). The entry's `provider` and `capabilities` had
+/// controls until this ball: a `provider` picker over a field nothing dispatches
+/// through (its only reader was the §9.2 Apply gate that judged it, retired with
+/// it) and a `capabilities` list no program in the suite reads a word of. A
+/// control over a fact nothing consumes is a setting that cannot matter. Neither
+/// control kind died with them — [`Control::Provider`] and [`Control::List`] are
+/// `providers.yaml`'s, over the live pointer and the role's tools.
 const MODEL_FIELDS: &[FieldSpec] = &[
-    FieldSpec {
-        name: "provider",
-        control: Control::Provider,
-        help: "the brazen provider row this model routes through — a row name, \
-               never an endpoint (endpoints live in brazen's own config)",
-    },
     FieldSpec {
         name: "model_id",
         control: Control::Text,
-        help: "the id the provider itself serves; the model picker fills this \
-               from a live `bz --list-models` roster",
-    },
-    FieldSpec {
-        name: "capabilities",
-        control: Control::List,
-        help: "declared, never discovered — brazen publishes no capabilities, \
-               so this list is the operator's claim",
+        help: "the wire id the provider itself serves, when the entry is filed \
+               under a different key; the entry key stands in when it is absent",
     },
     FieldSpec {
         name: "context_window",
@@ -75,8 +71,9 @@ const MODEL_FIELDS: &[FieldSpec] = &[
             min: 1,
             max: 100_000_000,
         },
-        help: "declared, never discovered — brazen publishes no window; \
-               under-stating compacts early, over-stating overflows the request",
+        help: "declared, never discovered — brazen publishes no window; this is \
+               the denominator of yog's context-fullness figure, and the only \
+               thing anything reads out of this table",
     },
 ];
 
@@ -89,9 +86,9 @@ const ROLE_FIELDS: &[FieldSpec] = &[
     FieldSpec {
         name: "model",
         control: Control::Text,
-        help: "a model id `models.yaml` declares — lernie refuses a config \
-               whose role names an undeclared model; the model picker writes \
-               both halves at once",
+        help: "the wire id this role dispatches on — with the row beside it, the \
+               whole of the binding (nothing declares it elsewhere; an id that \
+               does not exist is caught at the first live call)",
     },
     FieldSpec {
         name: "tools",

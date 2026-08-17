@@ -110,7 +110,8 @@ const FIELD_MIN: f32 = 120.0;
 ///
 /// egui's own default is a *constant*: `Style::spacing::text_edit_width`, a
 /// fixed 280 pt column whatever the pane. Measured at a maximized 2560 pt
-/// window, the §9.5 `capabilities` row read `tool_use_native, prompt_caching,
+/// window, the §9.5 `capabilities` row (a `models:` field until bl-3ffa retired
+/// it) read `tool_use_native, prompt_caching,
 /// streaming, stop_` — cut mid-token, no ellipsis, with ~1700 pt of pane unused
 /// immediately to its right: QUALITY G1 and G4 in one row, the space that would
 /// un-cut it right there and unspent. A constant cannot be right at two window

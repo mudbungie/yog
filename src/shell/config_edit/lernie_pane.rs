@@ -16,15 +16,14 @@ use status::{describe_saved, reload_status, status_line};
 use std::path::PathBuf;
 
 /// The declare-model id field (§9.2) — what the drafted entry is.
-const DECLARE_HINT: &str = "The model id to declare in models.yaml, on the provider row picked \
-     beside it. Declare drafts the entry; Apply writes it. The entry's \
-     context_window is the denominator of the context-fullness figure — the one \
-     fact anything reads out of this table. Typed, the whole file is \
-     `/config models <text…>`.";
+const DECLARE_HINT: &str = "The model id to declare in models.yaml. Declare drafts the entry; \
+     Apply writes it. The entry is the id and its context_window — the \
+     denominator of the context-fullness figure, and the one fact anything reads \
+     out of this table. Typed, the whole file is `/config models <text…>`.";
 
 /// The lernie global config (§9.2/§9.5): the open file's settings as controls
 /// where yog has a reader for it, the raw text where it does not, the file
-/// switcher, and Apply — gated on brazen's provider rows exactly as before.
+/// switcher, and Apply — which judges nothing since bl-3ffa (§9.2).
 pub(super) fn render(ui: &mut egui::Ui, config: &mut ConfigState, provider_rows: &[String]) {
     ui.heading(egui::RichText::new("lernie global config").color(theme::integration_hue("lernie")));
     ui.monospace(config.lernie_editor.path().display().to_string());
@@ -42,14 +41,13 @@ pub(super) fn render(ui: &mut egui::Ui, config: &mut ConfigState, provider_rows:
         if ui
             .button("Apply")
             .on_hover_text(
-                "Write this file, refusing it if it names a model whose provider \
-                 brazen does not have — which is the failure you would otherwise \
-                 only meet mid-conversation. Typed, it is `/config models <text…>`.",
+                "Write this file: the draft replaces it whole, refused only if it \
+                 changed underneath you since it was read. Typed, it is \
+                 `/config models <text…>`.",
             )
             .clicked()
         {
-            config.lernie_status =
-                describe_saved(config.lernie_editor.apply(provider_rows, &config.io));
+            config.lernie_status = describe_saved(config.lernie_editor.apply(&config.io));
         }
         if ui.button("Reload").on_hover_text(RELOAD_HINT).clicked() {
             config.lernie_status = reload_status(config.lernie_editor.reload(&config.io));
@@ -125,22 +123,22 @@ fn settings(
             Err(e) => config.lernie_status = e.to_string(),
         }
     }
-    declare(ui, config, schema, provider_rows);
+    declare(ui, config, schema);
 }
 
 /// Add a model entry to `models.yaml` — **the one seat that authors one** since
 /// bl-d9cb, the §9.4 picker's half of this write having been deleted with the
 /// lernie cross-check that justified it. Only offered for the file that has a
 /// `models:` block to add to.
-fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema, provider_rows: &[String]) {
+///
+/// The row it once picked went with bl-3ffa: the entry names no provider row any
+/// more, because nothing dispatched through the one it named.
+fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema) {
     if schema.block != crate::model_pick::grammar::MODELS {
         return;
     }
-    // Rule 1b again (bl-7414): the id field is the greedy half, the row it
-    // routes through and the verb are not. The two halves take **disjoint**
-    // borrows of the pane's RAM, since `control_last` holds both closures at
-    // once — the id is typed on the left, the row is picked on the right.
-    let (typed, picked) = (&mut config.new_model, &mut config.new_model_row);
+    // Rule 1b again (bl-7414): the id field is the greedy half, the verb is not.
+    let typed = &mut config.new_model;
     let declare = crate::shell::row::control_last(
         ui,
         |ui| {
@@ -149,30 +147,12 @@ fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema, provide
                 .on_hover_text(DECLARE_HINT);
         },
         |ui| {
-            egui::ComboBox::from_id_salt("declare-model-row")
-                .selected_text(picked.as_str())
-                .show_ui(ui, |ui| {
-                    for name in provider_rows {
-                        ui.selectable_value(picked, name.clone(), name)
-                            .on_hover_text(
-                                "The provider row this entry files the model under — one \
-                             of the rows brazen actually has. Typed, the whole file \
-                             is `/config models <text…>`.",
-                            );
-                    }
-                })
-                .response
-                .on_hover_text(
-                    "Which provider row the new entry files the model under — one of \
-                 the rows brazen actually has. Typed, the whole file is \
-                 `/config models <text…>`.",
-                );
             ui.button("Declare")
                 .on_hover_text(
-                    "Draft a `models:` entry for that id on the picked provider row. \
-                     Nothing lands until Apply. The entry declares the context \
-                     window yog measures fullness against; picking a model does not \
-                     write one. Typed, the whole file is `/config models <text…>`.",
+                    "Draft a `models:` entry for that id. Nothing lands until Apply. \
+                     The entry declares the context window yog measures fullness \
+                     against; picking a model does not write one. Typed, the whole \
+                     file is `/config models <text…>`.",
                 )
                 .clicked()
         },
@@ -183,23 +163,19 @@ fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema, provide
     }
 }
 
-/// Draft the new entry, or say why not. An id already on the picked row is
+/// Draft the new entry, or say why not. An id the file already declares is
 /// nothing to write, which is a value and not a failure.
 ///
 /// The entry's window is §9.4's declared default under the note that says so:
 /// this seat is a typed id with no roster behind it, and since bl-d9cb no seat
 /// has one — brazen's served window is a query, never a field seeded here.
 fn declared(config: &mut ConfigState) -> String {
-    match declare_model(
-        config.lernie_editor.draft(),
-        config.new_model.trim(),
-        config.new_model_row.trim(),
-    ) {
+    match declare_model(config.lernie_editor.draft(), config.new_model.trim()) {
         Ok(Some(text)) => {
             config.lernie_editor.set_draft(text);
             "declared — Apply to write".to_string()
         }
-        Ok(None) => "already declared on that row".to_string(),
+        Ok(None) => "already declared".to_string(),
         Err(e) => e.to_string(),
     }
 }

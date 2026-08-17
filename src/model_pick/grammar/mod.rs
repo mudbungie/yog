@@ -13,9 +13,15 @@
 //! ```text
 //! roles:                      models:
 //!   worker:                     gpt-5.4:
-//!     provider: codex             provider: codex
-//!     model: gpt-5.4              model_id: gpt-5.4
+//!     provider: codex             context_window: 400000
+//!     model: gpt-5.4
 //! ```
+//!
+//! The `models:` entry is the shape yog WRITES since bl-3ffa — the id and the one
+//! fact anything reads out of it. The read side takes the block's older four-field
+//! shape unchanged (`provider`, `model_id`, `capabilities` beside it), because
+//! these are anchored line reads: a field nothing looks for is a line nothing
+//! looks at.
 //!
 //! and **declines loudly** ([`GrammarError`], rendered in ichor per §7.3) on
 //! anything else, pointing at the §9.2 / §9.3 raw editors. Declining is not a
@@ -73,10 +79,7 @@ mod roles;
 mod tools;
 
 pub use fields::{entry_field, entry_names, remove_entry, set_entry, set_field};
-pub use models::{
-    DEFAULT_CONTEXT_WINDOW, DeclaredModel, context_windows, declare_model, declared,
-    is_unknown_row, unknown_rows,
-};
+pub use models::{DEFAULT_CONTEXT_WINDOW, context_windows, declare_model, is_unknown_row};
 pub use roles::{roles, set_role_model};
 pub use tools::{flow_members, flow_value};
 
@@ -85,8 +88,8 @@ pub const PROVIDERS_YAML: &str = "providers.yaml";
 pub const MODELS_YAML: &str = "models.yaml";
 
 /// The column-0 block key each file's entries hang under — the role map and the
-/// model map. Named once here because three rewrites, the §9.2 gate and the
-/// §9.5 pane all spell them.
+/// model map. Named once here because three rewrites and the §9.5 pane all
+/// spell them.
 pub const ROLES: &str = "roles";
 pub const MODELS: &str = "models";
 

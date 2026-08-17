@@ -1,29 +1,32 @@
 //! lernie global config editor — `models.yaml` and `workflows/*.yaml` (§9.2).
 //!
-//! > Text editor per file; Apply = **provider gate** → hash-guard +
-//! > temp-in-dir + rename (lernie declares these hand-edited; yog is the hand,
-//! > minus torn writes). yog still adds no YAML dep […] New workflow = same
-//! > path, new name; templates copyable. (DESIGN §9.2)
+//! > Text editor per file; Apply = hash-guard + temp-in-dir + rename (lernie
+//! > declares these hand-edited; yog is the hand, minus torn writes). yog still
+//! > adds no YAML dep […] New workflow = same path, new name; templates
+//! > copyable. (DESIGN §9.2)
 //!
-//! So this surface reuses the shared [`pipeline`](super::pipeline) verbatim —
-//! the same stage → hash-guard → atomic rename brazen uses — with **one**
-//! validator, the narrowest one the file's own contract implies: `provider:`
-//! on a model is a brazen provider-row NAME, and brazen publishes the row set
-//! ([`BzRunner::providers`](crate::config_edit::brazen::BzRunner::providers)),
-//! so an entry naming a row brazen does not have is refused
-//! ([`Saved::Rejected`]) exactly as §9.1 refuses a `bz`-rejected TOML draft.
-//! Nothing else about the YAML is judged — the operator's remaining risk is
-//! still `vi`'s.
+//! So this surface is the shared [`pipeline`](super::pipeline) verbatim — the
+//! same stage → hash-guard → atomic rename brazen uses — and **nothing here
+//! judges the YAML**: the operator's risk is `vi`'s, which is the section's
+//! original posture and its posture again.
 //!
-//! Two things are deliberately *not* special cases. The gate runs over every
-//! §9.2 file, because a `workflows/*.yaml` declares no `models:` block and so
-//! is always clean ([`unknown_rows`]) — no branch on which file is open. And a
-//! new workflow is the general path with an absent load-time snapshot: the
-//! guard that refuses a changed file *is* the must-not-exist guard when the
-//! file was never there.
+//! **It held one validator between bl-53be and bl-3ffa, and the field it read is
+//! why it went.** The gate refused an entry whose `models.<id>.provider` named no
+//! brazen row — checkable without a YAML dep, and right while a role's model
+//! resolved *through* that declaration. lernie retired the `models:` table
+//! (bl-35e2) and bl-d9cb re-pointed the picker at `providers.yaml`, leaving the
+//! gate judging a field whose only remaining reader was the refusal itself: it
+//! could refuse an Apply that was correcting the one line anything reads
+//! (`context_window`), on the strength of a dead one. The row judgement now runs
+//! only where the live pointer is
+//! ([`is_unknown_row`](crate::model_pick::grammar::is_unknown_row), §9.4's pick
+//! gate and role marks, §9.5's control over `roles.<r>.provider`).
+//!
+//! One thing is still deliberately *not* a special case: a new workflow is the
+//! general path with an absent load-time snapshot — the guard that refuses a
+//! changed file *is* the must-not-exist guard when the file was never there.
 
 use super::{Draft, FileIo};
-use crate::model_pick::grammar::{DeclaredModel, unknown_rows};
 use crate::xdg::Env;
 use std::path::{Path, PathBuf};
 
@@ -109,11 +112,10 @@ fn validate_workflow_name(name: &str) -> Result<(), WorkflowNameError> {
 }
 
 /// A raw-text editor over one lernie-global file (§9.2): load into a RAM draft,
-/// edit, Apply through the provider gate and then the shared hash-guard +
-/// temp-in-dir + atomic rename pipeline. Apply refuses on exactly two grounds
-/// — a model declared on a provider row brazen does not have
-/// ([`Rejected`](Saved::Rejected)) and a concurrent edit
-/// ([`Conflict`](Saved::Conflict)).
+/// edit, Apply through the shared hash-guard + temp-in-dir + atomic rename
+/// pipeline. Apply refuses on exactly one ground — a concurrent edit
+/// ([`Conflict`](Saved::Conflict)) — the file's contents being lernie's business
+/// and the operator's, never this editor's (bl-3ffa).
 #[derive(Debug, Clone)]
 pub struct Editor {
     draft: Draft,
@@ -177,16 +179,11 @@ impl Editor {
         self.draft.refresh(io)
     }
 
-    /// Apply the draft: provider gate first, then the shared pipeline. A model
-    /// on a row missing from `providers` ⇒ [`Saved::Rejected`]; a concurrent
-    /// change (or an already-present file when creating) ⇒
-    /// [`Saved::Conflict`]; any fs error ⇒ [`Saved::Io`].
-    ///
-    /// `providers` is brazen's effective row set
-    /// ([`BzRunner::providers`](crate::config_edit::brazen::BzRunner::providers));
-    /// an empty slice is *no answer* and gates nothing ([`unknown_rows`]).
-    pub fn apply(&mut self, providers: &[String], io: &dyn FileIo) -> Saved {
-        match self.apply_inner(providers, io) {
+    /// Apply the draft through the shared pipeline. A concurrent change (or an
+    /// already-present file when creating) ⇒ [`Saved::Conflict`]; any fs error ⇒
+    /// [`Saved::Io`].
+    pub fn apply(&mut self, io: &dyn FileIo) -> Saved {
+        match self.apply_inner(io) {
             Ok(saved) => saved,
             Err(e) => Saved::Io {
                 error: e.to_string(),
@@ -194,11 +191,7 @@ impl Editor {
         }
     }
 
-    fn apply_inner(&mut self, providers: &[String], io: &dyn FileIo) -> std::io::Result<Saved> {
-        let unknown = unknown_rows(self.draft.text(), providers);
-        if !unknown.is_empty() {
-            return Ok(Saved::Rejected { unknown });
-        }
+    fn apply_inner(&mut self, io: &dyn FileIo) -> std::io::Result<Saved> {
         let staged = self.draft.stage(io)?;
         if self.draft.commit(staged, io)? {
             Ok(Saved::Ok)
@@ -208,18 +201,14 @@ impl Editor {
     }
 }
 
-/// The terminal state of an [`Editor::apply`] (§9.2): the provider rejection,
-/// the concurrent-edit conflict (which is also the new-file must-not-exist
-/// refusal), and a filesystem error.
+/// The terminal state of an [`Editor::apply`] (§9.2): the concurrent-edit
+/// conflict (which is also the new-file must-not-exist refusal), and a
+/// filesystem error. There is no content rejection since bl-3ffa — see this
+/// module's header for the field the retired one judged.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Saved {
     /// Guard passed, renamed into place; the loaded snapshot is updated.
     Ok,
-    /// The draft declares models on brazen provider rows that do not exist:
-    /// refuse, name every offending entry, keep the draft in RAM and write
-    /// nothing — the §9.1 posture, minus a temp file, since the judgement is
-    /// pure over the draft text and needs no file to hand `bz`.
-    Rejected { unknown: Vec<DeclaredModel> },
     /// The on-disk file changed since load (or already exists when creating):
     /// refuse rather than blind-LWW. Reload to re-diff ([`Editor::reload`]).
     Conflict,
