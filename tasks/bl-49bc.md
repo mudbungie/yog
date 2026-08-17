@@ -1,7 +1,7 @@
 +++
-title = "a started receipt returns a name that only message can address; every other agent surface needs the root id"
+title = "one conversation addressing at the boundary: an agent id or the unique stored name, resolved once ahead of both chokepoints"
 created = 1786843631
-updated = 1786936198
+updated = 1786936647
 claimant = "Receipt49bc"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
