@@ -107,7 +107,10 @@ pub struct Hit {
 /// A whole answer: the question it answers, the ranked hits, and — never
 /// silently — the sources that could not be read. An unreadable corner of the
 /// world shrinks the corpus, it does not make the world unsearchable, so both
-/// halves ride back together.
+/// halves ride back together. A **compacted** conversation rides here too
+/// (bl-fde5): its deleted span is bytes that no longer exist to read, so an
+/// answer over one names the span rather than posing as an answer over the
+/// whole conversation.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Found {
     /// The needle this answers, as the operator typed it (trimmed). **The

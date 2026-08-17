@@ -29,6 +29,7 @@ fn bare() -> Attempt {
         steps: 0,
         response: None,
         verdicts: Vec::new(),
+        compacted: 0,
         outcome: Outcome::Pending,
     }
 }
@@ -42,6 +43,10 @@ fn an_unbound_row_omits_what_it_cannot_say() {
     for key in ["base", "conversation", "goal", "governing", "response"] {
         assert!(row.get(key).is_none(), "{key} rides only when there is one");
     }
+    assert!(
+        row.get("compacted").is_none(),
+        "an intact record has no compaction to speak of (bl-fde5)"
+    );
     assert_eq!(row["outcome"], json!({ "state": "pending" }));
     assert_eq!(body["kind"], "science");
 }
@@ -134,6 +139,7 @@ fn every_outcome_arm_round_trips() {
         row.pins = vec!["instructions/00-A.md=/p/A.md".to_owned()];
         row.wall_secs = 12;
         row.steps = 3;
+        row.compacted = 7;
         assert_eq!(read(&reply(&[row.clone()])).unwrap(), vec![row]);
     }
 }

@@ -135,11 +135,18 @@ fn last_action_from_disk(workspace: &Path, agent_id: &str, tip_ts: i64, newest_m
 }
 
 /// What one readdir of `<workspace>/agents/<agent-id>/messages/` yields (§5.1
-/// #12): how many entries are in it and the newest mtime among them. Two facts
-/// from one walk — the same fold `stream_from_disk` makes for the live response
-/// — because reading the directory twice would cost a second syscall per agent
-/// per tick and could catch two different states of it.
+/// #12): how many messages have ever landed and the newest mtime among the
+/// entries. Two facts from one walk — the same fold `stream_from_disk` makes
+/// for the live response — because reading the directory twice would cost a
+/// second syscall per agent per tick and could catch two different states of
+/// it.
 struct Messages {
+    /// The `NNN` counter's high-water mark — the highest counter present, not
+    /// a count of files (bl-fde5). The two were the same until compaction:
+    /// lernie's compactor deletes entries *below* the surviving counter (§5.1
+    /// #12), so a file count shrinks mid-flight while the messages-ever-landed
+    /// fact this field states never goes down — which is what the §7.2 echo's
+    /// passed-the-baseline predicate needs to stay a reading and not a race.
     count: usize,
     newest_unix: i64,
 }
@@ -161,26 +168,28 @@ fn call_start_from_disk(workspace: &Path, agent_id: &str) -> Option<i64> {
 }
 
 /// The [`Messages`] fold over `<workspace>/agents/<agent-id>/messages/` (§5.1
-/// #12): an empty count and a zero mtime when the directory is absent or empty.
-/// Entries are not filtered — a stray subdirectory's mtime is still a write
-/// into the transcript directory, and its presence is still something landing
-/// there.
+/// #12): a zero high-water and a zero mtime when the directory is absent or
+/// empty. The mtime is over every entry — a stray subdirectory's mtime is
+/// still a write into the transcript directory — while the count reads only
+/// names carrying the `NNN` counter, through the one parse of that shape
+/// ([`crate::transcript::seq_of`]): a stray entry is a write, but it is not a
+/// message that landed.
 fn messages_from_disk(workspace: &Path, agent_id: &str) -> Messages {
     let dir = workspace.join(AGENTS_DIR).join(agent_id).join(MESSAGES_DIR);
-    let Ok(entries) = std::fs::read_dir(&dir) else {
-        return Messages {
-            count: 0,
-            newest_unix: 0,
-        };
+    let mut fold = Messages {
+        count: 0,
+        newest_unix: 0,
     };
-    let stamps: Vec<i64> = entries
-        .flatten()
-        .map(|e| mtime_unix(&e.path()).unwrap_or(0))
-        .collect();
-    Messages {
-        count: stamps.len(),
-        newest_unix: stamps.into_iter().max().unwrap_or(0),
+    let Ok(entries) = std::fs::read_dir(&dir) else {
+        return fold;
+    };
+    for entry in entries.flatten() {
+        fold.newest_unix = fold.newest_unix.max(mtime_unix(&entry.path()).unwrap_or(0));
+        if let Some(seq) = crate::transcript::seq_of(&entry.file_name().to_string_lossy()) {
+            fold.count = fold.count.max(seq);
+        }
     }
+    fold
 }
 
 /// Mtime of the latest step's `response.json` — the very file

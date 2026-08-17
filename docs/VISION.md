@@ -315,6 +315,24 @@ as data, and a poisoned check can at worst emit a wrong verdict — a false
 severity the ladder config caps and whose harshest action (stop) is
 non-destructive.
 
+**A compacted record rides the window, summary and all** (the bl-fde5 ruling).
+lernie's compactor deletes message files and hands the agent `summary/NNN.md`
+in their place (DESIGN §5.1 #12), so after a compaction the summary is part of
+what the agent reads on every step — and this section's premise is that the
+monitor reads what the agent read. The counterargument was folding non-agent
+words into the evidence: the compaction marker is machinery prose, neither the
+agent's output nor a principal's message. It loses, twice over. The summary is
+lernie's artifact the agent actually consumed, not yog's commentary — omitting
+it hands the judge a window with a hole exactly where the agent's context was
+rewritten, and the deleted span itself is unrecoverable, so the summary is the
+*only* witness left to what the early work was. And the injection surface does
+not widen: the marker is quoted as data under a stated heading like every other
+line, so a poisoned summary is bounded by the same wrong-verdict ceiling as a
+poisoned transcript. The marker rides **every** window, not only the delta it
+landed in — it is standing context the way the goal is, and the delta diff
+(`--diff-filter=AM` over `messages/`) cannot see a deletion, so gating it on
+the delta would omit it from the one check where the compaction is news.
+
 **The ladder is a hook** (bl-156b). Verdict→response is
 a logic-board tie-point (§5): config an operator rewires, never code. A
 wiring takes one of two shapes, and both spend only existing verbs:

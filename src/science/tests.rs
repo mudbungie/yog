@@ -173,6 +173,7 @@ pub(super) fn candidate(handle: &str, response: Option<&str>) -> super::Attempt 
         steps: 3,
         response: response.map(str::to_owned),
         verdicts: Vec::new(),
+        compacted: 0,
         outcome: super::Outcome::Pending,
     }
 }

@@ -118,6 +118,33 @@ fn the_claim_attempt_projects_every_column() {
     // The workspace is no git repo here, so the freeze reads as unreadable
     // rather than as some other commit.
     assert_eq!(row.governing, None);
+    // An intact record: no compaction to speak of (bl-fde5).
+    assert_eq!(row.compacted, 0);
+}
+
+/// A compacted conversation's row says so (bl-fde5): the counter proves how
+/// many entries lernie's compactor deleted, and the projection states that
+/// bound rather than letting a short verdict list read as the conversation's
+/// whole history.
+#[test]
+fn a_compacted_conversation_marks_its_projection() {
+    let lab = Lab::new();
+    let claim = lab.claim(None);
+    let entries = trail(&lab.ws, &lab.project.path, &[(CONV, &claim)]);
+    let snap = snap(&lab.ws, &lab.project.path, vec![named_agent()], vec![]);
+    // The compactor's leavings: the surviving record starts at 004, so entries
+    // 001–003 — any verdicts among them included — are proven gone.
+    let dir = lab.ws.join("agents").join(AGENT).join("messages");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("004-claude-opus.json"), SAID).unwrap();
+    let rows = lab.project_at(&snap, &entries);
+    assert_eq!(rows.len(), 1, "{rows:?}");
+    assert_eq!(rows[0].compacted, 3, "entries 001–003 are proven deleted");
+    assert!(
+        rows[0].verdicts.is_empty(),
+        "nothing surviving is guessed at"
+    );
+    assert_eq!(rows[0].response.as_deref(), Some("done, tests green"));
 }
 
 /// A fan's candidates each project their own row, bound by their own fire —

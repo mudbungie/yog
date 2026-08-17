@@ -59,6 +59,9 @@ fn row(diff: crate::workdiff::Attempt, i: usize, outcome: Outcome) -> Attempt {
         } else {
             Vec::new()
         },
+        // The full row is a compacted record saying so; the rest are intact,
+        // whose encoding omits the column (bl-fde5).
+        compacted: if full { 12 } else { 0 },
         outcome,
     }
 }

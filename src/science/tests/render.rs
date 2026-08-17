@@ -89,6 +89,23 @@ fn every_outcome_and_absence_is_said_in_words() {
     assert!(text.contains("5s wall"), "{text}");
     // Four members and no picks: nothing compares until two are picked.
     assert!(!text.contains("response diff"), "{text}");
+    // Intact records say nothing about compaction — the general path.
+    assert!(!text.contains("record compacted"), "{text}");
+}
+
+/// A compacted record is stated on the card (bl-fde5): the figures the operator
+/// judges by were read over a rewritten conversation, and that bound must be on
+/// the same surface as the figures.
+#[test]
+fn a_compacted_record_is_stated_beside_its_figures() {
+    let mut squashed = candidate("at-1", Some("done"));
+    squashed.compacted = 12;
+    let mut seat = Seat::default();
+    let text = painted(&[squashed], &mut seat);
+    assert!(
+        text.contains("record compacted — 12 entries gone"),
+        "{text}"
+    );
 }
 
 /// A long response is clipped in code (the paint layer must never rely on an

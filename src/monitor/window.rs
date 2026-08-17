@@ -17,6 +17,21 @@
 //! content under a heading and never re-frames it as a message to the judge;
 //! tool-lessness (the check holds no verbs at all) is what bounds the damage a
 //! poisoned transcript can do, and the policy prompt says the rest.
+//!
+//! **A compacted record rides the window, summary and all** (the bl-fde5
+//! ruling, recorded in VISION §4.9). lernie's compactor deletes message files
+//! and hands the agent `summary/NNN.md` in their place (§5.1 #12), so after a
+//! compaction the summary is part of what the agent reads on **every** step —
+//! and §4.9's premise is that the monitor reads what the agent read. The
+//! counterargument was folding non-agent words into the evidence; it loses
+//! because the summary is lernie's artifact the agent actually consumed, not
+//! yog's commentary, and omitting it hands the judge a window with a hole
+//! exactly where the agent's context was rewritten. It is quoted as data under
+//! a stated heading like every other line. The marker rides **every** window,
+//! not only the delta it landed in: it is standing context the way the goal
+//! is, and the delta diff (`--diff-filter=AM` over `messages/`) cannot see a
+//! deletion, so gating the marker on the delta would omit it from the one
+//! check where the compaction is news.
 
 use crate::transcript::{Block, Entry, EntryKind, Transcript};
 use std::path::Path;
@@ -65,12 +80,17 @@ fn delta(workspace: &Path, since: Option<&str>, tip: &str) -> Option<Vec<String>
 }
 
 /// Fold the selected entries to plain text, tail-clipped. `only` names the
-/// entries to keep; `None` keeps them all.
+/// entries to keep; `None` keeps them all. A compaction marker is kept
+/// regardless — it is standing context, no file backs it, and no diff can name
+/// it (module doc).
 fn fold(transcript: &Transcript, only: Option<&[String]>) -> String {
     let text: String = transcript
         .entries
         .iter()
-        .filter(|e| only.is_none_or(|names| names.contains(&e.name)))
+        .filter(|e| {
+            matches!(e.kind, EntryKind::Compacted { .. })
+                || only.is_none_or(|names| names.contains(&e.name))
+        })
         .map(say)
         .collect::<Vec<_>>()
         .join("\n");
@@ -93,14 +113,29 @@ fn say(entry: &Entry) -> String {
             let mark = if *is_error { " (error)" } else { "" };
             format!("[tool result{mark}]\n{content}\n")
         }
-        // None reaches a v1 check: the streaming tail is excluded by
-        // construction (`build(.., false)`), a Raw entry is bytes yog could
-        // not classify, and a compaction marker is yog's own statement about
-        // the record rather than anything the agent said — quoting it would
-        // put the window's own words into the evidence it is the window onto.
-        // **What the marker replaced is still missing from this window**, and
-        // that is bl-fde5's, not this arm's.
-        EntryKind::Streaming { .. } | EntryKind::Raw | EntryKind::Compacted { .. } => String::new(),
+        // The compaction record, quoted as data (module doc): the span the
+        // counter proves deleted, and the summary lernie handed the agent in
+        // its place — what the agent read, which is what the judge reads.
+        EntryKind::Compacted {
+            first,
+            last,
+            summary,
+        } => {
+            let span = format!("entries {first:03}\u{2013}{last:03}");
+            if summary.is_empty() {
+                format!("[record compacted here: {span} deleted; no summary on this mark]\n")
+            } else {
+                format!(
+                    "[record compacted here: {span} deleted; lernie's summary replaced \
+                     them in the agent's context]\n{summary}\n"
+                )
+            }
+        }
+        // None of these reaches a v1 check's text: the streaming tail is
+        // excluded by construction (`build(.., false)` — staging text has no
+        // commit to replay a verdict against), and a Raw entry is bytes yog
+        // could not classify.
+        EntryKind::Streaming { .. } | EntryKind::Raw => String::new(),
     }
 }
 

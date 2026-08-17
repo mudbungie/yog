@@ -81,22 +81,59 @@ fn every_entry_kind_folds_to_its_quotation() {
     assert!(all.contains("[tool result (error)]\nboom"));
     assert!(!all.contains("partial"), "no streaming text in a v1 window");
     assert!(
-        !all.contains("squashed"),
-        "a compaction mark is yog's own statement about the record, not the agent's"
+        all.contains("[record compacted here: entries 004\u{2013}004 deleted; lernie's summary")
+            && all.contains("squashed"),
+        "the summary is what lernie handed the agent in place of the span, quoted as \
+         data under its own heading (VISION §4.9, bl-fde5):\n{all}"
+    );
+}
+
+/// A gap whose summary rode an earlier mark (or was never written) still says
+/// the entries are gone — the marker never depends on the summary existing.
+#[test]
+fn a_summaryless_mark_still_states_the_deletion() {
+    let transcript = Transcript {
+        entries: vec![Entry {
+            name: "«005–007»".to_owned(),
+            raw: Vec::new(),
+            kind: EntryKind::Compacted {
+                first: 5,
+                last: 7,
+                summary: String::new(),
+            },
+        }],
+    };
+    assert_eq!(
+        fold(&transcript, None),
+        "[record compacted here: entries 005\u{2013}007 deleted; no summary on this mark]\n"
     );
 }
 
 #[test]
-fn a_delta_keeps_only_the_named_entries() {
+fn a_delta_keeps_only_the_named_entries_plus_every_compaction_mark() {
     let transcript = Transcript {
         entries: vec![
-            model("001-m.json", vec![Block::Text("old".to_owned())]),
-            model("002-m.json", vec![Block::Text("new".to_owned())]),
+            Entry {
+                name: "«001»".to_owned(),
+                raw: Vec::new(),
+                kind: EntryKind::Compacted {
+                    first: 1,
+                    last: 1,
+                    summary: "what was cut".to_owned(),
+                },
+            },
+            model("002-m.json", vec![Block::Text("old".to_owned())]),
+            model("003-m.json", vec![Block::Text("new".to_owned())]),
         ],
     };
-    let only = vec!["002-m.json".to_owned()];
+    let only = vec!["003-m.json".to_owned()];
     let window = fold(&transcript, Some(&only));
     assert!(window.contains("new") && !window.contains("old"));
+    assert!(
+        window.contains("what was cut"),
+        "the marker is standing context and no diff can name it — a delta that \
+         dropped it would omit the compaction from the one check where it is news:\n{window}"
+    );
 }
 
 #[test]

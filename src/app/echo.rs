@@ -54,9 +54,12 @@ pub(crate) struct Echo {
     pub(crate) target: Target,
     /// The operator's text, verbatim — the payload the composer sent.
     pub(crate) text: String,
-    /// How many `messages/` entries the target held when this was made — the
-    /// reconciliation baseline (§5.1 #12). Zero for a start, whose root does
-    /// not exist.
+    /// How many messages had ever landed on the target when this was made —
+    /// the `NNN` counter's high-water mark (§5.1 #12), the reconciliation
+    /// baseline. A high-water rather than a file count (bl-fde5): compaction
+    /// deletes files mid-flight, and a shrunken count would strand the echo
+    /// behind a baseline no landing could ever pass. Zero for a start, whose
+    /// root does not exist.
     pub(crate) baseline: usize,
     /// Wall-clock seconds at the send: the deposit header's `at`, and the
     /// recency that lifts the row.
@@ -78,7 +81,7 @@ impl Echo {
     }
 
     /// The echo a §8.2 `message` leaves: the agent it was aimed at and the
-    /// count of messages already landed there, read off the derivation the
+    /// counter high-water already landed there, read off the derivation the
     /// gesture was fired against.
     pub(crate) fn messaged(
         snap: &Snapshot,
@@ -116,9 +119,10 @@ impl Echo {
     }
 
     /// Whether `derived` now shows the message this echo stands in for — the
-    /// one reconciliation predicate (§7.2): the target is on the roster and its
-    /// landed `messages/` count has passed the baseline the echo recorded.
-    /// False holds the echo.
+    /// one reconciliation predicate (§7.2): the target is on the roster and
+    /// its `messages/` counter high-water has passed the baseline the echo
+    /// recorded. False holds the echo — including across a compaction, which
+    /// deletes files but never lowers the counter (bl-fde5).
     pub(crate) fn landed(&self, derived: &Snapshot) -> bool {
         index_of(derived, &self.ws, &self.target)
             .and_then(|i| derived.trees.get(&self.ws)?.agents.get(i))

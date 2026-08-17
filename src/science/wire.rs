@@ -52,6 +52,12 @@ fn row(attempt: &Attempt) -> Value {
         "verdicts".to_owned(),
         Value::Array(attempt.verdicts.iter().map(verdict).collect()),
     );
+    // Absent on an intact record, like every other column with nothing to say:
+    // nonzero states how many entries compaction deleted out from under the
+    // verdicts and the response (§5.1 #12, bl-fde5).
+    if attempt.compacted > 0 {
+        map.insert("compacted".to_owned(), json!(attempt.compacted));
+    }
     map.insert("outcome".to_owned(), outcome(&attempt.outcome));
     Value::Object(map)
 }
@@ -115,6 +121,7 @@ fn row_of(v: &Value) -> Result<Attempt, String> {
         steps: usize_of(o, "steps")?,
         response: opt_str_of(o, "response")?,
         verdicts: list_of(o, "verdicts", verdict_of)?,
+        compacted: crate::boundary::codec::fields::opt(o, "compacted", usize_of)?.unwrap_or(0),
         outcome: outcome_of(o.get("outcome").ok_or("science row: missing outcome")?)?,
     })
 }

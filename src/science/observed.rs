@@ -35,6 +35,7 @@ pub(super) struct Observed {
     pub(super) steps: usize,
     pub(super) response: Option<String>,
     pub(super) verdicts: Vec<super::Verdict>,
+    pub(super) compacted: usize,
 }
 
 /// Read all of it for one agent. Three sources: the worktree's `goal.md`, the
@@ -61,6 +62,7 @@ pub(super) fn observed(snap: &Snapshot, workspace: &Path, agent: &str) -> Observ
         steps: bills.len(),
         response: response(&transcript),
         verdicts: verdicts(&transcript),
+        compacted: compacted(&transcript),
     }
 }
 
@@ -134,4 +136,22 @@ fn verdicts(transcript: &Transcript) -> Vec<super::Verdict> {
             _ => None,
         })
         .collect()
+}
+
+/// How many entries the counter proves compacted away (§5.1 #12) — the sum of
+/// the spliced markers' spans, and the whole of what disk can say about what
+/// [`verdicts`] and [`response`] no longer see. Verdicts delivered in a
+/// squashed span are deleted files: they are not recovered and not guessed at,
+/// and this figure is the projection saying so (bl-fde5).
+fn compacted(transcript: &Transcript) -> usize {
+    transcript
+        .entries
+        .iter()
+        .filter_map(|entry| match &entry.kind {
+            EntryKind::Compacted { first, last, .. } => {
+                Some(last.saturating_sub(*first).saturating_add(1))
+            }
+            _ => None,
+        })
+        .sum()
 }

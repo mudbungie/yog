@@ -42,6 +42,7 @@
 use std::path::{Path, PathBuf};
 
 mod compaction;
+pub(crate) use compaction::seq_of;
 mod parse;
 mod render;
 mod rows;

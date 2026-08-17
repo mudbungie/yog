@@ -112,3 +112,36 @@ fn the_message_count_rides_the_same_directory_walk_as_the_recency_fact() {
     );
     assert!(!two.in_memory(), "a derived agent always has a tip");
 }
+
+/// The count is the counter's **high-water**, not a file count (bl-fde5): a
+/// compaction deletes entries below the surviving counter, and the
+/// messages-ever-landed fact must not go down with the files — the §7.2 echo's
+/// passed-the-baseline predicate has no reading for a shrinking count. A stray
+/// non-message entry moves the recency mtime (it is a write into the
+/// directory) but never the count (it is not a message that landed).
+#[test]
+fn the_message_count_survives_a_compaction_and_ignores_stray_entries() {
+    let fx = Fixture::new();
+    let id = "20260801T120400Z-hiwater";
+    fx.build_agent(id, "compact me");
+    write_message(&fx, id, "001-user.md");
+    write_message(&fx, id, "002-m.json");
+    write_message(&fx, id, "003-tool.json");
+    let before = agent_of(&GitTree::from_repo(&fx.path).unwrap(), id);
+    assert_eq!(before.messages, 3);
+
+    // The compactor deletes the leading span; the counter's high-water stands.
+    let dir = fx.path.join("agents").join(id).join("messages");
+    fs::remove_file(dir.join("001-user.md")).unwrap();
+    fs::remove_file(dir.join("002-m.json")).unwrap();
+    let after = agent_of(&GitTree::from_repo(&fx.path).unwrap(), id);
+    assert_eq!(
+        after.messages, 3,
+        "one file on disk, three messages ever landed"
+    );
+
+    // A stray subdirectory is a write, not a landing.
+    fs::create_dir_all(dir.join("scratch")).unwrap();
+    let stray = agent_of(&GitTree::from_repo(&fx.path).unwrap(), id);
+    assert_eq!(stray.messages, 3, "the stray entry is not a message");
+}

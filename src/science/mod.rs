@@ -123,6 +123,14 @@ pub struct Attempt {
     /// none is filtered on its wording. Empty for an attempt nobody has
     /// written to.
     pub verdicts: Vec<Verdict>,
+    /// How many `messages/` entries the conversation's counter proves
+    /// **compacted away** (§5.1 #12, bl-fde5). Zero is an intact record — the
+    /// general path. Nonzero says [`verdicts`](Self::verdicts) and
+    /// [`response`](Self::response) were read over a **rewritten** record:
+    /// verdicts delivered in a squashed span are gone from disk and are not
+    /// guessed at, so this column is the projection stating its own bound
+    /// rather than the reader inferring one from a short list.
+    pub compacted: usize,
     /// Accepted, rejected, reworked — or pending, which is all three's absence
     /// ([`Outcome`]).
     pub outcome: Outcome,
@@ -201,6 +209,7 @@ fn row(
         steps: seen.steps,
         response: seen.response,
         verdicts: seen.verdicts,
+        compacted: seen.compacted,
         outcome: outcome::of(diff, siblings, repo),
     }
 }

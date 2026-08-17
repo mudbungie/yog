@@ -141,6 +141,37 @@ fn unreadable_sources_are_named_and_the_rest_of_the_world_still_answers() {
     assert_eq!(found.unreadable, sorted, "reported in a fixed order");
 }
 
+/// A compacted conversation answers, and the answer states its own bound
+/// (bl-fde5): the summary that replaced the span is searched — its bytes ride
+/// the spliced marker — and the deleted span is named beside the hits, so a
+/// search over a rewritten record never poses as one over the whole
+/// conversation.
+#[test]
+fn a_compacted_conversation_names_its_deleted_span_and_searches_the_summary() {
+    let dir = tempdir().unwrap();
+    let ws = dir.path().join("kraken");
+    let agent_dir = ws.join("agents").join(AGENT);
+    // The compactor's leavings: the record starts at 003, the summary survives.
+    write(
+        &agent_dir.join("messages").join("003-user.md"),
+        b"the tide holds",
+    );
+    write(
+        &agent_dir.join("summary").join("001.md"),
+        b"early ritual squashed",
+    );
+    let snap = world(&ws, vec![agent(AGENT, None)], vec![], vec![]);
+    let found = run(&snap, "ritual", &always());
+    assert_eq!(found.hits.len(), 1, "the summary's bytes are searched");
+    assert_eq!(found.hits[0].field, Field::Text);
+    assert!(
+        found.unreadable.iter().any(|u| u.contains(AGENT)
+            && u.contains("entries 001\u{2013}002 compacted away")
+            && u.contains("compaction summary")),
+        "the deleted span is named beside the hits: {found:?}"
+    );
+}
+
 #[test]
 fn an_unwanted_search_abandons_before_reading_the_conversations() {
     let dir = tempdir().unwrap();

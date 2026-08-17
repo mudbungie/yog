@@ -94,6 +94,15 @@ pub(super) fn conversations(snap: &Snapshot) -> Vec<(PathBuf, String, Fields)> {
 /// A goal that exists but cannot be read is **named** rather than skipped —
 /// that gap is exactly what an operator must not have to guess at. An absent
 /// goal is not a gap: most agents never had one.
+///
+/// **A compacted span is named the same way** (bl-fde5). lernie's compactor
+/// deletes entries out of `messages/` (§5.1 #12), so a search over such a
+/// conversation is a search over a **rewritten** record: the deleted text is
+/// unrecoverable and no hit can come from it. The spliced marker's `raw` is
+/// the compaction summary, so that replacement prose *is* searched — but the
+/// answer must not read as the whole conversation having been, which is
+/// exactly the `unreadable` channel's job: a source the search could not read,
+/// named with why.
 pub(super) fn read_conversation(
     workspace: &Path,
     agent: &str,
@@ -106,17 +115,22 @@ pub(super) fn read_conversation(
         Err(e) if goal.exists() => unreadable.push(format!("{}: {e}", goal.display())),
         Err(_) => {}
     }
-    fields.extend(
-        crate::transcript::build(workspace, agent)
-            .entries
-            .into_iter()
-            .map(|entry| {
-                (
-                    Field::Text,
-                    String::from_utf8_lossy(&entry.raw).into_owned(),
-                )
-            }),
-    );
+    let transcript = crate::transcript::build(workspace, agent);
+    for entry in &transcript.entries {
+        if let crate::transcript::EntryKind::Compacted { first, last, .. } = entry.kind {
+            unreadable.push(format!(
+                "{}/{agent}: entries {first:03}\u{2013}{last:03} compacted away — searched the \
+                 surviving record and the compaction summary",
+                workspace.display()
+            ));
+        }
+    }
+    fields.extend(transcript.entries.into_iter().map(|entry| {
+        (
+            Field::Text,
+            String::from_utf8_lossy(&entry.raw).into_owned(),
+        )
+    }));
     fields
 }
 

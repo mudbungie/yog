@@ -87,17 +87,22 @@ pub struct Agent {
     /// snapshot time (§3.5 stateless re-read) so the §11 list's sort and its
     /// age label are one fact read once — never a stat from the render path.
     pub last_action_unix: i64,
-    /// How many entries this agent's `messages/` directory holds (§5.1 #12) —
-    /// counted by the very readdir
+    /// How many messages have **ever landed** in this agent's `messages/`
+    /// directory (§5.1 #12): the monotonic `NNN` counter's high-water mark,
+    /// read off the very readdir
     /// [`last_action_unix`](Agent::last_action_unix) already performs, so the
-    /// two facts cost one directory walk (the §5.1 #10 discipline).
+    /// two facts cost one directory walk (the §5.1 #10 discipline). Not a
+    /// count of files present (bl-fde5): compaction deletes entries below the
+    /// surviving counter, so a file count goes *down* mid-flight while this
+    /// fact never does.
     ///
     /// Its one consumer is §7.2's pending echo: the operator's just-sent
     /// message is superseded when this count passes the baseline the echo
-    /// recorded. Nothing cheaper says that honestly —
-    /// [`last_action_unix`](Agent::last_action_unix) moves on a streaming
-    /// token and [`tip_oid`](Agent::tip_oid) on any step commit, so either
-    /// would retire the echo while the message was still missing.
+    /// recorded — a landed message advances the counter, a compaction never
+    /// lowers it, so the predicate has one reading. Nothing cheaper says it
+    /// honestly — [`last_action_unix`](Agent::last_action_unix) moves on a
+    /// streaming token and [`tip_oid`](Agent::tip_oid) on any step commit, so
+    /// either would retire the echo while the message was still missing.
     pub messages: usize,
     /// When the latest step's **model call began** (§5.1 #28 elapsed, bl-9dfb):
     /// the mtime of that step's `request.json`. lernie writes that file exactly
