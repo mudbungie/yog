@@ -1,7 +1,8 @@
 +++
 title = "compaction shrinks the science verdicts, the search corpus, the monitor window and the message count, and none of them says so"
 created = 1786936978
-updated = 1786936978
+updated = 1786937893
+claimant = "Compact-fde5"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
