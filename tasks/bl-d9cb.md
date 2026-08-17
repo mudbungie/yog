@@ -1,7 +1,8 @@
 +++
 title = "the models.yaml half of a pick is inert: lernie retired the models: table, so yog writes a file nothing reads and owns the only reader of context_window"
 created = 1786846408
-updated = 1786846408
+updated = 1786936893
+claimant = "Inert-d9cb"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design", "config", "model-pick"]
