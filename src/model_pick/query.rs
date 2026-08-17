@@ -186,23 +186,3 @@ pub fn model_ids(stdout: &str) -> Vec<String> {
         .map(str::to_owned)
         .collect()
 }
-
-/// The `context_window` brazen **served** for `model`, out of a roster document
-/// — the number the picker seeds its `models.yaml` declaration from (§9.4,
-/// bl-848f).
-///
-/// `None` where the provider published none (Anthropic, OpenAI and Ollama serve
-/// no window on their list GET; Google does), where the document names no such
-/// model, or where it is unreadable. Absent stays absent — brazen's own
-/// zero-vs-unknown rule — because the fallback is a *declared default* the
-/// entry's note says is one, and a fabricated number smuggled in here would be
-/// indistinguishable from a served one.
-pub fn served_window(document: &str, model: &str) -> Option<u32> {
-    rows(document)
-        .into_iter()
-        .find(|row| row.get("id").and_then(serde_json::Value::as_str) == Some(model))?
-        .get("context_window")?
-        .as_u64()?
-        .try_into()
-        .ok()
-}

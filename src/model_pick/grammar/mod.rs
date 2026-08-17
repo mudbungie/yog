@@ -1,8 +1,12 @@
-//! The anchored block grammar the §9.4 picker reads and writes.
+//! The anchored block grammar yog reads and writes the two config files
+//! through: `providers.yaml`'s `roles:` — the §9.4 picker's one write, and the
+//! single home of a role's (provider row, model id) pointer — and
+//! `models.yaml`'s `models:`, which no longer reaches lernie at all and is
+//! yog's own table (see `models.rs`).
 //!
 //! **This is not a YAML parser and must never become one.** yog declares no
 //! YAML dependency (§9.2) and lernie's own parser is private (its crate exposes
-//! only `cmd`), so the picker recognizes exactly the block shape lernie's
+//! only `cmd`), so it recognizes exactly the block shape lernie's
 //! template authors — a top-level key at column 0, two-space entry keys,
 //! four-space fields —
 //!
@@ -70,7 +74,7 @@ mod tools;
 
 pub use fields::{entry_field, entry_names, remove_entry, set_entry, set_field};
 pub use models::{
-    DEFAULT_CONTEXT_WINDOW, DeclaredModel, context_windows, declare_model, declared, fault,
+    DEFAULT_CONTEXT_WINDOW, DeclaredModel, context_windows, declare_model, declared,
     is_unknown_row, unknown_rows,
 };
 pub use roles::{roles, set_role_model};

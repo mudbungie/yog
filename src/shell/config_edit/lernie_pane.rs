@@ -17,8 +17,10 @@ use std::path::PathBuf;
 
 /// The declare-model id field (§9.2) — what the drafted entry is.
 const DECLARE_HINT: &str = "The model id to declare in models.yaml, on the provider row picked \
-     beside it. Declare drafts the entry; Apply writes it. Typed, the same write is \
-     `/model <role> <provider> <model-id>`.";
+     beside it. Declare drafts the entry; Apply writes it. The entry's \
+     context_window is the denominator of the context-fullness figure — the one \
+     fact anything reads out of this table. Typed, the whole file is \
+     `/config models <text…>`.";
 
 /// The lernie global config (§9.2/§9.5): the open file's settings as controls
 /// where yog has a reader for it, the raw text where it does not, the file
@@ -126,9 +128,10 @@ fn settings(
     declare(ui, config, schema, provider_rows);
 }
 
-/// Add a model entry to `models.yaml` — the same [`declare_model`] write the
-/// §9.4 picker makes, so a hand-declared model and a picked one are one shape.
-/// Only offered for the file that has a `models:` block to add to.
+/// Add a model entry to `models.yaml` — **the one seat that authors one** since
+/// bl-d9cb, the §9.4 picker's half of this write having been deleted with the
+/// lernie cross-check that justified it. Only offered for the file that has a
+/// `models:` block to add to.
 fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema, provider_rows: &[String]) {
     if schema.block != crate::model_pick::grammar::MODELS {
         return;
@@ -152,23 +155,24 @@ fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema, provide
                     for name in provider_rows {
                         ui.selectable_value(picked, name.clone(), name)
                             .on_hover_text(
-                                "The provider row this model calls through — one of the \
-                             rows brazen actually has. Typed, the pick is the middle \
-                             word of `/model <role> <provider> <model-id>`.",
+                                "The provider row this entry files the model under — one \
+                             of the rows brazen actually has. Typed, the whole file \
+                             is `/config models <text…>`.",
                             );
                     }
                 })
                 .response
                 .on_hover_text(
-                    "Which provider row the new model calls through — one of the rows \
-                 brazen actually has. Typed, the pick is the middle word of \
-                 `/model <role> <provider> <model-id>`.",
+                    "Which provider row the new entry files the model under — one of \
+                 the rows brazen actually has. Typed, the whole file is \
+                 `/config models <text…>`.",
                 );
             ui.button("Declare")
                 .on_hover_text(
-                    "Draft a `models:` entry for that id on the picked provider row — \
-                     the same write the model picker makes. Nothing lands until Apply; \
-                     `/model <role> <provider> <model-id>` does both halves at once.",
+                    "Draft a `models:` entry for that id on the picked provider row. \
+                     Nothing lands until Apply. The entry declares the context \
+                     window yog measures fullness against; picking a model does not \
+                     write one. Typed, the whole file is `/config models <text…>`.",
                 )
                 .clicked()
         },
@@ -182,16 +186,14 @@ fn declare(ui: &mut egui::Ui, config: &mut ConfigState, schema: &Schema, provide
 /// Draft the new entry, or say why not. An id already on the picked row is
 /// nothing to write, which is a value and not a failure.
 ///
-/// No served window (bl-848f): this seat is a typed id, not a pick off a
-/// roster, so nothing here asked a provider what its window is and the entry
-/// takes §9.4's declared default under the note that says so. The §9.4 picker
-/// is the seat that has a roster to seed from.
+/// The entry's window is §9.4's declared default under the note that says so:
+/// this seat is a typed id with no roster behind it, and since bl-d9cb no seat
+/// has one — brazen's served window is a query, never a field seeded here.
 fn declared(config: &mut ConfigState) -> String {
     match declare_model(
         config.lernie_editor.draft(),
         config.new_model.trim(),
         config.new_model_row.trim(),
-        None,
     ) {
         Ok(Some(text)) => {
             config.lernie_editor.set_draft(text);

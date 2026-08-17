@@ -3,13 +3,13 @@
 //!
 //! The defect these cover is a capability mismatch accepted at configuration
 //! time and detected at use time. `/model worker claude-code <id>` passed the
-//! row gate — brazen really does ship that row — advanced both config halves,
-//! and the next worker start died inside brazen's encoder before any network
+//! row gate — brazen really does ship that row — advanced the config, and the
+//! next worker start died inside brazen's encoder before any network
 //! call: *"claude_code carries no tool declarations; use the `anthropic` row for
 //! tools"*. Row existence never established request-shape compatibility, which
 //! is the design claim bl-3d22 amended.
 
-use super::{SEEDED_MODELS, TEMPLATE_PROVIDERS, rows_on, table};
+use super::{TEMPLATE_PROVIDERS, rows_on, table};
 use crate::config_edit::brazen::ProviderRow;
 use crate::model_pick::{Pick, PickError, WORKER_ROLE, plan};
 
@@ -22,23 +22,16 @@ fn pick(provider: &str) -> Pick {
 }
 
 fn refuse(rows: &[ProviderRow], provider: &str) -> PickError {
-    plan(
-        SEEDED_MODELS,
-        TEMPLATE_PROVIDERS,
-        rows,
-        &pick(provider),
-        None,
-    )
-    .expect_err("the row cannot serve a role")
+    plan(TEMPLATE_PROVIDERS, rows, &pick(provider)).expect_err("the row cannot serve a role")
 }
 
 /// The reproduction, at the gate. brazen ships `claude-code` as a built-in row,
 /// so the table HAS it and the old gate waved it through; the pick is now
-/// refused before either file is touched, naming the protocol rather than the
+/// refused before the file is touched, naming the protocol rather than the
 /// row name — the capability is a fact about the dialect, not about a spelling
 /// yog recognizes.
 #[test]
-fn a_pick_on_a_tool_less_protocol_is_refused_before_either_file() {
+fn a_pick_on_a_tool_less_protocol_is_refused_before_the_file_is_touched() {
     let rows = rows_on(&["claude-code"], "claude_code");
     let refused = refuse(&rows, "claude-code");
     assert_eq!(
@@ -73,26 +66,8 @@ fn a_row_the_table_does_not_carry_is_unknown_not_incapable() {
 /// row is the control: the same pick, the same model id, written.
 #[test]
 fn an_unanswerable_table_and_a_capable_row_both_pass() {
-    assert!(
-        plan(
-            SEEDED_MODELS,
-            TEMPLATE_PROVIDERS,
-            &[],
-            &pick("claude-code"),
-            None
-        )
-        .is_ok()
-    );
-    assert!(
-        plan(
-            SEEDED_MODELS,
-            TEMPLATE_PROVIDERS,
-            &table(&["codex"]),
-            &pick("codex"),
-            None
-        )
-        .is_ok()
-    );
+    assert!(plan(TEMPLATE_PROVIDERS, &[], &pick("claude-code")).is_ok());
+    assert!(plan(TEMPLATE_PROVIDERS, &table(&["codex"]), &pick("codex")).is_ok());
 }
 
 /// The caveat is NOT a gate (bl-671d). An `ollama_chat` row answers
@@ -109,16 +84,7 @@ fn a_dialect_that_leaves_the_context_to_the_server_is_stated_not_refused() {
         "the fixture is the dialect that carries the caveat"
     );
     assert_eq!(rows[0].tools_blocked(), None, "the tools read is separate");
-    assert!(
-        plan(
-            SEEDED_MODELS,
-            TEMPLATE_PROVIDERS,
-            &rows,
-            &pick("local"),
-            None
-        )
-        .is_ok()
-    );
+    assert!(plan(TEMPLATE_PROVIDERS, &rows, &pick("local")).is_ok());
 }
 
 /// The custom-id entry is the one seat that can name a model brazen never
@@ -134,7 +100,7 @@ fn neither_a_custom_id_nor_an_empty_role_tool_list_earns_an_exemption() {
     let mut custom = pick("claude-code");
     custom.model = "some-unlisted-preview".to_string();
     assert!(matches!(
-        plan(SEEDED_MODELS, TEMPLATE_PROVIDERS, &rows, &custom, None),
+        plan(TEMPLATE_PROVIDERS, &rows, &custom),
         Err(PickError::Incapable { .. })
     ));
     // `compactor` declares no `tools:` line at all in lernie's own template,
@@ -142,7 +108,7 @@ fn neither_a_custom_id_nor_an_empty_role_tool_list_earns_an_exemption() {
     let mut bare_role = pick("claude-code");
     bare_role.role = "compactor".to_string();
     assert!(matches!(
-        plan(SEEDED_MODELS, TEMPLATE_PROVIDERS, &rows, &bare_role, None),
+        plan(TEMPLATE_PROVIDERS, &rows, &bare_role),
         Err(PickError::Incapable { .. })
     ));
 }

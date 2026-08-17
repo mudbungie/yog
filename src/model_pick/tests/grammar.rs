@@ -165,7 +165,7 @@ fn set_role_model_declines_a_role_missing_the_field_it_must_move() {
 #[test]
 fn declare_model_inserts_after_the_models_key_not_at_eof() {
     let text = format!("adapter: /usr/bin/bz\n{SEEDED_MODELS}");
-    let out = declare_model(&text, "gpt-5.6-sol", "codex", None)
+    let out = declare_model(&text, "gpt-5.6-sol", "codex")
         .unwrap()
         .unwrap();
     let (head, _) = out.split_once("  gpt-5.6-sol:").unwrap();
@@ -175,71 +175,53 @@ fn declare_model_inserts_after_the_models_key_not_at_eof() {
     assert!(out.contains("    context_window: 400000"));
 }
 
-/// The two facts brazen does not publish are written as declared defaults,
-/// under a comment that says so (§9.4).
+/// bl-d9cb. Both generated fields are declared defaults under a comment that
+/// says so — and, since the picker's roster seed went away with the picker's
+/// write, that is the ONLY kind of generated entry there is. The note must also
+/// name the one thing that reads the number, because the operator's whole reason
+/// to edit it is the fullness figure.
 #[test]
-fn declare_model_writes_declared_defaults_under_a_note() {
-    let out = declare_model(SEEDED_MODELS, "gpt-5.6-sol", "codex", None)
+fn declare_model_writes_declared_defaults_under_a_note_naming_their_one_reader() {
+    let out = declare_model(SEEDED_MODELS, "gpt-5.6-sol", "codex")
         .unwrap()
         .unwrap();
     assert!(out.contains("  gpt-5.6-sol:\n    provider: codex\n    model_id: gpt-5.6-sol\n"));
     assert!(out.contains("    capabilities: []"));
     assert!(out.contains(&format!("    context_window: {DEFAULT_CONTEXT_WINDOW}")));
-    assert!(out.contains("declared defaults, not discoveries"));
+    assert!(out.contains("declared defaults"), "{out}");
+    assert!(out.contains("context-fullness figure"), "{out}");
+    // No seat claims a provider published any of it any more.
+    assert!(!out.contains("served"), "{out}");
+    assert!(!out.contains("list-models"), "{out}");
 }
 
-/// bl-848f. Where the roster carried the provider's own window, the entry
-/// declares THAT number — and says it was served, because a true number under
-/// the declared-default note is the same defect one step over: the operator
-/// cannot tell what was published from what was guessed.
+/// An id already declared on the picked row is nothing to write, so the
+/// operator's own edited window stands — the seed that could once have
+/// overwritten it is gone entirely (bl-d9cb), and a repoint still moves one line.
 #[test]
-fn declare_model_writes_the_window_the_provider_served() {
-    let out = declare_model(SEEDED_MODELS, "gemini-3-pro", "codex", Some(1_048_576))
-        .unwrap()
-        .unwrap();
-    assert!(out.contains("    context_window: 1048576"), "{out}");
-    assert!(!out.contains(&format!("context_window: {DEFAULT_CONTEXT_WINDOW}")));
-    assert!(out.contains("the number this provider served"), "{out}");
-    assert!(!out.contains("declared defaults, not discoveries"), "{out}");
-    // Capabilities are still nobody's discovery, and the note still says so.
-    assert!(out.contains("    capabilities: []"));
-    assert!(out.contains("declared default"), "{out}");
-}
-
-/// A served window seeds a NEW entry only: an id already declared on the picked
-/// row is nothing to write, so the operator's own edited window stands whatever
-/// the provider now says.
-#[test]
-fn a_served_window_never_overwrites_a_declaration_that_exists() {
-    assert_eq!(
-        declare_model(SEEDED_MODELS, "gpt-5.4", "codex", Some(1_048_576)),
-        Ok(None)
-    );
-    let repointed = declare_model(SEEDED_MODELS, "gpt-5.4", "openai-chatgpt", Some(1_048_576))
+fn a_declaration_that_exists_keeps_the_window_it_carries() {
+    assert_eq!(declare_model(SEEDED_MODELS, "gpt-5.4", "codex"), Ok(None));
+    let repointed = declare_model(SEEDED_MODELS, "gpt-5.4", "openai-chatgpt")
         .unwrap()
         .expect("the row differs, so the line must move");
     assert!(
         repointed.contains("    context_window: 400000"),
         "{repointed}"
     );
-    assert!(!repointed.contains("1048576"), "{repointed}");
 }
 
 #[test]
 fn declare_model_is_a_no_op_for_an_already_declared_id() {
-    assert_eq!(
-        declare_model(SEEDED_MODELS, "gpt-5.4", "codex", None),
-        Ok(None)
-    );
+    assert_eq!(declare_model(SEEDED_MODELS, "gpt-5.4", "codex"), Ok(None));
 }
 
-/// bl-bd89. An id declared on ANOTHER row is repointed, not skipped: lernie
-/// refuses a config whose model declaration and role assignment name different
-/// providers, so skipping here would brick the workspace the picker just
-/// "fixed". Only the one line moves — the operator's own two fields stand.
+/// bl-bd89. An id declared on ANOTHER row is repointed, not skipped: re-declaring
+/// an id is a statement about which row it belongs to, and two entries for one id
+/// would leave the reader to guess. Only the one line moves — the operator's own
+/// two fields stand.
 #[test]
 fn declare_model_repoints_an_id_declared_on_another_row() {
-    let out = declare_model(SEEDED_MODELS, "gpt-5.4", "openai-chatgpt", None)
+    let out = declare_model(SEEDED_MODELS, "gpt-5.4", "openai-chatgpt")
         .unwrap()
         .expect("the row differs, so the line must move");
     assert!(out.contains("  gpt-5.4:\n    provider: openai-chatgpt\n"));
@@ -256,7 +238,7 @@ fn declare_model_repoints_an_id_declared_on_another_row() {
 #[test]
 fn declare_model_declines_an_entry_with_no_provider_line() {
     assert_eq!(
-        declare_model("models:\n  m:\n    model_id: m\n", "m", "p", None),
+        declare_model("models:\n  m:\n    model_id: m\n", "m", "p"),
         Err(GrammarError::NoField {
             file: MODELS_YAML,
             entry: "m".into(),
@@ -269,12 +251,10 @@ fn declare_model_declines_an_entry_with_no_provider_line() {
 /// the block is created, not special-cased.
 #[test]
 fn declare_model_creates_the_block_when_there_is_none() {
-    let out = declare_model("", "gpt-5.6-sol", "codex", None)
-        .unwrap()
-        .unwrap();
+    let out = declare_model("", "gpt-5.6-sol", "codex").unwrap().unwrap();
     assert!(out.starts_with("models:\n"));
     assert!(out.contains("  gpt-5.6-sol:"));
-    let kept = declare_model("adapter: /usr/bin/bz\n", "m", "p", None)
+    let kept = declare_model("adapter: /usr/bin/bz\n", "m", "p")
         .unwrap()
         .unwrap();
     assert!(kept.starts_with("adapter: /usr/bin/bz\nmodels:\n"));
@@ -282,7 +262,7 @@ fn declare_model_creates_the_block_when_there_is_none() {
 
 #[test]
 fn declare_model_declines_an_inline_models_key() {
-    let err = declare_model("models: {}\n", "gpt-5.6-sol", "codex", None).unwrap_err();
+    let err = declare_model("models: {}\n", "gpt-5.6-sol", "codex").unwrap_err();
     assert_eq!(
         err,
         GrammarError::Inline {

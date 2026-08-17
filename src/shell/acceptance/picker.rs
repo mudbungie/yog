@@ -72,24 +72,35 @@ fn the_open_pane_states_the_blast_radius_of_a_pick() {
     );
 }
 
-/// The §9.2 judgement surfaced at the point of choice (bl-53be): this world's
-/// global `models.yaml` declares only `m`, so both seeded roles name a model
-/// lernie would refuse to load — and the picker says so *before* the fire
-/// instead of after it. The mark rides the strip; the reason is spelled out
-/// under the selected role.
+/// The judgement surfaced at the point of choice (bl-53be, re-pointed by
+/// bl-d9cb): a role's fault is over the **live** pointer —
+/// `roles.<r>.provider` against brazen's own table, read in-process (§16.7 W10),
+/// so the row set here is brazen's built-ins. This lineage names `codex`, the row
+/// bl-bd89's operator had renamed away, and the picker says so *before* the fire
+/// instead of after it. The mark rides the strip; the reason is spelled out under
+/// the selected role, in the pick gate's own words.
+///
+/// It used to name an undeclared model in the global `models.yaml`, on lernie's
+/// cross-check — retired upstream, so the sentence was false and the live
+/// pointer went unjudged in this very strip.
 #[test]
-fn a_role_whose_model_is_undeclared_wears_its_fault_in_the_pane() {
+fn a_role_on_a_row_brazen_lacks_wears_its_fault_in_the_pane() {
     let mut world = world();
+    world.fx.commit_other(
+        crate::model_pick::PROVIDERS,
+        "roles:\n  worker:\n    provider: codex\n    model: gpt-5.4\n",
+    );
     let out = open_pane(&mut world);
     assert!(
-        out.contains("worker · claude-sonnet-5 ⚠"),
+        out.contains("worker · gpt-5.4 ⚠"),
         "the dead assignment is marked in the strip:\n{out}"
     );
+    let said = crate::model_pick::PickError::UnknownProvider {
+        provider: "codex".to_string(),
+    }
+    .to_string();
     assert!(
-        out.contains(
-            "⚠ claude-sonnet-5 is not declared in models.yaml — lernie refuses to load a \
-             config whose role names an undeclared model"
-        ),
+        out.contains(&format!("⚠ {said}")),
         "and the selected role's reason is painted in full under it:\n{out}"
     );
 }

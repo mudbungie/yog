@@ -9,7 +9,7 @@ use std::sync::mpsc;
 use tempfile::tempdir;
 
 use crate::cli_outbound::{Chunk, Cli, ExitInfo, Streamed};
-use crate::model_pick::query::{EMPTY_ROSTER, Roster, model_ids, served_window, start};
+use crate::model_pick::query::{EMPTY_ROSTER, Roster, model_ids, start};
 
 /// The exact payload `bz --list-models --provider codex --json` returns against
 /// a live codex credential (§9.4, measured): ids and a default flag and nothing
@@ -19,8 +19,8 @@ const LIVE_PAYLOAD: &str = r#"{"models":[{"default":false,"id":"gpt-5.6-sol"},{"
 
 /// The other shape, from a provider that DOES serve metadata (Google): the same
 /// two keys plus brazen's three option-shaped ones. Both are lawful `Model`
-/// rows — the keys are additive and per-provider, which is the whole reason the
-/// picker must read rather than assume (bl-848f).
+/// rows — the keys are additive and per-provider, so the candidate list must be
+/// read off `id` alone and never assume a shape.
 const SERVED_PAYLOAD: &str = r#"{"models":[{"default":false,"id":"gemini-3-pro","context_window":1048576,"max_output_tokens":65536,"display_name":"Gemini 3 Pro"},{"default":false,"id":"gemini-3-flash"}]}"#;
 
 /// Drive a roster to settlement over a hand-fed channel.
@@ -73,36 +73,6 @@ fn model_ids_reads_a_metadata_carrying_roster_the_same_way() {
         model_ids(SERVED_PAYLOAD),
         ["gemini-3-pro", "gemini-3-flash"]
     );
-}
-
-/// bl-848f. The seed for the declared window is the number the provider served
-/// for that one id — and nothing else in the document.
-#[test]
-fn served_window_reads_the_number_the_provider_published() {
-    assert_eq!(
-        served_window(SERVED_PAYLOAD, "gemini-3-pro"),
-        Some(1_048_576)
-    );
-}
-
-/// Every honest miss is `None`, never a fabricated number: the row that carries
-/// no window, a provider that serves none at all, an id the roster does not
-/// have, an unreadable document, and a window no `u32` can hold.
-#[test]
-fn served_window_is_none_wherever_nobody_published_one() {
-    for (document, model) in [
-        (SERVED_PAYLOAD, "gemini-3-flash"),
-        (LIVE_PAYLOAD, "gpt-5.6-sol"),
-        (SERVED_PAYLOAD, "no-such-model"),
-        ("not json", "gemini-3-pro"),
-        (r#"{"models":[{"id":"m","context_window":"wide"}]}"#, "m"),
-        (
-            r#"{"models":[{"id":"m","context_window":4294967296}]}"#,
-            "m",
-        ),
-    ] {
-        assert_eq!(served_window(document, model), None, "{document} / {model}");
-    }
 }
 
 #[test]

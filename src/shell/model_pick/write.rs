@@ -57,9 +57,9 @@ pub(super) fn retarget(picker: &mut PickerState, model: &mut AppModel, ws: &Path
 
 /// Fold whatever the picker's act earned, once, on the frame it arrives.
 ///
-/// Every derived fact the pane holds is dropped **here**: the branch moved and
-/// `models.yaml` may have gained an entry, so the next paint re-reads rather
-/// than showing the pre-write world. A retarget writes a ref mark and nothing
+/// Every derived fact the pane holds is dropped **here**: the branch moved, so
+/// the next paint re-reads rather than showing the pre-write world. A retarget
+/// writes a ref mark and nothing
 /// else — the conversation's own executor lands it at its next step — so the
 /// freeze the drift row states is still true; re-deriving it costs two oid
 /// reads and is what keeps this one fold rather than two.
@@ -72,6 +72,5 @@ pub(super) fn settle(picker: &mut PickerState, model: &mut AppModel) {
         picker.act.say(said);
     }
     picker.tip_providers = None;
-    picker.models_text = None;
     picker.frozen = None;
 }

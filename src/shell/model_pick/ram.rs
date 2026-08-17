@@ -4,9 +4,7 @@
 //! `pub(super)`, i.e. reachable exactly where it was when it lived in
 //! [`super`] — the pane, [`super::marks`] and [`super::write`].
 
-use crate::config_edit::RealFileIo;
 use crate::config_edit::brazen::{ProviderRow, RealBzRunner};
-use crate::config_edit::lernie_global::LernieGlobal;
 use crate::model_pick::ModelRow;
 use crate::model_pick::query::Roster;
 use crate::xdg::Env;
@@ -67,21 +65,19 @@ pub struct PickerState {
     /// The config-branch tip's `providers.yaml`, read once per open rather than
     /// per frame; cleared by [`toggle`](Self::toggle) and after a write.
     pub(super) tip_providers: Option<String>,
-    /// brazen's effective provider rows and the global `models.yaml` text — the
-    /// two halves of "is the role's current model live?", each asked once per
-    /// open on the same terms as `tip_providers`. The rows are held **whole**,
-    /// `auth` column included: the credential fault's remedy is derived from
-    /// that column (bl-91f1), so reducing them to names here would throw away
-    /// the fact one paint later and buy a second read of it.
+    /// brazen's effective provider rows — the whole of "is the role's row live?"
+    /// since bl-d9cb, asked once per open on the same terms as `tip_providers`
+    /// (the global `models.yaml` text used to be held beside them, for a
+    /// judgement over a table lernie no longer loads). Held **whole**, `auth`
+    /// column included: the credential fault's remedy is derived from that column
+    /// (bl-91f1), so reducing them to names here would throw away the fact one
+    /// paint later and buy a second read of it.
     pub(super) rows: Option<Vec<ProviderRow>>,
-    pub(super) models_text: Option<String>,
-    pub(super) io: RealFileIo,
     pub(super) bz_runner: RealBzRunner,
     /// The wall layer (§16.2 as amended) the `--list-models` spawn is fired
     /// with, so the roster is listed against this workspace's providers and
     /// cached in this workspace's own cache.
     pub(super) wall: Vec<(String, String)>,
-    pub(super) lernie: LernieGlobal,
 }
 
 impl PickerState {
@@ -105,11 +101,8 @@ impl PickerState {
             birth: None,
             tip_providers: None,
             rows: None,
-            models_text: None,
-            io: RealFileIo,
             bz_runner: RealBzRunner::resolve(wall),
             wall: crate::world::wall::pairs_of(wall),
-            lernie: LernieGlobal::resolve(wall),
         }
     }
 
@@ -122,7 +115,6 @@ impl PickerState {
         self.roster = None;
         self.tip_providers = None;
         self.rows = None;
-        self.models_text = None;
         self.act.forget();
     }
 

@@ -33,7 +33,11 @@ use tempfile::TempDir;
 /// enumerates it.
 pub(in crate::shell::acceptance) struct World {
     pub(super) _root: TempDir,
-    pub(super) fx: Fixture,
+    /// The workspace's own git fixture. Reachable across the whole acceptance
+    /// tree because a beat sometimes needs a config the shipped world does not
+    /// carry — the §9.4 role fault wants a lineage naming a provider row brazen
+    /// does not have, and lernie's pinned template names a live one (bl-d9cb).
+    pub(in crate::shell::acceptance) fx: Fixture,
     /// Every extra sphere [`World::add_workspace`] created, held only so their
     /// temp dirs outlive the test — the §3.1 wall boundary is unobservable with
     /// one workspace, so a wall drive needs a second.

@@ -1,26 +1,25 @@
 //! The picker's read-back of the assignment it is about to change (§9.4,
-//! bl-53be): brazen's provider rows, the global `models.yaml`, and the two
-//! joined into "why can this role's current model not be fired?".
-//! Coverage-excluded glue — the judgement itself is
-//! [`grammar::fault`](crate::model_pick::grammar::fault).
+//! bl-53be): brazen's provider rows joined onto `providers.yaml`'s roles, into
+//! "why can this role not be fired?". Coverage-excluded glue — the judgement
+//! itself is [`role_fault`](crate::model_pick::role_fault).
 
 use super::{Marked, PickerState};
-use crate::config_edit::FileIo;
 use crate::config_edit::brazen::{BzRunner, ProviderRow, row_names};
-use crate::model_pick::grammar;
+use crate::model_pick::{grammar, role_fault};
 
-/// Every declared role paired with why its current model cannot be fired
-/// (§9.4): the model is undeclared in `models.yaml`, or declared on a provider
-/// row brazen's table does not have — the very defect that left two dead Claude
-/// entries offerable. An unusable assignment is visible at the point of change
-/// instead of failing at fire.
+/// Every declared role paired with why it cannot be fired (§9.4): the row it
+/// dispatches through is not one brazen's table has. An unusable assignment is
+/// visible at the point of change instead of failing at fire.
+///
+/// **It read the global `models.yaml` too until bl-d9cb**, for a judgement about
+/// a table lernie no longer loads — so the picker is down to one file, on the
+/// read side as well as the write side.
 pub(super) fn mark_roles(picker: &mut PickerState, providers_yaml: &str) -> Vec<Marked> {
     let names = row_names(&provider_rows(picker));
-    let models = models_text(picker);
     grammar::roles(providers_yaml)
         .into_iter()
         .map(|r| {
-            let fault = grammar::fault(&models, &names, &r.model);
+            let fault = role_fault(&names, &r);
             (r, fault)
         })
         .collect()
@@ -39,20 +38,4 @@ pub(super) fn provider_rows(picker: &mut PickerState) -> Vec<ProviderRow> {
         picker.rows = Some(picker.bz_runner.providers());
     }
     picker.rows.clone().unwrap_or_default()
-}
-
-/// The global `models.yaml` text, read once per open. A missing or unreadable
-/// file is empty text — every role then reads as undeclared, which is exactly
-/// what lernie says when it refuses to load such a config.
-fn models_text(picker: &mut PickerState) -> String {
-    if picker.models_text.is_none() {
-        let raw = picker
-            .io
-            .read(&picker.lernie.models())
-            .ok()
-            .flatten()
-            .unwrap_or_default();
-        picker.models_text = Some(String::from_utf8_lossy(&raw).into_owned());
-    }
-    picker.models_text.clone().unwrap_or_default()
 }

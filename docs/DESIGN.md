@@ -2008,7 +2008,7 @@ not a special case.
 
 | 33 | A **cohort** — the candidates dispatched from one notch, and the ancestry they share (VISION V2.3, bl-dc0c) | #30's cards, grouped | `rail::cohort::cohorts`, a **pure** grouping of #30 by `provenance_notch` — the birth notch V1.7 reserved as the fan anchor. **Membership is not a fact anybody records.** Firing the fork twice from one mark *is* firing a cohort and firing it once *is* a cohort of one, so there is no fan registry, no fan verb and no winner field to keep: the group is a `group_by` over cards yog already derived. The **common ancestry** is the fork label when every member wears the same one and nothing when they differ — the same fact said once at whichever level owns it, and absence is a value (the columns then say their own). The four side-by-side facts a candidate is judged by need no new derivation either: state is #8's, usage is #16 folded per agent, and the **terminal response** is #10 — `Agent::stream.text` is the latest step's accumulated text re-read every tick, so while a candidate runs it is the live tail and once it settles the same bytes are the last thing it said. A second "terminal response" reader would be two readers of one open file, disagreeing at every moment it matters |
 | 34 | The **fire-time policy** a pinned notch may fork into — the fork points, and the model each role names at each of them (VISION V2.2, bl-dc0c) | #18's config branches + the pinned commit; #17 asked at each; `providers.yaml` from that commit's tree | `fork::choices`. The points are **here** (the pinned commit — a fork carrying the conversation's own history) then every `config/<name>` head (a clean start): one control with two kinds of value, which is VISION V1.3's *"one spawn gesture with one parameter — the fork point"*. Each point's roles are read from the `providers.yaml` of the config commit that will **govern** it — the very file lernie resolves the run against — through §9.4's own `grammar::roles`, so the picker and the fork composer can never disagree about what a config says. **That is what makes the model visible without yog owning a model list**: a role *is* a model binding, and giving an attempt a model no config declares is a config write (§9.4's `PickModel`), not a dispatch flag. A ref whose config yog cannot reach declares no roles and the point paints as offering nothing — a fact about the workspace, never a silence. Memoized per snapshot with the pinned commit in the key (it is `for-each-ref` + a `merge-base` walk + a `git show` per point), never per frame |
-| 35 | **How full a conversation's context is** — the percentage §11's settings rows state per chat (bl-a48b: the context-window percentage is shown per chat) | the **last `Usage` line** of the root agent's **latest** `steps/<root>/<NNN>/response.json`, the model that step's `request.json` names (#16's walk), and the `context_window` §9.2's global `models.yaml` declares for it (#24) | `context::of_conversation`, a pure filter over `Snapshot::bills` — no second disk pass, no stored counter, nothing cached. **Fullness is not spend, and the difference is load-bearing:** #16 sums every counter of every attempt of every step of a whole descent (what exhausts `max_total_tokens`, and what keeps growing after a compaction empties the context), while this is one number off ONE step — so the walk carries two extra columns, the step's own `seq` (making "which is the latest" an in-memory question, exactly as bl-9dd4 made scope one) and its **last** attempt segment's counters (a step retried three times must not read as a context three times its size). **The root's own latest step, never the descent's** — a dispatched child runs its own context in its own tree. **The prompt is `max(input, cache_read + cache_write)`**: brazen's canonical `Usage` is deliberately unnormalized about overlap because its providers disagree — Anthropic reports the three as **disjoint** slices of one prompt while OpenAI's `prompt_tokens` and Google's `promptTokenCount` already **contain** the cached slice beside them — so summing over-states one shape and taking `input_tokens` alone under-states the other by nearly everything (brazen marks Anthropic prompts for caching unconditionally). The maximum is exact where the slice is contained, degrades to plain `input_tokens` where no cache counters are reported at all, and is a **floor** where they are disjoint. It never over-states; normalizing that overlap is brazen's job, not yog's to guess at. **The denominator is the declaration, not a discovery:** brazen serves `Model.context_window` only for the providers that publish one (Google), which is its own empty-set rule — *"a harness hand-configures only what no provider serves"* — and `models.yaml` **is** that hand-configuration, written by the §9.4 picker and edited by the §9.5 form. Reading brazen's cache as well *here* would be two representations of one fact — which is why bl-848f moved the discovery to the WRITE path instead: the picker seeds the declaration from the `Model.context_window` its own roster carried, so the one authority this figure reads starts out true wherever a provider serves the number at all, and this reader still consults nothing but the declaration. **No window, no figure** (no step, no model on the step, an undeclared or zero window): the row is absent, never a percentage of a default — the same no-capability-theater rule §3.5's unpriced remainder keeps. The windows ride the snapshot (`Snapshot::windows`), read at boot and on the 15 s full sweep like the ball fetch: one hand-edited world-global file, so a fifth watch root would buy latency nobody can perceive |
+| 35 | **How full a conversation's context is** — the percentage §11's settings rows state per chat (bl-a48b: the context-window percentage is shown per chat) | the **last `Usage` line** of the root agent's **latest** `steps/<root>/<NNN>/response.json`, the model that step's `request.json` names (#16's walk), and the `context_window` §9.2's global `models.yaml` declares for it (#24) | `context::of_conversation`, a pure filter over `Snapshot::bills` — no second disk pass, no stored counter, nothing cached. **Fullness is not spend, and the difference is load-bearing:** #16 sums every counter of every attempt of every step of a whole descent (what exhausts `max_total_tokens`, and what keeps growing after a compaction empties the context), while this is one number off ONE step — so the walk carries two extra columns, the step's own `seq` (making "which is the latest" an in-memory question, exactly as bl-9dd4 made scope one) and its **last** attempt segment's counters (a step retried three times must not read as a context three times its size). **The root's own latest step, never the descent's** — a dispatched child runs its own context in its own tree. **The prompt is `max(input, cache_read + cache_write)`**: brazen's canonical `Usage` is deliberately unnormalized about overlap because its providers disagree — Anthropic reports the three as **disjoint** slices of one prompt while OpenAI's `prompt_tokens` and Google's `promptTokenCount` already **contain** the cached slice beside them — so summing over-states one shape and taking `input_tokens` alone under-states the other by nearly everything (brazen marks Anthropic prompts for caching unconditionally). The maximum is exact where the slice is contained, degrades to plain `input_tokens` where no cache counters are reported at all, and is a **floor** where they are disjoint. It never over-states; normalizing that overlap is brazen's job, not yog's to guess at. **The denominator is the declaration, and since bl-d9cb yog is the only program that reads it:** lernie 0.0.10 retired the `models:` table (lernie's bl-35e2), so the block is yog's own hand-configuration — authored by §9.2's Declare control, edited by the §9.5 form, read here and nowhere else. One home, one number, operator-correctable. brazen serves `Model.context_window` only for the providers that publish one (Google), which is its own empty-set rule — *"a harness hand-configures only what no provider serves"* — and reading brazen's cache **as well** would be two representations of one fact. bl-848f had answered that by moving the discovery to the WRITE path, seeding the declaration from the roster a pick was made off; bl-d9cb deleted the pick's write entirely (it landed in a table nothing loads), and the seed went with it rather than being relocated. The number is the provider's fact and it moves without yog's involvement, so a field seeded at pick time is a stale snapshot; if this figure should ever prefer a served window, the shape is a read-time query over `model_cache_at`, not a write. Today: whatever the operator declared, or no figure. **No window, no figure** (no step, no model on the step, an undeclared or zero window): the row is absent, never a percentage of a default — and since bl-d9cb an undeclared window is the ordinary state of a fresh world rather than a corner, because no gesture seeds one — the same no-capability-theater rule §3.5's unpriced remainder keeps. The windows ride the snapshot (`Snapshot::windows`), read at boot and on the 15 s full sweep like the ball fetch: one hand-edited world-global file, so a fifth watch root would buy latency nobody can perceive |
 ### 5.2 Durable-on-disk, yog-owned
 
 Exactly `ui.json` (§4.1), `ops.jsonl` (§4.2), `cadence.yaml` (§7.2, bl-3381 —
@@ -2982,7 +2982,7 @@ making a genuine dropped event read as the watcher working.
 | Driver dies leaving an empty step (version skew, OOM, kill before the first event) | the step is a **no-response wound**, not a quiet one: an empty-or-absent `response.json` **and** no `meta.json` **and** no driver on the agent (§3.5) renders "driver produced no response" in ichor beside the step and banners it at Altitude 1 (§11). Framing alone reads this `Killed` — the ash "stopped" badge over a `0 attempts · 0 tok` row, which is how it read as a quiet step (bl-7f2e). **The banner states the *reason*, in the adapter's own words** (bl-55d8): the tail of that step's `stderr.log`, which lernie ARCH §2.3 defines as *"the adapter subprocess's stderr, appended once per attempt across the model call. **Empty on an ordinary run**: brazen speaks every failure in-band on stdout, so bytes here mean the adapter failed outside that contract — a startup failure (a malformed brazen config, an unreadable credstore) that produced no events at all"* — which is this row's class exactly, so the file is not a hint about the cause but the cause itself. The predicate is unchanged and the reason is not a second fact: one derived value carries both (`Wound::{None, Mute, Spoke}`), and the `stderr.log` read is gated on the wound so a healthy step never pays for it. A wound whose `stderr.log` is empty too (a SIGKILL mid-call) is `Mute` and **says so** — "nothing on disk says why" — never a bare glyph and never a pointer at somewhere that has nothing (§11 glyph doctrine). **What this retired:** the banner used to say *"the driver's own stderr is in the activity trail below"*, which was wrong for the class the operator actually hit. A turn continued by `lernie message` is driven by a child **lernie** launched, not by a yog detached spawn, so no §8.1 per-spawn sink exists for the ops sweep to fold into a `-2` row at all — the falsifying run's two sinks belong to its two `lernie prompt` starts and the one matching the wounded turn is zero bytes. The step's own `stderr.log` was the only copy of the answer, and yog was reading past it. The operator's whole signal was *"it looks like the second message in a conversation always fails"* — the absence of a reply. **The residual this left is closed** (bl-83d6): the banner still quotes a *tail* on the two bounds the crate already had (`opslog::detached::captured`'s 4 KiB of file, then `opslog::rows::stderr_tail`'s last three lines — the same tail every other §7.3 surface shows) and still names the file, but the file itself is now a **seat in the drill-in's record picker** (§11 Altitude 2), offered whenever it has bytes and shown to the bounded-file cap. Two bounds, each answering its own question: how much a one-line sentence quotes, and how much a reading surface shows |
 | A **healthy send** classified as that wound for a moment (bl-90bf) | the wound's two halves do not share a clock: the disk half is read through the §7.2 per-snapshot memo (once per published snapshot since bl-e90a; per frame before that), the liveness half rides the probe cache inside that same snapshot, and a driver *taking* its flock emits no fs event — so between the send and the §7.2 poll that finds the lock, a genuinely-in-flight empty step reads as a wound. The predicate is right on the inputs it is given; the cache is what is behind. The banner therefore holds a **grace window** before it paints (`src/app/grace.rs`, `WoundGrace`): a wound that clears inside the window never reaches the screen, one that outlives it banners and stays. The window is `Cadence::wound_grace` — cheap sweep + debounce, the catch-up bound itself (one sweep tick to mark the root, one debounce window before the mark is due), spelled as that sum over the **live** cadence off the rendered snapshot (bl-3381) so a re-tuned period carries the grace with it, never a magic number. The gate is **render-layer RAM on the injected clock**, mirroring `Schedule`'s debounce; the predicate stays pure and Clock-free (§5.1 #13). A genuinely dead driver is therefore banner-ed *late*, never not at all — by the window plus the frame cadence's own ≤2 s poll floor (I4), which applies to it exactly as to every other rendered fact. Only the **banner** is graced: the §11 Altitude-2 Steps row paints the same flag ungated, because a cell in a table you opened is as fresh as the rest of that table, while a banner is an unrequested alarm and an alarm that retracts itself teaches the operator to distrust it |
 | `bz --list-models` fails, or returns an empty roster (§9.4) | the picker banners in ichor with the captured stderr and the exact command to run by hand (the §8.3 fallback grammar); an empty roster is named as itself ("the provider offered no models"), never rendered as a picker with nothing in it. The current assignment stays on screen throughout, so a failed query never looks like a lost model. *An **auth-shaped** failure additionally names what this row needs (`login_blocked`'s own sentence) and carries the control that goes there — Login for a row that signs in, the Config tab otherwise (bl-91f1). The banner and the fallback command are unchanged beneath it* |
-| A config file the §9.4 anchored-block grammar does not recognize | the picker declines **loudly** (ichor, naming the file and the shape it expected) and points at the §9.2 / §9.3 raw editors. yog never guesses at YAML it cannot recognize, and never half-writes: the models.yaml half is refused before the providers.yaml half is attempted |
+| A config file the §9.4 anchored-block grammar does not recognize | the surface declines **loudly** (ichor, naming the file and the shape it expected) and points at the §9.2 / §9.3 raw editors. yog never guesses at YAML it cannot recognize, and cannot half-write: a pick is one file since bl-d9cb, and the text is composed — every gate passed, the grammar satisfied — before anything is staged |
 | A spawn whose requested cwd is not an existing directory | **the directory is named, never the program** (bl-6191): `std::process` fails such a child *between fork and exec*, and reports the resulting ENOENT against the **program path** — so a start into a typed-wrong work directory read `failed to spawn <yog binary>: No such file or directory`, telling an operator their binary was missing. Every spawn shape routes its failure through one constructor (`CliError::spawn`), which asks the cwd's own question first (`work_dir_fault`) and answers `work directory does not exist: <path>` — or `is not a directory` for a path that is plainly there, since a second lie fixes nothing. Not gated on the OS error kind: a cwd that is not a directory could not have forked for any other reason. The same question is what the §11 field pre-flights, so this error is the *unreachable-by-the-form* residual — a directory deleted between the flag and the Enter, or a non-form caller |
 | Failed action (short verb or start step) | **a rendered fact, never stderr-only, and rendered exactly once**: the full `ops.jsonl` entry (argv, cwd, exit, origin, stderr) is expandable at the ops pane, *and* the **originating surface** — and only it — renders the failure in ichor red with argv + stderr tail. The banner is **derived every frame** from the refreshed ops tail (`AppModel::last_failure(origin)`), never cached at dispatch: the dispatch handler runs microseconds after a detached spawn, before the child can die, so a snapshot taken there is `None` forever and the sink row above surfaces to nobody (bl-4895 — three live prompts, three populated sinks, zero banners). No `eprintln!`-only error path may exist in `src/shell/` (STORIES INV-2). **The originating surface is the op's `origin` field (§4.2), stamped at dispatch — see the row below for the rule it obeys** |
 | **How a banner ends** (bl-c417) | Two ways, and until bl-c417 only one existed. (1) **Retirement**: a newer op of the same `origin` that did not fail — the §6 rule, per-surface (the row below). (2) **The operator's ack**: `AppModel::last_failure` queries `opslog::since_ack`'s rows, so the §4.2 ack line quiets every surface's banner at once, whether or not anything was retried. That second exit is the whole of the complaint — *"I need a way to make the failed notification go away"* — because an operator who reads an error and decides **not** to retry could not otherwise put it down: the only exit was a *successful re-run of the same verb*, so a failure the operator has understood and chosen to leave alone banners forever. The ack is not a widget flag: it is a durable line, so the dismissal converges to the other instance and survives a restart exactly as the failure did. It is also not amnesia — a **new** failure of that origin lands after the watermark and banners again. The dismiss control sits on the banner itself and in the §11 ops pane, both spelled from one home (`opslog::operator`), both explaining themselves on hover (bl-68ac) |
@@ -4661,8 +4661,20 @@ its contents are lernie's seed and lernie's to fix — and yog reads it not at a
 
 The reader is the §9.4 anchored block grammar applied to the other file — the
 same primitives `roles:` is read through, so `models.yaml` has exactly one
-reader in yog and the picker's write and the editor's gate agree by
-construction.
+reader in yog.
+
+**And since bl-d9cb the `models:` block is yog's own table, not lernie's.**
+lernie 0.0.10 retired it (lernie's bl-35e2): the file's whole load shape there is
+one optional `adapter:` field, and a leftover `models:` block *"is ignored on
+parse"*. Two consequences for this section, both narrow. The §9.4 picker no
+longer writes here at all — see §9.4 — so **this surface is the only writer**,
+through its Declare control and the §9.5 typed rows. And the gate above judges a
+`provider:` field whose only remaining consumer is the gate itself; the one fact
+read out of the block is `context_window`, the §5.1 #35 denominator, which names
+no row. That is a real loose end and it is deliberately left: the block still has
+an editor, a typed control and a reader, and taking the provider column out is a
+separate judgement about this surface rather than a consequence of the picker's
+subtraction.
 
 ### 9.3 Per-workspace config branches (the scripted `$EDITOR`)
 
@@ -4799,10 +4811,10 @@ provider list's last entry is *add a provider…* — not a row but a **route** 
 the §9.1 brazen `config.toml` editor, which is the one place a row is authored;
 a second add-a-provider form over the same file would be a second authority on
 it. The model list's last entry is *custom model id…*, a free-entry field for a
-model brazen does not list. That entry can declare an *unserved* model — the
-operator's own call, and `models.yaml` is already the operator's authority
-(§9.2). It cannot declare an unroutable one, but **not because the row beside it
-is brazen's** — that was the reasoning, and bl-3d22 falsified it. The row's
+model brazen does not list. That entry can assign an *unserved* model — the
+operator's own call, on a row brazen has. It cannot assign an unroutable one, but
+**not because the row beside it is brazen's** — that was the reasoning, and
+bl-3d22 falsified it. The row's
 existence is checked *and so is its protocol's capability*, below.
 
 **Selection is the gesture (bl-fb6b).** There is no Set button. Choosing a
@@ -4828,8 +4840,8 @@ the operator had already stopped making.
 field writes when it is confirmed — Enter, or focus leaving it with content —
 and the confirmed id then becomes the dropdown's selection, which retires the
 field and makes a second confirm of the same id impossible. Per-keystroke would
-declare `g`, `gp`, `gpt`… every one of them a `models.yaml` entry and a `lernie
-config` commit on the workspace branch. A half-typed id is not a choice.
+assign `g`, `gp`, `gpt`… every one of them a `lernie config` commit on the
+workspace branch. A half-typed id is not a choice.
 
 **One control, and the role strip is its scope.** There is no per-role apply
 and no second button row: *"you're setting whichever one you have selected"*.
@@ -4844,9 +4856,8 @@ Three consequences, all invariants rather than warnings — the picker already
 warned, and the warning was the dead end:
 
 - **Nothing offered is unroutable.** Every listed candidate is a model brazen
-  listed for a row brazen has, so the `models.yaml` entry a pick writes can
-  never name a row the §9.2 Apply gate would reject, and the role mark it
-  produces can never be faulted.
+  listed for a row brazen has, so the assignment a pick writes can never name a
+  dead row, and the role mark it produces can never be faulted.
 
   **Row existence is not request-shape compatibility, and this claim used to
   assume it was** (bl-3d22). `bz --list-providers` ships `claude-code`, whose
@@ -4883,8 +4894,8 @@ warned, and the warning was the dead end:
   is the half yog owns.
 
   **The gate is not the whole remedy, because a config can predate it** (bl-5252).
-  This bullet gates the picker; it reaches no `models.yaml` written before the
-  gate existed, and none written by hand through the §9.1 editor, which is the
+  This bullet gates the picker; it reaches no assignment written before the
+  gate existed, and none written by hand through the §9.3 editor, which is the
   operator's own authority. Such a step still dies at encode — and it did so with
   a §7.3 banner offering Dismiss and nothing else, because the classifier there
   keyed on lernie's `Config` wrapper while brazen stamps every dialect decline
@@ -4893,16 +4904,15 @@ warned, and the warning was the dead end:
   column (§8.3 rule 6): one match, two ways in, so the banner's reason is the
   sentence this control paints.
 - **`plan` refuses a row brazen lacks** (`PickError::UnknownProvider`), before
-  either file is touched. The §9.2 Apply gate could not cover this alone: it
-  runs only when the `models.yaml` half needs writing, so re-picking an
-  already-declared model would have carried a dead row into `providers.yaml`
-  ungated. Since bl-3d22 it takes the effective table **whole** rather than its
-  name column, because the row gate asks two questions and only one of them is
-  answerable from a name.
+  the file is touched. It is the picker's own gate and always was the only one
+  that could be: the §9.2 Apply gate judges a different file, and since bl-d9cb a
+  pick does not go near it. Since bl-3d22 it takes the effective table **whole**
+  rather than its name column, because the row gate asks two questions and only
+  one of them is answerable from a name.
 - **`plan` refuses a row whose protocol cannot carry a yog turn**
   (`PickError::Incapable`, bl-3d22), in the row's own words, at the same point
   and for the same reason: a config that would die at the next step's encode is
-  refused instead of written. A row the table does not carry is an unknown row,
+  refused instead of committed. A row the table does not carry is an unknown row,
   not an incapable one — there is no protocol to judge — so the gate needs no
   case of its own for it, and an unanswerable table gates nothing.
 - **`plan` refuses an id the block grammar cannot hold**
@@ -4915,8 +4925,8 @@ dialect can be tool-capable and still leave a fact the turn depends on to the
 server. `ollama_chat` is the case: brazen's encoder maps the output cap to
 `options.num_predict` and emits **no `options.num_ctx` at all**, so the Ollama
 server's own default context governs every yog turn — not the model's capacity,
-and not the `context_window` the pick declares in `models.yaml` (which is the
-§5.1 #35 denominator and reaches no request). A drive through the offered row
+and not any `context_window` `models.yaml` declares (that number is the §5.1 #35
+denominator, reaches no request, and since bl-d9cb no pick writes one). A drive through the offered row
 reached local inference and produced nothing usable: 4095 input tokens on the
 platform payload, one generated token, `finish_reason: length`, against a model
 whose own context was 262144.
@@ -4947,75 +4957,110 @@ brazen bl-f19d** (a first-class context declaration, or a passthrough that
 composes with the typed `options`); when it lands, the caveat and the remedy are
 deleted together.
 
-**One gesture, two files, in that order.** lernie's cross-check
+**One gesture, ONE file (bl-d9cb).** A pick writes `providers.yaml` on
+`config/<name>` through the §9.3 path (staged draft + `lernie config`, the only
+lawful writer) and nothing else. Since bl-3f46 the gesture is the boundary's own
+`Action::PickModel { workspace, role, provider, model }` (§8.5): the pane
+constructs the variant and calls the chokepoint, and `/model <role> <provider>
+<model-id>` or a deposit reaches the same executor — one implementation,
+whichever seat fires it.
+
+**It was two writes in a normative order, and the premise for that died
+upstream.** This section used to read: *"lernie's cross-check
 (`config::cross::check_roles_against_models`) refuses to load any config whose
 `roles.<r>.model` is not declared in the global `models.yaml`, and refuses one
 whose declared `provider` differs from that model's. A role assignment and a
-model declaration are therefore two halves of **one** fact, and the picker
-writes both. Since bl-3f46 that gesture is the boundary's own
-`Action::PickModel { workspace, role, provider, model }` (§8.5): the pane
-constructs the variant and calls the chokepoint, and `/model <role> <provider>
-<model-id>` or a deposit reaches the same executor — the composition below has
-one implementation, whichever seat fires it. The two writes are:
+model declaration are therefore two halves of one fact, and the picker writes
+both"* — `models.yaml` first, *"normatively"*, because a role naming an
+undeclared model **bricked every step in the workspace**. lernie 0.0.10 retired
+that check and the table under it (lernie's bl-35e2). Read at the pin,
+`config/cross/mod.rs` says:
 
-1. `<config-root>/models.yaml` — the §9.2 pipeline (hash-guard + atomic
-   rename); skipped when the id is already declared **on the picked row**. An
-   id declared on a *different* row has its one `provider:` line repointed
-   (bl-bd89) — lernie refuses a config whose `models.<m>.provider` and
-   `roles.<r>.provider` disagree, so a skip there would brick the workspace the
-   pick just repaired. Everything else in the entry is the operator's and is
-   preserved;
-2. `providers.yaml` on `config/<name>` — the §9.3 path (staged draft +
-   `lernie config`, the only lawful writer).
+> There is no roles-against-models check any more (bl-35e2): the global
+> `models.yaml` carries no `models:` table, a role's `providers.yaml` assignment
+> is the single home of its (provider row, model id) pointer, and id validity is
+> brazen's fact caught at the first live model call.
 
-**models.yaml first, normatively.** A model declared with no role naming it is
-inert. A role naming an undeclared model **bricks every step in the
-workspace** — the config load fails before the model is ever called. The order
-is chosen so the half that can land alone is the harmless one.
+and `config/models.rs` deserializes the whole file to one optional `adapter:`
+field, adding that *"A leftover `models:` block in an operator's file is ignored
+on parse (serde's default for unknown keys), so existing installs load
+unchanged."* So the first write reached nothing that reads it, and the ordering
+rule it justified protected nothing. **Three things dissolved with it and none
+was replaced:** the second write, the order between them, and the class of
+half-written state an order exists to bound. `plan` returns one text.
 
-**What brazen publishes, and what yog declares.** `bz --list-models --json`
-returns `{"models":[{"id":…,"default":…}]}` plus three OPTION-shaped metadata
-keys beside them — `context_window`, `max_output_tokens`, `display_name` —
-each carried only where that provider's list GET served it (Google serves all
-three, Anthropic only `display_name`, OpenAI and Ollama none: brazen's own
-empty-set rule). The codex measurement this section once recorded as "and
-nothing else" measured a row of the last kind; it was never the shape of the
-payload. `models.yaml` requires `capabilities` and `context_window` and neither
-serde-defaults, so the picker writes both — but not the same way (bl-848f):
+**The pointer's single home is `providers.yaml`, and yog now says so in one
+place.** A role's `provider` + `model` is the whole binding; nothing mediates it.
+The §9.4 role marks therefore judge **that** pointer — `roles.<r>.provider`
+against brazen's effective table, in `PickError::UnknownProvider`'s own words, so
+the mark and the refusal one gesture later cannot phrase it differently (below).
+The picker reads one file too: it had held the global `models.yaml` per open
+beside brazen's rows, for a judgement about a table lernie no longer loads.
 
-- **`context_window` is the number the provider served**, taken from the
-  roster the pick was made from, wherever there was one — §9.4's named constant
-  only where there was none;
-- **`capabilities: []` is always a declared default** — no provider publishes
-  capabilities, so there is nothing to seed it from.
+**What became of `models.yaml`, and of the one fact still read out of it.** The
+file is still lernie's — it carries `adapter:` — and the `models:` block inside
+it is now **yog's own table, read by exactly one consumer**: `context_window`,
+the §5.1 #35 fullness denominator (`grammar::context_windows`). Nothing else in
+either program reads a byte of that block. So:
 
-The generated comment above the entry says which of the two each line is, and
-names the §9.2 editor to correct it in. The distinction is the point: since
-bl-a48b the declared window is the denominator of §5.1 #35's fullness figure,
-so a fabricated 200 000 sitting beside a true number brazen served *in the same
-request* produced a wrong percentage that read exactly like a considered one — a
-default that looks declared is indistinguishable from a judgement. An entry that
-already exists is never re-seeded: the operator's own edit wins over any
-discovery, and yog's line was only ever the seed.
+- **The fact is not deleted, its redundant writer is.** The window keeps one
+  authoritative home and one reader. What went away is the *seeding* of it by a
+  gesture that had no business declaring it.
+- **The seat that authors an entry is the §9.2 Declare control**, which was
+  always there beside the §9.5 typed rows that edit one. Its generated entry
+  takes `DEFAULT_CONTEXT_WINDOW` under a comment saying both generated lines are
+  declared defaults and naming the figure the number feeds — the operator's
+  reason to edit it, said where they are reading.
+- **bl-848f's distinction dissolves rather than being preserved.** That ball
+  found a fabricated 200 000 sitting beside a number brazen had served *in the
+  same request*, indistinguishable from a considered one, and answered it by
+  seeding the entry from the roster and writing a second comment variant that
+  said which was which. With the picker's write gone there is no seat with a
+  roster behind it: every generated number is a declared default, one note says
+  so, and the two-kinds problem has no instance. The seed, the second note and
+  `query::served_window` went with it.
+- **brazen's served window is a query, not a field.** It is the provider's fact
+  and it moves without yog's involvement, so copying it into a file at pick time
+  is a snapshot that goes stale — which is the reasoning this section already
+  applies to the roster itself (*"a stored candidate list would be a second
+  representation of a fact the provider owns"*). If the figure should ever prefer
+  a served window to a declared one, the shape is a read-time query over the
+  model cache (`config_edit::brazen::model_cache_at`, already on disk inside the
+  workspace's wall), never a field a write seeds.
+
+**What brazen publishes.** `bz --list-models --json` returns
+`{"models":[{"id":…,"default":…}]}` plus three OPTION-shaped metadata keys beside
+them — `context_window`, `max_output_tokens`, `display_name` — each carried only
+where that provider's list GET served it (Google serves all three, Anthropic only
+`display_name`, OpenAI and Ollama none: brazen's own empty-set rule). The codex
+measurement this section once recorded as "and nothing else" measured a row of the
+last kind; it was never the shape of the payload. yog reads `id` off it and
+nothing more.
 
 Rejected, with reasons:
 
 - **The intersection** — offer only models that brazen serves *and*
   `models.yaml` describes, greying the rest with an explanation. This is the
   reported bug restated politely: the operator still hand-edits a second file
-  to use a model his provider already offers.
+  to use a model his provider already offers. (It is doubly wrong now: the second
+  file governs nothing.)
 - **A lernie-side default for an undeclared model.** Right shape, wrong repo:
   lernie is an exact registry pin (§16.7) that yog cannot change — and a
   harness that invents a context window has invented it *silently*, where a
-  config file that declares one can be read and corrected.
-- **Writing `providers.yaml` alone.** `lernie config` validates nothing at
-  commit time, so the config lands and every later step dies on
-  `LoadError::UnresolvedRef`. The write is not optional; it is the other half.
+  config file that declares one can be read and corrected. Overtaken anyway:
+  lernie declines to carry model policy at all.
+- **Keeping the `models.yaml` write "in case lernie's check returns".** A write
+  kept against a hypothetical is a fact with two homes today. If the check
+  returns, this section is where it lands.
+- **A new yog-owned file for the window.** It would delete a file and add a file,
+  and leave the operator's one seat for correcting the denominator behind a path
+  nothing points at. The block already has an editor, a typed control and a
+  reader; moving it buys a cleaner sentence and nothing else.
 
 **yog still declares no YAML dependency (§9.2), and lernie's parser is
-private** (its crate exposes only `cmd`). Both writes are therefore **anchored
-line edits over the block form lernie's own template authors** — never a
-general YAML transform: `roles:` / `models:` at column 0, two-space entry keys,
+private** (its crate exposes only `cmd`). Every edit to either file is therefore
+an **anchored line edit over the block form lernie's own template authors** —
+never a general YAML transform: `roles:` / `models:` at column 0, two-space entry keys,
 four-space fields. yog recognizes exactly that shape and **declines loudly**
 (ichor, §7.3) on anything else, pointing at the §9.2 / §9.3 raw editors. That
 refusal is not a dead end precisely because those raw surfaces already exist —
@@ -5150,18 +5195,29 @@ rejected: the template deliberately gives the compactor a cheaper model, and
 retargeting a role the operator did not name is the same class of lie as an
 unstated scope.
 
-**A dead assignment is marked where it is read (bl-53be).** The candidate set is
-a live query, so a dead `models.yaml` entry is never *offered* — but the role
-rows name the model each role is **already** on, read from `providers.yaml`, and
-that is exactly where a dead entry hides. Each row therefore carries §9.2's
-judgement: the model is undeclared in `models.yaml`, or declared on a provider
-row brazen's table does not have. A faulted row is glyphed and the reason is
-painted in ichor under the selection, so "one usable model out of three" is
-visible at the point of change instead of at fire. The two facts this needs —
-brazen's rows and the `models.yaml` text — are asked **once per open** and
-discarded with the surface (§5.3), on the same terms as the roster: they answer
+**A dead assignment is marked where it is read (bl-53be, re-pointed by
+bl-d9cb).** The candidate set is a live query, so a dead row is never *offered* —
+but the role rows name what each role is **already** on, read from
+`providers.yaml`, and that is exactly where a dead one hides. Each row therefore
+carries the judgement: the provider row this role dispatches through is not one
+brazen's table has, so every step under it dies with `unknown provider`. A
+faulted row is glyphed and the reason is painted in ichor under the selection, so
+"one usable role out of two" is visible at the point of change instead of at fire.
+
+**It judged the wrong file until bl-d9cb, and missed the defect it was named
+for.** The mark used to read the global `models.yaml` and ask two questions of it:
+was the role's model declared there at all, and did that declaration's own
+`provider:` name a live row. Both are dead at the pin — lernie loads no `models:`
+table, so an undeclared id refuses nothing, and the declaration's provider is read
+by no dispatch — while the *live* pointer went unjudged here: a role sitting on a
+row brazen had dropped was **unmarked** whenever its old model entry happened to
+name a live one. The wording is `PickError::UnknownProvider`'s own, one home for
+the mark and the refusal a gesture later.
+
+The one fact this needs — brazen's rows — is asked **once per open** and
+discarded with the surface (§5.3), on the same terms as the roster: it answers
 "is what you already have usable?", a question that exists only while the picker
-is on screen.
+is on screen. It was two facts, and the second one was the file above.
 
 **Failure renders as itself (INV-2, §7.3).** A `--list-models` that exits
 non-zero, times out, or returns an empty roster banners in ichor with the
@@ -8337,7 +8393,7 @@ beside `main.rs`.
 | `src/lib.rs` | module decls, Args, test_support (`src/test_support{,/world,/workspace}.rs` — the fake effects, the hermetic fixture world and its wall, and the real on-disk lernie workspace, each its own file at §12's cap) |
 | `src/login/{mod,auth}.rs` | §8.3 as amended (§15 M6 Z8): the streamed-piped `bz --login` flow, whose lines render verbatim and whose exit lands ONE outcome row, and the pure auth-shaped step-failure predicate that puts the affordance one click from the failure |
 | `src/main.rs` (excl.) | entry, multi-call/namespace dispatch, the two `Engine::boot` faces (window and `yog serve`) and what a window adds beside the engine |
-| `src/model_pick/{mod,header,grammar/mod,grammar/fields,grammar/models,grammar/roles,grammar/tools,query,remedy}.rs` | the §9.4 picker: pure plan + the provider-row gate and default (bl-bd89), the **two** scope sentences the one pane is handed (conversation vs. birth, bl-824e) and the **two** config lines — the conversation's freeze + derived drift clause with the two exits it earns (bl-9786, bl-2d19) and the birth block's pair-and-branch-head line, the anchored block grammars (no YAML dep) — `fields` the generic locate/read/replace every rewrite and the §9.5 pane share — the ONE row judgement (`is_unknown_row`) every §9 gate calls, the protocol-capability gate beside it (`PickError::Incapable`, bl-3d22 — the effective table is carried whole because a row name cannot answer whether the dialect takes tools), and `remedy` the way out of a credential-shaped roster failure (bl-91f1, §9.4): §8.3's own `looks_auth` as the gate, `ProviderRow::login_blocked` as the words, a §11 tab as the destination — no wording and no classifier of its own, and no `Unrouted` state, because the picker named the row in the query it just fired |
+| `src/model_pick/{mod,header,grammar/mod,grammar/fields,grammar/models,grammar/roles,grammar/tools,query,remedy}.rs` | the §9.4 picker: the **one-file** pure plan (bl-d9cb — `plan` returns the `providers.yaml` text and nothing else, lernie having retired the `models:` table the second write fed; `grammar/models` survives for yog's own table and the §5.1 #35 denominator read out of it) + the provider-row gate and default (bl-bd89) + `role_fault`, the role rows' one judgement over the LIVE pointer in the pick gate's own words, the **two** scope sentences the one pane is handed (conversation vs. birth, bl-824e) and the **two** config lines — the conversation's freeze + derived drift clause with the two exits it earns (bl-9786, bl-2d19) and the birth block's pair-and-branch-head line, the anchored block grammars (no YAML dep) — `fields` the generic locate/read/replace every rewrite and the §9.5 pane share — the ONE row judgement (`is_unknown_row`) every §9 gate calls, the protocol-capability gate beside it (`PickError::Incapable`, bl-3d22 — the effective table is carried whole because a row name cannot answer whether the dialect takes tools), and `remedy` the way out of a credential-shaped roster failure (bl-91f1, §9.4): §8.3's own `looks_auth` as the gate, `ProviderRow::login_blocked` as the words, a §11 tab as the destination — no wording and no classifier of its own, and no `Unrouted` state, because the picker named the row in the query it just fired |
 | `src/monitor/{mod,arming,verdict,row}.rs` | the VISION §4.9 alignment monitor's data half: the anti-reinvention law stated where it must hold; the `cadence.yaml` `monitor:` block (arming, the model pin, the policy file it names) and the seed that file starts from; the three-valued verdict and the one reading of a model's reply; and the ops row that is audit trail, level-trigger memory and tuning dataset at once — with `latest`/`worst`, the queries that make a standing verdict a derivation rather than a field |
 | `src/monitor/{window,check,sentry}.rs` | its acting half: the evidence one check reads (`goal.md` verbatim + the transcript delta derived from the last-checked sha by `git diff`, tail-clipped); the one bounded tool-less call through the embedded brazen adapter (§16.7 W10) behind a `Caller` seam, and the NDJSON read that takes the verdict and the provider's own counters; and the level trigger and its thread (§7.2) — one check per tick, only when a tip moved, retry by re-firing |
 | `src/multiplex{.rs,/bl.rs,/lernie.rs,/help.rs,/landing.rs,/namespace.rs,/wire.rs}` | the §16.7 namespace arms: each embedded crate's verb surface, dispatched from `main.rs` — plus the router's namespace table and its exhaustive `owns_argv` classification (`namespace`, bl-4667 — which arms own their argv and answer `--help` themselves, and which are answered from the command table like `serve`); `help` (bl-52ed): the argv seat's whole command table, the top-level roster rendered from it, every per-command page, and the discovery probe the `bl`/`bz` arms answer world-free (§8.5's every-command-answers-help rule at the argv surface); and `landing` (bl-7e54): the §16.3 repair the `bl` arm converges on the way in, re-deriving a pre-nesting landing's plugin schedule from balls' own seed; and `wire` (bl-b6fa, bl-024b): the two wire CLIENT arms — `yog seat` and `yog tool-host` — which compose the world at the process edge because the certificate and the tool config are facts of *this* machine's data root even when the engine is elsewhere |
@@ -8383,7 +8439,7 @@ beside `main.rs`.
 | `src/shell/acceptance/name_column.rs` (excl.) | the same painted-geometry discipline one altitude in — on the row rather than the panel (bl-b9e3: the title's left edge is the row's fixed prefix and nothing else, so two rows differing only in attention align — measured on the painted galleys, since a string assertion would pass on a tree that deleted the flag outright) |
 | `src/shell/acceptance/one_rendering.rs` (excl.) | the QUALITY H1 seat drives: a fact yog derives once reaches the glass in exactly one seat, proved in both directions — the non-owning surface is asserted **not** to say the fact's own words, and the owner is asserted to say them (bl-20cb's provider roster; the reference control's tab focus) |
 | `src/shell/acceptance/orphan.rs` (excl.) | the bl-ace6 drive (a conversation whose newest transcript entry is delivered mail while no driver holds the lock, rendered on the whole window: the dead driver's own `driver.log` sentence is in the paint output, the mute variant says outright that nothing on disk explains it, and the grace gate still withholds the alarm on the frame before the window elapses — the `acceptance/wound.rs` harness, on `ShellState::orphan_grace`) |
-| `src/shell/acceptance/picker.rs` (excl.) | the bl-a842 drive that the §9.4 pane's **contents** reach the paint layer — the role strip the seeded `providers.yaml` declares, the blast-radius sentence a pick claims, and the §9.2 fault an undeclared model earns — all of it behind the "cannot read `roles:`" early return until the fixture carried a config lineage, and none of it asserted by the two picker beats that measure the seat's *height* |
+| `src/shell/acceptance/picker.rs` (excl.) | the bl-a842 drive that the §9.4 pane's **contents** reach the paint layer — the role strip the seeded `providers.yaml` declares, the blast-radius sentence a pick claims, and the fault a role on a row brazen lacks earns (bl-d9cb: the beat commits its own dead-row lineage, since lernie's pinned template names a live row and the retired judgement it used to assert was over a table nothing loads) — all of it behind the "cannot read `roles:`" early return until the fixture carried a config lineage, and none of it asserted by the two picker beats that measure the seat's *height* |
 | `src/shell/acceptance/raise.rs` (excl.) | the bl-9acf raise drive (one goal box, and a blank one fires nothing) |
 | `src/shell/acceptance/recall.rs` (excl.) | the bl-f908 drive (↑ pages back through the operator's own turns — pending ahead of delivered — ↓ hands the half-typed draft back verbatim, and a caret below the top row keeps its arrow) |
 | `src/shell/acceptance/refusal.rs` (excl.) | the bl-dc14 drive: a model carrying a wire refusal paints the engine's sentence and NO operable control, and the same world without one paints the shell — both directions, so the witness is the refusal and not a fixture that happens to paint nothing |
@@ -8448,7 +8504,7 @@ beside `main.rs`.
 | `src/shell/login_pane.rs` (excl.) | §8.3 — the Login tab's content and the auth-failed banner's, one machinery in two seats since it stopped being a fold in the roster column (bl-1ca2) |
 | `src/shell/menus.rs` (excl.) | the §11 context-menu attach/dispatch |
 | `src/shell/modal.rs` (excl.) | the §11 modal-owns-the-frame invariant (the backdrop layer + the one dismissal the ✕ and Escape both spend, bl-d921) |
-| `src/shell/model_pick/{mod,seat,lines,marks,ram,role,select,select/notes,write}.rs` (excl.) | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its **two** exits (bl-9786's new conversation and bl-2d19's `retarget`, laid as a peer strip so neither is ever dropped), the write receipt, and the pane's extras while it is open, over one `Subject` value naming what the seat is about (its scope claim, and the conversation it belongs to when there is one) — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks; the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns — which since bl-dd7f **name the row they steered off** when brazen has no such row, so a picker reading `anthropic` can never be mistaken for a report of the `openai-chatgpt` the conversation actually dispatched through; `role` the strip that re-scopes them, split off at the cap on that same row-versus-scope seam; `select/notes` everything **said** above the pair rather than chosen in it, split off `select` at the cap on that seam (bl-671d) — the strand the steering left behind, the tool refusal `plan` would make, and the context caveat it would not: a dialect that leaves the context size to the server stays selectable and is stated, with the remedy on its hover; the two-file write plan |
+| `src/shell/model_pick/{mod,seat,lines,marks,ram,role,select,select/notes,write}.rs` (excl.) | the §9.4 picker's widgets, worn by **two seats** with one implementation (bl-824e): `seat` paints the row both surfaces carry — the two dropdowns, the drift clause and its **two** exits (bl-9786's new conversation and bl-2d19's `retarget`, laid as a peer strip so neither is ever dropped), the write receipt, and the pane's extras while it is open, over one `Subject` value naming what the seat is about (its scope claim, and the conversation it belongs to when there is one) — `lines` derives and memoizes what that row says (the conversation's, keyed on agent tip + config tip + role; the birth block's, on the head alone), while `mod` holds the pane the row cannot hold (the role strip that re-scopes it, the dead-assignment fault), the two scope sentences it is handed, and the routes out, which are **one value**: the seat returns the §11 tab it was asked for, named by the `add a provider…` entry and by the credential fault's remedy alike (bl-91f1); roster fire on the model list's own open (bl-cd2a) + the three-layer failure paint (bz's line verbatim, the remedy between, the run-by-hand command beneath) + the commit-on-select wiring (no buttons, bl-fb6b); the dead-assignment marks, now over `roles.<r>.provider` itself (bl-d9cb); the surface's RAM, which holds brazen's rows **whole** so the fault's `auth` column costs no second read; the row's two brazen-sourced dropdowns — which since bl-dd7f **name the row they steered off** when brazen has no such row, so a picker reading `anthropic` can never be mistaken for a report of the `openai-chatgpt` the conversation actually dispatched through; `role` the strip that re-scopes them, split off at the cap on that same row-versus-scope seam; `select/notes` everything **said** above the pair rather than chosen in it, split off `select` at the cap on that seam (bl-671d) — the strand the steering left behind, the tool refusal `plan` would make, and the context caveat it would not: a dialect that leaves the context size to the server stays selectable and is stated, with the remedy on its hover; the one-file write plan (bl-d9cb), and the file the RAM stopped holding with it — the global `models.yaml`, read per open for a judgement lernie retired |
 | `src/shell/navigator.rs` (excl.) | §11 altitude 0 — reduced to the roster, the balls section and the two entries that FOCUS the center's Config and Login tabs, painting no surface of its own (bl-1ca2) |
 | `src/shell/new_ws.rs` (excl.) | §3.1 |
 | `src/shell/pane.rs` | the conversation pane's own column (§11, bl-9551), split from `shell/mod.rs` at the cap on a real seam: the window divides itself between a top bar, a roster column, one world-level accessory and a remainder — this divides *that* remainder between the conversation's docked accessories (each drawing from the §11 rule 5 budget, painting nothing when it cannot be paid) and the bounded, clipped viewport that is the conversation itself |

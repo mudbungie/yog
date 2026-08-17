@@ -50,7 +50,7 @@ pub(crate) mod read;
 pub(crate) mod write;
 use file::located;
 use read::{branch_text, text_at};
-use write::{cadence_path, commit, editor_at, saved};
+use write::{cadence_path, commit};
 
 /// Run one config apply (§9). The reply says what landed: a file destination
 /// answers with the path written, a lineage with `lernie config`'s captured run
@@ -182,12 +182,16 @@ pub(super) fn set_marks(
     Ok(Reply::Marks { branch: landed })
 }
 
-/// The §9.4 pick: §9.2 and §9.3 composed by one gesture, because lernie's
-/// cross-check makes a role assignment and a model declaration two halves of
-/// one fact. The plan is composed first, so a dead provider row or an
-/// unreadable file refuses before either half is written; then `models.yaml`
-/// lands **first** (a role naming an undeclared model bricks the workspace),
-/// and `providers.yaml` goes through the §9.3 lineage write.
+/// The §9.4 pick: **one write** (bl-d9cb) — the §9.3 lineage write of
+/// `providers.yaml`, which is the single home of a role's (provider row, model
+/// id) pointer. The text is composed first, so a dead provider row, an incapable
+/// protocol or a file the grammar cannot read refuses before anything is
+/// written.
+///
+/// It used to apply `models.yaml` through the §9.2 pipeline first, in that order,
+/// because lernie's cross-check refused a config naming an undeclared model.
+/// lernie retired that check and the table with it (its bl-35e2), so the first
+/// write reached nothing that reads it.
 ///
 /// The provider gate reads the rows of **the workspace being picked for**
 /// (bl-fcd5), not of whatever wall stood in `deps.world`: the pick already
@@ -198,9 +202,7 @@ pub(super) fn set_marks(
 ///
 /// The table is handed to [`plan`](crate::model_pick::plan) **whole** since
 /// bl-3d22: the gate asks whether the row exists AND whether its protocol can
-/// carry a yog turn, and the second question is not answerable from a name. The
-/// name projection is still what the §9.2 Apply pipeline consumes, so it is
-/// derived at that one call rather than read twice.
+/// carry a yog turn, and the second question is not answerable from a name.
 pub(super) fn pick_model(
     deps: &Deps,
     ts: &str,
@@ -210,21 +212,9 @@ pub(super) fn pick_model(
     let assigned = config_file(workspace, &format!("config/{BRANCH}"), PROVIDERS)
         .map(|b| String::from_utf8_lossy(&b).into_owned())
         .map_err(|e| e.to_string())?;
-    let mut editor = editor_at(&LernieGlobal::resolve(&deps.world).models())?;
     let table =
         crate::config_edit::brazen::RealBzRunner::resolve(&wall_env(deps, workspace)).providers();
-    let planned = crate::model_pick::plan(
-        editor.draft(),
-        &assigned,
-        &table,
-        pick,
-        served_window(deps, workspace, pick),
-    )
-    .map_err(|e| e.to_string())?;
-    if let Some(text) = planned.models_yaml {
-        editor.set_draft(text);
-        saved(editor.apply(&crate::config_edit::brazen::row_names(&table), &RealFileIo))?;
-    }
+    let assigned = crate::model_pick::plan(&assigned, &table, pick).map_err(|e| e.to_string())?;
     commit(
         deps,
         ts,
@@ -232,29 +222,8 @@ pub(super) fn pick_model(
         BRANCH,
         &EditOrigin::Advance,
         PROVIDERS,
-        &planned.providers_yaml,
+        &assigned,
     )
-}
-
-/// The context window brazen itself served for the picked model (bl-848f),
-/// read out of the model cache `bz --list-models` wholesale-writes inside
-/// **this workspace's** wall — the roster the picker offered the id from, still
-/// on disk, and the same one every other seat's pick would have read.
-///
-/// It seeds the declaration; it is not a second reader of the fact. bl-a48b's
-/// ruling stands — the §5.1 #35 fullness figure reads the declared window in
-/// `models.yaml` and nothing else. `None` (the provider serves no window, the
-/// cache was never written, or it names some other model) is the honest miss
-/// the §9.4 default is for.
-fn served_window(deps: &Deps, workspace: &Path, pick: &Pick) -> Option<u32> {
-    let cached = crate::config_edit::brazen::model_cache_at(
-        &brazen_paths(deps, workspace).models_cache_dir,
-        &pick.provider,
-        &RealFileIo,
-    )
-    .ok()
-    .flatten()?;
-    crate::model_pick::query::served_window(&cached, &pick.model)
 }
 
 #[cfg(test)]

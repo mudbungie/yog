@@ -1,9 +1,10 @@
 //! The composed one-pick plan (§9.4) and the sentences the surface paints.
 
-use super::{SEEDED_MODELS, TEMPLATE_PROVIDERS, table};
-use crate::model_pick::grammar::{GrammarError, MODELS_YAML, roles};
+use super::{TEMPLATE_PROVIDERS, table};
+use crate::model_pick::grammar::{GrammarError, RoleModel, roles};
 use crate::model_pick::{
-    Pick, PickError, WORKER_ROLE, WRITE_NOTE, birth_sentence, default_row, plan, scope_sentence,
+    Pick, PickError, WORKER_ROLE, WRITE_NOTE, birth_sentence, default_row, plan, role_fault,
+    scope_sentence,
 };
 
 fn pick(model: &str) -> Pick {
@@ -19,134 +20,48 @@ fn rows() -> Vec<crate::config_edit::brazen::ProviderRow> {
     table(&["codex", "google"])
 }
 
-/// A model the provider offers but `models.yaml` has never heard of produces
-/// BOTH writes — the whole point of §9.4.
+/// bl-d9cb. One pick, ONE write: the role's assignment in `providers.yaml`, and
+/// nothing else. lernie retired the global `models:` table (its bl-35e2), so the
+/// declaration that used to lead this gesture reached nothing that reads it.
 #[test]
-fn a_model_unknown_to_models_yaml_plans_both_writes() {
-    let planned = plan(
-        SEEDED_MODELS,
-        TEMPLATE_PROVIDERS,
-        &rows(),
-        &pick("gpt-5.6-sol"),
-        None,
-    )
-    .unwrap();
-    let declared = planned.models_yaml.expect("the id needed declaring");
-    assert!(declared.contains("  gpt-5.6-sol:\n    provider: codex\n"));
+fn a_pick_writes_the_role_assignment_and_only_that() {
+    let assigned = plan(TEMPLATE_PROVIDERS, &rows(), &pick("gpt-5.6-sol")).unwrap();
     assert_eq!(
-        roles(&planned.providers_yaml)
+        roles(&assigned)
             .into_iter()
             .find(|r| r.role == WORKER_ROLE)
-            .map(|r| r.model),
-        Some("gpt-5.6-sol".to_string())
+            .map(|r| (r.provider, r.model)),
+        Some(("codex".to_string(), "gpt-5.6-sol".to_string()))
     );
+    // Nothing models.yaml-shaped comes back — the one text IS the one file.
+    assert!(!assigned.contains("models:"), "{assigned}");
+    assert!(!assigned.contains("context_window"), "{assigned}");
+    // And the pick is total over ids the file never heard of: there is no
+    // declaration to have made first, so nothing to be missing.
+    assert!(plan(TEMPLATE_PROVIDERS, &rows(), &pick("my-local-tag")).is_ok());
 }
 
-/// bl-848f. The window the roster served rides the plan into the declaration,
-/// so the denominator of §5.1 #35's fullness figure starts out TRUE for a
-/// provider that publishes one — the same gesture, one guess fewer.
-#[test]
-fn a_served_window_reaches_the_declaration_the_plan_writes() {
-    let planned = plan(
-        SEEDED_MODELS,
-        TEMPLATE_PROVIDERS,
-        &rows(),
-        &pick("gemini-3-pro"),
-        Some(1_048_576),
-    )
-    .unwrap();
-    let declared = planned.models_yaml.expect("the id needed declaring");
-    assert!(
-        declared.contains("    context_window: 1048576"),
-        "{declared}"
-    );
-    assert_eq!(
-        crate::model_pick::grammar::context_windows(&declared).get("gemini-3-pro"),
-        Some(&1_048_576)
-    );
-    // The half that carries no window is untouched by the seed.
-    assert!(planned.providers_yaml.contains("    model: gemini-3-pro"));
-}
-
-/// An already-declared id needs no models.yaml write — the operator's own
-/// capabilities and context window stand.
-#[test]
-fn an_already_declared_model_plans_one_write() {
-    let planned = plan(
-        SEEDED_MODELS,
-        &crate::model_pick::grammar::set_role_model(
-            TEMPLATE_PROVIDERS,
-            WORKER_ROLE,
-            "codex",
-            "gpt-5.6-sol",
-        )
-        .unwrap(),
-        &rows(),
-        &pick("gpt-5.4"),
-        None,
-    )
-    .unwrap();
-    assert_eq!(planned.models_yaml, None);
-    assert!(planned.providers_yaml.contains("    model: gpt-5.4"));
-}
-
-/// The models.yaml half is decided first, so an unreadable one refuses the
-/// whole gesture before anything is staged — there is no half-written state.
-#[test]
-fn an_unreadable_models_yaml_refuses_before_the_providers_half() {
-    let refused = plan(
-        "models: {}\n",
-        TEMPLATE_PROVIDERS,
-        &rows(),
-        &pick("gpt-5.6-sol"),
-        None,
-    );
-    assert_eq!(
-        refused,
-        Err(PickError::Grammar(GrammarError::Inline {
-            file: MODELS_YAML,
-            key: "models".into(),
-        }))
-    );
-    // The grammar's own sentence rides through unchanged — the pick layer adds
-    // a refusal kind, never a second phrasing of the file's.
-    assert_eq!(
-        refused.unwrap_err().to_string(),
-        GrammarError::Inline {
-            file: MODELS_YAML,
-            key: "models".into(),
-        }
-        .to_string()
-    );
-}
-
+/// The one file the grammar cannot read refuses the gesture, and the grammar's
+/// own sentence rides through unchanged — the pick layer adds a refusal kind,
+/// never a second phrasing of the file's.
 #[test]
 fn an_unreadable_providers_yaml_refuses_the_plan() {
-    assert!(matches!(
-        plan(
-            SEEDED_MODELS,
-            "roles: {}\n",
-            &rows(),
-            &pick("gpt-5.6-sol"),
-            None
-        ),
-        Err(PickError::Grammar(GrammarError::Inline { .. }))
-    ));
+    let refused = plan("roles: {}\n", &rows(), &pick("gpt-5.6-sol"));
+    let expected = GrammarError::Inline {
+        file: crate::model_pick::grammar::PROVIDERS_YAML,
+        key: "roles".into(),
+    };
+    assert_eq!(refused, Err(PickError::Grammar(expected.clone())));
+    assert_eq!(refused.unwrap_err().to_string(), expected.to_string());
 }
 
 /// bl-bd89. A pick on a provider row brazen's table does not have is refused
 /// outright — not warned about. Writing it would land the exact config that
 /// dies at the first dispatch with `unknown provider`.
 #[test]
-fn a_pick_on_a_row_brazen_lacks_is_refused_before_either_file() {
+fn a_pick_on_a_row_brazen_lacks_is_refused_before_the_file_is_touched() {
     let live = table(&["openai-chatgpt"]);
-    let refused = plan(
-        SEEDED_MODELS,
-        TEMPLATE_PROVIDERS,
-        &live,
-        &pick("gpt-5.4"),
-        None,
-    );
+    let refused = plan(TEMPLATE_PROVIDERS, &live, &pick("gpt-5.4"));
     assert_eq!(
         refused,
         Err(PickError::UnknownProvider {
@@ -168,11 +83,11 @@ fn a_model_id_the_block_grammar_cannot_hold_is_refused() {
         let mut broken = pick(bad);
         broken.model = bad.to_string();
         assert_eq!(
-            plan(SEEDED_MODELS, TEMPLATE_PROVIDERS, &rows(), &broken, None),
+            plan(TEMPLATE_PROVIDERS, &rows(), &broken),
             Err(PickError::NotAnId {
                 model: bad.to_string(),
             }),
-            "{bad:?} must not reach either file"
+            "{bad:?} must not reach the file"
         );
     }
     let said = PickError::NotAnId {
@@ -180,34 +95,16 @@ fn a_model_id_the_block_grammar_cannot_hold_is_refused() {
     }
     .to_string();
     assert!(said.contains("not a plain model id"), "{said}");
-    // An unlisted but well-formed id is the operator's own declaration and is
-    // written: the row is still brazen's, so it can never be unroutable.
-    assert!(
-        plan(
-            SEEDED_MODELS,
-            TEMPLATE_PROVIDERS,
-            &rows(),
-            &pick("my-local-tag"),
-            None,
-        )
-        .is_ok()
-    );
+    // One file is named now, not two (bl-d9cb).
+    assert!(said.contains("providers.yaml"), "{said}");
+    assert!(!said.contains("models.yaml"), "{said}");
 }
 
 /// An empty table is brazen unanswered, not brazen answering "none" — it gates
 /// nothing, on the same terms as the §9.2 Apply gate.
 #[test]
 fn an_unanswerable_brazen_gates_no_pick() {
-    assert!(
-        plan(
-            SEEDED_MODELS,
-            TEMPLATE_PROVIDERS,
-            &[],
-            &pick("gpt-5.4"),
-            None
-        )
-        .is_ok()
-    );
+    assert!(plan(TEMPLATE_PROVIDERS, &[], &pick("gpt-5.4")).is_ok());
 }
 
 /// bl-bd89. The row the picker queries is the role's own while brazen has it,
@@ -265,11 +162,46 @@ fn the_birth_sentence_admits_it_moves_the_workspace_default() {
     assert!(!s.contains("frozen"));
 }
 
-/// The write note names both files and their order — models.yaml first.
+/// bl-d9cb. The write note names the ONE file a click touches. It named two and
+/// their order until the cross-check that justified the pair turned out to be
+/// retired upstream, so the note has to be checked for what it no longer says.
 #[test]
-fn the_write_note_names_both_files_in_order() {
-    let (first, rest) = WRITE_NOTE.split_once("models.yaml").unwrap();
-    assert!(first.contains("writes"));
-    assert!(rest.contains("providers.yaml"));
-    assert!(rest.contains("declared"));
+fn the_write_note_names_the_one_file_and_no_second_one() {
+    assert!(WRITE_NOTE.contains("writes"));
+    assert!(WRITE_NOTE.contains("providers.yaml"));
+    assert!(WRITE_NOTE.contains("lernie config"));
+    assert!(!WRITE_NOTE.contains("models.yaml"), "{WRITE_NOTE}");
+    assert!(!WRITE_NOTE.contains("first"), "{WRITE_NOTE}");
+}
+
+/// bl-d9cb, amending bl-53be. A role row's fault is over the LIVE pointer —
+/// `roles.<r>.provider` against brazen's table — in the pick gate's own words, so
+/// the mark and the refusal one gesture later cannot phrase it differently.
+///
+/// The old judgement went through the global `models.yaml` and had the defect the
+/// other way round: a role sitting on a row brazen had dropped was unmarked
+/// whenever its model entry happened to name a live one.
+#[test]
+fn a_role_on_a_row_brazen_lacks_is_marked_in_the_pick_gates_words() {
+    let stranded = RoleModel {
+        role: WORKER_ROLE.to_string(),
+        provider: "codex".to_string(),
+        model: "gpt-5.4".to_string(),
+    };
+    let live = vec!["openai-chatgpt".to_string()];
+    assert_eq!(
+        role_fault(&live, &stranded),
+        Some(
+            PickError::UnknownProvider {
+                provider: "codex".to_string(),
+            }
+            .to_string()
+        )
+    );
+    // A live row is no fault, and an unanswerable table judges nothing — the
+    // same rule `is_unknown_row` applies everywhere else.
+    let mut alive = stranded.clone();
+    alive.provider = "openai-chatgpt".to_string();
+    assert_eq!(role_fault(&live, &alive), None);
+    assert_eq!(role_fault(&[], &stranded), None);
 }

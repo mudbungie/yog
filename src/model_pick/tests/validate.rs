@@ -1,9 +1,13 @@
 //! Reading `models.yaml` back, and judging what it says (bl-53be): which rows
-//! the file declares, which of them brazen does not have, and the sentence a
-//! role row paints when its model cannot be fired.
+//! the file declares, which of them brazen does not have, and the one number
+//! anything reads out of the table (§5.1 #35's denominator).
+//!
+//! The role-row sentence moved out with bl-d9cb: it is over `providers.yaml`'s
+//! live pointer now, and lives in `plan.rs` beside the gate it shares a wording
+//! with.
 
 use super::SEEDED_MODELS;
-use crate::model_pick::grammar::{DeclaredModel, context_windows, declared, fault, unknown_rows};
+use crate::model_pick::grammar::{DeclaredModel, context_windows, declared, unknown_rows};
 use std::collections::BTreeMap;
 
 /// The live file as the operator's world carried it: two Claude entries on a
@@ -84,22 +88,6 @@ fn unknown_rows_names_every_entry_brazen_cannot_route() {
 #[test]
 fn an_empty_provider_table_gates_nothing() {
     assert!(unknown_rows(LIVE_MODELS, &[]).is_empty());
-    assert!(fault(LIVE_MODELS, &[], "claude-sonnet-5").is_none());
-}
-
-/// The role-row sentence: two faults, one per way lernie refuses the config.
-#[test]
-fn fault_names_the_undeclared_model_and_the_dead_row() {
-    assert!(fault(LIVE_MODELS, &rows(), "gpt-5.4").is_none());
-    let dead = fault(LIVE_MODELS, &rows(), "claude-sonnet-5").expect("the row is dead");
-    assert!(dead.starts_with("claude-sonnet-5 names provider row `anthropic`"));
-    assert!(dead.contains("brazen's table does not have"));
-    let missing = fault(LIVE_MODELS, &rows(), "gpt-5.6-sol").expect("undeclared");
-    assert!(missing.contains("is not declared in models.yaml"));
-    assert!(missing.contains("refuses to load"));
-    // An unreadable/absent file makes every model undeclared — exactly what
-    // lernie says when it refuses such a config.
-    assert!(fault("", &rows(), "gpt-5.4").is_some());
 }
 
 /// The rendered pair a rejection prints, so the Apply status line and this
@@ -114,7 +102,9 @@ fn a_declared_model_renders_as_model_arrow_row() {
 
 /// The §5.1 #35 denominator, read off the same file by the same grammar: the
 /// window an entry declares, keyed on the **wire id** a step's `request.json`
-/// names rather than on the alias the entry is filed under.
+/// names rather than on the alias the entry is filed under. Since bl-d9cb this
+/// is the ONLY number anything reads out of the `models:` table — lernie reads
+/// none of it, and the picker writes none of it.
 #[test]
 fn reads_the_context_window_each_entry_declares_keyed_on_the_wire_id() {
     assert_eq!(
