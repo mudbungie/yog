@@ -1,96 +1,92 @@
 +++
-title = "messages/ is not append-only: compaction deletes entries and the transcript renders the rewritten record as whole — a real latent defect, NOT the vanished-first-prompt sighting"
+title = "the transcript is a readdir of a directory compaction DELETES from, and yog reads no summary/**, so a squashed span is silent — derive the gap, paint what replaced it"
 created = 1786936867
-updated = 1786937015
+updated = 1786937185
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
-## The premise this ball was filed on is WITHDRAWN
+**Premise restored and now PROVEN on disk. This ball was briefly parked on a
+mistaken correction; the compaction mechanism is confirmed, not suspected.**
 
-This ball was opened from an operator sighting on 2026-08-16 — a conversation's
-opening question gone from the Transcript pane while the reply that answered it
-was still there — and attributed it to lernie's compactor. **The operator has
-since corrected that**: "compaction" was used loosely, every OTHER message in
-the conversation rendered correctly, and only the FIRST user prompt
-disappeared. Compaction squashes a *span*, so it cannot produce that shape.
+The Transcript pane is a bare `read_dir` of `<workspace>/agents/<id>/messages/`
+(`src/transcript/mod.rs::build`, sorted by filename, no git behind it), reached
+through the one chokepoint both seats use
+(`src/boundary/answer/inspector.rs::transcript`). lernie's compactor **deletes
+files from that directory** — `mark_for_deletion` is a literal `git rm -r -q --`
+and the landing squashes the deletion into a new compaction base — so the pane
+silently renders a rewritten record as the whole record.
 
-**Do not read this ball as the explanation for a vanished first prompt.** The
-real defect is yog's own, is being scoped separately, and is not this. What is
-below is what the investigation found on its way past — a genuine latent
-defect and a genuinely false invariant, both worth keeping, neither of them
-what the operator saw.
+## The evidence
 
-## What IS real here — verified against the tree, not inferred
+A traced conversation's `messages/` begins at `002-*` with no `001-*`. Its
+branch log shows a `compaction base` commit sitting on the dispatch step, and
+`git show --stat` on that base re-adds `messages/002…020` **plus
+`summary/001.md`, and nothing named `001-user.md`**. The compactor child's
+transcript records the `mark_for_deletion` call and its `{"status":"marked"}`
+result verbatim. Across every agent directory in two workspaces the correlation
+is total and has no counterexample: **the directories missing `001-*` are
+exactly the directories that have a `summary/`.**
 
-`src/transcript/mod.rs` `build()` joins `<workspace>/agents/<agent-id>/messages/`
-and `read_messages()` runs `std::fs::read_dir`, sorts by filename, reads each
-file. There is no git history behind it. That directory is the agent branch's
-worktree checkout (`src/files_view/mod.rs`). The answer both seats read is
-`src/shell/inspector/reads.rs` -> `src/boundary/answer.rs` ->
-`src/boundary/answer/inspector.rs`.
+With the default `AutoExpand { responses: true, others: false }`
+(`src/transcript/rows.rs`), the surviving machinery rolls into one `⚙ N
+inference calls · …` line, so the pane opens on an aggregate and a model answer
+with **no user turn above them** — the reported shape exactly.
 
-lernie's compactor deletes message files. Read at lernie 0.0.10:
+## What this ball builds
 
-- `src/prompt/compactor/tools.rs` `mark_for_deletion` runs
-  `git rm -r -q -- <path>`; its own routing fixture nominates
-  `messages/001-user.md`.
-- `src/prompt/compactor/land.rs` mints a compaction base whose tree is the tree
-  at the compaction point with the deletions applied and the new summary added,
-  parented on the span's lower bound, then rebases the branch forward onto it.
-  The files leave the checkout yog is reading.
+**yog has no reader for `<agent>/summary/**` anywhere.** A `grep -rn summary
+src/` finds only unrelated `summary` fields in fan/opslog/help. The text that
+*replaced* the deleted span has no seat in the pane. Build one:
 
-So the pane can render a REWRITTEN record as if it were the whole record: no
-gap, no marker, no summary. That is a real defect and it is still open. It just
-is not the one that was reported.
+1. **Derive the gap** from the monotonic `NNN` counter — a first entry whose
+   number is not the lowest expected, or a discontinuity mid-sequence. A query
+   over bytes already read; not a stored field, not an index.
+2. **Paint what replaced it**, reading `summary/<NNN>.md`. Verified location:
+   the summary lives at the **worktree root, a sibling of `messages/`** — NOT
+   inside it — zero-padded to 3, with a **branch-global** sequence (`next_seq` =
+   max + 1 across all passes).
+3. The marker must read as *the record was rewritten here*, never as another
+   turn — the summary is the compactor model's prose, not the operator's words.
+   If the summary is missing or unreadable the gap marker alone is still the
+   honest answer, so the marker must not depend on the summary existing.
 
-## Corrections to the original body
+**The one hard constraint, found by the parked attempt:** there is **no on-disk
+link between a summary and the span it replaced.** One pass can delete several
+disjoint runs (one summary, many gaps); two passes' deletions can abut into a
+single hole (one gap, many summaries). **Any pairing is positional and must be
+stated in the code as an assumption, never asserted as exact.** This was the
+weakest part of the parked sketch — do better or say plainly that you cannot.
 
-- **The `summary/**` shape, which the original body told the reader not to
-  trust, is now verified.** `tools.rs` `write_summary` writes
-  `summary/<NNN>.md` at the WORKTREE ROOT — a sibling of `messages/`, not
-  inside it — zero-padded to three (`SUMMARY_SEQ_WIDTH = 3`), and the seq is
-  branch-global over that directory's contents (`next_seq` = max existing + 1),
-  so several compaction passes on one branch share one numbering. The landing
-  commits it into the base beside the deletions, and
-  `src/prompt/dispatch/step_commit/inherited.rs` lists `summary` beside
-  `messages` in `DIALOG_PATHS`, so it is inherited dialog like the transcript.
-- **There is NO on-disk link between a summary and the span it replaced.** A
-  pass may delete several disjoint runs (one summary, several gaps) and two
-  passes' deletions may abut into one hole (one gap, several summaries). Any
-  pairing a reader derives from the filesystem alone is positional and must be
-  stated as such, never claimed exact.
-- **The secondary consumers were checked and split out as bl-fde5** —
-  `src/science/observed.rs`, `src/search/corpus.rs`, `src/monitor/window.rs`
-  and the message COUNT at `src/git_tree/enumerate.rs`. None of them is a
-  compile dependency on any new variant; each is its own judgement about what
-  the surface should say.
+## Parked work to resume or discard on its merits
 
-## The invariant that is false regardless of the sighting
+Commit `4e1b85fa` on the machine-local branch `work/bl-7bd2` (never pushed,
+never touched `main`) holds a compiling sketch with **no tests, no DESIGN
+amendment, and it never saw the gate**: a new `src/transcript/compaction.rs`, an
+`EntryKind::Compacted { first, last, summary }`, a `parse_name` that also
+returns the counter, one weak role-less row per gap, the turn-rollup boundary
+classification, the wire encode/decode both ways, and a `u32_of` in
+`src/boundary/codec/fields.rs`. Treat it as a sketch, not a baseline — take it
+only where it is right.
 
-DESIGN §5.1 #31 and `src/rail/pin.rs` both rest on append-only:
+## The invariant this falsifies — fix the doc
 
-> **Transcript** is a *prefix* of #12, cut at the notch's own `Place::cut` (#29)
-> — everything ahead of that call's own model output. Exact, not convenient:
-> `messages/` entries are append-only under a monotonic counter, so the pinned
-> tree's entries and today's leading entries are the same bytes ...
+DESIGN §5.1 #31 and `src/rail/pin.rs` rest on append-only, and deletion is not
+append:
 
-Deletion is not append. After a compaction the leading entries of today's
-listing are NOT the pinned tree's bytes, so the as-of view is wrong on its own
-stated terms. `src/rail/pin.rs` `transcript_as_of` states the same premise in
-its doc comment. Whoever takes this ball amends both rather than coding around
-them. DESIGN §5.1 #12 and §11 are silent on compaction rather than wrong about
-it; that silence is the hole.
+> Exact, not convenient: `messages/` entries are append-only under a monotonic
+> counter, so the pinned tree's entries and today's leading entries are the same
+> bytes …
 
-## Work already done and parked
+After a compaction the leading entries of today's listing are NOT the pinned
+tree's bytes, so every pinned as-of transcript view is wrong on its own stated
+terms. Amend §5.1 #31 and `pin.rs` to state what is actually exact and what is
+not. `tests/design_citations.rs` and `tests/design_module_map.rs` gate the
+correspondence.
 
-A branch `work/bl-7bd2` exists on this machine with one commit (`4e1b85fa`,
-"WIP parked, NOT the operator's defect"), left there by the unclaim. It
-derives the gap from the monotonic counter, seats a virtual
-`EntryKind::Compacted { first, last, summary }` marker in it (the same
-virtual-entry move `Transcript::with_live` already makes for the streaming
-tail), pairs summaries to gaps positionally, projects one weak row with the
-empty role seat and a turn-BOUNDARY step so no rollup can swallow it, and
-spells the variant both ways across the boundary. It compiles (`cargo build
---all-targets` clean). It has NO tests, NO DESIGN amendment and has not been
-through the gate. Treat it as a sketch, not a deliverable — in particular the
-positional summary pairing deserves the attack the original body asked for.
+## Scope
+
+This ball makes a squash **visible**. Preventing the opening prompt's deletion
+is upstream lernie bl-898f (the prompt is written twice — as `goal.md` and as
+`messages/001-user.md` — so the compactor reads it as duplication). Both are
+wanted and neither substitutes for the other. Secondary consumers that read the
+same shrinking directory are already filed as bl-fde5.
