@@ -1,7 +1,7 @@
 +++
 title = "text selection: double-click-drag doesn't extend selection by word boundaries — OPERATOR DISCUSSION, do not claim"
 created = 1785645008
-updated = 1785646290
+updated = 1786937231
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
@@ -20,3 +20,7 @@ Root cause found during implementation: egui counts clicks only on pointer *rele
 3. Then close this ball.
 
 Path C (TextEdit-only partial in yog) remains rejected: fixes the composer, not the transcript, and becomes deletion debt when the upstream lands.
+
+---
+
+Operator ruling 2026-08-16: keep monitoring the upstream PR (open, unreviewed, quiet since filing). Fallback set amended by the operator: if the PR stalls indefinitely, the options are (a) close won't-fix-here as before, OR (b) fork egui and carry the word-drag patch on the fork, pointing yog's eframe/egui dependency at it. Note before choosing (b): yog's dependency sources are registry-only (code-style rule 6), so a fork path means either publishing the fork to a registry or taking the phase-2 interim git-pin exception, which re-blocks 'make publish' — the fork is a last resort with a named exit, same as any git pin.
