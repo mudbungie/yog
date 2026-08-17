@@ -1,7 +1,8 @@
 +++
 title = "RULING: a default install has no browser-login row — 'sign the sphere in' resolves to the config editor, not bz --login; is that the intent?"
 created = 1786685596
-updated = 1786937419
+updated = 1786938622
+claimant = "Consume-0219"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
