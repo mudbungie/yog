@@ -1,7 +1,8 @@
 +++
 title = "REGRESSION of bl-f5f6: /attention returns an engine path that remote gestures cannot reuse"
 created = 1787206328
-updated = 1787206328
+updated = 1787207204
+claimant = "Zircons-Boundary"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "wire", "security", "addressing"]
