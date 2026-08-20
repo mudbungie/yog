@@ -1,7 +1,7 @@
 +++
 title = "the whole-tree ceiling nobody set: workspaces born before lernie's template fix froze budgets: into config/default, so a yog-dispatched conversation dies against a cap invisible everywhere yog looks"
 created = 1787206006
-updated = 1787206007
+updated = 1787206254
 claimant = "Zircons-Budget"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -28,9 +28,20 @@ The seeded block reads:
       max_wall_seconds: 3600
       max_depth: 4
 
-One hour of accumulated whole-tree wall, and a dispatch tree four deep. Both
-bind on ordinary work: a fan of subagents crosses depth 4 by its third hop, and
-an hour of tree-wall is a morning's chat.
+**The axis that actually bites is `max_total_tokens`, and 2,000,000 of them is
+roughly one short conversation.** `total_tokens` is all four brazen counters
+summed — `cache_read_tokens` included — and a cached context is re-read in full
+on every single call, so the number climbs at the size of the context rather
+than at the size of what was said. Measured on a live workspace: one root and
+three subagents, dispatched and dead inside four minutes of wall, 34 model
+calls, 2,248,984 tokens folded over the tree — 1,785,546 input, 452,096 cache
+read, 11,342 output. The ceiling is not a bound on a long conversation; it is a
+bound on about thirty model calls.
+
+The other two axes bind on ordinary work as well: a fan of subagents crosses
+depth 4 by its third hop, and an hour of *accumulated* tree-wall is not an hour
+of anybody's afternoon — every agent in the tree spends into the same hour at
+once.
 
 lernie already ruled the same way and fixed it upstream (bl-8dea, "ship the
 template with budgets off by default"), released in 0.0.11 — the pin yog
