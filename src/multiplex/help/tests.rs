@@ -140,6 +140,42 @@ fn the_only_unlisted_command_is_the_machine_seam() {
     assert_eq!(unlisted, vec![crate::control::SUBCMD]);
 }
 
+/// **`serve` and `wire-certs` describe ONE mint, so they are read together**
+/// (bl-6e0c). `serve`'s page said the listener was up *"only where an operator
+/// has provisioned certificates … and silently absent otherwise"* long after
+/// bl-ae05 moved the trigger into the engine's own boot
+/// ([`ensure`](crate::wire::provision::ensure), aimed at
+/// [`LOOPBACK`](crate::wire::provision::LOOPBACK)) and long after both faces
+/// began *saying* a refusal — because `wire-certs`' page was the only one
+/// anything ever read. Two pages over one authority drift apart unless a test
+/// holds them to it: both must state the boot mint and its loopback aim, and
+/// both must spell the explicit act as the const its dispatcher routes on, so a
+/// rename cannot leave either page naming a word that no longer runs.
+#[test]
+fn the_serve_and_mint_pages_agree_on_who_provisions() {
+    let page = |verb: &str| answer(&argv(&["yog", verb, "--help"])).unwrap_or_default();
+    let mint = crate::wire::provision::verb::SUBCMD;
+    for verb in [crate::boundary::SERVE_SUBCMD, mint] {
+        let text = page(verb);
+        assert!(
+            text.contains("boot"),
+            "{verb} does not name the boot mint: {text}"
+        );
+        assert!(
+            text.contains("loopback"),
+            "{verb} does not name its aim: {text}"
+        );
+        assert!(
+            text.contains(mint),
+            "{verb} does not name the explicit act: {text}"
+        );
+    }
+    assert!(
+        !page(crate::boundary::SERVE_SUBCMD).contains("silently"),
+        "the retired claim — a listener absent without a word — is gone"
+    );
+}
+
 /// The probe is recognized only when the whole argv *is* the flag (§8.5's
 /// "the flag form counts only when the tail is exactly the flag"), so no
 /// foreign crate's option grammar has to be restated to be sure a token is not

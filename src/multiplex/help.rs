@@ -38,8 +38,11 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  the gestures-inbox consumer and the mTLS wire listener — with no face beside \
                  it, and park until a signal ends the process. State is write-through, so \
                  nothing pends at exit. This is the engine `yog gesture` deposits into and \
-                 `yog seat` connects to; the listener is up only where an operator has \
-                 provisioned certificates (`make wire-certs`), and silently absent otherwise.",
+                 `yog seat` connects to; boot mints whatever wire material this box lacks, \
+                 aimed at loopback on a kernel-chosen port, so the listener is up with no \
+                 operator act behind it. `yog wire-certs` is the act for everything wider — a \
+                 stated address another machine dials, or a rotation. A mint or a bind that \
+                 fails is said on stderr and the engine runs on without a wire.",
     },
     HelpRow {
         verb: crate::wire::SEAT_SUBCMD,
