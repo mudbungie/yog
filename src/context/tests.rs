@@ -1,7 +1,7 @@
 //! The §5.1 #35 derivation: the latest step of the root, its prompt reading,
 //! and every way the figure declines to be fabricated.
 
-use super::{Fullness, of_conversation, prompt_tokens};
+use super::{Fullness, of_conversation};
 use crate::budgets::{BudgetSpend, StepBill};
 use std::collections::BTreeMap;
 
@@ -32,16 +32,16 @@ fn windows() -> BTreeMap<String, u64> {
     BTreeMap::from([("sonnet".to_owned(), 200_000)])
 }
 
-/// The two provider readings, at the one place the rule lives: a disjoint
-/// slicing (Anthropic) reads as its cached prefix, a contained one (OpenAI —
-/// `cached_tokens` inside `prompt_tokens`) reads as the prompt itself, and a
-/// provider reporting no cache counters at all degrades to `input_tokens`.
+/// The prompt reading itself is pinned where the formula lives
+/// (`budgets::BudgetSpend::prompt_tokens`); what this module owes is that the
+/// fullness figure asks for THAT reading of the right step. A contained cached
+/// slice is the case that used to divide the two: a step reading `input 2_000,
+/// cache_read 48_000` is a 48,000-token context, not a 50,000-token one.
 #[test]
-fn the_prompt_reading_never_over_states_either_provider_shape() {
-    assert_eq!(prompt_tokens(usage(4_000, 90_000, 6_000)), 96_000);
-    assert_eq!(prompt_tokens(usage(120_000, 100_000, 0)), 120_000);
-    assert_eq!(prompt_tokens(usage(30_000, 0, 0)), 30_000);
-    assert_eq!(prompt_tokens(BudgetSpend::default()), 0);
+fn fullness_reads_the_folded_prompt_not_the_bare_input_counter() {
+    let bills = [bill(ROOT, "001", Some("sonnet"), usage(2_000, 48_000, 0))];
+    let full = of_conversation(&bills, ROOT, &windows()).expect("a measured context");
+    assert_eq!(full.prompt_tokens, 48_000);
 }
 
 /// The figure is the LATEST step of the ROOT: an earlier step of the same

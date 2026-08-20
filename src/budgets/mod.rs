@@ -35,7 +35,9 @@ const STEP_SEQ_WIDTH: usize = 3;
 /// "cache_read_tokens":R,"cache_write_tokens":W}` (brazen
 /// `canonical::event`) — every counter nullable, a `null`/absent field
 /// counting **zero, never fabricated**. [`total_tokens`](BudgetSpend::total_tokens)
-/// is what exhausts `max_total_tokens` (ARCH §6: all four summed).
+/// is what exhausts `max_total_tokens` (ARCH §6), and it is **not** the four
+/// summed: the counters overlap on some providers, so the prompt is folded
+/// once ([`prompt_tokens`](BudgetSpend::prompt_tokens)).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct BudgetSpend {
     pub input_tokens: u64,
@@ -45,10 +47,60 @@ pub struct BudgetSpend {
 }
 
 impl BudgetSpend {
-    /// Total tokens billed against the tree's `max_total_tokens` ceiling —
-    /// all four counters summed (ARCH §6).
+    /// The cached slice this reading reports — read plus write. Zero on a
+    /// provider that reports no cache counters at all.
+    pub fn cached_tokens(&self) -> u64 {
+        self.cache_read_tokens
+            .saturating_add(self.cache_write_tokens)
+    }
+
+    /// The prompt these counters describe: `max(input, cache_read +
+    /// cache_write)`, so a cached slice that already sits **inside** the prompt
+    /// counter is counted once.
+    ///
+    /// brazen's canonical `Usage` reports each provider's own counters
+    /// unaltered, and the providers disagree about overlap: Anthropic's prompt
+    /// counters are **disjoint** slices (`input_tokens` beside
+    /// `cache_read_input_tokens` / `cache_creation_input_tokens`), while the
+    /// OpenAI-shaped and Google decoders map a prompt counter that **contains**
+    /// the cached one (`prompt_tokens` ⊇ `prompt_tokens_details.cached_tokens`,
+    /// `input_tokens` ⊇ `input_tokens_details.cached_tokens`,
+    /// `promptTokenCount` ⊇ `cachedContentTokenCount`), and ollama reports no
+    /// cache counters at all. Nothing on the `Usage` event says which shape it
+    /// is and a step record carries no protocol, so the fold takes the larger of
+    /// the two readings of the prompt rather than their sum: **exact** where the
+    /// slice is contained, a **floor** (never an over-statement) where the
+    /// counters are disjoint, and plain `input_tokens` where no cache counter is
+    /// reported. One formula, no per-provider branch — normalizing the overlap
+    /// is brazen's to do, not yog's to guess at.
+    pub fn prompt_tokens(&self) -> u64 {
+        self.input_tokens.max(self.cached_tokens())
+    }
+
+    /// The part of the prompt no cache served — the slice the **input** rate
+    /// applies to (§3.5). The fold's remainder by construction: `uncached +
+    /// cache_read + cache_write + output` is exactly [`Self::total_tokens`], so
+    /// the dollar figure prices the very tokens the token figure counts, and the
+    /// two can never tell different stories about one usage line.
+    pub fn uncached_prompt_tokens(&self) -> u64 {
+        self.input_tokens.saturating_sub(self.cached_tokens())
+    }
+
+    /// Total tokens billed against the tree's `max_total_tokens` ceiling:
+    /// `max(input, cache_read + cache_write) + output` (ARCH §6 "The cached
+    /// slice is billed once").
+    ///
+    /// **Lockstep with lernie**, whose `prompt/budget/derive.rs::usage_tokens`
+    /// folds the identical shape (lernie bl-68f5): this figure is a *preview* of
+    /// the one that exhausts `max_total_tokens` one layer down, so the two must
+    /// be the same arithmetic — change one only by changing both. A floor rather
+    /// than a ceiling on purpose: spend is what was really consumed, and billing
+    /// a prompt twice ends a conversation before the bound its operator
+    /// declared. Collapses back to the plain four-counter sum the day brazen
+    /// normalizes the overlap in its decoders (brazen bl-d192) — the named exit,
+    /// and the only thing that would make a sum correct here.
     pub fn total_tokens(&self) -> u64 {
-        self.input_tokens + self.output_tokens + self.cache_read_tokens + self.cache_write_tokens
+        self.prompt_tokens().saturating_add(self.output_tokens)
     }
 
     fn add(&mut self, other: BudgetSpend) {
@@ -119,59 +171,4 @@ fn counter(value: &serde_json::Value, key: &str) -> u64 {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// The Usage-event vocabulary, at the one place it is parsed: every
-    /// segment counts (a billed retry, ARCH §6), and everything that is not a
-    /// well-shaped `usage` event counts zero rather than refusing the file.
-    /// The tree walk that feeds these bytes is `bills/tests.rs`.
-    #[test]
-    fn folds_every_segment_and_ignores_everything_else() {
-        let jsonl = [
-            r#"{"type":"usage","input_tokens":10,"output_tokens":5,"cache_read_tokens":2,"cache_write_tokens":1}"#,
-            r#"{"type":"content_delta","index":0,"delta":{"text_delta":"hi"}}"#,
-            r#"{"type":"usage","input_tokens":3,"output_tokens":null}"#,
-            "not json",
-            r#"{"no_type":1}"#,
-            r#"{"type":123}"#,
-        ]
-        .join("\n");
-
-        let s = spend_from_bytes(jsonl.as_bytes());
-        // The second segment's `null` output and absent cache counters each
-        // count zero — unknown is never fabricated.
-        assert_eq!(s.input_tokens, 13);
-        assert_eq!(s.output_tokens, 5);
-        assert_eq!(s.cache_read_tokens, 2);
-        assert_eq!(s.cache_write_tokens, 1);
-        assert_eq!(s.total_tokens(), 21);
-    }
-
-    #[test]
-    fn empty_bytes_are_zero_spend() {
-        assert_eq!(spend_from_bytes(b""), BudgetSpend::default());
-    }
-
-    /// Fullness reads the LAST segment, spend reads them all — over the very
-    /// same bytes, so a retried step can never be read as a context that grew
-    /// by the retry (§5.1 #35).
-    #[test]
-    fn last_usage_takes_the_final_segment_not_the_fold() {
-        let jsonl = [
-            r#"{"type":"usage","input_tokens":10,"cache_read_tokens":90}"#,
-            r#"{"type":"content_delta","index":0,"delta":{"text_delta":"hi"}}"#,
-            r#"{"type":"usage","input_tokens":4,"cache_read_tokens":120}"#,
-        ]
-        .join("\n");
-        let last = last_usage(jsonl.as_bytes());
-        assert_eq!(last.input_tokens, 4);
-        assert_eq!(last.cache_read_tokens, 120);
-        assert_eq!(spend_from_bytes(jsonl.as_bytes()).input_tokens, 14);
-    }
-
-    #[test]
-    fn a_payload_with_no_usage_line_has_no_last_segment() {
-        assert_eq!(last_usage(b"{\"type\":\"end\"}"), BudgetSpend::default());
-    }
-}
+mod tests;

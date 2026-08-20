@@ -1,8 +1,11 @@
-//! The §3.5 join: the price table's parse and severability, the pricing of a
-//! bill set, and the two attribution altitudes of a ball figure.
+//! The §3.5 join: the pricing of a bill set, the bl-9dd4 selection rule, and
+//! the two attribution altitudes of a ball figure. The table's own parse and
+//! arithmetic are [`pricing`].
 
-use super::{Attribution, Cost, Prices, of_ball, of_conversation, select};
-use crate::budgets::{BudgetSpend, Scope, StepBill};
+mod pricing;
+
+use super::{Attribution, Prices, of_ball, of_conversation, select};
+use crate::budgets::{Scope, StepBill};
 use serde_json::json;
 use std::path::Path;
 
@@ -111,63 +114,6 @@ fn attribution_notes_only_what_the_seat_does_not_already_claim() {
     let note = Attribution::Conversations(3).note().unwrap();
     assert_eq!(note.label, "over 3 conversations");
     assert!(note.hover.contains('3'));
-}
-
-#[test]
-fn a_malformed_table_degrades_row_by_row() {
-    let prices = Prices::from_json(&json!({
-        "opus": { "input": 3, "output": "nope", "cache_read": -5 },
-        "broken": "not an object",
-    }));
-    assert!(prices.of(Some("broken")).is_none());
-    assert!(prices.of(Some("absent")).is_none());
-    assert!(prices.of(None).is_none());
-    let price = prices.of(Some("opus")).unwrap();
-    assert_eq!(price.input, 3_000_000);
-    assert_eq!(price.output, 0, "a non-numeric rate reads zero");
-    assert_eq!(price.cache_read, 0, "a negative rate reads zero");
-    // Not an object at all.
-    assert!(Prices::from_json(&json!([1, 2])).is_empty());
-}
-
-#[test]
-fn money_renders_at_cent_resolution_without_conflating_small_with_none() {
-    assert_eq!(Cost::default().usd(), "$0.00");
-    assert_eq!(
-        Cost {
-            micro_usd: 5_000,
-            unpriced_tokens: 0
-        }
-        .usd(),
-        "<$0.01"
-    );
-    assert_eq!(
-        Cost {
-            micro_usd: 10_000,
-            unpriced_tokens: 0
-        }
-        .usd(),
-        "$0.01"
-    );
-    assert_eq!(
-        Cost {
-            micro_usd: 1_234_567,
-            unpriced_tokens: 0
-        }
-        .usd(),
-        "$1.23"
-    );
-}
-
-#[test]
-fn a_nonsense_rate_saturates_rather_than_wrapping() {
-    let prices = Prices::from_json(&json!({ "opus": { "input": 1e300 } }));
-    let price = prices.of(Some("opus")).unwrap();
-    let cost = price.cost(BudgetSpend {
-        input_tokens: u64::MAX,
-        ..BudgetSpend::default()
-    });
-    assert!(cost > 0, "saturating, never a wrap to a small figure");
 }
 
 /// The bl-9dd4 selection rule, both directions: a root takes its own tree and

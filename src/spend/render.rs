@@ -88,7 +88,9 @@ mod tests {
             cost: None,
             attribution: Attribution::Conversations(1),
         });
-        assert!(text.contains("budget 18 tok"), "got:\n{text}");
+        // 15, not 18: `max(in 10, cache 2+1) + out 5` — the counters overlap on
+        // some providers, so the total is a fold and not their sum (bl-6621).
+        assert!(text.contains("budget 15 tok"), "got:\n{text}");
         assert!(
             text.contains("in 10 · out 5 · cache r 2 · w 1"),
             "got:\n{text}"

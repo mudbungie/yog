@@ -75,9 +75,10 @@ pub(super) const COLUMNS: &[Column] = &[
     },
     Column {
         header: "Tokens",
-        hint: "Tokens this step billed — its input, output and both cache \
-               counters summed, the same figure the budget line spends against \
-               the conversation's ceiling.",
+        hint: "Tokens this step billed — its prompt plus its output, with a \
+               cached slice counted once however its provider reports it. The \
+               same figure the budget line spends against the conversation's \
+               ceiling.",
         cell: |step, _| Cell::Plain(step.tokens.total_tokens().to_string()),
     },
     Column {

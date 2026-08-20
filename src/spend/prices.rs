@@ -43,11 +43,27 @@ pub struct Price {
 }
 
 impl Price {
-    /// Micro-USD billed for `spend` at this price. Saturating throughout: a
-    /// nonsense rate in a hand-edited table yields a huge figure, never a
-    /// panic and never a wrap to a small one.
+    /// Micro-USD billed for `spend` at this price, over the same overlap fold
+    /// the token figure uses ([`BudgetSpend::total_tokens`]).
+    ///
+    /// **A rate table with distinct `input` and `cache_read` rates describes
+    /// disjoint slices by construction, so it must be fed disjoint ones.** The
+    /// prompt is partitioned into exactly three non-overlapping parts — the
+    /// cached read, the cache write, and the uncached remainder
+    /// [`BudgetSpend::uncached_prompt_tokens`] (`max(input - (cache_read +
+    /// cache_write), 0)`) — and each is priced at its own rate. Where the cached
+    /// slice is *contained* in the prompt counter (OpenAI-shaped, Google — which
+    /// report no cache-write counter at all) that remainder is precisely what
+    /// the provider charges the input rate for, so the cached tokens are billed
+    /// once instead of at the input rate **and** the cache-read rate. Where the
+    /// counters are disjoint (Anthropic) it is a floor, short by the same tail
+    /// the token fold is short by — the two stay in lockstep because the tokens
+    /// priced here sum to `spend.total_tokens()` exactly.
+    ///
+    /// Saturating throughout: a nonsense rate in a hand-edited table yields a
+    /// huge figure, never a panic and never a wrap to a small one.
     pub fn cost(&self, spend: BudgetSpend) -> u64 {
-        rate(spend.input_tokens, self.input)
+        rate(spend.uncached_prompt_tokens(), self.input)
             .saturating_add(rate(spend.output_tokens, self.output))
             .saturating_add(rate(spend.cache_read_tokens, self.cache_read))
             .saturating_add(rate(spend.cache_write_tokens, self.cache_write))

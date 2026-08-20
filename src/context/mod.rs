@@ -18,30 +18,19 @@
 //! in would answer no question anyone asked. The conversation's context is the
 //! conversation's.
 //!
-//! **Why the prompt is `max(input, cache_read + cache_write)`.** brazen's
-//! canonical `Usage` is deliberately *unnormalized* about overlap, because its
-//! providers disagree: Anthropic reports `input_tokens`,
-//! `cache_read_input_tokens` and `cache_creation_input_tokens` as three
-//! **disjoint** slices of one prompt, while OpenAI's `prompt_tokens` and
-//! Google's `promptTokenCount` already **contain** the cached slice they report
-//! beside it. So summing all three over-states OpenAI by the cached prefix, and
-//! taking `input_tokens` alone under-states Anthropic by nearly the whole
-//! prompt — brazen marks Anthropic prompts for caching unconditionally
-//! (`protocol/anthropic/encode/cache.rs`: *"caching is brazen-owned POLICY with
-//! zero canonical surface"*), so mid-conversation `input_tokens` is only the
-//! uncached tail. The maximum of the two readings is exact wherever the cached
-//! slice is contained (OpenAI, Google, Ollama, and any provider reporting no
-//! cache counters at all — where it degrades to plain `input_tokens`) and a
-//! **floor** where the slices are disjoint (Anthropic, short by that same
-//! uncached tail). It never over-states, and yog already renders a figure it
-//! cannot complete as a floor rather than as an answer (§3.5's
-//! `+N tok unpriced`). One formula, no per-provider branch — normalizing that
-//! overlap is brazen's to do, not yog's to guess at.
+//! **The prompt is `max(input, cache_read + cache_write)`, and that formula
+//! has one home:** [`BudgetSpend::prompt_tokens`], which carries the whole
+//! why — brazen's canonical `Usage` is deliberately *unnormalized* about
+//! overlap because its providers disagree, so the maximum is exact where the
+//! cached slice is contained and a floor where the slices are disjoint. This
+//! module used to state it a second time and [`crate::budgets`] summed all four
+//! counters instead; that divergence was the double-count bl-6621 closed. Two
+//! questions, two derivations — one reading of a prompt.
 
 /// The egui line the settings rows paint.
 pub mod render;
 
-use crate::budgets::{BudgetSpend, StepBill};
+use crate::budgets::StepBill;
 use std::collections::BTreeMap;
 
 /// One conversation's context as of its latest step (§5.1 #35).
@@ -68,16 +57,6 @@ impl Fullness {
     }
 }
 
-/// The prompt one `Usage` reading describes — the module header's rule, at its
-/// one home.
-pub fn prompt_tokens(usage: BudgetSpend) -> u64 {
-    usage.input_tokens.max(
-        usage
-            .cache_read_tokens
-            .saturating_add(usage.cache_write_tokens),
-    )
-}
-
 /// One conversation's fullness, or `None` when nothing honest can be said: the
 /// root has taken no step, its latest step names no model, or that model
 /// declares no window. **Render nothing, never an estimate** — the whole point
@@ -95,7 +74,7 @@ pub fn of_conversation(
     let window = *windows.get(&model)?;
     Some(Fullness {
         model,
-        prompt_tokens: prompt_tokens(latest.last_usage),
+        prompt_tokens: latest.last_usage.prompt_tokens(),
         window,
     })
 }
