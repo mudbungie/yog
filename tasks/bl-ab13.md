@@ -1,7 +1,8 @@
 +++
 title = "fleet birth failure strands the claim, records spawn success, and leaves no conversation to repair"
 created = 1787206306
-updated = 1787206306
+updated = 1787207238
+claimant = "Zircons-Fleet"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "agentic"]
