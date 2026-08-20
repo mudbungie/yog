@@ -33,6 +33,28 @@
 //! Idempotence is by comparison, not by memory: [`authored`] is a fixed point,
 //! so a tip that already carries the block computes to itself and nothing is
 //! staged, nothing is spawned, and no commit is authored.
+//!
+//! **The same fixed point holds one other thing, and holds it empty: there is
+//! no conversation budget** (bl-56af). lernie's `workflow.yaml` may carry a
+//! `budgets:` block — `max_total_tokens`, `max_wall_seconds`, `max_depth`
+//! (lernie ARCH §6) — and every axis of it is a **whole-tree** consumable, one
+//! allowance a root and its whole descent spend together. lernie's pre-`0.0.11`
+//! template shipped it *set*, so every workspace born before that release froze
+//! `max_wall_seconds: 3600` and `max_depth: 4` into its `config/default` and
+//! caps every agent forked off that lineage. lernie has since retired the seed,
+//! but a template only ever reaches workspaces born after it — this convergence
+//! is the only thing that reaches the ones already standing, which is the same
+//! argument that put the control here.
+//!
+//! So [`authored`] **strips** a top-level `budgets:` block and leaves one line
+//! saying so. Unconditionally, not down to a smaller number: a whole-tree
+//! ceiling ends a conversation that is still working, which is the expensive
+//! failure DESIGN §3.5 already reasons about — and yog's own ceiling, the
+//! `ui.json` `ceiling` key, is that reasoning's answer (dollars, absent by
+//! default, gating a *birth* and never a live drone, spoken on the V4 board
+//! ahead of the spawn it will bind). Two ceilings over one concern is the
+//! second representation that drifts; the one yog authors is the one it can
+//! remove.
 
 use std::path::Path;
 
@@ -48,10 +70,17 @@ const DEFAULT_REF: &str = "refs/heads/config/default";
 const WORKFLOW_YAML: &str = "workflow.yaml";
 /// The block's key, as lernie's workflow parser reads it.
 const KEY: &str = "tool_control:";
+/// lernie's whole-tree spend ceiling (lernie ARCH §6). The second top-level
+/// block this fixed point holds, and the only one it holds **empty** — yog
+/// authors no ceiling and removes the one a pre-`0.0.11` template seeded.
+const BUDGETS: &str = "budgets:";
 /// The prefix of the one comment line yog authors. Stripped by the same pass
 /// that strips the block, so authoring stays a fixed point: a note that
 /// survived its own block would accrete one copy per start.
 const MARK: &str = "# yog authors this block";
+/// The prefix of the note left where the ceiling was — same discipline as
+/// [`MARK`]: stripped by the pass that re-authors it.
+const BUDGETS_MARK: &str = "# yog holds this file's budgets";
 
 /// One committed control file, as `config/default` carries it — the base every
 /// authoring starts from. `None` when the workspace has no config commit yet or
@@ -64,8 +93,13 @@ pub fn committed(workspace: &Path, file: &str) -> Option<String> {
 }
 
 /// `base` with any existing top-level `tool_control:` block replaced by one
-/// naming `shim`. A **fixed point**: authoring an authored file reproduces it
-/// byte for byte, which is the whole convergence test.
+/// naming `shim`, and any top-level `budgets:` block removed. A **fixed
+/// point**: authoring an authored file reproduces it byte for byte, which is
+/// the whole convergence test.
+///
+/// Two blocks, one pass, because they are one file's fixed point — a second
+/// transform over `workflow.yaml` would be a second answer to "what does this
+/// file say when yog is done with it".
 pub fn authored(base: &str, shim: &Path) -> String {
     let mut out = String::new();
     let mut inside = false;
@@ -74,10 +108,10 @@ pub fn authored(base: &str, shim: &Path) -> String {
         if inside && !line.starts_with([' ', '\t']) {
             inside = false;
         }
-        if line.starts_with(KEY) {
+        if line.starts_with(KEY) || line.starts_with(BUDGETS) {
             inside = true;
         }
-        if !inside && !line.starts_with(MARK) {
+        if !inside && !line.starts_with(MARK) && !line.starts_with(BUDGETS_MARK) {
             out.push_str(line);
             out.push('\n');
         }
@@ -85,8 +119,22 @@ pub fn authored(base: &str, shim: &Path) -> String {
     while out.ends_with("\n\n") {
         out.pop();
     }
+    out.push_str(&unbounded());
     out.push_str(&block(shim));
     out
+}
+
+/// The note left where the ceiling was, so the absence of one is **stated**
+/// and not merely true — a cap that binds a conversation must never again be
+/// a number only the file knows.
+fn unbounded() -> String {
+    format!(
+        "\n{BUDGETS_MARK} unbounded and strips the block at every start: a \
+         whole-tree token/wall/depth ceiling ends a conversation that is still \
+         working, and the ceiling yog offers instead is `ceiling` in ui.json — \
+         dollars, absent by default, and it refuses a birth rather than killing \
+         a drone.\n"
+    )
 }
 
 /// The block yog authors, with the note that says whose artifact it is.

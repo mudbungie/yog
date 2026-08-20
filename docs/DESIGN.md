@@ -1765,7 +1765,10 @@ viewport ephemera (§5.3, reasoning in §13.1).
   the key deletes the gate, not a code path. An empty `prices` deletes it too
   (§3.5: a ceiling in dollars needs the table that makes dollars). A literal
   `0` is honored — the hard stop that starts nothing new. It bounds *births*
-  only; nothing already running is ever stopped by it.
+  only; nothing already running is ever stopped by it. **It is also the only
+  ceiling a yog-dispatched conversation has** (bl-56af): §8.6's workflow fixed
+  point strips lernie's `budgets:` block from every workspace's `config/default`,
+  so there is no second, token-denominated bound that could drift from this one.
 
 **Write discipline: write-through.** Every mutation lands on disk before the
 mutating call returns — temp-in-dir + rename (I3) — and is **elided outright**
@@ -4384,6 +4387,43 @@ to *be* that executable and to own every fact it reads.
   **single** `lernie config` pass — one checkout, one commit, one ops row, and
   the same abort. Each author owns only its own file's fixed point and knows
   nothing of the other.
+
+  **The workflow fixed point holds one other block, and holds it empty: a
+  yog-dispatched conversation has no budget** (bl-56af). lernie's
+  `workflow.yaml` may carry `budgets:` — `max_total_tokens`,
+  `max_wall_seconds`, `max_depth` (lernie ARCH §6) — and every axis of it is a
+  **whole-tree** consumable: one allowance a root and its entire descent spend
+  together, checked at every model-call boundary, exhaustion writing
+  `refs/lernie/budget-exhausted/<branch>` and ceasing the loop. lernie's
+  pre-`0.0.11` template shipped that block *set* (`max_total_tokens: 2000000`,
+  `max_wall_seconds: 3600`, `max_depth: 4`), so every workspace born before
+  that release froze those numbers into its `config/default` and caps every
+  agent forked off that lineage — an hour of accumulated tree-wall, and a
+  dispatch tree four deep, both of which bind on ordinary work. lernie has
+  since retired the seed, but **a template only ever reaches workspaces born
+  after it**, which is this section's own argument for authoring per workspace
+  rather than into `template/`. So `authored` also **strips** any top-level
+  `budgets:` block and leaves one comment line stating that it did — same file,
+  same transform, same drive, no second drift entry, and a fixed point because
+  a file with no such block strips to itself.
+
+  **Unconditionally, not down to a smaller number.** A whole-tree ceiling ends
+  a conversation that is still working, and early termination destroying
+  uncommitted work is the expensive failure §3.5 already reasons about — the
+  reason yog's own ceiling gates a *birth* and never a live drone. And yog
+  already has that ceiling: the `ui.json` `ceiling` key (§4.1), denominated in
+  dollars rather than tokens or tree-seconds, absent by default so deleting the
+  key deletes the gate, and spoken on the V4 board with the gate's own words
+  ahead of the spawn it will bind. Two ceilings over one concern is the second
+  representation that drifts; the one yog authors is the one it can remove.
+  **This dissolves the config-tab question rather than deferring it**: there is
+  no per-conversation budget for the §9.5 pane to surface as an option, because
+  a control over a value the next start deletes would be a knob that lies.
+  `workflow.yaml` stays browsable as raw text like every other file in the
+  governing commit, so nothing is hidden from an operator who reads it. Agents
+  already running keep the ceiling they froze — lernie's per-branch freeze
+  again, not a gap this could close; what the strip converges is every
+  conversation forked after it.
 - **A hold is a parked drone, not a deadlock; a deny is a decline, not a
   stop.** The parked branch is derived state (the mark plus the unpaired
   tail) surfaced as an attention item naming the tool, an input summary,
@@ -8482,7 +8522,7 @@ beside `main.rs`.
 | `src/config_edit/lernie_global/mod.rs` | the §9.2 editors — the shared pipeline and nothing else since bl-3ffa retired the provider gate over `models.<id>.provider`, a field whose only reader was the refusal |
 | `src/config_edit/pipeline.rs` | the write pipeline every §9 editor shares: the one home for how a draft reaches disk without a torn write or a silent last-writer-wins over a concurrent edit |
 | `src/context/{mod,render}.rs` | §5.1 #35 — the context-fullness query (the root's latest step's prompt against the window `models.yaml` declares, `None` wherever nothing measured can be said) and the one line §11's settings rows paint from it. Pure over `Snapshot::bills`; the prompt reading's two-provider rule lives in its header and nowhere else |
-| `src/control/{mod,wire,classify,bash,lex,rules,policy,hold,root,judge,author}.rs` | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; lernie's two wire shapes; the effect vocabulary and the built-in intrinsic map; the bash ruleset over every program a command runs; the shell lexer that finds them; the shipped ruleset as data; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` lernie's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated — its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
+| `src/control/{mod,wire,classify,bash,lex,rules,policy,hold,root,judge,author}.rs` | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; lernie's two wire shapes; the effect vocabulary and the built-in intrinsic map; the bash ruleset over every program a command runs; the shell lexer that finds them; the shipped ruleset as data; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` lernie's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated **and born unbounded** — one pass over `workflow.yaml` that authors the `tool_control:` block and strips lernie's whole-tree `budgets:` ceiling (bl-56af: §3.5's dollar ceiling is the one that survives, and a template only reaches workspaces born after it); its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
 | `src/control/confine.rs` | the **OS confinement backend** (§8.6, VISION §4.11 item 8, bl-bca4): the platform switch (Linux is bubblewrap, shelled like §16.7's openssl mint — no crate, no `unsafe`; every other OS an explicit refusal naming itself), the availability probe that runs the exact sandbox shape a wrap spends (derived at each birth, never stored), the birth-gate refusal both drone doors call, and the wrapper argv — the fixed shape plus the derived writable set, unconditional under a `confinement: required` policy so an absent backend fails the spawn loudly rather than falling back bare. The set is four members and each is a derivation: the workspace and the composed world root off the env, the host `/tmp` off the fixed shape, and the **bound project repo** off the §3.2 claimant join `control::root::claimed` already owns (bl-34b1) — so a revived driver, which carries no payload, confines exactly as the fire it resumes did. A member that is not on disk drops out rather than failing the spawn on `bwrap`'s own refusal (§3.5's orphaned project), which can only narrow the set |
 | `src/delete/{mod,exec}.rs` | the §3.6 unmake: pure confirmation + plan; the logged runner |
 | `src/delete/agent.rs` | the §3.6 one-conversation delete (bl-f17a): the member-scoped gate, the blast-radius arming, the `DeleteReport` census parse, the dry-run and removal spawns |
