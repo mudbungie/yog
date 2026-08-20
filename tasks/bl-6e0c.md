@@ -1,7 +1,8 @@
 +++
 title = "help serve still describes the retired pre-self-provisioning wire behavior"
 created = 1787206336
-updated = 1787206336
+updated = 1787207206
+claimant = "Zircons-Misc"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "cli", "docs", "wire"]
