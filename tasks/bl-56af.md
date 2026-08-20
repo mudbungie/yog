@@ -1,7 +1,8 @@
 +++
 title = "the whole-tree ceiling nobody set: workspaces born before lernie's template fix froze budgets: into config/default, so a yog-dispatched conversation dies against a cap invisible everywhere yog looks"
 created = 1787206006
-updated = 1787206006
+updated = 1787206007
+claimant = "Zircons-Budget"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
