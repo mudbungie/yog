@@ -57,9 +57,15 @@
 # into the beat that needs one, because "where a wall's config lives" and "where
 # its credentials live" are §16.2 layout facts with one home:
 #
-#   nothing laid  → the template's row does not resolve at all → brazen's
-#                   CONFIG-kind decline, `unknown provider ...`, which is what
-#                   the §7.3 banner renders and what the §9.1 remedy answers.
+#   nothing laid  → whatever brazen's own compiled-in table can answer for the
+#                   row the template names. **That is no longer a CONFIG
+#                   decline by default** (bl-6244): since bl-8c2d a default
+#                   install ships offerable rows, so a wall-less workspace on
+#                   the seeded template resolves its row and declines AUTH,
+#                   exactly as the degree below does. A beat that wants the
+#                   CONFIG decline — `unknown provider ...`, what the §7.3
+#                   banner renders and the §9.1 remedy answers — must name a
+#                   row NOTHING ships; `beats_unseeded.sh` mints one.
 #   config only   → the row resolves and has no credential → brazen's AUTH-kind
 #                   decline, which is S0 step 5's own subject: the auth-failed
 #                   step with Login one click away (§8.3/§13.3).

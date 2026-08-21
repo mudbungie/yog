@@ -16,11 +16,20 @@
 # So this verb seeds the world and deliberately does NOT finish the wall, in the
 # two degrees `wall.sh` now names — and each degree is a different ruled remedy:
 #
-#   PHASE A, no wall at all. The seeded template names `openai-chatgpt`, a row
-#   that reaches a wall only through `config.toml` (preflight says so outright),
-#   so brazen declines CONFIG-kind: `provider error (Config): unknown provider
-#   `openai-chatgpt``. That line is the §7.3 banner's own input, and since
-#   bl-dd7f the banner pairs it with the §9.1 raw-TOML editor.
+#   PHASE A, no wall AND a row nothing ships. brazen declines CONFIG-kind —
+#   `provider error (Config): unknown provider `<row>`` — which is the §7.3
+#   banner's own input, paired since bl-dd7f with the §9.1 raw-TOML editor.
+#
+#   **The absent row is minted by this fixture, and that is the whole of
+#   bl-6244.** It used to be `openai-chatgpt` with the wall withheld, on the
+#   premise that the row "reaches a wall only through `config.toml`". bl-8c2d
+#   retired that premise from under the beat: brazen now compiles offerable
+#   provider rows in, so a workspace with NO wall at all resolves that row and
+#   declines AUTH-kind instead — the product being *right*, and the ladder
+#   standing red at 9/10 with the configuration remedy no longer exercised at
+#   all. A fixture must construct the exact prerequisite it claims is missing,
+#   so this one names a provider that nothing can ever ship (`$ABSENT_ROW`) and
+#   is immune to every future change in what a default install offers.
 #
 #   PHASE B, the row table and no sign-ins. The row resolves and has no
 #   credential, so the decline is AUTH-kind — S0 step 5 exactly, the shape
@@ -51,6 +60,24 @@ seed_wall_less() {
   mkdir -p "$1/yog/world/lernie/template"
   cp "$real_world/models.yaml" "$1/yog/world/lernie/models.yaml"
   cp "$real_world/template/providers.yaml" "$1/yog/world/lernie/template/providers.yaml"
+}
+
+# A provider row NOTHING can resolve — not the wall's `config.toml`, which this
+# phase never lays, and not brazen's compiled-in table, which cannot carry a
+# name minted here (bl-6244). It is the CONFIG decline's whole subject, so it is
+# spelled once and the needle below is derived from it rather than typed twice.
+ABSENT_ROW=yogdrive-no-such-provider
+# Point the seeded template's roles at it. Both roles, because a workspace is
+# born on the template and the first turn is the worker's — but a compactor row
+# left resolving would be a second, different world than the one this phase
+# says it laid.
+seed_absent_row() {
+  python3 - "$1/yog/world/lernie/template/providers.yaml" "$ABSENT_ROW" <<'PYROW'
+import re, sys
+path, row = sys.argv[1], sys.argv[2]
+text = open(path).read()
+open(path, "w").write(re.sub(r"provider: .*", f"provider: {row}", text))
+PYROW
 }
 
 # --- what a dead first turn leaves on disk ----------------------------------
@@ -119,7 +146,7 @@ run_unseeded() {
   # `unknown provider` on the trail (`config_edit::fault::CONFIG_MARKERS`), and
   # brazen's `kind` field in the settled step (`login::auth`, through
   # `git_tree::error_text`).
-  unseeded_phase "$data/nowall" a config trail_says 'unknown provider `openai-chatgpt`'
+  unseeded_phase "$data/nowall" a config trail_says "unknown provider \`$ABSENT_ROW\`"
   unseeded_phase "$data/nocred" b auth step_says '"kind":"auth"' 
   verdict "$out"
 }
@@ -133,8 +160,13 @@ unseeded_phase() {
   mkdir -p "$data_root"
   seed_wall_less "$data_root"
   # Phase B lays the ROW TABLE and stops (`wall.sh`'s middle degree); phase A
-  # lays nothing at all. This is the whole difference between the two runs.
-  [ "$kind" = auth ] && seed_wall_config "$data_root" "$BOOTSTRAP_WS"
+  # lays no wall at all and points the template at a row nothing ships. This is
+  # the whole difference between the two runs.
+  if [ "$kind" = auth ]; then
+    seed_wall_config "$data_root" "$BOOTSTRAP_WS"
+  else
+    seed_absent_row "$data_root"
+  fi
   ops="$data_root/yog/world/state/yog/ops.jsonl"
 
   launch_engine "$data_root" ; wid=$engine_wid

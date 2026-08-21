@@ -34,17 +34,24 @@ use crate::opslog::{OpEntry, Origin};
 /// Note the shape against the one bl-9b52's screenshot caught: the pinned
 /// lernie now names the row it routed to as well (`on provider row "…"`), and
 /// the classifier reads both spellings, so this beat holds across that move.
+///
+/// **The row is one nothing ships** (bl-6244). It was `openai-chatgpt` until
+/// bl-8c2d compiled offerable rows into a default install — after which that
+/// name is never unknown, the drive phase these words were copied from stopped
+/// producing a config decline at all, and re-pinning to a row that CAN go
+/// missing is what keeps this a paint beat over words a substrate really
+/// emits. Re-copied from `run-unseeded` phase A on 2026-08-20.
 const CONFIG_DECLINE: &str = "lernie prompt: provider error (Config) on provider row \
-     \"openai-chatgpt\": unknown provider `openai-chatgpt`";
+     \"yogdrive-no-such-provider\": unknown provider `yogdrive-no-such-provider`";
 
 /// The needle for the reason: brazen's own words, which appear nowhere in the
 /// shell's vocabulary, so finding them in the paint output can only mean the
 /// ops row's stderr reached it (INV-2 — a failure renders as itself).
-const REASON_NEEDLE: &str = "unknown provider `openai-chatgpt`";
+const REASON_NEEDLE: &str = "unknown provider `yogdrive-no-such-provider`";
 
 /// The needle for the **remedy**: the sentence bl-dd7f pairs with the reason,
 /// naming the row that has to exist and the file it has to exist in.
-const REMEDY_NEEDLE: &str = "no provider row named openai-chatgpt";
+const REMEDY_NEEDLE: &str = "no provider row named yogdrive-no-such-provider";
 
 /// The §11 tab the config remedy routes to — its own label, so a rename moves
 /// the control and this beat together (`CenterTab::label`).

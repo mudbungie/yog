@@ -979,9 +979,16 @@ Tests:
   disk → the step's view-model carries the Login affordance.
 - **S0-T7 unseeded-first-turn** (bl-9e10): step 5 driven rather than
   fixtured. `scripts/drive/beats_unseeded.sh` runs a real yog against a
-  workspace wall left deliberately unfinished, in the two degrees `wall.sh`
-  names — nothing laid, so the template's row does not resolve (CONFIG-kind),
-  and the row table with no sign-ins (AUTH-kind, step 5 itself). Every other
+  workspace wall left deliberately unfinished, in two degrees — no wall at all
+  *and a provider row nothing ships*, so the row does not resolve (CONFIG-kind),
+  and the row table with no sign-ins (AUTH-kind, step 5 itself).
+  **The absent row is minted by the fixture since bl-6244**: it used to be the
+  seeded template's own row with the wall withheld, and bl-8c2d gave a default
+  install compiled-in offerable rows — so that degree resolved after all and
+  declined AUTH, leaving the ladder red at 9/10 with the configuration remedy
+  unexercised while the product was behaving correctly. A fixture has to
+  construct the exact prerequisite it claims is missing, and a name nothing can
+  ever ship is the only construction immune to what the next default offers. Every other
   wire beat seeds the wall before the launch (bl-1851) and so has only ever
   driven step 3, which is why this went undriven. It asserts the start fires
   anyway (§9.2's birth gate stays retired, bl-00ee), the first turn settles as
