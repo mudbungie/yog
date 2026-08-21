@@ -1,7 +1,8 @@
 +++
 title = "REGRESSION of bl-bb20: the real-substrate drive still excludes live S10 and S18 surfaces"
 created = 1787206332
-updated = 1787206332
+updated = 1787275657
+claimant = "Zircons-Drive"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["regression", "drive", "testing"]
