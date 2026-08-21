@@ -259,6 +259,7 @@ run() {
 . "$here/beats_s3s4s6.sh"
 . "$here/beats_s5_fixture.sh"
 . "$here/beats_s5.sh"
+. "$here/beats_s5_run.sh"
 . "$here/beats_s8.sh"
 . "$here/beats_s7.sh"
 . "$here/beats_s6.sh"

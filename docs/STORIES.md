@@ -548,7 +548,7 @@ to rung 2: the marks pane's `Read current` was still being pressed at a measured
 point tagged "no spelling exists", six weeks after bl-0164 landed `/marks` bare —
 and the beat had been firing that very line two statements below the click. Six
 were views with no spelling by design and are derived off three anchors
-(`locate.sh`'s four surfaces): the §11 tab bar's own rule and the window's right
+(`locate.sh`'s surfaces): the §11 tab bar's own rule and the window's right
 edge for the ⋯ overflow and the ★ in its menu, the centre's header/tab-strip
 separator for the inspector's Raw toggle, step selector and record picker, and
 the window's *bottom* edge for the activity trail's newest ops row — which the
@@ -562,6 +562,24 @@ bl-5410 and was landing in the *lernie* editor two panes down. Every one of thos
 beats printed PASS throughout, because a pinned coordinate whose beat asserts a
 negative is not a test — it is a number that only a human re-measure can falsify,
 and the re-measure never comes.
+
+**A DERIVED coordinate is still only right for one surface (bl-fc3f).** The rule
+above makes a point move with its layout; it says nothing about the point being
+read off the *wrong window*. `Ctrl+Shift+2` is a `windowfocus` and then an XTEST
+press 0.2 s later, and on a loaded box the press can land before the focus does:
+in one run of two the centre stayed on Conversation, and the fixed sleep after
+the key proved nothing. The centre's separators are the same family on every
+tab, so the §9.1 locator read the rule above the *composer* as the one that ends
+brazen's pane and folded four perfectly-formed points off it — S5's marker was
+typed into the composer and clicked into a `lernie prompt`, a wire spend inside
+the one run whose contract is that it spends nothing. Two things follow, and
+both are now the harness's. A navigation is **waited on, never slept at**: focus
+is per-instance RAM (§13.1) and no file can witness it, so the witness is the
+frame — `locate.sh centertab` reads back the tab the §11 strip paints filled, as
+the digit that focuses it, and `focus_config` presses until the frame agrees.
+And a locator **refuses a frame that is not its surface** rather than converting
+a failed gesture into a different destructive one: `brazen` demands Config,
+`inspector` demands Conversation, and neither prints a number for anything else.
 
 **What a coordinate still means, in three kinds.** Every remaining click is
 tagged in the runner with which kind it is, and they are not interchangeable:

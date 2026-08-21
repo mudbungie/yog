@@ -32,11 +32,27 @@
 #     idiom (`crate::tail::scroll`) seats the newest row on the bottom one
 #     whether the trail holds two ops or two hundred.
 #
+# A COORDINATE IS ONLY EVER RIGHT FOR ONE SURFACE, so every locator that aims
+# at the centre column now says WHICH centre tab it is reading, and refuses any
+# other (bl-fc3f). A missed navigation used to be converted here into a
+# perfectly-formed click somewhere else: `Ctrl+Shift+2` did not land in one
+# run of two, the centre stayed on Conversation, and `brazen` read the rule
+# above the composer as if it ended the §9.1 pane — so S5's marker was typed
+# into the composer and clicked into a `lernie prompt`, spending on the wire in
+# the one run whose contract is that it spends nothing. The rules are the same
+# family in both frames; only the tab strip says which surface they belong to.
+#
 # Usage: locate.sh <surface> <shot.png>   (any window size, any panel width)
 #
+#   centertab the §11 centre tab the strip paints as SELECTED, as the digit
+#             that focuses it (`Ctrl+Shift+<n>`) — the guard the two centre
+#             locators spend, and the only monotone predicate a beat has for a
+#             tab focus, since focus is per-instance RAM (§13.1) and no file
+#             can answer it.
+#             → n
 #   brazen    §9.1's four points, off the rule that ends brazen's Config pane —
-#             the shot must have the raw fold still SHUT (opening it is what the
-#             first point is for).
+#             the shot must be of the CONFIG tab with the raw fold still SHUT
+#             (opening it is what the first point is for).
 #             → fold_x fold_y box_x box_y apply_x apply_y reload_x reload_y
 #   inspector §11 altitude-2's three controls, off the rule the centre paints
 #             between a conversation's header and its tab strip. The shot must
@@ -62,11 +78,11 @@ set -eu
 verb=${1:-}
 shot=${2:-}
 case $verb in
-brazen | inspector | activity | tabbar) [ -f "$shot" ] || verb= ;;
+centertab | brazen | inspector | activity | tabbar) [ -f "$shot" ] || verb= ;;
 *) verb= ;;
 esac
 [ -n "$verb" ] || {
-  echo "usage: locate.sh brazen|inspector|activity|tabbar <shot.png>" >&2
+  echo "usage: locate.sh centertab|brazen|inspector|activity|tabbar <shot.png>" >&2
   sed -n 's/^#   \(\S\+\) \+\(§\|the \)/  \1/p' "$0" >&2
   exit 1
 }
@@ -81,172 +97,11 @@ trap 'rm -f "$gray"' EXIT
 # would only be a third of the data to search for it in.
 ffmpeg -v error -y -i "$shot" -f rawvideo -pix_fmt gray "$gray"
 
-python3 - "$verb" "${size%%,*}" "${size##*,}" "$gray" <<'PY'
-import collections
-import sys
 
-verb, w, h, path = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
-px = open(path, "rb").read()
-# The window's own background is whatever colour most of it is — read, not
-# assumed, so a theme change moves the threshold with it rather than past it.
-bg = collections.Counter(px).most_common(1)[0][0]
-
-
-def longest_run(y):
-    """The longest flat horizontal run in row `y`, as (length, x, value)."""
-    row = px[y * w : (y + 1) * w]
-    best, x = (0, 0, 0), 0
-    while x < w:
-        v, x2 = row[x], x
-        while x2 < w and abs(row[x2] - v) <= 2:
-            x2 += 1
-        if x2 - x > best[0]:
-            best = (x2 - x, x, v)
-        x = x2
-    return best
-
-
-def rules(span, inset):
-    """The horizontal rules in the frame, top down, as (y, x0).
-
-    A rule is a long flat run brighter than the background. `inset` is the whole
-    of what tells the two FAMILIES apart: a section separator inside a column
-    starts at that column's own left edge, while a window-wide panel's rule
-    starts at x=0 and crosses the whole frame. Asking for one never returns the
-    other, so neither family's count shifts when the other gains a member.
-    """
-    hits = []
-    for y in range(h):
-        n, x0, v = longest_run(y)
-        if n >= span * w and v >= bg + 15 and (x0 > 0) == inset:
-            hits.append((y, x0))
-    # Coalesce, and keep only the THIN ones. A run of three or more adjacent hit
-    # rows is a filled block (a text box, a selected row), not a rule.
-    found, group = [], []
-    for hit in hits:
-        if group and hit[0] - group[-1][0] > 1:
-            if len(group) <= 2:
-                found.append(group[0])
-            group = []
-        group.append(hit)
-    if group and len(group) <= 2:
-        found.append(group[0])
-    return found
-
-
-def want(found, least, what):
-    if len(found) < least:
-        sys.exit(
-            f"locate.sh {verb}: found {len(found)} {what} in the frame, want at "
-            f"least {least} — is this the frame the surface describes?"
-        )
-    return found
-
-
-# A column's own separators: a run over most of the window's width but starting
-# inside it. The width test is also what keeps the roster column out — §11 caps
-# it at half the window, so only the centre's rules can clear four tenths of one.
-def column():
-    return want(rules(0.4, True), 2, "centre rules")
-
-
-# The window-wide panel rules: the top bar's under the frame's first row, the
-# activity accessory's above its last.
-def panels():
-    return want(rules(0.9, False), 2, "panel edges")
-
-
-if verb == "brazen":
-    # The Config column's rules, top down: the one under the §11 centre tab
-    # strip, then one per pane. brazen is the column's FIRST pane
-    # (config_edit/mod.rs renders it before lernie, yog, marks and the branch
-    # form), so the rule that ends it is the second — and the fold is the row
-    # above that rule.
-    #
-    # The offsets, measured once against an OPENED fold (2026-08-13, and the
-    # shot that carries them is any run's `s5-03b-raw-fold.png`). `FOLD_UP` is
-    # the item spacing above a separator plus half a header row; the rest are
-    # the fold's own body — egui's indent, a `desired_rows(6)` editor spanning
-    # y+13..y+100, and the button row at y+105..y+121 whose three seats start at
-    # the pane's x+18.
-    sep_y, pane_x = column()[1]
-    FOLD_UP, FOLD_IN = 16, 40
-    BOX_DOWN, BOX_IN = 56, 60
-    BTN_DOWN, APPLY_IN, RELOAD_IN = 113, 37, 87
-    fold_y = sep_y - FOLD_UP
-    print(
-        pane_x + FOLD_IN,
-        fold_y,
-        pane_x + BOX_IN,
-        fold_y + BOX_DOWN,
-        pane_x + APPLY_IN,
-        fold_y + BTN_DOWN,
-        pane_x + RELOAD_IN,
-        fold_y + BTN_DOWN,
-    )
-elif verb == "inspector":
-    # The centre's rules on the Conversation tab, top down: the one `center.rs`
-    # ends its tab strip with, then the one `workspace.rs` paints between the
-    # conversation's identity header and the altitude-2 strip. Everything the
-    # header can grow — a replay line, one §6 mark per kind, the auth banner,
-    # the wound banner, the ball rows — sits BETWEEN those two rules, so the
-    # second one carries the whole inspector down with it and none of the
-    # offsets below ever learn about it. That is the drift bl-1ca2 caused and
-    # nothing noticed: a strip and a rule appeared above, and three clicks
-    # measured before it went on aiming twenty-eight pixels high.
-    #
-    # Below the rule the inspector's own rows are fixed by `inspector/mod.rs`
-    # and `inspector/controls.rs`, in this order and no other: the tab strip,
-    # the Raw checkbox (bl-1ff1 put it on Steps too), then — Steps only — the
-    # step selector and, once a step is picked, the record picker. `RECORD_IN`
-    # clears `meta` to land on `request`, the record holding the malformed file.
-    sep_y, pane_x = column()[1]
-    RAW_DOWN, RAW_IN = 36, 40
-    STEP_DOWN, STEP_IN = 56, 40
-    RECORD_DOWN, RECORD_IN = 77, 60
-    print(
-        pane_x + RAW_IN,
-        sep_y + RAW_DOWN,
-        pane_x + STEP_IN,
-        sep_y + STEP_DOWN,
-        pane_x + RECORD_IN,
-        sep_y + RECORD_DOWN,
-    )
-elif verb == "activity":
-    # The trail is docked to the window's BOTTOM edge and the §11 tail idiom
-    # seats its newest row on that edge (`crate::tail::scroll` sticks an
-    # overfull body to the bottom and pads an underfull one down to it), so the
-    # newest row is one intra-widget distance up from the frame's last pixel —
-    # immune to the chip's own heading, to the Dismiss / Clear trail controls
-    # and to the two §7.2 derivation notes that appear above them only when the
-    # snapshot is stale. Nothing above the row can move it, which is the whole
-    # test. `ROW_IN` is the panel's left margin plus the collapsing triangle.
-    #
-    # The panel rule is still read, as the GUARD the beat otherwise lacks: a
-    # collapsed accessory is one row of chrome, so its edge sits within a row
-    # height of the bottom, and a click into it would silently *toggle the very
-    # thing the beat needs open* instead of opening a row. `a` failing to
-    # expand the trail now stops the beat here rather than passing it vacuously.
-    ROW_IN, ROW_UP, TRAIL_LEAST = 37, 12, 60
-    edge_y, _ = panels()[-1]
-    if h - edge_y < TRAIL_LEAST:
-        sys.exit(
-            f"locate.sh activity: the bottom panel is {h - edge_y} px tall — the "
-            "activity trail is still collapsed, so there is no ops row to open."
-        )
-    print(ROW_IN, h - ROW_UP)
-elif verb == "tabbar":
-    # The §11 tab bar is laid right-to-left with the ⋯ overflow painted FIRST,
-    # so it takes the window's right edge as soon as it is non-empty — and the
-    # top bar is the frame's first panel, so nothing can be inserted above it.
-    # Both coordinates therefore come off edges: the bar's own rule for y, the
-    # window's right for x. The menu it opens is wider than the gap between the
-    # button and that edge, so egui always clamps the popup INTO the frame and
-    # the ★ — the last widget of the entry's row — lands one inset from the same
-    # right edge. Which foreign workspace to pin is the pick; the ★ is the only
-    # safe seat in the row, since the entry's own label focuses it instead.
-    MORE_UP, MORE_RIGHT = 9, 19
-    PIN_DOWN, PIN_RIGHT = 16, 14
-    bar_y, _ = panels()[0]
-    print(w - MORE_RIGHT, bar_y - MORE_UP, w - PIN_RIGHT, bar_y + PIN_DOWN)
-PY
+# The reader is its own file (bl-fc3f, at the 300-line cap): this half claims
+# the grey plane — one shot, one size, one temp — and `locate.py` reads
+# geometry out of it. The seam is where the shell stops and the pixels start,
+# and it is the same one the beats files were split on: nothing above knows a
+# rule from a cluster, nothing below knows what ffmpeg is. Called, never
+# `exec`ed — an exec would drop the trap above and leak the plane.
+python3 "$(dirname "$0")/locate.py" "$verb" "${size%%,*}" "${size##*,}" "$gray"
