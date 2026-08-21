@@ -1,7 +1,8 @@
 +++
 title = "the remote teleoperator cannot set priority, blockers, hierarchy or tags—the facts its fleet schedules"
 created = 1787206351
-updated = 1787275064
+updated = 1787276328
+claimant = "Zircons-Dbde"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["missing", "boundary", "balls", "agentic"]
