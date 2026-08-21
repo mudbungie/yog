@@ -1,7 +1,8 @@
 +++
 title = "the drive front door loses its red-run report when failure happens before the first verdict"
 created = 1787206331
-updated = 1787206331
+updated = 1787275498
+claimant = "Zircons-Drive"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "drive", "testing"]
