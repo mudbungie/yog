@@ -114,6 +114,26 @@ cannot — real balls state and its blocker resolution, real git, real lernie's
 on-disk shapes, the real window, the real wire — and that a rung whose claim is
 a derivation over yog's own structures is proved exactly by its in-crate test.
 
+**A scope decision expires when its premise does** (bl-faca). Two of bl-bb20's
+were one sentence each and both stopped being true within days: S10 was out
+because "the rail, transcript, steps and files surfaces have NO headless
+spelling at all", which bl-6233 gave them, and S18 because "the armed loop is
+not live", which bl-66fb landed. Nothing came back to say so, so the ladder went
+on excluding two live surfaces on retired grounds — which is the failure mode a
+recorded decision has that an unrecorded one does not, and the reason the head
+of `beats_headless.sh` now names the ball that revived each rung beside the one
+that deferred it. Both are driven off ONE fixture, and the fixture is the point:
+the run's own armed loop mints the conversation, on a wall the stage strips of
+its sign-in, so a real drone is born, dies at the wall having spent nothing, and
+leaves a real spine for the historian to read. `beats_s18.sh` drives the
+trajectory no fixture snapshot can hold — a tick claims and spawns through real
+`bl` and the real start flow, a later tick gives the claim back with the
+comparison on the trail, and a later one still does not retake that ball
+(bl-3988's law, the wedge this rung exists to catch) — and `beats_s10.sh` reads
+the drone's transcript, steps, step drill-in, files, rail, governing freeze and
+mail through their §8.5 lines. Its zero-token step is also the run's own no-wire
+proof, made on the one surface a spend would show up on.
+
 `make drive` builds the release binary, preflights the host, gives each run verb
 its **own** scratch world under `$XDG_CACHE_HOME/yog-drive/<stamp>/<verb>/`, and
 emits a log skeleton at the tail. It is never the live world and cannot be

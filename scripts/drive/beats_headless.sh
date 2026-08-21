@@ -40,10 +40,11 @@
 #                      it needs a real agent running a real tool: wire spend and
 #                      agent nondeterminism for a fold `multiplex::bl` tests
 #                      exactly.
-#   S10 (historian) OUT — blocked, not skipped: the rail, transcript, steps and
-#                      files surfaces have NO headless spelling at all
-#                      (bl-6233), so a beat could only screenshot them, and a
-#                      screenshot proves nothing about a spine.
+#   S10 (historian) IN — since bl-faca. It was "blocked, not skipped: the rail,
+#                      transcript, steps and files surfaces have NO headless
+#                      spelling at all", and bl-6233 gave every one of them a
+#                      query and a line — so the block expired and the rung is
+#                      driven over the fleet's own drone (`beats_s10.sh`).
 #   S12 (counterfactualist) OUT — its ×N is a read-only fork off a pinned
 #                      notch, which needs a LIVE conversation with history:
 #                      a model call, which this verb refuses to spend.
@@ -59,9 +60,12 @@
 #                      really attempting a real tool, then a real decision:
 #                      wire spend, nondeterminism, and the response ladder is
 #                      bl-02c2, still open.
-#   S18 (admiral, armed) OUT — the armed loop is not live. Its unarmed clause,
-#                      "S18-T1 unarmed-is-today's-board", is exactly what the
-#                      S13 beats below assert on the real substrate.
+#   S18 (admiral, armed) IN — since bl-faca. It was "the armed loop is not
+#                      live", and bl-66fb landed it. A whole TRAJECTORY is the
+#                      part no fixture holds: a tick claims and spawns, a later
+#                      one gives the claim back, a later one still does not
+#                      retake it (`beats_s18.sh`). The unarmed clause is still
+#                      the S13 beats below, and is now this rung's bracket.
 
 # --- the seatless world -----------------------------------------------------
 # `yog serve` parks until a signal, so it is backgrounded and its pid is the
@@ -112,6 +116,15 @@ run_headless() {
   data=$1 ; out=$2
   mkdir -p "$out" ; rm -rf "$data" ; mkdir -p "$data"
   seed "$data"
+  # THE CLOCK, SEEDED FAST (bl-faca). The §4.3 loop ticks at the watcher's FULL
+  # sweep, so the armed rung's trajectory — spawn, then reap, then the tick that
+  # must NOT retake — costs three of them. At the shipped 15 s that is a minute
+  # of a seatless run waiting; at the floor the §9.5 control itself allows
+  # (`cadence::FULL_SWEEP_BOUNDS`) it is six seconds, and the periods are what
+  # this rung is timed against, never a fact it asserts.
+  mkdir -p "$data/yog/world/state/yog"
+  printf 'cadence:\n  watcher:\n    debounce_ms: 100\n    cheap_sweep_ms: 1000\n    full_sweep_ms: 2000\n' \
+    > "$data/yog/world/state/yog/cadence.yaml"
   ops="$data/yog/world/state/yog/ops.jsonl"
   proj="$data/proj"
   # A real project with a real balls store: three balls whose STORED facts put
@@ -189,6 +202,16 @@ print(json.loads(line).get('stdout','').strip())")
   s13_board "$data" "$ready" "$claim"
   s11_workdiff "$data" "$ws" "$claim" "$wt"
   s19_adjudicator "$data" "$ws" "$claim" "$proj"
+  # THE ARMED RUNG GOES LAST, and the order is load-bearing (bl-faca): from the
+  # moment `/fleet` writes its entry a real loop is claiming real balls in this
+  # world, so every beat above would be asserting against a board another
+  # thread is moving. It ends on `/disband`, which puts the world back.
+  #
+  # S10 rides its drone: the loop mints the only conversation this seatless run
+  # has, on a wall the fixture strips of its sign-in, so the historian's six
+  # surfaces have real bytes to read and nothing was spent making them.
+  s18_admiral "$data" "$ws" "$proj_name" "$claim"
+  s10_historian "$data" "$ws" "$FLEET_AGENT" "$FLEET_BALL"
 
   # S14-T5 — an answer aimed at nothing refuses. A refusal beat spells BOTH
   # arms: as `gesture … || pass` it could only ever emit a PASS row, and the one
