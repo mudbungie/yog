@@ -1,7 +1,8 @@
 +++
 title = "scoped snapshots drop real armed-fleet facts, so /board shows drones but not the policy running them"
 created = 1787206327
-updated = 1787206327
+updated = 1787274772
+claimant = "Zircons-Fleet"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "wire", "agentic"]
