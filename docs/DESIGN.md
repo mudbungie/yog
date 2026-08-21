@@ -6038,6 +6038,31 @@ list — the board is the *live* set, and "delivered" is not a column.
     spawn, so a conversation missing only because this snapshot predates it
     reads as yog's own latency rather than a fact about the world. A driver that
     dies **silently** leaves no evidence and stays the lease's to reap.
+- **The loop does not take back a ball it gave back (bl-3988).** A reap returns
+  a ball to *ready*, and the spawn's pick is the board's first ready row — so
+  the highest-priority ball the loop cannot finish was re-taken by the very next
+  tick, released again, re-taken again, forever, while every lower ball starved
+  behind it. That is a board state making the loop storm, which §4.3's own law
+  says cannot happen. It cannot now: a ready ball whose **newest**
+  `["yog-fleet",…]` act in this workspace is a `reap` is skipped, and the tick
+  takes the next one.
+
+  **No number is invented and nothing is stored.** The bound is the loop's own
+  trail read back — it took this ball, it gave it back — and taking it again
+  would be a bet that the same fire has a different outcome, which is the
+  diagnosing §4.3 forbids. The ball stays on the board, ready, for an operator
+  who *can* judge it. The rule's reach is the ops tail's reach and no further,
+  which is the honest bound rather than a promised one: a reap that has scrolled
+  off is a fact yog no longer has.
+
+  **The absent lease is not a defect of this rule, it is the other ruling.** With
+  no `lease_min` a wounded drone holds its claim indefinitely and a cap-1
+  workspace stays full — that is "no lease reaps nothing" doing exactly what it
+  was ruled to do, and the drone is not hidden while it does: it is at rest with
+  an unseen tip, which is §6 rule 2, so it is already on the attention strip
+  waiting for the human who can decide. A lease is the operator's answer to it,
+  and setting one is *safe* now in a way it was not before: recovery no longer
+  turns a wedge into an unbounded retry.
 
 **The live-activity indicator.** The rule: the conversation's name pulses in
 the chat list, and something in the active conversation pane pulses with it,
@@ -8578,7 +8603,7 @@ beside `main.rs`.
 | `src/fan/{mod,cohort,delivery,retention,spread}.rs` | the §3.8 **mutating fan** (VISION §4.10, bl-8746) and its V3 resolution (bl-c2bd): `mod` the family's own `Verb` — the three gestures the boundary carries as one `Action::Fan`, folded there in bl-a33d beside `monitor::Verb` and `fleet::Verb` and for their reasons — the obligation and the one route from a handle back to a live attempt, a thin in-process consumer of balls' attempt capability, which owns every name and path here; `spread` the materializing half, split out at §12's budget when the delivery arm arrived — open N candidates, prove one fan's members share one base, rebind a prepared start once per candidate; `delivery` **Deliver candidate** (VISION V3.2) — balls' one delivery law spent by handle, and `delivered_commit`, the derived acceptance mark read off the target's own `[<handle>]`-tagged history, stored nowhere; `cohort` the membership fold, derived from yog's own fire rows and never from the agent-writable `cd` mark; `retention` the one severable `cadence.yaml` policy that turns a released candidate into a discarded one, absent meaning never discard |
 | `src/files_view/{mod,render,wire}.rs` | agent-worktree bounded walk + file preview (§11 Files); `classify` is the one "what this file is" fold — bytes + true size ⇒ `Text`/`Truncated`/`Binary` — shared by the live walk, the pinned `git show` (§5.1 #31) and the Work tab's patch (#32), so three seats never grow three vocabularies. `wire` is the §8.5 spelling of the tab *and* the one home of `preview_value`/`preview_of`, which the work diff's patch codec reads rather than keeping a second wording of a bounded file (bl-6233, both directions since bl-7067) |
 | `src/fleet/{mod,arming,facts}.rs` | the VISION §4.3 **armed loop**, off until armed (bl-66fb): the two-gesture family and the law it holds to (*it spawns and reaps; it never diagnoses*); the `cadence.yaml` `fleet:` block — the project, the cap, the optional lease, and the two fields yog refuses to guess; and the derivation the V4 board renders — cap, count, tick, lease, last act and the §3.5 ceiling asked over this workspace's bills, every one a query |
-| `src/fleet/{row,pilot,pilot/plan}.rs` | its acting half: the one ops-row shape a spawn and a reap each leave (§4.2) with a reap's reason stored as the *comparison* and no way to store a diagnosis, plus `last_act` — the board's "last tick", derived; and the level trigger and its thread (§7.2) — at most one move per tick, reaps before spawns, both fired through the boundary's own doors so the ceiling and the confinement gate hold by construction, with `pilot/plan` the decision itself cut off at the budget (bl-b4b5) on the seam the module doc already drew: the thread and its acts above, and below them the pure fold over a published snapshot that says which act, if any — including the §11 **stillbirth** (bl-ab13), the one reap a lease does not gate, whose evidence is the loop's own spawn row joined by stamp and `cwd` to a detached driver that died, while the thread's own half of that invariant is a `birth` that releases the claim its `prepare` made when the `prompt` door refuses. Its corpus is cut on the same two seams the code is: `pilot/tests` the lease table, `pilot/tests/stillbirth` the other decision table beside it (different evidence, no gate), and under `pilot/tests/fire` — the effect half, fake substrate and real spawns — `fire` the reap and the thread with `fire/birth` the taking of work, which is the loop's own two moves |
+| `src/fleet/{row,pilot,pilot/plan}.rs` | its acting half: the one ops-row shape a spawn and a reap each leave (§4.2) with a reap's reason stored as the *comparison* and no way to store a diagnosis, plus `last_act` — the board's "last tick", derived; and the level trigger and its thread (§7.2) — at most one move per tick, reaps before spawns, both fired through the boundary's own doors so the ceiling and the confinement gate hold by construction, with `pilot/plan` the decision itself cut off at the budget (bl-b4b5) on the seam the module doc already drew: the thread and its acts above, and below them the pure fold over a published snapshot that says which act, if any — including the §11 **stillbirth** (bl-ab13), the one reap a lease does not gate, whose evidence is the loop's own spawn row joined by stamp and `cwd` to a detached driver that died, while the thread's own half of that invariant is a `birth` that releases the claim its `prepare` made when the `prompt` door refuses. Its corpus is cut on the same two seams the code is: `pilot/tests` the lease table, `pilot/tests/stillbirth` the other decision table beside it (different evidence, no gate) and `pilot/tests/retaking` the third on the far side of the move (bl-3988: what a tick may take, given what this loop has already given back), and under `pilot/tests/fire` — the effect half, fake substrate and real spawns — `fire` the reap and the thread with `fire/birth` the taking of work, which is the loop's own two moves |
 | `src/fork/{mod,composer,render}.rs` | the V2 **attempt** (bl-dc0c): `mod` what one fork *is* — the `lernie dispatch` argv, the skill pins, and the fire-time policy read off the workspace (§5.1 #34); `composer` the ×N and the readiness rule, where a cohort is a `Vec`'s length and nothing branches on it; `render` the seat at a pinned notch, every control a reading of the workspace rather than a yog list. Nothing here can touch a project worktree — the rung is read-only by construction (VISION §4.10, bl-2b8c) |
 | `src/fs_watcher/mod.rs` | the watched root's watcher: the §7.1 allowlist subset exposed as a drainable stream of coalesced change notifications, pure Rust with no egui dependency |
 | `src/fs_watcher/{roots,fold,hub}.rs` | per-root-kind allowlists (§7.1); the raw-event drain, coalesce and desync lead (§7.2); the process's one backend instance and its per-root fan-out (§7.1, bl-908c) |

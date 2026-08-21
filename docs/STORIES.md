@@ -2159,6 +2159,16 @@ call, and the operator has decided to let yog take work by itself.
    once, and stops. It keeps nothing: the next tick reads the world the last one
    left, so a missed tick, a crashed yog and a second instance all converge, and
    no board state can make the loop storm.
+6b. **The loop does not take back a ball it gave back** (bl-3988, DESIGN §11).
+   A reap returns a ball to ready and the pick is the board's first ready row,
+   so the top ball the loop could not finish was re-taken by the very next tick,
+   forever, while every lower ball starved — a board state making the loop
+   storm, which item 6 says cannot happen. A ready ball whose newest
+   `["yog-fleet",…]` act in this workspace is a `reap` is skipped and the next
+   one is taken. That is still no memory *between ticks*: the trail is the
+   world the last tick left, read back like everything else, and no number,
+   cooldown or retry count is invented. Re-taking would be a bet that the same
+   fire has a different outcome, which is the diagnosing item 4 forbids.
 
 Burden check: **unarmed, the board is today's balls section** — no chip, no
 loop line, no rows, no calls. Severability is deleting the `cadence.yaml`
@@ -2184,6 +2194,12 @@ Tests:
   in-flight drone is never reaped; no lease reaps nothing; a claim with no
   conversation and no birth of the loop's own is not reapable; reaps go before
   spawns; a gated ball and another project's ball are not this loop's work.
+- **S18-T8 no-board-state-storms** (`fleet::pilot`, bl-3988): a ball this
+  workspace's loop reaped is not the ball the next tick takes, and the
+  lower-priority work that was starved behind it runs; alone on the board it
+  stops the loop rather than looping; only the newest act decides and only this
+  workspace's — a ball re-taken since is takeable again, and another
+  workspace's reap is not this loop's memory.
 - **S18-T7 a-spawn-row-means-a-conversation** (`fleet::pilot`, bl-ab13): a fire
   that never launches gives back the claim its own flow just made and leaves no
   loop row; a claimed, conversationless ball whose spawn row is answered by a

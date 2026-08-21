@@ -8,7 +8,9 @@
 //! split at §12's cap on the seam between deciding and doing; [`stillbirth`] is
 //! the other decision table, cut off at the same cap on the seam the plan draws
 //! — a lease compares a drone's idleness, a stillbirth compares the loop's own
-//! birth record against a world that grew no conversation from it (bl-ab13).
+//! birth record against a world that grew no conversation from it (bl-ab13) —
+//! and [`retaking`] is the third, on the other side of the move: what a tick
+//! may take, given what this loop has already given back (bl-3988).
 
 use super::*;
 use crate::app::Snapshot;
@@ -270,4 +272,5 @@ fn a_workspace_with_no_derived_tree_reaps_nothing() {
 }
 
 mod fire;
+mod retaking;
 mod stillbirth;

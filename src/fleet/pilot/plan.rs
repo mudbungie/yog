@@ -99,11 +99,11 @@ fn reap(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Option<M
     })
 }
 
-/// The spawn: the board's top ready ball in this loop's project, when the
-/// workspace has room under its cap and the ceiling would not refuse the birth
-/// anyway. **Ready only** — a gated ball can be started but cannot be
-/// delivered, and a loop that fills its cap with undeliverable work has stopped
-/// being a fleet.
+/// The spawn: the board's top ready ball in this loop's project **that the loop
+/// has not already given back**, when the workspace has room under its cap and
+/// the ceiling would not refuse the birth anyway. **Ready only** — a gated ball
+/// can be started but cannot be delivered, and a loop that fills its cap with
+/// undeliverable work has stopped being a fleet.
 fn spawn(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow]) -> Option<Move> {
     if !fleet.has_room() {
         return None;
@@ -112,9 +112,36 @@ fn spawn(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow]) -> Option<Move> {
     // (bl-b4b5), so the entry is put into the row's vocabulary rather than the
     // row into the entry's — the one direction the naming set can answer.
     let project = snap.project_name(&fleet.project);
+    let acts = fleet_row::of_rows(&snap.ops);
+    let key = crate::nav::ws_key(&fleet.workspace);
     rows.iter()
-        .find(|r| r.column == Column::Ready && r.project == project)
+        .find(|r| r.column == Column::Ready && r.project == project && !given_back(&acts, &key, r))
         .map(|row| Move::Spawn { row: row.clone() })
+}
+
+/// **Whether this loop has already given this ball back** (bl-3988): its newest
+/// act on the ball, in this workspace, was a reap.
+///
+/// A reap returns a ball to *ready*, and the board's first ready ball is the
+/// pick — so without this the highest-priority ball the loop cannot finish is
+/// re-taken by the very next tick, forever, and no lower ball ever runs. That
+/// is a board state making the loop storm, which §4.3's own law says cannot
+/// happen; it does not, once the loop declines to undo its own decision.
+///
+/// **Nothing is stored and no number is invented.** The bound is the loop's own
+/// trail: it took this ball, it gave it back, and taking it again would be a
+/// bet that the same fire has a different outcome — which is the diagnosing
+/// §4.3 forbids. The ball stays on the board, ready, for an operator who *can*
+/// judge it; the loop simply moves to the next one.
+///
+/// Its reach is the ops tail's reach and no further, which is the honest bound
+/// rather than a promised one: a reap that has scrolled off the trail is a fact
+/// yog no longer has, and the loop may take the ball again.
+fn given_back(acts: &[fleet_row::Act], workspace: &str, row: &BoardRow) -> bool {
+    acts.iter()
+        .rev()
+        .find(|a| a.workspace == workspace && a.ball == row.id)
+        .is_some_and(|a| a.verb == fleet_row::REAP)
 }
 
 /// Whether this row is a ball the armed workspace holds right now.
