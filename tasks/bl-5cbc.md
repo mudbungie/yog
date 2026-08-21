@@ -1,7 +1,8 @@
 +++
 title = "/ops help says every gesture is recorded, but boundary queries leave no audit row"
 created = 1787206354
-updated = 1787206354
+updated = 1787275400
+claimant = "Zircons-Boundary"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "cli", "docs"]
