@@ -24,7 +24,7 @@ use crate::cli_outbound::Cli;
 /// sphere's own picker rather than the launch bundle's, which `focus_wall`
 /// swaps out from under a flag set before the first render.
 fn open_pane(world: &mut super::fixture::World) -> String {
-    let (lernie, bl) = (Cli::new("yog-absent-lernie"), Cli::new("yog-absent-bl"));
+    let (lernie, bl) = (Cli::new("/yog-absent-lernie"), Cli::new("/yog-absent-bl"));
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
     let _ = painted(world, &lernie, &bl);

@@ -224,9 +224,9 @@ fn clicking_the_field_unfolds_the_row_and_folds_it_again_without_selecting_it() 
 fn the_fields_hover_states_both_numbers_and_the_keys_that_press_it() {
     let mut world = super::nested_world();
     let (lernie, bl, bz) = (
-        crate::cli_outbound::Cli::new("yog-absent-lernie"),
-        crate::cli_outbound::Cli::new("yog-absent-bl"),
-        crate::cli_outbound::Cli::new("yog-absent-bz"),
+        crate::cli_outbound::Cli::new("/yog-absent-lernie"),
+        crate::cli_outbound::Cli::new("/yog-absent-bl"),
+        crate::cli_outbound::Cli::new("/yog-absent-bz"),
     );
     let ctx = egui::Context::default();
     // egui's own "show every tooltip" — the bl-2d87 idiom `super::super::hover`

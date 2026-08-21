@@ -8548,6 +8548,7 @@ beside `main.rs`.
 | `src/cli_outbound/exec.rs` | the `yog exec` escape hatch's spawn shape (§8.4, §16.4): a blocking wait with **inherited** stdio, split from `mod` so the piped `run` family keeps the cap |
 | `src/cli_outbound/piped.rs` | the **stdin-piped** spawn shape (REMOTE §5.2, bl-024b): `run_in` with the child's stdin a pipe yog writes and closes rather than `/dev/null`, which is lernie's own tool contract (its ARCH §3.3) and therefore what a tool host's own child speaks. It reuses that spawn whole rather than restating it, and the deadline on one is the stream's drop — the SIGTERM-then-SIGKILL cascade `stream` already owns |
 | `src/cli_outbound/resolve.rs` | binary resolution (§16.7 W12, the self-multiplex spine): which executable a `Cli` execs and under what leading argv — the one switch point, a per-namespace `self_multiplexed` const |
+| `src/cli_outbound/self_exe.rs` | **which file yog itself is**, asked once per process (§16.7's fourth standing fact, bl-f558): the memo every self-multiplexed resolution, world tool shim and §9.3 `$EDITOR` re-entry spends, so one fact has one home. Two rules, both here rather than at the call sites — the reading is taken at the first ask (which every face performs at boot, before an install can replace yog's inode under the live process), and a reading naming no file is no reading, judged by `stat` and never by spelling: no `(deleted)` suffix is stripped or matched, because only the filesystem can tell an unlinked binary from one genuinely installed under that name |
 | `src/cli_outbound/stream.rs` | the live-handle half: the running-subprocess handle whose iteration yields chunks (final item always the exit) and whose drop terminates the child — SIGTERM, then SIGKILL after a short grace (§2.9) |
 | `src/cli_outbound/streamed.rs` | the **streamed-piped** spawn class (§8, §8.3): both output streams line-buffered off a running child, each line tagged with the stream it came from, plus the terminal exit — the shape `bz --login` renders through (§5.3) |
 | `src/cli_outbound/sys.rs` | the crate's confined `unsafe` — `libc::kill` for the drop's best-effort SIGTERM, and `set_env` for the world fold a substrate arm stands in (§16.2, bl-81c9); the one audited home `rules/unsafe-outside-sys.yml` leaves it (AGENTS.md rule 3) |
@@ -9634,7 +9635,7 @@ bind: foundedness-not-exit-code and the in-process catalog read at §5.1 #2,
 the shim roster and the `Edge::exe_dir` plugin seam at §16.4, the `--as`
 default at §3.3, the logical-vs-physical ops argv at §8.2. The wave labels
 (W1–W14) survive in citations as historical labels git history resolves.
-Three facts live only here:
+Four facts live only here:
 
 - **lernie's `Fx` re-entry targets are spelled as the world's shims**
   (`world/tools/{lernie,bz}`), never the bare yog executable: both targets
@@ -9654,3 +9655,42 @@ Three facts live only here:
   promoted read surface. **Residual upstream ask, U-balls-2: promote the
   dead-set walk** (`reads::history`); landing it deletes yog's last spawned
   read and its last JSON parse together.
+- **Which file yog itself is, is read ONCE per process** (`cli_outbound::
+  self_exe`, bl-f558) — a fact of the process, not a question re-asked at every
+  resolution. W12 made `current_exe()` the default target of every namespace,
+  which handed yog a fact it was reading afresh in four places; a fact with
+  several readings drifts, and here it drifts catastrophically. **A live engine
+  outlives its own inode:** installing, updating or rebuilding yog moves a new
+  file onto yog's pathname (`cp new yog.next && mv -f yog.next yog`, atomic by
+  `rename(2)`) while the running process keeps executing the unlinked image,
+  and from that instant Linux's `/proc/self/exe` — the whole of `current_exe()`
+  there — reads back `<path> (deleted)`, a procfs annotation naming a file that
+  does not exist. The §8.6 control is the sharp case because `ensure_control`
+  re-resolves on **every** Start, so one Start after an install burned that
+  annotation into the adjudicator lernie consults before every granted tool
+  invocation, and every later tool call failed closed at a boundary whose cause
+  was hours in the past. Two rules answer it and both live in that module.
+  *(a)* The reading is taken at the **first** ask — which every face performs at
+  boot, `main.rs` converging the tool roster before eframe and a `yog <ns> …`
+  re-entry resolving before it dispatches — so the process holds the pathname
+  it was born from for its whole life. That is the honest answer as well as the
+  stable one: the shim must name yog's install path, and the install path is
+  exactly what the install did not change. *(b)* A reading that names no file
+  is not a reading, judged by `stat` and never by spelling — no `(deleted)`
+  suffix is stripped and none is matched, because a binary genuinely installed
+  under a name ending in ` (deleted)` is a real target while an unlinked one is
+  not, and only the filesystem can tell those apart; the same one test covers
+  the platforms that report the original path with no annotation at all (macOS
+  `_NSGetExecutablePath`). What is left after both is a pathname deleted
+  outright rather than replaced — a stale target, honestly named, healed by the
+  next install. **The durable half is `world::tools::ensure_shim`, which
+  refuses to write a shim whose target is not an absolute path.** When the
+  self-exe reading is unusable, resolution falls back to the bare PATH *name*
+  of the tool, and persisting that here is a catastrophe rather than a
+  degradation: the world's `PATH` is fronted by the tools dir itself (§16.2),
+  so `exec 'bl' "$@"` re-resolves to the shim and spins, and where a host
+  binary answers the name it silently runs the operator's installed tool
+  instead of yog's (§16.4's (b), bl-d1af's defect class). A convergent
+  artifact's honest answer to *"I do not know what to write"* is to leave the
+  last good file alone and say so — `yog env`/`yog exec` warn on stderr, a
+  Start fails with the reason.

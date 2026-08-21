@@ -146,9 +146,9 @@ fn the_live_activity_class_has_one_seat_and_the_strip_carries_only_what_it_adds(
 /// process ([`super::bands`] reaches the same state the same way).
 fn in_flight_frame() -> Vec<crate::paint_probe::Painted> {
     let (lernie, bl, bz) = (
-        crate::cli_outbound::Cli::new("yog-absent-lernie"),
-        crate::cli_outbound::Cli::new("yog-absent-bl"),
-        crate::cli_outbound::Cli::new("yog-absent-bz"),
+        crate::cli_outbound::Cli::new("/yog-absent-lernie"),
+        crate::cli_outbound::Cli::new("/yog-absent-bl"),
+        crate::cli_outbound::Cli::new("/yog-absent-bz"),
     );
     let mut world = super::inbox_composer::quick(world());
     let ws = world.ws.clone();

@@ -20,8 +20,9 @@
 //! process-env fold an in-process substrate arm stands in ([`sys::set_env`],
 //! §16.2). Which binary a
 //! [`Cli`] execs — and under what leading argv — is [`resolve`]'s concern: a
-//! host PATH name / `*_BINARY` override, or (§16.7 W12) yog's own `current_exe`
-//! under a namespace prefix. A [`Cli`] carries the *physical* `program` +
+//! host PATH name / `*_BINARY` override, or (§16.7 W12) yog's own executable
+//! under a namespace prefix — which file that is being [`self_exe`]'s, read
+//! once per process so a replaced inode cannot rewrite it. A [`Cli`] carries the *physical* `program` +
 //! `prefix` it execs and derives the *logical* [`binary`](Cli::binary) name
 //! from them, so the ops-log argv (§8.2) is invariant across that switch. Pure
 //! Rust — no egui — so a future `lernie-ui-web` crate reuses it unchanged; the
@@ -41,6 +42,11 @@ pub use chunk::{Chunk, CliError, ExitInfo, work_dir_fault};
 /// Binary resolution — the host/self-multiplex switch (§16.7 W12) + [`Binary`].
 pub(crate) mod resolve;
 pub use resolve::Binary;
+
+/// Which file yog itself is, read once per process (bl-f558) — the one home of
+/// that fact, which a live engine keeps across a replacement of its own inode.
+pub(crate) mod self_exe;
+pub(crate) use self_exe::self_exe;
 
 mod stream;
 pub use stream::{Stream, StreamPoll};

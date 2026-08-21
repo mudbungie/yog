@@ -28,7 +28,10 @@
 //! **Convergent, never authoritative.** The shim is a generated artifact (§5.2):
 //! `ensure_shim` rewrites it whenever its content differs — a reinstalled yog at
 //! a new path converges on the next start — and deleting the whole directory
-//! loses nothing. It is *not* the `lernie-tool-<name>` external-tool slot: that
+//! loses nothing. Convergence is not unconditional, though: a rewrite is only
+//! ever an improvement if the new target is one that can be exec'd, so
+//! [`ensure_shim`] refuses a resolution that is not an absolute path (bl-f558)
+//! rather than replacing a working shim with a broken one. It is *not* the `lernie-tool-<name>` external-tool slot: that
 //! is lernie's JSON-stdin tool contract under `$LERNIE_HOME/tools/`, needs a
 //! schema plus a `SKILL.md` plus a role `tools:` entry, and speaks nothing like
 //! bl's argv (see §16.4's amended note).
@@ -164,9 +167,36 @@ pub fn shim_script(namespace: &str, exec_words: &[String]) -> String {
 /// untouched, so the common start does one read and no write; any drift (a
 /// reinstalled yog, a hand-edit) is overwritten. The directory is created on the
 /// way in — the general path with the tree absent, not a bootstrap branch (§3.4).
+///
+/// **A shim's target must be an absolute path, and a resolution that is not one
+/// refuses the write** (bl-f558). This is the durable half of the self-exe
+/// invariant ([`crate::cli_outbound::self_exe`]): when yog cannot say which
+/// file it is, [`Cli::resolve`] falls back to the bare PATH *name* of the tool,
+/// and that name is a catastrophe to persist here rather than a degradation —
+/// the world's `PATH` is fronted by this very directory ([`prepend_path`]), so
+/// `exec 'bl' "$@"` re-resolves to the shim itself and spins, and for a
+/// namespace a host binary DOES answer it silently runs the operator's
+/// installed tool instead of yog's (§16.4's (b), bl-d1af's defect class). A
+/// convergent artifact's honest answer to "I do not know what to write" is to
+/// leave the last good file alone and say so: the caller surfaces it — `yog
+/// env`/`yog exec` warn on stderr, and a Start fails with the reason rather
+/// than seeding an adjudicator that cannot run.
 pub fn ensure_shim(tools: &Path, namespace: &str, cli: &Cli) -> io::Result<PathBuf> {
     let path = tools.join(namespace);
-    let want = shim_script(namespace, &cli.exec_words());
+    let words = cli.exec_words();
+    let target = Path::new(words.first().map_or("", String::as_str));
+    if !target.is_absolute() {
+        return Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            format!(
+                "world tool `{namespace}`: refusing to write a shim naming \
+                 `{}` — a shim target must be an absolute path, and yog could \
+                 not resolve its own executable",
+                target.display()
+            ),
+        ));
+    }
+    let want = shim_script(namespace, &words);
     if fs::read_to_string(&path).is_ok_and(|have| have == want) {
         return Ok(path);
     }

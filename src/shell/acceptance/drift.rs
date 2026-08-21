@@ -51,9 +51,9 @@ fn painted_seat(drifted: bool) -> (Vec<Painted>, egui::Rect) {
     }
     let ctx = egui::Context::default();
     let (lernie, bl, bz) = (
-        Cli::new("yog-absent-lernie"),
-        Cli::new("yog-absent-bl"),
-        Cli::new("yog-absent-bz"),
+        Cli::new("/yog-absent-lernie"),
+        Cli::new("/yog-absent-bl"),
+        Cli::new("/yog-absent-bz"),
     );
     let frame = |world: &mut World| {
         ctx.run(input(), |ctx| {

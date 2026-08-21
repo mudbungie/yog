@@ -4,6 +4,8 @@
 //!   `run_in` cwd propagation.
 //! - [`stream`]: chunk iteration, `exit_info` classification, `pump_step`.
 //! - [`spawn`]: spawn-error and drop→SIGTERM→SIGKILL cleanup.
+//! - [`self_exe`]: which file yog itself is — the `stat` judgement over one
+//!   reading and the process-lifetime memo over it (bl-f558).
 //! - [`detach`]: `spawn_detached` — parent-survival, cwd propagation, the
 //!   per-spawn stderr sink (and its null degradation), spawn error, and the
 //!   reaping of an exited child (no zombie left parented to us, bl-3016).
@@ -27,6 +29,7 @@ use crate::test_support::{SpawnGuard, spawn_guard};
 mod detach;
 mod exec;
 mod run;
+mod self_exe;
 mod spawn;
 mod stream;
 mod streamed;

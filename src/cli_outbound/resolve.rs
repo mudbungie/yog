@@ -146,12 +146,16 @@ impl Cli {
     /// non-empty, else the switch-gated default) — wraps
     /// [`resolve_with`](Self::resolve_with) over `std::env`. No standing env;
     /// [`resolve_in_world`](Self::resolve_in_world) adds it.
+    ///
+    /// The self-exe half is [`self_exe`](super::self_exe), **not** a fresh
+    /// `current_exe()` (bl-f558): a live engine whose own file has been
+    /// replaced under it must keep resolving the pathname it was born from,
+    /// because `/proc/self/exe` from that instant reads `<path> (deleted)` and
+    /// a resolution taken then is an impossible program. This function runs on
+    /// the live path — the §8.6 control shim is re-resolved at every Start —
+    /// so the memo is what makes those writes safe.
     pub fn resolve(binary: Binary) -> Self {
-        Self::resolve_with(
-            binary,
-            |k| std::env::var_os(k),
-            std::env::current_exe().ok(),
-        )
+        Self::resolve_with(binary, |k| std::env::var_os(k), super::self_exe())
     }
 
     /// Resolve `binary` and stand the world's nesting `overrides` (§16.2,

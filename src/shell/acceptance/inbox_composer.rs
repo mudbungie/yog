@@ -30,9 +30,9 @@ impl Frames {
     pub(super) fn new() -> Self {
         Self {
             ctx: egui::Context::default(),
-            lernie: Cli::new("yog-absent-lernie"),
-            bl: Cli::new("yog-absent-bl"),
-            bz: Cli::new("yog-absent-bz"),
+            lernie: Cli::new("/yog-absent-lernie"),
+            bl: Cli::new("/yog-absent-bl"),
+            bz: Cli::new("/yog-absent-bz"),
         }
     }
 

@@ -166,7 +166,7 @@ impl AppModel {
             lernie: lernie.clone(),
             bl: bl.clone(),
             state_root: self.state_root().to_path_buf(),
-            yog_binary: std::env::current_exe().unwrap_or_default(),
+            yog_binary: crate::cli_outbound::self_exe().unwrap_or_default(),
             world: crate::world::wall::env_opt(
                 &self.roots.world,
                 self.focused_workspace().as_deref(),

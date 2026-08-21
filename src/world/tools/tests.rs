@@ -80,6 +80,32 @@ fn ensure_shim_leaves_an_identical_file_untouched_but_rewrites_drift() {
     );
 }
 
+/// bl-f558's durable half: a resolution that is not an absolute path is refused
+/// rather than written, and the shim already on disk — written when yog could
+/// still say which file it was — is left exactly as it stands. The bare PATH
+/// *name* is what `Cli::resolve` falls back to when the self-exe reading is
+/// unusable, and persisting it here is worse than persisting nothing: this
+/// directory fronts the world's `PATH`, so `exec 'bl' "$@"` would re-resolve to
+/// the shim itself.
+#[test]
+fn ensure_shim_refuses_a_target_that_is_not_an_absolute_path() {
+    let dir = tempdir().unwrap();
+    let tools = dir.path().join("tools");
+    let good = ensure_shim(&tools, BL, &host("/opt/yog/bin/yog")).unwrap();
+    let before = fs::read_to_string(&good).unwrap();
+
+    let err = ensure_shim(&tools, BL, &host("bl")).unwrap_err();
+    assert_eq!(err.kind(), io::ErrorKind::NotFound);
+    assert!(err.to_string().contains("absolute path"), "{err}");
+    assert_eq!(fs::read_to_string(&good).unwrap(), before);
+
+    // Nothing on disk yet is refused the same way — an absent shim is honest
+    // where a self-referential one is a loop.
+    let empty = dir.path().join("empty");
+    ensure_shim(&empty, BL, &Cli::new("")).unwrap_err();
+    assert!(!empty.join(BL).exists());
+}
+
 /// The whole point, executed: the seeded file is a runnable program that hands
 /// its argv to the target verbatim. The target is a recorder script standing in
 /// for the yog binary, so the shim's own contract is what is under test.

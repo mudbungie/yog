@@ -159,9 +159,9 @@ fn the_login_rows_paint_in_the_center_not_in_the_roster_column() {
 fn no_tab_lays_off_window_at_either_capture() {
     for (w, h) in [(420.0, 320.0), (1600.0, 2400.0)] {
         let (lernie, bl, bz) = (
-            crate::cli_outbound::Cli::new("yog-absent-lernie"),
-            crate::cli_outbound::Cli::new("yog-absent-bl"),
-            crate::cli_outbound::Cli::new("yog-absent-bz"),
+            crate::cli_outbound::Cli::new("/yog-absent-lernie"),
+            crate::cli_outbound::Cli::new("/yog-absent-bl"),
+            crate::cli_outbound::Cli::new("/yog-absent-bz"),
         );
         let mut world = world();
         let ws = world.ws.clone();

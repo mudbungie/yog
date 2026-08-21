@@ -82,7 +82,7 @@ fn id_runs(painted: &str) -> Vec<String> {
 /// sender was reaped — is where the ladder still falls to the floor. Without it
 /// this scan would enumerate nothing, which its own guard calls a failure.
 fn painted_over_ids(tab: crate::keymap::InspectorTab) -> String {
-    let (lernie, bl) = (Cli::new("yog-absent-lernie"), Cli::new("yog-absent-bl"));
+    let (lernie, bl) = (Cli::new("/yog-absent-lernie"), Cli::new("/yog-absent-bl"));
     let mut world = super::inbox_composer::quick(super::fixture::world());
     let ws = world.ws.clone();
     world.add_root(ROOT, "cormorant");

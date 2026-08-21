@@ -92,9 +92,9 @@ fn out_of_order(seated: &[(&'static str, egui::Rect)]) -> Vec<String> {
 /// seated once and then dropped.
 fn stack(w: f32, h: f32) -> Vec<(&'static str, egui::Rect)> {
     let (lernie, bl, bz) = (
-        Cli::new("yog-absent-lernie"),
-        Cli::new("yog-absent-bl"),
-        Cli::new("yog-absent-bz"),
+        Cli::new("/yog-absent-lernie"),
+        Cli::new("/yog-absent-bl"),
+        Cli::new("/yog-absent-bz"),
     );
     let mut world = super::inbox_composer::quick(world());
     let ws = world.ws.clone();

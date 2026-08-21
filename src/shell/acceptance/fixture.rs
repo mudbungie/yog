@@ -238,7 +238,13 @@ fn build_world(title: &str, roster: &Roster) -> World {
         lernie_workspaces,
         link: link_end,
         outbox,
-        lernie: Cli::new("yog-absent-lernie"),
-        bl: Cli::new("yog-absent-bl"),
+        // Deliberately absent substrate, named by **absolute** path (bl-f558):
+        // a test that never spawns one wants a binary that cannot be found,
+        // and a bare name is not that — the world's `PATH` is fronted by the
+        // tools dir (§16.2), so a relative name resolves against it. The whole
+        // suite spells these the same way, and `world::tools::ensure_shim`
+        // refuses to persist a non-absolute target for that reason.
+        lernie: Cli::new("/yog-absent-lernie"),
+        bl: Cli::new("/yog-absent-bl"),
     }
 }
