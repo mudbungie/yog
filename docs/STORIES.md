@@ -440,7 +440,17 @@ advisory beside the credentials.
 - **S8 the nesting, severable** (S8-T1/T2) — the project's balls clone exists in
   the nested store and **not** in the ambient one, the ambient world's own seed
   file is byte-identical across the run, and `rm -rf <scratch>/yog` takes the
-  world with it and nothing else.
+  world with it and nothing else. **"Nothing else" is proved against a sentinel
+  the fixture lays** (bl-cd5b): one stamped file under each ambient root,
+  hashed before the delete and read back after, then removed. It used to be
+  "the ambient directories still exist", which is two different mistakes at
+  once — a directory survives having everything inside it deleted, so the claim
+  was too weak on a host that had them, and simply wrong on a host that did
+  not: a fresh `$HOME` has no ambient balls store before the run, so the beat
+  reported the product as having damaged a baseline the drive never
+  established. A fixture proves severability against something it can show was
+  there, and `mkdir -p` on an XDG root the next `bl` would create anyway is
+  what makes a clean host supported rather than blamed.
 - **S8 the task-branch knob** (S8-T4) — two agents resolve two balls spaces, an
   amendment moves one agent's branch and nobody else's, and the launch decides
   which space an agent gets: the policy is one key in balls' own config inside

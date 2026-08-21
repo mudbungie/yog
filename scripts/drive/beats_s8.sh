@@ -145,6 +145,46 @@ s8_hatches() {
       "$seen -> ${target:-no shim}"
 }
 
+# --- the ambient SENTINEL (bl-cd5b) -----------------------------------------
+# SEVERABILITY IS A CLAIM ABOUT WHAT SURVIVED, and until this it was asserted as
+# "the ambient directories still exist" — which is not the same claim twice
+# over. It is too weak on a host that has them (a directory survives having
+# everything in it deleted) and simply WRONG on a host that does not: a fresh
+# `$HOME` has no `~/.local/state/balls` before the run, so the beat read its own
+# missing baseline as the product having damaged something, twice, on two clean
+# worlds. `preflight.sh` never named an ambient balls store either, so the host
+# was neither supported nor refused — it was blamed.
+#
+# So the fixture LAYS what it will later prove intact: one small file under each
+# ambient root, with the run's own stamp in it, created before the world is
+# deleted and hashed. `mkdir -p` is what makes a clean host a supported fixture
+# — the roots are yog's and balls' own XDG homes, so creating an empty one is
+# what the next `bl` would do anyway — and the file is removed afterwards, so
+# the drive leaves the operator's tree as it found it.
+#
+# It is also the only form of this proof that is not flaky on a working box: a
+# byte-for-byte manifest of the whole ambient balls store would be racing every
+# other agent on the machine, while a file nothing but this beat knows about
+# cannot be touched by anything but the delete under test.
+AMBIENT_SENTINEL=.yogdrive-severability-sentinel
+# The two roots the nested world is severable FROM (§16.2): yog's own data home
+# and balls' state home, spelled here once.
+ambient_roots() { printf '%s/.local/share/yog\n%s/.local/state/balls\n' "$HOME" "$HOME"; }
+lay_sentinels() {
+  ambient_roots | while read -r root; do
+    mkdir -p "$root" && printf 'yogdrive severability sentinel %s\n' "$1" > "$root/$AMBIENT_SENTINEL"
+  done
+}
+# Every sentinel still there AND still the bytes that were laid. `md5of` names
+# an absent file rather than printing nothing (harness.sh), so a deleted
+# sentinel fails this rather than comparing equal to another absence.
+sentinels_intact() {
+  ambient_roots | while read -r root; do
+    [ "$(md5of "$root/$AMBIENT_SENTINEL")" = "$1" ] || exit 1
+  done
+}
+drop_sentinels() { ambient_roots | while read -r root; do rm -f "$root/$AMBIENT_SENTINEL"; done; }
+
 # --- S8-T1/T2: one nested world, severable ----------------------------------
 # The claim is about paths, so read them: the nested lernie home and the nested
 # balls state both live under `$XDG_DATA_HOME/yog`, the project's balls clone is
@@ -164,16 +204,22 @@ s8_nesting() {
     || fail "S8-T2 nesting: the project's balls clone is nested only" "clone misplaced"
   # The ambient seed must BE there for "never moved" to be a claim about yog
   # rather than about an empty box: absent-then, absent-now compared equal, so
-  # this passed on a host with no ambient world at all (bl-f16e). The
-  # severability beat below already requires the ambient dirs, so demanding the
-  # seed itself is the same host contract, stated where it is spent.
+  # this passed on a host with no ambient world at all (bl-f16e). It is a real
+  # host contract and `preflight.sh` names it — every run verb COPIES this file
+  # into its scratch world, so a host without it cannot drive at all.
   { [ -f "$HOME/.local/share/yog/world/lernie/models.yaml" ] \
     && [ "$(md5of "$HOME/.local/share/yog/world/lernie/models.yaml")" = "$ambient_before" ]; } \
     && pass "S8-T1 nesting: the ambient world's own seed never moved" \
     || fail "S8-T1 nesting: the ambient world's own seed never moved" "ambient seed changed or absent"
+  # Laid, hashed, then the world is deleted under them (bl-cd5b): the claim is
+  # that `rm -rf` the nested world takes the whole world and NOTHING else, so
+  # what it is proved against has to be something that was demonstrably there.
+  stamp="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+  lay_sentinels "$stamp"
+  sentinel_hash=$(md5of "$HOME/.local/share/yog/$AMBIENT_SENTINEL")
   rm -rf "$data/yog"
-  { [ ! -e "$data/yog" ] && [ -d "$HOME/.local/state/balls" ] \
-    && [ -d "$HOME/.local/share/yog" ]; } \
-    && pass "S8-T1 severability: rm -rf the world, ambient intact" \
-    || fail "S8-T1 severability: rm -rf the world, ambient intact" "ambient damaged"
+  { [ ! -e "$data/yog" ] && sentinels_intact "$sentinel_hash"; } \
+    && pass "S8-T1 severability: rm -rf the world, the ambient sentinels intact" \
+    || fail "S8-T1 severability: rm -rf the world, the ambient sentinels intact" "a sentinel moved"
+  drop_sentinels
 }
