@@ -69,12 +69,22 @@ impl Snapshot {
                 .filter(|g| keep(&g.workspace))
                 .cloned()
                 .collect(),
-            // Keyed by workspace NAME rather than path (bl-66fb), so the same
-            // predicate reads it one step shorter.
+            // Keyed by the `cadence.yaml` entry's own key, which is the
+            // workspace **path** — `fleet::arming::armed` returns the entry
+            // names verbatim and `derive::route` publishes them untouched, so
+            // this reads the same `keep` predicate every field above does.
+            //
+            // It once read `allowed.contains(name)` on the belief that the key
+            // was a leaf (bl-8bf6). A path is never a bare name, so the filter
+            // was total: **every real armed entry was dropped from every
+            // scoped snapshot**, and the loop ran autonomously while `/board`
+            // — the loopback window included — could not see the cap, the
+            // fullness, the tick, the lease or the last act governing it. The
+            // fixture below had fabricated leaf keys, so the suite agreed.
             fleet: self
                 .fleet
                 .iter()
-                .filter(|(name, _)| allowed.contains(*name))
+                .filter(|(key, _)| keep(std::path::Path::new(key)))
                 .map(|(k, v)| (k.clone(), v.clone()))
                 .collect(),
             ..self.clone()

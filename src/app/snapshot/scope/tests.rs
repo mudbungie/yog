@@ -32,8 +32,11 @@ fn snap() -> Snapshot {
             conversation: "c-1".to_owned(),
             added: 1,
         });
+        // Keyed as the worker publishes it — the `cadence.yaml` entry's own
+        // key, which is the workspace PATH (bl-8bf6). Keying this by the leaf
+        // is what let a total filter read as a passing test.
         s.fleet.insert(
-            crate::naming::leaf(std::path::Path::new(path)),
+            crate::nav::ws_key(std::path::Path::new(path)),
             crate::fleet::Policy {
                 project: PathBuf::from("/d/proj"),
                 cap: 1,
@@ -64,7 +67,7 @@ fn a_scoped_derivation_holds_only_the_registered_workspaces() {
         [&PathBuf::from(MINE)]
     );
     assert_eq!(scoped.growth.len(), 1);
-    assert_eq!(scoped.fleet.keys().collect::<Vec<_>>(), ["home"]);
+    assert_eq!(scoped.fleet.keys().collect::<Vec<_>>(), [MINE]);
     // The workspace is the whole trust domain (§1.5): world-wide facts stay.
     assert_eq!(scoped.projects, [PathBuf::from("/d/proj")]);
 }
@@ -80,6 +83,53 @@ fn an_unregistered_name_refuses_exactly_as_an_unknown_one_does() {
     assert_eq!(hidden, "unknown workspace \"corp\"");
     assert_eq!(absent.replace("no-such-thing", "corp"), hidden);
     assert!(scoped.ws_path("home").is_ok());
+}
+
+/// **The real arm, end to end** (bl-8bf6): a `cadence.yaml` written the way
+/// `/fleet` writes one, adopted by the worker's own read, narrowed by this
+/// filter, and asked as a board — which is the whole path a wire seat's
+/// `/board` walks and the one no fabricated fixture was covering.
+///
+/// The bug it pins: the entry's key is the workspace **path**, the filter
+/// compared it against leaf **names**, and so every armed loop vanished from
+/// every scoped snapshot. The loop kept acting; every seat went blind to the
+/// policy running it.
+#[test]
+fn a_real_armed_entry_survives_scoping_and_reaches_the_board() {
+    let h = crate::app::tests::harness::Harness::new();
+    let (_c, mut model) = h.model();
+    let ws = h.ws.clone();
+    std::fs::write(
+        h.roots.yog_state.join(crate::app::cadence::CADENCE_YAML),
+        format!(
+            "fleet:\n  {}:\n    project: /dev/yog\n    cap: 2\n",
+            ws.display()
+        ),
+    )
+    .expect("cadence");
+    model
+        .dirty_handle()
+        .mark_all([(h.roots.yog_state.clone(), crate::watch::Mark::Watch)]);
+    assert!(model.tick(), "an arming publishes");
+    let board = |snap: &Snapshot| crate::board::build(snap, &model.ui, model.now_unix()).fleet;
+    assert_eq!(board(&model.snap).len(), 1, "armed, unscoped");
+
+    let name = crate::naming::leaf(&ws);
+    let mine = model.snap.scoped(&allowed(&[name.as_str()]));
+    let facts = board(&mine);
+    assert_eq!(
+        facts.len(),
+        1,
+        "a registered seat sees the loop over its own workspace"
+    );
+    assert_eq!(facts[0].cap, 2);
+    assert_eq!(facts[0].workspace, ws);
+
+    let theirs = model.snap.scoped(&allowed(&["somebody-else"]));
+    assert!(
+        board(&theirs).is_empty(),
+        "an unregistered workspace's loop stays absent, which is the other half"
+    );
 }
 
 /// A certificate the operator has not seated sees a world with no workspace in
