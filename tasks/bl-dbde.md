@@ -1,7 +1,7 @@
 +++
 title = "the remote teleoperator cannot set priority, blockers, hierarchy or tags—the facts its fleet schedules"
 created = 1787206351
-updated = 1787276328
+updated = 1787276602
 claimant = "Zircons-Dbde"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -49,3 +49,11 @@ Every shape touches all 27 `Action::Create`/`Action::Update` sites regardless, s
 Four facts cover the brief and the rest is derivable sugar, which is worth stating because it keeps the surface small: priority, tag, parent, needs. `--blocks OP|ID:OP` and `--subtask-of ID` are both expressible as a second op — `--subtask-of E` is `--parent E` plus `bl update E --needs <new>:close` — so neither needs a boundary spelling. Clearing forms are no-ops at create (a new ball's fields start empty), which is the general path with an empty input rather than a create/update split.
 
 Not touched: no code or doc edited under this ball.
+
+---
+
+RULED and implemented: shape 3 (payloads into structs), extended with the field list of shape 2. Shape 1 was measured at ~95 construction/pattern sites against ~27 for the other two, so it is not the cheapest; shape 2 alone still needed a separate structural act because `action.rs` grows under it. Shape 3 makes room INSTEAD of needing it, and it dissolves a real duplication on the way: what a `bl update` carries was written twice — once as roster variant fields, once as a struct in the verbs file — bridged by an `Update::of` that re-cloned them. One vocabulary now, so a fact balls learns is added in one place.
+
+Landed: `verbs::edit` (new file, DESIGN §12 row) owns `Create`, `Update`, `Field` and the argv fold; the roster carries the payloads whole; `line/balls.rs` (new file, §12 row) holds the family's line grammar on the seam every sibling family already draws. Four facts, eight flags, both directions: priority, tag, parent, needs, each with its clearing form. A clearing form at create is a no-op rather than a refusal — a new ball's fields start empty, which is the general path at zero input. yog judges only that a priority is a number; balls owns the rest and its refusal rides back (§8.2). `--subtask-of`/`--blocks` stay underivable-by-design: both are a second gesture.
+
+Read/write parity, all three serializations: Action variants, JSON envelope (an ordered `fields` array, omitted when empty, absence reading as empty so an older seat's envelope still decodes), and the line with round-trip parity tests. Help carries the usage and the detail. Drive: `beats_s13w.sh` fires one `/create` with all four facts over the wire against a real store, reads the board back for the priority, the parent and balls' own `blocked` verdict on a live edge, uses `bl show` as the witness for the tag no reply carries, then clears all three and watches the row go ready.
