@@ -6,6 +6,7 @@
 //! failure view-models) over the same fixture — split per §12's line budget.
 
 use super::*;
+use crate::actions::verbs::edit::{Create as BallCreate, Update as BallUpdate};
 use crate::cli_outbound::Cli;
 use crate::opslog;
 use crate::test_support::{SpawnGuard, spawn_guard};
@@ -224,7 +225,18 @@ fn every_verb_stamps_the_origin_of_its_own_subject() {
         "cobalt",
     )
     .unwrap();
-    create(&w.cli, w.state.path(), "TS", &proj, "t", "amber", None).unwrap();
+    create(
+        &w.cli,
+        w.state.path(),
+        "TS",
+        &proj,
+        "amber",
+        &BallCreate {
+            title: "t".into(),
+            ..BallCreate::default()
+        },
+    )
+    .unwrap();
     update(
         &w.cli,
         w.state.path(),
@@ -232,7 +244,7 @@ fn every_verb_stamps_the_origin_of_its_own_subject() {
         &proj,
         "bl-7",
         "amber",
-        &Update::default(),
+        &BallUpdate::default(),
     )
     .unwrap();
     let ops = opslog::tail(w.state.path(), 16);

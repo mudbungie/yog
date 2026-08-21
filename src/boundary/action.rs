@@ -3,6 +3,7 @@
 //! Actions mutate the world and are the §4.2 trail's rows; queries populate.
 //! Two rosters, and only one of them can ever be wrong about the world.
 
+use crate::actions::verbs::edit;
 use crate::start::{Payload, Prepared};
 
 use super::config;
@@ -95,21 +96,21 @@ pub enum Action {
         from: String,
         to: String,
     },
-    /// `bl create <title> --as <name> [--body B]` (§8.2).
+    /// `bl create <title> --as <name> [fields…]` (§8.2): the whole payload is
+    /// [`edit::Create`], which owns the argv fold that spends it (bl-dbde).
     Create {
         project: String,
-        title: String,
         name: String,
-        body: Option<String>,
+        fields: edit::Create,
     },
-    /// `bl update <id> --as <name> [--title T][--body B][-m N]` (§8.2).
+    /// `bl update <id> --as <name> [fields…]` (§8.2), payload [`edit::Update`].
+    /// One vocabulary, so a fact balls learns is added in one place instead of
+    /// in the roster, the codec's field list and a second struct beside them.
     Update {
         project: String,
         id: String,
         name: String,
-        title: Option<String>,
-        body: Option<String>,
-        note: Option<String>,
+        fields: edit::Update,
     },
     /// The §8.1 start flow's mutating half: seed → ensure-workspace → the ball
     /// rung's `bl` steps, returning the composer's [`Prepared`] — the ▶ Start /

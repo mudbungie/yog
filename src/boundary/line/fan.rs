@@ -2,7 +2,7 @@
 //! [`super::fork`]'s, on the same seam: a family whose gestures read an
 //! obligation off the seat rather than a bare tail.
 
-use super::{Context, args, verbs};
+use super::{Context, args};
 use crate::boundary::{Action, Gesture};
 use crate::fan::Verb;
 
@@ -81,7 +81,7 @@ fn deliver(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
 fn obligation(ctx: &Context, verb: &str) -> Result<crate::fan::Obligation, String> {
     Ok(crate::fan::Obligation {
         project: args::project(ctx, verb)?,
-        ball: Some(verbs::id("", ctx, verb)?),
+        ball: Some(super::balls::id("", ctx, verb)?),
     })
 }
 

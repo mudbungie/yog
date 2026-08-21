@@ -12,6 +12,7 @@ use crate::fan::Verb;
 use crate::start::{BallSpec, Payload};
 use std::path::PathBuf;
 
+mod balls;
 mod inspector;
 mod policy;
 mod tools;
@@ -96,59 +97,6 @@ fn every_lernie_action_round_trips() {
         workspace: "ws".to_owned(),
         agent: "c-1".to_owned(),
     }));
-}
-
-#[test]
-fn every_ball_action_round_trips() {
-    let (project, id, name) = ("proj".to_owned(), "bl-1".to_owned(), "alba".to_owned());
-    rt(Gesture::Act(Action::Close {
-        project: project.clone(),
-        id: id.clone(),
-        name: name.clone(),
-    }));
-    rt(Gesture::Act(Action::Assign {
-        project: project.clone(),
-        id: id.clone(),
-        name: name.clone(),
-    }));
-    rt(Gesture::Act(Action::Release {
-        project: project.clone(),
-        id: id.clone(),
-        name: name.clone(),
-    }));
-    rt(Gesture::Act(Action::Move {
-        project: project.clone(),
-        id: id.clone(),
-        from: name.clone(),
-        to: "koi".to_owned(),
-    }));
-    for body in [None, Some("the body".to_owned())] {
-        rt(Gesture::Act(Action::Create {
-            project: project.clone(),
-            title: "a new ball".to_owned(),
-            name: name.clone(),
-            body,
-        }));
-    }
-    for fields in [
-        (Some("t".to_owned()), None, None),
-        (None, Some("b".to_owned()), None),
-        (None, None, Some("a note".to_owned())),
-        (
-            Some("t".to_owned()),
-            Some("b".to_owned()),
-            Some("n".to_owned()),
-        ),
-    ] {
-        rt(Gesture::Act(Action::Update {
-            project: project.clone(),
-            id: id.clone(),
-            name: name.clone(),
-            title: fields.0,
-            body: fields.1,
-            note: fields.2,
-        }));
-    }
 }
 
 #[test]

@@ -8,7 +8,7 @@ use crate::boundary::line::{Context, parse};
 use crate::start::BallSpec;
 
 /// Assert `line`, read at `ctx`, refuses with a reason containing `needle`.
-fn refuses(line: &str, ctx: &Context, needle: &str) {
+pub(super) fn refuses(line: &str, ctx: &Context, needle: &str) {
     match parse(line, ctx) {
         Ok(gesture) => panic!("{line:?} should refuse, got {gesture:?}"),
         Err(reason) => assert!(

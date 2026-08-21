@@ -100,64 +100,6 @@ pub(super) fn children(tail: &str) -> Result<bool, String> {
     }
 }
 
-/// The ball an id-taking verb acts on: the typed word, else the focused ball.
-pub(super) fn id(tail: &str, ctx: &Context, verb: &str) -> Result<String, String> {
-    args::ball_id(args::optional_word(tail, verb)?, ctx, verb)
-}
-
-/// `/move [id] <to>` — one word is the destination for the focused ball, two
-/// are the ball and its destination. `from` is the seat's own §3.2 stamp.
-pub(super) fn moved(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
-    let (ball, to) = match tail.split_whitespace().collect::<Vec<_>>().as_slice() {
-        [to] => (args::ball_id(None, ctx, verb)?, (*to).to_owned()),
-        [id, to] => ((*id).to_owned(), (*to).to_owned()),
-        _ => return Err(format!("/{verb}: usage: /move [id] <to>")),
-    };
-    Ok(act(Action::Move {
-        project: args::project(ctx, verb)?,
-        id: ball,
-        from: args::name(ctx, verb)?,
-        to,
-    }))
-}
-
-/// `/create <title…> [--body <text…>]`.
-pub(super) fn create(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
-    let (title, flags) = args::split_flags(tail);
-    args::only(&flags, &["body"], verb)?;
-    Ok(act(Action::Create {
-        project: args::project(ctx, verb)?,
-        title: args::required(&title, verb, "a title")?,
-        name: args::name(ctx, verb)?,
-        body: args::flag(&flags, "body", verb)?,
-    }))
-}
-
-/// `/update [id] [--title T] [--body B] [--note N]` — at least one field, or
-/// the line asked for nothing and the refusal says so.
-pub(super) fn update(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
-    let (positional, flags) = args::split_flags(tail);
-    args::only(&flags, &["title", "body", "note"], verb)?;
-    let (title, body, note) = (
-        args::flag(&flags, "title", verb)?,
-        args::flag(&flags, "body", verb)?,
-        args::flag(&flags, "note", verb)?,
-    );
-    if title.is_none() && body.is_none() && note.is_none() {
-        return Err(format!(
-            "/{verb}: nothing to change; usage: /update [id] [--title T] [--body B] [--note N]"
-        ));
-    }
-    Ok(act(Action::Update {
-        project: args::project(ctx, verb)?,
-        id: id(&positional, ctx, verb)?,
-        name: args::name(ctx, verb)?,
-        title,
-        body,
-        note,
-    }))
-}
-
 /// The §3.4 payload rung, said outright: nothing is the bare rung, `dir <path>`
 /// the path rung, `ball` the focused ball (or `--new <title…>` for one this
 /// line mints). The rung is never inferred from what happens to be selected —

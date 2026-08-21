@@ -4,12 +4,14 @@
 //! sibling file.
 
 use super::*;
+use crate::actions::verbs::edit;
 use crate::boundary::{Action, Gesture, Query, help};
 use crate::opslog::Origin;
 use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Prepared};
 use std::path::PathBuf;
 
+mod balls;
 mod parity;
 mod refusals;
 
@@ -157,9 +159,10 @@ fn a_ball_verb_defaults_to_the_focused_ball() {
             project: "proj".to_owned(),
             id: "bl-1".to_owned(),
             name: "alba".to_owned(),
-            title: None,
-            body: None,
-            note: Some("ping".to_owned()),
+            fields: edit::Update {
+                note: Some("ping".to_owned()),
+                ..edit::Update::default()
+            },
         }))
     );
 }

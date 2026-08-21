@@ -119,19 +119,26 @@ pub const ACTIONS: &[HelpRow] = &[
     },
     HelpRow {
         verb: "create",
-        usage: "/create <title…> [--body <text…>]",
+        usage: crate::boundary::line::CREATE_USAGE,
         summary: "create a ball in the focused project",
         detail: "Creates a ball in the seat's project (`bl create`) and prints nothing but its \
                  id in the reply. The title is the words before any flag; `--body` carries the \
-                 rest of the description. Both are whitespace-normalized — a line is a line.",
+                 rest of the description. Both are whitespace-normalized — a line is a line. \
+                 The four scheduling facts the board orders on ride here too: `--priority` (a \
+                 number, higher first), `--tag` (repeatable), `--parent` and `--needs` (a \
+                 blocker `ID[:OP]`, `OP` defaulting to claim). A subtask is `--parent E` plus \
+                 `/update E --needs <new>:close`; balls judges them and its refusal rides back.",
     },
     HelpRow {
         verb: "update",
-        usage: "/update [id] [--title T] [--body B] [--note N]",
-        summary: "amend a ball's title or body, or append a journal note",
+        usage: crate::boundary::line::UPDATE_USAGE,
+        summary: "amend a ball's title, body, schedule, or append a journal note",
         detail: "Amends a ball (`bl update`). At least one field is required, or the line asked \
                  for nothing; give any combination. `--note` appends to the ball's journal \
-                 rather than replacing anything. With no id, the focused ball.",
+                 rather than replacing anything. The scheduling facts each have a clearing \
+                 form beside them — `--no-priority`, `--no-parent`, and `--no-tag T` / \
+                 `--no-needs ID` which drop one named entry. Repeat `--tag` to add several. \
+                 With no id, the focused ball.",
     },
     HelpRow {
         verb: "prepare",

@@ -44,20 +44,18 @@ fn spell_action(action: &Action) -> String {
         Action::Assign { id, .. } => format!("/assign {id}"),
         Action::Release { id, .. } => format!("/release {id}"),
         Action::Move { id, to, .. } => format!("/move {id} {to}"),
-        Action::Create { title, body, .. } => {
-            format!("/create {title}{}", flag("body", body.as_ref()))
-        }
-        Action::Update {
-            id,
-            title,
-            body,
-            note,
-            ..
-        } => format!(
-            "/update {id}{}{}{}",
-            flag("title", title.as_ref()),
-            flag("body", body.as_ref()),
-            flag("note", note.as_ref())
+        Action::Create { fields, .. } => format!(
+            "/create {}{}{}",
+            fields.title,
+            flag("body", fields.body.as_ref()),
+            super::balls::spell_fields(&fields.fields)
+        ),
+        Action::Update { id, fields, .. } => format!(
+            "/update {id}{}{}{}{}",
+            flag("title", fields.title.as_ref()),
+            flag("body", fields.body.as_ref()),
+            flag("note", fields.note.as_ref()),
+            super::balls::spell_fields(&fields.fields)
         ),
         Action::Prepare { payload, .. } => spell_payload(payload),
         Action::Prompt { goal, .. } => format!("/prompt {goal}"),

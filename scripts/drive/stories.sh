@@ -265,6 +265,7 @@ run() {
 . "$here/beats_s6.sh"
 . "$here/beats_s3res.sh"
 . "$here/beats_headless.sh"
+. "$here/beats_s13w.sh"
 . "$here/beats_s19.sh"
 . "$here/beats_s10.sh"
 . "$here/beats_s18.sh"

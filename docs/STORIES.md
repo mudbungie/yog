@@ -1841,6 +1841,16 @@ waiting on a gate.
    `{"op":"board"}`, and the window's own variant, all one `boundary::answer`.
    Every action a row offers was already a boundary variant, so the board adds
    no gesture — and there is no GUI-only surface.
+8. **The facts it orders on are writable through the same boundary** (bl-dbde).
+   Priority, tags, the parent pointer and this ball's own blocker edges are
+   what put a row in a column and what sorts the ready one, and until this rung
+   `create`/`update` carried a title and a body and nothing else — so a seat
+   with no shell could arm a fleet (S18) and had no way to schedule the queue it
+   drained. Four facts, each with its clearing form, in balls' own vocabulary
+   and validated by balls: yog judges only that a priority is a number, and
+   every other refusal — a cycle through claim/close above all — rides back in
+   the substrate's own words. `--subtask-of` and `--blocks` earn no spelling of
+   their own, both being a second gesture over the four.
 
 **What this rung deferred, and where it landed:** V4.2's armed-loop facts —
 cap, count, tick, spawn/reap rows with comparison-shaped reasons. There was no
@@ -1887,6 +1897,15 @@ Tests:
 - **S13-T8 the-walk-is-the-workers**: a bill carries its conv id, selection
   after the walk equals the scoped walk itself, and a repeated root does not
   double-bill.
+- **S13-T9 the-schedule-is-writable**: the four scheduling facts round-trip
+  through the codec and through `line::spell`/`parse` — every one of the eight
+  flags, list order preserved — fold to balls' own argv in both directions, and
+  refuse by name when a value is missing, a clearing flag is given one, or a
+  priority is not a number. Its real-substrate half is a seatless drive
+  (`beats_s13w.sh`): one `/create` states all four against a real store, the
+  board reads back the priority, the parent and balls' own `blocked` verdict on
+  a live edge, `bl show` witnesses the tag no reply carries, and the clearing
+  half puts the row back in ready.
 
 ## S14 — Teleoperator: yog without the window (VISION V5)
 

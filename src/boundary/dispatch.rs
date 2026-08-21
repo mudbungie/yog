@@ -100,28 +100,12 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Action::Move { id, from, to, .. } => {
             outcome(verbs::reassign(bl, root, ts, project, id, from, to))
         }
-        Action::Create {
-            title, name, body, ..
-        } => outcome(verbs::create(
-            bl,
-            root,
-            ts,
-            project,
-            title,
-            name,
-            body.as_deref(),
-        )),
-        Action::Update {
-            id,
-            name,
-            title,
-            body,
-            note,
-            ..
-        } => {
-            let fields = verbs::Update::of(title, body, note);
-            outcome(verbs::update(bl, root, ts, project, id, name, &fields))
+        Action::Create { name, fields, .. } => {
+            outcome(verbs::create(bl, root, ts, project, name, fields))
         }
+        Action::Update {
+            id, name, fields, ..
+        } => outcome(verbs::update(bl, root, ts, project, id, name, fields)),
         Action::Prepare { payload, .. } => staged(deps, ts, ws, project, payload),
         Action::Prompt {
             prepared,

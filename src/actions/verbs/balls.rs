@@ -20,6 +20,8 @@ use crate::actions::verbs::Outcome;
 use crate::cli_outbound::Cli;
 use crate::opslog::Origin;
 
+pub mod edit;
+
 // bl subcommands (pinned to `bl <verb> --skill`, §8.2).
 const CLOSE: &str = "close";
 const CLAIM: &str = "claim";
@@ -115,51 +117,23 @@ pub fn reassign(
     assign(bl, state_root, ts, project, id, to)
 }
 
-/// `bl create <title> --as <name> [--body B]` in the project (§8.2). The new id
-/// is [`Outcome::stdout`] (bl prints it there for `id=$(bl create …)`); `name` is
-/// the authoring workspace (the start flow passes the resolved or focused name).
+/// `bl create <title> --as <name> [--body B] [fields…]` in the project (§8.2).
+/// The new id is [`Outcome::stdout`] (bl prints it there for `id=$(bl create
+/// …)`); `name` is the authoring workspace (the start flow passes the resolved
+/// or focused name). The payload spells its own argv ([`edit::Create`]).
 pub fn create(
     bl: &Cli,
     state_root: &Path,
     ts: &str,
     project: &Path,
-    title: &str,
     name: &str,
-    body: Option<&str>,
+    fields: &edit::Create,
 ) -> io::Result<Outcome> {
-    let mut args = vec![CREATE, title, AS, name];
-    if let Some(b) = body {
-        args.push(BODY);
-        args.push(b);
-    }
-    run_logged(bl, state_root, ts, project, &args, Origin::Balls)
+    spend(bl, state_root, ts, project, CREATE, fields.argv(name))
 }
 
-/// The field edits `bl update` carries from the ball editor (§11 ball detail):
-/// a retitle, a body rewrite (the living document), and/or a journal note. All
-/// optional — an all-`None` update still restamps `updated` (bl's note commit).
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct Update {
-    pub title: Option<String>,
-    pub body: Option<String>,
-    pub note: Option<String>,
-}
-
-impl Update {
-    /// The three optional edits, owned. A constructor rather than a literal at
-    /// the call site because the boundary's one caller is inside a match arm,
-    /// where a five-line literal costs the chokepoint its line budget (§12).
-    pub fn of(title: &Option<String>, body: &Option<String>, note: &Option<String>) -> Self {
-        Self {
-            title: title.clone(),
-            body: body.clone(),
-            note: note.clone(),
-        }
-    }
-}
-
-/// `bl update <id> --as <name> [--title T] [--body B] [-m NOTE]` in the project
-/// (§8.2), carrying only the fields the operator changed.
+/// `bl update <id> --as <name> [--title T] [--body B] [-m NOTE] [fields…]` in
+/// the project (§8.2), carrying only what the operator changed.
 pub fn update(
     bl: &Cli,
     state_root: &Path,
@@ -167,20 +141,24 @@ pub fn update(
     project: &Path,
     id: &str,
     name: &str,
-    fields: &Update,
+    fields: &edit::Update,
 ) -> io::Result<Outcome> {
-    let mut args = vec![UPDATE, id, AS, name];
-    if let Some(t) = &fields.title {
-        args.push(TITLE);
-        args.push(t);
-    }
-    if let Some(b) = &fields.body {
-        args.push(BODY);
-        args.push(b);
-    }
-    if let Some(n) = &fields.note {
-        args.push(NOTE);
-        args.push(n);
-    }
+    let mut argv = vec![id.to_owned()];
+    argv.extend(fields.argv(name));
+    spend(bl, state_root, ts, project, UPDATE, argv)
+}
+
+/// Run `bl <verb> <argv…>`, the one place an owned argv is narrowed to the
+/// borrowed slice [`run_logged`] takes.
+fn spend(
+    bl: &Cli,
+    state_root: &Path,
+    ts: &str,
+    project: &Path,
+    verb: &str,
+    argv: Vec<String>,
+) -> io::Result<Outcome> {
+    let mut args = vec![verb];
+    args.extend(argv.iter().map(String::as_str));
     run_logged(bl, state_root, ts, project, &args, Origin::Balls)
 }

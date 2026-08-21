@@ -12,7 +12,8 @@
 //! spellings, one gesture — `/help`, `/help <verb>`, `<verb> --help|-h`, and a
 //! bare `/`, which is the question with nothing named.
 
-use super::verbs::{self, children, create, id, moved, payload, update};
+use super::balls::{create, id, moved, update};
+use super::verbs::{self, children, payload};
 use super::{Context, args, config, queries};
 use crate::boundary::{Action, Gesture, Query, help};
 

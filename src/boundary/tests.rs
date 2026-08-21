@@ -128,17 +128,14 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
         },
         Action::Create {
             project: p.clone(),
-            title: "t".into(),
             name: "n".into(),
-            body: None,
+            fields: crate::actions::verbs::edit::Create::default(),
         },
         Action::Update {
             project: p.clone(),
             id: "b-1".into(),
             name: "n".into(),
-            title: None,
-            body: None,
-            note: None,
+            fields: crate::actions::verbs::edit::Update::default(),
         },
     ];
     for action in bl_family {

@@ -10,6 +10,7 @@ use super::{deps, snapshot_of, ui};
 use crate::support::Recorder;
 use std::path::Path;
 use tempfile::tempdir;
+use yog::actions::verbs::edit;
 use yog::boundary::Action;
 use yog::boundary::dispatch::dispatch;
 use yog::boundary::reply::Reply;
@@ -42,17 +43,22 @@ fn bl_actions(proj: &Path) -> [Action; 6] {
         },
         Action::Create {
             project: yog::naming::leaf(proj),
-            title: "the title".into(),
             name: "alba".into(),
-            body: Some("body".into()),
+            fields: edit::Create {
+                title: "the title".into(),
+                body: Some("body".into()),
+                ..edit::Create::default()
+            },
         },
         Action::Update {
             project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
-            title: Some("t2".into()),
-            body: None,
-            note: Some("n".into()),
+            fields: edit::Update {
+                title: Some("t2".into()),
+                note: Some("n".into()),
+                ..edit::Update::default()
+            },
         },
     ]
 }

@@ -212,6 +212,10 @@ print(json.loads(line).get('stdout','').strip())")
   # surfaces have real bytes to read and nothing was spent making them.
   s18_admiral "$data" "$ws" "$proj_name" "$claim"
   s10_historian "$data" "$ws" "$FLEET_AGENT" "$FLEET_BALL"
+  # S13's write half goes after the armed rung, for the reason the armed rung
+  # goes after everything else: it moves the board, and a loop still claiming
+  # would race the row it files. `/disband` above has put the world back.
+  s13_schedule "$data" "$ready" "$proj_name" "$ws"
 
   # S14-T5 — an answer aimed at nothing refuses. A refusal beat spells BOTH
   # arms: as `gesture … || pass` it could only ever emit a PASS row, and the one

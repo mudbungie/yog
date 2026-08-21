@@ -38,6 +38,7 @@
 use crate::start::{BallSpec, Prepared};
 
 mod args;
+mod balls;
 mod config;
 mod fan;
 mod fork;
@@ -51,6 +52,7 @@ mod tests;
 mod tools;
 mod verbs;
 
+pub use balls::{CREATE_USAGE, UPDATE_USAGE};
 pub use config::USAGE as CONFIG_USAGE;
 pub use parse::parse;
 pub use spell::spell;

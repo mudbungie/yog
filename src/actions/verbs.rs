@@ -60,7 +60,7 @@ use crate::opslog::Origin;
 mod balls;
 mod bound;
 mod dispatch;
-pub use balls::{Update, assign, close, create, reassign, unclaim, update};
+pub use balls::{assign, close, create, edit, reassign, unclaim, update};
 pub use bound::Bound;
 pub use dispatch::{Outcome, log_step_done, log_step_failure, run_logged, run_logged_cwdless};
 // `collect` stays crate-internal — the no-marks knob's `bl conf` seam reuses it.

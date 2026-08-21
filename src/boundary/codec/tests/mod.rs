@@ -4,12 +4,14 @@
 //! [`refusals`], split out at §12's cap.
 
 use super::*;
+use crate::actions::verbs::edit;
 use crate::monitor::Verb;
 use crate::opslog::Origin;
 use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Payload, Prepared};
 use std::path::PathBuf;
 
+mod balls;
 mod control;
 mod fan;
 mod fleet;
@@ -160,34 +162,33 @@ fn every_ball_action_variant_round_trips() {
         from: "alba".into(),
         to: "koi".into(),
     }));
-    rt(Gesture::Act(Action::Create {
-        project: "proj".into(),
-        title: "a title".into(),
-        name: "alba".into(),
-        body: Some("the body".into()),
-    }));
-    rt(Gesture::Act(Action::Create {
-        project: "proj".into(),
-        title: "a title".into(),
-        name: "alba".into(),
-        body: None,
-    }));
-    rt(Gesture::Act(Action::Update {
-        project: "proj".into(),
-        id: "bl-1".into(),
-        name: "alba".into(),
-        title: Some("t".into()),
-        body: Some(String::new()),
-        note: Some("n".into()),
-    }));
-    rt(Gesture::Act(Action::Update {
-        project: "proj".into(),
-        id: "bl-1".into(),
-        name: "alba".into(),
-        title: None,
-        body: None,
-        note: None,
-    }));
+    for body in [Some("the body".to_owned()), None] {
+        rt(Gesture::Act(Action::Create {
+            project: "proj".into(),
+            name: "alba".into(),
+            fields: edit::Create {
+                title: "a title".into(),
+                body,
+                ..edit::Create::default()
+            },
+        }));
+    }
+    for fields in [
+        edit::Update {
+            title: Some("t".into()),
+            body: Some(String::new()),
+            note: Some("n".into()),
+            ..edit::Update::default()
+        },
+        edit::Update::default(),
+    ] {
+        rt(Gesture::Act(Action::Update {
+            project: "proj".into(),
+            id: "bl-1".into(),
+            name: "alba".into(),
+            fields,
+        }));
+    }
 }
 
 #[test]

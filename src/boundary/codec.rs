@@ -82,18 +82,15 @@ fn encode_action(action: &Action) -> Value {
         } => balls::encode_move(project, id, from, to),
         Action::Create {
             project,
-            title,
             name,
-            body,
-        } => balls::create(project, title, name, body.as_ref()),
+            fields,
+        } => balls::create(project, name, fields),
         Action::Update {
             project,
             id,
             name,
-            title,
-            body,
-            note,
-        } => balls::update(project, id, name, [title, body, note]),
+            fields,
+        } => balls::update(project, id, name, fields),
         // The §8.1 start family's two, beside the `Prepared` body they share.
         Action::Prepare { .. } | Action::Prompt { .. } => encode_start(action),
         // The §4.10 fan's three, each spelled in its family file (bl-c2bd).

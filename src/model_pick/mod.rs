@@ -193,8 +193,9 @@ pub struct Pick {
 
 impl Pick {
     /// One choice, owned. A constructor rather than a literal at the call site
-    /// for the same reason [`crate::actions::verbs::Update::of`] is one: the
-    /// boundary's caller is a match arm with a line budget (§12).
+    /// because the boundary's caller is a match arm with a line budget (§12) —
+    /// the pressure [`edit::Create`](crate::actions::verbs::edit::Create)
+    /// answers by carrying its family's whole payload instead (bl-dbde).
     pub fn of(role: &str, provider: &str, model: &str) -> Self {
         Self {
             role: role.to_owned(),
