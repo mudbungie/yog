@@ -1,7 +1,8 @@
 +++
 title = "fresh HOME passes drive preflight, then S8 falsely reports absent ambient balls as damaged"
 created = 1787206335
-updated = 1787206335
+updated = 1787276127
+claimant = "Zircons-Drive"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "drive", "testing"]
