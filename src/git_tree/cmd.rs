@@ -42,22 +42,12 @@ pub(super) fn git_optional(repo: &Path, args: &[&str]) -> Result<Option<Vec<u8>>
     Ok(output.status.success().then_some(output.stdout))
 }
 
-/// Fork + exec `git`, capturing stdout/stderr. In production this is a plain
-/// `Command::output`; under `cargo test` it routes through the binary-wide
-/// `SPAWN_LOCK` (via `crate::test_support::spawn_locked`) so this `git` fork never
-/// lands while a recorder-script test holds a write fd it is about to exec
-/// (ETXTBSY — see `crate::test_support`). One fork discipline for every site.
-#[cfg(not(test))]
+/// Fork + exec `git`, capturing stdout/stderr — the crate's one fork
+/// (`crate::git_env::output`), which under `cargo test` takes the binary-wide
+/// spawn lock so this `git` never forks while a recorder-script test holds a
+/// write fd it is about to exec (ETXTBSY — see `crate::git_env`).
 fn spawn_output(mut cmd: Command) -> std::io::Result<std::process::Output> {
-    cmd.output()
-}
-
-#[cfg(test)]
-fn spawn_output(mut cmd: Command) -> std::io::Result<std::process::Output> {
-    cmd.stdin(std::process::Stdio::null())
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped());
-    crate::test_support::spawn_locked(&mut cmd)?.wait_with_output()
+    crate::git_env::output(&mut cmd)
 }
 
 /// Raw `git log --format='%H %ct%x00%s'` row, parsed. The trunk is

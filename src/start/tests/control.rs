@@ -8,7 +8,6 @@ use crate::binding::workspace_path;
 use crate::cli_outbound::Cli;
 use crate::opslog::{Origin, SYNTHETIC_EXIT, YOG_STEP};
 use crate::start::{Deps, StartError, execute_ensure_workspace};
-use crate::test_support::spawn_guard;
 use crate::world::{Layout, layout_under};
 
 /// lernie 0.0.8's shipped worker manifest, reduced: it composes no
@@ -37,7 +36,6 @@ fn deps(w: &World, lernie: &Cli) -> Deps {
 /// adjudicates must not be handed back as ready.
 #[test]
 fn ensure_aborts_when_the_capability_control_cannot_be_authored() {
-    let _g = spawn_guard();
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
     // An existing workspace whose committed workflow carries no control block.
@@ -59,7 +57,6 @@ fn ensure_aborts_when_the_capability_control_cannot_be_authored() {
 /// read once out of git and drives nothing, so a resume start stays spawnless.
 #[test]
 fn ensure_leaves_an_already_controlled_workspace_alone() {
-    let _g = spawn_guard();
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
     let shim = crate::world::tools::control_path(&layout(&w).tools);
@@ -79,7 +76,6 @@ fn ensure_leaves_an_already_controlled_workspace_alone() {
 /// checkout, one commit, one ops row, both files staged whole.
 #[test]
 fn ensure_converges_the_control_and_the_instruction_glob_in_one_drive() {
-    let _g = spawn_guard();
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
     crate::test_support::workspace::seed_workspace_config(
@@ -113,7 +109,6 @@ fn ensure_converges_the_control_and_the_instruction_glob_in_one_drive() {
 /// and spawns nothing — the steady state of every start after the first.
 #[test]
 fn ensure_leaves_an_already_converged_workspace_alone() {
-    let _g = spawn_guard();
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
     let shim = crate::world::tools::control_path(&layout(&w).tools);

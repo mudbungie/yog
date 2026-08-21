@@ -59,13 +59,13 @@ pub fn parse(blob: &str) -> Option<Held> {
 /// equally when git will not run or the blob is not the shape lernie writes.
 pub fn read(workspace: &Path, agent_id: &str) -> Option<Held> {
     let repo = workspace.join("repo.git");
-    let out = crate::git_env::git()
-        .arg("--git-dir")
-        .arg(&repo)
-        .args(["cat-file", "blob", &format!("{HELD_PREFIX}{agent_id}")])
-        .output()
-        .ok()
-        .filter(|out| out.status.success())?;
+    let out = crate::git_env::output(crate::git_env::git().arg("--git-dir").arg(&repo).args([
+        "cat-file",
+        "blob",
+        &format!("{HELD_PREFIX}{agent_id}"),
+    ]))
+    .ok()
+    .filter(|out| out.status.success())?;
     parse(&String::from_utf8_lossy(&out.stdout))
 }
 

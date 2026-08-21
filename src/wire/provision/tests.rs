@@ -3,7 +3,6 @@
 
 use super::openssl::{eku, run, san, tool};
 use super::*;
-use crate::test_support::spawn_guard;
 use crate::wire::material::{self, Material};
 use tempfile::TempDir;
 
@@ -25,7 +24,6 @@ fn provisioned(dir: &Path) -> Vec<Material> {
 /// seat, the window — is provisioned by it.
 #[test]
 fn an_unprovisioned_box_founds_its_own_loopback_trust_root() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let dir = tmp.path().join("wire");
     ensure(&dir).expect("mint");
@@ -53,7 +51,6 @@ fn an_unprovisioned_box_founds_its_own_loopback_trust_root() {
 /// nothing, so the certificates a running seat holds keep verifying.
 #[test]
 fn a_second_ensure_mints_nothing() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     ensure(tmp.path()).expect("mint");
     let before = std::fs::read(tmp.path().join(ANCHORS)).expect("ca");
@@ -70,7 +67,6 @@ fn a_second_ensure_mints_nothing() {
 /// with one that verifies nothing the operator issued.
 #[test]
 fn a_box_with_an_anchor_and_no_ca_key_is_left_alone() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let dir = tmp.path().join("wire");
     std::fs::create_dir_all(&dir).expect("dir");
@@ -97,7 +93,6 @@ fn a_box_with_an_anchor_and_no_ca_key_is_left_alone() {
 /// window can always reach its own engine.
 #[test]
 fn an_existing_address_is_kept_and_the_server_leaf_names_it() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     std::fs::write(tmp.path().join(ADDRESS), "engine.example.com:7737\n").expect("address");
     ensure(tmp.path()).expect("mint");
@@ -115,7 +110,6 @@ fn an_existing_address_is_kept_and_the_server_leaf_names_it() {
 /// implicit: every certificate already issued stops verifying.
 #[test]
 fn a_rotation_replaces_the_trust_root() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     mint(tmp.path(), "127.0.0.1:0", false).expect("mint");
     let before = std::fs::read(tmp.path().join(ANCHORS)).expect("ca");
@@ -138,7 +132,6 @@ fn a_rotation_replaces_the_trust_root() {
 /// a truncated key is re-minted rather than left to fail a handshake.
 #[test]
 fn half_a_leaf_is_re_minted() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     ensure(tmp.path()).expect("mint");
     assert!(leaf_present(tmp.path(), Role::Window));
@@ -193,7 +186,6 @@ fn a_server_leaf_always_names_loopback_and_never_twice() {
 /// know about them would leave them behind.
 #[test]
 fn the_artifact_list_is_the_whole_of_what_is_written() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     ensure(tmp.path()).expect("mint");
     for name in artifacts() {
@@ -215,7 +207,6 @@ fn the_artifact_list_is_the_whole_of_what_is_written() {
 /// half-provisioning a box.
 #[test]
 fn an_unwritable_target_refuses() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let blocked = tmp.path().join("file");
     std::fs::write(&blocked, b"not a directory").expect("file");
@@ -238,7 +229,6 @@ fn an_unwritable_target_refuses() {
 /// refused. Both are the operator's sentence, never a silent half-mint.
 #[test]
 fn the_tool_speaks_for_itself() {
-    let _guard = spawn_guard();
     let missing = run(Path::new("yog-no-such-tool"), &[]).expect_err("cannot start");
     assert!(missing.contains("yog-no-such-tool"), "{missing}");
     let refused =

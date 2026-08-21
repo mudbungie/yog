@@ -65,13 +65,14 @@ pub fn expired(keep: Option<Duration>, age: Option<Duration>) -> bool {
 /// is in the future (an unusable clock): in each the caller keeps the ref, which
 /// is the standing default.
 pub fn age(project: &Path, handle: &str, now: SystemTime) -> Option<Duration> {
-    let out = crate::git_env::git()
-        .arg("-C")
-        .arg(project)
-        .args(["log", "-1", "--format=%ct", &attempt_branch(handle)])
-        .output()
-        .ok()
-        .filter(|out| out.status.success())?;
+    let out = crate::git_env::output(crate::git_env::git().arg("-C").arg(project).args([
+        "log",
+        "-1",
+        "--format=%ct",
+        &attempt_branch(handle),
+    ]))
+    .ok()
+    .filter(|out| out.status.success())?;
     let secs: u64 = String::from_utf8_lossy(&out.stdout).trim().parse().ok()?;
     now.duration_since(UNIX_EPOCH + Duration::from_secs(secs))
         .ok()

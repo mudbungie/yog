@@ -29,15 +29,6 @@ const STALE: &str = r#"[hooks]
 /// A scratch world: balls' two homes, a tools dir carrying the `bl` sibling
 /// roster yog's world always seeds, and a project directory to address.
 pub(super) struct World {
-    /// The suite's spawn discipline, held for the world's whole life. Every
-    /// test here forks `git` — through [`World::found`], [`World::damage`],
-    /// [`World::head`] and `converge` itself — and this family was the one that
-    /// forked without the guard the rest of the binary holds (bl-1ce0). A spawn
-    /// is not only the victim of the write-then-exec overlap
-    /// [`crate::test_support`] describes, it is the *other* party to it: an
-    /// unguarded fork here inherits a peer thread's open write fd and hands
-    /// that peer an `ETXTBSY` on the script it just wrote.
-    _guard: crate::test_support::SpawnGuard,
     _dir: TempDir,
     pub(super) edge: Edge,
     pub(super) landing: PathBuf,
@@ -49,7 +40,6 @@ impl World {
     /// Lay the scratch world. Nothing is founded yet — the landing path is
     /// computed by balls' own `clone_dir` fold, never spelled here.
     pub(super) fn new() -> World {
-        let guard = crate::test_support::spawn_guard();
         let dir = tempfile::tempdir().expect("scratch world");
         // The real shape: balls' two homes live INSIDE the world subtree, which
         // is what earns the repair the right to rewrite a landing there.
@@ -84,7 +74,6 @@ impl World {
         );
         let landing = edge.xdg.clone_dir(&edge.invocation_path).landing();
         World {
-            _guard: guard,
             _dir: dir,
             edge,
             landing,

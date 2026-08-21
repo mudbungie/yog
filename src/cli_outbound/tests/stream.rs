@@ -11,7 +11,7 @@ use tempfile::tempdir;
 #[test]
 fn exit_info_reports_signal_when_child_killed_mid_flight() {
     let dir = tempdir().unwrap();
-    let (bin, _spawn_guard) = write_script(
+    let bin = write_script(
         dir.path(),
         "fake_lernie",
         "#!/bin/sh\nprintf 'hi\\n'\nkill -USR1 $$\nsleep 5\n",
@@ -28,7 +28,7 @@ fn exit_info_reports_signal_when_child_killed_mid_flight() {
 #[test]
 fn iterator_returns_none_after_exited() {
     let dir = tempdir().unwrap();
-    let (bin, _spawn_guard) = write_script(dir.path(), "fake_lernie", "#!/bin/sh\nexit 0\n");
+    let bin = write_script(dir.path(), "fake_lernie", "#!/bin/sh\nexit 0\n");
     let cli = Cli::new(bin);
     let mut stream = cli.run(&[]).unwrap();
     for chunk in stream.by_ref() {

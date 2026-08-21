@@ -119,7 +119,7 @@ impl Asker {
     /// Run [`pass`](Self::pass) forever, parked between looks — the
     /// [`Searcher`](crate::search::Searcher) shutdown shape exactly: a stop
     /// flag, an unpark, a join.
-    pub fn spawn(mut self) -> AskerThread {
+    pub fn start(mut self) -> AskerThread {
         let stop = Arc::new(AtomicBool::new(false));
         let flag = Arc::clone(&stop);
         let handle = std::thread::spawn(move || {

@@ -6,7 +6,7 @@
 
 use super::*;
 use crate::boundary::deposit;
-use crate::test_support::{spawn_guard, world_under};
+use crate::test_support::world_under;
 use crate::ui_state::Clock;
 use crate::watch::NoRepaint;
 use serde_json::json;
@@ -31,7 +31,6 @@ impl Clock for AtClock {
 /// has is up, and none of them is a frame.
 #[test]
 fn a_windowless_engine_answers_a_deposit_and_stops_on_drop() {
-    let _guard = spawn_guard();
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     // A boot listens on the default request — `127.0.0.1:0`, a kernel-chosen
@@ -85,7 +84,6 @@ fn a_windowless_engine_answers_a_deposit_and_stops_on_drop() {
 /// became (bl-dc14).
 #[test]
 fn a_booted_engine_hands_its_window_a_seat_on_its_own_wire() {
-    let _guard = spawn_guard();
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     let mut engine = Engine::boot(
@@ -133,7 +131,6 @@ fn a_booted_engine_hands_its_window_a_seat_on_its_own_wire() {
 /// be sent exactly once.
 #[test]
 fn a_window_takes_both_halves_of_the_wire_once() {
-    let _guard = spawn_guard();
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     let mut engine = Engine::boot(
@@ -160,7 +157,6 @@ fn a_window_takes_both_halves_of_the_wire_once() {
 /// line lost on a desktop launch's stderr.
 #[test]
 fn a_boot_whose_stated_port_is_held_refuses_where_the_frame_reads_it() {
-    let _guard = spawn_guard();
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     let dir = crate::wire::material::dir(&world);
@@ -196,7 +192,6 @@ fn a_boot_whose_stated_port_is_held_refuses_where_the_frame_reads_it() {
 /// the frame paints, remedy included.
 #[test]
 fn a_missing_window_leaf_is_a_refusal_naming_it() {
-    let _guard = spawn_guard();
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     let mut engine = Engine::boot(

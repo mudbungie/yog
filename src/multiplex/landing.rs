@@ -195,7 +195,7 @@ fn git(cwd: &Path, args: &[&str]) -> io::Result<String> {
 /// verb proceeds, since a repair that cannot run must never fail the op it rode
 /// in on.
 fn run(cwd: &Path, args: &[&str]) -> io::Result<String> {
-    let out = git_env::git().current_dir(cwd).args(args).output()?;
+    let out = git_env::output(git_env::git().current_dir(cwd).args(args))?;
     if !out.status.success() {
         return Err(io::Error::other(
             String::from_utf8_lossy(&out.stderr).into_owned(),

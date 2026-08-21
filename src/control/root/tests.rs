@@ -2,7 +2,6 @@
 
 use super::*;
 use crate::opslog::Origin;
-use crate::test_support::spawn_guard;
 use tempfile::tempdir;
 
 /// A root over `writable`, with `cwd` and a fixed home.
@@ -168,7 +167,6 @@ fn a_fanned_candidates_own_worktree_is_writable_and_a_strangers_is_not() {
 
 #[test]
 fn the_cwd_mark_is_read_from_lernie_s_own_ref() {
-    let _g = spawn_guard();
     let dir = tempdir().unwrap();
     let ws = dir.path().join("ws");
     let repo = ws.join("repo.git");
@@ -176,11 +174,7 @@ fn the_cwd_mark_is_read_from_lernie_s_own_ref() {
     // No repo, no mark: the caller's default (the agent worktree) applies.
     assert_eq!(agent_cwd(&ws, "amber-1"), None);
     let git = |args: &[&str]| {
-        crate::git_env::git()
-            .arg("--git-dir")
-            .arg(&repo)
-            .args(args)
-            .output()
+        crate::git_env::output(crate::git_env::git().arg("--git-dir").arg(&repo).args(args))
             .unwrap()
     };
     assert!(

@@ -17,7 +17,6 @@
 use super::fixture::{MINT_SEED, MINTED, MINTED_FIRST, fake_lernie, seed_world, world};
 use super::screen::{Screen, press};
 use crate::start::Prepared;
-use crate::test_support::spawn_guard;
 use tempfile::tempdir;
 
 /// The greyed §3.3 prediction on screen — the operator's whole view of the mint,
@@ -60,7 +59,6 @@ fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
     let bin = tempdir().unwrap();
     let mut world = world();
     seed_world(&world);
-    let _g = spawn_guard();
     let screen = Screen::with_lernie(fake_lernie(bin.path()));
     assert!(screen.idle(&mut world), "the cursor starts in the composer");
 
@@ -164,7 +162,6 @@ fn the_ball_rungs_send_retires_the_seed_the_same_way() {
     let bin = tempdir().unwrap();
     let mut world = world();
     seed_world(&world);
-    let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let ws = world.ws.clone();
     world.state.start.pending = Some(Prepared {

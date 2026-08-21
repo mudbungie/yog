@@ -10,7 +10,6 @@ use super::*;
 use crate::actions::verbs::collect;
 use crate::cli_outbound::Cli;
 use crate::opslog::{OpEntry, Origin};
-use crate::test_support::spawn_guard;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
@@ -72,7 +71,6 @@ fn the_backend_is_linux_only_and_every_other_os_is_named() {
 #[test]
 fn the_probe_believes_a_zero_exit_and_names_both_unavailabilities() {
     let dir = tempdir().unwrap();
-    let guard = spawn_guard();
     assert_eq!(
         probe(&script(dir.path(), "ok", "#!/bin/sh\nexit 0\n")),
         Ok(())
@@ -86,7 +84,6 @@ fn the_probe_believes_a_zero_exit_and_names_both_unavailabilities() {
     assert!(err.contains("exit 1"), "{err}");
     assert!(err.contains("Permission denied"), "{err}");
     let gone = probe(Path::new("/no/such/bwrap")).expect_err("an absent backend");
-    drop(guard);
     assert!(gone.contains("could not run"), "{gone}");
 }
 
@@ -205,9 +202,7 @@ fn a_project_that_is_gone_drops_out_of_the_set_rather_than_breaking_the_spawn() 
 /// place the sandbox must still refuse.
 #[test]
 fn the_real_backend_clamps_writes_to_the_bound_set_and_passes_env_through() {
-    let guard = spawn_guard();
     if available().is_err() {
-        drop(guard);
         return;
     }
     let scratch = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -233,7 +228,6 @@ fn the_real_backend_clamps_writes_to_the_bound_set_and_passes_env_through() {
     );
     let cli = Cli::new("/bin/sh").and_wrapper(argv(&set));
     let outcome = collect(cli.run_env(&[("YOG_CONFINE_PROOF", "held")], &["-c", &sh])).unwrap();
-    drop(guard);
     assert_eq!(outcome.exit, 0, "{}", outcome.stderr);
     assert!(!outcome.stdout.contains("IN_FAIL"), "{}", outcome.stdout);
     assert!(

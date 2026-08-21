@@ -143,13 +143,13 @@ pub fn agent_cwd(workspace: &Path, agent_id: &str) -> Option<PathBuf> {
     // A git that will not spawn and a git that exits non-zero are one answer —
     // the mark is not readable, so the caller's default applies — and they fold
     // into one `?` rather than two branches that mean the same thing.
-    let out = crate::git_env::git()
-        .arg("--git-dir")
-        .arg(&repo)
-        .args(["cat-file", "blob", &format!("{CWD_REF}{agent_id}")])
-        .output()
-        .ok()
-        .filter(|out| out.status.success())?;
+    let out = crate::git_env::output(crate::git_env::git().arg("--git-dir").arg(&repo).args([
+        "cat-file",
+        "blob",
+        &format!("{CWD_REF}{agent_id}"),
+    ]))
+    .ok()
+    .filter(|out| out.status.success())?;
     // Lossy rather than strict: lernie's own writer declines a directory that
     // does not survive a trimmed-UTF-8 round trip, so a mark that is not UTF-8
     // is unrepresentable upstream — and a lossy path that names nothing simply

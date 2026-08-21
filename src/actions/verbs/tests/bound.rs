@@ -37,7 +37,7 @@ fn fire(ws: &Path) -> crate::fork::Fire {
 
 #[test]
 fn every_workspace_bound_verb_spawns_inside_the_sphere() {
-    let (w, _g) = World::new("lernie", ENV_BODY);
+    let w = World::new("lernie", ENV_BODY);
     // The wall is a pure query on the anchor and the §3.1 leaf — recomputed
     // here from `world::wall`, so this asserts the same derivation the §9
     // config panes and the embedded `bz` read, not a second spelling of it.
@@ -66,7 +66,7 @@ fn every_workspace_bound_verb_spawns_inside_the_sphere() {
 /// revived driver find yog's own lernie home *and* the sphere's providers.
 #[test]
 fn binding_extends_the_standing_world_env() {
-    let (w, _g) = World::new(
+    let w = World::new(
         "lernie",
         "#!/bin/sh\nprintf '%s\\n' \"$LERNIE_HOME\"\nexit 0\n",
     );

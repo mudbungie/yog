@@ -26,10 +26,14 @@
 # pins around). Serial coverage sidesteps the race; the 100% floor is
 # unchanged (coverage is the union of executed lines, order-independent).
 #
-# `cargo test` (i.e. `make test`) itself stays PARALLEL: the ETXTBSY fork
-# race that once also forced serial is fixed at its root in each suite (the
-# Makefile's `test:` target is the one account of how). Only tarpaulin's own
-# ptrace bookkeeping needs the pin.
+# `cargo test` (i.e. `make test`) itself stays PARALLEL: the ETXTBSY fork race
+# that once also forced serial is fixed at its root — `crate::git_env` is the
+# crate's one fork and takes the binary-wide spawn lock across it under
+# `cfg(test)` (bl-6397, `rules/no-bare-fork.yml`). Only tarpaulin's own ptrace
+# bookkeeping needs the pin. Note that `--test-threads=1` was never itself a
+# cure for that race and must not be read as one: a serial suite still has
+# yog's OWN worker threads forking beside the one test thread, which is how the
+# race reached a coverage run at all.
 [default]
 exclude-files = ["src/main.rs", "src/shell/*"]
 ignore-panics = true

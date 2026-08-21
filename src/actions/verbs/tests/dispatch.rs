@@ -6,7 +6,6 @@ use super::{OK_BODY, World};
 use crate::actions::verbs::{Outcome, collect, log_step_failure, run_logged};
 use crate::cli_outbound::Cli;
 use crate::opslog::{self, Origin};
-use crate::test_support::spawn_guard;
 use std::path::Path;
 use tempfile::tempdir;
 
@@ -14,7 +13,6 @@ use tempfile::tempdir;
 fn collect_propagates_a_spawn_error() {
     // `collect` (the no-marks `bl conf` read seam) surfaces a spawn failure as
     // Err — nothing ran, so there is nothing to drain.
-    let _g = spawn_guard();
     let cli = Cli::new("/definitely/not/a/real/bin");
     assert!(collect(cli.run(&["x"])).is_err());
 }
@@ -32,7 +30,7 @@ fn outcome_ok_tracks_exit_zero() {
 
 #[test]
 fn run_logged_captures_streams_and_appends_the_entry() {
-    let (w, _g) = World::new("lernie", OK_BODY);
+    let w = World::new("lernie", OK_BODY);
     let out = run_logged(
         &w.cli,
         w.state.path(),
@@ -59,7 +57,7 @@ fn run_logged_captures_streams_and_appends_the_entry() {
 #[test]
 fn run_logged_logs_a_nonzero_gate_failure_verbatim() {
     // §8.2: a bl-close gate failure is a completed action — logged, not dropped.
-    let (w, _g) = World::new(
+    let w = World::new(
         "bl",
         "#!/bin/sh\nprintf 'gate: hook failed\\n' 1>&2\nexit 1\n",
     );
@@ -83,7 +81,6 @@ fn run_logged_errs_but_appends_a_synthetic_spawn_failure_line() {
     // INV-2 / §4.2 amended: a spawn that never launched is a *rendered fact*, not
     // a dropped error — a synthetic line with the intended argv, the error in
     // stderr, exit SYNTHETIC; the call still returns Err.
-    let _g = spawn_guard();
     let state = tempdir().unwrap();
     let cwd = tempdir().unwrap();
     let cli = Cli::new("/definitely/not/a/real/bl-xyz");
@@ -110,7 +107,7 @@ fn s0_t3_failed_step_entry_carries_stderr_and_view_model_renders_argv_and_tail()
     // S0-T3 (ops-row + view-model halves): a failed step (fake exits 2 with
     // stderr) leaves a rendered fact — the ops entry carries the stderr, and the
     // surface failure view-model renders argv + the stderr tail (§7.3).
-    let (w, _g) = World::new(
+    let w = World::new(
         "lernie",
         "#!/bin/sh\nprintf 'prime failed\\nmodels.yaml missing\\n' 1>&2\nexit 2\n",
     );

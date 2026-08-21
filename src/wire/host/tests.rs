@@ -14,7 +14,7 @@ use crate::boundary::consumer::ConsumerCtx;
 use crate::cli_outbound::Cli;
 use crate::registry::mailbox::Mailbox;
 use crate::registry::presence::Presence;
-use crate::test_support::{spawn_guard, wire::mint, world_under};
+use crate::test_support::{wire::mint, world_under};
 use crate::ui_state::SystemClock;
 use crate::wire::intake::Intake;
 use crate::wire::server::Listener;
@@ -78,7 +78,6 @@ fn provision(tmp: &TempDir) -> crate::xdg::Env {
 /// the middle of it.
 #[test]
 fn an_invocation_crosses_to_a_tool_host_and_the_capture_comes_back() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let state = tempdir().expect("state");
     let world = provision(&tmp);
@@ -243,7 +242,6 @@ fn a_completion_the_engine_refuses_stops_the_host() {
         }
     }
 
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = provision(&tmp);
     let engine = InTurn {

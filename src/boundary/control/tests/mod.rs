@@ -66,13 +66,14 @@ impl World {
     /// host who it is; every other fixture in the tree already says so itself
     /// (`test_support::workspace`, `control::tests`).
     fn git(&self, args: &[&str]) -> std::process::Output {
-        crate::git_env::git()
-            .args(["-c", "user.email=t@t.local", "-c", "user.name=T"])
-            .arg("--git-dir")
-            .arg(self.workspace().join("repo.git"))
-            .args(args)
-            .output()
-            .expect("git runs")
+        crate::git_env::output(
+            crate::git_env::git()
+                .args(["-c", "user.email=t@t.local", "-c", "user.name=T"])
+                .arg("--git-dir")
+                .arg(self.workspace().join("repo.git"))
+                .args(args),
+        )
+        .expect("git runs")
     }
 
     fn repo(&self) {
@@ -130,7 +131,6 @@ fn an_answer_writes_the_row_the_control_folds_and_launches_the_release() {
     let world = World::new();
     world.repo();
     world.park(AGENT, "toolu_42");
-    let guard = crate::test_support::spawn_guard();
     let reply = answer_hold(
         &world.deps(),
         "1000",
@@ -139,7 +139,6 @@ fn an_answer_writes_the_row_the_control_folds_and_launches_the_release() {
         Ruling::Pass,
     )
     .expect("something is parked");
-    drop(guard);
     assert_eq!(
         reply,
         Reply::Answered {
@@ -223,7 +222,6 @@ fn a_refusal_releases_too_because_a_decline_is_in_band() {
     let world = World::new();
     world.repo();
     world.park(AGENT, "toolu_8");
-    let guard = crate::test_support::spawn_guard();
     let reply = answer_hold(
         &world.deps(),
         "1000",
@@ -232,7 +230,6 @@ fn a_refusal_releases_too_because_a_decline_is_in_band() {
         Ruling::Refuse,
     )
     .expect("something is parked");
-    drop(guard);
     assert!(matches!(reply, Reply::Answered { advanced: true, .. }));
 }
 
@@ -243,10 +240,8 @@ fn a_failed_launch_is_still_an_answer_and_still_a_row() {
     world.park(AGENT, "toolu_9");
     let mut deps = world.deps();
     deps.lernie = Cli::new("/no/such/lernie");
-    let guard = crate::test_support::spawn_guard();
     let reply = answer_hold(&deps, "1000", &world.workspace(), AGENT, Ruling::Pass)
         .expect("the answer is durable whatever the launch does");
-    drop(guard);
     assert!(matches!(
         reply,
         Reply::Answered {

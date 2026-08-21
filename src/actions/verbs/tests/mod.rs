@@ -9,7 +9,6 @@ use super::*;
 use crate::actions::verbs::edit::{Create as BallCreate, Update as BallUpdate};
 use crate::cli_outbound::Cli;
 use crate::opslog;
-use crate::test_support::{SpawnGuard, spawn_guard};
 use crate::xdg::Env;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -20,16 +19,15 @@ mod bound;
 mod dispatch;
 mod edit;
 
-/// A fake `bl`/`lernie` under `SPAWN_LOCK` (the crate-wide spawn discipline);
-/// the guard is held across the spawn each verb then performs.
-fn recorder(dir: &Path, name: &str, body: &str) -> (PathBuf, SpawnGuard) {
-    let guard = spawn_guard();
+/// A fake `bl`/`lernie`. Nothing brackets the write: the crate's one fork
+/// (`crate::git_env`) owns the ETXTBSY exclusion, so a fixture just writes.
+fn recorder(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
     fs::write(&path, body).unwrap();
     let mut perms = fs::metadata(&path).unwrap().permissions();
     perms.set_mode(0o755);
     fs::set_permissions(&path, perms).unwrap();
-    (path, guard)
+    path
 }
 
 /// A recorder that prints `OUT` to stdout and `ERR` to stderr, exit 0.
@@ -46,19 +44,16 @@ struct World {
 }
 
 impl World {
-    fn new(name: &str, body: &str) -> (Self, SpawnGuard) {
+    fn new(name: &str, body: &str) -> Self {
         let dir = tempdir().unwrap();
-        let (bin, guard) = recorder(dir.path(), name, body);
+        let bin = recorder(dir.path(), name, body);
         let cwd = dir.path().to_path_buf();
-        (
-            Self {
-                _dir: dir,
-                state: tempdir().unwrap(),
-                cli: Cli::new(bin),
-                cwd,
-            },
-            guard,
-        )
+        Self {
+            _dir: dir,
+            state: tempdir().unwrap(),
+            cli: Cli::new(bin),
+            cwd,
+        }
     }
 
     /// This world's `lernie` bound to its workspace (`cwd`) inside a world
@@ -88,7 +83,7 @@ fn args_of(e: &crate::opslog::OpEntry) -> Vec<String> {
 
 #[test]
 fn message_builds_argv_and_runs_in_the_workspace() {
-    let (w, _g) = World::new("lernie", OK_BODY);
+    let w = World::new("lernie", OK_BODY);
     let ws = &w.cwd;
     message(&w.bound(), w.state.path(), "TS", "a-1", "hi there").unwrap();
     let e = w.logged();
@@ -101,7 +96,7 @@ fn message_builds_argv_and_runs_in_the_workspace() {
 
 #[test]
 fn stop_omits_and_includes_the_children_flag() {
-    let (w, _g) = World::new("lernie", OK_BODY);
+    let w = World::new("lernie", OK_BODY);
     let ws = w.cwd.clone();
     stop(&w.bound(), w.state.path(), "TS", "a-1", false).unwrap();
     assert_eq!(
@@ -118,7 +113,7 @@ fn stop_omits_and_includes_the_children_flag() {
 
 #[test]
 fn scan_builds_argv() {
-    let (w, _g) = World::new("lernie", OK_BODY);
+    let w = World::new("lernie", OK_BODY);
     let ws = &w.cwd;
     scan(&w.bound(), w.state.path(), "TS").unwrap();
     assert_eq!(
@@ -132,7 +127,7 @@ fn scan_builds_argv() {
 /// naming it would be a knob with one lawful value.
 #[test]
 fn retarget_builds_argv_for_one_conversation_with_no_config_flag() {
-    let (w, _g) = World::new("lernie", OK_BODY);
+    let w = World::new("lernie", OK_BODY);
     let ws = &w.cwd;
     retarget(&w.bound(), w.state.path(), "TS", "a-1").unwrap();
     let e = w.logged();
@@ -145,7 +140,7 @@ fn retarget_builds_argv_for_one_conversation_with_no_config_flag() {
 
 #[test]
 fn close_and_unclaim_build_argv_in_the_project() {
-    let (w, _g) = World::new("bl", OK_BODY);
+    let w = World::new("bl", OK_BODY);
     let proj = &w.cwd;
     close(&w.cli, w.state.path(), "TS", proj, "bl-7", "filtered").unwrap();
     let e = w.logged();
@@ -159,7 +154,7 @@ fn close_and_unclaim_build_argv_in_the_project() {
 
 #[test]
 fn assign_claims_the_ball_for_the_target_workspace() {
-    let (w, _g) = World::new("bl", OK_BODY);
+    let w = World::new("bl", OK_BODY);
     let proj = &w.cwd;
     assign(&w.cli, w.state.path(), "TS", proj, "bl-7", "cobalt-gecko").unwrap();
     let e = w.logged();
@@ -169,7 +164,7 @@ fn assign_claims_the_ball_for_the_target_workspace() {
 
 #[test]
 fn reassign_unclaims_from_then_claims_to_both_logged() {
-    let (w, _g) = World::new("bl", OK_BODY);
+    let w = World::new("bl", OK_BODY);
     let proj = &w.cwd;
     reassign(
         &w.cli,
@@ -201,16 +196,15 @@ fn reassign_unclaims_from_then_claims_to_both_logged() {
 /// the parser's default and accuse a surface that did nothing.
 #[test]
 fn every_verb_stamps_the_origin_of_its_own_subject() {
-    let (w, guard) = World::new("lernie", OK_BODY);
+    let w = World::new("lernie", OK_BODY);
     message(&w.bound(), w.state.path(), "TS", "a-1", "hi").unwrap();
     stop(&w.bound(), w.state.path(), "TS", "a-1", false).unwrap();
     scan(&w.bound(), w.state.path(), "TS").unwrap();
     for e in opslog::tail(w.state.path(), 8) {
         assert_eq!(e.origin, opslog::Origin::Conversation, "{:?}", e.argv);
     }
-    drop(guard);
 
-    let (w, _g) = World::new("bl", "#!/bin/sh\nprintf 'bl-9zzz\\n'\nexit 0\n");
+    let w = World::new("bl", "#!/bin/sh\nprintf 'bl-9zzz\\n'\nexit 0\n");
     let proj = w.cwd.clone();
     close(&w.cli, w.state.path(), "TS", &proj, "bl-7", "amber").unwrap();
     unclaim(&w.cli, w.state.path(), "TS", &proj, "bl-7", "amber").unwrap();

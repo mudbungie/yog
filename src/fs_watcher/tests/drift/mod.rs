@@ -43,17 +43,18 @@ fn wait_for(watcher: &Watcher, pred: impl Fn(&Change) -> bool) -> Vec<Change> {
 /// (`crate::git_env` — an inherited `GIT_DIR` outranks `current_dir` and aimed
 /// these forks at the real repo whenever a hook ran the suite, bl-0dff).
 fn git(dir: &Path, args: &[&str]) -> String {
-    let out = crate::git_env::git()
-        .args(args)
-        .current_dir(dir)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_SYSTEM", "/dev/null")
-        .env("GIT_AUTHOR_NAME", "Tester")
-        .env("GIT_AUTHOR_EMAIL", "t@t.local")
-        .env("GIT_COMMITTER_NAME", "Tester")
-        .env("GIT_COMMITTER_EMAIL", "t@t.local")
-        .output()
-        .expect("git runs");
+    let out = crate::git_env::output(
+        crate::git_env::git()
+            .args(args)
+            .current_dir(dir)
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_SYSTEM", "/dev/null")
+            .env("GIT_AUTHOR_NAME", "Tester")
+            .env("GIT_AUTHOR_EMAIL", "t@t.local")
+            .env("GIT_COMMITTER_NAME", "Tester")
+            .env("GIT_COMMITTER_EMAIL", "t@t.local"),
+    )
+    .expect("git runs");
     assert!(out.status.success(), "git {args:?}: {out:?}");
     String::from_utf8_lossy(&out.stdout).trim().to_string()
 }

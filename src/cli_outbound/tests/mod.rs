@@ -24,7 +24,6 @@ use std::os::unix::fs::PermissionsExt;
 // Spawn discipline rationale and the binary-wide lock live in
 // crate::test_support — one static for every test module, because
 // per-module locks do not exclude each other's threads.
-use crate::test_support::{SpawnGuard, spawn_guard};
 
 mod detach;
 mod exec;
@@ -35,14 +34,13 @@ mod stream;
 mod streamed;
 mod wrap;
 
-fn write_script(dir: &Path, name: &str, body: &str) -> (PathBuf, SpawnGuard) {
-    let guard = spawn_guard();
+fn write_script(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
     fs::write(&path, body).unwrap();
     let mut perms = fs::metadata(&path).unwrap().permissions();
     perms.set_mode(0o755);
     fs::set_permissions(&path, perms).unwrap();
-    (path, guard)
+    path
 }
 
 fn collect(stream: Stream) -> (Vec<u8>, Vec<u8>, ExitInfo) {

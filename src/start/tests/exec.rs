@@ -8,11 +8,9 @@ use crate::binding::work_worktree_path;
 use crate::cli_outbound::Cli;
 use crate::opslog::{SYNTHETIC_EXIT, YOG_STEP};
 use crate::start::{StartError, cross_check_claim, execute_claim, execute_create};
-use crate::test_support::spawn_guard;
 
 #[test]
 fn create_stamps_the_workspace_name_and_captures_the_id() {
-    let _g = spawn_guard();
     let w = World::new();
     let bl = Cli::new(fake_bl(w.bin.path(), "bl-new9", w.balls.path()));
     let id = execute_create(
@@ -41,7 +39,6 @@ fn create_stamps_the_workspace_name_and_captures_the_id() {
 
 #[test]
 fn create_elides_an_empty_body() {
-    let _g = spawn_guard();
     let w = World::new();
     let bl = Cli::new(fake_bl(w.bin.path(), "bl-1", w.balls.path()));
     execute_create(&bl, w.state.path(), "TS", w.project.path(), "T", "", "n").unwrap();
@@ -50,7 +47,6 @@ fn create_elides_an_empty_body() {
 
 #[test]
 fn create_errors_on_a_nonzero_exit() {
-    let _g = spawn_guard();
     let w = World::new();
     let bl = Cli::new(fake_fail(w.bin.path(), "bl", "boom"));
     let err =
@@ -60,7 +56,6 @@ fn create_errors_on_a_nonzero_exit() {
 
 #[test]
 fn claim_stamps_the_name_and_cross_checks_the_canonical_worktree() {
-    let _g = spawn_guard();
     let w = World::new();
     let canonical = work_worktree_path(w.balls.path(), w.project.path(), "bl-7", None);
     let bl = Cli::new(fake_bl(w.bin.path(), "x", &canonical));
@@ -84,7 +79,6 @@ fn claim_stamps_the_name_and_cross_checks_the_canonical_worktree() {
 
 #[test]
 fn claim_errors_on_a_nonzero_exit() {
-    let _g = spawn_guard();
     let w = World::new();
     let bl = Cli::new(fake_fail(w.bin.path(), "bl", "blocked"));
     let err = execute_claim(

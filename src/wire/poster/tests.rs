@@ -4,7 +4,7 @@
 use super::*;
 use crate::boundary::reply::Reply;
 use crate::registry::presence::Presence;
-use crate::test_support::wire::{EPHEMERAL, material, mint};
+use crate::test_support::wire::{EPHEMERAL, NO_LISTENER, material, mint};
 use crate::watch::NoRepaint;
 use crate::wire::material::Role;
 use crate::wire::post::{Post, pair};
@@ -64,8 +64,13 @@ fn a_posted_act_crosses_the_wire_and_its_receipt_lands_under_its_ticket() {
 #[test]
 fn a_dead_engine_lands_a_sentence_rather_than_blocking() {
     let tmp = TempDir::new().expect("tmp");
-    let (listener, mut poster, mut post) = wired(&tmp, Vec::new());
-    drop(listener);
+    mint(tmp.path());
+    // Aimed where nothing can be listening, rather than at a listener this test
+    // just dropped — see `NO_LISTENER`.
+    let seat = crate::wire::client::Seat::open(&material(tmp.path(), Role::Window, NO_LISTENER))
+        .expect("seat");
+    let (mut post, outbox) = pair();
+    let mut poster = Poster::new(seat, outbox, Arc::new(NoRepaint));
     let ticket = post.send(&json!({"op": "scan", "workspace": "home"}));
     assert!(poster.pass());
     post.settle();
@@ -83,7 +88,7 @@ fn the_thread_runs_until_the_window_drops() {
     let tmp = TempDir::new().expect("tmp");
     let (_listener, poster, mut post) = wired(&tmp, vec![json!({"ok": true, "kind": "acked"})]);
     let ticket = post.send(&json!({"op": "seen", "workspace": "home", "agent": "c-1"}));
-    let thread = poster.spawn();
+    let thread = poster.start();
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
     loop {
         post.settle();

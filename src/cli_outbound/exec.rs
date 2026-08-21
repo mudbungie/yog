@@ -33,14 +33,13 @@ impl Cli {
         let cli = Self::new(binary).with_env(overrides.to_vec());
         let mut cmd = crate::git_env::command(cli.binary());
         // Standing world env first, stdio inherited by default (`status`):
-        // the child owns the terminal. Callers hold `SPAWN_LOCK` across the
-        // spawn (test_support) so no fork races a peer's open write fd.
+        // the child owns the terminal. The fork is the crate's one fork, so
+        // under `cargo test` it cannot race a peer's open write fd (`git_env`).
         cmd.args(args).envs(cli.standing_env());
         if let Some(dir) = cwd {
             cmd.current_dir(dir);
         }
-        let status = cmd
-            .status()
+        let status = crate::git_env::status(&mut cmd)
             .map_err(|source| CliError::spawn(cli.binary(), cwd, source))?;
         Ok(stream::exit_info(Some(status)))
     }

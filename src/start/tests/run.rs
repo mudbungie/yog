@@ -8,7 +8,6 @@ use crate::binding::{work_worktree_path, workspace_path};
 use crate::cli_outbound::Cli;
 use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Deps, Payload, prepare};
-use crate::test_support::spawn_guard;
 use std::path::Path;
 
 fn deps(w: &World, bl: &Cli, lernie: &Cli) -> Deps {
@@ -29,7 +28,6 @@ fn mark_seeded(w: &World) {
 
 #[test]
 fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
-    let _g = spawn_guard();
     let w = World::new();
     let lernie = w.lernie();
     let bl = Cli::new("/no/bl"); // no ball rung → bl never runs
@@ -56,7 +54,6 @@ fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
 /// the override set fronts `PATH` with.
 #[test]
 fn prepare_seeds_the_world_bl_shim_before_the_prompt() {
-    let _g = spawn_guard();
     let w = World::new();
     let lernie = w.lernie();
     let bl = Cli::new("/some/bl");
@@ -77,7 +74,6 @@ fn prepare_seeds_the_world_bl_shim_before_the_prompt() {
 
 #[test]
 fn prepare_prompt_into_existing_skips_prime_new_and_mint() {
-    let _g = spawn_guard();
     let w = World::new();
     mark_seeded(&w);
     let name = "cobalt-gecko";
@@ -95,7 +91,6 @@ fn prepare_prompt_into_existing_skips_prime_new_and_mint() {
 
 #[test]
 fn prepare_path_rung_composes_the_target_and_runs_no_bl() {
-    let _g = spawn_guard();
     let w = World::new();
     let lernie = w.lernie();
     let bl = Cli::new("/no/bl");
@@ -113,7 +108,6 @@ fn prepare_path_rung_composes_the_target_and_runs_no_bl() {
 
 #[test]
 fn prepare_ball_ready_claims_after_new() {
-    let _g = spawn_guard();
     let w = World::new();
     let canonical = work_worktree_path(w.balls.path(), w.project.path(), "bl-r", None);
     let bl = Cli::new(fake_bl(w.bin.path(), "x", &canonical));
@@ -140,7 +134,6 @@ fn prepare_ball_ready_claims_after_new() {
 
 #[test]
 fn prepare_new_ball_creates_then_converges_to_one_claim() {
-    let _g = spawn_guard();
     let w = World::new();
     let canonical = work_worktree_path(w.balls.path(), w.project.path(), "bl-mint", None);
     let bl = Cli::new(fake_bl(w.bin.path(), "bl-mint", &canonical));
@@ -164,7 +157,6 @@ fn prepare_new_ball_creates_then_converges_to_one_claim() {
 
 #[test]
 fn prepare_bound_ball_resumes_without_a_claim_or_mint() {
-    let _g = spawn_guard();
     let w = World::new();
     mark_seeded(&w);
     std::fs::create_dir_all(workspace_path(w.yog.path(), "cobalt-gecko").join("repo.git")).unwrap();
@@ -194,7 +186,6 @@ fn prepare_bound_ball_resumes_without_a_claim_or_mint() {
 /// are the exact bytes still on `config/default` once `prepare` returns.
 #[test]
 fn a_fresh_workspace_keeps_the_templates_grant_with_no_extra_commit() {
-    let _g = spawn_guard();
     let w = World::new();
     let lernie = w.lernie();
     let bl = Cli::new("/no/bl");
@@ -225,7 +216,6 @@ fn a_fresh_workspace_keeps_the_templates_grant_with_no_extra_commit() {
 fn prepare_ball_aborts_before_any_bl_on_a_substrate_failure() {
     // S3-T6 load-bearing order: a failed `prime` precedes every `bl` mutation, so
     // no `bl create`/`bl claim` is recorded — the orphaned-claim wound is closed.
-    let _g = spawn_guard();
     let w = World::new();
     let bl = Cli::new(fake_bl(w.bin.path(), "x", Path::new("/wt")));
     let lernie = Cli::new(fake_fail(w.bin.path(), "lernie", "no seed"));

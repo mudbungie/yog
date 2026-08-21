@@ -21,7 +21,7 @@ pub(crate) fn seed_workspace_config(workspace: &Path, files: &[(&str, &str)]) {
     let author = workspace.join(".author");
     std::fs::create_dir_all(&repo).unwrap();
     let run = |args: &[&str]| {
-        let status = crate::git_env::git().args(args).status().unwrap();
+        let status = crate::git_env::status(crate::git_env::git().args(args)).unwrap();
         assert!(status.success(), "git {args:?}");
     };
     let (repo_s, author_s) = (repo.display().to_string(), author.display().to_string());

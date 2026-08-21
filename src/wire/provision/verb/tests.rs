@@ -1,7 +1,7 @@
 //! `yog wire-certs`: what the environment says, and what the verb does with it.
 
 use super::*;
-use crate::test_support::{spawn_guard, world_under};
+use crate::test_support::world_under;
 use tempfile::TempDir;
 
 /// Nothing stated is loopback at the default port, in the composed world's own
@@ -50,7 +50,6 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
 /// which is the rotation guard's whole contract.
 #[test]
 fn it_mints_then_refuses_then_rotates() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let dir = tmp.path().join("wire");
     let mut plan = Plan {
@@ -75,7 +74,6 @@ fn it_mints_then_refuses_then_rotates() {
 /// did not write.
 #[test]
 fn a_mint_that_cannot_run_exits_one() {
-    let _guard = spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let blocked = tmp.path().join("file");
     std::fs::write(&blocked, b"not a directory").expect("file");

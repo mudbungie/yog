@@ -62,14 +62,15 @@ impl World {
     }
 
     fn branch_exists(&self, refname: &str) -> bool {
-        crate::git_env::git()
-            .arg("-C")
-            .arg(&self.project)
-            .args(["rev-parse", "--verify", "-q", refname])
-            .output()
-            .unwrap()
-            .status
-            .success()
+        crate::git_env::output(crate::git_env::git().arg("-C").arg(&self.project).args([
+            "rev-parse",
+            "--verify",
+            "-q",
+            refname,
+        ]))
+        .unwrap()
+        .status
+        .success()
     }
 }
 

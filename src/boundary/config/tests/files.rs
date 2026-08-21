@@ -11,7 +11,7 @@ use crate::boundary::reply::Reply;
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::brazen::Applied;
 use crate::config_edit::lernie_global::Saved;
-use crate::test_support::{spawn_guard, world_under};
+use crate::test_support::world_under;
 use std::fs;
 use std::path::Path;
 use tempfile::tempdir;
@@ -142,7 +142,6 @@ fn an_unreadable_file_refuses_before_anything_is_staged() {
 
 #[test]
 fn a_lineage_apply_stages_the_text_and_drives_lernie_config() {
-    let g = spawn_guard();
     let root = tempdir().unwrap();
     let bin = tempdir().unwrap();
     let log = bin.path().join("log");
@@ -174,7 +173,6 @@ fn a_lineage_apply_stages_the_text_and_drives_lernie_config() {
             text,
         ),
     );
-    drop(g);
     assert_eq!(
         reply,
         Ok(Reply::Outcome(Outcome {

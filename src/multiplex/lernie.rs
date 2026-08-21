@@ -154,12 +154,13 @@ fn targets() -> io::Result<(PathBuf, PathBuf)> {
 /// seam — the `EDITOR` it stands on the spawn is `<yog> --editor-apply`, so
 /// the editor spawned here re-enters yog's apply shim.
 fn edit_with(editor: &str, dir: &Path) -> io::Result<()> {
-    let status = crate::git_env::command(Path::new("sh"))
-        .arg("-c")
-        .arg(format!("exec {editor} \"$1\""))
-        .arg("sh")
-        .arg(dir)
-        .status()?;
+    let status = crate::git_env::status(
+        crate::git_env::command(Path::new("sh"))
+            .arg("-c")
+            .arg(format!("exec {editor} \"$1\""))
+            .arg("sh")
+            .arg(dir),
+    )?;
     if status.success() {
         Ok(())
     } else {

@@ -13,6 +13,9 @@
 //!       * no-named-lifetimes.yml    → violation 10
 //!       * no-assert-outside-tests.yml → violation 11
 //!       * no-lint-suppression.yml     → violation 12
+//!       * no-bare-command.yml         → violation 13
+//!       * no-hand-rolled-paint-walk.yml → violation 14
+//!       * no-bare-fork.yml            → violation 15
 //!   - `ast-grep scan src` MUST exit zero (the sanctioned `unsafe` lives in
 //!     src/cli_outbound/sys.rs and the sanctioned locks in src/state.rs and
 //!     src/git_tree/probe_cache.rs, all of which the rules ignore; no
@@ -109,4 +112,15 @@ fn bare_child() -> std::io::Result<std::process::Child> {
 // bl-70b8). Painted glyphs come from `crate::paint_probe`.
 fn reads_the_input_text(t: &egui::epaint::TextShape) -> bool {
     t.galley.text() == "Login"
+}
+
+// Violation 15: a bare fork (no-bare-fork.yml — the `call_expression` whose
+// function is a `field_expression` ending in `.spawn`/`.output`/`.status` and
+// whose arguments are empty, outside `src/git_env.rs`). Building the child in
+// `git_env` and then forking it by hand leaves the ETXTBSY window open: a fork
+// on any thread copies a peer's open write fd into a child that holds it until
+// its own exec, and the peer's exec of the script it just wrote fails while it
+// does (bl-6397). `crate::git_env::{spawn, output, status}` is the one fork.
+fn bare_fork(cmd: &mut std::process::Command) -> std::io::Result<std::process::Output> {
+    cmd.output()
 }

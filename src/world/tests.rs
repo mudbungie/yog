@@ -1,6 +1,5 @@
 use super::*;
 use crate::cli_outbound::Cli;
-use crate::test_support::spawn_guard;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
@@ -129,7 +128,6 @@ fn the_override_set_nests_two_state_vars_and_fronts_the_tool_path() {
 /// is the whole deliverable; an agent's bash inherits exactly this env (§8).
 #[test]
 fn a_bare_bl_spawned_in_the_world_resolves_to_the_seeded_shim() {
-    let g = spawn_guard();
     let data = tempdir().unwrap();
     let bin = tempdir().unwrap();
     let log = bin.path().join("ran");
@@ -152,7 +150,6 @@ fn a_bare_bl_spawned_in_the_world_resolves_to_the_seeded_shim() {
         .with_env(overrides(&amb))
         .run(&["close", "bl-1a2b"])
         .unwrap();
-    drop(g);
     for _ in stream {}
     assert_eq!(fs::read_to_string(&log).unwrap(), "close bl-1a2b");
 }
@@ -167,7 +164,6 @@ fn a_bare_bl_spawned_in_the_world_resolves_to_the_seeded_shim() {
 /// clone than yog renders; this test is the guard.
 #[test]
 fn watched_clones_dir_equals_the_dir_a_world_spawned_bl_writes() {
-    let g = spawn_guard();
     let data = tempdir().unwrap();
     let bin = tempdir().unwrap();
     let log = bin.path().join("state");
@@ -192,7 +188,6 @@ fn watched_clones_dir_equals_the_dir_a_world_spawned_bl_writes() {
     fs::set_permissions(&path, perms).unwrap();
     // Spawn it in the world (standing overrides), then drain to completion.
     let stream = Cli::new(path).with_env(ov).run(&[]).unwrap();
-    drop(g);
     for _ in stream {}
     // The child was spawned with XDG_STATE_HOME = the world state dir …
     let child_state = fs::read_to_string(&log).unwrap();

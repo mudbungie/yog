@@ -6,7 +6,7 @@ use crate::binding::{Workspace, WorkspaceKind};
 use crate::boundary::reply::Reply;
 use crate::registry::presence::Presence;
 use crate::state::new_snapshot_cell;
-use crate::test_support::wire::{EPHEMERAL, material, mint};
+use crate::test_support::wire::{EPHEMERAL, NO_LISTENER, material, mint};
 use crate::watch::NoRepaint;
 use crate::wire::link::{Link, LinkEnd, pair};
 use crate::wire::material::Role;
@@ -175,8 +175,19 @@ fn a_refusal_and_an_unreadable_answer_both_land_as_one_err() {
 #[test]
 fn a_dead_engine_lands_a_sentence_rather_than_blocking() {
     let tmp = TempDir::new().expect("tmp");
-    let (listener, mut asker, mut link) = wired(&tmp, Vec::new(), &[]);
-    drop(listener);
+    mint(tmp.path());
+    // Aimed where nothing can be listening, rather than at a listener this test
+    // just dropped — see `NO_LISTENER`.
+    let seat = crate::wire::client::Seat::open(&material(tmp.path(), Role::Window, NO_LISTENER))
+        .expect("seat");
+    let (mut link, end) = pair();
+    let mut asker = Asker::new(
+        seat,
+        end,
+        snapshot_of(tmp.path(), &[]),
+        tmp.path().to_path_buf(),
+        Arc::new(NoRepaint),
+    );
     let question = json!({"op": "clients", "workspace": "home"});
     frame(&mut link, &question);
     frame(&mut link, &question);
@@ -209,7 +220,7 @@ fn the_thread_runs_until_dropped() {
     let question = json!({"op": "clients", "workspace": "home"});
     frame(&mut link, &question);
     frame(&mut link, &question);
-    let thread = asker.spawn();
+    let thread = asker.start();
     let deadline = std::time::Instant::now() + Duration::from_secs(10);
     loop {
         if frame(&mut link, &question).is_some() {

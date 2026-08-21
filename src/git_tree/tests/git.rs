@@ -1,7 +1,7 @@
 //! The fixtures' one `git` fork site. Split out of `fixture` so both the
 //! helper and the workspace-builder stay under the 300-line source cap.
 //!
-//! Every fork here routes through `crate::test_support::spawn_locked`, the binary-wide
+//! Every fork here routes through `crate::git_env`, the binary-wide
 //! spawn discipline: a fork must not land while another test holds a
 //! not-yet-closed write fd to a recorder script it is about to exec
 //! (ETXTBSY — see `crate::test_support`).
@@ -11,14 +11,15 @@ use std::path::Path;
 /// A fork whose **stdout is the product** — `hash-object`, which is the only
 /// fixture git call whose answer is needed rather than merely its success.
 pub(crate) fn git_out(repo: &Path, args: &[&str]) -> String {
-    let out = crate::git_env::git()
-        .arg("-C")
-        .arg(repo)
-        .args(args)
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_SYSTEM", "/dev/null")
-        .output()
-        .unwrap();
+    let out = crate::git_env::output(
+        crate::git_env::git()
+            .arg("-C")
+            .arg(repo)
+            .args(args)
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_SYSTEM", "/dev/null"),
+    )
+    .unwrap();
     assert!(out.status.success(), "git {args:?} failed");
     String::from_utf8_lossy(&out.stdout).trim().to_owned()
 }
@@ -35,10 +36,6 @@ pub(crate) fn run_git(repo: &Path, args: &[&str]) {
         // identity (the multiplex tests scrub the same way).
         .env("GIT_CONFIG_GLOBAL", "/dev/null")
         .env("GIT_CONFIG_SYSTEM", "/dev/null");
-    // Fork under SPAWN_LOCK; wait outside it so git still runs concurrently.
-    let status = crate::test_support::spawn_locked(&mut cmd)
-        .unwrap()
-        .wait()
-        .unwrap();
+    let status = crate::git_env::status(&mut cmd).unwrap();
     assert!(status.success(), "git {args:?} failed");
 }

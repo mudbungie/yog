@@ -4,7 +4,6 @@
 
 use super::*;
 use crate::cli_outbound::Cli;
-use crate::test_support::{SpawnGuard, spawn_guard};
 use crate::xdg::Env;
 use std::os::unix::fs::PermissionsExt;
 use tempfile::{TempDir, tempdir};
@@ -62,16 +61,15 @@ impl World {
     }
 }
 
-/// Write an executable fake `bl` under `SPAWN_LOCK` (the crate-wide spawn
-/// discipline); the guard is held across the spawn the caller then does.
-fn write_bl(dir: &Path, body: &str) -> (PathBuf, SpawnGuard) {
-    let guard = spawn_guard();
+/// Write an executable fake `bl`. Nothing brackets the write: the crate's one
+/// fork (`crate::git_env`) owns the ETXTBSY exclusion.
+fn write_bl(dir: &Path, body: &str) -> PathBuf {
     let path = dir.join("bl");
     std::fs::write(&path, body).unwrap();
     let mut perms = std::fs::metadata(&path).unwrap().permissions();
     perms.set_mode(0o755);
     std::fs::set_permissions(&path, perms).unwrap();
-    (path, guard)
+    path
 }
 
 #[test]
@@ -157,7 +155,7 @@ fn closed_runs_the_one_residual_subprocess_and_parses_its_bedrock_json() {
     let world = World::new(true);
     let dir = tempdir().unwrap();
     // Noise on stderr (exercises the Stderr arm) + a bedrock array on stdout.
-    let (bin, _g) = write_bl(
+    let bin = write_bl(
         dir.path(),
         "#!/bin/sh\nprintf 'warn\\n' 1>&2\nprintf '[{\"id\":\"bl-old\"}]\\n'\n",
     );
@@ -171,11 +169,10 @@ fn closed_errors_on_spawn_failure_and_on_a_nonzero_exit() {
     let world = World::new(true);
     let dir = tempdir().unwrap();
     {
-        let _g = spawn_guard();
         let missing = world.store(Cli::new(dir.path().join("no-such-bl")));
         assert!(missing.closed(&world.project).is_err(), "spawn failure");
     }
-    let (bin, _g) = write_bl(dir.path(), "#!/bin/sh\nprintf 'partial'\nexit 3\n");
+    let bin = write_bl(dir.path(), "#!/bin/sh\nprintf 'partial'\nexit 3\n");
     assert!(
         world.store(Cli::new(bin)).closed(&world.project).is_err(),
         "nonzero exit"

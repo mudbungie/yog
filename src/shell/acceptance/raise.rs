@@ -17,7 +17,6 @@
 use super::fixture::{fake_lernie, seed_world, world};
 use super::screen::{Screen, press};
 use crate::start::Prepared;
-use crate::test_support::spawn_guard;
 use tempfile::tempdir;
 
 #[test]
@@ -29,7 +28,6 @@ fn a_raise_focuses_its_sphere_and_opens_no_second_goal_box() {
     seed_world(&world);
     // Held across the script's write and every exec of it (the ETXTBSY window
     // `test_support` documents); re-entrant, so the flow's own `git` forks pass.
-    let _g = spawn_guard();
     let screen = Screen::with_lernie(fake_lernie(bin.path()));
     screen.idle(&mut world);
     // `w` is a bare key, so the composer lets go first — the §11 idiom.

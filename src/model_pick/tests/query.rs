@@ -181,7 +181,6 @@ fn start_spawns_the_documented_argv_and_reads_its_roster() {
     let dir = tempdir().unwrap();
     let path = dir.path().join("fake-bz");
     let seen = dir.path().join("argv");
-    let guard = crate::test_support::spawn_guard();
     fs::write(
         &path,
         format!(
@@ -192,7 +191,6 @@ fn start_spawns_the_documented_argv_and_reads_its_roster() {
     .unwrap();
     fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
     let mut roster = start(&Cli::new(&path), "codex");
-    drop(guard);
     while roster.poll() {}
     let view = roster.view();
     assert_eq!(view.error, None, "the child exited clean");
@@ -207,7 +205,6 @@ fn start_spawns_the_documented_argv_and_reads_its_roster() {
 /// infallible by construction and hands back a settled failure view.
 #[test]
 fn start_folds_a_spawn_failure_into_the_error_view() {
-    let _guard = crate::test_support::spawn_guard();
     let roster = start(&Cli::new("/definitely/not/a/real/bz-xyz"), "codex");
     let view = roster.view();
     assert!(!view.in_flight);

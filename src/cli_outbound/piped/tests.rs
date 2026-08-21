@@ -3,7 +3,6 @@
 
 use super::*;
 use crate::cli_outbound::Chunk;
-use crate::test_support::spawn_guard;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
@@ -26,7 +25,6 @@ fn drained(stream: Stream) -> (String, i32) {
 /// that close stdin outright.
 #[test]
 fn the_input_arrives_and_the_pipe_closes() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     let tool = dir.path().join("cat-tool");
     fs::write(&tool, "#!/bin/sh\ncat\nexit 3\n").expect("script");
@@ -46,7 +44,6 @@ fn the_input_arrives_and_the_pipe_closes() {
 /// best-effort, and its own capture is what says what happened.
 #[test]
 fn a_child_that_ignores_its_input_still_answers() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     let tool = dir.path().join("deaf-tool");
     fs::write(&tool, "#!/bin/sh\necho 'never read it'\n").expect("script");
@@ -62,7 +59,6 @@ fn a_child_that_ignores_its_input_still_answers() {
 /// spawn shape gives, through the same mapping.
 #[test]
 fn an_unspawnable_command_is_the_one_error() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     assert!(
         Cli::new(dir.path().join("no-such-binary"))

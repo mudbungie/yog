@@ -9,7 +9,7 @@ use crate::opslog;
 
 #[test]
 fn create_captures_the_printed_id_and_optional_body() {
-    let (w, _g) = World::new("bl", "#!/bin/sh\nprintf 'bl-9zzz\\n'\nexit 0\n");
+    let w = World::new("bl", "#!/bin/sh\nprintf 'bl-9zzz\\n'\nexit 0\n");
     // No body.
     let out = create(
         &w.cli,
@@ -57,7 +57,7 @@ fn create_captures_the_printed_id_and_optional_body() {
 
 #[test]
 fn update_carries_only_the_changed_fields() {
-    let (w, _g) = World::new("bl", OK_BODY);
+    let w = World::new("bl", OK_BODY);
     // All fields.
     update(
         &w.cli,
@@ -130,7 +130,7 @@ fn the_scheduling_facts_fold_to_balls_own_flags() {
             },
         ]
     };
-    let (w, _g) = World::new("bl", "#!/bin/sh\nprintf 'bl-9zzz\\n'\nexit 0\n");
+    let w = World::new("bl", "#!/bin/sh\nprintf 'bl-9zzz\\n'\nexit 0\n");
     create(
         &w.cli,
         w.state.path(),

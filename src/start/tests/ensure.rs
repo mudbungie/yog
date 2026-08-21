@@ -10,7 +10,6 @@ use crate::projects::join::JoinState;
 use crate::start::{
     Deps, Payload, StartError, execute_ensure_workspace, on_mint, resolve_worktree,
 };
-use crate::test_support::spawn_guard;
 use crate::world::{Layout, layout_under};
 use lernie::mint::MintError;
 use std::path::PathBuf;
@@ -46,7 +45,6 @@ fn ensure_skips_when_the_workspace_already_exists() {
 
 #[test]
 fn ensure_creates_the_workspace_and_logs() {
-    let _g = spawn_guard();
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
     let lernie = Cli::new(fake_lernie(w.bin.path()));
@@ -63,7 +61,6 @@ fn ensure_creates_the_workspace_and_logs() {
 
 #[test]
 fn ensure_errors_and_logs_on_a_nonzero_new() {
-    let _g = spawn_guard();
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "n");
     let lernie = Cli::new(fake_fail(w.bin.path(), "lernie", "disk full"));
@@ -95,7 +92,6 @@ fn ensure_creates_whatever_the_birth_template_names() {
     // operator's sign-in only reaches it AFTER birth. Birth now judges nothing
     // about providers: the workspace is created, and a dead row is faulted in
     // the §9.5 pane and surfaced at the first dispatch (§8.3) instead.
-    let _g = spawn_guard();
     let w = World::new();
     let tmpl = layout(&w).lernie.join("template");
     std::fs::create_dir_all(&tmpl).unwrap();

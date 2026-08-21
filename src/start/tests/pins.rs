@@ -5,7 +5,6 @@ use super::prompt::{make_fifo, prepared, workspace};
 use super::{World, write_exec};
 use crate::cli_outbound::Cli;
 use crate::start::execute_prompt;
-use crate::test_support::spawn_guard;
 
 /// §3.7: the freeze rides the same one argv as the binding — one `--pin
 /// <dest>=<src>` per instruction document the binding's project declares,
@@ -13,7 +12,6 @@ use crate::test_support::spawn_guard;
 /// payload and the logged row carries the whole provenance.
 #[test]
 fn prompt_pins_the_bound_projects_instructions_before_the_goal() {
-    let _g = spawn_guard();
     let w = World::new();
     let fifo = w.bin.path().join("report");
     make_fifo(&fifo);
@@ -66,7 +64,6 @@ fn prompt_pins_the_bound_projects_instructions_before_the_goal() {
 /// stat, no pin. The general path with empty inputs.
 #[test]
 fn an_unbound_rung_freezes_no_instructions() {
-    let _g = spawn_guard();
     let w = World::new();
     let fifo = w.bin.path().join("report");
     make_fifo(&fifo);

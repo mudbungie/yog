@@ -26,7 +26,6 @@ impl server::Answerer for Silent {
 /// port any running yog holds.
 #[test]
 fn an_unprovisioned_box_founds_its_own_loopback_wire() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let listener = listen(&world, Arc::new(Silent), Presence::default()).expect("listening");
@@ -54,7 +53,6 @@ fn an_unprovisioned_box_founds_its_own_loopback_wire() {
 /// one address file, two live listeners, two distinct ports.
 #[test]
 fn two_engines_on_one_box_each_get_their_own_wire() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let first = listen(&world, Arc::new(Silent), Presence::default()).expect("the first wire");
@@ -72,7 +70,6 @@ fn two_engines_on_one_box_each_get_their_own_wire() {
 /// and the window paints that sentence rather than opening inert.
 #[test]
 fn a_stated_port_another_process_holds_is_a_refusal_that_names_it() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);
@@ -92,7 +89,6 @@ fn a_stated_port_another_process_holds_is_a_refusal_that_names_it() {
 /// writable data root is the one place absence is still the answer.
 #[test]
 fn a_box_the_mint_cannot_provision_keeps_its_engine() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);
@@ -108,7 +104,6 @@ fn a_box_the_mint_cannot_provision_keeps_its_engine() {
 /// lost half a leaf heals rather than losing its wire.
 #[test]
 fn a_leaf_the_mint_can_replace_is_replaced() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);
@@ -120,7 +115,6 @@ fn a_leaf_the_mint_can_replace_is_replaced() {
 /// A provisioned box listens, on the address its material names.
 #[test]
 fn a_provisioned_box_listens() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     mint(&material::dir(&world));
@@ -134,7 +128,6 @@ fn a_provisioned_box_listens() {
 /// replacing an operator's trust root is the other.
 #[test]
 fn a_half_provisioned_box_the_mint_cannot_heal_does_not_listen() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);
@@ -160,7 +153,6 @@ fn the_window_dials_loopback_at_the_bound_port() {
 /// capability, and losing it is not losing the engine.
 #[test]
 fn an_unbindable_address_leaves_the_engine_running() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);
@@ -175,7 +167,6 @@ fn an_unbindable_address_leaves_the_engine_running() {
 /// goes, so the re-mint of that one leaf cannot write.
 #[test]
 fn a_mint_failure_with_readable_material_keeps_the_wire() {
-    let _guard = crate::test_support::spawn_guard();
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);

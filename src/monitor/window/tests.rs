@@ -222,22 +222,19 @@ fn the_delta_is_derived_from_the_last_checked_sha() {
 
 fn commit(wt: &std::path::Path, message: &str) {
     for args in [vec!["add", "-A"], vec!["commit", "-q", "-m", message]] {
-        let out = crate::git_env::git()
-            .arg("-C")
-            .arg(wt)
-            .args(&args)
-            .output()
+        let out = crate::git_env::output(crate::git_env::git().arg("-C").arg(wt).args(&args))
             .expect("git");
         assert!(out.status.success(), "git {args:?}: {out:?}");
     }
 }
 
 fn head(wt: &std::path::Path) -> String {
-    let out = crate::git_env::git()
-        .arg("-C")
-        .arg(wt)
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .expect("git");
+    let out = crate::git_env::output(
+        crate::git_env::git()
+            .arg("-C")
+            .arg(wt)
+            .args(["rev-parse", "HEAD"]),
+    )
+    .expect("git");
     String::from_utf8_lossy(&out.stdout).trim().to_owned()
 }

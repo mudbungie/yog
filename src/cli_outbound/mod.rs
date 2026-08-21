@@ -214,9 +214,10 @@ impl Cli {
         if let Some(dir) = cwd {
             cmd.current_dir(dir);
         }
-        // Callers hold `SPAWN_LOCK` across the spawn so no fork lands while a peer holds a not-yet-closed write fd (ETXTBSY; test_support).
-        let mut child = cmd
-            .spawn()
+        // The crate's one fork, which under `cargo test` holds the spawn lock
+        // so no fork lands while a peer holds a not-yet-closed write fd
+        // (ETXTBSY; `crate::git_env`).
+        let mut child = crate::git_env::spawn(&mut cmd)
             .map_err(|e| CliError::spawn(self.exec_target(), cwd, e))?;
         // Written and closed at once: the child reads its whole input and sees
         // EOF, which is what "the input on stdin" means. A write that fails is

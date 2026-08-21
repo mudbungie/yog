@@ -7,7 +7,6 @@
 use super::super::{Claim, DELETE_STEP, DeleteError, Step, confirmation, execute, plan};
 use crate::cli_outbound::Cli;
 use crate::opslog::{self, OpEntry, SYNTHETIC_EXIT, YOG_STEP};
-use crate::test_support::spawn_guard;
 use crate::ui_state::UiState;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -88,7 +87,6 @@ impl World {
 
 #[test]
 fn execute_releases_prunes_and_removes_leaving_one_step_row() {
-    let _g = spawn_guard();
     let w = World::new();
     let key = w.workspace().to_string_lossy().into_owned();
     let mut ui = w.ui();
@@ -112,7 +110,6 @@ fn the_sphere_takes_its_wall_down_with_it() {
     // §3.6 as amended: a workspace's providers and sign-ins are its own, so an
     // orphaned wall would hand a dead sphere's credentials to the next
     // workspace that takes the name.
-    let _g = spawn_guard();
     let w = World::new();
     let wall = w.seed_wall();
     let mut ui = w.ui();
@@ -133,7 +130,6 @@ fn a_wall_that_cannot_be_removed_aborts_the_unmaking() {
     // The removal is one step: a wall that refuses (here, a *file* where the
     // wall dir belongs) leaves the workspace standing rather than half-unmade,
     // and the synthetic step row records it.
-    let _g = spawn_guard();
     let w = World::new();
     let wall = crate::world::wall::root_under(&w.wall_root(), NAME);
     fs::create_dir_all(wall.parent().expect("the walls dir")).unwrap();
@@ -154,7 +150,6 @@ fn a_wall_that_cannot_be_removed_aborts_the_unmaking() {
 
 #[test]
 fn a_refused_release_aborts_before_the_removal() {
-    let _g = spawn_guard();
     let w = World::new();
     let mut ui = w.ui();
     let claims = vec![claim(&crate::naming::leaf(w.project.path()), "bl-7")];
@@ -174,7 +169,6 @@ fn a_refused_release_aborts_before_the_removal() {
 
 #[test]
 fn a_failed_removal_leaves_a_synthetic_step_row() {
-    let _g = spawn_guard();
     let w = World::new();
     let mut ui = w.ui();
     let steps = plan(
@@ -194,7 +188,6 @@ fn a_failed_removal_leaves_a_synthetic_step_row() {
 
 #[test]
 fn a_spawn_failure_rides_back_as_io() {
-    let _g = spawn_guard();
     let w = World::new();
     let mut ui = w.ui();
     let claims = vec![claim(&crate::naming::leaf(w.project.path()), "bl-7")];

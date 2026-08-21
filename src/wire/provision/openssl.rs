@@ -180,7 +180,7 @@ pub(super) fn tool(args: &[&str]) -> Result<(), String> {
 /// (`rules/no-bare-command.yml`). Its stderr is the refusal's text, trimmed:
 /// an operator whose mint failed needs the tool's own sentence.
 pub(super) fn run(program: &Path, args: &[&str]) -> Result<(), String> {
-    let out = git_env::command(program).args(args).output().map_err(|e| {
+    let out = git_env::output(git_env::command(program).args(args)).map_err(|e| {
         format!(
             "{}: {e} — the wire's certificates need it",
             program.display()

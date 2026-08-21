@@ -11,7 +11,7 @@ use crate::boundary::reply::Reply;
 use crate::cli_outbound::Cli;
 use crate::opslog::{self, DETACHED_EXIT};
 use crate::start::Prepared;
-use crate::test_support::{engine, spawn_guard};
+use crate::test_support::engine;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -47,7 +47,6 @@ fn the_engines_dispatch_is_the_one_chokepoint_a_posted_act_reaches() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Scan {
@@ -69,7 +68,6 @@ fn the_retarget_exit_spawns_the_bound_lernie_verb() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Retarget {
@@ -98,7 +96,6 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Prompt {
@@ -138,7 +135,6 @@ fn a_seedless_prompt_mints_off_the_stamp() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Prompt {
@@ -166,7 +162,6 @@ fn the_spend_ceiling_refuses_the_fire_and_says_so_on_the_trail() {
     )
     .unwrap();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Prompt {
@@ -201,7 +196,6 @@ fn an_attempt_dispatches_the_ordinary_fork_and_logs_its_whole_argv() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let _g = spawn_guard();
     let lernie = fake_lernie(bin.path());
     let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
     let action = Action::Fork {

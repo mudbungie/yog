@@ -1,0 +1,45 @@
+# Every child process is FORKED by `crate::git_env::{spawn, output, status}`,
+# never by a bare `Command::spawn/output/status`. `no-bare-command.yml` already
+# makes `git_env` build every child; this rule makes it fork every child, and
+# the two together are what let the module hold an invariant rather than a
+# convention.
+#
+# The invariant is ETXTBSY (bl-6397). `fs::write` on a fixture script holds a
+# write fd; a fork on ANOTHER thread copies that fd into a child that keeps it
+# until its own exec completes; an exec of the script inside that window fails
+# with ETXTBSY. So the fork is not merely the victim of a peer's write window,
+# it is the other party to it — and a test that writes a fake binary is
+# reddened by a spawn site three modules away that it has no way to know about.
+# Under `cfg(test)` the three verbs take one process-wide lock across the fork,
+# which is the whole of the discipline: measured with the writes left entirely
+# unguarded, 8 write-then-exec threads against an 8-thread fork storm over
+# ~9,600 pairs, zero ETXTBSY — against 8.3% with the fork unguarded.
+#
+# Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser: a
+# method call `cmd.spawn()` is a `call_expression` whose `function` field is a
+# `field_expression` (text `cmd.spawn`) and whose `arguments` field is `()`.
+# Both halves are load-bearing. The `field_expression` requirement excludes
+# `std::thread::spawn(…)`, which is a path call and not a fork at all; the
+# empty-`arguments` requirement excludes a thread starter that takes one
+# (`follow.spawn(repaint)`), and `out.status.success()` never matched because
+# the function text ends in `.success`. What that leaves is the ambiguous case,
+# a crate type with a zero-argument `spawn` — which is why the three thread
+# starters `Poster`/`Asker`/`Searcher` were renamed to `start`: in a crate whose
+# one fork lives in `git_env`, `spawn` on anything else is a name asking to be
+# misread.
+id: no-bare-fork
+language: rust
+severity: error
+message: "fork children through crate::git_env::{spawn,output,status} (see rules/no-bare-fork.yml)"
+ignores:
+  - "**/git_env.rs"
+rule:
+  kind: call_expression
+  all:
+    - has:
+        field: function
+        kind: field_expression
+        regex: '\.(spawn|output|status)$'
+    - has:
+        field: arguments
+        regex: '^\(\)$'

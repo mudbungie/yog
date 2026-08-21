@@ -102,7 +102,7 @@ impl Searcher {
     /// Run [`pass`](Self::pass) forever, parked between looks — the
     /// [`Consumer`](crate::boundary::consumer::Consumer) shutdown shape exactly:
     /// a stop flag, an unpark, a join.
-    pub fn spawn(self) -> SearchThread {
+    pub fn start(self) -> SearchThread {
         let stop = Arc::new(AtomicBool::new(false));
         let flag = Arc::clone(&stop);
         let handle = std::thread::spawn(move || {

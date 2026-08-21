@@ -7,7 +7,6 @@ use super::{World, write_exec};
 use crate::cli_outbound::Cli;
 use crate::opslog::{Origin, SYNTHETIC_EXIT};
 use crate::start::{DETACHED_EXIT, Prepared, execute_prompt};
-use crate::test_support::spawn_guard;
 use std::path::Path;
 
 /// The composer's fire-time params: workspace `name`, its path, and the §3.3
@@ -48,17 +47,17 @@ pub(super) fn workspace(w: &World) -> std::path::PathBuf {
 
 /// A blocking fifo — reading it rendezvous with the detached child's write.
 pub(super) fn make_fifo(path: &Path) {
-    let status = crate::git_env::command(Path::new("mkfifo"))
-        .args(["-m", "600"])
-        .arg(path)
-        .status()
-        .expect("spawn mkfifo");
+    let status = crate::git_env::status(
+        crate::git_env::command(Path::new("mkfifo"))
+            .args(["-m", "600"])
+            .arg(path),
+    )
+    .expect("spawn mkfifo");
     assert!(status.success(), "mkfifo");
 }
 
 #[test]
 fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
-    let _g = spawn_guard();
     let w = World::new();
     let fifo = w.bin.path().join("report");
     make_fifo(&fifo);
@@ -125,7 +124,6 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
 /// flag that rides conditionally.
 #[test]
 fn prompt_passes_the_typed_target_as_cwd_with_the_goal_still_last() {
-    let _g = spawn_guard();
     let w = World::new();
     let fifo = w.bin.path().join("report");
     make_fifo(&fifo);
@@ -167,7 +165,6 @@ fn prompt_passes_the_typed_target_as_cwd_with_the_goal_still_last() {
 
 #[test]
 fn prompt_routes_the_drivers_stderr_to_its_per_spawn_sink() {
-    let _g = spawn_guard();
     let w = World::new();
     let fifo = w.bin.path().join("report");
     make_fifo(&fifo);
@@ -204,7 +201,6 @@ fn prompt_routes_the_drivers_stderr_to_its_per_spawn_sink() {
 
 #[test]
 fn prompt_clips_a_large_logged_goal() {
-    let _g = spawn_guard();
     let w = World::new();
     let lernie = Cli::new(super::fake_lernie(w.bin.path()));
     let ws = workspace(&w);
@@ -237,7 +233,6 @@ fn prompt_clips_a_large_logged_goal() {
 /// "launched and running" — the two facts that used to share `-2`.
 #[test]
 fn prompt_logs_the_spawn_failure_and_returns_err() {
-    let _g = spawn_guard();
     let w = World::new();
     let lernie = Cli::new("/definitely/not/a/real/lernie-prompt");
     let ws = workspace(&w);
@@ -268,7 +263,6 @@ fn prompt_logs_the_spawn_failure_and_returns_err() {
 /// row must say so — not `-2`, which would claim the driver is running.
 #[test]
 fn a_nonexistent_work_directory_logs_failed_to_spawn_not_a_handoff() {
-    let _g = spawn_guard();
     let w = World::new();
     let lernie = Cli::new(super::fake_lernie(w.bin.path()));
     let missing = w.yog.path().join("no-such-dir");

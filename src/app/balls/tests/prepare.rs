@@ -18,7 +18,7 @@
 use super::{model_focused, world};
 use crate::boundary::{Action, reply::Reply};
 use crate::cli_outbound::Cli;
-use crate::test_support::{authoring_new_arm, engine, spawn_guard};
+use crate::test_support::{authoring_new_arm, engine};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -85,7 +85,6 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     // write-then-exec window (the ETXTBSY race `test_support` documents).
     let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
     assert_eq!(m.focused_workspace(), Some(w.ws_cobalt.clone()));
-    let _g = spawn_guard();
 
     let inputs = m.new_workspace_inputs("ops");
     let prepared = staged(&mut m, &fake_lernie(bin.path(), &news()), &inputs).unwrap();
@@ -129,7 +128,6 @@ fn a_failed_prepare_moves_the_focus_nowhere() {
     let w = world();
     seed(&w.roots.yog_data);
     let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
-    let _g = spawn_guard(); // after the model, per the note above
 
     let inputs = m.new_workspace_inputs("ops");
     let err = staged(&mut m, &fake_lernie(bin.path(), FAILS), &inputs).unwrap_err();
@@ -153,7 +151,6 @@ fn a_ball_rung_whose_project_this_world_does_not_enumerate_refuses_by_name() {
     let w = world();
     seed(&w.roots.yog_data);
     let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
-    let _g = spawn_guard();
 
     let inputs = m.new_ball_inputs(Path::new("/nowhere/at/all"), "Fresh", "do it");
     let err = staged(&mut m, &fake_lernie(bin.path(), &news()), &inputs).unwrap_err();

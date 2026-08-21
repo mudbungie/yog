@@ -17,7 +17,7 @@ use crate::boundary::{Action, reply::Reply};
 use crate::cli_outbound::Cli;
 use crate::git_tree::AgentState;
 use crate::opslog;
-use crate::test_support::{engine, spawn_guard};
+use crate::test_support::engine;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -135,7 +135,6 @@ fn a_live_member_refuses_before_anything_spawns() {
 
 #[test]
 fn a_leaf_fires_the_bare_verb_and_the_typed_name_arms_the_subtree() {
-    let _g = spawn_guard();
     let mut h = Harness::new();
     let named = h.mint_named("alba-koi", "c-1");
     let bin = tempdir().unwrap();
@@ -171,7 +170,6 @@ fn a_leaf_fires_the_bare_verb_and_the_typed_name_arms_the_subtree() {
 
 #[test]
 fn a_declined_verb_rides_back_its_stderr_verbatim() {
-    let _g = spawn_guard();
     let mut h = Harness::new();
     let named = h.mint_named("alba-koi", "c-1");
     let bin = tempdir().unwrap();
@@ -196,7 +194,6 @@ fn a_declined_verb_rides_back_its_stderr_verbatim() {
 
 #[test]
 fn a_focus_on_a_descendant_clears_with_its_root_and_a_neighbour_survives() {
-    let _g = spawn_guard();
     let mut h = Harness::new();
     let named = h.mint_named("alba-koi", "r-aa");
     h.last_added().build_agent("r-aa-c-bb", "child");

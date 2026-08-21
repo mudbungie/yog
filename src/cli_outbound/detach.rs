@@ -62,11 +62,10 @@ impl Cli {
         if let Some(dir) = cwd {
             cmd.current_dir(dir);
         }
-        // Direct fork like `run`: callers hold `SPAWN_LOCK` across it (the
-        // detach fixtures) so the fork never lands while a peer holds a
-        // not-yet-closed recorder write fd (ETXTBSY, `crate::test_support`).
-        let child = cmd
-            .spawn()
+        // Through the crate's one fork like `run`, so under `cargo test` it
+        // takes the spawn lock and never lands while a peer holds a
+        // not-yet-closed recorder write fd (ETXTBSY, `crate::git_env`).
+        let child = crate::git_env::spawn(&mut cmd)
             .map_err(|e| CliError::spawn(self.exec_target(), cwd, e))?;
         let pid = child.id();
         reap(child);

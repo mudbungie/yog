@@ -17,7 +17,6 @@ fn a_landed_spawn_starts_a_drone_and_leaves_one_row() {
     let ws = root.path().join("ws");
     std::fs::create_dir_all(&project).expect("mkdir");
     let mut ctx = ctx(root.path(), armed_world(&ws, &project, false, None));
-    let _guard = crate::test_support::spawn_guard();
     // `bl claim` prints the worktree it minted (§3.2), and the start flow
     // cross-checks it — so the fake prints exactly the one balls' delivery
     // layout puts under this state root.
@@ -69,7 +68,6 @@ fn a_birth_whose_fire_never_launches_gives_its_own_claim_back() {
     let ws = root.path().join("ws");
     std::fs::create_dir_all(&project).expect("mkdir");
     let mut ctx = ctx(root.path(), armed_world(&ws, &project, false, None));
-    let _guard = crate::test_support::spawn_guard();
     let worktree = ctx
         .deps
         .balls_state_root
@@ -109,7 +107,6 @@ fn a_refused_spawn_writes_no_loop_row() {
     let project = root.path().join("proj");
     let ws = root.path().join("ws");
     std::fs::create_dir_all(&project).expect("mkdir");
-    let _guard = crate::test_support::spawn_guard();
     let mut ctx = ctx(root.path(), armed_world(&ws, &project, false, None));
     ctx.deps.bl = fake(
         root.path(),

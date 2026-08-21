@@ -117,7 +117,7 @@ fn a_reply_of_another_kind_invents_nothing() {
 fn the_searcher_thread_answers_an_ask_and_stops_on_drop() {
     let tmp = TempDir::new().expect("tmp");
     let (_listener, searcher, asks) = wired(&tmp, answers("bl-thread"));
-    let thread = searcher.spawn();
+    let thread = searcher.start();
     asks.ask("bl-thread");
     for _ in 0..200 {
         if !asks.searching() {

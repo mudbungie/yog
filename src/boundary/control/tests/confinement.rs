@@ -14,10 +14,8 @@ fn confinement_required_gates_births_by_the_derived_availability() {
     // No policy at all: the gate is a no-op with nothing configured.
     assert_eq!(confinement_gate(&world.workspace()), Ok(()));
     world.policy("confinement: required\n");
-    let guard = crate::test_support::spawn_guard();
     let gated = confinement_gate(&world.workspace());
     let derived = crate::control::confine::available();
-    drop(guard);
     // The gate IS the derivation — required passes exactly where the backend
     // proves itself at this moment, and nothing anywhere stores the answer.
     assert_eq!(gated.is_ok(), derived.is_ok(), "{gated:?} vs {derived:?}");
@@ -65,7 +63,6 @@ fn an_attempt_is_gated_and_a_permitted_fire_is_wrapped() {
     let mut ui = crate::ui_state::UiState::open(PathBuf::from("/nonexistent/ui.json"));
     // Ungated, the fork runs bare and fails on its own terms — the executor's
     // error, not the policy's.
-    let guard = crate::test_support::spawn_guard();
     let ran = crate::boundary::dispatch::dispatch(&deps, &mut ui, "1", &attempt)
         .expect_err("no lernie to fork with");
     assert!(!ran.contains("confinement"), "{ran}");
@@ -75,7 +72,6 @@ fn an_attempt_is_gated_and_a_permitted_fire_is_wrapped() {
     let wrapper = crate::control::confine::wrapper(&deps.world, &world.workspace());
     let fired = crate::boundary::dispatch::dispatch(&deps, &mut ui, "2", &attempt);
     let derived = crate::control::confine::available();
-    drop(guard);
     // The fold is unconditional under the policy, probe or no probe.
     assert_eq!(wrapper.first().map(String::as_str), Some("bwrap"));
     assert_eq!(wrapper.last().map(String::as_str), Some("--"));

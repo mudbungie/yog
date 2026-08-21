@@ -8610,7 +8610,7 @@ beside `main.rs`.
 | `src/fork/{mod,composer,render}.rs` | the V2 **attempt** (bl-dc0c): `mod` what one fork *is* — the `lernie dispatch` argv, the skill pins, and the fire-time policy read off the workspace (§5.1 #34); `composer` the ×N and the readiness rule, where a cohort is a `Vec`'s length and nothing branches on it; `render` the seat at a pinned notch, every control a reading of the workspace rather than a yog list. Nothing here can touch a project worktree — the rung is read-only by construction (VISION §4.10, bl-2b8c) |
 | `src/fs_watcher/mod.rs` | the watched root's watcher: the §7.1 allowlist subset exposed as a drainable stream of coalesced change notifications, pure Rust with no egui dependency |
 | `src/fs_watcher/{roots,fold,hub}.rs` | per-root-kind allowlists (§7.1); the raw-event drain, coalesce and desync lead (§7.2); the process's one backend instance and its per-root fan-out (§7.1, bl-908c) |
-| `src/git_env.rs` | the ambient-git-env scrub at the spawn boundary; the crate's ONE `Command` constructor (bl-916a; `rules/no-bare-command.yml`) |
+| `src/git_env.rs` | the ambient-git-env scrub at the spawn boundary; the crate's ONE `Command` constructor (bl-916a; `rules/no-bare-command.yml`) **and its one fork** — `spawn`/`output`/`status`, which under `cfg(test)` take the binary-wide spawn lock so no fork lands in a peer's ETXTBSY window (bl-6397; `rules/no-bare-fork.yml`) |
 | `src/git_tree/{mod,model}.rs` | module wiring + the platform `cfg` probe stack; the inert view-model types it re-exports, incl. the §5.1 #28a call starts (`Agent::call_start_unix`, `ToolCall::start_unix`) and #28b's `Agent::last_delta` |
 | `src/git_tree/addressing.rs` | the **live conversation enumeration** the §8.5 boundary addresses over (bl-49bc): every `agents/*` ref with its stored `name` blob, two facts and nothing else, so it is affordable per gesture where the §7.1 tree walk is not — and asked of disk rather than remembered, for bl-6c9e's reason one noun down (a detached driver writes the branch after the fire has already answered) |
 | `src/git_tree/cmd.rs` | the git CLI wrapper and log/diff parsing — no libgit2, and every invocation built by `git_env::command` |
@@ -8827,7 +8827,8 @@ beside `main.rs`.
 
 Testing per the house pattern: real-git tempdir fixtures (extended with a
 balls-clone-layout and yog-ball-root fixture builder), argv-recorder scripts
-under the binary-wide SPAWN_LOCK, fake `/proc` and fake `lsof` output
+(written bare — the binary-wide SPAWN_LOCK sits at the one fork, not at the
+write, bl-6397), fake `/proc` and fake `lsof` output
 injection, injected clocks for every debounce/sweep branch, headless
 shape-walk for every render fn, forgiving-read cases for every file parser,
 `--test-threads=1`, tarpaulin 0.35.2 pinned, 100%.

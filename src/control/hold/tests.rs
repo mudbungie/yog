@@ -47,11 +47,7 @@ fn a_workspace_with_no_repo_holds_nothing() {
 fn parked(workspace: &std::path::Path, agent: &str, value: &str) {
     let repo = workspace.join("repo.git");
     let git = |args: &[&str]| {
-        crate::git_env::git()
-            .arg("--git-dir")
-            .arg(&repo)
-            .args(args)
-            .output()
+        crate::git_env::output(crate::git_env::git().arg("--git-dir").arg(&repo).args(args))
             .expect("git runs")
     };
     std::fs::create_dir_all(&repo).unwrap();

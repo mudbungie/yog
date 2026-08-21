@@ -157,7 +157,6 @@ fn a_landed_reap_releases_the_claim_and_leaves_one_row() {
     let project = root.path().join("proj");
     let ws = root.path().join("ws");
     std::fs::create_dir_all(&project).expect("mkdir");
-    let _guard = crate::test_support::spawn_guard();
     let bl = fake(root.path(), "bl", "#!/bin/sh\nexit 0\n");
     let mut ctx = ctx(
         root.path(),
@@ -182,7 +181,6 @@ fn a_refused_reap_writes_no_loop_row() {
     let project = root.path().join("proj");
     let ws = root.path().join("ws");
     std::fs::create_dir_all(&project).expect("mkdir");
-    let _guard = crate::test_support::spawn_guard();
     let bl = fake(
         root.path(),
         "bl",

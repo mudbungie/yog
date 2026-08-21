@@ -223,7 +223,19 @@ demotion removes an internal API from the boundary's obligations. Reach for
   forks; bl-916a moved the scrub to the **spawn boundary**, where one
   `env_remove` clears the whole descendant process tree (`bl`, `lernie`, `bz`,
   an `$EDITOR` shim, the suite's fake substrate scripts). A bare `Command::new`
-  outside `src/git_env.rs` is an error — `rules/no-bare-command.yml`.
+  outside `src/git_env.rs` is an error — `rules/no-bare-command.yml`. **So is a
+  bare fork** (bl-6397): `git_env::{spawn, output, status}` is the crate's one
+  `spawn`/`output`/`status` on a `Command`, and under `cfg(test)` it takes the
+  binary-wide spawn lock — `rules/no-bare-fork.yml`. Building every child here
+  and letting each caller fork it left a second per-call contract open, and it
+  cost the suite a recurring flake: `fs::write` on a fixture script holds a
+  write fd, a fork on any other thread copies that fd into a child that keeps it
+  until its own exec, and an exec of the script inside that window is ETXTBSY.
+  The victim's own care cannot save it — the fork is the other party — so the
+  discipline belongs at the fork and NOT at the write. A test writes its fake
+  binary bare and execs it; the ~150 write-side brackets that used to stand were
+  swept, and they were not merely redundant (one held the lock across a body
+  whose worker thread forked, starving that fork for the whole test).
   **`git commit` inside a `work/<id>` worktree is safe again:** the hook runs
   the suite, and the suite no longer writes to the outer repo (regression:
   `tests/git_env_scrub.rs`; verified by running the whole suite with

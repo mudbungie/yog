@@ -17,7 +17,6 @@
 
 use super::fixture::{MINTED_FIRST, World, fake_lernie, seed_world, world};
 use super::screen::{Screen, press};
-use crate::test_support::spawn_guard;
 use tempfile::tempdir;
 
 /// The operator's words. Deliberately unlike anything the fixture, the theme or
@@ -129,7 +128,6 @@ fn a_start_is_a_row_in_the_operators_own_words_on_the_next_frame() {
     let bin = tempdir().unwrap();
     let mut world = quick(world());
     seed_world(&world);
-    let _g = spawn_guard();
     let screen = Screen::with_lernie(fake_lernie(bin.path()));
     assert!(screen.idle(&mut world), "the cursor starts in the composer");
     let worktrees = branches(&world);
@@ -224,7 +222,6 @@ fn a_message_joins_the_inbox_queue_faded_and_brightens_when_it_lands() {
     let bin = tempdir().unwrap();
     let mut world = quick(world());
     seed_world(&world);
-    let _g = spawn_guard();
     let screen = Screen::with_lernie(fake_lernie(bin.path()));
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");

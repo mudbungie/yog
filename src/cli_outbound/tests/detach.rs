@@ -40,11 +40,12 @@ fn sink_in(dir: &Path) -> PathBuf {
 /// the read completing is itself proof the child survived our dropping its
 /// handle — no `waitpid` required to synchronize.
 fn make_fifo(path: &Path) {
-    let status = crate::git_env::command(Path::new("mkfifo"))
-        .args(["-m", "600"])
-        .arg(path)
-        .status()
-        .expect("spawn mkfifo");
+    let status = crate::git_env::status(
+        crate::git_env::command(Path::new("mkfifo"))
+            .args(["-m", "600"])
+            .arg(path),
+    )
+    .expect("spawn mkfifo");
     assert!(status.success(), "mkfifo");
 }
 
@@ -85,7 +86,7 @@ fn detached_child_survives_and_leads_own_group() {
     // internal Child — had that drop killed it (as Stream's drop does), the
     // fifo read below would block until timeout. process_group(0) makes the
     // child its own group leader, so the second field equals the pid.
-    let (bin, _guard) = write_script(dir.path(), "driver", GROUP_DRIVER);
+    let bin = write_script(dir.path(), "driver", GROUP_DRIVER);
     let fifo_str = fifo.to_str().unwrap();
     let pid = Cli::new(bin)
         .spawn_detached(None, &sink_in(dir.path()), &[fifo_str])
@@ -113,7 +114,7 @@ fn the_detached_child_is_reaped_and_leaves_no_zombie() {
     let dir = tempdir().unwrap();
     let fifo = dir.path().join("report");
     make_fifo(&fifo);
-    let (bin, _guard) = write_script(dir.path(), "driver", EXITING_DRIVER);
+    let bin = write_script(dir.path(), "driver", EXITING_DRIVER);
     let fifo_str = fifo.to_str().unwrap();
     let pid = Cli::new(bin)
         .spawn_detached(None, &sink_in(dir.path()), &[fifo_str])
@@ -147,7 +148,7 @@ fn spawn_detached_propagates_cwd() {
     // shared with `run`; it is proven, without mutating yog's own env, by
     // `run_env_sets_child_environment_variables`, which passes vars via
     // `Command::env` explicitly.)
-    let (bin, _guard) = write_script(dir.path(), "driver", "#!/bin/sh\npwd -P > \"$1\"\n");
+    let bin = write_script(dir.path(), "driver", "#!/bin/sh\npwd -P > \"$1\"\n");
     let fifo_str = fifo.to_str().unwrap();
     Cli::new(bin)
         .spawn_detached(Some(dir.path()), &sink_in(dir.path()), &[fifo_str])
@@ -165,7 +166,6 @@ fn spawn_detached_errors_on_missing_binary() {
     // A failing spawn still forks before exec reports ENOENT; hold
     // SPAWN_LOCK so that transient child can't inherit a peer's recorder
     // write fd.
-    let _g = spawn_guard();
     let dir = tempdir().unwrap();
     let cli = Cli::new("/definitely/not/a/real/binary/lernie-detach");
     let err = cli
@@ -185,7 +185,7 @@ fn detached_child_stderr_lands_in_the_sink_file() {
     let dir = tempdir().unwrap();
     let fifo = dir.path().join("report");
     make_fifo(&fifo);
-    let (bin, _guard) = write_script(dir.path(), "driver", DYING_DRIVER);
+    let bin = write_script(dir.path(), "driver", DYING_DRIVER);
     let sink = sink_in(dir.path());
     let fifo_str = fifo.to_str().unwrap();
     // The sink's parent does not exist yet: the spawn creates the chain.
@@ -208,7 +208,7 @@ fn an_unopenable_sink_degrades_to_null_and_still_launches() {
     let dir = tempdir().unwrap();
     let fifo = dir.path().join("report");
     make_fifo(&fifo);
-    let (bin, _guard) = write_script(dir.path(), "driver", DYING_DRIVER);
+    let bin = write_script(dir.path(), "driver", DYING_DRIVER);
     // A sink whose parent chain cannot be created (the "dir" is a file): the
     // capture is lost, but the driver is the point — the launch must proceed.
     let blocker = dir.path().join("blocker");

@@ -30,8 +30,9 @@ binary of its own, and 28 of them cost ~1.8 s of tarpaulin launch overhead and
 env (`multiplex_bl`, `multiplex_lernie`, `git_env_scrub`) stay standalone,
 because "one `#[test]` per binary" *is* their soundness argument. The rest
 share a process, so a fixture executable is authored through
-`support::write_executable` — a plain `fs::write` on a file about to be exec'd
-races a peer thread's fork into `ETXTBSY`. They drive the dispatch layer — the same
+`support::write_executable`. In *this* crate that still matters: `git_env`'s
+fork lock is `cfg(test)` on the lib, so an integration binary's own forks are
+outside it (bl-6397). They drive the dispatch layer — the same
 `pub` functions the shell's click-glue calls (`start::*`, `actions::*`,
 `AppModel`, the view-model modules) — never egui widgets (§11's split: glue
 is thin and excluded; everything a click *calls* is covered). Substrates are

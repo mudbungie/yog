@@ -8,7 +8,6 @@
 use super::{SeedError, ensure_seeded, seeded};
 use crate::cli_outbound::Cli;
 use crate::opslog::{self, OpEntry, Origin};
-use crate::test_support::spawn_guard;
 use crate::world::{Layout, layout_under};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -89,7 +88,6 @@ fn ensure_seeded_skips_a_seeded_world() {
 
 #[test]
 fn ensure_seeded_primes_with_lernie_home_and_logs() {
-    let _g = spawn_guard();
     let w = World::new();
     let report = w.bin.path().join("home");
     // The fake records the `LERNIE_HOME` it received (printf builtin only — no
@@ -123,7 +121,6 @@ fn ensure_seeded_primes_with_lernie_home_and_logs() {
 
 #[test]
 fn ensure_seeded_errors_on_a_nonzero_prime() {
-    let _g = spawn_guard();
     let w = World::new();
     let body = "#!/bin/sh\nprintf '%s\\n' 'prime boom' 1>&2\nexit 3\n";
     let lernie = Cli::new(fake_lernie(w.bin.path(), body));
@@ -148,7 +145,6 @@ fn ensure_seeded_errors_on_a_nonzero_prime() {
 
 #[test]
 fn ensure_seeded_surfaces_a_spawn_failure() {
-    let _g = spawn_guard();
     let w = World::new();
     let lernie = Cli::new("/definitely/not/a/real/lernie");
     let err = ensure_seeded(

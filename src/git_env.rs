@@ -22,9 +22,29 @@
 //! hand**: [`command`] is the crate's one [`Command`] constructor ([`git`] is
 //! its `git` spelling), it scrubs, and a caller cannot opt out because there is
 //! nothing else to call. Enforced by `rules/no-bare-command.yml`.
+//!
+//! # The fork is the boundary too (bl-6397)
+//!
+//! Building every child here and then letting each caller fork it by hand left
+//! a second per-call contract open, and it cost the suite a recurring flake.
+//! `fs::write` on a fixture script holds a write fd; a `fork` in ANOTHER thread
+//! copies that fd into a child that keeps it until its own `exec` completes; an
+//! `exec` of the script inside that window is **ETXTBSY**. So a test that never
+//! spawns anything can still redden a test three modules away, and the victim's
+//! own care cannot save it.
+//!
+//! [`spawn`], [`output`] and [`status`] are therefore the crate's one fork, and
+//! in `cfg(test)` they take one process-wide lock across the fork — the whole of
+//! the discipline, in one place nobody has to remember. Measured on this box
+//! with 8 write-then-exec threads against an 8-thread fork storm, ~9,600 pairs
+//! each: unguarded forks, 8.3% ETXTBSY; every fork through one lock, **zero** —
+//! and zero *with the writes left entirely unguarded*, which is why the write
+//! side needs no contract at all. Releasing the lock the instant the fork
+//! returns is enough (a child's inherited fds are gone by then), so a child is
+//! never waited on under it and the suite's subprocesses still run concurrently.
 
 use std::path::Path;
-use std::process::Command;
+use std::process::{Child, Command, ExitStatus, Output, Stdio};
 
 /// The variables `git` exports into a hook's (or any child's) environment that
 /// re-aim a child `git` at another repository. Public because a few callers
@@ -55,6 +75,32 @@ pub fn command(program: &Path) -> Command {
 /// [`command`] for `git` itself — the crate's git constructor.
 pub fn git() -> Command {
     command(Path::new("git"))
+}
+
+/// Fork + exec `cmd` — **the crate's one fork**, and the only lawful way to
+/// start a child here (`rules/no-bare-fork.yml`). Under `cfg(test)` the fork
+/// happens under the binary-wide spawn lock; see the module doc for the race
+/// that buys.
+pub(crate) fn spawn(cmd: &mut Command) -> std::io::Result<Child> {
+    #[cfg(test)]
+    let _guard = crate::test_support::spawn_guard();
+    cmd.spawn()
+}
+
+/// [`spawn`] then read the child to EOF — [`Command::output`]'s behavior, with
+/// its default stdio spelled out, so the lock covers the fork alone and never
+/// the child's whole life.
+pub(crate) fn output(cmd: &mut Command) -> std::io::Result<Output> {
+    cmd.stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    spawn(cmd)?.wait_with_output()
+}
+
+/// [`spawn`] then wait — [`Command::status`]'s behavior (stdio inherited unless
+/// the caller said otherwise), with the lock over the fork alone.
+pub(crate) fn status(cmd: &mut Command) -> std::io::Result<ExitStatus> {
+    spawn(cmd)?.wait()
 }
 
 #[cfg(test)]

@@ -6,7 +6,7 @@ use super::{ACME, deps_at, fire, quiet, script, seed_wall};
 use crate::boundary::Action;
 use crate::boundary::reply::Reply;
 use crate::git_tree::tests::fixture::Fixture;
-use crate::test_support::{TEMPLATE_PROVIDERS, spawn_guard};
+use crate::test_support::TEMPLATE_PROVIDERS;
 use std::fs;
 use std::path::Path;
 use tempfile::tempdir;
@@ -99,7 +99,6 @@ fn pick(role: &str, provider: &str, model: &str, ws: &Path) -> Action {
 /// pick untouched, and the assertion has to be that it was never created.
 #[test]
 fn a_pick_commits_the_assignment_and_writes_no_second_file() {
-    let g = spawn_guard();
     let root = tempdir().unwrap();
     let bin = tempdir().unwrap();
     let log = bin.path().join("log");
@@ -120,7 +119,6 @@ fn a_pick_commits_the_assignment_and_writes_no_second_file() {
     // for (bl-fcd5), so `acme` has to be live in *that* sphere's wall.
     seed_wall(&deps, &fx.path, ACME);
     let reply = fire(&deps, &pick("worker", "acme", "m-9", &fx.path));
-    drop(g);
     assert!(
         matches!(&reply, Ok(Reply::Outcome(o)) if o.ok()),
         "{reply:?}"

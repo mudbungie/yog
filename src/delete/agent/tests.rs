@@ -5,7 +5,6 @@
 
 use super::*;
 use crate::opslog;
-use crate::test_support::spawn_guard;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
@@ -202,7 +201,6 @@ impl FakeLernie {
 
 #[test]
 fn the_census_is_the_dry_run_subtree_form() {
-    let _g = spawn_guard();
     let fx = FakeLernie::new(
         "would delete r-aa; descendants: 1 (r-aa-c-bb); pending deposits: 2",
         "",
@@ -221,7 +219,6 @@ fn the_census_is_the_dry_run_subtree_form() {
 
 #[test]
 fn a_declined_or_unreadable_census_fails_closed() {
-    let _g = spawn_guard();
     let declined = FakeLernie::new("", "not a workspace", 2);
     let ws = declined.ws();
     assert_eq!(
@@ -244,7 +241,6 @@ fn a_declined_or_unreadable_census_fails_closed() {
 
 #[test]
 fn the_removal_is_the_logged_lernie_verb_bare_or_subtree() {
-    let _g = spawn_guard();
     let state = tempdir().unwrap();
     let fx = FakeLernie::new("deleted r-aa; descendants: 0; pending deposits: 0", "", 0);
     let ws = fx.ws();

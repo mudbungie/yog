@@ -132,7 +132,6 @@ fn start_logs_a_synthetic_row_when_bz_cannot_spawn() {
     // Hold the binary-wide spawn lock across the fork (the `test_support`
     // discipline): even a failed exec forks, and its copied write-fd would race a
     // peer's recorder-script write into ETXTBSY without this.
-    let _guard = crate::test_support::spawn_guard();
     let dir = tempdir().unwrap();
     let bz = Cli::new("/definitely/not/a/real/bz-xyz");
     // `.err()` sidesteps `unwrap_err`'s `T: Debug` bound (LoginRun holds a live

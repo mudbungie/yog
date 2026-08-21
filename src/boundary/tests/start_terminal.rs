@@ -14,8 +14,8 @@ use super::snapshot;
 use crate::boundary::dispatch::Deps;
 use crate::boundary::{consume::consume, deposit, sugar};
 use crate::cli_outbound::Cli;
+use crate::test_support::authoring_new_arm;
 use crate::test_support::world::no_world;
-use crate::test_support::{authoring_new_arm, spawn_guard};
 use crate::ui_state::UiState;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -45,11 +45,12 @@ fn fake_lernie(dir: &Path, fifo: &Path) -> PathBuf {
 }
 
 fn make_fifo(path: &Path) {
-    let status = crate::git_env::command(Path::new("mkfifo"))
-        .args(["-m", "600"])
-        .arg(path)
-        .status()
-        .expect("spawn mkfifo");
+    let status = crate::git_env::status(
+        crate::git_env::command(Path::new("mkfifo"))
+            .args(["-m", "600"])
+            .arg(path),
+    )
+    .expect("spawn mkfifo");
     assert!(status.success(), "mkfifo");
 }
 
@@ -57,7 +58,6 @@ fn make_fifo(path: &Path) {
 /// `/prompt …`, the second carrying nothing but the first's own reply.
 #[test]
 fn a_prepared_reply_fires_the_next_invocations_prompt() {
-    let _g = spawn_guard();
     let bin = tempfile::tempdir().unwrap();
     let state = tempfile::tempdir().unwrap();
     let yog = tempfile::tempdir().unwrap();

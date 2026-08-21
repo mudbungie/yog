@@ -67,20 +67,21 @@ impl World {
         let repo = self.workspace().join("repo.git");
         std::fs::create_dir_all(&repo).unwrap();
         let git = |args: &[&str]| {
-            let out = crate::git_env::git()
-                .arg("--git-dir")
-                .arg(&repo)
-                .args(args)
-                .env("GIT_AUTHOR_DATE", "2026-08-04T00:00:00Z")
-                .env("GIT_COMMITTER_DATE", "2026-08-04T00:00:00Z")
-                .env("GIT_AUTHOR_NAME", "t")
-                .env("GIT_AUTHOR_EMAIL", "t@t")
-                .env("GIT_COMMITTER_NAME", "t")
-                .env("GIT_COMMITTER_EMAIL", "t@t")
-                .env("GIT_CONFIG_GLOBAL", "/dev/null")
-                .env("GIT_CONFIG_SYSTEM", "/dev/null")
-                .output()
-                .unwrap();
+            let out = crate::git_env::output(
+                crate::git_env::git()
+                    .arg("--git-dir")
+                    .arg(&repo)
+                    .args(args)
+                    .env("GIT_AUTHOR_DATE", "2026-08-04T00:00:00Z")
+                    .env("GIT_COMMITTER_DATE", "2026-08-04T00:00:00Z")
+                    .env("GIT_AUTHOR_NAME", "t")
+                    .env("GIT_AUTHOR_EMAIL", "t@t")
+                    .env("GIT_COMMITTER_NAME", "t")
+                    .env("GIT_COMMITTER_EMAIL", "t@t")
+                    .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                    .env("GIT_CONFIG_SYSTEM", "/dev/null"),
+            )
+            .unwrap();
             assert!(out.status.success(), "git {args:?}");
             String::from_utf8_lossy(&out.stdout).trim().to_owned()
         };

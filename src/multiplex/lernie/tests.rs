@@ -6,7 +6,6 @@
 //! process environment (`LERNIE_HOME`/`XDG_DATA_HOME`/`EDITOR`).
 
 use super::*;
-use crate::test_support::spawn_guard;
 
 fn args(parts: &[&str]) -> Vec<String> {
     parts.iter().map(|s| (*s).to_string()).collect()
@@ -26,7 +25,6 @@ fn parse_accepts_a_verb_and_maps_help_and_errors_to_exit_codes() {
 
 #[test]
 fn edit_with_maps_the_editor_exit_to_the_edit_result() {
-    let _guard = spawn_guard();
     let dir = tempfile::TempDir::new().unwrap();
     // The editor is handed the checkout dir as `"$1"` through `sh -c`, so a
     // multi-word $EDITOR works; a zero exit is a completed edit.
@@ -45,7 +43,6 @@ fn conclude_performs_success_and_prints_the_uniform_failure() {
 
 #[test]
 fn perform_maps_each_outcome_to_its_exit() {
-    let _guard = spawn_guard();
     // The one-product line prints and succeeds; quiet succeeds silently.
     assert_eq!(perform(Outcome::Line("a-branch".to_owned())), 0);
     assert_eq!(perform(Outcome::Quiet), 0);

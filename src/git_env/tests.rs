@@ -5,25 +5,17 @@
 //! rows down in `fs_watcher::drift_tests` with no clue why.
 
 use super::{INHERITED, git};
-use std::process::Stdio;
 use tempfile::tempdir;
 
-/// Run a scrubbed `git` in `dir` and hand back its trimmed stdout. Forks under
-/// the binary-wide `SPAWN_LOCK` (`crate::test_support`) like every other fork
-/// in this binary.
+/// Run a scrubbed `git` in `dir` and hand back its trimmed stdout — through the
+/// module's own fork, like every other child in this binary.
 fn run(dir: &std::path::Path, args: &[&str]) -> String {
     let mut cmd = git();
     cmd.args(args)
         .current_dir(dir)
         .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_CONFIG_SYSTEM", "/dev/null")
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    let out = crate::test_support::spawn_locked(&mut cmd)
-        .unwrap()
-        .wait_with_output()
-        .unwrap();
+        .env("GIT_CONFIG_SYSTEM", "/dev/null");
+    let out = super::output(&mut cmd).unwrap();
     assert!(out.status.success(), "git {args:?}: {out:?}");
     String::from_utf8_lossy(&out.stdout).trim().to_string()
 }

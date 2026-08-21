@@ -38,7 +38,6 @@ fn prepare(ws: &str) -> serde_json::Value {
 /// anything, which is the half no `Prepare` fallback could ever have covered.
 #[test]
 fn a_second_gesture_addresses_the_wall_the_first_founded() {
-    let _g = crate::test_support::spawn_guard();
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = newborn_world(root.path(), data.path(), bin.path());
     let born = ctx.answer(&prepare("home"));
@@ -67,7 +66,6 @@ fn a_second_gesture_addresses_the_wall_the_first_founded() {
 /// One without the other still refuses.
 #[test]
 fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
-    let _g = crate::test_support::spawn_guard();
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = newborn_world(root.path(), data.path(), bin.path());
     let window = crate::registry::window();
@@ -100,7 +98,6 @@ fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
 /// idempotent ensure's `lernie new` finishes what the dead one started.
 #[test]
 fn a_half_born_directory_is_resumed_not_wedged() {
-    let _g = crate::test_support::spawn_guard();
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = newborn_world(root.path(), data.path(), bin.path());
     // The debris: the directory exists, the marker does not.
@@ -119,7 +116,6 @@ fn a_half_born_directory_is_resumed_not_wedged() {
 /// raise can found or resume, never join another client's wall.
 #[test]
 fn a_scoped_clients_prepare_never_joins_anothers_wall() {
-    let _g = crate::test_support::spawn_guard();
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = newborn_world(root.path(), data.path(), bin.path());
     let window = crate::registry::window();

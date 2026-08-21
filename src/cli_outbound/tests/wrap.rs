@@ -15,7 +15,7 @@ const RECORDER: &str =
 fn a_wrapped_spawn_execs_the_wrapper_around_the_whole_unwrapped_spawn() {
     let dir = tempfile::tempdir().unwrap();
     let log = dir.path().join("argv.log");
-    let (recorder, guard) = write_script(dir.path(), "recorder", RECORDER);
+    let recorder = write_script(dir.path(), "recorder", RECORDER);
     let cli = Cli::new("/bin/echo").and_wrapper(vec![
         recorder.to_string_lossy().into_owned(),
         log.to_string_lossy().into_owned(),
@@ -26,7 +26,6 @@ fn a_wrapped_spawn_execs_the_wrapper_around_the_whole_unwrapped_spawn() {
     assert_eq!(cli.exec_words(), vec!["/bin/echo".to_owned()]);
     let stream = cli.run(&["held"]).expect("wrapper spawns");
     let (out, _, exit) = collect(stream);
-    drop(guard);
     assert_eq!(exit, ExitInfo::Code(0));
     assert_eq!(String::from_utf8(out).unwrap(), "held\n");
     assert_eq!(
@@ -39,11 +38,9 @@ fn a_wrapped_spawn_execs_the_wrapper_around_the_whole_unwrapped_spawn() {
 #[test]
 fn a_missing_wrapper_fails_the_spawn_naming_the_wrapper_not_the_tool() {
     let cli = Cli::new("/bin/echo").and_wrapper(vec!["/no/such/wrapper".to_owned()]);
-    let guard = spawn_guard();
     let Err(err) = cli.run(&["held"]) else {
         panic!("no wrapper to exec")
     };
-    drop(guard);
     assert!(err.to_string().contains("/no/such/wrapper"), "{err}");
 }
 

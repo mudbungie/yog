@@ -89,7 +89,6 @@ fn a_torn_envelope_refuses_over_the_wire_too() {
 /// gesture reads it as an ordinary registration.
 #[test]
 fn a_workspace_created_over_the_wire_registers_its_creator() {
-    let _g = crate::test_support::spawn_guard();
     let root = tempdir().unwrap();
     let data = tempdir().unwrap();
     let bin = tempdir().unwrap();
@@ -123,7 +122,6 @@ fn a_workspace_created_over_the_wire_registers_its_creator() {
 /// way into a workspace the scope hides.
 #[test]
 fn a_create_naming_a_workspace_that_exists_refuses_rather_than_joining_it() {
-    let _g = crate::test_support::spawn_guard();
     let root = tempdir().unwrap();
     let data = tempdir().unwrap();
     let bin = tempdir().unwrap();

@@ -5,7 +5,6 @@
 
 use super::*;
 use crate::cli_outbound::Cli;
-use crate::test_support::spawn_guard;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
@@ -122,7 +121,6 @@ fn recorder(dir: &Path, log: &Path, code: i32) -> PathBuf {
 
 #[test]
 fn drive_lands_env_and_argv_and_streams_the_outcome_to_ops_jsonl() {
-    let g = spawn_guard();
     let dir = tempdir().unwrap();
     let log = dir.path().join("invocation.log");
     let bin = recorder(dir.path(), &log, 0);
@@ -142,7 +140,6 @@ fn drive_lands_env_and_argv_and_streams_the_outcome_to_ops_jsonl() {
         &state,
         Origin::World,
     );
-    drop(g);
 
     // The child saw the shim EDITOR, the staging dir, and the config argv.
     assert_eq!(
@@ -164,7 +161,6 @@ fn drive_lands_env_and_argv_and_streams_the_outcome_to_ops_jsonl() {
 
 #[test]
 fn drive_records_spawn_failure_as_a_negative_exit() {
-    let _g = spawn_guard();
     let dir = tempdir().unwrap();
     let state = dir.path().join("state");
     let p = plan(&EditOrigin::Advance);
@@ -185,7 +181,6 @@ fn drive_records_spawn_failure_as_a_negative_exit() {
 fn drive_records_a_signal_death_as_a_negative_exit() {
     // lernie killed mid-run exits by signal, not code: the outcome records
     // -1, not a spurious success.
-    let g = spawn_guard();
     let dir = tempdir().unwrap();
     let bin = dir.path().join("lernie");
     fs::write(&bin, "#!/bin/sh\nkill -TERM $$\n").unwrap();
@@ -200,7 +195,6 @@ fn drive_records_a_signal_death_as_a_negative_exit() {
         &state,
         Origin::World,
     );
-    drop(g);
     assert_eq!(entry.exit, -1);
 }
 

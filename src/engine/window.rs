@@ -55,9 +55,9 @@ impl Engine {
             return None;
         }
         Some(WindowWire {
-            _asker: self.asker(world)?.spawn(),
-            _poster: self.poster(world)?.spawn(),
-            _searcher: self.searcher(world)?.spawn(),
+            _asker: self.asker(world)?.start(),
+            _poster: self.poster(world)?.start(),
+            _searcher: self.searcher(world)?.start(),
         })
     }
 

@@ -9,7 +9,7 @@ use tempfile::tempdir;
 #[test]
 fn exec_in_world_passes_through_a_nonzero_exit_code() {
     let dir = tempdir().unwrap();
-    let (bin, _guard) = write_script(dir.path(), "silent", "#!/bin/sh\nexit 7\n");
+    let bin = write_script(dir.path(), "silent", "#!/bin/sh\nexit 7\n");
     let info = Cli::exec_in_world(bin.to_str().unwrap(), &[], None, &[]).unwrap();
     assert_eq!(info, ExitInfo::Code(7));
 }
@@ -18,7 +18,7 @@ fn exec_in_world_passes_through_a_nonzero_exit_code() {
 fn exec_in_world_reports_success_and_forwards_args() {
     let dir = tempdir().unwrap();
     // `[ $# = 2 ]` — the two args reach the child; else exit non-zero.
-    let (bin, _guard) = write_script(
+    let bin = write_script(
         dir.path(),
         "silent",
         "#!/bin/sh\n[ $# = 2 ] || exit 3\nexit 0\n",
@@ -31,7 +31,7 @@ fn exec_in_world_reports_success_and_forwards_args() {
 fn exec_in_world_runs_in_the_given_cwd() {
     let dir = tempdir().unwrap();
     let out = dir.path().join("cwd.txt");
-    let (bin, _guard) = write_script(
+    let bin = write_script(
         dir.path(),
         "reportcwd",
         &format!("#!/bin/sh\npwd -P > '{}'\n", out.display()),
@@ -49,7 +49,7 @@ fn exec_in_world_runs_in_the_given_cwd() {
 fn exec_in_world_layers_the_world_overrides_over_inherited_env() {
     let dir = tempdir().unwrap();
     let out = dir.path().join("env.txt");
-    let (bin, _guard) = write_script(
+    let bin = write_script(
         dir.path(),
         "reportenv",
         &format!(
@@ -65,7 +65,6 @@ fn exec_in_world_layers_the_world_overrides_over_inherited_env() {
 
 #[test]
 fn exec_in_world_errors_when_the_command_is_missing() {
-    let _guard = crate::test_support::spawn_guard();
     let err = Cli::exec_in_world("/no/such/binary-xyz", &[], None, &[]).unwrap_err();
     assert!(matches!(err, CliError::Spawn { .. }));
 }

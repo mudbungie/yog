@@ -63,7 +63,7 @@ impl Poster {
     /// The handle is handed back rather than detached so a caller *can* join;
     /// dropping it is the ordinary exit, because the thread ends on its own the
     /// moment there is nobody left to post.
-    pub fn spawn(mut self) -> JoinHandle<()> {
+    pub fn start(mut self) -> JoinHandle<()> {
         std::thread::spawn(move || while self.pass() {})
     }
 }

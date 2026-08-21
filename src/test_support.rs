@@ -1,20 +1,30 @@
-//! Test-only spawn discipline shared by every test module in this binary.
+//! Test-only spawn discipline for this binary — **one lock, held by the crate's
+//! one fork** ([`crate::git_env::spawn`]), and by nothing else.
 //!
-//! Serializes script-write-then-spawn pairs across tests. Without this, a
-//! concurrent posix_spawn in another thread inherits the write fd held by
-//! `fs::write` in this thread; that fd is CLOEXEC but only closes once the
-//! peer's own exec completes. If this thread's exec on the script it just
-//! wrote lands while the peer child still holds the inherited write fd,
-//! Linux returns ETXTBSY. Holding one lock across write + spawn in every
-//! test eliminates the overlap window — it must be a single static for the
-//! whole binary: per-module locks do not exclude each other's threads.
+//! `fs::write` on a fixture script holds a write fd. A `fork` in another thread
+//! copies that fd into a child, which keeps it until its own `exec` completes;
+//! an `exec` of the script inside that window is ETXTBSY, so a test that writes
+//! a fake binary is reddened by a peer test three modules away. The lock is one
+//! static for the whole binary because per-module locks do not exclude each
+//! other's threads.
 //!
-//! The lock is **re-entrant per thread** ([`SpawnGuard`]): the exclusion a
-//! nested acquisition wants is already held by the outer one, and a plain
-//! `Mutex` would self-deadlock instead. That is not hypothetical — a start
-//! test holds the guard across its fake-binary write and the flow under test
-//! forks `git` through [`spawn_locked`] (the model derives a workspace's
-//! snapshot back out of the config commit lernie just authored).
+//! It is taken **around the fork** (bl-6397). The older discipline asked every
+//! test that wrote a script to bracket its own write and exec, which is a
+//! contract each new test must be told about and most were not — the two tests
+//! that flaked were one of each kind: a victim that held the guard correctly,
+//! and an unguarded sign-in fixture that was both victim and cause. Guarding
+//! the fork alone is *sufficient*: a peer fork cannot land inside anyone's
+//! write window without holding the lock, and it returns the lock only once its
+//! child has exec'd. Measured with writes left entirely unguarded, 8
+//! write-then-exec threads against an 8-thread fork storm, ~9,600 pairs: zero
+//! ETXTBSY, against 8.3% with the fork unguarded.
+//!
+//! The write-side brackets tests used to hold are gone with the contract, and
+//! they were not merely redundant: a test that holds the lock across a body
+//! whose WORKER THREAD forks starves that fork for the whole test — the wire
+//! host's tool span, which this change caught the moment the fork started
+//! taking the lock. Write the script, exec it: the fork boundary holds, and
+//! nothing in a test body needs to know it is there.
 
 use crate::config_edit::FileIo;
 use std::collections::HashMap;
@@ -23,42 +33,12 @@ use std::sync::{Mutex, PoisonError};
 
 pub(crate) static SPAWN_LOCK: Mutex<()> = Mutex::new(());
 
-thread_local! {
-    /// How deep this thread already is inside [`spawn_guard`]. The lock is
-    /// **re-entrant per thread**: a test holds it across a write+exec pair and
-    /// the code under test forks again through [`spawn_locked`] (the start
-    /// flow's `git` reads do exactly that), which on a plain `Mutex` is a
-    /// self-deadlock. Depth makes the inner acquisition a no-op — the outer
-    /// guard already provides the exclusion the inner one wants.
-    static DEPTH: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
-}
-
-/// The held spawn lock: `Some` at depth 0 (the real guard), `None` for a
-/// re-entrant acquisition on the same thread. Dropping it unwinds the depth,
-/// then releases the mutex — in that order, so the thread is out of the nest
-/// before any peer can enter.
-pub(crate) struct SpawnGuard {
-    lock: Option<std::sync::MutexGuard<'static, ()>>,
-}
-
-impl Drop for SpawnGuard {
-    fn drop(&mut self) {
-        DEPTH.with(|d| d.set(d.get().saturating_sub(1)));
-        drop(self.lock.take());
-    }
-}
-
-/// Acquire `SPAWN_LOCK` poison-immune: a panicking test frees the guard with its
-/// `()` intact, so recover rather than cascade-poison peer tests. Recovery stays
-/// on one line — a split reads as uncovered under `ignore-panics` (the same
-/// discipline as `state::lock_watchset`).
-pub(crate) fn spawn_guard() -> SpawnGuard {
-    if DEPTH.with(|d| d.replace(d.get() + 1)) > 0 {
-        return SpawnGuard { lock: None };
-    }
-    SpawnGuard {
-        lock: Some(SPAWN_LOCK.lock().unwrap_or_else(PoisonError::into_inner)),
-    }
+/// Acquire `SPAWN_LOCK` poison-immune: a panicking fork frees the guard with
+/// its `()` intact, so recover rather than cascade-poison peer tests. Recovery
+/// stays on one line — a split reads as uncovered under `ignore-panics` (the
+/// same discipline as `state::lock_watchset`).
+pub(crate) fn spawn_guard() -> std::sync::MutexGuard<'static, ()> {
+    SPAWN_LOCK.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
 /// In-memory [`FileIo`] for editor and pipeline tests: a flat path→bytes map.
@@ -124,22 +104,6 @@ impl FileIo for FakeFs {
             .cloned()
             .collect())
     }
-}
-
-/// Fork + exec `cmd` while holding [`SPAWN_LOCK`], releasing it once the
-/// child has exec'd. The single fork-site discipline every test subprocess
-/// routes through: the `git_tree` fixture's `run_git` and the production
-/// `git_tree::cmd::git` under `cfg(test)`. Because `Command::spawn` returns
-/// only after the child has exec'd (CLOEXEC then closes every inherited fd),
-/// no fork is ever in flight while a recorder-script test holds a
-/// not-yet-closed write fd, so that fd can't leak into a to-be-exec'd script
-/// (the ETXTBSY race). The lock is released before the child is waited on, so
-/// the subprocesses still run concurrently.
-pub(crate) fn spawn_locked(
-    cmd: &mut std::process::Command,
-) -> std::io::Result<std::process::Child> {
-    let _g = spawn_guard();
-    cmd.spawn()
 }
 
 /// `providers.yaml` exactly as lernie's own `template/providers.yaml` authors

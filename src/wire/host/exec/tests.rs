@@ -3,7 +3,6 @@
 
 use super::*;
 use crate::registry::tools::Tool;
-use crate::test_support::spawn_guard;
 use serde_json::json;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -48,7 +47,6 @@ fn patient() -> Duration {
 /// them, so a tool that warned and succeeded says both.
 #[test]
 fn the_input_arrives_on_stdin_and_the_three_facts_come_back() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     let tool = script(dir.path(), "echo-tool", "cat; echo 'warned' >&2; exit 0");
     let set = vec![local(vec![tool.to_string_lossy().into_owned()], None)];
@@ -62,7 +60,6 @@ fn the_input_arrives_on_stdin_and_the_three_facts_come_back() {
 /// line — and `cwd` is where it runs.
 #[test]
 fn the_argv_and_the_working_directory_are_the_operators() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     let elsewhere = dir.path().join("elsewhere");
     fs::create_dir(&elsewhere).expect("cwd");
@@ -86,7 +83,6 @@ fn the_argv_and_the_working_directory_are_the_operators() {
 /// is an answer, not a fault of the host's.
 #[test]
 fn a_tools_own_failure_is_its_verdict() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     let tool = script(dir.path(), "fail-tool", "echo 'nope' >&2; exit 7");
     let set = vec![local(vec![tool.to_string_lossy().into_owned()], None)];
@@ -100,7 +96,6 @@ fn a_tools_own_failure_is_its_verdict() {
 /// verdict and a sentence saying what happened, never a hang.
 #[test]
 fn a_tool_that_outruns_its_deadline_is_terminated_and_says_so() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     let tool = script(dir.path(), "slow-tool", "echo 'starting'; sleep 30");
     let set = vec![local(vec![tool.to_string_lossy().into_owned()], None)];
@@ -118,7 +113,6 @@ fn a_tool_that_outruns_its_deadline_is_terminated_and_says_so() {
 /// are both in-band captures the model reads as a tool that failed.
 #[test]
 fn a_name_this_machine_cannot_run_is_an_in_band_capture() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     let set = vec![local(
         vec![
@@ -147,7 +141,6 @@ fn a_name_this_machine_cannot_run_is_an_in_band_capture() {
 /// the transcode is here, once, and it never refuses.
 #[test]
 fn output_that_is_not_utf8_is_transcoded_rather_than_refused() {
-    let _guard = spawn_guard();
     let dir = tempdir().expect("tmp");
     let tool = script(dir.path(), "binary-tool", "printf 'a\\377b'");
     let set = vec![local(vec![tool.to_string_lossy().into_owned()], None)];

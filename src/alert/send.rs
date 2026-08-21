@@ -66,14 +66,13 @@ pub fn argv(alert: &Alert) -> Vec<String> {
 /// with nothing anyone reads.
 pub fn deliver(notifier: &Path, alerts: &[Alert]) {
     for alert in alerts {
-        drop(
+        drop(crate::git_env::status(
             crate::git_env::command(notifier)
                 .args(argv(alert))
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status(),
-        );
+                .stderr(Stdio::null()),
+        ));
     }
 }
 

@@ -17,7 +17,6 @@ fn a_nudge_launches_the_driver_and_writes_only_that_row() {
     let world = World::new();
     world.repo();
     let mut ui = crate::ui_state::UiState::open(PathBuf::from("/nonexistent/ui.json"));
-    let guard = crate::test_support::spawn_guard();
     let reply = crate::boundary::dispatch::dispatch(
         &world.deps(),
         &mut ui,
@@ -27,7 +26,6 @@ fn a_nudge_launches_the_driver_and_writes_only_that_row() {
             agent: AGENT.to_owned(),
         },
     );
-    drop(guard);
     assert_eq!(reply, Ok(Reply::Nudged));
     let rows = tail(&world.state(), usize::MAX);
     assert_eq!(rows.len(), 1, "the launch is the whole trail");

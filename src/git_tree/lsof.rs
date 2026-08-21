@@ -177,11 +177,12 @@ impl LsofRunner for SystemLsof {
         // guards a path beginning with `-`. lsof exits 1 for both "no match"
         // and error, so status is not the failure signal: a spawn failure or a
         // non-empty stderr is Unknown; empty stdout is the definite "no holder".
-        let out = crate::git_env::command(Path::new("lsof"))
-            .args(["-F", "pan", "--"])
-            .arg(target)
-            .output()
-            .ok()?;
+        let out = crate::git_env::output(
+            crate::git_env::command(Path::new("lsof"))
+                .args(["-F", "pan", "--"])
+                .arg(target),
+        )
+        .ok()?;
         if !out.status.success() && !out.stderr.is_empty() {
             return None;
         }
