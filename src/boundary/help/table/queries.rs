@@ -241,8 +241,10 @@ pub const QUERIES: &[HelpRow] = &[
         verb: "ops",
         usage: "/ops [n]",
         summary: "the last n ops rows, newest last",
-        detail: "The tail of `ops.jsonl` — every gesture anything has fired, with its outcome. \
-                 Defaults to the last 50 rows.",
+        detail: "The tail of `ops.jsonl` — one line per action anything attempted, with its \
+                 outcome. Actions only: a query reads the world and changes nothing, so it \
+                 leaves no row, and what was read before an action was chosen cannot be \
+                 recovered here. Defaults to the last 50 rows.",
     },
     HelpRow {
         verb: "search",

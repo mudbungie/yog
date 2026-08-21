@@ -1,6 +1,7 @@
 //! One consumption pass, tabled (§8.5): queries answered, refusals written,
-//! a spawn-failing action logged and refused, and the reply-write failure's
-//! own ops row — no error class dropped (INV-2).
+//! a spawn-failing action logged and refused, the reply-write failure's own
+//! ops row — no error class dropped (INV-2) — and the §4.2 parity the `/ops`
+//! help now states: an action leaves a row, a query leaves none.
 
 use super::*;
 use crate::boundary::deposit;
@@ -209,6 +210,39 @@ fn the_decision_queue_reads_and_answers_over_the_one_ui_json() {
             .contains(&"n".repeat(40)),
         "the watermark is on the disk the window reads (I0)"
     );
+}
+
+/// **The §4.2 audit's exact extent** (bl-5cbc): `ops.jsonl` is one line per
+/// attempted *action*, so a query leaves nothing behind — and the `/ops` help
+/// now says so rather than promising "every gesture". Both halves are pinned
+/// here, because the claim is only worth anything as a pair: a query that began
+/// logging would break the read as surely as an action that stopped.
+///
+/// The two gestures are chosen so the assertion is about the rule and not about
+/// an executor: `/attention` is a pure read of the snapshot, and `/ack` is the
+/// operator's own §4.2 line, which spawns nothing and writes exactly one row.
+#[test]
+fn an_action_leaves_an_ops_row_and_a_query_leaves_none() {
+    let root = tempdir().unwrap();
+    let d = deps(root.path());
+
+    deposit::deposit(root.path(), "q-att", &json!({"op": "attention"})).unwrap();
+    assert_eq!(consume(&d, &mut ui(), "T1", 100), 1);
+    assert_eq!(
+        deposit::read_reply(root.path(), "q-att").map(|r| r["ok"].clone()),
+        Some(json!(true)),
+        "the query was answered — it simply left no trace in the trail"
+    );
+    assert!(
+        crate::opslog::tail(root.path(), 8).is_empty(),
+        "a query reads the world and changes nothing (§4.2)"
+    );
+
+    deposit::deposit(root.path(), "a-ack", &json!({"op": "ack"})).unwrap();
+    assert_eq!(consume(&d, &mut ui(), "T2", 100), 1);
+    let ops = crate::opslog::tail(root.path(), 8);
+    assert_eq!(ops.len(), 1, "one line per attempted action, {ops:?}");
+    assert_eq!(ops[0].argv, vec!["yog-step", "ack-failures"]);
 }
 
 #[test]
