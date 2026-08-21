@@ -77,10 +77,30 @@ use_release() {
 
 stamp() { date -u +%Y%m%dT%H%M%SZ; }
 
+# EVERY STAGE THIS FILE DRIVES LEAVES A ROW, whatever happened to it — verb and
+# exit code, appended before the next stage starts (bl-d0a0). A stage that dies
+# before its first beat writes no verdict, so until this it left no trace at all:
+# a seat that never came up, a duplicate beat definition refused at source time,
+# a preflight tool that answered and then quit. The report reads these rows, so
+# "which stage failed" is in the document rather than in a scrolled-past
+# terminal. It is not a second copy of the verdicts — it is the only record of a
+# run that produced none, and the only record of the process's own exit code.
+stage_row() { printf '%s\t%s\n' "$2" "$3" >>"$1/stages.tsv"; }
+
 # The skeleton is emitted from the run's own verdict rows, so it exists whether
 # the ladder was green or red — a red run is exactly when a report gets written.
+#
+# **And a report's own failure may never replace the run's** (bl-d0a0). This was
+# a bare command under `set -e`: the generator refused a root with no
+# `verdicts.jsonl`, so a run that died before its first beat took drive.sh out
+# HERE — leaving a zero-byte `drive-log.md`, swallowing the "N of the driven
+# verbs reported failing beats" line, and ending on the generator's complaint
+# instead of on the seat failure that actually happened. The generator now
+# reports a verdict-less run instead of refusing it, and this guard keeps the
+# primary failure and the exit code below whatever else it does.
 skeleton() {
-  "$here/logskel.sh" "$1" >"$1/drive-log.md"
+  "$here/logskel.sh" "$1" >"$1/drive-log.md" \
+    || echo "drive.sh: the log skeleton failed; the run's own verdict stands" >&2
   echo "log skeleton: $1/drive-log.md"
   echo "  hand-finish it IN PLACE (QUALITY.md §3 step 6): the log stays with its"
   echo "  evidence, outside the checkout — what comes back is the balls it files"
@@ -113,7 +133,10 @@ ladder() {
     mkdir -p "$d/out"
     echo
     echo "=== $v   world: $d/data   evidence: $d/out"
-    "$here/stories.sh" "$v" "$d/data" "$d/out" || bad=$((bad + 1))
+    rc=0
+    "$here/stories.sh" "$v" "$d/data" "$d/out" || rc=$?
+    [ "$rc" = 0 ] || bad=$((bad + 1))
+    stage_row "$base" "$v" "$rc"
   done
   echo
   skeleton "$base"
@@ -131,7 +154,8 @@ cleanroom() {
   guard "$base/room"
   mkdir -p "$base/out"
   bad=0
-  "$here/cleanroom.sh" "$tdir/release/yog" "$base/room" "$base/out" "$verb" || bad=1
+  "$here/cleanroom.sh" "$tdir/release/yog" "$base/room" "$base/out" "$verb" || bad=$?
+  stage_row "$base" "cleanroom-$verb" "$bad"
   echo
   skeleton "$base"
   [ "$bad" = 0 ] || { echo "drive.sh: the clean room reported failing beats" >&2; exit 1; }

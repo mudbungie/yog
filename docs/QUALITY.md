@@ -199,6 +199,15 @@ What a dispatched model does, start to finish:
    hand. The house style is evidence quoted, not summarized — exactly the half
    no generator can supply.
 
+   **A run that produced no beats still gets a log** (bl-d0a0). A red run is
+   exactly when a report is wanted, and the reddest run of all is one that died
+   before its first assertion — a seat that never came up, a harness refused at
+   source time. The skeleton then carries the stage table (`drive.sh` writes one
+   `stages.tsv` row per verb it drives, verb and exit code) and the sentence
+   **NO VERDICTS PRODUCED** in place of a beat table, so the document says what
+   happened rather than nothing. The generator never answers with an exit code:
+   a report's own failure may not replace the run's.
+
    **The log does not come back into the checkout.** It used to: one file per
    run under `docs/drive-logs/`, exempt from the home-path rule because a log's
    paths were its evidence. bl-244f burned all eleven and the exemption with

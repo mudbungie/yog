@@ -32,10 +32,16 @@ dir=${1:?usage: logskel.sh <ladder-root-or-out-dir>}
 dir=$(cd "$dir" && pwd)
 
 files=$(find "$dir" -name verdicts.jsonl | sort)
-[ -n "$files" ] || {
-  echo "logskel: no verdicts.jsonl under $dir — was anything driven?" >&2
-  exit 1
-}
+# A VERDICT-LESS RUN IS REPORTED, NOT REFUSED (bl-d0a0). This used to exit 1
+# before emitting a byte, which made the generator the loudest thing about a
+# run it knew nothing about: `drive.sh` redirects into `drive-log.md` and dies
+# on the non-zero under `set -e`, so a seat that never came up produced a
+# zero-byte report and a complaint about the report in place of the seat's own
+# error. Emitting the run is the generator's job and it can always do it — the
+# beat table is simply the sentence "no verdicts produced", which is a finding.
+# The stderr line stays: it is a diagnostic for this terminal, not the product.
+[ -n "$files" ] \
+  || echo "logskel: no verdicts.jsonl under $dir — reporting a verdict-less run." >&2
 
 # `git` is read through a scrubbed env: a `GIT_DIR` inherited from a hook
 # outranks `-C` and would silently report another repo's sha into this log.
@@ -85,6 +91,11 @@ if [ "$n" = 1 ]; then
   [ -e "$bin" ] \
     && binfield="\`$bin\` (mtime $(date -r "$bin" -u +%Y-%m-%dT%H:%M:%SZ))" \
     || binfield="\`$bin\` (**gone** — the driven binary no longer exists at that path)"
+elif [ "$n" = 0 ] && [ -z "$files" ]; then
+  # No rows at all, so there is nothing to have recorded a binary — a different
+  # statement from rows that failed to (bl-d0a0), and saying the other one here
+  # sent a reader looking for a harness defect that is not there.
+  binfield="**NONE DRIVEN** — no verdict row exists to name a binary"
 elif [ "$n" = 0 ]; then
   echo "logskel: no run under $dir recorded the binary it drove." >&2
   echo "  these rows predate bl-d1af, or were not written by harness.sh." >&2
@@ -132,6 +143,26 @@ cat <<HEAD
 - **Machine:** $(uname -srm), $(nproc) cpu, load average $l1 / $l5 / $l15
 HEAD
 
+# THE STAGES, WITH THEIR OWN EXIT CODES (bl-d0a0) — `drive.sh` appends one row
+# per verb it drives, so a stage that died before its first beat is named here
+# even though it wrote no verdict anywhere. `wc -l` per stage is the join: a
+# non-zero exit with zero rows is a run that never started, and a zero exit
+# with zero rows is a harness that reported nothing and said it was fine.
+# Absent for a run driven through `stories.sh` directly, which has no front
+# door to write it — the section then simply does not appear.
+if [ -f "$dir/stages.tsv" ]; then
+  printf '\n## Stages driven\n\n| Stage | Exit | Verdict rows |\n|---|---|---|\n'
+  while IFS=$'\t' read -r verb rc; do
+    rows=0
+    if [ -f "$dir/$verb/out/verdicts.jsonl" ]; then
+      rows=$(wc -l <"$dir/$verb/out/verdicts.jsonl")
+    fi
+    if [ "$rc" = 0 ]; then code=0; else code="**$rc**"; fi
+    echo "| \`$verb\` | $code | $rows |"
+  done <"$dir/stages.tsv"
+  echo
+fi
+
 # The beat table, read from the rows rather than transcribed from the scroll.
 # python3 is already a harness prerequisite (beats_s7.sh) and is the only thing
 # here that will not mangle a label carrying a quote, a pipe or an em dash.
@@ -151,6 +182,17 @@ for path in sys.argv[1:]:
         runs.append((path, rows))
 
 total = sum(len(r) for _, r in runs)
+# A run with no rows at all is REPORTED, and this sentence is the report
+# (bl-d0a0): zero beats is not an empty table, it is a finding — the run died
+# before its first assertion, so nothing here is a claim about yog and the
+# stage table above is where the run's own failure is named.
+if not total:
+    print("\n## Result summary — NO VERDICTS PRODUCED\n")
+    print("**Zero beats ran.** No `verdicts.jsonl` exists anywhere under this")
+    print("evidence root, so this log makes no claim about yog at all: the run")
+    print("failed before its first assertion. Read the stage table above for")
+    print("which stage it was, and the terminal for what it said.\n")
+    raise SystemExit(0)
 passed = sum(1 for _, r in runs for row in r if row["verdict"] == "PASS")
 failed = total - passed
 head = f"## Result summary — {total} BEATS: {passed} PASS"
