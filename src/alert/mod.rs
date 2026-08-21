@@ -65,20 +65,10 @@ pub fn of_queue(rows: &[QueueRow]) -> Vec<Alert> {
     rows.iter()
         .filter(|row| !row.signals.is_empty())
         .map(|row| Alert {
-            summary: format!("{} · {}", wall_of(row), row.display),
+            summary: format!("{} · {}", row.workspace, row.display),
             body: rules(&row.signals),
         })
         .collect()
-}
-
-/// The §3.1 leaf naming the row's wall — what the operator calls that sphere.
-/// A workspace path with no leaf is its own whole path, the same floor every
-/// other seat uses rather than an invented placeholder.
-fn wall_of(row: &QueueRow) -> String {
-    row.workspace.file_name().map_or_else(
-        || row.workspace.display().to_string(),
-        |n| n.to_string_lossy().into_owned(),
-    )
 }
 
 /// The firing rules as one sentence, in the badge order the queue lists them.

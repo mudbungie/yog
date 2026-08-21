@@ -5,11 +5,10 @@ use super::{Alert, Announced, announce, of_queue};
 use crate::attention::AttentionKind;
 use crate::boundary::answer::queue::QueueRow;
 use crate::git_tree::AgentState;
-use std::path::PathBuf;
 
 fn row(ws: &str, display: &str, signals: Vec<AttentionKind>) -> QueueRow {
     QueueRow {
-        workspace: PathBuf::from(ws),
+        workspace: ws.to_string(),
         agent: "20260802T120000Z-root".to_string(),
         display: display.to_string(),
         state: AgentState::Quiescent,
@@ -34,13 +33,9 @@ fn alert(summary: &str, body: &str) -> Alert {
 #[test]
 fn a_queue_row_names_its_workspace_its_conversation_and_its_rules() {
     let alerts = of_queue(&[
+        row("cobalt", "ochre-tern", vec![AttentionKind::Stopped]),
         row(
-            "/data/lernie/workspaces/cobalt",
-            "ochre-tern",
-            vec![AttentionKind::Stopped],
-        ),
-        row(
-            "/data/lernie/workspaces/slate",
+            "slate",
             "jade-vole",
             vec![AttentionKind::Notify, AttentionKind::Mail],
         ),
@@ -57,17 +52,18 @@ fn a_queue_row_names_its_workspace_its_conversation_and_its_rules() {
     );
 }
 
-/// Two degenerate shapes, neither a special case: a row with no firing signal
-/// is not announced at all (there is nothing to say), and a workspace path with
-/// no leaf falls to the whole path rather than to an invented placeholder.
+/// A row with no firing signal is not announced at all — there is nothing to
+/// say — and the summary is the row's own two words, the wall's §3.1 name and
+/// the conversation's §3.3 display, with nothing derived in between (bl-22ab:
+/// the row carries the name, so the escalation no longer shortens a path).
 #[test]
-fn a_signal_less_row_says_nothing_and_a_leafless_path_names_itself() {
-    assert!(of_queue(&[row("/data/ws/cobalt", "ochre-tern", Vec::new())]).is_empty());
-    let alerts = of_queue(&[row("/", "ochre-tern", vec![AttentionKind::Held])]);
+fn a_signal_less_row_says_nothing_and_a_named_row_says_its_two_words() {
+    assert!(of_queue(&[row("cobalt", "ochre-tern", Vec::new())]).is_empty());
+    let alerts = of_queue(&[row("cobalt", "ochre-tern", vec![AttentionKind::Held])]);
     assert_eq!(
         alerts,
         vec![alert(
-            "/ · ochre-tern",
+            "cobalt · ochre-tern",
             "parked a tool invocation for your answer"
         )]
     );
@@ -153,11 +149,7 @@ fn every_signal_words_itself_distinctly() {
 /// is switched on.
 #[test]
 fn focus_and_the_knob_each_silence_the_desktop_without_saving_the_news_up() {
-    let waiting = [row(
-        "/data/ws/cobalt",
-        "ochre-tern",
-        vec![AttentionKind::Stopped],
-    )];
+    let waiting = [row("cobalt", "ochre-tern", vec![AttentionKind::Stopped])];
     let arrival = alert("cobalt · ochre-tern", "came to rest — your turn");
 
     // Buried and armed: the ordinary path. Baseline first, then the arrival.

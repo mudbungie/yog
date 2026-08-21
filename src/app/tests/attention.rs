@@ -8,9 +8,9 @@
 
 use super::Harness;
 use super::derive::settle;
-use crate::boundary::Query;
 use crate::boundary::dispatch::Deps;
 use crate::boundary::reply::Reply;
+use crate::boundary::{Action, Query};
 use crate::cli_outbound::Cli;
 use crate::git_tree::AgentState;
 use crate::watch::Mark;
@@ -124,4 +124,44 @@ fn the_desktop_escalation_reads_the_strip_s_own_queue() {
     // The acknowledgement that empties the strip empties the desktop too.
     model.focus_agent(&h.ws, "c-1");
     assert!(crate::alert::of_queue(&queue(&model, &deps)).is_empty());
+}
+
+/// bl-22ab, a regression of bl-f5f6: **the address a row answers is the address
+/// the next gesture takes**. The chokepoint resolves workspace *names* (REMOTE
+/// §8), so a row that answered an engine-local path handed a remote seat two
+/// values it could only be refused for — a disclosure and a broken teleoperation
+/// in one field. The round trip is therefore the assertion: the very pair
+/// `/attention` answered is posted straight back as `/seen`, unedited, and the
+/// engine's own re-derived queue comes back empty.
+#[test]
+fn a_queue_rows_address_posts_straight_back_as_the_next_gesture() {
+    let h = Harness::new();
+    h.write_response(
+        "c-1",
+        b"{\"type\":\"finish\",\"reason\":\"stop\"}\n{\"type\":\"end\"}\n",
+    );
+    let (_c, model) = h.model();
+    let deps = model.boundary_deps(&Cli::new("/no/lernie"), &Cli::new("/no/bl"));
+    let rows = queue(&model, &deps);
+    let row = rows.first().expect("the resting conversation is queued");
+    assert_eq!(
+        row.workspace,
+        crate::naming::leaf(&h.ws),
+        "the §3.1 name, which is what a gesture addresses"
+    );
+
+    let answered = crate::test_support::engine::act(
+        &model,
+        &deps,
+        "0",
+        &Action::MarkSeen {
+            workspace: row.workspace.clone(),
+            agent: row.agent.clone(),
+        },
+    )
+    .expect("the address the queue answered resolves");
+    let Reply::Attention(remaining) = answered else {
+        panic!("an acknowledgement answers the queue that remains");
+    };
+    assert!(remaining.is_empty(), "answered, so it is off the queue");
 }

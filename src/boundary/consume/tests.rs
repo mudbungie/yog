@@ -186,7 +186,10 @@ fn the_decision_queue_reads_and_answers_over_the_one_ui_json() {
     let asked = deposit::read_reply(root.path(), "q-att").unwrap();
     assert_eq!(asked["kind"], "attention");
     assert_eq!(asked["rows"][0]["agent"], "c-1");
-    assert_eq!(asked["rows"][0]["workspace"], "/names/alba");
+    // The §3.1 name, which is the token the answering deposit below spells
+    // verbatim (bl-22ab): the read's answer and the act's address are one
+    // vocabulary, so a seat copies rather than translates.
+    assert_eq!(asked["rows"][0]["workspace"], "alba");
     assert_eq!(asked["rows"][0]["signals"], json!(["notify", "stopped"]));
 
     deposit::deposit(

@@ -972,13 +972,36 @@ rather than carrying a relative spelling.
   it discloses is bounded and stated: an engine-side directory name, to a seat
   that was already told the workspace it belongs to.
 
-  It is worth being exact about what remains. Since bl-b4b5 this is the only
-  path-typed field left on the reply surface, and it is one a **remote seat
-  cannot use and does not read** — which makes it a disclosure and not an interop defect. Closing
-  it wants the thing §9.5's residual wants: a ruling about what the local
-  window *is*, because the shape that dissolves it (`Prepared` becoming opaque
-  to the seat entirely) is only affordable once one seat's read path is the
-  only read path.
+  It is one a **remote seat cannot use and does not read** — which makes it a
+  disclosure and not an interop defect. Closing it wants the thing §9.5's
+  residual wants: a ruling about what the local window *is*, because the shape
+  that dissolves it (`Prepared` becoming opaque to the seat entirely) is only
+  affordable once one seat's read path is the only read path.
+
+  **This bullet claimed to be the last one and was wrong** (bl-22ab). It read
+  "since bl-b4b5 this is the only path-typed field left on the reply surface",
+  which was a statement about the *list above* rather than about the surface,
+  and the surface was never swept for it. Four fields were still spelling
+  engine-local paths, and the one that mattered is now closed:
+
+  - **`QueueRow::workspace` was a `PathBuf` and `/attention` answered it**, so
+    the §6 decision queue — the one read whose whole product is *an address you
+    answer* — handed back a pair that `/seen`, `/message` and `/stop` all refuse
+    with `unknown workspace`. It is the §3.1 name now, the token the gestures
+    take, and `app::tests::attention` posts the answered pair straight back as
+    a `/seen` to prove the round trip rather than the spelling.
+  - **Three remain, all of them disclosure rather than broken addressing**, and
+    each needs a ruling of the kind this bullet's first half is, not a rename:
+    `search::Address`'s three path fields (`Reply::Search`), `fleet::Facts`'s
+    `workspace` and `project` (`Reply::Board`), and `OpRow::cwd`
+    (`Reply::Ops`), whose *subject* is where a command ran — the one case §8
+    already says keeps path semantics, since answering it by name answers a
+    different question.
+
+  The general lesson is the one bl-f5f6 already paid for once: a type migration
+  is finished when the **encoders** are swept, not when the types the ball named
+  are. A field whose key matches a gesture's and whose value does not is worse
+  than one that plainly does not match, because it reads as an address.
 ## 9. Build sequence
 
 Each step is its own ball; boundary-surface work serializes (shared-surface

@@ -82,8 +82,8 @@ fn the_queue_is_the_rosters_attention_bearing_subsequence_and_the_strips_count()
     // `/names/alba` sorts before `/names/koi`; within a workspace the §6 rank
     // puts attention first.
     assert_eq!(order, ["c-2", "c-3", "k-1"]);
-    assert_eq!(rows[0].workspace, ws_a());
-    assert_eq!(rows[2].workspace, ws_b());
+    assert_eq!(rows[0].workspace, "alba", "the §3.1 name, never the path");
+    assert_eq!(rows[2].workspace, "koi");
 
     let seen = |k, w: &str, a: &str, o: &str| ui.is_seen(k, w, a, o);
     let keyed = [
@@ -125,7 +125,7 @@ fn a_row_carries_its_address_its_reason_and_what_it_last_said() {
     let (_dir, ui) = writable();
     let rows = queue(&snap, &ui, 200);
     let row = &rows[0];
-    assert_eq!(row.workspace, ws_a());
+    assert_eq!(row.workspace, "alba");
     assert_eq!(row.agent, "c-2");
     assert_eq!(row.display, "which branch do you want?");
     assert_eq!(row.state, AgentState::Stopped);

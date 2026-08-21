@@ -9,12 +9,11 @@ use super::super::*;
 use crate::attention::AttentionKind;
 use crate::boundary::answer::queue::QueueRow;
 use crate::git_tree::AgentState;
-use std::path::PathBuf;
 
 #[test]
 fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
     let row = QueueRow {
-        workspace: PathBuf::from("/names/alba"),
+        workspace: "alba".into(),
         agent: "c-1".into(),
         display: "koi".into(),
         state: AgentState::Stopped,
@@ -41,7 +40,7 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
     assert_eq!(encoded["kind"], "attention");
     let out = &encoded["rows"][0];
     // The address, in the gestures' own words.
-    assert_eq!(out["workspace"], "/names/alba");
+    assert_eq!(out["workspace"], "alba");
     assert_eq!(out["agent"], "c-1");
     assert_eq!(out["display"], "koi");
     assert_eq!(out["state"], "stopped");
@@ -71,7 +70,7 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
 #[test]
 fn a_row_with_no_park_spells_it_null() {
     let row = QueueRow {
-        workspace: PathBuf::from("/names/alba"),
+        workspace: "alba".into(),
         agent: "c-2".into(),
         display: "elk".into(),
         state: AgentState::Quiescent,

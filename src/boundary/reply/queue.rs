@@ -3,8 +3,12 @@
 //! is: a row that carries a derived list of its own.
 //!
 //! The address fields are spelled with the **same keys the gestures take**
-//! (`workspace`, `agent`), so answering a row is copying two values, never
-//! translating between an answer's vocabulary and a question's.
+//! (`workspace`, `agent`) **and in the same vocabulary** — the §3.1 workspace
+//! name, never a path — so answering a row is copying two values, never
+//! translating between an answer's vocabulary and a question's. That second
+//! half was the defect bl-22ab closed: the key matched and the value did not,
+//! so a copied address earned `unknown workspace` from the very engine that
+//! had just answered it.
 
 use crate::attention::AttentionKind;
 use crate::boundary::answer::queue::QueueRow;
@@ -12,7 +16,7 @@ use serde_json::{Value, json};
 
 pub(super) fn queue_row(row: &QueueRow) -> Value {
     json!({
-        "workspace": row.workspace.to_string_lossy(),
+        "workspace": row.workspace,
         "agent": row.agent,
         "display": row.display,
         "state": super::rows::state_token(row.state),
@@ -64,7 +68,7 @@ pub(super) fn queue_row_of(v: &Value) -> Result<QueueRow, String> {
     use crate::boundary::codec::fields::{bool_of, i64_of, list_of, opt_val, str_of, usize_of};
     let o = v.as_object().ok_or("queue row: not an object")?;
     Ok(QueueRow {
-        workspace: crate::boundary::codec::fields::path_of(o, "workspace")?,
+        workspace: str_of(o, "workspace")?,
         agent: str_of(o, "agent")?,
         display: str_of(o, "display")?,
         state: super::rows::decode::state_of(o)?,

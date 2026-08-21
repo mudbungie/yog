@@ -102,7 +102,7 @@ fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
     use crate::boundary::answer::queue::QueueRow;
     vec![
         QueueRow {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".into(),
             agent: "c-1".into(),
             display: "Cobalt".into(),
             state: AgentState::Stopped,
@@ -118,7 +118,7 @@ fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
             }),
         },
         QueueRow {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".into(),
             agent: "c-2".into(),
             display: "Dun".into(),
             state: AgentState::Live,

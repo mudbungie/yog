@@ -32,7 +32,13 @@ use std::path::{Path, PathBuf};
 /// one that must be answered.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueueRow {
-    pub workspace: PathBuf,
+    /// The workspace's **name** (§3.1: its leaf), never its path (REMOTE §8,
+    /// bl-f5f6, regression bl-22ab). It is the token
+    /// [`Action::MarkSeen`](crate::boundary::Action) and every other
+    /// conversation gesture takes, so a row's address copies straight into the
+    /// next gesture; an engine-local path could not be resolved by the seat
+    /// that read it and disclosed the engine's home root besides.
+    pub workspace: String,
     pub agent: String,
     /// The §3.3 display ladder's answer for this agent — the one naming rule
     /// every seat shares ([`convs::member_title`]), never a raw id.
@@ -101,7 +107,7 @@ fn row(snap: &Snapshot, ui: &UiState, key: &RosterKey, now_unix: i64) -> Option<
     let agent = agents.iter().find(|a| a.agent_id == key.agent_id)?;
     let seen = |k, w: &str, a: &str, o: &str| ui.is_seen(k, w, a, o);
     Some(QueueRow {
-        workspace,
+        workspace: snap.ws_name(&workspace),
         agent: agent.agent_id.clone(),
         display: convs::member_title(agent),
         state: agent.state,
