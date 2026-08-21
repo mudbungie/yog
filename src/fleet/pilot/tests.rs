@@ -5,7 +5,10 @@
 //! it is the rung's own condition and must be mechanical rather than promised.
 //!
 //! What one tick *does* — the thread, the two fires, the rows — is [`fire`],
-//! split at §12's cap on the seam between deciding and doing.
+//! split at §12's cap on the seam between deciding and doing; [`stillbirth`] is
+//! the other decision table, cut off at the same cap on the seam the plan draws
+//! — a lease compares a drone's idleness, a stillbirth compares the loop's own
+//! birth record against a world that grew no conversation from it (bl-ab13).
 
 use super::*;
 use crate::app::Snapshot;
@@ -217,7 +220,7 @@ fn a_row_that_names_no_claimant_is_not_reapable() {
 }
 
 #[test]
-fn a_claim_with_no_conversation_is_not_reapable_and_reaps_go_first() {
+fn a_claim_with_no_conversation_and_no_birth_row_is_not_reapable_and_reaps_go_first() {
     let droneless = vec![row("bl-1", Column::Claimed, vec![])];
     assert_eq!(
         plan(
@@ -227,7 +230,8 @@ fn a_claim_with_no_conversation_is_not_reapable_and_reaps_go_first() {
             NOW
         ),
         None,
-        "no conversation, no idleness to compare — the loop does not diagnose it"
+        "no conversation and no birth of the loop's own: nothing to compare, \
+         and yog does not guess whose claim it was"
     );
     // With one reapable ball and one ready ball, the reap is the tick's move.
     let quiet = agent("root-1", crate::git_tree::AgentState::Stopped, NOW - 600);
@@ -266,3 +270,4 @@ fn a_workspace_with_no_derived_tree_reaps_nothing() {
 }
 
 mod fire;
+mod stillbirth;

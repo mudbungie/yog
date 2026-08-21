@@ -119,16 +119,11 @@ impl PilotCtx {
                 claimant,
                 since,
             } => {
-                let release = Action::Release {
-                    project: row.project.clone(),
-                    id: row.id.clone(),
-                    name: claimant.clone(),
-                };
                 // The verb must actually have released it. A non-zero `bl`
                 // is not an `Err` here (§8.2: its stderr is the product), so
                 // the outcome is what decides — a row saying the loop reaped a
                 // ball it still holds would be the trail lying.
-                if !released(dispatch::dispatch(&deps, ui, ts, &release)) {
+                if !release(&deps, ui, ts, row, claimant) {
                     return false;
                 }
                 row::reaped(ts.to_owned(), &fleet.workspace, &row.id, claimant, since)
@@ -149,7 +144,23 @@ impl PilotCtx {
     /// and the §4.11 confinement refusal are seated inside
     /// [`dispatch::prompt`], so a loop spawn is gated by construction rather
     /// than by this module remembering to ask.
-    fn birth(deps: &Deps, ui: &UiState, ts: &str, fleet: &Facts, row: &BoardRow) -> Option<String> {
+    ///
+    /// **A birth is atomic against its own claim** (bl-ab13). [`dispatch::prepare`]
+    /// runs the `bl claim`, and that is the flow's LAST mutating step — so a
+    /// prepare that failed claimed nothing, while a prompt that failed has left
+    /// the ball held by a workspace with no conversation on it. Nothing else
+    /// would ever undo that: the §4.3 lease compares a *drone's* idleness and
+    /// there is no drone to be idle, so the slot and the ball were consumed
+    /// forever while the trail said the spawn had succeeded. The failing door
+    /// therefore releases what the door before it took. No loop row either way —
+    /// the birth did not land, and the `bl` claim/unclaim pair is the trail.
+    fn birth(
+        deps: &Deps,
+        ui: &mut UiState,
+        ts: &str,
+        fleet: &Facts,
+        row: &BoardRow,
+    ) -> Option<String> {
         // The row names its project (bl-b4b5); the live cache is keyed by the
         // clone's path and the `prepare` door takes one, so the name resolves
         // here through the snapshot's own round trip.
@@ -174,7 +185,14 @@ impl PilotCtx {
         // the composer to edit it, and the loop must not become a second author.
         let goal = prepared.goal.clone();
         // No preview, so no seed (bl-1747): the mint draws off the stamp.
-        dispatch::prompt(deps, ui, ts, &fleet.workspace, &prepared, &goal, None).ok()
+        let fired = dispatch::prompt(deps, ui, ts, &fleet.workspace, &prepared, &goal, None);
+        if fired.is_err() {
+            // The claim above landed and the fire did not: give it back. The
+            // claimant is the workspace's own leaf, which is what the start
+            // flow stamped `--as` a moment ago.
+            release(deps, ui, ts, row, &crate::naming::leaf(&fleet.workspace));
+        }
+        fired.ok()
     }
 
     /// This pass's [`Deps`]: the template plus the snapshot it just read,
@@ -194,6 +212,23 @@ impl PilotCtx {
 mod plan;
 
 pub use plan::plan;
+
+/// Give `row`'s claim back from `name`, through the boundary's own door, and
+/// say whether it actually came back. **The loop's one spelling of a release**
+/// — the lease reap spends it and so does a birth undoing its own claim
+/// (bl-ab13), which is what keeps the two from drifting into two acts.
+fn release(deps: &Deps, ui: &mut UiState, ts: &str, row: &BoardRow, name: &str) -> bool {
+    released(dispatch::dispatch(
+        deps,
+        ui,
+        ts,
+        &Action::Release {
+            project: row.project.clone(),
+            id: row.id.clone(),
+            name: name.to_owned(),
+        },
+    ))
+}
 
 /// Whether a released claim actually came back: the verb ran *and* exited
 /// clean. Anything else leaves the ball where it was, and the next tick decides

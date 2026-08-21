@@ -7,7 +7,7 @@
 //! from it, which is what lets the whole decision be a table test — no clock of
 //! its own, no disk, and no state between ticks.
 
-use super::super::{Facts, facts};
+use super::super::{Facts, facts, row as fleet_row};
 use super::Move;
 use crate::app::Snapshot;
 use crate::board::{BoardRow, Column};
@@ -17,7 +17,65 @@ use crate::git_tree::{AgentState, GitTree};
 /// the published snapshot and the board built from it — which is what lets the
 /// whole decision be a table test.
 pub fn plan(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Option<Move> {
-    reap(snap, fleet, rows, now).or_else(|| spawn(snap, fleet, rows))
+    stillborn(snap, fleet, rows)
+        .or_else(|| reap(snap, fleet, rows, now))
+        .or_else(|| spawn(snap, fleet, rows))
+}
+
+/// **The stillbirth** (bl-ab13): a claim this loop holds that has no
+/// conversation at all, and whose own spawn row is answered on the trail by a
+/// driver that died in the handoff. The claim comes back.
+///
+/// This is a reap and not a new move — the act is the same `bl unclaim`, and
+/// the reason is the same kind of sentence: what the loop recorded set against
+/// what the world has, never a diagnosis of the driver's death.
+///
+/// **It is not lease-gated, and the default lease must not reach it.** The
+/// lease is the operator's number for how long a *quiet worker* may hold a
+/// ball, and [`reap`] rightly refuses to guess one. A stillbirth is not a quiet
+/// worker: there is nobody to be quiet, so no number can ever expire, and
+/// before this the slot and the ball were consumed forever while the trail said
+/// the spawn had succeeded. Undoing an act the loop itself made, on evidence
+/// the loop itself wrote, is not a judgement about a drone.
+///
+/// **Two conditions keep it off a healthy birth.** The driver must have said
+/// something dying ([`OpRow::detached_died`](crate::opslog::OpRow)), so a slow
+/// but healthy launch is never touched; and the loop must have re-derived the
+/// world *since* it spawned (`derived_at_unix` past the spawn row), so a
+/// conversation missing only because this snapshot predates it is yog's own
+/// latency rather than a fact about the world.
+///
+/// A driver that dies **silently** leaves no evidence and is out of reach here;
+/// that claim is still the lease's to reap once one is set.
+fn stillborn(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow]) -> Option<Move> {
+    let key = crate::nav::ws_key(&fleet.workspace);
+    let acts = fleet_row::of_rows(&snap.ops);
+    rows.iter()
+        .filter(|r| held_here(r, fleet) && r.drones.is_empty())
+        .find_map(|row| {
+            let claimant = row.claimant.clone()?;
+            // The loop's OWN newest birth on this ball — a claim yog did not
+            // make is not yog's to unmake.
+            let act = acts
+                .iter()
+                .rev()
+                .find(|a| a.verb == fleet_row::SPAWN && a.workspace == key && a.ball == row.id)?;
+            (act.ts < snap.derived_at_unix && died(snap, &key, act.ts)).then(move || Move::Reap {
+                row: row.clone(),
+                claimant,
+                since: format!("spawn {} left no conversation", act.subject),
+            })
+        })
+}
+
+/// Whether the driver the loop handed off at `ts` in `ws` died there. The join
+/// is exact and needs no field of its own: the detached `lernie prompt` row and
+/// the loop's own spawn row are written inside one tick, from one stamp, with
+/// the workspace as both their `cwd` (§4.2).
+fn died(snap: &Snapshot, ws: &str, ts: i64) -> bool {
+    snap.ops
+        .iter()
+        .any(|r| r.cwd == ws && r.ts.parse::<i64>().ok() == Some(ts) && r.detached_died())
 }
 
 /// The reap: the first claimed ball of this workspace whose conversations have

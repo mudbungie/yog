@@ -127,6 +127,17 @@ impl OpRow {
         matches!(self.kind(), ExitKind::Detached) && !self.failed()
     }
 
+    /// Whether this row is a detached spawn whose driver **died in the
+    /// handoff** (bl-ab13): the `-2` sentinel with its sink folded in, which is
+    /// the trail's one durable statement that a launch that reported success
+    /// did not survive. [`detached`](Self::detached)'s exact complement inside
+    /// the sentinel, and the reading the §4.3 loop's stillbirth check asks for
+    /// — a caller that re-read the integer itself would be inventing a second
+    /// meaning for it, which is the defect this module exists to prevent.
+    pub(crate) fn detached_died(&self) -> bool {
+        matches!(self.kind(), ExitKind::Detached) && self.failed()
+    }
+
     /// Whether this row is a **drift** observation (§7.2) rather than an
     /// attempted action: yog's own instrumentation naming a change nobody
     /// announced. Counted separately on the §11 chip

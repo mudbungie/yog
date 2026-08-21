@@ -2144,6 +2144,17 @@ call, and the operator has decided to let yog take work by itself.
    stop, message or delete a conversation. A live or in-flight drone is never
    reaped however old its claim, because killing mid-ball destroys uncommitted
    work — the ceiling's own ruling, applied to claims.
+5b. **A spawn row means a conversation** (bl-ab13, DESIGN §11). The claim and
+   the detached fire are two acts and the second can fail after the first
+   landed; the lease can never reach what that leaves, because a lease compares
+   a drone's idleness and a stranded claim has no drone. So a fire that never
+   launches releases the claim its own flow just made, and a driver that
+   launches and then dies is caught by the next tick — a claimed ball with no
+   conversation at all, whose own spawn row is joined to a detached row carrying
+   the driver's dying words, is a **stillbirth** and the claim comes back, with
+   *"spawn `<name>` left no conversation"* as the comparison. Not lease-gated:
+   undoing the loop's own act on the loop's own evidence is not the judgement
+   about a quiet worker that an absent lease refuses to make.
 6. **One move per tick, and no memory between ticks.** A tick reaps or spawns,
    once, and stops. It keeps nothing: the next tick reads the world the last one
    left, so a missed tick, a crashed yog and a second instance all converge, and
@@ -2171,8 +2182,14 @@ Tests:
 - **S18-T4 the-move-is-a-comparison** (`fleet::pilot`): a ball quiet past its
   lease is reaped with *"lease expired Nm ago"* as its reason; a live or
   in-flight drone is never reaped; no lease reaps nothing; a claim with no
-  conversation is not reapable; reaps go before spawns; a gated ball and another
-  project's ball are not this loop's work.
+  conversation and no birth of the loop's own is not reapable; reaps go before
+  spawns; a gated ball and another project's ball are not this loop's work.
+- **S18-T7 a-spawn-row-means-a-conversation** (`fleet::pilot`, bl-ab13): a fire
+  that never launches gives back the claim its own flow just made and leaves no
+  loop row; a claimed, conversationless ball whose spawn row is answered by a
+  driver that died is reaped with the comparison as its reason and with no lease
+  set at all; and neither a live handoff, nor a snapshot older than the spawn it
+  judges, nor another ball's birth is that evidence.
 - **S18-T5 one-row-per-landed-move** (`fleet::row`, `fleet::pilot::tests::fire`):
   a spawn and a reap each round-trip through the trail as themselves with the
   comparison verbatim, nothing else on the trail reads as one, and a refused

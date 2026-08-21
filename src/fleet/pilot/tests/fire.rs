@@ -1,9 +1,11 @@
-//! What one tick **does**: the thread it runs on, the two moves it fires
-//! through the ordinary boundary doors, and the one row each leaves behind.
+//! What one tick **does**: the thread it runs on, the moves it fires through
+//! the ordinary boundary doors, and the one row each leaves behind.
 //!
 //! Split from [`super`] at §12's cap, on a real seam — that file is the
 //! decision (pure, table-shaped), this one is the effect (fake substrate,
-//! real spawns, the trail read back).
+//! real spawns, the trail read back). Cut once more at the same cap along the
+//! loop's own two moves: the reap and the thread are here, and [`birth`] —
+//! taking work — is beside it.
 
 use super::super::*;
 use crate::app::Snapshot;
@@ -199,67 +201,4 @@ fn a_refused_reap_writes_no_loop_row() {
     );
 }
 
-/// The spawn: the ordinary §8.1 start flow, through the ordinary doors, leaving
-/// the loop's own row naming the ball it took and the conversation it minted.
-#[test]
-fn a_landed_spawn_starts_a_drone_and_leaves_one_row() {
-    let root = tempdir().expect("tempdir");
-    let project = root.path().join("proj");
-    let ws = root.path().join("ws");
-    std::fs::create_dir_all(&project).expect("mkdir");
-    let mut ctx = ctx(root.path(), armed_world(&ws, &project, false, None));
-    let _guard = crate::test_support::spawn_guard();
-    // `bl claim` prints the worktree it minted (§3.2), and the start flow
-    // cross-checks it — so the fake prints exactly the one balls' delivery
-    // layout puts under this state root.
-    let worktree = ctx
-        .deps
-        .balls_state_root
-        .join("plugins/bl-delivery")
-        .join(project.strip_prefix("/").expect("absolute"))
-        .join("bl-1");
-    std::fs::create_dir_all(&worktree).expect("mkdir");
-    ctx.deps.bl = fake(
-        root.path(),
-        "bl",
-        &format!(
-            "#!/bin/sh\ncase \"$1\" in\n  claim) printf '%s\\n' '{}' ;;\nesac\nexit 0\n",
-            worktree.display()
-        ),
-    );
-    ctx.deps.lernie = fake(
-        root.path(),
-        "lernie",
-        &format!(
-            "#!/bin/sh\ncase \"$1\" in\n{}esac\nexit 0\n",
-            crate::test_support::authoring_new_arm()
-        ),
-    );
-    let acted = ctx.pass();
-    let trail0 = std::fs::read_to_string(root.path().join("ops.jsonl")).unwrap_or_default();
-    assert!(acted, "a ready ball under the cap is taken: {trail0}");
-    let trail = std::fs::read_to_string(root.path().join("ops.jsonl")).expect("trail");
-    assert!(trail.contains("yog-fleet"), "{trail}");
-    assert!(trail.contains("spawn"), "{trail}");
-    assert!(trail.contains("bl-1"), "{trail}");
-}
-
-/// A spawn the start flow refuses leaves no loop row, for the same reason a
-/// refused reap does.
-#[test]
-fn a_refused_spawn_writes_no_loop_row() {
-    let root = tempdir().expect("tempdir");
-    let project = root.path().join("proj");
-    let ws = root.path().join("ws");
-    std::fs::create_dir_all(&project).expect("mkdir");
-    let _guard = crate::test_support::spawn_guard();
-    let mut ctx = ctx(root.path(), armed_world(&ws, &project, false, None));
-    ctx.deps.bl = fake(
-        root.path(),
-        "bl",
-        "#!/bin/sh\nprintf 'no\\n' 1>&2\nexit 3\n",
-    );
-    assert!(!ctx.pass());
-    let trail = std::fs::read_to_string(root.path().join("ops.jsonl")).unwrap_or_default();
-    assert!(!trail.contains("yog-fleet"), "{trail}");
-}
+mod birth;
