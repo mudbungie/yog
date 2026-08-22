@@ -1,7 +1,8 @@
 +++
 title = "the speaker label wears body ink on the body's own line — role hue never reaches the prefix"
 created = 1787375806
-updated = 1787375806
+updated = 1787375825
+claimant = "Gatehouse"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
