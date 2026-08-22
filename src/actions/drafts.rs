@@ -73,6 +73,44 @@ impl Drafts {
         }
     }
 
+    /// **Take out exactly what was sent** (§5.3, bl-56c6) — a clean deposit
+    /// clears the words it deposited, not the seat they were typed in.
+    ///
+    /// A send is answered by a receipt frames later (REMOTE §9.8), and the
+    /// composer stays live throughout: what the operator types in that gap is a
+    /// draft like any other, and emptying the whole buffer on the receipt threw
+    /// it away — the box was never disabled, so the only signal they had that
+    /// it would happen was it happening. `fired` is the buffer as it stood when
+    /// the act was posted, so what remains is what they typed after.
+    ///
+    /// **A draft is never destroyed**: if `fired` is no longer a prefix of the
+    /// buffer the text was edited under the send, and the buffer is left exactly
+    /// as it is. The ordinary case — nothing typed in the gap — leaves the
+    /// empty string, which is [`set`](Self::set)'s own clearing.
+    pub fn sent(&mut self, key: &DraftKey, fired: &str) {
+        let now = self.text(key);
+        let rest = now.strip_prefix(fired).unwrap_or(&now).to_owned();
+        self.set(key.clone(), rest);
+    }
+
+    /// **Carry a draft to the key its target acquired** (§3.4, bl-56c6): a
+    /// conversation started in this window is keyed by its minted §3.3 name
+    /// until the derivation shows its branch, and by its id from then on — one
+    /// conversation, two spellings, and half-typed text vanished at the swap.
+    ///
+    /// Idempotent by construction, so the seat that calls it may call it every
+    /// frame: an empty source moves nothing, and a destination that already
+    /// holds a draft is left alone rather than overwritten — the same rule as
+    /// above, that a draft is never destroyed.
+    pub fn carry(&mut self, from: &DraftKey, to: &DraftKey) {
+        let text = self.text(from);
+        if from == to || text.is_empty() || !self.text(to).is_empty() {
+            return;
+        }
+        self.set(from.clone(), String::new());
+        self.set(to.clone(), text);
+    }
+
     /// Whether no target holds a draft at all.
     pub fn is_empty(&self) -> bool {
         self.by_target.is_empty()

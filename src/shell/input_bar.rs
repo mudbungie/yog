@@ -131,44 +131,28 @@ pub fn composer(
     // is the snapshot's (§5.1 #11) — the message target's inbox; a new
     // conversation has none, which is the same rule at zero items.
     let key = DraftKey::composer(Some(ws.clone()), target.clone());
-    // The target's undelivered deposits (§5.1 #11) — the composer's queue and
-    // the `✉n` badge's listing. **`Query::Inbox`'s answer** (bl-b4b5), which is
-    // the §11 Inbox tab's own standing question, so the two seats are one ask;
-    // it re-reads the deposit directory where the accessor folded the tree's
-    // gathered copy, which is the same rows one derivation fresher.
-    let pending = target
-        .as_deref()
-        .map(|agent| {
-            let landed = super::inspector::inbox(model, &ws, agent)
-                .value
-                .unwrap_or_default();
-            // This window's own §3.4 echo folded on (`AppModel::echoed_pending`)
-            // — the third projection of one optimism, for bl-44e9's reason: a
-            // seat's optimism reaches whatever that seat actually reads, and
-            // what this one reads is now an answer.
-            model.echoed_pending(agent, landed)
-        })
-        .unwrap_or_default();
-    // What ↑ pages back through (bl-f908): the operator's own turns in this
-    // conversation, derived from the two seats already open here — the
-    // snapshot's pending listing above and the delivered transcript, which is
-    // the inspector's own standing question and therefore **one ask** shared
-    // with the chat pane (REMOTE §9.7, bl-13f9), never a second `messages/`
-    // read. A new conversation has neither, and a question not yet answered is
-    // the same derivation at zero items: the recall fills a round trip after
-    // the chat it pages back through, which is the honest empty state and not a
-    // case of its own. There is nowhere here to paint a refusal — the composer
-    // is a box, not a pane — so one reads as no past turns, exactly as an
-    // unanswered frame does.
-    let prompts = target
-        .as_deref()
-        .map(|agent| {
-            let tx = super::inspector::transcript(model, &ws, agent)
-                .value
-                .unwrap_or_default();
-            crate::composer::prompts(&pending, &tx)
-        })
-        .unwrap_or_default();
+    // **The draft travels with the conversation across the name→id swap**
+    // (§3.4, bl-56c6): a start is keyed by its minted §3.3 name until the
+    // derivation shows its branch and by its id from then on, and a buffer keyed
+    // by the first spelling simply vanished at the swap — mid-typing, with no
+    // gesture behind it. Idempotent, so it is asked every frame and answers
+    // nothing on all but one: after the carry the old key holds nothing.
+    if let Some((born, id)) = model.adopted_names() {
+        state.actions.drafts.carry(
+            &DraftKey::composer(Some(ws.clone()), Some(born)),
+            &DraftKey::composer(Some(ws.clone()), Some(id)),
+        );
+    }
+    // **Nothing is asked about a conversation with no branch** (§3.4, bl-56c6):
+    // its address resolves nowhere, so every such question refuses — and pays
+    // the rung-3 disk fallback (`for-each-ref` plus a `git show` per agent) to
+    // do it, on every standing question, for the whole start window. What the
+    // queue shows there is the §7.2 echo, which is a fold and not an ask.
+    let branchless = seat.as_ref().is_some_and(|s| s.pending);
+    // What the queue region is handed — the target's own deposits and the turns
+    // ↑ pages back through, in one place because the second is derived from the
+    // first (`queued`).
+    let (pending, prompts) = queued(model, &ws, target.as_deref(), branchless);
     let queue = inbox_queue::QueueCtx {
         key: key.clone(),
         agent_id: target.clone(),
@@ -251,4 +235,51 @@ pub fn composer(
     if let Some(failure) = model.last_failure(crate::opslog::Origin::Conversation) {
         super::banner::failure_banner(ui, model, state, &failure);
     }
+}
+
+/// **What the §11 queue region is handed**: the target's undelivered deposits
+/// (§5.1 #11) with this window's own §3.4 echo folded on, and the operator's
+/// past turns ↑ pages back through (bl-f908). One function because the second
+/// is derived from the first — the recall walks the pending listing ahead of
+/// the delivered transcript — and because both are the same two standing
+/// questions the §11 Inbox tab and the chat pane already ask, so the seats are
+/// one ask apiece rather than two (REMOTE §9.7, bl-b4b5, bl-13f9).
+///
+/// `branchless` is the §3.4 start window: a conversation with no branch has no
+/// address, so neither question is *declared* for it — each would refuse and
+/// pay the rung-3 disk fallback to do it, every ask period, for the whole
+/// window (bl-56c6). What the queue paints there is the echo, which is a fold.
+///
+/// Every empty answer here is the honest one and not a case: no target, an
+/// unanswered question and a conversation with no mail all read as nothing
+/// queued and no past turns, exactly as they always did.
+fn queued(
+    model: &mut AppModel,
+    ws: &std::path::Path,
+    target: Option<&str>,
+    branchless: bool,
+) -> (Vec<crate::inboxview::InboxEntry>, Vec<String>) {
+    let Some(agent) = target else {
+        return (Vec::new(), Vec::new());
+    };
+    let landed = if branchless {
+        Vec::new()
+    } else {
+        super::inspector::inbox(model, ws, agent)
+            .value
+            .unwrap_or_default()
+    };
+    // This window's own §3.4 echo folded on (`AppModel::echoed_pending`) — the
+    // third projection of one optimism, for bl-44e9's reason: a seat's optimism
+    // reaches whatever that seat actually reads, and what this one reads is now
+    // an answer.
+    let pending = model.echoed_pending(agent, landed);
+    if branchless {
+        return (pending, Vec::new());
+    }
+    let tx = super::inspector::transcript(model, ws, agent)
+        .value
+        .unwrap_or_default();
+    let prompts = crate::composer::prompts(&pending, &tx);
+    (pending, prompts)
 }

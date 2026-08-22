@@ -75,6 +75,27 @@ pub struct Selection {
     /// Whether the answered forest carries this agent at all — the roster half
     /// of §8.2's message gate.
     pub present: bool,
+    /// **Whether this row is yog's own optimism rather than the world's**
+    /// (§3.4, §7.2; bl-56c6): a §3.4 start whose detached driver has not
+    /// written its branch, folded into the answer by
+    /// [`echo::rows`](crate::app::echo::rows). Read off the row's own
+    /// [`Tone`](crate::transcript::Tone), which is
+    /// [`Agent::in_memory`](crate::git_tree::Agent::in_memory)'s answer — a
+    /// query, never a flag (§7.2's faded-send ruling), so nothing says it twice.
+    ///
+    /// Like [`ball`](Self::ball) it has **no `AgentView` twin, deliberately**:
+    /// the engine answers about conversations the world carries, and this one is
+    /// not the world's. bl-adcb's ruling is that a seat's optimism reaches
+    /// whatever that seat reads and crosses no wire, so a twin would be the
+    /// engine claiming a fact it cannot hold.
+    ///
+    /// Two seats read it. The inspector asks the engine **nothing** about a
+    /// conversation with no branch — every question refuses, and five ichor
+    /// refusal sentences on the glass for the whole of a healthy start window
+    /// is the window reported as broken. And §8.2's `Stop` is not offered on
+    /// it, which falls out of the row's own honest state rather than being said
+    /// again here.
+    pub pending: bool,
     /// Whether §8.2's `Stop` is offered on it (it holds a driver right now).
     pub stoppable: bool,
     /// Whether the `+children` cascade is offered beside it.
@@ -114,6 +135,7 @@ pub fn selection(rows: &[ConvRow], agent_id: &str) -> Selection {
         flight: root_row.and_then(|r| r.flight),
         ball: root_row.and_then(|r| r.ball.clone()),
         present: own.is_some(),
+        pending: own.is_some_and(|r| r.tone == crate::transcript::Tone::Weak),
         stoppable: own.is_some_and(|r| r.stoppable),
         stop_children: own.is_some_and(|r| r.stop_children),
         agent_id: agent_id.to_owned(),

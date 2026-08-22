@@ -9,7 +9,7 @@
 //! unfocused window echoes nothing, because an echo belongs to the workspace it
 //! was fired in and there is none to compare against.
 
-use super::{Target, rows};
+use super::rows;
 use crate::inboxview::InboxEntry;
 
 impl crate::app::AppModel {
@@ -42,9 +42,19 @@ impl crate::app::AppModel {
     /// is the §11 faded-send ruling deleted at the one surface it exists for.
     ///
     /// It appends rather than reordering: the queue is oldest-first and the
-    /// echo is the newest thing said. A **start**'s echo adds nothing here —
-    /// its conversation has no id yet, so no seat is asking this question about
-    /// it, and the row it does mint is [`rows::with_echo`]'s.
+    /// echo is the newest thing said, and what it appends is **every** send the
+    /// echo stands for ([`super::Echo::deposits`]) — the one that made it and
+    /// each §3.4 held follow-up, in the order they were said.
+    ///
+    /// **A start's echo is folded here too** (bl-56c6). It used to be declined
+    /// on the premise that *"its conversation has no id yet, so no seat is
+    /// asking this question about it"* — a premise bl-2e8f had already
+    /// invalidated by making the start focus its minted name: the composer aims
+    /// at that name, asks `Query::Inbox` about it, is refused, and painted an
+    /// **empty queue for the whole start window** — the operator's first
+    /// message with no representation at the one seat §7.2 names as the seat
+    /// they meant. A name and an id are two spellings of one target
+    /// ([`super::Echo::addresses`]), and the seat asks about whichever it holds.
     ///
     /// **And it yields the moment the answer carries the deposit**
     /// ([`super::Echo::deposited`], bl-78d8). The §8.2 verb is piped, so a follow-up's
@@ -59,12 +69,10 @@ impl crate::app::AppModel {
             return pending;
         };
         let mine = self.started.as_ref().filter(|echo| {
-            echo.ws == ws
-                && echo.target == Target::Agent(agent.to_owned())
-                && !echo.deposited(pending.len())
+            echo.ws == ws && echo.addresses(agent) && !echo.deposited(pending.len())
         });
         match mine {
-            Some(echo) => pending.into_iter().chain([echo.deposit()]).collect(),
+            Some(echo) => pending.into_iter().chain(echo.deposits()).collect(),
             None => pending,
         }
     }

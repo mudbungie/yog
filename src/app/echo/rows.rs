@@ -43,8 +43,12 @@ use crate::nav::convs::{ConvBall, ConvRow, forest_rows};
 ///   synthetic agent `compose` appends and **leads** the list, because a start
 ///   is by construction the newest thing that has happened.
 ///
-/// A [`Target::Agent`] the answer does not carry adds nothing: the conversation
-/// it named is gone, and inventing a row for it would be a false definite.
+/// A **follow-up** whose agent the answer does not carry adds nothing: the
+/// conversation it named is gone, and inventing a row for it would be a false
+/// definite. A resolved **start** whose id it does not carry yet is the
+/// opposite case and mints its row anyway — the derivation is what said that
+/// root exists, and this list lands an ask period behind it
+/// ([`Echo::pending_identity`], bl-56c6).
 pub(crate) fn with_echo(
     echo: Option<&Echo>,
     ws: &Path,
@@ -80,13 +84,13 @@ fn freshen(mut rows: Vec<ConvRow>, index: usize, age: i64) -> Vec<ConvRow> {
     rows
 }
 
-/// Put the pending conversation at the head of the list. A [`Target::Agent`]
-/// with no row is left alone.
+/// Put the pending conversation at the head of the list. A follow-up whose
+/// agent has no row is left alone.
 fn lead(echo: &Echo, rows: Vec<ConvRow>, now_unix: i64) -> Vec<ConvRow> {
-    let Target::Conversation(name) = &echo.target else {
+    let Some((id, name)) = echo.pending_identity() else {
         return rows;
     };
-    pending(echo, name, now_unix)
+    pending(echo, &id, &name, now_unix)
         .into_iter()
         .chain(rows)
         .collect()
@@ -107,8 +111,8 @@ fn lead(echo: &Echo, rows: Vec<ConvRow>, now_unix: i64) -> Vec<ConvRow> {
 /// is reachable from a pending conversation and a lambda nobody calls is a claim
 /// nobody checks. Stated as functions, each is a total answer this module's own
 /// tests hold it to.
-fn pending(echo: &Echo, name: &str, now_unix: i64) -> Vec<ConvRow> {
-    let agent = echo.pending_conversation(name);
+fn pending(echo: &Echo, id: &str, name: &str, now_unix: i64) -> Vec<ConvRow> {
+    let agent = echo.pending_conversation(id, name);
     forest_rows(
         std::slice::from_ref(&agent),
         &crate::nav::ws_key(&echo.ws),

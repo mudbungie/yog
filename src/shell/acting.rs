@@ -39,10 +39,15 @@ use std::path::{Path, PathBuf};
 /// The §3.8 fan's door and aftermath (bl-77bc) — the start family's N-wide
 /// sibling, split on the same seam.
 pub(super) mod fan;
+/// **The receipt's own two folds** — the act's and the seat's — split off at
+/// §12's budget on the same seam: everything in this file is the hold, and that
+/// is what the engine answering does with it.
+mod settle;
 /// The §8.1 start family's two aftermaths — split per §12's budget, on the seam
 /// this file's own doc draws: everything here is the hold, and that is the one
 /// [`Owes`] pair whose landing is itself a step in a longer gesture.
 pub(super) mod start;
+pub(super) use settle::settle;
 
 /// What the **act's** landing re-derives on the frame. A fact about the
 /// gesture: the same act owes the same thing whichever hand fired it.
@@ -90,10 +95,15 @@ enum Seat {
     /// row menu. A refusal still reaches the operator, as the §7.3 banner reads
     /// the act's own `ops.jsonl` line back.
     Quiet,
-    /// The composer's box (bl-a69a): a clean landing empties **this** draft and
-    /// no other, the box being one widget over many buffers and the selection
-    /// being free to move while the act is in flight.
-    Draft(DraftKey),
+    /// The composer's box (bl-a69a): a clean landing takes **this** draft's
+    /// fired text out and no other's, the box being one widget over many
+    /// buffers and the selection being free to move while the act is in flight.
+    ///
+    /// It carries the buffer **as it stood at the post** (bl-56c6), because the
+    /// box is never disabled and the receipt is frames away: what the operator
+    /// typed in that gap is theirs, and emptying the seat took it
+    /// ([`crate::actions::Drafts::sent`]).
+    Draft(DraftKey, String),
     /// The §8.5 line: a clean run empties the line **and** shows the reply — the
     /// same JSON a deposited line's answer file carries, because a line typed at
     /// the window and one deposited from a terminal earn the same answer.
@@ -131,6 +141,16 @@ pub(super) fn deposit(
 ) {
     let owes = match action {
         Action::Message { agent, content, .. } | Action::Interrupt { agent, content, .. } => {
+            // **A send aimed at this window's own unresolved §3.4 mint never
+            // leaves** (bl-56c6): the minted name resolves nowhere until the
+            // detached driver writes its branch, so yog holds the words and
+            // posts them when the start resolves. From the box's side that is a
+            // clean deposit — the text has left it and joined the §11 queue —
+            // and no act was posted, so there is no receipt to hold.
+            if model.hold_send(ws, agent, content) {
+                state.actions.drafts.set(key.clone(), String::new());
+                return;
+            }
             Owes::Message {
                 agent: agent.clone(),
                 content: content.clone(),
@@ -139,7 +159,14 @@ pub(super) fn deposit(
         }
         _ => Owes::Nothing,
     };
-    hold(model, state, ws, action, Seat::Draft(key.clone()), owes);
+    hold(model, state, ws, action, drafting(state, key), owes);
+}
+
+/// The composer's seat for one post: its key, and the buffer as it stands right
+/// now — read here rather than plumbed from the caller, because *here* is the
+/// post, which is the moment the seat is about.
+fn drafting(state: &ShellState, key: &DraftKey) -> Seat {
+    Seat::Draft(key.clone(), state.actions.drafts.text(key))
 }
 
 /// Fire one §8.5 line's **act** arm: the note under the box and whether the
@@ -190,88 +217,4 @@ fn hold(
         seat,
         owes,
     });
-}
-
-/// One frame's fold of the outstanding act. Nothing in flight is nothing to do,
-/// which is every frame but the handful after a gesture.
-pub(super) fn settle(model: &mut AppModel, state: &mut ShellState) {
-    let Some(ticket) = state.acting.as_ref().map(|a| a.ticket) else {
-        return;
-    };
-    let Some(landed) = model.act_receipt(ticket) else {
-        return;
-    };
-    let Some(acting) = state.acting.take() else {
-        return;
-    };
-    let trouble = super::act::trouble(&landed);
-    // The act's own fold first, and only on a clean landing: a refusal changed
-    // nothing in the world, so it may change nothing on the frame. It answers
-    // whether the gesture **handed off** — the composer's Enter chains a
-    // `Prompt` behind its `Prepared` — because the seat's fold belongs to the
-    // act that finished the gesture, never to the one that got half way.
-    if trouble.is_none() && acted(model, state, &acting, &landed) {
-        return;
-    }
-    match acting.seat {
-        Seat::Quiet => quietly(state, trouble),
-        Seat::Draft(key) => match trouble {
-            None => state.actions.drafts.set(key, String::new()),
-            Some(reason) => state.slash = Some(reason),
-        },
-        // The line's own rendering of the answer, in full — help as help, a
-        // search as the §11 tab, anything else as its JSON — which also says
-        // whether the line landed.
-        Seat::Line(key) => {
-            if super::slash::note(state, landed) {
-                state.actions.drafts.set(key, String::new());
-            }
-        }
-    }
-}
-
-/// The act's own aftermath. `true` when this receipt handed the gesture on to a
-/// second act rather than finishing it.
-fn acted(
-    model: &mut AppModel,
-    state: &mut ShellState,
-    acting: &Acting,
-    landed: &Result<crate::boundary::reply::Reply, String>,
-) -> bool {
-    use crate::boundary::reply::Reply;
-    match (&acting.owes, landed) {
-        (
-            Owes::Message {
-                agent,
-                content,
-                queued,
-            },
-            _,
-        ) => {
-            model.await_message(&acting.ws, agent, content, *queued);
-            false
-        }
-        (Owes::Prepared { goal }, Ok(Reply::Prepared(prepared))) => {
-            start::staged(model, state, acting, prepared, goal.clone())
-        }
-        (Owes::Started { goal }, Ok(Reply::Started { conversation })) => {
-            start::fired(model, state, &acting.ws, conversation, goal);
-            false
-        }
-        (Owes::Fanned { goal }, Ok(Reply::Fanned(candidates))) => {
-            fan::fanned(model, state, &acting.ws, candidates, goal)
-        }
-        // A clean reply of a kind this fire cannot read — a codec defect rather
-        // than a state, and the seat below still says what came back.
-        (_, _) => false,
-    }
-}
-
-/// A quiet seat's refusal: the durable record is the act's own `ops.jsonl` line
-/// the §7.3 banner reads back (INV-2), and this is the sentence beside it,
-/// under the box where the operator is already looking.
-fn quietly(state: &mut ShellState, trouble: Option<String>) {
-    if let Some(reason) = trouble {
-        state.slash = Some(reason);
-    }
 }

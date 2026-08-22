@@ -51,16 +51,27 @@ pub(in crate::shell) fn fire(
     key: &DraftKey,
     text: &str,
 ) {
-    staging(
-        model,
-        state,
-        inputs,
-        Seat::Draft(key.clone()),
-        Some(text.to_owned()),
-    );
+    let seat = Seat::Draft(key.clone(), state.actions.drafts.text(key));
+    staging(model, state, inputs, seat, Some(text.to_owned()));
 }
 
 /// The post both rungs make.
+///
+/// **One start at a time** (§3.4, bl-56c6). A second fire while the pair is
+/// still in flight is refused outright — not held, not replaced — because the
+/// two facts a start carries are both spent by the *first* one's landing: the
+/// §3.3 mint seed and the §3.4 claim. Replacing the hold left the first
+/// `Prompt`'s receipt with nobody waiting on it, so its aftermath never ran
+/// while its detached driver launched anyway, and the replacement chained a
+/// second `Prompt` **with the same unspent seed against the same occupied
+/// set** — two roots wearing one minted name, which is "ambiguous
+/// conversation" for as long as both exist.
+///
+/// Nothing is lost by refusing: the draft is untouched, and DESIGN §3.4's
+/// always-the-second ruling is what the very next frame does with it — the
+/// landed start makes its minted name the selection, so that same Enter is a
+/// message to the conversation now being started, held by
+/// [`AppModel::hold_send`] until it has an address.
 fn staging(
     model: &mut AppModel,
     state: &mut ShellState,
@@ -68,6 +79,9 @@ fn staging(
     seat: Seat,
     goal: Option<String>,
 ) {
+    if state.acting.is_some() {
+        return;
+    }
     let action = Action::Prepare {
         workspace: model.snap.ws_name(&inputs.workspace),
         payload: inputs.payload.clone(),

@@ -8,7 +8,7 @@
 //! One file per altitude, and still one module owning every fold: *"what does a
 //! frame see that disk does not say?"* has one place to read.
 
-use super::{Echo, Snapshot, Target, index_of};
+use super::{Echo, Snapshot, index_of};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -63,10 +63,12 @@ pub(crate) fn compose(
             }
         }
         // It is not: a start whose branch does not exist yet, which is the
-        // whole of what the operator could not see.
+        // whole of what the operator could not see. Which identity that row
+        // wears is the echo's own answer (`pending_identity`), so this altitude
+        // and the row altitude mint one row from one rule.
         None => {
-            if let Target::Conversation(name) = &echo.target {
-                tree.agents.push(echo.pending_conversation(name));
+            if let Some((id, name)) = echo.pending_identity() {
+                tree.agents.push(echo.pending_conversation(&id, &name));
             }
         }
     }

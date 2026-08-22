@@ -135,6 +135,21 @@ impl Screen {
         out
     }
 
+    /// One frame with the wire **left outstanding** — the gap between an act's
+    /// post and its receipt, which every other read here settles away.
+    ///
+    /// That gap is where a whole class of defect lives and the only place it
+    /// can be driven from (bl-56c6): the composer is not disabled across it, so
+    /// what the operator types there is a draft like any other, and the fold
+    /// that runs when the receipt lands has to leave it alone. A drive that
+    /// settles to a fixed point per frame is never inside the gap and so can
+    /// assert nothing about it.
+    pub(super) fn unsettled(&self, world: &mut World, events: Vec<egui::Event>) -> bool {
+        world.substrate(&self.lernie, &self.bl);
+        let _ = self.paint(world, events);
+        self.ctx.wants_keyboard_input()
+    }
+
     /// One frame, and nothing else.
     fn paint(&self, world: &mut World, events: Vec<egui::Event>) -> egui::FullOutput {
         let input = egui::RawInput {

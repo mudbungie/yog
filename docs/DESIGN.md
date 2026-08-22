@@ -819,13 +819,54 @@ plus inputs.
   driver got round to it, whether the operator's *next* Enter started a second
   conversation or messaged the first was a race. It is now always the second,
   and `new conversation` (§11's button, `n`) is how they say otherwise.
+  - **And the second is HELD, because it has nowhere to go yet** (bl-56c6).
+    The ruling above was made true of the *selection* and left false of the
+    *address*: until the driver writes its branch the minted name resolves
+    nowhere, so the second Enter posted `Message{agent: <minted name>}` and was
+    refused *"unknown conversation"* for the whole window. It was the second,
+    and the second bounced. So a send aimed at **this window's own unresolved
+    mint** is taken by yog rather than posted — one more undelivered deposit on
+    the §7.2 echo that already stands for the first one, painted in the same
+    faded §11 queue — and posted, in the order it was said and addressed by the
+    id the branch brought, at the instant the claim resolves. Nothing addresses
+    a name that resolves nowhere, so the refusal has no site left to happen at.
+    It is not a queue beside the echo and not a start-window mode: the hold is a
+    field on the one pending value, the predicate is that value's own, and every
+    other target is posted exactly as before.
+  - **A start in flight refuses a second start** (bl-56c6). The §8.1 fire is two
+    posted acts, and both facts a start spends — the §3.3 mint seed and the §3.4
+    claim — are spent on the *second* one's receipt. Replacing the outstanding
+    hold left the first `Prompt`'s aftermath unrun while its detached driver
+    launched anyway, and chained a second `Prompt` **with the same unspent seed
+    against the same occupied set**: one minted name, two roots, and every later
+    address to it "ambiguous conversation" forever. The one-act-at-a-time rule
+    that governs every other gesture (§9.8: *newest wins*) is therefore not the
+    rule here, and the gate is the existing signal — an act outstanding — rather
+    than a flag. Nothing is lost by refusing: the draft is untouched, and the
+    ruling above is what the very next frame does with it.
   A claim whose root never appears is
   inert — the conversation it selected stays selected and stays faded, which is
   what a start whose driver died honestly is — and no claim survives being
-  spent, so the operator's own later selection stands. The claim is per-instance
+  spent, so the operator's own later selection stands. **A claim is spent where
+  it was made** (bl-56c6): it moves the selection only while the selection is
+  still the name the claim put there, because a start can take a minute to write
+  its branch and an operator who read something else in that minute must not be
+  yanked back by their own conversation arriving. The rule is *a start focuses
+  what it started*, not *a start outranks whatever you did next* — the same
+  reason a follow-up's echo claims no focus at all. The claim is per-instance
   RAM like the focus it becomes (§13.1); nothing about it is written down, the
   §6 acknowledgement included: that records the evidence an agent *has*, and a
   conversation with no branch has none.
+  **A pending conversation's state is what nothing observed** (bl-56c6): the
+  synthetic row a start mints carries no lock and no completed step, flagged
+  uncertain, which is exactly what `git_tree::state::classify` answers for an
+  agent it cannot probe — there is no inbox directory to hold a lock and no step
+  to frame. It read `live` until that ball, claiming a driver yog had never
+  looked at and offering §8.2's `Stop` on a conversation no signal could reach.
+  For the same reason **nothing is asked about it**: every §11 inspector
+  question refuses at the address, and painting those refusals told the operator
+  their own new conversation was unknown for the whole of a healthy window. The
+  empty view is what the world honestly holds; their text is in the queue.
   **The claim carries the operator's text with it** (bl-915e): a handle that
   paints no row left the message with no representation anywhere in yog between
   Enter and the driver's first write, which is what the operator saw as the UI
@@ -2587,6 +2628,17 @@ The frame's whole interface to everything that does is the cells in
     top by recency, in the operator's own words. This is deliberately not a new
     "pending" widget class: a message yog has sent and the driver has not
     flushed **is** an undelivered deposit, and yog already had that concept.
+    - **The queue seat asks about a name exactly as it asks about an id**
+      (bl-56c6). The composer aims at whatever the §11 selection is, and since
+      bl-2e8f a fired start makes its minted name that selection — so the seat
+      asked `Query::Inbox` about the name, was refused, and painted an **empty
+      queue for the whole start window**: the operator's first message with no
+      representation at the one seat this bullet names as the seat they meant.
+      The echo declined the fold there on the premise that *"a start has no id
+      yet, so no seat is asking"*, which bl-2e8f had already retired. A name and
+      an id are two spellings of one target; the seat folds on whichever it
+      holds, and what it folds is **every** send the echo stands for — the one
+      that made it and each held follow-up, oldest first.
   - **The reconciliation key is the landed message count, never the text.**
     Every echo records its target's `NNN` counter high-water when it was made
     (§5.1 #12 — messages ever landed, never files present, so a compaction
@@ -2636,6 +2688,31 @@ The frame's whole interface to everything that does is the cells in
     started); an *agent* target does not, because the operator was already
     there, and their own message landing must not yank them back from wherever
     they have since navigated.
+    - **Resolving is that same event, and everything the window held rides it**
+      (bl-56c6). The claim spending, the target taking its id and the §3.4 held
+      sends going out are three things that happen because *one* thing became
+      true: the conversation has an address. So they are one place, and the
+      third needs no receipt — the draft those sends came out of was emptied
+      when they were held, and each is already in the §11 queue as the
+      undelivered deposit it is; a refusal earns the durable `ops.jsonl` line
+      every act leaves (INV-2).
+    - **The half-held state this rules out was reachable** (bl-56c6). In the
+      disk-fallback race where a second send *did* land mid-window, its receipt
+      raised a follow-up echo on the minted NAME, overwriting the start claim:
+      focus could never migrate to the real id, the synthetic row vanished, and
+      the new echo's own predicate was false forever because nothing on the
+      roster ever wore that name as an id. Holding the send closes it at the
+      source rather than by a rule about which echo wins.
+    - **What the seats keyed by the old spelling do** (bl-56c6). Two of them
+      hold state keyed by the identity a conversation *had*: the composer's
+      draft buffer (§11, one box over many targets) and the §11 row list, whose
+      answer lands an ask period behind the derivation that resolved the claim.
+      Both read the swap off the echo rather than being told about it — it is
+      true for the echo's whole remaining life, so each is idempotent and no
+      event has to be caught. The draft is **carried**, never destroyed; the row
+      keeps leading the list under the name it was born with until the answer
+      carries the real one, because the derivation is what said that root
+      exists.
   - **A pending echo is *visibly* pending, and that is what makes expiry cheap.**
     Showing a send in-memory in faded colour, brightening when it is actually
     locked in as a statement, is exactly what the case wants. So an
@@ -2660,6 +2737,24 @@ The frame's whole interface to everything that does is the cells in
     replaces it: one send is in flight at a time, exactly as the §3.4 claim
     always was. What says the launch *failed* is the §4.2 trail, which is where
     a failure has always been said.
+    - **"The next send replaces it" was written for two follow-ups** (bl-56c6),
+      and it is wrong for a follow-up arriving on an **unresolved start**. A
+      follow-up replacing a follow-up is honest — the older send is not unsent,
+      and the newer one is what the seat is now waiting on. A follow-up
+      replacing a start CLAIM destroys the claim before it is spent: the focus
+      can never migrate to the id, the synthetic row disappears, and the
+      replacement echo waits on a name no roster will ever wear. So the rule is
+      narrowed to what it was about: **one send at a time to a conversation the
+      world carries**. A send to a conversation it does not carry yet replaces
+      nothing — it is HELD beside the start's own (§3.4), and both go out when
+      the address exists.
+    - **A draft is never destroyed by a receipt, either** (bl-56c6). A send is
+      answered frames later and the box is not disabled across the gap, so what
+      the operator types there is a draft like any other: the receipt removes
+      exactly the words that were deposited, and if the buffer was edited under
+      the send it is left alone rather than half-cut. The same rule one noun up
+      is why the buffer is carried across the name→id swap instead of being
+      stranded.
   - **The second and later messages ride the same mechanism, and must.** The
     §8.2 `message` verb is piped and its deposit becomes `NNN-user.md` only on
     the driver's next step boundary, so the identical hole was open there. One
@@ -8729,6 +8824,8 @@ beside `main.rs`.
 | `src/app/drift.rs` | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |
 | `src/app/echo.rs` | the pending echo (§7.2, §3.4, bl-915e): the §3.4 start claim's value, its **two** reconciliations — the landed-message count that retires the echo, and the queue-seat count that retires only its §11 seat (bl-78d8) — the expiry bound, and the projections a fold hands a seat |
 | `src/app/echo/fold.rs` | the **one** fold of the derivation + every non-derived fact into the snapshot the frame paints (the echo, the §7.2 live tail, the §3.4 raised wall), split off `echo.rs` at this section's budget (bl-78d8) on the seam that module draws three ways — one file per altitude, and still one module owning every fold, so *"what does a frame see that disk does not say?"* has one place to read |
+| `src/app/echo/held.rs` | **the sends yog holds while a conversation has no address** (§3.4, bl-56c6) — the start window, dissolved rather than patched per seat: until the detached driver writes its branch the minted §3.3 name resolves nowhere, so a send aimed at this window's own pending mint is TAKEN here instead of posted at an address that refuses, and released in order the instant the claim resolves. Not a queue beside the echo — a held send is one more deposit on the same value, painted in the same faded §11 queue — and it carries the name→id swap the composer's draft key has to follow, read off the echo rather than announced, so the seat that acts on it is idempotent |
+| `src/app/echo/pending.rs` | **what a pending conversation looks like to a seat** (§3.4, §5.1 #11) — the deposits an echo stands for and the synthetic agent that carries them, cut off `echo.rs` at this section's budget on the seam that module's doc already draws. Both facts here are queries, never flags (§7.2's faded-send ruling): a deposit with no file has no name, a conversation with no branch has no tip. Its state is what `git_tree::state::classify` would answer about an agent nothing could probe — no lock, no completed step, flagged uncertain — which is why §8.2's `Stop` is not offered on it (bl-56c6: it read `live`, claiming a driver yog had never looked at) |
 | `src/app/echo/rows.rs` | the **same** echo at the ROW altitude (REMOTE §9.7, bl-44e9): the §11 list reads a `Reply::Conversations` now, so the fold that reached it through the composed snapshot has to reach it through the answer instead — a start's pending conversation leads the list, a follow-up freshens the row it named, and a target the answer no longer carries adds nothing. Beside `echo.rs` rather than anywhere convenient, for that file's own single-source reason: one module owns every projection of the echo |
 | `src/app/echo/seat.rs` | what a **frame** asks of the echo — the two doors a seat folds an answer through, split off `echo.rs` at the budget on the seam it already drew (bl-b4b5): the §11 list's rows, and the composer's queue, which is the echo's *third* projection since the pending listing became `Query::Inbox`' answer — and, since bl-78d8, the door that **yields** that projection the moment the answer carries the deposit it stands for. Both orchestration, never derivation: the rows are the engine's and the optimism is the seat's |
 | `src/app/focus.rs` | the §6/§11 **selection**: the roster ladder (↑/↓, jump-to-attention), the pin/collapse writes, the seen-acknowledgement, and the startup focus. Not `shell/focus.rs`, which owns the keyboard |
@@ -8845,7 +8942,10 @@ beside `main.rs`.
 | `src/shell/acceptance/drafts.rs` (excl.) | the bl-a69a drive that a draft belongs to its target |
 | `src/shell/acceptance/drift.rs` (excl.) | the §9.4 drift drive (bl-2d19): a conversation whose config lineage advanced past it states its freeze and offers **both** exits — the one that keeps it (`retarget`) and the one that starts over — on that sentence's own row inside the settings seat, read off painted glyphs rather than the strings handed to the widgets; and the other direction, an undrifted conversation offered neither, which is what makes the first beat evidence |
 | `src/shell/acceptance/echo.rs` (excl.) | the bl-915e drive (a start and a follow-up each read on the frame *immediately* after Enter, with the substrate pinned to prove no derivation ran, then landed and re-read to prove the echo gave its seat up rather than doubling it) |
+| `src/shell/acceptance/echo/harness.rs` (excl.) | the start-window drive's shared fixtures — the world, the gestures and the paint reads its three beat files run on, split off at this section's budget on the seam that already existed: what a drive *does to* the window here, what the window must then *show* in the beats |
 | `src/shell/acceptance/echo/queue.rs` (excl.) | the bl-78d8 drive, split from `echo.rs` at this section's budget on the seam between an echo **appearing** and an echo **giving way**: one message is one §11 queue row through the whole lifecycle — faded while the deposit is unwritten, solid the instant the listing carries the file, gone on the delivery commit — counted by painted `✉` headers, because the echo and the deposit say the same words and no assertion over those words could tell them apart. Its second beat hands the fake `lernie` a `message` arm that **writes the deposit**, which is the ordering the operator hit and the one arrangement no earlier beat had ever set up: every previous fake wrote nothing, so appending unconditionally was indistinguishable from yielding |
+| `src/shell/acceptance/echo/window.rs` (excl.) | the bl-56c6 drive: the §3.4 window, from Enter to the driver's first write. Its substrate is a `lernie` that **records every verb it is handed**, so *"one conversation, one name, the follow-up delivered after the start and addressed by its id"* is read off what the substrate was actually asked to do rather than inferred from the glass — a claim no paint read can make. Beside it, the two the glass is the only witness for: the composer's queue carrying the first message from the fire onward, and a healthy window painting no refusal and offering no `Stop` |
+| `src/shell/acceptance/echo/window/gap.rs` (excl.) | the two beats that live **inside the gap between an act's post and its receipt** — the stretch `Screen::unsettled` is the only way into, and the reason neither defect was reachable before: text typed into a box whose send has not landed (which the receipt used to empty wholesale), and a second Enter arriving before the first fire has (which used to mint the same §3.3 name twice) |
 | `src/shell/acceptance/elision.rs` (excl.) | the §11 rule 1b regression on the two witness rows (the Login verb behind the longest provider name, `assign → <ws>` behind an arbitrary ball title), each asserted in both directions and against the panel's own edge, on painted glyphs rather than galley text — and beside them L4's other question, *where* a row cuts (bl-3aa1): two activity ops sharing the audit's invariant path prefix are laid in the real trail, and the glyphs show each row ending in the leaf and agent id that tell it from the other, where the head-keeping cut painted both rows as one identical line |
 | `src/shell/acceptance/first_run.rs` (excl.) | the bl-3b62 drive that a stranger reaches a **populated** §8.3 roster from the empty world before spending a turn — Ctrl+Shift+3 from inside the bootstrap box, every row on the glass with its credential fact, the sphere named (and named *derived*, since a focused world names its own), and the wall those rows and any sign-in are bound to proved to be the one the first message founds — plus bl-8c2d's consume, that a default install's roster carries a pressable Login on the shipped oauth2 row (found by seat, not by string: `Login` is painted three times on that window) while the keyed rows still name the config editor |
 | `src/shell/acceptance/fixture/crowd.rs` (excl.) | the **crowded roster's** own bytes (bl-86a5): how many conversations `Roster::Crowded` seats, the §3.3 name each wears, the §3.1 name of the wall they hang under, and the one loop that builds them. Split from `fixture.rs` at §12's budget on the seam the builder already had — the shipped world is one thing, the crowd laid on top of it another. It exists because no fixture in this suite held more than **one** conversation, so 1900+ tests ran against a §11 column that never once had to divide itself, and rule 5's promise about that column had never been asked |
@@ -8893,6 +8993,7 @@ beside `main.rs`.
 | `src/shell/act.rs` (excl.) | the shell's one spelling of a wire **act** (REMOTE §1.2, §9.8; bl-4841) — `src/shell/wire.rs`'s twin on the write side. Two shapes and no more: the act whose receipt is *nothing* (every §8.2 verb whose durable record is its own `ops.jsonl` line — it posts and holds no ticket, because nobody read the reply before either), and the act whose receipt is a *sentence* (the four surfaces that paint what came back — they gain a ticket beside the status line they already held). The in-flight state is that same line with an ellipsis on it rather than a second phrasing to learn, and a clean landing simply drops the mark. The `lernie`/`bl` pair does not come here: a posted act carries the gesture and nothing else, the verb binaries being the engine's |
 | `src/shell/acting.rs` (excl.) | **the act whose receipt gates a frame-side state change** (REMOTE §1.2, §9.8; bl-1747) — the third kind, beside `act.rs`'s two, and the last four gestures `AppModel::dispatch` existed for: `Message`, the §8.1 `Prepare`/`Prompt` doors and the §8.5 line's act arm. Two orthogonal axes, because a receipt owes two different parties: `Owes` is what the *act* re-derives (a fact about the gesture, the same however it was asked for — the §3.4 echo, the workspace adoption, the mint-seed spend and the start claim), `Seat` is what the *hand that fired* shows for it (a draft to empty, a reply to render, or neither). One hold at a time and the newest wins, which is `act::Held`'s rule for its reason: an act is never unsent |
 | `src/shell/acting/fan.rs` (excl.) | the §3.8 fan's door and aftermath (bl-77bc) — the start family's N-wide sibling, split on the same seam: the pending start's Send with N > 1 posts one `Fan(Spread)` over the focused ball's obligation (the same context read `/fan` makes, refused in words when the seat holds none), and its receipt walks the rebound starts back through `Prompt`'s ordinary door — the last one held, so the pane, the focus hand-back and the seed ride its receipt exactly as a single start's do; the ones before fire quietly with no seed, one predicted name not being N |
+| `src/shell/acting/settle.rs` (excl.) | **the receipt, folded** — the other half of `acting.rs`, split at this section's budget on the seam that file's own doc draws: everything there is the hold, this is what happens when the engine answers. Two folds and no more, because a receipt owes two parties — the act's own (`Owes`) and the firing seat's (`Seat`) — in that order, the first free to end the frame's work outright when the gesture handed off to a second act rather than finishing |
 | `src/shell/acting/start.rs` (excl.) | the §8.1 start family's two doors, posted and held — split at §12's budget on the seam its parent's doc draws: everything there is the hold, and this is the one `Owes` pair whose landing is itself a step in a longer gesture. The composer's own Enter carries its typed text through the `Prepare` into a chained `Prompt`, so the box empties when the *second* act lands and the whole gesture is judged once, exactly as the synchronous pair was; every other rung stops at the goal box, which is §3.4's own table |
 | `src/shell/activity.rs` (excl.) | §4.2 — the chip's counts still off the snapshot, the expanded trail a `Reply::Ops` off the wire since bl-adcb (REMOTE §1.2), asked only while the pane is open and bounded by `opslog::OPS_TAIL`, the log's own one number |
 | `src/shell/alerts.rs` (excl.) | the §6 desktop escalation's whole shell face (bl-e160) — one standing `Query::Attention` (REMOTE §9.7, bl-f297) into the pure `crate::alert` decision, plus the two things only a window can supply: the OS's answer to *do I have focus*, and a thread to spawn the notifier on so the frame never waits for a desktop. The one branch it owns is §6's ruling that an unanswered or refused frame is not a reading of the queue, so the baseline does not move |

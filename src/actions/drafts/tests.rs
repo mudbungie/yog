@@ -92,3 +92,69 @@ fn drafts_clone_eq_and_debug() {
     assert!(format!("{drafts:?}").contains("ping"));
     assert!(format!("{key:?}").contains("c-1"));
 }
+
+/// **A clean send takes out what it sent, and nothing else** (§5.3, bl-56c6).
+/// The box stays live across the frames between a post and its receipt, so what
+/// is typed there is a draft like any other — and a buffer edited under the send
+/// is left exactly as it is rather than half-cut.
+#[test]
+fn a_send_removes_the_words_it_deposited_and_never_the_ones_after_them() {
+    let mut drafts = Drafts::default();
+    let key = DraftKey::Message("c-1".into());
+
+    drafts.set(key.clone(), "ping".into());
+    drafts.sent(&key, "ping");
+    assert_eq!(drafts.text(&key), "", "the ordinary case: nothing is left");
+
+    drafts.set(key.clone(), "ping and hurry".into());
+    drafts.sent(&key, "ping");
+    assert_eq!(
+        drafts.text(&key),
+        " and hurry",
+        "what was typed after Enter is still theirs, verbatim"
+    );
+
+    // Edited under the send: the fired words are no longer a prefix, so nothing
+    // is cut — a draft is never destroyed to keep a rule tidy.
+    drafts.set(key.clone(), "something else".into());
+    drafts.sent(&key, "ping");
+    assert_eq!(drafts.text(&key), "something else");
+
+    // A send from a key that holds nothing is the general path at zero.
+    let empty = DraftKey::Message("c-2".into());
+    drafts.sent(&empty, "ping");
+    assert_eq!(drafts.text(&empty), "");
+}
+
+/// **One buffer follows its conversation through every spelling of its
+/// identity** (§3.4, bl-56c6): the workspace's new-conversation draft, then the
+/// minted §3.3 name's, then the id's. Idempotent, so the seat that does it may
+/// do it every frame — and never destructive, so a destination already holding
+/// a draft keeps it.
+#[test]
+fn a_draft_is_carried_to_the_key_its_conversation_acquired() {
+    let mut drafts = Drafts::default();
+    let bare = start_in("/w");
+    let named = DraftKey::Message("CourtyardRooftop".into());
+    let id = DraftKey::Message("c-2".into());
+
+    drafts.set(bare.clone(), "half a thought".into());
+    drafts.carry(&bare, &named);
+    assert_eq!(drafts.text(&named), "half a thought");
+    assert_eq!(drafts.text(&bare), "", "and it is not in two places");
+
+    // Idempotent: a second pass moves nothing, because the source is empty now.
+    drafts.carry(&bare, &named);
+    assert_eq!(drafts.text(&named), "half a thought");
+    drafts.carry(&named, &id);
+    assert_eq!(drafts.text(&id), "half a thought");
+
+    // One spelling to itself is a no-op, and an occupied destination is left
+    // alone rather than overwritten.
+    drafts.carry(&id, &id);
+    assert_eq!(drafts.text(&id), "half a thought");
+    drafts.set(named.clone(), "typed since".into());
+    drafts.carry(&named, &id);
+    assert_eq!(drafts.text(&id), "half a thought");
+    assert_eq!(drafts.text(&named), "typed since");
+}

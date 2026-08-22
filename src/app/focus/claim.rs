@@ -76,22 +76,44 @@ impl AppModel {
     ///    selection does, §6), and the echo takes that id. The claim is spent
     ///    once and never again — a resolved target has no name left to match —
     ///    so the operator's own later selection stands.
-    /// 2. **The echo retires** when the derivation shows the message it stood
+    /// 2. **Everything the window held is posted** (bl-56c6). A send the
+    ///    operator made while the conversation had only its minted name was
+    ///    held rather than fired at a name that resolves nowhere
+    ///    ([`hold_send`](Self::hold_send)); an id an act can address is exactly
+    ///    what it was waiting for, so it goes out here, in order, on the same
+    ///    event.
+    /// 3. **The echo retires** when the derivation shows the message it stood
     ///    in for. Nothing claimed, or nothing landed, holds it: the general
     ///    path with the file absent, not a wait state — and there is no timeout
     ///    beside it, because a faded row (§11) is not a claim that can go stale
     ///    (the faded-send ruling; §7.2 spells the whole expiry).
+    ///
+    /// **The focus is spent where it was made, and nowhere else** (bl-56c6):
+    /// the claim moves the selection only while the selection is still the name
+    /// the claim put there. A start can take a whole minute to write its branch,
+    /// and an operator who walked off to read something else in that minute was
+    /// yanked back by their own conversation arriving — the §3.4 rule is *a
+    /// start focuses what it started*, not *a start outranks whatever you did
+    /// next*. It is the same reason a follow-up's echo claims no focus at all.
     pub(in crate::app) fn adopt_started(&mut self) {
         let Some(mut echo) = self.started.take() else {
             return;
         };
-        if let Some(agent) = echo.resolved(&self.derived) {
+        let resolved = echo.resolved(&self.derived);
+        if let Some(agent) = &resolved {
+            let claimed = self.focus.agent == echo.born;
             echo.target = Target::Agent(agent.clone());
-            self.focus_agent(&echo.ws, &agent);
+            if claimed {
+                self.focus_agent(&echo.ws, agent);
+            }
         }
-        if echo.landed(&self.derived) {
-            return;
-        }
+        let landed = echo.landed(&self.derived);
         self.started = Some(echo);
+        if let Some(agent) = resolved {
+            self.release_held(&agent);
+        }
+        if landed {
+            self.started = None;
+        }
     }
 }

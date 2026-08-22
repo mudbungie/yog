@@ -8,6 +8,7 @@ mod attention;
 mod deletes;
 pub(super) mod derive;
 mod drift;
+mod echo;
 mod focus;
 pub(crate) mod harness;
 mod knobs;

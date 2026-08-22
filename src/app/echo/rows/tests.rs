@@ -107,13 +107,52 @@ fn nothing_pending_and_nothing_matching_hand_the_answer_straight_back() {
         answered
     );
 
-    let gone = Echo {
-        target: Target::Agent("c-9".to_owned()),
-        ..Echo::started(Path::new(WS), "unused", "hi", 95)
-    };
+    let gone = Echo::messaged(
+        &std::sync::Arc::new(crate::app::Snapshot::empty(0)),
+        Path::new(WS),
+        "c-9",
+        "hi",
+        0,
+        95,
+    );
     assert_eq!(
         with_echo(Some(&gone), &ws(), answered.clone(), 100),
         answered
+    );
+}
+
+/// **A resolved start is the opposite case** (bl-56c6). The echo takes the id
+/// its branch brought off the *derivation*, and this list is an answer that
+/// lands an ask period later — so for that half-second the target is an id no
+/// row carries. A follow-up in that position invents nothing, because its
+/// conversation really may be gone; a start in it mints its row anyway, because
+/// the derivation is what said the root exists. Without this the conversation
+/// blinks out of the §11 list at exactly the handover, and the composer's verbs
+/// grey with it.
+#[test]
+fn a_resolved_start_keeps_its_row_until_the_answer_catches_up() {
+    let answered = vec![row("c-1", Some("other"), 30)];
+    let adopted = Echo {
+        target: Target::Agent("c-2".to_owned()),
+        ..Echo::started(Path::new(WS), "stench-pug", "open the gate", 95)
+    };
+    let rows = with_echo(Some(&adopted), &ws(), answered.clone(), 100);
+    assert_eq!(ids(&rows), ["c-2", "c-1"], "still leading the list");
+    assert_eq!(
+        rows[0].display_name(),
+        "stench-pug",
+        "under the name it was born with, which is what the answer will say too"
+    );
+    assert_eq!(rows[0].tone, Tone::Weak, "and still yog's own word for it");
+
+    // The answer catches up: one row, the derivation's, freshened — never two.
+    let landed = vec![row("c-2", Some("stench-pug"), 40), answered[0].clone()];
+    let rows = with_echo(Some(&adopted), &ws(), landed, 100);
+    assert_eq!(ids(&rows), ["c-2", "c-1"]);
+    assert_eq!(
+        rows[0].tone,
+        Tone::Plain,
+        "the derivation's row, brightened"
     );
 }
 

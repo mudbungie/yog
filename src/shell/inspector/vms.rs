@@ -53,6 +53,17 @@ pub(super) fn tab_data(
     // bl-1eb0 and picked out of the landed forest since bl-48ae, so this reads
     // an answer rather than a roster.
     let speaker = focus.name.clone();
+    // **A conversation with no branch is asked nothing** (§3.4, bl-56c6). The
+    // start window is a healthy state, not a fault: the root has no
+    // `agents/<id>` ref until the detached driver writes one, so every question
+    // below refuses at the address — and the ichor sentences that painted for
+    // the whole window told the operator their own new conversation was
+    // unknown. What the empty view shows is what the world honestly holds about
+    // it, and their text is not lost with it: the §11 queue above the box
+    // carries every send (§7.2), faded, from the fire onward.
+    if focus.pending {
+        return (nothing_yet(state, model, speaker), Vec::new());
+    }
     let mut said = Said::default();
     // The two asked on every tab: the steps view because the centre's auth and
     // wound banners read it beside the Steps tab, and the transcript because a
@@ -119,6 +130,32 @@ pub(super) fn tab_data(
         pin,
     };
     (data, said.sentences())
+}
+
+/// The inspector of a conversation the world does not carry yet (§3.4,
+/// bl-56c6): every answer at its empty value, which is what a question nobody
+/// asked honestly holds — the same value each arm above already falls back to
+/// when its own question has not landed. Only the seat's own ephemera survive,
+/// because those are facts about the operator rather than about the branch.
+fn nothing_yet(state: &ShellState, model: &AppModel, speaker: String) -> TabData {
+    TabData {
+        transcript: std::sync::Arc::default(),
+        speaker,
+        raw: state.inspector.raw,
+        auto: model.transcript_auto_expand(),
+        step_sel: None,
+        step_detail: None,
+        step_tab: state.inspector.step_tab,
+        steps: StepsView::default(),
+        inbox: Vec::new(),
+        files: crate::files_view::FilesView::default(),
+        file_preview: None,
+        science: Vec::new(),
+        work_patch: None,
+        governing: None,
+        rail: crate::rail::Rail::default(),
+        pin: None,
+    }
 }
 
 /// Which step the drill-in is about: the selected row of the list that landed,

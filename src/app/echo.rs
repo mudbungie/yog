@@ -22,14 +22,7 @@
 //! list, in the operator's own words.
 
 use super::Snapshot;
-use crate::git_tree::{Agent, AgentState};
-use crate::inboxview::{Deposit, InboxEntry};
 use std::path::{Path, PathBuf};
-
-/// The deposit sender an echo speaks for — the operator, exactly as a real
-/// `user` deposit's frontmatter says it, so a pending row reads identically
-/// whether yog or the substrate put it there.
-const SENDER: &str = "user";
 
 /// Who an echo addresses. The two arms are the two things that can be true when
 /// a message is sent, and the difference between them is real: a start has no
@@ -51,8 +44,22 @@ pub(crate) enum Target {
 pub(crate) struct Echo {
     pub(crate) ws: PathBuf,
     pub(crate) target: Target,
+    /// The minted §3.3 name a **start** was born under, for a start; `None` for
+    /// a follow-up, which was born addressing an id. Unlike
+    /// [`target`](Self::target) it never changes — it is what the conversation
+    /// *was called*, not what it *is* — so the two are one fact each rather than
+    /// two copies of one (bl-56c6). Two seats still need it after the swap: the
+    /// composer's draft is keyed by the identity it was typed against, and the
+    /// §11 row leads by the minted name until the answered list catches up.
+    pub(crate) born: Option<String>,
     /// The operator's text, verbatim — the payload the composer sent.
     pub(crate) text: String,
+    /// **Sends the operator made at this conversation before it had an
+    /// address** (§3.4, bl-56c6) — held by yog, never fired at a name that
+    /// resolves nowhere, and posted in this order the instant the start
+    /// resolves ([`held`](self::held)). Empty for every echo that is not an
+    /// unresolved start, which is the general path at zero items.
+    pub(crate) held: Vec<held::HeldSend>,
     /// How many messages had ever landed on the target when this was made —
     /// the `NNN` counter's high-water mark (§5.1 #12), the reconciliation
     /// baseline. A high-water rather than a file count (bl-fde5): compaction
@@ -80,7 +87,9 @@ impl Echo {
         Self {
             ws: ws.to_path_buf(),
             target: Target::Conversation(conversation.to_owned()),
+            born: Some(conversation.to_owned()),
             text: goal.to_owned(),
+            held: Vec::new(),
             baseline: 0,
             queue_baseline: 0,
             at_unix,
@@ -107,7 +116,9 @@ impl Echo {
         Self {
             ws: ws.to_path_buf(),
             target,
+            born: None,
             text: content.to_owned(),
+            held: Vec::new(),
             baseline,
             queue_baseline: queued,
             at_unix,
@@ -154,63 +165,39 @@ impl Echo {
         shown > self.queue_baseline
     }
 
-    /// This echo as the pending deposit it is (§5.1 #11) — the same shape a
-    /// real `inbox/<id>/*.md` parses to, so every seat that renders pending
-    /// mail renders this identically.
-    ///
-    /// Its `name` is **empty**, and that is the whole of what makes it read as
-    /// pending rather than settled ([`InboxEntry::in_memory`]): a deposit's
-    /// name is its file, and this one has no file. The seats paint it faded off
-    /// that one fact and brighten when the derivation replaces it (§11, the
-    /// faded-send ruling).
-    pub(crate) fn deposit(&self) -> InboxEntry {
-        InboxEntry {
-            name: String::new(),
-            raw: self.text.clone().into_bytes(),
-            deposit: Deposit {
-                sender: Some(SENDER.to_owned()),
-                deposited_at: Some(crate::ui_state::iso8601_extended(self.at_unix)),
-                body: self.text.clone(),
-                ..Deposit::default()
-            },
+    /// Whether this echo speaks for the conversation `agent` names — by the id
+    /// it has, or by the §3.3 name it was born under while it has none. The one
+    /// predicate every seat asks before folding its optimism on, so a seat
+    /// holding a minted name and a seat holding an id are asking one question.
+    pub(crate) fn addresses(&self, agent: &str) -> bool {
+        match &self.target {
+            Target::Conversation(name) => name == agent,
+            Target::Agent(id) => id == agent,
         }
     }
 
-    /// The **pending conversation** a start's echo mints (§3.4): an agent keyed
-    /// by the minted §3.3 name — the only identity a start has before its
-    /// branch — carrying the operator's goal as its preview, so the §11 list
-    /// paints one row in their own words. Live, because a driver is starting;
-    /// every other field is the empty one, which is what a conversation with no
-    /// commits, no steps and no marks honestly has.
+    /// **The identity the pending row is minted under**, when there is one
+    /// (§3.4, bl-56c6): `(what addresses it, what it is called)`.
     ///
-    /// Its **tip oid is empty**, and that is what the seats read to paint it
-    /// faded ([`Agent::in_memory`]): a derived agent comes off `for-each-ref`,
-    /// so it always has a tip, and this one has no branch at all.
-    fn pending_conversation(&self, name: &str) -> Agent {
-        Agent {
-            branch_name: format!("agents/{name}"),
-            agent_id: name.to_owned(),
-            tip_oid: String::new(),
-            tip_short_oid: String::new(),
-            tip_timestamp_unix: self.at_unix,
-            call_start_unix: None,
-            last_action_unix: self.at_unix,
-            messages: 0,
-            steps: Vec::new(),
-            preview: Some(self.text.clone()),
-            stream: crate::git_tree::Stream::default(),
-            tool_calls: Vec::new(),
-            state: AgentState::Live,
-            state_uncertain: false,
-            pending: vec![self.deposit()],
-            conflicted_oid: None,
-            budget_oid: None,
-            abandoned_oid: None,
-            notify_oid: None,
-            held: None,
-            goal_ball: None,
-            name: Some(name.to_owned()),
-            goal_name: None,
+    /// Two arms, one rule — *a conversation yog started and the world has not
+    /// shown yet is a row of its own*:
+    ///
+    /// - an **unresolved** start is addressed and named by the minted §3.3
+    ///   name, the only identity it has;
+    /// - a **resolved** one is addressed by the id its branch brought and still
+    ///   named by the name it was born under, because the answered §11 list
+    ///   lands an ask period behind the derivation that resolved it — without
+    ///   this the conversation blinks out of the list at exactly the handover
+    ///   (bl-56c6 D9), and it is no invention: the derivation is what said the
+    ///   root exists.
+    ///
+    /// `None` for a follow-up, whose conversation the world either carries or
+    /// has lost — inventing a row for it would be a false definite.
+    pub(crate) fn pending_identity(&self) -> Option<(String, String)> {
+        let name = self.born.clone()?;
+        match &self.target {
+            Target::Conversation(_) => Some((name.clone(), name)),
+            Target::Agent(id) => Some((id.clone(), name)),
         }
     }
 }
@@ -229,6 +216,18 @@ fn index_of(snap: &Snapshot, ws: &Path, target: &Target) -> Option<usize> {
             Target::Agent(id) => &a.agent_id == id,
         })
 }
+
+/// **The sends yog holds while a conversation has no address** (§3.4, bl-56c6)
+/// — the window between Enter and the driver's branch, in its own file at §12's
+/// budget. Nothing here is a second pending concept: a held send is one more
+/// deposit on the same echo, and releasing it is the claim resolving.
+pub(crate) mod held;
+
+/// **What a pending conversation looks like to a seat** (§3.4, §5.1 #11) — the
+/// deposits an echo stands for and the synthetic agent that carries them, cut
+/// off this file at §12's budget on the seam it already draws: above is what an
+/// echo *is* and when it retires, there is the shape it wears on the glass.
+mod pending;
 
 /// **The echo folded into the snapshot** (§7.2) — the fold this module's doc
 /// calls the one place snapshot and pending meet, in its own file at §12's

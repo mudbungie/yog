@@ -73,6 +73,11 @@ pub(super) fn verb_buttons(
         return;
     }
     let selected = state.actions.selected_branch.clone();
+    // **Whether a start may be fired at all** (§3.4, bl-56c6): not while one is
+    // still in flight. The invariant is `acting::start::staging`'s — this is the
+    // same fact painted, so the operator sees a control that is not offered
+    // rather than pressing one that does nothing.
+    let quiet = state.acting.is_none();
     // `//…` said a slash and meant it (§8.5): the escape is shed here, the one
     // place a draft becomes something a model reads.
     let said = line::unescape(&ctx.text);
@@ -123,7 +128,7 @@ pub(super) fn verb_buttons(
             // Armed by both halves (bl-6191): something to say, and a work
             // directory the start can actually run in. The birth block's field
             // carries the red sentence saying which one refused.
-            let on = new_prompt_enabled(&ctx.text, &state.actions.path_dir);
+            let on = quiet && new_prompt_enabled(&ctx.text, &state.actions.path_dir);
             let send = ui
                 .add_enabled(on, egui::Button::new("New prompt"))
                 .on_hover_text(
@@ -131,7 +136,10 @@ pub(super) fn verb_buttons(
                      detached `lernie prompt` that keeps running whatever yog does. \
                      Enter starts it; typed whole, it is `/prompt <goal…>`.",
                 )
-                .on_disabled_hover_text("type something first — an empty prompt starts nothing")
+                .on_disabled_hover_text(
+                    "type something first — an empty prompt starts nothing; and a start \
+                     already in flight has to land before a second one may be fired",
+                )
                 .clicked();
             if on && (send || ctx.entered) {
                 super::focus::request(state);
