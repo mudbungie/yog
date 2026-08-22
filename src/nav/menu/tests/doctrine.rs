@@ -27,31 +27,19 @@ fn every_seat() -> Vec<Seat> {
     }
     for state in JOIN_STATES {
         for assign_to in [None, Some("alba-koi".to_owned())] {
-            for move_to in [Vec::new(), vec!["zeta-pug".to_owned()]] {
-                seats.push(Seat::BallRow {
-                    state,
-                    assign_to: assign_to.clone(),
-                    move_to,
-                });
-            }
+            seats.push(Seat::BallRow { state, assign_to });
         }
     }
     seats
 }
 
-/// Walk an entry and its submenu rows — the doctrine holds at every depth.
+/// Every entry is worded and names the visible affordance it accelerates.
 fn assert_carried(entry: &Entry) {
     assert!(
         !entry.carrier.is_empty(),
         "{entry:?} names no visible carrier"
     );
     assert!(!entry.label.is_empty(), "{entry:?} has no worded label");
-    if let Action::Submenu(children) = &entry.action {
-        assert!(!children.is_empty(), "{entry:?} is an empty submenu");
-        for child in children {
-            assert_carried(child);
-        }
-    }
 }
 
 #[test]

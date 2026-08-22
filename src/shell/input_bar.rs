@@ -217,15 +217,10 @@ pub fn composer(
     // the §11 Search tab focus, not a scroller growing out of the composer.
     super::slash::note_ui(ui, state);
 
-    // The focused workspace's first bound ball and where it may be re-homed —
-    // both selections out of answers this frame already holds (REMOTE §9.7,
-    // bl-b4b5): the §11 balls listing and the altitude-0 enumeration.
+    // The focused workspace's first bound ball — a selection out of an answer
+    // this frame already holds (REMOTE §9.7, bl-b4b5): the §11 balls listing.
     let ball = super::chrome::focused_balls(model).first().cloned();
-    let targets = match &ball {
-        Some(ball) => crate::nav::tabs::move_targets(&super::chrome::ws_rows(model), &ball.owner),
-        None => Vec::new(),
-    };
-    super::ball_bar::actions(ui, model, ball.as_ref(), &targets);
+    super::ball_bar::actions(ui, model, ball.as_ref());
     // Derived per frame, never cached at dispatch (§7.3, bl-4895): a detached
     // driver that dies after launch lands in the model on a later sweep. Scoped
     // to this surface's own gestures (bl-48f8) — the message/stop verbs and the

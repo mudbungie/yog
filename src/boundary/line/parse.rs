@@ -12,7 +12,7 @@
 //! spellings, one gesture — `/help`, `/help <verb>`, `<verb> --help|-h`, and a
 //! bare `/`, which is the question with nothing named.
 
-use super::balls::{create, id, moved, update};
+use super::balls::{create, id, update};
 use super::verbs::{self, children, payload};
 use super::{Context, args, config, queries};
 use crate::boundary::{Action, Gesture, Query, help};
@@ -93,7 +93,6 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
             id: id(tail, ctx, verb)?,
             name: args::name(ctx, verb)?,
         })),
-        "move" => moved(tail, ctx, verb),
         "create" => create(tail, ctx, verb),
         "update" => update(tail, ctx, verb),
         // The §8.1 start family, as its two real gestures.

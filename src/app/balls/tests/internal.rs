@@ -168,34 +168,23 @@ fn empty_project_hint_only_with_zero_projects() {
 }
 
 #[test]
-fn move_targets_are_the_named_workspaces_minus_the_one_holding_the_ball() {
-    // §8.2 Move: one destination rule for the composer's `move to:` buttons,
-    // the §11 ball-row menu's submenu and the board row's — and never a move to
-    // where the ball already is. **Off the landed enumeration** since bl-b4b5,
-    // so the destinations and the tab bar are one answer; a foreign (lernie
-    // auto-id) workspace carries no yog identity and is excluded, which is the
-    // non-Named arm.
+fn is_named_is_the_landed_enumerations_own_yog_walls() {
+    // The §3.6 scope gate off the landed enumeration (bl-b4b5): yog's own named
+    // walls only. A foreign (lernie auto-id) workspace carries no yog identity,
+    // which is the non-Named arm; a name the answer does not carry reads false.
     let w = world();
     fs::create_dir_all(w.roots.lernie_data.join("workspaces/adhoc/repo.git")).unwrap();
     let (_c, m) = model(&w);
     let rows = crate::test_support::chrome::ws_rows(&m);
-    assert_eq!(
-        crate::nav::tabs::move_targets(&rows, "cobalt"),
-        vec!["spare".to_owned()],
-        "foreign 'adhoc' excluded, and never where it already is",
-    );
-    let mut all = crate::nav::tabs::move_targets(&rows, "nobody");
-    all.sort();
-    assert_eq!(all, vec!["cobalt".to_owned(), "spare".to_owned()]);
-    // The §3.6 scope gate off the same rows: yog's own named walls only.
     assert!(crate::nav::tabs::is_named(&rows, "cobalt"));
+    assert!(crate::nav::tabs::is_named(&rows, "spare"));
     assert!(!crate::nav::tabs::is_named(&rows, "adhoc"), "foreign");
     assert!(!crate::nav::tabs::is_named(&rows, "nowhere"), "absent");
 }
 
 #[test]
 fn focused_ws_name_is_the_focused_leaf_else_none() {
-    // The Assign/Move target name (§8.2/§3.2): the focused workspace's leaf.
+    // The Assign target name (§8.2/§3.2): the focused workspace's leaf.
     let w = world();
     let (_c, mut m) = model(&w);
     m.focus_workspace(&crate::naming::leaf(&w.ws_cobalt));

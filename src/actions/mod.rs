@@ -16,8 +16,8 @@
 //! gesture and works on *any* selected agent ([`message_enabled`], ARCH §2.9 —
 //! no resume verb);
 //! **Close** needs the ball bound to a local workspace ([`close_enabled`] =
-//! `JoinState::Bound`); **Unclaim**/release and **Move** need the same
-//! ([`unclaim_enabled`], [`move_enabled`]); **Assign** needs a ready, unclaimed
+//! `JoinState::Bound`); **Unclaim**/release needs the same
+//! ([`unclaim_enabled`]); **Assign** needs a ready, unclaimed
 //! ball ([`assign_enabled`] = `JoinState::ReadyStartable`) — each predicate
 //! refuses exactly what the underlying `bl` verb would (§8.2/§3.5); **Scan** is
 //! unconditional (offered for any focused workspace — no predicate). All are
@@ -120,7 +120,7 @@ pub fn new_prompt_enabled(input: &str, work_dir: &str) -> bool {
 /// A new ball's Create & Start is offered iff its title is non-blank (§8.1): a
 /// ball with no title has nothing to name the work. A distinct §3.5 rule from
 /// [`new_prompt_enabled`] though the current bodies coincide (as [`close_enabled`]
-/// / [`unclaim_enabled`] / [`move_enabled`] share `Bound`) — each names the rule
+/// and [`unclaim_enabled`] share `Bound`) — each names the rule
 /// its `bl`/start path enforces. Covered here, not inlined in coverage-excluded
 /// shell glue.
 pub fn create_ball_enabled(title: &str) -> bool {
@@ -237,14 +237,6 @@ pub fn unclaim_enabled(state: JoinState) -> bool {
 /// claimed-elsewhere / delivered ball refuses — exactly what `bl claim` refuses.
 pub fn assign_enabled(state: JoinState) -> bool {
     matches!(state, JoinState::ReadyStartable)
-}
-
-/// Move is offered iff the ball is bound to a local workspace —
-/// [`JoinState::Bound`] (§8.2, §3.5). Move is unclaim-then-claim (release + assign
-/// to another workspace): only a ball this yog owns can be re-homed, so an
-/// unclaimed or claimed-elsewhere ball refuses (what `bl unclaim` would refuse).
-pub fn move_enabled(state: JoinState) -> bool {
-    matches!(state, JoinState::Bound)
 }
 
 #[cfg(test)]

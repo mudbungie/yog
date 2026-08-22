@@ -79,9 +79,6 @@ pub(super) fn ready_row(
     let seat = Seat::BallRow {
         state: join,
         assign_to: to,
-        // A ready ball is claimed by nobody, so there is nothing to re-home;
-        // `move_enabled` refuses it anyway (§3.5).
-        move_to: Vec::new(),
     };
     let target = Target::Ball(BallRef {
         project,
@@ -92,8 +89,8 @@ pub(super) fn ready_row(
 }
 
 /// One bound ball: ▶ Continue `<id>: <title>` into the ball's **own** claimant
-/// workspace (§8.1 resume, addendum), seating the §11 ball-row menu — Move /
-/// Release / Close — on the button.
+/// workspace (§8.1 resume, addendum), seating the §11 ball-row menu — Release /
+/// Close — on the button.
 ///
 /// This is a bound ball's **only** roster row (bl-abbe). It used to render
 /// twice: here, and again below the new-ball form as a bare grey id with no
@@ -128,7 +125,6 @@ pub(super) fn continue_row(
     let seat = Seat::BallRow {
         state: ball.state,
         assign_to: model.focused_ws_name(),
-        move_to: crate::nav::tabs::move_targets(&super::chrome::ws_rows(model), &ball.owner),
     };
     let target = Target::Ball(BallRef {
         project: ball.project,

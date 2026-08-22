@@ -1,4 +1,4 @@
-//! The `bl` family through the §8.5 chokepoint: six variants, one project, and
+//! The `bl` family through the §8.5 chokepoint: five variants, one project, and
 //! the exact §8.2 argv each spawns.
 //!
 //! Split from [`super`] at §12's cap on the seam `codec/balls.rs` is already cut
@@ -17,8 +17,8 @@ use yog::boundary::reply::Reply;
 use yog::cli_outbound::Cli;
 use yog::opslog;
 
-/// The six bl-family variants, against one project.
-fn bl_actions(proj: &Path) -> [Action; 6] {
+/// The five bl-family variants, against one project.
+fn bl_actions(proj: &Path) -> [Action; 5] {
     [
         Action::Close {
             project: yog::naming::leaf(proj),
@@ -34,12 +34,6 @@ fn bl_actions(proj: &Path) -> [Action; 6] {
             project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
-        },
-        Action::Move {
-            project: yog::naming::leaf(proj),
-            id: "bl-1".into(),
-            from: "alba".into(),
-            to: "koi".into(),
         },
         Action::Create {
             project: yog::naming::leaf(proj),
@@ -107,18 +101,6 @@ fn the_bl_actions_spawn_their_exact_argv_and_ops_rows() {
                 "alba".into()
             ],
             vec![
-                "unclaim".to_owned(),
-                "bl-1".into(),
-                "--as".into(),
-                "alba".into()
-            ],
-            vec![
-                "claim".to_owned(),
-                "bl-1".into(),
-                "--as".into(),
-                "koi".into()
-            ],
-            vec![
                 "create".to_owned(),
                 "the title".into(),
                 "--as".into(),
@@ -137,9 +119,9 @@ fn the_bl_actions_spawn_their_exact_argv_and_ops_rows() {
                 "n".into(),
             ],
         ],
-        "the §8.2 argv, verbatim (a move is unclaim then claim)"
+        "the §8.2 argv, verbatim"
     );
     let ops = opslog::tail(state.path(), 16);
-    assert_eq!(ops.len(), 7, "one ops row per spawn (§4.2)");
+    assert_eq!(ops.len(), 5, "one ops row per spawn (§4.2)");
     assert!(ops.iter().all(|e| e.exit == 0));
 }

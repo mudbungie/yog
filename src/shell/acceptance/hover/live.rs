@@ -21,8 +21,8 @@
 //!
 //! **Both halves stand, and neither subsumes the other.** This one is
 //! name-free but reaches only what the fixture paints; the source scan reaches
-//! every seat in the tree — a Move destination, a provider Login row, a
-//! workflow-file button — but only through the spellings it lists. So a new
+//! every seat in the tree — a provider Login row, a workflow-file button — but
+//! only through the spellings it lists. So a new
 //! constructor in a reachable seat now fails here whatever it is called, and
 //! the list's blind spot is what remains of the hole rather than the whole of
 //! it.

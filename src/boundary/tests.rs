@@ -120,12 +120,6 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
             id: "b-1".into(),
             name: "n".into(),
         },
-        Action::Move {
-            project: p.clone(),
-            id: "b-1".into(),
-            from: "a".into(),
-            to: "b".into(),
-        },
         Action::Create {
             project: p.clone(),
             name: "n".into(),

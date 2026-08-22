@@ -24,12 +24,6 @@ fn every_ball_action_round_trips() {
         id: id.clone(),
         name: name.clone(),
     }));
-    rt(Gesture::Act(Action::Move {
-        project: project.clone(),
-        id: id.clone(),
-        from: name.clone(),
-        to: "koi".to_owned(),
-    }));
     for body in [None, Some("the body".to_owned())] {
         rt(Gesture::Act(Action::Create {
             project: project.clone(),

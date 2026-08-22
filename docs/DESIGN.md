@@ -263,11 +263,11 @@ e.g.  ~/.local/share/yog/workspaces/cobalt-gecko/
 
 **Renaming, and the pre-reversal leaves (migration).** There is no rename
 verb: a sphere with the wrong name is **replaced, not renamed** — raise the
-chosen-name workspace (New workspace), move its bound balls across (§8.2
-Move), and let the old workspace's conversations age out under lernie's
-30-day retention; a hand `mv` of the dir plus per-ball unclaim/claim through
-the hatches (§8.4) is the same operation spelled by hand, lawful while
-nothing runs there. A ball whose claimant still names the old leaf renders
+chosen-name workspace (New workspace), re-home its bound balls with a
+per-ball unclaim/claim through the hatches (§8.4, the operation spelled by
+hand and lawful while nothing runs there, optionally with a hand `mv` of the
+dir), and let the old workspace's conversations age out under lernie's
+30-day retention. A ball whose claimant still names the old leaf renders
 **claimed-elsewhere** — §3.5 already enumerates "a deleted workspace"; a
 rendered fact, never a wound. Pre-reversal minted leaves need no migration
 event: they remain valid names until their operator replaces them. (The
@@ -294,9 +294,10 @@ to a workspace iff its claimant equals the workspace's name.
   appears as a claimant — §8.1's load-bearing order claims *before* the root
   exists, the constraint bl-68d9 identified and bl-df65 preserves.
 - **Explicitly late-mutable, by design:** assign = `bl claim <id> --as
-  <name>`; move = `bl unclaim <id>` + `bl claim <id> --as <other-name>`;
-  release = `bl unclaim <id>`. All are first-class UI verbs (§8.2), legal
-  whenever balls allows them, at any point in a workspace's life.
+  <name>`; release = `bl unclaim <id>`. Both are first-class UI verbs (§8.2),
+  legal whenever balls allows them, at any point in a workspace's life; a
+  re-home is the pair, spelled through the §8.4 hatches (bl-6c28 retired the
+  one-gesture Move).
 - **N balls per workspace** over its life; a ball has one claimant, so at
   most one workspace at a time. Stop-scope, budget-scope, and retention-scope
   ride the workspace, not the ball.
@@ -1157,8 +1158,8 @@ live conversations so the operator stops them first. Verbs stay orthogonal.
 **Confirmation doctrine — destructive vs recoverable (normative for every
 future verb).** A verb is **destructive** iff it destroys facts no derivation
 can recompute. Everything else is **recoverable** through the ordinary
-primitives — Stop resumes by message, Release re-claims, Move is two of
-those, Close is a *delivery* gated by the repo's own hook — and fires
+primitives — Stop resumes by message, Release re-claims, Close is a
+*delivery* gated by the repo's own hook — and fires
 unconfirmed, the ops trail its record. A destructive verb:
 
 - **confirms explicitly, scaled to blast radius (amended bl-f17a)**: every
@@ -3366,7 +3367,6 @@ being copied into `ops.jsonl`. Consequences, each load-bearing:
 | Move a live conversation onto the current config (§9.4's drift exit, bl-2d19) | `lernie retarget <ws> <agent>` (ws) | short, piped. It writes `refs/lernie/retarget/<agent>` and returns; the conversation's **own** executor lands the re-fork at its next step boundary (lernie ARCH §2.2), so nothing yog spawns advances the branch. No `--config`: lernie's default lineage is the one §9.3 writes and the one the drift is measured against |
 | Close ball | `bl close <id>` (project) | short, piped; capture/fold/gate/squash output in `ops.jsonl`, gate failures verbatim (claim+worktree stay up, bl's own semantics) |
 | Assign ball → workspace (§3.2) | `bl claim <id> --as <name>` (project) | short, piped |
-| Move ball → other workspace | `bl unclaim <id>` then `bl claim <id> --as <other-name>` (project) | short, piped ×2, both logged |
 | Release ball | `bl unclaim <id>` (project) | short, piped |
 | New ball | `bl create "<title>" [--body B] [-p N] [-t TAG]… [--parent ID] [--needs ID[:OP]]` (project) | short, piped; new id captured on stdout |
 | Update ball | `bl update <id> [--title T] [--body B] [-m NOTE] [-p N\|--no-priority] [-t TAG\|--no-tag TAG]… [--parent ID\|--no-parent] [--needs ID[:OP]\|--no-needs ID]` (project) | short, piped |
@@ -3385,9 +3385,8 @@ same fact both instances see. Only the long verbs detach (§8.1).
 `--as <workspace name>`, **not** the operator's `$USER` — the claimant delivers
 its own ball (§3.2's ownership line, the same fact as the start flow's `bl claim
 --as <name>` and W9's `YOG_NAME`). Concretely: **close** and **release** stamp
-the ball's *bound* workspace name (its claimant); **assign** and a **move**'s
-claim stamp the *target* workspace name; a **move**'s unclaim stamps the ball's
-current (source) workspace name. The operator identity survives only as the
+the ball's *bound* workspace name (its claimant); **assign** stamps the
+*target* workspace name. The operator identity survives only as the
 *author* of a standalone `bl create`/`bl update` (§8.2 New ball / Update ball),
 where a workspace is not the reporter.
 
@@ -3776,7 +3775,7 @@ the zeros it honestly has.
   routes every variant to its §8 executor. Today's roster: the §8.2 short
   verbs (message, stop, **interrupt** — bl-a33d's send-and-interrupt, the one
   arm that composes two acts and so leaves two trail rows for one gesture —
-  scan, close, assign, release, move, create, update — the last two carrying
+  scan, close, assign, release, create, update — the last two carrying
   their whole payload as `verbs::edit::Create`/`Update` rather than as loose
   variant fields, bl-dbde, so the roster, the codec, the line and the executor
   read **one** vocabulary of what a ball is made of),
@@ -6127,7 +6126,7 @@ list — the board is the *live* set, and "delivered" is not a column.
   `AppModel::board` is that same call. Its three spellings are `/board`,
   `{"op":"board"}` and the GUI's own variant — §8.5's rule, so the board is not
   a GUI-only surface. Every *action* a row offers was already a boundary
-  variant (assign / release / move / close / create / update / prepare), which
+  variant (assign / release / close / create / update / prepare), which
   is why the board adds no `Action`.
 - **The armed loop renders as facts, and only when one is armed (V4.2,
   bl-66fb).** Both of V4's preconditions closed — bl-2b8c's
@@ -7810,7 +7809,7 @@ under 30 pt and painted its target line across its own draft. The bands, then:
   state that a selection cannot reach. Still RAM until sent (§5.3): the fix is
   the key, not persistence.
   The dir (path-rung) field, Stop (+children checkbox), Scan, and the ball
-  actions (Close/Release/Move, §8.2) ride beside it unchanged.
+  actions (Close/Release, §8.2) ride beside it unchanged.
 - The **activity accessory** — the demoted ops pane: one collapsed chip
   (`activity · N ops · M failed ⚠`, the **live**-failure count in ichor when
   M > 0 — §6's retirement rule, so a failure a later clean run of the same verb
@@ -7923,10 +7922,10 @@ Three rules decide what gets a key, so the table never grows by taste:
 2. **A pick may ride the pointer; the pointer is never the only path** (the
    everything-is-keyboard-operable ruling, resolving this rule's old carve-out
    against QUALITY F1, which stands as written).** A
-   pick is what a pointer is *good* for — Move's destination workspace, the
-   overflow menu's entries, which descent-tree member or ops row to open, which
-   step record to drill into — and where the thing picked has an *address*,
-   §8.5's line names it outright (`/assign <id>`, `/move <id> <to>`), so a pick
+   pick is what a pointer is *good* for — the overflow menu's entries, which
+   descent-tree member or ops row to open, which step record to drill into —
+   and where the thing picked has an *address*,
+   §8.5's line names it outright (`/assign <id>`, `/close <id>`), so a pick
    at the pointer and a name at the line are one gesture with two spellings.
    What this rule refuses is a second *cursor* in this table, not a keyboard
    spelling: every pick must have one — a line address, or a keyboard walk over
@@ -7960,7 +7959,7 @@ Three rules decide what gets a key, so the table never grows by taste:
 | `f` | — (rule 3) | Flush the inbox — `lernie scan` on the focused workspace (§8.2) |
 | — (rule 3: the bare plane is Flush) | Ctrl+F | **search** — put the composer on a `/search ` line (§8.5). Combo-only: a query spends nothing, so it is safe mid-typing, and the letter's two planes carry its two meanings |
 | `c` | — (rule 3) | Close the focused conversation's bound ball (§8.2; refused exactly where the button is disabled) |
-| `r` | — (rule 3) | Release (unclaim) that same ball (§8.2) — Move stays a click, because its destination is a pick |
+| `r` | — (rule 3) | Release (unclaim) that same ball (§8.2) |
 | `b` | Ctrl+B | fold / unfold the balls section (the persisted §4.1 collapse) |
 | `m` | — (rule 3) | open / close the model picker for the focused workspace (§9.4) — a verb on the target the selection already names, so no combo; *which* model then gets picked stays a pointer gesture, per rule 2 |
 | `g` | Ctrl+G | organizing view: recent ⇄ by ball (§15 Z9, RAM) |
@@ -8631,7 +8630,7 @@ into a restatement of the label:
    plain language, not invented at the render site — and every control's
    keyboard spelling rides in the sentence, in one of exactly three
    vocabularies: a **key** the binding table names (`(f)`, `(x)`, `Ctrl+N`), a
-   **§8.5 line** where the gesture's address is a line (`/move [id] <to>`,
+   **§8.5 line** where the gesture's address is a line (`/release [id]`,
    `/config <destination> <text…>`), or **the focus floor** where the control
    has neither and needs neither ("No key of its own: Tab reaches it, Space
    presses it"). The first two are read from their authorities rather than
@@ -8641,9 +8640,9 @@ into a restatement of the label:
    amended), never a hover exemption.
 4. **The seat is the home.** Unlike a badge — one fact worn at many seats,
    hence one mapping function — a control is one fact with **one** seat, so its
-   sentence lives at the render site. A phrase genuinely worn twice (a field and
-   its label; `move to:` and each destination) is a named `const` in that
-   module, never two spellings. Where the seats are a *set* — the six inspector
+   sentence lives at the render site. A phrase genuinely worn twice (a field
+   and its label; the composer's Close hint and the `c` key's) is a named
+   `const` in that module, never two spellings. Where the seats are a *set* — the six inspector
    tabs, the five step drill-ins — the sentences are one exhaustive match over
    the enum, so a new variant cannot ship wordless.
 
@@ -8663,8 +8662,8 @@ that construction, not by a shape heuristic.
 `every_interactive_control_carries_a_hover` reads
 the tree's own source (`hover/scan.rs` reduces a file to its call structure,
 then walks the method chain off each widget constructor), so a control shipped
-mute fails **even where no fixture can reach its seat** — a Move destination, a
-provider Login row, a workflow-file button. Its `CONTROLS` vocabulary is
+mute fails **even where no fixture can reach its seat** — a provider Login row,
+a workflow-file button. Its `CONTROLS` vocabulary is
 hand-listed and that is its known weakness (bl-45c7's shape: a call it does not
 know is not judged at all); the live half is what covers that wherever the
 window can be driven, leaving only *a new spelling in a seat no drive reaches*.
@@ -8724,11 +8723,11 @@ by taste):
 |---|---|---|
 | workspace tab | Delete workspace… (§3.6, named workspaces only); unpin (pinned hoists) | delete: a worded, ichor `delete this workspace…` row on the Config tab's per-workspace surface (§9.3's entry for the focused workspace — the settings-danger-zone convention); unpin: the overflow menu's ★ toggle (fix below) |
 | conversation row | Stop (+children), Flush, Delete… (§3.6 one-conversation delete, named workspaces only) | Stop/Flush: the composer-side Stop/Scan affordances and the `x` / `f` keys (§8.2) — selection-targeted where the menu is pointer-targeted; delete: a worded, ichor `delete this conversation…` row at the foot of the inspector's Config tab (bl-f17a — the per-conversation settings surface, mirroring the workspace verb's danger row), opening the confirmation and never past it |
-| ball row | Assign / Move (destination submenu) / Release / Close | the ball actions beside the composer and the `c` / `r` keys (§8.2), plus the ready row's `assign → <workspace>` button (§8.1); Move's destination is a pick, and a context submenu is a pointer surface — keyboard rule 2's carve-out, satisfied in place |
+| ball row | Assign / Release / Close | the ball actions beside the composer and the `c` / `r` keys (§8.2), plus the ready row's `assign → <workspace>` button (§8.1) |
 
 Each seat's entries are offered exactly where its visible carrier is enabled,
 because both read the same `crate::actions` predicate — `stop_enabled`,
-`assign_enabled`, `move_enabled`, `unclaim_enabled`, `close_enabled`. A menu
+`assign_enabled`, `unclaim_enabled`, `close_enabled`. A menu
 that offered a verb the button refuses would be a second rule; there is one.
 Where every entry is withheld the object has **no menu at all** — an empty popup
 is a mystery no-op (bl-e266), so nothing is attached.
@@ -8744,17 +8743,18 @@ against its own tab.
 **Where the roster lives (bl-0ccc, extended bl-7e32).** The seats are a *table*,
 not scattered `.context_menu()` calls: `src/nav/menu.rs` maps a `Seat` (the
 object, carrying the facts its entries are gated on) to its `Entry` list — a
-worded label, the **visible carrier** that entry claims, and an `Action` that is
-either `Fire(Verb)` or a `Submenu` of the same rows (Move's destination pick;
-one representation of the one fact, so a row is never both). `src/shell/menus.rs`
+worded label, the **visible carrier** that entry claims, and the `Verb` the row
+fires. The roster is **flat**: every row is a button, so nothing can hide behind
+a nested level (bl-6c28 retired the `Submenu` shape with Move, its only
+producer). `src/shell/menus.rs`
 is the one place a menu is attached and the one dispatch from a verb to its
 effect, against a `Target` the **attach site** resolved from the row under the
 pointer — never re-derived from the focus, which is what keeps right-click off
 the §6 gesture (focusing acknowledges, so a focusing right-click would silently
 clear the row's attention). Each `fire` arm calls the same function the visible
 carrier calls. Adding a seat is three edits in those two files, and the
-doctrine's rule is a unit test sweeping the whole table — every entry, submenu
-rows included, names a carrier — rather than a review promise.
+doctrine's rule is a unit test sweeping the whole table — every entry names a
+carrier — rather than a review promise.
 
 ---
 
@@ -8816,7 +8816,7 @@ beside `main.rs`.
 | `src/alert/{mod,send}.rs` | §6 as amended (bl-e160) — the strip escalated to the desktop. `mod` is the whole decision, pure: a §8.5 queue row projected to the sentence a notification shows, the per-window baseline of what has already been said, and the two gates (focus, the §4.1 knob) that silence the announcing while the baseline advances regardless. `send` is the one spawn — libnotify's `notify-send` through the bare `git_env::command` constructor (not `Cli`: the desktop is not substrate and must not take the §16.2 world fold), synchronous so a test can drive it, with the window running it off-thread and every failure silent |
 | `src/app/{mod,roots,knobs,view,seat,ops,refresh}.rs` | AppModel — what a *frame* owns (§7.2): the held snapshot, ui-state integration, and — since the act path split it out of the root at this section's budget (bl-4841) — `refresh`, the per-frame duty entire: take the newest derivation, adopt an externally-changed `ui.json`, settle the wire's read and act hand-offs, hold the §6 ack; `roots` the boot-time fold of the composed world and the four derived paths every root read goes through (bl-3f46); the §11 transcript-density knobs and the whole-UI zoom (§4.1); the per-conversation view-model assembly the shell paints, plus the snapshot's staleness and live-cadence reads; `seat` the client/server line itself (REMOTE §9.4, bl-1eb0) — the reads a *seat* makes about its own selection, each one a resolution of the per-instance focus (§13.1) against the published snapshot, so what crosses into paint is a payload the wire could carry and never the engine's `GitTree`. **`focused_conversation` is gone** (REMOTE §9.7, bl-48ae): the whole seat view is no longer derived here at all — the facts a click reads are a fold over the landed `Query::Conversations` forest and the selection's own detail is a standing `Query::Agent`, both spelled at `src/shell/seat.rs`; `ops` the frame's two *writes* to the trail — the operator's ack and the clear verb (§4.2 as amended, bl-c417), here rather than in the excluded shell so the gestures a click makes are covered |
 | `src/app/acts.rs` | **the frame's act half** (REMOTE §1.2, §9.8; bl-4841): a gesture posted over the wire, the [`Ticket`] its receipt lands under, and the one place that decides what an act's landing re-derives. A click *posts* and holds a ticket; a frame may not wait on a socket, so the receipt arrives frames later and the surface that fired reads it then. **The aftermath belongs to the receipt**: the root a verb touched is marked dirty when the engine says it is done, not when the operator asked — and which root that is comes off the ACTION (the project a ball verb names, else the yog state root the trail is written under), which is what retired the three copies of that match in the click-glue. **Two roots, not one** (bl-18e8): a gesture writes in two of §7.1's disjoint places, so the act names its **substrate** root (the project a ball verb names, else the yog state root) *and* the **workspace** its own address table answers, when the enumeration holds that name. A `Message` names no project, so a send used to request the yog state root alone — and the deposit that creates the §13.3 mail-on-tail state therefore never asked for the re-derivation that clears it, leaving both §7.3 banners' liveness half waiting on an fs event and a whole pass |
-| `src/app/balls{,/starts}.rs` | the frame's read of the live `bl` projection — the ops tail and the two post-verb dirty marks (§5.1, §7.2); the §3.4/§8.1 start hand-off. **The §3.2/§3.5 read half is gone** (REMOTE §9.7, bl-b4b5): `ws_balls`/`roster_ball_rows`/`bound_ball` and the whole `spend.rs` beside them folded the window's own join and bills on the paint thread; one workspace-addressed `Query::WorkspaceBalls` answers the listing *with* each ball's figure, and the roster's partition and the ▶ Continue row's object are pure selections out of it (`nav::balls`). `targets.rs` emptied out with the Move picker — the destinations are a fold over the landed enumeration (`nav::tabs::move_targets`) — and the focus's own name went to `app/view.rs` beside the resolver. What is left of the join here is the §8.5 line context's private read, which is the acts side of bl-adcb's line |
+| `src/app/balls{,/starts}.rs` | the frame's read of the live `bl` projection — the ops tail and the two post-verb dirty marks (§5.1, §7.2); the §3.4/§8.1 start hand-off. **The §3.2/§3.5 read half is gone** (REMOTE §9.7, bl-b4b5): `ws_balls`/`roster_ball_rows`/`bound_ball` and the whole `spend.rs` beside them folded the window's own join and bills on the paint thread; one workspace-addressed `Query::WorkspaceBalls` answers the listing *with* each ball's figure, and the roster's partition and the ▶ Continue row's object are pure selections out of it (`nav::balls`). `targets.rs` emptied out when the ball Move was retired (bl-6c28), and the focus's own name went to `app/view.rs` beside the resolver. What is left of the join here is the §8.5 line context's private read, which is the acts side of bl-adcb's line |
 | `src/app/cadence.rs` | the clock's periods (§7.2, bl-3381): the `Cadence` value, its `cadence.yaml` grammar (total parse, shared bounds), and the derived periods (wound grace, late pass, staleness) |
 | `src/app/deletes.rs` | the §3.6 hand-off, both altitudes: confirmation derivations, fire-time re-gates, post-delete convergence (bl-f17a: the agent delete's focus-off-the-dead-subtree move) |
 | `src/app/derive{,/route,/sweeps,/liveness,/worker}.rs` | the derivation worker (§7.2): its state and one pass; the §7.1 dirty-root routing table; the two sweeps, reconcile, the fetch cadence and re-deriving one root — the work every sweep ends in, moved beside them at the budget (bl-4b28); **which cached liveness observations are evicted and on which signal** — the sweep's poll for agents that can die silently and the watcher's refresh for agents that can come alive, complements by construction (§10, bl-1015); the thread that drives the pass |
@@ -9003,7 +9003,7 @@ beside `main.rs`.
 | `src/shell/board/rows.rs` (excl.) | one board row and the planner entry points it is matched against (bl-adcb split it off at the budget, on the seam between laying out the section and painting one ball): the affordance a row earns — ▶ Continue, ▶ Start + Assign, or a plain read with the §11 ball-row menu — then the facts under it, its gates, drones, spend and epic rollup |
 | `src/shell/bootstrap.rs` (excl.) | the one-time frame setup |
 | `src/shell/center.rs` (excl.) | the §11 center-tab strip and the one dispatch behind it (the four `CenterTab` peers, the Config focus gesture that carries §9's re-read, and the Search tab offered exactly while there is an answer) |
-| `src/shell/chrome.rs` (excl.) | **the two workspace-addressed reads every §11 surface folds** (REMOTE §9.7, bl-296f, bl-b4b5), beside `shell/convs`' one about a conversation list: the standing `Query::Workspaces` — the enumeration with the §3.4 raise claim folded on, plus the §7.2 currency notes the activity accessory paints — and `Query::WorkspaceBalls` for the workspace a seat is looking at. Asked here rather than at each surface because a standing question is keyed by its own envelope: the tab bar, the attention strip, a move-target submenu, the §3.6 scope gate, the §9.4 lineage tip and the balls section are **one ask** however many of them paint |
+| `src/shell/chrome.rs` (excl.) | **the two workspace-addressed reads every §11 surface folds** (REMOTE §9.7, bl-296f, bl-b4b5), beside `shell/convs`' one about a conversation list: the standing `Query::Workspaces` — the enumeration with the §3.4 raise claim folded on, plus the §7.2 currency notes the activity accessory paints — and `Query::WorkspaceBalls` for the workspace a seat is looking at. Asked here rather than at each surface because a standing question is keyed by its own envelope: the tab bar, the attention strip, the §3.6 scope gate, the §9.4 lineage tip and the balls section are **one ask** however many of them paint |
 | `src/shell/clients.rs` (excl.) | the §11 clients section (REMOTE §5, bl-4e08) — and, since bl-ae05, **the first surface yog paints from a wire reply**: the rows are a `Reply::Clients` that crossed loopback mTLS, was scoped against the window's own registrations and was decoded like any seat's. Nothing here reads disk, joins presence or holds a memo any more — the fold is the engine's, and the frame's whole part is to declare the question (`AppModel::wire_ask`) and paint what landed, which is `None` until the first answer arrives and never a wait. A refusal is painted rather than swallowed, because the wire is how this window reads now. It carries no gesture and will not: a registration is the operator's own file act on the server (or the engine's, for its own window) and an advertisement is the tool host's, so there is nothing here for a click to do |
 | `src/shell/clock.rs` (excl.) | the three process-boundary mintings (the ops timestamp, the seconds every dated seat reads, the mint's entropy seed) — one home each, since two spellings of "now" would be two facts |
 | `src/shell/config_edit/mod.rs` (excl.) | §9 |

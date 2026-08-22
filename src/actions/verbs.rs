@@ -13,7 +13,6 @@
 //! | retarget | `lernie retarget <ws> <agent>` | ws | conversation |
 //! | close | `bl close <id> --as <name>` | project | balls |
 //! | assign | `bl claim <id> --as <name>` | project | balls |
-//! | move | `bl unclaim <id> --as <from>` then `bl claim <id> --as <to>` | project | balls |
 //! | release / unclaim | `bl unclaim <id> --as <name>` | project | balls |
 //! | create | `bl create <title> --as <name> [--body B]` | project | balls |
 //! | update | `bl update <id> --as <name> [--title T][--body B][-m N]` | project | balls |
@@ -35,9 +34,8 @@
 //!
 //! **§8.2 identity rider (Z4):** every `bl` claim/close/unclaim is stamped `--as
 //! <workspace name>`, **not** the operator `$USER` — the claimant delivers its own
-//! ball (§3.2). Close/release stamp the ball's *bound* name; assign and a move's
-//! claim the *target* name; a move's unclaim the *source* name. Enablement
-//! predicates live in [`super`](crate::actions).
+//! ball (§3.2). Close/release stamp the ball's *bound* name; assign stamps the
+//! *target* name. Enablement predicates live in [`super`](crate::actions).
 //!
 //! **The four `lernie` verbs take a [`Bound`], never a bare `Cli`** (bl-bf79):
 //! the workspace's wall (`YOG_WALL`, §16.2) and its name (`YOG_NAME`, §3.3) are
@@ -60,7 +58,7 @@ use crate::opslog::Origin;
 mod balls;
 mod bound;
 mod dispatch;
-pub use balls::{assign, close, create, edit, reassign, unclaim, update};
+pub use balls::{assign, close, create, edit, unclaim, update};
 pub use bound::Bound;
 pub use dispatch::{Outcome, log_step_done, log_step_failure, run_logged, run_logged_cwdless};
 // `collect` stays crate-internal — the no-marks knob's `bl conf` seam reuses it.

@@ -173,15 +173,6 @@ fn assign_enabled_only_for_a_ready_ball() {
 }
 
 #[test]
-fn move_enabled_only_for_bound() {
-    // Move = release + assign elsewhere → only a ball this yog owns (Bound).
-    assert!(move_enabled(JoinState::Bound));
-    assert!(!move_enabled(JoinState::ReadyStartable));
-    assert!(!move_enabled(JoinState::ClaimedElsewhere));
-    assert!(!move_enabled(JoinState::Delivered));
-}
-
-#[test]
 fn actions_state_default_is_empty() {
     let s = ActionsState::default();
     assert!(s.drafts.is_empty());

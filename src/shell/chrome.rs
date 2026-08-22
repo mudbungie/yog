@@ -4,8 +4,8 @@
 //!
 //! Both are asked here rather than at each surface for [`super::convs`]' own
 //! reason: a standing question is keyed by its own encoded envelope, so the tab
-//! bar, the attention strip, a move-target submenu, the §3.6 scope gate and the
-//! §9.4 picker's lineage tip are **one ask** however many of them paint. What
+//! bar, the attention strip, the §3.6 scope gate and the §9.4 picker's lineage
+//! tip are **one ask** however many of them paint. What
 //! each surface then does is a pure selection out of the landed rows
 //! ([`nav::tabs`], [`nav::balls`]), which is what keeps two carriers of one
 //! affordance from offering different things.
@@ -33,8 +33,8 @@ pub(super) fn workspaces(model: &mut AppModel) -> Landed<crate::boundary::reply:
 /// The enumerated rows with this window's own §3.4 raise claim folded on
 /// ([`AppModel::raised_rows`]) — what every altitude-0 fold reads. The claim
 /// rides here rather than at the paint for the echo's reason: a wall `lernie
-/// new` has just founded must wear its tab, resolve its name and be a lawful
-/// move target from the frame the receipt lands, not one derivation later.
+/// new` has just founded must wear its tab and resolve its name from the frame
+/// the receipt lands, not one derivation later.
 pub(super) fn ws_rows(model: &mut AppModel) -> Vec<WsRow> {
     let answered = workspaces(model).value.unwrap_or_default().rows;
     model.raised_rows(answered)

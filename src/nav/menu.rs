@@ -22,13 +22,8 @@
 //! [`crate::actions`] predicate the button's `add_enabled` reads — one rule, two
 //! surfaces, no drift.
 
-use crate::actions::{assign_enabled, close_enabled, move_enabled, unclaim_enabled};
+use crate::actions::{assign_enabled, close_enabled, unclaim_enabled};
 use crate::projects::join::JoinState;
-
-/// The composer's ball row is the visible carrier of every §8.2 move (one button
-/// per destination, `move to:`); named once because the submenu and each of its
-/// destinations claim it.
-const MOVE_CARRIER: &str = "the composer's ball row `move to:` buttons";
 
 /// A verb a context menu carries. Every variant has a visible carrier (see
 /// [`Entry::carrier`]); the menu only saves the click of reaching it.
@@ -53,33 +48,21 @@ pub enum Verb {
     /// `bl claim <id> --as <workspace>` — bind a ready ball (§8.2). Carries its
     /// destination, so the dispatch resolves no name of its own.
     Assign(String),
-    /// `bl unclaim` then `bl claim --as <destination>` — re-home a bound ball
-    /// (§8.2). One variant per destination row of the Move submenu.
-    MoveTo(String),
     /// `bl unclaim <id> --as <claimant>` — release a bound ball (§8.2).
     Release,
     /// `bl close <id> --as <claimant>` — deliver a bound ball (§8.2).
     CloseBall,
 }
 
-/// What a rendered row **does**: fire a verb, or open a submenu of rows that do
-/// (§11 — Move's destination is a pick, and a submenu is a pointer surface, so
-/// keyboard rule 2's carve-out is satisfied in place). One fact, one home: a row
-/// is never both, so nothing can drift between a flag and a child list.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Action {
-    Fire(Verb),
-    Submenu(Vec<Entry>),
-}
-
 /// One rendered menu row: its worded label, the visible affordance that carries
-/// the same verb (the doctrine's claim, per entry — submenu rows included), and
-/// what clicking it does.
+/// the same verb (the doctrine's claim, per entry), and the verb clicking it
+/// fires. A row is a button and nothing else — the roster is flat, so nothing
+/// can hide behind a nested level.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub label: String,
     pub carrier: String,
-    pub action: Action,
+    pub verb: Verb,
 }
 
 /// The object a menu was opened on — the §11 closed seat roster.
@@ -100,13 +83,11 @@ pub enum Seat {
     },
     /// A ball row — a ready one in the start affordances or a bound one in the
     /// balls section. `state` is the §3.5 join state the enablement predicates
-    /// read; `assign_to` the focused workspace an Assign would bind to (`None`
-    /// when none is focused); `move_to` the other named workspaces a Move can
-    /// re-home to.
+    /// read and `assign_to` the focused workspace an Assign would bind to
+    /// (`None` when none is focused).
     BallRow {
         state: JoinState,
         assign_to: Option<String>,
-        move_to: Vec<String>,
     },
 }
 
@@ -120,11 +101,7 @@ pub fn entries(seat: Seat) -> Vec<Entry> {
             has_children,
             named,
         } => conversation_row(stoppable, has_children, named),
-        Seat::BallRow {
-            state,
-            assign_to,
-            move_to,
-        } => ball_row(state, assign_to, move_to),
+        Seat::BallRow { state, assign_to } => ball_row(state, assign_to),
     }
 }
 
@@ -184,9 +161,9 @@ fn conversation_row(stoppable: bool, has_children: bool, named: bool) -> Vec<Ent
     out
 }
 
-/// The ball row's seat (§11 roster row 3): Assign / Move / Release / Close, each
+/// The ball row's seat (§11 roster row 3): Assign / Release / Close, each
 /// offered exactly where the composer's own button is enabled (§8.2/§3.5).
-fn ball_row(state: JoinState, assign_to: Option<String>, move_to: Vec<String>) -> Vec<Entry> {
+fn ball_row(state: JoinState, assign_to: Option<String>) -> Vec<Entry> {
     let mut out = Vec::new();
     if let Some(to) = assign_to.filter(|_| assign_enabled(state)) {
         out.push(fires(
@@ -194,17 +171,6 @@ fn ball_row(state: JoinState, assign_to: Option<String>, move_to: Vec<String>) -
             "the ready ball row's `assign → <workspace>` button",
             Verb::Assign(to),
         ));
-    }
-    if move_enabled(state) && !move_to.is_empty() {
-        let destinations = move_to
-            .into_iter()
-            .map(|to| fires(&to, MOVE_CARRIER, Verb::MoveTo(to.clone())))
-            .collect();
-        out.push(Entry {
-            label: "move to".to_owned(),
-            carrier: MOVE_CARRIER.to_owned(),
-            action: Action::Submenu(destinations),
-        });
     }
     if unclaim_enabled(state) {
         out.push(fires(
@@ -227,7 +193,7 @@ fn fires(label: &str, carrier: &str, verb: Verb) -> Entry {
     Entry {
         label: label.to_owned(),
         carrier: carrier.to_owned(),
-        action: Action::Fire(verb),
+        verb,
     }
 }
 

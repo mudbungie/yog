@@ -1,6 +1,6 @@
-//! The `bl` family's envelopes (§8.2): the six verbs that address a project's
-//! task graph — three one-shape rows (op, project, id, `--as` name), the
-//! four-name move, and the two with optional fields. Its own family file since
+//! The `bl` family's envelopes (§8.2): the five verbs that address a project's
+//! task graph — three one-shape rows (op, project, id, `--as` name) and the
+//! two with optional fields. Its own family file since
 //! bl-c2bd, on the seam every other family here is cut on (`deposit`, `fan`,
 //! `fork`, `config`) — the top-level codec keeps the roster, each family keeps
 //! its grammar.
@@ -19,11 +19,6 @@ use super::{obj, opt_str_of, str_of};
 /// inside §12's per-function budget.
 pub(super) fn ball(op: &str, project: &str, id: &str, name: &str) -> Value {
     json!({ "op": op, "project": project, "id": id, "name": name })
-}
-
-/// The four-name re-home: unclaim as `from`, claim as `to`.
-pub(super) fn encode_move(project: &str, id: &str, from: &str, to: &str) -> Value {
-    json!({ "op": "move", "project": project, "id": id, "from": from, "to": to })
 }
 
 /// The two `bl` envelopes with **optional** fields, bodied out beside [`ball`]
@@ -103,7 +98,7 @@ fn decode_field(v: &Value) -> Result<edit::Field, String> {
     })
 }
 
-/// Decode any of the six, strictly. `op` has already been matched by the
+/// Decode any of the five, strictly. `op` has already been matched by the
 /// roster, so an unlisted one cannot arrive here — and the roster is what
 /// keeps the fallthrough arm honest: `update` is the only op left.
 pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String> {
@@ -123,12 +118,6 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String>
             project,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
-        },
-        "move" => Action::Move {
-            project,
-            id: str_of(o, "id")?,
-            from: str_of(o, "from")?,
-            to: str_of(o, "to")?,
         },
         "create" => Action::Create {
             project,

@@ -156,12 +156,6 @@ fn every_ball_action_variant_round_trips() {
         id: "bl-1".into(),
         name: "alba".into(),
     }));
-    rt(Gesture::Act(Action::Move {
-        project: "proj".into(),
-        id: "bl-1".into(),
-        from: "alba".into(),
-        to: "koi".into(),
-    }));
     for body in [Some("the body".to_owned()), None] {
         rt(Gesture::Act(Action::Create {
             project: "proj".into(),

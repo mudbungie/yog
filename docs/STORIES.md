@@ -1101,7 +1101,7 @@ Tests:
 
 1. New workspace (the deliberate sphere-wall verb, §3.4/§11) takes a typed,
    validated name (DESIGN §3.1) — the first time the user ever names one.
-2. Assign / move / release balls (§8.2) with enablement from the join state;
+2. Assign / release balls (§8.2) with enablement from the join state;
    bound balls render in the focused workspace's balls section (§11 — the
    full per-project ball views return in the ball-views wave).
 3. Claimed-elsewhere renders the claimant verbatim; delivered balls group
@@ -1160,7 +1160,7 @@ world with no balls renders no badge column at all.
 Tests:
 - **S4-T1 new-workspace-verb**: typed name validated (shape, reserved
   `unknown`, leaf collision refused — DESIGN §3.1) + `lernie new`.
-- **S4-T2 assign-move-release**: argv per §8.2; enablement predicates refuse
+- **S4-T2 assign-release**: argv per §8.2; enablement predicates refuse
   what balls would refuse.
 - **S4-T3 join-rows**: one fixture per §3.5 row state; the balls section
   groups bound balls under their claimant workspace.

@@ -19,23 +19,10 @@ pub(super) const JOIN_STATES: [JoinState; 7] = [
     JoinState::OrphanedProject,
 ];
 
-/// The verbs a seat fires, submenu destinations flattened in render order — the
-/// shape every per-seat table below asserts on.
+/// The verbs a seat fires, in render order — the shape every per-seat table
+/// below asserts on.
 fn verbs(seat: Seat) -> Vec<Verb> {
-    let mut out = Vec::new();
-    for entry in entries(seat) {
-        match entry.action {
-            Action::Fire(verb) => out.push(verb),
-            Action::Submenu(children) => {
-                for child in children {
-                    if let Action::Fire(verb) = child.action {
-                        out.push(verb);
-                    }
-                }
-            }
-        }
-    }
-    out
+    entries(seat).into_iter().map(|e| e.verb).collect()
 }
 
 #[test]
@@ -160,16 +147,14 @@ fn a_ready_ball_offers_only_assign_and_only_with_a_focused_workspace() {
         verbs(Seat::BallRow {
             state: JoinState::ReadyStartable,
             assign_to: Some("alba-koi".to_owned()),
-            move_to: vec!["zeta-pug".to_owned()],
         }),
         [Verb::Assign("alba-koi".to_owned())],
-        "unclaimed ⇒ nothing to move, release or close"
+        "unclaimed ⇒ nothing to release or close"
     );
     assert!(
         entries(Seat::BallRow {
             state: JoinState::ReadyStartable,
             assign_to: None,
-            move_to: vec!["zeta-pug".to_owned()],
         })
         .is_empty(),
         "no focused workspace ⇒ no destination ⇒ no menu at all"
@@ -177,46 +162,30 @@ fn a_ready_ball_offers_only_assign_and_only_with_a_focused_workspace() {
 }
 
 #[test]
-fn a_bound_ball_carries_move_release_close_in_roster_order() {
+fn a_bound_ball_carries_release_close_in_roster_order() {
     let seat = Seat::BallRow {
         state: JoinState::Bound,
         assign_to: Some("alba-koi".to_owned()),
-        move_to: vec!["zeta-pug".to_owned(), "moss-hare".to_owned()],
     };
     assert_eq!(
         verbs(seat.clone()),
-        [
-            Verb::MoveTo("zeta-pug".to_owned()),
-            Verb::MoveTo("moss-hare".to_owned()),
-            Verb::Release,
-            Verb::CloseBall,
-        ],
-        "bound ⇒ no assign; destinations in the caller's order"
+        [Verb::Release, Verb::CloseBall],
+        "bound ⇒ no assign"
     );
     let rows = entries(seat);
-    assert_eq!(rows[0].label, "move to");
-    let Action::Submenu(destinations) = &rows[0].action else {
-        panic!("Move's destination is a submenu (§11)");
-    };
-    let labels: Vec<&str> = destinations.iter().map(|d| d.label.as_str()).collect();
-    assert_eq!(
-        labels,
-        ["zeta-pug", "moss-hare"],
-        "each row names its target"
-    );
-    assert_eq!(destinations[0].carrier, rows[0].carrier);
+    assert_eq!(rows[0].label, "release");
+    assert_eq!(rows[1].label, "close");
 }
 
 #[test]
-fn the_only_workspace_holding_a_ball_offers_no_move() {
+fn a_bound_ball_needs_no_focused_workspace_for_its_own_verbs() {
     assert_eq!(
         verbs(Seat::BallRow {
             state: JoinState::Bound,
             assign_to: None,
-            move_to: Vec::new(),
         }),
         [Verb::Release, Verb::CloseBall],
-        "nowhere to move to ⇒ no empty submenu"
+        "release and close are the ball's own, not the focus's"
     );
 }
 
@@ -232,7 +201,6 @@ fn an_unactionable_ball_row_has_no_menu_at_all() {
             entries(Seat::BallRow {
                 state,
                 assign_to: Some("alba-koi".to_owned()),
-                move_to: vec!["zeta-pug".to_owned()],
             })
             .is_empty(),
             "{state:?} carries no ball verb"

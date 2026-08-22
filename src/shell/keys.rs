@@ -9,8 +9,8 @@
 //!
 //! Three §11 rules decide what is here: a key fires a verb on the target the
 //! selection already names (so no effect below grows its own cursor), choosing
-//! *among* several targets stays a pointer gesture (so Move's destination, the
-//! overflow entries, and which descent-tree member to open are not bound), and
+//! *among* several targets stays a pointer gesture (so the overflow entries and
+//! which descent-tree member to open are not bound), and
 //! a combo may only repaint or create — never fire a verb at the selection,
 //! since a combo is the one plane that survives a text box holding the
 //! keyboard.

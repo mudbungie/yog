@@ -118,16 +118,12 @@ fn read_row(
                 .sense(egui::Sense::click()),
         )
         .on_hover_text(
-            "Right-click for this ball's actions — Close, Release, Move. Each is also \
-             a key or a line: (c), (r), `/move [id] <to>`.",
+            "Right-click for this ball's actions — Close and Release. Each is also \
+             a key or a line: (c), (r), `/close [id]`, `/release [id]`.",
         );
     let seat = Seat::BallRow {
         state: row.state,
         assign_to: model.focused_ws_name(),
-        move_to: crate::nav::tabs::move_targets(
-            &super::super::chrome::ws_rows(model),
-            row.claimant.as_deref().unwrap_or_default(),
-        ),
     };
     let target = Target::Ball(BallRef {
         project: row.project.clone(),

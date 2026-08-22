@@ -118,8 +118,6 @@ fn a_verb_that_takes_nothing_refuses_arguments() {
 fn the_shaped_verbs_refuse_a_shape_they_do_not_have() {
     refuses("/close bl-1 bl-2", &ctx(), "at most one word");
     refuses("/stop hard", &ctx(), "usage: /stop [children]");
-    refuses("/move", &ctx(), "usage: /move [id] <to>");
-    refuses("/move a b c", &ctx(), "usage: /move [id] <to>");
     refuses("/ops soon", &ctx(), "not a row count");
 }
 

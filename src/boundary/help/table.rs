@@ -111,13 +111,6 @@ pub const ACTIONS: &[HelpRow] = &[
                  the focused ball.",
     },
     HelpRow {
-        verb: "move",
-        usage: "/move [id] <to>",
-        summary: "re-home a bound ball onto another workspace",
-        detail: "Re-homes a bound ball: released here, claimed there, in one gesture. One word \
-                 is the destination for the focused ball; two are the ball and its destination.",
-    },
-    HelpRow {
         verb: "create",
         usage: crate::boundary::line::CREATE_USAGE,
         summary: "create a ball in the focused project",

@@ -97,9 +97,6 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Action::Close { id, name, .. } => spend(verbs::close, deps, ts, project, id, name),
         Action::Assign { id, name, .. } => spend(verbs::assign, deps, ts, project, id, name),
         Action::Release { id, name, .. } => spend(verbs::unclaim, deps, ts, project, id, name),
-        Action::Move { id, from, to, .. } => {
-            outcome(verbs::reassign(bl, root, ts, project, id, from, to))
-        }
         Action::Create { name, fields, .. } => {
             outcome(verbs::create(bl, root, ts, project, name, fields))
         }

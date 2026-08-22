@@ -94,14 +94,13 @@ impl AppModel {
     }
 
     /// The focused workspace's name (§3.1): the **target** an Assign
-    /// (`bl claim <id> --as <name>`) or a Move's claim stamps (§8.2/§3.2).
-    /// `None` when no workspace is focused (the affordance is then withheld).
+    /// (`bl claim <id> --as <name>`) stamps (§8.2/§3.2). `None` when no
+    /// workspace is focused (the affordance is then withheld).
     ///
     /// **The focus verbatim since bl-7407** — it holds the name — where it was
     /// a leaf derivation off a held path. The derivation did not move, it
     /// dissolved: one fact, one home. It sits here since bl-b4b5, beside the
-    /// resolver and the path below it, `app/balls/targets.rs` having emptied
-    /// out when the Move picker became a fold over the landed enumeration.
+    /// resolver and the path below it.
     pub fn focused_ws_name(&self) -> Option<String> {
         self.focus.ws.clone()
     }

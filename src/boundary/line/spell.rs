@@ -43,7 +43,6 @@ fn spell_action(action: &Action) -> String {
         Action::Close { id, .. } => format!("/close {id}"),
         Action::Assign { id, .. } => format!("/assign {id}"),
         Action::Release { id, .. } => format!("/release {id}"),
-        Action::Move { id, to, .. } => format!("/move {id} {to}"),
         Action::Create { fields, .. } => format!(
             "/create {}{}{}",
             fields.title,

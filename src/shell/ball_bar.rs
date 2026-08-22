@@ -1,11 +1,11 @@
 //! The ball action row of the composer (§8.2/§11): the focused ball's
-//! Close / Release / Move, split from [`super::input_bar`] per §12's 300-line
+//! Close / Release, split from [`super::input_bar`] per §12's 300-line
 //! budget. Coverage-excluded glue — the enablement predicates and the `bl`
 //! dispatchers it wires are covered in `actions`.
 //!
 //! It is also **the one body of each §8.2 ball verb**, written by (project,
 //! ball, claimant) rather than by "the focused row": [`close_ball`],
-//! [`release_ball`], [`move_ball`] and [`assign_ball`]. The composer's buttons
+//! [`release_ball`] and [`assign_ball`]. The composer's buttons
 //! and the §11 `c`/`r` keys reach them through the focus; the §11 ball-row
 //! context menu (`super::menus`) reaches them with the row under the pointer.
 //! One implementation per gesture, whichever hand fires it.
@@ -18,7 +18,7 @@
 //! engine's.
 
 use crate::AppModel;
-use crate::actions::{close_enabled, move_enabled, unclaim_enabled};
+use crate::actions::{close_enabled, unclaim_enabled};
 use crate::boundary::Action;
 use crate::nav::BoundBall;
 
@@ -31,31 +31,19 @@ const CLOSE_HINT: &str = "Deliver this ball (`bl close`): folds `main` into its 
 const RELEASE_HINT: &str = "Let this ball go (`bl unclaim`): the workspace stops holding it and anyone \
      can claim it again. Nothing already committed in its worktree is lost (r).";
 
-/// The `move to:` destinations (§8.2): one gesture, two `bl` calls.
-const MOVE_HINT: &str = "Re-home this ball to that workspace — released here, claimed there, in \
-     one gesture. The destination is a pick, so its keyboard spelling is the line: \
-     `/move [id] <to>`.";
-
-/// The focused ball's Close / Release / Move, gated by its §3.5 join state (§8.2).
+/// The focused ball's Close / Release, gated by its §3.5 join state (§8.2).
 /// Every `bl` verb stamps `--as` the ball's **bound workspace name** (its
 /// claimant, which the answered row carries as `owner`) — the §3.2 ownership
 /// line, never the operator `$USER`.
 ///
 /// `ball` is the first row of the focused workspace's landed listing
-/// (REMOTE §9.7, bl-b4b5), and `targets` the move destinations folded off the
-/// landed enumeration — both selections out of answers this frame already
-/// holds, so the row and its submenu are one ask apiece rather than two reads
-/// of the window's own snapshot.
-pub(super) fn actions(
-    ui: &mut egui::Ui,
-    model: &mut AppModel,
-    ball: Option<&BoundBall>,
-    targets: &[String],
-) {
+/// (REMOTE §9.7, bl-b4b5) — a selection out of an answer this frame already
+/// holds, so the row is one ask rather than a second read of the window's own
+/// snapshot.
+pub(super) fn actions(ui: &mut egui::Ui, model: &mut AppModel, ball: Option<&BoundBall>) {
     let Some(row) = ball else {
         return;
     };
-    let owner = row.owner.clone();
     ui.horizontal(|ui| {
         ui.label(format!("ball {}", row.id));
         if ui
@@ -77,18 +65,6 @@ pub(super) fn actions(
             release_row(model, row);
         }
     });
-    // Move (§8.2): re-home a bound ball to another workspace — one button per
-    // target, each an `unclaim --as owner` then `claim --as target`.
-    if move_enabled(row.state) && !targets.is_empty() {
-        ui.horizontal(|ui| {
-            ui.label("move to:").on_hover_text(MOVE_HINT);
-            for to in targets {
-                if ui.button(to).on_hover_text(MOVE_HINT).clicked() {
-                    move_ball(model, &row.project, &row.id, &owner, to);
-                }
-            }
-        });
-    }
 }
 
 /// `bl close <id> --as <owner>` for one answered ball row (§8.2) — the Close
@@ -127,20 +103,6 @@ pub(super) fn release_ball(model: &mut AppModel, project: &str, id: &str, owner:
             project: project.to_owned(),
             id: id.to_owned(),
             name: owner.to_owned(),
-        },
-    );
-}
-
-/// `bl unclaim` then `bl claim --as <to>` (§8.2) — Move's one body, shared with
-/// the ball-row menu's destination submenu.
-pub(super) fn move_ball(model: &mut AppModel, project: &str, id: &str, owner: &str, to: &str) {
-    super::act::fire(
-        model,
-        &Action::Move {
-            project: project.to_owned(),
-            id: id.to_owned(),
-            from: owner.to_owned(),
-            to: to.to_owned(),
         },
     );
 }

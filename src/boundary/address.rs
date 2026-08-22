@@ -87,7 +87,6 @@ impl Action {
             | Action::Close { .. }
             | Action::Assign { .. }
             | Action::Release { .. }
-            | Action::Move { .. }
             | Action::Create { .. }
             | Action::Update { .. }
             | Action::Fan(
@@ -105,7 +104,6 @@ impl Action {
             Action::Close { project, .. }
             | Action::Assign { project, .. }
             | Action::Release { project, .. }
-            | Action::Move { project, .. }
             | Action::Create { project, .. }
             | Action::Update { project, .. } => Some(project.clone()),
             // A fan claims nothing, a retirement delivers nothing, and a

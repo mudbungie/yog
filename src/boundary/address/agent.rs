@@ -67,7 +67,6 @@ impl Action {
             | Action::Close { .. }
             | Action::Assign { .. }
             | Action::Release { .. }
-            | Action::Move { .. }
             | Action::Create { .. }
             | Action::Update { .. }
             | Action::Fan(_)

@@ -162,33 +162,6 @@ fn assign_claims_the_ball_for_the_target_workspace() {
     assert_eq!(e.cwd, proj.display().to_string());
 }
 
-#[test]
-fn reassign_unclaims_from_then_claims_to_both_logged() {
-    let w = World::new("bl", OK_BODY);
-    let proj = &w.cwd;
-    reassign(
-        &w.cli,
-        w.state.path(),
-        "TS",
-        proj,
-        "bl-7",
-        "amber-toad",
-        "cobalt-gecko",
-    )
-    .unwrap();
-    // §8.2 "short, piped ×2, both logged": unclaim `--as from`, then claim `--as to`.
-    let ops = opslog::tail(w.state.path(), 8);
-    assert_eq!(ops.len(), 2, "both spawns logged");
-    assert_eq!(
-        args_of(&ops[0]),
-        vec!["unclaim", "bl-7", "--as", "amber-toad"]
-    );
-    assert_eq!(
-        args_of(&ops[1]),
-        vec!["claim", "bl-7", "--as", "cobalt-gecko"]
-    );
-}
-
 /// bl-48f8: every verb stamps its own §7.3 origin on the row it logs, and the
 /// stamp is the verb's **subject** — `bl` acts on a ball, `lernie` on a
 /// conversation. Exhaustive over the two families, because the surfaces filter
@@ -209,16 +182,6 @@ fn every_verb_stamps_the_origin_of_its_own_subject() {
     close(&w.cli, w.state.path(), "TS", &proj, "bl-7", "amber").unwrap();
     unclaim(&w.cli, w.state.path(), "TS", &proj, "bl-7", "amber").unwrap();
     assign(&w.cli, w.state.path(), "TS", &proj, "bl-7", "cobalt").unwrap();
-    reassign(
-        &w.cli,
-        w.state.path(),
-        "TS",
-        &proj,
-        "bl-7",
-        "amber",
-        "cobalt",
-    )
-    .unwrap();
     create(
         &w.cli,
         w.state.path(),
@@ -242,7 +205,7 @@ fn every_verb_stamps_the_origin_of_its_own_subject() {
     )
     .unwrap();
     let ops = opslog::tail(w.state.path(), 16);
-    assert_eq!(ops.len(), 7, "reassign logs two");
+    assert_eq!(ops.len(), 5, "one row per bl verb");
     for e in ops {
         assert_eq!(e.origin, opslog::Origin::Balls, "{:?}", e.argv);
     }

@@ -168,15 +168,14 @@ fn balls_section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState
         // ▶ Continue row above, so it is not repeated here as a bare id
         // (bl-abbe) — `nav::balls::roster` is the covered partition, now a
         // selection out of the landed listing rather than a second derivation.
-        let targets = nav::tabs::move_targets(&super::chrome::ws_rows(model), "");
         for ball in nav::balls::roster(&super::chrome::focused_balls(model)) {
-            bound_ball_row(ui, model, state, lernie, &ball, &targets);
+            bound_ball_row(ui, model, state, lernie, &ball);
         }
     });
 }
 
 /// One bound ball row (§3.5): `id · badge`, weak, and the §11 ball-row
-/// accelerator menu — Move / Release / Close, each gated by the same §8.2
+/// accelerator menu — Release / Close, each gated by the same §8.2
 /// predicate the composer's own button is gated by. Sensing clicks is what makes
 /// the row right-clickable; nothing here reacts to a primary click, so the row
 /// stays a read and the menu stays pointer-targeted.
@@ -186,7 +185,6 @@ fn bound_ball_row(
     state: &mut ShellState,
     lernie: &Cli,
     ball: &crate::nav::BoundBall,
-    targets: &[String],
 ) {
     let text = match &ball.badge {
         Some(b) => format!("{} · {b}", ball.id),
@@ -195,20 +193,13 @@ fn bound_ball_row(
     let row = ui
         .add(egui::Label::new(egui::RichText::new(text).weak()).sense(egui::Sense::click()))
         .on_hover_text(
-            "a ball this workspace has claimed. Right-click for its actions — Close, \
-             Release, Move to another workspace. Each is also a key or a line: (c), \
-             (r), `/move [id] <to>`.",
+            "a ball this workspace has claimed. Right-click for its actions — Close \
+             and Release. Each is also a key or a line: (c), (r), `/close [id]`, \
+             `/release [id]`.",
         );
     let seat = Seat::BallRow {
         state: ball.state,
         assign_to: model.focused_ws_name(),
-        // The destinations minus this row's own holder — the same rule the
-        // composer's `move to:` buttons read, folded once for the section.
-        move_to: targets
-            .iter()
-            .filter(|n| **n != ball.owner)
-            .cloned()
-            .collect(),
     };
     let target = Target::Ball(BallRef {
         project: ball.project.clone(),

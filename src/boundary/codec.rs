@@ -74,12 +74,6 @@ fn encode_action(action: &Action) -> Value {
         Action::Close { project, id, name } => balls::ball("close", project, id, name),
         Action::Assign { project, id, name } => balls::ball("assign", project, id, name),
         Action::Release { project, id, name } => balls::ball("release", project, id, name),
-        Action::Move {
-            project,
-            id,
-            from,
-            to,
-        } => balls::encode_move(project, id, from, to),
         Action::Create {
             project,
             name,
@@ -175,8 +169,8 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
         })),
-        // The `bl` family's six (§8.2), each in its family file.
-        "close" | "assign" | "release" | "move" | "create" | "update" => {
+        // The `bl` family's five (§8.2), each in its family file.
+        "close" | "assign" | "release" | "create" | "update" => {
             balls::decode(op.as_str(), o).map(act)
         }
         "prepare" => Ok(act(Action::Prepare {

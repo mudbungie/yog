@@ -1,5 +1,5 @@
-//! The `bl` family's line grammar (§8.5) — the ball an id-taking verb acts on,
-//! the re-home, and the two authoring verbs with their payloads.
+//! The `bl` family's line grammar (§8.5) — the ball an id-taking verb acts on
+//! and the two authoring verbs with their payloads.
 //!
 //! Its own file on the seam every sibling family here is already cut on
 //! (`fan`, `fork`, `tools`, `config`) and the one `codec/balls` draws one layer
@@ -17,22 +17,6 @@ fn act(action: Action) -> Gesture {
 /// The ball an id-taking verb acts on: the typed word, else the focused ball.
 pub(super) fn id(tail: &str, ctx: &Context, verb: &str) -> Result<String, String> {
     args::ball_id(args::optional_word(tail, verb)?, ctx, verb)
-}
-
-/// `/move [id] <to>` — one word is the destination for the focused ball, two
-/// are the ball and its destination. `from` is the seat's own §3.2 stamp.
-pub(super) fn moved(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
-    let (ball, to) = match tail.split_whitespace().collect::<Vec<_>>().as_slice() {
-        [to] => (args::ball_id(None, ctx, verb)?, (*to).to_owned()),
-        [id, to] => ((*id).to_owned(), (*to).to_owned()),
-        _ => return Err(format!("/{verb}: usage: /move [id] <to>")),
-    };
-    Ok(act(Action::Move {
-        project: args::project(ctx, verb)?,
-        id: ball,
-        from: args::name(ctx, verb)?,
-        to,
-    }))
 }
 
 /// `/create <title…> [--body <text…>] [scheduling flags…]`.

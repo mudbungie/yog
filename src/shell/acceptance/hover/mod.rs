@@ -16,8 +16,8 @@
 //!   off the tree's own source: it finds every widget constructor that yields
 //!   something the operator can press, type into or toggle, and walks the
 //!   method chain hanging off it for an `on_hover_text`. A control shipped
-//!   without one fails here even when no fixture can reach its seat — the Move
-//!   destinations, a provider Login row, a workflow file button. Its reach is
+//!   without one fails here even when no fixture can reach its seat — a
+//!   provider Login row, a workflow file button. Its reach is
 //!   the whole tree and its vocabulary is [`CONTROLS`], hand-listed, which is
 //!   the blind spot [`live`] covers wherever the window can be driven.
 //! - [`spelling`] is the same reading held to §11's *other* half: a control

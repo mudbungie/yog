@@ -10,7 +10,7 @@
 //! **§8.2 identity rider (Z4):** every claim/close/unclaim is stamped `--as
 //! <workspace name>` — the claimant delivers its own ball (§3.2) — never the
 //! operator `$USER`. Close and release stamp the ball's *bound* name; assign
-//! and a move's claim the *target* name; a move's unclaim the *source* name.
+//! stamps the *target* name.
 
 use std::io;
 use std::path::Path;
@@ -97,24 +97,6 @@ pub fn unclaim(
         &[UNCLAIM, id, AS, name],
         Origin::Balls,
     )
-}
-
-/// **Move** a ball to another workspace (§8.2/§3.2): `bl unclaim <id> --as <from>`
-/// then `bl claim <id> --as <to>`, in the project — the source workspace releases
-/// its own ball, the target claims it, both logged (§8.2 "short, piped ×2, both
-/// logged"). Returns the claim's [`Outcome`]; a spawn failure of the unclaim
-/// aborts before the claim.
-pub fn reassign(
-    bl: &Cli,
-    state_root: &Path,
-    ts: &str,
-    project: &Path,
-    id: &str,
-    from: &str,
-    to: &str,
-) -> io::Result<Outcome> {
-    unclaim(bl, state_root, ts, project, id, from)?;
-    assign(bl, state_root, ts, project, id, to)
 }
 
 /// `bl create <title> --as <name> [--body B] [fields…]` in the project (§8.2).

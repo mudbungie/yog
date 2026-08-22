@@ -18,7 +18,7 @@ use crate::projects::join::{JoinRow, owner_name};
 
 impl AppModel {
     /// The focused workspace's join row **that names a ball** — the (project,
-    /// ball, state) a typed `/close`, `/release` or `/move` aims at when the
+    /// ball, state) a typed `/close` or `/release` aims at when the
     /// line elides its target. The first bound row wins; the live-ball loop
     /// emits Bound before Delivered, so a closed ball never shadows an active
     /// one here.

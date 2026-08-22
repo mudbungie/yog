@@ -10,8 +10,8 @@
 //! [`crate::keymap::spell`] sweeps the §11 binding table itself, and
 //! [`crate::boundary::help`] is the §8.5 verb roster. So a control may spell
 //! itself as a key (`(f)`, `Ctrl+N`) or, where its gesture's address is a line,
-//! as that line (`/move`, `/config`) — F1's own wording, and the reason a pick
-//! is not a hover exemption. Rebinding a key rewrites what this test accepts,
+//! as that line (`/release`, `/config`) — F1's own wording, and the reason a
+//! pick is not a hover exemption. Rebinding a key rewrites what this test accepts,
 //! in lockstep, because there is no second list to update.
 
 use super::lex::{skeleton, text_of};

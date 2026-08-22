@@ -21,7 +21,7 @@
 
 use crate::AppModel;
 use crate::cli_outbound::Cli;
-use crate::nav::menu::{self, Action, Entry, Seat, Verb};
+use crate::nav::menu::{self, Entry, Seat, Verb};
 use crate::nav::tabs::Tab;
 use std::path::PathBuf;
 
@@ -66,8 +66,7 @@ pub(super) fn attach(
     response.context_menu(|ui| paint(ui, &entries, target, model, state, lernie));
 }
 
-/// Render one roster level: a firing row is a button, a submenu row is a nested
-/// menu of the same shape (§11 — Move's destination pick).
+/// Render the roster: one button per entry (§11 — the roster is flat).
 fn paint(
     ui: &mut egui::Ui,
     entries: &[Entry],
@@ -82,20 +81,9 @@ fn paint(
         // claim that this verb exists elsewhere, so the hover is read from it
         // rather than written a second time here.
         let hint = accelerates(&entry.carrier);
-        match &entry.action {
-            Action::Fire(verb) => {
-                if ui.button(&entry.label).on_hover_text(hint).clicked() {
-                    fire(verb, target, model, state, lernie);
-                    ui.close_menu();
-                }
-            }
-            Action::Submenu(children) => {
-                ui.menu_button(&entry.label, |ui| {
-                    paint(ui, children, target, model, state, lernie);
-                })
-                .response
-                .on_hover_text(hint);
-            }
+        if ui.button(&entry.label).on_hover_text(hint).clicked() {
+            fire(&entry.verb, target, model, state, lernie);
+            ui.close_menu();
         }
     }
 }
@@ -128,9 +116,6 @@ fn fire(verb: &Verb, target: &Target, model: &mut AppModel, state: &mut ShellSta
         }
         (Verb::Assign(to), Target::Ball(ball)) => {
             super::ball_bar::assign_ball(model, &ball.project, &ball.id, to);
-        }
-        (Verb::MoveTo(to), Target::Ball(ball)) => {
-            super::ball_bar::move_ball(model, &ball.project, &ball.id, &ball.owner, to);
         }
         (Verb::Release, Target::Ball(ball)) => {
             super::ball_bar::release_ball(model, &ball.project, &ball.id, &ball.owner);

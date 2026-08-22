@@ -89,13 +89,6 @@ pub enum Action {
         id: String,
         name: String,
     },
-    /// Re-home a bound ball: `bl unclaim --as <from>` then `claim --as <to>` (§8.2).
-    Move {
-        project: String,
-        id: String,
-        from: String,
-        to: String,
-    },
     /// `bl create <title> --as <name> [fields…]` (§8.2): the whole payload is
     /// [`edit::Create`], which owns the argv fold that spends it (bl-dbde).
     Create {

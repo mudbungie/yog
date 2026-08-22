@@ -145,15 +145,6 @@ fn a_ball_verb_defaults_to_the_focused_ball() {
         }))
     );
     assert_eq!(
-        parse("/move koi", &ctx()),
-        Ok(Gesture::Act(Action::Move {
-            project: "proj".to_owned(),
-            id: "bl-1".to_owned(),
-            from: "alba".to_owned(),
-            to: "koi".to_owned(),
-        }))
-    );
-    assert_eq!(
         parse("/update --note ping", &ctx()),
         Ok(Gesture::Act(Action::Update {
             project: "proj".to_owned(),
