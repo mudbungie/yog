@@ -84,19 +84,38 @@ use crate::AppModel;
 use crate::cli_outbound::Cli;
 use crate::ui_state::Panel;
 
-/// Pin a resizable panel's content to the panel's own rect (§11, bl-9ad4).
+/// Seat a resizable panel's content in a rect of the **panel's** own size, and
+/// report that rect to egui instead of the content's (§11 rules 2/4/5, bl-9ad4
+/// as completed by bl-0424).
 ///
-/// egui stores the rect its **content** occupied and re-opens the panel at
-/// that, so a pane whose content is shorter than the boundary the operator
-/// dragged collapses back to its floor on the very next frame — measured: a
-/// 200 pt pane holding one short row settles at 40 pt and stays there. Pinning
-/// the content's minimum to the panel's own height makes the stored rect the
-/// operator's size rather than the content's. It is the mirror of the width
-/// ratchet bl-9669 fixed by truncating rows: over-long content grows the rect,
-/// under-long content shrinks it, and a panel the operator sizes must do
-/// neither.
-fn pin_to_panel(ui: &mut egui::Ui) {
-    ui.set_min_height(ui.available_height());
+/// egui stores the rect its content occupied and re-opens the panel at that, so
+/// the content — not the operator — owns the boundary in **both** directions.
+/// Under-long content shrinks it: a 200 pt trail holding one short row settles
+/// at 40 pt on the very next frame. Over-wide content grows it: a row that lays
+/// past the edge writes a wider rect, which the next frame opens at, which the
+/// row lays past again — ~15 pt a frame until the rule 5 ceiling pins it, and a
+/// splitter drag cannot win against it because the walk resumes the frame after
+/// the pointer comes up (the operator's "it slides back out", bl-0424).
+///
+/// A minimum could only ever answer the first half. So the content is laid in a
+/// child `Ui` of the panel's own rect and the parent's cursor is advanced by
+/// **that** rect rather than by what the child used: the stored rect is the
+/// panel's size, whatever the content did inside it. What overflows is clipped
+/// — egui already clips a panel to itself — which is rule 1's answer anyway,
+/// and the rows are contained in their own right so nothing reaches it.
+///
+/// The seam closes with the ratchet, and that is the same fact twice. egui
+/// clips a panel's fill to the panel rect but starts the next panel at the
+/// **content** rect's edge, so content wider than the panel leaves an interval
+/// painted by nobody — a translucent bar of the frame's clear colour flickering
+/// as the content width changes frame to frame. With the two rects equal there
+/// is no interval to paint.
+fn seat<R>(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui) -> R) -> R {
+    let rect = ui.available_rect_before_wrap();
+    let mut inner = ui.new_child(egui::UiBuilder::new().max_rect(rect));
+    let out = contents(&mut inner);
+    ui.advance_cursor_after_rect(rect);
+    out
 }
 
 /// Render the whole window (§11): the top bar (attention strip + workspace tab
@@ -184,7 +203,9 @@ pub fn render(
         .default_width(model.panel_size(Panel::Conversations, window.x))
         .width_range(Panel::Conversations.min_size()..=Panel::Conversations.max_size(window.x))
         .show(ctx, |ui| {
-            navigator::side_panel(ui, model, state, lernie);
+            seat(ui, |ui| {
+                navigator::side_panel(ui, model, state, lernie);
+            });
         })
         .response
         .rect
@@ -234,9 +255,15 @@ fn activity_panel(
         .show(ctx, |ui| {
             row::bounded(ui);
             if trail {
-                pin_to_panel(ui);
+                seat(ui, |ui| {
+                    activity::accessory(ui, model, &mut state.activity_open);
+                });
+            } else {
+                // The collapsed chip is sized by its content on purpose — that
+                // is the whole reason it is a second panel id — so it is the
+                // one docked surface `seat` must not hold to a stored rect.
+                activity::accessory(ui, model, &mut state.activity_open);
             }
-            activity::accessory(ui, model, &mut state.activity_open);
         })
         .response
         .rect

@@ -282,6 +282,15 @@ impl eframe::App for App {
             &self.bz,
         );
     }
+    /// The ground the frame is cleared to before a panel paints (§11, bl-0424).
+    /// eframe's default is a near-black at ~70% alpha, invisible only while
+    /// every pixel is painted over by somebody — and a panel whose content
+    /// outgrew it left an interval where nobody was. That is closed at its
+    /// source (`shell::seat`); this makes any residual pixel the panel ground
+    /// the operator's theme asks for rather than a hole onto the compositor.
+    fn clear_color(&self, visuals: &egui::Visuals) -> [f32; 4] {
+        visuals.panel_fill.to_normalized_gamma_f32()
+    }
     // No `on_exit` hook: §4.1 state is write-through at the gesture, so there
     // is nothing pending to flush at close — and nothing a SIGTERM (`pkill`,
     // which never reaches `on_exit`) could take with it (bl-b54e).

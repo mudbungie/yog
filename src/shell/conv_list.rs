@@ -85,6 +85,13 @@ pub(super) fn conversations(
     // balls section's first line.
     ui.set_clip_rect(ui.clip_rect().intersect(ui.available_rect_before_wrap()));
     egui::ScrollArea::vertical().show(ui, |ui| {
+        // And rule 1 on the width axis, `shell::pane::body`'s note again
+        // (bl-0424): a vertical `ScrollArea` **follows its content outward** on
+        // the axis it does not scroll, so a row laid past the column widens the
+        // scroll's own rect, which widens the panel's, which is next frame's
+        // panel width. Clamped here the surplus never exists, and every row
+        // below truncates to the width the column really shows.
+        super::row::shown_width(ui);
         if state.group_by_ball {
             // The grouping is a partition of the visible rows and asserts no
             // order of its own (§3.5, §15 Z9), so the unfold reaches both

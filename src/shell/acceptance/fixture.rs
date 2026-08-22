@@ -86,6 +86,10 @@ pub(super) fn seed_world(world: &World) {
 /// file per §12's budget.
 pub(in crate::shell::acceptance) mod crowd;
 
+/// The rows whose **width** outgrows the column, laid on the shipped world —
+/// [`crowd`]'s twin on the other axis, its own file per §12's budget.
+pub(in crate::shell::acceptance) mod wide;
+
 /// The world a test drives, and the wire behind it — its own file per §12's
 /// budget.
 mod world;

@@ -167,8 +167,9 @@ fn start_box(
             .default_height(model.panel_size(Panel::StartGoal, window_y))
             .height_range(Panel::StartGoal.min_size().min(cap)..=cap)
             .show_inside(ui, |ui| {
-                super::pin_to_panel(ui);
-                super::start_pane::composer(ui, model, state);
+                super::seat(ui, |ui| {
+                    super::start_pane::composer(ui, model, state);
+                });
             })
             .response
             .rect

@@ -47,6 +47,7 @@ mod tabs;
 mod unfold;
 mod walk;
 mod walls;
+mod width;
 mod wire;
 mod wound;
 

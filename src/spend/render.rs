@@ -25,12 +25,27 @@
 
 use super::Figure;
 
-/// Render one figure on a line: total tokens, the four counters, the dollars
-/// and any unpriced remainder when a price table exists, and — independently of
-/// pricing — the attribution clause whenever the sum is wider than the seat
-/// claims.
+/// Render one figure: total tokens, the four counters, the dollars and any
+/// unpriced remainder when a price table exists, and — independently of pricing
+/// — the attribution clause whenever the sum is wider than the seat claims.
+///
+/// **A part per line, not five parts per row** (§11 rule 1, bl-0424). Laid
+/// horizontally these five are one greedy run (the counter clause, ~300 pt of
+/// its own) followed by three more, and under rule 1's `Truncate` the greedy
+/// one takes the whole remaining width: each part after it is laid at zero
+/// available width, paints a bare `…` — which says nothing and is rule 1d's own
+/// defect — and allocates ~20 pt past the seat's edge anyway. Measured in a
+/// 260 pt navigator column the row laid 319 pt, and in a side panel that rect
+/// is next frame's panel width, so this row alone ratcheted the column to its
+/// half-window ceiling and held it there against the splitter.
+///
+/// Given a line apiece every part truncates against the **seat's** width rather
+/// than against its neighbours' leavings, so nothing overflows and nothing is
+/// elided to nothing. The wide centre settings seat (`shell::settings`) is
+/// unaffected in what it says — every part still reaches the glass whole; it
+/// says it down the column instead of across it.
 pub fn render(ui: &mut egui::Ui, figure: &Figure) {
-    ui.horizontal(|ui| {
+    ui.vertical(|ui| {
         let spend = figure.tokens;
         ui.label(format!("budget {} tok", spend.total_tokens()));
         ui.weak(format!(

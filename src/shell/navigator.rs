@@ -120,6 +120,12 @@ fn sections(
             .id_salt("navigator-sections")
             .max_height(cap)
             .show(ui, |ui| {
+                // The width axis of the same clamp (bl-0424): this band holds
+                // the board's spend rows and the `CollapsingHeader`s that lay
+                // their own text `Extend` whatever the panel's wrap mode says,
+                // so it is the band most able to widen the column through the
+                // scroll's own outward-following rect.
+                super::row::shown_width(ui);
                 balls_section(ui, model, state, lernie);
                 super::clients::section(ui, model);
             });

@@ -219,8 +219,18 @@ fn row_body(
                 // §11: the name is the title, the first payload line rides weak
                 // beside it. Empty when the ladder already spent that line as
                 // the title, so an unstamped row never says it twice.
+                //
+                // **And only where the row can pay for it** (§11 rules 1b/1d,
+                // bl-0424). This is greedy prose laid AFTER the greedy title,
+                // which is rule 1b's inversion in its label-on-label form: a
+                // title longer than the row leaves nothing, and the preview is
+                // then laid at zero width — a bare `…` that names nothing, and
+                // ~20 pt of allocation past the panel's edge, which in a side
+                // panel is next frame's panel width. The title is the row's
+                // identity and outranks its preview, so the preview is the one
+                // that goes.
                 let subtitle = row.subtitle();
-                if !subtitle.is_empty() {
+                if !subtitle.is_empty() && super::row::has_room(ui) {
                     ui.weak(subtitle);
                 }
             });

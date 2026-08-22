@@ -6267,6 +6267,32 @@ splitter drag cannot win against it). Three rules close it — 1 and 2 below, an
 the ceiling of rule 5 for whatever escapes them — and they are rules about the
 panel, not about any one row:
 
+**Three rules that audit rows are not an invariant, and bl-0424 is the proof.**
+Every one of them held and the column still ratcheted, because rule 1 was read
+as *"labels truncate"* and truncation is not containment: a label handed **zero**
+available width — which is what a row's third, fourth and fifth part gets after
+a greedy one — still lays an ellipsis and still allocates it, ~20 pt past the
+edge apiece. Measured, the §3.5 spend row laid 319 pt in the 260 pt column, and
+the column walked out to its rule 5 ceiling and sat there against the splitter.
+So the panel's rect is now the panel's by **construction** and not by audit:
+`shell::seat` lays a sized panel's content in a child `Ui` of the panel's own
+rect and advances the parent's cursor by *that* rect, so what egui stores is the
+size the operator set whatever the content did inside it (rule 4, which the same
+call now answers in both directions). The row rules stay, because a contained
+overflow is still a row saying nothing; what changes is that they no longer have
+to be complete.
+
+**The seam is the same fact, seen from the centre.** egui clips a panel's fill
+to the panel rect but starts the next panel at the **content** rect's edge, so
+while the two differ the interval between them is painted by nobody — and what
+shows through is eframe's default clear colour, `rgba(12, 12, 12, 180)`, a
+near-black at ~70% alpha over whatever the compositor has behind the window. It
+flickers because the content width moves frame to frame under the live badges
+and chips. Equal rects leave no interval, which is the fix; and `App::clear_color`
+now answers `visuals.panel_fill` so that a residual pixel anywhere is the ground
+the operator's theme already asks for rather than a hole. Pinned in
+`shell/acceptance/width/`.
+
 1. **Nothing in this panel extends past it.** The panel sets
    `wrap_mode = Truncate` at its root, so every label clips at the edge rather
    than reserving space beyond it; and a row with trailing metadata (the
@@ -6303,7 +6329,11 @@ panel, not about any one row:
    content, and with horizontal scrolling off none of the surplus is reachable —
    `shell::row::shown_width` clamps it back, one call at the scroll body, the
    same "state the rule where it stopped being true" discipline as `bounded`
-   itself. Worse, and the general form: **an over-wide row ratchets the seat's
+   itself. **Every scroll body, not just the centre's** (bl-0424): the roster's
+   own scroll and the navigator's balls/clients band each hold rows the column
+   cannot fit, and a vertical `ScrollArea` *follows its content outward* on the
+   axis it does not scroll — so an over-wide row there widened the scroll's rect,
+   which widened the panel's, which was next frame's panel width. Worse, and the general form: **an over-wide row ratchets the seat's
    `max_rect` for every row beneath it**, so one widget's overflow silently
    re-bases the whole surface, and each row below elides to a width that is not
    there and is then hard-cut — *taking its own `…` with it*, which is 1c's
@@ -6347,6 +6377,19 @@ panel, not about any one row:
    on the painted **glyphs** — `Galley::text()` reports the string that went in,
    so an assertion read that way is blind to exactly this defect, and
    `paint_probe` reads what the layout actually put on screen instead.
+   **The label-on-label form has a different answer** (bl-0424). Two greedy
+   *labels* on one line — the conversation row's title with its payload-line
+   preview laid after it, the §3.5 figure's five parts — cannot be repaired by
+   ordering, because neither is a control and pinning either one right merely
+   chooses which of them is destroyed. Two answers, by what the parts are.
+   Parts that are peers of one another take **a line apiece**
+   (`spend::render`), where each truncates against the seat rather than
+   against its neighbours' leavings, and the wide centre seat still says every
+   one of them whole. A part that *qualifies* another is optional, and is not
+   painted where the row cannot pay for it (rule 1d's floor,
+   `shell::row::has_room`) — the title is the row's identity and the preview is
+   a gloss on it, so the preview is what goes. Pinned in
+   `shell/acceptance/width/`.
 1c. **Rule 1 is a rule about a *panel*, so every panel states it (bl-36c3,
    bl-5410).** It was set at the side panel's root and nowhere else, so in the
    centre, the top bar and the activity panel egui's default `Extend` held: a
@@ -6391,15 +6434,22 @@ panel, not about any one row:
    scrolls on both axes, since truncating it leaves `{…` and wrapping it destroys
    the structure that was the value.
 2. **The floor is a sliver, not egui's 96 pt.** `min_width` is the panel's own
-   `Panel::min_size()` (24 pt for the roster) so it can be dragged out of the way;
-   what it settles at (~89 pt, measured) is the width of its own controls, and
-   that is an honest floor rather than a stored default.
+   `Panel::min_size()` (24 pt for the roster) so it can be dragged out of the way,
+   and since bl-0424's containment **that floor is what it settles at**: a
+   boundary dropped at 40 pt is 40 pt on every frame after, where before it
+   settled at the width of the panel's own controls (~89 pt, measured) because
+   the stored rect was the content's. The panel's own controls are still there
+   and still elide; what has stopped is their width answering for the
+   operator's.
 
 The window's own `min_inner_size` is the same question one level up: 420×320,
 lowered from 700×500 — yog must fit a tiled quarter-screen, not dictate one.
 The regression is pinned in `shell/acceptance/geometry.rs`: a long title cannot
 widen the panel, the width does not creep across frames, and a drag to nothing
-settles below egui's stock floor.
+settles below egui's stock floor — and in `shell/acceptance/width/`, which is
+the same claims under content that does not fit, a fixture the suite had none
+of until bl-0424 (`fixture::wide`) and without which every one of those beats
+was asking a column whose widest row was short.
 
 3. **Which boundaries drag, and why the others do not** (bl-9ad4). Three:
    the conversation column, the expanded activity trail, and the start-goal
@@ -6417,9 +6467,15 @@ settles below egui's stock floor.
    long row ratchet the column wider (rule 1) lets short content collapse a
    pane the operator sized: a 200 pt trail holding one row settles at its
    48 pt floor on the very next frame, measured. Each sized panel therefore
-   sets its content's minimum to the panel's own extent (`shell::pin_to_panel`),
-   and each scrolling body caps at the room actually left — so neither
-   direction of content can move a boundary the operator set. The activity
+   **seats** its content in a child `Ui` of the panel's own rect and advances
+   by that rect rather than by what the content used (`shell::seat`), and each
+   scrolling body caps at the room actually left — so neither direction of
+   content can move a boundary the operator set. A *minimum* was the earlier
+   spelling and it could only ever answer the shrinking half; bl-0424 is what
+   the growing half cost, and one call now answers both, on the height axis and
+   the width axis alike. The collapsed activity chip is the one docked surface
+   deliberately left out of it — a chip's height **is** its content's, which is
+   the whole reason it is a second panel id. The activity
    accessory is **two panels** for the same reason: a collapsed chip is sized
    by its content and an expanded trail by the operator, and egui keys panel
    geometry by id, so under one id the trail would open at the chip's stored
@@ -8793,6 +8849,7 @@ beside `main.rs`.
 | `src/shell/acceptance/elision.rs` (excl.) | the §11 rule 1b regression on the two witness rows (the Login verb behind the longest provider name, `assign → <ws>` behind an arbitrary ball title), each asserted in both directions and against the panel's own edge, on painted glyphs rather than galley text — and beside them L4's other question, *where* a row cuts (bl-3aa1): two activity ops sharing the audit's invariant path prefix are laid in the real trail, and the glyphs show each row ending in the leaf and agent id that tell it from the other, where the head-keeping cut painted both rows as one identical line |
 | `src/shell/acceptance/first_run.rs` (excl.) | the bl-3b62 drive that a stranger reaches a **populated** §8.3 roster from the empty world before spending a turn — Ctrl+Shift+3 from inside the bootstrap box, every row on the glass with its credential fact, the sphere named (and named *derived*, since a focused world names its own), and the wall those rows and any sign-in are bound to proved to be the one the first message founds — plus bl-8c2d's consume, that a default install's roster carries a pressable Login on the shipped oauth2 row (found by seat, not by string: `Login` is painted three times on that window) while the keyed rows still name the config editor |
 | `src/shell/acceptance/fixture/crowd.rs` (excl.) | the **crowded roster's** own bytes (bl-86a5): how many conversations `Roster::Crowded` seats, the §3.3 name each wears, the §3.1 name of the wall they hang under, and the one loop that builds them. Split from `fixture.rs` at §12's budget on the seam the builder already had — the shipped world is one thing, the crowd laid on top of it another. It exists because no fixture in this suite held more than **one** conversation, so 1900+ tests ran against a §11 column that never once had to divide itself, and rule 5's promise about that column had never been asked |
+| `src/shell/acceptance/fixture/wide.rs` (excl.) | the **wide roster's** own bytes (bl-0424): conversations whose content is wider than the column — a §3.3 name that fills the row paired with the payload line laid weak after it — and `world_wide`, which lays them on the shipped world. `crowd`'s twin on the other axis: that fixture is a list too TALL for the column, this one is rows too WIDE for it, and until it existed every §11 panel-width beat asked a column whose widest row was short. The §7.2 watcher debounce is spent rather than waited on, or a fixture that changes disk and converges in the same breath never reaches the derivation |
 | `src/shell/acceptance/fixture/world.rs` (excl.) | the acceptance `World` and **the wire standing behind it** (REMOTE §9.8, bl-1747): the populated fixture a test drives, its derivation stepped by hand, and the two channel ends the frame's reads and acts are answered on — every act the window fires is posted now, so a fixture with nothing behind its end of the channel is a window whose every gesture is refused. It stands in for the transport and nothing else: the questions go through `AppModel::answer` and the acts through `boundary::dispatch::dispatch` over a `ui.json` opened fresh per gesture, which is answer 3's *engine writes, window adopts* paid in full. Split from `fixture.rs` at §12's budget on the seam the two halves already had — the builder mints the world's bytes once, this holds what a test then does to it. `World::drain` is the **one** definition of settling the wire to a fixed point (bl-13f9), spent by both drivers: a chained read — the §11 step drill-in, whose sequence name is picked out of the step list that landed — is why counting passes stopped being enough |
 | `src/shell/acceptance/floor.rs` (excl.) | the §11 **focus floor** (bl-478d: Tab steps the frame's focus control by control, and Space presses what it reached — driven onto the balls fold, whose press is a durable §4.1 fact) |
 | `src/shell/acceptance/{focus,walk}.rs` (excl.) | the keyboard driver and the §11 focus-discipline drive it steers — `focus` its pointer/launch half, `walk` its keyboard half (bl-c21f: a roster step lands the composer in both directions, Ctrl+↓ continues the walk from inside the box, and Escape still releases to a live bare plane), each asserting the model's selection beside egui's `wants_keyboard_input` so a walk that never walked cannot pass |
@@ -8829,6 +8886,8 @@ beside `main.rs`.
 | `src/shell/acceptance/unfold/drive.rs` (excl.) | the bl-89de drive, pointer half (the field's click unfolds and folds without selecting the row, and its hover states both numbers at the paint layer, which is where the hover scan's descent-less fixture cannot reach it) |
 | `src/shell/acceptance/unfold/keys.rs` (excl.) | the bl-89de drive, keyboard half (→ unfolds the selected row and again one generation down without walking, ↓ steps over a folded subtree and opens nothing, ← pages up to the parent before a second ← shuts it) |
 | `src/shell/acceptance/walls.rs` (excl.) | the bl-5894 drive over two spheres (an unsaved brazen draft survives a workspace round trip, a live `bz --login` stream paints only under the wall that started it and is parked rather than killed by leaving, and a picker opened in one wall is closed in the next) |
+| `src/shell/acceptance/width.rs` (excl.) | **the column's width is the operator's, under content that does not fit** (§11 rules 1/1b/2/5, bl-0424) — the half `geometry.rs` could not ask for want of a wide fixture. The whole window over `world_wide`: the column opens where it is told and stays there at every size the audit renders (the stored rect being the CONTENT rect, which is also the seam — egui clips a panel's fill to the panel and starts the centre at the content's edge, so every point of difference is an interval painted by nobody), no run in the column is elided to a bare `…`, and a boundary dragged to a sliver is still there frames later instead of walking back out |
+| `src/shell/acceptance/width/figure.rs` (excl.) | the same claim one altitude in: the §3.5 spend figure, the widest row the column carries, driven in a real resizable panel at every audit size — the stored width never leaves the panel's opening, no glyph is laid past its edge, no part is elided to nothing, and, in both directions, the figure is demonstrably wider than the column when nothing bounds it and still says every part whole in the wide centre seat. Split from `width.rs` at §12's budget on the seam the two halves had: that file asks what a panel does under wide content, this one what the widest row does inside one |
 | `src/shell/acceptance/wire.rs` (excl.) | the acceptance world's own answerer (bl-adcb): the frame's standing questions taken off the `LinkEnd` exactly as the asker takes them, decoded by the one codec and answered by `AppModel::answer` — the transport stood in for, never a second dispatch, because a fixture mints no certificate and binds no port. Its `wired` helper pays the settle-then-render shape out in three paint passes, which is what the window does over half a second; and its two-direction witnesses pin that the balls fold paints the board a reply carries — and, since bl-13f9, that the §11 chat paints the conversation a reply carries — with **nothing** on screen when nobody answers |
 | `src/shell/acceptance/wound.rs` (excl.) | the bl-55d8 drive (a conversation whose latest step has an empty `response.json` beside a non-empty `stderr.log`, rendered on the whole window: the adapter's own sentence is in the paint output, the retired *"activity trail below"* pointer is not, and the bl-90bf grace gate still withholds it on the frame before the window elapses — driven on a `FakeClock` swapped into `ShellState::wound_grace`, since the window is wall-clock time and a frame test must not sleep through it) |
 | `src/shell/act.rs` (excl.) | the shell's one spelling of a wire **act** (REMOTE §1.2, §9.8; bl-4841) — `src/shell/wire.rs`'s twin on the write side. Two shapes and no more: the act whose receipt is *nothing* (every §8.2 verb whose durable record is its own `ops.jsonl` line — it posts and holds no ticket, because nobody read the reply before either), and the act whose receipt is a *sentence* (the four surfaces that paint what came back — they gain a ticket beside the status line they already held). The in-flight state is that same line with an ellipsis on it rather than a second phrasing to learn, and a clean landing simply drops the mark. The `lernie`/`bl` pair does not come here: a posted act carries the gesture and nothing else, the verb binaries being the engine's |

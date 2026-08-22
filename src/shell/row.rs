@@ -64,6 +64,27 @@ pub(super) fn shown_width(ui: &mut egui::Ui) {
     ui.set_max_width(width);
 }
 
+/// §11 rule 1d at the moment an **optional trailing run** is about to be laid:
+/// *an accessory the seat cannot pay does not paint* (bl-0424).
+///
+/// Rule 1 makes a run truncate; under a floor the truncation eats the run and
+/// what lands is a bare `…`, which says strictly less than nothing and is
+/// exactly what `legible/floor.rs` forbids. Worse on the width axis than on the
+/// height one: a run laid at zero available width still allocates its ellipsis,
+/// so three such runs after a greedy one push the seat's `min_rect` ~60 pt past
+/// its `max_rect` — and in a side panel that rect **is** next frame's panel
+/// width (rule 2's ratchet, measured again in bl-0424 at 319 pt of a 260 pt
+/// column). So the answer is the same one `layout::share` gives on the other
+/// axis: either the seat can pay a run or the run is not painted this frame.
+///
+/// The floor is [`crate::layout::ROW`] — *"the least an accessory can be and
+/// still say anything"* — read on the width axis, which it generalizes to
+/// without a second number: a run narrower than one line of text is one glyph
+/// and an ellipsis.
+pub(super) fn has_room(ui: &egui::Ui) -> bool {
+    ui.available_width() >= crate::layout::ROW
+}
+
 /// Lay `text` and a trailing `control` on one line, control first.
 ///
 /// The control is allocated at its natural width against the row's full
