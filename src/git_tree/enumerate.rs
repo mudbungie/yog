@@ -3,15 +3,16 @@
 //! shapes.
 //!
 //! The trunk is the config lineage (§2.2); agents are the `agents/*` refs
-//! (§2.3), never merged anywhere (§2.6). Per-agent disk reads (preview,
-//! streaming text, tool calls, the pending-deposit listing — §5.1 #11 via
-//! [`crate::inboxview::list_inbox`], the one reader) come from the
-//! workspace root (`steps/<agent-id>/…`, `inbox/<agent-id>/`, §2.2/§2.11);
-//! the §3.5 state and the four ref-derived marks (conflicted, budget-exhausted,
-//! abandoned, notify) are classified here.
+//! (§2.3), never merged anywhere (§2.6). Per-agent disk reads (the goal's two
+//! stamps and its preview, streaming text, tool calls, the pending-deposit
+//! listing — §5.1 #11 via [`crate::inboxview::list_inbox`], the one reader)
+//! come from the workspace root (`agents/<agent-id>/goal.md`,
+//! `steps/<agent-id>/…`, `inbox/<agent-id>/`, §2.2/§2.11); the §3.5 state and
+//! the four ref-derived marks (conflicted, budget-exhausted, abandoned, notify)
+//! are classified here.
 
 use super::cmd::{LogEntry, for_each_ref_agents, ref_name, walk_branch_steps};
-use super::detect::extract_request_preview;
+use super::detect::payload_headline;
 use super::marks::Marks;
 use super::probe::{LockProbe, WriterProbe};
 use super::state::classify;
@@ -19,14 +20,6 @@ use super::streaming::{RESPONSE_FILE, latest_step_dir, stream_from_disk};
 use super::tools::tool_calls_from_disk;
 use super::{AGENTS_DIR, Agent, CommitNode, GitTreeError, MESSAGES_DIR, STEPS_DIR};
 use std::path::Path;
-
-/// The wire request lernie lands in `step_dir` immediately before it invokes the
-/// model (§2.3). Read twice here for two different facts — the first step's
-/// *content* is the row preview, the latest step's *stamp* is the call's start
-/// (§5.1 #28a) — so the record has one home rather than two spellings.
-fn request_in(step_dir: &Path) -> std::path::PathBuf {
-    step_dir.join("request.json")
-}
 
 pub(super) fn build_node(entry: LogEntry) -> CommitNode {
     let LogEntry {
@@ -81,7 +74,7 @@ pub(super) fn enumerate_agents(
         let tip_short_oid = tip_oid.get(..8).unwrap_or(&tip_oid).to_string();
         let steps = walk_branch_steps(git_dir, &branch_name)?;
         let (state, state_uncertain) = classify(workspace, &agent_id, lock, writer);
-        let goal = goal_stamps_from_disk(workspace, &agent_id);
+        let goal = goal_from_disk(workspace, &agent_id);
         // One readdir of `messages/` for both of its facts (§5.1 #12): when the
         // transcript last moved, and how many entries it holds.
         let messages = messages_from_disk(workspace, &agent_id);
@@ -91,7 +84,7 @@ pub(super) fn enumerate_agents(
         let stream = stream_from_disk(workspace, &agent_id);
         agents.push(Agent {
             name: ref_name(git_dir, &branch_name)?,
-            preview: preview_from_disk(workspace, &agent_id),
+            preview: goal.preview,
             stream,
             tool_calls: tool_calls_from_disk(workspace, &agent_id),
             state,
@@ -164,7 +157,7 @@ struct Messages {
 /// read as an hours-long call five seconds in.
 fn call_start_from_disk(workspace: &Path, agent_id: &str) -> Option<i64> {
     let steps = workspace.join(STEPS_DIR).join(agent_id);
-    mtime_unix(&request_in(&latest_step_dir(&steps)?))
+    mtime_unix(&latest_step_dir(&steps)?.join("request.json"))
 }
 
 /// The [`Messages`] fold over `<workspace>/agents/<agent-id>/messages/` (§5.1
@@ -217,30 +210,35 @@ pub(super) fn mtime_unix(path: &Path) -> Option<i64> {
         .and_then(|since| i64::try_from(since.as_secs()).ok())
 }
 
-/// The two stamps a yog-composed `goal.md` carries (§3.3): the start-flow ball id
-/// and the **legacy** `You are <x>.` identity line (the name's home before lernie
-/// 0.0.4; kept only for pre-0.0.4 roots until retention ages them out). Both are
-/// read back with yog's own inverses ([`crate::start::parse_ball_stamp`] /
-/// [`crate::start::parse_identity_stamp`]), one parse per compose.
-struct GoalStamps {
+/// What a yog-composed `goal.md` says (§3.3), all three facts of it: the
+/// start-flow ball id, the **legacy** `You are <x>.` identity line (the name's
+/// home before lernie 0.0.4; kept only for pre-0.0.4 roots until retention ages
+/// them out), and the operator's payload headline — the §3.3 ladder's second
+/// rung. The two stamps are read back with yog's own inverses
+/// ([`crate::start::parse_ball_stamp`] / [`crate::start::parse_identity_stamp`]),
+/// one parse per compose.
+struct Goal {
     ball: Option<String>,
     name: Option<String>,
+    preview: Option<String>,
 }
 
-/// Both stamps from `<workspace>/agents/<id>/goal.md` (the agent worktree, §7.1)
-/// in **one** read — a missing file (a removed worktree, a non-yog agent) or a
-/// goal without a given stamp yields `None` for it.
-fn goal_stamps_from_disk(workspace: &Path, agent_id: &str) -> GoalStamps {
+/// All three facts from `<workspace>/agents/<id>/goal.md` (the agent worktree,
+/// §7.1) in **one** read — a missing file (a removed worktree, a non-yog agent)
+/// drops every one of them, and a goal without a given stamp yields `None` for
+/// that stamp alone.
+///
+/// The preview's source is this file and **not** `steps/<id>/001/request.json`
+/// (bl-368d): the request record is the assembled model context, which since
+/// the §3.7 instruction freeze opens with a pinned-instruction frame and wraps
+/// a deposit in its `---` envelope, so its head is never what the operator
+/// said. `goal.md` is the payload's one home, so the fact has one home too.
+fn goal_from_disk(workspace: &Path, agent_id: &str) -> Goal {
     let path = workspace.join(AGENTS_DIR).join(agent_id).join("goal.md");
-    let text = std::fs::read_to_string(&path).unwrap_or_default();
-    GoalStamps {
-        ball: crate::start::parse_ball_stamp(&text),
-        name: crate::start::parse_identity_stamp(&text),
+    let text = std::fs::read_to_string(&path).ok();
+    Goal {
+        ball: text.as_deref().and_then(crate::start::parse_ball_stamp),
+        name: text.as_deref().and_then(crate::start::parse_identity_stamp),
+        preview: text.as_deref().map(payload_headline),
     }
-}
-
-fn preview_from_disk(workspace: &Path, agent_id: &str) -> Option<String> {
-    let path = request_in(&workspace.join(STEPS_DIR).join(agent_id).join("001"));
-    let bytes = std::fs::read(&path).ok()?;
-    extract_request_preview(&bytes)
 }

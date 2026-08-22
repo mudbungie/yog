@@ -679,6 +679,17 @@ conversations with the same preview stay distinguishable by name, state,
 age, and the root id (the true identifier): a preview is a subtitle, not a
 key — the same distinction balls draws between a task's title and its id.
 
+**The payload's home is `goal.md`, and rung two reads it there** (bl-368d):
+`agents/<id>/goal.md` is the file the dispatch writes and the same read that
+yields the goal's two stamps, so one fact has one home. What lernie *sent* the
+model is a different document and never this one — an assembled context leads
+with the §3.7 pinned-instruction frame (lernie ARCH §2.5) and carries a deposit
+inside its `---` envelope, so `steps/<id>/001/request.json` heads with
+`<file path="instructions/…">` or with `---` and with nothing the operator
+wrote. Rung two was derived from that record until the freeze made the
+divergence total, and the operator read the frame's opening tag as the name of
+every fresh conversation.
+
 **The `--as` stamp is applied where balls reads the default, not by rewriting
 argv:** the multiplex `bl` arm resolves `Edge::default_actor` as `$YOG_NAME`
 → `$USER` → balls' `"unknown"`, so an explicit `--as` still wins and a verb
@@ -8615,7 +8626,7 @@ beside `main.rs`.
 | `src/git_tree/addressing.rs` | the **live conversation enumeration** the §8.5 boundary addresses over (bl-49bc): every `agents/*` ref with its stored `name` blob, two facts and nothing else, so it is affordable per gesture where the §7.1 tree walk is not — and asked of disk rather than remembered, for bl-6c9e's reason one noun down (a detached driver writes the branch after the fire has already answered) |
 | `src/git_tree/cmd.rs` | the git CLI wrapper and log/diff parsing — no libgit2, and every invocation built by `git_env::command` |
 | `src/git_tree/descent.rs` | hyphenated-descent ordering for the agent view (§7.1): hierarchy lives in the name, and lernie's narrow grammar is the authority |
-| `src/git_tree/detect.rs` | the user-message preview, read off `steps/<agent-id>/001/request.json` — step records are never in a git tree |
+| `src/git_tree/detect.rs` | the §3.3 preview: the operator's payload headline, folded off the goal `enumerate` already reads (`agents/<agent-id>/goal.md`) — never off the assembled request, whose head is the §3.7 instruction frame and not anything anyone said (bl-368d) |
 | `src/git_tree/enumerate.rs` | commit-node and agent construction: raw git output bridged into the view-model's shapes, the trunk the config lineage |
 | `src/git_tree/{fd_probe,lsof,terminal}.rs` | the `/proc/*/fd` writer scan; the pure `lsof -F` parser + the cfg(macos) spawn shim (§10); the §4.4 settled-tail classifier |
 | `src/git_tree/lock_probe.rs` | the executor-lock probe behind the §3.5 `live` classification — the inbox-directory `flock`'s holder is *the* driver |

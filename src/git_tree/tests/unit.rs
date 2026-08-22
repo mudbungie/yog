@@ -2,7 +2,7 @@
 
 use crate::git_tree::GitTreeError;
 use crate::git_tree::cmd::{parse_log, parse_step_commits};
-use crate::git_tree::detect::{PREVIEW_MAX, extract_request_preview, truncate_preview};
+use crate::git_tree::detect::{PREVIEW_MAX, payload_headline, truncate_preview};
 
 #[test]
 fn truncate_preview_passes_short_input_through() {
@@ -24,77 +24,34 @@ fn truncate_preview_cuts_long_input_with_ellipsis() {
 }
 
 #[test]
-fn extract_request_preview_pulls_first_user_message_content() {
-    let json = br#"{"messages":[{"role":"user","content":"hi v03"}]}"#;
-    assert_eq!(extract_request_preview(json).as_deref(), Some("hi v03"));
+fn payload_headline_is_the_goals_first_line() {
+    assert_eq!(payload_headline("hi v03"), "hi v03");
 }
 
 /// The §3.3 ladder's second rung at its source: the identity stamp comes off
 /// before anything collapses, and what is left is the payload's headline — so a
 /// stamped conversation never previews as its own identity line.
 #[test]
-fn extract_request_preview_strips_the_identity_stamp_and_keeps_the_headline() {
-    let json = br#"{"messages":[{"role":"user","content":"You are stench-pug.\n\nBall bl-1: fix\n\nthe body runs on"}]}"#;
+fn payload_headline_strips_the_identity_stamp_and_keeps_the_headline() {
     assert_eq!(
-        extract_request_preview(json).as_deref(),
-        Some("Ball bl-1: fix")
+        payload_headline("You are stench-pug.\n\nBall bl-1: fix\n\nthe body runs on"),
+        "Ball bl-1: fix"
     );
     // Unstamped (foreign / hand-typed): the goal is its own payload, and its
     // first non-blank line is the headline.
-    let plain = br#"{"messages":[{"role":"user","content":"\n\nwire the gate\nsecond line"}]}"#;
     assert_eq!(
-        extract_request_preview(plain).as_deref(),
-        Some("wire the gate")
+        payload_headline("\n\nwire the gate\nsecond line"),
+        "wire the gate"
     );
     // A stamp and nothing else previews as nothing — the row falls to rung three.
-    let bare = br#"{"messages":[{"role":"user","content":"You are stench-pug."}]}"#;
-    assert_eq!(extract_request_preview(bare).as_deref(), Some(""));
+    assert_eq!(payload_headline("You are stench-pug."), "");
 }
 
+/// An empty `goal.md` is a goal that says nothing, not an absent one — absence
+/// is the read's own `None` (see the `goal.md`-removed repo test).
 #[test]
-fn extract_request_preview_returns_none_on_bad_json() {
-    assert!(extract_request_preview(b"not json").is_none());
-}
-
-#[test]
-fn extract_request_preview_returns_none_without_messages() {
-    assert!(extract_request_preview(br#"{"model":"m"}"#).is_none());
-}
-
-#[test]
-fn extract_request_preview_returns_none_when_messages_empty() {
-    assert!(extract_request_preview(br#"{"messages":[]}"#).is_none());
-}
-
-/// The real lernie child shape: step-001 request content is a block array,
-/// and the first `text` block carries the goal.
-#[test]
-fn extract_request_preview_reads_first_text_block_of_a_block_array() {
-    let json = br#"{"messages":[{"role":"user","content":[{"text":"wire the gate\nsecond line","type":"text"}]}]}"#;
-    assert_eq!(
-        extract_request_preview(json).as_deref(),
-        Some("wire the gate")
-    );
-}
-
-#[test]
-fn extract_request_preview_skips_non_text_blocks_to_the_first_text_block() {
-    let json = br#"{"messages":[{"role":"user","content":[{"type":"image","source":{}},{"type":"text","text":"the goal"}]}]}"#;
-    assert_eq!(extract_request_preview(json).as_deref(), Some("the goal"));
-}
-
-#[test]
-fn extract_request_preview_returns_none_when_array_has_no_text_block() {
-    let empty = br#"{"messages":[{"role":"user","content":[]}]}"#;
-    assert!(extract_request_preview(empty).is_none());
-    let no_text = br#"{"messages":[{"role":"user","content":[{"type":"image","source":{}}]}]}"#;
-    assert!(extract_request_preview(no_text).is_none());
-}
-
-#[test]
-fn extract_request_preview_returns_none_when_content_is_neither_shape() {
-    let json = br#"{"messages":[{"role":"user","content":42}]}"#;
-    assert!(extract_request_preview(json).is_none());
+fn payload_headline_of_an_empty_goal_is_empty() {
+    assert_eq!(payload_headline(""), "");
 }
 
 #[test]

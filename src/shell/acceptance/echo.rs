@@ -194,6 +194,16 @@ fn a_start_is_a_row_in_the_operators_own_words_on_the_next_frame() {
     let messages = world.ws.join("agents/c-2/messages");
     std::fs::create_dir_all(&messages).unwrap();
     std::fs::write(messages.join("001-user.md"), SAID).unwrap();
+    // And what the driver wrote is what the driver writes: the operator's
+    // payload in `goal.md`, while the context it assembled for the model opens
+    // with the §3.7 pinned-instruction frame. The two part here, so the flip
+    // below is a claim about which one the row reads (bl-368d).
+    std::fs::write(world.ws.join("agents/c-2/goal.md"), SAID).unwrap();
+    std::fs::write(
+        world.ws.join("steps/c-2/001/request.json"),
+        br#"{"model":"m","messages":[{"role":"user","content":[{"type":"text","text":"<file path=\"instructions/00/AGENTS.md\">\nhouse rules\n</file>"},{"type":"text","text":"---\nfrom: operator\n---\n\nunbar it"}]}]}"#,
+    )
+    .unwrap();
     converge_ws(&mut world);
 
     let landed = rows_named(&world, MINTED_FIRST);
@@ -210,6 +220,12 @@ fn a_start_is_a_row_in_the_operators_own_words_on_the_next_frame() {
     assert_eq!(
         landed[0].root_id, "c-2",
         "the row is now the real branch, keyed by its agent id"
+    );
+    assert_eq!(
+        landed[0].subtitle(),
+        SAID,
+        "and the flip changed nothing about what it says: still the operator's \
+         text, not the assembled context's head"
     );
 }
 

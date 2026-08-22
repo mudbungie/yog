@@ -41,6 +41,42 @@ impl Fixture {
         path
     }
 
+    /// Overwrite `agents/<conv-id>/goal.md` — the operator's payload in its one
+    /// home (§3.3), which the enumerate pass reads as a plain file rather than
+    /// out of the branch. `build_agent` seeds it from the same string it seeds
+    /// the step record with; this parts the two, which is the only way to say
+    /// which one a preview came from.
+    pub(super) fn write_goal(&self, conv_id: &str, goal: &str) {
+        let dir = self.path.join("agents").join(conv_id);
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("goal.md"), goal).unwrap();
+    }
+
+    /// Write `steps/<conv-id>/001/request.json` as the **assembled context**
+    /// lernie really sends (bl-368d): a block array whose first `text` block is
+    /// the §3.7 pinned-instruction frame, the operator's message behind it
+    /// inside its deposit envelope. Every other fixture writes `content` as a
+    /// plain string, which is why nothing here ever saw the head the operator
+    /// was shown.
+    pub(super) fn write_assembled_request(&self, conv_id: &str) {
+        let step_dir = self.path.join("steps").join(conv_id).join("001");
+        fs::create_dir_all(&step_dir).unwrap();
+        let request_json = serde_json::json!({
+            "model": "m",
+            "messages": [{"role": "user", "content": [
+                {"type": "text",
+                 "text": "<file path=\"instructions/00/AGENTS.md\">\nhouse rules\n</file>"},
+                {"type": "text",
+                 "text": "---\nfrom: operator\n---\n\nunbar the postern"},
+            ]}],
+        });
+        fs::write(
+            step_dir.join("request.json"),
+            serde_json::to_vec_pretty(&request_json).unwrap(),
+        )
+        .unwrap();
+    }
+
     /// Write a tool-call `input.json` (and optionally `output.json`)
     /// under `<workspace>/steps/<conv-id>/<seq>/tools/<tool_id>/`. Mirrors
     /// the executor's on-disk shape (ARCH §3.3): `input.json` lands first

@@ -255,15 +255,42 @@ fn from_repo_reads_a_descent_childs_name_by_the_same_query() {
     assert_eq!(child.name.as_deref(), Some("quiet-heron"));
 }
 
+/// Two facts, two sources since bl-368d: the preview is the goal on disk, the
+/// streaming text is the step record. Take the goal away and the preview goes
+/// silent even though the step record is still sitting there.
 #[test]
-fn from_repo_agent_without_request_json_drops_preview() {
+fn from_repo_agent_without_a_goal_on_disk_drops_preview() {
     let fx = Fixture::new();
     fx.build_agent("20260422T130000Z-xxxx", "seed");
-    // Remove the step record: preview and streaming text derive from
-    // disk (§2.3), so both go silent.
-    std::fs::remove_dir_all(fx.path.join("steps/20260422T130000Z-xxxx")).unwrap();
+    std::fs::remove_file(fx.path.join("agents/20260422T130000Z-xxxx/goal.md")).unwrap();
     let tree = GitTree::from_repo(&fx.path).unwrap();
     assert_eq!(tree.agents.len(), 1);
     assert!(tree.agents[0].preview.is_none());
+    // And the step record's own fact is untouched by that: it holds a request
+    // and no response, so the stream is silent for its own reason.
     assert!(tree.agents[0].stream.text.is_none());
+}
+
+/// The defect bl-368d closed. A root's **assembled context** opens with the
+/// §3.7 pinned-instruction frame and wraps a deposit in its `---` envelope, so
+/// a preview read off `request.json` showed `<file path="instructions/…">`
+/// where the operator's words belong. The payload's home is `goal.md` and that
+/// is what the row reads — the assembled request is written here, carrying the
+/// frame, and contributes nothing.
+#[test]
+fn from_repo_previews_the_goal_not_the_assembled_contexts_pinned_frame() {
+    let fx = Fixture::new();
+    let id = "20260422T131500Z-frm0";
+    fx.build_agent(id, "seed");
+    fx.write_goal(
+        id,
+        "You are slate-newt.\n\nunbar the postern\n\nthe body runs on",
+    );
+    fx.write_assembled_request(id);
+    let tree = GitTree::from_repo(&fx.path).unwrap();
+    assert_eq!(
+        tree.agents[0].preview.as_deref(),
+        Some("unbar the postern"),
+        "the operator's headline, not the frame's opening tag"
+    );
 }
