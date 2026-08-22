@@ -127,12 +127,41 @@ fn whole<R>(ui: &mut egui::Ui, body: impl FnOnce(&mut egui::Ui) -> R) -> R {
     .inner
 }
 
-/// One line: toggle, tone-painted prefix, and the payload — inline as the
-/// preview while contracted, or below in full while expanded. A row whose
-/// payload already fits the line has an empty body and shows it inline
-/// always, so nothing is hidden behind a fold that would reveal nothing. A
-/// turn's aggregate row has no payload of its own: what its fold reveals is
-/// the step rows the projection puts after it.
+/// One chrome line of a row — stripe, toggle, label, inline preview — with §11
+/// rule 1 stated at the row rather than inherited: chrome is one line and
+/// elides rather than running off the pane, wherever the transcript is seated.
+fn chrome(ui: &mut egui::Ui, body: impl FnOnce(&mut egui::Ui)) {
+    ui.horizontal(|ui| {
+        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
+        body(ui);
+    });
+}
+
+/// What the prefix stands for, hovered (bl-2335) — the §11 glyph doctrine
+/// applied to a name: the glance gets the agent, the hover gets the config fact
+/// behind it. A label that says everything it has to say hovers nothing.
+fn hover(row: &Row, label: egui::Response) {
+    if !row.hover.is_empty() {
+        label.on_hover_text(&row.hover);
+    }
+}
+
+/// A row: the speaker's own line where somebody is speaking, then the payload
+/// line — toggle, machinery label, and the payload inline as the preview while
+/// contracted — with the full body below while expanded. A row whose payload
+/// already fits the line has an empty body and shows it inline always, so
+/// nothing is hidden behind a fold that would reveal nothing. A turn's
+/// aggregate row has no payload of its own: what its fold reveals is the step
+/// rows the projection puts after it.
+///
+/// **The speaker is not the output** (bl-f3fc, operator ruling). A speaking row
+/// wore its label in the body's own ink on the body's own line, so the eye had
+/// nothing to separate who spoke from what they said. The label now takes the
+/// line above the payload and the role's hue — `theme::role_badge`, the one
+/// mapping the stripe and the pending queue already read, so no hue is minted.
+/// Machinery rows (`role: None` — thinking, tool calls, results, raw bytes, the
+/// turn aggregate) are one line still: nobody is speaking, so there is no
+/// speaker to set apart, and their tone-painted prefix keeps its seat.
 ///
 /// **One fact decides three things** (bl-7654). `row.body.is_empty()` — the
 /// projection's own spelling of *"is there anything behind this?"* — says
@@ -148,22 +177,26 @@ fn render_row(ui: &mut egui::Ui, row: &Row, folds: &mut HashSet<String>) {
     // abridged prose — an aggregate has no payload of its own and its preview
     // is empty — so this is exactly "a body exists and is folded away".
     let abridged = inline && !row.body.is_empty();
-    ui.horizontal(|ui| {
-        // §11 rule 1, stated at the row rather than inherited: the chrome of a
-        // row — stripe, toggle, prefix — is one line and elides rather than
-        // running off the pane, wherever the transcript is seated.
-        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
-        // The §11 role stripe (bl-3acb): who this row speaks for, at the left
-        // edge, from the one mapping the pending queue reads too. Every row
-        // allocates the seat, so machinery rows keep the toggles aligned.
-        theme::role_stripe(ui, row.role);
+    if let Some(role) = row.role {
+        chrome(ui, |ui| {
+            // The §11 role stripe (bl-3acb): who this row speaks for, at the
+            // left edge, from the one mapping the label now reads too.
+            theme::role_stripe(ui, Some(role));
+            let label = ui.colored_label(theme::role_badge(role).0, &row.prefix);
+            hover(row, label);
+        });
+    }
+    chrome(ui, |ui| {
+        // Every line allocates the stripe seat, so the toggles stay aligned
+        // down the whole chat; the hue is spent once, on the line that names
+        // the speaker.
+        theme::role_stripe(ui, None);
+        // The toggle rides the payload line — the line it folds — so a run
+        // marked as cut always has its triangle on its own laid band.
         toggle(ui, row, folds);
-        // The label is the speaker; what it stands for hovers (bl-2335) — the
-        // §11 glyph doctrine applied to a name: the glance gets the agent, the
-        // hover gets the config fact behind it.
-        let label = paint(ui, row.tone, &row.prefix);
-        if !row.hover.is_empty() {
-            label.on_hover_text(&row.hover);
+        if row.role.is_none() {
+            let label = paint(ui, row.tone, &row.prefix);
+            hover(row, label);
         }
         if inline && !row.preview.is_empty() {
             preview(ui, &row.preview, abridged);

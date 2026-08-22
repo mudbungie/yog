@@ -6830,7 +6830,7 @@ move content down.
 
   So the row is a **block, not a file**: a delivered message, one model text
   block, one thinking block, one tool call, one tool result, the live tail —
-  each is exactly one line (a `prefix` label plus the payload's clipped first
+  each is one row (a `prefix` label plus the payload's clipped first
   line) that folds open to its whole payload. A model message that says
   something and then calls two tools is three rows, because it is three
   things. A payload that already fits its line has nothing to fold and shows
@@ -6855,6 +6855,24 @@ move content down.
   `tool_use_id`s are dropped from the parsed view — the model is the
   conversation's model line's fact (§9.4, the §11 bottom settings rows) and
   the ids are plumbing the Raw toggle still shows verbatim.
+
+  **A speaking row spends two lines, and only a speaking row (bl-f3fc,
+  operator ruling 2026-08-21).** The density rule above is a rule about
+  *things* — one row per block — and it had been read as a rule about text
+  lines too, which cost the surface the one distinction it most needed: the
+  speaker label sat inline with the payload in the payload's own default ink,
+  so a delivered message reached the glass as one undifferentiated run and the
+  eye could not tell speaker from output. The label now takes **the line above
+  its payload**, inked in the role's own hue from the one mapping the stripe
+  already reads (`theme::role_badge` — still no hue minted, below).
+  **Machinery rows are unchanged and stay one line**: thinking, tool calls,
+  tool results, raw bytes and the turn aggregate wear the empty role seat
+  because nobody is speaking, so there is no speaker to set apart and their
+  tone-painted prefix keeps its seat beside the preview. Every line allocates
+  the stripe seat, so the toggles stay aligned down the whole chat; the hue is
+  spent once, on the line that names the speaker. And the fold toggle stays on
+  the **payload** line — the line it folds — so the triangle invariant below
+  still reads on a single laid band.
 
   **Anything hidden is hidden behind a triangle (bl-7654).** Model output was
   being elided rather than shown, which is two defects at once: the content was
@@ -7025,9 +7043,16 @@ move content down.
   pending queue both paint through it, so a message looks the same pending as
   it does delivered — one spelling of the mapping, two seats reading it. The
   stripe paints no glyph, so per the glyph doctrine the words ride the
-  mapping and every stripe hovers them (the discoverability invariant). It is
-  styling only: no reordering, no relabeling, and the crossing rules and turn
-  rollups keep their own seats untouched.
+  mapping and every stripe hovers them (the discoverability invariant). It was
+  **styling only** — no reordering, no relabeling, the crossing rules and the
+  turn rollups keeping their own seats untouched — and **the operator's ruling
+  of bl-f3fc (2026-08-21) lifts half of that**: one stripe at the row's edge was
+  not separation enough, so the same mapping now inks the **speaker label**
+  too, and a speaking row lays that label on a line of its own above the
+  payload (the density amendment above). No relabeling still holds — the prefix
+  string is untouched, and so are the stripe itself, the crossing rules and the
+  rollups. What moved is where the label is painted and what colour it is
+  painted in: one mapping still, spent in three seats now rather than two.
 
   **A step in flight expands itself (bl-1f21).** The surface shows a lot
   happening while it is happening — streamed thinking directly visible, for

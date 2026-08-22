@@ -17,7 +17,7 @@
 
 /// What the center column is showing (§11 altitude 1). Exactly one at a time,
 /// per-instance viewport ephemera (§13.1) held in the shell's RAM.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum CenterTab {
     /// The selected conversation and its altitude-2 inspector — the home tab,
     /// and the only one with a composer, which is why every focus request

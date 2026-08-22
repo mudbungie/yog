@@ -123,8 +123,15 @@ fn scrolling_up_releases_the_tail_and_growth_does_not_recapture_it() {
         "growth must not recapture a released view:\n{painted}"
     );
     // Returning to the tail re-engages the anchor: further growth rides again.
+    // The gesture must be **drained**, not merely landed. egui hands a wheel
+    // turn to the view over many frames (`unprocessed_scroll_delta`, flushed
+    // whole only once it decays under one point), and a leftover point spent
+    // on the frame the transcript GROWS is a scroll gesture in egui's eyes —
+    // it un-sticks the anchor at the one moment stick-to-bottom was about to
+    // re-seat it, and the view then parks a row short of the tail forever. So
+    // this loop is sized to outlast the decay, not to settle the paint.
     let _ = event_frame(&ctx, &t, wheel(-9000.0));
-    for _ in 0..20 {
+    for _ in 0..40 {
         painted = event_frame(&ctx, &t, Vec::new());
     }
     assert!(

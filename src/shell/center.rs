@@ -76,7 +76,14 @@ pub(super) fn render(
         super::focus::center(state, CenterTab::Conversation);
     }
     strip(ui, model, state, offered);
-    match state.center {
+    // **Each tab's widgets are its own** (bl-f3fc). egui derives a widget's id
+    // from its seat in the tree, and every tab is built at the same seat — so
+    // the Conversation transcript's scroll area and the Config pane's were one
+    // id, sharing one stored offset: a chat riding its tail (§11) handed Config
+    // that offset and the pane opened already scrolled past its first rows. The
+    // tab is the discriminator, said once here rather than as a salt per
+    // surface, and it dissolves the class rather than this one pair.
+    ui.push_id(state.center, |ui| match state.center {
         CenterTab::Conversation => super::workspace::center(ui, model, state, lernie, bz),
         CenterTab::Config => super::config_edit::center(ui, model, state),
         CenterTab::Login => {
@@ -84,7 +91,7 @@ pub(super) fn render(
             super::login_pane::login_section(ui, &mut state.wall.login, bz, &state_root);
         }
         CenterTab::Search => super::search_pane::pane(ui, model, state, &answer, searching),
-    }
+    });
 }
 
 /// Whether the conversation's own bottom stack paints this frame — the

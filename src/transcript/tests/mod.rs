@@ -29,6 +29,7 @@ mod legible;
 mod parity;
 mod render;
 mod rows;
+mod speaker;
 mod spine;
 mod tail;
 mod turns;
