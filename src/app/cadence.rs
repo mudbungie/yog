@@ -81,11 +81,36 @@ impl Default for Cadence {
 
 impl Cadence {
     /// How long a wound must persist before the §11 banner paints it
-    /// (§7.2, bl-90bf): one cheap-sweep tick (the worst case before the poll
-    /// that re-probes liveness marks the root) plus one debounce window (what
-    /// the mark then waits before it is due to re-derive).
+    /// (§7.2, bl-90bf) — **the rising edge's own latency** (bl-18e8), summed
+    /// over the cadence's terms rather than asserted as a constant. It is the
+    /// whole distance between the instant disk changes and the instant a frame
+    /// can hold the snapshot that says so:
+    ///
+    /// - one **cheap sweep** — the coarsest signal that can mark the root at
+    ///   all. A driver *taking* its flock emits no fs event, and the §7.2
+    ///   targeted re-probe looks only at agents already Live/InFlight
+    ///   (`derive::liveness::needs_liveness_reprobe`), so a resting agent
+    ///   coming alive has no poll of its own.
+    /// - one **debounce** — the coalescing window the mark then waits.
+    /// - one **pass**, at its widest bound: a derivation publishes once at its
+    ///   end and may be queued behind a *full* sweep of every workspace, which
+    ///   is the period that sweep is budgeted ([`late_pass`](Self::late_pass),
+    ///   bl-4b28 — a real workspace cannot re-derive inside the cheap one).
+    /// - one **[`ASK_PERIOD`](crate::wire::asker::ASK_PERIOD)** — the
+    ///   boundary's own poll, between the worker publishing and the frame
+    ///   holding the answer (REMOTE §9.7).
+    ///
+    /// It was cheap sweep + debounce alone until bl-18e8, spelled there as
+    /// "the catch-up bound itself". That is the bound on **marking** the root,
+    /// not on the fact reaching the frame, and the two legs it omitted are the
+    /// larger two. Under it a healthy send flashed the alarm the window exists
+    /// to prevent — arriving, on a default cadence, some fifteen seconds
+    /// before the truth did.
     pub fn wound_grace(&self) -> Duration {
-        self.cheap_sweep.saturating_add(self.debounce)
+        self.cheap_sweep
+            .saturating_add(self.debounce)
+            .saturating_add(self.late_pass(super::dirty::Sweep::Full))
+            .saturating_add(crate::wire::asker::ASK_PERIOD)
     }
 
     /// How long one derivation pass may take before it is itself drift (§7.2)
@@ -185,7 +210,9 @@ mod tests {
             cheap_sweep: Duration::from_secs(4),
             full_sweep: Duration::from_secs(30),
         };
-        assert_eq!(c.wound_grace(), Duration::from_millis(4200));
+        // cheap sweep + debounce + the full-sweep pass bound + one ask period
+        // — every leg of the rising edge, off the tuned bases (bl-18e8).
+        assert_eq!(c.wound_grace(), Duration::from_millis(34_700));
         // Both pass bounds are tuned bases, not one of them (bl-4b28).
         assert_eq!(
             c.late_pass(super::super::dirty::Sweep::Cheap),
@@ -198,7 +225,7 @@ mod tests {
         assert_eq!(c.stale_after(), Duration::from_mins(1));
         // And the defaults reproduce the pre-bl-3381 consts byte-for-byte.
         let d = Cadence::default();
-        assert_eq!(d.wound_grace(), Duration::from_millis(2100));
+        assert_eq!(d.wound_grace(), Duration::from_millis(17_600));
         assert_eq!(d.stale_after(), Duration::from_secs(30));
     }
 }

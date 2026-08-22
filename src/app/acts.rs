@@ -32,7 +32,7 @@ use std::path::PathBuf;
 #[derive(Default)]
 pub struct Acts {
     post: Post,
-    roots: BTreeMap<Ticket, PathBuf>,
+    roots: BTreeMap<Ticket, Vec<PathBuf>>,
 }
 
 impl crate::AppModel {
@@ -49,10 +49,10 @@ impl crate::AppModel {
     /// poster does both, off-frame — so a surface built on this paints the act
     /// as in flight and the receipt whenever it arrives.
     pub fn post_act(&mut self, action: &Action) -> Ticket {
-        let root = self.act_root(action);
+        let roots = self.act_roots(action);
         let envelope = codec::encode(&Gesture::Act(action.clone()));
         let ticket = self.acts.post.send(&envelope);
-        self.acts.roots.insert(ticket, root);
+        self.acts.roots.insert(ticket, roots);
         ticket
     }
 
@@ -63,27 +63,43 @@ impl crate::AppModel {
     }
 
     /// One frame's act duty (§7.2): take the receipts that landed and mark each
-    /// act's root dirty now that the engine has finished with it. One channel
+    /// act's roots dirty now that the engine has finished with it. One channel
     /// drain and, with nothing in flight, nothing else — which is every frame
     /// but the handful after a click.
     pub(super) fn settle_acts(&mut self) {
         for ticket in self.acts.post.settle() {
-            if let Some(root) = self.acts.roots.remove(&ticket) {
-                self.mark_dirty([root]);
+            if let Some(roots) = self.acts.roots.remove(&ticket) {
+                self.mark_dirty(roots);
             }
         }
     }
 
-    /// Which root an act's effect lands in (§7.1): the project a ball verb
-    /// names, or the yog state root every `lernie` verb's `ops.jsonl` line lands
-    /// under. Read from the **action**, which is the one thing that knows which
-    /// substrate it touched — and resolved at the fire, against the enumeration
-    /// the operator clicked against.
-    fn act_root(&self, action: &Action) -> PathBuf {
-        action
+    /// Which roots an act's effect lands in (§7.1) — read from the **action**,
+    /// which is the one thing that knows what it touched, and resolved at the
+    /// fire against the enumeration the operator clicked against.
+    ///
+    /// Two, because a gesture writes in two places and the §7.1 roots are
+    /// disjoint. Its **substrate** root is the project a ball verb names, or
+    /// the yog state root every `lernie` verb's `ops.jsonl` line lands under.
+    /// Its **workspace** is whatever the boundary's own address table answers
+    /// ([`Action::workspace`]), when the enumeration holds that name.
+    ///
+    /// **The workspace half is bl-18e8.** A `Message` names no project, so a
+    /// send used to request the yog state root alone — and the deposit that
+    /// creates the mail-on-tail state therefore never asked for the
+    /// re-derivation that clears it, leaving the §7.3/§13.3 banners' liveness
+    /// half waiting on an fs event and a whole sweep. The act that changed a
+    /// workspace is the one thing that knows it changed: naming it here is
+    /// what makes the deposit schedule its own catch-up.
+    fn act_roots(&self, action: &Action) -> Vec<PathBuf> {
+        let substrate = action
             .project()
             .and_then(|name| self.derivation().project_path(&name).ok())
-            .unwrap_or_else(|| self.roots.yog_state.clone())
+            .unwrap_or_else(|| self.roots.yog_state.clone());
+        let workspace = action
+            .workspace()
+            .and_then(|name| self.derivation().ws_path(&name).ok());
+        std::iter::once(substrate).chain(workspace).collect()
     }
 }
 

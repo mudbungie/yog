@@ -86,6 +86,79 @@ fn the_window_states_why_the_chat_stopped_answering() {
     );
 }
 
+/// **The rising edge itself** (bl-18e8) — the beat the two above could not
+/// be: they hand-place a world that is *already* orphaned and ask what the
+/// window does to it, so the only latency they ever drive is the gate's own.
+/// This one drives the healthy send: the driver takes the agent's lock and
+/// delivers the mail under it (lernie §2.11), so disk reads "delivered mail
+/// on the tail" the instant the deposit returns while the published snapshot
+/// still says nobody is driving. Nothing is wrong; the cache is behind.
+///
+/// The catch-up is not a sweep tick. It is the whole §7.2 chain — the
+/// coalescing window, then a derivation pass that may be queued behind a full
+/// sweep of every workspace, then one `ASK_PERIOD` before the frame holds the
+/// published answer — and every leg of it is read off the model's own cadence
+/// here rather than spelled. Walk the clock along that chain and the alarm
+/// must be silent at every step of it, which under the old sizing — cheap
+/// sweep plus debounce, 2.1 s on the shipped rhythm — it was not: the operator
+/// got a second of ichor red on a send that worked.
+///
+/// The coalescing window is turned off ([`super::inbox_composer::quick`]) for
+/// the reason every other clock-driven drive turns it off: it is the *worker's*
+/// wall clock, not this test's, and the suite holds no sleeps. The legs that
+/// matter are the two the old window never covered.
+#[test]
+fn a_healthy_send_never_flashes_the_alarm_while_the_snapshot_catches_up() {
+    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let mut world = super::inbox_composer::quick(world());
+    let ws = world.ws.clone();
+    world.model.focus_agent(&ws, "c-1");
+    world.model.select_tab(InspectorTab::Transcript);
+    let clock = FakeClock::new();
+    world.state.orphan_grace = WoundGrace::new(Arc::new(clock.handle()));
+    world.converge();
+
+    // The send, as the §5.1 #28 probe actually reads it: the driver's own fd on
+    // the agent's inbox directory, held by this process, and the mail delivered
+    // under that lock. The published snapshot has seen neither.
+    let driver = std::fs::File::open(ws.join("inbox/c-1")).expect("the inbox dir");
+    orphaned_mail(&world, None);
+
+    let cadence = world.model.cadence();
+    let chain = [
+        cadence.debounce,
+        // The pass bound at its widest — `Cadence::late_pass` of a full sweep,
+        // which is the period a full sweep is budgeted (bl-4b28).
+        cadence.full_sweep,
+        crate::wire::asker::ASK_PERIOD,
+    ];
+    for leg in chain {
+        let text = painted(&mut world, &lernie, &bl);
+        assert!(
+            !text.contains(ORPHANED_MAIL),
+            "the send is healthy; the snapshot is merely behind:\n{text}"
+        );
+        clock.advance(leg);
+    }
+
+    // The snapshot catches up — the driver was holding the lock all along, so
+    // the state clears and the window closes on nothing. A whole grace further
+    // on, and the alarm has still never been on screen.
+    super::inbox_composer::converge_ws(&mut world);
+    // One round trip for the catch-up to reach the frame: a landed answer is
+    // adopted on the refresh after the frame that kept its question standing,
+    // so this paint is the one that carries it — and it is still inside the
+    // window, so it could not have banner-ed either way.
+    let _ = painted(&mut world, &lernie, &bl);
+    clock.advance(cadence.wound_grace());
+    let text = painted(&mut world, &lernie, &bl);
+    assert!(
+        !text.contains(ORPHANED_MAIL),
+        "a state that healed leaves nothing behind:\n{text}"
+    );
+    drop(driver);
+}
+
 /// A launch that died without ever writing a word still banners — the
 /// state is the fact, and the banner says outright that nothing on disk
 /// explains it.
