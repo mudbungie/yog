@@ -94,7 +94,7 @@ fn a_start_with_no_branch_yet_folds_in_as_a_pending_conversation() {
 #[test]
 fn a_follow_up_folds_onto_the_agent_it_was_aimed_at() {
     let derived = snap(vec![agent("c-1", None, 2)]);
-    let echo = Echo::messaged(&derived, Path::new(WS), "c-1", "and again", 42);
+    let echo = Echo::messaged(&derived, Path::new(WS), "c-1", "and again", 0, 42);
     assert_eq!(echo.baseline, 2, "the baseline is what has already landed");
     let agents = folded(&derived, &echo);
 
@@ -112,7 +112,7 @@ fn a_follow_up_folds_onto_the_agent_it_was_aimed_at() {
 #[test]
 fn an_echo_retires_exactly_when_its_message_lands_and_not_before() {
     let before = snap(vec![agent("c-1", None, 2)]);
-    let echo = Echo::messaged(&before, Path::new(WS), "c-1", "and again", 42);
+    let echo = Echo::messaged(&before, Path::new(WS), "c-1", "and again", 0, 42);
     assert!(!echo.landed(&before), "nothing has landed yet");
     // Anything short of a new message file holds it — a moved tip or a
     // streaming token is not the fact the echo is waiting for.
@@ -164,7 +164,7 @@ fn nothing_pending_folds_nothing_and_an_absent_target_invents_nothing() {
     // A follow-up whose agent is gone (deleted under it) folds nothing: the
     // start arm is the only one that mints a row, because it is the only one
     // whose subject legitimately has no branch yet.
-    let orphan = Echo::messaged(&derived, Path::new(WS), "gone", "hello?", 5);
+    let orphan = Echo::messaged(&derived, Path::new(WS), "gone", "hello?", 0, 5);
     assert_eq!(folded(&derived, &orphan), derived.trees[&ws()].agents);
 }
 
@@ -177,4 +177,38 @@ fn a_start_into_a_workspace_with_no_tree_still_paints_its_row() {
     let rendered = compose(&derived, Some(&echo), None, None);
     assert_eq!(rendered.trees[&ws()].agents.len(), 1);
     assert_eq!(rendered.trees[&ws()].agents[0].agent_id, "stench-pug");
+}
+
+/// **The fold stops pushing once the derivation carries the deposit** (§7.2,
+/// bl-78d8). This is the same yielding the queue seat does, at the snapshot
+/// altitude — and the seat that pays for it here is the `✉n` badge, which
+/// counts `pending` and so counted the operator's one message twice for as long
+/// as it sat undelivered. `landed` cannot cover it: the badge's own listing
+/// carries the deposit an entire step boundary before `messages/` does.
+#[test]
+fn the_snapshot_fold_yields_its_deposit_rather_than_doubling_it() {
+    let derived = snap(vec![agent("c-1", None, 2)]);
+    // Queued against a roster showing no pending mail at all.
+    let echo = Echo::messaged(&derived, Path::new(WS), "c-1", "and again", 0, 42);
+    assert!(!echo.deposited(0), "nothing has arrived to stand for it");
+    assert!(
+        echo.deposited(1),
+        "a longer listing is the deposit, counted"
+    );
+
+    let mut carried = agent("c-1", None, 2);
+    carried.pending = vec![echo.deposit()];
+    let folded = folded(&snap(vec![carried]), &echo);
+    assert_eq!(
+        folded[0].pending.len(),
+        1,
+        "the derivation's deposit stands alone: no second copy of one message"
+    );
+    assert_eq!(
+        folded[0].last_action_unix, 42,
+        "and the row still rises — the send is an action either way"
+    );
+    // The message has not landed, so the echo itself is still held: the two
+    // predicates answer two questions and neither stands in for the other.
+    assert!(!echo.landed(&derived));
 }

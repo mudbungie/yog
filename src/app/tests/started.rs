@@ -137,7 +137,7 @@ fn a_message_echoes_without_claiming_the_focus() {
         .and_then(|t| t.agents.first().map(|a| a.messages))
         .expect("the fixture's conversation");
 
-    model.await_message(&h.ws, "c-1", "and again");
+    model.await_message(&h.ws, "c-1", "and again", 0);
     model.refresh();
     let echoed = model
         .tree(&h.ws)
@@ -200,7 +200,7 @@ fn an_idle_frame_refolds_nothing_and_hands_back_the_same_pointer() {
         "nothing pending, nothing published: the same snapshot, not a copy of it"
     );
 
-    model.await_message(&h.ws, "c-1", "and again");
+    model.await_message(&h.ws, "c-1", "and again", 0);
     model.refresh();
     let folded = Arc::clone(&model.snap);
     assert!(!Arc::ptr_eq(&quiet, &folded), "a new echo is a new fold");
@@ -209,4 +209,57 @@ fn an_idle_frame_refolds_nothing_and_hands_back_the_same_pointer() {
         Arc::ptr_eq(&folded, &model.snap),
         "and holding the same echo over the same derivation folds nothing again"
     );
+}
+
+/// One deposit as the answered §11 listing spells it.
+fn listed(name: &str, body: &str) -> crate::inboxview::InboxEntry {
+    crate::inboxview::InboxEntry {
+        name: name.into(),
+        raw: body.as_bytes().to_vec(),
+        deposit: crate::inboxview::Deposit {
+            sender: Some("user".into()),
+            body: body.into(),
+            ..crate::inboxview::Deposit::default()
+        },
+    }
+}
+
+/// **The queue seat's own reconciliation** (§7.2, bl-78d8), which is the third
+/// projection's half of `rows`' *"freshened and never duplicated"*: the echo
+/// folds onto the answered listing while that listing is still the one the act
+/// was queued against, and yields the moment it grows — because what grew it is
+/// the deposit this echo stands for.
+///
+/// The key is the listing's **length**, never its text. `landed` cannot serve
+/// here and that is the whole reason there are two predicates: the §8.2 verb is
+/// piped, so the file is on disk before the receipt mints the echo, while
+/// `messages/` only moves at the driver's next step boundary — seconds in which
+/// the queue held the solid deposit and the faded echo side by side, saying the
+/// same words.
+#[test]
+fn the_queue_echo_yields_the_moment_the_answer_carries_its_deposit() {
+    let h = Harness::new();
+    let (_c, mut model) = h.model();
+    model.focus_agent(&h.ws, "c-1");
+    // Queued against a seat showing one deposit — the baseline the act carries.
+    model.await_message(&h.ws, "c-1", "and again", 1);
+    let stale = vec![listed("user-001.md", "already mail")];
+    let echoed = model.echoed_pending("c-1", stale.clone());
+    assert_eq!(echoed.len(), 2, "the answer has not moved: the echo shows");
+    assert!(echoed[1].in_memory(), "and it is yog's word, not disk's");
+    assert_eq!(echoed[1].deposit.body, "and again");
+
+    // The listing grows: the file the echo stood in for is in the answer.
+    let mut fresh = stale.clone();
+    fresh.push(listed("user-002.md", "and again"));
+    let yielded = model.echoed_pending("c-1", fresh.clone());
+    assert_eq!(yielded, fresh, "one row, and it is the deposit's own");
+    assert!(
+        !yielded.iter().any(crate::inboxview::InboxEntry::in_memory),
+        "nothing faded is left beside it (§7.2)"
+    );
+
+    // Another conversation's queue is not this echo's seat, however long its
+    // own listing is — the target is matched before the count is read.
+    assert_eq!(model.echoed_pending("c-2", stale.clone()), stale);
 }

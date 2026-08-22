@@ -187,3 +187,44 @@ fn a_deposit_with_no_file_is_the_faded_one() {
         "faded until the derivation makes it a statement"
     );
 }
+
+/// **One message is one row, in two tones** (§7.2, bl-78d8). The beat above
+/// codifies two rows as *correct* — for two different deposits, which is what a
+/// queue is for. The same message is the other case, and it was the operator's:
+/// the echo and the file it stands for are one row at two strengths, never a
+/// pair. The seat that builds the listing is where that is decided
+/// (`AppModel::echoed_pending`), so this projection is handed one entry either
+/// way — what it must do is paint the same words under the same header at the
+/// tone the entry's own file-ness dictates, and key the row by whichever one it
+/// got, so a fold override cannot survive the handover onto the real deposit.
+#[test]
+fn the_same_message_is_one_row_before_and_after_its_file_exists() {
+    let said = "unbar it";
+    let echo = InboxEntry {
+        name: String::new(),
+        ..entry("", "user", "t1", said)
+    };
+    let pending = rows("c-1", &[echo], &Titles::default(), &HashSet::new());
+    let landed = rows(
+        "c-1",
+        &[entry("user-002.md", "user", "t1", said)],
+        &Titles::default(),
+        &HashSet::new(),
+    );
+    assert_eq!(pending.len(), 1, "the echo alone");
+    assert_eq!(landed.len(), 1, "and the deposit alone");
+    assert_eq!(pending[0].preview, landed[0].preview, "the same words");
+    assert_eq!(pending[0].header, landed[0].header, "under the same header");
+    assert_eq!(pending[0].role, landed[0].role, "wearing the same stripe");
+    assert_eq!(pending[0].tone, crate::transcript::Tone::Weak);
+    assert_eq!(
+        landed[0].tone,
+        crate::transcript::Tone::Plain,
+        "brightening is that same row at full strength (§7.2)"
+    );
+    assert_ne!(
+        pending[0].key, landed[0].key,
+        "keyed by the deposit's own inbox path, which the echo has none of — so \
+         a fold override dies with the pending row rather than riding onto the file"
+    );
+}

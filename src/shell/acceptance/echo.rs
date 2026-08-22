@@ -15,6 +15,10 @@
 //! it. Then land the message on disk, converge, and prove the echo gave its seat
 //! up instead of doubling it.
 
+/// **One message is one queue row** (§7.2, bl-78d8) — the seat where the echo
+/// must *give way* rather than appear, split off at §12's budget on that seam.
+mod queue;
+
 use super::fixture::{MINTED_FIRST, World, fake_lernie, seed_world, world};
 use super::screen::{Screen, press};
 use tempfile::tempdir;

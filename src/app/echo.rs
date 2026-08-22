@@ -25,7 +25,6 @@ use super::Snapshot;
 use crate::git_tree::{Agent, AgentState};
 use crate::inboxview::{Deposit, InboxEntry};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 /// The deposit sender an echo speaks for — the operator, exactly as a real
 /// `user` deposit's frontmatter says it, so a pending row reads identically
@@ -61,6 +60,13 @@ pub(crate) struct Echo {
     /// behind a baseline no landing could ever pass. Zero for a start, whose
     /// root does not exist.
     pub(crate) baseline: usize,
+    /// How many deposits the §11 queue seat could show when the act was
+    /// **queued** — the second, narrower baseline (§7.2, bl-78d8), counted over
+    /// the inbox listing rather than over `messages/`. Zero for a start, which
+    /// is queued against no inbox at all, and zero for a seat whose standing
+    /// ask had not answered yet: both showed nothing, which is the general path
+    /// at zero items rather than a case of its own.
+    pub(crate) queue_baseline: usize,
     /// Wall-clock seconds at the send: the deposit header's `at`, and the
     /// recency that lifts the row.
     pub(crate) at_unix: i64,
@@ -76,18 +82,22 @@ impl Echo {
             target: Target::Conversation(conversation.to_owned()),
             text: goal.to_owned(),
             baseline: 0,
+            queue_baseline: 0,
             at_unix,
         }
     }
 
-    /// The echo a §8.2 `message` leaves: the agent it was aimed at and the
-    /// counter high-water already landed there, read off the derivation the
-    /// gesture was fired against.
+    /// The echo a §8.2 `message` leaves: the agent it was aimed at, the counter
+    /// high-water already landed there — read off the derivation the gesture
+    /// was fired against — and `queued`, the queue seat's own baseline, which
+    /// only the seat that fired can know (it is what that seat's standing ask
+    /// showed *before* the piped verb ran).
     pub(crate) fn messaged(
         snap: &Snapshot,
         ws: &Path,
         agent: &str,
         content: &str,
+        queued: usize,
         at_unix: i64,
     ) -> Self {
         let target = Target::Agent(agent.to_owned());
@@ -99,6 +109,7 @@ impl Echo {
             target,
             text: content.to_owned(),
             baseline,
+            queue_baseline: queued,
             at_unix,
         }
     }
@@ -127,6 +138,20 @@ impl Echo {
         index_of(derived, &self.ws, &self.target)
             .and_then(|i| derived.trees.get(&self.ws)?.agents.get(i))
             .is_some_and(|a| a.messages > self.baseline)
+    }
+
+    /// Whether an inbox listing of `shown` deposits already carries the one
+    /// this echo stands for (§7.2, bl-78d8) — the **queue seat's** narrower
+    /// reconciliation, beside [`landed`](Self::landed)'s. Two predicates
+    /// because there are two facts: `landed` asks whether the *derivation*
+    /// shows the message (which is also the §3.4 claim's spend), and this asks
+    /// only whether the seat can show the *deposit* — which happens far sooner,
+    /// because the §8.2 verb is piped and writes the file before the receipt
+    /// that mints this echo. Counted, never matched, exactly as `landed` is: a
+    /// listing longer than the one the act was queued against is the deposit,
+    /// and no text was read to say so.
+    pub(crate) fn deposited(&self, shown: usize) -> bool {
+        shown > self.queue_baseline
     }
 
     /// This echo as the pending deposit it is (§5.1 #11) — the same shape a
@@ -205,61 +230,12 @@ fn index_of(snap: &Snapshot, ws: &Path, target: &Target) -> Option<usize> {
         })
 }
 
-/// **The one place the derivation and the non-derived facts meet** (§7.2): the
-/// snapshot a frame paints is the worker's, with the pending `echo`, the
-/// focused conversation's live `tail` and the §3.4 `raised` wall
-/// ([`super::raise`]) folded in. Every render seat reads the result and none of
-/// them knows any of the three exists.
-///
-/// The two are folded here rather than each somewhere convenient because that
-/// is the whole partition: **one function writes the painted snapshot**, so
-/// "what does a frame see that disk does not say?" has one answer to read, and
-/// a third such fact is a third argument here rather than a third mechanism.
-///
-/// With nothing pending and nothing streaming this is a pointer clone, so the
-/// ordinary case allocates nothing and the rendered `Arc` is the derived one —
-/// which is also why the caller may only run this when one of its inputs moved:
-/// a fresh `Arc` every frame would make `SnapMemo` rebuild per frame, the exact
-/// cost bl-e90a removed.
-pub(crate) fn compose(
-    derived: &Arc<Snapshot>,
-    echo: Option<&Echo>,
-    tail: Option<&super::live::LiveTail>,
-    raised: Option<&Path>,
-) -> Arc<Snapshot> {
-    if echo.is_none() && tail.is_none() && raised.is_none() {
-        return Arc::clone(derived);
-    }
-    let mut snap = (**derived).clone();
-    if let Some(tail) = tail {
-        super::live::overlay(&mut snap, tail);
-    }
-    if let Some(ws) = raised {
-        super::raise::fold(&mut snap, ws);
-    }
-    let Some(echo) = echo else {
-        return Arc::new(snap);
-    };
-    let tree = snap.trees.entry(echo.ws.clone()).or_default();
-    match index_of(derived, &echo.ws, &echo.target) {
-        // The target is on the roster: the echo is one more undelivered
-        // deposit on it, and the send is an action, so the row rises.
-        Some(i) => {
-            if let Some(agent) = tree.agents.get_mut(i) {
-                agent.pending.push(echo.deposit());
-                agent.last_action_unix = agent.last_action_unix.max(echo.at_unix);
-            }
-        }
-        // It is not: a start whose branch does not exist yet, which is the
-        // whole of what the operator could not see.
-        None => {
-            if let Target::Conversation(name) = &echo.target {
-                tree.agents.push(echo.pending_conversation(name));
-            }
-        }
-    }
-    Arc::new(snap)
-}
+/// **The echo folded into the snapshot** (§7.2) — the fold this module's doc
+/// calls the one place snapshot and pending meet, in its own file at §12's
+/// budget (bl-78d8). Re-exported so `echo::compose` stays the one name every
+/// caller and every citation knows it by.
+mod fold;
+pub(crate) use fold::compose;
 
 /// **The echo at the row altitude** (REMOTE §9.7, bl-44e9) — the same fold, over
 /// an answered §11 list instead of over a snapshot, because that surface reads a

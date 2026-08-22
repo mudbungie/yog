@@ -45,14 +45,24 @@ impl crate::app::AppModel {
     /// echo is the newest thing said. A **start**'s echo adds nothing here —
     /// its conversation has no id yet, so no seat is asking this question about
     /// it, and the row it does mint is [`rows::with_echo`]'s.
+    ///
+    /// **And it yields the moment the answer carries the deposit**
+    /// ([`super::Echo::deposited`], bl-78d8). The §8.2 verb is piped, so a follow-up's
+    /// file is on disk before the receipt that mints the echo; what lags is
+    /// this seat's own ask, and the answer that catches up *is* the row. Folding
+    /// unconditionally painted both — one solid, one faded, same words — until
+    /// a whole-workspace derivation seconds later retired the echo, which is
+    /// §7.2's "brightening is that same row at full strength" broken at the one
+    /// seat it was written for.
     pub fn echoed_pending(&self, agent: &str, pending: Vec<InboxEntry>) -> Vec<InboxEntry> {
         let Some(ws) = self.focused_workspace() else {
             return pending;
         };
-        let mine = self
-            .started
-            .as_ref()
-            .filter(|echo| echo.ws == ws && echo.target == Target::Agent(agent.to_owned()));
+        let mine = self.started.as_ref().filter(|echo| {
+            echo.ws == ws
+                && echo.target == Target::Agent(agent.to_owned())
+                && !echo.deposited(pending.len())
+        });
         match mine {
             Some(echo) => pending.into_iter().chain([echo.deposit()]).collect(),
             None => pending,

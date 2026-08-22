@@ -2598,6 +2598,37 @@ The frame's whole interface to everything that does is the cells in
     drift instrumentation exists to avoid: `last_action_unix` moves on a single
     streaming token and `tip_oid` on any step commit, so either would retire the
     echo while the operator's message was still missing — the defect, restored.
+  - **The QUEUE seat has a second key, narrower and faster, and needs one**
+    (bl-78d8). The count above answers *"has the derivation shown the message?"*,
+    which is the right question for the §3.4 claim and the wrong one for the §11
+    inbox-composer queue: the echo's seat there is the **inbox listing**, and a
+    follow-up's deposit reaches that listing an entire step boundary before
+    `messages/` moves. Between those two moments the queue held **two rows for
+    one message** — the solid deposit and the faded echo, the same words, side by
+    side — which is the promise below broken at the one seat it was written for.
+    So an echo records a second baseline: **how many deposits its seat could show
+    when the act was QUEUED**, and it yields that seat the moment the listing
+    exceeds it. Two facts, two predicates, and neither stands in for the other.
+    - **Queue time, not receipt time.** The §8.2 verb is piped and run to
+      completion, so by the receipt that mints the echo the deposit is already on
+      disk; a count taken then would include the very file the echo stands for
+      and retire it at birth. The baseline is therefore the *seat's* to supply —
+      read off the standing `Query::Inbox` the region above the box already
+      paints from — and it is carried on the held act, which is the last moment
+      it is knowable.
+    - **Still a count, never the text.** The §11 rule holds unchanged: the echo
+      and the deposit say the same words by construction, so words cannot tell
+      them apart. A listing longer than the one the act was queued against is the
+      deposit, and nothing was read to say so.
+    - **Zero is the general path, not a case.** A start is queued against no
+      inbox at all, and a seat whose standing ask has not answered showed
+      nothing; both baseline at zero and the rule reads correctly for each.
+    - **What it does not do.** It retires a *seat*, not the echo — §3.4's claim
+      still spends on `messages/`, per the bullet below. A drain that did not also
+      flush would shrink the listing back under the baseline and seat the echo
+      again, which no substrate does: the delivery commit that empties the inbox
+      is the same commit that writes `NNN-user.md`, and that write retires the
+      echo outright.
   - **Landing and the §3.4 claim are one event, not two.** One predicate retires
     the echo and spends the focus claim, in `adopt_started` — so the pending
     value has one lifetime and there is no state in which yog holds half of it.
@@ -2634,6 +2665,18 @@ The frame's whole interface to everything that does is the cells in
     the driver's next step boundary, so the identical hole was open there. One
     `Echo` with two target arms covers both; there is no start-only path, and no
     second thing to build when the same complaint is made about a reply.
+    - **What that sentence left out, and what it cost** (bl-78d8). A follow-up's
+      deposit is two writes at two rates, not one: the piped verb writes
+      `inbox/<agent>/` **synchronously**, and only the flush into `messages/`
+      waits for the step boundary. Reading the two as one hole made the
+      `messages/` count the only reconciliation an echo had — so from the first
+      fresh inbox answer until a whole-workspace derivation caught up, the queue
+      appended the echo beside the deposit it stood for and the operator saw
+      their own message twice. The gap the echo actually fills at that seat is
+      an **ask period**, not a step boundary: what the queue paints between
+      Enter and the next `Query::Inbox` answer. The queue-seat baseline above is
+      that hole's own key, and the two arms still share one `Echo` — the second
+      key is a field on it, not a second mechanism beside it.
 - **The live tail: the focused conversation's open `response.json`, followed at
   frame cadence** (`src/app/live.rs`, bl-54f7). Text did not stream back in
   while the model was thinking or writing: yog reads directly from the
@@ -8582,10 +8625,12 @@ beside `main.rs`.
 | `src/app/derive{,/route,/sweeps,/liveness,/worker}.rs` | the derivation worker (§7.2): its state and one pass; the §7.1 dirty-root routing table; the two sweeps, reconcile, the fetch cadence and re-deriving one root — the work every sweep ends in, moved beside them at the budget (bl-4b28); **which cached liveness observations are evicted and on which signal** — the sweep's poll for agents that can die silently and the watcher's refresh for agents that can come alive, complements by construction (§10, bl-1015); the thread that drives the pass |
 | `src/app/dirty.rs` | Change→dirty-root mapping, debounce/sweep scheduling over the live `Cadence`, `watch::Mark` provenance (§7.2) |
 | `src/app/drift.rs` | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |
-| `src/app/echo.rs` | the pending echo (§7.2, §3.4, bl-915e): the §3.4 start claim's value, the landed-message reconciliation, the expiry bound, and the **one** fold of the derivation + every non-derived fact into the snapshot the frame paints (the echo, and the §7.2 live tail) |
+| `src/app/echo.rs` | the pending echo (§7.2, §3.4, bl-915e): the §3.4 start claim's value, its **two** reconciliations — the landed-message count that retires the echo, and the queue-seat count that retires only its §11 seat (bl-78d8) — the expiry bound, and the projections a fold hands a seat |
+| `src/app/echo/fold.rs` | the **one** fold of the derivation + every non-derived fact into the snapshot the frame paints (the echo, the §7.2 live tail, the §3.4 raised wall), split off `echo.rs` at this section's budget (bl-78d8) on the seam that module draws three ways — one file per altitude, and still one module owning every fold, so *"what does a frame see that disk does not say?"* has one place to read |
 | `src/app/echo/rows.rs` | the **same** echo at the ROW altitude (REMOTE §9.7, bl-44e9): the §11 list reads a `Reply::Conversations` now, so the fold that reached it through the composed snapshot has to reach it through the answer instead — a start's pending conversation leads the list, a follow-up freshens the row it named, and a target the answer no longer carries adds nothing. Beside `echo.rs` rather than anywhere convenient, for that file's own single-source reason: one module owns every projection of the echo |
-| `src/app/echo/seat.rs` | what a **frame** asks of the echo — the two doors a seat folds an answer through, split off `echo.rs` at the budget on the seam it already drew (bl-b4b5): the §11 list's rows, and the composer's queue, which is the echo's *third* projection since the pending listing became `Query::Inbox`' answer. Both orchestration, never derivation: the rows are the engine's and the optimism is the seat's |
-| `src/app/focus.rs` | the §6/§11 **selection**: the roster ladder (↑/↓, jump-to-attention), the pin/collapse writes, the seen-acknowledgement, and the §3.4 start claim a fire leaves for the first roster that carries its root. Not `shell/focus.rs`, which owns the keyboard |
+| `src/app/echo/seat.rs` | what a **frame** asks of the echo — the two doors a seat folds an answer through, split off `echo.rs` at the budget on the seam it already drew (bl-b4b5): the §11 list's rows, and the composer's queue, which is the echo's *third* projection since the pending listing became `Query::Inbox`' answer — and, since bl-78d8, the door that **yields** that projection the moment the answer carries the deposit it stands for. Both orchestration, never derivation: the rows are the engine's and the optimism is the seat's |
+| `src/app/focus.rs` | the §6/§11 **selection**: the roster ladder (↑/↓, jump-to-attention), the pin/collapse writes, the seen-acknowledgement, and the startup focus. Not `shell/focus.rs`, which owns the keyboard |
+| `src/app/focus/claim.rs` | the §3.4 **start claim** a fire leaves for the first roster that carries its root, and the §7.2 echo it carries — one value with one lifetime: minted by a fire, painted by the seats, carried forward against each derivation until the world shows what it stood in for. Split off `focus.rs` at this section's budget (bl-78d8) on the seam that module's own doc already drew: the selection surface is about rows that exist, this is about the one that does not yet |
 | `src/app/grace.rs` | the §7.3 wound banner's grace window (bl-90bf): the render-layer age gate over the same injected clock, so a wound that heals inside the rising edge's own latency (`Cadence::wound_grace`, re-sized to all four of its legs in bl-18e8) never flashes |
 | `src/app/line.rs` | the §8.5 line context: the seat's focus read as what a slash command elides — the §3.2 stamp a `bl` verb carries (the focused ball's claimant, else the workspace's own name), derived here so a typed verb and a clicked one cannot aim differently |
 | `src/app/live{,/follow}.rs` | the §7.2 **live tail** (bl-54f7) under the in-memory carve-out: the value, its fold onto the painted snapshot, the model's side of the hand-off — and, in `follow`, the append-following read of the focused conversation's open `response.json` and the thread that drives it. The split is *what the tail promises* vs *how the bytes are gathered* |
@@ -8698,6 +8743,7 @@ beside `main.rs`.
 | `src/shell/acceptance/drafts.rs` (excl.) | the bl-a69a drive that a draft belongs to its target |
 | `src/shell/acceptance/drift.rs` (excl.) | the §9.4 drift drive (bl-2d19): a conversation whose config lineage advanced past it states its freeze and offers **both** exits — the one that keeps it (`retarget`) and the one that starts over — on that sentence's own row inside the settings seat, read off painted glyphs rather than the strings handed to the widgets; and the other direction, an undrifted conversation offered neither, which is what makes the first beat evidence |
 | `src/shell/acceptance/echo.rs` (excl.) | the bl-915e drive (a start and a follow-up each read on the frame *immediately* after Enter, with the substrate pinned to prove no derivation ran, then landed and re-read to prove the echo gave its seat up rather than doubling it) |
+| `src/shell/acceptance/echo/queue.rs` (excl.) | the bl-78d8 drive, split from `echo.rs` at this section's budget on the seam between an echo **appearing** and an echo **giving way**: one message is one §11 queue row through the whole lifecycle — faded while the deposit is unwritten, solid the instant the listing carries the file, gone on the delivery commit — counted by painted `✉` headers, because the echo and the deposit say the same words and no assertion over those words could tell them apart. Its second beat hands the fake `lernie` a `message` arm that **writes the deposit**, which is the ordering the operator hit and the one arrangement no earlier beat had ever set up: every previous fake wrote nothing, so appending unconditionally was indistinguishable from yielding |
 | `src/shell/acceptance/elision.rs` (excl.) | the §11 rule 1b regression on the two witness rows (the Login verb behind the longest provider name, `assign → <ws>` behind an arbitrary ball title), each asserted in both directions and against the panel's own edge, on painted glyphs rather than galley text — and beside them L4's other question, *where* a row cuts (bl-3aa1): two activity ops sharing the audit's invariant path prefix are laid in the real trail, and the glyphs show each row ending in the leaf and agent id that tell it from the other, where the head-keeping cut painted both rows as one identical line |
 | `src/shell/acceptance/first_run.rs` (excl.) | the bl-3b62 drive that a stranger reaches a **populated** §8.3 roster from the empty world before spending a turn — Ctrl+Shift+3 from inside the bootstrap box, every row on the glass with its credential fact, the sphere named (and named *derived*, since a focused world names its own), and the wall those rows and any sign-in are bound to proved to be the one the first message founds — plus bl-8c2d's consume, that a default install's roster carries a pressable Login on the shipped oauth2 row (found by seat, not by string: `Login` is painted three times on that window) while the keyed rows still name the config editor |
 | `src/shell/acceptance/fixture/world.rs` (excl.) | the acceptance `World` and **the wire standing behind it** (REMOTE §9.8, bl-1747): the populated fixture a test drives, its derivation stepped by hand, and the two channel ends the frame's reads and acts are answered on — every act the window fires is posted now, so a fixture with nothing behind its end of the channel is a window whose every gesture is refused. It stands in for the transport and nothing else: the questions go through `AppModel::answer` and the acts through `boundary::dispatch::dispatch` over a `ui.json` opened fresh per gesture, which is answer 3's *engine writes, window adopts* paid in full. Split from `fixture.rs` at §12's budget on the seam the two halves already had — the builder mints the world's bytes once, this holds what a test then does to it. `World::drain` is the **one** definition of settling the wire to a fixed point (bl-13f9), spent by both drivers: a chained read — the §11 step drill-in, whose sequence name is picked out of the step list that landed — is why counting passes stopped being enough |

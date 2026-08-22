@@ -56,7 +56,18 @@ enum Owes {
     /// are nowhere in yog until then. **Held on the receipt rather than on the
     /// synchronous `Ok`** (§9.8 ruling 3) — the echo and the receipt stay two
     /// facts at two rates, and only the trigger moved.
-    Message { agent: String, content: String },
+    ///
+    /// `queued` is the §11 queue seat's reconciliation baseline (§7.2,
+    /// bl-78d8): how many deposits that seat's standing `Query::Inbox` showed
+    /// when this act was **posted**. It is read here and carried because here
+    /// is the last moment it is knowable — the verb runs piped, so by the
+    /// receipt the deposit is already on disk and a count taken then would
+    /// retire the echo at birth.
+    Message {
+        agent: String,
+        content: String,
+        queued: usize,
+    },
     /// A landed §8.1 `Prepare`: the §3.4 workspace adoption, then either the
     /// goal box on the prefill or — for the composer's own Enter, which carries
     /// its typed text straight through — the chained `Prompt`.
@@ -123,6 +134,7 @@ pub(super) fn deposit(
             Owes::Message {
                 agent: agent.clone(),
                 content: content.clone(),
+                queued: shown(model, ws, agent),
             }
         }
         _ => Owes::Nothing,
@@ -148,6 +160,18 @@ pub(super) fn line(
         _ => Owes::Nothing,
     };
     hold(model, state, ws, action, Seat::Line(key.clone()), owes);
+}
+
+/// How many deposits the §11 queue is showing for `agent` **right now**
+/// (bl-78d8) — the echo's queue-seat baseline, read off the very ask the region
+/// above the box paints from (`inspector::inbox`, one memoized standing
+/// question, so this costs nothing the frame was not already asking). An
+/// unanswered ask showed nothing, which is the same count at zero rather than a
+/// case of its own.
+fn shown(model: &mut AppModel, ws: &Path, agent: &str) -> usize {
+    super::inspector::inbox(model, ws, agent)
+        .value
+        .map_or(0, |entries| entries.len())
 }
 
 /// Post and hold — the one place this seat mints a ticket.
@@ -216,8 +240,15 @@ fn acted(
 ) -> bool {
     use crate::boundary::reply::Reply;
     match (&acting.owes, landed) {
-        (Owes::Message { agent, content }, _) => {
-            model.await_message(&acting.ws, agent, content);
+        (
+            Owes::Message {
+                agent,
+                content,
+                queued,
+            },
+            _,
+        ) => {
+            model.await_message(&acting.ws, agent, content, *queued);
             false
         }
         (Owes::Prepared { goal }, Ok(Reply::Prepared(prepared))) => {
