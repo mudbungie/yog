@@ -1,6 +1,6 @@
 [package]
 name = "yog"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2024"
 description = "yog: a balls-oriented session manager for lernie loops (egui frontend)"
 license = "MIT"
