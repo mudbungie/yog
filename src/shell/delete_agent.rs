@@ -145,6 +145,11 @@ fn window(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     egui::Window::new(format!("delete conversation {}", confirm.name))
         .collapsible(false)
         .resizable(false)
+        // Centred for `super::delete`'s reason (bl-86a5): egui's automatic
+        // cascade seats an unanchored window wherever the frame's other areas
+        // leave room, which for a tall dialog is with its own fire button off
+        // the bottom edge.
+        .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
         .open(&mut shown)
         .show(ctx, |ui| body(ui, model, state, &confirm));
     if !shown {
@@ -171,13 +176,19 @@ fn body(
         ui.colored_label(theme::ICHOR, &state.delete_agent.error);
         return;
     };
-    ui.label("children that die with it:");
-    if census.descendants.is_empty() {
-        ui.weak("(none)");
-    }
-    for id in &census.descendants {
-        ui.weak(id);
-    }
+    // The descendant list is unbounded, so it scrolls in its own room and the
+    // arming row below it cannot be pushed off the screen — `super::delete`'s
+    // [`census_room`](super::delete::census_room) is the one definition of that
+    // rule (bl-86a5). The deposit count is one line and stays outside it.
+    super::delete::census_room(ui, "delete-agent-census", &mut |ui| {
+        ui.label("children that die with it:");
+        if census.descendants.is_empty() {
+            ui.weak("(none)");
+        }
+        for id in &census.descendants {
+            ui.weak(id);
+        }
+    });
     ui.label(format!(
         "pending inbox deposits that die: {}",
         census.pending_deposits

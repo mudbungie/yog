@@ -132,6 +132,15 @@ fn window(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
     egui::Window::new(format!("delete workspace {}", confirm.name))
         .collapsible(false)
         .resizable(false)
+        // **A modal owns the frame, so it opens in the middle of one** (§11,
+        // bl-d921; seated by bl-86a5). Unanchored, egui gives a new window an
+        // *automatic cascade* position derived from the areas already on
+        // screen — measured at 2560x1700 that put this dialog's title 1190 pt
+        // down, with its own fire button below the bottom edge, and its
+        // `constrain` then walked it back up one step per frame while the
+        // operator watched. A destructive confirmation may not be reachable
+        // only after it has finished crawling.
+        .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
         .open(&mut shown)
         .show(ctx, |ui| body(ui, model, state, &confirm));
     if !shown {
@@ -147,10 +156,12 @@ fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, confirm
         theme::ICHOR,
         "this destroys the workspace and everything inside it — irrecoverably",
     );
-    ui.label("conversations that die:");
-    enumerate(ui, &confirm.conversations, "(none)");
-    ui.label("balls released:");
-    enumerate(ui, &confirm.ball_ids(), "(none)");
+    census_room(ui, "delete-workspace-census", &mut |ui| {
+        ui.label("conversations that die:");
+        enumerate(ui, &confirm.conversations, "(none)");
+        ui.label("balls released:");
+        enumerate(ui, &confirm.ball_ids(), "(none)");
+    });
     ui.separator();
     if confirm.refused() {
         ui.colored_label(
@@ -190,6 +201,40 @@ fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, confirm
     if !state.delete.error.is_empty() {
         ui.colored_label(theme::ICHOR, &state.delete.error);
     }
+}
+
+/// **A census scrolls in its own room** (§11 rule 6 as extended by bl-86a5) —
+/// the one definition, shared with [`super::delete_agent`]'s dialog because
+/// both have the same shape and the same defect.
+///
+/// §3.6 mandates the concrete enumeration and nothing bounds how long one is: a
+/// dialog window is `resizable(false)` and sized by its content, so a wall with
+/// enough conversations in it laid its own arming field and fire button past the
+/// bottom of the screen, where they are clipped away and unreachable — a
+/// destructive dialog that cannot be fired, and (worse) cannot be read before
+/// firing. The enumeration is therefore a bounded viewport and everything the
+/// operator must *act* on stays outside it, below, where the census cannot move
+/// it. Half the screen is the ceiling every other sized surface divides
+/// ([`crate::layout::panel_ceiling`]) — one home, so a dialog and a panel
+/// cannot disagree about what half means.
+pub(super) fn census_room(ui: &mut egui::Ui, salt: &str, rows: &mut dyn FnMut(&mut egui::Ui)) {
+    let cap = crate::layout::panel_ceiling(ui.ctx().screen_rect().height());
+    // **The cap is handed to the ui, not only to the scroll** — `shell::settings`
+    // one door over, and for the same lock. A `ScrollArea` takes the *available*
+    // size at most, and inside a window sized by its own content that is last
+    // frame's height, so the two settle on each other wherever the first frame
+    // happened to land: measured, the census took every point the window had
+    // and the arming row below it was clipped away for good. A scope carrying
+    // the cap breaks the loop — the region grows with its content up to half
+    // the screen, then scrolls, and what is below it is seated against a height
+    // that no longer depends on what was below it last frame.
+    ui.scope(|ui| {
+        ui.set_max_height(cap);
+        egui::ScrollArea::vertical()
+            .id_salt(salt)
+            .max_height(cap)
+            .show(ui, rows);
+    });
 }
 
 /// One list section, or the empty-state word — the dialog names concretely.

@@ -76,6 +76,14 @@ pub(super) fn conversations(
     // between rows.
     let rows = crate::nav::convs::visible(&forest, &state.expanded);
     let ctx = super::conv_row::RowCtx::of(model, ws);
+    // **The room this scrolls in is what the column's bands left it** (§11 rule
+    // 6 as extended by bl-86a5, `super::navigator`), and it is clipped to
+    // exactly that room — rule 1 on the vertical axis, `shell::pane::body`'s
+    // note one level up: a scroll body's own clip rect is its viewport grown by
+    // egui's `clip_rect_margin`, and against a band docked hard beneath it
+    // those few points are the bottom of a conversation row painted over the
+    // balls section's first line.
+    ui.set_clip_rect(ui.clip_rect().intersect(ui.available_rect_before_wrap()));
     egui::ScrollArea::vertical().show(ui, |ui| {
         if state.group_by_ball {
             // The grouping is a partition of the visible rows and asserts no

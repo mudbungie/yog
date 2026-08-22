@@ -82,6 +82,10 @@ pub(super) fn seed_world(world: &World) {
     std::fs::write(lernie_home.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
+/// The crowd [`Roster::Crowded`] lays on top of the shipped world — its own
+/// file per §12's budget.
+pub(in crate::shell::acceptance) mod crowd;
+
 /// The world a test drives, and the wire behind it — its own file per §12's
 /// budget.
 mod world;
@@ -98,6 +102,13 @@ enum Roster {
     /// `shell::bootstrap` paints: `shell::workspace::center` hands over to it
     /// exactly when `focused_workspace()` is `None`.
     Empty,
+    /// **A list taller than any window the audit renders** — the state every
+    /// §11 rule-5/6 claim about the navigator column is a claim *about*, and
+    /// the state no fixture in this suite could reach before bl-86a5. Its
+    /// wall is one of yog's own (§3.1) rather than foreign, because the §3.6
+    /// workspace delete exists nowhere else and its census is the other half
+    /// of what this roster is for. [`crowd`] holds its bytes.
+    Crowded,
 }
 
 pub(super) fn world_titled(title: &str) -> World {
@@ -122,6 +133,15 @@ pub(super) fn world() -> World {
 /// bootstrap ran against the start pane for as long as that fixture existed.
 pub(super) fn world_empty() -> World {
     build_world("hello", &Roster::Empty)
+}
+
+/// **A world whose conversation list outgrows the column** ([`Roster::Crowded`])
+/// — the fixture every §11 navigator-budget beat and both §3.6 census beats are
+/// driven over (bl-86a5). Identical to [`world`] in every other respect, so a
+/// beat that reddens under it and passes under [`world`] has found a defect of
+/// *length*, which is the only axis these two fixtures differ on.
+pub(super) fn world_crowded() -> World {
+    build_world("hello", &Roster::Crowded)
 }
 
 fn build_world(title: &str, roster: &Roster) -> World {
@@ -166,6 +186,9 @@ fn build_world(title: &str, roster: &Roster) -> World {
     // past every conversation and paint one on every settings surface.
     fx.commit_other(PROVIDERS, crate::test_support::TEMPLATE_PROVIDERS);
     fx.build_agent("c-1", title);
+    if *roster == Roster::Crowded {
+        crowd::seat(&fx);
+    }
     let messages = fx.path.join("agents/c-1/messages");
     std::fs::create_dir_all(&messages).unwrap();
     std::fs::write(messages.join("001-user.md"), "please ping").unwrap();
@@ -196,7 +219,20 @@ fn build_world(title: &str, roster: &Roster) -> World {
         "---\nfrom: user\ndeposited_at: t0\n---\nfollow-up message",
     );
     let lernie_workspaces = roots.lernie_data.join("workspaces");
-    let ws = lernie_workspaces.join("ws");
+    // **The crowded world's wall is one of yog's own** (§3.1's named root),
+    // where every other fixture's is foreign. Not decoration: §3.6 offers the
+    // workspace delete on a named wall and nowhere else, so a foreign wall's
+    // confirmation dialog closes on the frame it opens
+    // (`acceptance::focus::a_dismissed_modal_hands_the_keyboard_back` reads
+    // that as its own door) — and half of what this roster exists for is the
+    // dialog's own census.
+    let names_root = crate::binding::names_root(&yog_data);
+    let ws = if *roster == Roster::Crowded {
+        std::fs::create_dir_all(&names_root).unwrap();
+        names_root.join(crowd::WALL)
+    } else {
+        lernie_workspaces.join("ws")
+    };
     // The one line that makes a world empty: unlinked, the conversation is on
     // disk and invisible to enumeration, so the roster has nothing in it and
     // `startup_focus` has nothing to derive.
@@ -207,7 +243,7 @@ fn build_world(title: &str, roster: &Roster) -> World {
     let balls = Box::new(BlStore::new(env.balls_layout(), Cli::new("bl")));
     let (mut model, deriver) = AppModel::boot(
         roots,
-        (*roster == Roster::One).then(|| ws.clone()),
+        (*roster != Roster::Empty).then(|| ws.clone()),
         Arc::new(SystemClock),
         balls,
         Some("me".into()),

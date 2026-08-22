@@ -162,6 +162,25 @@ impl Fixture {
         self.write_step_record(conv_id, user_message);
     }
 
+    /// A **bare** agent branch: `agents/<conv_id>` pointed at the config tip,
+    /// and nothing else — no worktree, no dispatch commit, no compaction merge
+    /// and no step record. The ref namespace *is* the registry (ARCH §2.3), so
+    /// the enumeration answers with this conversation exactly as it does with a
+    /// built one; its row falls to the DESIGN §3.3 display ladder's last rung,
+    /// the id, which is what a beat names it by.
+    ///
+    /// One `git branch` where [`build_agent`](Self::build_agent) is a dozen
+    /// forks, two worktrees and a merge. That difference is what makes a
+    /// fixture of *many* conversations affordable at all (yog bl-86a5): the
+    /// column-budget beats need a list longer than any window, and they need
+    /// rows rather than transcripts.
+    pub(crate) fn build_bare_agent(&self, conv_id: &str) {
+        run_git(
+            &self.repo,
+            &["branch", &format!("agents/{conv_id}"), "config/default"],
+        );
+    }
+
     /// Commit a lernie-0.0.4 `name` blob on an existing agent's branch — the
     /// name fact's one home (`git show agents/<id>:name`, DESIGN §3.3 as ruled
     /// by bl-50f3). Empty `name` mirrors lernie's unnamed write. Re-adds the

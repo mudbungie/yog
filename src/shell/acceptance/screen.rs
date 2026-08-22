@@ -7,6 +7,12 @@ use super::super::render;
 use super::fixture::World;
 use crate::cli_outbound::Cli;
 
+/// **How a beat names a seat on the glass** — the paint-layer locator, split
+/// from the driver at §12's budget on the seam the two already had: this file
+/// is how a frame is *run*, `aim` is how a coordinate is found in one.
+mod aim;
+pub(super) use aim::{locate, rect_of, rects_of};
+
 /// The window under test: one persistent `egui::Context`, so focus carries
 /// frame to frame exactly as it does for the operator.
 pub(super) struct Screen {
@@ -14,6 +20,12 @@ pub(super) struct Screen {
     lernie: Cli,
     bl: Cli,
     bz: Cli,
+    /// The window this driver paints into, when a beat needs a **particular**
+    /// one (bl-86a5). `None` is [`super::input`]'s 1600x2400, which is taller
+    /// than any list the suite can build — so a §11 rule 5 budget defect in a
+    /// column that has to divide itself is invisible at that size, and a
+    /// pointer beat about one has to say which window it means.
+    size: Option<(f32, f32)>,
 }
 
 impl Screen {
@@ -28,6 +40,15 @@ impl Screen {
             lernie: Cli::new("/yog-absent-lernie"),
             bl: Cli::new("/yog-absent-bl"),
             bz: Cli::new("/yog-absent-bz"),
+            size: None,
+        }
+    }
+
+    /// The same driver on a window of a **named** size ([`Screen::size`]).
+    pub(super) fn sized(w: f32, h: f32) -> Self {
+        Self {
+            size: Some((w, h)),
+            ..Self::new()
         }
     }
 
@@ -123,7 +144,7 @@ impl Screen {
             // test would be the wrong one.
             modifiers: modifiers_of(&events),
             events,
-            ..super::input()
+            ..self.window()
         };
         self.ctx.run(input, |ctx| {
             render(
@@ -135,6 +156,15 @@ impl Screen {
                 &self.bz,
             );
         })
+    }
+
+    /// The raw input this driver's frames are laid into — its own size, or the
+    /// suite's default window.
+    fn window(&self) -> egui::RawInput {
+        match self.size {
+            Some((w, h)) => crate::paint_probe::screen_sized(w, h),
+            None => super::input(),
+        }
     }
 
     /// The right edge of the §11 conversation panel — the boundary between the
@@ -233,53 +263,6 @@ pub(super) fn click(screen: &Screen, world: &mut World, pos: egui::Pos2) {
             }],
         );
     }
-}
-
-/// The rect of the galley reading exactly `text` — how a pointer test names a
-/// seat without an `egui::Id` it has no way to know, and how a geometry test
-/// asks which panel a row landed in. The **first**, in paint order; a word one
-/// window paints twice needs [`rects_of`].
-pub(super) fn rect_of(shapes: &[egui::epaint::ClippedShape], text: &str) -> Option<egui::Rect> {
-    rects_of(shapes, text).into_iter().next()
-}
-
-/// **Every** rect a galley reading exactly `text` landed on. A label is not a
-/// seat: `Login` is on this window three times — the navigator entry, the §11
-/// tab strip's entry and the §8.3 row's verb — so a beat about the verb has to
-/// tell them apart by where they landed, which it cannot do from the first
-/// match alone.
-pub(super) fn rects_of(shapes: &[egui::epaint::ClippedShape], text: &str) -> Vec<egui::Rect> {
-    shapes
-        .iter()
-        .flat_map(|clipped| find(&clipped.shape, text))
-        .collect()
-}
-
-/// The centre of that rect — the coordinate a click is aimed at.
-pub(super) fn locate(shapes: &[egui::epaint::ClippedShape], text: &str) -> Option<egui::Pos2> {
-    rect_of(shapes, text).map(|r| r.center())
-}
-
-/// Over [`paint_probe::collect`] — the ONE walk — and not a private copy of it.
-///
-/// This *was* a copy, and it was the copy bl-bc06 fixed and bl-36c3 swept for:
-/// it matched on `Galley::text()`, which is the string that went IN. A row egui
-/// truncated to `Login (bz browser…` still reports the whole label, so this
-/// found it, handed back its rect, and the pointer test clicked confidently at
-/// a seat whose painted text was not what it named — the one defect the paint
-/// layer is the only witness for, aiming a click instead of reading a dump.
-/// Both earlier balls fixed the homes they knew about; this copy was private to
-/// the acceptance harness and survived both, which is why the check that
-/// forbids the shape now lives in `rules/no-hand-rolled-paint-walk.yml` rather
-/// than in anyone's memory (bl-70b8).
-fn find(shape: &egui::Shape, text: &str) -> Vec<egui::Rect> {
-    let mut painted = Vec::new();
-    crate::paint_probe::collect(shape, &mut painted);
-    painted
-        .into_iter()
-        .filter(|(seen, _)| seen == text)
-        .map(|(_, rect)| rect)
-        .collect()
 }
 
 pub(super) fn press(key: egui::Key, modifiers: egui::Modifiers) -> egui::Event {

@@ -6469,6 +6469,28 @@ settles below egui's stock floor.
    special case: a pane that cannot seat a row of composer has nothing to type
    into either.
 
+   **The navigator column divides itself by the same budget (bl-86a5), and its
+   priority runs the other way.** The column was written as a plain top-down
+   flow — the conversation list, then the balls section, the clients section
+   and the entries that focus Config and Login — and a `ScrollArea` sizes
+   itself from what is available and shrinks only for content *smaller* than
+   that. So a list taller than the panel took the whole column, and everything
+   declared after it laid out past the panel's bottom edge, where egui's own
+   panel clip made it invisible AND un-clickable. That cost the operator the
+   ⚙ Config entry, the only visible carrier of the §3.6 workspace delete: a
+   wall with a long enough conversation list could not be deleted through the
+   window at all. Read bottom-up the column is three bands — the entries at the
+   bottom edge, one budgeted band above them holding the balls and clients
+   sections, and the conversation list as the container's own content keeping
+   its half. **The doors hold nothing back**, because nothing below them has to
+   survive; the conversation pane's bottom band holds back the goal box's floor
+   for the opposite reason, and one rule states both (*a band holds back
+   whatever must outlive it*). The doors are all-or-nothing at their own floor
+   — a band that seats one of two entries is not a smaller band, it is the
+   delete door missing — and the balls band is nested inside that answer, so a
+   column too starved to seat the doors never seats the section above them
+   either.
+
 6. **What the remainder cannot show, it scrolls (bl-9551).** The budget
    guarantees the centre is at least half its pane; it cannot guarantee the
    surface *fits* in half a pane, and at 420×320 nothing does. A pane whose
@@ -6487,6 +6509,30 @@ settles below egui's stock floor.
    fully subscribed, and **no two painted galleys sharing pixels** — the
    audit's own `crop-s6-overlap.png` finding stated as arithmetic. That file
    also proves the walk bites, on a frame that really does stack two runs.
+
+   **A dialog's census is bounded by the same rule (bl-86a5).** §3.6 mandates
+   the concrete enumeration and nothing bounds how long one is; a confirmation
+   window is `resizable(false)` and sized by its content, so a wall with enough
+   conversations in it — or a conversation with enough descendants — laid its
+   own arming field and fire button below the bottom of the screen. That is a
+   destructive dialog that cannot be read before it is fired and cannot be
+   fired at all. The enumeration is therefore a bounded viewport of half the
+   screen (`layout::panel_ceiling`, the same half every sized surface divides)
+   and everything the operator must *act* on sits outside it, below, where the
+   census cannot move it — one home, `shell::delete::census_room`, spent by
+   both dialogs. Two mechanics come with it and neither is decoration. The cap
+   is handed to the **ui** and not only to the scroll, because a `ScrollArea`
+   takes the available size at most and inside a content-sized window that is
+   last frame's height, so the two otherwise settle on each other wherever the
+   first frame landed (`shell::settings` states the same lock one door over).
+   And both windows are **anchored centre-centre**: unanchored, egui gives a
+   new window an automatic cascade position derived from the areas already on
+   screen — measured at 2560×1700 that put the workspace dialog's title 1190 pt
+   down with its fire button off the bottom edge, and its `constrain` then
+   walked it back up one step per frame. A destructive confirmation may not be
+   reachable only after it has finished crawling. Pinned in
+   `shell/acceptance/reach.rs` beside the navigator's own doors, at every size
+   in `acceptance::SIZES`.
 
 
 7. **A control's width is a share of its row, never a constant (bl-76f8).**
@@ -8746,6 +8792,7 @@ beside `main.rs`.
 | `src/shell/acceptance/echo/queue.rs` (excl.) | the bl-78d8 drive, split from `echo.rs` at this section's budget on the seam between an echo **appearing** and an echo **giving way**: one message is one §11 queue row through the whole lifecycle — faded while the deposit is unwritten, solid the instant the listing carries the file, gone on the delivery commit — counted by painted `✉` headers, because the echo and the deposit say the same words and no assertion over those words could tell them apart. Its second beat hands the fake `lernie` a `message` arm that **writes the deposit**, which is the ordering the operator hit and the one arrangement no earlier beat had ever set up: every previous fake wrote nothing, so appending unconditionally was indistinguishable from yielding |
 | `src/shell/acceptance/elision.rs` (excl.) | the §11 rule 1b regression on the two witness rows (the Login verb behind the longest provider name, `assign → <ws>` behind an arbitrary ball title), each asserted in both directions and against the panel's own edge, on painted glyphs rather than galley text — and beside them L4's other question, *where* a row cuts (bl-3aa1): two activity ops sharing the audit's invariant path prefix are laid in the real trail, and the glyphs show each row ending in the leaf and agent id that tell it from the other, where the head-keeping cut painted both rows as one identical line |
 | `src/shell/acceptance/first_run.rs` (excl.) | the bl-3b62 drive that a stranger reaches a **populated** §8.3 roster from the empty world before spending a turn — Ctrl+Shift+3 from inside the bootstrap box, every row on the glass with its credential fact, the sphere named (and named *derived*, since a focused world names its own), and the wall those rows and any sign-in are bound to proved to be the one the first message founds — plus bl-8c2d's consume, that a default install's roster carries a pressable Login on the shipped oauth2 row (found by seat, not by string: `Login` is painted three times on that window) while the keyed rows still name the config editor |
+| `src/shell/acceptance/fixture/crowd.rs` (excl.) | the **crowded roster's** own bytes (bl-86a5): how many conversations `Roster::Crowded` seats, the §3.3 name each wears, the §3.1 name of the wall they hang under, and the one loop that builds them. Split from `fixture.rs` at §12's budget on the seam the builder already had — the shipped world is one thing, the crowd laid on top of it another. It exists because no fixture in this suite held more than **one** conversation, so 1900+ tests ran against a §11 column that never once had to divide itself, and rule 5's promise about that column had never been asked |
 | `src/shell/acceptance/fixture/world.rs` (excl.) | the acceptance `World` and **the wire standing behind it** (REMOTE §9.8, bl-1747): the populated fixture a test drives, its derivation stepped by hand, and the two channel ends the frame's reads and acts are answered on — every act the window fires is posted now, so a fixture with nothing behind its end of the channel is a window whose every gesture is refused. It stands in for the transport and nothing else: the questions go through `AppModel::answer` and the acts through `boundary::dispatch::dispatch` over a `ui.json` opened fresh per gesture, which is answer 3's *engine writes, window adopts* paid in full. Split from `fixture.rs` at §12's budget on the seam the two halves already had — the builder mints the world's bytes once, this holds what a test then does to it. `World::drain` is the **one** definition of settling the wire to a fixed point (bl-13f9), spent by both drivers: a chained read — the §11 step drill-in, whose sequence name is picked out of the step list that landed — is why counting passes stopped being enough |
 | `src/shell/acceptance/floor.rs` (excl.) | the §11 **focus floor** (bl-478d: Tab steps the frame's focus control by control, and Space presses what it reached — driven onto the balls fold, whose press is a durable §4.1 fact) |
 | `src/shell/acceptance/{focus,walk}.rs` (excl.) | the keyboard driver and the §11 focus-discipline drive it steers — `focus` its pointer/launch half, `walk` its keyboard half (bl-c21f: a roster step lands the composer in both directions, Ctrl+↓ continues the walk from inside the box, and Escape still releases to a live bare plane), each asserting the model's selection beside egui's `wants_keyboard_input` so a walk that never walked cannot pass |
@@ -8766,9 +8813,11 @@ beside `main.rs`.
 | `src/shell/acceptance/orphan.rs` (excl.) | the bl-ace6 drive (a conversation whose newest transcript entry is delivered mail while no driver holds the lock, rendered on the whole window: the dead driver's own `driver.log` sentence is in the paint output, the mute variant says outright that nothing on disk explains it, and the grace gate still withholds the alarm on the frame before the window elapses — the `acceptance/wound.rs` harness, on `ShellState::orphan_grace`). Plus **the rising edge** (bl-18e8): a healthy send — the driver's own fd on the agent's inbox directory, the mail delivered under it, the published snapshot behind on both — walked along every leg of the §7.2 catch-up chain read off the model's own cadence, silent at each, and silent again once the snapshot catches up |
 | `src/shell/acceptance/picker.rs` (excl.) | the bl-a842 drive that the §9.4 pane's **contents** reach the paint layer — the role strip the seeded `providers.yaml` declares, the blast-radius sentence a pick claims, and the fault a role on a row brazen lacks earns (bl-d9cb: the beat commits its own dead-row lineage, since lernie's pinned template names a live row and the retired judgement it used to assert was over a table nothing loads) — all of it behind the "cannot read `roles:`" early return until the fixture carried a config lineage, and none of it asserted by the two picker beats that measure the seat's *height* |
 | `src/shell/acceptance/raise.rs` (excl.) | the bl-9acf raise drive (one goal box, and a blank one fires nothing) |
+| `src/shell/acceptance/reach.rs` (excl.) | **what the operator must be able to press stays on the glass** (bl-86a5), at every size in `SIZES`: the navigator's ⚙ Config and Login entries under a list taller than the column, one click on that entry still focusing the Config tab, and each §3.6 dialog's arming field and fire button under a census that outgrows the screen. Read through `paint_probe::seen_of` narrowed to the screen rect — a run laid past a container's edge is painted into a clip nothing shows and no pointer reaches, and the laid rect alone cannot tell that from a run that fits. The pointer beat asserts the fixture *bites* first (some of the crowd on the glass, not all of it), because a column that never overflowed would pass on the very layout the file forbids |
 | `src/shell/acceptance/recall.rs` (excl.) | the bl-f908 drive (↑ pages back through the operator's own turns — pending ahead of delivered — ↓ hands the half-typed draft back verbatim, and a caret below the top row keeps its arrow) |
 | `src/shell/acceptance/refusal.rs` (excl.) | the bl-dc14 drive: a model carrying a wire refusal paints the engine's sentence and NO operable control, and the same world without one paints the shell — both directions, so the witness is the refusal and not a fixture that happens to paint nothing |
 | `src/shell/acceptance/remedies.rs` (excl.) | **S0 step 5 at the paint layer** (bl-9e10), the other half of `scripts/drive/beats_unseeded.sh`: the two declines an unfinished wall really produces, pinned verbatim off a real `run_unseeded` the way `wound`'s `BZ_REFUSAL` was pinned off bl-55d8's falsifying run, each rendered on the whole window with its ruled remedy read out of the paint output — the §9.1 route for the config kind (bl-dd7f) and Login for the auth kind (§8.3 rule 5). Three claims apiece and a negative between them, so a classifier that stopped telling the two apart fails rather than passing on either: the reason renders as itself, the remedy names its row, and a third class earns the reason and no route. The remedy's **control** is asserted as a difference in occurrence count, never as `contains("Config")` — the centre strip paints that word in every frame, so the containment is true of a window with no remedy on it |
+| `src/shell/acceptance/screen/aim.rs` (excl.) | **how a beat names a seat on the glass**: the rects a painted galley landed on, the first of them, and the centre a click is aimed at. Split from `screen.rs` at §12's budget on the seam the two already had — the driver is how a frame is *run*, this is how a coordinate is found in one. Over `paint_probe::collect` and never a private copy of it, which is `rules/no-hand-rolled-paint-walk.yml`'s subject |
 | `src/shell/acceptance/search_tab.rs` (excl.) | what is true of the **Search** tab alone, split off `tabs.rs` at the budget on that seam: it is offered while a search has been asked and retired when a `/search` with no text clears it — and a needle that matched nothing keeps its tab, keeps the operator on it, and paints `no matches for <needle>` with the paved path beneath (bl-648a) |
 | `src/shell/acceptance/settings.rs` (excl.) | the bl-2e18 seat drive (the spend figures and the model row paint inside the settings panel and nowhere above it, the empty selection answers the same question in the same seat, and an expanded picker cannot grow it past half the pane) + the bl-a48b context drive (the fullness percent and its evidence paint in that seat *beneath* the spend line they are not, and an empty selection — nothing measured — paints no such row at all) |
 | `src/shell/acceptance/slash.rs` (excl.) | the bl-ec8f drive that a `/`-draft is a command (answered under the box, refused with its draft kept, and a bare `/` listing the roster) |
