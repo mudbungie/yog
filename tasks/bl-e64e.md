@@ -1,7 +1,8 @@
 +++
 title = "the Files tab has no viewer: clicking a file selects it but the preview is stacked under the listing instead of beside it"
 created = 1787515080
-updated = 1787515080
+updated = 1787515084
+claimant = "CavernHamper"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
