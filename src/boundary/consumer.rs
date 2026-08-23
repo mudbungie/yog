@@ -112,6 +112,39 @@ impl ConsumerCtx {
         answered
     }
 
+    /// **The same gesture, answered as a stream** (REMOTE §3, bl-73e7) — `Some`
+    /// only for the one query whose answer is a *sequence*, and only once its
+    /// address has resolved under this client's scope.
+    ///
+    /// `None` is the whole of "this is not a follow-class read, or it is one
+    /// nobody can answer", and it is deliberately the same `None` for both: an
+    /// unresolvable workspace and an unknown conversation fall back to
+    /// [`answer_as`](Self::answer_as), which refuses in the resolver's own
+    /// words and in one frame. The intake needs no second refusal path, and a
+    /// seat cannot tell a refused follow from any other refused read.
+    ///
+    /// The scope is spent HERE, at connect, exactly as it is for a one-frame
+    /// answer — the identity is per request (REMOTE §4) and a held read is one
+    /// request. What the stream then re-reads per look is the state of a
+    /// conversation this caller was already authorized for.
+    pub fn follow(
+        &self,
+        client: &crate::registry::Client,
+        request: &Value,
+    ) -> Option<Box<dyn Iterator<Item = Value>>> {
+        let Ok(super::Gesture::Ask(super::Query::Follow { workspace, agent })) =
+            super::codec::decode(request)
+        else {
+            return None;
+        };
+        let scope = crate::registry::registered(&self.state_root, client);
+        let (deps, _, _) = self.deps(client, Some(&scope));
+        let ws = deps.snapshot.ws_path(&workspace).ok()?;
+        let agent = super::address::resolve_agent(&deps.snapshot, &ws, Some(agent)).ok()?;
+        let frames = super::follow::Follow::new(self.cell.clone(), ws, agent);
+        Some(Box::new(frames.map(|reply| super::reply::encode(&reply))))
+    }
+
     /// The per-gesture [`Deps`] every intake builds — freshly against whatever
     /// the worker has published, with this moment's stamp beside it, and with
     /// the **workspace set re-asked of disk** rather than taken off that

@@ -30,8 +30,8 @@
 use std::path::Path;
 
 use crate::AppModel;
-use crate::boundary::Query;
 use crate::boundary::reply::Reply;
+use crate::boundary::{Query, codec};
 use crate::config_edit::branch::GoverningConfig;
 use crate::files_view::{FilesView, Preview};
 use crate::inboxview::InboxEntry;
@@ -48,27 +48,48 @@ fn at(model: &AppModel, ws: &Path, agent: &str) -> (String, String) {
 }
 
 /// **The conversation** — the committed `messages/` entries with the in-flight
-/// tail folded on by the engine (bl-6233's ruling, unmoved).
+/// tail folded on by the engine (bl-6233's ruling, unmoved), and then **the
+/// follow lane's newer tail spliced over it** (bl-73e7).
 ///
-/// The tail now moves at the asker's cadence rather than the derivation's,
-/// which is what a migrated read costs and is stated in REMOTE §9.7: half a
-/// second of streamed text arrives as one row rather than as characters. It is
-/// still the *same* fold, so the two seats cannot describe one moment
-/// differently — which was always the point of putting it at the boundary.
+/// Two questions and one answer, which is the whole of what minting the lane
+/// costs a seat. `Query::Transcript` is the pull read: committed entries plus
+/// whatever tail the engine's derivation had, at
+/// [`ASK_PERIOD`](crate::wire::asker::ASK_PERIOD). `Query::Follow` is the held
+/// read on its own lane: the same fold of the same file, arriving as the model
+/// writes it. When a frame from the lane has landed it replaces the pull's tail
+/// at [`Transcript::with_live`](crate::transcript::Transcript::with_live) —
+/// which *replaces* rather than appends, so there is nothing to reconcile and
+/// no way to paint the answer twice.
+///
+/// **The pull path is the fallback and stays load-bearing.** A lane that never
+/// came up, one whose stream just ended at a step boundary, and one whose
+/// window has no wire at all are the same state here: no landed fold, and the
+/// chat is exactly what REMOTE §9.7's migration left — half a second of
+/// streamed text arriving as one row. So the lane can fail without the chat
+/// failing, which is why it is worth having.
 pub(in crate::shell) fn transcript(
     model: &mut AppModel,
     ws: &Path,
     agent: &str,
 ) -> Landed<Transcript> {
     let (workspace, agent) = at(model, ws, agent);
-    ask(
+    let followed = codec::encode(&crate::boundary::Gesture::Ask(Query::Follow {
+        workspace: workspace.clone(),
+        agent: agent.clone(),
+    }));
+    let tail = model.tail_ask(&followed);
+    let mut landed = ask(
         model,
         Query::Transcript { workspace, agent },
         |reply| match reply {
             Reply::Transcript(tx) => Some(tx),
             _ => None,
         },
-    )
+    );
+    if let (Some(tx), Some(stream)) = (landed.value.as_ref(), tail.as_ref()) {
+        landed.value = Some(tx.with_live(stream));
+    }
+    landed
 }
 
 /// **Every step the conversation has taken** — the Steps tab's list, and the

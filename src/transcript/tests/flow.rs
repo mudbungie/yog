@@ -153,3 +153,36 @@ fn a_stream_that_has_said_nothing_appends_nothing() {
     let t = build(dir.path(), AGENT).with_live(&Stream::default());
     assert_eq!(t.entries.len(), 1);
 }
+
+/// **The newest fold wins, and it wins by replacement** (bl-73e7). The tail
+/// reaches a seat by two routes at two cadences — the pull answer folds one on
+/// at ask cadence, the follow lane delivers a newer one as the model writes —
+/// so `with_live` is idempotent by replacement and the answer can never be
+/// painted twice. A fold that has gone quiet takes the row away with it, which
+/// is what makes the step boundary a swap rather than a duplication.
+#[test]
+fn a_second_live_fold_replaces_the_first_rather_than_standing_beside_it() {
+    let dir = tempdir().unwrap();
+    write_msg(dir.path(), "001-a.md", b"hi");
+    let committed = build(dir.path(), AGENT);
+    let said = |text: &str| Stream {
+        text: Some(text.into()),
+        thinking: None,
+        last_delta: Some(crate::git_tree::Delta::Text),
+    };
+
+    let once = committed.with_live(&said("the first half."));
+    let twice = committed
+        .with_live(&said("the first "))
+        .with_live(&said("the first half."));
+    assert_eq!(once, twice, "a.with_live(x).with_live(y) == a.with_live(y)");
+    assert_eq!(twice.entries.len(), 2, "the committed half plus ONE tail");
+
+    // And an empty fold over a live one leaves the committed half alone.
+    assert_eq!(
+        committed
+            .with_live(&said("said"))
+            .with_live(&Stream::default()),
+        committed
+    );
+}

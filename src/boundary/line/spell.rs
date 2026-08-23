@@ -164,6 +164,7 @@ fn spell_query(query: &Query) -> String {
         // so most of them are the verb alone, and the rest state only the
         // thing no seat can supply (which step, which file, which commit).
         Query::Transcript { .. } => "/transcript".to_owned(),
+        Query::Follow { .. } => "/follow".to_owned(),
         Query::Steps { .. } => "/steps".to_owned(),
         Query::Step { seq, .. } => format!("/step {seq}"),
         Query::Files { path, at, .. } => {

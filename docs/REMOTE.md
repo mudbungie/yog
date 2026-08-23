@@ -98,8 +98,13 @@ is a transport for that surface, not a vocabulary:
   **The streaming form is not a second form.** Every answer is a stream, so a
   follow-class read is the general path with more than one frame in it — no
   flag, no version, no second reader, and nothing to add when the first
-  follow-class `Query` lands. Today N is always 1, because none is
-  follow-class: the seat polls (below).
+  follow-class `Query` lands. That promise was tested and held by bl-73e7's
+  `Query::Follow`, the first read whose N is greater than 1: no flag, no
+  version, no second reader were added. What the engine *did* have to change is
+  that `Answerer::answer` hands back a lazy iterator rather than a `Vec` — a
+  materialized answer must be finished before its first frame can be written,
+  and a read that answers as the world changes never finishes. That is a
+  signature, not a protocol.
 - **`Reply` gains a decode side.** Today the reply codec is encode-only. The
   client is in-crate (§8), so the hand-codec discipline extends to decode;
   serde derive stays a non-dependency (existing stance, `src/ui_state`).
@@ -142,10 +147,14 @@ is a transport for that surface, not a vocabulary:
   nothing else to do and is the only party that knows how long its call is
   worth waiting for. The follow-class read blocks a **connection** thread, which
   is a thread per tool host and nothing else's.
-- **Cadence: the seat polls.** The window today adopts a snapshot per frame;
-  a remote seat asks at human cadence and rides the follow stream for the hot
-  path. A push/subscription channel is deliberately deferred (§10) — it is an
-  optimization of the same surface, not a different one.
+- **Cadence: the seat polls, and rides a follow stream for the hot path.** A
+  seat asks at human cadence over the standing set; the two surfaces that change
+  faster than an operator looks are held reads it makes — a tool host waiting
+  for work (`Query::Invocations`, bl-024b) and the streaming transcript tail
+  (`Query::Follow`, bl-73e7). Both are asks, so **the engine never speaks first**
+  and nothing here is a push channel: a push/subscription channel stays
+  deliberately deferred (§10, §11), being an optimization of the same surface
+  rather than a different one.
 - **The disk inbox survives for in-world callers.** Agents drive yog through
   the `yog` PATH shim and the `gestures/` deposit inbox — same machine, same
   world, disk is the bus. The wire is for cross-trust-domain callers; the
@@ -1665,10 +1674,13 @@ spelled. The window's Altitude-2 pane derives nothing at all now; what is left i
   workspace refuses every one of them in the same sentence — five copies of which
   is a report about the transport, where one is content.
 
-**The live tail is now half a second old at the seat, and the follow-stream
-graduation was declined.** bl-ccf7 named the §7.2 live tail the one follow-class
-candidate, and this is the migration where it would have paid. It does not, and
-the reasoning is the ruling rather than the scope. The fold itself is unmoved —
+**The live tail went half a second old at the seat, the follow-stream
+graduation was declined — and the operator reversed that decline.** Both halves
+are kept, because the second is only readable against the first.
+
+*What bl-13f9 ruled.* bl-ccf7 named the §7.2 live tail the one follow-class
+candidate, and this migration is where it would have paid. It did not, and the
+reasoning was the ruling rather than the scope. The fold itself is unmoved —
 `inspector::live_tail` is still the boundary's (bl-6233), so the two seats cannot
 describe one moment differently — but the frame used to re-fold it off the
 rendered snapshot every paint and now reads it at `ASK_PERIOD`, so streamed text
@@ -1682,6 +1694,51 @@ its duration — which is the poster, renamed (§9.7 already refused exactly tha
 for `Query::Search`). A mechanism for a legibility optimisation is the wrong
 trade; if the tail ever needs to be smoother, the lane is the ball, not the
 migration.
+
+*The reversal (operator ruling 2026-08-22, bl-73e7).* **Streamed model output
+must reach the glass at write cadence.** The decline turned on a judgement about
+legibility — that half a second of prose arriving as one row reads the same as
+prose arriving as characters — and the operator, who is the party the judgement
+was about, ruled it wrong. §10's criterion is *"when a surface needs a rate an
+operator could not read at"*, and by that ruling the streaming tail is such a
+surface: watching a model think is watching it write, and a row that appears
+whole says nothing about whether anything is happening. So the lane was minted
+exactly as §10 priced it and exactly as the paragraph above says it would have
+to be — **the ball, not the migration**, which is why nothing above is retracted.
+Everything the decline said about the *cost* was correct and was paid:
+
+- **`Query::Follow` is the second follow-class read**, and the first whose
+  subject is the world rather than a queue. The engine answers it with a frame
+  per growth of the open `response.json` and no terminator until the stream
+  closes at the step boundary. No wire change, no framing change, no new
+  dependency: §3's *"a follow-class read is the general path with more frames"*,
+  spent for the first time — until this ball, `Query::Invocations` was
+  follow-class and still answered exactly one frame.
+- **The lane is a second connection and a second thread** (`src/wire/lane.rs`),
+  beside the asker and never inside it, because the asker's pass is serial and
+  the paragraph above is right that a held read in it would stall every other
+  surface. Re-ask is the whole reconnect ladder.
+- **The pull path stays, and stays load-bearing.** `Query::Transcript` still
+  folds the tail at `ASK_PERIOD`. A lane that is down, one whose stream just
+  ended, and a window with no wire at all are one state at the seat: the chat is
+  exactly what this migration left. The lane may fail without the chat failing,
+  which is the only reason it is worth having.
+- **The fold is untouched.** `inspector::live_tail` still decides whether there
+  *is* a tail; what the lane adds is where the bytes are read from — the suffix
+  on the writer's schedule rather than the whole file on the worker's — and the
+  two agree by `Stream::absorb`'s contract, pinned by a test that folds the same
+  bytes both ways.
+- **What it cost that the decline did not price**: `Answerer::answer` hands back
+  an iterator rather than a `Vec`. A materialized list has to be finished before
+  its first frame can be written, so a read that answers *as the world changes*
+  could not be one. That is the whole of the wire change, and it is a signature.
+
+*And what the reversal did NOT cost, stated because §10 priced these too*:
+per-request identity is unchanged (a held read is **one** request, and its scope
+is spent at connect exactly as a one-frame answer's is), there is no
+connection-scoped identity, no liveness protocol and no reconnect ladder beyond
+re-asking. The pull model stays the rule for every human-cadence read; this is
+one surface, named.
 
 **A drive settles to a fixed point in one place now** (`World::drain`). bl-44e9
 put that loop in `Screen::run`; the whole-window paint driver (`acceptance::mod`'s
@@ -2215,6 +2272,16 @@ act carries no `Cli`: they are the engine's, and a seat never had them.
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer
   is a frame stream terminated by a zero-length frame, so a follow-class read
   is the general path with more frames.
+
+  **And it has its consumer now (bl-73e7).** `Query::Follow` is the first read
+  that answers more than one frame — `Query::Invocations` is follow-class and
+  still answers exactly one — so the shape this row settled ahead of any payer
+  was finally spent, and it cost nothing it had not already promised: no
+  version, no flag, no second reader. The one thing it did cost was on the
+  *engine* side and was not priced here: `Answerer::answer` had to become lazy
+  (an iterator, not a `Vec`), because a materialized answer must be finished
+  before its first frame can be written and a read that answers as the world
+  changes never finishes.
 - ~~Whether a seat holds one connection across gestures~~ — **settled by
   bl-ccf7: it dials per ask, and the server already loops.** Two facts decide
   it. The listener's connection thread is `while let Ok(Some(request)) =
@@ -2239,10 +2306,37 @@ act carries no `Cli`: they are the engine's, and a seat never had them.
   still costs with no payer. Revisit when a surface needs a rate an operator
   could not read at — which is what a follow-class read is for, and it holds its
   own connection by asking (§3).
+
+  **Revisited, and one lane now stands (operator ruling 2026-08-22, bl-73e7).**
+  The streaming transcript tail is the surface that needs a rate an operator
+  could not read at, and it holds its connection by asking — exactly as this row
+  said it would. Note carefully **what that did not change**, because the row's
+  whole argument was about the costs a held connection buys and none of them was
+  bought:
+
+  - **Per-request identity stands, everywhere, this read included** (§4). A held
+    read is *one request*: the certificate is read at its first frame and the
+    scope is spent at connect, the same moment and on the same terms as a
+    one-frame answer's. There is no connection-scoped identity and nothing
+    remembers a peer between requests.
+  - **The pull model stands for every human-cadence read.** The standing set is
+    still connection-per-ask at 500 ms, and it is still the *fallback* for the
+    tail itself — a seat that loses the lane keeps the chat.
+  - **No reconnect ladder and no liveness protocol.** The lane re-asks; a stream
+    that ended, a subject that moved and a dial that failed are one case. The
+    engine's own bound is a quiet hold, and a frame written is what discovers a
+    peer that went away, so nothing pings anything.
+
+  The criterion is unchanged and still the thing to measure a future candidate
+  against. One surface met it. The row stays open because the next one will have
+  to argue the same case.
 - ~~When polling graduates to a follow-class query~~ — **settled and built by
   bl-024b**: `Query::Invocations` is the first follow-class read with a
-  consumer, and it needed no wire change. What stays open is only whether the
-  *transcript* tail follows it. The reasoning, kept: bl-ccf7 said there was one candidate —
+  consumer, and it needed no wire change. ~~What stays open is only whether the
+  *transcript* tail follows it.~~ **It did: `Query::Follow`, by operator ruling
+  2026-08-22 (bl-73e7, §9.7).** So bl-ccf7's one candidate and bl-c907's second
+  are both built, and this question is closed in both halves. The reasoning,
+  kept: bl-ccf7 said there was one candidate —
   the live model-call tail (§9 step 1's folded `Stream`), the one read whose
   subject changes faster than an operator looks, every other read being a
   projection of a snapshot the derivation worker republishes on its own

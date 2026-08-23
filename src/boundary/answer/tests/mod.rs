@@ -7,6 +7,11 @@
 //! has (`answer::confirm` is its own file).
 
 mod confirm;
+/// The one query whose answer is a **sequence** (REMOTE §3, bl-73e7), answered
+/// here as one frame — its own file at §12's budget, on the seam that every
+/// other beat in this directory is about a derivation and this one is about a
+/// *cadence* every intake shares the bottom of.
+mod follow;
 
 use super::*;
 use crate::boundary::tests::{agent, bound_row, snapshot};

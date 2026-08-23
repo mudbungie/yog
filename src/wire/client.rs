@@ -69,8 +69,47 @@ impl Seat {
     }
 
     /// Send one request envelope and read its whole reply stream — every frame
-    /// up to the terminator. A stream of one is today's every answer.
+    /// up to the terminator. A stream of one is the ordinary answer.
     pub fn ask(&self, request: &Value) -> Result<Vec<Value>, String> {
+        let mut tls = self.dial(request)?;
+        let mut stream = Vec::new();
+        loop {
+            match frame::read_value(&mut tls).map_err(|e| format!("receive: {e}"))? {
+                Some(chunk) => stream.push(chunk),
+                None => return Ok(stream),
+            }
+        }
+    }
+
+    /// **Ask, and stay on the line** (REMOTE §3, §10; bl-73e7) — the same one
+    /// request, with each frame decoded and handed over *as it arrives* rather
+    /// than collected. This is the held connection §10 kept as a question and
+    /// the follow lane finally pays for: no second envelope, no second reader,
+    /// and nothing here that [`ask`](Self::ask) does not already do — the whole
+    /// difference is that the caller is given the frames instead of the list.
+    ///
+    /// `on_frame` answers whether to stay: `false` ends the read, which is how
+    /// a lane whose subject moved stops without a word to the engine (dropping
+    /// the connection is the word). `Ok(())` is the engine terminating the
+    /// stream — the ordinary end, not an event.
+    pub fn followed(
+        &self,
+        request: &Value,
+        on_frame: &mut dyn FnMut(crate::wire::link::Landed) -> bool,
+    ) -> Result<(), String> {
+        let mut tls = self.dial(request)?;
+        while let Some(chunk) = frame::read_value(&mut tls).map_err(|e| format!("receive: {e}"))? {
+            if !on_frame(crate::boundary::reply::decode(&chunk).unwrap_or_else(Err)) {
+                return Ok(());
+            }
+        }
+        Ok(())
+    }
+
+    /// Connect, handshake and send `request` — the half both spellings share.
+    /// The handshake happens inside the first read, so what this hands back is
+    /// a socket with an envelope on it and nothing yet read.
+    fn dial(&self, request: &Value) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
         let tcp = TcpStream::connect(&self.address)
             .map_err(|e| format!("connect {}: {e}", self.address))?;
         tcp.set_read_timeout(Some(ASK_TIMEOUT))
@@ -79,13 +118,7 @@ impl Seat {
             .map_err(|e| format!("tls {}: {e}", self.address))?;
         let mut tls = StreamOwned::new(conn, tcp);
         frame::write_value(&mut tls, request).map_err(|e| format!("send: {e}"))?;
-        let mut stream = Vec::new();
-        loop {
-            match frame::read_value(&mut tls).map_err(|e| format!("receive: {e}"))? {
-                Some(chunk) => stream.push(chunk),
-                None => return Ok(stream),
-            }
-        }
+        Ok(tls)
     }
 }
 

@@ -13,8 +13,14 @@ use tempfile::TempDir;
 struct Verdict(bool);
 
 impl Answerer for Verdict {
-    fn answer(&self, _client: &crate::registry::Client, request: Value) -> Vec<Value> {
-        vec![json!({"ok": self.0, "kind": "echo", "asked": request})]
+    fn answer(
+        &self,
+        _client: &crate::registry::Client,
+        request: Value,
+    ) -> Box<dyn Iterator<Item = Value>> {
+        Box::new(std::iter::once(
+            json!({"ok": self.0, "kind": "echo", "asked": request}),
+        ))
     }
 }
 

@@ -25,6 +25,10 @@ fn every_conversation_read_round_trips() {
             workspace: workspace.clone(),
             agent: agent.clone(),
         },
+        Query::Follow {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+        },
         Query::Steps {
             workspace: workspace.clone(),
             agent: agent.clone(),

@@ -92,6 +92,7 @@ impl Query {
     pub(crate) fn agent(&self) -> Option<String> {
         match self {
             Query::Transcript { agent, .. }
+            | Query::Follow { agent, .. }
             | Query::Steps { agent, .. }
             | Query::Step { agent, .. }
             | Query::Files { agent, .. }

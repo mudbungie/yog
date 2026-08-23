@@ -137,6 +137,15 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // like the two above, answered straight through for the same reason,
         // over the derivations in [`inspector`] the frame delegates to.
         Query::Transcript { .. } => Reply::Transcript(inspector::transcript(snap, ws, agent)),
+        // The follow lane's read, answered **once** (REMOTE §3, bl-73e7): this
+        // is the chokepoint every intake shares, and most intakes cannot hold a
+        // connection open — so what they get is the tail as of now, which is
+        // the general path with one frame rather than a degraded answer. The
+        // holding is `follow::Follow`, driven by the one intake that can, and
+        // its frames come off this same fold.
+        Query::Follow { .. } => {
+            Reply::Follow(inspector::live_tail(snap, ws, agent).unwrap_or_default())
+        }
         Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent)),
         Query::Step { seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
         Query::Files { path, at, .. } => {

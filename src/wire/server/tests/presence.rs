@@ -12,8 +12,10 @@ use std::time::Instant;
 struct Watcher(Presence);
 
 impl Answerer for Watcher {
-    fn answer(&self, _client: &Client, _request: Value) -> Vec<Value> {
-        vec![json!({"live": self.0.live().into_iter().collect::<Vec<String>>()})]
+    fn answer(&self, _client: &Client, _request: Value) -> Box<dyn Iterator<Item = Value>> {
+        Box::new(std::iter::once(
+            json!({"live": self.0.live().into_iter().collect::<Vec<String>>()}),
+        ))
     }
 }
 

@@ -168,6 +168,7 @@ impl Query {
             | Query::Models { workspace, .. }
             | Query::Marks { workspace }
             | Query::Transcript { workspace, .. }
+            | Query::Follow { workspace, .. }
             | Query::Steps { workspace, .. }
             | Query::Step { workspace, .. }
             | Query::Files { workspace, .. }

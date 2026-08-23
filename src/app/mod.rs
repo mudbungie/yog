@@ -57,9 +57,7 @@ use crate::binding::Workspace;
 use crate::fs_watcher::RootKind;
 use crate::keymap::InspectorTab;
 use crate::projects::runner::BlRunner;
-use crate::state::{
-    DirtySet, SearchCell, SnapshotCell, TailCell, latest_snapshot, new_snapshot_cell,
-};
+use crate::state::{DirtySet, SearchCell, SnapshotCell, latest_snapshot, new_snapshot_cell};
 use crate::ui_state::{Clock, UiState};
 use crate::watch::Mark;
 use clap::Parser;
@@ -75,7 +73,6 @@ pub use self::derive::worker::Worker;
 /// the chokepoint rather than restated for a seat.
 pub use self::drift::stale_label;
 pub use self::grace::WoundGrace;
-pub use self::live::{FollowThread, Follower, LiveTail};
 pub(crate) use self::memo::SnapMemo;
 pub use self::roots::Roots;
 /// The §3.1 enumeration standing in for the derivation's cached copy at the
@@ -171,15 +168,13 @@ pub struct AppModel {
     /// Which raise [`snap`](Self::snap) was folded from — the fold's third
     /// memo, beside [`folded`](Self::folded) and for its reason exactly.
     folded_raise: Option<PathBuf>,
-    /// The §7.2 **live tail** hand-off (bl-54f7): the frame asks this for the
-    /// focused conversation every refresh and folds whatever the
-    /// [`Follower`] has published. Purely display, under the
-    /// in-memory carve-out — and a **dead end**, which is what the absence of
-    /// any accessor beside [`refresh`](Self::refresh)'s own fold enforces.
-    tail: TailCell,
-    /// Which tail [`snap`](Self::snap) was folded from — the fold's other memo,
-    /// beside [`folded`](Self::folded) and for the same reason.
-    followed: Option<Arc<LiveTail>>,
+    /// **The window's follow lane** (REMOTE §3, DESIGN §7.2; bl-73e7): the
+    /// conversation whose live tail this frame is watching, and the newest fold
+    /// that has arrived for it. Default until the engine hands over the live
+    /// end — a window with no lane simply paints the tail the pull
+    /// `Query::Transcript` folds, which is the same code path and the same
+    /// content, one ask period behind.
+    lane: crate::wire::lane::Tail,
     /// **The window's read path over the wire** (REMOTE §1.2 as executed,
     /// bl-ae05): the standing questions this frame declares and the decoded
     /// replies that have landed for them. Default until the engine hands over
@@ -243,8 +238,7 @@ impl AppModel {
             started: None,
             raised: None,
             folded_raise: None,
-            tail: TailCell::default(),
-            followed: None,
+            lane: crate::wire::lane::Tail::default(),
             wire: crate::wire::link::Link::default(),
             wire_refusal: None,
             acts: acts::Acts::default(),

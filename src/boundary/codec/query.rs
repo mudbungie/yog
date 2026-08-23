@@ -58,6 +58,10 @@ pub(super) fn encode(query: &Query) -> Value {
         // The §11 inspector family (bl-6233): one address, written once —
         // what differs between them rides beside it, never instead of it.
         Query::Transcript { workspace, agent } => inspector::at("transcript", workspace, agent),
+        // The follow lane's read (bl-73e7): the same address, the same fold,
+        // and a cadence the envelope says nothing about — how many frames an
+        // answer becomes is the intake's, never the question's.
+        Query::Follow { workspace, agent } => inspector::at(inspector::FOLLOW, workspace, agent),
         Query::Steps { workspace, agent } => inspector::at("steps", workspace, agent),
         Query::Rail { workspace, agent } => inspector::at("rail", workspace, agent),
         Query::Agent { workspace, agent } => inspector::at("agent", workspace, agent),

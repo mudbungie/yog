@@ -127,13 +127,13 @@ fn gaps(entries: &[Entry]) -> Vec<Gap> {
 }
 
 /// An entry's `NNN`, off the one filename parse this module tree has
-/// ([`super::parse_name`]) — a second reading of the shape would be a second
+/// ([`super::read::parse_name`]) — a second reading of the shape would be a second
 /// truth about it. `None` for a name that is not a message file's, and for a
 /// counter no `usize` can hold. `pub(crate)` since bl-fde5: the §5.1 #12
 /// message count is this counter's high-water mark, and the enumerate walk
 /// ([`crate::git_tree`]) reads it through this one definition.
 pub(crate) fn seq_of(name: &str) -> Option<usize> {
-    super::parse_name(name).and_then(|(num, _, _)| num.parse().ok())
+    super::read::parse_name(name).and_then(|(num, _, _)| num.parse().ok())
 }
 
 /// Every `summary/<NNN>.md` the compactor has written, in counter order (the

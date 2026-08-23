@@ -49,6 +49,10 @@ pub mod frame;
 /// for its next invocation, and posts each capture back.
 pub mod host;
 pub mod intake;
+/// The window's **second** asker lane (REMOTE §3, §10; bl-73e7): one held
+/// connection on the focused conversation's live tail, so the serial pass below
+/// is never stalled by a read that deliberately never finishes.
+pub mod lane;
 /// The frame's half of that read path: the standing questions and what landed.
 pub mod link;
 pub mod material;

@@ -73,6 +73,10 @@ fn inspector_family() {
             workspace: workspace.clone(),
             agent: agent.clone(),
         },
+        Query::Follow {
+            workspace: workspace.clone(),
+            agent: agent.clone(),
+        },
         Query::Steps {
             workspace: workspace.clone(),
             agent: agent.clone(),

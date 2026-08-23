@@ -241,6 +241,21 @@ pub(super) fn inspector() -> Vec<Reply> {
         Reply::Science(science()),
         Reply::Science(vec![]),
         Reply::Transcript(transcript()),
+        // One follow frame (bl-73e7). Three readings of the fold, because each
+        // field is absent until a delta of its kind lands and absence is not
+        // the same claim as an empty string: nothing said yet, reasoning only,
+        // and both with the last delta being the answer.
+        Reply::Follow(crate::git_tree::Stream::default()),
+        Reply::Follow(crate::git_tree::Stream {
+            thinking: Some("first I".into()),
+            text: None,
+            last_delta: Some(crate::git_tree::Delta::Thinking),
+        }),
+        Reply::Follow(crate::git_tree::Stream {
+            thinking: Some("first I".into()),
+            text: Some("then this".into()),
+            last_delta: Some(crate::git_tree::Delta::Text),
+        }),
         Reply::Steps(steps()),
         Reply::Steps(StepsView {
             steps: vec![],

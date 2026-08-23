@@ -28,18 +28,30 @@ impl Intake {
 }
 
 impl super::server::Answerer for Intake {
-    /// One request, one reply frame. A follow-class read would be the same
-    /// call returning more of them (see [`frame`](super::frame)); no `Query` is
-    /// follow-class today, so this is the whole of it.
+    /// One request, one reply frame — **unless the read is follow-class**
+    /// (bl-73e7), in which case it is the frames that read produces, written as
+    /// they are produced. Two arms and no third: [`follow`](ConsumerCtx::follow)
+    /// answers `None` for every request that is not one, and for a follow whose
+    /// address does not resolve — which then earns the ordinary refusal, in one
+    /// frame, from the one function that words it.
     ///
     /// **This is where the wire's trust grade is spent** (REMOTE §4, bl-8bbc):
     /// [`answer_as`](ConsumerCtx::answer_as) is
     /// [`answer`](ConsumerCtx::answer) with a client identity, and the identity
     /// is the whole difference between the two intakes. The inbox's callers are
     /// the world's own residents and are unscoped (§3); a connection is a
-    /// caller from another trust domain and sees its registrations.
-    fn answer(&self, client: &crate::registry::Client, request: Value) -> Vec<Value> {
-        vec![self.ctx.answer_as(client, &request)]
+    /// caller from another trust domain and sees its registrations. A held read
+    /// spends it at the same moment and on the same terms — a connection that
+    /// stays open is still one request.
+    fn answer(
+        &self,
+        client: &crate::registry::Client,
+        request: Value,
+    ) -> Box<dyn Iterator<Item = Value>> {
+        match self.ctx.follow(client, &request) {
+            Some(frames) => frames,
+            None => Box::new(std::iter::once(self.ctx.answer_as(client, &request))),
+        }
     }
 }
 

@@ -15,6 +15,9 @@ use super::super::start::opt_field;
 use super::super::str_of;
 use crate::boundary::Query;
 
+/// The follow lane's op token (bl-73e7), named once for both directions.
+pub(super) const FOLLOW: &str = "follow";
+
 /// The address every one of the family carries: the workspace, and the
 /// conversation inside it.
 pub(super) fn at(op: &str, workspace: &str, agent: &str) -> Value {
@@ -70,6 +73,10 @@ pub(super) fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, St
         "transcript" => {
             let (workspace, agent) = address(o)?;
             Query::Transcript { workspace, agent }
+        }
+        FOLLOW => {
+            let (workspace, agent) = address(o)?;
+            Query::Follow { workspace, agent }
         }
         "steps" => {
             let (workspace, agent) = address(o)?;

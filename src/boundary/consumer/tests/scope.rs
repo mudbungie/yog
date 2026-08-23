@@ -167,3 +167,58 @@ fn a_raise_naming_something_that_is_not_a_plain_component_refuses() {
     }
     assert!(crate::registry::registered(root.path(), &client("phone")).is_empty());
 }
+
+/// **A held read is one request, and it spends the scope like one** (REMOTE §4,
+/// bl-73e7). The address resolves at connect, under the caller's registrations,
+/// so an unregistered workspace answers `None` here — and `None` is not a
+/// second refusal path: the intake falls back to the one-frame answer, which
+/// refuses in the resolver's own words. A seat cannot tell a refused follow
+/// from any other refused read, which is exactly REMOTE §4's absence.
+#[test]
+fn a_follow_resolves_its_address_under_the_callers_scope() {
+    let root = tempdir().unwrap();
+    let data = tempdir().unwrap();
+    let ctx = over(
+        root.path(),
+        world_of(data.path(), &["home", "corp"]),
+        data.path().to_path_buf(),
+        Cli::new("/no/such/lernie"),
+    );
+    let phone = client("phone");
+    crate::registry::register(root.path(), &phone, "home").unwrap();
+    let follow = |workspace: &str, agent: &str| json!({"op": "follow", "workspace": workspace, "agent": agent});
+
+    // Nothing this seat may not see: the workspace it is not seated in, and a
+    // conversation the workspace does not carry, both answer no stream.
+    assert!(ctx.follow(&phone, &follow("corp", "c-1")).is_none());
+    assert!(ctx.follow(&phone, &follow("home", "nobody")).is_none());
+    // And the refusal a seat actually reads is the resolver's, one frame long.
+    let said = |workspace: &str| {
+        ctx.answer_as(&phone, &follow(workspace, "c-1"))["error"]
+            .as_str()
+            .unwrap_or_default()
+            .replace(workspace, "<name>")
+    };
+    assert_eq!(
+        said("corp"),
+        said("nowhere"),
+        "absence, not a scope error: a workspace this seat is not seated in \
+         refuses in the identical bytes one nobody founded earns"
+    );
+}
+
+/// Every other request is `None` here too, and that is the whole of what makes
+/// the intake two arms rather than three: a read that is not follow-class is
+/// answered by the one function that answers everything else.
+#[test]
+fn nothing_but_a_follow_is_a_stream() {
+    let root = tempdir().unwrap();
+    let ctx = ctx(root.path());
+    for request in [
+        json!({"op": "workspaces"}),
+        json!({"op": "teleport"}),
+        json!("not even an object"),
+    ] {
+        assert!(ctx.follow(&client("phone"), &request).is_none());
+    }
+}

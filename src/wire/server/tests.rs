@@ -10,6 +10,11 @@ use serde_json::json;
 use std::sync::atomic::AtomicUsize;
 use tempfile::TempDir;
 
+/// The listener's **laziness** (bl-73e7) — a frame written as it is produced,
+/// which is the property a held read is impossible without. Its own file at
+/// §12's per-file budget, beside [`presence`] and for its reason: one contract
+/// of this listener, argued whole.
+mod lazy;
 /// REMOTE §5's live half (bl-4e08), split off at §12's cap: everything here is
 /// the listener's own contract, and that is the presence it keeps beside it.
 mod presence;
@@ -24,14 +29,13 @@ struct Echo {
 }
 
 impl Answerer for Echo {
-    fn answer(&self, client: &Client, request: Value) -> Vec<Value> {
+    fn answer(&self, client: &Client, request: Value) -> Box<dyn Iterator<Item = Value>> {
         self.asked.fetch_add(1, Ordering::Relaxed);
-        (0..self.chunks)
-            .map(|n| {
-                json!({"ok": true, "kind": "echo", "seq": n,
-                       "asked": request, "client": client.name()})
-            })
-            .collect()
+        let name = client.name();
+        Box::new((0..self.chunks).map(move |n| {
+            json!({"ok": true, "kind": "echo", "seq": n,
+                   "asked": request, "client": name})
+        }))
     }
 }
 

@@ -18,6 +18,7 @@ mod first_run;
 mod fixture;
 mod floor;
 mod focus;
+mod follow;
 mod geometry;
 mod hover;
 mod inbox_composer;

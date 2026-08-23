@@ -130,6 +130,13 @@ fn conversation(verb: &str, tail: &str, ctx: &Context) -> Option<Result<Gesture,
             workspace,
             agent,
         }),
+        // The follow lane's read (bl-73e7), aimed exactly as `/transcript` is.
+        // A line seat holds no connection to hold open, so it earns the tail as
+        // of now — the general path with one frame, and the same fold.
+        "follow" => bare(verb, tail, ctx, &|workspace, agent| Query::Follow {
+            workspace,
+            agent,
+        }),
         "steps" => bare(verb, tail, ctx, &|workspace, agent| Query::Steps {
             workspace,
             agent,

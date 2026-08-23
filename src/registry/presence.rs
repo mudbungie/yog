@@ -27,8 +27,9 @@
 //! exceptions. It cannot stay there: adding the alias and its lock helper cost
 //! `state.rs` its 100% coverage floor, llvm-cov attributing four phantom
 //! uncovered regions to unexecutable declaration lines there — `impl SearchCell
-//! {`, `impl DirtySet {`, and the `TailCell` and `PresenceCell` type aliases —
-//! on a file otherwise at 100%. That is the exact hazard the rule's other two
+//! {`, `impl DirtySet {`, and the live tail's own cell alias beside
+//! `PresenceCell` (that one retired with the §7.2 follower, bl-73e7) — on a
+//! file otherwise at 100%. That is the exact hazard the rule's other two
 //! carve-outs already record, measured a third time. The confinement's *reason*
 //! is auditability, so the rule file names this file and the module doc says
 //! what it holds; what is lost is the single reading of `state.rs`, and what

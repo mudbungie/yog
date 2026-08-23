@@ -60,6 +60,14 @@ pub(in crate::shell::acceptance) struct World {
     /// The frame's end of the act path — what its gestures posted, taken
     /// exactly as the poster takes them.
     pub(in crate::shell::acceptance) outbox: Outbox,
+    /// The follow lane's engine end (bl-73e7), taken exactly as
+    /// [`Lane`](crate::wire::lane::Lane) takes it.
+    pub(in crate::shell::acceptance) tail: crate::wire::lane::TailEnd,
+    /// The held read standing behind it: the conversation it is on, and the
+    /// incremental fold it has reached. Minted when the subject changes and
+    /// dropped when the stream ends, which is what the lane's thread does with
+    /// a connection.
+    pub(in crate::shell::acceptance) followed: Option<(String, crate::boundary::follow::Follow)>,
     /// **The engine's own substrate binaries** — what a posted act actually
     /// spawns. They are the engine's and never a seat's (REMOTE §9.8: a seat
     /// carries the gesture and nothing else), so they live here rather than on
@@ -163,6 +171,7 @@ impl World {
     pub(in crate::shell::acceptance) fn settle(&mut self) {
         self.model.refresh();
         self.reads();
+        self.follows();
         self.acts();
         self.searches();
     }
@@ -186,6 +195,7 @@ impl World {
             self.model.refresh();
             let waiting = self.model.awaiting();
             self.reads();
+            self.follows();
             let acted = self.acts();
             self.searches();
             if !waiting && !acted {

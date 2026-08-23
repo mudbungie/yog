@@ -92,6 +92,9 @@ pub(in crate::shell::acceptance) mod wide;
 
 /// The world a test drives, and the wire behind it — its own file per §12's
 /// budget.
+/// The follow lane's stand-in (bl-73e7) — its own file at §12's budget; the
+/// seam is its own doc's.
+mod follow;
 mod world;
 pub(in crate::shell::acceptance) use world::World;
 
@@ -264,8 +267,13 @@ fn build_world(title: &str, roster: &Roster) -> World {
     // window whose every gesture is refused.
     let (link, link_end) = crate::wire::link::pair();
     let (post, outbox) = crate::wire::post::pair();
+    // The follow lane's ends, on the same terms (bl-73e7): a world that took
+    // none would be a window with no lane, which is a true reading and no
+    // witness at all for the one this ball exists to prove.
+    let (tail, tail_end) = crate::wire::lane::pair();
     model.adopt_wire(link);
     model.adopt_post(post);
+    model.adopt_tail(tail);
     World {
         _root: root,
         fx,
@@ -278,6 +286,8 @@ fn build_world(title: &str, roster: &Roster) -> World {
         lernie_workspaces,
         link: link_end,
         outbox,
+        tail: tail_end,
+        followed: None,
         // Deliberately absent substrate, named by **absolute** path (bl-f558):
         // a test that never spawns one wants a binary that cannot be found,
         // and a bare name is not that — the world's `PATH` is fronted by the

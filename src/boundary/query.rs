@@ -143,6 +143,20 @@ pub enum Query {
     /// different from the window about the same moment, which is the exact
     /// parity §8.5 exists to hold.
     Transcript { workspace: String, agent: String },
+    /// **The live tail, followed** (REMOTE §3, §10; DESIGN §7.2, bl-73e7) — the
+    /// second follow-class read, and the one the operator ruling of 2026-08-22
+    /// minted: one conversation's streaming answer, delivered as it is written
+    /// rather than as it is asked for.
+    ///
+    /// Its subject is the same fold [`Transcript`](Query::Transcript) carries
+    /// on its tail — `inspector::live_tail` — so the two cannot describe one
+    /// moment differently (bl-6233). What differs is the **cadence**: an intake
+    /// that can hold a connection answers a frame per growth of the open
+    /// `response.json` and terminates the stream when the step commits, and an
+    /// intake that cannot answers the tail as of now, which is the general path
+    /// with one frame. The pull read stays the fallback, so a seat that loses
+    /// the lane keeps the tail at ask cadence rather than losing it.
+    Follow { workspace: String, agent: String },
     /// **Every step one conversation has taken** (§11 Altitude-2 Steps): the
     /// cheap per-step summary list — framing, attempts, tokens, timestamps, the
     /// §8.3 login affordance and the §7.3 wound. The agent's liveness is read

@@ -1,6 +1,6 @@
 //! **One frame's model duty** (§7.2): take the newest derivation, adopt what
-//! changed under it, and settle the two off-frame hand-offs — the wire's read
-//! path and, since bl-4841, its act path.
+//! changed under it, and settle the off-frame hand-offs — the wire's read path,
+//! its act path (bl-4841) and the follow lane (bl-73e7).
 //!
 //! Split out of [`app`](super)'s root at §12's budget. It is the whole of what
 //! a frame asks the model to *do*: everything else the model offers is a read,
@@ -37,20 +37,10 @@ impl crate::AppModel {
         // ahead of the fold, so the painted snapshot never carries the same
         // workspace twice.
         self.adopt_raised();
-        // Tell the follower which conversation is on screen and take whatever
-        // it has folded since the last frame (§7.2 live tail). Both are one
-        // lock and one compare, which is what a frame is allowed to cost.
-        crate::state::follow(&self.tail, self.followed_subject());
-        let followed = crate::state::taken_tail(&self.tail);
         // The one fold of derivation + the non-derived facts (§7.2), run only
         // when one of its inputs moved so the rendered `Arc` stays stable under
         // `SnapMemo`.
-        if landed
-            || self.started != self.folded
-            || followed != self.followed
-            || self.raised != self.folded_raise
-        {
-            self.followed = followed;
+        if landed || self.started != self.folded || self.raised != self.folded_raise {
             self.refold();
         }
         // The wire read path's one frame duty (REMOTE §1.2, bl-ae05): take the
@@ -58,6 +48,12 @@ impl crate::AppModel {
         // if that changed. Two channel drains and one set compare — no lock, no
         // dial, and nothing here can wait on a socket.
         self.wire.settle();
+        // The follow lane's own frame duty (REMOTE §3, bl-73e7): take the folds
+        // the lane landed and tell it which conversation is on screen if that
+        // changed. One channel drain and one compare, on the lane that never
+        // waits on the standing set — which is the whole reason it is a second
+        // one.
+        self.lane.settle();
         // The act path's own frame duty (REMOTE §9.8, bl-4841): take the
         // receipts the poster landed and mark each act's root dirty now that
         // the engine is done with it — the aftermath a dispatched verb used to
@@ -83,12 +79,7 @@ impl crate::AppModel {
     pub(super) fn refold(&mut self) {
         self.folded = self.started.clone();
         self.folded_raise = self.raised.clone();
-        self.snap = echo::compose(
-            &self.derived,
-            self.started.as_ref(),
-            self.followed.as_deref(),
-            self.raised.as_deref(),
-        );
+        self.snap = echo::compose(&self.derived, self.started.as_ref(), self.raised.as_deref());
     }
 
     /// Adopt an external `ui.json` change the worker read for us (§4.1, I5):

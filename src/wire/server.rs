@@ -40,8 +40,16 @@ use std::time::Duration;
 const ACCEPT_POLL: Duration = Duration::from_millis(20);
 
 /// What answers a request frame: the reply stream it becomes, one [`Value`] per
-/// frame. Today every answer is one element long; a follow-class read is the
-/// same signature with more of them (see [`frame`](super::frame)).
+/// frame. Most answers are one element long; a follow-class read is the same
+/// signature with more of them (see [`frame`](super::frame)).
+///
+/// **It is an iterator and not a `Vec` since bl-73e7**, which is the whole of
+/// what minting the follow lane cost the wire. A materialized list has to be
+/// finished before the first frame can be written, so a read that answers *as
+/// the world changes* could not be one; pulled lazily, the connection thread
+/// writes each frame as it is produced and parks inside `next` between them —
+/// and dropping the iterator is how a peer that went away stops the work,
+/// with nothing to cancel and no second channel to say so.
 ///
 /// **`client` is the connection's authorization** (REMOTE §4, bl-8bbc): the
 /// identity read off the certificate the peer presented, which the engine
@@ -49,7 +57,7 @@ const ACCEPT_POLL: Duration = Duration::from_millis(20);
 /// rather than connection state because the answer is the only thing that ever
 /// needs it, and a field would be a second copy of what the certificate says.
 pub trait Answerer: Send + Sync {
-    fn answer(&self, client: &Client, request: Value) -> Vec<Value>;
+    fn answer(&self, client: &Client, request: Value) -> Box<dyn Iterator<Item = Value>>;
 }
 
 /// The listener thread. Owns its join handle and a stop flag; [`Drop`] signals

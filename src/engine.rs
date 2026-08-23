@@ -9,13 +9,13 @@
 //! windowless arm — in the one file `tarpaulin.toml` excludes, so the two
 //! copies were free to drift and no test could notice. Now there is one
 //! [`Engine::boot`] and two callers, and what a face adds beside it is exactly
-//! what the window is: an event loop to repaint ([`Repaint`]), the three
-//! off-frame wire halves ([`Engine::window_wire`] — asker, poster and the §8.5
-//! searcher, which the windowless face needs none of, since every headless seat
-//! already answers in place and off-frame), and the §5.3 RAM surfaces a pointer
-//! needs.
+//! what the window is: an event loop to repaint ([`Repaint`]), the four
+//! off-frame wire halves ([`Engine::window_wire`] — asker, poster, follow lane
+//! and the §8.5 searcher, which the windowless face needs none of, since every
+//! headless seat already answers in place and off-frame), and the §5.3 RAM
+//! surfaces a pointer needs.
 //!
-//! The engine spawns six threads and **no frame** — which is the §7.2
+//! The engine spawns five threads and **no frame** — which is the §7.2
 //! invariant stated from the other side: everything yog does other than paint
 //! happens here, so nothing that runs long has a frame to block.
 
@@ -24,7 +24,7 @@
 pub mod window;
 
 use crate::AppModel;
-use crate::app::{FollowThread, Roots, Worker};
+use crate::app::{Roots, Worker};
 use crate::boundary::consumer::{Consumer, ConsumerCtx};
 use crate::boundary::dispatch::Deps;
 use crate::cli_outbound::{Binary, Cli};
@@ -55,13 +55,16 @@ pub struct Engine {
     wire: Option<crate::wire::server::Listener>,
     _sentry: Sentry,
     _pilot: Pilot,
-    _follower: FollowThread,
     /// The asker's half of the window's read path (REMOTE §1.2, bl-ae05),
     /// minted here beside the listener because both ends of a loopback wire are
     /// this one assembly's. Taken by [`asker`](Self::asker) — a window takes it
     /// and a `yog serve` never does, which is the whole difference between the
     /// two faces here.
     wire_end: Option<crate::wire::link::LinkEnd>,
+    /// The follow lane's engine-side end (REMOTE §3, bl-73e7), minted and taken
+    /// on the read path's own terms — one lane per engine, and a `yog serve`
+    /// never takes it.
+    lane_end: Option<crate::wire::lane::TailEnd>,
     /// The poster's half of the window's **act** path (REMOTE §9.8, bl-4841),
     /// minted beside the read path's end and taken the same way — by
     /// [`poster`](Self::poster), which a window calls and `yog serve` never
@@ -116,12 +119,6 @@ impl Engine {
         );
         let bridge = Bridge::spawn(deriver.watchset_handle(), deriver.dirty_handle());
         let worker = Worker::spawn(deriver, Arc::clone(&repaint));
-        // The §7.2 live tail (bl-54f7): the focused conversation's open
-        // `response.json`, followed at frame cadence. It rides the engine
-        // beside the worker because a *reader* of one file is not a face's
-        // concern — the windowless seat simply has a `NoRepaint` to wake.
-        let face = Arc::clone(&repaint);
-        let follower = model.follower().spawn(repaint);
         // Which clients hold a live connection right now (REMOTE §5, bl-4e08):
         // one handle, minted here because the listener fills it while every
         // answer reads it. RAM by ruling: presence changes with every network
@@ -137,6 +134,13 @@ impl Engine {
         // code path as a surface whose answer has not landed yet.
         let (link, wire_end) = crate::wire::link::pair();
         model.adopt_wire(link);
+        // The follow lane's two ends (REMOTE §3, bl-73e7), minted here for the
+        // read path's reason exactly. The §7.2 live tail used to be a follower
+        // thread on this engine writing into the model's own RAM; it is a held
+        // wire read now, so what the engine mints is a channel pair and the
+        // face takes the far end or does not.
+        let (tail, lane_end) = crate::wire::lane::pair();
+        model.adopt_tail(tail);
         // The act path's two ends (REMOTE §9.8, bl-4841), minted here for the
         // read path's reason exactly: both ends of a loopback wire belong to
         // this one assembly, and a face takes the far one or does not.
@@ -228,10 +232,10 @@ impl Engine {
             wire,
             _sentry: sentry,
             _pilot: pilot,
-            _follower: follower,
             wire_end: Some(wire_end),
+            lane_end: Some(lane_end),
             post_end: Some(post_end),
-            repaint: face,
+            repaint,
         }
     }
 }

@@ -9,18 +9,19 @@
 //! address is handed over in RAM rather than read back out of a file, and a `:0`
 //! in `address` is a request nobody has to resolve twice.
 //!
-//! Both ends are **taken**, not shared: a second call answers `None`. There is
-//! one asker and one poster per engine, and for the act path that is load
-//! bearing — an act must be sent exactly once.
+//! All three ends are **taken**, not shared: a second call answers `None`.
+//! There is one asker, one poster and one follow lane per engine, and for the
+//! act path that is load bearing — an act must be sent exactly once.
 
 use super::Engine;
 use crate::xdg::Env;
 use std::sync::Arc;
 
-/// **Both of a window's off-frame halves**, taken together because they are one
+/// **All of a window's off-frame halves**, taken together because they are one
 /// hand-over and one lifetime: the [`asker`](crate::wire::asker) polling the
-/// standing reads at human cadence, and the [`poster`](crate::wire::poster)
-/// sending what the frame fires.
+/// standing reads at human cadence, the [`poster`](crate::wire::poster) sending
+/// what the frame fires, and — since bl-73e7 — the [`lane`](crate::wire::lane)
+/// holding the live tail open at the rate the model writes it.
 ///
 /// Held by the face so they live as long as the window. They stop differently
 /// and each in its own right: the asker is a poll, so its handle signals, unparks
@@ -36,6 +37,13 @@ pub struct WindowWire {
     /// asker would make a once-per-ask walk a 2 Hz one and put it in front of
     /// every other surface's answer.
     _searcher: crate::search::SearchThread,
+    /// The **follow lane** (REMOTE §3, bl-73e7) — the fourth half, and the one
+    /// that exists because the asker's pass is serial: a read held open on the
+    /// live tail would stall every other surface for its whole duration, so it
+    /// gets a connection and a thread of its own. Its handle signals and
+    /// unparks but does not join, for the reason
+    /// [`LaneThread`](crate::wire::lane::LaneThread) states.
+    _lane: crate::wire::lane::LaneThread,
 }
 
 impl Engine {
@@ -58,6 +66,7 @@ impl Engine {
             _asker: self.asker(world)?.start(),
             _poster: self.poster(world)?.start(),
             _searcher: self.searcher(world)?.start(),
+            _lane: self.lane(world)?.start(),
         })
     }
 
@@ -115,6 +124,23 @@ impl Engine {
         Some(crate::search::Searcher::new(
             self.window_seat(world).ok()?,
             self.model.search_cell(),
+        ))
+    }
+
+    /// **The window's follow lane** (REMOTE §3, §10; bl-73e7): a third seat, on
+    /// a connection it holds rather than one it drops.
+    ///
+    /// Its own seat for the poster's reason exactly — the threads dial
+    /// independently and a seat is a configuration and an address (REMOTE §6),
+    /// so there is nothing to share. It takes the lane end, so there is one
+    /// lane per engine: two lanes on one conversation would be two held reads
+    /// of one tail, and REMOTE §10's whole argument for a held connection is
+    /// that there is exactly one surface whose rate needs it.
+    pub fn lane(&mut self, world: &Env) -> Option<crate::wire::lane::Lane> {
+        Some(crate::wire::lane::Lane::new(
+            self.window_seat(world).ok()?,
+            self.lane_end.take()?,
+            Arc::clone(&self.repaint),
         ))
     }
 

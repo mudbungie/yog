@@ -261,20 +261,6 @@ pub const QUERIES: &[HelpRow] = &[
                  results are clickable; a search with no text clears the last one.",
     },
     HelpRow {
-        verb: "invocations",
-        usage: "/invocations",
-        summary: "a tool host's next work: wait for what this machine has been asked to run",
-        detail: "The follow-class read. It does not answer until this machine has an invocation \
-                 or the engine's hold expires — thirty seconds — so a tool host waits here \
-                 rather than polling, and asks again the moment it is answered. It names \
-                 nothing: the queue it drains is the one addressed to the certificate this \
-                 connection presented, which is why a caller inside the world (`yog gesture`, \
-                 the deposit inbox, the window) is refused rather than handed somebody's work. \
-                 An empty answer is the ordinary answer of a hold that ended quietly, not a \
-                 failure. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run \
-                 it and post the result with `/complete`.",
-    },
-    HelpRow {
         verb: "capture",
         usage: "/capture <invocation>",
         summary: "what one routed invocation captured, if the far machine has answered yet",

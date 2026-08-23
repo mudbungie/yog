@@ -39,8 +39,10 @@ impl Answerer for Yes {
         &self,
         _client: &yog::registry::Client,
         request: serde_json::Value,
-    ) -> Vec<serde_json::Value> {
-        vec![serde_json::json!({"ok": true, "kind": "balls", "asked": request})]
+    ) -> Box<dyn Iterator<Item = serde_json::Value>> {
+        Box::new(std::iter::once(
+            serde_json::json!({"ok": true, "kind": "balls", "asked": request}),
+        ))
     }
 }
 

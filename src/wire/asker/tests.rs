@@ -20,8 +20,12 @@ use tempfile::TempDir;
 struct Says(Vec<serde_json::Value>);
 
 impl Answerer for Says {
-    fn answer(&self, _client: &crate::registry::Client, _request: serde_json::Value) -> Vec<Value> {
-        self.0.clone()
+    fn answer(
+        &self,
+        _client: &crate::registry::Client,
+        _request: serde_json::Value,
+    ) -> Box<dyn Iterator<Item = Value>> {
+        Box::new(self.0.clone().into_iter())
     }
 }
 

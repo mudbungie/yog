@@ -96,6 +96,8 @@ pub(crate) use streaming::{fold_stream, latest_response_path};
 // whole value and the §11 live mark, the flight strip and the transcript's
 // live tail all read it off the snapshot.
 pub use streaming::{Delta, Stream, stream_from_disk};
+// The fold's wire spelling (bl-73e7), the follow lane's frame body.
+pub use streaming::wire as stream_wire;
 // The §4.4 terminal classifier, shared with the Y13 steps inspector so the
 // segment-boundary parser is never duplicated (§15 Y13: "reuse
 // git_tree::terminal's segment classification — do NOT duplicate the

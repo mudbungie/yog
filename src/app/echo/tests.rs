@@ -58,7 +58,7 @@ fn snap(agents: Vec<Agent>) -> Arc<Snapshot> {
 }
 
 fn folded(derived: &Arc<Snapshot>, echo: &Echo) -> Vec<Agent> {
-    compose(derived, Some(echo), None, None).trees[&ws()]
+    compose(derived, Some(echo), None).trees[&ws()]
         .agents
         .clone()
 }
@@ -158,7 +158,7 @@ fn a_starts_target_takes_the_id_its_branch_brings_and_only_once() {
 fn nothing_pending_folds_nothing_and_an_absent_target_invents_nothing() {
     let derived = snap(vec![agent("c-1", None, 2)]);
     assert!(
-        Arc::ptr_eq(&compose(&derived, None, None, None), &derived),
+        Arc::ptr_eq(&compose(&derived, None, None), &derived),
         "with nothing pending the rendered snapshot IS the derivation"
     );
     // A follow-up whose agent is gone (deleted under it) folds nothing: the
@@ -174,7 +174,7 @@ fn a_start_into_a_workspace_with_no_tree_still_paints_its_row() {
     // never derived. The general path with an empty tree, not a special case.
     let derived = Arc::new(Snapshot::empty(0));
     let echo = Echo::started(Path::new(WS), "stench-pug", "found the world", 7);
-    let rendered = compose(&derived, Some(&echo), None, None);
+    let rendered = compose(&derived, Some(&echo), None);
     assert_eq!(rendered.trees[&ws()].agents.len(), 1);
     assert_eq!(rendered.trees[&ws()].agents[0].agent_id, "stench-pug");
 }

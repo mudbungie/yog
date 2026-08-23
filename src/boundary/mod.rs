@@ -51,6 +51,9 @@ pub mod dispatch;
 pub mod fan;
 /// The VISION §4.3 armed loop's one executor — arming, which is a config write.
 pub mod fleet;
+/// The follow lane's engine half (REMOTE §3, §10; bl-73e7): the one query whose
+/// answer is a frame *sequence*, held open at the rate the model writes.
+pub(crate) mod follow;
 pub mod help;
 /// The §8.2 send-and-interrupt's one executor (bl-a33d) — a stop and a deposit,
 /// in that order, leaving the two ops rows they each already leave. Its own

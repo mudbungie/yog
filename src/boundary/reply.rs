@@ -223,6 +223,12 @@ pub enum Reply {
     /// answer: the committed `messages/` entries with the in-flight tail folded
     /// on, which is the whole of what the window's chat pane paints.
     Transcript(crate::transcript::Transcript),
+    /// **One frame of the live tail** (REMOTE §3, DESIGN §7.2; bl-73e7) —
+    /// [`Follow`](super::Query::Follow)'s answer, and the whole accumulated
+    /// stream rather than a delta, so a frame replaces what a seat holds and
+    /// nothing has to be reassembled. Empty is the honest answer for a
+    /// conversation with nothing in flight.
+    Follow(crate::git_tree::Stream),
     /// Every step the conversation has taken (§11) —
     /// [`Steps`](super::Query::Steps)' answer, the Steps tab's list.
     Steps(crate::steps_view::StepsView),

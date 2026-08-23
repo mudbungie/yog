@@ -20,7 +20,8 @@ pub mod table;
 mod tests;
 
 /// The whole verb roster — the acts on a conversation or a ball, then the
-/// standing/settings verbs, then the queries, in that order. A **function**,
+/// standing/settings verbs, then the queries, then the follow-class reads
+/// whose answer is a sequence (bl-73e7), in that order. A **function**,
 /// not a const, because the list outgrew one file at §12's cap (bl-dc0c,
 /// bl-2d19) and const slices cannot be concatenated in a const: the split is a
 /// line budget, so it must not become a second list anyone can read half of.
@@ -30,6 +31,7 @@ pub fn table() -> Vec<HelpRow> {
         table::ACTIONS,
         table::standing::STANDING,
         table::queries::QUERIES,
+        table::following::FOLLOWING,
     ]
     .concat()
 }

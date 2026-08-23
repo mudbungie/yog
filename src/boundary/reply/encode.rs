@@ -15,6 +15,9 @@ use super::search::hit_row;
 use super::{Reply, prepared_value};
 use crate::registry::mailbox::{capture_value, invocation_value};
 
+/// The follow lane's reply kind (bl-73e7), named once for both directions.
+pub(super) const FOLLOW: &str = "follow";
+
 /// Encode a reply to its file body. `ok` is the one field every reply carries.
 pub fn encode(reply: &Reply) -> Value {
     match reply {
@@ -121,6 +124,11 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Science(rows) => crate::science::wire::reply(rows),
         // The §11 inspector family (bl-6233) — the conversation's own reads.
         Reply::Transcript(transcript) => crate::transcript::wire::reply(transcript),
+        // One frame of the live tail (bl-73e7). The body is the fold's own
+        // spelling, so a follow frame and the tail folded into a transcript
+        // are the same value said the same way.
+        Reply::Follow(stream) => json!({ "ok": true, "kind": FOLLOW,
+                                         "stream": crate::git_tree::stream_wire::stream_value(stream) }),
         Reply::Steps(view) => crate::steps_view::wire::steps(view),
         Reply::Step(detail) => crate::steps_view::wire::detail(detail),
         Reply::Files { view, preview } => crate::files_view::wire::reply(view, preview.as_ref()),

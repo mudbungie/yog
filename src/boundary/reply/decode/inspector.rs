@@ -21,6 +21,9 @@ use crate::boundary::codec::fields::{opt_str_of, opt_val, str_of, strings_of};
 pub(super) fn decode(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> {
     Some(match kind {
         "transcript" => crate::transcript::wire::decode::transcript(o).map(Reply::Transcript),
+        // One frame of the live tail (bl-73e7) — the fold read back by the
+        // module that wrote it, so the lane needs no reader of its own.
+        super::super::encode::FOLLOW => follow(o),
         "steps" => crate::steps_view::wire::decode::steps(o).map(Reply::Steps),
         "step" => crate::steps_view::wire::decode::detail(o).map(Reply::Step),
         "files" => files(o),
@@ -32,6 +35,16 @@ pub(super) fn decode(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply,
         "science" => crate::science::wire::rows_of(o).map(Reply::Science),
         _ => return None,
     })
+}
+
+/// One follow frame: the fold, under the one key the encoder writes it at. A
+/// frame with no `stream` object at all is a codec that has drifted, not an
+/// empty tail — an empty tail is an empty object, which reads as
+/// [`Stream::default`](crate::git_tree::Stream).
+fn follow(o: &Map<String, Value>) -> Result<Reply, String> {
+    let body = o.get("stream").ok_or("follow: missing stream")?;
+    let body = body.as_object().ok_or("follow: stream is not an object")?;
+    crate::git_tree::stream_wire::stream_of(body).map(Reply::Follow)
 }
 
 fn files(o: &Map<String, Value>) -> Result<Reply, String> {

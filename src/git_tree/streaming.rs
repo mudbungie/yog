@@ -35,6 +35,10 @@ use std::path::Path;
 
 use super::STEPS_DIR;
 
+/// The fold's own JSON spelling (REMOTE §3, bl-73e7) — the follow lane's frame
+/// body, beside the type rather than at the boundary that carries it.
+pub mod wire;
+
 /// Width of the zero-padded step sequence in on-disk paths
 /// (`steps/<conv-id>/001`, `…/002`, ...). Mirrors
 /// `src/prompt/step::STEP_SEQ_WIDTH` — duplicated here to keep the UI

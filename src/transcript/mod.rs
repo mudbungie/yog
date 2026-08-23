@@ -39,16 +39,17 @@
 //! one build made the tail as slow as the derivation, which is the defect
 //! bl-54f7 closed.
 
-use std::path::{Path, PathBuf};
-
 mod compaction;
 pub(crate) use compaction::seq_of;
 mod parse;
+/// The committed record's disk read — its own file at §12's budget (bl-73e7).
+mod read;
 mod render;
 mod rows;
 mod spine;
 pub(crate) mod wire;
 use parse::{parse_model, parse_tool_result};
+pub use read::build;
 pub use render::{Reading, render};
 pub(crate) use rows::key;
 pub use rows::{AutoExpand, Fold, Row, RowClass, Tone, rows};
@@ -171,14 +172,22 @@ impl Transcript {
         })
     }
 
-    /// This transcript with the live tail appended as a virtual trailing entry
-    /// (§7.2). `stream` is the rendered snapshot's own fold — never a disk read
-    /// from here, which is what lets the caller run this per frame while the
-    /// committed half stays memoized per published snapshot.
+    /// This transcript with the live tail as a virtual trailing entry (§7.2).
+    /// `stream` is a fold somebody else already made — never a disk read from
+    /// here, which is what lets the two halves keep different clocks.
     ///
     /// A stream that has said nothing yet adds no entry: an empty live row is
     /// not the same claim as a model that has begun, and "waiting for the API"
     /// is the §11 live mark's to say, not a blank line's.
+    ///
+    /// **It replaces a live entry rather than appending beside one** (bl-73e7),
+    /// so `a.with_live(x).with_live(y) == a.with_live(y)`. That is not a
+    /// convenience: the tail now reaches a seat by two routes at two cadences —
+    /// the pull `Query::Transcript` folds one on at ask cadence, and the follow
+    /// lane delivers a newer one at write cadence — and *the newest fold wins*
+    /// is the only reconciliation either needs. Appending would paint the
+    /// answer twice, and a caller stripping the older one by hand would be a
+    /// second party deciding what a live row is.
     #[must_use]
     pub fn with_live(&self, stream: &crate::git_tree::Stream) -> Transcript {
         let (thinking, text) = (
@@ -186,6 +195,12 @@ impl Transcript {
             stream.text.clone().unwrap_or_default(),
         );
         let mut entries = self.entries.clone();
+        if matches!(
+            entries.last().map(|e| &e.kind),
+            Some(EntryKind::Streaming { .. })
+        ) {
+            entries.pop();
+        }
         if !thinking.is_empty() || !text.is_empty() {
             entries.push(Entry {
                 name: STREAMING_NAME.to_string(),
@@ -195,97 +210,6 @@ impl Transcript {
         }
         Transcript { entries }
     }
-}
-
-/// Build the **committed** transcript for `agent_id` in `workspace`: the
-/// `messages/` directory, with a marker seated in every hole compaction left
-/// in its counter ([`compaction`] — the directory is not append-only, and a
-/// readdir alone renders a rewritten record as if it were the whole record).
-/// The live tail is [`Transcript::with_live`] — see the module doc for why
-/// the two are not one call.
-pub fn build(workspace: &Path, agent_id: &str) -> Transcript {
-    let agent = workspace.join(AGENTS_DIR).join(agent_id);
-    let read = read_messages(&agent.join(MESSAGES_DIR));
-    Transcript {
-        entries: compaction::splice(&agent, read),
-    }
-}
-
-/// Enumerate `messages/` as entries in filename order. The zero-padded `NNN`
-/// counter makes lexicographic filename order the true message order, so a
-/// plain string sort suffices. Non-files (a stray subdir) are skipped; an
-/// absent directory yields no entries.
-fn read_messages(dir: &Path) -> Vec<Entry> {
-    let Ok(read) = std::fs::read_dir(dir) else {
-        return Vec::new();
-    };
-    let mut files: Vec<(String, PathBuf)> = read
-        .flatten()
-        .filter_map(|e| {
-            let path = e.path();
-            path.is_file()
-                .then(|| (e.file_name().to_string_lossy().into_owned(), path))
-        })
-        .collect();
-    files.sort_by(|a, b| a.0.cmp(&b.0));
-    files
-        .into_iter()
-        .map(|(name, path)| {
-            let raw = std::fs::read(&path).unwrap_or_default();
-            let kind = classify(&name, &raw);
-            Entry { name, raw, kind }
-        })
-        .collect()
-}
-
-/// Classify one entry by its filename origin token and bytes.
-///
-/// A delivered `.md` is a **deposit file moved verbatim** — lernie's
-/// `deliver_message` is a literal `rename(2)` and "the file's frontmatter
-/// travels untouched" (ARCH §2.11) — so its bytes open with the
-/// `---\nfrom: …\n---\n` envelope, not with the message. It is parsed by
-/// the one envelope parser yog has ([`crate::inboxview::parse_deposit`]);
-/// a second copy here would be a second truth about the same bytes. The
-/// envelope's asserted fields are dropped from the parsed view exactly as
-/// the model-id line and the `tool_use_id`s are (DESIGN §11) — the framing
-/// `sender` is the filename's, and the Raw toggle still shows the envelope
-/// verbatim. **`epitaph:` is the one exception, and it is the rule's own
-/// reason**: the dropped fields are re-asserted elsewhere (the sender by the
-/// filename, the timestamp by the file order), but nothing else carries the
-/// ending, and on a body-less result deposit it is the whole message (bl-71e8).
-fn classify(name: &str, raw: &[u8]) -> EntryKind {
-    let Some((_, origin, ext)) = parse_name(name) else {
-        return EntryKind::Raw;
-    };
-    match ext {
-        MD_EXT => {
-            let deposit = crate::inboxview::parse_deposit(raw);
-            EntryKind::Delivered {
-                sender: origin.to_string(),
-                epitaph: deposit.epitaph,
-                body: deposit.body,
-            }
-        }
-        JSON_EXT if origin == TOOL_ORIGIN => parse_tool_result(raw).unwrap_or(EntryKind::Raw),
-        JSON_EXT => parse_model(origin, raw),
-        _ => EntryKind::Raw,
-    }
-}
-
-/// Split `NNN-<origin>.<ext>` into `(NNN, origin, ext)`. Anything not matching
-/// the shape is `None` (→ Raw bucket).
-///
-/// The counter is **returned** since bl-7bd2: filename order carries where an
-/// entry sits, but only its value says which entries are *not there*
-/// ([`compaction`]), and one parse of this shape is the whole of what either
-/// caller may know about it.
-fn parse_name(name: &str) -> Option<(&str, &str, &str)> {
-    let (stem, ext) = name.rsplit_once('.')?;
-    let (num, origin) = stem.split_once('-')?;
-    if num.is_empty() || !num.bytes().all(|b| b.is_ascii_digit()) || origin.is_empty() {
-        return None;
-    }
-    Some((num, origin, ext))
 }
 
 #[cfg(test)]

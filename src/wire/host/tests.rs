@@ -189,8 +189,12 @@ fn arguments_are_a_usage_refusal() {
 fn an_answer_that_is_not_this_machines_work_names_itself() {
     struct Says(Vec<Value>);
     impl crate::wire::server::Answerer for Says {
-        fn answer(&self, _client: &crate::registry::Client, _request: Value) -> Vec<Value> {
-            self.0.clone()
+        fn answer(
+            &self,
+            _client: &crate::registry::Client,
+            _request: Value,
+        ) -> Box<dyn Iterator<Item = Value>> {
+            Box::new(self.0.clone().into_iter())
         }
     }
 
@@ -235,10 +239,18 @@ fn a_completion_the_engine_refuses_stops_the_host() {
         at: std::sync::atomic::AtomicUsize,
     }
     impl crate::wire::server::Answerer for InTurn {
-        fn answer(&self, _client: &crate::registry::Client, _request: Value) -> Vec<Value> {
+        fn answer(
+            &self,
+            _client: &crate::registry::Client,
+            _request: Value,
+        ) -> Box<dyn Iterator<Item = Value>> {
             let at = self.at.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            vec![self.said.get(at).cloned().unwrap_or(json!({"ok": false,
-                                                             "error": "nothing left to say"}))]
+            Box::new(std::iter::once(
+                self.said
+                    .get(at)
+                    .cloned()
+                    .unwrap_or(json!({"ok": false, "error": "nothing left to say"})),
+            ))
         }
     }
 

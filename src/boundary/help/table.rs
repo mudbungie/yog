@@ -7,15 +7,17 @@
 
 use super::HelpRow;
 
+pub mod following;
 pub mod queries;
 pub mod standing;
 
 /// Every **action on a conversation or a ball**, in the order help lists them:
 /// the §8.2 conversation verbs, the ball verbs, the start pair, the V2 attempt
 /// and the §3.6 deletes. The verbs whose subject is a setting, a standing
-/// policy or a record are [`standing::STANDING`] and the queries are
-/// [`queries::QUERIES`]; [`table`](super::table) reads all three as one, so
-/// neither split is a seam an operator can see.
+/// policy or a record are [`standing::STANDING`], the queries are
+/// [`queries::QUERIES`] and the follow-class reads are
+/// [`following::FOLLOWING`]; [`table`](super::table) reads all four as one, so
+/// no split is a seam an operator can see.
 pub const ACTIONS: &[HelpRow] = &[
     HelpRow {
         verb: "message",

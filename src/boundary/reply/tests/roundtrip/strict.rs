@@ -103,6 +103,22 @@ fn the_conversation_rows_alignment_verdict_is_a_known_word() {
     );
 }
 
+/// **A follow frame with no fold at all is a codec that has drifted, not an
+/// empty tail** (bl-73e7). An empty tail is an empty object; a missing `stream`
+/// key is a frame that says nothing about the thing it exists to say, and a
+/// `delta` naming no arm of the fold is the same class of drift.
+#[test]
+fn the_follow_frame_is_read_strictly() {
+    let follow = |stream: Value| json!({ "ok": true, "kind": "follow", "stream": stream });
+    refuses(&json!({ "ok": true, "kind": "follow" }), "missing stream");
+    refuses(&follow(json!("said")), "not an object");
+    refuses(
+        &follow(json!({ "delta": "sideways" })),
+        "unknown delta kind",
+    );
+    refuses(&follow(json!({ "text": 7 })), "\"text\"");
+}
+
 #[test]
 fn the_board_figure_is_read_strictly() {
     let row = |spend: Value| {
