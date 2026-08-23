@@ -1,7 +1,8 @@
 +++
 title = "yog has no deployment recipe for a headless server: no service unit, no auto-update from the registry, and an unconditional restart kills an in-flight turn"
 created = 1787460962
-updated = 1787460962
+updated = 1787460963
+claimant = "Nachos"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
