@@ -89,6 +89,34 @@ fn fold_surfaces_a_driver_that_died_after_launching() {
     );
 }
 
+/// **THE BALL** (bl-1296): the fold is unchanged — the sink's tail rides into
+/// the row exactly as before — but a tail that is nothing but lernie notice
+/// lines does not make the row a rendered failure. The sink is append-only for
+/// the driver's whole life, so this is the difference between a benign line
+/// quieting on the next sweep and one that banners until it is acked.
+#[test]
+fn a_sink_holding_only_notices_folds_in_without_reddening_the_row() {
+    let dir = tempdir().unwrap();
+    let (state, ws) = (dir.path(), dir.path().join("cobalt-gecko"));
+    let entry = prompt(&ws);
+    let path = sink(state, &entry.ts, &ws);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    let notice = "lernie: compaction landing [c-2] superseded — a compaction landed \
+                  since its fork point (ARCH §2.6); the branch continues\n";
+    fs::write(&path, notice).unwrap();
+
+    let folded = fold(state, &entry);
+    assert_eq!(folded.stderr, notice, "the tail still folds in");
+    let row = OpRow::from(&folded);
+    assert!(!row.failed(), "a driver notice is not a rendered failure");
+    assert!(row.has_output(), "and the pane still offers the expansion");
+
+    // The driver then really dies, into the same append-only sink: the row goes
+    // back to being a failure on the next sweep.
+    fs::write(&path, format!("{notice}lernie: brazen 0.0.2 != 0.0.3\n")).unwrap();
+    assert!(OpRow::from(&fold(state, &entry)).failed());
+}
+
 #[test]
 fn fold_leaves_every_row_it_is_not_the_authority_for() {
     let dir = tempdir().unwrap();

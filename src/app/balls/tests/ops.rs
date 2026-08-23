@@ -220,3 +220,52 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
         "no line rewritten"
     );
 }
+
+/// **THE BALL** (bl-1296): the same sweep, over a sink holding a benign lernie
+/// driver notice. The row folds the tail in and stays out of every alarm — no
+/// §7.3 banner on the surface that fired it, nothing in the chip's ⚠ count —
+/// while the expandable ops row keeps the text. The dead-driver beat above is
+/// the arm this must not weaken, which is why the two stand side by side.
+#[test]
+fn a_detached_prompt_whose_driver_only_filed_a_notice_never_banners() {
+    let w = world();
+    let (_c, mut m) = model(&w);
+    let ws = Path::new("/ws/cobalt-gecko");
+    opslog::append(
+        m.state_root(),
+        &opslog::OpEntry {
+            ts: "19".into(),
+            argv: vec![
+                "lernie".into(),
+                "prompt".into(),
+                ws.to_string_lossy().into_owned(),
+                "goal".into(),
+            ],
+            cwd: "/ws".into(),
+            exit: DETACHED_EXIT,
+            stdout: String::new(),
+            stderr: String::new(),
+            origin: Origin::Conversation,
+        },
+    )
+    .unwrap();
+
+    // The driver lands a compaction decline and carries on, into its §8.1 sink.
+    let notice = "lernie: compaction landing [c-2] superseded — a compaction landed \
+                  since its fork point (ARCH §2.6); the branch continues\n";
+    let sink = opslog::detached::sink(m.state_root(), "19", ws);
+    fs::create_dir_all(sink.parent().unwrap()).unwrap();
+    fs::write(&sink, notice).unwrap();
+
+    m.after_lernie_verb();
+    m.tick(); // the ops re-read is the worker's next pass (§7.2)
+    let row = m.snap.ops.last().unwrap();
+    assert!(!row.failed(), "a benign notice is not a rendered failure");
+    assert_eq!(row.stderr, notice, "and the trail still carries its words");
+    assert!(row.has_output(), "so the pane offers the expansion");
+    assert!(
+        m.last_failure(Origin::Conversation).is_none(),
+        "the surface that fired it is not bannered"
+    );
+    assert_eq!(m.activity().errors, 0, "and the chip counts no failure");
+}

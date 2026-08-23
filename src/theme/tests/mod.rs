@@ -166,6 +166,7 @@ fn op_badges_say_their_outcome_in_words() {
         OpOutcome::Failed,
         OpOutcome::Retired,
         OpOutcome::Detached,
+        OpOutcome::Notice,
     ] {
         let (glyph, color, phrase) = super::op_badge(o);
         assert!(!glyph.is_empty(), "unmarked outcome {o:?}");
@@ -204,6 +205,16 @@ fn op_badges_say_their_outcome_in_words() {
     assert_ne!(detached_glyph, "⚠", "must not read as failed");
     assert_eq!(detached_hue, BRAZEN);
     assert_eq!(detached_phrase, "detached — handed off, no exit to observe");
+    // bl-1296: a driver notice takes the handoff's hue quieted — the outcome
+    // exists *because* a benign line was painting as a death, so it may not
+    // wear the wound hue, and it may not borrow either failure's ⚠ or the clean
+    // bullet.
+    let (notice_glyph, notice_hue, notice_phrase) = super::op_badge(OpOutcome::Notice);
+    assert_ne!(notice_hue, ICHOR, "a notice must never read as a wound");
+    assert_eq!(notice_hue, super::BRAZEN_DIM);
+    assert_ne!(notice_glyph, "⚠", "must not read as failed");
+    assert_ne!(notice_glyph, "·", "must not read as clean");
+    assert!(notice_phrase.starts_with("notice"));
 }
 
 #[test]

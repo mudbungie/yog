@@ -139,6 +139,12 @@ fn a_config_kind_dispatch_failure_paints_its_reason_and_the_way_out() {
 /// Every other failure class keeps the banner it had. A transport reset is
 /// nobody's remedy, and routing one to the config editor would be a guess with
 /// a button on it — so the reason paints and the remedy does not.
+///
+/// *"Every other failure class"* is exact and stayed exact through bl-1296: a
+/// detached driver's **notice** is not one. It never becomes a
+/// `SurfaceFailure`, so it reaches no banner to keep — `opslog::notice` decides
+/// that one line earlier, off the ops row, and this file's classifiers are
+/// asked only about failures that already are failures.
 #[test]
 fn a_failure_of_another_class_earns_the_reason_and_no_config_route() {
     let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));

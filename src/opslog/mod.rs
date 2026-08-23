@@ -279,6 +279,11 @@ pub use origin::Origin;
 /// and the read-time fold that projects its tail into the row.
 pub mod detached;
 
+/// Which of that captured stderr is an **operator notice** rather than a death
+/// (§4.2, §13.3, bl-1296) — the narrow marker classifier `exit` asks before it
+/// calls a `-2` row failed.
+pub mod notice;
+
 /// The operator's own two lines (§4.2 as amended, bl-c417): the **ack** — a
 /// global seen-watermark that quiets every failure-derived alarm without
 /// hiding a row — and the **clear**, the one gesture that ends a trail, which

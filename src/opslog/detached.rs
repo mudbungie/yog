@@ -14,11 +14,23 @@
 //! is never stored twice and a still-running driver's later output surfaces on
 //! the next sweep without rewriting a durable line.
 //!
-//! A non-empty capture makes the row a rendered failure
-//! ([`OpRow::failed`](super::rows::OpRow::failed) already reads `DETACHED_EXIT`
+//! A capture the notice classifier does not recognize makes the row a rendered
+//! failure ([`OpRow::failed`](super::rows::OpRow::failed) reads `DETACHED_EXIT`
 //! that way), which is what stirs the §6/§11 activity surface and the §7.3
 //! ichor-red banner — no new signal, the existing machinery fed a fact it was
 //! previously denied.
+//!
+//! **A non-empty capture was the whole test until bl-1296, and that was too
+//! wide.** This file is a *transport*: it folds the tail in and says nothing
+//! about what the tail means. What it meant was decided one layer up by
+//! "the driver said anything at all", and lernie's contract makes this sink an
+//! **operator-notice** channel as much as a dying one — declines, superseded
+//! landings, accepted-crash-class launch notes, a §6 budget stop, all printed
+//! on paths that return `Ok(())`. Since the sink is append-only for the
+//! driver's whole life and this fold re-reads its tail every sweep, one benign
+//! line held its origin's newest row red until the operator acked it.
+//! [`super::notice`] is the narrow reading that tells the two apart; the fold
+//! is unchanged.
 //!
 //! **The join key is computed, not stored.** The sink's name derives from facts
 //! the ops line already carries — its `ts` and its workspace argument — so the

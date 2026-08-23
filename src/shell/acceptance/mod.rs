@@ -39,6 +39,7 @@ mod remedies;
 mod screen;
 mod search_tab;
 mod settings;
+mod sink;
 mod slash;
 mod smoke;
 mod start_draft;

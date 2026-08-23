@@ -20,21 +20,37 @@ fn row(argv: &str, cwd: &str, exit: i32) -> OpRow {
     })
 }
 
-use OpOutcome::{Clean, Detached, Failed, Retired};
+use OpOutcome::{Clean, Detached, Failed, Notice, Retired};
 
-/// A clean detached handoff: `-2` with empty stderr (`super::super::DETACHED_EXIT`
-/// — the [`row`] helper's exit==0 stderr rule doesn't apply to sentinels, so this
-/// is separate rather than reused).
-fn handoff(argv: &str, cwd: &str) -> OpRow {
+/// A lernie notice line, verbatim (bl-1296) — the sink content that used to
+/// make a `-2` row a rendered failure.
+const NOTICE_LINE: &str = "lernie: exit launch for c-1: no such file \
+     (accepted crash class, ARCH §2.11)\n";
+
+/// A detached `-2` row with `stderr` already folded in from its §8.1 sink
+/// (`super::super::DETACHED_EXIT` — the [`row`] helper's exit==0 stderr rule
+/// doesn't apply to sentinels, so this is separate rather than reused).
+fn detached(argv: &str, cwd: &str, stderr: &str) -> OpRow {
     OpRow::from(&OpEntry {
         ts: "TS".into(),
         argv: argv.split(' ').map(String::from).collect(),
         cwd: cwd.into(),
         exit: super::super::DETACHED_EXIT,
         stdout: String::new(),
-        stderr: String::new(),
+        stderr: stderr.into(),
         origin: Origin::default(),
     })
+}
+
+/// A clean detached handoff: the sentinel with the driver still silent.
+fn handoff(argv: &str, cwd: &str) -> OpRow {
+    detached(argv, cwd, "")
+}
+
+/// A `-2` row whose sink holds only lernie notice lines (bl-1296) — [`handoff`]
+/// with the driver's benign words in place of the silence.
+fn noticed(argv: &str, cwd: &str) -> OpRow {
+    detached(argv, cwd, NOTICE_LINE)
 }
 
 #[test]
@@ -146,45 +162,57 @@ fn a_handoff_retires_an_earlier_failure_of_the_same_verb() {
 /// the rollup must not double-classify the same row two ways.
 #[test]
 fn a_post_launch_death_reads_failed_not_detached() {
-    let died = OpRow::from(&OpEntry {
-        ts: "TS".into(),
-        argv: vec!["lernie".into(), "prompt".into()],
-        cwd: "/ws".into(),
-        exit: super::super::DETACHED_EXIT,
-        stdout: String::new(),
-        stderr: "refusing: version skew\n".into(),
-        origin: Origin::default(),
-    });
+    let died = detached("lernie prompt", "/ws", "refusing: version skew\n");
     assert_eq!(outcomes(&[died]), vec![Failed]);
 }
 
+/// **THE BALL** (bl-1296): a driver notice is its own outcome — never `Failed`
+/// (nothing went wrong), never `Detached` (the driver did speak), never `Clean`
+/// (nobody observed an exit).
 #[test]
-fn a_drift_row_is_counted_on_its_own_axis_never_as_a_failure() {
-    // A drift line accuses the watcher, not the operator's last verb: it
-    // must not read as a failure (that would hijack the §7.3 banner), and it
-    // must not retire or be retired by anything.
-    let drift = OpRow::from(&OpEntry::drift(
-        "TS".into(),
-        "unannounced",
-        "/state".into(),
-        "/ws/a\n".into(),
-    ));
-    assert!(drift.drift());
-    assert!(!drift.failed(), "a drift is not a failed action");
-    let rows = [row("bl close bl-1", "/p", 1), drift];
-    let a = activity(&rows);
+fn a_driver_notice_is_its_own_outcome() {
+    assert_eq!(outcomes(&[noticed("lernie prompt", "/ws")]), vec![Notice]);
+}
+
+/// And it never reaches the chip's ⚠ count — which is the whole complaint: the
+/// sink is append-only for the driver's life, so one benign line kept saying
+/// `1 failed ⚠` on every sweep until the operator acked it.
+#[test]
+fn a_notice_does_not_move_the_chip_failed_count() {
+    let a = activity(&[noticed("lernie prompt", "/ws")]);
     assert_eq!(
         a,
         Activity {
-            total: 2,
-            errors: 1,
-            drifts: 1
+            total: 1,
+            errors: 0,
+            drifts: 0
         }
     );
-    assert_eq!(a.chip(), "activity · 2 ops · 1 failed ⚠ · 1 drift");
-    assert_eq!(
-        activity(&rows[1..]).chip(),
-        "activity · 1 ops · 1 drift",
-        "drift alone still reaches the chip"
+    assert_eq!(a.chip(), "activity · 1 ops");
+    assert!(!a.alarming(), "and the pane offers no Dismiss for it");
+}
+
+/// It retires an earlier failure of the same verb exactly as `Clean` and
+/// `Detached` do (§6): it is the newest fact about that verb in this `cwd`.
+#[test]
+fn a_notice_retires_an_earlier_failure_of_the_same_verb() {
+    let rows = [
+        row("lernie prompt", "/ws", 2),
+        noticed("lernie prompt", "/ws"),
+    ];
+    assert_eq!(outcomes(&rows), vec![Retired, Notice]);
+    assert_eq!(activity(&rows).errors, 0);
+}
+
+/// The narrowing did not weaken the rule it narrowed: a sink that mixes a
+/// notice with words nothing recognizes is still a death, and still counted.
+#[test]
+fn a_sink_mixing_a_notice_with_unrecognized_words_stays_a_failure() {
+    let mixed = detached(
+        "lernie prompt",
+        "/ws",
+        &format!("{NOTICE_LINE}lernie: brazen 0.0.2 != 0.0.3\n"),
     );
+    assert_eq!(outcomes(std::slice::from_ref(&mixed)), vec![Failed]);
+    assert_eq!(activity(&[mixed]).errors, 1);
 }

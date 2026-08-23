@@ -185,7 +185,14 @@ fn ops_row(ui: &mut egui::Ui, row: &crate::opslog::OpRow, outcome: crate::opslog
             ui.code(&row.stdout);
         }
         if !row.stderr.is_empty() {
-            ui.colored_label(theme::ICHOR, "stderr:");
+            // The label wears the **row's own** hue, never ichor outright
+            // (bl-1296): captured stderr is not a synonym for failure — an
+            // exit-0 piped verb chatters there, and a detached driver's sink is
+            // lernie's operator-notice channel. Painting the section red on any
+            // bytes at all made the expansion contradict the badge above it,
+            // which is the one place the operator looks to know whether this
+            // row wants anything. One hue per row, from `theme::op_badge`.
+            ui.colored_label(hue, "stderr:");
             ui.code(&row.stderr);
         }
     })

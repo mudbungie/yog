@@ -49,6 +49,17 @@ pub enum OpOutcome {
     /// (§6): the handoff is the newest fact about that verb in this `cwd`,
     /// and a stale failure under it is no longer the live story.
     Detached,
+    /// A detached driver that **said something and carried on** — its sink holds
+    /// nothing but lernie notice lines ([`OpRow::notice`], bl-1296). The
+    /// `Detached` bucket's argument, repeated one class down: a compaction
+    /// landing superseded or a launch in the accepted crash class is neither a
+    /// clean exit (nobody observed one) nor a failure (nothing went wrong), so
+    /// it gets its own bucket rather than being folded into a neighbour that
+    /// would lie about it. It is **never counted in the chip's failure tally**
+    /// and the §7.3 banner never paints it; like `Clean` and `Detached` it
+    /// retires an earlier failure of the same verb (§6), being the newest fact
+    /// about that verb in this `cwd`.
+    Notice,
 }
 
 /// The §11 activity-accessory summary — the demoted ops pane's collapsed chip:
@@ -131,12 +142,13 @@ impl Activity {
 
 /// One [`OpOutcome`] per row, positionally aligned with `rows`: a failed row
 /// ([`OpRow::failed`]) is `Failed` unless a *later* row with the same
-/// [`verb_key`] retired it (ran clean, or handed off — see
-/// [`OpOutcome::Detached`]), which makes it `Retired`; a handoff with nothing
-/// said against it is `Detached`; everything else is `Clean`. Both `Clean`
-/// and `Detached` mark the verb retired going forward (bl-8433: a handoff is
-/// the newest fact about the verb, same as a clean run). The whole retirement
-/// rule lives here; nothing is stored.
+/// [`verb_key`] retired it (ran clean, handed off, or filed a notice — see
+/// [`OpOutcome::Detached`] and [`OpOutcome::Notice`]), which makes it `Retired`;
+/// a handoff whose driver said only that it carried on is `Notice`; a handoff
+/// with nothing said against it at all is `Detached`; everything else is
+/// `Clean`. All three of those mark the verb retired going forward (bl-8433: a
+/// handoff is the newest fact about the verb, same as a clean run). The whole
+/// retirement rule lives here; nothing is stored.
 pub fn outcomes(rows: &[OpRow]) -> Vec<OpOutcome> {
     let mut retired: HashSet<(String, String)> = HashSet::new();
     let mut out: Vec<OpOutcome> = rows
@@ -151,7 +163,9 @@ pub fn outcomes(rows: &[OpRow]) -> Vec<OpOutcome> {
                 };
             }
             retired.insert(verb_key(row));
-            if row.detached() {
+            if row.notice() {
+                OpOutcome::Notice
+            } else if row.detached() {
                 OpOutcome::Detached
             } else {
                 OpOutcome::Clean
