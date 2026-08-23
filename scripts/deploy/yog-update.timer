@@ -1,0 +1,20 @@
+# When to look for a new yog (bl-bf35). Hourly is well inside any useful
+# latency for a release and far below the registry's rate limits; the tick is
+# cheap when nothing changed (one small index fetch).
+[Unit]
+Description=hourly check for a new yog release
+Documentation=https://github.com/mudbungie/yog
+
+[Timer]
+# Not at boot exactly: the engine should come up first and a box that was off
+# overnight should not race its own network.
+OnBootSec=5min
+OnUnitActiveSec=1h
+# A missed window (the box was asleep) runs once on resume rather than being
+# skipped to the next hour.
+Persistent=true
+# Nothing depends on the minute, so let systemd spread the load.
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

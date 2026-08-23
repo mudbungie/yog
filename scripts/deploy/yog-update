@@ -1,0 +1,219 @@
+#!/bin/sh
+# Reconcile a server's yog against the registry — the CD half of the headless
+# deployment (bl-bf35). Run by `yog-update.timer`; safe to run by hand.
+# `yog-update --self-test` checks the decision below and touches no machine.
+#
+# TWO RECONCILIATIONS, NOT ONE PROCEDURE. They are separated because they have
+# different safety conditions and must be free to happen at different times:
+#
+#   1. the INSTALLED binary against the registry's newest live version
+#   2. the RUNNING engine against the installed binary
+#
+# (1) is always safe while the engine runs: `cargo install` replaces the file
+# by rename, so the running process keeps its own inode and never sees a
+# half-written binary. (2) is NOT always safe, and that is the whole reason
+# this script exists rather than a `cargo install && systemctl restart` line —
+# see `decide`.
+#
+# Nothing here is stored. "Which version is installed" is the binary's own
+# answer, "is a restart pending" is a kernel fact, and "is it safe" is read off
+# the cgroup. There is no state file to drift, and nothing to reconcile if a
+# human installs or restarts by hand.
+#
+# Exit 0 whenever the box is in a lawful state, including "newer version
+# installed, restart deferred" — a deferral is not a failure, and a timer unit
+# that reddened on one would cry wolf through every long turn.
+set -eu
+
+CRATE=yog
+UNIT=yog.service
+BIN="${CARGO_HOME:-$HOME/.cargo}/bin/$CRATE"
+# The sparse index — the same source `cargo install` resolves from, so the two
+# never disagree about what exists. Three-letter crate names live under `3/<a>`.
+INDEX_URL="https://index.crates.io/3/y/$CRATE"
+
+say() { printf '%s: %s\n' "$CRATE-update" "$*"; }
+die() { say "$*" >&2; exit 1; }
+
+# ------------------------------------------------------------- the decision
+#
+# ONE RULE: the engine should be running the newest live version, unless a turn
+# is in flight or the operator stopped it. Every case below falls out of that
+# sentence.
+#
+# It is a pure function of five facts so the branches that matter can be tested
+# without a server, a release or an agent (`--self-test`). Prints exactly one of
+# `current`, `defer`, `restart`.
+#
+# WHY `defer` EXISTS. A restart SIGTERMs the whole control group, and an agent
+# turn killed between a tool call and its result leaves an unpaired tool-use
+# tail — every later message on that conversation is refused by the provider.
+# The engine itself survives a SIGTERM (§4.1 state is write-through and there
+# is no `on_exit` hook, bl-b54e); the CONVERSATION does not, and no later boot
+# repairs it. So an unattended restart must read quiescence rather than assume
+# it.
+#
+# WHY THE PROCESS COUNT IS THE PREDICATE. The substrate is linked in-process
+# (§16.7) and the engine's own concurrency is threads, so an idle `yog serve`
+# is exactly one process; a turn in flight is a `lernie` child in the same
+# cgroup. That needs no yog-side API, no new gesture and no field on the model
+# — the fact is already there to read.
+#
+# WHY `failed` IS ITS OWN ARM. A unit that could not start has no turn to
+# protect, so nothing has to be deferred for — but neither is there any point
+# retrying the version that just failed. Trying a version it has NOT run is the
+# one useful act, and together with the yank lever below that closes the loop: a
+# release that crashes on boot is recovered by yanking it, with nobody logging
+# in. Without this arm a bad release would strand the box until a human did.
+#
+# `unknown` for any input defers: a fact we could not read is never grounds for
+# killing a turn we cannot see.
+decide() {
+    _state=$1 _changed=$2 _running=$3 _installed=$4 _procs=$5
+    if [ "$_state" = failed ]; then
+        if [ "$_changed" = yes ]; then echo restart; else echo defer; fi
+        return
+    fi
+    # Stopped on purpose, or mid-transition: not ours to move.
+    if [ "$_state" != active ]; then echo current; return; fi
+    case "$_running$_installed$_procs" in
+        *unknown*) echo defer; return ;;
+    esac
+    if [ "$_running" = "$_installed" ]; then echo current; return; fi
+    if [ "$_procs" -gt 1 ]; then echo defer; return; fi
+    echo restart
+}
+
+self_test() {
+    _fail=0
+    # state changed running installed procs -> expected
+    for _case in \
+        'active  no  a a 1 current' \
+        'active  no  a a 9 current' \
+        'active  no  a b 1 restart' \
+        'active  yes a b 1 restart' \
+        'active  no  a b 2 defer' \
+        'active  no  a b 9 defer' \
+        'active  no  unknown b 1 defer' \
+        'active  no  a unknown 1 defer' \
+        'active  no  a b unknown defer' \
+        'active  no  unknown unknown 1 defer' \
+        'failed  yes a b 1 restart' \
+        'failed  yes a a 1 restart' \
+        'failed  no  a b 1 defer' \
+        'failed  no  a a 1 defer' \
+        'inactive yes a b 1 current' \
+        'activating no a b 1 current'
+    do
+        # shellcheck disable=SC2086
+        set -- $_case
+        _got=$(decide "$1" "$2" "$3" "$4" "$5")
+        if [ "$_got" = "$6" ]; then
+            printf '  ok    %-10s %-3s %-7s %-7s %-7s -> %s\n' "$1" "$2" "$3" "$4" "$5" "$_got"
+        else
+            printf '  FAIL  %-10s %-3s %-7s %-7s %-7s -> %s (want %s)\n' \
+                "$1" "$2" "$3" "$4" "$5" "$_got" "$6"
+            _fail=1
+        fi
+    done
+    # The table must not silently shrink to nothing, the same two-direction
+    # discipline `make line-cap` and `leak-scan --self-test` hold.
+    [ "$_fail" = 0 ] || die 'the restart decision is wrong'
+    say 'self-test passed'
+}
+
+[ "${1:-}" != --self-test ] || { self_test; exit 0; }
+
+# ---------------------------------------------------------------- 1. install
+#
+# The newest version the registry will serve. Yanked releases are filtered
+# HERE rather than left to cargo, and that is deliberate: it makes a yank the
+# operator's ROLLBACK LEVER. Yank a bad release and the next tick resolves the
+# previous one, sees it differ from what is installed, and puts it back.
+# (`cargo install` alone cannot do this — it refuses to go backwards without
+# `--force`, which is why the install below passes an explicit `--version`.)
+latest_live() {
+    curl -fsS --max-time 60 "$INDEX_URL" | while IFS= read -r line; do
+        # One JSON object per line. Read it with parameter expansion rather
+        # than a regex: `"vers"` occurs exactly once per line (a dependency
+        # entry carries `"req"`, never `"vers"`), so there is nothing for a
+        # greedy match to run past.
+        case $line in
+            *'"yanked":false'*) ;;
+            *) continue ;;
+        esac
+        v=${line#*'"vers":"'}
+        v=${v%%'"'*}
+        [ -n "$v" ] && printf '%s\n' "$v"
+    done | sort -V | tail -1
+}
+
+# What is on disk. Asking the binary is the one authority: cargo's own
+# bookkeeping can disagree with the file after a hand install, and the file is
+# what the service will exec.
+installed() {
+    [ -x "$BIN" ] || return 0
+    "$BIN" --version 2>/dev/null | awk 'NR==1 {print $NF}'
+}
+
+want=$(latest_live) || die 'cannot reach the registry index'
+[ -n "$want" ] || die 'the registry index named no live version'
+have=$(installed)
+
+changed=no
+if [ "$want" != "$have" ]; then
+    changed=yes
+    say "installing $want (was ${have:-absent})"
+    # `--locked` builds against the lockfile the crate publishes, which is the
+    # parity check that yog and its embedded substrate resolve one brazen
+    # (§16.7). `--force` because an explicit `--version` may be a DOWNGRADE —
+    # the yank lever above — and cargo refuses to move backwards without it.
+    cargo install "$CRATE" --locked --version "$want" --force
+    say "installed $(installed)"
+else
+    say "installed $have is current"
+fi
+
+# ---------------------------------------------------------------- 2. restart
+
+state=$(systemctl --user show -P ActiveState "$UNIT" 2>/dev/null || echo unknown)
+pid=$(systemctl --user show -P MainPID "$UNIT" 2>/dev/null || echo 0)
+
+# "A restart is pending" is not a flag anybody writes — it is the running
+# process executing a different file than the one installed. The kernel holds
+# that fact: `/proc/<pid>/exe` still resolves to the replaced inode after an
+# install renames a new file over the path.
+running_inode=unknown
+[ "${pid:-0}" = 0 ] || running_inode=$(stat -Lc %i "/proc/$pid/exe" 2>/dev/null || echo unknown)
+installed_inode=$(stat -Lc %i "$BIN" 2>/dev/null || echo unknown)
+cgroup=$(systemctl --user show -P ControlGroup "$UNIT" 2>/dev/null || true)
+procs=unknown
+[ -z "$cgroup" ] || [ ! -r "/sys/fs/cgroup${cgroup}/cgroup.procs" ] \
+    || procs=$(wc -l < "/sys/fs/cgroup${cgroup}/cgroup.procs")
+
+case "$(decide "$state" "$changed" "$running_inode" "$installed_inode" "$procs")" in
+    current)
+        if [ "$state" = active ]; then
+            say 'the running engine is the installed binary; nothing to do'
+        else
+            say "$UNIT is $state; leaving it alone"
+        fi ;;
+    defer)
+        if [ "$state" = failed ]; then
+            say "$UNIT is failed and $have is all the registry offers;" \
+                "leaving it (journalctl --user -u $UNIT)"
+        else
+            say "a turn is in flight or a fact is unreadable (processes: $procs);" \
+                'deferring the restart to the next tick'
+        fi ;;
+    restart)
+        say "starting $UNIT on $(installed) (was $state)"
+        # `reset-failed` FIRST, always. A unit that tripped its start limit is
+        # REFUSED a restart until the limit's interval expires — so without
+        # this the recovery arm above cannot actually recover anything, which
+        # is exactly how it failed the first time it was tried. On a healthy
+        # unit it is a no-op beyond clearing the restart counter, which is the
+        # right thing to do when putting a new version on anyway.
+        systemctl --user reset-failed "$UNIT" 2>/dev/null || true
+        systemctl --user restart "$UNIT" ;;
+esac

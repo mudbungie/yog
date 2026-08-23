@@ -409,6 +409,90 @@ difference between the two is coverage — tarpaulin's 100% floor runs on Linux
 alone, which is where every line is compiled (nothing but the `lsof` spawn shim
 is `cfg`'d out).
 
+### Server install (headless)
+
+The section above is the **desktop** recipe: it builds `main`'s tip out of a
+checkout and relaunches the window. A server wants neither half of that — it
+has no display, and a checkout on it would be a second source of truth about
+what is running. So a server installs from **the registry**, which is also what
+makes "a new version dropped" an event it can observe:
+
+    make deploy HOST=<ssh-host>          # seat it (idempotent; also the upgrade path)
+    make deploy-status HOST=<ssh-host>   # what it is running, and what the last tick did
+
+`HOST` is an ssh destination and the only parameter. No machine, address or
+account name is committed anywhere in this tree — that is the leak gate's rule
+and the severability one at once: pointing this at another box is a different
+argument, never an edit.
+
+What gets seated is three units and one script (`scripts/deploy/`):
+
+| | |
+|---|---|
+| `yog.service` | `yog serve` — the engine with no window (DESIGN §8.5, REMOTE §8), `Restart=always`, under the user manager so the world stays the operator's |
+| `yog-update.timer` | hourly, `Persistent=true` |
+| `yog-update.service` | the oneshot the timer runs, niced below the agents it serves |
+| `yog-update` | the reconciler |
+
+Lingering (`loginctl enable-linger`) is enabled by the deploy, and it is
+load-bearing: without it the user manager — and so the engine — stops at
+logout, which presents as "it just stopped overnight".
+
+**The reconciler is two reconciliations, not one procedure**, because they have
+different safety conditions and must be free to happen at different times:
+
+1. the **installed binary** against the registry's newest live version, and
+2. the **running engine** against the installed binary.
+
+The first is always safe while the engine runs — an install replaces the file
+by rename, so the running process keeps its own inode — and so it happens
+immediately. The second is not, and that is why this is a script rather than a
+`cargo install && systemctl restart` line.
+
+**A restart is deferred while a turn is in flight.** A restart SIGTERMs the
+whole control group. The engine survives that — §4.1 state is write-through and
+there is no `on_exit` hook (bl-b54e) — but a `lernie` turn killed between a tool
+call and its result leaves an unpaired tool-use tail, and every later message on
+that conversation is refused by the provider. That is not a crash the next boot
+repairs; it is a wedged conversation. So quiescence is **read**: the substrate
+is linked in-process (§16.7) and the engine's concurrency is threads, so an idle
+`yog serve` is exactly one process and a turn in flight is a child in the same
+cgroup. The service cgroup's process count is therefore the predicate, and it
+needs no yog-side API, no new gesture and no field on the model.
+
+Nothing is stored. Which version is installed is the binary's own `--version`;
+whether a restart is pending is the running `/proc/<pid>/exe` inode differing
+from the installed one — a kernel fact, so a hand install or a hand restart
+needs no reconciling. An unreadable fact defers rather than acts.
+
+The decision is a pure function of those three facts and is checked by
+`make deploy-audit` (wired into `make lint`, and run again by the deploy before
+it touches a host). It is in the gate for the same reason `beat-audit` is: the
+branch that matters is the one that **refuses** to act, so nothing on a live box
+exercises it on a good day, and a silent regression there costs a conversation
+rather than reddening a run.
+
+**A release that cannot start is recovered without logging in.** `Restart=always`
+alone would hide one: systemd's default start limit never trips at a 5s restart
+delay, so a crash-loop presents as "running" forever. The unit therefore fails
+after five starts in five minutes, and the reconciler treats a *failed* unit as
+its own case — there is no turn to protect, and no point retrying the version
+that just failed, so it acts only when a version the unit has not run is
+available. Together with the lever below, that is a complete unattended
+recovery: yank the bad release and the box puts the previous one back and starts
+it.
+
+**Yanking is the rollback lever.** The reconciler resolves the newest *live*
+version from the sparse index rather than letting `cargo install` decide, and
+installs it with an explicit `--version`, so a yanked bad release is picked up
+as a difference on the next tick and the previous version goes back on.
+
+Two consequences worth knowing. A box that is never quiescent never restarts —
+correct, but it means a long-running turn can hold an update for hours; the
+journal says so on every tick, and `systemctl --user restart yog.service` is the
+override. And the deferral is coarse: any child in the cgroup counts, so a
+transient spawn can cost one tick.
+
 ## Publishing
 
 The crate reaches [crates.io](https://crates.io/crates/yog) two ways, and both

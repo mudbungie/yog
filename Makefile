@@ -1,5 +1,6 @@
 .PHONY: all build release test coverage lint fmt fmt-check check run ux reload icon icon-seats install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny \
-        drive drive-preflight drive-cleanroom drive-seat drive-unseat drive-seed drive-log wire-certs
+        drive drive-preflight drive-cleanroom drive-seat drive-unseat drive-seed drive-log wire-certs \
+        deploy deploy-status deploy-audit
 
 # Install location for `make install`. Defaults to the XDG-ish user-local
 # convention; override for system-wide installs or packaging:
@@ -91,6 +92,7 @@ coverage:
 lint:
 	$(MAKE) line-cap
 	$(MAKE) beat-audit
+	$(MAKE) deploy-audit
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
 	$(MAKE) rules-audit
@@ -445,6 +447,35 @@ drive-seed:
 
 drive-log:
 	@DRIVE_ROOT="$(DRIVE_ROOT)" $(DRIVE) log $(DRIVE_LOG_DIR)
+
+# Seat the headless deployment on a server: the `yog serve` user service plus
+# the hourly registry reconciler that keeps it current (bl-bf35). HOST is an
+# ssh destination and the only parameter — no machine is named in this tree.
+#
+#   make deploy HOST=myserver
+#
+# This is NOT `make install`. That target is the desktop recipe: it builds from
+# this checkout and seats icons and a `.desktop` entry. A server has no display
+# and wants no checkout — it installs from the registry, which is also what
+# makes "a new version dropped" an event it can observe.
+# The restart decision the unattended reconciler makes (bl-bf35), checked
+# without a server, a release or an agent. It sits in `lint` beside
+# `beat-audit` and for the same reason: the branch that matters is the one that
+# REFUSES to act, so nothing on a live box ever exercises it on a good day, and
+# a silent regression there kills a conversation rather than reddening a run.
+deploy-audit:
+	@scripts/deploy/yog-update --self-test
+
+deploy:
+	@[ -n "$(HOST)" ] || { echo "usage: make deploy HOST=<ssh-host>" >&2; exit 2; }
+	@scripts/deploy/seat.sh "$(HOST)"
+
+# What that server is running right now, and what the reconciler last did.
+deploy-status:
+	@[ -n "$(HOST)" ] || { echo "usage: make deploy-status HOST=<ssh-host>" >&2; exit 2; }
+	@ssh "$(HOST)" 'systemctl --user --no-pager --lines=0 status yog.service yog-update.timer; \
+	  echo; systemctl --user list-timers --no-pager yog-update.timer; \
+	  echo; journalctl --user -u yog-update.service --no-pager -n 15'
 
 uninstall:
 	@rm -f "$(INSTALL_BIN)/yog" "$(INSTALL_STAMP)" "$(INSTALL_APPS)/yog.desktop" "$(INSTALL_ICONS)/yog.svg"

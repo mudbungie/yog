@@ -1,0 +1,48 @@
+# The yog engine as a user service (DESIGN §8.5, REMOTE §8): `yog serve` is the
+# same `Engine::boot` the window runs, with no window beside it — the world
+# converged, the derivation worker and watch bridge up, the gestures-inbox
+# consumer answering deposits and the §9.5 wire listener answering seats.
+#
+# User-level and not system-level, because the world is the operator's: it
+# resolves under `$XDG_DATA_HOME/yog/world` (§16.2), and a system unit would
+# either run as another user or need that path hard-coded. `%h` keeps this file
+# free of any account name.
+#
+# Requires lingering (`loginctl enable-linger`) or the manager — and so the
+# engine — stops at logout. `scripts/deploy/seat.sh` enables it.
+[Unit]
+Description=yog engine (yog serve)
+Documentation=https://github.com/mudbungie/yog
+# The engine dials nothing at boot, but its agents do.
+After=network-online.target
+Wants=network-online.target
+# `Restart=always` below must not hide a release that cannot start. Systemd's
+# defaults (5 starts per 10s) never trip at a 5s restart delay, so a crash-loop
+# would present as "running" forever and the reconciler would see a live pid.
+# Five failures in five minutes is a broken version, not a blip: enter `failed`
+# and let it be seen — and let the reconciler try the next version over it.
+StartLimitIntervalSec=5min
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=%h/.cargo/bin/yog serve
+# `yog serve` parks until a signal (main.rs). A crash is a defect, not a state
+# to sit in: come back and keep converging.
+Restart=always
+RestartSec=5s
+# The engine's own state is write-through at the gesture (§4.1) and there is no
+# `on_exit` hook, so SIGTERM costs it nothing — a stop never needs to flush.
+# The default control-group kill therefore also reaps any child turn, which is
+# what a deliberate stop should do; the *update* path never relies on it,
+# because it refuses to restart while a turn is in flight (`yog-update`).
+TimeoutStopSec=30s
+# The engine shells out for two things it links no library for: `openssl`, for
+# the REMOTE §8 certificate mint its boot performs when a box has none, and
+# `git`, under the embedded balls substrate. A systemd user unit does not
+# inherit a login shell's PATH, so both are named here along with the install
+# root the binary itself lives in.
+Environment=PATH=%h/.cargo/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target
