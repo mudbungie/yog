@@ -140,7 +140,10 @@ impl Engine {
         // for the other end, and a model whose link nobody answers is the same
         // code path as a surface whose answer has not landed yet.
         let (link, wire_end) = crate::wire::link::pair();
-        model.adopt_wire(link);
+        // …and one channel per §8.2 entry beside it (bl-028a), composed here
+        // because the engine is what holds the world. Zero entries is the local
+        // channel alone — the general path with empty inputs.
+        model.adopt_wire(crate::wire::channels::Channels::compose(world, link));
         // The follow lane's two ends (REMOTE §3, bl-73e7), minted here for the
         // read path's reason exactly. The §7.2 live tail used to be a follower
         // thread on this engine writing into the model's own RAM; it is a held

@@ -191,7 +191,7 @@ pub(in crate::shell::acceptance) fn build_world(title: &str, roster: &Roster) ->
     // none would be a window with no lane, which is a true reading and no
     // witness at all for the one this ball exists to prove.
     let (tail, tail_end) = crate::wire::lane::pair();
-    model.adopt_wire(link);
+    model.adopt_wire(crate::wire::channels::Channels::of(link));
     model.adopt_post(post);
     model.adopt_tail(tail);
     World {

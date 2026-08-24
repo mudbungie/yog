@@ -36,7 +36,10 @@ pub(super) fn workspaces(model: &mut AppModel) -> Landed<crate::boundary::reply:
 /// new` has just founded must wear its tab and resolve its name from the frame
 /// the receipt lands, not one derivation later.
 pub(super) fn ws_rows(model: &mut AppModel) -> Vec<WsRow> {
-    let answered = workspaces(model).value.unwrap_or_default().rows;
+    // **The union, not one channel's answer** (REMOTE §8.2, bl-028a): every
+    // channel's slice, each row already named in this box's spelling. With zero
+    // entries it is the `workspaces` answer above, row for row.
+    let answered = model.wire_roster().into_iter().map(|r| r.row).collect();
     model.raised_rows(answered)
 }
 

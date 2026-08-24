@@ -176,12 +176,13 @@ pub struct AppModel {
     /// content, one ask period behind.
     lane: crate::wire::lane::Tail,
     /// **The window's read path over the wire** (REMOTE §1.2 as executed,
-    /// bl-ae05): the standing questions this frame declares and the decoded
-    /// replies that have landed for them. Default until the engine hands over
-    /// the live end — a model with no listener behind it asks into a link
-    /// nobody answers, which is the same posture, and the same code path, as a
-    /// surface whose answer has not arrived yet.
-    wire: crate::wire::link::Link,
+    /// bl-ae05; §8.2 as composed, bl-028a): one standing-question set per
+    /// channel — the engine in this process, plus one per §8.2 entry — and the
+    /// union roster over them. Default until the engine hands over the live
+    /// end: a model with no listener behind it asks into a link nobody answers,
+    /// which is the same posture, and the same code path, as a surface whose
+    /// answer has not arrived yet.
+    wire: crate::wire::channels::Channels,
     /// **Why this window has no wire, when it has none** (bl-dc14): the
     /// engine's refusal — a bind another process beat it to, a mint the box
     /// cannot perform — held so the frame paints it (`shell::refusal`) instead
@@ -239,7 +240,7 @@ impl AppModel {
             raised: None,
             folded_raise: None,
             lane: crate::wire::lane::Tail::default(),
-            wire: crate::wire::link::Link::default(),
+            wire: crate::wire::channels::Channels::default(),
             wire_refusal: None,
             acts: acts::Acts::default(),
         };

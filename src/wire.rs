@@ -42,6 +42,14 @@ use std::sync::Arc;
 /// The window's off-frame asker (REMOTE §1.2, bl-ae05) — the thread that makes
 /// the local window a wire client of its own engine.
 pub mod asker;
+/// **One channel the window holds** (REMOTE §8.2, bl-028a): the roster slice it
+/// feeds, and the one place its leaf↔host-name mapping is spent on the read
+/// path — [`seat::channel`]'s discipline, read from the frame.
+pub mod channel;
+/// **The window's channel set and the union over it** (REMOTE §8.2, bl-028a):
+/// the roster composed across the channels, and the name resolution that
+/// refuses a collision.
+pub mod channels;
 pub mod client;
 /// The client-side workspaces this box holds elsewhere (REMOTE §8.2, bl-aaec)
 /// — [`material`]'s shape one level down and named, one directory per

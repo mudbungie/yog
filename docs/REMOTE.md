@@ -1165,6 +1165,34 @@ loses that one channel and keeps its entries, which is what a pure-client box
 holding a local engine looks like. With zero entries the whole of that is one
 channel and one sentence: exactly what a tool host was.
 
+**As landed, the window's half (bl-028a).** The model holds one standing-question
+set per channel (`wire::channel`) and the set of them (`wire::channels`), which
+the engine composes at boot because the engine is what holds the world. The
+roster the frame paints is the union across those slices, local first and then
+the entries in leaf order, every row carrying the channel it came from — a
+client-side stamp, so no origin crosses the wire and no reply type grew a field
+the engine cannot fill. Names resolve exactly as `wire::seat::channel` resolves
+them: an entry is the answer to its leaf, and every other name — and every
+question naming no workspace — goes to this window's own engine. **A collision
+is read off the union and refuses in place of the answer**, which is the sentence
+every read surface already paints, and it names the token and the remedy:
+*"ambiguous workspace "home": this window's own engine and the entry "home" hold
+that name and the union is one namespace — rename the entry (`mv` its directory
+under `workspaces/`), never the workspace on its host."* An entry's leaf is
+unique on disk, so the only token two channels can both hold is one an entry
+claims and another channel already names; that question costs a look at the
+composed roster and is asked only when an entry claims the name, which is why
+**zero entries is byte for byte today** — nothing claims, nothing is resolved,
+nothing extra is asked.
+
+**An entry wears a row before it answers.** The entry IS a workspace this box
+participates in, so it appears in the roster from the moment the operator
+provisions it, carrying the zeros it honestly has — the §3.4 raise claim's shape
+one noun over. Nothing fills those zeros yet: every entry channel's link is one
+nobody answers until the askers land, and the world-spanning reads this section
+says fan out and union — search, attention, the board — still ask this window's
+own engine alone.
+
 **How material reaches an entry** — §1.4 verbatim, forever. On the host, the
 operator mints a leaf for the visiting box (`yog wire-certs` issues an extra
 client leaf under a stated common name — the one recipe, one more artifact it

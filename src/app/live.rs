@@ -41,11 +41,13 @@ impl super::AppModel {
         &self.derived
     }
 
-    /// Take the engine's end of the wire read path (REMOTE §1.2, bl-ae05).
-    /// Handed over rather than taken at [`boot`](Self::boot) because the model
-    /// owns no thread and mints no handle the engine is the one owner of.
-    pub fn adopt_wire(&mut self, link: crate::wire::link::Link) {
-        self.wire = link;
+    /// Take the engine's end of the wire read path (REMOTE §1.2, bl-ae05) —
+    /// **the whole channel set** since bl-028a, the engine being what knows
+    /// which entries this box holds (REMOTE §8.2). Handed over rather than
+    /// taken at [`boot`](Self::boot) because the model owns no thread and mints
+    /// no handle the engine is the one owner of.
+    pub fn adopt_wire(&mut self, channels: crate::wire::channels::Channels) {
+        self.wire = channels;
     }
 
     /// Take the frame's end of the **follow lane** (REMOTE §3, bl-73e7), on
@@ -79,6 +81,15 @@ impl super::AppModel {
     /// doing.
     pub fn wire_ask(&mut self, question: &serde_json::Value) -> Option<crate::wire::link::Landed> {
         self.wire.ask(question)
+    }
+
+    /// **The union roster** (REMOTE §8.2, bl-028a): every channel's workspace
+    /// slice, each row carrying the channel it came from — the window's own
+    /// engine, or the entry leaf. [`wire_ask`](Self::wire_ask)'s shape for the
+    /// one read that is a union rather than a routed question: a workspace is a
+    /// workspace, and which engine hosts it is a fact painted on it.
+    pub fn wire_roster(&mut self) -> Vec<crate::wire::channel::RosterRow> {
+        self.wire.roster()
     }
 
     /// **Follow the tail** (REMOTE §3, bl-73e7): declare `question` the lane's
