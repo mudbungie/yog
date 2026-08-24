@@ -12,14 +12,26 @@
 //!   attempt and backoff sleep, so a mid-retry `end` segment is still
 //!   in_flight, never stopped.
 //! - [`AgentState::Quiescent`] — no lock held and the latest step's
-//!   `response.json` is *complete* (§4.4): last line `end`, last segment a
-//!   `finish` with no `error`. A finished-for-now agent awaiting a message
-//!   (§2.4).
+//!   `response.json` is *complete and whole* (§4.4, [`Settled::whole`]): last
+//!   line `end`, last segment a `finish` with no `error`, and that `finish`
+//!   naming a reason the model reached rather than ran out of room at. A
+//!   finished-for-now agent awaiting a message (§2.4).
 //! - [`AgentState::Stopped`] — no lock held and the latest step is *failed*
 //!   (last segment carries an `error`, §2.10) or *killed* (closed with no
-//!   trailing `end`, §2.9), or no step has run. Kill, crash, and explicit
-//!   stop are indistinguishable on disk (§2.9); a failed step renders here
-//!   too, per §3.5.
+//!   trailing `end`, §2.9), or ended at the **output limit** (§4.4
+//!   [`Ending::OutputLimit`], bl-fb87), or no step has run. Kill, crash, and
+//!   explicit stop are indistinguishable on disk (§2.9); a failed step renders
+//!   here too, per §3.5.
+//!
+//! The output-limit arm is bl-fb87's correction, and it is a §3.5 reading, not
+//! a fifth state: transport completion is not task completion, so a tail that
+//! framed cleanly around a turn the request's `max_tokens` cut off is a
+//! conversation **stopped mid-utterance**, not one at rest. The coarse badge
+//! vocabulary is unchanged (the bl-d816 ruling: the badge answers "needs me?",
+//! the workspace pane answers "why"), and the *why* rides beside it as
+//! [`Liveness::truncated`] — the fact §8.2's Nudge gate reads, because linked
+//! lernie derives `NothingDue` from exactly this shape and a control that
+//! fires and does nothing is QUALITY H4's theater.
 //!
 //! The two observations are deliberately not collapsed (§2.11): the lock is
 //! *is-anyone-driving*; the open `response.json` fd is
@@ -36,7 +48,7 @@ use std::path::{Path, PathBuf};
 
 use super::probe::{LockProbe, Probe, WriterProbe};
 use super::streaming::latest_step_dir;
-use super::terminal::last_segment_complete;
+use super::terminal::{Ending, Settled, settled};
 use super::{INBOX_DIR, STEPS_DIR};
 
 pub(super) const RESPONSE_FILE: &str = "response.json";
@@ -58,28 +70,48 @@ pub enum AgentState {
     Stopped,
 }
 
+/// One agent's §3.5 classification: the three readings the two liveness
+/// observations plus the latest step's settled tail yield, gathered in one
+/// pass so the response file is read once.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct Liveness {
+    pub state: AgentState,
+    /// A probe returned [`Probe::Unknown`] (DESIGN §10): the state is the best
+    /// framing-only reading, not a definite one, and the renderer marks it.
+    pub uncertain: bool,
+    /// The latest turn was cut off at the **output limit** (§4.4
+    /// [`Ending::OutputLimit`], bl-fb87). Read only **at rest**: a driver
+    /// holding the lease is itself the answer to "what now", and the step it
+    /// is filling has no settled tail to read.
+    pub truncated: bool,
+}
+
 /// Classify `agent_id` in `workspace` from the two liveness observations
-/// plus the latest step's terminal framing. Returns the [`AgentState`] and an
-/// **uncertainty flag** — `true` when a probe returned [`Probe::Unknown`]
-/// (DESIGN §10), meaning the state is the best framing-only reading, not a
-/// definite one.
+/// plus the latest step's settled tail.
 pub(super) fn classify(
     workspace: &Path,
     agent_id: &str,
     lock: &dyn LockProbe,
     writer: &dyn WriterProbe,
-) -> (AgentState, bool) {
+) -> Liveness {
     let inbox_dir = workspace.join(INBOX_DIR).join(agent_id);
     match lock.lock_state(&inbox_dir) {
         // A driver holds the lock: the agent is live; the writer refines it
         // to `in_flight` (and may itself be unable to observe → uncertain).
-        Probe::Held => live_substate(workspace, agent_id, writer),
+        Probe::Held => {
+            let (state, uncertain) = live_substate(workspace, agent_id, writer);
+            Liveness {
+                state,
+                uncertain,
+                truncated: false,
+            }
+        }
         // No driver: the terminal-only reading rules (§4.4) settle the file.
-        Probe::Free => (framing_state(workspace, agent_id), false),
+        Probe::Free => at_rest(workspace, agent_id, false),
         // Can't tell whether a driver exists (DESIGN §10): degrade to the
         // same framing-only reading, but flag it uncertain — never a false
         // definite `live`/`stopped`.
-        Probe::Unknown => (framing_state(workspace, agent_id), true),
+        Probe::Unknown => at_rest(workspace, agent_id, true),
     }
 }
 
@@ -101,12 +133,18 @@ fn live_substate(workspace: &Path, agent_id: &str, writer: &dyn WriterProbe) -> 
 }
 
 /// No (observable) lock: the §4.4 terminal-only rules settle the file — a
-/// complete latest `response.json` is `Quiescent`, anything else `Stopped`.
-fn framing_state(workspace: &Path, agent_id: &str) -> AgentState {
-    if latest_response_complete(workspace, agent_id) {
-        AgentState::Quiescent
-    } else {
-        AgentState::Stopped
+/// complete-and-whole latest `response.json` is `Quiescent`, anything else
+/// `Stopped`, and an output-limited tail says so beside the state.
+fn at_rest(workspace: &Path, agent_id: &str, uncertain: bool) -> Liveness {
+    let settled = latest_settled(workspace, agent_id);
+    Liveness {
+        state: if settled.whole() {
+            AgentState::Quiescent
+        } else {
+            AgentState::Stopped
+        },
+        uncertain,
+        truncated: settled.ending == Ending::OutputLimit,
     }
 }
 
@@ -115,14 +153,14 @@ fn latest_response_path(workspace: &Path, agent_id: &str) -> Option<PathBuf> {
     Some(latest_step_dir(&steps)?.join(RESPONSE_FILE))
 }
 
-/// Is the latest step's `response.json` *complete* (§4.4)? Reads the file
-/// once; absence or an unreadable file is not complete.
-fn latest_response_complete(workspace: &Path, agent_id: &str) -> bool {
+/// The latest step's §4.4 settled reading. Reads the file once; absence and an
+/// unreadable file both read as the *killed* tail they honestly are.
+fn latest_settled(workspace: &Path, agent_id: &str) -> Settled {
     let Some(path) = latest_response_path(workspace, agent_id) else {
-        return false;
+        return Settled::KILLED;
     };
     match std::fs::read(&path) {
-        Ok(bytes) => last_segment_complete(&bytes),
-        Err(_) => false,
+        Ok(bytes) => settled(&bytes),
+        Err(_) => Settled::KILLED,
     }
 }

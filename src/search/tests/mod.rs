@@ -52,6 +52,7 @@ fn agent(id: &str, name: Option<&str>) -> Agent {
         tool_calls: vec![],
         state: AgentState::Quiescent,
         state_uncertain: false,
+        truncated: false,
         pending: vec![],
         conflicted_oid: None,
         budget_oid: None,

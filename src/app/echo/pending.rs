@@ -75,6 +75,8 @@ impl Echo {
             tool_calls: Vec::new(),
             state: AgentState::Stopped,
             state_uncertain: true,
+            // No step, so no settled tail to have been cut off (§4.4).
+            truncated: false,
             pending: self.deposits(),
             conflicted_oid: None,
             budget_oid: None,

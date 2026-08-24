@@ -1,7 +1,10 @@
-//! The §7.3 no-response wound: the derivation, its liveness gate, the
-//! Altitude-1 predicate, the **reason** read off the step's own `stderr.log`
-//! (bl-55d8), and the sentence that actually reaches the paint output — the
-//! bl-8e07 real-substrate finding, driven from its on-disk shape.
+//! The §7.3 step wound: the derivation, its liveness gate, the Altitude-1
+//! predicate, the **reason** read off the step's own `stderr.log` (bl-55d8),
+//! and the sentence that actually reaches the paint output — the bl-8e07
+//! real-substrate finding, driven from its on-disk shape. The wound's **other**
+//! class, the §4.4 output limit, is [`super::truncation`] — a separate file
+//! because it is a separate on-disk shape with its own fixtures, not because
+//! either outgrew a cap.
 
 use tempfile::tempdir;
 
@@ -171,8 +174,10 @@ fn a_wound_with_an_empty_stderr_log_says_so_rather_than_inventing_a_cause() {
         build(bare.path(), AGENT, AgentState::Stopped).steps[0].wound,
         Wound::Mute
     );
-    // Not a wound, no sentence — the caller gates on `wounded`.
+    // Not a wound, no sentence and no badge word — the caller gates on
+    // `wounded` and paints the framing instead.
     assert_eq!(Wound::None.banner(), "");
+    assert_eq!(Wound::None.word(), "");
     assert_eq!(Wound::default(), Wound::None);
 }
 

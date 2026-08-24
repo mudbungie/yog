@@ -4,8 +4,9 @@
 //! injected [`Probe`] stubs — the `live`/`in_flight` states need a driver
 //! holding the lock and cannot be reached against a dead fixture, so they are
 //! proven here rather than in [`super::state_repo`]. Each case asserts both
-//! the [`AgentState`] and the DESIGN §10 uncertainty flag: `Unknown` degrades
-//! to a framing-only reading that is flagged, never a false definite.
+//! the [`AgentState`], the DESIGN §10 uncertainty flag (`Unknown` degrades to
+//! a framing-only reading that is flagged, never a false definite) and the
+//! §4.4 output-limit reading beside it (bl-fb87).
 
 use crate::git_tree::probe::{LockProbe, WriterProbe};
 use crate::git_tree::state::{RESPONSE_FILE, classify};
@@ -42,6 +43,18 @@ fn write(path: &Path, contents: &[u8]) {
     std::fs::write(path, contents).unwrap();
 }
 
+/// The classification as a comparable triple: state, §10 uncertainty, and the
+/// §4.4 output-limit reading.
+fn reading(
+    dir: &Path,
+    agent: &str,
+    lock: &dyn LockProbe,
+    writer: &dyn WriterProbe,
+) -> (AgentState, bool, bool) {
+    let read = classify(dir, agent, lock, writer);
+    (read.state, read.uncertain, read.truncated)
+}
+
 fn resp(dir: &Path, agent: &str, seq: &str) -> PathBuf {
     dir.join(format!("{STEPS_DIR}/{agent}/{seq}/{RESPONSE_FILE}"))
 }
@@ -54,6 +67,14 @@ const ERROR_END: &[u8] = br#"{"type":"message_start","v":1,"role":"assistant"}
 {"type":"error","kind":"transport","message":"reset"}
 {"type":"end"}
 "#;
+/// The bl-fb87 shape: thinking, no text, no `tool_use`, and a `finish` whose
+/// canonical reason is `length` — every transport promise kept around a turn
+/// the request's `max_tokens` cut off.
+const LENGTH_END: &[u8] = br#"{"type":"message_start","v":1,"role":"assistant"}
+{"type":"content_delta","index":0,"delta":{"thinking_delta":"hmm"}}
+{"type":"finish","reason":"length"}
+{"type":"end"}
+"#;
 
 #[test]
 fn lock_held_and_writer_held_is_in_flight() {
@@ -62,8 +83,8 @@ fn lock_held_and_writer_held_is_in_flight() {
     write(&resp(dir.path(), agent, "001"), FINISH_END);
     // Lock Held + writer Held → InFlight, certain.
     assert_eq!(
-        classify(dir.path(), agent, &lock(Probe::Held), &writer(Probe::Held)),
-        (AgentState::InFlight, false)
+        reading(dir.path(), agent, &lock(Probe::Held), &writer(Probe::Held)),
+        (AgentState::InFlight, false, false)
     );
 }
 
@@ -74,8 +95,8 @@ fn lock_held_and_writer_free_is_live() {
     write(&resp(dir.path(), agent, "001"), FINISH_END);
     // Lock Held + writer Free → Live (between calls), certain.
     assert_eq!(
-        classify(dir.path(), agent, &lock(Probe::Held), &writer(Probe::Free)),
-        (AgentState::Live, false)
+        reading(dir.path(), agent, &lock(Probe::Held), &writer(Probe::Free)),
+        (AgentState::Live, false, false)
     );
 }
 
@@ -88,13 +109,13 @@ fn lock_held_and_writer_unknown_is_live_uncertain() {
     let agent = "20260427T140000Z-uuuu";
     write(&resp(dir.path(), agent, "001"), FINISH_END);
     assert_eq!(
-        classify(
+        reading(
             dir.path(),
             agent,
             &lock(Probe::Held),
             &writer(Probe::Unknown)
         ),
-        (AgentState::Live, true)
+        (AgentState::Live, true, false)
     );
 }
 
@@ -106,8 +127,8 @@ fn lock_held_with_no_response_is_live() {
     let agent = "20260427T140000Z-cccc";
     std::fs::create_dir_all(dir.path().join(STEPS_DIR).join(agent)).unwrap();
     assert_eq!(
-        classify(dir.path(), agent, &lock(Probe::Held), &writer(Probe::Held)),
-        (AgentState::Live, false)
+        reading(dir.path(), agent, &lock(Probe::Held), &writer(Probe::Held)),
+        (AgentState::Live, false, false)
     );
 }
 
@@ -117,8 +138,8 @@ fn no_lock_and_complete_response_is_quiescent() {
     let agent = "20260427T140000Z-dddd";
     write(&resp(dir.path(), agent, "001"), FINISH_END);
     assert_eq!(
-        classify(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
-        (AgentState::Quiescent, false)
+        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
+        (AgentState::Quiescent, false, false)
     );
 }
 
@@ -128,8 +149,8 @@ fn no_lock_and_failed_response_is_stopped() {
     let agent = "20260427T140000Z-eeee";
     write(&resp(dir.path(), agent, "001"), ERROR_END);
     assert_eq!(
-        classify(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
-        (AgentState::Stopped, false)
+        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
+        (AgentState::Stopped, false, false)
     );
 }
 
@@ -137,13 +158,13 @@ fn no_lock_and_failed_response_is_stopped() {
 fn no_lock_and_no_response_is_stopped() {
     let dir = tempdir().unwrap();
     assert_eq!(
-        classify(
+        reading(
             dir.path(),
             "no-such-agent",
             &lock(Probe::Free),
             &writer(Probe::Free)
         ),
-        (AgentState::Stopped, false)
+        (AgentState::Stopped, false, false)
     );
 }
 
@@ -155,13 +176,13 @@ fn lock_unknown_and_complete_response_is_quiescent_uncertain() {
     let agent = "20260427T140000Z-qqqq";
     write(&resp(dir.path(), agent, "001"), FINISH_END);
     assert_eq!(
-        classify(
+        reading(
             dir.path(),
             agent,
             &lock(Probe::Unknown),
             &writer(Probe::Free)
         ),
-        (AgentState::Quiescent, true)
+        (AgentState::Quiescent, true, false)
     );
 }
 
@@ -171,13 +192,13 @@ fn lock_unknown_and_incomplete_response_is_stopped_uncertain() {
     let agent = "20260427T140000Z-ssss";
     write(&resp(dir.path(), agent, "001"), ERROR_END);
     assert_eq!(
-        classify(
+        reading(
             dir.path(),
             agent,
             &lock(Probe::Unknown),
             &writer(Probe::Free)
         ),
-        (AgentState::Stopped, true)
+        (AgentState::Stopped, true, false)
     );
 }
 
@@ -193,7 +214,68 @@ fn classify_reads_latest_step_only() {
         b"{\"type\":\"content_delta\",\"index\":0,\"delta\":{\"text_delta\":\"go\"}}\n",
     );
     assert_eq!(
-        classify(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
-        (AgentState::Stopped, false)
+        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
+        (AgentState::Stopped, false, false)
+    );
+}
+
+#[test]
+fn no_lock_and_output_limited_response_is_stopped_and_truncated() {
+    // Transport completion is not task completion (bl-fb87): the tail frames
+    // clean, so §4.4 reads it `Complete` and `rail::place` still pairs it with
+    // the entry lernie sealed — but the turn ran out of room, which is a
+    // conversation stopped mid-utterance, not one at rest.
+    let dir = tempdir().unwrap();
+    let agent = "20260427T140000Z-llll";
+    write(&resp(dir.path(), agent, "001"), LENGTH_END);
+    assert_eq!(
+        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
+        (AgentState::Stopped, false, true)
+    );
+}
+
+#[test]
+fn a_driver_at_work_over_an_output_limited_step_reads_neither() {
+    // The truncation reading is asked only at rest: a driver holding the lease
+    // is itself the answer to "what now", and Nudge is already off for it.
+    let dir = tempdir().unwrap();
+    let agent = "20260427T140000Z-mmmm";
+    write(&resp(dir.path(), agent, "001"), LENGTH_END);
+    assert_eq!(
+        reading(dir.path(), agent, &lock(Probe::Held), &writer(Probe::Free)),
+        (AgentState::Live, false, false)
+    );
+}
+
+#[test]
+fn a_tool_use_finish_is_untouched_by_the_output_limit_reading() {
+    // A turn that really did end with a call to make finishes `tool_use`, not
+    // `length` — the canonical reason is one value and the provider names it,
+    // so the continuation case needs no content sniffing to stay Quiescent.
+    let dir = tempdir().unwrap();
+    let agent = "20260427T140000Z-tttt";
+    write(
+        &resp(dir.path(), agent, "001"),
+        br#"{"type":"finish","reason":"tool_use"}
+{"type":"end"}
+"#,
+    );
+    assert_eq!(
+        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
+        (AgentState::Quiescent, false, false)
+    );
+}
+
+#[test]
+fn an_output_limited_step_behind_a_newer_one_is_not_the_reading() {
+    // Only the latest step settles the agent (§3.5): a truncated turn the
+    // operator already carried on from is history, not the state.
+    let dir = tempdir().unwrap();
+    let agent = "20260427T140000Z-nnnn";
+    write(&resp(dir.path(), agent, "001"), LENGTH_END);
+    write(&resp(dir.path(), agent, "002"), FINISH_END);
+    assert_eq!(
+        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
+        (AgentState::Quiescent, false, false)
     );
 }

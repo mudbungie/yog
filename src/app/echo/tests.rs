@@ -32,6 +32,7 @@ fn agent(id: &str, name: Option<&str>, messages: usize) -> Agent {
         tool_calls: Vec::new(),
         state: AgentState::Quiescent,
         state_uncertain: false,
+        truncated: false,
         pending: Vec::new(),
         conflicted_oid: None,
         budget_oid: None,

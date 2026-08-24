@@ -83,7 +83,9 @@ fn message_enabled_only_for_a_present_selection_with_text() {
 
 /// The nudge and Stop partition the four states between them (bl-9bef): every
 /// agent is offered exactly one of the two, so neither is ever a control that
-/// fires and does nothing (QUALITY H4).
+/// fires and does nothing (QUALITY H4). The one exception is
+/// [`a_truncated_turn_is_not_nudgeable`], where the partition would put the
+/// nudge on a shape lernie answers with nothing.
 #[test]
 fn nudge_is_offered_exactly_where_stop_is_not() {
     let bs = vec![
@@ -107,6 +109,30 @@ fn nudge_is_offered_exactly_where_stop_is_not() {
     assert!(!nudge_enabled(None, &bs), "no selection");
     assert!(!nudge_enabled(Some("zz"), &bs), "absent id");
     assert!(!nudge_enabled(Some("a"), &[]), "no agents at all");
+}
+
+/// bl-fb87: a turn the output limit cut off leaves an assistant-side tail with
+/// no `tool_use`, which linked lernie's `advance` reads as `Warrant::NothingDue`
+/// — it releases the lease and exits without creating a step. So the partition
+/// above gives way here rather than offering a control that fires and does
+/// nothing; Message, the recovery, is ungated and unaffected.
+#[test]
+fn a_truncated_turn_is_not_nudgeable() {
+    let mut cut_off = branch("a", AgentState::Stopped);
+    cut_off.truncated = true;
+    let mut settled_at_rest = branch("b", AgentState::Quiescent);
+    settled_at_rest.truncated = true;
+    let bs = vec![cut_off, settled_at_rest, branch("c", AgentState::Stopped)];
+    assert!(!nudge_enabled(Some("a"), &bs), "stopped and cut off");
+    assert!(!nudge_enabled(Some("b"), &bs), "quiescent and cut off");
+    assert!(
+        nudge_enabled(Some("c"), &bs),
+        "an ordinary resting conversation is unaffected"
+    );
+    // Neither is Stop offered — the conversation holds no driver — so this is
+    // the one shape with no §8.2 conversation verb but Message.
+    assert!(!stop_enabled(Some("a"), &bs));
+    assert!(message_enabled(true, "carry on"));
 }
 
 #[test]

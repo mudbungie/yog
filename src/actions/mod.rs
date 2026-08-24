@@ -12,7 +12,8 @@
 //!
 //! Predicate discipline (§8.2): **Stop** needs a Live/InFlight executor to
 //! signal ([`stop_enabled`]); **Nudge** is its complement — the states with no
-//! driver holding the lease ([`nudge_enabled`]); **Message** is the resume
+//! driver holding the lease, less the one shape lernie reads as nothing-due
+//! ([`nudge_enabled`]); **Message** is the resume
 //! gesture and works on *any* selected agent ([`message_enabled`], ARCH §2.9 —
 //! no resume verb);
 //! **Close** needs the ball bound to a local workspace ([`close_enabled`] =
@@ -198,12 +199,26 @@ pub fn message_enabled(present: bool, content: &str) -> bool {
 /// verbs partition the states between them, Stop for the running ones and this
 /// for the rest.
 ///
-/// Enabled iff an agent is selected, present in `agents`, and Quiescent or
-/// Stopped. `false` for no selection and for an id absent from the set.
+/// **One state at rest is exempt, for that same reason** (bl-fb87): a
+/// conversation whose latest turn was cut off at the output limit
+/// ([`Agent::truncated`], §4.4). Its transcript tail is an assistant turn with
+/// no `tool_use`, and linked lernie's `advance` derives `Warrant::NothingDue`
+/// from exactly that — it releases the lease and exits without creating a
+/// step. So the control would fire and do nothing, which is the theater the
+/// partition above exists to prevent; the recovery is [`message_enabled`],
+/// which needs no gate because a deposit lands user-side and warrants a call.
+/// The §7.3 step wound says so in words at the same moment
+/// ([`crate::steps_view::OUTPUT_LIMIT`]).
+///
+/// Enabled iff an agent is selected, present in `agents`, Quiescent or
+/// Stopped, and not truncated. `false` for no selection and for an id absent
+/// from the set.
 pub fn nudge_enabled(selected: Option<&str>, agents: &[Agent]) -> bool {
     selected.is_some_and(|name| {
         agents.iter().any(|a| {
-            a.agent_id == name && matches!(a.state, AgentState::Quiescent | AgentState::Stopped)
+            a.agent_id == name
+                && !a.truncated
+                && matches!(a.state, AgentState::Quiescent | AgentState::Stopped)
         })
     })
 }

@@ -73,7 +73,7 @@ pub(super) fn enumerate_agents(
             .to_string();
         let tip_short_oid = tip_oid.get(..8).unwrap_or(&tip_oid).to_string();
         let steps = walk_branch_steps(git_dir, &branch_name)?;
-        let (state, state_uncertain) = classify(workspace, &agent_id, lock, writer);
+        let liveness = classify(workspace, &agent_id, lock, writer);
         let goal = goal_from_disk(workspace, &agent_id);
         // One readdir of `messages/` for both of its facts (§5.1 #12): when the
         // transcript last moved, and how many entries it holds.
@@ -87,8 +87,9 @@ pub(super) fn enumerate_agents(
             preview: goal.preview,
             stream,
             tool_calls: tool_calls_from_disk(workspace, &agent_id),
-            state,
-            state_uncertain,
+            state: liveness.state,
+            state_uncertain: liveness.uncertain,
+            truncated: liveness.truncated,
             pending: crate::inboxview::list_inbox(workspace, &agent_id),
             conflicted_oid: marks.conflicted_oid(&agent_id),
             budget_oid: marks.budget_oid(&agent_id),

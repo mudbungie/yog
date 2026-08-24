@@ -9,7 +9,8 @@
 //! [`raw`] holds the §11 Raw toggle's half of that walk (S7-T1: the record
 //! file's bytes unaltered), and [`wound`] drives the §7.3 no-response state
 //! from the shape the real substrate left behind, all the way to the painted
-//! sentence. [`tail`] does the render walk on a viewport too short for the
+//! sentence, with [`truncation`] doing the same for the wound's other class
+//! (the §4.4 output limit, bl-fb87). [`tail`] does the render walk on a viewport too short for the
 //! table, where the §11 tail anchor decides which steps are on screen.
 
 use std::path::{Path, PathBuf};
@@ -19,6 +20,7 @@ mod orphan;
 mod raw;
 mod render;
 mod tail;
+mod truncation;
 mod vm;
 mod wound;
 

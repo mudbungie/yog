@@ -57,6 +57,7 @@ fn agent(id: &str, tip: &str) -> crate::git_tree::Agent {
         tool_calls: Vec::new(),
         state: AgentState::Quiescent,
         state_uncertain: false,
+        truncated: false,
         pending: Vec::new(),
         conflicted_oid: None,
         budget_oid: None,

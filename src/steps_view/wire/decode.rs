@@ -2,12 +2,17 @@
 //! encoder in [`super`], across both tiers: the summary list and one step's
 //! drill-in.
 //!
-//! Two shapes are read back from a **pair** of keys rather than a discriminant,
-//! because that is how they are written: the §8.3 login affordance is
-//! `auth_failed` + an optional `auth_row`, and the §7.3 wound is `wounded` +
-//! an optional `wound_reason`. Each pair is a bijection over its three-armed
-//! enum — offered-with-a-row, offered-without, not offered — so nothing needed
+//! The §8.3 login affordance is read back from a **pair** of keys rather than
+//! a discriminant, because that is how it is written: `auth_failed` + an
+//! optional `auth_row` is a bijection over its three-armed enum —
+//! offered-with-a-row, offered-without, not offered — so nothing needed
 //! widening for the round trip.
+//!
+//! The §7.3 wound was such a pair too until bl-fb87 gave it a fourth arm. A
+//! `(bool, Option<reason>)` cannot address four, so it is a class token plus
+//! the same optional reason now: the token picks the class and the reason
+//! separates the no-response class's two arms, which is the one thing that
+//! ever distinguished them.
 
 use serde_json::Value;
 
@@ -25,6 +30,23 @@ const FRAMINGS: [(&str, Framing); 3] = [
     ("complete", Framing::Complete),
     ("failed", Framing::Failed),
     ("killed", Framing::Killed),
+];
+
+/// The §7.3 wound's class, [`wound_token`](super::wound_token)'s other half.
+/// A [`Wound`] of its own cannot stand in the table — [`pick`] answers `Copy`
+/// values and [`Wound::Spoke`] carries a `String` — so the class is named here
+/// and the reason key resolves it below.
+#[derive(Clone, Copy)]
+enum WoundKind {
+    None,
+    NoResponse,
+    OutputLimit,
+}
+
+const WOUNDS: [(&str, WoundKind); 3] = [
+    ("none", WoundKind::None),
+    ("no_response", WoundKind::NoResponse),
+    ("output_limit", WoundKind::OutputLimit),
 ];
 
 /// The `steps` reply body read back: one summary per row, in sequence order,
@@ -50,10 +72,11 @@ fn step_row(v: &Value) -> Result<StepSummary, String> {
         (true, None) => AuthFailure::Unrouted,
         (true, Some(row)) => AuthFailure::Row(row),
     };
-    let wound = match (bool_of(o, "wounded")?, opt_str_of(o, "wound_reason")?) {
-        (false, _) => Wound::None,
-        (true, None) => Wound::Mute,
-        (true, Some(reason)) => Wound::Spoke(reason),
+    let wound = match (pick(o, "wound", &WOUNDS)?, opt_str_of(o, "wound_reason")?) {
+        (WoundKind::None, _) => Wound::None,
+        (WoundKind::NoResponse, None) => Wound::Mute,
+        (WoundKind::NoResponse, Some(reason)) => Wound::Spoke(reason),
+        (WoundKind::OutputLimit, _) => Wound::OutputLimit,
     };
     Ok(StepSummary {
         seq: str_of(o, "seq")?,

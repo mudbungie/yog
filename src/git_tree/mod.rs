@@ -105,7 +105,7 @@ pub use streaming::wire as stream_wire;
 // reads the raw framing (a public classification it surfaces per step) plus
 // the completed-segment count. The two folds stay crate-internal.
 pub use terminal::Framing;
-pub(crate) use terminal::{error_text, framing, segment_count};
+pub(crate) use terminal::{Ending, error_text, segment_count, settled};
 
 /// The bare workspace repository dir (ARCH §2.2). Mirrors
 /// `src/workspace::REPO_DIR` in the harness; the duplicate constant keeps

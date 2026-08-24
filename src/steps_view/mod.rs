@@ -28,7 +28,7 @@ use std::path::Path;
 use serde_json::Value;
 
 use crate::budgets::{BudgetSpend, spend_from_bytes};
-use crate::git_tree::{AgentState, Framing, framing, segment_count};
+use crate::git_tree::{AgentState, Framing, segment_count, settled};
 use crate::login::auth::{AuthFailure, row_of_model};
 
 mod columns;
@@ -43,7 +43,7 @@ pub use detail::{Doc, StepDetail, ToolIo, UNPARSED, detail};
 pub use orphan::{ORPHANED_MAIL, Orphan};
 pub(crate) use records::seats;
 pub use render::{StepTab, render};
-pub use wound::{NO_RESPONSE, Wound, latest_wound};
+pub use wound::{NO_RESPONSE, OUTPUT_LIMIT, Wound, latest_wound};
 
 /// Conv-repo subdir of per-agent step records (ARCH §2.3).
 const STEPS_DIR: &str = "steps";
@@ -82,12 +82,15 @@ pub struct StepSummary {
     /// one click away beside the step (a prompt-time failure surfaces here as
     /// derived agent state, §13.3). Logic covered; shell paints.
     pub auth_failed: AuthFailure,
-    /// The §7.3 **no-response wound** (the `wound` module): this step's driver
-    /// produced nothing — no response bytes and no settled `meta.json` — and
-    /// nobody is driving the agent. Renders as a failure row
-    /// ([`NO_RESPONSE`], ichor) instead of the quiet ash "stopped" its framing
-    /// alone reads as, and carries the adapter's own reason from the step's
-    /// `stderr.log` when there is one (bl-55d8).
+    /// The §7.3 **step wound** (the `wound` module) — what went wrong with this
+    /// step, in the badge's own seat and in words. Two classes: the driver
+    /// produced nothing (no response bytes, no settled `meta.json`, nobody
+    /// driving — [`NO_RESPONSE`], carrying the adapter's own reason from the
+    /// step's `stderr.log` when there is one, bl-55d8), or the **output limit**
+    /// ended the turn ([`OUTPUT_LIMIT`], bl-fb87). Each renders as a failure
+    /// row (ichor) instead of the reading its framing alone gives — the quiet
+    /// ash "stopped" for the first, and a `✔ complete` that is true of the
+    /// transport and false of the turn for the second.
     pub wound: Wound,
 }
 
@@ -193,16 +196,20 @@ fn summarize(workspace: &Path, agent_id: &str, seq: &str) -> StepSummary {
     let meta = meta_bytes
         .as_ref()
         .and_then(|bytes| serde_json::from_slice::<Value>(bytes).ok());
+    // One §4.4 walk of the response bytes, two facts off it (bl-fb87): the
+    // transport framing the badge reports, and the semantic ending the §7.3
+    // wound reads. Never two walks — they would be two readings of one file.
+    let settled = settled(&response);
     StepSummary {
         seq: seq.to_string(),
-        framing: framing(&response),
+        framing: settled.framing,
         attempts: segment_count(&response),
         tokens: spend_from_bytes(&response),
         commit: meta_field(meta.as_ref(), "commit"),
         started_at: meta_field(meta.as_ref(), "started_at"),
         ended_at: meta_field(meta.as_ref(), "ended_at"),
         auth_failed: crate::login::auth::classify(&response),
-        wound: wound::read(&step, &response, meta_bytes.is_some()),
+        wound: wound::read(&step, &response, meta_bytes.is_some(), settled.ending),
     }
 }
 

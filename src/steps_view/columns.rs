@@ -51,7 +51,9 @@ pub(super) const COLUMNS: &[Column] = &[
                complete, failed, no clean end — a kill, a crash and a call still \
                in flight leave the same trace on disk, so the row claims only \
                that it never ended cleanly — or no response at all, which means \
-               the step produced nothing and nobody is driving the agent.",
+               the step produced nothing and nobody is driving the agent, or \
+               the output limit ended the turn, which means the reply framed \
+               cleanly but stops where the model ran out of room.",
         cell: |step, _| {
             let (glyph, color, phrase) = summary_badge(step);
             Cell::Colored(color, format!("{glyph} {phrase}"))

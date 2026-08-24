@@ -56,13 +56,27 @@ fn step_row(step: &StepSummary) -> Value {
     if let Some(row) = step.auth_failed.row() {
         map.insert("auth_row".to_owned(), json!(row));
     }
-    // The §7.3 wound: whether this step is one, and the adapter's own reason
-    // when it left words behind.
-    map.insert("wounded".to_owned(), json!(step.wound.wounded()));
+    // The §7.3 wound: which class it is, and the adapter's own reason when the
+    // no-response class left words behind.
+    map.insert("wound".to_owned(), json!(wound_token(&step.wound)));
     if let Wound::Spoke(reason) = &step.wound {
         map.insert("wound_reason".to_owned(), json!(reason));
     }
     Value::Object(map)
+}
+
+/// The §7.3 wound's **class**, beside the optional reason (bl-fb87). A class
+/// token rather than the `wounded` boolean the pair used to carry: with a
+/// fourth arm the (bool, Option<reason>) pair stopped being a bijection, and
+/// the honest fix is a discriminant, not a second boolean beside the first.
+/// The two no-response arms share one token because the reason key is exactly
+/// what tells them apart.
+fn wound_token(wound: &Wound) -> &'static str {
+    match wound {
+        Wound::None => "none",
+        Wound::Mute | Wound::Spoke(_) => "no_response",
+        Wound::OutputLimit => "output_limit",
+    }
 }
 
 /// The §4.4 terminal classification, in the three words the seat renders.

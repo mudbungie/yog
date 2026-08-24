@@ -90,8 +90,9 @@ fn transcript() -> Transcript {
 }
 
 /// One step per [`Framing`], per [`AuthFailure`] and per [`Wound`] arm — the
-/// two pair-encoded shapes are the ones a widening would have been needed for
-/// had either not been a bijection.
+/// two shapes encoded from more than one key. The login affordance is still a
+/// bijective pair; the wound became a class token plus the same optional
+/// reason when bl-fb87 gave it a fourth arm.
 fn steps() -> StepsView {
     let base = StepSummary {
         seq: "001".into(),
@@ -122,6 +123,13 @@ fn steps() -> StepsView {
                 framing: Framing::Killed,
                 auth_failed: AuthFailure::Unrouted,
                 wound: Wound::Mute,
+                ..base.clone()
+            },
+            // The bl-fb87 arm: a wound whose framing is `complete`, so the
+            // class cannot be recovered from either the framing or a reason.
+            StepSummary {
+                seq: "004".into(),
+                wound: Wound::OutputLimit,
                 ..base
             },
         ],

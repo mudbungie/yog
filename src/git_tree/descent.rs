@@ -124,6 +124,7 @@ mod tests {
             tool_calls: vec![],
             state: AgentState::Stopped,
             state_uncertain: false,
+            truncated: false,
             pending: vec![],
             conflicted_oid: None,
             budget_oid: None,

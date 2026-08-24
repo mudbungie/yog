@@ -65,6 +65,7 @@ pub(crate) fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
         tool_calls: vec![],
         state,
         state_uncertain: false,
+        truncated: false,
         pending: vec![],
         conflicted_oid: None,
         budget_oid: None,

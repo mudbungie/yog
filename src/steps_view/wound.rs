@@ -1,5 +1,16 @@
-//! The §7.3 **no-response wound**: a step whose driver died before the model
-//! produced anything — **and, since bl-55d8, why**.
+//! The §7.3 **step wound**: what went wrong with one step, said in words where
+//! the step is rendered. Two classes, which is the whole of the vocabulary:
+//!
+//! - **No response** — the driver died before the model produced anything, and
+//!   since bl-55d8, why.
+//! - **Output limit** — the model call framed cleanly and the *turn* did not
+//!   end: the request's `max_tokens` ran out mid-utterance (§4.4
+//!   [`Ending::OutputLimit`], bl-fb87). Framing alone paints that step `✔
+//!   complete`, which is true of the transport and a lie about the turn — the
+//!   same quiet-step misreading the no-response class exists to correct, one
+//!   layer up.
+//!
+//! The no-response class, in detail:
 //!
 //! Without this state such a step reads as a quiet one — `Framing::Killed`
 //! paints the same ash "stopped" badge a mid-stream kill gets, over a
@@ -53,12 +64,17 @@
 
 use std::path::Path;
 
-use crate::git_tree::AgentState;
+use crate::git_tree::{AgentState, Ending};
 
 /// The sentence yog renders at the wound — the §7.3 rendered fact for this
 /// class. Used verbatim beside the Steps row and composed into the §11
 /// Altitude-1 banner, so both surfaces say one thing.
 pub const NO_RESPONSE: &str = "driver produced no response";
+
+/// The same, for the §4.4 output-limit class (bl-fb87). It names what happened
+/// to the **turn**, not to the transport, because the transport is the half
+/// the framing badge already reports and the half that went fine.
+pub const OUTPUT_LIMIT: &str = "output limit ended the turn";
 
 /// What the banner adds when the step's own `stderr.log` is empty too — the
 /// honest end of the trail, said outright rather than pointing somewhere that
@@ -70,21 +86,34 @@ const MUTE: &str = "and its stderr.log is empty too — nothing on disk says why
 /// than the tail must be told where the whole of it lives.
 const SPOKE: &str = "its stderr.log says:";
 
+/// What the banner adds for the output-limit class: what the operator is
+/// looking at, and the one gesture that carries it on.
+///
+/// It names Nudge in order to **retire** it, because §8.2 offers Nudge on
+/// every other resting conversation and a control that silently disappears
+/// reads as a bug. Linked lernie derives `NothingDue` from a tool-free
+/// assistant tail and exits without creating a step, so the honest sentence is
+/// that the gesture cannot help and which one can — never a blind retry, and
+/// never a new verb (bl-fb87).
+const CUT_OFF: &str = "the reply stops where the model's output budget ran out, so nothing \
+     more is coming. Nudge cannot resume it — send a message to carry it on.";
+
 /// The §11 banner's leading mark. Never the only carrier — the sentence beside
 /// it states the fact in words (§11 glyph doctrine).
 const ALARM: &str = "⚠";
 
-/// The §7.3 no-response wound **and its reason** — three readings of one
+/// The §7.3 wound, its class **and its reason** — four readings of one
 /// derivation, never a stored flag (§5.1 #13).
 ///
-/// Three variants rather than an `Option<String>` because a wound with nothing
-/// to say is a real, distinct answer (a SIGKILL mid-call leaves an empty
-/// `stderr.log`), and `Some("")` would spell it as a wound whose words are
-/// blank — one fact with two encodings, which is how they drift.
+/// The two no-response arms are separate rather than an `Option<String>`
+/// because a wound with nothing to say is a real, distinct answer (a SIGKILL
+/// mid-call leaves an empty `stderr.log`), and `Some("")` would spell it as a
+/// wound whose words are blank — one fact with two encodings, which is how
+/// they drift.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum Wound {
-    /// Not a wound: the step answered, or it settled, or a driver is still
-    /// filling it.
+    /// Not a wound: the step answered whole, or it settled, or a driver is
+    /// still filling it.
     #[default]
     None,
     /// The driver produced nothing and left no words behind.
@@ -92,6 +121,10 @@ pub enum Wound {
     /// The driver produced nothing, and the adapter said why — the tail of the
     /// step's `stderr.log`, verbatim.
     Spoke(String),
+    /// The output limit ended the turn (§4.4, bl-fb87). It carries no reason
+    /// of its own: the reason IS the class, stated by the canonical finish
+    /// reason rather than recovered from anybody's stderr.
+    OutputLimit,
 }
 
 impl Wound {
@@ -99,6 +132,17 @@ impl Wound {
     /// row's badge both ask exactly this and nothing finer.
     pub fn wounded(&self) -> bool {
         !matches!(self, Wound::None)
+    }
+
+    /// The class, in the badge's one seat — the words the Steps row paints
+    /// where the framing badge would otherwise go. `Wound::None` has no word:
+    /// the caller gates on [`wounded`](Self::wounded) and paints the framing.
+    pub(crate) fn word(&self) -> &'static str {
+        match self {
+            Wound::None => "",
+            Wound::Mute | Wound::Spoke(_) => NO_RESPONSE,
+            Wound::OutputLimit => OUTPUT_LIMIT,
+        }
     }
 
     /// The whole §7.3 rendered fact, in words — glyph, the class, and the
@@ -110,14 +154,20 @@ impl Wound {
             Wound::None => String::new(),
             Wound::Mute => format!("{ALARM} {NO_RESPONSE} — {MUTE}"),
             Wound::Spoke(words) => format!("{ALARM} {NO_RESPONSE} — {SPOKE} {words}"),
+            Wound::OutputLimit => format!("{ALARM} {OUTPUT_LIMIT} — {CUT_OFF}"),
         }
     }
 }
 
-/// Read one step's wound from its own bytes. `response` and `meta_present` are
-/// the reads [`summarize`](super::summarize) already made — `meta_present` is
-/// the *existence* of `meta.json`, not its parse, since a malformed meta still
-/// means the step settled.
+/// Read one step's wound from its own bytes. `response`, `meta_present` and
+/// `ending` are the reads [`summarize`](super::summarize) already made —
+/// `meta_present` is the *existence* of `meta.json`, not its parse, since a
+/// malformed meta still means the step settled, and `ending` is the §4.4
+/// classifier's semantic half off the same response bytes (never a second
+/// walk, §15 Y13).
+///
+/// The two classes are disjoint by construction: a step with no response bytes
+/// has no settled tail to read an [`Ending`] out of.
 ///
 /// The `stderr.log` read is **gated on the predicate**: an ordinary step pays
 /// one comparison and no syscall, so attaching the reason costs a healthy
@@ -125,9 +175,13 @@ impl Wound {
 /// invented — [`crate::opslog::detached::captured`] for how much of a capture
 /// file yog ever reads, [`crate::opslog::rows::stderr_tail`] for how much of a
 /// stderr a *surface* says.
-pub(super) fn read(step: &Path, response: &[u8], meta_present: bool) -> Wound {
+pub(super) fn read(step: &Path, response: &[u8], meta_present: bool, ending: Ending) -> Wound {
     if !response.is_empty() || meta_present {
-        return Wound::None;
+        return if ending == Ending::OutputLimit {
+            Wound::OutputLimit
+        } else {
+            Wound::None
+        };
     }
     let captured = crate::opslog::detached::captured(&step.join(super::records::STDERR_FILE));
     let words = crate::opslog::rows::stderr_tail(captured.trim());

@@ -134,15 +134,17 @@ fn paint_cell(ui: &mut egui::Ui, cell: Cell) {
     };
 }
 
-/// The row's badge — glyph, hue, and the outcome **in words**. The §7.3
-/// no-response wound outranks the framing read: framing alone classifies it
-/// `Killed`, which paints the ash "stopped" badge a mid-stream kill gets —
-/// exactly the quiet-step misreading the wound state exists to correct — so the
-/// wound's own sentence ([`super::NO_RESPONSE`], bl-7f2e) is what the row says,
-/// in the badge's one seat rather than a second label further along the row.
+/// The row's badge — glyph, hue, and the outcome **in words**. The §7.3 wound
+/// outranks the framing read, because for both of its classes the framing is
+/// the wrong sentence: a no-response step frames `Killed`, which paints the ash
+/// "stopped" badge a mid-stream kill gets, and an output-limited one frames
+/// `Complete`, which paints `✔ complete` over a turn that was cut off
+/// (bl-fb87). Either way the wound's own word ([`Wound::word`], bl-7f2e) is
+/// what the row says, in the badge's one seat rather than a second label
+/// further along the row.
 pub(super) fn summary_badge(step: &StepSummary) -> (&'static str, egui::Color32, &'static str) {
     if step.wound.wounded() {
-        ("✖", theme::ICHOR, super::NO_RESPONSE)
+        ("✖", theme::ICHOR, step.wound.word())
     } else {
         framing_badge(step.framing)
     }

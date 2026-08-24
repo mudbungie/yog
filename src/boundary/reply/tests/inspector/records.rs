@@ -46,8 +46,13 @@ fn a_step_row_states_what_was_recorded_and_omits_what_was_not() {
     let mut killed = step("003", Framing::Killed);
     killed.auth_failed = AuthFailure::Unrouted;
     killed.wound = Wound::Spoke("no credentials".to_owned());
+    // bl-fb87: a step that framed clean around a turn the output limit cut off
+    // — the class the `wounded` boolean could not spell, since it is a wound
+    // whose framing is `complete`.
+    let mut truncated = step("004", Framing::Complete);
+    truncated.wound = Wound::OutputLimit;
     let rows = encode(&Reply::Steps(StepsView {
-        steps: vec![settled, failed, killed],
+        steps: vec![settled, failed, killed, truncated],
         orphan: Orphan::default(),
     }));
     assert_eq!(rows["kind"], "steps");
@@ -60,7 +65,7 @@ fn a_step_row_states_what_was_recorded_and_omits_what_was_not() {
     assert_eq!(at(0)["tokens"]["input"], 3);
     assert_eq!(at(0)["tokens"]["total"], 7);
     assert_eq!(at(0)["auth_failed"], false);
-    assert_eq!(at(0)["wounded"], false);
+    assert_eq!(at(0)["wound"], "none");
     assert_eq!(at(1)["framing"], "failed");
     assert_eq!(at(1)["auth_failed"], true);
     assert_eq!(at(1)["auth_row"], "acme");
@@ -68,11 +73,19 @@ fn a_step_row_states_what_was_recorded_and_omits_what_was_not() {
     // Unrouted: the affordance is offered and there is nothing to pick for you.
     assert_eq!(at(2)["auth_failed"], true);
     assert!(at(2).get("auth_row").is_none());
-    assert_eq!(at(2)["wounded"], true);
+    assert_eq!(at(2)["wound"], "no_response");
     assert_eq!(at(2)["wound_reason"], "no credentials");
     for key in ["commit", "started_at", "ended_at"] {
         assert!(at(2).get(key).is_none(), "{key} was never recorded");
     }
+    // The framing stays honest about the transport while the wound says what
+    // became of the turn — two facts, neither standing in for the other.
+    assert_eq!(at(3)["framing"], "complete");
+    assert_eq!(at(3)["wound"], "output_limit");
+    assert!(
+        at(3).get("wound_reason").is_none(),
+        "the class is the reason"
+    );
 }
 
 /// The drill-in's three record classes stay apart: parsed (with the bytes it
