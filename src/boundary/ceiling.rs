@@ -25,7 +25,7 @@
 //! fired it (the row carries the start's own [`Origin`](crate::opslog::Origin)),
 //! and the §6 attention count that follows.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::opslog::{self, OpEntry};
 use crate::ui_state::UiState;
@@ -33,19 +33,27 @@ use crate::ui_state::UiState;
 /// The step name a refusal's `["yog-step", …]` ops row carries (§4.2).
 const STEP: &str = "ceiling";
 
-/// Let a spawn into `prepared.workspace` through, or refuse it (§3.5).
+/// Let a spawn into `workspace` through, or refuse it (§3.5).
+///
+/// **`world` is the comparison's scope and `workspace` is only the row's
+/// subject** (bl-a80a): the ceiling bounds what this whole world has spent, so
+/// the roster of every workspace is what the figure is folded over, while the
+/// ops row still names where the refused birth was headed. Both come from the
+/// caller — the §3.1 roster is [`crate::binding::workspaces`]' answer, asked at
+/// the door rather than re-derived here, so the gate stays pure over its inputs.
 ///
 /// `Ok(())` is the ungated world's only answer — no `ceiling` key, no price
-/// table, or a workspace still under the number. The `Err` is the operator's
+/// table, or a world still under the number. The `Err` is the operator's
 /// refusal text, already durable on the trail when it is returned.
 pub fn gate(
     ui: &UiState,
     state_root: &Path,
     ts: &str,
     workspace: &Path,
+    world: &[PathBuf],
     origin: crate::opslog::Origin,
 ) -> Result<(), String> {
-    let Some(refusal) = ui.ceiling().refusal(workspace, &ui.prices()) else {
+    let Some(refusal) = ui.ceiling().refusal(world, &ui.prices()) else {
         return Ok(());
     };
     let entry = OpEntry::step_failure(
@@ -68,7 +76,7 @@ mod tests {
     use super::gate;
     use crate::opslog::Origin;
     use crate::ui_state::UiState;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     const CONV: &str = "20260803T120000Z-root";
 
@@ -94,12 +102,27 @@ mod tests {
     /// `$1/Mtok` input, so the fixture workspace has spent exactly $3.
     const PRICED: &str = r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":2}"#;
 
+    /// The world roster a one-workspace fixture presents (bl-a80a).
+    fn world(dir: &Path) -> Vec<PathBuf> {
+        vec![dir.to_path_buf()]
+    }
+
     #[test]
     fn an_unconfigured_world_is_ungated() {
         let dir = tempfile::tempdir().unwrap();
         spent(dir.path());
         let ui = ui(dir.path(), r#"{"v":1,"prices":{"opus":{"input":1}}}"#);
-        assert!(gate(&ui, dir.path(), "T1", dir.path(), Origin::Balls).is_ok());
+        assert!(
+            gate(
+                &ui,
+                dir.path(),
+                "T1",
+                dir.path(),
+                &world(dir.path()),
+                Origin::Balls
+            )
+            .is_ok()
+        );
         assert!(!dir.path().join("ops.jsonl").exists(), "nothing to log");
     }
 
@@ -111,7 +134,17 @@ mod tests {
             dir.path(),
             r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":5}"#,
         );
-        assert!(gate(&ui, dir.path(), "T1", dir.path(), Origin::Balls).is_ok());
+        assert!(
+            gate(
+                &ui,
+                dir.path(),
+                "T1",
+                dir.path(),
+                &world(dir.path()),
+                Origin::Balls
+            )
+            .is_ok()
+        );
         assert!(!dir.path().join("ops.jsonl").exists());
     }
 
@@ -120,12 +153,39 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         spent(dir.path());
         let ui = ui(dir.path(), PRICED);
-        let refusal = gate(&ui, dir.path(), "T1", dir.path(), Origin::Balls).unwrap_err();
+        let refusal = gate(
+            &ui,
+            dir.path(),
+            "T1",
+            dir.path(),
+            &world(dir.path()),
+            Origin::Balls,
+        )
+        .unwrap_err();
         assert!(refusal.contains("spend ceiling reached"), "{refusal}");
         let trail = std::fs::read_to_string(dir.path().join("ops.jsonl")).unwrap();
         assert!(trail.contains("yog-step"), "{trail}");
         assert!(trail.contains("ceiling"), "{trail}");
         assert!(trail.contains("\"exit\":-3"), "{trail}");
+    }
+
+    /// bl-a80a: the scope of the comparison and the subject of the row are two
+    /// different things. A birth into a workspace that has spent nothing is
+    /// refused because a *sibling* spent, and the row still names the workspace
+    /// the birth was headed for — otherwise the trail would say the refusal
+    /// happened somewhere nobody was going.
+    #[test]
+    fn a_sibling_s_spend_refuses_an_idle_workspace_and_the_row_names_the_target() {
+        let dir = tempfile::tempdir().unwrap();
+        let (idle, busy) = (dir.path().join("idle"), dir.path().join("busy"));
+        std::fs::create_dir_all(&idle).unwrap();
+        spent(&busy);
+        let ui = ui(dir.path(), PRICED);
+        let roster = vec![idle.clone(), busy];
+        let refusal = gate(&ui, dir.path(), "T1", &idle, &roster, Origin::Balls).unwrap_err();
+        assert!(refusal.contains("$3.00"), "{refusal}");
+        let trail = std::fs::read_to_string(dir.path().join("ops.jsonl")).unwrap();
+        assert!(trail.contains("idle"), "{trail}");
     }
 
     #[test]
@@ -136,6 +196,16 @@ mod tests {
         // A state root that is not a directory: the append cannot land, and the
         // refusal is still what rides back.
         let wall = dir.path().join("ui.json");
-        assert!(gate(&ui, &wall, "T1", dir.path(), Origin::Balls).is_err());
+        assert!(
+            gate(
+                &ui,
+                &wall,
+                "T1",
+                dir.path(),
+                &world(dir.path()),
+                Origin::Balls
+            )
+            .is_err()
+        );
     }
 }

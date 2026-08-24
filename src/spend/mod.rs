@@ -36,7 +36,7 @@
 //! renders snapshots and reads no disk).
 
 use crate::budgets::{self, BudgetSpend, Scope, StepBill};
-use std::path::Path;
+use std::path::PathBuf;
 
 mod ceiling;
 mod prices;
@@ -157,20 +157,30 @@ pub fn attribution(roots: &[String]) -> Attribution {
     }
 }
 
-/// Every conversation in a workspace, priced and labelled as the
-/// workspace-wide sum it is — the §3.5 granularity a ball no conversation
-/// stamps falls back to, and the scope the [`Ceiling`](crate::boundary::ceiling)
-/// gate compares against.
+/// **The whole world's priced spend** — every workspace in `workspaces`, folded
+/// into one number, which is the scope the §3.5
+/// [`Ceiling`](crate::boundary::ceiling) gate compares against since bl-a80a.
+/// `None` is the empty price table, the §3.5 severability gate.
 ///
-/// **The one figure that still walks disk itself** (bl-56d5 × bl-9dd4): every
+/// A *cost* rather than a [`Figure`], because a bound is arithmetic and never a
+/// rendering: an [`Attribution`] label answers "what is this figure honest
+/// about" for a figure somebody reads, and nothing reads this one — the gate
+/// compares it and the board asks the gate. Inventing a world label for a value
+/// no surface shows would be a fact with no reader.
+///
+/// **The one fold that still walks disk itself** (bl-56d5 × bl-9dd4): every
 /// other figure here reads the worker's `Snapshot::bills`, but a *gate* must
 /// compare against the world as it is at the instant it refuses, not against a
 /// snapshot that may be a debounce window old. It runs once per spawn, at a
-/// chokepoint, so it costs a walk on a gesture rather than a walk per row per
-/// frame.
-pub fn of_workspace(workspace: &Path, prices: &Prices) -> Figure {
-    let bills = budgets::bills(workspace, &Scope::Workspace);
-    figure(&bills, prices, Attribution::Workspace)
+/// chokepoint, so it costs one walk on a gesture rather than a walk per row per
+/// frame — and the spawn rate is already bounded at one per full sweep (§4.3),
+/// however many workspaces the roster holds.
+pub fn of_world(workspaces: &[PathBuf], prices: &Prices) -> Option<Cost> {
+    let mut bills = Vec::new();
+    for workspace in workspaces {
+        bills.extend(budgets::bills(workspace, &Scope::Workspace));
+    }
+    priced(&bills, prices)
 }
 
 /// One conversation's whole-tree figure (§5.1 #16 priced): the root agent and
@@ -203,9 +213,18 @@ pub fn of_ball(bills: &[StepBill], stamped_roots: &[String], prices: &Prices) ->
 pub fn figure(bills: &[StepBill], prices: &Prices, attribution: Attribution) -> Figure {
     Figure {
         tokens: budgets::total(bills),
-        cost: (!prices.is_empty()).then(|| cost(bills, prices)),
+        cost: priced(bills, prices),
         attribution,
     }
+}
+
+/// The money half of [`figure`] alone: what `bills` cost, or `None` when the
+/// table is empty. **The severability gate lives here and only here** — an
+/// unpriced yog bounds nothing rather than inventing a token proxy for dollars
+/// (§3.5) — so the ceiling's world fold and every rendered figure ask one
+/// function and cannot disagree about what "unpriced" means.
+pub fn priced(bills: &[StepBill], prices: &Prices) -> Option<Cost> {
+    (!prices.is_empty()).then(|| cost(bills, prices))
 }
 
 /// Price every bill by its own step's model — the join proper. A bill whose

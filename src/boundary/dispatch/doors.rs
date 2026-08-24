@@ -79,7 +79,18 @@ pub fn prompt(
     seed: Option<u64>,
 ) -> Result<String, String> {
     control::confinement_gate(workspace)?;
-    ceiling::gate(ui, &deps.state_root, ts, workspace, prepared.origin)?;
+    // The §3.5 ceiling is the **world's** since bl-a80a, so its comparison is
+    // folded over the §3.1 roster rather than over the one workspace this birth
+    // names — enumerated here, at the door, because "every workspace" has one
+    // home ([`crate::binding::workspaces`]) and the gate stays pure over what it
+    // is handed. It is read at the instant of the refusal, not off the snapshot:
+    // a gate compares against the world as it is, not as a debounce window ago.
+    let world: Vec<std::path::PathBuf> =
+        crate::binding::workspaces(&deps.yog_data_root, &deps.world.lernie_data_root())
+            .into_iter()
+            .map(|w| w.path)
+            .collect();
+    ceiling::gate(ui, &deps.state_root, ts, workspace, &world, prepared.origin)?;
     // The fired loop carries the target workspace's wall (§16.2 as amended):
     // lernie hands its own environment to every tool subprocess, and a bare
     // `bz` in an agent's bash is the world's shim re-entering yog — so this one

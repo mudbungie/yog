@@ -1058,14 +1058,53 @@ worse than none. §8.5 supplied it.
   ceiling is a dollar figure and yog refuses to bound dollars it cannot compute
   rather than inventing a token proxy for them. No new config artifact, no
   setter, no verb, no flag.
-- **The figure it compares is the target workspace's**, the same
-  `Attribution::Workspace` sum this section already accepts as a ball's honest
-  upper bound: a workspace is the sphere a drone lives its ball in, and it is
-  the one scope a spawn names outright without inventing a linkage fact nobody
-  stores. At-or-over refuses. The comparison is against the figure's **floor** —
-  unpriced tokens are reported (above) and never guessed at — so the gate
-  refuses only on spend it can actually name, and a literal `0` is honored as
-  written: the deliberate hard stop.
+- **The figure it compares is the whole world's** (bl-a80a) — every workspace
+  the §3.1 roster names, folded into one number. At-or-over refuses. The
+  comparison is against the figure's **floor** — unpriced tokens are reported
+  (above) and never guessed at — so the gate refuses only on spend it can
+  actually name, and a literal `0` is honored as written: the deliberate hard
+  stop.
+
+  **It was the target workspace's, and that was a defect, not a granularity
+  choice.** The argument for the narrow scope was attribution's — a workspace is
+  the sphere a drone lives its ball in, the one scope a spawn names outright —
+  but *what a figure is honest about* and *what an operator's allowance covers*
+  are two questions, and the number answers the second. `ceiling` is **world
+  config**: one `ui.json`, one key, beside the one `prices` table it is
+  denominated in (§4.1). A world-level number read as a per-sphere bound gives
+  one operator figure as many meanings as there are workspaces, so arming a
+  second project silently doubled the allowance the operator wrote — and §4.3
+  arming is one entry per workspace, so a whole-day operator's portfolio
+  multiplied it by however many projects were live.
+
+  **One key, one comparison, one gate, one home.** The multiplication is gone by
+  construction rather than policed by a second rule: no world ceiling *beside* a
+  workspace ceiling (two ceilings over one concern is exactly the shape bl-56af
+  deleted), no precedence table, no stored counter, no new durable fact. The
+  fold is a query over bills yog already publishes — `spend::of_world` at the
+  gate, walking the roster at the instant of the refusal, and
+  `spend::priced` over `Snapshot::bills` for the V4 board's copy of the same
+  verdict. Severability is untouched: delete `ceiling` or delete `prices` and
+  the gate is gone, exactly as before.
+
+  **The cost is the ruling's, and it is stated rather than mitigated.** An idle
+  workspace is refused because a busy one spent, and an operator who wrote `25`
+  meaning *per sphere* now has a world allowance of `25`. That is the safe
+  direction: a ceiling that binds sooner refuses a **birth**, which is the one
+  thing it may refuse, and never touches a live drone. Because the figure is
+  lifetime-cumulative (nothing windows it and nothing resets it — the ceiling
+  has always meant *"this has spent enough, ever"*), a long-lived world
+  eventually latches the gate; the remedy is raising the number, which is the
+  remedy it had before, arriving sooner.
+
+  **Deliberately not built** (each would be a new fact needing its own ruling,
+  not a derivation off this one): a *day window*, which needs a clock origin, a
+  reset and a stored or derived boundary — the first thing here that would not
+  be severable by deleting a key; and a *world concurrent-drone cap*, because
+  sum-of-caps is already arithmetic over entries the operator wrote themselves,
+  the birth rate is already bounded at one per full sweep (§4.3 — one pilot
+  thread, one move per tick, world-wide), and a drone count is a poor proxy for
+  the thing being protected when yog can price the money directly.
 - **A refusal renders where refusals already render.** It writes the §4.2
   `["yog-step","ceiling"]` failure line before it rides back, carrying the
   start's own `Origin`, so it banners at the rung that fired it (§7.3) and
@@ -1824,9 +1863,11 @@ viewport ephemera (§5.3, reasoning in §13.1).
   non-numeric rate degrades to absent rather than refusing the document (the
   forgiving read), so a typo costs a column, never the window. Deleting the key
   deletes the column and no code path — the severability §3.5 demands.
-- **`ceiling`** — the §3.5 spend ceiling: one number, **USD**, the bound a
-  workspace's own spend must stay under for yog to start a *new* conversation
-  in it. Read exactly like `prices` and for the same reasons — read-only, no
+- **`ceiling`** — the §3.5 spend ceiling: one number, **USD**, the bound *this
+  whole world's* spend must stay under for yog to start a *new* conversation
+  anywhere in it. World-scoped since bl-a80a: it is a world-level key in a
+  world-level file, so it names a world-level allowance, and arming a second
+  project does not multiply it. Read exactly like `prices` and for the same reasons — read-only, no
   setter, no editor, no verb, live within a tick through the whole-file
   `adopt`. Absent, non-numeric or negative all read as **no ceiling**: deleting
   the key deletes the gate, not a code path. An empty `prices` deletes it too
@@ -6250,9 +6291,12 @@ list — the board is the *live* set, and "delivered" is not a column.
   bound to that workspace, so what the operator is looking at and what the cap
   compares against are one derivation; the last tick is `last_act` over the
   `["yog-fleet",…]` rows (§4.2); and the ceiling is §3.5's own `Ceiling` asked
-  over the workspace's already-walked bills — **the gate's policy object, not a
-  second opinion**, which is what makes "the ceiling renders where it will bind"
-  (V4.3) true rather than parallel. Nothing is stored: no cap field, no count
+  over **every** workspace's already-walked bills — **the gate's policy object,
+  not a second opinion**, which is what makes "the ceiling renders where it will
+  bind" (V4.3) true rather than parallel. Since bl-a80a that fold is the world's
+  on both sides, so the verdict is computed once and every armed row shows the
+  same string: that is the fact — one allowance, however many projects are armed
+  — and not a repetition of it. Nothing is stored: no cap field, no count
   field, no tick record.
 - **The tick renders as a period, not a countdown, and that is a ruling.** A
   level-triggered loop's tick is not an event — it converges from whatever state

@@ -103,26 +103,32 @@ fn the_last_tick_is_the_newest_row_the_loop_left() {
     assert!(one.label().contains("last 4m ago"), "{}", one.label());
 }
 
+/// One priced step's bill: `input` tokens of `opus`, which the table below
+/// charges at $1/Mtok.
+fn bill(input: u64) -> Vec<StepBill> {
+    vec![StepBill {
+        conv: "otter-one".to_owned(),
+        seq: "001".to_owned(),
+        model: Some("opus".to_owned()),
+        spend: BudgetSpend {
+            input_tokens: input,
+            ..BudgetSpend::default()
+        },
+        last_usage: BudgetSpend::default(),
+        wall_secs: 0,
+    }]
+}
+
+fn table() -> Prices {
+    Prices::from_json(&json!({ "opus": { "input": 1 } }))
+}
+
 #[test]
 fn the_ceiling_renders_where_it_will_bind_and_closes_the_room() {
     let mut snap = snap(vec![(WS, policy(4, None))]);
-    snap.bills.insert(
-        PathBuf::from(WS),
-        vec![StepBill {
-            conv: "otter-one".to_owned(),
-            seq: "001".to_owned(),
-            model: Some("opus".to_owned()),
-            spend: BudgetSpend {
-                input_tokens: 3_000_000,
-                ..BudgetSpend::default()
-            },
-            last_usage: BudgetSpend::default(),
-            wall_secs: 0,
-        }],
-    );
-    let prices = Prices::from_json(&json!({ "opus": { "input": 1 } }));
+    snap.bills.insert(PathBuf::from(WS), bill(3_000_000));
     let ceiling = Ceiling::from_json(Some(&json!(2)));
-    let facts = of(&snap, &prices, ceiling, &[], NOW);
+    let facts = of(&snap, &table(), ceiling, &[], NOW);
     let one = facts.first().expect("armed");
     let refusal = one.ceiling.as_deref().expect("the next spawn would bind");
     assert!(refusal.contains("spend ceiling reached"), "{refusal}");
@@ -130,4 +136,43 @@ fn the_ceiling_renders_where_it_will_bind_and_closes_the_room() {
         !one.has_room(),
         "an empty workspace still has no room when the next birth would be refused"
     );
+}
+
+/// **bl-a80a on the render side.** Two armed workspaces, each $2 against a
+/// $2.50 ceiling — under it alone, over it together. Both rows close, and both
+/// say the same thing, because there is one allowance and it is the world's.
+#[test]
+fn a_second_armed_project_cannot_multiply_the_allowance() {
+    const OTHER: &str = "/names/heron";
+    let mut snap = snap(vec![(WS, policy(4, None)), (OTHER, policy(4, None))]);
+    snap.bills.insert(PathBuf::from(WS), bill(2_000_000));
+    snap.bills.insert(PathBuf::from(OTHER), bill(2_000_000));
+    let facts = of(
+        &snap,
+        &table(),
+        Ceiling::from_json(Some(&json!(2.5))),
+        &[],
+        NOW,
+    );
+    assert_eq!(facts.len(), 2);
+    for one in &facts {
+        let refusal = one
+            .ceiling
+            .as_deref()
+            .expect("the world is over the number");
+        assert!(refusal.contains("$4.00"), "{refusal}");
+        assert!(!one.has_room(), "no armed loop has room");
+    }
+
+    // Either workspace alone is still under it — the sum is the whole defect.
+    let mut alone = snap;
+    alone.bills.remove(Path::new(OTHER));
+    let facts = of(
+        &alone,
+        &table(),
+        Ceiling::from_json(Some(&json!(2.5))),
+        &[],
+        NOW,
+    );
+    assert!(facts.iter().all(|f| f.ceiling.is_none()));
 }

@@ -187,6 +187,45 @@ fn the_spend_ceiling_refuses_the_fire_and_says_so_on_the_trail() {
     );
 }
 
+/// **bl-a80a end to end.** The gate's scope is the world, so a fire into
+/// `cobalt` — which has spent nothing — is refused by what `spare` spent. This
+/// is the one drive that proves the door actually enumerates the §3.1 roster:
+/// the test above uses a `0` ceiling, which refuses over an empty roster too.
+#[test]
+fn spend_in_another_workspace_refuses_a_fire_into_an_idle_one() {
+    let bin = tempdir().unwrap();
+    let w = world();
+    let step = w
+        .ws_spare
+        .join("steps")
+        .join("20260101T000000Z-x")
+        .join("001");
+    fs::create_dir_all(&step).unwrap();
+    fs::write(
+        step.join("response.json"),
+        r#"{"type":"usage","input_tokens":3000000}"#,
+    )
+    .unwrap();
+    fs::write(step.join("request.json"), r#"{"model":"opus"}"#).unwrap();
+    fs::write(
+        w.roots.ui_json(),
+        r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":2}"#,
+    )
+    .unwrap();
+    let (_c, m) = model_focused(&w, &w.ws_cobalt);
+    let deps = m.boundary_deps(&fake_lernie(bin.path()), &Cli::new("/no/bl"));
+    let action = Action::Prompt {
+        prepared: prepared(&w),
+        goal: "go".into(),
+        seed: Some(7),
+    };
+    let err = engine::act(&m, &deps, "T3", &action).unwrap_err();
+    assert!(
+        err.contains("$3.00"),
+        "the sibling's spend is the figure: {err}"
+    );
+}
+
 /// **S12-T5 three-spellings** (the executor half): one attempt crosses the
 /// boundary as the ordinary `lernie dispatch --from`, and the whole argv —
 /// role, parent, verbatim goal, fork point, skill pin — lands on the §4.2

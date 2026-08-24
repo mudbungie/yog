@@ -10,7 +10,7 @@
 //! | current count | the board's own **claimed** rows bound to this workspace |
 //! | the last tick that acted | the newest `yog-fleet` row on the ops tail |
 //! | the next tick | the clock's period — the loop looks again within it |
-//! | the ceiling | §3.5's `Ceiling` over the workspace's already-walked bills |
+//! | the ceiling | §3.5's `Ceiling` over **every** workspace's already-walked bills |
 //!
 //! **Why the tick is a period and not a countdown.** A level-triggered loop's
 //! tick is not an event: it converges from whatever state it finds, so a tick
@@ -26,14 +26,16 @@
 //! It is the very policy object the spawn gate consults
 //! ([`crate::boundary::ceiling`], bl-56d5), asked over the same figure; this
 //! composes that gate and does not restate it, which is why raising the number
-//! moves both at once.
+//! moves both at once. Since bl-a80a that figure is the **world's**, so the
+//! verdict is folded once and every armed row shows it: one allowance, however
+//! many projects are armed, is the whole of what that ball fixed.
 
 use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::app::Snapshot;
 use crate::board::{BoardRow, Column};
-use crate::spend::{Attribution, Ceiling, Prices};
+use crate::spend::{Ceiling, Prices};
 
 /// One armed workspace's loop, as the board states it. A value, never a record.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,6 +58,8 @@ pub struct Facts {
     /// ago" and must not render as one.
     pub since_act: Option<i64>,
     /// What the **next spawn** would be refused with, or `None` to let it fly.
+    /// World-scoped since bl-a80a, so it reads the same on every armed row —
+    /// the ceiling bounds the world, not this sphere.
     pub ceiling: Option<String>,
 }
 
@@ -113,6 +117,10 @@ pub fn of(
     now: i64,
 ) -> Vec<Facts> {
     let acts = super::row::of_rows(&snap.ops);
+    // One world, one number, one verdict (bl-a80a): the ceiling bounds what the
+    // whole world has spent, so it is folded once here and every armed row
+    // carries the same answer — which is the fact, not a repetition of it.
+    let verdict = ceiling.verdict(spent(snap, prices));
     snap.fleet
         .iter()
         .map(|(key, policy)| {
@@ -124,7 +132,7 @@ pub fn of(
                 tick: snap.cadence.full_sweep,
                 lease: policy.lease,
                 since_act: super::row::last_act(&acts, key).map(|ts| now.saturating_sub(ts)),
-                ceiling: ceiling.verdict(&spent(snap, &workspace, prices)),
+                ceiling: verdict.clone(),
                 workspace,
             }
         })
@@ -144,11 +152,14 @@ pub fn held(rows: &[BoardRow], workspace: &std::path::Path) -> usize {
         .count()
 }
 
-/// The workspace's whole priced spend, off the worker's already-walked bills
-/// (§7.2 — no frame reads disk). The same scope the gate compares against.
-fn spent(snap: &Snapshot, workspace: &std::path::Path, prices: &Prices) -> crate::spend::Figure {
-    let bills = snap.bills.get(workspace).cloned().unwrap_or_default();
-    crate::spend::figure(&bills, prices, Attribution::Workspace)
+/// The **world's** whole priced spend, off the worker's already-walked bills
+/// (§7.2 — no frame reads disk): every workspace the derivation pass billed,
+/// concatenated and folded once. The same scope the gate compares against
+/// (bl-a80a), which is what keeps "the ceiling renders where it will bind" one
+/// answer instead of two that could drift.
+fn spent(snap: &Snapshot, prices: &Prices) -> Option<crate::spend::Cost> {
+    let bills: Vec<_> = snap.bills.values().flatten().cloned().collect();
+    crate::spend::priced(&bills, prices)
 }
 
 #[cfg(test)]
