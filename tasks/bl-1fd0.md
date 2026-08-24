@@ -1,7 +1,7 @@
 +++
 title = "the start pane invites a goal that cannot possibly run: on a wall with no usable provider, the first rung must be provider sign-in, not a text box"
 created = 1787548547
-updated = 1787548558
+updated = 1787549232
 claimant = "Grommet"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -60,3 +60,41 @@ was wasted.
 - Acceptance coverage: fresh wall → rung painted, goal Send refuses with the
   reason; signed wall → rung absent, flow byte-for-byte today's; sign-in
   completing mid-pane → rung dissolves, draft preserved.
+
+---
+
+**One deviation from the ruling's predicate, and why.** The ruling's stated test
+— *"any row `stored` or `not required`"* — is vacuous as written. brazen merges
+its built-in table under **every** config there can be, so `ollama` and
+`claude-code` read `credential = "not required"` on every wall, including a bare
+one and including the table this box actually carries. A predicate they satisfy
+is a predicate nothing ever fails: the rung would not have appeared on the wall
+the ruling was filed from. Verified against a real `bz --list-providers --json`
+with an empty config home — five keyed rows `missing`, `ollama` and
+`claude-code` `not required`, the built-in oauth row `missing`.
+
+Nor is a keyless row what a doomed start was routed to: both claim no model
+prefixes and are reached only by an explicit `--provider`, so a start whose role
+names an uncredentialled row dies exactly as described with both of them sitting
+in the table.
+
+So the shipped predicate is **a row carrying a credential a run would spend**,
+read off brazen's own `credential` column (its `fetch_cred` answer minus the
+network) rather than off a second file-existence read. `stored`, `ambient`,
+`inline` and any spelling this build cannot read all ready the wall — the last
+because refusing on an unanswered question would block a working setup — and
+only `missing`/`not required` do not. The keyless rows still change what the
+rung *says*, so an operator looking at two rows marked "no credential needed" is
+told why they do not count.
+
+**What the gate still cannot see, and did not pretend to:** *which* row a start
+routes to. That is `roles.<r>.provider` on the config branch — several git reads
+and §9.4's subject — so the gate judges the wall, not the route. Exactly right
+when nothing at all is signed in; conservative for an operator whose roles all
+name a keyless row, who is told to sign in when their setup needs no sign-in.
+DESIGN §8.1 carries all of this.
+
+**Filed out of this ball:** bl-fef7 — the rung guards the start pane only, and
+the docked message composer and the empty-world bootstrap box fire the same
+doomed start through §3.4's bare rung. That is probably the seat the live
+incident used.
