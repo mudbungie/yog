@@ -69,14 +69,21 @@ pub enum Verb {
 }
 
 impl Verb {
-    /// The workspace this verb names (REMOTE §8) — every one of the three does,
-    /// so the boundary's own table ([`Action::workspace`](crate::boundary::Action))
-    /// answers through here rather than re-matching the arms.
-    pub fn workspace(&self) -> String {
+    /// **The workspace this verb names** (REMOTE §8) — every one of the three
+    /// does, so the boundary's own table
+    /// ([`Action::workspace`](crate::boundary::Action)) answers through here
+    /// rather than re-matching the arms.
+    ///
+    /// Borrowed rather than read, because the boundary both reads this name and
+    /// **writes** it: REMOTE §8.2's channel-boundary rewrite replaces it when a
+    /// client-side entry's leaf differs from the name its host knows. One table
+    /// rather than two, for the reason `boundary::address::workspace`'s doc
+    /// gives — two exhaustive matches over one fact are two things that drift.
+    pub(crate) fn workspace_slot(&mut self) -> &mut String {
         match self {
             Verb::Arm { workspace, .. }
             | Verb::Disarm { workspace }
-            | Verb::Flag { workspace, .. } => workspace.clone(),
+            | Verb::Flag { workspace, .. } => workspace,
         }
     }
 

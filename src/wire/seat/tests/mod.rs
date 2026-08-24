@@ -158,3 +158,9 @@ fn an_empty_stream_is_not_an_answer() {
     assert_eq!(report(&[]), 1);
     assert_eq!(report(&[json!({"ok": true})]), 0);
 }
+
+/// **The §8.2 resolution** — which engine a gesture reaches, and under what
+/// name. Its own corpus at §12's cap, on the seam the module doc draws: above
+/// is what this seat *is* (the argv, the exits, the transport), and there is
+/// which channel it is.
+mod channel;

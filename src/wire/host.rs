@@ -23,12 +23,19 @@
 //! *this machine's* supervision, which the operator who installed the tool host
 //! already owns, and inventing one here would be yog deciding how a box it does
 //! not administer restarts a program.
+//!
+//! **It serves every channel this box holds** (REMOTE §8.2, bl-4e31): the flat
+//! root and one per [`entry`](crate::wire::entries), each on that entry's own
+//! material and therefore under that entry's own client identity. Serial stays
+//! serial *per channel*; [`entries`] is the resolution and the fan-out, and its
+//! doc is where that seam is stated.
 
 use std::time::Duration;
 
 use serde_json::Value;
 
 use super::client::Seat;
+use super::material::Material;
 use crate::boundary::codec;
 use crate::boundary::reply::{self, Reply};
 use crate::boundary::{Action, Gesture, Query};
@@ -37,6 +44,9 @@ use crate::xdg::Env;
 
 /// What this machine can run, and how (REMOTE §5.2).
 pub mod config;
+/// Every channel this box serves (REMOTE §8.2, bl-4e31) — the flat root beside
+/// one per entry, and the fan-out that serves them at once.
+pub(crate) mod entries;
 /// Running one invocation locally — lernie's own tool contract.
 pub mod exec;
 
@@ -62,23 +72,46 @@ pub fn run(world: &Env, args: &[String]) -> i32 {
     1
 }
 
-/// Present, then wait, run and answer — until something stops it, and **it
-/// answers the sentence that did**.
+/// Present, then wait, run and answer — on **every** channel this box is
+/// provisioned for — until each has stopped, and **it answers the sentences
+/// that stopped them**.
 ///
-/// There is no success exit, so none is spelled: the loop's only way out is a
+/// There is no success exit, so none is spelled: a channel's only way out is a
 /// gesture that failed, and a `Result` here would carry an `Ok` arm no state of
-/// the world can reach. Every `return` below is a reason an operator can read.
+/// the world can reach. Every sentence below is a reason an operator can read.
+///
+/// The config is read first, because a machine with nothing to offer has
+/// nothing to present and no reason to dial anything. Then §8.2's channel set:
+/// a box with no channel at all refuses with what its channels said, which for
+/// a box holding no entries is the flat root's own sentence and nothing else.
 fn serve(world: &Env) -> String {
     let set = match config::read(&config::path(world)) {
         Ok(set) => set,
         Err(reason) => return reason,
     };
-    let seat = match super::seat::open(world) {
+    let (held, refused) = entries::channels(world);
+    if held.is_empty() {
+        return refused.join("\n");
+    }
+    // A channel this box cannot open is that channel's refusal, said once —
+    // never the whole host's, which is reserved for holding no channel at all.
+    for reason in &refused {
+        eprintln!("yog {VERB}: {reason}");
+    }
+    entries::fan(&set, held)
+}
+
+/// One channel, served: advertise once, then `invocations` → run → `complete`,
+/// forever. Serial by construction, which is REMOTE §10's deferred-concurrency
+/// row unmoved — a host executes one invocation at a time, per engine it is
+/// present at.
+fn hold(set: &[config::Local], material: &Material) -> String {
+    let seat = match Seat::open(material) {
         Ok(seat) => seat,
         Err(reason) => return reason,
     };
     let presenting = Gesture::Act(Action::Advertise {
-        tools: config::advertisement(&set),
+        tools: config::advertisement(set),
     });
     if let Err(reason) = tell(&seat, &presenting) {
         return reason;
@@ -89,7 +122,7 @@ fn serve(world: &Env) -> String {
             Err(reason) => return reason,
         };
         for invocation in work {
-            let capture = exec::execute(&set, &invocation, DEADLINE);
+            let capture = exec::execute(set, &invocation, DEADLINE);
             if let Err(reason) = answer(&seat, &invocation, capture) {
                 return reason;
             }

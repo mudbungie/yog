@@ -60,12 +60,15 @@ pub enum Verb {
 }
 
 impl Verb {
-    /// The workspace this verb names (REMOTE §8) — both do, so the boundary's
-    /// own table ([`Action::workspace`](crate::boundary::Action)) answers
-    /// through here rather than re-matching the arms.
-    pub fn workspace(&self) -> String {
+    /// **The workspace this verb names** (REMOTE §8) — both do, so the
+    /// boundary's own table ([`Action::workspace`](crate::boundary::Action))
+    /// answers through here rather than re-matching the arms. Borrowed, and one
+    /// table rather than two:
+    /// [`monitor::Verb::workspace_slot`](crate::monitor::Verb::workspace_slot)'s
+    /// twin, and it exists for that one's reason exactly.
+    pub(crate) fn workspace_slot(&mut self) -> &mut String {
         match self {
-            Verb::Arm { workspace, .. } | Verb::Disarm { workspace } => workspace.clone(),
+            Verb::Arm { workspace, .. } | Verb::Disarm { workspace } => workspace,
         }
     }
 }

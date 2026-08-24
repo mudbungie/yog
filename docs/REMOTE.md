@@ -1140,6 +1140,31 @@ it has always been, the box's own root: its engine's material, its window
 leaf, and the one client relationship the box holds without naming it.
 Everything beyond the box's own engine is an entry.
 
+**As landed (bl-4e31).** `yog seat` resolves the typed gesture's workspace
+name over the entries first (`wire::seat::channel`), dials that entry's
+channel on that entry's material, and re-encodes the gesture carrying the
+host's name **only** where the entry renames it — the one write site the
+mapping is spent at, with the operator's own envelope crossing byte for byte
+everywhere else. An entry that exists is the answer to its name even when it
+cannot be dialled: a half-provisioned entry refuses with its own sentence
+rather than falling through to the flat root, which would send a gesture to
+the wrong engine on the strength of a missing file.
+
+`yog tool-host` has **no name to resolve**, and that is not a gap: none of its
+three gestures addresses a workspace — an advertisement and the routing leg's
+two address a *machine* (§5) — so what an entry adds it is a second engine to
+be present at, never a name to rewrite. It therefore serves the flat channel
+*and* one channel per entry, each on that entry's own material and so under
+that entry's own client identity (§2's one-certificate-one-client, which is
+what makes the advertisements separate without a mechanism). One thread per
+channel and execution serial *within* each, so §10's deferred-concurrency row
+is per-host and untouched. A channel it cannot open is said once while its
+neighbours are served; only a box holding **no** channel at all refuses
+outright — and a box whose flat root is merely self-provisioned (`:0`, §8)
+loses that one channel and keeps its entries, which is what a pure-client box
+holding a local engine looks like. With zero entries the whole of that is one
+channel and one sentence: exactly what a tool host was.
+
 **How material reaches an entry** — §1.4 verbatim, forever. On the host, the
 operator mints a leaf for the visiting box (`yog wire-certs` issues an extra
 client leaf under a stated common name — the one recipe, one more artifact it

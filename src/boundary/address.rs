@@ -1,17 +1,23 @@
-//! **What a gesture addresses** (§8.2, REMOTE §8): the two tables over
-//! [`Action`] that answer *which workspace* and *which project* it names. Its
-//! own file at §12's 300-line cap (bl-dc0c, widened to both nouns by bl-f5f6);
-//! each was always a query on the enum rather than a part of it.
+//! **What a gesture addresses** (§8.2, REMOTE §8): the tables over [`Action`]
+//! and [`Query`] answering which named thing a gesture is aimed at — one file
+//! per noun, each a query *on* the enum rather than a part of it. Split off at
+//! §12's cap (bl-dc0c) and widened from one noun to three as the boundary
+//! learned to speak names (bl-f5f6, bl-49bc, bl-4e31).
 //!
-//! **The third noun is the conversation, and it lives in [`agent`]** (bl-49bc):
-//! the same shape — one table over each enum, resolved once ahead of the match —
-//! but the rule differs because the noun does, so it is its own file rather
-//! than a third table here. A workspace and a project are addressed over an
-//! *enumerated set of paths*; a conversation is addressed by **an agent id, or
-//! the unique stored name a living agent wears**, which is the vocabulary the
-//! `Started` receipt speaks and the one lernie already resolves by.
+//! What is left here is the **project** table. The other two nouns are their
+//! own files because each differs from this one in a way worth stating where
+//! it lives:
 //!
-//! Both answer **names**, because that is what the boundary now carries: a
+//! - [`workspace`] — the noun that is also **written** (REMOTE §8.2): a §8.2
+//!   entry's client-side leaf may differ from the name that workspace bears on
+//!   its host, so the table is borrowed rather than read, and one rewrite
+//!   spends the mapping at the channel boundary.
+//! - [`agent`] — the **conversation** (bl-49bc), addressed by an agent id or
+//!   the unique stored name a living agent wears rather than over an
+//!   enumerated set of paths, so it carries a resolution ladder beside its
+//!   table.
+//!
+//! All three answer **names**, because that is what the boundary now carries: a
 //! path is meaningless across machines and a disclosure besides (REMOTE §8).
 //! One table per noun means the resolution stands **once, ahead of the
 //! dispatch table** ([`dispatch`](super::dispatch::dispatch)) instead of being
@@ -19,84 +25,17 @@
 //! after-verb refresh reads, so "which project did that touch" has one answer
 //! wherever it is asked.
 
-use super::{Action, Gesture, Query};
+use super::Action;
 
 /// The conversation noun's own table and resolution (bl-49bc) — see the module
-/// doc above for why it is a file rather than a third table here.
+/// doc above for why each noun is a file rather than a third table here.
 mod agent;
+/// The workspace noun's table, and the one rewrite that writes it (REMOTE §8.2,
+/// bl-4e31).
+mod workspace;
 pub(super) use agent::resolve_agent;
 
-impl Gesture {
-    /// The workspace this gesture names, whichever half it is — the two tables
-    /// below, read as one (bl-8bbc).
-    ///
-    /// The wire's scoped intake asks it: a gesture's address is what
-    /// authorization is decided over (REMOTE §4), and asking it here means the
-    /// scope and the dispatch chokepoint read the **same** table rather than
-    /// two that could disagree about which workspace a variant names.
-    pub fn workspace(&self) -> Option<String> {
-        match self {
-            Gesture::Act(action) => action.workspace(),
-            Gesture::Ask(query) => query.workspace(),
-        }
-    }
-}
-
 impl Action {
-    /// The **workspace** this gesture names (§3.1), or `None` when it names
-    /// none — the ack, the trail clear, and the two `bl`-only families. The
-    /// nested payloads answer through it: a deferred prompt and a fan both
-    /// name the workspace their [`Prepared`](crate::start::Prepared) was
-    /// prepared in, and the monitor/fleet verbs name their own.
-    pub fn workspace(&self) -> Option<String> {
-        match self {
-            Action::Message { workspace, .. }
-            | Action::Stop { workspace, .. }
-            | Action::Interrupt { workspace, .. }
-            | Action::Scan { workspace }
-            | Action::Nudge { workspace, .. }
-            | Action::Retarget { workspace, .. }
-            | Action::Fork { workspace, .. }
-            | Action::Prepare { workspace, .. }
-            | Action::DeleteWorkspace { workspace, .. }
-            | Action::DeleteAgent { workspace, .. }
-            | Action::MarkSeen { workspace, .. }
-            | Action::SetMarks { workspace, .. }
-            | Action::PickModel { workspace, .. }
-            | Action::AnswerHold { workspace, .. }
-            | Action::Floor { workspace, .. } => Some(workspace.clone()),
-            Action::Prompt { prepared, .. }
-            | Action::Fan(crate::fan::Verb::Spread { prepared, .. }) => {
-                Some(prepared.workspace.clone())
-            }
-            Action::Monitor(verb) => Some(verb.workspace()),
-            Action::Fleet(verb) => Some(verb.workspace()),
-            // An advertisement names its CLIENT, never a workspace (REMOTE §5,
-            // bl-4e08): a tool set is a fact about the machine, and which
-            // workspaces see it is the registration listing that already exists.
-            // The routing leg's two, for the advertisement's reason exactly
-            // (bl-024b): a call addresses a MACHINE, and the queue of calls to
-            // one is a fact about that machine, not about a workspace.
-            Action::Advertise { .. }
-            | Action::Route(_)
-            // The §9 config family answers through its destination instead
-            // ([`config::ConfigFile::workspace`](super::config::ConfigFile)):
-            // two of the five name a wall and three name no world at all, so
-            // the table would have to read the file to answer here anyway.
-            | Action::ApplyConfig { .. }
-            | Action::Close { .. }
-            | Action::Assign { .. }
-            | Action::Release { .. }
-            | Action::Create { .. }
-            | Action::Update { .. }
-            | Action::Fan(
-                crate::fan::Verb::Retire { .. } | crate::fan::Verb::Deliver { .. },
-            )
-            | Action::Ack
-            | Action::ClearTrail => None,
-        }
-    }
-
     /// The project a `bl`-family action mutates — the §8.2 after-verb ball
     /// refresh target. `None` for the lernie/workspace families.
     pub fn project(&self) -> Option<String> {
@@ -144,53 +83,6 @@ impl Action {
             | Action::Advertise { .. }
             | Action::Route(_)
             | Action::PickModel { .. } => None,
-        }
-    }
-}
-
-impl Query {
-    /// The **workspace** this read is aimed at (§3.1), or `None` for the reads
-    /// that span the world (the roster, the board, the trail, search) and the
-    /// one whose subject is the interface (help). The §9 config family answers
-    /// through its destination instead
-    /// ([`ConfigFile`](super::config::ConfigFile)), for the reason
-    /// [`Action::workspace`] gives.
-    ///
-    /// The mirror of the action table above, and it exists for the same reason:
-    /// one resolution stands ahead of [`answer`](super::answer::answer)'s table
-    /// rather than being re-derived inside a dozen arms.
-    pub fn workspace(&self) -> Option<String> {
-        match self {
-            Query::Conversations { workspace }
-            | Query::WorkDiff { workspace, .. }
-            | Query::Science { workspace }
-            | Query::Lineages { workspace }
-            | Query::Models { workspace, .. }
-            | Query::Marks { workspace }
-            | Query::Transcript { workspace, .. }
-            | Query::Follow { workspace, .. }
-            | Query::Steps { workspace, .. }
-            | Query::Step { workspace, .. }
-            | Query::Files { workspace, .. }
-            | Query::Governing { workspace, .. }
-            | Query::Rail { workspace, .. }
-            | Query::Inbox { workspace, .. }
-            | Query::Agent { workspace, .. }
-            | Query::Providers { workspace }
-            | Query::WorkspaceBalls { workspace }
-            | Query::Clients { workspace } => Some(workspace.clone()),
-            Query::Workspaces
-            | Query::Balls
-            | Query::Board
-            | Query::Attention
-            | Query::Ops { .. }
-            | Query::Search { .. }
-            | Query::Help { .. }
-            | Query::ReadConfig { .. }
-            // The routing leg's two reads: one is answered to the intake's own
-            // identity, the other to a handle — neither names a world.
-            | Query::Invocations
-            | Query::Capture { .. } => None,
         }
     }
 }
