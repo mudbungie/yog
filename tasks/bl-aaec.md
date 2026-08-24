@@ -1,7 +1,8 @@
 +++
 title = "DESIGN: a client holds many servers, and the client-side workspace is what names one — separate material, separate chats, separate everything"
 created = 1787544372
-updated = 1787544372
+updated = 1787544475
+claimant = "Futtock"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design"]
