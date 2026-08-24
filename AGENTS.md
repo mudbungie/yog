@@ -73,8 +73,14 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
 
 4. **No panic paths outside tests.** `unwrap`/`expect`/`panic!`/`todo!`/
    `unimplemented!`/`dbg!` and unchecked `indexing_slicing`/`string_slice` are
-   `deny` in the manifest; `assert!`/`assert_eq!`/`assert_ne!` are banned in
-   prod (a `panic!` in disguise); `debug_assert!` is fine. Locks use
+   `deny` in the manifest; `assert!`/`assert_eq!`/`assert_ne!` **and their
+   `debug_` variants** are banned in prod (a `panic!` in disguise) — the
+   ast-grep rule matches all six macros, so `debug_assert!` is not an escape
+   hatch. **yog ships tight** (operator ruling 2026-08-23): the strong case for
+   `debug_assert!` is guarding an `unsafe` precondition, yog's `unsafe` is
+   confined to one file at the process edge (rule 3), and under the 100%
+   coverage floor an invariant it would check is test-reachable anyway — where
+   it dies as an unstructured panic instead of a named assertion. Locks use
    `unwrap_or_else(PoisonError::into_inner)`; fallible reads use `.get()`/`?`.
    Tests get carve-outs via `clippy.toml` (`allow-*-in-tests`) and
    `rules/no-assert-outside-tests.yml`.
