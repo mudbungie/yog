@@ -46,7 +46,7 @@ pub(in crate::shell::acceptance) const ROWS: [(&str, &str, &str); 2] = [
 /// and passes there has found a defect of *width*, which is the only axis these
 /// two fixtures differ on.
 pub(in crate::shell::acceptance) fn world_wide() -> World {
-    let mut world = super::build_world("hello", &super::Roster::One);
+    let mut world = super::build::build_world("hello", &super::build::Roster::One);
     // The §7.2 watcher debounce, spent rather than waited on: a fixture that
     // changes disk and converges in the same breath is inside the window
     // otherwise, and the rows below would never reach the derivation

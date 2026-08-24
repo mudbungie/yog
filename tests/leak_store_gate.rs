@@ -25,116 +25,15 @@
 //! after the push; test 8 pins that chain, AGENTS.md states the boundary.
 
 #![allow(clippy::unwrap_used)]
+// The harness half. `#[path]` because this file IS the test target's crate
+// root, so a bare `mod` would resolve to `tests/harness.rs` — and a second
+// top-level `tests/*.rs` is a second test binary, not a module.
+#[path = "leak_store_gate/harness.rs"]
+mod harness;
+use harness::{fixture, gate, git, op, payload, repo, scan_direct, store};
 
 use std::fs;
-use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
-use std::process::Stdio;
-
-use tempfile::TempDir;
-
-/// This repository, whose plugin, scanner and fixtures are the subject.
-fn repo() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
-/// One of the scanner's declared fixtures, verbatim.
-fn fixture(name: &str) -> Vec<u8> {
-    fs::read(repo().join("scripts/leak-fixtures").join(name)).unwrap()
-}
-
-fn git(dir: &Path, args: &[&str]) {
-    let status = yog::git_env::git()
-        .current_dir(dir)
-        .args(args)
-        .status()
-        .unwrap();
-    assert!(status.success(), "git {args:?}");
-}
-
-fn head(dir: &Path) -> String {
-    let out = yog::git_env::git()
-        .current_dir(dir)
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .unwrap();
-    String::from_utf8(out.stdout).unwrap().trim().to_owned()
-}
-
-/// An empty task store: a git repository on the store branch. It carries no
-/// `scripts/` — the store never does, which is the point: the scanner brings
-/// its own rule table and judges whatever tree it is run in.
-fn store() -> TempDir {
-    let dir = tempfile::tempdir().unwrap();
-    git(dir.path(), &["init", "-q", "-b", "balls/tasks", "."]);
-    git(dir.path(), &["config", "user.email", "nobody@example.com"]);
-    git(dir.path(), &["config", "user.name", "nobody"]);
-    dir
-}
-
-/// One `bl` op: write a ball and seal it, the way every store commit is made.
-/// Returns the commit — the §7 `commit` field, and the whole of what this op
-/// publishes.
-fn op(dir: &Path, id: &str, body: &[u8], message: &str) -> String {
-    let at = dir.join("tasks").join(format!("{id}.md"));
-    fs::create_dir_all(at.parent().unwrap()).unwrap();
-    fs::write(at, body).unwrap();
-    git(dir, &["add", "-A"]);
-    git(dir, &["commit", "-q", "-m", message]);
-    head(dir)
-}
-
-/// The §7 post payload balls pipes to a plugin: the store checkout, and the
-/// commit the op just sealed there.
-fn payload(store: &Path, commit: &str) -> String {
-    format!(
-        r#"{{"op":"update","phase":"post","actor":"tester","commit":"{commit}",
-            "previous_commit":"0000000",
-            "binding":{{"landing":"/nowhere","tasks_branch":"balls/tasks",
-                        "store":"{}","invocation_path":"/nowhere"}}}}"#,
-        store.display()
-    )
-}
-
-/// Run the plugin as balls runs it: `<op> <phase>` on argv, the payload on
-/// stdin, and a working directory that is NOT the store — a plugin is
-/// dispatched in the change worktree, so a gate that read cwd would scan the
-/// wrong repository. Returns (ok, stdout, stderr).
-fn gate(args: &[&str], payload: &str) -> (bool, String, String) {
-    let mut child = yog::git_env::command(&repo().join("scripts/yog-leak-gate"))
-        .current_dir(repo())
-        .args(args)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
-    child
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(payload.as_bytes())
-        .unwrap();
-    let out = child.wait_with_output().unwrap();
-    (
-        out.status.success(),
-        String::from_utf8(out.stdout).unwrap(),
-        String::from_utf8(out.stderr).unwrap(),
-    )
-}
-
-/// The scanner's own verdict, for the no-drift comparison against the plugin's
-/// and for the whole-tree question the plugin no longer asks.
-fn scan_direct(store: &Path, args: &[&str]) -> String {
-    let out = yog::git_env::command(Path::new("bash"))
-        .current_dir(store)
-        .arg(repo().join("scripts/leak-scan.sh"))
-        .args(args)
-        .output()
-        .unwrap();
-    String::from_utf8(out.stderr).unwrap()
-}
 
 // 1. The headline: a ball body carrying leak material refuses the op that
 //    would publish it, and says which ball and which rule.

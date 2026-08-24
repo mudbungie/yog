@@ -296,15 +296,19 @@ demotion removes an internal API from the boundary's obligations. Reach for
   pattern must not pass silently — the same two-direction discipline as
   `rules-audit`'s fixtures). The cap is a parameter, so **`make line-cap
   LINE_CAP=199` lists the ≥200 pre-split band** — run that before you extend a
-  module, not after. It is deliberately *not* a gate: 94 of 395 source files sit
-  in that band today. A warning that fires on a fifth of the tree is noise, and a
-  gate there is just the cap moved to 200. ≥200 is a **design-time projection
-  rule** — it fires on the author about to add to a file, not on the file's
-  existing state. The band is the aspiration, not the limit: bl-52f8 swept the
-  tree so nothing rides the 300 wall, and nothing has since — **ask `make
-  line-cap LINE_CAP=n` for today's census rather than trusting a count written
-  here** (this line has been wrong before: it named `transcript/rows.rs` at 266
-  as the tree's one ≥250 file long after bl-2335 split that file in two).
+  module, not after. It is deliberately *not* a gate: the band is wide enough
+  that a warning over it would be noise, and a gate there is just the cap moved
+  to 200. ≥200 is a **design-time projection rule** — it fires on the author
+  about to add to a file, not on the file's existing state. **300 is a hard
+  wall, not a target: a file should normally be considerably smaller, and one
+  resting ON the wall inverts the rule**, firing on whoever touches it next, at
+  the moment they are finishing something else, when the cheapest way out is
+  exactly the shave the rule forbids (bl-b278). **Ask `make line-cap
+  LINE_CAP=n` for today's census; no count is written here.** This paragraph
+  used to carry two, and both rotted — one named `transcript/rows.rs` at 266 as
+  the tree's one ≥250 file long after bl-2335 had split that file in two, and
+  the other asserted that nothing rode the 300 wall while three files sat on
+  it. One fact, one home, and the home is the command.
 - `make beat-audit` — the two mechanically checkable shapes of a **drive beat
   that proves nothing** (bl-70b8, `scripts/beat-audit.sh`). *(a)* Every label
   handed to `pass` is also handed to `fail`: a `gesture … || pass "…"` emits a

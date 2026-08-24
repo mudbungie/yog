@@ -7,6 +7,7 @@
 //! shell glue end to end, so it is the reachability proof that complements the
 //! per-widget render tests.
 
+mod activity_tail;
 mod alerts;
 mod bands;
 mod birth;

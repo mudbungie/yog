@@ -22,6 +22,7 @@ pub(crate) mod config_fixture;
 mod disk_fixture;
 pub(crate) mod fixture;
 pub(crate) mod git;
+mod naming;
 mod repo;
 mod starts;
 mod state_repo;

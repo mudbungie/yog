@@ -9,7 +9,7 @@
 //! column, taking the ⚙ Config entry (the only visible door to the §3.6
 //! workspace delete) off the glass with it.
 //!
-//! [`Roster::Crowded`]: super::Roster::Crowded
+//! [`Roster::Crowded`]: super::build::Roster::Crowded
 
 use crate::git_tree::tests::fixture::Fixture;
 

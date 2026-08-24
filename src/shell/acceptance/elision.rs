@@ -21,11 +21,9 @@
 //! the panel's own edge, because rule 1b must not buy the verb by laying it
 //! outside the panel, which is the bl-ac3d defect rule 1 exists to stop.
 //!
-//! The file's last beat is the same evidence answering L4's other question —
-//! not *whether* a row elides but **where** (bl-3aa1). `OpRow::summary`'s own
-//! tables pin the cut as a string; that beat lays two activity rows in the
-//! real trail and reads the glyphs, because the defect it guards was two ops
-//! painting the identical line.
+//! L4's other question — not *whether* a row elides but **where** the cut
+//! falls — is the same evidence about a different subject, and lives in
+//! [`super::activity_tail`].
 
 use super::super::{login_pane, start_rows};
 use super::fixture::world;
@@ -230,71 +228,4 @@ fn the_row_truncates_itself_in_a_seat_that_declares_no_wrap_mode() {
         }
     }
     assert_inside_the_panel(&painted);
-}
-
-/// **The activity row's cut reaches the glass keeping the end that tells rows
-/// apart** (bl-3aa1, QUALITY L4 "ids are tamed … floor to the terminal segment
-/// or middle-elide, with the full value one gesture away").
-///
-/// `OpRow::summary`'s own tables (`opslog/rows/tests.rs`) pin the string; this
-/// pins the **painted glyphs**, which is a different claim: the row is laid in
-/// the real trail, and what an operator can read is the galley's laid-out
-/// glyphs, never `Galley::text()` (bl-bc06 — the input string survives every
-/// truncation, so a dump read that way is blind to exactly this defect).
-///
-/// Two ops that share the audit's invariant prefix and differ only at the end
-/// are painted together, and asserted in both directions: each row's own tail
-/// is on screen, the invariant run between the ends is not, and the two rows
-/// are not the same line. A head-keeping cut passes none of the three.
-#[test]
-fn the_activity_trail_paints_the_tail_that_tells_two_ops_apart() {
-    const PREFIX: &str = "lernie prompt --name growing \
-         /home/u/.cache/yog-drive/quality-20260807T214407Z/data/yog/workspaces/";
-    const HOME: &str = "home 20260807T214551Z-2a1181a3";
-    const SCRATCH: &str = "scratch 20260807T220107Z-c0ffeeba";
-    let mut world = crate::shell::acceptance::fixture::world();
-    for leaf in [HOME, SCRATCH] {
-        crate::opslog::append(
-            world.model.state_root(),
-            &crate::opslog::OpEntry {
-                ts: "1785630266".into(),
-                argv: vec![format!("{PREFIX}{leaf}")],
-                cwd: "/proj".into(),
-                exit: 0,
-                stdout: String::new(),
-                stderr: String::new(),
-                origin: crate::opslog::Origin::default(),
-            },
-        )
-        .expect("the fixture world takes an ops line");
-    }
-    world.model.after_lernie_verb();
-    world.converge();
-    world.converge();
-    let mut open = true;
-    // The trail is a `Reply::Ops` since bl-adcb, so the rows exist only once
-    // something has answered — [`super::wire::wired`] is the settle-then-render
-    // dance the window does over half a second, paid out here in three passes.
-    let painted = super::wire::wired(&mut world, &mut |model, _| {
-        crate::paint_probe::paint(|ui| {
-            crate::shell::activity::accessory(ui, model, &mut open);
-        })
-    });
-    let rows: Vec<&str> = painted
-        .lines()
-        .filter(|line| line.contains("lernie prompt"))
-        .collect();
-    assert_eq!(rows.len(), 2, "both ops paint one row each:\n{painted}");
-    assert_ne!(rows[0], rows[1], "the two rows must not read alike");
-    for (row, leaf) in rows.iter().zip([HOME, SCRATCH]) {
-        assert!(
-            row.ends_with(leaf),
-            "the row ends with what names it: {row}"
-        );
-        assert!(row.contains('…'), "the cut is marked on screen: {row}");
-        assert!(
-            !row.contains("quality-20260807T214407Z"),
-            "and the invariant run between the ends is what went: {row}"
-        );
-    }
 }
