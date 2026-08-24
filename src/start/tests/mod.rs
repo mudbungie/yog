@@ -2,12 +2,14 @@
 //! (the pure planner tables per rung), [`goal`] (preambles, prefills, the driver
 //! cwd, the preview), [`identity`] (the §3.3 stamp, its inverses and the mint), [`exec`] (the `bl`-facing executors + their
 //! non-spawn aborts), [`ensure`] (the `lernie new` ensure, the mint and the
-//! worktree ladder), and [`run`] ([`prepare`] end-to-end per rung). Shared
+//! worktree ladder), [`gate`] (the §8.1 provider gate over brazen's credential
+//! column, bl-1fd0), and [`run`] ([`prepare`] end-to-end per rung). Shared
 //! fixtures live here.
 
 mod control;
 mod ensure;
 mod exec;
+mod gate;
 mod goal;
 mod identity;
 mod pins;

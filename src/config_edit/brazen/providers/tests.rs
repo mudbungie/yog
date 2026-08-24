@@ -264,11 +264,13 @@ fn a_row_missing_a_column_degrades_to_empty_not_loginable() {
                 name: String::new(),
                 protocol: String::new(),
                 auth: String::new(),
+                credential: String::new(),
             },
             ProviderRow {
                 name: String::new(),
                 protocol: String::new(),
                 auth: "oauth2".to_owned(),
+                credential: String::new(),
             },
         ]
     );

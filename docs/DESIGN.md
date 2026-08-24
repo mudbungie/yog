@@ -3466,6 +3466,66 @@ being copied into `ops.jsonl`. Consequences, each load-bearing:
 - **An unopenable sink degrades to `/dev/null`** and the launch proceeds: the
   driver is the point, the capture is the diagnosis.
 
+**The start pane's FIRST rung is provider sign-in when the wall has none
+(bl-1fd0, operator ruling).** Verbatim: *"On a wall holding no usable provider
+credential, typing a goal and hitting Enter will work zero percent of the time —
+the conversation is born, immediately dies on no-models, and the operator learns
+it from a dead row (or from nothing at all). The pane is inviting the one act
+that cannot succeed while hiding the one act that must come first."* It was hit
+live twice in one evening and both first goals were wasted.
+
+- **The predicate is brazen's own `credential` column**, projected beside the
+  three §5.1 #20/#21 columns yog already reads and folded by the same §8.3 `ask`
+  that populates the Login roster (`crate::start::WallCredit`). No network, no
+  spawn, no per-frame cost — the ruling's "must not add a round trip to the
+  pane" kept by reading a table the frame already holds.
+- **A keyless row is not a credential.** The ruling's own wording is *"any row
+  `stored` or `not required`"*; taken literally it is vacuous, because brazen
+  merges its built-in table under **every** config, so `ollama` and
+  `claude-code` read `not required` on every wall there can be. Nor are they
+  what a doomed start was routed to: both claim no model prefixes and are
+  reached only by an explicit `--provider`. So `not required` does not ready a
+  wall; it only adds a clause to what the rung says. Every other spelling does
+  ready it — `stored`, `ambient`, `inline`, and any this build cannot read,
+  because refusing a wall whose rows carry a credential a run would spend blocks
+  a working setup, and no surface refuses on an unanswered question.
+- **Three states, total** (`crate::start::StartGate`): Ready paints nothing at
+  all and today's flow is untouched byte for byte; SignIn paints the sentence
+  and the §8.3 roster beneath it, and Send says the sentence instead of firing —
+  through the same read the §11 Enter binding makes, so pointer and keypress
+  cannot disagree; Unknown is a workspace a §8.2 entry hosts, where this box
+  reads its OWN wall's brazen and says so rather than answering with the wrong
+  table. **Unknown is bl-61bf's seam** and never a refusal: an unread wall is
+  not a wall known to be empty.
+- **The goal box stays draftable and the draft is never spent.** A refused Send
+  is a no-op — the pending start, its goal and its §3.3 seed all stand — which
+  is the whole point: the ruling is about a typed goal that was lost.
+- **It is a band of the pane, not content inside the goal box's panel** (§11
+  rule 5). Written inside the composer first, it does not fit there by
+  construction: the start box is 240 points and the rung is a sentence, ten
+  provider rows and a live command stream, so the roster took the box's room and
+  the pane clipped Send off the bottom. It docks directly above the box and asks
+  for a share of its own, exactly as the settings band does. It is not a fifth
+  settings band and bl-2e18's ordering ruling is untouched — it is not a
+  setting, it is the reason the box below it cannot fire, and like the in-flight
+  strip it is conditional as a whole.
+- **It dissolves on the sign-in's own outcome.** The §8.3 holder folds a clean
+  streamed exit back into its rows the one frame the run settles, so the wall's
+  credit flips and the next frame is a signed wall's — with §11's one focus door
+  handing the keyboard to the goal box, whose draft is untouched. The start goal
+  box takes that hand-off because it is a composer like the other two (§11: one
+  box, one Enter) and the message composer is not painted while it is up.
+
+**What the gate cannot see, recorded rather than hidden:** *which* row a start
+routes to. That is `roles.<r>.provider` on the config branch — several git reads,
+and §9.4's subject rather than the pane's — so the gate judges the **wall**, not
+the route. It is exactly right when nothing at all is signed in, and
+conservative for an operator whose roles all name a keyless row: they are told to
+sign in when their setup needs no sign-in, and the remedy is one sentence they
+can read past. The same defect one seat over — the docked message composer and
+the empty-world bootstrap box, whose Enter is §3.4's bare rung — is not covered
+here.
+
 ### 8.2 Per-workspace / per-agent verbs
 
 | UI action | argv (cwd) | Spawn mode |
@@ -8033,7 +8093,13 @@ under 30 pt and painted its target line across its own draft. The bands, then:
     ten provider rows and a live command stream into a column sized for
     conversation titles. It is a center tab; the auth-failed banner still
     renders the same section inline where the wound is (above), which is one
-    machinery in two seats, not two surfaces.
+    machinery in two seats, not two surfaces. Since bl-1fd0 there is a
+    **third**: the start pane's first rung docks the same section above the
+    goal box on a wall that carries no credential (§8.1). Still one
+    capability — a keyless or api-keyed row gets the reason and no button in
+    every seat, because the row derivation is one — and still not a surface: a
+    seat is where a machinery is painted, and this one is painted where the
+    operator is about to spend a goal on it.
   - **Search** grew out of the composer, pushing the conversation off its own
     pane — the same defect in a smaller frame. It is a tab **offered**, not a
     permanent peer: the results are a view of the published answer (§8.5), so
@@ -9151,6 +9217,7 @@ beside `main.rs`.
 | `src/shell/acceptance/sink.rs` (excl.) | the §8.1 detached-sink pair at the paint layer, split from `smoke` at the cap on its own seam: a driver that dies right after launch banners on the sweep that folds its sink (bl-4895), and a driver that files an operator notice does not — it reaches the trail badged and expandable while the window raises no ⚠ at all (bl-1296). One claim, two arms; the first alone goes green while the sink equates speech with death |
 | `src/shell/acceptance/slash.rs` (excl.) | the bl-ec8f drive that a `/`-draft is a command (answered under the box, refused with its draft kept, and a bare `/` listing the roster) |
 | `src/shell/acceptance/start_draft.rs` (excl.) | the bl-6ad8 drive that a pending start draft takes the composer's seat |
+| `src/shell/acceptance/start_provider.rs` (excl.) | the bl-1fd0 drive that the start pane's FIRST rung is provider sign-in on a wall that has none: the rung appears over the bare fixture wall with the roster's whole table and the goal box below it whole, Send refuses through the §11 Enter binding with the draft still in the box, a signed wall paints no band at all (today's flow, byte for byte), and a sign-in that lands — a fake `bz` that really writes the credential — dissolves the rung on its own outcome with the draft untouched |
 | `src/shell/acceptance/started.rs` (excl.) | the S0.3 drive that a fired start renders its own transcript (§3.4) |
 | `src/shell/acceptance/tabs.rs` (excl.) | the bl-1ca2 no-full-cover-overlays drive: a combo focuses Config from inside the box and Escape comes home with the draft intact, every peer stays reachable from every tab while the composer is absent rather than buried, and the Login rows land right of the roster column (asserted by geometry, since the auth banner paints the same text) |
 | `src/shell/acceptance/unfold/mod.rs` (excl.) | the unfold's **shared fixture and window-wide reads**: one conversation three generations deep with the §7.2 debounce spent rather than waited on, the settled paint of the whole window, the per-depth title edge, the elbow count, and `name_of` — the title read off the derivation with the whole forest open, spelled out because the §3.3 floor of a chained id is its terminal *generation* and a beat that split the id on its last `-` asserted the absence of a string this tree never paints. One claim per child file, the seam between them being the hand |
@@ -9228,12 +9295,14 @@ beside `main.rs`.
 | `src/shell/seat.rs` (excl.) | **the §11 selection's two reads** (REMOTE §9.7, bl-48ae) — and the ruling about which may land late. `selection` is `nav::convs::selection` over the forest `shell/convs` already holds, so the composer's target line, §11's ancestor unfold and both click-time §8.2 gates change in the same frame the selection does; `detail` is a standing `Query::Agent` for the selection's own detail — the §9.4 freeze tip, the §6 marks, the §8.6 park, the `Nudge` gate — which paint an affordance rather than judge one and may therefore arrive an ask period behind. `AppModel::focused_conversation` is deleted, and the subtraction is the proof |
 | `src/shell/settings.rs` (excl.) | the conversation's config-shaped rows at the **foot** of the pane's bottom stack, below the goal box since the band-order ruling (bl-58e4) — the §3.5 spend figures + the §5.1 #35 context-fullness line under them + the §9.4 model row's two dropdowns and the picker extras `m` expands, capped at half the pane and scrolling past it |
 | `src/shell/slash.rs` (excl.) | the §8.5 line seat (the `/`-draft's Run button and Enter, the start family through the frame's typed doors, and the answer note) |
+| `src/shell/start_login.rs` (excl.) | the start flow's **first rung** (§8.1, §8.3; bl-1fd0): on a wall that carries no credential the pane leads with provider sign-in instead of with a text box. It paints nothing of its own — the sentence is `start::StartGate`'s and the rows and streamed sign-in beneath it are `login_pane::login_section`, the §8.3 machinery in a third seat beside the Login tab and the auth-failed banner, aimed at the wall `shell::render` has already lensed onto §3.4's `start_workspace`. A clean sign-in folds inside the same call, so the rung dissolves and hands the keyboard to the goal box with the draft untouched |
 | `src/shell/{start_pane,start_rows}.rs` (excl.) | §3.4/§8.1 (the per-row affordances) |
 | `src/shell/top_bar.rs` (excl.) | the §11 chrome strip |
 | `src/shell/wire.rs` (excl.) | the shell's one spelling of a wire read (REMOTE §1.2 as ruled 2026-08-14; bl-adcb) — declare a standing question, and pick the payload out of the one reply variant that query answers. Four states, spelled once instead of per pane: the answer, the refusal (painted, never swallowed), the honest not-yet, and the wrong-kind reply that is a codec defect rather than a state. `Said` beside it collects a surface's refusals **distinct** (bl-13f9), because a pane declaring several questions over one address would otherwise paint one sentence five times |
 | `src/shell/workspace.rs` (excl.) | §11 altitudes 1–2 — reduced to the identity header and its banners by bl-2e18, and to nothing else since bl-8905 deleted `members`, whose descent-tree rows the unfolded list had come to repeat |
 | `src/spend/{mod,prices,ceiling,render}.rs` | the §3.5 join, pure over the worker's pre-walked bills (bl-9dd4) — selection, attribution, the honest-granularity label, and the unpriced remainder, with `of_workspace` the one deliberate fresh walk because a gate compares against now; the price table's parse and its micro-USD arithmetic over the §3.5 three-way partition of the prompt (bl-6621 — the cached slice is priced once, and the tokens priced sum to §5.1 #16's fold exactly); the §3.5 spend ceiling's policy half — the operator's number and the at-or-over comparison against the workspace figure (bl-56d5); the one figure widget every spend seat paints — the board's ball rows and the conversation's settings rows (bl-2e18) — whose attribution clause is independent of the price table, so the honest-granularity label survives deleting the cost column (bl-1765) |
 | `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the one convergence that authors §8.6's control block and §3.7's instruction glob onto `config/default` in a single `lernie config` drive, outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire, whose one argv carries `--name`, `--cwd` and every `--pin` |
+| `src/start/gate.rs` | the §8.1 provider gate (bl-1fd0): a pure read of brazen's `credential` column answering whether the wall a start aims at can reach a model at all. `WallCredit` folds the table to two booleans and `StartGate` is total over them plus the §8.2 channel — Ready (today's flow, byte for byte), SignIn (the rung, refusing Send only where the wall has neither a credential nor a keyless row left to try) and Unknown (a workspace an entry hosts, whose wall this box reads nothing of — bl-61bf's seam). A keyless row is deliberately not Ready: brazen ships `ollama` and `claude-code` at `not required` on every bare wall, so counting them would make the rung vacuous on exactly the wall it was ruled for |
 | `src/start/instructions.rs` + `src/start/instructions/{names,manifest}.rs` | the §3.7 project-instruction freeze (bl-aa8b): the walk from the binding's authority root down to the binding and the ranked `--pin` specs it yields — yog reads no instruction bytes, lernie's caller-supplied pinned documents do the loading, validation, snapshot and commit; `names` the severable filename policy (`AGENTS.md` in code, `instructions.yaml` at the live config tip overriding it, an existing file authoritative even when it names nothing); `manifest` the `instructions/**` glob's fixed point, without which a frozen document is a committed file no model ever sees |
 | `src/state.rs` | the crate's lock chokepoint: the dirty hand-off, the snapshot cell, the §8.5 search cell and the §7.2 live-tail cell — the whole inter-thread interface (§7.2, §8.5, AGENTS rule 7). The tail cell is **appended whole below every line that was there before**, and takes the snapshot cell's *alias + free functions* spelling rather than a struct with an `impl` — including leaving the module doc's stale "three residents" line untouched. That is the hazard `rules/locks-outside-state.yml` records as the reason for both its carve-outs: llvm-cov mis-attributes phantom uncovered regions onto this file's `impl` headers when anything above them moves, and an added `impl` block draws one onto itself besides. This is genuine cross-thread hand-off state — what the chokepoint exists to inventory — so it belongs here and the spelling gives way instead of the rule. The watch hub's two singletons are its second declared carve-out (§7.1, `rules/locks-outside-state.yml`) |
 | `src/steps_view/{mod,detail,columns,render,drill,wound,wire,wire/decode}.rs` | the step inspector, incl. the §7.3 wound in both its classes — no response, and the §4.4 output limit (§11 Steps). Both tiers are cut twice, read from write: `mod`+`detail` are the list/drill-in **reads**, `render`+`drill` their **paints**, and `columns` is the §11 column table — header, hover explanation and cell in one home, so no field paints without its name (bl-3ffc). `wire` is the §8.5 spelling of **both** tiers, cut along that same read seam (bl-6233), with `wire/decode` its other direction at the §12 budget (bl-7067) — also the one home of the `BudgetSpend` shape, which the §3.5 board figure spends rather than keeping a second wording of four counters |

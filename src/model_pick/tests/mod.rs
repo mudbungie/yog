@@ -37,6 +37,7 @@ pub(crate) fn rows_on(
             name: (*name).to_owned(),
             protocol: protocol.to_owned(),
             auth: "none".to_owned(),
+            credential: "not required".to_owned(),
         })
         .collect()
 }

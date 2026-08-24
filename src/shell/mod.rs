@@ -59,6 +59,7 @@ mod search_pane;
 mod seat;
 mod settings;
 mod slash;
+mod start_login;
 mod start_pane;
 mod start_rows;
 mod top_bar;

@@ -45,6 +45,7 @@ mod sink;
 mod slash;
 mod smoke;
 mod start_draft;
+mod start_provider;
 mod started;
 mod tabs;
 mod unfold;

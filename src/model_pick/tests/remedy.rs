@@ -21,6 +21,7 @@ fn row(name: &str, auth: &str) -> ProviderRow {
         name: name.to_owned(),
         protocol: "anthropic_messages".to_owned(),
         auth: auth.to_owned(),
+        credential: "missing".to_owned(),
     }
 }
 

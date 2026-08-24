@@ -72,6 +72,45 @@ pub(super) fn seed_world(world: &World) {
     std::fs::write(lernie_home.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
+/// **Sign this world's start wall in** (§16.2, bl-1fd0): write the credential
+/// file brazen reads `stored` off for its built-in `anthropic` row, then
+/// re-ask, so the §8.1 provider gate says the wall can reach a model.
+///
+/// A drive whose subject is the START — the mint, the seed, the fire — needs
+/// it, because the gate's whole point is that a wall with nothing signed in
+/// refuses the fire. **Call it after a frame has painted**: the wall is seated
+/// by [`ShellState::focus_wall`](crate::shell::ShellState::focus_wall) during
+/// a render, and it is that seated wall's root the credential must land under —
+/// re-deriving the path here would be a second answer to §16.2's question and
+/// free to be the wrong one (it was, once: the fixture's own `yog_data` is not
+/// the env's yog data root).
+///
+/// brazen merges its built-in table under every config, so there is no config
+/// to author: one credential file is the whole of it. The row is named for the
+/// same reason `first_run`'s is — an upstream that drops it fails here, in the
+/// file about signing a wall in.
+pub(super) fn sign_wall_in(world: &mut World) {
+    let wall = world
+        .state
+        .wall
+        .login
+        .wall
+        .iter()
+        .find(|(key, _)| key == crate::world::wall::YOG_WALL)
+        .map(|(_, value)| std::path::PathBuf::from(value))
+        .expect("a frame has painted, so the start's wall is seated");
+    let creds = crate::config_edit::brazen::BrazenPaths::in_wall(&wall).credentials_dir;
+    std::fs::create_dir_all(&creds).unwrap();
+    // brazen's own `Cred` shape: the variant IS the token-kind discriminant and
+    // the file's stem is the provider row's name.
+    std::fs::write(
+        creds.join("anthropic.json"),
+        b"{\"ApiKey\":{\"key\":\"seeded-by-the-fixture\"}}\n",
+    )
+    .unwrap();
+    world.state.wall.login.ask();
+}
+
 /// The crowd [`Roster::Crowded`] lays on top of the shipped world — its own
 /// file per §12's budget.
 pub(in crate::shell::acceptance) mod crowd;

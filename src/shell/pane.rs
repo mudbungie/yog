@@ -28,6 +28,18 @@ use super::ShellState;
 /// row*, and a goal box is not one.
 const GOAL_FLOOR: f32 = 96.0;
 
+/// **The first rung's own floor** (bl-1fd0): the sentence, the roster's heading
+/// and enough rows to reach the one a default brazen table can browser-sign-in,
+/// which on that table is the last of eight. A rung whose verb is below the
+/// fold is the pane hiding the act that must come first all over again, so the
+/// number is the roster's own height and not a guess — bounded by the band's
+/// §11 share, which is what a window too small for it answers with instead.
+///
+/// It is a `default_height` for [`GOAL_FLOOR`]'s reason: a panel opens at its
+/// default and measures its content a frame later, so a band left to size
+/// itself is culled to a row or two on every appearance.
+const RUNG_FLOOR: f32 = 400.0;
+
 /// The pane, outermost accessory first. `window` is the whole window's extent
 /// (the start box's stored size is a §4.1 window fact); `settled` says the
 /// pointer is up, so a dragged boundary lands on disk once.
@@ -134,6 +146,35 @@ pub(super) fn render(
                     super::input_bar::composer(ui, model, state, lernie, bl, cap);
                 });
         }
+    }
+    // **The start's first rung** (§8.1, bl-1fd0), docked directly above the
+    // goal box it gates — created after it, since bottom panels stack
+    // outermost-first. A band of its own rather than content inside the box's
+    // panel: the start box is 240 points and the rung is a sentence, ten
+    // provider rows and a live command stream, so painted inside it the roster
+    // took the box's room and the Send row was clipped off the bottom.
+    //
+    // **It is not a fifth settings band** and the bl-2e18 ordering ruling is
+    // untouched: it is not a setting, it is the reason the box below it cannot
+    // fire, and like the in-flight strip it is conditional as a whole. A wall
+    // that can run paints no band at all, which is what keeps today's flow byte
+    // for byte (`rung` is `None` there and nothing is created).
+    if state.start.pending.is_some()
+        && super::start_login::gate(model, state).note().is_some()
+        && let Some(cap) = crate::layout::share(pane, ui.available_height(), 0.0)
+    {
+        egui::TopBottomPanel::bottom("start-provider")
+            // A multi-row default, for the composer's own reason above: a
+            // panel's first frame is its **default** height and its content
+            // height only lands the next one, so without this the roster is
+            // culled to a row or two on every appearance. The content is capped
+            // below, so a band that needs less shrinks on the frame after and a
+            // band that needs more never outgrows its share.
+            .default_height(RUNG_FLOOR.min(cap))
+            .show_inside(ui, |ui| {
+                ui.set_max_height(cap);
+                super::seat(ui, |ui| super::start_login::band(ui, model, state, bz));
+            });
     }
     // The in-flight strip stays innermost, hard against the chat tail (bl-905f,
     // untouched by the band-order ruling): it is not one of the four elements

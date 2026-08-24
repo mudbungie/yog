@@ -39,6 +39,7 @@ use std::path::PathBuf;
 
 mod ensure;
 mod exec;
+mod gate;
 mod goal;
 mod identity;
 pub mod instructions;
@@ -52,6 +53,7 @@ pub use exec::{
     ClaimResolved, DETACHED_EXIT, Deps, Prepared, StartError, cross_check_claim, execute_claim,
     execute_create, on_mint,
 };
+pub use gate::{StartGate, WallCredit};
 pub use goal::{Composer, parse_ball_stamp, preview};
 pub use identity::{identity_preview, parse_identity_stamp, strip_identity_stamp};
 pub use prompt::{Fire, execute_prompt};

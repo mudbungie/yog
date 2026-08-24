@@ -48,9 +48,26 @@ pub(super) fn run_prepare(model: &mut AppModel, state: &mut ShellState, inputs: 
 /// Dismissing the pane — a clean fire, or Cancel — hands the keyboard back to
 /// the message composer beneath it (§11 focus discipline). A failed launch
 /// keeps the pane and the edited goal, so it is not a dismissal.
+///
+/// **The pending start is taken for the body and put back at the end** — one
+/// borrow of `state`, not a live one held across the paint, which is what lets
+/// the §8.1 provider gate ([`super::start_login::gate`], bl-1fd0) and §11's one
+/// focus door ([`super::focus::take`]) both take `state` inside. The take is
+/// invisible from outside: nothing between the two lines returns, and the only
+/// frame the field is `None` is this one, mid-call.
+///
+/// **This box is a composer like the other two** (§11: one box, one Enter), so
+/// it consumes the focus request rather than leaving the keyboard nowhere — it
+/// IS the goal box while it is up, and the message composer beneath it is not
+/// painted at all.
 pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) {
     let mint_seed = state.start.mint_seed;
-    let Some(pending) = state.start.pending.as_mut() else {
+    // The start's FIRST rung (§8.1, bl-1fd0), whose roster is docked as its own
+    // band above this box ([`super::pane`]). Only the verb's half of it is
+    // read here: what the target wall can run, and therefore whether Send is a
+    // fire or a sentence.
+    let gate = super::start_login::gate(model, state);
+    let Some(mut pending) = state.start.pending.take() else {
         return;
     };
     let (mut send, mut cancel) = (false, false);
@@ -101,20 +118,26 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
     egui::ScrollArea::vertical()
         .max_height(box_height)
         .show(ui, |ui| {
-            ui.add_sized(
-                [ui.available_width(), box_height],
-                egui::TextEdit::multiline(&mut pending.goal),
-            )
-            .on_hover_text(
-                "The goal this conversation starts with — the agent's first instruction. \
+            let edit = ui
+                .add_sized(
+                    [ui.available_width(), box_height],
+                    egui::TextEdit::multiline(&mut pending.goal),
+                )
+                .on_hover_text(
+                    "The goal this conversation starts with — the agent's first instruction. \
                  Edit it freely; it is only read when you press Send — or Enter, which \
                  is the same fire. Typed whole, it is `/prompt <goal…>`.",
-            );
+                );
+            super::focus::take(state, ui, &edit);
         });
     // Armed only by a goal that says something (bl-9acf) — the same predicate
     // [`send_pending`] refuses on, so the disabled button and the inert Enter
     // are one rule wearing two faces rather than a check the pointer can dodge.
-    let armed = crate::actions::goal_present(&pending.goal);
+    // …and by a wall that can reach a model at all (bl-1fd0). Two refusals, one
+    // button: the gate's own sentence when the wall is the blocker, so Send
+    // states the real reason instead of firing a start that dies on no-models.
+    let refusal = gate.refusal();
+    let armed = crate::actions::goal_present(&pending.goal) && refusal.is_none();
     ui.horizontal(|ui| {
         send = ui
             .add_enabled(armed, egui::Button::new("Send (detached prompt)"))
@@ -122,10 +145,11 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
                 "Launch the conversation: `lernie prompt`, detached, in the workspace \
                  named above. It keeps running whatever yog does afterwards (Enter).",
             )
-            .on_disabled_hover_text(
+            .on_disabled_hover_text(refusal.unwrap_or_else(|| {
                 "The goal above is empty — say what you want done before this can \
-                 launch anything.",
-            )
+                 launch anything."
+                    .to_owned()
+            }))
             .clicked();
         cancel = ui
             .button("Cancel")
@@ -136,6 +160,7 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
             .clicked();
     });
     state.start.fan_n = fan_n;
+    state.start.pending = Some(pending);
     if send {
         send_pending(model, state);
     }
@@ -164,6 +189,14 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
 /// here, not only on the button, because the §11 Enter binding is the other
 /// hand on the same trigger.
 pub(super) fn send_pending(model: &mut AppModel, state: &mut ShellState) {
+    // **A wall that cannot reach a model is not a goal either** (bl-1fd0). The
+    // guard lives here as well as on the button for `goal_present`'s own
+    // reason: §11's Enter is the other hand on the same trigger, and a start
+    // fired past the rung is a conversation born to die on no-models with the
+    // operator's first typed goal inside it.
+    if super::start_login::gate(model, state).refusal().is_some() {
+        return;
+    }
     let Some(p) = state
         .start
         .pending

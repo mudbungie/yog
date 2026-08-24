@@ -3,9 +3,10 @@
 //! One row per provider `bz` would route to, read from `bz --list-providers
 //! --json` — the **linked** brazen's own serde projection (§16.7 W10), not a
 //! scan of the config text. yog re-implements none of it: the `name` column
-//! names the row, the `auth` column names its credential model and the
-//! `protocol` column names its wire dialect — all three spelled by brazen's own
-//! serde renames.
+//! names the row, the `auth` column names its credential model, the `protocol`
+//! column names its wire dialect, and the `credential` column names the secret
+//! a run would actually reach for — all four spelled by brazen's own serde
+//! renames.
 //!
 //! **What the `protocol` column judges lives beside it** in
 //! [`capability`]: the tool-capability refusal (bl-3d22), the context caveat
@@ -47,6 +48,20 @@ const NONE: &str = "none";
 const API_KEY: &str = "api_key";
 const BEARER: &str = "bearer";
 
+/// brazen's `credential` spelling for a row that needs none at all — its
+/// `auth = "none"` arm, answered before any store is consulted. A keyless row
+/// is a local runtime or a host CLI carrying its own sign-in, so this says
+/// nothing about whether that runtime is *there* — see
+/// [`WallCredit`](crate::start::WallCredit), the one consumer that cares.
+pub const NOT_REQUIRED: &str = "not required";
+
+/// brazen's `credential` spelling for a row with no credential to use: its
+/// `fetch_cred` found nothing. **The one spelling that is a refusal** — every
+/// other, this build's four known ones and any this build has never heard of,
+/// leaves the row able to answer, and no surface refuses on the strength of a
+/// question that went unanswered.
+pub const MISSING: &str = "missing";
+
 /// One row of the effective provider table (§5.1 #20/#21) — the three columns
 /// yog consumes, verbatim from brazen's `--list-providers --json` object.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -61,6 +76,15 @@ pub struct ProviderRow {
     /// brazen's credential model for the row: `oauth2` / `api_key` / `bearer` /
     /// `none`.
     pub auth: String,
+    /// **The credential this row would actually use**, in brazen's own
+    /// spelling: `stored` (a credential bz owns), `ambient` (one it found
+    /// outside its store), `inline` (a key written into the config), `not
+    /// required` ([`NOT_REQUIRED`] — the keyless arm) or `missing`
+    /// ([`MISSING`]). brazen computes it through the very `fetch_cred` a run
+    /// spends, minus the network, so it is the authority on "could this row
+    /// answer at all" and yog re-derives none of it. Read by the §8.1 start
+    /// gate ([`crate::start::WallCredit`], bl-1fd0).
+    pub credential: String,
 }
 
 impl ProviderRow {
@@ -156,6 +180,7 @@ pub fn provider_rows(listing_json: &str) -> Vec<ProviderRow> {
             name: column(row, "name"),
             protocol: column(row, "protocol"),
             auth: column(row, "auth"),
+            credential: column(row, "credential"),
         })
         .collect()
 }

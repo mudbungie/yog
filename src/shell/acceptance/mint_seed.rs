@@ -178,6 +178,11 @@ fn the_ball_rungs_send_retires_the_seed_the_same_way() {
     // **receipt** the frame after (REMOTE §9.8).
     let screen = Screen::with_lernie(lernie);
     screen.idle(&mut world);
+    // The §8.1 provider gate refuses a fire on a wall with nothing signed in
+    // (bl-1fd0), and this beat's subject is the seed a *landed* fire spends —
+    // so the wall is signed in first, which is the state it was always
+    // implicitly about.
+    super::fixture::sign_wall_in(&mut world);
     super::super::start_pane::send_pending(&mut world.model, &mut world.state);
     screen.idle(&mut world);
     assert_ne!(

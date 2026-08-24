@@ -28,7 +28,7 @@
 //! painted seat: the §9.1 config pane used to render the identical sentences
 //! verb-less, and now counts the rows and points here instead.
 //!
-//! Everything it calls — the row derivation and its capability read, [`LoginRun`]
+//! Everything it calls — the row derivation and its capability read, [`LoginRun`](crate::login::LoginRun)
 //! poll/finalize — is covered; only these widgets are not.
 //!
 //! *Was the toolchain pane* until §16.7 W13 deleted the phase-1 capability gate
@@ -40,7 +40,7 @@ use std::path::Path;
 
 use crate::cli_outbound::Cli;
 use crate::config_edit::brazen::ProviderRowView;
-use crate::login::{self, LoginRun};
+use crate::login;
 use crate::theme;
 
 use super::LoginHolder;
@@ -115,11 +115,16 @@ pub(super) fn login_section(
             login.workspace.as_deref(),
         )
     {
-        login.run = Some(run);
+        login.begin(run);
     }
-    if let Some(run) = login.run.as_mut() {
-        run.poll();
-        render_run(ui, run);
+    // The holder owns the run's frame duty (bl-1fd0): draining it, and folding
+    // a clean outcome back into the rows the one frame it settles — so a row
+    // the operator just signed into reads as signed in without a second
+    // gesture, and the §8.1 start rung above it dissolves on its own.
+    if login.poll_run()
+        && let Some(run) = login.run.as_ref()
+    {
+        render_run(ui, &run.view());
     }
 }
 
@@ -197,8 +202,7 @@ pub(super) fn provider_row(ui: &mut egui::Ui, row: &ProviderRowView) -> bool {
 /// arrival order, verbatim (§8.3); bz's authorize URL and its terminal
 /// error/remedy line both ride stderr, so both land here. Then, once settled,
 /// the outcome and, on a non-zero exit, the run-by-hand fallback (§8.3).
-fn render_run(ui: &mut egui::Ui, run: &LoginRun) {
-    let view = run.view();
+fn render_run(ui: &mut egui::Ui, view: &crate::login::LoginView) {
     for line in &view.lines {
         ui.monospace(&line.text);
     }
