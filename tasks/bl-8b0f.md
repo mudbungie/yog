@@ -1,7 +1,7 @@
 +++
 title = "DUPLICATE of bl-3792 — evidence folded there, do not claim"
 created = 1787544797
-updated = 1787545336
+updated = 1787545337
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["duplicate"]
@@ -68,3 +68,7 @@ whole run each time, with a message that names no test.
 Note the shape of the hazard for `check-coverage.sh` if it ever did surface
 there: a signalled run is exactly the class bl-673a gave exit 75 to, and a
 SIGPIPE-killed binary must never be recorded as a FAIL verdict.
+
+---
+
+Superseded by **bl-3792**, filed a day earlier and claimed. The distinguishing evidence in this body — the brazen `bz` SIGPIPE-restore suspect, the `wire::*` death region, and the --skip measurement proving independence from bl-269a — has been folded into bl-3792 as a comment. Work happens there. Left standing rather than closed only to avoid a gate run against a live queue.
