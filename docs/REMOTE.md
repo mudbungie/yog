@@ -1290,6 +1290,89 @@ box's own root.
   holding hundreds, and no mechanism was added against a problem that
   provisioning friction already bounds.
 
+### 8.3 Sign-in follows the wall (bl-61bf)
+
+**The gap, found live.** A seat registered into a workspace held elsewhere
+(§8.2) could fire chats there and could not sign it in: the Login flow (DESIGN
+§8.3) spawned `bz --login` on the seat's own box with a locally derived wall,
+so the credential landed in the seat's wall while the host's — the one the
+workspace's agents read (DESIGN §16.2) — stayed empty. Structural, not a
+misclick: the loopback AuthCode flow binds its redirect beside the browser by
+construction, and the spawn was the window's, so no spelling existed that put
+the browser at the seat and the credential in the host's wall.
+
+**The ruling: the sign-in is an act on the boundary, executed by the ENGINE
+inside the named workspace's wall, streamed to the invoking seat.** bz runs
+where the wall is, so the credential lands where the agents that need it run,
+and the custody stance survives unchanged at both ends: DESIGN §5.1 #22 holds
+— yog pipes the flow's lines and never a credential — and **nothing
+credential-shaped ever crosses yog's wire**; the token moves from the provider
+to the engine's own box over the provider's channel, exactly as a local
+sign-in always did. What crosses the wire is bz's human-facing stream — the
+authorize URL, a device code, a failure's reason and remedy — an N-frame
+answer like any other (§3).
+
+The alternative — sign in at the seat, deposit the credential to the host —
+was weighed and is recorded in §11. §1.4 was deliberately NOT the argument:
+that section governs the channel's own material, and a provider credential is
+a different object; the deposit loses on custody (§5.1 #22, §6), not on
+bootstrap doctrine.
+
+**Two verbs, and the wire gains nothing (§3).** Implementation is bl-c285; the
+window's consumption bl-1ddb; the flow branch bl-7c9f.
+
+- `Action::Login { workspace, provider }` starts the run engine-side — inside
+  the named workspace's wall, the same lens the config reads spend — and
+  answers at once with the run's standing (the `Marks` re-read discipline):
+  the intake is one thread for the whole world, so an act that waited out a
+  browser-minutes flow would stop every deposit converging — the same reason
+  `invoke` queues and answers a handle (§3).
+- A follow-class read streams the run's lines: buffered from the start, then
+  live to the outcome. Re-ask replays — a dropped lane, a re-attached seat and
+  a settled run are one case (the `Query::Follow` discipline, §10).
+- The run is engine RAM, one per workspace × provider. A second `Login` on a
+  live pair terminates and replaces it — the operator's own restart is the
+  cancel, so no cancel verb exists — and a run older than an hour is swept
+  (§5.3's mailbox bound). The `ops.jsonl` outcome row appends engine-side: it
+  was always world state.
+
+**The flow follows the row's capability; the browser follows the human.** The
+flow-selection rule is DESIGN §8.3's and is amended there (rule 1): the device
+flow where the row declares a device endpoint, the browser flow everywhere
+else. What belongs here is the wire consequence. A **device-capable row
+completes from any seat**: the URL and user code paint wherever the lane is
+held, the human finishes in any browser anywhere (a phone's included), bz
+polls the token endpoint from the engine, and the credential never touches the
+wire. A **browser-only row** completes only where a browser can reach the
+ENGINE's loopback: the engine's own box (the window's local case, unchanged),
+or an operator's own port-forward — an operator act on boxes the operator
+administers, §1.4's own posture, **stated as the remedy where the seat is
+remote and never built into the channel**. At the current brazen pin the one
+builtin oauth row is browser-only and the projection carries no device fact;
+the upstream ask that closes both halves is bl-c5fe.
+
+**Faces (one capability, N spellings — §3).** The window's Login pane aims at
+the FOCUSED workspace across channels (§8.2): a local workspace asks this
+window's own engine, an entry workspace asks its entry's channel on its
+entry's material, one pane either way. `yog seat` spells the same act and read
+at a terminal. The run-by-hand fallback is per-channel: a local workspace
+keeps `yog exec --ws … bz --login …`; an entry-hosted workspace spells the
+`yog seat` act, because there is no `yog exec --ws` for a wall this box does
+not hold.
+
+**What this does not solve, on purpose.**
+
+- A browser-only row signed in from a seat with no shell (a phone): the
+  port-forward remedy assumes a terminal somewhere. The hole closes per row as
+  bl-c5fe lands; until then that pairing has no paved path, and the pane says
+  so rather than offering a verb that cannot finish.
+- Re-auth when a token expires mid-conversation on the host: already owned —
+  bz's silent refresh renews without interaction, and where refresh fails the
+  auth-failed banner (DESIGN §8.3 rule 5) routes to this same one act, which
+  any seat can now complete.
+- A provider with neither a device endpoint nor a reachable redirect: the same
+  stated operator remedy. No paste-back arm — §11.
+
 ## 9. Build sequence
 
 Each step is its own ball; boundary-surface work serializes (shared-surface
@@ -2685,3 +2768,19 @@ Recorded so they are not relitigated:
   reads-what-it-could-join discovery surface is the convenience flow §1.4's
   posture exists to exclude, and it would derive the client's roster from a
   set the server owns — drift with an authority on the other end of a wire.
+- **A credential deposit act — sign in at the seat, ship the credential to
+  the host's wall** (bl-61bf, §8.3). The browser UX would be native, but a
+  bearer credential rides a boundary payload: yog reads it at the seat,
+  transports it, and writes it at the engine — custody at three points where
+  DESIGN §5.1 #22 rules yog touches a credential at none — and the seat mints
+  a durable secret, which §6 rules a client never holds (key material and RAM,
+  nothing else). The engine-side act buys the same capability with no secret
+  in channel.
+- **A paste-back completion arm for browser-only rows** (bl-61bf, §8.3) — the
+  seat's human copying the redirect landing back into the stream. It would
+  give the login surface its first INPUT path — a boundary act feeding a
+  child's stdin, and a change to the streamed-piped spawn class, which is
+  stdin-null by design (DESIGN §8.3) — to serve a flow the vendor's own device
+  flow supersedes (bl-c5fe). Revisit only for a provider with neither a device
+  flow nor a reachable redirect, once one exists with a payer; until then the
+  stated operator port-forward is the remedy.

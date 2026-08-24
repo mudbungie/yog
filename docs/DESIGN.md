@@ -3546,7 +3546,7 @@ here.
 | Delete workspace (§3.6 — typed-name confirm; refused while any agent is Live/InFlight) | `bl unclaim <id> --as <name>` per live bound ball (project), then the `ui.json` prune, then the dir removal logged as `["yog-step","delete-workspace"]` | short, piped ×N + the §4.2 non-spawn step line; the §8.1 planner idiom, order load-bearing (§3.6) |
 | Delete conversation (§3.6 one deep, bl-f17a — confirm scaled to blast radius; refused while any member is Live/InFlight) | `lernie delete <ws> <agent>` (+ `--children` iff the typed name armed it); the dialog's census is `lernie delete <ws> <agent> --children --dry-run` beforehand (unlogged — a read, the `bl conf` seam's idiom) | short, piped; a clean removal then prunes the subtree's `seen` keys (`ui.json`, §4.1) |
 | Refresh models | `bz --list-models --provider <row> --json` | streamed-piped where a frame paints it (§9.4's picker, physically `yog bz …` since §16.7 W10 — the logical argv logged is unchanged); **in-process** through the linked brazen where nothing paints it, which is `RealBzRunner` and therefore every off-frame caller (§8.5's `Models`, bl-dff8) |
-| Login provider | `bz --login --provider <row> --browser` (Login pane; also offered beside an auth-failed step) | streamed-piped (§8.3); same physical retarget. `--browser` is unconditional and the row is offered only when brazen's table says `auth = "oauth2"` (§8.3 as amended, bl-b4e5) |
+| Login provider | `bz --login --provider <row> --browser` (Login pane; also offered beside an auth-failed step) | streamed-piped (§8.3); same physical retarget. The row is offered only when brazen's table says `auth = "oauth2"` (§8.3 as amended, bl-b4e5); `--browser` is unconditional at the current pin and becomes the browser-only arm of §8.3 rule 1 as amended (bl-61bf) once a row declares a device endpoint. The spawn's locus moves to the engine as a boundary act (REMOTE §8.3, bl-c285) |
 
 A short verb is **piped inside the gesture** — `actions::verbs::run_logged`
 runs it to completion and appends its outcome — so there is no window for a
@@ -3607,20 +3607,44 @@ knows the workspace, and no downstream seat has to be told.*
   written by yog. Showing the exact command stays as the fallback when the
   piped flow exits non-zero.
 
+  **Once a workspace can be held from another box, the spawn's locus is the
+  ENGINE (bl-61bf; REMOTE §8.3).** The sign-in is a boundary act executed
+  inside the NAMED workspace's wall and streamed to the invoking seat, so the
+  credential lands in the wall the workspace's agents read (§16.2) whichever
+  box the browser is on — a sign-in fired at the seat wrote the seat's wall
+  and left the host's empty, which is the live defect the ruling closes. The
+  pane's in-process spawn is the local case of the same act and retires with
+  the pane's migration (bl-c285 the act and lane, bl-1ddb the pane). Nothing
+  credential-shaped crosses the boundary in either direction: yog still
+  renders the flow, bz still owns the credential (§5.1 #22), and the streamed
+  lines are the whole of what moves.
+
   **The flow-selection rule and the capability source (bl-b4e5), three
   rules:**
 
-  1. **The flow is always the browser flow: `--login --provider <row>
-     --browser`.** bz *defaults* to the headless RFC 8628 device flow and
-     refuses it — exit 78, "this provider has no device endpoint; use
-     `--browser`" — for any row whose `oauth` block omits the optional
-     `device_url`, which is most of them. The loopback AuthCode flow (RFC 8252) has no such hole:
-     `authorize_url` and `token_url` are *required* fields of every `oauth`
-     block while `device_url` is `Option`, so `--browser` is the one flow
-     **every** oauth row can serve. yog is a desktop GUI with a browser at hand
-     and no terminal to type a device code into, so it is also the right one.
-     This is a constant, not a per-row branch: there is no flow yog must guess
-     at, and no flow selector on the surface.
+  1. **The flow is the row's own capability (amended bl-61bf): the device
+     flow where the row declares a device endpoint, the browser flow
+     everywhere else.** The rule was "always `--browser`", argued from the
+     desktop — a GUI with a browser at hand — and the argument died when the
+     workspace stopped being the box's own (REMOTE §8.2): the loopback
+     AuthCode flow (RFC 8252) completes only where the browser can reach bz's
+     loopback, which for an engine-side sign-in (REMOTE §8.3) is the engine's
+     box and not the seat's. The device flow (RFC 8628) is the
+     seat-independent one — bz needs no browser and binds nothing; the URL and
+     user code stream to whichever seat asked; the human completes in any
+     browser anywhere — so where a row can serve it, it is the flow that
+     completes from every seat, the engine's own box included (the window
+     paints the verification URL as an opening link, so the co-located case
+     keeps its one-gesture feel). `authorize_url` and `token_url` are
+     *required* fields of every `oauth` block while `device_url` is `Option`,
+     so `--browser` remains the floor every oauth row can serve; a
+     browser-only row signed in from a remote seat gets the stated loopback
+     remedy (REMOTE §8.3), never a silent hang. Still no flow selector on any
+     surface and nothing yog guesses at: the branch is one row-declared fact,
+     read off brazen's own table (rule 2). At the current pin no builtin row
+     declares a device endpoint and the projection does not carry the fact, so
+     the spawn is `--browser` unconditionally — byte for byte the old rule —
+     until the upstream ask lands (bl-c5fe, consumed by bl-7c9f).
   2. **Loginability is brazen's `auth` column, never a yog-side
      reclassification.** `bz --list-providers --json` projects
      `{name, protocol, auth, credential}` per row; brazen's own resolve
@@ -3630,7 +3654,10 @@ knows the workspace, and no downstream seat has to be told.*
      in oauth rows only, so every other spelling (`none`, `api_key`, `bearer`)
      is a row it can only refuse: those rows get **no Login button at all** —
      see rule 4. The projection carries no device-endpoint fact at the
-     pinned brazen — and needs none, per rule 1.
+     pinned brazen — and rule 1 as amended (bl-61bf) makes that fact the flow
+     key, so gaining the column is half of the bl-c5fe upstream ask; until it
+     lands the absence reads as browser-only and the spawn matches the old
+     constant.
   3. **The streamed class carries stderr, tagged.** bz writes its entire
      human-facing login flow to *stderr* (stdout is reserved for its
      machine-readable discovery output): the authorize URL, and on failure the
