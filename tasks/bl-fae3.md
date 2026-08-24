@@ -1,7 +1,8 @@
 +++
 title = "decompose 7/10 — src/git_tree/, src/nav/, src/start/, src/config_edit/, src/model_pick/: twelve files at 253-290 lines"
 created = 1787546576
-updated = 1787546576
+updated = 1787547887
+claimant = "Fairlead"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["decompose"]
