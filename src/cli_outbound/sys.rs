@@ -48,6 +48,13 @@ pub(crate) fn set_env(pairs: &[(String, String)]) {
         // run exactly one `#[test]` for this reason, and the src-side unit
         // tests reach no folding arm (their argv is a discovery probe or a
         // parse error, both of which answer before the fold).
+        //
+        // That last clause is MEASURED, not asserted (bl-419d): the whole lib
+        // suite was run with this function instrumented, and none of its 2,672
+        // tests reached it. The env tearing that ball was filed about is real
+        // but has another author — a RETURNING `exec` frees the environment
+        // copy it lent the process (`crate::git_env::exec`), which no caller
+        // of this function can cause or repair.
         unsafe { std::env::set_var(key, value) };
     }
 }

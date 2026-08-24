@@ -37,8 +37,9 @@
 //! in `cfg(test)` they take one process-wide lock across the fork — the whole of
 //! the discipline, in one place nobody has to remember. [`exec`] joins them for
 //! the same reason and not the same hazard: it forks nothing, it *replaces*,
-//! and what it owes the process is the `SIGPIPE` disposition std clobbers on
-//! the way out (bl-3792, read it there). Measured on this box
+//! and the two process-global effects a RETURNING one leaves are its own
+//! (bl-3792's `SIGPIPE` reset, which it repairs, and bl-419d's freed `environ`
+//! copy, which nothing can — read [`exec`] there). Measured on this box
 //! with 8 write-then-exec threads against an 8-thread fork storm, ~9,600 pairs
 //! each: unguarded forks, 8.3% ETXTBSY; every fork through one lock, **zero** —
 //! and zero *with the writes left entirely unguarded*, which is why the write
@@ -127,7 +128,36 @@ pub(crate) fn status(cmd: &mut Command) -> std::io::Result<ExitStatus> {
 /// somebody's write fd into a child, and an exec forks nothing. It can only be
 /// ETXTBSY's *victim*, and the discipline above already retired the party that
 /// makes one.
-pub(crate) fn exec(cmd: &mut Command) -> std::io::Error {
+///
+/// # A returning exec has a SECOND global effect, and it cannot be repaired
+///
+/// `SIGPIPE` above is repairable because the damage outlives the call. The
+/// other one does not (bl-419d). A `Command` that carries any env delta — and
+/// [`command`] gives every command in this crate seven — makes std capture the
+/// environment into a `CStringArray`, and `do_exec` points the process's own
+/// `environ` at it on the way to `execvp`. A failed `execvp` restores the old
+/// pointer, and then FREES that array as `exec` returns. std holds only the env
+/// **read** lock across all of it, so a peer thread's env read runs
+/// concurrently by design: it can be walking that array at the moment it is
+/// freed, and what it hands back is freed memory — entries with interior NUL
+/// bytes, which surface as `InvalidInput: "nul byte found in provided data"` at
+/// that peer's next spawn, in a module the exec is nowhere near. Measured on
+/// this box: 6 reader threads against a failing-exec loop, 73,435 torn entries
+/// in 21.2M reads; zero with the env delta removed, which is the leg that
+/// proves the swap is the party.
+///
+/// Nothing here can fix it — the window is inside std, and the victim is any
+/// env reader in the process, including the linked balls' own `git` forks,
+/// which take no lock of yog's. So the discipline is placement, not repair:
+/// **a returning exec belongs only in a process with no peer threads.** In
+/// production that is where it already stands (`main.rs`, above eframe). Its
+/// proof is `tests/exec_return.rs`, an integration binary with exactly one
+/// `#[test]` — the `tests/multiplex_bl.rs` precedent — and that is why this
+/// verb is `pub` while [`spawn`]/[`output`]/[`status`] are not. The lib suite
+/// must never reach `execvp`: `multiplex::lernie`'s unit test hands the arm a
+/// command std refuses ABOVE `do_exec`, so it proves the arm without spending
+/// either effect.
+pub fn exec(cmd: &mut Command) -> std::io::Error {
     use std::os::unix::process::CommandExt as _;
     let failure = cmd.exec();
     crate::cli_outbound::sys::ignore_sigpipe();

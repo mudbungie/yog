@@ -4,8 +4,12 @@
 //! [`run`]'s full verb path — preludes, the shim converge, the `Fx` build —
 //! rides `tests/multiplex_lernie.rs`, a test binary of its own that owns its
 //! process environment (`LERNIE_HOME`/`XDG_DATA_HOME`/`EDITOR`).
+//! The `Exec` outcome's *returning* half rides `tests/exec_return.rs` for the
+//! same reason one layer down: a returning exec is a process-global act, and
+//! this binary has 2,600 peer threads (bl-419d).
 
 use super::*;
+use std::os::unix::ffi::OsStringExt as _;
 
 fn args(parts: &[&str]) -> Vec<String> {
     parts.iter().map(|s| (*s).to_string()).collect()
@@ -50,32 +54,18 @@ fn perform_maps_each_outcome_to_its_exit() {
     assert_eq!(perform(Outcome::Code(7)), 7);
     // The successor exec: a successful execve never returns, so the arm past
     // it IS the failure path — a target that cannot exec reports and fails.
-    let cmd = crate::git_env::command(Path::new("/nonexistent/yog-successor"));
+    //
+    // **The target is refused ABOVE `do_exec`, on purpose** (bl-419d). std
+    // rejects a command whose program, argv or cwd holds a NUL before it
+    // touches the process at all, so this beat proves the arm's mapping while
+    // spending neither of the two global effects a returning exec leaves — the
+    // `SIGPIPE` reset (bl-3792) and the freed `environ` copy that reddened a
+    // peer's spawn with this very error text. A real returning `execvp` has
+    // exactly one lawful home in this repo and it is not a shared test binary:
+    // `tests/exec_return.rs`, one `#[test]`, no peer threads.
+    let mut cmd = crate::git_env::command(Path::new("/nonexistent/yog-successor"));
+    cmd.arg(std::ffi::OsString::from_vec(b"a\0b".to_vec()));
     assert_eq!(perform(Outcome::Exec(cmd)), 1);
-}
-
-/// The exec arm's other half (bl-3792). `CommandExt::exec` does not fork:
-/// std's `do_exec` runs in THIS process and resets `SIGPIPE` to `SIG_DFL` on
-/// its way to `execvp`, so a failed exec returns into a process that now
-/// *dies* where it used to get an error. Under `cargo test` this process is
-/// the whole lib binary, and the writer that pays is any peer thread with a
-/// pipe or a socket — which is why the defect read as a `signal: 13, SIGPIPE`
-/// killing a run with no test reported failing.
-///
-/// The proof is the property and not the mechanism: a write with no reader
-/// left. Ignored, it is a `BrokenPipe` error; defaulted, it is this binary's
-/// death — so a regression here does not fail this test, it deletes the run,
-/// which is exactly the shape being fixed.
-#[test]
-fn a_failed_exec_leaves_sigpipe_ignored() {
-    let cmd = crate::git_env::command(Path::new("/nonexistent/yog-successor"));
-    assert_eq!(perform(Outcome::Exec(cmd)), 1);
-    let (mut near, far) = std::os::unix::net::UnixStream::pair().unwrap();
-    drop(far);
-    assert_eq!(
-        std::io::Write::write(&mut near, b"x").unwrap_err().kind(),
-        std::io::ErrorKind::BrokenPipe
-    );
 }
 
 /// The injection's per-process context (REMOTE §5, bl-c907): `advance` names
