@@ -1,7 +1,8 @@
 +++
 title = "DESIGN: sign-in is stranded on the box with the browser — a seat must be able to run SSO for a remote workspace's wall, where the agents that need the credential actually run"
 created = 1787548511
-updated = 1787548511
+updated = 1787548651
+claimant = "Painter"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design"]
