@@ -35,7 +35,10 @@
 //!
 //! [`spawn`], [`output`] and [`status`] are therefore the crate's one fork, and
 //! in `cfg(test)` they take one process-wide lock across the fork — the whole of
-//! the discipline, in one place nobody has to remember. Measured on this box
+//! the discipline, in one place nobody has to remember. [`exec`] joins them for
+//! the same reason and not the same hazard: it forks nothing, it *replaces*,
+//! and what it owes the process is the `SIGPIPE` disposition std clobbers on
+//! the way out (bl-3792, read it there). Measured on this box
 //! with 8 write-then-exec threads against an 8-thread fork storm, ~9,600 pairs
 //! each: unguarded forks, 8.3% ETXTBSY; every fork through one lock, **zero** —
 //! and zero *with the writes left entirely unguarded*, which is why the write
@@ -101,6 +104,34 @@ pub(crate) fn output(cmd: &mut Command) -> std::io::Result<Output> {
 /// the caller said otherwise), with the lock over the fork alone.
 pub(crate) fn status(cmd: &mut Command) -> std::io::Result<ExitStatus> {
     spawn(cmd)?.wait()
+}
+
+/// Replace this process image with `cmd` — **the crate's one `exec`**, and the
+/// only lawful way to spend an `execve` baton here (`rules/no-bare-fork.yml`).
+/// It returns only on failure, carrying that failure, because an `execvp` that
+/// works never comes back.
+///
+/// **The return is the whole reason it lives here** (bl-3792).
+/// `CommandExt::exec` does not fork: std's `do_exec` runs in THIS process and
+/// resets `SIGPIPE` to `SIG_DFL` on its way to `execvp`, so what a failed exec
+/// hands back is a live process in which the next write to a reader that went
+/// away is a *death* and no longer a `BrokenPipe` error. Under `cargo test`
+/// that process is the whole test binary and the writer is any peer thread, so
+/// the death lands nowhere near the exec and reports no failing test — a
+/// `signal: 13, SIGPIPE` on roughly one parallel run in four. Putting the
+/// disposition back is therefore not the caller's errand any more than the git
+/// scrub is: a contract a caller has to remember is a defect nobody sees until
+/// it fires.
+///
+/// No spawn lock, and the asymmetry is the point: ETXTBSY needs a fork to copy
+/// somebody's write fd into a child, and an exec forks nothing. It can only be
+/// ETXTBSY's *victim*, and the discipline above already retired the party that
+/// makes one.
+pub(crate) fn exec(cmd: &mut Command) -> std::io::Error {
+    use std::os::unix::process::CommandExt as _;
+    let failure = cmd.exec();
+    crate::cli_outbound::sys::ignore_sigpipe();
+    failure
 }
 
 #[cfg(test)]

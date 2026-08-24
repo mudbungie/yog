@@ -192,12 +192,14 @@ fn perform(outcome: Outcome) -> i32 {
         }
         Outcome::Quiet => 0,
         Outcome::Exec(mut command) => {
-            use std::os::unix::process::CommandExt as _;
-            let _ = writeln!(
-                io::stderr(),
-                "lernie advance: exec successor: {}",
-                command.exec()
-            );
+            // Through the crate's one exec, which puts `SIGPIPE` back before
+            // this line runs (bl-3792): `exec` does not fork, so a failure
+            // returns into a process whose disposition std has already reset
+            // to `SIG_DFL` — and the report below, down a stderr the departing
+            // parent may have closed, is the very first write that would die
+            // of it.
+            let failure = crate::git_env::exec(&mut command);
+            let _ = writeln!(io::stderr(), "lernie advance: exec successor: {failure}");
             1
         }
         Outcome::Code(code) => i32::from(code),

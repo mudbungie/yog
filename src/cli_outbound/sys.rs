@@ -1,13 +1,16 @@
-//! The crate's confined `unsafe` — **three raw process effects**, all of them
+//! The crate's confined `unsafe` — **four raw process effects**, all of them
 //! things std gives no safe wrapper for and none of them reducible.
 //! [`sigterm`] is the best-effort `SIGTERM` [`super::Stream`]'s drop sends
 //! before escalating to `Child::kill` (SIGKILL); [`set_env`] is the process
 //! environment mutation the nested world needs to become a *place* and not only
-//! a value ([`crate::world::inhabit`], DESIGN §16.2, bl-81c9); and
+//! a value ([`crate::world::inhabit`], DESIGN §16.2, bl-81c9);
 //! [`term_disposition`] is the `SIGTERM` *catch* an engine needs before either
 //! of those can happen at all (§8.5, bl-269a) — under the default disposition
 //! the process dies where it stands, so no `Drop` runs and the `sigterm` above
-//! is never posted. The
+//! is never posted; and [`ignore_sigpipe`] is the disposition repair a RETURNED
+//! `exec` owes this process ([`crate::git_env::exec`], bl-3792). Two of the
+//! four are therefore signal dispositions, and they are opposites on purpose:
+//! one asks to be told about a death, the other refuses one. The
 //! `unsafe-outside-sys` ast-grep rule (`rules/unsafe-outside-sys.yml`) bans
 //! `unsafe` everywhere else in the tree, so this file is the one audited home
 //! for it — keeping the whole-crate `unsafe` inventory at exactly one site,
@@ -70,7 +73,7 @@ pub(crate) extern "C" fn on_term(_signo: libc::c_int) {
 
 /// Point `SIGTERM` at [`on_term`] (`catch`) or back at the kernel's default
 /// terminate disposition (`!catch`). The third raw process effect, and the one
-/// that makes the other two reachable at all: the default disposition kills the
+/// that makes the two above reachable at all: the default disposition kills the
 /// process outright, so no `Drop` runs and [`super::Stream`]'s SIGTERM above is
 /// never posted.
 ///
@@ -100,4 +103,30 @@ pub(crate) fn term_disposition(catch: bool) {
 /// process-wide fact and every reader must read *that* one, never a copy.
 pub(crate) fn term_flag() -> &'static std::sync::atomic::AtomicBool {
     &TERM_REQUESTED
+}
+
+/// Set `SIGPIPE` to `SIG_IGN` — the disposition Rust's runtime installs before
+/// `main`, and the one every safe write in this process is written against: it
+/// is what makes a reader that went away a [`BrokenPipe`] error instead of a
+/// death.
+///
+/// **It is a repair, not a policy.** Its one caller is
+/// [`crate::git_env::exec`], on the only path that can reach it:
+/// `CommandExt::exec` does not fork, so std's `do_exec` runs in *this* process
+/// and resets `SIGPIPE` to `SIG_DFL` on its way to `execvp` — and an `execvp`
+/// that fails hands back a live process with that reset standing (bl-3792).
+///
+/// [`BrokenPipe`]: std::io::ErrorKind::BrokenPipe
+pub(crate) fn ignore_sigpipe() {
+    // SAFETY: `libc::signal` is a thin FFI shim over `signal(2)` — it
+    // dereferences no pointers, and `SIG_IGN` is a disposition constant and
+    // not a function this process could be asked to run. Setting a signal to
+    // ignored is the one disposition with no handler to be re-entered, so
+    // there is no async-signal-safety obligation on the caller and no thread
+    // it can surprise: every thread already behaved as if this were the value,
+    // because until the `exec` above it was. The previous disposition is
+    // discarded on purpose — the value being restored is the runtime's, known
+    // statically, and reading back what std just clobbered would only name
+    // `SIG_DFL`.
+    unsafe { libc::signal(libc::SIGPIPE, libc::SIG_IGN) };
 }

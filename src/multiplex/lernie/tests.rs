@@ -54,6 +54,30 @@ fn perform_maps_each_outcome_to_its_exit() {
     assert_eq!(perform(Outcome::Exec(cmd)), 1);
 }
 
+/// The exec arm's other half (bl-3792). `CommandExt::exec` does not fork:
+/// std's `do_exec` runs in THIS process and resets `SIGPIPE` to `SIG_DFL` on
+/// its way to `execvp`, so a failed exec returns into a process that now
+/// *dies* where it used to get an error. Under `cargo test` this process is
+/// the whole lib binary, and the writer that pays is any peer thread with a
+/// pipe or a socket — which is why the defect read as a `signal: 13, SIGPIPE`
+/// killing a run with no test reported failing.
+///
+/// The proof is the property and not the mechanism: a write with no reader
+/// left. Ignored, it is a `BrokenPipe` error; defaulted, it is this binary's
+/// death — so a regression here does not fail this test, it deletes the run,
+/// which is exactly the shape being fixed.
+#[test]
+fn a_failed_exec_leaves_sigpipe_ignored() {
+    let cmd = crate::git_env::command(Path::new("/nonexistent/yog-successor"));
+    assert_eq!(perform(Outcome::Exec(cmd)), 1);
+    let (mut near, far) = std::os::unix::net::UnixStream::pair().unwrap();
+    drop(far);
+    assert_eq!(
+        std::io::Write::write(&mut near, b"x").unwrap_err().kind(),
+        std::io::ErrorKind::BrokenPipe
+    );
+}
+
 /// The injection's per-process context (REMOTE §5, bl-c907): `advance` names
 /// the agent it drives, so its loaded set is declared; every other verb names
 /// none — `prompt` and `dispatch` *mint* their agent, and an agent that does

@@ -124,3 +124,13 @@ fn reads_the_input_text(t: &egui::epaint::TextShape) -> bool {
 fn bare_fork(cmd: &mut std::process::Command) -> std::io::Result<std::process::Output> {
     cmd.output()
 }
+
+// Violation 16: a bare exec (no-bare-fork.yml — the same shape, `.exec` on the
+// end). `CommandExt::exec` does not fork: it resets `SIGPIPE` to `SIG_DFL` in
+// THIS process on its way to `execvp`, and an `execvp` that fails returns into
+// a process that now dies where it used to error (bl-3792).
+// `crate::git_env::exec` is the one exec, and it puts the disposition back.
+fn bare_exec(cmd: &mut std::process::Command) -> std::io::Error {
+    use std::os::unix::process::CommandExt as _;
+    cmd.exec()
+}

@@ -4,6 +4,15 @@
 # the two together are what let the module hold an invariant rather than a
 # convention.
 #
+# `exec` is the fourth verb and the odd one: it forks nothing, it replaces this
+# process, and it is here because it too leaves the caller holding a contract
+# no caller reliably remembers. `CommandExt::exec` runs std's `do_exec` in THIS
+# process, which resets `SIGPIPE` to `SIG_DFL` before `execvp` — so a failed
+# exec returns into a live process where the next write down a closed pipe is
+# a death and not an error. `crate::git_env::exec` puts it back; a bare one
+# does not, and under `cargo test` the corpse is the whole binary, reported as
+# `signal: 13, SIGPIPE` with no test failing (bl-3792).
+#
 # The invariant is ETXTBSY (bl-6397). `fs::write` on a fixture script holds a
 # write fd; a fork on ANOTHER thread copies that fd into a child that keeps it
 # until its own exec completes; an exec of the script inside that window fails
@@ -30,7 +39,7 @@
 id: no-bare-fork
 language: rust
 severity: error
-message: "fork children through crate::git_env::{spawn,output,status} (see rules/no-bare-fork.yml)"
+message: "spend a Command through crate::git_env::{spawn,output,status,exec} (see rules/no-bare-fork.yml)"
 ignores:
   - "**/git_env.rs"
 rule:
@@ -39,7 +48,7 @@ rule:
     - has:
         field: function
         kind: field_expression
-        regex: '\.(spawn|output|status)$'
+        regex: '\.(spawn|output|status|exec)$'
     - has:
         field: arguments
         regex: '^\(\)$'
