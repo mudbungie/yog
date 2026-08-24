@@ -16,17 +16,23 @@
 //! - **Provisioned** — `Ok(Some(Material))`: the anchors, this role's leaf and
 //!   key, and the one address.
 //!
-//! **The address is one fact with one home.** A server binds `address` and a
-//! local seat dials it; a seat on another machine has its own `wire/address`
-//! naming the server it belongs to. There is no second file and no flag: two
-//! spellings of one address is exactly the drift §8's name-resolution ruling
-//! removed from the boundary.
+//! **An address is one fact with one home, and the home is the relationship**
+//! (REMOTE §8 as amended, bl-aaec). A server binds its own `wire/address` and a
+//! local seat dials it; a workspace held elsewhere names its host in its own
+//! entry's `address` file ([`entries`](super::entries), REMOTE §8.2). Every
+//! address still has exactly one file and no flag — two spellings of one
+//! address is exactly the drift §8's name-resolution ruling removed from the
+//! boundary — and one address per relationship is what a client of many
+//! servers needs, no more.
 //!
 //! **It sits beside the world, not inside it** (`<yog-data-root>/wire`, the
 //! sibling of `<yog-data-root>/world`). The world subtree is a *generated*
 //! artifact — yog seeds it, and it is wiped and reseeded — while key material
 //! is operator-provisioned and irreplaceable by anything yog can do. Nesting it
-//! under a directory yog rebuilds would make a reseed a revocation.
+//! under a directory yog rebuilds would make a reseed a revocation. Entries sit
+//! *inside* `wire/` ([`entries::ENTRIES`](super::entries::ENTRIES)) for that
+//! same reason: an entry is the same operator-provisioned, irreplaceable class
+//! of fact.
 
 use crate::xdg::Env;
 use std::path::{Path, PathBuf};

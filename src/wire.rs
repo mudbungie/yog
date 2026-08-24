@@ -43,6 +43,10 @@ use std::sync::Arc;
 /// the local window a wire client of its own engine.
 pub mod asker;
 pub mod client;
+/// The client-side workspaces this box holds elsewhere (REMOTE §8.2, bl-aaec)
+/// — [`material`]'s shape one level down and named, one directory per
+/// workspace hosted on another box.
+pub mod entries;
 pub mod frame;
 /// The tool-host client mode (REMOTE §5, bl-024b) — the wire's second shipped
 /// client: it advertises what this machine can run, rides a follow-class read
