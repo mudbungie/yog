@@ -1,7 +1,8 @@
 +++
 title = "the start pane invites a goal that cannot possibly run: on a wall with no usable provider, the first rung must be provider sign-in, not a text box"
 created = 1787548547
-updated = 1787548547
+updated = 1787548558
+claimant = "Grommet"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
