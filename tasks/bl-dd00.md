@@ -1,7 +1,8 @@
 +++
 title = "decompose 1/10 — src/shell/acceptance/: ten drives at 250-291 lines, on the surface the REMOTE §8.2 window chain must add coverage to next"
 created = 1787546558
-updated = 1787546558
+updated = 1787547050
+claimant = "Thimble"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["decompose"]
