@@ -1,7 +1,8 @@
 +++
 title = "decompose 8/10 — the paint tier: src/theme/, src/ui_state/, src/paint_probe.rs, src/inspector/, src/rail/, src/steps_view/, ten files at 250-294"
 created = 1787546581
-updated = 1787546581
+updated = 1787548083
+claimant = "Sextant"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["decompose"]
