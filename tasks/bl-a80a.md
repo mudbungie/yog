@@ -1,7 +1,8 @@
 +++
 title = "multiple armed projects have no world-level concurrency or whole-day spend ceiling"
 created = 1787206353
-updated = 1787207265
+updated = 1787546726
+claimant = "Capstan"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["missing", "design", "agentic"]
