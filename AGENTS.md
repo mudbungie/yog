@@ -47,13 +47,17 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
 
 3. **`unsafe` is confined, not forbidden. yog ADAPTATION:** the standard's
    `unsafe_code = "forbid"` is replaced by an ast-grep *location* rule pinning
-   every `unsafe` to `src/cli_outbound/sys.rs`. **Two raw process effects live
-   there**, both irreducible and neither wrapped safely by std: the SIGTERM in
-   `Stream`'s drop, and `set_env` — the process-env fold a §16.7 substrate arm
+   every `unsafe` to `src/cli_outbound/sys.rs`. **Three raw process effects live
+   there**, all irreducible and none wrapped safely by std: the SIGTERM in
+   `Stream`'s drop; `set_env` — the process-env fold a §16.7 substrate arm
    stands in, because the linked balls/lernie read `getenv` themselves and spawn
    children that do too, so no injected `Env` can reach them (DESIGN §16.2's
-   value-and-place ruling, bl-81c9). Its soundness argument is the file's: every
-   caller is at the process edge, single-threaded, above clap and above eframe.
+   value-and-place ruling, bl-81c9); and `term_disposition`, the `SIGTERM`
+   **catch** both engine faces install (DESIGN §8.5, bl-269a) — under the
+   default disposition the process dies where it stands, so no `Drop` runs and
+   the first of the three is never posted. Its soundness argument is the file's:
+   every caller is at the process edge, single-threaded, above clap and above
+   eframe, and the handler's whole body is one async-signal-safe atomic store.
    `forbid` is unoverridable and reaches test code, and a `nix`/`rustix`
    dependency or a crate split for ~10 lines of FFI is worse than a confinement
    rule. **The rule's `ignores` list is the one location authority** — add a

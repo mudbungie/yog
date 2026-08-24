@@ -143,6 +143,18 @@ pub fn ensure_tools(tools: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// [`ensure_tools`] over an ambient env, **warned rather than fatal** — the one
+/// call every face that hands the world out makes before it does (the two §8.4
+/// hatches and the §8.5 windowless face). Here rather than once per caller
+/// because it is one policy: stdout is the hatch's one product, so a converge
+/// failure is said on stderr and the caller carries on — the world still works
+/// for every command that needs no shim.
+pub fn seed(ambient: &crate::xdg::Env) {
+    if let Err(e) = ensure_tools(&crate::world::layout(ambient).tools) {
+        eprintln!("yog: seed world tools: {e}");
+    }
+}
+
 /// Shim permissions: executable by all, writable only by the owner.
 const SHIM_MODE: u32 = 0o755;
 

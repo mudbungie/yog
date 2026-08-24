@@ -5,21 +5,10 @@ use yog::config_edit;
 use yog::engine::Engine;
 use yog::shell::ShellState;
 use yog::ui_state::{Clock, SystemClock};
-use yog::watch::{EguiRepaint, NoRepaint};
+use yog::watch::EguiRepaint;
 use yog::world::hatch;
 use yog::xdg::Env;
 use yog::{Args, shell};
-
-/// §8.4 (bl-44a5): converge the world's tool shims before a hatch hands the
-/// world out — the tools dir is a generated artifact of the world itself, not
-/// of the start flow, and the world `PATH` names it unconditionally. Warn on
-/// stderr and continue on failure (stdout stays the hatch's one product).
-fn seed_world_tools(ambient: &Env) {
-    let tools = yog::world::layout(ambient).tools;
-    if let Err(e) = yog::world::tools::ensure_tools(&tools) {
-        eprintln!("yog: seed world tools: {e}");
-    }
-}
 
 fn main() -> eframe::Result<()> {
     // §9.3 shim mode: the `$EDITOR` lernie execs re-enters here BEFORE clap or
@@ -67,7 +56,7 @@ fn main() -> eframe::Result<()> {
         // spelling for every wall-needing command, sign-in included.
         Some(hatch::ENV_SUBCMD) => match hatch::parse_env(argv.get(2..).unwrap_or_default()) {
             Ok(plan) => {
-                seed_world_tools(&ambient);
+                yog::world::tools::seed(&ambient);
                 print!(
                     "{}",
                     hatch::env_script(&hatch::overrides_for(&ambient, plan.workspace.as_deref()))
@@ -83,7 +72,7 @@ fn main() -> eframe::Result<()> {
         // exit faithfully yog's (a plan parse error is 2; a spawn failure 127).
         Some(hatch::EXEC_SUBCMD) => match hatch::parse_exec(argv.get(2..).unwrap_or_default()) {
             Ok(plan) => {
-                seed_world_tools(&ambient);
+                yog::world::tools::seed(&ambient);
                 let cmd_args: Vec<&str> = plan.args.iter().map(String::as_str).collect();
                 // `--ws` layers that workspace's wall over the world (bl-b589),
                 // so `yog exec --ws <ws> bz --login …` signs in *inside* the
@@ -112,13 +101,14 @@ fn main() -> eframe::Result<()> {
             let ws = yog::control::workspace_of(&world);
             std::process::exit(yog::control::run(&mut i, &mut o, &world, &ws));
         }
-        // `yog serve` (§8.5, REMOTE §8): the same engine with no window — the
-        // world composed, the derivation worker and watch bridge up, the
-        // gestures-inbox consumer answering deposits and the §9.5 wire
-        // listener answering seats — parked until a signal ends the process
-        // (§4.1 state is write-through; nothing pends at exit, exactly as the
-        // GUI's no-`on_exit` rule).
-        Some(yog::boundary::SERVE_SUBCMD) => serve(&ambient, &overrides),
+        // `yog serve` (§8.5, REMOTE §8): the same engine with no window, parked
+        // until a §8.5 stop. The whole face is `Engine::serve` and therefore
+        // tested (bl-269a) — this arm is the one call, which is all a
+        // coverage-excluded file should ever hold of a face.
+        Some(yog::boundary::SERVE_SUBCMD) => {
+            Engine::serve(&ambient, &overrides);
+            return Ok(());
+        }
         // `yog wire-certs` (REMOTE §8, bl-ae05): the operator's explicit mint —
         // a server another machine dials by name, or a rotation. The boot's own
         // mint covers this box aimed at loopback, so this is the act for
@@ -137,6 +127,9 @@ fn main() -> eframe::Result<()> {
         std::process::exit(yog::world::seat::REFUSED);
     }
     let args = Args::parse();
+    // The same §8.5 catch `serve` makes: one engine, so one stop (VISION V5.4).
+    // Only the loop that consults it differs — eframe's, below.
+    yog::engine::stop::catch();
     // Compose the nested world (§16.2): every read below derives through `world`
     // (so yog watches the nested clones/state/lernie-home) and every child spawns
     // with `overrides` standing (§16.6 W2), so reads and spawns agree.
@@ -217,28 +210,6 @@ fn wire_certs(ambient: &Env) -> ! {
     )));
 }
 
-/// `yog serve` (§8.5, VISION §4.8, REMOTE §8): **the same engine with no
-/// window** — one [`Engine::boot`], no face beside it, parked until a signal
-/// ends the process (§4.1 state is write-through; nothing pends at exit,
-/// exactly as the GUI's no-`on_exit` rule). The window's arm above and this one
-/// are the same call with a different repaint hook, which is the whole of
-/// VISION V5.4's "nothing here is a second implementation" — and since bl-b6fa
-/// that one call also carries the REMOTE §9.5 wire listener, so a seat reaches
-/// whichever face is up exactly as a deposit does.
-fn serve(ambient: &Env, overrides: &[(String, String)]) -> ! {
-    seed_world_tools(ambient);
-    let _engine = Engine::boot(
-        &yog::world::compose(ambient),
-        overrides,
-        None,
-        Arc::new(SystemClock),
-        Arc::new(NoRepaint),
-    );
-    loop {
-        std::thread::park();
-    }
-}
-
 struct App {
     // The engine both faces run (VISION §5 V5): the model the frame renders
     // plus the derivation worker, watch bridge and gesture consumer it holds —
@@ -264,6 +235,12 @@ struct App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // The window's whole consultation of the §8.5 stop: close the viewport,
+        // which is the close a titlebar click already makes — `run_native`
+        // returns, `App` drops, and the engine stops down its one path.
+        if yog::engine::stop::requested() {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        }
         // The frame's whole non-render duty (§7.2): take the latest snapshot the
         // worker published, adopt an external `ui.json`, hold the §6 ack. It
         // derives nothing, spawns nothing, and waits for nothing — the window
@@ -291,7 +268,7 @@ impl eframe::App for App {
     fn clear_color(&self, visuals: &egui::Visuals) -> [f32; 4] {
         visuals.panel_fill.to_normalized_gamma_f32()
     }
-    // No `on_exit` hook: §4.1 state is write-through at the gesture, so there
-    // is nothing pending to flush at close — and nothing a SIGTERM (`pkill`,
-    // which never reaches `on_exit`) could take with it (bl-b54e).
+    // No `on_exit` hook, and bl-269a adds none: §4.1 state is write-through, so
+    // nothing pends at close (bl-b54e). What a SIGTERM took was never that
+    // state but the WORK — a `Drop` that never ran. Ending the loop is the fix.
 }

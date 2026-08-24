@@ -31,11 +31,17 @@ ExecStart=%h/.cargo/bin/yog serve
 # to sit in: come back and keep converging.
 Restart=always
 RestartSec=5s
-# The engine's own state is write-through at the gesture (§4.1) and there is no
-# `on_exit` hook, so SIGTERM costs it nothing — a stop never needs to flush.
-# The default control-group kill therefore also reaps any child turn, which is
-# what a deliberate stop should do; the *update* path never relies on it,
-# because it refuses to restart while a turn is in flight (`yog-update`).
+# The grace a stop actually spends (DESIGN §8.5, bl-269a). The engine catches
+# SIGTERM now: the face's loop ends, the Engine drops, each thread finishes its
+# pass and joins, and every piped child gets Stream's polite SIGTERM-then-
+# SIGKILL instead of dying with the process. yog states no deadline of its own —
+# this is it, and the kernel's SIGKILL at the end of it is the only bound that
+# cannot be out-waited. Until bl-269a nothing used this window at all: `yog
+# serve` parked with the default disposition and was killed where it stood.
+#
+# The control-group kill still reaches a running turn beside yog, which is what
+# a deliberate stop should do — the detached `lernie` driver takes its own copy
+# of this SIGTERM and settles its unanswered tool window on the way out.
 TimeoutStopSec=30s
 # The engine shells out for two things it links no library for: `openssl`, for
 # the REMOTE §8 certificate mint its boot performs when a box has none, and

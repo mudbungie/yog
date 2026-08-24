@@ -226,3 +226,28 @@ fn the_capability_control_shim_is_seeded_where_the_authored_block_names_it() {
         )
     );
 }
+
+/// [`seed`]'s two arms over an ambient env: it converges the world's tools dir,
+/// and it *warns* rather than failing when it cannot — the §8.5/§8.4 callers
+/// hand the world out either way.
+#[test]
+fn seed_converges_the_world_tools_dir_and_warns_when_it_cannot() {
+    let root = tempfile::tempdir().unwrap();
+    let world_root = root.path().join("ok");
+    let ambient = crate::test_support::world_under(&world_root);
+    seed(&ambient);
+    assert!(
+        crate::world::layout(&ambient).tools.join("bl").exists(),
+        "the world's `PATH` names this dir unconditionally, so seeding it is the world's own act"
+    );
+
+    // A tools *file* where the dir belongs: every shim write fails and the
+    // converge cannot happen at all.
+    let blocked_root = root.path().join("blocked");
+    let blocked = crate::test_support::world_under(&blocked_root);
+    let tools = crate::world::layout(&blocked).tools;
+    std::fs::create_dir_all(tools.parent().unwrap()).unwrap();
+    std::fs::write(&tools, b"not a directory").unwrap();
+    seed(&blocked);
+    assert!(tools.is_file(), "it said so and left the world alone");
+}

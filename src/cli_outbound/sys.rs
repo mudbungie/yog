@@ -1,9 +1,13 @@
-//! The crate's confined `unsafe` — **two raw process effects**, both of them
-//! things std gives no safe wrapper for and neither of them reducible.
+//! The crate's confined `unsafe` — **three raw process effects**, all of them
+//! things std gives no safe wrapper for and none of them reducible.
 //! [`sigterm`] is the best-effort `SIGTERM` [`super::Stream`]'s drop sends
 //! before escalating to `Child::kill` (SIGKILL); [`set_env`] is the process
 //! environment mutation the nested world needs to become a *place* and not only
-//! a value ([`crate::world::inhabit`], DESIGN §16.2, bl-81c9). The
+//! a value ([`crate::world::inhabit`], DESIGN §16.2, bl-81c9); and
+//! [`term_disposition`] is the `SIGTERM` *catch* an engine needs before either
+//! of those can happen at all (§8.5, bl-269a) — under the default disposition
+//! the process dies where it stands, so no `Drop` runs and the `sigterm` above
+//! is never posted. The
 //! `unsafe-outside-sys` ast-grep rule (`rules/unsafe-outside-sys.yml`) bans
 //! `unsafe` everywhere else in the tree, so this file is the one audited home
 //! for it — keeping the whole-crate `unsafe` inventory at exactly one site,
@@ -43,4 +47,57 @@ pub(crate) fn set_env(pairs: &[(String, String)]) {
         // parse error, both of which answer before the fold).
         unsafe { std::env::set_var(key, value) };
     }
+}
+
+/// Process-wide "a stop was asked for" flag. Set by [`on_term`] and read
+/// through [`term_flag`]; the *only* thing a SIGTERM does to this process once
+/// [`term_disposition`] has pointed the signal here.
+static TERM_REQUESTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// The SIGTERM handler: one atomic store, which POSIX lists as
+/// async-signal-safe. Everything a stop *means* (§8.5) happens outside it, in
+/// the face's own loop — a handler that dropped the engine would run arbitrary
+/// code, take locks and join threads on a signal stack.
+///
+/// `pub(crate)` so the §8.5 stop's one process-wide test drives it **as a
+/// function** rather than by signalling the test binary: this suite runs under
+/// tarpaulin's ptrace, whose signal bookkeeping is exactly what `tarpaulin.toml`
+/// already pins the run serial to work around. What a delivered SIGTERM would
+/// prove beyond this call is `signal(2)`'s own contract, not yog's.
+pub(crate) extern "C" fn on_term(_signo: libc::c_int) {
+    TERM_REQUESTED.store(true, std::sync::atomic::Ordering::SeqCst);
+}
+
+/// Point `SIGTERM` at [`on_term`] (`catch`) or back at the kernel's default
+/// terminate disposition (`!catch`). The third raw process effect, and the one
+/// that makes the other two reachable at all: the default disposition kills the
+/// process outright, so no `Drop` runs and [`super::Stream`]'s SIGTERM above is
+/// never posted.
+///
+/// One function with a boolean rather than an install/restore pair, because
+/// `signal(2)` is one call either way and is idempotent — the second install of
+/// the same handler is a no-op, so there is nothing for a `OnceLock` to guard.
+/// The restoring direction is what keeps the *test* that installs the real
+/// handler hermetic: it hands the disposition back rather than leaving the rest
+/// of a suite unable to die on a signal.
+pub(crate) fn term_disposition(catch: bool) {
+    let handler = if catch {
+        on_term as *const () as libc::sighandler_t
+    } else {
+        libc::SIG_DFL
+    };
+    // SAFETY: `libc::signal` is the documented POSIX handler-install call and
+    // dereferences nothing; `on_term` is a plain `extern "C"` function whose
+    // body is a single atomic store, so nothing unsound can run on the signal
+    // stack. The same construction the linked lernie already uses for its own
+    // §2.9 stop catch.
+    unsafe {
+        libc::signal(libc::SIGTERM, handler);
+    }
+}
+
+/// The flag [`on_term`] sets — `pub(crate)` and a borrow on purpose: it is one
+/// process-wide fact and every reader must read *that* one, never a copy.
+pub(crate) fn term_flag() -> &'static std::sync::atomic::AtomicBool {
+    &TERM_REQUESTED
 }

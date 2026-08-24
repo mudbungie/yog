@@ -19,6 +19,13 @@
 //! invariant stated from the other side: everything yog does other than paint
 //! happens here, so nothing that runs long has a frame to block.
 
+/// **The windowless face, whole** (§8.5) — `yog serve`, which left `main.rs`
+/// for that file's own coverage reason once bl-269a gave its loop an exit.
+pub mod serve;
+/// **What a SIGTERM means to a running yog** (§8.5, bl-269a): the catch, the
+/// flag both faces consult, and the windowless face's loop — which ends by
+/// dropping this engine, since the drop already IS the stop.
+pub mod stop;
 /// The engine's hand-overs to a window's off-frame threads (REMOTE §1.2, §9.8)
 /// — split out of this file at §12's budget when the act path landed (bl-4841).
 pub mod window;
