@@ -16,77 +16,21 @@
 //! all. Both are real seats, so both are swept, at both of the window sizes
 //! this surface has broken at (bl-5410, bl-9551).
 
+//!
+//! **How a run is read off the glass is [`glass`]**, split off at the cap on
+//! the seam three modules already share: the probe, the two window sizes and
+//! the fold vocabulary are the fixture, and everything below is what bl-7654
+//! asserts with them.
+
+mod glass;
+
+use glass::{NO_FOLD, SHORT};
+pub(super) use glass::{OPEN, SHUT, SIZES, answer, long, run, seen, whole};
+
 use std::collections::HashSet;
 
-use super::render::{entry, tx};
-use crate::paint_probe::{Seen, screen_sized, seen_of};
-use crate::transcript::{AutoExpand, Block, EntryKind, Transcript, Usage};
-
-/// The two window sizes this surface has broken at.
-pub(super) const SIZES: [(f32, f32); 2] = [(420.0, 320.0), (800.0, 500.0)];
-
-/// The toggle glyphs, and the mark a row with nothing to fold wears instead.
-pub(super) const OPEN: &str = "▼";
-pub(super) const SHUT: &str = "▶";
-const NO_FOLD: &str = "·";
-
-/// A payload that fits its line and has nothing to fold.
-const SHORT: &str = "pong";
-
-/// A single-line model answer far wider than either window.
-pub(super) fn long() -> String {
-    "abcdefghij".repeat(40)
-}
-
-/// Every galley one settled render of `t` put on the glass. `bounded` is
-/// whether the seat carries the centre's ambient `Truncate`; `false` is a seat
-/// that declares nothing, where egui's horizontal default is `Extend`.
-pub(super) fn seen(t: &Transcript, auto: AutoExpand, bounded: bool, w: f32, h: f32) -> Vec<Seen> {
-    let ctx = egui::Context::default();
-    let mut folds = HashSet::new();
-    let mut frame = || {
-        ctx.run(screen_sized(w, h), |ctx| {
-            egui::CentralPanel::default().show(ctx, |ui| {
-                if bounded {
-                    // Verbatim what `shell::row::bounded` puts at the centre
-                    // panel root (bl-5410) — the transcript's real seat.
-                    ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
-                }
-                super::plain(ui, t, false, auto, &mut folds);
-            });
-        })
-    };
-    let _ = frame();
-    seen_of(&frame())
-}
-
-/// A run is **whole** when its seat showed all of what was laid into it. A run
-/// laid wider than its clip rect is one the operator reads the front of, with
-/// no ellipsis to say so — the galley was never truncated, so egui never added
-/// one.
-pub(super) fn whole(seen: &Seen) -> bool {
-    seen.shown.width() >= seen.laid.width() - 1.0
-}
-
-/// The run carrying `needle`'s glyphs, whichever seat painted it.
-pub(super) fn run(painted: &[Seen], needle: &str) -> Seen {
-    let seats: Vec<&String> = painted.iter().map(|s| &s.text).collect();
-    let hit = painted.iter().find(|s| s.text.contains(needle)).cloned();
-    assert!(
-        hit.is_some(),
-        "nothing on the glass carries {needle:?}: {seats:?}"
-    );
-    hit.expect("asserted present just above")
-}
-
-/// A transcript of one model turn whose single text block is `payload`.
-pub(super) fn answer(payload: &str) -> Transcript {
-    tx(vec![entry(EntryKind::Model {
-        model_id: "opus".into(),
-        usage: Usage::default(),
-        blocks: vec![Block::Text(payload.into())],
-    })])
-}
+use crate::paint_probe::{screen_sized, seen_of};
+use crate::transcript::{AutoExpand, EntryKind, Transcript};
 
 /// **Finding 2 — the expanded body is shown in full.** A triangle that reveals
 /// a still-cut payload is worse than no triangle, so the run the fold opens

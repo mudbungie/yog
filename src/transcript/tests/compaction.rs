@@ -2,13 +2,14 @@
 //!
 //! Every test here drives [`build`] over a real directory, because the defect
 //! was that `messages/` is a directory something else **writes to and deletes
-//! from** — a hand-built `Vec<Entry>` cannot exhibit it. The painted assertion
-//! goes through `crate::paint_probe`, the one walk.
+//! from** — a hand-built `Vec<Entry>` cannot exhibit it. What the marker then
+//! becomes on the glass is [`row`], split off at the cap on that same seam: a
+//! hole is found by reading a directory, and said by projecting a row.
 
-use std::collections::HashSet;
+mod row;
 
 use super::{AGENT, write_msg, write_summary};
-use crate::transcript::{AutoExpand, Entry, EntryKind, Transcript, build, rows};
+use crate::transcript::{EntryKind, Transcript, build};
 use tempfile::tempdir;
 
 /// A workspace holding exactly these message files, read back as a transcript.
@@ -160,107 +161,4 @@ fn a_wholly_compacted_conversation_has_no_counter_left_to_read() {
     let dir = tempdir().unwrap();
     std::fs::create_dir_all(dir.path().join("agents").join(AGENT).join("messages")).unwrap();
     assert!(build(dir.path(), AGENT).entries.is_empty());
-}
-
-/// A marker as the projection sees it, with the record it carries.
-fn mark_entry(first: usize, last: usize, summary: &str) -> Entry {
-    Entry {
-        name: format!("«{first:03}–{last:03}»"),
-        raw: summary.as_bytes().to_vec(),
-        kind: EntryKind::Compacted {
-            first,
-            last,
-            summary: summary.to_owned(),
-        },
-    }
-}
-
-/// The row projection of `entries` under the given machinery knob.
-fn projected(entries: Vec<Entry>, others: bool) -> Vec<crate::transcript::Row> {
-    rows(
-        &Transcript { entries },
-        "agent",
-        AutoExpand {
-            responses: true,
-            others,
-        },
-        &HashSet::new(),
-    )
-}
-
-#[test]
-fn the_marker_states_how_many_and_which_and_wears_no_role() {
-    let row = projected(vec![mark_entry(1, 12, "gist")], false).remove(0);
-    assert_eq!(row.prefix, "✂ 12 entries compacted away — 001–012");
-    assert_eq!(row.preview, "gist");
-    assert_eq!(row.class, crate::transcript::RowClass::Other);
-    assert_eq!(row.tone, crate::transcript::Tone::Weak);
-    assert!(row.role.is_none(), "nobody is speaking on a cut mark");
-    assert!(
-        row.hover.contains(
-            "nothing \
-             on disk says which summary replaced which span"
-        ),
-        "the hover states the derivation's own limit: {}",
-        row.hover
-    );
-}
-
-#[test]
-fn one_missing_entry_reads_as_one_entry() {
-    let row = projected(vec![mark_entry(4, 4, "")], false).remove(0);
-    assert_eq!(row.prefix, "✂ 1 entry compacted away — 004");
-    assert_eq!(row.preview, "(no summary on this mark)");
-}
-
-#[test]
-fn a_turn_rollup_never_swallows_the_mark() {
-    // A marker is a turn BOUNDARY: were it a step, the collapsed aggregate
-    // would hide behind a fold the one row saying the record was rewritten —
-    // which is the silence this ball closed.
-    let model = |text: &str| Entry {
-        name: format!("00x-{text}.json"),
-        raw: Vec::new(),
-        kind: EntryKind::Model {
-            model_id: "opus".to_owned(),
-            blocks: vec![
-                crate::transcript::Block::Thinking("hmm".to_owned()),
-                crate::transcript::Block::Text(text.to_owned()),
-            ],
-            usage: crate::transcript::Usage::new(),
-        },
-    };
-    let out = projected(
-        vec![model("before"), mark_entry(1, 2, "gist"), model("after")],
-        false,
-    );
-    assert!(
-        out.iter().any(|r| r.prefix.starts_with('✂')),
-        "the mark survived the rollup: {:?}",
-        out.iter().map(|r| r.prefix.clone()).collect::<Vec<_>>()
-    );
-}
-
-#[test]
-fn the_mark_and_its_record_reach_the_glass() {
-    // Through the paint layer, not the row struct: a galley reports the
-    // string that went IN, so only the painted glyphs witness what an
-    // operator can actually read.
-    let t = Transcript {
-        entries: vec![mark_entry(1, 2, "the operator asked about the gate")],
-    };
-    let painted = super::render::painted_with(
-        &t,
-        false,
-        AutoExpand {
-            responses: true,
-            others: true,
-        },
-        &mut HashSet::new(),
-    );
-    assert!(
-        painted.contains("✂ 2 entries compacted away — 001–002"),
-        "got:\n{painted}"
-    );
-    assert!(painted.contains("the operator asked about the gate"));
 }

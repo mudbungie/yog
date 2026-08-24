@@ -2,7 +2,9 @@
 //! the labels each variant wears. The row *vocabulary* it builds with —
 //! [`Row`], [`RowClass`], [`Tone`] — lives in [`super`], which is the only
 //! caller; **how** a row is made of those parts is [`build`], split off at
-//! §12's per-file budget on the seam this doc already drew.
+//! §12's per-file budget on the seam this doc already drew. The one arm that
+//! projects a *hole* rather than something somebody said is [`compacted`],
+//! split off at that same budget on that same seam.
 //!
 //! **Only the tool-result row states its size** ([`build::with_size`], bl-1f75) —
 //! it is the row whose payload the operator cannot guess: `✔ tool result — ok`
@@ -19,24 +21,11 @@ use crate::theme::{Role, message_role};
 use crate::transcript::{Block, Entry, EntryKind, Transcript};
 
 mod build;
+mod compacted;
 
 pub(crate) use build::key;
 use build::{row, with_size};
-
-/// The compaction marker's glyph: this was **cut out** (§11 glyph doctrine —
-/// the words beside it carry the meaning, the glyph only recognizes it).
-const GAP_GLYPH: &str = "✂";
-/// What the marker stands for, on hover. It states the derivation's own
-/// limit as plainly as its finding: nothing on disk links a summary to the
-/// span it replaced, so the compactor's summaries ride the conversation's
-/// first cut mark rather than being guessed onto a gap apiece.
-const COMPACTED_HOVER: &str = "These entries were removed: lernie's compactor squashed them out of the record and \
-     wrote a summary in their place. The counter proves which entries are gone; nothing \
-     on disk says which summary replaced which span, so every summary this conversation \
-     has opens from its first cut mark, in the order they were written.";
-/// The payload of a marker carrying no part of the record — a later gap, or a
-/// compaction that wrote no summary this pane can read.
-const NO_SUMMARY: &str = "(no summary on this mark)";
+use compacted::compacted_row;
 
 /// Rows for one entry: one per model content block, else one for the entry.
 pub(super) fn push_entry(
@@ -239,46 +228,6 @@ fn push_streaming(name: &str, thinking: &str, text: &str, out: &mut Vec<Row>) {
             Some(Role::Model),
         ));
     }
-}
-
-/// **The record was rewritten here** — never another turn in the conversation
-/// (bl-7bd2). The summary is the compactor model's own prose, not the
-/// operator's and not this agent's, so the row wears the empty role seat
-/// (nobody is speaking), the machinery knob's class and the weak tone: one
-/// faded line stating what is missing, folding open onto what lernie put in
-/// its place. A mark carrying no part of the record still says the entries are
-/// gone — what the counter proves never depends on a summary existing.
-fn compacted_row(name: &str, first: usize, last: usize, summary: &str) -> Row {
-    Row {
-        hover: COMPACTED_HOVER.to_string(),
-        ..row(
-            key(name, 0),
-            compacted_prefix(first, last),
-            if summary.is_empty() {
-                NO_SUMMARY
-            } else {
-                summary
-            },
-            RowClass::Other,
-            Tone::Weak,
-            None,
-        )
-    }
-}
-
-/// The prefix seat of a compaction marker: **how many** entries are gone and
-/// **which** counter values they were, in the always-visible slot — the two
-/// facts the surviving counter proves, and the whole of what yog may assert
-/// about a span it never saw. The span reads as one number when one entry went.
-fn compacted_prefix(first: usize, last: usize) -> String {
-    let count = last.saturating_sub(first) + 1;
-    let span = if first == last {
-        format!("{first:03}")
-    } else {
-        format!("{first:03}–{last:03}")
-    };
-    let entries = if count == 1 { "entry" } else { "entries" };
-    format!("{GAP_GLYPH} {count} {entries} compacted away — {span}")
 }
 
 /// What a model turn's speaker label stands for: the model that ran it

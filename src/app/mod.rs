@@ -27,6 +27,12 @@
 /// and the receipt that lands frames later.
 mod acts;
 mod balls;
+/// **Founding the model, and the one signal it sends the worker** (§7.2) — the
+/// pair a caller gets, the first derivation taken synchronously, and
+/// [`AppModel::mark_dirty`]. Split off this root at §12's budget on the seam
+/// the doc above already draws: what a frame *owns* is declared here, how it is
+/// brought into being and how it talks to the worker is there.
+mod boot;
 pub mod cadence;
 mod deletes;
 mod derive;
@@ -56,10 +62,8 @@ mod view;
 use crate::binding::Workspace;
 use crate::fs_watcher::RootKind;
 use crate::keymap::InspectorTab;
-use crate::projects::runner::BlRunner;
-use crate::state::{DirtySet, SearchCell, SnapshotCell, latest_snapshot, new_snapshot_cell};
+use crate::state::{DirtySet, SearchCell, SnapshotCell};
 use crate::ui_state::{Clock, UiState};
-use crate::watch::Mark;
 use clap::Parser;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -194,67 +198,6 @@ pub struct AppModel {
     /// exactly — a window with nothing behind it earns the sentence saying so
     /// rather than a branch.
     acts: acts::Acts,
-}
-
-impl AppModel {
-    /// Build the frame's model **and** the worker's [`Deriver`], taking the
-    /// first derivation synchronously so the window opens on real content and
-    /// the §4.1 startup focus has a roster to derive from.
-    ///
-    /// Returned as a pair rather than spawned here: the thread is the caller's
-    /// (`main.rs` hands it an egui repaint hook; a test drives `step()` by
-    /// hand), and a model that spawned its own thread could not be exercised
-    /// deterministically. This is the same shape the watch bridge always had.
-    pub fn boot(
-        roots: Roots,
-        initial_focus: Option<PathBuf>,
-        clock: Arc<dyn Clock>,
-        balls: Box<dyn BlRunner>,
-        user: Option<String>,
-    ) -> (Self, Deriver) {
-        let ui = UiState::open(roots.ui_json());
-        let dirty = DirtySet::default();
-        let cell = new_snapshot_cell(Arc::new(Snapshot::empty(clock.unix())));
-        let mut deriver = Deriver::new(
-            roots.clone(),
-            Arc::clone(&clock),
-            balls,
-            dirty.clone(),
-            Arc::clone(&cell),
-        );
-        deriver.boot();
-        let derived = latest_snapshot(&cell);
-        let mut model = Self {
-            snap: Arc::clone(&derived),
-            derived,
-            folded: None,
-            roots,
-            ui,
-            focus: Focus::default(),
-            cell,
-            dirty,
-            clock,
-            identity_user: user,
-            search: SearchCell::default(),
-            started: None,
-            raised: None,
-            folded_raise: None,
-            lane: crate::wire::lane::Tail::default(),
-            wire: crate::wire::channels::Channels::default(),
-            wire_refusal: None,
-            acts: acts::Acts::default(),
-        };
-        model.focus = model.startup_focus(initial_focus, &Arc::clone(&model.snap).workspaces);
-        (model, deriver)
-    }
-
-    /// Tell the worker a root changed (§7.2). The frame's *only* outbound
-    /// signal: a dispatched verb names the root it touched and the worker's
-    /// ordinary routing does the rest, so there is no second path in.
-    pub(crate) fn mark_dirty<I: IntoIterator<Item = PathBuf>>(&self, roots: I) {
-        self.dirty
-            .mark_all(roots.into_iter().map(|r| (r, Mark::Watch)));
-    }
 }
 
 /// The roots the model watches (§7.1): every enumerated workspace, the three

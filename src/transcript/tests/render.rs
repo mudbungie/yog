@@ -1,5 +1,9 @@
 //! Headless shape-walk tests for the transcript widget — assert user-visible
-//! text lands in the paint output, and the in-progress tool chip pulses.
+//! text lands in the paint output. The tool rows are [`tools`], split off at
+//! the cap: they are the only ones whose subject is a *repaint schedule* rather
+//! than a string, so they carry a probe of their own.
+
+mod tools;
 
 use crate::transcript::{AutoExpand, Block, Entry, EntryKind, Transcript, Usage};
 use std::collections::HashSet;
@@ -21,29 +25,6 @@ pub(super) fn painted_with(
     folds: &mut HashSet<String>,
 ) -> String {
     crate::paint_probe::paint(|ui| super::plain(ui, t, raw, auto, folds))
-}
-
-/// Second-frame steady-state repaint delay (egui returns 0 on frame one).
-fn repaint_delay(t: &Transcript) -> std::time::Duration {
-    let ctx = egui::Context::default();
-    let auto = AutoExpand::default();
-    let mut folds = HashSet::new();
-    for _ in 0..2 {
-        let _ = ctx.run(input(), |ctx| {
-            egui::CentralPanel::default().show(ctx, |ui| {
-                super::plain(ui, t, false, auto, &mut folds);
-            });
-        });
-    }
-    ctx.run(input(), |ctx| {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            super::plain(ui, t, false, auto, &mut folds);
-        });
-    })
-    .viewport_output
-    .get(&egui::ViewportId::ROOT)
-    .expect("root viewport output present")
-    .repaint_delay
 }
 
 pub(super) fn entry(kind: EntryKind) -> Entry {
@@ -95,78 +76,6 @@ fn model_text_and_thinking_render() {
     assert!(painted.contains("visible answer"));
     assert!(painted.contains("thinking:"), "got:\n{painted}");
     assert!(painted.contains("private reasoning"));
-}
-
-fn tool_use_entry() -> Entry {
-    entry(EntryKind::Model {
-        model_id: "opus".into(),
-        usage: Usage::default(),
-        blocks: vec![Block::ToolUse {
-            id: "toolu_9".into(),
-            name: "Read".into(),
-            input_summary: r#"{"path":"/x"}"#.into(),
-        }],
-    })
-}
-
-#[test]
-fn in_progress_tool_chip_pulses_and_paints() {
-    // No matching tool_result → in progress.
-    let t = tx(vec![tool_use_entry()]);
-    assert!(
-        repaint_delay(&t) < std::time::Duration::from_secs(1),
-        "in-progress tool must schedule a near-term repaint"
-    );
-    let painted = rendered_text(&t, false);
-    assert!(painted.contains("⚙ Read — running"), "got:\n{painted}");
-    assert!(painted.contains(r#"{"path":"/x"}"#));
-}
-
-#[test]
-fn resolved_tool_chip_is_static() {
-    // A matching tool_result elsewhere resolves the call → no pulse.
-    let t = tx(vec![
-        tool_use_entry(),
-        entry(EntryKind::ToolResult {
-            tool_use_id: "toolu_9".into(),
-            content: "file body".into(),
-            is_error: false,
-        }),
-    ]);
-    assert_eq!(
-        repaint_delay(&t),
-        std::time::Duration::MAX,
-        "resolved tools must not pull repaints"
-    );
-    let painted = rendered_text(&t, false);
-    assert!(painted.contains("⚙ Read"), "got:\n{painted}");
-    assert!(!painted.contains("running"));
-}
-
-#[test]
-fn tool_result_renders_content_and_error_glyph() {
-    let ok = tx(vec![entry(EntryKind::ToolResult {
-        tool_use_id: "t".into(),
-        content: "all good".into(),
-        is_error: false,
-    })]);
-    let ok_painted = rendered_text(&ok, false);
-    assert!(ok_painted.contains("all good"));
-    assert!(
-        ok_painted.contains("✔ tool result — ok"),
-        "got:\n{ok_painted}"
-    );
-    let err = tx(vec![entry(EntryKind::ToolResult {
-        tool_use_id: "t".into(),
-        content: "boom".into(),
-        is_error: true,
-    })]);
-    let err_painted = rendered_text(&err, false);
-    assert!(err_painted.contains("boom"));
-    assert!(
-        err_painted.contains("✖ tool result — error"),
-        "got:\n{err_painted}"
-    );
 }
 
 #[test]
