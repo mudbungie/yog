@@ -451,14 +451,33 @@ immediately. The second is not, and that is why this is a script rather than a
 
 **A restart is deferred while a turn is in flight.** A restart SIGTERMs the
 whole control group. The engine survives that — §4.1 state is write-through and
-there is no `on_exit` hook (bl-b54e) — but a `lernie` turn killed between a tool
-call and its result leaves an unpaired tool-use tail, and every later message on
-that conversation is refused by the provider. That is not a crash the next boot
-repairs; it is a wedged conversation. So quiescence is **read**: the substrate
-is linked in-process (§16.7) and the engine's concurrency is threads, so an idle
-`yog serve` is exactly one process and a turn in flight is a child in the same
-cgroup. The service cgroup's process count is therefore the predicate, and it
-needs no yog-side API, no new gesture and no field on the model.
+there is no `on_exit` hook (bl-b54e) — and so, since the pinned substrate, does
+the conversation: a `lernie` turn killed between a tool call and its result
+leaves an unpaired tool-use tail, and lernie **settles** it. At the next drive
+boundary, strictly before delivery, every unanswered `tool_use` in the trailing
+assistant window is committed an in-band `is_error` `tool_result` saying the
+executor died — so the tail pairs, the warrant reads `ModelCallDue`, and an
+ordinary deposit revives the branch (lernie ARCH §6 crash settlement, upstream
+bl-4187, consumed here in bl-4c1f; `src/prompt/dispatch/advance/crash.rs` in the
+`=0.0.11` pin, idempotent because the answered ids are read back out of the
+transcript rather than a cursor). The graceful exit settles its own window the
+same way on the way out (§2.9). The one shape settlement cannot repair — a
+`tool_use` already buried behind a delivered message, which positional pairing
+cannot fix by appending — is unreachable from a restart, because delivery runs
+strictly after settlement.
+
+**What a killed turn costs is the work in flight and the spend that bought it.**
+The tools that were running die mid-execution, whatever side effects they had
+already performed stand, and the next model call is paid again to re-derive from
+a window of error results. That is the reason to defer, and stating it correctly
+is the point: a mechanism defended by a claim that stopped being true is one
+audit away from being deleted by the reader who checks the claim.
+
+**Quiescence is read, not asked for.** The substrate is linked in-process
+(§16.7) and the engine's concurrency is threads, so an idle `yog serve` is
+exactly one process and a turn in flight is a child in the same cgroup. The
+service cgroup's process count is therefore the predicate, and it needs no
+yog-side API, no new gesture and no field on the model.
 
 Nothing is stored. Which version is installed is the binary's own `--version`;
 whether a restart is pending is the running `/proc/<pid>/exe` inode differing

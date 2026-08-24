@@ -11,9 +11,10 @@
 #
 # (1) is always safe while the engine runs: `cargo install` replaces the file
 # by rename, so the running process keeps its own inode and never sees a
-# half-written binary. (2) is NOT always safe, and that is the whole reason
-# this script exists rather than a `cargo install && systemctl restart` line —
-# see `decide`.
+# half-written binary. (2) is NOT always safe — a restart kills whatever turn
+# is in flight, discarding its work and the spend that bought it — and that is
+# the whole reason this script exists rather than a `cargo install && systemctl
+# restart` line. See `decide`.
 #
 # Nothing here is stored. "Which version is installed" is the binary's own
 # answer, "is a restart pending" is a kernel fact, and "is it safe" is read off
@@ -45,13 +46,28 @@ die() { say "$*" >&2; exit 1; }
 # without a server, a release or an agent (`--self-test`). Prints exactly one of
 # `current`, `defer`, `restart`.
 #
-# WHY `defer` EXISTS. A restart SIGTERMs the whole control group, and an agent
-# turn killed between a tool call and its result leaves an unpaired tool-use
-# tail — every later message on that conversation is refused by the provider.
-# The engine itself survives a SIGTERM (§4.1 state is write-through and there
-# is no `on_exit` hook, bl-b54e); the CONVERSATION does not, and no later boot
-# repairs it. So an unattended restart must read quiescence rather than assume
-# it.
+# WHY `defer` EXISTS — and it is NOT that a restart wedges the conversation.
+# It does not. A restart SIGTERMs the whole control group, and a turn killed
+# between a tool call and its result leaves an unpaired tool-use tail, but the
+# pinned lernie SETTLES that tail: at the next drive boundary, strictly before
+# delivery, each unanswered `tool_use` in the trailing assistant window gets an
+# in-band `is_error` `tool_result` saying the executor died, so the tail pairs
+# and an ordinary deposit revives the branch (lernie ARCH §6 crash settlement,
+# upstream bl-4187, consumed in bl-4c1f; `src/prompt/dispatch/advance/crash.rs`
+# in the `=0.0.11` pin, idempotent — answered ids are read back out of the
+# transcript). The graceful exit settles its own window the same way (§2.9),
+# and the one shape settlement cannot repair — a `tool_use` already buried
+# behind delivered mail, unfixable by appending because pairing is positional —
+# cannot arise from a restart, since delivery runs strictly after settlement.
+#
+# What a restart actually destroys is the WORK IN FLIGHT and the SPEND that
+# bought it: the running tools die mid-execution, their partial side effects
+# stand, and the next model call is paid again to re-derive from a window of
+# error results. The engine itself survives a SIGTERM (§4.1 state is
+# write-through and there is no `on_exit` hook, bl-b54e). That is reason enough
+# for an unattended restart to read quiescence rather than assume it — and the
+# reason has to be the true one, because a mechanism defended by a false claim
+# is one audit away from being deleted by whoever checks the claim (bl-286b).
 #
 # WHY THE PROCESS COUNT IS THE PREDICATE. The substrate is linked in-process
 # (§16.7) and the engine's own concurrency is threads, so an idle `yog serve`
