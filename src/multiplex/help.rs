@@ -85,9 +85,15 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  another machine dials by name (`WIRE_HOST=engine.example.com WIRE_PORT=7737`), \
                  a different directory (`WIRE_DIR`), or a rotation (`FORCE=1`). It refuses to \
                  overwrite otherwise, because a rotation distrusts every certificate already \
-                 issued and every seat holding one stops connecting. It shells to `openssl`: \
-                 provisioning is the operator's out-of-channel act and yog links no \
-                 certificate library.",
+                 issued and every seat holding one stops connecting. `WIRE_LEAF=<common-name>` \
+                 asks for the other act instead: issue ONE extra client leaf under that name, \
+                 over the CA already here — no CA, no address, no other leaf. That is the leaf \
+                 a visiting box participates as; carry it, its key and `ca.pem` to that box by \
+                 hand and place them in its `wire/workspaces/<leaf>/` as `client.pem`, \
+                 `client.key` and `ca.pem`, beside an `address` naming this engine. The common \
+                 name INSIDE the certificate is the identity, not the basename, so the rename \
+                 costs nothing. It shells to `openssl`: provisioning is the operator's \
+                 out-of-channel act and yog links no certificate library.",
     },
     HelpRow {
         verb: crate::world::hatch::ENV_SUBCMD,

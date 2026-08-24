@@ -68,8 +68,10 @@ fn yog_seat_sends_over_the_wire_and_exits_on_the_reply() {
     assert_eq!(
         yog::wire::provision::verb::perform(&yog::wire::provision::verb::Plan {
             dir: dir.clone(),
-            address: "127.0.0.1:0".to_owned(),
-            force: false,
+            act: yog::wire::provision::verb::Act::Mint {
+                address: "127.0.0.1:0".to_owned(),
+                force: false,
+            },
         }),
         0,
         "the mint runs"

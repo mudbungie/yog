@@ -1,6 +1,8 @@
 //! The mint: what a box with nothing gets, what a box with something keeps,
 //! and what a rotation costs.
 
+mod issue;
+
 use super::openssl::{eku, run, san, tool};
 use super::*;
 use crate::wire::material::{self, Material};

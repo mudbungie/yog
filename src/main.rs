@@ -192,11 +192,11 @@ fn main() -> eframe::Result<()> {
     )
 }
 
-/// `yog wire-certs` (REMOTE §8, bl-ae05): the operator's explicit mint — the
-/// same recipe the engine's boot performs, reached by a verb. The four
-/// environment readings happen here because the process edge is where every
-/// other environment read in this crate happens (the xdg discipline); the
-/// decision they fold into is `verb::plan`, which is pure and tested.
+/// `yog wire-certs` (REMOTE §8, §8.2; bl-ae05, bl-64a7): the operator's explicit
+/// mint — the recipe the engine's boot performs, reached by a verb — or, under
+/// `WIRE_LEAF`, one extra client leaf. The five environment readings happen
+/// here because the process edge is where every environment read in this crate
+/// happens (the xdg discipline); they fold into `verb::plan`, which is pure.
 fn wire_certs(ambient: &Env) -> ! {
     use yog::wire::provision::verb;
     let read = |key: &str| std::env::var(key).ok();
@@ -207,6 +207,7 @@ fn wire_certs(ambient: &Env) -> ! {
         read(verb::READS[1]),
         read(verb::READS[2]),
         read(verb::READS[3]),
+        read(verb::READS[4]),
     )));
 }
 

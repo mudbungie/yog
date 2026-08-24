@@ -789,7 +789,18 @@ operator's own act for a server another machine dials by name and for a
 rotation. `scripts/wire-certs.sh` was the recipe until bl-ae05 and is retired —
 an installed binary has no repository to find a script in, and two spellings of
 one act drift within a week; `make wire-certs` runs the verb, and its
-`WIRE_DIR`/`WIRE_HOST`/`WIRE_PORT`/`FORCE` interface is unchanged. The server
+`WIRE_DIR`/`WIRE_HOST`/`WIRE_PORT`/`FORCE` interface is unchanged. **`WIRE_LEAF`
+is the fifth reading** *(bl-64a7)* and it selects the recipe's *other* act
+rather than modifying the mint: issue ONE extra client leaf under the common
+name it states, over the CA already here — no CA founded, no address written,
+no other leaf touched. That is §8.2's host half, one more artifact the one
+recipe can be asked for. It refuses three ways, each naming its remedy: a
+common name the registry would refuse (§4.1's rule, spent once — a plain path
+component, never the reserved `local`), a directory with no `ca.key` (a client
+box cannot issue, and the mint never replaces an operator's trust root), and a
+pair already under that name (re-issuing distrusts nothing, so it would be two
+live certificates under one identity; a fresh name is the remedy and rotation
+stays `FORCE=1` over the whole directory). The server
 leaf always carries `IP:127.0.0.1` beside whatever host it is minted for,
 because the window is a client of loopback unconditionally and a certificate
 that named only an operator's public host would refuse the one seat certain to

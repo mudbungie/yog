@@ -54,10 +54,39 @@ pub(super) fn ca(dir: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// One CA-signed leaf: a key, a bare request, then the signature that carries
-/// its SAN and EKU. The subject common name **is** the client identity the
-/// engine reads back off the presented certificate (REMOTE §2), so it comes
-/// from [`Role::common_name`] rather than being spelled here.
+/// One of the three roles' leaves: [`Role`] derives the basename it is written
+/// under, the common name it carries — which **is** the client identity the
+/// engine reads back off the presented certificate (REMOTE §2) — and the two
+/// X.509 facts below.
+pub(super) fn leaf(dir: &Path, role: Role, host: &str) -> Result<(), String> {
+    issue(
+        dir,
+        &role.leaf(),
+        &role.common_name(),
+        &san(role, host),
+        eku(role),
+    )
+}
+
+/// A client leaf under a **stated** common name (REMOTE §8.2, bl-64a7): the
+/// host half of provisioning an entry, and [`Role::Client`]'s own recipe with
+/// the operator's name where the role's would be — the client EKU, and a SAN
+/// naming the leaf itself, because nothing dials a client. No host is named
+/// anywhere in it, which is what lets the pair be carried to whichever box the
+/// operator hands it to.
+///
+/// The pair is written under the common name itself (`<cn>.pem`/`<cn>.key`),
+/// because a directory holding several must say which is which. That basename
+/// is a filing convenience and nothing more: the name **inside** is the
+/// identity (REMOTE §2), and on the client box the pair is placed into
+/// `wire/workspaces/<leaf>/` as `client.pem`/`client.key` (§8.2) without
+/// changing what it authenticates as.
+pub(super) fn stated_leaf(dir: &Path, cn: &str) -> Result<(), String> {
+    issue(dir, cn, cn, &format!("DNS:{cn}"), eku(Role::Client))
+}
+
+/// The issuance itself: a key, a bare request, then the signature that carries
+/// the SAN and EKU it was handed.
 ///
 /// **The extensions are the issuer's, and they are handed over in a file**
 /// (bl-8626). The obvious spelling — `req -addext` to put them in the request
@@ -69,16 +98,11 @@ pub(super) fn ca(dir: &Path) -> Result<(), String> {
 /// model besides: what a certificate asserts is decided by whoever signs it,
 /// not by whoever asked. One recipe, both toolsets — never a second recipe and
 /// never a platform gate.
-pub(super) fn leaf(dir: &Path, role: Role, host: &str) -> Result<(), String> {
-    let name = role.leaf();
+fn issue(dir: &Path, name: &str, cn: &str, san: &str, eku: &str) -> Result<(), String> {
     let key = dir.join(format!("{name}.key"));
     let csr = dir.join(format!("{name}.csr"));
     let ext = dir.join(format!("{name}.{EXT}"));
-    let body = format!(
-        "[{SECTION}]\nsubjectAltName={}\nextendedKeyUsage={}\n",
-        san(role, host),
-        eku(role)
-    );
+    let body = format!("[{SECTION}]\nsubjectAltName={san}\nextendedKeyUsage={eku}\n");
     std::fs::write(&ext, body).map_err(|e| format!("{}: {e}", ext.display()))?;
     tool(&[
         "req",
@@ -90,7 +114,7 @@ pub(super) fn leaf(dir: &Path, role: Role, host: &str) -> Result<(), String> {
         "-nodes",
         "-sha256",
         "-subj",
-        &format!("/CN={}", role.common_name()),
+        &format!("/CN={cn}"),
         "-keyout",
         &key.to_string_lossy(),
         "-out",

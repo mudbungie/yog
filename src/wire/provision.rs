@@ -35,6 +35,12 @@
 //! *that* address is the operator's statement of intent. One fact with one
 //! home (§8), no second knob, and no flag deciding how far a listener reaches.
 //!
+//! **It also issues one extra client leaf on request** ([`issue`], REMOTE §8.2)
+//! — the host half of provisioning an entry, and the same recipe rather than a
+//! second one. That is an act over a trust root that already exists: it founds
+//! no CA, writes no address and touches no other leaf, and the material it
+//! writes still leaves this box in the operator's hand.
+//!
 //! **Nothing complete is ever overwritten.** Every step here asks whether its
 //! artifact is already there, so a second call mints nothing — which is what
 //! makes it safe on every boot. A rotation distrusts every certificate already
@@ -110,6 +116,55 @@ pub fn mint(dir: &Path, address: &str, force: bool) -> Result<(), String> {
             .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))?;
     }
     Ok(())
+}
+
+/// Issue **one extra client leaf** under a stated common name — the host half
+/// of provisioning an entry (REMOTE §8.2, bl-64a7). The operator mints a leaf
+/// for a visiting box; the anchors, that leaf and its key are then carried to
+/// it by hand, which is §1.4 verbatim and forever. Nothing here is reachable
+/// from the channel, and nothing here founds a trust root: this is one more
+/// artifact the one recipe can be asked for, over a CA that already exists.
+///
+/// It refuses three ways, each naming its remedy:
+///
+/// - **An identity the registry would refuse.** The same rule, spent once
+///   ([`Client::parse`](crate::registry::Client::parse)): a common name is one
+///   path component and `local` is reserved for the certificate-less in-world
+///   callers (§4.1). A name that could carry a separator is a name that could
+///   address the filesystem — here, and again on the box that files the pair.
+/// - **No CA key.** A box holding an operator's `ca.pem` with no key beside it
+///   is a *client* machine, and the mint never replaces an operator's trust
+///   root (§8). `ca.key`'s presence is exactly the question "can this box
+///   mint?", so it is exactly the question asked here.
+/// - **A pair already under that name.** Re-issuing distrusts nothing — the
+///   certificate already carried away stays valid until the CA behind it is
+///   rotated — so it would put two live certificates under one identity for no
+///   gain. A fresh common name is the remedy; rotating the trust root stays the
+///   verb's `FORCE` over the whole directory.
+pub(crate) fn issue(dir: &Path, cn: &str) -> Result<(), String> {
+    crate::registry::Client::parse(cn).map_err(|refusal| {
+        format!(
+            "{refusal} — a common name is one path component, and {:?} is reserved for the              in-world callers; state another one",
+            crate::registry::LOCAL
+        )
+    })?;
+    if !dir.join(CA_KEY).is_file() {
+        return Err(format!(
+            "{} holds no {CA_KEY}: only the box that founded this trust root can issue under it \
+             — run this where the CA lives",
+            dir.display()
+        ));
+    }
+    let pair = [format!("{cn}.pem"), format!("{cn}.key")];
+    if pair.iter().any(|name| dir.join(name).is_file()) {
+        return Err(format!(
+            "{} already holds {}: re-issuing distrusts nothing, so both would be live under one \
+             identity — state another common name, or rotate the whole directory with FORCE=1",
+            dir.display(),
+            pair.join(" or ")
+        ));
+    }
+    openssl::stated_leaf(dir, cn)
 }
 
 /// Every file the mint writes — the rotation's delete list, and the summary a

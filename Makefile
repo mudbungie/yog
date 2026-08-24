@@ -49,6 +49,10 @@ YOG_PIDFILE   := $(YOG_DATA_HOME)/yog.pid
 WIRE_DIR      ?= $(YOG_DATA_HOME)/wire
 WIRE_HOST     ?= 127.0.0.1
 WIRE_PORT     ?= 7737
+# Set to a common name to ask the same recipe for ONE extra client leaf instead
+# of a mint (REMOTE §8.2) — the leaf a visiting box participates as. Empty is
+# unset, so the default target is the mint it has always been.
+WIRE_LEAF     ?=
 
 all: check
 
@@ -136,11 +140,16 @@ beat-audit:
 # Nothing it writes is in the repo — `WIRE_DIR` is under the yog data root,
 # beside the world. Refuses to overwrite; `FORCE=1` rotates, which distrusts
 # every certificate already issued.
+# `WIRE_LEAF=<common-name>` asks for the other act (REMOTE §8.2): one extra
+# client leaf under that name, over the CA already here — the host half of
+# provisioning an entry on a visiting box. The pair is then carried to that box
+# by hand, which is §1.4 verbatim and forever.
 #   make wire-certs
 #   make wire-certs WIRE_HOST=engine.example.com WIRE_PORT=7737
+#   make wire-certs WIRE_LEAF=phone
 wire-certs:
 	@WIRE_DIR="$(WIRE_DIR)" WIRE_HOST="$(WIRE_HOST)" WIRE_PORT="$(WIRE_PORT)" \
-		cargo run --quiet -- wire-certs
+		WIRE_LEAF="$(WIRE_LEAF)" cargo run --quiet -- wire-certs
 
 leak-scan:
 	@scripts/leak-scan.sh --self-test
