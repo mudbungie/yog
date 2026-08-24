@@ -70,6 +70,17 @@ pub struct Entry {
     pub channel: Result<Material, String>,
 }
 
+impl Entry {
+    /// **This entry, seated** — the one place an entry's material becomes a
+    /// client of its host. Its `Err` is the entry's own sentence where the
+    /// material would not read, and the seat's where it read but will not open;
+    /// both are one fact to every caller — *this channel cannot be dialled, and
+    /// here is why* — so there is one function and not one per cause.
+    pub(crate) fn seat(&self) -> Result<super::client::Seat, String> {
+        super::client::Seat::open(&self.channel.clone()?)
+    }
+}
+
 /// Every entry a composed world holds, sorted by [`leaf`](Entry::leaf).
 pub fn entries(world: &Env) -> Vec<Entry> {
     read_dir(&material::dir(world).join(ENTRIES))

@@ -78,7 +78,11 @@ fn a_held_read_does_not_delay_the_standing_set() {
 
     let (mut tail, end) = pair();
     watching(&mut tail);
-    let mut lane = Lane::new(lane_seat, end, Arc::new(NoRepaint));
+    let mut lane = Lane::new(
+        crate::wire::dial::Dial::of(lane_seat),
+        end,
+        Arc::new(NoRepaint),
+    );
     let held = std::thread::spawn(move || lane.turn());
 
     // The lane is parked on a read that has not answered. The standing set's

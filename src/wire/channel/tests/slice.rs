@@ -26,7 +26,7 @@ fn an_entry_that_landed_nothing_still_wears_its_leaf() {
 #[test]
 fn a_half_provisioned_entry_answers_its_own_sentence() {
     let mut channel = Channel::entry(
-        Entry {
+        &Entry {
             channel: Err("cobalt is an empty entry".to_owned()),
             ..entry("cobalt", "home")
         },

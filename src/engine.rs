@@ -68,6 +68,17 @@ pub struct Engine {
     /// and a `yog serve` never does, which is the whole difference between the
     /// two faces here.
     wire_end: Option<crate::wire::link::LinkEnd>,
+    /// **The same, once per §8.2 entry** (bl-670c): what each entry channel is,
+    /// and the end its own asker answers on. Minted in one act with the model's
+    /// half ([`channels::compose`](crate::wire::channels::compose)), so the
+    /// pairing is the composition's rather than a join two lists keep in step.
+    ///
+    /// Taken by [`window_wire`](Self::window_wire) and **not gated**: a second
+    /// call already answers `None` on the loopback channel's own end, which is
+    /// the one wire a window cannot be a window without, so a second gate here
+    /// would be the same fact with a second home. A `yog serve` never takes
+    /// them: a headless face is nobody's window and is a client of no other box.
+    entry_ends: Vec<crate::wire::channels::EntryEnd>,
     /// The follow lane's engine-side end (REMOTE §3, bl-73e7), minted and taken
     /// on the read path's own terms — one lane per engine, and a `yog serve`
     /// never takes it.
@@ -142,8 +153,13 @@ impl Engine {
         let (link, wire_end) = crate::wire::link::pair();
         // …and one channel per §8.2 entry beside it (bl-028a), composed here
         // because the engine is what holds the world. Zero entries is the local
-        // channel alone — the general path with empty inputs.
-        model.adopt_wire(crate::wire::channels::Channels::compose(world, link));
+        // channel alone — the general path with empty inputs. Since bl-670c the
+        // composition hands back the far end of every entry channel too, so a
+        // window can put an asker on each: one thread, one seat and one slice
+        // per channel, which is what makes an unreachable entry cost only its
+        // own rows.
+        let (channels, entry_ends) = crate::wire::channels::compose(world, link);
+        model.adopt_wire(channels);
         // The follow lane's two ends (REMOTE §3, bl-73e7), minted here for the
         // read path's reason exactly. The §7.2 live tail used to be a follower
         // thread on this engine writing into the model's own RAM; it is a held
@@ -243,6 +259,7 @@ impl Engine {
             _sentry: sentry,
             _pilot: pilot,
             wire_end: Some(wire_end),
+            entry_ends,
             lane_end: Some(lane_end),
             post_end: Some(post_end),
             repaint,

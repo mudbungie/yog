@@ -24,9 +24,11 @@
 //!
 //! **A channel nobody answers is the ordinary empty state**, not a case: a
 //! [`Link`] whose far end was never taken lands nothing, which is the same code
-//! path — and the same paint — as an answer that has not arrived yet. Every
-//! entry channel is in exactly that posture until bl-670c attaches an asker to
-//! it; what the roster shows for one meanwhile is [`Channel::rows`]' claim row.
+//! path — and the same paint — as an answer that has not arrived yet. That is
+//! the posture of a model composed without an engine behind it (a fixture,
+//! `Channels::default`); a booted one has an [`asker`](super::asker) on every
+//! channel since bl-670c, each on that entry's own material and each failing
+//! only itself.
 
 /// The origin and its mapping — the value half, split off at §12's band.
 mod origin;
@@ -66,18 +68,10 @@ impl Channel {
     /// ([`Channels::compose`](super::channels::Channels::compose)) because no
     /// thread asks an entry yet — that is bl-670c's. Its refusal is the
     /// entry's own.
-    pub fn entry(held: Entry, link: Link) -> Self {
-        let Entry {
-            leaf,
-            workspace,
-            channel,
-        } = held;
+    pub fn entry(held: &Entry, link: Link) -> Self {
         Self {
-            origin: Origin::Entry {
-                leaf,
-                host: workspace,
-            },
-            refusal: channel.err(),
+            origin: Origin::of(held),
+            refusal: held.channel.clone().err(),
             link,
         }
     }
@@ -95,9 +89,9 @@ impl Channel {
         if let Some(said) = &self.refusal {
             return Some(Err(said.clone()));
         }
-        let carried = self.carried(question);
+        let carried = self.origin.carried(question);
         let landed = self.link.ask(&carried)?;
-        Some(landed.map(|reply| self.labelled(reply)))
+        Some(landed.map(|reply| self.origin.labelled(reply)))
     }
 
     /// This channel's slice of the union roster (§8.2), each row labelled.
@@ -106,7 +100,8 @@ impl Channel {
     /// a workspace this box participates in, so it wears a row from the moment
     /// the operator provisions it, carrying the zeros it honestly has — the
     /// §3.4 raise claim's shape one noun over (`AppModel::raised_rows`), and
-    /// the row bl-670c's asker fills and bl-f29c paints unreachable.
+    /// the row this channel's asker fills once the host answers (bl-f29c paints
+    /// the one that never does).
     pub(crate) fn rows(&mut self) -> Vec<RosterRow> {
         let landed = self.ask(&codec::encode(&Gesture::Ask(Query::Workspaces)));
         let answered = match landed {
@@ -140,36 +135,6 @@ impl Channel {
     #[cfg(test)]
     pub(crate) fn awaiting(&self) -> bool {
         self.link.awaiting()
-    }
-
-    /// `question` as the far side reads it. Undecodable, naming no workspace,
-    /// and naming one this channel does not rename are one branch: nothing to
-    /// rewrite, so the envelope crosses as it was written.
-    fn carried(&self, question: &Value) -> Value {
-        let rewritten = codec::decode(question).ok().and_then(|gesture| {
-            let named = gesture.workspace()?;
-            let host = self.origin.outbound(&named)?;
-            Some(codec::encode(&gesture.with_workspace(&host)))
-        });
-        rewritten.unwrap_or_else(|| question.clone())
-    }
-
-    /// A landed reply in this box's spelling — the roster's rows renamed back
-    /// to the leaf. It is the one reply that *identifies* a workspace and also
-    /// crosses an entry channel today; the board's and the monitor's do neither
-    /// until the fan-out rung gives them a channel to cross.
-    fn labelled(&self, reply: Reply) -> Reply {
-        match reply {
-            Reply::Workspaces(mut view) => {
-                for row in &mut view.rows {
-                    if let Some(leaf) = self.origin.inbound(&row.workspace) {
-                        row.workspace = leaf;
-                    }
-                }
-                Reply::Workspaces(view)
-            }
-            other => other,
-        }
     }
 }
 

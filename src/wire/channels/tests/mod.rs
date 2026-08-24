@@ -15,10 +15,9 @@ use super::Channels;
 use crate::boundary::reply::{Reply, Workspaces, WsRow};
 use crate::boundary::{Gesture, Query, codec};
 use crate::wire::channel::{Channel, Origin};
-use crate::wire::entries::{ENTRIES, Entry};
+use crate::wire::entries::Entry;
 use crate::wire::link::{Link, LinkEnd};
 use serde_json::Value;
-use tempfile::TempDir;
 
 /// A provisioned entry naming `leaf` here and `host` there.
 fn entry(leaf: &str, host: &str) -> Entry {

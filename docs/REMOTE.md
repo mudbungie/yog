@@ -1188,10 +1188,58 @@ nothing extra is asked.
 **An entry wears a row before it answers.** The entry IS a workspace this box
 participates in, so it appears in the roster from the moment the operator
 provisions it, carrying the zeros it honestly has — the §3.4 raise claim's shape
-one noun over. Nothing fills those zeros yet: every entry channel's link is one
-nobody answers until the askers land, and the world-spanning reads this section
-says fan out and union — search, attention, the board — still ask this window's
-own engine alone.
+one noun over. What fills those zeros is the entry's own asker, below.
+
+**As landed, the four threads (bl-670c).** The window attaches to every channel
+it holds, and the four halves of that attachment differ by what each does with
+the set rather than by any second mechanism.
+
+- **One asker per channel** — its own thread, its own seat on that entry's own
+  material, its own slice. That is where the isolation is: a seat's dial is
+  bounded by the kernel's connect, so a host off the network parks one thread
+  while every other channel keeps being answered on its own. This section's
+  *"the window's cost is linear — one channel, one asker pass per cadence
+  period, per entry"* is that cost, paid deliberately. **Only the loopback
+  channel seats the window** (§4.1): a registration is a file on the host's
+  disk, written by the operator who owns that box, and nothing on this side of
+  the wire may write one.
+- **The poster routes**, sending each act down the channel the workspace it
+  names resolves to — which is what makes §7's amended fact-locality true for
+  ACTS: a foreign workspace's seen and pin gestures land at its host. Exactly
+  once is untouched and structural, routing picking a channel rather than
+  duplicating one. It stays a single thread: acts were serialized among
+  themselves from the day that thread existed, because *"an act runs as long as
+  the verb behind it"*, so a dead entry's act is a slow act rather than a new
+  class — and the reads that must never wait behind one have a thread each.
+- **The lane resolves**, because one conversation is focused: it is dialled at
+  whichever channel hosts that conversation's workspace, and a subject crossing
+  the boundary is the re-ask the lane already performs whenever a subject moves.
+- **The searcher fans out** and publishes the union *as it arrives*, local
+  channel first and then the entries in leaf order. Each host's block stays
+  ranked and bounded by that host — no global ordering, dedupe or clock is
+  promised across engines — and the union is not re-cut to `MAX`, which would
+  silently delete a whole host's answer to keep a bound already kept once per
+  engine. An entry's refusal is named with the entry that gave it; the local
+  channel's is not, an unattributed sentence having always meant this window's
+  own engine.
+
+**The union's collision is a fact about the ROSTER, and only the roster asks
+it.** A read of a colliding name refuses with the sentence above. An act, a
+follow and a search hold no roster and need none: *"an entry that exists is the
+answer to its name even when it cannot be dialled"* answers them outright, which
+is the rule `yog seat` has resolved by since bl-4e31. Two readings, one remedy —
+rename the entry.
+
+**A remote name still has no local PATH, on purpose.** `Snapshot::ws_path`
+resolves the *painted enumeration*, whose members are directories on this box;
+a workspace hosted elsewhere has none, so `focused_workspace` answers `None` for
+one. Every surface whose content is a name-addressed wire read works over the
+union unchanged — the roster, conversations, the transcript, marks — and every
+surface that still wants a path is one whose subject is a file on **this** box:
+config editing, the ball store, a spawn's working directory. Withholding those
+is correct rather than pending. The one residual is the frame's implicit ack
+(`ui.json`, keyed by path), which records nothing for a remote conversation
+while the explicit `MarkSeen` act routes to its host like any other.
 
 **How material reaches an entry** — §1.4 verbatim, forever. On the host, the
 operator mints a leaf for the visiting box (`yog wire-certs` issues an extra

@@ -44,7 +44,11 @@ fn wired(tmp: &TempDir, says: Vec<Value>) -> (Listener, Poster, Post) {
     let (post, outbox) = pair();
     (
         listener,
-        Poster::new(seat, outbox, Arc::new(NoRepaint)),
+        Poster::new(
+            crate::wire::dial::Dial::of(seat),
+            outbox,
+            Arc::new(NoRepaint),
+        ),
         post,
     )
 }
@@ -74,7 +78,11 @@ fn a_dead_engine_lands_a_sentence_rather_than_blocking() {
     let seat = crate::wire::client::Seat::open(&material(tmp.path(), Role::Window, NO_LISTENER))
         .expect("seat");
     let (mut post, outbox) = pair();
-    let mut poster = Poster::new(seat, outbox, Arc::new(NoRepaint));
+    let mut poster = Poster::new(
+        crate::wire::dial::Dial::of(seat),
+        outbox,
+        Arc::new(NoRepaint),
+    );
     let ticket = post.send(&json!({"op": "scan", "workspace": "home"}));
     assert!(poster.pass());
     post.settle();

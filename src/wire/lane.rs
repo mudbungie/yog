@@ -29,6 +29,16 @@
 //! **The question is its own key**, again as `link`'s is: a frame carries the
 //! envelope text it answers, so a subject that moved cannot land the previous
 //! conversation's tail on the new one.
+//!
+//! **One lane, dialled at whichever channel hosts the focused conversation**
+//! (REMOTE §8.2, bl-670c). The lane does not fan out, because one conversation
+//! is focused: it *resolves*, exactly as the poster routes an act — the
+//! subject names a workspace, an entry is the answer to its leaf, and every
+//! other name is this window's own engine's ([`Dial`](super::dial::Dial)). A
+//! subject that moves from a local conversation to a remote one is the same
+//! re-ask the lane already performs when a subject moves at all; the seat it
+//! re-asks on is the only thing that differs, and nothing above this line
+//! notices.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -42,7 +52,7 @@ use crate::git_tree::Stream;
 use crate::watch::Repaint;
 
 use super::asker::ASK_PERIOD;
-use super::client::Seat;
+use super::dial::Dial;
 
 /// The frame's end of the lane: the conversation it wants followed, and the
 /// newest fold that has arrived for it.
@@ -153,10 +163,10 @@ impl TailEnd {
     }
 }
 
-/// One window's follow lane: its own seat on the wire, its end of the frame's
-/// hand-off, and the face to wake when a frame lands.
+/// One window's follow lane: its own seats on every channel the window holds,
+/// its end of the frame's hand-off, and the face to wake when a frame lands.
 pub struct Lane {
-    seat: Seat,
+    dial: Dial,
     end: TailEnd,
     repaint: Arc<dyn Repaint>,
 }
@@ -165,8 +175,8 @@ impl Lane {
     /// Assemble the lane. Built by [`Engine::lane`](crate::engine::Engine::lane)
     /// so a test can drive [`turn`](Self::turn) by hand — the
     /// [`Asker`](super::asker::Asker) precedent exactly.
-    pub fn new(seat: Seat, end: TailEnd, repaint: Arc<dyn Repaint>) -> Self {
-        Self { seat, end, repaint }
+    pub fn new(dial: Dial, end: TailEnd, repaint: Arc<dyn Repaint>) -> Self {
+        Self { dial, end, repaint }
     }
 
     /// One turn: hold the line on whatever the frame is following, until the
@@ -175,13 +185,13 @@ impl Lane {
     /// far end is answering at all, and therefore whether to re-ask at once or
     /// to wait a period first.
     pub fn turn(&mut self) -> bool {
-        let Self { seat, end, repaint } = self;
+        let Self { dial, end, repaint } = self;
         let Some(question) = end.standing() else {
             return false;
         };
         let key = question.to_string();
         let mut landed = false;
-        let _ = seat.followed(&question, &mut |frame| {
+        let _ = dial.followed(&question, &mut |frame| {
             let Ok(Reply::Follow(stream)) = frame else {
                 return false;
             };

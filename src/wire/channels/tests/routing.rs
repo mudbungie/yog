@@ -11,7 +11,10 @@ use super::*;
 fn a_name_an_entry_holds_goes_down_that_entrys_channel() {
     let (local, mut local_end) = crate::wire::link::pair();
     let (remote, mut remote_end) = crate::wire::link::pair();
-    let mut set = Channels::held(local, vec![Channel::entry(entry("cobalt", "home"), remote)]);
+    let mut set = Channels::held(
+        local,
+        vec![Channel::entry(&entry("cobalt", "home"), remote)],
+    );
     assert_eq!(set.ask(&about("cobalt")), None);
     frame(&mut set, &[about("cobalt")]);
     assert_eq!(
@@ -31,7 +34,10 @@ fn a_name_an_entry_holds_goes_down_that_entrys_channel() {
 fn every_other_name_goes_to_this_windows_own_engine() {
     let (local, mut local_end) = crate::wire::link::pair();
     let (remote, mut remote_end) = crate::wire::link::pair();
-    let mut set = Channels::held(local, vec![Channel::entry(entry("cobalt", "home"), remote)]);
+    let mut set = Channels::held(
+        local,
+        vec![Channel::entry(&entry("cobalt", "home"), remote)],
+    );
     frame(&mut set, &[about("ops")]);
     assert!(local_end.standing().contains(&about("ops")));
     assert_eq!(
@@ -49,7 +55,7 @@ fn a_leaf_that_collides_with_a_local_name_refuses() {
     let (local, mut local_end) = crate::wire::link::pair();
     let mut set = Channels::held(
         local,
-        vec![Channel::entry(entry("home", "home"), Link::default())],
+        vec![Channel::entry(&entry("home", "home"), Link::default())],
     );
     answer(&mut set, &mut local_end, &[], &listing(&["home"]));
     assert_eq!(
@@ -85,8 +91,8 @@ fn a_half_provisioned_entry_does_not_disturb_the_rest_of_the_roster() {
     let mut set = Channels::held(
         local,
         vec![
-            Channel::entry(broken, Link::default()),
-            Channel::entry(entry("zinc", "zinc"), Link::default()),
+            Channel::entry(&broken, Link::default()),
+            Channel::entry(&entry("zinc", "zinc"), Link::default()),
         ],
     );
     answer(&mut set, &mut local_end, &[], &listing(&["ops"]));

@@ -115,7 +115,11 @@ fn wired(tmp: &TempDir, says: Vec<Value>) -> (Listener, Lane, Tail) {
     ))
     .expect("seat");
     let (tail, end) = pair();
-    (listener, Lane::new(seat, end, Arc::new(NoRepaint)), tail)
+    (
+        listener,
+        Lane::new(crate::wire::dial::Dial::of(seat), end, Arc::new(NoRepaint)),
+        tail,
+    )
 }
 
 /// One frame's dance at the seat: settle, then declare and read — the order
@@ -159,7 +163,7 @@ fn every_frame_the_engine_writes_reaches_the_seat_and_the_end_is_told() {
     ))
     .expect("seat");
     let (mut tail, end) = pair();
-    let mut lane = Lane::new(seat, end, Arc::new(NoRepaint));
+    let mut lane = Lane::new(crate::wire::dial::Dial::of(seat), end, Arc::new(NoRepaint));
 
     assert_eq!(watching(&mut tail), None, "nothing has crossed yet");
     let held = std::thread::spawn(move || lane.turn());
@@ -194,7 +198,7 @@ fn a_lane_with_no_engine_lands_nothing_and_says_so() {
     let seat = crate::wire::client::Seat::open(&material(tmp.path(), Role::Window, NO_LISTENER))
         .expect("seat");
     let (mut tail, end) = pair();
-    let mut lane = Lane::new(seat, end, Arc::new(NoRepaint));
+    let mut lane = Lane::new(crate::wire::dial::Dial::of(seat), end, Arc::new(NoRepaint));
     watching(&mut tail);
     assert!(!lane.turn(), "no engine, no frames");
     assert_eq!(declared(&mut tail), None);

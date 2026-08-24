@@ -12,7 +12,10 @@
 //! leaf ([`inbound`](Origin::inbound)). Neither direction exists for
 //! [`Local`](Origin::Local): there is no second namespace to map into.
 
-use crate::boundary::reply::WsRow;
+use crate::boundary::codec;
+use crate::boundary::reply::{Reply, WsRow};
+use crate::wire::entries::Entry;
+use serde_json::Value;
 
 /// **Which channel a workspace came from** (§8.2) — a fact painted on the row,
 /// never a mode the window is in.
@@ -28,6 +31,16 @@ pub enum Origin {
 }
 
 impl Origin {
+    /// One [`Entry`] as an origin — **the one place an entry becomes a
+    /// channel's identity**, so the leaf and the host-side name are read off
+    /// the directory once and every consumer below reasons in this value.
+    pub(crate) fn of(held: &Entry) -> Self {
+        Self::Entry {
+            leaf: held.leaf.clone(),
+            host: held.workspace.clone(),
+        }
+    }
+
     /// The client's name for this channel — the entry leaf, `None` for
     /// [`Local`](Self::Local). The label a row wears, and the token a gesture
     /// resolves against.
@@ -48,6 +61,18 @@ impl Origin {
         }
     }
 
+    /// **A sentence this channel gave, attributed to it** — for a reader with
+    /// several channels' answers in one list and no other way to tell which
+    /// refused (the searcher's union). The local channel adds nothing, because
+    /// an unattributed sentence has always meant this window's own engine and a
+    /// box holding no entry must read byte for byte as it did.
+    pub(crate) fn attributed(&self, said: &str) -> String {
+        match self.label() {
+            None => said.to_owned(),
+            Some(_) => format!("{}: {said}", self.held_by()),
+        }
+    }
+
     /// `name` as the far side spells it, or `None` where the two agree and the
     /// gesture crosses byte for byte — which is every name but the one an entry
     /// renames.
@@ -59,10 +84,47 @@ impl Origin {
     }
 
     /// The inverse: `name` as this box spells it, `None` where they agree.
-    pub(super) fn inbound(&self, name: &str) -> Option<String> {
+    fn inbound(&self, name: &str) -> Option<String> {
         match self {
             Self::Entry { leaf, host } if name == host && host != leaf => Some(leaf.clone()),
             _ => None,
+        }
+    }
+
+    /// **`question` as this channel's far side reads it** — the outbound
+    /// direction, spent. Undecodable, naming no workspace, and naming one this
+    /// channel does not rename are one branch: nothing to rewrite, so the
+    /// envelope crosses byte for byte as it was written.
+    ///
+    /// Every write path spends the mapping here and only here — the frame's
+    /// standing reads ([`Channel::ask`](super::Channel::ask)), the window's
+    /// acts and its follow lane ([`Dial`](crate::wire::dial::Dial)), and the
+    /// `yog seat` verb ([`seat::channel`](crate::wire::seat)). One site, so a
+    /// gesture cannot cross renamed down one path and unrenamed down another.
+    pub(crate) fn carried(&self, question: &Value) -> Value {
+        let rewritten = codec::decode(question).ok().and_then(|gesture| {
+            let named = gesture.workspace()?;
+            let host = self.outbound(&named)?;
+            Some(codec::encode(&gesture.with_workspace(&host)))
+        });
+        rewritten.unwrap_or_else(|| question.clone())
+    }
+
+    /// **A landed reply in this box's spelling** — the inbound direction,
+    /// spent. The roster's rows are renamed back to the leaf; it is the one
+    /// reply that *identifies* a workspace by name, so every other kind lands
+    /// as it was answered.
+    pub(crate) fn labelled(&self, reply: Reply) -> Reply {
+        match reply {
+            Reply::Workspaces(mut view) => {
+                for row in &mut view.rows {
+                    if let Some(leaf) = self.inbound(&row.workspace) {
+                        row.workspace = leaf;
+                    }
+                }
+                Reply::Workspaces(view)
+            }
+            other => other,
         }
     }
 }

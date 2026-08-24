@@ -23,17 +23,24 @@
 //! question costs a look at the composed roster, and it is asked only when an
 //! entry claims the name — the general path with empty inputs, not a case.
 //!
-//! **What is NOT here.** No channel is *dialled* from this file: the entry
-//! channels' links are ones nobody answers until bl-670c attaches an asker to
-//! each, so today a routed question lands nothing and paints the honest empty
-//! state. The world-spanning reads that §8.2 says fan out and union — search,
-//! attention, the board — still ask this window's own engine alone; they are
-//! bl-670c's, and the roster is the union this rung composes.
+//! **What is NOT here.** No channel is *dialled* from this file. [`compose`]
+//! mints each entry channel's link **pair** and hands the far end back to the
+//! engine, which puts one [`asker`](super::asker) on each — its own thread, its
+//! own seat, its own material — so a routed question is answered by the engine
+//! that hosts it and an entry nobody can reach costs only its own slice. The
+//! seats those threads dial are [`Dial`](super::dial::Dial), this set seen from
+//! the other end of the same links.
+
+/// **Composing the set from a world** (bl-670c) — the entries read, a link pair
+/// minted per channel, and the far ends handed back for the engine's askers.
+/// Split from the set itself at §12's band: this is the one arm that touches
+/// the disk, and everything below it is a union over values.
+mod compose;
+pub use compose::{EntryEnd, compose};
 
 use super::channel::{Channel, RosterRow};
 use super::link::{Landed, Link};
 use crate::boundary::codec;
-use crate::xdg::Env;
 use serde_json::Value;
 
 /// Every channel this window holds: its own engine's, and one per entry.
@@ -63,23 +70,6 @@ impl Channels {
     /// own boot) states that rather than composing an empty one.
     pub fn of(local: Link) -> Self {
         Self::held(local, Vec::new())
-    }
-
-    /// The whole set: the window's own engine over `local`, plus one channel
-    /// per entry `world` holds, in leaf order (`entries` sorts).
-    ///
-    /// **Each entry's link is one nobody answers**, which is why a routed
-    /// question lands nothing today: the threads that answer them are bl-670c's,
-    /// and a link with no far end is the same code path as one whose answer has
-    /// not arrived.
-    pub fn compose(world: &Env, local: Link) -> Self {
-        Self::held(
-            local,
-            super::entries::entries(world)
-                .into_iter()
-                .map(|held| Channel::entry(held, Link::default()))
-                .collect(),
-        )
     }
 
     /// The set from channels already built — what the two constructors above
@@ -131,10 +121,11 @@ impl Channels {
     /// Whether anything standing is still unanswered — **the local channel's
     /// question**, which is a driven frame's settle condition (bl-44e9).
     ///
-    /// The union would never settle while an entry channel's link has no
-    /// answerer, and every one of them is in that posture until bl-670c;
-    /// widening this before there is a thread to answer would hang the driver
-    /// rather than describe it.
+    /// Deliberately not the union's. An entry channel's answer comes from
+    /// another box, so a driver that settled on it would wait on somebody
+    /// else's network to decide when a *local* frame is finished — and a driven
+    /// world composes no entries at all, so widening this would describe
+    /// nothing it does not already describe.
     #[cfg(test)]
     pub fn awaiting(&self) -> bool {
         self.local.awaiting()

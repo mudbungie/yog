@@ -39,7 +39,7 @@ fn entry(leaf: &str, host: &str) -> Entry {
 /// seat, played by the test.
 fn wired(held: Entry) -> (Channel, LinkEnd) {
     let (link, end) = crate::wire::link::pair();
-    (Channel::entry(held, link), end)
+    (Channel::entry(&held, link), end)
 }
 
 /// One workspace question, encoded the way `shell::wire` encodes it.

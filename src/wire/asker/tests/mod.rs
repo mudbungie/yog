@@ -1,5 +1,14 @@
 //! The window as a wire client of loopback: it seats itself, it asks, it lands
 //! decoded replies — and it never hands the frame anything it had to wait for.
+//!
+//! The fixtures live here and the beats are split at §12's pre-split band along
+//! the module's own seam: [`channel`] is what differs **per channel** (bl-670c)
+//! — the loopback asker seating its window, an entry asker seating nothing and
+//! answering its own sentence — and everything here is the read path each of
+//! them shares.
+
+/// What one channel's asker does that the others do not.
+mod channel;
 
 use super::*;
 use crate::binding::{Workspace, WorkspaceKind};
@@ -76,55 +85,6 @@ fn wired(tmp: &TempDir, says: Vec<serde_json::Value>, names: &[&str]) -> (Listen
         Arc::new(NoRepaint),
     );
     (listener, asker, link)
-}
-
-/// The whole read path in one test: the window seats its own leaf, asks over
-/// loopback mTLS presenting that leaf, and the frame reads a decoded `Reply`
-/// it never waited for.
-#[test]
-fn the_window_seats_itself_and_paints_a_decoded_reply() {
-    let tmp = TempDir::new().expect("tmp");
-    let (_listener, mut asker, mut link) = wired(
-        &tmp,
-        vec![json!({"ok": true, "kind": "clients", "rows": [
-            {"client": "laptop", "present": true, "tools": []}]})],
-        &["home", "away"],
-    );
-    // Nothing declared: a pass still seats the window, and asks nothing.
-    assert_eq!(asker.pass(), 0);
-    let window = crate::registry::window();
-    assert_eq!(
-        crate::registry::registered(tmp.path(), &window),
-        ["away".to_owned(), "home".to_owned()].into_iter().collect(),
-        "the engine seats its own window in every workspace it enumerates"
-    );
-
-    let question = json!({"op": "clients", "workspace": "home"});
-    assert!(frame(&mut link, &question).is_none(), "nothing landed yet");
-    frame(&mut link, &question);
-    assert_eq!(asker.pass(), 1);
-    let Some(Ok(Reply::Clients(rows))) = frame(&mut link, &question) else {
-        panic!("the reply decodes to the roster");
-    };
-    assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0].client, "laptop");
-    assert!(rows[0].present);
-}
-
-/// A registration already written is one directory read, not a second write —
-/// which is what makes the seating free on every pass.
-#[test]
-fn a_seating_that_is_already_there_writes_nothing() {
-    let tmp = TempDir::new().expect("tmp");
-    let (_listener, mut asker, _link) = wired(&tmp, Vec::new(), &["home"]);
-    asker.pass();
-    let seat = crate::registry::registrations(tmp.path(), &crate::registry::window()).join("home");
-    let before = std::fs::metadata(&seat).expect("seated").modified().ok();
-    asker.pass();
-    assert_eq!(
-        std::fs::metadata(&seat).expect("seated").modified().ok(),
-        before
-    );
 }
 
 /// An engine that ends the stream without saying anything is a refusal with a

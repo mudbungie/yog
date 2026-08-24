@@ -26,18 +26,41 @@
 //! polling a machine. Holding the connection is `Seat::ask` keeping the stream
 //! it drops, the day a follow-class read has a consumer here.
 //!
-//! **It also seats the window** ([`Asker::seat_window`]). Authorization is
-//! registration (REMOTE §4), and the window carries a certificate now, so it is
-//! scoped like any client — it would see nothing at all unless something wrote
-//! its registrations. The engine that enumerates the workspaces is what knows
-//! them, so it seats its own window's leaf in each, and re-seats as the
-//! enumeration grows: a workspace founded while the window is up is registered
-//! within one pass, with no create to detect.
+//! **One asker per channel** (REMOTE §8.2, bl-670c). The window is a client of
+//! the engine in its own process *plus one per [entry](super::entries)*, and
+//! this is one of them: one seat, one [`Link`](super::link::Link) end, one
+//! thread. That is what makes an unreachable entry cost only its own slice —
+//! the passes never touch, so a channel parked on a dead host's connect is not
+//! a channel the local roster is waiting behind. A seat that will not open is
+//! the same shape one step earlier: the sentence is held and answered in place
+//! of every question standing on that channel, so the slice says why instead of
+//! staying empty.
+//!
+//! **It also seats the window, on the loopback channel and nowhere else**
+//! ([`Seating`]). Authorization is registration (REMOTE §4), and the window
+//! carries a certificate now, so it is scoped like any client — it would see
+//! nothing at all unless something wrote its registrations. The engine that
+//! enumerates the workspaces is what knows them, so it seats its own window's
+//! leaf in each, and re-seats as the enumeration grows: a workspace founded
+//! while the window is up is registered within one pass, with no create to
+//! detect. **An entry channel seats nothing**, and that is REMOTE §4.1 rather
+//! than a limitation: a registration is a file on the engine's own disk, minted
+//! by the operator who owns that box (§1.4), and nothing on this side of the
+//! wire may write one. The window's leaf reaches a host the way its certificate
+//! did — by hand, out of channel.
+
+/// **The one act an asker performs that is not a question** (REMOTE §4, §4.1):
+/// seating this window's leaf in the workspaces its own engine enumerates.
+/// Split off at §12's band, and the split is the rule: it is the loopback
+/// channel's alone.
+mod seating;
+use seating::Seating;
 
 use super::client::Seat;
-use super::link::LinkEnd;
-use crate::state::{SnapshotCell, latest_snapshot};
+use super::link::{Landed, LinkEnd};
+use crate::state::SnapshotCell;
 use crate::watch::Repaint;
+use serde_json::Value;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -49,20 +72,22 @@ use std::time::Duration;
 /// §10's ask-rate criterion is measured against.
 pub const ASK_PERIOD: Duration = Duration::from_millis(500);
 
-/// One window's asker: its seat on the wire, its end of the frame's link, and
-/// the enumeration it seats itself against.
+/// One channel's asker: its seat on that channel — or the sentence saying why
+/// this box has none for it — its end of the frame's link, and the registry it
+/// seats the window in, on the one channel where that is this engine's to do.
 pub struct Asker {
-    seat: Seat,
+    seat: Result<Seat, String>,
     end: LinkEnd,
-    snap: SnapshotCell,
-    state_root: PathBuf,
+    seating: Option<Seating>,
     repaint: Arc<dyn Repaint>,
 }
 
 impl Asker {
-    /// Assemble the asker. Built by [`Engine::asker`](crate::engine::Engine::asker)
-    /// so a test can drive [`pass`](Self::pass) by hand — the same reason
-    /// `Engine::searcher` hands back a value rather than spawning.
+    /// **The loopback channel's asker** — this engine's own, and the only one
+    /// that seats the window (see the module doc). Built by
+    /// [`Engine::asker`](crate::engine::Engine::asker) so a test can drive
+    /// [`pass`](Self::pass) by hand — the same reason `Engine::searcher` hands
+    /// back a value rather than spawning.
     pub fn new(
         seat: Seat,
         end: LinkEnd,
@@ -71,10 +96,22 @@ impl Asker {
         repaint: Arc<dyn Repaint>,
     ) -> Self {
         Self {
+            seat: Ok(seat),
+            end,
+            seating: Some(Seating::new(snap, state_root)),
+            repaint,
+        }
+    }
+
+    /// **One §8.2 entry channel's asker**, on that entry's own material. It
+    /// seats nothing and enumerates nothing: what it holds is one seat and one
+    /// slice. `seat` carries the entry's refusal where the channel cannot be
+    /// dialled, which every standing question is then answered with.
+    pub fn entry(seat: Result<Seat, String>, end: LinkEnd, repaint: Arc<dyn Repaint>) -> Self {
+        Self {
             seat,
             end,
-            snap,
-            state_root,
+            seating: None,
             repaint,
         }
     }
@@ -87,7 +124,7 @@ impl Asker {
         self.seat_window();
         let mut landed = 0;
         for question in self.end.standing() {
-            let answer = self.seat.answered(&question);
+            let answer = self.answered(&question);
             if !self.end.publish(&question, answer) {
                 break;
             }
@@ -99,20 +136,24 @@ impl Asker {
         landed
     }
 
-    /// Register the window's identity in every workspace the published
-    /// derivation enumerates (REMOTE §4, §4.1). Idempotent and quiet: a
-    /// registration that is already there is one directory read, and one that
-    /// cannot be written is a state root that is broken in ways this pass
-    /// cannot answer for.
+    /// What one standing question earned — the seat's answer, or this
+    /// channel's refusal in place of it. A channel that cannot be dialled says
+    /// so on every question standing on it, which is the one `Err` every read
+    /// surface already paints (`shell::wire`).
+    fn answered(&self, question: &Value) -> Landed {
+        match &self.seat {
+            Ok(seat) => seat.answered(question),
+            Err(said) => Err(said.clone()),
+        }
+    }
+
+    /// Register the window's identity in every workspace this engine
+    /// enumerates ([`Seating::seat_window`]). **Nothing on an entry channel** —
+    /// a registration is the host operator's file (§1.4), so an asker with no
+    /// [`Seating`] does not skip a step, it has no step to take.
     fn seat_window(&self) {
-        let client = crate::registry::window();
-        let snap = latest_snapshot(&self.snap);
-        let seated = crate::registry::registered(&self.state_root, &client);
-        for workspace in &snap.workspaces {
-            let name = snap.ws_name(&workspace.path);
-            if !seated.contains(&name) {
-                let _ = crate::registry::register(&self.state_root, &client, &name);
-            }
+        if let Some(seating) = &self.seating {
+            seating.seat_window();
         }
     }
 

@@ -42,8 +42,8 @@ fn a_window_holding_no_entry_is_one_channel() {
 fn the_roster_unions_every_channels_slice() {
     let (local, mut local_end) = crate::wire::link::pair();
     let (remote, mut remote_end) = crate::wire::link::pair();
-    let filled = Channel::entry(entry("cobalt", "home"), remote);
-    let empty = Channel::entry(entry("zinc", "zinc"), Link::default());
+    let filled = Channel::entry(&entry("cobalt", "home"), remote);
+    let empty = Channel::entry(&entry("zinc", "zinc"), Link::default());
     let mut set = Channels::held(local, vec![filled, empty]);
     answer(&mut set, &mut remote_end, &[], &listing(&["home"]));
     answer(&mut set, &mut local_end, &[], &listing(&["ops"]));
@@ -59,29 +59,6 @@ fn the_roster_unions_every_channels_slice() {
         ],
         "a workspace is a workspace; which engine hosts it is painted on it — \
          and an entry whose slice is still empty wears its leaf regardless"
-    );
-}
-
-/// A composed world's entries become channels — `compose` reading the same
-/// directory `entries` does, in leaf order, and a box with none composing the
-/// local channel alone.
-#[test]
-fn compose_reads_the_worlds_entries() {
-    let tmp = TempDir::new().expect("tmp");
-    let world = crate::test_support::world_under(tmp.path());
-    assert_eq!(
-        names(&mut Channels::compose(&world, Link::default())),
-        Vec::<String>::new(),
-        "no entries directory is zero entries, which is every box before §8.2"
-    );
-    let root = crate::wire::material::dir(&world).join(ENTRIES);
-    for leaf in ["zinc", "cobalt"] {
-        std::fs::create_dir_all(root.join(leaf)).expect("mkdir");
-    }
-    assert_eq!(
-        names(&mut Channels::compose(&world, Link::default())),
-        vec!["cobalt".to_owned(), "zinc".to_owned()],
-        "in leaf order, each holding its own name before anything is asked"
     );
 }
 

@@ -10,10 +10,23 @@
 //! in `address` is a request nobody has to resolve twice.
 //!
 //! All three ends are **taken**, not shared: a second call answers `None`.
-//! There is one asker, one poster and one follow lane per engine, and for the
-//! act path that is load bearing — an act must be sent exactly once.
+//! There is one asker **per channel** (REMOTE §8.2, bl-670c), one poster and one
+//! follow lane per engine, and for the act path that is load bearing — an act
+//! must be sent exactly once.
+//!
+//! **The window is a client of every channel it holds** (§8.2), so what this
+//! module hands over is that set seen from the engine's end ([`channels`]): an
+//! [`asker`](crate::wire::asker) per channel — one thread, one seat, one slice,
+//! failing only itself — and one [`Dial`](crate::wire::dial::Dial) each for the
+//! three threads that route rather than stand.
+
+/// **The window's channel set, seated** (REMOTE §8.2, bl-670c) — one asker per
+/// channel, and the dial the routing threads share the shape of. Pre-split from
+/// this file at §12's band, where the act path split it once before.
+mod channels;
 
 use super::Engine;
+use crate::wire::dial::Dial;
 use crate::xdg::Env;
 use std::sync::Arc;
 
@@ -28,7 +41,11 @@ use std::sync::Arc;
 /// and joins; the poster is parked on a channel, so it ends when the model's
 /// outbox drops and its handle is only a way to wait for that.
 pub struct WindowWire {
-    _asker: crate::wire::asker::AskerThread,
+    /// **One per channel** (§8.2, bl-670c), the loopback engine's first and then
+    /// one per entry in leaf order. A `Vec` rather than a field and a list,
+    /// because from here they are interchangeable: each is one thread holding
+    /// one seat and one slice, and stopping them is stopping each of them.
+    _askers: Vec<crate::wire::asker::AskerThread>,
     _poster: std::thread::JoinHandle<()>,
     /// The §8.5 searcher, here since bl-44e9 because its read crosses the wire
     /// too (REMOTE §9.7) — a third half of one hand-over, on the same seat mint
@@ -62,11 +79,18 @@ impl Engine {
             self.model.refuse_wire(reason);
             return None;
         }
+        // The entry channels' far ends, taken with everything else this window
+        // takes once. What each of them *is* stays behind as `entries`, because
+        // the three routing threads each seat themselves on it. Ungated: the
+        // loopback channel's end is what a second call already fails on.
+        let held = std::mem::take(&mut self.entry_ends);
+        let entries: Vec<crate::wire::entries::Entry> =
+            held.iter().map(|one| one.entry.clone()).collect();
         Some(WindowWire {
-            _asker: self.asker(world)?.start(),
-            _poster: self.poster(world)?.start(),
-            _searcher: self.searcher(world)?.start(),
-            _lane: self.lane(world)?.start(),
+            _askers: self.askers(world, held)?,
+            _poster: self.poster(self.dial(world, &entries)?)?.start(),
+            _searcher: self.searcher(self.dial(world, &entries)?)?.start(),
+            _lane: self.lane(self.dial(world, &entries)?)?.start(),
         })
     }
 
@@ -99,15 +123,17 @@ impl Engine {
     /// **The window's poster** (REMOTE §9.8, bl-4841): the asker's twin on the
     /// write side, on its own seat and its own thread.
     ///
-    /// A second seat rather than a shared one, because the two threads dial
+    /// A second `Dial` rather than a shared one, because the threads dial
     /// independently and a seat is a configuration and an address (REMOTE §6) —
-    /// nothing is held to share. It takes the outbox end, so there is one
-    /// poster per engine for the reason there is one asker: an act must be sent
-    /// exactly once, and two posters draining one queue would be two windows'
-    /// worth of gestures with no way to tell whose is whose.
-    pub fn poster(&mut self, world: &Env) -> Option<crate::wire::poster::Poster> {
+    /// nothing is held to share, one channel or twenty. It takes the outbox end,
+    /// so there is one poster per engine for the reason there is one asker per
+    /// channel: an act must be sent exactly once, and two posters draining one
+    /// queue would be two windows' worth of gestures with no way to tell whose
+    /// is whose. **Routing does not touch that** (§8.2): it picks which channel
+    /// the one send goes down.
+    pub fn poster(&mut self, dial: Dial) -> Option<crate::wire::poster::Poster> {
         Some(crate::wire::poster::Poster::new(
-            self.window_seat(world).ok()?,
+            dial,
             self.post_end.take()?,
             Arc::clone(&self.repaint),
         ))
@@ -120,11 +146,11 @@ impl Engine {
     /// It takes nothing, unlike the two above: the ask cell is a value the model
     /// shares rather than an end handed over once, because a search has no
     /// exactly-once obligation — a superseded answer is discarded on publish.
-    pub fn searcher(&mut self, world: &Env) -> Option<crate::search::Searcher> {
-        Some(crate::search::Searcher::new(
-            self.window_seat(world).ok()?,
-            self.model.search_cell(),
-        ))
+    /// It **fans out** over every channel and unions what lands (§8.2), which
+    /// is the one read that is not routed: a search names no workspace, so
+    /// there is nothing to resolve and every host is asked.
+    pub fn searcher(&mut self, dial: Dial) -> Option<crate::search::Searcher> {
+        Some(crate::search::Searcher::new(dial, self.model.search_cell()))
     }
 
     /// **The window's follow lane** (REMOTE §3, §10; bl-73e7): a third seat, on
@@ -136,9 +162,13 @@ impl Engine {
     /// lane per engine: two lanes on one conversation would be two held reads
     /// of one tail, and REMOTE §10's whole argument for a held connection is
     /// that there is exactly one surface whose rate needs it.
-    pub fn lane(&mut self, world: &Env) -> Option<crate::wire::lane::Lane> {
+    /// It **resolves** rather than fans out (§8.2): one conversation is focused,
+    /// so the lane is dialled at whichever channel hosts that conversation's
+    /// workspace and a subject that moves across the boundary is the re-ask the
+    /// lane already performs whenever a subject moves.
+    pub fn lane(&mut self, dial: Dial) -> Option<crate::wire::lane::Lane> {
         Some(crate::wire::lane::Lane::new(
-            self.window_seat(world).ok()?,
+            dial,
             self.lane_end.take()?,
             Arc::clone(&self.repaint),
         ))
@@ -149,7 +179,7 @@ impl Engine {
     /// box has none (bl-dc14): no listener (whose cause the boot already
     /// recorded, and outranks this derived sentence), no window leaf, or a
     /// seat the material cannot open.
-    fn window_seat(&self, world: &Env) -> Result<crate::wire::client::Seat, String> {
+    pub(crate) fn window_seat(&self, world: &Env) -> Result<crate::wire::client::Seat, String> {
         let Some(wire) = self.wire.as_ref() else {
             return Err("this engine has no listener".to_owned());
         };

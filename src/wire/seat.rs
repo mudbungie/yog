@@ -27,11 +27,12 @@
 //! always one — see [`frame`](super::frame)). Exit: `0` the last reply is ok,
 //! `1` it is not or the channel failed, `2` bad usage or no wire provisioned.
 
+use super::channel::Origin;
 use super::client::Seat;
-use super::entries::{self, Entry};
+use super::entries;
 use super::material::{self, Material, REMEDY, Role};
 use crate::boundary::sugar::argv;
-use crate::boundary::{Gesture, Query, codec, help};
+use crate::boundary::{Gesture, Query, help};
 use crate::xdg::Env;
 use serde_json::Value;
 
@@ -82,14 +83,16 @@ pub fn run(world: &Env, args: &[String]) -> i32 {
 /// box's own root, and the one client relationship the box holds without
 /// naming it.
 ///
-/// **This is the one place the leaf↔host-name mapping is spent** (§8.2). An
-/// entry's leaf is the *client's* name for the workspace and its
-/// [`WORKSPACE`](entries::WORKSPACE) file is the name that workspace answers to
-/// on its host; when they differ the gesture is re-encoded carrying the host's
-/// name, here, at the channel boundary — never earlier, because every seat
-/// above this line reasons in the leaf, and never later, because below it is a
-/// socket. When they agree the operator's own envelope crosses byte for byte,
-/// as it always has.
+/// **The leaf↔host-name mapping is spent at the channel boundary** (§8.2), and
+/// since bl-670c this seat spends it at the same *function* the window's three
+/// paths do — [`Origin::carried`]. An entry's leaf is the *client's* name for
+/// the workspace and its [`WORKSPACE`](entries::WORKSPACE) file is the name that
+/// workspace answers to on its host; when they differ the gesture is re-encoded
+/// carrying the host's name, there, never earlier — every seat above this line
+/// reasons in the leaf — and never later, because below it is a socket. When
+/// they agree the operator's own envelope crosses byte for byte, as it always
+/// has. One site, so a gesture cannot cross renamed from a window and unrenamed
+/// from a terminal.
 ///
 /// A half-provisioned entry refuses with **its own** sentence (`entries`), and
 /// that refusal is one entry's rather than the box's: nothing here reads
@@ -99,22 +102,10 @@ fn channel(world: &Env, gesture: &Gesture, value: &Value) -> Result<(Seat, Value
     let named = gesture
         .workspace()
         .and_then(|name| entries::entries(world).into_iter().find(|e| e.leaf == name));
-    let Some(Entry {
-        leaf,
-        workspace,
-        channel,
-    }) = named
-    else {
+    let Some(entry) = named else {
         return Ok((open(world)?, value.clone()));
     };
-    let seat = Seat::open(&channel?)?;
-    if workspace == leaf {
-        return Ok((seat, value.clone()));
-    }
-    Ok((
-        seat,
-        codec::encode(&gesture.clone().with_workspace(&workspace)),
-    ))
+    Ok((entry.seat()?, Origin::of(&entry).carried(value)))
 }
 
 /// This machine's own seat — the flat root's, which is what every caller with

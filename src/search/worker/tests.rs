@@ -46,7 +46,11 @@ fn wired(tmp: &TempDir, says: Vec<Value>) -> (Listener, Searcher, SearchCell) {
     ))
     .expect("seat");
     let asks = SearchCell::default();
-    (listener, Searcher::new(seat, asks.clone()), asks)
+    (
+        listener,
+        Searcher::new(crate::wire::dial::Dial::of(seat), asks.clone()),
+        asks,
+    )
 }
 
 /// One `search` reply body carrying a single ball hit.
@@ -103,7 +107,12 @@ fn a_refusal_lands_as_the_reason_and_never_as_an_empty_answer() {
 
 /// A reply of another kind is a codec that has drifted from the query it
 /// answers — a defect the round-trip tests are the witness for, not a state — so
-/// nothing is invented for it.
+/// nothing is invented for it: no hits, and nothing named unreadable.
+///
+/// **The needle survives it** (bl-670c). The answer knows its question from the
+/// *ask* rather than from a reply, which is what a union of several channels'
+/// answers needs: one host answering the wrong kind must not erase the search
+/// every other host answered.
 #[test]
 fn a_reply_of_another_kind_invents_nothing() {
     let tmp = TempDir::new().expect("tmp");
@@ -111,7 +120,13 @@ fn a_reply_of_another_kind_invents_nothing() {
         wired(&tmp, vec![json!({"ok": true, "kind": "balls", "rows": []})]);
     asks.ask("kraken");
     assert!(searcher.pass());
-    assert_eq!(asks.found(), Found::default());
+    assert_eq!(
+        asks.found(),
+        Found {
+            needle: "kraken".to_owned(),
+            ..Found::default()
+        }
+    );
 }
 
 /// The thread is the one thing only a real thread can test (the `Consumer`

@@ -51,6 +51,10 @@ pub mod channel;
 /// refuses a collision.
 pub mod channels;
 pub mod client;
+/// **Every channel a window's off-frame thread dials** (REMOTE §8.2, bl-670c):
+/// [`channels`] seen from the other end of the same links — one seat per
+/// channel, the routing that picks which, and the mapping spent on the way.
+pub mod dial;
 /// The client-side workspaces this box holds elsewhere (REMOTE §8.2, bl-aaec)
 /// — [`material`]'s shape one level down and named, one directory per
 /// workspace hosted on another box.
