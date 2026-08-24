@@ -84,6 +84,13 @@ pub struct Prepared {
     /// `None` binds nothing and lets lernie's own default (the agent worktree)
     /// stand: the bare rung, and a ball not yet created.
     pub binding: Option<PathBuf>,
+    /// The §8.7 birth policy the ball's tags selected
+    /// ([`lineage::select`](super::lineage::select)): the `config/<name>` this
+    /// drone forks off, which is one fact with two consumers — §8.6's policy
+    /// convergence during the prepare, and the fire's own `--config`. `None` is
+    /// lernie's `config/default`, and it is an absent flag rather than a value
+    /// yog spells, so an unmatched tag and no tag at all are one path.
+    pub lineage: Option<String>,
     pub goal: String,
     /// The §7.3 banner surface this start's ops rows carry (bl-48f8) — the
     /// rung's own ([`Payload::origin`](super::Payload::origin)), carried here so

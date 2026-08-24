@@ -86,7 +86,7 @@ fn a_workspace_with_no_committed_manifest_drifts_nothing() {
     let ws = dir.path().join("ws");
     crate::test_support::workspace::seed_workspace_workflow(&ws, "events: {}\n");
     assert!(
-        drift(&ws).is_none(),
+        drift(&ws, "default").is_none(),
         "nothing to author onto is not an error"
     );
 }
@@ -96,7 +96,7 @@ fn a_committed_manifest_without_the_glob_drifts_the_whole_file() {
     let dir = tempdir().unwrap();
     let ws = dir.path().join("ws");
     crate::test_support::workspace::seed_workspace_config(&ws, &[(MANIFEST_YAML, SHIPPED)]);
-    let draft = drift(&ws).expect("the shipped manifest composes no instructions");
+    let draft = drift(&ws, "default").expect("the shipped manifest composes no instructions");
     assert_eq!(draft.rel_path, MANIFEST_YAML);
     let text = String::from_utf8(draft.bytes).unwrap();
     assert_eq!(text, authored(SHIPPED));
@@ -111,5 +111,5 @@ fn a_manifest_that_already_composes_instructions_drifts_nothing() {
         &ws,
         &[(MANIFEST_YAML, &authored(SHIPPED))],
     );
-    assert!(drift(&ws).is_none());
+    assert!(drift(&ws, "default").is_none());
 }

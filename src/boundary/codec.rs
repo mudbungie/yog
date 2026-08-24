@@ -35,7 +35,7 @@ mod start;
 mod tools;
 use config::encode_file;
 use deposit::{INTERRUPT, MESSAGE, deposit, deposited};
-use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, usize_of};
+use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, strings_of, usize_of};
 use start::{decode_payload, decode_prepared, encode_start, opt_field};
 pub(crate) use start::{
     decode_prepared as prepared_from_value, encode_prepared as prepared_value, join_token,

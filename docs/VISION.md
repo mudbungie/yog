@@ -72,7 +72,7 @@ the survey found on disk.
 | G3 | Baseline context, fork N variants off it | Survey truth ("`prompt` hardcodes `config/default`") is superseded by the same landing: `--config <name>` on `prompt`/`dispatch` (bl-a693, pinned 0.0.6). Remaining gap is the yog surface | yog UI (V2) |
 | G4 | Judge / consensus fan-in | Verifier gating runs end-to-end config-only; sibling results already arrive as N deposits. No synthesis primitive — and none needed: judging is a workflow shape (§4.4) | yog workflow + lernie exposure |
 | G5 | Spend attribution ("$3800/wk and no idea per what") | brazen counts tokens statelessly; lernie sums them into one budget scalar; balls tags every delivery `[bl-id]`; **nobody joins them and nothing prices them** | yog (§4.5) |
-| G6 | Model by complexity heuristic, not tag map | yog has a per-role picker; no policy layer, no dataset | yog (§4.6) |
+| G6 | Model by complexity heuristic, not tag map | **Half delivered (yog bl-380f, DESIGN §8.7).** The policy layer exists: a ball's tags select the `config/<name>` its drone is born on, so the model and the skill set are the fired lineage's and yog names neither. What is still missing is the **dataset** the vision wants the mapping tuned against — the estimate-outcome-spend triple — which is G5's join, not this row's mechanism | yog (§4.6) → G5 |
 | G7 | Bounded agents, no judging supervisor | bl-3381 as filed implements the *superseded* five-role fleet (long-lived shepherd/sensor) | yog (§4.1 adjudicates) |
 | G8 | Unified inbox — "a new prompt, a steer, a tool result, an inter-agent message… all a message in the inbox" | Delivered, with one deliberate refinement: prompts, steers, results, and peer messages all enter by the inbox front door; **tool results commit straight to the transcript** because self-output needs no on-ramp. The unification that holds is: *everything context-bearing is a committed transcript entry* | none — promise met, wording refined |
 | G9 | Push-not-poll agent wake-up | lernie's writer/driver totality delivers it in-process; balls' draft ruling: "a poke carries no truth… the poll loop is the correctness floor." yog's level-triggered loop is that floor made cheap | none — polling is the design, not a gap |
@@ -116,7 +116,9 @@ Three mechanisms, all existing, carry the discipline:
   (bl-chore's pattern). Never a lifecycle document.
 - **Skills are seeded at spawn, keyed on ball tags.** A drone's context is
   fresh exactly once; that is the one moment a standard cannot be crowded out.
-  yog selects skills and model from the ball's tags at fire. No standing
+  yog selects skills and model from the ball's tags at fire — **shipped in yog
+  bl-380f** as the tag→config-lineage selection §4.6 and DESIGN §8.7 describe:
+  one fork carries both, because a config lineage already holds both. No standing
   overseer injects anything mid-flight — bounded lifetime already prevents the
   decay the overseer would exist to fight. A skill states a *bar*, never a
   procedure; a skill that grows into a lifecycle document has failed.
@@ -201,6 +203,18 @@ at decomposition time) mapped to model by a yog policy table — because the
 estimate-outcome-spend triple (§4.5's join plus delivered/reverted facts) is
 the dataset that lets the mapping be tuned instead of vibed. Policy table,
 yog config, severable. No crate below yog ever names a model.
+
+**Shipped, and it is not a table** (yog bl-380f, DESIGN §8.7). A lernie config
+lineage already *is* the (model, skills) pair — `providers.yaml` names the
+worker role's provider and model, `descriptions/skills/**` is the skill set —
+so the policy needed no artifact of its own: **the lineage's existence is the
+policy**. A ball tagged `deep` is born on `config/deep` where the workspace has
+one; the first tag naming a lineage wins, an unmatched or untagged ball gets
+lernie's own default with no flag spelled, and severability is
+`git branch -d config/<tag>` — removing a default deletes a ref and edits no
+code. §4.2's promise is met by the same mechanism, because skills and model
+ride one fork. The complexity estimate this section wants is then just another
+tag, and what remains open is G5's dataset rather than any missing layer.
 
 ### 4.7 Fleets talking to fleets
 

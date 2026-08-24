@@ -100,9 +100,9 @@ fn a_workspace_with_no_config_commit_drifts_nothing() {
     let dir = tempdir().unwrap();
     let ws = dir.path().join("ws");
     std::fs::create_dir_all(ws.join("repo.git")).unwrap();
-    assert_eq!(committed(&ws, WORKFLOW_YAML), None);
+    assert_eq!(committed(&ws, DEFAULT_CONFIG, WORKFLOW_YAML), None);
     assert!(
-        workflow_drift(&ws, &shim()).is_none(),
+        workflow_drift(&ws, DEFAULT_CONFIG, &shim()).is_none(),
         "nothing to author onto is not an error"
     );
 }
@@ -112,8 +112,12 @@ fn a_tip_lacking_the_block_drifts_the_whole_workflow() {
     let dir = tempdir().unwrap();
     let ws = dir.path().join("ws");
     crate::test_support::workspace::seed_workspace_workflow(&ws, SHIPPED);
-    assert_eq!(committed(&ws, WORKFLOW_YAML).as_deref(), Some(SHIPPED));
-    let draft = workflow_drift(&ws, &shim()).expect("a tip without the block drifts");
+    assert_eq!(
+        committed(&ws, DEFAULT_CONFIG, WORKFLOW_YAML).as_deref(),
+        Some(SHIPPED)
+    );
+    let draft =
+        workflow_drift(&ws, DEFAULT_CONFIG, &shim()).expect("a tip without the block drifts");
     assert_eq!(draft.rel_path, WORKFLOW_YAML);
     // The drafted file is the WHOLE workflow: a fragment would truncate policy.
     let text = String::from_utf8(draft.bytes).unwrap();
@@ -129,5 +133,5 @@ fn a_tip_that_already_names_this_shim_drifts_nothing() {
     let dir = tempdir().unwrap();
     let ws = dir.path().join("ws");
     crate::test_support::workspace::seed_workspace_workflow(&ws, &authored(SHIPPED, &shim()));
-    assert!(workflow_drift(&ws, &shim()).is_none());
+    assert!(workflow_drift(&ws, DEFAULT_CONFIG, &shim()).is_none());
 }

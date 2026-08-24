@@ -11,7 +11,7 @@
 use super::ensure::execute_ensure_workspace;
 use super::exec::{execute_claim, execute_create};
 use super::goal::compose_prepared;
-use super::{BallSpec, Deps, Payload, Prepared, StartError, StartInputs, Step};
+use super::{BallSpec, Deps, Payload, Prepared, StartError, StartInputs, Step, lineage};
 use crate::binding::work_worktree_path;
 use crate::projects::join::JoinState;
 use crate::world::{layout_under, seed, tools};
@@ -68,6 +68,14 @@ fn existing_worktree(balls_state_root: &Path, project: &Path, id: &str, name: &s
 /// after-loop return.
 pub fn prepare(deps: &Deps, inputs: &StartInputs, ts: &str) -> Result<Prepared, StartError> {
     let name = crate::naming::leaf(&inputs.workspace);
+    // The §8.7 birth policy, derived once and used twice: the convergence below
+    // authors onto this lineage, and the deferred fire forks off it. One read,
+    // so a `config/<tag>` created between the two cannot converge one branch and
+    // fork another.
+    let lineage = lineage::select(&inputs.workspace, &inputs.payload);
+    let config = lineage
+        .as_deref()
+        .unwrap_or(crate::control::author::DEFAULT_CONFIG);
     // The §7.3 attribution for every row this flow writes (bl-48f8): the rung's
     // own, read once from the payload. The substrate steps below name no ball
     // and no conversation, so nothing downstream could recover it from the argv.
@@ -99,7 +107,7 @@ pub fn prepare(deps: &Deps, inputs: &StartInputs, ts: &str) -> Result<Prepared, 
                 // one home, read and edited through §9.3/§9.4 like every later
                 // config.
                 let layout = layout_under(&inputs.yog_data_root);
-                execute_ensure_workspace(deps, ts, &workspace, &layout, origin)?;
+                execute_ensure_workspace(deps, ts, &workspace, config, &layout, origin)?;
             }
             Step::Create {
                 project,
@@ -141,7 +149,10 @@ pub fn prepare(deps: &Deps, inputs: &StartInputs, ts: &str) -> Result<Prepared, 
         &name,
         claimed,
     );
-    Ok(compose_prepared(inputs, worktree.as_deref()))
+    Ok(Prepared {
+        lineage,
+        ..compose_prepared(inputs, worktree.as_deref())
+    })
 }
 
 /// Re-plan a new ball as its freshly-minted existing self (§8.1): the Ready,
@@ -158,6 +169,11 @@ fn with_minted(inputs: &StartInputs, id: String, title: String, body: String) ->
                 title,
                 body,
                 join: JoinState::ReadyStartable,
+                // A ball `bl create` minted a moment ago carries no tags — the
+                // §8.7 selection is the general path with an empty input, not a
+                // case (the operator tags it afterwards, and the next start reads
+                // them back off the board).
+                tags: Vec::new(),
             },
         },
         ..inputs.clone()

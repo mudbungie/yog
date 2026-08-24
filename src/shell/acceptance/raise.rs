@@ -96,6 +96,7 @@ fn enter_on_a_blank_start_draft_fires_nothing_and_keeps_the_draft() {
         binding: None,
         goal: "  \n\t ".to_owned(),
         origin: crate::opslog::Origin::Conversation,
+        lineage: None,
     });
 
     screen.frame(

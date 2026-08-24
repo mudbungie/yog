@@ -1,7 +1,7 @@
 //! The **filename policy** (DESIGN §3.7 item 5): which files count as project
 //! instructions, and in what order within one directory.
 //!
-//! The default lives in code and the override lives in the workspace's config
+//! The default lives in code and the override lives in the fired lineage's config
 //! commit — `capability.yaml`'s exact shape one concern over (§8.6): **absence
 //! is the shipped default, and that is the whole severability claim.** Deleting
 //! `instructions.yaml` deletes the policy, not the mechanism, so removing a
@@ -11,7 +11,7 @@
 //! freezes where its branch forks (lernie ARCH §2.2), but this is the
 //! *operator's* policy: a filename set that only bound conversations started
 //! before the edit would not be a policy. So the read is
-//! `config/default:instructions.yaml` at its head, at every fire.
+//! `config/<fired>:instructions.yaml` at its head, at every fire.
 //!
 //! The grammar is one line shape — deliberately not a YAML subset with a parser
 //! to trust, and deliberately no new dependency:
@@ -38,14 +38,22 @@ mod tests;
 const DEFAULT: &[&str] = &["AGENTS.md"];
 /// The override's name, beside `capability.yaml` in the same config commit.
 pub const INSTRUCTIONS_YAML: &str = "instructions.yaml";
-/// The lineage the policy is read off — the one every workspace is born on.
-const DEFAULT_REF: &str = "refs/heads/config/default";
-
-/// `workspace`'s instruction filenames: its committed override, else the
-/// shipped default. A workspace with no config commit, no such file, or bytes
-/// git cannot hand back is the default — nothing to override with.
-pub fn names(workspace: &Path) -> Vec<String> {
-    match config_file(workspace, DEFAULT_REF, INSTRUCTIONS_YAML) {
+/// `workspace`'s instruction filenames on `config/<config>`: its committed
+/// override, else the shipped default. A workspace with no such config commit,
+/// no such file, or bytes git cannot hand back is the default — nothing to
+/// override with.
+///
+/// **The lineage is the fire's, not always `default`** (§8.7, bl-380f). This
+/// policy picks the filenames whose contents §3.7 freezes and `manifest.yaml`'s
+/// glob composes — and that manifest is authored on the lineage the drone forks
+/// off, so reading the filename policy anywhere else would let one lineage's
+/// answer compose another lineage's files.
+pub fn names(workspace: &Path, config: &str) -> Vec<String> {
+    match config_file(
+        workspace,
+        &format!("refs/heads/config/{config}"),
+        INSTRUCTIONS_YAML,
+    ) {
         Ok(bytes) => parse(&String::from_utf8_lossy(&bytes)),
         Err(_) => DEFAULT.iter().map(|n| (*n).to_owned()).collect(),
     }

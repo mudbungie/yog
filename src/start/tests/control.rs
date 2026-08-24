@@ -41,8 +41,15 @@ fn ensure_aborts_when_the_capability_control_cannot_be_authored() {
     // An existing workspace whose committed workflow carries no control block.
     crate::test_support::workspace::seed_workspace_workflow(&ws, "events: {}\n");
     let lernie = Cli::new(fake_fail(w.bin.path(), "lernie", "no config for you"));
-    let err = execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
-        .unwrap_err();
+    let err = execute_ensure_workspace(
+        &deps(&w, &lernie),
+        "TS",
+        &ws,
+        "default",
+        &layout(&w),
+        Origin::Balls,
+    )
+    .unwrap_err();
     assert!(matches!(err, StartError::Control(_)), "{err}");
     let ops = w.ops();
     assert_eq!(
@@ -64,8 +71,15 @@ fn ensure_leaves_an_already_controlled_workspace_alone() {
     crate::test_support::workspace::seed_workspace_workflow(&ws, &authored);
     let lernie = Cli::new("/definitely/not/a/real/lernie");
     assert!(
-        !execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
-            .unwrap()
+        !execute_ensure_workspace(
+            &deps(&w, &lernie),
+            "TS",
+            &ws,
+            "default",
+            &layout(&w),
+            Origin::Balls
+        )
+        .unwrap()
     );
     assert!(w.ops().is_empty(), "converged: nothing ran, nothing logged");
 }
@@ -95,7 +109,15 @@ fn ensure_converges_the_control_and_the_instruction_glob_in_one_drive() {
             record.display()
         ),
     ));
-    execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls).unwrap();
+    execute_ensure_workspace(
+        &deps(&w, &lernie),
+        "TS",
+        &ws,
+        "default",
+        &layout(&w),
+        Origin::Balls,
+    )
+    .unwrap();
     assert_eq!(w.ops().len(), 1, "one drive, one row: {:?}", w.verbs());
     let staged = std::path::PathBuf::from(std::fs::read_to_string(&record).unwrap().trim());
     let workflow = std::fs::read_to_string(staged.join("workflow.yaml")).unwrap();
@@ -127,8 +149,15 @@ fn ensure_leaves_an_already_converged_workspace_alone() {
     );
     let lernie = Cli::new("/definitely/not/a/real/lernie");
     assert!(
-        !execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
-            .unwrap()
+        !execute_ensure_workspace(
+            &deps(&w, &lernie),
+            "TS",
+            &ws,
+            "default",
+            &layout(&w),
+            Origin::Balls
+        )
+        .unwrap()
     );
     assert!(w.ops().is_empty(), "converged: nothing ran, nothing logged");
 }

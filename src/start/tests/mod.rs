@@ -12,6 +12,7 @@ mod exec;
 mod gate;
 mod goal;
 mod identity;
+mod lineage;
 mod pins;
 mod plan;
 mod prompt;
@@ -152,6 +153,7 @@ pub(super) fn ball(project: &Path, id: &str, join: JoinState) -> Payload {
             title: "T".to_owned(),
             body: "B".to_owned(),
             join,
+            tags: Vec::new(),
         },
     }
 }

@@ -37,6 +37,7 @@ fn ball_payload(join: JoinState) -> Payload {
             title: "T".to_owned(),
             body: "B".to_owned(),
             join,
+            tags: Vec::new(),
         },
     }
 }
@@ -198,6 +199,7 @@ fn the_rung_decides_which_surface_the_starts_failures_banner_on() {
             title: "T".to_owned(),
             body: "B".to_owned(),
             join: JoinState::ReadyStartable,
+            tags: Vec::new(),
         },
     };
     assert_eq!(existing.origin(), Origin::Balls);

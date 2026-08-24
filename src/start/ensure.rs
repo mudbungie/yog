@@ -1,8 +1,9 @@
 //! The workspace half of the start flow's executors (DESIGN §8.1, §8.6, §3.7):
 //! the idempotent `lernie new` ensure and the **policy convergence** that runs
 //! **outside** the create skip, so a workspace made a moment ago and one made
-//! last week both converge to a `config/default` naming the control shim and
-//! composing frozen project instructions.
+//! last week both converge to a config lineage naming the control shim and
+//! composing frozen project instructions — **the lineage the drone will fork
+//! off** (§8.7), which is `config/default` unless the ball's tags named another.
 //!
 //! Split from [`super::exec`] at the seam the tests already used: the `bl`-facing
 //! executors (create / claim / cross-check) are that file's concern, the
@@ -49,6 +50,7 @@ pub fn execute_ensure_workspace(
     deps: &Deps,
     ts: &str,
     workspace: &Path,
+    config: &str,
     layout: &Layout,
     origin: Origin,
 ) -> Result<bool, StartError> {
@@ -56,19 +58,20 @@ pub fn execute_ensure_workspace(
     let created = create_workspace(lernie, state_root, ts, workspace, origin)?;
     // yog's policy is authored **after** the create and **outside** its skip
     // (§8.6, §3.7): a workspace made a moment ago and one made last week both
-    // converge to a `config/default` naming the control shim and composing
+    // converge to a config lineage naming the control shim and composing
     // frozen instructions, so every agent forked from here on is adjudicated
-    // and instructed. Converged, not branched — the steady state reads two
+    // and instructed. On `config`, not on `default` (§8.7): the branch this
+    // start will fork its drone off is the only one whose policy governs it. Converged, not branched — the steady state reads two
     // files out of git and spawns nothing.
     let shim = crate::world::tools::control_path(&layout.tools);
     let drafts: Vec<DraftFile> = [
-        control::author::workflow_drift(workspace, &shim),
-        manifest::drift(workspace),
+        control::author::workflow_drift(workspace, config, &shim),
+        manifest::drift(workspace, config),
     ]
     .into_iter()
     .flatten()
     .collect();
-    let authored = converge(deps, workspace, &drafts, state_root, ts, origin)?;
+    let authored = converge(deps, workspace, config, &drafts, state_root, ts, origin)?;
     if let Some(entry) = authored.filter(|e| e.exit != 0) {
         log_step_failure(state_root, ts, workspace, CONTROL, &entry.stderr, origin)?;
         return Err(StartError::Control(entry.stderr));
@@ -76,7 +79,7 @@ pub fn execute_ensure_workspace(
     Ok(created)
 }
 
-/// Stage `drafts` and drive the one `lernie config <ws> default` pass that
+/// Stage `drafts` and drive the one `lernie config <ws> <config>` pass that
 /// commits them (§9.3 — the only lawful writer of `config/*`, so yog never
 /// writes inside a workspace itself). `None` when nothing drifted: no staging
 /// dir, no spawn, no ops row.
@@ -87,6 +90,7 @@ pub fn execute_ensure_workspace(
 fn converge(
     deps: &Deps,
     workspace: &Path,
+    config: &str,
     drafts: &[DraftFile],
     state_root: &Path,
     ts: &str,
@@ -99,7 +103,7 @@ fn converge(
     let plan = EditPlan::compose(
         &deps.yog_binary,
         workspace,
-        control::author::DEFAULT_CONFIG,
+        config,
         &EditOrigin::Advance,
         &staging,
     );

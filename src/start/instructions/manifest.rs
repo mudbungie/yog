@@ -41,11 +41,12 @@ const ROLES: &str = "roles:";
 /// The always-included category (lernie ARCH §5.2).
 const PINNED: &str = "pinned:";
 
-/// `workspace`'s `manifest.yaml` drift, or `None` when its committed tip
-/// already composes `instructions/**` — the steady state, which stages nothing
-/// and spawns nothing.
-pub fn drift(workspace: &Path) -> Option<DraftFile> {
-    let base = crate::control::author::committed(workspace, MANIFEST_YAML)?;
+/// `workspace`'s `manifest.yaml` drift on `config/<config>`, or `None` when
+/// that tip already composes `instructions/**` — the steady state, which stages
+/// nothing and spawns nothing. The lineage is a parameter for §8.7's reason:
+/// what composes into a drone's context must be authored where the drone forks.
+pub fn drift(workspace: &Path, config: &str) -> Option<DraftFile> {
+    let base = crate::control::author::committed(workspace, config, MANIFEST_YAML)?;
     let want = authored(&base);
     (want != base).then(|| DraftFile {
         rel_path: MANIFEST_YAML.to_owned(),

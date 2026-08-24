@@ -43,6 +43,7 @@ mod gate;
 mod goal;
 mod identity;
 pub mod instructions;
+mod lineage;
 mod prompt;
 mod run;
 #[cfg(test)]
@@ -68,6 +69,10 @@ pub enum BallSpec {
         title: String,
         body: String,
         join: JoinState,
+        /// The ball's own tags, in `bl`'s order — the §8.7 birth policy's one
+        /// input (VISION §4.2). Carried, never stored: [`lineage::select`]
+        /// reads them at [`prepare`] and nothing else in yog ever does.
+        tags: Vec<String>,
     },
     New {
         title: String,

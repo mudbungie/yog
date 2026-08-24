@@ -14,6 +14,7 @@ fn shapes(named: &str) -> Vec<Gesture> {
         binding: None,
         goal: String::new(),
         origin: Origin::Conversation,
+        lineage: None,
     };
     vec![
         Gesture::Act(Action::Scan {

@@ -43,7 +43,9 @@ const FOREIGN: &[&str] = &[
     // §4.11 (the capability boundary, bl-0cea), always cited with their doc
     // prefix ("VISION §4.8", "VISION §4.9", …) — foreign here because the
     // scanner is deliberately prefix-blind.
-    "4.5", "4.8", "4.9", "4.10", "4.11",
+    // VISION §4.6 (model selection — the policy-table ruling §8.7's birth
+    // policy answers) joins them, cited "VISION §4.6" for the same reason.
+    "4.5", "4.6", "4.8", "4.9", "4.10", "4.11",
     // REMOTE.md's own rulings — §1.2 (one method, one channel), §1.3 (the
     // channel is mTLS), §1.4 (bootstrapping is out-of-channel) and §1.5 (the
     // workspace is the trust domain, bl-8bbc) — always cited with their doc

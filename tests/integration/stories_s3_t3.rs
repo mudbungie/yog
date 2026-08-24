@@ -52,6 +52,7 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
                 title: "Ongoing".to_owned(),
                 body: "keep going".to_owned(),
                 join: JoinState::Bound,
+                tags: Vec::new(),
             },
         },
         home: home.path().to_path_buf(),

@@ -22,6 +22,7 @@ pub(super) fn receipts() -> Vec<Reply> {
             binding: Some(PathBuf::from("/target")),
             goal: "g".into(),
             origin: Origin::Balls,
+            lineage: None,
         }),
         // The fan family's three receipts (§3.8; V3's delivery). The fanned
         // rows are `prepared` bodies; the delivery is taken at both of its
@@ -32,6 +33,7 @@ pub(super) fn receipts() -> Vec<Reply> {
             binding: Some(PathBuf::from("/candidate")),
             goal: "g".into(),
             origin: Origin::Balls,
+            lineage: None,
         }]),
         Reply::Retired { discarded: true },
         Reply::Delivered(crate::fan::Delivery {

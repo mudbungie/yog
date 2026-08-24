@@ -68,6 +68,7 @@ fn prepared(ws: &Path, cwd: &Path) -> Prepared {
         binding: Some(cwd.to_path_buf()),
         goal: "prefill".into(),
         origin: yog::opslog::Origin::Conversation,
+        lineage: None,
     }
 }
 

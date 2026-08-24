@@ -3391,7 +3391,9 @@ Members: `bz --login` and the §9.4 `bz --list-models` roster query)*.
    from the composer (the goal half of `new_prompt_enabled`, bl-6191). On
    confirm: the conversation name mints (§3.3 — a pure in-process step;
    exhaustion is a `["yog-step","mint"]` row, §4.2), and
-   `lernie prompt --name <minted> <root>/<name> <goal>` — the goal **verbatim**
+   `lernie prompt --name <minted> [--config <lineage>] <root>/<name> <goal>`
+   — the lineage §8.7's birth policy selected off the ball's tags, absent for
+   every start that selected none — with the goal **verbatim**
    (bl-6920) and last in the argv (the ops-log clip trims exactly the final
    element, §4.2) — is **spawned
    detached** (own process group, stdin/stdout→null, **stderr→the per-spawn
@@ -4981,6 +4983,75 @@ confinement refusal), bl-94b4 (the floor writer above — the monitor's revoke
 rung over the same fold, whose *reader* `Answers::floored` came with the shim),
 bl-bca4 (the Linux backend behind that refusal — probe, gate and wrap) and
 bl-34b1 (the writable set's fourth member).
+
+### 8.7 The birth policy (VISION §4.2 / §4.6, bl-380f)
+
+**A ball's tags select the config lineage its drone is born on.** VISION §4.2
+promises *"Skills are seeded at spawn, keyed on ball tags. A drone's context is
+fresh exactly once; that is the one moment a standard cannot be crowded out.
+yog selects skills and model from the ball's tags at fire"*, and §4.6 fixes the
+shape: *"Policy table, yog config, severable. No crate below yog ever names a
+model."* Until bl-380f neither existed — `BallSpec` carried id, title, body and
+join, so a fleet birth read the whole ball off the snapshot and dropped its
+tags at the payload.
+
+**The lineage is the policy, so there is no table.** A lernie config commit
+already *is* the (model, skills) pair yog would otherwise have to name
+separately — `providers.yaml` holds `roles.worker.{provider, model}`,
+`descriptions/skills/**` is the skill set the tools composer offers, and
+`manifest.yaml` says what composes — and `lernie prompt --config <name>` forks
+the new agent off its head (lernie ARCH §2.3, in the pin since 0.0.6). So the
+whole mechanism is one sentence: **a ball tagged `deep` is born on
+`config/deep` where the workspace has one.** No new file, no new verb, no new
+flag, and nothing below yog names a model.
+
+The four questions a policy layer has to answer, answered without a surface:
+
+- **Conflict — the ball's own tag order.** The first tag naming a lineage wins.
+  Tags are an ordered, operator-authored list, so the precedence is already
+  written where the tags are; a priority column or a longest-match rule would
+  be a second home for one fact and the two would drift.
+- **Default — no match, no flag.** An untagged ball, a ball whose tags name no
+  lineage, and the bare/path rungs are one path with different inputs, not
+  three cases: the selection answers `None` and the fire omits `--config`. The
+  default is *lernie's* `config/default`, never a word yog spells.
+- **Severability — the ref is the config.** Installing a policy is
+  `lernie config <ws> <tag> --from default` (or §9.3's editor drive); removing
+  one is `git branch -d config/<tag>`. Removing a default deletes config and
+  edits no code, which is the test stated the right way round.
+- **Authority — the ball, once.** Nothing is mirrored into yog state. The tags
+  ride the §3.4 payload from the board row that carried them, are read by
+  `start::lineage::select`, and are gone.
+
+**Resolved once, consumed twice** (`src/start/lineage.rs`, called from
+[`prepare`](#81-start-the-composite-verb--34s-axes-as-argv)). The answer
+governs two acts, and they must not be able to disagree:
+
+1. **§8.6's policy convergence.** `execute_ensure_workspace` authors the
+   capability control and §3.7's instruction glob onto **the lineage this start
+   will fork off**, not onto `config/default`. Converging `default` while
+   birthing on `config/deep` would make a tagged birth the one birth nothing
+   adjudicates — the §4.11 confinement silently absent on exactly the drones an
+   operator gave a special policy to. §3.7's filename policy
+   (`instructions.yaml`) follows for the same reason: the manifest that
+   composes the frozen documents is authored on the fired lineage, so reading
+   the filenames off another one would let one lineage's answer compose
+   another's files.
+2. **The fire's `--config`.** `prepared.lineage` rides the one argv beside
+   `--cwd` and the `--pin` specs, spawned and logged from the same list (§3.3).
+
+Deriving it separately in each would be two homes for one fact, and a lineage
+created between the two reads would converge one branch and fork another. So
+`Prepared` carries it — the same shape and the same reason as `binding`: a
+value the engine minted, carried back verbatim by a seat that never reads it.
+
+**What this does not close.** VISION's ledger row G6 asks for *model by
+complexity heuristic, not tag map*, and §4.6 is explicit that tag→model *"is
+the functional heuristic and stays available"* while the target is one rung up:
+a complexity estimate written at decomposition time, tuned against the
+estimate-outcome-spend triple. The policy **layer** that row calls missing now
+exists and a complexity estimate is just another tag; what is still missing is
+the **dataset**, which is G5's join (§4.5) and not this section's.
 
 ---
 
@@ -9328,9 +9399,10 @@ beside `main.rs`.
 | `src/shell/wire.rs` (excl.) | the shell's one spelling of a wire read (REMOTE §1.2 as ruled 2026-08-14; bl-adcb) — declare a standing question, and pick the payload out of the one reply variant that query answers. Four states, spelled once instead of per pane: the answer, the refusal (painted, never swallowed), the honest not-yet, and the wrong-kind reply that is a codec defect rather than a state. `Said` beside it collects a surface's refusals **distinct** (bl-13f9), because a pane declaring several questions over one address would otherwise paint one sentence five times |
 | `src/shell/workspace.rs` (excl.) | §11 altitudes 1–2 — reduced to the identity header and its banners by bl-2e18, and to nothing else since bl-8905 deleted `members`, whose descent-tree rows the unfolded list had come to repeat |
 | `src/spend/{mod,prices,ceiling,render}.rs` | the §3.5 join, pure over the worker's pre-walked bills (bl-9dd4) — selection, attribution, the honest-granularity label, and the unpriced remainder, with `of_workspace` the one deliberate fresh walk because a gate compares against now; the price table's parse and its micro-USD arithmetic over the §3.5 three-way partition of the prompt (bl-6621 — the cached slice is priced once, and the tokens priced sum to §5.1 #16's fold exactly); the §3.5 spend ceiling's policy half — the operator's number and the at-or-over comparison against the workspace figure (bl-56d5); the one figure widget every spend seat paints — the board's ball rows and the conversation's settings rows (bl-2e18) — whose attribution clause is independent of the price table, so the honest-granularity label survives deleting the cost column (bl-1765) |
-| `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the one convergence that authors §8.6's control block and §3.7's instruction glob onto `config/default` in a single `lernie config` drive, outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire, whose one argv carries `--name`, `--cwd` and every `--pin` |
+| `src/start/{mod,goal,identity,exec,ensure,prompt,run}.rs` | the start flow (§3.4/§8.1): pure plan, goal compose, the §3.3 stamp and its inverses, the `bl`-facing gated executors, `ensure` the workspace's existence and its policy — `lernie new` plus the one convergence that authors §8.6's control block and §3.7's instruction glob onto **the lineage the drone will fork off** (§8.7, `config/default` unless the ball's tags named another) in a single `lernie config` drive, outside the create skip; the §9.2 birth-template gate that once sat here is retired (bl-00ee) — the detached fire, whose one argv carries `--name`, `--config`, `--cwd` and every `--pin` |
 | `src/start/gate.rs` | the §8.1 provider gate (bl-1fd0): a pure read of brazen's `credential` column answering whether the wall a start aims at can reach a model at all. `WallCredit` folds the table to two booleans and `StartGate` is total over them plus the §8.2 channel — Ready (today's flow, byte for byte), SignIn (the rung, refusing Send only where the wall has neither a credential nor a keyless row left to try) and Unknown (a workspace an entry hosts, whose wall this box reads nothing of — bl-61bf's seam). A keyless row is deliberately not Ready: brazen ships `ollama` and `claude-code` at `not required` on every bare wall, so counting them would make the rung vacuous on exactly the wall it was ruled for |
 | `src/start/instructions.rs` + `src/start/instructions/{names,manifest}.rs` | the §3.7 project-instruction freeze (bl-aa8b): the walk from the binding's authority root down to the binding and the ranked `--pin` specs it yields — yog reads no instruction bytes, lernie's caller-supplied pinned documents do the loading, validation, snapshot and commit; `names` the severable filename policy (`AGENTS.md` in code, `instructions.yaml` at the live config tip overriding it, an existing file authoritative even when it names nothing); `manifest` the `instructions/**` glob's fixed point, without which a frozen document is a committed file no model ever sees |
+| `src/start/lineage.rs` | the §8.7 birth policy (bl-380f): which `config/<name>` a ball's tags select, and the whole of how VISION §4.2's *"skills and model from the ball's tags"* is delivered — a lineage already being the (model, skills) pair, its **existence** is the policy and no table exists. First tag naming a lineage wins (the operator's own tag order is the precedence), no match is `None` and an omitted flag, and severability is `git branch -d config/<tag>`. Resolved once in `prepare` because two acts consume it and must not disagree — §8.6's convergence and the fire's `--config` |
 | `src/state.rs` | the crate's lock chokepoint: the dirty hand-off, the snapshot cell, the §8.5 search cell and the §7.2 live-tail cell — the whole inter-thread interface (§7.2, §8.5, AGENTS rule 7). The tail cell is **appended whole below every line that was there before**, and takes the snapshot cell's *alias + free functions* spelling rather than a struct with an `impl` — including leaving the module doc's stale "three residents" line untouched. That is the hazard `rules/locks-outside-state.yml` records as the reason for both its carve-outs: llvm-cov mis-attributes phantom uncovered regions onto this file's `impl` headers when anything above them moves, and an added `impl` block draws one onto itself besides. This is genuine cross-thread hand-off state — what the chokepoint exists to inventory — so it belongs here and the spelling gives way instead of the rule. The watch hub's two singletons are its second declared carve-out (§7.1, `rules/locks-outside-state.yml`) |
 | `src/steps_view/{mod,detail,columns,render,drill,wound,wire,wire/decode}.rs` | the step inspector, incl. the §7.3 wound in both its classes — no response, and the §4.4 output limit (§11 Steps). Both tiers are cut twice, read from write: `mod`+`detail` are the list/drill-in **reads**, `render`+`drill` their **paints**, and `columns` is the §11 column table — header, hover explanation and cell in one home, so no field paints without its name (bl-3ffc). `wire` is the §8.5 spelling of **both** tiers, cut along that same read seam (bl-6233), with `wire/decode` its other direction at the §12 budget (bl-7067) — also the one home of the `BudgetSpend` shape, which the §3.5 board figure spends rather than keeping a second wording of four counters |
 | `src/steps_view/orphan.rs` | the **orphaned-mail state** (bl-ace6): a delivered message on the transcript tail with nobody holding the driver lock — the class the §7.3 wound cannot see because the driver that died (an unpaired-tail decline, a lease fault, a crashed launch) never created a step. Derived per reading from the messages listing plus the already-derived §3.5 liveness, nothing stored; the reason is the tail of `steps/<agent>/driver.log`, lernie's binding of every launched driver's stderr (the file yog pinned lernie 0.0.9 for and, until this, never read), read only when the state holds |

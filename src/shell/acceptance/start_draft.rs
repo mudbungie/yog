@@ -55,6 +55,7 @@ fn a_pending_start_draft_replaces_the_composer_and_cancel_restores_it() {
         binding: None,
         goal: BALL_GOAL.to_owned(),
         origin: crate::opslog::Origin::Balls,
+        lineage: None,
     });
 
     let pending = screen.text(&mut world);

@@ -9,7 +9,7 @@ use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Payload, Prepared};
 use serde_json::{Map, Value, json};
 
-use super::{opt_path_of, path_of, str_of};
+use super::{opt_path_of, opt_str_of, path_of, str_of, strings_of};
 
 /// Encode the §3.4 payload rung. `rung` is the discriminant; each rung carries
 /// exactly its own inputs.
@@ -51,7 +51,9 @@ fn encode_ball(ball: &BallSpec) -> Value {
             title,
             body,
             join,
-        } => json!({ "id": id, "title": title, "body": body, "join": join_token(*join) }),
+            tags,
+        } => json!({ "id": id, "title": title, "body": body,
+                     "join": join_token(*join), "tags": tags }),
         BallSpec::New { title, body } => json!({ "title": title, "body": body }),
     }
 }
@@ -66,6 +68,10 @@ fn decode_ball(v: &Value) -> Result<BallSpec, String> {
             title,
             body,
             join: parse_join(&str_of(obj, "join")?)?,
+            // Required, like every other input of a rung: an absent array is a
+            // gesture whose §8.7 birth policy is unknown, and guessing the
+            // untagged answer would silently birth on the default lineage.
+            tags: strings_of(obj, "tags")?,
         }),
         None => Ok(BallSpec::New { title, body }),
     }
@@ -81,6 +87,10 @@ pub(crate) fn encode_prepared(p: &Prepared) -> Value {
         // nothing" — a real value of the field, not an omission, so a reply
         // deposits back as the same gesture it came from.
         "binding": p.binding.as_ref().map(|b| b.to_string_lossy()),
+        // The §8.7 birth policy, same shape and same reason as `binding`: a
+        // real `null` for "the default lineage", so a reply deposits back as
+        // the gesture it came from.
+        "lineage": p.lineage,
         "goal": p.goal,
         "origin": origin_token(p.origin),
     })
@@ -116,6 +126,7 @@ pub(crate) fn decode_prepared(v: &Value) -> Result<Prepared, String> {
     Ok(Prepared {
         workspace: str_of(obj, "workspace")?,
         binding: opt_path_of(obj, "binding")?,
+        lineage: opt_str_of(obj, "lineage")?,
         goal: str_of(obj, "goal")?,
         origin: parse_origin(&str_of(obj, "origin")?)?,
     })

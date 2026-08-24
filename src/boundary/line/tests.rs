@@ -35,6 +35,7 @@ pub(super) fn existing() -> BallSpec {
         title: "a title".to_owned(),
         body: "a body".to_owned(),
         join: JoinState::ReadyStartable,
+        tags: Vec::new(),
     }
 }
 
@@ -44,6 +45,7 @@ pub(super) fn prepared() -> Prepared {
         binding: Some(PathBuf::from("/ws/work")),
         goal: String::new(),
         origin: Origin::Conversation,
+        lineage: None,
     }
 }
 

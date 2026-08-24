@@ -43,6 +43,7 @@ fn draft(world: &mut World) {
         binding: None,
         goal: DRAFT.to_owned(),
         origin: crate::opslog::Origin::Balls,
+        lineage: None,
     });
 }
 

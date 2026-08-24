@@ -44,6 +44,7 @@ fn the_prepared_reply_is_the_prompt_gestures_own_spelling() {
         binding: Some(PathBuf::from("/target")),
         goal: "g".into(),
         origin: Origin::Balls,
+        lineage: None,
     };
     let v = encode(&Reply::Prepared(prepared.clone()));
     assert_eq!(v["ok"], true);

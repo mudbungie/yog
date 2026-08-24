@@ -84,6 +84,7 @@ fn s8_t2_one_world_cli_nests_every_verb_it_spawns() {
                 title: "Wire it".to_owned(),
                 body: "Do the thing.".to_owned(),
                 join: JoinState::ReadyStartable,
+                tags: Vec::new(),
             },
         },
         home: home.path().to_path_buf(),

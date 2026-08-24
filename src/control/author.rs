@@ -64,8 +64,10 @@ use crate::config_edit::branch::edit::DraftFile;
 /// The config lineage every workspace is born on and every fresh agent forks
 /// off (lernie ARCH §2.2).
 pub const DEFAULT_CONFIG: &str = "default";
-/// Its refspec in the bare workspace repo.
-const DEFAULT_REF: &str = "refs/heads/config/default";
+/// The refspec of `config/<name>` in the bare workspace repo.
+fn config_ref(config: &str) -> String {
+    format!("refs/heads/config/{config}")
+}
 /// The control file inside a config commit.
 const WORKFLOW_YAML: &str = "workflow.yaml";
 /// The block's key, as lernie's workflow parser reads it.
@@ -82,13 +84,18 @@ const MARK: &str = "# yog authors this block";
 /// [`MARK`]: stripped by the pass that re-authors it.
 const BUDGETS_MARK: &str = "# yog holds this file's budgets";
 
-/// One committed control file, as `config/default` carries it — the base every
-/// authoring starts from. `None` when the workspace has no config commit yet or
-/// the file cannot be read: nothing to author onto, which is not an error, only
-/// nothing to do. Shared with §3.7's `manifest.yaml` author: two files, one
-/// read of the same lineage tip.
-pub fn committed(workspace: &Path, file: &str) -> Option<String> {
-    let bytes = config_file(workspace, DEFAULT_REF, file).ok()?;
+/// One committed control file, as `config/<config>` carries it — the base every
+/// authoring starts from. `None` when the workspace has no such config commit
+/// yet or the file cannot be read: nothing to author onto, which is not an
+/// error, only nothing to do. Shared with §3.7's `manifest.yaml` author: two
+/// files, one read of the same lineage tip.
+///
+/// **The lineage is a parameter because the drone's is** (§8.7, bl-380f). It is
+/// [`DEFAULT_CONFIG`] for every untagged start, and the ball's tag-selected
+/// lineage otherwise — the control must land on the branch the agent will
+/// actually fork off, or a tagged birth is the one birth nothing adjudicates.
+pub fn committed(workspace: &Path, config: &str, file: &str) -> Option<String> {
+    let bytes = config_file(workspace, &config_ref(config), file).ok()?;
     String::from_utf8(bytes).ok()
 }
 
@@ -156,8 +163,8 @@ fn block(shim: &Path) -> String {
 /// Who *drives* the commit is [`crate::start::execute_ensure_workspace`], which
 /// converges this drift and §3.7's `manifest.yaml` drift in one `lernie config`
 /// pass — two files of one policy, one checkout, one commit, one ops row.
-pub fn workflow_drift(workspace: &Path, shim: &Path) -> Option<DraftFile> {
-    let base = committed(workspace, WORKFLOW_YAML)?;
+pub fn workflow_drift(workspace: &Path, config: &str, shim: &Path) -> Option<DraftFile> {
+    let base = committed(workspace, config, WORKFLOW_YAML)?;
     let want = authored(&base, shim);
     (want != base).then(|| DraftFile {
         rel_path: WORKFLOW_YAML.to_owned(),

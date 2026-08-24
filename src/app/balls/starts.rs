@@ -179,6 +179,9 @@ impl AppModel {
             title: ball.title.clone(),
             body: ball.body.clone(),
             join: row.state,
+            // The §8.7 birth policy's input, carried off the live ball rather
+            // than the join row: the row is the projection, the ball is the fact.
+            tags: ball.tags.clone(),
         })
     }
 

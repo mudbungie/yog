@@ -57,3 +57,20 @@ pub(crate) fn seed_workspace_config(workspace: &Path, files: &[(&str, &str)]) {
     ]);
     run(&["-C", &repo_s, "worktree", "remove", &author_s]);
 }
+
+/// Fork `config/<name>` off `config/default` — the §8.7 birth policy an
+/// operator installs by *creating a lineage*, and the whole of what makes a
+/// ball tag selectable. Nothing else is written: the policy is the ref.
+pub(crate) fn seed_workspace_lineage(workspace: &Path, name: &str) {
+    let repo = workspace.join("repo.git").display().to_string();
+    let branch = format!("config/{name}");
+    let status = crate::git_env::status(crate::git_env::git().args([
+        "-C",
+        &repo,
+        "branch",
+        &branch,
+        "config/default",
+    ]))
+    .unwrap();
+    assert!(status.success(), "git branch {branch}");
+}

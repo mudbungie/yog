@@ -67,6 +67,7 @@ fn the_fan_reply_rows_re_enter_as_prompt_gestures() {
         binding: Some(PathBuf::from("/state/balls/attempts/dev/proj/at-0badcafe")),
         goal: "g".into(),
         origin: Origin::Balls,
+        lineage: None,
     };
     let v = encode(&Reply::Fanned(vec![prepared.clone()]));
     assert_eq!(v["ok"], true);

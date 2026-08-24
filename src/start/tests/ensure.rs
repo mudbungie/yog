@@ -36,9 +36,15 @@ fn ensure_skips_when_the_workspace_already_exists() {
     let ws = workspace_path(w.yog.path(), "n");
     std::fs::create_dir_all(ws.join("repo.git")).unwrap();
     let lernie = Cli::new("/definitely/not/a/real/lernie");
-    let created =
-        execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
-            .unwrap();
+    let created = execute_ensure_workspace(
+        &deps(&w, &lernie),
+        "TS",
+        &ws,
+        "default",
+        &layout(&w),
+        Origin::Balls,
+    )
+    .unwrap();
     assert!(!created, "existing workspace skipped");
     assert!(w.ops().is_empty(), "skip runs and logs nothing");
 }
@@ -49,8 +55,15 @@ fn ensure_creates_the_workspace_and_logs() {
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
     let lernie = Cli::new(fake_lernie(w.bin.path()));
     assert!(
-        execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
-            .unwrap()
+        execute_ensure_workspace(
+            &deps(&w, &lernie),
+            "TS",
+            &ws,
+            "default",
+            &layout(&w),
+            Origin::Balls
+        )
+        .unwrap()
     );
     assert!(ws.parent().unwrap().is_dir(), "parent chain mkdir -p'd");
     assert_eq!(
@@ -64,8 +77,15 @@ fn ensure_errors_and_logs_on_a_nonzero_new() {
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "n");
     let lernie = Cli::new(fake_fail(w.bin.path(), "lernie", "disk full"));
-    let err = execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
-        .unwrap_err();
+    let err = execute_ensure_workspace(
+        &deps(&w, &lernie),
+        "TS",
+        &ws,
+        "default",
+        &layout(&w),
+        Origin::Balls,
+    )
+    .unwrap_err();
     assert!(matches!(err, StartError::VerbFailed { verb: "new", .. }));
 }
 
@@ -78,8 +98,15 @@ fn ensure_logs_a_mkdir_step_failure() {
     std::fs::write(&blocker, b"x").unwrap();
     let ws = blocker.join("workspaces").join("n");
     let lernie = Cli::new("/definitely/not/a/real/lernie");
-    let err = execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
-        .unwrap_err();
+    let err = execute_ensure_workspace(
+        &deps(&w, &lernie),
+        "TS",
+        &ws,
+        "default",
+        &layout(&w),
+        Origin::Balls,
+    )
+    .unwrap_err();
     assert!(matches!(err, StartError::Io(_)));
     assert_eq!(w.ops()[0].argv, [YOG_STEP, "mkdir"]);
 }
@@ -103,8 +130,15 @@ fn ensure_creates_whatever_the_birth_template_names() {
     let ws = workspace_path(w.yog.path(), "n");
     let lernie = Cli::new(fake_lernie(w.bin.path()));
     assert!(
-        execute_ensure_workspace(&deps(&w, &lernie), "TS", &ws, &layout(&w), Origin::Balls)
-            .unwrap()
+        execute_ensure_workspace(
+            &deps(&w, &lernie),
+            "TS",
+            &ws,
+            "default",
+            &layout(&w),
+            Origin::Balls
+        )
+        .unwrap()
     );
     assert!(
         !w.ops().iter().any(|e| e.argv == [YOG_STEP, "template"]),

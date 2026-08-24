@@ -39,6 +39,7 @@ fn prepared(w: &super::World) -> Prepared {
         binding: Some(w.ws_cobalt.clone()),
         goal: "prefill".into(),
         origin: crate::opslog::Origin::Conversation,
+        lineage: None,
     }
 }
 

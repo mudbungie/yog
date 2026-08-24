@@ -23,6 +23,7 @@ fn existing_ball() -> Payload {
             title: "T".to_owned(),
             body: "B".to_owned(),
             join: JoinState::ReadyStartable,
+            tags: Vec::new(),
         },
     }
 }

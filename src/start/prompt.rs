@@ -26,6 +26,11 @@ const CWD_FLAG: &str = "--cwd";
 /// lernie's caller-supplied pinned document (upstream bl-fb5c, released 0.0.4):
 /// the §3.7 project-instruction freeze's one channel.
 const PIN_FLAG: &str = "--pin";
+/// lernie's config-lineage selector (upstream bl-a693, released 0.0.6): fork
+/// off `config/<name>`'s head instead of `config/default`. The §8.7 birth
+/// policy's one channel — the whole of how a ball's tags reach the model and
+/// the skill set the drone is born with.
+const CONFIG_FLAG: &str = "--config";
 const YOG_NAME: &str = "YOG_NAME";
 
 /// One fire, whole (§8.1): the `Prepared` a `/prompt` carries, the edited
@@ -112,10 +117,13 @@ pub fn execute_prompt(
     // The §3.7 freeze: one `--pin` per instruction document the binding's
     // project declares, discovered from the binding's own authority root. No
     // binding, no discovery — the bare rung reads no policy and stats no file.
-    let pins: Vec<String> = prepared
-        .binding
+    let config = prepared
+        .lineage
         .as_deref()
-        .map_or_else(Vec::new, |target| specs(target, &names::names(workspace)));
+        .unwrap_or(crate::control::author::DEFAULT_CONFIG);
+    let pins: Vec<String> = prepared.binding.as_deref().map_or_else(Vec::new, |target| {
+        specs(target, &names::names(workspace, config))
+    });
     let named = lernie.and_env(vec![(YOG_NAME.to_owned(), prepared.workspace.clone())]);
     let sink = opslog::detached::sink(state_root, ts, workspace);
     // One argv, built once and spawned *and* logged from it — so the flag that
@@ -123,6 +131,12 @@ pub fn execute_prompt(
     // in both: `opslog::clip_goal` trims exactly the final element (§4.2), so
     // every pin survives into the trail and *is* the provenance record (§3.7).
     let mut args = vec![PROMPT, NAME_FLAG, conversation.as_str()];
+    // The §8.7 birth policy (VISION §4.2/§4.6): the lineage the ball's tags
+    // selected, absent for every start that matched none — an omitted flag is
+    // lernie's own `config/default`, so the untagged case spells nothing.
+    if let Some(name) = prepared.lineage.as_deref() {
+        args.extend([CONFIG_FLAG, name]);
+    }
     if let Some(dir) = bound.as_deref() {
         args.extend([CWD_FLAG, dir]);
     }

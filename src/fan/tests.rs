@@ -81,6 +81,7 @@ fn prepared(dir: &TempDir) -> Prepared {
         binding: Some(dir.path().join("claim")),
         goal: "Ball bl-1f2a: do the thing".to_owned(),
         origin: Origin::Balls,
+        lineage: None,
     }
 }
 

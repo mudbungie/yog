@@ -225,6 +225,7 @@ fn every_join_state_round_trips_inside_an_existing_ball() {
                     title: "t".into(),
                     body: "b".into(),
                     join,
+                    tags: Vec::new(),
                 },
             },
         }));
@@ -249,6 +250,7 @@ fn every_origin_round_trips_inside_a_prompt() {
                         binding: binding.clone(),
                         goal: "the goal".into(),
                         origin,
+                        lineage: None,
                     },
                     goal: "edited goal".into(),
                     seed,

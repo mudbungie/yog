@@ -34,6 +34,7 @@ pub(super) fn prepared(name: &str, binding: Option<&Path>) -> Prepared {
         binding: binding.map(Path::to_path_buf),
         goal: String::new(),
         origin: Origin::Conversation,
+        lineage: None,
     }
 }
 

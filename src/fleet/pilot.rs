@@ -178,6 +178,10 @@ impl PilotCtx {
                 title: ball.title.clone(),
                 body: ball.body.clone(),
                 join: row.state,
+                // §8.7: the loop reads the whole ball off the snapshot, so its
+                // tags reach the start plan exactly as a clicked ▶ Start's do —
+                // a fleet birth and a hand birth select one lineage (bl-380f).
+                tags: ball.tags.clone(),
             },
         };
         let prepared = dispatch::prepare(deps, ts, &fleet.workspace, &project, &payload).ok()?;

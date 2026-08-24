@@ -97,6 +97,7 @@ impl World {
             binding: Some(self.dir.path().join("claim")),
             goal: "Ball bl-1f2a: do it".to_owned(),
             origin: Origin::Balls,
+            lineage: None,
         }
     }
 

@@ -154,6 +154,7 @@ fn the_assign_verb_stays_whole_behind_a_ball_title_of_any_length() {
                 title: "epic: the inspector rework".to_owned(),
                 body: String::new(),
                 join: JoinState::ReadyStartable,
+                tags: Vec::new(),
             },
         },
         home: ws.clone(),

@@ -41,6 +41,7 @@ fn s3_t1_ready_ball_claims_after_new_and_binds_the_worktree() {
                 title: "Wire it".to_owned(),
                 body: "Do the thing.".to_owned(),
                 join: JoinState::ReadyStartable,
+                tags: Vec::new(),
             },
         },
         home: home.path().to_path_buf(),

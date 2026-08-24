@@ -164,6 +164,10 @@ pub(super) fn compose_prepared(inputs: &StartInputs, worktree: Option<&Path>) ->
     super::Prepared {
         workspace: crate::naming::leaf(&inputs.workspace),
         binding: target_binding(&inputs.payload, worktree),
+        // The §8.7 lineage is a git read, and everything here is pure: the
+        // planner's preview never names one, and [`prepare`](super::prepare)
+        // — the one caller that resolved it — fills it in on the way out.
+        lineage: None,
         goal: prefill(&inputs.payload),
         origin: inputs.payload.origin(),
     }

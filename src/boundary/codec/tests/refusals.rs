@@ -98,6 +98,17 @@ fn malformed_envelopes_refuse_with_a_reason() {
             json!({"op": "update", "project": "/p", "id": "x", "name": "n", "title": 5}),
             "field \"title\"",
         ),
+        // §8.7: an existing ball's `tags` are a required input like every
+        // other. A payload that omits them names no birth policy, and reading
+        // the absence as "untagged" would silently birth the drone on the
+        // default lineage — the guess a strict edge exists to refuse.
+        (
+            json!({"op": "prepare", "workspace": "ws",
+                   "payload": {"rung": "ball", "project": "p",
+                               "ball": {"id": "bl-1", "title": "t", "body": "b",
+                                        "join": "ready"}}}),
+            "field \"tags\"",
+        ),
     ];
     for (envelope, needle) in cases {
         let err = decode(&envelope).expect_err(&envelope.to_string());

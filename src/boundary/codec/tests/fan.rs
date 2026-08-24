@@ -16,6 +16,7 @@ fn prepared(binding: Option<&str>) -> Prepared {
         binding: binding.map(p),
         goal: "Ball bl-1f2a: do it".into(),
         origin: Origin::Balls,
+        lineage: None,
     }
 }
 

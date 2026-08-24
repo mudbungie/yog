@@ -20,6 +20,7 @@ fn prepared() -> Prepared {
         binding: None,
         goal: "g".to_owned(),
         origin: crate::opslog::Origin::Conversation,
+        lineage: None,
     }
 }
 
