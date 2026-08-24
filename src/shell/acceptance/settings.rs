@@ -13,94 +13,18 @@
 //! input bar and the chat, so they belong below the input box rather than
 //! above it. The seat's ordering claim is asserted at every window size in
 //! [`super::bands`]; what these beats own is the seat's **contents** — which
-//! facts belong in it, which must not be left in the header above, and that it
-//! cannot grow past half the pane.
+//! facts belong in it and which must not be left in the header above. How
+//! large the seat may become is [`bound`]'s.
 
-use super::super::render;
-use super::fixture::{World, world};
-use super::input;
-use crate::cli_outbound::Cli;
-use crate::paint_probe::Painted;
+/// **The bound half** — a seat that expands may not eat its pane (QUALITY G4),
+/// held at both ends of the supported window range.
+mod bound;
+/// **The settled frame** these beats measure — the driver, and the galley
+/// locators over what it painted.
+mod frame;
 
-/// A settled full-window frame: its galleys with positions, on a context whose
-/// panel rects can then be read back by id.
-struct Window {
-    ctx: egui::Context,
-    lernie: Cli,
-    bl: Cli,
-    bz: Cli,
-}
-
-impl Window {
-    fn new() -> Self {
-        Self {
-            ctx: egui::Context::default(),
-            lernie: Cli::new("/yog-absent-lernie"),
-            bl: Cli::new("/yog-absent-bl"),
-            bz: Cli::new("/yog-absent-bz"),
-        }
-    }
-
-    /// Four frames — panels adopt their content height a frame late, and the
-    /// composer's queue region settles one after that — then the galleys of the
-    /// frame an operator would actually be looking at.
-    fn settled(&self, world: &mut World) -> Vec<Painted> {
-        self.settled_on(world, input())
-    }
-
-    /// The same settle on a window of the caller's own size.
-    fn settled_on(&self, world: &mut World, raw: egui::RawInput) -> Vec<Painted> {
-        let frame = |world: &mut World| {
-            self.ctx.run(raw.clone(), |ctx| {
-                render(
-                    ctx,
-                    &mut world.model,
-                    &mut world.state,
-                    &self.lernie,
-                    &self.bl,
-                    &self.bz,
-                );
-            })
-        };
-        // Two frames, then the **wire settled to a fixed point** (REMOTE §9.7's
-        // harness ruling): this seat's rows are a selection out of an answered
-        // forest and a standing `Query::Agent` since bl-48ae, so a driver that
-        // only ran frames would measure a panel holding nothing.
-        let _ = frame(world);
-        let _ = frame(world);
-        world.drain(&mut |world| {
-            let _ = frame(world);
-        });
-        let mut out = None;
-        for _ in 0..4 {
-            out = Some(frame(world));
-        }
-        crate::paint_probe::painted_of(&out.expect("four frames ran"))
-    }
-
-    /// The stored rect of a panel, by its id.
-    fn panel(&self, id: &str) -> egui::Rect {
-        egui::containers::panel::PanelState::load(&self.ctx, egui::Id::new(id))
-            .expect("the panel stores its rect")
-            .rect
-    }
-}
-
-/// Every painted galley whose text contains `needle`, with its rect.
-fn all(painted: &[Painted], needle: &str) -> Vec<egui::Rect> {
-    painted
-        .iter()
-        .filter(|(text, _)| text.contains(needle))
-        .map(|(_, rect)| *rect)
-        .collect()
-}
-
-/// The one galley containing `needle`, or a panic naming it.
-fn one(painted: &[Painted], needle: &str) -> egui::Rect {
-    *all(painted, needle)
-        .first()
-        .unwrap_or_else(|| panic!("{needle:?} not painted"))
-}
+use super::fixture::world;
+use frame::{Window, all, one};
 
 /// The whole ruling, on a selected conversation: the spend figures and the
 /// §9.4 model line paint **inside** the conversation pane's settings panel,
@@ -196,62 +120,6 @@ fn an_empty_selection_answers_the_same_question_in_the_same_seat() {
         seat.top() >= composer.bottom() - 1.0,
         "and the empty seat takes the same side of the box as the full one \
          (bl-58e4): {seat:?} vs {composer:?}"
-    );
-}
-
-/// QUALITY G4, held against the seat that can grow: the §9.4 picker expands
-/// inline at the model line, and an accessory that eats its own pane is the
-/// overlap defect bl-9551 filed. The region is capped at half the pane and
-/// scrolls past it, so an open picker cannot push the transcript off screen.
-#[test]
-fn an_expanded_picker_cannot_grow_the_seat_past_half_the_pane() {
-    let mut world = world();
-    let ws = world.ws.clone();
-    world.model.focus_agent(&ws, "c-1");
-    let win = Window::new();
-
-    let collapsed = {
-        win.settled(&mut world);
-        win.panel("conversation-settings").height()
-    };
-    world.state.wall.picker.open = true;
-    win.settled(&mut world);
-    let expanded = win.panel("conversation-settings");
-    assert!(
-        expanded.height() > collapsed,
-        "the picker does open inline at the line: {collapsed} → {}",
-        expanded.height()
-    );
-    let window = input().screen_rect.expect("the probe sizes the screen");
-    assert!(
-        expanded.height() <= window.height() / 2.0,
-        "and the seat stays under half the pane: {} of {}",
-        expanded.height(),
-        window.height()
-    );
-}
-
-/// G4 at the documented minimum window (`src/main.rs` `min_inner_size`,
-/// 420x320): the cap is a *share* of the pane, not a pixel count, so the seat
-/// that can expand a picker inline is still bounded where there is least room
-/// to spare. The rest of that window has its own open defects (bl-b531,
-/// bl-9551); this asserts only the accessory this ball added.
-#[test]
-fn the_seat_is_bounded_at_the_smallest_supported_window_too() {
-    let mut world = world();
-    let ws = world.ws.clone();
-    world.model.focus_agent(&ws, "c-1");
-    let win = Window::new();
-    // One frame first: the picker is the wall's RAM (bl-5894), so the flag goes
-    // on the focused sphere's own picker rather than the launch bundle's.
-    win.settled_on(&mut world, crate::paint_probe::screen_sized(420.0, 320.0));
-    world.state.wall.picker.open = true;
-    win.settled_on(&mut world, crate::paint_probe::screen_sized(420.0, 320.0));
-    let seat = win.panel("conversation-settings");
-    assert!(
-        seat.height() <= 320.0 / 2.0,
-        "an open picker may not take more than half the pane: {}",
-        seat.height()
     );
 }
 

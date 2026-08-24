@@ -11,7 +11,13 @@ use crate::cli_outbound::Cli;
 /// from the driver at §12's budget on the seam the two already had: this file
 /// is how a frame is *run*, `aim` is how a coordinate is found in one.
 mod aim;
+/// **How a beat spells an input** — the key, the click, the release and the
+/// modifier plane they arrive on, split from the driver at the same budget and
+/// on the same seam, one door over.
+mod gesture;
 pub(super) use aim::{locate, rect_of, rects_of};
+use gesture::modifiers_of;
+pub(super) use gesture::{click, command_shift, press};
 
 /// The window under test: one persistent `egui::Context`, so focus carries
 /// frame to frame exactly as it does for the operator.
@@ -205,13 +211,6 @@ impl Screen {
         self.ctx.memory(egui::Memory::focused)
     }
 
-    /// Force every tooltip to paint, hover or no (`super::hover::live`'s drive
-    /// and the paint-layer half both need it): the operator's hover is a
-    /// pointer position no walk of the keyboard floor can be in two places for.
-    pub(super) fn reveal(&self) {
-        self.ctx.memory_mut(|m| m.set_everything_is_visible(true));
-    }
-
     /// What the widget `id` **was** — egui's own record of the response it
     /// handed the render site, sense and enablement included. The frame is over
     /// by the time a test asks, which is exactly what `read_response` answers.
@@ -225,67 +224,5 @@ impl Screen {
     /// which controls are supposed to have one.
     pub(super) fn tooltipped(&self, id: egui::Id) -> bool {
         egui::popup::was_tooltip_open_last_frame(&self.ctx, id)
-    }
-
-    /// A frame with no input.
-    pub(super) fn idle(&self, world: &mut World) -> bool {
-        self.frame(world, Vec::new())
-    }
-
-    /// Escape — egui spends it surrendering text focus (§11), which is how a
-    /// test puts the keyboard back down before asking whether an operation
-    /// picks it up again.
-    pub(super) fn release(&self, world: &mut World) {
-        assert!(
-            !self.frame(world, vec![press(egui::Key::Escape, egui::Modifiers::NONE)]),
-            "Escape is the release gesture: the box must let go"
-        );
-    }
-}
-
-/// The modifier plane a frame's presses arrive on.
-fn modifiers_of(events: &[egui::Event]) -> egui::Modifiers {
-    events
-        .iter()
-        .find_map(|e| match e {
-            egui::Event::Key { modifiers, .. } => Some(*modifiers),
-            _ => None,
-        })
-        .unwrap_or(egui::Modifiers::NONE)
-}
-
-/// The §11 Ctrl+Shift plane (⌘⇧ on macOS) — the `new workspace` combo.
-pub(super) fn command_shift() -> egui::Modifiers {
-    egui::Modifiers {
-        shift: true,
-        ..egui::Modifiers::COMMAND
-    }
-}
-
-/// One full click at `pos`: move, press, release — three frames, because egui
-/// hit-tests against the *previous* frame's widget rects, so a press in the
-/// frame that first sees the pointer would test against nothing.
-pub(super) fn click(screen: &Screen, world: &mut World, pos: egui::Pos2) {
-    screen.frame(world, vec![egui::Event::PointerMoved(pos)]);
-    for pressed in [true, false] {
-        screen.frame(
-            world,
-            vec![egui::Event::PointerButton {
-                pos,
-                button: egui::PointerButton::Primary,
-                pressed,
-                modifiers: egui::Modifiers::NONE,
-            }],
-        );
-    }
-}
-
-pub(super) fn press(key: egui::Key, modifiers: egui::Modifiers) -> egui::Event {
-    egui::Event::Key {
-        key,
-        physical_key: None,
-        pressed: true,
-        repeat: false,
-        modifiers,
     }
 }

@@ -11,78 +11,18 @@
 //! The **keyboard** half of the discipline — a selection landing the composer
 //! however it was made, and the combo the walk then continues on — is
 //! [`super::walk`], its own file at the rule's own seam.
+//!
+//! **The request mechanism itself is [`request`]** — raised at launch, spent
+//! once, and taken by the empty world's bootstrap box on the same path. Split
+//! off at §12's budget on this doc's own seam: what an operation does to the
+//! keyboard is one subject, what the request does on its own another.
+
+/// The mechanism: raised at launch, spent once, by whichever composer paints.
+mod request;
 
 use super::super::focus;
-use super::fixture::{world, world_empty};
+use super::fixture::world;
 use super::screen::{Screen, command_shift, press};
-
-/// The §3.4 invitation above the bootstrap's one box (`shell::bootstrap`) — a
-/// run no other surface paints, so its presence identifies the frame.
-const BOOTSTRAP_INVITATION: &str = "start a conversation:";
-
-/// What the centre says instead when a workspace IS focused and no conversation
-/// is selected (`shell::workspace::center`) — the frame this file's empty-world
-/// test used to run against without noticing.
-const SELECT_A_CONVERSATION: &str = "select a conversation";
-
-/// Launch: the operator opens yog and types. No click, no key first — the
-/// request stands from [`ShellState::new`] and the first painted composer
-/// spends it.
-#[test]
-fn launch_lands_the_keyboard_in_the_composer() {
-    let mut world = world();
-    assert!(
-        world.state.focus_composer,
-        "a fresh ShellState carries the launch request"
-    );
-    let screen = Screen::new();
-    assert!(
-        screen.idle(&mut world),
-        "the first frame hands the keyboard to the composer"
-    );
-    assert!(
-        !world.state.focus_composer,
-        "and spends the request rather than re-grabbing every frame"
-    );
-}
-
-/// The empty world takes the same path — the bootstrap composer is not a
-/// special case with a focus flag of its own (it used to carry an `egui::Id`
-/// memory bit; one mechanism replaced it).
-///
-/// **The surface is asserted before the keyboard is** (bl-37bf). This test ran
-/// for its whole life against `world_unfocused`, which withheld the startup
-/// focus *argument* while leaving the workspace in the roster — so
-/// `AppModel::startup_focus` derived a focus onto it, `shell::bootstrap` was
-/// never called, and the box that took the keyboard was the start pane's. The
-/// assertion passed on a widget that is not the one its own message names,
-/// which is the vacuity shape bl-36c3 catalogued: a predicate satisfied by
-/// something other than the behaviour under test.
-///
-/// So the frame proves it is the right frame first, by the two runs only the
-/// bootstrap paints — the tagline under the wordmark, and the §3.4 invitation.
-/// A world with a workspace in it paints neither, and paints
-/// [`SELECT_A_CONVERSATION`] instead.
-#[test]
-fn the_empty_world_bootstrap_takes_the_launch_request_too() {
-    let mut world = world_empty();
-    let screen = Screen::new();
-    let painted = screen.text(&mut world);
-    for run in [crate::theme::TAGLINE, BOOTSTRAP_INVITATION] {
-        assert!(
-            painted.contains(run),
-            "`{run}` is the bootstrap's own — this is not the bootstrap frame:\n{painted}"
-        );
-    }
-    assert!(
-        !painted.contains(SELECT_A_CONVERSATION),
-        "and the conversation centre is not up beside it:\n{painted}"
-    );
-    assert!(
-        screen.idle(&mut world),
-        "the bootstrap box takes the keyboard"
-    );
-}
 
 /// Opening a conversation with the pointer: the composer is re-aimed at what
 /// was clicked, so the keyboard follows it there.
@@ -232,20 +172,4 @@ fn sending_a_message_keeps_the_keyboard() {
         screen.idle(&mut world),
         "the send left the cursor where the next message gets typed"
     );
-}
-
-/// The mechanism itself: a request is spent exactly once, by whichever composer
-/// paints — never held, never re-grabbing a box the operator has left.
-#[test]
-fn a_request_is_spent_once() {
-    let mut world = world();
-    assert!(world.state.focus_composer, "launch stands the request up");
-    let screen = Screen::new();
-    screen.idle(&mut world);
-    assert!(!world.state.focus_composer, "the composer spent it");
-    focus::request(&mut world.state);
-    focus::request(&mut world.state);
-    assert!(world.state.focus_composer, "asking twice is asking once");
-    screen.idle(&mut world);
-    assert!(!world.state.focus_composer, "and one frame clears it");
 }

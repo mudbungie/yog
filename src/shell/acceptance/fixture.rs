@@ -80,11 +80,15 @@ pub(in crate::shell::acceptance) mod crowd;
 /// [`crowd`]'s twin on the other axis, its own file per §12's budget.
 pub(in crate::shell::acceptance) mod wide;
 
-/// The world a test drives, and the wire behind it — its own file per §12's
-/// budget.
 /// The follow lane's stand-in (bl-73e7) — its own file at §12's budget; the
 /// seam is its own doc's.
 mod follow;
+/// **The wire standing behind the world** — the questions and the acts the
+/// frame's own channel ends carry, answered through the chokepoints the real
+/// listener reaches; its own file at §12's budget, on the seam between the
+/// fixture a test mutates and the engine that answers what it said.
+mod wire;
+/// The world a test drives — its own file per §12's budget.
 mod world;
 pub(in crate::shell::acceptance) use world::World;
 

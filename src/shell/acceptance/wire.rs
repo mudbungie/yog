@@ -16,7 +16,7 @@
 //! dispatch implementation is added** — REMOTE §11's rejection is about a face,
 //! and this is a wire with the socket taken out for a test that cannot have one.
 //!
-//! **The answering itself lives on the fixture** (`fixture::world`, bl-1747),
+//! **The answering itself lives on the fixture** (`fixture::wire`, bl-1747),
 //! because every world needs it now that acts are posted; what is left here is
 //! the settle-then-render *dance* a migrated READ costs, and the witness that a
 //! migrated fold really reads a reply.

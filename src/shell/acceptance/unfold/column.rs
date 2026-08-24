@@ -14,7 +14,7 @@
 //! everywhere; a title truncated to nothing satisfies the second.
 
 use super::super::screen::Screen;
-use super::drive::{band, column, seat, visible};
+use super::reads::{band, column, seat, visible};
 
 /// Two more **direct children of `c-1`**, both leaves and siblings of each
 /// other, differing in nothing but attention: the second is marked abandoned,
