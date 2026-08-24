@@ -1,119 +1,14 @@
-//! The §9 config family's line parity and refusals (bl-3f46): every
-//! destination spells and reads back as itself at the seat it was spelled
-//! from, the file's text survives the trip whitespace and all, and every way
-//! the grammar can be under-said names what is missing.
+//! Every way a §9 config line can be under-said, and what each one means. The
+//! rule is not "refuse" — it is that a line stating no *destination* refuses by
+//! name, while a destination stating no *text* is a READ. Its own file at
+//! §12's cap, on the seam the module above states: parity there, grammar here.
 
+use super::brazen;
 use crate::boundary::config::ConfigFile;
 use crate::boundary::line::tests::ctx;
-use crate::boundary::line::{Context, parse, spell};
-use crate::boundary::{Action, Gesture, Query, help};
+use crate::boundary::line::{Context, parse};
+use crate::boundary::{Gesture, Query, help};
 use crate::config_edit::branch::edit::EditOrigin;
-
-/// The parity claim (§8.5), and the other direction of the single source: the
-/// verb the line names has a help page.
-fn rt(gesture: Gesture) {
-    let line = spell(&gesture);
-    assert_eq!(parse(&line, &ctx()), Ok(gesture.clone()), "via {line}");
-    let verb = line
-        .split_whitespace()
-        .next()
-        .unwrap_or_default()
-        .trim_start_matches('/');
-    assert!(help::known(verb), "/{verb} has no help page");
-}
-
-fn applying(file: ConfigFile) -> Gesture {
-    Gesture::Act(Action::ApplyConfig {
-        file,
-        text: "roles:\n  worker:\n    provider: codex".to_owned(),
-    })
-}
-
-/// The brazen destination, naming the seat's own workspace — what `--ws` (or
-/// the window's focus) supplies, and what [`ctx`] carries (bl-fcd5).
-fn brazen() -> ConfigFile {
-    ConfigFile::Brazen {
-        workspace: "ws".to_owned(),
-    }
-}
-
-fn branch(origin: EditOrigin) -> ConfigFile {
-    ConfigFile::Branch {
-        workspace: "ws".to_owned(),
-        lineage: "default".to_owned(),
-        origin,
-        path: "providers.yaml".to_owned(),
-    }
-}
-
-#[test]
-fn every_config_destination_round_trips_as_a_line() {
-    for file in [
-        brazen(),
-        ConfigFile::LernieModels,
-        ConfigFile::Cadence,
-        ConfigFile::LernieWorkflow {
-            name: "review".to_owned(),
-        },
-        branch(EditOrigin::Advance),
-        branch(EditOrigin::Fork {
-            source: "base".to_owned(),
-        }),
-        branch(EditOrigin::Orphan),
-    ] {
-        rt(applying(file));
-    }
-}
-
-#[test]
-fn a_marks_amendment_and_a_pick_round_trip_as_lines() {
-    for branch in ["balls/tasks", "balls/agents/corp"] {
-        rt(Gesture::Act(Action::SetMarks {
-            workspace: "ws".to_owned(),
-            branch: branch.to_owned(),
-        }));
-    }
-    rt(Gesture::Act(Action::PickModel {
-        workspace: "ws".to_owned(),
-        role: "worker".to_owned(),
-        provider: "codex".to_owned(),
-        model: "gpt-5.4".to_owned(),
-    }));
-}
-
-#[test]
-fn the_text_is_the_whole_tail_and_no_flag_is_read_out_of_it() {
-    // The destination is words; everything after them is the file, including
-    // what would be a flag anywhere else on the boundary.
-    let read = parse("/config cadence a: 1\n--body: not a flag", &ctx());
-    assert_eq!(
-        read,
-        Ok(Gesture::Act(Action::ApplyConfig {
-            file: ConfigFile::Cadence,
-            text: "a: 1\n--body: not a flag".to_owned(),
-        }))
-    );
-}
-
-#[test]
-fn a_lineage_destination_takes_its_workspace_from_the_seat() {
-    let read = parse("/config branch strict workflow.yaml events: {}", &ctx());
-    assert_eq!(
-        read,
-        Ok(Gesture::Act(Action::ApplyConfig {
-            file: ConfigFile::Branch {
-                workspace: "ws".to_owned(),
-                lineage: "strict".to_owned(),
-                origin: EditOrigin::Advance,
-                path: "workflow.yaml".to_owned(),
-            },
-            text: "events: {}".to_owned(),
-        }))
-    );
-    // …and a seat with no workspace refuses by naming it rather than guessing.
-    let err = parse("/config branch strict workflow.yaml x", &Context::default()).unwrap_err();
-    assert!(err.contains("no workspace in context"), "{err}");
-}
 
 /// bl-fcd5 — the wall-scoped gestures state their sphere or they are refused,
 /// at the edge and by name. Read and write alike, and `/providers` with them:
@@ -263,10 +158,10 @@ fn an_unlawful_branch_refuses_at_the_line_in_the_spaces_own_words() {
 #[test]
 fn the_config_usage_line_is_what_a_bad_destination_prints() {
     let err = parse("/config enhance x", &ctx()).unwrap_err();
-    assert!(err.contains(super::USAGE), "{err}");
+    assert!(err.contains(super::super::USAGE), "{err}");
     // …and it is the page `/help config` renders, not a second wording.
     assert_eq!(
         help::rows(Some("config")).first().map(|r| r.usage),
-        Some(super::USAGE)
+        Some(super::super::USAGE)
     );
 }
