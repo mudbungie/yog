@@ -50,14 +50,28 @@ id is cited, the path to the ruling is not narrated.
    is an act the operator performs on the boxes; yog carries no enrollment,
    pairing, or account protocol in the channel, ever.
 5. **Client registration is per-workspace; the workspace is the trust
-   domain.** A client registered in one workspace is invisible in another —
-   the corporate machine participates in the corporate workspace without
-   seeing the personal ones, and vice versa.
+   domain — at both ends** *(amended bl-aaec)*. Server-side as always: a
+   client registered in one workspace is invisible in another — the corporate
+   machine participates in the corporate workspace without seeing the
+   personal ones, and vice versa. Client-side the same boundary is now
+   material: a box's participation in a workspace held elsewhere is its own
+   directory of channel facts (§8.2) — its own mTLS material, its own
+   address, its own conversations — so what a box can even *ask about* is
+   separated the same way what a server will answer is.
 6. **Conversations are aware of registered clients and the tools they
    advertise.** Client presence and tool availability are rendered facts of
    the workspace and enter agent context.
 7. **Agents run on the server, in the background**, independent of any client
    connection. Seats attach and detach; the work does not.
+8. **A client is a client of many servers, and the client-side workspace is
+   what names one** *(operator ruling 2026-08-24, bl-aaec)*. The unit of
+   participation is the workspace, never the server: a box holds one entry
+   per workspace it participates in elsewhere (§8.2), each with its own
+   material and its own address — and "the server" is nothing but the address
+   an entry names. The loopback engine bare `yog` boots is the same shape
+   seen from the window's side — one more channel, whose address is learned
+   in RAM rather than read from a file (§8) — so the roster a window paints
+   spans engines without a client-side "server" object ever existing.
 
 The canonical scene: a home server runs the engine and keeps every log; a
 phone seat talks to a conversation; the conversation teleoperates a work
@@ -74,7 +88,18 @@ and reuses one:
 | **client** | A machine holding an operator-issued certificate. One certificate = one client identity (its leaf name). A client is a fact about a machine, not a person — v1 has one human, and every certificate is operator-grade within its registrations. |
 | **seat** | A client connection acting as an operator face: it asks queries, paints replies, dispatches gestures. (The word already names GUI/headless/line faces in DESIGN §8.5 — a remote seat is the fourth face of the same surface.) |
 | **tool host** | A client advertising tools into the workspaces it is registered in. One client may be seat and tool host at once (the work laptop usually is). |
-| **registration** | The durable fact that client C participates in workspace W. Server-side, in the world, a file — the file religion applies; the wire only ever transports the gesture that writes it. |
+| **registration** | The durable fact that client C participates in workspace W, on the server that hosts W. Server-side, in the world, a file — the file religion applies; the wire only ever transports the gesture that writes it. |
+| **entry** | A workspace, held from the box that participates in it (bl-aaec): a directory under that box's `wire/workspaces/<leaf>/` carrying the channel facts that reach it — the host engine's anchors, this box's leaf and key for it, the host's address, and the name the workspace bears there (§8.2). The entry is the client's half of the pair registration is the server's half of — possession, where registration is permission — exactly as a channel needs both a certificate and its issuer's trust. |
+
+Multi-server adds **no noun** (bl-aaec). A workspace is one word at both
+ends — the trust domain, the unit of conversations — and "entry" above names
+a *spelling* of it, not a second object. The collision that would have minted
+one (a client-side workspace that names a server, while a server hosts many
+workspaces) dissolves because the client-side unit is the (server, workspace)
+participation and never the server: nothing client-side enumerates a server
+or holds a fact about one, so there is nothing for a second word to name. Two
+entries naming one address are two trust relationships that happen to
+terminate at one listener.
 
 ## 3. The wire is the boundary — and adds nothing to it
 
@@ -617,8 +642,12 @@ and a tool that has not answered is working.
 Everything durable is the server's: the world, the logs (`ops.jsonl`), the
 UI-state documents, the agent processes, the LLM calls (brazen in the engine
 process), the sentry, the pilot, the clock. A client holds exactly two things:
-its key material (operator-provisioned, out-of-channel) and RAM. Losing a
-client loses nothing; the server's disk remains the single history.
+key material (operator-provisioned, out-of-channel — one set per entry,
+§8.2) and RAM. Losing a client loses nothing; each server's disk remains the
+single history of the workspaces it hosts (bl-aaec). A workspace held
+elsewhere is therefore read through, never cached: there is no client-side
+copy of a conversation, and a host that cannot be dialled is a workspace
+painted unreachable, not one remembered stale.
 
 ## 7. Per-seat UI state
 
@@ -698,7 +727,12 @@ the wire exactly as `yog serve` does. That decides the local boot question §9.5
 was asked to settle, and it decides it by **dissolving it**: nothing spawns
 anything, nothing refuses with a remedy, and there is no ladder — because there
 is never a second engine to arrange. One world, one engine, whichever face
-started it; every other seat is a client of that one. The alternatives were both
+started it — a ruling about the box's OWN world, which bl-aaec leaves
+untouched: bare `yog` still boots the engine, a box used purely as a seat on
+other boxes is just a window whose local workspace set is empty, and no
+window-only mode exists. Every other seat of *this* world is a client of this
+one engine; the window is additionally a client of every entry it holds
+(§8.2). The alternatives were both
 worse and both were considered: bare `yog` *spawning* `yog serve` gives one
 world two engines (two pilots, two sentries, two derivation workers — the
 instance-coordination shape DESIGN §14 rejects), and *refusing with a remedy*
@@ -814,13 +848,17 @@ would be a second boot path.
 the sibling of `<yog-data-root>/world`. The world subtree is a generated
 artifact yog seeds, wipes and reseeds; key material is operator-provisioned and
 irreplaceable by anything yog can do. Nesting it under a directory yog rebuilds
-would make a reseed a revocation.
+would make a reseed a revocation. Entries sit *inside* `wire/`
+(`wire/workspaces/`, §8.2) for the same reason: an entry is the same
+operator-provisioned, irreplaceable class of fact.
 
-**The address is one fact with one home.** A server binds `address` and a local
-seat dials it; a seat on another machine has its own `wire/address` naming the
-server it belongs to. There is no second file and no flag — and no server-name
-knob either, because the name a client verifies is read off the address it
-dialled (an IP literal is an IP identity, anything else a DNS one).
+**An address is one fact with one home, and the home is the relationship**
+*(amended bl-aaec)*. A server binds its own `wire/address` and a local seat
+dials it; a workspace held elsewhere names its host in its own entry's
+`address` file (§8.2). Every address still has exactly one file and no flag —
+and no server-name knob either, because the name a client verifies is read
+off the address it dialled (an IP literal is an IP identity, anything else a
+DNS one).
 
 **Paths never cross the wire.** *(Landed, bl-f5f6.)* Boundary types addressed
 workspaces and projects by absolute `PathBuf`; across machines those are
@@ -1011,6 +1049,135 @@ rather than carrying a relative spelling.
   is finished when the **encoders** are swept, not when the types the ball named
   are. A field whose key matches a gesture's and whose value does not is worse
   than one that plainly does not match, because it reads as an address.
+
+### 8.2 The client-side workspace (bl-aaec)
+
+**The ruling** (operator ruling 2026-08-24): a client can be a client of many
+servers, and the client-side workspace is what names one — its own mTLS
+material, its own address, its own conversations, separate everything. This
+section is that ruling made structural; §1.5, §1.8, §2, §6 and §7 carry its
+other amendments.
+
+**An entry is a directory, and its shape already existed.**
+
+```text
+<yog-data-root>/wire/workspaces/<leaf>/
+    ca.pem        the HOST engine's anchors — that operator's trust root
+    client.pem    this box's leaf for this workspace (one certificate = one
+    client.key    client identity, §2 — so separation is §2's own rule)
+    address       the host engine, host:port — "the server", entire
+    workspace     OPTIONAL: the name this workspace bears on its host, when
+                  it differs from <leaf>; absent, the leaf is the name
+```
+
+Four of the five files are exactly the material a pure-client box already
+holds flat (`material::read_dir` with `Role::Client` reads an entry
+unchanged): an entry is that directory, one level down, named. `<leaf>` is
+the *client's* name for the workspace — the name the window's roster and
+every gesture resolve — and `workspace` exists because a host's namespace is
+the host's fact (§9.6: global per server) and two hosts may both call
+something `home`: the remedy for a collision is a local rename, which is
+`mv`, never a server-side rewrite. The mapping between the two names is spent
+at exactly one place, the channel boundary, in both directions — a gesture
+crossing the wire carries the host's name, a reply landing is labelled with
+the leaf — the same two-directions-one-mapping discipline as §8's
+`Snapshot::ws_name`.
+
+**Separation is not a mechanism; it is the absence of one.** Entries share
+nothing: not anchors (two servers are two operators' trust roots), not leaves
+(one certificate = one client identity, and the provisioned norm is one leaf
+registered in exactly its one workspace — then §1.5's invisibility is the
+wire's own fact rather than a rendering choice), not addresses, not
+conversations. An operator who registers one leaf in several workspaces on
+one host collapses that channel-level separation to presentation — lawful,
+and theirs.
+
+**The window's channel set.** The window is a client of the engine in its own
+process — over loopback, on the window leaf, at the address only that
+listener knows (§8) — plus one channel per entry, each on the entry's own
+material. The roster is the union: a workspace is a workspace, and which
+engine hosts it is a fact painted on it, never a mode the window is in. Names
+resolve over the union — local leaves and entry leaves in one namespace — and
+a collision refuses naming the token, §8's two-roots-one-leaf rule with the
+same remedy shape (rename the entry). Per channel, everything §3 ruled holds
+unchanged: the asker's pass at human cadence, the poster's exactly-once act
+routed by the workspace it names, the follow lane dialled at whichever
+channel hosts the focused conversation, the searcher fanned out and unioned.
+A channel that cannot be dialled is *that channel's* workspaces painted
+unreachable — the bl-dc14 refusal discipline applied per entry, never the
+whole shell, which stays reserved for the one wire the window cannot exist
+without: its own.
+
+**The reframe, tested and taken in half.** The proposal was that "local" stop
+being a special case — the loopback engine one entry among N, the window
+picking one. Half holds: loopback stops being the *only* channel, and
+`Engine::window_seat`'s forced `loopback()` stops defining the window's shape
+— it becomes one channel's address resolution among N. Half is rejected, for
+cause. The loopback channel cannot BE an entry, because an entry's address is
+a file and the loopback address is a `:0` answered in RAM by the listener
+that bound it (§8, bl-dc14) — writing what it became to disk each boot would
+store a runtime fact, the drift the one-home rule exists to refuse. And the
+window does not "pick one": the ruling is a client of MANY servers at once,
+so the window attaches to every channel it holds; picking would make the
+window modal, and the mode would be the new special case.
+
+**What a seat verb does with entries.** `yog seat` and `yog tool-host`
+resolve the gesture's workspace name over the entries first; a name no entry
+holds — and a gesture naming no workspace — goes where it always went, the
+flat directory's client material. The flat directory therefore remains what
+it has always been, the box's own root: its engine's material, its window
+leaf, and the one client relationship the box holds without naming it.
+Everything beyond the box's own engine is an entry.
+
+**How material reaches an entry** — §1.4 verbatim, forever. On the host, the
+operator mints a leaf for the visiting box (`yog wire-certs` issues an extra
+client leaf under a stated common name — the one recipe, one more artifact it
+can be asked for) and writes the registration (§4.1's `mkdir` and `touch`).
+The anchors, leaf and key are carried to the client box by hand — the same
+out-of-channel act the certificates always rode — and written into
+`wire/workspaces/<leaf>/` beside an `address` the operator states. No
+enrollment, no pairing, no first-connect ceremony. A workspace that does not
+yet exist on the host is founded by the entry's own first `Prepare` (§4.1's
+raise), which auto-registers its creator — in-channel work, on material that
+moved out of channel.
+
+**Migration: none.** A box with a flat `wire/` and no `workspaces/`
+directory is the general path with zero entries and behaves as before, byte
+for byte — the self-provisioned loopback root keeps its meaning, the window
+keeps its one channel, `yog seat` keeps its flat read. The one deployed shape
+that *should* move is a box whose flat directory was a copied client set
+aimed at another machine: one `mkdir` and one `mv` turns it into the entry it
+always was. Nothing forces the move; the flat spelling stays lawful as the
+box's own root.
+
+**What this does not solve, on purpose.**
+
+- **Offline.** A client holds material and RAM (§6); a workspace whose host
+  is unreachable paints unreachable and holds no cache to read. §11's
+  rejection of syncing the world at clients is load-bearing here: offline
+  reading IS a synced world.
+- **Cross-engine aggregation.** Search fans out and unions; attention ranks
+  across channels over each host's own facts. No global ordering, dedupe or
+  clock is promised across engines — each host's timestamps are its own.
+- **Revocation propagation.** Deleting an entry un-participates this box; it
+  revokes nothing. Revocation stays the host operator's act (§4), and the two
+  ends can disagree: a revoked entry is a dead channel painted unreachable, a
+  deleted entry with a live registration is a host waiting for a client that
+  never dials. Both are legible; neither is reconciled.
+- **A lying host.** A client trusts each of its servers about that server's
+  workspaces, so a compromised host can paint lies onto its own tabs. What
+  separation buys is the boundary: it can say nothing about another entry's
+  workspaces, and it ever held only what its channel's replies carried —
+  which, for a client of RAM, is nothing durable.
+- **Moving a workspace between hosts.** No federation, no export: a
+  workspace's world lives on its host (§1.1) and this design gives it no
+  second home.
+- **Scale in entries.** The window's cost is linear — one channel, one asker
+  pass per cadence period, per entry. Entries are operator-provisioned by
+  hand, so N is small by construction; nothing here is sized for a box
+  holding hundreds, and no mechanism was added against a problem that
+  provisioning friction already bounds.
+
 ## 9. Build sequence
 
 Each step is its own ball; boundary-surface work serializes (shared-surface
@@ -2365,6 +2532,11 @@ act carries no `Cli`: they are the engine's, and a seat never had them.
   bl-8bbc landed that default — moving a pin is one accessor, not a migration).
 - Certificate hygiene: lifetime, rotation cadence, whether the CA distrusts
   or registrations carry the whole revocation load.
+- **Whether a seat ever reads a foreign host's per-engine policy keys**
+  (bl-aaec). §7 routes a workspace's world facts to its host and the pane to
+  the box's own engine; the keys with no per-workspace subject (`ceiling`,
+  `prices`, `identity_last_used`) stay the window's own engine's. Reading — or
+  editing — another host's waits for the first surface that needs it.
 
 ## 11. Rejections
 
@@ -2390,3 +2562,14 @@ Recorded so they are not relitigated:
   instance-coordination shape DESIGN §14 rejects, kept rejected.
 - **Per-tool or per-verb ACLs in v1** — registration is workspace-grade
   trust; a finer policy layer is speculative until a second human exists.
+- **A "server" noun, or a per-server config object, on the client** (bl-aaec)
+  — the client-side unit is the workspace by operator ruling; a per-server
+  object would make the noun mean two things and reintroduce discovery
+  through the channel. A server dissolves into the address inside each entry.
+- **A client-side unit whose workspaces are discovered through the channel**
+  (bl-aaec) — what a box participates in is what its entries state; what a
+  host permits is what its registrations state; participation needs both,
+  the same two-sided shape as certificate possession against issuer trust. A
+  reads-what-it-could-join discovery surface is the convenience flow §1.4's
+  posture exists to exclude, and it would derive the client's roster from a
+  set the server owns — drift with an authority on the other end of a wire.

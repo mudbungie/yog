@@ -9431,9 +9431,10 @@ Recorded so they are not relitigated:
   list is workspace enumeration).
 - **Daemon/socket/IPC between instances** — disk is the bus (every
   substrate's religion). *Scope narrowed by the client/server split (bl-b9a2,
-  `docs/REMOTE.md`): a seat may reach the §8.5 boundary over one mTLS channel —
-  that is a client transport to one engine, not instance coordination, which
-  stays disk-only.*
+  `docs/REMOTE.md`): a seat may reach the §8.5 boundary over mTLS channels —
+  since bl-aaec one per workspace held elsewhere (REMOTE §8.2), each a client
+  transport to one engine. The wire is never the bus between two engines;
+  instance coordination stays disk-only.*
 - **Linking lernie/brazen crates *as a blanket rule*** — *superseded by
   §16.5.* The original stance (CLI + disk is the whole contract; brazen's
   library API is explicitly unstable) is now the *phase-1* posture only; the
