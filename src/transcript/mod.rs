@@ -50,6 +50,10 @@ mod spine;
 pub(crate) mod wire;
 use parse::{parse_model, parse_tool_result};
 pub use read::build;
+/// One message file classified — [`build`]'s own reading of a single entry,
+/// for the §7.3 orphaned-tail predicate (`steps_view::orphan`, bl-abba), which
+/// needs the **tail** entry alone and must not pay a whole record to get it.
+pub(crate) use read::classify;
 pub use render::{Reading, render};
 pub(crate) use rows::key;
 pub use rows::{AutoExpand, Fold, Row, RowClass, Tone, rows};

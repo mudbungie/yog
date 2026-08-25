@@ -5,7 +5,7 @@
 use super::super::spend;
 use crate::git_tree::Framing;
 use crate::login::auth::AuthFailure;
-use crate::steps_view::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
+use crate::steps_view::{Doc, Orphan, StepDetail, StepSummary, StepsView, Tail, ToolIo, Wound};
 
 /// One step per [`Framing`], per [`AuthFailure`] and per [`Wound`] arm — the
 /// two shapes encoded from more than one key. The login affordance is still a
@@ -51,9 +51,11 @@ pub(super) fn steps() -> StepsView {
                 ..base
             },
         ],
-        // The view-level orphaned-mail pair (bl-ace6): the Spoke arm here,
-        // the Mute and None arms as their own replies below.
-        orphan: Orphan::Spoke("driver died".into()),
+        // The view-level orphaned-tail class + reason (bl-ace6, bl-abba):
+        // the Spoke arm here, the Mute and None arms as their own replies
+        // below — and each of the two `Tail` shapes across them, so no token
+        // rides the round trip untested.
+        orphan: Orphan::Spoke(Tail::Mail, "driver died".into()),
     }
 }
 

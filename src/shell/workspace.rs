@@ -135,17 +135,24 @@ pub fn center(
     ) {
         ui.colored_label(theme::ICHOR, wound.banner());
     }
-    // A conversation whose newest transcript entry is delivered mail while
-    // nobody holds the driver lock banners the **orphaned-mail** state
-    // (bl-ace6, `steps_view::orphan`): the driver that should be answering
-    // died before creating a step — an unpaired-tail decline, a lease
-    // fault, a crashed launch — so the wound above has no step to hang on
-    // and the ops trail says `exit 0` (the deposit succeeded; the failure
-    // was a grandchild lernie launched). The sentence carries the tail of
-    // `steps/<agent>/driver.log`, the one copy of that driver's words.
-    // Same grace discipline as the wound: delivery happens under the
-    // driver's own lock, so the healthy shape of this pair is only ever
-    // the relaunch gap, and a pair that outlives the grace window is real.
+    // A conversation whose newest transcript entry is owed an answer while
+    // nobody holds the driver lock banners the **orphaned-tail** state
+    // (bl-ace6, widened by bl-abba, `steps_view::orphan`): the driver that
+    // should be answering died before creating a step — an unpaired-tail
+    // decline, a lease fault, a crashed launch — or died *inside* a tool
+    // window, leaving `tool_use` blocks nobody answered. Either way the
+    // wound above has no step to hang on and the ops trail says `exit 0`
+    // (the deposit succeeded; the failure was a grandchild lernie
+    // launched). The sentence carries the tail of
+    // `steps/<agent>/driver.log`, the one copy of that driver's words, and
+    // for the tool-window shape it names the one gesture that recovers it —
+    // a conversation that looks idle is the whole reason it needs saying.
+    // **One banner and one gate for both shapes**: they are the same fact
+    // about the same agent in the same seat, so a second grace field and a
+    // second `paints` block would be two spellings of one rule. Same grace
+    // discipline as the wound: both shapes are laid down under the driver's
+    // own lock, so their healthy form is only ever the relaunch gap, and a
+    // pair that outlives the grace window is real.
     if state.orphan_grace.paints(
         &ws,
         &agent_id,

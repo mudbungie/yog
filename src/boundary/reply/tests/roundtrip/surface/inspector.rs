@@ -192,7 +192,7 @@ pub(super) fn inspector() -> Vec<Reply> {
         Reply::Steps(steps()),
         Reply::Steps(StepsView {
             steps: vec![],
-            orphan: Orphan::Mute,
+            orphan: Orphan::Mute(crate::steps_view::Tail::ToolWindow),
         }),
         Reply::Steps(StepsView::default()),
         Reply::Step(step_detail()),

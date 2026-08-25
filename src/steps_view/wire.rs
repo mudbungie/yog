@@ -6,7 +6,7 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
+use super::{Doc, Orphan, StepDetail, StepSummary, StepsView, Tail, ToolIo, Wound};
 use crate::budgets::BudgetSpend;
 use crate::git_tree::Framing;
 
@@ -14,7 +14,7 @@ use crate::git_tree::Framing;
 pub(crate) mod decode;
 
 /// The `steps` reply body: one row per step, in sequence order, and the
-/// view-level orphaned-mail state (bl-ace6) — the wound's key-pair shape,
+/// view-level orphaned-tail state (bl-ace6) — the wound's class-token shape,
 /// at the top because it is not any one step's fact.
 pub(crate) fn steps(view: &StepsView) -> Value {
     let mut map = Map::new();
@@ -24,11 +24,27 @@ pub(crate) fn steps(view: &StepsView) -> Value {
         "rows".to_owned(),
         Value::Array(view.steps.iter().map(step_row).collect()),
     );
-    map.insert("orphaned".to_owned(), json!(view.orphan.orphaned()));
-    if let Orphan::Spoke(reason) = &view.orphan {
+    map.insert("orphan".to_owned(), json!(orphan_token(&view.orphan)));
+    if let Orphan::Spoke(_, reason) = &view.orphan {
         map.insert("orphan_reason".to_owned(), json!(reason));
     }
     Value::Object(map)
+}
+
+/// Which [`Tail`] is orphaned, or none — a class token rather than the
+/// `orphaned` boolean the pair carried until bl-abba, for exactly the reason
+/// [`wound_token`] is one: with a second shape the (bool, Option<reason>)
+/// pair stopped being a bijection, and the honest fix is a discriminant, not
+/// a second boolean beside the first. The reason key still separates mute
+/// from spoken, which is the one thing it ever did.
+fn orphan_token(orphan: &Orphan) -> &'static str {
+    match orphan {
+        Orphan::None => "none",
+        Orphan::Mute(tail) | Orphan::Spoke(tail, _) => match tail {
+            Tail::Mail => "mail",
+            Tail::ToolWindow => "tool_window",
+        },
+    }
 }
 
 /// One step's summary. The timestamps and the read-state commit are absent

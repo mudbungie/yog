@@ -71,7 +71,7 @@ fn read_messages(dir: &Path) -> Vec<Entry> {
 /// reason**: the dropped fields are re-asserted elsewhere (the sender by the
 /// filename, the timestamp by the file order), but nothing else carries the
 /// ending, and on a body-less result deposit it is the whole message (bl-71e8).
-fn classify(name: &str, raw: &[u8]) -> EntryKind {
+pub fn classify(name: &str, raw: &[u8]) -> EntryKind {
     let Some((_, origin, ext)) = parse_name(name) else {
         return EntryKind::Raw;
     };

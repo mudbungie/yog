@@ -16,6 +16,9 @@
 //! sentence, with [`truncation`] doing the same for the wound's other class
 //! (the §4.4 output limit, bl-fb87). [`tail`] does the render walk on a viewport too short for the
 //! table, where the §11 tail anchor decides which steps are on screen.
+//! [`orphan`] and [`window`] drive the two shapes of the §7.3 orphaned-tail
+//! state — delivered mail nobody answers (bl-ace6) and a tool window an
+//! executor died inside (bl-abba) — split at §12's budget on that seam.
 
 use std::path::{Path, PathBuf};
 
@@ -28,6 +31,7 @@ mod render;
 mod tail;
 mod truncation;
 mod vm;
+mod window;
 mod wound;
 
 /// Fixed agent id the fs-backed tests build under.

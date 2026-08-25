@@ -16,7 +16,7 @@
 
 use serde_json::Value;
 
-use super::super::{Doc, Orphan, StepDetail, StepSummary, StepsView, ToolIo, Wound};
+use super::super::{Doc, Orphan, StepDetail, StepSummary, StepsView, Tail, ToolIo, Wound};
 use crate::boundary::codec::fields::{
     bool_of, bytes_of, list_of, opt_str_of, opt_val, pick, str_of, u64_of, usize_of,
 };
@@ -49,14 +49,26 @@ const WOUNDS: [(&str, WoundKind); 3] = [
     ("output_limit", WoundKind::OutputLimit),
 ];
 
+/// Which [`Tail`] is orphaned, [`orphan_token`](super::orphan_token)'s other
+/// half. `None` is the un-orphaned tail, which is why the table's value type
+/// is an option rather than a fourth arm nothing on the wire spells.
+const TAILS: [(&str, Option<Tail>); 3] = [
+    ("none", None),
+    ("mail", Some(Tail::Mail)),
+    ("tool_window", Some(Tail::ToolWindow)),
+];
+
 /// The `steps` reply body read back: one summary per row, in sequence order,
-/// and the view-level orphaned-mail pair (bl-ace6) — the wound's bijection,
-/// one tier up.
+/// and the view-level orphaned-tail class plus its optional reason (bl-ace6,
+/// widened by bl-abba) — the wound's own token/reason bijection, one tier up.
 pub(crate) fn steps(obj: &serde_json::Map<String, Value>) -> Result<StepsView, String> {
-    let orphan = match (bool_of(obj, "orphaned")?, opt_str_of(obj, "orphan_reason")?) {
-        (false, _) => Orphan::None,
-        (true, None) => Orphan::Mute,
-        (true, Some(reason)) => Orphan::Spoke(reason),
+    let orphan = match (
+        pick(obj, "orphan", &TAILS)?,
+        opt_str_of(obj, "orphan_reason")?,
+    ) {
+        (None, _) => Orphan::None,
+        (Some(tail), None) => Orphan::Mute(tail),
+        (Some(tail), Some(reason)) => Orphan::Spoke(tail, reason),
     };
     Ok(StepsView {
         steps: list_of(obj, "rows", step_row)?,

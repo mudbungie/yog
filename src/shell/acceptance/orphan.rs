@@ -15,6 +15,13 @@
 //! frame inside the window says nothing (delivery happens under the
 //! driver's lock, so a healthy send's mail-with-free-lock moment is only
 //! the relaunch gap), and the frame after it carries the reason.
+//!
+//! The state's **other shape** — an executor that died mid-tool-window,
+//! bl-abba — is [`window`], its own file at §12's budget. It renders through
+//! this same seat, this same grace field and this same banner, which is the
+//! whole point of it being one state and not a third one.
+
+mod window;
 
 use std::sync::Arc;
 
@@ -39,6 +46,12 @@ const NEEDLE: &str = "tool_use unmatched";
 fn orphaned_mail(world: &World, driver_log: Option<&[u8]>) {
     let messages = world.ws.join("agents/c-1/messages");
     std::fs::write(messages.join("003-user.md"), "hello?").unwrap();
+    dead_driver(world, driver_log);
+}
+
+/// The dead driver's own words, beside the steps — the one copy of them
+/// (lernie binds every launched driver's stderr there since 0.0.9).
+fn dead_driver(world: &World, driver_log: Option<&[u8]>) {
     if let Some(bytes) = driver_log {
         let steps = world.ws.join("steps/c-1");
         std::fs::create_dir_all(&steps).unwrap();

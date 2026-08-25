@@ -40,7 +40,7 @@ mod render;
 pub(crate) mod wire;
 mod wound;
 pub use detail::{Doc, StepDetail, ToolIo, UNPARSED, detail};
-pub use orphan::{ORPHANED_MAIL, Orphan};
+pub use orphan::{ORPHANED_MAIL, ORPHANED_WINDOW, Orphan, Tail};
 pub(crate) use records::seats;
 pub use render::{StepTab, render};
 pub use wound::{NO_RESPONSE, OUTPUT_LIMIT, Wound, latest_wound};
@@ -95,9 +95,11 @@ pub struct StepSummary {
 }
 
 /// The ordered per-step summaries for one agent's `steps/<agent-id>/` tree,
-/// plus the view-level **orphaned-mail state** (bl-ace6, the `orphan`
-/// module): a delivered message nobody is answering, which no per-step
-/// field can carry because the driver that died never created a step.
+/// plus the view-level **orphaned-tail state** (bl-ace6, widened by bl-abba;
+/// the `orphan` module): a transcript tail owed an answer with nobody
+/// driving — delivered mail nobody answers, or a tool window an executor
+/// died inside. No per-step field can carry either, because the driver that
+/// died created no step to carry it.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct StepsView {
     pub steps: Vec<StepSummary>,
