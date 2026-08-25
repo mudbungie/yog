@@ -4831,6 +4831,35 @@ to *be* that executable and to own every fact it reads.
   already running keep the ceiling they froze — lernie's per-branch freeze
   again, not a gap this could close; what the strip converges is every
   conversation forked after it.
+
+  **And a conversation the old ceiling already killed is not dead — the §9.4
+  exit reaches it (bl-d710).** The strip converges *workspaces*, so the ball
+  asked what becomes of the branches marked before it, and the answer is a
+  gesture yog already paints rather than anything to build. Three facts, all
+  read out of lernie 0.0.11 rather than assumed. **The mark is a record, not a
+  gate**: `budget::check` derives the tree's spend live at every model-call
+  boundary and compares it to the frozen `budgets:` (lernie ARCH §6, "no stored
+  counter"); it never reads `refs/lernie/budget-exhausted/*`, and every axis is
+  an `Option`, so a config with no such block bounds nothing. **`retarget` is
+  the exit and it lands early enough**: lernie's `advance` consumes the mark *at
+  the step boundary, before anything resolves config*, so the first step after
+  the landing is one the target config governs — and the target is
+  `config/<name>`'s head, default `default`, which is the very ref this fixed
+  point strips. **The park is only the missing launch**: exhaustion is an
+  ordinary terminal state, and lernie's exit protocol declines to self-relaunch
+  on that epitaph alone (an epitaph-spam cycle against a hard ceiling), while an
+  ordinary deposit probes and launches with no epitaph gate at all — so the
+  message is the next step, exactly as lernie's own note says a retarget "is in
+  practice followed by a message, which *is* that next step". The operator's
+  whole remedy is therefore **the drift clause's keeping exit, then a message**,
+  and it costs nothing new: the clause paints for every one of these branches by
+  construction, since the strip is what moved the config past them. Fork — the
+  hatch the ball guessed at — is the *discarding* exit beside it and always
+  worked; it is simply the worse one, since it leaves the history behind. What
+  this ball changed is that the §11 mark now says so (`theme::mark_badge`), the
+  one mark of the five that named its cause and no remedy. **Clearing the mark
+  is still not yog's** (§5.1 #14): a revived branch keeps it, as the record of
+  what happened, and the acknowledged §6 signal stays acknowledged.
 - **A hold is a parked drone, not a deadlock; a deny is a decline, not a
   stop.** The parked branch is derived state (the mark plus the unpaired
   tail) surfaced as an attention item naming the tool, an input summary,
@@ -7092,6 +7121,18 @@ Then the **marks the focused agent wears** — the §6 durable facts (notified,
 budget-exhausted, declined-transfer, abandoned), each said outright as a full
 sentence because this seat has the room and because it is where a
 jump-to-attention lands.
+
+**A mark a live branch can be moved off names the act that moves it** (bl-d710).
+Held has always said *approve or decline it*; budget-exhausted said only what
+had happened, and a wound with no stated way forward reads as a death — which
+is what the operator took it for. Its sentence now names the §9.4 keeping exit
+**in that control's own words**, because a remedy the reader has to translate is
+one they have to guess at, and the settings rows that carry the control are on
+this same screen a scroll below. The remedy's mechanism, and the reading of
+lernie that establishes it, is §8.6's; the guard against the two texts drifting
+is a test asserting the wound contains `RETARGET_EXIT` rather than a copy of it.
+Nothing here clears a mark: the fact is lernie's (§5.1 #14) and outlives the
+remedy, exactly as it outlives its `⚑`.
 
 **The centre renders no membership list (bl-8905).** It carried one until this
 ball: a compact descent tree, one selectable row per member, rendered whenever

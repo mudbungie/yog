@@ -144,6 +144,35 @@ fn every_agent_mark_says_itself_in_a_label_and_a_sentence() {
     assert_eq!(crate::theme::mark_badge(AgentMark::Abandoned).1, ASH);
 }
 
+/// The two marks a **live** branch wears must each name the act that moves it
+/// on, and name it in the words the control itself wears — a remedy the
+/// operator has to translate is a remedy they have to guess at (bl-d710).
+///
+/// Held has said *approve or decline it* since it shipped; budget-exhausted
+/// said only what had happened, which is the wound this ball closes. The
+/// sentence is checked against [`RETARGET_EXIT`] rather than against a copy of
+/// its text, so relabelling the button that lifts the ceiling fails here
+/// instead of leaving the wound pointing at a control by a name nothing wears.
+#[test]
+fn a_live_mark_names_the_act_that_moves_it_on() {
+    use crate::git_tree::AgentMark;
+    use crate::model_pick::RETARGET_EXIT;
+    let budget = crate::theme::mark_badge(AgentMark::BudgetExhausted).2;
+    assert!(
+        budget.contains(RETARGET_EXIT),
+        "the budget wound names no way out: {budget:?}"
+    );
+    // And says what the ceiling IS, since the way out only works because the
+    // figure is re-derived per call against the frozen config rather than
+    // banked against the branch (lernie ARCH §6).
+    assert!(budget.contains("never stored"), "{budget:?}");
+    assert!(
+        crate::theme::mark_badge(AgentMark::Held)
+            .2
+            .contains("decline")
+    );
+}
+
 #[test]
 fn op_badges_say_their_outcome_in_words() {
     use crate::opslog::OpOutcome;

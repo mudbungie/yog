@@ -140,11 +140,29 @@ pub fn mark_badge(mark: crate::git_tree::AgentMark) -> (&'static str, egui::Colo
              when you arrived; the ask stands until the branch raises a new one",
         ),
         // §6 rule 3's fact: the tree hit a spend ceiling — a stop with a cause.
+        // **And the way out** (bl-d710), because this was the one mark whose
+        // sentence named no remedy. The ceiling is not a stored counter and
+        // this mark is not a gate: lernie re-derives the tree's spend at every
+        // model-call boundary and compares it to the `budgets:` of the config
+        // commit the branch is FROZEN on (lernie ARCH §6, §2.2 — every axis is
+        // an `Option`, so a config with no such block bounds nothing and the
+        // check that killed the branch passes). §8.6's workflow fixed point
+        // strips that block from every workspace yog starts, so the exit is the
+        // §9.4 drift clause's own KEEPING exit, in the settings seat below:
+        // `retarget` lands at the next step boundary *before anything resolves
+        // config*, and the message that wakes the branch is that step. The mark
+        // is left standing as the record of what happened — writing one is
+        // lernie's (§5.1 #14), and so is clearing it.
         AgentMark::BudgetExhausted => (
             "budget-exhausted",
             BRAZEN,
-            "budget-exhausted — this agent tree hit its spend ceiling \
-             (refs/lernie/budget-exhausted)",
+            "budget-exhausted — this agent tree hit the spend ceiling frozen into the \
+             config it forked off (refs/lernie/budget-exhausted). The ceiling is \
+             re-derived at every model call and never stored, so \"move this \
+             conversation onto the current config\" in the settings below lifts it \
+             wherever that config carries no budget — then message the branch, and \
+             the step that lands the move is the step that answers you. The mark \
+             stays as the record",
         ),
         // §6 rule 4's fact: a transfer was declined loudly (§2.6). Ichor.
         AgentMark::Conflicted => (
