@@ -63,7 +63,7 @@ pub(super) fn fold(snap: &mut Snapshot, raised: &Path) {
 
 impl AppModel {
     /// Adopt the workspace a landed start resolved (§3.4 — *a start focuses
-    /// what it started*): focus it by name, and **claim the wall** so the name
+    /// what it started*): focus it by `name`, and **claim the wall** so the name
     /// resolves for as long as the derivation has not read it.
     ///
     /// The claim is taken unconditionally rather than only when the enumeration
@@ -72,15 +72,24 @@ impl AppModel {
     /// already focused — and a start into an enumerated one is simply the claim
     /// retired the instant it is made ([`Self::adopt_raised`] runs first). One
     /// rule, not a raise/re-focus branch asking the same question twice.
-    pub(crate) fn adopt_workspace(&mut self, ws: &Path) {
-        self.raised = Some(ws.to_path_buf());
+    ///
+    /// **`raised` is `None` for a workspace a §8.2 entry hosts** (bl-e349), and
+    /// that is the claim's own premise rather than an exception to it. The claim
+    /// exists to carry a wall from the instant `lernie new` founded it **on this
+    /// box** to the instant this box's derivation reads it; a workspace founded
+    /// on its host has no local directory to enumerate and no such gap — its row
+    /// arrives on the entry's own slice ([`start_path`](AppModel::start_path)).
+    /// The focus is taken either way: a start focuses what it started, wherever
+    /// that is.
+    pub(crate) fn adopt_workspace(&mut self, name: &str, raised: Option<&Path>) {
+        self.raised = raised.map(Path::to_path_buf);
         // The same two moves [`refresh`](AppModel::refresh) makes, in its
         // order, run here as well: a claim taken mid-frame must resolve for the
         // rest of that frame, and retiring before folding is what keeps the
         // painted snapshot from enumerating one workspace twice.
         self.adopt_raised();
         self.refold();
-        self.focus_workspace(&naming::leaf(ws));
+        self.focus_workspace(name);
     }
 
     /// **The claim at the ROW altitude** (REMOTE §9.7, bl-296f) — the same

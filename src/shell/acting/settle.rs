@@ -98,18 +98,22 @@ fn acted(
             },
             _,
         ) => {
-            model.await_message(&acting.ws, agent, content, *queued);
+            // The §3.4 echo is keyed by path like every other frame-side
+            // optimism, so it is raised only where this box has one (bl-e349).
+            if let Some(ws) = acting.ws.as_deref() {
+                model.await_message(ws, agent, content, *queued);
+            }
             false
         }
         (Owes::Prepared { goal }, Ok(Reply::Prepared(prepared))) => {
             start::staged(model, state, acting, prepared, goal.clone())
         }
         (Owes::Started { goal }, Ok(Reply::Started { conversation })) => {
-            start::fired(model, state, &acting.ws, conversation, goal);
+            start::fired(model, state, acting.ws.as_deref(), conversation, goal);
             false
         }
         (Owes::Fanned { goal }, Ok(Reply::Fanned(candidates))) => {
-            fan::fanned(model, state, &acting.ws, candidates, goal)
+            fan::fanned(model, state, acting.ws.as_deref(), candidates, goal)
         }
         // A clean reply of a kind this fire cannot read — a codec defect rather
         // than a state, and the seat below still says what came back.

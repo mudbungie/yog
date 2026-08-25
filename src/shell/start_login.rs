@@ -42,11 +42,8 @@ use super::ShellState;
 /// does ([`super::start_pane::send_pending`]), so a pointer and a keypress
 /// cannot disagree about whether the wall can run.
 pub(super) fn gate(model: &mut AppModel, state: &ShellState) -> StartGate {
-    let name = model.snap.ws_name(&model.start_workspace());
-    StartGate::read(
-        super::chrome::ws_channel(model, &name),
-        state.wall.login.credit,
-    )
+    let name = model.start_workspace_name();
+    StartGate::read(model.hosting_entry(&name), state.wall.login.credit)
 }
 
 /// Paint the rung. Called only where [`gate`] has something to say

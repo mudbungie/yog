@@ -1241,6 +1241,34 @@ is correct rather than pending. The one residual is the frame's implicit ack
 (`ui.json`, keyed by path), which records nothing for a remote conversation
 while the explicit `MarkSeen` act routes to its host like any other.
 
+**Withholding it is the whole rule, and flattening it was destructive**
+*(bl-e349)*. `None` here means *this box has no directory for that workspace*,
+and it is one answer away from `None` meaning *nothing is focused at all* — so a
+surface that reads the focused **path** where it wants the focused **name** reads
+the two as one state. The §8.1 start did: it took `focused_workspace()`, fell
+through to §3.1's bootstrap default, and fired the operator's goal at a LOCAL
+workspace called `home` — founding it, focusing it, and running an agent in it,
+with the tab flip as the only thing the operator saw. One rung down, the pane's
+own fire flattened the same `Err` with `unwrap_or_default()` and posted the act
+at `PathBuf::new()`. **No arm may resolve a start to a path it invented.** The
+three answers are one rule (`AppModel::start_path`): an enumerated name is its
+own path, a name no channel holds is the place a `Prepare` would found it (the
+§3.1 names root — the chokepoint's `resolve_workspace` read from the frame's
+side), and a name an entry holds has **none**. The frame-side folds a start
+holds — the §3.4 raise claim, the start claim, the pending echo — are every one
+of them keyed by path, and every one of them is local optimism standing in for a
+read that arrives on the entry's own slice: they skip, and the act itself is
+untouched, because an act is addressed by the NAME the poster routes it by.
+
+That is also what makes the §8.1 pair routed end to end. The `Prepare` names the
+workspace and goes down its entry's channel, where §4.1's raise founds it **on
+the host** and auto-registers its creator (§1.4's material clause, unchanged);
+the `Prepared` that comes back is renamed to the leaf at the channel boundary
+like a roster row, because the name it carries is handed straight out again as
+the next act's address — an unrenamed one would route its own `Prompt` back to
+this window's own engine, which is the local misfire the mapping exists to
+prevent.
+
 **How material reaches an entry** — §1.4 verbatim, forever. On the host, the
 operator mints a leaf for the visiting box (`yog wire-certs` issues an extra
 client leaf under a stated common name — the one recipe, one more artifact it

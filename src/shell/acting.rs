@@ -113,12 +113,21 @@ enum Seat {
 /// One posted act, and the two folds its receipt owes.
 pub(super) struct Acting {
     ticket: Ticket,
-    /// The workspace **path** the aftermath is about. A reply spells a
-    /// workspace only as a §3.1 name, and a start that raises one names a
-    /// workspace no snapshot can resolve a path for yet — the raise is what
-    /// founds it — so the path is the fire's own knowledge, carried rather than
-    /// re-derived.
-    ws: PathBuf,
+    /// The workspace **path** the aftermath is about, **when this box has one**
+    /// ([`AppModel::start_path`]). A reply spells a workspace only as a §3.1
+    /// name, and a start that raises one names a workspace no snapshot can
+    /// resolve a path for yet — the raise is what founds it — so the path is
+    /// the fire's own knowledge, carried rather than re-derived.
+    ///
+    /// **`None` is a workspace a §8.2 entry hosts** (bl-e349): its directory is
+    /// on its host, so every fold below skips its own local optimism instead of
+    /// inventing a place. The act itself is unaffected — it carries the NAME
+    /// and the poster routes it by that (REMOTE §8.2) — and what the optimism
+    /// stood in for arrives a moment later on the entry's own slice. Firing at
+    /// an invented path was bl-e349: an `unwrap_or_default()` here posted a
+    /// remote-focused start at `PathBuf::new()` and the §4.1 raise founded a
+    /// phantom local workspace on whatever that resolved to.
+    ws: Option<PathBuf>,
     seat: Seat,
     owes: Owes,
 }
@@ -159,7 +168,7 @@ pub(super) fn deposit(
         }
         _ => Owes::Nothing,
     };
-    hold(model, state, ws, action, drafting(state, key), owes);
+    hold(model, state, Some(ws), action, drafting(state, key), owes);
 }
 
 /// The composer's seat for one post: its key, and the buffer as it stands right
@@ -178,7 +187,7 @@ pub(super) fn line(
     model: &mut AppModel,
     state: &mut ShellState,
     key: &DraftKey,
-    ws: &Path,
+    ws: Option<&Path>,
     action: &Action,
 ) {
     let owes = match action {
@@ -205,7 +214,7 @@ fn shown(model: &mut AppModel, ws: &Path, agent: &str) -> usize {
 fn hold(
     model: &mut AppModel,
     state: &mut ShellState,
-    ws: &Path,
+    ws: Option<&Path>,
     action: &Action,
     seat: Seat,
     owes: Owes,
@@ -213,7 +222,7 @@ fn hold(
     let ticket = model.post_act(action);
     state.acting = Some(Acting {
         ticket,
-        ws: ws.to_path_buf(),
+        ws: ws.map(Path::to_path_buf),
         seat,
         owes,
     });

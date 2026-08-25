@@ -211,10 +211,29 @@ pub(super) fn send_pending(model: &mut AppModel, state: &mut ShellState) {
     // With N > 1 picked, the same Enter is the §3.8 fan (bl-77bc): one
     // `Fan(Spread)` whose receipt walks the rebound starts back through this
     // very door, so the ceiling gates every birth exactly as it gates one.
-    let ws = model.snap.ws_path(&p.workspace).unwrap_or_default();
+    // **The act is addressed by the name the prepare came back with, never by
+    // a path** (REMOTE §8.2, bl-e349): the poster routes `Prompt` by
+    // `prepared.workspace`, so a start on a workspace a §8.2 entry hosts goes
+    // down that entry's channel and is founded, claimed and fired on its HOST.
+    // The path beside it is this box's own, for the frame-side folds alone, and
+    // for a remote workspace there simply is not one — `None`, and each fold
+    // skips its local optimism.
+    //
+    // It used to be `ws_path(…).unwrap_or_default()`, which flattened *"this
+    // box has no directory for that name"* into `PathBuf::new()` and fired
+    // anyway. The empty path reached no spawn — the act carries the name, not
+    // the path — but it reached every fold that keys on one: the §3.4 start
+    // claim was taken at `""`, which matches no workspace, so the conversation
+    // this fire started got no row and no focus and the operator watched a
+    // fire land on nothing. The phantom `home` in the same report was the
+    // *other* half, one rung up: `start_workspace` read the focused PATH,
+    // which is `None` for a workspace an entry hosts exactly as for no focus
+    // at all, so the act itself was addressed `home` — a local name, raised
+    // locally, and the goal ran there.
+    let ws = model.start_path(&p.workspace);
     if state.start.fan_n > 1 {
-        super::acting::fan::fan(model, state, &ws, &p, state.start.fan_n);
+        super::acting::fan::fan(model, state, ws.as_deref(), &p, state.start.fan_n);
         return;
     }
-    super::acting::start::prompt(model, state, &ws, &p, &p.goal);
+    super::acting::start::prompt(model, state, ws.as_deref(), &p, &p.goal);
 }

@@ -74,3 +74,46 @@ fn a_reply_that_names_no_workspace_lands_untouched() {
     answer(&mut channel, &mut end, &[about("cobalt")], &models);
     assert_eq!(channel.ask(&about("cobalt")), Some(Ok(models)));
 }
+
+/// **The §8.1 `Prepared` is renamed back too, and it has to be** (bl-e349). The
+/// name it carries is handed straight out again as the next act's address —
+/// `Action::Prompt` names `prepared.workspace` — so a `Prepared` left in the
+/// host's spelling would route its own `Prompt` to a name no entry claims, back
+/// to this window's own engine, which is the local misfire the mapping exists
+/// to prevent.
+#[test]
+fn a_landed_prepare_is_renamed_back_so_its_prompt_routes_home_again() {
+    let (mut channel, mut end) = wired(entry("cobalt", "home"));
+    answer(
+        &mut channel,
+        &mut end,
+        &[about("cobalt")],
+        &prepared("home"),
+    );
+    assert_eq!(channel.ask(&about("cobalt")), Some(Ok(prepared("cobalt"))));
+}
+
+/// The other half of the same rule: an entry that renames nothing lands the
+/// reply byte for byte, the general path with the two names agreeing.
+#[test]
+fn an_entry_that_renames_nothing_lands_the_prepare_unchanged() {
+    let (mut channel, mut end) = wired(entry("cobalt", "cobalt"));
+    answer(
+        &mut channel,
+        &mut end,
+        &[about("cobalt")],
+        &prepared("cobalt"),
+    );
+    assert_eq!(channel.ask(&about("cobalt")), Some(Ok(prepared("cobalt"))));
+}
+
+/// A §8.1 prepare answered for the workspace `workspace`.
+fn prepared(workspace: &str) -> Reply {
+    Reply::Prepared(crate::start::Prepared {
+        workspace: workspace.to_owned(),
+        binding: None,
+        lineage: None,
+        goal: "do it".to_owned(),
+        origin: crate::opslog::Origin::Conversation,
+    })
+}

@@ -20,7 +20,7 @@ use std::path::Path;
 pub(in crate::shell) fn fan(
     model: &mut AppModel,
     state: &mut ShellState,
-    ws: &Path,
+    ws: Option<&Path>,
     prepared: &Prepared,
     n: usize,
 ) {
@@ -65,7 +65,7 @@ pub(in crate::shell) fn fan(
 pub(super) fn fanned(
     model: &mut AppModel,
     state: &mut ShellState,
-    ws: &Path,
+    ws: Option<&Path>,
     candidates: &[Prepared],
     goal: &str,
 ) -> bool {

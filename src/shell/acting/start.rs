@@ -82,14 +82,20 @@ fn staging(
     if state.acting.is_some() {
         return;
     }
+    // **The act's address is the NAME** (REMOTE §8.2): the poster routes by it,
+    // and the chokepoint resolves it at whichever engine answers — founding an
+    // absent one, which is what a raise is. The path beside it is only this
+    // box's, for the frame-side folds, and a workspace an entry hosts has none.
+    let workspace = model.snap.ws_name(&inputs.workspace);
+    let ws = model.start_path(&workspace);
     let action = Action::Prepare {
-        workspace: model.snap.ws_name(&inputs.workspace),
+        workspace,
         payload: inputs.payload.clone(),
     };
     super::hold(
         model,
         state,
-        &inputs.workspace,
+        ws.as_deref(),
         &action,
         seat,
         Owes::Prepared { goal },
@@ -103,7 +109,7 @@ fn staging(
 pub(in crate::shell) fn prompt(
     model: &mut AppModel,
     state: &mut ShellState,
-    ws: &Path,
+    ws: Option<&Path>,
     prepared: &Prepared,
     goal: &str,
 ) {
@@ -116,7 +122,7 @@ pub(in crate::shell) fn prompt(
 fn post(
     model: &mut AppModel,
     state: &mut ShellState,
-    ws: &Path,
+    ws: Option<&Path>,
     prepared: &Prepared,
     goal: &str,
     seat: Seat,
@@ -153,7 +159,10 @@ pub(super) fn staged(
     prepared: &Prepared,
     goal: Option<String>,
 ) -> bool {
-    model.adopt_workspace(&acting.ws);
+    // Adopted by the name the reply came back with — the one thing that knows
+    // what the engine actually prepared — and claimed by the path only where
+    // this box has one (bl-e349).
+    model.adopt_workspace(&prepared.workspace, acting.ws.as_deref());
     let Some(text) = goal else {
         // A draft opens only when the rung composed one (bl-9acf): one
         // predicate, not a rung match — the prefill's blankness is the fact,
@@ -169,7 +178,7 @@ pub(super) fn staged(
     post(
         model,
         state,
-        &acting.ws,
+        acting.ws.as_deref(),
         prepared,
         &text,
         acting.seat.clone(),
@@ -187,7 +196,7 @@ pub(super) fn staged(
 pub(super) fn fired(
     model: &mut AppModel,
     state: &mut ShellState,
-    ws: &Path,
+    ws: Option<&Path>,
     conversation: &str,
     goal: &str,
 ) {
@@ -197,5 +206,12 @@ pub(super) fn fired(
     if state.start.pending.take().is_some() {
         crate::shell::focus::request(state);
     }
-    model.await_conversation(ws, conversation, goal);
+    // **The claim is this box's optimism, so it is taken only where this box
+    // has a path to key it by** (bl-e349). A start that landed at a §8.2 entry
+    // has none: the conversation it just founded is the host's, and it arrives
+    // wearing its row on that entry's own slice within one ask period, which is
+    // exactly what the claim stands in for locally.
+    if let Some(ws) = ws {
+        model.await_conversation(ws, conversation, goal);
+    }
 }

@@ -92,6 +92,61 @@ impl super::AppModel {
         self.wire.roster()
     }
 
+    /// **Which §8.2 entry hosts `name`**, or `None` for this window's own
+    /// engine — a selection out of the union roster the frame already holds, so
+    /// it costs no ask of its own.
+    ///
+    /// [`wire_roster`](Self::wire_roster) drops the origin for every seat that
+    /// paints a workspace *row*, which is right: a row is a row wherever it
+    /// came from. This is the one question for which the channel IS the answer
+    /// — the §8.1 provider gate judges a wall on the far side of it, and
+    /// [`start_path`](Self::start_path) below asks it to find out whether this
+    /// box has a directory for the workspace at all.
+    pub fn hosting_entry(&mut self, name: &str) -> Option<String> {
+        self.wire_roster()
+            .into_iter()
+            .find(|r| r.row.workspace == name)
+            .and_then(|r| r.origin.label())
+    }
+
+    /// **Where the workspace `name` lives on THIS box, if anywhere** (REMOTE
+    /// §8.2, bl-e349) — one rule with three answers and no branch on a mode:
+    ///
+    /// - an enumerated name is its own path
+    ///   ([`workspace_path`](Self::workspace_path));
+    /// - a name **no channel holds** is one a `Prepare` is about to found
+    ///   *here*, so it is spelled the §3.1 way, under yog's flat names root.
+    ///   That is the frame's side of the chokepoint's own rule
+    ///   (`dispatch::resolve_workspace`: *"a `Prepare` naming an unenumerated
+    ///   workspace resolves to yog's flat names root"*), and the shape the §11
+    ///   raise and the bootstrap `home` have always taken;
+    /// - a name a §8.2 **entry** holds answers `None`. REMOTE §8.2, verbatim:
+    ///   *"A remote name still has no local PATH, on purpose. `Snapshot::ws_path`
+    ///   resolves the painted enumeration, whose members are directories on this
+    ///   box; a workspace hosted elsewhere has none."*
+    ///
+    /// `None` is the fact the start's frame-side folds need in order to **skip**
+    /// rather than invent. The §3.4 raise claim, the §3.4 start claim and the
+    /// §3.4 pending echo are every one of them keyed by path, and every one of
+    /// them is local optimism standing in for a wire read that will arrive on
+    /// the entry's own slice a moment later.
+    ///
+    /// **Inventing a path was the defect** (bl-e349). `focused_workspace()`
+    /// answers `None` for a workspace an entry hosts exactly as it does for no
+    /// focus at all, so the start flow read the two states as one and
+    /// substituted the §3.1 bootstrap default: a start fired at a workspace held
+    /// elsewhere founded a LOCAL workspace named `home`, focused it, and ran the
+    /// operator's goal in it.
+    pub fn start_path(&mut self, name: &str) -> Option<std::path::PathBuf> {
+        if self.hosting_entry(name).is_some() {
+            return None;
+        }
+        Some(
+            self.workspace_path(name)
+                .unwrap_or_else(|| self.roots.names().join(name)),
+        )
+    }
+
     /// **Follow the tail** (REMOTE §3, bl-73e7): declare `question` the lane's
     /// subject and read whatever fold has landed for it. The
     /// [`wire_ask`](Self::wire_ask) shape one lane over, and deliberately so —
@@ -110,3 +165,6 @@ impl super::AppModel {
         self.wire.awaiting()
     }
 }
+
+#[cfg(test)]
+mod tests;

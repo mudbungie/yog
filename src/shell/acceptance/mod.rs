@@ -38,6 +38,7 @@ mod reach;
 mod recall;
 mod refusal;
 mod remedies;
+mod remote_start;
 mod screen;
 mod search_tab;
 mod settings;

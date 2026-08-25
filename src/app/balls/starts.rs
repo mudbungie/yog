@@ -29,16 +29,37 @@ impl AppModel {
             .find(|b| b.id == id)
     }
 
-    /// The **where** axis for a start from this instance (§3.4): the focused
-    /// workspace's path verbatim whenever one is focused (named **or foreign**: a
-    /// foreign workspace is a real lernie workspace, so §3.4's "prompt into the
-    /// focused workspace" is unconditional), else `<names-root>/home` — the §3.1
-    /// default name, taken by the empty world and only by it (a focus is derived
-    /// whenever the roster holds anything, §4.1). The bootstrap is that path not
-    /// existing yet, which the planner's `EnsureWorkspace` founds: the empty case
-    /// of the general path, never a wizard and never a name picker.
+    /// **The where axis for a start, as a §3.1 NAME** (§3.4): the focused
+    /// workspace's — named, foreign, **or held at a §8.2 entry** — else `home`,
+    /// the §3.1 default the empty world takes and only it (a focus is derived
+    /// whenever the roster holds anything, §4.1).
     ///
-    /// **It is also the sphere the §16.2 wall lens rides** (bl-3b62). The wall is
+    /// A name and not a path since bl-e349, because a name is what a start is
+    /// **addressed** by: `Action::Prepare` carries one, the poster routes the
+    /// act by it (REMOTE §8.2), and the chokepoint resolves it at the far end —
+    /// founding an absent one, which is what "raising a workspace" is
+    /// (`dispatch::resolve_workspace`). Reading the focused *path* instead made
+    /// two different states answer `None` as one — nothing focused, and a
+    /// workspace whose directory is on another box — and the `home` substituted
+    /// for the second founded a phantom local workspace and ran the operator's
+    /// goal in it.
+    pub fn start_workspace_name(&self) -> String {
+        self.focused_ws_name()
+            .unwrap_or_else(|| names::DEFAULT_NAME.to_owned())
+    }
+
+    /// That target **spelled as a path** — the enumerated workspace's own, or
+    /// the §3.1 names-root spelling of a name this box does not enumerate (the
+    /// §11 raise's shape, and the bootstrap's).
+    ///
+    /// It is a spelling and never an address: the only things read off it are
+    /// its leaf — which is [`start_workspace_name`](Self::start_workspace_name)
+    /// again, the name the act carries — and the §16.2 wall the leaf names.
+    /// What this box may actually *do* with the directory is
+    /// [`start_path`](AppModel::start_path)'s answer, which withholds one
+    /// outright for a workspace an entry hosts.
+    ///
+    /// **It is the sphere the §16.2 wall lens rides** (bl-3b62). The wall is
     /// pure path algebra over a workspace's leaf — no IO, nothing stored — so
     /// "which sphere's settings is this window showing" and "which sphere would
     /// the next Enter land in" are the same question, and keying the lens on the
@@ -50,10 +71,9 @@ impl AppModel {
     /// first Enter's workspace will use — and the ruling at bl-9b52 Q3 is one
     /// call site, not a new verb.
     pub fn start_workspace(&self) -> PathBuf {
-        match self.focused_workspace() {
-            Some(ws) => ws,
-            None => workspace_path(&self.roots.yog_data, names::DEFAULT_NAME),
-        }
+        let name = self.start_workspace_name();
+        self.workspace_path(&name)
+            .unwrap_or_else(|| workspace_path(&self.roots.yog_data, &name))
     }
 
     /// The common [`StartInputs`] shape at an **explicit** workspace (§3.4): the

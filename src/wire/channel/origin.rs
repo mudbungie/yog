@@ -111,9 +111,18 @@ impl Origin {
     }
 
     /// **A landed reply in this box's spelling** — the inbound direction,
-    /// spent. The roster's rows are renamed back to the leaf; it is the one
-    /// reply that *identifies* a workspace by name, so every other kind lands
-    /// as it was answered.
+    /// spent. Two replies *identify* a workspace by name and both are renamed
+    /// back to the leaf; every other kind lands as it was answered.
+    ///
+    /// The roster's rows are the obvious one. The §8.1
+    /// [`Prepared`](crate::start::Prepared) is the other and it is
+    /// load-bearing (bl-e349): the name it carries is handed straight back out
+    /// as the next act's address (`Action::Prompt` names
+    /// `prepared.workspace`), so a `Prepared` left in the HOST's spelling
+    /// routes its own `Prompt` to a name no entry claims — this window's own
+    /// engine, which is precisely the local misfire this mapping exists to
+    /// prevent. One direction of one mapping, spent at the one boundary §8.2
+    /// puts it at.
     pub(crate) fn labelled(&self, reply: Reply) -> Reply {
         match reply {
             Reply::Workspaces(mut view) => {
@@ -123,6 +132,12 @@ impl Origin {
                     }
                 }
                 Reply::Workspaces(view)
+            }
+            Reply::Prepared(mut prepared) => {
+                if let Some(leaf) = self.inbound(&prepared.workspace) {
+                    prepared.workspace = leaf;
+                }
+                Reply::Prepared(prepared)
             }
             other => other,
         }

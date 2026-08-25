@@ -26,7 +26,6 @@ use crate::AppModel;
 use crate::actions::DraftKey;
 use crate::boundary::{Action, Gesture, help, line, reply::Reply, reply::encode};
 use crate::cli_outbound::Cli;
-use std::path::PathBuf;
 
 use super::ShellState;
 
@@ -96,15 +95,13 @@ fn act(model: &mut AppModel, state: &mut ShellState, key: &DraftKey, action: &Ac
     // The line's address resolved at the seat's own door (REMOTE §8): the
     // aftermath is about a workspace **path**, the gesture carries a name, and
     // a gesture naming none is about none. A name the roster does not carry is
-    // one a `/prepare` is about to found, so it resolves the §3.1 way — the
-    // same path the §11 raise's own inputs name.
-    let ws = action.workspace().map_or_else(PathBuf::new, |name| {
-        model
-            .snap
-            .ws_path(&name)
-            .unwrap_or_else(|_| model.new_workspace_inputs(&name).workspace)
-    });
-    super::acting::line(model, state, key, &ws, action);
+    // one a `/prepare` is about to found, so it resolves the §3.1 way — and a
+    // name a §8.2 entry holds resolves to no local path at all, its directory
+    // being on its host. One rule, all three answers
+    // ([`AppModel::start_path`], bl-e349); this used to spell its own,
+    // flattening a gesture that named none to `PathBuf::new()`.
+    let ws = action.workspace().and_then(|name| model.start_path(&name));
+    super::acting::line(model, state, key, ws.as_deref(), action);
 }
 
 /// Show the boundary's own answer, and say whether the line landed.

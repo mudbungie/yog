@@ -21,7 +21,8 @@ fn the_raised_wall_resolves_before_the_derivation_reads_it() {
         "the derivation has not read it — that is the whole premise"
     );
 
-    rig.model.adopt_workspace(&raised);
+    rig.model
+        .adopt_workspace(&crate::naming::leaf(&raised), Some(&raised));
 
     assert_eq!(rig.model.focused_ws_name().as_deref(), Some("ops"));
     assert_eq!(
@@ -57,7 +58,8 @@ fn the_derivation_showing_the_wall_retires_the_claim() {
     let mut h = Harness::new();
     let (_c, mut rig) = h.model();
     let raised = h.mint_named("ops", "c-9");
-    rig.model.adopt_workspace(&raised);
+    rig.model
+        .adopt_workspace(&crate::naming::leaf(&raised), Some(&raised));
 
     rig.tick();
 
@@ -87,7 +89,8 @@ fn a_start_into_an_enumerated_workspace_claims_nothing() {
     let (_c, mut rig) = h.model();
     let before = rig.model.workspaces().len();
 
-    rig.model.adopt_workspace(&h.ws);
+    rig.model
+        .adopt_workspace(&crate::naming::leaf(&h.ws), Some(&h.ws));
 
     assert_eq!(rig.model.focused_ws_name().as_deref(), Some("ws"));
     assert_eq!(
@@ -109,7 +112,8 @@ fn the_claim_never_doubles_a_wall_the_answer_already_carries() {
     let mut h = Harness::new();
     let (_c, mut rig) = h.model();
     let raised = h.mint_named("ops", "c-9");
-    rig.model.adopt_workspace(&raised);
+    rig.model
+        .adopt_workspace(&crate::naming::leaf(&raised), Some(&raised));
 
     // The listing as it stands with the derivation still behind: one row for
     // the claim, minted here because nothing else carries the wall.

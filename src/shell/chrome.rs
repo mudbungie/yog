@@ -43,22 +43,6 @@ pub(super) fn ws_rows(model: &mut AppModel) -> Vec<WsRow> {
     model.raised_rows(answered)
 }
 
-/// **Which §8.2 entry hosts `name`**, or `None` for this window's own engine
-/// (bl-1fd0) — a selection out of the union roster this frame already holds,
-/// exactly as the tab bar's is, so it costs no ask of its own.
-///
-/// The origin is dropped by [`ws_rows`] above, which is right for every seat
-/// that paints a workspace *row*: a row is a row wherever it came from. The
-/// §8.1 provider gate is the one reader for which the channel IS the question,
-/// because the wall it must judge lives on the far side of it.
-pub(super) fn ws_channel(model: &mut AppModel, name: &str) -> Option<String> {
-    model
-        .wire_roster()
-        .into_iter()
-        .find(|r| r.row.workspace == name)
-        .and_then(|r| r.origin.label())
-}
-
 /// One workspace's bound balls with their §3.5 figures — the §11 balls
 /// section's whole content, and the object its row menus act on. Nothing
 /// focused is nothing asked.

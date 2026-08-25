@@ -206,6 +206,8 @@ pub(in crate::shell::acceptance) fn build_world(title: &str, roster: &Roster) ->
         lernie_workspaces,
         link: link_end,
         outbox,
+        entry: None,
+        acted: Vec::new(),
         tail: tail_end,
         followed: None,
         // Deliberately absent substrate, named by **absolute** path (bl-f558):

@@ -36,8 +36,19 @@ impl World {
             answered = true;
             let landed = match codec::decode(&envelope) {
                 Ok(Gesture::Act(action)) => {
-                    let mut ui = UiState::open(self.model.ui_json_path());
-                    crate::boundary::dispatch::dispatch(&deps, &mut ui, &ts, &action)
+                    self.acted.push(action.clone());
+                    // **Routed, exactly as the poster routes** (REMOTE §8.2):
+                    // an act naming a workspace an entry holds is that host's
+                    // and never reaches this box's chokepoint. Without this the
+                    // fixture would answer every act locally whatever it named,
+                    // which is the one thing a beat about a remote start must
+                    // not have done for it.
+                    if let Some(landed) = self.entry_act(&action) {
+                        landed
+                    } else {
+                        let mut ui = UiState::open(self.model.ui_json_path());
+                        crate::boundary::dispatch::dispatch(&deps, &mut ui, &ts, &action)
+                    }
                 }
                 Ok(Gesture::Ask(_)) => Err("the act path carries no reads".to_owned()),
                 Err(said) => Err(said),
@@ -67,22 +78,7 @@ impl World {
             };
             self.link.publish(&question, landed);
         }
-    }
-
-    /// **Answer the outstanding §8.5 search**, the way the
-    /// [`Searcher`](crate::search::Searcher) thread does — the same stand-in
-    /// this file makes for the asker and the poster, one door over (bl-44e9).
-    /// The searcher dials a listener the fixture has none of, so the walk runs
-    /// in place over this world's own snapshot, which is what the engine at the
-    /// far end would have run.
-    pub(in crate::shell::acceptance) fn searches(&mut self) {
-        let Some((seq, text)) = self.model.search_cell().pending() else {
-            return;
-        };
-        let snap = self.model.derivation().clone();
-        self.model
-            .search_cell()
-            .publish(seq, crate::search::run(&snap, &text, &|| true));
+        self.entry_reads();
     }
 
     /// **One frame's whole wire duty** (REMOTE §9.8's harness ruling, extended

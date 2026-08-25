@@ -41,13 +41,24 @@ pub(in crate::shell::acceptance) struct World {
     /// world here and read the raised sphere back.
     pub(in crate::shell::acceptance) yog_data: PathBuf,
     /// Where a second sphere is symlinked from ([`World::add_workspace`]).
-    pub(super) lernie_workspaces: PathBuf,
+    pub(in crate::shell::acceptance) lernie_workspaces: PathBuf,
     /// The frame's end of the read path — the standing questions a painted
     /// surface declared, taken exactly as the asker takes them.
     pub(in crate::shell::acceptance) link: LinkEnd,
     /// The frame's end of the act path — what its gestures posted, taken
     /// exactly as the poster takes them.
     pub(in crate::shell::acceptance) outbox: Outbox,
+    /// **A §8.2 entry's end**, once [`World::attach_entry`] has given this
+    /// window one: a second channel claiming one leaf, standing in for a
+    /// workspace held on another box. `None` is every other fixture, which is
+    /// §8.2's zero-entry shape — byte for byte what a window did before entries
+    /// existed.
+    pub(super) entry: Option<(String, LinkEnd)>,
+    /// **Every act this world has answered**, in the order it took them — what
+    /// a beat asserts a gesture *posted*, which is the only half of a routed
+    /// act a window decides. Which channel it then goes down is
+    /// `wire::channels`' question and is proven there.
+    pub(in crate::shell::acceptance) acted: Vec<crate::boundary::Action>,
     /// The follow lane's engine end (bl-73e7), taken exactly as
     /// [`Lane`](crate::wire::lane::Lane) takes it.
     pub(in crate::shell::acceptance) tail: crate::wire::lane::TailEnd,

@@ -102,7 +102,7 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     // — asserted here as the *input* to the retarget below, which is this
     // file's own claim: whether the seat really makes it is the raise drive's
     // (`shell::acceptance::raise`), end to end through the real window.
-    m.adopt_workspace(&raised);
+    m.adopt_workspace(&crate::naming::leaf(&raised), Some(&raised));
     assert_eq!(
         m.focused_ws_name().as_deref(),
         Some("ops"),
