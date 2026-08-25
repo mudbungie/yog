@@ -6,7 +6,8 @@
 //! proven here rather than in [`super::state_repo`]. Each case asserts both
 //! the [`AgentState`], the DESIGN §10 uncertainty flag (`Unknown` degrades to
 //! a framing-only reading that is flagged, never a false definite) and the
-//! §4.4 output-limit reading beside it (bl-fb87).
+//! §4.4 output-limit reading beside it, which is `false` on every row here —
+//! the reading's own cases live in [`super::state_truncated`] (bl-fb87).
 
 use crate::git_tree::probe::{LockProbe, WriterProbe};
 use crate::git_tree::state::{RESPONSE_FILE, classify};
@@ -16,27 +17,27 @@ use tempfile::tempdir;
 
 /// Stub probes returning a fixed tri-state answer — one per trait so lock and
 /// writer observations vary independently across the mapping rows.
-struct LockStub(Probe);
+pub(super) struct LockStub(Probe);
 impl LockProbe for LockStub {
     fn lock_state(&self, _dir: &Path) -> Probe {
         self.0
     }
 }
-struct WriterStub(Probe);
+pub(super) struct WriterStub(Probe);
 impl WriterProbe for WriterStub {
     fn writer_state(&self, _path: &Path) -> Probe {
         self.0
     }
 }
 
-fn lock(p: Probe) -> LockStub {
+pub(super) fn lock(p: Probe) -> LockStub {
     LockStub(p)
 }
-fn writer(p: Probe) -> WriterStub {
+pub(super) fn writer(p: Probe) -> WriterStub {
     WriterStub(p)
 }
 
-fn write(path: &Path, contents: &[u8]) {
+pub(super) fn write(path: &Path, contents: &[u8]) {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).unwrap();
     }
@@ -45,7 +46,7 @@ fn write(path: &Path, contents: &[u8]) {
 
 /// The classification as a comparable triple: state, §10 uncertainty, and the
 /// §4.4 output-limit reading.
-fn reading(
+pub(super) fn reading(
     dir: &Path,
     agent: &str,
     lock: &dyn LockProbe,
@@ -55,24 +56,16 @@ fn reading(
     (read.state, read.uncertain, read.truncated)
 }
 
-fn resp(dir: &Path, agent: &str, seq: &str) -> PathBuf {
+pub(super) fn resp(dir: &Path, agent: &str, seq: &str) -> PathBuf {
     dir.join(format!("{STEPS_DIR}/{agent}/{seq}/{RESPONSE_FILE}"))
 }
 
-const FINISH_END: &[u8] = br#"{"type":"message_start","v":1,"role":"assistant"}
+pub(super) const FINISH_END: &[u8] = br#"{"type":"message_start","v":1,"role":"assistant"}
 {"type":"finish","reason":"stop"}
 {"type":"end"}
 "#;
 const ERROR_END: &[u8] = br#"{"type":"message_start","v":1,"role":"assistant"}
 {"type":"error","kind":"transport","message":"reset"}
-{"type":"end"}
-"#;
-/// The bl-fb87 shape: thinking, no text, no `tool_use`, and a `finish` whose
-/// canonical reason is `length` — every transport promise kept around a turn
-/// the request's `max_tokens` cut off.
-const LENGTH_END: &[u8] = br#"{"type":"message_start","v":1,"role":"assistant"}
-{"type":"content_delta","index":0,"delta":{"thinking_delta":"hmm"}}
-{"type":"finish","reason":"length"}
 {"type":"end"}
 "#;
 
@@ -216,66 +209,5 @@ fn classify_reads_latest_step_only() {
     assert_eq!(
         reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
         (AgentState::Stopped, false, false)
-    );
-}
-
-#[test]
-fn no_lock_and_output_limited_response_is_stopped_and_truncated() {
-    // Transport completion is not task completion (bl-fb87): the tail frames
-    // clean, so §4.4 reads it `Complete` and `rail::place` still pairs it with
-    // the entry lernie sealed — but the turn ran out of room, which is a
-    // conversation stopped mid-utterance, not one at rest.
-    let dir = tempdir().unwrap();
-    let agent = "20260427T140000Z-llll";
-    write(&resp(dir.path(), agent, "001"), LENGTH_END);
-    assert_eq!(
-        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
-        (AgentState::Stopped, false, true)
-    );
-}
-
-#[test]
-fn a_driver_at_work_over_an_output_limited_step_reads_neither() {
-    // The truncation reading is asked only at rest: a driver holding the lease
-    // is itself the answer to "what now", and Nudge is already off for it.
-    let dir = tempdir().unwrap();
-    let agent = "20260427T140000Z-mmmm";
-    write(&resp(dir.path(), agent, "001"), LENGTH_END);
-    assert_eq!(
-        reading(dir.path(), agent, &lock(Probe::Held), &writer(Probe::Free)),
-        (AgentState::Live, false, false)
-    );
-}
-
-#[test]
-fn a_tool_use_finish_is_untouched_by_the_output_limit_reading() {
-    // A turn that really did end with a call to make finishes `tool_use`, not
-    // `length` — the canonical reason is one value and the provider names it,
-    // so the continuation case needs no content sniffing to stay Quiescent.
-    let dir = tempdir().unwrap();
-    let agent = "20260427T140000Z-tttt";
-    write(
-        &resp(dir.path(), agent, "001"),
-        br#"{"type":"finish","reason":"tool_use"}
-{"type":"end"}
-"#,
-    );
-    assert_eq!(
-        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
-        (AgentState::Quiescent, false, false)
-    );
-}
-
-#[test]
-fn an_output_limited_step_behind_a_newer_one_is_not_the_reading() {
-    // Only the latest step settles the agent (§3.5): a truncated turn the
-    // operator already carried on from is history, not the state.
-    let dir = tempdir().unwrap();
-    let agent = "20260427T140000Z-nnnn";
-    write(&resp(dir.path(), agent, "001"), LENGTH_END);
-    write(&resp(dir.path(), agent, "002"), FINISH_END);
-    assert_eq!(
-        reading(dir.path(), agent, &lock(Probe::Free), &writer(Probe::Free)),
-        (AgentState::Quiescent, false, false)
     );
 }

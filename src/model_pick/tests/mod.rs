@@ -1,6 +1,8 @@
 //! Tests for the §9.4 picker's pure half. Split by concern: the generic
 //! [`fields`](super::grammar::entry_field) access every rewrite shares, the
-//! block [`grammar`](super::grammar), the roster [`query`](super::query), the
+//! block [`grammar`](super::grammar) — its `roles:` half and its `models:`
+//! half on the seam the production module already has — the roster
+//! [`query`](super::query), the
 //! composed [`plan`](super::plan) + the sentences the surface paints, the
 //! conversation [`header`](super::header) line and its drift clause, the
 //! `models.yaml` read-back that judges a declared provider row (`validate`),
@@ -10,7 +12,8 @@
 
 mod capability;
 mod fields;
-mod grammar;
+mod grammar_models;
+mod grammar_roles;
 mod header;
 mod plan;
 mod query;

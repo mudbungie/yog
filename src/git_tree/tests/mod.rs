@@ -1,7 +1,9 @@
 //! Tests for the git-tree view-model.
 //!
-//! Tests are split by concern: [`fixture`] owns the shared workspace-
-//! building helpers (its one `git` fork site lives in [`git`]) and
+//! Tests are split by concern: [`fixture`] owns the workspace skeleton and its
+//! config lineage (its one `git` fork site lives in [`git`]), [`agent_fixture`]
+//! everything keyed to an agent id (branches, the `name` blob, the
+//! `refs/lernie/*` marks, descent forks) and
 //! [`disk_fixture`] the ones writing plain files git never sees, [`unit`]
 //! drives the pure-function layer (detection,
 //! parsing, preview extraction), and [`repo`] covers the end-to-end
@@ -12,12 +14,15 @@
 //! [`state_repo`] (end-to-end quiescent/stopped classification against
 //! real fixtures) and [`state_unit`] (the probe-injected tri-state mapping
 //! table, where the `live`/`in_flight` and `Unknown`-uncertainty rows are
-//! proven); the procfs probe backends are unit-tested in `super::fd_probe`
+//! proven), with [`state_truncated`] holding the §4.4 output-limit reading
+//! that same walk answers beside the state (bl-fb87 — one read, two facts, so
+//! two suites over one set of stubs); the procfs probe backends are unit-tested in `super::fd_probe`
 //! and `super::lock_probe`. The state-badge glyph/hue mapping lives in
 //! `theme` (§11's single colour authority) with its tests; badge paint
 //! reachability is the shell acceptance smoke's concern.
 
 mod activity;
+mod agent_fixture;
 pub(crate) mod config_fixture;
 mod disk_fixture;
 pub(crate) mod fixture;
@@ -26,6 +31,7 @@ mod naming;
 mod repo;
 mod starts;
 mod state_repo;
+mod state_truncated;
 mod state_unit;
 mod steps;
 mod unit;

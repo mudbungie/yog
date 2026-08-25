@@ -1,7 +1,9 @@
 //! The effectful half of the start flow (DESIGN §3.3, §8.1, §15 M6 Z3): the
-//! piped `bl`/`lernie` executors, the claim worktree
-//! cross-check, and the shapes the [`prepare`](super::prepare) orchestrator
-//! threads through them. The detached fire — and the §3.3 conversation mint it
+//! piped `bl`/`lernie` executors and the shapes the
+//! [`prepare`](super::prepare) orchestrator threads through them. The claim and
+//! its worktree cross-check are [`claim`], split off at §12's pre-split band:
+//! every other verb here is done when it exits zero, and that one is the step
+//! whose *answer* still has to be checked against the bl-delivery formula. The detached fire — and the §3.3 conversation mint it
 //! stamps with — is [`prompt`](super::prompt); everything here is piped, gated
 //! and re-runnable.
 //!
@@ -14,7 +16,6 @@
 //! behind).
 
 use crate::actions::verbs::{self, Outcome, log_step_failure};
-use crate::binding::work_worktree_path;
 use crate::cli_outbound::Cli;
 use crate::opslog::Origin;
 use crate::world::seed;
@@ -23,7 +24,6 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 const CREATE: &str = "create";
-const CLAIM: &str = "claim";
 const AS: &str = "--as";
 const BODY: &str = "--body";
 pub(super) const NEW: &str = "new";
@@ -32,11 +32,16 @@ pub(super) const REPO_MARK: &str = "repo.git";
 /// The `["yog-step",<name>]` step names for the non-spawn aborts (§4.2).
 const MINT: &str = "mint";
 pub(super) const MKDIR: &str = "mkdir";
-const DRIFT: &str = "cross-check";
 /// The §8.6 authoring of the capability control onto `config/default`.
 pub(super) const CONTROL: &str = "control";
 
 pub use crate::opslog::DETACHED_EXIT;
+
+/// The ball rung's claim and the worktree cross-check that follows it (§3.3,
+/// §5.1 #5) — the one step whose success still has to be *checked* rather than
+/// merely exited-zero.
+mod claim;
+pub use claim::{ClaimResolved, cross_check_claim, execute_claim};
 
 /// The injected binaries + the ops-log target (§14). Owned — [`prepare`] borrows
 /// each field as it threads them into the per-step executors.
@@ -48,13 +53,6 @@ pub struct Deps {
     /// which is how §8.6 authors the capability control onto `config/default`
     /// without yog ever writing inside a workspace itself.
     pub yog_binary: PathBuf,
-}
-
-/// The worktree a claim resolved to and which formula variant matched (§3.3).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ClaimResolved {
-    pub worktree: PathBuf,
-    pub suffixed: bool,
 }
 
 /// The composer's fire-time parameters (§8.1): the resolved workspace `name` (for
@@ -170,83 +168,6 @@ pub fn execute_create(
     // roster's balls section outright, not a threaded parameter.
     let out = verbs::run_logged(bl, state_root, ts, project, &args, Origin::Balls)?;
     verb_ok(out, CREATE).map(|o| o.stdout.trim().to_owned())
-}
-
-/// `bl claim <id> --as <name>` in the project (§8.1), piped + opslog'd, then the
-/// stdout worktree path cross-checked against the bl-delivery formula.
-pub fn execute_claim(
-    bl: &Cli,
-    state_root: &Path,
-    ts: &str,
-    project: &Path,
-    id: &str,
-    name: &str,
-    balls_state_root: &Path,
-) -> Result<ClaimResolved, StartError> {
-    let out = verb_ok(
-        verbs::run_logged(
-            bl,
-            state_root,
-            ts,
-            project,
-            &[CLAIM, id, AS, name],
-            Origin::Balls,
-        )?,
-        CLAIM,
-    )?;
-    cross_check_claim(
-        &out.stdout,
-        balls_state_root,
-        project,
-        id,
-        name,
-        state_root,
-        ts,
-    )
-}
-
-/// Cross-check `bl claim`'s stdout against the bl-delivery worktree formula
-/// (§3.3, §5.1 #5): the canonical `<id>` leaf or the `<id>-<claimant>` variant
-/// matches; anything else is a workspace-convention [`Drift`](StartError::Drift),
-/// logged as a `["yog-step","cross-check"]` row (Z5) before it returns.
-pub fn cross_check_claim(
-    stdout: &str,
-    balls_state_root: &Path,
-    project: &Path,
-    id: &str,
-    name: &str,
-    state_root: &Path,
-    ts: &str,
-) -> Result<ClaimResolved, StartError> {
-    let got = PathBuf::from(stdout.trim());
-    let canonical = work_worktree_path(balls_state_root, project, id, None);
-    let suffixed = work_worktree_path(balls_state_root, project, id, Some(name));
-    if got == canonical {
-        return Ok(ClaimResolved {
-            worktree: canonical,
-            suffixed: false,
-        });
-    }
-    if got == suffixed {
-        return Ok(ClaimResolved {
-            worktree: suffixed,
-            suffixed: true,
-        });
-    }
-    let err = StartError::Drift {
-        stdout: got.display().to_string(),
-        canonical: canonical.display().to_string(),
-        suffixed: suffixed.display().to_string(),
-    };
-    log_step_failure(
-        state_root,
-        ts,
-        project,
-        DRIFT,
-        &err.to_string(),
-        Origin::Balls,
-    )?;
-    Err(err)
 }
 
 /// Return `out` iff the verb exited 0, else a [`StartError::VerbFailed`] carrying

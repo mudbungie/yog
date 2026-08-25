@@ -16,6 +16,7 @@ mod lineage;
 mod pins;
 mod plan;
 mod prompt;
+mod prompt_ops;
 mod run;
 
 use crate::opslog::{self, OpEntry};

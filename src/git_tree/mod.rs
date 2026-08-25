@@ -79,7 +79,7 @@ pub use marks::AgentMark;
 // plain reachability reads over any repo, and §3.9's science projection asks
 // them of a *project* repo — the base two ends departed from, and whether a
 // source has incorporated its target. One spelling of one git command.
-pub(crate) use cmd::{
+pub(crate) use cmd::browse::{
     diff_names, for_each_ref_config, is_ancestor, ls_tree, ls_tree_long, merge_base, show_file,
 };
 pub use probe::Probe;

@@ -22,6 +22,11 @@
 //! state transition under Linux tarpaulin; the real [`RealBzRunner`] is a thin
 //! shell over [`crate::bz_host`] plus one recorder-covered spawn.
 //!
+//! The three on-disk locations themselves — and the two reads that need nothing
+//! but them ([`credential_presence`], [`model_cache_at`]) — are [`paths`],
+//! split off at §12's pre-split band: a layout is not an editor, and both of
+//! those reads were already documented as free of one.
+//!
 //! Apply is the shared [`pipeline`](super::pipeline) (stage → hash-guard →
 //! atomic rename) with brazen's one addition, the `bz` validator gate:
 //! ```text
@@ -38,11 +43,15 @@
 //! (`bz --help`: "--config <file> … else the default search path").
 
 use super::{Draft, FileIo};
-use crate::xdg::Env;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod effects;
 pub use effects::RealBzRunner;
+
+/// The wall's brazen layout and the two reads that need only it (§5.1
+/// #19/#22/#23) — free of the editor, because every caller asks without one.
+mod paths;
+pub use paths::{BrazenPaths, credential_presence, model_cache_at};
 
 mod providers;
 pub use providers::{
@@ -107,80 +116,6 @@ pub enum Applied {
 /// (QUALITY H1) — this line is now only the fact the *file* is short of.
 pub const BUILT_IN_ROWS_HINT: &str =
     "built-in provider rows are compiled into bz and are not shown in this file";
-
-/// brazen's three locations **inside one workspace's wall** (§5.1 rows
-/// 19/22/23, §16.2 as amended): the layout is yog's own, so it is the same
-/// three leaves on every §10 target and there is no per-OS branch left. This
-/// struct is that layout's single home — [`crate::bz_host`] hands the very
-/// same paths to the linked brazen's seams, so the file yog's editor writes
-/// and the file `bz` reads cannot be two different files.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BrazenPaths {
-    pub config: PathBuf,
-    pub credentials_dir: PathBuf,
-    pub models_cache_dir: PathBuf,
-}
-
-impl BrazenPaths {
-    /// The three locations under an explicit wall root.
-    pub fn in_wall(wall: &Path) -> Self {
-        let brazen = wall.join("brazen");
-        Self {
-            config: brazen.join("config.toml"),
-            credentials_dir: brazen.join("credentials"),
-            models_cache_dir: brazen.join("models"),
-        }
-    }
-
-    /// The three locations of the wall `env` names ([`Env::wall`]), or `None`
-    /// outside any wall — a seat in no workspace has no providers to read, and
-    /// that emptiness is rendered as a guard rather than filled from the
-    /// machine's own brazen state (§16.2: nothing is ambient but the roster).
-    pub fn of(env: &Env) -> Option<Self> {
-        env.wall().map(|w| Self::in_wall(&w))
-    }
-}
-
-/// Credential presence for a table of rows, against a credentials dir (§5.1
-/// #22): does `<dir>/<provider>.json` exist? Booleans only — contents are never
-/// read, never written. Free of the editor because every caller asks the
-/// question without one: the §8.3 Login surface and the boundary's own
-/// `Providers` reply hold no draft and no Apply pipeline, only the folded dir.
-/// `BrazenEditor` used to
-/// wrap it at its own path as well; since bl-20cb the §9.1 pane paints no
-/// credential column at all, so the wrapper went with the seat and this is the
-/// one presence read there has ever been meant to be.
-pub fn credential_presence(
-    dir: &Path,
-    rows: &[ProviderRow],
-    io: &dyn FileIo,
-) -> Vec<(String, bool)> {
-    rows.iter()
-        .map(|row| {
-            let path = dir.join(format!("{}.json", row.name));
-            (row.name.clone(), io.exists(&path))
-        })
-        .collect()
-}
-
-/// The raw model-cache document `bz --list-models` wholesale-wrote for
-/// `provider` under `dir` (§5.1 row 23), or `None` where it never ran there.
-/// Read-only and forgiving — no parse, no schema coupling.
-///
-/// Free of the editor for the same reason [`credential_presence`] is: the §9.4
-/// pick reads this very file to seed the context window it declares (bl-848f)
-/// and holds no `config.toml` draft to ask through. One naming of
-/// `<provider>.json`, so the file the picker reads and the file the §9.5 pane
-/// shows can never be two different files.
-pub fn model_cache_at(
-    dir: &Path,
-    provider: &str,
-    io: &dyn FileIo,
-) -> std::io::Result<Option<String>> {
-    Ok(io
-        .read(&dir.join(format!("{provider}.json")))?
-        .map(|b| String::from_utf8_lossy(&b).into_owned()))
-}
 
 /// The brazen config editor view-model. Holds only the RAM carve-out (the
 /// unsent draft, §5.3) and the loaded-content hash for the concurrent-edit

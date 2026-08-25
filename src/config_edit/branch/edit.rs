@@ -18,21 +18,26 @@
 //!    `sh -c` invocation shape this depends on).
 //! 5. Stale `<nonce>/` dirs are swept at startup ([`sweep_staging`], §5.2).
 //!
+//! Steps 1 and 5 — the staging dir a draft is written into and the sweep that
+//! collects the ones a crash left behind — are [`staging`], split off at §12's
+//! pre-split band: what yog *stages* is a scratch-dir lifecycle, and what it
+//! *drives* is a subprocess with an environment.
+//!
 //! [`apply`]: crate::config_edit::apply
 
 use crate::cli_outbound::{Chunk, Cli, ExitInfo};
 use crate::config_edit::apply::EDITOR_APPLY_FLAG;
 use crate::opslog::{self, OpEntry, Origin};
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::path::Path;
 
 const SUBCOMMAND_CONFIG: &str = "config";
 const ENV_EDITOR: &str = "EDITOR";
 const ENV_EDIT_SRC: &str = "YOG_EDIT_SRC";
-/// Staging dirs untouched for longer than this are swept at startup (§5.2) —
-/// the bound is [`crate::scratch::STALE_SECS`], one home for both halves of
-/// that sentence.
-use crate::scratch::STALE_SECS;
+
+/// Step 1 and step 5: the drafted files' staging dir and the §5.2 sweep that
+/// collects the ones a crash left behind.
+mod staging;
+pub use staging::{DraftFile, next_nonce, stage_files, stale_staging, sweep_staging};
 
 /// Which config lineage an edit targets (mirrors lernie
 /// `template::authoring::Origin`, §2.2/§2.3): advance the existing branch,
@@ -72,42 +77,6 @@ pub fn editor_env_value(yog_binary: &Path) -> String {
         "{} {EDITOR_APPLY_FLAG}",
         sh_quote(&yog_binary.display().to_string())
     )
-}
-
-/// A drafted config file: a checkout-relative path and its bytes.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DraftFile {
-    pub rel_path: String,
-    pub bytes: Vec<u8>,
-}
-
-/// A collision-safe staging nonce: `<pid>-<counter>`. No clock / randomness
-/// (per the task) — the pid scopes it to this process and the monotonic
-/// counter to this call, so concurrent edits never share a dir.
-pub fn next_nonce() -> String {
-    static COUNTER: AtomicU64 = AtomicU64::new(0);
-    let n = COUNTER.fetch_add(1, Ordering::Relaxed);
-    format!("{}-{n}", std::process::id())
-}
-
-/// Write the drafted `files` into `<staging_root>/<nonce>/` (creating parent
-/// dirs) and return that staging dir. An empty `files` still creates the
-/// dir — the shim then copies nothing and lernie declines the empty commit.
-pub fn stage_files(
-    staging_root: &Path,
-    nonce: &str,
-    files: &[DraftFile],
-) -> std::io::Result<PathBuf> {
-    let dir = staging_root.join(nonce);
-    std::fs::create_dir_all(&dir)?;
-    for f in files {
-        let dest = dir.join(&f.rel_path);
-        // A path joined under `dir` always has a parent (at worst `dir`
-        // itself); the fallback keeps the staging write panic-free.
-        std::fs::create_dir_all(dest.parent().unwrap_or(&dir))?;
-        std::fs::write(&dest, &f.bytes)?;
-    }
-    Ok(dir)
 }
 
 /// The fully-composed spawn plan for one config-branch edit (pure): the
@@ -215,47 +184,6 @@ fn collect(stream: crate::cli_outbound::Stream) -> (String, String, i32) {
         String::from_utf8_lossy(&err).into_owned(),
         code,
     )
-}
-
-/// Pure decision (clock-injected): the staging dirs whose mtime is more than
-/// 24 h before `now_secs`. `now_secs` and each mtime are unix seconds, so
-/// every arm is deterministic under test.
-pub fn stale_staging(now_secs: i64, dirs: &[(PathBuf, i64)]) -> Vec<PathBuf> {
-    dirs.iter()
-        .filter(|(_, mtime)| now_secs - mtime > STALE_SECS)
-        .map(|(p, _)| p.clone())
-        .collect()
-}
-
-/// Sweep `<stage_root>/*`: best-effort delete every `<nonce>/` dir untouched
-/// for over 24 h (§5.2 startup sweep). A missing root is a no-op; the wall
-/// clock is the caller's (main.rs), keeping the decision ([`stale_staging`])
-/// pure. Returns the dirs decided stale.
-pub fn sweep_staging(stage_root: &Path, now_secs: i64) -> Vec<PathBuf> {
-    let stale = stale_staging(now_secs, &staging_dirs(stage_root));
-    for dir in &stale {
-        let _ = std::fs::remove_dir_all(dir);
-    }
-    stale
-}
-
-/// Enumerate `<stage_root>/*` sub-dirs paired with their mtime (unix secs).
-/// A missing root, or any entry that cannot be stat'd (a dangling symlink, a
-/// racing unlink), contributes nothing — enumeration is best-effort.
-fn staging_dirs(stage_root: &Path) -> Vec<(PathBuf, i64)> {
-    use std::os::unix::fs::MetadataExt;
-    let Ok(entries) = std::fs::read_dir(stage_root) else {
-        return Vec::new();
-    };
-    let mut out = Vec::new();
-    for entry in entries.flatten() {
-        if let Ok(meta) = entry.metadata()
-            && meta.is_dir()
-        {
-            out.push((entry.path(), meta.mtime()));
-        }
-    }
-    out
 }
 
 #[cfg(test)]
