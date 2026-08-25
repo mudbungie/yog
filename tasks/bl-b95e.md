@@ -1,7 +1,8 @@
 +++
 title = "detached-row failure should be a state predicate, not sink content: apply the driver.log rule to the stderr sink"
 created = 1787379499
-updated = 1787379499
+updated = 1787622450
+claimant = "Cleat"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
