@@ -1,7 +1,8 @@
 +++
 title = "decompose 4/10 — the REMOTE transport: src/wire/, src/tool_host/, src/engine.rs, seven files at 251-289 lines"
 created = 1787546570
-updated = 1787546570
+updated = 1787620559
+claimant = "Bollard"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["decompose"]
