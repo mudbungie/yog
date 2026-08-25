@@ -1,7 +1,8 @@
 +++
 title = "decompose 5/10 — src/shell/ outside acceptance: eleven window files at 250-294 lines"
 created = 1787546571
-updated = 1787546571
+updated = 1787620560
+claimant = "Transom"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["decompose"]
