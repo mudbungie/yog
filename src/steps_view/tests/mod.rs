@@ -1,11 +1,15 @@
 //! Tests for the steps inspector.
 //!
-//! [`vm`] drives [`super::build`] / [`super::detail`] against tempdir-backed
-//! `steps/<agent>/NNN/` trees, covering enumeration order, the reused
-//! framing/attempts/token derivations, forgiving parsing, and the drill-in.
+//! [`vm`] drives [`super::build`] against tempdir-backed `steps/<agent>/NNN/`
+//! trees, covering enumeration order, the reused framing/attempts/token
+//! derivations, forgiving parsing and the §7.1 login routing; [`detail`] drives
+//! [`super::detail`] over the same trees for the drill-in — the two split at
+//! §12's budget on the read seam the production modules are cut on.
 //! [`logs`] drives the two capture-log seats (bl-83d6) — the derived row set
 //! and the whole of a long log in the paint output.
-//! [`render`] shape-walks the widget headlessly per the transcript pattern,
+//! [`render`] shape-walks the table headlessly per the transcript pattern with
+//! [`drill`] doing the same for the record trees below it (the two cut at §12's
+//! budget on the `render`/`drill` seam the paints themselves have),
 //! [`raw`] holds the §11 Raw toggle's half of that walk (S7-T1: the record
 //! file's bytes unaltered), and [`wound`] drives the §7.3 no-response state
 //! from the shape the real substrate left behind, all the way to the painted
@@ -15,6 +19,8 @@
 
 use std::path::{Path, PathBuf};
 
+mod detail;
+mod drill;
 mod logs;
 mod orphan;
 mod raw;

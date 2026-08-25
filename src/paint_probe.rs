@@ -8,22 +8,16 @@
 //! coverage obligation**: four of them shipped a byte-identical
 //! `collect_text_descends_shape_vec_and_ignores_non_text` purely to reach
 //! this file's recursion arm and catch-all. One home, one such test.
+//!
+//! [`frame`] is the other half — how a frame is *produced* (the offscreen
+//! inputs, the context runs, the two-frame settle), split off at §12's budget
+//! and re-exported here so a caller still imports one module.
 
-/// An offscreen input of exactly `w` x `h` logical points.
-pub(crate) fn screen_sized(w: f32, h: f32) -> egui::RawInput {
-    egui::RawInput {
-        screen_rect: Some(egui::Rect::from_min_size(
-            egui::Pos2::ZERO,
-            egui::vec2(w, h),
-        )),
-        ..Default::default()
-    }
-}
+mod frame;
 
-/// A screen big enough that every row lays out.
-pub(crate) fn screen() -> egui::RawInput {
-    screen_sized(1024.0, 4096.0)
-}
+pub(crate) use frame::{
+    paint, paint_fills, paint_settled, painted_settled, screen, screen_sized, span,
+};
 
 /// One painted galley: its text and the rect it landed on, in screen points.
 pub(crate) type Painted = (String, egui::Rect);
@@ -164,16 +158,6 @@ pub(crate) fn seen_of(output: &egui::FullOutput) -> Vec<Seen> {
     out
 }
 
-/// Render `body` into a central panel on a [`screen`]-sized frame and return
-/// everything it painted.
-pub(crate) fn paint(mut body: impl FnMut(&mut egui::Ui)) -> String {
-    let ctx = egui::Context::default();
-    let output = ctx.run(screen(), |ctx| {
-        egui::CentralPanel::default().show(ctx, &mut body);
-    });
-    text_of(&output)
-}
-
 /// Every filled rect's hue, descending `Shape::Vec` — the one *fill* walk,
 /// beside [`collect`]'s text walk. A role stripe (§11) is a rect with no
 /// galley, so a hue assertion must read the fills the frame painted.
@@ -183,57 +167,6 @@ pub(crate) fn collect_fills(shape: &egui::Shape, out: &mut Vec<egui::Color32>) {
         egui::Shape::Vec(shapes) => shapes.iter().for_each(|s| collect_fills(s, out)),
         _ => {}
     }
-}
-
-/// Render `body` as [`paint`] does and return every filled rect's hue.
-pub(crate) fn paint_fills(mut body: impl FnMut(&mut egui::Ui)) -> Vec<egui::Color32> {
-    let ctx = egui::Context::default();
-    let output = ctx.run(screen(), |ctx| {
-        egui::CentralPanel::default().show(ctx, &mut body);
-    });
-    let mut out = Vec::new();
-    for clipped in &output.shapes {
-        collect_fills(&clipped.shape, &mut out);
-    }
-    out
-}
-
-/// The same walk on a screen small enough to scroll, read after the view has
-/// settled: a `ScrollArea` learns its content extent *during* a frame, so both
-/// halves of §11's tail idiom — the `stick_to_bottom` offset and the top pad
-/// that seats an underfull body on the bottom edge (`crate::tail`) — first show
-/// on the frame after. Two frames on one context is that settle; what is
-/// returned is what a steady-state viewer actually sees, off-screen rows culled.
-fn settled_frame(w: f32, h: f32, mut body: impl FnMut(&mut egui::Ui)) -> egui::FullOutput {
-    let ctx = egui::Context::default();
-    let mut frame = || {
-        ctx.run(screen_sized(w, h), |ctx| {
-            egui::CentralPanel::default().show(ctx, &mut body);
-        })
-    };
-    let _ = frame();
-    frame()
-}
-
-/// The settled frame's text — what is on screen.
-pub(crate) fn paint_settled(w: f32, h: f32, body: impl FnMut(&mut egui::Ui)) -> String {
-    text_of(&settled_frame(w, h, body))
-}
-
-/// The settled frame's galleys with their positions — where it sits.
-pub(crate) fn painted_settled(w: f32, h: f32, body: impl FnMut(&mut egui::Ui)) -> Vec<Painted> {
-    painted_of(&settled_frame(w, h, body))
-}
-
-/// The topmost and bottommost painted pixel of a frame — the two edges the §11
-/// tail idiom is a claim about. An empty frame yields an inverted span, which
-/// no assertion about a real one can pass.
-pub(crate) fn span(painted: &[Painted]) -> (f32, f32) {
-    painted
-        .iter()
-        .fold((f32::MAX, f32::MIN), |(top, bottom), (_, rect)| {
-            (top.min(rect.top()), bottom.max(rect.bottom()))
-        })
 }
 
 #[cfg(test)]

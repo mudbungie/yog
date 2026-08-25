@@ -1,12 +1,15 @@
 //! The spine's headless tests — S10's derivation half.
 //!
-//! Split by what each half asserts: [`build`] the notches, the two edges and
-//! the cards; [`cohort`] their grouping into V2's fans; [`pin`] the fold that
+//! Split by what each half asserts: [`build`] the notches and the two edges,
+//! [`cards`] the card those edges carry — the two cut at §12's budget on the
+//! `mod`/`cards` seam the production modules have; [`cohort`] their grouping
+//! into V2's fans; [`pin`] the fold that
 //! threads one notch through the inspector; [`place`] where each notch sits in
 //! the chat, which is the pairing bl-1802 corrected. The paint half moved to
 //! `transcript::tests::spine` with the seat itself.
 
 mod build;
+mod cards;
 mod cohort;
 mod pin;
 mod place;

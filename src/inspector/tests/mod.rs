@@ -16,7 +16,11 @@ use crate::config_edit::branch::GoverningConfig;
 use crate::files_view::FilesView;
 use crate::git_tree::GitTree;
 use crate::git_tree::tests::fixture::Fixture;
+use crate::inboxview::InboxEntry;
 use crate::nav::convs::Titles;
+use crate::rail::Rail;
+use crate::steps_view::{StepTab, StepsView};
+use crate::transcript::{AutoExpand, Transcript};
 
 /// The conversation's §3.3 display name — the transcript's sender label for
 /// every model turn (bl-2335).
