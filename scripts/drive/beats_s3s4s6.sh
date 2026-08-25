@@ -15,7 +15,8 @@ ball_gone() { [ "$(in_world "$1" bl list --json)" = "[]" ]; }
 closed_claims() { [ -n "$2" ] && in_world "$1" bl list -s closed --json | grep -q "\"claimant\": \"$2\""; }
 spheres_are() { [ "$(find "$1/yog/workspaces" -maxdepth 1 -mindepth 1 -type d | wc -l)" = "$2" ]; }
 # `stopped` and `other_root` — the two predicates this run shares with the S6
-# stage it hands off to — are in `harness.sh`, the tier every run shares: they
+# stage it hands off to — are in `predicates.sh`, the read tier every run
+# shares: they
 # read `$ops` and `$ws_root` exactly as `verb_ge` and `agent_count` do.
 # the ball rung's whole point (§3.3): the detached driver runs *in the worktree*
 # `bl claim` cut, not in the project and not in the operator's cwd.
@@ -177,79 +178,11 @@ run_s3s4s6() {
     || fail "S4 by-ball: ephemera, no write no spawn" "ui.json/ops moved"
   "$drive" bare "$wid" g ; sleep 1
 
-  # S4 New workspace (S4-T1): `w` is §11's deliberate sphere-wall mint — and it
-  # is DELIBERATE in the literal sense, which is the whole of this beat's shape.
-  # `w` opens the name form and nothing else (`src/shell/new_ws.rs`): the sphere
-  # is raised by a name the OPERATOR types and §3.1 validates, so a `w` on its
-  # own can never fire `lernie new` and no `await` window changes that. Both
-  # authorities say so outright — DESIGN §11's table ("new workspace: the
-  # deliberate sphere-wall raise, name typed by the operator") and STORIES S4-T1
-  # ("the operator's typed, validated name") — and the beat that pressed `w`
-  # alone was written three days before the name form landed (bl-afa7). So the
-  # gesture is the whole form: open it, type a valid name, Return, which
-  # `new_ws.rs` submits exactly as Create does.
-  #
-  # Retried like every other gesture: `bare` spends an Escape first, which is
-  # the form's own dismissal (§11), so a retry re-opens an EMPTY form rather
-  # than typing twice into a half-filled one — and after the mint has landed the
-  # same name is refused as taken, so a late retry cannot raise a third sphere.
-  first_ws=$(find "$data/yog/workspaces" -maxdepth 1 -mindepth 1 -type d | head -1)
-  raise_sphere() {
-    "$drive" bare "$wid" w
-    "$drive" type "$wid" "ops"
-    "$drive" key "$wid" Return
-  }
-  until_landed raise_sphere verb_ge new 2 \
-    && pass "S4 new workspace: second lernie new" \
-    || fail "S4 new workspace: second lernie new" "no mint"
-  sleep 2
-  "$drive" shot "$wid" "$out/s4-11-second-workspace.png"
-  spheres_are "$data" 2 \
-    && pass "S4 new workspace: two named spheres" \
-    || fail "S4 new workspace: two named spheres" "not two"
-
-  # S4-T1 focus follows the mint (bl-2826, §3.4 "a start focuses the workspace
-  # it resolved"). The failure this pins was silent: the mint left the tab bar,
-  # the conversation list and the BOTTOM composer on the workspace the operator
-  # had just walked away from, so the goal typed into the box that *looks* like
-  # the place you type fired into the OLD sphere and the fresh one stayed a husk
-  # (`repo.git` only — never prompted). Focus is per-instance RAM (§13.1), so it
-  # is not readable from any file: the argv of the prompt the bottom composer
-  # fires IS the observable, and it is the one the operator was burned by.
-  #
-  # Escape drops the start pane's draft (§11 Cancel), `i` puts the cursor in the
-  # bottom composer, Return fires its bare rung — which resolves the FOCUSED
-  # workspace (§3.4). The reply is not awaited; only the dispatch is the claim.
-  #
-  # `$minted` is the SUBJECT of both assertions below, so it is judged before it
-  # is used: when the mint above failed it was the empty string, the grep became
-  # `grep -q '""'` — which matches nearly any ops row — and both beats reported
-  # PASS while asserting nothing, beside a red mint (bl-afa7). A beat that
-  # cannot fail is worse than a red one.
-  minted=$(find "$data/yog/workspaces" -maxdepth 1 -mindepth 1 -type d ! -path "$first_ws" | head -1)
-  mints=$(verb_count new) ; prompts=$(verb_count prompt)
-  bottom_send() {
-    "$drive" bare "$wid" i
-    "$drive" type "$wid" "Respond with exactly this text and nothing else: focus OK"
-    "$drive" key "$wid" Return
-  }
-  until_landed bottom_send verb_ge prompt $((prompts + 1)) \
-    && pass "S4 mint focus: the bottom composer fired" \
-    || fail "S4 mint focus: the bottom composer fired" "no prompt row"
-  "$drive" shot "$wid" "$out/s4-12-mint-focused.png"
-  if [ -z "$minted" ]; then
-    fail "S4 mint focus: Enter prompts the MINTED sphere" "no second sphere to prompt"
-    fail "S4 mint focus: focused ⇒ no re-mint" "no second sphere to prompt"
-  else
-    grep '"lernie","prompt"' "$ops" | tail -1 | grep -q "\"$minted\"" \
-      && pass "S4 mint focus: Enter prompts the MINTED sphere" \
-      || fail "S4 mint focus: Enter prompts the MINTED sphere" "wrong workspace"
-    [ "$(verb_count new)" = "$mints" ] \
-      && pass "S4 mint focus: focused ⇒ no re-mint" \
-      || fail "S4 mint focus: focused ⇒ no re-mint" "lernie new re-fired"
-  fi
-  # Escape is §11's Cancel — leave no draft behind for the beats that follow.
-  "$drive" key "$wid" Escape ; sleep 1
+  # S4 board residual — the deliberate sphere-wall mint and the focus that
+  # follows it, in `beats_s4res.sh` with the other S4 stages this family fires
+  # (the same seam `run_s7` reaches across for `s4_overflow`). It owns the two
+  # beats' whole gesture, so the run hands it only the world.
+  s4_new_workspace "$wid" "$out" "$data"
 
   # S6 activity chip (S6-T5): `a` is §11's activity accessory, collapsed ⇄
   # expanded. CLICK (a VIEW, and a pick — §11 rule 2): WHICH ops row to open —

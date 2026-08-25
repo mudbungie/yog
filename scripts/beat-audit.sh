@@ -36,7 +36,7 @@
 # (`"\"cwd\":\"[^\"]*/$1\""`) degrades to a literal when the variable is empty
 # and is a different question; a bare `"$x"` degrades to nothing at all. The
 # repo's answer to shape B is that the guard lives in the PREDICATE — every
-# id-taking predicate in `harness.sh` refuses an empty subject — and this check
+# id-taking predicate in `predicates.sh` refuses an empty subject — and this check
 # is what keeps the next beat from reaching past it.
 
 set -euo pipefail

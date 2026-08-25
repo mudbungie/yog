@@ -79,7 +79,7 @@ CHILD_SEG=20260727T090100Z-c0ffeeba
 
 # --- world C predicates -----------------------------------------------------
 # `seen_kind` — the `seen[ws][agent].<kind>` watermark read — now lives in
-# harness.sh, the tier every run shares: the S6 beats read the same fact off the
+# predicates.sh, the read tier every run shares: the S6 beats read the same fact off the
 # same file, and a predicate two runners assert on has one home (bl-2d45).
 # `seen_agent` — a bare `grep -q "\"$2\"" ui.json` — is GONE rather than kept for
 # convenience: it had no caller left after that move, and an unreached vacuous

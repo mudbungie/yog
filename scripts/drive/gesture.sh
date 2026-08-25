@@ -33,7 +33,7 @@ launch_engine() { read -r engine_pid engine_wid < <("$drive" launch "$1"); }
 # An EMPTY pid is not "no claim", it is a refusal: a gesture with no engine
 # recorded is a gesture nothing can answer, and reporting that in milliseconds
 # beats waiting out a deadline to say the same thing (the empty-subject
-# discipline every predicate in harness.sh holds, bl-f16e).
+# discipline every predicate in predicates.sh holds, bl-f16e).
 engine_alive() { [ -n "$engine_pid" ] && kill -0 "$engine_pid" 2>/dev/null; }
 
 # --- the transport, deadlined ------------------------------------------------
@@ -58,7 +58,7 @@ engine_alive() { [ -n "$engine_pid" ] && kill -0 "$engine_pid" 2>/dev/null; }
 #      answer any deposit, ever, so spending a whole deadline on each of a run's
 #      remaining gestures is time spent proving nothing: a dead engine is an
 #      immediate red. That is what bounds the case this was written for —
-#      `await board_says` (beats_headless.sh) wraps a gesture in a 40-iteration
+#      `await board_says` (beats_s13.sh) wraps a gesture in a 40-iteration
 #      poll, so at `yog gesture`'s own 60 s ONE beat cost forty minutes of a
 #      dead engine's silence before it could go red.
 #

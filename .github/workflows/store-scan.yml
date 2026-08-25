@@ -33,6 +33,7 @@ on:
     paths:
       - scripts/leak-rules.sh
       - scripts/leak-scan.sh
+      - scripts/leak-modes.sh
       - .github/workflows/store-scan.yml
 
 # Reads two refs, writes nothing back. Actions are pinned to a full commit SHA

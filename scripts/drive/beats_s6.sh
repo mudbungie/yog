@@ -1,20 +1,21 @@
 #!/bin/bash
-# beats_s6.sh — the S6 Triager and S4 board residual beats, fired from `run_s7`
-# in beats_s7.sh (which owns world C and lays their fixtures) and, for the
-# attention stage at the foot, from `run_s3s4s6` in beats_s3s4s6.sh. Sourced by
-# stories.sh; not an entry point of its own. **This is the S6 stage tier**: a
+# beats_s6.sh — the S6 Triager stages, fired from `run_s7` in beats_s7.sh
+# (which owns world C and lays their fixtures) and, for the stop-and-ack stage
+# at the foot, from `run_s3s4s6` in beats_s3s4s6.sh. Sourced by stories.sh; not
+# an entry point of its own. The S4 board residual stages those same two runs
+# fire are next door in `beats_s4res.sh` — one file per story, which is the
+# seam this whole tier is cut on (bl-7547). **This is the S6 stage tier**: a
 # run verb owns its world and its fixtures, and reaches here for the S6 beats
 # that world can support — which is why an S6 stage never sits inside a run's
 # body, and why moving one out of `run_s3s4s6` was a seam rather than a shave
 # when that file went over the 300-line cap (bl-2d45).
 #
-# These are the rows bl-84f3 could not reach: §6's budget / conflicted / mail
-# predicates (each needs its own world state), the ack convergence across two
-# instances, the tab strip's pins and overflow (needs a foreign workspace), and
-# the conversation badge's uncoloured-id case (needs a goal stamped with a ball id
-# this machine's join does not know). Their fixtures are laid in `lay_forensics`
-# and here; the assertions are ui.json watermarks and on-disk goals, with the
-# screenshots carrying the halves no file can (a colour, a strip total).
+# These are the S6 rows bl-84f3 could not reach: §6's budget / conflicted /
+# mail predicates (each needs its own world state), the stop and its
+# acknowledgement by identity, and the ack convergence across two instances.
+# Their fixtures are laid in `lay_forensics` and here; the assertions are
+# ui.json watermarks, with the screenshots carrying the halves no file can (a
+# colour, a strip total).
 
 # S6-T1 rules 3 and 4 (budget-exhausted, conflicted): a mark that lands while
 # nothing is focused is attention, and walking the roster onto it is the
@@ -96,85 +97,6 @@ s6_attention() {
   { seen_kind "$ui" "$agent" budget && ! grep -q '"mail"' "$ui"; } \
     && pass "S6-T1 mail: no watermark exists to silence it" \
     || fail "S6-T1 mail: no watermark exists to silence it" "mail was seen-gated, or no ack to measure"
-}
-
-# S4-T7 — the tab strip's overflow and pins. A **foreign** workspace (lernie's own
-# auto-id territory under the nested `LERNIE_HOME`, §3.1) is real but not a
-# regime, so it falls to the ⋯ menu rather than widening the wall row; ★ hoists it
-# into the tabs, and that pin is durable (§4.1) — which is what makes this
-# assertable rather than a screenshot claim.
-s4_overflow() {
-  wid=$1 ; out=$2 ; data=$3
-  foreign="$data/yog/world/lernie/workspaces/20260727T093000Z-f0reign"
-  # The §8.4 hatch again, without a project cwd this time (world C has none): one
-  # `lernie new` at a path under the NESTED lernie data root is exactly what makes
-  # a workspace foreign (§3.1) — nothing yog owns says so.
-  XDG_DATA_HOME="$data" yog exec lernie new "$foreign" >/dev/null 2>&1
-  sleep 4
-  "$drive" shot "$wid" "$out/s6-03-overflow.png"
-  # CLICK (a VIEW, and a pick — §11 rule 2): a pin is a §4.1 presentation
-  # durable, which §8.5 puts on the views' side of the line outright ("durability
-  # does not promote presentation state into an operation"), so it has no
-  # boundary spelling by design. Both points are DERIVED from the frame above
-  # (bl-5cce, `locate.sh tabbar`) rather than measured: the ⋯ overflow is painted
-  # FIRST in a right-to-left bar, so it holds the window's right edge as soon as
-  # it is non-empty, and the menu it opens is wider than the gap left beside it,
-  # so egui clamps the popup into the frame and the ★ — the last widget of the
-  # entry's row — lands one inset from that same edge. Two window edges and a
-  # panel rule, none of them a number that a row can put wrong.
-  # WHICH foreign workspace to pin is the pick, and the ★ is the ONLY safe target
-  # in that row: the entry's own label focuses the workspace instead of pinning.
-  read -r more_x more_y pin_x pin_y < <("$here/locate.sh" tabbar "$out/s6-03-overflow.png")
-  pin_foreign() {
-    "$drive" click "$wid" "$more_x" "$more_y" ; sleep 2
-    "$drive" click "$wid" "$pin_x" "$pin_y"
-  }
-  until_landed pin_foreign file_has "$ui" 'f0reign' \
-    && pass "S4-T7 tab strip: ★ pins the foreign workspace (ui.json)" \
-    || fail "S4-T7 tab strip: ★ pins the foreign workspace (ui.json)" "no pin record"
-  sleep 2
-  "$drive" shot "$wid" "$out/s6-04-pinned.png"
-}
-
-# S4-T4's uncoloured-id case — the badge is honest about what it cannot know: a
-# goal stamped with a ball id **this machine's join does not know** renders the id
-# with no colour, because the stamp is truth and the colour is the join's only
-# when it has one. World C holds no project at all, so every stamped id is
-# unknown; the assertion is the stamp on disk, the colour is the screenshot's.
-s4_uncoloured() {
-  wid=$1 ; out=$2 ; ws_root=$3
-  before=$(agent_count)
-  # `n` (§11 new conversation) hands the composer focus itself, so nothing else
-  # touches the box. The first line of the composed goal is the §3.3
-  # `Ball <id>: <title>` header the stamp parse reads back.
-  phantom() {
-    "$drive" bare "$wid" n ; sleep 1
-    "$drive" type "$wid" "Ball bl-9999: phantom. Respond with exactly: Phantom OK."
-    "$drive" key "$wid" Return
-  }
-  # `>=`, not `=`. `phantom` is NOT a no-op when it misses — it starts a whole
-  # conversation — so under load the slow first attempt lands late, the retry
-  # starts a second, and an equality pinned to `before+1` is stepped straight
-  # over by the loop that was waiting for it. This beat burned all five attempts
-  # and reported "no new agent" against a world holding FIVE phantom
-  # conversations, while the neighbour below PASSED on the goal.md files they
-  # left: same evidence, opposite verdicts, and only the counting was wrong
-  # (bl-0e44). The invariant now lives on `until_landed` itself.
-  until_landed phantom agents_ge $((before + 1)) \
-    && pass "S4-T4 uncoloured id: stamped conversation started" \
-    || fail "S4-T4 uncoloured id: stamped conversation started" "no new agent"
-  await goal_stamped "$ws_root" bl-9999 \
-    && pass "S4-T4 uncoloured id: goal.md carries the unknown stamp" \
-    || fail "S4-T4 uncoloured id: goal.md carries the unknown stamp" "no stamp on disk"
-  sleep 3
-  "$drive" bare "$wid" Down ; sleep 2
-  "$drive" shot "$wid" "$out/s6-05-uncoloured-id.png"
-}
-
-# Any agent's `goal.md` carrying a `Ball <id>:` stamp (§3.3's one compose, read
-# back off disk).
-goal_stamped() {
-  grep -lq "^Ball $2:" "$1"/agents/*/goal.md 2>/dev/null
 }
 
 # S6 stop-and-ack in world 2 — Stop the in-flight root, then acknowledge it.

@@ -7,7 +7,9 @@
 # brazen credentials, Claude Code session transcripts, world paths under an
 # operator's home, opslog dumps.
 #
-# The rules live next door in `scripts/leak-rules.sh`; this file is mechanism.
+# The rules live next door in `scripts/leak-rules.sh` and the two scopes in
+# `scripts/leak-modes.sh`; this file is mechanism — HOW a file is judged, as
+# against WHAT counts as a finding and WHICH files are handed over.
 #
 #   scripts/leak-scan.sh              scan the whole tracked tree (the gate)
 #   scripts/leak-scan.sh FILE...      scan exactly these files (commit-msg)
@@ -110,6 +112,11 @@ FIXTURES="scripts/leak-fixtures"
 
 # shellcheck source=scripts/leak-rules.sh
 . "$HERE/leak-rules.sh"
+# The two SCOPES — the tree scan and the commit scan — and the scratch trees
+# they materialize into. Sourced from beside the scanner for the same reason
+# the rule table is: `$0` may be reached from any tree. See leak-modes.sh.
+# shellcheck source=scripts/leak-modes.sh
+. "$HERE/leak-modes.sh"
 
 # --- mechanism -------------------------------------------------------------
 
@@ -187,86 +194,6 @@ scan() {
     return 1
   fi
   return 0
-}
-
-# --- modes -----------------------------------------------------------------
-
-# scan_set FILE... -> 0 clean, 1 with findings. The file-list scan every mode
-# shares: a rule's own fixture is judged by every rule BUT its own (see the
-# header), so one file cannot mean two things depending on which mode read it.
-# `${a[@]+"${a[@]}"}`, not `"${a[@]}"`: under `set -u` bash 3.2 treats the
-# expansion of an EMPTY array as an unbound variable, kills the shell mid-scan
-# — and exits 0 doing it, so a tree full of findings passed the gate on macOS,
-# which ships 3.2 and always will (bl-1015). The guard is the portable idiom
-# for "expand this array, or nothing".
-scan_set() {
-  local files=() fixtures=() f rc=0
-  for f in "$@"; do
-    case "$f" in "$FIXTURES"/*) fixtures+=("$f"); continue ;; esac
-    files+=("$f")
-  done
-  if [ "${#files[@]}" -gt 0 ]; then scan "${files[@]}" || rc=1; fi
-  for f in ${fixtures[@]+"${fixtures[@]}"}; do
-    f="${f##*/}"
-    scan --skip "${f%.*}" "$FIXTURES/$f" || rc=1
-  done
-  return "$rc"
-}
-
-# A scratch tree for a mode to materialize into. Not a command substitution:
-# the trap has to be set in THIS shell or the directory is deleted the moment
-# the subshell returns it.
-scratch() {
-  SCAN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/leak-scan.XXXXXXXX")"
-  trap 'rm -rf "$SCAN_DIR"' EXIT
-}
-
-# The whole tracked tree, read from the INDEX: `git checkout-index`
-# materializes it into the scratch tree, so "what the gate scanned" and "what
-# the commit contains" are the same bytes.
-scan_tree() {
-  local files=() f
-  while IFS= read -r f; do files+=("$f"); done < <(git ls-files)
-  if [ "${#files[@]}" -eq 0 ]; then
-    echo "leak-scan: enumerated 0 tracked files — the scan is broken, not the tree." >&2
-    exit 1
-  fi
-  scratch
-  git checkout-index --all --force --prefix="$SCAN_DIR/"
-  cd "$SCAN_DIR"
-  scan_set "${files[@]}" || exit 1
-  echo "leak-scan: ${#files[@]} tracked files, no disclosure findings"
-}
-
-# What one commit publishes: the blobs it adds or rewrites, plus its MESSAGE.
-# Blobs out of the commit, never the index or the worktree — in a checkout many
-# agents share, both of those carry other people's in-flight text, and a gate
-# must judge the author for what the author wrote. The message is scanned
-# because it is published prose that lands in no file at all: a `-m` note is
-# the whole of what `bl close` writes, and AGENTS.md governs it like a body.
-scan_commit() {
-  local rev="$1" files=() f rc=0
-  while IFS= read -r f; do
-    [ -n "$f" ] || continue
-    files+=("$f")
-  done < <(git diff-tree --no-commit-id --name-only -r -m --root \
-    --diff-filter=ACMR "$rev" | sort -u)
-  scratch
-  mkdir "$SCAN_DIR/tree"
-  # No blobs is not a broken scan here, unlike the tree mode: a commit that
-  # only deletes (an archived ball) publishes its message and nothing else.
-  if [ "${#files[@]}" -gt 0 ]; then
-    # `-m`: take the bytes, not the archive's timestamps — a clock skewed
-    # against the commit's date makes tar warn on stderr, and this scan's
-    # stderr is a plugin's user-facing channel.
-    git archive "$rev" -- "${files[@]}" | tar -xm -C "$SCAN_DIR/tree"
-  fi
-  git log -1 --format=%B "$rev" >"$SCAN_DIR/message"
-  cd "$SCAN_DIR"
-  scan message || rc=1
-  (cd tree && scan_set ${files[@]+"${files[@]}"}) || rc=1
-  [ "$rc" -eq 0 ] || exit 1
-  echo "leak-scan: ${#files[@]} file(s) and the message of $rev, no disclosure findings"
 }
 
 case "${1-}" in

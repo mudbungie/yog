@@ -28,7 +28,7 @@
 fleet_key() { printf '%s/yog/workspaces/%s' "$1" "$2"; }
 # One `["yog-fleet",<verb>,<ball>,…]` row on the trail. Never a bare
 # interpolation: an empty ball id would make this true of any loop row at all,
-# the empty-subject trap every id-taking predicate in harness.sh is guarded
+# the empty-subject trap every id-taking predicate in predicates.sh is guarded
 # against (bl-f16e).
 fleet_did() { [ -n "$2" ] && grep -q "\"yog-fleet\",\"$1\",\"$2\"" "$ops" 2>/dev/null; }
 fleet_count() { c=$(grep -c "\"yog-fleet\",\"$1\",\"$2\"" "$ops" 2>/dev/null) || true; echo "${c:-0}"; }

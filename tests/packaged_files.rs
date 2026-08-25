@@ -30,18 +30,19 @@
 //! The fail-closed direction has one cost — a build input added tomorrow
 //! silently does NOT ship — and [`every_compile_time_embed_ships`] is the
 //! answer to it: the `include_bytes!`/`include_str!` targets outside `src` are
-//! swept out of the tree and each one must be in the list.
+//! swept out of the tree and each one must be in the list. That sweep is a
+//! different question from this file's — a fact about the tree, not about the
+//! policy — so it lives next door in `packaged_files/embeds.rs`.
 
 #![allow(clippy::unwrap_used)]
+// The embed sweep. `#[path]` because this file IS the test target's crate
+// root, so a bare `mod` would resolve to `tests/embeds.rs` — and a second
+// top-level `tests/*.rs` is a second test binary, not a module.
+#[path = "packaged_files/embeds.rs"]
+mod embeds;
+use embeds::{embedded_paths, root};
 
-use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
-
-/// The package root — this crate's own manifest directory, so the guard reads
-/// the tree it was compiled from rather than a working directory.
-fn root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
+use std::path::Path;
 
 /// The real answer to *"what would `cargo publish` upload?"*, one path per
 /// line. `--offline` keeps the guard hermetic (the lockfile is committed and
@@ -94,59 +95,6 @@ fn is_ruled_in(path: &str) -> bool {
         || path
             .strip_prefix("assets/yog-")
             .is_some_and(|p| p.ends_with(".png"))
-}
-
-/// Every `.rs` file under `dir`, recursively — forgiving, like the citation and
-/// module-map guards' sweeps; [`the_list_is_not_vacuous`] is what stops
-/// "nothing" from passing.
-fn rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in std::fs::read_dir(dir).into_iter().flatten().flatten() {
-        let p = entry.path();
-        if p.is_dir() {
-            rust_files(&p, out);
-        } else if p.extension().is_some_and(|e| e == "rs") {
-            out.push(p);
-        }
-    }
-}
-
-/// One source file's compile-time embeds, resolved against its own directory
-/// and expressed relative to the package root. Only targets OUTSIDE `src` are
-/// interesting: `src/**` ships whole, so an embed of a sibling module's data
-/// cannot be dropped by the allowlist.
-fn embeds_of(file: &Path, root: &Path, out: &mut BTreeSet<String>) {
-    let text = std::fs::read_to_string(file).unwrap_or_default();
-    let dir = file.parent().unwrap_or(root);
-    for macro_name in ["include_bytes!(\"", "include_str!(\""] {
-        for tail in text.split(macro_name).skip(1) {
-            let Some((target, _)) = tail.split_once('"') else {
-                continue;
-            };
-            let Ok(abs) = dir.join(target).canonicalize() else {
-                continue;
-            };
-            let Ok(rel) = abs.strip_prefix(root) else {
-                continue;
-            };
-            let rel = rel.display().to_string();
-            if !rel.starts_with("src/") {
-                out.insert(rel);
-            }
-        }
-    }
-}
-
-/// Every non-`src` path the crate embeds at compile time — the build inputs an
-/// allowlist can silently drop, gathered from the tree rather than listed here.
-fn embedded_paths() -> BTreeSet<String> {
-    let root = root();
-    let mut files = Vec::new();
-    rust_files(&root.join("src"), &mut files);
-    let mut out = BTreeSet::new();
-    for file in &files {
-        embeds_of(file, &root, &mut out);
-    }
-    out
 }
 
 /// The defect: design commentary, gate apparatus and agent guides shipping to

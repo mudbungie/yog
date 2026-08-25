@@ -215,8 +215,9 @@ was silent.
   `messages/`, `ui.json`, the workspace's own git refs and branches), one
   PASS/FAIL line per beat, screenshots to `<out>` for visual review. The beat
   bodies live in sourced files — one per rung group (`beats_s3s4s6.sh`,
-  `beats_s5.sh`, `beats_s8.sh`, `beats_s3res.sh`, `beats_s7.sh`, `beats_s6.sh`) —
-  same helpers, same seat, split only for the repo's 300-line cap. It owns the
+  `beats_s5.sh`, `beats_s8.sh`, `beats_s3res.sh`, `beats_s7.sh`, `beats_s6.sh`,
+  `beats_s4res.sh`) — same helpers, same seat, split only for the repo's
+  300-line cap. It owns the
   **second** transport beside the seat: `gesture <data> '/line' [flags]` — one
   DESIGN §8.5 boundary gesture, `yog gesture` against the run's own scratch
   world. It takes no window id and needs no display, because the deposit
@@ -230,9 +231,10 @@ was silent.
   unchanged. It **asserts** the scrub (`lernie`/`bl`/`bz` must all fail
   `command -v`, `yog`/`git` must both resolve) before driving anything, so the
   env is not a claim in prose but the executable precondition of the run.
-- `harness.sh` — the tier every run shares, sourced by `stories.sh`: the
-  assertion helpers, the two waiting primitives, the per-run seat, and the
-  verdict. **The verdict has two halves and one emission.** `pass`/`fail` print
+- `harness.sh` — the tier every run shares, sourced by `stories.sh`: the two
+  waiting primitives, the per-run seat, and the verdict. The assertion helpers
+  those wait on are `predicates.sh` beside it, and the seatless boot with its
+  reply predicates is `headless.sh`; both are sourced tiers, not runners. **The verdict has two halves and one emission.** `pass`/`fail` print
   the same PASS/FAIL line they always did *and* write one JSONL row —
   `{run, beat, label, verdict, detail, evidence, bin, at}` — to
   `<out>/verdicts.jsonl`, beside the `gestures.jsonl` the boundary transport
@@ -1903,7 +1905,7 @@ Tests:
   flags, list order preserved — fold to balls' own argv in both directions, and
   refuse by name when a value is missing, a clearing flag is given one, or a
   priority is not a number. Its real-substrate half is a seatless drive
-  (`beats_s13w.sh`): one `/create` states all four against a real store, the
+  (`beats_s13.sh`'s write half): one `/create` states all four against a real store, the
   board reads back the priority, the parent and balls' own `blocked` verdict on
   a live edge, `bl show` witnesses the tag no reply carries, and the clearing
   half puts the row back in ready.

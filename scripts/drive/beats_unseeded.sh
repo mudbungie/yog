@@ -98,7 +98,7 @@ PYROW
 # at a grep pattern, and the answer is the same one: assert on the subject.
 #
 # `<dir> <needle>`; an empty needle is refused, never interpolated into a
-# pattern that matches everything (harness.sh's empty-subject discipline).
+# pattern that matches everything (predicates.sh's empty-subject discipline).
 says_under() {
   [ -n "${1:-}" ] && [ -n "${2:-}" ] || return 1
   python3 - "$1" "$2" <<'PY'

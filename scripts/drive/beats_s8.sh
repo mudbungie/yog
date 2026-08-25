@@ -176,7 +176,7 @@ lay_sentinels() {
   done
 }
 # Every sentinel still there AND still the bytes that were laid. `md5of` names
-# an absent file rather than printing nothing (harness.sh), so a deleted
+# an absent file rather than printing nothing (predicates.sh), so a deleted
 # sentinel fails this rather than comparing equal to another absence.
 sentinels_intact() {
   ambient_roots | while read -r root; do

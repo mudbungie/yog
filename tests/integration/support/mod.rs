@@ -26,7 +26,7 @@ use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use yog::projects::balls::{Ball, parse_list};
 use yog::projects::runner::BlRunner;
@@ -125,6 +125,12 @@ pub use payload::*;
 mod clock;
 pub use clock::*;
 
+/// The §11 reads — every `boundary::Query` a story puts to the engine, folded
+/// the way the seat folds it. Everything else in this file WRITES the world a
+/// story runs over; those only read it back, which is the seam.
+mod asked;
+pub use asked::*;
+
 fn run_git(repo: &Path, args: &[&str]) {
     // Scrubbed (`yog::git_env`): inherited from the cargo-test process, `GIT_DIR`
     // and friends would redirect these fixture commits onto the outer repo.
@@ -187,100 +193,4 @@ pub fn build_workspace(ws: &Path) {
     fs::write(wt.join("goal.md"), "hello\n").unwrap();
     run_git(&wt, &["add", "goal.md"]);
     run_git(&wt, &["commit", "-q", "-m", "dispatch [c-001]"]);
-}
-
-/// **The §11 conversation list, asked the way a seat asks it** (REMOTE §9.7,
-/// bl-44e9).
-///
-/// `AppModel` carries no conversation accessor any more: the derivation is the
-/// engine's — `Query::Conversations` answers the whole descent forest with its
-/// per-row rollups — and the fold is the seat's (`nav::convs::visible`). So a
-/// story test asks the boundary the same question the window asks it, and
-/// cannot assert against a second derivation nobody paints.
-///
-/// Empty for no focus and for a workspace name the snapshot cannot resolve —
-/// the refusal a seat would paint, which is no rows either way.
-pub fn conversations(
-    model: &yog::AppModel,
-    now_unix: i64,
-    expanded: &HashSet<String>,
-) -> Vec<yog::nav::convs::ConvRow> {
-    let Some(workspace) = model.focused_ws_name() else {
-        return Vec::new();
-    };
-    let deps = model.boundary_deps(
-        &yog::cli_outbound::Cli::new("lernie"),
-        &yog::cli_outbound::Cli::new("bl"),
-    );
-    let query = yog::boundary::Query::Conversations { workspace };
-    match model.answer(&deps, &query, now_unix) {
-        Ok(yog::boundary::reply::Reply::Conversations(rows)) => {
-            yog::nav::convs::visible(&rows, expanded)
-        }
-        _ => Vec::new(),
-    }
-}
-
-/// The all-collapsed list: the root subset of the forest above, which is what a
-/// seat holding no viewport reads.
-pub fn conversation_rows(model: &yog::AppModel, now_unix: i64) -> Vec<yog::nav::convs::ConvRow> {
-    conversations(model, now_unix, &HashSet::new())
-}
-
-/// **The §11 altitude-0 chrome, asked the way the top bar asks it** (REMOTE
-/// §9.7, bl-296f) — the answered workspace rows with the §3.4 raise claim
-/// folded on, which is exactly what `shell::top_bar` paints from.
-///
-/// `AppModel` carries no tab-bar or strip accessor any more: the derivation is
-/// the engine's (`Query::Workspaces`, carrying the §6 rollups and the §4.1 pin
-/// rank) and both folds are the seat's.
-pub fn ws_rows(model: &yog::AppModel) -> Vec<yog::boundary::reply::WsRow> {
-    let deps = model.boundary_deps(
-        &yog::cli_outbound::Cli::new("lernie"),
-        &yog::cli_outbound::Cli::new("bl"),
-    );
-    let answered = match model.answer(&deps, &yog::boundary::Query::Workspaces, 0) {
-        Ok(yog::boundary::reply::Reply::Workspaces(view)) => view.rows,
-        _ => Vec::new(),
-    };
-    model.raised_rows(answered)
-}
-
-/// One workspace's bound balls with their §3.5 figures — the §11 balls
-/// section's whole content (`Query::WorkspaceBalls`, bl-b4b5), asked the way a
-/// seat asks it.
-pub fn ws_balls(model: &yog::AppModel, ws: &std::path::Path) -> Vec<yog::nav::BoundBall> {
-    let deps = model.boundary_deps(
-        &yog::cli_outbound::Cli::new("lernie"),
-        &yog::cli_outbound::Cli::new("bl"),
-    );
-    let query = yog::boundary::Query::WorkspaceBalls {
-        workspace: yog::naming::leaf(ws),
-    };
-    match model.answer(&deps, &query, 0) {
-        Ok(yog::boundary::reply::Reply::WorkspaceBalls(rows)) => rows,
-        _ => Vec::new(),
-    }
-}
-
-/// The §6 attention-strip total, as the top bar folds it.
-pub fn strip_total(model: &yog::AppModel) -> usize {
-    yog::nav::tabs::strip_total(&ws_rows(model))
-}
-
-/// The §11 workspace tab bar, as the top bar folds it.
-pub fn tab_bar(model: &yog::AppModel) -> yog::nav::tabs::TabBar {
-    yog::nav::tabs::build(&ws_rows(model), model.focused_ws_name().as_deref())
-}
-
-/// **The §11 header's conversation ball, as the seat folds it** (bl-296f): the
-/// `ConvBall` the answered forest already carries on the root's row, picked out
-/// by `nav::convs::selection`. There is no model accessor — the header reads
-/// `Selection::ball` off the list it is already painting.
-pub fn conversation_ball(
-    model: &yog::AppModel,
-    root_id: &str,
-    now_unix: i64,
-) -> Option<yog::nav::convs::ConvBall> {
-    yog::nav::convs::selection(&conversation_rows(model, now_unix), root_id).ball
 }

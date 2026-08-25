@@ -101,17 +101,23 @@ seed() {
 }
 
 # --- the shared harness tier ------------------------------------------------
-# The assertion helpers, the two waiting primitives (`await`, `until_landed`),
-# the per-run seat and the verdict all live in `harness.sh` — none of them is
-# about S0/S1, and every sourced beats_* file below calls them. It also carries
-# the verdict's machine-keyable half, the `verdicts.jsonl` row each PASS/FAIL
-# line now writes beside `gestures.jsonl` (bl-56d5), and it sources the two
-# tiers of its own: the §16.2 wall fixture (`wall.sh`) and the §8.5 boundary
-# transport with the engine it is aimed at (`gesture.sh` — `launch_engine`,
-# `engine_alive`, `gesture`). The `gesture` helper lived HERE until bl-5cf7 gave
-# it a deadline; it is no more about S0/S1 than `await` is, and it could not
-# grow its watch where it sat, this file being at the 300-line cap.
+# The two waiting primitives (`await`, `until_landed`), the per-run seat and
+# the verdict all live in `harness.sh` — none of them is about S0/S1, and every
+# sourced beats_* file below calls them. It also carries the verdict's
+# machine-keyable half, the `verdicts.jsonl` row each PASS/FAIL line now writes
+# beside `gestures.jsonl` (bl-56d5), and it sources the three tiers of its own:
+# the assertion helpers (`predicates.sh`), the §16.2 wall fixture (`wall.sh`)
+# and the §8.5 boundary transport with the engine it is aimed at (`gesture.sh`
+# — `launch_engine`, `engine_alive`, `gesture`). The `gesture` helper lived
+# HERE until bl-5cf7 gave it a deadline; it is no more about S0/S1 than `await`
+# is, and it could not grow its watch where it sat, this file being at the
+# 300-line cap.
 . "$here/harness.sh"
+# The SEATLESS tier — how a run with no display boots an engine and reads what
+# it said (`boot_headless`, `reply_is`, `row`). Sourced here rather than from
+# harness.sh because a windowed run never touches it, and five of the files
+# below do (bl-7547).
+. "$here/headless.sh"
 
 # The per-world beat bodies, sourced rather than duplicated: each reuses `$drive`,
 # `seed`, and every assertion helper above (and `in_world`/`seed_balls`, laid by
@@ -126,9 +132,11 @@ seed() {
 . "$here/beats_s8.sh"
 . "$here/beats_s7.sh"
 . "$here/beats_s6.sh"
+. "$here/beats_s4res.sh"
 . "$here/beats_s3res.sh"
 . "$here/beats_headless.sh"
-. "$here/beats_s13w.sh"
+. "$here/beats_s11.sh"
+. "$here/beats_s13.sh"
 . "$here/beats_s19.sh"
 . "$here/beats_s10.sh"
 . "$here/beats_s18.sh"

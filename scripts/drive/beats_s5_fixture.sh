@@ -24,7 +24,7 @@ brazen_scratch() {
 }
 
 # --- world-A predicates -----------------------------------------------------
-# `md5of` and `file_has` were here and are now in harness.sh: `beats_s8.sh`
+# `md5of` and `file_has` were here and are now in predicates.sh: `beats_s8.sh`
 # spends the first and `beats_s6.sh` the second, and a predicate two runners
 # assert on has one home — the same rule that moved `seen_kind` (bl-2d45,
 # bl-f16e). Whoever files a beat here reaches for the shared spelling.

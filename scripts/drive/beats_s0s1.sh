@@ -8,7 +8,7 @@
 # into the live conversation, and a prompt that starts another one without
 # re-minting the workspace.
 #
-# It calls `seed` and every assertion helper from `harness.sh` exactly as the
+# It calls `seed` and every assertion helper from `predicates.sh` exactly as the
 # other `beats_*.sh` do, and it is sourced before `one_name_one_definition`
 # runs, so a name collided with any other beat file is refused there.
 

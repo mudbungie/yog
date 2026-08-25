@@ -24,82 +24,15 @@
 //! as a release checklist instead.
 
 #![allow(clippy::unwrap_used)]
+// The harness half. `#[path]` because this file IS the test target's crate
+// root, so a bare `mod` would resolve to `tests/harness.rs` — and a second
+// top-level `tests/*.rs` is a second test binary, not a module.
+#[path = "leak_gate/harness.rs"]
+mod harness;
+use harness::{cases, content_rules, declared, findings, fixture, repo, scan, staged};
 
 use std::fs;
-use std::path::{Path, PathBuf};
-
-use tempfile::TempDir;
-
-/// This repository, whose scanner and fixtures are the subject.
-fn repo() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-}
-
-/// One of the scanner's declared fixtures, verbatim.
-fn fixture(name: &str) -> Vec<u8> {
-    fs::read(repo().join("scripts/leak-fixtures").join(name)).unwrap()
-}
-
-/// The 1-based line numbers of a fixture's cases (its non-comment lines).
-fn cases(name: &str) -> Vec<usize> {
-    let text = String::from_utf8(fixture(name)).unwrap();
-    text.lines()
-        .enumerate()
-        .filter(|(_, l)| !l.is_empty() && !l.starts_with('#'))
-        .map(|(i, _)| i + 1)
-        .collect()
-}
-
-fn git(dir: &Path, args: &[&str]) {
-    let status = yog::git_env::git()
-        .current_dir(dir)
-        .args(args)
-        .status()
-        .unwrap();
-    assert!(status.success(), "git {args:?}");
-}
-
-/// A throwaway repository carrying this repo's scanner and the given files,
-/// all staged. Nothing is committed: the index is the subject.
-fn staged(files: &[(&str, Vec<u8>)]) -> TempDir {
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-    fs::create_dir_all(root.join("scripts")).unwrap();
-    for name in ["leak-scan.sh", "leak-rules.sh"] {
-        fs::copy(
-            repo().join("scripts").join(name),
-            root.join("scripts").join(name),
-        )
-        .unwrap();
-    }
-    git(root, &["init", "-q", "-b", "main", "."]);
-    for (path, body) in files {
-        let at = root.join(path);
-        fs::create_dir_all(at.parent().unwrap()).unwrap();
-        fs::write(at, body).unwrap();
-    }
-    git(root, &["add", "-A"]);
-    dir
-}
-
-/// Run the tree scan. `home` is the account the scan believes it runs as —
-/// a parameter because what this gate catches must not depend on it.
-fn scan(dir: &Path, home: &Path) -> (bool, String) {
-    let out = yog::git_env::command(Path::new("bash"))
-        .current_dir(dir)
-        .env("HOME", home)
-        .arg("scripts/leak-scan.sh")
-        .output()
-        .unwrap();
-    (out.status.success(), String::from_utf8(out.stderr).unwrap())
-}
-
-/// The scan must reject `dir`; returns what it said.
-fn findings(dir: &TempDir) -> String {
-    let (ok, err) = scan(dir.path(), dir.path());
-    assert!(!ok, "the scan passed a tree it must reject:\n{err}");
-    err
-}
+use std::path::Path;
 
 // 1. The headline: index blobs, not worktree bytes.
 #[test]
@@ -275,20 +208,4 @@ fn ci_reaches_the_leak_scan_from_its_own_entry_point() {
         spec.contains("scripts/pre-commit"),
         "the remote builder runs some other gate"
     );
-}
-
-/// The text a single-quoted shell assignment binds in `scripts/leak-rules.sh`
-/// — read from the table itself so these tests cannot drift from it.
-fn declared(open: &str, close: &str) -> String {
-    let rules = fs::read_to_string(repo().join("scripts/leak-rules.sh")).unwrap();
-    let tail = rules.split_once(open).unwrap().1.to_owned();
-    tail.split_once(close).unwrap().0.to_owned()
-}
-
-/// The content rules, as the table lists them.
-fn content_rules() -> Vec<String> {
-    declared("RULES=(", ")")
-        .split_whitespace()
-        .map(str::to_owned)
-        .collect()
 }
