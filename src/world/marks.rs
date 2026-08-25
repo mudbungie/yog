@@ -52,11 +52,14 @@
 //! conf` remains the authority on what resolved (it reports the winning layer
 //! by name, `xdg`). Severability holds: deleting the space deletes the policy.
 
-use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::opslog::{self, OpEntry};
 use crate::xdg::Env;
+
+/// **Pointing a space at a branch** — the write, split off at §12's budget.
+mod write;
+
+pub use write::{REFUSAL, apply, body};
 
 /// The one var naming an agent's own balls space (§16.3). Absent = the world's
 /// space, which is the project's board — the space every agent pointed at a
@@ -189,77 +192,6 @@ pub fn pairs(world: &Env, workspace: &Path, own: bool) -> Vec<(String, String)> 
 /// which is what makes the launched-then-pointed-at-a-project case answerable.
 pub fn read(world: &Env, workspace: &Path) -> Space {
     Space::own(&own_root(world, workspace))
-}
-
-/// Point a workspace's own space at `branch` (§16.3): write `tasks_branch` into
-/// balls' layer-2 config for that space, log the write to `ops.jsonl` (§4.2, the
-/// mutation-logging discipline), and hand back the branch **re-read** — what
-/// landed, never an echo of what was asked.
-pub fn apply(space: &Space, state_root: &Path, ts: &str, branch: &str) -> io::Result<String> {
-    let path = config_file(&space.config);
-    let outcome = if lawful(branch) {
-        write_branch(&path, branch)
-    } else {
-        Err(io::Error::other(REFUSAL))
-    };
-    log_op(state_root, ts, &path, branch, &outcome)?;
-    outcome?;
-    Ok(space.branch())
-}
-
-/// The refusal an unlawful branch earns, said once — the grammar states it
-/// before dispatch and [`apply`] states it again at the write, so a typed line
-/// and a forced call cannot word the same fact differently.
-pub const REFUSAL: &str =
-    "name a store branch: one word, no quotes, and not balls' own landing branch (balls/config)";
-
-/// Write `tasks_branch = "<branch>"` as the space's whole layer-2 config. The
-/// file is yog's to author in full: a space is one agent's, and its only balls
-/// config is the branch — so a merge-preserving edit would be machinery for a
-/// key nothing else ever writes.
-fn write_branch(path: &Path, branch: &str) -> io::Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(path, body(branch))
-}
-
-/// The config body, said once — the write emits it and [`parse_branch`] reads
-/// it back. One key, quoted; [`lawful`] has already refused anything a quote
-/// would have to escape.
-pub fn body(branch: &str) -> String {
-    format!("tasks_branch = \"{branch}\"\n")
-}
-
-/// Append the write's outcome to `ops.jsonl` (§4.2). A file write is not a
-/// spawn, so it rides the §4.2 non-spawn step shape the start flow's own
-/// `yog-step` rows use — the path is the subject, the exit says whether it
-/// landed.
-fn log_op(
-    state_root: &Path,
-    ts: &str,
-    path: &Path,
-    branch: &str,
-    outcome: &io::Result<()>,
-) -> io::Result<()> {
-    let (exit, stderr) = match outcome {
-        Ok(()) => (0, String::new()),
-        Err(e) => (-3, e.to_string()),
-    };
-    opslog::append(
-        state_root,
-        &OpEntry {
-            ts: ts.to_owned(),
-            argv: vec!["yog-step".to_owned(), "marks".to_owned(), branch.to_owned()],
-            cwd: path.display().to_string(),
-            exit,
-            stdout: String::new(),
-            stderr,
-            // The §16.3 knob's own pane states this outcome in place (§7.3,
-            // bl-48f8), so no banner elsewhere repeats it.
-            origin: crate::opslog::Origin::World,
-        },
-    )
 }
 
 #[cfg(test)]

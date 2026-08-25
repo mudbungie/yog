@@ -7,6 +7,7 @@
 
 use super::super::*;
 use super::branch;
+use crate::git_tree::Agent;
 use crate::git_tree::AgentState;
 
 #[test]

@@ -2,6 +2,7 @@
 //! verdict out on stdout, and every way the protocol can break failing closed.
 
 use super::*;
+use std::io::Write;
 
 #[test]
 fn the_shim_reads_one_request_and_prints_one_verdict() {

@@ -6,6 +6,7 @@
 //! spawn→disconnect path is covered by the S0-T5 login story.
 
 use super::*;
+use std::sync::mpsc;
 
 /// A stdout-tagged line.
 fn out(text: &str) -> StreamedLine {

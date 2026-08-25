@@ -6,6 +6,7 @@ use super::super::chunk::pump_step;
 use super::*;
 use crate::cli_outbound::stream::exit_info;
 use std::io::Read;
+use std::sync::mpsc;
 use tempfile::tempdir;
 
 #[test]

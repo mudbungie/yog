@@ -22,7 +22,8 @@ use crate::control::root::claimed;
 use crate::fan::{self, delivered_commit};
 use crate::opslog::OpEntry;
 
-use super::{Attempt, diff_change};
+use super::Attempt;
+use super::read::diff_change;
 
 /// Every fan candidate the workspace at `workspace` (named `name`) has bound,
 /// as work-diff rows. A workspace that never fanned has none — the cohort fold

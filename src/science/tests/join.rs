@@ -10,6 +10,8 @@ use crate::opslog::OpEntry;
 use crate::science::{Attempt, Outcome, project};
 use crate::workdiff::{Change, tests::Project};
 
+mod absences;
+
 /// One model turn as lernie commits it: canonical blocks wrapped in `content`.
 const SAID: &str = r#"{"content":[{"type":"thinking","thinking":"hmm"},
 {"type":"text","text":"done, tests green"}]}"#;
@@ -18,22 +20,22 @@ const VERDICT: &str = "---\nfrom: judge-one\ndeposited_at: t\n---\ncandidate B r
 
 /// A project repo, a balls layout and a workspace directory, all under one
 /// throwaway root — every path this projection reads is inside it.
-struct Lab {
+pub(super) struct Lab {
     _dir: tempfile::TempDir,
-    project: Project,
+    pub(super) project: Project,
     xdg: balls::layout::Xdg,
     balls_root: PathBuf,
-    ws: PathBuf,
+    pub(super) ws: PathBuf,
 }
 
 impl Lab {
-    fn new() -> Lab {
+    pub(super) fn new() -> Lab {
         Lab::over(claimed_project())
     }
 
     /// The same lab over a project founded some other way — the base column's
     /// own reading needs a source that shares no history with its target.
-    fn over(project: Project) -> Lab {
+    pub(super) fn over(project: Project) -> Lab {
         let dir = tempfile::tempdir().unwrap();
         let (xdg, balls_root) = layout(dir.path());
         let ws = dir.path().join("workspaces").join(NAME);
@@ -47,12 +49,12 @@ impl Lab {
         }
     }
 
-    fn project_at(&self, snap: &Snapshot, entries: &[OpEntry]) -> Vec<Attempt> {
+    pub(super) fn project_at(&self, snap: &Snapshot, entries: &[OpEntry]) -> Vec<Attempt> {
         project(snap, &self.ws, entries, &self.xdg, &self.balls_root)
     }
 
     /// The claim attempt's own worktree path, by balls' formula.
-    fn claim(&self, claimant: Option<&str>) -> PathBuf {
+    pub(super) fn claim(&self, claimant: Option<&str>) -> PathBuf {
         crate::binding::work_worktree_path(&self.balls_root, &self.project.path, BALL, claimant)
     }
 }
@@ -194,82 +196,4 @@ fn each_candidate_carries_its_own_binding_and_figures() {
     assert_eq!(rows[2].usage.input_tokens, 0);
     assert!(rows[2].verdicts.is_empty());
     assert_eq!(rows[2].response, None);
-}
-
-/// A project that is no git repo states so — the diff column reads unreadable —
-/// and the outcome is pending rather than a guess: with no target ref named,
-/// there is no history to record a delivery and no sibling to lose to.
-#[test]
-fn an_unreadable_project_is_pending_with_nothing_named() {
-    let lab = Lab::new();
-    let plain = lab.ws.join("not-a-repo");
-    std::fs::create_dir_all(&plain).unwrap();
-    let snap = snap(&lab.ws, &plain, vec![], vec![]);
-    let rows = lab.project_at(&snap, &[]);
-    assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0].diff.change, Change::Unreadable);
-    assert_eq!(rows[0].diff.range(), None);
-    assert_eq!(rows[0].base, None, "no pair, so no commit to name");
-    assert_eq!(rows[0].outcome, Outcome::Pending);
-}
-
-/// Two ends that share no ancestor departed from **nothing this repo can name**:
-/// the diff still reads — git compares unrelated trees happily — and the base
-/// column says so rather than naming one of the two roots.
-#[test]
-fn ends_with_no_shared_ancestor_have_no_base() {
-    let project = Project::new();
-    let source = balls::delivery_path::work_branch(BALL);
-    crate::git_tree::tests::git::run_git(&project.path, &["checkout", "-q", "--orphan", &source]);
-    project.commit("src/b.rs", "fn b() {}\n");
-    project.checkout(crate::workdiff::tests::MAIN);
-    let lab = Lab::over(project);
-    let snap = snap(&lab.ws, &lab.project.path, vec![], vec![]);
-    let rows = lab.project_at(&snap, &[]);
-    assert!(
-        matches!(rows[0].diff.change, Change::Diff { .. }),
-        "{rows:?}"
-    );
-    assert_eq!(rows[0].base, None);
-}
-
-/// A workspace that claims nothing projects nothing — the general path with no
-/// inputs, not an arm of its own.
-#[test]
-fn no_obligation_projects_no_rows() {
-    let lab = Lab::new();
-    let mut snap = snap(&lab.ws, &lab.project.path, vec![], vec![]);
-    snap.balls_by_project.clear();
-    assert!(lab.project_at(&snap, &[]).is_empty());
-}
-
-/// A project whose name the snapshot cannot resolve has no repo to reproduce a
-/// worktree path in, so the binding join declines rather than attributing
-/// another attempt's conversation to the row.
-#[test]
-fn an_unresolvable_project_binds_nothing() {
-    let lab = Lab::new();
-    let claim = lab.claim(None);
-    let entries = trail(&lab.ws, &lab.project.path, &[(CONV, &claim)]);
-    let mut snap = snap(&lab.ws, &lab.project.path, vec![named_agent()], vec![]);
-    // The enumeration is what makes a NAME resolve back to a repository; empty
-    // it, and the row still reads (its diff was already taken) while nothing can
-    // be located to bind against.
-    snap.projects.clear();
-    let rows = lab.project_at(&snap, &entries);
-    assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0].conversation, None);
-}
-
-/// A claim worktree balls disambiguated with the claimant leaf binds too —
-/// both spellings are asked, because which one exists is a disk question.
-#[test]
-fn the_claimant_disambiguated_leaf_binds() {
-    let lab = Lab::new();
-    let claim = lab.claim(Some(NAME));
-    let entries = trail(&lab.ws, &lab.project.path, &[(CONV, &claim)]);
-    let snap = snap(&lab.ws, &lab.project.path, vec![named_agent()], vec![]);
-    super::worktree(&lab.ws, AGENT, "either leaf", &[]);
-    let rows = lab.project_at(&snap, &entries);
-    assert_eq!(rows[0].conversation.as_deref(), Some(AGENT));
 }

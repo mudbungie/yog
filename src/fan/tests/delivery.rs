@@ -3,7 +3,7 @@
 //! the target's own history, and a stale sibling refuses until it has
 //! incorporated what landed — the rework rule, exercised rather than believed.
 
-use super::{BALL, World};
+use super::world::{BALL, World};
 use crate::fan::{Obligation, deliver, delivered_commit, open};
 use crate::git_tree::tests::git::{git_out, run_git};
 

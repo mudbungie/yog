@@ -4,86 +4,15 @@
 //! with one commit), which is what a balls invocation path is.
 
 mod delivery;
+mod world;
 
 use std::path::PathBuf;
 
-use tempfile::{TempDir, tempdir};
-
 use super::spread::one_base;
 use super::{Candidate, Obligation, discard, open, release, resume, spread};
-use crate::git_tree::tests::git::{git_out, run_git};
-use crate::opslog::Origin;
 use crate::start::Prepared;
 use balls::delivery_path::{attempt_branch, attempt_path};
-use balls::layout::Xdg;
-
-/// The fixture repo's integration branch.
-const MAIN: &str = "main";
-/// The ball whose `work/<id>` ref every ball-obligation test targets.
-const BALL: &str = "bl-1f2a";
-
-/// A project repo plus the balls layout its attempts are placed under.
-struct World {
-    dir: TempDir,
-    project: PathBuf,
-    xdg: Xdg,
-}
-
-impl World {
-    fn new() -> World {
-        let dir = tempdir().unwrap();
-        let project = dir.path().join("proj");
-        std::fs::create_dir_all(&project).unwrap();
-        run_git(&project, &["init", "-q", "-b", MAIN]);
-        run_git(&project, &["config", "user.email", "t@t.local"]);
-        run_git(&project, &["config", "user.name", "Tester"]);
-        run_git(&project, &["config", "commit.gpgsign", "false"]);
-        std::fs::write(project.join("README.md"), "the project\n").unwrap();
-        run_git(&project, &["add", "README.md"]);
-        run_git(&project, &["commit", "-q", "-m", "found"]);
-        let xdg = Xdg::with(
-            &dir.path().join("home"),
-            None,
-            Some(&dir.path().join("state").to_string_lossy()),
-        );
-        World { dir, project, xdg }
-    }
-
-    fn obligation(ball: Option<&str>) -> Obligation {
-        Obligation {
-            project: "proj".to_owned(),
-            ball: ball.map(str::to_owned),
-        }
-    }
-
-    /// The commit a ref names right now.
-    fn tip(&self, refname: &str) -> String {
-        git_out(&self.project, &["rev-parse", refname])
-    }
-
-    fn branch_exists(&self, refname: &str) -> bool {
-        crate::git_env::output(crate::git_env::git().arg("-C").arg(&self.project).args([
-            "rev-parse",
-            "--verify",
-            "-q",
-            refname,
-        ]))
-        .unwrap()
-        .status
-        .success()
-    }
-}
-
-/// The ordinary prepared start a fan spreads.
-fn prepared(dir: &TempDir) -> Prepared {
-    Prepared {
-        workspace: "cobalt-gecko".to_owned(),
-        binding: Some(dir.path().join("claim")),
-        goal: "Ball bl-1f2a: do the thing".to_owned(),
-        origin: Origin::Balls,
-        lineage: None,
-    }
-}
+use world::{BALL, MAIN, World, prepared};
 
 #[test]
 fn a_ball_fan_forks_every_candidate_off_the_one_work_ref_tip() {

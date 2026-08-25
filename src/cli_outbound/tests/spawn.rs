@@ -3,6 +3,7 @@
 //! escalating to SIGKILL when SIGTERM is trapped.
 
 use super::*;
+use std::thread;
 use std::time::{Duration, Instant};
 use tempfile::tempdir;
 
