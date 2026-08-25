@@ -1,35 +1,59 @@
 //! **The detached driver's own verdict** (§8.1, §13.3) — the one op class whose
 //! outcome is not in its exit code, split off [`super`] at the cap on the seam
 //! it already had: every row there is judged by what the verb returned, and
-//! these two are judged by what a sink file said afterwards.
+//! these two are judged by the world the launch left behind.
 //!
 //! A `lernie prompt` launches detached, so its line lands clean at
-//! [`DETACHED_EXIT`] and the only evidence of what happened next is the captured
-//! stderr the next sweep folds in. Both directions stand here, because the fold
-//! must make a death a failure **and** must leave a benign notice alone: the two
-//! beats are one another's burden check.
+//! [`DETACHED_EXIT`] and nothing about what happened next is in it. Since
+//! bl-b95e the sweep asks the **state** — is the conversation the row named
+//! there, and is anything driving it — and reads the §8.1 sink only when the
+//! answer is no. Both directions stand here, because the gate must make a
+//! stillbirth a failure **and** must leave a live launch alone whatever its
+//! sink says: the two beats are one another's burden check.
 
 use super::{model, world};
+use crate::git_tree::tests::fixture::Fixture;
 use crate::opslog::{self, DETACHED_EXIT, Origin};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
 
-#[test]
-fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
-    let w = world();
-    let (_c, mut m) = model(&w);
-    let ws = Path::new("/ws/cobalt-gecko");
+/// A **derivable** workspace under this world's names root: a real git
+/// fixture with no conversations, symlinked where the model enumerates it.
+/// The shared world's two workspaces are bare directories holding an empty
+/// `repo.git`, so they derive no tree at all — and the §8.1 verdict is a
+/// question about a derived tree, never about a path. Call before `model`, so
+/// the boot pass enumerates it.
+fn derivable(w: &super::super::World) -> (Fixture, PathBuf) {
+    let fx = Fixture::new();
+    let ws = w.roots.yog_data.join("workspaces").join("gecko");
+    std::os::unix::fs::symlink(&fx.path, &ws).unwrap();
+    (fx, ws)
+}
+
+/// The §3.3 name the fire minted, carried on the row's `--name`.
+const MINTED: &str = "vanished-heron";
+
+/// The sink line both beats use — deliberately the same bytes, because the
+/// claim is that the bytes decide nothing.
+const CRY: &str = "brazen 0.0.2 refuses 0.0.3\n";
+
+/// One detached `lernie prompt` line for `ws`, written as
+/// `start::execute_prompt` writes it: `--name` up front, the goal last.
+fn launch(m: &crate::AppModel, ts: &str, ws: &Path) {
     opslog::append(
         m.state_root(),
         &opslog::OpEntry {
-            ts: "17".into(),
+            ts: ts.into(),
             argv: vec![
                 "lernie".into(),
                 "prompt".into(),
+                "--name".into(),
+                MINTED.into(),
                 ws.to_string_lossy().into_owned(),
                 "goal".into(),
             ],
-            cwd: "/ws".into(),
+            cwd: ws.to_string_lossy().into_owned(),
             exit: DETACHED_EXIT,
             stdout: String::new(),
             stderr: String::new(),
@@ -37,6 +61,24 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
         },
     )
     .unwrap();
+}
+
+/// Write the dead driver's cry into the sink the launch at `ts` routed to.
+fn cry(m: &crate::AppModel, ts: &str, ws: &Path) {
+    let sink = opslog::detached::sink(m.state_root(), ts, ws);
+    fs::create_dir_all(sink.parent().unwrap()).unwrap();
+    fs::write(&sink, CRY).unwrap();
+}
+
+#[test]
+fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
+    let w = world();
+    let (_fx, ws) = derivable(&w);
+    let (clock, mut m) = model(&w);
+    launch(&m, "0", &ws);
+    // Past the §7.3 grace window, so the launch has had its time to produce
+    // something. `FakeClock` counts unix seconds from its own origin.
+    clock.advance(Duration::from_mins(10));
     // The launch alone: a clean `-2` row, nothing to see — the §13.3 hole.
     m.after_lernie_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
@@ -44,10 +86,10 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     assert!(!m.snap.ops.last().unwrap().failed());
     assert!(!m.snap.ops.last().unwrap().has_output());
 
-    // The driver then refuses and dies, leaving its cry in the sink file.
-    let sink = opslog::detached::sink(m.state_root(), "17", ws);
-    fs::create_dir_all(sink.parent().unwrap()).unwrap();
-    fs::write(&sink, "brazen 0.0.2 refuses 0.0.3\n").unwrap();
+    // The driver then refuses and dies, leaving its cry in the sink file. The
+    // workspace holds no conversation by that name and never will, so the state
+    // says the launch produced nothing.
+    cry(&m, "0", &ws);
 
     // The next sweep folds it in: the row becomes a rendered failure and the
     // originating surface — the one that fired the bare rung, and only it —
@@ -55,14 +97,11 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     m.after_lernie_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
     let row = m.snap.ops.last().unwrap();
-    assert!(
-        row.failed(),
-        "the dead driver's stderr makes the row a failure"
-    );
+    assert!(row.failed(), "a launch that produced nothing is a failure");
     assert!(row.has_output(), "and the pane offers the expansion");
     assert_eq!(
         m.last_failure(Origin::Conversation).unwrap().stderr_tail,
-        "brazen 0.0.2 refuses 0.0.3"
+        CRY.trim_end()
     );
     assert!(
         m.last_failure(Origin::Balls).is_none(),
@@ -75,48 +114,32 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     );
 }
 
-/// **THE BALL** (bl-1296): the same sweep, over a sink holding a benign lernie
-/// driver notice. The row folds the tail in and stays out of every alarm — no
-/// §7.3 banner on the surface that fired it, nothing in the chip's ⚠ count —
-/// while the expandable ops row keeps the text. The dead-driver beat above is
-/// the arm this must not weaken, which is why the two stand side by side.
+/// **THE BALL** (bl-b95e): the same sweep, the same sink bytes, over a launch
+/// **younger than the §7.3 grace window**. Nothing is folded, so nothing
+/// alarms — the rising edge of a healthy start is indistinguishable from a
+/// death until yog has had time to look (bl-18e8), and the sink's words cannot
+/// close that gap because they are never the trigger. The beat above is the arm
+/// this must not weaken, which is why the two stand side by side over one
+/// string.
 #[test]
-fn a_detached_prompt_whose_driver_only_filed_a_notice_never_banners() {
+fn a_launch_inside_the_grace_window_never_alarms_however_its_sink_reads() {
     let w = world();
+    let (_fx, ws) = derivable(&w);
     let (_c, mut m) = model(&w);
-    let ws = Path::new("/ws/cobalt-gecko");
-    opslog::append(
-        m.state_root(),
-        &opslog::OpEntry {
-            ts: "19".into(),
-            argv: vec![
-                "lernie".into(),
-                "prompt".into(),
-                ws.to_string_lossy().into_owned(),
-                "goal".into(),
-            ],
-            cwd: "/ws".into(),
-            exit: DETACHED_EXIT,
-            stdout: String::new(),
-            stderr: String::new(),
-            origin: Origin::Conversation,
-        },
-    )
-    .unwrap();
-
-    // The driver lands a compaction decline and carries on, into its §8.1 sink.
-    let notice = "lernie: compaction landing [c-2] superseded — a compaction landed \
-                  since its fork point (ARCH §2.6); the branch continues\n";
-    let sink = opslog::detached::sink(m.state_root(), "19", ws);
-    fs::create_dir_all(sink.parent().unwrap()).unwrap();
-    fs::write(&sink, notice).unwrap();
+    // Stamped at the clock's own origin and never advanced: a launch that has
+    // only just happened.
+    launch(&m, "0", &ws);
+    cry(&m, "0", &ws);
 
     m.after_lernie_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
     let row = m.snap.ops.last().unwrap();
-    assert!(!row.failed(), "a benign notice is not a rendered failure");
-    assert_eq!(row.stderr, notice, "and the trail still carries its words");
-    assert!(row.has_output(), "so the pane offers the expansion");
+    assert!(
+        !row.failed(),
+        "a launch still inside its grace is no failure"
+    );
+    assert!(row.stderr.is_empty(), "and its sink was never read");
+    assert!(!row.has_output());
     assert!(
         m.last_failure(Origin::Conversation).is_none(),
         "the surface that fired it is not bannered"

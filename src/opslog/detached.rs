@@ -14,23 +14,27 @@
 //! is never stored twice and a still-running driver's later output surfaces on
 //! the next sweep without rewriting a durable line.
 //!
-//! A capture the notice classifier does not recognize makes the row a rendered
-//! failure ([`OpRow::failed`](super::rows::OpRow::failed) reads `DETACHED_EXIT`
+//! A folded capture makes the row a rendered failure
+//! ([`OpRow::failed`](super::rows::OpRow::failed) reads `DETACHED_EXIT`
 //! that way), which is what stirs the §6/§11 activity surface and the §7.3
 //! ichor-red banner — no new signal, the existing machinery fed a fact it was
 //! previously denied.
 //!
-//! **A non-empty capture was the whole test until bl-1296, and that was too
-//! wide.** This file is a *transport*: it folds the tail in and says nothing
-//! about what the tail means. What it meant was decided one layer up by
-//! "the driver said anything at all", and lernie's contract makes this sink an
-//! **operator-notice** channel as much as a dying one — declines, superseded
-//! landings, accepted-crash-class launch notes, a §6 budget stop, all printed
-//! on paths that return `Ok(())`. Since the sink is append-only for the
-//! driver's whole life and this fold re-reads its tail every sweep, one benign
-//! line held its origin's newest row red until the operator acked it.
-//! [`super::notice`] is the narrow reading that tells the two apart; the fold
-//! is unchanged.
+//! **Whether to fold at all is not this file's question** (bl-b95e). This file
+//! is a *transport*: it names the sink and reads its tail, and says nothing
+//! about what the tail means. For two rulings it was folded into every `-2`
+//! row, which made the meaning "the driver said anything at all" — and
+//! lernie's contract makes this sink an **operator-notice** channel as much as
+//! a dying one (declines, superseded landings, accepted-crash-class launch
+//! notes, a §6 budget stop, all printed on paths that return `Ok(())`). bl-1296
+//! answered with a phrase table over those sentences; bl-b95e deleted the table
+//! and moved the decision to where §13.3 already puts it for `driver.log` — the
+//! **state** the launch produced ([`super::launch::stillborn`]), asked by the
+//! caller ([`crate::app::derive`]'s ops refresh) before it folds. Content is
+//! diagnosis. That also dissolves what no table could reach: the sink is
+//! append-only for the driver's whole life and this fold re-reads its tail every
+//! sweep, so one unrecognized line held its origin's newest row red for every
+//! later pass, however many turns the driver went on to run.
 //!
 //! **The join key is computed, not stored.** The sink's name derives from facts
 //! the ops line already carries — its `ts` and its workspace argument — so the
@@ -71,7 +75,8 @@ pub fn sink(state_root: &Path, ts: &str, workspace: &Path) -> PathBuf {
 }
 
 /// `entry` with its detached child's captured stderr folded in — the read-time
-/// projection the ops sweep applies to every tailed line (§4.2, §7.2).
+/// projection the ops sweep applies to a line whose launch produced nothing
+/// (§4.2, §7.2; the gate is [`super::launch::stillborn`], asked by the caller).
 ///
 /// Only a [`DETACHED_EXIT`] line whose own `stderr` is empty is folded, which
 /// since bl-afa9 is every `-2` line yog writes: a spawn that never launched is a

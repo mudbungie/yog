@@ -127,16 +127,17 @@ fn the_signal_reading_is_bounded_at_both_ends() {
 /// The top of the `128 + n` band.
 const SIGNAL_TOP: i32 = super::SIGNAL_BASE + super::SIGNAL_MAX;
 
-/// A **notice** line lernie's driver prints on the way past a decline (bl-1296)
-/// — the verbatim shape `opslog::notice` classifies.
+/// A **notice** line lernie's driver prints on the way past a decline — the
+/// shape bl-1296's retired phrase table was written over. It stands here as an
+/// ordinary sink line now: bl-b95e moved the decision to whether the fold ran
+/// at all, so nothing at this altitude reads its words.
 const NOTICE: &str = "lernie: compaction landing [c-2] superseded — a compaction landed \
      since its fork point (ARCH §2.6); the branch continues\n";
 
-/// A detached row carrying stderr the notice classifier does not recognize is
-/// the driver's *post-launch* death (folded from its sink) — still the detached
-/// wording, because the handoff did happen; the row is a failure on the strength
-/// of what the child said. This is the property bl-1296 narrowed and did **not**
-/// weaken: a dying driver's words still redden the row.
+/// A detached row carrying folded stderr is the driver's *post-launch* death —
+/// still the detached wording, because the handoff did happen; the row is a
+/// failure because the fold only runs over a launch the derivation already
+/// found stillborn ([`crate::opslog::launch::stillborn`], bl-b95e).
 #[test]
 fn a_driver_that_died_after_launching_stays_detached_and_fails() {
     let r = row(DETACHED_EXIT, "refusing: version skew\n");
@@ -162,44 +163,47 @@ fn detached_is_true_only_for_a_clean_handoff() {
     assert!(!row(PIPED_UNOBSERVED, "").detached());
 }
 
-/// **THE BALL** (bl-1296): a `-2` row whose sink holds only lernie notice lines
-/// is not a failure. It keeps the detached wording — the handoff did happen —
-/// and it is not the bare handoff either, because the driver did speak.
+/// **THE BALL** (bl-b95e): at this altitude a notice line is not special and
+/// nothing here reads it. A `-2` row whose sink was folded in is a failure
+/// whatever the words say — because the caller folds only over a launch whose
+/// product is missing — and an unfolded one is a bare handoff. The phrase
+/// table that used to sit between them is gone.
 #[test]
-fn a_driver_notice_on_the_sink_is_its_own_third_of_the_sentinel() {
-    let r = row(DETACHED_EXIT, NOTICE);
-    assert!(!r.failed(), "a benign notice is not a rendered failure");
-    assert!(r.notice());
+fn the_sink_is_no_longer_read_for_what_it_says() {
+    let spoke = row(DETACHED_EXIT, NOTICE);
     assert!(
-        !r.detached(),
-        "the driver said something; this is not silence"
+        spoke.failed(),
+        "a folded tail is the derivation's verdict, not lernie's prose"
     );
-    assert!(!r.detached_died(), "and it did not die");
-    assert_eq!(r.exit_label(), "detached — handed off, no exit to observe");
+    assert!(spoke.detached_died());
+    assert!(!spoke.detached());
+    assert_eq!(
+        spoke.exit_label(),
+        "detached — handed off, no exit to observe"
+    );
+    let unfolded = row(DETACHED_EXIT, "");
+    assert!(!unfolded.failed(), "and an unfolded handoff is no failure");
+    assert!(unfolded.detached());
 }
 
-/// The three readings of the `-2` sentinel **partition** it: every detached row
-/// is exactly one of silent, notice, died. Asserted as the property, because
-/// two of them overlapping is how a benign line reached the §7.3 banner.
+/// The two readings of the `-2` sentinel **partition** it: every detached row
+/// is exactly one of silent-handoff and died. Asserted as the property,
+/// because two of them overlapping is how a benign line reached the §7.3
+/// banner under the old three-way split.
 #[test]
-fn the_detached_sentinels_three_readings_never_overlap() {
-    for stderr in [
-        "",
-        NOTICE,
-        "refusing: version skew\n",
-        &format!("{NOTICE}boom\n"),
-    ] {
+fn the_detached_sentinels_two_readings_never_overlap() {
+    for stderr in ["", NOTICE, "refusing: version skew\n"] {
         let r = row(DETACHED_EXIT, stderr);
-        let hits = u8::from(r.detached()) + u8::from(r.notice()) + u8::from(r.detached_died());
+        let hits = u8::from(r.detached()) + u8::from(r.detached_died());
         assert_eq!(hits, 1, "not exactly one reading of {stderr:?}");
     }
 }
 
-/// The classifier is asked of the `-2` sentinel and of nothing else: a piped
-/// verb that happened to print a notice-shaped line still exits as it exits.
+/// The reading is asked of the `-2` sentinel and of nothing else: a piped verb
+/// that happened to print a notice-shaped line still exits as it exits.
 #[test]
-fn notice_is_a_reading_of_the_detached_sentinel_only() {
-    assert!(!row(0, NOTICE).notice());
-    assert!(!row(2, NOTICE).notice());
+fn the_detached_readings_are_of_that_sentinel_only() {
+    assert!(!row(0, NOTICE).detached_died());
+    assert!(!row(2, NOTICE).detached_died());
     assert!(row(2, NOTICE).failed(), "a real non-zero exit still fails");
 }

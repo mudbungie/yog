@@ -70,6 +70,20 @@ pub enum AgentState {
     Stopped,
 }
 
+impl AgentState {
+    /// **Is a driver at work on this agent?** (§3.5) — the one reading of the
+    /// two live states, and the gate every derivation that must not accuse a
+    /// running driver asks: the §7.3 step wound (a driver at work is still
+    /// filling its newest step), the orphaned-mail state, and the §8.1
+    /// detached-launch verdict ([`crate::opslog::launch::stillborn`]). It lives on the
+    /// state itself because it is a reading of the state and nothing else —
+    /// three copies of `matches!(…, Live | InFlight)` is one fact with three
+    /// homes, and the third was about to be written.
+    pub fn driven(self) -> bool {
+        matches!(self, Self::Live | Self::InFlight)
+    }
+}
+
 /// One agent's §3.5 classification: the three readings the two liveness
 /// observations plus the latest step's settled tail yield, gathered in one
 /// pass so the response file is read once.

@@ -75,17 +75,39 @@ impl Deriver {
     /// Re-read the `ops.jsonl` tail (§4.2). Run on the yog-state dirtiness, the
     /// full sweep, and after any dispatched verb.
     ///
-    /// Each line is projected through [`opslog::detached::fold`] first, so a
-    /// detached driver's captured stderr — the only evidence a fired prompt died
-    /// after launch (§8.1, §13.3) — reaches the row from its sink file on *this*
-    /// pass. The fold is read-time by construction: the sink stays the
-    /// authority, `ops.jsonl` is never rewritten, and a driver still writing
-    /// surfaces more on the next pass.
+    /// A detached line whose launch **produced nothing** is projected through
+    /// [`opslog::detached::fold`], so the dead driver's captured stderr — the
+    /// only evidence a fired prompt died after launch (§8.1, §13.3) — reaches
+    /// the row from its sink file on *this* pass. The fold is read-time by
+    /// construction: the sink stays the authority, `ops.jsonl` is never
+    /// rewritten, and a driver still writing surfaces more on the next pass.
+    ///
+    /// **The gate is the whole of bl-b95e.** The fold used to run over every
+    /// `-2` line, which made *speech* the trigger and needed a phrase table
+    /// (`opslog::notice`) to hold lernie's benign lines back — and left one
+    /// unrecognized line reddening its row for the driver's whole life, since
+    /// the sink is append-only and every sweep re-read its tail.
+    /// [`opslog::launch::stillborn`] asks the state instead: the launch's
+    /// target is not being driven and has not acted since the row's own `ts`.
+    /// The bytes are then diagnosis, exactly as §13.3 already rules for
+    /// `driver.log` — and a healthy launch pays no syscall for them.
+    ///
+    /// This is the one seat where the two halves meet: the ops tail is read
+    /// here and `self.trees` is this pass's already-derived §3.5 forest, so no
+    /// second walk and no stored flag is needed to ask the question.
     pub(super) fn refresh_ops(&mut self) {
         let root = self.roots.yog_state.clone();
+        let now = self.clock.unix();
+        let grace = self.cadence.wound_grace();
         let rows: Vec<OpRow> = opslog::tail(&root, opslog::OPS_TAIL)
             .iter()
-            .map(|entry| OpRow::from(&opslog::detached::fold(&root, entry)))
+            .map(|entry| {
+                if opslog::launch::stillborn(&self.trees, entry, now, grace) {
+                    OpRow::from(&opslog::detached::fold(&root, entry))
+                } else {
+                    OpRow::from(entry)
+                }
+            })
             .collect();
         if rows != self.ops {
             self.ops = rows;

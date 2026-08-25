@@ -179,10 +179,11 @@ pub use origin::Origin;
 /// and the read-time fold that projects its tail into the row.
 pub mod detached;
 
-/// Which of that captured stderr is an **operator notice** rather than a death
-/// (§4.2, §13.3, bl-1296) — the narrow marker classifier `exit` asks before it
-/// calls a `-2` row failed.
-pub mod notice;
+/// **What a detached launch produced** (§8.1, §13.3, bl-b95e) — the state a
+/// `-2` row's failure is derived from, which decides whether the sink above is
+/// read at all. It replaced the marker table (`opslog::notice`, bl-1296) that
+/// tried to tell a dying line from a benign one by its words.
+pub mod launch;
 
 /// The operator's own two lines (§4.2 as amended, bl-c417): the **ack** — a
 /// global seen-watermark that quiets every failure-derived alarm without

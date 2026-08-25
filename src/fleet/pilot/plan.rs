@@ -38,15 +38,23 @@ pub fn plan(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Opti
 /// the spawn had succeeded. Undoing an act the loop itself made, on evidence
 /// the loop itself wrote, is not a judgement about a drone.
 ///
-/// **Two conditions keep it off a healthy birth.** The driver must have said
-/// something dying ([`OpRow::detached_died`](crate::opslog::OpRow)), so a slow
+/// **Two conditions keep it off a healthy birth.** The spawn's own row must
+/// read as a death ([`OpRow::detached_died`](crate::opslog::OpRow)), so a slow
 /// but healthy launch is never touched; and the loop must have re-derived the
 /// world *since* it spawned (`derived_at_unix` past the spawn row), so a
 /// conversation missing only because this snapshot predates it is yog's own
 /// latency rather than a fact about the world.
 ///
-/// A driver that dies **silently** leaves no evidence and is out of reach here;
-/// that claim is still the lease's to reap once one is set.
+/// Since bl-b95e that first condition is itself a **state** reading rather than
+/// "the driver said something": the §7.2 ops refresh folds a `-2` row's §8.1
+/// sink only where the launch's target is missing from the derived tree, past
+/// the §7.3 grace window. So the two conditions now say the same kind of thing
+/// at two altitudes, and the second is the sharper of the pair rather than the
+/// only honest one.
+///
+/// A driver that dies **silently** leaves no evidence — its sink is empty, so
+/// the fold puts nothing in the row — and is out of reach here; that claim is
+/// still the lease's to reap once one is set.
 fn stillborn(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow]) -> Option<Move> {
     let key = crate::nav::ws_key(&fleet.workspace);
     let acts = fleet_row::of_rows(&snap.ops);

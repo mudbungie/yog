@@ -18,8 +18,11 @@ use lernie::mint::Rng;
 use std::io;
 use std::path::Path;
 
-const PROMPT: &str = "prompt";
-const NAME_FLAG: &str = "--name";
+// The verb and the name flag are `opslog::launch`'s (bl-b95e): the launch
+// writes them into `ops.jsonl` and the §8.1 verdict reads them back out, so
+// the two sides of that join have one home — `detached::sink`'s own argument
+// about the file name, one field over.
+use opslog::launch::{NAME_FLAG, PROMPT};
 /// lernie's creation-time working-directory parameter (upstream bl-d0b4,
 /// released 0.0.8): the §3.3 typed work-target binding's one channel.
 const CWD_FLAG: &str = "--cwd";

@@ -89,13 +89,14 @@ fn fold_surfaces_a_driver_that_died_after_launching() {
     );
 }
 
-/// **THE BALL** (bl-1296): the fold is unchanged — the sink's tail rides into
-/// the row exactly as before — but a tail that is nothing but lernie notice
-/// lines does not make the row a rendered failure. The sink is append-only for
-/// the driver's whole life, so this is the difference between a benign line
-/// quieting on the next sweep and one that banners until it is acked.
+/// **bl-b95e**: the fold is a transport and reads nothing. Whatever the sink
+/// says — a benign lernie notice, a death — the tail rides into the row and the
+/// row is a failure, because the caller folds only over a launch whose product
+/// the derivation already found missing
+/// ([`crate::opslog::launch::stillborn`]). bl-1296 put a phrase table here
+/// instead; the words it read are inert now, which is what this pins.
 #[test]
-fn a_sink_holding_only_notices_folds_in_without_reddening_the_row() {
+fn the_fold_carries_the_tail_and_reads_none_of_it() {
     let dir = tempdir().unwrap();
     let (state, ws) = (dir.path(), dir.path().join("cobalt-gecko"));
     let entry = prompt(&ws);
@@ -106,14 +107,17 @@ fn a_sink_holding_only_notices_folds_in_without_reddening_the_row() {
     fs::write(&path, notice).unwrap();
 
     let folded = fold(state, &entry);
-    assert_eq!(folded.stderr, notice, "the tail still folds in");
+    assert_eq!(folded.stderr, notice, "the tail folds in verbatim");
     let row = OpRow::from(&folded);
-    assert!(!row.failed(), "a driver notice is not a rendered failure");
-    assert!(row.has_output(), "and the pane still offers the expansion");
+    assert!(
+        row.failed(),
+        "and a folded tail is the verdict, not the prose"
+    );
+    assert!(row.has_output(), "the pane still offers the expansion");
 
-    // The driver then really dies, into the same append-only sink: the row goes
-    // back to being a failure on the next sweep.
-    fs::write(&path, format!("{notice}lernie: brazen 0.0.2 != 0.0.3\n")).unwrap();
+    // A death in the same append-only sink reads identically here: this layer
+    // has no second answer to give.
+    fs::write(&path, "lernie: brazen 0.0.2 != 0.0.3\n").unwrap();
     assert!(OpRow::from(&fold(state, &entry)).failed());
 }
 

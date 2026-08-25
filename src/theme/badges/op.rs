@@ -1,14 +1,14 @@
 //! The **ops-trail** row's badge (§4.2, §11) — the one badge vocabulary painted
 //! over `ops.jsonl` rather than over a conversation.
 //!
-//! Its own file since bl-1296 added the fifth outcome and [`super`] reached
-//! §12's cap. The seam is the surface: everything left in the parent describes
+//! Its own file since bl-1296 added a fifth outcome and [`super`] reached
+//! §12's cap. bl-b95e retired that outcome again and the file stays: the seam
+//! was never the count. The seam is the surface — everything left in the parent describes
 //! an agent, a step or a tool result — a conversation's vocabulary — while this
 //! one describes an *attempted action yog ran*, which is the activity
 //! accessory's subject and nothing else's.
 
 use super::{ASH, BRAZEN, ICHOR, MOONLIT};
-use crate::theme::BRAZEN_DIM;
 
 /// Glyph + colour + **the outcome said in words** for an ops-trail row
 /// ([`crate::opslog::OpOutcome`]) — the §11 activity accessory's one badge
@@ -28,13 +28,12 @@ use crate::theme::BRAZEN_DIM;
 /// badge and the expanded detail never say two different things about the same
 /// row.
 ///
-/// `Notice` (bl-1296) is the same argument one class down, and takes the
-/// handoff's own hue **quieted**: [`BRAZEN_DIM`] is the palette's "still warm,
-/// no longer bright", which is exactly what a notice is — the same detached
-/// spawn, having said something the operator may read past. It may not be
-/// [`ICHOR`], the whole point of the outcome being that a benign driver line
-/// was painting as a death; and its glyph is neither `⚠` nor the clean bullet,
-/// because it is neither.
+/// **There is no `Notice` badge** (bl-b95e). bl-1296 minted one — a dimmed
+/// handoff, for a driver whose sink held only benign lines — because the sink
+/// was folded into every `-2` row and a byte in it painted ichor. The fold is
+/// now gated on the state the launch produced, so such a driver *is* a handoff
+/// and wears the handoff's badge; a vocabulary entry for it would be a fifth
+/// word for a fact the fourth already says.
 pub fn op_badge(outcome: crate::opslog::OpOutcome) -> (&'static str, egui::Color32, &'static str) {
     use crate::opslog::OpOutcome;
     match outcome {
@@ -50,11 +49,5 @@ pub fn op_badge(outcome: crate::opslog::OpOutcome) -> (&'static str, egui::Color
         OpOutcome::Clean => ("·", MOONLIT, "ran clean"),
         // Handed off: launched, no exit to observe — neither clean nor failed.
         OpOutcome::Detached => ("↳", BRAZEN, "detached — handed off, no exit to observe"),
-        // Spoke, and what it said was that it carried on: an operator notice.
-        OpOutcome::Notice => (
-            "ℹ",
-            BRAZEN_DIM,
-            "notice — the driver reported something and the branch continued",
-        ),
     }
 }

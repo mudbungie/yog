@@ -20,10 +20,11 @@ fn row(argv: &str, cwd: &str, exit: i32) -> OpRow {
     })
 }
 
-use OpOutcome::{Clean, Detached, Failed, Notice, Retired};
+use OpOutcome::{Clean, Detached, Failed, Retired};
 
-/// A lernie notice line, verbatim (bl-1296) — the sink content that used to
-/// make a `-2` row a rendered failure.
+/// A lernie notice line, verbatim — the sink content bl-1296's phrase table
+/// was written to spare and bl-b95e stopped reading. It stands here as an
+/// ordinary folded tail: at this altitude a fold IS the verdict.
 const NOTICE_LINE: &str = "lernie: exit launch for c-1: no such file \
      (accepted crash class, ARCH §2.11)\n";
 
@@ -45,12 +46,6 @@ fn detached(argv: &str, cwd: &str, stderr: &str) -> OpRow {
 /// A clean detached handoff: the sentinel with the driver still silent.
 fn handoff(argv: &str, cwd: &str) -> OpRow {
     detached(argv, cwd, "")
-}
-
-/// A `-2` row whose sink holds only lernie notice lines (bl-1296) — [`handoff`]
-/// with the driver's benign words in place of the silence.
-fn noticed(argv: &str, cwd: &str) -> OpRow {
-    detached(argv, cwd, NOTICE_LINE)
 }
 
 #[test]
@@ -166,48 +161,25 @@ fn a_post_launch_death_reads_failed_not_detached() {
     assert_eq!(outcomes(&[died]), vec![Failed]);
 }
 
-/// **THE BALL** (bl-1296): a driver notice is its own outcome — never `Failed`
-/// (nothing went wrong), never `Detached` (the driver did speak), never `Clean`
-/// (nobody observed an exit).
+/// **THE BALL** (bl-b95e): a driver that filed a notice and carried on has no
+/// bucket of its own here, because the caller never folds its sink at all —
+/// what the rollup sees is a bare `-2`, and `Detached` is the whole answer. The
+/// fifth outcome that used to stand for it is gone, and the row raises nothing:
+/// the complaint was that the sink is append-only for the driver's life, so one
+/// benign line kept saying `1 failed ⚠` on every sweep until it was acked.
 #[test]
-fn a_driver_notice_is_its_own_outcome() {
-    assert_eq!(outcomes(&[noticed("lernie prompt", "/ws")]), vec![Notice]);
-}
-
-/// And it never reaches the chip's ⚠ count — which is the whole complaint: the
-/// sink is append-only for the driver's life, so one benign line kept saying
-/// `1 failed ⚠` on every sweep until the operator acked it.
-#[test]
-fn a_notice_does_not_move_the_chip_failed_count() {
-    let a = activity(&[noticed("lernie prompt", "/ws")]);
-    assert_eq!(
-        a,
-        Activity {
-            total: 1,
-            errors: 0,
-            drifts: 0
-        }
-    );
-    assert_eq!(a.chip(), "activity · 1 ops");
+fn a_driver_that_carried_on_is_an_ordinary_handoff() {
+    let a = activity(&[handoff("lernie prompt", "/ws")]);
+    assert_eq!(a.errors, 0);
     assert!(!a.alarming(), "and the pane offers no Dismiss for it");
 }
 
-/// It retires an earlier failure of the same verb exactly as `Clean` and
-/// `Detached` do (§6): it is the newest fact about that verb in this `cwd`.
+/// The rule the move did not weaken: a folded sink is still a death, still
+/// `Failed`, and still counted — whatever the words in it are, notice-shaped
+/// ones included. The verdict came from the world, so the prose cannot soften
+/// it.
 #[test]
-fn a_notice_retires_an_earlier_failure_of_the_same_verb() {
-    let rows = [
-        row("lernie prompt", "/ws", 2),
-        noticed("lernie prompt", "/ws"),
-    ];
-    assert_eq!(outcomes(&rows), vec![Retired, Notice]);
-    assert_eq!(activity(&rows).errors, 0);
-}
-
-/// The narrowing did not weaken the rule it narrowed: a sink that mixes a
-/// notice with words nothing recognizes is still a death, and still counted.
-#[test]
-fn a_sink_mixing_a_notice_with_unrecognized_words_stays_a_failure() {
+fn a_folded_sink_stays_a_failure_whatever_it_says() {
     let mixed = detached(
         "lernie prompt",
         "/ws",
@@ -215,4 +187,7 @@ fn a_sink_mixing_a_notice_with_unrecognized_words_stays_a_failure() {
     );
     assert_eq!(outcomes(std::slice::from_ref(&mixed)), vec![Failed]);
     assert_eq!(activity(&[mixed]).errors, 1);
+    let benign = detached("lernie prompt", "/ws", NOTICE_LINE);
+    assert_eq!(outcomes(std::slice::from_ref(&benign)), vec![Failed]);
+    assert_eq!(activity(&[benign]).errors, 1);
 }

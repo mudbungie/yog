@@ -103,54 +103,46 @@ impl OpRow {
     /// Whether this attempted action is a **failure** to render (§7.3). A clean
     /// code, a ran-but-unobservable piped status, and a drift observation are
     /// not failures. A [`ExitKind::Detached`] row is a failure only when it
-    /// carries stderr the notice classifier does not recognize — which for a
-    /// `-2` line is the driver's own dying words, folded in at read time from
-    /// its per-spawn sink ([`super::detached`]), since a spawn that never
-    /// launched no longer writes one (it is [`ExitKind::NeverSpawned`]).
-    /// Everything else — a non-zero code, a signal, a never-started spawn, a
-    /// failed step — is.
+    /// carries stderr — which for a `-2` line is the driver's own dying words,
+    /// folded in at read time from its per-spawn sink ([`super::detached`]),
+    /// since a spawn that never launched no longer writes one (it is
+    /// [`ExitKind::NeverSpawned`]). Everything else — a non-zero code, a signal,
+    /// a never-started spawn, a failed step — is.
     ///
-    /// **Stderr alone was never the test** (bl-1296). This arm read
-    /// `!stderr.is_empty()`, substituting "the driver said anything" for an
-    /// exit nobody observed — but lernie's driver stderr is an *operator-notice*
-    /// channel as much as a dying one, and the sink is append-only for the
-    /// driver's whole life, so one benign line held its origin's newest row in
-    /// ichor until it was acked. [`super::notice`] is the narrow reading that
-    /// tells the two apart, and it fails toward alarming.
+    /// **Content is no longer the trigger, so this arm is honest again**
+    /// (bl-b95e). It once read `!stderr.is_empty()` over a sink folded in
+    /// unconditionally, substituting "the driver said anything" for an exit
+    /// nobody observed — and lernie's driver stderr is an *operator-notice*
+    /// channel as much as a dying one, so bl-1296 bolted a phrase table
+    /// (`opslog::notice`) on to hold the benign lines back. The fold is now
+    /// gated on the **state** the launch produced ([`super::launch::stillborn`])
+    /// and the table is gone: a folded tail means the derivation already found
+    /// nothing where the launch's product should be, and the bytes are its
+    /// diagnosis rather than its cause (§13.3's `driver.log` rule).
     pub fn failed(&self) -> bool {
         match self.kind() {
             ExitKind::Code(0) | ExitKind::Unobserved | ExitKind::Drift => false,
-            ExitKind::Detached => !self.stderr.is_empty() && !self.notice(),
+            ExitKind::Detached => !self.stderr.is_empty(),
             _ => true,
         }
     }
 
-    /// Whether this row is a detached driver's **operator notice** (bl-1296): a
-    /// `-2` line whose folded sink holds nothing but lernie notice lines
-    /// ([`super::notice::looks_notice`]). Its own third of the sentinel, beside
-    /// [`detached`](Self::detached) and [`detached_died`](Self::detached_died) —
-    /// the driver spoke, and what it said was that it carried on.
-    pub(crate) fn notice(&self) -> bool {
-        matches!(self.kind(), ExitKind::Detached) && super::notice::looks_notice(&self.stderr)
-    }
-
     /// Whether this row is a **handoff** (§6, bl-8433): a detached spawn that
-    /// launched with nothing yet said against it. Distinct from
-    /// [`failed`](Self::failed) and from [`notice`](Self::notice) — the three
-    /// partition the `-2` sentinel, so no row is ever two of them. The §11
-    /// rollup layer ([`super::live::outcomes`]) reads this, never the raw `-2`
-    /// sentinel, to classify the row `OpOutcome::Detached` rather than `Clean`:
-    /// nobody observed the exit, so it must not read as one.
+    /// launched with nothing said against it. Distinct from
+    /// [`failed`](Self::failed) — the two partition the `-2` sentinel, so no
+    /// row is ever both. The §11 rollup layer ([`super::live::outcomes`]) reads
+    /// this, never the raw `-2` sentinel, to classify the row
+    /// `OpOutcome::Detached` rather than `Clean`: nobody observed the exit, so
+    /// it must not read as one.
     pub(crate) fn detached(&self) -> bool {
-        matches!(self.kind(), ExitKind::Detached) && !self.failed() && !self.notice()
+        matches!(self.kind(), ExitKind::Detached) && !self.failed()
     }
 
     /// Whether this row is a detached spawn whose driver **died in the
     /// handoff** (bl-ab13): the `-2` sentinel with its sink folded in, which is
     /// the trail's one durable statement that a launch that reported success
-    /// did not survive. The third arm of the sentinel's partition — a driver
-    /// that filed a [`notice`](Self::notice) and carried on never reaches it
-    /// (bl-1296) — and the reading the §4.3 loop's stillbirth check asks for
+    /// did not survive. The other half of the sentinel's partition — and the
+    /// reading the §4.3 loop's stillbirth check asks for
     /// — a caller that re-read the integer itself would be inventing a second
     /// meaning for it, which is the defect this module exists to prevent.
     pub(crate) fn detached_died(&self) -> bool {

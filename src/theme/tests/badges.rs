@@ -154,7 +154,6 @@ fn op_badges_say_their_outcome_in_words() {
         OpOutcome::Failed,
         OpOutcome::Retired,
         OpOutcome::Detached,
-        OpOutcome::Notice,
     ] {
         let (glyph, color, phrase) = crate::theme::op_badge(o);
         assert!(!glyph.is_empty(), "unmarked outcome {o:?}");
@@ -194,16 +193,10 @@ fn op_badges_say_their_outcome_in_words() {
     assert_ne!(detached_glyph, "⚠", "must not read as failed");
     assert_eq!(detached_hue, BRAZEN);
     assert_eq!(detached_phrase, "detached — handed off, no exit to observe");
-    // bl-1296: a driver notice takes the handoff's hue quieted — the outcome
-    // exists *because* a benign line was painting as a death, so it may not
-    // wear the wound hue, and it may not borrow either failure's ⚠ or the clean
-    // bullet.
-    let (notice_glyph, notice_hue, notice_phrase) = crate::theme::op_badge(OpOutcome::Notice);
-    assert_ne!(notice_hue, ICHOR, "a notice must never read as a wound");
-    assert_eq!(notice_hue, crate::theme::BRAZEN_DIM);
-    assert_ne!(notice_glyph, "⚠", "must not read as failed");
-    assert_ne!(notice_glyph, "·", "must not read as clean");
-    assert!(notice_phrase.starts_with("notice"));
+    // bl-b95e: the vocabulary is four words again. bl-1296's fifth — a dimmed
+    // handoff for a driver whose sink held only benign lines — went with the
+    // phrase table it existed to serve: such a driver is now an ordinary
+    // handoff, because its sink is never folded in at all.
 }
 
 #[test]

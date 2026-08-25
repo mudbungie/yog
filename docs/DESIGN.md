@@ -2097,43 +2097,51 @@ row depends on this:
   would. No reason surfaced to treat retirement differently for a handoff than
   for a clean run — both are "the last thing yog knows about this verb went
   fine, or at least didn't fail," which is all retirement asks.
-- **A fifth outcome, on the same argument (bl-1296): `OpOutcome::Notice`.** The
-  bucket ruling above says a fact that is neither clean nor failed gets its own
-  bucket rather than being folded into a neighbour that would lie about it.
-  Detached driver stderr is such a fact and was being folded into `Failed`. The
-  pinned lernie ARCH binds a detached driver's stderr to
-  `steps/<agent-id>/driver.log` and states what that file is for — *"it is where
+- **The `-2` sentinel's failure is a STATE, not what its sink said (bl-b95e).**
+  This is §13.3's `driver.log` ruling — *"its **content** is never the trigger
+  — a stale line from a healed crash must not alarm — only the diagnosis"* —
+  finally applied to the one capture file yog still read the other way round.
+  The pinned lernie ARCH binds a detached driver's stderr to
+  `steps/<agent-id>/driver.log` and states what that file is for: *"it is where
   every driver states what it **declined** — a compaction landing declined or
   superseded (§2.6), a launch that failed into the accepted crash class, a §6
   budget stop — and those lines are addressed to an operator"* — every one of
   them printed on a path that returns `Ok(())`. yog's `-2` row has no observed
   exit to read, so `OpRow::failed` substituted *"the driver said anything at
   all"* for one, and the ops sink is append-only for the driver's whole life
-  while the §7.2 fold re-reads its tail every sweep: one benign line therefore
-  kept the newest row of its origin ichor-red — §7.3 banner with argv and
-  stderr tail, ⚠ on the §11 chip — until the operator acked it, and the next
-  notice raised it again. So the `-2` sentinel now has **three** readings, and
-  they partition it: `OpRow::detached` (silent), `OpRow::notice`, and
-  `OpRow::detached_died` (`failed`). `opslog::notice` is the classifier — a
-  narrow case-insensitive marker table over the folded tail, sibling in shape
-  and discipline to `config_edit::fault::looks_config` and
-  `login::auth::looks_auth` — and it **fails toward alarming** on both of its
-  rules: a line must carry lernie's own `lernie: ` prefix *and* a marker, and
-  every non-blank line of the tail must qualify, so a tail mixing a notice with
-  anything unrecognized is a failure exactly as before. A notice never counts
-  in the chip's ⚠ tally, is never painted by the §7.3 banner, keeps its
-  expandable ops row with the driver's words in it, and retires an earlier
-  failure of the same verb exactly as `Clean` and `Detached` do. Its badge is
-  the handoff's own hue quieted (`ℹ` brazen-dim — "still warm, no longer
-  bright"), never ichor. **The marker table is knowingly fragile and meant to
-  be temporary**: it is keyed on sentences lernie is free to reword, the same
-  fragility `config_edit::fault` records about its own, and an upstream lernie
-  ball asks for a stable `lernie: notice:` prefix that will replace the phrase
-  list when it lands. Until then a reworded line reads as a failure, which is
-  the safe way for this to break. *Deriving a detached row's failure from
-  **state** — the driver lost its lease, no reply arrived — with sink content as
-  diagnosis only, per §13.3's own "its *content* is never the trigger" rule, is
-  the architectural follow-on and is filed separately; it subsumes this table.*
+  while the §7.2 fold re-read its tail every sweep: one line therefore kept the
+  newest row of its origin ichor-red — §7.3 banner with argv and stderr tail,
+  ⚠ on the §11 chip — until the operator acked it, however many turns the
+  driver went on to run. **bl-1296's answer was a marker table** over the
+  sentences lernie prints, a fifth outcome (`OpOutcome::Notice`) for the lines
+  it recognized, and its own doc calling the table knowingly fragile and meant
+  to be temporary. It was: a phrase list keyed on prose somebody else owns is
+  not a classifier, and no widening of it could have reached the defect above,
+  which is about *time*, not words.
+  **The rule now**: `opslog::launch::stillborn` asks what the launch produced,
+  and the §7.2 ops refresh folds the sink **only** when the answer is nothing —
+  so a folded tail is the derivation's verdict and the bytes in it are
+  diagnosis. The state is the orphaned-mail pair (§13.3) asked of the launch's
+  own target: the row names it (`prompt --name <conversation>`, `advance <ws>
+  <agent>` — the tokens live in `opslog::launch` so the spawn and the reading
+  cannot drift), and the launch is **stillborn** when no matching agent is
+  being driven (§3.5) and none has acted since the row's stamp. Both hold
+  vacuously when the target is not on disk at all, which is the class the sink
+  was added for: a start whose driver died before writing a branch. Ahead of it
+  sit the §7.3 grace window (a launch younger than it has not had time to
+  produce anything, and bl-18e8's rising edge is indistinguishable from a death
+  until yog has looked again) and §10's rule against a false definite (a
+  workspace that derived no tree is **no verdict**, never an accusation).
+  **What this retires**: the phrase table, the fifth outcome and its badge. A
+  driver that filed a notice and carried on is a handoff like any other — its
+  sink is never read, so it needs no bucket of its own to be spared the alarm,
+  and the `-2` sentinel is back to **two** readings that partition it,
+  `OpRow::detached` (a live handoff) and `OpRow::detached_died` (`failed`).
+  **What it costs**: a healthy launch's ops row carries no stderr, so the
+  operator cannot expand it to read lernie's notice lines. That is the trade
+  the rule states — a capture log is diagnosis, read where something is wrong —
+  and the lines themselves keep their durable home in `driver.log`, which
+  §13.3 gives a seat of its own in the step drill-in.
 
 ---
 
@@ -3292,8 +3300,8 @@ making a genuine dropped event read as the watcher working.
 | yog signalled (SIGTERM from `pkill`, SIGKILL) or crashed between a §4.1 gesture and disk | cannot arise: `ui.json` is **write-through** (§4.1) — the gesture is on disk before the call returns, so there is no in-flight window and no shutdown hook to miss (bl-b54e) |
 | yog SIGTERM'd with **work** in flight (a `systemctl restart`, a `pkill`) | bl-b54e's ruling covers the engine's own state and never covered the work. Since bl-269a both faces catch `SIGTERM` (§8.5, `src/engine/stop.rs`): the flag ends the face's loop, the `Engine` drops, each thread finishes its pass and joins, and every piped child goes through `Stream`'s polite SIGTERM-then-SIGKILL rather than being cut down with the process. Bounded by the unit's own `TimeoutStopSec`, never by a second deadline in yog. A SIGKILL still reaches nothing, which is what a SIGKILL is |
 | yog crash with drivers running | drivers are detached into their own process group, holding no yog-owned pipe (stdin/stdout null, stderr on a file) — unaffected; next launch re-derives their state from locks/refs |
-| Detached driver dies right after launch (tool version skew, missing model config) | its stderr sink (§8.1) carries words the notice classifier does not recognize; the ops sweep folds the tail into the `-2` row, which becomes a rendered failure — banner + ⚠ chip. Without the sink this was invisible: exit `-2`, empty stderr, a prompt that "does nothing" (bl-a649) |
-| Detached driver **declines something and carries on** (a compaction landing superseded, a launch in the accepted crash class, a §6 budget stop) | the same sink, the same fold, and **not** a failure: `opslog::notice` recognizes lernie's operator-notice lines, so the row is `OpOutcome::Notice` — no banner, nothing on the ⚠ count, the expandable row keeping the driver's own words (§4.2, bl-1296). The rule it replaced equated *any* stderr on a `-2` row with death, and because the sink is append-only and re-read every sweep, one benign line banners forever otherwise |
+| Detached driver dies right after launch (tool version skew, missing model config) | past the §7.3 grace window the launch's **target is missing from the derived tree** — no conversation of the minted name, or an agent that has not acted since the row's stamp with nobody driving it — so `opslog::launch::stillborn` holds and the ops sweep folds that launch's §8.1 stderr sink into its `-2` row, which becomes a rendered failure — banner + ⚠ chip, with the driver's words as the diagnosis. Without the sink this was invisible: exit `-2`, empty stderr, a prompt that "does nothing" (bl-a649) |
+| Detached driver **declines something and carries on** (a compaction landing superseded, a launch in the accepted crash class, a §6 budget stop) | **nothing at all**, because the sink is never read: the conversation is on disk and its driver is at work, so the launch is not stillborn and the fold does not run (bl-b95e). No banner, nothing on the ⚠ count, an ordinary `OpOutcome::Detached` row. The rule this replaced equated *any* stderr on a `-2` row with death, and because the sink is append-only and re-read every sweep, one benign line banners forever otherwise; bl-1296's phrase table over lernie's own sentences narrowed that without reaching it. Its cost is stated where it is paid (§4.2): a healthy launch's row carries no stderr to expand, and the driver's lines keep their durable home in `driver.log` |
 | Probe backend unavailable (lsof missing) | tri-state `Unknown` → uncertainty badge, never a false definite state (§10) |
 | Driver dies leaving an empty step (version skew, OOM, kill before the first event) | the step is a **no-response wound**, not a quiet one: an empty-or-absent `response.json` **and** no `meta.json` **and** no driver on the agent (§3.5) renders "driver produced no response" in ichor beside the step and banners it at Altitude 1 (§11). Framing alone reads this `Killed` — the ash "stopped" badge over a `0 attempts · 0 tok` row, which is how it read as a quiet step (bl-7f2e). **The banner states the *reason*, in the adapter's own words** (bl-55d8): the tail of that step's `stderr.log`, which lernie ARCH §2.3 defines as *"the adapter subprocess's stderr, appended once per attempt across the model call. **Empty on an ordinary run**: brazen speaks every failure in-band on stdout, so bytes here mean the adapter failed outside that contract — a startup failure (a malformed brazen config, an unreadable credstore) that produced no events at all"* — which is this row's class exactly, so the file is not a hint about the cause but the cause itself. The predicate is unchanged and the reason is not a second fact: one derived value carries both (`Wound::{None, Mute, Spoke}`), and the `stderr.log` read is gated on the wound so a healthy step never pays for it. A wound whose `stderr.log` is empty too (a SIGKILL mid-call) is `Mute` and **says so** — "nothing on disk says why" — never a bare glyph and never a pointer at somewhere that has nothing (§11 glyph doctrine). **What this retired:** the banner used to say *"the driver's own stderr is in the activity trail below"*, which was wrong for the class the operator actually hit. A turn continued by `lernie message` is driven by a child **lernie** launched, not by a yog detached spawn, so no §8.1 per-spawn sink exists for the ops sweep to fold into a `-2` row at all — the falsifying run's two sinks belong to its two `lernie prompt` starts and the one matching the wounded turn is zero bytes. The step's own `stderr.log` was the only copy of the answer, and yog was reading past it. The operator's whole signal was *"it looks like the second message in a conversation always fails"* — the absence of a reply. **The residual this left is closed** (bl-83d6): the banner still quotes a *tail* on the two bounds the crate already had (`opslog::detached::captured`'s 4 KiB of file, then `opslog::rows::stderr_tail`'s last three lines — the same tail every other §7.3 surface shows) and still names the file, but the file itself is now a **seat in the drill-in's record picker** (§11 Altitude 2), offered whenever it has bytes and shown to the bounded-file cap. Two bounds, each answering its own question: how much a one-line sentence quotes, and how much a reading surface shows |
 | A **healthy send** classified as that wound for a moment (bl-90bf) | the wound's two halves do not share a clock: the disk half is read through the §7.2 per-snapshot memo (once per published snapshot since bl-e90a; per frame before that), the liveness half rides the probe cache inside that same snapshot, and a driver *taking* its flock emits no fs event — so between the send and the §7.2 poll that finds the lock, a genuinely-in-flight empty step reads as a wound. The predicate is right on the inputs it is given; the cache is what is behind. The banner therefore holds a **grace window** before it paints (`src/app/grace.rs`, `WoundGrace`): a wound that clears inside the window never reaches the screen, one that outlives it banners and stays. The window is `Cadence::wound_grace` — **the rising edge's own latency**, spelled as a sum over the **live** cadence off the rendered snapshot (bl-3381) so a re-tuned period carries the grace with it, never a magic number. Four legs, because that is the whole distance between disk changing and a frame holding the snapshot that says so (bl-18e8): one **cheap sweep** (the coarsest signal that can mark the root at all), one **debounce** (the coalescing window the mark then waits), one **pass** at its widest bound (`late_pass` of a full sweep — a derivation publishes once at its end and may be queued behind a full sweep of every workspace, which is the period that sweep is budgeted, bl-4b28), and one **`ASK_PERIOD`** (the boundary's own poll between the worker publishing and the frame holding the answer, REMOTE §9.7). It was cheap sweep + debounce alone until bl-18e8, stated here as *the catch-up bound itself* — but that is the bound on *marking* the root, not on the fact reaching the frame, and the two legs it omitted are the larger two. The rising edge is not covered by the cheap sweep at all: the targeted re-probe looks only at agents already Live/InFlight (`derive::liveness::needs_liveness_reprobe`), so a resting agent coming alive is purely fs-event driven and the sweep tick that leg stood for never happens. The excess was visible — roughly a second of ichor red on a healthy send, which is the alarm the window exists to prevent, arriving on schedule. **And the send now schedules its own catch-up** (bl-18e8's other half, which shortens the true window rather than papering it): an act's receipt marks the *workspace* it named dirty beside its substrate root (`src/app/acts.rs`), so the deposit that creates the mail-on-tail state is the same act that requests the re-derivation clearing it. The gate is **render-layer RAM on the injected clock**, mirroring `Schedule`'s debounce; the predicate stays pure and Clock-free (§5.1 #13). A genuinely dead driver is therefore banner-ed *late*, never not at all — by the window plus the frame cadence's own ≤2 s poll floor (I4), which applies to it exactly as to every other rendered fact. Only the **banner** is graced: the §11 Altitude-2 Steps row paints the same flag ungated, because a cell in a table you opened is as fresh as the rest of that table, while a banner is an unrequested alarm and an alarm that retracts itself teaches the operator to distrust it |
@@ -9250,7 +9258,7 @@ beside `main.rs`.
 | `src/names/mod.rs` | the §3.1 workspace-name validation, and only that. The §3.3 conversation mint left with bl-cd38 (bl-aca4's ruling, consumed at lernie 0.0.8): the wordlist, the injected-`Rng` seam and the bounded wraparound scan are `lernie::mint`'s, and `words.txt` is deleted |
 | `src/naming/mod.rs` | **wire names** (REMOTE §8, bl-f5f6): how a workspace or a project is addressed when a path may not cross the boundary — a workspace by its §3.1 directory leaf (which §3.2 already makes its `--as` identity, so a foreign one needs no special case), a project by the shortest trailing run of components no other enumerated project shares (§5.1 #1 gives it no name of its own). Nothing stored; the §11 roster label is that same name elided |
 | `src/nav/{mod,balls,tabs,convs,convs/naming,convs/row,convs/row/model,convs/census,convs/expand,convs/select,convs/doing,convs/flight,convs/group,convs/titles,menu}.rs` | the §11 altitude-0 view-models. **`tabs` folds an answer** (REMOTE §9.7 class 2, bl-296f): the bar and the attention strip beside it are both built out of the `Query::Workspaces` reply — named, §3.1-classified, §6-rolled-up and §4.1 pin-*ranked* rows — so the seat orders and hoists and derives nothing, and no path appears anywhere in it. A stale pin key dissolves rather than being skipped, ranking no row at the boundary. **`convs/naming` is the §3.3 ladder itself** and `convs/row/model` the row type it titles — both cut at the §12 pre-split band on seams the surface already had: `convs` folds the descent forest into conversations and `naming` says what the fold produced is *called* (the ladder, its `id_floor` terminal-generation floor, and the when-seat `started_at` reads out of the same id through the one stamp grammar), while `convs/row` projects a subtree and `convs/row/model` is the shape it projects into. So: tab bar + `Kind` marks, conversation list + the §3.3 display ladder + the header's derived when-seat (bl-16da, assembled through the shared `ui_state::format_iso8601` — bl-61db) + the §3.5 ball overlay, the §5.1 #28b per-agent `Doing` and the §11 live mark's seat roster (`convs/doing`, bl-b768 — the finest live fact, which `convs/flight` then *folds* into the #28 class rather than re-reading the snapshot; both the roster and the strip below are fields on `AgentView` since bl-296f, so the window reads them off the selection's own answer), the #28 live-activity class, its priority **and the bottom strip's characteristics** — including the per-class elapsed each derives from a §5.1 #28a structural start or honestly omits (bl-9dfb), in `convs/row`'s own `age_label` (its own file because all three §11 seats read it, not just the row — bl-905f), the grouped-by-ball partition, the context-menu seat roster; and `ConvRow::verdict`, the VISION §4.9 standing verdict derived per build from the published ops tail (bl-8da1). **`convs/expand` is the unfold** (bl-fa82): the visible-row flatten over `git_tree::descent_order` given the shell's expanded set — the jsonview `flatten`'s shape, one altitude out — plus the two pure walks the §11 keyboard rides (`step` over the visible rows, `parent_of` read off their depths) and the ancestor chain a jump reveals. `convs/row`'s builder generalized with it: it projects **any** member's subtree slice, so the root-only build is one call per depth-0 subtree rather than the only shape it knew — and since bl-1eb0 it carries the row's own two §8.2 gates, neither derivable from anything else on it. **`convs/select` is the second fold over that same answer** (REMOTE §9.7, bl-48ae): `expand::visible` picks the rows a viewport has open, and this one picks the facts a seat knows about the row the operator has *selected* — the conversation it belongs to, the chain §11 unfolds to keep it visible, what it is called, what is in flight in it, the §3.3/§3.5 ball its header paints (`Selection::ball`, bl-296f — `ConvRow`'s own field, and the one member of this fold with no `AgentView` twin, a second copy being exactly the disagreement the parity test exists to catch) and the §8.2 gates a click reads. Pure over rows, so the frame-synchronous half of the old `AppModel::focused_conversation` costs no ask of its own; its parity with `boundary::answer::agent`'s projection of the same derivation is pinned in that module's tests. **`convs/titles` is the ladder's input narrowed to what a wire carries** (REMOTE §9.4, bl-1eb0): the id→title table every seat resolves a *third party* against, built either from the engine's agent set or from a conversations reply's own rows, so painting somebody's name never requires holding the tree. **`convs/census` is the third fold over that answer** (REMOTE §9.7, bl-b4b5) — `expand` picks the rows a viewport has open, `select` the facts about the row it has picked, and this one *what a conversation contains*: the §3.6 gate's per-root liveness (the §10 uncertainty counting as live, so a seat's copy fails closed exactly as the chokepoint's re-derivation does) and the §3.3 occupied name set the mint may not re-use. Depth is the containment, as it is the parentage in `select`. **`balls` is the same kind of thing at the other noun**: the §11 roster's partition and the ▶ Continue row's own object, selected out of the `Query::WorkspaceBalls` listing rather than derived — so a section, a menu and a spend row cannot be three answers of three ages |
-| `src/opslog/{mod,entry,line,rows,exit,origin,live,detached,notice,operator}.rs` | `ops.jsonl` append/tail + the sentinels (§4.2), the ≤4096 capper, `entry` the shape of one line and the three synthetic constructors for the lines no process status ever backed (split at the cap on the seam between the log's policy and a record's shape), OpRow's shape + its human-timestamp leading column (bl-61db) and collapsed summary (bl-0bf9 for the cap, bl-3aa1 for where it cuts — `elide::middle`, so the workspace leaf and agent id that tell two rows apart survive the cut; its tables split to `rows/tests` at the cap on this directory's own seam), `exit` the one reading of the `exit` field — `ExitKind` and the `failed`/`drift`/`exit_label`/`detached` half of OpRow that asks it (bl-afa9, bl-8433), `origin` the §7.3 attribution — which surface an op came from, and the one thing a banner filters on so a failure renders once and on its own seat (bl-48f8) — the §6 retirement projection + activity summary + the `Detached` outcome (bl-8433), the stderr-sink fold (§8.1), `notice` the narrow marker classifier that tells a detached driver's operator notice from its dying words, so a benign line is the `Notice` outcome instead of the §7.3 banner (bl-1296), `operator` the two lines the operator writes: the ack watermark every alarm derivation reads past and the clear that ends a trail by logging itself as the next one's first row (bl-c417) |
+| `src/opslog/{mod,entry,line,rows,exit,origin,live,detached,launch,operator}.rs` | `ops.jsonl` append/tail + the sentinels (§4.2), the ≤4096 capper, `entry` the shape of one line and the three synthetic constructors for the lines no process status ever backed (split at the cap on the seam between the log's policy and a record's shape), OpRow's shape + its human-timestamp leading column (bl-61db) and collapsed summary (bl-0bf9 for the cap, bl-3aa1 for where it cuts — `elide::middle`, so the workspace leaf and agent id that tell two rows apart survive the cut; its tables split to `rows/tests` at the cap on this directory's own seam), `exit` the one reading of the `exit` field — `ExitKind` and the `failed`/`drift`/`exit_label`/`detached` half of OpRow that asks it (bl-afa9, bl-8433), `origin` the §7.3 attribution — which surface an op came from, and the one thing a banner filters on so a failure renders once and on its own seat (bl-48f8) — the §6 retirement projection + activity summary + the `Detached` outcome (bl-8433), the stderr-sink fold (§8.1), `launch` **what a detached launch produced** — the state a `-2` row's failure is derived from, and the gate the ops refresh asks before it folds that sink at all (bl-b95e): the launch's target is not being driven (§3.5) and has not acted since the row's own stamp, both holding vacuously when the target is not on disk at all, with the §7.3 grace window ahead of it and no verdict at all over a workspace that derived no tree. It replaced `notice`, a marker table over sentences lernie is free to reword (bl-1296), which could never reach the defect under it — the sink is append-only for the driver's whole life and every sweep re-read its tail, so one unrecognized line held its row red however many turns the driver went on to run; `operator` the two lines the operator writes: the ack watermark every alarm derivation reads past and the clear that ends a trail by logging itself as the next one's first row (bl-c417) |
 | `src/paint_probe.rs` | the ONE headless egui paint harness (`collect` + `screen`/`input`) every render test drives, incl. the settled small-screen frame the §11 tail idiom is read on — as text (*what* is on screen), as positioned galleys (*where* it sits, bl-8c13), or as rect fills (*what hue* a glyphless mark painted — the §11 role stripes, bl-3acb). The text it reports is the galley's **glyphs**, row by row, not `Galley::text()` (bl-bc06): the text that went in survives truncation, so a dump read that way answers `contains("Login")` with yes about a button rendering a bare `…` — the one defect the paint layer is the only witness for. `Seen` also carries the run's **ink** (bl-7654) — its layout section's colour, or the shape's `fallback_color` where that section defers to it, which is what `Ui::set_opacity` dims — so "is this seat faded?" is a question of the frame rather than a guess about which widget drew it, and the §11 solidity is readable at the paint layer the way a role stripe's hue already was |
 | `src/paint_probe/frame.rs` | how a frame is **produced**, as against the walk above, which is how one is **read** — the offscreen `RawInput`s, the central-panel context runs behind `paint`/`paint_fills`, the two-frame settle the §11 tail idiom is only true on, and the painted span it is a claim about. Split at the budget on the seam the two already had: nothing here traverses a shape, so `rules/no-hand-rolled-paint-walk.yml`'s one walk stays exactly one and this is the harness around it |
 | `src/projects/mod.rs` | clone enumeration, nested-delivery detection, roster labels (§11 rule 1) |
@@ -9620,21 +9628,34 @@ not recognize makes the row a rendered failure — the existing §7.3 machinery.
 Only the *immediacy* is still deferred: the death is visible on the next sweep,
 not at fire.
 
-**A non-empty capture was the wrong test (bl-1296).** The sink is a *transport*
-and says nothing about what it carries; what it meant was decided one layer up
-by "the driver said anything at all", and lernie's contract makes this channel
-an **operator-notice** one as much as a dying one — declines, superseded
-compaction landings, accepted-crash-class launch notes, a §6 budget stop, every
-one on a path that returns `Ok(())`. Since the sink is append-only for the
-driver's whole life and the fold re-reads its tail on every sweep, one benign
-line held the newest row of its origin in the §7.3 banner and the ⚠ chip until
-it was acked. `opslog::notice` (§4.2's fifth outcome) is the narrow reading that
-tells the two apart, and it fails toward alarming: a tail mixing a notice with
-anything unrecognized stays a failure. The **structural** fix — deriving a
-detached row's failure from *state* (the driver lost its lease, no reply
-arrived) with sink content as diagnosis only, exactly as the orphaned-mail
-paragraph below rules for `driver.log` — is filed separately; it subsumes the
-marker table.
+**A non-empty capture was the wrong test (bl-1296, structurally fixed
+bl-b95e).** The sink is a *transport* and says nothing about what it carries;
+what it meant was decided one layer up by "the driver said anything at all",
+and lernie's contract makes this channel an **operator-notice** one as much as
+a dying one — declines, superseded compaction landings, accepted-crash-class
+launch notes, a §6 budget stop, every one on a path that returns `Ok(())`.
+Since the sink is append-only for the driver's whole life and the fold re-read
+its tail on every sweep, one benign line held the newest row of its origin in
+the §7.3 banner and the ⚠ chip until it was acked. bl-1296 answered with a
+marker table over the sentences lernie prints — knowingly fragile, and unable
+to reach the defect above, which is about *time* rather than words.
+
+bl-b95e moved the decision instead, to exactly where the orphaned-mail
+paragraph below already puts it for `driver.log`: **the fold is gated on
+state**, and the tail is diagnosis. `opslog::launch::stillborn` reads the
+launch's own target out of the row's argv — the `--name` a `prompt` minted, the
+agent id an `advance` was handed, the tokens living in `opslog::launch` so the
+spawn and the reading cannot drift — and answers *stillborn* when no matching
+agent is being driven (§3.5) and none has acted since the row's stamp. Both
+halves hold vacuously when the target is not on disk at all, which is this
+sink's own class: a driver that died before writing a branch. Ahead of it stand
+the §7.3 grace window and §10's rule against a false definite — a workspace
+that derived no tree is no verdict, never an accusation. The marker table, the
+fifth `OpOutcome` and its badge are gone with it; a driver that filed a notice
+and carried on is an ordinary handoff, because nothing reads its sink. The cost
+is that a healthy launch's row has no stderr to expand — a capture log is
+diagnosis, read where something is wrong, and these lines keep their durable
+home in `driver.log` (§13.3's own record seat).
 
 **A failure to *launch* is not deferred at all (bl-afa9).** The one detached
 failure yog observes synchronously is the fork itself, and it is logged as what

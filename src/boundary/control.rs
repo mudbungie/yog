@@ -55,10 +55,12 @@ pub(super) use floor::set_floor;
 /// than by a shared const, because the reader deliberately owns its grammar.
 const ANSWER: &str = "answer";
 
-/// lernie's re-drive verb — `lernie advance <ws> <agent>` (its ARCH §6): one
-/// hop of the workflow chain, which re-enters the tool window under the mark
-/// and re-consults the control. That re-consult *is* the release.
-const ADVANCE: &str = "advance";
+// lernie's re-drive verb — `lernie advance <ws> <agent>` (its ARCH §6): one
+// hop of the workflow chain, which re-enters the tool window under the mark
+// and re-consults the control. That re-consult *is* the release. The token is
+// `opslog::launch`'s since bl-b95e — the launch writes it into `ops.jsonl` and
+// the §8.1 verdict reads it back out, so the join has one home.
+use opslog::launch::ADVANCE;
 
 /// Answer the invocation parked at `(workspace, agent)`.
 pub(super) fn answer_hold(
