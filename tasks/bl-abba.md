@@ -1,7 +1,8 @@
 +++
 title = "a crashed tool window paints nothing — the third member of the swallowed-error class, and the only one that reads as an idle conversation"
 created = 1787544496
-updated = 1787544496
+updated = 1787622437
+claimant = "Davit"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
