@@ -1,23 +1,24 @@
 //! The shell's cross-frame RAM (§3.5: the frontend holds no durable state;
-//! every surface here is discarded on exit). Four holders — the start flow's
-//! drafts and pending prompt, the Altitude-2 inspector's viewport ephemera
-//! (`ram/inspector`), [`WallRam`], one workspace's own surfaces (`ram/wall`,
-//! with the Login pane's in-process runner inside it in `ram/login`), and
-//! [`ShellState`], the one bundle the window's render entry takes so its param
-//! list cannot widen. Inert data: no widget is painted here, and the editors
-//! these fold own their own seams.
+//! every surface here is discarded on exit). Four holders, one file each —
+//! [`StartState`], the start flow's drafts and pending prompt (`ram/start`);
+//! the Altitude-2 inspector's viewport ephemera (`ram/inspector`); [`WallRam`],
+//! one workspace's own surfaces (`ram/wall`, with the Login pane's in-process
+//! runner inside it in `ram/login`); and [`ShellState`], defined here — the one
+//! bundle the window's render entry takes so its param list cannot widen.
+//! Inert data: no widget is painted here, and the editors these fold own their
+//! own seams.
 //!
 //! **Two lifetimes, spelled structurally** (bl-5894): what belongs to the
 //! window sits directly on [`ShellState`], what belongs to a workspace sits
-//! inside [`WallRam`], and a focus change swaps the second whole.
+//! inside [`WallRam`], and a focus change swaps the second whole — which is why
+//! the two methods that perform that swap live beside `WallRam` in `ram/wall`
+//! rather than here, where only the fields they move are declared.
 
 use crate::actions::ActionsState;
 use crate::app::WoundGrace;
 use crate::shell::ConfigState;
-use crate::start::Prepared;
 use crate::ui_state::Clock;
 use crate::xdg::Env;
-use lernie::mint::{Rng, SplitMix64};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -26,59 +27,12 @@ use super::{DeleteAgentState, DeleteState, NewWsState, entropy_seed};
 
 mod inspector;
 mod login;
+mod start;
 mod wall;
 pub use inspector::InspectorState;
 pub use login::LoginHolder;
+pub use start::StartState;
 pub use wall::WallRam;
-
-/// The transient start-flow input (RAM, §5.3 carve-out): the per-project
-/// new-ball drafts and, after [`start_pane`] runs `prepare`, the pending
-/// detached prompt — its editable goal and the (workspace, worktree) it fires
-/// against. Discarded on exit; nothing here is durable (§8.1 draft is RAM).
-#[derive(Default)]
-pub struct StartState {
-    /// New-ball (title, body) drafts keyed by project path.
-    pub new_ball: HashMap<PathBuf, (String, String)>,
-    /// The composer's editable goal + targets, `Some` once `prepare` succeeds.
-    pub pending: Option<Prepared>,
-    /// The conversation-mint RNG seed (RAM, §5.3): held stable across frames so
-    /// the composer's greyed name prediction (§3.3) predicts the name each
-    /// frame *and* at fire — a fresh `SplitMix64::from_seed(mint_seed)` for both
-    /// the pure preview read and the fire's own mint. **A seed lives exactly as
-    /// long as the prediction it backs** ([`StartState::spend_mint`]).
-    pub mint_seed: u64,
-    /// The §3.8 fan's **N picker** (bl-77bc): how many isolated candidates the
-    /// pending start fires as. `0` reads as 1 — the ordinary single start, the
-    /// same fold with one input — and a landed fan resets it, so N is a fact
-    /// about the *next* fire, never a sticky mode.
-    pub fan_n: usize,
-}
-
-impl StartState {
-    /// Retire the seed a landed fire just spent (bl-28ba) — called at the one
-    /// point the old prediction dies, so the next preview predicts off a seed of
-    /// its own. A refused or failed launch minted nothing, so its prediction
-    /// stands and its seed is not spent.
-    ///
-    /// Held past its fire, one seed served the whole session: the mint takes ONE
-    /// draw (§3.3), so every later fire re-drew the same start index, landed on
-    /// the occupied slot and walked one forward — and the pool is
-    /// first-word-major, so the walk paid out `recite-a`, `recite-b`, `recite-c`.
-    ///
-    /// The successor is **the seed's own stream**, not a second entropy read
-    /// (bl-dd3d): one `SplitMix64` step off the spent value. Entropy enters a
-    /// session exactly once, where the first seed is minted
-    /// ([`ShellState::new`]), which is what makes a *known* opening seed pin the
-    /// whole run of names rather than only its first — the acceptance world
-    /// pins that one read, and every later prediction follows from it. A second
-    /// clock read here bought nothing (the successor was already unpredictable
-    /// from a seed nobody publishes) and cost the suite determinism: it made
-    /// "the third name differs from the first" a probabilistic assertion over
-    /// lernie's 541-word pool instead of a fact of the pinned seed.
-    pub fn spend_mint(&mut self) {
-        self.mint_seed = SplitMix64::from_seed(self.mint_seed).next_u64();
-    }
-}
 
 /// Every RAM surface the shell owns across frames (§3.5: the frontend holds no
 /// durable state; this is all discarded on exit). Bundled so the window's one
@@ -239,56 +193,5 @@ impl ShellState {
             wall_at: None,
             parked: HashMap::new(),
         })
-    }
-
-    /// Point every wall-bound surface at the focused workspace's **wall**
-    /// (§16.2 as amended, §3.1's blast radius): brazen's config pane, the login
-    /// roster and its live sign-in stream, and the §9.4 picker. One call,
-    /// because they are one sphere's settings — switching workspace switches
-    /// providers, sign-in state and model cache together or it switches none of
-    /// them honestly.
-    ///
-    /// **A swap, not a re-lens** (bl-5894). The outgoing wall's RAM is parked
-    /// under the workspace it was typed in and the incoming wall's is taken back
-    /// out, so a draft, an open picker and a running sign-in survive A → B → A
-    /// intact while none of them can paint or be acted on under B. Re-lensing
-    /// one box could only ever pick one of those two: it lost the draft *and*
-    /// carried the stream.
-    ///
-    /// Idempotent and change-driven: a frame whose focus has not moved does
-    /// nothing at all, so this is not a per-frame cost (§7.2). A wall is folded
-    /// from the world exactly once, the first time its workspace takes focus.
-    pub fn focus_wall(&mut self, workspace: Option<&std::path::Path>) {
-        if self.wall_at.as_deref() == workspace {
-            return;
-        }
-        let next = workspace.map(std::path::Path::to_path_buf);
-        let incoming = self.parked.remove(&next).unwrap_or_else(|| {
-            WallRam::new(
-                &crate::world::wall::env_opt(&self.world, workspace),
-                workspace,
-            )
-        });
-        let outgoing = std::mem::replace(&mut self.wall, incoming);
-        let previous = std::mem::replace(&mut self.wall_at, next);
-        self.parked.insert(previous, outgoing);
-    }
-
-    /// Unmake a wall's RAM with its workspace (§3.6). A wall's RAM lives exactly
-    /// as long as its wall: §16.2 deletes the wall *directory* with the sphere
-    /// precisely so a workspace created later under the same §3.1 name cannot
-    /// inherit a dead one's credentials, and the box over that directory has to
-    /// die on the same terms — the key here is the workspace path, which a
-    /// same-named rebirth reoccupies exactly.
-    ///
-    /// Total over both homes, so there is no "was it focused?" case: the parked
-    /// entry goes, and a live one is replaced by the no-wall bundle, which is
-    /// the truth after unmaking the sphere you were standing in.
-    pub fn forget_wall(&mut self, workspace: &std::path::Path) {
-        self.parked.remove(&Some(workspace.to_path_buf()));
-        if self.wall_at.as_deref() == Some(workspace) {
-            self.wall = WallRam::new(&crate::world::wall::env_opt(&self.world, None), None);
-            self.wall_at = None;
-        }
     }
 }

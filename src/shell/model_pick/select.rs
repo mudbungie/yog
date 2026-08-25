@@ -29,39 +29,25 @@
 //! dropdown's click is the write, scoped to whichever role the row reports
 //! (`worker`, or whatever the pane's strip has re-scoped it to). The free-entry
 //! id is the one thing that does not commit as it is chosen — it commits on
-//! confirm, because a half-typed id is not a choice.
+//! confirm, because a half-typed id is not a choice. That is the seam this
+//! file is split on: the provider list, which only re-scopes, is here, and
+//! everything that can commit an assignment is `select/model`.
 
+mod model;
 mod notes;
 
 use super::PickerState;
 use crate::config_edit::brazen::ProviderRow;
 use crate::model_pick::ModelRow;
+use model::CUSTOM_MODEL;
 
 /// The provider list's last entry: not a row, a route to the §9.1 brazen
 /// `config.toml` editor, which is the one place a row is authored.
 const ADD_PROVIDER: &str = "add a provider…";
-/// The model list's last entry: a free-entry id, for a model brazen does not
-/// list (a preview, a local tag). The row is still brazen's, so this can
-/// declare an unserved model but never an unroutable one.
-const CUSTOM_MODEL: &str = "custom model id…";
-
 /// The provider dropdown, in operator terms (§9.4).
 const PROVIDER_HINT: &str = "Which of brazen's providers this role is routed through. Choosing one \
      asks it for its models and refills the list beside it. Typed, the pick is \
      the middle word of `/model <role> <provider> <model-id>`.";
-
-/// The free-entry model id field (§9.4).
-const CUSTOM_ID_HINT: &str = "Type the model id exactly as the provider names it, then press Enter — a \
-     half-typed id is not a choice, so this one field commits on confirm \
-     rather than as you type. The whole gesture is one line: \
-     `/model <role> <provider> <model-id>`.";
-
-/// The model dropdown, in operator terms (§9.4).
-const MODEL_HINT: &str = "Which model this role runs on — the ids the chosen provider reports. \
-     Picking one IS the write: it advances the workspace's config branch at \
-     once, for the next conversation. Typed, it is the last word of \
-     `/model <role> <provider> <model-id>`. The whole picker — other roles, a \
-     custom id, a provider to add — is `m`.";
 
 /// What the row asked for this frame. The widgets choose; the caller fires the
 /// roster, writes the pick and routes the surface, so this file stays a set of
@@ -114,7 +100,7 @@ pub(super) fn pair_row(
         .horizontal(|ui| {
             provider_combo(ui, &provider, rows, &mut chosen_provider);
             ui.weak("·").on_hover_text(&row.hover);
-            model_combo(ui, &shown, candidates, in_flight, &mut chosen_model)
+            model::model_combo(ui, &shown, candidates, in_flight, &mut chosen_model)
         })
         .inner;
     if chosen_provider == ADD_PROVIDER {
@@ -139,7 +125,7 @@ pub(super) fn pair_row(
     PairChoice {
         provider,
         add_provider: false,
-        chosen: commit(ui, picker, &shown, chosen_model),
+        chosen: model::commit(ui, picker, &shown, chosen_model),
         list_open,
     }
 }
@@ -179,92 +165,4 @@ fn provider_combo(ui: &mut egui::Ui, selected: &str, rows: &[ProviderRow], chose
         })
         .response
         .on_hover_text(PROVIDER_HINT);
-}
-
-/// The model dropdown over the selected row's live roster, plus
-/// [`CUSTOM_MODEL`]. Returns whether the list is **open** — the roster is fired
-/// off that (bl-cd2a), so a conversation you are only looking at spawns nothing,
-/// and the first frame of an open paints the pulse where the ids will land.
-fn model_combo(
-    ui: &mut egui::Ui,
-    selected: &str,
-    candidates: &[String],
-    in_flight: bool,
-    chosen: &mut String,
-) -> bool {
-    // The closure runs only while the popup is open, so setting the flag inside
-    // it IS the "is the list open" question — and the hover stays on the
-    // constructor's own chain, where §11's discoverability scan reads it.
-    let mut open = false;
-    egui::ComboBox::from_id_salt("model-pick-model")
-        .selected_text(selected)
-        .show_ui(ui, |ui| {
-            open = true;
-            if in_flight || candidates.is_empty() {
-                let time = ui.ctx().input(|i| i.time);
-                ui.colored_label(
-                    crate::theme::pulse(crate::theme::SPECTRE, time),
-                    "⟳ asking the provider for its models…",
-                );
-                ui.ctx()
-                    .request_repaint_after(crate::theme::PULSE_REPAINT_DELAY);
-            }
-            for id in candidates {
-                ui.selectable_value(chosen, id.clone(), id)
-                    .on_hover_text(MODEL_HINT);
-            }
-            ui.selectable_value(chosen, CUSTOM_MODEL.to_string(), CUSTOM_MODEL)
-                .on_hover_text(
-                    "Reveal a field for typing a model id the provider did not \
-                     list — a preview, or a locally served tag. Typed, any id is \
-                     the last word of `/model <role> <provider> <model-id>`.",
-                );
-        })
-        .response
-        .on_hover_text(MODEL_HINT);
-    open
-}
-
-/// Turn the model list's answer into the write (bl-fb6b), or into the free-entry
-/// field's own state. `CUSTOM_MODEL` commits nothing by itself: it reveals
-/// [`custom_entry`], which commits on confirm.
-fn commit(
-    ui: &mut egui::Ui,
-    picker: &mut PickerState,
-    shown: &str,
-    chosen: String,
-) -> Option<String> {
-    if chosen != shown {
-        if chosen == CUSTOM_MODEL {
-            picker.custom = Some(String::new());
-            return None;
-        }
-        picker.model = Some(chosen.clone());
-        picker.custom = None;
-        return Some(chosen);
-    }
-    custom_entry(ui, picker)
-}
-
-/// The free-entry id field, visible only while [`CUSTOM_MODEL`] is the
-/// selection. It commits on **confirm** — Enter, or focus leaving the field
-/// with something in it — never per keystroke: writing on the keystroke would
-/// declare `g`, `gp`, `gpt`… each one a `models.yaml` entry and a `lernie
-/// config` commit. A confirmed id becomes the dropdown's selection, which
-/// retires the field and makes a second confirm of the same id impossible.
-fn custom_entry(ui: &mut egui::Ui, picker: &mut PickerState) -> Option<String> {
-    let typed = picker.custom.as_mut()?;
-    let response = ui
-        .horizontal(|ui| {
-            ui.label("id").on_hover_text(CUSTOM_ID_HINT);
-            ui.text_edit_singleline(typed).on_hover_text(CUSTOM_ID_HINT)
-        })
-        .inner;
-    let id = typed.trim().to_string();
-    if !response.lost_focus() || id.is_empty() {
-        return None;
-    }
-    picker.model = Some(id.clone());
-    picker.custom = None;
-    Some(id)
 }

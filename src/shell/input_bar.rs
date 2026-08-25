@@ -51,6 +51,9 @@
 //! and written back every frame. A verb that re-labels itself with the selection
 //! must re-key with it too, or a goal typed for a new conversation rides the
 //! selection into `→ message <name>` and Enter deposits it on a stranger.
+//!
+//! What the queue region is *handed* — the pending deposits with this window's
+//! echo folded on, and the turns ↑ pages back through — is `input_bar/feed`.
 
 use crate::AppModel;
 use crate::actions::DraftKey;
@@ -59,6 +62,8 @@ use crate::start;
 use lernie::mint::SplitMix64;
 
 use super::ShellState;
+
+mod feed;
 use super::inbox_queue;
 use super::verb_row::{VerbCtx, verb_buttons};
 
@@ -152,7 +157,7 @@ pub fn composer(
     // What the queue region is handed — the target's own deposits and the turns
     // ↑ pages back through, in one place because the second is derived from the
     // first (`queued`).
-    let (pending, prompts) = queued(model, &ws, target.as_deref(), branchless);
+    let (pending, prompts) = feed::queued(model, &ws, target.as_deref(), branchless);
     let queue = inbox_queue::QueueCtx {
         key: key.clone(),
         agent_id: target.clone(),
@@ -230,51 +235,4 @@ pub fn composer(
     if let Some(failure) = model.last_failure(crate::opslog::Origin::Conversation) {
         super::banner::failure_banner(ui, model, state, &failure);
     }
-}
-
-/// **What the §11 queue region is handed**: the target's undelivered deposits
-/// (§5.1 #11) with this window's own §3.4 echo folded on, and the operator's
-/// past turns ↑ pages back through (bl-f908). One function because the second
-/// is derived from the first — the recall walks the pending listing ahead of
-/// the delivered transcript — and because both are the same two standing
-/// questions the §11 Inbox tab and the chat pane already ask, so the seats are
-/// one ask apiece rather than two (REMOTE §9.7, bl-b4b5, bl-13f9).
-///
-/// `branchless` is the §3.4 start window: a conversation with no branch has no
-/// address, so neither question is *declared* for it — each would refuse and
-/// pay the rung-3 disk fallback to do it, every ask period, for the whole
-/// window (bl-56c6). What the queue paints there is the echo, which is a fold.
-///
-/// Every empty answer here is the honest one and not a case: no target, an
-/// unanswered question and a conversation with no mail all read as nothing
-/// queued and no past turns, exactly as they always did.
-fn queued(
-    model: &mut AppModel,
-    ws: &std::path::Path,
-    target: Option<&str>,
-    branchless: bool,
-) -> (Vec<crate::inboxview::InboxEntry>, Vec<String>) {
-    let Some(agent) = target else {
-        return (Vec::new(), Vec::new());
-    };
-    let landed = if branchless {
-        Vec::new()
-    } else {
-        super::inspector::inbox(model, ws, agent)
-            .value
-            .unwrap_or_default()
-    };
-    // This window's own §3.4 echo folded on (`AppModel::echoed_pending`) — the
-    // third projection of one optimism, for bl-44e9's reason: a seat's optimism
-    // reaches whatever that seat actually reads, and what this one reads is now
-    // an answer.
-    let pending = model.echoed_pending(agent, landed);
-    if branchless {
-        return (pending, Vec::new());
-    }
-    let tx = super::inspector::transcript(model, ws, agent)
-        .value
-        .unwrap_or_default();
-    let prompts = crate::composer::prompts(&pending, &tx);
-    (pending, prompts)
 }
