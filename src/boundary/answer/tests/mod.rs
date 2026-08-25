@@ -17,6 +17,8 @@ mod confirm;
 /// *cadence* every intake shares the bottom of.
 mod follow;
 
+use crate::app::Snapshot;
+
 use super::*;
 use crate::boundary::tests::{agent, bound_row, snapshot};
 use crate::cli_outbound::Cli;

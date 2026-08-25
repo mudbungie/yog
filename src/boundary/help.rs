@@ -21,15 +21,19 @@ mod tests;
 
 /// The whole verb roster — the acts on a conversation or a ball, then the
 /// standing/settings verbs, then the queries, then the follow-class reads
-/// whose answer is a sequence (bl-73e7), in that order. A **function**,
+/// whose answer is a sequence (bl-73e7), in that order. Six lists rather than
+/// four since bl-c088, on the same terms: `driving` is a prefix of the acts and
+/// `world` a prefix of the queries, each joined back where it stood. A **function**,
 /// not a const, because the list outgrew one file at §12's cap (bl-dc0c,
 /// bl-2d19) and const slices cannot be concatenated in a const: the split is a
 /// line budget, so it must not become a second list anyone can read half of.
 /// Cheap: `HelpRow` is `Copy` over `'static` strs.
 pub fn table() -> Vec<HelpRow> {
     [
+        table::driving::DRIVING,
         table::ACTIONS,
         table::standing::STANDING,
+        table::world::WORLD,
         table::queries::QUERIES,
         table::following::FOLLOWING,
     ]

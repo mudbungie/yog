@@ -18,12 +18,7 @@
 //! Also home to the §3.6 confirmation derivation both dispatch and the dialog
 //! read — the delete gate is one derivation wherever it is asked.
 
-use crate::app::Snapshot;
-use crate::nav::{self, convs::ConvBall, convs::ConvRow, ws_key};
-use crate::projects::join;
 use crate::ui_state::UiState;
-
-use std::path::Path;
 
 use super::dispatch::Deps;
 use super::reply::Reply;
@@ -40,6 +35,10 @@ mod chrome;
 /// The §3.6 unmaking's own derivations — what a delete would destroy, read by
 /// the dialog and by the dispatch gate alike.
 mod confirm;
+/// The §11 conversation list of one workspace and the two reads that hang off
+/// it — split off at §12's budget (bl-c088): everything left here is the
+/// `Query` table, and these three are a derivation it calls.
+pub mod convs;
 /// The §11 inspector family (bl-6233): one conversation's transcript, steps,
 /// files, spine and mail — the derivations the frame's view-models delegate to.
 pub mod inspector;
@@ -49,6 +48,7 @@ pub mod queue;
 
 pub use chrome::{workspace_stats, workspaces, ws_rows};
 pub use confirm::{agent_confirmation_of, confirmation_of};
+pub use convs::{conv_ball, conversations, names_in};
 
 /// Answer one query (§8.5). Total over [`Query`]; `now_unix` is the caller's
 /// wall clock (minted at the process boundary, so the derivation stays
@@ -203,67 +203,6 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         Query::Invocations => return super::routing::invocations(deps),
         Query::Capture { invocation } => return super::routing::capture(deps, invocation),
     })
-}
-
-/// The §11 conversation list of one workspace, at the **forest** altitude
-/// (REMOTE §9.7, bl-44e9): every member of the descent forest with its own
-/// per-row rollups, in paint order. Aimed by parameter instead of focus; a
-/// workspace with no derived tree is simply empty (§3.3's general path).
-///
-/// **This is the whole answer and it carries no fold.** A viewport's expanded
-/// set is a view (§8.5: *views gain no boundary representation*), so it never
-/// crosses and never rides a row — each seat selects its own visible rows out of
-/// this with [`nav::convs::visible`], and a seat holding no fold at all selects
-/// the root subset, which is the all-collapsed list this query used to answer.
-pub fn conversations(snap: &Snapshot, ui: &UiState, ws: &Path, now_unix: i64) -> Vec<ConvRow> {
-    let Some(tree) = snap.trees.get(ws) else {
-        return Vec::new();
-    };
-    let key = ws_key(ws);
-    let seen = |k, w: &str, a: &str, o: &str| ui.is_seen(k, w, a, o);
-    let ball = |id: &str| conv_ball(snap, id);
-    // The standing verdicts, read off the same published ops tail the §11 pane
-    // renders (VISION §4.9): a derivation per build, not a field on the world.
-    let checks = crate::monitor::row::of_rows(&snap.ops);
-    nav::convs::forest_rows(&tree.agents, &key, &seen, now_unix, &ball, &checks)
-}
-
-/// Resolve a conversation's goal-stamp ball `id` to its render facts (§3.3,
-/// §3.5): the id always renders; the join supplies status/title/badge when a
-/// row matches, else those stay `None` — a pure read over the cached join.
-pub fn conv_ball(snap: &Snapshot, id: &str) -> ConvBall {
-    match snap.join_rows.iter().find(|r| r.ball_id == id) {
-        Some(r) => ConvBall {
-            id: id.to_owned(),
-            state: Some(r.state),
-            title: r.title.clone(),
-            badge: join::badge(r.state, r.claimant.as_deref()),
-        },
-        None => ConvBall {
-            id: id.to_owned(),
-            state: None,
-            title: None,
-            badge: None,
-        },
-    }
-}
-
-/// The conversation mint's occupied set for a workspace (§3.3): the names its
-/// living agents wear — each agent's `name_fact`, the lernie-stored blob with
-/// the legacy goal-stamp fallback while pre-0.0.4 roots live. Children count
-/// too, and must: lernie refuses a name any living agent already wears, so a
-/// mint that ignored a named child would fail at fire. Empty for an underived
-/// workspace — the general path with no inputs.
-pub fn names_in(snap: &Snapshot, ws: &Path) -> Vec<String> {
-    snap.trees
-        .get(ws)
-        .into_iter()
-        .flat_map(|t| {
-            t.agents
-                .iter()
-                .filter_map(crate::git_tree::Agent::name_fact)
-        })
-        .collect()
 }
 
 #[cfg(test)]

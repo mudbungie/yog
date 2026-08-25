@@ -7,86 +7,25 @@
 
 use super::HelpRow;
 
+/// The six §8.2 verbs whose subject is a conversation already running — split
+/// off at §12's budget (bl-c088), and joined back *ahead* of [`ACTIONS`].
+pub mod driving;
 pub mod following;
 pub mod queries;
 pub mod standing;
+/// The eleven reads aimed at a workspace or the world above it — split off at
+/// §12's budget (bl-c088), and joined back *ahead* of [`queries::QUERIES`].
+pub mod world;
 
-/// Every **action on a conversation or a ball**, in the order help lists them:
-/// the §8.2 conversation verbs, the ball verbs, the start pair, the V2 attempt
-/// and the §3.6 deletes. The verbs whose subject is a setting, a standing
-/// policy or a record are [`standing::STANDING`], the queries are
-/// [`queries::QUERIES`] and the follow-class reads are
+/// Every **action on a conversation or a ball** that is not one of the six
+/// [`driving::DRIVING`] states, in the order help lists them: the ball verbs,
+/// the start pair, the V2 attempt, REMOTE §5's routing leg and the §3.6
+/// deletes. The verbs whose subject is a setting, a standing
+/// policy or a record are [`standing::STANDING`], the world's own reads are
+/// [`world::WORLD`], the rest of the queries are [`queries::QUERIES`] and the follow-class reads are
 /// [`following::FOLLOWING`]; [`table`](super::table) reads all four as one, so
 /// no split is a seam an operator can see.
 pub const ACTIONS: &[HelpRow] = &[
-    HelpRow {
-        verb: "message",
-        usage: "/message <text…>",
-        summary: "send the text to the selected conversation and wake its driver",
-        detail: "Deposits the text in the selected conversation's inbox and wakes its driver so \
-                 it reads it (`lernie message`). The text is the whole tail, verbatim — spacing \
-                 and newlines reach the model unchanged, and no flag is read out of it. Takes \
-                 the workspace and the agent from the seat; refuses when nothing is selected.",
-    },
-    HelpRow {
-        verb: "interrupt",
-        usage: "/interrupt <text…>",
-        summary: "cut the selected conversation off mid-work and send it this text",
-        detail: "Stops whatever is running the selected conversation and then deposits the text \
-                 (`lernie stop`, then `lernie message`), so the model reads it now instead of at \
-                 the end of what it is doing. The deposit is what restarts the conversation — \
-                 there is no separate resume — so this leaves it running on your new text. Work \
-                 already committed is kept, and a tool call cut off mid-flight is reported to the \
-                 model in band as having produced no result. With nothing running it is simply a \
-                 send. Two lines on the trail, one for each half, because the stop can be \
-                 declined while the text still lands. The text is the whole tail, verbatim; no \
-                 flag is read out of it, `children` included — use `/stop children` for a \
-                 subtree. Takes the workspace and the agent from the seat; refuses when nothing \
-                 is selected. Ctrl+Enter in the composer is this gesture.",
-    },
-    HelpRow {
-        verb: "stop",
-        usage: "/stop [children]",
-        summary: "kill the selected conversation's driver; `children` cascades",
-        detail: "Kills the driver running the selected conversation (`lernie stop`). Everything \
-                 it has already committed is kept, and it can be messaged again afterwards. Say \
-                 `children` to stop the agents it spawned too, not only the one at its root.",
-    },
-    HelpRow {
-        verb: "scan",
-        usage: "/scan",
-        summary: "flush the focused workspace's inboxes and deposit epitaphs",
-        detail: "One workspace-wide sweep (`lernie scan`): delivers pending inbox mail and \
-                 deposits an epitaph for any agent that died silently. Acts on the focused \
-                 workspace, not on the selection.",
-    },
-    HelpRow {
-        verb: "nudge",
-        usage: "/nudge",
-        summary: "prompt the selected conversation again from where it already stands",
-        detail: "Runs the model on the selected conversation as it is, with nothing added \
-                 (`lernie advance`): no new message, no goal retyped, the same conversation \
-                 continued. This is the fix for a first turn that died before it reached the \
-                 model — a missing sign-in, a provider row that was wrong — sign in, then nudge, \
-                 and the turn is dispatched again in place. The driver runs detached, so it \
-                 keeps going whatever yog does. Takes the workspace and the agent from the \
-                 seat; refuses when nothing is selected, and does nothing while a driver is \
-                 already running the conversation.",
-    },
-    HelpRow {
-        verb: "retarget",
-        usage: "/retarget",
-        summary: "move the selected conversation onto the config this workspace runs now",
-        detail: "A conversation is frozen on the config commit it forked off, so a model you \
-                 picked afterwards governs the next conversation and not this one. This moves \
-                 this one (`lernie retarget`): it marks the conversation, and the conversation's \
-                 own driver re-forks it onto the current config at its next step, replaying \
-                 everything it has already done on top — nothing is discarded and nothing is \
-                 killed. It takes effect at that next step, never mid-step, which in practice is \
-                 the message you send after it. Takes the workspace and the conversation from the \
-                 seat; lernie declines it when the conversation is already on that config, or \
-                 when the target config does not describe the role it runs as.",
-    },
     HelpRow {
         verb: "close",
         usage: "/close [id]",
