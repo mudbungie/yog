@@ -19,6 +19,10 @@
 //! invariant stated from the other side: everything yog does other than paint
 //! happens here, so nothing that runs long has a frame to block.
 
+/// **The four ends a face takes** (REMOTE §1.2, §3, §8.2, §9.8) — the channel
+/// pairs this boot mints and holds the far half of, split out of [`Engine::boot`]
+/// at §12's budget on the seam the boot's own prose declares.
+mod ends;
 /// **The windowless face, whole** (§8.5) — `yog serve`, which left `main.rs`
 /// for that file's own coverage reason once bl-269a gave its loop an exit.
 pub mod serve;
@@ -62,32 +66,11 @@ pub struct Engine {
     wire: Option<crate::wire::server::Listener>,
     _sentry: Sentry,
     _pilot: Pilot,
-    /// The asker's half of the window's read path (REMOTE §1.2, bl-ae05),
-    /// minted here beside the listener because both ends of a loopback wire are
-    /// this one assembly's. Taken by [`asker`](Self::asker) — a window takes it
-    /// and a `yog serve` never does, which is the whole difference between the
-    /// two faces here.
-    wire_end: Option<crate::wire::link::LinkEnd>,
-    /// **The same, once per §8.2 entry** (bl-670c): what each entry channel is,
-    /// and the end its own asker answers on. Minted in one act with the model's
-    /// half ([`channels::compose`](crate::wire::channels::compose)), so the
-    /// pairing is the composition's rather than a join two lists keep in step.
-    ///
-    /// Taken by [`window_wire`](Self::window_wire) and **not gated**: a second
-    /// call already answers `None` on the loopback channel's own end, which is
-    /// the one wire a window cannot be a window without, so a second gate here
-    /// would be the same fact with a second home. A `yog serve` never takes
-    /// them: a headless face is nobody's window and is a client of no other box.
-    entry_ends: Vec<crate::wire::channels::EntryEnd>,
-    /// The follow lane's engine-side end (REMOTE §3, bl-73e7), minted and taken
-    /// on the read path's own terms — one lane per engine, and a `yog serve`
-    /// never takes it.
-    lane_end: Option<crate::wire::lane::TailEnd>,
-    /// The poster's half of the window's **act** path (REMOTE §9.8, bl-4841),
-    /// minted beside the read path's end and taken the same way — by
-    /// [`poster`](Self::poster), which a window calls and `yog serve` never
-    /// does.
-    post_end: Option<crate::wire::post::Outbox>,
+    /// **The four channel ends a face takes** ([`ends`]): the window's read
+    /// path, one per §8.2 entry, the follow lane's and the act path's. A window
+    /// takes all four and a `yog serve` takes none, which is the whole
+    /// difference between the two faces here.
+    ends: ends::Ends,
     /// The face's wake hook, kept so the asker can wake a window when an answer
     /// lands — the same reason the follower holds one.
     repaint: Arc<dyn Repaint>,
@@ -145,33 +128,10 @@ impl Engine {
         // other client does, so the second reader went with the second read
         // path.
         let presence = crate::registry::presence::Presence::default();
-        // The window's read path (REMOTE §1.2 as ruled, bl-ae05): the frame's
-        // half goes to the model, the asker's half is held for whichever face
-        // takes it. Minted unconditionally — a `yog serve` simply never asks
-        // for the other end, and a model whose link nobody answers is the same
-        // code path as a surface whose answer has not landed yet.
-        let (link, wire_end) = crate::wire::link::pair();
-        // …and one channel per §8.2 entry beside it (bl-028a), composed here
-        // because the engine is what holds the world. Zero entries is the local
-        // channel alone — the general path with empty inputs. Since bl-670c the
-        // composition hands back the far end of every entry channel too, so a
-        // window can put an asker on each: one thread, one seat and one slice
-        // per channel, which is what makes an unreachable entry cost only its
-        // own rows.
-        let (channels, entry_ends) = crate::wire::channels::compose(world, link);
-        model.adopt_wire(channels);
-        // The follow lane's two ends (REMOTE §3, bl-73e7), minted here for the
-        // read path's reason exactly. The §7.2 live tail used to be a follower
-        // thread on this engine writing into the model's own RAM; it is a held
-        // wire read now, so what the engine mints is a channel pair and the
-        // face takes the far end or does not.
-        let (tail, lane_end) = crate::wire::lane::pair();
-        model.adopt_tail(tail);
-        // The act path's two ends (REMOTE §9.8, bl-4841), minted here for the
-        // read path's reason exactly: both ends of a loopback wire belong to
-        // this one assembly, and a face takes the far one or does not.
-        let (post, post_end) = crate::wire::post::pair();
-        model.adopt_post(post);
+        // The four channel pairs this engine mints for a face ([`ends`]): each
+        // frame-side half adopted into the model as it is made, each far half
+        // held here until whichever face asks.
+        let ends = ends::Ends::mint(world, &mut model);
         // The §8.5 gestures-inbox consumer: both faces are one consumer surface,
         // so a deposit converges whichever is up (I0).
         let intake = Arc::new(ConsumerCtx {
@@ -258,10 +218,7 @@ impl Engine {
             wire,
             _sentry: sentry,
             _pilot: pilot,
-            wire_end: Some(wire_end),
-            entry_ends,
-            lane_end: Some(lane_end),
-            post_end: Some(post_end),
+            ends,
             repaint,
         }
     }

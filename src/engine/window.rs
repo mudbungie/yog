@@ -83,7 +83,7 @@ impl Engine {
         // takes once. What each of them *is* stays behind as `entries`, because
         // the three routing threads each seat themselves on it. Ungated: the
         // loopback channel's end is what a second call already fails on.
-        let held = std::mem::take(&mut self.entry_ends);
+        let held = std::mem::take(&mut self.ends.entries);
         let entries: Vec<crate::wire::entries::Entry> =
             held.iter().map(|one| one.entry.clone()).collect();
         Some(WindowWire {
@@ -113,7 +113,7 @@ impl Engine {
     pub fn asker(&mut self, world: &Env) -> Option<crate::wire::asker::Asker> {
         Some(crate::wire::asker::Asker::new(
             self.window_seat(world).ok()?,
-            self.wire_end.take()?,
+            self.ends.link.take()?,
             self.model.snapshot_cell(),
             world.yog_state_root(),
             Arc::clone(&self.repaint),
@@ -134,7 +134,7 @@ impl Engine {
     pub fn poster(&mut self, dial: Dial) -> Option<crate::wire::poster::Poster> {
         Some(crate::wire::poster::Poster::new(
             dial,
-            self.post_end.take()?,
+            self.ends.post.take()?,
             Arc::clone(&self.repaint),
         ))
     }
@@ -169,7 +169,7 @@ impl Engine {
     pub fn lane(&mut self, dial: Dial) -> Option<crate::wire::lane::Lane> {
         Some(crate::wire::lane::Lane::new(
             dial,
-            self.lane_end.take()?,
+            self.ends.tail.take()?,
             Arc::clone(&self.repaint),
         ))
     }

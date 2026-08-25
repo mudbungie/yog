@@ -1,6 +1,13 @@
 //! The `clients` tool: what it accepts, what it observes, and what it makes
 //! callable (REMOTE §5, bl-c907).
 
+/// **What it makes callable** — the third of the three subjects this file's own
+/// doc names, in its own file at §12's per-file budget. `load` is the only op
+/// that writes: it freezes definitions into the agent's durable set, so what it
+/// refuses and what it leaves behind on a refusal are one subject, and the two
+/// read-only ops share none of it.
+mod load;
+
 use super::*;
 use crate::boundary::reply::{self, Reply};
 use crate::registry::tools::Tool;
@@ -160,87 +167,6 @@ fn an_unregistered_client_is_absent() {
     .expect_err("absent");
     assert!(e.contains("no client \"desk\" is registered"), "{e}");
     assert!(e.contains("the 1 there are"), "{e}");
-}
-
-/// `load` freezes the named definitions into the agent's durable set and says
-/// what became callable.
-#[test]
-fn load_makes_the_named_tools_callable_and_durable() {
-    let root = TempDir::new().expect("tmp");
-    let said = against(
-        root.path(),
-        vec![row("laptop", true, vec![tool("Bash"), tool("Read")])],
-        &json!({"op": "load", "client": "laptop", "tools": ["Bash"]}),
-    )
-    .expect("loaded");
-    assert!(said.contains("loaded, observed 1970-01-01"), "{said}");
-    assert!(said.contains("laptop_Bash — what Bash does"), "{said}");
-    assert!(said.contains("now holds 1 loaded tool."), "{said}");
-    assert!(said.contains("There is no unload"), "{said}");
-
-    let held = crate::tool_host::loaded::read(root.path(), "home", "dulcet-mongoose");
-    assert_eq!(held.len(), 1);
-    assert_eq!(held[0].tool, tool("Bash"), "the definition is frozen whole");
-}
-
-/// A load of a name the client does not advertise refuses whole: a partial
-/// load would leave the model believing it holds a tool it does not.
-#[test]
-fn an_unadvertised_tool_refuses_the_whole_load() {
-    let root = TempDir::new().expect("tmp");
-    let e = against(
-        root.path(),
-        vec![row("laptop", true, vec![tool("Bash")])],
-        &json!({"op": "load", "client": "laptop", "tools": ["Bash", "Nope"]}),
-    )
-    .expect_err("refused");
-    assert!(e.contains("advertises no tool \"Nope\""), "{e}");
-    assert!(
-        crate::tool_host::loaded::read(root.path(), "home", "dulcet-mongoose").is_empty(),
-        "nothing was recorded"
-    );
-}
-
-/// A pair whose composed name a provider would refuse declines at the load,
-/// naming the name — before the model is ever told it exists.
-#[test]
-fn a_name_a_provider_would_refuse_declines_at_the_load() {
-    let root = TempDir::new().expect("tmp");
-    let e = against(
-        root.path(),
-        vec![row("laptop.local", true, vec![tool("Bash")])],
-        &json!({"op": "load", "client": "laptop.local", "tools": ["Bash"]}),
-    )
-    .expect_err("refused");
-    assert!(
-        e.contains("\"laptop.local_Bash\" is not a usable tool name"),
-        "{e}"
-    );
-}
-
-/// A load the agent's document cannot hold refuses, naming the address — the
-/// write half of the loaded set's own component rule.
-#[test]
-fn a_load_that_cannot_be_recorded_says_so() {
-    let root = TempDir::new().expect("tmp");
-    let mut s = site(root.path(), budget());
-    s.agent = "..".to_owned();
-    let (handle, _seen) = engine(
-        root.path(),
-        &reply::encode(&Reply::Clients(vec![row(
-            "laptop",
-            true,
-            vec![tool("Bash")],
-        )])),
-    );
-    let e = answer(
-        &s,
-        &json!({"op": "load", "client": "laptop", "tools": ["Bash"]}),
-        &quiet(),
-    )
-    .expect_err("unrecordable");
-    handle.join().expect("engine");
-    assert!(e.contains("recording the load"), "{e}");
 }
 
 /// A malformed invocation is declined **before** the engine is asked: the

@@ -11,7 +11,18 @@
 //! stands the engine in, and everything there drives the real intake over a
 //! real workspace, because neither of those claims can be made by one half.
 
+/// **What happens when the far end is not there** — the third of the three
+/// subjects this file's own doc names, in its own file at §12's per-file
+/// budget: a dial that fails, a subject nobody declared, and an answer of a
+/// kind this lane did not ask for. One outcome, reached three ways, and it is
+/// the pull fold rather than a broken chat.
+mod absent;
 mod engine;
+/// The **hand-off alone** — the two beats that drive `pair()` and nothing else,
+/// split off at §12's per-file budget on the seam production is cut on
+/// ([`tail`](super::tail)): no listener, no seat, no thread, so what they argue
+/// is the channels' own discipline rather than anything the wire does.
+mod tail;
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -186,101 +197,6 @@ fn every_frame_the_engine_writes_reaches_the_seat_and_the_end_is_told() {
         None,
         "the stream is over and the seat is back on the pull fold"
     );
-}
-
-/// **A lane that cannot dial is the pull path, not a broken chat.** The turn
-/// answers that nothing landed — which is what paces the re-ask — and the seat
-/// holds no tail, so the committed transcript's own fold is what paints.
-#[test]
-fn a_lane_with_no_engine_lands_nothing_and_says_so() {
-    let tmp = TempDir::new().expect("tmp");
-    mint(tmp.path());
-    let seat = crate::wire::client::Seat::open(&material(tmp.path(), Role::Window, NO_LISTENER))
-        .expect("seat");
-    let (mut tail, end) = pair();
-    let mut lane = Lane::new(crate::wire::dial::Dial::of(seat), end, Arc::new(NoRepaint));
-    watching(&mut tail);
-    assert!(!lane.turn(), "no engine, no frames");
-    assert_eq!(declared(&mut tail), None);
-}
-
-/// A lane nobody has aimed asks nothing at all — the resting state of a window
-/// with no conversation open, and the same `false` a failed dial answers, so
-/// the caller paces both the same way.
-#[test]
-fn a_lane_with_no_subject_asks_nothing() {
-    let tmp = TempDir::new().expect("tmp");
-    let (_listener, mut lane, _tail) = wired(&tmp, vec![frame("unread")]);
-    assert!(!lane.turn(), "nothing declared, nothing asked");
-}
-
-/// **An answer of another kind ends the read.** A refusal, or a reply the codec
-/// carried faithfully but this lane did not ask for, is a defect rather than a
-/// state — so the lane hangs up and the seat falls back rather than painting
-/// something it cannot read.
-#[test]
-fn an_answer_of_another_kind_ends_the_read() {
-    let tmp = TempDir::new().expect("tmp");
-    let (_listener, mut lane, mut tail) = wired(
-        &tmp,
-        vec![json!({"ok": false, "error": "no such conversation"})],
-    );
-    watching(&mut tail);
-    assert!(!lane.turn(), "nothing landed");
-    assert_eq!(declared(&mut tail), None);
-}
-
-/// **The question is its own key.** A frame answering the conversation the seat
-/// was watching a moment ago cannot land on the one it is watching now — the
-/// subject change drops what landed, with nothing to say "stop".
-#[test]
-fn a_frame_for_the_conversation_just_left_lands_nowhere() {
-    let (mut tail, end) = pair();
-    let other = crate::boundary::codec::encode(&crate::boundary::Gesture::Ask(
-        crate::boundary::Query::Follow {
-            workspace: "alba".to_owned(),
-            agent: "c-2".to_owned(),
-        },
-    ));
-    // Standing on c-1, and a fold lands for it.
-    watching(&mut tail);
-    end.publish(
-        &subject().to_string(),
-        Some(crate::git_tree::Stream {
-            text: Some("c-1 is talking".to_owned()),
-            ..crate::git_tree::Stream::default()
-        }),
-    );
-    assert!(
-        declared(&mut tail).is_some(),
-        "the fold is for this subject"
-    );
-
-    // The operator moves to c-2. What c-1 says next reaches nobody.
-    tail.settle();
-    tail.ask(&other);
-    end.publish(
-        &subject().to_string(),
-        Some(crate::git_tree::Stream {
-            text: Some("c-1 is still talking".to_owned()),
-            ..crate::git_tree::Stream::default()
-        }),
-    );
-    tail.settle();
-    assert_eq!(tail.ask(&other), None, "and c-2 has said nothing yet");
-}
-
-/// **A lane whose window is gone stops asking.** The lane thread is not joined
-/// on drop, so this is what ends it: the subject channel disconnecting is read
-/// as no subject, which is the same resting state as a window that has nothing
-/// open.
-#[test]
-fn a_lane_whose_frame_end_is_gone_follows_nothing() {
-    let (mut tail, mut end) = pair();
-    watching(&mut tail);
-    assert!(end.standing().is_some(), "a live frame end has a subject");
-    drop(tail);
-    assert!(end.standing().is_none(), "and a dead one has none, forever");
 }
 
 /// The lane's own thread, started and stopped — the `Drop` that signals and

@@ -1,6 +1,15 @@
 //! The injection itself: what it declares, what it answers, and what it
 //! declines (REMOTE §5, bl-c907).
 
+/// **The substrate every beat in this family drives against** (REMOTE §5) — the
+/// stand-in engines that hold up the deposit consumer's contract and nothing
+/// else, the two budgets, and the `Site` an injection answers at. Its own file
+/// at §12's per-file budget: four sibling test modules import it, so it is a
+/// shared subject rather than this file's own scaffolding.
+mod stand_in;
+
+pub(super) use stand_in::{budget, engine, impatient, scripted, site, tool};
+
 use super::*;
 use crate::boundary::deposit;
 use crate::registry::tools::Tool;
@@ -11,97 +20,6 @@ use std::sync::mpsc::Receiver;
 use std::thread::JoinHandle;
 use std::time::Duration;
 use tempfile::TempDir;
-
-/// A stand-in engine: answer the first deposit that lands with `reply`, hand
-/// the request back over a channel, and stop. It is the deposit consumer's
-/// contract and nothing else — claim, then reply — because that contract is
-/// the whole of what the driver's ask depends on.
-pub(super) fn engine(root: &Path, reply: &Value) -> (JoinHandle<()>, Receiver<Value>) {
-    let root = root.to_path_buf();
-    let reply = reply.clone();
-    let (tx, rx) = std::sync::mpsc::channel();
-    let handle = std::thread::spawn(move || {
-        for _ in 0..4000 {
-            if let Some((id, path)) = deposit::pending(&root).into_iter().next() {
-                let request = std::fs::read(&path)
-                    .ok()
-                    .and_then(|b| serde_json::from_slice(&b).ok())
-                    .unwrap_or(Value::Null);
-                let _ = deposit::claim(&root, &id);
-                let _ = deposit::write_reply(&root, &id, &reply);
-                let _ = tx.send(request);
-                return;
-            }
-            std::thread::sleep(Duration::from_millis(1));
-        }
-    });
-    (handle, rx)
-}
-
-/// A budget that answers fast when an engine is there and gives up fast when
-/// it is not.
-pub(super) fn budget() -> ask::Budget {
-    ask::Budget {
-        waits: 4000,
-        tick: Duration::from_millis(1),
-    }
-}
-
-/// A budget with no patience at all — the "no engine" path, without the wait.
-pub(super) fn impatient() -> ask::Budget {
-    ask::Budget {
-        waits: 1,
-        tick: Duration::ZERO,
-    }
-}
-
-pub(super) fn tool(name: &str) -> Tool {
-    Tool {
-        name: name.to_owned(),
-        description: format!("what {name} does"),
-        input_schema: json!({"type": "object"}),
-    }
-}
-
-pub(super) fn site(root: &Path, budget: ask::Budget) -> Site {
-    Site {
-        state_root: root.to_path_buf(),
-        workspace: "home".to_owned(),
-        agent: "dulcet-mongoose".to_owned(),
-        budget,
-        patience: budget,
-        clock: FakeClock::new().arc(),
-    }
-}
-
-/// A stand-in engine that answers `replies` in order, one per deposit — the
-/// routing leg needs two round trips (queue, then poll) and [`engine`] answers
-/// exactly one. Hands every request back over the channel.
-pub(super) fn scripted(root: &Path, replies: &[Value]) -> (JoinHandle<()>, Receiver<Value>) {
-    let root = root.to_path_buf();
-    let replies = replies.to_vec();
-    let (tx, rx) = std::sync::mpsc::channel();
-    let handle = std::thread::spawn(move || {
-        let mut said = 0;
-        for _ in 0..40_000 {
-            let Some(reply) = replies.get(said) else {
-                return;
-            };
-            if let Some((id, path)) = deposit::pending(&root).into_iter().next() {
-                let request = std::fs::read(&path)
-                    .ok()
-                    .and_then(|b| serde_json::from_slice(&b).ok())
-                    .unwrap_or(Value::Null);
-                let _ = deposit::claim(&root, &id);
-                let _ = deposit::write_reply(&root, &id, reply);
-                let _ = tx.send(request);
-                said += 1;
-            }
-            std::thread::sleep(Duration::from_millis(1));
-        }
-    });
-    (handle, rx)
-}
 
 fn injection(root: &Path, driving: Option<(String, String)>) -> Injection {
     Injection::new(
