@@ -85,9 +85,10 @@ and reuses one:
 
 | Noun | Definition |
 |---|---|
-| **client** | A machine holding an operator-issued certificate. One certificate = one client identity (its leaf name). A client is a fact about a machine, not a person — v1 has one human, and every certificate is operator-grade within its registrations. |
-| **seat** | A client connection acting as an operator face: it asks queries, paints replies, dispatches gestures. (The word already names GUI/headless/line faces in DESIGN §8.5 — a remote seat is the fourth face of the same surface.) |
-| **tool host** | A client advertising tools into the workspaces it is registered in. One client may be seat and tool host at once (the work laptop usually is). |
+| **client** | A machine holding an operator-issued certificate. One certificate = one client identity (its leaf name). A client is a fact about a machine, not a person — v1 has one human. **A certificate carries one of two grades** (§4.2, bl-1dd3): **operator**, which is the whole boundary within its registrations, and **foot**, which is the tool-host gestures and nothing else. This narrows the original sentence here — *"every certificate is operator-grade within its registrations"* — for the foot class only; an operator-grade leaf is unchanged in every respect. |
+| **seat** | A client connection acting as an operator face: it asks queries, paints replies, dispatches gestures. (The word already names GUI/headless/line faces in DESIGN §8.5 — a remote seat is the fourth face of the same surface.) A seat is operator-grade by definition: a face that could not ask is not a face. |
+| **tool host** | A client advertising tools into the workspaces it is registered in. One client may be seat and tool host at once (the work laptop usually is) — a machine wearing both roles wears them on **one operator-grade certificate**, because the roles are what a connection does, and the grade is what its leaf may do. |
+| **thrall** | The **component** that is only a tool host (§5.4, §12; bl-1dd3): a separately installed foot whose entire wire surface is advertise, wait, complete. It is the noun for the installable; *tool host* stays the noun for the role, and the two are not synonyms — an operator-grade laptop hosting tools is a tool host and not a thrall. |
 | **registration** | The durable fact that client C participates in workspace W, on the server that hosts W. Server-side, in the world, a file — the file religion applies; the wire only ever transports the gesture that writes it. |
 | **entry** | A workspace, held from the box that participates in it (bl-aaec): a directory under that box's `wire/workspaces/<leaf>/` carrying the channel facts that reach it — the host engine's anchors, this box's leaf and key for it, the host's address, and the name the workspace bears there (§8.2). The entry is the client's half of the pair registration is the server's half of — possession, where registration is permission — exactly as a channel needs both a certificate and its issuer's trust. |
 
@@ -380,6 +381,74 @@ the ruling is that this is acceptable and bounded: **a namespace with creation
 creation. What a collision reveals is that a name is taken. It reveals no
 workspace's contents, conversations, clients or registrations — everything §4
 makes absent stays absent.
+
+### 4.2 The two grades, and the foot (bl-1dd3)
+
+**A certificate carries a grade, and there are exactly two.**
+
+- **Operator grade** — the whole boundary, within the registrations §4 already
+  scopes. This is every certificate issued before the split and every seat
+  after it; nothing about it changes.
+- **Foot grade** — the tool-host gestures and **nothing else**: `advertise`
+  (§5.1), `invocations` and `complete` (§5.3). No other `Query`, no other
+  `Action`.
+
+**"No ask, no act" is the sentence, and the three verbs above are not the
+exception to it — they are what it is measured against.** A foot cannot ask
+*about the world*: not the workspaces, not the board, not the trail, not a
+transcript. It cannot act *on the world*: no message, no start, no stop, no
+ball, no config. What it may do is answer for the machine it is: state what
+this box can run, wait for work addressed to it, and hand back what happened.
+Note which of §5.3's four verbs is absent — `invoke`, the asking side's. A foot
+is invoked; it never invokes.
+
+**The grade is on the leaf, not in a registration and not in a config.** It is
+issued out of channel with the certificate, by the operator's own CA, on the
+same act §1.4 already requires — so making a foot into an operator is minting
+a new certificate, which is exactly the friction that ruling wants. A
+registration field would be a second authority for one fact and would let a
+gesture over the wire widen the sender; a config file would put it on the box
+being trusted.
+
+**The spelling is the subject's organizational unit, read by the walk that
+already reads the common name** (`registry::leaf`): `CN=<client>, OU=foot` is a
+foot, and a subject with no `OU=foot` is operator grade. Two reasons, and the
+second is the one that decides it. A custom X.509 extension or an EKU OID would
+be the textbook home for a capability bit, but it needs an `openssl` config
+stanza in the §8 mint recipe *and* an extension parser yog does not have, where
+the OU is one more attribute in a subject the DER walk opens anyway. And
+**default-operator, not default-foot**: a certificate minted before this
+existed, or by a recipe that has not learned the flag, must keep working
+exactly as it did — a silently demoted seat would be an outage with no sentence
+attached, while a silently promoted foot cannot happen, because promotion
+requires the operator's CA to have written the word.
+
+**Enforcement is one raise at the chokepoint** (built by bl-7ff3 — until it
+lands this is a ruling with no code behind it, and every leaf is operator grade
+in practice), where the client identity is
+already spent for scoping (§9.6): the same `answer_as` that filters what a
+caller sees refuses what a foot may say, **in band and naming the grade**. Not
+absent-shaped, and that is deliberate — §4's absence rule exists so a scoped
+caller cannot map what it is not registered in, and a foot asking for the board
+learns nothing about the world from being told it is a foot. It made a category
+error and the sentence is worth more than the silence, exactly as §5.1 rules
+for an intake carrying no client identity.
+
+**This is not the per-verb ACL §11 rejects, and the difference is not a
+quibble.** The grade is **binary, closed, and in the code**: two values, one
+fixed set of gestures each, no table, no configuration, nothing an operator
+writes per verb or per tool and nothing that grows a row when a verb is added.
+A new `Action` is operator-only by construction — the foot set is enumerated,
+not subtracted from. §11's rejection is of a *policy layer*, and a policy layer
+is the thing with a place to put a rule; this has none. §11's entry stands
+unamended.
+
+**What it closes.** §9.6 states a residual plainly: *"a client registered in
+one workspace still reads the trail of every workspace"*. For a foot that is no
+longer true, because a foot reads nothing at all — and a foot is the class most
+likely to run on a box the operator trusts least (a build machine, a phone, a
+box in someone else's house). The residual stands for operator-grade clients,
+where it is the same ruling it always was.
 
 ## 5. Tools follow the client
 
@@ -772,6 +841,75 @@ crate already owns) and answers the shell's `timeout` verdict with a sentence;
 the driver's longer patience stands behind it for the case where the whole host
 process went away. Neither is a knob: an engine that has not answered is down,
 and a tool that has not answered is working.
+
+### 5.4 The thrall, and the local execution corpus (bl-1dd3)
+
+**A thrall is §5.3's executor, severed into a separately installed component**
+(§12) and carrying a foot-grade leaf (§4.2). Its entire wire surface is the
+three gestures a foot may send: advertise once, wait on `invocations`, post
+each capture with `complete`. **The transport is unchanged in every
+particular** — it dials per ask and holds a connection only while it is
+*waiting*, so a busy thrall is absent (§5's presence amendment), and **nothing
+in the path is the engine speaking first** (§3's routing ruling). Founding the
+repo is bl-1dd3's other half and lands there; this section is what it
+implements against, and until it ships `yog tool-host` is the same executor
+reached by a verb.
+
+**The thrall owns the local execution corpus, and yog owns none of it.** This
+is the bl-37fd ruling's sharpest consequence and it inverts what the tree does
+today:
+
+- **Workspace substrate access is a thrall tool.** Balls operations, repo
+  tools, the shell of a checkout — anything that reads or writes a working
+  tree — reaches an agent as a tool the thrall on that box advertises, and
+  never as an integration inside the engine.
+- **yog exposes engine acts only** — agent lifecycle: start a conversation,
+  deposit, interrupt, stop, compact, fork. Those are acts on the *world*, which
+  is the thing yog holds. Everything that happens on a *machine* is a thrall's.
+  **This is the destination, not a description of the tree**: today's boundary
+  carries the balls family, the config writes, the files and git reads and the
+  rest, because today one process is server, seat and foot at once. Each moves
+  under §12's migration order, and the sentence above is what each move is
+  measured against — nothing NEW goes into the engine that a thrall could
+  advertise.
+- **A thrall beside the server is the normal install, not a special case.** The
+  single-box operator runs both and enrolls the local one, and that enrolment
+  is an explicit act (§12's "ship inert"). There is no in-process shortcut for
+  the co-located case and no unix socket beside the wire: one transport, one
+  code path, no place for a bug to hide (§12's "front door only"). The
+  co-located thrall pays a loopback handshake per invocation, which is
+  microseconds and buys the property that the local case and the remote case
+  are the same case.
+
+**Local config gates what a thrall enables**, and it is §5.2's document
+unchanged: `<yog-data-root>/tools.json` on the thrall's own box, operator
+authored, with the advertisement derived from it by dropping the local half. A
+tool absent from that file does not exist as far as the wire is concerned —
+which is the severability the whole arrangement rests on: what a box will run
+is decided on that box, by the person who administers it, in a file, and
+removing a capability is deleting a config entry rather than editing anything.
+
+**Server-side adjudication is unchanged and still fails closed.** The
+invocation crosses `yog tool-control` exactly as it does today, before it
+reaches a mailbox. Foot grade narrows what a thrall may *say*; it widens
+nothing about what it may be *asked*, and the two questions do not meet.
+
+**The containment honesty carries over verbatim** (§5): *"execution happens on
+a machine the adjudicator cannot inspect. Adjudication judges the invocation
+exactly as today; any containment beyond that is whatever the client enforces
+locally, and the design must not claim otherwise."* Severing the executor into
+its own installable does not change this by one word — if anything it makes the
+sentence more literal, since the box now runs a different program, by a
+different name, that the server never shipped.
+
+**MCP enters only as a thrall-local bridge, and is deferred.** The shape, when
+it is paid for: a thrall is an MCP *client* on its own box, and re-advertises
+the tools its local MCP servers offer up the wire as ordinary §5.1 elements. It
+buys the existing ecosystem without any of it reaching the engine. **yog never
+learns MCP** — not a verb, not a schema, not a transport — because a protocol
+in the engine is a second vocabulary on a surface §3 keeps down to one, and the
+bridge belongs where the servers are. Nothing about v1 is blocked on this and
+nothing in v1 anticipates it.
 
 ## 6. What lives where
 
@@ -1755,6 +1893,15 @@ not an oversight — a finer policy layer is speculative until a second human
 exists — but it is worth stating plainly, because "the workspace is the trust
 domain" reads like more isolation than it buys: a client registered in one
 workspace still reads the trail of every workspace.
+
+**Narrowed for one class by bl-1dd3 (§4.2): a foot reads nothing.** The
+sentence above is now about **operator-grade** clients, where it stands
+unchanged and for its original reason. A foot-grade leaf may send three
+gestures — advertise, wait, complete — and none of them reads a trail, a
+board, a project or a transcript, so the residual does not exist for the class
+most likely to be running on a box the operator trusts least. That is a
+narrowing by *grade*, not the per-verb policy layer §11 rejects: two values, a
+fixed set each, nothing to configure (§4.2 argues it in full).
 
 **Two residuals, named rather than papered over.**
 
@@ -2942,6 +3089,17 @@ Recorded so they are not relitigated:
   instance-coordination shape DESIGN §14 rejects, kept rejected.
 - **Per-tool or per-verb ACLs in v1** — registration is workspace-grade
   trust; a finer policy layer is speculative until a second human exists.
+  **Unamended by bl-1dd3, which was checked against it** (§4.2): the foot grade
+  is two values with a fixed gesture set each, in the code, with nothing an
+  operator writes per verb or per tool — a policy layer is the thing with a
+  place to put a rule, and this has none. Adding an `Action` adds no row
+  anywhere; the foot set is enumerated, never subtracted from.
+- **MCP inside the engine** (bl-1dd3, §5.4) — a second vocabulary on the
+  surface §3 keeps down to one, and a transport yog would have to speak to
+  reach a box it does not administer. MCP's place, when something pays for it,
+  is **thrall-local**: the foot is an MCP client on its own box and
+  re-advertises what it finds as ordinary §5.1 elements, so the ecosystem
+  arrives without the engine learning a word of it. Deferred, not v1.
 - **A "server" noun, or a per-server config object, on the client** (bl-aaec)
   — the client-side unit is the workspace by operator ruling; a per-server
   object would make the noun mean two things and reintroduce discovery
@@ -2990,7 +3148,9 @@ stands and is amended by the ball that moves it.
   (bl-9905). The crates.io name is held at 0.0.0.
 - **thrall** — the foot: §2's tool host severed into its own installable
   (bl-1dd3), carrying a foot-grade certificate — advertise and execute only,
-  no ask, no act. The name is likewise held.
+  no ask, no act. The name is likewise held. **The protocol half has landed
+  here**: the grade is §4.2, the component and the local execution corpus it
+  owns are §5.4, and founding the repo is the ball's other half.
 
 Two invariants ride with the ruling:
 
