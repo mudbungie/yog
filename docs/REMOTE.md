@@ -343,6 +343,52 @@ makes absent stays absent.
   **Settled by bl-c907 (§5.2): re-declared.** The set is a durable document the
   injection reads at every assembly, so the rebuild happens once, at the step
   after the load, and the agent chose it.
+- **Locality rides in the name, and there is no second place to say it**
+  (bl-71d0). A loaded tool is a **host-bound instance**: the name the model
+  chooses already states which machine will run it. Two consequences follow and
+  both are the point. Schemas stay **per host** and provider-validated at
+  emission — there is no shared `host` argument for the model to fill in and get
+  wrong, and no union of every host's schema under one name, which is what a
+  name that did not carry its host would force. And no call has an *implicit*
+  location: a model that can name a tool can say where it runs, before anything
+  is routed. The spelling is §5.2's `<client>_<tool>`, unconditionally; the
+  joiner is an underscore rather than a colon because the providers' tool-name
+  grammars refuse a colon, and it is the qualification, not the punctuation,
+  that is the rule. This is a naming discipline over the load mechanism §5.2
+  landed (`list`/`get`/`load` on the one client-management tool), not a new
+  surface — nothing here adds a verb, a field or a document.
+- **A tool executes where its subject lives** — the subject-locality invariant
+  (bl-71d0). A workspace-relative tool follows the worktree it reads; a tool
+  about a box follows that box. **"Local" is not a privileged default**: the
+  machine the engine happens to run on is simply the host that holds the
+  subject in the ordinary case, and when it does not hold the subject it is not
+  the executor. This is what makes the qualification above honest rather than
+  decorative — the name states the host because the *subject* already chose the
+  host, and a routing decision that disagreed with the subject would be
+  executing somewhere the answer does not exist.
+- **The environment is the executing end's own** (bl-71d0). An invocation
+  carries its subject's location; everything else — `PATH`, the substrate's
+  home, the state root, the credentials — comes from the machine that runs it.
+  The server's composed world fold (DESIGN §16.2: `LERNIE_HOME`,
+  `XDG_STATE_HOME` and the rest of the nested world) is **never shipped across
+  the wire.** It names paths that exist on the server and nowhere else, so an
+  env that crossed would at best be inert and at worst point a remote process at
+  a directory of the same name on the wrong box; and a server that folded env
+  into another operator's machine would be administering a box it does not own.
+  Substrate access therefore reaches an agent as a **tool the executing end
+  advertises** (§12's thrall) or as an engine act, never as ambient inherited
+  env. As the tree stands the executing end already supplies its own
+  environment — `src/wire/host/exec.rs` spawns the operator's argv folding
+  nothing off the wire — and the subject location is the host config's own
+  `cwd` (§5.2); carrying the location on the *invocation* instead is the half
+  bl-1dd3's thrall moves.
+- **No broadcast** (bl-71d0). The invocation shape names one addressee and takes
+  no hosts list, in the wire verb (§5.3's `invoke`) and in the loaded name
+  alike. One adjudication decision must stand for exactly one execution on one
+  machine, and a list would make it stand for N on N — with one refusal, one
+  deadline and one capture to describe all of them. If fan-out ever becomes hot
+  it is a distinct tool that makes sub-calls, with its own name, its own schema
+  and its own trip through the chokepoint, never an overload of `invoke`.
 - **Use is attempt.** A loaded tool, when called, is attempted: routed to
   the client, and refused in band when it cannot be — an error tool result is
   an appended message the model reacts to, never a prefix change. The same
@@ -464,7 +510,21 @@ why it is one tool rather than one per op — and why loaded remote tools still
 surface as individually named definitions of their own. lernie's
 `docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too: a generic
 `call {client, tool, arguments}` would collapse the role grant, the grant gate,
-the tool control and every future policy into one bit. The declared schema:
+the tool control and every future policy into one bit.
+
+**The same question was re-put by bl-71d0 as a *wrapper meta-tool* — one
+declared tool carrying an untyped payload — and refused again, with two reasons
+of its own.** It loses **emission-time validation**: the provider validates the
+wrapper's schema, and the wrapper's schema says nothing about the tool actually
+being called, so a malformed call becomes a runtime refusal on a far machine
+instead of a model correcting itself before it emits. And it forces the
+**adjudication chokepoint to unwrap a payload** before it can see what is being
+asked — judging a string it must first parse, rather than a call. Its one
+virtue is discovery without a server-side change, and that is exactly what
+`load` already delivers on a surface the model reads and the chokepoint can
+see. §5's host-qualified naming is the alternative, and it costs no new verb.
+
+The declared schema:
 
 ```json
 {"name": "clients",
@@ -501,6 +561,16 @@ loads one. Prefixing *conditionally* would make a tool's own name depend on what
 some other machine advertises, so a name the model already learned could change
 under it; one rule and no case. A composed name a provider's tool block would
 refuse declines at the load, naming it.
+
+**That unconditional prefix IS §5's host-qualification** (bl-71d0), and reading
+it as a collision fix undersells it: the name is the locality, so there is no
+tool a model can call without having said which machine answers, and no case
+where two hosts' schemas have to be reconciled under one name. The underscore
+is the joiner because it survives the providers' tool-name grammars —
+`loaded::callable` refuses a composed name that would not (alphanumerics, `_`
+and `-`, at most 64 characters; checked at the load act, not at the call, so a
+model never learns a name a provider will refuse) — and the punctuation is the
+only part of this that is negotiable.
 
 **The loaded set is durable, and its document is**
 
@@ -2782,6 +2852,24 @@ Recorded so they are not relitigated:
   ruling became the payer. Until bl-0716 lands, the tree still ships the
   multi-call single binary, and §8's description of it stays accurate prose
   about the present tree.
+- **A wrapper meta-tool — one declared tool carrying an untyped payload**
+  (bl-71d0, reasons in §5.2). It loses emission-time validation, since the
+  provider validates the wrapper and not the call inside it, and it makes the
+  adjudication chokepoint parse a payload before it can see what is being
+  asked. Its one virtue, discovery without a server-side change, is what `load`
+  already delivers. Host-qualified names (§5) are the answer that costs no
+  verb.
+- **A hosts list on the invocation — fan-out by broadcast** (bl-71d0, §5). One
+  adjudication decision stands for one execution on one machine; a list makes
+  it stand for N, with one refusal, one deadline and one capture to describe
+  all of them. Fan-out, if it ever pays, is a distinct tool making sub-calls
+  through the same chokepoint, never an overload of `invoke`.
+- **Shipping the server's world fold across the wire** (bl-71d0, §5) — handing
+  a remote executor the engine's composed env (`LERNIE_HOME`, `XDG_STATE_HOME`,
+  DESIGN §16.2) so its tools "see the same substrate". Those paths exist on the
+  server and nowhere else; the executing end supplies its own environment, and
+  substrate access is a tool the executing end advertises or an engine act.
+  This is the client-side twin of the next entry.
 - **Syncing or mounting the world at clients** (network filesystem, rsync,
   shared checkout) — the world never leaves the server; clients receive
   replies, not files. Two full engines over one networked disk is the
