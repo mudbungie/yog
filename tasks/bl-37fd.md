@@ -1,8 +1,8 @@
 +++
 title = "adopt the four-component split: yog server, lernie seat, litany engine, thrall foot"
 created = 1787977082
-updated = 1787977082
-priority = 5
+updated = 1787977107
+priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Operator ruling 2026-08-28. The harness splits into four separately installed components, meeting only at the wire; brazen is unchanged as the provider adapter.
