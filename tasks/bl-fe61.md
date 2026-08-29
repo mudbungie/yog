@@ -1,7 +1,8 @@
 +++
 title = "litany seam inversion: every tool routes through injection"
 created = 1787977101
-updated = 1787977110
+updated = 1787977830
+claimant = "OrderInverter"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
