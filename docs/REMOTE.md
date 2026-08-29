@@ -542,14 +542,33 @@ where it is the same ruling it always was.
 - The workspace surface renders its registered clients — present or absent —
   and each one's advertised tools, live: the seat sees the flap; the model's
   prefix does not.
-- **Invocation path:** the agent's tool call hits lernie's tool seam →
+- **Invocation path — one pipeline, and there is no second one** (amended by
+  bl-fe61 under §12's front-door invariant; it used to route *designated* tools
+  this way and execute the rest in the driver). **Every** tool call the agent
+  makes takes the same road: it hits the engine's injection seam →
   server-side adjudication (`yog tool-control`, unchanged, fails closed) →
   the driver queues the invocation in that client's engine-side mailbox → the
-  tool host, waiting on its follow-class read, is handed it → the client
-  executes locally → the client posts the capture back as an ordinary act →
+  thrall, waiting on its follow-class read, is handed it → it executes on its
+  own box → it posts the capture back as an ordinary act →
   the driver's poll collects it. A routed invocation carries a deadline; a
   vanished client is a visible refusal, not a hang. **Nothing in that path is
   the engine speaking first** (§3).
+
+  **The engine's driver keeps no local executor.** Not a fallback, not a
+  fast path for the co-located case, not a residual for tools nobody routed —
+  adjudicate → mailbox → execute → capture is the whole of it. A driver that
+  could still run a binary itself would be a second pipeline with its own
+  adjudication story, its own capture shape and its own containment claim, and
+  the one an operator hit would depend on which tools happened to be
+  designated. The engine does not care where execution happens: it emits the
+  invocation and waits on the capture.
+
+  **So a server with zero enrolled thralls refuses every tool call, in band.**
+  That is §12's ship-inert posture working, not an error state and not a
+  degraded mode: with nowhere to route, use-is-attempt gives the model an error
+  tool result it reacts to, exactly as it does for a tool a client no longer
+  carries. Enrolling a thrall — the local one included — is the explicit
+  operator act that makes execution possible at all.
 - **Honesty about containment:** execution happens on a machine the
   adjudicator cannot inspect. Adjudication judges the invocation exactly as
   today; any containment beyond that is whatever the client enforces locally,
@@ -564,7 +583,12 @@ where it is the same ruling it always was.
   name outranks an elected one, the per-invocation disk record stays the
   executor's, and adjudication is untouched. yog owns the registry, the
   advertisement, the routing and the adjudication chokepoint; §5.2 is what it
-  filled the seam with.
+  filled the seam with. **The seam's scope is what bl-fe61 inverts**, and only
+  its scope: the same object, the same two halves, the same rule that an
+  injected name outranks an elected one — but the router is consulted for every
+  call rather than ahead of a binary resolution that no longer stands behind
+  it. Deleting the executor is the engine's half of that ball and lands in the
+  engine's own repo; this document is what it implements against.
 
 ### 5.1 The advertisement, as landed (bl-4e08)
 
