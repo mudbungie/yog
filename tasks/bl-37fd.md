@@ -1,7 +1,8 @@
 +++
 title = "adopt the four-component split: yog server, lernie seat, litany engine, thrall foot"
 created = 1787977082
-updated = 1787977107
+updated = 1787977175
+claimant = "Order"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
