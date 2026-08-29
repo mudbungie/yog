@@ -1,7 +1,8 @@
 +++
 title = "enforce the foot grade: read it off the leaf, mint it, and raise on it at the chokepoint"
 created = 1787977716
-updated = 1787977716
+updated = 1787977983
+claimant = "OrderInverter"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
