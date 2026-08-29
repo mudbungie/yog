@@ -2776,9 +2776,12 @@ Recorded so they are not relitigated:
   surface §1.3–§1.4 exist to exclude.
 - **An in-channel pairing/enrollment protocol** — bootstrap is out-of-channel
   by ruling; convenience flows reopen the exact surface mTLS closed.
-- **A separate client crate or binary for v1** — the multi-call single binary
-  stays (DESIGN §0); a foreign-language client is a future consumer of the
-  wire, not a reason to split the crate now.
+- ~~**A separate client crate or binary for v1**~~ — **lifted by the bl-37fd
+  ruling (§12)**: the four-component split makes the seat its own crate and
+  repo. The rejection's reasoning — no payer for a split — held until the
+  ruling became the payer. Until bl-0716 lands, the tree still ships the
+  multi-call single binary, and §8's description of it stays accurate prose
+  about the present tree.
 - **Syncing or mounting the world at clients** (network filesystem, rsync,
   shared checkout) — the world never leaves the server; clients receive
   replies, not files. Two full engines over one networked disk is the
@@ -2812,3 +2815,59 @@ Recorded so they are not relitigated:
   flow supersedes (bl-c5fe). Revisit only for a provider with neither a device
   flow nor a reachable redirect, once one exists with a payer; until then the
   stated operator port-forward is the remedy.
+
+## 12. The four-component split (adopted 2026-08-28, bl-37fd)
+
+Operator ruling: the harness becomes four separately installed components
+meeting only at the wire; brazen stays the provider adapter beneath the
+engine. This section is the ruling's home — the components, the invariants and
+the order live here; every other section keeps describing the tree as it
+stands and is amended by the ball that moves it.
+
+- **yog** — the standalone server: holder of the world, the balls, the
+  conversations. No UI, no execution. What is `yog serve` today becomes the
+  whole binary (bl-7942).
+- **lernie** — the seat: the window and the seat-client face, extracted into
+  their own crate and repo (bl-0716). The crate name flips at a version
+  fence: the engine's line ends at 0.0.x, the seat's begins at 0.1.0, and
+  both READMEs state the fence — the published record carries two eras of
+  the name, and the fence is the one disambiguation rule.
+- **litany** — the agent-loop engine: the crate named lernie until the fence
+  (bl-9905). The crates.io name is held at 0.0.0.
+- **thrall** — the foot: §2's tool host severed into its own installable
+  (bl-1dd3), carrying a foot-grade certificate — advertise and execute only,
+  no ask, no act. The name is likewise held.
+
+Two invariants ride with the ruling:
+
+1. **Front door only.** Every execution is transported over the real wire —
+   real socket, real handshake, real leaf — extending §1.2's bl-ae05 ruling
+   from the window to execution itself. No in-process executor, and no
+   unix-socket second transport in v1: one transport, one code path, no
+   place to hide the bug.
+2. **Ship inert.** A yog with zero enrolled thralls is valid and is the
+   default. The server is structurally incapable of executing anything until
+   a thrall is enrolled — even a single-box install enrolls its local thrall
+   as an explicit operator act. A tool call with no thrall to route to
+   refuses in band (§5's use-is-attempt), which is the posture working, not
+   an error state.
+
+Consequences the ruling fixes, each landed by its own ball: with the front
+door extended to execution there is exactly one invocation pipeline —
+adjudicate → mailbox → execute → capture — and the engine's driver keeps no
+local executor (bl-fe61); tool locality is host-qualified and subject-local,
+with the server's world fold never shipped across the wire (bl-71d0);
+separately installed ends make version skew possible for the first time, so
+the handshake carries a protocol version and a mismatch refuses fail-closed,
+naming both versions (bl-a670). With the versioned wire, this document
+becomes the protocol authority all four components implement against, and
+each repo's DESIGN governs only its own component.
+
+Migration order (strangler; each step ships green): thrall founded (bl-1dd3)
+→ engine renamed (bl-9905) → seat severed, with yog's window mode riding one
+deprecated release (bl-0716) → yog drops the UI and goes inert by default
+(bl-7942).
+
+Supersessions, so stale prose is not read as live: §8's "one crate, one
+multi-call binary, as today" describes the tree until bl-0716/bl-7942 land;
+§11's rejection of a separate client crate is lifted in place above.

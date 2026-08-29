@@ -50,6 +50,15 @@ serde_json, thiserror — plus the three embedded substrates `balls`, `brazen`,
 `lernie` as **exact-pinned** crates, the pin being the version mechanism
 (§16.5; the pin authority is `Cargo.toml`).
 
+**Adopted direction (operator ruling 2026-08-28, bl-37fd): the four-component
+split.** yog becomes the standalone server alone — no UI, no execution, inert
+until a thrall (the tool-executing foot) is enrolled; the window becomes its
+own seat crate, taking the `lernie` name at a version fence; the loop engine
+continues as `litany`. REMOTE §12 is the ruling's home — the components, the
+front-door and ship-inert invariants, and the migration order live there, not
+here. This document's prose continues to describe the tree as it stands and
+is amended step by step as each of the ruling's balls lands.
+
 ---
 
 ## 1. Taxonomy
