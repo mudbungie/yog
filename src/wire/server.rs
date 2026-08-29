@@ -151,6 +151,10 @@ pub(crate) fn serve(
         return;
     };
     let mut tls = StreamOwned::new(conn, tcp);
+    // The §3 version preface, stated and checked before any gesture (bl-a670).
+    if !super::hello::admit(&mut tls) {
+        return;
+    }
     // **Presence is this scope** (REMOTE §5, bl-4e08): the guard is taken when
     // the connection first names its client and released when this function
     // leaves, however it leaves — a clean close, a refused frame, a peer that

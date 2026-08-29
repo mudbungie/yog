@@ -107,8 +107,9 @@ impl Seat {
     }
 
     /// Connect, handshake and send `request` — the half both spellings share.
-    /// The handshake happens inside the first read, so what this hands back is
-    /// a socket with an envelope on it and nothing yet read.
+    /// The TLS handshake happens inside the first write, and the one frame read
+    /// here is the engine's version preface (bl-a670), so what this hands back
+    /// is a socket with an envelope on it and no *answer* yet read.
     fn dial(&self, request: &Value) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
         let tcp = TcpStream::connect(&self.address)
             .map_err(|e| format!("connect {}: {e}", self.address))?;
@@ -117,7 +118,13 @@ impl Seat {
         let conn = ClientConnection::new(Arc::clone(&self.config), self.name.clone())
             .map_err(|e| format!("tls {}: {e}", self.address))?;
         let mut tls = StreamOwned::new(conn, tcp);
+        // **Both ends state a protocol version before either reads** (REMOTE
+        // §3, bl-a670). The request goes out in the same breath as the
+        // preface, so confirming the engine's costs no round trip — and a
+        // mismatch refuses here, before a frame of the answer is decoded.
+        super::hello::state(&mut tls).map_err(|e| format!("send: {e}"))?;
         frame::write_value(&mut tls, request).map_err(|e| format!("send: {e}"))?;
+        super::hello::confirm(&mut tls)?;
         Ok(tls)
     }
 }

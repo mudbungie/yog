@@ -60,6 +60,9 @@ pub mod dial;
 /// workspace hosted on another box.
 pub mod entries;
 pub mod frame;
+/// The version preface (REMOTE §3, bl-a670): what each end states about itself
+/// before it says anything, and the fail-closed refusal a skew earns.
+pub mod hello;
 /// The tool-host client mode (REMOTE §5, bl-024b) — the wire's second shipped
 /// client: it advertises what this machine can run, rides a follow-class read
 /// for its next invocation, and posts each capture back.

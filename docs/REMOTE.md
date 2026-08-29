@@ -106,7 +106,10 @@ terminate at one listener.
 The protocol **is** the existing gesture surface: `Act(Action) | Ask(Query)`
 in, `Reply` out, in the JSON serialization the codec already defines
 exhaustively (`src/boundary/codec.rs`, strict decode, compile-gated). The wire
-is a transport for that surface, not a vocabulary:
+is a transport for that surface, not a vocabulary. It states exactly one fact
+of its own — **the protocol version each end speaks** (bl-a670, below), which
+is a fact about the transport's two ends and about nothing the boundary
+says — and adds no verb, no field and no envelope:
 
 - **No wire-only verbs.** A capability a client needs and the boundary lacks
   is added to the boundary — every face gains it — never to the wire alone.
@@ -123,13 +126,76 @@ is a transport for that surface, not a vocabulary:
   **The streaming form is not a second form.** Every answer is a stream, so a
   follow-class read is the general path with more than one frame in it — no
   flag, no version, no second reader, and nothing to add when the first
-  follow-class `Query` lands. That promise was tested and held by bl-73e7's
+  follow-class `Query` lands. (*"No version"* is about the **framing**: a frame
+  never says what shape it is. The connection's version preface below is a
+  different fact — who is speaking, stated once per connection — and it changes
+  nothing about how a frame is read.) That promise was tested and held by bl-73e7's
   `Query::Follow`, the first read whose N is greater than 1: no flag, no
   version, no second reader were added. What the engine *did* have to change is
   that `Answerer::answer` hands back a lazy iterator rather than a `Vec` — a
   materialized answer must be finished before its first frame can be written,
   and a read that answers as the world changes never finishes. That is a
   signature, not a protocol.
+- **Every connection opens with a version preface** *(decided and landed,
+  bl-a670 — `src/wire/hello.rs`)*: **each end writes one frame,
+  `{"protocol": <integer>}`, before it reads the peer's.** Both write before
+  either reads, so neither waits on the other and there is no ordering rule to
+  remember. `PROTOCOL` is `1`.
+
+  **Why now, and not before.** Until the four-component split (§12) one crate
+  shipped both ends of every connection, so the wire could not skew and a
+  version would have been a field nobody could ever disagree about. Four
+  separately installed components can skew, and the day yog, lernie, litany and
+  thrall are upgraded on their own schedules is the day an unversioned wire
+  starts answering an old question with a new meaning.
+
+  **A mismatch is fail-closed, and the refusal names both versions.** No
+  version list, no capability probe, no compat shim, no downgrade: the engine
+  refuses in band on the connection the peer opened — *before* any gesture is
+  decoded, so a request of a version this build does not speak is never
+  adjudicated — and a seat refuses to its caller as the one `Err(String)` every
+  other transport failure already arrives as (§9.7). Both say the same
+  sentence, and it names **this end's version, the peer's, and the remedy**.
+  **The refusal is the upgrade prompt**, which is the whole reason it must name
+  a number an operator can act on rather than a code. Negotiation is the
+  mechanism that makes every later version carry every earlier one's shape
+  forever, and nobody here is paying for that: an operator who installs both
+  ends can upgrade the older one.
+
+  **A peer that states no version is refused exactly as a peer of the wrong
+  one.** An unversioned build (a gesture envelope where a preface belongs), a
+  frame that is not an object, and a peer that hung up mid-preface are one
+  case, because none of them can be served and three sentences for one outcome
+  is three sentences. The pre-version era is diagnosed rather than
+  special-cased.
+
+  **It adds nothing to the boundary, and that is not a technicality.** The
+  preface rides *beside* the gesture envelope, never inside it, so the frame
+  the wire carries is still byte for byte the frame the `gestures/` inbox
+  carries and the codec gains no field — the version is a fact about the
+  *transport's* two ends, and the disk inbox has only one. It costs no round
+  trip either: a seat writes its preface and its request in the same breath and
+  confirms the engine's on the way to the answer.
+
+  **ALPN was the alternative and it cannot say this.** rustls will refuse a
+  handshake whose application protocol does not match, at no cost and with no
+  frame — but that refusal is a TLS alert, so neither end learns the other's
+  version and an operator reads a transport error where a sentence belongs.
+  Naming both versions is the requirement, so the preface is in band.
+
+  **What bumps it.** A new `Query`, a new `Action` or a new reply kind is
+  **not** a bump: the strict decode already refuses an unknown one in band,
+  naming it, which is the boundary correcting itself rather than two protocols
+  meeting. The integer moves when the *existing* shape changes meaning — the
+  framing, the envelope, or what a spelling already in use is taken to say.
+- **This document is the protocol authority** (bl-a670, with §12's split). All
+  four components implement against REMOTE; **each repo's DESIGN governs only
+  its own component.** Where a component doc describes the wire it **cites this
+  section rather than restating it** — one fact, one home, because four
+  restatements of a protocol drift into four protocols. What a component's own
+  DESIGN owns is everything on its side of the socket: yog's world and its
+  chokepoints, the seat's window, the engine's loop, the thrall's local
+  execution corpus.
 - **`Reply` gains a decode side.** Today the reply codec is encode-only. The
   client is in-crate (§8), so the hand-codec discipline extends to decode;
   serde derive stays a non-dependency (existing stance, `src/ui_state`).

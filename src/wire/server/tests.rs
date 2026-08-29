@@ -24,6 +24,10 @@ mod lazy;
 /// REMOTE §5's live half (bl-4e08), split off at §12's cap: everything here is
 /// the listener's own contract, and that is the presence it keeps beside it.
 mod presence;
+/// REMOTE §3's version preface (bl-a670), split off at §12's cap beside the
+/// three below and for their reason: one contract of this listener, argued
+/// whole — here, whether a peer is admitted at all.
+mod protocol;
 
 /// An answerer that counts what it was asked and echoes it back inside a
 /// reply-shaped envelope — the boundary's own shape without the boundary.
