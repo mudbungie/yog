@@ -1,7 +1,8 @@
 +++
 title = "found thrall: the foot that owns the local execution corpus"
 created = 1787977099
-updated = 1787977107
+updated = 1787977674
+claimant = "OrderScribe"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
