@@ -37,7 +37,7 @@ struct Yes;
 impl Answerer for Yes {
     fn answer(
         &self,
-        _client: &yog::registry::Client,
+        _peer: &yog::registry::Peer,
         request: serde_json::Value,
     ) -> Box<dyn Iterator<Item = serde_json::Value>> {
         Box::new(std::iter::once(

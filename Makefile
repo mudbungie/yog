@@ -144,9 +144,14 @@ beat-audit:
 # client leaf under that name, over the CA already here — the host half of
 # provisioning an entry on a visiting box. The pair is then carried to that box
 # by hand, which is §1.4 verbatim and forever.
+# `WIRE_FOOT=1` beside it grades that leaf a FOOT (REMOTE §4.2): a tool host
+# that may advertise, take invocations and complete them, and say nothing else
+# to the boundary. Unset is operator grade — inherited from the environment like
+# FORCE, so there is no word to mistype into a demotion.
 #   make wire-certs
 #   make wire-certs WIRE_HOST=engine.example.com WIRE_PORT=7737
 #   make wire-certs WIRE_LEAF=phone
+#   WIRE_FOOT=1 make wire-certs WIRE_LEAF=buildbox
 wire-certs:
 	@WIRE_DIR="$(WIRE_DIR)" WIRE_HOST="$(WIRE_HOST)" WIRE_PORT="$(WIRE_PORT)" \
 		WIRE_LEAF="$(WIRE_LEAF)" cargo run --quiet -- wire-certs

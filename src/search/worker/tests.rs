@@ -23,7 +23,7 @@ struct Says(Vec<Value>);
 impl Answerer for Says {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         _request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         Box::new(self.0.clone().into_iter())

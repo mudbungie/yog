@@ -6,6 +6,9 @@
 /// start flow is, at both intakes. Its own file beside [`scope`] for that
 /// file's reason — a real seam, and the one the drive reproduced on.
 mod birth;
+/// The REMOTE §4.2 half (bl-7ff3): the certificate grade raising at this same
+/// chokepoint — what a foot may say, and the sentence everything else earns.
+mod grade;
 /// The scoped intake (REMOTE §4, bl-8bbc): what a connection enumerates, what
 /// an unregistered name earns, and the create that seats its own client. Its
 /// own file at §12's cap — a real seam, because everything above is the
@@ -119,6 +122,21 @@ fn listed(reply: &serde_json::Value) -> Vec<String> {
 
 fn client(name: &str) -> crate::registry::Client {
     crate::registry::Client::parse(name).expect("a usable identity")
+}
+
+/// A peer of operator grade (REMOTE §4.2) — every seat, and every certificate
+/// minted before the grade existed. The default the scope tests are written
+/// against; the foot's own raise is [`grade`]'s.
+fn operator(client: crate::registry::Client) -> crate::registry::Peer {
+    crate::registry::Peer {
+        client,
+        grade: crate::registry::Grade::Operator,
+    }
+}
+
+/// [`operator`] over a named identity — the everyday spelling.
+fn seat(name: &str) -> crate::registry::Peer {
+    operator(client(name))
 }
 
 #[test]

@@ -19,8 +19,8 @@ fn a_wire_client_enumerates_only_its_registrations() {
         data.path().to_path_buf(),
         Cli::new("/no/such/lernie"),
     );
-    let phone = client("phone");
-    crate::registry::register(root.path(), &phone, "home").unwrap();
+    let phone = seat("phone");
+    crate::registry::register(root.path(), &phone.client, "home").unwrap();
     let reply = ctx.answer_as(&phone, &json!({"op": "workspaces"}));
     assert_eq!(listed(&reply), ["home".to_owned()]);
 
@@ -34,7 +34,7 @@ fn a_wire_client_enumerates_only_its_registrations() {
     );
     // A certificate the operator has not seated sees no workspace at all —
     // the general path with no registrations, not a bootstrap case.
-    assert!(listed(&ctx.answer_as(&client("stranger"), &json!({"op": "workspaces"}))).is_empty());
+    assert!(listed(&ctx.answer_as(&seat("stranger"), &json!({"op": "workspaces"}))).is_empty());
 }
 
 /// **Absence, not a scope error** (§4): a gesture naming an unregistered
@@ -50,8 +50,8 @@ fn an_unregistered_workspace_refuses_exactly_as_an_unknown_one() {
         data.path().to_path_buf(),
         Cli::new("/no/such/lernie"),
     );
-    let phone = client("phone");
-    crate::registry::register(root.path(), &phone, "home").unwrap();
+    let phone = seat("phone");
+    crate::registry::register(root.path(), &phone.client, "home").unwrap();
     let hidden = ctx.answer_as(&phone, &json!({"op": "conversations", "workspace": "corp"}));
     let absent = ctx.answer_as(
         &phone,
@@ -72,7 +72,7 @@ fn an_unregistered_workspace_refuses_exactly_as_an_unknown_one() {
 #[test]
 fn a_torn_envelope_refuses_over_the_wire_too() {
     let root = tempdir().unwrap();
-    let refusal = ctx(root.path()).answer_as(&client("phone"), &json!({"op": "enhance"}));
+    let refusal = ctx(root.path()).answer_as(&seat("phone"), &json!({"op": "enhance"}));
     assert_eq!(refusal["ok"], false);
     assert!(
         refusal["error"]
@@ -99,7 +99,7 @@ fn a_workspace_created_over_the_wire_registers_its_creator() {
         data.path().to_path_buf(),
         fake_lernie(bin.path()),
     );
-    let phone = client("phone");
+    let phone = seat("phone");
     let reply = ctx.answer_as(
         &phone,
         &json!({"op": "prepare", "workspace": "fresh", "payload": {"rung": "bare"}}),
@@ -110,7 +110,7 @@ fn a_workspace_created_over_the_wire_registers_its_creator() {
         "the raise founded it under yog's flat names root"
     );
     assert_eq!(
-        crate::registry::registered(root.path(), &phone),
+        crate::registry::registered(root.path(), &phone.client),
         std::collections::BTreeSet::from(["fresh".to_owned()])
     );
     // And nobody else was seated by it.
@@ -134,14 +134,14 @@ fn a_create_naming_a_workspace_that_exists_refuses_rather_than_joining_it() {
         data.path().to_path_buf(),
         fake_lernie(bin.path()),
     );
-    let phone = client("phone");
+    let phone = seat("phone");
     let refusal = ctx.answer_as(
         &phone,
         &json!({"op": "prepare", "workspace": "corp", "payload": {"rung": "bare"}}),
     );
     assert_eq!(refusal["ok"], false);
     assert_eq!(refusal["error"], "unknown workspace \"corp\"");
-    assert!(crate::registry::registered(root.path(), &phone).is_empty());
+    assert!(crate::registry::registered(root.path(), &phone.client).is_empty());
 }
 
 /// The raised name becomes a directory, so it is checked on the same terms the
@@ -159,7 +159,7 @@ fn a_raise_naming_something_that_is_not_a_plain_component_refuses() {
     );
     for name in ["../elsewhere", ".."] {
         let refusal = ctx.answer_as(
-            &client("phone"),
+            &seat("phone"),
             &json!({"op": "prepare", "workspace": name, "payload": {"rung": "bare"}}),
         );
         assert_eq!(refusal["ok"], false, "{name}");
@@ -184,8 +184,8 @@ fn a_follow_resolves_its_address_under_the_callers_scope() {
         data.path().to_path_buf(),
         Cli::new("/no/such/lernie"),
     );
-    let phone = client("phone");
-    crate::registry::register(root.path(), &phone, "home").unwrap();
+    let phone = seat("phone");
+    crate::registry::register(root.path(), &phone.client, "home").unwrap();
     let follow = |workspace: &str, agent: &str| json!({"op": "follow", "workspace": workspace, "agent": agent});
 
     // Nothing this seat may not see: the workspace it is not seated in, and a
@@ -219,6 +219,6 @@ fn nothing_but_a_follow_is_a_stream() {
         json!({"op": "teleport"}),
         json!("not even an object"),
     ] {
-        assert!(ctx.follow(&client("phone"), &request).is_none());
+        assert!(ctx.follow(&seat("phone"), &request).is_none());
     }
 }

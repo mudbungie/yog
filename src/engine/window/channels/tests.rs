@@ -41,7 +41,7 @@ struct Hosts(&'static str);
 impl Answerer for Hosts {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         _request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         Box::new(std::iter::once(crate::boundary::reply::encode(

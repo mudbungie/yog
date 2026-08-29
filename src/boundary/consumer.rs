@@ -91,7 +91,17 @@ impl ConsumerCtx {
     /// outside the scope is, by construction, a creation, and registering it is
     /// the general path rather than a branch: §4's "a workspace created over
     /// the wire auto-registers its creating client", with nothing to detect.
-    pub fn answer_as(&self, client: &crate::registry::Client, request: &Value) -> Value {
+    ///
+    /// **The grade raises here, one line above the scope's own filter**
+    /// (REMOTE §4.2, bl-7ff3). This is the place the client identity is already
+    /// spent, so it is the place the certificate's other fact is spent too: a
+    /// foot may advertise, take its invocations and complete one, and anything
+    /// else it says is refused **in band, naming the grade** rather than
+    /// answered absent-shaped. The raise is ahead of the dispatch and ahead of
+    /// the auto-registration below it, so a refused gesture founds nothing and
+    /// seats nothing.
+    pub fn answer_as(&self, peer: &crate::registry::Peer, request: &Value) -> Value {
+        let client = &peer.client;
         let scope = crate::registry::registered(&self.state_root, client);
         let (deps, ts, now_unix) = self.deps(client, Some(&scope));
         let mut ui = UiState::open_at(
@@ -101,6 +111,9 @@ impl ConsumerCtx {
         let Ok(gesture) = super::codec::decode(request) else {
             return run_value(&deps, &mut ui, &ts, now_unix, request);
         };
+        if !peer.grade.admits(&gesture) {
+            return super::reply::refusal(crate::registry::peer::REFUSAL);
+        }
         let named = gesture.workspace();
         let answered = run_gesture(&deps, &mut ui, &ts, now_unix, &gesture);
         if let Some(name) = named
@@ -127,16 +140,26 @@ impl ConsumerCtx {
     /// answer — the identity is per request (REMOTE §4) and a held read is one
     /// request. What the stream then re-reads per look is the state of a
     /// conversation this caller was already authorized for.
+    ///
+    /// **A foot never reaches the lane** (REMOTE §4.2, bl-7ff3): a follow-class
+    /// read is not one of the three gestures its grade admits, so this answers
+    /// `None` for it and [`answer_as`](Self::answer_as) words the refusal —
+    /// which is the same fall-through an unresolvable address already takes.
     pub fn follow(
         &self,
-        client: &crate::registry::Client,
+        peer: &crate::registry::Peer,
         request: &Value,
     ) -> Option<Box<dyn Iterator<Item = Value>>> {
-        let Ok(super::Gesture::Ask(super::Query::Follow { workspace, agent })) =
-            super::codec::decode(request)
-        else {
+        let Ok(gesture) = super::codec::decode(request) else {
             return None;
         };
+        if !peer.grade.admits(&gesture) {
+            return None;
+        }
+        let super::Gesture::Ask(super::Query::Follow { workspace, agent }) = gesture else {
+            return None;
+        };
+        let client = &peer.client;
         let scope = crate::registry::registered(&self.state_root, client);
         let (deps, _, _) = self.deps(client, Some(&scope));
         let ws = deps.snapshot.ws_path(&workspace).ok()?;

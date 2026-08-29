@@ -33,7 +33,7 @@ struct Echo(&'static str);
 impl Answerer for Echo {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         let named = request
@@ -55,7 +55,7 @@ struct Lists(&'static str);
 impl Answerer for Lists {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         _request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         Box::new(std::iter::once(crate::boundary::reply::encode(

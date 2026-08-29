@@ -23,8 +23,8 @@
 
 use super::frame;
 use super::material::Material;
-use crate::registry::Client;
 use crate::registry::presence::Presence;
+use crate::registry::{Client, Peer};
 use rustls::pki_types::CertificateDer;
 use rustls::{ServerConfig, ServerConnection, StreamOwned};
 use serde_json::Value;
@@ -51,13 +51,15 @@ const ACCEPT_POLL: Duration = Duration::from_millis(20);
 /// and dropping the iterator is how a peer that went away stops the work,
 /// with nothing to cancel and no second channel to say so.
 ///
-/// **`client` is the connection's authorization** (REMOTE §4, bl-8bbc): the
-/// identity read off the certificate the peer presented, which the engine
-/// resolves to the workspaces that client is registered in. It is a parameter
-/// rather than connection state because the answer is the only thing that ever
-/// needs it, and a field would be a second copy of what the certificate says.
+/// **`peer` is the connection's authorization** (REMOTE §4, §4.2; bl-8bbc,
+/// bl-7ff3): the identity read off the certificate the peer presented — which
+/// the engine resolves to the workspaces that client is registered in — beside
+/// the grade the same subject carries, which decides what it may say at all. It
+/// is a parameter rather than connection state because the answer is the only
+/// thing that ever needs it, and a field would be a second copy of what the
+/// certificate says.
 pub trait Answerer: Send + Sync {
-    fn answer(&self, client: &Client, request: Value) -> Box<dyn Iterator<Item = Value>>;
+    fn answer(&self, peer: &Peer, request: Value) -> Box<dyn Iterator<Item = Value>>;
 }
 
 /// The listener thread. Owns its join handle and a stop flag; [`Drop`] signals
@@ -171,11 +173,11 @@ pub(crate) fn serve(
         // carries no name yog can use is dropped without a reply, on exactly
         // the terms an unauthenticated peer is — a connection that cannot be
         // authorized gets nothing said to it.
-        let Some(client) = peer_client(tls.conn.peer_certificates()) else {
+        let Some(peer) = peer_client(tls.conn.peer_certificates()) else {
             return;
         };
-        let _ = live.get_or_insert_with(|| presence.enter(&client));
-        for chunk in answerer.answer(&client, request) {
+        let _ = live.get_or_insert_with(|| presence.enter(&peer.client));
+        for chunk in answerer.answer(&peer, request) {
             if frame::write_value(&mut tls, &chunk).is_err() {
                 return;
             }
@@ -186,13 +188,18 @@ pub(crate) fn serve(
     }
 }
 
-/// The client identity a presented chain names (REMOTE §2): the **leaf's**
-/// subject common name. The leaf is the first certificate — TLS sends the end
-/// entity first and the chain toward the anchor after it, so the issuer's own
-/// common name is never mistaken for the peer's.
-pub(crate) fn peer_client(chain: Option<&[CertificateDer<'_>]>) -> Option<Client> {
-    let name = crate::registry::leaf::common_name(chain?.first()?)?;
-    Client::parse(&name).ok()
+/// The peer a presented chain names (REMOTE §2, §4.2): the **leaf's** subject
+/// common name, and the grade the same subject carries. The leaf is the first
+/// certificate — TLS sends the end entity first and the chain toward the anchor
+/// after it, so the issuer's own common name is never mistaken for the peer's,
+/// and an `OU` on the CA is never mistaken for a grade on the client.
+pub(crate) fn peer_client(chain: Option<&[CertificateDer<'_>]>) -> Option<Peer> {
+    let leaf = chain?.first()?;
+    let client = Client::parse(&crate::registry::leaf::common_name(leaf)?).ok()?;
+    Some(Peer {
+        client,
+        grade: crate::registry::leaf::grade(leaf),
+    })
 }
 
 #[cfg(test)]

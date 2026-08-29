@@ -11,7 +11,7 @@ struct Silent;
 impl server::Answerer for Silent {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         _request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         Box::new(std::iter::once(json!({"ok": true})))

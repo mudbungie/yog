@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
-use super::super::{Answerer, Client, Listener};
+use super::super::{Answerer, Listener, Peer};
 use crate::registry::presence::Presence;
 use crate::test_support::wire::{material, mint};
 use crate::wire::client::Seat;
@@ -28,7 +28,7 @@ fn a_frame_is_written_as_it_is_produced_rather_than_when_the_answer_ends() {
     struct Paced(Arc<AtomicUsize>);
 
     impl Answerer for Paced {
-        fn answer(&self, _client: &Client, _request: Value) -> Box<dyn Iterator<Item = Value>> {
+        fn answer(&self, _peer: &Peer, _request: Value) -> Box<dyn Iterator<Item = Value>> {
             let gate = Arc::clone(&self.0);
             Box::new((0..2).map(move |n| {
                 while gate.load(Ordering::Relaxed) <= n {

@@ -141,7 +141,13 @@ pub fn mint(dir: &Path, address: &str, force: bool) -> Result<(), String> {
 ///   rotated — so it would put two live certificates under one identity for no
 ///   gain. A fresh common name is the remedy; rotating the trust root stays the
 ///   verb's `FORCE` over the whole directory.
-pub(crate) fn issue(dir: &Path, cn: &str) -> Result<(), String> {
+///
+/// **`grade` is minted into the subject** (REMOTE §4.2, bl-7ff3). Making a foot
+/// is minting a certificate for it, out of channel, on the operator's own CA —
+/// which is exactly the friction the out-of-channel ruling wants, and the
+/// reason the grade is not a registration field a gesture over the wire could
+/// widen, nor a config file on the box being trusted.
+pub(crate) fn issue(dir: &Path, cn: &str, grade: crate::registry::Grade) -> Result<(), String> {
     crate::registry::Client::parse(cn).map_err(|refusal| {
         format!(
             "{refusal} — a common name is one path component, and {:?} is reserved for the              in-world callers; state another one",
@@ -164,7 +170,7 @@ pub(crate) fn issue(dir: &Path, cn: &str) -> Result<(), String> {
             pair.join(" or ")
         ));
     }
-    openssl::stated_leaf(dir, cn)
+    openssl::stated_leaf(dir, cn, grade)
 }
 
 /// Every file the mint writes — the rotation's delete list, and the summary a

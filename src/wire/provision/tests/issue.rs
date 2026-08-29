@@ -7,7 +7,7 @@
 
 use super::super::{CA_KEY, ensure, issue};
 use crate::git_env;
-use crate::registry::LOCAL;
+use crate::registry::{Grade, LOCAL};
 use crate::wire::material::{ADDRESS, ANCHORS, Role, read_dir};
 use std::path::Path;
 use tempfile::TempDir;
@@ -45,7 +45,7 @@ fn a_host_issues_a_client_leaf_under_the_name_it_states() {
     let tmp = TempDir::new().expect("tmp");
     let dir = tmp.path().join("wire");
     ensure(&dir).expect("mint");
-    issue(&dir, VISITOR).expect("issue");
+    issue(&dir, VISITOR, Grade::Operator).expect("issue");
 
     let pem = dir.join(format!("{VISITOR}.pem"));
     assert!(dir.join(format!("{VISITOR}.key")).is_file(), "the key too");
@@ -87,7 +87,7 @@ fn a_host_issues_a_client_leaf_under_the_name_it_states() {
 fn the_pair_reads_back_as_an_entry_on_the_box_it_is_carried_to() {
     let host = TempDir::new().expect("tmp");
     ensure(host.path()).expect("mint");
-    issue(host.path(), VISITOR).expect("issue");
+    issue(host.path(), VISITOR, Grade::Operator).expect("issue");
 
     let visitor = TempDir::new().expect("tmp");
     let entry = visitor.path().join("workspaces").join(VISITOR);
@@ -120,13 +120,14 @@ fn a_box_with_no_ca_key_refuses_and_says_which_file() {
     let tmp = TempDir::new().expect("tmp");
     let bare = tmp.path().join("bare");
     std::fs::create_dir_all(&bare).expect("dir");
-    let refusal = issue(&bare, VISITOR).expect_err("nothing to sign with");
+    let refusal = issue(&bare, VISITOR, Grade::Operator).expect_err("nothing to sign with");
     assert!(refusal.contains(CA_KEY), "{refusal}");
 
     let client = tmp.path().join("client-box");
     std::fs::create_dir_all(&client).expect("dir");
     std::fs::write(client.join(ANCHORS), b"operator's own").expect("anchor");
-    let refusal = issue(&client, VISITOR).expect_err("a client machine cannot issue");
+    let refusal =
+        issue(&client, VISITOR, Grade::Operator).expect_err("a client machine cannot issue");
     assert!(refusal.contains(CA_KEY), "{refusal}");
     assert_eq!(
         std::fs::read(client.join(ANCHORS)).expect("anchor"),
@@ -143,10 +144,10 @@ fn a_box_with_no_ca_key_refuses_and_says_which_file() {
 fn an_existing_pair_refuses_and_names_its_remedy() {
     let tmp = TempDir::new().expect("tmp");
     ensure(tmp.path()).expect("mint");
-    issue(tmp.path(), VISITOR).expect("issue");
+    issue(tmp.path(), VISITOR, Grade::Operator).expect("issue");
     let first = std::fs::read(tmp.path().join(format!("{VISITOR}.pem"))).expect("leaf");
 
-    let refusal = issue(tmp.path(), VISITOR).expect_err("already issued");
+    let refusal = issue(tmp.path(), VISITOR, Grade::Operator).expect_err("already issued");
     assert!(refusal.contains("FORCE=1"), "{refusal}");
     assert_eq!(
         std::fs::read(tmp.path().join(format!("{VISITOR}.pem"))).expect("leaf"),
@@ -157,9 +158,12 @@ fn an_existing_pair_refuses_and_names_its_remedy() {
     // Either half is a pair as far as the guard is concerned — an issue over a
     // key still on disk would leave a certificate no key opens.
     std::fs::remove_file(tmp.path().join(format!("{VISITOR}.pem"))).expect("rm");
-    assert!(issue(tmp.path(), VISITOR).is_err(), "the key is still here");
+    assert!(
+        issue(tmp.path(), VISITOR, Grade::Operator).is_err(),
+        "the key is still here"
+    );
     std::fs::remove_file(tmp.path().join(format!("{VISITOR}.key"))).expect("rm");
-    issue(tmp.path(), VISITOR).expect("a name nothing holds");
+    issue(tmp.path(), VISITOR, Grade::Operator).expect("a name nothing holds");
 }
 
 /// The common name becomes a directory name on both boxes and a client
@@ -171,7 +175,7 @@ fn an_identity_the_registry_would_refuse_is_refused_here() {
     let tmp = TempDir::new().expect("tmp");
     ensure(tmp.path()).expect("mint");
     for name in ["", ".", "..", "a/b", "a\\b", "a\0b", LOCAL] {
-        let refusal = issue(tmp.path(), name).expect_err("unusable");
+        let refusal = issue(tmp.path(), name, Grade::Operator).expect_err("unusable");
         assert!(refusal.contains(LOCAL), "{name:?} → {refusal}");
         assert_eq!(
             std::fs::read_dir(tmp.path()).expect("dir").count(),

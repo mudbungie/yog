@@ -9,6 +9,15 @@ use serde_json::json;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
+/// The in-world caller as a peer — operator grade, which every intake without
+/// a certificate is (REMOTE §4.2).
+fn local() -> crate::registry::Peer {
+    crate::registry::Peer {
+        client: crate::registry::Client::local(),
+        grade: crate::registry::Grade::Operator,
+    }
+}
+
 fn intake(state_root: &std::path::Path) -> Intake {
     let snap = Arc::new(crate::app::Snapshot::empty(0));
     Intake::new(Arc::new(ConsumerCtx {
@@ -33,10 +42,7 @@ fn intake(state_root: &std::path::Path) -> Intake {
 fn a_request_is_one_reply_frame() {
     let root = tempdir().expect("tmp");
     let stream: Vec<_> = intake(root.path())
-        .answer(
-            &crate::registry::Client::local(),
-            json!({"op": "workspaces"}),
-        )
+        .answer(&local(), json!({"op": "workspaces"}))
         .collect();
     assert_eq!(stream.len(), 1);
     assert_eq!(stream[0]["kind"], "workspaces");
@@ -49,7 +55,7 @@ fn a_request_is_one_reply_frame() {
 fn an_unknown_verb_refuses_in_band() {
     let root = tempdir().expect("tmp");
     let stream: Vec<_> = intake(root.path())
-        .answer(&crate::registry::Client::local(), json!({"op": "teleport"}))
+        .answer(&local(), json!({"op": "teleport"}))
         .collect();
     assert_eq!(stream.len(), 1);
     assert_eq!(stream[0]["ok"], false);

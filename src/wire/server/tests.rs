@@ -39,9 +39,9 @@ struct Echo {
 }
 
 impl Answerer for Echo {
-    fn answer(&self, client: &Client, request: Value) -> Box<dyn Iterator<Item = Value>> {
+    fn answer(&self, peer: &Peer, request: Value) -> Box<dyn Iterator<Item = Value>> {
         self.asked.fetch_add(1, Ordering::Relaxed);
-        let name = client.name();
+        let name = peer.client.name();
         Box::new((0..self.chunks).map(move |n| {
             json!({"ok": true, "kind": "echo", "seq": n,
                    "asked": request, "client": name})

@@ -15,7 +15,7 @@ struct Verdict(bool);
 impl Answerer for Verdict {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         Box::new(std::iter::once(

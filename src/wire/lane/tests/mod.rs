@@ -44,7 +44,7 @@ struct Says(Vec<Value>);
 impl Answerer for Says {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         _request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         Box::new(self.0.clone().into_iter())
@@ -64,7 +64,7 @@ struct Paced {
 impl Answerer for Paced {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         _request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         let gate = Arc::clone(&self.gate);

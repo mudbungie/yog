@@ -69,21 +69,22 @@ fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = newborn_world(root.path(), data.path(), bin.path());
     let window = crate::registry::window();
-    let born = ctx.answer_as(&window, &prepare("home"));
+    let seated = operator(window.clone());
+    let born = ctx.answer_as(&seated, &prepare("home"));
     assert_eq!(born["kind"], "prepared", "{born}");
     assert!(
         crate::registry::registered(root.path(), &window).contains("home"),
         "the create seated its creator (REMOTE §4)"
     );
     let listed = ctx.answer_as(
-        &window,
+        &seated,
         &json!({"op": "conversations", "workspace": "home"}),
     );
     assert_eq!(listed["kind"], "conversations", "{listed}");
     // Scope still decides, and it decides on registration rather than on what
     // disk holds: the very same wall is absent to a certificate nobody seated.
     let refusal = ctx.answer_as(
-        &client("stranger"),
+        &seat("stranger"),
         &json!({"op": "conversations", "workspace": "home"}),
     );
     assert_eq!(refusal["error"], "unknown workspace \"home\"", "{refusal}");
@@ -119,8 +120,9 @@ fn a_scoped_clients_prepare_never_joins_anothers_wall() {
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = newborn_world(root.path(), data.path(), bin.path());
     let window = crate::registry::window();
-    let born = ctx.answer_as(&window, &prepare("home"));
+    let seated = operator(window.clone());
+    let born = ctx.answer_as(&seated, &prepare("home"));
     assert_eq!(born["kind"], "prepared", "{born}");
-    let refusal = ctx.answer_as(&client("stranger"), &prepare("home"));
+    let refusal = ctx.answer_as(&seat("stranger"), &prepare("home"));
     assert_eq!(refusal["error"], "unknown workspace \"home\"", "{refusal}");
 }

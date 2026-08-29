@@ -10,7 +10,7 @@ use tempfile::TempDir;
 fn an_unstated_plan_is_the_worlds_own_loopback() {
     let tmp = TempDir::new().expect("tmp");
     let world = world_under(tmp.path());
-    let plan = plan(&world, None, None, None, None, None);
+    let plan = plan(&world, None, None, None, None, None, None);
     assert_eq!(plan.dir, super::super::super::material::dir(&world));
     assert_eq!(
         plan.act,
@@ -35,6 +35,7 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
         Some("7000".to_owned()),
         Some("1".to_owned()),
         None,
+        None,
     );
     assert_eq!(stated, stated.clone(), "a plan is a value, and says so");
     assert_eq!(stated.dir, PathBuf::from("/elsewhere/wire"));
@@ -48,6 +49,7 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
 
     let blank = plan(
         &world,
+        Some(String::new()),
         Some(String::new()),
         Some(String::new()),
         Some(String::new()),
@@ -79,9 +81,43 @@ fn a_stated_leaf_is_the_other_act_and_takes_no_mint_facts() {
         Some("7000".to_owned()),
         Some("1".to_owned()),
         Some("phone".to_owned()),
+        None,
     );
     assert_eq!(stated.dir, super::super::super::material::dir(&world));
-    assert_eq!(stated.act, Act::Leaf("phone".to_owned()));
+    assert_eq!(
+        stated.act,
+        Act::Leaf("phone".to_owned(), Grade::Operator),
+        "an unstated grade is operator, which is what keeps every existing recipe working"
+    );
+}
+
+/// `WIRE_FOOT` grades the same act and nothing else (REMOTE §4.2): it is
+/// presence-shaped like `FORCE`, so there is no word to mistype into a
+/// demotion, and an empty statement is not one.
+#[test]
+fn a_stated_foot_grades_the_leaf_and_an_empty_one_does_not() {
+    let tmp = TempDir::new().expect("tmp");
+    let world = world_under(tmp.path());
+    let footed = plan(
+        &world,
+        None,
+        None,
+        None,
+        None,
+        Some("box".to_owned()),
+        Some("1".to_owned()),
+    );
+    assert_eq!(footed.act, Act::Leaf("box".to_owned(), Grade::Foot));
+    let blank = plan(
+        &world,
+        None,
+        None,
+        None,
+        None,
+        Some("box".to_owned()),
+        Some(String::new()),
+    );
+    assert_eq!(blank.act, Act::Leaf("box".to_owned(), Grade::Operator));
 }
 
 /// The verb mints, then refuses to mint again, then rotates when told to —
@@ -141,7 +177,7 @@ fn the_leaf_act_issues_once_and_writes_nothing_else() {
     let dir = tmp.path().join("wire");
     let leaf = Plan {
         dir: dir.clone(),
-        act: Act::Leaf("phone".to_owned()),
+        act: Act::Leaf("phone".to_owned(), Grade::Operator),
     };
     assert_eq!(perform(&leaf), 1, "nothing to issue under yet");
 
@@ -190,7 +226,7 @@ fn an_unusable_common_name_refuses() {
     assert_eq!(
         perform(&Plan {
             dir: tmp.path().to_owned(),
-            act: Act::Leaf("a/b".to_owned()),
+            act: Act::Leaf("a/b".to_owned(), Grade::Operator),
         }),
         1
     );
@@ -203,6 +239,45 @@ fn an_unusable_common_name_refuses() {
 fn the_reads_are_named_once() {
     assert_eq!(
         READS,
-        ["WIRE_DIR", "WIRE_HOST", "WIRE_PORT", "FORCE", "WIRE_LEAF"]
+        [
+            "WIRE_DIR",
+            "WIRE_HOST",
+            "WIRE_PORT",
+            "FORCE",
+            "WIRE_LEAF",
+            "WIRE_FOOT"
+        ]
     );
+}
+
+/// **A foot leaf is the same act at a different grade** (REMOTE §4.2,
+/// bl-7ff3): the verb issues it, reports it under the grade's own word, and
+/// writes exactly the one pair — the round trip back off the subject is
+/// [`leaf`](crate::registry::leaf)'s own test.
+#[test]
+fn the_verb_issues_a_foot_leaf_beside_an_ordinary_one() {
+    let tmp = TempDir::new().expect("tmp");
+    let dir = tmp.path().join("wire");
+    assert_eq!(
+        perform(&Plan {
+            dir: dir.clone(),
+            act: Act::Mint {
+                address: "127.0.0.1:0".to_owned(),
+                force: false,
+            },
+        }),
+        0,
+        "minted"
+    );
+    assert_eq!(
+        perform(&Plan {
+            dir: dir.clone(),
+            act: Act::Leaf("host".to_owned(), Grade::Foot),
+        }),
+        0,
+        "issued a foot"
+    );
+    assert!(dir.join("host.pem").is_file() && dir.join("host.key").is_file());
+    assert_eq!(word(Grade::Foot), crate::registry::peer::FOOT);
+    assert_eq!(word(Grade::Operator), "client");
 }

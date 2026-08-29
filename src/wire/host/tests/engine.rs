@@ -15,7 +15,7 @@ fn an_answer_that_is_not_this_machines_work_names_itself() {
     impl crate::wire::server::Answerer for Says {
         fn answer(
             &self,
-            _client: &crate::registry::Client,
+            _peer: &crate::registry::Peer,
             _request: Value,
         ) -> Box<dyn Iterator<Item = Value>> {
             Box::new(self.0.clone().into_iter())
@@ -65,7 +65,7 @@ fn a_completion_the_engine_refuses_stops_the_host() {
     impl crate::wire::server::Answerer for InTurn {
         fn answer(
             &self,
-            _client: &crate::registry::Client,
+            _peer: &crate::registry::Peer,
             _request: Value,
         ) -> Box<dyn Iterator<Item = Value>> {
             let at = self.at.fetch_add(1, std::sync::atomic::Ordering::Relaxed);

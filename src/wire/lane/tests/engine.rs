@@ -31,7 +31,7 @@ struct Holds {
 impl Answerer for Holds {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         if request["op"] == "follow" {

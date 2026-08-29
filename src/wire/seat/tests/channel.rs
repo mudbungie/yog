@@ -12,7 +12,7 @@ struct Expects(String);
 impl Answerer for Expects {
     fn answer(
         &self,
-        _client: &crate::registry::Client,
+        _peer: &crate::registry::Peer,
         request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
         let named = request

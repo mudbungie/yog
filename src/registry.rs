@@ -192,3 +192,13 @@ pub const WINDOW: &str = "yog-window";
 pub fn window() -> Client {
     Client(WINDOW.to_owned())
 }
+
+/// **What a certificate authorizes** (REMOTE §4.2, bl-1dd3) — the grade its
+/// subject carries, and the [`Peer`] an intake answers as.
+///
+/// Declared at the bottom beside [`mailbox`] and for its reason exactly:
+/// adding a `mod` at the top of this file shifts every byte below it, and
+/// llvm-cov then draws a phantom uncovered region onto `impl Client`.
+pub mod peer;
+
+pub use peer::{Grade, Peer};

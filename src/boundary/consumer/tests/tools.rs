@@ -30,18 +30,15 @@ fn a_connections_advertisement_lands_under_its_own_identity() {
     let root = tempdir().unwrap();
     let data = tempdir().unwrap();
     let ctx = quiet(root.path(), data.path());
-    let laptop = client("laptop");
+    let laptop = seat("laptop");
     let reply = ctx.answer_as(&laptop, &json!({"op": "advertise", "tools": set()}));
     assert_eq!(reply["kind"], "advertised");
     assert_eq!(reply["ok"], true);
-    let stored = crate::registry::tools::read(root.path(), &laptop);
+    let stored = crate::registry::tools::read(root.path(), &laptop.client);
     assert_eq!(stored.len(), 1);
     assert_eq!(stored[0].name, "Bash");
     // Another certificate's set is its own: cross-client collisions are legal.
-    ctx.answer_as(
-        &client("phone"),
-        &json!({"op": "advertise", "tools": set()}),
-    );
+    ctx.answer_as(&seat("phone"), &json!({"op": "advertise", "tools": set()}));
     assert_eq!(
         crate::registry::tools::read(root.path(), &client("phone"))[0].name,
         "Bash"
@@ -75,8 +72,8 @@ fn the_roster_answers_the_registered_set_of_a_scoped_workspace() {
     let root = tempdir().unwrap();
     let data = tempdir().unwrap();
     let ctx = quiet(root.path(), data.path());
-    let laptop = client("laptop");
-    crate::registry::register(root.path(), &laptop, "home").unwrap();
+    let laptop = seat("laptop");
+    crate::registry::register(root.path(), &laptop.client, "home").unwrap();
     ctx.answer_as(&laptop, &json!({"op": "advertise", "tools": set()}));
     let reply = ctx.answer_as(&laptop, &json!({"op": "clients", "workspace": "home"}));
     assert_eq!(reply["kind"], "clients");
@@ -86,7 +83,7 @@ fn the_roster_answers_the_registered_set_of_a_scoped_workspace() {
     // a client that is registered and not connected is a row all the same.
     assert_eq!(reply["rows"][0]["present"], false);
     let refusal = ctx.answer_as(
-        &client("stranger"),
+        &seat("stranger"),
         &json!({"op": "clients", "workspace": "home"}),
     );
     assert_eq!(refusal["error"], "unknown workspace \"home\"");

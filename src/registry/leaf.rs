@@ -37,6 +37,10 @@ const OID: u8 = 0x06;
 /// dotted arc string because the dotted form of four small arcs is
 /// indistinguishable from an IPv4 address, to a reader and to `make leak-scan`.
 const COMMON_NAME: [u8; 3] = [0x55, 0x04, 0x03];
+/// `id-at-organizationalUnitName` — the same arc one attribute over, and the
+/// home REMOTE §4.2 gives the grade. Spelled as bytes for [`COMMON_NAME`]'s
+/// reason.
+const ORG_UNIT: [u8; 3] = [0x55, 0x04, 0x0b];
 /// How many constructed fields separate `serialNumber` from `subject`:
 /// signature, issuer, validity, subject.
 const SERIAL_TO_SUBJECT: usize = 4;
@@ -49,31 +53,66 @@ const SERIAL_TO_SUBJECT: usize = 4;
 /// final `CN` is the leaf's own; a certificate minted by `make wire-certs` has
 /// exactly one and the question does not arise.
 pub fn common_name(der: &[u8]) -> Option<String> {
+    attributes(subject(der)?, COMMON_NAME).pop()
+}
+
+/// **The grade the same subject carries** (REMOTE §4.2, bl-1dd3): an
+/// `OU=foot` anywhere in it is a foot, and everything else — a subject with
+/// other organizational units, a subject with none, bytes that are not a
+/// certificate at all — is operator grade.
+///
+/// **Default-operator, not default-foot**, which is why this answers a
+/// [`Grade`] rather than an `Option`: a leaf minted before the grade existed
+/// must keep working exactly as it did. A silent demotion would be an outage
+/// with no sentence attached; a silent promotion cannot happen, because the
+/// word is written by the operator's own CA or not at all.
+///
+/// It is the organizational unit rather than a custom extension or an EKU OID
+/// because those need an `openssl` config stanza in the mint *and* an extension
+/// parser yog does not have, where the OU is one more attribute in a subject
+/// this walk opens anyway.
+pub fn grade(der: &[u8]) -> crate::registry::Grade {
+    let foot = subject(der).is_some_and(|name| {
+        attributes(name, ORG_UNIT)
+            .iter()
+            .any(|unit| unit == crate::registry::peer::FOOT)
+    });
+    if foot {
+        crate::registry::Grade::Foot
+    } else {
+        crate::registry::Grade::Operator
+    }
+}
+
+/// The `Name` bytes of the certificate's **subject** — located relative to the
+/// serial number, for the reason the module doc gives.
+fn subject(der: &[u8]) -> Option<&[u8]> {
     let (_, certificate, _) = tlv(der)?;
     let (_, tbs, _) = tlv(certificate)?;
     let fields = elements(tbs);
     let serial = fields.iter().position(|(tag, _)| *tag == INTEGER)?;
     let &(_, subject) = fields.get(serial + SERIAL_TO_SUBJECT)?;
-    last_common_name(subject)
+    Some(subject)
 }
 
-/// The last `CN` attribute value in a `Name`, decoded as UTF-8. Every string
-/// type a CN is minted in — `UTF8String`, `PrintableString`, `IA5String` — is
-/// UTF-8 or a subset of it, and one that is not (`BMPString` is UTF-16) fails
-/// the decode and is skipped rather than mis-read.
-fn last_common_name(name: &[u8]) -> Option<String> {
-    let mut found: Option<String> = None;
+/// Every value of attribute `oid` in a `Name`, in DER order, decoded as UTF-8.
+/// Every string type these attributes are minted in — `UTF8String`,
+/// `PrintableString`, `IA5String` — is UTF-8 or a subset of it, and one that is
+/// not (`BMPString` is UTF-16) fails the decode and is skipped rather than
+/// mis-read.
+fn attributes(name: &[u8], oid: [u8; 3]) -> Vec<String> {
+    let mut found = Vec::new();
     for (_, rdn) in elements(name) {
         for (_, attribute) in elements(rdn) {
             let parts = elements(attribute);
-            let (Some(&(tag, oid)), Some(&(_, value))) = (parts.first(), parts.get(1)) else {
+            let (Some(&(tag, kind)), Some(&(_, value))) = (parts.first(), parts.get(1)) else {
                 continue;
             };
-            if tag != OID || oid != COMMON_NAME {
+            if tag != OID || kind != oid {
                 continue;
             }
             if let Ok(text) = std::str::from_utf8(value) {
-                found = Some(text.to_owned());
+                found.push(text.to_owned());
             }
         }
     }

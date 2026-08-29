@@ -423,9 +423,8 @@ exactly as it did — a silently demoted seat would be an outage with no sentenc
 attached, while a silently promoted foot cannot happen, because promotion
 requires the operator's CA to have written the word.
 
-**Enforcement is one raise at the chokepoint** (built by bl-7ff3 — until it
-lands this is a ruling with no code behind it, and every leaf is operator grade
-in practice), where the client identity is
+**Enforcement is one raise at the chokepoint, and it is landed** (bl-7ff3),
+where the client identity is
 already spent for scoping (§9.6): the same `answer_as` that filters what a
 caller sees refuses what a foot may say, **in band and naming the grade**. Not
 absent-shaped, and that is deliberate — §4's absence rule exists so a scoped
@@ -433,6 +432,25 @@ caller cannot map what it is not registered in, and a foot asking for the board
 learns nothing about the world from being told it is a foot. It made a category
 error and the sentence is worth more than the silence, exactly as §5.1 rules
 for an intake carrying no client identity.
+
+**Three parts, as built.** The DER walk that reads the common name
+(`registry::leaf`) reads the organizational units of the same subject and
+answers a `Grade` rather than an `Option` — a leaf that says nothing is
+operator grade, which is default-operator made total rather than defaulted.
+What a connection carries into the boundary is therefore a `Peer` — the
+identity and the grade, read off one certificate per request — and **not** a
+field on the client identity itself, which keys the presence map, the mailbox
+and every registration on disk: folding a second fact in would make a peer that
+connected under one grade a different key from the same client read off the
+`clients/` listing. The mint writes the word (`src/wire/provision.rs`, the one
+`openssl` recipe): `WIRE_FOOT=1` beside `WIRE_LEAF=<common-name>` on `yog
+wire-certs` puts `OU=foot` in the subject, and it is presence-shaped like
+`FORCE` precisely so there is no word to mistype into a demotion. And the raise
+sits in `answer_as` ahead of the dispatch and ahead of the create's
+auto-registration, so a refused gesture founds nothing and seats nothing; the
+follow lane needs no second refusal path, because a follow-class read is not in
+the foot set, so the lane answers no stream and the fall-through `answer_as`
+already there words the sentence.
 
 **This is not the per-verb ACL §11 rejects, and the difference is not a
 quibble.** The grade is **binary, closed, and in the code**: two values, one

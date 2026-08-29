@@ -183,3 +183,60 @@ fn a_malformed_tail_ends_the_element_walk() {
     assert_eq!(read.len(), 1);
     assert_eq!(read.first().map(|(tag, _)| *tag), Some(INTEGER));
 }
+
+/// **The grade round trip over a real certificate** (REMOTE §4.2, bl-7ff3):
+/// the one recipe mints a foot leaf, and this walk reads the grade back off it
+/// without touching the identity. The ordinary leaves beside it stay operator
+/// grade, which is default-operator working — the property that keeps every
+/// certificate minted before the grade existed exactly as good as it was.
+#[test]
+fn a_minted_foot_reads_back_as_one_and_every_other_leaf_does_not() {
+    let tmp = TempDir::new().expect("tmp");
+    mint(tmp.path());
+    crate::wire::provision::issue(tmp.path(), "host", crate::registry::Grade::Foot)
+        .expect("a foot leaf");
+    crate::wire::provision::issue(tmp.path(), "desk", crate::registry::Grade::Operator)
+        .expect("an operator leaf");
+    let read = |name: &str| {
+        let der =
+            CertificateDer::from_pem_file(tmp.path().join(format!("{name}.pem"))).expect("pem");
+        (common_name(&der), grade(&der))
+    };
+    assert_eq!(
+        read("host"),
+        (Some("host".to_owned()), crate::registry::Grade::Foot),
+        "the grade rides beside the identity, not instead of it"
+    );
+    assert_eq!(
+        read("desk"),
+        (Some("desk".to_owned()), crate::registry::Grade::Operator)
+    );
+    assert_eq!(read("client").1, crate::registry::Grade::Operator);
+    assert_eq!(read("ca").1, crate::registry::Grade::Operator);
+}
+
+/// Only the grade's own word is the grade. Another organizational unit is not
+/// a foot, and neither are bytes that are no certificate at all — the default
+/// answers, rather than the read failing.
+#[test]
+fn only_the_grades_own_word_demotes_and_unreadable_bytes_do_not() {
+    let footed = certificate(tlv_of(
+        SEQ,
+        &cat(&[
+            rdn(&ORG_UNIT, UTF8, crate::registry::peer::FOOT.as_bytes()),
+            rdn(&COMMON_NAME, UTF8, b"host"),
+        ]),
+    ));
+    assert_eq!(grade(&footed), crate::registry::Grade::Foot);
+    assert_eq!(common_name(&footed).as_deref(), Some("host"));
+
+    let other = certificate(tlv_of(
+        SEQ,
+        &cat(&[
+            rdn(&ORG_UNIT, UTF8, b"engineering"),
+            rdn(&COMMON_NAME, UTF8, b"host"),
+        ]),
+    ));
+    assert_eq!(grade(&other), crate::registry::Grade::Operator);
+    assert_eq!(grade(&[]), crate::registry::Grade::Operator);
+}

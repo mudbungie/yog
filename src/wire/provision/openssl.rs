@@ -13,6 +13,7 @@
 
 use super::{ANCHORS, CA_KEY, CURVE, DAYS, LOOPBACK, private};
 use crate::git_env;
+use crate::registry::Grade;
 use crate::wire::material::Role;
 use std::net::IpAddr;
 use std::path::Path;
@@ -62,7 +63,7 @@ pub(super) fn leaf(dir: &Path, role: Role, host: &str) -> Result<(), String> {
     issue(
         dir,
         &role.leaf(),
-        &role.common_name(),
+        &format!("/CN={}", role.common_name()),
         &san(role, host),
         eku(role),
     )
@@ -81,8 +82,31 @@ pub(super) fn leaf(dir: &Path, role: Role, host: &str) -> Result<(), String> {
 /// identity (REMOTE §2), and on the client box the pair is placed into
 /// `wire/workspaces/<leaf>/` as `client.pem`/`client.key` (§8.2) without
 /// changing what it authenticates as.
-pub(super) fn stated_leaf(dir: &Path, cn: &str) -> Result<(), String> {
-    issue(dir, cn, cn, &format!("DNS:{cn}"), eku(Role::Client))
+///
+/// **`grade` is the other thing the subject says** (REMOTE §4.2, bl-7ff3), and
+/// it is written here because the operator's own CA is the only thing entitled
+/// to write it. A foot's subject gains one organizational unit; an operator's
+/// is the bare common name it always was, so every leaf minted before the grade
+/// existed reads back exactly as it did.
+pub(super) fn stated_leaf(dir: &Path, cn: &str, grade: Grade) -> Result<(), String> {
+    issue(
+        dir,
+        cn,
+        &subject(cn, grade),
+        &format!("DNS:{cn}"),
+        eku(Role::Client),
+    )
+}
+
+/// The subject a stated leaf is minted under. Most-general attribute first,
+/// which is DER's own order and the reverse of how RFC 4514 renders it — so
+/// `OU=foot` precedes the common name, and the walk that reads the name back
+/// (which takes the LAST one) is unaffected either way.
+fn subject(cn: &str, grade: Grade) -> String {
+    match grade {
+        Grade::Operator => format!("/CN={cn}"),
+        Grade::Foot => format!("/OU={}/CN={cn}", crate::registry::peer::FOOT),
+    }
 }
 
 /// The issuance itself: a key, a bare request, then the signature that carries
@@ -98,7 +122,7 @@ pub(super) fn stated_leaf(dir: &Path, cn: &str) -> Result<(), String> {
 /// model besides: what a certificate asserts is decided by whoever signs it,
 /// not by whoever asked. One recipe, both toolsets — never a second recipe and
 /// never a platform gate.
-fn issue(dir: &Path, name: &str, cn: &str, san: &str, eku: &str) -> Result<(), String> {
+fn issue(dir: &Path, name: &str, subject: &str, san: &str, eku: &str) -> Result<(), String> {
     let key = dir.join(format!("{name}.key"));
     let csr = dir.join(format!("{name}.csr"));
     let ext = dir.join(format!("{name}.{EXT}"));
@@ -114,7 +138,7 @@ fn issue(dir: &Path, name: &str, cn: &str, san: &str, eku: &str) -> Result<(), S
         "-nodes",
         "-sha256",
         "-subj",
-        &format!("/CN={cn}"),
+        subject,
         "-keyout",
         &key.to_string_lossy(),
         "-out",

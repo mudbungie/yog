@@ -35,6 +35,12 @@ impl super::server::Answerer for Intake {
     /// address does not resolve — which then earns the ordinary refusal, in one
     /// frame, from the one function that words it.
     ///
+    /// **The certificate's grade is spent one level down** (REMOTE §4.2,
+    /// bl-7ff3), where the identity already is: a foot's follow-class read is
+    /// not one of the three gestures it may send, so `follow` answers `None`
+    /// for it and the refusal arrives through the same one function that words
+    /// every other one. No second refusal path here, and nothing to forget.
+    ///
     /// **This is where the wire's trust grade is spent** (REMOTE §4, bl-8bbc):
     /// [`answer_as`](ConsumerCtx::answer_as) is
     /// [`answer`](ConsumerCtx::answer) with a client identity, and the identity
@@ -45,12 +51,12 @@ impl super::server::Answerer for Intake {
     /// stays open is still one request.
     fn answer(
         &self,
-        client: &crate::registry::Client,
+        peer: &crate::registry::Peer,
         request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
-        match self.ctx.follow(client, &request) {
+        match self.ctx.follow(peer, &request) {
             Some(frames) => frames,
-            None => Box::new(std::iter::once(self.ctx.answer_as(client, &request))),
+            None => Box::new(std::iter::once(self.ctx.answer_as(peer, &request))),
         }
     }
 }
