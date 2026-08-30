@@ -1,7 +1,8 @@
 +++
 title = "the codec emits a conformance corpus: one canonical fixture set every client replays, so an implementation miss fails a fixture instead of shipping"
 created = 1788068701
-updated = 1788068701
+updated = 1788068791
+claimant = "OrderNotary"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
