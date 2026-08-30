@@ -34,7 +34,7 @@ pub(crate) const FLOOR: usize = 16;
 /// `s` cut to `max` characters keeping **both ends**, the removed middle marked
 /// with a single `…`.
 ///
-/// The head keeps the operation's verb (`lernie prompt --name growing`), the
+/// The head keeps the operation's verb (`litany prompt --name growing`), the
 /// tail keeps what the row is actually distinguished by (the workspace leaf,
 /// the agent id), and what goes is the invariant run between them. A string
 /// already within `max` is returned unchanged — the general path with nothing
@@ -64,12 +64,12 @@ mod tests {
     /// the invariant path run between them is what goes.
     #[test]
     fn a_machine_string_keeps_the_verb_and_the_thing_that_tells_the_row_apart() {
-        let argv = "lernie prompt --name growing \
+        let argv = "litany prompt --name growing \
                     /home/u/.cache/yog-drive/quality-20260807T214407Z/data/yog/workspaces/home \
                     20260807T214551Z-2a1181a3";
         let cut = middle(argv, 100);
         assert_eq!(cut.chars().count(), 100, "the cut honours its cap: {cut}");
-        assert!(cut.starts_with("lernie prompt --name growing"), "{cut}");
+        assert!(cut.starts_with("litany prompt --name growing"), "{cut}");
         assert!(cut.ends_with("20260807T214551Z-2a1181a3"), "{cut}");
         assert!(cut.contains('…'), "the cut is marked: {cut}");
         assert!(
@@ -92,7 +92,7 @@ mod tests {
     /// A string that fits is returned byte-identical — no marker, no cut.
     #[test]
     fn a_string_within_the_cap_passes_through_whole() {
-        assert_eq!(middle("lernie stop", 100), "lernie stop");
+        assert_eq!(middle("litany stop", 100), "litany stop");
         // Exactly at the cap is still whole: the boundary is inclusive.
         let exact: String = std::iter::repeat_n('x', 20).collect();
         assert_eq!(middle(&exact, 20), exact);

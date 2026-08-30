@@ -84,7 +84,7 @@ fn shift_enter_newlines_the_draft_and_enter_alone_sends() {
     let key = DraftKey::Message("c-1".to_owned());
 
     // A two-line draft: text, Shift+Enter, text. Nothing may fire on the combo
-    // — the Screen's lernie is absent, so a send would banner in ichor.
+    // — the Screen's litany is absent, so a send would banner in ichor.
     screen.frame(&mut world, vec![egui::Event::Text("first line".into())]);
     screen.frame(
         &mut world,
@@ -110,7 +110,7 @@ fn shift_enter_newlines_the_draft_and_enter_alone_sends() {
         "the multi-line draft reaches the paint layer on both lines:\n{quiet}"
     );
 
-    // Enter alone is the send. The absent lernie refuses the spawn, which is
+    // Enter alone is the send. The absent litany refuses the spawn, which is
     // the proof the verb fired — and a refused send keeps the draft (§5.3)
     // exactly as typed: no third line, because the plain press never reaches
     // the box as a newline.
@@ -136,7 +136,7 @@ fn shift_enter_newlines_the_draft_and_enter_alone_sends() {
 /// The box's **third** Enter (§11, bl-a33d): **Ctrl+Enter is send-and-interrupt,
 /// and its first act is the stop.** Driven through the real keyboard beside its
 /// two siblings, because the whole family is the box's own and the only way to
-/// tell the three apart is which verb reached the substrate. The absent lernie
+/// tell the three apart is which verb reached the substrate. The absent litany
 /// is the witness: the attempted argv is what a refused spawn records, so the
 /// leading verb says which gesture fired.
 #[test]

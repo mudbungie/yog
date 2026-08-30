@@ -24,7 +24,7 @@ fn an_unnamed_agent_answers_with_no_name_rather_than_a_second_shape() {
     fx.build_agent("20260101T000000Z-bbbb", "one");
     fx.build_agent("20260101T000000Z-cccc", "two");
     fx.name_agent("20260101T000000Z-cccc", "grey-heron");
-    // The first wears an empty `name` blob, which is what lernie writes for an
+    // The first wears an empty `name` blob, which is what litany writes for an
     // unnamed agent — absence and emptiness are one fact.
     fx.name_agent("20260101T000000Z-bbbb", "");
     let mut seen = living_agents(&fx.path);

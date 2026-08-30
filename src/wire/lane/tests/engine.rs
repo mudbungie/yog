@@ -140,7 +140,7 @@ fn the_engine_holds_one_connection_across_every_growth_of_the_tail() {
         crate::wire::intake::Intake::new(Arc::new(crate::boundary::consumer::ConsumerCtx {
             yog_binary: std::path::PathBuf::from("/no/such/yog"),
             world: crate::test_support::no_world(),
-            lernie: crate::cli_outbound::Cli::new("/no/such/lernie"),
+            litany: crate::cli_outbound::Cli::new("/no/such/litany"),
             bl: crate::cli_outbound::Cli::new("/no/such/bl"),
             state_root: state_root.clone(),
             home: std::path::PathBuf::from("/home/x"),

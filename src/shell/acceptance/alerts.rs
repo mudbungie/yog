@@ -35,10 +35,10 @@ use crate::cli_outbound::Cli;
 #[test]
 fn a_focused_frame_absorbs_what_needs_the_operator_and_tells_the_desktop_nothing() {
     let mut world = world();
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let ctx = egui::Context::default();
 
-    let deps = world.model.boundary_deps(&lernie, &bl);
+    let deps = world.model.boundary_deps(&litany, &bl);
     let Ok(Reply::Attention(queue)) = world.model.answer(&deps, &Query::Attention, 0) else {
         panic!("attention answers attention");
     };
@@ -56,7 +56,7 @@ fn a_focused_frame_absorbs_what_needs_the_operator_and_tells_the_desktop_nothing
     // the ask is *absorbed*, not saved up.
     let mut paint = |model: &mut AppModel, state: &mut ShellState| {
         let _ = ctx.run(input(), |ctx| {
-            render(ctx, model, state, &lernie, &bl, &bz);
+            render(ctx, model, state, &litany, &bl, &bz);
         });
         String::new()
     };
@@ -85,10 +85,10 @@ fn a_focused_frame_absorbs_what_needs_the_operator_and_tells_the_desktop_nothing
 #[test]
 fn an_unanswered_frame_leaves_the_baseline_exactly_where_it_was() {
     let mut world = world();
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let ctx = egui::Context::default();
 
-    let deps = world.model.boundary_deps(&lernie, &bl);
+    let deps = world.model.boundary_deps(&litany, &bl);
     let Ok(Reply::Attention(queue)) = world.model.answer(&deps, &Query::Attention, 0) else {
         panic!("attention answers attention");
     };
@@ -97,7 +97,7 @@ fn an_unanswered_frame_leaves_the_baseline_exactly_where_it_was() {
     assert!(announce(&mut world.state.alerts, &[], false, true).is_empty());
     for _ in 0..3 {
         let _ = ctx.run(input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         });
     }
     assert!(

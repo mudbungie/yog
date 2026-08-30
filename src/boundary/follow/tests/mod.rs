@@ -44,7 +44,7 @@ pub(super) fn thinking_delta(fragment: &str) -> String {
     )
 }
 
-/// The open response file of `agent`'s step `seq` — the literal file lernie's
+/// The open response file of `agent`'s step `seq` — the literal file litany's
 /// harness appends stream events to.
 pub(super) fn response(ws: &Path, seq: u32) -> std::path::PathBuf {
     let step = ws.join("steps").join(AGENT).join(format!("{seq:03}"));

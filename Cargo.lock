@@ -1326,24 +1326,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lernie"
-version = "0.0.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "292fa0e2fe909c856b792279161ff50656487a58eaf93f12a7d3b9bda83b8f23"
-dependencies = [
- "brazen",
- "chrono",
- "clap",
- "include_dir",
- "libc",
- "schemars",
- "serde",
- "serde_json",
- "serde_yaml_ng",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1382,6 +1364,24 @@ name = "linux-raw-sys"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
+
+[[package]]
+name = "litany"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d59067294c915e2d2774e06765ce03ddcad50c2975bc312c09948bac9ee38903"
+dependencies = [
+ "brazen",
+ "chrono",
+ "clap",
+ "include_dir",
+ "libc",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+ "thiserror 2.0.19",
+]
 
 [[package]]
 name = "litemap"
@@ -2463,7 +2463,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.4",
  "windows-sys 0.61.2",
@@ -3443,8 +3443,8 @@ dependencies = [
  "egui",
  "egui-winit",
  "image",
- "lernie",
  "libc",
+ "litany",
  "notify",
  "rustls",
  "serde_json",

@@ -33,7 +33,7 @@ fn no_needle_resolves_to_nothing() {
 
 /// Rung one: an **id-shaped** needle is an id, returned untouched and with no
 /// enumeration at all — so a path that never existed is never even read, and
-/// `delete-agent` keeps admitting the id no ref answers to (lernie §9.2).
+/// `delete-agent` keeps admitting the id no ref answers to (litany §9.2).
 #[test]
 fn an_id_shaped_needle_passes_through_unread() {
     let id = "20260101T000000Z-aaaa-20260102T000000Z-bbbb";
@@ -48,7 +48,7 @@ fn an_id_shaped_needle_passes_through_unread() {
     );
 }
 
-/// Rung two, first reading: an id the derivation holds that lernie's stamp
+/// Rung two, first reading: an id the derivation holds that litany's stamp
 /// grammar does not recognize — a foreign or hand-made branch — still addresses
 /// itself. Refusing it would have made every such conversation unreachable.
 #[test]

@@ -113,7 +113,7 @@ brazen_draft() {
   "$drive" type "$1" "$2"
 }
 
-# S5-T5 — the config-branch shim (§9.3): the drafted file is staged and `lernie
+# S5-T5 — the config-branch shim (§9.3): the drafted file is staged and `litany
 # config <ws> <name>` is driven with yog itself as `$EDITOR`, so the only lawful
 # writer of `config/*` does the write. Both halves asserted: the ops row and the
 # branch that now carries the file.
@@ -123,18 +123,18 @@ s5_config_branch() {
   # The lineage Send is a boundary gesture since bl-3f46 (§8.5: "the lineage
   # Send, the marks buttons, the picker's selection — now construct a variant
   # and call `AppModel::dispatch`"), so the form's four coordinates are gone:
-  # three text-box focuses and `Send (stage + lernie config)`, all measured
+  # three text-box focuses and `Send (stage + litany config)`, all measured
   # against a column whose every pane above them could push them down. The line
   # spells the destination as LEADING WORDS and takes the file's text verbatim
   # after them — which is the only way a config file is sayable at all, since
   # its whitespace is semantic. `default` is the branch the workspace already
-  # has, so this is `lernie config`'s everyday ADVANCE of an existing lineage.
+  # has, so this is `litany config`'s everyday ADVANCE of an existing lineage.
   "$drive" shot "$wid" "$out/s5-07-branch-before.png"
   gesture "$data" "/config branch default notes.md driven by yogdrive" \
       --ws "$(basename "$ws_root")" \
-    && row_ok '"lernie","config"' \
-    && pass "S5-T5 config-branch: lernie config exit 0" \
-    || fail "S5-T5 config-branch: lernie config exit 0" "no clean config row"
+    && row_ok '"litany","config"' \
+    && pass "S5-T5 config-branch: litany config exit 0" \
+    || fail "S5-T5 config-branch: litany config exit 0" "no clean config row"
   await config_branch_has "$ws_root" default notes.md "driven by yogdrive" \
     && pass "S5-T5 config-branch: staged file lands on config/default" \
     || fail "S5-T5 config-branch: staged file lands on config/default" "branch/file absent"

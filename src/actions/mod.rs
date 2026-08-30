@@ -4,7 +4,7 @@
 //! action is offered for the current selection. The **short, piped, logged**
 //! verbs — message/stop/scan and `bl` close/unclaim/create/update — live in
 //! [`verbs`], which appends each outcome to `ops.jsonl` (§8.2, §15 Y16); the
-//! **detached** `lernie prompt` (the new-root launch, §8.1) is now the one
+//! **detached** `litany prompt` (the new-root launch, §8.1) is now the one
 //! [`start::execute_prompt`](crate::start::execute_prompt) path (Y17 moved it
 //! onto `spawn_detached`, unifying the composer's new-prompt with the start
 //! flow's final prompt — one detached, logged launch, no piped-and-drained
@@ -12,7 +12,7 @@
 //!
 //! Predicate discipline (§8.2): **Stop** needs a Live/InFlight executor to
 //! signal ([`stop_enabled`]); **Nudge** is its complement — the states with no
-//! driver holding the lease, less the one shape lernie reads as nothing-due
+//! driver holding the lease, less the one shape litany reads as nothing-due
 //! ([`nudge_enabled`]); **Message** is the resume
 //! gesture and works on *any* selected agent ([`message_enabled`], ARCH §2.9 —
 //! no resume verb);
@@ -67,7 +67,7 @@ pub struct ActionsState {
     /// `Default` leaves it empty because `ActionsState` cannot read the env; the
     /// seed is folded once in `ShellState::new`, the one boundary that can.
     pub path_dir: String,
-    /// User-selected agent id (§2.3 — the id is the address; `lernie
+    /// User-selected agent id (§2.3 — the id is the address; `litany
     /// stop`/`message` take it, not the `agents/*` ref). Gates Stop (which
     /// also needs the agent live) and Message.
     pub selected_branch: Option<String>,

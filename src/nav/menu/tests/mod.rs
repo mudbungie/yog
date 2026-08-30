@@ -37,7 +37,7 @@ fn a_named_pinned_tab_carries_delete_then_unpin() {
 
 #[test]
 fn a_foreign_tab_offers_no_delete_and_an_unpinned_one_no_unpin() {
-    // §3.6 scope: foreign/replay workspaces are lernie's territory.
+    // §3.6 scope: foreign/replay workspaces are litany's territory.
     assert_eq!(
         verbs(Seat::WorkspaceTab {
             named: false,

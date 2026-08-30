@@ -8,7 +8,7 @@
 //! yog writes and closes, rather than `/dev/null` — so it reuses that spawn
 //! whole rather than restating it.
 //!
-//! **It is lernie's own tool contract** (its ARCH §3.3): the `tool_use.input`
+//! **It is litany's own tool contract** (its ARCH §3.3): the `tool_use.input`
 //! JSON on stdin, bytes on stdout, the exit code the verdict. A tool host's
 //! executable is therefore the same kind of program a local pool tool is
 //! (REMOTE §5.2), which is why the far end needed no vocabulary of its own.

@@ -62,7 +62,7 @@ fn flying(world: &mut World) {
 }
 
 /// Append to the open response file of `AGENT`'s newest step — the literal file
-/// lernie's harness writes mid-call.
+/// litany's harness writes mid-call.
 fn append(world: &World, bytes: &str) {
     use std::io::Write;
     let path = crate::git_tree::latest_response_path(&world.ws, AGENT)
@@ -81,7 +81,7 @@ fn append(world: &World, bytes: &str) {
 /// live row gone rather than standing beside it.
 #[test]
 fn appended_bytes_reach_the_glass_with_no_derivation_and_no_asker_pass() {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let mut world = super::fixture::world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, AGENT);
@@ -90,7 +90,7 @@ fn appended_bytes_reach_the_glass_with_no_derivation_and_no_asker_pass() {
 
     // The window, settled: the committed chat is on the glass and every
     // standing question has been answered once.
-    let settled = super::painted(&mut world, &lernie, &bl);
+    let settled = super::painted(&mut world, &litany, &bl);
     assert!(
         !settled.contains("hark"),
         "nothing has been said yet:\n{settled}"
@@ -104,7 +104,7 @@ fn appended_bytes_reach_the_glass_with_no_derivation_and_no_asker_pass() {
     let ctx = egui::Context::default();
     let frame = |world: &mut World| {
         crate::paint_probe::text_of(&ctx.run(super::input(), |ctx| {
-            super::super::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            super::super::render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         }))
     };
     // egui measures before it paints on a fresh context, so the pane is laid
@@ -174,7 +174,7 @@ fn appended_bytes_reach_the_glass_with_no_derivation_and_no_asker_pass() {
 /// witness for that half.
 #[test]
 fn with_no_lane_the_tail_still_arrives_on_the_pull_path() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = super::fixture::world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, AGENT);
@@ -193,7 +193,7 @@ fn with_no_lane_the_tail_still_arrives_on_the_pull_path() {
     let ctx = egui::Context::default();
     let frame = |world: &mut World| {
         crate::paint_probe::text_of(&ctx.run(super::input(), |ctx| {
-            super::super::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            super::super::render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         }))
     };
     let _ = frame(&mut world);

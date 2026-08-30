@@ -45,7 +45,7 @@ fn s6_t5_the_chip_counts_and_every_row_expands_verbatim() {
         ),
         op(
             "1002",
-            &["lernie", "scan", "/ws"],
+            &["litany", "scan", "/ws"],
             "/ws",
             2,
             "no such workspace",
@@ -109,7 +109,7 @@ fn s6_t5_the_chip_counts_and_every_row_expands_verbatim() {
     // --- The §4.2 cap on the captured streams: a line too long to store says
     // so, rather than handing back short bytes that read as complete.
     let noisy = "e".repeat(opslog::CAP * 2);
-    let long = op("1004", &["lernie", "scan", "/ws"], "/ws", 1, &noisy);
+    let long = op("1004", &["litany", "scan", "/ws"], "/ws", 1, &noisy);
     let line = String::from_utf8(opslog::build_line(&long)).unwrap();
     assert!(
         line.contains(r#""truncated":true"#),
@@ -133,10 +133,10 @@ fn s6_t5_the_chip_counts_and_every_row_expands_verbatim() {
 
     // argv is never truncated inside the serializer — a pathological argv is the
     // one unavoidable overflow — so the deliberately-large field (a composed
-    // `lernie prompt` goal, §8.1) is clipped at its source, and says how much it
+    // `litany prompt` goal, §8.1) is clipped at its source, and says how much it
     // dropped rather than trailing off.
     let goal = "g".repeat(opslog::CAP * 2);
-    let prompt = op("1006", &["lernie", "prompt", &goal], "/ws", 0, "");
+    let prompt = op("1006", &["litany", "prompt", &goal], "/ws", 0, "");
     let clipped = opslog::clip_goal(&prompt);
     let kept = clipped.argv.last().unwrap();
     assert!(kept.len() < goal.len(), "the goal was clipped");

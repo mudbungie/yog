@@ -3,11 +3,11 @@
 //! same Apply lands (STORIES S5.3, DESIGN §9.1, §9.2).
 //!
 //! **The row's premise drifted: there are two doors with this guard, not
-//! three.** STORIES says "asserted once per editor (brazen, lernie-global,
+//! three.** STORIES says "asserted once per editor (brazen, litany-global,
 //! config branch) — one discipline, three doors". The first two share
 //! `config_edit::pipeline`'s snapshot guard, asserted below. The **config
 //! branch has no such guard and must not grow one**: yog never writes
-//! `config/*` at all — `lernie config` is that tree's only lawful writer (§9.3)
+//! `config/*` at all — `litany config` is that tree's only lawful writer (§9.3)
 //! and owns its own concurrency — so yog stages a draft and hands it over
 //! (S5-T5). Adding a hash guard on this side would be yog claiming an
 //! authority over a file it does not own.
@@ -19,7 +19,7 @@ use yog::config_edit::RealFileIo;
 use yog::config_edit::brazen::{
     Applied, BrazenEditor, BrazenPaths, BzOutcome, BzRunner, ProviderRow,
 };
-use yog::config_edit::lernie_global::{Editor, Saved};
+use yog::config_edit::litany_global::{Editor, Saved};
 
 /// A `bz` that validates anything — this row is about the guard, not the gate.
 struct PermissiveBz;
@@ -80,10 +80,10 @@ fn s5_t4_brazen_apply_refuses_a_file_that_moved_and_lands_after_a_reload() {
     assert_eq!(std::fs::read_to_string(&config).unwrap(), "a = 2\n");
 }
 
-/// STORIES **S5-T4** hash-guard — door 2: lernie's global raw-text files (§9.2).
+/// STORIES **S5-T4** hash-guard — door 2: litany's global raw-text files (§9.2).
 /// The same pipeline, so the same refusal, reached through a different editor.
 #[test]
-fn s5_t4_lernie_global_apply_refuses_a_file_that_moved_and_lands_after_a_reload() {
+fn s5_t4_litany_global_apply_refuses_a_file_that_moved_and_lands_after_a_reload() {
     let home = tempdir().unwrap();
     let models = home.path().join("models.yaml");
     std::fs::write(&models, "models: []\n").unwrap();

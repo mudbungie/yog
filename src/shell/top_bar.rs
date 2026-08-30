@@ -44,7 +44,7 @@ const OVERFLOW_HINT: &str = "Workspaces that are real but not regimes — checko
 /// The §11 top bar: left, the attention strip (totals + jump-to-next); right,
 /// the workspace tab bar — named tabs, the slim `new` name form, and the
 /// foreign/replay overflow menu.
-pub fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
+pub fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, litany: &Cli) {
     // One ask for the whole altitude-0 row, with the §3.4 raise claim folded on
     // (`super::chrome`). A refusal has no seat here — the top bar is chrome, and
     // a sentence in place of the wall row would be a report about the transport
@@ -94,7 +94,7 @@ pub fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, l
                 super::new_ws::open(state);
             }
             for tab in bar.tabs.iter().rev() {
-                workspace_tab(ui, model, state, lernie, tab);
+                workspace_tab(ui, model, state, litany, tab);
             }
             // The row's own name, painted LAST because this layout lays
             // right-to-left — so it lands immediately left of the leftmost tab
@@ -113,7 +113,7 @@ fn workspace_tab(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     tab: &Tab,
 ) {
     let badge = if tab.attention > 0 {
@@ -149,7 +149,7 @@ fn workspace_tab(
         &Target::Tab(tab.clone()),
         model,
         state,
-        lernie,
+        litany,
     );
 }
 

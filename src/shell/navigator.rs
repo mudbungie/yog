@@ -42,7 +42,7 @@ use super::menus::{BallRef, Target};
 /// That is the conversation pane's priority inverted, and one rule covers both:
 /// a band holds back whatever must outlive it, and nothing below the doors
 /// does.
-pub fn side_panel(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
+pub fn side_panel(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, litany: &Cli) {
     // Every row here truncates rather than extends (bl-9669): a row that
     // overflows widens the panel's `min_rect`, and egui *stores that rect as
     // the panel width*, so one long title ratchets the left column wider every
@@ -62,10 +62,10 @@ pub fn side_panel(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellStat
     if crate::layout::share(column, column, 0.0).is_some_and(|cap| cap >= DOORS) {
         entries(ui, model, state);
         if let Some(cap) = crate::layout::share(column, ui.available_height(), 0.0) {
-            sections(ui, cap, model, state, lernie);
+            sections(ui, cap, model, state, litany);
         }
     }
-    super::conv_list::conversations(ui, model, state, lernie);
+    super::conv_list::conversations(ui, model, state, litany);
 }
 
 /// **The doors' own floor**: two entry rows, plus the panel frame's margins
@@ -112,7 +112,7 @@ fn sections(
     cap: f32,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
 ) {
     egui::TopBottomPanel::bottom("navigator-sections").show_inside(ui, |ui| {
         ui.set_max_height(cap);
@@ -126,7 +126,7 @@ fn sections(
                 // so it is the band most able to widen the column through the
                 // scroll's own outward-following rect.
                 super::row::shown_width(ui);
-                balls_section(ui, model, state, lernie);
+                balls_section(ui, model, state, litany);
                 super::clients::section(ui, model);
             });
     });
@@ -145,7 +145,7 @@ fn entry_mark(tab: CenterTab) -> &'static str {
 /// The minimal collapsible balls section (§11): the start affordances and the
 /// focused workspace's bound-ball rows; the full per-project views return in
 /// the ball-views wave. The fold is the persisted §4.1 collapse override.
-fn balls_section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
+fn balls_section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, litany: &Cli) {
     let collapsed = model.is_collapsed("balls");
     let arrow = if collapsed { "▶" } else { "▼" };
     if ui
@@ -162,14 +162,14 @@ fn balls_section(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState
         return;
     }
     ui.indent("balls", |ui| {
-        super::board::board(ui, model, state, lernie);
+        super::board::board(ui, model, state, litany);
         // The focused workspace's remaining ball rows (§3.5 claimant join), id +
         // badge: the delivered ones. A *bound* ball is rendered in full by the
         // ▶ Continue row above, so it is not repeated here as a bare id
         // (bl-abbe) — `nav::balls::roster` is the covered partition, now a
         // selection out of the landed listing rather than a second derivation.
         for ball in nav::balls::roster(&super::chrome::focused_balls(model)) {
-            bound_ball_row(ui, model, state, lernie, &ball);
+            bound_ball_row(ui, model, state, litany, &ball);
         }
     });
 }
@@ -183,7 +183,7 @@ fn bound_ball_row(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     ball: &crate::nav::BoundBall,
 ) {
     let text = match &ball.badge {
@@ -206,5 +206,5 @@ fn bound_ball_row(
         id: ball.id.clone(),
         owner: ball.owner.clone(),
     });
-    super::menus::attach(&row, seat, &target, model, state, lernie);
+    super::menus::attach(&row, seat, &target, model, state, litany);
 }

@@ -14,7 +14,7 @@
 //! - A **workspace already has a name**: §3.1 says its directory leaf *is* the
 //!   name, and §3.2 makes that same leaf the `--as` identity every ball claim
 //!   is stamped with. So [`leaf`] is the whole rule — no derivation, no second
-//!   spelling, and **no special case for a foreign workspace**: lernie's
+//!   spelling, and **no special case for a foreign workspace**: litany's
 //!   `workspaces/`/`replays/` leaves are the auto-ids the tab strip already
 //!   paints as their identity (`nav::tabs::tab`: "the display name is the path
 //!   leaf"). Two roots holding one leaf is a world whose §3.2 join is already

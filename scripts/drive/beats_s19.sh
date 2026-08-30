@@ -7,7 +7,7 @@
 # ways a fake substrate cannot. What a beat here deliberately does NOT reach is
 # cohort membership on the read surfaces (`/work-diff`'s candidate rows,
 # `/science`'s) — membership is derived from real FIRE rows, a fire is a
-# detached `lernie prompt`, and a prompt is a model call this verb refuses to
+# detached `litany prompt`, and a prompt is a model call this verb refuses to
 # spend. That join is proved by the in-crate tests over fixture trails
 # (`workdiff`/`science` tests); what only the real substrate can falsify is
 # below.

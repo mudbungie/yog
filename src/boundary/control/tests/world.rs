@@ -42,7 +42,7 @@ impl World {
             // `true` exists on every platform the suite runs on and exits 0 —
             // enough to prove the detached launch happened without driving a
             // real conversation.
-            lernie: Cli::new("/usr/bin/true"),
+            litany: Cli::new("/usr/bin/true"),
             bl: Cli::new("/no/such/bl"),
             state_root: self.state(),
             home: self.dir.path().join("home"),
@@ -78,7 +78,7 @@ impl World {
         self.git(&["init", "--bare", "-q"]);
     }
 
-    /// Park `agent` on `tool_use`, exactly as lernie's seam does.
+    /// Park `agent` on `tool_use`, exactly as litany's seam does.
     pub(super) fn park(&self, agent: &str, tool_use: &str) {
         let staged = self.dir.path().join("mark.json");
         std::fs::write(
@@ -90,7 +90,7 @@ impl World {
         let oid = String::from_utf8_lossy(&hashed.stdout).trim().to_owned();
         self.git(&[
             "update-ref",
-            &format!("refs/lernie/held/{agent}"),
+            &format!("refs/litany/held/{agent}"),
             oid.as_str(),
         ]);
     }

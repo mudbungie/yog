@@ -1,5 +1,5 @@
 //! STORIES **S3-T1** ball-rung: a ready ball's ▶ Start claims it `--as <name>`
-//! *after* `lernie new` (the amended §8.1 order), the composer prefills the ball
+//! *after* `litany new` (the amended §8.1 order), the composer prefills the ball
 //! title, body, and worktree preamble, and the driver cwd is the work worktree
 //! (STORIES S3.1, DESIGN §3.2/§3.3/§8.1).
 
@@ -22,11 +22,11 @@ fn s3_t1_ready_ball_claims_after_new_and_binds_the_worktree() {
         tempdir().unwrap(),
     );
     let canonical = work_worktree_path(balls.path(), project.path(), "bl-7", None);
-    let lernie = Recorder::new(bin.path(), "lernie").authoring_workspaces();
+    let litany = Recorder::new(bin.path(), "litany").authoring_workspaces();
     let bl = Recorder::new(bin.path(), "bl").on("claim", &canonical.to_string_lossy(), 0);
     let deps = Deps {
         bl: Cli::new(bl.path()),
-        lernie: Cli::new(lernie.path()),
+        litany: Cli::new(litany.path()),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
         // No answer from brazen: the §9.2 birth-template gate judges nothing.
@@ -75,6 +75,6 @@ fn s3_t1_ready_ball_claims_after_new_and_binds_the_worktree() {
     assert_eq!(
         verbs,
         ["prime", "new", "claim"],
-        "claim after lernie new (§8.1)"
+        "claim after litany new (§8.1)"
     );
 }

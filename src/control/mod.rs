@@ -1,14 +1,14 @@
 //! The **capability control** (VISION §4.11, DESIGN §8.6): the executable
-//! lernie's tool-control seam consults before every granted tool invocation
+//! litany's tool-control seam consults before every granted tool invocation
 //! executes, and everything it reads to answer.
 //!
-//! **The enforcement point already shipped upstream.** Pinned lernie carries the
+//! **The enforcement point already shipped upstream.** Pinned litany carries the
 //! seam (its ARCH §3.3 *Tool control*): `workflow.yaml`'s `tool_control:` names
 //! one binary, hands it the `tool_use` block plus the calling role and agent id
 //! on stdin, and reads one verdict — `pass`, `refuse`, `hold` — off its stdout,
 //! failing closed. yog's whole job is to *be* that binary. No new primitive is
-//! asked of anyone, and role grants stay exactly as lernie ships them: grants
-//! are lernie's structure, this is yog's policy.
+//! asked of anyone, and role grants stay exactly as litany ships them: grants
+//! are litany's structure, this is yog's policy.
 //!
 //! Two moves per consult, and nothing else:
 //!
@@ -20,9 +20,9 @@
 //! **It writes nothing, ever.** A hold is released by re-adjudication on the
 //! next drive, so a consult with a side effect would answer differently the
 //! second time; and every fact it needs already has a durable home elsewhere —
-//! lernie's hold mark, yog's ops trail, the shipped defaults. That is also why
+//! litany's hold mark, yog's ops trail, the shipped defaults. That is also why
 //! it never calls stop: a stop mid-tool-window wedges the branch permanently
-//! (lernie's own bl-b98d), so a refusal is an in-band decline the model steps
+//! (litany's own bl-b98d), so a refusal is an in-band decline the model steps
 //! past and an "ask" is a park that costs no process and no tokens. There is no
 //! modal in either frontend, and no attended/unattended split — the attention
 //! item is answered in seconds or in hours, so attendance is latency, not a
@@ -60,7 +60,7 @@ use root::Root;
 use wire::{Request, Verdict};
 
 /// The multi-call subcommand the `world/tools/` shim re-execs yog under
-/// (§8.6). Not a multiplex namespace and not something a human types: lernie
+/// (§8.6). Not a multiplex namespace and not something a human types: litany
 /// spawns the control with **no argv at all**, so this word is the whole of its
 /// command line. `main.rs` answers it at the process edge beside the other
 /// multi-call subcommands, binding the process's real stdin and stdout to
@@ -77,7 +77,7 @@ const UNREADABLE: i32 = 2;
 /// function of it — the seam of every test below.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Consult {
-    /// The workspace root — the control's own cwd, per lernie's contract.
+    /// The workspace root — the control's own cwd, per litany's contract.
     pub workspace: PathBuf,
     /// balls' own layout — where the bl-delivery formula is rooted, and where
     /// the §4.10 attempt formula places a fan candidate's worktree. balls'
@@ -88,7 +88,7 @@ pub struct Consult {
     pub state_root: PathBuf,
     /// `$HOME`, for `~` in operands.
     pub home: PathBuf,
-    /// The agent's working directory as lernie's own mark reports it; `None`
+    /// The agent's working directory as litany's own mark reports it; `None`
     /// for an agent that never moved, whose tools run in its worktree.
     pub cwd: Option<PathBuf>,
     /// The workspace's standing policy at its **live** config tip — the
@@ -100,7 +100,7 @@ pub struct Consult {
 }
 
 impl Consult {
-    /// Resolve a consult from the composed world env and the workspace lernie
+    /// Resolve a consult from the composed world env and the workspace litany
     /// named. Pure — the two disk reads (the cwd mark, the policy file) are the
     /// caller's.
     pub fn new(env: &Env, workspace: &Path, cwd: Option<PathBuf>, policy: Policy) -> Consult {
@@ -221,11 +221,11 @@ pub fn run(stdin: &mut dyn Read, stdout: &mut dyn Write, env: &Env, workspace: &
     0
 }
 
-/// The workspace the control was consulted about: lernie's own env var, else the
-/// process cwd — which lernie also sets to the workspace root, so the fallback
+/// The workspace the control was consulted about: litany's own env var, else the
+/// process cwd — which litany also sets to the workspace root, so the fallback
 /// is the same fact by its other spelling.
 pub fn workspace_of(env: &Env) -> PathBuf {
-    env.lernie_conv_repo()
+    env.litany_conv_repo()
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_default())
 }
 

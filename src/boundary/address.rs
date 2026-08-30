@@ -37,7 +37,7 @@ pub(super) use agent::resolve_agent;
 
 impl Action {
     /// The project a `bl`-family action mutates — the §8.2 after-verb ball
-    /// refresh target. `None` for the lernie/workspace families.
+    /// refresh target. `None` for the litany/workspace families.
     pub fn project(&self) -> Option<String> {
         match self {
             Action::Close { project, .. }

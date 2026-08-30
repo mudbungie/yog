@@ -27,7 +27,7 @@ s4_new_workspace() {
   # is DELIBERATE in the literal sense, which is the whole of this beat's shape.
   # `w` opens the name form and nothing else (`src/shell/new_ws.rs`): the sphere
   # is raised by a name the OPERATOR types and §3.1 validates, so a `w` on its
-  # own can never fire `lernie new` and no `await` window changes that. Both
+  # own can never fire `litany new` and no `await` window changes that. Both
   # authorities say so outright — DESIGN §11's table ("new workspace: the
   # deliberate sphere-wall raise, name typed by the operator") and STORIES S4-T1
   # ("the operator's typed, validated name") — and the beat that pressed `w`
@@ -46,8 +46,8 @@ s4_new_workspace() {
     "$drive" key "$wid" Return
   }
   until_landed raise_sphere verb_ge new 2 \
-    && pass "S4 new workspace: second lernie new" \
-    || fail "S4 new workspace: second lernie new" "no mint"
+    && pass "S4 new workspace: second litany new" \
+    || fail "S4 new workspace: second litany new" "no mint"
   sleep 2
   "$drive" shot "$wid" "$out/s4-11-second-workspace.png"
   spheres_are "$data" 2 \
@@ -87,29 +87,29 @@ s4_new_workspace() {
     fail "S4 mint focus: Enter prompts the MINTED sphere" "no second sphere to prompt"
     fail "S4 mint focus: focused ⇒ no re-mint" "no second sphere to prompt"
   else
-    grep '"lernie","prompt"' "$ops" | tail -1 | grep -q "\"$minted\"" \
+    grep '"litany","prompt"' "$ops" | tail -1 | grep -q "\"$minted\"" \
       && pass "S4 mint focus: Enter prompts the MINTED sphere" \
       || fail "S4 mint focus: Enter prompts the MINTED sphere" "wrong workspace"
     [ "$(verb_count new)" = "$mints" ] \
       && pass "S4 mint focus: focused ⇒ no re-mint" \
-      || fail "S4 mint focus: focused ⇒ no re-mint" "lernie new re-fired"
+      || fail "S4 mint focus: focused ⇒ no re-mint" "litany new re-fired"
   fi
   # Escape is §11's Cancel — leave no draft behind for the beats that follow.
   "$drive" key "$wid" Escape ; sleep 1
 }
 
-# S4-T7 — the tab strip's overflow and pins. A **foreign** workspace (lernie's own
-# auto-id territory under the nested `LERNIE_HOME`, §3.1) is real but not a
+# S4-T7 — the tab strip's overflow and pins. A **foreign** workspace (litany's own
+# auto-id territory under the nested `LITANY_HOME`, §3.1) is real but not a
 # regime, so it falls to the ⋯ menu rather than widening the wall row; ★ hoists it
 # into the tabs, and that pin is durable (§4.1) — which is what makes this
 # assertable rather than a screenshot claim.
 s4_overflow() {
   wid=$1 ; out=$2 ; data=$3
-  foreign="$data/yog/world/lernie/workspaces/20260727T093000Z-f0reign"
+  foreign="$data/yog/world/litany/workspaces/20260727T093000Z-f0reign"
   # The §8.4 hatch again, without a project cwd this time (world C has none): one
-  # `lernie new` at a path under the NESTED lernie data root is exactly what makes
+  # `litany new` at a path under the NESTED litany data root is exactly what makes
   # a workspace foreign (§3.1) — nothing yog owns says so.
-  XDG_DATA_HOME="$data" yog exec lernie new "$foreign" >/dev/null 2>&1
+  XDG_DATA_HOME="$data" yog exec litany new "$foreign" >/dev/null 2>&1
   sleep 4
   "$drive" shot "$wid" "$out/s6-03-overflow.png"
   # CLICK (a VIEW, and a pick — §11 rule 2): a pin is a §4.1 presentation

@@ -40,7 +40,7 @@ RestartSec=5s
 # serve` parked with the default disposition and was killed where it stood.
 #
 # The control-group kill still reaches a running turn beside yog, which is what
-# a deliberate stop should do — the detached `lernie` driver takes its own copy
+# a deliberate stop should do — the detached `litany` driver takes its own copy
 # of this SIGTERM and settles its unanswered tool window on the way out.
 TimeoutStopSec=30s
 # The engine shells out for two things it links no library for: `openssl`, for

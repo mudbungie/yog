@@ -33,7 +33,7 @@ fn workspace_round_trips_through_its_name() {
     let s = snap(
         &[
             ("/d/yog/workspaces/home", named("home")),
-            ("/d/lernie/workspaces/auto-1", WorkspaceKind::Foreign),
+            ("/d/litany/workspaces/auto-1", WorkspaceKind::Foreign),
         ],
         &[],
     );
@@ -43,19 +43,19 @@ fn workspace_round_trips_through_its_name() {
         Ok(PathBuf::from("/d/yog/workspaces/home"))
     );
     assert_eq!(
-        s.ws_name(Path::new("/d/lernie/workspaces/auto-1")),
+        s.ws_name(Path::new("/d/litany/workspaces/auto-1")),
         "auto-1"
     );
     assert_eq!(
         s.ws_path("auto-1"),
-        Ok(PathBuf::from("/d/lernie/workspaces/auto-1"))
+        Ok(PathBuf::from("/d/litany/workspaces/auto-1"))
     );
 }
 
 /// A project round-trips the same way, over the enumerated clone set.
 #[test]
 fn project_round_trips_through_its_name() {
-    let s = snap(&[], &["/home/u/dev/yog", "/home/u/dev/lernie"]);
+    let s = snap(&[], &["/home/u/dev/yog", "/home/u/dev/litany"]);
     assert_eq!(s.project_name(Path::new("/home/u/dev/yog")), "yog");
     assert_eq!(s.project_path("yog"), Ok(PathBuf::from("/home/u/dev/yog")));
 }

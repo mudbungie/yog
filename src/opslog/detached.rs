@@ -1,6 +1,6 @@
 //! The detached driver's captured stderr (DESIGN §8.1, §13.3, §4.2, §5.2).
 //!
-//! A detached `lernie prompt`'s status is never observed — the row is written at
+//! A detached `litany prompt`'s status is never observed — the row is written at
 //! launch and never rewritten — so its ops line carries the
 //! [`DETACHED_EXIT`] sentinel and an empty `stderr` (§8.1), and says nothing but
 //! that the handoff happened (bl-afa9: a spawn that never happened writes a
@@ -24,7 +24,7 @@
 //! is a *transport*: it names the sink and reads its tail, and says nothing
 //! about what the tail means. For two rulings it was folded into every `-2`
 //! row, which made the meaning "the driver said anything at all" — and
-//! lernie's contract makes this sink an **operator-notice** channel as much as
+//! litany's contract makes this sink an **operator-notice** channel as much as
 //! a dying one (declines, superseded landings, accepted-crash-class launch
 //! notes, a §6 budget stop, all printed on paths that return `Ok(())`). bl-1296
 //! answered with a phrase table over those sentences; bl-b95e deleted the table
@@ -60,7 +60,7 @@ const TAIL: u64 = 4096;
 /// Sink-name stand-in for a workspace path with no file name (`/`, `..`).
 const UNNAMED: &str = "workspace";
 
-/// The per-spawn stderr sink for a detached `lernie prompt`:
+/// The per-spawn stderr sink for a detached `litany prompt`:
 /// `<state_root>/detached/<ts>-<workspace leaf>.err`. Both sides of the fold go
 /// through here — the spawn hands this path to
 /// [`spawn_detached`](crate::cli_outbound::Cli::spawn_detached), [`fold`] reads
@@ -88,7 +88,7 @@ pub fn fold(state_root: &Path, entry: &OpEntry) -> OpEntry {
     if entry.exit != DETACHED_EXIT || !entry.stderr.is_empty() {
         return entry.clone();
     }
-    // `lernie prompt … <workspace> <goal>` behind the resolved binary: the goal
+    // `litany prompt … <workspace> <goal>` behind the resolved binary: the goal
     // is always LAST (`clip_goal` trims exactly it, so the rest survives the
     // log intact) and the workspace rides just before it. Reading from the tail
     // holds across flag growth (`--name`, bl-08f2) and across the append-only
@@ -110,7 +110,7 @@ pub fn fold(state_root: &Path, entry: &OpEntry) -> OpEntry {
 ///
 /// `pub(crate)` since bl-55d8: this is the crate's **one** bound on how much of
 /// a captured stderr yog ever reads back, and the §7.3 no-response wound reads
-/// a step's own `stderr.log` (lernie ARCH §2.3) through it. Nothing about the
+/// a step's own `stderr.log` (litany ARCH §2.3) through it. Nothing about the
 /// bound is detached-spawn-specific — a driver that chatters for hours and an
 /// adapter that retried a hundred times both die at the tail — and a second
 /// spelling of "how far back do we read" is how the two would drift.

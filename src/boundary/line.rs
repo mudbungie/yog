@@ -67,7 +67,7 @@ pub use verbs::ANSWER_USAGE;
 /// (argv, a fresh TUI) hands [`Context::default`] and spells its targets out.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Context {
-    /// The focused workspace's **name** (§3.1) — the lernie family's target.
+    /// The focused workspace's **name** (§3.1) — the litany family's target.
     /// A name, not a path, because a line is a wire spelling like any other
     /// (REMOTE §8, bl-f5f6): the seat that fills this from a focus spells the
     /// name (`Snapshot::ws_name`), and the engine resolves it at the chokepoint.

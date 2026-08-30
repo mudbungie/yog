@@ -8,7 +8,7 @@
 //! the fire: the root has no `agents/<id>` ref until the detached driver writes
 //! one, so it is held by the minted §3.3 name and spent by the frame's
 //! [`AppModel::refresh`] on the first roster whose root wears the name fact —
-//! the lernie-stored `name` blob `--name` committed (bl-6920: the goal itself
+//! the litany-stored `name` blob `--name` committed (bl-6920: the goal itself
 //! carries no stamp).
 
 use super::Harness;
@@ -18,7 +18,7 @@ use crate::watch::Mark;
 use std::time::Duration;
 
 /// Land a root wearing `name` the way a modern fire does (bl-6920): the goal
-/// verbatim on the branch, the name as the lernie-committed `name` blob the
+/// verbatim on the branch, the name as the litany-committed `name` blob the
 /// derivation reads back as its `name_fact`.
 fn build_named(h: &Harness, id: &str, name: &str) {
     h.build_more(id, "fix the gate");

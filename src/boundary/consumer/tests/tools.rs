@@ -19,7 +19,7 @@ fn quiet(root: &std::path::Path, data: &std::path::Path) -> ConsumerCtx {
         root,
         world_of(data, &["home"]),
         data.to_path_buf(),
-        Cli::new("/no/such/lernie"),
+        Cli::new("/no/such/litany"),
     )
 }
 

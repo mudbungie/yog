@@ -1,9 +1,9 @@
-//! The lernie arm's binding pieces, each driven directly: the clap parse and
+//! The litany arm's binding pieces, each driven directly: the clap parse and
 //! its exit-code mapping, the `$EDITOR` hand-off, and the outcome/failure
 //! plumbing ([`conclude`]/[`perform`], upstream's `perform` with `i32`).
 //! [`run`]'s full verb path — preludes, the shim converge, the `Fx` build —
-//! rides `tests/multiplex_lernie.rs`, a test binary of its own that owns its
-//! process environment (`LERNIE_HOME`/`XDG_DATA_HOME`/`EDITOR`).
+//! rides `tests/multiplex_litany.rs`, a test binary of its own that owns its
+//! process environment (`LITANY_HOME`/`XDG_DATA_HOME`/`EDITOR`).
 //! The `Exec` outcome's *returning* half rides `tests/exec_return.rs` for the
 //! same reason one layer down: a returning exec is a process-global act, and
 //! this binary has 2,600 peer threads (bl-419d).
@@ -17,7 +17,7 @@ fn args(parts: &[&str]) -> Vec<String> {
 
 #[test]
 fn parse_accepts_a_verb_and_maps_help_and_errors_to_exit_codes() {
-    // A well-formed verb parses into lernie's own surface.
+    // A well-formed verb parses into litany's own surface.
     let cli = parse(&args(&["new", "/tmp/ws"])).unwrap();
     assert!(matches!(cli.command, cmd::Command::New(_)));
     // `--help` is clap's short-circuit: printed, exit 0 — never a verb.

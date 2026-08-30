@@ -25,7 +25,7 @@ use crate::cli_outbound::Cli;
 /// verdict finds what the launch was supposed to produce.
 const MINTED: &str = "vanished-heron";
 
-/// One detached `lernie prompt` row, launched at `ts` for the conversation
+/// One detached `litany prompt` row, launched at `ts` for the conversation
 /// `name`, appended to the trail exactly as `start::execute_prompt` writes it
 /// (the goal last, the workspace before it, `--name` up front).
 fn launched(world: &crate::shell::acceptance::fixture::World, ts: &str, name: &str) {
@@ -35,7 +35,7 @@ fn launched(world: &crate::shell::acceptance::fixture::World, ts: &str, name: &s
         &crate::opslog::OpEntry {
             ts: ts.into(),
             argv: vec![
-                "lernie".into(),
+                "litany".into(),
                 "prompt".into(),
                 "--name".into(),
                 name.into(),
@@ -60,7 +60,7 @@ fn sink(world: &crate::shell::acceptance::fixture::World, ts: &str, text: &str) 
     std::fs::write(&path, text).unwrap();
 }
 
-/// bl-4895: a detached `lernie prompt` whose driver dies right after launch must
+/// bl-4895: a detached `litany prompt` whose driver dies right after launch must
 /// banner. The failure lands in the model on a **later sweep** — long after the
 /// dispatch handler that fired the prompt returned — so a banner cached at
 /// dispatch showed nothing at all (three live prompts, three populated §8.1 sink
@@ -73,34 +73,34 @@ fn sink(world: &crate::shell::acceptance::fixture::World, ts: &str, text: &str) 
 /// writing a branch, so there is nothing on disk where its product should be.
 #[test]
 fn a_driver_that_dies_after_launch_banners_on_the_sweep_that_folds_its_sink() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
 
     // The launch: a clean `-2` row. Nothing to see yet.
     launched(&world, "17", MINTED);
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
-    let quiet = painted(&mut world, &lernie, &bl);
+    let quiet = painted(&mut world, &litany, &bl);
     assert!(
         !quiet.contains("was retired"),
         "a live launch is not a failure:\n{quiet}"
     );
 
     // The driver then dies on a stale workspace config, into its §8.1 sink.
-    sink(&world, "17", "lernie prompt: config: action was retired\n");
+    sink(&world, "17", "litany prompt: config: action was retired\n");
 
     // The sweep folds it in — no dispatch, no click. The next frame banners it.
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
-    let banner = painted(&mut world, &lernie, &bl);
+    let banner = painted(&mut world, &litany, &bl);
     assert!(
         banner.contains("was retired"),
         "the dead driver's stderr tail reaches the paint layer:\n{banner}"
     );
     assert!(
-        banner.contains("⚠ lernie prompt"),
+        banner.contains("⚠ litany prompt"),
         "with the attempted argv:\n{banner}"
     );
 }
@@ -118,7 +118,7 @@ fn a_driver_that_dies_after_launch_banners_on_the_sweep_that_folds_its_sink() {
 /// driver that spoke once and went on working stayed red forever.
 #[test]
 fn a_live_launchs_sink_never_alarms_however_it_reads() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
@@ -134,7 +134,7 @@ fn a_live_launchs_sink_never_alarms_however_it_reads() {
         "cadence:\n  watcher:\n    debounce_ms: 0\n",
     )
     .unwrap();
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     // The launch's product, on disk: a conversation wearing the very name the
     // row minted. This is the whole difference from the beat above.
@@ -143,10 +143,10 @@ fn a_live_launchs_sink_never_alarms_however_it_reads() {
     world.converge();
 
     launched(&world, "19", MINTED);
-    sink(&world, "19", "lernie prompt: config: action was retired\n");
-    world.model.after_lernie_verb();
+    sink(&world, "19", "litany prompt: config: action was retired\n");
+    world.model.after_litany_verb();
     world.converge();
-    let out = painted(&mut world, &lernie, &bl);
+    let out = painted(&mut world, &litany, &bl);
 
     let (glyph, _, _) = crate::theme::op_badge(crate::opslog::OpOutcome::Detached);
     let row = out
@@ -154,7 +154,7 @@ fn a_live_launchs_sink_never_alarms_however_it_reads() {
         .find(|line| line.starts_with(glyph))
         .unwrap_or_default();
     assert!(
-        row.contains("lernie prompt --name"),
+        row.contains("litany prompt --name"),
         "the row is on the glass wearing the handoff badge:\n{out}"
     );
     assert!(
@@ -166,7 +166,7 @@ fn a_live_launchs_sink_never_alarms_however_it_reads() {
         "the sink is not read at all, so its words reach nothing:\n{out}"
     );
     assert!(
-        !out.contains("⚠ lernie prompt"),
+        !out.contains("⚠ litany prompt"),
         "and no §7.3 failure banner is raised over it:\n{out}"
     );
     assert!(

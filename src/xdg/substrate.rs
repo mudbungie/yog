@@ -1,6 +1,6 @@
 //! **Where the embedded substrates keep their state** — balls' own
 //! `layout::Xdg` over this snapshot (§16.7 W8: the crate is linked, so yog
-//! reproduces no balls fold of its own) and lernie's `LERNIE_HOME` override
+//! reproduces no balls fold of its own) and litany's `LITANY_HOME` override
 //! with the XDG folds behind it (§16.2). Split from [`super`] at §12's budget
 //! on the seam that module's doc already draws: a fold that answers *where
 //! another tool keeps its things* is a different subject from yog's own roots,
@@ -52,22 +52,22 @@ impl Env {
         self.balls_layout().clones_dir()
     }
 
-    /// `$LERNIE_HOME` when set collapses both lernie roots onto that dir.
-    fn lernie_home(&self) -> Option<PathBuf> {
-        self.get("LERNIE_HOME").map(PathBuf::from)
+    /// `$LITANY_HOME` when set collapses both litany roots onto that dir.
+    fn litany_home(&self) -> Option<PathBuf> {
+        self.get("LITANY_HOME").map(PathBuf::from)
     }
 
-    /// Lernie config root: `$LERNIE_HOME` else `$XDG_CONFIG_HOME/lernie` else
-    /// `$HOME/.config/lernie`.
-    pub fn lernie_config_root(&self) -> PathBuf {
-        self.lernie_home()
-            .unwrap_or_else(|| self.xdg("XDG_CONFIG_HOME", ".config", "lernie"))
+    /// Litany config root: `$LITANY_HOME` else `$XDG_CONFIG_HOME/litany` else
+    /// `$HOME/.config/litany`.
+    pub fn litany_config_root(&self) -> PathBuf {
+        self.litany_home()
+            .unwrap_or_else(|| self.xdg("XDG_CONFIG_HOME", ".config", "litany"))
     }
 
-    /// Lernie data root: `$LERNIE_HOME` else `$XDG_DATA_HOME/lernie` else
-    /// `$HOME/.local/share/lernie`.
-    pub fn lernie_data_root(&self) -> PathBuf {
-        self.lernie_home()
-            .unwrap_or_else(|| self.xdg("XDG_DATA_HOME", ".local/share", "lernie"))
+    /// Litany data root: `$LITANY_HOME` else `$XDG_DATA_HOME/litany` else
+    /// `$HOME/.local/share/litany`.
+    pub fn litany_data_root(&self) -> PathBuf {
+        self.litany_home()
+            .unwrap_or_else(|| self.xdg("XDG_DATA_HOME", ".local/share", "litany"))
     }
 }

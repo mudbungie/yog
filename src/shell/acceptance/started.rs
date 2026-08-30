@@ -19,20 +19,20 @@ use crate::cli_outbound::Cli;
 use crate::keymap::InspectorTab;
 
 /// The fixture's root carries the **legacy** §3.3 identity stamp (a pre-0.0.4
-/// root — a modern fire wears the lernie `name` blob instead, bl-6920); the
+/// root — a modern fire wears the litany `name` blob instead, bl-6920); the
 /// claim spends off `name_fact` the same way on either rung.
 const GOAL: &str = "You are stench-pug.\n\nfix the gate";
 
 #[test]
 fn a_fired_start_renders_its_own_transcript_with_no_selection_gesture() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = world_titled(GOAL);
     let ws = world.ws.clone();
     world.model.select_tab(InspectorTab::Transcript);
 
     // Where Enter leaves the operator today: the workspace focused, nothing
     // selected — the §11 birth block and its placeholder.
-    let before = painted(&mut world, &lernie, &bl);
+    let before = painted(&mut world, &litany, &bl);
     assert!(
         before.contains("select a conversation"),
         "the pre-start center is the placeholder:\n{before}"
@@ -49,7 +49,7 @@ fn a_fired_start_renders_its_own_transcript_with_no_selection_gesture() {
         .await_conversation(&ws, "stench-pug", "fix the gate");
     world.converge();
 
-    let after = painted(&mut world, &lernie, &bl);
+    let after = painted(&mut world, &litany, &bl);
     assert!(
         !after.contains("select a conversation"),
         "the placeholder is gone — the start focused what it started:\n{after}"

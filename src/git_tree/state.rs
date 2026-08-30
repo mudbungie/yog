@@ -30,7 +30,7 @@
 //! vocabulary is unchanged (the bl-d816 ruling: the badge answers "needs me?",
 //! the workspace pane answers "why"), and the *why* rides beside it as
 //! [`Liveness::truncated`] — the fact §8.2's Nudge gate reads, because linked
-//! lernie derives `NothingDue` from exactly this shape and a control that
+//! litany derives `NothingDue` from exactly this shape and a control that
 //! fires and does nothing is QUALITY H4's theater.
 //!
 //! The two observations are deliberately not collapsed (§2.11): the lock is

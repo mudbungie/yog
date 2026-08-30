@@ -61,7 +61,7 @@ fn a_conversations_settings_rows_sit_below_the_composer_at_the_pane_foot() {
 
     // The §9.4 model row rides the same seat — and since bl-cd2a the row IS the
     // two dropdowns: the model one shows what the config branch tip assigns,
-    // which since bl-a842 is the worker model lernie's own template declares.
+    // which since bl-a842 is the worker model litany's own template declares.
     let model = one(&painted, "claude-sonnet-5");
     assert!(
         model.top() >= seat.top() - 1.0,

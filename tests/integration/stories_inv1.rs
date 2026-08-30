@@ -50,7 +50,7 @@ fn inv1_idle_construction_and_ticks_perform_no_mutation() {
     let xdg = Xdg::with(root.path(), None, Some(&state.to_string_lossy()));
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state-yog"),
         balls_clones: xdg.clones_dir(),
         home: root.path().join("home"),
@@ -116,7 +116,7 @@ fn inv1_idle_construction_and_ticks_perform_no_mutation() {
     );
     assert!(
         !layout_under(&roots.yog_data)
-            .lernie
+            .litany
             .join("models.yaml")
             .exists(),
         "no world seeded"

@@ -102,7 +102,7 @@ fn only_a_bl_claim_row_stamped_with_this_claimant_joins() {
     let mut close = claim_row("/dev/proj", "bl-1111", "cobalt-gecko");
     close.argv[1] = "close".to_owned();
     let mut foreign = claim_row("/dev/proj", "bl-1111", "cobalt-gecko");
-    foreign.argv[0] = "lernie".to_owned();
+    foreign.argv[0] = "litany".to_owned();
     let mut unstamped = claim_row("/dev/proj", "bl-1111", "cobalt-gecko");
     unstamped.argv.truncate(3);
     // And a row too short to be a claim at all — the trail carries every op.
@@ -129,7 +129,7 @@ fn a_fanned_candidates_own_worktree_is_writable_and_a_strangers_is_not() {
     let fire = |binding: &Path, cwd: &str| OpEntry {
         ts: "TS".to_owned(),
         argv: [
-            "lernie",
+            "litany",
             "prompt",
             "--name",
             "amber-1",
@@ -166,7 +166,7 @@ fn a_fanned_candidates_own_worktree_is_writable_and_a_strangers_is_not() {
 }
 
 #[test]
-fn the_cwd_mark_is_read_from_lernie_s_own_ref() {
+fn the_cwd_mark_is_read_from_litany_s_own_ref() {
     let dir = tempdir().unwrap();
     let ws = dir.path().join("ws");
     let repo = ws.join("repo.git");
@@ -189,7 +189,7 @@ fn the_cwd_mark_is_read_from_lernie_s_own_ref() {
     let out = git(&["hash-object", "-w", "--", &blob.display().to_string()]);
     let oid = String::from_utf8(out.stdout).unwrap().trim().to_owned();
     assert!(
-        git(&["update-ref", "refs/lernie/cwd/amber-1", &oid])
+        git(&["update-ref", "refs/litany/cwd/amber-1", &oid])
             .status
             .success()
     );
@@ -202,7 +202,7 @@ fn the_cwd_mark_is_read_from_lernie_s_own_ref() {
     let out = git(&["hash-object", "-w", "--", &blob.display().to_string()]);
     let oid = String::from_utf8(out.stdout).unwrap().trim().to_owned();
     assert!(
-        git(&["update-ref", "refs/lernie/cwd/amber-1", &oid])
+        git(&["update-ref", "refs/litany/cwd/amber-1", &oid])
             .status
             .success()
     );

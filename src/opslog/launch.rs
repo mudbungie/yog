@@ -7,7 +7,7 @@
 //! was the one capture file yog still read the other way round: a byte in it
 //! made the row a rendered failure, and the marker table (`opslog::notice`,
 //! bl-1296) existed only to hold back the benign lines that reading swept up.
-//! A phrase table over sentences lernie is free to reword is not a classifier,
+//! A phrase table over sentences litany is free to reword is not a classifier,
 //! and it could never reach the defect underneath it — the sink is append-only
 //! for the driver's whole life, so **one** unrecognized line held that row red
 //! for every later sweep, however many turns the driver went on to run.
@@ -25,7 +25,7 @@
 //!   surface to say it on.
 //!
 //! Both hold **vacuously when the target does not exist at all**, which is the
-//! class the sink was added for (bl-4895): a `lernie prompt` whose driver died
+//! class the sink was added for (bl-4895): a `litany prompt` whose driver died
 //! before writing a branch leaves no conversation, no step and no transcript —
 //! nothing but its ops row and its sink.
 //!
@@ -49,14 +49,14 @@ use std::time::Duration;
 use super::{DETACHED_EXIT, OpEntry};
 use crate::git_tree::{Agent, GitTree};
 
-/// lernie's start verb, and the flag carrying the §3.3 name the fire minted.
+/// litany's start verb, and the flag carrying the §3.3 name the fire minted.
 /// Here rather than beside the spawn for [`super::detached::sink`]'s own
 /// reason: the launch writes these tokens into `ops.jsonl` and this reads them
 /// back, so the two sides of that join have one home and cannot drift.
 pub(crate) const PROMPT: &str = "prompt";
 /// See [`PROMPT`].
 pub(crate) const NAME_FLAG: &str = "--name";
-/// lernie's resume verb (§8.2): `advance <workspace> <agent>`, the driver
+/// litany's resume verb (§8.2): `advance <workspace> <agent>`, the driver
 /// launch behind a capability release and the operator's own nudge.
 pub(crate) const ADVANCE: &str = "advance";
 

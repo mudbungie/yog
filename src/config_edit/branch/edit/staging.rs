@@ -1,5 +1,5 @@
 //! The staged half of a config-branch edit (DESIGN §9.3 step 1, §5.2 step 5):
-//! where a drafted file waits for lernie's `$EDITOR` callback to collect it,
+//! where a drafted file waits for litany's `$EDITOR` callback to collect it,
 //! and how a dir the callback never reached is swept.
 //!
 //! Split off [`super`] at §12's pre-split band on the seam that module's own
@@ -33,7 +33,7 @@ pub fn next_nonce() -> String {
 
 /// Write the drafted `files` into `<staging_root>/<nonce>/` (creating parent
 /// dirs) and return that staging dir. An empty `files` still creates the
-/// dir — the shim then copies nothing and lernie declines the empty commit.
+/// dir — the shim then copies nothing and litany declines the empty commit.
 pub fn stage_files(
     staging_root: &Path,
     nonce: &str,

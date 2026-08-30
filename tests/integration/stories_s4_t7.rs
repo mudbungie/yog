@@ -38,7 +38,7 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         balls_clones: root.path().join("clones"),
         home: root.path().join("home"),
@@ -57,12 +57,12 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
         std::fs::create_dir_all(&ws).unwrap();
         build_agents(&ws, &agents);
     }
-    // A FOREIGN workspace (lernie's auto-id territory) and a REPLAY one — real
+    // A FOREIGN workspace (litany's auto-id territory) and a REPLAY one — real
     // workspaces, but not spheres the operator named, so neither tabs the wall.
-    let foreign = roots.lernie_data.join("workspaces").join("ws-7f3a");
+    let foreign = roots.litany_data.join("workspaces").join("ws-7f3a");
     std::fs::create_dir_all(&foreign).unwrap();
     build_agents(&foreign, &[stirring("f-001")]);
-    let replay = roots.lernie_data.join("replays").join("rp-1");
+    let replay = roots.litany_data.join("replays").join("rp-1");
     std::fs::create_dir_all(&replay).unwrap();
     build_agents(&replay, &[stirring("r-001")]);
 

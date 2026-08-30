@@ -42,7 +42,7 @@ use super::fixture::World;
 use crate::cli_outbound::Cli;
 use crate::nav::convs::{id_floor, is_stamp};
 
-/// A **named** root wearing a real lernie id — the shape every seat that wants
+/// A **named** root wearing a real litany id — the shape every seat that wants
 /// a title must resolve past.
 const ROOT: &str = "20260803T045643Z-1e5f99d4";
 /// A nameless descent child of [`ROOT`], its id carrying the whole ancestry
@@ -68,7 +68,7 @@ const BREAKS: &[char] = &[
 ];
 
 /// Every id-shaped run in `painted`: a token one of whose `-` segments is a
-/// lernie stamp. **This is the derivation** — the scan asks the value what it
+/// litany stamp. **This is the derivation** — the scan asks the value what it
 /// is, never asks a field what it is called.
 fn id_runs(painted: &str) -> Vec<String> {
     painted
@@ -78,7 +78,7 @@ fn id_runs(painted: &str) -> Vec<String> {
         .collect()
 }
 
-/// The whole window over a world built out of real lernie ids: a named root, a
+/// The whole window over a world built out of real litany ids: a named root, a
 /// chained child of it unfolded into the list, and three inbox deposits — the
 /// §2.11 `from:` field, which is the carrier the vocabulary scan had never heard
 /// of until the defect had already shipped.
@@ -89,7 +89,7 @@ fn id_runs(painted: &str) -> Vec<String> {
 /// sender was reaped — is where the ladder still falls to the floor. Without it
 /// this scan would enumerate nothing, which its own guard calls a failure.
 pub(super) fn painted_over_ids(tab: crate::keymap::InspectorTab) -> String {
-    let (lernie, bl) = (Cli::new("/yog-absent-lernie"), Cli::new("/yog-absent-bl"));
+    let (litany, bl) = (Cli::new("/yog-absent-litany"), Cli::new("/yog-absent-bl"));
     let mut world = super::inbox_composer::quick(super::fixture::world());
     let ws = world.ws.clone();
     world.add_root(ROOT, "cormorant");
@@ -105,11 +105,11 @@ pub(super) fn painted_over_ids(tab: crate::keymap::InspectorTab) -> String {
     // Unfold the root: since bl-fa82 a member is a row of the conversation
     // list, and since bl-8905 that is the only place a child paints.
     world.state.expanded.insert(ROOT.to_owned());
-    super::painted(&mut world, &lernie, &bl)
+    super::painted(&mut world, &litany, &bl)
 }
 
 /// Land a deposit in `agent`'s inbox whose `from:` is another **agent id**
-/// (§2.11) — what one agent's `lernie message` to another leaves behind. The
+/// (§2.11) — what one agent's `litany message` to another leaves behind. The
 /// sibling helper in [`super::inbox_composer`] deposits from `user`, which is
 /// precisely the sender that carries no id and so proves nothing here.
 fn deposit_from(world: &World, agent: &str, sender: &str) {

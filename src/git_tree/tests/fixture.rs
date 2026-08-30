@@ -7,7 +7,7 @@
 //! so mocking would mean testing our mock.
 //!
 //! Everything keyed to an **agent id** — the `agents/<id>` branch, its `name`
-//! blob, its `refs/lernie/*` marks and its descent forks — is
+//! blob, its `refs/litany/*` marks and its descent forks — is
 //! [`super::agent_fixture`]; the plain files git never sees (step records,
 //! inbox deposits) are [`super::disk_fixture`]; the second config lineages are
 //! [`super::config_fixture`]. Four files, one `Fixture`, split on the seams

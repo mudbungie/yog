@@ -9,7 +9,7 @@
 //! wears.** A `/prompt` receipt answers `{"kind":"started","conversation":
 //! "<minted-name>"}` — the minted §3.3 name is all the fire knows, since the
 //! root has no id until the detached driver writes `agents/<id>` — so before
-//! this resolution existed, that handle composed with `message` (lernie's one
+//! this resolution existed, that handle composed with `message` (litany's one
 //! name-resolving verb) and with nothing else: `/agent` read `present:false`,
 //! `/steps` and `/transcript` answered empty rows, `/stop` and `/retarget`
 //! refused, and — the dangerous half — `/floor`, `/flag` and `/delete-agent`
@@ -17,15 +17,15 @@
 //! answers to. A receipt whose handle only one verb accepts is not a receipt.
 //!
 //! **Names and ids are disjoint spaces, so the resolution never guesses.**
-//! Every agent id opens with lernie's compact `YYYYMMDDTHHMMSSZ` stamp
-//! (ARCH §2.3) and lernie refuses a *name* that reads like one at creation, so
+//! Every agent id opens with litany's compact `YYYYMMDDTHHMMSSZ` stamp
+//! (ARCH §2.3) and litany refuses a *name* that reads like one at creation, so
 //! [`id_shaped`] is a total discriminator on the needle itself. That buys three
 //! things at once. An id costs nothing — no enumeration, no existence check, so
 //! every seat that already spells one (the window, the inspector, a peer
 //! following a `/conversations` row) is untouched, and `delete-agent` keeps
-//! admitting the id no ref answers to that lernie's §9.2 debris cleanup needs. A
+//! admitting the id no ref answers to that litany's §9.2 debris cleanup needs. A
 //! name is resolved or **refused**, never passed through as though it were an
-//! id — which is the whole defect. And the vocabulary is lernie's own, not a
+//! id — which is the whole defect. And the vocabulary is litany's own, not a
 //! second one yog invented (`workspace::agent_name::resolve`: "an exact id match
 //! first, else the unique living agent wearing that name"), so a handle that
 //! addresses here addresses there.
@@ -135,11 +135,11 @@ impl Query {
 /// 1. An **id-shaped** needle is an id (module doc): returned untouched, with no
 ///    enumeration and no existence claim — so every seat that already spells one
 ///    pays nothing, and `delete-agent` keeps admitting the id no ref answers to
-///    that lernie's §9.2 debris cleanup needs.
+///    that litany's §9.2 debris cleanup needs.
 /// 2. Otherwise the **published derivation** ([`Snapshot`]) is asked, because it
 ///    is the very set every boundary *read* answers from: addressing and
 ///    answering must not be able to disagree about which conversations there
-///    are. It holds foreign and hand-made ids — the ones lernie's stamp grammar
+///    are. It holds foreign and hand-made ids — the ones litany's stamp grammar
 ///    does not recognize, which rung one cannot see — beside every stored name.
 /// 3. Otherwise **disk**, for the conversation no derivation has swept yet
 ///    (bl-6c9e's barrier, one noun down): a `/prompt` fire returns the instant
@@ -213,7 +213,7 @@ fn derived(snap: &Snapshot, workspace: &Path) -> Vec<(String, Option<String>)> {
         .collect()
 }
 
-/// Does `needle` read as an agent id — its first `-` segment being lernie's
+/// Does `needle` read as an agent id — its first `-` segment being litany's
 /// compact `YYYYMMDDTHHMMSSZ` stamp (ARCH §2.3)?
 ///
 /// The grammar is [`crate::nav::convs::is_stamp`], the tree's one definition of

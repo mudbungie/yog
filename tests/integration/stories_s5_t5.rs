@@ -1,4 +1,4 @@
-//! STORIES **S5-T5** config-branch-shim: `lernie config <ws> <name>` is spawned
+//! STORIES **S5-T5** config-branch-shim: `litany config <ws> <name>` is spawned
 //! with `EDITOR=<yog> --editor-apply` and `YOG_EDIT_SRC=<stage>`, the shim
 //! copies **only** the drafted files, an empty diff surfaces verbatim, and the
 //! staging directory has a bounded life (STORIES S5.3, DESIGN §9.3).
@@ -12,7 +12,7 @@
 //! is not, and deliberately: `drive` returns the outcome and leaves the staged
 //! bytes alone (a draft the operator may still be looking at), and
 //! `sweep_staging` reclaims a directory untouched for 24 h at the next startup
-//! (§5.2). Deleting at exit would race lernie's own read of the checkout it was
+//! (§5.2). Deleting at exit would race litany's own read of the checkout it was
 //! just handed. The assertion below is that bounded life, not a same-breath
 //! delete.
 
@@ -26,7 +26,7 @@ use yog::config_edit::apply::{EDITOR_APPLY_FLAG, copy_staged};
 use yog::config_edit::branch::edit::{self, DraftFile, EditOrigin, EditPlan};
 use yog::opslog::{self, Origin};
 
-/// What lernie says when the operator's edit changed nothing.
+/// What litany says when the operator's edit changed nothing.
 const NO_CHANGE: &str = "no change to config/default — nothing committed\n";
 
 /// STORIES **S5-T5** config-branch-shim.
@@ -64,12 +64,12 @@ fn s5_t5_the_shim_contract_and_the_verbatim_ride_back() {
         ("YOG_EDIT_SRC", staging.display().to_string().as_str())
     );
 
-    // --- The verb, and its words riding back. An empty diff is lernie's own
+    // --- The verb, and its words riding back. An empty diff is litany's own
     // sentence — yog owns no judgement about whether a config changed, so it
     // carries the verb's answer rather than deriving a second opinion.
-    let lernie = Recorder::new(dir.path(), "lernie").on("config", NO_CHANGE, 0);
+    let litany = Recorder::new(dir.path(), "litany").on("config", NO_CHANGE, 0);
     let entry = edit::drive(
-        &Cli::new(lernie.path()),
+        &Cli::new(litany.path()),
         &ws,
         &plan,
         "T0",
@@ -85,7 +85,7 @@ fn s5_t5_the_shim_contract_and_the_verbatim_ride_back() {
     );
     // The child observed both variables — asserted at the recorder, not at the
     // plan, so the env actually reached the process.
-    let inv = lernie.invocations();
+    let inv = litany.invocations();
     assert_eq!(inv.len(), 1);
     assert_eq!(
         inv[0].env.get("YOG_EDIT_SRC").map(String::as_str),
@@ -115,7 +115,7 @@ fn s5_t5_the_shim_contract_and_the_verbatim_ride_back() {
         &staging,
     );
     let entry = edit::drive(
-        &Cli::new(lernie.path()),
+        &Cli::new(litany.path()),
         &ws,
         &forked,
         "T1",
@@ -143,11 +143,11 @@ fn s5_t5_only_the_draft_is_copied_and_the_staging_dir_has_a_bounded_life() {
     )
     .unwrap();
 
-    // --- Only the drafted files are copied: whatever lernie refreshed into the
+    // --- Only the drafted files are copied: whatever litany refreshed into the
     // checkout survives, because the shim writes and never deletes.
     let checkout = dir.path().join("checkout");
     std::fs::create_dir_all(checkout.join("descriptions")).unwrap();
-    std::fs::write(checkout.join("descriptions/pool.md"), "lernie-refreshed").unwrap();
+    std::fs::write(checkout.join("descriptions/pool.md"), "litany-refreshed").unwrap();
     let written = copy_staged(&staging, &checkout).unwrap();
     assert_eq!(
         written,
@@ -156,7 +156,7 @@ fn s5_t5_only_the_draft_is_copied_and_the_staging_dir_has_a_bounded_life() {
     );
     assert_eq!(
         std::fs::read_to_string(checkout.join("descriptions/pool.md")).unwrap(),
-        "lernie-refreshed",
+        "litany-refreshed",
         "the checkout's own files are untouched"
     );
 

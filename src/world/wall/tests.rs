@@ -24,13 +24,13 @@ fn the_wall_is_the_world_root_plus_the_workspace_leaf() {
         PathBuf::from("/w/walls/corp")
     );
     // A workspace path is named by its §3.1 leaf, wherever it is rooted — a
-    // foreign workspace under lernie's own tree gets a wall by the same fold.
+    // foreign workspace under litany's own tree gets a wall by the same fold.
     assert_eq!(
         root_of(&world, Path::new("/d/yog/workspaces/corp")),
         PathBuf::from("/d/yog/world/walls/corp")
     );
     assert_eq!(
-        root_of(&world, Path::new("/elsewhere/lernie/workspaces/a1b2")),
+        root_of(&world, Path::new("/elsewhere/litany/workspaces/a1b2")),
         PathBuf::from("/d/yog/world/walls/a1b2")
     );
 }

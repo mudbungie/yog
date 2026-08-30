@@ -43,7 +43,7 @@ const RUN_HINT: &str = "Run this slash command — the same gesture the buttons 
 pub(super) fn run(
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     bl: &Cli,
     key: &DraftKey,
     typed: &str,
@@ -58,7 +58,7 @@ pub(super) fn run(
             false
         }
         Ok(Gesture::Ask(query)) => {
-            let deps = model.boundary_deps(lernie, bl);
+            let deps = model.boundary_deps(litany, bl);
             let answer = model.answer(&deps, &query, super::now_unix());
             note(state, answer)
         }
@@ -149,7 +149,7 @@ pub(super) fn seat(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     bl: &Cli,
     ctx: &super::verb_row::VerbCtx,
 ) -> bool {
@@ -163,7 +163,7 @@ pub(super) fn seat(
         // A run keeps the keyboard (§11 focus discipline), asked on the attempt
         // and not the outcome — a refused line is fixed where it was typed.
         super::focus::request(state);
-        if run(model, state, lernie, bl, &ctx.key, &ctx.text) {
+        if run(model, state, litany, bl, &ctx.key, &ctx.text) {
             state.actions.drafts.set(ctx.key.clone(), String::new());
         }
     }

@@ -15,7 +15,7 @@ fn ambient() -> Env {
         ("HOME", "/h"),
         ("XDG_DATA_HOME", "/d"),
         ("XDG_CACHE_HOME", "/c"),
-        ("LERNIE_HOME", "/ambient/lernie"),
+        ("LITANY_HOME", "/ambient/litany"),
         ("XDG_STATE_HOME", "/ambient/state"),
         ("BRAZEN_CONFIG", "/ambient/brazen.toml"),
         ("PATH", "/usr/bin:/bin"),
@@ -33,8 +33,8 @@ fn overrides_win_and_every_substrate_fold_nests() {
     let cases: &[Case] = &[
         // Each override seen through the fold that reads it — yielding the
         // world value, NOT the ambient one it replaced.
-        (Env::lernie_config_root, "/d/yog/world/lernie"),
-        (Env::lernie_data_root, "/d/yog/world/lernie"),
+        (Env::litany_config_root, "/d/yog/world/litany"),
+        (Env::litany_data_root, "/d/yog/world/litany"),
         (Env::balls_state_root, "/d/yog/world/state/balls"),
         (Env::balls_clones_dir, "/d/yog/world/state/balls/clones"),
         // yog's own state root moves under the world (§16.2 decision).
@@ -88,7 +88,7 @@ fn nothing_brazen_survives_the_world_and_the_anchor_is_self_consistent() {
 fn layout_names_the_world_subtree() {
     let l = layout(&ambient());
     assert_eq!(l.root, PathBuf::from("/d/yog/world"));
-    assert_eq!(l.lernie, PathBuf::from("/d/yog/world/lernie"));
+    assert_eq!(l.litany, PathBuf::from("/d/yog/world/litany"));
     assert_eq!(l.state, PathBuf::from("/d/yog/world/state"));
     assert_eq!(l.tools, PathBuf::from("/d/yog/world/tools"));
 }
@@ -109,7 +109,7 @@ fn the_override_set_nests_two_state_vars_and_fronts_the_tool_path() {
     assert_eq!(
         ov,
         vec![
-            ("LERNIE_HOME".to_owned(), "/d/yog/world/lernie".to_owned()),
+            ("LITANY_HOME".to_owned(), "/d/yog/world/litany".to_owned()),
             ("XDG_STATE_HOME".to_owned(), "/d/yog/world/state".to_owned()),
             (
                 "PATH".to_owned(),

@@ -33,9 +33,9 @@ use crate::keymap::InspectorTab;
 use crate::steps_view::ORPHANED_MAIL;
 use crate::test_support::FakeClock;
 
-/// The shape lernie's own decline writes to `driver.log` — its `advance`
-/// erroring out after the deposit delivered (lernie §6).
-const DRIVER_WORDS: &str = "lernie: branch tip is an assistant entry with tool_use unmatched \
+/// The shape litany's own decline writes to `driver.log` — its `advance`
+/// erroring out after the deposit delivered (litany §6).
+const DRIVER_WORDS: &str = "litany: branch tip is an assistant entry with tool_use unmatched \
 by committed tool results — declined (ARCH 6)";
 
 /// The needle: a phrase from the file's bytes, in no shell vocabulary.
@@ -50,7 +50,7 @@ fn orphaned_mail(world: &World, driver_log: Option<&[u8]>) {
 }
 
 /// The dead driver's own words, beside the steps — the one copy of them
-/// (lernie binds every launched driver's stderr there since 0.0.9).
+/// (lernie 0.0.9 bound every launched driver's stderr there).
 fn dead_driver(world: &World, driver_log: Option<&[u8]>) {
     if let Some(bytes) = driver_log {
         let steps = world.ws.join("steps/c-1");
@@ -75,19 +75,19 @@ fn orphaned_world(driver_log: Option<&[u8]>) -> (World, FakeClock) {
 
 #[test]
 fn the_window_states_why_the_chat_stopped_answering() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let (mut world, clock) = orphaned_world(Some(DRIVER_WORDS.as_bytes()));
 
     // Inside the grace window the alarm is withheld — the healthy send's
     // relaunch gap must never flash it.
-    let early = painted(&mut world, &lernie, &bl);
+    let early = painted(&mut world, &litany, &bl);
     assert!(
         !early.contains(ORPHANED_MAIL),
         "the orphan is graced before it is believed:\n{early}"
     );
 
     clock.advance(world.model.cadence().wound_grace());
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
     assert!(text.contains(ORPHANED_MAIL), "the class, in words:\n{text}");
     assert!(
         text.contains(NEEDLE),
@@ -103,7 +103,7 @@ fn the_window_states_why_the_chat_stopped_answering() {
 /// be: they hand-place a world that is *already* orphaned and ask what the
 /// window does to it, so the only latency they ever drive is the gate's own.
 /// This one drives the healthy send: the driver takes the agent's lock and
-/// delivers the mail under it (lernie §2.11), so disk reads "delivered mail
+/// delivers the mail under it (litany §2.11), so disk reads "delivered mail
 /// on the tail" the instant the deposit returns while the published snapshot
 /// still says nobody is driving. Nothing is wrong; the cache is behind.
 ///
@@ -122,7 +122,7 @@ fn the_window_states_why_the_chat_stopped_answering() {
 /// matter are the two the old window never covered.
 #[test]
 fn a_healthy_send_never_flashes_the_alarm_while_the_snapshot_catches_up() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = super::inbox_composer::quick(world());
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
@@ -146,7 +146,7 @@ fn a_healthy_send_never_flashes_the_alarm_while_the_snapshot_catches_up() {
         crate::wire::asker::ASK_PERIOD,
     ];
     for leg in chain {
-        let text = painted(&mut world, &lernie, &bl);
+        let text = painted(&mut world, &litany, &bl);
         assert!(
             !text.contains(ORPHANED_MAIL),
             "the send is healthy; the snapshot is merely behind:\n{text}"
@@ -162,9 +162,9 @@ fn a_healthy_send_never_flashes_the_alarm_while_the_snapshot_catches_up() {
     // adopted on the refresh after the frame that kept its question standing,
     // so this paint is the one that carries it — and it is still inside the
     // window, so it could not have banner-ed either way.
-    let _ = painted(&mut world, &lernie, &bl);
+    let _ = painted(&mut world, &litany, &bl);
     clock.advance(cadence.wound_grace());
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
     assert!(
         !text.contains(ORPHANED_MAIL),
         "a state that healed leaves nothing behind:\n{text}"
@@ -177,12 +177,12 @@ fn a_healthy_send_never_flashes_the_alarm_while_the_snapshot_catches_up() {
 /// explains it.
 #[test]
 fn an_orphan_with_nothing_to_quote_still_banners_and_says_so() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let (mut world, clock) = orphaned_world(None);
-    let _ = painted(&mut world, &lernie, &bl);
+    let _ = painted(&mut world, &litany, &bl);
     clock.advance(world.model.cadence().wound_grace());
 
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
     assert!(text.contains(ORPHANED_MAIL), "still the class:\n{text}");
     assert!(
         text.contains("nothing on disk says why"),

@@ -20,9 +20,9 @@
 //! the menu reaches the *dialog*, never past it (§11 doctrine), and **no key
 //! opens it or arms it** (§3.6). Escape dismisses it (`super::modal`).
 //!
-//! **The dialog enumerates from the substrate's own census** — `lernie delete
+//! **The dialog enumerates from the substrate's own census** — `litany delete
 //! --children --dry-run`, fetched once at open ([`open`]): the descendants by
-//! name and the pending-deposit count come off lernie's `DeleteReport`, never
+//! name and the pending-deposit count come off litany's `DeleteReport`, never
 //! a yog re-derivation. The arming scales with the blast radius (§3.6 as
 //! amended): a leaf takes a plain explicit confirm — the row the operator is
 //! already pointing at, its name in the title — while a subtree takes the
@@ -61,8 +61,8 @@ pub struct DeleteAgentState {
 /// Open the confirmation on `ws`/`root` — the one entry **both** carriers
 /// call. The census spawn is the open's own cost (a short dry run, one
 /// explicit gesture — never per frame).
-pub(super) fn open(state: &mut ShellState, lernie: &Cli, ws: &Path, root: &str) {
-    let (census, error) = match crate::delete::agent::census(lernie, ws, root) {
+pub(super) fn open(state: &mut ShellState, litany: &Cli, ws: &Path, root: &str) {
+    let (census, error) = match crate::delete::agent::census(litany, ws, root) {
         Ok(census) => (Some(census), String::new()),
         Err(e) => (None, e),
     };
@@ -82,7 +82,7 @@ pub(super) fn danger_row(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     ws: &Path,
 ) {
     // The §2.3 descent root, off the seat's own view of its selection
@@ -108,6 +108,6 @@ pub(super) fn danger_row(
         )
         .clicked()
     {
-        open(state, lernie, ws, &root);
+        open(state, litany, ws, &root);
     }
 }

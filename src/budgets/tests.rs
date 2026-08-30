@@ -3,7 +3,7 @@
 use super::*;
 
 /// The three provider shapes the fold has to answer for, at the one place the
-/// formula lives — the counters are NOT four disjoint slices (bl-6621, lernie
+/// formula lives — the counters are NOT four disjoint slices (bl-6621, litany
 /// bl-68f5).
 ///
 /// *Contained* (OpenAI-shaped, Google): the cached slice sits inside the prompt

@@ -38,7 +38,7 @@ s10_historian() {
   ask() { gesture "$data" "$1" --ws "$ws" --agent "$agent" || true; }
 
   # S10-T1 — THE TRANSCRIPT. The first entry is the composed goal (§3.3), so it
-  # carries the ball's own id: bytes lernie wrote, read back through the query.
+  # carries the ball's own id: bytes litany wrote, read back through the query.
   ask /transcript
   reply_is "[r for r in d.get(\"rows\",[]) if r.get(\"kind\")==\"delivered\"
       and r.get(\"sender\")==\"user\" and \"$ball\" in r.get(\"body\",\"\")]" \
@@ -82,7 +82,7 @@ s10_historian() {
 
   # S10-T5 — THE GOVERNING CONFIG (VISION V1.2's freeze): the lineage this
   # conversation is frozen on, by name and by oid, with the files that commit
-  # carries. A workspace's own `config/default`, made by real `lernie config`.
+  # carries. A workspace's own `config/default`, made by real `litany config`.
   ask /governing
   reply_is '(d.get("branch")=="default" and d.get("oid")
       and "workflow.yaml" in d.get("files",[]))' \

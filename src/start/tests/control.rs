@@ -20,11 +20,11 @@ fn layout(w: &World) -> Layout {
     layout_under(w.yog.path())
 }
 
-/// Start deps whose `lernie` is the only binary these rungs reach.
-fn deps(w: &World, lernie: &Cli) -> Deps {
+/// Start deps whose `litany` is the only binary these rungs reach.
+fn deps(w: &World, litany: &Cli) -> Deps {
     Deps {
         bl: Cli::new("/no/bl"),
-        lernie: lernie.clone(),
+        litany: litany.clone(),
         state_root: w.state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
     }
@@ -40,9 +40,9 @@ fn ensure_aborts_when_the_capability_control_cannot_be_authored() {
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
     // An existing workspace whose committed workflow carries no control block.
     crate::test_support::workspace::seed_workspace_workflow(&ws, "events: {}\n");
-    let lernie = Cli::new(fake_fail(w.bin.path(), "lernie", "no config for you"));
+    let litany = Cli::new(fake_fail(w.bin.path(), "litany", "no config for you"));
     let err = execute_ensure_workspace(
-        &deps(&w, &lernie),
+        &deps(&w, &litany),
         "TS",
         &ws,
         "default",
@@ -69,10 +69,10 @@ fn ensure_leaves_an_already_controlled_workspace_alone() {
     let shim = crate::world::tools::control_path(&layout(&w).tools);
     let authored = crate::control::author::authored("events: {}\n", &shim);
     crate::test_support::workspace::seed_workspace_workflow(&ws, &authored);
-    let lernie = Cli::new("/definitely/not/a/real/lernie");
+    let litany = Cli::new("/definitely/not/a/real/litany");
     assert!(
         !execute_ensure_workspace(
-            &deps(&w, &lernie),
+            &deps(&w, &litany),
             "TS",
             &ws,
             "default",
@@ -86,7 +86,7 @@ fn ensure_leaves_an_already_controlled_workspace_alone() {
 
 /// §3.7 item 4 — **two files, one drive.** The `tool_control:` block and the
 /// `instructions/**` glob are two control files of one yog policy, so a
-/// workspace missing both converges in a *single* `lernie config` pass: one
+/// workspace missing both converges in a *single* `litany config` pass: one
 /// checkout, one commit, one ops row, both files staged whole.
 #[test]
 fn ensure_converges_the_control_and_the_instruction_glob_in_one_drive() {
@@ -99,18 +99,18 @@ fn ensure_converges_the_control_and_the_instruction_glob_in_one_drive() {
             ("manifest.yaml", MANIFEST),
         ],
     );
-    // A `lernie` that records the staging dir the scripted editor is pointed at.
+    // A `litany` that records the staging dir the scripted editor is pointed at.
     let record = w.bin.path().join("staged");
-    let lernie = Cli::new(super::write_exec(
+    let litany = Cli::new(super::write_exec(
         w.bin.path(),
-        "lernie",
+        "litany",
         &format!(
             "#!/bin/sh\nprintf '%s\\n' \"$YOG_EDIT_SRC\" > '{}'\nexit 0\n",
             record.display()
         ),
     ));
     execute_ensure_workspace(
-        &deps(&w, &lernie),
+        &deps(&w, &litany),
         "TS",
         &ws,
         "default",
@@ -147,10 +147,10 @@ fn ensure_leaves_an_already_converged_workspace_alone() {
             ),
         ],
     );
-    let lernie = Cli::new("/definitely/not/a/real/lernie");
+    let litany = Cli::new("/definitely/not/a/real/litany");
     assert!(
         !execute_ensure_workspace(
-            &deps(&w, &lernie),
+            &deps(&w, &litany),
             "TS",
             &ws,
             "default",

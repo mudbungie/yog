@@ -56,7 +56,7 @@ fn blocks_from_value(value: &serde_json::Value) -> Vec<Block> {
 
 /// **Where a committed message's content blocks live** — the one answer, used
 /// by both parsers. A `messages/NNN-*.json` file is a *bare array of canonical
-/// blocks* as lernie commits it (`[{"type":"tool_result",…}]`,
+/// blocks* as litany commits it (`[{"type":"tool_result",…}]`,
 /// `[{"type":"tool_use",…}]`); an API-shaped message object wrapping them in
 /// `content` is accepted too. `None` for any other shape.
 ///
@@ -116,7 +116,7 @@ pub(super) fn parse_tool_result(raw: &[u8]) -> Option<EntryKind> {
 
 /// Locate the result block — the value itself when it carries a
 /// `tool_use_id`, else the first such element of the payload's block array
-/// ([`block_array`]: the bare array lernie commits, or a `content` wrapper).
+/// ([`block_array`]: the bare array litany commits, or a `content` wrapper).
 /// The id is never inspected, only carried: `call_…` (OpenAI) and `toolu_…`
 /// (Anthropic) are equally opaque, and the pairing is byte equality.
 fn find_tool_result(value: &serde_json::Value) -> Option<&serde_json::Value> {

@@ -15,7 +15,7 @@
 //! and compares, so a formula change upstream shows up as an empty cohort rather
 //! than as a wrong one.
 //!
-//! **The trail, never the agent's mark.** lernie's `refs/lernie/cwd/<agent-id>`
+//! **The trail, never the agent's mark.** litany's `refs/litany/cwd/<agent-id>`
 //! also names a bound directory, and it is the wrong source for exactly the
 //! reason [`crate::control::root`] gives for the writable root: the mark is
 //! rewritten by the agent's own `cd`, so a cohort read from it would be a set
@@ -29,7 +29,7 @@ use balls::layout::Xdg;
 use crate::opslog::OpEntry;
 
 /// The logical `argv[0]` of a fire row (§8.2's logical-vs-physical argv).
-const LERNIE: &str = "lernie";
+const LITANY: &str = "litany";
 /// The subcommand a start fires (§8.1).
 const PROMPT: &str = "prompt";
 /// The minted conversation name's flag (§3.3).
@@ -62,7 +62,7 @@ pub struct Fire {
 }
 
 /// Every bound fire in `workspace`, oldest first — the one parse of the §4.2
-/// trail's fire rows. A row that is not a `lernie prompt`, or one that named no
+/// trail's fire rows. A row that is not a `litany prompt`, or one that named no
 /// `--cwd`, contributes nothing: it bound no work target, so there is no
 /// attempt for it to be about.
 pub fn fires(entries: &[OpEntry], workspace: &Path) -> Vec<Fire> {
@@ -125,7 +125,7 @@ fn fire_of(entry: &OpEntry) -> Option<Fire> {
     let [bin, verb, rest @ ..] = argv.as_slice() else {
         return None;
     };
-    if *bin != LERNIE || *verb != PROMPT {
+    if *bin != LITANY || *verb != PROMPT {
         return None;
     }
     Some(Fire {

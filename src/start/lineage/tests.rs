@@ -44,7 +44,7 @@ fn the_first_tag_naming_a_lineage_wins() {
 
 #[test]
 fn a_tag_naming_no_lineage_selects_the_default() {
-    // No policy for this tag, so no flag: `None` is lernie's own
+    // No policy for this tag, so no flag: `None` is litany's own
     // `config/default`, never a name yog spells.
     let fx = Fixture::new();
     assert_eq!(select(&fx.path, &ball(&["deep"])), None);

@@ -104,7 +104,7 @@ pub fn accessory(ui: &mut egui::Ui, model: &mut AppModel, open: &mut bool) {
         })
         .header_response
         .on_hover_text(
-            "Open the ops trail: every command yog has run — lernie, bl, bz — with \
+            "Open the ops trail: every command yog has run — litany, bl, bz — with \
              its exit code and everything it printed. This is where a failure's \
              reason lives (a).",
         );
@@ -188,7 +188,7 @@ fn ops_row(ui: &mut egui::Ui, row: &crate::opslog::OpRow, outcome: crate::opslog
             // The label wears the **row's own** hue, never ichor outright
             // (bl-1296): captured stderr is not a synonym for failure — an
             // exit-0 piped verb chatters there, and a detached driver's sink is
-            // lernie's operator-notice channel. Painting the section red on any
+            // litany's operator-notice channel. Painting the section red on any
             // bytes at all made the expansion contradict the badge above it,
             // which is the one place the operator looks to know whether this
             // row wants anything. One hue per row, from `theme::op_badge`.

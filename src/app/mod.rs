@@ -87,7 +87,7 @@ pub use self::snapshot::growth_label;
 pub use self::snapshot::{Growth, Snapshot};
 
 #[derive(Parser, Debug, Clone, PartialEq, Eq)]
-#[command(version, about = "yog: egui frontend for lernie loops")]
+#[command(version, about = "yog: egui frontend for litany loops")]
 pub struct Args {
     /// Workspace to focus at startup (overrides the derived next-attention
     /// focus). Absent ⇒ the first attention-bearing workspace, else the
@@ -201,7 +201,7 @@ pub struct AppModel {
 }
 
 /// The roots the model watches (§7.1): every enumerated workspace, the three
-/// enumeration roots (the flat names root, lernie workspaces + replays), and the
+/// enumeration roots (the flat names root, litany workspaces + replays), and the
 /// yog state root. Missing roots are tolerated —
 /// [`WatchSet::reconcile`](crate::watch::WatchSet::reconcile) skips one that fails to arm.
 fn desired_watches(roots: &Roots, workspaces: &[Workspace]) -> Vec<(PathBuf, RootKind)> {

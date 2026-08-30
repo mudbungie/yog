@@ -29,7 +29,7 @@
 //! **The snap-down is render-layer viewport ephemera** (§13.1) whose trigger is
 //! **structural, not gestural**: the pending count dropping, because delivery
 //! commits landed. One path therefore covers every drain — the operator's
-//! Enter, a live driver's step-boundary drain, a `lernie scan` flush, another
+//! Enter, a live driver's step-boundary drain, a `litany scan` flush, another
 //! instance's send — and the snap can never show a crossing the substrate
 //! didn't make. The animation eases the region from its pre-drain height down
 //! to its content, nothing stored, nothing claimed durably.

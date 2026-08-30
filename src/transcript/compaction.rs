@@ -1,15 +1,15 @@
-//! **Compaction gaps** — the entries lernie's compactor deleted, derived from
+//! **Compaction gaps** — the entries litany's compactor deleted, derived from
 //! the counter that survived them (DESIGN §5.1 #12, §11 Transcript).
 //!
-//! `messages/` is not append-only. lernie's compactor `git rm`s message files
-//! out of the agent worktree and squashes the span they lived in (lernie ARCH
+//! `messages/` is not append-only. litany's compactor `git rm`s message files
+//! out of the agent worktree and squashes the span they lived in (litany ARCH
 //! §2.6 the compaction landing), so a readdir of a compacted conversation is a
 //! **rewritten** record, not a shorter one — the operator's question is simply
 //! absent while the reply that answered it is still there, and the pane
 //! rendered that as the whole record until bl-7bd2.
 //!
 //! **The gap is a query, never a field.** The `NNN` counter is monotonic and
-//! lernie starts it at `001`, so a deleted span leaves a hole in the listing
+//! litany starts it at `001`, so a deleted span leaves a hole in the listing
 //! that nothing has to record: a first entry above `001`, or a discontinuity
 //! mid-sequence. [`splice`] reads that hole out of the names already read and
 //! seats a virtual [`Compacted`](super::EntryKind::Compacted) entry in it —
@@ -141,7 +141,7 @@ pub(crate) fn seq_of(name: &str) -> Option<usize> {
 /// decoded lossily rather than dropped: mangled prose still says the record
 /// was rewritten, which is §15 Y12's rule applied to these bytes too. An
 /// absent directory — every conversation never compacted, and every one
-/// compacted by a lernie that wrote no summary — yields none.
+/// compacted by a litany that wrote no summary — yields none.
 fn summaries(dir: &Path) -> Vec<String> {
     let Ok(read) = std::fs::read_dir(dir) else {
         return Vec::new();

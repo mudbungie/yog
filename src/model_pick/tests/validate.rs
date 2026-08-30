@@ -24,7 +24,7 @@ const LIVE_MODELS: &str = "# header\n\nmodels:\n  claude-sonnet-5:\n    provider
 /// The §5.1 #35 denominator: the window an entry declares, keyed on the **wire
 /// id** a step's `request.json` names rather than on the alias the entry is filed
 /// under. Since bl-d9cb this is the ONLY number anything reads out of the
-/// `models:` table — lernie reads none of it, and the picker writes none of it.
+/// `models:` table — litany reads none of it, and the picker writes none of it.
 ///
 /// Both fixtures carry the retired `provider:`/`capabilities:` lines, which is
 /// the point of reading them here: bl-3ffa stopped WRITING those fields and

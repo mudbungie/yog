@@ -17,7 +17,7 @@ use super::{DRIFT_EXIT, Origin, SYNTHETIC_EXIT, YOG_DRIFT, YOG_STEP};
 /// time. [`rows::OpRow::when`] renders it for a human (bl-61db).
 /// `origin` is the §7.3 attribution — which surface the gesture was made on
 /// ([`Origin`]), recorded at dispatch because no reading of `argv`/`cwd` can
-/// tell a ball-rung start's `lernie new` from the composer's.
+/// tell a ball-rung start's `litany new` from the composer's.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct OpEntry {
     pub ts: String,

@@ -17,7 +17,7 @@
 //! level-trigger itself** — a failed check leaves the last-checked sha behind
 //! the branch tip, so the next tick simply re-fires; its **audit is the ops
 //! row**; and **any response that requires a decision is a dispatch**. The
-//! moment the check wants a second lernie feature — a tool, a multi-step chain,
+//! moment the check wants a second litany feature — a tool, a multi-step chain,
 //! a memory — it has become an agent, and the design's answer already exists:
 //! dispatch one. Nothing in this module may grow one.
 //!

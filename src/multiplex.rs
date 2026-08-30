@@ -1,6 +1,6 @@
 //! The self-multiplex spine (DESIGN §16.7 W12). yog's own executable is the
-//! physical target of every embedded-tool spawn: a `lernie`/`bl`/`bz` leading
-//! verb — `yog lernie <argv…>`, `yog bl <argv…>`, `yog bz <argv…>` — dispatches
+//! physical target of every embedded-tool spawn: a `litany`/`bl`/`bz` leading
+//! verb — `yog litany <argv…>`, `yog bl <argv…>`, `yog bz <argv…>` — dispatches
 //! here, to the arm that calls the embedded crate's entrypoint exactly as each
 //! upstream's own thin bin does (all three filled: W8/W10/W11), and so do
 //! balls' two sibling plugin binaries — `yog bl-delivery <op> <phase>`,
@@ -14,7 +14,7 @@
 //! &[String]) -> i32`. A wave lands by replacing exactly that one function's
 //! body with the crate call — **W8 filled [`bl::run`]** (`balls::run(&edge,
 //! args)`), **W10 filled [`bz::run`]** ([`crate::bz_host`], brazen's own `main`
-//! in this process), and **W11 filled [`lernie::run`]** (lernie's own thin exec
+//! in this process), and **W11 filled [`litany::run`]** (litany's own thin exec
 //! binding: parse `cmd::Cli`, run `Command::preludes` + `Command::run`, perform
 //! the `Outcome` including the successor `exec`). The routing, argv slicing,
 //! and exit plumbing here did not change — each wave also flipped its
@@ -23,14 +23,14 @@
 //! two edits are the whole of a wave's spine work.
 //!
 //! **A substrate arm stands its process in the world** ([`crate::world::inhabit`],
-//! §16.2, bl-81c9): the `bl` and `lernie` arms fold the override set into their
+//! §16.2, bl-81c9): the `bl` and `litany` arms fold the override set into their
 //! own env, because the embedded crate reads `getenv` itself and spawns children
 //! that do too, so no `Env` value reaches either — one spelling, one world. The
 //! rest need no fold: `bz`'s state is per-**wall**, not per XDG (§16.2 as
 //! amended); the plugin arms are spawned by a balls that folded already; and
 //! `gesture`/`seat`/`tool-host` are yog's own code over a composed `Env`. It is
 //! each arm's own act, not the router's, because the fold must land after that
-//! arm's "touches nothing yet" point — for `lernie` that is below the clap
+//! arm's "touches nothing yet" point — for `litany` that is below the clap
 //! parse, which is what keeps a probe and a bad verb world-free.
 //!
 //! `main.rs` (coverage-excluded) stays a thin call: `dispatch(&argv)` returns
@@ -143,9 +143,9 @@ mod gesture {
 /// reach is elsewhere.
 mod wire;
 
-/// The `lernie` arm — **filled by W11**: lernie's own thin exec binding, in
-/// yog's process (see the module doc in `multiplex/lernie.rs`).
-mod lernie;
+/// The `litany` arm — **filled by W11**: litany's own thin exec binding, in
+/// yog's process (see the module doc in `multiplex/litany.rs`).
+mod litany;
 
 mod bl;
 
@@ -232,7 +232,7 @@ mod bz {
     /// so the config, sign-ins and cache it reaches are its workspace's own; a
     /// `bz` outside any workspace has no wall and is refused. Every route
     /// works, not just the two yog drives, because this is also the adapter a
-    /// linked lernie will exec (§16.7 W11).
+    /// linked litany will exec (§16.7 W11).
     pub(super) fn run(args: &[String]) -> i32 {
         crate::bz_host::run(
             args.to_vec(),

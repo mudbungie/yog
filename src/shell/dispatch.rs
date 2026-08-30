@@ -61,7 +61,7 @@ pub(super) fn stop_agent(model: &mut AppModel, ws: &Path, agent: &str, children:
     );
 }
 
-/// Flush the focused workspace's inbox — `lernie scan` (§8.2): the §11 `f`
+/// Flush the focused workspace's inbox — `litany scan` (§8.2): the §11 `f`
 /// binding and the Scan button's one implementation.
 pub(super) fn scan_focused(model: &mut AppModel) {
     let Some(ws) = model.focused_workspace() else {

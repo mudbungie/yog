@@ -5,7 +5,7 @@
 //! What each editor still restated for itself was the state that edit is made
 //! of — the `{path, text, loaded}` trio and its load / reload / refresh /
 //! set gestures. §9.1's [`BrazenEditor`](super::brazen::BrazenEditor) and
-//! §9.2's [`Editor`](super::lernie_global::Editor) carried byte-identical
+//! §9.2's [`Editor`](super::litany_global::Editor) carried byte-identical
 //! bodies for all of them and differed only in their Apply **gate** (`bz`
 //! validation vs the provider-row check). Under the 100% floor each copy also
 //! bought its own tests for the same three facts.

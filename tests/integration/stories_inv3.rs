@@ -75,10 +75,10 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
     let id = "bl-42";
     let canonical = work_worktree_path(balls.path(), project.path(), id, None);
     let bl = Recorder::new(bin.path(), "bl").on("claim", &canonical.to_string_lossy(), 0);
-    let lernie = Recorder::new(bin.path(), "lernie").authoring_workspaces();
+    let litany = Recorder::new(bin.path(), "litany").authoring_workspaces();
     let deps = Deps {
         bl: Cli::new(bl.path()),
-        lernie: Cli::new(lernie.path()),
+        litany: Cli::new(litany.path()),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
         // No answer from brazen: the §9.2 birth-template gate judges nothing.
@@ -107,7 +107,7 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
     let ws = workspace_path(yog.path(), NAME);
     assert_eq!(bl.invocations().len(), 1, "one claim");
     assert_eq!(bl.invocations()[0].argv, ["claim", id, "--as", NAME]);
-    let l1: Vec<Vec<String>> = lernie.invocations().into_iter().map(|i| i.argv).collect();
+    let l1: Vec<Vec<String>> = litany.invocations().into_iter().map(|i| i.argv).collect();
     assert_eq!(
         l1,
         vec![
@@ -120,16 +120,16 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
     // The kill lands after `new`: the effects the killed steps left persist
     // (§8.1). Materialize exactly that — the seed marker and workspace exist, and
     // the ball now reads bound to its workspace.
-    let lernie_home = layout_under(yog.path()).lernie;
-    std::fs::create_dir_all(&lernie_home).unwrap();
-    std::fs::write(lernie_home.join("models.yaml"), b"models: {}\n").unwrap();
+    let litany_home = layout_under(yog.path()).litany;
+    std::fs::create_dir_all(&litany_home).unwrap();
+    std::fs::write(litany_home.join("models.yaml"), b"models: {}\n").unwrap();
     std::fs::create_dir_all(ws.join("repo.git")).unwrap();
 
     // Run 2 — the re-run converges: claim dropped (bound), seed skipped (marker
     // present), `new` skipped (repo.git present). No new spawn.
     let second = start::prepare(&deps, &inputs(JoinState::Bound), "T2").unwrap();
     assert_eq!(bl.invocations().len(), 1, "no second claim");
-    assert_eq!(lernie.invocations().len(), 2, "no re-prime / re-new");
+    assert_eq!(litany.invocations().len(), 2, "no re-prime / re-new");
     assert_eq!(
         first.binding, second.binding,
         "the same worktree either way"

@@ -10,7 +10,7 @@
 //! heading that anything still cites fails the build, so retirement is safe
 //! exactly when this test says it is.
 //!
-//! Foreign keys: prose cites lernie ARCH (`§2.2`, `§4.4`, …) and brazen arch
+//! Foreign keys: prose cites litany ARCH (`§2.2`, `§4.4`, …) and brazen arch
 //! (`§5.5`) bare, without a doc prefix. Those keys are listed in [`FOREIGN`]
 //! — lawful only while DESIGN itself has no such heading, which
 //! [`foreign_keys_are_not_design_headings`] pins, so the allowlist can never
@@ -31,10 +31,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 /// Section keys lawfully cited bare that belong to *other* repos' docs:
-/// lernie ARCH §2.2–§2.11 / §4.3 / §4.4, brazen arch §5.5. DESIGN has no such
+/// litany ARCH §2.2–§2.11 / §4.3 / §4.4, brazen arch §5.5. DESIGN has no such
 /// headings (see `foreign_keys_are_not_design_headings`).
 const FOREIGN: &[&str] = &[
-    // lernie ARCH coordinates, cited bare. §2.5 is caller-supplied pinned
+    // litany ARCH coordinates, cited bare. §2.5 is caller-supplied pinned
     // documents — the mechanism DESIGN §3.7's instruction freeze rides.
     "2.2", "2.3", "2.4", "2.5", "2.6", "2.9", "2.10", "2.11", "4.3", "4.4", "5.5",
     // VISION.md's §4.5 (spend attribution's join discipline, bl-afc4), §4.8

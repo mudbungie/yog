@@ -38,14 +38,14 @@ fn copies_nested_files_preserving_structure() {
 
 #[test]
 fn never_deletes_unstaged_checkout_files() {
-    // The invariant that protects lernie's freshly-refreshed descriptions/**:
+    // The invariant that protects litany's freshly-refreshed descriptions/**:
     // a file present in the checkout but absent from staging survives, and a
     // staged file overwrites its checkout counterpart.
     let dir = tempdir().unwrap();
     let staging = dir.path().join("stage");
     let checkout = dir.path().join("checkout");
     fs::create_dir_all(checkout.join("descriptions")).unwrap();
-    fs::write(checkout.join("descriptions/pool.md"), b"lernie-refreshed").unwrap();
+    fs::write(checkout.join("descriptions/pool.md"), b"litany-refreshed").unwrap();
     fs::write(checkout.join("workflow.yaml"), b"old").unwrap();
     fs::create_dir_all(&staging).unwrap();
     fs::write(staging.join("workflow.yaml"), b"new").unwrap();
@@ -53,7 +53,7 @@ fn never_deletes_unstaged_checkout_files() {
     let written = copy_staged(&staging, &checkout).unwrap();
 
     assert_eq!(written, vec![PathBuf::from("workflow.yaml")]);
-    assert_eq!(read(&checkout, "descriptions/pool.md"), "lernie-refreshed");
+    assert_eq!(read(&checkout, "descriptions/pool.md"), "litany-refreshed");
     assert_eq!(read(&checkout, "workflow.yaml"), "new");
 }
 

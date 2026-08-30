@@ -80,7 +80,7 @@ impl crate::AppModel {
     ///
     /// Two, because a gesture writes in two places and the §7.1 roots are
     /// disjoint. Its **substrate** root is the project a ball verb names, or
-    /// the yog state root every `lernie` verb's `ops.jsonl` line lands under.
+    /// the yog state root every `litany` verb's `ops.jsonl` line lands under.
     /// Its **workspace** is whatever the boundary's own address table answers
     /// ([`Action::workspace`]), when the enumeration holds that name.
     ///

@@ -78,10 +78,10 @@ fn arm(world: &mut World) {
 /// witness, so the assertion below is about the *wire* and not about a fixture
 /// that happens to hold no balls.
 fn painted_board(world: &mut World, answered: bool) -> String {
-    let lernie = Cli::new("lernie");
+    let litany = Cli::new("litany");
     let mut paint = |model: &mut AppModel, state: &mut ShellState| {
         crate::paint_probe::paint(|ui| {
-            super::super::board::board(ui, model, state, &lernie);
+            super::super::board::board(ui, model, state, &litany);
         })
     };
     if answered {
@@ -123,11 +123,11 @@ fn the_balls_fold_paints_the_board_the_wire_answers_and_nothing_without_one() {
 /// nothing. The negative direction has to run the real window, because what it
 /// denies is that the pane derives its own content.
 fn painted_unanswered(world: &mut World) -> String {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let ctx = egui::Context::default();
     let frame = |world: &mut World| {
         ctx.run(super::input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         })
     };
     let _ = frame(world);
@@ -141,7 +141,7 @@ fn painted_unanswered(world: &mut World) -> String {
 /// kept deriving in process, and which no positive assertion can make.
 #[test]
 fn the_inspector_paints_the_chat_the_wire_answers_and_nothing_without_one() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = super::fixture::world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
@@ -155,7 +155,7 @@ fn the_inspector_paints_the_chat_the_wire_answers_and_nothing_without_one() {
         unanswered.contains("(no messages yet)"),
         "and it says so rather than painting a torn pane:\n{unanswered}"
     );
-    let answered = super::painted(&mut world, &lernie, &bl);
+    let answered = super::painted(&mut world, &litany, &bl);
     assert!(
         answered.contains("pong reply"),
         "and the conversation reaches the glass once a reply lands:\n{answered}"

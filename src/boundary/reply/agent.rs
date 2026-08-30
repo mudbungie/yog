@@ -75,7 +75,7 @@ pub(super) fn reply(view: &AgentView) -> Value {
         map.insert("flight".to_owned(), json!(flight_token(flight)));
     }
     if let Some(held) = &view.held {
-        // lernie's own three keys — the blob's spelling, not a second one
+        // litany's own three keys — the blob's spelling, not a second one
         // (`control::hold::parse` reads exactly these).
         map.insert(
             "held".to_owned(),
@@ -203,7 +203,7 @@ fn doing_token(doing: Doing) -> &'static str {
     }
 }
 
-/// The parked invocation, read back on lernie's own three keys.
+/// The parked invocation, read back on litany's own three keys.
 fn held_of(v: &Value) -> Result<Held, String> {
     let o = v.as_object().ok_or("held: not an object")?;
     Ok(Held {

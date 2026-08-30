@@ -44,7 +44,7 @@ fn an_attempt_is_gated_and_a_permitted_fire_is_wrapped() {
     let world = World::new();
     world.repo();
     let mut deps = world.deps();
-    deps.lernie = Cli::new("/no/such/lernie");
+    deps.litany = Cli::new("/no/such/litany");
     // A hermetic world root the wrapper can bind (the real one need not exist
     // under a scratch `XDG_DATA_HOME`).
     let data = world.dir.path().join("data");
@@ -64,7 +64,7 @@ fn an_attempt_is_gated_and_a_permitted_fire_is_wrapped() {
     // Ungated, the fork runs bare and fails on its own terms — the executor's
     // error, not the policy's.
     let ran = crate::boundary::dispatch::dispatch(&deps, &mut ui, "1", &attempt)
-        .expect_err("no lernie to fork with");
+        .expect_err("no litany to fork with");
     assert!(!ran.contains("confinement"), "{ran}");
     // Gated, the policy decides: the spawn is wrapped where the backend is
     // available, refused by name where it is not.
@@ -85,7 +85,7 @@ fn an_attempt_is_gated_and_a_permitted_fire_is_wrapped() {
         Ok(()) => match fired {
             Ok(Reply::Outcome(o)) => {
                 assert!(!o.ok(), "the sandboxed exec of a missing tool fails");
-                assert!(o.stderr.contains("lernie"), "{}", o.stderr);
+                assert!(o.stderr.contains("litany"), "{}", o.stderr);
             }
             other => panic!("a wrapped fire completes with the backend's own verdict: {other:?}"),
         },

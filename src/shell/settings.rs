@@ -138,7 +138,7 @@ fn conversation(
     // pick advances, for the next conversation. This one stays frozen on the
     // commit it forked off, which the row's hover says and — when the two have
     // parted — a clause beside them names, with the two exits it earns (§9.4
-    // drift): `lernie retarget`, which moves this conversation onto the current
+    // drift): `litany retarget`, which moves this conversation onto the current
     // config and keeps its history (bl-2d19), and the composer's own
     // new-conversation verb, focused, which starts over instead (bl-9786).
     //

@@ -17,7 +17,7 @@
 //! The binding from the seat is the §3.2 claimant equality: the focused
 //! conversation's workspace holds the balls whose claimant is its name. A
 //! workspace holding two is two attempts, both shown — the layer that binds a
-//! *conversation* to a project directory is lernie's working-directory mark,
+//! *conversation* to a project directory is litany's working-directory mark,
 //! which yog passes typed only once bl-6654 lands, and until then a
 //! per-conversation answer would be a guess.
 //!

@@ -30,7 +30,7 @@ pub(super) fn sigterm(pid: i32) {
 
 /// Set every `(var, value)` pair in **this process's** environment. The one env
 /// mutation in the tree, and the only way the world can reach an in-process
-/// substrate arm (§16.7): the linked `balls`/`lernie` read `getenv` themselves
+/// substrate arm (§16.7): the linked `balls`/`litany` read `getenv` themselves
 /// and spawn children that do the same, so there is no `Env` to inject — the
 /// process has to stand in the world. Its production callers are the `world`
 /// module's two place-folds and nothing else: [`crate::world::inhabit`] (the
@@ -99,7 +99,7 @@ pub(crate) fn term_disposition(catch: bool) {
     // SAFETY: `libc::signal` is the documented POSIX handler-install call and
     // dereferences nothing; `on_term` is a plain `extern "C"` function whose
     // body is a single atomic store, so nothing unsound can run on the signal
-    // stack. The same construction the linked lernie already uses for its own
+    // stack. The same construction the linked litany already uses for its own
     // §2.9 stop catch.
     unsafe {
         libc::signal(libc::SIGTERM, handler);

@@ -86,7 +86,7 @@ fn message_enabled_only_for_a_present_selection_with_text() {
 /// agent is offered exactly one of the two, so neither is ever a control that
 /// fires and does nothing (QUALITY H4). The one exception is
 /// [`a_truncated_turn_is_not_nudgeable`], where the partition would put the
-/// nudge on a shape lernie answers with nothing.
+/// nudge on a shape litany answers with nothing.
 #[test]
 fn nudge_is_offered_exactly_where_stop_is_not() {
     let bs = vec![
@@ -113,7 +113,7 @@ fn nudge_is_offered_exactly_where_stop_is_not() {
 }
 
 /// bl-fb87: a turn the output limit cut off leaves an assistant-side tail with
-/// no `tool_use`, which linked lernie's `advance` reads as `Warrant::NothingDue`
+/// no `tool_use`, which linked litany's `advance` reads as `Warrant::NothingDue`
 /// — it releases the lease and exits without creating a step. So the partition
 /// above gives way here rather than offering a control that fires and does
 /// nothing; Message, the recovery, is ungated and unaffected.

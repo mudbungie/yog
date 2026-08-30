@@ -1,6 +1,6 @@
 //! The composite "start a conversation" verb (DESIGN §3.4, §8.1, §15 M6 Z3):
 //! **a pure planner + a step executor**, the one flow that turns Enter-in-a-box
-//! into a running lernie loop.
+//! into a running litany loop.
 //!
 //! §3.4's two orthogonal axes, one composer. *Where* a prompt goes — the target
 //! `workspace` path: the focused one, or, in a world with zero workspaces,
@@ -14,7 +14,7 @@
 //!
 //! [`plan`] is the pure planner: given the [`StartInputs`] it returns the ordered
 //! [`Step`] sequence — the amended
-//! §8.1 order **seed → `lernie new` → `bl` mutations → prompt**, so every
+//! §8.1 order **seed → `litany new` → `bl` mutations → prompt**, so every
 //! substrate step precedes every `bl` mutation and a failed substrate can never
 //! mint an orphaned claim. Every step is idempotent-or-convergent, so re-running
 //! `plan` after a partial failure yields the shorter remainder: a bound ball
@@ -28,13 +28,13 @@
 //! shapes, split from the planner at §12's pre-split band, so what a start *is*
 //! and how it is *derived* are two files.
 //!
-//! The effectful half — the piped `bl`/`lernie` executors and the claim
-//! cross-check — lives in [`exec`]; the detached `lernie prompt` and the
+//! The effectful half — the piped `bl`/`litany` executors and the claim
+//! cross-check — lives in [`exec`]; the detached `litany prompt` and the
 //! conversation mint it fires with in [`prompt`]; the goal composition and the
 //! pre-mint preview in [`goal`]. The **goal reaches the model unmutated**
 //! (§3.3, bl-6920): [`goal::preview`] renders the greyed
 //! name prediction pre-submit, and [`prompt::execute_prompt`] mints afresh and
-//! passes the name via `--name` as it fires — lernie states the stored fact in
+//! passes the name via `--name` as it fires — litany states the stored fact in
 //! its assembled context; nothing is prepended to the payload. The name is the
 //! *conversation's* (bl-df65); the workspace's rides `YOG_NAME` and never the
 //! goal text.
@@ -67,7 +67,7 @@ pub use prompt::{Fire, execute_prompt};
 pub use run::{prepare, resolve_worktree};
 
 /// The pure planner (§8.1): the amended-order step sequence to reach a running
-/// loop. Substrate first (seed, `lernie new`), then the ball rung's `bl`
+/// loop. Substrate first (seed, `litany new`), then the ball rung's `bl`
 /// mutations (create for a new ball — the id defers the rest to a re-plan; else
 /// claim when unclaimed), then the deferred prompt. Re-run after any step and it
 /// converges to the shorter remainder.

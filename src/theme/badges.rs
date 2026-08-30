@@ -31,11 +31,11 @@ pub const STATE_UNCERTAIN: &str = "uncertain — the liveness probe came back un
 
 /// What the display-only name hover says in words (bl-8068): the §3.3 ladder
 /// landed on the legacy goal-stamp rung, so the title is prose, not the
-/// lernie-stored name fact — and lernie resolves message targets by id or
+/// litany-stored name fact — and litany resolves message targets by id or
 /// stored name only, so peers addressing this name fail with
 /// `no agent "<x>" in this workspace`. Shown wherever the name seats render a
 /// legacy-rung title ([`crate::git_tree::Agent::name_display_only`]).
-pub const NAME_DISPLAY_ONLY: &str = "display-only name — no lernie-stored name fact backs it (dispatched \
+pub const NAME_DISPLAY_ONLY: &str = "display-only name — no litany-stored name fact backs it (dispatched \
      before names were passed at fire), so agents cannot message it by this \
      name; address its agent id instead";
 /// What the conversation row's bare `⚑` says in words (§6, bl-b9e3) — the
@@ -120,13 +120,13 @@ pub fn verdict_badge(
 }
 
 /// Short label + colour + **the mark said in a whole sentence** for each
-/// `refs/lernie/*` agent mark ([`crate::git_tree::AgentMark`]) — the one home of
+/// `refs/litany/*` agent mark ([`crate::git_tree::AgentMark`]) — the one home of
 /// what a mark is called and what it means.
 ///
 /// These are the §6 **facts** behind five of the six attention rules, and the
 /// reason the mapping exists at all: acknowledging a signal clears the signal,
 /// never the fact, so the fact needs a carrier that outlives its `⚑`. The match
-/// is total over the enum, so a further `refs/lernie/*` namespace cannot reach a
+/// is total over the enum, so a further `refs/litany/*` namespace cannot reach a
 /// renderer without words — which is precisely how notify shipped invisible
 /// (bl-efa2: the ref was read into the model and rendered nowhere at all).
 pub fn mark_badge(mark: crate::git_tree::AgentMark) -> (&'static str, egui::Color32, &'static str) {
@@ -136,15 +136,15 @@ pub fn mark_badge(mark: crate::git_tree::AgentMark) -> (&'static str, egui::Colo
         AgentMark::Notified => (
             "notified",
             BRAZEN,
-            "notified — this agent asked for you (refs/lernie/notify). The ⚑ cleared \
+            "notified — this agent asked for you (refs/litany/notify). The ⚑ cleared \
              when you arrived; the ask stands until the branch raises a new one",
         ),
         // §6 rule 3's fact: the tree hit a spend ceiling — a stop with a cause.
         // **And the way out** (bl-d710), because this was the one mark whose
         // sentence named no remedy. The ceiling is not a stored counter and
-        // this mark is not a gate: lernie re-derives the tree's spend at every
+        // this mark is not a gate: litany re-derives the tree's spend at every
         // model-call boundary and compares it to the `budgets:` of the config
-        // commit the branch is FROZEN on (lernie ARCH §6, §2.2 — every axis is
+        // commit the branch is FROZEN on (litany ARCH §6, §2.2 — every axis is
         // an `Option`, so a config with no such block bounds nothing and the
         // check that killed the branch passes). §8.6's workflow fixed point
         // strips that block from every workspace yog starts, so the exit is the
@@ -152,12 +152,12 @@ pub fn mark_badge(mark: crate::git_tree::AgentMark) -> (&'static str, egui::Colo
         // `retarget` lands at the next step boundary *before anything resolves
         // config*, and the message that wakes the branch is that step. The mark
         // is left standing as the record of what happened — writing one is
-        // lernie's (§5.1 #14), and so is clearing it.
+        // litany's (§5.1 #14), and so is clearing it.
         AgentMark::BudgetExhausted => (
             "budget-exhausted",
             BRAZEN,
             "budget-exhausted — this agent tree hit the spend ceiling frozen into the \
-             config it forked off (refs/lernie/budget-exhausted). The ceiling is \
+             config it forked off (refs/litany/budget-exhausted). The ceiling is \
              re-derived at every model call and never stored, so \"move this \
              conversation onto the current config\" in the settings below lifts it \
              wherever that config carries no budget — then message the branch, and \
@@ -169,7 +169,7 @@ pub fn mark_badge(mark: crate::git_tree::AgentMark) -> (&'static str, egui::Colo
             "declined-transfer",
             ICHOR,
             "declined-transfer — a child's work product failed to apply and was \
-             declined (refs/lernie/conflicted)",
+             declined (refs/litany/conflicted)",
         ),
         // §6 rule 6's fact: the capability boundary parked an invocation before
         // it ran (§8.6). Brazen, the hue yog already wears for waiting on
@@ -179,7 +179,7 @@ pub fn mark_badge(mark: crate::git_tree::AgentMark) -> (&'static str, egui::Colo
             "held",
             BRAZEN,
             "held — a tool call is parked at the capability boundary and nothing at or \
-             past it has run (refs/lernie/held). It waits for your answer and spends \
+             past it has run (refs/litany/held). It waits for your answer and spends \
              nothing meanwhile; approve or decline it to let the branch move on",
         ),
         // Not an attention rule — the assertion that *suppresses* rule 2, so a
@@ -188,7 +188,7 @@ pub fn mark_badge(mark: crate::git_tree::AgentMark) -> (&'static str, egui::Colo
             "abandoned",
             ASH,
             "abandoned — this stopped branch will not be retried \
-             (refs/lernie/abandoned), so it no longer stirs attention",
+             (refs/litany/abandoned), so it no longer stirs attention",
         ),
     }
 }

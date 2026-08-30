@@ -72,13 +72,13 @@ fn after_bl_verb_reflects_a_closed_ball_as_delivered() {
 }
 
 #[test]
-fn after_lernie_verb_refreshes_only_the_ops_tail() {
+fn after_litany_verb_refreshes_only_the_ops_tail() {
     let w = world();
     let (_c, mut m) = model(&w);
     assert!(m.snap.ops.is_empty());
     assert_eq!(m.activity().total, 0, "the §11 chip reads the same cache");
     append_op(&m);
-    m.after_lernie_verb();
+    m.after_litany_verb();
     m.tick();
     assert_eq!(m.snap.ops.len(), 1);
     assert_eq!(m.activity().total, 1);
@@ -139,7 +139,7 @@ fn a_names_root_reconcile_rebinds_a_ball_to_a_fresh_workspace() {
         "no workspace named the claimant yet"
     );
 
-    // The start flow's `lernie new` raises the workspace; the NamesRoot event
+    // The start flow's `litany new` raises the workspace; the NamesRoot event
     // reconciles. reconcile() must rebuild the join over the already-fetched
     // balls (addendum) — else the just-claimed ball renders claimed-elsewhere
     // until the 15 s sweep. No refresh_balls runs on this path.

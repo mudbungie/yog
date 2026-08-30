@@ -73,7 +73,7 @@ impl Doc {
     }
 }
 
-/// One tool call's on-disk records (ARCH §3.3). `is_error` mirrors lernie's
+/// One tool call's on-disk records (ARCH §3.3). `is_error` mirrors litany's
 /// own `is_error = exit_code != 0` (`spawn.rs`) — derived from
 /// `output.json`'s `exit_code`, `false` when output is absent or carries no
 /// exit code.

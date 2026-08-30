@@ -206,7 +206,7 @@ fn tool_facts(members: &[&Agent], root_id: &str) -> Facts {
 /// commit was the candidate and it fails the test the other two pass: a start
 /// must be tied one-to-one to the thing in flight, and a dispatch commit is
 /// written once per branch while the driver over it may be its third run (a stop
-/// plus a `lernie advance` resume), so "dispatched 40m ago" would be printed in
+/// plus a `litany advance` resume), so "dispatched 40m ago" would be printed in
 /// the slot that everywhere else means "running for". A count of three children
 /// has no one dispatch to quote in any case.
 fn children_facts(members: &[&Agent]) -> Facts {

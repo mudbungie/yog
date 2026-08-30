@@ -7,13 +7,13 @@ use super::{model, world};
 use crate::AppModel;
 use crate::opslog::{self, Origin};
 
-/// Append one failed `lernie prime` line attributed to `origin`.
+/// Append one failed `litany prime` line attributed to `origin`.
 fn fail(m: &AppModel, origin: Origin) {
     opslog::append(
         m.state_root(),
         &opslog::OpEntry::synthetic_failure(
             "TS".into(),
-            vec!["lernie".into(), "prime".into()],
+            vec!["litany".into(), "prime".into()],
             "/proj".into(),
             "unrecognized subcommand\n".into(),
             origin,
@@ -42,7 +42,7 @@ fn an_ack_quiets_the_banners_and_the_chip_without_hiding_a_row() {
     fail(&m, Origin::Balls);
     fail(&m, Origin::Conversation);
     drift(&m);
-    m.after_lernie_verb();
+    m.after_litany_verb();
     m.tick();
     assert!(m.last_failure(Origin::Balls).is_some());
     assert!(m.last_failure(Origin::Conversation).is_some());
@@ -96,11 +96,11 @@ fn a_new_failure_after_an_ack_banners_again() {
     assert!(m.last_failure(Origin::Balls).is_none());
 
     fail(&m, Origin::Conversation);
-    m.after_lernie_verb();
+    m.after_litany_verb();
     m.tick();
     assert_eq!(
         m.last_failure(Origin::Conversation).unwrap().argv,
-        "lernie prime"
+        "litany prime"
     );
     assert!(
         m.last_failure(Origin::Balls).is_none(),
@@ -118,7 +118,7 @@ fn clear_leaves_a_one_row_trail_whose_row_is_the_clear() {
     let (_c, mut m) = model(&w);
     fail(&m, Origin::Balls);
     drift(&m);
-    m.after_lernie_verb();
+    m.after_litany_verb();
     m.tick();
     assert_eq!(m.snap.ops.len(), 2);
 

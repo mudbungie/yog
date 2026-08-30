@@ -27,23 +27,23 @@ fn a_non_namespace_verb_falls_through() {
 }
 
 #[test]
-fn the_lernie_arm_runs_the_embedded_lernie_crate() {
-    // W11: `yog lernie …` IS lernie's thin exec binding. `--help` is clap's
+fn the_litany_arm_runs_the_embedded_litany_crate() {
+    // W11: `yog litany …` IS litany's thin exec binding. `--help` is clap's
     // own short-circuit — it prints the shared `cmd::Cli` surface and exits 0
     // before any prelude, world write, or Fx build, so it proves the crate
     // parse is wired (the W12 stub would have returned its 90). An unknown
-    // verb is clap's usage error (2) — lernie's own exit, not yog's.
-    assert_eq!(dispatch(&argv(&["yog", "lernie", "--help"])), Some(0));
-    assert_eq!(dispatch(&argv(&["yog", "lernie", "no-such-verb"])), Some(2));
+    // verb is clap's usage error (2) — litany's own exit, not yog's.
+    assert_eq!(dispatch(&argv(&["yog", "litany", "--help"])), Some(0));
+    assert_eq!(dispatch(&argv(&["yog", "litany", "no-such-verb"])), Some(2));
     // The full verb path (preludes, shim converge, Fx, Outcome) is driven by
-    // `tests/multiplex_lernie.rs`, which owns its process env.
+    // `tests/multiplex_litany.rs`, which owns its process env.
 }
 
 // The `bl` arm's own proof lives in `tests/multiplex_bl.rs` (bl-2930): the arm
 // converges the world's tool shims on the way into every verb (its `prime`
 // binds them as balls' siblings), so any verb here would write under the
 // ambient `$XDG_DATA_HOME` — an integration binary that owns its process env
-// is the hermetic home, exactly the W11 lernie-arm precedent. That binary also
+// is the hermetic home, exactly the W11 litany-arm precedent. That binary also
 // carries the bl-52ed proof that a *discovery probe* writes nothing at all,
 // which is only meaningful against an anchor the test owns.
 
@@ -68,15 +68,15 @@ fn the_bz_arm_reaches_the_embedded_brazen_crate_and_asks_it_for_a_wall() {
 fn a_namespace_with_no_verb_args_dispatches_with_an_empty_slice() {
     // `yog <ns>` alone: `argv[2..]` is an empty slice, the arm still runs and
     // returns a code (the slicing never indexes out of bounds). Bare `yog
-    // lernie` is clap's missing-subcommand usage error (2) — the crate's own
+    // litany` is clap's missing-subcommand usage error (2) — the crate's own
     // exit. (Bare `yog bl` — balls' no-command usage exit, same shape — is
     // proved in `tests/multiplex_bl.rs`; see the note above.)
-    assert_eq!(dispatch(&argv(&["yog", "lernie"])), Some(2));
+    assert_eq!(dispatch(&argv(&["yog", "litany"])), Some(2));
 }
 
 #[test]
 fn from_arg_maps_names_and_rejects_the_rest() {
-    assert_eq!(Namespace::from_arg("lernie"), Some(Namespace::Lernie));
+    assert_eq!(Namespace::from_arg("litany"), Some(Namespace::Litany));
     assert_eq!(Namespace::from_arg("bl"), Some(Namespace::Bl));
     assert_eq!(Namespace::from_arg("bz"), Some(Namespace::Bz));
     assert_eq!(
@@ -149,7 +149,7 @@ fn the_top_level_page_states_the_whole_surface() {
         crate::world::hatch::ENV_SUBCMD,
         crate::world::hatch::EXEC_SUBCMD,
         "gesture",
-        "lernie",
+        "litany",
         "bl",
         "bz",
     ] {

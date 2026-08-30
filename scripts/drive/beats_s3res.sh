@@ -113,7 +113,7 @@ s3_residuals() {
     || fail "S4-T2 assign: claim --as the workspace name" "no clean claim row"
   [ "$(verb_count new)" = "$mints" ] \
     && pass "S4-T2 assign: no conversation started" \
-    || fail "S4-T2 assign: no conversation started" "a lernie new fired"
+    || fail "S4-T2 assign: no conversation started" "a litany new fired"
   sleep 2
   "$drive" shot "$wid" "$out/s3r-02-assigned.png"
 

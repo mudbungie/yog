@@ -22,7 +22,7 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         // A non-existent clones root ⇒ no projects ⇒ the injected `bl` runner is
         // never consulted (no live spawn), like the `AppModel` unit harness.
@@ -30,8 +30,8 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };
-    // One ad-hoc workspace on disk, under the lernie workspaces root (§3.1).
-    let ws = roots.lernie_data.join("workspaces").join("alpha");
+    // One ad-hoc workspace on disk, under the litany workspaces root (§3.1).
+    let ws = roots.litany_data.join("workspaces").join("alpha");
     std::fs::create_dir_all(&ws).unwrap();
     build_workspace(&ws);
 

@@ -52,7 +52,7 @@ pub struct Recorder {
     new_arm: bool,
 }
 
-/// lernie's own `template/providers.yaml` (pinned lernie, `=0.0.8`): the whole
+/// litany's own `template/providers.yaml` (the pinned engine): the whole
 /// worker tool pool, `message` + `dispatch` included — yog grants nothing on
 /// top (§8.1, bl-7fc8).
 pub const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: anthropic\n    \
@@ -61,7 +61,7 @@ pub const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: anthropic
 
 /// The `new)` arm [`Recorder::authoring_workspaces`] injects: `git init --bare
 /// -b config/default`, then the orphan first config commit carrying the
-/// template `providers.yaml` — lernie `template::scaffold` in shell.
+/// template `providers.yaml` — litany `template::scaffold` in shell.
 const AUTHOR_WORKSPACE: &str = r#"new)
   d=$2
   mkdir -p "$d/repo.git"
@@ -76,7 +76,7 @@ const AUTHOR_WORKSPACE: &str = r#"new)
 "#;
 
 impl Recorder {
-    /// A recorder named `name` (`lernie`/`bl`/`bz`) writing its log beside the
+    /// A recorder named `name` (`litany`/`bl`/`bz`) writing its log beside the
     /// script under `dir`. With no cases every verb defaults to exit 0, empty
     /// stdout.
     pub fn new(dir: &Path, name: &str) -> Self {
@@ -94,7 +94,7 @@ impl Recorder {
         self.on_err(verb, stdout, "", code)
     }
 
-    /// Make the `new` verb **materialize** the workspace lernie's own `new`
+    /// Make the `new` verb **materialize** the workspace litany's own `new`
     /// authors (ARCH §2.2): a bare `repo.git` on `config/default` whose one
     /// orphan-root commit carries the template `providers.yaml`. Any start
     /// whose flow reads the workspace back needs it — a `new` that only
@@ -145,7 +145,7 @@ impl Recorder {
     }
 
     /// Poll until at least `n` invocations are recorded (a **detached** child —
-    /// the `lernie prompt` — writes its log asynchronously), up to a ~2 s bound,
+    /// the `litany prompt` — writes its log asynchronously), up to a ~2 s bound,
     /// then return them. Sequential piped verbs are already present on entry.
     pub fn wait(&self, n: usize) -> Vec<Invocation> {
         for _ in 0..200 {
@@ -174,7 +174,7 @@ const SCRIPT: &str = r#"#!/bin/sh
 {
   printf 'C%s\000' "$(pwd -P)"
   for a in "$@"; do printf 'A%s\000' "$a"; done
-  for k in LERNIE_HOME XDG_STATE_HOME YOG_WALL YOG_NAME EDITOR YOG_EDIT_SRC PATH; do
+  for k in LITANY_HOME XDG_STATE_HOME YOG_WALL YOG_NAME EDITOR YOG_EDIT_SRC PATH; do
     eval "v=\${$k-}"
     [ -n "$v" ] && printf 'E%s=%s\000' "$k" "$v"
   done

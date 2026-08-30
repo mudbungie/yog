@@ -75,8 +75,8 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
     // nothing and no arm reads it.
     let agent: &str = &super::address::resolve_agent(&deps.snapshot, ws, action.agent())?;
     match action {
-        // The §8.2 lernie arms spawn through [`Deps::bound`] and never through
-        // `deps.lernie` itself (bl-bf79): a workspace verb's spawn owes its
+        // The §8.2 litany arms spawn through [`Deps::bound`] and never through
+        // `deps.litany` itself (bl-bf79): a workspace verb's spawn owes its
         // workspace the wall and the name, stated at that one binding rather
         // than once per arm here — `Retarget` is the §9.4 exit (bl-2d19).
         Action::Message { content, .. } => {
@@ -87,11 +87,11 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         }
         // Send-and-interrupt (bl-a33d): the one arm that composes two acts, so
         // it has a body of its own ([`interrupt`]) and leaves the two rows those
-        // acts each leave. The deposit's driver-start is the trigger — lernie's
+        // acts each leave. The deposit's driver-start is the trigger — litany's
         // standing law (ARCH §2.9), not a verb yog adds.
         Action::Interrupt { content, .. } => interrupt::interrupt(deps, ts, ws, agent, content),
         Action::Scan { .. } => outcome(verbs::scan(&deps.bound(ws), root, ts)),
-        // The §8.2 nudge (bl-9bef): a detached `lernie advance`, which is the
+        // The §8.2 nudge (bl-9bef): a detached `litany advance`, which is the
         // §8.6 release's own launch — one body in [`control`], because "start a
         // driver on this conversation" is one act however it was asked for.
         // Detached and never piped: an advance runs the conversation until it

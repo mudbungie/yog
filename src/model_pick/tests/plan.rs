@@ -21,7 +21,7 @@ fn rows() -> Vec<crate::config_edit::brazen::ProviderRow> {
 }
 
 /// bl-d9cb. One pick, ONE write: the role's assignment in `providers.yaml`, and
-/// nothing else. lernie retired the global `models:` table (its bl-35e2), so the
+/// nothing else. litany retired the global `models:` table (its bl-35e2), so the
 /// declaration that used to lead this gesture reached nothing that reads it.
 #[test]
 fn a_pick_writes_the_role_assignment_and_only_that() {
@@ -150,7 +150,7 @@ fn the_scope_sentence_states_branch_workspace_and_the_frozen_conversation() {
 
 /// The birth block's sentence carries the one admission the §11 block owes the
 /// operator (bl-824e): the start-time pick is not scoped to the conversation —
-/// it moves the workspace default, because lernie offers no other semantic.
+/// it moves the workspace default, because litany offers no other semantic.
 #[test]
 fn the_birth_sentence_admits_it_moves_the_workspace_default() {
     let s = birth_sentence("mauve-tapir", "default");
@@ -169,7 +169,7 @@ fn the_birth_sentence_admits_it_moves_the_workspace_default() {
 fn the_write_note_names_the_one_file_and_no_second_one() {
     assert!(WRITE_NOTE.contains("writes"));
     assert!(WRITE_NOTE.contains("providers.yaml"));
-    assert!(WRITE_NOTE.contains("lernie config"));
+    assert!(WRITE_NOTE.contains("litany config"));
     assert!(!WRITE_NOTE.contains("models.yaml"), "{WRITE_NOTE}");
     assert!(!WRITE_NOTE.contains("first"), "{WRITE_NOTE}");
 }

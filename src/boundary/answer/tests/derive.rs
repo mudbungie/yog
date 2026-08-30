@@ -90,9 +90,9 @@ fn workspace_stats_roll_up_attention_and_running() {
 #[test]
 fn names_in_reads_the_name_fact_children_included() {
     // The mint's occupied set (§3.3, bl-08f2): each agent's name_fact — the
-    // lernie-stored blob, with the legacy goal stamp while pre-0.0.4 roots
-    // live. A named descent child occupies too: lernie refuses a taken name at
-    // fire, so the mint must see everything lernie would.
+    // litany-stored blob, with the legacy goal stamp while pre-0.0.4 roots
+    // live. A named descent child occupies too: litany refuses a taken name at
+    // fire, so the mint must see everything litany would.
     let mut named = agent("c-1", AgentState::Live, 1);
     named.name = Some("pale-otter".into());
     let mut legacy = agent("c-2", AgentState::Live, 2);

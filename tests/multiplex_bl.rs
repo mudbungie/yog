@@ -8,7 +8,7 @@
 //! delivers the tagged squash to the project's `main`.
 //!
 //! **This test binary owns its process environment** (the
-//! `tests/multiplex_lernie.rs` precedent): the arm is a *binding* — it reads
+//! `tests/multiplex_litany.rs` precedent): the arm is a *binding* — it reads
 //! `$XDG_STATE_HOME`/`$XDG_DATA_HOME`/`$HOME`/`$USER` live at the process
 //! boundary, none injectable through `dispatch`'s argv surface — so this file
 //! mutates its own env, lawful exactly here: every `tests/*.rs` is a separate
@@ -72,7 +72,7 @@ fn probes_answer_and_found_nothing(world: &Path) {
 /// exist reports and fails (1) before balls runs at all — while a probe, which
 /// needs no shim, still answers 0 (bl-52ed: help must not depend on a world
 /// being writable). Anchoring `$XDG_DATA_HOME` inside a regular file makes the
-/// dir uncreatable (ENOTDIR) — the `tests/multiplex_lernie.rs` idiom.
+/// dir uncreatable (ENOTDIR) — the `tests/multiplex_litany.rs` idiom.
 fn an_unusable_anchor_fails_every_verb_but_a_probe(tmp: &Path) {
     let blocked = tmp.join("not-a-dir");
     fs::write(&blocked, "").unwrap();
@@ -106,7 +106,7 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
     }
     for var in [
         "BL_BINARY",
-        "LERNIE_BINARY",
+        "LITANY_BINARY",
         "BZ_BINARY",
         "YOG_NAME",
         "BALLS_CLOCK",
@@ -167,7 +167,7 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
         Some(0)
     );
     let tools = tmp.path().join("data/yog/world/tools");
-    for shim in ["bl", "lernie", "bz", "bl-delivery", "bl-tracker"] {
+    for shim in ["bl", "litany", "bz", "bl-delivery", "bl-tracker"] {
         assert!(tools.join(shim).is_file(), "shim {shim} converged");
     }
     let balls_state = the_world_state_and_no_other(tmp.path());

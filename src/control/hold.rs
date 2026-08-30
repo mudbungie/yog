@@ -1,10 +1,10 @@
-//! The **hold mark** as yog reads it — `refs/lernie/held/<agent-id>` (lernie
+//! The **hold mark** as yog reads it — `refs/litany/held/<agent-id>` (litany
 //! ARCH §3.3, DESIGN §8.6).
 //!
-//! When the control answers `hold`, lernie's seam parks the invocation *before*
+//! When the control answers `hold`, litany's seam parks the invocation *before*
 //! it executes and points this ref at a blob holding one line of JSON: the held
 //! `tool_use` id, the tool the model named, and the control's own reason. That
-//! is the parked branch's one non-derivable fact, and it is lernie's to write —
+//! is the parked branch's one non-derivable fact, and it is litany's to write —
 //! yog only ever reads it.
 //!
 //! Two readers, one parse:
@@ -16,16 +16,16 @@
 //!   than trusting a dialog. A once-answer is scoped to the id that is parked
 //!   *now*, which is what makes it unable to race.
 //!
-//! An unreadable or unparseable mark reads as absent, the discipline lernie's
+//! An unreadable or unparseable mark reads as absent, the discipline litany's
 //! own reader keeps: never a forged park, and never a panic on a mangled blob.
 
 use std::path::Path;
 
 use serde_json::Value;
 
-/// Ref namespace for the mark (lernie ARCH §3.3). The one spelling; the
+/// Ref namespace for the mark (litany ARCH §3.3). The one spelling; the
 /// snapshot's enumeration and the single read below both name it from here.
-pub const HELD_PREFIX: &str = "refs/lernie/held/";
+pub const HELD_PREFIX: &str = "refs/litany/held/";
 
 /// What one parked invocation is. The operator's whole question — *what was it
 /// about to do, and why did the control stop it* — answered without opening a
@@ -43,7 +43,7 @@ pub struct Held {
 }
 
 /// Parse the mark's blob. `None` for anything that is not the three-field
-/// object lernie writes.
+/// object litany writes.
 pub fn parse(blob: &str) -> Option<Held> {
     let value: Value = serde_json::from_str(blob).ok()?;
     let text = |key: &str| value.get(key).and_then(Value::as_str).map(str::to_owned);
@@ -56,7 +56,7 @@ pub fn parse(blob: &str) -> Option<Held> {
 
 /// The mark one agent wears right now, read live off the workspace repo.
 /// `None` when nothing is parked — the ordinary state of every branch — and
-/// equally when git will not run or the blob is not the shape lernie writes.
+/// equally when git will not run or the blob is not the shape litany writes.
 pub fn read(workspace: &Path, agent_id: &str) -> Option<Held> {
     let repo = workspace.join("repo.git");
     let out = crate::git_env::output(crate::git_env::git().arg("--git-dir").arg(&repo).args([

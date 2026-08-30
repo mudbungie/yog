@@ -88,7 +88,7 @@ pub const ACTIONS: &[HelpRow] = &[
         verb: "prompt",
         usage: "/prompt <goal…>",
         summary: "fire the prepared start with this goal, verbatim",
-        detail: "Fires the detached `lernie prompt` a `/prepare` made ready, with this goal as \
+        detail: "Fires the detached `litany prompt` a `/prepare` made ready, with this goal as \
                  its whole tail, verbatim. Refuses when nothing is prepared. At a seat with no \
                  composer to hold it — a terminal, where each `yog gesture` is its own process — \
                  hand the `/prepare` reply's own `prepared` object back with `yog gesture \
@@ -137,8 +137,8 @@ pub const ACTIONS: &[HelpRow] = &[
         summary: "try this conversation again from a point in its history",
         detail: "Forks the selected conversation from `--from` — a commit of its own history \
                  (the mark you pinned) or a `config/<name>` head for a clean start — and gives \
-                 the fork this goal (`lernie dispatch`). `--role` is what names the model: \
-                 lernie reads the provider and model id from the role's entry in the config \
+                 the fork this goal (`litany dispatch`). `--role` is what names the model: \
+                 litany reads the provider and model id from the role's entry in the config \
                  governing that ref, so a role the config does not declare is refused there. \
                  `--skills` pins each named skill's instructions into the fork's context. To \
                  compare candidates, fire this more than once from the same mark: they group \
@@ -180,7 +180,7 @@ pub const ACTIONS: &[HelpRow] = &[
         usage: "/complete <invocation> <json capture>",
         summary: "answer one routed invocation with what running it captured",
         detail: "The tool host's half of the routing leg. The capture is \
-                 `{\"stdout\": …, \"stderr\": …, \"exit_code\": …}` — lernie's own tool \
+                 `{\"stdout\": …, \"stderr\": …, \"exit_code\": …}` — litany's own tool \
                  contract, one for one. Only the machine the invocation was addressed to may \
                  answer it; a handle addressed to anyone else reads as absent, which is the \
                  same sentence a handle nobody minted earns. A caller inside the world has no \
@@ -198,9 +198,9 @@ pub const ACTIONS: &[HelpRow] = &[
         verb: "delete-agent",
         usage: "/delete-agent [typed name]",
         summary: "delete the selected conversation; the typed name arms taking its children too",
-        detail: "Removes the selected conversation and everything lernie holds for it — its ref, \
+        detail: "Removes the selected conversation and everything litany holds for it — its ref, \
                  worktree, steps and inbox. Refused while it is live. A bare line deletes the one \
                  conversation; typing its name is what arms taking its descendants with it, and \
-                 without that lernie declines a subtree nobody confirmed.",
+                 without that litany declines a subtree nobody confirmed.",
     },
 ];

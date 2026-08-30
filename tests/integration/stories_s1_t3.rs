@@ -1,6 +1,6 @@
 //! STORIES **S1-T3** agent-verbs: message / stop (± children) / scan spawn the
 //! §8.2 argv with cwd = the workspace, and every outcome lands in `ops.jsonl`
-//! (STORIES S1.3, DESIGN §8.2, §4.2, §15 M6 Z7). One fake `lernie` recorder,
+//! (STORIES S1.3, DESIGN §8.2, §4.2, §15 M6 Z7). One fake `litany` recorder,
 //! the three verbs driven sequentially through the current `actions::verbs`
 //! dispatch API.
 
@@ -20,14 +20,14 @@ fn s1_t3_message_stop_scan_argv_and_ops_trail() {
     let ws = tempdir().unwrap();
     let ws_s = ws.path().to_string_lossy().to_string();
 
-    // Fake `lernie`: records every spawn; `scan` plays a summary line (§8.2).
-    let rec = Recorder::new(bin.path(), "lernie").on("scan", "flushed 2 inboxes\n", 0);
-    let lernie = Cli::new(rec.path());
-    // The §8.2 lernie family takes a workspace-bound `Cli` and nothing else
+    // Fake `litany`: records every spawn; `scan` plays a summary line (§8.2).
+    let rec = Recorder::new(bin.path(), "litany").on("scan", "flushed 2 inboxes\n", 0);
+    let litany = Cli::new(rec.path());
+    // The §8.2 litany family takes a workspace-bound `Cli` and nothing else
     // (bl-bf79): the workspace is named once, here, and is the verbs' cwd and
     // their `<ws>` argv word both.
     let bound = verbs::Bound::at(
-        &lernie,
+        &litany,
         &yog::world::compose(&yog::xdg::Env::from_env()),
         ws.path(),
     );

@@ -17,9 +17,9 @@
 //! times leaves N ordinary `ops.jsonl` rows (§4.2) — N committed execution
 //! facts — which is strictly more provenance than one row for N would be.
 //!
-//! **The upstream verb already exists** (lernie bl-a693, in the pin since `=0.0.6`):
-//! `lernie dispatch <role> <ws> <parent> --goal <text> --from <ref>
-//! [--pin <dest>=<src>]`. lernie's own words: *"`--from <ref>` is not a second
+//! **The upstream verb already exists** (litany bl-a693, in the pin since `=0.0.6`):
+//! `litany dispatch <role> <ws> <parent> --goal <text> --from <ref>
+//! [--pin <dest>=<src>]`. litany's own words: *"`--from <ref>` is not a second
 //! kind of dispatch … the flag reaches the existing `fork_point` field … and
 //! changes nothing else"* — so yog composes an argv and adds no mechanism.
 //!
@@ -31,7 +31,7 @@
 //!   ancestry) or `config/<name>` (a clean start, provenance only) — which is
 //!   VISION V1.3's ruling verbatim: *"'Clean vs fork' is one spawn gesture
 //!   with one parameter — the fork point."*
-//! - **model** is the **role** (`<role>`). lernie resolves a model from
+//! - **model** is the **role** (`<role>`). litany resolves a model from
 //!   `roles.<name>.{provider,model}` in the `providers.yaml` of the config
 //!   commit governing the fork point, and from nowhere else. So the composer
 //!   lists the roles that ref declares **with the model each names**
@@ -41,11 +41,11 @@
 //!   — §9.4's [`PickModel`](crate::boundary::Action::PickModel) — not a
 //!   dispatch flag, and pretending otherwise would be capability theater.
 //! - **skills** are pins (`--pin skills/<name>/SKILL.md=<pool>/<name>/SKILL.md`).
-//!   lernie's pin is documented as *"standing context a caller (a frontend, an
+//!   litany's pin is documented as *"standing context a caller (a frontend, an
 //!   operator) pins without rewriting the goal or authoring a config commit"*,
 //!   and the shipped worker manifest composes `order: skills/**`, so a pinned
 //!   skill reaches assembled context by the config's own glob. The pool is the
-//!   world's `$LERNIE_HOME/skills` ([`pool`]) — the same directory the agent's
+//!   world's `$LITANY_HOME/skills` ([`pool`]) — the same directory the agent's
 //!   own `load_skill` tool copies out of, so the composer offers exactly what
 //!   the agent could have loaded for itself.
 //!
@@ -64,12 +64,12 @@ mod tests;
 
 pub use choices::{Choices, ForkPoint, choices, pool, roles_at, skills_root};
 
-/// The lernie subcommand an attempt is (ARCH §3.4).
+/// The litany subcommand an attempt is (ARCH §3.4).
 const DISPATCH: &str = "dispatch";
 const GOAL: &str = "--goal";
 const FROM: &str = "--from";
 const PIN: &str = "--pin";
-/// The skills pool, under the world's `$LERNIE_HOME` — and the destination
+/// The skills pool, under the world's `$LITANY_HOME` — and the destination
 /// prefix a pinned skill lands at in the child's worktree. One constant,
 /// because they are one name: the pin reproduces the pool's own layout.
 pub const SKILLS_DIR: &str = "skills";
@@ -77,7 +77,7 @@ pub const SKILLS_DIR: &str = "skills";
 /// destination is one path, so a skill's `references/**` stay where the
 /// agent's own `load_skill` can still fetch them whole.
 const SKILL_FILE: &str = "SKILL.md";
-/// The `config/` ref prefix a clean fork point wears (lernie ARCH §2.2).
+/// The `config/` ref prefix a clean fork point wears (litany ARCH §2.2).
 pub const CONFIG_REF: &str = "config/";
 
 /// One attempt's fire-time overrides — everything that varies between the
@@ -91,7 +91,7 @@ pub struct Attempt {
     /// `config/<name>`. Empty is not a value — the composer refuses to fire
     /// without one, because a fork with no ref is a different gesture.
     pub from: String,
-    /// The role (`<role>`), which is the model: lernie resolves the provider
+    /// The role (`<role>`), which is the model: litany resolves the provider
     /// and model id from this name against `from`'s governing config.
     pub role: String,
     /// Skill names from the [`pool`], each pinned into the child's worktree.
@@ -110,7 +110,7 @@ pub struct Fire {
     /// The goal, verbatim (§3.3, bl-6920).
     pub goal: String,
     pub attempt: Attempt,
-    /// The world's `$LERNIE_HOME/skills` ([`skills_root`]).
+    /// The world's `$LITANY_HOME/skills` ([`skills_root`]).
     pub skills_root: PathBuf,
 }
 
@@ -137,7 +137,7 @@ impl Fire {
     }
 }
 
-/// The argv one attempt fires: `lernie dispatch <role> <ws> <parent> --goal
+/// The argv one attempt fires: `litany dispatch <role> <ws> <parent> --goal
 /// <goal> --from <ref> [--pin skills/<s>/SKILL.md=<pool>/<s>/SKILL.md]…`.
 ///
 /// **The goal is passed verbatim** — the same rule the start flow's fire keeps

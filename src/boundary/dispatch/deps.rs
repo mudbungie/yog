@@ -21,7 +21,7 @@ use std::sync::Arc;
 /// stamp-derived draw.
 #[derive(Clone)]
 pub struct Deps {
-    pub lernie: Cli,
+    pub litany: Cli,
     pub bl: Cli,
     /// `ops.jsonl`'s root (§4.2).
     pub state_root: PathBuf,
@@ -86,12 +86,12 @@ pub struct Caller {
 }
 
 impl Deps {
-    /// This gesture's `lernie` bound to `workspace` (§8.2, §16.2) — the one
+    /// This gesture's `litany` bound to `workspace` (§8.2, §16.2) — the one
     /// composition point for a workspace-bound spawn, so the sphere's wall and
-    /// name ride every §8.2 lernie verb by construction rather than by each
+    /// name ride every §8.2 litany verb by construction rather than by each
     /// arm remembering to layer them (bl-bf79,
     /// [`verbs::Bound`](crate::actions::verbs::Bound)).
     pub fn bound(&self, workspace: &std::path::Path) -> crate::actions::verbs::Bound {
-        crate::actions::verbs::Bound::at(&self.lernie, &self.world, workspace)
+        crate::actions::verbs::Bound::at(&self.litany, &self.world, workspace)
     }
 }

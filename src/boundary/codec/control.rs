@@ -8,7 +8,7 @@
 //! decision, which is the one thing a gesture must never do.
 //!
 //! The `tool_use` id is **not** a field, in either direction. It is derived
-//! from `refs/lernie/held/<agent>` at fire time (§8.6): a headless caller that
+//! from `refs/litany/held/<agent>` at fire time (§8.6): a headless caller that
 //! had to quote an id would be quoting a fact it read a tick ago, and the
 //! whole point of scoping the answer to a provider-unique id is that it names
 //! what is parked *now*.

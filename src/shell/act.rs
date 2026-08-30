@@ -11,7 +11,7 @@
 //!
 //! - **[`fire`] — the act whose receipt is nothing.** Every §8.2 verb whose
 //!   durable record is its own `ops.jsonl` line (INV-2): the ball verbs, the
-//!   `lernie` short verbs, a fork's cohort. Nobody held the reply before either
+//!   `litany` short verbs, a fork's cohort. Nobody held the reply before either
 //!   — it was discarded on the spot — so nobody holds a ticket now. The
 //!   re-derivation the fire used to trigger is not lost: it moved to the receipt,
 //!   where it belongs, and the model runs it for every act
@@ -117,7 +117,7 @@ pub(super) fn trouble(landed: &Result<Reply, String>) -> Option<String> {
         Err(said) => Some(said.clone()),
         Ok(Reply::Outcome(outcome)) if !outcome.ok() => Some(format!(
             "{} · {}",
-            crate::opslog::exit::ExitKind::of(outcome.exit, "lernie").label(),
+            crate::opslog::exit::ExitKind::of(outcome.exit, "litany").label(),
             outcome.stderr.trim()
         )),
         Ok(_) => None,

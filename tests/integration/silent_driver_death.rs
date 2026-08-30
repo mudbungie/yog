@@ -67,14 +67,14 @@ impl Clock for TestClock {
     }
 }
 
-/// Lay down one step exactly as lernie leaves it (ARCH §2.3 write order):
+/// Lay down one step exactly as litany leaves it (ARCH §2.3 write order):
 /// `request.json` first, then `response.json`, and `meta.json` only once the
 /// model call returns.
 fn write_step(ws: &Path, seq: u32, response: Option<&[u8]>, meta: Option<&[u8]>) {
     write_step_with_stderr(ws, seq, response, meta, b"");
 }
 
-/// The same, plus the adapter's captured stderr — `stderr.log`, which lernie
+/// The same, plus the adapter's captured stderr — `stderr.log`, which litany
 /// opens on every attempt and which is empty on an ordinary run (ARCH §2.3).
 fn write_step_with_stderr(
     ws: &Path,

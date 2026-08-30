@@ -29,9 +29,9 @@ pub(super) fn messages(ws: &std::path::Path) -> std::path::PathBuf {
     dir
 }
 
-/// The words a dead driver left behind — the shape lernie's own decline
+/// The words a dead driver left behind — the shape litany's own decline
 /// writes (its `advance` erroring to the `driver.log` fd).
-pub(super) const DECLINE: &str = "lernie: branch tip is an assistant entry with tool_use unmatched";
+pub(super) const DECLINE: &str = "litany: branch tip is an assistant entry with tool_use unmatched";
 
 /// Lay the dead driver's words beside the steps.
 pub(super) fn write_driver_log(ws: &std::path::Path, words: &str) {

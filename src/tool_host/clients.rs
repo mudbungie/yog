@@ -11,7 +11,7 @@
 //!
 //! **One tool, and its subject is the roster — not a multiplexer.** Loaded
 //! remote tools surface as individually named definitions of their own
-//! ([`super::loaded`]), because lernie's `docs/DESIGN_MCP_BRIDGE.md` §6 ruling
+//! ([`super::loaded`]), because litany's `docs/DESIGN_MCP_BRIDGE.md` §6 ruling
 //! binds a host too: a generic `call {client, tool, arguments}` would collapse
 //! the grant gate, the tool control and every future policy into one bit. This
 //! tool's own subject is *which machines are here and what they offer*, which

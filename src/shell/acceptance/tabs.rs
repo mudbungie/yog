@@ -77,15 +77,15 @@ fn a_combo_focuses_config_from_inside_the_box_and_escape_comes_home() {
 /// beneath.
 #[test]
 fn every_peer_is_reachable_from_every_tab_and_no_tab_paints_over_the_composer() {
-    let (lernie, bl) = (
-        crate::cli_outbound::Cli::new("lernie"),
+    let (litany, bl) = (
+        crate::cli_outbound::Cli::new("litany"),
         crate::cli_outbound::Cli::new("bl"),
     );
     let mut world = world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
 
-    let home = super::painted(&mut world, &lernie, &bl);
+    let home = super::painted(&mut world, &litany, &bl);
     for tab in ["Conversation", "Config", "Login"] {
         assert!(
             home.lines().any(|line| line == tab),
@@ -98,7 +98,7 @@ fn every_peer_is_reachable_from_every_tab_and_no_tab_paints_over_the_composer() 
     );
 
     crate::shell::center::focus(&world.model, &mut world.state, CenterTab::Config);
-    let config = super::painted(&mut world, &lernie, &bl);
+    let config = super::painted(&mut world, &litany, &bl);
     for tab in ["Conversation", "Config", "Login"] {
         assert!(
             config.lines().any(|line| line == tab),
@@ -158,8 +158,8 @@ fn the_login_rows_paint_in_the_center_not_in_the_roster_column() {
 #[test]
 fn no_tab_lays_off_window_at_either_capture() {
     for (w, h) in [(420.0, 320.0), (1600.0, 2400.0)] {
-        let (lernie, bl, bz) = (
-            crate::cli_outbound::Cli::new("/yog-absent-lernie"),
+        let (litany, bl, bz) = (
+            crate::cli_outbound::Cli::new("/yog-absent-litany"),
             crate::cli_outbound::Cli::new("/yog-absent-bl"),
             crate::cli_outbound::Cli::new("/yog-absent-bz"),
         );
@@ -175,7 +175,7 @@ fn no_tab_lays_off_window_at_either_capture() {
         let mut out = None;
         for _ in 0..4 {
             out = Some(ctx.run(raw.clone(), |ctx| {
-                crate::shell::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+                crate::shell::render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
             }));
         }
         let shapes = out.expect("four frames ran").shapes;

@@ -21,19 +21,19 @@ fn s3_t2_new_ball_creates_then_converges_to_one_claim() {
         tempdir().unwrap(),
         tempdir().unwrap(),
     );
-    let seed = layout_under(yog.path()).lernie;
+    let seed = layout_under(yog.path()).litany;
     std::fs::create_dir_all(&seed).unwrap();
     std::fs::write(seed.join("models.yaml"), b"models: {}\n").unwrap();
     std::fs::create_dir_all(workspace_path(yog.path(), "cobalt-gecko").join("repo.git")).unwrap();
     let canonical = work_worktree_path(balls.path(), project.path(), "bl-mint", None);
 
-    let lernie = Recorder::new(bin.path(), "lernie");
+    let litany = Recorder::new(bin.path(), "litany");
     let bl = Recorder::new(bin.path(), "bl")
         .on("create", "bl-mint\n", 0)
         .on("claim", &canonical.to_string_lossy(), 0);
     let deps = Deps {
         bl: Cli::new(bl.path()),
-        lernie: Cli::new(lernie.path()),
+        litany: Cli::new(litany.path()),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
         // No answer from brazen: the §9.2 birth-template gate judges nothing.

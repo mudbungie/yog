@@ -16,10 +16,10 @@ use crate::app::Snapshot;
 use crate::budgets::{BudgetSpend, Scope, total, wall};
 use crate::transcript::{Block, Entry, EntryKind, Transcript};
 
-/// The agent worktree's goal file (lernie ARCH §2.2) — the frozen input, as of
+/// The agent worktree's goal file (litany ARCH §2.2) — the frozen input, as of
 /// the dispatch commit this worktree is a checkout of.
 const GOAL_FILE: &str = "goal.md";
-/// Workspace subdirectory holding the per-agent worktrees (lernie ARCH §2.2).
+/// Workspace subdirectory holding the per-agent worktrees (litany ARCH §2.2).
 const AGENTS_DIR: &str = "agents";
 
 /// What the bound conversation can be asked — every column of the projection

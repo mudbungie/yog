@@ -4,15 +4,15 @@
 # entry point of its own.
 #
 # World C is one bare conversation on the live wire, then a **laid** forensic
-# state around it: a child agent carrying a `refs/lernie/*` mark, a second
+# state around it: a child agent carrying a `refs/litany/*` mark, a second
 # (newer) root, a pending inbox deposit, and a malformed step file — plus the two
 # marks `s6_attention` lays for itself, one beat before it spends them, which is
 # where a fixture whose beat must WATCH it land belongs. Every one of those is
-# lernie's own on-disk representation written by hand — a branch one well-formed
+# litany's own on-disk representation written by hand — a branch one well-formed
 # descent segment below the root IS a child (§2.3, `CHILD_SEG` below), a ref IS a
 # mark (§6) — which is what makes S7/S6's rows drivable
 # without a second live agent, a real budget exhaustion or a real conflict. The
-# fixture is honest about being a fixture: it writes what lernie would write and
+# fixture is honest about being a fixture: it writes what litany would write and
 # nothing yog owns.
 
 # --- world C fixtures --------------------------------------------------------
@@ -37,7 +37,7 @@ lay_forensics() {
   # fixture is a state, not a trick.
   child=$ag-$CHILD_SEG
   git --git-dir="$g" branch "agents/$child" "$tip"
-  git --git-dir="$g" update-ref "refs/lernie/conflicted/$child" "$tip"
+  git --git-dir="$g" update-ref "refs/litany/conflicted/$child" "$tip"
   # A second root, deliberately NEWER than the flagged one, so the §6 sort has
   # something to beat: by recency it would head the roster.
   second=$(git --git-dir="$g" commit-tree "$tree" -p "$tip" -m "yogdrive second root")
@@ -50,9 +50,9 @@ lay_forensics() {
   # rows passed on it with their own gesture deleted (bl-1061).
   # §6 rule 5: pending mail nobody is driving — a deposit file (§2.11) with the
   # lock free, the one signal that is deliberately NOT silenceable.
-  # The file name is lernie's own framing — `<sender-agent-id>-NNN.md` (§2.11) —
+  # The file name is litany's own framing — `<sender-agent-id>-NNN.md` (§2.11) —
   # so the sender is an agent id, the child laid above, never a human name. It
-  # has to be the child specifically: `lernie scan`'s sweep reads this very
+  # has to be the child specifically: `litany scan`'s sweep reads this very
   # listing to answer "did the child ever deposit?" (§2.6 return), and a sender
   # that is not the child makes the sweep deposit a `died` message of its own.
   mkdir -p "$ws/inbox/$ag"
@@ -68,12 +68,12 @@ lay_forensics() {
 SECOND_ROOT=20260727T090000Z-yogdrive2
 
 # The laid child's own descent SEGMENT — `<ts>-<short>`, exactly two hyphen-free
-# tokens, which is the whole of lernie's id grammar (lernie ARCH §2.3: an id is
+# tokens, which is the whole of litany's id grammar (litany ARCH §2.3: an id is
 # its parent's id plus one such segment). So the child branch is a four-token id
 # whose derived parent is exactly the root. Until bl-c03e this fixture laid a
-# one-token suffix (`$ag-c0ffee`) — a legal branch name, but an id lernie would
+# one-token suffix (`$ag-c0ffee`) — a legal branch name, but an id litany would
 # never mint: three tokens, so stripping the last segment derives the bare
-# timestamp, a ref nobody holds, and `lernie scan` died on git's 128 (lernie
+# timestamp, a ref nobody holds, and `litany scan` died on git's 128 (litany
 # bl-025b). Two tokens is not decoration here; it is what the beats assert.
 CHILD_SEG=20260727T090100Z-c0ffeeba
 
@@ -219,7 +219,7 @@ s7_steps() {
     || fail "S7-T2 steps: malformed step stays inspectable, no crash" "ops grew or yog died"
 }
 
-# S7-T4 — the Inbox tab explains `✉n` and the flush is `lernie scan`. The verb is
+# S7-T4 — the Inbox tab explains `✉n` and the flush is `litany scan`. The verb is
 # the assertable half; the deposit's parsed from/deposited_at/epitaph are the
 # screenshot's. Note where the flush actually lives: the Inbox tab renders the
 # deposits only, and the dispatcher is the composer's `Scan` (§8.2) — one verb,
@@ -236,14 +236,14 @@ s7_inbox() {
   # until this file's own `CHILD_SEG` fix: the sweep derives each `agents/*`
   # branch's parent address by stripping one two-token segment, and the old
   # one-token `$ag-c0ffee` derived an address no ref held, so git's 128 aborted
-  # the whole pass before the flush ran (the mail was a bystander). lernie fixed
+  # the whole pass before the flush ran (the mail was a bystander). litany fixed
   # its half too — c816ee8 intersects the derived address with the `agents/*`
-  # registry — and that IS in the lernie release yog pins and embeds (the pin
+  # registry — and that IS in the litany release yog pins and embeds (the pin
   # authority is `Cargo.toml`, never a version copied into a comment here; the
-  # verb runs through the §16.7 self-multiplex, never the `lernie` on PATH), so
+  # verb runs through the §16.7 self-multiplex, never the `litany` on PATH), so
   # both halves of the fix are now under this beat.
-  until_landed flush row_ok '"lernie","scan"' \
-    && pass "S7-T4 inbox: Flush's lernie scan exits 0" \
-    || fail "S7-T4 inbox: Flush's lernie scan exits 0" "no clean scan row"
+  until_landed flush row_ok '"litany","scan"' \
+    && pass "S7-T4 inbox: Flush's litany scan exits 0" \
+    || fail "S7-T4 inbox: Flush's litany scan exits 0" "no clean scan row"
   "$drive" shot "$wid" "$out/s7-08-flushed.png"
 }

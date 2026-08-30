@@ -11,7 +11,7 @@
 //! decision itself lives here so every arm is headless shape-walk tested.
 //!
 //! The Config tab shows only the agent's **governing config** ("policy frozen
-//! at `<short-oid>`", §9.3); the three write surfaces (brazen / lernie-global /
+//! at `<short-oid>`", §9.3); the three write surfaces (brazen / litany-global /
 //! config-branch editors) are the roster's Config panel (§11 "Config mode …
 //! swaps the center"), interaction glue in the shell.
 

@@ -40,11 +40,11 @@ pub(super) fn config(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
             },
             rest,
         ),
-        "models" => (ConfigFile::LernieModels, rest),
+        "models" => (ConfigFile::LitanyModels, rest),
         "cadence" => (ConfigFile::Cadence, rest),
         "workflow" => {
             let (name, rest) = word(&rest, verb, "a workflow name")?;
-            (ConfigFile::LernieWorkflow { name }, rest)
+            (ConfigFile::LitanyWorkflow { name }, rest)
         }
         "branch" => lineage(&rest, ctx, verb, None)?,
         "orphan" => lineage(&rest, ctx, verb, Some(EditOrigin::Orphan))?,
@@ -119,9 +119,9 @@ pub(super) fn model(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, St
 pub(super) fn target_words(file: &ConfigFile) -> String {
     match file {
         ConfigFile::Brazen { .. } => "brazen".to_owned(),
-        ConfigFile::LernieModels => "models".to_owned(),
+        ConfigFile::LitanyModels => "models".to_owned(),
         ConfigFile::Cadence => "cadence".to_owned(),
-        ConfigFile::LernieWorkflow { name } => format!("workflow {name}"),
+        ConfigFile::LitanyWorkflow { name } => format!("workflow {name}"),
         ConfigFile::Branch {
             lineage,
             origin,

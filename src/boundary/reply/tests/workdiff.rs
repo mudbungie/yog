@@ -22,7 +22,7 @@ use crate::workdiff::{Attempt, Change, Churn, FileChurn, WorkFile};
 /// would be a second answer to what a boundary read runs in.
 pub(super) fn deps(snap: crate::app::Snapshot) -> Deps {
     Deps {
-        lernie: Cli::new("/no/such/lernie"),
+        litany: Cli::new("/no/such/litany"),
         bl: Cli::new("/no/such/bl"),
         state_root: PathBuf::from("/nonexistent/state"),
         yog_binary: PathBuf::from("/no/such/yog"),

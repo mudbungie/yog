@@ -14,7 +14,7 @@ use crate::paint_probe::Painted;
 /// panel rects can then be read back by id.
 pub(super) struct Window {
     ctx: egui::Context,
-    lernie: Cli,
+    litany: Cli,
     bl: Cli,
     bz: Cli,
 }
@@ -23,7 +23,7 @@ impl Window {
     pub(super) fn new() -> Self {
         Self {
             ctx: egui::Context::default(),
-            lernie: Cli::new("/yog-absent-lernie"),
+            litany: Cli::new("/yog-absent-litany"),
             bl: Cli::new("/yog-absent-bl"),
             bz: Cli::new("/yog-absent-bz"),
         }
@@ -44,7 +44,7 @@ impl Window {
                     ctx,
                     &mut world.model,
                     &mut world.state,
-                    &self.lernie,
+                    &self.litany,
                     &self.bl,
                     &self.bz,
                 );

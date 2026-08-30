@@ -5,7 +5,7 @@
 //! docked composer be its goal box. What it did instead was open the §8.1 start
 //! draft over that composer — the ball rung's mechanism reused by a rung with no
 //! prefill (§3.4's table: bare composes none) — so the operator who typed a name
-//! got two goal boxes and one of them was empty. Its Send was live: `lernie
+//! got two goal boxes and one of them was empty. Its Send was live: `litany
 //! prompt` fired with an empty goal, an ops row and a
 //! model call bought with no instruction behind them.
 //!
@@ -14,7 +14,7 @@
 //! button or from the §11 Enter binding, which is the other hand on the same
 //! trigger.
 
-use super::fixture::{fake_lernie, seed_world, world};
+use super::fixture::{fake_litany, seed_world, world};
 use super::screen::{Screen, press};
 use crate::start::Prepared;
 use tempfile::tempdir;
@@ -28,7 +28,7 @@ fn a_raise_focuses_its_sphere_and_opens_no_second_goal_box() {
     seed_world(&world);
     // Held across the script's write and every exec of it (the ETXTBSY window
     // `test_support` documents); re-entrant, so the flow's own `git` forks pass.
-    let screen = Screen::with_lernie(fake_lernie(bin.path()));
+    let screen = Screen::with_litany(fake_litany(bin.path()));
     screen.idle(&mut world);
     // `w` is a bare key, so the composer lets go first — the §11 idiom.
     screen.release(&mut world);
@@ -81,7 +81,7 @@ fn a_raise_focuses_its_sphere_and_opens_no_second_goal_box() {
 
 /// The other half, at the trigger the pointer cannot reach: a pending draft the
 /// operator has emptied. Enter must be inert — the draft stays standing, and
-/// nothing spawns. `lernie` here is [`Screen::new`]'s deliberately absent one,
+/// nothing spawns. `litany` here is [`Screen::new`]'s deliberately absent one,
 /// so a fire would leave an ops row with a spawn error; that no failure ever
 /// appears is the proof nothing was attempted.
 #[test]
@@ -114,6 +114,6 @@ fn enter_on_a_blank_start_draft_fires_nothing_and_keeps_the_draft() {
             .model
             .last_failure(crate::opslog::Origin::Conversation)
             .is_none(),
-        "and nothing was dispatched: no `lernie prompt` on a blank payload"
+        "and nothing was dispatched: no `litany prompt` on a blank payload"
     );
 }

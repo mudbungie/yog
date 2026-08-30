@@ -23,9 +23,9 @@ pub(super) fn encode_file(file: &ConfigFile) -> Value {
         ConfigFile::Brazen { workspace } => {
             json!({ "file": "brazen", "workspace": workspace })
         }
-        ConfigFile::LernieModels => json!({ "file": "lernie-models" }),
-        ConfigFile::LernieWorkflow { name } => {
-            json!({ "file": "lernie-workflow", "name": name })
+        ConfigFile::LitanyModels => json!({ "file": "litany-models" }),
+        ConfigFile::LitanyWorkflow { name } => {
+            json!({ "file": "litany-workflow", "name": name })
         }
         ConfigFile::Cadence => json!({ "file": "cadence" }),
         ConfigFile::Branch {
@@ -98,8 +98,8 @@ pub(super) fn decode_file(v: &Value) -> Result<ConfigFile, String> {
         "brazen" => Ok(ConfigFile::Brazen {
             workspace: str_of(obj, "workspace")?,
         }),
-        "lernie-models" => Ok(ConfigFile::LernieModels),
-        "lernie-workflow" => Ok(ConfigFile::LernieWorkflow {
+        "litany-models" => Ok(ConfigFile::LitanyModels),
+        "litany-workflow" => Ok(ConfigFile::LitanyWorkflow {
             name: str_of(obj, "name")?,
         }),
         "cadence" => Ok(ConfigFile::Cadence),

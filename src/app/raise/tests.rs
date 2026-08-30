@@ -5,7 +5,7 @@
 use crate::app::tests::Harness;
 use crate::nav::tabs::Kind;
 
-/// The blocker this ball exists for. `lernie new` has returned, the enumeration
+/// The blocker this ball exists for. `litany new` has returned, the enumeration
 /// predates it, and the focus is a **name** — so without the claim the composer's
 /// bare rung would resolve into the previous wall (the bl-9acf defect). With it,
 /// every door answers on the frame the receipt landed.
@@ -13,7 +13,7 @@ use crate::nav::tabs::Kind;
 fn the_raised_wall_resolves_before_the_derivation_reads_it() {
     let mut h = Harness::new();
     let (_c, mut rig) = h.model();
-    // The wall is founded AFTER the boot derivation, exactly as `lernie new`
+    // The wall is founded AFTER the boot derivation, exactly as `litany new`
     // founds it after the snapshot the receipt is folded onto.
     let raised = h.mint_named("ops", "c-9");
     assert!(

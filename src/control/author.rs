@@ -7,25 +7,25 @@
 //! every start**: a workspace created a moment ago and a workspace created last
 //! week both converge to a tip that names the shim, and every agent forked after
 //! that commit is controlled. Agents already running keep the policy they froze
-//! — that is lernie's law, not a gap this could close.
+//! — that is litany's law, not a gap this could close.
 //!
 //! **The ruling named a different file, and the tree says it cannot work.** The
-//! ruling authored the block into `<LERNIE_HOME>/template/workflow.yaml`, on
-//! the premise that `lernie prime` seeds that file and later seeding is
+//! ruling authored the block into `<LITANY_HOME>/template/workflow.yaml`, on
+//! the premise that `litany prime` seeds that file and later seeding is
 //! seed-if-absent. Verified against the pin, all three halves are false:
 //!
 //! - `prime` never touches `template/` — it is an *override* root, absent by
-//!   default ("policy lives in config, not code", at lernie's own constant).
+//!   default ("policy lives in config, not code", at litany's own constant).
 //! - The override is a whole-file `fs::copy`, not a merge. A `workflow.yaml`
 //!   carrying only `tool_control:` would delete `events:` — and with it every
 //!   dispatch — from every workspace born after it.
-//! - Authoring a *complete* override would need lernie's embedded default, and
+//! - Authoring a *complete* override would need litany's embedded default, and
 //!   the crate's `template` module is private. There is no lawful read of it.
 //!
 //! So the base is taken from where it is undeniably correct: the workspace's own
-//! committed `workflow.yaml`, which is exactly what lernie put there. And the
+//! committed `workflow.yaml`, which is exactly what litany put there. And the
 //! write goes through the one lawful writer of `config/*` — the scripted-editor
-//! `lernie config` drive (§9.3) — so yog still never writes inside a workspace.
+//! `litany config` drive (§9.3) — so yog still never writes inside a workspace.
 //! This is *stronger* than the template route rather than a retreat from it: the
 //! template only reached workspaces born after it, while this reaches every
 //! workspace on its next start.
@@ -35,13 +35,13 @@
 //! staged, nothing is spawned, and no commit is authored.
 //!
 //! **The same fixed point holds one other thing, and holds it empty: there is
-//! no conversation budget** (bl-56af). lernie's `workflow.yaml` may carry a
+//! no conversation budget** (bl-56af). litany's `workflow.yaml` may carry a
 //! `budgets:` block — `max_total_tokens`, `max_wall_seconds`, `max_depth`
-//! (lernie ARCH §6) — and every axis of it is a **whole-tree** consumable, one
+//! (litany ARCH §6) — and every axis of it is a **whole-tree** consumable, one
 //! allowance a root and its whole descent spend together. lernie's pre-`0.0.11`
 //! template shipped it *set*, so every workspace born before that release froze
 //! `max_wall_seconds: 3600` and `max_depth: 4` into its `config/default` and
-//! caps every agent forked off that lineage. lernie has since retired the seed,
+//! caps every agent forked off that lineage. litany has since retired the seed,
 //! but a template only ever reaches workspaces born after it — this convergence
 //! is the only thing that reaches the ones already standing, which is the same
 //! argument that put the control here.
@@ -62,7 +62,7 @@ use crate::config_edit::branch::config_file;
 use crate::config_edit::branch::edit::DraftFile;
 
 /// The config lineage every workspace is born on and every fresh agent forks
-/// off (lernie ARCH §2.2).
+/// off (litany ARCH §2.2).
 pub const DEFAULT_CONFIG: &str = "default";
 /// The refspec of `config/<name>` in the bare workspace repo.
 fn config_ref(config: &str) -> String {
@@ -70,9 +70,9 @@ fn config_ref(config: &str) -> String {
 }
 /// The control file inside a config commit.
 const WORKFLOW_YAML: &str = "workflow.yaml";
-/// The block's key, as lernie's workflow parser reads it.
+/// The block's key, as litany's workflow parser reads it.
 const KEY: &str = "tool_control:";
-/// lernie's whole-tree spend ceiling (lernie ARCH §6). The second top-level
+/// litany's whole-tree spend ceiling (litany ARCH §6). The second top-level
 /// block this fixed point holds, and the only one it holds **empty** — yog
 /// authors no ceiling and removes the one a pre-`0.0.11` template seeded.
 const BUDGETS: &str = "budgets:";
@@ -161,7 +161,7 @@ fn block(shim: &Path) -> String {
 /// The drafted file is the **whole** `workflow.yaml`: the scripted editor
 /// copies files over the checkout, so a fragment would truncate the policy.
 /// Who *drives* the commit is [`crate::start::execute_ensure_workspace`], which
-/// converges this drift and §3.7's `manifest.yaml` drift in one `lernie config`
+/// converges this drift and §3.7's `manifest.yaml` drift in one `litany config`
 /// pass — two files of one policy, one checkout, one commit, one ops row.
 pub fn workflow_drift(workspace: &Path, config: &str, shim: &Path) -> Option<DraftFile> {
     let base = committed(workspace, config, WORKFLOW_YAML)?;

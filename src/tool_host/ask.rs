@@ -1,8 +1,8 @@
-//! **The driver's ask** (REMOTE §3, §5; bl-c907): how a `yog lernie` process
+//! **The driver's ask** (REMOTE §3, §5; bl-c907): how a `yog litany` process
 //! puts a question to the engine that spawned it.
 //!
 //! The injection runs inside the **driver**, a child process yog spawned
-//! (`src/multiplex/lernie.rs`). The facts a `clients` op needs are not all on
+//! (`src/multiplex/litany.rs`). The facts a `clients` op needs are not all on
 //! disk — REMOTE §5 makes *presence* connection-scoped RAM in the engine, on
 //! purpose — so the driver cannot read the roster itself. It asks, through the
 //! door REMOTE §3 already reserves for the world's own residents:
@@ -19,7 +19,7 @@
 //! hands `XDG_STATE_HOME` down to every child (§16.2), so both fold to
 //! `<world>/state/yog`.
 //!
-//! **Every wait is bounded, and the bound is the router's own** (lernie
+//! **Every wait is bounded, and the bound is the router's own** (litany
 //! `docs/DESIGN_TOOL_INJECTION.md` §3.3: *"Carry your own deadline … A vanished
 //! endpoint is an in-band error result, never a hang … Watch
 //! `RoutedCall::stop`"*). A [`Budget`] is a poll count and a tick, and a stop

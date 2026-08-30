@@ -11,8 +11,8 @@ use std::path::PathBuf;
 
 /// Where one [`ApplyConfig`](crate::boundary::Action::ApplyConfig) lands (§9). The
 /// destination decides the pipeline, so the gesture carries no mode flag: a
-/// brazen draft is `bz`-validated, a lernie-global one is provider-gated, and a
-/// lineage file is committed by `lernie config`.
+/// brazen draft is `bz`-validated, a litany-global one is provider-gated, and a
+/// lineage file is committed by `litany config`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConfigFile {
     /// One workspace's own brazen `config.toml` (§9.1, §16.2's wall) —
@@ -29,21 +29,21 @@ pub enum ConfigFile {
     /// names neither is refused where every other missing target is, at the
     /// edge.
     Brazen { workspace: String },
-    /// lernie's global `models.yaml` (§9.2).
-    LernieModels,
+    /// litany's global `models.yaml` (§9.2).
+    LitanyModels,
     /// One `workflows/<name>.yaml` (§9.2). The name must be a safe single-file
     /// basename; anything else is refused before a byte is staged.
-    LernieWorkflow { name: String },
+    LitanyWorkflow { name: String },
     /// yog's own `cadence.yaml` — the clock's periods (§7.2), on the same §9
     /// editor discipline because the file is a file.
     Cadence,
     /// One file on a per-workspace config lineage (§9.3): staged, then handed
-    /// to `lernie config`, whose `$EDITOR` callback re-enters this binary and
-    /// copies it over the checkout. lernie commits; yog never writes inside a
+    /// to `litany config`, whose `$EDITOR` callback re-enters this binary and
+    /// copies it over the checkout. litany commits; yog never writes inside a
     /// workspace.
     Branch {
         workspace: String,
-        /// The lineage's bare name — `lernie config <ws> <lineage>`.
+        /// The lineage's bare name — `litany config <ws> <lineage>`.
         lineage: String,
         /// Advance it, fork it off a source, or start a fresh orphan (§9.3).
         origin: EditOrigin,
@@ -54,7 +54,7 @@ pub enum ConfigFile {
 
 impl ConfigFile {
     /// The workspace this destination names (REMOTE §8), or `None` for the
-    /// three that name no world — lernie's globals and yog's own cadence file.
+    /// three that name no world — litany's globals and yog's own cadence file.
     /// The §9 family's own half of [`Action::workspace`](crate::boundary::Action), where
     /// it belongs: the destination decides, and only it can say.
     pub fn workspace(&self) -> Option<String> {
@@ -62,7 +62,7 @@ impl ConfigFile {
             ConfigFile::Brazen { workspace } | ConfigFile::Branch { workspace, .. } => {
                 Some(workspace.clone())
             }
-            ConfigFile::LernieModels | ConfigFile::LernieWorkflow { .. } | ConfigFile::Cadence => {
+            ConfigFile::LitanyModels | ConfigFile::LitanyWorkflow { .. } | ConfigFile::Cadence => {
                 None
             }
         }

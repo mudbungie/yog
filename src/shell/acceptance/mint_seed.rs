@@ -14,7 +14,7 @@
 //! prediction became the fired `--name`), and nothing else does — a launch that failed
 //! minted no name, so its prediction still stands and its seed with it.
 
-use super::fixture::{MINT_SEED, MINTED, MINTED_FIRST, fake_lernie, seed_world, world};
+use super::fixture::{MINT_SEED, MINTED, MINTED_FIRST, fake_litany, seed_world, world};
 use super::screen::{Screen, press};
 use crate::start::Prepared;
 use tempfile::tempdir;
@@ -59,7 +59,7 @@ fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
     let bin = tempdir().unwrap();
     let mut world = world();
     seed_world(&world);
-    let screen = Screen::with_lernie(fake_lernie(bin.path()));
+    let screen = Screen::with_litany(fake_litany(bin.path()));
     assert!(screen.idle(&mut world), "the cursor starts in the composer");
 
     let first = predicted(&screen.text(&mut world));
@@ -86,7 +86,7 @@ fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
     // Named, not merely *different* (bl-dd3d): the successor comes off the spent
     // seed's own stream, so with the opening seed pinned every later prediction
     // is a known word too. `assert_ne!` here used to be a coin flip over
-    // lernie's 541-word pool — it flaked twice in one day, once taking an
+    // litany's 541-word pool — it flaked twice in one day, once taking an
     // unrelated close gate with it. A repeat now fails every run, and names the
     // word it repeated.
     fresh(&screen, &mut world);
@@ -125,7 +125,7 @@ fn consecutive_fires_each_predict_and_spend_a_seed_of_their_own() {
 #[test]
 fn a_launch_that_never_left_the_ground_keeps_its_prediction() {
     let mut world = world();
-    // `Screen::new`'s deliberately absent `lernie`: the spawn fails, so the fire
+    // `Screen::new`'s deliberately absent `litany`: the spawn fails, so the fire
     // minted nothing and stamped nothing.
     let screen = Screen::new();
     let ws = world.ws.clone();
@@ -163,7 +163,7 @@ fn the_ball_rungs_send_retires_the_seed_the_same_way() {
     let bin = tempdir().unwrap();
     let mut world = world();
     seed_world(&world);
-    let lernie = fake_lernie(bin.path());
+    let litany = fake_litany(bin.path());
     let ws = world.ws.clone();
     world.state.start.pending = Some(Prepared {
         workspace: crate::naming::leaf(&ws),
@@ -178,7 +178,7 @@ fn the_ball_rungs_send_retires_the_seed_the_same_way() {
     // binding calls this too). One rule, both hands: the ball rung's fire spends
     // its prediction exactly as the composer's does, and both spend it on the
     // **receipt** the frame after (REMOTE §9.8).
-    let screen = Screen::with_lernie(lernie);
+    let screen = Screen::with_litany(litany);
     screen.idle(&mut world);
     // The §8.1 provider gate refuses a fire on a wall with nothing signed in
     // (bl-1fd0), and this beat's subject is the seed a *landed* fire spends —

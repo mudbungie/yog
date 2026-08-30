@@ -131,7 +131,7 @@ fn a_failed_launch_is_still_an_answer_and_still_a_row() {
     world.repo();
     world.park(AGENT, "toolu_9");
     let mut deps = world.deps();
-    deps.lernie = Cli::new("/no/such/lernie");
+    deps.litany = Cli::new("/no/such/litany");
     let reply = answer_hold(&deps, "1000", &world.workspace(), AGENT, Ruling::Pass)
         .expect("the answer is durable whatever the launch does");
     assert!(matches!(

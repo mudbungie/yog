@@ -76,14 +76,14 @@ fn entry(ts: &str, argv: &[&str], exit: i32) -> OpEntry {
 fn prompt(ts: &str, name: &str) -> OpEntry {
     entry(
         ts,
-        &["lernie", PROMPT, NAME_FLAG, name, WS, "the goal"],
+        &["litany", PROMPT, NAME_FLAG, name, WS, "the goal"],
         DETACHED_EXIT,
     )
 }
 
 /// The row `boundary::control::advance` writes for a resume of `agent`.
 fn advance(ts: &str, agent: &str) -> OpEntry {
-    entry(ts, &["lernie", ADVANCE, WS, agent], DETACHED_EXIT)
+    entry(ts, &["litany", ADVANCE, WS, agent], DETACHED_EXIT)
 }
 
 /// **THE BALL**: a start whose conversation is nowhere on disk produced
@@ -186,7 +186,7 @@ fn a_world_yog_cannot_read_answers_nothing() {
 /// and a synthetic failure carry their own observed status.
 #[test]
 fn only_a_detached_line_is_asked() {
-    let piped = entry("100", &["lernie", PROMPT, NAME_FLAG, MINTED, WS, "g"], 0);
+    let piped = entry("100", &["litany", PROMPT, NAME_FLAG, MINTED, WS, "g"], 0);
     assert!(!stillborn(&forest(vec![]), &piped, NOW, GRACE));
 }
 
@@ -198,11 +198,11 @@ fn only_a_detached_line_is_asked() {
 fn a_row_that_names_no_target_answers_nothing() {
     let world = forest(vec![]);
     for argv in [
-        vec!["lernie", "prime", WS, "x"],
-        vec!["lernie", PROMPT, WS, "the goal"],
-        vec!["lernie", PROMPT, NAME_FLAG],
-        vec!["lernie", ADVANCE, WS],
-        vec!["lernie"],
+        vec!["litany", "prime", WS, "x"],
+        vec!["litany", PROMPT, WS, "the goal"],
+        vec!["litany", PROMPT, NAME_FLAG],
+        vec!["litany", ADVANCE, WS],
+        vec!["litany"],
     ] {
         let e = entry("100", &argv, DETACHED_EXIT);
         assert!(!stillborn(&world, &e, NOW, GRACE), "{argv:?}");

@@ -43,7 +43,7 @@ pub(super) fn ws() -> PathBuf {
 /// against the real hermetic world `boundary::config::tests` builds).
 pub(super) fn deps(snap: Snapshot) -> Deps {
     Deps {
-        lernie: Cli::new("/no/such/lernie"),
+        litany: Cli::new("/no/such/litany"),
         bl: Cli::new("/no/such/bl"),
         state_root: PathBuf::from("/nonexistent/state"),
         yog_binary: PathBuf::from("/no/such/yog"),

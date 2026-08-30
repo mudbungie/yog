@@ -11,7 +11,7 @@
 //! which is precisely the inversion the ruling forbids.
 //!
 //! **The live tip, never the governing commit.** An agent's `workflow.yaml` is
-//! frozen where its branch forked (lernie ARCH §2.2), and that is right for the
+//! frozen where its branch forked (litany ARCH §2.2), and that is right for the
 //! agent's own structure — but this is the *operator's* policy, and revocation
 //! that only bound conversations started afterwards would not be revocation. So
 //! the read is `config/default:capability.yaml` at its head, on every consult.

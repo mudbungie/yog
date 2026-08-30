@@ -3,7 +3,7 @@
 //! Tests are split by concern: [`fixture`] owns the workspace skeleton and its
 //! config lineage (its one `git` fork site lives in [`git`]), [`agent_fixture`]
 //! everything keyed to an agent id (branches, the `name` blob, the
-//! `refs/lernie/*` marks, descent forks) and
+//! `refs/litany/*` marks, descent forks) and
 //! [`disk_fixture`] the ones writing plain files git never sees, [`unit`]
 //! drives the pure-function layer (detection,
 //! parsing, preview extraction), and [`repo`] covers the end-to-end

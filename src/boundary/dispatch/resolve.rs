@@ -33,12 +33,12 @@ use super::{Action, Deps};
 /// **And since bl-c9d2 a directory that is NOT a workspace does not refuse.**
 /// No `repo.git` means no root enumerates it, so it is inside nobody's scope
 /// and joining it escalates nothing — it is a birth that died between making
-/// the directory and making the marker (`lernie new` orders them that way),
+/// the directory and making the marker (`litany new` orders them that way),
 /// and refusing it wedged the name forever behind an `unknown workspace`
 /// sentence about addressing. The raise resolves to the path and the
 /// idempotent `EnsureWorkspace` decides: its create skips only on the marker,
-/// so the resume runs `lernie new` against the debris and whatever *that*
-/// says — success into an empty shell, or lernie's own destination refusal —
+/// so the resume runs `litany new` against the debris and whatever *that*
+/// says — success into an empty shell, or litany's own destination refusal —
 /// is an in-band, truthful sentence with a logged ops row, which the wedge
 /// never had.
 ///

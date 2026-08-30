@@ -55,11 +55,11 @@ fn s8_t3_yog_env_prints_the_world_and_yog_exec_runs_inside_it() {
         .collect();
     assert_eq!(
         keys,
-        ["LERNIE_HOME", "XDG_STATE_HOME", "PATH"],
+        ["LITANY_HOME", "XDG_STATE_HOME", "PATH"],
         "the world's own override set, in its own order"
     );
     assert!(
-        stdout.contains(&*world_root.join("lernie").to_string_lossy()),
+        stdout.contains(&*world_root.join("litany").to_string_lossy()),
         "the lines name THIS anchor's world: {stdout}"
     );
     assert!(stdout.contains(&*world_root.join("state").to_string_lossy()));
@@ -69,8 +69,8 @@ fn s8_t3_yog_env_prints_the_world_and_yog_exec_runs_inside_it() {
         stdout,
         hatch::env_script(&[
             (
-                "LERNIE_HOME".to_owned(),
-                world_root.join("lernie").to_string_lossy().into_owned()
+                "LITANY_HOME".to_owned(),
+                world_root.join("litany").to_string_lossy().into_owned()
             ),
             (
                 "XDG_STATE_HOME".to_owned(),
@@ -94,7 +94,7 @@ fn s8_t3_yog_env_prints_the_world_and_yog_exec_runs_inside_it() {
             &cwd.path().to_string_lossy(),
             "sh",
             "-c",
-            r#"pwd -P; printf '%s\n' "$LERNIE_HOME" "$XDG_STATE_HOME""#,
+            r#"pwd -P; printf '%s\n' "$LITANY_HOME" "$XDG_STATE_HOME""#,
         ],
     );
     assert_eq!(exit, 0, "stderr: {stderr}");
@@ -104,7 +104,7 @@ fn s8_t3_yog_env_prints_the_world_and_yog_exec_runs_inside_it() {
         std::fs::canonicalize(cwd.path()).unwrap().to_string_lossy(),
         "the child ran where it was told"
     );
-    assert_eq!(out[1], world_root.join("lernie").to_string_lossy());
+    assert_eq!(out[1], world_root.join("litany").to_string_lossy());
     assert_eq!(out[2], world_root.join("state").to_string_lossy());
 
     // --- The parse is total and refuses rather than guessing.

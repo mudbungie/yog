@@ -38,7 +38,7 @@ pub fn center(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     bz: &Cli,
 ) {
     let Some(ws) = model.focused_workspace() else {
@@ -116,9 +116,9 @@ pub fn center(
     // the §7.3 wound here rather than leaving a `0 attempts · 0 tok` step to
     // read as quiet (bl-7f2e). Since bl-55d8 it carries **the reason in
     // words** — the tail of that step's own `stderr.log`, which is the model
-    // adapter's last words (lernie ARCH §2.3) — rather than pointing at the
-    // activity trail, which for a turn continued by `lernie message` holds
-    // nothing at all: that driver is launched by lernie, so there is no §8.1
+    // adapter's last words (litany ARCH §2.3) — rather than pointing at the
+    // activity trail, which for a turn continued by `litany message` holds
+    // nothing at all: that driver is launched by litany, so there is no §8.1
     // per-spawn sink for the ops row to fold. The whole sentence is composed
     // in `steps_view::wound` so the words have one home (§11 badge-seat).
     //
@@ -142,7 +142,7 @@ pub fn center(
     // decline, a lease fault, a crashed launch — or died *inside* a tool
     // window, leaving `tool_use` blocks nobody answered. Either way the
     // wound above has no step to hang on and the ops trail says `exit 0`
-    // (the deposit succeeded; the failure was a grandchild lernie
+    // (the deposit succeeded; the failure was a grandchild litany
     // launched). The sentence carries the tail of
     // `steps/<agent>/driver.log`, the one copy of that driver's words, and
     // for the tool-window shape it names the one gesture that recovers it —
@@ -162,7 +162,7 @@ pub fn center(
         ui.colored_label(theme::ICHOR, steps.orphan.banner());
     }
     ui.separator();
-    super::inspector::tabs_and_content(ui, model, state, &ws, lernie);
+    super::inspector::tabs_and_content(ui, model, state, &ws, litany);
 }
 
 /// The conversation header (§11): the identity line — the display name, when it
@@ -190,7 +190,7 @@ fn header(
     ui.horizontal(|ui| {
         let heading = ui.heading(seat.name.clone());
         if seat.display_only {
-            // The headline is the legacy §3.3 rung — prose no lernie name
+            // The headline is the legacy §3.3 rung — prose no litany name
             // fact backs — so the pane says here what the list row hovers:
             // this name is not a message target (bl-8068).
             heading.on_hover_text(theme::NAME_DISPLAY_ONLY);

@@ -14,7 +14,7 @@
 use super::ShellState;
 use crate::AppModel;
 use crate::start::{self, StartInputs};
-use lernie::mint::SplitMix64;
+use litany::mint::SplitMix64;
 
 /// Post `prepare` (seed?/new?/create?/claim?/compose). Its **receipt** focuses
 /// the workspace it resolved (§3.4) and opens the composer on the goal it
@@ -39,7 +39,7 @@ pub(super) fn run_prepare(model: &mut AppModel, state: &mut ShellState, inputs: 
 }
 
 /// The editable goal composer (§8.1, §3.3): the greyed name prediction, the
-/// editable payload prefill, then Send fires `lernie prompt` detached (the
+/// editable payload prefill, then Send fires `litany prompt` detached (the
 /// conversation name minted at fire and passed via `--name`, `YOG_NAME`
 /// layered; the goal fires verbatim, bl-6920); Cancel drops
 /// the draft. The preview draws off the held seed and the target workspace's
@@ -142,7 +142,7 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
         send = ui
             .add_enabled(armed, egui::Button::new("Send (detached prompt)"))
             .on_hover_text(
-                "Launch the conversation: `lernie prompt`, detached, in the workspace \
+                "Launch the conversation: `litany prompt`, detached, in the workspace \
                  named above. It keeps running whatever yog does afterwards (Enter).",
             )
             .on_disabled_hover_text(refusal.unwrap_or_else(|| {
@@ -171,7 +171,7 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
     }
 }
 
-/// Fire the pending start goal as a detached `lernie prompt` (§8.1) — the Send
+/// Fire the pending start goal as a detached `litany prompt` (§8.1) — the Send
 /// button's body, shared with the §11 Enter binding. Nothing pending is a
 /// no-op.
 ///
@@ -184,7 +184,7 @@ pub fn composer(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState)
 ///
 /// **A blank goal is not a goal** ([`goal_present`](crate::actions::goal_present),
 /// bl-9acf): the pending start is *read* rather than taken here, so a blank
-/// draft stays standing with the cursor in it instead of spawning `lernie
+/// draft stays standing with the cursor in it instead of spawning `litany
 /// prompt` with the identity preamble and nothing after it. The guard lives
 /// here, not only on the button, because the §11 Enter binding is the other
 /// hand on the same trigger.

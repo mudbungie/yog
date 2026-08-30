@@ -25,12 +25,12 @@ spheres_are() { [ "$(find "$1/yog/workspaces" -maxdepth 1 -mindepth 1 -type d | 
 # in this harness all refuse an empty subject rather than assert on its shape
 # (bl-f16e).
 prompt_cwd_is_worktree() {
-  [ -n "$1" ] && grep '"lernie","prompt"' "$ops" 2>/dev/null | grep -q "\"cwd\":\"[^\"]*/$1\""
+  [ -n "$1" ] && grep '"litany","prompt"' "$ops" 2>/dev/null | grep -q "\"cwd\":\"[^\"]*/$1\""
 }
 
 # The world seed plus a real git project primed INTO the world carrying one
 # ready ball; prints the ball id. A **separate** world from `run` on purpose:
-# with zero workspaces the ball rung mints one (`lernie new` *then* `bl claim` —
+# with zero workspaces the ball rung mints one (`litany new` *then* `bl claim` —
 # the §8.1 order S3-T1 asserts) and the conversation list is empty, which is
 # what keeps the balls-section coordinates below deterministic. Reusing `run`'s
 # world would give a focused workspace (no mint) and rows above every click.
@@ -84,10 +84,10 @@ run_s3s4s6() {
     && pass "S3 ball-rung: claim --as workspace name" \
     || fail "S3 ball-rung: claim --as workspace name" "no clean claim row"
   "$drive" shot "$wid" "$out/s3-02-claimed-composer.png"
-  new_at=$(verb_line lernie new) ; claim_at=$(verb_line bl claim)
+  new_at=$(verb_line litany new) ; claim_at=$(verb_line bl claim)
   { [ -n "$claim_at" ] && [ -n "$new_at" ] && [ "$new_at" -lt "$claim_at" ]; } \
-    && pass "S3 ball-rung: lernie new then bl claim" \
-    || fail "S3 ball-rung: lernie new then bl claim" "order/rows missing"
+    && pass "S3 ball-rung: litany new then bl claim" \
+    || fail "S3 ball-rung: litany new then bl claim" "order/rows missing"
 
   # Return is §11's Send (detached prompt) for the editable-goal composer (§8.1).
   # The goal box is not auto-focused, so the key reaches the table rather than
@@ -156,7 +156,7 @@ run_s3s4s6() {
     || fail "S4 second conversation: a second root, same workspace" "agents=$(agent_count)"
   [ "$(verb_count new)" = 1 ] \
     && pass "S4 second conversation: no re-mint" \
-    || fail "S4 second conversation: no re-mint" "lernie new re-fired"
+    || fail "S4 second conversation: no re-mint" "litany new re-fired"
   sleep 5
   "$drive" shot "$wid" "$out/s4-06-second-conversation.png"
 

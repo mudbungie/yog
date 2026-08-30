@@ -4,7 +4,7 @@
 //! settle arms, the [`fault`](crate::model_pick::grammar::fault) sentence a
 //! dead role row paints, the row the settings seat wears
 //! ([`crate::model_pick::header`]), and the two write pipelines in `config_edit`
-//! (§9.2 provider gate + hash-guard + rename, §9.3 staged `lernie config`
+//! (§9.2 provider gate + hash-guard + rename, §9.3 staged `litany config`
 //! drive).
 //!
 //! This wires them to widgets: [`seat`] paints the row both surfaces carry,
@@ -89,7 +89,7 @@ pub(crate) fn conversation_scope(ws: &Path, frozen_oid: &str) -> String {
 /// The scope a pick claims when the picker was opened from the §11 birth-config
 /// block: the same branch write, said in the terms the birth surface has —
 /// there is no frozen conversation to exempt, and the workspace default moves
-/// (bl-824e; lernie 0.0.3 offers no per-conversation config).
+/// (bl-824e; litany offers no per-conversation config).
 pub(crate) fn birth_scope(ws: &Path) -> String {
     birth_sentence(&leaf_of(ws), BRANCH)
 }

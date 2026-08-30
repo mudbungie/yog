@@ -1,7 +1,7 @@
 //! **Running one invocation locally** (REMOTE §5.2, bl-024b): the far end of
 //! the routing leg, where a tool actually happens.
 //!
-//! It is lernie's own tool contract, unchanged (its ARCH §3.3): the
+//! It is litany's own tool contract, unchanged (its ARCH §3.3): the
 //! `tool_use.input` JSON on stdin, bytes on stdout, the exit code the verdict.
 //! So a tool host's executable is the same kind of program a local pool tool
 //! is, and the capture that comes back is the same three facts.

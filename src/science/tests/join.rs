@@ -12,7 +12,7 @@ use crate::workdiff::{Change, tests::Project};
 
 mod absences;
 
-/// One model turn as lernie commits it: canonical blocks wrapped in `content`.
+/// One model turn as litany commits it: canonical blocks wrapped in `content`.
 const SAID: &str = r#"{"content":[{"type":"thinking","thinking":"hmm"},
 {"type":"text","text":"done, tests green"}]}"#;
 /// One delivered message, envelope and all.
@@ -125,7 +125,7 @@ fn the_claim_attempt_projects_every_column() {
 }
 
 /// A compacted conversation's row says so (bl-fde5): the counter proves how
-/// many entries lernie's compactor deleted, and the projection states that
+/// many entries litany's compactor deleted, and the projection states that
 /// bound rather than letting a short verdict list read as the conversation's
 /// whole history.
 #[test]

@@ -10,10 +10,10 @@ use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Deps, Payload, prepare};
 use std::path::Path;
 
-fn deps(w: &World, bl: &Cli, lernie: &Cli) -> Deps {
+fn deps(w: &World, bl: &Cli, litany: &Cli) -> Deps {
     Deps {
         bl: bl.clone(),
-        lernie: lernie.clone(),
+        litany: litany.clone(),
         state_root: w.state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
     }
@@ -21,18 +21,18 @@ fn deps(w: &World, bl: &Cli, lernie: &Cli) -> Deps {
 
 /// Materialize a seeded home (`models.yaml`) so `prime` skips.
 fn mark_seeded(w: &World) {
-    let lernie = crate::world::layout_under(w.yog.path()).lernie;
-    std::fs::create_dir_all(&lernie).unwrap();
-    std::fs::write(lernie.join("models.yaml"), b"models: {}\n").unwrap();
+    let litany = crate::world::layout_under(w.yog.path()).litany;
+    std::fs::create_dir_all(&litany).unwrap();
+    std::fs::write(litany.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
 #[test]
 fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
     let w = World::new();
-    let lernie = w.lernie();
+    let litany = w.litany();
     let bl = Cli::new("/no/bl"); // no ball rung → bl never runs
     let inputs = w.inputs(crate::names::DEFAULT_NAME, Payload::Bare);
-    let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     assert_eq!(
         p.workspace, "home",
         "the bootstrap names without asking (§3.1)"
@@ -44,7 +44,7 @@ fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
     assert_eq!(
         w.ops()[1].argv[2],
         workspace_path(w.yog.path(), &p.workspace).to_string_lossy(),
-        "`lernie new` targets `<names-root>/home`"
+        "`litany new` targets `<names-root>/home`"
     );
 }
 
@@ -55,10 +55,10 @@ fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
 #[test]
 fn prepare_seeds_the_world_bl_shim_before_the_prompt() {
     let w = World::new();
-    let lernie = w.lernie();
+    let litany = w.litany();
     let bl = Cli::new("/some/bl");
     let inputs = w.inputs(crate::names::DEFAULT_NAME, Payload::Bare);
-    prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     let tools = crate::world::layout_under(w.yog.path()).tools;
     let shim = tools.join(crate::world::tools::BL);
     assert_eq!(
@@ -78,10 +78,10 @@ fn prepare_prompt_into_existing_skips_prime_new_and_mint() {
     mark_seeded(&w);
     let name = "cobalt-gecko";
     std::fs::create_dir_all(workspace_path(w.yog.path(), name).join("repo.git")).unwrap();
-    let lernie = Cli::new("/no/lernie"); // a spawn would surface as an error
+    let litany = Cli::new("/no/litany"); // a spawn would surface as an error
     let bl = Cli::new("/no/bl");
     let inputs = w.inputs(name, Payload::Bare);
-    let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     assert_eq!(p.workspace, name);
     assert!(
         w.ops().is_empty(),
@@ -92,11 +92,11 @@ fn prepare_prompt_into_existing_skips_prime_new_and_mint() {
 #[test]
 fn prepare_path_rung_composes_the_target_and_runs_no_bl() {
     let w = World::new();
-    let lernie = w.lernie();
+    let litany = w.litany();
     let bl = Cli::new("/no/bl");
     let dir = w.home.path().join("work");
     let inputs = w.inputs("cobalt-gecko", Payload::Path { dir: dir.clone() });
-    let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     assert_eq!(
         p.binding.as_ref(),
         Some(&dir),
@@ -111,12 +111,12 @@ fn prepare_ball_ready_claims_after_new() {
     let w = World::new();
     let canonical = work_worktree_path(w.balls.path(), w.project.path(), "bl-r", None);
     let bl = Cli::new(fake_bl(w.bin.path(), "x", &canonical));
-    let lernie = w.lernie();
+    let litany = w.litany();
     let inputs = w.inputs(
         "cobalt-gecko",
         ball(w.project.path(), "bl-r", JoinState::ReadyStartable),
     );
-    let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     assert_eq!(
         p.binding.as_ref(),
         Some(&canonical),
@@ -137,7 +137,7 @@ fn prepare_new_ball_creates_then_converges_to_one_claim() {
     let w = World::new();
     let canonical = work_worktree_path(w.balls.path(), w.project.path(), "bl-mint", None);
     let bl = Cli::new(fake_bl(w.bin.path(), "bl-mint", &canonical));
-    let lernie = w.lernie();
+    let litany = w.litany();
     let payload = Payload::Ball {
         project: crate::naming::leaf(w.project.path()),
         ball: BallSpec::New {
@@ -146,7 +146,7 @@ fn prepare_new_ball_creates_then_converges_to_one_claim() {
         },
     };
     let inputs = w.inputs("cobalt-gecko", payload);
-    let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     assert!(
         p.goal.contains("Ball bl-mint: Fresh"),
         "re-planned as existing"
@@ -162,12 +162,12 @@ fn prepare_bound_ball_resumes_without_a_claim_or_mint() {
     std::fs::create_dir_all(workspace_path(w.yog.path(), "cobalt-gecko").join("repo.git")).unwrap();
     // A bl that would *fail* if a claim ran — proof the claim is skipped.
     let bl = Cli::new(fake_fail(w.bin.path(), "bl", "should not run"));
-    let lernie = Cli::new("/no/lernie");
+    let litany = Cli::new("/no/litany");
     let inputs = w.inputs(
         "cobalt-gecko",
         ball(w.project.path(), "bl-c", JoinState::Bound),
     );
-    let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     assert_eq!(
         p.binding,
         Some(work_worktree_path(
@@ -182,15 +182,15 @@ fn prepare_bound_ball_resumes_without_a_claim_or_mint() {
 
 /// §8.1, bl-7fc8: the pinned template already grants the worker role the whole
 /// tool pool (`message` and `dispatch` included), so a freshly authored
-/// workspace needs no second commit — the exact bytes `lernie new` committed
+/// workspace needs no second commit — the exact bytes `litany new` committed
 /// are the exact bytes still on `config/default` once `prepare` returns.
 #[test]
 fn a_fresh_workspace_keeps_the_templates_grant_with_no_extra_commit() {
     let w = World::new();
-    let lernie = w.lernie();
+    let litany = w.litany();
     let bl = Cli::new("/no/bl");
     let inputs = w.inputs(crate::names::DEFAULT_NAME, Payload::Bare);
-    let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     // No `config` step: the template's grant is already complete.
     assert_eq!(w.verbs(), vec!["prime", "new"]);
     let committed = crate::config_edit::branch::config_file(
@@ -218,12 +218,12 @@ fn prepare_ball_aborts_before_any_bl_on_a_substrate_failure() {
     // no `bl create`/`bl claim` is recorded — the orphaned-claim wound is closed.
     let w = World::new();
     let bl = Cli::new(fake_bl(w.bin.path(), "x", Path::new("/wt")));
-    let lernie = Cli::new(fake_fail(w.bin.path(), "lernie", "no seed"));
+    let litany = Cli::new(fake_fail(w.bin.path(), "litany", "no seed"));
     let inputs = w.inputs(
         "cobalt-gecko",
         ball(w.project.path(), "bl-r", JoinState::ReadyStartable),
     );
-    assert!(prepare(&deps(&w, &bl, &lernie), &inputs, "TS").is_err());
+    assert!(prepare(&deps(&w, &bl, &litany), &inputs, "TS").is_err());
     assert_eq!(
         w.verbs(),
         vec!["prime"],

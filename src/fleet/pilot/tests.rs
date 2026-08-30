@@ -63,7 +63,7 @@ fn a_full_workspace_a_gated_ball_and_a_bound_ceiling_all_spawn_nothing() {
 #[test]
 fn a_ready_ball_in_another_project_is_not_this_loops_work() {
     let mut elsewhere = row("bl-2", Column::Ready, vec![]);
-    elsewhere.project = "lernie".to_owned();
+    elsewhere.project = "litany".to_owned();
     assert_eq!(
         plan(&snap(vec![]), &facts(3, 0, None), &[elsewhere], NOW),
         None

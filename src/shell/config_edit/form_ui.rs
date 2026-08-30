@@ -14,12 +14,12 @@ use crate::config_edit::form::{Control, Group, Row};
 use crate::theme;
 
 /// How tall a raw editor opens. One number for all three raw surfaces (§9.1
-/// brazen, §9.2 lernie-global, §9.3 config-branch): the fallback is one thing,
+/// brazen, §9.2 litany-global, §9.3 config-branch): the fallback is one thing,
 /// so it looks like one thing wherever it is folded open.
 const RAW_ROWS: usize = 6;
 
 /// Why a file has no controls, in the operator's words — the §9.5 fallback
-/// announcing itself. Two seats say it (the lernie-global pane and the
+/// announcing itself. Two seats say it (the litany-global pane and the
 /// config-branch pane) and it is one fact, so it is one sentence.
 pub(super) const NO_READER: &str =
     "yog has no reader for this file's shape — edit it as raw text below";

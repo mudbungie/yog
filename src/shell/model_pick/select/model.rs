@@ -97,7 +97,7 @@ pub(super) fn commit(
 /// The free-entry id field, visible only while [`CUSTOM_MODEL`] is the
 /// selection. It commits on **confirm** — Enter, or focus leaving the field
 /// with something in it — never per keystroke: writing on the keystroke would
-/// declare `g`, `gp`, `gpt`… each one a `models.yaml` entry and a `lernie
+/// declare `g`, `gp`, `gpt`… each one a `models.yaml` entry and a `litany
 /// config` commit. A confirmed id becomes the dropdown's selection, which
 /// retires the field and makes a second confirm of the same id impossible.
 fn custom_entry(ui: &mut egui::Ui, picker: &mut PickerState) -> Option<String> {

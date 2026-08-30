@@ -60,7 +60,7 @@ pub const OPS_TAIL: usize = 256;
 /// process **ran** — not a rendered failure ([`rows::OpRow::failed`]).
 pub const PIPED_UNOBSERVED: i32 = -1;
 
-/// `exit` sentinel for the detached `lernie prompt` (§8.1, §13.3): the row is
+/// `exit` sentinel for the detached `litany prompt` (§8.1, §13.3): the row is
 /// written the moment the child launches, while its status arrives arbitrarily
 /// later (the reaper thread takes it and discards it — bl-3016 — since
 /// `ops.jsonl` is append-only and never rewritten), so `-2` records **the

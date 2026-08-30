@@ -4,11 +4,11 @@
 //! An auth-shaped step failure has offered its remedy since bl-8e34: the
 //! sentence names the row and Login is one click away
 //! ([`crate::login::auth`]). A **config**-shaped one offered nothing. A
-//! dispatch through a provider row brazen does not resolve dies with lernie's
+//! dispatch through a provider row brazen does not resolve dies with litany's
 //! own words —
 //!
 //! ```text
-//! lernie prompt: provider error (Config): unknown provider `openai-chatgpt`
+//! litany prompt: provider error (Config): unknown provider `openai-chatgpt`
 //! ```
 //!
 //! — and the §7.3 banner painted exactly that, with a Dismiss beside it and no
@@ -21,9 +21,9 @@
 //! judging a workspace's providers against a wall that did not exist yet. This
 //! reads a failure that already happened, so there is nothing to pre-judge and
 //! nothing to resurrect: the row's existence is brazen's fact, resolved at call
-//! time (lernie ARCH §4.1), and this is that answer arriving.
+//! time (litany ARCH §4.1), and this is that answer arriving.
 //!
-//! **It classifies, it never re-words.** brazen's and lernie's sentences stay
+//! **It classifies, it never re-words.** brazen's and litany's sentences stay
 //! verbatim on the banner (INV-2 / §7.3); what is added is one sentence saying
 //! which file holds the fault, and the control that opens it.
 //!
@@ -32,7 +32,7 @@
 //! turn dies at brazen's encoder, not at its config resolution, and the whole
 //! `claude_code` decline family — no tools, no `tool_choice`, no multi-turn
 //! transcript, no non-text block — is stamped `ErrorKind::ParseInput` by one
-//! `reject` helper. So lernie wraps it `provider error (ParseInput) …`: no
+//! `reject` helper. So litany wraps it `provider error (ParseInput) …`: no
 //! config-kind word appears anywhere in it, and the banner offered Dismiss for a
 //! failure whose only remedy is a config file. The second way in
 //! ([`dialect_remedy`]) is therefore keyed on the dialect the decline NAMES, not
@@ -44,9 +44,9 @@
 /// remedy is a file, not a credential and not a retry.
 ///
 /// Deliberately narrow, the discipline [`looks_auth`](crate::login::auth::looks_auth)
-/// keeps: each token is a phrase brazen or lernie writes for a configuration
+/// keeps: each token is a phrase brazen or litany writes for a configuration
 /// fault and for nothing else — which is why they are not the whole class, and
-/// [`dialect_remedy`] is the other way in. `provider error (config)` is lernie's own
+/// [`dialect_remedy`] is the other way in. `provider error (config)` is litany's own
 /// wrapper around brazen's `ErrorKind::Config`; `unknown provider` is brazen's
 /// `ConfigError::UnknownProvider`, the one an operator actually meets. A bare
 /// `config` is **excluded** — it appears in every path yog prints.
@@ -71,7 +71,7 @@ fn marker_hit(text: &str) -> bool {
 /// its row's *dialect* cannot carry a yog turn at all (bl-5252).
 ///
 /// No marker can reach this family. brazen's four `claude_code` declines come
-/// from one `reject` helper stamping `ErrorKind::ParseInput`, so lernie wraps
+/// from one `reject` helper stamping `ErrorKind::ParseInput`, so litany wraps
 /// them `provider error (ParseInput) …` and the words above match nothing —
 /// while the only remedy there IS a config file. The judgement is not
 /// re-derived here either: `dialect_decline` reads the dialect out of the
@@ -115,7 +115,7 @@ pub fn config_remedy(text: &str) -> Option<String> {
 
 /// The provider row a config-kind failure names, when it names one: the word
 /// brazen quotes in backticks (`unknown provider `openai-chatgpt``), or the
-/// word lernie quotes after `on provider row` when it wrapped the decline with
+/// word litany quotes after `on provider row` when it wrapped the decline with
 /// the row it routed to. `None` when neither shape is present, or when the
 /// quote never closes — a half-parsed name is worse than none.
 fn failing_row(text: &str) -> Option<String> {

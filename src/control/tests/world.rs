@@ -136,7 +136,7 @@ impl std::io::Write for Closed {
     }
 }
 
-/// One request as lernie's seam serializes it.
+/// One request as litany's seam serializes it.
 pub(super) fn request(name: &str, input: serde_json::Value) -> String {
     json!({
         "id": "toolu_01",

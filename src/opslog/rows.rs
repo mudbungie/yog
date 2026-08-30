@@ -28,7 +28,7 @@ const SURFACE_STDERR_LINES: usize = 3;
 /// **Where** it cuts is [`crate::elide::middle`]'s rule, not this file's
 /// (bl-3aa1). The cut used to keep the head, which for an `argv` is the end
 /// that does not distinguish it: every row opened
-/// `lernie <verb> … /home/<user>/.cache/…/data/yog/` — over half the row,
+/// `litany <verb> … /home/<user>/.cache/…/data/yog/` — over half the row,
 /// identical on every line — and the workspace leaf and agent id that told two
 /// operations apart were exactly what fell off the end. A column of different
 /// ops scanned as one repeated string.

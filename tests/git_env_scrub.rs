@@ -3,10 +3,10 @@
 //! can never be re-aimed at the repo a hook is committing to.
 //!
 //! bl-0dff scrubbed yog's *own* `git` forks. That left the larger half open:
-//! `bl`, `lernie`, an `$EDITOR` shim and the suite's fake substrate scripts all
+//! `bl`, `litany`, an `$EDITOR` shim and the suite's fake substrate scripts all
 //! fork `git` themselves, and they inherit whatever yog hands them. Running the
 //! suite from `.githooks/pre-commit` (where `git` exports `GIT_DIR` and
-//! `GIT_INDEX_FILE`) therefore let the fake `lernie new` arm's
+//! `GIT_INDEX_FILE`) therefore let the fake `litany new` arm's
 //! `git commit -m 'config: init [config/default]'` land on the **outer work
 //! branch**, replacing its tree — observed, not theorized.
 //!

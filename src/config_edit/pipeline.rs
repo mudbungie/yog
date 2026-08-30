@@ -2,7 +2,7 @@
 //! truth for how an in-RAM draft reaches disk without a torn write or a silent
 //! last-writer-wins over a concurrent edit.
 //!
-//! Every editor (brazen §9.1, lernie-global §9.2, config branches §9.3) loads a
+//! Every editor (brazen §9.1, litany-global §9.2, config branches §9.3) loads a
 //! file into a RAM draft, edits it, then Applies through one discipline: stage
 //! the draft to a temp *in the destination's own directory* (so committing is
 //! an atomic same-dir rename), optionally let the caller inspect the temp (the
@@ -60,7 +60,7 @@ pub(crate) fn load_snapshot(
 /// blind LWW §9 rejects.
 ///
 /// An absent snapshot (`None`) loaded as empty text, so an empty draft is
-/// pristine there — and a [`seeded`](super::lernie_global::Editor::seeded)
+/// pristine there — and a [`seeded`](super::litany_global::Editor::seeded)
 /// new-file draft is not, which is right: its text was authored, never read.
 pub(crate) fn is_pristine(draft: &str, loaded: Option<u64>) -> bool {
     match loaded {

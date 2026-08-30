@@ -144,7 +144,7 @@ fn the_ops_surface_says_how_stale_the_rendered_derivation_is() {
 fn a_conversation_whose_descent_grows_is_named_on_the_ops_surface() {
     // The storm signal (bl-ee0a): 227 branches under one conversation used to
     // render as yog being slow. Now the sweep that finds the growth says whose
-    // it is, which points the operator at lernie in one glance.
+    // it is, which points the operator at litany in one glance.
     let h = Harness::new();
     let (clock, mut model) = h.model();
     assert_eq!(

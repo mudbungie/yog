@@ -3,18 +3,18 @@
 //! the §7.3 banners quote.
 //!
 //! The row set is **derived, not declared** (bl-83d6). It used to be a fixed
-//! table of the five JSON records lernie contracts to write, which is why the
+//! table of the five JSON records litany contracts to write, which is why the
 //! whole of a long `stderr.log` was unreadable in-window: the only view of it
 //! was the wound banner's tail, three lines of the file's last 4 KiB, with the
 //! rest reachable only by leaving the window. The two capture logs are now
 //! seats of their own, and their presence is read off the disk rather than
 //! asserted here:
 //!
-//! - **The five JSON records are the step's contract.** lernie writes them, so
+//! - **The five JSON records are the step's contract.** litany writes them, so
 //!   each keeps its seat unconditionally and an absent one paints "(absent)" —
 //!   the *fact* that a record the step should hold is missing is worth a seat.
 //! - **A log is evidence, and it only exists when something went wrong.**
-//!   `stderr.log` is *"empty on an ordinary run"* (lernie ARCH §2.3), so a
+//!   `stderr.log` is *"empty on an ordinary run"* (litany ARCH §2.3), so a
 //!   permanent seat for it would be a dead row on every healthy step in the
 //!   tree. It is offered exactly when the file has bytes — the presence rule is
 //!   [`super::detail`]'s single read of it, never a second stat here.
@@ -32,12 +32,12 @@ use super::{StepDetail, StepTab};
 /// label's idiom (bl-2d87, bl-3ffc), one home for all three.
 pub(crate) type Record = (StepTab, &'static str, &'static str);
 
-/// The adapter subprocess's captured stderr, per step (lernie ARCH §2.3). One
+/// The adapter subprocess's captured stderr, per step (litany ARCH §2.3). One
 /// home for the name: the §7.3 wound quotes this file's tail in its banner and
 /// the picker seats the whole of it, and two spellings of one file name drift.
 pub(crate) const STDERR_FILE: &str = "stderr.log";
 
-/// Where lernie binds a launched driver's stderr (ARCH §2.11; lernie bl-55f9):
+/// Where litany binds a launched driver's stderr (ARCH §2.11; litany bl-55f9):
 /// beside the step dirs, one per agent, append-only across launches. The
 /// orphaned-mail banner quotes its tail; the picker seats the whole of it.
 pub(crate) const DRIVER_LOG_FILE: &str = "driver.log";

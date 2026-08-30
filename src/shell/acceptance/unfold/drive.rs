@@ -82,8 +82,8 @@ fn clicking_the_field_unfolds_the_row_and_folds_it_again_without_selecting_it() 
 #[test]
 fn the_fields_hover_states_both_numbers_and_the_keys_that_press_it() {
     let mut world = super::nested_world();
-    let (lernie, bl, bz) = (
-        crate::cli_outbound::Cli::new("/yog-absent-lernie"),
+    let (litany, bl, bz) = (
+        crate::cli_outbound::Cli::new("/yog-absent-litany"),
         crate::cli_outbound::Cli::new("/yog-absent-bl"),
         crate::cli_outbound::Cli::new("/yog-absent-bz"),
     );
@@ -94,7 +94,7 @@ fn the_fields_hover_states_both_numbers_and_the_keys_that_press_it() {
     ctx.memory_mut(|m| m.set_everything_is_visible(true));
     let frame = |world: &mut World| {
         let out = ctx.run(super::super::input(), |ctx| {
-            super::super::super::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            super::super::super::render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         });
         crate::paint_probe::text_of(&out)
     };

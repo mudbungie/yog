@@ -19,7 +19,7 @@ fn s3_t5_zero_projects_carries_the_yog_exec_bl_prime_hint() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         // The clones root is absent ⇒ `projects::enumerate` finds nothing ⇒ zero
         // projects; the injected `bl` is never consulted.

@@ -80,7 +80,7 @@ pub const STANDING: &[HelpRow] = &[
                  else); `models`, `cadence` and a `workflow` are refused if they name a \
                  provider row brazen does not have; a lineage (`branch` advances one, `fork` \
                  starts one from another, `orphan` starts a fresh one) is committed by \
-                 `lernie config` on the seat's workspace. The text is everything \
+                 `litany config` on the seat's workspace. The text is everything \
                  after the destination's words, verbatim — whitespace is part of a config file. \
                  With nothing after the destination, reads its current bytes instead — a file \
                  not there yet answers empty text, a lineage answers what its tip holds at that \
@@ -104,7 +104,7 @@ pub const STANDING: &[HelpRow] = &[
         usage: "/model <role> <provider> <model-id>",
         summary: "give a role this model, on the focused workspace's config lineage",
         detail: "Assigns a model to a role for the whole focused workspace: declares the model \
-                 in lernie's global models.yaml if it is not there yet, then rewrites \
+                 in litany's global models.yaml if it is not there yet, then rewrites \
                  providers.yaml on the workspace's default config lineage. Both halves or \
                  neither — a provider row brazen does not have is refused before anything is \
                  written. Conversations already running keep the policy they were born on; the \
@@ -140,7 +140,7 @@ pub const STANDING: &[HelpRow] = &[
                  passed it. The answer is scoped to the exact call that is held, which is read \
                  from the conversation's own hold mark, so nothing is typed and nothing can be \
                  spent by a different call. Passing or refusing then drives the conversation on \
-                 (`lernie advance`), which is what actually lifts the hold: the control is asked \
+                 (`litany advance`), which is what actually lifts the hold: the control is asked \
                  again and now finds your answer. Nothing here stops the agent. Refuses when \
                  nothing is held there.",
     },

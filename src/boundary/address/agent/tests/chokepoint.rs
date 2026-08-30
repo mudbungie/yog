@@ -34,7 +34,7 @@ fn world() -> (TempDir, PathBuf, Deps) {
     let deps = Deps {
         // Exits 0 on every platform the suite runs on: enough to prove which
         // argv a resolved gesture spawned without driving a conversation.
-        lernie: Cli::new("/usr/bin/true"),
+        litany: Cli::new("/usr/bin/true"),
         bl: Cli::new("/no/such/bl"),
         state_root: dir.path().join("state"),
         home: dir.path().join("home"),

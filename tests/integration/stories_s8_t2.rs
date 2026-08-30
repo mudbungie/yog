@@ -53,24 +53,24 @@ fn s8_t2_one_world_cli_nests_every_verb_it_spawns() {
     // Re-point the two nesting vars at this test's own anchor; PATH's prepend
     // is asserted by S8-T1 and left as composed.
     for (key, value) in &mut overrides {
-        if key == "LERNIE_HOME" {
-            *value = layout.lernie.to_string_lossy().into_owned();
+        if key == "LITANY_HOME" {
+            *value = layout.litany.to_string_lossy().into_owned();
         } else if key == "XDG_STATE_HOME" {
             *value = layout.state.to_string_lossy().into_owned();
         }
     }
 
     let canonical = work_worktree_path(balls.path(), project.path(), "bl-7", None);
-    let lernie_rec = Recorder::new(bin.path(), "lernie").authoring_workspaces();
+    let litany_rec = Recorder::new(bin.path(), "litany").authoring_workspaces();
     let bl_rec = Recorder::new(bin.path(), "bl").on("claim", &canonical.to_string_lossy(), 0);
     // The ONE construction point. Every verb below takes these by reference.
-    let lernie = Cli::new(lernie_rec.path()).with_env(overrides.clone());
+    let litany = Cli::new(litany_rec.path()).with_env(overrides.clone());
     let bl = Cli::new(bl_rec.path()).with_env(overrides.clone());
 
     let workspace = workspace_path(yog.path(), "cobalt-gecko");
     let deps = Deps {
         bl: bl.clone(),
-        lernie: lernie.clone(),
+        litany: litany.clone(),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
     };
@@ -93,13 +93,13 @@ fn s8_t2_one_world_cli_nests_every_verb_it_spawns() {
         conversation_names: Vec::new(),
     };
 
-    // --- The start steps (lernie prime, lernie new, bl claim).
+    // --- The start steps (litany prime, litany new, bl claim).
     start::prepare(&deps, &inputs, "T0").unwrap();
     // --- A per-agent verb, through the same `Cli`, bound to the workspace it is
     // about (§8.2, bl-bf79) — the binding LAYERS onto the world set, so these
     // spawns must show both nestings and the wall.
     let world_env = world::compose(&Env::from_env());
-    let bound = verbs::Bound::at(&lernie, &world_env, &workspace);
+    let bound = verbs::Bound::at(&litany, &world_env, &workspace);
     verbs::scan(&bound, state.path(), "T1").unwrap();
     verbs::message(&bound, state.path(), "T2", "c-001", "hello").unwrap();
     // --- And a `bl` verb that is not part of a start at all.
@@ -115,7 +115,7 @@ fn s8_t2_one_world_cli_nests_every_verb_it_spawns() {
 
     // Every recorded spawn — whichever binary, whichever verb — observed the
     // world's nesting set. Not "the ones we remembered to check": all of them.
-    let mut spawns = lernie_rec.invocations();
+    let mut spawns = litany_rec.invocations();
     spawns.extend(bl_rec.invocations());
     assert!(
         spawns.len() >= 6,
@@ -123,7 +123,7 @@ fn s8_t2_one_world_cli_nests_every_verb_it_spawns() {
         spawns.len()
     );
     for inv in &spawns {
-        nests(inv, "LERNIE_HOME", &layout.lernie);
+        nests(inv, "LITANY_HOME", &layout.litany);
         nests(inv, "XDG_STATE_HOME", &layout.state);
     }
 
@@ -135,7 +135,7 @@ fn s8_t2_one_world_cli_nests_every_verb_it_spawns() {
     // dies "no workspace in this environment", which is a spawn that reached the
     // wire and produced nothing — a failure a `YOG_NAME`-only assertion missed
     // for as long as this test has existed.
-    let named = lernie_rec
+    let named = litany_rec
         .invocations()
         .into_iter()
         .find(|i| i.env.contains_key("YOG_NAME"))
@@ -144,7 +144,7 @@ fn s8_t2_one_world_cli_nests_every_verb_it_spawns() {
         named.env.get("YOG_NAME").map(String::as_str),
         Some("cobalt-gecko")
     );
-    assert!(named.env.contains_key("LERNIE_HOME"), "and still nests");
+    assert!(named.env.contains_key("LITANY_HOME"), "and still nests");
     nests(
         &named,
         "YOG_WALL",

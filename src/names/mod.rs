@@ -9,10 +9,10 @@
 //! leaves and foreign leaves stay lawful names.
 //!
 //! **A conversation name is minted, and the mint is not here** (§3.3, bl-aca4
-//! consumed at bl-cd38): its one home is lernie, beside the
-//! `require_available` uniqueness check it races, because *every* lernie
+//! consumed at bl-cd38): its one home is litany, beside the
+//! `require_available` uniqueness check it races, because *every* litany
 //! creation path mints on omission and none of them pass through yog. Yog is a
-//! consumer — [`lernie::mint`]'s `mint` over the crate's `Rng`/`SplitMix64`,
+//! consumer — [`litany::mint`]'s `mint` over the crate's `Rng`/`SplitMix64`,
 //! drawn at preview and again at fire so the two cannot drift into two lists.
 //! Yog's own wordlist and draw are deleted, not bypassed.
 

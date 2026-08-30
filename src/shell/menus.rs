@@ -57,13 +57,13 @@ pub(super) fn attach(
     target: &Target,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
 ) {
     let entries = menu::entries(seat);
     if entries.is_empty() {
         return;
     }
-    response.context_menu(|ui| paint(ui, &entries, target, model, state, lernie));
+    response.context_menu(|ui| paint(ui, &entries, target, model, state, litany));
 }
 
 /// Render the roster: one button per entry (§11 — the roster is flat).
@@ -73,7 +73,7 @@ fn paint(
     target: &Target,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
 ) {
     for entry in entries {
         // §11 discoverability: an accelerator says what it accelerates, and the
@@ -82,7 +82,7 @@ fn paint(
         // rather than written a second time here.
         let hint = accelerates(&entry.carrier);
         if ui.button(&entry.label).on_hover_text(hint).clicked() {
-            fire(&entry.verb, target, model, state, lernie);
+            fire(&entry.verb, target, model, state, litany);
             ui.close_menu();
         }
     }
@@ -101,7 +101,7 @@ fn accelerates(carrier: &str) -> String {
 /// One menu verb's effect — the same call its visible carrier makes, never a
 /// second implementation (the doctrine's teeth: delete every context menu and
 /// the UI loses clicks, never capabilities).
-fn fire(verb: &Verb, target: &Target, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
+fn fire(verb: &Verb, target: &Target, model: &mut AppModel, state: &mut ShellState, litany: &Cli) {
     match (verb, target) {
         (Verb::DeleteWorkspace, Target::Tab(tab)) => super::delete::open(model, state, &tab.name),
         (Verb::Unpin, Target::Tab(tab)) => model.toggle_pin(&tab.name),
@@ -112,7 +112,7 @@ fn fire(verb: &Verb, target: &Target, model: &mut AppModel, state: &mut ShellSta
             super::dispatch::scan_ws(model, ws);
         }
         (Verb::DeleteAgent, Target::Conversation { ws, agent }) => {
-            super::delete_agent::open(state, lernie, ws, agent);
+            super::delete_agent::open(state, litany, ws, agent);
         }
         (Verb::Assign(to), Target::Ball(ball)) => {
             super::ball_bar::assign_ball(model, &ball.project, &ball.id, to);

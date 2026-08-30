@@ -1,7 +1,7 @@
 # yog — Agent Operating Guide
 
 You are working in **yog**, a single published binary crate: an egui desktop
-window that drives `lernie` loops over `balls` tasks. Two authorities govern
+window that drives `litany` loops over `balls` tasks. Two authorities govern
 your work and they do not overlap:
 
 - **`docs/DESIGN.md` is the architecture authority** — what yog *is*, its
@@ -12,9 +12,9 @@ your work and they do not overlap:
 - **This file is the code-style authority** — the machine-enforced rules below
   and the repo discipline that surrounds them.
 
-yog composes a **nested world** (DESIGN §16): it overrides `LERNIE_HOME` and
+yog composes a **nested world** (DESIGN §16): it overrides `LITANY_HOME` and
 `XDG_STATE_HOME` under `$XDG_DATA_HOME/yog/world` and hands that env to every
-child it spawns, so yog's `bl`/`lernie` substrate never collides with the
+child it spawns, so yog's `bl`/`litany` substrate never collides with the
 user's ambient tools (brazen's config/credentials/cache resolve **per
 workspace** since the blast-radius ruling — nothing brazen-shaped
 stays ambient, §16.2). If you touch spawn paths, env folds (`src/xdg`), or
@@ -50,7 +50,7 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    every `unsafe` to `src/cli_outbound/sys.rs`. **Four raw process effects live
    there**, all irreducible and none wrapped safely by std: the SIGTERM in
    `Stream`'s drop; `set_env` — the process-env fold a §16.7 substrate arm
-   stands in, because the linked balls/lernie read `getenv` themselves and spawn
+   stands in, because the linked balls/litany read `getenv` themselves and spawn
    children that do too, so no injected `Env` can reach them (DESIGN §16.2's
    value-and-place ruling, bl-81c9); `term_disposition`, the `SIGTERM`
    **catch** both engine faces install (DESIGN §8.5, bl-269a) — under the
@@ -123,7 +123,7 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    restated here**, an entry that stops matching being a warning telling you to
    drop it. **Zero new dependencies without explicit user approval.**
    Sources are **registry-only, with no exception in force**: since
-   bl-89a4 all three embedded substrate crates (`balls`, `brazen`, `lernie`)
+   bl-89a4 all three embedded substrate crates (`balls`, `brazen`, `litany`)
    are plain crates.io pins — **`Cargo.toml` is the pin authority and no
    version is restated here**, the restatement having gone stale once already —
    `deny.toml` has no `allow-git` list, and `make publish` works. The phase-2
@@ -238,7 +238,7 @@ demotion removes an internal API from the boundary's obligations. Reach for
   `-C <repo>` and `current_dir` — so a child that inherits them forks its *own*
   `git` against the hook's repo. bl-0dff closed that for yog's direct `git`
   forks; bl-916a moved the scrub to the **spawn boundary**, where one
-  `env_remove` clears the whole descendant process tree (`bl`, `lernie`, `bz`,
+  `env_remove` clears the whole descendant process tree (`bl`, `litany`, `bz`,
   an `$EDITOR` shim, the suite's fake substrate scripts). A bare `Command::new`
   outside `src/git_env.rs` is an error — `rules/no-bare-command.yml`. **So is a
   bare fork** (bl-6397): `git_env::{spawn, output, status}` is the crate's one
@@ -261,7 +261,7 @@ demotion removes an internal API from the boundary's obligations. Reach for
   `Command::new` added under `tests/` is on you; and a test binary that drives
   the embedded substrate **in-process** (`multiplex::dispatch`) must scrub its
   own process env from `git_env::INHERITED`, as `tests/multiplex_bl.rs` and
-  `tests/multiplex_lernie.rs` do — no spawn boundary exists to do it for them.
+  `tests/multiplex_litany.rs` do — no spawn boundary exists to do it for them.
 - **300-line hard cap on every source file, inline tests included.** Docs and
   config (`.md`/`.toml`/`.yml`/`.json`/lock, `Makefile`, `LICENSE`) are exempt.
   Anything projected ≥200 is pre-split at design time (DESIGN §12), not at the

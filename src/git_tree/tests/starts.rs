@@ -5,11 +5,11 @@
 //! both are gathered at snapshot time — a unit test of the readers alone would
 //! not show that the render path never stats.
 //!
-//! Why these files and not the tip commit, verified against the pinned lernie
+//! Why these files and not the tip commit, verified against the pinned litany
 //! (`=0.0.3`, `src/prompt/dispatch`): both drivers — `run_exchange`'s loop and
-//! the `lernie advance` hop — land `request.json`, then take the timestamp they
+//! the `litany advance` hop — land `request.json`, then take the timestamp they
 //! will later write as `meta.json`'s `started_at`, then invoke the adapter. The
-//! stamp and lernie's own notion of the step's start are therefore the same
+//! stamp and litany's own notion of the step's start are therefore the same
 //! instant, and `meta.json` itself is useless here because it lands only *after*
 //! the call returns. The executor does the same for a tool: `input.json` is
 //! written atomically, then `started_at` is taken, then the tool is spawned.

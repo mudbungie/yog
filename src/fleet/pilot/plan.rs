@@ -77,7 +77,7 @@ fn stillborn(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow]) -> Option<Move> 
 }
 
 /// Whether the driver the loop handed off at `ts` in `ws` died there. The join
-/// is exact and needs no field of its own: the detached `lernie prompt` row and
+/// is exact and needs no field of its own: the detached `litany prompt` row and
 /// the loop's own spawn row are written inside one tick, from one stamp, with
 /// the workspace as both their `cwd` (§4.2).
 fn died(snap: &Snapshot, ws: &str, ts: i64) -> bool {

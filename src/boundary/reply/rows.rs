@@ -75,10 +75,10 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
     map.insert("root_id".to_owned(), json!(row.root_id));
     map.insert("display".to_owned(), json!(row.display_name()));
     // `name` is the **addressable** name (bl-8068): a peer reading this row
-    // uses it as a `message` target, and lernie resolves by exact id else
+    // uses it as a `message` target, and litany resolves by exact id else
     // unique *stored* name. A legacy-rung title is goal-stamp prose no stored
     // fact backs, so it is withheld here rather than handed over as a target
-    // lernie will refuse — `display` above still carries the §3.3 ladder's
+    // litany will refuse — `display` above still carries the §3.3 ladder's
     // answer, and `root_id` is the address that always works.
     if let Some(name) = row.name.as_ref().filter(|_| !row.name_display_only) {
         map.insert("name".to_owned(), json!(name));

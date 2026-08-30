@@ -1,5 +1,5 @@
 //! Tests for the config-branch edit half (§9.3): the pure argv/env
-//! composition and the `lernie config` drive — a recorder-script fake proving
+//! composition and the `litany config` drive — a recorder-script fake proving
 //! `EDITOR`/`YOG_EDIT_SRC`/argv land and the outcome reaches `ops.jsonl`.
 //!
 //! The staging dir and its §5.2 sweep are `super::staging`'s own corpus.
@@ -17,7 +17,7 @@ fn editor_env_value_appends_flag_and_quotes_the_binary() {
         editor_env_value(Path::new("/opt/yog")),
         "'/opt/yog' --editor-apply"
     );
-    // A spaced path stays one argv element through lernie's word-splitting.
+    // A spaced path stays one argv element through litany's word-splitting.
     assert_eq!(
         editor_env_value(Path::new("/home/x y/yog")),
         "'/home/x y/yog' --editor-apply"
@@ -66,10 +66,10 @@ fn compose_orphan_adds_orphan_flag() {
     assert_eq!(p.argv(), ["config", "/ws", "default", "--orphan"]);
 }
 
-/// A recorder `lernie` that logs `EDITOR`/`YOG_EDIT_SRC`/argv to `log`,
+/// A recorder `litany` that logs `EDITOR`/`YOG_EDIT_SRC`/argv to `log`,
 /// prints canned stdout/stderr, and exits `code`. Caller holds `SPAWN_LOCK`.
 fn recorder(dir: &Path, log: &Path, code: i32) -> PathBuf {
-    let path = dir.join("lernie");
+    let path = dir.join("litany");
     let body = format!(
         "#!/bin/sh\n{{ printf 'EDITOR=%s\\n' \"$EDITOR\"; \
          printf 'SRC=%s\\n' \"$YOG_EDIT_SRC\"; \
@@ -131,7 +131,7 @@ fn drive_records_spawn_failure_as_a_negative_exit() {
     let state = dir.path().join("state");
     let p = plan(&EditOrigin::Advance);
     let entry = drive(
-        &Cli::new("/definitely/not/a/real/lernie-xyz"),
+        &Cli::new("/definitely/not/a/real/litany-xyz"),
         Path::new("/ws"),
         &p,
         "T0",
@@ -145,10 +145,10 @@ fn drive_records_spawn_failure_as_a_negative_exit() {
 
 #[test]
 fn drive_records_a_signal_death_as_a_negative_exit() {
-    // lernie killed mid-run exits by signal, not code: the outcome records
+    // litany killed mid-run exits by signal, not code: the outcome records
     // -1, not a spurious success.
     let dir = tempdir().unwrap();
-    let bin = dir.path().join("lernie");
+    let bin = dir.path().join("litany");
     fs::write(&bin, "#!/bin/sh\nkill -TERM $$\n").unwrap();
     fs::set_permissions(&bin, fs::Permissions::from_mode(0o755)).unwrap();
     let state = dir.path().join("state");

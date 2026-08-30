@@ -6,7 +6,7 @@
 //!
 //! ```text
 //! monitor:
-//!   /home/u/.local/share/yog/world/lernie/workspaces/otter:
+//!   /home/u/.local/share/yog/world/litany/workspaces/otter:
 //!     model: claude-haiku-4-5
 //!     prompt: monitor.md
 //! ```

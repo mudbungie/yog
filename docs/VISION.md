@@ -1,6 +1,6 @@
 # VISION — executing the task-first promise across the suite
 
-**Scope:** the four-crate suite — `balls`, `brazen`, `lernie`, `yog`.
+**Scope:** the four-crate suite — `balls`, `brazen`, `litany`, `yog`.
 **Authority:** this document owns cross-suite *direction*: which promises the
 suite is executing, which layer owns each one, and the acceptance stories that
 prove them. `docs/DESIGN.md` remains yog's architecture authority and each
@@ -21,7 +21,7 @@ supersedes G2/G3's survey truth); the project-delivery contract §4.10
 
 ## 1. The promise
 
-> yog takes balls and lernie and integrates them into an agentic workflow
+> yog takes balls and litany and integrates them into an agentic workflow
 > engine that treats the task, not the agent, as the principal unit of work.
 
 Unpacked, that is three claims, each with a reason:
@@ -39,7 +39,7 @@ Unpacked, that is three claims, each with a reason:
    skills, when to spawn, when to reap, what a token costs — lives in yog,
    where it is config, severable, and visible in one place.
 
-The third claim is also the standing self-criticism: lernie today mixes
+The third claim is also the standing self-criticism: litany today mixes
 primitives with usage of them, and the opinion embedded in it needs
 extracting. Section 6 carries the extraction ledger.
 
@@ -49,13 +49,13 @@ extracting. Section 6 carries the extraction ledger.
 |---|---|---|
 | **balls** | What is true about work: occupancy, blocker edges, worktree lifecycle, squash delivery, the plugin seam | Messaging, liveness, identity minting, residency, quality opinions |
 | **brazen** | The wire: canonical request in, `Event` stream out, credentials, token counters | Pricing, model catalogs beyond routing, tool execution, state |
-| **lernie** | The agent: branch-per-dispatch, transcript-as-context, the inbox front door, the exec baton, locks, sweep | Schedulers/clocks, model catalogs, workflow *content*, UI |
+| **litany** | The agent: branch-per-dispatch, transcript-as-context, the inbox front door, the exec baton, locks, sweep | Schedulers/clocks, model catalogs, workflow *content*, UI |
 | **yog** | Every opinion: the clock, spawn policy, model/skill selection, spend, the fleet loop, the whole operator surface | A second implementation of anything below it |
 
 Each lower crate has already ruled its side of this law in its own docs:
 balls assigns signaling residency to "the party that already has it" (the
 harness), refuses a reaper verb, and outsources identity; brazen ships four
-`Usage` counters and no price; lernie ships no scheduler and runs `scan` only
+`Usage` counters and no price; litany ships no scheduler and runs `scan` only
 by hand or cron. The law is not aspiration — it is the recorded consensus of
 three repos. What remains is to *finish obeying it* (§6) and to build the yog
 side that the abstinence below was reserving room for (§4, §5).
@@ -68,18 +68,18 @@ the survey found on disk.
 | # | Promise | Truth today | Gap owner |
 |---|---|---|---|
 | G1 | Task, not agent, as principal unit | The phrase appears nowhere in yog; DESIGN organizes by workspace, STORIES by conversation. Balls are start-affordances, not the spine | yog (§4.1, §5) |
-| G2 | "Running five versions of the same workflow and having a judge decide" | Survey truth ("**no CLI verb takes a ref** — `prompt` is `(repo, message)`, the only production `fork_point` caller is the verifier") is superseded: lernie bl-a693 shipped `--from <ref>` on `prompt`/`dispatch` (ARCH §2.3 shipped-state note; in the pin since 0.0.6). Remaining gap is the yog surface (V2) and, for fans that mutate project work, §4.10's attempt isolation | yog UI (§4.4, V2, §4.10) |
+| G2 | "Running five versions of the same workflow and having a judge decide" | Survey truth ("**no CLI verb takes a ref** — `prompt` is `(repo, message)`, the only production `fork_point` caller is the verifier") is superseded: litany bl-a693 shipped `--from <ref>` on `prompt`/`dispatch` (ARCH §2.3 shipped-state note; in the pin since 0.0.6). Remaining gap is the yog surface (V2) and, for fans that mutate project work, §4.10's attempt isolation | yog UI (§4.4, V2, §4.10) |
 | G3 | Baseline context, fork N variants off it | Survey truth ("`prompt` hardcodes `config/default`") is superseded by the same landing: `--config <name>` on `prompt`/`dispatch` (bl-a693, pinned 0.0.6). Remaining gap is the yog surface | yog UI (V2) |
-| G4 | Judge / consensus fan-in | Verifier gating runs end-to-end config-only; sibling results already arrive as N deposits. No synthesis primitive — and none needed: judging is a workflow shape (§4.4) | yog workflow + lernie exposure |
-| G5 | Spend attribution ("$3800/wk and no idea per what") | brazen counts tokens statelessly; lernie sums them into one budget scalar; balls tags every delivery `[bl-id]`; **nobody joins them and nothing prices them** | yog (§4.5) |
+| G4 | Judge / consensus fan-in | Verifier gating runs end-to-end config-only; sibling results already arrive as N deposits. No synthesis primitive — and none needed: judging is a workflow shape (§4.4) | yog workflow + litany exposure |
+| G5 | Spend attribution ("$3800/wk and no idea per what") | brazen counts tokens statelessly; litany sums them into one budget scalar; balls tags every delivery `[bl-id]`; **nobody joins them and nothing prices them** | yog (§4.5) |
 | G6 | Model by complexity heuristic, not tag map | **Half delivered (yog bl-380f, DESIGN §8.7).** The policy layer exists: a ball's tags select the `config/<name>` its drone is born on, so the model and the skill set are the fired lineage's and yog names neither. What is still missing is the **dataset** the vision wants the mapping tuned against — the estimate-outcome-spend triple — which is G5's join, not this row's mechanism | yog (§4.6) → G5 |
 | G7 | Bounded agents, no judging supervisor | bl-3381 as filed implements the *superseded* five-role fleet (long-lived shepherd/sensor) | yog (§4.1 adjudicates) |
 | G8 | Unified inbox — "a new prompt, a steer, a tool result, an inter-agent message… all a message in the inbox" | Delivered, with one deliberate refinement: prompts, steers, results, and peer messages all enter by the inbox front door; **tool results commit straight to the transcript** because self-output needs no on-ramp. The unification that holds is: *everything context-bearing is a committed transcript entry* | none — promise met, wording refined |
-| G9 | Push-not-poll agent wake-up | lernie's writer/driver totality delivers it in-process; balls' draft ruling: "a poke carries no truth… the poll loop is the correctness floor." yog's level-triggered loop is that floor made cheap | none — polling is the design, not a gap |
-| G10 | Agents address each other by name | lernie resolves only `agents/*` ids; display names are yog prose. Already ruled: lernie bl-c8ed (`--name` at creation, `message` resolves id-or-unique-name), yog bl-50f3/bl-08f2 consume it | in flight upstream |
-| G11 | Policy out of the primitives | lernie ships `models.yaml` (a model catalog, in git — bl-35e2 rules it out), budget numbers, an opinionated soul, and a hardcoded default config ref | lernie extraction (§6) |
+| G9 | Push-not-poll agent wake-up | litany's writer/driver totality delivers it in-process; balls' draft ruling: "a poke carries no truth… the poll loop is the correctness floor." yog's level-triggered loop is that floor made cheap | none — polling is the design, not a gap |
+| G10 | Agents address each other by name | litany resolves only `agents/*` ids; display names are yog prose. Already ruled: litany bl-c8ed (`--name` at creation, `message` resolves id-or-unique-name), yog bl-50f3/bl-08f2 consume it | in flight upstream |
+| G11 | Policy out of the primitives | litany ships `models.yaml` (a model catalog, in git — bl-35e2 rules it out), budget numbers, an opinionated soul, and a hardcoded default config ref | litany extraction (§6) |
 | G12 | An agent in yog can operate yog (§4.8) | The dispatch layer is already `pub` and driven headlessly by every story test; but there is no headless entrypoint, no parity enforcement, and the drive harness steers pixels | yog (§4.8, V5) |
-| G13 | Project work is one forkable, deliverable fact | **Ruled (§4.10, bl-2b8c); item 2 landed.** The target no longer rides goal prose — yog passes it typed as lernie's `--cwd` at fire (yog bl-6654 over lernie bl-d0b4) — but project edits still stay outside agent refs, child inheritance, bundle/replay, and comparison, so the rest of the chain stands: balls bl-a1a4 → bl-4eac → yog bl-8746 | §4.10's filed balls |
+| G13 | Project work is one forkable, deliverable fact | **Ruled (§4.10, bl-2b8c); item 2 landed.** The target no longer rides goal prose — yog passes it typed as litany's `--cwd` at fire (yog bl-6654 over litany bl-d0b4) — but project edits still stay outside agent refs, child inheritance, bundle/replay, and comparison, so the rest of the chain stands: balls bl-a1a4 → bl-4eac → yog bl-8746 | §4.10's filed balls |
 
 ## 4. The execution model
 
@@ -90,12 +90,12 @@ to a single task **deletes** the coordination machinery instead of improving
 it. An idle bounded agent is not ambiguous — it is either working or finished —
 so the role that existed to disambiguate idleness (the shepherd) is retired,
 not audited. Reaping becomes three timestamp/pid comparisons, which is also
-lernie's own convergent design (`scan` derives silent death from refs, locks,
+litany's own convergent design (`scan` derives silent death from refs, locks,
 and framing — "no status field anywhere"). Early closure, not runaway, is the
 failure to engineer against, and gates — not nudges — are the engineering.
 
 **bl-3381 is therefore re-scoped, not discarded.** Its recorded decisions
-stand: *yog becomes the clock*; cadence lives in yog; lernie stays
+stand: *yog becomes the clock*; cadence lives in yog; litany stays
 schedulerless. What changes is what the clock drives. The five-role cast maps
 onto the bounded model as follows:
 
@@ -145,13 +145,13 @@ The **agent-history** experimentation verbs have shipped (G2/G3, pinned
 0.0.6); the **project-work** promise is ruled, its binding and its frozen
 project instructions are built (§4.10 items 2 and 9, yog bl-6654 + bl-aa8b),
 and the attempt fan itself is not yet (§4.10 items 1, 3, 5–6). G13
-is the distinction the earliest version of this section missed: a lernie
+is the distinction the earliest version of this section missed: a litany
 sibling ref carries agent context/transcript, while a yog ball's code edits
 live in a separate balls worktree. Those refs are not candidate project
 branches and balls cannot squash one of them.
 
-- **Agent fork remains the ordinary fork with a ref argument** (lernie ARCH
-  §7.2, verbatim). The narrow upstream ask has landed (lernie bl-a693, ARCH
+- **Agent fork remains the ordinary fork with a ref argument** (litany ARCH
+  §7.2, verbatim). The narrow upstream ask has landed (litany bl-a693, ARCH
   §2.3 shipped-state note; pinned 0.0.6): `--from <ref>` on
   `prompt`/`dispatch`, plus the `--config` branch selector. An agent's
   history carries two distinct facts, never conflated: *context* is git
@@ -161,7 +161,7 @@ branches and balls cannot squash one of them.
   lawful comparison of model/config/goal outcomes. A fan whose candidates
   mutate project work additionally needs N isolated project attempts and a
   typed binding from each agent to one of them — §4.10 items 1–3; built by
-  balls bl-4eac and yog bl-8746 over lernie bl-d0b4.
+  balls bl-4eac and yog bl-8746 over litany bl-d0b4.
 - **A judge is still a dispatch, not a fan-in primitive.** It may compare
   terminal responses and agent refs now. A project diff is a pure git read
   once §4.10's pointer join lands; a synthesizer that writes project bytes is
@@ -182,7 +182,7 @@ visible, not make project work forkable.
 Cost per ball is now a *query* (bl-afc4), honoring single-source-of-truth:
 
 - brazen keeps counting tokens and never learns prices (its stated boundary).
-- lernie keeps committing usage into step records (already on disk, already
+- litany keeps committing usage into step records (already on disk, already
   folded by yog's budget inspector).
 - balls keeps tagging every delivery `[bl-id]` and stays metric-free — its own
   doc reserves exactly this seam: "a `*.post` plugin observes the lifecycle
@@ -204,13 +204,13 @@ estimate-outcome-spend triple (§4.5's join plus delivered/reverted facts) is
 the dataset that lets the mapping be tuned instead of vibed. Policy table,
 yog config, severable. No crate below yog ever names a model.
 
-**Shipped, and it is not a table** (yog bl-380f, DESIGN §8.7). A lernie config
+**Shipped, and it is not a table** (yog bl-380f, DESIGN §8.7). A litany config
 lineage already *is* the (model, skills) pair — `providers.yaml` names the
 worker role's provider and model, `descriptions/skills/**` is the skill set —
 so the policy needed no artifact of its own: **the lineage's existence is the
 policy**. A ball tagged `deep` is born on `config/deep` where the workspace has
 one; the first tag naming a lineage wins, an unmatched or untagged ball gets
-lernie's own default with no flag spelled, and severability is
+litany's own default with no flag spelled, and severability is
 `git branch -d config/<tag>` — removing a default deletes a ref and edits no
 code. §4.2's promise is met by the same mechanism, because skills and model
 ride one fork. The complexity estimate this section wants is then just another
@@ -222,7 +222,7 @@ Adopted from fleet-setup §6, which paid for its rules: coordinator-to-
 coordinator over a channel **both humans stand in**; one speaker per outward
 surface; sensors read-only with enumerated write prohibitions; findings travel
 with method and numbers. yog's part is rendering the channel and the sensor's
-relays as inbox facts — the mechanism is lernie messages plus whatever
+relays as inbox facts — the mechanism is litany messages plus whatever
 transport (Slack MCP today) the deployment chooses.
 
 ### 4.8 Every gesture is a verb — the headless invariant
@@ -232,7 +232,7 @@ headless mode — an agent in yog can operate yog.**
 
 The foundation already exists: yog's story tests "drive the dispatch layer —
 the same `pub` functions the shell's click-glue calls… never egui widgets,"
-and yog already multiplexes verb namespaces (`yog bl`, `yog lernie`, `yog
+and yog already multiplexes verb namespaces (`yog bl`, `yog litany`, `yog
 bz`). What this vision adds is the invariant that makes that foundation
 binding: **the GUI is one serialization of the dispatch surface; headless mode
 is another serialization of exactly the same surface** — brazen's lib↔CLI
@@ -301,13 +301,13 @@ The suite's own disciplines make the design nearly free:
   per-branch. The monitor quotes them verbatim; no extracted-intent store
   exists to drift (single source of truth). The concept's original three
   questions collapse to one classification.
-- **The live stream is already on disk.** lernie streams every model event
+- **The live stream is already on disk.** litany streams every model event
   into the step record as it arrives, and the committed transcript carries
   assistant text *and thinking blocks*; watching an agent is reading files
   yog already derives from (the in-flight strip, bl-905f). No wire tap, no
   new transport — disk is the bus.
 - **The verdict is replayable.** A check reads (goal, transcript window) from
-  the branch's read-state commit — lernie's own assembly-from-commit
+  the branch's read-state commit — litany's own assembly-from-commit
   discipline — so any verdict re-runs against the sha its ops row names. A
   verdict that cannot be reproduced cannot be tuned or tested.
 
@@ -330,13 +330,13 @@ severity the ladder config caps and whose harshest action (stop) is
 non-destructive.
 
 **A compacted record rides the window, summary and all** (the bl-fde5 ruling).
-lernie's compactor deletes message files and hands the agent `summary/NNN.md`
+litany's compactor deletes message files and hands the agent `summary/NNN.md`
 in their place (DESIGN §5.1 #12), so after a compaction the summary is part of
 what the agent reads on every step — and this section's premise is that the
 monitor reads what the agent read. The counterargument was folding non-agent
 words into the evidence: the compaction marker is machinery prose, neither the
 agent's output nor a principal's message. It loses, twice over. The summary is
-lernie's artifact the agent actually consumed, not yog's commentary — omitting
+litany's artifact the agent actually consumed, not yog's commentary — omitting
 it hands the judge a window with a hole exactly where the agent's context was
 rewritten, and the deleted span itself is unrecoverable, so the summary is the
 *only* witness left to what the early work was. And the injection surface does
@@ -353,7 +353,7 @@ wiring takes one of two shapes, and both spend only existing verbs:
 
 - **Direct** — a verdict mechanically fires one verb; yog executes a config
   row and decides nothing.
-- **Hooked** — a verdict dispatches a **responder**: an ordinary lernie
+- **Hooked** — a verdict dispatches a **responder**: an ordinary litany
   worker on an operator-named workflow, its goal carrying the flagged window,
   its granted tools yog's own boundary verbs through the world's tool shims.
   This is V5's promise cashed early — an agent operating yog drives the
@@ -366,26 +366,26 @@ wiring takes one of two shapes, and both spend only existing verbs:
   violation inside the monitor's own machinery. A responder granted only
   `flag` is a pure judge (§4.4 — a judge is a dispatch, not a primitive),
   its verdict typed by the tool's schema. yog names the workflow and the
-  grants; lernie runs the tools; no rung executor exists in yog.
+  grants; litany runs the tools; no rung executor exists in yog.
 
 | Verb | Mechanism | Notes |
 |---|---|---|
 | Flag | attention item + ops row; a boundary variant, so it is also grantable as a responder tool | the default floor twice over: tier-0's direct wiring writes it mechanically from the verdict, and it is the responder's minimum grant — the signal-out verb |
-| Notice | `message` — an inbox deposit quoting the goal and the divergence, delivered at the next step boundary | lernie's own front door; **reveals the monitor to the agent**, inviting in-context masking (the obfuscation result), so it is a deliberate wiring, never the default |
+| Notice | `message` — an inbox deposit quoting the goal and the divergence, delivered at the next step boundary | litany's own front door; **reveals the monitor to the agent**, inviting in-context masking (the obfuscation result), so it is a deliberate wiring, never the default |
 | Dispatch | the responder hook above, on a stronger model | the audit budget: deliberative response only on flags |
 | Revoke | `/revoke` — a boundary action writing the per-conversation capability floor (§4.11 item 7) | the fifth rung, landed bl-94b4: every class above read adjudicates to a hold, over the conversation and its whole descent, until `/restore`. Non-destructive like stop and *less* blunt — the drone keeps running and keeps reading, and each call it wants can still be walked through with `/answer pass` |
-| Stop | the existing stop verb | non-destructive by lernie's design — a stopped agent is a persisting branch (ARCH §2.9); the operator reviews, then resumes with a message or abandons |
+| Stop | the existing stop verb | non-destructive by litany's design — a stopped agent is a persisting branch (ARCH §2.9); the operator reviews, then resumes with a message or abandons |
 
 Responder verdicts weigh **actions over prose** — tool calls and worktree
 diffs are evidence; thinking is early warning that a monitored model can
 learn to launder.
 
-**The check never becomes a second lernie.** The anti-reinvention guardrail,
+**The check never becomes a second litany.** The anti-reinvention guardrail,
 stated as law: the tier-0 call has no tools, no retry machinery, and no
 transcript. Its retry is the level-trigger itself — a failed check leaves
 the last-checked sha behind the tip, so the next tick simply re-fires; its
 audit is the ops row; and any response requiring a decision is a dispatch.
-The moment the check wants a second lernie feature — a tool, a multi-step
+The moment the check wants a second litany feature — a tool, a multi-step
 chain, a memory — it has become an agent, and the design's answer already
 exists: dispatch one.
 
@@ -393,7 +393,7 @@ A fifth rung — **revoke tool auto-approval** — is ruled (§4.11 item 7,
 bl-0cea) and **landed** (bl-94b4, over bl-765d's policy surface): an
 alignment verdict becomes one input to the capability policy — a boundary
 action writing a per-conversation floor (every class above read adjudicates
-to hold) into the ops-row fold the capability control reads. No lernie-side
+to hold) into the ops-row fold the capability control reads. No litany-side
 approval seam needed filing: the tool-control seam had already shipped
 (§4.11 item 2). It is a **verb the operator may wire, never a behavior that
 switched on**: nothing fires it by default, because the monitor still ships
@@ -446,7 +446,7 @@ or **accepted** by ordinary source-to-target delivery. Acceptance advances
 the parent obligation's branch; it never closes that parent — the parent
 later delivers recursively through ordinary close. The layer law, applied:
 balls owns project refs, worktree lifecycle, delivery, and safe cleanup;
-lernie owns agent context/transcript and the attempt binding; yog owns N,
+litany owns agent context/transcript and the attempt binding; yog owns N,
 variants, comparison, accept/reject/rework policy, retention, and
 presentation.
 
@@ -464,12 +464,12 @@ presentation.
    checkout; a synthesizer that writes project bytes is itself an ordinary
    attempt on the same target as the candidates it merges.
 
-2. **The binding is typed and mechanical, never prose.** lernie's
-   working-directory mark (`refs/lernie/cwd/<agent-id>`, pinned 0.0.8 —
+2. **The binding is typed and mechanical, never prose.** litany's
+   working-directory mark (`refs/litany/cwd/<agent-id>`, pinned 0.0.8 —
    today written only by the model-driven `cd` tool, read by the executor at
    every tool spawn) becomes seedable at creation: a parameter on
    `prompt`/`dispatch`/the `dispatch` tool writes the mark before the first
-   step (lernie bl-d0b4). yog's fire passes the attempt worktree and the
+   step (litany bl-d0b4). yog's fire passes the attempt worktree and the
    goal-prose location preamble retires (yog bl-6654) — the goal keeps
    payload (ball title and body), never location. Validation lives where the
    binding is consumed: creation refuses a missing directory; an executor
@@ -499,7 +499,7 @@ presentation.
    crash recovery all join project state by resolving OIDs against the
    project repo; the project diff is a pure git read (`target..source`); a
    missing project repo renders as a named absence, never a guess; crash
-   recovery is balls' worktree convergence plus lernie's committed facts —
+   recovery is balls' worktree convergence plus litany's committed facts —
    nothing reconciles because nothing was duplicated.
 
 5. **One source-to-target delivery law** (bl-a1a4). The source owner
@@ -517,7 +517,7 @@ presentation.
 6. **N, candidates, and outcomes are yog policy over derived facts.** yog
    decides N and per-variant overrides at fire; comparison, selection,
    rejection, rework, and retention are boundary actions (§4.8) spending
-   existing verbs — deliver (balls), message/fork (lernie), cleanup (balls'
+   existing verbs — deliver (balls), message/fork (litany), cleanup (balls'
    separated worktree-release vs source-ref retention). There is no Adopt
    verb and no stored winner: the accepted candidate is the attempt whose
    delivery the target's history records (balls returns the exact
@@ -530,7 +530,7 @@ presentation.
    pins, governing config commit — model and skills ride it),
    base/source/target/delivered OIDs, terminal response, usage, wall time,
    project diff, verdicts (messages), and the accepted/rejected/reworked
-   outcome — all derived at read time from lernie step records, balls
+   outcome — all derived at read time from litany step records, balls
    delivery identities, and git ancestry. Nothing stored.
 
    **Landed** as `Query::Science` (yog DESIGN §3.9), with three corrections the
@@ -563,12 +563,12 @@ presentation.
    case of the same path.
 
 9. **Implementation and release sequence.**
-   - **Landed.** lernie: bl-d0b4 (binding parameter, validation, per-step OID) →
+   - **Landed.** litany: bl-d0b4 (binding parameter, validation, per-step OID) →
      publish → yog bl-6654 pins it, passes the binding typed, retires the
      prose channel → yog bl-aa8b freezes the binding's project instructions
      as pinned documents on the dispatch commit and authors the manifest glob
      that composes them (yog DESIGN §3.7). One correction the ruling did not
-     anticipate: lernie's pinned-document mechanism *freezes* but does not
+     anticipate: litany's pinned-document mechanism *freezes* but does not
      *compose* — composition is the governing manifest's question — so the
      yog side is a pin **and** a per-workspace manifest convergence, not a pin
      alone.
@@ -583,7 +583,7 @@ presentation.
 
 ### 4.11 The capability boundary — policy before execution (bl-0cea)
 
-The verified premise (bl-7fc8): pinned lernie's shipped `worker` role grants
+The verified premise (bl-7fc8): pinned litany's shipped `worker` role grants
 the **entire** tool pool — `[apply_patch, bash, cd, dispatch, load_skill,
 message, multi_tool, read_file]` — yog grants nothing on top and has no grant
 path at all, so an unattended drone has unrestricted `bash`/`apply_patch`/`cd`
@@ -598,48 +598,48 @@ mediation.
    verbs), **destructive** (irreversible loss: history rewrite, forced ref
    updates, deletion beyond git's recoverability), **process** (minting
    agents or processes beyond the invocation — `dispatch` lands here, and
-   stays governed by lernie's own budget/depth gates), **open-world**
+   stays governed by litany's own budget/depth gates), **open-world**
    (effects beyond the root and the world: network egress, host filesystem
    writes, a `cd` out of the root), **secret** (credential and environment
    access: brazen config/credentials, key material, `bz` itself — a drone
-   spending ambient credentials outside lernie's budget derivation). Built-ins
+   spending ambient credentials outside litany's budget derivation). Built-ins
    carry an intrinsic class map; `cd` and `apply_patch` classify against the
    writable root at consult time; `bash` classifies by an operator-editable
    ruleset over its command — and an **unmatched bash invocation is
    open-world**: classification error fails toward the wider class, so
    obfuscation never lands in `read` and is what an override or a floor bites
-   on. External `lernie-tool-*` binaries default to open-world until the
+   on. External `litany-tool-*` binaries default to open-world until the
    ruleset classifies them.
 
-2. **The enforcement point is lernie's shipped tool-control seam — no new
-   primitive anywhere.** The pinned 0.0.8 already carries it (lernie ARCH
+2. **The enforcement point is litany's shipped tool-control seam — no new
+   primitive anywhere.** The pinned 0.0.8 already carries it (litany ARCH
    §3.3 *Tool control*, bl-de6d): `workflow.yaml`'s `tool_control:` names one
    executable consulted before every granted invocation executes, answering
    `pass` / `refuse` / `hold`, failing closed. yog supplies that executable —
    a world-tools re-exec shim of the yog binary (DESIGN §16.4's pattern) —
    and authors the block onto each workspace's `config/default` at every
-   start, through lernie's own config verb — the nested *template* route this
+   start, through litany's own config verb — the nested *template* route this
    item first named cannot carry it (bl-fec8 verified the pin: `prime` never
    seeds that override root, the override is a whole-file copy that would
-   delete `events:`, and lernie's embedded default is private), and the
+   delete `events:`, and litany's embedded default is private), and the
    per-workspace route is stronger anyway: it reaches workspaces already on
-   disk, not only ones born after. The §6 lernie item-7 contingency ("if bl-0cea wants a
+   disk, not only ones born after. The §6 litany item-7 contingency ("if bl-0cea wants a
    synchronous pre-tool approval seam, that files as its own ask then") is
    answered: **it shipped before we asked; the ask is zero.** Role grants
-   stay exactly as shipped — grants are lernie's structure, the control is
+   stay exactly as shipped — grants are litany's structure, the control is
    yog's policy — so bl-7fc8's deletion of the grant path stands; tool-name
    narrowing returns nowhere, because the workhorse tool (`bash`) is every
    class at once and only per-invocation adjudication can tell them apart.
 
 3. **The writable root is §4.10's answer, restated:** the bound attempt
    worktree plus the agent's own worktree. Inside it, writing is the job
-   (target write, pass). The world's substrate verbs — the `bl`/`lernie`
+   (target write, pass). The world's substrate verbs — the `bl`/`litany`
    shims, `message`, `dispatch` — keep their own gates (the delivery law,
    the front door, budgets and depth) and are never re-adjudicated: the
    control rules host effects, not deliveries.
 
 4. **Every fact is durable, and the control writes none of them.** The
-   *request* is lernie's hold mark (`refs/lernie/held/<agent-id>` — id,
+   *request* is litany's hold mark (`refs/litany/held/<agent-id>` — id,
    tool, reason). *Standing policy* is per-workspace config, severable:
    absence is the shipped defaults of item 6. *Answers and floors* — a hold
    approved or denied once, a conversation's auto-approval revoked — are
@@ -656,8 +656,8 @@ mediation.
    the held call ran, the drone costs nothing while it waits, and the board
    renders the ball waiting at its gate — attention, not deadlock. A `refuse`
    is an in-band decline the model reads and steps past. **No enforcement
-   path ever calls stop**: `lernie stop` mid-tool-window permanently wedges
-   the branch (lernie bl-b98d), so a deny that stopped would brick the drone
+   path ever calls stop**: `litany stop` mid-tool-window permanently wedges
+   the branch (litany bl-b98d), so a deny that stopped would brick the drone
    it means to protect — the wedge is routed around, not depended on. And no
    modal exists anywhere: attended and unattended are one flow — the
    attention item is answered in seconds or in hours, so attendance is
@@ -695,13 +695,13 @@ mediation.
    design: unmatched effects fail to a hold (this section), sustained drift
    is the monitor's job (§4.9), and evasion is the OS-confinement layer's —
    platform facilities, platform-explicit (Linux's bubblewrap landed as
-   yog's per-drone envelope, DESIGN §8.6/bl-bca4; lernie's reserved v1.1
+   yog's per-drone envelope, DESIGN §8.6/bl-bca4; litany's reserved v1.1
    sandbox seam, ARCH §3.6, remains the later, finer per-tool clamp). A
    workspace policy may declare confinement *required*, and arming then
    refuses where the platform cannot provide it — never a silent fallback,
    never a promised wall that isn't there.
 
-9. **Implementation** (yog only — lernie, balls, and brazen file nothing):
+9. **Implementation** (yog only — litany, balls, and brazen file nothing):
    bl-fec8 (the control shim, classifier, judgment fold, template
    authoring) → bl-765d (the policy config, hold-answer boundary actions,
    parked-branch attention, the confinement-required refusal; blocks
@@ -720,7 +720,7 @@ or steer a fan**. Written in the ladder's idiom; tests get filed with the
 graduating rung.
 
 **The rungs are projections of a logic board, not built-in flows.** The
-lernie/yog workflow is a logic board for how tasks and agents get handled, and
+litany/yog workflow is a logic board for how tasks and agents get handled, and
 the thing worth spending time on is how they are tied together. Every flow a
 rung renders — which skills a tag
 seeds, which model a complexity maps to, which gates a close mints, what shape
@@ -749,9 +749,9 @@ Machine state: a conversation with history worth walking.
    - The *context edge* — what the child inherited — is git ancestry.
    - The *provenance edge* — who dispatched it — is the descent id plus the
      parent-transcript notch where the dispatch landed.
-   A clean child (`dispatch --from config/<name>`, shipped in lernie bl-a693)
+   A clean child (`dispatch --from config/<name>`, shipped in litany bl-a693)
    has provenance only — no ancestry edge to its parent. "Clean vs fork" is
-   one spawn gesture with one parameter — the fork point — per lernie ARCH
+   one spawn gesture with one parameter — the fork point — per litany ARCH
    §2.3 ("Any ref is a legal fork point"); the spine renders both edge kinds,
    never just ancestry.
    **Amended by bl-1802 on how they are *drawn*, not on what they are.** The
@@ -784,7 +784,7 @@ Machine state: a conversation with history worth walking.
    its fork-point label ("from here" / "from config/default" /
    "from <Name>@<notch>"), a state chip, a spend figure, and a **streaming
    tail** — the last line or two of the child's in-flight inference text.
-   Grounding is §4.9 verbatim: "lernie streams every model event into the
+   Grounding is §4.9 verbatim: "litany streams every model event into the
    step record as it arrives … watching an agent is reading files yog already
    derives from (the in-flight strip, bl-905f)" — the tail is a second
    consumer of that same derivation (DESIGN §5.1 #10, the in-flight strip's
@@ -796,7 +796,7 @@ Machine state: a conversation with history worth walking.
    workspace-root and id-namespaced, so nothing double-counts: a fork's
    shared prefix cost stays with the ancestor. A subtree rollup is a
    descent-id prefix match; no registry.
-6. Everything here is a **pure read of the lernie workspace repo** — refs,
+6. Everything here is a **pure read of the litany workspace repo** — refs,
    trees, commits — **derived, never pushed**: the card updates via the
    fs_watcher on the workspace repo plus an off-thread snapshot read, like
    every other I1 derivation, and the frame renders snapshots only
@@ -838,9 +838,9 @@ about, and which are the authority over it:
   mark lived in another tab.
 - **The crossing set and the notch set were never the same set, and that was a
   shipped bug.** Both derivations paired *the i-th delivered run* with *the
-  i-th step*, on the ground that drains and steps serialize under lernie's
-  executor lock. Serialization gives order, not a bijection: a lernie step is
-  one model call and a tool loop is many steps behind one delivered run (lernie
+  i-th step*, on the ground that drains and steps serialize under litany's
+  executor lock. Serialization gives order, not a bijection: a litany step is
+  one model call and a tool loop is many steps behind one delivered run (litany
   ARCH §2.3), so from the second tool-using turn onward every rule carried the
   wrong commit and every pin cut the transcript in the wrong place. What pairs
   exactly is **one sealed model-output entry per completed step** — a call that
@@ -866,17 +866,17 @@ Machine state: V1, plus a step the operator wishes had gone differently.
 3. A fan renders as a group: siblings-of-one-ref, each with its state badge,
    terminal response preview, and usage figure side by side — anchored at the
    birth notch (one card, N columns; V1.7 reserves the anchor).
-4. Upstream landed (lernie bl-a693, in the pin since 0.0.6): `--from <ref>` and the
+4. Upstream landed (litany bl-a693, in the pin since 0.0.6): `--from <ref>` and the
    config-branch selector on `prompt`/`dispatch` (G2/G3). A **mutating** fan
    additionally needs §4.10's attempt isolation and binding (balls bl-4eac +
-   yog bl-8746 over lernie bl-d0b4); until those pins land the affordance
+   yog bl-8746 over litany bl-d0b4); until those pins land the affordance
    does not render (no capability theater). No new fan verb exists anywhere.
 
 Burden check: no fork, no fan, no change — the composer is reachable only
 from a pinned notch.
 
 **Landed (bl-dc0c), graduated as STORIES §S12 with its six tests (S11 went to the Auditor rung, bl-3746, which landed the same day).** It needed
-no verb either: the attempt is `lernie dispatch <role> <ws> <parent> --goal
+no verb either: the attempt is `litany dispatch <role> <ws> <parent> --goal
 <text> --from <ref> [--pin …]`, already shipped. Three implementation rulings
 amend items 2 and 3 above and are the authority over their first wording:
 
@@ -888,7 +888,7 @@ amend items 2 and 3 above and are the authority over their first wording:
   path in the strongest sense available: the same single gesture, counted. The
   §4.2 trail gains N rows where one would have gained one, which is more
   provenance, not less.
-- **"Model" is the *role*, and that is what makes it honest.** lernie binds a
+- **"Model" is the *role*, and that is what makes it honest.** litany binds a
   provider and a model id to a role in the `providers.yaml` of the config
   commit governing the fork point, and nowhere else. The composer therefore
   lists the roles that ref declares *with the model each names*, read from the
@@ -959,7 +959,7 @@ Machine state: a project with a decomposed backlog; fleet mode armed.
 
 Precondition: code-writing drones do not arm until every drone has the
 mechanical, isolated project target §4.10 rules (landed as yog bl-6654 over
-lernie bl-d0b4) and the §4.11 capability policy runs live — bl-fec8 (the
+litany bl-d0b4) and the §4.11 capability policy runs live — bl-fec8 (the
 control) plus bl-765d (the policy surface), which close-gates the armed
 loop (bl-66fb). A fleet of agents merely *told* where to
 work, with unrestricted host shell authority, violates §1 before it scales it.
@@ -1005,7 +1005,7 @@ an agent; yog runs headless.
    answering headlessly writes the same watermarks the GUI writes, and I0
    guarantees the two frontends converge over one disk.
 3. **An agent operating yog is unremarkable.** The coordinator that
-   decides-or-escalates is itself a lernie agent whose tools are yog's
+   decides-or-escalates is itself a litany agent whose tools are yog's
    headless verbs; the human on the phone talks to the coordinator, and the
    coordinator drives yog.
 4. Nothing here is a second implementation. Parity (§4.8) is the rung's whole
@@ -1055,7 +1055,7 @@ S0 stranger and the unarmed operator see today's yog exactly.
 
 Filed as balls in each repo; this table is the index, the balls are the work.
 
-**lernie** (the big one — exposure and extraction):
+**litany** (the big one — exposure and extraction):
 1. `--from <ref>` on `prompt`/`dispatch` + config-branch selector (G2/G3).
    **Landed** (bl-a693, ARCH §2.3 shipped-state note; pinned 0.0.6); what
    remains is yog's V2 surface — landed in bl-dc0c.
@@ -1067,7 +1067,7 @@ Filed as balls in each repo; this table is the index, the balls are the work.
 3. ~~bl-c8ed naming~~ **shipped and consumed** (0.0.4 → pin bumps landed).
 4. The §4.10 binding: a creation-time working-directory parameter seeding
    the existing cwd mark, its validation, and per-step observed project
-   OIDs in the step record (bl-d0b4). Policy-blind — lernie never learns
+   OIDs in the step record (bl-d0b4). Policy-blind — litany never learns
    balls, targets, candidates, or delivery.
 5. Extraction per bl-35e2's ruling: `models.yaml` out of git —
    protocols and login triggers only, brazen's `defaults.toml` as the
@@ -1082,8 +1082,8 @@ Filed as balls in each repo; this table is the index, the balls are the work.
    ask then~~ **Answered (bl-0cea): the seam had already shipped** — the
    tool-control connection point (ARCH §3.3, bl-de6d, in the 0.0.6 pin) is
    the enforcement point §4.11 builds on, and the capability ruling files
-   zero lernie asks. One standing defect matters to it: `lernie stop`
-   mid-tool-window wedges a branch (lernie bl-b98d) — §4.11's refusal paths
+   zero litany asks. One standing defect matters to it: `litany stop`
+   mid-tool-window wedges a branch (litany bl-b98d) — §4.11's refusal paths
    route around stop entirely, but the monitor's stop rung still wants that
    fix.
 
@@ -1127,7 +1127,7 @@ loop amends I7 as §4.3 states; §4.8 amends the §8 hatches into a full surface
    now-eligible — the clock, the embedded adapter, and the boundary all
    exist; arming lands as a boundary variant first (§4.8's compile gate).
    Only the auto-approval rung waits, on bl-0cea.
-2. **Behind the release trains** (§4.10 item 9): lernie bl-d0b4 → publish →
+2. **Behind the release trains** (§4.10 item 9): litany bl-d0b4 → publish →
    yog bl-6654 → bl-aa8b; balls bl-a1a4 → bl-4eac → publish → yog bl-8746 →
    bl-c2bd (V3) and bl-40ab. V2's read-only fan needs neither train; its
    mutating path waits for bl-8746.
@@ -1137,7 +1137,7 @@ loop amends I7 as §4.3 states; §4.8 amends the §8 hatches into a full surface
    targets (bl-6654) and an explicit noninteractive capability policy
    (§4.11: bl-fec8 + bl-765d). **Landed (bl-66fb), off by default**:
    the sequencing held, and what shipped is the mechanism, not an armed fleet.
-4. **Continuous:** lernie extraction (G11) — each item severable, none
+4. **Continuous:** litany extraction (G11) — each item severable, none
    blocking the rungs.
 
 ## 8. Refusals
@@ -1158,7 +1158,7 @@ Named so they stay refused:
   much, the answer is coarser balls.
 - **No pricing, catalogs, or policy in the lower crates.** The severability
   test governs: removing a default must delete config, not edit code.
-- **No new lernie primitives for fan-in, registry, or scheduling.** The
+- **No new litany primitives for fan-in, registry, or scheduling.** The
   message, the dispatch, and the yog clock already cover them.
 - **No second project-work path** (§4.10's rejected set, named): no goal
   parsing as a binding channel; no yog-side project index; no duplicate
@@ -1172,10 +1172,10 @@ Named so they stay refused:
   never silently substituted by policy mediation — where a workspace
   requires it and the platform lacks it, arming refuses.
 - **No permission modal and no second adjudicator** (§4.11). One enforcement
-  seam (lernie's tool control), one control (yog's shim), one policy home
+  seam (litany's tool control), one control (yog's shim), one policy home
   per fact. "Ask" is a park rendered as attention, never a prompt that
   blocks a fleet; "deny" is an in-band decline the model steps past; no
-  enforcement path ever stops an agent (the stop-mid-window wedge, lernie
+  enforcement path ever stops an agent (the stop-mid-window wedge, litany
   bl-b98d, is routed around, not depended on). Role grants stay whole-pool:
   tool-name narrowing is theater when `bash` is every effect class at once,
   so no grant path returns (bl-7fc8 stands).

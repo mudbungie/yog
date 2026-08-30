@@ -26,7 +26,7 @@
 use super::{WORKER_ROLE, grammar};
 
 /// The workspace's config-lineage tip (§2.2) as a **seat** holds it (REMOTE
-/// §9.4, bl-1eb0): the commit `lernie prompt` forks the next conversation off.
+/// §9.4, bl-1eb0): the commit `litany prompt` forks the next conversation off.
 /// Two strings, because two strings are all the picker asks of it — the row
 /// labels with the short oid and reads `providers.yaml` at the full one — and
 /// because the `CommitNode` this replaced is a git-derivation record a face
@@ -99,7 +99,7 @@ const NO_ROW: &str = "(none)";
 /// start a conversation.
 pub const NEW_CONVERSATION_EXIT: &str = "new conversation uses the current config";
 
-/// The exit that **keeps** (bl-2d19), beside it: lernie's own `retarget` verb,
+/// The exit that **keeps** (bl-2d19), beside it: litany's own `retarget` verb,
 /// which re-forks this conversation off the config commit the workspace runs
 /// now and replays every commit it has made onto that base — so its whole
 /// history survives the move. Offered under the same condition, because an
@@ -110,7 +110,7 @@ pub const RETARGET_EXIT: &str = "move this conversation onto the current config"
 /// keyboard spelling is named): the verb, its timing, and the one thing an
 /// operator must know before spending it — that nothing is thrown away.
 pub const RETARGET_HOVER: &str = "Mark this conversation to be re-forked onto the config \
-    this workspace runs now (lernie retarget). It keeps every message: the \
+    this workspace runs now (litany retarget). It keeps every message: the \
     re-fork lands at the conversation's next step, with the work it has already \
     done replayed on top. Type /retarget to do it without the mouse.";
 
@@ -146,7 +146,7 @@ pub fn conversation_row(governing: &ConfigPoint, tip: &ConfigPoint, role: &str) 
 /// **head** — the commit a fresh root forks off. No drift clause: a
 /// conversation that does not exist yet cannot have parted from anything.
 ///
-/// That head is not a yog choice: lernie 0.0.3's `lernie prompt <repo>
+/// That head is not a yog choice: litany's `litany prompt <repo>
 /// <message>` takes no config argument and resolves
 /// `ConfigSource::ConfigBranch("config/default")` internally, so "which config
 /// is this conversation born on" has exactly one answer and the hover says it.
@@ -158,7 +158,7 @@ pub fn birth_row(tip: &ConfigPoint, role: &str, branch: &str) -> ModelRow {
         hover: format!(
             "the {role} the conversation you are about to start will be born on: a \
              new conversation forks the head of config/{branch} ({}) and is frozen \
-             there for its whole life — lernie takes no per-conversation config, so \
+             there for its whole life — litany takes no per-conversation config, so \
              changing the model before the start advances that head",
             tip.short_oid
         ),

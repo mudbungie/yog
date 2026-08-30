@@ -6,7 +6,7 @@
 //! `epitaph` / `terminal_ref` on a result message), and its body verbatim —
 //! or, under the §11 Raw toggle, the deposit file's own bytes. No click, so
 //! the whole tab is a headless shape-walk-tested pure render; the Flush =
-//! `lernie scan` action is this tab's own Scan button, wired beside it in the
+//! `litany scan` action is this tab's own Scan button, wired beside it in the
 //! shell's `inspector::tabs_and_content` per-tab controls.
 
 use super::{Deposit, InboxEntry};

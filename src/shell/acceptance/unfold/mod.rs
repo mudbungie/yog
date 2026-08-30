@@ -51,7 +51,7 @@ pub(super) fn nested_world() -> World {
         "cadence:\n  watcher:\n    debounce_ms: 0\n",
     )
     .unwrap();
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     world.add_child("c-1", CHILD);
     world.add_child(CHILD, GRANDCHILD);
@@ -66,11 +66,11 @@ pub(super) fn nested_world() -> World {
 /// default size on the frame it first appears, so the settled one is what the
 /// operator sees.
 pub(super) fn painted(world: &mut World) -> Vec<Painted> {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let ctx = egui::Context::default();
     let frame = |world: &mut World| {
         ctx.run(input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         })
     };
     // The wire settled between frames (bl-44e9): the list is a `Reply` now, so

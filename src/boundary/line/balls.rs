@@ -3,7 +3,7 @@
 //!
 //! Its own file on the seam every sibling family here is already cut on
 //! (`fan`, `fork`, `tools`, `config`) and the one `codec/balls` draws one layer
-//! down: [`super::verbs`] holds the lernie-family and policy arms, this holds
+//! down: [`super::verbs`] holds the litany-family and policy arms, this holds
 //! the verbs that address *a ball in a project*.
 
 use super::{Context, args};

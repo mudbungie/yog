@@ -80,7 +80,7 @@ fn window(ctx: &egui::Context, model: &mut AppModel, state: &mut ShellState) {
 
 /// The dialog body: what dies, what is released, and either the refusal or the
 /// typed-name arming (§3.6 — the dialog *states* irrecoverability, since no
-/// archival verb exists to offer until `lernie bundle` lands, §8.3).
+/// archival verb exists to offer until `litany bundle` lands, §8.3).
 fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, confirm: &Confirmation) {
     ui.colored_label(
         theme::ICHOR,

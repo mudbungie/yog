@@ -13,7 +13,7 @@
 //! **Every verb here crosses the wire** (REMOTE §9.8, bl-4841): it posts the
 //! gesture and holds no receipt, because none was ever read — the durable record
 //! is the ball verb's own `ops.jsonl` line and the pane re-reads the store the
-//! §7.1 routing refreshes. The `lernie`/`bl` pair went with the dispatch: a
+//! §7.1 routing refreshes. The `litany`/`bl` pair went with the dispatch: a
 //! posted act carries the gesture and nothing else, the binaries being the
 //! engine's.
 

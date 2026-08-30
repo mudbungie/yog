@@ -73,7 +73,7 @@ pub fn pin(rail: &Rail, selected: Option<usize>) -> Option<Pin> {
 /// `messages/NNN-*` file is never rewritten, so every entry this prefix shows
 /// **is** the pinned tree's bytes, and the Raw toggle keeps showing them with
 /// no `git show` per message. What is *not* exact is the prefix's extent —
-/// `messages/` is not append-only, because lernie's compactor deletes from it
+/// `messages/` is not append-only, because litany's compactor deletes from it
 /// (`crate::transcript::compaction`), so entries the pinned tree held may be
 /// gone from today's listing and the cut lands short of where that call really
 /// read to. The compaction markers spliced into the listing are what makes the

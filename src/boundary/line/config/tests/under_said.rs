@@ -94,11 +94,11 @@ fn a_lineage_with_no_text_reads_the_file_at_its_tip() {
 fn a_destination_with_no_text_reads_instead_of_refusing() {
     let cases = [
         ("/config brazen", brazen()),
-        ("/config models", ConfigFile::LernieModels),
+        ("/config models", ConfigFile::LitanyModels),
         ("/config cadence", ConfigFile::Cadence),
         (
             "/config workflow review",
-            ConfigFile::LernieWorkflow {
+            ConfigFile::LitanyWorkflow {
                 name: "review".to_owned(),
             },
         ),

@@ -2,14 +2,14 @@
 //! algebra every containment question is asked through.
 //!
 //! The root is two directories: the agent's own worktree (`agents/<agent-id>/`
-//! under the workspace, lernie ARCH §2.2) and the **bound attempt worktree** —
+//! under the workspace, litany ARCH §2.2) and the **bound attempt worktree** —
 //! the balls `work/<id>` checkout the ball this workspace claimed materialized.
 //! Inside either, writing is the job; outside, a write leaves the world.
 //!
 //! **The root is derived from facts yog owns, never from a fact the agent
 //! controls.** That distinction is the whole security content of this module:
 //!
-//! - The **cwd** comes from lernie's own mark (`refs/lernie/cwd/<agent-id>`),
+//! - The **cwd** comes from litany's own mark (`refs/litany/cwd/<agent-id>`),
 //!   because relative operands must resolve where the executor will run them.
 //!   The mark is written by the agent's `cd` — so it is read to *interpret*
 //!   operands and never to widen the root. An agent that could widen its root
@@ -36,7 +36,7 @@ use std::path::{Component, Path, PathBuf};
 use crate::binding::work_worktree_path;
 use crate::opslog::OpEntry;
 
-/// Workspace subdirectory holding the per-agent worktrees (lernie ARCH §2.2).
+/// Workspace subdirectory holding the per-agent worktrees (litany ARCH §2.2).
 /// Mirrored here rather than imported, the convention every module that names
 /// it already follows (`git_tree`, `files_view`, `transcript`).
 const AGENTS_DIR: &str = "agents";
@@ -123,12 +123,12 @@ pub fn agent_worktree(workspace: &Path, agent_id: &str) -> PathBuf {
     workspace.join(AGENTS_DIR).join(agent_id)
 }
 
-/// Workspace subdirectory holding the bare repository (lernie ARCH §2.2).
+/// Workspace subdirectory holding the bare repository (litany ARCH §2.2).
 const REPO_DIR: &str = "repo.git";
-/// The per-agent working-directory mark's ref namespace (lernie ARCH §3.3).
-const CWD_REF: &str = "refs/lernie/cwd/";
+/// The per-agent working-directory mark's ref namespace (litany ARCH §3.3).
+const CWD_REF: &str = "refs/litany/cwd/";
 
-/// The agent's working directory as lernie's own mark records it — the ref names
+/// The agent's working directory as litany's own mark records it — the ref names
 /// a blob whose bytes are the absolute path. `None` when the mark is unset
 /// (the ordinary state of an agent that never called `cd`), when the repo is not
 /// there, or when git will not run: in every one of those the caller's default
@@ -150,7 +150,7 @@ pub fn agent_cwd(workspace: &Path, agent_id: &str) -> Option<PathBuf> {
     ]))
     .ok()
     .filter(|out| out.status.success())?;
-    // Lossy rather than strict: lernie's own writer declines a directory that
+    // Lossy rather than strict: litany's own writer declines a directory that
     // does not survive a trimmed-UTF-8 round trip, so a mark that is not UTF-8
     // is unrepresentable upstream — and a lossy path that names nothing simply
     // resolves outside the root, which holds.

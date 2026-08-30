@@ -47,7 +47,7 @@ pub fn tabs_and_content(
     model: &mut AppModel,
     state: &mut ShellState,
     ws: &Path,
-    lernie: &Cli,
+    litany: &Cli,
 ) {
     let active = model.inspector_tab();
     // Wrapped, not laid in one line (§11 rule 8, bl-b531): at the documented
@@ -136,7 +136,7 @@ pub fn tabs_and_content(
     // visible carrier, at the foot of the settings-shaped tab — mirroring the
     // workspace verb's config-mode danger row.
     if active == InspectorTab::Config {
-        super::delete_agent::danger_row(ui, model, state, lernie, ws);
+        super::delete_agent::danger_row(ui, model, state, litany, ws);
     }
 }
 

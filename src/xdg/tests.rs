@@ -70,49 +70,49 @@ fn xdg_folds_set_unset_and_missing_home() {
 }
 
 #[test]
-fn lernie_roots_home_collapse_set_empty_unset() {
+fn litany_roots_home_collapse_set_empty_unset() {
     run(&[
-        // LERNIE_HOME set and non-empty: both roots collapse onto it,
+        // LITANY_HOME set and non-empty: both roots collapse onto it,
         // even with XDG vars present.
         (
-            Env::lernie_config_root,
-            &[("LERNIE_HOME", "/L"), ("XDG_CONFIG_HOME", "/c")],
+            Env::litany_config_root,
+            &[("LITANY_HOME", "/L"), ("XDG_CONFIG_HOME", "/c")],
             "/L",
         ),
         (
-            Env::lernie_data_root,
-            &[("LERNIE_HOME", "/L"), ("XDG_DATA_HOME", "/d")],
+            Env::litany_data_root,
+            &[("LITANY_HOME", "/L"), ("XDG_DATA_HOME", "/d")],
             "/L",
         ),
-        // Empty LERNIE_HOME falls through to the XDG fold.
+        // Empty LITANY_HOME falls through to the XDG fold.
         (
-            Env::lernie_config_root,
-            &[("LERNIE_HOME", ""), ("XDG_CONFIG_HOME", "/c")],
-            "/c/lernie",
+            Env::litany_config_root,
+            &[("LITANY_HOME", ""), ("XDG_CONFIG_HOME", "/c")],
+            "/c/litany",
         ),
         (
-            Env::lernie_data_root,
-            &[("LERNIE_HOME", ""), ("XDG_DATA_HOME", "/d")],
-            "/d/lernie",
+            Env::litany_data_root,
+            &[("LITANY_HOME", ""), ("XDG_DATA_HOME", "/d")],
+            "/d/litany",
         ),
-        // Unset LERNIE_HOME: XDG, then HOME default, then bare relative.
+        // Unset LITANY_HOME: XDG, then HOME default, then bare relative.
         (
-            Env::lernie_config_root,
+            Env::litany_config_root,
             &[("XDG_CONFIG_HOME", "/c")],
-            "/c/lernie",
+            "/c/litany",
         ),
         (
-            Env::lernie_config_root,
+            Env::litany_config_root,
             &[("HOME", "/h")],
-            "/h/.config/lernie",
+            "/h/.config/litany",
         ),
-        (Env::lernie_config_root, &[], ".config/lernie"),
+        (Env::litany_config_root, &[], ".config/litany"),
         (
-            Env::lernie_data_root,
+            Env::litany_data_root,
             &[("HOME", "/h")],
-            "/h/.local/share/lernie",
+            "/h/.local/share/litany",
         ),
-        (Env::lernie_data_root, &[], ".local/share/lernie"),
+        (Env::litany_data_root, &[], ".local/share/litany"),
     ]);
 }
 

@@ -1,12 +1,12 @@
-//! The **workspace-bound lernie seam** (DESIGN §8.2, §16.2) — [`Bound`].
+//! The **workspace-bound litany seam** (DESIGN §8.2, §16.2) — [`Bound`].
 //!
-//! Every §8.2 `lernie` verb is *about one workspace*, and a workspace-bound
+//! Every §8.2 `litany` verb is *about one workspace*, and a workspace-bound
 //! spawn owes that workspace two env facts: its **wall** (`YOG_WALL`, §16.2 as
 //! amended — brazen's config, sign-ins and model cache) and its **name**
 //! (`YOG_NAME`, §8/§3.3 — the `--as` stamp the W9 shim writes). Before bl-bf79
 //! each verb laid its own layer, and the three that revive a driver laid the
-//! name without the wall: `lernie message` deposits and then **detach-launches**
-//! a driver when the branch is quiescent (lernie ARCH §2.9 — there is no resume
+//! name without the wall: `litany message` deposits and then **detach-launches**
+//! a driver when the branch is quiescent (litany ARCH §2.9 — there is no resume
 //! verb; the deposit restarts a driver), that driver inherited yog's fold, and
 //! its first `bz` died with
 //!
@@ -16,7 +16,7 @@
 //! ```
 //!
 //! so every message that had to revive a quiescent conversation produced an
-//! empty reply. The first turn worked only because `lernie prompt` is fired from
+//! empty reply. The first turn worked only because `litany prompt` is fired from
 //! [`boundary::dispatch`](crate::boundary::dispatch), which does lay the wall.
 //!
 //! **The fix is the seam, not three reminders.** A §8.2 workspace verb takes a
@@ -41,7 +41,7 @@ use crate::cli_outbound::Cli;
 /// revived driver's unstamped `bl` verbs from it.
 const YOG_NAME: &str = "YOG_NAME";
 
-/// A `lernie` [`Cli`] bound to one workspace — the only handle the §8.2
+/// A `litany` [`Cli`] bound to one workspace — the only handle the §8.2
 /// workspace verbs accept. Constructing it lays the workspace's wall and name on
 /// the spawn; carrying the workspace with it means the verb's cwd and its `<ws>`
 /// argv are one fact rather than a repeated argument.
@@ -52,7 +52,7 @@ pub struct Bound {
 }
 
 impl Bound {
-    /// Bind `lernie` to `workspace` inside `world`: `YOG_WALL` (§16.2) and
+    /// Bind `litany` to `workspace` inside `world`: `YOG_WALL` (§16.2) and
     /// `YOG_NAME` (§3.3) layered **on top of** the world `Cli`'s standing
     /// nesting set, which [`Cli::and_env`] extends rather than replaces — and
     /// the §8.6 confinement wrapper when the workspace's live policy requires
@@ -60,11 +60,11 @@ impl Bound {
     /// edge that knows the workspace, so no verb — including one written later
     /// — can spawn a workspace-bound child outside the sandbox its policy
     /// demands. Empty when the policy states nothing (severability).
-    pub fn at(lernie: &Cli, world: &crate::xdg::Env, workspace: &Path) -> Self {
+    pub fn at(litany: &Cli, world: &crate::xdg::Env, workspace: &Path) -> Self {
         let mut layer = crate::world::wall::pairs(world, workspace);
         layer.push((YOG_NAME.to_owned(), crate::naming::leaf(workspace)));
         Self {
-            cli: lernie
+            cli: litany
                 .and_env(layer)
                 .and_wrapper(crate::control::confine::wrapper(world, workspace)),
             workspace: workspace.to_path_buf(),
@@ -82,7 +82,7 @@ impl Bound {
         &self.workspace
     }
 
-    /// The same workspace as the `<ws>` argv word every §8.2 lernie verb takes.
+    /// The same workspace as the `<ws>` argv word every §8.2 litany verb takes.
     pub(crate) fn workspace_arg(&self) -> String {
         self.workspace.to_string_lossy().into_owned()
     }

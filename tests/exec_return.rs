@@ -22,15 +22,15 @@
 //!    balls forks `git` on its own account and takes none).
 //!
 //! **So this binary runs exactly one `#[test]`**, the `tests/multiplex_bl.rs`
-//! and `tests/multiplex_lernie.rs` precedent applied one hazard down: a
+//! and `tests/multiplex_litany.rs` precedent applied one hazard down: a
 //! returning exec is lawful only where no peer thread exists. In production
 //! that is `main.rs`, above clap and above eframe. The lib suite reaches
-//! `execvp` nowhere — `multiplex::lernie`'s unit test hands its arm a command
+//! `execvp` nowhere — `multiplex::litany`'s unit test hands its arm a command
 //! std refuses ABOVE `do_exec`, which is why the arm's mapping can still be
 //! proved beside the code.
 
 // clippy's allow-*-in-tests reaches `#[test]` fns, not an integration crate's
-// free fixture helpers — the `tests/multiplex_lernie.rs` precedent.
+// free fixture helpers — the `tests/multiplex_litany.rs` precedent.
 #![allow(clippy::unwrap_used)]
 
 use std::io::Write as _;

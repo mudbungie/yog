@@ -10,7 +10,7 @@ mod exec;
 pub(super) const ROOT: &str = "r-aa";
 pub(super) const CHILD: &str = "r-aa-c-bb";
 
-/// One agent row, the conversation-list fixture shape (lernie ARCH §2.3).
+/// One agent row, the conversation-list fixture shape (litany ARCH §2.3).
 fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
     Agent {
         branch_name: format!("agents/{id}"),
@@ -75,7 +75,7 @@ fn a_settled_conversation_passes_and_the_typed_name_arms_the_subtree() {
 
 #[test]
 fn an_absent_root_is_the_general_path_with_empty_inputs() {
-    // lernie's delete of an absent agent is already its postcondition; yog's
+    // litany's delete of an absent agent is already its postcondition; yog's
     // gate mirrors that convergence rather than minting an error class.
     let confirm = confirmation("gone-id", &[]);
     assert_eq!(confirm.name, "gone-id", "rung three: its own id");

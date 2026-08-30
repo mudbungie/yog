@@ -45,7 +45,7 @@ impl Deriver {
         // already runs at the operator's tuning, not one default tick of it.
         self.adopt_cadence();
         self.adopt_windows();
-        self.workspaces = crate::binding::workspaces(&self.roots.yog_data, &self.roots.lernie_data);
+        self.workspaces = crate::binding::workspaces(&self.roots.yog_data, &self.roots.litany_data);
         lock_watchset(&self.watches).reconcile(&desired_watches(&self.roots, &self.workspaces));
         let paths: Vec<PathBuf> = self.workspaces.iter().map(|w| w.path.clone()).collect();
         for path in paths {

@@ -6,7 +6,7 @@
 //! running drone**, because killing mid-ball destroys uncommitted work and
 //! early termination is the expensive failure. So the only thing it can ever
 //! refuse is a *birth* — nothing already running is touched, slowed or
-//! stopped, and the bound on a drone that is already alive is lernie's own
+//! stopped, and the bound on a drone that is already alive is litany's own
 //! `max_total_tokens`, one layer down, where the loop that spends it lives.
 //!
 //! **Severable in the strong sense, and in two directions.** The ceiling is

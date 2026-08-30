@@ -12,8 +12,8 @@ use crate::model_pick::grammar::{MODELS, MODELS_YAML, PROVIDERS_YAML, ROLES};
 
 /// How one setting is edited (§9.5). Four kinds, because four are what the
 /// files declare: a reference to a brazen provider row, a bounded number, one
-/// of lernie's inline flow sequences, and a scalar whose value set belongs to
-/// the far side (a provider's model id, a lernie tool name) rather than to yog.
+/// of litany's inline flow sequences, and a scalar whose value set belongs to
+/// the far side (a provider's model id, a litany tool name) rather than to yog.
 ///
 /// There is deliberately no boolean and no closed-enum kind: **no file these
 /// surfaces reach declares one.** The two enumerated settings in config mode —
@@ -27,7 +27,7 @@ pub enum Control {
     Provider,
     /// A whole number the file's contract bounds.
     Number { min: u64, max: u64 },
-    /// lernie's inline flow sequence (`[a, b]`), edited as its member names.
+    /// litany's inline flow sequence (`[a, b]`), edited as its member names.
     List,
     /// A scalar yog holds no vocabulary for.
     Text,
@@ -93,7 +93,7 @@ const ROLE_FIELDS: &[FieldSpec] = &[
     FieldSpec {
         name: "tools",
         control: Control::List,
-        help: "the tool names this role may call (lernie's vocabulary, not \
+        help: "the tool names this role may call (litany's vocabulary, not \
                yog's); yog grants `message` and `dispatch` at creation",
     },
 ];
@@ -155,7 +155,7 @@ pub const CADENCE_SCHEMA: Schema = Schema {
 
 /// The schema for a file basename, or `None` when yog has no reader for it —
 /// which is the raw-text fallback, not a failure: `workflows/*.yaml`, `souls/**`
-/// prose and lernie's own `workflow.yaml`/`manifest.yaml` are documents yog
+/// prose and litany's own `workflow.yaml`/`manifest.yaml` are documents yog
 /// declines to interpret (§9.5), and a form over a shape yog guessed at would
 /// be exactly the second authority §9 forbids.
 pub fn schema_for(file_name: &str) -> Option<Schema> {

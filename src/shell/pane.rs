@@ -51,7 +51,7 @@ pub(super) fn render(
     window: egui::Vec2,
     settled: bool,
 ) {
-    let (lernie, bl, bz) = clis;
+    let (litany, bl, bz) = clis;
     // **A pending start draft takes the composer's seat** (§11 S0, bl-6ad8): it
     // is a goal box, and so is the composer, so painting both stacked two live
     // boxes with an identity line each and no answer to "which one does Enter
@@ -143,7 +143,7 @@ pub(super) fn render(
                 .default_height(GOAL_FLOOR)
                 .show_inside(ui, |ui| {
                     ui.set_max_height(cap);
-                    super::input_bar::composer(ui, model, state, lernie, bl, cap);
+                    super::input_bar::composer(ui, model, state, litany, bl, cap);
                 });
         }
     }
@@ -183,7 +183,7 @@ pub(super) fn render(
     if conversation && crate::layout::share(pane, ui.available_height(), 0.0).is_some() {
         super::flight_strip::render(ui, model);
     }
-    body(ui, model, state, (lernie, bz));
+    body(ui, model, state, (litany, bz));
 }
 
 /// The §3.4 start draft in the goal box's seat, when one is pending — `None`
@@ -236,7 +236,7 @@ fn start_box(
 /// it, those points are the bottom of a banner glyph painted over the
 /// composer's first row. The viewport is the pane's, so the clip is too.
 fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, clis: (&Cli, &Cli)) {
-    let (lernie, bz) = clis;
+    let (litany, bz) = clis;
     ui.set_clip_rect(ui.clip_rect().intersect(ui.available_rect_before_wrap()));
     egui::ScrollArea::vertical()
         .id_salt("center-body")
@@ -246,6 +246,6 @@ fn body(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, clis: (
             // width nothing can ever reach — every row below would truncate to
             // it and be hard-cut at the real edge, ellipsis and all (bl-7414).
             super::row::shown_width(ui);
-            super::center::render(ui, model, state, lernie, bz);
+            super::center::render(ui, model, state, litany, bz);
         });
 }

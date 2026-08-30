@@ -61,7 +61,7 @@ seedfile() { # seedfile <path> <what it carries>
   fi
 }
 
-real_world="$HOME/.local/share/yog/world/lernie"
+real_world="$HOME/.local/share/yog/world/litany"
 # The host's own brazen state, which is a FIXTURE SOURCE now and not a
 # destination: nothing yog spawns reads it since §16.2's ruling. The harness
 # copies out of it into each scratch workspace's wall (`seed_wall`, wall.sh),
@@ -102,7 +102,7 @@ tool python3 "the step-kind reader (beats_s7.sh), locate.sh's rule scan, and the
 tool git     "the scratch project fixture, and the clean room's floor"
 tool yog     "the binary under drive — build it (make release) and put target/release first on PATH"
 seedfile "$real_world/models.yaml" \
-  "the model roster; also lernie's seeded marker, so its absence changes what S0 asserts"
+  "the model roster; also litany's seeded marker, so its absence changes what S0 asserts"
 seedfile "$real_world/template/providers.yaml" \
   "the workspace-birth template — the role→provider rows the wall section below reports"
 

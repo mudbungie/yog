@@ -8,7 +8,7 @@
 //! an idle workspace refused by a *sibling's* spend proves the door enumerates
 //! the §3.1 roster at all.
 
-use super::{fake_lernie, model_focused, prepared, world};
+use super::{fake_litany, model_focused, prepared, world};
 use crate::boundary::Action;
 use crate::cli_outbound::Cli;
 use crate::opslog;
@@ -30,8 +30,8 @@ fn the_spend_ceiling_refuses_the_fire_and_says_so_on_the_trail() {
     )
     .unwrap();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let lernie = fake_lernie(bin.path());
-    let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
+    let litany = fake_litany(bin.path());
+    let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Prompt {
         prepared: prepared(&w),
         goal: "go".into(),
@@ -81,7 +81,7 @@ fn spend_in_another_workspace_refuses_a_fire_into_an_idle_one() {
     )
     .unwrap();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let deps = m.boundary_deps(&fake_lernie(bin.path()), &Cli::new("/no/bl"));
+    let deps = m.boundary_deps(&fake_litany(bin.path()), &Cli::new("/no/bl"));
     let action = Action::Prompt {
         prepared: prepared(&w),
         goal: "go".into(),

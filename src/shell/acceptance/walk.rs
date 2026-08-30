@@ -35,7 +35,7 @@ fn walked_world() -> (World, Screen) {
         "cadence:\n  watcher:\n    debounce_ms: 0\n",
     )
     .unwrap();
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     world.add_root(SECOND, "second-root");
     let ws = world.ws.clone();

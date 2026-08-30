@@ -58,7 +58,7 @@ impl World {
     fn deps(&self) -> Deps {
         let ws = self.workspace();
         Deps {
-            lernie: Cli::new("/usr/bin/true"),
+            litany: Cli::new("/usr/bin/true"),
             bl: Cli::new("/no/such/bl"),
             state_root: self.state(),
             yog_binary: PathBuf::from("/no/such/yog"),

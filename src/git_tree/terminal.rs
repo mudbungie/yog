@@ -182,7 +182,7 @@ pub(crate) fn segment_count(bytes: &[u8]) -> usize {
 /// segment boundary; `None` for complete / killed / empty. The verbatim event
 /// line (its `kind`/`message`/`status` fields and all) is what the auth heuristic
 /// ([`crate::login::auth`]) scans, so the classifier stays schema-agnostic (bz's
-/// and lernie's error shapes may differ, §5.1 #10/#13).
+/// and litany's error shapes may differ, §5.1 #10/#13).
 pub(crate) fn error_text(bytes: &[u8]) -> Option<String> {
     let terminated = match bytes.iter().rposition(|&b| b == b'\n') {
         // `idx` is a position within `bytes`, so `..=idx` always yields `Some`.

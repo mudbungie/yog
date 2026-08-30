@@ -31,7 +31,7 @@ impl Cli {
     /// bound to null, stderr bound to the `stderr` sink file, and no pipe and no
     /// signal from us — only the [`reap`] thread's blocking wait, which observes
     /// the child without touching it. This launches long-lived drivers (§8.1:
-    /// `lernie prompt` detached) so yog's exit can never kill a running loop:
+    /// `litany prompt` detached) so yog's exit can never kill a running loop:
     /// yog's death takes the reaper thread with it and init adopts the still-live
     /// driver, exactly as before. `cwd`, when set,
     /// is the child's working directory (a bound workspace's work-worktree,
@@ -50,7 +50,7 @@ impl Cli {
         let mut cmd = self.spawn_base();
         cmd.args(args)
             // The detached driver nests too (§16.6 W2): the standing world env
-            // rides the long-lived `lernie prompt` so its agents' own tool
+            // rides the long-lived `litany prompt` so its agents' own tool
             // subprocesses inherit the nested `$XDG_STATE_HOME` (§16.4).
             .envs(self.standing_env())
             .stdin(Stdio::null())

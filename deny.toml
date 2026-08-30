@@ -99,7 +99,7 @@ deny = [
 [sources]
 # Every crate must come from a known registry (crates.io) — no unvetted
 # registries and no ad-hoc git sources. There is no `allow-git` list: the
-# embedded substrate crates (DESIGN §16.7 — W8 balls, W10 brazen, W11 lernie)
+# embedded substrate crates (DESIGN §16.7 — W8 balls, W10 brazen, W11 litany)
 # are exact registry pins (`=x.y.z`) since bl-89a4, so yog's whole graph comes
 # from crates.io and `cargo publish` is unblocked. Nothing goes back on this
 # list; a git dep is not the shape any more.

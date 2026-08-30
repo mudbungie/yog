@@ -25,7 +25,7 @@ use crate::opslog::{Activity, OPS_TAIL};
 /// One answered query, through the model's own chokepoint. A refusal reads as
 /// the resting `None` a seat would paint nothing for.
 fn ask(model: &AppModel, query: &Query, now_unix: i64) -> Option<Reply> {
-    let deps: Deps = model.boundary_deps(&Cli::new("lernie"), &Cli::new("bl"));
+    let deps: Deps = model.boundary_deps(&Cli::new("litany"), &Cli::new("bl"));
     model.answer(&deps, query, now_unix).ok()
 }
 

@@ -1,6 +1,6 @@
 //! The descent tree as a **query over the id set** (§2.3, §7.1): the pre-order
 //! walk's depths and sibling order, the two shapes that deliberately render at
-//! depth 0 (an id outside lernie's grammar, a descendant whose intermediate
+//! depth 0 (an id outside litany's grammar, a descendant whose intermediate
 //! ancestor ref is absent), and the direct-children rule the §11 rail shares.
 
 use super::*;
@@ -99,9 +99,9 @@ fn siblings_render_id_sorted_under_their_parent() {
 #[test]
 fn an_id_outside_the_two_token_grammar_is_a_root() {
     // `<root>-c0ffee` is one token short of a descent segment (§2.3), so
-    // its derived parent is the bare `a`, a ref nobody holds. lernie calls
+    // its derived parent is the bare `a`, a ref nobody holds. litany calls
     // that nobody's child; so does yog. (bl-c03e — world C laid exactly
-    // this shape, and lernie's sweep died on it.)
+    // this shape, and litany's sweep died on it.)
     let out = order(&["a-b", "a-b-c0ffee"]);
     assert_eq!(out, vec![(0, "a-b".into()), (0, "a-b-c0ffee".into())]);
 }

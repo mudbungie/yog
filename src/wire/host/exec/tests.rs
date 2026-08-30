@@ -42,7 +42,7 @@ fn patient() -> Duration {
     Duration::from_secs(30)
 }
 
-/// **lernie's own tool contract, one for one** (its ARCH §3.3): the input JSON
+/// **litany's own tool contract, one for one** (its ARCH §3.3): the input JSON
 /// on stdin, bytes on stdout, the exit code the verdict — and stderr beside
 /// them, so a tool that warned and succeeded says both.
 #[test]

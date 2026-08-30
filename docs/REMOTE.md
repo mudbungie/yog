@@ -79,7 +79,7 @@ laptop through the tools that laptop's client advertises into its workspace.
 
 ## 2. Nouns
 
-lernie bans "session" (DESIGN §1), and the transport/connection collision is
+litany bans "session" (DESIGN §1), and the transport/connection collision is
 exactly the reason — the word appears nowhere here. The split adds three nouns
 and reuses one:
 
@@ -372,8 +372,8 @@ by scope — and only that, since bl-c9d2: a directory that is not a §3.1
 workspace at all is a birth that died between making the directory and making
 the marker, enumerated by no root and inside nobody's scope, and refusing it
 wedged the name forever behind an addressing sentence. The raise resolves past
-it and the idempotent ensure's own `lernie new` decides — finishing the dead
-birth, or refusing in lernie's own words with a logged ops row.
+it and the idempotent ensure's own `litany new` decides — finishing the dead
+birth, or refusing in litany's own words with a logged ops row.
 
 That refusal is the one place existence is observable to a scoped client, and
 the ruling is that this is acceptable and bounded: **a namespace with creation
@@ -491,7 +491,7 @@ where it is the same ruling it always was.
   loads a client's tools; loaded definitions are callable from that turn on.
   Whether the driver re-declares them in the tool block (one deliberate,
   paid prefix rebuild at a moment the agent chose) or carries them
-  append-only was left to the lernie seam; the invariant
+  append-only was left to the litany seam; the invariant
   is that nothing but an explicit load ever changes the tool surface.
   **Settled by bl-c907 (§5.2): re-declared.** The set is a durable document the
   injection reads at every assembly, so the rebuild happens once, at the step
@@ -522,7 +522,7 @@ where it is the same ruling it always was.
 - **The environment is the executing end's own** (bl-71d0). An invocation
   carries its subject's location; everything else — `PATH`, the substrate's
   home, the state root, the credentials — comes from the machine that runs it.
-  The server's composed world fold (DESIGN §16.2: `LERNIE_HOME`,
+  The server's composed world fold (DESIGN §16.2: `LITANY_HOME`,
   `XDG_STATE_HOME` and the rest of the nested world) is **never shipped across
   the wire.** It names paths that exist on the server and nowhere else, so an
   env that crossed would at best be inert and at worst point a remote process at
@@ -591,7 +591,7 @@ where it is the same ruling it always was.
   adjudicator cannot inspect. Adjudication judges the invocation exactly as
   today; any containment beyond that is whatever the client enforces locally,
   and the design must not claim otherwise.
-- **The driver-side seam was a lernie ask, and it landed.** lernie's driver
+- **The driver-side seam was a litany ask, and it landed.** litany's driver
   executes tools; routing a designated tool to a remote executor needed an
   upstream seam. It is lernie 0.0.9's `Fx::tool_injection` (its
   `docs/DESIGN_TOOL_INJECTION.md`): **one** object carrying both halves — the
@@ -684,7 +684,7 @@ is not this — it is §5.2, and it is built on this read.
 
 **One tool, named `clients`, three ops.** Its subject is the roster, which is
 why it is one tool rather than one per op — and why loaded remote tools still
-surface as individually named definitions of their own. lernie's
+surface as individually named definitions of their own. litany's
 `docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too: a generic
 `call {client, tool, arguments}` would collapse the role grant, the grant gate,
 the tool control and every future policy into one bit.
@@ -776,7 +776,7 @@ Subtraction is a second act on the one surface §5 says nothing but an explicit
 load may change, and nothing has yet needed it.
 
 **Where the injection runs, and what it may touch.** It is installed by the
-`yog lernie` arm (DESIGN §16.7 W11) at `Fx::tool_injection`, which puts it
+`yog litany` arm (DESIGN §16.7 W11) at `Fx::tool_injection`, which puts it
 inside the **driver** — a child process, not the engine. Two consequences, both
 load-bearing. Declaring touches nothing but disk, so a slow or absent engine can
 never change the prefix. Answering a `clients` op needs presence, which is
@@ -786,7 +786,7 @@ its reply read back with the one reply codec. **No verb and no transport were
 added** — the roster read is the one bl-4e08 landed. The child folds the same
 state root the engine writes, because the world hands `XDG_STATE_HOME` down to
 every process it spawns (DESIGN §16.2). Every wait carries a bound and ends
-early on lernie's stop flag, which is the router obligation lernie states and
+early on litany's stop flag, which is the router obligation litany states and
 cannot enforce.
 
 **The tool host's own config, and why the advertisement is derived from it.**
@@ -815,7 +815,7 @@ of why the config is not a second list beside the advertisement.
 interpolation of the invocation's input into it: a shell would make the declared
 schema advisory and turn an operator's config into a command-injection surface
 for anything the model can type. The invocation reaches the command exactly as
-lernie's own tool contract already delivers one (its ARCH §3.3): the
+litany's own tool contract already delivers one (its ARCH §3.3): the
 `tool_use.input` JSON on stdin, bytes on stdout, the exit code the verdict. So a
 tool host's executable is the same kind of program a local pool tool is, and the
 capture that comes back is the same three facts.
@@ -1203,7 +1203,7 @@ live-enumeration barrier bl-6c9e added, and the conversation noun bl-49bc added
   derived.** The rule differs because the nouns do (`src/naming`). §3.1 already
   says a workspace's leaf *is* its name and §3.2 already makes that same leaf
   the `--as` identity every ball claim is stamped with — so there is nothing to
-  invent, and **a foreign workspace needs no special case**: lernie's
+  invent, and **a foreign workspace needs no special case**: litany's
   `workspaces/`/`replays/` leaves are the auto-ids the tab strip already paints
   as their identity. Two roots holding one leaf is a world whose §3.2 join is
   already ambiguous — both would claim `--as home` — so the resolver refuses
@@ -1217,10 +1217,10 @@ live-enumeration barrier bl-6c9e added, and the conversation noun bl-49bc added
   `--project`.
 - **The third noun is the CONVERSATION, and the rule differs again** *(bl-49bc)*.
   A workspace and a project are resolved over an enumerated set of *paths*; a
-  conversation's identity is a **pair** — lernie's id (its branch name, and the
+  conversation's identity is a **pair** — litany's id (its branch name, and the
   only half that addresses a path) beside the §3.3 name it wears — so it is
   addressed by **an agent id, or the unique stored name a living agent wears**.
-  That is not a vocabulary yog invented: it is lernie's own
+  That is not a vocabulary yog invented: it is litany's own
   (`workspace::agent_name::resolve`, "an exact id match first, else the unique
   living agent wearing that name"), and the two spaces are disjoint by
   construction, every id opening with the compact `YYYYMMDDTHHMMSSZ` stamp and a
@@ -1228,7 +1228,7 @@ live-enumeration barrier bl-6c9e added, and the conversation noun bl-49bc added
   guesses which reading was meant. It had to become a contract because a
   `/prompt` receipt answers with the **minted name** (the root has no id until
   its detached driver writes `agents/<id>`) while the terminal's usage said
-  `--agent ID`: the handle composed with `message`, lernie's one name-resolving
+  `--agent ID`: the handle composed with `message`, litany's one name-resolving
   verb, and with nothing else — empty inspector reads, refusals from `stop` and
   `retarget`, and, worse, *successes* from `floor`, `flag` and `seen`, which
   write yog's own id-keyed rows and so left policy that governed nothing. One
@@ -1333,7 +1333,7 @@ rather than carrying a relative spelling.
   either back at the one seam that owns the round trip
   (`Snapshot::project_path` / `ws_path`).
 - **`Prepared::binding` stays a path, and that is now the ruling.** It is
-  lernie's `--cwd`: minted by the engine at `Prepare`, relayed back verbatim
+  litany's `--cwd`: minted by the engine at `Prepare`, relayed back verbatim
   inside `Action::Prompt` by a seat that never reads it, and read again by the
   engine to seed the working-directory mark and to discover the §3.7
   instruction pins. Both narrowings §8 imagined are worse than the disclosure.
@@ -1776,12 +1776,12 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    The per-workspace registry, the one scope filter that makes an unregistered
    workspace absent, auto-registration on create, and the per-seat `ui.json`
    split.
-7. **Tool hosts:** advertisement, rendering, routing, the lernie seam —
+7. **Tool hosts:** advertisement, rendering, routing, the litany seam —
    after its own design pass (§5). **Landed, in three parts.**
    - bl-4e08 (§5.1): the `advertise` gesture in all three serializations, the
      per-client `tools.json`, connection-scoped presence, and the
      `Query::Clients` roster the workspace surface renders.
-   - bl-c907 (§5.2): the lernie seam filled (`Fx::tool_injection`, lernie
+   - bl-c907 (§5.2): the litany seam filled (`Fx::tool_injection`, litany
      0.0.9), the `clients` tool with its three ops, the durable per-agent
      loaded set, and the frozen definitions the prefix declares. The
      model-facing half is complete: an agent can see this workspace's machines,
@@ -1798,7 +1798,7 @@ valuable with no network at all — they finish VISION V5 teleop parity.
    The day the leg landed the same call succeeded with nothing above it
    changing, which is what the interim refusal was shaped to make true: an
    in-band non-zero result is what a vanished endpoint had to produce anyway
-   (lernie's §3.3), so the seam was complete and honest before the transport
+   (litany's §3.3), so the seam was complete and honest before the transport
    existed.
 8. **The window becomes a client.** *(Landed. Opened bl-ae05 — see §9.7; the act
    path §9.8, designed and half-migrated in bl-4841 and **completed in
@@ -2216,7 +2216,7 @@ the wide one — focus held by **name**, resolved at the doors that need a path.
 It was attacked and put down, and the reason is worth more than the refactor
 would have been. **A name resolves against the enumeration, and the §3.4 raise
 focuses a workspace the enumeration does not carry yet.** `Snapshot::ws_path`
-answers over the published `workspaces` set; a `lernie new` that has just
+answers over the published `workspaces` set; a `litany new` that has just
 returned is a wall the derivation has not read. Today the frame holds the path
 and the composer's bare rung fires into the wall that was just raised
 (bl-9acf's whole fix); name-keyed, that focus would be unresolvable for as long
@@ -2577,7 +2577,7 @@ missing was a seat willing to read them there. Where a payload grew it grew by
   A **stale pin key dissolves** rather than being skipped — a key naming no
   enumerated workspace ranks no row, so the seat has nothing to drop.
 - **The §3.4 raise claim needed a second projection, exactly as the echo did.**
-  Migrating the bar re-opened bl-9acf on the first run: a wall `lernie new` has
+  Migrating the bar re-opened bl-9acf on the first run: a wall `litany new` has
   just founded is in no answer for as long as one derivation takes, so it wore
   no tab and its name resolved to nothing, and the composer's bare Enter would
   fire into the previous wall. bl-44e9's ruling covers it verbatim — *a seat's
@@ -3120,7 +3120,7 @@ Recorded so they are not relitigated:
   all of them. Fan-out, if it ever pays, is a distinct tool making sub-calls
   through the same chokepoint, never an overload of `invoke`.
 - **Shipping the server's world fold across the wire** (bl-71d0, §5) — handing
-  a remote executor the engine's composed env (`LERNIE_HOME`, `XDG_STATE_HOME`,
+  a remote executor the engine's composed env (`LITANY_HOME`, `XDG_STATE_HOME`,
   DESIGN §16.2) so its tools "see the same substrate". Those paths exist on the
   server and nowhere else; the executing end supplies its own environment, and
   substrate access is a tool the executing end advertises or an engine act.
@@ -3183,11 +3183,20 @@ stands and is amended by the ball that moves it.
   whole binary (bl-7942).
 - **lernie** — the seat: the window and the seat-client face, extracted into
   their own crate and repo (bl-0716). The crate name flips at a version
-  fence: the engine's line ends at 0.0.x, the seat's begins at 0.1.0, and
-  both READMEs state the fence — the published record carries two eras of
-  the name, and the fence is the one disambiguation rule.
-- **litany** — the agent-loop engine: the crate named lernie until the fence
-  (bl-9905). The crates.io name is held at 0.0.0.
+  fence: the engine's line under it ended at 0.0.11, the seat's begins at
+  0.1.0, and both READMEs state the fence — the published record carries two
+  eras of the name, and the fence is the one disambiguation rule. **Read
+  every `lernie` in yog's tree against it**: a bare one names the seat or
+  this ruling, and one bound to a `0.0.x` version names the engine at that
+  release.
+- **litany** — the agent-loop engine, renamed from lernie and re-pinned here
+  at `=0.0.1` (bl-9905, upstream bl-2f58). The rename took three durable-state
+  surfaces with it and shipped no compatibility shim: `LERNIE_HOME` →
+  `LITANY_HOME`, the XDG harness subdirs `.../lernie` → `.../litany`, and the
+  in-workspace mark namespace `refs/lernie/*` → `refs/litany/*`. yog's nested
+  world (DESIGN §16.2) carries all three, so a world founded before the fence
+  needs the migration recorded there; yog refuses to seed over one rather
+  than founding a rival empty home beside it.
 - **thrall** — the foot: §2's tool host severed into its own installable
   (bl-1dd3), carrying a foot-grade certificate — advertise and execute only,
   no ask, no act. The name is likewise held. **The protocol half has landed
@@ -3219,10 +3228,10 @@ naming both versions (bl-a670). With the versioned wire, this document
 becomes the protocol authority all four components implement against, and
 each repo's DESIGN governs only its own component.
 
-Migration order (strangler; each step ships green): thrall founded (bl-1dd3)
-→ engine renamed (bl-9905) → seat severed, with yog's window mode riding one
-deprecated release (bl-0716) → yog drops the UI and goes inert by default
-(bl-7942).
+Migration order (strangler; each step ships green): thrall founded (bl-1dd3,
+landed) → engine renamed (bl-9905, landed — the pin is `litany = "=0.0.1"`)
+→ seat severed, with yog's window mode riding one deprecated release
+(bl-0716) → yog drops the UI and goes inert by default (bl-7942).
 
 Supersessions, so stale prose is not read as live: §8's "one crate, one
 multi-call binary, as today" describes the tree until bl-0716/bl-7942 land;

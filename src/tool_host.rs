@@ -1,5 +1,5 @@
-//! **yog's tool injection** (REMOTE §5, bl-c907): the object the `yog lernie`
-//! arm hands lernie at `Fx::tool_injection`, so an agent can see this
+//! **yog's tool injection** (REMOTE §5, bl-c907): the object the `yog litany`
+//! arm hands litany at `Fx::tool_injection`, so an agent can see this
 //! workspace's client machines and drive the tools they advertise.
 //!
 //! lernie 0.0.9's seam (its `docs/DESIGN_TOOL_INJECTION.md`) is **one object
@@ -12,7 +12,7 @@
 //!   roster, and `load` is the act that makes a host's tools callable.
 //! - [`loaded`] — the agent's durable loaded set, read at every assembly, each
 //!   entry surfacing as an **individually named** tool. Never a multiplexer:
-//!   lernie's `docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too, so the
+//!   litany's `docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too, so the
 //!   grant gate, the tool control and any future policy keep seeing one name
 //!   per capability.
 //!
@@ -27,7 +27,7 @@
 //!
 //! **Adjudication is untouched and still runs first.** `yog tool-control`
 //! (DESIGN §8.6) is consulted before the executor routes anything, so a routed
-//! invocation is judged exactly as a local one — and lernie is honest that what
+//! invocation is judged exactly as a local one — and litany is honest that what
 //! happens on the far machine is beyond the adjudicator's reach (REMOTE §5).
 //!
 //! **A loaded remote name runs where it lives** (REMOTE §9 step 7, bl-024b).
@@ -37,13 +37,13 @@
 //! stdout, stderr and exit code passed through untouched, so the model cannot
 //! tell a routed tool from a local one. Only a *transport* failure is a
 //! sentence of yog's own, and it is in band and non-zero, which is the shape a
-//! vanished endpoint already had to produce (lernie's §3.3: *"A vanished
+//! vanished endpoint already had to produce (litany's §3.3: *"A vanished
 //! endpoint is an in-band error result, never a hang"*).
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use ::lernie::cmd::{InjectedTool, RoutedCall, RoutedCapture, ToolInjection};
+use ::litany::cmd::{InjectedTool, RoutedCall, RoutedCapture, ToolInjection};
 
 use crate::ui_state::{Clock, iso8601_extended};
 
@@ -98,7 +98,7 @@ pub struct Injection {
     clock: Arc<dyn Clock>,
     /// The `(workspace, agent)` this driver process was launched to drive, when
     /// its verb names one. [`ToolInjection::tools`] has no call to read them
-    /// off — the seam is per-process, not per-agent (lernie's §7) — so the
+    /// off — the seam is per-process, not per-agent (litany's §7) — so the
     /// binding reads them out of its own argv and hands them over. A verb that
     /// names no agent (`prompt`, which mints one, and every operator verb)
     /// declares the `clients` tool and nothing else, which is exactly what a
@@ -149,7 +149,7 @@ fn declaration() -> InjectedTool {
     }
 }
 
-/// A [`Result`] in the stdio vocabulary lernie's executor already speaks
+/// A [`Result`] in the stdio vocabulary litany's executor already speaks
 /// (`docs/DESIGN_TOOL_INJECTION.md` §3.1): a product on stdout at exit 0, or
 /// the reason on stderr at exit 1. The model cannot tell this from a local
 /// tool, and neither can the transcript.
@@ -173,7 +173,7 @@ fn capture(name: &str, answered: Result<String, String>) -> RoutedCapture {
 /// far machine's own stdout, stderr and exit code, so the model cannot tell a
 /// routed tool from a local one and neither can the transcript. A *transport*
 /// failure is the in-band refusal [`capture`] spells, which is the shape a
-/// vanished endpoint already had to produce (lernie's §3.3).
+/// vanished endpoint already had to produce (litany's §3.3).
 fn routed(site: &Site, entry: &loaded::Entry, call: &RoutedCall<'_>) -> RoutedCapture {
     match remote::invoke(site, entry, call.input, call.stop) {
         Ok(got) => RoutedCapture {

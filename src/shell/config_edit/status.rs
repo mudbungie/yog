@@ -4,7 +4,7 @@
 //! transitions are tested in `config_edit`.
 
 use crate::config_edit::brazen::Applied;
-use crate::config_edit::lernie_global::Saved;
+use crate::config_edit::litany_global::Saved;
 
 pub(super) fn status_line(ui: &mut egui::Ui, status: &str) {
     if !status.is_empty() {

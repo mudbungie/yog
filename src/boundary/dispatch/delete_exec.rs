@@ -49,7 +49,7 @@ pub(super) fn unmake(
 }
 
 /// The §3.6 class one conversation deep (bl-f17a): gate liveness fail-closed
-/// off the snapshot ("?" counts as live), then spawn the lernie verb — the
+/// off the snapshot ("?" counts as live), then spawn the litany verb — the
 /// only lawful remover of agent state (I2). `--children` rides exactly when
 /// `typed` re-states the conversation's name; the bare form otherwise, so a
 /// subtree nobody confirmed is declined by the substrate's own
@@ -72,7 +72,7 @@ pub(super) fn delete_agent(
     }
     let children = confirm.subtree_armed(typed);
     let outcome = delete::agent::spawn(
-        &deps.lernie,
+        &deps.litany,
         &deps.state_root,
         ts,
         workspace,

@@ -105,8 +105,8 @@ fn a_destination_not_there_yet_reads_as_empty_not_a_refusal() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
     for file in [
-        ConfigFile::LernieModels,
-        ConfigFile::LernieWorkflow {
+        ConfigFile::LitanyModels,
+        ConfigFile::LitanyWorkflow {
             name: "fresh".to_owned(),
         },
         ConfigFile::Cadence,
@@ -127,9 +127,9 @@ fn a_round_trip_apply_then_read_returns_the_same_bytes() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
     let text = "models:\n  m-1:\n    provider: acme\n";
-    assert!(fire(&deps, &applying(ConfigFile::LernieModels, text)).is_ok());
+    assert!(fire(&deps, &applying(ConfigFile::LitanyModels, text)).is_ok());
     assert_eq!(
-        ask(&deps, &reading(ConfigFile::LernieModels)),
+        ask(&deps, &reading(ConfigFile::LitanyModels)),
         Ok(Reply::Config {
             text: text.to_owned()
         })
@@ -140,7 +140,7 @@ fn a_round_trip_apply_then_read_returns_the_same_bytes() {
 fn a_bad_workflow_name_refuses_before_any_read() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
-    let file = ConfigFile::LernieWorkflow {
+    let file = ConfigFile::LitanyWorkflow {
         name: "../escape".to_owned(),
     };
     assert!(ask(&deps, &reading(file)).is_err());

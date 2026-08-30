@@ -1,5 +1,5 @@
 //! The one home for every filesystem-path derivation in yog (DESIGN §15 Y2,
-//! §5.1). Balls, lernie and yog locate their state through XDG folds; this
+//! §5.1). Balls, litany and yog locate their state through XDG folds; this
 //! module reproduces each fold once, over an injected [`Env`] snapshot —
 //! except **balls'**, which is no longer reproduced at all: the crate is
 //! linked (§16.7 W8), so [`Env::balls_layout`] hands back balls' own
@@ -57,7 +57,7 @@ impl Env {
     /// Derive a new snapshot from this one with the given `(key, value)` pairs
     /// overridden — inserted, or replaced when already present. The composition
     /// seam for the nested world (§16.2, [`crate::world`]): the world layers its
-    /// fixed override set (`LERNIE_HOME`/`XDG_STATE_HOME`) over
+    /// fixed override set (`LITANY_HOME`/`XDG_STATE_HOME`) over
     /// the ambient snapshot, and the result is itself an `Env`, so every fold
     /// above re-derives through the world with no second code path. A concrete
     /// slice (not `impl IntoIterator`) keeps the seam off the crate's generic
@@ -111,7 +111,7 @@ impl Env {
     }
 
     /// A present, non-empty variable. Empty reads as absent — the XDG
-    /// convention, and lernie's `LERNIE_HOME` "empty falls through" semantics,
+    /// convention, and litany's `LITANY_HOME` "empty falls through" semantics,
     /// unified into one rule.
     fn get(&self, key: &str) -> Option<&str> {
         self.vars
@@ -138,7 +138,7 @@ impl Env {
     }
 }
 
-/// **The substrate folds** — balls' linked layout and lernie's `LERNIE_HOME`
+/// **The substrate folds** — balls' linked layout and litany's `LITANY_HOME`
 /// override; their own file per §12's budget.
 mod substrate;
 
@@ -178,13 +178,13 @@ impl Env {
         self.get("PATH").map(str::to_owned)
     }
 
-    /// The workspace root lernie's tool-control seam names when it consults the
-    /// capability control (`LERNIE_CONV_REPO`, §8.6). `None` when unset — the
+    /// The workspace root litany's tool-control seam names when it consults the
+    /// capability control (`LITANY_CONV_REPO`, §8.6). `None` when unset — the
     /// control is also *run* in that directory, so the caller's fallback is the
     /// same fact by its other spelling. Read from the snapshot, never the live
     /// process env (the module rule).
-    pub fn lernie_conv_repo(&self) -> Option<PathBuf> {
-        self.get("LERNIE_CONV_REPO").map(PathBuf::from)
+    pub fn litany_conv_repo(&self) -> Option<PathBuf> {
+        self.get("LITANY_CONV_REPO").map(PathBuf::from)
     }
 
     /// Yog scripted-editor staging root: `<yog-state-root>/stage` (§9.3,

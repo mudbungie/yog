@@ -1,7 +1,7 @@
 //! STORIES **S0-T1** bootstrap-bare-start: an empty world, one Enter → the world
-//! materializes. `lernie prime`, `lernie new <names-root>/home` — the §3.1
+//! materializes. `litany prime`, `litany new <names-root>/home` — the §3.1
 //! default name, taken without asking, so the first Enter meets no name picker —
-//! and a detached `lernie prompt` carrying the typed text **verbatim** (bl-6920:
+//! and a detached `litany prompt` carrying the typed text **verbatim** (bl-6920:
 //! identity rides `--name`, never the payload), `YOG_NAME=home`, cwd `~`; the
 //! pre-submit view-model already carried the greyed name prediction (STORIES
 //! S0.2, DESIGN §3.1/§3.3/§3.4/§8.1).
@@ -9,7 +9,7 @@
 #![allow(clippy::unwrap_used)]
 
 use crate::support::Recorder;
-use lernie::mint::SplitMix64;
+use litany::mint::SplitMix64;
 use tempfile::tempdir;
 use yog::binding::{names_root, workspace_path};
 use yog::cli_outbound::Cli;
@@ -20,11 +20,11 @@ use yog::start::{self, DETACHED_EXIT, Deps, Payload, StartInputs};
 fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     let (bin, state) = (tempdir().unwrap(), tempdir().unwrap());
     let (yog, balls, home) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
-    let lernie_rec = Recorder::new(bin.path(), "lernie").authoring_workspaces();
+    let litany_rec = Recorder::new(bin.path(), "litany").authoring_workspaces();
     let bl_rec = Recorder::new(bin.path(), "bl");
     let deps = Deps {
         bl: Cli::new(bl_rec.path()),
-        lernie: Cli::new(lernie_rec.path()),
+        litany: Cli::new(litany_rec.path()),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
         // No answer from brazen: the §9.2 birth-template gate judges nothing.
@@ -64,7 +64,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     // The conversation mint re-derives at fire off a fresh generator on the same
     // held seed the preview used — so the greyed prediction is the fired name (§3.3).
     let minted = start::execute_prompt(
-        &deps.lernie,
+        &deps.litany,
         state.path(),
         "T0",
         &start::Fire {
@@ -80,7 +80,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     // The full argv sequence: prime, new <names-root>/home, prompt — the pinned
     // template already grants the worker role's whole tool pool (§8.1,
     // bl-7fc8), so nothing advances config/default a second time.
-    let inv = lernie_rec.wait(3);
+    let inv = litany_rec.wait(3);
     assert_eq!(inv[0].argv, ["prime"]);
     assert_eq!(inv[1].argv, ["new", ws.to_string_lossy().as_ref()]);
     assert!(
@@ -94,7 +94,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     // The fire hands the minted name back — the §3.4 focus claim's only handle:
     // the started root has no agent id until the detached driver writes it, so
     // this name is what the view-model holds until the roster carries the
-    // lernie-stored name fact (bl-49cb).
+    // litany-stored name fact (bl-49cb).
     assert_eq!(
         minted, conversation,
         "the name the fire returns is the name --name carries — one mint, one channel (§3.3)"

@@ -12,15 +12,15 @@ use crate::start::{BallSpec, Deps, Payload, execute_prompt, prepare};
 use crate::test_support::workspace::{seed_workspace_config, seed_workspace_lineage};
 use std::path::Path;
 
-/// lernie's shipped worker manifest, reduced — it composes no
+/// litany's shipped worker manifest, reduced — it composes no
 /// `instructions/**`, so §3.7's glob always drifts and the convergence always
-/// drives. That makes the `lernie config <ws> <name>` argv the observable.
+/// drives. That makes the `litany config <ws> <name>` argv the observable.
 const MANIFEST: &str = "roles:\n  worker:\n    pinned:\n      - goal.md\n";
 
-fn deps(w: &World, bl: &Cli, lernie: &Cli) -> Deps {
+fn deps(w: &World, bl: &Cli, litany: &Cli) -> Deps {
     Deps {
         bl: bl.clone(),
-        lernie: lernie.clone(),
+        litany: litany.clone(),
         state_root: w.state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
     }
@@ -41,7 +41,7 @@ fn tagged(project: &Path, tags: &[&str]) -> Payload {
 }
 
 /// A world whose workspace already exists, carrying `config/default` plus a
-/// lineage per name — the state an operator's `lernie config` leaves behind.
+/// lineage per name — the state an operator's `litany config` leaves behind.
 fn seeded(w: &World, lineages: &[&str]) -> std::path::PathBuf {
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
     seed_workspace_config(
@@ -54,14 +54,14 @@ fn seeded(w: &World, lineages: &[&str]) -> std::path::PathBuf {
     for name in lineages {
         seed_workspace_lineage(&ws, name);
     }
-    let lernie = crate::world::layout_under(w.yog.path()).lernie;
-    std::fs::create_dir_all(&lernie).unwrap();
-    std::fs::write(lernie.join("models.yaml"), b"models: {}\n").unwrap();
+    let litany = crate::world::layout_under(w.yog.path()).litany;
+    std::fs::create_dir_all(&litany).unwrap();
+    std::fs::write(litany.join("models.yaml"), b"models: {}\n").unwrap();
     ws
 }
 
-/// The `lernie config` rows this prepare drove, by the lineage they targeted
-/// (`argv[3]` — `lernie config <ws> <name>`).
+/// The `litany config` rows this prepare drove, by the lineage they targeted
+/// (`argv[3]` — `litany config <ws> <name>`).
 fn converged(w: &World) -> Vec<String> {
     w.ops()
         .into_iter()
@@ -85,10 +85,10 @@ fn two_tagged_balls_are_born_on_two_different_lineages() {
         let w = World::new();
         let ws = seeded(&w, &["deep", "quick"]);
         let bl = Cli::new("/no/bl"); // a bound ball claims nothing
-        let lernie = w.lernie();
+        let litany = w.litany();
         let mut inputs = w.inputs("cobalt-gecko", tagged(w.project.path(), &tags));
         inputs.workspace = ws.clone();
-        let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+        let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
         assert_eq!(p.lineage.as_deref(), want, "tags {tags:?}");
         // The §8.6 convergence authored onto the *same* branch the fire will
         // fork off — never `default` while the drone is born elsewhere.
@@ -97,7 +97,7 @@ fn two_tagged_balls_are_born_on_two_different_lineages() {
 }
 
 /// The fire's half: the selected lineage rides `--config` ahead of the binding,
-/// and a start that selected none spells no flag at all — lernie's own
+/// and a start that selected none spells no flag at all — litany's own
 /// `config/default` is the default, not a word yog writes.
 #[test]
 fn the_fire_carries_the_selected_lineage_and_omits_an_unselected_one() {
@@ -112,10 +112,10 @@ fn the_fire_carries_the_selected_lineage_and_omits_an_unselected_one() {
             "#!/bin/sh\nprintf '%s\\037%s' \"$4\" \"$5\" > '{}'\n",
             fifo.display()
         );
-        let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
+        let litany = Cli::new(write_exec(w.bin.path(), "litany", &body));
         let ws = workspace(&w);
         execute_prompt(
-            &lernie,
+            &litany,
             w.state.path(),
             "TS",
             &crate::start::Fire {
@@ -180,7 +180,7 @@ fn a_freshly_minted_ball_selects_the_default_lineage() {
     let ws = seeded(&w, &["deep"]);
     let wt = crate::binding::work_worktree_path(w.balls.path(), w.project.path(), "bl-2222", None);
     let bl = Cli::new(fake_bl(w.bin.path(), "bl-2222", &wt));
-    let lernie = w.lernie();
+    let litany = w.litany();
     let mut inputs = w.inputs(
         "cobalt-gecko",
         Payload::Ball {
@@ -192,6 +192,6 @@ fn a_freshly_minted_ball_selects_the_default_lineage() {
         },
     );
     inputs.workspace = ws;
-    let p = prepare(&deps(&w, &bl, &lernie), &inputs, "TS").unwrap();
+    let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
     assert_eq!(p.lineage, None);
 }

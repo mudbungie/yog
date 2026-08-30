@@ -54,8 +54,8 @@ fn epoch_from_iso8601_inverts_the_extended_rendering() {
     }
 }
 
-/// It accepts exactly lernie's clock shape and nothing else — a tolerant parse
-/// would invent an answer for bytes no lernie wrote.
+/// It accepts exactly litany's clock shape and nothing else — a tolerant parse
+/// would invent an answer for bytes no litany wrote.
 #[test]
 fn epoch_from_iso8601_refuses_every_other_shape() {
     for bad in [

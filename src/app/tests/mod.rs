@@ -107,7 +107,7 @@ fn startup_focus_falls_back_to_first_when_nothing_needs_attention() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         balls_clones: root.path().join("balls").join("clones"),
         home: root.path().join("home"),

@@ -5,14 +5,14 @@
 //! the operator asks for a fresh trail ([`super::clear`]). But a
 //! failure a later clean run of the same verb has superseded is *history*, not
 //! a live wound, and painting it with the same prominence sends diagnosis down
-//! a false trail — the proven wound: a three-day-old `lernie prime` failure,
+//! a false trail — the proven wound: a three-day-old `litany prime` failure,
 //! since fixed and re-run green, read as THE error when an unrelated action
 //! failed.
 //!
 //! So prominence is a **projection over the tail at read time, never a stored
 //! flag**: walking newest-first, a failed row is live unless a *later* row with
 //! the same (`cwd`, verb) did not fail. The verb is the leading two argv tokens
-//! — binary plus subcommand (`bl close`, `lernie prime`, `yog-step mint`) —
+//! — binary plus subcommand (`bl close`, `litany prime`, `yog-step mint`) —
 //! because the argv tail carries per-run operands (a ball id, a composed goal)
 //! that never repeat, so keying on the whole argv would retire nothing; `cwd`
 //! scopes it, so a clean `bl close` in one project leaves a failed one in
@@ -49,7 +49,7 @@ pub enum OpOutcome {
     /// (§6): the handoff is the newest fact about that verb in this `cwd`,
     /// and a stale failure under it is no longer the live story.
     /// **Since bl-b95e it is the whole of a live handoff.** A fifth bucket
-    /// stood here — `Notice`, a driver whose sink held nothing but lernie's own
+    /// stood here — `Notice`, a driver whose sink held nothing but litany's own
     /// benign lines (bl-1296) — because the sink was folded in unconditionally
     /// and a byte in it meant death. The fold is now gated on the state the
     /// launch produced (`opslog::launch::stillborn`), so a driver that filed a

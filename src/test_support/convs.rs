@@ -28,7 +28,7 @@ pub(crate) fn forest(model: &AppModel, now_unix: i64) -> Vec<ConvRow> {
     let Some(workspace) = model.focused_ws_name() else {
         return Vec::new();
     };
-    let deps: Deps = model.boundary_deps(&Cli::new("lernie"), &Cli::new("bl"));
+    let deps: Deps = model.boundary_deps(&Cli::new("litany"), &Cli::new("bl"));
     let answered = match model.answer(&deps, &Query::Conversations { workspace }, now_unix) {
         Ok(Reply::Conversations(rows)) => rows,
         _ => Vec::new(),

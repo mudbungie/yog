@@ -81,7 +81,7 @@ fn s8_t4_each_agent_tracks_in_a_space_of_its_own() {
 
     // --- Clause 3, inheritance: the whole of it is one env pair, so a subagent
     // resolves its parent's space with no mechanism of its own — exactly how
-    // `YOG_WALL` already reaches a whole descent (lernie hands its environment
+    // `YOG_WALL` already reaches a whole descent (litany hands its environment
     // to every tool subprocess it spawns).
     // The pair a parent layers names the space root, and a root IS both of
     // balls' homes — so the child process that inherits the var resolves its

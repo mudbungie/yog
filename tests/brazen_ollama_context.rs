@@ -88,9 +88,9 @@ impl brazen::Clock for Zero {
 }
 
 /// The canonical request a yog turn is: a system prompt, one user message, the
-/// `clients` tool yog injects into every turn, and lernie's per-call output cap
+/// `clients` tool yog injects into every turn, and litany's per-call output cap
 /// (`build_request` sets `max_tokens: Some(4096)` and no `stop`). Written as the
-/// bytes lernie pipes to `bz`, because that is the interface — a struct literal
+/// bytes litany pipes to `bz`, because that is the interface — a struct literal
 /// here would be a second spelling of it.
 const TURN: &[u8] =
     br#"{"model":"qwen3-coder","system":[{"type":"text","text":"you are a worker"}],
@@ -197,6 +197,6 @@ fn clearing_the_typed_cap_lets_an_explicit_context_through() {
     assert_eq!(body["options"]["num_ctx"], 32768, "{body}");
     assert_eq!(
         body["options"]["num_predict"], 2048,
-        "the operator's explicit output cap wins over lernie's request: {body}"
+        "the operator's explicit output cap wins over litany's request: {body}"
     );
 }

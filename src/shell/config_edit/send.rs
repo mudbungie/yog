@@ -17,7 +17,7 @@ use std::path::Path;
 /// Send the drafted file through the boundary (§8.5), **posted** (REMOTE §9.8):
 /// the variant carries the destination — this workspace, this lineage, this
 /// path, this origin — and the full staged text, and the chokepoint stages it
-/// and drives `lernie config`.
+/// and drives `litany config`.
 pub(super) fn edit(model: &mut AppModel, config: &mut ConfigState, ws: &Path) {
     let action = Action::ApplyConfig {
         file: ConfigFile::Branch {
@@ -31,7 +31,7 @@ pub(super) fn edit(model: &mut AppModel, config: &mut ConfigState, ws: &Path) {
     config.cb_act.fire(
         model,
         &action,
-        "sent — staged and committed by `lernie config`",
+        "sent — staged and committed by `litany config`",
     );
 }
 

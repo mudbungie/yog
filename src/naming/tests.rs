@@ -13,7 +13,7 @@ fn set(paths: &[&str]) -> Vec<PathBuf> {
 fn a_workspace_is_named_by_its_leaf() {
     assert_eq!(leaf(Path::new("/d/yog/workspaces/home")), "home");
     assert_eq!(
-        leaf(Path::new("/d/lernie/workspaces/20260727T093000Z-f0reign")),
+        leaf(Path::new("/d/litany/workspaces/20260727T093000Z-f0reign")),
         "20260727T093000Z-f0reign"
     );
 }
@@ -30,8 +30,8 @@ fn a_rootless_path_names_nothing() {
 fn by_leaf_is_the_inverse() {
     let s = set(&[
         "/d/yog/workspaces/home",
-        "/d/lernie/workspaces/auto-1",
-        "/d/lernie/replays/replay-1",
+        "/d/litany/workspaces/auto-1",
+        "/d/litany/replays/replay-1",
     ]);
     assert_eq!(by_leaf(&s, "home"), Ok(s[0].clone()));
     assert_eq!(by_leaf(&s, "auto-1"), Ok(s[1].clone()));
@@ -57,7 +57,7 @@ fn an_unknown_leaf_refuses() {
 /// join is already ambiguous, so the refusal says so instead of picking.
 #[test]
 fn an_ambiguous_leaf_refuses() {
-    let s = set(&["/d/yog/workspaces/home", "/d/lernie/replays/home"]);
+    let s = set(&["/d/yog/workspaces/home", "/d/litany/replays/home"]);
     assert_eq!(
         by_leaf(&s, "home"),
         Err("ambiguous workspace \"home\"".to_owned())
@@ -68,9 +68,9 @@ fn an_ambiguous_leaf_refuses() {
 /// it is already unique.
 #[test]
 fn a_project_names_by_its_basename() {
-    let s = set(&["/home/u/dev/yog", "/home/u/dev/lernie"]);
+    let s = set(&["/home/u/dev/yog", "/home/u/dev/litany"]);
     assert_eq!(name_of(&s, &s[0]), "yog");
-    assert_eq!(name_of(&s, &s[1]), "lernie");
+    assert_eq!(name_of(&s, &s[1]), "litany");
 }
 
 /// …and grows exactly enough to separate two checkouts that share one.

@@ -57,9 +57,9 @@
 # template are what make this a yog world at all, and they are not what is
 # being withheld.
 seed_wall_less() {
-  mkdir -p "$1/yog/world/lernie/template"
-  cp "$real_world/models.yaml" "$1/yog/world/lernie/models.yaml"
-  cp "$real_world/template/providers.yaml" "$1/yog/world/lernie/template/providers.yaml"
+  mkdir -p "$1/yog/world/litany/template"
+  cp "$real_world/models.yaml" "$1/yog/world/litany/models.yaml"
+  cp "$real_world/template/providers.yaml" "$1/yog/world/litany/template/providers.yaml"
 }
 
 # A provider row NOTHING can resolve — not the wall's `config.toml`, which this
@@ -72,7 +72,7 @@ ABSENT_ROW=yogdrive-no-such-provider
 # left resolving would be a second, different world than the one this phase
 # says it laid.
 seed_absent_row() {
-  python3 - "$1/yog/world/lernie/template/providers.yaml" "$ABSENT_ROW" <<'PYROW'
+  python3 - "$1/yog/world/litany/template/providers.yaml" "$ABSENT_ROW" <<'PYROW'
 import re, sys
 path, row = sys.argv[1], sys.argv[2]
 text = open(path).read()

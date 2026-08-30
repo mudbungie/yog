@@ -32,7 +32,7 @@ pub(super) fn render(ui: &mut egui::Ui, config: &mut ConfigState) {
         }
     }
     // The fold is keyed by the FILE, not by its label (bl-9551):
-    // `CollapsingHeader` derives its id from its text, and the lernie and
+    // `CollapsingHeader` derives its id from its text, and the litany and
     // yog surfaces both head their raw escape "raw text" — one id, so the
     // two folds opened and shut together and egui painted its id-clash
     // warning straight across the Apply row beneath them. The word the

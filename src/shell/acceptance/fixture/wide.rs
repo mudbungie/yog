@@ -56,7 +56,7 @@ pub(in crate::shell::acceptance) fn world_wide() -> World {
         "cadence:\n  watcher:\n    debounce_ms: 0\n",
     )
     .unwrap();
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     for (id, name, preview) in ROWS {
         // The payload line first: `build_agent` writes it as the conversation's

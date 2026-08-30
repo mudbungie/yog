@@ -17,7 +17,7 @@ fn a_wire_client_enumerates_only_its_registrations() {
         root.path(),
         world_of(data.path(), &["home", "corp"]),
         data.path().to_path_buf(),
-        Cli::new("/no/such/lernie"),
+        Cli::new("/no/such/litany"),
     );
     let phone = seat("phone");
     crate::registry::register(root.path(), &phone.client, "home").unwrap();
@@ -48,7 +48,7 @@ fn an_unregistered_workspace_refuses_exactly_as_an_unknown_one() {
         root.path(),
         world_of(data.path(), &["home", "corp"]),
         data.path().to_path_buf(),
-        Cli::new("/no/such/lernie"),
+        Cli::new("/no/such/litany"),
     );
     let phone = seat("phone");
     crate::registry::register(root.path(), &phone.client, "home").unwrap();
@@ -97,7 +97,7 @@ fn a_workspace_created_over_the_wire_registers_its_creator() {
         root.path(),
         world_of(data.path(), &[]),
         data.path().to_path_buf(),
-        fake_lernie(bin.path()),
+        fake_litany(bin.path()),
     );
     let phone = seat("phone");
     let reply = ctx.answer_as(
@@ -132,7 +132,7 @@ fn a_create_naming_a_workspace_that_exists_refuses_rather_than_joining_it() {
         root.path(),
         world_of(data.path(), &["corp"]),
         data.path().to_path_buf(),
-        fake_lernie(bin.path()),
+        fake_litany(bin.path()),
     );
     let phone = seat("phone");
     let refusal = ctx.answer_as(
@@ -155,7 +155,7 @@ fn a_raise_naming_something_that_is_not_a_plain_component_refuses() {
         root.path(),
         world_of(data.path(), &[]),
         data.path().to_path_buf(),
-        Cli::new("/no/such/lernie"),
+        Cli::new("/no/such/litany"),
     );
     for name in ["../elsewhere", ".."] {
         let refusal = ctx.answer_as(
@@ -182,7 +182,7 @@ fn a_follow_resolves_its_address_under_the_callers_scope() {
         root.path(),
         world_of(data.path(), &["home", "corp"]),
         data.path().to_path_buf(),
-        Cli::new("/no/such/lernie"),
+        Cli::new("/no/such/litany"),
     );
     let phone = seat("phone");
     crate::registry::register(root.path(), &phone.client, "home").unwrap();

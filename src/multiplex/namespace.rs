@@ -7,7 +7,7 @@
 /// plugin binaries are absent from it because balls' own plugin chain spawns
 /// them and no operator types one.
 pub(super) const NAMESPACES: &[(&str, Namespace)] = &[
-    ("lernie", Namespace::Lernie),
+    ("litany", Namespace::Litany),
     ("bl", Namespace::Bl),
     ("bz", Namespace::Bz),
     ("bl-delivery", Namespace::BlDelivery),
@@ -23,7 +23,7 @@ pub(super) const NAMESPACES: &[(&str, Namespace)] = &[
 /// `world/tools/` shims a `yog bl prime` binds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Namespace {
-    Lernie,
+    Litany,
     Bl,
     Bz,
     BlDelivery,
@@ -56,7 +56,7 @@ impl Namespace {
     /// unclassified.
     pub(super) fn owns_argv(self) -> bool {
         match self {
-            Namespace::Lernie
+            Namespace::Litany
             | Namespace::Bl
             | Namespace::Bz
             | Namespace::BlDelivery
@@ -70,7 +70,7 @@ impl Namespace {
     /// Route to the namespace's arm with the sliced verb args (§16.7 W12).
     pub(super) fn run(self, args: &[String]) -> i32 {
         match self {
-            Namespace::Lernie => super::lernie::run(args),
+            Namespace::Litany => super::litany::run(args),
             Namespace::Bl => super::bl::run(args),
             Namespace::Bz => super::bz::run(args),
             Namespace::BlDelivery => super::bl_delivery::run(args),

@@ -53,7 +53,7 @@ pub struct ShellState {
     /// of their own, none aware of the others, which is what let a mode paint
     /// over the conversation.
     pub center: crate::keymap::CenterTab,
-    /// The **world's** config editors (§9): lernie's global file and the yog
+    /// The **world's** config editors (§9): litany's global file and the yog
     /// clock's, one draft of each per install. brazen's pane is not here — it is
     /// a workspace's, so it rides [`WallRam`] (§16.2 as amended, bl-5894).
     pub config: ConfigState,
@@ -144,7 +144,7 @@ pub struct ShellState {
 
 impl ShellState {
     /// Fold the config editors from the env snapshot (their paths + runners);
-    /// the rest default. A missing brazen/lernie file loads as an empty draft,
+    /// the rest default. A missing brazen/litany file loads as an empty draft,
     /// not an error (§9), so this only fails on an unexpected io error.
     ///
     /// `clock` is the crate's one injected time source (§7.2), shared with the

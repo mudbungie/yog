@@ -5,7 +5,7 @@ use super::*;
 use crate::app::tests::agent;
 use crate::git_tree::AgentState;
 
-/// A tree of `ids` in lernie's §2.3 grammar — an id is a chain of `<ts>-<short>`
+/// A tree of `ids` in litany's §2.3 grammar — an id is a chain of `<ts>-<short>`
 /// segments, so `alpha-1` is a root and `alpha-1-kid-2` its child. All
 /// quiescent: growth is about the branch set, not liveness.
 fn tree(ids: &[&str]) -> GitTree {

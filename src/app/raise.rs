@@ -3,7 +3,7 @@
 //!
 //! Focus is a §3.1 **name** now, and a name resolves against the enumerated
 //! workspaces. The raise is the one moment that ordering runs backwards:
-//! `lernie new` has returned and the wall exists on disk, but the worker has
+//! `litany new` has returned and the wall exists on disk, but the worker has
 //! not enumerated it, so for as long as one derivation takes the focus names a
 //! workspace no set carries — and the composer's bare Enter, which resolves the
 //! focused name to fire into it, would resolve into the *previous* wall. That
@@ -75,7 +75,7 @@ impl AppModel {
     ///
     /// **`raised` is `None` for a workspace a §8.2 entry hosts** (bl-e349), and
     /// that is the claim's own premise rather than an exception to it. The claim
-    /// exists to carry a wall from the instant `lernie new` founded it **on this
+    /// exists to carry a wall from the instant `litany new` founded it **on this
     /// box** to the instant this box's derivation reads it; a workspace founded
     /// on its host has no local directory to enumerate and no such gap — its row
     /// arrives on the entry's own slice ([`start_path`](AppModel::start_path)).

@@ -11,7 +11,7 @@
 //! **The queue is the snapshot's** (§11: no frame-time IO): the pending items
 //! are the snapshot's own pending listing, gathered by the off-thread
 //! enumerate over the watched `inbox/` root — the frame renders it, adds no
-//! read, and notices no arrival event. The cut is lernie's: pending is what
+//! read, and notices no arrival event. The cut is litany's: pending is what
 //! still sits in `inbox/<id>/`, crossed is what its delivery drain committed;
 //! yog holds no membership claim.
 //!
@@ -59,7 +59,7 @@ use crate::AppModel;
 use crate::actions::DraftKey;
 use crate::cli_outbound::Cli;
 use crate::start;
-use lernie::mint::SplitMix64;
+use litany::mint::SplitMix64;
 
 use super::ShellState;
 
@@ -75,7 +75,7 @@ pub fn composer(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     bl: &Cli,
     cap: f32,
 ) {
@@ -215,7 +215,7 @@ pub fn composer(
         entered,
         interrupted,
     };
-    verb_buttons(ui, model, state, lernie, bl, &ctx);
+    verb_buttons(ui, model, state, litany, bl, &ctx);
 
     // The line's own answer stays under the box that typed it. A **search**
     // answer does not: it is a whole-center surface, so since bl-1ca2 it is

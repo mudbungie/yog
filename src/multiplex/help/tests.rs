@@ -85,7 +85,7 @@ fn a_namespace_help_is_the_tools_own_and_falls_through() {
     }
     // Asked from the top, though, yog does have a page for the three a human
     // types — what the namespace is, and that its own `--help` is the tool's.
-    for word in ["gesture", "lernie", "bl", "bz"] {
+    for word in ["gesture", "litany", "bl", "bz"] {
         assert!(answer(&argv(&["yog", "help", word])).is_some(), "{word}");
     }
 }

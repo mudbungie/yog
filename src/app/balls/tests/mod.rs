@@ -35,10 +35,10 @@ mod convball;
 // file under the 300-line cap, sharing this world's cloned project.
 mod delete;
 // The start flow's focus adoption (§3.4, bl-2826): it shares this world but spawns
-// a fake `lernie`, so it lives in its own file under the 300-line cap.
+// a fake `litany`, so it lives in its own file under the 300-line cap.
 mod prepare;
 // The frame-side boundary glue (dispatch / fire_prompt, §8.5) — its own file,
-// same fake-`lernie` discipline as `prepare`.
+// same fake-`litany` discipline as `prepare`.
 mod glue;
 // The §8.5 line context (what a slash command elides) — its own file, this
 // world's focus read as a seat.
@@ -171,7 +171,7 @@ pub(super) fn empty_model() -> (TempDir, AppModel) {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         balls_clones: root.path().join("clones"),
         home: root.path().join("home"),

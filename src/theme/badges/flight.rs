@@ -2,7 +2,7 @@
 //! right now, keyed by [`crate::nav::convs`]'s two liveness vocabularies.
 //!
 //! Split from [`super`] at §12's cap on the seam `op` was split on: the parent
-//! is the vocabulary of what a thing *is* — an agent's state, a `refs/lernie/*`
+//! is the vocabulary of what a thing *is* — an agent's state, a `refs/litany/*`
 //! mark, a verdict, a tool's outcome — and these two are the vocabulary of what
 //! it is *doing* this instant, read off the live snapshot and repainted every
 //! frame. Both mappings are total over their enum, so a new class cannot ship

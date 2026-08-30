@@ -18,12 +18,12 @@ use crate::keymap::CenterTab;
 /// still no search mode to enter or leave.
 #[test]
 fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
-    let (lernie, bl) = (
-        crate::cli_outbound::Cli::new("lernie"),
+    let (litany, bl) = (
+        crate::cli_outbound::Cli::new("litany"),
         crate::cli_outbound::Cli::new("bl"),
     );
     let mut world = world();
-    let quiet = super::painted(&mut world, &lernie, &bl);
+    let quiet = super::painted(&mut world, &litany, &bl);
     assert!(
         !quiet.lines().any(|line| line == "Search"),
         "no answer, no tab:\n{quiet}"
@@ -40,7 +40,7 @@ fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
     assert!(crate::shell::slash::run(
         &mut world.model,
         &mut world.state,
-        &lernie,
+        &litany,
         &bl,
         &key,
         "/search hello"
@@ -51,7 +51,7 @@ fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
         "asking focuses the answer's tab — the ask is the operator's one gesture"
     );
     world.searches();
-    let answered = super::painted(&mut world, &lernie, &bl);
+    let answered = super::painted(&mut world, &litany, &bl);
     assert!(
         answered.lines().any(|line| line == "Search"),
         "the tab is offered while there is an answer:\n{answered}"
@@ -62,13 +62,13 @@ fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
     assert!(crate::shell::slash::run(
         &mut world.model,
         &mut world.state,
-        &lernie,
+        &litany,
         &bl,
         &key,
         "/search"
     ));
     world.searches();
-    let cleared = super::painted(&mut world, &lernie, &bl);
+    let cleared = super::painted(&mut world, &litany, &bl);
     assert!(
         !cleared.lines().any(|line| line == "Search"),
         "a cleared answer retires its tab:\n{cleared}"
@@ -95,8 +95,8 @@ fn the_search_tab_is_offered_with_an_answer_and_goes_when_the_answer_does() {
 /// operator typed is on screen, in the pane, with the way on beneath it.
 #[test]
 fn a_search_that_matches_nothing_says_so_and_keeps_its_tab() {
-    let (lernie, bl) = (
-        crate::cli_outbound::Cli::new("lernie"),
+    let (litany, bl) = (
+        crate::cli_outbound::Cli::new("litany"),
         crate::cli_outbound::Cli::new("bl"),
     );
     let mut world = world();
@@ -104,13 +104,13 @@ fn a_search_that_matches_nothing_says_so_and_keeps_its_tab() {
     assert!(crate::shell::slash::run(
         &mut world.model,
         &mut world.state,
-        &lernie,
+        &litany,
         &bl,
         &key,
         "/search zzzznotathing"
     ));
     world.searches();
-    let painted = super::painted(&mut world, &lernie, &bl);
+    let painted = super::painted(&mut world, &litany, &bl);
     assert_eq!(
         world.state.center,
         CenterTab::Search,

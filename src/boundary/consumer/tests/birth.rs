@@ -12,7 +12,7 @@ use serde_json::json;
 use tempfile::tempdir;
 
 /// The context the drive reproduced on: a world with no workspace at all, a
-/// `lernie` that founds one, and a snapshot nothing will ever re-derive.
+/// `litany` that founds one, and a snapshot nothing will ever re-derive.
 fn newborn_world(
     root: &std::path::Path,
     data: &std::path::Path,
@@ -23,7 +23,7 @@ fn newborn_world(
         root,
         world_of(data, &[]),
         data.to_path_buf(),
-        fake_lernie(bin),
+        fake_litany(bin),
     )
 }
 
@@ -61,7 +61,7 @@ fn a_second_gesture_addresses_the_wall_the_first_founded() {
 
 /// The same composition for the window (REMOTE §4.1, §9.8): it posts every act
 /// over the wire as `yog-window`, so its own Prepare receipt reaching
-/// `lernie prompt` needs the newborn to be both **registered** — which the
+/// `litany prompt` needs the newborn to be both **registered** — which the
 /// create's auto-registration writes — and **enumerated**, which is this fix.
 /// One without the other still refuses.
 #[test]
@@ -91,12 +91,12 @@ fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
 }
 
 /// **A birth that died mid-way is resumable, not a wedge** (bl-c9d2):
-/// `lernie new` makes the directory before it makes the `repo.git` marker, so
+/// `litany new` makes the directory before it makes the `repo.git` marker, so
 /// a killed birth leaves a marker-less directory no root enumerates. The
 /// resolver used to refuse that name forever — `unknown workspace`, a
 /// sentence about addressing for a half-written filesystem — with no in-band
 /// exit. Now the raise resolves past debris that is not a workspace, and the
-/// idempotent ensure's `lernie new` finishes what the dead one started.
+/// idempotent ensure's `litany new` finishes what the dead one started.
 #[test]
 fn a_half_born_directory_is_resumed_not_wedged() {
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());

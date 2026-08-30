@@ -5,9 +5,9 @@
 //! two dropdowns over brazen's own facts.
 //!
 //! **It was two writes and is one** (bl-d9cb). The pick used to compose §9.2 and
-//! §9.3 in a normative order, because lernie's cross-check refused a config
+//! §9.3 in a normative order, because litany's cross-check refused a config
 //! whose `roles.<r>.model` was not declared in the global `models.yaml`. That
-//! check is retired upstream (lernie's bl-35e2): a role's `providers.yaml`
+//! check is retired upstream (litany's bl-35e2): a role's `providers.yaml`
 //! assignment is the single home of its (provider row, model id) pointer, so
 //! there is one file to write and no order to get wrong.
 //!
@@ -42,12 +42,12 @@ pub use header::{
 pub use pick::{Pick, PickError, plan, role_fault};
 pub use remedy::{Remedy, remedy};
 
-/// The role that talks to you (lernie's `WORKER_ROLE`) — the one the
+/// The role that talks to you (litany's `WORKER_ROLE`) — the one the
 /// conversation's model row shows and writes, because that is the question
 /// being asked; the picker's role strip re-scopes the same two dropdowns.
 pub const WORKER_ROLE: &str = "worker";
 
-/// The config branch a pick advances — `lernie config <ws>`'s own default
+/// The config branch a pick advances — `litany config <ws>`'s own default
 /// (§9.3). A differently-named lineage is edited through the §9.3 surface; the
 /// picker deliberately offers no branch chooser. Named here rather than in a
 /// frontend because both seats that fire a pick — the §11 pane and the §8.5
@@ -135,7 +135,7 @@ pub fn scope_sentence(workspace_leaf: &str, branch: &str, short_oid: &str) -> St
 /// [`scope_sentence`] is about a conversation already frozen ("this one stays
 /// frozen at …"), which is not a fact the birth block has. What the birth block
 /// must say instead is the one thing the operator would otherwise get wrong:
-/// **there is no per-conversation pick to make.** lernie 0.0.3's `lernie prompt`
+/// **there is no per-conversation pick to make.** litany's `litany prompt`
 /// takes no config argument and resolves the head of `config/<branch>` itself,
 /// so a start-time pick *is* the workspace default moving — the same write the
 /// §9.4 picker always did, made one gesture before the start instead of after it.
@@ -151,7 +151,7 @@ pub fn birth_sentence(workspace_leaf: &str, branch: &str) -> String {
 /// operator can see what it is about to do before it does it.
 ///
 /// It named two files and their order until bl-d9cb, and both halves of that
-/// sentence were false at the pin: lernie reads no global `models:` table, so the
+/// sentence were false at the pin: litany reads no global `models:` table, so the
 /// declaration was inert and its ordering rule protected nothing.
 pub const WRITE_NOTE: &str = "writes the role's provider and model into providers.yaml on this workspace's \
-     config branch, through `lernie config`";
+     config branch, through `litany config`";

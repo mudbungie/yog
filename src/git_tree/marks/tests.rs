@@ -1,9 +1,9 @@
-//! Unit tests for the `refs/lernie/*` mark projection (marks).
+//! Unit tests for the `refs/litany/*` mark projection (marks).
 
 use super::*;
 use crate::git_tree::AgentState;
 
-/// An unmarked agent — every `refs/lernie/*` oid absent.
+/// An unmarked agent — every `refs/litany/*` oid absent.
 fn agent() -> Agent {
     Agent {
         branch_name: "agents/a-b".into(),
@@ -95,8 +95,8 @@ fn a_mark_survives_its_acknowledgement() {
 
 #[test]
 fn parse_oids_strips_prefix_and_keeps_oid() {
-    let out = b"refs/lernie/conflicted/a-b 1111111111111111111111111111111111111111\n\
-                refs/lernie/conflicted/c-d 2222222222222222222222222222222222222222\n";
+    let out = b"refs/litany/conflicted/a-b 1111111111111111111111111111111111111111\n\
+                refs/litany/conflicted/c-d 2222222222222222222222222222222222222222\n";
     let oids = parse_oids(out, CONFLICTED_PREFIX);
     assert_eq!(oids.len(), 2);
     assert_eq!(
@@ -114,7 +114,7 @@ fn parse_oids_ignores_nonmatching_and_malformed_lines() {
     // A ref outside the namespace, and a line with no oid field, both
     // contribute nothing.
     let out = b"refs/heads/agents/a-b 3333333333333333333333333333333333333333\n\
-                refs/lernie/budget-exhausted/x-y 4444444444444444444444444444444444444444\n\
+                refs/litany/budget-exhausted/x-y 4444444444444444444444444444444444444444\n\
                 nospaceline\n";
     let oids = parse_oids(out, BUDGET_PREFIX);
     assert_eq!(oids.len(), 1);
@@ -127,7 +127,7 @@ fn parse_oids_ignores_nonmatching_and_malformed_lines() {
 #[test]
 fn parse_oids_drops_empty_id() {
     // The bare prefix with no id after it strips to "" and is dropped.
-    let out = b"refs/lernie/notify/ 5555555555555555555555555555555555555555\n";
+    let out = b"refs/litany/notify/ 5555555555555555555555555555555555555555\n";
     assert!(parse_oids(out, NOTIFY_PREFIX).is_empty());
 }
 

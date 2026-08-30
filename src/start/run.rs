@@ -88,11 +88,11 @@ pub fn prepare(deps: &Deps, inputs: &StartInputs, ts: &str) -> Result<Prepared, 
                 // The world's agent tools first (§16.7 W9): a pure-disk converge
                 // of `<world>/tools/bl`, so the shim an agent's bash finds is
                 // present before any driver exists to run one. Idempotent, no
-                // spawn — it precedes the lernie seed for cost, not order.
+                // spawn — it precedes the litany seed for cost, not order.
                 tools::ensure_shim(&layout.tools, tools::BL, &deps.bl)?;
-                seed::ensure_seeded(&deps.lernie, &deps.state_root, ts, &layout, origin)?;
+                seed::ensure_seeded(&deps.litany, &deps.state_root, ts, &layout, origin)?;
                 // The capability control's own shim (§8.6): the executable
-                // lernie's tool-control seam consults, converged here beside
+                // litany's tool-control seam consults, converged here beside
                 // the agent tools because the next step authors its absolute
                 // path into the workspace's policy.
                 tools::ensure_control(&layout.tools)?;
@@ -100,10 +100,10 @@ pub fn prepare(deps: &Deps, inputs: &StartInputs, ts: &str) -> Result<Prepared, 
             Step::EnsureWorkspace { workspace } => {
                 // The birth template is judged inside the ensure, on the fresh
                 // branch only (bl-c3a9) — the layout is the same pure fold the
-                // seed step made, so the file gated and the file `lernie new`
+                // seed step made, so the file gated and the file `litany new`
                 // commits are one path. The pinned template already grants the
                 // worker role the whole tool pool (§8.1, bl-7fc8), so nothing
-                // runs after: the first `config/default` is lernie's/operator's
+                // runs after: the first `config/default` is litany's/operator's
                 // one home, read and edited through §9.3/§9.4 like every later
                 // config.
                 let layout = layout_under(&inputs.yog_data_root);

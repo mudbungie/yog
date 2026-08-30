@@ -7,14 +7,14 @@ use std::fs;
 use std::path::Path;
 use tempfile::tempdir;
 
-/// A detached `lernie prompt` line as [`crate::start::execute_prompt`] writes it
+/// A detached `litany prompt` line as [`crate::start::execute_prompt`] writes it
 /// (bl-08f2 shape: `--name` rides ahead, the workspace is second-to-last, the
 /// goal last), `stderr` empty (a launch, not an outcome).
 fn prompt(ws: &Path) -> OpEntry {
     OpEntry {
         ts: "1784783961".into(),
         argv: vec![
-            "lernie".into(),
+            "litany".into(),
             "prompt".into(),
             "--name".into(),
             "gecko".into(),
@@ -65,9 +65,9 @@ fn fold_surfaces_a_driver_that_died_after_launching() {
     // The child refuses and dies; its stderr landed in the sink.
     let path = sink(state, &entry.ts, &ws);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
-    fs::write(&path, "lernie: brazen 0.0.2 != 0.0.3\n").unwrap();
+    fs::write(&path, "litany: brazen 0.0.2 != 0.0.3\n").unwrap();
     let dead = fold(state, &entry);
-    assert_eq!(dead.stderr, "lernie: brazen 0.0.2 != 0.0.3\n");
+    assert_eq!(dead.stderr, "litany: brazen 0.0.2 != 0.0.3\n");
     assert!(
         OpRow::from(&dead).failed(),
         "captured stderr makes the -2 row a rendered failure (§7.3)"
@@ -76,7 +76,7 @@ fn fold_surfaces_a_driver_that_died_after_launching() {
     // still reads off the tail (second-to-last), so old rows fold identically.
     let old_shape = OpEntry {
         argv: vec![
-            "lernie".into(),
+            "litany".into(),
             "prompt".into(),
             ws.to_string_lossy().into_owned(),
             "goal".into(),
@@ -85,12 +85,12 @@ fn fold_surfaces_a_driver_that_died_after_launching() {
     };
     assert_eq!(
         fold(state, &old_shape).stderr,
-        "lernie: brazen 0.0.2 != 0.0.3\n"
+        "litany: brazen 0.0.2 != 0.0.3\n"
     );
 }
 
 /// **bl-b95e**: the fold is a transport and reads nothing. Whatever the sink
-/// says — a benign lernie notice, a death — the tail rides into the row and the
+/// says — a benign litany notice, a death — the tail rides into the row and the
 /// row is a failure, because the caller folds only over a launch whose product
 /// the derivation already found missing
 /// ([`crate::opslog::launch::stillborn`]). bl-1296 put a phrase table here
@@ -102,7 +102,7 @@ fn the_fold_carries_the_tail_and_reads_none_of_it() {
     let entry = prompt(&ws);
     let path = sink(state, &entry.ts, &ws);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
-    let notice = "lernie: compaction landing [c-2] superseded — a compaction landed \
+    let notice = "litany: compaction landing [c-2] superseded — a compaction landed \
                   since its fork point (ARCH §2.6); the branch continues\n";
     fs::write(&path, notice).unwrap();
 
@@ -117,7 +117,7 @@ fn the_fold_carries_the_tail_and_reads_none_of_it() {
 
     // A death in the same append-only sink reads identically here: this layer
     // has no second answer to give.
-    fs::write(&path, "lernie: brazen 0.0.2 != 0.0.3\n").unwrap();
+    fs::write(&path, "litany: brazen 0.0.2 != 0.0.3\n").unwrap();
     assert!(OpRow::from(&fold(state, &entry)).failed());
 }
 
@@ -141,13 +141,13 @@ fn fold_leaves_every_row_it_is_not_the_authority_for() {
     // a `-3` line since bl-afa9 — but `ops.jsonl` is append-only and pre-bl-afa9
     // lines on disk still say what they said.
     let legacy = OpEntry {
-        stderr: "failed to spawn lernie".into(),
+        stderr: "failed to spawn litany".into(),
         ..entry.clone()
     };
-    assert_eq!(fold(state, &legacy).stderr, "failed to spawn lernie");
+    assert_eq!(fold(state, &legacy).stderr, "failed to spawn litany");
     // A detached line too short to carry a workspace argument names no sink.
     let truncated_argv = OpEntry {
-        argv: vec!["lernie".into()],
+        argv: vec!["litany".into()],
         ..entry
     };
     assert!(fold(state, &truncated_argv).stderr.is_empty());

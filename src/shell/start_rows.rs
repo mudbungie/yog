@@ -46,7 +46,7 @@ pub(super) fn ready_row(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     inputs: StartInputs,
 ) {
     let ball = ball_ref(&inputs.payload);
@@ -89,7 +89,7 @@ pub(super) fn ready_row(
         id,
         owner: String::new(),
     });
-    super::menus::attach(&start_button, seat, &target, model, state, lernie);
+    super::menus::attach(&start_button, seat, &target, model, state, litany);
 }
 
 /// One bound ball: ▶ Continue `<id>: <title>` into the ball's **own** claimant
@@ -105,7 +105,7 @@ pub(super) fn continue_row(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     inputs: StartInputs,
 ) {
     // The ball's **own** claimant workspace, not the focused one (a resume
@@ -135,7 +135,7 @@ pub(super) fn continue_row(
         id: ball.id,
         owner: ball.owner,
     });
-    super::menus::attach(&button, seat, &target, model, state, lernie);
+    super::menus::attach(&button, seat, &target, model, state, litany);
 }
 
 /// The (project, id, join state) of an existing-ball payload — the ball an

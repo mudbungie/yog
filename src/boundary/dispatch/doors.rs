@@ -11,7 +11,7 @@
 
 use crate::start::{self, StartInputs};
 use crate::ui_state::UiState;
-use lernie::mint::SplitMix64;
+use litany::mint::SplitMix64;
 
 use super::super::{answer, ceiling, control};
 use super::Deps;
@@ -42,7 +42,7 @@ pub fn prepare(
     };
     let start_deps = start::Deps {
         bl: deps.bl.clone(),
-        lernie: deps.lernie.clone(),
+        litany: deps.litany.clone(),
         state_root: deps.state_root.clone(),
         yog_binary: deps.yog_binary.clone(),
     };
@@ -86,13 +86,13 @@ pub fn prompt(
     // is handed. It is read at the instant of the refusal, not off the snapshot:
     // a gate compares against the world as it is, not as a debounce window ago.
     let world: Vec<std::path::PathBuf> =
-        crate::binding::workspaces(&deps.yog_data_root, &deps.world.lernie_data_root())
+        crate::binding::workspaces(&deps.yog_data_root, &deps.world.litany_data_root())
             .into_iter()
             .map(|w| w.path)
             .collect();
     ceiling::gate(ui, &deps.state_root, ts, workspace, &world, prepared.origin)?;
     // The fired loop carries the target workspace's wall (§16.2 as amended):
-    // lernie hands its own environment to every tool subprocess, and a bare
+    // litany hands its own environment to every tool subprocess, and a bare
     // `bz` in an agent's bash is the world's shim re-entering yog — so this one
     // layer is what puts the whole descendant tree inside the sphere's
     // providers, sign-ins and model cache.
@@ -105,8 +105,8 @@ pub fn prompt(
     // default. Nothing new decides this: `Payload::origin` is the rung, already
     // carried on `Prepared` for the §7.3 banner.
     let own_space = prepared.origin != crate::opslog::Origin::Balls;
-    let lernie = deps
-        .lernie
+    let litany = deps
+        .litany
         .and_env(crate::world::wall::pairs(&deps.world, workspace))
         .and_env(crate::world::marks::pairs(
             &deps.world,
@@ -119,7 +119,7 @@ pub fn prompt(
         // loudly rather than running bare. Empty otherwise.
         .and_wrapper(crate::control::confine::wrapper(&deps.world, workspace));
     start::execute_prompt(
-        &lernie,
+        &litany,
         &deps.state_root,
         ts,
         &start::Fire {

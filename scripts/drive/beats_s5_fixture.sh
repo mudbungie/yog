@@ -41,7 +41,7 @@ balls_expanded() { ! grep -q '"balls"' "$pane" 2>/dev/null; }
 # a ball, drives three editors and NEVER prompts a model — "the whole run spends
 # NOTHING on the wire", this file's neighbour's header. BOTH halves, because the
 # negative alone is satisfied by a world where nothing ran at all: the trail must
-# carry rows AND none of them may be a `lernie prompt`.
+# carry rows AND none of them may be a `litany prompt`.
 no_wire_spend() { [ -s "$ops" ] && [ "$(verb_count prompt)" = 0 ]; }
 
 # --- world-A navigation -----------------------------------------------------
@@ -51,7 +51,7 @@ no_wire_spend() { [ -s "$ops" ] && [ "$(verb_count prompt)" = 0 ]; }
 # two the centre stayed on Conversation. The fixed sleep that used to follow
 # proved nothing, and the frame it left was handed to `locate.sh brazen` as if it
 # were the §12 Config column — the rules are the same family in both frames — so
-# S5's marker was typed into the COMPOSER and clicked into a `lernie prompt`,
+# S5's marker was typed into the COMPOSER and clicked into a `litany prompt`,
 # spending on the wire in the one run whose contract is that it spends nothing.
 #
 # Focus is per-instance RAM (§13.1), so no file can witness this and the frame

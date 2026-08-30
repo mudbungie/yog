@@ -50,7 +50,7 @@ pub(super) fn board_row(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     row: &crate::board::BoardRow,
     affordances: &Affordances,
 ) {
@@ -60,12 +60,12 @@ pub(super) fn board_row(
         affordances.resumes.get(&row.id),
     ) {
         (Column::Claimed, _, Some(inputs)) => {
-            continue_row(ui, model, state, lernie, inputs.clone());
+            continue_row(ui, model, state, litany, inputs.clone());
         }
         (Column::Ready | Column::Gated, Some(inputs), _) => {
-            ready_row(ui, model, state, lernie, inputs.clone());
+            ready_row(ui, model, state, litany, inputs.clone());
         }
-        _ => read_row(ui, model, state, lernie, row),
+        _ => read_row(ui, model, state, litany, row),
     }
     ui.indent(("board-facts", row.id.as_str()), |ui| {
         for gate in &row.gates {
@@ -109,7 +109,7 @@ fn read_row(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     row: &crate::board::BoardRow,
 ) {
     let label = ui
@@ -130,5 +130,5 @@ fn read_row(
         id: row.id.clone(),
         owner: row.claimant.clone().unwrap_or_default(),
     });
-    super::super::menus::attach(&label, seat, &target, model, state, lernie);
+    super::super::menus::attach(&label, seat, &target, model, state, litany);
 }

@@ -141,7 +141,7 @@ fn the_login_verb_stays_whole_on_the_row_whose_name_would_have_eaten_it() {
 /// its glyph, its id, and its hover.
 #[test]
 fn the_assign_verb_stays_whole_behind_a_ball_title_of_any_length() {
-    let lernie = Cli::new("lernie");
+    let litany = Cli::new("litany");
     let mut world = world();
     let ws = world.ws.clone();
     let inputs = StartInputs {
@@ -167,7 +167,7 @@ fn the_assign_verb_stays_whole_behind_a_ball_title_of_any_length() {
         .focused_ws_name()
         .expect("the fixture focuses a workspace");
     let painted = in_a_bounded_panel(|ui| {
-        start_rows::ready_row(ui, &mut world.model, &mut world.state, &lernie, inputs);
+        start_rows::ready_row(ui, &mut world.model, &mut world.state, &litany, inputs);
     });
     let said = says(&painted);
     assert!(

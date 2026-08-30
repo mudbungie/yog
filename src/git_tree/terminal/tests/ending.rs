@@ -46,7 +46,7 @@ fn the_ending_reads_the_canonical_finish_reason_and_nothing_else() {
 
 /// The framing stays honest while the ending says what framing cannot: the
 /// bl-fb87 shape frames `Complete` — the transport kept every promise, and the
-/// entry lernie sealed off it really is there — and is not *whole*.
+/// entry litany sealed off it really is there — and is not *whole*.
 #[test]
 fn an_output_limited_tail_is_complete_transport_and_an_unfinished_turn() {
     let jsonl = br#"{"type":"message_start","v":1,"role":"assistant"}

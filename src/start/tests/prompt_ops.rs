@@ -24,10 +24,10 @@ fn prompt_routes_the_drivers_stderr_to_its_per_spawn_sink() {
         "#!/bin/sh\nprintf 'refusing: version skew\\n' >&2\nprintf done > '{}'\n",
         fifo.display()
     );
-    let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
+    let litany = Cli::new(write_exec(w.bin.path(), "litany", &body));
     let ws = workspace(&w);
     execute_prompt(
-        &lernie,
+        &litany,
         w.state.path(),
         "TS",
         &fire(&ws, "n", None, "g"),
@@ -52,14 +52,14 @@ fn prompt_routes_the_drivers_stderr_to_its_per_spawn_sink() {
 #[test]
 fn prompt_clips_a_large_logged_goal() {
     let w = World::new();
-    let lernie = Cli::new(super::fake_lernie(w.bin.path()));
+    let litany = Cli::new(super::fake_litany(w.bin.path()));
     let ws = workspace(&w);
     // Each byte JSON-escapes to `\u00XX` (6 bytes): a raw-byte clip would let this
     // serialize to ~54 KB. The clip must hold POST-escape or the `ops.jsonl` line
     // blows past CAP/PIPE_BUF and loses its two-instance atomic append (§4.2).
     let big = "\u{1}".repeat(9000);
     execute_prompt(
-        &lernie,
+        &litany,
         w.state.path(),
         "TS",
         &fire(&ws, "n", None, &big),
@@ -84,10 +84,10 @@ fn prompt_clips_a_large_logged_goal() {
 #[test]
 fn prompt_logs_the_spawn_failure_and_returns_err() {
     let w = World::new();
-    let lernie = Cli::new("/definitely/not/a/real/lernie-prompt");
+    let litany = Cli::new("/definitely/not/a/real/litany-prompt");
     let ws = workspace(&w);
     let err = execute_prompt(
-        &lernie,
+        &litany,
         w.state.path(),
         "TS",
         &fire(&ws, "n", None, "g"),
@@ -114,10 +114,10 @@ fn prompt_logs_the_spawn_failure_and_returns_err() {
 #[test]
 fn a_nonexistent_work_directory_logs_failed_to_spawn_not_a_handoff() {
     let w = World::new();
-    let lernie = Cli::new(super::fake_lernie(w.bin.path()));
+    let litany = Cli::new(super::fake_litany(w.bin.path()));
     let missing = w.yog.path().join("no-such-dir");
     let err = execute_prompt(
-        &lernie,
+        &litany,
         w.state.path(),
         "TS",
         &fire(&missing, "n", None, "g"),

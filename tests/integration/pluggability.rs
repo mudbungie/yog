@@ -2,7 +2,7 @@
 //! pure over filesystem state, so multiple frontends running against
 //! one repo cannot corrupt each other. The "second frontend" here is
 //! just a sibling thread that calls the same public surface a real
-//! `lernie-ui-web` would.
+//! `litany-ui-web` would.
 //!
 //! Mechanism: build a minimal workspace (ARCH §2.2: bare repo.git,
 //! config/default, agents/* refs) on disk, then derive

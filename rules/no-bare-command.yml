@@ -3,7 +3,7 @@
 # GIT_INDEX_FILE and friends into every process it starts, and those OUTRANK
 # `-C <repo>` and `current_dir` — so a child yog spawns while such a variable is
 # set forks its OWN git against the hook's repo. bl-0dff closed that for yog's
-# direct git forks; bl-916a closed it for `bl`/`lernie`/`$EDITOR`/the fake
+# direct git forks; bl-916a closed it for `bl`/`litany`/`$EDITOR`/the fake
 # substrate scripts by moving the scrub to the spawn boundary, where one
 # `env_remove` clears the whole descendant process tree.
 #

@@ -34,7 +34,7 @@ pub(super) fn git(repo: &Path, args: &[&str]) -> Result<Vec<u8>, GitTreeError> {
 /// Run `git`, returning its stdout on exit 0 or `None` on any clean non-zero
 /// exit — the "no result" signal of the ancestry probes (`merge-base` with no
 /// shared ancestor; `merge-base --is-ancestor` reporting "not an ancestor").
-/// Only a spawn failure surfaces as `Err`. Mirrors lernie's own governing-
+/// Only a spawn failure surfaces as `Err`. Mirrors litany's own governing-
 /// config fold (`src/workspace.rs`), which treats a failed `merge-base` as
 /// "this config lineage contributes no candidate — skip it".
 pub(super) fn git_optional(repo: &Path, args: &[&str]) -> Result<Option<Vec<u8>>, GitTreeError> {
@@ -165,12 +165,12 @@ pub(super) fn for_each_ref_agents(repo: &Path) -> Result<Vec<u8>, GitTreeError> 
     )
 }
 
-/// The lernie-stored **name fact** on an agent branch (lernie ARCH §2.3, DESIGN
+/// The litany-stored **name fact** on an agent branch (litany ARCH §2.3, DESIGN
 /// §3.3): the `name` blob committed beside `goal.md` on the dispatch commit,
 /// read `git show <branch>:name` — the ref namespace is the registry, so this
-/// is a query against the bare repo, exactly lernie's own outside read. `None`
+/// is a query against the bare repo, exactly litany's own outside read. `None`
 /// for a pre-0.0.4 branch with no blob (a clean non-zero `show`) and for the
-/// empty blob lernie writes for an unnamed agent — absence and emptiness are
+/// empty blob litany writes for an unnamed agent — absence and emptiness are
 /// one fact: no name.
 pub(super) fn ref_name(repo: &Path, branch: &str) -> Result<Option<String>, GitTreeError> {
     Ok(git_optional(repo, &["show", &format!("{branch}:name")])?
@@ -178,7 +178,7 @@ pub(super) fn ref_name(repo: &Path, branch: &str) -> Result<Option<String>, GitT
         .filter(|name| !name.is_empty()))
 }
 
-/// Every ref under a `refs/lernie/<kind>/` namespace as `<refname> <oid>`
+/// Every ref under a `refs/litany/<kind>/` namespace as `<refname> <oid>`
 /// lines (ARCH §8 — all four mark namespaces). The caller strips `prefix`
 /// to recover the agent id and keeps the oid as §6 watermark evidence
 /// ([`super::marks`]).
@@ -189,7 +189,7 @@ pub(super) fn for_each_ref_under(repo: &Path, prefix: &str) -> Result<Vec<u8>, G
     )
 }
 
-/// One blob's bytes by oid — the **value** half of a valued mark (lernie ARCH
+/// One blob's bytes by oid — the **value** half of a valued mark (litany ARCH
 /// §3.3: `held` and `cwd` name blobs, the other four name commits).
 /// `for-each-ref`'s `%(contents)` is empty for a blob, so the value is a second
 /// call; it is only ever made for a ref that exists, which is why holds cost

@@ -58,7 +58,7 @@ fn read_messages(dir: &Path) -> Vec<Entry> {
 
 /// Classify one entry by its filename origin token and bytes.
 ///
-/// A delivered `.md` is a **deposit file moved verbatim** — lernie's
+/// A delivered `.md` is a **deposit file moved verbatim** — litany's
 /// `deliver_message` is a literal `rename(2)` and "the file's frontmatter
 /// travels untouched" (ARCH §2.11) — so its bytes open with the
 /// `---\nfrom: …\n---\n` envelope, not with the message. It is parsed by

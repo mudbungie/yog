@@ -164,7 +164,7 @@ fn a_live_mark_names_the_act_that_moves_it_on() {
     );
     // And says what the ceiling IS, since the way out only works because the
     // figure is re-derived per call against the frozen config rather than
-    // banked against the branch (lernie ARCH §6).
+    // banked against the branch (litany ARCH §6).
     assert!(budget.contains("never stored"), "{budget:?}");
     assert!(
         crate::theme::mark_badge(AgentMark::Held)

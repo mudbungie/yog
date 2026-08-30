@@ -65,13 +65,13 @@ pub(super) fn verb_buttons(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     bl: &Cli,
     ctx: &VerbCtx,
 ) {
     // The line seat (§8.5): a drafted command re-labels the one button and takes
     // Enter, whatever the selection is — the gesture says its own target.
-    if super::slash::seat(ui, model, state, lernie, bl, ctx) {
+    if super::slash::seat(ui, model, state, litany, bl, ctx) {
         return;
     }
     let selected = state.actions.selected_branch.clone();
@@ -103,7 +103,7 @@ pub(super) fn verb_buttons(
                 .add_enabled(msg_on, egui::Button::new("Message"))
                 .on_hover_text(
                     "Deposit this text in the selected conversation's inbox and wake its \
-                     driver so it reads it (`lernie message`). Enter sends it; typed \
+                     driver so it reads it (`litany message`). Enter sends it; typed \
                      whole, it is `/message <text…>`.",
                 )
                 .on_disabled_hover_text("type something first — an empty message sends nothing")
@@ -135,7 +135,7 @@ pub(super) fn verb_buttons(
                 .add_enabled(on, egui::Button::new("New prompt"))
                 .on_hover_text(
                     "Start a new conversation in this workspace from this text — a \
-                     detached `lernie prompt` that keeps running whatever yog does. \
+                     detached `litany prompt` that keeps running whatever yog does. \
                      Enter starts it; typed whole, it is `/prompt <goal…>`.",
                 )
                 .on_disabled_hover_text(
@@ -181,7 +181,7 @@ fn interrupt_control(
         .add_enabled(armed, egui::Button::new("Interrupt"))
         .on_hover_text(
             "Cut this conversation off mid-work and send it this text instead: it stops what is \
-             running and then deposits the message (`lernie stop`, then `lernie message`), and \
+             running and then deposits the message (`litany stop`, then `litany message`), and \
              the deposit is what starts it going again. Work already committed is kept, and a \
              tool call cut off mid-flight is reported to the model as having produced no result. \
              Ctrl+Enter does the same; typed whole, it is `/interrupt <text…>`.",

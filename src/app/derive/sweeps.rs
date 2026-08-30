@@ -45,7 +45,7 @@ impl Deriver {
     pub(super) fn reconcile(&mut self, mark: Mark) -> Vec<Drift> {
         let before: BTreeSet<PathBuf> = self.workspaces.iter().map(|w| w.path.clone()).collect();
         let announceable = self.announceable();
-        self.workspaces = crate::binding::workspaces(&self.roots.yog_data, &self.roots.lernie_data);
+        self.workspaces = crate::binding::workspaces(&self.roots.yog_data, &self.roots.litany_data);
         let desired = desired_watches(&self.roots, &self.workspaces);
         crate::state::lock_watchset(&self.watches).reconcile(&desired);
         let known: BTreeSet<PathBuf> = self.workspaces.iter().map(|w| w.path.clone()).collect();
@@ -61,7 +61,7 @@ impl Deriver {
         }
         self.schedule.mark(missing);
         // The workspace set is a join axis (§3.5): a freshly named workspace (the
-        // start flow's `lernie new`) that lands via a NamesRoot event must re-bind
+        // start flow's `litany new`) that lands via a NamesRoot event must re-bind
         // the balls at once, else the just-claimed ball renders claimed-elsewhere
         // until the 15 s sweep. Rebuild the join over the already-fetched balls.
         let cloned: Vec<PathBuf> = self.balls_by_project.keys().cloned().collect();

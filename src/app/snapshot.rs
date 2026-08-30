@@ -75,7 +75,7 @@ pub struct Snapshot {
     /// The context windows `models.yaml` declares, wire-model id → tokens
     /// (§5.1 #35): the denominator of every context-fullness figure, read by
     /// the worker on the same 15 s full sweep the balls fetch rides. World-wide
-    /// rather than per-workspace because the file is — §9.2's global lernie
+    /// rather than per-workspace because the file is — §9.2's global litany
     /// config, one home for the declaration. Empty is the ordinary quiet case:
     /// nothing declared, so nothing is rendered.
     pub windows: std::collections::BTreeMap<String, u64>,
@@ -146,7 +146,7 @@ impl Snapshot {
 /// The §11 ops-surface growth line, or `None` when nothing grew (the normal
 /// case, which must render nothing at all). Names the biggest grower — a storm
 /// has one — and counts the rest, so one glance says which conversation is
-/// spawning and, by implication, that the spawning is lernie's, not yog's.
+/// spawning and, by implication, that the spawning is litany's, not yog's.
 pub fn growth_label(growth: &[Growth]) -> Option<String> {
     let worst = growth.first()?;
     let rest = growth.len() - 1;

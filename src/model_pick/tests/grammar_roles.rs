@@ -10,7 +10,7 @@ use super::TEMPLATE_PROVIDERS;
 use crate::model_pick::grammar::{GrammarError, PROVIDERS_YAML, RoleModel, roles, set_role_model};
 
 #[test]
-fn reads_every_role_lernies_template_declares() {
+fn reads_every_role_litanys_template_declares() {
     assert_eq!(
         roles(TEMPLATE_PROVIDERS),
         vec![
@@ -65,7 +65,7 @@ fn comments_and_blanks_ride_inside_a_block() {
 }
 
 /// A column-0 line ends the block: neither a later top-level key's own entries
-/// nor its fields are mistaken for the block's (the `roles:` block in lernie's
+/// nor its fields are mistaken for the block's (the `roles:` block in litany's
 /// template is last, but nothing guarantees it stays that way).
 #[test]
 fn a_later_top_level_key_ends_the_block() {

@@ -1,5 +1,5 @@
 //! **The two spawns** — the unlogged dry-run census and the logged removal —
-//! against a fake `lernie` on disk. Split from the tables at §12's budget on
+//! against a fake `litany` on disk. Split from the tables at §12's budget on
 //! the seam between *what the gate decides* and *what the verb costs*: above is
 //! pure over an already-answered forest, here a real process is forked and its
 //! argv read back.
@@ -12,17 +12,17 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::{TempDir, tempdir};
 
-/// A fake `lernie` script: logs `$@` beside itself, prints `stdout`, exits
+/// A fake `litany` script: logs `$@` beside itself, prints `stdout`, exits
 /// `code` — the `delete/exec` fixture idiom.
-struct FakeLernie {
+struct FakeLitany {
     dir: TempDir,
 }
 
-impl FakeLernie {
+impl FakeLitany {
     fn new(stdout: &str, stderr: &str, code: i32) -> Self {
         let dir = tempdir().unwrap();
         let log = dir.path().join("argv.log");
-        let path = dir.path().join("lernie");
+        let path = dir.path().join("litany");
         fs::write(
             &path,
             format!(
@@ -38,7 +38,7 @@ impl FakeLernie {
     }
 
     fn cli(&self) -> Cli {
-        Cli::new(self.dir.path().join("lernie"))
+        Cli::new(self.dir.path().join("litany"))
     }
 
     fn argv(&self) -> String {
@@ -57,7 +57,7 @@ impl FakeLernie {
 
 #[test]
 fn the_census_is_the_dry_run_subtree_form() {
-    let fx = FakeLernie::new(
+    let fx = FakeLitany::new(
         "would delete r-aa; descendants: 1 (r-aa-c-bb); pending deposits: 2",
         "",
         0,
@@ -75,19 +75,19 @@ fn the_census_is_the_dry_run_subtree_form() {
 
 #[test]
 fn a_declined_or_unreadable_census_fails_closed() {
-    let declined = FakeLernie::new("", "not a workspace", 2);
+    let declined = FakeLitany::new("", "not a workspace", 2);
     let ws = declined.ws();
     assert_eq!(
         census(&declined.cli(), &ws, ROOT).unwrap_err(),
         "not a workspace"
     );
-    let garbled = FakeLernie::new("all good", "", 0);
+    let garbled = FakeLitany::new("all good", "", 0);
     let ws = garbled.ws();
     assert_eq!(
         census(&garbled.cli(), &ws, ROOT).unwrap_err(),
         "unrecognized delete report: all good"
     );
-    let gone = Cli::new(declined.dir.path().join("no-such-lernie"));
+    let gone = Cli::new(declined.dir.path().join("no-such-litany"));
     assert!(
         census(&gone, &ws, ROOT)
             .unwrap_err()
@@ -96,9 +96,9 @@ fn a_declined_or_unreadable_census_fails_closed() {
 }
 
 #[test]
-fn the_removal_is_the_logged_lernie_verb_bare_or_subtree() {
+fn the_removal_is_the_logged_litany_verb_bare_or_subtree() {
     let state = tempdir().unwrap();
-    let fx = FakeLernie::new("deleted r-aa; descendants: 0; pending deposits: 0", "", 0);
+    let fx = FakeLitany::new("deleted r-aa; descendants: 0; pending deposits: 0", "", 0);
     let ws = fx.ws();
     let outcome = spawn(&fx.cli(), state.path(), "TS", &ws, ROOT, false).unwrap();
     assert!(outcome.ok());

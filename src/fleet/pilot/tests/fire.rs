@@ -27,7 +27,7 @@ fn ctx(state_root: &Path, snapshot: Snapshot) -> PilotCtx {
     let cell = crate::state::new_snapshot_cell(Arc::new(snapshot));
     PilotCtx {
         deps: Deps {
-            lernie: Cli::new("/no/such/lernie"),
+            litany: Cli::new("/no/such/litany"),
             bl: Cli::new("/no/such/bl"),
             state_root: state_root.to_path_buf(),
             yog_binary: PathBuf::from("/no/such/yog"),

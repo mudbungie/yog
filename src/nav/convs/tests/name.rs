@@ -1,4 +1,4 @@
-//! The §3.3 display ladder: the lernie-stored name fact → the legacy goal-stamp
+//! The §3.3 display ladder: the litany-stored name fact → the legacy goal-stamp
 //! parse → first payload line → root id, one function, every seat.
 
 use super::{agent, plain, unseen};
@@ -20,8 +20,8 @@ fn the_ladder_climbs_stamped_name_then_payload_line_then_root_id() {
 }
 
 #[test]
-fn the_lernie_name_fact_is_rung_one_and_the_goal_stamp_its_legacy_fallback() {
-    // bl-08f2: the fold every seat reads — the lernie-stored blob wins, the
+fn the_litany_name_fact_is_rung_one_and_the_goal_stamp_its_legacy_fallback() {
+    // bl-08f2: the fold every seat reads — the litany-stored blob wins, the
     // legacy `You are <x>.` parse covers only pre-0.0.4 roots (no blob), and
     // retiring that rung is one deletion in `Agent::name_fact`.
     let mut a = agent("r1-0", AgentState::Quiescent, 10);
@@ -39,7 +39,7 @@ fn the_lernie_name_fact_is_rung_one_and_the_goal_stamp_its_legacy_fallback() {
 }
 
 #[test]
-fn a_lernie_named_row_and_a_named_child_read_the_same_rung() {
+fn a_litany_named_row_and_a_named_child_read_the_same_rung() {
     // The fact rides any agent — root or descent child — with no special case;
     // the row title and the agents-side seats agree.
     let mut root = agent("r1-0", AgentState::Quiescent, 10);
@@ -57,7 +57,7 @@ fn a_lernie_named_row_and_a_named_child_read_the_same_rung() {
 #[test]
 fn a_legacy_rung_title_declares_itself_display_only() {
     // bl-8068 (the energize/marbling-lake diagnosis): a goal-stamp title with
-    // no lernie-stored blob behind it renders, but lernie cannot resolve it as
+    // no litany-stored blob behind it renders, but litany cannot resolve it as
     // a message target — the row says so, so an operator never hands an
     // unaddressable name to an agent. A fact-named row and a nameless row both
     // stay silent: the first is addressable, the second claims no name.

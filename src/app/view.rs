@@ -118,7 +118,7 @@ impl AppModel {
     }
 
     /// Whether the focused workspace is a read-only replay (§3.1
-    /// `<lernie-data>/replays/*`). "Replay is not a mode": the ordinary center
+    /// `<litany-data>/replays/*`). "Replay is not a mode": the ordinary center
     /// view renders it through the same tree renderer — this query only gates
     /// the mutating composer off, so a replay offers no write surface.
     pub fn focused_is_replay(&self) -> bool {

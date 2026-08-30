@@ -57,7 +57,7 @@ s8_marks() {
   # by pointer to get there. It shows the §12 Config column from its top — and
   # the marks pane is not in it, being three panes further down than one screen
   # holds, which is the whole demonstration: the retired pixel was landing inside
-  # the *lernie* editor.
+  # the *litany* editor.
   "$drive" shot "$wid" "$out/s8-01-marks-read.png"
 
   # The amendment: one word, and it is the branch.
@@ -102,14 +102,14 @@ s8_marks() {
 # --- S8-T3: the hatches -----------------------------------------------------
 # `eval "$(yog env)"` drops a shell into the world and `yog exec <cmd…>` runs one
 # command there — both pure entrypoints, neither a substrate spawn. The composed
-# env overrides EXACTLY `LERNIE_HOME` and `XDG_STATE_HOME` (and, since W9, the
+# env overrides EXACTLY `LITANY_HOME` and `XDG_STATE_HOME` (and, since W9, the
 # `PATH` head) and names no sphere — the hatches hand out the WORLD, and the
 # wall is one layer further in (§16.2), so `YOG_WALL` never appears either.
 # Assertable line by line on the printed script.
 s8_hatches() {
   data=$1
   script=$(XDG_DATA_HOME="$data" yog env)
-  # Exactly the §16.2 override set, whatever that set currently is: `LERNIE_HOME`,
+  # Exactly the §16.2 override set, whatever that set currently is: `LITANY_HOME`,
   # `XDG_STATE_HOME` and — since the batteries landed (§16.7 W9) — a `PATH` whose
   # HEAD is the world's own tools shim dir, so an agent's bare `bl` is yog's. What
   # must never appear is the anchor (`XDG_DATA_HOME` — nesting it would recurse)
@@ -117,14 +117,14 @@ s8_hatches() {
   # brazen's config is the wall's and the world names no wall. That absence is
   # the assertion with teeth, because it is the one a leak would break.
   { [ "$(printf '%s\n' "$script" | grep -c '^export ')" = 3 ] \
-    && printf '%s\n' "$script" | grep -q "^export LERNIE_HOME='$data/yog/world/lernie'$" \
+    && printf '%s\n' "$script" | grep -q "^export LITANY_HOME='$data/yog/world/litany'$" \
     && printf '%s\n' "$script" | grep -q "^export XDG_STATE_HOME='$data/yog/world/state'$" \
     && printf '%s\n' "$script" | grep -q "^export PATH='$data/yog/world/tools:" \
     && ! printf '%s\n' "$script" | grep -q 'XDG_DATA_HOME\|BRAZEN_CONFIG\|YOG_WALL'; } \
     && pass "S8-T3 yog env: exactly the world override set" \
     || fail "S8-T3 yog env: exactly the world override set" "$script"
-  seen=$(XDG_DATA_HOME="$data" yog exec --cwd "$data/proj" sh -c 'echo "$LERNIE_HOME|$PWD"')
-  [ "$seen" = "$data/yog/world/lernie|$data/proj" ] \
+  seen=$(XDG_DATA_HOME="$data" yog exec --cwd "$data/proj" sh -c 'echo "$LITANY_HOME|$PWD"')
+  [ "$seen" = "$data/yog/world/litany|$data/proj" ] \
     && pass "S8-T3 yog exec: argv runs in the world, at --cwd" \
     || fail "S8-T3 yog exec: argv runs in the world, at --cwd" "$seen"
   # The beat above reads the PATH head as a STRING; this one resolves through it.
@@ -186,7 +186,7 @@ sentinels_intact() {
 drop_sentinels() { ambient_roots | while read -r root; do rm -f "$root/$AMBIENT_SENTINEL"; done; }
 
 # --- S8-T1/T2: one nested world, severable ----------------------------------
-# The claim is about paths, so read them: the nested lernie home and the nested
+# The claim is about paths, so read them: the nested litany home and the nested
 # balls state both live under `$XDG_DATA_HOME/yog`, the project's balls clone is
 # **there and not in the operator's ambient store** (the dir yog watches and the
 # dir a spawned `bl` writes are one path), the ambient world is untouched, and
@@ -197,7 +197,7 @@ s8_nesting() {
   # the run log quotes it, and a deleted trail cannot be read back.
   cp "$ops" "$out/ops.jsonl" 2>/dev/null || true
   enc=$(printf '%s' "$data/proj" | sed 's|/|%2F|g')
-  { [ -f "$data/yog/world/lernie/models.yaml" ] \
+  { [ -f "$data/yog/world/litany/models.yaml" ] \
     && [ -d "$data/yog/world/state/balls/clones/$enc" ] \
     && [ ! -d "$HOME/.local/state/balls/clones/$enc" ]; } \
     && pass "S8-T2 nesting: the project's balls clone is nested only" \
@@ -207,8 +207,8 @@ s8_nesting() {
   # this passed on a host with no ambient world at all (bl-f16e). It is a real
   # host contract and `preflight.sh` names it — every run verb COPIES this file
   # into its scratch world, so a host without it cannot drive at all.
-  { [ -f "$HOME/.local/share/yog/world/lernie/models.yaml" ] \
-    && [ "$(md5of "$HOME/.local/share/yog/world/lernie/models.yaml")" = "$ambient_before" ]; } \
+  { [ -f "$HOME/.local/share/yog/world/litany/models.yaml" ] \
+    && [ "$(md5of "$HOME/.local/share/yog/world/litany/models.yaml")" = "$ambient_before" ]; } \
     && pass "S8-T1 nesting: the ambient world's own seed never moved" \
     || fail "S8-T1 nesting: the ambient world's own seed never moved" "ambient seed changed or absent"
   # Laid, hashed, then the world is deleted under them (bl-cd5b): the claim is

@@ -5,7 +5,7 @@
 //! segment of every step** under a root agent and its entire hyphenated
 //! descent — `steps/<root>/` plus every `steps/<root>-*/` (the one shared
 //! `steps/` subtree; budgets are whole-tree consumables, ARCH §6, §2.2).
-//! This mirrors lernie's own `budget::spend` derivation exactly — a failed
+//! This mirrors litany's own `budget::spend` derivation exactly — a failed
 //! or superseded attempt still burned tokens and real money (§4.4, §6) —
 //! so the figure yog shows is the figure that exhausts `max_total_tokens`.
 //!
@@ -90,8 +90,8 @@ impl BudgetSpend {
     /// `max(input, cache_read + cache_write) + output` (ARCH §6 "The cached
     /// slice is billed once").
     ///
-    /// **Lockstep with lernie**, whose `prompt/budget/derive.rs::usage_tokens`
-    /// folds the identical shape (lernie bl-68f5): this figure is a *preview* of
+    /// **Lockstep with litany**, whose `prompt/budget/derive.rs::usage_tokens`
+    /// folds the identical shape (litany bl-68f5): this figure is a *preview* of
     /// the one that exhausts `max_total_tokens` one layer down, so the two must
     /// be the same arithmetic — change one only by changing both. A floor rather
     /// than a ceiling on purpose: spend is what was really consumed, and billing

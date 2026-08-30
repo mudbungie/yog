@@ -27,7 +27,7 @@ pub(super) fn conversations(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
 ) {
     let Some(ws) = model.focused_workspace() else {
         ui.weak("no workspace yet — say the word");
@@ -99,12 +99,12 @@ pub(super) fn conversations(
             for group in crate::nav::convs::group::group_by_ball(rows) {
                 super::conv_ball::group_header(ui, &group);
                 for row in &group.convs {
-                    super::conv_row::conversation_row(ui, model, state, lernie, row, &ctx);
+                    super::conv_row::conversation_row(ui, model, state, litany, row, &ctx);
                 }
             }
         } else {
             for row in &rows {
-                super::conv_row::conversation_row(ui, model, state, lernie, row, &ctx);
+                super::conv_row::conversation_row(ui, model, state, litany, row, &ctx);
             }
         }
     });

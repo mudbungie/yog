@@ -13,7 +13,7 @@ use super::{AGENT, write_file};
 use crate::git_tree::{AgentState, Framing};
 use crate::steps_view::{NO_RESPONSE, StepTab, Wound, build, latest_wound};
 
-/// The observed repro: lernie wrote `request.json`, opened `response.json`,
+/// The observed repro: litany wrote `request.json`, opened `response.json`,
 /// and died on a substrate version skew — zero bytes, no `meta.json`.
 fn write_repro(ws: &std::path::Path, seq: &str) {
     write_file(ws, seq, "request.json", br#"{"model":"opus"}"#);
@@ -143,7 +143,7 @@ fn the_wound_carries_the_adapters_own_words_off_the_steps_stderr_log() {
     );
 }
 
-/// A `stderr.log` that exists and is empty (the ordinary shape — lernie opens
+/// A `stderr.log` that exists and is empty (the ordinary shape — litany opens
 /// it every attempt) is not words, and neither is one of pure whitespace.
 #[test]
 fn a_wound_with_an_empty_stderr_log_says_so_rather_than_inventing_a_cause() {

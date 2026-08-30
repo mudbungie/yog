@@ -59,7 +59,7 @@ pub(super) fn render(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     bz: &Cli,
 ) {
     let answer = model.found();
@@ -84,7 +84,7 @@ pub(super) fn render(
     // tab is the discriminator, said once here rather than as a salt per
     // surface, and it dissolves the class rather than this one pair.
     ui.push_id(state.center, |ui| match state.center {
-        CenterTab::Conversation => super::workspace::center(ui, model, state, lernie, bz),
+        CenterTab::Conversation => super::workspace::center(ui, model, state, litany, bz),
         CenterTab::Config => super::config_edit::center(ui, model, state),
         CenterTab::Login => {
             let state_root = model.state_root().to_path_buf();

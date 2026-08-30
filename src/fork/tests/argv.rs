@@ -116,12 +116,12 @@ fn the_pool_is_the_worlds_skill_directories() {
     assert!(pool(&root.join("nowhere")).is_empty());
 }
 
-/// The pool hangs off the world's `$LERNIE_HOME`, derived from the same anchor
-/// every other world path is (§16.2) — never an ambient lernie's.
+/// The pool hangs off the world's `$LITANY_HOME`, derived from the same anchor
+/// every other world path is (§16.2) — never an ambient litany's.
 #[test]
 fn the_pool_lives_in_yogs_nested_world() {
     assert_eq!(
         skills_root(Path::new("/d/yog")),
-        Path::new("/d/yog/world/lernie/skills")
+        Path::new("/d/yog/world/litany/skills")
     );
 }

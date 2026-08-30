@@ -31,7 +31,7 @@ fn injection(root: &Path, driving: Option<(String, String)>) -> Injection {
     )
 }
 
-/// One invocation, as lernie's executor hands it over. A macro rather than a
+/// One invocation, as litany's executor hands it over. A macro rather than a
 /// function because three independent borrows cannot be elided and a named
 /// lifetime is banned (AGENTS.md rule 1).
 macro_rules! call {

@@ -3,7 +3,7 @@
 use super::{config_remedy, failing_row, looks_config};
 
 /// brazen's four `claude_code` declines, verbatim from the pinned encoder's own
-/// `reject` sites, inside lernie's `AdapterError` wrapper — the text the §7.3
+/// `reject` sites, inside litany's `AdapterError` wrapper — the text the §7.3
 /// banner is handed. All four are `ErrorKind::ParseInput`, which is why the
 /// marker table cannot see any of them.
 const DECLINES: &[&str] = &[
@@ -74,7 +74,7 @@ fn no_unrelated_failure_on_that_row_is_claimed() {
 /// names the row brazen could not resolve.
 #[test]
 fn the_failing_dispatch_of_bl_9b52_earns_a_remedy_that_names_its_row() {
-    let line = "lernie prompt: provider error (Config): unknown provider `openai-chatgpt`";
+    let line = "litany prompt: provider error (Config): unknown provider `openai-chatgpt`";
     assert!(looks_config(line));
     assert_eq!(failing_row(line).as_deref(), Some("openai-chatgpt"));
     let remedy = config_remedy(line).expect("a config fault has a way out");
@@ -82,10 +82,10 @@ fn the_failing_dispatch_of_bl_9b52_earns_a_remedy_that_names_its_row() {
     assert!(remedy.contains("config.toml"), "{remedy}");
 }
 
-/// The pinned lernie names the row it routed to in its own wrapper (its
+/// The pinned litany names the row it routed to in its own wrapper (its
 /// `AdapterError`), so that shape is read too — one classifier over both.
 #[test]
-fn the_row_is_read_from_lernies_own_wrapper_as_well() {
+fn the_row_is_read_from_litanys_own_wrapper_as_well() {
     let line = "provider error (Config) on provider row \"codex\": no such row";
     assert_eq!(failing_row(line).as_deref(), Some("codex"));
     assert!(config_remedy(line).is_some_and(|r| r.contains("codex")));
@@ -95,7 +95,7 @@ fn the_row_is_read_from_lernies_own_wrapper_as_well() {
 /// answer either way, and absence is a value rather than a branch out.
 #[test]
 fn a_config_fault_with_no_row_still_names_the_file() {
-    let line = "lernie prompt: provider error (config): the table could not be read";
+    let line = "litany prompt: provider error (config): the table could not be read";
     assert_eq!(failing_row(line), None);
     let remedy = config_remedy(line).expect("still config-shaped");
     assert!(remedy.contains("config.toml"), "{remedy}");

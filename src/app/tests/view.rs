@@ -84,7 +84,7 @@ fn the_boundary_answer_is_the_frames_derivation_without_a_frame() {
     let h = Harness::new();
     let (_c, mut model) = h.model();
     model.focus_workspace(&crate::naming::leaf(&h.ws));
-    let deps = model.boundary_deps(&Cli::new("/no/lernie"), &Cli::new("/no/bl"));
+    let deps = model.boundary_deps(&Cli::new("/no/litany"), &Cli::new("/no/bl"));
 
     // What the chokepoint answers, and what a seat then paints from it. Since
     // bl-44e9 the frame has no derivation of its own to compare against — it

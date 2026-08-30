@@ -7,7 +7,7 @@
 //! Inert data: nothing here paints, and the start pane owns its own seam.
 
 use crate::start::Prepared;
-use lernie::mint::{Rng, SplitMix64};
+use litany::mint::{Rng, SplitMix64};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -54,7 +54,7 @@ impl StartState {
     /// prediction follows from it. A second clock read here bought nothing (the
     /// successor was already unpredictable from a seed nobody publishes) and
     /// cost the suite determinism: it made "the third name differs from the
-    /// first" a probabilistic assertion over lernie's 541-word pool instead of
+    /// first" a probabilistic assertion over litany's 541-word pool instead of
     /// a fact of the pinned seed.
     pub fn spend_mint(&mut self) {
         self.mint_seed = SplitMix64::from_seed(self.mint_seed).next_u64();

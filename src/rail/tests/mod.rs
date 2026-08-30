@@ -59,7 +59,7 @@ pub(super) fn steps(rows: Vec<StepSummary>) -> StepsView {
 
 /// One delivered message and one model reply per step — the settled shape a
 /// conversation of `turns` completed calls has, so every notch gets its seat
-/// in the chat and the `NNN` counter runs as lernie's does.
+/// in the chat and the `NNN` counter runs as litany's does.
 pub(super) fn chat(turns: usize) -> Transcript {
     let entry = |name: String, kind: EntryKind| Entry {
         name,

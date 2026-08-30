@@ -50,7 +50,7 @@ fn a_named_senders_deposit_paints_the_name_the_rest_of_the_frame_paints() {
 /// including the hover, whose id seat moved onto the list row with it.
 #[test]
 fn a_nameless_chained_child_row_shows_its_terminal_segment_and_hovers_the_full_id() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = super::super::inbox_composer::quick(super::super::fixture::world());
     let ws = world.ws.clone();
     // A descent child whose id embeds the ancestry chain, with no name blob,
@@ -62,7 +62,7 @@ fn a_nameless_chained_child_row_shows_its_terminal_segment_and_hovers_the_full_i
     // Unfold the parent: since bl-fa82 a member is a row of the conversation
     // list, and since bl-8905 that is the only place it paints.
     world.state.expanded.insert("c-1".to_owned());
-    let out = super::super::painted(&mut world, &lernie, &bl);
+    let out = super::super::painted(&mut world, &litany, &bl);
     assert!(
         out.contains("20260803T045643Z-1e5f99d4"),
         "the child's row titles it by its terminal generation:\n{out}"
@@ -78,7 +78,7 @@ fn a_nameless_chained_child_row_shows_its_terminal_segment_and_hovers_the_full_i
     ctx.memory_mut(|m| m.set_everything_is_visible(true));
     let mut frame = || {
         let full = ctx.run(super::super::input(), |ctx| {
-            super::super::super::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            super::super::super::render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         });
         crate::paint_probe::text_of(&full)
     };

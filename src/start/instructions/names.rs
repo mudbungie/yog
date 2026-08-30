@@ -8,7 +8,7 @@
 //! default is a file removal and never a code edit.
 //!
 //! **The live tip, never the governing commit.** An agent's own structure
-//! freezes where its branch forks (lernie ARCH §2.2), but this is the
+//! freezes where its branch forks (litany ARCH §2.2), but this is the
 //! *operator's* policy: a filename set that only bound conversations started
 //! before the edit would not be a policy. So the read is
 //! `config/<fired>:instructions.yaml` at its head, at every fire.

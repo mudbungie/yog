@@ -43,13 +43,13 @@ const RATCHET_FRAMES: usize = 14;
 /// One settled frame of the real window at `w` x `h`, and the width egui stored
 /// for the conversation panel afterwards.
 fn settled(ctx: &egui::Context, world: &mut World, w: f32, h: f32) -> f32 {
-    let (lernie, bl, bz) = (
-        Cli::new("/yog-absent-lernie"),
+    let (litany, bl, bz) = (
+        Cli::new("/yog-absent-litany"),
         Cli::new("/yog-absent-bl"),
         Cli::new("/yog-absent-bz"),
     );
     let _ = ctx.run(paint_probe::screen_sized(w, h), |ctx| {
-        render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+        render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
     });
     world.settle();
     egui::containers::panel::PanelState::load(ctx, egui::Id::new("conversations"))
@@ -118,13 +118,13 @@ fn the_conversation_column_opens_where_it_is_told_at_any_window_size() {
 /// One more frame, laid out against the settled ones — the frame a beat reads,
 /// exactly as the operator's eye reads the repaint after the answer.
 fn frame(world: &mut World, ctx: &egui::Context, w: f32, h: f32) -> egui::FullOutput {
-    let (lernie, bl, bz) = (
-        Cli::new("/yog-absent-lernie"),
+    let (litany, bl, bz) = (
+        Cli::new("/yog-absent-litany"),
         Cli::new("/yog-absent-bl"),
         Cli::new("/yog-absent-bz"),
     );
     ctx.run(paint_probe::screen_sized(w, h), |ctx| {
-        render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+        render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
     })
 }
 

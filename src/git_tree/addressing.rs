@@ -1,6 +1,6 @@
 //! **The live conversation-name enumeration** the boundary addresses over
 //! (REMOTE §8 as amended by bl-49bc, DESIGN §8.5): every `agents/*` ref that
-//! wears a lernie-stored name, asked of disk at the moment a gesture names one.
+//! wears a litany-stored name, asked of disk at the moment a gesture names one.
 //!
 //! Two facts per agent and nothing else — the id and the name — which is why it
 //! is a module of its own rather than a row on the §7.1 derivation. The whole

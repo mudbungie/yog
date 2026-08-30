@@ -1,7 +1,7 @@
 //! Start-flow tests (§15 M6 Z3), split by concern for the 300-line cap: [`plan`]
 //! (the pure planner tables per rung), [`goal`] (preambles, prefills, the driver
 //! cwd, the preview), [`identity`] (the §3.3 stamp, its inverses and the mint), [`exec`] (the `bl`-facing executors + their
-//! non-spawn aborts), [`ensure`] (the `lernie new` ensure, the mint and the
+//! non-spawn aborts), [`ensure`] (the `litany new` ensure, the mint and the
 //! worktree ladder), [`gate`] (the §8.1 provider gate over brazen's credential
 //! column, bl-1fd0), and [`run`] ([`prepare`] end-to-end per rung). Shared
 //! fixtures live here.
@@ -23,7 +23,7 @@ use crate::opslog::{self, OpEntry};
 use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Payload, StartInputs};
 use crate::test_support::authoring_new_arm;
-use lernie::mint::SplitMix64;
+use litany::mint::SplitMix64;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -48,17 +48,17 @@ pub(super) fn fake_bl(dir: &Path, id: &str, worktree: &Path) -> PathBuf {
     write_exec(dir, "bl", &body)
 }
 
-/// A fake `lernie` that **materializes** its markers like the real one, so a
-/// re-plan converges on disk (§8.1): `prime` writes `$LERNIE_HOME/models.yaml`
+/// A fake `litany` that **materializes** its markers like the real one, so a
+/// re-plan converges on disk (§8.1): `prime` writes `$LITANY_HOME/models.yaml`
 /// (the seed marker) and `new` authors the ARCH §2.2 workspace through the
 /// shared [`authoring_new_arm`]. Other verbs exit 0.
-pub(super) fn fake_lernie(dir: &Path) -> PathBuf {
+pub(super) fn fake_litany(dir: &Path) -> PathBuf {
     write_exec(
         dir,
-        "lernie",
+        "litany",
         &format!(
-            "#!/bin/sh\ncase \"$1\" in\nprime) [ -n \"$LERNIE_HOME\" ] && mkdir -p \"$LERNIE_HOME\" \
-             && : > \"$LERNIE_HOME/models.yaml\";;\n{}esac\nexit 0\n",
+            "#!/bin/sh\ncase \"$1\" in\nprime) [ -n \"$LITANY_HOME\" ] && mkdir -p \"$LITANY_HOME\" \
+             && : > \"$LITANY_HOME/models.yaml\";;\n{}esac\nexit 0\n",
             authoring_new_arm()
         ),
     )
@@ -110,14 +110,14 @@ impl World {
             .collect()
     }
 
-    /// The materializing fake `lernie` as a `Cli` standing the world's
-    /// `LERNIE_HOME`, so `prime` writes the seed marker where [`seed::seeded`]
+    /// The materializing fake `litany` as a `Cli` standing the world's
+    /// `LITANY_HOME`, so `prime` writes the seed marker where [`seed::seeded`]
     /// reads it — a re-plan then converges (`prime`/`new` skip) exactly as in
     /// production.
-    pub(super) fn lernie(&self) -> crate::cli_outbound::Cli {
-        let home = crate::world::layout_under(self.yog.path()).lernie;
-        crate::cli_outbound::Cli::new(fake_lernie(self.bin.path())).with_env(vec![(
-            "LERNIE_HOME".to_owned(),
+    pub(super) fn litany(&self) -> crate::cli_outbound::Cli {
+        let home = crate::world::layout_under(self.yog.path()).litany;
+        crate::cli_outbound::Cli::new(fake_litany(self.bin.path())).with_env(vec![(
+            "LITANY_HOME".to_owned(),
             home.to_string_lossy().into_owned(),
         )])
     }

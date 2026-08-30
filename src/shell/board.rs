@@ -41,7 +41,7 @@ use rows::{Affordances, board_row};
 ///
 /// Coverage-excluded glue, as ever: `crate::board::build` is the covered
 /// derivation, reached over the wire, and this file only lays it out.
-pub fn board(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
+pub fn board(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, litany: &Cli) {
     // **This** surface's last failure (§7.3), derived from the model this frame.
     // A failed seed/claim/mint step no longer prints to a stderr nobody reads —
     // it renders here in ichor red, and the composer that would have opened
@@ -75,7 +75,7 @@ pub fn board(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, le
              it, then copy.",
         );
     }
-    columns(ui, model, state, lernie);
+    columns(ui, model, state, litany);
     ui.separator();
     // Rows are labelled by the covered [`crate::projects::labels`] fold — the
     // basename, extended only where two projects would read alike (bl-ac3d).
@@ -88,7 +88,7 @@ pub fn board(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, le
 /// The four columns, each folded open by default and headed by its count. A
 /// column with no rows renders nothing at all — an operator with no blocked
 /// work should not be told about a blocked column.
-fn columns(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lernie: &Cli) {
+fn columns(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, litany: &Cli) {
     let landed = super::wire::ask(model, Query::Board, |reply| match reply {
         Reply::Board(board) => Some(board),
         _ => None,
@@ -134,7 +134,7 @@ fn columns(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState, lern
             .default_open(true)
             .show(ui, |ui| {
                 for row in rows {
-                    board_row(ui, model, state, lernie, &row, &affordances);
+                    board_row(ui, model, state, litany, &row, &affordances);
                 }
             })
             .header_response

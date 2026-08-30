@@ -2,7 +2,7 @@
 //! and since bl-4841 a posted one.
 //!
 //! The pick used to be composed here: plan both files, apply `models.yaml`
-//! through the §9.2 pipeline, then stage `providers.yaml` and drive `lernie
+//! through the §9.2 pipeline, then stage `providers.yaml` and drive `litany
 //! config`. All of that is now the chokepoint's
 //! [`PickModel`](crate::boundary::Action::PickModel) arm, so a click, a
 //! `/model` line and a deposit are one implementation and the pane is what it
@@ -43,7 +43,7 @@ pub(super) fn apply(picker: &mut PickerState, model: &mut AppModel, ws: &Path, p
 /// pick above it writes: one sentence per gesture, in one place, whichever of
 /// the two the operator spent.
 ///
-/// lernie's own confirmation is on stderr (the mark is a ref the operator did
+/// litany's own confirmation is on stderr (the mark is a ref the operator did
 /// not name, taking effect at a moment they did not choose), so the sentence
 /// says when it lands rather than that it happened.
 pub(super) fn retarget(picker: &mut PickerState, model: &mut AppModel, ws: &Path, agent: &str) {

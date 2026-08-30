@@ -9,11 +9,11 @@
 //!
 //! Neither beat below could be written before this ball, and that gap **was**
 //! the defect: no test had ever held an echo alive while its own deposit file
-//! existed on disk. The shared fake `lernie` writes nothing, so every earlier
+//! existed on disk. The shared fake `litany` writes nothing, so every earlier
 //! beat watched the echo against an empty inbox — the one arrangement in which
 //! appending unconditionally is indistinguishable from yielding.
 
-use super::super::fixture::{World, fake_lernie, seed_world, world};
+use super::super::fixture::{World, fake_litany, seed_world, world};
 use super::super::inbox_composer::{deposit, drain};
 use super::super::screen::Screen;
 use super::{SAID, converge_ws, faded_user, fills, quick, say, shot};
@@ -44,11 +44,11 @@ fn said(out: &egui::FullOutput) -> usize {
         .count()
 }
 
-/// A `lernie` whose **`message` arm writes the deposit**, the way the real one
+/// A `litany` whose **`message` arm writes the deposit**, the way the real one
 /// does: the §8.2 verb is piped and run to completion, so the file is on disk
 /// before the receipt that mints the echo. Every other verb exits 0.
-fn depositing_lernie(dir: &Path, ws: &Path) -> Cli {
-    let path = dir.join("lernie");
+fn depositing_litany(dir: &Path, ws: &Path) -> Cli {
+    let path = dir.join("litany");
     let inbox = ws.join("inbox/c-1");
     std::fs::write(
         &path,
@@ -85,7 +85,7 @@ fn queued() -> World {
 fn one_message_is_one_queue_row_faded_then_solid_then_gone() {
     let bin = tempdir().unwrap();
     let mut world = queued();
-    let screen = Screen::with_lernie(fake_lernie(bin.path()));
+    let screen = Screen::with_litany(fake_litany(bin.path()));
     let before = shot(&screen, &mut world);
     assert_eq!(
         queue_rows(&before),
@@ -155,7 +155,7 @@ fn the_substrates_own_write_never_earns_a_second_row() {
     let ws = world.ws.clone();
     // The substrate's own write, seated the way every acceptance fake is: the
     // screen hands its binaries to the world on every frame it runs.
-    let screen = Screen::with_lernie(depositing_lernie(bin.path(), &ws));
+    let screen = Screen::with_litany(depositing_litany(bin.path(), &ws));
     shot(&screen, &mut world);
 
     say(&screen, &mut world);

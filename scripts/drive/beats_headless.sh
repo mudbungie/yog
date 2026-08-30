@@ -13,7 +13,7 @@
 # WHY THESE RUNGS AND NOT THE OTHERS (bl-bb20's scope decision, made against
 # the ball's instruction to attack the scope before committing). A drive beat
 # earns its keep only where the REAL substrate can say something a fake cannot:
-# real balls state and its blocker semantics, real git, real lernie's on-disk
+# real balls state and its blocker semantics, real git, real litany's on-disk
 # shapes, the real window, the real wire. Where a rung's claim is a derivation
 # over yog's own structures, the in-crate test proves it exactly and a beat
 # would re-run the same logic through a slower door.
@@ -53,7 +53,7 @@
 #                      real git with no model call anywhere (`beats_s19.sh`).
 #                      What stays OUT is cohort membership on the read
 #                      surfaces: membership is derived from real FIRE rows and
-#                      a fire is a detached `lernie prompt` — a model call —
+#                      a fire is a detached `litany prompt` — a model call —
 #                      so that join is the in-crate tests' half, over fixture
 #                      trails.
 #   S15/S16/S17 (warden, releaser) OUT — a real adjudication needs a real agent
@@ -123,7 +123,7 @@ run_headless() {
 
   # S2-T1 — the target rung, asserted at the TYPED BINDING and nowhere else.
   # The prepared reply named this `cwd` until bl-6654 landed (642b054f) and made
-  # the target a typed parameter handed to lernie rather than a directory folded
+  # the target a typed parameter handed to litany rather than a directory folded
   # into a spawn; this beat was written against `cwd` and reddened on the merge
   # that brought it in, which is the beat working. The other half of S2-T1 — the
   # §3.3 preamble the goal carries — is deliberately NOT asserted: it is the

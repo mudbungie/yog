@@ -1,8 +1,8 @@
-//! The workspace-and-name executors (§4.2, Z5): the idempotent `lernie new`
+//! The workspace-and-name executors (§4.2, Z5): the idempotent `litany new`
 //! ensure, the mint mapping the fire applies ([`on_mint`]), and the worktree
 //! resolution ladder. The `bl`-facing executors are [`super::exec`]'s concern.
 
-use super::{World, ball, fake_fail, fake_lernie};
+use super::{World, ball, fake_fail, fake_litany};
 use crate::binding::{work_worktree_path, workspace_path};
 use crate::cli_outbound::Cli;
 use crate::opslog::{Origin, SYNTHETIC_EXIT, YOG_STEP};
@@ -11,7 +11,7 @@ use crate::start::{
     Deps, Payload, StartError, execute_ensure_workspace, on_mint, resolve_worktree,
 };
 use crate::world::{Layout, layout_under};
-use lernie::mint::MintError;
+use litany::mint::MintError;
 use std::path::PathBuf;
 
 /// The world layout anchored on this world's yog data root — where the §8.6
@@ -20,11 +20,11 @@ fn layout(w: &World) -> Layout {
     layout_under(w.yog.path())
 }
 
-/// Start deps whose `lernie` is the only binary these rungs reach.
-fn deps(w: &World, lernie: &Cli) -> Deps {
+/// Start deps whose `litany` is the only binary these rungs reach.
+fn deps(w: &World, litany: &Cli) -> Deps {
     Deps {
         bl: Cli::new("/no/bl"),
-        lernie: lernie.clone(),
+        litany: litany.clone(),
         state_root: w.state.path().to_path_buf(),
         yog_binary: PathBuf::from("/no/yog"),
     }
@@ -35,9 +35,9 @@ fn ensure_skips_when_the_workspace_already_exists() {
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "n");
     std::fs::create_dir_all(ws.join("repo.git")).unwrap();
-    let lernie = Cli::new("/definitely/not/a/real/lernie");
+    let litany = Cli::new("/definitely/not/a/real/litany");
     let created = execute_ensure_workspace(
-        &deps(&w, &lernie),
+        &deps(&w, &litany),
         "TS",
         &ws,
         "default",
@@ -53,10 +53,10 @@ fn ensure_skips_when_the_workspace_already_exists() {
 fn ensure_creates_the_workspace_and_logs() {
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "cobalt-gecko");
-    let lernie = Cli::new(fake_lernie(w.bin.path()));
+    let litany = Cli::new(fake_litany(w.bin.path()));
     assert!(
         execute_ensure_workspace(
-            &deps(&w, &lernie),
+            &deps(&w, &litany),
             "TS",
             &ws,
             "default",
@@ -76,9 +76,9 @@ fn ensure_creates_the_workspace_and_logs() {
 fn ensure_errors_and_logs_on_a_nonzero_new() {
     let w = World::new();
     let ws = workspace_path(w.yog.path(), "n");
-    let lernie = Cli::new(fake_fail(w.bin.path(), "lernie", "disk full"));
+    let litany = Cli::new(fake_fail(w.bin.path(), "litany", "disk full"));
     let err = execute_ensure_workspace(
-        &deps(&w, &lernie),
+        &deps(&w, &litany),
         "TS",
         &ws,
         "default",
@@ -92,14 +92,14 @@ fn ensure_errors_and_logs_on_a_nonzero_new() {
 #[test]
 fn ensure_logs_a_mkdir_step_failure() {
     // The parent chain cannot be created (a file sits where a dir must go) → a
-    // `["yog-step","mkdir"]` row before the Io error (§4.2, Z5), no `lernie` spawn.
+    // `["yog-step","mkdir"]` row before the Io error (§4.2, Z5), no `litany` spawn.
     let w = World::new();
     let blocker = w.yog.path().join("blocked");
     std::fs::write(&blocker, b"x").unwrap();
     let ws = blocker.join("workspaces").join("n");
-    let lernie = Cli::new("/definitely/not/a/real/lernie");
+    let litany = Cli::new("/definitely/not/a/real/litany");
     let err = execute_ensure_workspace(
-        &deps(&w, &lernie),
+        &deps(&w, &litany),
         "TS",
         &ws,
         "default",
@@ -120,7 +120,7 @@ fn ensure_creates_whatever_the_birth_template_names() {
     // about providers: the workspace is created, and a dead row is faulted in
     // the §9.5 pane and surfaced at the first dispatch (§8.3) instead.
     let w = World::new();
-    let tmpl = layout(&w).lernie.join("template");
+    let tmpl = layout(&w).litany.join("template");
     std::fs::create_dir_all(&tmpl).unwrap();
     std::fs::write(
         tmpl.join("providers.yaml"),
@@ -128,10 +128,10 @@ fn ensure_creates_whatever_the_birth_template_names() {
     )
     .unwrap();
     let ws = workspace_path(w.yog.path(), "n");
-    let lernie = Cli::new(fake_lernie(w.bin.path()));
+    let litany = Cli::new(fake_litany(w.bin.path()));
     assert!(
         execute_ensure_workspace(
-            &deps(&w, &lernie),
+            &deps(&w, &litany),
             "TS",
             &ws,
             "default",

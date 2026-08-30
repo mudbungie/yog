@@ -74,14 +74,14 @@ fn input() -> egui::RawInput {
 /// (bl-929d — its measured content height feeds the panel's, so the chrome
 /// below the region reaches its final seat on the frame after the panel
 /// adopts it). The settled third frame is the one the operator actually sees.
-fn painted(world: &mut World, lernie: &Cli, bl: &Cli) -> String {
+fn painted(world: &mut World, litany: &Cli, bl: &Cli) -> String {
     // A `bz` handle for the §8.3 Login surface; unspawned here — the Toolchain
     // pane only shells to bz on an explicit click, unreachable headless.
     let bz = Cli::new("bz");
     let ctx = egui::Context::default();
     let frame = |world: &mut World| {
         ctx.run(input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, lernie, bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, litany, bl, &bz);
         })
     };
     // Two frames before anything is settled, because a **fresh** `egui::Context`
@@ -134,7 +134,7 @@ fn painted(world: &mut World, lernie: &Cli, bl: &Cli) -> String {
 /// this one the suite had never rendered a window where height is abundant and
 /// width is scarce — and the four rules that only bite there had never been
 /// asked. It reddened `legible` on sight at three independent seats (the
-/// lernie-global pane's workflow and declare rows, the config-branch pane's
+/// litany-global pane's workflow and declare rows, the config-branch pane's
 /// lineage and file rows, and the marks pane's verb pair, each claiming egui's
 /// fixed 280 pt `text_edit_width` in a 224 pt centre) and a fourth in the Steps
 /// table, whose `Commit` heading was laid six points past the pane's clip so
@@ -165,7 +165,7 @@ pub(super) fn window(
     tab: crate::keymap::CenterTab,
     inspector: crate::keymap::InspectorTab,
 ) -> egui::FullOutput {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let mut world = fixture::world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
@@ -175,7 +175,7 @@ pub(super) fn window(
     super::center::focus(&world.model, &mut world.state, tab);
     let frame = |world: &mut World| {
         ctx.run(crate::paint_probe::screen_sized(w, h), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         })
     };
     // The wire settled between frames, for `painted`'s reason: a migrated

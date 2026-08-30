@@ -89,7 +89,7 @@ pub fn entry_field(text: &str, block: &str, entry: &str, name: &str) -> Option<S
 
 /// Replace one entry's four-space field value, preserving every other byte
 /// (comments, sibling fields, sibling entries). Declines loudly on anything but
-/// the block form lernie writes, like every other rewrite in this grammar.
+/// the block form litany writes, like every other rewrite in this grammar.
 pub fn set_field(
     file: &'static str,
     text: &str,

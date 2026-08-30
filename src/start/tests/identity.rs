@@ -73,13 +73,13 @@ fn mint_conversation_skips_the_workspaces_occupied_names() {
 }
 
 /// **Preview parity** (§3.3, bl-cd38): the composer's prediction and the fire's
-/// mint are the *same function* — `lernie::mint::mint`, drawn through the crate
+/// mint are the *same function* — `litany::mint::mint`, drawn through the crate
 /// yog links rather than a second list of yog's own. Same seed, same occupied
 /// set, same word, at both altitudes; and calling the crate directly with those
 /// inputs lands the same word again, which is what says yog kept no draw of its
 /// own. This is the assertion a re-grown local wordlist would fail.
 #[test]
-fn preview_and_fire_draw_the_one_lernie_mint() {
+fn preview_and_fire_draw_the_one_litany_mint() {
     let occupied = ["ash".to_owned(), "bay".to_owned()];
     let fired = mint_conversation(&occupied, &super::rng()).unwrap();
     assert_eq!(
@@ -88,7 +88,7 @@ fn preview_and_fire_draw_the_one_lernie_mint() {
         "the prediction names the word the fire mints"
     );
     assert_eq!(
-        lernie::mint::mint(&super::rng(), &occupied.iter().cloned().collect()).unwrap(),
+        litany::mint::mint(&super::rng(), &occupied.iter().cloned().collect()).unwrap(),
         fired,
         "and that word is the crate's own draw — yog holds no second list"
     );

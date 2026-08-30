@@ -7,7 +7,7 @@
 //! differently the second time. Everything it needs therefore has a home
 //! somewhere else already:
 //!
-//! - the **request** is lernie's own hold mark, written by the seam;
+//! - the **request** is litany's own hold mark, written by the seam;
 //! - **standing policy** is the shipped [`Table`], overridden row by row by the
 //!   workspace's own [`Policy`](super::policy::Policy) when it declares one —
 //!   absence *is* the defaults, the `cadence.yaml` severability pattern;

@@ -1,6 +1,6 @@
 //! The §9.3 per-workspace config-branch pane: pick the lineage, pick the file,
 //! load what it actually holds, edit it — typed where yog has a grammar for the
-//! file (§9.5), raw where it does not — and drive `lernie config`, the only
+//! file (§9.5), raw where it does not — and drive `litany config`, the only
 //! lawful `config/*` writer.
 //!
 //! Two things this pane used to be: a free-text branch name and a free-text
@@ -30,7 +30,7 @@ use std::path::Path;
 mod pick;
 
 /// Per-workspace config branches (§9.3): the lineage, the file, its settings,
-/// and the staged edit that drives `lernie config`.
+/// and the staged edit that drives `litany config`.
 pub(super) fn render(
     ui: &mut egui::Ui,
     model: &mut AppModel,
@@ -70,9 +70,9 @@ pub(super) fn render(
              it, Space presses it.",
         );
     if ui
-        .button("Send (stage + lernie config)")
+        .button("Send (stage + litany config)")
         .on_hover_text(
-            "Stage this file and run `lernie config` — the only thing allowed to \
+            "Stage this file and run `litany config` — the only thing allowed to \
              write a config branch. New conversations in this workspace read the \
              result; running ones stay on the commit they started from. Typed, it is \
              `/config branch <name> <text…>`.",
@@ -86,7 +86,7 @@ pub(super) fn render(
 
 /// Read the workspace's lineages and the selected one's file listing — the
 /// §9 read-on-demand rule extended to git: the pane's own open gesture fills
-/// this, and the pane refills it after a `lernie config` it caused (§7.2 — the
+/// this, and the pane refills it after a `litany config` it caused (§7.2 — the
 /// frame marks what it changed; it never polls). Both answers come from one
 /// pass, so the listing and the tree can never be of different commits.
 pub(super) fn reread(config: &mut ConfigState, workspace: Option<&Path>) {
@@ -105,7 +105,7 @@ fn schema_of(path: &str) -> Option<Schema> {
 }
 
 /// The loaded file's settings as controls; an edit rewrites the body in RAM and
-/// `lernie config` remains the writer.
+/// `litany config` remains the writer.
 fn settings(
     ui: &mut egui::Ui,
     config: &mut ConfigState,

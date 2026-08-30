@@ -5,7 +5,7 @@
 #![allow(clippy::unwrap_used)]
 
 use crate::support::Recorder;
-use lernie::mint::SplitMix64;
+use litany::mint::SplitMix64;
 use tempfile::tempdir;
 use yog::binding::workspace_path;
 use yog::cli_outbound::Cli;
@@ -16,7 +16,7 @@ use yog::world::layout_under;
 fn s2_t1_path_rung_targets_the_directory() {
     let (bin, state) = (tempdir().unwrap(), tempdir().unwrap());
     let (yog, balls, home) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
-    let seed = layout_under(yog.path()).lernie;
+    let seed = layout_under(yog.path()).litany;
     std::fs::create_dir_all(&seed).unwrap();
     std::fs::write(seed.join("models.yaml"), b"models: {}\n").unwrap();
     let ws = workspace_path(yog.path(), "cobalt-gecko");
@@ -24,11 +24,11 @@ fn s2_t1_path_rung_targets_the_directory() {
     let dir = home.path().join("project-x");
     std::fs::create_dir_all(&dir).unwrap();
 
-    let lernie = Recorder::new(bin.path(), "lernie");
+    let litany = Recorder::new(bin.path(), "litany");
     let bl = Recorder::new(bin.path(), "bl");
     let deps = Deps {
         bl: Cli::new(bl.path()),
-        lernie: Cli::new(lernie.path()),
+        litany: Cli::new(litany.path()),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
         // No answer from brazen: the §9.2 birth-template gate judges nothing.
@@ -56,7 +56,7 @@ fn s2_t1_path_rung_targets_the_directory() {
         "the prefill leads with the dir verbatim (§3.3 headline-first)"
     );
     start::execute_prompt(
-        &deps.lernie,
+        &deps.litany,
         state.path(),
         "T0",
         &start::Fire {
@@ -69,12 +69,12 @@ fn s2_t1_path_rung_targets_the_directory() {
     )
     .unwrap();
 
-    let inv = lernie.wait(1);
+    let inv = litany.wait(1);
     assert_eq!(inv[0].argv[0], "prompt");
     assert_eq!(
         inv[0].argv[3..5],
         ["--cwd".to_owned(), dir.display().to_string()],
-        "the dir reaches lernie as the typed binding, not as the process cwd"
+        "the dir reaches litany as the typed binding, not as the process cwd"
     );
     assert!(bl.invocations().is_empty(), "the path rung mutates no ball");
 }

@@ -111,14 +111,14 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
 }
 
 /// The inverse of [`iso8601_extended`], for the one timestamp yog reads back
-/// rather than prints: lernie's step `meta.json` `started_at`/`ended_at`
+/// rather than prints: litany's step `meta.json` `started_at`/`ended_at`
 /// (§3.9, bl-40ab). `2026-04-22T06:54:32Z` → epoch seconds.
 ///
 /// **Deliberately not an RFC 3339 parser.** It accepts exactly the shape
-/// lernie's clock writes (`prompt/clock.rs`) — four digits, `-`, two, `-`,
+/// litany's clock writes (`prompt/clock.rs`) — four digits, `-`, two, `-`,
 /// two, `T`, two, `:`, two, `:`, two, `Z`, and nothing else — because that
 /// clock is the only writer this crate ever reads, and a tolerant parser would
-/// invent an answer for bytes no lernie produced. Anything else is `None`, the
+/// invent an answer for bytes no litany produced. Anything else is `None`, the
 /// same honest unknown a missing `meta.json` gives.
 pub fn epoch_from_iso8601(stamp: &str) -> Option<i64> {
     let b = stamp.as_bytes();

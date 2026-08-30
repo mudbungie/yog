@@ -12,7 +12,7 @@
 //! carries. That is what this row now asserts.
 //!
 //! **The row's premise drifted: there are THREE overrides, not two.** STORIES
-//! says "exactly `LERNIE_HOME` and `XDG_STATE_HOME`"; §16.7 W9 added the
+//! says "exactly `LITANY_HOME` and `XDG_STATE_HOME`"; §16.7 W9 added the
 //! `PATH` prepend that puts `<world>/tools` in front of the ambient search
 //! path, so an agent's bare `bl` is the world's own shim (§16.4). It belongs to
 //! the same set for the same reason — it is a pure function of the anchor, and
@@ -42,13 +42,13 @@ fn s8_t1_the_world_nests_three_vars_and_re_composing_is_a_fixed_point() {
     let ov = map(&ambient);
     assert_eq!(
         ov.keys().cloned().collect::<Vec<_>>(),
-        ["LERNIE_HOME", "PATH", "XDG_STATE_HOME"],
+        ["LITANY_HOME", "PATH", "XDG_STATE_HOME"],
         "the nesting set, and nothing else"
     );
     // Each value is the layout's own path — one derivation, so the dir yog
     // watches and the dir a spawned child writes cannot be two answers.
     let layout = world::layout(&ambient);
-    assert_eq!(ov["LERNIE_HOME"], layout.lernie.to_string_lossy());
+    assert_eq!(ov["LITANY_HOME"], layout.litany.to_string_lossy());
     assert_eq!(ov["XDG_STATE_HOME"], layout.state.to_string_lossy());
     assert!(
         ov["PATH"].starts_with(&*layout.tools.to_string_lossy()),
@@ -99,7 +99,7 @@ fn s8_t1_the_world_nests_three_vars_and_re_composing_is_a_fixed_point() {
     assert_eq!(world_env.yog_data_root(), ambient.yog_data_root());
 
     // --- The world's own reads land inside it.
-    assert!(world_env.lernie_data_root().starts_with(&layout.lernie));
+    assert!(world_env.litany_data_root().starts_with(&layout.litany));
     assert!(world_env.balls_state_root().starts_with(&layout.state));
 
     // The layout is pure path algebra over the anchor — no IO, no env — which
@@ -107,7 +107,7 @@ fn s8_t1_the_world_nests_three_vars_and_re_composing_is_a_fixed_point() {
     // re-snapshotting the process environment.
     let under = world::layout_under(Path::new("/anchor"));
     assert_eq!(under.root, Path::new("/anchor/world"));
-    assert_eq!(under.lernie, Path::new("/anchor/world/lernie"));
+    assert_eq!(under.litany, Path::new("/anchor/world/litany"));
     assert_eq!(under.state, Path::new("/anchor/world/state"));
     assert_eq!(under.tools, Path::new("/anchor/world/tools"));
 
@@ -117,7 +117,7 @@ fn s8_t1_the_world_nests_three_vars_and_re_composing_is_a_fixed_point() {
     // rather than stacking a second tools entry.
     let twice = world::compose(&world_env);
     assert_eq!(map(&world_env), map(&twice), "re-composition is idempotent");
-    assert_eq!(world_env.lernie_data_root(), twice.lernie_data_root());
+    assert_eq!(world_env.litany_data_root(), twice.litany_data_root());
     assert_eq!(world_env.balls_state_root(), twice.balls_state_root());
     assert_eq!(
         world::layout(&world_env).root,

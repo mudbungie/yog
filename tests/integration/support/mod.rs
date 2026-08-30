@@ -144,7 +144,7 @@ fn run_git(repo: &Path, args: &[&str]) {
     assert!(status.success(), "git {args:?}");
 }
 
-/// Build a minimal lernie workspace at `ws` (ARCH §2.2 layout): a bare
+/// Build a minimal litany workspace at `ws` (ARCH §2.2 layout): a bare
 /// `repo.git` with a `config/default` commit and one `agents/c-001` dispatch
 /// commit — enough for `GitTree::from_repo` to derive a single agent, so the
 /// derived roster is non-empty.

@@ -1,11 +1,11 @@
 //! The §11 **Config tab** (§9): the three write surfaces — brazen's
-//! `config.toml`, lernie's global config, this workspace's config branches —
+//! `config.toml`, litany's global config, this workspace's config branches —
 //! as **controls over facts** since §9.5: each setting the files declare gets the
 //! widget its kind implies, and raw text survives only where §9.5 justifies it.
 //!
 //! **The three surfaces do not share a lifetime.** brazen's file is a
 //! *workspace's* (§16.2 as amended), so its whole pane is per-wall RAM
-//! ([`brazen_pane`], bl-5894); the lernie-global and cadence files are the
+//! ([`brazen_pane`], bl-5894); the litany-global and cadence files are the
 //! world's, one per install, so [`ConfigState`] holds exactly one draft of each
 //! however many spheres the operator walks through. Two homes because there are
 //! two lifetimes, not two mechanisms.
@@ -29,7 +29,7 @@ use crate::config_edit::RealFileIo;
 use crate::config_edit::branch::ConfigBranch;
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::brazen::row_names;
-use crate::config_edit::lernie_global::{Editor, LernieGlobal};
+use crate::config_edit::litany_global::{Editor, LitanyGlobal};
 use crate::shell::config_marks::{self, MarksPane};
 use crate::xdg::Env;
 use std::path::PathBuf;
@@ -37,7 +37,7 @@ use std::path::PathBuf;
 mod branch_pane;
 pub(crate) mod brazen_pane;
 mod form_ui;
-mod lernie_pane;
+mod litany_pane;
 /// The lineage pane's **write half** (REMOTE §9.8, bl-4841) — the posted
 /// gesture and the receipt it earns, split off at §12's budget on the seam the
 /// act path draws everywhere: browsing and drafting is one thing, firing a
@@ -61,13 +61,13 @@ const NEW_WORKFLOW_HINT: &str = "Name for a new `workflows/<name>.yaml`. Create 
 /// The **world's** config editors and their RAM (§9). brazen's `config.toml` is
 /// deliberately not here: it belongs to a workspace's wall, so it is
 /// [`BrazenPane`] — one field of the per-wall RAM (§16.2 as amended, bl-5894) —
-/// while the lernie-global and cadence files are the world's, one per install,
+/// while the litany-global and cadence files are the world's, one per install,
 /// and there is exactly one draft of each no matter which sphere is focused.
 pub struct ConfigState {
     io: RealFileIo,
-    lernie: LernieGlobal,
-    lernie_editor: Editor,
-    lernie_status: String,
+    litany: LitanyGlobal,
+    litany_editor: Editor,
+    litany_status: String,
     /// The yog clock's own file (§7.2, bl-3381), on the same editor discipline.
     cadence_editor: Editor,
     cadence_status: String,
@@ -91,12 +91,12 @@ pub struct ConfigState {
 }
 
 impl ConfigState {
-    /// Fold the editors from the env snapshot (§9). A missing lernie file loads
+    /// Fold the editors from the env snapshot (§9). A missing litany file loads
     /// as an empty draft (§9.2), never an error.
     pub fn new(env: &Env) -> std::io::Result<Self> {
         let io = RealFileIo;
-        let lernie = LernieGlobal::resolve(env);
-        let lernie_editor = Editor::load(lernie.models(), &io)?;
+        let litany = LitanyGlobal::resolve(env);
+        let litany_editor = Editor::load(litany.models(), &io)?;
         // The clock's file (bl-3381): absent means the defaults, so a fresh
         // world's pane seeds the default template — every row renders, and the
         // first Apply creates the file it edits (the must-not-exist guard is
@@ -108,9 +108,9 @@ impl ConfigState {
         }
         Ok(Self {
             io,
-            lernie,
-            lernie_editor,
-            lernie_status: String::new(),
+            litany,
+            litany_editor,
+            litany_status: String::new(),
             cadence_editor,
             cadence_status: String::new(),
             workflows: Vec::new(),
@@ -139,9 +139,9 @@ impl ConfigState {
     /// brazen's own half of that re-read is [`BrazenPane::open`], because the
     /// file is the focused wall's and this state is the world's.
     pub fn open(&mut self, workspace: Option<&std::path::Path>) {
-        let _ = self.lernie_editor.refresh(&self.io);
+        let _ = self.litany_editor.refresh(&self.io);
         let _ = self.cadence_editor.refresh(&self.io);
-        self.workflows = self.lernie.workflows(&self.io).unwrap_or_default();
+        self.workflows = self.litany.workflows(&self.io).unwrap_or_default();
         branch_pane::reread(self, workspace);
     }
 }
@@ -167,7 +167,7 @@ pub fn center(ui: &mut egui::Ui, model: &mut AppModel, state: &mut super::ShellS
         super::row::shown_width(ui);
         route = brazen_pane::render(ui, &mut state.wall.brazen);
         ui.separator();
-        lernie_pane::render(ui, &mut state.config, &rows);
+        litany_pane::render(ui, &mut state.config, &rows);
         ui.separator();
         yog_pane::render(ui, &mut state.config);
         ui.separator();

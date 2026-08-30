@@ -94,7 +94,7 @@ fail() { say "$1" "FAIL — $2"; fails=$((fails + 1)); record "$1" FAIL "$2"; }
 # latency belongs to the model or to a spawned tool, and it fails in both
 # directions — 2026-07-26 alone, an 8 s guess went red against an agent that
 # spent four tool round trips before answering, and a 5 s one went red against a
-# `lernie stop` whose row landed the moment it finished reaping a *streaming*
+# `litany stop` whose row landed the moment it finished reaping a *streaming*
 # driver. Sleeps that remain gate only screenshots, never a verdict.
 await() { for _ in $(seq 1 40); do "$@" && return 0; sleep 1; done; return 1; }
 

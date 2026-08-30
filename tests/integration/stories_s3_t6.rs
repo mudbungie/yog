@@ -1,5 +1,5 @@
 //! STORIES **S3-T6** abort-before-claim: on the ball rung — the rung that *has*
-//! a `bl` mutation to abort — a failed substrate step (`lernie prime`) precedes
+//! a `bl` mutation to abort — a failed substrate step (`litany prime`) precedes
 //! every `bl` mutation, so **no `bl create`/`bl claim` is recorded** (STORIES
 //! S3.6, DESIGN §8.1 — the load-bearing order that closes the orphaned-claim
 //! wound). S0-T3's no-`bl` assertion is vacuous on the bare rung; this proves it.
@@ -22,13 +22,13 @@ fn s3_t6_a_failed_substrate_aborts_before_any_bl_mutation() {
         tempdir().unwrap(),
     );
     // `prime` fails; `bl create`/`bl claim` would both succeed if ever reached.
-    let lernie = Recorder::new(bin.path(), "lernie").on_err("prime", "", "no seed", 2);
+    let litany = Recorder::new(bin.path(), "litany").on_err("prime", "", "no seed", 2);
     let bl = Recorder::new(bin.path(), "bl")
         .on("create", "bl-x\n", 0)
         .on("claim", "/wt/bl-x", 0);
     let deps = Deps {
         bl: Cli::new(bl.path()),
-        lernie: Cli::new(lernie.path()),
+        litany: Cli::new(litany.path()),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
         // No answer from brazen: the §9.2 birth-template gate judges nothing.

@@ -18,7 +18,7 @@
 //! tools dir, the seed's sibling rule (`exe_dir/<name>`) finds the plugin
 //! shims there, and a `prime` founds a checkout whose plugin chain re-enters
 //! yog ([`super::bl_delivery`]/[`super::bl_tracker`]) — the same
-//! converge-on-the-way-in the lernie arm does for its re-entry targets (W11).
+//! converge-on-the-way-in the litany arm does for its re-entry targets (W11).
 
 use balls::edge::Edge;
 use std::env;
@@ -100,7 +100,7 @@ fn stand(probe: bool) -> Space {
 /// Converge the world's tool shims and return the world's `bl` — the path
 /// handed to balls as the running executable, so `Edge::exe_dir` is the
 /// tools dir where the `bl-delivery`/`bl-tracker` sibling shims live
-/// (bl-2930; the W11 lernie-arm mechanism). The tools dir derives from the
+/// (bl-2930; the W11 litany-arm mechanism). The tools dir derives from the
 /// ambient anchor (`$XDG_DATA_HOME/yog/world/tools`, §16.2 — never a world
 /// override, so every process in the chain resolves the same dir).
 ///

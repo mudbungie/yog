@@ -125,7 +125,7 @@ fn every_interactive_control_carries_a_hover() {
 /// compiles, reads fine, and fails here.
 #[test]
 fn the_hovers_reach_the_paint_layer() {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let mut world = super::fixture::world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
@@ -145,7 +145,7 @@ fn the_hovers_reach_the_paint_layer() {
     ctx.memory_mut(|m| m.set_everything_is_visible(true));
     let frame = |world: &mut super::fixture::World| {
         let out = ctx.run(super::input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         });
         crate::paint_probe::text_of(&out)
     };

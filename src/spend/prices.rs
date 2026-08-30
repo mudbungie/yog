@@ -6,7 +6,7 @@
 //! empty table is the default, so a yog that was never priced renders exactly
 //! the token figures it always did.
 //!
-//! **No crate below yog learns a price** (§3.5): brazen counts tokens, lernie
+//! **No crate below yog learns a price** (§3.5): brazen counts tokens, litany
 //! commits them into step records, balls stays metric-free. The rate lives
 //! here and nowhere else.
 //!

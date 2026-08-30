@@ -235,7 +235,7 @@ fn push_streaming(name: &str, thinking: &str, text: &str, out: &mut Vec<Row>) {
 /// governing commit assigned (§9.4) — not a speaker, so it rides the hover while
 /// the label names the agent. One turn can name a different model than the
 /// header's current assignment, and that is the truth of that turn: the id here
-/// is read from the entry lernie itself wrote.
+/// is read from the entry litany itself wrote.
 fn model_hover(model_id: &str) -> String {
     format!("ran on {model_id} — the model is config, not the speaker")
 }

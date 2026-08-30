@@ -45,7 +45,7 @@ impl Deriver {
         self.schedule.mark(workspaces);
     }
 
-    /// An enumeration root (§7.1): the flat names root, the lernie workspaces
+    /// An enumeration root (§7.1): the flat names root, the litany workspaces
     /// root, or the replays root — a create/remove there changes the workspace
     /// set.
     fn is_enum_root(&self, root: &Path) -> bool {
@@ -116,7 +116,7 @@ impl Deriver {
     /// routing branch (§7.1's roots are the enumeration set, not a file list).
     pub(super) fn adopt_windows(&mut self) {
         let path =
-            crate::config_edit::lernie_global::LernieGlobal::resolve(&self.roots.world).models();
+            crate::config_edit::litany_global::LitanyGlobal::resolve(&self.roots.world).models();
         let text = std::fs::read_to_string(path).unwrap_or_default();
         let next = crate::model_pick::grammar::context_windows(&text);
         if next != self.windows {

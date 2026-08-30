@@ -3,10 +3,10 @@
 //! this conversation, then deposit the operator's text, and let the deposit's
 //! own driver-start be the trigger.
 //!
-//! **No new substrate verb.** It is `lernie stop` followed by `lernie message`,
+//! **No new substrate verb.** It is `litany stop` followed by `litany message`,
 //! in that order, through the two §8.2 short verbs that already exist
 //! ([`verbs::stop`], [`verbs::message`]) and the workspace-bound spawn they
-//! already take (bl-bf79). The trigger is lernie's standing law rather than
+//! already take (bl-bf79). The trigger is litany's standing law rather than
 //! anything yog adds: ARCH §2.9 has no resume verb, so a deposit into a
 //! quiescent branch *is* a driver start — which is exactly the state the stop
 //! just put the branch in.
@@ -26,18 +26,18 @@
 //! **deposit's** outcome: it is the act that resumes the conversation, and its
 //! exit is the one the operator is waiting on.
 //!
-//! **Why this could not be built until lernie bl-b98d landed.** A stop landing
-//! in a *tool window* used to leave the branch tip at lernie's ARCH §6 one
+//! **Why this could not be built until litany bl-b98d landed.** A stop landing
+//! in a *tool window* used to leave the branch tip at litany's ARCH §6 one
 //! non-replayable state: the assistant entry with its `tool_use` blocks was
 //! already committed, the felled invocations had no `tool_result`, and the next
-//! `lernie advance` — which is exactly what this gesture's deposit starts —
+//! `litany advance` — which is exactly what this gesture's deposit starts —
 //! declined with `Error::UnpairedToolUse`. The gesture would have bricked any
-//! conversation it happened to catch mid-tool-call. The pinned lernie settles
+//! conversation it happened to catch mid-tool-call. The pinned litany settles
 //! that window on the stopped exit (`prompt::dispatch::tool_step::settle`): one
 //! in-band `is_error` `tool_result` per unanswered `tool_use`, so the tail
 //! warrants an ordinary model call and the deposit revives the branch. yog
 //! carries no guess about which window a stop landed in — a yog-side read of
-//! lernie's step state would be a race, not a mechanism.
+//! litany's step state would be a race, not a mechanism.
 
 use std::path::Path;
 

@@ -57,13 +57,13 @@ fn work_worktree_path_matches_bl_claim_layout() {
 fn workspaces_classifies_across_three_roots() {
     let tmp = TempDir::new().unwrap();
     let yog = tmp.path().join("yog");
-    let lernie = tmp.path().join("lernie");
+    let litany = tmp.path().join("litany");
 
     // A named workspace under yog's flat names root: the leaf is the name.
     let cobalt = workspace(&yog, "workspaces/cobalt-gecko");
-    // Foreign (lernie auto-id) and a replay.
-    let foreign = workspace(&lernie, "workspaces/01ABC");
-    let replay = workspace(&lernie, "replays/99XYZ");
+    // Foreign (litany auto-id) and a replay.
+    let foreign = workspace(&litany, "workspaces/01ABC");
+    let replay = workspace(&litany, "replays/99XYZ");
     // A names-root child without `repo.git`: skipped (not a workspace).
     mkdir(&yog, "workspaces/half-built");
     // A `repo.git` two levels deep under the names root: NOT enumerated — the
@@ -73,7 +73,7 @@ fn workspaces_classifies_across_three_roots() {
     // A stray file among the entries: walked past.
     fs::write(yog.join("workspaces/NOTES"), b"x").unwrap();
 
-    let got = workspaces(&yog, &lernie);
+    let got = workspaces(&yog, &litany);
     assert_eq!(
         got,
         vec![
@@ -100,7 +100,7 @@ fn names_root_enumerates_multiple_names_sorted() {
     let zephyr = workspace(yog, "workspaces/zephyr-mole");
     let amber = workspace(yog, "workspaces/amber-toad");
 
-    let got = workspaces(yog, &yog.join("absent-lernie"));
+    let got = workspaces(yog, &yog.join("absent-litany"));
     // Sorted by path: amber before zephyr, both Named by their leaf.
     assert_eq!(
         got,
@@ -121,7 +121,7 @@ fn names_root_enumerates_multiple_names_sorted() {
 fn missing_roots_yield_empty() {
     let tmp = TempDir::new().unwrap();
     let yog = tmp.path().join("absent-yog");
-    let lernie = tmp.path().join("absent-lernie");
+    let litany = tmp.path().join("absent-litany");
     // Exercises the `read_dir` early-return in the flat enumerator.
-    assert!(workspaces(&yog, &lernie).is_empty());
+    assert!(workspaces(&yog, &litany).is_empty());
 }

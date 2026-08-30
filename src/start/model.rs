@@ -48,7 +48,7 @@ impl Payload {
     /// The §7.3 banner surface every ops row this rung writes is attributed to
     /// (bl-48f8) — **the rung is the origin**, and it is the one thing the argv
     /// cannot say: a ball-rung start and a bare-rung one write byte-identical
-    /// `lernie new` / `lernie prompt` / `["yog-step","mkdir"]` lines, so a
+    /// `litany new` / `litany prompt` / `["yog-step","mkdir"]` lines, so a
     /// derivation at read time would hand the balls fold and the composer the
     /// same row and be wrong for one of them every time.
     ///
@@ -94,7 +94,7 @@ pub struct StartInputs {
     /// <name>` for a raise — the operator's typed name, or `home` at bootstrap
     /// (§3.1). Its leaf is the `--as`/`YOG_NAME` stamp. Carrying the path, not a
     /// names-root-relative leaf, is what lets a foreign focus (which lives outside
-    /// yog's flat names root) resolve to the right `lernie prompt <ws>`. An absent
+    /// yog's flat names root) resolve to the right `litany prompt <ws>`. An absent
     /// directory is founded by [`Step::EnsureWorkspace`] — that, and nothing else,
     /// is what "raising a workspace" is.
     pub workspace: PathBuf,
@@ -126,12 +126,12 @@ pub struct StartInputs {
 pub enum Step {
     /// **The world is founded** — always planned; both halves converge rather
     /// than branch. The executor seeds `<world>/tools/bl`, the agent-tool shim
-    /// (§16.7 W9, rewritten only on drift), then runs `LERNIE_HOME=… lernie
+    /// (§16.7 W9, rewritten only on drift), then runs `LITANY_HOME=… litany
     /// prime`, skipping a seeded home (§16.6 W3, the general path with the seed
     /// present). A marker step: the executor derives the world layout from
     /// `yog_data_root` (the single source), so the step carries no path of its own.
     EnsureSeeded,
-    /// `mkdir -p` + `lernie new <workspace>` — always planned; the executor skips
+    /// `mkdir -p` + `litany new <workspace>` — always planned; the executor skips
     /// an existing dir (§8.1 convergence; bootstrap is this with an absent dir).
     EnsureWorkspace { workspace: PathBuf },
     /// `bl create <title> [--body B]` — the ball New rung; mints the id, after
@@ -148,7 +148,7 @@ pub enum Step {
         id: String,
         name: String,
     },
-    /// `lernie prompt <workspace> <goal>` fired detached, `YOG_NAME=<workspace>`
+    /// `litany prompt <workspace> <goal>` fired detached, `YOG_NAME=<workspace>`
     /// (the §3.2 stamp *is* the name, §3.1), cwd per the §3.4 rung. `goal` is the
     /// editable payload prefill; the conversation's identity line is minted and
     /// stamped at fire, never carried here (§3.3).
@@ -156,7 +156,7 @@ pub enum Step {
         /// The workspace's name (REMOTE §8) — the preview of what the fire
         /// re-resolves.
         workspace: String,
-        /// The §3.3 typed work target the fire will pass as lernie's `--cwd`
+        /// The §3.3 typed work target the fire will pass as litany's `--cwd`
         /// (bl-6654) — the plan's preview of it, off the ball's *canonical*
         /// worktree formula; the executor re-derives it from the claim.
         binding: Option<PathBuf>,

@@ -17,7 +17,7 @@ use crate::ui_state::Panel;
 /// can be dragged well below egui's own 96 pt floor.
 #[test]
 fn a_long_title_cannot_widen_the_conversation_panel_and_it_shrinks_to_a_sliver() {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let mut world = world_titled(
         "a very long conversation title that runs on and on and would once have \
          ratcheted the left column wider on every frame it was painted",
@@ -26,7 +26,7 @@ fn a_long_title_cannot_widen_the_conversation_panel_and_it_shrinks_to_a_sliver()
     let panel = egui::Id::new("conversations");
     let mut frame = || {
         let _ = ctx.run(input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         });
         egui::containers::panel::PanelState::load(&ctx, panel)
             .expect("the panel stores its rect")
@@ -92,13 +92,13 @@ fn a_long_title_cannot_widen_the_conversation_panel_and_it_shrinks_to_a_sliver()
 /// already under half the window, and it settles there rather than creeping.
 #[test]
 fn a_panel_grown_past_its_ceiling_is_back_under_it_on_the_next_frame() {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let mut world = world_titled("hello");
     let ctx = egui::Context::default();
     let panel = egui::Id::new("conversations");
     let mut frame = || {
         let _ = ctx.run(input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         });
         egui::containers::panel::PanelState::load(&ctx, panel)
             .expect("the panel stores its rect")
@@ -149,14 +149,14 @@ fn a_panel_grown_past_its_ceiling_is_back_under_it_on_the_next_frame() {
 /// the worst case.
 #[test]
 fn a_dragged_boundary_stays_dropped_and_reaches_ui_json() {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let mut world = world_titled("hello");
     world.state.activity_open = true;
     let ctx = egui::Context::default();
     let ui_json = world.model.state_root().join("ui.json");
     let mut frame = |id: &str| {
         let _ = ctx.run(input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         });
         let rect = egui::containers::panel::PanelState::load(&ctx, egui::Id::new(id))
             .expect("the panel stores its rect")

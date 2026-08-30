@@ -121,7 +121,7 @@ impl AppModel {
     pub fn validate_workspace_name(&self, typed: &str) -> Result<String, NameError> {
         names::validate(
             typed,
-            &crate::binding::roots(&self.roots.yog_data, &self.roots.lernie_data),
+            &crate::binding::roots(&self.roots.yog_data, &self.roots.litany_data),
         )
     }
 

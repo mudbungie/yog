@@ -60,7 +60,7 @@ fn the_tick_holds_the_focused_agents_acknowledgement() {
     assert_eq!(model.strip_total(), 0, "focusing acked the unseen stop");
 
     // A notify mark lands while c-1 is still the focused conversation.
-    h.fx.mark_ref("refs/lernie/notify/c-1");
+    h.fx.mark_ref("refs/litany/notify/c-1");
     model.dirty_handle().mark_all([(h.ws.clone(), Mark::Watch)]);
     settle(&mut model, &clock);
     assert!(
@@ -77,7 +77,7 @@ fn the_tick_holds_the_focused_agents_acknowledgement() {
     // The converse: look away (workspace focus acks nothing), and the next mark
     // to land raises the flag.
     model.focus_workspace(&crate::naming::leaf(&h.ws));
-    h.fx.mark_ref("refs/lernie/budget-exhausted/c-1");
+    h.fx.mark_ref("refs/litany/budget-exhausted/c-1");
     model.dirty_handle().mark_all([(h.ws.clone(), Mark::Watch)]);
     settle(&mut model, &clock);
     assert_eq!(
@@ -106,7 +106,7 @@ fn the_desktop_escalation_reads_the_strip_s_own_queue() {
     let (_c, mut model) = h.model();
     assert!(model.notify_unfocused(), "armed by default (§4.1)");
 
-    let deps = model.boundary_deps(&Cli::new("/no/lernie"), &Cli::new("/no/bl"));
+    let deps = model.boundary_deps(&Cli::new("/no/litany"), &Cli::new("/no/bl"));
     let alerts = crate::alert::of_queue(&queue(&model, &deps));
     assert_eq!(
         model.strip_total(),
@@ -141,7 +141,7 @@ fn a_queue_rows_address_posts_straight_back_as_the_next_gesture() {
         b"{\"type\":\"finish\",\"reason\":\"stop\"}\n{\"type\":\"end\"}\n",
     );
     let (_c, model) = h.model();
-    let deps = model.boundary_deps(&Cli::new("/no/lernie"), &Cli::new("/no/bl"));
+    let deps = model.boundary_deps(&Cli::new("/no/litany"), &Cli::new("/no/bl"));
     let rows = queue(&model, &deps);
     let row = rows.first().expect("the resting conversation is queued");
     assert_eq!(

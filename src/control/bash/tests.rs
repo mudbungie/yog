@@ -24,7 +24,7 @@ fn the_shipped_rows_classify_the_work_and_the_reach() {
         ("make check", Effect::TargetWrite),
         ("git commit -m x", Effect::TargetWrite),
         ("bl close bl-1a2b", Effect::TargetWrite),
-        ("lernie advance ws a", Effect::TargetWrite),
+        ("litany advance ws a", Effect::TargetWrite),
         ("git push", Effect::OpenWorld),
         ("curl https://x", Effect::OpenWorld),
         ("gh pr create", Effect::OpenWorld),

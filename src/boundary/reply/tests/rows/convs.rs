@@ -96,9 +96,9 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
 
 #[test]
 fn a_display_only_name_is_withheld_from_the_boundary_as_a_message_target() {
-    // bl-8068: `name` is what a peer feeds `message`, and lernie resolves by
+    // bl-8068: `name` is what a peer feeds `message`, and litany resolves by
     // exact id else unique *stored* name. A legacy-rung title has no stored
-    // fact behind it, so handing it over would hand over a target lernie
+    // fact behind it, so handing it over would hand over a target litany
     // refuses (`no agent "marbling-lake" in this workspace`) — the very
     // failure this ball diagnosed. `display` still says what the row is
     // called, and `root_id` is the address that works.

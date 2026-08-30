@@ -19,7 +19,7 @@ mod bound;
 mod dispatch;
 mod edit;
 
-/// A fake `bl`/`lernie`. Nothing brackets the write: the crate's one fork
+/// A fake `bl`/`litany`. Nothing brackets the write: the crate's one fork
 /// (`crate::git_env`) owns the ETXTBSY exclusion, so a fixture just writes.
 fn recorder(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
@@ -56,8 +56,8 @@ impl World {
         }
     }
 
-    /// This world's `lernie` bound to its workspace (`cwd`) inside a world
-    /// anchored on this world's own scratch — the handle every §8.2 lernie verb
+    /// This world's `litany` bound to its workspace (`cwd`) inside a world
+    /// anchored on this world's own scratch — the handle every §8.2 litany verb
     /// now takes, and the only way to reach one.
     fn bound(&self) -> Bound {
         Bound::at(
@@ -83,7 +83,7 @@ fn args_of(e: &crate::opslog::OpEntry) -> Vec<String> {
 
 #[test]
 fn message_builds_argv_and_runs_in_the_workspace() {
-    let w = World::new("lernie", OK_BODY);
+    let w = World::new("litany", OK_BODY);
     let ws = &w.cwd;
     message(&w.bound(), w.state.path(), "TS", "a-1", "hi there").unwrap();
     let e = w.logged();
@@ -96,7 +96,7 @@ fn message_builds_argv_and_runs_in_the_workspace() {
 
 #[test]
 fn stop_omits_and_includes_the_children_flag() {
-    let w = World::new("lernie", OK_BODY);
+    let w = World::new("litany", OK_BODY);
     let ws = w.cwd.clone();
     stop(&w.bound(), w.state.path(), "TS", "a-1", false).unwrap();
     assert_eq!(
@@ -113,7 +113,7 @@ fn stop_omits_and_includes_the_children_flag() {
 
 #[test]
 fn scan_builds_argv() {
-    let w = World::new("lernie", OK_BODY);
+    let w = World::new("litany", OK_BODY);
     let ws = &w.cwd;
     scan(&w.bound(), w.state.path(), "TS").unwrap();
     assert_eq!(
@@ -123,11 +123,11 @@ fn scan_builds_argv() {
 }
 
 /// The §9.4 exit (bl-2d19): the workspace, the conversation, and **no config
-/// flag** — lernie's own default lineage is the one yog's picker writes, so
+/// flag** — litany's own default lineage is the one yog's picker writes, so
 /// naming it would be a knob with one lawful value.
 #[test]
 fn retarget_builds_argv_for_one_conversation_with_no_config_flag() {
-    let w = World::new("lernie", OK_BODY);
+    let w = World::new("litany", OK_BODY);
     let ws = &w.cwd;
     retarget(&w.bound(), w.state.path(), "TS", "a-1").unwrap();
     let e = w.logged();
@@ -163,13 +163,13 @@ fn assign_claims_the_ball_for_the_target_workspace() {
 }
 
 /// bl-48f8: every verb stamps its own §7.3 origin on the row it logs, and the
-/// stamp is the verb's **subject** — `bl` acts on a ball, `lernie` on a
+/// stamp is the verb's **subject** — `bl` acts on a ball, `litany` on a
 /// conversation. Exhaustive over the two families, because the surfaces filter
 /// on exactly this: a verb that forgot to say would banner on the composer by
 /// the parser's default and accuse a surface that did nothing.
 #[test]
 fn every_verb_stamps_the_origin_of_its_own_subject() {
-    let w = World::new("lernie", OK_BODY);
+    let w = World::new("litany", OK_BODY);
     message(&w.bound(), w.state.path(), "TS", "a-1", "hi").unwrap();
     stop(&w.bound(), w.state.path(), "TS", "a-1", false).unwrap();
     scan(&w.bound(), w.state.path(), "TS").unwrap();

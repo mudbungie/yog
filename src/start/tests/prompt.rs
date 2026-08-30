@@ -1,4 +1,4 @@
-//! **What the detached `lernie prompt` child is handed** (§8.1, §3.3): the
+//! **What the detached `litany prompt` child is handed** (§8.1, §3.3): the
 //! fire-time conversation mint riding `--name`, the goal fired verbatim
 //! (bl-6920), the `YOG_NAME` layer and the typed `--cwd` target binding. A fifo
 //! rendezvous proves the detached child ran and captures its argv + env.
@@ -73,10 +73,10 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
         "#!/bin/sh\nprintf '%s\\037%s\\037%s\\037%s\\037%s\\037%s' \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" \"$YOG_NAME\" > '{}'\n",
         fifo.display()
     );
-    let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
+    let litany = Cli::new(write_exec(w.bin.path(), "litany", &body));
     let ws = workspace(&w);
     let conversation = execute_prompt(
-        &lernie,
+        &litany,
         w.state.path(),
         "TS",
         &fire(&ws, "cobalt-gecko", None, "do it"),
@@ -88,13 +88,13 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
     let recorded = std::fs::read_to_string(&fifo).unwrap();
     let fields: Vec<&str> = recorded.split('\u{1f}').collect();
     assert_eq!(fields[0], "prompt");
-    // The minted name rides `--name` — the lernie-stored fact home (§3.3 as
+    // The minted name rides `--name` — the litany-stored fact home (§3.3 as
     // ruled by bl-50f3) — with the goal last so `clip_goal` still trims it.
     assert_eq!(fields[1], "--name");
     assert_eq!(fields[3], ws.to_string_lossy());
-    // The goal reaches lernie exactly as the operator edited it (bl-6920):
+    // The goal reaches litany exactly as the operator edited it (bl-6920):
     // no identity line, no mutation — `--name` is identity's only channel,
-    // and lernie states the stored fact in its assembled context (lernie
+    // and litany states the stored fact in its assembled context (litany
     // bl-d55f). The workspace name rides `YOG_NAME` and nothing else.
     assert_eq!(fields[4], "do it", "the payload is unmutated");
     assert_eq!(fields[2], conversation, "--name carries the fired mint");
@@ -123,7 +123,7 @@ fn prompt_fires_the_goal_verbatim_layers_yog_name_and_logs_the_sentinel() {
 }
 
 /// **The work target is typed, not prose** (§3.3, bl-6654 / VISION §4.10 item
-/// 2): a bound rung's directory rides lernie's `--cwd` — the creation-time seed
+/// 2): a bound rung's directory rides litany's `--cwd` — the creation-time seed
 /// for the working-directory mark every later tool step reads — and the goal
 /// stays LAST so `clip_goal` still trims exactly the payload. The spawned argv
 /// and the logged one are built from one list, so they cannot disagree about a
@@ -137,12 +137,12 @@ fn prompt_passes_the_typed_target_as_cwd_with_the_goal_still_last() {
         "#!/bin/sh\nprintf '%s\\037%s\\037%s\\037%s\\037%s\\037%s\\037%s' \"$1\" \"$2\" \"$3\" \"$4\" \"$5\" \"$6\" \"$7\" > '{}'\n",
         fifo.display()
     );
-    let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
+    let litany = Cli::new(write_exec(w.bin.path(), "litany", &body));
     let ws = workspace(&w);
     let target = w.balls.path().join("work");
     std::fs::create_dir_all(&target).unwrap();
     let conversation = execute_prompt(
-        &lernie,
+        &litany,
         w.state.path(),
         "TS",
         &fire(&ws, "cobalt-gecko", Some(&target), "do it"),

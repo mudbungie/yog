@@ -21,7 +21,7 @@ fn tool(name: &str) -> Tool {
 
 fn deps(state_root: &Path, client: Client) -> Deps {
     Deps {
-        lernie: Cli::new("/no/such/lernie"),
+        litany: Cli::new("/no/such/litany"),
         bl: Cli::new("/no/such/bl"),
         state_root: state_root.to_path_buf(),
         home: PathBuf::from("/home/x"),

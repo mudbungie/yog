@@ -38,7 +38,7 @@ fn a_ruling_spells_itself_the_same_way_both_directions() {
 
 #[test]
 fn a_verdict_carries_the_reason_except_a_pass() {
-    // lernie's parser rejects a pass that carries one.
+    // litany's parser rejects a pass that carries one.
     assert_eq!(Ruling::Pass.verdict("why"), Verdict::Pass);
     assert_eq!(Ruling::Hold.verdict("why"), Verdict::Hold("why".to_owned()));
     assert_eq!(

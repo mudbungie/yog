@@ -150,7 +150,7 @@ elif verb == "brazen":
     on_tab(2, "Config")
     # The Config column's rules, top down: the one under the §11 centre tab
     # strip, then one per pane. brazen is the column's FIRST pane
-    # (config_edit/mod.rs renders it before lernie, yog, marks and the branch
+    # (config_edit/mod.rs renders it before litany, yog, marks and the branch
     # form), so the rule that ends it is the second — and the fold is the row
     # above that rule.
     #

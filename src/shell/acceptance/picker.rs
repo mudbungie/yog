@@ -24,12 +24,12 @@ use crate::cli_outbound::Cli;
 /// sphere's own picker rather than the launch bundle's, which `focus_wall`
 /// swaps out from under a flag set before the first render.
 fn open_pane(world: &mut super::fixture::World) -> String {
-    let (lernie, bl) = (Cli::new("/yog-absent-lernie"), Cli::new("/yog-absent-bl"));
+    let (litany, bl) = (Cli::new("/yog-absent-litany"), Cli::new("/yog-absent-bl"));
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
-    let _ = painted(world, &lernie, &bl);
+    let _ = painted(world, &litany, &bl);
     world.state.wall.picker.open = true;
-    painted(world, &lernie, &bl)
+    painted(world, &litany, &bl)
 }
 
 /// The refusal is gone and the strip is there: every role the seeded
@@ -80,7 +80,7 @@ fn the_open_pane_states_the_blast_radius_of_a_pick() {
 /// instead of after it. The mark rides the strip; the reason is spelled out under
 /// the selected role, in the pick gate's own words.
 ///
-/// It used to name an undeclared model in the global `models.yaml`, on lernie's
+/// It used to name an undeclared model in the global `models.yaml`, on litany's
 /// cross-check — retired upstream, so the sentence was false and the live
 /// pointer went unjudged in this very strip.
 #[test]

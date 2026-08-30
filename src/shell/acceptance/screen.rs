@@ -23,7 +23,7 @@ pub(super) use gesture::{click, command_shift, press};
 /// frame to frame exactly as it does for the operator.
 pub(super) struct Screen {
     ctx: egui::Context,
-    lernie: Cli,
+    litany: Cli,
     bl: Cli,
     bz: Cli,
     /// The window this driver paints into, when a beat needs a **particular**
@@ -37,13 +37,13 @@ pub(super) struct Screen {
 impl Screen {
     /// Binaries that deliberately do not exist: the send test below is the one
     /// acceptance case that actually *dispatches*, and what it asserts is where
-    /// the keyboard ends up, not what `lernie` did. A name nothing resolves
+    /// the keyboard ends up, not what `litany` did. A name nothing resolves
     /// fails the spawn at once, so the frame never forks the operator's real
     /// substrate to prove a focus rule.
     pub(super) fn new() -> Self {
         Self {
             ctx: egui::Context::default(),
-            lernie: Cli::new("/yog-absent-lernie"),
+            litany: Cli::new("/yog-absent-litany"),
             bl: Cli::new("/yog-absent-bl"),
             bz: Cli::new("/yog-absent-bz"),
             size: None,
@@ -58,13 +58,13 @@ impl Screen {
         }
     }
 
-    /// The same driver with a `lernie` that really answers — for the one
+    /// The same driver with a `litany` that really answers — for the one
     /// acceptance case whose gesture has to *succeed* end to end (the §3.4
     /// raise, whose surface afterwards is what bl-9acf is about). `bl` and `bz`
     /// stay absent: a bare rung mutates no ball and paints no login.
-    pub(super) fn with_lernie(lernie: Cli) -> Self {
+    pub(super) fn with_litany(litany: Cli) -> Self {
         Self {
-            lernie,
+            litany,
             ..Self::new()
         }
     }
@@ -132,7 +132,7 @@ impl Screen {
         // The engine's spawns are the ones a posted act runs (REMOTE §9.8), so
         // this drive's fakes have to be the world's — a seat carries the
         // gesture and never a binary.
-        world.substrate(&self.lernie, &self.bl);
+        world.substrate(&self.litany, &self.bl);
         let mut out = self.paint(world, events);
         // The fixed point itself is `World::drain` (bl-13f9), one definition
         // for both drivers; what is this driver's own is the context the
@@ -151,7 +151,7 @@ impl Screen {
     /// settles to a fixed point per frame is never inside the gap and so can
     /// assert nothing about it.
     pub(super) fn unsettled(&self, world: &mut World, events: Vec<egui::Event>) -> bool {
-        world.substrate(&self.lernie, &self.bl);
+        world.substrate(&self.litany, &self.bl);
         let _ = self.paint(world, events);
         self.ctx.wants_keyboard_input()
     }
@@ -172,7 +172,7 @@ impl Screen {
                 ctx,
                 &mut world.model,
                 &mut world.state,
-                &self.lernie,
+                &self.litany,
                 &self.bl,
                 &self.bz,
             );

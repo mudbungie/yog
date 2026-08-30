@@ -97,7 +97,7 @@ pub enum Reply {
     Flagged,
     /// A parked invocation was answered (§8.6): which `tool_use` the answer
     /// landed on, the tool it names, the verdict written, and whether the
-    /// releasing `lernie advance` was launched. It answers with the *held
+    /// releasing `litany advance` was launched. It answers with the *held
     /// invocation* rather than the queue that remains (the `seen` precedent):
     /// the mark lifts only once the re-adjudication runs, so a queue read here
     /// would still show the park it just answered — a receipt that lied.
@@ -116,7 +116,7 @@ pub enum Reply {
     Floored {
         standing: bool,
     },
-    /// The nudge's driver was launched (§8.2, bl-9bef): `lernie advance` is
+    /// The nudge's driver was launched (§8.2, bl-9bef): `litany advance` is
     /// running detached against the conversation. It answers with nothing else
     /// because there *is* nothing else yet — what the model does with the turn
     /// arrives on the transcript and the §4.2 trail, at its own pace, and a
@@ -127,7 +127,7 @@ pub enum Reply {
     /// The trail was truncated; the clear is the fresh trail's first row.
     TrailCleared,
     /// The §9 config file the gesture named landed (bl-3f46). A lineage write
-    /// answers with its `lernie config` run ([`Outcome`](Self::Outcome))
+    /// answers with its `litany config` run ([`Outcome`](Self::Outcome))
     /// instead — a write and a spawn earn different receipts, here as
     /// everywhere else on the boundary.
     ///

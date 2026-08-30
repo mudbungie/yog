@@ -36,7 +36,7 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         return Ok(ask(query));
     }
     match verb {
-        // The §8.2 lernie family: the composer's own three.
+        // The §8.2 litany family: the composer's own three.
         "message" => Ok(act(Action::Message {
             workspace: args::workspace(ctx, verb)?,
             agent: args::agent(ctx, verb)?,

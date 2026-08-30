@@ -19,7 +19,7 @@ fn the_request_parse_requires_every_field_and_ignores_the_rest() {
     // Absent or non-string fields of `input` read as empty rather than failing:
     // an off-schema input is an invocation with no operands, not a panic.
     assert_eq!(r.field("path"), "");
-    // A field lernie adds later must not brick every tool call.
+    // A field litany adds later must not brick every tool call.
     let extra = json!({"id":"i","name":"n","input":{},"role":"r","agent_id":"a","sandbox":true});
     assert!(Request::parse(&extra.to_string()).is_some());
     // Each required field, missing in turn.
@@ -33,7 +33,7 @@ fn the_request_parse_requires_every_field_and_ignores_the_rest() {
 
 #[test]
 fn a_pass_carries_no_reason_and_the_other_two_require_one() {
-    // lernie's own parser rejects `{"verdict":"pass","reason":…}`.
+    // litany's own parser rejects `{"verdict":"pass","reason":…}`.
     assert_eq!(Verdict::Pass.json(), r#"{"verdict":"pass"}"#);
     assert_eq!(
         Verdict::Hold("why".to_owned()).json(),
@@ -143,9 +143,9 @@ mod policy;
 mod shim;
 
 #[test]
-fn the_workspace_is_lernie_s_own_env_var_else_the_cwd_it_runs_in() {
-    let env = crate::xdg::Env::from_pairs([("LERNIE_CONV_REPO", "/w/ws")]);
+fn the_workspace_is_litany_s_own_env_var_else_the_cwd_it_runs_in() {
+    let env = crate::xdg::Env::from_pairs([("LITANY_CONV_REPO", "/w/ws")]);
     assert_eq!(workspace_of(&env), PathBuf::from("/w/ws"));
-    let env = crate::xdg::Env::from_pairs([("LERNIE_CONV_REPO", "")]);
+    let env = crate::xdg::Env::from_pairs([("LITANY_CONV_REPO", "")]);
     assert_eq!(workspace_of(&env), std::env::current_dir().unwrap());
 }

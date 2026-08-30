@@ -13,7 +13,7 @@
 //! `set_current_dir`), `unsafe` in edition 2024 and sound only when no peer
 //! thread can observe the mutation. Their soundness argument *is* "one
 //! `#[test]` per binary", which merging would silently void:
-//! `multiplex_bl.rs`, `multiplex_lernie.rs`, `git_env_scrub.rs`.
+//! `multiplex_bl.rs`, `multiplex_litany.rs`, `git_env_scrub.rs`.
 //!
 //! Merging changes one thing beyond the layout: ~25 tests now run
 //! thread-parallel in ONE process, all of them forking, so a fixture script

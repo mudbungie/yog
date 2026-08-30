@@ -6,8 +6,8 @@
 //! says *whose* failure it is, so every banner surface asked the same global
 //! question ("did the last op fail?") and a single start failure painted itself
 //! on all of them at once (bl-48f8). The attribution is a fact of the **gesture**,
-//! not of the row's bytes: `bl close` and `lernie message` are told apart by
-//! their argv, but `lernie prompt` / `lernie new` / `["yog-step","mkdir"]` are
+//! not of the row's bytes: `bl close` and `litany message` are told apart by
+//! their argv, but `litany prompt` / `litany new` / `["yog-step","mkdir"]` are
 //! written identically by a ball-rung start and by the composer's own Enter. So
 //! origin is recorded once, where the op fires and the rung is known, and every
 //! surface reads it back rather than re-deriving it from a shape that cannot say.
@@ -35,7 +35,7 @@ pub enum Origin {
     /// by the roster's balls section, where the ▶ Start row that fired it is
     /// (§11, bl-6ad8).
     Balls,
-    /// A **conversation** op: `lernie message`/`stop`/`scan`, and every step of a
+    /// A **conversation** op: `litany message`/`stop`/`scan`, and every step of a
     /// bare- or path-rung start. Rendered by the composer.
     ///
     /// The default, so a line written by an older yog — or by any writer that

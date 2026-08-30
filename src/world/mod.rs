@@ -3,22 +3,22 @@
 //! subtree layout. yog reads the ambient environment once, anchors on
 //! `$XDG_DATA_HOME/yog`, and layers a fixed three-var override set over that
 //! snapshot; the composed result is itself an [`Env`], so every §5.1 fold
-//! re-derives the *nested* location through it (balls state, lernie home, and
+//! re-derives the *nested* location through it (balls state, litany home, and
 //! yog's own `ui.json`/`ops.jsonl`). Brazen's three folds are **not** here and
 //! **not** ambient: since the blast-radius ruling they resolve
 //! inside the focused workspace's wall, one layer further in ([`wall`]).
 //! **This module is the pure
 //! composition layer only** — it neither materializes the subtree nor wires the
 //! world into any spawn (W2/W3); the submodules do the effectful halves
-//! ([`seed`] the lernie home, [`tools`] the agent-tool shims).
+//! ([`seed`] the litany home, [`tools`] the agent-tool shims).
 //!
 //! **The overrides, and why exactly these three (§16.2):**
 //!
 //! | Var | World value | Nests |
 //! |---|---|---|
-//! | `LERNIE_HOME` | `world/lernie` | lernie config **and** data (the `lernie_home` collapse) |
+//! | `LITANY_HOME` | `world/litany` | litany config **and** data (the `litany_home` collapse) |
 //! | `XDG_STATE_HOME` | `world/state` | balls clones/worktrees/op-logs **and** yog's `ui.json`/`ops.jsonl` |
-//! | `PATH` | `world/tools:$PATH` | the tool an agent's bash *finds* — yog's own `bl`/`lernie`/`bz` shims, not host binaries (§16.7 W9/W11, [`tools`]) |
+//! | `PATH` | `world/tools:$PATH` | the tool an agent's bash *finds* — yog's own `bl`/`litany`/`bz` shims, not host binaries (§16.7 W9/W11, [`tools`]) |
 //!
 //! The first two nest **state**; the third nests the **toolchain** — the same
 //! encapsulation argument one layer up (§16.4: an ambient `bl` reads the right
@@ -31,7 +31,7 @@
 //! credentials and model cache used to be, on the reasoning that one host `bz`
 //! read them all; the blast-radius ruling reversed that (§16.2, §3.1's blast
 //! radius) and they now resolve per workspace through [`wall`], whose one var
-//! rides on top of this override set. Everything version-fragile (lernie's
+//! rides on top of this override set. Everything version-fragile (litany's
 //! home, balls' store layout) is nested here as before.
 //!
 //! **Design decision — yog's own artifacts move under the world (§16.2, not
@@ -90,17 +90,17 @@ pub mod seat;
 /// The `<yog-data-root>/world/` subtree (§16.2). Every path is computed from the
 /// ambient anchor; nothing is stored. `root` backs materialization (W3); every
 /// other field anchors an override [`compose`] layers into the world `Env` —
-/// `lernie` → `LERNIE_HOME`, `state` → `XDG_STATE_HOME`, `tools` → the head of
+/// `litany` → `LITANY_HOME`, `state` → `XDG_STATE_HOME`, `tools` → the head of
 /// `PATH` (§16.7 W9), which is also the dir the shim is seeded into.
 pub struct Layout {
     /// `<yog-data-root>/world` — the subtree root; one `rm -rf` severs the world.
     pub root: PathBuf,
-    /// `world/lernie` → `LERNIE_HOME` (lernie config **and** data).
-    pub lernie: PathBuf,
+    /// `world/litany` → `LITANY_HOME` (litany config **and** data).
+    pub litany: PathBuf,
     /// `world/state` → `XDG_STATE_HOME` (balls state **and** yog's artifacts).
     pub state: PathBuf,
     /// `world/tools` — the agent-tool shim territory (§16.4, §16.7 W9/W11): yog
-    /// seeds `bl`/`lernie`/`bz` re-exec shims here ([`tools::ensure_shim`]) and
+    /// seeds `bl`/`litany`/`bz` re-exec shims here ([`tools::ensure_shim`]) and
     /// puts the directory at the head of the world's `PATH`, so an agent's bare
     /// `bl` is yog's embedded balls.
     pub tools: PathBuf,
@@ -120,15 +120,15 @@ pub fn layout(ambient: &Env) -> Layout {
 pub fn layout_under(yog_data_root: &Path) -> Layout {
     let root = yog_data_root.join("world");
     Layout {
-        lernie: root.join("lernie"),
+        litany: root.join("litany"),
         state: root.join("state"),
         tools: root.join("tools"),
         root,
     }
 }
 
-/// `LERNIE_HOME` — nests lernie config **and** data onto [`Layout::lernie`].
-const LERNIE_HOME: &str = "LERNIE_HOME";
+/// `LITANY_HOME` — nests litany config **and** data onto [`Layout::litany`].
+const LITANY_HOME: &str = "LITANY_HOME";
 /// `XDG_STATE_HOME` — nests balls state **and** yog's artifacts onto
 /// [`Layout::state`], and is re-pointed one layer in by [`inhabit_space`] when
 /// an agent's own §16.3 space is the balls state this process addresses.
@@ -159,8 +159,8 @@ pub fn overrides(ambient: &Env) -> Vec<(String, String)> {
     let l = layout(ambient);
     vec![
         (
-            LERNIE_HOME.to_owned(),
-            l.lernie.to_string_lossy().into_owned(),
+            LITANY_HOME.to_owned(),
+            l.litany.to_string_lossy().into_owned(),
         ),
         (
             XDG_STATE_HOME.to_owned(),
@@ -181,10 +181,10 @@ pub fn overrides(ambient: &Env) -> Vec<(String, String)> {
 /// every child yog spawns (the overrides ride the `Command`). It is not enough
 /// for an **in-process substrate arm** (§16.7): `yog bl` hands balls an `Edge`
 /// but balls' plugin chain spawns children that resolve `$XDG_STATE_HOME`
-/// through their own `getenv`, and the linked lernie reads `LERNIE_HOME` with
+/// through their own `getenv`, and the linked litany reads `LITANY_HOME` with
 /// no injection seam at all. For those the world has to *be* the environment —
 /// so the arm folds it in once, at the process edge, and every read and every
-/// descendant follows. A bare `yog bl` / `yog lernie` typed at an ambient shell
+/// descendant follows. A bare `yog bl` / `yog litany` typed at an ambient shell
 /// is then the same world `yog exec bl …` hands out, which is what the
 /// namespaces advertise.
 ///

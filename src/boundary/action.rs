@@ -22,13 +22,13 @@ use super::config;
 /// [`Action::project`] (`src/boundary/address.rs`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
-    /// `lernie message <ws> <agent> <content>` — the resume gesture (§8.2).
+    /// `litany message <ws> <agent> <content>` — the resume gesture (§8.2).
     Message {
         workspace: String,
         agent: String,
         content: String,
     },
-    /// `lernie stop <ws> <agent> [--stop-children]` (§8.2).
+    /// `litany stop <ws> <agent> [--stop-children]` (§8.2).
     Stop {
         workspace: String,
         agent: String,
@@ -36,7 +36,7 @@ pub enum Action {
     },
     /// **Send and interrupt** (§8.2, bl-a33d): stop whatever is running this
     /// conversation, then deposit `content` — and the deposit's own
-    /// driver-start is the trigger, lernie's standing law (ARCH §2.9: there is
+    /// driver-start is the trigger, litany's standing law (ARCH §2.9: there is
     /// no resume verb, a deposit into a quiescent branch starts a driver). One
     /// gesture, because the operator's act is one; **two ops rows**, because
     /// the interrupt and the deposit are independently observable mutations and
@@ -45,25 +45,25 @@ pub enum Action {
     /// It gates on nothing the seat has to know: a stop landing on a branch with
     /// nothing in flight is declined in band and the deposit still lands — the
     /// same gesture at zero work, not a case of its own. What it *does* rest on
-    /// is lernie bl-b98d, which the pin carries; [`interrupt`](super::interrupt)
+    /// is litany bl-b98d, which the pin carries; [`interrupt`](super::interrupt)
     /// records what that settling is and why nothing here may be built on a
-    /// yog-side guess at lernie's step state.
+    /// yog-side guess at litany's step state.
     Interrupt {
         workspace: String,
         agent: String,
         content: String,
     },
-    /// `lernie scan <ws>` — flush inboxes, deposit died epitaphs (§8.2).
+    /// `litany scan <ws>` — flush inboxes, deposit died epitaphs (§8.2).
     Scan { workspace: String },
     /// **Fire inference on a conversation from the state it is already in**
-    /// (§8.2's Nudge row, bl-9bef): `lernie advance <ws> <agent>`, detached.
-    /// It carries no text, and that absence is the whole gesture — lernie
+    /// (§8.2's Nudge row, bl-9bef): `litany advance <ws> <agent>`, detached.
+    /// It carries no text, and that absence is the whole gesture — litany
     /// derives what is due from the transcript tail (ARCH §6 *warrant*), so a
     /// first turn whose model call died re-dispatches **in place**. Never
     /// [`Message`](Self::Message) with an empty body: a deposit would put a
     /// second user turn on the wire saying what the first already said.
     Nudge { workspace: String, agent: String },
-    /// `lernie retarget <ws> <agent>` — the §9.4 exit from the config freeze
+    /// `litany retarget <ws> <agent>` — the §9.4 exit from the config freeze
     /// (bl-2d19): mark this conversation to be re-forked onto the config
     /// lineage's head, which its own executor lands at the next step boundary.
     /// **No config name on the wire**: yog's picker writes one lineage and the
@@ -110,7 +110,7 @@ pub enum Action {
     /// Create-&-Start / raise gesture. The prompt is the separate, deferred
     /// [`Action::Prompt`], exactly as the GUI defers it to the composer.
     Prepare { workspace: String, payload: Payload },
-    /// Fire the detached `lernie prompt` (§8.1): mint the conversation name,
+    /// Fire the detached `litany prompt` (§8.1): mint the conversation name,
     /// pass it via `--name`, spawn detached — the goal verbatim (bl-6920).
     /// `prepared` is the [`Action::Prepare`] reply (or a re-composed equal);
     /// `goal` the edited text. **`seed` is the firing seat's own §3.3
@@ -134,10 +134,10 @@ pub enum Action {
     /// the workspace is yog's own, nothing is live, and `typed` re-states its
     /// name — fail-closed at fire time, whichever frontend fires.
     DeleteWorkspace { workspace: String, typed: String },
-    /// `lernie delete <ws> <agent> [--children]` — the §3.6 class one
+    /// `litany delete <ws> <agent> [--children]` — the §3.6 class one
     /// conversation deep (bl-f17a). Gated on liveness here, fail-closed;
     /// `typed` re-stating the conversation's name is the one thing that arms
-    /// `--children`, and an unarmed fire is the bare verb — lernie's own
+    /// `--children`, and an unarmed fire is the bare verb — litany's own
     /// `HasDescendants` decline rides back for a subtree nobody confirmed.
     DeleteAgent {
         workspace: String,
@@ -163,12 +163,12 @@ pub enum Action {
     Fleet(crate::fleet::Verb),
     /// **Answer the invocation parked at one conversation's capability
     /// boundary** (VISION §4.11 items 5–6, §8.6). The held `tool_use` id is
-    /// *derived* — read off `refs/lernie/held/<agent>` at fire time — never
+    /// *derived* — read off `refs/litany/held/<agent>` at fire time — never
     /// typed, so the answer lands on exactly what is parked now and cannot
     /// race. **Nothing here ever calls stop** — a decline is the model's own
     /// in-band tool result, which it reads and steps past, and that is a
     /// property of what an answer *means* rather than of what a stop costs: the
-    /// cost changed when lernie bl-b98d landed ([`Interrupt`](Self::Interrupt)),
+    /// cost changed when litany bl-b98d landed ([`Interrupt`](Self::Interrupt)),
     /// and this is unaffected by it.
     AnswerHold {
         workspace: String,
@@ -233,7 +233,7 @@ pub enum Action {
     /// nothing of yog's own shape; the reply is the branch **re-read** after
     /// the write.
     SetMarks { workspace: String, branch: String },
-    /// One **attempt** (VISION §5 V2, bl-dc0c): `lernie dispatch <role> <ws>
+    /// One **attempt** (VISION §5 V2, bl-dc0c): `litany dispatch <role> <ws>
     /// <parent> --goal <goal> --from <ref> [--pin …]` — the ordinary fork,
     /// with the pinned notch's commit (or a `config/<name>` head) as its ref.
     ///
@@ -280,7 +280,7 @@ pub enum Action {
 
     /// The §9.4 model pick: give `role` this `model` on this provider row, for
     /// `workspace`. §9.2 and §9.3 composed by one gesture — refuse either half
-    /// and neither is written — because lernie's cross-check makes the role
+    /// and neither is written — because litany's cross-check makes the role
     /// assignment and the model declaration two halves of one fact.
     PickModel {
         workspace: String,

@@ -2,7 +2,7 @@
 //! a frozen instruction document actually reach the model.
 //!
 //! Pinning a document commits it beside `goal.md`; whether it *composes* into
-//! assembled context is the governing `manifest.yaml`'s question (lernie ARCH
+//! assembled context is the governing `manifest.yaml`'s question (litany ARCH
 //! §5.2). The shipped worker role pins `goal.md`, `soul.md`, `descriptions/**`
 //! and orders `summary/**`, `skills/**` — so a pin at `instructions/…` under
 //! the stock manifest is a committed file no model ever sees. That premise,
@@ -10,7 +10,7 @@
 //!
 //! So `roles.worker.pinned` gains [`GLOB`], authored onto `config/default` by
 //! the same fixed-point convergence §8.6 runs for `tool_control:` — and in the
-//! *same* `lernie config` drive, since the two files are one policy
+//! *same* `litany config` drive, since the two files are one policy
 //! ([`crate::start::execute_ensure_workspace`]). [`authored`] is the fixed
 //! point: authoring an authored manifest reproduces it byte for byte, which is
 //! the whole convergence test.
@@ -34,11 +34,11 @@ mod tests;
 pub const MANIFEST_YAML: &str = "manifest.yaml";
 /// The glob that admits every frozen instruction document, at any rank.
 pub const GLOB: &str = "instructions/**";
-/// The role yog's drones run as (lernie's shipped `worker`).
+/// The role yog's drones run as (litany's shipped `worker`).
 const ROLE: &str = "worker:";
 /// The map key holding the roles.
 const ROLES: &str = "roles:";
-/// The always-included category (lernie ARCH §5.2).
+/// The always-included category (litany ARCH §5.2).
 const PINNED: &str = "pinned:";
 
 /// `workspace`'s `manifest.yaml` drift on `config/<config>`, or `None` when
@@ -98,7 +98,7 @@ fn insertion(lines: &[String]) -> Option<(usize, String)> {
 ///
 /// **A sequence item at the key's own indent still belongs to the key.** YAML
 /// lets a block sequence sit level with the mapping key that owns it, and
-/// lernie's own template is the *other* spelling — so a rule that closed on
+/// litany's own template is the *other* spelling — so a rule that closed on
 /// indent alone would read a level `- goal.md` as the end of `pinned:` and
 /// author the glob outside the list it belongs to.
 fn block(lines: &[String], span: Range<usize>, depth: usize, key: &str) -> Option<Range<usize>> {

@@ -1,11 +1,11 @@
 //! The `models:` half of the §9.4 block grammar — **yog's own table, in
-//! lernie's file** (bl-d9cb): the `models.yaml` block the §9.2 Declare control
+//! litany's file** (bl-d9cb): the `models.yaml` block the §9.2 Declare control
 //! authors and the §9.5 typed rows edit, plus the readers over it.
 //!
-//! **It used to be lernie's, and the picker used to write it.** The whole
+//! **It used to be litany's, and the picker used to write it.** The whole
 //! justification was a cross-check — a role naming a model `models.yaml` did
 //! not declare was a hard load error, so a pick wrote this half FIRST and the
-//! assignment second. That check is gone at the pin: lernie's own
+//! assignment second. That check is gone at the pin: litany's own
 //! `config/cross/mod.rs` says *"There is no roles-against-models check any more
 //! (bl-35e2): the global `models.yaml` carries no `models:` table, a role's
 //! `providers.yaml` assignment is the single home of its (provider row, model
@@ -75,7 +75,7 @@ fn model_entry(model: &str) -> String {
 /// fields it carries) stands untouched.
 ///
 /// The entry is inserted **directly after the `models:` line**, not at EOF, so
-/// a file that carries a later top-level key (`adapter:` — the one field lernie
+/// a file that carries a later top-level key (`adapter:` — the one field litany
 /// still reads out of this file) stays valid. A file with no `models:` key at
 /// all gets one appended; an inline `models: {}` is refused rather than
 /// transformed.
@@ -86,7 +86,7 @@ fn model_entry(model: &str) -> String {
 /// Declaring an id that exists is simply nothing to write.
 ///
 /// **Its one caller is the §9.2 Declare control** since bl-d9cb. The §9.4
-/// picker used to call it first and `set_role_model` second; lernie reads no
+/// picker used to call it first and `set_role_model` second; litany reads no
 /// `models:` table any more, so the pick is one write and this is a hand
 /// gesture over yog's own table.
 pub fn declare_model(models_yaml: &str, model: &str) -> Result<Option<String>, GrammarError> {
@@ -117,7 +117,7 @@ pub fn declare_model(models_yaml: &str, model: &str) -> Result<Option<String>, G
 /// context-fullness figure, and the one home for it.
 ///
 /// Keyed on `model_id`, falling back to the entry key when the entry declares
-/// none, because the id a step's `request.json` names is the wire id lernie
+/// none, because the id a step's `request.json` names is the wire id litany
 /// sent — not the alias the entry is filed under. An entry with no
 /// `context_window:` line, an unparseable one, or a zero is **absent from the
 /// map**: a window nobody declared is unknown, and a percentage against a
@@ -125,7 +125,7 @@ pub fn declare_model(models_yaml: &str, model: &str) -> Result<Option<String>, G
 /// to avoid (brazen's Usage zero-vs-unknown principle, applied one field over).
 ///
 /// **This is the fact's one home, and since bl-d9cb it is the ONLY reader of
-/// the `models:` block that reads a number.** lernie reads no `models:` table at
+/// the `models:` block that reads a number.** litany reads no `models:` table at
 /// all (see this module's header), so the block is yog's own hand-configuration:
 /// authored by the §9.2 Declare control, edited by the §9.5 form, read here.
 /// One home, one number, operator-correctable.

@@ -49,9 +49,9 @@ fn branch(origin: EditOrigin) -> ConfigFile {
 fn every_config_destination_round_trips() {
     for file in [
         brazen(),
-        ConfigFile::LernieModels,
+        ConfigFile::LitanyModels,
         ConfigFile::Cadence,
-        ConfigFile::LernieWorkflow {
+        ConfigFile::LitanyWorkflow {
             name: "review".to_owned(),
         },
         branch(EditOrigin::Advance),
@@ -118,9 +118,9 @@ fn a_wall_scoped_envelope_without_its_workspace_is_refused() {
 fn a_field_left_out_reads_instead_of_writing() {
     for file in [
         brazen(),
-        ConfigFile::LernieModels,
+        ConfigFile::LitanyModels,
         ConfigFile::Cadence,
-        ConfigFile::LernieWorkflow {
+        ConfigFile::LitanyWorkflow {
             name: "review".to_owned(),
         },
     ] {
@@ -166,7 +166,7 @@ fn malformed_config_envelopes_refuse_with_a_reason() {
             "unknown target file",
         ),
         (
-            json!({"op": "config", "target": {"file": "lernie-workflow"}, "text": "x"}),
+            json!({"op": "config", "target": {"file": "litany-workflow"}, "text": "x"}),
             "\"name\"",
         ),
         (

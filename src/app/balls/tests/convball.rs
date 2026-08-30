@@ -25,7 +25,7 @@ fn model() -> (tempfile::TempDir, Fixture, AppModel) {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         balls_clones: root.path().join("clones"),
         home: root.path().join("home"),

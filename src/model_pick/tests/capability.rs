@@ -103,7 +103,7 @@ fn neither_a_custom_id_nor_an_empty_role_tool_list_earns_an_exemption() {
         plan(TEMPLATE_PROVIDERS, &rows, &custom),
         Err(PickError::Incapable { .. })
     ));
-    // `compactor` declares no `tools:` line at all in lernie's own template,
+    // `compactor` declares no `tools:` line at all in litany's own template,
     // which is the emptiest role list there is.
     let mut bare_role = pick("claude-code");
     bare_role.role = "compactor".to_string();

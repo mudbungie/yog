@@ -5,7 +5,7 @@
 //! (deleted)`, an annotation naming a file that does not exist. The §8.6
 //! capability control is the sharp case, because the start flow re-resolves its
 //! shim on **every** Start (`world::tools::ensure_control`), so the first Start
-//! after an install used to burn that annotation into the adjudicator lernie
+//! after an install used to burn that annotation into the adjudicator litany
 //! consults before every granted tool invocation — and every later tool call
 //! failed closed at a boundary whose cause was hours in the past.
 //!
@@ -17,7 +17,7 @@
 //! links (the born-from one to this test binary, the replacement to the built
 //! `yog`), which is also what makes the consult at the end a real one — after
 //! the swap that pathname IS the yog binary, so the shim is exec'd for a real
-//! verdict over real stdio, exactly as lernie's seam consults it.
+//! verdict over real stdio, exactly as litany's seam consults it.
 
 // The fixture helpers of an integration-test crate unwrap freely like any test.
 #![allow(clippy::unwrap_used)]
@@ -84,7 +84,7 @@ fn the_live_engine_that_lost_its_inode() {
     assert!(!body.contains("(deleted)"), "{body}");
 }
 
-/// Consult the shim exactly as lernie's seam does: no argv, the request on
+/// Consult the shim exactly as litany's seam does: no argv, the request on
 /// stdin, the conversation's env, the workspace as cwd.
 fn consult(shim: &Path, root: &Path, workspace: &Path, request: &str) -> (i32, String) {
     let mut child = yog::git_env::command(shim)
@@ -93,8 +93,8 @@ fn consult(shim: &Path, root: &Path, workspace: &Path, request: &str) -> (i32, S
         .env("HOME", root.join("home"))
         .env("XDG_DATA_HOME", root.join("data"))
         .env("XDG_STATE_HOME", root.join("state"))
-        .env("LERNIE_CONV_REPO", workspace)
-        .env("LERNIE_CONV_BRANCH", "amber")
+        .env("LITANY_CONV_REPO", workspace)
+        .env("LITANY_CONV_BRANCH", "amber")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())

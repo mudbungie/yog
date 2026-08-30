@@ -40,7 +40,7 @@ fn painted_seat(drifted: bool) -> (Vec<Painted>, egui::Rect) {
             "cadence:\n  watcher:\n    debounce_ms: 0\n",
         )
         .unwrap();
-        world.model.after_lernie_verb();
+        world.model.after_litany_verb();
         world.converge();
         // One ordinary config edit, made after every agent forked: the
         // governing commit and the lineage tip part, which is the entire
@@ -50,14 +50,14 @@ fn painted_seat(drifted: bool) -> (Vec<Painted>, egui::Rect) {
         world.converge();
     }
     let ctx = egui::Context::default();
-    let (lernie, bl, bz) = (
-        Cli::new("/yog-absent-lernie"),
+    let (litany, bl, bz) = (
+        Cli::new("/yog-absent-litany"),
         Cli::new("/yog-absent-bl"),
         Cli::new("/yog-absent-bz"),
     );
     let frame = |world: &mut World| {
         ctx.run(input(), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         })
     };
     // Two frames, then the **wire settled to a fixed point** (REMOTE §9.7's

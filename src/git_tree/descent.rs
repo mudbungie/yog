@@ -1,17 +1,17 @@
 //! Hyphenated-descent tree ordering for the agent view (§2.3, §7.1).
 //!
 //! Agent ids encode the full descent from the root — hierarchy lives in the
-//! name, not the filesystem. **lernie's grammar is the authority and it is
+//! name, not the filesystem. **litany's grammar is the authority and it is
 //! narrow** (ARCH §2.3): an id is a chain of `-`-joined **segments**, and a
 //! segment is `<ts>-<short>`, exactly two hyphen-free tokens. So a root is
 //! two tokens (`20260427T160000Z-pre0`), a child four, a grandchild six, and
 //! an id's parent is that id less its last two tokens ([`parent_id`], the
-//! mirror of lernie's own `prompt::inbox::parent_of`).
+//! mirror of litany's own `prompt::inbox::parent_of`).
 //!
 //! This derives the render tree purely from the id set: an agent's parent is
 //! its **derived** parent id when that id is present in the set, and every
 //! other agent is a root row. That second clause is a *query against the
-//! registry*, not string arithmetic — the same intersection lernie's own
+//! registry*, not string arithmetic — the same intersection litany's own
 //! sweep applies (ARCH §8: "a branch whose derived address holds no ref …
 //! is nobody's child … treated exactly as a root"). A pre-order walk yields
 //! each agent paired with its nesting depth, children directly under their
@@ -20,9 +20,9 @@
 //!
 //! Two shapes this deliberately renders at depth 0, where a looser
 //! longest-hyphen-prefix rule nested them (bl-c03e): an id **outside** the
-//! grammar (`<root>-c0ffee`, one token too few — lernie would never mint it),
+//! grammar (`<root>-c0ffee`, one token too few — litany would never mint it),
 //! and a descendant whose intermediate ancestor ref is **absent**. Both are
-//! ids lernie itself refuses to call anyone's child, and yog agreeing is what
+//! ids litany itself refuses to call anyone's child, and yog agreeing is what
 //! keeps one grammar rather than two.
 
 use std::collections::HashMap;

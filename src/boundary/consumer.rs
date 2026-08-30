@@ -31,7 +31,7 @@ const CONSUMER_POLL: Duration = Duration::from_millis(250);
 /// verb binaries and roots (fixed at boot), the snapshot cell the worker
 /// publishes to, the durable `ui.json` path, and the clock.
 pub struct ConsumerCtx {
-    pub lernie: crate::cli_outbound::Cli,
+    pub litany: crate::cli_outbound::Cli,
     pub bl: crate::cli_outbound::Cli,
     pub state_root: PathBuf,
     pub home: PathBuf,
@@ -189,10 +189,10 @@ impl ConsumerCtx {
         // make a success reply a barrier for the call after it.
         let published = crate::app::addressable(
             crate::state::latest_snapshot(&self.cell),
-            crate::binding::workspaces(&self.yog_data_root, &self.world.lernie_data_root()),
+            crate::binding::workspaces(&self.yog_data_root, &self.world.litany_data_root()),
         );
         let deps = Deps {
-            lernie: self.lernie.clone(),
+            litany: self.litany.clone(),
             bl: self.bl.clone(),
             state_root: self.state_root.clone(),
             yog_binary: self.yog_binary.clone(),

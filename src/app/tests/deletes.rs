@@ -36,7 +36,7 @@ fn unmake(model: &mut AppModel, ws: &Path, typed: &str) -> Result<Reply, String>
     // The act's own root, marked by the receipt for every act alike
     // (`AppModel::settle_acts`); an unmaking names no project, so it is the
     // yog-state root's ordinary routing (§7.1) and the ops tail re-reads.
-    model.after_lernie_verb();
+    model.after_litany_verb();
     model.deleted_workspace(ws);
     landed
 }
@@ -62,7 +62,7 @@ fn add_named(h: &Harness, name: &str, agent: &str) -> PathBuf {
 
 #[test]
 fn the_verb_is_offered_only_on_yogs_own_named_workspaces() {
-    // §3.6 scope: foreign workspaces are lernie's retention-governed territory
+    // §3.6 scope: foreign workspaces are litany's retention-governed territory
     // and replays are read-only — yog may not delete what it did not place.
     let mut h = Harness::new();
     let named = add_named(&h, "alba-koi", "c-1");

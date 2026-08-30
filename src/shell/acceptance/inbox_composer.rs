@@ -21,7 +21,7 @@ mod fold_line;
 /// tests hand it the frame's moment instead of the wall.
 pub(super) struct Frames {
     ctx: egui::Context,
-    lernie: Cli,
+    litany: Cli,
     bl: Cli,
     bz: Cli,
 }
@@ -30,7 +30,7 @@ impl Frames {
     pub(super) fn new() -> Self {
         Self {
             ctx: egui::Context::default(),
-            lernie: Cli::new("/yog-absent-lernie"),
+            litany: Cli::new("/yog-absent-litany"),
             bl: Cli::new("/yog-absent-bl"),
             bz: Cli::new("/yog-absent-bz"),
         }
@@ -47,7 +47,7 @@ impl Frames {
                     ctx,
                     &mut world.model,
                     &mut world.state,
-                    &self.lernie,
+                    &self.litany,
                     &self.bl,
                     &self.bz,
                 );
@@ -87,7 +87,7 @@ impl Frames {
     }
 }
 
-/// Land a deposit in c-1's inbox — what `lernie message` (or any other
+/// Land a deposit in c-1's inbox — what `litany message` (or any other
 /// instance's send) leaves there.
 pub(super) fn deposit(world: &World, name: &str, at: &str, body: &str) {
     let dir = world.ws.join("inbox/c-1");
@@ -109,7 +109,7 @@ pub(super) fn quick(mut world: World) -> World {
         "cadence:\n  watcher:\n    debounce_ms: 0\n",
     )
     .unwrap();
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     world
 }
@@ -123,7 +123,7 @@ pub(super) fn converge_ws(world: &mut World) {
     world.converge();
 }
 
-/// Drain the inbox — what lernie's delivery commit does to `inbox/<id>/`.
+/// Drain the inbox — what litany's delivery commit does to `inbox/<id>/`.
 pub(super) fn drain(world: &World) {
     let dir = world.ws.join("inbox/c-1");
     for entry in std::fs::read_dir(&dir).unwrap().flatten() {

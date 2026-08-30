@@ -82,7 +82,7 @@ fn a_machine_that_never_answers_runs_out_and_says_so() {
     assert!(e.contains("inv-7") && e.contains("laptop"), "{e}");
 }
 
-/// A stop landing mid-run ends the wait, which is the router obligation lernie
+/// A stop landing mid-run ends the wait, which is the router obligation litany
 /// states and cannot enforce. The flag is raised by the stand-in engine
 /// **before** it writes the answer the driver is waiting on — the hostile
 /// order, and the one this test used to be flaky on (bl-3a88): the driver may

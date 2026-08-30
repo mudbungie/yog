@@ -35,9 +35,9 @@ fn a_landed_spawn_starts_a_drone_and_leaves_one_row() {
             worktree.display()
         ),
     );
-    ctx.deps.lernie = fake(
+    ctx.deps.litany = fake(
         root.path(),
-        "lernie",
+        "litany",
         &format!(
             "#!/bin/sh\ncase \"$1\" in\n{}esac\nexit 0\n",
             crate::test_support::authoring_new_arm()
@@ -59,7 +59,7 @@ fn a_landed_spawn_starts_a_drone_and_leaves_one_row() {
 /// loop row, because the birth did not land.
 ///
 /// The fire fails because the driver's working directory is the workspace and
-/// this `lernie new` never made one: a launch into a directory that is not
+/// this `litany new` never made one: a launch into a directory that is not
 /// there is exactly the class the loop could not previously survive.
 #[test]
 fn a_birth_whose_fire_never_launches_gives_its_own_claim_back() {
@@ -85,7 +85,7 @@ fn a_birth_whose_fire_never_launches_gives_its_own_claim_back() {
             worktree.display()
         ),
     );
-    ctx.deps.lernie = fake(root.path(), "lernie", "#!/bin/sh\nexit 0\n");
+    ctx.deps.litany = fake(root.path(), "litany", "#!/bin/sh\nexit 0\n");
     assert!(!ctx.pass(), "the fire never launched, so no birth landed");
     let args = std::fs::read_to_string(&seen).expect("bl was called");
     assert!(

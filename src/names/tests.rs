@@ -50,9 +50,9 @@ fn validate_enforces_the_shape_the_wordlist_used_to_guarantee() {
 /// refuses the name outright — and occupancy is wider than enumeration.
 #[test]
 fn validate_refuses_a_leaf_that_exists_under_any_root() {
-    let (yog, lernie) = (TempDir::new().unwrap(), TempDir::new().unwrap());
-    let foreign = lernie.path().join("workspaces");
-    let replay = lernie.path().join("replays");
+    let (yog, litany) = (TempDir::new().unwrap(), TempDir::new().unwrap());
+    let foreign = litany.path().join("workspaces");
+    let replay = litany.path().join("replays");
     // A half-created dir (no repo.git) still owns its name; so does a file.
     fs::create_dir_all(yog.path().join("ops")).unwrap();
     fs::create_dir_all(foreign.join("acme")).unwrap();
@@ -67,12 +67,12 @@ fn validate_refuses_a_leaf_that_exists_under_any_root() {
     assert_eq!(
         validate("acme", &roots).unwrap_err(),
         NameError::Taken("acme".to_owned()),
-        "a leaf under lernie's own root occupies the name too"
+        "a leaf under litany's own root occupies the name too"
     );
     assert_eq!(
         validate("20260101T-aa", &roots),
         Err(NameError::Shape),
-        "shape is asked first: a lernie auto-id is not a name a human may type"
+        "shape is asked first: a litany auto-id is not a name a human may type"
     );
     assert_eq!(
         validate("notes", &roots),

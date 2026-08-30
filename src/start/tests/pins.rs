@@ -19,14 +19,14 @@ fn prompt_pins_the_bound_projects_instructions_before_the_goal() {
         "#!/bin/sh\nprintf '%s\\037%s\\037%s\\037%s\\037%s' \"$4\" \"$5\" \"$6\" \"$7\" \"$8\" > '{}'\n",
         fifo.display()
     );
-    let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
+    let litany = Cli::new(write_exec(w.bin.path(), "litany", &body));
     let ws = workspace(&w);
     // A bound project declaring instructions at its own authority root.
     let target = w.balls.path().join("work");
     std::fs::create_dir_all(target.join(".git")).unwrap();
     std::fs::write(target.join("AGENTS.md"), "house rules").unwrap();
     execute_prompt(
-        &lernie,
+        &litany,
         w.state.path(),
         "TS",
         &crate::start::Fire {
@@ -71,10 +71,10 @@ fn an_unbound_rung_freezes_no_instructions() {
         "#!/bin/sh\nprintf '%s\\037%s' \"$4\" \"$5\" > '{}'\n",
         fifo.display()
     );
-    let lernie = Cli::new(write_exec(w.bin.path(), "lernie", &body));
+    let litany = Cli::new(write_exec(w.bin.path(), "litany", &body));
     let ws = workspace(&w);
     execute_prompt(
-        &lernie,
+        &litany,
         w.state.path(),
         "TS",
         &crate::start::Fire {

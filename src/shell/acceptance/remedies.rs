@@ -25,14 +25,14 @@ use crate::cli_outbound::Cli;
 use crate::opslog::{OpEntry, Origin};
 
 /// The CONFIG-kind decline **verbatim, as the unseeded drive captured it** —
-/// brazen's `ConfigError::UnknownProvider` inside lernie's `prompt` wrapper,
+/// brazen's `ConfigError::UnknownProvider` inside litany's `prompt` wrapper,
 /// which is what the §8.1 detached sink folds into the ops row the §7.3 banner
 /// renders. Copied out of a real `run-unseeded` phase-A sink, the way
 /// [`super::wound`]'s `BZ_REFUSAL` was copied out of bl-55d8's falsifying run:
 /// a paint beat over words no substrate emits proves nothing.
 ///
 /// Note the shape against the one bl-9b52's screenshot caught: the pinned
-/// lernie now names the row it routed to as well (`on provider row "…"`), and
+/// litany now names the row it routed to as well (`on provider row "…"`), and
 /// the classifier reads both spellings, so this beat holds across that move.
 ///
 /// **The row is one nothing ships** (bl-6244). It was `openai-chatgpt` until
@@ -41,7 +41,7 @@ use crate::opslog::{OpEntry, Origin};
 /// producing a config decline at all, and re-pinning to a row that CAN go
 /// missing is what keeps this a paint beat over words a substrate really
 /// emits. Re-copied from `run-unseeded` phase A on 2026-08-20.
-const CONFIG_DECLINE: &str = "lernie prompt: provider error (Config) on provider row \
+const CONFIG_DECLINE: &str = "litany prompt: provider error (Config) on provider row \
      \"yogdrive-no-such-provider\": unknown provider `yogdrive-no-such-provider`";
 
 /// The needle for the reason: brazen's own words, which appear nowhere in the
@@ -64,12 +64,12 @@ fn says(text: &str, needle: &str) -> usize {
 }
 
 /// Lay one failed §4.2 row of `Origin::Conversation` — the shape a detached
-/// `lernie prompt` that died leaves behind, and the one input
+/// `litany prompt` that died leaves behind, and the one input
 /// `AppModel::last_failure` reads for the composer's banner.
 fn dead_dispatch(world: &mut super::fixture::World, stderr: &str) {
     let row = OpEntry::synthetic_failure(
         "T0".to_owned(),
-        vec!["lernie".to_owned(), "prompt".to_owned()],
+        vec!["litany".to_owned(), "prompt".to_owned()],
         "ws".to_owned(),
         stderr.to_owned(),
         Origin::Conversation,
@@ -77,7 +77,7 @@ fn dead_dispatch(world: &mut super::fixture::World, stderr: &str) {
     crate::opslog::append(world.model.state_root(), &row).unwrap();
     // The banner reads the PUBLISHED snapshot, never disk (§7.2 / INV-1), so
     // the row only exists for the frame once a derivation has carried it.
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     // The composer that paints an `Origin::Conversation` banner is the docked
     // one, and it renders only for a focused workspace — the bootstrap box is
@@ -95,10 +95,10 @@ fn dead_dispatch(world: &mut super::fixture::World, stderr: &str) {
 /// the file that caused it.
 #[test]
 fn a_config_kind_dispatch_failure_paints_its_reason_and_the_way_out() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut shell = world();
     dead_dispatch(&mut shell, CONFIG_DECLINE);
-    let text = painted(&mut shell, &lernie, &bl);
+    let text = painted(&mut shell, &litany, &bl);
 
     assert!(
         text.contains(REASON_NEEDLE),
@@ -122,8 +122,8 @@ fn a_config_kind_dispatch_failure_paints_its_reason_and_the_way_out() {
     // is one more occurrence than the same window carries without the fault,
     // which is a claim only the control can satisfy.
     let mut bare = super::fixture::world();
-    dead_dispatch(&mut bare, "lernie prompt: exit 1");
-    let baseline = painted(&mut bare, &lernie, &bl);
+    dead_dispatch(&mut bare, "litany prompt: exit 1");
+    let baseline = painted(&mut bare, &litany, &bl);
     assert!(
         says(&text, CONFIG_TAB) > says(&baseline, CONFIG_TAB),
         "the route to the §9.1 editor is a control, not only a sentence:\n{text}"
@@ -147,14 +147,14 @@ fn a_config_kind_dispatch_failure_paints_its_reason_and_the_way_out() {
 /// asked only about failures that already are failures.
 #[test]
 fn a_failure_of_another_class_earns_the_reason_and_no_config_route() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = world();
     dead_dispatch(
         &mut world,
-        "lernie prompt: provider error (Transport) on provider row \
+        "litany prompt: provider error (Transport) on provider row \
          \"openai-chatgpt\": connection reset by peer",
     );
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
 
     assert!(
         text.contains("connection reset by peer"),
@@ -180,12 +180,12 @@ fn a_failure_of_another_class_earns_the_reason_and_no_config_route() {
 /// of them would go green while the other's affordance was deleted.
 #[test]
 fn an_auth_kind_step_failure_paints_its_reason_and_offers_the_sign_in() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
     world.converge();
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
 
     assert!(
         text.contains("failed on") && text.contains("credentials"),

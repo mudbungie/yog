@@ -39,7 +39,7 @@ impl Cli {
 
     /// `stdin` is the fourth spawn shape's one difference (bl-024b): `None`
     /// closes the child's stdin, `Some(bytes)` pipes them in and closes it —
-    /// the tool contract lernie's executor already speaks (its ARCH §3.3), and
+    /// the tool contract litany's executor already speaks (its ARCH §3.3), and
     /// therefore the one a tool host's own child speaks too.
     pub(super) fn run_streaming(
         &self,

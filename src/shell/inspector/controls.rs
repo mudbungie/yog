@@ -27,7 +27,7 @@ const RAW_HINT: &str = "Show the files behind this tab exactly as they are on di
 /// STORIES.md S7 point 3 says so in those words) — beside the Transcript's two
 /// §11 density knobs (durable, `ui.json` §4.1 — unlike the rest here, which is
 /// §5.3 ephemera), the Steps step-selector + drill-in tab picker, and the
-/// Inbox tab's Scan button (the Flush = `lernie scan` verb, moved off the
+/// Inbox tab's Scan button (the Flush = `litany scan` verb, moved off the
 /// composer — it flushes the focused workspace's inbox, not this agent's
 /// conversation, so it belongs beside the deposits it flushes rather than
 /// among the composer's send/stop verbs).
@@ -82,7 +82,7 @@ pub(super) fn per_tab_controls(
                 if ui
                     .button("Scan")
                     .on_hover_text(
-                        "Run `lernie scan` on this workspace: it writes a died epitaph \
+                        "Run `litany scan` on this workspace: it writes a died epitaph \
                          for every driver that crashed without one, and delivers inbox \
                          deposits still sitting queued. Nothing is started and nothing \
                          is killed (f).",

@@ -1,6 +1,6 @@
 //! The **OS confinement backend** (VISION §4.11 item 8, DESIGN §8.6): the one
 //! platform-explicit layer a `confinement: required` workspace spends, wired
-//! at yog's own lernie spawn seam.
+//! at yog's own litany spawn seam.
 //!
 //! **One backend, named per platform.** Linux is **bubblewrap** (`bwrap`),
 //! shelled as a subprocess exactly the way certificates are minted by shelling
@@ -15,7 +15,7 @@
 //! *is* the unavailability, with no field anywhere to go stale.
 //!
 //! **The wrap is unconditional under the policy** ([`wrapper`]): a workspace
-//! whose live policy requires confinement has *every* workspace-bound lernie
+//! whose live policy requires confinement has *every* workspace-bound litany
 //! spawn prefixed with the backend argv, probe or no probe. A backend that
 //! vanishes between gate and spawn therefore fails the spawn loudly (the exec
 //! names `bwrap`) instead of quietly running bare — fail-closed by
@@ -25,16 +25,16 @@
 //! **The support boundary — what the shape clamps and what it leaves.**
 //! - *Filesystem writes*: the whole host tree is re-bound read-only; writable
 //!   is exactly the derived set ([`writable`]) — the workspace, the composed
-//!   world root (§16.2: lernie home, nested balls state, walls, tools), the
+//!   world root (§16.2: litany home, nested balls state, walls, tools), the
 //!   host `/tmp` (world-writable on the host by design; a private tmpfs would
 //!   break cross-process temp coordination for nothing), and the **bound
 //!   project repo** when the §3.2 claimant join names one ([`bound_project`],
 //!   bl-34b1) — without which a ball-rung drone could not run its own `bl
 //!   close`.
 //! - *Process access*: **not clamped.** A pid namespace dies with its init,
-//!   and lernie's short verbs detach-launch drivers that must outlive them
+//!   and litany's short verbs detach-launch drivers that must outlive them
 //!   (its ARCH §2.9), so `--unshare-pid` would kill every revived driver at
-//!   the verb's exit; `lernie stop` also signals by host pid. The capability
+//!   the verb's exit; `litany stop` also signals by host pid. The capability
 //!   boundary's `process` class governs.
 //! - *Environment*: **not clamped.** The spawn's env is already composed
 //!   explicitly at yog's boundary (the §16.2 world + wall folds, the git
@@ -131,7 +131,7 @@ fn refusal(workspace: &Path, why: &str) -> String {
     )
 }
 
-/// The wrapper argv for a workspace-bound lernie spawn — empty when the live
+/// The wrapper argv for a workspace-bound litany spawn — empty when the live
 /// policy requires no confinement (the general path with empty inputs), the
 /// full backend argv when it does. Read fresh per spawn: policy is the live
 /// config tip, availability is the exec itself.
@@ -173,7 +173,7 @@ fn writable(world: &crate::xdg::Env, workspace: &Path) -> Vec<PathBuf> {
 /// ([`super::root::claimed`]): the last `bl claim <id> --as <name>` row on
 /// yog's own ops trail, stamped with this workspace's leaf, whose `cwd` **is**
 /// the project the claim ran in. A workspace encodes no project path (§3.5) and
-/// a revived driver carries no payload — `lernie message` and `lernie advance`
+/// a revived driver carries no payload — `litany message` and `litany advance`
 /// reach [`wrapper`] with the workspace and nothing else — so a project taken
 /// off a *birth parameter* would have confined every revival more tightly than
 /// the fire it resumes. The trail is durable, so both doors derive the

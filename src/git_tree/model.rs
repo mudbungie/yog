@@ -32,7 +32,7 @@ pub enum GitTreeError {
     /// The governing-config derivation (§5.1 #17) declined: either no
     /// `config/*` lineage reaches the agent's branch, or two candidate
     /// ancestors are incomparable. Both mean a defective workspace, declined
-    /// rather than guessed (mirrors lernie `workspace.rs`).
+    /// rather than guessed (mirrors litany `workspace.rs`).
     #[error("governing config: {0}")]
     Governing(String),
 }

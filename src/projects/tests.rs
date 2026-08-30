@@ -89,9 +89,9 @@ fn enumerate_skips_non_utf8_basenames() {
 fn a_label_is_the_basename() {
     let paths = [
         PathBuf::from("/home/u/dev/yog"),
-        PathBuf::from("/tmp/scratch-9f2/lernie"),
+        PathBuf::from("/tmp/scratch-9f2/litany"),
     ];
-    assert_eq!(labels(&paths), vec!["yog".to_owned(), "lernie".to_owned()]);
+    assert_eq!(labels(&paths), vec!["yog".to_owned(), "litany".to_owned()]);
 }
 
 /// Two projects that end in the same name are not one project: the label
@@ -103,14 +103,14 @@ fn colliding_basenames_extend_leftward_until_they_differ() {
     let paths = [
         PathBuf::from("/home/u/work/yog"),
         PathBuf::from("/home/u/play/yog"),
-        PathBuf::from("/home/u/play/lernie"),
+        PathBuf::from("/home/u/play/litany"),
     ];
     assert_eq!(
         labels(&paths),
         vec![
             "work/yog".to_owned(),
             "play/yog".to_owned(),
-            "lernie".to_owned(),
+            "litany".to_owned(),
         ]
     );
 }

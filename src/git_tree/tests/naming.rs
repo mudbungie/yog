@@ -11,7 +11,7 @@ use super::fixture::Fixture;
 use crate::git_tree::GitTree;
 
 #[test]
-fn from_repo_reads_the_lernie_name_fact_off_the_branch() {
+fn from_repo_reads_the_litany_name_fact_off_the_branch() {
     // §3.3 as ruled by bl-50f3: the name's one home is the `name` blob on the
     // agent's own branch (lernie 0.0.4), read `git show agents/<id>:name`.
     let fx = Fixture::new();
@@ -38,7 +38,7 @@ fn from_repo_reads_the_lernie_name_fact_off_the_branch() {
 
 #[test]
 fn from_repo_reads_an_empty_name_blob_as_unnamed() {
-    // lernie writes the file on EVERY dispatch commit — empty means unnamed
+    // litany writes the file on EVERY dispatch commit — empty means unnamed
     // (one shape, no absence-vs-empty split); yog folds both to None.
     let fx = Fixture::new();
     fx.build_agent("20260422T124500Z-emt0", "unnamed");
@@ -49,7 +49,7 @@ fn from_repo_reads_an_empty_name_blob_as_unnamed() {
 
 #[test]
 fn from_repo_reads_a_descent_childs_name_by_the_same_query() {
-    // §3.3's honest-scope limit is lifted (bl-08f2): a lernie-dispatched child
+    // §3.3's honest-scope limit is lifted (bl-08f2): a litany-dispatched child
     // may carry a name, and it surfaces through the identical read — no yog
     // special case.
     let fx = Fixture::new();

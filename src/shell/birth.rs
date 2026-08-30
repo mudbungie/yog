@@ -10,7 +10,7 @@
 //! beside it stays one box and one Enter (§11).
 //!
 //! **The pick is not per-conversation, and the block says so.** lernie 0.0.3's
-//! `lernie prompt <repo> <message>` takes no config argument: it resolves
+//! `litany prompt <repo> <message>` takes no config argument: it resolves
 //! `ConfigSource::ConfigBranch("config/default")` itself, so a conversation is
 //! always born on that branch's head. There is therefore no start-time scope to
 //! write into — a start-time pick IS the §9.4 write, made one gesture before
@@ -79,7 +79,7 @@ pub(super) fn block(
     if let Some(refusal) = crate::actions::work_dir_refusal(&state.actions.path_dir) {
         ui.colored_label(crate::theme::ICHOR, refusal);
     }
-    // The §2.2 config-lineage tip — the very commit `lernie prompt` will fork.
+    // The §2.2 config-lineage tip — the very commit `litany prompt` will fork.
     // Off the landed enumeration (bl-b4b5): it is a fact about a *workspace*,
     // so it rides `Query::Workspaces`' row beside the §6 rollups rather than
     // being folded out of the window's own tree. A workspace with no lineage

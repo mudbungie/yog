@@ -145,8 +145,8 @@ fn the_live_activity_class_has_one_seat_and_the_strip_carries_only_what_it_adds(
 /// inbox-dir lock fd and the `response.json` writer fd, both held open by this
 /// process ([`super::bands`] reaches the same state the same way).
 fn in_flight_frame() -> Vec<crate::paint_probe::Painted> {
-    let (lernie, bl, bz) = (
-        crate::cli_outbound::Cli::new("/yog-absent-lernie"),
+    let (litany, bl, bz) = (
+        crate::cli_outbound::Cli::new("/yog-absent-litany"),
         crate::cli_outbound::Cli::new("/yog-absent-bl"),
         crate::cli_outbound::Cli::new("/yog-absent-bz"),
     );
@@ -162,7 +162,7 @@ fn in_flight_frame() -> Vec<crate::paint_probe::Painted> {
     let ctx = egui::Context::default();
     let frame = |world: &mut World| {
         ctx.run(super::input(), |ctx| {
-            crate::shell::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            crate::shell::render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         })
     };
     // Two frames, then the **wire settled to a fixed point** (REMOTE §9.7's

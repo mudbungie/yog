@@ -15,7 +15,7 @@
 //! **Three moves, in this order, and each one earns its place.**
 //!
 //! 1. *Read the mark, live.* The held `tool_use` id is never typed and never
-//!    carried from a snapshot: it is read off `refs/lernie/held/<agent>` at
+//!    carried from a snapshot: it is read off `refs/litany/held/<agent>` at
 //!    fire time, so the answer names what is parked now. Nothing parked is a
 //!    refusal — a gesture is an instruction, and an answer aimed at nothing
 //!    must say so rather than report a silent success.
@@ -30,8 +30,8 @@
 //!    `advance` runs the conversation until it goes quiet, and no gesture may
 //!    block a frame or a consumer thread on that.
 //!
-//! **No enforcement path calls stop.** `lernie stop` mid-tool-window wedges the
-//! branch permanently (lernie bl-b98d), so declining is in-band and parking is
+//! **No enforcement path calls stop.** `litany stop` mid-tool-window wedges the
+//! branch permanently (litany bl-b98d), so declining is in-band and parking is
 //! a park — never a kill.
 
 use std::path::Path;
@@ -55,7 +55,7 @@ pub(super) use floor::set_floor;
 /// than by a shared const, because the reader deliberately owns its grammar.
 const ANSWER: &str = "answer";
 
-// lernie's re-drive verb — `lernie advance <ws> <agent>` (its ARCH §6): one
+// litany's re-drive verb — `litany advance <ws> <agent>` (its ARCH §6): one
 // hop of the workflow chain, which re-enters the tool window under the mark
 // and re-consults the control. That re-consult *is* the release. The token is
 // `opslog::launch`'s since bl-b95e — the launch writes it into `ops.jsonl` and
@@ -98,21 +98,21 @@ pub(super) fn answer_hold(
     })
 }
 
-/// Fire `lernie advance <ws> <agent>` detached, logging the launch exactly as
+/// Fire `litany advance <ws> <agent>` detached, logging the launch exactly as
 /// the §8.1 fire logs its own: [`DETACHED_EXIT`] for a handoff that happened, a
 /// §4.2 synthetic-failure line for a fork that never landed. The row is the
 /// receipt — the answer's own reply says only whether the launch was made.
 ///
 /// **Two callers, one body** (bl-9bef): the release above, and the §8.2 nudge —
 /// the operator's own "run it again from here", which is this launch and
-/// nothing else, since lernie derives what is due from the transcript tail
+/// nothing else, since litany derives what is due from the transcript tail
 /// (ARCH §6). Shared rather than re-written, so a driver launch has one home.
 ///
 /// **The spawn is workspace-bound** ([`Deps::bound`], bl-bf79): what this
 /// launches is a *driver*, which makes model calls, so it owes its workspace
 /// the §16.2 wall — without it the driver's first `bz` dies with `no workspace
 /// in this environment` and the turn produces an empty reply. That is the same
-/// fold every §8.2 lernie verb takes, and it was missing here.
+/// fold every §8.2 litany verb takes, and it was missing here.
 pub(super) fn advance(deps: &Deps, ts: &str, workspace: &Path, agent: &str) -> Result<(), String> {
     let ws_s = workspace.to_string_lossy();
     let sink = opslog::detached::sink(&deps.state_root, ts, workspace);
@@ -122,7 +122,7 @@ pub(super) fn advance(deps: &Deps, ts: &str, workspace: &Path, agent: &str) -> R
             .cli()
             .spawn_detached(Some(workspace), &sink, &[ADVANCE, ws_s.as_ref(), agent]);
     let argv = vec![
-        deps.lernie.binary().display().to_string(),
+        deps.litany.binary().display().to_string(),
         ADVANCE.to_owned(),
         ws_s.into_owned(),
         agent.to_owned(),

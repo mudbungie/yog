@@ -1,14 +1,14 @@
 //! Agent deletion — the §3.6 class, one conversation deep (bl-f17a).
 //!
 //! Unlike the workspace unmaking ([`super`]), the removal here is **not** yog's
-//! own write: lernie ships `lernie delete <ws> <agent> [--children] [--dry-run]`
-//! (0.0.4), and I2's lernie-verbs-only rule makes that verb the only lawful
+//! own write: litany ships `litany delete <ws> <agent> [--children] [--dry-run]`
+//! (0.0.4), and I2's litany-verbs-only rule makes that verb the only lawful
 //! remover of agent state. yog's part is the §3.6 confirm discipline around it:
 //!
 //! - **The gate** ([`AgentConfirmation`]): refuse while the conversation's root
 //!   or any member probes Live/InFlight — the §10 "?" uncertainty counting as
 //!   live, fail closed. Stop keeps its own semantics (§3.6 rejected (c)); the
-//!   refusal names the live members so the operator stops them first. lernie's
+//!   refusal names the live members so the operator stops them first. litany's
 //!   own `Driven` decline is the substrate's independent fail-closed under the
 //!   race; yog gates first.
 //! - **The arming** ([`AgentConfirmation::subtree_armed`], §3.6's amended
@@ -18,13 +18,13 @@
 //!   does not already show. A subtree delete destroys conversations that are
 //!   *not* that row, so it takes the typed name — and the typed name is the
 //!   only thing that unlocks `--children`. An unarmed fire is the **bare**
-//!   verb, and lernie's own `HasDescendants` decline (naming the descendants)
+//!   verb, and litany's own `HasDescendants` decline (naming the descendants)
 //!   rides back: the census that gates the subtree is computed by the substrate
 //!   that performs the act, at the moment it acts — never a yog re-derivation,
 //!   never a stale dialog's.
-//! - **The census** ([`census`]): the dialog enumerates from `lernie delete
+//! - **The census** ([`census`]): the dialog enumerates from `litany delete
 //!   --children --dry-run` — the descendants by name and the pending-deposit
-//!   count come straight off lernie's `DeleteReport` line ([`parse_report`]).
+//!   count come straight off litany's `DeleteReport` line ([`parse_report`]).
 //!   A dry run mutates nothing, so it is the unlogged `collect` read (the
 //!   `bl conf` seam's idiom), not an ops row per dialog open.
 
@@ -35,8 +35,8 @@ use crate::opslog::Origin;
 use std::io;
 use std::path::Path;
 
-/// lernie's verb and flags, pinned to the locked crate (`lernie = "=0.0.4"`,
-/// `src/cmd/delete.rs`).
+/// litany's verb and flags, pinned to the locked crate
+/// (`src/cmd/delete.rs`).
 const DELETE: &str = "delete";
 const CHILDREN: &str = "--children";
 const DRY_RUN: &str = "--dry-run";
@@ -68,7 +68,7 @@ impl AgentConfirmation {
 
 /// Derive the confirmation for the conversation rooted at `root` from the
 /// agent snapshot. A root the snapshot does not carry yields the general path
-/// with empty inputs: its own id for a name, nothing live — and lernie's
+/// with empty inputs: its own id for a name, nothing live — and litany's
 /// delete of an absent agent is already its postcondition (convergent).
 pub fn confirmation(root: &str, agents: &[Agent]) -> AgentConfirmation {
     let live = crate::nav::convs::members(agents, root)
@@ -119,17 +119,17 @@ pub fn live_refusal(live: &[String]) -> String {
 }
 
 /// The census a confirmation dialog enumerates: what a subtree delete would
-/// take, per lernie's own `DeleteReport`.
+/// take, per litany's own `DeleteReport`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Census {
-    /// The hyphen-descendants that die with the root, by id (lernie ARCH §2.3).
+    /// The hyphen-descendants that die with the root, by id (litany ARCH §2.3).
     pub descendants: Vec<String>,
     /// Undelivered deposits across the subtree's inboxes — mail addressed *to*
     /// these agents, which dies with them.
     pub pending_deposits: usize,
 }
 
-/// Parse lernie's one-line `DeleteReport` (either mood): `would delete <id>;
+/// Parse litany's one-line `DeleteReport` (either mood): `would delete <id>;
 /// descendants: N (a, b); pending deposits: M` — the names ride in the
 /// parenthesis, absent when N is 0. `None` for anything else.
 pub fn parse_report(line: &str) -> Option<Census> {
@@ -150,12 +150,12 @@ pub fn parse_report(line: &str) -> Option<Census> {
     })
 }
 
-/// Run `lernie delete <ws> <root> --children --dry-run` and read the census
+/// Run `litany delete <ws> <root> --children --dry-run` and read the census
 /// off its report. Unlogged (a dry run mutates nothing — the `collect` read
 /// seam, like the marks knob's `bl conf`); a decline rides back as its stderr.
-pub fn census(lernie: &Cli, ws: &Path, root: &str) -> Result<Census, String> {
+pub fn census(litany: &Cli, ws: &Path, root: &str) -> Result<Census, String> {
     let ws_s = ws.to_string_lossy().into_owned();
-    let outcome = collect(lernie.run_in(ws, &[DELETE, &ws_s, root, CHILDREN, DRY_RUN]))
+    let outcome = collect(litany.run_in(ws, &[DELETE, &ws_s, root, CHILDREN, DRY_RUN]))
         .map_err(|e| e.to_string())?;
     if !outcome.ok() {
         return Err(outcome.stderr.trim().to_owned());
@@ -164,12 +164,12 @@ pub fn census(lernie: &Cli, ws: &Path, root: &str) -> Result<Census, String> {
     parse_report(line).ok_or_else(|| format!("unrecognized delete report: {line}"))
 }
 
-/// The removal itself: `lernie delete <ws> <root> [--children]`, short, piped
-/// and logged like every lernie verb (§8.2, Origin::Conversation). The bare
-/// form is deliberate when unarmed — lernie declines a subtree nobody
+/// The removal itself: `litany delete <ws> <root> [--children]`, short, piped
+/// and logged like every litany verb (§8.2, Origin::Conversation). The bare
+/// form is deliberate when unarmed — litany declines a subtree nobody
 /// confirmed, naming it.
 pub fn spawn(
-    lernie: &Cli,
+    litany: &Cli,
     state_root: &Path,
     ts: &str,
     ws: &Path,
@@ -181,7 +181,7 @@ pub fn spawn(
     if children {
         args.push(CHILDREN);
     }
-    run_logged(lernie, state_root, ts, ws, &args, Origin::Conversation)
+    run_logged(litany, state_root, ts, ws, &args, Origin::Conversation)
 }
 
 #[cfg(test)]

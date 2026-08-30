@@ -1,17 +1,17 @@
 //! The tool-control **wire contract** (DESIGN §8.6, VISION §4.11 item 2) — the
-//! two shapes lernie's shipped seam speaks, and nothing else.
+//! two shapes litany's shipped seam speaks, and nothing else.
 //!
-//! lernie's `prompt::tool::control` client (its ARCH *Tool control* section)
+//! litany's `prompt::tool::control` client (its ARCH *Tool control* section)
 //! spawns the configured executable with **no argv**, writes one JSON object on
 //! its stdin and reads one JSON verdict off its stdout, requiring exit 0. This
 //! module is yog's side of exactly that, deliberately kept to the two types:
 //!
 //! - [`Request`] — the `tool_use` block verbatim (`id`, `name`, `input`) plus
 //!   the calling `role` and `agent_id`. **Unknown fields are ignored**: a later
-//!   lernie that adds a fact must not brick every tool call yog adjudicates,
+//!   litany that adds a fact must not brick every tool call yog adjudicates,
 //!   and the fields we do read are all required — a missing one is a protocol
 //!   break the caller fails closed on.
-//! - [`Verdict`] — `pass` (which carries **no** reason: lernie's parser rejects
+//! - [`Verdict`] — `pass` (which carries **no** reason: litany's parser rejects
 //!   one) or `refuse`/`hold` (each of which **requires** one). The parser on the
 //!   far side is a strict `deny_unknown_fields` struct, so the encoding here is
 //!   hand-written rather than a tagged enum — one shape, no serde-attribute
@@ -19,7 +19,7 @@
 
 use serde_json::{Value, json};
 
-/// One invocation to adjudicate, as lernie's seam presents it.
+/// One invocation to adjudicate, as litany's seam presents it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Request {
     /// `tool_use.id` — provider-unique, and what a hold parks on. It is also
@@ -30,7 +30,7 @@ pub struct Request {
     pub name: String,
     /// `tool_use.input`, verbatim — the object the classifier reads.
     pub input: Value,
-    /// The calling agent's role. Grants stay lernie's structure (bl-7fc8); the
+    /// The calling agent's role. Grants stay litany's structure (bl-7fc8); the
     /// role is carried for the record, never to narrow a tool name.
     pub role: String,
     /// The calling agent's id — the full hyphenated descent, which is also its
@@ -44,7 +44,7 @@ impl Request {
     /// (no derive, and a dependency is not added for four fields). Every field
     /// this reads is required: a missing one is a protocol break, `None`, and a
     /// fail-closed exit — never a default that adjudicates the wrong thing.
-    /// Fields we do not know are ignored, so a later lernie that adds one does
+    /// Fields we do not know are ignored, so a later litany that adds one does
     /// not brick every tool call.
     pub fn parse(raw: &str) -> Option<Request> {
         let value: Value = serde_json::from_str(raw).ok()?;
@@ -71,7 +71,7 @@ impl Request {
     }
 }
 
-/// The control's answer, in lernie's three-valued vocabulary.
+/// The control's answer, in litany's three-valued vocabulary.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Verdict {
     /// The invocation proceeds to the executor unchanged.
@@ -86,7 +86,7 @@ pub enum Verdict {
 }
 
 impl Verdict {
-    /// The verdict as the one JSON line lernie parses. A pass carries no
+    /// The verdict as the one JSON line litany parses. A pass carries no
     /// `reason` key at all — the far side rejects `{"verdict":"pass","reason":…}`.
     pub fn json(&self) -> String {
         match self {

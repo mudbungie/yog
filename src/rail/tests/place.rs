@@ -3,7 +3,7 @@
 //!
 //! The premise these tests retire — shipped in bl-929d and bl-98da alike — was
 //! that the i-th maximal run of delivered `.md` entries feeds the i-th step. It
-//! does not: a lernie step is one model call and a tool loop is many of them
+//! does not: a litany step is one model call and a tool loop is many of them
 //! behind one delivered run, so the two sets were never the same set. What
 //! pairs one for one is a **model-output entry per completed step**, which is
 //! what every case below asserts.

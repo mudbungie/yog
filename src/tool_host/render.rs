@@ -9,7 +9,7 @@
 //! a line that did not say when it was read would be a claim about now.
 //!
 //! It is **text, not JSON**, because the reader is a model and the result
-//! envelope carries bytes (lernie ARCH §3.3): a shape a model has to parse to
+//! envelope carries bytes (litany ARCH §3.3): a shape a model has to parse to
 //! act on buys nothing a sentence does not. Each rendering is a list of lines
 //! joined once, so no line is appended to a string that has already been built.
 

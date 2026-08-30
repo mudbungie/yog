@@ -77,7 +77,7 @@ fn largest_fit(max: usize, len: impl Fn(usize) -> usize) -> usize {
 }
 
 /// Return `entry` with its **last argv element** — the caller's one deliberately
-/// large field (the composed `lernie prompt` goal, §8.1) — clipped so
+/// large field (the composed `litany prompt` goal, §8.1) — clipped so
 /// [`build_line`] holds ≤ [`CAP`] *after* JSON escaping. `argv` is never
 /// truncated inside [`build_line`] (a pathological argv is the one unavoidable
 /// overflow), so the known-large element is clipped here, at its source, against
@@ -110,7 +110,7 @@ pub fn clip_goal(entry: &OpEntry) -> OpEntry {
 /// explicit `… [+N bytes elided]` marker when it truncates (§4.2). [`clip_goal`]
 /// drives it under a [`largest_fit`] search so the *serialized* line lands ≤
 /// [`CAP`]/PIPE_BUF post-escape; `argv` never truncates inside [`build_line`]
-/// itself, so the one deliberately-large element (a composed `lernie prompt`
+/// itself, so the one deliberately-large element (a composed `litany prompt`
 /// goal) is clipped here at its source — the *spawned* goal stays full (it is
 /// derivable from the workspace, so full fidelity is never the log's job).
 pub(super) fn clip_arg(s: &str, max: usize) -> String {

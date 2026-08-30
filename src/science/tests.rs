@@ -42,7 +42,7 @@ pub(super) fn trail(ws: &Path, project: &Path, bindings: &[(&str, &Path)]) -> Ve
     for (conv, binding) in bindings {
         entries.push(OpEntry {
             argv: [
-                "lernie",
+                "litany",
                 "prompt",
                 "--name",
                 conv,
@@ -114,7 +114,7 @@ pub(super) fn layout(root: &Path) -> (balls::layout::Xdg, std::path::PathBuf) {
 }
 
 /// Write the agent worktree bytes the projection reads: its frozen `goal.md`
-/// and, for each entry, one `messages/` file in lernie's own naming.
+/// and, for each entry, one `messages/` file in litany's own naming.
 pub(super) fn worktree(ws: &Path, agent: &str, goal: &str, messages: &[(&str, &str)]) {
     let dir = ws.join("agents").join(agent);
     std::fs::create_dir_all(dir.join("messages")).unwrap();

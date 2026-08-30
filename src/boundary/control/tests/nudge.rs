@@ -1,4 +1,4 @@
-//! The §8.2 **nudge** (bl-9bef) over this family's own launch: `lernie advance`
+//! The §8.2 **nudge** (bl-9bef) over this family's own launch: `litany advance`
 //! fired detached with no park in front of it — the operator's "run it again
 //! from where it stands".
 //!
@@ -9,7 +9,7 @@
 use super::*;
 
 /// The §8.2 nudge (bl-9bef) is the same launch with no park in front of it:
-/// one detached `lernie advance` row and nothing else — no answer row, because
+/// one detached `litany advance` row and nothing else — no answer row, because
 /// there is no invocation to answer. Driven through the chokepoint every seat
 /// enters, which is the whole claim the boundary makes.
 #[test]
@@ -42,7 +42,7 @@ fn a_nudge_whose_fork_never_landed_refuses_and_leaves_the_row() {
     let world = World::new();
     world.repo();
     let deps = Deps {
-        lernie: Cli::new("/no/such/lernie"),
+        litany: Cli::new("/no/such/litany"),
         ..world.deps()
     };
     let refused = advance(&deps, "1000", &world.workspace(), AGENT);

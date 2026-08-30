@@ -11,7 +11,7 @@ use tempfile::tempdir;
 fn run_errors_on_missing_binary() {
     // A failing spawn still forks before exec reports ENOENT; hold the lock
     // so that transient child can't inherit a peer's recorder write fd.
-    let cli = Cli::new("/definitely/not/a/real/binary/lernie-xyz");
+    let cli = Cli::new("/definitely/not/a/real/binary/litany-xyz");
     let Err(err) = cli.run(&[]) else {
         panic!("expected spawn failure");
     };
@@ -26,7 +26,7 @@ fn run_errors_on_missing_binary() {
 #[test]
 fn a_missing_work_directory_is_named_instead_of_the_binary() {
     let dir = tempdir().unwrap();
-    let bin = write_script(dir.path(), "fake_lernie", "#!/bin/sh\nexit 0\n");
+    let bin = write_script(dir.path(), "fake_litany", "#!/bin/sh\nexit 0\n");
     let missing = dir.path().join("nonexistent-uat-dir");
     let cli = Cli::new(bin);
     let Err(err) = cli.run_in(&missing, &[]) else {
@@ -41,7 +41,7 @@ fn a_missing_work_directory_is_named_instead_of_the_binary() {
 #[test]
 fn drop_terminates_long_running_child() {
     let dir = tempdir().unwrap();
-    let bin = write_script(dir.path(), "fake_lernie", "#!/bin/sh\nsleep 30\n");
+    let bin = write_script(dir.path(), "fake_litany", "#!/bin/sh\nsleep 30\n");
     let cli = Cli::new(bin);
     let stream = cli.run(&[]).unwrap();
     let pid = stream.pid().unwrap();
@@ -67,7 +67,7 @@ fn drop_escalates_to_sigkill_if_sigterm_ignored() {
     // ordering.
     let bin = write_script(
         dir.path(),
-        "fake_lernie",
+        "fake_litany",
         "#!/bin/sh\ntrap '' TERM\nprintf 'ready\\n'\nwhile :; do sleep 1; done\n",
     );
     let cli = Cli::new(bin);

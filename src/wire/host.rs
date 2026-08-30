@@ -47,7 +47,7 @@ pub mod config;
 /// Every channel this box serves (REMOTE §8.2, bl-4e31) — the flat root beside
 /// one per entry, and the fan-out that serves them at once.
 pub(crate) mod entries;
-/// Running one invocation locally — lernie's own tool contract.
+/// Running one invocation locally — litany's own tool contract.
 pub mod exec;
 
 /// This mode's own word, for the usage line its refusals carry.

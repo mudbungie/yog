@@ -104,8 +104,8 @@ fn dirs_are_the_three_write_sites_destinations() {
     // wall's three brazen destinations (§9.1, §16.2).
     for expected in [
         world.yog_state_root(),
-        world.lernie_config_root(),
-        world.lernie_config_root().join("workflows"),
+        world.litany_config_root(),
+        world.litany_config_root().join("workflows"),
         wall.config.parent().unwrap().to_path_buf(),
         wall.credentials_dir.clone(),
         wall.models_cache_dir.clone(),

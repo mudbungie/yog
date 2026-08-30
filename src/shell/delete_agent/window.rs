@@ -171,7 +171,7 @@ fn fire(model: &mut AppModel, state: &mut ShellState) {
 
 /// Fold the delete's receipt: the dialog closes on a clean removal and keeps
 /// the refusal otherwise (the trail's own record is the `ops.jsonl` line either
-/// way — a declined `lernie delete` rides back as the executor's non-zero
+/// way — a declined `litany delete` rides back as the executor's non-zero
 /// outcome, which [`crate::shell::act::trouble`] spells).
 fn settle(model: &mut AppModel, state: &mut ShellState) {
     let (Some(ticket), Some((ws, root))) =

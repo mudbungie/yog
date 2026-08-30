@@ -15,7 +15,7 @@ use super::{
 
 #[test]
 fn integration_hues_key_the_three_driven_tools() {
-    assert_eq!(integration_hue("lernie"), HYDRA);
+    assert_eq!(integration_hue("litany"), HYDRA);
     assert_eq!(integration_hue("bz"), BRAZEN);
     assert_eq!(integration_hue("bl"), GATE);
     // An unknown tool reads in the moonlit text default, not a lore hue.

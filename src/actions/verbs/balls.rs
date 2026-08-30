@@ -1,9 +1,9 @@
 //! The `bl` half of the §8.2 verb table: the ball verbs, every one of them
 //! `bl <verb> <id> --as <name>` run piped in the **project** directory and
-//! logged to `ops.jsonl` like its lernie siblings.
+//! logged to `ops.jsonl` like its litany siblings.
 //!
 //! Split from [`super`](super) per §12's line budget, on the seam the §8.2
-//! table already draws: the lernie verbs act on a *conversation* in a
+//! table already draws: the litany verbs act on a *conversation* in a
 //! workspace, these act on a *ball* in a project, and their §7.3 origin is
 //! [`Origin::Balls`] to a verb.
 //!

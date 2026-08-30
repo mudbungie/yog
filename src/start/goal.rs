@@ -5,7 +5,7 @@
 //! verbatim (path), or the ball's header and body (ball). What the
 //! operator edits is exactly what fires (bl-6920: the goal reaches the model
 //! unmutated); identity is not text at all — the minted name rides `--name`, and
-//! lernie states the stored fact in its assembled context. The name is the
+//! litany states the stored fact in its assembled context. The name is the
 //! **conversation's** ([`mint_conversation`]): the workspace never enters the
 //! prompt (bl-df65), because `YOG_NAME` already carries it and the world's `bl`
 //! shim defaults `--as` to it (§16.7 W9, §3.3). [`preview`] mints the predicted
@@ -25,7 +25,7 @@
 use super::identity::identity_preview;
 use super::{BallSpec, Payload, StartInputs};
 use crate::binding::work_worktree_path;
-use lernie::mint::Rng;
+use litany::mint::Rng;
 use std::path::{Path, PathBuf};
 
 /// The composer view-model (§3.3): the greyed name-prediction `preview` line and
@@ -103,7 +103,7 @@ pub(super) fn canonical_worktree(inputs: &StartInputs) -> Option<PathBuf> {
 /// location channel — [`parse_ball_stamp`] reads it back. The worktree
 /// paragraph it used to trail ("The project repository checkout for this work
 /// is the git worktree at: …") is **gone** (bl-6654, VISION §4.10 item 2): an
-/// absolute path in prose was the interim channel while pinned lernie had no
+/// absolute path in prose was the interim channel while pinned litany had no
 /// creation-time working directory, and a model had to notice and obey it. The
 /// binding is typed now — [`target_binding`] rides `--cwd` — so location is a
 /// parameter, and the goal is payload.
@@ -131,10 +131,10 @@ fn stamp_id(line: &str) -> Option<String> {
 }
 
 /// The rung's **typed work target** (§3.3, bl-2b8c / VISION §4.10 item 2): what
-/// the fire passes as lernie's `--cwd`, seeding the agent's working-directory
+/// the fire passes as litany's `--cwd`, seeding the agent's working-directory
 /// mark at creation. The path rung binds the directory box's value; the ball
 /// rung binds the claim's cross-checked `work/<id>` worktree; the bare rung and
-/// a not-yet-created ball bind nothing, and an absent `--cwd` is lernie's own
+/// a not-yet-created ball bind nothing, and an absent `--cwd` is litany's own
 /// default (the agent's worktree). Not a rung table: `worktree` is already
 /// `None` for every rung but an existing ball ([`super::resolve_worktree`]), so
 /// it *is* the ball rung's binding and the match has two arms, not four.
@@ -154,7 +154,7 @@ pub(super) fn target_binding(payload: &Payload, worktree: Option<&Path>) -> Opti
 ///
 /// **There is no per-rung driver cwd any more (bl-6654).** `Prepared` used to
 /// carry one — `~`, the given directory, or the work worktree — as the initial
-/// `lernie prompt` process's `current_dir`. It was a second, weaker spelling of
+/// `litany prompt` process's `current_dir`. It was a second, weaker spelling of
 /// the work target: it reached that one process and no tool step (every step
 /// runs at the agent's own working-directory mark), which DESIGN §3.3 recorded
 /// as misleading redundancy. [`target_binding`] is the one operative channel

@@ -1,8 +1,8 @@
-//! `yog --editor-apply` shim: the `$EDITOR` lernie execs (DESIGN §9.3 Y21).
+//! `yog --editor-apply` shim: the `$EDITOR` litany execs (DESIGN §9.3 Y21).
 //!
-//! **TASK-0 FINDING** — lernie's exact `$EDITOR` invocation shape
-//! (`lernie/src/bin/lernie/cli.rs:20-27`, `edit_in_editor`, source-read
-//! 2026-07-17). `lernie config` hands the authoring checkout to `$EDITOR` as
+//! **TASK-0 FINDING** — litany's exact `$EDITOR` invocation shape
+//! (`litany/src/bin/litany/cli.rs:20-27`, `edit_in_editor`, source-read
+//! 2026-07-17). `litany config` hands the authoring checkout to `$EDITOR` as
 //! ```text
 //!     sh -c 'exec {EDITOR} "$1"' sh <checkout-dir>
 //! ```
@@ -11,17 +11,17 @@
 //! `template/authoring/mod.rs:121,132`), never per-file — quoted `"$1"` so a
 //! spaced path stays one argv element. The process cwd is inherited (unset),
 //! so the shim must take the checkout from **argv**, never cwd. Crucially,
-//! lernie has already refreshed `descriptions/**` INTO that checkout before
+//! litany has already refreshed `descriptions/**` INTO that checkout before
 //! calling `$EDITOR` (`authoring/mod.rs:131`) and commits the whole checkout
 //! after — so the shim copies **only the staged files** over it and never
-//! deletes, or lernie's fresh `descriptions/**` (and any unedited config)
+//! deletes, or litany's fresh `descriptions/**` (and any unedited config)
 //! would be clobbered.
 //!
 //! Contract: argv is `<yog> --editor-apply <checkout>`; env `YOG_EDIT_SRC` is
 //! the staging dir. Every regular file under the staging dir is copied into
 //! the checkout at the same relative path (parent dirs created); every other
 //! checkout path is left untouched. Exit 0 on success; non-zero + a stderr
-//! diagnostic on any failure — which aborts lernie's commit cleanly.
+//! diagnostic on any failure — which aborts litany's commit cleanly.
 //!
 //! **Symlink / special-file hygiene.** Staging holds the plain files yog's UI
 //! wrote. Only regular files and directories are mirrored; a symlink or
@@ -41,7 +41,7 @@ pub const EDITOR_APPLY_FLAG: &str = "--editor-apply";
 /// Shim entry mapped to a process exit code (the value `main` exits with).
 /// `edit_src` is `YOG_EDIT_SRC` (env), `checkout` the argv the shim received.
 /// A missing input or any copy error is exit 1 with a `yog --editor-apply:`
-/// diagnostic on stderr — the non-zero exit aborts lernie's commit.
+/// diagnostic on stderr — the non-zero exit aborts litany's commit.
 pub fn run_shim(edit_src: Option<String>, checkout: Option<String>) -> i32 {
     match shim(edit_src, checkout) {
         Ok(()) => 0,
@@ -67,7 +67,7 @@ fn shim(edit_src: Option<String>, checkout: Option<String>) -> io::Result<()> {
 
 /// Copy every regular file under `staging` into `checkout` at the same
 /// relative path, creating parent dirs; nothing in `checkout` is ever deleted
-/// (the "only drafted files" rule — lernie's freshly-refreshed
+/// (the "only drafted files" rule — litany's freshly-refreshed
 /// `descriptions/**` must survive). Nested dirs are mirrored recursively;
 /// symlinks and special files are skipped (see the module hygiene note).
 /// Returns the checkout-relative paths written, sorted, for assertions.

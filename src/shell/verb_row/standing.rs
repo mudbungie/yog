@@ -11,7 +11,7 @@ use crate::AppModel;
 use super::{ShellState, VerbCtx};
 
 /// `Stop` (§8.2): the driver dies, the work stays.
-const STOP_HINT: &str = "Kill the driver running this conversation (`lernie stop`). Everything it \
+const STOP_HINT: &str = "Kill the driver running this conversation (`litany stop`). Everything it \
      has already committed is kept; you can message it again afterwards (x).";
 
 /// **Nudge** (§8.2, bl-9bef): run the model on this conversation as it stands.
@@ -28,7 +28,7 @@ pub(super) fn nudge_control(ui: &mut egui::Ui, model: &mut AppModel, ctx: &VerbC
         .add_enabled(on, egui::Button::new("Nudge"))
         .on_hover_text(
             "Run the model on this conversation as it already stands — no new message, no \
-             goal retyped (`lernie advance`). It is the re-dispatch for a first turn that \
+             goal retyped (`litany advance`). It is the re-dispatch for a first turn that \
              died before it reached the model: sign in, press this, and the same \
              conversation carries on. Typed, it is `/nudge`.",
         )
@@ -51,7 +51,7 @@ pub(super) fn nudge_control(ui: &mut egui::Ui, model: &mut AppModel, ctx: &VerbC
 /// park across a policy edit is the point.
 ///
 /// Neither button stops anything: a decline is the model's own in-band tool
-/// result, which it reads and steps past (lernie bl-b98d — a stop here would
+/// result, which it reads and steps past (litany bl-b98d — a stop here would
 /// wedge the branch for good).
 pub(super) fn hold_controls(ui: &mut egui::Ui, model: &mut AppModel, ctx: &VerbCtx, agent: &str) {
     use crate::control::judge::Ruling;

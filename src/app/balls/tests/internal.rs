@@ -85,12 +85,12 @@ fn bare_target_is_the_focused_workspace_named_or_foreign() {
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
     assert_eq!(m.start_bare_inputs().workspace, w.ws_cobalt);
-    // A foreign workspace is a real lernie workspace, so §3.4's "prompt into the
+    // A foreign workspace is a real litany workspace, so §3.4's "prompt into the
     // focused workspace" applies — its own path, never a redirect into yog's
     // names root (the addendum-3 fix). Really on disk, because the focus is a
     // §3.1 name now and a name resolves against the enumeration (bl-7407) — a
     // directory the walk never saw was never a state this could be in.
-    let foreign = w.roots.lernie_data.join("workspaces/foreign");
+    let foreign = w.roots.litany_data.join("workspaces/foreign");
     std::fs::create_dir_all(foreign.join("repo.git")).unwrap();
     let (_c2, mf) = model_focused(&w, &foreign);
     assert_eq!(mf.start_bare_inputs().workspace, foreign);
@@ -170,10 +170,10 @@ fn empty_project_hint_only_with_zero_projects() {
 #[test]
 fn is_named_is_the_landed_enumerations_own_yog_walls() {
     // The §3.6 scope gate off the landed enumeration (bl-b4b5): yog's own named
-    // walls only. A foreign (lernie auto-id) workspace carries no yog identity,
+    // walls only. A foreign (litany auto-id) workspace carries no yog identity,
     // which is the non-Named arm; a name the answer does not carry reads false.
     let w = world();
-    fs::create_dir_all(w.roots.lernie_data.join("workspaces/adhoc/repo.git")).unwrap();
+    fs::create_dir_all(w.roots.litany_data.join("workspaces/adhoc/repo.git")).unwrap();
     let (_c, m) = model(&w);
     let rows = crate::test_support::chrome::ws_rows(&m);
     assert!(crate::nav::tabs::is_named(&rows, "cobalt"));

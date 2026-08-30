@@ -21,7 +21,7 @@
 //! against the build under drive (bl-d1af). The refusal is the same either way,
 //! which is what makes it a property of the seat rather than of one path to it.
 //!
-//! **The operator is never caught by it.** `yog env` prints `LERNIE_HOME`,
+//! **The operator is never caught by it.** `yog env` prints `LITANY_HOME`,
 //! `XDG_STATE_HOME` and `PATH` and nothing else (§8.4), so a human who ran
 //! `eval "$(yog env)"` carries no `YOG_NAME` and opens windows exactly as
 //! before. Nor is any yog-spawned child: every one of them names a namespace
@@ -47,7 +47,7 @@ pub fn window_refusal(yog_name: Option<String>) -> Option<String> {
          operator's own act; what you can drive from here is yog's windowless \
          surface — `yog gesture '/attention'` and every other gesture (`yog \
          gesture --help` lists them), `yog serve` for a windowless engine, \
-         and the `bl` / `lernie` / `bz` namespaces."
+         and the `bl` / `litany` / `bz` namespaces."
     ))
 }
 

@@ -18,7 +18,7 @@ const TS: &str = "2026-08-15T00:00:00Z";
 const AGENT: &str = "alba-1";
 
 /// A state root the rows land in and a workspace the bound spawn addresses.
-/// `true` stands in for `lernie`: it exists on every platform the suite runs on
+/// `true` stands in for `litany`: it exists on every platform the suite runs on
 /// and exits 0, which is all this executor reads off either half.
 struct World {
     dir: TempDir,
@@ -45,7 +45,7 @@ impl World {
 
     fn deps(&self) -> Deps {
         Deps {
-            lernie: Cli::new("/usr/bin/true"),
+            litany: Cli::new("/usr/bin/true"),
             bl: Cli::new("/no/such/bl"),
             state_root: self.state(),
             home: self.dir.path().join("home"),
@@ -107,7 +107,7 @@ fn the_reply_is_the_deposits_own_outcome() {
 fn a_stop_that_cannot_spawn_refuses_before_the_deposit() {
     let world = World::new();
     let deps = Deps {
-        lernie: Cli::new("/no/such/lernie"),
+        litany: Cli::new("/no/such/litany"),
         ..world.deps()
     };
     let refused = interrupt(&deps, TS, &world.workspace(), AGENT, "text");

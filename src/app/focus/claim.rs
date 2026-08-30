@@ -18,7 +18,7 @@ impl AppModel {
     /// merely the workspace it resolved. The claim is held by the minted
     /// `conversation` name because that is all the fire knows — the root has no
     /// agent id until the detached driver writes `agents/<id>` — and the name is
-    /// the lernie-stored fact (`--name` at fire, §3.3), which the derivation
+    /// the litany-stored fact (`--name` at fire, §3.3), which the derivation
     /// reads back off every root as its `name_fact`.
     /// Spent by [`adopt_started`](Self::adopt_started); RAM only (§13.1),
     /// as the focus it becomes is.

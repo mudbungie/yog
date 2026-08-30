@@ -115,10 +115,10 @@ fn from_repo_surfaces_all_four_mark_oids() {
     // surfaces its ref oid (the §6 watermark evidence), not a bare bool.
     let fx = Fixture::new();
     fx.build_agent("20260422T121500Z-mrk0", "marked");
-    fx.mark_ref("refs/lernie/conflicted/20260422T121500Z-mrk0");
-    fx.mark_ref("refs/lernie/budget-exhausted/20260422T121500Z-mrk0");
-    fx.mark_ref("refs/lernie/abandoned/20260422T121500Z-mrk0");
-    fx.mark_ref("refs/lernie/notify/20260422T121500Z-mrk0");
+    fx.mark_ref("refs/litany/conflicted/20260422T121500Z-mrk0");
+    fx.mark_ref("refs/litany/budget-exhausted/20260422T121500Z-mrk0");
+    fx.mark_ref("refs/litany/abandoned/20260422T121500Z-mrk0");
+    fx.mark_ref("refs/litany/notify/20260422T121500Z-mrk0");
     let tree = GitTree::from_repo(&fx.path).unwrap();
     let agent = &tree.agents[0];
     // mark_ref points every mark at config/default, so all four oids are
@@ -135,7 +135,7 @@ fn from_repo_surfaces_all_four_mark_oids() {
 
 /// The fifth mark carries a **value** (ARCH §3.3, DESIGN §8.6): the parked
 /// invocation, read off the blob the ref names — and a blob that is not the
-/// shape lernie writes is no park at all, never a forged one.
+/// shape litany writes is no park at all, never a forged one.
 #[test]
 fn from_repo_reads_the_parked_invocation_off_the_hold_mark() {
     let fx = Fixture::new();
@@ -145,7 +145,7 @@ fn from_repo_reads_the_parked_invocation_off_the_hold_mark() {
         "20260422T123000Z-hld0",
         r#"{"tool_use_id":"toolu_5","tool":"bash","reason":"open-world (no rule classifies `curl`)"}"#,
     );
-    fx.hold_ref("20260422T123000Z-hld1", "not the shape lernie writes");
+    fx.hold_ref("20260422T123000Z-hld1", "not the shape litany writes");
     let tree = GitTree::from_repo(&fx.path).unwrap();
     let parked = tree
         .agents
@@ -172,7 +172,7 @@ fn from_repo_marks_only_the_named_agent() {
     let fx = Fixture::new();
     fx.build_agent("20260422T122000Z-aaa0", "marked");
     fx.build_agent("20260422T122000Z-bbb0", "clean");
-    fx.mark_ref("refs/lernie/budget-exhausted/20260422T122000Z-aaa0");
+    fx.mark_ref("refs/litany/budget-exhausted/20260422T122000Z-aaa0");
     let tree = GitTree::from_repo(&fx.path).unwrap();
     let marked = tree
         .agents

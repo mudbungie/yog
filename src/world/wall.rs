@@ -12,9 +12,9 @@
 //! **One var carries it: `YOG_WALL`.** It names the wall root, and every other
 //! per-workspace location is derived from it ([`BrazenPaths`]) — one fact, one
 //! home, no second var to drift. Setting it on a workspace-bound spawn is
-//! enough for the whole descendant tree: the fired `lernie` loop inherits it,
-//! lernie hands its own environment to every tool subprocess it spawns
-//! (lernie ARCH §3.3), and a bare `bz` in an agent's bash is the world's shim
+//! enough for the whole descendant tree: the fired `litany` loop inherits it,
+//! litany hands its own environment to every tool subprocess it spawns
+//! (litany ARCH §3.3), and a bare `bz` in an agent's bash is the world's shim
 //! re-entering yog (§16.7 W9/W12) — which folds the wall back out of its own
 //! process env. So the wall is set once, at the edge that knows the workspace,
 //! and no downstream seat has to be told.

@@ -1,5 +1,5 @@
 //! The fire (DESIGN §3.3, §8.1 step 2): mint the conversation's name and spawn
-//! `lernie prompt` **detached** — the goal exactly as the operator edited it.
+//! `litany prompt` **detached** — the goal exactly as the operator edited it.
 //!
 //! Split from [`exec`](super::exec) at §12's 300-line budget, along the seam the
 //! design already draws: everything else in the start flow is a piped, gated
@@ -14,7 +14,7 @@ use super::instructions::{names, specs};
 use super::{Prepared, StartError, on_mint};
 use crate::cli_outbound::Cli;
 use crate::opslog::{self, DETACHED_EXIT, OpEntry};
-use lernie::mint::Rng;
+use litany::mint::Rng;
 use std::io;
 use std::path::Path;
 
@@ -23,13 +23,13 @@ use std::path::Path;
 // the two sides of that join have one home — `detached::sink`'s own argument
 // about the file name, one field over.
 use opslog::launch::{NAME_FLAG, PROMPT};
-/// lernie's creation-time working-directory parameter (upstream bl-d0b4,
+/// litany's creation-time working-directory parameter (upstream bl-d0b4,
 /// released 0.0.8): the §3.3 typed work-target binding's one channel.
 const CWD_FLAG: &str = "--cwd";
-/// lernie's caller-supplied pinned document (upstream bl-fb5c, released 0.0.4):
+/// litany's caller-supplied pinned document (upstream bl-fb5c, released 0.0.4):
 /// the §3.7 project-instruction freeze's one channel.
 const PIN_FLAG: &str = "--pin";
-/// lernie's config-lineage selector (upstream bl-a693, released 0.0.6): fork
+/// litany's config-lineage selector (upstream bl-a693, released 0.0.6): fork
 /// off `config/<name>`'s head instead of `config/default`. The §8.7 birth
 /// policy's one channel — the whole of how a ball's tags reach the model and
 /// the skill set the drone is born with.
@@ -38,7 +38,7 @@ const YOG_NAME: &str = "YOG_NAME";
 
 /// One fire, whole (§8.1): the `Prepared` a `/prompt` carries, the edited
 /// `goal`, and `prepared.workspace` **located** (REMOTE §8, bl-f5f6) — the name
-/// is the identity, the path is where the driver stands and what `lernie
+/// is the identity, the path is where the driver stands and what `litany
 /// prompt` is aimed at.
 ///
 /// One value rather than three parameters, for
@@ -52,7 +52,7 @@ pub struct Fire {
     pub goal: String,
 }
 
-/// `lernie prompt --name <minted> [--cwd <target>] <workspace> <goal>` fired
+/// `litany prompt --name <minted> [--cwd <target>] <workspace> <goal>` fired
 /// **detached** (§8.1): own process
 /// group, stdin/stdout→null, stderr→the per-spawn sink ([`opslog::detached::sink`]),
 /// `YOG_NAME=<workspace name>` layered (§8, §3.2 — the harness channel the goal
@@ -65,7 +65,7 @@ pub struct Fire {
 /// rung's claim-derived `work/<id>` worktree, the path rung's directory — seeds
 /// the agent's working-directory mark at creation, so every tool step of every
 /// later turn runs there. It rides only when the rung binds something
-/// ([`Prepared::binding`](super::Prepared::binding)); an absent flag is lernie's
+/// ([`Prepared::binding`](super::Prepared::binding)); an absent flag is litany's
 /// own default, the agent's worktree, which is exactly what the bare rung
 /// means. It replaced a paragraph of goal prose naming the path, which reached
 /// the model as content it had to notice and obey, and the initial process's
@@ -74,12 +74,12 @@ pub struct Fire {
 /// The conversation name mints first ([`mint_conversation`] over `occupied` + the
 /// injected `rng`); an exhausted pool leaves a `["yog-step","mint"]` row and
 /// aborts before anything spawns (§4.2). The minted name rides `--name` (§3.3 as
-/// ruled by bl-50f3): lernie commits it beside `goal.md`, the one durable home
+/// ruled by bl-50f3): litany commits it beside `goal.md`, the one durable home
 /// the display ladder reads back — and on a lost-race re-mint the re-derived
 /// name is what passes, since the mint here *is* the truth. What is sent is
 /// `goal` **verbatim** — the operator's edited payload, unmutated (operator
-/// ruling bl-6920): identity is `--name`'s alone, and lernie states the stored
-/// name fact in its assembled context (lernie bl-d55f, released 0.0.4 —
+/// ruling bl-6920): identity is `--name`'s alone, and litany states the stored
+/// name fact in its assembled context (litany bl-d55f, released 0.0.4 —
 /// `compose_system`'s `Your name is <name>.` in the system slot); yog prepends
 /// nothing. The *logged* argv rides
 /// the full goal through [`opslog::clip_goal`], which trims it so the serialized
@@ -96,7 +96,7 @@ pub struct Fire {
 /// until the detached driver writes its branch, so the name is what identifies
 /// the conversation until then ([`AppModel::await_conversation`](crate::AppModel::await_conversation)).
 pub fn execute_prompt(
-    lernie: &Cli,
+    litany: &Cli,
     state_root: &Path,
     ts: &str,
     fire: &Fire,
@@ -127,7 +127,7 @@ pub fn execute_prompt(
     let pins: Vec<String> = prepared.binding.as_deref().map_or_else(Vec::new, |target| {
         specs(target, &names::names(workspace, config))
     });
-    let named = lernie.and_env(vec![(YOG_NAME.to_owned(), prepared.workspace.clone())]);
+    let named = litany.and_env(vec![(YOG_NAME.to_owned(), prepared.workspace.clone())]);
     let sink = opslog::detached::sink(state_root, ts, workspace);
     // One argv, built once and spawned *and* logged from it — so the flag that
     // rides conditionally cannot ride in only one of them. The goal stays LAST
@@ -136,7 +136,7 @@ pub fn execute_prompt(
     let mut args = vec![PROMPT, NAME_FLAG, conversation.as_str()];
     // The §8.7 birth policy (VISION §4.2/§4.6): the lineage the ball's tags
     // selected, absent for every start that matched none — an omitted flag is
-    // lernie's own `config/default`, so the untagged case spells nothing.
+    // litany's own `config/default`, so the untagged case spells nothing.
     if let Some(name) = prepared.lineage.as_deref() {
         args.extend([CONFIG_FLAG, name]);
     }
@@ -151,7 +151,7 @@ pub fn execute_prompt(
     // rung since bl-6654 retired the per-target `current_dir`. It is where the
     // process stands, not where the work is: the work target is `--cwd` above.
     let spawn = named.spawn_detached(Some(workspace), &sink, &args);
-    let argv: Vec<String> = std::iter::once(lernie.binary().display().to_string())
+    let argv: Vec<String> = std::iter::once(litany.binary().display().to_string())
         .chain(args.iter().map(|a| (*a).to_owned()))
         .collect();
     let cwd = ws_s.clone().into_owned();

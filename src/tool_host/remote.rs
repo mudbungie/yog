@@ -33,7 +33,7 @@
 //! whichever nested wait notices, the sentence the model reads is the same one.
 //! The cost is that a stop landing just after a poll answered is noticed at the
 //! next round trip rather than at once, one `patience.tick` later; the wait
-//! still "ends early on lernie's stop flag" (REMOTE §5) by two orders of
+//! still "ends early on litany's stop flag" (REMOTE §5) by two orders of
 //! magnitude of its bound.
 
 use std::sync::atomic::{AtomicBool, Ordering};

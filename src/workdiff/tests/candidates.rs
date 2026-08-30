@@ -29,7 +29,7 @@ fn trail(project: &Path, bindings: &[&Path]) -> Vec<OpEntry> {
     for (i, binding) in bindings.iter().enumerate() {
         entries.push(OpEntry {
             argv: [
-                "lernie",
+                "litany",
                 "prompt",
                 "--name",
                 &format!("conv-{i}"),

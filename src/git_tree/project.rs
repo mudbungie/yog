@@ -1,5 +1,5 @@
 //! Reads of a **project** repo — the balls invocation path's own git repo,
-//! not a lernie workspace's `repo.git` (DESIGN §5.1 #32, VISION §4.10).
+//! not a litany workspace's `repo.git` (DESIGN §5.1 #32, VISION §4.10).
 //!
 //! Every other module here reads the workspace repo; this one reads the repo
 //! the agent's work lands in. It lives beside them anyway because [`cmd`] is
@@ -10,7 +10,7 @@
 //! Five reads, all pure: name the integration branch, resolve a ref to a
 //! commit, count the churn between two commits, read one file's patch, and
 //! find the delivery commit a subject tag names. Nothing here writes, and
-//! nothing here spends a balls or lernie verb — the project diff is a pure
+//! nothing here spends a balls or litany verb — the project diff is a pure
 //! git read (VISION §4.10 item 4).
 //!
 //! **The two ancestry questions §3.9 asks of a project repo are NOT here**

@@ -2,7 +2,7 @@
 //! the exact §8.2 argv each spawns.
 //!
 //! Split from [`super`] at §12's cap on the seam `codec/balls.rs` is already cut
-//! on one layer down — the lernie family and the deposit round trip are one
+//! on one layer down — the litany family and the deposit round trip are one
 //! subject, the ball verbs another, and the fixtures they share stay in the
 //! parent.
 
@@ -66,7 +66,7 @@ fn the_bl_actions_spawn_their_exact_argv_and_ops_rows() {
     let rec = Recorder::new(bin.path(), "bl").on("create", "bl-77\n", 0);
     let bl = Cli::new(rec.path());
     let d = deps(
-        &Cli::new("/no/lernie"),
+        &Cli::new("/no/litany"),
         &bl,
         state.path(),
         snapshot_of(&[], &[proj.path()]),

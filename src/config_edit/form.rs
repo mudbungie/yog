@@ -51,7 +51,7 @@ pub struct Group {
 }
 
 /// Read a file's text as typed settings (§9.5). A field the entry does not
-/// declare yields no row: the pane shows the settings that exist, and lernie's
+/// declare yields no row: the pane shows the settings that exist, and litany's
 /// own loader stays the authority on a half-written entry.
 ///
 /// `provider_rows` is brazen's effective table; an empty one is no answer and
@@ -139,7 +139,7 @@ pub fn write(schema: &Schema, text: &str, row: &Row, value: &str) -> Result<Stri
 }
 
 /// The value as the file spells it: a bounded number clamped into range, a list
-/// re-emitted as lernie's flow sequence, anything else trimmed. A number that
+/// re-emitted as litany's flow sequence, anything else trimmed. A number that
 /// does not parse falls to `min` — the control cannot produce one, and a
 /// keystroke mid-edit must never write a line the grammar cannot read back.
 fn normalize(control: Control, value: &str) -> String {

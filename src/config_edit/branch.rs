@@ -1,6 +1,6 @@
 //! Per-workspace config-branch surface (DESIGN §9.3, §5.1 #17–#18).
 //!
-//! This is the **read-only browse half**. A lernie workspace's policy lives on
+//! This is the **read-only browse half**. A litany workspace's policy lives on
 //! `refs/heads/config/<name>` branches in the bare `<workspace>/repo.git`
 //! (ARCH §2.2 — there is no `main`). This module enumerates those branches,
 //! lists and reads any file from a config commit's tree, and derives an
@@ -24,7 +24,7 @@ pub mod edit;
 
 /// One config branch: `refs/heads/config/<name>` (§5.1 #18). `name` is the
 /// user-facing bare name (the `config/` prefix stripped) — exactly what a user
-/// passes to `lernie config <ws> <name>`.
+/// passes to `litany config <ws> <name>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConfigBranch {
     pub name: String,
@@ -146,7 +146,7 @@ pub fn config_file(workspace: &Path, refspec: &str, path: &str) -> Result<Vec<u8
 /// Derive an agent's **governing config commit** from its branch tip
 /// (`agent_tip`, an oid): the nearest ancestor reachable from any `config/*`
 /// ref (§5.1 #17, ARCH §2.2). A faithful port of
-/// `lernie/src/workspace.rs::{governing_config, nearest}`.
+/// `litany/src/workspace.rs::{governing_config, nearest}`.
 ///
 /// For each config branch, `merge-base(agent_tip, config_tip)` is the shared
 /// ancestor on that lineage — or nothing, when an unrelated orphan config
@@ -197,7 +197,7 @@ pub fn governing_config(
 }
 
 /// Of two ancestor candidates of one branch tip, keep the descendant — the
-/// one nearer the tip (mirrors lernie `workspace.rs::nearest`). Incomparable
+/// one nearer the tip (mirrors litany `workspace.rs::nearest`). Incomparable
 /// candidates are declined loudly: a defective workspace (§2.2), not a guess.
 fn nearest(repo: &Path, a: String, b: String) -> Result<String, GitTreeError> {
     if is_ancestor(repo, &a, &b)? {

@@ -1,6 +1,6 @@
 //! The [`Fixture`] half keyed to **an agent id**: the `agents/<id>` branch a
-//! dispatch founds, the `name` blob it wears (lernie ARCH §2.3, DESIGN §3.3),
-//! the `refs/lernie/*` marks hung beside it (§6, §8.6), and the hyphenated-
+//! dispatch founds, the `name` blob it wears (litany ARCH §2.3, DESIGN §3.3),
+//! the `refs/litany/*` marks hung beside it (§6, §8.6), and the hyphenated-
 //! descent forks the §7.1 tree render is drawn from.
 //!
 //! Split from [`super::fixture`] at §12's pre-split band on the seam the
@@ -111,7 +111,7 @@ impl Fixture {
 
     /// Commit a lernie-0.0.4 `name` blob on an existing agent's branch — the
     /// name fact's one home (`git show agents/<id>:name`, DESIGN §3.3 as ruled
-    /// by bl-50f3). Empty `name` mirrors lernie's unnamed write. Re-adds the
+    /// by bl-50f3). Empty `name` mirrors litany's unnamed write. Re-adds the
     /// branch's worktree when it is gone (a child's is torn down after
     /// [`build_child`](Self::build_child)).
     pub(crate) fn name_agent(&self, conv_id: &str, name: &str) {
@@ -134,7 +134,7 @@ impl Fixture {
         run_git(&wt, &["commit", "-q", "--allow-empty", "-m", "settle name"]);
     }
 
-    /// Point a `refs/lernie/<kind>/<agent-id>` mark ref at `config/default`
+    /// Point a `refs/litany/<kind>/<agent-id>` mark ref at `config/default`
     /// (any commit is fine — the frontend reads existence, not content).
     /// Mirrors `transfer::decline` (§2.6) and `budget::mark_exhausted`
     /// (§6), which key the mark off the raw agent id.
@@ -142,8 +142,8 @@ impl Fixture {
         run_git(&self.repo, &["update-ref", refname, "config/default"]);
     }
 
-    /// Point `refs/lernie/held/<agent_id>` at a **blob** carrying `value` —
-    /// the one valued mark yog reads (lernie ARCH §3.3). Unlike [`mark_ref`],
+    /// Point `refs/litany/held/<agent_id>` at a **blob** carrying `value` —
+    /// the one valued mark yog reads (litany ARCH §3.3). Unlike [`mark_ref`],
     /// which only has to exist, this mark's content *is* what the operator
     /// reads, so the fixture writes the blob the seam would write.
     ///
@@ -157,7 +157,7 @@ impl Fixture {
         );
         run_git(
             &self.repo,
-            &["update-ref", &format!("refs/lernie/held/{agent_id}"), &oid],
+            &["update-ref", &format!("refs/litany/held/{agent_id}"), &oid],
         );
     }
 

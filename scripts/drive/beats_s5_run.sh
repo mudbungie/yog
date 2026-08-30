@@ -41,11 +41,11 @@ run_s5s8() {
   # coordinates. World A never prompts, so nothing here needs the other rows;
   # the file's PRESENCE is what the §16.6 W3 marker means (S0-T2).
   printf 'models:\n  gpt-5.4:\n    provider: codex\n    model_id: gpt-5.4\n    capabilities: [streaming]\n    context_window: 400000\n' \
-    > "$data/yog/world/lernie/models.yaml"
+    > "$data/yog/world/litany/models.yaml"
   # The ambient world's own seed file, hashed: this run reads it (the §16.6 W3
   # seed copy) and must never write it — S8-T1's "untouched", asserted on the one
   # file the run actually touches on that side of the wall.
-  ambient_before=$(md5of "$HOME/.local/share/yog/world/lernie/models.yaml")
+  ambient_before=$(md5of "$HOME/.local/share/yog/world/litany/models.yaml")
 
   launch_engine "$data" ; pid=$engine_pid ; wid=$engine_wid
   sleep 2
@@ -151,7 +151,7 @@ run_s5s8() {
   # the two S8 stages below drive `yog env`/`yog exec` and no window at all.
   no_wire_spend \
     && pass "S5 fixture: the run spent nothing on the wire" \
-    || fail "S5 fixture: the run spent nothing on the wire" "a lernie prompt ran"
+    || fail "S5 fixture: the run spent nothing on the wire" "a litany prompt ran"
   s8_hatches "$data"
   s8_nesting "$data" "$ambient_before"
 

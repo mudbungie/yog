@@ -127,7 +127,7 @@ fn summary_elision_boundary_is_exact() {
 /// made a column of different operations scan as one repeated line.
 #[test]
 fn two_ops_differing_only_in_their_tail_do_not_summarize_alike() {
-    let prefix = "lernie prompt --name growing \
+    let prefix = "litany prompt --name growing \
          /home/u/.cache/yog-drive/quality-20260807T214407Z/data/yog/workspaces/";
     let summarize = |leaf: &str| {
         let e = OpEntry {

@@ -176,7 +176,7 @@ fn doc_value(doc: &Doc) -> Value {
     }
 }
 
-/// One tool call's records (ARCH §3.3), with lernie's own `is_error` reading.
+/// One tool call's records (ARCH §3.3), with litany's own `is_error` reading.
 fn tool_value(tool: &ToolIo) -> Value {
     json!({
         "tool_id": tool.tool_id, "is_error": tool.is_error,

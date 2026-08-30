@@ -85,7 +85,7 @@ pub(super) fn conversation_row(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     row: &ConvRow,
     ctx: &RowCtx,
 ) {
@@ -97,7 +97,7 @@ pub(super) fn conversation_row(
     // than a repaint into a second palette.
     ui.scope(|ui| {
         ui.set_opacity(theme::tone_solidity(row.tone));
-        row_body(ui, model, state, lernie, row, ctx);
+        row_body(ui, model, state, litany, row, ctx);
     });
 }
 
@@ -106,7 +106,7 @@ fn row_body(
     ui: &mut egui::Ui,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     row: &ConvRow,
     ctx: &RowCtx,
 ) {
@@ -197,7 +197,7 @@ fn row_body(
                 ));
                 if row.name_display_only {
                     // The title is the legacy §3.3 rung — prose, not the
-                    // lernie name fact — so say it is unaddressable (bl-8068)
+                    // litany name fact — so say it is unaddressable (bl-8068)
                     // before an operator hands it to an agent as a target.
                     label = label.on_hover_text(theme::NAME_DISPLAY_ONLY);
                 }
@@ -215,7 +215,7 @@ fn row_body(
                     ws: ctx.ws.clone(),
                     agent: row.root_id.clone(),
                 };
-                super::menus::attach(&label, seat, &target, model, state, lernie);
+                super::menus::attach(&label, seat, &target, model, state, litany);
                 // §11: the name is the title, the first payload line rides weak
                 // beside it. Empty when the ladder already spent that line as
                 // the title, so an unstamped row never says it twice.

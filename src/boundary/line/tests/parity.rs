@@ -54,7 +54,7 @@ fn the_attempt_round_trips_with_and_without_skills() {
 }
 
 #[test]
-fn every_lernie_action_round_trips() {
+fn every_litany_action_round_trips() {
     rt(Gesture::Act(Action::Message {
         workspace: "ws".to_owned(),
         agent: "c-1".to_owned(),
@@ -203,9 +203,9 @@ fn the_config_familys_reads_round_trip() {
         ConfigFile::Brazen {
             workspace: "ws".to_owned(),
         },
-        ConfigFile::LernieModels,
+        ConfigFile::LitanyModels,
         ConfigFile::Cadence,
-        ConfigFile::LernieWorkflow {
+        ConfigFile::LitanyWorkflow {
             name: "review".to_owned(),
         },
     ] {

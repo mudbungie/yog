@@ -29,7 +29,7 @@
 //! own ([`asker`](super::asker)).
 //!
 //! **It is a thread of its own, and that is the point.** An act can take as long
-//! as the verb behind it: a `bl close` runs a gate, and a piped `lernie` verb
+//! as the verb behind it: a `bl close` runs a gate, and a piped `litany` verb
 //! runs until it is done. On the asker's thread that would stall every standing
 //! read for the duration, which is the frame going blind because the operator
 //! clicked something. Acts are serialized among themselves — one connection at a

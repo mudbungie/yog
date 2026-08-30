@@ -69,7 +69,7 @@ fn pulsing(t: &Transcript) -> bool {
 }
 
 /// The operator's stuck `⚙ bash — running` (bl-47ec), byte-for-byte off disk:
-/// lernie commits a **bare array** of canonical blocks, and the id is
+/// litany commits a **bare array** of canonical blocks, and the id is
 /// OpenAI-shaped (`call_…`). The result must classify as a `ToolResult` — a
 /// Raw-bucket entry names no id, so it retires nothing — and the call's row
 /// must then carry neither the word nor the pulse.

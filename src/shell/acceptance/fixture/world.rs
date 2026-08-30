@@ -17,14 +17,14 @@ use std::path::PathBuf;
 use tempfile::TempDir;
 
 /// A workspace populated across every inspector surface (transcript, steps +
-/// tool i/o, inbox), symlinked under the lernie workspaces root so the model
+/// tool i/o, inbox), symlinked under the litany workspaces root so the model
 /// enumerates it.
 pub(in crate::shell::acceptance) struct World {
     pub(super) _root: TempDir,
     /// The workspace's own git fixture. Reachable across the whole acceptance
     /// tree because a beat sometimes needs a config the shipped world does not
     /// carry — the §9.4 role fault wants a lineage naming a provider row brazen
-    /// does not have, and lernie's pinned template names a live one (bl-d9cb).
+    /// does not have, and litany's pinned template names a live one (bl-d9cb).
     pub(in crate::shell::acceptance) fx: Fixture,
     /// Every extra sphere [`World::add_workspace`] created, held only so their
     /// temp dirs outlive the test — the §3.1 wall boundary is unobservable with
@@ -41,7 +41,7 @@ pub(in crate::shell::acceptance) struct World {
     /// world here and read the raised sphere back.
     pub(in crate::shell::acceptance) yog_data: PathBuf,
     /// Where a second sphere is symlinked from ([`World::add_workspace`]).
-    pub(in crate::shell::acceptance) lernie_workspaces: PathBuf,
+    pub(in crate::shell::acceptance) litany_workspaces: PathBuf,
     /// The frame's end of the read path — the standing questions a painted
     /// surface declared, taken exactly as the asker takes them.
     pub(in crate::shell::acceptance) link: LinkEnd,
@@ -72,7 +72,7 @@ pub(in crate::shell::acceptance) struct World {
     /// carries the gesture and nothing else), so they live here rather than on
     /// the driver. Deliberately absent by default, on `Screen::new`'s doctrine:
     /// a drive that has not said which fake it wants forks nothing real.
-    pub(super) lernie: Cli,
+    pub(super) litany: Cli,
     pub(super) bl: Cli,
 }
 
@@ -88,13 +88,13 @@ impl World {
     }
 
     /// Point the engine's spawns at this drive's fakes — what
-    /// `Screen::with_lernie` is asking for, said once where the acts run.
-    pub(in crate::shell::acceptance) fn substrate(&mut self, lernie: &Cli, bl: &Cli) {
-        self.lernie = lernie.clone();
+    /// `Screen::with_litany` is asking for, said once where the acts run.
+    pub(in crate::shell::acceptance) fn substrate(&mut self, litany: &Cli, bl: &Cli) {
+        self.litany = litany.clone();
         self.bl = bl.clone();
     }
 
-    /// Mint a **second sphere** under the same lernie root: another workspace
+    /// Mint a **second sphere** under the same litany root: another workspace
     /// with one conversation, symlinked where the model enumerates it. Its §3.1
     /// leaf names its own wall (§16.2 as amended), so this is what a wall drive
     /// switches to. Caller converges to fold it in.
@@ -105,7 +105,7 @@ impl World {
     ) -> PathBuf {
         let fx = Fixture::new();
         fx.build_agent(agent, name);
-        let ws = self.lernie_workspaces.join(name);
+        let ws = self.litany_workspaces.join(name);
         std::os::unix::fs::symlink(&fx.path, &ws).unwrap();
         self.spheres.push(fx);
         ws
@@ -142,6 +142,6 @@ impl World {
     /// does, without focusing anything and so without spending an ack.
     pub(in crate::shell::acceptance) fn quiet(&self, conv_id: &str) {
         self.fx
-            .mark_ref(&format!("refs/lernie/abandoned/{conv_id}"));
+            .mark_ref(&format!("refs/litany/abandoned/{conv_id}"));
     }
 }

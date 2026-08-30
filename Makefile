@@ -342,7 +342,7 @@ icon-seats:
 	@gtk-update-icon-cache -f -t "$(INSTALL_THEME)" 2>/dev/null \
 	  || touch "$(INSTALL_THEME)" 2>/dev/null || true
 
-# The binary is a live spawn target (lernie/bl/a running instance's `reload`
+# The binary is a live spawn target (litany/bl/a running instance's `reload`
 # exec it mid-install), so it gets rename(2) atomicity: `install` writes a temp
 # name in the SAME directory, then `mv -f` swaps it into place — a concurrent
 # spawn sees whole-old or whole-new, never ENOENT from install(1)'s
@@ -355,7 +355,7 @@ install: release icon-seats
 	@git rev-parse HEAD >"$(INSTALL_STAMP)" 2>/dev/null || rm -f "$(INSTALL_STAMP)"
 	@echo "installed $(INSTALL_BIN)/yog"
 	@echo "installed $(INSTALL_APPS)/yog.desktop + the scalable SVG and PNGs at $(ICON_SIZES) under $(INSTALL_THEME)"
-	@echo "note: no substrate to install — lernie, balls and brazen are compiled in (DESIGN §16.7)."
+	@echo "note: no substrate to install — litany, balls and brazen are compiled in (DESIGN §16.7)."
 
 # The UX-testing loop: one command between landing a change and looking at it.
 # Rebuilds + installs the RELEASE binary and restarts it on LIVE state — the

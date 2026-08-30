@@ -14,7 +14,7 @@ fn gesture() -> Gesture {
     })
 }
 
-/// Workspace and agent, and **no config field**: lernie's default lineage is
+/// Workspace and agent, and **no config field**: litany's default lineage is
 /// the one yog's picker writes and the one the drift this answers is measured
 /// against, so the envelope has no branch to carry and no seat has to guess one.
 #[test]

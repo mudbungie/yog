@@ -9,7 +9,7 @@
 //! all, which discovers nothing. The general path with empty inputs.
 //!
 //! **yog reads no instruction bytes.** It stats candidates and names paths;
-//! lernie's caller-supplied pinned documents (ARCH §2.5, released 0.0.4 as
+//! litany's caller-supplied pinned documents (ARCH §2.5, released 0.0.4 as
 //! bl-fb5c, in the `=0.0.8` pin) load, validate, write and commit them — in the
 //! CLI layer, before any branch, ref or inference exists. There is no yog-side
 //! copy of anything, which is the whole "no opaque automatic memory" clause.
@@ -34,7 +34,7 @@ const MAX_BYTES: u64 = 128 * 1024;
 /// nested directories each declaring its own, and what keeps the rank two
 /// digits wide.
 const MAX_DOCS: usize = 16;
-/// The pin destination's first segment. None of lernie's reserved harness names
+/// The pin destination's first segment. None of litany's reserved harness names
 /// (`goal.md`, `soul.md`, `name`, the control files, `descriptions/`,
 /// `messages/`, `summary/`), so the pin is accepted.
 const DEST_ROOT: &str = "instructions";
@@ -128,7 +128,7 @@ fn chain(root: &Path, binding: &Path) -> Vec<PathBuf> {
 /// a **regular file** by `symlink_metadata` (a symlink is skipped — the freeze
 /// is byte-exact and a link can point out of the root), within [`MAX_BYTES`],
 /// and spellable as a destination (UTF-8, and no [`SEP`], which `--pin` splits
-/// on). A candidate that only fails the *read* later is lernie's loud pre-fork
+/// on). A candidate that only fails the *read* later is litany's loud pre-fork
 /// refusal, not a silent partial (§3.7 item 2).
 fn admissible(src: &Path, root: &Path) -> Option<String> {
     let meta = std::fs::symlink_metadata(src).ok()?;

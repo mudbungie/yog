@@ -36,7 +36,7 @@ const NEEDLE: &str = "no workspace in this environment";
 
 /// Lay the dead step down beside the fixture's answered one — the on-disk shape
 /// the falsifying run left: `request.json` written, `response.json` at zero
-/// bytes, **no** `meta.json` (lernie writes it only once the call returns), and
+/// bytes, **no** `meta.json` (litany writes it only once the call returns), and
 /// the adapter's refusal in `stderr.log`.
 fn dead_step(world: &World, stderr: &[u8]) {
     let dir = world.ws.join("steps/c-1/002");
@@ -69,18 +69,18 @@ fn past_the_window(world: &World) -> Duration {
 
 #[test]
 fn the_window_states_why_the_reply_never_came() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let (mut world, clock) = wounded_world(BZ_REFUSAL.as_bytes());
 
     // Inside the grace window the alarm is withheld — bl-90bf, unchanged.
-    let early = painted(&mut world, &lernie, &bl);
+    let early = painted(&mut world, &litany, &bl);
     assert!(
         !early.contains(NEEDLE),
         "the wound is graced before it is believed:\n{early}"
     );
 
     clock.advance(past_the_window(&world));
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
     assert!(
         text.contains(NO_RESPONSE),
         "the §7.3 class, in words:\n{text}"
@@ -94,8 +94,8 @@ fn the_window_states_why_the_reply_never_came() {
         text.contains("stderr.log"),
         "and where the whole of it lives:\n{text}"
     );
-    // The retired pointer: for a turn continued by `lernie message` the driver
-    // is lernie's, so no §8.1 sink exists and the trail holds nothing. A banner
+    // The retired pointer: for a turn continued by `litany message` the driver
+    // is litany's, so no §8.1 sink exists and the trail holds nothing. A banner
     // must never send the operator somewhere empty.
     assert!(
         !text.contains("activity trail below"),
@@ -109,14 +109,14 @@ fn the_window_states_why_the_reply_never_came() {
 /// pointing at a surface that has none.
 #[test]
 fn a_wound_with_nothing_to_quote_still_banners_and_says_so() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let (mut world, clock) = wounded_world(b"");
     // The window opens on the frame that first sees the wound, so it is a
     // rendered frame that starts the clock — then the wait, then the alarm.
-    let _ = painted(&mut world, &lernie, &bl);
+    let _ = painted(&mut world, &litany, &bl);
     clock.advance(past_the_window(&world));
 
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
     assert!(text.contains(NO_RESPONSE), "still the class:\n{text}");
     assert!(
         text.contains("nothing on disk says why"),

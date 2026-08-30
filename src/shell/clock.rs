@@ -12,7 +12,7 @@
 /// session's names by pinning its first seed. Not
 /// secret — the mint is collision-avoidance, and the occupied-set check is what
 /// guarantees uniqueness. Yog's own seat in the mint seam since bl-cd38: the
-/// draw is `lernie::mint`'s, but "now" has one home and it is here, so the seed
+/// draw is `litany::mint`'s, but "now" has one home and it is here, so the seed
 /// is minted at this boundary and handed to `SplitMix64::from_seed` (never the
 /// crate's own `from_entropy`, which would be a second reading of the clock).
 pub(crate) fn entropy_seed() -> u64 {

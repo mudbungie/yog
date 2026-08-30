@@ -137,7 +137,7 @@ fn last_action_from_disk(workspace: &Path, agent_id: &str, tip_ts: i64, newest_m
 struct Messages {
     /// The `NNN` counter's high-water mark — the highest counter present, not
     /// a count of files (bl-fde5). The two were the same until compaction:
-    /// lernie's compactor deletes entries *below* the surviving counter (§5.1
+    /// litany's compactor deletes entries *below* the surviving counter (§5.1
     /// #12), so a file count shrinks mid-flight while the messages-ever-landed
     /// fact this field states never goes down — which is what the §7.2 echo's
     /// passed-the-baseline predicate needs to stay a reading and not a race.
@@ -146,14 +146,14 @@ struct Messages {
 }
 
 /// When the latest step's **model call began** (`Agent::call_start_unix`, §5.1
-/// #28, bl-9dfb): the mtime of that step's `request.json`, the write lernie
+/// #28, bl-9dfb): the mtime of that step's `request.json`, the write litany
 /// makes once and immediately before it hands the request to the adapter — the
 /// instant it itself calls the step's `started_at`. `None` when the agent has no
 /// step tree, or its latest step has not written a request.
 ///
-/// The **branch tip** was the other candidate and it does not hold: lernie takes
+/// The **branch tip** was the other candidate and it does not hold: litany takes
 /// no pre-call commit from step 2 on (§2.10), so the tip is whatever the
-/// *previous* step's tool window committed — and a branch resumed by `lernie
+/// *previous* step's tool window committed — and a branch resumed by `litany
 /// advance` after a stop calls the model against a tip hours old, which would
 /// read as an hours-long call five seconds in.
 fn call_start_from_disk(workspace: &Path, agent_id: &str) -> Option<i64> {

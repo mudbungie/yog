@@ -37,8 +37,8 @@ run() {
     "$drive" key "$wid" Return
   }
   until_landed bare_start verb_ge new 1 \
-    && pass "S0 bare-start: lernie new fired" \
-    || fail "S0 bare-start: lernie new fired" "no new"
+    && pass "S0 bare-start: litany new fired" \
+    || fail "S0 bare-start: litany new fired" "no new"
   "$drive" shot "$wid" "$out/s0-03-fired.png"
 
   # Locate the workspace the fire minted (single dir under yog/workspaces) — a
@@ -46,16 +46,16 @@ run() {
   # the wall the seed laid is a path this harness chose, the workspace is a fact
   # yog produced, and a beat must never assert the second by restating the first.
   # Its wall was seeded before the launch (§16.2, bl-1851 — see `seed` above): the
-  # mint and the first `lernie prompt` are one gesture, so nothing laid here could
+  # mint and the first `litany prompt` are one gesture, so nothing laid here could
   # beat the first model call, and the payoff beat below is what that cost.
   ws_root=$(find "$data/yog/workspaces" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
 
   [ "$(verb_count prime)" = 0 ] \
-    && pass "S0 seeded-skip: no lernie prime" \
-    || fail "S0 seeded-skip: no lernie prime" "prime spawned"
+    && pass "S0 seeded-skip: no litany prime" \
+    || fail "S0 seeded-skip: no litany prime" "prime spawned"
   [ "$(verb_count prompt)" -ge 1 ] \
-    && pass "S0 bare-start: detached lernie prompt" \
-    || fail "S0 bare-start: detached lernie prompt" "no prompt"
+    && pass "S0 bare-start: detached litany prompt" \
+    || fail "S0 bare-start: detached litany prompt" "no prompt"
   # Poll, never a fixed sleep: the reply's latency is the model's, not yog's, so
   # the 3 s above is enough to assert the *spawns* but not the payoff. Waiting
   # here also orders the transcript screenshot below after the reply lands.
@@ -100,10 +100,10 @@ run() {
     "$drive" key "$wid" Return
   }
   until_landed message_it verb_ge message $((before + 1)) \
-    && pass "S1 message-to-agent: lernie message" \
-    || fail "S1 message-to-agent: lernie message" "no message verb"
+    && pass "S1 message-to-agent: litany message" \
+    || fail "S1 message-to-agent: litany message" "no message verb"
   # THE PAYOFF, and the beat that was missing (bl-bf79). The line above asserts
-  # that yog SPAWNED the verb; it is true of a `lernie message` whose revived
+  # that yog SPAWNED the verb; it is true of a `litany message` whose revived
   # driver dies on its first `bz`, which is what shipped. The conversation went
   # quiescent after S0's reply, so this message is the revive path — no live
   # driver to hand it to — and only the reply proves the driver came back inside
@@ -147,7 +147,7 @@ run() {
   "$drive" shot "$wid2" "$out/s1-07-prompt-existing.png"
   [ "$(verb_count new)" = "$new_before" ] \
     && pass "S1 prompt-existing: no re-mint" \
-    || fail "S1 prompt-existing: no re-mint" "lernie new re-fired"
+    || fail "S1 prompt-existing: no re-mint" "litany new re-fired"
 
   "$drive" stop "$pid2"
   verdict "$out"

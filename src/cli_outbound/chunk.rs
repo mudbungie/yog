@@ -81,7 +81,7 @@ pub fn work_dir_fault(dir: &Path) -> Option<CliError> {
     })
 }
 
-/// One piece of output from a running `lernie` subprocess. The final
+/// One piece of output from a running `litany` subprocess. The final
 /// chunk in any stream is always `Exited`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Chunk {

@@ -26,7 +26,7 @@ const LENGTH_END: &[u8] = br#"{"type":"message_start","v":1,"role":"assistant"}
 fn no_lock_and_output_limited_response_is_stopped_and_truncated() {
     // Transport completion is not task completion (bl-fb87): the tail frames
     // clean, so §4.4 reads it `Complete` and `rail::place` still pairs it with
-    // the entry lernie sealed — but the turn ran out of room, which is a
+    // the entry litany sealed — but the turn ran out of room, which is a
     // conversation stopped mid-utterance, not one at rest.
     let dir = tempdir().unwrap();
     let agent = "20260427T140000Z-llll";

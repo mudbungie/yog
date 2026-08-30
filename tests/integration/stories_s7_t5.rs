@@ -42,7 +42,7 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         balls_clones: root.path().join("clones"),
         home: root.path().join("home"),

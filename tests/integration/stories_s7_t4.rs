@@ -1,6 +1,6 @@
 //! STORIES **S7-T4** inbox-and-progress: deposits parse `from` /
 //! `deposited_at` / `epitaph`, the `✉n` badge **equals** the listing's length,
-//! Flush dispatches `lernie scan <ws>`, and a committed `tool_use` with no
+//! Flush dispatches `litany scan <ws>`, and a committed `tool_use` with no
 //! `tool_result` renders "tool in progress" (STORIES S7.5, DESIGN §2.11, §5.1
 //! #11, §8.2).
 //!
@@ -110,17 +110,17 @@ fn s7_t4_deposits_parse_the_count_is_the_listing_and_progress_is_read_not_guesse
     assert_eq!(agent.pending.len(), inbox.len(), "one listing, two seats");
     assert_eq!(agent.pending.len(), 3);
 
-    // --- Flush is `lernie scan <ws>` — one verb, logged like every other (§4.2).
+    // --- Flush is `litany scan <ws>` — one verb, logged like every other (§4.2).
     let bin = tempdir().unwrap();
     let state = tempdir().unwrap();
-    let lernie = Recorder::new(bin.path(), "lernie").on("scan", "", 0);
+    let litany = Recorder::new(bin.path(), "litany").on("scan", "", 0);
     let bound = verbs::Bound::at(
-        &Cli::new(lernie.path()),
+        &Cli::new(litany.path()),
         &yog::world::compose(&yog::xdg::Env::from_env()),
         &ws,
     );
     verbs::scan(&bound, state.path(), "T0").unwrap();
-    let inv = lernie.invocations();
+    let inv = litany.invocations();
     assert_eq!(inv.len(), 1);
     assert_eq!(inv[0].argv, ["scan", &ws.to_string_lossy()]);
     let ops = opslog::tail(state.path(), 8);

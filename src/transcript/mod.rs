@@ -12,14 +12,14 @@
 //! | `json` | `<model-id>` | model output — canonical content blocks    |
 //!
 //! Both `.json` origins carry the **same envelope**: a bare array of canonical
-//! blocks as legacy lernie committed it, or an API-shaped object wrapping them
+//! blocks as legacy litany committed it, or an API-shaped object wrapping them
 //! in `content` — with the provider's token `usage` report as `content`'s
 //! sibling when one was reported (lernie ≥0.0.4).
 //! One function answers where the blocks live (`parse::block_array`)
 //! — two answers left every real `NNN-tool.json` in the Raw bucket (bl-47ec).
 //! | other / unparseable name / unparseable bytes | — | Raw bucket (never dropped) |
 //!
-//! **The directory is not append-only.** lernie's compactor deletes message
+//! **The directory is not append-only.** litany's compactor deletes message
 //! files and squashes the span they lived in, so a hole in the `NNN` counter
 //! is entries that were *removed* — [`compaction`] derives each one and seats
 //! a virtual [`EntryKind::Compacted`] marker in it, carrying whatever
@@ -125,7 +125,7 @@ pub enum EntryKind {
     /// a model that has only thought so far, or one that answered without
     /// reasoning, and an empty half is simply no row.
     Streaming { thinking: String, text: String },
-    /// A span of entries lernie's compactor **deleted** — a hole in the `NNN`
+    /// A span of entries litany's compactor **deleted** — a hole in the `NNN`
     /// counter, standing where they were. `first` and `last` are the missing
     /// counter values, inclusive, and are the only thing this entry asserts.
     /// `summary` is the conversation's whole compaction record, which rides

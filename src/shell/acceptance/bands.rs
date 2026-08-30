@@ -91,8 +91,8 @@ fn out_of_order(seated: &[(&'static str, egui::Rect)]) -> Vec<String> {
 /// frames are exactly where a band the budget cannot ultimately pay for gets
 /// seated once and then dropped.
 fn stack(w: f32, h: f32) -> Vec<(&'static str, egui::Rect)> {
-    let (lernie, bl, bz) = (
-        Cli::new("/yog-absent-lernie"),
+    let (litany, bl, bz) = (
+        Cli::new("/yog-absent-litany"),
         Cli::new("/yog-absent-bl"),
         Cli::new("/yog-absent-bz"),
     );
@@ -110,7 +110,7 @@ fn stack(w: f32, h: f32) -> Vec<(&'static str, egui::Rect)> {
     let ctx = egui::Context::default();
     let mut frame = |world: &mut super::fixture::World| {
         let _ = ctx.run(crate::paint_probe::screen_sized(w, h), |ctx| {
-            render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         });
     };
     for _ in 0..5 {

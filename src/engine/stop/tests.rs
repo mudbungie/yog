@@ -4,7 +4,7 @@
 //! the whole suite — `engine::serve::tests`, which drives the face that reads
 //! it — because a static two tests may raise is a static they can race, and
 //! `cargo test` runs them in parallel. One owner is cheaper than a lock and is
-//! the same discipline the linked lernie applies to its own §2.9 flag.
+//! the same discipline the linked litany applies to its own §2.9 flag.
 
 use super::*;
 use std::sync::Arc;

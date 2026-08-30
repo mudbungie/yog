@@ -1,5 +1,5 @@
 //! The governing-config merge-base fold (§5.1 #17), a faithful port of
-//! lernie `workspace.rs::{governing_config, nearest}`. Every arm is covered:
+//! litany `workspace.rs::{governing_config, nearest}`. Every arm is covered:
 //! fresh fork point, the frozen ancestor after advancement, both `nearest`
 //! directions, the equal-candidate short-circuit, the skip of an unrelated
 //! orphan config, and the two loud declines (no ancestor / incomparable).

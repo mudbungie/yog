@@ -4,7 +4,7 @@
 //! visual identity is exactly that: luminous sphere-hues against the void.
 //! Every colour the UI paints is named here, once; renderers import the hue,
 //! never restate an RGB triple. The naming keys each hue to the platform's
-//! lore so the vocabulary is stable across the tools yog drives: **lernie**
+//! lore so the vocabulary is stable across the tools yog drives: **litany**
 //! (the hydra) owns the liveness green, **brazen** (the brazen head) owns the
 //! oracle bronze, and yog itself — the key and the gate — owns the violet.
 //!
@@ -52,7 +52,7 @@ pub use visuals::{apply, fonts, visuals};
 // badges are.
 pub use role::{Role, message_role, role_badge, role_stripe};
 
-/// Hydra green — lernie's liveness hue: the `Live` state badge, ✔ ok tool
+/// Hydra green — litany's liveness hue: the `Live` state badge, ✔ ok tool
 /// results, `Complete` framing, a settled login outcome.
 pub const HYDRA: egui::Color32 = egui::Color32::from_rgb(110, 222, 148);
 
@@ -143,14 +143,14 @@ pub fn tone_solidity(tone: crate::transcript::Tone) -> f32 {
     }
 }
 
-/// The hue of a driven integration, keyed by its CLI name: `lernie` the
+/// The hue of a driven integration, keyed by its CLI name: `litany` the
 /// hydra (green), `bz` the brazen head (bronze), `bl` the balls — the
 /// congeries itself, so it wears the gate's violet. Anything else reads in
 /// the moonlit text default. The one authoritative home for the tool → hue
 /// branding (config-editor headings).
 pub fn integration_hue(tool: &str) -> egui::Color32 {
     match tool {
-        "lernie" => HYDRA,
+        "litany" => HYDRA,
         "bz" => BRAZEN,
         "bl" => GATE,
         _ => MOONLIT,

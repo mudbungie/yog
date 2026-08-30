@@ -75,7 +75,7 @@ fn figures(ui: &mut egui::Ui, row: &Attempt) {
     if row.compacted > 0 {
         ui.weak(format!("record compacted — {} entries gone", row.compacted))
             .on_hover_text(
-                "lernie's compactor deleted entries from this conversation, so the \
+                "litany's compactor deleted entries from this conversation, so the \
              verdicts and the response read the surviving record; anything \
              delivered in the squashed span is gone from disk, not hidden.",
             );

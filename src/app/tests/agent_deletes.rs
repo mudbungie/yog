@@ -23,9 +23,9 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tempfile::{TempDir, tempdir};
 
-/// A fake `lernie`: logs `$@` beside itself, prints `stdout`, exits `code`.
-fn fake_lernie(dir: &TempDir, stdout: &str, stderr: &str, code: i32) -> Cli {
-    let path = dir.path().join("lernie");
+/// A fake `litany`: logs `$@` beside itself, prints `stdout`, exits `code`.
+fn fake_litany(dir: &TempDir, stdout: &str, stderr: &str, code: i32) -> Cli {
+    let path = dir.path().join("litany");
     fs::write(
         &path,
         format!(
@@ -56,12 +56,12 @@ fn unused_bl() -> Cli {
 /// engine's own chokepoint, then the convergence a receipt earns.
 fn delete(
     model: &mut AppModel,
-    lernie: &Cli,
+    litany: &Cli,
     ws: &Path,
     root: &str,
     typed: &str,
 ) -> Result<Reply, String> {
-    let deps = model.boundary_deps(lernie, &unused_bl());
+    let deps = model.boundary_deps(litany, &unused_bl());
     let action = Action::DeleteAgent {
         workspace: model.snap.ws_name(ws),
         agent: root.to_owned(),
@@ -71,7 +71,7 @@ fn delete(
     // The act's own root, marked by the receipt for every act alike
     // (`AppModel::settle_acts`): an agent delete names no project, so it is the
     // yog-state root's ordinary routing (§7.1).
-    model.after_lernie_verb();
+    model.after_litany_verb();
     model.deleted_agent(ws, root);
     landed
 }
@@ -138,7 +138,7 @@ fn a_leaf_fires_the_bare_verb_and_the_typed_name_arms_the_subtree() {
     let mut h = Harness::new();
     let named = h.mint_named("alba-koi", "c-1");
     let bin = tempdir().unwrap();
-    let lernie = fake_lernie(
+    let litany = fake_litany(
         &bin,
         "deleted c-1; descendants: 0; pending deposits: 0",
         "",
@@ -149,8 +149,8 @@ fn a_leaf_fires_the_bare_verb_and_the_typed_name_arms_the_subtree() {
     assert!(model.focused_agent().is_some());
 
     // Unarmed (`typed` restates nothing): the bare verb — a subtree nobody
-    // confirmed would be declined by lernie itself, never assumed here.
-    assert!(outcome(delete(&mut model, &lernie, &named, "c-1", "")).ok());
+    // confirmed would be declined by litany itself, never assumed here.
+    assert!(outcome(delete(&mut model, &litany, &named, "c-1", "")).ok());
     assert_eq!(logged_argv(&bin), format!("delete {} c-1", named.display()));
     assert!(
         model.focused_agent().is_none(),
@@ -158,7 +158,7 @@ fn a_leaf_fires_the_bare_verb_and_the_typed_name_arms_the_subtree() {
     );
 
     // The typed conversation name — and nothing else — unlocks --children.
-    assert!(outcome(delete(&mut model, &lernie, &named, "c-1", " hi ")).ok());
+    assert!(outcome(delete(&mut model, &litany, &named, "c-1", " hi ")).ok());
     assert_eq!(
         logged_argv(&bin),
         format!("delete {} c-1 --children", named.display())
@@ -174,9 +174,9 @@ fn a_declined_verb_rides_back_its_stderr_verbatim() {
     let named = h.mint_named("alba-koi", "c-1");
     let bin = tempdir().unwrap();
     let decline = "agent \"c-1\" has 1 descendant(s); pass --children";
-    let lernie = fake_lernie(&bin, "", decline, 2);
+    let litany = fake_litany(&bin, "", decline, 2);
     let (_c, mut model) = h.model();
-    let ran = outcome(delete(&mut model, &lernie, &named, "c-1", ""));
+    let ran = outcome(delete(&mut model, &litany, &named, "c-1", ""));
     assert!(!ran.ok(), "a non-zero verb is not a removal");
     assert_eq!(
         ran.stderr.trim(),
@@ -187,7 +187,7 @@ fn a_declined_verb_rides_back_its_stderr_verbatim() {
 
     // A spawn that never launched rides back as the refusal itself — its
     // synthetic ops row is already written by the logged runner.
-    let gone = Cli::new(bin.path().join("no-such-lernie"));
+    let gone = Cli::new(bin.path().join("no-such-litany"));
     let err = delete(&mut model, &gone, &named, "c-1", "").unwrap_err();
     assert!(err.contains("No such file"), "{err}");
 }
@@ -199,7 +199,7 @@ fn a_focus_on_a_descendant_clears_with_its_root_and_a_neighbour_survives() {
     h.last_added().build_agent("r-aa-c-bb", "child");
     h.last_added().build_agent("z-zz", "other");
     let bin = tempdir().unwrap();
-    let lernie = fake_lernie(
+    let litany = fake_litany(
         &bin,
         "deleted r-aa; descendants: 1 (r-aa-c-bb); pending deposits: 0",
         "",
@@ -209,12 +209,12 @@ fn a_focus_on_a_descendant_clears_with_its_root_and_a_neighbour_survives() {
     // A focus inside the subtree clears with it…
     let (_c, mut model) = h.model_focused(Some(named.clone()));
     model.focus_agent(&named, "r-aa-c-bb");
-    assert!(outcome(delete(&mut model, &lernie, &named, "r-aa", "")).ok());
+    assert!(outcome(delete(&mut model, &litany, &named, "r-aa", "")).ok());
     assert!(model.focused_agent().is_none());
 
     // …and a focus on a neighbouring conversation stands.
     model.focus_agent(&named, "z-zz");
-    assert!(outcome(delete(&mut model, &lernie, &named, "r-aa", "")).ok());
+    assert!(outcome(delete(&mut model, &litany, &named, "r-aa", "")).ok());
     assert_eq!(
         model.focused_agent().map(|a| a.agent_id.clone()),
         Some("z-zz".to_owned())

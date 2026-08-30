@@ -7,7 +7,7 @@
 //!
 //! ```text
 //! fleet:
-//!   /home/u/.local/share/yog/world/lernie/workspaces/otter:
+//!   /home/u/.local/share/yog/world/litany/workspaces/otter:
 //!     project: /home/u/dev/yog
 //!     cap: 3
 //!     lease_min: 30
@@ -177,11 +177,11 @@ mod tests {
 
     #[test]
     fn arming_a_second_workspace_leaves_the_first() {
-        let two = arm(ARMED, "/ws/b", "/dev/lernie", 1).expect("armable");
+        let two = arm(ARMED, "/ws/b", "/dev/litany", 1).expect("armable");
         assert_eq!(policy(&two, "/ws/a").expect("armed").cap, 3);
         assert_eq!(
             policy(&two, "/ws/b").expect("armed").project,
-            PathBuf::from("/dev/lernie")
+            PathBuf::from("/dev/litany")
         );
     }
 

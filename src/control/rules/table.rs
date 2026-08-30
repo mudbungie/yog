@@ -16,7 +16,7 @@ use Reach::{ByRoot, Fixed};
 /// The shipped ruleset, in match order.
 pub const DEFAULT: &[Rule] = &[
     // ---- credentials and environment -------------------------------------
-    // `bz` spends the workspace's own brazen credentials outside lernie's own
+    // `bz` spends the workspace's own brazen credentials outside litany's own
     // budget derivation, which is precisely the drone-spending-secrets case.
     ("bz", ANY, Fixed(Secret)),
     ("env", ANY, Fixed(Secret)),
@@ -73,7 +73,7 @@ pub const DEFAULT: &[Rule] = &[
     ("cargo", &["install"], Fixed(OpenWorld)),
     // ---- the world's own substrates, through their gated verbs ------------
     ("bl", ANY, Fixed(TargetWrite)),
-    ("lernie", ANY, Fixed(TargetWrite)),
+    ("litany", ANY, Fixed(TargetWrite)),
     // ---- building the target ----------------------------------------------
     ("git", ANY, Fixed(TargetWrite)),
     ("cargo", ANY, Fixed(TargetWrite)),

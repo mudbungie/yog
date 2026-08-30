@@ -24,7 +24,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::config_edit::brazen::BrazenPaths;
-use crate::config_edit::lernie_global::LernieGlobal;
+use crate::config_edit::litany_global::LitanyGlobal;
 use crate::xdg::Env;
 
 /// A leftover older than this is swept (§2 I3, §5.2): 24 h, in seconds. One
@@ -110,7 +110,7 @@ pub fn sweep(dirs: &[PathBuf], now_secs: i64) -> Vec<PathBuf> {
 
 /// Every directory yog writes an I3 temp into, folded from the composed world
 /// (§16.2) — the sweep's whole territory, and the inverse of the three write
-/// sites: `ui.json`'s state root (§4.1), the §9.2 lernie config root and its
+/// sites: `ui.json`'s state root (§4.1), the §9.2 litany config root and its
 /// `workflows/`, and per wall (§16.2) the three brazen destinations §9.1 and
 /// [`bz_host::store`](crate::bz_host::store) write — `config.toml`'s directory,
 /// the credentials dir and the model cache. A wall is discovered rather than
@@ -118,8 +118,8 @@ pub fn sweep(dirs: &[PathBuf], now_secs: i64) -> Vec<PathBuf> {
 pub fn dirs(world: &Env) -> Vec<PathBuf> {
     let mut out = vec![
         world.yog_state_root(),
-        world.lernie_config_root(),
-        LernieGlobal::resolve(world).workflows_dir(),
+        world.litany_config_root(),
+        LitanyGlobal::resolve(world).workflows_dir(),
     ];
     let walls = crate::world::wall::walls_dir(&crate::world::layout(world).root);
     for entry in std::fs::read_dir(walls).into_iter().flatten().flatten() {

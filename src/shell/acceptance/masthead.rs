@@ -25,12 +25,12 @@ const ONE_AXIS: f32 = 2.0;
 
 /// The settled empty-world frame at `w` x `h`, as painted galleys.
 fn masthead(w: f32, h: f32) -> Vec<Seen> {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let mut world = world_empty();
     let ctx = egui::Context::default();
     let mut frame = || {
         ctx.run(crate::paint_probe::screen_sized(w, h), |ctx| {
-            super::super::render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+            super::super::render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
         })
     };
     for _ in 0..3 {

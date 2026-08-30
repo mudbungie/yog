@@ -2,7 +2,7 @@
 //!
 //! Cost per ball is a **query**, and single-source-of-truth is what makes it
 //! one. Every fact it needs already has an owner: brazen counts tokens and
-//! never learns a price; lernie commits that count into the step record; balls
+//! never learns a price; litany commits that count into the step record; balls
 //! tags every delivery `[bl-id]` and stays metric-free. Yog adds exactly two
 //! things nobody below it may hold — **the price table** ([`prices`]) and
 //! **the join** (this module) — and stores neither result (§3.5: a figure is

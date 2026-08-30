@@ -42,7 +42,7 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
     for action in bl_family {
         assert_eq!(action.project(), Some(p.clone()), "{action:?}");
     }
-    let lernie_family = [
+    let litany_family = [
         Action::Message {
             workspace: ws.clone(),
             agent: "c".into(),
@@ -87,7 +87,7 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
         },
         Action::ClearTrail,
     ];
-    for action in lernie_family {
+    for action in litany_family {
         assert_eq!(action.project(), None, "{action:?}");
     }
 }

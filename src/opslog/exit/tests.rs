@@ -9,7 +9,7 @@ use super::ExitKind;
 fn row(exit: i32, stderr: &str) -> OpRow {
     OpRow::from(&OpEntry {
         ts: "TS".into(),
-        argv: vec!["lernie".into(), "prompt".into(), "/ws".into()],
+        argv: vec!["litany".into(), "prompt".into(), "/ws".into()],
         cwd: "/proj".into(),
         exit,
         stdout: String::new(),
@@ -127,11 +127,11 @@ fn the_signal_reading_is_bounded_at_both_ends() {
 /// The top of the `128 + n` band.
 const SIGNAL_TOP: i32 = super::SIGNAL_BASE + super::SIGNAL_MAX;
 
-/// A **notice** line lernie's driver prints on the way past a decline — the
+/// A **notice** line litany's driver prints on the way past a decline — the
 /// shape bl-1296's retired phrase table was written over. It stands here as an
 /// ordinary sink line now: bl-b95e moved the decision to whether the fold ran
 /// at all, so nothing at this altitude reads its words.
-const NOTICE: &str = "lernie: compaction landing [c-2] superseded — a compaction landed \
+const NOTICE: &str = "litany: compaction landing [c-2] superseded — a compaction landed \
      since its fork point (ARCH §2.6); the branch continues\n";
 
 /// A detached row carrying folded stderr is the driver's *post-launch* death —
@@ -173,7 +173,7 @@ fn the_sink_is_no_longer_read_for_what_it_says() {
     let spoke = row(DETACHED_EXIT, NOTICE);
     assert!(
         spoke.failed(),
-        "a folded tail is the derivation's verdict, not lernie's prose"
+        "a folded tail is the derivation's verdict, not litany's prose"
     );
     assert!(spoke.detached_died());
     assert!(!spoke.detached());

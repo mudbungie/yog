@@ -1,5 +1,5 @@
-//! STORIES **S0-T3** seed-failure-surfaces (abort half): a `lernie prime` that
-//! exits non-zero aborts the start **before** anything else spawns — no `lernie
+//! STORIES **S0-T3** seed-failure-surfaces (abort half): a `litany prime` that
+//! exits non-zero aborts the start **before** anything else spawns — no `litany
 //! new`, no prompt — and the failure is a durable, rendered fact (its stderr in
 //! the ops row). The view-model + draft-survival halves are Z5-covered; this
 //! proves the abort + the ops trail (STORIES S0.4, DESIGN §8.1, §4.2).
@@ -18,11 +18,11 @@ fn s0_t3_a_failed_prime_aborts_before_any_further_spawn() {
     let (bin, state) = (tempdir().unwrap(), tempdir().unwrap());
     let (yog, balls, home) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     // `prime` fails on stderr; `new` would exit 0 if it were ever reached.
-    let lernie = Recorder::new(bin.path(), "lernie").on_err("prime", "", "no models.yaml", 2);
+    let litany = Recorder::new(bin.path(), "litany").on_err("prime", "", "no models.yaml", 2);
     let bl = Recorder::new(bin.path(), "bl");
     let deps = Deps {
         bl: Cli::new(bl.path()),
-        lernie: Cli::new(lernie.path()),
+        litany: Cli::new(litany.path()),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
         // No answer from brazen: the §9.2 birth-template gate judges nothing.
@@ -44,15 +44,15 @@ fn s0_t3_a_failed_prime_aborts_before_any_further_spawn() {
     );
 
     // The abort precedes every other spawn: only `prime` ran — no `new`, no bl.
-    let lernie_verbs: Vec<String> = lernie
+    let litany_verbs: Vec<String> = litany
         .invocations()
         .into_iter()
         .map(|i| i.argv[0].clone())
         .collect();
     assert_eq!(
-        lernie_verbs,
+        litany_verbs,
         ["prime"],
-        "no `lernie new` after a failed seed"
+        "no `litany new` after a failed seed"
     );
     assert!(
         bl.invocations().is_empty(),

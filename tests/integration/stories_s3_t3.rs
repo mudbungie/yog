@@ -6,7 +6,7 @@
 #![allow(clippy::unwrap_used)]
 
 use crate::support::Recorder;
-use lernie::mint::SplitMix64;
+use litany::mint::SplitMix64;
 use tempfile::tempdir;
 use yog::binding::{work_worktree_path, workspace_path};
 use yog::cli_outbound::Cli;
@@ -23,7 +23,7 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
         tempdir().unwrap(),
         tempdir().unwrap(),
     );
-    let seed = layout_under(yog.path()).lernie;
+    let seed = layout_under(yog.path()).litany;
     std::fs::create_dir_all(&seed).unwrap();
     std::fs::write(seed.join("models.yaml"), b"models: {}\n").unwrap();
     std::fs::create_dir_all(workspace_path(yog.path(), "cobalt-gecko").join("repo.git")).unwrap();
@@ -32,12 +32,12 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
     let worktree = work_worktree_path(balls.path(), project.path(), "bl-8", None);
     std::fs::create_dir_all(&worktree).unwrap();
 
-    let lernie = Recorder::new(bin.path(), "lernie");
+    let litany = Recorder::new(bin.path(), "litany");
     // A bl that would exit non-zero if a claim ran — proof no claim is issued.
     let bl = Recorder::new(bin.path(), "bl").on_err("claim", "", "should not run", 1);
     let deps = Deps {
         bl: Cli::new(bl.path()),
-        lernie: Cli::new(lernie.path()),
+        litany: Cli::new(litany.path()),
         state_root: state.path().to_path_buf(),
         yog_binary: std::path::PathBuf::from("/no/yog"),
         // No answer from brazen: the §9.2 birth-template gate judges nothing.
@@ -77,7 +77,7 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
     );
 
     start::execute_prompt(
-        &deps.lernie,
+        &deps.litany,
         state.path(),
         "T0",
         &start::Fire {
@@ -89,6 +89,6 @@ fn s3_t3_bound_ball_resumes_without_claim_or_mint() {
         &SplitMix64::from_seed(1),
     )
     .unwrap();
-    let inv = lernie.wait(1);
+    let inv = litany.wait(1);
     assert_eq!(inv[0].argv[0], "prompt", "just a new root in the workspace");
 }

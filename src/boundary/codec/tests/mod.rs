@@ -28,7 +28,7 @@ pub(super) fn p(s: &str) -> PathBuf {
     PathBuf::from(s)
 }
 
-/// The workspace-and-conversation half: the §8.2 lernie family, the §3.6
+/// The workspace-and-conversation half: the §8.2 litany family, the §3.6
 /// deletes, the §4.9 monitor, the §4.11 answer and the trail's own verbs.
 #[test]
 fn every_action_variant_round_trips() {

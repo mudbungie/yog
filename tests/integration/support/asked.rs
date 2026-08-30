@@ -27,7 +27,7 @@ pub fn conversations(
         return Vec::new();
     };
     let deps = model.boundary_deps(
-        &yog::cli_outbound::Cli::new("lernie"),
+        &yog::cli_outbound::Cli::new("litany"),
         &yog::cli_outbound::Cli::new("bl"),
     );
     let query = yog::boundary::Query::Conversations { workspace };
@@ -53,7 +53,7 @@ pub fn conversation_rows(model: &yog::AppModel, now_unix: i64) -> Vec<yog::nav::
 /// and the §4.1 pin rank) and both folds are the seat's.
 pub fn ws_rows(model: &yog::AppModel) -> Vec<yog::boundary::reply::WsRow> {
     let deps = model.boundary_deps(
-        &yog::cli_outbound::Cli::new("lernie"),
+        &yog::cli_outbound::Cli::new("litany"),
         &yog::cli_outbound::Cli::new("bl"),
     );
     let answered = match model.answer(&deps, &yog::boundary::Query::Workspaces, 0) {
@@ -68,7 +68,7 @@ pub fn ws_rows(model: &yog::AppModel) -> Vec<yog::boundary::reply::WsRow> {
 /// seat asks it.
 pub fn ws_balls(model: &yog::AppModel, ws: &std::path::Path) -> Vec<yog::nav::BoundBall> {
     let deps = model.boundary_deps(
-        &yog::cli_outbound::Cli::new("lernie"),
+        &yog::cli_outbound::Cli::new("litany"),
         &yog::cli_outbound::Cli::new("bl"),
     );
     let query = yog::boundary::Query::WorkspaceBalls {

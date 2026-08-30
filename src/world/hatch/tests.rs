@@ -8,7 +8,7 @@ use std::path::Path;
 fn shell_quote_is_eval_safe_across_shapes() {
     let cases: &[(&str, &str)] = &[
         ("", "''"),
-        ("/d/yog/world/lernie", "'/d/yog/world/lernie'"),
+        ("/d/yog/world/litany", "'/d/yog/world/litany'"),
         ("a b c", "'a b c'"),
         ("it's", "'it'\\''s'"),
         ("a'b'c", "'a'\\''b'\\''c'"),
@@ -23,7 +23,7 @@ fn shell_quote_is_eval_safe_across_shapes() {
 #[test]
 fn env_script_emits_one_quoted_export_per_override_in_order() {
     let overrides = vec![
-        ("LERNIE_HOME".to_owned(), "/d/yog/world/lernie".to_owned()),
+        ("LITANY_HOME".to_owned(), "/d/yog/world/litany".to_owned()),
         (
             "XDG_STATE_HOME".to_owned(),
             "/weird dir/world/state".to_owned(),
@@ -31,7 +31,7 @@ fn env_script_emits_one_quoted_export_per_override_in_order() {
     ];
     assert_eq!(
         env_script(&overrides),
-        "export LERNIE_HOME='/d/yog/world/lernie'\n\
+        "export LITANY_HOME='/d/yog/world/litany'\n\
          export XDG_STATE_HOME='/weird dir/world/state'\n"
     );
 }

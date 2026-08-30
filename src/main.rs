@@ -11,9 +11,9 @@ use yog::xdg::Env;
 use yog::{Args, shell};
 
 fn main() -> eframe::Result<()> {
-    // §9.3 shim mode: the `$EDITOR` lernie execs re-enters here BEFORE clap or
+    // §9.3 shim mode: the `$EDITOR` litany execs re-enters here BEFORE clap or
     // eframe. argv is `<yog> --editor-apply <checkout>`; `YOG_EDIT_SRC` (env)
-    // carries the staging dir. Exit 0/non-zero — non-zero aborts lernie's
+    // carries the staging dir. Exit 0/non-zero — non-zero aborts litany's
     // commit cleanly (see `config_edit::apply` for the invocation shape).
     let argv: Vec<String> = std::env::args().collect();
     if argv.get(1).map(String::as_str) == Some(config_edit::apply::EDITOR_APPLY_FLAG) {
@@ -24,7 +24,7 @@ fn main() -> eframe::Result<()> {
     }
 
     // §16.7 W12 self-multiplex, and — since bl-52ed — the argv seat's help,
-    // which is why this stands ABOVE the subcommand match: a `lernie`/`bl`/`bz`
+    // which is why this stands ABOVE the subcommand match: a `litany`/`bl`/`bz`
     // leading verb dispatches to that embedded crate's arm (`yog <namespace>
     // …`) and exits with its code, and `yog <command> --help` is answered from
     // the interface before any command below composes a world, spawns, parks or
@@ -91,7 +91,7 @@ fn main() -> eframe::Result<()> {
                 std::process::exit(2);
             }
         },
-        // `yog tool-control` (§8.6): the capability control lernie's seam
+        // `yog tool-control` (§8.6): the capability control litany's seam
         // consults before every granted tool invocation, spawned with no argv
         // beyond this word and speaking over the real stdio — so it binds here
         // at the process edge, exactly as the hatches above do.
@@ -131,7 +131,7 @@ fn main() -> eframe::Result<()> {
     // Only the loop that consults it differs — eframe's, below.
     yog::engine::stop::catch();
     // Compose the nested world (§16.2): every read below derives through `world`
-    // (so yog watches the nested clones/state/lernie-home) and every child spawns
+    // (so yog watches the nested clones/state/litany-home) and every child spawns
     // with `overrides` standing (§16.6 W2), so reads and spawns agree.
     let world = yog::world::compose(&ambient);
     eframe::run_native(
@@ -184,7 +184,7 @@ fn main() -> eframe::Result<()> {
                 engine,
                 _wire: wire,
                 state,
-                lernie: Cli::resolve_in_world(Binary::Lernie, &overrides),
+                litany: Cli::resolve_in_world(Binary::Litany, &overrides),
                 bl: Cli::resolve_in_world(Binary::Bl, &overrides),
                 bz: Cli::resolve_in_world(Binary::Bz, &overrides),
             }))
@@ -226,12 +226,12 @@ struct App {
     // Every RAM surface the shell owns: the action/start drafts, the inspector
     // ephemera, and the config editors (§3.5 — discarded on exit).
     state: ShellState,
-    // The mutating-verb binaries: message/stop/scan/prompt on `lernie`,
+    // The mutating-verb binaries: message/stop/scan/prompt on `litany`,
     // close/unclaim/create/update on `bl` (§8.2), and `bz --login` — bz's one
     // interactive verb — streamed from the Login pane (§8.3). Ball *reads* are
     // in-process on the model's own `BlStore` (§16.7 W8); these drive the short
     // *actions*, which stay processes (balls' seal CAS + plugin chain).
-    lernie: Cli,
+    litany: Cli,
     bl: Cli,
     bz: Cli,
 }
@@ -257,7 +257,7 @@ impl eframe::App for App {
             ctx,
             &mut self.engine.model,
             &mut self.state,
-            &self.lernie,
+            &self.litany,
             &self.bl,
             &self.bz,
         );

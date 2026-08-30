@@ -67,7 +67,7 @@ fn the_composers_enter_at_a_remote_focus_runs_the_whole_pair_at_the_host() {
     let screen = Screen::new();
     let mut world = remote_focus(&screen);
     let names_root = crate::binding::names_root(&world.yog_data);
-    let before = crate::binding::workspaces(&world.yog_data, &world.lernie_workspaces).len();
+    let before = crate::binding::workspaces(&world.yog_data, &world.litany_workspaces).len();
 
     // The keyboard into the goal box, then the §11 Enter — one box, one Enter.
     crate::shell::focus::request(&mut world.state);
@@ -107,7 +107,7 @@ fn a_send_at_a_remote_focus_founds_no_local_workspace() {
     let screen = Screen::new();
     let mut world = remote_focus(&screen);
     let names_root = crate::binding::names_root(&world.yog_data);
-    let before = crate::binding::workspaces(&world.yog_data, &world.lernie_workspaces).len();
+    let before = crate::binding::workspaces(&world.yog_data, &world.litany_workspaces).len();
 
     // Exactly what a landed `Prepare` leaves: the goal box, open on the
     // workspace it prepared.
@@ -159,7 +159,7 @@ fn founded_nothing(world: &super::fixture::World, names_root: &std::path::Path, 
         "and neither was a local stand-in wearing the entry's own name"
     );
     assert_eq!(
-        crate::binding::workspaces(&world.yog_data, &world.lernie_workspaces).len(),
+        crate::binding::workspaces(&world.yog_data, &world.litany_workspaces).len(),
         before,
         "the §3.1 enumeration is exactly what it was before the Enter"
     );

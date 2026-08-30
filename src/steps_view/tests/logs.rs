@@ -20,7 +20,7 @@ const ADAPTER: &str = "bz: no workspace in this environment — providers, sign-
 cache belong to a workspace.";
 
 /// What a driver that declined at the boundary writes to `driver.log`.
-const DRIVER: &str = "lernie: provider refused the turn — unpaired tool_use in the tail";
+const DRIVER: &str = "litany: provider refused the turn — unpaired tool_use in the tail";
 
 fn painted(detail: &StepDetail, tab: StepTab, raw: bool) -> String {
     let mut collapsed = HashSet::new();
@@ -88,8 +88,8 @@ fn a_step_with_captured_words_carries_both_logs_whole() {
 fn an_ordinary_step_is_offered_no_log_seat() {
     let dir = tempfile::tempdir().unwrap();
     let ws = dir.path();
-    // The ordinary run: lernie opens `stderr.log` every attempt and the adapter
-    // says nothing in it (lernie ARCH §2.3), and this agent's drivers have
+    // The ordinary run: litany opens `stderr.log` every attempt and the adapter
+    // says nothing in it (litany ARCH §2.3), and this agent's drivers have
     // written no log at all.
     write_file(ws, "001", "meta.json", br#"{"commit":"c0ffee"}"#);
     write_file(ws, "001", "stderr.log", b"");

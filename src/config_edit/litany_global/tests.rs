@@ -12,11 +12,11 @@ use super::*;
 use crate::test_support::FakeFs;
 
 fn root() -> PathBuf {
-    PathBuf::from("/cfg/lernie")
+    PathBuf::from("/cfg/litany")
 }
 
-fn lg() -> LernieGlobal {
-    LernieGlobal { root: root() }
+fn lg() -> LitanyGlobal {
+    LitanyGlobal { root: root() }
 }
 
 fn wf(name: &str) -> PathBuf {
@@ -24,17 +24,17 @@ fn wf(name: &str) -> PathBuf {
 }
 
 #[test]
-fn resolve_folds_root_from_env_and_lernie_home_collapse() {
+fn resolve_folds_root_from_env_and_litany_home_collapse() {
     let xdg = Env::from_pairs([("HOME", "/home/u"), ("XDG_CONFIG_HOME", "/home/u/.config")]);
     assert_eq!(
-        LernieGlobal::resolve(&xdg).models(),
-        PathBuf::from("/home/u/.config/lernie/models.yaml")
+        LitanyGlobal::resolve(&xdg).models(),
+        PathBuf::from("/home/u/.config/litany/models.yaml")
     );
-    // LERNIE_HOME collapses both roots onto one dir.
-    let home = Env::from_pairs([("HOME", "/home/u"), ("LERNIE_HOME", "/srv/lernie")]);
+    // LITANY_HOME collapses both roots onto one dir.
+    let home = Env::from_pairs([("HOME", "/home/u"), ("LITANY_HOME", "/srv/litany")]);
     assert_eq!(
-        LernieGlobal::resolve(&home).workflows_dir(),
-        PathBuf::from("/srv/lernie/workflows")
+        LitanyGlobal::resolve(&home).workflows_dir(),
+        PathBuf::from("/srv/litany/workflows")
     );
 }
 

@@ -1,5 +1,5 @@
 //! Every §9 config *destination*, driven through the chokepoint (bl-3f46): the
-//! `bz`-validated brazen write, the unjudged lernie-global one (bl-3ffa retired
+//! `bz`-validated brazen write, the unjudged litany-global one (bl-3ffa retired
 //! its provider gate), the workflow-name gate, the clock's own file, and the
 //! staged lineage commit — plus the two verdict folds that name every refusal.
 
@@ -10,7 +10,7 @@ use crate::boundary::dispatch::Deps;
 use crate::boundary::reply::Reply;
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::brazen::Applied;
-use crate::config_edit::lernie_global::Saved;
+use crate::config_edit::litany_global::Saved;
 use crate::test_support::world_under;
 use std::fs;
 use std::path::Path;
@@ -57,27 +57,27 @@ fn a_brazen_apply_that_cannot_write_says_so() {
 /// field's last reader, so a row brazen has never heard of is the operator's
 /// business, exactly as it is in `vi`.
 #[test]
-fn a_lernie_global_apply_lands_the_text_it_is_handed() {
+fn a_litany_global_apply_lands_the_text_it_is_handed() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
     let text = "models:\n  m-1:\n    context_window: 200000\n";
     assert_eq!(
-        fire(&deps, &applying(ConfigFile::LernieModels, text)),
+        fire(&deps, &applying(ConfigFile::LitanyModels, text)),
         Ok(Reply::Applied)
     );
     assert_eq!(
-        fs::read_to_string(root.path().join("lernie/models.yaml")).unwrap(),
+        fs::read_to_string(root.path().join("litany/models.yaml")).unwrap(),
         text
     );
     // A legacy entry naming a row brazen does not have lands too — refusing it
     // would refuse an Apply that is correcting the one line anything reads.
     let legacy = "models:\n  m-2:\n    provider: nope\n    context_window: 400000\n";
     assert_eq!(
-        fire(&deps, &applying(ConfigFile::LernieModels, legacy)),
+        fire(&deps, &applying(ConfigFile::LitanyModels, legacy)),
         Ok(Reply::Applied)
     );
     assert_eq!(
-        fs::read_to_string(root.path().join("lernie/models.yaml")).unwrap(),
+        fs::read_to_string(root.path().join("litany/models.yaml")).unwrap(),
         legacy
     );
 }
@@ -89,7 +89,7 @@ fn a_workflow_destination_must_name_one_file_and_lands_under_workflows() {
     let err = fire(
         &deps,
         &applying(
-            ConfigFile::LernieWorkflow {
+            ConfigFile::LitanyWorkflow {
                 name: "a/b".to_owned(),
             },
             "events: {}\n",
@@ -103,7 +103,7 @@ fn a_workflow_destination_must_name_one_file_and_lands_under_workflows() {
         fire(
             &deps,
             &applying(
-                ConfigFile::LernieWorkflow {
+                ConfigFile::LitanyWorkflow {
                     name: "review".to_owned(),
                 },
                 "events: {}\n",
@@ -112,7 +112,7 @@ fn a_workflow_destination_must_name_one_file_and_lands_under_workflows() {
         Ok(Reply::Applied)
     );
     assert_eq!(
-        fs::read_to_string(root.path().join("lernie/workflows/review.yaml")).unwrap(),
+        fs::read_to_string(root.path().join("litany/workflows/review.yaml")).unwrap(),
         "events: {}\n"
     );
 }
@@ -136,20 +136,20 @@ fn an_unreadable_file_refuses_before_anything_is_staged() {
     let deps = quiet(root.path());
     // A directory where the file should be: the read is a real error, not
     // absence, so the editor refuses to load.
-    fs::create_dir_all(root.path().join("lernie/models.yaml")).unwrap();
-    assert!(fire(&deps, &applying(ConfigFile::LernieModels, "x: 1\n")).is_err());
+    fs::create_dir_all(root.path().join("litany/models.yaml")).unwrap();
+    assert!(fire(&deps, &applying(ConfigFile::LitanyModels, "x: 1\n")).is_err());
 }
 
 #[test]
-fn a_lineage_apply_stages_the_text_and_drives_lernie_config() {
+fn a_lineage_apply_stages_the_text_and_drives_litany_config() {
     let root = tempdir().unwrap();
     let bin = tempdir().unwrap();
     let log = bin.path().join("log");
     // The recorder copies the staged file out, so the test can prove the text
-    // reached the shim's source dir — which is what lernie's $EDITOR reads.
-    let lernie = script(
+    // reached the shim's source dir — which is what litany's $EDITOR reads.
+    let litany = script(
         bin.path(),
-        "lernie",
+        "litany",
         &format!(
             "cat \"$YOG_EDIT_SRC/providers.yaml\" > {}\nprintf 'ok'\nexit 0\n",
             log.display()
@@ -157,7 +157,7 @@ fn a_lineage_apply_stages_the_text_and_drives_lernie_config() {
     );
     let ws = root.path().join("sphere");
     let deps = super::seeing(
-        &deps_at(root.path(), &lernie, Path::new("/no/bl")),
+        &deps_at(root.path(), &litany, Path::new("/no/bl")),
         &[ws.as_path()],
     );
     let text = "roles:\n  worker:\n    provider: acme\n";

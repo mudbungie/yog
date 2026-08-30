@@ -6,7 +6,7 @@
 //! The classifier that routes a dead step to the §9.1 editor is keyed on brazen's
 //! own words, so those words have to be brazen's and not a memory of them. This
 //! drives the pinned crate in-process with the request a yog turn is, takes the
-//! sentence it declines with, wraps it exactly as lernie's `AdapterError` does,
+//! sentence it declines with, wraps it exactly as litany's `AdapterError` does,
 //! and asserts yog classifies the result. No network, no `claude` CLI, and no
 //! second copy of brazen's message written down in prose.
 //!
@@ -80,8 +80,8 @@ impl brazen::Clock for Zero {
 
 /// The canonical request a yog turn is: a system prompt, one user message, and
 /// the `clients` tool yog injects into **every** turn
-/// (`tool_host::Injection::tools` returns it unconditionally, and lernie splices
-/// the injection into every canonical request). Written as the bytes lernie pipes
+/// (`tool_host::Injection::tools` returns it unconditionally, and litany splices
+/// the injection into every canonical request). Written as the bytes litany pipes
 /// to `bz`, because that is the interface — a struct literal here would be a
 /// second spelling of it.
 const TURN: &[u8] = br#"{"model":"sonnet","system":[{"type":"text","text":"you are a worker"}],
@@ -126,7 +126,7 @@ fn turn(provider: &str) -> (String, bool) {
 
 /// Leg one — why no marker could find this family. The decline lands at ENCODE,
 /// before any transport, and it calls itself nothing config-shaped: brazen stamps
-/// it `ErrorKind::ParseInput`, so lernie's wrapper carries `ParseInput` and not
+/// it `ErrorKind::ParseInput`, so litany's wrapper carries `ParseInput` and not
 /// the `config` word the two [`yog::config_edit::fault`] markers key on.
 #[test]
 fn the_dialect_declines_at_encode_and_never_calls_it_a_config_fault() {
@@ -143,8 +143,8 @@ fn the_dialect_declines_at_encode_and_never_calls_it_a_config_fault() {
     );
 }
 
-/// Leg two — the acceptance. brazen's own sentence, wrapped as lernie wraps it,
-/// earns the §9.1 route. The wrapper is lernie's `Error::AdapterError` display
+/// Leg two — the acceptance. brazen's own sentence, wrapped as litany wraps it,
+/// earns the §9.1 route. The wrapper is litany's `Error::AdapterError` display
 /// verbatim — `provider error ({kind}) on provider row {row:?}: {message}`, with
 /// `kind` the `Debug` of brazen's `ErrorKind`.
 #[test]

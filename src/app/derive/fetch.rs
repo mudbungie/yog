@@ -84,7 +84,7 @@ impl Deriver {
     ///
     /// **The gate is the whole of bl-b95e.** The fold used to run over every
     /// `-2` line, which made *speech* the trigger and needed a phrase table
-    /// (`opslog::notice`) to hold lernie's benign lines back — and left one
+    /// (`opslog::notice`) to hold litany's benign lines back — and left one
     /// unrecognized line reddening its row for the driver's whole life, since
     /// the sink is append-only and every sweep re-read its tail.
     /// [`opslog::launch::stillborn`] asks the state instead: the launch's

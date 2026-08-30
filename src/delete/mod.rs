@@ -2,7 +2,7 @@
 //! the §8.2 verb row).
 //!
 //! Deletion is the raise's inverse at the raise's altitude: raising is `mkdir -p`
-//! the names root + `lernie new` under the operator's chosen name (§3.1, §3.4),
+//! the names root + `litany new` under the operator's chosen name (§3.1, §3.4),
 //! so unmaking is the release of the
 //! sphere's live claims followed by removal of the workspace directory — a write
 //! to yog's **own** names root, never inside a workspace (I2 stands untouched).

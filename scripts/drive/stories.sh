@@ -1,6 +1,6 @@
 #!/bin/bash
 # stories.sh — drive S0/S1 of docs/STORIES.md against a REAL yog + the live
-# lernie wire (a real API call to the gpt-5.4 codex model). Layers on
+# litany wire (a real API call to the gpt-5.4 codex model). Layers on
 # yogdrive.sh (same dir): the low-level primitive is an isolated Xvfb seat,
 # claimed per run; this file is the STORY runner that seeds the world, fires the
 # beats, and asserts on ops.jsonl + the on-disk workspace tree.
@@ -76,12 +76,12 @@
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 drive="$here/yogdrive.sh"
-real_world="$HOME/.local/share/yog/world/lernie"
+real_world="$HOME/.local/share/yog/world/litany"
 
 # --- world seed (DESIGN §16.6 W3 marker + the codex provider rows) ----------
 # Copy the real world's models.yaml (carries the gpt-5.4 codex entry) and
 # template/providers.yaml (codex in both roles) into the scratch world. The
-# models.yaml presence is lernie's seeded marker, so yog skips `lernie prime`
+# models.yaml presence is litany's seeded marker, so yog skips `litany prime`
 # (S0-T2 seeded-skip) — the general path with the seed present (§3.4).
 #
 # The BOOTSTRAP SPHERE'S WALL is the third file of the same seed (bl-1851), not
@@ -94,9 +94,9 @@ real_world="$HOME/.local/share/yog/world/lernie"
 # is always too late.
 seed() {
   data=$1
-  mkdir -p "$data/yog/world/lernie/template"
-  cp "$real_world/models.yaml" "$data/yog/world/lernie/models.yaml"
-  cp "$real_world/template/providers.yaml" "$data/yog/world/lernie/template/providers.yaml"
+  mkdir -p "$data/yog/world/litany/template"
+  cp "$real_world/models.yaml" "$data/yog/world/litany/models.yaml"
+  cp "$real_world/template/providers.yaml" "$data/yog/world/litany/template/providers.yaml"
   seed_wall "$data" "$BOOTSTRAP_WS"
 }
 

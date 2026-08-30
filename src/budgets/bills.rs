@@ -92,7 +92,7 @@ pub struct StepBill {
     /// once, so wall time is a fold over the result rather than a second disk
     /// pass over the same `steps/` tree.
     ///
-    /// **Wall is wall** (lernie ARCH §6, whose `budget::derive::wall_seconds`
+    /// **Wall is wall** (litany ARCH §6, whose `budget::derive::wall_seconds`
     /// this mirrors): the span covers the backoff sleeps between a step's
     /// attempts, so it counts waiting as well as streaming. Zero when
     /// `meta.json` is missing, unparseable, still unsettled, or reports an end
@@ -128,7 +128,7 @@ pub fn total(bills: &[StepBill]) -> BudgetSpend {
 
 /// Sum of every bill's `meta.json` span — the wall figure (§3.9, bl-40ab),
 /// beside [`total`] and over the same walk. Summed per step rather than taken
-/// as the first-to-last span, exactly as lernie's own `wall_seconds` is: a
+/// as the first-to-last span, exactly as litany's own `wall_seconds` is: a
 /// conversation that sat idle for an hour between two calls spent no wall time
 /// on them, and it is the calls a budget bounds.
 pub fn wall(bills: &[StepBill]) -> u64 {

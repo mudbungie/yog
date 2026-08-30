@@ -43,7 +43,7 @@ pub(crate) fn spawn_guard() -> std::sync::MutexGuard<'static, ()> {
 
 /// In-memory [`FileIo`] for editor and pipeline tests: a flat path→bytes map.
 /// `fail_write` forces the write step to error (the `Io` Apply arm). Shared by
-/// the brazen, lernie-global and pipeline test modules — one fake, one
+/// the brazen, litany-global and pipeline test modules — one fake, one
 /// behavior, so the write pipeline is exercised the same way everywhere.
 #[derive(Default)]
 pub(crate) struct FakeFs {
@@ -106,16 +106,16 @@ impl FileIo for FakeFs {
     }
 }
 
-/// `providers.yaml` exactly as lernie's own `template/providers.yaml` authors
-/// it (pinned lernie, `=0.0.8`) — what a materialized `lernie new` commits,
+/// `providers.yaml` exactly as litany's own `template/providers.yaml` authors
+/// it (the pinned engine) — what a materialized `litany new` commits,
 /// worker tool pool included: yog grants nothing on top (§8.1, bl-7fc8).
 pub(crate) const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: anthropic\n    \
      model: claude-sonnet-5\n    tools: [apply_patch, bash, cd, dispatch, load_skill, message, \
      multi_tool, read_file]\n  compactor:\n    provider: anthropic\n    model: claude-haiku-4-5\n";
 
-/// The `new)` arm of a fake `lernie`: the workspace lernie ARCH §2.2 describes,
+/// The `new)` arm of a fake `litany`: the workspace litany ARCH §2.2 describes,
 /// authored in shell — a bare `repo.git` whose orphan `config/default` root
-/// carries [`TEMPLATE_PROVIDERS`]. Every fake `lernie` a start test drives
+/// carries [`TEMPLATE_PROVIDERS`]. Every fake `litany` a start test drives
 /// through shares this one arm.
 pub(crate) fn authoring_new_arm() -> String {
     format!(
@@ -167,7 +167,7 @@ pub(crate) fn prepared_replacement(path: &std::path::Path) -> std::path::PathBuf
 pub(crate) mod world;
 pub(crate) use world::{fixture_workspace, no_wall, no_world, wall_paths, world_under};
 
-/// A real lernie workspace on disk, for the tests that need one (§8.6's control
+/// A real litany workspace on disk, for the tests that need one (§8.6's control
 /// authoring and the start-flow abort it can raise). Its own file: the cap is a
 /// tree-wide invariant, and this seeder is a self-contained fixture rather than
 /// part of the spawn discipline above.

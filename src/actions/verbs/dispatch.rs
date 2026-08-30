@@ -7,8 +7,8 @@
 //!
 //! Every logging entry point takes an [`Origin`] — the §7.3 attribution
 //! (bl-48f8). It is a parameter rather than a derivation because the caller is
-//! the only one who knows: `bl close` and `lernie message` are told apart by
-//! their argv, but a ball-rung start's `lernie new` and the composer's are the
+//! the only one who knows: `bl close` and `litany message` are told apart by
+//! their argv, but a ball-rung start's `litany new` and the composer's are the
 //! same bytes. It is stated once, in the verb's own body, where the subject is
 //! not a guess.
 
@@ -91,8 +91,8 @@ pub fn run_logged(
 
 /// Like [`run_logged`] but with **no explicit cwd**: the child inherits yog's
 /// working dir (logged blank, like the detached prompt) while the standing world
-/// env (§16.6 W2) still nests it. The world seed's `lernie prime` (§16.6 W3):
-/// `prime` resolves its target from the standing `LERNIE_HOME` (§16.2), not cwd,
+/// env (§16.6 W2) still nests it. The world seed's `litany prime` (§16.6 W3):
+/// `prime` resolves its target from the standing `LITANY_HOME` (§16.2), not cwd,
 /// so no cwd is threaded — and, post-W2, no per-call env either. The nesting
 /// rides the world `Cli` every child carries; there is one source for it.
 pub fn run_logged_cwdless(

@@ -68,7 +68,7 @@ pub struct PickerState {
     /// brazen's effective provider rows — the whole of "is the role's row live?"
     /// since bl-d9cb, asked once per open on the same terms as `tip_providers`
     /// (the global `models.yaml` text used to be held beside them, for a
-    /// judgement over a table lernie no longer loads). Held **whole**, `auth`
+    /// judgement over a table litany no longer loads). Held **whole**, `auth`
     /// column included: the credential fault's remedy is derived from that column
     /// (bl-91f1), so reducing them to names here would throw away the fact one
     /// paint later and buy a second read of it.

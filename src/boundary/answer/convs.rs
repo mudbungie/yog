@@ -61,9 +61,9 @@ pub fn conv_ball(snap: &Snapshot, id: &str) -> ConvBall {
 }
 
 /// The conversation mint's occupied set for a workspace (§3.3): the names its
-/// living agents wear — each agent's `name_fact`, the lernie-stored blob with
+/// living agents wear — each agent's `name_fact`, the litany-stored blob with
 /// the legacy goal-stamp fallback while pre-0.0.4 roots live. Children count
-/// too, and must: lernie refuses a name any living agent already wears, so a
+/// too, and must: litany refuses a name any living agent already wears, so a
 /// mint that ignored a named child would fail at fire. Empty for an underived
 /// workspace — the general path with no inputs.
 pub fn names_in(snap: &Snapshot, ws: &Path) -> Vec<String> {

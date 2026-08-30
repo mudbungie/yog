@@ -177,7 +177,7 @@ fn resume_eligibility_is_the_bound_ball() {
 
 /// bl-48f8: the rung IS the §7.3 origin, and it is total over the three of them.
 /// A ball rung was offered on the roster's balls section, so its whole flow —
-/// the `lernie prime`/`lernie new`/`["yog-step","mkdir"]` substrate steps
+/// the `litany prime`/`litany new`/`["yog-step","mkdir"]` substrate steps
 /// included, which name no ball and could never be classified from their argv —
 /// banners there (§11, bl-6ad8). The bare and path rungs are the composer's own
 /// Enter, the empty world's bootstrap box being that same box with no workspace.

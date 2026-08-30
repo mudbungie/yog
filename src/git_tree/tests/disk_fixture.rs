@@ -16,7 +16,7 @@ impl Fixture {
         self.write_request(conv_id, 1, user_message);
     }
 
-    /// Write `steps/<conv-id>/<seq>/request.json` — the file lernie lands once,
+    /// Write `steps/<conv-id>/<seq>/request.json` — the file litany lands once,
     /// immediately before it invokes the model, so its mtime is that step's
     /// model-call start (§5.1 #28). Returns the path so a test can compare the
     /// snapshot's `call_start_unix` against the stamp it actually wrote.
@@ -53,7 +53,7 @@ impl Fixture {
     }
 
     /// Write `steps/<conv-id>/001/request.json` as the **assembled context**
-    /// lernie really sends (bl-368d): a block array whose first `text` block is
+    /// litany really sends (bl-368d): a block array whose first `text` block is
     /// the §3.7 pinned-instruction frame, the operator's message behind it
     /// inside its deposit envelope. Every other fixture writes `content` as a
     /// plain string, which is why nothing here ever saw the head the operator

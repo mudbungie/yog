@@ -14,9 +14,9 @@ use crate::cli_outbound::Cli;
 /// that happens to paint nothing.
 #[test]
 fn a_wireless_window_paints_the_refusal_and_no_operable_control() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = world();
-    let shell = painted(&mut world, &lernie, &bl);
+    let shell = painted(&mut world, &litany, &bl);
     assert!(
         shell.contains("Workspaces:"),
         "the wired frame paints the shell:\n{shell}"
@@ -25,7 +25,7 @@ fn a_wireless_window_paints_the_refusal_and_no_operable_control() {
     world
         .model
         .refuse_wire("bind 127.0.0.1:7737: Address already in use".to_owned());
-    let refused = painted(&mut world, &lernie, &bl);
+    let refused = painted(&mut world, &litany, &bl);
     assert!(
         refused.contains(crate::wire::post::NO_WIRE),
         "the one sentence every wireless act receipt carries heads the frame:\n{refused}"

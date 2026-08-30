@@ -24,7 +24,7 @@ pub enum CenterTab {
     /// lands here (`shell/focus.rs`).
     #[default]
     Conversation,
-    /// The §9 write surfaces: brazen's `config.toml`, lernie's global config,
+    /// The §9 write surfaces: brazen's `config.toml`, litany's global config,
     /// this workspace's config branches.
     Config,
     /// The §8.3 `bz --login` device flow, one row per provider.
@@ -79,7 +79,7 @@ impl CenterTab {
                  the box you talk to it in. Escape from any other tab comes back here."
             }
             Self::Config => {
-                "Every setting yog can write: brazen's config.toml, lernie's global \
+                "Every setting yog can write: brazen's config.toml, litany's global \
                  config, and this workspace's config branches. Focusing the tab re-reads \
                  all three off disk; nothing is written until you Apply."
             }

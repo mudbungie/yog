@@ -1,12 +1,12 @@
 //! The anchored block grammar yog reads and writes the two config files
 //! through: `providers.yaml`'s `roles:` — the §9.4 picker's one write, and the
 //! single home of a role's (provider row, model id) pointer — and
-//! `models.yaml`'s `models:`, which no longer reaches lernie at all and is
+//! `models.yaml`'s `models:`, which no longer reaches litany at all and is
 //! yog's own table (see `models.rs`).
 //!
 //! **This is not a YAML parser and must never become one.** yog declares no
-//! YAML dependency (§9.2) and lernie's own parser is private (its crate exposes
-//! only `cmd`), so it recognizes exactly the block shape lernie's
+//! YAML dependency (§9.2) and litany's own parser is private (its crate exposes
+//! only `cmd`), so it recognizes exactly the block shape litany's
 //! template authors — a top-level key at column 0, two-space entry keys,
 //! four-space fields —
 //!
@@ -26,7 +26,7 @@
 //! and **declines loudly** ([`GrammarError`], rendered in ichor per §7.3) on
 //! anything else, pointing at the §9.2 / §9.3 raw editors. Declining is not a
 //! dead end because those raw surfaces already exist: the picker is the fast
-//! path over the shape lernie itself writes, never a second authority on YAML.
+//! path over the shape litany itself writes, never a second authority on YAML.
 //!
 //! Every function here is pure text → text, so every arm is table-tested.
 //! Rewrites preserve every byte outside the lines they target; the output is
@@ -57,17 +57,17 @@ impl std::fmt::Display for GrammarError {
             Self::Inline { file, key } => write!(
                 f,
                 "{file}: {key}: carries an inline value; yog edits only the \
-                 block form lernie writes — use the raw editor"
+                 block form litany writes — use the raw editor"
             ),
             Self::NoEntry { file, entry } => write!(
                 f,
                 "{file}: no `  {entry}:` block entry; yog edits only the block \
-                 form lernie writes — use the raw editor"
+                 form litany writes — use the raw editor"
             ),
             Self::NoField { file, entry, field } => write!(
                 f,
                 "{file}: `  {entry}:` declares no `    {field}:` line; yog edits \
-                 only the block form lernie writes — use the raw editor"
+                 only the block form litany writes — use the raw editor"
             ),
         }
     }

@@ -135,7 +135,7 @@ impl Engine {
         // The §8.5 gestures-inbox consumer: both faces are one consumer surface,
         // so a deposit converges whichever is up (I0).
         let intake = Arc::new(ConsumerCtx {
-            lernie: Cli::resolve_in_world(Binary::Lernie, overrides),
+            litany: Cli::resolve_in_world(Binary::Litany, overrides),
             bl: Cli::resolve_in_world(Binary::Bl, overrides),
             state_root: world.yog_state_root(),
             home: world.home_dir(),
@@ -194,7 +194,7 @@ impl Engine {
         // of the seat, so it rides the engine and both faces run it.
         let pilot = Pilot::spawn(PilotCtx {
             deps: Deps {
-                lernie: Cli::resolve_in_world(Binary::Lernie, overrides),
+                litany: Cli::resolve_in_world(Binary::Litany, overrides),
                 bl: Cli::resolve_in_world(Binary::Bl, overrides),
                 state_root: world.yog_state_root(),
                 yog_binary: crate::cli_outbound::self_exe().unwrap_or_default(),

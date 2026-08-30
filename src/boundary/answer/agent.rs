@@ -54,7 +54,7 @@ pub struct AgentView {
     /// answer, not three.
     pub name: String,
     /// Whether [`name`](Self::name) is the legacy display-only rung (bl-8068):
-    /// prose off the root's goal stamp that no lernie-stored name fact backs,
+    /// prose off the root's goal stamp that no litany-stored name fact backs,
     /// so peers cannot address the conversation by it.
     pub display_only: bool,
     /// The agent branch's tip oid — the §5.1 #17 governing-config derivation's
@@ -63,7 +63,7 @@ pub struct AgentView {
     /// Its **own** §3.5 liveness, not the subtree aggregate a
     /// [`ConvRow`](crate::nav::convs::ConvRow) badge carries.
     pub state: AgentState,
-    /// The `refs/lernie/*` marks it wears (§6), in badge order — the derived
+    /// The `refs/litany/*` marks it wears (§6), in badge order — the derived
     /// badge list, exactly as [`Agent::marks`] folds it.
     pub marks: Vec<AgentMark>,
     /// The parked invocation itself (§8.6, ARCH §3.3) — the one mark that

@@ -31,7 +31,7 @@
 #
 # SO IT IS LAID BEFORE THE LAUNCH, with the world seed (stories.sh `seed`), and
 # that ordering is the whole of bl-1851. yog's bare start is ONE gesture — the
-# `lernie new` and the detached `lernie prompt` fire within the same second — so
+# `litany new` and the detached `litany prompt` fire within the same second — so
 # a fixture laid "after the mint" is always later than the FIRST MODEL CALL, and
 # every scratch-world run's first turn died with brazen's config error,
 # `unknown provider openai-chatgpt`, while the beat asserting the reply read as

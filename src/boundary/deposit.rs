@@ -1,5 +1,5 @@
 //! The headless transport (§8.5): a gesture is a **create-only file** in the
-//! yog-watched `<state_root>/gestures/` inbox — the lernie deposit discipline
+//! yog-watched `<state_root>/gestures/` inbox — the litany deposit discipline
 //! (I4) applied to yog itself. Delivery is `rename(2)`; temps are `.`-prefixed
 //! dotfiles the consumer never lists; the audit is the deposit plus the
 //! `ops.jsonl` rows the dispatch writes (§4.2).

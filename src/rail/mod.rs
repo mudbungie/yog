@@ -21,7 +21,7 @@
 //! **Two edges, one rendering** (VISION V1.3). A child's *context* edge — what
 //! it inherited — is git ancestry; its *provenance* edge — who dispatched it —
 //! is the descent id plus the parent-transcript notch where the dispatch
-//! landed. A clean child (`lernie dispatch --from config/<name>`) has
+//! landed. A clean child (`litany dispatch --from config/<name>`) has
 //! provenance only. The taxonomy is intact and still derived here; what it is
 //! **drawn** as changed with the seat. A gutter had room for two strokes, solid
 //! and dashed; a rule across a chat has no gutter to stroke in — and the fact
@@ -40,7 +40,7 @@
 //! carries. The dispatch notch is located the same way for both kinds: the
 //! last notch whose commit is no later than the child's own first commit.
 //!
-//! Everything here is a pure read of the lernie workspace repo — refs, trees,
+//! Everything here is a pure read of the litany workspace repo — refs, trees,
 //! commits — derived, never pushed (VISION V1.6). The card updates on the
 //! ordinary fs_watcher + off-thread snapshot read like every other §5.1
 //! derivation, and the frame renders snapshots only.

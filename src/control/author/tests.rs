@@ -11,7 +11,7 @@ use tempfile::tempdir;
 const SHIPPED: &str = "events:\n  user_message:\n    - dispatch(worker)\n\n\
      compaction:\n  intermediate:\n    trigger: on_flush\n";
 
-/// The same file as a workspace born before lernie retired the seed carries
+/// The same file as a workspace born before litany retired the seed carries
 /// it — the stale whole-tree ceiling this convergence exists to remove.
 const SEEDED: &str = "events:\n  user_message:\n    - dispatch(worker)\n\n\
      budgets:\n  max_total_tokens: 2000000\n  max_wall_seconds: 3600\n  max_depth: 4\n\n\
@@ -61,7 +61,7 @@ fn a_hand_added_ceiling_does_not_survive_the_next_convergence() {
     assert_eq!(out, authored(SEEDED, &shim()));
 }
 
-/// A workspace born after lernie retired the seed has no block to strip, so
+/// A workspace born after litany retired the seed has no block to strip, so
 /// the strip computes to itself — the general path with empty input.
 #[test]
 fn a_workflow_with_no_ceiling_strips_to_itself() {

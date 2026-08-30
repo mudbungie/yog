@@ -74,7 +74,7 @@ fn ui() -> UiState {
 /// A `Deps` around `snap` — no binary this suite runs ever needs to spawn.
 fn deps(snap: Snapshot, state: &Path) -> yog::boundary::dispatch::Deps {
     yog::boundary::dispatch::Deps {
-        lernie: yog::cli_outbound::Cli::new("/no/lernie"),
+        litany: yog::cli_outbound::Cli::new("/no/litany"),
         bl: yog::cli_outbound::Cli::new("/no/bl"),
         state_root: state.to_path_buf(),
         yog_binary: state.join("yog"),

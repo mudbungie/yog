@@ -7,7 +7,7 @@ use crate::model_pick::{
     row_role,
 };
 
-/// The governing commit as the fixtures see it: lernie's own template, forked
+/// The governing commit as the fixtures see it: litany's own template, forked
 /// at `1a2b3c4d`.
 fn governing() -> ConfigPoint {
     point("1a2b3c4dfeed", "1a2b3c4d", TEMPLATE_PROVIDERS)
@@ -120,7 +120,7 @@ fn the_retarget_exit_moves_this_conversation_and_keeps_it() {
     assert!(RETARGET_EXIT.contains("move this conversation"));
     assert!(RETARGET_EXIT.contains("current config"));
     assert!(!RETARGET_EXIT.contains("new conversation"));
-    assert!(RETARGET_HOVER.contains("lernie retarget"));
+    assert!(RETARGET_HOVER.contains("litany retarget"));
     assert!(RETARGET_HOVER.contains("next step"));
     assert!(RETARGET_HOVER.contains("keeps every message"));
     assert!(RETARGET_HOVER.contains("/retarget"));

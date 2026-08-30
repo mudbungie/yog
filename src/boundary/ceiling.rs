@@ -15,7 +15,7 @@
 //! spend-attribution ruling). A
 //! `Message` to a live conversation is therefore *not* gated — refusing to
 //! answer a drone that is mid-ball strands exactly the work the ruling exists
-//! to protect — and the bound on a drone already alive is lernie's own
+//! to protect — and the bound on a drone already alive is litany's own
 //! `max_total_tokens`, one layer down. Nor is `Prepare`: a claim spawns no
 //! drone and is releasable, so the refusal lands at the one irreversible step.
 //!

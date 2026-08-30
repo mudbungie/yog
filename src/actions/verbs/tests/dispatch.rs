@@ -30,7 +30,7 @@ fn outcome_ok_tracks_exit_zero() {
 
 #[test]
 fn run_logged_captures_streams_and_appends_the_entry() {
-    let w = World::new("lernie", OK_BODY);
+    let w = World::new("litany", OK_BODY);
     let out = run_logged(
         &w.cli,
         w.state.path(),
@@ -108,7 +108,7 @@ fn s0_t3_failed_step_entry_carries_stderr_and_view_model_renders_argv_and_tail()
     // stderr) leaves a rendered fact — the ops entry carries the stderr, and the
     // surface failure view-model renders argv + the stderr tail (§7.3).
     let w = World::new(
-        "lernie",
+        "litany",
         "#!/bin/sh\nprintf 'prime failed\\nmodels.yaml missing\\n' 1>&2\nexit 2\n",
     );
     let out = run_logged(

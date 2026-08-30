@@ -25,7 +25,7 @@ use crate::theme;
 /// owns (§5.3); the widget renders the chosen tab, and tab-switch clicks live
 /// in the shell.
 ///
-/// The first five are the JSON records lernie contracts to write; the last two
+/// The first five are the JSON records litany contracts to write; the last two
 /// are the capture logs (bl-83d6), which the picker seats only when they have
 /// bytes ([`super::records::seats`]) — a variant is a thing the operator can be
 /// looking at, not a claim that the file exists.

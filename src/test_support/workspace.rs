@@ -1,4 +1,4 @@
-//! A real lernie workspace on disk (lernie ARCH §2.2), reduced to what yog's
+//! A real litany workspace on disk (litany ARCH §2.2), reduced to what yog's
 //! own policy authoring reads: a bare `repo.git` whose orphan `config/default`
 //! root carries the control files — `workflow.yaml` for §8.6's capability
 //! control, `manifest.yaml` for §3.7's instruction glob, `instructions.yaml`
@@ -14,7 +14,7 @@ pub(crate) fn seed_workspace_workflow(workspace: &Path, workflow: &str) {
     seed_workspace_config(workspace, &[("workflow.yaml", workflow)]);
 }
 
-/// Author a workspace's `config/default` carrying `files` — the shape `lernie
+/// Author a workspace's `config/default` carrying `files` — the shape `litany
 /// new` leaves behind, reduced to the control files yog reads and rewrites.
 pub(crate) fn seed_workspace_config(workspace: &Path, files: &[(&str, &str)]) {
     let repo = workspace.join("repo.git");

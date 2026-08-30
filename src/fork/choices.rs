@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use super::{CONFIG_REF, SKILL_FILE, SKILLS_DIR};
 
 /// The `providers.yaml` a fork point's governing config declares its roles in
-/// (lernie ARCH §4.3) — the one file that binds a role to a model.
+/// (litany ARCH §4.3) — the one file that binds a role to a model.
 const PROVIDERS: &str = "providers.yaml";
 
 /// The world's skill pool: every directory under `skills_root` that carries a
@@ -41,7 +41,7 @@ pub struct ForkPoint {
     pub refspec: String,
     /// The roles this ref's **governing config commit** declares, each with
     /// the provider row and model id it names. Read from that commit's
-    /// `providers.yaml` — the file lernie itself resolves against — so the
+    /// `providers.yaml` — the file litany itself resolves against — so the
     /// model shown at the point of choice is the model that will run. Empty
     /// when the ref names no config lineage yog can reach: the composer then
     /// offers nothing to fire rather than guessing a role.
@@ -120,13 +120,13 @@ pub fn roles_at(workspace: &Path, refspec: &str) -> Vec<RoleModel> {
     grammar::roles(&String::from_utf8_lossy(&bytes))
 }
 
-/// The world's skills pool directory, `$LERNIE_HOME/skills` — the same path
-/// lernie's own `load_skill` tool resolves. Derived from the world layout, so
+/// The world's skills pool directory, `$LITANY_HOME/skills` — the same path
+/// litany's own `load_skill` tool resolves. Derived from the world layout, so
 /// yog's nested substrate (§16.2) and the pool it offers are one fact.
 pub fn skills_root(yog_data_root: &Path) -> PathBuf {
     // Bound rather than chained: tarpaulin's llvm engine mis-attributes a
     // multi-line method chain's tail as uncovered, and rustfmt's chain width
     // will not keep this one on a single line.
     let world = crate::world::layout_under(yog_data_root);
-    world.lernie.join(SKILLS_DIR)
+    world.litany.join(SKILLS_DIR)
 }

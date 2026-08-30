@@ -29,12 +29,12 @@
 
 ops="" ; ws_root=""
 
-# count occurrences of a lernie verb in ops.jsonl (argv[1] == verb). Before the
+# count occurrences of a litany verb in ops.jsonl (argv[1] == verb). Before the
 # first spawn there is no ops.jsonl at all and `grep -c` prints nothing, so
 # normalise the missing-file and no-match cases to the same plain 0 — every
 # `await`/`until_landed` predicate below reads a count before yog has written a
 # single row.
-verb_count() { c=$(grep -c "\"lernie\",\"$1\"" "$ops" 2>/dev/null) || true; echo "${c:-0}"; }
+verb_count() { c=$(grep -c "\"litany\",\"$1\"" "$ops" 2>/dev/null) || true; echo "${c:-0}"; }
 # the 1-based ops.jsonl line of a verb's first row (empty when absent) — the
 # §8.1 order assertion compares two of these.
 verb_line() { grep -n "\"$1\",\"$2\"" "$ops" 2>/dev/null | head -1 | cut -d: -f1; }
@@ -101,14 +101,14 @@ verb_ge() { [ "$(verb_count "$1")" -ge "$2" ]; }
 # claim is asserted by their own no-re-mint neighbours, which count a verb that
 # must NOT grow — the safe direction for an equality.
 agents_ge() { [ "$(agent_count)" -ge "$1" ]; }
-# a `lernie stop` row naming THIS conversation (argv: `lernie stop <ws> <id>`).
+# a `litany stop` row naming THIS conversation (argv: `litany stop <ws> <id>`).
 # Identity, not a count: `verb_ge stop 1` is satisfied by a stop of the WRONG
 # conversation exactly as well as by the right one, and the S6 beat that spends
 # it is about which one the selection was on (bl-2d45).
 # An EMPTY id is refused, never interpolated: `grep -q '""'` matches almost any
 # ops row. Every id-taking predicate in this harness carries the same guard, so
 # the trap cannot be re-armed one call site at a time (bl-f16e).
-stopped() { [ -n "$1" ] && grep '"lernie","stop"' "$ops" 2>/dev/null | grep -q "\"$1\""; }
+stopped() { [ -n "$1" ] && grep '"litany","stop"' "$ops" 2>/dev/null | grep -q "\"$1\""; }
 # the id of the one conversation under `$ws_root` that is NOT `$1` — empty when
 # there is none. A world that lays two roots can then name either by identity
 # instead of by its rank in a list, which is a thing yog's list no longer has.

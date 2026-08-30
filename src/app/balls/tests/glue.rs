@@ -3,7 +3,7 @@
 //! window posts every act over the wire and holds no dispatch of its own, so
 //! these read the chokepoint the wire's listener reaches, over a `ui.json`
 //! opened fresh per gesture. Shares [`super::world`]'s hermetic fixture; spawns
-//! a fake `lernie`, so it lives in its own file (the `prepare.rs` discipline).
+//! a fake `litany`, so it lives in its own file (the `prepare.rs` discipline).
 
 use super::{model_focused, world};
 use crate::boundary::Action;
@@ -22,9 +22,9 @@ use tempfile::tempdir;
 /// gesture names (bl-49bc), and an id reads as one on its own.
 const AGENT: &str = "20260101T000000Z-c1";
 
-/// An everything-succeeds fake `lernie`.
-fn fake_lernie(dir: &Path) -> Cli {
-    let path = dir.join("lernie");
+/// An everything-succeeds fake `litany`.
+fn fake_litany(dir: &Path) -> Cli {
+    let path = dir.join("litany");
     fs::write(&path, "#!/bin/sh\nexit 0\n").unwrap();
     let mut perms = fs::metadata(&path).unwrap().permissions();
     perms.set_mode(0o755);
@@ -48,8 +48,8 @@ fn the_engines_dispatch_is_the_one_chokepoint_a_posted_act_reaches() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let lernie = fake_lernie(bin.path());
-    let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
+    let litany = fake_litany(bin.path());
+    let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Scan {
         workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
     };
@@ -62,15 +62,15 @@ fn the_engines_dispatch_is_the_one_chokepoint_a_posted_act_reaches() {
 }
 
 /// The §9.4 exit rides the same chokepoint (bl-2d19), and what reaches the
-/// substrate is the workspace-bound `lernie retarget <ws> <agent>` — asserted
+/// substrate is the workspace-bound `litany retarget <ws> <agent>` — asserted
 /// off the §4.2 trail, which records the argv actually spawned.
 #[test]
-fn the_retarget_exit_spawns_the_bound_lernie_verb() {
+fn the_retarget_exit_spawns_the_bound_litany_verb() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let lernie = fake_lernie(bin.path());
-    let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
+    let litany = fake_litany(bin.path());
+    let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Retarget {
         workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
         agent: AGENT.into(),
@@ -97,8 +97,8 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let lernie = fake_lernie(bin.path());
-    let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
+    let litany = fake_litany(bin.path());
+    let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Prompt {
         prepared: prepared(&w),
         goal: "go".into(),
@@ -122,7 +122,7 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
     );
 
     // The same door refuses when the fork cannot land, error text riding back.
-    let dead = m.boundary_deps(&Cli::new("/no/such/lernie"), &Cli::new("/no/bl"));
+    let dead = m.boundary_deps(&Cli::new("/no/such/litany"), &Cli::new("/no/bl"));
     let err = engine::act(&m, &dead, "T2", &action).unwrap_err();
     assert!(!err.is_empty());
 }
@@ -136,8 +136,8 @@ fn a_seedless_prompt_mints_off_the_stamp() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let lernie = fake_lernie(bin.path());
-    let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
+    let litany = fake_litany(bin.path());
+    let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Prompt {
         prepared: prepared(&w),
         goal: "go".into(),
@@ -150,7 +150,7 @@ fn a_seedless_prompt_mints_off_the_stamp() {
 }
 
 /// **S12-T5 three-spellings** (the executor half): one attempt crosses the
-/// boundary as the ordinary `lernie dispatch --from`, and the whole argv —
+/// boundary as the ordinary `litany dispatch --from`, and the whole argv —
 /// role, parent, verbatim goal, fork point, skill pin — lands on the §4.2
 /// trail. A cohort is this, N times: nothing here knows how many there were.
 #[test]
@@ -158,8 +158,8 @@ fn an_attempt_dispatches_the_ordinary_fork_and_logs_its_whole_argv() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
-    let lernie = fake_lernie(bin.path());
-    let deps = m.boundary_deps(&lernie, &Cli::new("/no/bl"));
+    let litany = fake_litany(bin.path());
+    let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Fork {
         workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
         parent: AGENT.into(),
@@ -187,8 +187,8 @@ fn an_attempt_dispatches_the_ordinary_fork_and_logs_its_whole_argv() {
         argv.contains(&"try it the other way".to_owned()),
         "{argv:?}"
     );
-    // The pin's source is the **world's** pool, never an ambient lernie's.
+    // The pin's source is the **world's** pool, never an ambient litany's.
     let pin = argv.iter().find(|a| a.starts_with("skills/bash/SKILL.md="));
     let pin = pin.expect("the skill rides as a pin");
-    assert!(pin.contains("world/lernie/skills/bash/SKILL.md"), "{pin}");
+    assert!(pin.contains("world/litany/skills/bash/SKILL.md"), "{pin}");
 }

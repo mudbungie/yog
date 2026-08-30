@@ -79,7 +79,7 @@ fn prepend_path_puts_the_tools_dir_first_and_is_idempotent() {
 /// §8.6: the capability control's shim is a roster member like the rest — the
 /// path the authored `tool_control:` block names is exactly what
 /// [`ensure_control`] writes, and both halves come from one place so the
-/// adjudicator lernie spawns cannot be a different file from the one yog
+/// adjudicator litany spawns cannot be a different file from the one yog
 /// authored.
 #[test]
 fn the_capability_control_shim_is_seeded_where_the_authored_block_names_it() {

@@ -32,22 +32,22 @@ fn ctx(state_root: &std::path::Path) -> ConsumerCtx {
         state_root,
         crate::app::Snapshot::empty(0),
         PathBuf::from("/data"),
-        Cli::new("/no/such/lernie"),
+        Cli::new("/no/such/litany"),
     )
 }
 
-/// A context over a stated snapshot, world root and `lernie` — everything the
+/// A context over a stated snapshot, world root and `litany` — everything the
 /// REMOTE §4 tests below vary.
 fn over(
     state_root: &std::path::Path,
     snap: crate::app::Snapshot,
     yog_data_root: PathBuf,
-    lernie: Cli,
+    litany: Cli,
 ) -> ConsumerCtx {
     ConsumerCtx {
         yog_binary: PathBuf::from("/no/such/yog"),
         world: crate::test_support::no_world(),
-        lernie,
+        litany,
         bl: Cli::new("/no/such/bl"),
         state_root: state_root.to_path_buf(),
         home: PathBuf::from("/home/x"),
@@ -84,16 +84,16 @@ fn world_of(root: &std::path::Path, names: &[&str]) -> crate::app::Snapshot {
     snap
 }
 
-/// A `lernie` that materializes what the real one does for a start's substrate
+/// A `litany` that materializes what the real one does for a start's substrate
 /// steps — the world's seed marker and the workspace's config branch — and
 /// nothing else. `prime` is short-circuited by [`seed`] ahead of it.
-fn fake_lernie(dir: &std::path::Path) -> Cli {
+fn fake_litany(dir: &std::path::Path) -> Cli {
     use std::os::unix::fs::PermissionsExt;
     let body = format!(
         "#!/bin/sh\ncase \"$1\" in\n{arm}esac\nexit 0\n",
         arm = crate::test_support::authoring_new_arm()
     );
-    let path = dir.join("lernie");
+    let path = dir.join("litany");
     std::fs::write(&path, body).unwrap();
     let mut perms = std::fs::metadata(&path).unwrap().permissions();
     perms.set_mode(0o755);
@@ -103,9 +103,9 @@ fn fake_lernie(dir: &std::path::Path) -> Cli {
 
 /// Lay the world's seed marker so `prime` short-circuits (§16.6 W3).
 fn seed(yog_data_root: &std::path::Path) {
-    let lernie = crate::world::layout_under(yog_data_root).lernie;
-    std::fs::create_dir_all(&lernie).unwrap();
-    std::fs::write(lernie.join("models.yaml"), b"models: {}\n").unwrap();
+    let litany = crate::world::layout_under(yog_data_root).litany;
+    std::fs::create_dir_all(&litany).unwrap();
+    std::fs::write(litany.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
 /// The workspace names a `workspaces` reply lists.

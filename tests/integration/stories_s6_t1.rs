@@ -6,7 +6,7 @@
 //! landed with the capability boundary (§8.6, S15–S17): a tool invocation
 //! parked at the control. It joins rule 5 (mail) as a signal a watermark cannot
 //! clear — "each self-clears when the world moves (a driver drains the inbox;
-//! lernie lifts the hold mark on the answer's re-adjudication), and no watermark
+//! litany lifts the hold mark on the answer's re-adjudication), and no watermark
 //! may pretend to answer them" (`attention::evidence`).
 //!
 //! Rule 2 carries **two** fixtures since bl-2194 widened it to *rest*: the

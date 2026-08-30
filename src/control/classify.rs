@@ -20,13 +20,13 @@
 //! Built-ins carry an **intrinsic map**; two of them (`cd`, `apply_patch`) are
 //! judged against the writable root at consult time, and `bash` goes to the
 //! operator ruleset ([`super::bash`]). Everything the map does not name — an
-//! external `lernie-tool-*` binary, a tool a later lernie adds — is
+//! external `litany-tool-*` binary, a tool a later litany adds — is
 //! [`OpenWorld`](Effect::OpenWorld): classification error fails toward the
 //! widest class short of loss, so an unrecognised effect is never mistaken for
 //! a read and stays something an override or a floor can catch.
 //!
 //! **Substrate verbs are target writes, not exemptions.** `message` and the
-//! world's `bl`/`lernie` shims mutate the world's own substrates *through their
+//! world's `bl`/`litany` shims mutate the world's own substrates *through their
 //! gated verbs* — the delivery law, the front door — which is literally the
 //! second half of the target-write definition. They therefore pass by the
 //! ordinary table rather than by a bypass, and the control keeps ruling host
@@ -104,7 +104,7 @@ impl Classified {
     }
 }
 
-/// Built-in tool names, as lernie spells them.
+/// Built-in tool names, as litany spells them.
 const READ_FILE: &str = "read_file";
 const LOAD_SKILL: &str = "load_skill";
 const MESSAGE: &str = "message";
@@ -132,7 +132,7 @@ pub fn classify(request: &Request, root: &Root, policy: &super::policy::Policy) 
             Effect::Process,
             "mints an agent, under the harness's own budget and depth gates",
         ),
-        // The envelope itself observes nothing and changes nothing: lernie
+        // The envelope itself observes nothing and changes nothing: litany
         // adjudicates each inner invocation through this same seam, so passing
         // the wrapper structurally is the general path, not an exemption.
         MULTI_TOOL => Classified::new(

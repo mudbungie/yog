@@ -5,7 +5,7 @@
 //! — the [`FileIo`] seam, temp-in-dir staging, the concurrent-edit hash guard
 //! and the atomic rename — lives in [`pipeline`], the single source of truth
 //! for how an edit reaches disk (§9). Each is a thin view-model over it:
-//! [`brazen`] (§9.1, raw TOML gated by `bz`) and [`lernie_global`] (§9.2, raw
+//! [`brazen`] (§9.1, raw TOML gated by `bz`) and [`litany_global`] (§9.2, raw
 //! `models.yaml`/`workflows/*.yaml` with no validator). Every editor is pure
 //! over the injected seam, so Linux tarpaulin drives each transition with a
 //! fake and no real disk.
@@ -20,9 +20,9 @@
 //! env-scrubbed `git_tree::cmd` wrapper and derives each agent's governing
 //! config; the `$EDITOR`-driven edit half ([`branch::edit`], Y21) is the only
 //! lawful writer of `config/*` and so bypasses the [`FileIo`] pipeline
-//! entirely — it stages drafts and drives `lernie config`, whose `$EDITOR`
+//! entirely — it stages drafts and drives `litany config`, whose `$EDITOR`
 //! callback re-enters this binary in [`apply`] shim mode to copy them over the
-//! checkout. lernie commits.
+//! checkout. litany commits.
 
 mod draft;
 mod effects;
@@ -36,7 +36,7 @@ pub mod brazen;
 /// editor it points at, exactly as §8.3's auth classifier sits with Login.
 pub mod fault;
 pub mod form;
-pub mod lernie_global;
+pub mod litany_global;
 
 pub(crate) use draft::Draft;
 pub use effects::RealFileIo;

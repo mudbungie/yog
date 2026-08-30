@@ -12,7 +12,7 @@ use crate::model_pick::{grammar, role_fault};
 /// visible at the point of change instead of failing at fire.
 ///
 /// **It read the global `models.yaml` too until bl-d9cb**, for a judgement about
-/// a table lernie no longer loads — so the picker is down to one file, on the
+/// a table litany no longer loads — so the picker is down to one file, on the
 /// read side as well as the write side.
 pub(super) fn mark_roles(picker: &mut PickerState, providers_yaml: &str) -> Vec<Marked> {
     let names = row_names(&provider_rows(picker));

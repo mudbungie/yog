@@ -76,23 +76,23 @@ pub(in crate::shell::acceptance) fn build_world(title: &str, roster: &Roster) ->
     let yog_data = root.path().join("yog");
     let roots = Roots {
         yog_data: yog_data.clone(),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         balls_clones: root.path().join("balls").join("clones"),
         home: root.path().join("home"),
-        // A hermetic world rooted at this fixture's own temp dir, whose lernie
-        // leaf IS `roots.lernie_data` — the coincidence production has (§16.2:
-        // `LERNIE_HOME` nests lernie's config and data onto one dir), so the
+        // A hermetic world rooted at this fixture's own temp dir, whose litany
+        // leaf IS `roots.litany_data` — the coincidence production has (§16.2:
+        // `LITANY_HOME` nests litany's config and data onto one dir), so the
         // §9.2 `models.yaml` a test writes is the one the worker reads.
         world: crate::test_support::world_under(root.path()),
     };
-    std::fs::create_dir_all(roots.lernie_data.join("workspaces")).unwrap();
+    std::fs::create_dir_all(roots.litany_data.join("workspaces")).unwrap();
     // The §9.2 global `models.yaml` a founded world carries, declaring the
     // §5.1 #35 context window of `m` — the model the fixture's step records
     // name in their own `request.json` (`write_step_record`). Written in the
     // block's legacy shape, which the read still takes whole (bl-3ffa).
     std::fs::write(
-        roots.lernie_data.join("models.yaml"),
+        roots.litany_data.join("models.yaml"),
         b"models:\n  m:\n    provider: anthropic\n    model_id: m\n    context_window: 200000\n",
     )
     .unwrap();
@@ -102,7 +102,7 @@ pub(in crate::shell::acceptance) fn build_world(title: &str, roster: &Roster) ->
     // `config/default` the pane takes its first early return — "cannot read
     // `roles:`" — and everything below it (the role strip, the two dropdowns,
     // the roster query and its remedy) is unreachable from any acceptance test.
-    // The text is `TEMPLATE_PROVIDERS`, the same bytes lernie's own
+    // The text is `TEMPLATE_PROVIDERS`, the same bytes litany's own
     // `template/providers.yaml` commits and the `model_pick` unit tests pin, so
     // the fixture and those tests read ONE shape.
     //
@@ -145,7 +145,7 @@ pub(in crate::shell::acceptance) fn build_world(title: &str, roster: &Roster) ->
         "user-001.md",
         "---\nfrom: user\ndeposited_at: t0\n---\nfollow-up message",
     );
-    let lernie_workspaces = roots.lernie_data.join("workspaces");
+    let litany_workspaces = roots.litany_data.join("workspaces");
     // **The crowded world's wall is one of yog's own** (§3.1's named root),
     // where every other fixture's is foreign. Not decoration: §3.6 offers the
     // workspace delete on a named wall and nowhere else, so a foreign wall's
@@ -158,7 +158,7 @@ pub(in crate::shell::acceptance) fn build_world(title: &str, roster: &Roster) ->
         std::fs::create_dir_all(&names_root).unwrap();
         names_root.join(crowd::WALL)
     } else {
-        lernie_workspaces.join("ws")
+        litany_workspaces.join("ws")
     };
     // The one line that makes a world empty: unlinked, the conversation is on
     // disk and invisible to enumeration, so the roster has nothing in it and
@@ -203,7 +203,7 @@ pub(in crate::shell::acceptance) fn build_world(title: &str, roster: &Roster) ->
         state,
         ws,
         yog_data,
-        lernie_workspaces,
+        litany_workspaces,
         link: link_end,
         outbox,
         entry: None,
@@ -216,7 +216,7 @@ pub(in crate::shell::acceptance) fn build_world(title: &str, roster: &Roster) ->
         // tools dir (§16.2), so a relative name resolves against it. The whole
         // suite spells these the same way, and `world::tools::ensure_shim`
         // refuses to persist a non-absolute target for that reason.
-        lernie: Cli::new("/yog-absent-lernie"),
+        litany: Cli::new("/yog-absent-litany"),
         bl: Cli::new("/yog-absent-bl"),
     }
 }

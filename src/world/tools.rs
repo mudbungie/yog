@@ -3,7 +3,7 @@
 //! seeds into it and the `PATH` entry that makes them the tools an agent finds.
 //!
 //! **The surface an agent actually uses is bash.** §16.4's premise — "binaries
-//! matter only as the plane on which lernie's worker agents drive tools by
+//! matter only as the plane on which litany's worker agents drive tools by
 //! bash" — decides the mechanism: a worker types `bl close bl-1a2b` in its
 //! `bash` tool, so `bl` must *resolve* to yog's embedded balls, not to whatever
 //! host binary sits on the ambient `PATH`. Hence two facts, both here:
@@ -15,7 +15,7 @@
 //!    `bl` spawns cannot name different targets — one fact, one home.
 //! 2. [`prepend_path`] puts that directory in front of the ambient `$PATH` in
 //!    the world override set (§16.2), so every child of yog — the detached
-//!    `lernie prompt`, its driver, the driver's `bash` tool, the shim — inherits
+//!    `litany prompt`, its driver, the driver's `bash` tool, the shim — inherits
 //!    a `PATH` on which the world's `bl` wins.
 //!
 //! **Identity rides the env, not the argv.** The shim passes the caller's
@@ -31,8 +31,8 @@
 //! loses nothing. Convergence is not unconditional, though: a rewrite is only
 //! ever an improvement if the new target is one that can be exec'd, so
 //! [`ensure_shim`] refuses a resolution that is not an absolute path (bl-f558)
-//! rather than replacing a working shim with a broken one. It is *not* the `lernie-tool-<name>` external-tool slot: that
-//! is lernie's JSON-stdin tool contract under `$LERNIE_HOME/tools/`, needs a
+//! rather than replacing a working shim with a broken one. It is *not* the `litany-tool-<name>` external-tool slot: that
+//! is litany's JSON-stdin tool contract under `$LITANY_HOME/tools/`, needs a
 //! schema plus a `SKILL.md` plus a role `tools:` entry, and speaks nothing like
 //! bl's argv (see §16.4's amended note).
 
@@ -49,17 +49,17 @@ use crate::world::hatch::shell_quote;
 /// to run one.
 pub const BL: &str = "bl";
 
-/// The `lernie` shim namespace (§16.7 W11). Converged by the multiplex arm on
-/// the way into every `yog lernie` verb — it is `Fx::driver_target`, the single
-/// path every lernie re-entry (the detached `advance` launch, the §6 successor
+/// The `litany` shim namespace (§16.7 W11). Converged by the multiplex arm on
+/// the way into every `yog litany` verb — it is `Fx::driver_target`, the single
+/// path every litany re-entry (the detached `advance` launch, the §6 successor
 /// `execve`, the tool resolver's third hop) spawns verbatim, so it must exist
 /// before the first driver runs and must carry the namespace word a bare yog
 /// exe cannot.
-pub const LERNIE: &str = "lernie";
+pub const LITANY: &str = "litany";
 
 /// The `bz` shim namespace (§16.7 W11): `Fx::adapter_target`, the provider
-/// adapter a linked lernie spawns — the same single-path constraint as
-/// [`LERNIE`], answered by the W10 `bz` arm. Converged beside it.
+/// adapter a linked litany spawns — the same single-path constraint as
+/// [`LITANY`], answered by the W10 `bz` arm. Converged beside it.
 pub const BZ: &str = "bz";
 
 /// The `bl-delivery` shim namespace (bl-2930): balls' delivery plugin sibling.
@@ -74,8 +74,8 @@ pub const BL_DELIVERY: &str = "bl-delivery";
 pub const BL_TRACKER: &str = "bl-tracker";
 
 /// The capability control's shim namespace (§8.6, VISION §4.11, bl-fec8): the
-/// executable lernie's tool-control seam consults before every granted tool
-/// invocation. Not an agent tool — no agent types it, and lernie spawns it with
+/// executable litany's tool-control seam consults before every granted tool
+/// invocation. Not an agent tool — no agent types it, and litany spawns it with
 /// no argv at all — but it belongs to this roster for the roster's own reason:
 /// the authored `tool_control:` block names it by **absolute path**, so the
 /// adjudicator cannot be shadowed by a host binary the way an unqualified name
@@ -119,7 +119,7 @@ pub fn ensure_control(tools: &Path) -> io::Result<PathBuf> {
 /// drives yog through.
 pub const ROSTER: [(&str, Binary); 7] = [
     (BL, Binary::Bl),
-    (LERNIE, Binary::Lernie),
+    (LITANY, Binary::Litany),
     (BZ, Binary::Bz),
     (BL_DELIVERY, Binary::BlDelivery),
     (BL_TRACKER, Binary::BlTracker),

@@ -5,7 +5,7 @@
 //!
 //! - `yog env` prints the world's `export` lines ([`env_script`]) so
 //!   `eval "$(yog env)"` drops the caller's shell *into* the world (§16.2),
-//!   where a bare `bl`/`lernie`/`bz` is the world's own shim — each an exec of
+//!   where a bare `bl`/`litany`/`bz` is the world's own shim — each an exec of
 //!   yog's embedded substrate against the nested state (§16.4; the phase-1
 //!   "ambient binaries on nested state" reading died with the batteries).
 //!   Values are shell-quoted ([`shell_quote`]) so a path with a space or a
@@ -57,7 +57,7 @@ pub fn shell_quote(s: &str) -> String {
 }
 
 /// The `yog env` product: one `export <VAR>='<value>'` line per world override
-/// (§16.2 — `LERNIE_HOME`, `XDG_STATE_HOME`, then the §16.7 W9 `PATH` prepend,
+/// (§16.2 — `LITANY_HOME`, `XDG_STATE_HOME`, then the §16.7 W9 `PATH` prepend,
 /// in that order), each value [`shell_quote`]d, newline-terminated. Fed the same
 /// [`world::overrides`](crate::world::overrides) every spawn layers, so the
 /// dir a human's `eval`'d shell writes is the dir yog watches.

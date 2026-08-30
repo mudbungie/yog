@@ -22,7 +22,7 @@
 //! agent state, nothing stored (§5.1 #13):
 //!
 //! - **Unanswered on disk** — the step's `response.json` carries no bytes
-//!   (absent or zero-length) *and* its `meta.json` is absent. lernie writes
+//!   (absent or zero-length) *and* its `meta.json` is absent. litany writes
 //!   `meta.json` only after the model call returns (ARCH §2.3 — its dispatch
 //!   loop short-circuits on the call's own error before `write_meta`), so the
 //!   pair says exactly: the call emitted nothing and the step never settled.
@@ -36,7 +36,7 @@
 //! unambiguous, and stays rendered as the place the conversation died.
 //!
 //! The **reason** is a third read of the same step directory, and it is the
-//! whole of bl-55d8. lernie ARCH §2.3 on `stderr.log`, verbatim: *"the adapter
+//! whole of bl-55d8. litany ARCH §2.3 on `stderr.log`, verbatim: *"the adapter
 //! subprocess's stderr, appended once per attempt across the model call.
 //! **Empty on an ordinary run**: brazen speaks every failure in-band on stdout
 //! (§4.4), so bytes here mean the adapter failed outside that contract — a
@@ -53,7 +53,7 @@
 //! **Where it is NOT.** Until bl-55d8 the banner pointed at the ops surface —
 //! *"the driver's own stderr is in the activity trail below"*. For the class
 //! the operator actually hit that pointer is empty: a turn continued by
-//! `lernie message` is driven by a child **lernie** launched, not by a yog
+//! `litany message` is driven by a child **litany** launched, not by a yog
 //! detached spawn, so no §8.1 per-spawn sink exists to fold into a `-2` ops row
 //! at all. The step's own `stderr.log` is the only copy, which is why the
 //! sentence now carries the bytes instead of naming a place to look.
@@ -91,7 +91,7 @@ const SPOKE: &str = "its stderr.log says:";
 ///
 /// It names Nudge in order to **retire** it, because §8.2 offers Nudge on
 /// every other resting conversation and a control that silently disappears
-/// reads as a bug. Linked lernie derives `NothingDue` from a tool-free
+/// reads as a bug. Linked litany derives `NothingDue` from a tool-free
 /// assistant tail and exits without creating a step, so the honest sentence is
 /// that the gesture cannot help and which one can — never a blind retry, and
 /// never a new verb (bl-fb87).

@@ -33,7 +33,7 @@ pub(crate) fn no_balls() -> BlStore {
 }
 
 /// A hermetic test world: XDG roots under one tempdir, plus one ad-hoc
-/// workspace (a real git fixture) symlinked under the lernie workspaces root so
+/// workspace (a real git fixture) symlinked under the litany workspaces root so
 /// [`binding::workspaces`](crate::binding::workspaces) enumerates it. The
 /// fixture's single agent (`c-1`) has no driver and no response — it classifies
 /// [`AgentState::Stopped`], so its unseen stop is attention (§6).
@@ -58,9 +58,9 @@ impl Harness {
     }
 
     /// A world as the operator first meets it: the yog state root and **nothing
-    /// else** — no names root, no lernie workspaces root, no workspace. The
+    /// else** — no names root, no litany workspaces root, no workspace. The
     /// shape the §8.1 start flow founds its first workspace into
-    /// (`execute_ensure_workspace`'s `create_dir_all(parent)` + `lernie new`),
+    /// (`execute_ensure_workspace`'s `create_dir_all(parent)` + `litany new`),
     /// and therefore the shape the §7.2 sweep first meets that workspace in.
     ///
     /// `ws` is the not-yet-existing path a workspace *would* take; a pristine
@@ -69,7 +69,7 @@ impl Harness {
         let root = tempdir().unwrap();
         let roots = Roots {
             yog_data: root.path().join("yog"),
-            lernie_data: root.path().join("lernie"),
+            litany_data: root.path().join("litany"),
             yog_state: root.path().join("state"),
             balls_clones: root.path().join("balls").join("clones"),
             home: root.path().join("home"),
@@ -99,7 +99,7 @@ impl Harness {
         self.add_at(self.roots.workspaces().join(name), agent)
     }
 
-    /// A read-only replay workspace symlinked under the lernie replays root
+    /// A read-only replay workspace symlinked under the litany replays root
     /// (§3.1) — the same fixture shape as an ad-hoc, classified `Replay` by its
     /// root alone.
     pub(crate) fn add_replay(&mut self, name: &str, agent: &str) -> PathBuf {

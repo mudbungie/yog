@@ -1,6 +1,6 @@
 //! **Whether a verb is offered for the current selection** (§8.2, §3.5) — the
 //! enablement predicates over an agent or a joined ball, each refusing exactly
-//! what the underlying `lernie`/`bl` verb would.
+//! what the underlying `litany`/`bl` verb would.
 //!
 //! Split from the composer's own rules at §12's budget on the seam the module
 //! doc already draws: [`super`] asks whether there is anything to *fire* (a
@@ -39,10 +39,10 @@ pub fn message_enabled(present: bool, content: &str) -> bool {
 }
 
 /// Nudge fires inference on the selected conversation from the state it is
-/// already in (§8.2, bl-9bef) — `lernie advance`, no text at all. So it is
+/// already in (§8.2, bl-9bef) — `litany advance`, no text at all. So it is
 /// [`message_enabled`] without the content half, and [`stop_enabled`]'s
 /// **complement** on state: a driver already holds the lease of a Live or
-/// InFlight agent, and lernie's own hop would take the clean no-op branch
+/// InFlight agent, and litany's own hop would take the clean no-op branch
 /// (ARCH §2.11 Writer/driver totality). Offering it there would be a control
 /// that fires and does nothing, which QUALITY H4 calls theater — so the two
 /// verbs partition the states between them, Stop for the running ones and this
@@ -51,7 +51,7 @@ pub fn message_enabled(present: bool, content: &str) -> bool {
 /// **One state at rest is exempt, for that same reason** (bl-fb87): a
 /// conversation whose latest turn was cut off at the output limit
 /// ([`Agent::truncated`], §4.4). Its transcript tail is an assistant turn with
-/// no `tool_use`, and linked lernie's `advance` derives `Warrant::NothingDue`
+/// no `tool_use`, and linked litany's `advance` derives `Warrant::NothingDue`
 /// from exactly that — it releases the lease and exits without creating a
 /// step. So the control would fire and do nothing, which is the theater the
 /// partition above exists to prevent; the recovery is [`message_enabled`],

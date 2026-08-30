@@ -1,5 +1,5 @@
 //! The §8.5 Prompt action end-to-end: the boundary's deferred detached fire
-//! is `lernie prompt --name <minted> <ws> <goal>` — the goal verbatim, bl-6920
+//! is `litany prompt --name <minted> <ws> <goal>` — the goal verbatim, bl-6920
 //! (§8.1) — the minted name
 //! rides back as the reply, and a fork that never lands is a refusal with its
 //! §4.2 synthetic ops row — through the same chokepoint the GUI's Send uses.
@@ -24,9 +24,9 @@ use yog::ui_state::UiState;
 /// against (REMOTE §8, bl-f5f6) — the wire carries no paths, so a fixture that
 /// acts on a sphere must publish it exactly as the worker publishes what it
 /// found on disk.
-fn deps(lernie: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
+fn deps(litany: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
     Deps {
-        lernie: lernie.clone(),
+        litany: litany.clone(),
         bl: Cli::new("/no/bl"),
         state_root: state_root.to_path_buf(),
         yog_binary: state_root.join("yog"),
@@ -77,9 +77,9 @@ fn the_prompt_action_fires_detached_and_returns_the_minted_name() {
     let bin = tempdir().unwrap();
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
-    let rec = Recorder::new(bin.path(), "lernie");
-    let lernie = Cli::new(rec.path());
-    let d = deps(&lernie, state.path(), &[ws.path()]);
+    let rec = Recorder::new(bin.path(), "litany");
+    let litany = Cli::new(rec.path());
+    let d = deps(&litany, state.path(), &[ws.path()]);
 
     let action = Action::Prompt {
         prepared: prepared(ws.path(), ws.path()),
@@ -102,7 +102,7 @@ fn the_prompt_action_fires_detached_and_returns_the_minted_name() {
     assert_eq!(
         &inv[0].argv[1..3],
         ["--name", conversation.as_str()],
-        "the minted name rides --name to its lernie home (§3.3, bl-08f2)"
+        "the minted name rides --name to its litany home (§3.3, bl-08f2)"
     );
     assert_eq!(
         &inv[0].argv[3..5],
@@ -126,8 +126,8 @@ fn the_prompt_action_fires_detached_and_returns_the_minted_name() {
 fn a_fork_that_never_lands_is_a_refusal_with_its_synthetic_row() {
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
-    let lernie = Cli::new("/no/such/lernie");
-    let d = deps(&lernie, state.path(), &[ws.path()]);
+    let litany = Cli::new("/no/such/litany");
+    let d = deps(&litany, state.path(), &[ws.path()]);
     let action = Action::Prompt {
         prepared: prepared(ws.path(), ws.path()),
         goal: "g".into(),
@@ -152,8 +152,8 @@ fn a_fork_that_never_lands_is_a_refusal_with_its_synthetic_row() {
 fn a_prepare_that_cannot_seed_refuses_through_the_dispatch_arm() {
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
-    let lernie = Cli::new("/no/such/lernie");
-    let d = deps(&lernie, state.path(), &[ws.path()]);
+    let litany = Cli::new("/no/such/litany");
+    let d = deps(&litany, state.path(), &[ws.path()]);
     let action = Action::Prepare {
         workspace: yog::naming::leaf(ws.path()),
         payload: Payload::Bare,

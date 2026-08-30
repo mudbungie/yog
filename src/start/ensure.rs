@@ -1,5 +1,5 @@
 //! The workspace half of the start flow's executors (DESIGN §8.1, §8.6, §3.7):
-//! the idempotent `lernie new` ensure and the **policy convergence** that runs
+//! the idempotent `litany new` ensure and the **policy convergence** that runs
 //! **outside** the create skip, so a workspace made a moment ago and one made
 //! last week both converge to a config lineage naming the control shim and
 //! composing frozen project instructions — **the lineage the drone will fork
@@ -13,7 +13,7 @@
 //! §3.7's `instructions/**` glob are two control files of one yog policy, and
 //! each owns its own fixed point ([`control::author::workflow_drift`],
 //! [`manifest::drift`]) and knows nothing of the other. This module collects
-//! whichever drifted and converges them in a **single** `lernie config` pass —
+//! whichever drifted and converges them in a **single** `litany config` pass —
 //! one checkout, one commit, one ops row. With neither drifted nothing is
 //! staged and nothing spawns, which is the steady state of every start after
 //! the first.
@@ -35,7 +35,7 @@ use std::path::Path;
 /// Ensure the bound workspace exists (§8.1, §3.1): skip when `<workspace>/repo.git`
 /// is present (resume is the same path as opening). Otherwise `mkdir -p` the
 /// parent chain — a failure logs a `["yog-step","mkdir"]` row (Z5) before it
-/// returns — and `lernie new <workspace>` piped + opslog'd.
+/// returns — and `litany new <workspace>` piped + opslog'd.
 ///
 /// **Birth judges only what exists at birth (bl-00ee).** bl-c3a9 gated the
 /// world's birth template here, against brazen's provider table; §16.2's wall
@@ -54,8 +54,8 @@ pub fn execute_ensure_workspace(
     layout: &Layout,
     origin: Origin,
 ) -> Result<bool, StartError> {
-    let (lernie, state_root) = (&deps.lernie, deps.state_root.as_path());
-    let created = create_workspace(lernie, state_root, ts, workspace, origin)?;
+    let (litany, state_root) = (&deps.litany, deps.state_root.as_path());
+    let created = create_workspace(litany, state_root, ts, workspace, origin)?;
     // yog's policy is authored **after** the create and **outside** its skip
     // (§8.6, §3.7): a workspace made a moment ago and one made last week both
     // converge to a config lineage naming the control shim and composing
@@ -79,7 +79,7 @@ pub fn execute_ensure_workspace(
     Ok(created)
 }
 
-/// Stage `drafts` and drive the one `lernie config <ws> <config>` pass that
+/// Stage `drafts` and drive the one `litany config <ws> <config>` pass that
 /// commits them (§9.3 — the only lawful writer of `config/*`, so yog never
 /// writes inside a workspace itself). `None` when nothing drifted: no staging
 /// dir, no spawn, no ops row.
@@ -108,7 +108,7 @@ fn converge(
         &staging,
     );
     Ok(Some(drive(
-        &deps.lernie,
+        &deps.litany,
         workspace,
         &plan,
         ts,
@@ -118,10 +118,10 @@ fn converge(
 }
 
 /// The create half of [`execute_ensure_workspace`]: the parent chain and
-/// `lernie new`. Skipped whole for a workspace that already exists — resume is
+/// `litany new`. Skipped whole for a workspace that already exists — resume is
 /// the same path as opening.
 fn create_workspace(
-    lernie: &Cli,
+    litany: &Cli,
     state_root: &Path,
     ts: &str,
     workspace: &Path,
@@ -137,7 +137,7 @@ fn create_workspace(
     }
     let ws_s = workspace.to_string_lossy();
     verb_ok(
-        verbs::run_logged(lernie, state_root, ts, parent, &[NEW, &ws_s], origin)?,
+        verbs::run_logged(litany, state_root, ts, parent, &[NEW, &ws_s], origin)?,
         NEW,
     )?;
     Ok(true)

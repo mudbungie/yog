@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 /// A hermetic composed world (§16.2) rooted under `root`, **with a wall
 /// standing**: every fold a §9 destination resolves through — brazen's three
-/// wall locations, lernie's config root, yog's state (and so the staging root),
+/// wall locations, litany's config root, yog's state (and so the staging root),
 /// `$HOME` — lands inside it, so a test that drives a config gesture writes
 /// only into its own tempdir. The wall is set because brazen is unreachable
 /// without one (§16.2 as amended): a fixture with no wall is a fixture whose
@@ -24,7 +24,7 @@ pub(crate) fn world_under(root: &Path) -> crate::xdg::Env {
         ("XDG_DATA_HOME", at("data")),
         ("XDG_STATE_HOME", at("state")),
         ("XDG_CACHE_HOME", at("cache")),
-        ("LERNIE_HOME", at("lernie")),
+        ("LITANY_HOME", at("litany")),
         // Deliberately pre-set and deliberately inert: brazen's config is the
         // wall's (§16.2 as amended), so a fixture that leaves this standing
         // proves an ambient value never wins.

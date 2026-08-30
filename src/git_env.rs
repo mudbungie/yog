@@ -8,11 +8,11 @@
 //! whatever repo the hook was committing to.
 //!
 //! **The scrub belongs to every child, not just to `git`** (bl-916a). Scrubbing
-//! only yog's own `git` forks left the larger half open: `bl`, `lernie`, `bz`,
+//! only yog's own `git` forks left the larger half open: `bl`, `litany`, `bz`,
 //! an `$EDITOR` shim and the fake substrate scripts the suite drives all fork
 //! `git` *of their own accord*, and they inherit whatever yog handed them. A
 //! hook-run suite therefore still committed onto the branch being committed —
-//! reproduced: the fake `lernie new` arm's `git commit -m 'config: init
+//! reproduced: the fake `litany new` arm's `git commit -m 'config: init
 //! [config/default]'` landed on the outer work branch and replaced its tree.
 //! Scrubbing at yog's spawn boundary clears the variables from the whole
 //! descendant process tree at once, so no descendant needs to remember.
@@ -154,7 +154,7 @@ pub(crate) fn status(cmd: &mut Command) -> std::io::Result<ExitStatus> {
 /// proof is `tests/exec_return.rs`, an integration binary with exactly one
 /// `#[test]` — the `tests/multiplex_bl.rs` precedent — and that is why this
 /// verb is `pub` while [`spawn`]/[`output`]/[`status`] are not. The lib suite
-/// must never reach `execvp`: `multiplex::lernie`'s unit test hands the arm a
+/// must never reach `execvp`: `multiplex::litany`'s unit test hands the arm a
 /// command std refuses ABOVE `do_exec`, so it proves the arm without spending
 /// either effect.
 pub fn exec(cmd: &mut Command) -> std::io::Error {

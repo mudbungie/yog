@@ -28,11 +28,11 @@
 //!    (a driver-absence stall). Signals 1–4 are seen-gated on `ui.json`; **mail
 //!    is not** — it self-clears when a driver drains the inbox (§6 rule 5).
 //! 6. **held** — the capability control parked a tool invocation before it
-//!    executed (`refs/lernie/held/<id>`, §8.6). **Not seen-gated**, on mail's
+//!    executed (`refs/litany/held/<id>`, §8.6). **Not seen-gated**, on mail's
 //!    own precedent and for a stronger reason: a park costs the drone no
 //!    process and no tokens and *nothing but an answer releases it*, so a
 //!    watermark could only hide a conversation that cannot move. It self-clears
-//!    when lernie lifts the mark — which happens exactly when the answer lands
+//!    when litany lifts the mark — which happens exactly when the answer lands
 //!    and the branch re-adjudicates.
 //!
 //! Signals 1–4 "re-arm" automatically: the watermark is an oid, so a moved ref
@@ -163,7 +163,7 @@ fn at_rest(state: AgentState) -> bool {
 }
 
 /// The §6 rule-2 evidence for `agent`: the branch tip oid it is resting at, or
-/// `None` when it is still running or has been abandoned (`refs/lernie/abandoned`
+/// `None` when it is still running or has been abandoned (`refs/litany/abandoned`
 /// is the will-not-retry assertion that suppresses the rule). **The one home for
 /// rule 2's non-watermark gate** — the predicate here and the acknowledgement in
 /// `app::focus` both call it, so the two can never drift into two answers.
@@ -181,7 +181,7 @@ pub fn rest_evidence(agent: &Agent) -> Option<String> {
 /// boundary's `seen` action
 /// ([`queue::mark_seen`](crate::boundary::answer::queue::mark_seen)). Rules 5
 /// (mail) and 6 (held) have no oid and appear here by design — each self-clears
-/// when the world moves (a driver drains the inbox; lernie lifts the hold mark
+/// when the world moves (a driver drains the inbox; litany lifts the hold mark
 /// on the answer's re-adjudication), and no watermark may pretend to answer
 /// them.
 pub fn evidence(agent: &Agent) -> Vec<(SeenKind, String)> {

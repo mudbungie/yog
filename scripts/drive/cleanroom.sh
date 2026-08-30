@@ -4,7 +4,7 @@
 # It builds a room in which the ONLY substrate on `PATH` is one yog binary plus
 # the system's own `git`/coreutils/X tools, points every version-fragile root at
 # fresh scratch, asserts the scrub instead of assuming it, and then hands the
-# room to `stories.sh` unchanged. The assertion is the point: `lernie`, `bl` and
+# room to `stories.sh` unchanged. The assertion is the point: `litany`, `bl` and
 # `bz` are unresolvable inside the room, so a spawn that still reached for a host
 # binary cannot silently succeed — it dies ENOENT and the beat goes red. That is
 # the whole of W14's invariant ("it fails if any spawn still resolves a host
@@ -30,13 +30,13 @@
 #     `BRAZEN_CONFIG`, so brazen never reaches its own `$XDG_CONFIG_HOME`
 #     fall-through and the link fed nothing (bl-49c6).
 #   - `$XDG_CACHE_HOME` — the drive's own evidence root. Every root yog *nests*
-#     (lernie's home, balls' store layout, yog's own artifacts) is scratch,
+#     (litany's home, balls' store layout, yog's own artifacts) is scratch,
 #     which is what W14 asks for.
 #   - stories.sh's world seed copies the ambient world's `models.yaml` +
 #     `template/providers.yaml`, and `seed_wall` copies the host's brazen config
 #     and credential files into the bootstrap sphere's wall. Those are config
 #     files, never a binary: the model roster, the role rows, and the provider
-#     row those roles name with the sign-in that answers for it. lernie's own
+#     row those roles name with the sign-in that answers for it. litany's own
 #     in-process `prime` seeds an anthropic-only roster, so the seeded rows are a
 #     *credential* choice — the same carve-out, one layer in.
 set -eu
@@ -56,9 +56,9 @@ ln -sfn "$yogbin" "$root/bin/yog"
 # ~/.cargo/bin, which the room drops.
 export PATH="$root/bin:/usr/bin:/bin"
 export XDG_DATA_HOME="$root/data" XDG_STATE_HOME="$root/state"
-export XDG_CONFIG_HOME="$root/config" LERNIE_HOME="$root/lernie-ambient-unused"
+export XDG_CONFIG_HOME="$root/config" LITANY_HOME="$root/litany-ambient-unused"
 
-for t in lernie bl bz; do
+for t in litany bl bz; do
   if p=$(command -v "$t" 2>/dev/null); then
     echo "clean room BREACHED: $t resolves to $p" >&2
     exit 1
@@ -83,8 +83,8 @@ echo "  PATH=$PATH"
 echo "  XDG_DATA_HOME=$XDG_DATA_HOME"
 echo "  XDG_STATE_HOME=$XDG_STATE_HOME"
 echo "  XDG_CONFIG_HOME=$XDG_CONFIG_HOME  (nothing brazen-shaped here, §16.2)"
-echo "  LERNIE_HOME=$LERNIE_HOME  (yog overrides it per-spawn anyway, §16.2)"
+echo "  LITANY_HOME=$LITANY_HOME  (yog overrides it per-spawn anyway, §16.2)"
 echo "  brazen  -> $XDG_DATA_HOME/yog/world/walls/home/brazen  (the bootstrap wall, §16.2)"
 echo "  yog=$(command -v yog) -> $yogbin"
-echo "  lernie/bl/bz: unresolvable"
+echo "  litany/bl/bz: unresolvable"
 exec "$here/stories.sh" "$verb" "$XDG_DATA_HOME" "$out"

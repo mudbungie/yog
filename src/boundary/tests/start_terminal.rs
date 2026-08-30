@@ -22,21 +22,21 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-/// A fake `lernie` that materializes what the real one does — the seed marker
+/// A fake `litany` that materializes what the real one does — the seed marker
 /// and the workspace's config branch — and, on `prompt`, reports the goal it
 /// was fired with through a fifo, so the detached child is *observed* rather
 /// than assumed. It reads the goal as the **last** argument rather than a fixed
 /// position, which is the §4.2 invariant `clip_goal` rests on and which the
 /// bl-6654 `--cwd` binding rides in front of.
-fn fake_lernie(dir: &Path, fifo: &Path) -> PathBuf {
+fn fake_litany(dir: &Path, fifo: &Path) -> PathBuf {
     let body = format!(
-        "#!/bin/sh\ncase \"$1\" in\nprime) [ -n \"$LERNIE_HOME\" ] && mkdir -p \"$LERNIE_HOME\" \
-         && : > \"$LERNIE_HOME/models.yaml\";;\n{arm}prompt) for a; do last=\"$a\"; done; printf '%s' \"$last\" > '{fifo}';;\
+        "#!/bin/sh\ncase \"$1\" in\nprime) [ -n \"$LITANY_HOME\" ] && mkdir -p \"$LITANY_HOME\" \
+         && : > \"$LITANY_HOME/models.yaml\";;\n{arm}prompt) for a; do last=\"$a\"; done; printf '%s' \"$last\" > '{fifo}';;\
          \nesac\nexit 0\n",
         arm = authoring_new_arm(),
         fifo = fifo.display(),
     );
-    let path = dir.join("lernie");
+    let path = dir.join("litany");
     fs::write(&path, body).unwrap();
     let mut perms = fs::metadata(&path).unwrap().permissions();
     perms.set_mode(0o755);
@@ -67,11 +67,11 @@ fn a_prepared_reply_fires_the_next_invocations_prompt() {
     let fifo = bin.path().join("report");
     make_fifo(&fifo);
     let ws = crate::binding::workspace_path(yog.path(), "alba");
-    let lernie_home = crate::world::layout_under(yog.path()).lernie;
+    let litany_home = crate::world::layout_under(yog.path()).litany;
     let deps = Deps {
-        lernie: Cli::new(fake_lernie(bin.path(), &fifo)).with_env(vec![(
-            "LERNIE_HOME".to_owned(),
-            lernie_home.to_string_lossy().into_owned(),
+        litany: Cli::new(fake_litany(bin.path(), &fifo)).with_env(vec![(
+            "LITANY_HOME".to_owned(),
+            litany_home.to_string_lossy().into_owned(),
         )]),
         bl: Cli::new("/no/such/bl"),
         state_root: state.path().to_path_buf(),
@@ -129,7 +129,7 @@ fn a_prepared_reply_fires_the_next_invocations_prompt() {
     assert_eq!(
         fs::read_to_string(&fifo).unwrap(),
         "build the greeting script and tests",
-        "exactly one detached `lernie prompt`, with the goal verbatim"
+        "exactly one detached `litany prompt`, with the goal verbatim"
     );
 }
 

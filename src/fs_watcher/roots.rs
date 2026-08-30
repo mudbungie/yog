@@ -5,7 +5,7 @@
 //! single pure predicate generalizing the previously-hardcoded Workspace
 //! allowlist over every kind in the §7.1 table. It is path-only (no stat, no
 //! I/O), so it is exhaustively testable and shared unchanged by a future
-//! `lernie-ui-web`. Event *kind* (create vs remove) and recursion *scope*
+//! `litany-ui-web`. Event *kind* (create vs remove) and recursion *scope*
 //! (top vs recursive) are the watcher's concern, never the allowlist's.
 
 use std::path::Path;
@@ -45,21 +45,21 @@ const REFS_PREFIXES: &[&str] = &["repo.git/HEAD", "repo.git/refs", "repo.git/pac
 /// [`WatchSet`](crate::watch::WatchSet) map (Y6).
 ///
 /// The set is exactly what `desired_watches` arms — there is no kind here that
-/// nothing watches. `BrazenConfig` and `LernieConfig` used to be, and were
+/// nothing watches. `BrazenConfig` and `LitanyConfig` used to be, and were
 /// retired unarmed at bl-9130: config is operator-authored draft state that
 /// feeds no re-derivation, its concurrency answer is §9's hash guard, and the
-/// lernie config root *is* the lernie data root under the world's `LERNIE_HOME`
+/// litany config root *is* the litany data root under the world's `LITANY_HOME`
 /// collapse (§16.2), so arming it recursively is the watcher §7.1 rejects. The
 /// §9 editors re-read on pane open instead.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RootKind {
-    /// A lernie workspace dir: `steps/`, `inbox/`, per-agent worktree files,
+    /// A litany workspace dir: `steps/`, `inbox/`, per-agent worktree files,
     /// `repo.git/{HEAD,refs}` — the original hardcoded allowlist.
     Workspace,
     /// `$XDG_DATA_HOME/yog/workspaces/` (flat by construction, §3.1/§7.1): named
     /// workspaces appearing and being removed.
     NamesRoot,
-    /// `<lernie-data>/workspaces/`, `replays/`: foreign workspaces and replays
+    /// `<litany-data>/workspaces/`, `replays/`: foreign workspaces and replays
     /// appearing and being removed.
     WorkspacesRoot,
     /// `$XDG_STATE_HOME/balls/clones/`: clone dirs, per-clone `tasks/tasks/*.md`

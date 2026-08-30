@@ -17,7 +17,7 @@ fn birth_rows(ts: i64, ball: &str, conversation: &str, dying_words: &str) -> Vec
     let fleet = crate::fleet::row::spawned(ts.to_string(), Path::new(WS), ball, conversation);
     let driver = OpEntry {
         ts: ts.to_string(),
-        argv: vec!["lernie".to_owned(), "prompt".to_owned()],
+        argv: vec!["litany".to_owned(), "prompt".to_owned()],
         cwd: crate::nav::ws_key(Path::new(WS)),
         exit: crate::opslog::DETACHED_EXIT,
         stdout: String::new(),

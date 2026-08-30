@@ -3,7 +3,7 @@
 //! it already had: every row there is judged by what the verb returned, and
 //! these two are judged by the world the launch left behind.
 //!
-//! A `lernie prompt` launches detached, so its line lands clean at
+//! A `litany prompt` launches detached, so its line lands clean at
 //! [`DETACHED_EXIT`] and nothing about what happened next is in it. Since
 //! bl-b95e the sweep asks the **state** — is the conversation the row named
 //! there, and is anything driving it — and reads the §8.1 sink only when the
@@ -38,7 +38,7 @@ const MINTED: &str = "vanished-heron";
 /// claim is that the bytes decide nothing.
 const CRY: &str = "brazen 0.0.2 refuses 0.0.3\n";
 
-/// One detached `lernie prompt` line for `ws`, written as
+/// One detached `litany prompt` line for `ws`, written as
 /// `start::execute_prompt` writes it: `--name` up front, the goal last.
 fn launch(m: &crate::AppModel, ts: &str, ws: &Path) {
     opslog::append(
@@ -46,7 +46,7 @@ fn launch(m: &crate::AppModel, ts: &str, ws: &Path) {
         &opslog::OpEntry {
             ts: ts.into(),
             argv: vec![
-                "lernie".into(),
+                "litany".into(),
                 "prompt".into(),
                 "--name".into(),
                 MINTED.into(),
@@ -80,7 +80,7 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     // something. `FakeClock` counts unix seconds from its own origin.
     clock.advance(Duration::from_mins(10));
     // The launch alone: a clean `-2` row, nothing to see — the §13.3 hole.
-    m.after_lernie_verb();
+    m.after_litany_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
     assert!(m.last_failure(Origin::Conversation).is_none());
     assert!(!m.snap.ops.last().unwrap().failed());
@@ -94,7 +94,7 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     // The next sweep folds it in: the row becomes a rendered failure and the
     // originating surface — the one that fired the bare rung, and only it —
     // gets its ichor-red banner (§7.3). No new ops line.
-    m.after_lernie_verb();
+    m.after_litany_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
     let row = m.snap.ops.last().unwrap();
     assert!(row.failed(), "a launch that produced nothing is a failure");
@@ -131,7 +131,7 @@ fn a_launch_inside_the_grace_window_never_alarms_however_its_sink_reads() {
     launch(&m, "0", &ws);
     cry(&m, "0", &ws);
 
-    m.after_lernie_verb();
+    m.after_litany_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
     let row = m.snap.ops.last().unwrap();
     assert!(

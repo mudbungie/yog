@@ -1,19 +1,19 @@
 //! Config-branch **edit half** (DESIGN §9.3 Y21): the scripted-`$EDITOR`
-//! drive of `lernie config`. This is the only lawful writer of `config/*`
-//! (ARCH §2.2), so yog never writes inside a lernie workspace itself — it
-//! stages its drafted files, then drives `lernie config`, whose `$EDITOR`
+//! drive of `litany config`. This is the only lawful writer of `config/*`
+//! (ARCH §2.2), so yog never writes inside a litany workspace itself — it
+//! stages its drafted files, then drives `litany config`, whose `$EDITOR`
 //! callback re-enters the yog binary in [`apply`](crate::config_edit::apply)
-//! shim mode to copy those files over the checkout. lernie performs the
+//! shim mode to copy those files over the checkout. litany performs the
 //! commit.
 //!
 //! The flow (§9.3):
 //! 1. [`stage_files`] writes the UI's drafted files into
 //!    `$XDG_STATE_HOME/yog/stage/<nonce>/`.
-//! 2. [`EditPlan::compose`] builds the `lernie config <ws> <name> [flags]`
+//! 2. [`EditPlan::compose`] builds the `litany config <ws> <name> [flags]`
 //!    argv plus the `EDITOR` + `YOG_EDIT_SRC` environment (pure).
 //! 3. [`drive`] spawns it through the injected [`Cli`] and streams the
 //!    outcome to `ops.jsonl`.
-//! 4. lernie execs `$EDITOR` = `<yog> --editor-apply` against the checkout;
+//! 4. litany execs `$EDITOR` = `<yog> --editor-apply` against the checkout;
 //!    the shim copies only the staged files (see [`apply`] for the exact
 //!    `sh -c` invocation shape this depends on).
 //! 5. Stale `<nonce>/` dirs are swept at startup ([`sweep_staging`], §5.2).
@@ -39,7 +39,7 @@ const ENV_EDIT_SRC: &str = "YOG_EDIT_SRC";
 mod staging;
 pub use staging::{DraftFile, next_nonce, stage_files, stale_staging, sweep_staging};
 
-/// Which config lineage an edit targets (mirrors lernie
+/// Which config lineage an edit targets (mirrors litany
 /// `template::authoring::Origin`, §2.2/§2.3): advance the existing branch,
 /// fork a new one off a source head, or start a fresh orphan lineage.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,7 +50,7 @@ pub enum EditOrigin {
 }
 
 impl EditOrigin {
-    /// The `lernie config` flags this origin adds after `<ws> <name>` — the
+    /// The `litany config` flags this origin adds after `<ws> <name>` — the
     /// exact surface of `Command::Config` (`--from`/`--orphan`).
     fn flags(&self) -> Vec<String> {
         match self {
@@ -62,7 +62,7 @@ impl EditOrigin {
 }
 
 /// Single-quote `s` as one POSIX `sh` word so a path with spaces survives
-/// lernie's `sh -c 'exec {EDITOR} "$1"'` word-splitting (see [`apply`]).
+/// litany's `sh -c 'exec {EDITOR} "$1"'` word-splitting (see [`apply`]).
 ///
 /// [`apply`]: crate::config_edit::apply
 fn sh_quote(s: &str) -> String {
@@ -70,7 +70,7 @@ fn sh_quote(s: &str) -> String {
 }
 
 /// The `$EDITOR` value that re-enters this binary in shim mode: the yog
-/// binary path (sh-quoted) plus [`EDITOR_APPLY_FLAG`]. lernie word-splits
+/// binary path (sh-quoted) plus [`EDITOR_APPLY_FLAG`]. litany word-splits
 /// it, so the quoting keeps a spaced binary path a single argv element.
 pub fn editor_env_value(yog_binary: &Path) -> String {
     format!(
@@ -80,7 +80,7 @@ pub fn editor_env_value(yog_binary: &Path) -> String {
 }
 
 /// The fully-composed spawn plan for one config-branch edit (pure): the
-/// `lernie config …` argv plus the two environment variables the shim needs.
+/// `litany config …` argv plus the two environment variables the shim needs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EditPlan {
     argv: Vec<String>,
@@ -112,7 +112,7 @@ impl EditPlan {
         }
     }
 
-    /// The `lernie config …` argv (no binary). Test-only reader.
+    /// The `litany config …` argv (no binary). Test-only reader.
     #[cfg(test)]
     pub(crate) fn argv(&self) -> &[String] {
         &self.argv
@@ -124,11 +124,11 @@ impl EditPlan {
     }
 }
 
-/// Spawn `lernie config …` through `cli` with the plan's environment, drain
+/// Spawn `litany config …` through `cli` with the plan's environment, drain
 /// the stream, and stream the outcome to `<state_root>/ops.jsonl` (§4.2).
 /// `ts` is the caller's wall-clock stamp (opslog reads no clock); `cwd` is
 /// the workspace, recorded for context. Logging is best-effort — the
-/// operation's real effect is lernie's commit — so the [`OpEntry`] is
+/// operation's real effect is litany's commit — so the [`OpEntry`] is
 /// returned regardless for the UI to surface. A spawn failure is itself a
 /// non-zero (-1) outcome carrying the error.
 ///

@@ -5,7 +5,7 @@
 //! (goal, pins, governing config commit — model and skills ride it),
 //! base/source/target/delivered OIDs, terminal response, usage, wall time,
 //! project diff, verdicts (messages), and the accepted/rejected/reworked
-//! outcome — all derived at read time from lernie step records, balls delivery
+//! outcome — all derived at read time from litany step records, balls delivery
 //! identities, and git ancestry. Nothing stored."*
 //!
 //! So this module owns **no fact**. Every column names an authority that
@@ -17,7 +17,7 @@
 //! | the conversation bound to the attempt, and its frozen pins | the §4.2 trail's own fire row ([`crate::fan::fires`]) |
 //! | the goal | the agent worktree's `goal.md`, frozen at the dispatch commit |
 //! | the governing config commit | §5.1 #17's walk ([`crate::config_edit::branch`]) |
-//! | usage, wall time, step count | lernie's step records, off the one walk already published as `Snapshot::bills` |
+//! | usage, wall time, step count | litany's step records, off the one walk already published as `Snapshot::bills` |
 //! | the terminal response and the verdicts | the committed `messages/` tree ([`crate::transcript`]) |
 //! | the base the two ends departed from | git: `merge-base target source`, balls' own base formula ([`outcome`]) |
 //! | accepted / rejected / reworked | git: the target's history and its ancestry ([`outcome`]) |
@@ -142,7 +142,7 @@ pub struct Attempt {
 /// one file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Verdict {
-    /// The filename's origin token — the sender, as lernie recorded delivery.
+    /// The filename's origin token — the sender, as litany recorded delivery.
     pub sender: String,
     pub body: String,
 }

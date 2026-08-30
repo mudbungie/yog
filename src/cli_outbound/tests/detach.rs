@@ -10,7 +10,7 @@
 //! ptrace machine: the Linux drivers use only shell builtins (`read`,
 //! `printf`, `pwd`) and a `/proc` redirect. macOS CI runs plain `cargo
 //! test` (no tarpaulin, no ptrace), so its process-group driver may fork
-//! `ps` — see [`GROUP_DRIVER`]. This mirrors lernie's fire-and-forget
+//! `ps` — see [`GROUP_DRIVER`]. This mirrors litany's fire-and-forget
 //! launcher.
 //!
 //! `spawn_detached` forks directly like `run`, so — as with the streaming
@@ -167,7 +167,7 @@ fn spawn_detached_errors_on_missing_binary() {
     // SPAWN_LOCK so that transient child can't inherit a peer's recorder
     // write fd.
     let dir = tempdir().unwrap();
-    let cli = Cli::new("/definitely/not/a/real/binary/lernie-detach");
+    let cli = Cli::new("/definitely/not/a/real/binary/litany-detach");
     let err = cli
         .spawn_detached(None, &sink_in(dir.path()), &[])
         .unwrap_err();

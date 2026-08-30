@@ -6,7 +6,7 @@
 //! [`super`] under the 300-line cap. It is `Cli::new + with_env`
 //! construction (§16.6 W2): the world overrides stand over the inherited env
 //! exactly as they do for every other world spawn, so the command sees the
-//! nested `$XDG_STATE_HOME`/`$LERNIE_HOME` a human joining the
+//! nested `$XDG_STATE_HOME`/`$LITANY_HOME` a human joining the
 //! world by hand would.
 
 use std::path::Path;

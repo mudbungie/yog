@@ -27,7 +27,7 @@ Integration tests live in `tests/integration/`, modules of **one** binary
 rooted at `tests/integration/main.rs` — a file directly under `tests/` is a
 binary of its own, and 28 of them cost ~1.8 s of tarpaulin launch overhead and
 ~175 MB of duplicated linkage apiece. Only the three that mutate process-global
-env (`multiplex_bl`, `multiplex_lernie`, `git_env_scrub`) stay standalone,
+env (`multiplex_bl`, `multiplex_litany`, `git_env_scrub`) stay standalone,
 because "one `#[test]` per binary" *is* their soundness argument. The rest
 share a process, so a fixture executable is authored through
 `support::write_executable`. In *this* crate that still matters: `git_env`'s
@@ -39,7 +39,7 @@ is thin and excluded; everything a click *calls* is covered). Substrates are
 fake recorder script binaries injected as `Cli::new(path)` / `Deps{…}` at
 the dispatch API (the `tests/integration/editor_roundtrip.rs` idiom): each records
 argv+env+cwd to a log and plays a canned stdout/exit per verb. (The
-`LERNIE_BINARY`/`BL_BINARY`/`BZ_BINARY` env vars are production wiring,
+`LITANY_BINARY`/`BL_BINARY`/`BZ_BINARY` env vars are production wiring,
 covered by the existing `resolve_with` unit tests — tests never mutate
 process-global env under the parallel runner.) Every story test asserts up
 to three surfaces: the recorded spawns, the `ops.jsonl` trail, and the
@@ -91,7 +91,7 @@ The intro's done-bar has two halves: a story is done when its tests pass
 works against the real one**. The fake harness proves the dispatch layer in
 isolation; nothing in it exercises the installed `yog` binary, a live egui
 window, or a real model wire. This section is the second half's harness — a
-graduated, repeatable drive of the *real* `yog` against the *real* `lernie`
+graduated, repeatable drive of the *real* `yog` against the *real* `litany`
 wire, so "works against the real one" is a run you can re-run, not a claim.
 
 **One command drives it** (DESIGN §12.2 maps the files):
@@ -111,7 +111,7 @@ rung's real-substrate half lands when the rung has a headless spelling. Which
 rungs those are, and which are ruled out and why, is recorded rung by rung in
 `scripts/drive/beats_headless.sh`'s own head; the short of it is that a drive
 beat earns its keep only where the REAL substrate can falsify something a fake
-cannot — real balls state and its blocker resolution, real git, real lernie's
+cannot — real balls state and its blocker resolution, real git, real litany's
 on-disk shapes, the real window, the real wire — and that a rung whose claim is
 a derivation over yog's own structures is proved exactly by its in-crate test.
 
@@ -228,7 +228,7 @@ was silent.
   room whose `PATH` is `<room>/bin:/usr/bin:/bin` — one yog binary plus the
   system's own git/sh/coreutils and the harness's Xvfb/xdotool/ffmpeg — points
   every nested root at fresh scratch, and hands the room to `stories.sh`
-  unchanged. It **asserts** the scrub (`lernie`/`bl`/`bz` must all fail
+  unchanged. It **asserts** the scrub (`litany`/`bl`/`bz` must all fail
   `command -v`, `yog`/`git` must both resolve) before driving anything, so the
   env is not a claim in prose but the executable precondition of the run.
 - `harness.sh` — the tier every run shares, sourced by `stories.sh`: the two
@@ -259,7 +259,7 @@ was silent.
   difference is load-bearing rather than incidental:
   - with **zero** workspaces the ball rung *founds* one (`home`, DESIGN
     §3.1), so its ops trail is
-    `lernie new` **then** `bl claim` — the §8.1 order S3-T1 actually asserts.
+    `litany new` **then** `bl claim` — the §8.1 order S3-T1 actually asserts.
     Continuing S0/S1's world would give a focused workspace (no founding, a weaker
     assertion) and would stack conversation rows above every balls-section click.
   - S5/S8's world binds a ball and **never sends the goal**: ▶ Start claims,
@@ -275,24 +275,24 @@ was silent.
   boundary one.** The project enters through `yog exec bl prime` in a throwaway
   `git init` repo under the scratch dir — the exact command the empty balls
   section renders (S3-T5, S8-3) — followed by `yog exec bl create`; a **foreign**
-  workspace is one `yog exec lernie new` at a path under the nested
-  `LERNIE_HOME`, because foreignness *is* a path (§3.1). Every one of those is a
+  workspace is one `yog exec litany new` at a path under the nested
+  `LITANY_HOME`, because foreignness *is* a path (§3.1). Every one of those is a
   §8.4 hatch and **stays** one now that `/create` and friends exist, because a
   fixture laid across the boundary would write `ops.jsonl` rows of its own and
   the beats assert on that trail: `row_ok '"bl","create"'` is only a claim about
   the gesture under test while the trail holds nothing the fixture put there.
-  The hatch is out-of-band by construction; the boundary is deliberately not. Where no gesture exists, the fixture writes what **lernie**
+  The hatch is out-of-band by construction; the boundary is deliberately not. Where no gesture exists, the fixture writes what **litany**
   would write and nothing yog owns: a descent branch (hierarchy lives in the id,
   §2.3, so a branch whose id is the root's plus one `<ts>-<short>` segment *is* a
-  child — two hyphen-free tokens, no fewer, or it is an id lernie would never
-  mint and nobody's child), `refs/lernie/budget-exhausted/*` and
-  `refs/lernie/conflicted/*` (a ref *is* a mark, §6), a pending `inbox/` deposit
+  child — two hyphen-free tokens, no fewer, or it is an id litany would never
+  mint and nobody's child), `refs/litany/budget-exhausted/*` and
+  `refs/litany/conflicted/*` (a ref *is* a mark, §6), a pending `inbox/` deposit
   under §2.11's own naming, a `request.json` that is not JSON, and — for the
   close gate — a failing `pre-commit` hook **plus a commit in the ball's
   worktree**, since a work branch identical to `main` never reaches a commit and
   so never reaches the hook. Two more are environment, not content: a scratch
   `BRAZEN_CONFIG` (historical — see the note below; a §9.1 Apply beat must never
-  reach the operator's own machine) and a stub `lernie`
+  reach the operator's own machine) and a stub `litany`
   missing exactly one driven verb (the §16.6 W5 gate's own shape, in eight
   lines). `rm -rf <scratch>` erases all of it. (The scratch `BRAZEN_CONFIG` that
   used to sit in this list is gone: brazen's config now lives inside the run's
@@ -300,10 +300,10 @@ was silent.
   isolation is structural rather than a var the fixture must remember.)
 
 **The world seed (DESIGN §16.6 W3).** Before launch the runner copies the
-ambient world's `world/lernie/models.yaml` (which carries a `gpt-5.4` codex
-model entry) and `world/lernie/template/providers.yaml` (the provider row in
+ambient world's `world/litany/models.yaml` (which carries a `gpt-5.4` codex
+model entry) and `world/litany/template/providers.yaml` (the provider row in
 both the worker and compactor roles) into the scratch world. The `models.yaml`
-*is* lernie's seeded marker, so a seeded world skips `lernie prime` — the S0-T2
+*is* litany's seeded marker, so a seeded world skips `litany prime` — the S0-T2
 general path with the seed present (§3.4), not a bootstrap branch.
 
 **The wall seed (DESIGN §16.2, bl-49c6, bl-1851).** Nothing brazen-shaped is
@@ -322,8 +322,8 @@ the other half of the same fact, and half a fact seeded late is a red beat.
 keyed by a *name*, and DESIGN §3.1 fixes the empty-world start's name at `home`
 ("a constant, not a config … and not a mint"); every run verb here opens on zero
 workspaces, so every wall this harness lays is `home`'s. Seeded "after the mint"
-it was always too late — yog's bare start is **one gesture**, the `lernie new`
-and the detached first `lernie prompt` inside the same second, so the first model
+it was always too late — yog's bare start is **one gesture**, the `litany new`
+and the detached first `litany prompt` inside the same second, so the first model
 call had already gone out against an empty wall. `S0 payoff: wire reply on disk`
 was therefore structurally red from the blast-radius ruling until bl-1851, and
 its literal cause — the first step's `response.json` carrying
@@ -342,10 +342,10 @@ advisory beside the credentials.
 **Beats driven, world 1** (the P0 rungs — S0+S1, the Codex bar):
 
 - **S0 bare start** — launch to composer, type a goal, Enter: assert the argv
-  trail is `lernie new` then a detached `lernie prompt` (no `prime`), the wire
+  trail is `litany new` then a detached `litany prompt` (no `prime`), the wire
   reply lands on disk, and the transcript renders it in the focused view.
 - **S1 message-to-agent** — type into the focused conversation, Enter → a
-  `lernie message` verb, **and the reply to it on disk** (`004-*.json`), with no
+  `litany message` verb, **and the reply to it on disk** (`004-*.json`), with no
   step left holding a zero-byte `response.json`. The reply half is the beat, not
   a garnish (bl-bf79): S0's turn left the conversation quiescent, so this message
   has no live driver to hand itself to and must **revive** one — and a driver
@@ -357,11 +357,11 @@ advisory beside the credentials.
   workspace, conversation, and ops trail re-derive from disk with **no spawn
   at idle** (INV-1 / I1: restart is re-read).
 - **S1 prompt-into-existing** — Enter in the focused workspace's composer →
-  `lernie prompt` only, a new root agent, **no re-mint** (no `new`/`prime`).
+  `litany prompt` only, a new root agent, **no re-mint** (no `new`/`prime`).
 
 **Beats driven, world 2** (P1's S3 + P2's S4/S6 — `run-s3s4s6`):
 
-- **S3 ball rung** — ▶ Start on the ready ball: assert `lernie new` precedes
+- **S3 ball rung** — ▶ Start on the ready ball: assert `litany new` precedes
   `bl claim <id> --as <workspace name>` (the §8.1 order, asserted as ops line
   numbers), then Send → the detached prompt's cwd **is the ball worktree**
   (asserted against the ops row's own `cwd`, the ball rung's whole point §3.3)
@@ -374,7 +374,7 @@ advisory beside the credentials.
 - **S4 second conversation** — new conversation, type, Enter → a second root in
   the *same* workspace with **no re-mint**, and the bare one shows **no ball
   badge** (§3.2's honest limit).
-- **S6 attention** — Stop the in-flight root → `lernie stop`, and the strip goes
+- **S6 attention** — Stop the in-flight root → `litany stop`, and the strip goes
   from `nothing stirs` to **`⚑ 1 need attention`** with the workspace tab and the
   row both badged. Then ↓ back onto it: the strip goes quiet, `ui.json` records
   the seen watermark, and the **state badge stays** — §6's "acknowledging clears
@@ -392,7 +392,7 @@ advisory beside the credentials.
   a click that missed would pass them vacuously — nothing on disk can tell the
   difference, because "stored nowhere" is the property under test. Their
   screenshots are the other half of the proof, and the log describes them.
-- **S4 New workspace** (S4-T1) — the deliberate raise fires a second `lernie
+- **S4 New workspace** (S4-T1) — the deliberate raise fires a second `litany
   new` with the operator's typed, validated name (DESIGN §3.1 as amended at
   bl-df65), and the tab strip grows a second
   tab in name order. The raise also **focuses** what it raised (DESIGN §3.4), so
@@ -409,9 +409,9 @@ advisory beside the credentials.
 - **S5-T1/T2 were driven and then deleted, in that order** — a footnote worth
   keeping because it is the ladder working as designed. Against pre-W13 `main` the
   runner drove the phase-1 gate live: a capable tuple rendering an ok row per tool
-  with **no** remediation text, and — relaunched against a stub `lernie` missing
+  with **no** remediation text, and — relaunched against a stub `litany` missing
   one driven verb — a mutating dispatch refusing *carrying that verdict*, as a
-  `["yog-step","gate"]` ops row, with **no lernie spawn at all** and the balls
+  `["yog-step","gate"]` ops row, with **no litany spawn at all** and the balls
   section still fully rendered. Then W13 landed and deleted the gate, so those
   three beats were removed with it rather than left to rot: S9's "removed, not
   skipped" is now a thing that happened to a real drive, and the run is quoted in
@@ -429,12 +429,12 @@ advisory beside the credentials.
   (bl-f8dc). The wall config is seeded **before** the pane is opened, because §9's
   freshness is the open gesture: a draft that loaded "file absent" refuses every
   Apply against a file that exists.
-- **S5 the config-branch shim** (S5-T5) — a drafted file staged and `lernie
+- **S5 the config-branch shim** (S5-T5) — a drafted file staged and `litany
   config <ws> default` driven with yog itself as `$EDITOR`: exit 0, the file on
   `config/default`, and the checkout's own `descriptions/` **untouched** — the
   shim copied only the draft.
 - **S8 the hatches** (S8-T3) — `yog env` prints exactly the world's three
-  override lines (`LERNIE_HOME`, `XDG_STATE_HOME`, both nested, then the `PATH`
+  override lines (`LITANY_HOME`, `XDG_STATE_HOME`, both nested, then the `PATH`
   prepend of `world/tools/`) and no others; `yog exec --cwd` runs its argv under
   them at the requested cwd; and resolving *through* that `PATH` finds `yog`
   itself — `command -v yog` inside the world is the world's own shim, and the
@@ -486,9 +486,9 @@ model call plus one stamped-goal call):
   malformed file was indistinguishable from a file whose content happens to be
   that text.
 - **S7 the inbox** (S7-T4) — the tab explains `✉n` with from/deposited_at/epitaph
-  parsed, and the flush dispatches `lernie scan <ws>` (the composer's `Scan`, not
+  parsed, and the flush dispatches `litany scan <ws>` (the composer's `Scan`, not
   a second button in the tab). The verb's own exit is upstream's: on this tuple
-  `lernie scan` fails for a **root** recipient, surfaced verbatim (bl-a942).
+  `litany scan` fails for a **root** recipient, surfaced verbatim (bl-a942).
 - **S6 the ref-marked predicates** (S6-T1 rules 3/4) — `budget-exhausted` and
   `conflicted` marks stir the strip, and one ↓ from a cleared selection writes
   *both* watermarks: the world also holds a strictly **newer** unmarked root, so
@@ -591,7 +591,7 @@ sharpest form.** Five of the eight had already drifted and no beat had noticed:
 bl-1ff1 put a Raw checkbox above the Steps tab's step selector and bl-1ca2 put a
 whole centre tab strip above the inspector, so S7's three clicks had spent twelve
 days landing on blank panel; the marks click had been ~119 px stale since
-bl-5410 and was landing in the *lernie* editor two panes down. Every one of those
+bl-5410 and was landing in the *litany* editor two panes down. Every one of those
 beats printed PASS throughout, because a pinned coordinate whose beat asserts a
 negative is not a test — it is a number that only a human re-measure can falsify,
 and the re-measure never comes.
@@ -604,7 +604,7 @@ in one run of two the centre stayed on Conversation, and the fixed sleep after
 the key proved nothing. The centre's separators are the same family on every
 tab, so the §9.1 locator read the rule above the *composer* as the one that ends
 brazen's pane and folded four perfectly-formed points off it — S5's marker was
-typed into the composer and clicked into a `lernie prompt`, a wire spend inside
+typed into the composer and clicked into a `litany prompt`, a wire spend inside
 the one run whose contract is that it spends nothing. Two things follow, and
 both are now the harness's. A navigation is **waited on, never slept at**: focus
 is per-instance RAM (§13.1) and no file can witness it, so the witness is the
@@ -714,7 +714,7 @@ run by date and verb. QUALITY.md §3 step 6 is the protocol.
 drive passed all eight beats
 against a live `gpt-5.4` wire — the goal typed, `Wire check OK.` on disk and
 **painted in the transcript** with real usage folded into the header, a
-`lernie message` answered inside the existing conversation, a pure restart, and
+`litany message` answered inside the existing conversation, a pure restart, and
 a second root agent with no re-mint. So for P0 both halves of the intro's
 done-bar hold: fake-substrate tests *and* the real flow. Two prior runs are the
 history worth keeping — 2026-07-24 (payoff + message red on a host tool skew,
@@ -754,7 +754,7 @@ drive): 41 further beats, all green, on the same
 tuple. The gate refusing a mutating dispatch with the verdict it named, all three
 §9 editors written through (a hash-guard refusal bracketed by two Applies that
 land, a malformed config that `bz` itself rejects, a staged file delivered onto a
-config branch by `lernie config` with yog as `$EDITOR`), both §8.4 hatches, the
+config branch by `litany config` with yog as `$EDITOR`), both §8.4 hatches, the
 nested world proven severable, the marks knob driving `bl conf` and writing
 nothing of its own, the descent tree with a member selection that leaves the
 child's own watermark on disk, a malformed step file that costs nothing, §6's
@@ -779,7 +779,7 @@ render their empty state (S4-T3 asserts the negative; DESIGN §16.3 states it).
 no framing, while §11 and S7-T2 both promise an "error row". Taken as the ball
 recommended (the code, not the promise): `Doc` now names the three facts a
 record file can be — `Json` / `Absent` / `Unparsed` — and the renderer frames
-the last with `steps_view::UNPARSED` above the verbatim bytes. **bl-a942** — upstream, `lernie scan` exits 1
+the last with `steps_view::UNPARSED` above the verbatim bytes. **bl-a942** — upstream, `litany scan` exits 1
 whenever a root agent holds pending mail; yog dispatches and surfaces it
 verbatim, which is its job, so the S7-T4 beat asserts the dispatch.
 
@@ -788,7 +788,7 @@ verbatim, which is its job, so the S7-T4 beat asserts the dispatch.
 **From here on, "the flow works against the real one" means it works with only
 `yog` and `git` on `PATH`.** That is the bar every future real-substrate claim in
 this document is measured against, because it is the only run that can *fail*
-when a spawn resolves a host binary — with `lernie`/`bl`/`bz` unresolvable, a
+when a spawn resolves a host binary — with `litany`/`bl`/`bz` unresolvable, a
 fallthrough is an `ENOENT`, not a silent success. One command re-runs it:
 
     make drive-cleanroom                      # DRIVE_VERB=run-s3s4s6 for another rung
@@ -801,11 +801,11 @@ stamped scratch root. The primitive it wraps is unchanged and still direct:
 **S0/S1 clear that bar.** The 2026-07-26 W14 clean-room drive recorded
 all eight beats PASS on a live `gpt-5.4` wire in the room — the reply painted in
 the transcript — with a `ps` sampler showing every substrate process image in the
-chain to be the driven `yog` itself under a namespace prefix (`yog lernie
-prompt`, its own successor `yog lernie advance`, and the adapter `yog bz --json
+chain to be the driven `yog` itself under a namespace prefix (`yog litany
+prompt`, its own successor `yog litany advance`, and the adapter `yog bz --json
 --provider codex`) and **zero** host-binary processes in the window. The ops
 argv rows stay logical by design (§8.2), so that physical proof comes from `ps`
-and from the seeded `world/tools/{bl,lernie,bz}` shims, each an `exec
+and from the seeded `world/tools/{bl,litany,bz}` shims, each an `exec
 '<the driven yog>' '<namespace>' "$@"`. Nothing reaches in from the ambient
 world: the blast-radius ruling retired §16.2's brazen carve-out, so
 the wire's precondition is now a **copy** — `wall.sh`'s `seed_wall` lays the
@@ -834,7 +834,7 @@ and `run-s3s4s6` in the room is the standing proof.
 runner's timing discipline: a clock is never the thing to wait on.** Three reds
 in one afternoon were the same mistake in three costumes — an 8 s sleep called
 "no reply" on an agent that was four bash round trips deep; a 5 s sleep called
-"no stop verb" while `lernie stop` was still reaping a *streaming* driver (an ops
+"no stop verb" while `litany stop` was still reaping a *streaming* driver (an ops
 row lands when its child finishes, so its latency is the child's); and, at load
 average 84, one blind click at a fixed moment hit blank panel because the balls
 section had not painted yet, so the whole ball rung silently never fired. A blind
@@ -938,16 +938,16 @@ projects, possibly no credentials.
 2. Type a goal, hit Enter — **one box, one Enter**. On this one explicit
    action (I7) the world materializes: the `world/tools/bl` agent-tool shim is
    written (§16.7 W9 — so the agent's `bl` is yog's own, first on its `PATH`),
-   `lernie prime` seeds the nested home
+   `litany prime` seeds the nested home
    (skipped forever after — the seeded world is the general path with the
    seed present, §3.4/W3),
-   `lernie new <root>/home` creates the workspace under the fixed default
+   `litany new <root>/home` creates the workspace under the fixed default
    name (DESIGN §3.1 — no picker, no mint), the
    previewed conversation name mints (re-derived at fire; the fired mint is
    the truth, §3.3), and the goal — the payload **exactly as typed**, nothing
-   prepended (bl-6920; identity rides `--name`, lernie states the stored fact
+   prepended (bl-6920; identity rides `--name`, litany states the stored fact
    in its assembled context) — fires as a detached
-   `lernie prompt` with `YOG_NAME=home`, cwd `~`.
+   `litany prompt` with `YOG_NAME=home`, cwd `~`.
 3. The start renders in flight (busy indicator per step), then **the reply
    streams into the focused view** — the root appears within a watch tick
    and its streaming tail paints as it grows (§5.1 #10). That is the Codex
@@ -975,13 +975,13 @@ name picker. One box, one Enter. The name prediction is one grey line.
 
 Tests:
 - **S0-T1 bootstrap-bare-start**: empty world, submit → argv sequence
-  `lernie prime`, `lernie new <names-root>/home`, detached `lernie prompt`
+  `litany prime`, `litany new <names-root>/home`, detached `litany prompt`
   carrying `--name <minted>` + the typed text **verbatim** (bl-6920: no
   identity line in the payload), env
   `YOG_NAME=home`, cwd `~`; the pre-submit view-model already predicted the
   minted name (`will be named <a-b>`); ops trail complete.
 - **S0-T2 seeded-skip**: seeded world (marker present) → no `prime` spawn.
-- **S0-T3 seed-failure-surfaces**: fake `lernie prime` exits 2 → **no `bl`
+- **S0-T3 seed-failure-surfaces**: fake `litany prime` exits 2 → **no `bl`
   spawn recorded**; the error carries argv + stderr; the ops row holds
   stderr; the failure view-model renders argv + stderr tail; the draft
   remains.
@@ -1023,17 +1023,17 @@ Tests:
    them mid-flight. A second instance alongside converges identically (I0).
 2. Enter in the composer → a new root in the focused workspace. Re-opening
    is the same gesture as opening (§3.4) — no resume concept.
-3. Select an agent and type → `lernie message` (the resume gesture, §8.2).
-   Stop (± children) and Scan work per §8.2. (Platform caveat, §10: `lernie
+3. Select an agent and type → `litany message` (the resume gesture, §8.2).
+   Stop (± children) and Scan work per §8.2. (Platform caveat, §10: `litany
    stop` is /proc-based — on macOS the Stop failure renders verbatim; the
-   fix is upstream lernie's, tracked there.)
+   fix is upstream litany's, tracked there.)
 4. The streaming tail keeps painting for any in-flight agent (S0 step 3's
    surface, same derivation).
 
 Burden check: identical gesture set to S0; the second launch adds zero steps.
 
 Tests:
-- **S1-T1 prompt-into-existing**: focused workspace, submit → `lernie
+- **S1-T1 prompt-into-existing**: focused workspace, submit → `litany
   prompt` only (no mint, no `new`, no `prime`).
 - **S1-T2 restart-equivalence**: two AppModels over the same disk derive
   identical view-models — workspace tabs and per-workspace trees (I0).
@@ -1082,7 +1082,7 @@ the §3.5 "unassigned workspace" row is the general case (no ball column).
 
 Tests:
 - **S3-T1 ball-rung**: ready ball → `bl claim <id> --as <name>` after
-  `lernie new`, goal carries title/body only, the worktree rides `--cwd`.
+  `litany new`, goal carries title/body only, the worktree rides `--cwd`.
 - **S3-T2 new-ball-converges**: create → re-planned as existing; one claim.
 - **S3-T3 resume-not-remint**: ball claimed by local name → prompt into
   that workspace; no mint, no claim.
@@ -1090,8 +1090,8 @@ Tests:
   verbatim in ops + view-model.
 - **S3-T5 empty-project-hint**: zero projects in the world → the balls-
   section view-model carries the `yog exec bl prime` hint.
-- **S3-T6 abort-before-claim**: ball rung with a fake `lernie prime` (or
-  `lernie new`) failing → **no `bl create`/`bl claim` recorded** — the §8.1
+- **S3-T6 abort-before-claim**: ball rung with a fake `litany prime` (or
+  `litany new`) failing → **no `bl create`/`bl claim` recorded** — the §8.1
   load-bearing order proven on the rung that has a `bl` mutation to abort
   (S0-T3's no-`bl` assertion is vacuous on the bare rung).
 - **S3-T7 close-stamps-and-delivers** (`stories_s3_t7.rs`): Close on a bound ball → `bl close <id>
@@ -1107,7 +1107,7 @@ Tests:
    bound balls render in the focused workspace's balls section (§11 — the
    full per-project ball views return in the ball-views wave).
 3. Claimed-elsewhere renders the claimant verbatim; delivered balls group
-   under their claimant on demand (§3.4). Workspace retirement is lernie's
+   under their claimant on demand (§3.4). Workspace retirement is litany's
    retention (30-day default, §3.4) — yog deletes nothing and grows no
    delete verb; clutter ages out where the data lives.
 4. **The conversation list is the board.** With many roots in flight, each row
@@ -1161,7 +1161,7 @@ world with no balls renders no badge column at all.
 
 Tests:
 - **S4-T1 new-workspace-verb**: typed name validated (shape, reserved
-  `unknown`, leaf collision refused — DESIGN §3.1) + `lernie new`.
+  `unknown`, leaf collision refused — DESIGN §3.1) + `litany new`.
 - **S4-T2 assign-release**: argv per §8.2; enablement predicates refuse
   what balls would refuse.
 - **S4-T3 join-rows**: one fixture per §3.5 row state; the balls section
@@ -1210,8 +1210,8 @@ Tests:
    normative driven-verb list) died with the gate at §16.7 W13, because a
    lockfile-pinned crate has no install story to show (§16.4).
 2. Config editing per §9, three surfaces, one gesture: brazen's `config.toml`
-   as raw TOML, lernie's global `models.yaml`/`workflows/*` as raw text, and a
-   workspace's config branches — the last written by `lernie config` driven
+   as raw TOML, litany's global `models.yaml`/`workflows/*` as raw text, and a
+   workspace's config branches — the last written by `litany config` driven
    with yog itself as `$EDITOR` (§9.3), because that verb is the only lawful
    writer of `config/*`.
 3. **One discipline for all three**: load → RAM buffer → Apply = stage →
@@ -1237,24 +1237,24 @@ Tests:
 - **S5-T4 hash-guard** (`stories_s5_t4.rs`): the file changes on disk after
   load → Apply refuses and names the drift; after a reload the same Apply
   lands. Asserted once per editor that **has** the guard — brazen and
-  lernie-global, which share `config_edit::pipeline`'s snapshot commit: one
+  litany-global, which share `config_edit::pipeline`'s snapshot commit: one
   discipline, **two** doors. The row once said three. The **config branch has
   no hash guard and must not grow one**: yog never writes `config/*` at all —
-  `lernie config` is that tree's only lawful writer (§9.3) and owns its own
+  `litany config` is that tree's only lawful writer (§9.3) and owns its own
   concurrency — so a guard on yog's side would be yog claiming authority over
   a file it does not own. Its must-not-exist case (creating a file that
   appeared underneath you) is the same guard with an empty `loaded`, not a
   fourth rule.
-- **S5-T5 config-branch-shim**: `lernie config <ws> <name>` is spawned with
+- **S5-T5 config-branch-shim**: `litany config <ws> <name>` is spawned with
   `EDITOR=<yog> --editor-apply` and `YOG_EDIT_SRC=<stage>`; the shim copies
   **only** the drafted files (a `descriptions/` file already in the checkout
-  is untouched) and an empty diff surfaces verbatim — "no change" is lernie's
+  is untouched) and an empty diff surfaces verbatim — "no change" is litany's
   own sentence riding back through the outcome, not a judgement yog derives.
   The staging dir is **not** gone at exit, and deliberately: this row used to
   say it was. `drive` returns the outcome and leaves the staged bytes alone (a
   draft the operator may still be looking at); `sweep_staging` reclaims a
   directory untouched for 24 h at the next startup (§5.2). Deleting in the
-  same breath would race lernie's own read of the checkout it was just handed.
+  same breath would race litany's own read of the checkout it was just handed.
   (`tests/integration/editor_roundtrip.rs` is this test's seed and holds the
   copy half end-to-end through the real `yog` binary as `$EDITOR`;
   `stories_s5_t5.rs` holds the spawn contract, the ride-back and the staging
@@ -1278,7 +1278,7 @@ dead.
 3. **Acknowledging is focusing.** Landing on a conversation records the
    current evidence oids as seen. The acknowledgement *converges* — the second
    instance stops flagging it too — while each instance's own focus stays its
-   own (§13.1). The mark is lernie's; the acknowledgement is yog's.
+   own (§13.1). The mark is litany's; the acknowledgement is yog's.
 4. **Acknowledging clears the signal, not the fact.** A dead conversation goes
    quiet in the strip and keeps its state badge, and an auth-shaped death
    keeps its inline Login one click away.
@@ -1373,7 +1373,7 @@ Machine state: a conversation that did something surprising.
 4. Budget is a fold over the subtree's usage events. Limits render as the raw
    `workflow.yaml` text, because yog owns no YAML parser and will not become a
    second authority on one.
-5. Pending mail explains `✉n`, and Flush is `lernie scan`. A committed
+5. Pending mail explains `✉n`, and Flush is `litany scan`. A committed
    `tool_use` with no `tool_result` renders "tool in progress" — a fact read
    off the transcript, not a guess about a running process.
 
@@ -1393,7 +1393,7 @@ Tests:
 - **S7-T3 budget-fold** (`stories_s7_t3.rs`): usage across a root and two children folds to the
   subtree total shown in the header; the limit line is raw text, never parsed.
 - **S7-T4 inbox-and-progress** (`stories_s7_t4.rs`): deposits parse from/deposited_at/epitaph,
-  `✉n` equals the count, Flush dispatches `lernie scan <ws>`; a committed
+  `✉n` equals the count, Flush dispatches `litany scan <ws>`; a committed
   tool_use with no result renders "tool in progress".
 - **S7-T5 descent-only-with-children** (`stories_s7_t5.rs`): a single-agent conversation has no
   descent however wide the fold is opened; adding a child gives its list row one
@@ -1402,12 +1402,12 @@ Tests:
 
 ## S8 — Neighbour: yog beside your own shell
 
-Machine state: an operator who also drives `bl` and `lernie` by hand.
+Machine state: an operator who also drives `bl` and `litany` by hand.
 
 1. **yog's substrate state is yog's.** One nested world under
-   `$XDG_DATA_HOME/yog` (§16.2) holds the nested lernie home, the nested balls
+   `$XDG_DATA_HOME/yog` (§16.2) holds the nested litany home, the nested balls
    state and yog's own two artifacts. `rm -rf` that directory and the world is
-   gone, with the ambient lernie, balls and brazen untouched — severability
+   gone, with the ambient litany, balls and brazen untouched — severability
    you can actually run.
 2. **The overlap is chosen, not accidental.** An agent pointed at a project's
    board claims into the shared store branch, so that ball shows up in the
@@ -1437,7 +1437,7 @@ the same first Start that S0 already describes (I7).
 
 Tests:
 - **S8-T1 world-compose** (`stories_s8_t1.rs`): the composed env overrides
-  exactly `LERNIE_HOME`, `XDG_STATE_HOME` **and `PATH`** — the third is §16.7
+  exactly `LITANY_HOME`, `XDG_STATE_HOME` **and `PATH`** — the third is §16.7
   W9's prepend of `<world>/tools`, so an agent's bare `bl` is the world's own
   shim (§16.4); this row said "exactly two" until that landed, and the third
   belongs to the same set for the same reason (a pure function of the anchor,
@@ -1479,12 +1479,12 @@ subtracts a prerequisite, and its acceptance is that S0's entry bar
 disappears. It **landed** with phase 2 (§16.7): all three substrates are linked
 crates and every wave, W8–W14, is in.
 
-Machine state: a machine with yog and nothing else — no `lernie`, no `bl`, no
+Machine state: a machine with yog and nothing else — no `litany`, no `bl`, no
 `bz` on `PATH`.
 
 1. Launch yog and S0 runs **exactly as written**. Nothing is probed for
    absence because nothing is shelled to for the substrate work yog owns:
-   balls, brazen and lernie are exact-pinned crates and the pin *is* the
+   balls, brazen and litany are exact-pinned crates and the pin *is* the
    version (§16.5).
 2. The toolchain pane loses its remediation column — and with it, its reason to
    exist. There is no install command to show, so the phase-1 capability gate
@@ -1495,7 +1495,7 @@ Machine state: a machine with yog and nothing else — no `lernie`, no `bl`, no
    re-execing itself against the embedded balls crate and the nested roots,
    first on the world's `PATH` — so an agent's `bl claim` computes the world's
    paths and shares yog's own implementation. (Named plainly `bl` and found by
-   bash, *not* lernie's `lernie-tool-<name>` JSON-stdin tool slot: the §16.4 W9
+   bash, *not* litany's `litany-tool-<name>` JSON-stdin tool slot: the §16.4 W9
    amendment.)
 4. **Identity stops being an instruction.** The shim stamps `--as $YOG_NAME`
    on any verb the caller left unstamped, and §3.3's phase-1 preamble sentence
@@ -1530,7 +1530,7 @@ re-enters yog, with only yog and git on `PATH` (§16.4; the in-repo proof is
 `tests/multiplex_bl.rs`, the room's is `cleanroom.sh … run-s3s4s6`).
 
 Tests:
-- **S9-T1 no-host-binaries**: the story suite runs with `lernie`/`bl`/`bz`
+- **S9-T1 no-host-binaries**: the story suite runs with `litany`/`bl`/`bz`
   absent from `PATH` → S0-T1 and S1-T1 pass unchanged; the gate tests are gone
   from the suite rather than ignored (**done** — W13 removed them, W14 drove
   the real-substrate half for S0/S1 in the clean room, and bl-44a5/bl-2930
@@ -1580,7 +1580,7 @@ VISION V1 (bl-98da); the rung's authority for what it must do is that section.
    *context* edge — what the child inherited — is git ancestry, from the notch
    its branch forks off. The *provenance* edge — who dispatched it — is the
    descent id plus the dispatch notch, which is the rule its card hangs under.
-   A clean child (`lernie dispatch --from config/<name>`) has provenance only.
+   A clean child (`litany dispatch --from config/<name>`) has provenance only.
    Since bl-1802 the difference on screen is the card's **fork label** in words
    (`from here` / `from <Name>@<oid>` vs `from config/<name>`), not a solid and
    a dashed stroke: a rule across a chat has no gutter to stroke in, and the
@@ -1592,7 +1592,7 @@ VISION V1 (bl-98da); the rung's authority for what it must do is that section.
    two of its in-flight inference text, off the same fold the bottom in-flight
    strip reads. Moving text means active; still text means tool-wait or
    quiescent. Following a card is the ordinary selection gesture.
-6. Everything is a **pure read of the lernie workspace repo** — refs, trees,
+6. Everything is a **pure read of the litany workspace repo** — refs, trees,
    commits — derived, never pushed. **No new verb anywhere**, in yog or
    upstream. Both edges cost no git call at all: an agent's `steps` list is
    `git log --first-parent … --not --branches=config/*`, so the longest common
@@ -1735,12 +1735,12 @@ implementation rulings recorded there.
    from nowhere else — and a workspace whose config declares no role anywhere
    paints no composer at all, because a button that cannot work is not offered.
 2. Its **three fire-time controls are three parameters of one real argv**
-   (`lernie dispatch <role> <ws> <parent> --goal <text> --from <ref> [--pin …]`,
+   (`litany dispatch <role> <ws> <parent> --goal <text> --from <ref> [--pin …]`,
    shipped in lernie 0.0.6 and in the pin): the **fork point** (`here` — this
    conversation as of the mark — or a `config/<name>` head for a clean start:
    one control, two kinds of value), the **role**, and the **skills**. Nothing
    yog invents rides along.
-3. **The role is the model, and that is what keeps it honest.** lernie binds a
+3. **The role is the model, and that is what keeps it honest.** litany binds a
    provider and a model id to a role in the `providers.yaml` of the config
    commit governing the fork point, and nowhere else — so the composer lists
    that ref's roles with the model each names, read from the file the run will
@@ -1803,7 +1803,7 @@ Tests:
   every parameter it cannot invent refuses by name; a `skills` field of the
   wrong shape refuses rather than being half-obeyed, while an absent one is no
   skills.
-- **S12-T6 skills-pool**: the pool is the world's own `$LERNIE_HOME/skills`, a
+- **S12-T6 skills-pool**: the pool is the world's own `$LITANY_HOME/skills`, a
   directory counts only when it carries the instructions, and an absent pool
   is no skills rather than an error.
 ## S13 — Admiral: the balls section is the board (VISION V4)
@@ -2000,13 +2000,13 @@ Tests:
 Machine state: a workspace with a drone at work and no human at the window.
 
 1. **Every granted tool invocation is adjudicated before it executes.** The
-   enforcement point is lernie's own shipped tool-control seam: the workspace's
+   enforcement point is litany's own shipped tool-control seam: the workspace's
    `workflow.yaml` names one executable, hands it the `tool_use` block plus the
    calling role and agent id, and reads back `pass` / `refuse` / `hold`,
    failing closed. yog *is* that executable — a `world/tools/` re-exec shim
    named by **absolute path**, so no host binary can shadow the adjudicator.
    No new primitive is asked of anyone, and the shipped whole-pool grant is
-   untouched: grants are lernie's structure, the control is yog's policy.
+   untouched: grants are litany's structure, the control is yog's policy.
 2. **The vocabulary classifies invocations, never tool names.** read / target
    write / process / open-world / destructive / secret. Built-ins carry an
    intrinsic map; `cd` and `apply_patch` are judged against the writable root
@@ -2028,7 +2028,7 @@ Machine state: a workspace with a drone at work and no human at the window.
    enforcement path ever stops an agent**, and no modal exists in either
    frontend: attended and unattended are one flow.
 5. **The workspace is born adjudicated.** Every start converges the workspace's
-   `config/default` onto a workflow naming the shim, through lernie's own
+   `config/default` onto a workflow naming the shim, through litany's own
    config verb — so a workspace made a moment ago and one made last week are
    both controlled, and every agent forked after that commit is. A tip that
    already names the shim reads one file out of git and spawns nothing.
@@ -2040,7 +2040,7 @@ Machine state: a workspace with a drone at work and no human at the window.
 Tests:
 - **S15-T1 the-shim-answers-the-seam** (`tests/tool_control_shim.rs`): the
   seeded shim, spawned with no argv and a request on stdin, prints one verdict
-  on stdout — a pass carrying no reason (lernie's parser rejects one), a hold
+  on stdout — a pass carrying no reason (litany's parser rejects one), a hold
   with its reason once a floor row imposes one, a refusal at exit **0** (a decline is an answer;
   the seam reads non-zero as a fault), and a non-zero exit for a request nobody
   could adjudicate.
@@ -2059,7 +2059,7 @@ Tests:
   descent subtree and never lowers a refusal; every other ops row folds to
   nothing.
 - **S15-T5 authoring-is-a-fixed-point** (`control::author`, `start::tests`):
-  a tip without the block is driven through `lernie config` with the **whole**
+  a tip without the block is driven through `litany config` with the **whole**
   workflow staged; a tip that already names the shim spawns nothing; a drive
   that fails aborts the start with its own `["yog-step","control"]` row.
 
@@ -2088,7 +2088,7 @@ Nothing is running; nothing is lost; nothing has been spent since.
 4. **The answer is the audit.** One `ops.jsonl` row — `["yog-control","answer",
    <tool_use id>,<verdict>]` — is at once the record and the memory the control
    folds on its next consult. No fourth durable artifact.
-5. **The release is the re-adjudication.** A pass or a refuse fires `lernie
+5. **The release is the re-adjudication.** A pass or a refuse fires `litany
    advance` detached; the seam re-enters the tool window under the mark,
    re-consults the control, now finds the answer, and the branch moves. Nothing
    stops the agent — a stop mid-tool-window wedges it permanently.
@@ -2106,14 +2106,14 @@ Nothing is running; nothing is lost; nothing has been spent since.
 
 Tests:
 - **S16-T1 a-park-is-attention-nothing-can-quiet** (`attention`, `git_tree`):
-  the mark reads back off the blob lernie writes; a mangled blob is no park at
+  the mark reads back off the blob litany writes; a mangled blob is no park at
   all; the signal fires, wears its badge, survives every watermark, and writes
   none.
 - **S16-T2 the-answer-is-the-fold's-memory** (`boundary::control`): the row is
   written before anything is launched and the control's own fold reads it back
   as the verdict for that exact `tool_use` id.
 - **S16-T3 releasing-drives-and-parking-does-not** (`boundary::control`): pass
-  and refuse each launch a detached `lernie advance` as its own logged row; a
+  and refuse each launch a detached `litany advance` as its own logged row; a
   `hold` answer writes the row and launches nothing; a launch that never lands
   is still an answer and still a row; an answer aimed at nothing refuses and
   writes nothing.
@@ -2386,7 +2386,7 @@ Tests:
   `Err` lands in `ops.jsonl` per the amended §4.2 (spawn failures included,
   non-spawn steps as `["yog-step",…]` rows), and `grep -r eprintln
   src/shell/` finds **zero** occurrences. *(bl-a649 closed the one error the
-  dispatch layer never saw: a detached `lernie prompt` that launches cleanly and
+  dispatch layer never saw: a detached `litany prompt` that launches cleanly and
   then dies has no `Err` to log — its stderr goes to a per-spawn sink file
   (§8.1/§13.3) which the ops sweep folds into the `-2` row, making the death a
   rendered failure instead of a prompt that "does nothing".)*
@@ -2402,7 +2402,7 @@ graduating one at a time as their enabling verbs land — S10 (Historian),
 S11 (Auditor), S12 (Counterfactualist), S13 (Admiral), S14 (Teleoperator),
 S15 (Warden), S16 (Releaser), S17 (Warden, again), S18 (Admiral, armed) and
 S19 (Adjudicator) are here, and none of them needed a verb below yog: S12's
-fork is `lernie dispatch --from`, shipped upstream and already pinned, S19's
+fork is `litany dispatch --from`, shipped upstream and already pinned, S19's
 fan rides balls' attempt capability (bl-8746/bl-c2bd, no `bl` verb by
 upstream's own ruling), and the rest needed no
 verb at all. S13 and S14 each landed minus the armed-loop half they refused to

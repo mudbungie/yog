@@ -3,7 +3,7 @@
 //! The preview is the **operator's payload**, and the payload's one home on
 //! disk is `<workspace>/agents/<agent-id>/goal.md` (DESIGN §3.3) — read by
 //! [`super::enumerate`] in the same pass that reads the goal's two stamps.
-//! What lernie *sent* the model is not that text: an assembled context leads
+//! What litany *sent* the model is not that text: an assembled context leads
 //! with the §3.7 pinned-instruction frame and wraps a deposit in its envelope,
 //! so a request record previews as `<file path="…">` or `---` rather than as
 //! anything the operator wrote (bl-368d).

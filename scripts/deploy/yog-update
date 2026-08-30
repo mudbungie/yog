@@ -49,12 +49,12 @@ die() { say "$*" >&2; exit 1; }
 # WHY `defer` EXISTS — and it is NOT that a restart wedges the conversation.
 # It does not. A restart SIGTERMs the whole control group, and a turn killed
 # between a tool call and its result leaves an unpaired tool-use tail, but the
-# pinned lernie SETTLES that tail: at the next drive boundary, strictly before
+# pinned litany SETTLES that tail: at the next drive boundary, strictly before
 # delivery, each unanswered `tool_use` in the trailing assistant window gets an
 # in-band `is_error` `tool_result` saying the executor died, so the tail pairs
-# and an ordinary deposit revives the branch (lernie ARCH §6 crash settlement,
+# and an ordinary deposit revives the branch (litany ARCH §6 crash settlement,
 # upstream bl-4187, consumed in bl-4c1f; `src/prompt/dispatch/advance/crash.rs`
-# in the `=0.0.11` pin, idempotent — answered ids are read back out of the
+# in the current pin, idempotent — answered ids are read back out of the
 # transcript). The graceful exit settles its own window the same way (§2.9),
 # and the one shape settlement cannot repair — a `tool_use` already buried
 # behind delivered mail, unfixable by appending because pairing is positional —
@@ -71,7 +71,7 @@ die() { say "$*" >&2; exit 1; }
 #
 # WHY THE PROCESS COUNT IS THE PREDICATE. The substrate is linked in-process
 # (§16.7) and the engine's own concurrency is threads, so an idle `yog serve`
-# is exactly one process; a turn in flight is a `lernie` child in the same
+# is exactly one process; a turn in flight is a `litany` child in the same
 # cgroup. That needs no yog-side API, no new gesture and no field on the model
 # — the fact is already there to read.
 #

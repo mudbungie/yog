@@ -13,7 +13,7 @@ use crate::search::{Address, Found};
 fn the_frame_hands_search_over_and_renders_the_landed_answer() {
     let h = Harness::new();
     let (_c, model) = h.model();
-    let deps = model.boundary_deps(&Cli::new("/no/lernie"), &Cli::new("/no/bl"));
+    let deps = model.boundary_deps(&Cli::new("/no/litany"), &Cli::new("/no/bl"));
     let ask = |text: &str| {
         let Ok(Reply::Search(found)) = model.answer(
             &deps,

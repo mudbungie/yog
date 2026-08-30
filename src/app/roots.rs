@@ -7,12 +7,12 @@ use crate::binding;
 use std::path::PathBuf;
 
 /// The enumeration roots the model watches and walks (§7.1): yog's own flat
-/// names root, the lernie data root (foreign workspaces + replays), and the yog
+/// names root, the litany data root (foreign workspaces + replays), and the yog
 /// state root (`ui.json`). Built once from [`crate::xdg::Env`] by the shell.
 #[derive(Debug, Clone)]
 pub struct Roots {
     pub yog_data: PathBuf,
-    pub lernie_data: PathBuf,
+    pub litany_data: PathBuf,
     pub yog_state: PathBuf,
     /// The balls per-project clones dir (`$XDG_STATE_HOME/balls/clones/`, §5.1
     /// #1) — project enumeration and the `BallsClones` watch (§7.1).
@@ -23,7 +23,7 @@ pub struct Roots {
     /// boot, kept beside them because the §8.5 config family
     /// ([`Action::ApplyConfig`](crate::boundary::Action::ApplyConfig) and its
     /// two siblings) folds *destinations* rather than roots — brazen's
-    /// `config.toml`, lernie's config root, the staging root — and asks the
+    /// `config.toml`, litany's config root, the staging root — and asks the
     /// **linked** brazen for its provider table through the same snapshot. It
     /// is the source of the four, never a second copy of them: nothing reads a
     /// root back off it.
@@ -37,7 +37,7 @@ impl Roots {
     pub fn of(world: &crate::xdg::Env) -> Roots {
         Roots {
             yog_data: world.yog_data_root(),
-            lernie_data: world.lernie_data_root(),
+            litany_data: world.litany_data_root(),
             yog_state: world.yog_state_root(),
             balls_clones: world.balls_clones_dir(),
             home: world.home_dir(),
@@ -50,10 +50,10 @@ impl Roots {
         binding::names_root(&self.yog_data)
     }
     pub(crate) fn workspaces(&self) -> PathBuf {
-        self.lernie_data.join("workspaces")
+        self.litany_data.join("workspaces")
     }
     pub(super) fn replays(&self) -> PathBuf {
-        self.lernie_data.join("replays")
+        self.litany_data.join("replays")
     }
     pub(super) fn ui_json(&self) -> PathBuf {
         self.yog_state.join("ui.json")

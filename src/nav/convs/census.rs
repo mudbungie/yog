@@ -58,7 +58,7 @@ pub(crate) fn subtree(rows: &[ConvRow], at: usize) -> impl Iterator<Item = &Conv
 /// **The §3.3 occupied name set off an answered forest** (§3.3, bl-b4b5) — what
 /// the conversation mint may not re-use, as a seat reads it.
 ///
-/// Every member counts, and must: lernie refuses a name any living agent
+/// Every member counts, and must: litany refuses a name any living agent
 /// already wears, so a mint that ignored a named child would fail at fire. A
 /// row's `name` is the root-or-member's own `name_fact` — the very fold
 /// `answer::names_in` collects — so this is one derivation addressed from the

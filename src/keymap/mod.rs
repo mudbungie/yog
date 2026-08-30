@@ -138,7 +138,7 @@ pub enum KeyAction {
     /// `x` — Stop the selected conversation (+children per its checkbox, §8.2).
     /// No combo (rule 3; Ctrl+X is the text box's cut).
     Stop,
-    /// `f` — Flush the inbox: `lernie scan` on the focused workspace (§8.2).
+    /// `f` — Flush the inbox: `litany scan` on the focused workspace (§8.2).
     /// No combo (rule 3): Ctrl+F is [`Search`](Self::Search), and the two
     /// planes now carry the two meanings the letter has — the bare one
     /// mutates, the combo one only looks.

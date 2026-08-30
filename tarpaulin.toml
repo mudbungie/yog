@@ -1,7 +1,7 @@
 # Repo-wide tarpaulin defaults: applied by every `cargo tarpaulin` run,
 # including the pre-commit hook.
 #
-# Pinned tarpaulin version: 0.35.2 (same pin as the lernie repo).
+# Pinned tarpaulin version: 0.35.2 (same pin as the litany repo).
 # 0.35.3 was yanked, and 0.35.4+ silently excludes inline `#[cfg(test)] mod
 # tests;` files from the coverable denominator. The 100% floor only means
 # the same thing on every machine if everyone is on the same tarpaulin —
@@ -22,7 +22,7 @@
 # `spawn_detached` (§8.1) forks `setsid` children that tarpaulin's
 # `--engine llvm` still follows under ptrace, and its state machine races
 # the parallel teardown of those detached processes ("Failed to find
-# process for pid: … → segfault" — the same failure lernie's tarpaulin
+# process for pid: … → segfault" — the same failure litany's tarpaulin
 # pins around). Serial coverage sidesteps the race; the 100% floor is
 # unchanged (coverage is the union of executed lines, order-independent).
 #

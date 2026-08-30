@@ -1,23 +1,23 @@
 # yog
 
 yog is the desktop manager for
-[lernie](https://github.com/mudbungie/lernie) loops: an egui/eframe desktop
-window that browses every lernie workspace, surfaces what needs attention, and
+[litany](https://github.com/mudbungie/litany) loops: an egui/eframe desktop
+window that browses every litany workspace, surfaces what needs attention, and
 drives the loop lifecycle — start work from nothing, a path, or a
-ball, message or stop agents, assign and close balls — over the lernie and
+ball, message or stop agents, assign and close balls — over the litany and
 balls substrates it embeds.
 
 It is its own package ([mudbungie/yog](https://github.com/mudbungie/yog)),
-deliberately outside the lernie and balls workspaces: both ship as composable
+deliberately outside the litany and balls workspaces: both ship as composable
 components and yog composes on top of them. The batteries-included direction is
-**landed**: balls, brazen and lernie are all linked crates, exact-pinned in
+**landed**: balls, brazen and litany are all linked crates, exact-pinned in
 `Cargo.toml` — which is the pin authority, so no version is restated here or in
 any doc. Ball reads run in-process, and every substrate spawn targets yog's own
 executable under a verb namespace — `yog bl <verb…>`, `yog bz <args…>`, `yog
-lernie <argv…>` — dispatched to the embedded crate exactly as each upstream's
+litany <argv…>` — dispatched to the embedded crate exactly as each upstream's
 own thin binary does (DESIGN §16.7). Nothing is installed alongside: there is no
-host `bl`, `bz` or `lernie` in the chain, which is what `make drive-cleanroom`
-proves by putting only `yog` and `git` on `PATH`. lernie, balls and brazen take
+host `bl`, `bz` or `litany` in the chain, which is what `make drive-cleanroom`
+proves by putting only `yog` and `git` on `PATH`. litany, balls and brazen take
 no dependency back.
 
 ## Architecture
@@ -78,7 +78,7 @@ telemetry's empty reading *is* the logo.
 
 The window is three information altitudes (DESIGN §11): the attention strip and
 roster (does anything need me? what's running?), the focused workspace (its
-agent descent tree with per-agent state badges, the four `refs/lernie/*` marks
+agent descent tree with per-agent state badges, the four `refs/litany/*` marks
 — conflicted, budget-exhausted, abandoned, notify — budgets, streaming tails,
 and tool pulses), and a per-agent tabbed inspector. Two composite flows sit on
 top: the **start flow** (DESIGN §3.4) — prompts land as new roots in the
@@ -86,7 +86,7 @@ focused workspace (a fresh world bootstraps one automatically; creating more
 is a deliberate act, walling off spheres like clients or corporate vs.
 personal) and may carry a path or a ball payload (`bl create` + `bl claim
 --as <workspace-name>`), through an editable goal composer whose
-Send fires `lernie prompt` detached. A start that binds a work target also
+Send fires `litany prompt` detached. A start that binds a work target also
 **freezes that project's instruction files** into the agent's first commit
 (DESIGN §3.7): yog walks from the target's git root down to the target, pins
 each `AGENTS.md` it finds as exact bytes before the first inference, and
@@ -94,8 +94,8 @@ authors the workspace's `config/default` so the worker composes them — the
 filename set is `AGENTS.md` unless a workspace's `instructions.yaml` says
 otherwise, and the goal you typed stays your payload, never a concatenation.
 Then the **config editors** stage-and-validate
-brazen `config.toml`, lernie global config, and per-workspace config branches
-(DESIGN §9). Replays (`<lernie-data>/replays/*`) render through the same view,
+brazen `config.toml`, litany global config, and per-workspace config branches
+(DESIGN §9). Replays (`<litany-data>/replays/*`) render through the same view,
 read-only.
 
 ## Running
@@ -105,10 +105,10 @@ yog                                # browse every workspace, attention-sorted
 yog --workspace /path/to/workspace # start focused on one workspace
 ```
 
-yog enumerates every lernie workspace (named workspaces under
+yog enumerates every litany workspace (named workspaces under
 `<yog-data-root>/workspaces/` — the resolved root is spelled out under "The
 world" below — foreign workspaces and replays under the
-lernie data root) and opens on the first one that needs attention. A workspace
+litany data root) and opens on the first one that needs attention. A workspace
 name is **chosen** — typed at the New-workspace affordance — or the fixed
 `home` the empty-world bootstrap uses without asking; it is never minted
 (DESIGN §3.1). Minting is what names a *conversation*, from an embedded
@@ -137,17 +137,17 @@ is a no-op kill — hammer it as often as you like.
 egui is winit-based; its only runtime deps are the X11/Wayland libs
 already present on any Linux desktop. No `apt install` step is required.
 
-**No substrate needs installing.** lernie, balls and brazen are compiled in, and
-every `lernie` / `bl` / `bz` yog runs is yog re-execing itself under that verb
-namespace (DESIGN §16.7). The `LERNIE_BINARY` / `BL_BINARY` / `BZ_BINARY` env
+**No substrate needs installing.** litany, balls and brazen are compiled in, and
+every `litany` / `bl` / `bz` yog runs is yog re-execing itself under that verb
+namespace (DESIGN §16.7). The `LITANY_BINARY` / `BL_BINARY` / `BZ_BINARY` env
 vars still override the physical target, as test seams and escape hatches back
 to a host binary.
 
 ## The world
 
 yog composes its own **nested world** — a substrate environment under
-`<yog-data-root>/world` that overrides `LERNIE_HOME`, `XDG_STATE_HOME`, and
-`PATH` and hands it to every child it spawns, so yog's `bl`/`lernie` state never
+`<yog-data-root>/world` that overrides `LITANY_HOME`, `XDG_STATE_HOME`, and
+`PATH` and hands it to every child it spawns, so yog's `bl`/`litany` state never
 collides with your ambient tools. The world is the authority in **DESIGN §16**.
 
 **The reset is one `rm`, and the path it takes is resolved, not spelled.**
@@ -157,20 +157,20 @@ applies (`src/xdg`), and the reason a literal `rm -rf $XDG_DATA_HOME/yog` is
 wrong: with the optional variable unset that command names `/yog`, and unquoted
 it splits on any space in the value. Ask yog for the resolved value rather than
 re-deriving it — `yog env` prints the world's roots shell-quoted, and
-`LERNIE_HOME` is `<yog-data-root>/world/lernie`:
+`LITANY_HOME` is `<yog-data-root>/world/litany`:
 
 ```
 rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/yog"
 ```
 
 **Scope of that deletion, exactly:** everything yog owns and nothing else — the
-world subtree (the nested lernie home, the nested `XDG_STATE_HOME` holding
+world subtree (the nested litany home, the nested `XDG_STATE_HOME` holding
 balls' state and yog's own durables, and the generated `world/tools/` shims),
 every workspace yog created under `<yog-data-root>/workspaces/`, and every
 per-workspace wall with its brazen config, credentials and model cache. Your
-**ambient** lernie, balls and brazen state is untouched — it lives under your
+**ambient** litany, balls and brazen state is untouched — it lives under your
 real `$XDG_*` roots, which the world never writes to. Foreign workspaces and
-replays are untouched too: they live under the lernie data root, outside this
+replays are untouched too: they live under the litany data root, outside this
 path. There is no undo and no reset verb; the deletion is the reset, which is
 the severability the nesting was chosen for.
 
@@ -197,7 +197,7 @@ below dropped into, since they hand out the world, and the world names no
 sphere.
 
 The `PATH` override fronts `world/tools/`, where yog seeds a **shim per
-namespace** — `bl`, `lernie`, `bz`, balls' two plugin siblings `bl-delivery` and
+namespace** — `bl`, `litany`, `bz`, balls' two plugin siblings `bl-delivery` and
 `bl-tracker`, and the capability control — each a one-line re-exec of yog itself
 (DESIGN §16.4, §16.7). So an agent yog starts gets yog's own compiled-in balls
 when it types `bl` — same implementation, same nested state — and its claims are
@@ -212,7 +212,7 @@ Two escape hatches (DESIGN §8.4) let a human — or a foreign frontend — join
 world from a shell with one prefix:
 
 ```
-eval "$(yog env)"          # drop THIS shell into the world; `bl`/`lernie`/`bz`
+eval "$(yog env)"          # drop THIS shell into the world; `bl`/`litany`/`bz`
                            # now resolve to the world's shims — yog itself,
                            # against yog's nested state
 yog exec bl list           # run one command inside the world (its exit is yog's)
@@ -452,14 +452,14 @@ immediately. The second is not, and that is why this is a script rather than a
 **A restart is deferred while a turn is in flight.** A restart SIGTERMs the
 whole control group. The engine survives that — §4.1 state is write-through and
 there is no `on_exit` hook (bl-b54e) — and so, since the pinned substrate, does
-the conversation: a `lernie` turn killed between a tool call and its result
-leaves an unpaired tool-use tail, and lernie **settles** it. At the next drive
+the conversation: a `litany` turn killed between a tool call and its result
+leaves an unpaired tool-use tail, and litany **settles** it. At the next drive
 boundary, strictly before delivery, every unanswered `tool_use` in the trailing
 assistant window is committed an in-band `is_error` `tool_result` saying the
 executor died — so the tail pairs, the warrant reads `ModelCallDue`, and an
-ordinary deposit revives the branch (lernie ARCH §6 crash settlement, upstream
+ordinary deposit revives the branch (litany ARCH §6 crash settlement, upstream
 bl-4187, consumed here in bl-4c1f; `src/prompt/dispatch/advance/crash.rs` in the
-`=0.0.11` pin, idempotent because the answered ids are read back out of the
+current pin, idempotent because the answered ids are read back out of the
 transcript rather than a cursor). The graceful exit settles its own window the
 same way on the way out (§2.9). The one shape settlement cannot repair — a
 `tool_use` already buried behind a delivered message, which positional pairing

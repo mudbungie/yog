@@ -1,6 +1,6 @@
 //! S15-T1 — the capability control end to end (DESIGN §8.6, VISION §4.11): the
-//! shim yog seeds into `world/tools/` **is** the executable lernie's
-//! tool-control seam consults, and it answers lernie's wire contract over a real
+//! shim yog seeds into `world/tools/` **is** the executable litany's
+//! tool-control seam consults, and it answers litany's wire contract over a real
 //! process's stdin and stdout.
 //!
 //! Everything below the process edge is unit-tested beside its module; what this
@@ -38,8 +38,8 @@ fn seed_shim(tools: &Path) -> std::path::PathBuf {
     path
 }
 
-/// Consult the shim exactly as lernie's seam does: no argv, the request on
-/// stdin, `LERNIE_CONV_REPO`/`LERNIE_CONV_BRANCH` in the environment, and the
+/// Consult the shim exactly as litany's seam does: no argv, the request on
+/// stdin, `LITANY_CONV_REPO`/`LITANY_CONV_BRANCH` in the environment, and the
 /// workspace root as cwd. Returns `(exit code, stdout)`.
 fn consult(shim: &Path, root: &Path, workspace: &Path, request: &str) -> (i32, String) {
     let mut child = Command::new(shim)
@@ -48,8 +48,8 @@ fn consult(shim: &Path, root: &Path, workspace: &Path, request: &str) -> (i32, S
         .env("HOME", root.join("home"))
         .env("XDG_DATA_HOME", root.join("data"))
         .env("XDG_STATE_HOME", root.join("state"))
-        .env("LERNIE_CONV_REPO", workspace)
-        .env("LERNIE_CONV_BRANCH", "amber")
+        .env("LITANY_CONV_REPO", workspace)
+        .env("LITANY_CONV_BRANCH", "amber")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -98,7 +98,7 @@ fn the_seeded_shim_answers_the_seam_over_real_stdio() {
     let shim = seed_shim(&root.path().join("data/yog/world/tools"));
 
     // Work inside the writable root passes, and a pass carries no reason —
-    // lernie's own parser rejects one.
+    // litany's own parser rejects one.
     let (code, out) = consult(&shim, root.path(), &workspace, &request("cargo test"));
     assert_eq!(code, 0);
     assert_eq!(out.trim(), r#"{"verdict":"pass"}"#);

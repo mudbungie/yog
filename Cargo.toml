@@ -2,11 +2,11 @@
 name = "yog"
 version = "0.0.5"
 edition = "2024"
-description = "yog: a balls-oriented session manager for lernie loops (egui frontend)"
+description = "yog: a balls-oriented session manager for litany loops (egui frontend)"
 license = "MIT"
 repository = "https://github.com/mudbungie/yog"
 readme = "README.md"
-keywords = ["lernie", "agents", "egui", "balls"]
+keywords = ["litany", "agents", "egui", "balls"]
 categories = ["development-tools", "gui"]
 # What ships to crates.io (bl-8340). An ALLOWLIST, and never an `exclude`: with
 # `exclude`, every file class added tomorrow ships by DEFAULT, and that default
@@ -72,20 +72,35 @@ balls = "=0.5.11"
 # The embedded LLM adapter (DESIGN §16.7 W10). EXACT pin: `native-host` re-exposes
 # the `bz` bin's impure shim (ureq/rustls transport, XDG credential store + model
 # cache) with NO semver contract, so the version is the contract — and the lockfile
-# is the parity check that yog and lernie resolve ONE brazen (§16.7 "skew death is
+# is the parity check that yog and litany resolve ONE brazen (§16.7 "skew death is
 # structural"). 0.0.6 ships an eighth default provider row, `openai-chatgpt`
 # (oauth2, no model prefixes, last in the table), so a bare install has a
 # browser-login-capable provider with no config file authored (brazen bl-77fa,
 # the ruling on yog bl-8c2d).
 brazen = { version = "=0.0.6", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
-# The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog lernie
-# <argv…>` reproduces lernie's own thin exec binding over `lernie::cmd`, and the
+# The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
+# <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
 # driver every spawn re-enters is yog itself. EXACT registry pin — track the
-# published latest (0.0.11), which carries the **two-word PascalCase mint**
+# published latest.
+#
+# **The name moved at a version fence (REMOTE §12, bl-9905).** This crate — the
+# agent-loop engine — shipped as `lernie` through 0.0.11 and continues its line
+# as `litany` from 0.0.1; the `lernie` name passes to the seat, whose line
+# begins at 0.1.0. So a `lernie 0.0.x` in the notes below is THIS engine at that
+# release, and every version citation in yog's tree reads against that one rule.
+# 0.0.1 is 0.0.11 plus the rename itself — crate, binary, `LITANY_HOME`, the XDG
+# harness subdir and the `refs/litany/*` mark namespace, with no compatibility
+# shim (upstream bl-2f58, its `docs/DESIGN_ENGINE_RENAME.md`) — plus upstream
+# bl-68f5, which stops §6 spend double-billing the cached prompt slice on the
+# OpenAI-shaped and Google decoders, where the prompt counter already CONTAINS
+# the cached one.
+#
+# Carried in from the lernie era, newest first. 0.0.11 carried the **two-word
+# PascalCase mint**
 # (bl-0219): upstream bl-79a2 draws an agent name as one ordered pair from a
 # widened index space instead of the single lowercase word that read as a word
-# and not a name — yog links `lernie::mint::mint` directly
+# and not a name — yog links `litany::mint::mint` directly
 # (`src/start/identity.rs`) at both preview and fire, so it inherits the new
 # shape with no code change. It also ships the workflow template with **budgets
 # off by default** (upstream bl-8dea — the shipped whole-tree spend ceilings
@@ -130,11 +145,11 @@ clap = { version = "4", features = ["derive"] }
 # and 0.0.3's `Fx::adapter_target` (the injection W11 consumes); the interim git
 # rev is retired (a git pin also cost yog its publishability, and cost it the
 # rev itself once upstream rewrote `main`; the registry has neither failure
-# mode). The lockfile is also the brazen parity check: lernie 0.0.11 links
+# mode). The lockfile is also the brazen parity check: litany 0.0.1 links
 # `brazen =0.0.6`, the same exact version yog pins, so exactly ONE brazen
 # resolves — skew death is structural otherwise (§16.7). The two pins move
 # TOGETHER, in one change, for that reason.
-lernie = "=0.0.11"
+litany = "=0.0.1"
 eframe = { version = "0.29", default-features = false, features = ["default_fonts", "glow"] }
 egui = "0.29"
 # Not used in code — present only to turn ON `egui-winit`'s `wayland` feature,
@@ -201,7 +216,7 @@ missing_panics_doc = "allow"       # prod is panic-free (restriction lints below
 must_use_candidate = "allow"       # advisory; not decorating every getter with #[must_use]
 
 # Empirically-warranted for this egui GUI (measured B6 histogram).
-doc_markdown = "allow"             # proper-noun-dominated (yog/bl/egui/lernie) — the nag is noise
+doc_markdown = "allow"             # proper-noun-dominated (yog/bl/egui/litany) — the nag is noise
 cast_possible_truncation = "allow" # egui f64->u8 colour and pixel/index math is intentional
 cast_sign_loss = "allow"           # ditto: non-negative f64 -> unsigned in colour/layout math
 cast_possible_wrap = "allow"       # ditto: usize<->isize index arithmetic

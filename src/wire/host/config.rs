@@ -22,7 +22,7 @@
 //! interpolation of the invocation's input into it: a shell would make the
 //! declared schema advisory and turn an operator's config into a
 //! command-injection surface for anything a model can type. The input reaches
-//! the command exactly as lernie's own tool contract delivers one (its ARCH
+//! the command exactly as litany's own tool contract delivers one (its ARCH
 //! §3.3) — the JSON on stdin, bytes on stdout, the exit code the verdict.
 //!
 //! **It sits beside the wire material, not inside the world**

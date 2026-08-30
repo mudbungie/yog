@@ -12,8 +12,8 @@
 //! **A config apply is a destination plus the full staged text.** That is the
 //! whole reframe: [`ConfigFile`] enumerates *where* the bytes land, and the
 //! pipeline follows from it — `bz` validates a brazen draft (§9.1), a
-//! lernie-global one is hash-guarded and renamed (§9.2), and a per-workspace
-//! lineage is staged and committed by `lernie config` (§9.3, the only lawful
+//! litany-global one is hash-guarded and renamed (§9.2), and a per-workspace
+//! lineage is staged and committed by `litany config` (§9.3, the only lawful
 //! writer of `config/*`). One variant, no per-file gesture.
 //!
 //! **One validator, at the one destination whose contents yog can judge.** §9.2
@@ -35,7 +35,7 @@ use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::brazen::{
     BrazenPaths, BzRunner, RealBzRunner, credential_presence, row_views,
 };
-use crate::config_edit::lernie_global::LernieGlobal;
+use crate::config_edit::litany_global::LitanyGlobal;
 use crate::model_pick::{BRANCH, PROVIDERS, Pick};
 use crate::world::marks;
 use std::path::Path;
@@ -54,7 +54,7 @@ use read::{branch_text, text_at};
 use write::{cadence_path, commit};
 
 /// Run one config apply (§9). The reply says what landed: a file destination
-/// answers with the path written, a lineage with `lernie config`'s captured run
+/// answers with the path written, a lineage with `litany config`'s captured run
 /// — the same distinction every other action makes between a write and a spawn.
 pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Result<Reply, String> {
     // The destination's own address, resolved once (REMOTE §8, bl-f5f6): two of
@@ -63,11 +63,11 @@ pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Res
     let ws = &located(deps, file)?;
     match file {
         ConfigFile::Brazen { .. } => write::brazen(deps, ws, text),
-        ConfigFile::LernieModels => {
-            write::write_file(LernieGlobal::resolve(&deps.world).models(), text)
+        ConfigFile::LitanyModels => {
+            write::write_file(LitanyGlobal::resolve(&deps.world).models(), text)
         }
-        ConfigFile::LernieWorkflow { name } => {
-            let path = LernieGlobal::resolve(&deps.world)
+        ConfigFile::LitanyWorkflow { name } => {
+            let path = LitanyGlobal::resolve(&deps.world)
                 .new_workflow(name)
                 .map_err(|e| e.to_string())?;
             write::write_file(path, text)
@@ -96,9 +96,9 @@ pub(super) fn read(deps: &Deps, file: &ConfigFile) -> Result<Reply, String> {
     let ws = &located(deps, file)?;
     let text = match file {
         ConfigFile::Brazen { .. } => text_at(&brazen_paths(deps, ws).config)?,
-        ConfigFile::LernieModels => text_at(&LernieGlobal::resolve(&deps.world).models())?,
-        ConfigFile::LernieWorkflow { name } => text_at(
-            &LernieGlobal::resolve(&deps.world)
+        ConfigFile::LitanyModels => text_at(&LitanyGlobal::resolve(&deps.world).models())?,
+        ConfigFile::LitanyWorkflow { name } => text_at(
+            &LitanyGlobal::resolve(&deps.world)
                 .new_workflow(name)
                 .map_err(|e| e.to_string())?,
         )?,
@@ -190,8 +190,8 @@ pub(super) fn set_marks(
 /// written.
 ///
 /// It used to apply `models.yaml` through the §9.2 pipeline first, in that order,
-/// because lernie's cross-check refused a config naming an undeclared model.
-/// lernie retired that check and the table with it (its bl-35e2), so the first
+/// because litany's cross-check refused a config naming an undeclared model.
+/// litany retired that check and the table with it (its bl-35e2), so the first
 /// write reached nothing that reads it.
 ///
 /// The provider gate reads the rows of **the workspace being picked for**

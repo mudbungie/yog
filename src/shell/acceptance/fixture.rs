@@ -1,5 +1,5 @@
 //! The populated fixture world the acceptance tests render (§11): one
-//! workspace symlinked under the lernie root with a transcript, a settled
+//! workspace symlinked under the litany root with a transcript, a settled
 //! auth-failed step with tool i/o, and an inbox deposit — every inspector
 //! surface has something to paint. Split from the smoke test for §12's budget.
 
@@ -30,11 +30,11 @@ pub(super) const MINT_SEED: u64 = 0xc0df;
 /// `assert_ne!` (bl-dd3d): "a fresh name each time" is read off the pinned
 /// sequence, so a mint regressing to repeats fails every run, not once in the
 /// pool's size.
-/// The pool is **lernie's** since bl-cd38 (yog deleted its own list and draws
-/// through [`lernie::mint`]), so this is also the seam check on that
+/// The pool is **litany's** since bl-cd38 (yog deleted its own list and draws
+/// through [`litany::mint`]), so this is also the seam check on that
 /// consumption: a corpus change moves it, and fails in `mint_seed.rs` naming
 /// the cause instead of as a needle collision elsewhere in the suite. It has
-/// moved once, and that is the check working: lernie's bl-79a2 widened the draw
+/// moved once, and that is the check working: litany's bl-79a2 widened the draw
 /// from one lowercase word to an ordered PascalCase **pair** (yog bl-0219's
 /// consume), so these three re-pinned words are two-word names now.
 pub(super) const MINTED: [&str; 3] = ["CourtyardRooftop", "AxolotlHeadland", "XylophoneAzure"];
@@ -43,12 +43,12 @@ pub(super) const MINTED: [&str; 3] = ["CourtyardRooftop", "AxolotlHeadland", "Xy
 /// minted name, rather than walking the sequence, only ever see this one.
 pub(super) const MINTED_FIRST: &str = MINTED[0];
 
-/// A `lernie` whose `new` authors the workspace the real one does (ARCH §2.2);
+/// A `litany` whose `new` authors the workspace the real one does (ARCH §2.2);
 /// every other verb exits 0. Written executable into `dir`. Shared by every
 /// acceptance test whose gesture has to *land* — one fake, so a start that must
 /// succeed succeeds the same way wherever it is driven from.
-pub(super) fn fake_lernie(dir: &Path) -> Cli {
-    let path = dir.join("lernie");
+pub(super) fn fake_litany(dir: &Path) -> Cli {
+    let path = dir.join("litany");
     std::fs::write(
         &path,
         format!(
@@ -63,13 +63,13 @@ pub(super) fn fake_lernie(dir: &Path) -> Cli {
     Cli::new(path)
 }
 
-/// Seed the nested world's `LERNIE_HOME` marker (§16.6 W3) so a start's
-/// `EnsureSeeded` step short-circuits instead of shelling `lernie prime` —
+/// Seed the nested world's `LITANY_HOME` marker (§16.6 W3) so a start's
+/// `EnsureSeeded` step short-circuits instead of shelling `litany prime` —
 /// keeping every fake to the verbs the test's own gesture really runs.
 pub(super) fn seed_world(world: &World) {
-    let lernie_home = crate::world::layout_under(&world.yog_data).lernie;
-    std::fs::create_dir_all(&lernie_home).unwrap();
-    std::fs::write(lernie_home.join("models.yaml"), b"models: {}\n").unwrap();
+    let litany_home = crate::world::layout_under(&world.yog_data).litany;
+    std::fs::create_dir_all(&litany_home).unwrap();
+    std::fs::write(litany_home.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
 /// **Sign this world's start wall in** (§16.2, bl-1fd0): write the credential

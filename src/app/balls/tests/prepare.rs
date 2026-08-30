@@ -11,8 +11,8 @@
 //! prepare moves is likewise the receipt's business — it answers no `Prepared`,
 //! so nothing is adopted.
 //!
-//! Hermetic: the world is pre-seeded (`models.yaml` present ⇒ `lernie prime` skips,
-//! §16.6 W3), so the only spawn is `lernie new` — a fake that materializes the same
+//! Hermetic: the world is pre-seeded (`models.yaml` present ⇒ `litany prime` skips,
+//! §16.6 W3), so the only spawn is `litany new` — a fake that materializes the same
 //! `<ws>/repo.git` marker the real one does, or fails, per test.
 
 use super::{model_focused, world};
@@ -24,7 +24,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tempfile::tempdir;
 
-/// A fake `lernie` authoring `new`'s workspace like the real one (ARCH §2.2,
+/// A fake `litany` authoring `new`'s workspace like the real one (ARCH §2.2,
 /// the shared [`authoring_new_arm`]). Every other verb exits 0.
 fn news() -> String {
     format!(
@@ -32,12 +32,12 @@ fn news() -> String {
         authoring_new_arm()
     )
 }
-/// A fake `lernie` that refuses — the failed-prepare path.
+/// A fake `litany` that refuses — the failed-prepare path.
 const FAILS: &str = "#!/bin/sh\nprintf 'boom\\n' 1>&2\nexit 3\n";
 
-/// Write `body` as an executable `lernie` in `dir` and hand back its [`Cli`].
-fn fake_lernie(dir: &Path, body: &str) -> Cli {
-    let path = dir.join("lernie");
+/// Write `body` as an executable `litany` in `dir` and hand back its [`Cli`].
+fn fake_litany(dir: &Path, body: &str) -> Cli {
+    let path = dir.join("litany");
     fs::write(&path, body).unwrap();
     let mut perms = fs::metadata(&path).unwrap().permissions();
     perms.set_mode(0o755);
@@ -50,11 +50,11 @@ fn fake_lernie(dir: &Path, body: &str) -> Cli {
 /// composer's [`Prepared`](crate::start::Prepared) or the refusal.
 fn staged(
     m: &mut crate::AppModel,
-    lernie: &Cli,
+    litany: &Cli,
     inputs: &crate::start::StartInputs,
 ) -> Result<crate::start::Prepared, String> {
     // `bl` is never spawned here: no rung under test mutates a ball.
-    let deps = m.boundary_deps(lernie, &Cli::new("/no/bl"));
+    let deps = m.boundary_deps(litany, &Cli::new("/no/bl"));
     let action = Action::Prepare {
         workspace: m.snap.ws_name(&inputs.workspace),
         payload: inputs.payload.clone(),
@@ -66,11 +66,11 @@ fn staged(
 }
 
 /// Lay the world's seed marker so `prime` short-circuits (§16.6 W3) — the ordinary
-/// case, and the one that keeps the fake `lernie` to a single verb.
+/// case, and the one that keeps the fake `litany` to a single verb.
 fn seed(yog_data_root: &Path) {
-    let lernie = crate::world::layout_under(yog_data_root).lernie;
-    fs::create_dir_all(&lernie).unwrap();
-    fs::write(lernie.join("models.yaml"), b"models: {}\n").unwrap();
+    let litany = crate::world::layout_under(yog_data_root).litany;
+    fs::create_dir_all(&litany).unwrap();
+    fs::write(litany.join("models.yaml"), b"models: {}\n").unwrap();
 }
 
 #[test]
@@ -87,17 +87,17 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     assert_eq!(m.focused_workspace(), Some(w.ws_cobalt.clone()));
 
     let inputs = m.new_workspace_inputs("ops");
-    let prepared = staged(&mut m, &fake_lernie(bin.path(), &news()), &inputs).unwrap();
+    let prepared = staged(&mut m, &fake_litany(bin.path(), &news()), &inputs).unwrap();
 
     assert_eq!(
         prepared.workspace, "ops",
         "the operator's own name (§3.1) — the address and the stamp are one"
     );
     // The wall the raise just made: a name resolves against the *published*
-    // set, and this snapshot predates the `lernie new` that founded it.
+    // set, and this snapshot predates the `litany new` that founded it.
     let raised = crate::binding::workspace_path(&w.roots.yog_data, &prepared.workspace);
     assert_ne!(raised, w.ws_cobalt, "the raise always raises a fresh wall");
-    assert!(raised.join("repo.git").is_dir(), "`lernie new` ran");
+    assert!(raised.join("repo.git").is_dir(), "`litany new` ran");
     // The adoption the receipt makes (`shell::acting::start::staged`, bl-1747)
     // — asserted here as the *input* to the retarget below, which is this
     // file's own claim: whether the seat really makes it is the raise drive's
@@ -130,7 +130,7 @@ fn a_failed_prepare_moves_the_focus_nowhere() {
     let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
 
     let inputs = m.new_workspace_inputs("ops");
-    let err = staged(&mut m, &fake_lernie(bin.path(), FAILS), &inputs).unwrap_err();
+    let err = staged(&mut m, &fake_litany(bin.path(), FAILS), &inputs).unwrap_err();
 
     assert!(err.contains("boom"), "the refusal rode back");
     assert_eq!(
@@ -153,7 +153,7 @@ fn a_ball_rung_whose_project_this_world_does_not_enumerate_refuses_by_name() {
     let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
 
     let inputs = m.new_ball_inputs(Path::new("/nowhere/at/all"), "Fresh", "do it");
-    let err = staged(&mut m, &fake_lernie(bin.path(), &news()), &inputs).unwrap_err();
+    let err = staged(&mut m, &fake_litany(bin.path(), &news()), &inputs).unwrap_err();
 
     assert_eq!(err, "unknown project \"/nowhere/at/all\"");
 }

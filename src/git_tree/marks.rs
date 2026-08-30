@@ -1,4 +1,4 @@
-//! Ref-derived agent marks (§2.6, §6, ARCH §8, §3.3 — the `refs/lernie/*` set).
+//! Ref-derived agent marks (§2.6, §6, ARCH §8, §3.3 — the `refs/litany/*` set).
 //!
 //! Five orthogonal marks, each a git ref keyed by agent id, read once per
 //! `from_repo` tick. Four are carried to the view-model as **ref oids** (not
@@ -8,16 +8,16 @@
 //! is not something an acknowledgement may quiet, so there is no watermark to
 //! compare and the useful fact is the blob's content.
 //!
-//! - **conflicted** — `refs/lernie/conflicted/<id>`: a child's work-product
+//! - **conflicted** — `refs/litany/conflicted/<id>`: a child's work-product
 //!   transfer failed to apply and was declined loudly (§2.6).
-//! - **budget-exhausted** — `refs/lernie/budget-exhausted/<id>`: the agent
+//! - **budget-exhausted** — `refs/litany/budget-exhausted/<id>`: the agent
 //!   tree hit a spend ceiling (§6).
-//! - **abandoned** — `refs/lernie/abandoned/<id>`: a policy assertion that a
+//! - **abandoned** — `refs/litany/abandoned/<id>`: a policy assertion that a
 //!   stopped branch will not be retried (ARCH §8 `mark_abandoned`); it
 //!   suppresses the stop-attention signal (§6 rule 2).
-//! - **notify** — `refs/lernie/notify/<id>`: the branch asked the UI to
+//! - **notify** — `refs/litany/notify/<id>`: the branch asked the UI to
 //!   raise a user-facing notification (ARCH §8 `notify_ui`, §6 rule 1).
-//! - **held** — `refs/lernie/held/<id>` (ARCH §3.3, DESIGN §8.6): the
+//! - **held** — `refs/litany/held/<id>` (ARCH §3.3, DESIGN §8.6): the
 //!   capability control parked a tool invocation before it executed. The ref
 //!   names a blob saying which invocation and why ([`crate::control::hold`]).
 //!
@@ -31,10 +31,10 @@ use crate::control::hold::{self, HELD_PREFIX, Held};
 use std::collections::HashMap;
 use std::path::Path;
 
-const CONFLICTED_PREFIX: &str = "refs/lernie/conflicted/";
-const BUDGET_PREFIX: &str = "refs/lernie/budget-exhausted/";
-const ABANDONED_PREFIX: &str = "refs/lernie/abandoned/";
-const NOTIFY_PREFIX: &str = "refs/lernie/notify/";
+const CONFLICTED_PREFIX: &str = "refs/litany/conflicted/";
+const BUDGET_PREFIX: &str = "refs/litany/budget-exhausted/";
+const ABANDONED_PREFIX: &str = "refs/litany/abandoned/";
+const NOTIFY_PREFIX: &str = "refs/litany/notify/";
 
 /// The mark maps for a workspace: four `agent-id -> ref oid` (a membership
 /// query is `oid.is_some()`; the oid itself is the §6 watermark evidence), and
@@ -80,7 +80,7 @@ impl Marks {
     }
 }
 
-/// A `refs/lernie/*` mark an agent **wears** — the durable fact, as opposed to
+/// A `refs/litany/*` mark an agent **wears** — the durable fact, as opposed to
 /// the [attention signal](crate::attention) it may be gating. One variant per
 /// namespace this module reads, so the set is closed and total: a mark cannot be
 /// added to [`Marks`] without a variant, and a variant cannot exist without the

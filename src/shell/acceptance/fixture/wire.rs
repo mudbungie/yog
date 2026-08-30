@@ -29,7 +29,7 @@ impl World {
     /// `true` when it answered anything, which is what lets a driver settle a
     /// gesture whose receipt posts the next act (the §8.1 start family is two).
     pub(in crate::shell::acceptance) fn acts(&mut self) -> bool {
-        let deps = self.model.boundary_deps(&self.lernie, &self.bl);
+        let deps = self.model.boundary_deps(&self.litany, &self.bl);
         let ts = crate::shell::now_ts();
         let mut answered = false;
         while let Some((ticket, envelope)) = self.outbox.try_next() {
@@ -68,7 +68,7 @@ impl World {
     /// answers the whole standing set, so "I answered something" is true
     /// forever and could end no loop.
     pub(in crate::shell::acceptance) fn reads(&mut self) {
-        let deps = self.model.boundary_deps(&self.lernie, &self.bl);
+        let deps = self.model.boundary_deps(&self.litany, &self.bl);
         let now = crate::shell::now_unix();
         for question in self.link.standing() {
             let landed = match codec::decode(&question) {

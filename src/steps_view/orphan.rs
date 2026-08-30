@@ -5,7 +5,7 @@
 //! The §7.3 wound beside this covers a driver that died *inside a step*.
 //! The gap it left is the driver that died **before creating one**, or
 //! **between two of them**: the ordinary 2nd..Nth message of a conversation
-//! is driven by a child *lernie* launched (ARCH §2.11 — never a yog spawn,
+//! is driven by a child *litany* launched (ARCH §2.11 — never a yog spawn,
 //! so no §8.1 sink), and when that driver errors out — an unpaired-tail
 //! decline, a lease fault, a crashed launch, an executor killed mid-tool-
 //! window — the steps tree is unchanged, `ops.jsonl` says `exit 0`, and the
@@ -36,7 +36,7 @@
 //! the third arm, so the class is a token and the reason resolves the rest.
 //!
 //! The **reason** is the tail of `steps/<agent>/driver.log` — where
-//! lernie binds every launched driver's stderr (lernie 0.0.9, its
+//! litany binds every launched driver's stderr (lernie 0.0.9, its
 //! bl-55f9; the file yog pinned that release for and then never read).
 //! It is append-only across launches, so its content is never the
 //! trigger — a stale line from a healed crash must not alarm — only the
@@ -79,7 +79,7 @@ pub const ORPHANED_MAIL: &str = "a delivered message has no driver";
 /// that died mid-window leaves an agent that looks finished, and on an
 /// unattended box that window has no upper bound. A deposit settles it —
 /// the next drive boundary writes an in-band `is_error` `tool_result` per
-/// unanswered id before delivery (lernie ARCH §6, its bl-4187, consumed in
+/// unanswered id before delivery (litany ARCH §6, its bl-4187, consumed in
 /// bl-4c1f) and the branch carries on.
 pub const ORPHANED_WINDOW: &str =
     "a tool call has no driver — the turn died mid-tool-window; a message revives it";
@@ -156,8 +156,8 @@ pub(super) fn read(workspace: &Path, agent_id: &str, state: AgentState) -> Orpha
         return Orphan::None;
     };
     // **A parked call is not a crashed one.** The capability control answers
-    // `hold` by parking the invocation before it executes (§8.6) and lernie
-    // records which one in `refs/lernie/held/<agent-id>` — a branch that is
+    // `hold` by parking the invocation before it executes (§8.6) and litany
+    // records which one in `refs/litany/held/<agent-id>` — a branch that is
     // waiting on the operator wears exactly the tool-window shape, and it is
     // waiting on purpose. Read live and only here, the way the answer gesture
     // reads it (`control::hold`): an unreadable mark is an absent one, which

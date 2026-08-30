@@ -54,20 +54,20 @@ fn crashed_world(driver_log: Option<&[u8]>) -> (World, FakeClock) {
 
 #[test]
 fn the_window_states_that_the_turn_died_mid_tool_call() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let (mut world, clock) = crashed_world(Some(DRIVER_WORDS.as_bytes()));
 
     // The same grace discipline: a driver between committing its assistant
     // entry and committing its first tool result wears this exact shape, so
     // the alarm is withheld until the window has elapsed.
-    let early = painted(&mut world, &lernie, &bl);
+    let early = painted(&mut world, &litany, &bl);
     assert!(
         !early.contains(ORPHANED_WINDOW),
         "a live driver mid-window is graced, not accused:\n{early}"
     );
 
     clock.advance(world.model.cadence().wound_grace());
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
     assert!(
         text.contains(ORPHANED_WINDOW),
         "THE BALL: the class, in words, where nothing painted before:\n{text}"
@@ -86,12 +86,12 @@ fn the_window_states_that_the_turn_died_mid_tool_call() {
 /// the fact, and the banner says outright that nothing on disk explains it.
 #[test]
 fn a_crashed_window_with_nothing_to_quote_still_banners_and_says_so() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let (mut world, clock) = crashed_world(None);
-    let _ = painted(&mut world, &lernie, &bl);
+    let _ = painted(&mut world, &litany, &bl);
     clock.advance(world.model.cadence().wound_grace());
 
-    let text = painted(&mut world, &lernie, &bl);
+    let text = painted(&mut world, &litany, &bl);
     assert!(text.contains(ORPHANED_WINDOW), "still the class:\n{text}");
     assert!(
         text.contains("nothing on disk says why"),

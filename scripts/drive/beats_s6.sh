@@ -61,12 +61,12 @@ s6_attention() {
   # release is what gives it back before each bound gesture. Fired ONCE, before
   # the marks: with no agent focused there is no frame that can stamp them.
   "$drive" bare "$wid" n ; sleep 1
-  # §6 rules 3 and 4, in lernie's own spelling — a mark IS a ref (§2.6), so
+  # §6 rules 3 and 4, in litany's own spelling — a mark IS a ref (§2.6), so
   # there is nothing else to write. Laid here rather than in `lay_forensics`
   # because this is the only beat that spends them and the header above is why.
   tip=$(git --git-dir="$ws_root/repo.git" rev-parse "agents/$agent")
-  git --git-dir="$ws_root/repo.git" update-ref "refs/lernie/budget-exhausted/$agent" "$tip"
-  git --git-dir="$ws_root/repo.git" update-ref "refs/lernie/conflicted/$agent" "$tip"
+  git --git-dir="$ws_root/repo.git" update-ref "refs/litany/budget-exhausted/$agent" "$tip"
+  git --git-dir="$ws_root/repo.git" update-ref "refs/litany/conflicted/$agent" "$tip"
   sleep 3
   # The strip with both flags UP and nothing acknowledged — the before half of
   # the pair, and now it is genuinely before.
@@ -128,18 +128,18 @@ s6_stop_ack() {
   wid=$1 ; out=$2 ; flight=$3
   "$drive" shot "$wid" "$out/s6-07-inflight.png"
   if [ -z "$flight" ]; then
-    fail "S6 stop: lernie stop dispatched" "no second root to stop"
+    fail "S6 stop: litany stop dispatched" "no second root to stop"
     fail "S6 ack: seen watermark names the stopped conversation" "no second root"
     return 0
   fi
-  # `lernie stop` reaps a *streaming* driver, so its row lands when the driver
+  # `litany stop` reaps a *streaming* driver, so its row lands when the driver
   # actually dies — a 5 s sleep here read a live stop as "no stop verb" once.
   # The predicate names the conversation, not a count: the failure this beat
   # exists to catch is a stop of the WRONG one, which a count cannot see.
   stop_it() { "$drive" bare "$wid" x; }
   until_landed stop_it stopped "$flight" \
-    && pass "S6 stop: lernie stop dispatched" \
-    || fail "S6 stop: lernie stop dispatched" "no stop verb for $flight"
+    && pass "S6 stop: litany stop dispatched" \
+    || fail "S6 stop: litany stop dispatched" "no stop verb for $flight"
   sleep 3
   "$drive" shot "$wid" "$out/s6-08-stirs.png"
   # Acknowledging is focusing (§6): walk the roster with ↓ — the bound gesture —

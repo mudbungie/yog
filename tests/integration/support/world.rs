@@ -4,7 +4,7 @@
 //!
 //! [`super::build_workspace`] lays exactly one bare agent, which is all the S1
 //! rows need. The board, triage and forensic rungs need *several* conversations
-//! in one workspace, each with its own goal stamp, its own `refs/lernie/*`
+//! in one workspace, each with its own goal stamp, its own `refs/litany/*`
 //! attention marks and (for S7) its own `messages/`, `steps/` and `inbox/`
 //! payloads on disk. This module is that builder: plain data in, a real git
 //! workspace out, so every assertion runs against
@@ -21,7 +21,7 @@ use std::path::Path;
 /// One agent branch to lay in a fixture workspace: its id (the §2.3 descent
 /// grammar decides root-vs-child), its `goal.md` body — a `Ball <id>: <title>`
 /// first line is the §3.3 stamp the conversation badge derives from — and the
-/// `refs/lernie/<mark>/<id>` marks to point at its tip.
+/// `refs/litany/<mark>/<id>` marks to point at its tip.
 pub struct AgentFixture {
     pub id: String,
     pub goal: String,
@@ -35,7 +35,7 @@ pub struct AgentFixture {
     /// one (⇒ `Stopped`). `None` writes no step at all, which is also
     /// `Stopped` — "no step has run" and "the step failed" are one state.
     pub complete: Option<bool>,
-    /// The `refs/lernie/held/<id>` **blob** body (§8.6): unlike every other
+    /// The `refs/litany/held/<id>` **blob** body (§8.6): unlike every other
     /// mark, a hold carries a value — the parked `tool_use`, its tool and the
     /// control's reason — so the ref points at a blob, not at the branch.
     pub held: Option<String>,
@@ -60,7 +60,7 @@ impl AgentFixture {
         Self::new(id, &format!("Ball {ball}: {title}\n"))
     }
 
-    /// Point `refs/lernie/<mark>/<id>` at this agent's tip — `notify`,
+    /// Point `refs/litany/<mark>/<id>` at this agent's tip — `notify`,
     /// `budget-exhausted`, `conflicted` or `abandoned` (§6's watermark
     /// evidence).
     #[must_use]
@@ -77,7 +77,7 @@ impl AgentFixture {
     }
 
     /// Park a tool invocation at the capability boundary (§8.6): `tool` named,
-    /// `reason` stated, keyed on `tool_use_id` — the three-field object lernie
+    /// `reason` stated, keyed on `tool_use_id` — the three-field object litany
     /// writes and `control::hold::parse` accepts.
     #[must_use]
     pub fn held(mut self, tool_use_id: &str, tool: &str, reason: &str) -> Self {
@@ -177,12 +177,12 @@ fn lay_agent(ws: &Path, repo: &Path, agent: &AgentFixture) {
     super::run_git(&wt, &["add", "goal.md"]);
     commit_at(&wt, &format!("dispatch [{}]", agent.id), agent.at);
     for mark in &agent.marks {
-        let refname = format!("refs/lernie/{mark}/{}", agent.id);
+        let refname = format!("refs/litany/{mark}/{}", agent.id);
         super::run_git(repo, &["update-ref", &refname, &branch]);
     }
     if let Some(blob) = &agent.held {
         let oid = hash_object(repo, blob);
-        let refname = format!("refs/lernie/held/{}", agent.id);
+        let refname = format!("refs/litany/held/{}", agent.id);
         super::run_git(repo, &["update-ref", &refname, &oid]);
     }
     if let Some(complete) = agent.complete {

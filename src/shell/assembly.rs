@@ -22,7 +22,7 @@ use super::{
 /// bar), the activity accessory (window bottom), the conversation-list side
 /// panel, and the center's tab strip with whichever focus it heads (§11,
 /// bl-1ca2) — the selected conversation, with the composer docked at its own
-/// bottom (bl-c038), being the tab the window rests on. `lernie`/`bl` are the
+/// bottom (bl-c038), being the tab the window rests on. `litany`/`bl` are the
 /// two mutating-verb binaries (§8.2); `bz` drives the §8.3 Login surfaces.
 ///
 /// **Which boundaries drag** (§4.1 `panels`): the conversation column, the
@@ -35,7 +35,7 @@ pub fn render(
     ctx: &egui::Context,
     model: &mut AppModel,
     state: &mut ShellState,
-    lernie: &Cli,
+    litany: &Cli,
     bl: &Cli,
     bz: &Cli,
 ) {
@@ -83,7 +83,7 @@ pub fn render(
     let window = ctx.screen_rect().size();
     egui::TopBottomPanel::top("top-bar").show(ctx, |ui| {
         row::bounded(ui);
-        top_bar::render(ui, model, state, lernie);
+        top_bar::render(ui, model, state, litany);
     });
     // The one window-level bottom accessory (§11, bl-c038): the activity
     // accessory is world-level ops chrome, so it alone spans the window. The
@@ -104,7 +104,7 @@ pub fn render(
         .width_range(Panel::Conversations.min_size()..=Panel::Conversations.max_size(window.x))
         .show(ctx, |ui| {
             seat(ui, |ui| {
-                navigator::side_panel(ui, model, state, lernie);
+                navigator::side_panel(ui, model, state, litany);
             });
         })
         .response
@@ -115,7 +115,7 @@ pub fn render(
     // §11 rule 5 budget one level down (`pane`).
     egui::CentralPanel::default().show(ctx, |ui| {
         row::bounded(ui);
-        pane::render(ui, model, state, (lernie, bl, bz), window, settled);
+        pane::render(ui, model, state, (litany, bl, bz), window, settled);
     });
     // The §3.6 confirmation and the §11 `new` name form, painted last so they
     // float over every panel. Both delete carriers open the first; nothing else

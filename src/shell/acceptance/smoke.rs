@@ -16,7 +16,7 @@ use crate::keymap::{CenterTab, InspectorTab};
 
 #[test]
 fn full_window_reaches_every_data_surface() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = world();
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
@@ -28,7 +28,7 @@ fn full_window_reaches_every_data_surface() {
     // composer (message-targeted — an agent is focused), the activity chip,
     // and the budget-spent header.
     world.model.select_tab(InspectorTab::Transcript);
-    let base = painted(&mut world, &lernie, &bl);
+    let base = painted(&mut world, &litany, &bl);
     assert!(base.contains("need attention"), "attention strip:\n{base}");
     // The strip's jump control sits beside the legend it walks (§11 glyph
     // doctrine, bl-e266); the fixture bears attention, so it paints enabled.
@@ -105,7 +105,7 @@ fn full_window_reaches_every_data_surface() {
     // Steps tab: the list figures and the selected step's tool drill-in.
     world.model.select_tab(InspectorTab::Steps);
     world.state.inspector.step_tab = crate::steps_view::StepTab::Tools;
-    let steps = painted(&mut world, &lernie, &bl);
+    let steps = painted(&mut world, &litany, &bl);
     // bl-3ffc: the step table names its own columns — the figures under them
     // are bare, so the heading is what proves the token column reached paint.
     assert!(steps.contains("Tokens"), "steps token column:\n{steps}");
@@ -115,14 +115,14 @@ fn full_window_reaches_every_data_surface() {
     // (bl-0b4b: moved off the composer, which acts on the conversation, not
     // the workspace's inbox).
     world.model.select_tab(InspectorTab::Inbox);
-    let inbox = painted(&mut world, &lernie, &bl);
+    let inbox = painted(&mut world, &litany, &bl);
     assert!(inbox.contains("follow-up message"), "inbox deposit");
     assert!(inbox.contains("Scan"), "scan verb:\n{inbox}");
 
     // Files tab: the agent worktree listing and the selected file's preview.
     world.model.select_tab(InspectorTab::Files);
     world.state.inspector.eph.files_sel = Some("goal.md".to_owned());
-    let files = painted(&mut world, &lernie, &bl);
+    let files = painted(&mut world, &litany, &bl);
     assert!(
         files.contains("goal.md"),
         "files worktree listing:\n{files}"
@@ -132,7 +132,7 @@ fn full_window_reaches_every_data_surface() {
     // Config tab: the governing config frozen label.
     world.model.select_tab(InspectorTab::Config);
     assert!(
-        painted(&mut world, &lernie, &bl).contains("policy frozen at"),
+        painted(&mut world, &litany, &bl).contains("policy frozen at"),
         "governing config"
     );
 
@@ -141,14 +141,14 @@ fn full_window_reaches_every_data_surface() {
     // (§9.5, bl-ee0a), so the tab is focused through the one gesture every
     // carrier spends (bl-1ca2) rather than by setting a flag beside a read.
     crate::shell::center::focus(&world.model, &mut world.state, CenterTab::Config);
-    let editors = painted(&mut world, &lernie, &bl);
+    let editors = painted(&mut world, &litany, &bl);
     assert!(
         editors.contains("brazen config.toml"),
         "brazen editor:\n{editors}"
     );
     assert!(
-        editors.contains("lernie global config"),
-        "lernie-global editor"
+        editors.contains("litany global config"),
+        "litany-global editor"
     );
     assert!(
         editors.contains("workspace config branches"),
@@ -161,18 +161,18 @@ fn full_window_reaches_every_data_surface() {
 /// fact** — the §3.3 display-name ladder over the selection's *conversation
 /// root*, never the raw agent id. Here the ladder stops on rung one via the
 /// legacy `You are <name>.` goal stamp (a pre-0.0.4 root — the modern carrier
-/// is the lernie `name` blob); the smoke test above covers rung two off the same
+/// is the litany `name` blob); the smoke test above covers rung two off the same
 /// composer. That the selection is resolved to its root first (so a descent
 /// CHILD still names the conversation it belongs to) is
 /// [`crate::nav::convs::root_of`]'s own property, tested there — this fixture
 /// prunes its compaction branch, so it holds one lone root.
 #[test]
 fn the_composer_names_the_conversation_never_the_agent_id() {
-    let (lernie, bl) = (Cli::new("lernie"), Cli::new("bl"));
+    let (litany, bl) = (Cli::new("litany"), Cli::new("bl"));
     let mut world = fixture::world_titled("You are stench-pug.\n\nfix the gate");
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
-    let out = painted(&mut world, &lernie, &bl);
+    let out = painted(&mut world, &litany, &bl);
     assert!(
         out.contains("→ message stench-pug"),
         "the stamped name is the target line:\n{out}"

@@ -1,11 +1,11 @@
-//! The hold mark: the shape lernie writes, read back, and every way a mark can
+//! The hold mark: the shape litany writes, read back, and every way a mark can
 //! fail to say anything reading as "nothing is parked".
 
 use super::*;
 use tempfile::tempdir;
 
 #[test]
-fn the_shape_lernie_writes_reads_back_whole() {
+fn the_shape_litany_writes_reads_back_whole() {
     let held = parse(
         r#"{"tool_use_id":"toolu_01","tool":"bash","reason":"bash {\"command\":\"curl x\"} classified open-world (no rule classifies `curl`)"}"#,
     )
@@ -81,6 +81,6 @@ fn an_unparseable_mark_reads_as_no_park() {
 }
 
 #[test]
-fn the_ref_namespace_is_lernies_own() {
-    assert_eq!(HELD_PREFIX, "refs/lernie/held/");
+fn the_ref_namespace_is_litanys_own() {
+    assert_eq!(HELD_PREFIX, "refs/litany/held/");
 }

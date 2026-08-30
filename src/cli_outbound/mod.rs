@@ -25,7 +25,7 @@
 //! once per process so a replaced inode cannot rewrite it. A [`Cli`] carries the *physical* `program` +
 //! `prefix` it execs and derives the *logical* [`binary`](Cli::binary) name
 //! from them, so the ops-log argv (§8.2) is invariant across that switch. Pure
-//! Rust — no egui — so a future `lernie-ui-web` crate reuses it unchanged; the
+//! Rust — no egui — so a future `litany-ui-web` crate reuses it unchanged; the
 //! caller supplies argv.
 
 use std::path::{Path, PathBuf};
@@ -81,11 +81,11 @@ pub struct Cli {
     /// mode; `[<namespace>]` in self-multiplex mode, so the spawn is `yog
     /// <namespace> <args…>`. Also the *logical*-name source — [`binary`](Self::binary)
     /// (the ops-log argv[0], §8.2) reads `prefix[0]` when present, else
-    /// `program` — so ops rows log the logical `["lernie", …]` whatever the
+    /// `program` — so ops rows log the logical `["litany", …]` whatever the
     /// physical target.
     prefix: Vec<String>,
     /// The **standing** env overrides layered over the inherited environment on
-    /// every spawn (§16.6 W2): the composed world's nesting set (`LERNIE_HOME`/
+    /// every spawn (§16.6 W2): the composed world's nesting set (`LITANY_HOME`/
     /// `XDG_STATE_HOME`, §16.2) when built through
     /// [`resolve_in_world`](Self::resolve_in_world), empty otherwise. Carrying it
     /// at construction makes nesting impossible to forget at a new call site — a
@@ -129,7 +129,7 @@ impl Cli {
     /// projection ([`crate::login`], [`crate::config_edit`], [`crate::start`]).
     /// Derived from the physical target: the namespace `prefix[0]` in
     /// self-multiplex mode, else the `program` itself — so a spawn retargeted to
-    /// `yog <namespace>` (§16.7 W12) still logs `["lernie", …]`.
+    /// `yog <namespace>` (§16.7 W12) still logs `["litany", …]`.
     pub(crate) fn binary(&self) -> &Path {
         self.prefix
             .first()

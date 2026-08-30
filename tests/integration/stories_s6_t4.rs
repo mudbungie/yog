@@ -30,7 +30,7 @@ fn s6_t4_rollups_sum_and_jump_to_next_wraps_without_sticking() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         balls_clones: root.path().join("clones"),
         home: root.path().join("home"),

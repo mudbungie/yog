@@ -38,7 +38,7 @@
 # perfectly-formed click somewhere else: `Ctrl+Shift+2` did not land in one
 # run of two, the centre stayed on Conversation, and `brazen` read the rule
 # above the composer as if it ended the §9.1 pane — so S5's marker was typed
-# into the composer and clicked into a `lernie prompt`, spending on the wire in
+# into the composer and clicked into a `litany prompt`, spending on the wire in
 # the one run whose contract is that it spends nothing. The rules are the same
 # family in both frames; only the tab strip says which surface they belong to.
 #

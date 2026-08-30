@@ -26,7 +26,7 @@ mod queue;
 /// stretch in which the conversation has no address at all.
 mod window;
 
-use super::fixture::{fake_lernie, seed_world};
+use super::fixture::{fake_litany, seed_world};
 use super::screen::Screen;
 use harness::{
     MINTED_FIRST, SAID, branches, converge_ws, faded_user, fills, quick, rows_named, say, shot,
@@ -34,7 +34,7 @@ use harness::{
 };
 use tempfile::tempdir;
 
-/// **A start.** Enter mints a name and detaches `lernie prompt`; the driver has
+/// **A start.** Enter mints a name and detaches `litany prompt`; the driver has
 /// written nothing. The very next frame must carry the goal anyway — as a §11
 /// row of its own, faded, in the operator's own words.
 #[test]
@@ -42,7 +42,7 @@ fn a_start_is_a_row_in_the_operators_own_words_on_the_next_frame() {
     let bin = tempdir().unwrap();
     let mut world = quick(world());
     seed_world(&world);
-    let screen = Screen::with_lernie(fake_lernie(bin.path()));
+    let screen = Screen::with_litany(fake_litany(bin.path()));
     assert!(screen.idle(&mut world), "the cursor starts in the composer");
     let worktrees = branches(&world);
 
@@ -152,7 +152,7 @@ fn a_message_joins_the_inbox_queue_faded_and_brightens_when_it_lands() {
     let bin = tempdir().unwrap();
     let mut world = quick(world());
     seed_world(&world);
-    let screen = Screen::with_lernie(fake_lernie(bin.path()));
+    let screen = Screen::with_litany(fake_litany(bin.path()));
     let ws = world.ws.clone();
     world.model.focus_agent(&ws, "c-1");
     // The Transcript tab, so the landed half of the beat has a seat to land in:

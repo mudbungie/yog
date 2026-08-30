@@ -2,7 +2,7 @@
 //! the picker's list control (§9.5) reads and writes a role's `tools:` field
 //! through.
 //!
-//! The value is a **flow sequence** (`[a, b, c]`) — the one place lernie's
+//! The value is a **flow sequence** (`[a, b, c]`) — the one place litany's
 //! template leaves the block form — so this is the only field the grammar reads
 //! as a list.
 

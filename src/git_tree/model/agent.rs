@@ -50,7 +50,7 @@ pub struct Agent {
     /// either would retire the echo while the message was still missing.
     pub messages: usize,
     /// When the latest step's **model call began** (§5.1 #28 elapsed, bl-9dfb):
-    /// the mtime of that step's `request.json`. lernie writes that file exactly
+    /// the mtime of that step's `request.json`. litany writes that file exactly
     /// once, immediately before handing the request to the adapter — the same
     /// instant it later records as `meta.json`'s `started_at` — and never
     /// appends to it, so its mtime *is* the call's start rather than its last
@@ -93,7 +93,7 @@ pub struct Agent {
     /// and no continuation exists to run.
     ///
     /// Its one consumer is §8.2's Nudge gate
-    /// ([`nudge_enabled`](crate::actions::nudge_enabled)): linked lernie reads
+    /// ([`nudge_enabled`](crate::actions::nudge_enabled)): linked litany reads
     /// this shape as `NothingDue` and exits without creating a step, so
     /// offering the control would be a control that fires and does nothing
     /// (QUALITY H4's theater). The *recovery* is Message, which is offered
@@ -114,25 +114,25 @@ pub struct Agent {
     /// touches disk. The count is this listing's length, never a second
     /// stored fact.
     pub pending: Vec<crate::inboxview::InboxEntry>,
-    /// `refs/lernie/conflicted/<agent-id>` oid, or `None` when unmarked —
+    /// `refs/litany/conflicted/<agent-id>` oid, or `None` when unmarked —
     /// a work-product transfer was declined (§2.6). Rendered as an
     /// orthogonal mark alongside the state (§3.5, §7.1); the oid is the §6
     /// attention watermark evidence (rule 4).
     pub conflicted_oid: Option<String>,
-    /// `refs/lernie/budget-exhausted/<agent-id>` oid, or `None` — the
+    /// `refs/litany/budget-exhausted/<agent-id>` oid, or `None` — the
     /// agent tree hit a spend ceiling (§6). Rendered alongside the state
     /// (§3.5, §7.1); the oid is the §6 watermark evidence (rule 3).
     pub budget_oid: Option<String>,
-    /// `refs/lernie/abandoned/<agent-id>` oid, or `None` — the policy
+    /// `refs/litany/abandoned/<agent-id>` oid, or `None` — the policy
     /// assertion that a stopped branch will not be retried (ARCH §8). Its
     /// presence suppresses the stop-attention signal (§6 rule 2).
     pub abandoned_oid: Option<String>,
-    /// `refs/lernie/notify/<agent-id>` oid, or `None` — the branch asked
+    /// `refs/litany/notify/<agent-id>` oid, or `None` — the branch asked
     /// the UI to raise a notification (ARCH §8). The oid is the §6
     /// watermark evidence (rule 1: unseen = oid ≠ watermark).
     pub notify_oid: Option<String>,
     /// The invocation the capability control **parked** before it executed
-    /// (`refs/lernie/held/<agent-id>`, ARCH §3.3, DESIGN §8.6): which
+    /// (`refs/litany/held/<agent-id>`, ARCH §3.3, DESIGN §8.6): which
     /// `tool_use`, which tool, and the control's reason. `None` for every
     /// branch nothing is holding, which is nearly all of them.
     ///
@@ -147,19 +147,19 @@ pub struct Agent {
     /// one home is the goal content). Only a root the yog start flow composed
     /// carries one; a sub-agent or a hand-typed conversation reads `None`.
     pub goal_ball: Option<String>,
-    /// The **lernie-stored name fact** (DESIGN §3.3 as ruled by bl-50f3): the
+    /// The **litany-stored name fact** (DESIGN §3.3 as ruled by bl-50f3): the
     /// `name` blob on this agent's own branch, committed beside `goal.md` at
     /// dispatch and read back `git show agents/<id>:name` — the `agents/*`
     /// refs stay the only registry, so this is a query, never a stored index.
     /// The one durable home of the name since lernie 0.0.4; any agent may
-    /// carry it — a yog-fired root (`--name` at fire) or a lernie-dispatched
+    /// carry it — a yog-fired root (`--name` at fire) or a litany-dispatched
     /// child alike, no special case. `None` for an unnamed agent and for a
     /// pre-0.0.4 branch with no blob.
     pub name: Option<String>,
     /// The **legacy** `You are <x>.` stamp on this agent's `goal.md` first line
     /// (DESIGN §3.3), parsed back by [`crate::start::parse_identity_stamp`].
     /// Demoted by bl-08f2 from the name's home to its fallback: it covers only
-    /// pre-0.0.4 roots (no [`name`](Agent::name) blob) until lernie's 30-day
+    /// pre-0.0.4 roots (no [`name`](Agent::name) blob) until litany's 30-day
     /// retention ages them out — then the rung is deleted. Not a fact home;
     /// since bl-6920 nothing composes the stamp, so new roots never carry one.
     pub goal_name: Option<String>,
@@ -167,7 +167,7 @@ pub struct Agent {
 
 impl Agent {
     /// The agent's display identity, or `None` when it has none — the top of
-    /// the §3.3 ladder in one fold: the lernie-stored [`name`](Agent::name)
+    /// the §3.3 ladder in one fold: the litany-stored [`name`](Agent::name)
     /// fact, else the legacy [`goal_name`](Agent::goal_name) stamp parse.
     /// Every seat that names an agent (the §11 row title and in-flight strip,
     /// the center header, the §3.6 deletion gate, the mint's occupied set)
@@ -188,9 +188,9 @@ impl Agent {
     }
 
     /// Whether [`name_fact`](Agent::name_fact)'s answer is the **legacy
-    /// display-only rung** (bl-8068): a goal-stamp parse with no lernie-stored
+    /// display-only rung** (bl-8068): a goal-stamp parse with no litany-stored
     /// [`name`](Agent::name) blob behind it. Such a name renders as the title,
-    /// but lernie resolves message targets by id or *stored* name only — a
+    /// but litany resolves message targets by id or *stored* name only — a
     /// peer addressing this name gets `no agent "<x>" in this workspace`. The
     /// seats that show the name hover this fact so an operator never reads an
     /// unaddressable name as an addressable one. `false` for a fact-named

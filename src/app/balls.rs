@@ -1,5 +1,5 @@
 //! What a frame asks of the live `bl` projection — the §3.5 join, the ops tail,
-//! and the two verb hooks that tell the worker a `bl`/`lernie` action landed
+//! and the two verb hooks that tell the worker a `bl`/`litany` action landed
 //! (DESIGN §5.1 #2/#7, §7.2, §4.2, §15 Y16).
 //!
 //! Y14 built the pure projection ([`crate::projects`]); Y16 held it live. Since
@@ -120,10 +120,10 @@ impl AppModel {
         self.mark_dirty([project.to_path_buf()]);
     }
 
-    /// A dispatched `lernie` verb landed (message/stop/scan): it touches no
+    /// A dispatched `litany` verb landed (message/stop/scan): it touches no
     /// ball, so only the ops tail changes — the yog-state root's ordinary
     /// routing (§7.1).
-    pub fn after_lernie_verb(&mut self) {
+    pub fn after_litany_verb(&mut self) {
         self.mark_dirty([self.roots.yog_state.clone()]);
     }
 
@@ -161,9 +161,9 @@ impl AppModel {
     /// of `deps.world`, and those live inside the sphere the operator is
     /// looking at. No focus is no wall — the gesture refuses rather than
     /// reaching the machine's own brazen state.
-    pub fn boundary_deps(&self, lernie: &Cli, bl: &Cli) -> crate::boundary::dispatch::Deps {
+    pub fn boundary_deps(&self, litany: &Cli, bl: &Cli) -> crate::boundary::dispatch::Deps {
         crate::boundary::dispatch::Deps {
-            lernie: lernie.clone(),
+            litany: litany.clone(),
             bl: bl.clone(),
             state_root: self.state_root().to_path_buf(),
             yog_binary: crate::cli_outbound::self_exe().unwrap_or_default(),

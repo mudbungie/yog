@@ -37,7 +37,7 @@ use super::ShellState;
 /// opens the §9.1 raw-TOML editor — exactly the shape an auth-kind step
 /// failure has had since bl-8e34, where the affordance is Login.
 ///
-/// Additive, and in that order: brazen's and lernie's own words stay verbatim
+/// Additive, and in that order: brazen's and litany's own words stay verbatim
 /// on top (INV-2 / §7.3), the remedy sits under them, and Dismiss stays where
 /// it was — a *wrong* classification must never become the only thing on
 /// screen (§8.3 rule 5's own clause).

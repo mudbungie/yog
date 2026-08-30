@@ -4,7 +4,7 @@
 //!
 //! **Bytes come back from text.** `raw` was written with
 //! `String::from_utf8_lossy`, which is exact for every entry whose file is
-//! UTF-8 — every entry lernie writes — and lossy for one that is not, in which
+//! UTF-8 — every entry litany writes — and lossy for one that is not, in which
 //! case the replacement happened on the way OUT and this reads back what the
 //! wire actually carries. That is the ruling [`super`] states, read from the
 //! other side: a transcript entry is a text file, and a byte array beside the

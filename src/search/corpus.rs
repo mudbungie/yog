@@ -95,7 +95,7 @@ pub(super) fn conversations(snap: &Snapshot) -> Vec<(PathBuf, String, Fields)> {
 /// that gap is exactly what an operator must not have to guess at. An absent
 /// goal is not a gap: most agents never had one.
 ///
-/// **A compacted span is named the same way** (bl-fde5). lernie's compactor
+/// **A compacted span is named the same way** (bl-fde5). litany's compactor
 /// deletes entries out of `messages/` (§5.1 #12), so a search over such a
 /// conversation is a search over a **rewritten** record: the deleted text is
 /// unrecoverable and no hit can come from it. The spliced marker's `raw` is

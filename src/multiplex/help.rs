@@ -9,7 +9,7 @@
 //! and `tool-host`, which routes as a namespace but takes no argv, bl-4667)
 //! have no interface of their own to consult, so their page is [`COMMANDS`]
 //! and this module prints it. A namespace that owns its argv
-//! ([`super::Namespace::owns_argv`]: `gesture`, `lernie`, `bl`, `bz`, `seat`,
+//! ([`super::Namespace::owns_argv`]: `gesture`, `litany`, `bl`, `bz`, `seat`,
 //! balls' two plugin seams): its `--help` is the embedded tool's own answer,
 //! so the ask is passed through to the arm, which must reach it **world-free**
 //! — that is why [`is_discovery`] exists and why `bl`'s shim converge and
@@ -101,7 +101,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
         summary: "print the world's environment (`eval \"$(yog env)\"`)",
         detail: "Print one shell `export` line per world override, quoted so `eval` reproduces \
                  each value byte-for-byte. `eval \"$(yog env)\"` drops the calling shell into \
-                 yog's nested world, where a bare `bl`/`lernie`/`bz` is the world's own shim \
+                 yog's nested world, where a bare `bl`/`litany`/`bz` is the world's own shim \
                  into yog's embedded substrate. `--ws WORKSPACE` also stands that workspace's \
                  wall, which is what a `bz` needs: providers, sign-ins and the model cache \
                  belong to a workspace, and without one bz refuses rather than reaching the \
@@ -123,7 +123,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
         verb: crate::control::SUBCMD,
         usage: "yog tool-control",
         summary: "",
-        detail: "The capability control an embedded lernie consults before each granted tool \
+        detail: "The capability control an embedded litany consults before each granted tool \
                  invocation: it speaks a line protocol over stdin/stdout and is spawned with \
                  no arguments beyond this word. Nothing types it by hand.",
     },
@@ -137,11 +137,11 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  lists every gesture and `yog gesture --help <command>` is one gesture's page.",
     },
     HelpRow {
-        verb: "lernie",
-        usage: "yog lernie <argv…>",
-        summary: "the embedded lernie, in yog's own process",
-        detail: "Run lernie's own verb surface in this process, against the nested world. The \
-                 argv after the word is lernie's, so `yog lernie --help` is lernie's own usage.",
+        verb: "litany",
+        usage: "yog litany <argv…>",
+        summary: "the embedded litany, in yog's own process",
+        detail: "Run litany's own verb surface in this process, against the nested world. The \
+                 argv after the word is litany's, so `yog litany --help` is litany's own usage.",
     },
     HelpRow {
         verb: "bl",

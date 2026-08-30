@@ -114,7 +114,7 @@ pub(crate) fn render(ui: &mut egui::Ui, pane: &mut BrazenPane) -> Option<CenterT
 /// `CollapsingHeader`'s own text `Extend` whatever the style says — and it was
 /// the widest run this surface laid, so it also set the **content width** of the
 /// vertical `ScrollArea` around it and every row beneath then elided against a
-/// width the viewport never had (the lernie pane's `models.yaml` path came out
+/// width the viewport never had (the litany pane's `models.yaml` path came out
 /// truncated at 287 pt and clipped again at 194). Ten provider rows used to sit
 /// above it and push both off the bottom of that window, which is the only
 /// reason the audit never caught either. The clause it lost is a promise about

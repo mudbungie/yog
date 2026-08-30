@@ -65,7 +65,7 @@ fn the_gate_reads_each_conversations_own_subtree_and_fails_closed() {
 }
 
 /// The mint's occupied set is every **member's** own stored name, not the
-/// roots' — lernie refuses a name any living agent wears, so a named child must
+/// roots' — litany refuses a name any living agent wears, so a named child must
 /// count. A row with no stored name contributes nothing.
 #[test]
 fn the_occupied_set_is_every_members_stored_name() {

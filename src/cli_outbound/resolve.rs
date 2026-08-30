@@ -3,7 +3,7 @@
 //!
 //! **The one switch point.** Every namespace resolves in one of two modes, and
 //! the choice lives in exactly one place — [`Binary::self_multiplexed`], a
-//! per-namespace `const` (`Bl` since W8, `Bz` since W10, `Lernie` since W11 —
+//! per-namespace `const` (`Bl` since W8, `Bz` since W10, `Litany` since W11 —
 //! all ON):
 //!
 //! - **host mode** (now only via override): the physical program is the tool
@@ -23,7 +23,7 @@
 //!
 //! **The logical/physical split.** [`Cli::binary`] returns the *logical* name
 //! ([`prefix`](Cli)`[0]` in self-mode, else the physical `program`), so every
-//! ops-log argv projection (§8.2) records `["lernie", …]` whatever the physical
+//! ops-log argv projection (§8.2) records `["litany", …]` whatever the physical
 //! target is — the ops surface is invariant across the switch.
 
 use std::ffi::OsString;
@@ -47,7 +47,7 @@ pub(crate) enum Target {
 /// each namespace's resolution policy is stated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Binary {
-    Lernie,
+    Litany,
     Bl,
     Bz,
     /// **yog itself** (bl-3ff4): the world's `yog` shim, so an agent's bash can
@@ -65,7 +65,7 @@ pub enum Binary {
     /// balls' tracker plugin sibling (`bl-tracker`), the same seam over
     /// `balls::tracker::run`.
     BlTracker,
-    /// The capability control (§8.6, VISION §4.11): the executable lernie's
+    /// The capability control (§8.6, VISION §4.11): the executable litany's
     /// tool-control seam consults before every granted tool invocation. Not an
     /// agent tool — nothing types it — but it seats in the same world-tools
     /// roster, because what it must be is exactly what they must be: yog's own
@@ -78,7 +78,7 @@ impl Binary {
     /// The environment-variable override and the host PATH-name default.
     const fn env_and_default(self) -> (&'static str, &'static str) {
         match self {
-            Binary::Lernie => ("LERNIE_BINARY", "lernie"),
+            Binary::Litany => ("LITANY_BINARY", "litany"),
             Binary::Bl => ("BL_BINARY", "bl"),
             Binary::Bz => ("BZ_BINARY", "bz"),
             Binary::BlDelivery => ("BL_DELIVERY_BINARY", "bl-delivery"),
@@ -96,8 +96,8 @@ impl Binary {
     /// tool namespace is [`Namespace`](Target::Namespace)**: `Bl` since W8
     /// (balls is linked; [`crate::multiplex`]'s `bl` arm calls `balls::run`),
     /// `Bz` since W10 (brazen is linked; the `bz` arm is [`crate::bz_host`]),
-    /// `Lernie` since W11 (lernie is linked; its arm is the thin exec binding
-    /// in `multiplex/lernie.rs`), and the two balls plugin siblings since
+    /// `Litany` since W11 (litany is linked; its arm is the thin exec binding
+    /// in `multiplex/litany.rs`), and the two balls plugin siblings since
     /// bl-2930 (their arms are the promoted `delivery_bin::run` /
     /// `tracker::run` boundaries). The `*_BINARY` env overrides still win — the
     /// test seam / escape hatch back to a host binary.
@@ -105,7 +105,7 @@ impl Binary {
         match self {
             Binary::Bl => Target::Namespace("bl"),
             Binary::Bz => Target::Namespace("bz"),
-            Binary::Lernie => Target::Namespace("lernie"),
+            Binary::Litany => Target::Namespace("litany"),
             Binary::BlDelivery => Target::Namespace("bl-delivery"),
             Binary::BlTracker => Target::Namespace("bl-tracker"),
             Binary::ToolControl => Target::Namespace(crate::control::SUBCMD),

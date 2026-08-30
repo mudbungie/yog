@@ -3,7 +3,7 @@
 //! reads (roots come from `crate::xdg`), no writes.
 //!
 //! §3.1: a workspace is exactly a directory holding `repo.git`. Under yog's own
-//! **flat names root** its leaf *is* the chosen name; under lernie's roots it is
+//! **flat names root** its leaf *is* the chosen name; under litany's roots it is
 //! foreign (`workspaces/`, auto-id) or a read-only replay (`replays/`). Three
 //! roots, one shape, classification by path alone. The names root is flat by
 //! construction — names are direct children — so each root is one readdir.
@@ -37,10 +37,10 @@ pub enum WorkspaceKind {
     /// the chosen name — the workspace's identity **and** the `--as` identity of
     /// every ball claim it makes (§3.1/§3.2).
     Named { name: String },
-    /// Under `<lernie-data>/workspaces/` — lernie's auto-id territory, rendered
+    /// Under `<litany-data>/workspaces/` — litany's auto-id territory, rendered
     /// unnamed, never created by yog (§3.1).
     Foreign,
-    /// Under `<lernie-data>/replays/` — a read-only replay workspace (§3.1).
+    /// Under `<litany-data>/replays/` — a read-only replay workspace (§3.1).
     Replay,
 }
 
@@ -99,27 +99,27 @@ const KINDS: [fn(&str) -> WorkspaceKind; 3] = [
 ];
 
 /// The three workspace roots (§3.1), in classification order: yog's flat names
-/// root, then lernie's `workspaces/` (foreign) and `replays/`. The single home
+/// root, then litany's `workspaces/` (foreign) and `replays/`. The single home
 /// of that list — [`workspaces`] enumerates it, and
 /// [`names::validate`](crate::names::validate) refuses a name equal to any leaf
 /// under it, so creation and enumeration can never disagree about where names
 /// live.
-pub fn roots(yog_data_root: &Path, lernie_data_root: &Path) -> Vec<PathBuf> {
+pub fn roots(yog_data_root: &Path, litany_data_root: &Path) -> Vec<PathBuf> {
     vec![
         names_root(yog_data_root),
-        lernie_data_root.join("workspaces"),
-        lernie_data_root.join("replays"),
+        litany_data_root.join("workspaces"),
+        litany_data_root.join("replays"),
     ]
 }
 
 /// Every workspace across the three roots (§3.1), tagged with its kind: named
-/// (yog's flat names root, leaf = name), then foreign and replay (lernie's flat
+/// (yog's flat names root, leaf = name), then foreign and replay (litany's flat
 /// `workspaces/` and `replays/`). Each root is one readdir, sorted by path; a
 /// missing root contributes nothing — the general path with no inputs, not a
 /// bootstrap special case.
-pub fn workspaces(yog_data_root: &Path, lernie_data_root: &Path) -> Vec<Workspace> {
+pub fn workspaces(yog_data_root: &Path, litany_data_root: &Path) -> Vec<Workspace> {
     let mut out = Vec::new();
-    for (root, classify) in roots(yog_data_root, lernie_data_root).iter().zip(KINDS) {
+    for (root, classify) in roots(yog_data_root, litany_data_root).iter().zip(KINDS) {
         enumerate_flat(root, classify, &mut out);
     }
     out

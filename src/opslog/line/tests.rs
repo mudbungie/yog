@@ -163,7 +163,7 @@ fn clip_goal_holds_cap_after_json_escape() {
     // the *serialized* length, so the line lands ≤ CAP — not a raw-byte proxy.
     let e = OpEntry {
         argv: vec![
-            "lernie".into(),
+            "litany".into(),
             "prompt".into(),
             "/ws".into(),
             "\u{1}".repeat(9000),

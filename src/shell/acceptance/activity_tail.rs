@@ -28,7 +28,7 @@
 /// are not the same line. A head-keeping cut passes none of the three.
 #[test]
 fn the_activity_trail_paints_the_tail_that_tells_two_ops_apart() {
-    const PREFIX: &str = "lernie prompt --name growing \
+    const PREFIX: &str = "litany prompt --name growing \
          /home/u/.cache/yog-drive/quality-20260807T214407Z/data/yog/workspaces/";
     const HOME: &str = "home 20260807T214551Z-2a1181a3";
     const SCRATCH: &str = "scratch 20260807T220107Z-c0ffeeba";
@@ -48,7 +48,7 @@ fn the_activity_trail_paints_the_tail_that_tells_two_ops_apart() {
         )
         .expect("the fixture world takes an ops line");
     }
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     world.converge();
     let mut open = true;
@@ -62,7 +62,7 @@ fn the_activity_trail_paints_the_tail_that_tells_two_ops_apart() {
     });
     let rows: Vec<&str> = painted
         .lines()
-        .filter(|line| line.contains("lernie prompt"))
+        .filter(|line| line.contains("litany prompt"))
         .collect();
     assert_eq!(rows.len(), 2, "both ops paint one row each:\n{painted}");
     assert_ne!(rows[0], rows[1], "the two rows must not read alike");

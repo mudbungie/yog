@@ -68,7 +68,7 @@ fn every_built_in_carries_its_intrinsic_class() {
         Effect::TargetWrite
     );
     assert_eq!(effect(DISPATCH, json!({"role": "worker"})), Effect::Process);
-    // The envelope is inert: lernie adjudicates each inner on its own.
+    // The envelope is inert: litany adjudicates each inner on its own.
     assert_eq!(
         effect(MULTI_TOOL, json!({"invocations": [{"name": "bash"}]})),
         Effect::Read
@@ -78,12 +78,12 @@ fn every_built_in_carries_its_intrinsic_class() {
 #[test]
 fn an_unknown_tool_is_open_world_so_error_never_falls_toward_a_read() {
     let c = classify(
-        &req("lernie-tool-deploy", json!({})),
+        &req("litany-tool-deploy", json!({})),
         &root(),
         &crate::control::policy::Policy::default(),
     );
     assert_eq!(c.effect, Effect::OpenWorld);
-    assert!(c.why.contains("lernie-tool-deploy"), "{}", c.why);
+    assert!(c.why.contains("litany-tool-deploy"), "{}", c.why);
 }
 
 #[test]

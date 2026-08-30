@@ -38,7 +38,7 @@ enum Exit {
     /// Focus the composer's new-conversation verb — the caller's, since the
     /// caller owns the composer.
     NewConversation,
-    /// Fire `lernie retarget` on this conversation — the seat's own, since it
+    /// Fire `litany retarget` on this conversation — the seat's own, since it
     /// is a boundary gesture like the pick above it.
     Retarget,
 }
@@ -204,7 +204,7 @@ fn drift_exit(ui: &mut egui::Ui, row: &ModelRow) -> Exit {
     // is not; never absent.
     crate::shell::row::peers(ui, |ui| {
         ui.weak(clause).on_hover_text(&row.hover);
-        // The exit that KEEPS (§9.4 as amended, bl-2d19): lernie's `retarget`
+        // The exit that KEEPS (§9.4 as amended, bl-2d19): litany's `retarget`
         // re-forks this conversation onto the current config at its next step
         // and replays its work on top, so the history survives the move.
         if ui

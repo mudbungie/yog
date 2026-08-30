@@ -13,7 +13,7 @@ use crate::git_tree::Agent;
 
 /// What a conversation is called (DESIGN §3.3) — **the one function**, a ladder:
 /// the agent's name fact, else the first payload line (`preview`), else the id's
-/// [`id_floor`] — the terminal generation only (bl-63a1). `name` is [`Agent::name_fact`]'s fold — the lernie-stored `name`
+/// [`id_floor`] — the terminal generation only (bl-63a1). `name` is [`Agent::name_fact`]'s fold — the litany-stored `name`
 /// blob (rung one), else the legacy `You are <x>.` goal-stamp parse covering
 /// pre-0.0.4 roots until retention ages them out. Every seat reads it and falls
 /// through together — the §11 row title, the §11 center header, the §3.6
@@ -31,7 +31,7 @@ pub fn display_name(name: Option<&str>, preview: &str, root_id: &str) -> String 
     }
 }
 
-/// The ladder's floor spelling (bl-63a1). A lernie child id embeds the full
+/// The ladder's floor spelling (bl-63a1). A litany child id embeds the full
 /// ancestry chain — one `<stamp>-<hash>` pair per generation — and the descent
 /// tree's indentation already states the lineage, so a row re-spelling the
 /// whole chain is a second spelling of a derivable fact (the operator:
@@ -77,7 +77,7 @@ const ID_HOVER: &str = "the conversation's id — its branch name and on-disk ke
 /// When a conversation started, read out of its own id (bl-16da). Operator:
 /// *"the timestamp at the top of the chat is unconsumable. make it still
 /// ISO8601, but less built for the machine."* — the id is
-/// `20260801T225418Z-2286254c`, lernie's compact ISO 8601 basic form plus a
+/// `20260801T225418Z-2286254c`, litany's compact ISO 8601 basic form plus a
 /// discriminator, and the headline seat wants the extended form
 /// (`2026-08-01 22:54:18Z`) with the hash suffix gone: a hash is not a
 /// timestamp.
@@ -95,7 +95,7 @@ pub fn started_at(root_id: &str) -> StartedAt {
 }
 
 /// `20260801T225418Z-<any>` → `2026-08-01 22:54:18Z`. `None` unless the id
-/// opens with exactly lernie's stamp: 8 digits, `T`, 6 digits, `Z`, then either
+/// opens with exactly litany's stamp: 8 digits, `T`, 6 digits, `Z`, then either
 /// the end or the `-` before the discriminator. Assembly is
 /// [`crate::ui_state::format_iso8601`], the same call the activity row's
 /// epoch-derived timestamp goes through (bl-61db) — one spelling either way.
@@ -112,7 +112,7 @@ fn iso_extended(root_id: &str) -> Option<String> {
     ))
 }
 
-/// The `<date>`/`<time>` halves of a lernie stamp segment, or `None` when the
+/// The `<date>`/`<time>` halves of a litany stamp segment, or `None` when the
 /// segment is not one: exactly 8 digits, `T`, 6 digits, `Z` — the one grammar
 /// both the header's when-label ([`iso_extended`]) and the ladder's
 /// [`id_floor`] read, so the two seats can never disagree on what a stamp is.
@@ -126,7 +126,7 @@ fn stamp_halves(segment: &str) -> Option<(&str, &str)> {
     .then_some((date, time))
 }
 
-/// **Is this run of text a lernie stamp segment?** — [`stamp_halves`] asked for
+/// **Is this run of text a litany stamp segment?** — [`stamp_halves`] asked for
 /// the answer alone, which is all [`id_floor`] ever wanted of it.
 ///
 /// `pub(crate)` because the §3.3 naming invariant is asserted on *values* rather

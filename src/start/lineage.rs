@@ -5,10 +5,10 @@
 //! VISION §4.2 promises *"Skills are seeded at spawn, keyed on ball tags … yog
 //! selects skills and model from the ball's tags at fire"*, and §4.6 fixes the
 //! shape it must take: *"Policy table, yog config, severable. No crate below
-//! yog ever names a model."* A lernie **config lineage is already that pair**
+//! yog ever names a model."* A litany **config lineage is already that pair**
 //! — its `providers.yaml` names the worker role's provider and model, its
 //! `descriptions/skills/**` is the skill set the tools composer offers, and
-//! `lernie prompt --config <name>` forks the new agent off its head (lernie
+//! `litany prompt --config <name>` forks the new agent off its head (litany
 //! ARCH §2.3) — so the policy needs no table of its own. **The lineage's
 //! existence IS the policy**: a ball tagged `deep` is born on `config/deep`
 //! where the workspace has one, and on the ordinary default where it has not.
@@ -24,9 +24,9 @@
 //!   untagged ball, and the bare/path rungs are one case, not three: an empty
 //!   or unmatched tag list selects nothing, [`select`] answers `None`, and the
 //!   fire omits `--config` exactly as it always did. The default is not a
-//!   value yog holds; it is lernie's own `config/default`.
+//!   value yog holds; it is litany's own `config/default`.
 //! - **Severability — `git branch -d config/<tag>`.** Creating the policy is
-//!   creating the ref (`lernie config <ws> <tag> --from default`, or §9.3's
+//!   creating the ref (`litany config <ws> <tag> --from default`, or §9.3's
 //!   editor drive); removing it is deleting the ref. Neither edits a line of
 //!   yog, which is the severability test stated the right way round.
 //! - **Authority — the ball, once.** Nothing is mirrored into yog state. The

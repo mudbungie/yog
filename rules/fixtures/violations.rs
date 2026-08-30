@@ -100,7 +100,7 @@ fn suppresses_a_lint() -> u32 {
 // from the whole descendant process tree; a hand-rolled spawn hands a hook's
 // repo to whatever the child forks (bl-916a).
 fn bare_child() -> std::io::Result<std::process::Child> {
-    std::process::Command::new("lernie").spawn()
+    std::process::Command::new("litany").spawn()
 }
 
 // Violation 14: a hand-rolled paint walk (no-hand-rolled-paint-walk.yml — the

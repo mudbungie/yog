@@ -19,7 +19,7 @@ fn append_then_tail_round_trips_in_order() {
     let root = dir.path();
     let first = sample();
     let second = OpEntry {
-        argv: vec!["lernie".into(), "scan".into()],
+        argv: vec!["litany".into(), "scan".into()],
         stdout: "summary".into(),
         ..sample()
     };
@@ -102,13 +102,13 @@ fn parse_line_defaults_absent_and_mistyped_fields() {
 fn synthetic_failure_encodes_the_intended_argv_and_stderr() {
     let e = OpEntry::synthetic_failure(
         "TS".into(),
-        vec!["lernie".into(), "prompt".into()],
+        vec!["litany".into(), "prompt".into()],
         "/proj".into(),
         "No such file or directory".into(),
         Origin::Balls,
     );
     assert_eq!(e.exit, SYNTHETIC_EXIT);
-    assert_eq!(e.argv, vec!["lernie".to_string(), "prompt".to_string()]);
+    assert_eq!(e.argv, vec!["litany".to_string(), "prompt".to_string()]);
     assert_eq!(e.cwd, "/proj");
     assert!(e.stdout.is_empty());
     assert_eq!(e.stderr, "No such file or directory");

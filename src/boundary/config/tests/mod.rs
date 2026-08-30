@@ -1,6 +1,6 @@
 //! The §9 config family's executors (bl-3f46), driven end to end against a
 //! hermetic world: a real `config.toml` validated by the **linked** brazen, a
-//! real `models.yaml` written unjudged (bl-3ffa), a recorder `lernie`/`bl` for
+//! real `models.yaml` written unjudged (bl-3ffa), a recorder `litany`/`bl` for
 //! the two spawning halves, and a real-git workspace for the §9.4 pick.
 //!
 //! Nothing here mocks a pipeline — every case writes the file the gesture
@@ -32,11 +32,11 @@ mod reads;
 pub(super) const ACME: &str = "[[provider]]\nname = \"acme\"\nprotocol = \"openai_chat\"\n\
                                base_url = \"https://acme.test\"\nauth = \"none\"\n";
 
-/// A hermetic world under `root` with brazen's config written, the lernie
+/// A hermetic world under `root` with brazen's config written, the litany
 /// config root and yog's state root created, and both verb binaries injected.
-pub(super) fn deps_at(root: &Path, lernie: &Path, bl: &Path) -> Deps {
+pub(super) fn deps_at(root: &Path, litany: &Path, bl: &Path) -> Deps {
     let world = world_under(root);
-    fs::create_dir_all(root.join("lernie/workflows")).unwrap();
+    fs::create_dir_all(root.join("litany/workflows")).unwrap();
     fs::create_dir_all(world.yog_state_root()).unwrap();
     // brazen's config is the **wall's** now (§16.2 as amended), so the fixture
     // writes where the focused workspace's fold reads.
@@ -44,7 +44,7 @@ pub(super) fn deps_at(root: &Path, lernie: &Path, bl: &Path) -> Deps {
     fs::create_dir_all(brazen.parent().expect("the wall's brazen dir")).unwrap();
     fs::write(&brazen, ACME).unwrap();
     Deps {
-        lernie: Cli::new(lernie),
+        litany: Cli::new(litany),
         bl: Cli::new(bl),
         state_root: world.yog_state_root(),
         yog_binary: root.join("yog"),
@@ -81,7 +81,7 @@ pub(super) fn seeing(deps: &Deps, workspaces: &[&Path]) -> Deps {
 pub(super) fn quiet(root: &Path) -> Deps {
     deps_at(
         root,
-        Path::new("/definitely/not/a/lernie-xyz"),
+        Path::new("/definitely/not/a/litany-xyz"),
         Path::new("/definitely/not/a/bl-xyz"),
     )
 }

@@ -1,6 +1,6 @@
 //! The §16.3 knob and the §9.4 pick, driven through the chokepoint (bl-3f46):
 //! a recorder `bl` for the knob's `conf` writes and reads, a real-git workspace
-//! and a recorder `lernie` for the pick's two halves.
+//! and a recorder `litany` for the pick's two halves.
 
 use super::{ACME, deps_at, fire, quiet, script, seed_wall};
 use crate::boundary::Action;
@@ -75,7 +75,7 @@ fn set_marks_refuses_an_unlawful_branch_rather_than_writing_one() {
     assert!(err.contains("landing branch"), "{err}");
 }
 
-/// A real-git workspace carrying lernie's own `providers.yaml` on
+/// A real-git workspace carrying litany's own `providers.yaml` on
 /// `config/default` — what the pick reads before it rewrites it.
 fn workspace() -> Fixture {
     let fx = Fixture::new();
@@ -92,19 +92,19 @@ fn pick(role: &str, provider: &str, model: &str, ws: &Path) -> Action {
     }
 }
 
-/// bl-d9cb. The pick is ONE write: `providers.yaml`, staged for lernie's own
+/// bl-d9cb. The pick is ONE write: `providers.yaml`, staged for litany's own
 /// commit. The `models.yaml` half it used to land first — normatively first,
-/// because lernie's cross-check refused a config naming an undeclared model —
-/// reached a table lernie retired (its bl-35e2), so the file must come out of a
+/// because litany's cross-check refused a config naming an undeclared model —
+/// reached a table litany retired (its bl-35e2), so the file must come out of a
 /// pick untouched, and the assertion has to be that it was never created.
 #[test]
 fn a_pick_commits_the_assignment_and_writes_no_second_file() {
     let root = tempdir().unwrap();
     let bin = tempdir().unwrap();
     let log = bin.path().join("log");
-    let lernie = script(
+    let litany = script(
         bin.path(),
-        "lernie",
+        "litany",
         &format!(
             "cat \"$YOG_EDIT_SRC/providers.yaml\" > {}\nexit 0\n",
             log.display()
@@ -112,7 +112,7 @@ fn a_pick_commits_the_assignment_and_writes_no_second_file() {
     );
     let fx = workspace();
     let deps = super::seeing(
-        &deps_at(root.path(), &lernie, Path::new("/no/bl")),
+        &deps_at(root.path(), &litany, Path::new("/no/bl")),
         &[fx.path.as_path()],
     );
     // The pick's provider gate reads the rows of the workspace being picked
@@ -127,8 +127,8 @@ fn a_pick_commits_the_assignment_and_writes_no_second_file() {
     assert!(staged.contains("provider: acme"), "{staged}");
     assert!(staged.contains("model: m-9"), "{staged}");
     assert!(
-        !root.path().join("lernie/models.yaml").exists(),
-        "a pick declares nothing in lernie's global config"
+        !root.path().join("litany/models.yaml").exists(),
+        "a pick declares nothing in litany's global config"
     );
 }
 
@@ -139,7 +139,7 @@ fn a_pick_on_a_row_brazen_lacks_writes_nothing() {
     let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
     let err = fire(&deps, &pick("worker", "nope", "m-9", &fx.path)).unwrap_err();
     assert!(err.contains("no provider row `nope`"), "{err}");
-    assert!(!root.path().join("lernie/models.yaml").exists());
+    assert!(!root.path().join("litany/models.yaml").exists());
 }
 
 #[test]
@@ -154,7 +154,7 @@ fn a_pick_needs_a_lineage_it_can_read_the_assignment_from() {
 fn a_pick_whose_models_file_cannot_be_read_refuses_before_planning() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
-    fs::create_dir_all(root.path().join("lernie/models.yaml")).unwrap();
+    fs::create_dir_all(root.path().join("litany/models.yaml")).unwrap();
     let fx = workspace();
     assert!(fire(&deps, &pick("worker", "acme", "m-9", &fx.path)).is_err());
 }
@@ -172,5 +172,5 @@ fn a_pick_on_a_tool_less_protocol_writes_neither_half() {
     let err = fire(&deps, &pick("worker", "claude-code", "sonnet", &fx.path)).unwrap_err();
     assert!(err.contains("`claude-code` cannot serve a role"), "{err}");
     assert!(err.contains("claude_code declares no tools"), "{err}");
-    assert!(!root.path().join("lernie/models.yaml").exists());
+    assert!(!root.path().join("litany/models.yaml").exists());
 }

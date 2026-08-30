@@ -103,7 +103,7 @@ fn parse_ball_stamp_rejects_non_ball_goals_and_malformed_headers() {
     assert_eq!(parse_ball_stamp("Ball two words: nope"), None);
     // A header buried after the preamble still parses (line-wise scan) — and the
     // scan is preamble-agnostic, so a pre-bl-df65 goal (whose `<y>` was a
-    // *workspace*, still on disk until lernie's 30-day retention ages it out,
+    // *workspace*, still on disk until litany's 30-day retention ages it out,
     // §3.3) reads its ball back unchanged.
     assert_eq!(
         parse_ball_stamp("You are y.\n\nBall bz-9: T\n\nbody").as_deref(),
@@ -112,11 +112,11 @@ fn parse_ball_stamp_rejects_non_ball_goals_and_malformed_headers() {
 }
 
 /// The typed work target, per rung (§3.3, bl-6654 / VISION §4.10 item 2) — the
-/// value the fire passes as lernie's `--cwd`.
+/// value the fire passes as litany's `--cwd`.
 #[test]
 fn target_binding_is_the_per_rung_work_target() {
     let wt = work_worktree_path(Path::new(BALLS), Path::new(PROJ), "bl-1", None);
-    // The bare rung binds nothing: lernie's own default (the agent worktree)
+    // The bare rung binds nothing: litany's own default (the agent worktree)
     // stands, which is what "no work target" means.
     assert_eq!(target_binding(&Payload::Bare, None), None);
     // The path rung binds the directory box's value.
@@ -166,7 +166,7 @@ fn compose_prepared_derives_the_fire_params() {
     // target path's leaf, for a foreign workspace outside the names root exactly
     // as for one of yog's own — nothing carries a second copy of it.
     let foreign = StartInputs {
-        workspace: PathBuf::from("/lernie/workspaces/20260101T-aa"),
+        workspace: PathBuf::from("/litany/workspaces/20260101T-aa"),
         ..inputs
     };
     assert_eq!(compose_prepared(&foreign, None).workspace, "20260101T-aa");

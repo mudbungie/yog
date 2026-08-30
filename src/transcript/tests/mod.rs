@@ -5,7 +5,7 @@
 //! forgiving-parse branch through the public API. [`flow`] covers
 //! enumeration order, skipping, the in-progress query, and the live tail.
 //! [`compaction`] pins the one thing a readdir cannot see — the entries
-//! lernie's compactor deleted, derived from the hole they left in the `NNN`
+//! litany's compactor deleted, derived from the hole they left in the `NNN`
 //! counter, and the `summary/` prose that replaced them.
 //! [`rows`] pins the §11 one-line projection — classification, the derived
 //! auto-state, the override flip — and [`turns`] the rollup over it: a

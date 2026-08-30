@@ -24,7 +24,7 @@ const BOOTSTRAP_HINT: &str = "Say what you want done. This founds your first wor
 /// The empty-world placeholder + bootstrap composer (§3.4, STORIES S0): the
 /// wordmark, the greyed name prediction (the conversation the Enter will mint
 /// and pass via `--name`, §3.3), and one box whose Enter runs the bare-rung bootstrap —
-/// `lernie new <names-root>/home` (§3.1's default name) and the detached prompt —
+/// `litany new <names-root>/home` (§3.1's default name) and the detached prompt —
 /// through the same planner. No wizard, no dead end, and no name picker.
 pub(super) fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellState) {
     // The preview's own read of the held seed (§3.3); the fire below reads —
@@ -43,7 +43,7 @@ pub(super) fn render(ui: &mut egui::Ui, model: &mut AppModel, state: &mut ShellS
         let inputs = model.start_bare_inputs();
         ui.weak(
             egui::RichText::new(
-                crate::start::preview(&inputs, &lernie::mint::SplitMix64::from_seed(seed)).preview,
+                crate::start::preview(&inputs, &litany::mint::SplitMix64::from_seed(seed)).preview,
             )
             .italics(),
         );

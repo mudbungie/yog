@@ -3,10 +3,10 @@
 //! [`GitTree::from_repo`] inspects the workspace's on-disk state and
 //! produces a view-model suitable for rendering. The view-model is a pure
 //! function of the workspace's refs and tree content; it holds no egui
-//! dependency, so a future `lernie-ui-web` crate can render the same
+//! dependency, so a future `litany-ui-web` crate can render the same
 //! structure from the web.
 //!
-//! Git access is via the `git` CLI (a hard dep of lernie itself, per ARCH
+//! Git access is via the `git` CLI (a hard dep of litany itself, per ARCH
 //! §2.2) — no libgit2 native build step is required.
 //!
 //! # Workspace layout (ARCH §2.2–§2.3)

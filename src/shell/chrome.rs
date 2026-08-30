@@ -32,7 +32,7 @@ pub(super) fn workspaces(model: &mut AppModel) -> Landed<crate::boundary::reply:
 
 /// The enumerated rows with this window's own §3.4 raise claim folded on
 /// ([`AppModel::raised_rows`]) — what every altitude-0 fold reads. The claim
-/// rides here rather than at the paint for the echo's reason: a wall `lernie
+/// rides here rather than at the paint for the echo's reason: a wall `litany
 /// new` has just founded must wear its tab and resolve its name from the frame
 /// the receipt lands, not one derivation later.
 pub(super) fn ws_rows(model: &mut AppModel) -> Vec<WsRow> {

@@ -199,7 +199,7 @@ fn the_workspace_delete_dialog_keeps_its_arming_row_on_the_glass() {
 }
 
 /// **The conversation dialog's is the same claim one door over.** Its census is
-/// the substrate's own answer (`lernie delete --children --dry-run`), so the
+/// the substrate's own answer (`litany delete --children --dry-run`), so the
 /// beat hands it one rather than building 120 agents to be told about them: the
 /// dialog paints what the census says, and how long that list is is the only
 /// thing under test.

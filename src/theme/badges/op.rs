@@ -21,7 +21,7 @@ use super::{ASH, BRAZEN, ICHOR, MOONLIT};
 ///
 /// `Detached` (bl-8433) reuses the descent-arrow glyph and brazen hue
 /// [`flight_badge`](super::flight_badge) wears for `Flight::Subagents` — "a
-/// dispatched child is running", the same fact a handed-off `lernie prompt`
+/// dispatched child is running", the same fact a handed-off `litany prompt`
 /// states about itself — rather than minting a new glyph/hue pair the palette
 /// doesn't already key to this meaning. Its phrase matches
 /// `opslog::exit::ExitKind::Detached`'s own wording verbatim, so the collapsed

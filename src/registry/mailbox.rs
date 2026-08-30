@@ -72,7 +72,7 @@ pub struct Invocation {
 
 impl Eq for Invocation {}
 
-/// **What came back**: lernie's own tool contract, one for one (its ARCH §3.3)
+/// **What came back**: litany's own tool contract, one for one (its ARCH §3.3)
 /// — bytes on stdout, bytes on stderr, the exit code the verdict. Text rather
 /// than bytes because a tool result becomes a model message and a model message
 /// is text; the executor transcodes at the one place bytes become an answer

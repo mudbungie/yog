@@ -4,17 +4,17 @@
 //! **The bug this replaces.** Both the old crossings derivation (bl-929d) and
 //! the old pin cut (bl-98da) paired *the i-th maximal run of delivered `.md`
 //! entries* with *the i-th step*, on the stated ground that "drains and steps
-//! are serialized under lernie's executor lock". Serialization gives order, not
-//! a bijection, and the two sets are nowhere near the same size: lernie's step
+//! are serialized under litany's executor lock". Serialization gives order, not
+//! a bijection, and the two sets are nowhere near the same size: litany's step
 //! is **one model call** (`StepOutcome::ToolsRan` re-enters `advance` for the
-//! next one — lernie ARCH §2.3 step 3), while a boundary drain lands delivery
+//! next one — litany ARCH §2.3 step 3), while a boundary drain lands delivery
 //! commits only when the inbox holds something. A turn that calls five tools is
 //! five steps behind one delivered run, so from the second tool-using turn
 //! onward every rule carried the wrong commit and every pin cut the transcript
 //! in the wrong place. **The sets were never the same set.**
 //!
 //! **What pairs exactly.** A model call that reaches `Finish` seals its output
-//! and the executor commits it as `messages/NNN-<model-id>.json` (lernie ARCH
+//! and the executor commits it as `messages/NNN-<model-id>.json` (litany ARCH
 //! §2.3 *The transcript writer*); a call that errors, is killed, or is still
 //! open commits nothing. So the transcript's model entries are exactly the
 //! steps whose framing is [`Framing::Complete`], **in step order, one for

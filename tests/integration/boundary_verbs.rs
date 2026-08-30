@@ -59,9 +59,9 @@ fn snapshot_of(workspaces: &[&Path], projects: &[&Path]) -> Arc<Snapshot> {
     })
 }
 
-fn deps(lernie: &Cli, bl: &Cli, state_root: &Path, snapshot: Arc<Snapshot>) -> Deps {
+fn deps(litany: &Cli, bl: &Cli, state_root: &Path, snapshot: Arc<Snapshot>) -> Deps {
     Deps {
-        lernie: lernie.clone(),
+        litany: litany.clone(),
         bl: bl.clone(),
         state_root: state_root.to_path_buf(),
         yog_binary: state_root.join("yog"),
@@ -78,17 +78,17 @@ fn ui() -> UiState {
     UiState::open(std::path::PathBuf::from("/nonexistent/ui.json"))
 }
 
-/// The lernie-family variants spawn their §8.2 argv through the chokepoint.
+/// The litany-family variants spawn their §8.2 argv through the chokepoint.
 #[test]
-fn the_lernie_actions_spawn_their_exact_argv_and_ops_rows() {
+fn the_litany_actions_spawn_their_exact_argv_and_ops_rows() {
     let bin = tempdir().unwrap();
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
     let ws_s = ws.path().to_string_lossy().to_string();
-    let rec = Recorder::new(bin.path(), "lernie");
-    let lernie = Cli::new(rec.path());
+    let rec = Recorder::new(bin.path(), "litany");
+    let litany = Cli::new(rec.path());
     let d = deps(
-        &lernie,
+        &litany,
         &Cli::new("/no/bl"),
         state.path(),
         snapshot_of(&[ws.path()], &[]),
@@ -147,10 +147,10 @@ fn a_deposited_message_converges_to_the_same_spawn_and_a_reply() {
     let bin = tempdir().unwrap();
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
-    let rec = Recorder::new(bin.path(), "lernie");
-    let lernie = Cli::new(rec.path());
+    let rec = Recorder::new(bin.path(), "litany");
+    let litany = Cli::new(rec.path());
     let bl = Cli::new("/no/bl");
-    let d = deps(&lernie, &bl, state.path(), snapshot_of(&[ws.path()], &[]));
+    let d = deps(&litany, &bl, state.path(), snapshot_of(&[ws.path()], &[]));
 
     deposit::deposit(
         state.path(),

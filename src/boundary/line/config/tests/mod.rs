@@ -53,9 +53,9 @@ fn branch(origin: EditOrigin) -> ConfigFile {
 fn every_config_destination_round_trips_as_a_line() {
     for file in [
         brazen(),
-        ConfigFile::LernieModels,
+        ConfigFile::LitanyModels,
         ConfigFile::Cadence,
-        ConfigFile::LernieWorkflow {
+        ConfigFile::LitanyWorkflow {
             name: "review".to_owned(),
         },
         branch(EditOrigin::Advance),

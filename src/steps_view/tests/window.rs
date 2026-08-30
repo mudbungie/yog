@@ -17,7 +17,7 @@ use crate::git_tree::AgentState;
 use crate::steps_view::{ORPHANED_WINDOW, Orphan, Tail, build};
 
 /// A committed assistant entry that calls a tool, in the bare-array envelope
-/// lernie commits (`transcript` module doc).
+/// litany commits (`transcript` module doc).
 fn write_tool_window(ws: &std::path::Path, name: &str) {
     std::fs::write(
         messages(ws).join(name),
@@ -26,9 +26,9 @@ fn write_tool_window(ws: &std::path::Path, name: &str) {
     .unwrap();
 }
 
-/// A bare workspace repo whose `refs/lernie/held/<agent>` names the park the
+/// A bare workspace repo whose `refs/litany/held/<agent>` names the park the
 /// capability control imposed — the shape `control::hold`'s own tests lay down,
-/// which is what lernie's seam writes (ARCH §3.3).
+/// which is what litany's seam writes (ARCH §3.3).
 fn park(ws: &std::path::Path, agent: &str) {
     let repo = ws.join("repo.git");
     let git = |args: &[&str]| {
@@ -119,7 +119,7 @@ fn an_answered_tool_call_is_no_orphan() {
 }
 
 /// A **parked** call wears this exact shape and is waiting on purpose (§8.6):
-/// the control answered `hold`, lernie wrote the mark, and the operator is
+/// the control answered `hold`, litany wrote the mark, and the operator is
 /// the driver. Alarming there would turn every park into a crash.
 #[test]
 fn a_parked_tool_call_is_no_orphan() {

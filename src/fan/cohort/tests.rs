@@ -23,12 +23,12 @@ fn candidate(handle: &str) -> String {
 }
 
 /// One fire row exactly as `start::execute_prompt` logs it: the logical
-/// `lernie` argv0, `--name`, the typed `--cwd` binding, then ws and goal.
+/// `litany` argv0, `--name`, the typed `--cwd` binding, then ws and goal.
 fn fire(conversation: &str, binding: &str) -> OpEntry {
     OpEntry {
         ts: "TS".to_owned(),
         argv: [
-            "lernie",
+            "litany",
             "prompt",
             "--name",
             conversation,

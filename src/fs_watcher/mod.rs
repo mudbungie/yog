@@ -3,7 +3,7 @@
 //! Exposes the subset of paths admitted by the root's [`RootKind`] allowlist
 //! (DESIGN §7.1) as a drainable stream of coalesced change notifications. The
 //! module is pure Rust — no egui/eframe dependency — so a future
-//! `lernie-ui-web` crate can reuse it unchanged. The watcher is strictly
+//! `litany-ui-web` crate can reuse it unchanged. The watcher is strictly
 //! read-only: it never mutates the repo.
 //!
 //! Backing impl: `notify::RecommendedWatcher` (inotify on Linux, kqueue on
@@ -88,7 +88,7 @@ impl Drop for Watcher {
 }
 
 impl Watcher {
-    /// Watch a lernie workspace root — the original behavior, unchanged
+    /// Watch a litany workspace root — the original behavior, unchanged
     /// ([`RootKind::Workspace`]).
     pub fn new(repo_root: &Path) -> Result<Self, WatchError> {
         Self::with_kind(repo_root, RootKind::Workspace)

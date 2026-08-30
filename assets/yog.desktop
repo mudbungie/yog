@@ -2,10 +2,10 @@
 Type=Application
 Name=yog
 GenericName=Agent session manager
-Comment=Drive lernie loops over balls tasks
+Comment=Drive litany loops over balls tasks
 Exec=yog
 Icon=yog
 Terminal=false
 Categories=Development;
-Keywords=agents;lernie;balls;
+Keywords=agents;litany;balls;
 StartupWMClass=yog

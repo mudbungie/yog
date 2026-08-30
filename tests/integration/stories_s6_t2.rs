@@ -2,7 +2,7 @@
 //! acknowledging in A clears the signal in B after the adopt, while B's own
 //! focus stays B's (STORIES S6.3, DESIGN §6, §13.1, I0).
 //!
-//! "The mark is lernie's; the acknowledgement is yog's": the acknowledgement is
+//! "The mark is litany's; the acknowledgement is yog's": the acknowledgement is
 //! shared state on disk and converges, and viewport ephemera (focus, scroll,
 //! unsent drafts) never leaves the instance that owns it. Both halves are one
 //! test because the interesting claim is that they hold *at the same time*.
@@ -21,7 +21,7 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
-        lernie_data: root.path().join("lernie"),
+        litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
         balls_clones: root.path().join("clones"),
         home: root.path().join("home"),

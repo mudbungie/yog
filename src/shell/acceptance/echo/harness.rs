@@ -16,7 +16,7 @@ use super::super::screen::{Screen, press};
 /// **Short, because the row it lands in is a column** (bl-0219). The subtitle
 /// shares one `left_to_right` line with the §3.3 title inside the conversation
 /// panel, whose wrap mode is `Truncate` (§11 rule 1), so the title's width is
-/// the subtitle's budget — and lernie's mint went from one lowercase word to a
+/// the subtitle's budget — and litany's mint went from one lowercase word to a
 /// PascalCase pair, which is most of that budget. `unbar the postern` painted
 /// as `unbar the po…` and the beat read the glyphs, correctly, as not carrying
 /// what was typed. Elision there is §11 working (`super::elision`); the beat
@@ -66,7 +66,7 @@ pub(super) fn quick(mut world: World) -> World {
         "cadence:\n  watcher:\n    debounce_ms: 0\n",
     )
     .unwrap();
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     world
 }
@@ -81,7 +81,7 @@ pub(super) fn converge_ws(world: &mut World) {
 }
 
 /// How many agent worktrees the driver has written. The real-substrate proof
-/// that a beat's frame is showing the echo and not a derivation: a `lernie
+/// that a beat's frame is showing the echo and not a derivation: a `litany
 /// prompt` that had landed would have made one here.
 pub(super) fn branches(world: &World) -> usize {
     std::fs::read_dir(world.ws.join("agents")).map_or(0, |d| d.flatten().count())

@@ -11,7 +11,7 @@
 //!
 //! None of it was reachable from a test, and that is why it stood: the world
 //! these beats build is the one where the driver **has written nothing**, and
-//! the substrate they run is a `lernie` that records every verb it is handed —
+//! the substrate they run is a `litany` that records every verb it is handed —
 //! so *"one conversation, one name, the follow-up delivered after the start"*
 //! is read off what the substrate was actually asked to do, not inferred.
 
@@ -35,13 +35,13 @@ pub(super) const AGAIN: &str = "and hurry";
 /// window is waiting for, and never something a seat could have guessed.
 pub(super) const LANDED: &str = "c-2";
 
-/// A `lernie` that **writes down every verb it is handed** and otherwise
-/// behaves like [`super::super::fixture::fake_lernie`]. The claims these beats
+/// A `litany` that **writes down every verb it is handed** and otherwise
+/// behaves like [`super::super::fixture::fake_litany`]. The claims these beats
 /// make are about what did and did not reach the substrate — one `prompt` for
 /// two Enters, one `message` and only after the start resolved — and no read of
 /// the glass can make them.
-fn recording_lernie(dir: &Path, log: &Path) -> Cli {
-    let path = dir.join("lernie");
+fn recording_litany(dir: &Path, log: &Path) -> Cli {
+    let path = dir.join("litany");
     std::fs::write(
         &path,
         format!(
@@ -82,7 +82,7 @@ pub(super) fn lines(log: &Path) -> Vec<String> {
 pub(super) fn armed(bin: &Path, log: &Path) -> (World, Screen) {
     let mut world = quick(world());
     seed_world(&world);
-    let screen = Screen::with_lernie(recording_lernie(bin, log));
+    let screen = Screen::with_litany(recording_litany(bin, log));
     assert!(screen.idle(&mut world), "the cursor starts in the composer");
     (world, screen)
 }

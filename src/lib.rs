@@ -1,10 +1,10 @@
-//! egui/eframe frontend for the lernie agent harness — the balls-oriented
-//! manager for lernie loops.
+//! egui/eframe frontend for the litany agent harness — the balls-oriented
+//! manager for litany loops.
 //!
 //! This crate is the desktop UI: a stateless renderer over on-disk state that
-//! issues user actions as `lernie` and `bl` subcommand invocations. Every
+//! issues user actions as `litany` and `bl` subcommand invocations. Every
 //! render is a pure function of filesystem state at the current tick, and the
-//! public view-model API is reentrant, so a future `lernie-ui-web` runs
+//! public view-model API is reentrant, so a future `litany-ui-web` runs
 //! concurrently against the same repo without coordination.
 //!
 //! **`docs/DESIGN.md` is the authority** for the state inventory, the attention
@@ -47,7 +47,7 @@ pub mod config_edit;
 /// How full a conversation's context is (§5.1 #35) — the latest step's prompt
 /// against the window `models.yaml` declares. Fullness, not spend.
 pub mod context;
-/// The capability control (§8.6, VISION §4.11) — the adjudicator lernie's
+/// The capability control (§8.6, VISION §4.11) — the adjudicator litany's
 /// tool-control seam consults before every granted tool invocation.
 pub mod control;
 pub mod delete;
@@ -101,7 +101,7 @@ pub mod steps_view;
 /// library surface.
 pub(crate) mod tail;
 pub mod theme;
-/// yog's lernie tool injection (REMOTE §5, bl-c907) — the `clients` tool, the
+/// yog's litany tool injection (REMOTE §5, bl-c907) — the `clients` tool, the
 /// agent's durable loaded set, and the router the executor consults.
 pub mod tool_host;
 pub mod transcript;

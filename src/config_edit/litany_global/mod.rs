@@ -1,6 +1,6 @@
-//! lernie global config editor — `models.yaml` and `workflows/*.yaml` (§9.2).
+//! litany global config editor — `models.yaml` and `workflows/*.yaml` (§9.2).
 //!
-//! > Text editor per file; Apply = hash-guard + temp-in-dir + rename (lernie
+//! > Text editor per file; Apply = hash-guard + temp-in-dir + rename (litany
 //! > declares these hand-edited; yog is the hand, minus torn writes). yog still
 //! > adds no YAML dep […] New workflow = same path, new name; templates
 //! > copyable. (DESIGN §9.2)
@@ -13,7 +13,7 @@
 //! **It held one validator between bl-53be and bl-3ffa, and the field it read is
 //! why it went.** The gate refused an entry whose `models.<id>.provider` named no
 //! brazen row — checkable without a YAML dep, and right while a role's model
-//! resolved *through* that declaration. lernie retired the `models:` table
+//! resolved *through* that declaration. litany retired the `models:` table
 //! (bl-35e2) and bl-d9cb re-pointed the picker at `providers.yaml`, leaving the
 //! gate judging a field whose only remaining reader was the refusal itself: it
 //! could refuse an Apply that was correcting the one line anything reads
@@ -30,20 +30,20 @@ use super::{Draft, FileIo};
 use crate::xdg::Env;
 use std::path::{Path, PathBuf};
 
-/// The lernie-global editable surface, rooted at one config root (§9.2). The
-/// root is the Y2 fold ([`lernie_config_root`](Env::lernie_config_root),
-/// honoring `LERNIE_HOME`); a missing root or empty `workflows/` simply yields
+/// The litany-global editable surface, rooted at one config root (§9.2). The
+/// root is the Y2 fold ([`litany_config_root`](Env::litany_config_root),
+/// honoring `LITANY_HOME`); a missing root or empty `workflows/` simply yields
 /// no workflows, never an error — absence is a value.
 #[derive(Debug, Clone)]
-pub struct LernieGlobal {
+pub struct LitanyGlobal {
     root: PathBuf,
 }
 
-impl LernieGlobal {
+impl LitanyGlobal {
     /// Fold the config root from an [`Env`] snapshot (§15 Y2).
     pub fn resolve(env: &Env) -> Self {
         Self {
-            root: env.lernie_config_root(),
+            root: env.litany_config_root(),
         }
     }
 
@@ -111,10 +111,10 @@ fn validate_workflow_name(name: &str) -> Result<(), WorkflowNameError> {
     Ok(())
 }
 
-/// A raw-text editor over one lernie-global file (§9.2): load into a RAM draft,
+/// A raw-text editor over one litany-global file (§9.2): load into a RAM draft,
 /// edit, Apply through the shared hash-guard + temp-in-dir + atomic rename
 /// pipeline. Apply refuses on exactly one ground — a concurrent edit
-/// ([`Conflict`](Saved::Conflict)) — the file's contents being lernie's business
+/// ([`Conflict`](Saved::Conflict)) — the file's contents being litany's business
 /// and the operator's, never this editor's (bl-3ffa).
 #[derive(Debug, Clone)]
 pub struct Editor {

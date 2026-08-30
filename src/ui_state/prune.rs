@@ -36,7 +36,7 @@ impl UiState {
 
     /// Drop a deleted conversation's acknowledgement watermarks: `seen[key][id]`
     /// for `root` and every `<root>-*` hyphen-descendant — the same subtree cut
-    /// lernie's `delete` removes (ARCH §2.3), so the two sets cannot drift. The
+    /// litany's `delete` removes (ARCH §2.3), so the two sets cannot drift. The
     /// hyphen boundary is load-bearing: `a-bb` is not pruned by `a-b`'s delete
     /// (a shared byte prefix is nothing, §2.3's whole-token rule).
     pub fn prune_agent(&mut self, key: &str, root: &str) {

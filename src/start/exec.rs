@@ -1,5 +1,5 @@
 //! The effectful half of the start flow (DESIGN §3.3, §8.1, §15 M6 Z3): the
-//! piped `bl`/`lernie` executors and the shapes the
+//! piped `bl`/`litany` executors and the shapes the
 //! [`prepare`](super::prepare) orchestrator threads through them. The claim and
 //! its worktree cross-check are [`claim`], split off at §12's pre-split band:
 //! every other verb here is done when it exits zero, and that one is the step
@@ -19,7 +19,7 @@ use crate::actions::verbs::{self, Outcome, log_step_failure};
 use crate::cli_outbound::Cli;
 use crate::opslog::Origin;
 use crate::world::seed;
-use lernie::mint::MintError;
+use litany::mint::MintError;
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -47,7 +47,7 @@ pub use claim::{ClaimResolved, cross_check_claim, execute_claim};
 /// each field as it threads them into the per-step executors.
 pub struct Deps {
     pub bl: Cli,
-    pub lernie: Cli,
+    pub litany: Cli,
     pub state_root: PathBuf,
     /// yog's own binary — the `$EDITOR` shim the §9.3 lineage write re-enters,
     /// which is how §8.6 authors the capability control onto `config/default`
@@ -63,7 +63,7 @@ pub struct Deps {
 /// **A prepare reply is also the next gesture** (§8.1), so it obeys the wire's
 /// own rule (REMOTE §8, bl-f5f6): `workspace` is the **name**, re-resolved when
 /// the deferred [`Prompt`](crate::boundary::Action::Prompt) lands. `binding` is
-/// the one path left, and it is not an identity — it is lernie's `--cwd`, a
+/// the one path left, and it is not an identity — it is litany's `--cwd`, a
 /// filesystem fact the engine minted and the engine consumes, carried back
 /// verbatim by a seat that never reads it.
 ///
@@ -77,16 +77,16 @@ pub struct Prepared {
     /// the §3.2 `--as`/`YOG_NAME` stamp, which are one fact.
     pub workspace: String,
     /// The §3.3 **typed work target** (bl-6654): the directory the fire passes
-    /// as lernie's `--cwd`, seeding the agent's working-directory mark at
+    /// as litany's `--cwd`, seeding the agent's working-directory mark at
     /// creation so *every* tool step runs there — not just the first process.
-    /// `None` binds nothing and lets lernie's own default (the agent worktree)
+    /// `None` binds nothing and lets litany's own default (the agent worktree)
     /// stand: the bare rung, and a ball not yet created.
     pub binding: Option<PathBuf>,
     /// The §8.7 birth policy the ball's tags selected
     /// ([`lineage::select`](super::lineage::select)): the `config/<name>` this
     /// drone forks off, which is one fact with two consumers — §8.6's policy
     /// convergence during the prepare, and the fire's own `--config`. `None` is
-    /// lernie's `config/default`, and it is an absent flag rather than a value
+    /// litany's `config/default`, and it is an absent flag rather than a value
     /// yog spells, so an unmatched tag and no tag at all are one path.
     pub lineage: Option<String>,
     pub goal: String,
@@ -118,7 +118,7 @@ pub enum StartError {
     Mint(#[from] MintError),
     #[error(transparent)]
     Seed(#[from] seed::SeedError),
-    /// The `lernie config` drive that authors the capability control onto
+    /// The `litany config` drive that authors the capability control onto
     /// `config/default` ran non-zero (§8.6). A workspace whose policy could not
     /// be written would birth drones nothing adjudicates, so the start stops
     /// here rather than proceeding uncontrolled.

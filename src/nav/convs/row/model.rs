@@ -61,14 +61,14 @@ pub struct ConvRow {
     /// stamp and coloured by the §3.5 join. `None` for a bare/path conversation.
     pub ball: Option<ConvBall>,
     /// The conversation's own name (§3.3): the root's
-    /// [`name_fact`](crate::git_tree::Agent::name_fact) — the lernie-stored
+    /// [`name_fact`](crate::git_tree::Agent::name_fact) — the litany-stored
     /// blob, else the legacy goal-stamp parse — the display ladder's first
     /// rung. `None` for a foreign or hand-typed root, which lands on the
     /// payload line or the id.
     pub name: Option<String>,
     /// Whether [`name`](ConvRow::name) is the **legacy display-only rung**
     /// (bl-8068, [`Agent::name_display_only`]): a goal-stamp parse no
-    /// lernie-stored fact backs, so peers cannot message the conversation by
+    /// litany-stored fact backs, so peers cannot message the conversation by
     /// this name. The row hovers [`crate::theme::NAME_DISPLAY_ONLY`] on it,
     /// and the boundary withholds the `name` key entirely.
     pub name_display_only: bool,
@@ -88,7 +88,7 @@ pub struct ConvRow {
     /// Whether the `+children` cascade is offered beside it — some other agent
     /// id here descends from this one by the Stop menu's **looser prefix test**
     /// ([`stop_children_offered`](crate::actions::stop_children_offered)),
-    /// which is `lernie stop --children`'s own rule and deliberately not the
+    /// which is `litany stop --children`'s own rule and deliberately not the
     /// strict §5.1 #8 descent [`members`](ConvRow::members) counts.
     pub stop_children: bool,
     /// How solid the row paints (§11, bl-915e): [`Tone::Weak`] while this is

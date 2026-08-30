@@ -6,7 +6,7 @@ use crate::boundary::reply::Reply;
 use crate::boundary::{Action, Gesture, codec};
 use crate::watch::Mark;
 
-/// A `lernie` short verb — names no project, so its substrate root is the yog
+/// A `litany` short verb — names no project, so its substrate root is the yog
 /// state root the ops trail is written under; it does name the fixture's one
 /// enumerated workspace.
 fn nudge() -> Action {
@@ -32,7 +32,7 @@ fn a_post_puts_the_codec_spelling_of_the_act_on_the_wire() {
     assert_eq!(envelope, codec::encode(&Gesture::Act(nudge())));
 }
 
-/// **The aftermath belongs to the receipt.** The roots a `lernie` verb touches
+/// **The aftermath belongs to the receipt.** The roots a `litany` verb touches
 /// are marked dirty when the engine says it is done — not at the click, where
 /// the act has not happened yet.
 #[test]
@@ -59,7 +59,7 @@ fn the_root_is_re_derived_when_the_receipt_lands_and_not_before() {
         ]
         .into_iter()
         .collect(),
-        "a lernie verb's ops line lands under the yog state root, and its \
+        "a litany verb's ops line lands under the yog state root, and its \
          effect lands in the workspace it named (bl-18e8)"
     );
     assert_eq!(rig.model.act_receipt(ticket), Some(Ok(Reply::Nudged)));

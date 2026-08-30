@@ -36,10 +36,10 @@ pub enum Verb {
     /// Drop a pinned hoist (§11 pin/unpin). The overflow menu's ★ is the
     /// visible toggle; the tab's entry is the accelerator.
     Unpin,
-    /// `lernie stop <ws> <root>` (+ `--stop-children`) on the conversation under
+    /// `litany stop <ws> <root>` (+ `--stop-children`) on the conversation under
     /// the pointer (§8.2) — the composer's Stop, retargeted off the selection.
     Stop { children: bool },
-    /// `lernie scan <ws>` — flush the workspace's undelivered mail (§8.2).
+    /// `litany scan <ws>` — flush the workspace's undelivered mail (§8.2).
     Flush,
     /// The §3.6 class one conversation deep (bl-f17a) — **opens the
     /// confirmation dialog**, exactly as its visible carrier does. A menu

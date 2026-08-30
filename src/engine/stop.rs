@@ -24,10 +24,10 @@
 //! kernel's `SIGKILL` at the end of it is the only bound that cannot be
 //! out-waited. A second timeout in yog would be a worse copy of it.
 //!
-//! **The substrate settles itself.** A turn in flight is a *detached* `lernie`
+//! **The substrate settles itself.** A turn in flight is a *detached* `litany`
 //! driver in its own process group (§8.1) — deliberately not yog's to kill,
 //! and unaffected by yog's exit either way. Under the unit it takes the
-//! cgroup's own `SIGTERM` beside yog's, and the pinned lernie catches that and
+//! cgroup's own `SIGTERM` beside yog's, and the pinned litany catches that and
 //! deposits its branch's result message with a `stopped` epitaph on the way
 //! out (its ARCH §2.9). So yog neither drains nor signals a turn: it stops
 //! being in the way of one.

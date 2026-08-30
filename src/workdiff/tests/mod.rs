@@ -6,7 +6,7 @@
 //! The fixture is a **project** repo — an ordinary working repo with an
 //! integration branch and `work/<id>` branches on it, which is what a balls
 //! invocation path is. It is not the workspace fixture: nothing here reads a
-//! lernie workspace.
+//! litany workspace.
 
 mod candidates;
 mod paint;

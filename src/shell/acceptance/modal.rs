@@ -107,7 +107,7 @@ fn a_click_beneath_the_open_form_reaches_nothing() {
 /// The raise itself is read off the §8.1 planner's first mutating step, because
 /// the driver deliberately names binaries that do not exist ([`Screen::new`]):
 /// the point is that Enter reached the planner with the typed name, not what
-/// `lernie` did next.
+/// `litany` did next.
 #[test]
 fn return_submits_a_valid_name_and_a_refused_one_keeps_the_form() {
     let mut world = world();

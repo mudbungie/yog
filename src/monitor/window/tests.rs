@@ -81,9 +81,9 @@ fn every_entry_kind_folds_to_its_quotation() {
     assert!(all.contains("[tool result (error)]\nboom"));
     assert!(!all.contains("partial"), "no streaming text in a v1 window");
     assert!(
-        all.contains("[record compacted here: entries 004\u{2013}004 deleted; lernie's summary")
+        all.contains("[record compacted here: entries 004\u{2013}004 deleted; litany's summary")
             && all.contains("squashed"),
-        "the summary is what lernie handed the agent in place of the span, quoted as \
+        "the summary is what litany handed the agent in place of the span, quoted as \
          data under its own heading (VISION §4.9, bl-fde5):\n{all}"
     );
 }

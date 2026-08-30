@@ -4,7 +4,7 @@
 //! `exit` is not a number the operator can read on its own: three of its values
 //! are §4.2 **sentinels** (`-1`/`-2`/`-3`/`-4`), and a negative integer in an
 //! exit column reads as a signal death to anyone who has used a shell. Worse,
-//! `-2` used to carry two opposite facts — a detached `lernie prompt` that
+//! `-2` used to carry two opposite facts — a detached `litany prompt` that
 //! handed off cleanly *and* one that never started (the spawn failure rode the
 //! same line, bl-afa9) — so the trail could not tell "running fine" from "never
 //! ran". The encoding was the lie and is fixed at the source: a spawn that never
@@ -112,7 +112,7 @@ impl OpRow {
     /// **Content is no longer the trigger, so this arm is honest again**
     /// (bl-b95e). It once read `!stderr.is_empty()` over a sink folded in
     /// unconditionally, substituting "the driver said anything" for an exit
-    /// nobody observed — and lernie's driver stderr is an *operator-notice*
+    /// nobody observed — and litany's driver stderr is an *operator-notice*
     /// channel as much as a dying one, so bl-1296 bolted a phrase table
     /// (`opslog::notice`) on to hold the benign lines back. The fold is now
     /// gated on the **state** the launch produced ([`super::launch::stillborn`])

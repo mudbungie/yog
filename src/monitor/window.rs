@@ -19,12 +19,12 @@
 //! poisoned transcript can do, and the policy prompt says the rest.
 //!
 //! **A compacted record rides the window, summary and all** (the bl-fde5
-//! ruling, recorded in VISION §4.9). lernie's compactor deletes message files
+//! ruling, recorded in VISION §4.9). litany's compactor deletes message files
 //! and hands the agent `summary/NNN.md` in their place (§5.1 #12), so after a
 //! compaction the summary is part of what the agent reads on **every** step —
 //! and §4.9's premise is that the monitor reads what the agent read. The
 //! counterargument was folding non-agent words into the evidence; it loses
-//! because the summary is lernie's artifact the agent actually consumed, not
+//! because the summary is litany's artifact the agent actually consumed, not
 //! yog's commentary, and omitting it hands the judge a window with a hole
 //! exactly where the agent's context was rewritten. It is quoted as data under
 //! a stated heading like every other line. The marker rides **every** window,
@@ -114,7 +114,7 @@ fn say(entry: &Entry) -> String {
             format!("[tool result{mark}]\n{content}\n")
         }
         // The compaction record, quoted as data (module doc): the span the
-        // counter proves deleted, and the summary lernie handed the agent in
+        // counter proves deleted, and the summary litany handed the agent in
         // its place — what the agent read, which is what the judge reads.
         EntryKind::Compacted {
             first,
@@ -126,7 +126,7 @@ fn say(entry: &Entry) -> String {
                 format!("[record compacted here: {span} deleted; no summary on this mark]\n")
             } else {
                 format!(
-                    "[record compacted here: {span} deleted; lernie's summary replaced \
+                    "[record compacted here: {span} deleted; litany's summary replaced \
                      them in the agent's context]\n{summary}\n"
                 )
             }

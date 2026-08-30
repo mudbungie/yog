@@ -1,6 +1,6 @@
 //! The pipelines each §9 destination runs (bl-3f46), split from the gestures
 //! that name them per §12's line budget: the §9.1 `bz`-validated brazen write,
-//! the §9.2 hash-guarded file write, the §9.3 staged `lernie config` commit,
+//! the §9.2 hash-guarded file write, the §9.3 staged `litany config` commit,
 //! and the two verdict folds that turn an editor's terminal state into the
 //! boundary's `Ok`/`Err`.
 //!
@@ -13,7 +13,7 @@ use crate::config_edit::branch::edit::{
     DraftFile, EditOrigin, EditPlan, drive, next_nonce, stage_files,
 };
 use crate::config_edit::brazen::{Applied, BrazenEditor, RealBzRunner};
-use crate::config_edit::lernie_global::{Editor, Saved};
+use crate::config_edit::litany_global::{Editor, Saved};
 use crate::opslog::Origin;
 use crate::xdg::Env;
 use std::path::{Path, PathBuf};
@@ -87,7 +87,7 @@ pub(super) fn cadence_path(world: &Env) -> PathBuf {
     root.join(crate::app::cadence::CADENCE_YAML)
 }
 
-/// The §9.3 write: stage the text under a fresh nonce and drive `lernie config`
+/// The §9.3 write: stage the text under a fresh nonce and drive `litany config`
 /// with the `$EDITOR` shim standing. The drive's own `ops.jsonl` row is the
 /// audit; a non-zero exit rides back as the captured outcome, as every other
 /// spawned verb's does.
@@ -108,7 +108,7 @@ pub(super) fn commit(
         .map_err(|e| e.to_string())?;
     let plan = EditPlan::compose(&deps.yog_binary, workspace, lineage, origin, &dir);
     let entry = drive(
-        &deps.lernie,
+        &deps.litany,
         workspace,
         &plan,
         ts,

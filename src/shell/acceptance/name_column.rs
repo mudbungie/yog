@@ -40,7 +40,7 @@ use crate::cli_outbound::Cli;
 /// prefix are ruled on by bl-8257 and pinned in the beat below.
 #[test]
 fn the_titles_left_edge_is_the_same_on_a_flagged_row_and_a_quiet_one() {
-    let (lernie, bl, bz) = (Cli::new("lernie"), Cli::new("bl"), Cli::new("bz"));
+    let (litany, bl, bz) = (Cli::new("litany"), Cli::new("bl"), Cli::new("bz"));
     let mut world = world_titled("hello");
     // Zero the watcher debounce so the second root derives on the very next
     // pass instead of on a wall clock this test would have to sleep against
@@ -50,7 +50,7 @@ fn the_titles_left_edge_is_the_same_on_a_flagged_row_and_a_quiet_one() {
         "cadence:\n  watcher:\n    debounce_ms: 0\n",
     )
     .unwrap();
-    world.model.after_lernie_verb();
+    world.model.after_litany_verb();
     world.converge();
     world.add_root("c-2", "quiet-root");
     world.quiet("c-2");
@@ -63,7 +63,7 @@ fn the_titles_left_edge_is_the_same_on_a_flagged_row_and_a_quiet_one() {
     let painted = {
         let frame = |world: &mut super::fixture::World| {
             ctx.run(input(), |ctx| {
-                render(ctx, &mut world.model, &mut world.state, &lernie, &bl, &bz);
+                render(ctx, &mut world.model, &mut world.state, &litany, &bl, &bz);
             })
         };
         // The wire settled between frames (bl-44e9): the column is painted off

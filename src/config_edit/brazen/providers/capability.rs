@@ -20,14 +20,14 @@
 //! carries no tool declarations; use the `anthropic` row for tools"*. Every yog
 //! turn declares at least the `clients` tool
 //! ([`crate::tool_host::Injection::tools`] returns it unconditionally, and
-//! lernie splices the injection into every canonical request), so a
-//! tool-less dialect can serve no lernie ROLE at all.
+//! litany splices the injection into every canonical request), so a
+//! tool-less dialect can serve no litany ROLE at all.
 //!
 //! **The same judgement answers the failure that already happened** (bl-5252).
 //! Gating the picker never reached a config written BEFORE the gate, or written
 //! by hand through the §9.1 editor, which is the operator's own authority: that
 //! step still dies at encode, and the §7.3 banner offered it Dismiss and nothing
-//! else, because [`crate::config_edit::fault`] keyed on lernie's `Config`-kind
+//! else, because [`crate::config_edit::fault`] keyed on litany's `Config`-kind
 //! wrapper and brazen stamps every dialect decline `ErrorKind::ParseInput`. So
 //! [`dialect_decline`] reads the dead step's own words into the same match a row
 //! is read into — the route, not a second table.
@@ -49,7 +49,7 @@
 //! ([`crate::monitor::check`]: *"`bz` takes no tool flag, so tool-lessness here
 //! is structural rather than a promise"*) and pins a MODEL rather than a provider
 //! row, so a tool-less dialect is a legitimate target for it. What cannot be a
-//! lernie role's row is not thereby useless.
+//! litany role's row is not thereby useless.
 //!
 //! **The second read is a CAVEAT, not a refusal** (bl-671d, §9.4). A dialect
 //! whose request declares no context size hands that number to the server, and
@@ -88,7 +88,7 @@ pub const CONTEXT_REMEDY: &str = "give the row an explicit context in this works
      reach the wire, and a nested `options` beside a typed cap is dropped whole and silently.";
 
 impl ProviderRow {
-    /// Why this row can carry no lernie **role**, or `None` when it can
+    /// Why this row can carry no litany **role**, or `None` when it can
     /// (bl-3d22). Read by the §9.4 pick gate
     /// ([`plan`](crate::model_pick::plan)) and by the picker's provider control,
     /// which offers the row unselectably with this sentence beside it.
@@ -136,7 +136,7 @@ impl ProviderRow {
     }
 }
 
-/// Why a dialect can carry no lernie role, keyed on the `protocol` **spelling**
+/// Why a dialect can carry no litany role, keyed on the `protocol` **spelling**
 /// rather than on a row — the one match, which [`ProviderRow::tools_blocked`]
 /// reads a column into and [`dialect_decline`] reads a dead step's own words
 /// into. Two callers, one arm per dialect: a second table would be the thing
