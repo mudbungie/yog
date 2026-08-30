@@ -1011,12 +1011,51 @@ sweep buying nothing.
 
 ## 8. Shape of the code
 
-One crate, one multi-call binary, as today: `yog serve` runs the engine (the
-former `headless` boot plus the wire listener); bare `yog` runs the window;
-`yog seat` and `yog tool-host` are the two **client** modes, the second landed
-with §5.3; `yog wire-certs` is the operator's mint (below). A TUI or web seat
-later is another consumer of the same wire and needs nothing new from the
-engine.
+**Era-stamped, and read the stamp before the sentence** *(bl-0716)*. What
+follows described one crate holding every face, and that is no longer where the
+seat lives. The paragraph is kept — the tree still answers to it for one
+release — but it is now a statement about a **deprecated** mode rather than
+about where a face belongs.
+
+> **Until bl-0716 (landed):** one crate, one multi-call binary. `yog serve`
+> runs the engine (the former `headless` boot plus the wire listener); bare
+> `yog` runs the window; `yog seat` and `yog tool-host` are the two **client**
+> modes, the second landed with §5.3; `yog wire-certs` is the operator's mint
+> (below). A TUI or web seat later is another consumer of the same wire and
+> needs nothing new from the engine.
+
+**Since bl-0716: the seat lives in its own crate and repository.** `lernie`
+0.1.0 is the seat — the window and its wire client — extracted at the version
+fence §12 fixes, with its own gate, its own store and its own DESIGN. It links
+no substrate crate and nothing server-side; that dependency dividend is what
+the severance was for.
+
+**yog keeps its window for exactly one deprecated release, and that is the
+strangler's middle step**, not a second home for the face. Bare `yog` still
+opens a window and `yog seat` still sends a typed gesture, so an operator on
+the released binary loses nothing while the seat crate is stood up beside it.
+bl-7942 deletes both, along with everything else the server does not need, and
+the migration order in §12 is what says when.
+
+**Read a `lernie` in this document against the fence** (§12): a bare one names
+the seat crate or the ruling, and one bound to a `0.0.x` version names the
+agent-loop engine at that release — the program that continues as `litany`.
+
+**What the extraction cost, and what it did not.** It moved code, not
+architecture: §1.2's ruling had already made the window a pure wire client of
+localhost, with `AppModel::dispatch` deleted and every read and act through the
+front door, so there was no in-process face to unpick. What the seat
+**reimplements** is this document — the framing, the preface, the mTLS dial,
+the §8.2 entries and the workspace-name mapping — exactly as the android client
+does. **No shared protocol crate was created and none should be**: §12 makes
+this document the versioned authority all four components implement against,
+and a shared crate would make it the authority for three of them and a
+dependency for the fourth.
+
+The seat's **first** landing is the wire client and the one-shot verb over it;
+the window itself is filed in that repository rather than moved, because a
+window paints *typed* replies and the reply vocabulary is the part of the
+boundary the seat had not yet had to own. Its DESIGN §6 is the ledger.
 
 **Two roles in one process, one boundary between them** *(bl-ae05)*. Bare `yog`
 boots the engine in its own process exactly as it always has — the listener
@@ -3104,9 +3143,11 @@ Recorded so they are not relitigated:
 - ~~**A separate client crate or binary for v1**~~ — **lifted by the bl-37fd
   ruling (§12)**: the four-component split makes the seat its own crate and
   repo. The rejection's reasoning — no payer for a split — held until the
-  ruling became the payer. Until bl-0716 lands, the tree still ships the
-  multi-call single binary, and §8's description of it stays accurate prose
-  about the present tree.
+  ruling became the payer. **Landed (bl-0716):** the seat crate exists and
+  reimplements this document, as §12's authority ruling requires and as the
+  android client already did. yog keeps its window for one deprecated release
+  (bl-7942 deletes it), so §8's old paragraph survives there era-stamped
+  rather than deleted.
 - **A wrapper meta-tool — one declared tool carrying an untyped payload**
   (bl-71d0, reasons in §5.2). It loses emission-time validation, since the
   provider validates the wrapper and not the call inside it, and it makes the
@@ -3182,7 +3223,10 @@ stands and is amended by the ball that moves it.
   conversations. No UI, no execution. What is `yog serve` today becomes the
   whole binary (bl-7942).
 - **lernie** — the seat: the window and the seat-client face, extracted into
-  their own crate and repo (bl-0716). The crate name flips at a version
+  their own crate and repo (bl-0716, **landed** — the crate's first landing is
+  the wire client and the verb over it; the window is filed in that
+  repository's own store, because it needs a reply vocabulary the seat had not
+  had to own). The crate name flips at a version
   fence: the engine's line under it ended at 0.0.11, the seat's begins at
   0.1.0, and both READMEs state the fence — the published record carries two
   eras of the name, and the fence is the one disambiguation rule. **Read
@@ -3231,8 +3275,9 @@ each repo's DESIGN governs only its own component.
 Migration order (strangler; each step ships green): thrall founded (bl-1dd3,
 landed) → engine renamed (bl-9905, landed — the pin is `litany = "=0.0.1"`)
 → seat severed, with yog's window mode riding one deprecated release
-(bl-0716) → yog drops the UI and goes inert by default (bl-7942).
+(bl-0716, landed) → yog drops the UI and goes inert by default (bl-7942).
 
 Supersessions, so stale prose is not read as live: §8's "one crate, one
-multi-call binary, as today" describes the tree until bl-0716/bl-7942 land;
-§11's rejection of a separate client crate is lifted in place above.
+multi-call binary" is **era-stamped in place** and now describes a deprecated
+mode rather than where a face belongs — bl-7942 is what deletes it; §11's
+rejection of a separate client crate is lifted in place above.
