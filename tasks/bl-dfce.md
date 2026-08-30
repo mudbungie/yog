@@ -1,7 +1,8 @@
 +++
 title = "the compactor's procedure pair routes to the tool host under the inverted seam, and the engine cannot decide where they belong"
 created = 1788060201
-updated = 1788060201
+updated = 1788068253
+claimant = "OrderRouter"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
