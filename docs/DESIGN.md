@@ -6168,12 +6168,114 @@ Six properties, and each is load-bearing rather than stylistic:
   reasoning as the ball-body rule above, one distribution channel over.
 - **`make image` pushes nothing, and no repo has a `push` target.** Podman or
   docker, autodetected, podman first (no daemon, no group membership); the tag
-  is read out of `Cargo.toml`'s version rather than typed. Where these images
-  publish is unanswered — a push is not undoable, since a tag can move but the
-  bytes anyone pulled are theirs, and a convenience target for an irreversible
-  act is how the act happens by accident (the same reasoning that keeps
-  `publish` guarded, and that item 6 of the publication checklist in AGENTS.md
-  was written by).
+  is read out of `Cargo.toml`'s version rather than typed. A push is not
+  undoable — a tag can move, but the bytes anyone pulled are theirs — and a
+  convenience target for an irreversible act is how the act happens by accident
+  (the same reasoning that keeps `publish` guarded, and that item 6 of the
+  publication checklist in AGENTS.md was written by). **Where these images
+  publish was unanswered when this section was written; it is answered below,
+  and the answer did not move the push into `make`.**
+
+#### The registry (operator ruling 2026-08-30)
+
+**`ghcr.io/mudbungie/<component>` — one package per repo, named for the
+component.** `ghcr.io/mudbungie/litany`, `/thrall`, `/yog`, `/lernie`. GitHub's
+registry and not a fifth account somewhere else, because the repos are already
+there: the package inherits the repo's owner, its visibility and its access
+control, so there is no second identity to hold, no second credential to
+rotate, and no way for a package to outlive the repo that explains it.
+
+Four properties, and each is a refusal of a way this goes wrong:
+
+- **Pushed only from that repo's own release workflow, at tag time.** Not from
+  a laptop, not from `make`, not from a second repo's workflow. The publishing
+  identity is the repository's own `GITHUB_TOKEN`, which exists only inside
+  that workflow run — so "who can publish" is answered by the same access
+  control that answers "who can push a tag", and there is no long-lived
+  registry credential on any box.
+- **The version tag and the manifest digest, both immutable. Never a moving
+  `latest`.** A published `latest` is a name whose bytes change under everyone
+  who ever wrote it down; a digest is the only tag that means one thing
+  forever. `make image` still tags `latest` **locally**, and that is not the
+  same act: a local tag is a convenience on one box that nobody else can pull.
+- **A version is published once.** The registry is not a place to re-push a
+  corrected build under the same tag — that is a moving `latest` wearing a
+  version number. A bad image is superseded by the next version, exactly as a
+  bad crate release is (AGENTS.md item 6: `cargo publish` is irreversible, and
+  so is `podman push`).
+- **The image and the crate are the same publication, so they carry the same
+  version.** The tag is read out of `Cargo.toml` (it already is), which makes
+  the crate version the one home for both and makes a mismatched pair
+  impossible to produce by hand.
+
+#### The condition: an image-side disclosure gate (REQUIRED)
+
+The ruling above is **conditional**, and this is the condition. No component
+image is pushed — by a workflow or by hand — unless a scan of that image has
+passed, and the scan is wired so that the build path runs it: **`make
+image-scan` is part of `make image`, or is a prerequisite of whatever target
+pushes**, mirroring exactly how the source `leak-scan` sits ahead of the commit
+rather than beside it. A gate a person has to remember to run is not a gate;
+that is the whole reasoning of the pre-commit hook, one artifact over.
+
+**It is a second gate and not a reuse of the first, because an image is not a
+tree.** `make leak-scan` reads the git INDEX (AGENTS.md, "It reads index BLOBS,
+not the worktree"), and every input an image has that a commit does not — the
+build context as the engine actually receives it, the layers a `RUN` writes,
+the base image, the package index, and the image CONFIG — is outside every byte
+that gate has ever read. The `include` allowlist in `Cargo.toml` is the
+analogue one publication channel over (item 6 of the AGENTS.md checklist), and
+its lesson transfers: **the build context is the image's `include` list**, so
+each repo's `.containerignore` and its `COPY`-by-name discipline are the thing
+the scan is checking has held, and each repo records that as a line of its own
+publication checklist.
+
+Three surfaces, because those are the three ways bytes reach an image:
+
+- **The authored filesystem** — what the build ADDED above the pinned base
+  digest, isolated by content and not by trust in the `COPY` lines. Each repo
+  picks the mechanically simplest isolation its engine gives it and **records
+  why in the script**; what is not negotiable is that the isolation be by
+  content-addressed comparison against the base, so a file the build did not
+  touch is never scanned and a file the build rewrote always is.
+- **The distro floor is accounted for, not exempted.** A runtime layer that
+  runs `apk add` adds thousands of files that this repo did not write; scanning
+  them is noise that gets the gate switched off, and skipping them by path is
+  an allowlist. The package manager's own ledger is the authority instead:
+  a file **owned by an installed package** is distro content, a symlink whose
+  resolved target is distro content is distro content, and everything else
+  above the base is this repo's and is scanned. That keeps the enumeration
+  derived rather than typed — the same rule as everywhere else in this tree.
+- **The image config** — every `Env`, every `Label`, and every `history` entry.
+  Build arguments echo into history, and an `ENV` is shipped to everyone who
+  pulls whether or not any file holds it.
+
+And the posture the source gate already fixed, carried over unchanged:
+
+- **The rule table is the SAME table**, `scripts/leak-rules.sh`, sourced and
+  never copied. Two copies of the rules drift within a week (AGENTS.md says so
+  about the task-store gate; it is no less true here).
+- **Findings LOCATE, they never reprint.** Truncated as the source gate
+  truncates them.
+- **Unreadable is rejected, not skipped.** The binaries a build authors are
+  knowable — they are the `COPY --from=` destinations, which the Containerfile
+  already names, so the expected set is **derived from the Containerfile**
+  rather than typed into the scanner. Any OTHER authored file the rules cannot
+  read is a refusal.
+- **Both directions, and a scan that enumerates nothing fails.** A self-test
+  builds a scratch image that layers in a fabricated secret carrying the
+  `notreal` marker AND plants one in an `ENV`, and proves the scan catches
+  each; the real image must pass clean. A leak gate dies by matching nothing
+  and passing everything forever — the same two-direction discipline as
+  `line-cap`, `rules-audit` and `leak-scan --self-test`.
+
+**What it cannot promise, stated rather than implied.** It scans one image, on
+the box that built it, before the push. It does not read what is already in the
+registry, it cannot un-publish a digest, and whoever runs the build can bypass
+it exactly as `--no-verify` bypasses the commit hook. That is the same
+prevention-is-local, enforcement-is-late split AGENTS.md draws for the task
+store; the late half here is that a published image can only be superseded,
+never recalled, which is why the gate lives ahead of the push and not after it.
 
 **yog's own image is deferred, not skipped, and the reason is §0's.** The image
 is the **UI-free server** — the post-severance binary of bl-7942, which takes
