@@ -1,7 +1,7 @@
 +++
 title = "the seat ships as an OCI image, and the display stack is the question the other three did not have to answer"
 created = 1788068754
-updated = 1788068754
+updated = 1788068827
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
@@ -45,3 +45,7 @@ Note the naming fence while writing this: the seat is `lernie` at 0.1.0 and
 above, the engine is `lernie` at 0.0.x and is now `litany`. An image tagged
 from a crate version inherits that fence and should not be the place someone
 first discovers it.
+
+---
+
+The seat's own repo now exists: bl-0716 landed the severance and the name flip, so the artifact this ball would ship has a home to be built from. The blocker stands as bl-320b — a seat that cannot dial a stated address has nothing to deploy, whatever repo it lives in.
