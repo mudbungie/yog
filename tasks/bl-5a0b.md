@@ -1,7 +1,8 @@
 +++
 title = "the image is a published artifact and the gate has never read one: §10.1 names the registry and requires an image-side disclosure scan ahead of every push"
 created = 1788069063
-updated = 1788069063
+updated = 1788069064
+claimant = "OrderCustoms"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
