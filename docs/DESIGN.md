@@ -6114,6 +6114,75 @@ the config-branch `for-each-ref` — are gone with it.
   expansion is guarded `${a[@]+"${a[@]}"}`; a new script is checked with
   `bash -n` under a real 3.2, never against the host's bash.
 
+### 10.1 Deployment: one OCI image per component (bl-223f)
+
+**An OCI image is a tarball of filesystem layers plus a manifest, in the format
+podman and docker both read** — the unit an operator installs on a box that
+takes images rather than binaries.
+
+Operator ruling 2026-08-30: every component of the four-way split ships one —
+yog (the server), litany (the engine), thrall (the foot), lernie (the seat) —
+**for deployment sanity and for nothing else**. Not for internal container
+semantics: no component uses the container filesystem as a feature, none may
+start to, and a container is never a containment claim any component makes on
+the wire. The image is the unit of install. That is the whole of the ruling,
+and the rest of this section is the shape the two containerized repos landed
+against it (litany bl-6467, thrall bl-3586), which the remaining two follow.
+
+**Each repo owns its own `Containerfile` and `make image`; there is no shared
+build tooling and no meta-repo.** The components meet at the wire and nowhere
+else (REMOTE), and a build system that spanned them would be the first place
+they met somewhere else.
+
+Six properties, and each is load-bearing rather than stylistic:
+
+- **The toolchain pin has one home and the image proves it.** The build stage
+  is `rust:<pin>-alpine`, and a step inside the build reads `channel` out of
+  the repo's own `rust-toolchain.toml` and fails the build if it differs from
+  the base image's `rustc`. The `FROM` tag is unavoidably a second statement of
+  the pin; this makes the drift a build failure instead of a silent difference
+  between what the gate compiles and what ships.
+- **The build stage is discarded whole.** Two stages, and only built artifacts
+  cross. No compiler, no cargo, no source, no `target/` in the shipped layers.
+- **The runtime layer is exactly what the binary EXECS, and that is per crate,
+  not per house style.** `FROM scratch` is right only for a binary that execs
+  nothing — a static musl build is that binary right up until it forks
+  something. litany execs `git` (the harness is git-backed and shells to the
+  binary on PATH), `sh` (its `bash` built-in tool), `bz` (the adapter, at the
+  pin read from its own `Cargo.toml`), and itself; thrall execs
+  operator-configured argv that is not knowable from thrall's repo at all. Both
+  therefore ship `alpine`, and both **record the reasoning in the file** —
+  because the next person's instinct will be to shrink the layer, and the
+  reason not to is not visible from the outside.
+- **No state in the image; the XDG dirs are the runtime contract.** Each image
+  sets the XDG variables and provisions nothing under them, so the roots are
+  mounts. litany's image deliberately does not run `litany prime`: seeding the
+  harness root writes files, and writing them into a **layer** puts the one
+  state litany owns where a mount cannot replace it and an upgrade cannot see
+  it. Nor is there a `VOLUME` instruction anywhere — a `VOLUME` lets an
+  unmounted run succeed against an empty anonymous volume, where the refusal
+  naming the missing file is the answer an operator can act on.
+- **No credentials and no certificates, ever.** thrall's foot-grade certificate
+  and brazen's provider auth are mounted or injected. A credential baked into a
+  layer is a credential published to everyone who can pull it — the same
+  reasoning as the ball-body rule above, one distribution channel over.
+- **`make image` pushes nothing, and no repo has a `push` target.** Podman or
+  docker, autodetected, podman first (no daemon, no group membership); the tag
+  is read out of `Cargo.toml`'s version rather than typed. Where these images
+  publish is unanswered — a push is not undoable, since a tag can move but the
+  bytes anyone pulled are theirs, and a convenience target for an irreversible
+  act is how the act happens by accident (the same reasoning that keeps
+  `publish` guarded, and that item 6 of the publication checklist in AGENTS.md
+  was written by).
+
+**yog's own image is deferred, not skipped, and the reason is §0's.** The image
+is the **UI-free server** — the post-severance binary of bl-7942, which takes
+the eframe/egui/GL stack out of the crate. Containerizing today's windowed
+binary would ship a GL display stack into a layer nothing in a server can
+present, so the yog image is filed behind that severance and the seat's image
+behind the seat's own window chain (bl-320b). Both cite this section for the
+shape.
+
 ---
 
 ## 11. UI structure — three altitudes
