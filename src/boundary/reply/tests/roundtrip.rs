@@ -9,7 +9,7 @@
 //! prevent.
 
 mod strict;
-mod surface;
+pub(crate) mod surface;
 
 use super::super::{decode, encode, refusal};
 

@@ -1,5 +1,5 @@
 .PHONY: all build release test coverage lint fmt fmt-check check run ux reload icon icon-seats install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny \
-        drive drive-preflight drive-cleanroom drive-seat drive-unseat drive-seed drive-log wire-certs \
+        corpus drive drive-preflight drive-cleanroom drive-seat drive-unseat drive-seed drive-log wire-certs \
         deploy deploy-status deploy-audit
 
 # Install location for `make install`. Defaults to the XDG-ish user-local
@@ -155,6 +155,15 @@ beat-audit:
 wire-certs:
 	@WIRE_DIR="$(WIRE_DIR)" WIRE_HOST="$(WIRE_HOST)" WIRE_PORT="$(WIRE_PORT)" \
 		WIRE_LEAF="$(WIRE_LEAF)" cargo run --quiet -- wire-certs
+
+# Regenerate the wire conformance corpus (REMOTE §3, bl-32cb) from the boundary
+# itself. The corpus is committed under corpus/; a test verifies it on every
+# run, so this target is only ever needed after a wire-visible change — and it
+# REFUSES a shape that changed its fields while PROTOCOL (src/wire/hello.rs)
+# stood still, which is the rule made mechanical.
+corpus:
+	@YOG_CORPUS_OUT="$(CURDIR)/corpus" cargo test --quiet --lib boundary::corpus::tests::gate -- --exact
+	@echo "corpus: regenerated from the boundary"
 
 leak-scan:
 	@scripts/leak-scan.sh --self-test

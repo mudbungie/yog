@@ -45,8 +45,12 @@ fn branch(origin: EditOrigin) -> ConfigFile {
     }
 }
 
-#[test]
-fn every_config_destination_round_trips() {
+/// The §9 config family's values: every destination a write names, the marks
+/// amendment, the model pick, and the same destinations read — a read is the
+/// write minus the field that makes it one (bl-0164), so both directions are
+/// entries here.
+pub(crate) fn surface() -> Vec<Gesture> {
+    let mut out = Vec::new();
     for file in [
         brazen(),
         ConfigFile::LitanyModels,
@@ -60,28 +64,42 @@ fn every_config_destination_round_trips() {
         }),
         branch(EditOrigin::Orphan),
     ] {
-        rt(applying(file));
+        out.push(applying(file));
     }
-}
-
-#[test]
-fn a_marks_amendment_round_trips() {
     for branch in ["balls/tasks", "balls/agents/corp"] {
-        rt(Gesture::Act(Action::SetMarks {
+        out.push(Gesture::Act(Action::SetMarks {
             workspace: "ws".to_owned(),
             branch: branch.to_owned(),
         }));
     }
-}
-
-#[test]
-fn a_pick_round_trips_with_its_whole_triple() {
-    rt(Gesture::Act(Action::PickModel {
+    out.push(Gesture::Act(Action::PickModel {
         workspace: "ws".to_owned(),
         role: "worker".to_owned(),
         provider: "codex".to_owned(),
         model: "gpt-5.4".to_owned(),
     }));
+    for file in [
+        brazen(),
+        ConfigFile::LitanyModels,
+        ConfigFile::Cadence,
+        ConfigFile::LitanyWorkflow {
+            name: "review".to_owned(),
+        },
+    ] {
+        out.push(Gesture::Ask(Query::ReadConfig { file }));
+    }
+    out.push(Gesture::Ask(Query::Marks {
+        workspace: "ws".to_owned(),
+    }));
+    out.push(Gesture::Ask(providers()));
+    out
+}
+
+#[test]
+fn every_config_gesture_round_trips() {
+    for gesture in surface() {
+        rt(gesture);
+    }
 }
 
 #[test]
@@ -116,21 +134,6 @@ fn a_wall_scoped_envelope_without_its_workspace_is_refused() {
 /// `mode` for the knob.
 #[test]
 fn a_field_left_out_reads_instead_of_writing() {
-    for file in [
-        brazen(),
-        ConfigFile::LitanyModels,
-        ConfigFile::Cadence,
-        ConfigFile::LitanyWorkflow {
-            name: "review".to_owned(),
-        },
-    ] {
-        rt(Gesture::Ask(Query::ReadConfig { file }));
-    }
-    rt(Gesture::Ask(Query::Marks {
-        workspace: "ws".to_owned(),
-    }));
-    rt(Gesture::Ask(providers()));
-
     let read = encode(&Gesture::Ask(Query::ReadConfig { file: brazen() }));
     assert_eq!(read["op"], "config");
     assert!(read.get("text").is_none(), "{read}");

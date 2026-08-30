@@ -2,22 +2,24 @@
 //! production took (`codec/query.rs`): §4.8's taxonomy is a file boundary on
 //! both sides.
 
-use super::rt;
 use crate::boundary::{Gesture, Query, codec::decode};
 
-#[test]
-fn every_query_variant_round_trips() {
-    rt(Gesture::Ask(Query::Workspaces));
-    rt(Gesture::Ask(Query::Conversations {
-        workspace: "ws".into(),
-    }));
-    rt(Gesture::Ask(Query::Balls));
-    rt(Gesture::Ask(Query::Board));
-    rt(Gesture::Ask(Query::Attention));
-    rt(Gesture::Ask(Query::Ops { max: 32 }));
-    rt(Gesture::Ask(Query::Search {
-        text: "tekeli-li".into(),
-    }));
+/// The query roster's values — the workspace-scoped reads, then the §11
+/// inspector family beneath them.
+pub(super) fn surface() -> Vec<Gesture> {
+    let mut out = vec![
+        Gesture::Ask(Query::Workspaces),
+        Gesture::Ask(Query::Conversations {
+            workspace: "ws".into(),
+        }),
+        Gesture::Ask(Query::Balls),
+        Gesture::Ask(Query::Board),
+        Gesture::Ask(Query::Attention),
+        Gesture::Ask(Query::Ops { max: 32 }),
+        Gesture::Ask(Query::Search {
+            text: "tekeli-li".into(),
+        }),
+    ];
     for file in [
         None,
         Some(crate::workdiff::WorkFile {
@@ -32,41 +34,53 @@ fn every_query_variant_round_trips() {
             path: "src/a.rs".into(),
         }),
     ] {
-        rt(Gesture::Ask(Query::WorkDiff {
+        out.push(Gesture::Ask(Query::WorkDiff {
             workspace: "ws".into(),
             file,
         }));
     }
     // The §3.9 projection (bl-40ab): the address is its whole envelope.
-    rt(Gesture::Ask(Query::Science {
+    out.push(Gesture::Ask(Query::Science {
         workspace: "ws".into(),
     }));
     // The §9 browse and roster (bl-dff8), each carrying the sphere it is asked
     // in — providers, sign-ins and lineages all live inside a workspace.
-    rt(Gesture::Ask(Query::Lineages {
+    out.push(Gesture::Ask(Query::Lineages {
         workspace: "ws".into(),
     }));
-    rt(Gesture::Ask(Query::Models {
+    out.push(Gesture::Ask(Query::Models {
         workspace: "ws".into(),
         provider: "acme".into(),
     }));
     // REMOTE §5's roster (bl-4e08).
-    rt(Gesture::Ask(Query::Clients {
+    out.push(Gesture::Ask(Query::Clients {
         workspace: "ws".into(),
     }));
+    // The §11 balls section one workspace deep (bl-b4b5), and the help pages
+    // (§8.5) — two spellings whose envelopes had no round trip of their own
+    // until the conformance corpus took this list (bl-32cb). The help verb is
+    // optional and both states are facts: the index, and one page.
+    out.push(Gesture::Ask(Query::WorkspaceBalls {
+        workspace: "ws".into(),
+    }));
+    for verb in [None, Some("scan".to_owned())] {
+        out.push(Gesture::Ask(Query::Help { verb }));
+    }
     // The routing leg's two reads (bl-024b): one names a handle, the other
     // names nothing — the queue it drains is the intake's own.
-    rt(Gesture::Ask(Query::Invocations));
-    rt(Gesture::Ask(Query::Capture {
+    out.push(Gesture::Ask(Query::Invocations));
+    out.push(Gesture::Ask(Query::Capture {
         invocation: "inv-1".into(),
     }));
-    inspector_family();
+    out.extend(inspector_family());
+    out
 }
 
 /// The §11 inspector family (bl-6233, bl-13f9): the reads addressed at a
 /// conversation rather than a workspace, so each carries both halves of the
 /// address and only what no seat could supply beside them.
-fn inspector_family() {
+fn inspector_family() -> Vec<Gesture> {
+    let mut out = Vec::new();
     let (workspace, agent) = ("ws".to_owned(), "c-1".to_owned());
     for query in [
         Query::Transcript {
@@ -99,14 +113,14 @@ fn inspector_family() {
             agent: agent.clone(),
         },
     ] {
-        rt(Gesture::Ask(query));
+        out.push(Gesture::Ask(query));
     }
     // The listing and one file's bytes are the same query at two depths — the
     // `work-diff` shape, so the path is optional and both sides round-trip. The
     // tree is the third selection on it (bl-44e9): live, or as of one commit.
     for path in [None, Some("src/a.rs".to_owned())] {
         for at in [None, Some("abcdef1234".to_owned())] {
-            rt(Gesture::Ask(Query::Files {
+            out.push(Gesture::Ask(Query::Files {
                 workspace: workspace.clone(),
                 agent: agent.clone(),
                 path: path.clone(),
@@ -117,12 +131,13 @@ fn inspector_family() {
     // Config-frozen-at (bl-13f9): the same optional commit, at the family's
     // other tree-subject read — bare is the conversation's own tip.
     for at in [None, Some("abcdef1234".to_owned())] {
-        rt(Gesture::Ask(Query::Governing {
+        out.push(Gesture::Ask(Query::Governing {
             workspace: workspace.clone(),
             agent: agent.clone(),
             at,
         }));
     }
+    out
 }
 
 /// A conversation read names its conversation, always: half an address would

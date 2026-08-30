@@ -7,16 +7,35 @@
 use super::*;
 use crate::control::judge::Ruling;
 
-#[test]
-fn every_verdict_round_trips_and_the_id_is_never_on_the_wire() {
+/// The family's values: every verdict, and the floor in both directions.
+pub(super) fn surface() -> Vec<Gesture> {
+    let mut out = Vec::new();
     for ruling in [Ruling::Pass, Ruling::Hold, Ruling::Refuse] {
-        let gesture = Gesture::Act(Action::AnswerHold {
+        out.push(Gesture::Act(Action::AnswerHold {
             workspace: "ws".into(),
             agent: "c-1".into(),
             ruling,
-        });
-        rt(gesture.clone());
-        let envelope = encode(&gesture).to_string();
+        }));
+    }
+    for raised in [true, false] {
+        out.push(Gesture::Act(Action::Floor {
+            workspace: "ws".into(),
+            agent: "c-1".into(),
+            raised,
+        }));
+    }
+    out
+}
+
+#[test]
+fn the_held_id_is_never_on_the_wire() {
+    for ruling in [Ruling::Pass, Ruling::Hold, Ruling::Refuse] {
+        let envelope = encode(&Gesture::Act(Action::AnswerHold {
+            workspace: "ws".into(),
+            agent: "c-1".into(),
+            ruling,
+        }))
+        .to_string();
         assert!(!envelope.contains("tool_use"), "{envelope}");
     }
 }
@@ -42,14 +61,13 @@ fn an_unknown_verdict_is_refused() {
 /// are two instructions — and the direction is the op, never a field a caller
 /// could omit into the wrong one.
 #[test]
-fn the_floor_round_trips_in_both_directions() {
+fn the_floor_spells_its_direction_as_the_op() {
     for raised in [true, false] {
         let gesture = Gesture::Act(Action::Floor {
             workspace: "ws".into(),
             agent: "c-1".into(),
             raised,
         });
-        rt(gesture.clone());
         let envelope = encode(&gesture).to_string();
         let op = if raised { "revoke" } else { "restore" };
         assert!(envelope.contains(op), "{envelope}");

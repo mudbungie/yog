@@ -226,4 +226,4 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

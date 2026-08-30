@@ -45,6 +45,12 @@ pub mod consumer;
 /// The VISION §4.11 capability family's one executor — the hold answer's row
 /// and its releasing `advance` — plus the confinement-required birth gate.
 pub mod control;
+/// **The wire conformance corpus** (REMOTE §3, bl-32cb): the fixture set every
+/// client replays, generated from this boundary's own round-trip surfaces.
+/// Test-gated — the generator ships nothing; the committed `corpus/` directory
+/// is what a client consumes.
+#[cfg(test)]
+pub(crate) mod corpus;
 pub mod deposit;
 pub mod dispatch;
 /// The VISION §4.10 mutating fan's two executors — spread and retire.

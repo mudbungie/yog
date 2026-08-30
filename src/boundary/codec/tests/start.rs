@@ -4,7 +4,7 @@
 //! gesture that is not one. Its own file at §12's cap, on the seam the codec
 //! itself is cut along.
 
-use super::{p, rt};
+use super::p;
 use crate::boundary::codec::decode;
 use crate::boundary::codec::start::encode_start;
 use crate::boundary::{Action, Gesture};
@@ -12,8 +12,12 @@ use crate::opslog::Origin;
 use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Payload, Prepared};
 
-#[test]
-fn every_payload_rung_round_trips_inside_prepare() {
+/// Every payload rung a prepare carries, every join state an existing ball is
+/// spelled with, and every origin a prompt is stamped with — each beside the
+/// two states of the §3.3 binding and of the §3.3 seed, because absent and
+/// present are different facts and both cross.
+pub(super) fn surface() -> Vec<Gesture> {
+    let mut out = Vec::new();
     for payload in [
         Payload::Bare,
         Payload::Path { dir: p("/work") },
@@ -25,15 +29,11 @@ fn every_payload_rung_round_trips_inside_prepare() {
             },
         },
     ] {
-        rt(Gesture::Act(Action::Prepare {
+        out.push(Gesture::Act(Action::Prepare {
             workspace: "ws".into(),
             payload,
         }));
     }
-}
-
-#[test]
-fn every_join_state_round_trips_inside_an_existing_ball() {
     for join in [
         JoinState::ReadyStartable,
         JoinState::Blocked,
@@ -43,7 +43,7 @@ fn every_join_state_round_trips_inside_an_existing_ball() {
         JoinState::UnassignedWorkspace,
         JoinState::OrphanedProject,
     ] {
-        rt(Gesture::Act(Action::Prepare {
+        out.push(Gesture::Act(Action::Prepare {
             workspace: "ws".into(),
             payload: Payload::Ball {
                 project: "proj".into(),
@@ -57,21 +57,10 @@ fn every_join_state_round_trips_inside_an_existing_ball() {
             },
         }));
     }
-}
-
-/// Every origin **and both states of the §3.3 typed binding** (bl-6654): a
-/// bound rung and the bare rung's `None` are two values of one field, so both
-/// have to survive the wire — `null` decoding as "bind nothing" is the whole
-/// reason the bare rung can be deposited back as the gesture it was.
-#[test]
-fn every_origin_round_trips_inside_a_prompt() {
     for origin in [Origin::Balls, Origin::Conversation, Origin::World] {
         for binding in [None, Some(p("/target"))] {
-            // Both halves of the §3.3 seed (bl-1747): a seat that predicted a
-            // name carries it, and one that predicted none carries `None` —
-            // absent and present are different facts, so both cross.
             for seed in [None, Some(0xc0df)] {
-                rt(Gesture::Act(Action::Prompt {
+                out.push(Gesture::Act(Action::Prompt {
                     prepared: Prepared {
                         workspace: "ws".into(),
                         binding: binding.clone(),
@@ -85,6 +74,7 @@ fn every_origin_round_trips_inside_a_prompt() {
             }
         }
     }
+    out
 }
 
 /// **The start family's envelope builder answers `null` to anything else**

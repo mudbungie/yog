@@ -7,7 +7,7 @@ mod config;
 mod inspector;
 mod queue;
 mod receipts;
-mod roundtrip;
+pub(crate) mod roundtrip;
 mod rows;
 mod science;
 mod search;

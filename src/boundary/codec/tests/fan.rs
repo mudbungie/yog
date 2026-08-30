@@ -3,7 +3,7 @@
 
 use serde_json::json;
 
-use super::{p, rt};
+use super::p;
 use crate::boundary::codec::decode;
 use crate::boundary::{Action, Gesture};
 use crate::fan::{Obligation, Verb};
@@ -28,33 +28,34 @@ fn obligation(ball: Option<&str>) -> Obligation {
 }
 
 /// A ball fan and the bare project-repo fan are one envelope with and without
-/// its `ball` — absence is a value, and it survives the wire as one.
-#[test]
-fn both_fan_envelopes_round_trip() {
+/// its `ball` — absence is a value, and it survives the wire as one. N of one
+/// is a lawful fan (the ordinary path), and so is N of none.
+pub(super) fn surface() -> Vec<Gesture> {
+    let mut out = Vec::new();
     for ball in [Some("bl-1f2a"), None] {
-        rt(Gesture::Act(Action::Fan(Verb::Spread {
+        out.push(Gesture::Act(Action::Fan(Verb::Spread {
             prepared: prepared(Some("/claim")),
             obligation: obligation(ball),
             n: 3,
         })));
-        rt(Gesture::Act(Action::Fan(Verb::Retire {
+        out.push(Gesture::Act(Action::Fan(Verb::Retire {
             obligation: obligation(ball),
             handle: "at-0badcafe".into(),
         })));
-        rt(Gesture::Act(Action::Fan(Verb::Deliver {
+        out.push(Gesture::Act(Action::Fan(Verb::Deliver {
             obligation: obligation(ball),
             handle: "at-0badcafe".into(),
             summary: "take the winner — spaces stay".into(),
         })));
     }
-    // N of one is a lawful fan (the ordinary path), and so is N of none.
     for n in [0, 1] {
-        rt(Gesture::Act(Action::Fan(Verb::Spread {
+        out.push(Gesture::Act(Action::Fan(Verb::Spread {
             prepared: prepared(None),
             obligation: obligation(Some("bl-1f2a")),
             n,
         })));
     }
+    out
 }
 
 /// A fan with no `ball` field fans the project's own integration branch: the

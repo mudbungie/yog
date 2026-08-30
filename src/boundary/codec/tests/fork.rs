@@ -2,7 +2,6 @@
 //! itself, its list field reads strictly, and there is no cohort envelope to
 //! test — a fan is N of these.
 
-use super::rt;
 use crate::boundary::codec::decode;
 use crate::boundary::{Action, Gesture};
 use crate::fork::Attempt;
@@ -18,20 +17,21 @@ fn attempt(from: &str, skills: Vec<String>) -> Attempt {
 
 /// One attempt, with and without skills — and the goal verbatim through the
 /// envelope, spacing and newlines included.
-#[test]
-fn the_attempt_round_trips_with_and_without_skills() {
-    rt(Gesture::Act(Action::Fork {
-        workspace: "ws".into(),
-        parent: "c-1".into(),
-        attempt: attempt("aaaa1111", vec!["bash".into(), "read_file".into()]),
-        goal: "try it  the other way\nagain".into(),
-    }));
-    rt(Gesture::Act(Action::Fork {
-        workspace: "ws".into(),
-        parent: "c-1".into(),
-        attempt: attempt("config/strict", Vec::new()),
-        goal: "g".into(),
-    }));
+pub(super) fn surface() -> Vec<Gesture> {
+    vec![
+        Gesture::Act(Action::Fork {
+            workspace: "ws".into(),
+            parent: "c-1".into(),
+            attempt: attempt("aaaa1111", vec!["bash".into(), "read_file".into()]),
+            goal: "try it  the other way\nagain".into(),
+        }),
+        Gesture::Act(Action::Fork {
+            workspace: "ws".into(),
+            parent: "c-1".into(),
+            attempt: attempt("config/strict", Vec::new()),
+            goal: "g".into(),
+        }),
+    ]
 }
 
 /// A fork envelope with no `skills` field carries no skills: absence is a

@@ -7,16 +7,18 @@
 use super::*;
 use crate::fleet::Verb as Fleet;
 
-#[test]
-fn arming_and_disbanding_round_trip() {
-    rt(Gesture::Act(Action::Fleet(Fleet::Arm {
-        workspace: "ws".into(),
-        project: "proj".into(),
-        cap: 4,
-    })));
-    rt(Gesture::Act(Action::Fleet(Fleet::Disarm {
-        workspace: "ws".into(),
-    })));
+/// Arming names both spheres and the cap; disbanding names the workspace.
+pub(super) fn surface() -> Vec<Gesture> {
+    vec![
+        Gesture::Act(Action::Fleet(Fleet::Arm {
+            workspace: "ws".into(),
+            project: "proj".into(),
+            cap: 4,
+        })),
+        Gesture::Act(Action::Fleet(Fleet::Disarm {
+            workspace: "ws".into(),
+        })),
+    ]
 }
 
 /// Every field an arm needs is required, and a cap that is not a number is a

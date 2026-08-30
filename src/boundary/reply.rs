@@ -290,4 +290,4 @@ pub enum Reply {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

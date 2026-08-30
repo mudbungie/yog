@@ -42,7 +42,7 @@ fn preview() -> Preview {
 }
 
 /// Every variant, populated, in [`Reply`]'s own order.
-pub(super) fn surface() -> Vec<Reply> {
+pub(crate) fn surface() -> Vec<Reply> {
     [
         receipts::receipts(),
         listings::listings(),

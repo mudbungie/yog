@@ -138,4 +138,4 @@ fn decode_origin(obj: &Map<String, Value>) -> Result<EditOrigin, String> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

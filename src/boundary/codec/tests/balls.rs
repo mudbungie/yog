@@ -1,60 +1,12 @@
-//! The `bl` family's **scheduling facts** on the wire (bl-dbde): the four the
-//! §11 board orders on and the §4.3 fleet selects by, which a remote seat could
-//! not state at all before. Its own file beside the family tables above, on the
-//! seam `codec/balls.rs` is already cut on.
+//! The `bl` family's strict edges (bl-dbde): an empty schedule that is absent
+//! on the wire and reads back as empty, and a field row that refuses by name.
+//! The family's own round-trip values moved to [`super::surface::ball`] when
+//! the conformance corpus took the same list (bl-32cb).
 
-use super::{decode, rt};
-use crate::actions::verbs::edit::{Create, Field, Update};
+use super::decode;
+use crate::actions::verbs::edit::Update;
 use crate::boundary::{Action, Gesture};
 use serde_json::json;
-
-/// Every field application, in the order a fold must apply them.
-fn every_field() -> Vec<Field> {
-    vec![
-        Field::Priority(Some(-2)),
-        Field::Priority(None),
-        Field::Tag {
-            tag: "boundary".to_owned(),
-            on: true,
-        },
-        Field::Tag {
-            tag: "stale".to_owned(),
-            on: false,
-        },
-        Field::Parent(Some("bl-1a2b".to_owned())),
-        Field::Parent(None),
-        Field::Needs {
-            edge: "bl-9:close".to_owned(),
-            on: true,
-        },
-        Field::Needs {
-            edge: "bl-8".to_owned(),
-            on: false,
-        },
-    ]
-}
-
-#[test]
-fn every_scheduling_fact_round_trips_on_both_authoring_verbs() {
-    rt(Gesture::Act(Action::Create {
-        project: "proj".into(),
-        name: "alba".into(),
-        fields: Create {
-            title: "a title".into(),
-            body: None,
-            fields: every_field(),
-        },
-    }));
-    rt(Gesture::Act(Action::Update {
-        project: "proj".into(),
-        id: "bl-1".into(),
-        name: "alba".into(),
-        fields: Update {
-            fields: every_field(),
-            ..Update::default()
-        },
-    }));
-}
 
 /// An empty list is **absent** on the wire, and absence reads back as empty —
 /// the same absent-is-a-value rule the optional string fields take.
