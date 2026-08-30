@@ -587,6 +587,13 @@ where it is the same ruling it always was.
   tool result it reacts to, exactly as it does for a tool a client no longer
   carries. Enrolling a thrall — the local one included — is the explicit
   operator act that makes execution possible at all.
+
+  **Two names reach that router and are not tool calls at all** (bl-dfce): the
+  compactor's procedure pair, which yog answers itself as an **engine act**
+  rather than routing anywhere. The road above is the road every call *on a
+  machine* takes, and that is the whole of what "the same road" ever claimed;
+  §5.4 records the ruling, its subject-locality reasoning and how the acts are
+  performed. A server with no thrall therefore still compacts.
 - **Honesty about containment:** execution happens on a machine the
   adjudicator cannot inspect. Adjudication judges the invocation exactly as
   today; any containment beyond that is whatever the client enforces locally,
@@ -605,8 +612,11 @@ where it is the same ruling it always was.
   its scope: the same object, the same two halves, the same rule that an
   injected name outranks an elected one — but the router is consulted for every
   call rather than ahead of a binary resolution that no longer stands behind
-  it. Deleting the executor is the engine's half of that ball and lands in the
-  engine's own repo; this document is what it implements against.
+  it. Deleting the executor is the engine's half of that ball and landed in the
+  engine's own repo; this document is what it implemented against. **The pin
+  that makes it load-bearing here is bl-dfce's**, which is also where the
+  question the inversion raised — where the compactor's procedure pair belongs —
+  is answered (§5.4).
 
 ### 5.1 The advertisement, as landed (bl-4e08)
 
@@ -922,6 +932,51 @@ today:
   co-located thrall pays a loopback handshake per invocation, which is
   microseconds and buys the property that the local case and the remote case
   are the same case.
+
+**The compactor's procedure pair is an engine act, and yog answers it**
+(bl-dfce, operator ruling 2026-08-29). litany injects tool definitions from two
+sources, not one: the host's injection (§5.2) and the calling role's own
+**procedure**, which today is exactly `write_summary` / `mark_for_deletion`.
+Since the seam inverted (§5's pipeline ruling) the engine's router is total, so
+that pair arrives at yog's router like every other name and yog has to say
+where it belongs. **It belongs here, and the subject-locality invariant decides
+it on its own**: *"a tool executes where its subject lives"* — `write_summary`
+writes the conversation's own summary onto the compactor branch and
+`mark_for_deletion` nominates that same conversation's files, so the pair's
+subject is the conversation, the conversation lives on the server, and no
+machine and no thrall is involved. §12's *front door only* is not narrowed by
+this; it governs execution **on a machine**, which this is not. Shipping the
+pair to a thrall would send a box that does not hold the world a request about
+it — the adjacent move §5 already forbids for the world fold. The principle the
+ruling states, and which this is the first instance of: **context management
+happens in yog.**
+
+**Performed at the engine's own front door, never reimplemented.** litany
+defines what the pair *does* — the summary numbering, the refusal to nominate
+the dispatch entry, the staged removal — and yog restates none of it. The
+router re-enters `<driver_target> tool <name>`, the third hop litany's own
+resolution addressed before the inversion, with the caller identity on the
+child's environment and the `tool_use` input on its stdin; the child is yog
+under the `litany` namespace, standing in the same world. One definition of the
+acts and it is upstream's. **The name set is closed and enumerated in exactly
+one place in code** (`src/tool_host/engine_act.rs`): two rows, because the
+procedure is the only second source of injected definitions litany has. A third
+would arrive there as a row, never as a prefix test or a name shape.
+
+**The tool control still sees the pair, and no carve-out was needed.** litany
+adjudicates in the tool window, *before* the executor is entered, for every
+name — injected ones included. So `yog tool-control` judges these two exactly
+as it judges every other invocation, and yog's router, which lives inside
+execution, could not exempt them if it wanted to. Nothing about the chokepoint
+moves.
+
+**A name nobody offers is now a refusal yog renders.** With the router total
+there is nothing to hand an unowned name back to, so the injection answers it
+itself: non-zero, the reason on stderr, indistinguishable from the "no such
+tool" an absent binary produced behind the front door. That is §12's ship-inert
+posture reaching its natural edge — a server with zero enrolled thralls refuses
+every ordinary call in band **and still compacts**, because compaction was
+never a machine's work.
 
 **Local config gates what a thrall enables**, and it is §5.2's document
 unchanged: `<yog-data-root>/tools.json` on the thrall's own box, operator
@@ -3233,8 +3288,9 @@ stands and is amended by the ball that moves it.
   every `lernie` in yog's tree against it**: a bare one names the seat or
   this ruling, and one bound to a `0.0.x` version names the engine at that
   release.
-- **litany** — the agent-loop engine, renamed from lernie and re-pinned here
-  at `=0.0.1` (bl-9905, upstream bl-2f58). The rename took three durable-state
+- **litany** — the agent-loop engine, renamed from lernie (bl-9905, upstream
+  bl-2f58) and pinned exactly; `Cargo.toml` is the pin authority and no version
+  is restated here. The rename took three durable-state
   surfaces with it and shipped no compatibility shim: `LERNIE_HOME` →
   `LITANY_HOME`, the XDG harness subdirs `.../lernie` → `.../litany`, and the
   in-workspace mark namespace `refs/lernie/*` → `refs/litany/*`. yog's nested
@@ -3273,7 +3329,7 @@ becomes the protocol authority all four components implement against, and
 each repo's DESIGN governs only its own component.
 
 Migration order (strangler; each step ships green): thrall founded (bl-1dd3,
-landed) → engine renamed (bl-9905, landed — the pin is `litany = "=0.0.1"`)
+landed) → engine renamed (bl-9905, landed; the pin lives in `Cargo.toml`)
 → seat severed, with yog's window mode riding one deprecated release
 (bl-0716, landed) → yog drops the UI and goes inert by default (bl-7942).
 

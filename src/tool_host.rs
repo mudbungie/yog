@@ -2,11 +2,13 @@
 //! arm hands litany at `Fx::tool_injection`, so an agent can see this
 //! workspace's client machines and drive the tools they advertise.
 //!
-//! lernie 0.0.9's seam (its `docs/DESIGN_TOOL_INJECTION.md`) is **one object
-//! carrying both halves** — the definitions prompt assembly and the grant gate
-//! read, and the router the executor consults ahead of binary resolution — so a
-//! tool declared and not permitted, or permitted and not declared, is
-//! unrepresentable. yog fills it with:
+//! litany's seam (its `docs/DESIGN_TOOL_INJECTION.md`) is **one object carrying
+//! both halves** — the definitions prompt assembly and the grant gate read, and
+//! the router the executor answers through — so a tool declared and not
+//! permitted, or permitted and not declared, is unrepresentable. Since litany
+//! 0.0.2 that router is **total**: while an injection is installed it answers
+//! every invocation the agent makes, and no binary resolution stands behind it.
+//! yog fills it with:
 //!
 //! - [`clients`] — ONE tool in the stable prefix, always. Its subject is the
 //!   roster, and `load` is the act that makes a host's tools callable.
@@ -15,6 +17,11 @@
 //!   litany's `docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too, so the
 //!   grant gate, the tool control and any future policy keep seeing one name
 //!   per capability.
+//! - [`engine_act`] — the compactor's procedure pair, which is not a host
+//!   injection at all: litany injects it from the calling role's own procedure,
+//!   and since the seam inverted it reaches this router like every other name.
+//!   Its subject is the conversation, which yog holds, so yog answers it
+//!   itself, at the engine's own front door (REMOTE §5.4, bl-dfce).
 //!
 //! **It runs in the driver, and the driver is a child process.** Presence is
 //! engine RAM by ruling (REMOTE §5), so the roster is asked for through the
@@ -24,6 +31,13 @@
 //! that changed when an engine was slow would be a connectivity-rate fact
 //! inside the model's cached context, which is what REMOTE §5 was amended to
 //! exclude.
+//!
+//! **A name the router does not own is a refusal it renders.** Nothing resolves
+//! a binary behind the injection any more, so there is nothing to hand a name
+//! back to: an unowned name earns a non-zero capture saying so, which is the
+//! shape an absent binary produced anyway. A conversation with nothing loaded
+//! therefore refuses every ordinary call in band — REMOTE §12's ship-inert
+//! posture working, not an error state.
 //!
 //! **Adjudication is untouched and still runs first.** `yog tool-control`
 //! (DESIGN §8.6) is consulted before the executor routes anything, so a routed
@@ -51,6 +65,8 @@ use crate::ui_state::{Clock, iso8601_extended};
 pub mod ask;
 /// The `clients` tool: the roster, and the act that loads from it.
 pub mod clients;
+/// The compactor's procedure pair, performed as engine acts.
+pub mod engine_act;
 /// The agent's durable loaded set.
 pub mod loaded;
 /// The driver's end of the routing leg (REMOTE §5, bl-024b).
@@ -93,6 +109,11 @@ impl Site {
 /// yog's injection, as installed at `Fx::tool_injection`.
 pub struct Injection {
     state_root: PathBuf,
+    /// The path litany's own third hop addresses as `<driver_target> tool
+    /// <name>` — the world's `litany` shim, which re-executes yog under that
+    /// namespace. [`engine_act`] performs the compactor pair through it, so the
+    /// acts stay the engine's own and yog restates none of their semantics.
+    driver_target: PathBuf,
     budget: ask::Budget,
     patience: ask::Budget,
     clock: Arc<dyn Clock>,
@@ -113,6 +134,7 @@ impl Injection {
     /// run ([`remote::patience`]).
     pub fn new(
         state_root: PathBuf,
+        driver_target: PathBuf,
         budget: ask::Budget,
         patience: ask::Budget,
         clock: Arc<dyn Clock>,
@@ -120,6 +142,7 @@ impl Injection {
     ) -> Self {
         Self {
             state_root,
+            driver_target,
             budget,
             patience,
             clock,
@@ -148,6 +171,14 @@ fn declaration() -> InjectedTool {
         description: Some(clients::DESCRIPTION.to_owned()),
     }
 }
+
+/// **What a name nobody offers earns.** The router is total, so this is a
+/// refusal yog renders rather than a hand-back — and it is the *whole* of the
+/// ship-inert posture: a server with no machine enrolled, or an agent that has
+/// loaded nothing, refuses every ordinary call in band and the model steps on.
+/// It names the way out rather than the rule, because its reader is a model.
+const UNLOADED: &str = "no tool of that name is loaded in this conversation; \
+     use the clients tool to see this workspace's machines and load what one advertises";
 
 /// A [`Result`] in the stdio vocabulary litany's executor already speaks
 /// (`docs/DESIGN_TOOL_INJECTION.md` §3.1): a product on stdout at exit 0, or
@@ -204,21 +235,24 @@ impl ToolInjection for Injection {
         out
     }
 
-    /// Answer the `clients` tool and every loaded remote name; decline
-    /// everything else, so a pool tool resolves exactly as it would with no
-    /// injection installed.
-    fn route(&self, call: RoutedCall<'_>) -> Option<RoutedCapture> {
+    /// Answer every name, because the router is total (litany's inverted seam):
+    /// the `clients` tool, the compactor's two engine acts, every loaded remote
+    /// name — and a refusal, rendered here, for anything else.
+    fn route(&self, call: RoutedCall<'_>) -> RoutedCapture {
         let site = self.site(call.workspace, call.agent);
         if call.name == clients::NAME {
-            return Some(capture(
-                call.name,
-                clients::answer(&site, call.input, call.stop),
-            ));
+            return capture(call.name, clients::answer(&site, call.input, call.stop));
         }
-        let entry = loaded::read(&site.state_root, &site.workspace, &site.agent)
+        if engine_act::is(call.name) {
+            return engine_act::perform(&self.driver_target, self.patience.span(), &call);
+        }
+        match loaded::read(&site.state_root, &site.workspace, &site.agent)
             .into_iter()
-            .find(|entry| entry.presented() == call.name)?;
-        Some(routed(&site, &entry, &call))
+            .find(|entry| entry.presented() == call.name)
+        {
+            Some(entry) => routed(&site, &entry, &call),
+            None => capture(call.name, Err(UNLOADED.to_owned())),
+        }
     }
 }
 

@@ -8,7 +8,7 @@
 /// shared subject rather than this file's own scaffolding.
 mod stand_in;
 
-pub(super) use stand_in::{budget, engine, impatient, scripted, site, tool};
+pub(super) use stand_in::{budget, engine, front_door, impatient, scripted, site, tool};
 
 use super::*;
 use crate::boundary::deposit;
@@ -22,10 +22,22 @@ use std::time::Duration;
 use tempfile::TempDir;
 
 fn injection(root: &Path, driving: Option<(String, String)>) -> Injection {
+    at(root, root.join("no-such-front-door"), impatient(), driving)
+}
+
+/// An injection with every knob named — the front door it re-enters for an
+/// engine act, and the budget both its waits are bounded by.
+fn at(
+    root: &Path,
+    driver_target: PathBuf,
+    budget: ask::Budget,
+    driving: Option<(String, String)>,
+) -> Injection {
     Injection::new(
         root.to_path_buf(),
-        impatient(),
-        impatient(),
+        driver_target,
+        budget,
+        budget,
         FakeClock::new().arc(),
         driving,
     )
@@ -36,11 +48,14 @@ fn injection(root: &Path, driving: Option<(String, String)>) -> Injection {
 /// lifetime is banned (AGENTS.md rule 1).
 macro_rules! call {
     ($name:expr, $input:expr, $stop:expr) => {
+        call!($name, $input, $stop, Path::new("/w/home"))
+    };
+    ($name:expr, $input:expr, $stop:expr, $workspace:expr) => {
         RoutedCall {
             id: "toolu_1",
             name: $name,
             input: $input,
-            workspace: Path::new("/w/home"),
+            workspace: $workspace,
             agent: "dulcet-mongoose",
             stop: $stop,
         }
@@ -121,18 +136,37 @@ fn a_loaded_tool_is_declared_under_its_own_name() {
     );
 }
 
-/// A name the injection does not own is declined, so the executor resolves it
-/// exactly as it would with no injection installed.
+/// **A name the injection does not own is a refusal it renders**, because the
+/// router is total and nothing resolves a binary behind it. A conversation with
+/// nothing loaded therefore refuses every ordinary call in band — the ship-inert
+/// posture working — while the compactor's engine acts still go through, so
+/// nothing about compaction depends on a machine being enrolled.
 #[test]
-fn an_unowned_name_falls_through_to_the_pool() {
+fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
     let root = TempDir::new().expect("tmp");
+    let door = front_door(root.path(), "printf compacted");
     let input = json!({});
     let stop = AtomicBool::new(false);
+    let live = at(root.path(), door, budget(), None);
+
+    let refused = live.route(call!("Read", &input, &stop));
+    assert_eq!(refused.exit_code, 1);
+    assert!(refused.stdout.is_empty());
+    let said = String::from_utf8_lossy(&refused.stderr).into_owned();
     assert!(
-        injection(root.path(), None)
-            .route(call!("Read", &input, &stop))
-            .is_none()
+        said.starts_with("Read: no tool of that name is loaded"),
+        "{said}"
     );
+    assert!(said.contains("use the clients tool"), "{said}");
+
+    for name in engine_act::NAMES {
+        let acted = live.route(call!(name, &input, &stop, root.path()));
+        assert_eq!(
+            acted.exit_code, 0,
+            "{name} is an engine act, not a tool call"
+        );
+        assert_eq!(acted.stdout, b"compacted");
+    }
 }
 
 /// The `clients` tool is answered in the stdio vocabulary the executor already
@@ -146,15 +180,8 @@ fn a_clients_op_answers_as_a_zero_exit_capture() {
     );
     let input = json!({"op": "list"});
     let stop = AtomicBool::new(false);
-    let capture = Injection::new(
-        root.path().to_path_buf(),
-        budget(),
-        budget(),
-        FakeClock::new().arc(),
-        None,
-    )
-    .route(call!(clients::NAME, &input, &stop))
-    .expect("owned");
+    let capture =
+        at(root.path(), PathBuf::new(), budget(), None).route(call!(clients::NAME, &input, &stop));
     handle.join().expect("engine");
 
     assert_eq!(capture.exit_code, 0);
@@ -177,9 +204,7 @@ fn a_refusal_is_an_in_band_non_zero_capture() {
     let root = TempDir::new().expect("tmp");
     let input = json!({"op": "nope"});
     let stop = AtomicBool::new(false);
-    let capture = injection(root.path(), None)
-        .route(call!(clients::NAME, &input, &stop))
-        .expect("owned");
+    let capture = injection(root.path(), None).route(call!(clients::NAME, &input, &stop));
     assert_eq!(capture.exit_code, 1);
     assert!(capture.stdout.is_empty());
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();

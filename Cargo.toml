@@ -89,7 +89,20 @@ clap = { version = "4", features = ["derive"] }
 # as `litany` from 0.0.1; the `lernie` name passes to the seat, whose line
 # begins at 0.1.0. So a `lernie 0.0.x` in the notes below is THIS engine at that
 # release, and every version citation in yog's tree reads against that one rule.
-# 0.0.1 is 0.0.11 plus the rename itself — crate, binary, `LITANY_HOME`, the XDG
+# 0.0.2 is **the inverted tool-injection seam** (upstream bl-a00a, its
+# `docs/DESIGN_TOOL_INJECTION.md`), which REMOTE §5's one-pipeline ruling asked
+# for: `ToolInjection::route` returns a `RoutedCapture` outright rather than an
+# `Option`, and while an injection is installed it answers EVERY invocation the
+# agent makes — the §3.3 three-hop binary resolution stands behind it for no
+# name at all, so the engine's driver keeps no local executor. Two consequences
+# land in yog's own router (`src/tool_host`, bl-dfce). A name yog does not own
+# is a refusal yog *renders*, not a hand-back, which is what makes REMOTE §12's
+# ship-inert posture literal. And litany's second source of injected
+# definitions — the calling role's own procedure, today exactly the compactor's
+# `write_summary` / `mark_for_deletion` — now reaches the router too; those two
+# are engine acts on the conversation rather than tools on a machine, so yog
+# answers them itself by re-entering the engine's front door (REMOTE §5.4).
+# Atop that, 0.0.1 is 0.0.11 plus the rename itself — crate, binary, `LITANY_HOME`, the XDG
 # harness subdir and the `refs/litany/*` mark namespace, with no compatibility
 # shim (upstream bl-2f58, its `docs/DESIGN_ENGINE_RENAME.md`) — plus upstream
 # bl-68f5, which stops §6 spend double-billing the cached prompt slice on the
@@ -145,11 +158,11 @@ clap = { version = "4", features = ["derive"] }
 # and 0.0.3's `Fx::adapter_target` (the injection W11 consumes); the interim git
 # rev is retired (a git pin also cost yog its publishability, and cost it the
 # rev itself once upstream rewrote `main`; the registry has neither failure
-# mode). The lockfile is also the brazen parity check: litany 0.0.1 links
+# mode). The lockfile is also the brazen parity check: litany 0.0.2 links
 # `brazen =0.0.6`, the same exact version yog pins, so exactly ONE brazen
 # resolves — skew death is structural otherwise (§16.7). The two pins move
 # TOGETHER, in one change, for that reason.
-litany = "=0.0.1"
+litany = "=0.0.2"
 eframe = { version = "0.29", default-features = false, features = ["default_fonts", "glow"] }
 egui = "0.29"
 # Not used in code — present only to turn ON `egui-winit`'s `wayland` feature,

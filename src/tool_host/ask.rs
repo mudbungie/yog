@@ -47,6 +47,17 @@ pub struct Budget {
     pub tick: Duration,
 }
 
+impl Budget {
+    /// The wall-clock bound this budget *is* — the product of its two halves,
+    /// computed rather than stored, so a waiter that polls and one that blocks
+    /// read the same fact off the same knob (an engine act is bounded by
+    /// [`super::Injection`]'s patience, the tool bound, because it measures the
+    /// same thing: how long one invocation may take).
+    pub fn span(&self) -> Duration {
+        self.tick * self.waits
+    }
+}
+
 impl Default for Budget {
     /// The production bound: ten seconds, looked at eight times a second. A
     /// roster read is three local file reads behind a 250 ms consumer poll, so

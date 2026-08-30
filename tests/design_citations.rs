@@ -36,7 +36,9 @@ use std::path::PathBuf;
 const FOREIGN: &[&str] = &[
     // litany ARCH coordinates, cited bare. §2.5 is caller-supplied pinned
     // documents — the mechanism DESIGN §3.7's instruction freeze rides.
-    "2.2", "2.3", "2.4", "2.5", "2.6", "2.9", "2.10", "2.11", "4.3", "4.4", "5.5",
+    // §2.7 is litany's compactor toolset — the `write_summary` /
+    // `mark_for_deletion` pair REMOTE §5.4 rules an engine act (bl-dfce).
+    "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.9", "2.10", "2.11", "4.3", "4.4", "5.5",
     // VISION.md's §4.5 (spend attribution's join discipline, bl-afc4), §4.8
     // (the control-boundary ruling), §4.9 (the alignment
     // monitor, bl-af1a), §4.10 (the project-delivery contract, bl-2b8c) and
@@ -59,6 +61,11 @@ const FOREIGN: &[&str] = &[
     // [`foreign_keys_are_not_design_headings`] is what keeps honest: the day it
     // grows one, this entry fails rather than masking it.
     "9.7", "9.8",
+    // REMOTE.md's §5.4 — the thrall and the local execution corpus, and since
+    // bl-dfce the home of the ruling that the compactor's procedure pair is an
+    // engine act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN
+    // §5 has no subsections, which the sibling test keeps honest.
+    "5.4",
 ];
 
 /// Parse a section key (`digits`, optionally `.digits`) starting at `i`;

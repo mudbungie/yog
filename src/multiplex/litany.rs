@@ -78,8 +78,13 @@ pub(super) fn run(args: &[String]) -> i32 {
     // binding and never inside the surface. It resolves to the very directory
     // the engine writes — the world hands `XDG_STATE_HOME` down to every child
     // (§16.2), so parent and child fold to one `<world>/state/yog`.
+    // The driver target rides in as well as standing on the `Fx`: since the
+    // seam inverted, the router answers the compactor's procedure pair itself
+    // (REMOTE §5.4, bl-dfce) by re-entering litany's own front door at exactly
+    // this path — the third hop, unchanged, reached from the other side.
     let injection = tool_host::Injection::new(
         crate::xdg::Env::from_env().yog_state_root(),
+        driver_target.clone(),
         tool_host::ask::Budget::default(),
         tool_host::remote::patience(),
         Arc::new(SystemClock),
