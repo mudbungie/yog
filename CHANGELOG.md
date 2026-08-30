@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6](https://github.com/mudbungie/yog/compare/v0.0.5...v0.0.6) - 2026-08-30
+
+### Changes
+
+- the deploy path seats a binary unit while the server now runs the image: make deploy would overwrite the cutover [bl-c6e2]
+- the config family carries its workspace inside target, and the workspace-slot table does not read it: a config act at a renamed remote workspace edits the wrong wall's file [bl-523f]
+- the clients tool can load but never unload: the per-agent loaded document only grows, and a finished host rides every later assembly [bl-3455]
+- the server ships as an OCI image: the UI-free binary, its XDG mounts, and the wire material it never carries [bl-10f9]
+- server severance: yog ships UI-free and inert by default [bl-7942]
+- the codec emits a conformance corpus: one canonical fixture set every client replays, so an implementation miss fails a fixture instead of shipping [bl-32cb]
+- the compactor's procedure pair routes to the tool host under the inverted seam, and the engine cannot decide where they belong [bl-dfce]
+- engine rename: lernie becomes litany [bl-9905]
+- enforce the foot grade: read it off the leaf, mint it, and raise on it at the chokepoint [bl-7ff3]
+- version the wire: handshake protocol version, fail-closed on mismatch [bl-a670]
+- a start fired at a remote workspace resolves its path with unwrap_or_default and posts the act at an empty PathBuf: silent misfire, bounce to home, no refusal painted [bl-e349]
+- decompose 2/10 — src/boundary/ production: the seven §8.5 chokepoint files at 262-293 lines, the surface every §8.2 act routes through [bl-c088]
+- a conversation the removed ceiling already killed has no stated way forward: the frozen budgets: still binds it and the exhausted mark parks it, so the §11 wound names no remedy [bl-d710]
+- a crashed tool window paints nothing — the third member of the swallowed-error class, and the only one that reads as an idle conversation [bl-abba]
+- detached-row failure should be a state predicate, not sink content: apply the driver.log rule to the stderr sink [bl-b95e]
+- decompose 9/10 — the §7 fleet tier and the substrate tail: twenty-one files at 251-291 lines [bl-063b]
+- decompose 5/10 — src/shell/ outside acceptance: eleven window files at 250-294 lines [bl-49cc]
+- decompose 4/10 — the REMOTE transport: src/wire/, src/tool_host/, src/engine.rs, seven files at 251-289 lines [bl-eae9]
+- decompose 7/10 — src/git_tree/, src/nav/, src/start/, src/config_edit/, src/model_pick/: twelve files at 253-290 lines [bl-fae3]
+- decompose 8/10 — the paint tier: src/theme/, src/ui_state/, src/paint_probe.rs, src/inspector/, src/rail/, src/steps_view/, ten files at 250-294 [bl-5aae]
+- decompose 6/10 — src/app/ and src/transcript/: thirteen derivation and chat files at 251-292 lines [bl-3b22]
+- decompose 3/10 — src/boundary/**/tests/: eleven §8.5 corpora at 260-296 lines [bl-a473]
+- VISION promises model and skill selection from ball tags, but fleet birth discards tags [bl-380f]
+- the start pane invites a goal that cannot possibly run: on a wall with no usable provider, the first rung must be provider sign-in, not a text box [bl-1fd0]
+- one asker per channel: the window attaches to every entry; poster routes acts, lane and searcher follow the focused channel (REMOTE §8.2) [bl-670c]
+- decompose 1/10 — src/shell/acceptance/: ten drives at 250-291 lines, on the surface the REMOTE §8.2 window chain must add coverage to next [bl-dd00]
+- the window's model composes one snapshot slice per channel: union roster, origin labels, collision refusal (REMOTE §8.2) [bl-028a]
+- a test-thread set_env tears the process environment: a peer thread's spawn sees a nul byte and the run fails on a test that is not broken [bl-419d]
+- multiple armed projects have no world-level concurrency or whole-day spend ceiling [bl-a80a]
+- src/boundary/reply/tests/mod.rs carries a second copy of tests/rows.rs — five row-encoder beats, three of them verbatim [bl-9d34]
+- 307 of 1112 files are over the 200-line pre-split band and three sit exactly on the 300 wall — split for real, and stop the doc asserting a census it cannot know [bl-b278]
+
 ## [0.0.5](https://github.com/mudbungie/yog/compare/v0.0.4...v0.0.5) - 2026-08-23
 
 ### Changes
