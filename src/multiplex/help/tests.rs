@@ -43,12 +43,11 @@ fn a_command_is_asked_about_from_either_end() {
 
 /// Every one of yog's own subcommands answers — including the two that used to
 /// do their work first (`env` printed exports, `exec` tried to spawn a program
-/// called `--help`), the two that never returned or refused (`headless`
-/// parked; `tool-control` waited on stdin), and `tool-host`, which routed as a
-/// namespace and rejected the flag as an argument (bl-4667). The roster is
-/// derived from [`COMMANDS`] minus the [`SELF_ANSWERING`] set — the
+/// called `--help`) and the one that waited on stdin (`tool-control`). The
+/// roster is derived from [`COMMANDS`] minus the [`SELF_ANSWERING`] set — the
 /// authoritative definitions — so a later command cannot fall outside the
-/// invariant silently, which is how `tool-host` regressed bl-52ed.
+/// invariant silently, which is how `tool-host` regressed bl-52ed before the
+/// severance took that verb out of this crate.
 #[test]
 fn every_yog_subcommand_answers_at_the_command() {
     let owed: Vec<&str> = COMMANDS
@@ -58,10 +57,7 @@ fn every_yog_subcommand_answers_at_the_command() {
             !super::super::Namespace::from_arg(verb).is_some_and(super::super::Namespace::owns_argv)
         })
         .collect();
-    assert!(
-        owed.contains(&crate::wire::HOST_SUBCMD),
-        "the regression's own verb is in the derived roster"
-    );
+    assert!(!owed.is_empty(), "the roster derived nothing");
     for verb in owed {
         let page = answer(&argv(&["yog", verb, "--help"])).unwrap_or_default();
         assert!(page.starts_with(&format!("yog {verb}")), "{verb}: {page}");
@@ -140,38 +136,26 @@ fn the_only_unlisted_command_is_the_machine_seam() {
     assert_eq!(unlisted, vec![crate::control::SUBCMD]);
 }
 
-/// **`serve` and `wire-certs` describe ONE mint, so they are read together**
-/// (bl-6e0c). `serve`'s page said the listener was up *"only where an operator
-/// has provisioned certificates … and silently absent otherwise"* long after
-/// bl-ae05 moved the trigger into the engine's own boot
+/// **The mint page states who provisions** (bl-6e0c). It used to be two pages
+/// — this one and the retired `serve` verb's (bl-7942) — and the beat existed
+/// because they had drifted: `serve`'s said the listener was up *"only where an
+/// operator has provisioned certificates … and silently absent otherwise"* long
+/// after bl-ae05 moved the trigger into the engine's own boot
 /// ([`ensure`](crate::wire::provision::ensure), aimed at
-/// [`LOOPBACK`](crate::wire::provision::LOOPBACK)) and long after both faces
-/// began *saying* a refusal — because `wire-certs`' page was the only one
-/// anything ever read. Two pages over one authority drift apart unless a test
-/// holds them to it: both must state the boot mint and its loopback aim, and
-/// both must spell the explicit act as the const its dispatcher routes on, so a
-/// rename cannot leave either page naming a word that no longer runs.
+/// [`LOOPBACK`](crate::wire::provision::LOOPBACK)). With one page the drift has
+/// nowhere to happen, and what is still worth holding is that the page states
+/// the boot mint and its aim, and names the explicit act as the const its
+/// dispatcher routes on — so a rename cannot leave it naming a word that no
+/// longer runs.
 #[test]
-fn the_serve_and_mint_pages_agree_on_who_provisions() {
-    let page = |verb: &str| answer(&argv(&["yog", verb, "--help"])).unwrap_or_default();
+fn the_mint_page_states_the_boot_mint_and_its_own_word() {
     let mint = crate::wire::provision::verb::SUBCMD;
-    for verb in [crate::boundary::SERVE_SUBCMD, mint] {
-        let text = page(verb);
-        assert!(
-            text.contains("boot"),
-            "{verb} does not name the boot mint: {text}"
-        );
-        assert!(
-            text.contains("loopback"),
-            "{verb} does not name its aim: {text}"
-        );
-        assert!(
-            text.contains(mint),
-            "{verb} does not name the explicit act: {text}"
-        );
-    }
+    let text = answer(&argv(&["yog", mint, "--help"])).unwrap_or_default();
+    assert!(text.contains("boot"), "the boot mint is unstated: {text}");
+    assert!(text.contains("loopback"), "its aim is unstated: {text}");
+    assert!(text.contains(mint), "the explicit act is unnamed: {text}");
     assert!(
-        !page(crate::boundary::SERVE_SUBCMD).contains("silently"),
+        !text.contains("silently"),
         "the retired claim — a listener absent without a word — is gone"
     );
 }

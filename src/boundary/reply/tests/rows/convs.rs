@@ -42,7 +42,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
             input_tokens: Some(10),
             output_tokens: Some(2),
         }),
-        tone: crate::transcript::Tone::Plain,
+        tone: crate::nav::convs::Tone::Plain,
     };
     let bare = ConvRow {
         root_id: "c-2".into(),
@@ -66,7 +66,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
         name: None,
         name_display_only: false,
         verdict: None,
-        tone: crate::transcript::Tone::Plain,
+        tone: crate::nav::convs::Tone::Plain,
     };
     let plain = ConvRow {
         ball: None,
@@ -119,7 +119,7 @@ fn a_display_only_name_is_withheld_from_the_boundary_as_a_message_target() {
         name: Some("marbling-lake".into()),
         name_display_only: true,
         verdict: None,
-        tone: crate::transcript::Tone::Plain,
+        tone: crate::nav::convs::Tone::Plain,
     };
     let addressable = ConvRow {
         name_display_only: false,

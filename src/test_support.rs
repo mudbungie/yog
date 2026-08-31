@@ -177,15 +177,12 @@ pub(crate) mod workspace;
 /// out-of-channel act an operator performs (REMOTE §1.4, bl-b6fa) — its own
 /// file because a certificate fixture is never committed and the minting is a
 /// self-contained seeder, not part of the spawn discipline above.
-pub(crate) mod wire;
-
-/// The engine's own dispatch, for a test that drives a gesture (REMOTE §9.8) —
-/// its own file so the reason it exists is stated where it is read.
+/// **The suite's own seat** — the client half of the wire, which the crate no
+/// longer ships (bl-7942) and its own tests must still speak to prove the
+/// listener.
 pub(crate) mod engine;
-
-/// The §11 conversation list, asked through the boundary as every seat asks it
-/// (REMOTE §9.7, bl-44e9) — there is no model accessor left to ask instead.
-pub(crate) mod convs;
+pub(crate) mod seat;
+pub(crate) mod wire;
 
 /// The §11 accessories that crossed with bl-296f — the altitude-0 chrome and
 /// the selection's own detail — asked through the boundary, there being no

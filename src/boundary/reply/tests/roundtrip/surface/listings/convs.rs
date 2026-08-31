@@ -4,9 +4,9 @@
 
 use crate::git_tree::AgentState;
 use crate::monitor::{Check, Verdict};
+use crate::nav::convs::Tone;
 use crate::nav::convs::{ConvBall, ConvRow, Flight};
 use crate::projects::join::JoinState;
-use crate::transcript::Tone;
 
 /// The §11 conversation rows: the fully-loaded one, the bare one, and the
 /// display-only rung whose `name` the wire withholds and the decode recovers

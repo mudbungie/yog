@@ -22,16 +22,6 @@ use std::path::Path;
 /// real box does.
 pub(crate) const EPHEMERAL: &str = "127.0.0.1:0";
 
-/// An address nothing is listening on, for the tests that assert a transport
-/// refusal. **Not a port a listener just freed** (bl-6397): the kernel hands a
-/// recently-released ephemeral port straight back, so a peer test's `:0` bind
-/// lands on it and answers the connect the test expected to be refused — which
-/// is what "connect" became "send: Connection reset by peer" roughly 1 run in 5
-/// once the suite stopped serializing the wire tests behind the spawn lock.
-/// Port 1 is below the ephemeral range and unbindable without privilege, so no
-/// peer can occupy it.
-pub(crate) const NO_LISTENER: &str = "127.0.0.1:1";
-
 /// Mint a CA and every leaf into `dir`, plus the `address` file — the whole of
 /// what a boot mints, in the shape [`crate::wire::material::read`] expects.
 pub(crate) fn mint(dir: &Path) {

@@ -107,7 +107,7 @@ fn only_live_failures_reach_the_chip() {
     // §11: the count is said in words, glyph on top — and the word is the
     // badge mapping's, so chip and rows can never disagree.
     assert_eq!(a.chip(), "activity · 3 ops · 1 failed ⚠");
-    assert!(a.chip().contains(crate::theme::op_badge(Failed).2));
+    assert!(a.chip().contains(crate::badge::op_badge(Failed).1));
     assert_eq!(activity(&rows[2..]).chip(), "activity · 1 ops");
     assert_eq!(activity(&[]).chip(), "activity · 0 ops");
     assert!(outcomes(&[]).is_empty());

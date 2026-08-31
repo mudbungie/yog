@@ -9,21 +9,16 @@
 [advisories]
 # Reject crates whose published version has been yanked from the registry.
 yanked = "deny"
-# Acknowledged advisories that cannot be resolved by config alone and whose
-# fix would require bumping the eframe 0.29 GUI stack (a dependency change
-# this repo forbids). Transitive and unreachable in yog's threat model.
-# Revisit when eframe is next upgraded. An entry that stops matching any crate
-# makes `cargo deny check` warn `advisory-not-detected` on every gate run —
-# drop it then, so this list stays exactly as long as the tree justifies.
+# **The ignore list is empty, and that is a state to keep.** An entry that
+# stops matching any crate makes `cargo deny check` warn `advisory-not-detected`
+# on every gate run, so this list stays exactly as long as the tree justifies —
+# which right now is not at all.
+#
 # Dropped when they stopped matching: RUSTSEC-2026-0194 / -0195 (quick-xml
-# < 0.41 XML DoS), reached only via wayland-scanner; wayland-scanner 0.31.11
-# moved to quick-xml 0.41.0, which is out of the advisories' range.
-ignore = [
-    # ttf-parser unmaintained. Pulled by egui's font rasterizer
-    # (ab_glyph -> owned_ttf_parser). The advisory itself states "No safe
-    # upgrade is available"; it is an unmaintained notice, not a vuln.
-    "RUSTSEC-2026-0192",
-]
+# < 0.41 XML DoS), reached only via wayland-scanner, which moved to quick-xml
+# 0.41.0; and RUSTSEC-2026-0192 (ttf-parser unmaintained), reached only through
+# egui's font rasterizer, which left the graph with the window (bl-7942).
+ignore = []
 
 [licenses]
 # Exhaustive allow-list for the current dependency graph. The slash-form
@@ -36,24 +31,25 @@ ignore = [
 # The embedded balls crate (§16.7 W8) added NO new license value: `balls`
 # itself is MIT, and its transitive additions — toml, toml_edit,
 # toml_datetime, toml_write, serde_spanned, winnow 0.7, getrandom 0.4 — are
-# each "MIT OR Apache-2.0", both arms already allowed below. The only new
-# finding is an informational duplicate (winnow 0.7 under balls' toml stack vs
-# winnow 1.0 under the eframe/winit stack), which `multiple-versions = "warn"`
-# already admits.
+# each "MIT OR Apache-2.0", both arms already allowed below.
+#
+# **Re-derived over the shrunken lockfile** (bl-7942). The severance took the
+# eframe/egui/winit/glow stack out of the graph, and with it every license
+# only that stack carried: `BSD-2-Clause`, `Zlib`, `0BSD` and `OFL-1.1` — plus
+# the `epaint_default_fonts` exception, which existed for exactly one crate
+# that is no longer linked. Each of those made `cargo deny check` warn
+# `license-not-encountered` on every gate run, which is the warning telling you
+# to drop the entry.
 allow = [
     "MIT",
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "Unicode-3.0",
-    "BSD-2-Clause",
     "BSD-3-Clause",
     "ISC",
-    "Zlib",
-    "0BSD",
     "BSL-1.0",
     "CC0-1.0",
     "Unlicense",
-    "OFL-1.1",
     # webpki-roots: the Mozilla CA root store as DATA, which is why it carries a
     # data licence rather than a code one. Entered the graph with brazen's
     # rustls transport (§16.7 W10) — it IS the trust anchor set that makes the
@@ -61,13 +57,11 @@ allow = [
     "CDLA-Permissive-2.0",
 ]
 
-# epaint_default_fonts is "(MIT OR Apache-2.0) AND OFL-1.1 AND
-# LicenseRef-UFL-1.0". OFL-1.1 is allowed globally above; the Ubuntu Font
-# License is non-SPDX (LicenseRef), so it cannot go in `allow` and is
-# granted here as a per-crate exception scoped to exactly that crate.
-exceptions = [
-    { crate = "epaint_default_fonts", allow = ["LicenseRef-UFL-1.0"] },
-]
+# **No exceptions, and that is a state to keep.** The one that stood was
+# `epaint_default_fonts`'s non-SPDX Ubuntu Font License — egui's bundled fonts,
+# which left the graph with the window (bl-7942). An exception naming a crate
+# nothing links is a `license-exception-not-encountered` warning on every run.
+exceptions = []
 
 [bans]
 # Duplicate versions are informational (the transitive graph legitimately

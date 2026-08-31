@@ -13,8 +13,6 @@ pub(super) const NAMESPACES: &[(&str, Namespace)] = &[
     ("bl-delivery", Namespace::BlDelivery),
     ("bl-tracker", Namespace::BlTracker),
     ("gesture", Namespace::Gesture),
-    (crate::wire::SEAT_SUBCMD, Namespace::Seat),
-    (crate::wire::HOST_SUBCMD, Namespace::ToolHost),
 ];
 
 /// The embedded-tool namespaces yog multiplexes to (§16.7 W12): the three
@@ -29,13 +27,11 @@ pub(super) enum Namespace {
     BlDelivery,
     BlTracker,
     Gesture,
-    Seat,
-    ToolHost,
 }
 
 impl Namespace {
     /// The namespace a leading verb names, or `None` — the signal that `arg` is
-    /// not a multiplex target (the GUI/hatch path).
+    /// not a multiplex target (the hatch/boot path).
     pub(super) fn from_arg(arg: &str) -> Option<Self> {
         NAMESPACES
             .iter()
@@ -45,15 +41,13 @@ impl Namespace {
 
     /// Whether this namespace's argv **belongs to the tool behind it**, so a
     /// `--help` falls through to the arm and the tool prints its own page —
-    /// the embedded tools, balls' two plugin seams, the gesture grammar, and
-    /// `seat` (whose payload *is* that grammar and which answers `Query::Help`
-    /// itself, engine-free — `wire/seat.rs`). `ToolHost` routes as a namespace
-    /// but takes no argv at all, so it has no interface of its own to consult
-    /// and its page is [`super::help::COMMANDS`]'s to answer, like `serve`'s
-    /// (bl-4667 — conflating "routes as a namespace" with "owns its argv" is
-    /// exactly how bl-52ed's every-command-answers invariant regressed). The
-    /// match is exhaustive on purpose: an added variant cannot compile
-    /// unclassified.
+    /// the embedded tools, balls' two plugin seams, and the gesture grammar.
+    /// Every namespace left after the severance (bl-7942) owns its argv; the
+    /// two that did not were the wire's client modes, and they are the seat
+    /// crate's. The match is exhaustive on purpose: an added variant cannot
+    /// compile unclassified — which is how bl-4667 caught the last one that
+    /// conflated "routes as a namespace" with "owns its argv" and regressed
+    /// bl-52ed's every-command-answers invariant.
     pub(super) fn owns_argv(self) -> bool {
         match self {
             Namespace::Litany
@@ -61,9 +55,7 @@ impl Namespace {
             | Namespace::Bz
             | Namespace::BlDelivery
             | Namespace::BlTracker
-            | Namespace::Gesture
-            | Namespace::Seat => true,
-            Namespace::ToolHost => false,
+            | Namespace::Gesture => true,
         }
     }
 
@@ -76,8 +68,6 @@ impl Namespace {
             Namespace::BlDelivery => super::bl_delivery::run(args),
             Namespace::BlTracker => super::bl_tracker::run(args),
             Namespace::Gesture => super::gesture::run(args),
-            Namespace::Seat => super::wire::seat(args),
-            Namespace::ToolHost => super::wire::tool_host(args),
         }
     }
 }

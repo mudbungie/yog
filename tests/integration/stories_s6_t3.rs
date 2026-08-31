@@ -52,12 +52,11 @@ fn s6_t3_the_ack_quiets_the_signal_and_keeps_every_fact() {
 
     let (mut m, mut worker) = AppModel::boot(
         roots,
-        None,
         Arc::new(SystemClock),
         Box::new(FakeBl::default()),
         None,
     );
-    m.focus_workspace(&yog::naming::leaf(&ws));
+    let name = yog::naming::leaf(&ws);
 
     // --- Before: it stirs.
     assert_eq!(
@@ -66,12 +65,18 @@ fn s6_t3_the_ack_quiets_the_signal_and_keeps_every_fact() {
         "a failed latest step stirs (rule 2)"
     );
 
-    // --- The ack: landing on the conversation is the acknowledgement (§6.3).
-    m.focus_agent(&ws, "d-001");
-    m.refresh();
+    // --- The ack: one act at the boundary (§6.3).
+    crate::support::act(
+        &m,
+        &yog::boundary::Action::MarkSeen {
+            workspace: name.clone(),
+            agent: "d-001".to_owned(),
+        },
+    )
+    .expect("the ack lands");
     for _ in 0..200 {
         worker.step();
-        if m.refresh() && crate::support::strip_total(&m) == 0 {
+        if m.take() && crate::support::strip_total(&m) == 0 {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(5));
@@ -86,7 +91,12 @@ fn s6_t3_the_ack_quiets_the_signal_and_keeps_every_fact() {
 
     // … and every fact intact. The state badge still says the conversation is
     // dead — an ack is "I have seen this", never "this did not happen".
-    let agent = m.focused_agent().expect("still focused");
+    let tree = m.tree(&ws).expect("the workspace is derived");
+    let agent = tree
+        .agents
+        .iter()
+        .find(|a| a.agent_id == "d-001")
+        .expect("the conversation is still on the roster");
     assert_eq!(agent.state, AgentState::Stopped, "the badge keeps the fact");
 
     // And the auth-shaped death keeps its inline Login one click away: the

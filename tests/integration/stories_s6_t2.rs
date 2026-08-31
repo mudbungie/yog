@@ -1,6 +1,10 @@
 //! STORIES **S6-T2** ack-converges: two `AppModel`s over one `ui.json` —
-//! acknowledging in A clears the signal in B after the adopt, while B's own
-//! focus stays B's (STORIES S6.3, DESIGN §6, §13.1, I0).
+//! acknowledging at A's boundary clears the signal at B's after the adopt, and
+//! clears only the conversation it named (STORIES S6.3, DESIGN §6, §13.1, I0).
+//!
+//! The viewport half of this rung went with the window (bl-7942): which
+//! conversation each instance was *looking at* was per-instance RAM, and a
+//! server holds none (REMOTE §7).
 //!
 //! "The mark is litany's; the acknowledgement is yog's": the acknowledgement is
 //! shared state on disk and converges, and viewport ephemera (focus, scroll,
@@ -17,7 +21,7 @@ use yog::{AppModel, Roots};
 
 /// STORIES **S6-T2** ack-converges.
 #[test]
-fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
+fn s6_t2_the_acknowledgement_converges_through_the_file() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
@@ -45,7 +49,6 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
     let boot = || {
         AppModel::boot(
             roots.clone(),
-            None,
             Arc::new(SystemClock),
             Box::new(FakeBl::default()),
             None,
@@ -56,8 +59,7 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
     // One file, two instances (I0) — the convergence is the disk, not a channel.
     assert_eq!(a.ui_json_path(), b.ui_json_path());
 
-    a.focus_workspace(&yog::naming::leaf(&ws));
-    b.focus_workspace(&yog::naming::leaf(&ws));
+    let name = yog::naming::leaf(&ws);
     assert_eq!(
         crate::support::strip_total(&a),
         2,
@@ -65,17 +67,19 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
     );
     assert_eq!(crate::support::strip_total(&b), 2);
 
-    // B is looking at n-002 — its viewport, and nobody else's.
-    b.focus_agent(&ws, "n-002");
-    b.refresh();
-
-    // A lands on n-001. Landing IS acknowledging (§6.3, bl-aa1f: the ack is a
-    // state re-stamped every frame, not a gesture).
-    a.focus_agent(&ws, "n-001");
-    a.refresh();
+    // A acknowledges n-001 — one act at A's boundary, and the only thing it
+    // writes is `ui.json` (§6.3, bl-aa1f).
+    crate::support::act(
+        &a,
+        &yog::boundary::Action::MarkSeen {
+            workspace: name.clone(),
+            agent: "n-001".to_owned(),
+        },
+    )
+    .expect("the ack lands");
     for _ in 0..200 {
         a_worker.step();
-        if a.refresh() && crate::support::strip_total(&a) == 1 {
+        if a.take() && crate::support::strip_total(&a) == 1 {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(5));
@@ -83,14 +87,14 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
     assert_eq!(
         crate::support::strip_total(&a),
         1,
-        "A's own landing quieted n-001"
+        "A's own acknowledgement quieted n-001"
     );
 
     // B adopts the same `ui.json` and stops flagging n-001 too — nothing was
     // sent between them.
     for _ in 0..200 {
         b_worker.step();
-        b.refresh();
+        b.take();
         if crate::support::strip_total(&b) == 1 {
             break;
         }
@@ -101,13 +105,14 @@ fn s6_t2_the_acknowledgement_converges_and_the_viewport_does_not() {
         1,
         "the acknowledgement converged through the file"
     );
-
-    // …and B is still where B was. The adopt takes the seen marks wholesale; it
-    // never takes the other instance's viewport with them (§13.1).
+    // And n-002 is untouched: acknowledging one conversation acknowledges one.
     assert_eq!(
-        b.focused_agent().map(|a| a.agent_id.clone()),
-        Some("n-002".to_owned()),
-        "B's focus is B's"
+        crate::support::conversation_rows(&b, &name, 1000)
+            .iter()
+            .filter(|r| r.attention > 0)
+            .map(|r| r.root_id.clone())
+            .collect::<Vec<_>>(),
+        vec!["n-002".to_owned()],
+        "the other signal stands"
     );
-    assert_eq!(b.focused_workspace(), Some(ws.clone()));
 }

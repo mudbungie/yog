@@ -27,9 +27,6 @@
 //! counters instead; that divergence was the double-count bl-6621 closed. Two
 //! questions, two derivations — one reading of a prompt.
 
-/// The egui line the settings rows paint.
-pub mod render;
-
 use crate::budgets::StepBill;
 use std::collections::BTreeMap;
 

@@ -74,7 +74,6 @@ fn inv1_idle_construction_and_ticks_perform_no_mutation() {
     let clock = TestClock::new();
     let (mut model, mut deriver) = AppModel::boot(
         roots.clone(),
-        None,
         clock.arc(),
         Box::new(BlStore::new(xdg, Cli::new(bl.path()))),
         Some("me".to_owned()),
@@ -96,12 +95,17 @@ fn inv1_idle_construction_and_ticks_perform_no_mutation() {
             deriver.step(),
             "pass {pass} owed a full sweep and published it (§7.2)"
         );
-        model.refresh();
+        model.take();
     }
 
-    // The read really happened: the ready ball is start-eligible (§3.5) — and it
-    // reached the model with no process spawned at all (§16.7 W8).
-    assert_eq!(model.startable().len(), 1, "the store read produced a ball");
+    // The read really happened: the ready ball reached the derivation — and it
+    // did so with no process spawned at all (§16.7 W8).
+    let Ok(yog::boundary::reply::Reply::Balls(rows)) =
+        crate::support::ask(&model, &yog::boundary::Query::Balls, 0)
+    else {
+        panic!("the balls listing is answerable");
+    };
+    assert_eq!(rows.len(), 1, "the store read produced a ball: {rows:?}");
     assert!(
         bl.invocations().is_empty(),
         "the fetch cadence spawns no process at all: {:?}",

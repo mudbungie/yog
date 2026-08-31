@@ -29,26 +29,6 @@ pub fn strip_total(rows: &[WsRow]) -> usize {
     rows.iter().map(|r| r.attention).sum()
 }
 
-/// **Whether the enumeration calls this workspace one of yog's own** (§3.1) —
-/// the §3.6 scope gate every delete carrier reads before offering the verb.
-/// `false` for a name the answer does not carry, which is what an unfetched or
-/// deleted workspace already read as.
-pub fn is_named(rows: &[WsRow], workspace: &str) -> bool {
-    rows.iter()
-        .any(|r| r.workspace == workspace && matches!(r.kind, WorkspaceKind::Named { .. }))
-}
-
-/// **The §2.2 config-lineage tip of one workspace** (§9.4) — the commit the next
-/// conversation started here forks off, off the same answer. `None` for a name
-/// the enumeration does not carry and for a workspace with no lineage derived
-/// yet: both paint nothing, which is the same reading.
-pub fn config_tip(rows: &[WsRow], workspace: &str) -> Option<crate::model_pick::ConfigTip> {
-    rows.iter()
-        .find(|r| r.workspace == workspace)?
-        .config_tip
-        .clone()
-}
-
 /// Which of the §3.1 kinds a tab stands for — [`WorkspaceKind`] without its
 /// payload (the tab's `name` already carries the minted name). **One field, not
 /// a pair of `named`/`replay` bools**: bools admit a state that cannot exist and

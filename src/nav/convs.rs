@@ -20,6 +20,26 @@
 
 use crate::git_tree::{Agent, AgentState, DescentRow, descent_order};
 
+/// The **tone** a listed row asks to be said in — the one hue vocabulary that
+/// crosses the boundary, as a token (`boundary::reply::rows::tone_token`) and
+/// never as a colour. It lives here because the row that carries it does
+/// ([`ConvRow`]): yog names the fact, and a seat picks the pixels.
+///
+/// It was `transcript::Tone` until bl-7942 severed the window — the transcript
+/// row projection that also wore it is the seat's now, and this list's row is
+/// the only holder left in a server.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Tone {
+    Plain,
+    Weak,
+    Good,
+    Bad,
+    /// A live streaming tail.
+    Live,
+    /// Work with no result yet.
+    InFlight,
+}
+
 /// The **census** folds a §3.6 gate and the §3.3 mint read off an answered
 /// forest (REMOTE §9.7, bl-b4b5) — [`expand`]'s and [`select`]'s third sibling.
 pub mod census;

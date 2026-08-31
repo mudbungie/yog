@@ -6,8 +6,6 @@
 //! becomes on the glass is [`row`], split off at the cap on that same seam: a
 //! hole is found by reading a directory, and said by projecting a row.
 
-mod row;
-
 use super::{AGENT, write_msg, write_summary};
 use crate::transcript::{EntryKind, Transcript, build};
 use tempfile::tempdir;

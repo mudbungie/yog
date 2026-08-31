@@ -109,9 +109,15 @@ pub(crate) fn admit<S: Read + Write>(s: &mut S) -> bool {
 }
 
 /// **The seat's half**: read the engine's preface and refuse a mismatch to the
-/// caller, as one `Err(String)` — which is where every other thing that can go
-/// wrong with a transport already arrives (REMOTE §9.7), so a surface painting
-/// the sentence carries no new case.
+/// caller, as one `Err(String)`.
+///
+/// `cfg(test)` since bl-7942: no seat ships in this crate any more, and the one
+/// client left in the tree is the suite's own
+/// ([`test_support::wire::Seat`](crate::test_support::wire)), which has to
+/// speak the whole protocol or it would prove the listener against a dialect.
+/// The *rule* it implements is still the server's — [`stated`] writes the same
+/// preface — so it belongs beside it rather than in the harness.
+#[cfg(test)]
 pub(crate) fn confirm(r: &mut dyn Read) -> Result<(), String> {
     let peer = stated(r);
     if agreed(peer) {

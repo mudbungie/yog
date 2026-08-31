@@ -73,3 +73,40 @@ pub fn embedded_paths() -> BTreeSet<String> {
     }
     out
 }
+
+#[cfg(test)]
+mod tests {
+    use super::embeds_of;
+    use std::collections::BTreeSet;
+
+    /// **The sweep still bites** — the direction the tree can no longer prove
+    /// on its own (bl-7942 took the icon artifacts, which were every non-`src`
+    /// embed the crate had). A parser that silently matched nothing would
+    /// otherwise report an empty set forever and read as a clean tree.
+    ///
+    /// Driven over a scratch tree rather than the repo's, so it stays true
+    /// whatever the repo embeds next.
+    #[test]
+    fn a_non_src_embed_is_found_and_a_src_one_is_not() {
+        let root = tempfile::tempdir().expect("tmp");
+        let src = root.path().join("src");
+        std::fs::create_dir_all(&src).expect("src");
+        std::fs::write(root.path().join("outside.bin"), b"x").expect("outside");
+        std::fs::write(src.join("inside.bin"), b"x").expect("inside");
+        std::fs::write(
+            src.join("lib.rs"),
+            b"const A: &[u8] = include_bytes!(\"../outside.bin\");\n\
+              const B: &[u8] = include_bytes!(\"inside.bin\");\n\
+              const C: &str = include_str!(\"../nothing-here\");\n",
+        )
+        .expect("lib");
+        let root = root.path().canonicalize().expect("canonical");
+        let mut out = BTreeSet::new();
+        embeds_of(&root.join("src").join("lib.rs"), &root, &mut out);
+        assert_eq!(
+            out,
+            BTreeSet::from(["outside.bin".to_owned()]),
+            "the non-src embed is the one an `include` list can drop"
+        );
+    }
+}

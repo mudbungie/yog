@@ -8,7 +8,6 @@
 mod argv;
 mod choices;
 mod composer;
-mod paint;
 
 use crate::fork::{Attempt, Choices, ForkPoint};
 use crate::model_pick::grammar::RoleModel;

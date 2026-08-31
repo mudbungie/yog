@@ -132,17 +132,22 @@ fn expanding_a_row_never_moves_its_conversation_in_the_list() {
 
 #[test]
 fn the_toggle_round_trips_the_list_through_the_shared_disclosure_set() {
-    // The click's mutation is `jsonview::toggle_path` — the crate's one
-    // disclosure-set flip (this module reads a set, it never owns one). Two
-    // flips of the same id restore the rows byte for byte, which is what makes
-    // the collapsed list a *state* rather than a first render.
+    // A seat's disclosure toggle is one flip of membership in the set this
+    // module reads (it never owns one). Two flips of the same id restore the
+    // rows byte for byte, which is what makes the disclosed list a *state*
+    // rather than a first render.
     let agents = family();
     let collapsed = rows_with(&agents, &HashSet::new());
     let mut set = HashSet::new();
-    crate::jsonview::toggle_path(&mut set, "r-0");
+    let toggle = |set: &mut HashSet<String>, id: &str| {
+        if !set.remove(id) {
+            set.insert(id.to_owned());
+        }
+    };
+    toggle(&mut set, "r-0");
     let open_rows = rows_with(&agents, &set);
     assert_eq!(ids(&open_rows), ["s-0", "r-0", "r-0-a-1", "r-0-b-1"]);
-    crate::jsonview::toggle_path(&mut set, "r-0");
+    toggle(&mut set, "r-0");
     assert!(set.is_empty(), "the second flip takes the id back out");
     assert_eq!(rows_with(&agents, &set), collapsed);
 }

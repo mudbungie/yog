@@ -21,8 +21,6 @@
 //!   that *polls* every live watcher's `tick()` on a short interval and parks
 //!   between polls ([`BRIDGE_POLL`]) — the pull API's equivalent of blocking on
 //!   the channels.
-//! - [`Repaint`] is the injected wake-the-window effect (the LockProbe
-//!   template, so the thread that uses it is testable without a window).
 //!
 //! **Ingest stays its own thread, and that is deliberate** (bl-ee0a). The
 //! derivation moved off the frame onto [`Worker`](crate::app::Worker), and it
@@ -31,8 +29,11 @@
 //! instrumentation compares (a change with no announcement is a dropped event),
 //! and folding them into one thread makes the comparison unobservable — nothing
 //! could ever exercise "disk moved and nothing said so". Two threads, one
-//! question each. The bridge no longer requests a repaint either: a dirty root
-//! is not something to render, a published snapshot is (the worker's job).
+//! question each. Neither thread wakes anything: **there is no face in this
+//! process to wake** (bl-7942). A seat is on the far side of the wire and asks
+//! on its own cadence (`wire::ASK_PERIOD`), so a published snapshot is simply
+//! the next thing a gesture reads.
+//!
 //! Correctness never rides on this thread — the sweeps are the floor ("watches
 //! are latency, polls are correctness", I4).
 
@@ -45,12 +46,6 @@ use std::time::Duration;
 
 use crate::fs_watcher::{Change, ChangeKind, RootKind, Watcher};
 use crate::state::{DirtySet, WatchSetHandle, lock_watchset};
-
-/// **Waking the face**, split off at §12's budget: the injected repaint effect
-/// and its three impls, which watch nothing and belong to no root.
-mod repaint;
-
-pub use repaint::{EguiRepaint, NoRepaint, Repaint};
 
 /// Bridge poll cadence: how often the ingest thread drains the watchers. Short
 /// enough that a disk change reaches the worker's next pass; the sweeps are the

@@ -230,13 +230,19 @@ transport (Slack MCP today) the deployment chooses.
 **Every interface in yog, no exceptions, is drivable headlessly, and yog has a
 headless mode — an agent in yog can operate yog.**
 
-The foundation already exists: yog's story tests "drive the dispatch layer —
-the same `pub` functions the shell's click-glue calls… never egui widgets,"
-and yog already multiplexes verb namespaces (`yog bl`, `yog litany`, `yog
-bz`). What this vision adds is the invariant that makes that foundation
-binding: **the GUI is one serialization of the dispatch surface; headless mode
-is another serialization of exactly the same surface** — brazen's lib↔CLI
-parity discipline, applied to yog.
+The foundation already existed when this was written: yog's story tests drove
+the dispatch layer — the same `pub` functions the shell's click-glue called,
+never egui widgets — and yog already multiplexed verb namespaces (`yog bl`,
+`yog litany`, `yog bz`). What this vision added is the invariant that made that
+foundation binding: **the GUI is one serialization of the dispatch surface;
+headless mode is another serialization of exactly the same surface** — brazen's
+lib↔CLI parity discipline, applied to yog.
+
+**Arrived at in full** (bl-7942): there is no GUI in this crate, so there is
+one serialization and the parity is structural rather than promised. The
+sentence above is kept as written because it is what made the severance
+survivable — every gesture already had a headless spelling, so removing the
+face removed no capability.
 
 **The boundary is formal, and it carries queries as well as actions.**
 The ruling is a formal control boundary for every operation that *does

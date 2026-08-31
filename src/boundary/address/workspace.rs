@@ -37,19 +37,6 @@ impl Gesture {
             Gesture::Ask(query) => query.workspace(),
         }
     }
-
-    /// This gesture with the workspace it names replaced by `name` — the §8.2
-    /// mapping's write direction, spent by the seat that is about to encode it
-    /// for one channel ([`wire::seat`](crate::wire::seat)).
-    ///
-    /// A gesture naming no workspace comes back unchanged: the general path
-    /// with nothing to rewrite, not a case of its own.
-    pub(crate) fn with_workspace(self, name: &str) -> Self {
-        match self {
-            Gesture::Act(action) => Gesture::Act(action.with_workspace(name)),
-            Gesture::Ask(query) => Gesture::Ask(query.with_workspace(name)),
-        }
-    }
 }
 
 impl Action {
@@ -58,15 +45,6 @@ impl Action {
     pub fn workspace(&self) -> Option<String> {
         let mut named = self.clone();
         named.workspace_slot().map(std::mem::take)
-    }
-
-    /// [`Self::workspace`] written: this action with its workspace field set to
-    /// `name`, or itself when it has none.
-    pub(crate) fn with_workspace(mut self, name: &str) -> Self {
-        if let Some(slot) = self.workspace_slot() {
-            name.clone_into(slot);
-        }
-        self
     }
 
     /// **The one table.** The field naming this action's workspace, borrowed so
@@ -139,14 +117,6 @@ impl Query {
     pub fn workspace(&self) -> Option<String> {
         let mut named = self.clone();
         named.workspace_slot().map(std::mem::take)
-    }
-
-    /// [`Self::workspace`] written — [`Action::with_workspace`]'s mirror.
-    pub(crate) fn with_workspace(mut self, name: &str) -> Self {
-        if let Some(slot) = self.workspace_slot() {
-            name.clone_into(slot);
-        }
-        self
     }
 
     /// The one table for reads, for [`Action::workspace_slot`]'s reason exactly.

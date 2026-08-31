@@ -1,11 +1,48 @@
-//! The operator's two trail gestures against the live model (bl-c417): the ack
-//! that quiets every banner and the chip without losing a row, and the clear
-//! that starts a fresh trail. Both directions, end to end — write the line,
-//! let the worker re-read the tail (`tick`), assert what the surfaces derive.
+//! The operator's two trail gestures (bl-c417): the ack that quiets every
+//! banner and the chip without losing a row, and the clear that starts a fresh
+//! trail. Both directions, end to end — write the line, fire the §8.5 act, let
+//! the worker re-read the tail (`tick`), assert what the answers derive.
 
 use super::{model, world};
 use crate::AppModel;
 use crate::opslog::{self, Origin};
+
+/// The §8.5 ack — the act a seat fires, run where the engine runs it. It was
+/// an `AppModel` method while a frame's ops pane called one (bl-7942 took the
+/// pane); the body it called is `opslog::ack`, which the boundary's own arm
+/// has always reached.
+fn ack(m: &crate::app::tests::Rig) {
+    let deps = m.boundary_deps(
+        &crate::cli_outbound::Cli::new("litany"),
+        &crate::cli_outbound::Cli::new("bl"),
+    );
+    let mut ui = crate::ui_state::UiState::open(m.ui_json_path());
+    crate::boundary::dispatch::dispatch(&deps, &mut ui, "TS", &crate::boundary::Action::Ack)
+        .expect("the ack lands");
+    announce(m);
+}
+
+/// The §8.5 trail clear, its sibling and for its reason.
+fn clear(m: &crate::app::tests::Rig) {
+    let deps = m.boundary_deps(
+        &crate::cli_outbound::Cli::new("litany"),
+        &crate::cli_outbound::Cli::new("bl"),
+    );
+    let mut ui = crate::ui_state::UiState::open(m.ui_json_path());
+    crate::boundary::dispatch::dispatch(&deps, &mut ui, "TS", &crate::boundary::Action::ClearTrail)
+        .expect("the clear lands");
+    announce(m);
+}
+
+/// Stand in for the §7.1 watcher: on a real box the state root's change is
+/// announced by `notify` and the worker re-reads the tail on its next pass.
+/// A hand-driven rig has no watcher, so the announcement is made here — the
+/// same `Mark::Watch` the bridge would post.
+fn announce(m: &crate::app::tests::Rig) {
+    m.deriver
+        .dirty_handle()
+        .mark_all([(m.state_root().to_path_buf(), crate::watch::Mark::Watch)]);
+}
 
 /// Append one failed `litany prime` line attributed to `origin`.
 fn fail(m: &AppModel, origin: Origin) {
@@ -50,7 +87,7 @@ fn an_ack_quiets_the_banners_and_the_chip_without_hiding_a_row() {
     assert_eq!(m.activity().drifts, 1);
     assert!(m.activity().alarming(), "and the pane offers its Dismiss");
 
-    m.ack_failures();
+    ack(&m);
     m.tick();
     assert!(
         m.last_failure(Origin::Balls).is_none(),
@@ -91,7 +128,7 @@ fn a_new_failure_after_an_ack_banners_again() {
     let w = world();
     let (_c, mut m) = model(&w);
     fail(&m, Origin::Balls);
-    m.ack_failures();
+    ack(&m);
     m.tick();
     assert!(m.last_failure(Origin::Balls).is_none());
 
@@ -122,7 +159,7 @@ fn clear_leaves_a_one_row_trail_whose_row_is_the_clear() {
     m.tick();
     assert_eq!(m.snap.ops.len(), 2);
 
-    m.clear_trail();
+    clear(&m);
     m.tick();
     let rows = &m.snap.ops;
     assert_eq!(rows.len(), 1);

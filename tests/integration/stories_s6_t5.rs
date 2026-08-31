@@ -79,7 +79,7 @@ fn s6_t5_the_chip_counts_and_every_row_expands_verbatim() {
         "two non-zero exits and one that never ran"
     );
     assert_eq!(activity.drifts, 0);
-    let (glyph, _, phrase) = yog::theme::op_badge(OpOutcome::Failed);
+    let (glyph, phrase) = yog::badge::op_badge(OpOutcome::Failed);
     let chip = activity.chip();
     assert_eq!(chip, format!("activity · 4 ops · 3 {phrase} {glyph}"));
     assert!(chip.starts_with("activity · 4 ops"));

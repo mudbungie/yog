@@ -39,76 +39,28 @@
 use crate::xdg::Env;
 use std::sync::Arc;
 
-/// The window's off-frame asker (REMOTE §1.2, bl-ae05) — the thread that makes
-/// the local window a wire client of its own engine.
-pub mod asker;
-/// **One channel the window holds** (REMOTE §8.2, bl-028a): the roster slice it
-/// feeds, and the one place its leaf↔host-name mapping is spent on the read
-/// path — [`seat::channel`]'s discipline, read from the frame.
-pub mod channel;
-/// **The window's channel set and the union over it** (REMOTE §8.2, bl-028a):
-/// the roster composed across the channels, and the name resolution that
-/// refuses a collision.
-pub mod channels;
-pub mod client;
-/// **Every channel a window's off-frame thread dials** (REMOTE §8.2, bl-670c):
-/// [`channels`] seen from the other end of the same links — one seat per
-/// channel, the routing that picks which, and the mapping spent on the way.
-pub mod dial;
-/// The client-side workspaces this box holds elsewhere (REMOTE §8.2, bl-aaec)
-/// — [`material`]'s shape one level down and named, one directory per
-/// workspace hosted on another box.
-pub mod entries;
 pub mod frame;
 /// The version preface (REMOTE §3, bl-a670): what each end states about itself
 /// before it says anything, and the fail-closed refusal a skew earns.
 pub mod hello;
-/// The tool-host client mode (REMOTE §5, bl-024b) — the wire's second shipped
-/// client: it advertises what this machine can run, rides a follow-class read
-/// for its next invocation, and posts each capture back.
-pub mod host;
 pub mod intake;
-/// The window's **second** asker lane (REMOTE §3, §10; bl-73e7): one held
-/// connection on the focused conversation's live tail, so the serial pass below
-/// is never stalled by a read that deliberately never finishes.
-pub mod lane;
-/// The frame's half of that read path: the standing questions and what landed.
-pub mod link;
 pub mod material;
-/// The frame's half of the **act** path (REMOTE §9.8, bl-4841): what the window
-/// has sent, and the minted ticket its receipt lands under.
-pub mod post;
-/// The window's off-frame poster (bl-4841) — the asker's twin on the write
-/// side, pushed rather than polled and on a thread of its own.
-pub mod poster;
 /// The mint (REMOTE §1.4, §8; bl-ae05) — the one `openssl` recipe, spent by the
 /// engine's boot and by `yog wire-certs` alike.
 pub mod provision;
-pub mod seat;
 pub mod server;
 pub mod tls;
 
-/// The argv seat's leading word: `yog seat`. Named once, here, because the arm
-/// that routes it and the help that advertises it would otherwise be two facts.
-pub const SEAT_SUBCMD: &str = "seat";
-
-/// The tool-host client mode's leading word: `yog tool-host` (REMOTE §5,
-/// bl-024b). Named here beside [`SEAT_SUBCMD`] and for its reason exactly.
-pub const HOST_SUBCMD: &str = "tool-host";
-
-/// **The address the local window dials** (REMOTE §1.2, §8; bl-ae05): loopback
-/// at the port the listener actually bound.
+/// **How often a seat re-asks its standing set** — human cadence (REMOTE §3),
+/// and the number REMOTE §10's ask-rate criterion is measured against.
 ///
-/// The window is a client of `127.0.0.1` and of nothing else, whatever
-/// `address` names the engine to the rest of the world — which is why
-/// [`provision`] always puts loopback on the server leaf. The **bound** port
-/// rather than the requested one, for the reason
-/// [`Listener::address`](server::Listener::address) exists: a `:0` in the file
-/// is a request, and only the listener knows what it became.
-pub fn loopback(bound: &str) -> String {
-    let port = bound.rsplit_once(':').map_or("", |(_, port)| port);
-    format!("{}:{port}", provision::LOOPBACK)
-}
+/// It is a **protocol** period rather than a client's private knob, which is
+/// why it survived the seat's departure (bl-7942): the §7.3 wound grace is the
+/// sum of every leg a fact crosses before a seat can see it
+/// ([`Cadence::wound_grace`](crate::app::Cadence::wound_grace)), and the last
+/// of those legs is the ask. A server that did not name the period could not
+/// state the grace, and would raise the alarm the grace exists to prevent.
+pub const ASK_PERIOD: std::time::Duration = std::time::Duration::from_millis(500);
 
 /// Bring the engine's listener up, or explain why there is none.
 ///

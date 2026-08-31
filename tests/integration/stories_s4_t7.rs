@@ -66,16 +66,15 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     std::fs::create_dir_all(&replay).unwrap();
     build_agents(&replay, &[stirring("r-001")]);
 
-    let (mut m, _worker) = AppModel::boot(
-        roots,
-        None,
+    let (m, _worker) = AppModel::boot(
+        roots.clone(),
         Arc::new(SystemClock),
         Box::new(FakeBl::default()),
         None,
     );
 
     // --- Unpinned: the wall is the named workspaces in NAME order.
-    let bar = crate::support::tab_bar(&m);
+    let bar = crate::support::tab_bar(&m, None);
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(
         names,
@@ -115,9 +114,23 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     );
 
     // --- Pinned: hoisted in PIN order, ahead of the name-ordered remainder.
-    m.toggle_pin("delta");
-    m.toggle_pin("charlie");
-    let bar = crate::support::tab_bar(&m);
+    // A pin is durable operator state in `ui.json` (§4.1) and no gesture writes
+    // it (see the residual on bl-7942), so the fixture writes the document and
+    // a fresh instance reads it — which is exactly how one instance's pin
+    // reaches another (I0: restart is re-read).
+    let mut ui = yog::ui_state::UiState::open(m.ui_json_path());
+    ui.set_pinned(vec![
+        yog::nav::ws_key(&names_root.join("delta")),
+        yog::nav::ws_key(&names_root.join("charlie")),
+    ]);
+    drop(m);
+    let (m, _worker) = AppModel::boot(
+        roots,
+        Arc::new(SystemClock),
+        Box::new(FakeBl::default()),
+        None,
+    );
+    let bar = crate::support::tab_bar(&m, None);
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(
         names,

@@ -31,18 +31,13 @@ use crate::budgets::{BudgetSpend, spend_from_bytes};
 use crate::git_tree::{AgentState, Framing, segment_count, settled};
 use crate::login::auth::{AuthFailure, row_of_model};
 
-mod columns;
 mod detail;
-mod drill;
 mod orphan;
 mod records;
-mod render;
 pub(crate) mod wire;
 mod wound;
 pub use detail::{Doc, StepDetail, ToolIo, UNPARSED, detail};
 pub use orphan::{ORPHANED_MAIL, ORPHANED_WINDOW, Orphan, Tail};
-pub(crate) use records::seats;
-pub use render::{StepTab, render};
 pub use wound::{NO_RESPONSE, OUTPUT_LIMIT, Wound, latest_wound};
 
 /// Conv-repo subdir of per-agent step records (ARCH §2.3).

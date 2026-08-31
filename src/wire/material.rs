@@ -43,6 +43,14 @@ pub const DIR: &str = "wire";
 pub const ANCHORS: &str = "ca.pem";
 /// The file naming the address the engine binds and a seat dials.
 pub const ADDRESS: &str = "address";
+
+/// The directory a **client** box files one host's material under, inside its
+/// own [`DIR`] — `wire/workspaces/<leaf>/` (REMOTE §8.2). yog holds no
+/// entries since bl-7942 (a seat does), but it still *issues* the leaf a
+/// visiting box files there (`WIRE_LEAF`), and the instruction that goes with
+/// the pair has to name the destination. One home for the word, so the mint's
+/// sentence and the client that reads the directory cannot drift.
+pub const ENTRIES: &str = "workspaces";
 /// The target that mints the lot, named in every refusal so a seat that cannot
 /// start says how to make it start.
 pub const REMEDY: &str = "make wire-certs";

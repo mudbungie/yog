@@ -136,16 +136,16 @@ fn the_top_level_answers_help_in_every_spelling() {
     }
 }
 
-/// What it says is the surface itself: the windowless face, both hatches, the
-/// boundary's own verb, and every namespace a human is meant to type — each
-/// named by the const its dispatcher routes on, so the page cannot drift from
-/// what runs. The two plugin binaries are not advertised: balls' own chain
-/// spawns them, and no operator types one.
+/// What it says is the surface itself: both hatches, the boundary's own verb,
+/// the mint, and every namespace a human is meant to type — each named by the
+/// const its dispatcher routes on, so the page cannot drift from what runs.
+/// The two plugin binaries are not advertised: balls' own chain spawns them,
+/// and no operator types one. **The engine itself is not a word** since
+/// bl-7942: a bare `yog` IS it, so there is nothing to list.
 #[test]
 fn the_top_level_page_states_the_whole_surface() {
     let page = usage();
     for word in [
-        crate::boundary::SERVE_SUBCMD,
         crate::world::hatch::ENV_SUBCMD,
         crate::world::hatch::EXEC_SUBCMD,
         "gesture",
@@ -159,9 +159,15 @@ fn the_top_level_page_states_the_whole_surface() {
     assert!(!page.contains("bl-tracker"));
     // It says how to go deeper, since one line per command is not a manual.
     assert!(page.contains("--help"));
-    // And it still carries the window's own flags, rendered by clap rather
-    // than restated here.
-    assert!(page.contains("--workspace"));
+    // And it carries the binary's own header and flags, rendered by clap
+    // rather than restated here.
+    assert!(page.contains("--version"), "{page}");
+    assert!(
+        page.contains("the server for litany loops"),
+        "the header is the manifest's: {page}"
+    );
+    // The retired window flag is gone from the surface, not merely unused.
+    assert!(!page.contains("--workspace"), "{page}");
 }
 
 /// The namespace table is the router: every advertised word routes, and the

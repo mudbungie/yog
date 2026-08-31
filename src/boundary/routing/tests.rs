@@ -186,3 +186,39 @@ fn an_empty_hold_and_an_unheld_handle_are_both_ordinary_answers() {
         "the handle is named"
     );
 }
+
+/// **The family's one door** ([`route`]) reaches both ends of the hand-off,
+/// and that is all it does: an `Invoke` and a `Complete` land on the same two
+/// bodies the tables above drive directly. Asserted here because the door is
+/// what `dispatch` calls, so a variant added without an arm would be a
+/// compile error at exactly one place and a silent miss at none.
+#[test]
+fn the_door_reaches_both_ends_of_the_hand_off() {
+    let root = tempdir().expect("tmp");
+    let mail = Mailbox::holding(1, Duration::from_millis(1));
+    let host = deps(root.path(), "laptop", &mail);
+    // Neither end is reachable for a client that advertised nothing and holds
+    // no invocation — which is the point: the door is spent, and each body
+    // answers its own refusal rather than the door inventing one.
+    let invoked = route(&host, "TS", &Verb::Invoke(call("laptop", "build")));
+    assert!(
+        invoked.is_err_and(|e| e.contains("build")),
+        "the invoke end names the tool it could not route"
+    );
+    let completed = route(
+        &host,
+        "TS",
+        &Verb::Complete(crate::registry::mailbox::Completion {
+            invocation: "inv-404".to_owned(),
+            capture: Capture {
+                stdout: String::new(),
+                stderr: String::new(),
+                exit_code: 0,
+            },
+        }),
+    );
+    assert!(
+        completed.is_err_and(|e| !e.is_empty()),
+        "the complete end answers its own refusal"
+    );
+}

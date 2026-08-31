@@ -8,13 +8,14 @@
 # upgrade in lockstep (this file + Makefile preflight) or the floor gets
 # quietly weaker on whichever side moves first.
 #
-# - `src/main.rs` is the thin eframe entry point (window bring-up); the
-#   view-model modules behind it are fully unit-tested. Excluding it keeps
-#   the 100% floor meaningful without a contrived windowed test.
-# - `src/shell/*` is the M2 shell's egui interaction glue (§11): the
-#   attention strip, roster, and center panel wire `.clicked()` branches —
-#   unreachable headless — to tested `AppModel`/`nav`/`attention` methods.
-#   Same precedent as main.rs; everything a click *calls* is covered.
+# - `src/main.rs` is the process edge: the multi-call argv match, the two
+#   world hatches, and one call into `Engine::serve` — which is itself a
+#   tested function (bl-269a). Everything it reaches is covered.
+# - **`src/shell/*` is gone with the exclusion** (bl-7942). It was the egui
+#   interaction glue, whose `.clicked()` branches were unreachable headless;
+#   the crate has no face at all now, so there is nothing left that a test
+#   cannot drive. **One exclusion, and it is the process edge** — the only
+#   class this list has ever admitted.
 # - `ignore-panics` excludes branches that only fire on programmer-error
 #   panics (e.g. `.expect(...)` on infallible operations).
 #
@@ -35,7 +36,7 @@
 # yog's OWN worker threads forking beside the one test thread, which is how the
 # race reached a coverage run at all.
 [default]
-exclude-files = ["src/main.rs", "src/shell/*"]
+exclude-files = ["src/main.rs"]
 ignore-panics = true
 timeout = "300s"
 args = ["--test-threads=1"]

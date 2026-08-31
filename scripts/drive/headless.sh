@@ -1,7 +1,6 @@
 #!/bin/bash
-# headless.sh — the SEATLESS tier: how a run with no X display boots an engine
-# and reads what it said. Sourced by stories.sh; not an entry point, and it
-# writes no verdict row of its own.
+# headless.sh — how a run boots an engine and reads what it said. Sourced by
+# stories.sh; not an entry point, and it writes no verdict row of its own.
 #
 # It is a tier for the reason harness.sh and gesture.sh are: five sourced files
 # spend `reply_is` and `row` (`beats_headless.sh`, `beats_s13.sh`,
@@ -11,25 +10,22 @@
 # and the seam is the same one wall.sh was cut on: that file is a RUN VERB and
 # a scope decision, this is the vocabulary the verb and its stages speak.
 #
-# `yog serve` is "the same engine with no window: worker, watcher, gesture
-# consumer" (DESIGN §8.4), so everything below is a `yog gesture` line against
-# a real world — no seat, no window, no wire spend, no model call.
+# It was the SEATLESS tier — the one run verb that claimed no X display while
+# every other verb drove a window. Since bl-7942 a bare `yog` IS the engine and
+# there is no other kind of run, so what was the exception is the whole harness.
 
-# `yog serve` parks until a signal, so it is backgrounded and its pid is the
-# run's one piece of teardown. The consumer is not up the instant the process
-# is, so the first gesture is the one that waits — `await`, never a sleep.
+# `yog` parks until a signal, so it is backgrounded and its pid is the run's one
+# piece of teardown. The consumer is not up the instant the process is, so the
+# first gesture is the one that waits — `await`, never a sleep.
 boot_headless() {
-  XDG_DATA_HOME="$1" yog serve >"$2/headless.log" 2>&1 &
-  # THIS run's engine, recorded where it is launched — the same fact
-  # `launch_engine` records for a windowed run (`gesture.sh`), and what every
-  # `gesture` below watches alongside its reply, so a headless engine that dies
-  # mid-run reddens the next gesture instead of waiting out its deadline
-  # (bl-5cf7). It has no window, so `engine_wid` stays empty.
+  XDG_DATA_HOME="$1" yog >"$2/headless.log" 2>&1 &
+  # THIS run's engine, recorded where it is booted — what every `gesture` below
+  # watches alongside its reply, so an engine that dies mid-run reddens the next
+  # gesture instead of waiting out its deadline (bl-5cf7).
   engine_pid=$!
-  # PAIRED WITH THE BOOT, the way `verdict` is paired with `claim_seat`: `set
-  # -e` can end this file anywhere between here and the tail, and a parked
-  # engine survives to hold a scratch world nobody will look at again. One
-  # aborted mutation run left exactly that behind.
+  # PAIRED WITH THE BOOT: `set -e` can end this file anywhere between here and
+  # the tail, and a parked engine survives to hold a scratch world nobody will
+  # look at again. One aborted mutation run left exactly that behind.
   trap 'kill "$engine_pid" 2>/dev/null || true' EXIT
   await consumer_up "$1"
 }

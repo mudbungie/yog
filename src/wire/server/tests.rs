@@ -3,8 +3,8 @@
 
 use super::*;
 use crate::registry::presence::Presence;
+use crate::test_support::seat::Seat;
 use crate::test_support::wire::{material, mint};
-use crate::wire::client::Seat;
 use crate::wire::material::Role;
 use serde_json::json;
 use std::sync::atomic::AtomicUsize;

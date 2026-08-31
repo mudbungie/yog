@@ -144,15 +144,6 @@ fn a_half_provisioned_box_the_mint_cannot_heal_does_not_listen() {
     assert!(refusal.contains("half-provisioned"), "{refusal}");
 }
 
-/// The address the window dials: loopback at the port the listener really
-/// bound, whatever the file said the engine answers to.
-#[test]
-fn the_window_dials_loopback_at_the_bound_port() {
-    assert_eq!(loopback("0.0.0.0:7737"), "127.0.0.1:7737");
-    assert_eq!(loopback("engine.example.com:9"), "127.0.0.1:9");
-    assert_eq!(loopback("nonsense"), "127.0.0.1:");
-}
-
 /// An engine that cannot bind carries on without a wire: a listener is a
 /// capability, and losing it is not losing the engine.
 #[test]

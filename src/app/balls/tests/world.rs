@@ -111,19 +111,9 @@ pub(crate) fn world() -> World {
 }
 
 pub(crate) fn model(w: &World) -> (FakeClock, Rig) {
-    build_model(w, None)
-}
-
-/// A model with an explicit startup focus — the start-target derivation tests.
-pub(crate) fn model_focused(w: &World, ws: &std::path::Path) -> (FakeClock, Rig) {
-    build_model(w, Some(ws.to_path_buf()))
-}
-
-pub(crate) fn build_model(w: &World, focus: Option<PathBuf>) -> (FakeClock, Rig) {
     let clock = FakeClock::new();
     let (model, deriver) = AppModel::boot(
         w.roots.clone(),
-        focus,
         clock.arc(),
         Box::new(FakeBl {
             live: w.live.clone(),

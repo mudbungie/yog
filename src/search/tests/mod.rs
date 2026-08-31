@@ -1,8 +1,6 @@
 //! The §8.5 search derivation, end to end: the corpus it spans, the order it
-//! ranks in, the bytes it re-reads, the gaps it names, and the abandonment a
-//! superseded ask earns.
+//! ranks in, the bytes it re-reads, and the gaps it names.
 
-mod cell;
 mod corpus;
 mod rank;
 mod render;
@@ -13,7 +11,6 @@ use crate::binding::{Workspace, WorkspaceKind};
 use crate::git_tree::{Agent, AgentState, GitTree};
 use crate::projects::balls::Ball;
 use crate::projects::join::{JoinRow, JoinState};
-use crate::state::SearchCell;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tempfile::tempdir;

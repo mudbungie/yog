@@ -9,8 +9,8 @@ use tempfile::TempDir;
 
 use super::super::{Answerer, Listener, Peer};
 use crate::registry::presence::Presence;
+use crate::test_support::seat::Seat;
 use crate::test_support::wire::{material, mint};
-use crate::wire::client::Seat;
 use crate::wire::material::Role;
 
 /// **A frame is written when it is produced, not when the answer is finished**
@@ -55,7 +55,7 @@ fn a_frame_is_written_as_it_is_produced_rather_than_when_the_answer_ends() {
     let seat = Seat::open(&material(
         tmp.path(),
         Role::Window,
-        &crate::wire::loopback(&listener.address()),
+        &crate::test_support::seat::loopback(&listener.address()),
     ))
     .expect("seat");
 
@@ -71,4 +71,16 @@ fn a_frame_is_written_as_it_is_produced_rather_than_when_the_answer_ends() {
     })
     .expect("the stream ends cleanly");
     assert_eq!(seen, 2, "and both frames arrive, in order");
+
+    // **A reader that has seen enough stops without a word** (REMOTE §3, §10):
+    // answering `false` ends the read where it stands, and dropping the
+    // connection IS the word — there is no second envelope for "stop", and a
+    // held read that needed one would be a verb the wire does not have.
+    let mut first = 0usize;
+    seat.followed(&json!({"op": "ops"}), &mut |_| {
+        first += 1;
+        false
+    })
+    .expect("the reader's own end is a clean end");
+    assert_eq!(first, 1, "the read ended on the frame that said so");
 }

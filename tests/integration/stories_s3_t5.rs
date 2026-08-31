@@ -29,7 +29,6 @@ fn s3_t5_zero_projects_carries_the_yog_exec_bl_prime_hint() {
     };
     let (m, _worker) = AppModel::boot(
         roots,
-        None,
         Arc::new(SystemClock),
         Box::new(FakeBl {
             live: HashMap::new(),

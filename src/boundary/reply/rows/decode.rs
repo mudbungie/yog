@@ -20,10 +20,10 @@ use crate::config_edit::branch::{ConfigBranch, Lineage};
 use crate::config_edit::brazen::ProviderRowView;
 use crate::git_tree::AgentState;
 use crate::monitor::{Check, Verdict};
+use crate::nav::convs::Tone;
 use crate::nav::convs::{ConvBall, ConvRow, Flight};
 use crate::opslog::OpRow;
 use crate::projects::join::JoinRow;
-use crate::transcript::Tone;
 
 /// The §5.1 agent-state table — [`state_token`](super::state_token)'s other
 /// half. Two spellings of one vocabulary is the tree's standing shape here

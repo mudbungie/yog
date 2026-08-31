@@ -85,10 +85,8 @@ fn load_distinguishes_existing_from_new() {
 }
 
 #[test]
-fn draft_mut_and_set_draft_edit_the_buffer() {
+fn set_draft_replaces_the_buffer() {
     let mut ed = Editor::load(lg().models(), &FakeFs::default()).unwrap();
-    ed.draft_mut().push_str("k: v");
-    assert_eq!(ed.draft(), "k: v");
     ed.set_draft("k: w".into());
     assert_eq!(ed.draft(), "k: w");
 }

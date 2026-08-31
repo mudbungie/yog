@@ -38,12 +38,9 @@ mod plan;
 /// **The read itself**, split off at §12's budget: this file is the vocabulary
 /// an answer is said in, `read` is the git read that says it.
 mod read;
-mod render;
 
 pub use read::{patch, read};
 pub(crate) mod wire;
-
-pub use render::render;
 
 /// How much one file changed. `Binary` is git's own `-`/`-` numstat row said
 /// as itself: a file that changed by an amount lines cannot express.

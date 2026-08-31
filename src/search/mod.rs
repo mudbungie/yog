@@ -33,10 +33,8 @@ mod corpus;
 mod excerpt;
 #[cfg(test)]
 mod tests;
-mod worker;
 
 pub use excerpt::excerpt;
-pub use worker::{SearchThread, Searcher};
 
 /// How many hits an answer carries at most (§8.5). A bound, not a knob: the
 /// operator asks *what matches*, and how much of the world yog is willing to

@@ -11,8 +11,8 @@
 use super::super::display_name;
 use super::super::flight::Flight;
 use crate::git_tree::AgentState;
+use crate::nav::convs::Tone;
 use crate::projects::join::JoinState;
-use crate::transcript::Tone;
 
 /// The conversation's associated start-flow ball (DESIGN §3.2, §3.3, §3.5): the
 /// `id` is the goal stamp — source 1, the *only* per-conversation attribution

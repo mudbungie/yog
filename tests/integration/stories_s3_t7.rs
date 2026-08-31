@@ -20,7 +20,6 @@ use tempfile::tempdir;
 use yog::actions::verbs;
 use yog::cli_outbound::Cli;
 use yog::projects::join::{self, JoinState};
-use yog::theme;
 use yog::ui_state::SystemClock;
 use yog::{AppModel, Roots};
 
@@ -52,7 +51,6 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
     let delivered = Arc::new(AtomicBool::new(false));
     let (mut m, mut deriver) = AppModel::boot(
         roots,
-        None,
         Arc::new(SystemClock),
         Box::new(FakeBl {
             live: HashMap::from([(project.path().to_path_buf(), LIVE.to_owned())]),
@@ -61,27 +59,23 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
         }),
         None,
     );
-    m.focus_workspace(&yog::naming::leaf(&ws));
+    let name = yog::naming::leaf(&ws);
 
-    // --- Before: the row is Bound and the conversation's badge is the bound hue.
-    // The seat's own row: the first of the focused workspace's answered listing
-    // (`Query::WorkspaceBalls`, bl-b4b5), which is what the composer's ball row
-    // paints and what `c`/`r` fire on.
-    let ball_row = |m: &yog::AppModel| {
-        crate::support::ws_balls(m, &m.focused_workspace().expect("cobalt is focused"))
-            .first()
-            .cloned()
-    };
+    // --- Before: the row is Bound and the conversation's badge names it bound.
+    // The seat's own row: the first of the named workspace's answered listing
+    // (`Query::WorkspaceBalls`, bl-b4b5), which is what a seat's ball row shows
+    // and what its close/unclaim verbs fire on.
+    let ball_row = |m: &yog::AppModel| crate::support::ws_balls(m, &ws).first().cloned();
     let row = ball_row(&m).expect("cobalt binds bl-7");
     assert_eq!(row.state, JoinState::Bound);
     let before =
-        crate::support::conversation_ball(&m, "c-001", 1000).expect("the goal stamps bl-7");
+        crate::support::conversation_ball(&m, &name, "c-001", 1000).expect("the goal stamps bl-7");
     assert_eq!(before.id, "bl-7");
     assert_eq!(before.state, Some(JoinState::Bound));
     assert_eq!(
-        theme::ball_hue(JoinState::Bound),
-        theme::HYDRA,
-        "a bound ball's badge is green"
+        join::badge(JoinState::Bound, None),
+        None,
+        "a bound ball needs no badge word — the state is the row's own"
     );
 
     // --- Close: one verb, stamped with the ball's BOUND WORKSPACE name (§8.2).
@@ -115,7 +109,7 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
     m.after_bl_verb(project.path());
     for _ in 0..200 {
         deriver.step();
-        m.refresh();
+        m.take();
         if ball_row(&m).map(|r| r.state) == Some(JoinState::Delivered) {
             break;
         }
@@ -135,16 +129,11 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
     );
 
     // The conversation's badge turns ash — same stamp, new join (§3.5).
-    let after =
-        crate::support::conversation_ball(&m, "c-001", 1000).expect("the stamp is unchanged");
+    let after = crate::support::conversation_ball(&m, &name, "c-001", 1000)
+        .expect("the stamp is unchanged");
     assert_eq!(
         after.id, "bl-7",
         "the stamp is the fact; the colour is the join"
     );
     assert_eq!(after.state, Some(JoinState::Delivered));
-    assert_eq!(
-        theme::ball_hue(JoinState::Delivered),
-        theme::ASH,
-        "a delivered ball's badge is ash"
-    );
 }

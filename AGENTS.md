@@ -1,8 +1,11 @@
 # yog — Agent Operating Guide
 
-You are working in **yog**, a single published binary crate: an egui desktop
-window that drives `litany` loops over `balls` tasks. Two authorities govern
-your work and they do not overlap:
+You are working in **yog**, a single published binary crate: the **server** of
+the four-component split — the holder of a world of `litany` loops over `balls`
+tasks, with no interface and no local execution. A bare `yog` boots the engine
+and parks; every read and every act crosses the §8.5 control boundary, and the
+desktop window is the `lernie` seat crate's (REMOTE §12). Two authorities
+govern your work and they do not overlap:
 
 - **`docs/DESIGN.md` is the architecture authority** — what yog *is*, its
   invariants, module map (§12), and the world substrate it composes (§16). When
@@ -61,7 +64,7 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    to an `execvp` that then failed, and every later write down a closed pipe is
    a death instead of an error (bl-3792). The soundness argument for the first
    three is the file's: every caller is at the process edge, single-threaded,
-   above clap and above eframe, and the handler's whole body is one
+   above clap, and the handler's whole body is one
    async-signal-safe atomic store. `ignore_sigpipe` needs no such caller — it
    restores a statically known constant, and an ignored signal is the one
    disposition with no handler any thread could re-enter.
@@ -94,10 +97,13 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
 6. **Dependencies are pre-approved + `cargo-deny`. yog ADAPTATION (amended
    §16.7 W10):** the standard's "rustls-only, no openssl" is now yog's rule
    **verbatim**. The former adaptation — "no TLS surface at all", justified by
-   yog being a native GL desktop app with no network — died when the
+   yog being a native GL desktop app with no network — died twice over: first
+   when the
    batteries-included wave embedded `brazen`, the LLM network adapter: yog's
    own process now makes the HTTPS calls, so `ureq`/`rustls`/`ring`/
-   `webpki-roots` are load-bearing, not incidental. **`rustls` is a DIRECT
+   `webpki-roots` are load-bearing, not incidental; and again when bl-7942 took
+   the GL stack out entirely, leaving a server whose network surface is the
+   whole point. **`rustls` is a DIRECT
    dependency since bl-b6fa** — approved by operator ruling 2026-08-13 for
    REMOTE §9.5's wire, and cheap because it was already in the graph behind
    `ureq`: the lockfile gained one line, no crate, no license and no advisory.
@@ -159,8 +165,8 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    `rules/locks-outside-state.yml`, `rules/no-rc-refcell.yml`.
 
 8. **Async is tokio-only, `#[async_trait]` mandatory. yog ADAPTATION:** yog runs
-   **no async and no tokio today** — it is a synchronous egui frame loop over
-   subprocess spawns. This rule is installed but **vacuous**; honor it if async
+   **no async and no tokio today** — it is a synchronous derivation worker over
+   subprocess spawns, with a synchronous `std::net` listener beside it. This rule is installed but **vacuous**; honor it if async
    is ever introduced, do not add tokio to satisfy a rule that currently matches
    nothing.
 
@@ -273,12 +279,13 @@ demotion removes an internal API from the boundary's obligations. Reach for
   task edited it, bl-12dc). Over the cap? Split along a real seam and add the
   row to DESIGN §12; never shave lines to duck the limit.
 - **100% test coverage, `cargo-tarpaulin` pinned 0.35.2.** `tarpaulin.toml`
-  holds the config (excludes `src/main.rs` and `src/shell/*`); the hook and CI
+  holds the config (excludes `src/main.rs`, the process edge, and nothing
+  else since bl-7942 took the shell); the hook and CI
   both run `--fail-under 100`. If it can't be tested, it mustn't be built.
 - **The clippy pedantic allow-list lives ONLY in the manifest.** `Cargo.toml
   [lints.clippy]` runs `pedantic = deny` with a justified allow-list (currently
   13 entries in three tiers: the bootstrap five, six empirically-warranted for
-  this egui GUI, and two site-specific false positives). Each entry carries a
+  this tree, and two site-specific false positives). Each entry carries a
   one-line justification. Never inline a suppression to dodge it (rule 5) — add
   a justified manifest entry via review instead.
 - **`docs/DESIGN.md` is the architecture authority.** Amend the doc when reality
@@ -357,9 +364,10 @@ demotion removes an internal API from the boundary's obligations. Reach for
   **Unreadable is rejected, not skipped.** `grep -I` silently passes binary
   files, which is the class most likely to carry a dump (archives, databases,
   PDFs, HAR captures, screenshots, executables). A tracked binary must be a
-  regenerable derivation with a byte-for-byte test — `BINARY_ALLOWED` names
-  exactly `assets/yog-*.png`, which `make icon` emits and
-  `src/theme/icon/tests/artifacts.rs` pins.
+  regenerable derivation with a byte-for-byte test. **`BINARY_ALLOWED` is now
+  empty**: it named the icon PNGs, and the application mark went with the
+  window (bl-7942), so this repository tracks no binary at all and every one is
+  refused.
 
   **The scan is never cached.** `scripts/pre-commit` runs it BEFORE consulting
   bl-speculate's verdict cache, so no stored verdict — including one imported
@@ -422,16 +430,15 @@ demotion removes an internal API from the boundary's obligations. Reach for
   is how the task store is gated below without a second copy of the rules.
 - `make rules-audit` — `ast-grep scan src` (must be clean) AND a negative check
   that `ast-grep scan rules/fixtures` *fails* (proving every rule still bites).
-  Most rules govern production style; **`no-hand-rolled-paint-walk.yml` governs
-  the tests** — `Galley::text()` is the string that went IN, so a galley egui
-  truncated to `…` still reports the whole label and every assertion against it
-  is blind to elision, the one defect the paint layer is the only witness for.
-  Painted glyphs come from `crate::paint_probe`, the one walk. This has been
-  fixed three times (bl-bc06 found it in `paint_probe` itself, where **1815
-  tests passed while covering no truncation at all**; bl-36c3 found two copies;
-  bl-70b8 found a third still live, aiming every pointer test's click by input
-  text) — which is why it is a rule now and not a memory. Geometry off a galley
-  (`.size()`, `.rect`, `.rows`) is unaffected: it is the text that lies.
+  Every rule governs production style. **Three governed the paint layer and
+  went with it** (bl-7942): `no-hand-rolled-paint-walk.yml` (`Galley::text()`
+  is the string that went IN, so an assertion on it is blind to elision — a
+  defect that was fixed three times before it became a rule),
+  `no-engine-tree-in-paint.yml` (a `GitTree` reaching a widget) and
+  `no-eprintln-in-shell.yml` (a GUI process has no terminal). Each is a rule
+  about a face; the seat crate is where a face is. If you are tempted to
+  re-add one here, the question to ask first is what in *this* crate it would
+  govern.
 - `make coverage` — pinned tarpaulin, `--fail-under 100`. The bare invocation,
   always verbose; `check` does not call it directly.
 - `scripts/check-coverage.sh` — the coverage STEP, and the one every caller
@@ -661,9 +668,8 @@ cost is recorded per item; the notes are the checklist's evidence that it works.
 
    **This is the one item on the list a gate has since reached** (bl-8340).
    `Cargo.toml` now declares an `include` **allowlist** — the crate's own
-   source, the icon artifacts `src/theme/icon/tests/artifacts.rs` embeds, and
-   the three files crates.io renders — so `docs/**` (DESIGN, VISION, QUALITY,
-   REMOTE, STORIES), `tests/**`, `examples/**`, `scripts/**` (its
+   source and the three files crates.io renders — so `docs/**` (DESIGN, VISION,
+   QUALITY, REMOTE, STORIES), `tests/**`, `scripts/**` (its
    fabricated-secret `leak-fixtures/` included), `rules/**`, `.github/**`,
    `.githooks/**`, the gate configs and this file no longer ship. An allowlist
    and not an `exclude` because the two failure modes are not symmetric: a

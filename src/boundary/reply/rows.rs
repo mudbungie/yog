@@ -10,10 +10,10 @@ use super::WsRow;
 use crate::binding::WorkspaceKind;
 use crate::git_tree::AgentState;
 use crate::monitor::Check;
+use crate::nav::convs::Tone;
 use crate::nav::convs::{ConvRow, Flight};
 use crate::opslog::OpRow;
 use crate::projects::join::JoinRow;
-use crate::transcript::Tone;
 
 use super::super::codec::join_token;
 use super::super::codec::origin_token;

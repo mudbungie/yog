@@ -134,17 +134,6 @@ impl Wound {
         !matches!(self, Wound::None)
     }
 
-    /// The class, in the badge's one seat — the words the Steps row paints
-    /// where the framing badge would otherwise go. `Wound::None` has no word:
-    /// the caller gates on [`wounded`](Self::wounded) and paints the framing.
-    pub(crate) fn word(&self) -> &'static str {
-        match self {
-            Wound::None => "",
-            Wound::Mute | Wound::Spoke(_) => NO_RESPONSE,
-            Wound::OutputLimit => OUTPUT_LIMIT,
-        }
-    }
-
     /// The whole §7.3 rendered fact, in words — glyph, the class, and the
     /// reason. One home, so the banner cannot drift from what the derivation
     /// found, and so the sentence is assertable without a frame. `Wound::None`

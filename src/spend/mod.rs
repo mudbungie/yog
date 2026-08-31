@@ -40,10 +40,8 @@ use std::path::PathBuf;
 
 mod ceiling;
 mod prices;
-mod render;
 pub use ceiling::Ceiling;
 pub use prices::{MICRO_PER_CENT, MICRO_PER_USD, Price, Prices};
-pub use render::render;
 
 /// What a figure cost, in micro-USD, plus what it could not price.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

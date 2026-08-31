@@ -29,8 +29,7 @@
 //! is — the readings that do not apply to the selected act are inert here and
 //! always have been.
 
-use super::super::entries::ENTRIES;
-use super::super::material::{ADDRESS, DIR, Role};
+use super::super::material::{ADDRESS, DIR, ENTRIES, Role};
 use super::{ANCHORS, LOOPBACK, PORT};
 use crate::registry::Grade;
 use crate::xdg::Env;
@@ -167,7 +166,7 @@ fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
         println!("  {}", dir.join(name).display());
     }
     // Spelled from the reader's own constants, so the instruction and the
-    // directory `entries` walks cannot drift.
+    // directory a client files it into cannot drift.
     let client = Role::Client.leaf();
     println!(
         "  carry those and {} to that box by hand, into its {DIR}/{ENTRIES}/<leaf>/ as \

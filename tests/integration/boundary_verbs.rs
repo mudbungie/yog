@@ -108,6 +108,15 @@ fn the_litany_actions_spawn_their_exact_argv_and_ops_rows() {
         Action::Scan {
             workspace: yog::naming::leaf(ws.path()),
         },
+        // Send-and-interrupt (bl-a33d): the one arm that composes two acts, so
+        // it is here to prove the chokepoint routes it to that composition —
+        // the composition's own order and its two §4.2 rows are
+        // `boundary::interrupt`'s beat.
+        Action::Interrupt {
+            workspace: yog::naming::leaf(ws.path()),
+            agent: AGENT.into(),
+            content: "stop and read this".into(),
+        },
     ];
     for (i, action) in actions.iter().enumerate() {
         match dispatch(&d, &mut ui(), &format!("T{i}"), action).unwrap() {
@@ -132,11 +141,23 @@ fn the_litany_actions_spawn_their_exact_argv_and_ops_rows() {
                 "--stop-children".into()
             ],
             vec!["scan".to_owned(), ws_s.clone()],
+            vec!["stop".to_owned(), ws_s.clone(), AGENT.into()],
+            vec![
+                "message".to_owned(),
+                ws_s.clone(),
+                AGENT.into(),
+                "stop and read this".into()
+            ],
         ],
         "the §8.2 argv, verbatim"
     );
     let ops = opslog::tail(state.path(), 8);
-    assert_eq!(ops.len(), 3, "one ops row per spawn (§4.2)");
+    assert_eq!(
+        ops.len(),
+        5,
+        "one ops row per spawn (§4.2) — and the interrupt is two acts, so it \
+         leaves the two rows those acts each leave"
+    );
     assert!(ops.iter().all(|e| e.exit == 0));
 }
 

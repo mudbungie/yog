@@ -19,7 +19,6 @@
 //! latency knob, the sweeps are the correctness floor (§7.2).
 
 use super::Deriver;
-use crate::watch::Repaint;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
@@ -39,17 +38,18 @@ pub struct Worker {
 }
 
 impl Worker {
-    /// Take ownership of `deriver` and run its pass forever. `repaint` wakes the
-    /// egui event loop when — and only when — a new snapshot was published, so
-    /// a quiet world costs zero frames.
-    pub fn spawn(mut deriver: Deriver, repaint: impl Repaint + 'static) -> Self {
+    /// Take ownership of `deriver` and run its pass forever, publishing each
+    /// completed derivation to the snapshot cell.
+    ///
+    /// It used to wake a face on publish. There is none in this process since
+    /// bl-7942: a seat asks over the wire on its own cadence, so a snapshot
+    /// that has landed is simply what the next gesture is answered from.
+    pub fn spawn(mut deriver: Deriver) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
         let flag = Arc::clone(&stop);
         let handle = std::thread::spawn(move || {
             while !flag.load(Ordering::Relaxed) {
-                if deriver.step() {
-                    repaint.request();
-                }
+                deriver.step();
                 std::thread::park_timeout(WORKER_POLL);
             }
         });

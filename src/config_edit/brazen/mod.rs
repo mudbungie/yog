@@ -143,11 +143,6 @@ impl BrazenEditor {
         self.draft.text()
     }
 
-    /// The draft as a mutable buffer — the binding an egui `TextEdit` edits.
-    pub(crate) fn draft_mut(&mut self) -> &mut String {
-        self.draft.text_mut()
-    }
-
     /// Replace the draft text wholesale (e.g. a template paste).
     pub fn set_draft(&mut self, text: String) {
         self.draft.set(text);

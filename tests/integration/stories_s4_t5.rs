@@ -56,9 +56,8 @@ fn s4_t5_grouping_is_a_stable_partition_of_the_sorted_rows() {
         ],
     );
 
-    let (mut m, _worker) = AppModel::boot(
+    let (m, _worker) = AppModel::boot(
         roots,
-        None,
         Arc::new(SystemClock),
         Box::new(FakeBl {
             live: HashMap::from([(project.path().to_path_buf(), LIVE.to_owned())]),
@@ -66,9 +65,9 @@ fn s4_t5_grouping_is_a_stable_partition_of_the_sorted_rows() {
         }),
         None,
     );
-    m.focus_workspace(&yog::naming::leaf(&ws));
+    let name = yog::naming::leaf(&ws);
 
-    let flat = crate::support::conversation_rows(&m, 9000);
+    let flat = crate::support::conversation_rows(&m, &name, 9000);
     let flat_ids: Vec<&str> = flat.iter().map(|r| r.root_id.as_str()).collect();
     assert_eq!(
         flat_ids,
@@ -76,7 +75,7 @@ fn s4_t5_grouping_is_a_stable_partition_of_the_sorted_rows() {
         "the default `recent` ordering is the input to the partition"
     );
 
-    let groups = group_by_ball(crate::support::conversation_rows(&m, 9000));
+    let groups = group_by_ball(crate::support::conversation_rows(&m, &name, 9000));
     let heads: Vec<Option<&str>> = groups
         .iter()
         .map(|g| g.ball.as_ref().map(|b| b.id.as_str()))

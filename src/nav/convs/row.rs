@@ -15,7 +15,7 @@
 use super::flight::flight;
 use crate::attention;
 use crate::git_tree::{Agent, AgentState, DescentRow, children_of};
-use crate::transcript::Tone;
+use crate::nav::convs::Tone;
 use crate::ui_state::SeenKind;
 
 /// The row's own inert shapes — what the §11 list paints, and the two facts

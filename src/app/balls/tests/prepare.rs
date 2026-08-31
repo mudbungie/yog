@@ -1,21 +1,20 @@
 //! The start flow's first act (§8.1 step 1): `Action::Prepare` through the one
 //! chokepoint — what it resolves, what it refuses, and by which name.
 //!
-//! **The §3.4 focus adoption is no longer here** (bl-1747). It rode
-//! `prepare_start`'s synchronous `Ok`; the act crosses the wire now, so the
-//! adoption hangs off the receipt (`shell::acting::start::staged`) and its
-//! witness is the end-to-end raise drive in `shell::acceptance::raise`, which
-//! pins the same regression (bl-2826: New workspace raised a sphere and left the
-//! focus on the previous one, so the bottom composer's bare rung still resolved
-//! to the workspace the operator had just walked away from). What a *failed*
-//! prepare moves is likewise the receipt's business — it answers no `Prepared`,
-//! so nothing is adopted.
+//! **What the prepare MOVES is a seat's** (bl-1747, completed by bl-7942). The
+//! §3.4 focus adoption rode `prepare_start`'s synchronous `Ok`; the act crossed
+//! the wire at bl-1747 and the adoption hung off the receipt, and with the
+//! window gone the whole notion of a focus is the seat's (REMOTE §7). What this
+//! file pins is the half that was always the engine's: the raise founds a wall
+//! under the operator's own §3.1 name, and the reply names it — so a seat has
+//! something to adopt, and a *failed* prepare answers no `Prepared` and there
+//! is nothing to adopt.
 //!
 //! Hermetic: the world is pre-seeded (`models.yaml` present ⇒ `litany prime` skips,
 //! §16.6 W3), so the only spawn is `litany new` — a fake that materializes the same
 //! `<ws>/repo.git` marker the real one does, or fails, per test.
 
-use super::{model_focused, world};
+use super::{model, world};
 use crate::boundary::{Action, reply::Reply};
 use crate::cli_outbound::Cli;
 use crate::test_support::{authoring_new_arm, engine};
@@ -65,6 +64,28 @@ fn staged(
     }
 }
 
+/// The §3.4 inputs a start rung hands the prepare, built from the model's own
+/// roots. It was three `AppModel` constructors (`new_workspace_inputs`,
+/// `start_bare_inputs`, `new_ball_inputs`) while a composer called them; those
+/// were the seat's rungs and went with it (bl-7942), and what the ENGINE has
+/// always taken is this struct.
+fn inputs(
+    m: &crate::AppModel,
+    w: &super::World,
+    workspace: &Path,
+    payload: crate::start::Payload,
+) -> crate::start::StartInputs {
+    crate::start::StartInputs {
+        workspace: workspace.to_path_buf(),
+        payload,
+        repo: None,
+        home: w.roots.home.clone(),
+        yog_data_root: w.roots.yog_data.clone(),
+        balls_state_root: m.balls_state_root(),
+        conversation_names: Vec::new(),
+    }
+}
+
 /// Lay the world's seed marker so `prime` short-circuits (§16.6 W3) — the ordinary
 /// case, and the one that keeps the fake `litany` to a single verb.
 fn seed(yog_data_root: &Path) {
@@ -74,7 +95,7 @@ fn seed(yog_data_root: &Path) {
 }
 
 #[test]
-fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
+fn a_raise_founds_the_wall_the_reply_names() {
     let bin = tempdir().unwrap();
     let w = world();
     seed(&w.roots.yog_data);
@@ -83,10 +104,10 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     // `SPAWN_LOCK` here first would deadlock against it (the mutex is not
     // reentrant). The guard covers only what needs it: the fake script's
     // write-then-exec window (the ETXTBSY race `test_support` documents).
-    let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
-    assert_eq!(m.focused_workspace(), Some(w.ws_cobalt.clone()));
+    let (_c, mut m) = model(&w);
 
-    let inputs = m.new_workspace_inputs("ops");
+    let target = crate::binding::workspace_path(&w.roots.yog_data, "ops");
+    let inputs = inputs(&m, &w, &target, crate::start::Payload::Bare);
     let prepared = staged(&mut m, &fake_litany(bin.path(), &news()), &inputs).unwrap();
 
     assert_eq!(
@@ -98,61 +119,52 @@ fn a_raise_focuses_the_raised_workspace_and_retargets_the_bare_rung() {
     let raised = crate::binding::workspace_path(&w.roots.yog_data, &prepared.workspace);
     assert_ne!(raised, w.ws_cobalt, "the raise always raises a fresh wall");
     assert!(raised.join("repo.git").is_dir(), "`litany new` ran");
-    // The adoption the receipt makes (`shell::acting::start::staged`, bl-1747)
-    // — asserted here as the *input* to the retarget below, which is this
-    // file's own claim: whether the seat really makes it is the raise drive's
-    // (`shell::acceptance::raise`), end to end through the real window.
-    m.adopt_workspace(&crate::naming::leaf(&raised), Some(&raised));
-    assert_eq!(
-        m.focused_ws_name().as_deref(),
-        Some("ops"),
-        "the focus is the §3.1 name (bl-7407)"
-    );
-    assert_eq!(
-        m.focused_workspace(),
-        Some(raised.clone()),
-        "and it resolves through the raise claim, on the frame the receipt landed"
-    );
-    // The bug's sharp end: the BOTTOM composer's bare rung derives from the focus,
-    // so Enter now fires into the newly created workspace, not the abandoned one.
-    assert_eq!(
-        m.start_bare_inputs().workspace,
-        raised,
-        "the bare rung names the start's own workspace"
-    );
+    // The reply names the wall by its §3.1 NAME, which is what a seat adopts
+    // and what the next gesture addresses (bl-7407): the raise's whole product.
+    assert_eq!(crate::naming::leaf(&raised), prepared.workspace);
 }
 
 #[test]
-fn a_failed_prepare_moves_the_focus_nowhere() {
+fn a_failed_prepare_answers_the_refusal_and_founds_nothing() {
     let bin = tempdir().unwrap();
     let w = world();
     seed(&w.roots.yog_data);
-    let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
+    let (_c, mut m) = model(&w);
 
-    let inputs = m.new_workspace_inputs("ops");
+    let raised = crate::binding::workspace_path(&w.roots.yog_data, "ops");
+    let inputs = inputs(&m, &w, &raised, crate::start::Payload::Bare);
     let err = staged(&mut m, &fake_litany(bin.path(), FAILS), &inputs).unwrap_err();
 
     assert!(err.contains("boom"), "the refusal rode back");
-    assert_eq!(
-        m.focused_workspace(),
-        Some(w.ws_cobalt.clone()),
-        "nothing was resolved, so nothing moved"
+    assert!(
+        !raised.join("repo.git").is_dir(),
+        "nothing was founded, so there is nothing to adopt"
     );
 }
 
-/// The frame's door resolves the payload's project **name** exactly as the
-/// dispatch table's Prepare arm does (REMOTE §8, bl-f5f6) — and a name this
-/// snapshot enumerates no project for is a refusal saying so, before a `bl`
-/// runs. The click-glue and a deposit therefore fail the same way on the same
-/// token, which is the whole point of one resolution.
+/// The Prepare arm resolves the payload's project **name** (REMOTE §8,
+/// bl-f5f6), and a name this snapshot enumerates no project for is a refusal
+/// saying so, before a `bl` runs. One resolution, so every caller fails the
+/// same way on the same token.
 #[test]
 fn a_ball_rung_whose_project_this_world_does_not_enumerate_refuses_by_name() {
     let bin = tempdir().unwrap();
     let w = world();
     seed(&w.roots.yog_data);
-    let (_c, mut m) = model_focused(&w, &w.ws_cobalt);
+    let (_c, mut m) = model(&w);
 
-    let inputs = m.new_ball_inputs(Path::new("/nowhere/at/all"), "Fresh", "do it");
+    let inputs = inputs(
+        &m,
+        &w,
+        &crate::binding::workspace_path(&w.roots.yog_data, "ops"),
+        crate::start::Payload::Ball {
+            project: "/nowhere/at/all".to_owned(),
+            ball: crate::start::BallSpec::New {
+                title: "Fresh".to_owned(),
+                body: "do it".to_owned(),
+            },
+        },
+    );
     let err = staged(&mut m, &fake_litany(bin.path(), &news()), &inputs).unwrap_err();
 
     assert_eq!(err, "unknown project \"/nowhere/at/all\"");

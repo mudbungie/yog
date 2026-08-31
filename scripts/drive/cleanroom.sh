@@ -11,7 +11,7 @@
 # binary"), and it is why this wrapper exists rather than a prose recipe in a
 # drive log: the env IS the proof, so it lives in one executable place.
 #
-# Usage: cleanroom.sh <yog-binary> <scratch-root> <out-dir> [run|run-s3s4s6]
+# Usage: cleanroom.sh <yog-binary> <scratch-root> <out-dir> [run-headless]
 #   e.g. cleanroom.sh target/release/yog /tmp/w14 "$DRIVE_ROOT/w14-shots"
 #   The out dir is evidence: it belongs under the drive root, outside the
 #   checkout, with every other run's (QUALITY.md §3 step 6; bl-244f).
@@ -44,16 +44,16 @@ here=$(cd "$(dirname "$0")" && pwd)
 yogbin=${1:?usage: cleanroom.sh <yog-binary> <scratch-root> <out-dir> [verb]}
 root=${2:?usage: cleanroom.sh <yog-binary> <scratch-root> <out-dir> [verb]}
 out=${3:?usage: cleanroom.sh <yog-binary> <scratch-root> <out-dir> [verb]}
-verb=${4:-run}
+verb=${4:-run-headless}
 
 yogbin=$(cd "$(dirname "$yogbin")" && pwd)/$(basename "$yogbin")
 rm -rf "$root"
 mkdir -p "$root/bin" "$root/config" "$root/state"
 ln -sfn "$yogbin" "$root/bin/yog"
 
-# The room. `/usr/bin:/bin` carries git, sh, coreutils and the harness's
-# Xvfb/xdotool/ffmpeg; the three substrate binaries live in ~/.local/bin and
-# ~/.cargo/bin, which the room drops.
+# The room. `/usr/bin:/bin` carries git, sh, coreutils and python3; the three
+# substrate binaries live in ~/.local/bin and ~/.cargo/bin, which the room
+# drops.
 export PATH="$root/bin:/usr/bin:/bin"
 export XDG_DATA_HOME="$root/data" XDG_STATE_HOME="$root/state"
 export XDG_CONFIG_HOME="$root/config" LITANY_HOME="$root/litany-ambient-unused"

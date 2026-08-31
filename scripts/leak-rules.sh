@@ -143,7 +143,7 @@ rule_fields() {
     WHY='a file shape that carries credentials or session state. It should be gitignored, not tracked.' ;;
 
   binary-content)
-    WHY='content the scanner cannot read — a binary the gate would have to take on faith. Track it only if it is a regenerable derivation with a byte-for-byte test (assets/yog-*.png); otherwise do not track it.' ;;
+    WHY='content the scanner cannot read — a binary the gate would have to take on faith. Track it only if it is a regenerable derivation with a byte-for-byte test, and add it to BINARY_ALLOWED; otherwise do not track it.' ;;
   esac
 }
 
@@ -161,11 +161,15 @@ FORBIDDEN_PATH='(^|/)(\.env(\..+)?|\.netrc|\.npmrc|\.pypirc|credentials\.json|id
 # the one class of file most likely to carry a dump. Unreadable is now
 # rejected, not skipped, and the allowlist is one line of policy: a tracked
 # binary must be a DERIVATION the repo can regenerate and check byte for byte.
-# The icon PNGs are exactly that (`make icon` emits them from `theme::icon`,
-# and src/theme/icon/tests/artifacts.rs asserts each checked-in file still
-# equals the generator's output), so nothing can hide in them that the
-# generator did not put there.
-BINARY_ALLOWED='^assets/yog-[0-9]+\.png$'
+#
+# **The allowlist is empty, and that is the state to keep** (bl-7942). It named
+# the icon PNGs, which qualified: `make icon` emitted them from `theme::icon`
+# and a test asserted each checked-in file still equalled the generator's
+# output. The mark went with the window, and so did the only tracked binary
+# this repository has ever had. A pattern matching nothing is exactly right
+# here — it refuses every binary — and `--self-test`'s own fixture is what
+# proves the RULE still bites, not this line.
+BINARY_ALLOWED='^$'
 
 # Every non-comment line of every content-rule fixture must contain this
 # marker (bl-167d). No regex can tell a real secret from a fabricated one, so

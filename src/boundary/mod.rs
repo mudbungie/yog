@@ -24,17 +24,6 @@
 //! variant here leaves [`codec::encode`], [`codec::decode`] and the dispatch
 //! match non-exhaustive until the spelling exists.
 
-/// The windowless face's leading word (§8.5, REMOTE §8): `yog serve`. Named
-/// here, once, because two spellings — the arm that dispatches it and the help
-/// that advertises it — would be two facts.
-///
-/// It was `headless` until bl-b6fa. The face did not change — it is still the
-/// one [`Engine::boot`](crate::engine::Engine::boot) with no window — but the
-/// engine now carries the wire listener (REMOTE §9.5), so what it *is* to
-/// anything outside the box is a server, and REMOTE §8 names it `serve`. Two
-/// names for one face would be the drift this const exists to prevent.
-pub const SERVE_SUBCMD: &str = "serve";
-
 pub mod answer;
 /// The §3.5 spend ceiling's one seat — the spawn gate.
 pub mod ceiling;

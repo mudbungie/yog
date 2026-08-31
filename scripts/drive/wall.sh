@@ -5,7 +5,7 @@
 #
 # Split out of harness.sh at the 300-line cap (bl-f16e). The seam is real and
 # it restores that file's own header: harness.sh is "the two waiting
-# primitives, the per-run seat, and the verdict in BOTH its halves"
+# primitives and the verdict in BOTH its halves"
 # — a fixture that COPIES A HOST CREDENTIAL INTO A SCRATCH WORLD is none of
 # those, and it was parked there only because bl-49c6 had nowhere else to put
 # it. Everything below is unchanged; only its address moved.

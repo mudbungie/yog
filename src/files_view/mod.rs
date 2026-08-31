@@ -23,13 +23,7 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-mod render;
 pub(crate) mod wire;
-/// The bounded-bytes painter, shared with the Steps drill-in's capture-log
-/// seats (§11, bl-83d6): one wording for the cap, the truncation and the binary
-/// verdict, wherever a whole file is shown.
-pub(crate) use render::preview_body;
-pub use render::render;
 
 /// Workspace subdir holding the per-agent worktrees (ARCH §2.3).
 const AGENTS_DIR: &str = "agents";

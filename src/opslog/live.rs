@@ -120,13 +120,12 @@ impl Activity {
     ///
     /// §11 glyph doctrine: the chip has room, so it says the outcome **outright**
     /// — and takes both the word and the glyph from the one badge mapping
-    /// (`theme::op_badge`, whose hue slot belongs to the shell and is dropped
-    /// here), so the chip can never spell an outcome differently from the rows
+    /// (`badge::op_badge`), so the chip can never spell an outcome differently from the rows
     /// it summarizes.
     pub fn chip(&self) -> String {
         let mut parts = vec![format!("activity · {} ops", self.total)];
         if self.errors > 0 {
-            let (glyph, _, phrase) = crate::theme::op_badge(OpOutcome::Failed);
+            let (glyph, phrase) = crate::badge::op_badge(OpOutcome::Failed);
             parts.push(format!("{} {phrase} {glyph}", self.errors));
         }
         if self.drifts > 0 {

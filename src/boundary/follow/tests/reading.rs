@@ -177,3 +177,35 @@ fn a_quiet_hold_expires_and_a_frame_resets_it() {
         "the quiet look before this one did not count against a hold a frame reset"
     );
 }
+
+/// **A stream that is over ends the hold, and says so by ending** — the
+/// iterator's third arm. A step that advanced (or a tree that went away) is
+/// not a quiet look to be waited out: there is nothing more to say about the
+/// call this connection was following, so the frames stop rather than the
+/// hold expiring on patience it never needed.
+#[test]
+fn a_stream_that_is_over_ends_the_hold_at_once() {
+    let (dir, cell, _drop) = flying();
+    let ws = dir.path().to_path_buf();
+    let file = response(&ws, 1);
+    let mut held = Follow::holding(
+        cell,
+        ws.clone(),
+        AGENT.to_owned(),
+        // A hold so patient that expiry cannot be what ends it: if the frames
+        // stop, it is because the stream did.
+        u32::MAX,
+        Duration::ZERO,
+    );
+    append(&file, &text_delta("one"));
+    assert!(held.next().is_some(), "the open step's bytes");
+
+    // The step advances: a new response file, so the stream this hold opened
+    // is over.
+    let next_step = response(&ws, 2);
+    append(&next_step, &text_delta("two"));
+    assert!(
+        held.next().is_none(),
+        "the stream is over, and the hold ends with it"
+    );
+}

@@ -55,9 +55,8 @@ fn s4_t3_balls_section_groups_all_bound_balls_under_their_workspace() {
         .unwrap();
     }
     let live = HashMap::from([(PathBuf::from("/proj/a"), LIST.to_owned())]);
-    let (mut m, _worker) = AppModel::boot(
+    let (m, _worker) = AppModel::boot(
         roots,
-        None,
         Arc::new(SystemClock),
         Box::new(FakeBl {
             live,
@@ -67,7 +66,7 @@ fn s4_t3_balls_section_groups_all_bound_balls_under_their_workspace() {
     );
 
     // Both named workspaces are wall tabs (§11), in name order.
-    let bar = crate::support::tab_bar(&m);
+    let bar = crate::support::tab_bar(&m, Some("cobalt"));
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(names, ["cobalt", "spare"], "named workspaces tab the wall");
 
@@ -90,29 +89,22 @@ fn s4_t3_balls_section_groups_all_bound_balls_under_their_workspace() {
         .is_empty(),
         "unassigned workspace has no ball"
     );
-    // The negative beat (bl-9cb0): focusing that workspace answers NO ball, so
-    // the composer's ball row (§8.2) and the per-project marks knob (§16.3)
-    // render their empty state instead of a row naming an empty ball and an
-    // empty project.
-    let ball_row = |m: &yog::AppModel| {
-        crate::support::ws_balls(m, &m.focused_workspace().expect("a focus"))
+    // The negative beat (bl-9cb0): the named workspace answers NO ball, so a
+    // seat's ball row (§8.2) and its per-project marks knob (§16.3) render
+    // their empty state instead of a row naming an empty ball and an empty
+    // project.
+    let ball_row = |m: &yog::AppModel, name: &str| {
+        crate::support::ws_balls(m, &m.workspace_path(name).expect("the name resolves"))
             .first()
             .cloned()
     };
-    m.focus_workspace(&bar.tabs[1].name);
     assert!(
-        ball_row(&m).is_none(),
+        ball_row(&m, &bar.tabs[1].name).is_none(),
         "no ball claims spare ⇒ no ball row, no marks knob"
     );
-    m.focus_workspace(&bar.tabs[0].name);
     assert_eq!(
-        ball_row(&m).map(|r| r.id),
+        ball_row(&m, &bar.tabs[0].name).map(|r| r.id),
         Some("bl-1".to_owned()),
         "a bound workspace still answers its ball"
     );
-
-    // The ready, unclaimed ball is startable; the claimed-elsewhere one is not
-    // (§3.5) — one ▶ Start entry, bl-3.
-    let startable = m.startable();
-    assert_eq!(startable.len(), 1, "only the ready ball is startable");
 }

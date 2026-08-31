@@ -32,18 +32,23 @@ because "one `#[test]` per binary" *is* their soundness argument. The rest
 share a process, so a fixture executable is authored through
 `support::write_executable`. In *this* crate that still matters: `git_env`'s
 fork lock is `cfg(test)` on the lib, so an integration binary's own forks are
-outside it (bl-6397). They drive the dispatch layer — the same
-`pub` functions the shell's click-glue calls (`start::*`, `actions::*`,
-`AppModel`, the view-model modules) — never egui widgets (§11's split: glue
-is thin and excluded; everything a click *calls* is covered). Substrates are
+outside it (bl-6397).
+
+**Every story asks the boundary the way a seat asks it** (bl-7942). They drove
+the dispatch layer directly while a window sat on the same functions; there is
+no window, so a story states its workspace and its target exactly as a gesture
+does, through `support::{ask, act}` — one `Deps`, one `ui.json` opened per
+gesture, the same `answer`/`dispatch` chokepoints the wire and the inbox reach.
+A test that reached past them would be asserting against a derivation no seat
+can see. Substrates are
 fake recorder script binaries injected as `Cli::new(path)` / `Deps{…}` at
 the dispatch API (the `tests/integration/editor_roundtrip.rs` idiom): each records
 argv+env+cwd to a log and plays a canned stdout/exit per verb. (The
 `LITANY_BINARY`/`BL_BINARY`/`BZ_BINARY` env vars are production wiring,
 covered by the existing `resolve_with` unit tests — tests never mutate
 process-global env under the parallel runner.) Every story test asserts up
-to three surfaces: the recorded spawns, the `ops.jsonl` trail, and the
-derived view-model the shell would paint.
+to three surfaces: the recorded spawns, the `ops.jsonl` trail, and the typed
+reply a seat is answered with.
 
 **Test→enabling-task map** (M6 §15; a test lands red-first *inside the
 worktree of the task that turns it green* — written first, red in-worktree,
@@ -89,25 +94,25 @@ history (bl-43cd) and its task table is gone; the heading survives only so
 The intro's done-bar has two halves: a story is done when its tests pass
 **against the fake substrate** (the `tests/` harness above) *and* **the flow
 works against the real one**. The fake harness proves the dispatch layer in
-isolation; nothing in it exercises the installed `yog` binary, a live egui
-window, or a real model wire. This section is the second half's harness — a
+isolation; nothing in it exercises the installed `yog` binary or a real model
+wire. This section is the second half's harness — a
 graduated, repeatable drive of the *real* `yog` against the *real* `litany`
 wire, so "works against the real one" is a run you can re-run, not a claim.
 
 **One command drives it** (DESIGN §12.2 maps the files):
 
     make drive                            # the whole ladder, one world per verb
-    make drive DRIVE_RUNS="run run-s7"    # a subset
+    make drive DRIVE_RUNS="run-headless"  # a subset
     make drive-cleanroom                  # the same, in the §16.7 W14 room
     make drive-preflight                  # name every missing host tool at once
 
-**Not every run verb drives a window.** `run-headless` (bl-bb20) claims no X
-display, opens nothing and spends nothing on the wire: `yog serve` is the
-same engine with no face (§8.4), so the whole verb is `yog gesture` lines
-against a real world. It is the ladder's first verb — a world that is broken in
-its own shape reddens in seconds rather than after four windowed runs — it is
-the only verb drivable on a box with no X server, and it is where a graduated
-rung's real-substrate half lands when the rung has a headless spelling. Which
+**Every beat is a §8.5 gesture, and there is one run verb** (bl-7942).
+`run-headless` (bl-bb20) was the exception — the only verb that claimed no X
+display, opened nothing and spent nothing on the wire — and every other verb
+drove a window with keystrokes and screenshots. The window is the `lernie`
+seat crate's, so the exception is the whole harness: a bare `yog` is the
+engine, and the run is `yog gesture` lines against a real world. Its beats are
+where a graduated rung's real-substrate half lands. Which
 rungs those are, and which are ruled out and why, is recorded rung by rung in
 `scripts/drive/beats_headless.sh`'s own head; the short of it is that a drive
 beat earns its keep only where the REAL substrate can falsify something a fake
@@ -140,8 +145,7 @@ its **own** scratch world under `$XDG_CACHE_HOME/yog-drive/<stamp>/<verb>/`, and
 emits a log skeleton at the tail. It is never the live world and cannot be
 pointed at one: the scratch root and `$XDG_DATA_HOME` are compared in both
 directions and an overlap is refused outright, because a run wipes its world
-before it starts. `make ux` and `make reload` are the live-world verbs; these
-are not.
+before it starts.
 
 **The evidence root is outside the checkout on purpose.** A scratch world is not
 inert data — it holds `git init` project fixtures and a nested balls delivery
@@ -156,11 +160,10 @@ an interior mirror directory never is — so the class is dead at the fixture as
 well as at the path.
 
 The friction that hid behind the positional scripts was not incidental — it is
-why the ladder went undriven for eleven days while 177 commits landed. Four
-facts had to be right before the first beat (a seat is per run; each verb wants
-its own world; the driven `yog` resolves from `PATH`, so a worktree build must
-be prefixed onto it; the evidence needs a home), and getting any of them wrong
-was silent.
+why the ladder went undriven for eleven days while 177 commits landed. Facts
+had to be right before the first beat (each verb wants its own world; the
+driven `yog` resolves from `PATH`, so a worktree build must be prefixed onto
+it; the evidence needs a home), and getting any of them wrong was silent.
 
 **Scripts** (`scripts/drive/`, bash, no repo deps):
 
@@ -170,12 +173,12 @@ was silent.
   `stories.sh <verb> <data> <out>` and `cleanroom.sh <bin> <root> <out> [verb]`
   keep working exactly as they always have.
 - `preflight.sh` — the host contract, named in full and *at once*. Before it, a
-  run claimed a seat, went quiet for ten seconds and died on the first missing
-  binary — one per attempt, a full seat claim spent to learn each. Its subjects
-  are what the scripts actually call, verified against them: `Xvfb`, `xdotool`,
-  `ffmpeg` (capture is `-f x11grab`, so ImageMagick `import`/`convert`, `scrot`
-  and `xwd` are **not** subjects and never were), `python3`, `git`, the `yog`
-  under drive, and the two world-seed files every run verb copies. It also
+  run went quiet for ten seconds and died on the first missing binary — one per
+  attempt. Its subjects are what the scripts actually call, verified against
+  them: `python3`, `git`, the `yog` under drive, and the two world-seed files
+  every run verb copies. (`Xvfb`, `xdotool`, `ffmpeg` and `ffprobe` were
+  subjects while beats pressed §11 keys at a window and shot the result; they
+  went with the window, bl-7942.) It also
   names the **wall** contract (bl-49c6), because a host tool is not the only way
   a run can be unready: §16.2 moved brazen's config, credentials and model cache
   inside the per-workspace wall, so a newborn workspace answers brazen's shipped
@@ -186,47 +189,23 @@ was silent.
   restated here. The whole tier is **advisory** since bl-00ee retired the §9.2
   birth gate — which used to red *every* beat of *every* run over one row, with
   no workspace ever created: a workspace is now born whatever its template
-  names, so a missing row or sign-in costs only the wire beats, and `run-s5s8` —
-  26 beats, zero model calls — needs neither.
-- `yogdrive.sh` — the seat primitive. It drives a real `yog` on an **isolated
-  Xvfb display claimed per run**, never the user's live seat: synthetic
-  `xdotool` input on a live seat leaks keystrokes into the operator's own apps,
-  so input is confined to that display (no compositor there — XTEST works
-  natively). The seat is per *run*, not per box: a hardcoded `:99` was a
-  singleton, and two drives at once stole each other's window focus mid-typing
-  (bl-4132). `seat` claims one — `Xvfb -displayfd` picks the free display
-  itself, which a probe-then-start cannot do without racing — and prints `:N`;
-  the runner exports it as `YOG_SEAT` and every later invocation inherits it,
-  with no verb falling back to a default. `unseat` tears it down (the X lock
-  file names the server's pid, so nothing of ours is stored).
-  `launch <scratch>` spawns `yog` under `XDG_DATA_HOME=<scratch>` (with
-  `WAYLAND_DISPLAY` unset, `DISPLAY=$YOG_SEAT`), finds the window by pid, and
-  prints `PID WID`; `shot`/`type`/`key`/`click`/`stop` are the verbs. Capture is
-  `ffmpeg -f x11grab` to a PNG. The driven `yog` resolves from `PATH`, so a
-  worktree build is driven by prefixing its `target/release` — the drive
-  proves the build in hand, not whatever is installed.
+  names, so a missing row or sign-in costs only the wire beats.
 - `stories.sh` — the story runner, **one verb per world**. `seed <scratch>` lays
-  the world seed; `run` fires S0/S1; `run-s3s4s6` fires S3/S4/S6 in a world that
-  additionally holds a primed project with a ready ball; `run-s5s8` fires S5, S8
-  and the residual S3/S4 ball rows in a world with a *bound* ball and **no
-  conversation at all**; `run-s7` fires S7 and §6's remaining predicates in a
-  world with one live conversation and a laid forensic state around it. Each
-  asserts on the real surfaces (`ops.jsonl`, the workspace tree, the on-disk
-  `messages/`, `ui.json`, the workspace's own git refs and branches), one
-  PASS/FAIL line per beat, screenshots to `<out>` for visual review. The beat
-  bodies live in sourced files — one per rung group (`beats_s3s4s6.sh`,
-  `beats_s5.sh`, `beats_s8.sh`, `beats_s3res.sh`, `beats_s7.sh`, `beats_s6.sh`,
-  `beats_s4res.sh`) — same helpers, same seat, split only for the repo's
-  300-line cap. It owns the
-  **second** transport beside the seat: `gesture <data> '/line' [flags]` — one
+  the world seed; `run-headless <scratch> <out>` fires the beats. It asserts on
+  the real surfaces (`ops.jsonl`, the workspace tree, the on-disk `messages/`,
+  `ui.json`, the workspace's own git refs and branches), one PASS/FAIL line per
+  beat. The beat bodies live in sourced files — one per rung group
+  (`beats_headless.sh`, `beats_s10.sh`, `beats_s11.sh`, `beats_s13.sh`,
+  `beats_s18.sh`, `beats_s19.sh`) — same helpers, split only for the repo's
+  300-line cap. Its one transport is `gesture <data> '/line' [flags]`: one
   DESIGN §8.5 boundary gesture, `yog gesture` against the run's own scratch
-  world. It takes no window id and needs no display, because the deposit
-  converges through the running yog's consumer thread rather than through its
-  surface; replies land in `<out>/gestures.jsonl` as the audit half.
+  world, converging through the running engine's consumer thread; replies land
+  in `<out>/gestures.jsonl` as the audit half. (Four windowed run verbs and the
+  `yogdrive.sh` X-seat primitive under them went with the window, bl-7942.)
 - `cleanroom.sh` — the **standing done-bar** wrapper (§16.7 W14, below):
   `cleanroom.sh <yog-binary> <scratch-root> <out> [<any stories.sh verb>]` builds a
   room whose `PATH` is `<room>/bin:/usr/bin:/bin` — one yog binary plus the
-  system's own git/sh/coreutils and the harness's Xvfb/xdotool/ffmpeg — points
+  system's own git/sh/coreutils and python3 — points
   every nested root at fresh scratch, and hands the room to `stories.sh`
   unchanged. It **asserts** the scrub (`litany`/`bl`/`bz` must all fail
   `command -v`, `yog`/`git` must both resolve) before driving anything, so the
@@ -309,9 +288,9 @@ general path with the seed present (§3.4), not a bootstrap branch.
 **The wall seed (DESIGN §16.2, bl-49c6, bl-1851).** Nothing brazen-shaped is
 shared any more: since the blast-radius ruling a workspace's provider
 config, sign-ins and model cache live at `<world>/walls/<name>/brazen/*`, so a
-newborn workspace's wall is an **empty directory** and the `yogdrive.sh` symlink
-that used to point the scratch `brazen/credentials` at the ambient one fed
-nothing. `wall.sh`'s `seed_wall` copies the host's brazen config and
+newborn workspace's wall is an **empty directory**, and the symlink the seat
+primitive used to point the scratch `brazen/credentials` at the ambient one
+with fed nothing. `wall.sh`'s `seed_wall` copies the host's brazen config and
 credential files into that wall instead — **beside the world seed above, before
 the launch**, and that is the third file of one fixture rather than a later step.
 The template the seed lays names `openai-chatgpt`, which a newborn wall does not
@@ -791,12 +770,12 @@ this document is measured against, because it is the only run that can *fail*
 when a spawn resolves a host binary — with `litany`/`bl`/`bz` unresolvable, a
 fallthrough is an `ENOENT`, not a silent success. One command re-runs it:
 
-    make drive-cleanroom                      # DRIVE_VERB=run-s3s4s6 for another rung
+    make drive-cleanroom                      # DRIVE_VERB=<verb> for another rung
 
 which builds the release binary, preflights the host and lays the room under a
 stamped scratch root. The primitive it wraps is unchanged and still direct:
 
-    scripts/drive/cleanroom.sh target/release/yog /tmp/w14 /tmp/w14-shots run
+    scripts/drive/cleanroom.sh target/release/yog /tmp/w14 /tmp/w14-out run-headless
 
 **S0/S1 clear that bar.** The 2026-07-26 W14 clean-room drive recorded
 all eight beats PASS on a live `gpt-5.4` wire in the room — the reply painted in
@@ -1527,7 +1506,7 @@ multiplex arms + shims, the `bl` arm naming `world/tools/bl` as balls'
 executable) and deleted the refusal. S3-T5's rendered `yog exec bl prime` is
 now a paved path *with* pavement: it founds a checkout whose plugin chain
 re-enters yog, with only yog and git on `PATH` (§16.4; the in-repo proof is
-`tests/multiplex_bl.rs`, the room's is `cleanroom.sh … run-s3s4s6`).
+`tests/multiplex_bl.rs`, the room's is `cleanroom.sh …`).
 
 Tests:
 - **S9-T1 no-host-binaries**: the story suite runs with `litany`/`bl`/`bz`
@@ -1915,16 +1894,15 @@ Tests:
 Machine state: the operator is not at the machine — a phone, a peer fleet's
 coordinator, an agent. Some conversations are waiting on somebody.
 
-1. **`yog serve` is the same binary minus the window, and now literally the
-   same code.** One `Engine::boot` (`src/engine.rs`) is the whole of a running
-   yog minus its face: the §5.2 startup sweep, the §7.1 roots, the model's first
-   synchronous derivation, and the derivation worker + watch bridge + gesture
-   consumer beside it. The two faces are two calls to it differing in one
-   argument — the repaint hook. This is a *deletion*, not a feature: the
-   assembly used to exist twice inside `main.rs`, the one file coverage
-   excludes, so the copies could drift and no test could see it. What a window
-   adds beside the engine is exactly what a window is — an event loop to wake,
-   the §8.5 searcher, and the §5.3 RAM surfaces a pointer needs.
+1. **A bare `yog` IS the engine.** One `Engine::boot` (`src/engine.rs`) is the
+   whole of a running yog: the §5.2 startup sweep, the §7.1 roots, the model's
+   first synchronous derivation, and the derivation worker + watch bridge +
+   gesture consumer beside it. It was `yog serve` while a window stood beside
+   it, and the two were two calls differing in one argument — the repaint hook.
+   Both the verb and the hook went with the window (bl-7942), which is the
+   second half of a *deletion* that started as one: the assembly used to exist
+   twice inside `main.rs`, the one file coverage excludes, so the copies could
+   drift and no test could see it.
 2. **The attention strip is addressable.** `/attention` is the §6 predicate as a
    list: every conversation waiting on the operator across every workspace, in
    §6's attention-ranked roster order — the jump's order, which the ↓ key
@@ -1934,11 +1912,11 @@ coordinator, an agent. Some conversations are waiting on somebody.
    what it last said, its age, and its undelivered-mail count. It is not a
    second model of "what needs you" — the queue is the roster's own subsequence,
    so its length is the strip's own number.
-3. **Answering writes the window's watermarks.** `/seen` records the
+3. **Answering writes the watermark every seat reads.** `/seen` records the
    conversation's present evidence as acknowledged, from the *one* definition
-   (`attention::evidence`) the window's focus tick reads — so a headless answer
-   and a windowed one are the same bytes in `ui.json`, and I0 converges the two
-   frontends over one disk rather than over a protocol. Its answer is **the
+   (`attention::evidence`) every reading of the queue derives from — so two
+   seats answering the same conversation write the same bytes in `ui.json`, and
+   I0 converges them over one disk rather than over a protocol. Its answer is **the
    queue that remains**, which makes the operator's loop one gesture per
    decision. Undelivered mail is not a watermark and is not quieted: §6 rule 5
    self-clears when a driver reads the inbox, and no acknowledgement may pretend
@@ -2384,8 +2362,11 @@ Tests:
   `app::tests::worker`.
 - **INV-2 no-swallowed-errors**: mechanized two ways — every dispatch-layer
   `Err` lands in `ops.jsonl` per the amended §4.2 (spawn failures included,
-  non-spawn steps as `["yog-step",…]` rows), and `grep -r eprintln
-  src/shell/` finds **zero** occurrences. *(bl-a649 closed the one error the
+  non-spawn steps as `["yog-step",…]` rows). Its second half was `grep -r
+  eprintln src/shell/` finding **zero** occurrences — a GUI process has no
+  terminal to print to — and it retired with the shell (bl-7942): a server's
+  stderr is its unit's journal, which is exactly where an unswallowed error
+  belongs. *(bl-a649 closed the one error the
   dispatch layer never saw: a detached `litany prompt` that launches cleanly and
   then dies has no `Err` to log — its stderr goes to a per-spawn sink file
   (§8.1/§13.3) which the ops sweep folds into the `-2` row, making the death a

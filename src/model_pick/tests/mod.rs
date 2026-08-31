@@ -17,7 +17,6 @@ mod grammar_roles;
 mod header;
 mod plan;
 mod query;
-mod remedy;
 mod validate;
 
 /// brazen's effective table as the fixtures need it: one row per name, keyless,

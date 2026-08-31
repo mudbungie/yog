@@ -37,29 +37,22 @@ fn shapes(named: &str) -> Vec<Gesture> {
     ]
 }
 
-/// The rewrite reaches every shape, nested payloads included — and the read
-/// answers through the very table the write borrows, so the two cannot disagree
-/// about which arms have a workspace at all.
+/// The read reaches every shape, nested payloads included, through the one
+/// table — so no arm can carry a workspace the reader cannot see.
 #[test]
-fn a_gesture_that_names_a_workspace_carries_the_new_name_after_the_rewrite() {
-    for (gesture, already) in shapes("leaf").into_iter().zip(shapes("host")) {
+fn a_gesture_that_names_a_workspace_answers_with_it() {
+    for (gesture, other) in shapes("leaf").into_iter().zip(shapes("host")) {
         assert_eq!(gesture.workspace().as_deref(), Some("leaf"), "{gesture:?}");
-        let crossing = gesture.with_workspace("host");
-        assert_eq!(
-            crossing.workspace().as_deref(),
-            Some("host"),
-            "{crossing:?}"
-        );
-        assert_eq!(crossing, already, "only the name changed");
+        assert_eq!(other.workspace().as_deref(), Some("host"), "{other:?}");
+        assert_ne!(gesture, other, "the name is the only difference");
     }
 }
 
-/// A gesture naming no workspace comes back untouched: the general path with
-/// nothing to rewrite, not a case of its own. The two families that name a
-/// machine rather than a world are the ones a tool host speaks, which is why
-/// that mode resolves channels instead of names.
+/// A gesture naming no workspace answers `None`: the general path with nothing
+/// to name, not a case of its own. The two families that name a machine rather
+/// than a world are the ones a tool host speaks.
 #[test]
-fn a_gesture_naming_no_workspace_is_unchanged() {
+fn a_gesture_naming_no_workspace_answers_none() {
     for gesture in [
         Gesture::Act(Action::Ack),
         Gesture::Act(Action::Advertise { tools: Vec::new() }),
@@ -67,7 +60,6 @@ fn a_gesture_naming_no_workspace_is_unchanged() {
         Gesture::Ask(Query::Invocations),
     ] {
         assert_eq!(gesture.workspace(), None, "{gesture:?}");
-        assert_eq!(gesture.clone().with_workspace("host"), gesture);
     }
 }
 

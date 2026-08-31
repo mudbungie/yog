@@ -1,7 +1,7 @@
 //! STORIES **S7-T5** descent-only-with-children: a single-agent conversation
 //! grows **no** descent to unfold; adding a child gives its list row one row per
-//! member at its own depth, and selecting a member retargets the inspector
-//! (STORIES S7.1, DESIGN §2.3, §11).
+//! member at its own depth, each addressable by its own id (STORIES S7.1,
+//! DESIGN §2.3). Which member a seat is *reading* is the seat's (bl-7942).
 //!
 //! "Only a conversation **with children** has a descent" — membership is a query
 //! over the id set, so the single-agent case is the general path with one member
@@ -28,9 +28,9 @@ use yog::{AppModel, Roots};
 /// unfolded — the surface that replaced the retired altitude-1 descent tree
 /// (bl-8905). Read off the derivation the frame reads, so the story names no
 /// title of its own.
-fn subtree_rows(m: &AppModel, root: &str, open: &[&str]) -> Vec<convs::ConvRow> {
+fn subtree_rows(m: &AppModel, ws: &str, root: &str, open: &[&str]) -> Vec<convs::ConvRow> {
     let open: std::collections::HashSet<String> = open.iter().map(|s| (*s).to_owned()).collect();
-    crate::support::conversations(m, 9000, &open)
+    crate::support::conversations(m, ws, 9000, &open)
         .into_iter()
         .filter(|r| r.root_id.starts_with(root))
         .collect()
@@ -38,7 +38,7 @@ fn subtree_rows(m: &AppModel, root: &str, open: &[&str]) -> Vec<convs::ConvRow> 
 
 /// STORIES **S7-T5** descent-only-with-children.
 #[test]
-fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
+fn s7_t5_a_lone_root_grows_no_descent_and_a_member_is_addressable() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
@@ -65,31 +65,29 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
     let boot = |roots: Roots| {
         AppModel::boot(
             roots,
-            None,
             Arc::new(SystemClock),
             Box::new(FakeBl::default()),
             None,
         )
         .0
     };
-    let mut m = boot(roots.clone());
-    m.focus_workspace(&yog::naming::leaf(&ws));
+    let m = boot(roots.clone());
+    let name = yog::naming::leaf(&ws);
 
     // --- Before: two lone roots. Neither grows a tree.
-    let rows = crate::support::conversation_rows(&m, 9000);
+    let rows = crate::support::conversation_rows(&m, &name, 9000);
     assert_eq!(rows.len(), 2);
     for row in &rows {
         assert_eq!(row.members, 1, "{} is alone", row.root_id);
         assert!(!row.has_children(), "a lone root renders no descent tree");
     }
-    m.focus_agent(&ws, "a-001");
     // Unfolding a lone root reveals nothing: there is no descent to open, which
     // is the negative half of the story and the reason the field is absent.
     let all_open: std::collections::HashSet<String> = ["a-001".to_owned(), "b-001".to_owned()]
         .into_iter()
         .collect();
     assert_eq!(
-        crate::support::conversations(&m, 9000, &all_open).len(),
+        crate::support::conversations(&m, &name, 9000, &all_open).len(),
         2,
         "two lone roots stay two rows however wide the fold is opened"
     );
@@ -108,9 +106,8 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
         ],
     );
 
-    let mut m = boot(roots);
-    m.focus_workspace(&yog::naming::leaf(&ws));
-    let rows = crate::support::conversation_rows(&m, 9000);
+    let m = boot(roots);
+    let rows = crate::support::conversation_rows(&m, &name, 9000);
     // Still TWO conversations — the descendants are members of b-001's, never
     // rows of their own.
     assert_eq!(rows.len(), 2, "descendants are members, not conversations");
@@ -123,9 +120,8 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
 
     // One row per member, in §2.3 descent order, each at its nesting depth —
     // read off the list's own derivation with the descent chain unfolded.
-    m.focus_agent(&ws, "b-001");
     let opened = ["b-001", "b-001-c-002"];
-    let members = subtree_rows(&m, "b-001", &opened);
+    let members = subtree_rows(&m, &name, "b-001", &opened);
     assert_eq!(members.len(), 3, "one row per member");
     assert_eq!(
         members.iter().map(|r| r.depth).collect::<Vec<_>>(),
@@ -133,19 +129,17 @@ fn s7_t5_a_lone_root_grows_no_descent_and_selecting_a_member_retargets() {
         "children sit directly under their parent"
     );
 
-    // --- Selecting a member retargets the inspector to that member, while the
-    // conversation stays whole: the tree is the subtree of the selection's
-    // ROOT, so descending does not shrink what is on screen.
-    m.focus_agent(&ws, "b-001-c-002");
-    assert_eq!(
-        m.focused_agent().map(|a| a.agent_id.clone()),
-        Some("b-001-c-002".to_owned()),
-        "the inspector follows the selection"
+    // --- A member is addressable in its own right while the conversation
+    // stays whole: the tree is the subtree of the member's ROOT, so descending
+    // does not shrink what a seat has to render.
+    assert!(
+        members.iter().any(|r| r.root_id == "b-001-c-002"),
+        "the child is a row of the subtree, addressable by its own id"
     );
     assert_eq!(
-        subtree_rows(&m, "b-001", &opened).len(),
+        subtree_rows(&m, &name, "b-001", &opened).len(),
         3,
-        "selecting a child keeps the whole conversation on screen"
+        "reading a child keeps the whole conversation on screen"
     );
     // The root of any member is the conversation's root — the fact the tree and
     // the retarget both read.

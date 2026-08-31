@@ -5,7 +5,7 @@
 //! opened fresh per gesture. Shares [`super::world`]'s hermetic fixture; spawns
 //! a fake `litany`, so it lives in its own file (the `prepare.rs` discipline).
 
-use super::{model_focused, world};
+use super::{model, world};
 use crate::boundary::Action;
 use crate::boundary::reply::Reply;
 use crate::cli_outbound::Cli;
@@ -47,7 +47,7 @@ fn prepared(w: &super::World) -> Prepared {
 fn the_engines_dispatch_is_the_one_chokepoint_a_posted_act_reaches() {
     let bin = tempdir().unwrap();
     let w = world();
-    let (_c, m) = model_focused(&w, &w.ws_cobalt);
+    let (_c, m) = model(&w);
     let litany = fake_litany(bin.path());
     let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Scan {
@@ -68,7 +68,7 @@ fn the_engines_dispatch_is_the_one_chokepoint_a_posted_act_reaches() {
 fn the_retarget_exit_spawns_the_bound_litany_verb() {
     let bin = tempdir().unwrap();
     let w = world();
-    let (_c, m) = model_focused(&w, &w.ws_cobalt);
+    let (_c, m) = model(&w);
     let litany = fake_litany(bin.path());
     let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Retarget {
@@ -96,7 +96,7 @@ fn the_retarget_exit_spawns_the_bound_litany_verb() {
 fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
     let bin = tempdir().unwrap();
     let w = world();
-    let (_c, m) = model_focused(&w, &w.ws_cobalt);
+    let (_c, m) = model(&w);
     let litany = fake_litany(bin.path());
     let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Prompt {
@@ -135,7 +135,7 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
 fn a_seedless_prompt_mints_off_the_stamp() {
     let bin = tempdir().unwrap();
     let w = world();
-    let (_c, m) = model_focused(&w, &w.ws_cobalt);
+    let (_c, m) = model(&w);
     let litany = fake_litany(bin.path());
     let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Prompt {
@@ -157,7 +157,7 @@ fn a_seedless_prompt_mints_off_the_stamp() {
 fn an_attempt_dispatches_the_ordinary_fork_and_logs_its_whole_argv() {
     let bin = tempdir().unwrap();
     let w = world();
-    let (_c, m) = model_focused(&w, &w.ws_cobalt);
+    let (_c, m) = model(&w);
     let litany = fake_litany(bin.path());
     let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
     let action = Action::Fork {

@@ -1,34 +1,9 @@
-//! Tests for the Inbox view-model and its widget. This file holds the claims
-//! about **bytes** — the forgiving envelope parse and the listing's file facts
-//! (name + verbatim bytes). [`paint`] holds the claims about **glyphs**: the
-//! two render modes, the parsed deposit and the §11 Raw toggle's unaltered
-//! bytes. [`tail`] runs the same walk on a viewport too short for the backlog,
-//! where the §11 tail anchor decides which deposits are on screen.
+//! Tests for the Inbox view-model: the forgiving envelope parse and the
+//! listing's file facts (name + verbatim bytes). What a seat *renders* out of
+//! them is the seat's, and its claims went with it (bl-7942).
 
-use super::render::render;
 use super::*;
-use crate::nav::convs::Titles;
 use tempfile::tempdir;
-
-mod tail;
-
-/// The widget over a roster with nothing in it: every sender then lands on the
-/// §3.3 ladder's floor, which is what these tables are about. The named rung is
-/// asserted where a name can exist at all — the §11 window (bl-b6d0,
-/// `shell::acceptance::naming`).
-fn painted(entries: &[InboxEntry], raw: bool) -> String {
-    crate::paint_probe::paint(|ui| render(ui, entries, &Titles::default(), raw))
-}
-
-/// One listing entry carrying `body` as its parsed deposit and `raw` as the
-/// bytes behind it — the shape the shell hands the widget.
-fn entry(name: &str, bytes: &str) -> InboxEntry {
-    InboxEntry {
-        name: name.to_string(),
-        raw: bytes.as_bytes().to_vec(),
-        deposit: parse_deposit(bytes.as_bytes()),
-    }
-}
 
 #[test]
 fn parses_ordinary_deposit() {
@@ -53,8 +28,13 @@ fn epitaph_values_map_to_typed_variants() {
         let file =
             format!("---\nfrom: c\ndeposited_at: t\nepitaph: {raw}\nterminal_ref: sha\n---\nbody");
         let d = parse_deposit(file.as_bytes());
-        assert_eq!(d.epitaph, Some(want));
+        assert_eq!(d.epitaph, Some(want.clone()));
         assert_eq!(d.terminal_ref.as_deref(), Some("sha"));
+        // The wording is what crosses the boundary (`transcript::wire`), and
+        // it round-trips the raw value: a forward-compat epitaph this build
+        // does not know rides through verbatim rather than being flattened
+        // into one of the four it does.
+        assert_eq!(want.label(), raw);
     }
 }
 
@@ -140,8 +120,3 @@ fn list_inbox_carries_each_files_name_and_verbatim_bytes() {
     assert_eq!(entry.raw, bytes.as_bytes(), "bytes must be unaltered");
     assert_eq!(entry.deposit.body, "the body\n");
 }
-
-/// **What the widget paints** — the two §11 render modes; its own file per
-/// §12's budget, on the seam between a claim about bytes and a claim about
-/// glyphs.
-mod paint;

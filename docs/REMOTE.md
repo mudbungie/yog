@@ -1120,18 +1120,25 @@ sweep buying nothing.
 
 ## 8. Shape of the code
 
-**Era-stamped, and read the stamp before the sentence** *(bl-0716)*. What
-follows described one crate holding every face, and that is no longer where the
-seat lives. The paragraph is kept — the tree still answers to it for one
-release — but it is now a statement about a **deprecated** mode rather than
-about where a face belongs.
+**Bare `yog` is the server, and there is no other face in this crate**
+*(bl-7942)*. The binary's whole interface is: the engine (a bare `yog`, which
+boots `Engine::boot` and parks until a §8.5 stop); `yog gesture`, the
+deposit-and-wait sugar over the world's own inbox; the three namespace arms
+(`bl`, `litany`, `bz`) and balls' two plugin seams; the two world hatches (`yog
+env`, `yog exec`); `yog tool-control`, the capability adjudicator litany's seam
+spawns; and `yog wire-certs`, the operator's mint (below).
+
+**There is no `serve` verb.** It named the windowless face while a windowed one
+stood beside it; with one face the word selects nothing, and two spellings of
+one face are two facts — which is the same reasoning that renamed `headless` to
+`serve` in the first place (below). An operator's systemd unit runs the bare
+binary (`scripts/deploy/yog.service`).
 
 > **Until bl-0716 (landed):** one crate, one multi-call binary. `yog serve`
 > runs the engine (the former `headless` boot plus the wire listener); bare
 > `yog` runs the window; `yog seat` and `yog tool-host` are the two **client**
-> modes, the second landed with §5.3; `yog wire-certs` is the operator's mint
-> (below). A TUI or web seat later is another consumer of the same wire and
-> needs nothing new from the engine.
+> modes, the second landed with §5.3. A TUI or web seat later is another
+> consumer of the same wire and needs nothing new from the engine.
 
 **Since bl-0716: the seat lives in its own crate and repository.** `lernie`
 0.1.0 is the seat — the window and its wire client — extracted at the version
@@ -1139,12 +1146,15 @@ fence §12 fixes, with its own gate, its own store and its own DESIGN. It links
 no substrate crate and nothing server-side; that dependency dividend is what
 the severance was for.
 
-**yog keeps its window for exactly one deprecated release, and that is the
-strangler's middle step**, not a second home for the face. Bare `yog` still
-opens a window and `yog seat` still sends a typed gesture, so an operator on
-the released binary loses nothing while the seat crate is stood up beside it.
-bl-7942 deletes both, along with everything else the server does not need, and
-the migration order in §12 is what says when.
+**And the window's deprecated release was never cut** *(bl-7942)*. The
+migration order in §12 gave yog's window one release of overlap so an operator
+on the published binary lost nothing while the seat crate was stood up. The
+operator pulled the cutover trigger with every component's publish batched into
+ONE coordinated moment, so that release would have been a deprecation nobody
+consumed — and the only deployments are the operator's own dev box and one
+server, neither of which needs the overlap. The window was therefore **dropped
+outright** rather than deprecated, and `yog seat` and `yog tool-host` went with
+it: both were wire *clients*, and a client is a seat's, not a server's.
 
 **Read a `lernie` in this document against the fence** (§12): a bare one names
 the seat crate or the ruling, and one bound to a `0.0.x` version names the
@@ -1166,16 +1176,31 @@ the window itself is filed in that repository rather than moved, because a
 window paints *typed* replies and the reply vocabulary is the part of the
 boundary the seat had not yet had to own. Its DESIGN §6 is the ledger.
 
-**Two roles in one process, one boundary between them** *(bl-ae05)*. Bare `yog`
-boots the engine in its own process exactly as it always has — the listener
-rides `Engine::boot`, one world one engine, and that ruling is untouched — and
-then talks to it over **nothing but the wire**: a seat presenting the window
-leaf, dialling `127.0.0.1` at the port the listener actually bound. The address
-is handed over in RAM rather than read back out of a file, because the two roles
-share a process and only the listener knows what a `:0` became. The two
+**And every `yog seat` / `yog tool-host` below names the PROTOCOL, not a yog
+verb** *(bl-7942)*. §12 makes this document the versioned authority all four
+components implement against, so the two client modes are described here in
+full and are implemented by the `lernie` seat and by `thrall`. Read them as
+*"what a seat does"* and *"what a foot does"*; nothing in this crate answers to
+either word.
+
+The same reading applies to every `src/shell/**`, `src/wire/{asker, poster,
+lane, link, seat, host, channels, dial, entries, client, post}` and frame-side
+`AppModel::` path this document names: §9's build-sequence ledgers record what
+each ball landed **at its time**, and the client halves they name are the seat
+crate's code now. The *protocol* each describes is unchanged and is what this
+document is the authority for; the file paths are history.
+
+**Two roles in one process, one boundary between them** *(bl-ae05; the two roles
+became two processes at bl-7942)*. Bare `yog` boots the engine in its own
+process exactly as it always has — the listener rides `Engine::boot`, one world
+one engine, and that ruling is untouched. What changed is that the second role
+left: a local window used to share this process and be handed its address in
+RAM, because only the listener knows what a `:0` became. A seat is a separate
+program now and reads the address the way every other seat does — the operator
+states it, or a local one is told the bound port by the operator. The two
 alternatives §8 already rejected stay rejected and neither is needed: nothing
 spawns a second engine, and nothing refuses a desktop launch with a terminal
-instruction.
+instruction, because a desktop launch is the seat's own program.
 
 **`headless` is now `serve`, and the rename is the point** *(bl-b6fa)*. The
 face did not change — it is still the one `Engine::boot` with no window — but
@@ -1186,8 +1211,8 @@ there is one word and §8's is it.
 **The listener rides the ENGINE, not one face** *(decided, bl-b6fa)*. §8.5
 already runs the deposit consumer on both faces, for I0's reason: *a deposit
 converges whichever face is up*. A seat wants the identical guarantee, so the
-listener boots beside the consumer in `Engine::boot`, and a windowed yog serves
-the wire exactly as `yog serve` does. That decides the local boot question §9.5
+listener boots beside the consumer in `Engine::boot`, which is the whole binary
+since bl-7942. That decides the local boot question §9.5
 was asked to settle, and it decides it by **dissolving it**: nothing spawns
 anything, nothing refuses with a remedy, and there is no ladder — because there
 is never a second engine to arrange. One world, one engine, whichever face
@@ -1197,7 +1222,7 @@ other boxes is just a window whose local workspace set is empty, and no
 window-only mode exists. Every other seat of *this* world is a client of this
 one engine; the window is additionally a client of every entry it holds
 (§8.2). The alternatives were both
-worse and both were considered: bare `yog` *spawning* `yog serve` gives one
+worse and both were considered: one face *spawning* another gives one
 world two engines (two pilots, two sentries, two derivation workers — the
 instance-coordination shape DESIGN §14 rejects), and *refusing with a remedy*
 puts a terminal instruction in front of a desktop launch that has no terminal.
@@ -1298,26 +1323,24 @@ amendment keeps whatever its `address` file names, the file being the
 operator's; the second instance on such a world refuses **visibly** now
 (below), and pointing the file at `127.0.0.1:0` is the stated remedy.
 
-**A wire the engine cannot get up is a refusal the window PAINTS** *(bl-dc14)*.
-Until then the whole failure family — a bind an operator-stated port lost, a
-mint the box cannot perform, a half-provisioned directory, a window seat the
-material cannot open — collapsed to one stderr line and an engine with no
-listener, and `main.rs` kept the window anyway: a frame with no asker, no
-poster and no searcher, accepting text and firing nothing, with the one
-diagnostic on a stream a desktop launch has nowhere to show. This section had
-already rejected refusing-with-a-terminal-instruction, and the missing half of
-that ruling is that the refusal therefore has to be *paintable*:
-`wire::listen` now returns the sentence instead of swallowing it, the engine's
-boot says it once per face — stderr for `yog serve`, `AppModel::refuse_wire`
-for a window (kept at the FIRST reason, so the cause outranks the "no seat"
-derived from it) — and `shell::refusal` paints it INSTEAD of the shell: the
-engine's own words verbatim, the same headline every wireless act receipt
-carries (`wire::post::NO_WIRE`), the remedy naming the port-zero path, and
-**no composer, tab or roster beside it**, because a control painted without a
-wire only looks actionable. One early return in `shell::render` is the whole
-gating; there is no per-control enablement to drift. Recovery is a relaunch —
-the listener is a boot-time fact, and a retry loop inside a refused window
-would be a second boot path.
+**A wire the engine cannot get up is a refusal SAID, not swallowed**
+*(bl-dc14; narrowed by bl-7942)*. The whole failure family — a bind an
+operator-stated port lost, a mint the box cannot perform, a half-provisioned
+directory — used to collapse to one stderr line and an engine with no listener,
+and `main.rs` kept a window anyway: a frame with no asker, no poster and no
+searcher, accepting text and firing nothing, with the one diagnostic on a
+stream a desktop launch has nowhere to show. bl-dc14's ruling was that a
+refusal has to be *paintable*, and it made `wire::listen` RETURN the sentence
+instead of swallowing it, said once per face.
+
+There is one face, and it has a terminal: the engine says the sentence on
+stderr, its unit's journal keeps it, and the engine **runs on without a wire**
+— every deposit still converges through the inbox, so only a seat is shut out.
+A seat that cannot connect learns it from its own dial and paints its own
+sentence, which is the seat crate's half of this ruling and is why the
+paintable half left with the window. What is not negotiable in either half is
+the first line of the original ruling: the engine states the CAUSE (a bind, a
+mint, a missing file), never the consequence derived from it.
 
 **The material sits BESIDE the world, not inside it** — `<yog-data-root>/wire`,
 the sibling of `<yog-data-root>/world`. The world subtree is a generated
@@ -1978,9 +2001,11 @@ it stays. What went is the frame deriving *out of* `GitTree`: names, marks,
 liveness, descent and verb gates folded on the render thread from the engine's
 own agent set, which is a thing no client will ever hold.
 
-Mechanized as `rules/no-engine-tree-in-paint.yml` over `src/shell/**` plus the
-three modules that render rather than derive (`inspector`, `composer`,
-`inboxview`). The test is **not which module a type lives in** — it is whether
+It was mechanized as `rules/no-engine-tree-in-paint.yml` over `src/shell/**`
+plus the three modules that rendered rather than derived. The rule went with
+the paint layer it governed (bl-7942); what it enforced is now structural, a
+seat being a separate program that links none of this. The test is **not which
+module a type lives in** — it is whether
 a `Reply` can say it: `AgentState`, `AgentMark`, `Flight` and `Tone` ride the
 wire today and are lawful in paint; `GitTree`, `Agent` and `CommitNode` ride
 nothing. Every other module under `src/` is engine and folds the agent set
@@ -2137,8 +2162,8 @@ before anything is dialled (§8). Every consequence is recorded where it belongs
   decodes with `reply::decode` and publishes. Two channels, no lock, and no
   frame-side wait: a dead engine costs a surface its content and the window
   nothing.
-- `Engine::asker` — a window takes it, `yog serve` never does. One asker per
-  engine, because the link end is taken rather than shared.
+- `Engine::asker` — a window took it, and the engine never did. It went with
+  the window (bl-7942): what the engine hands a seat is a socket.
 - The **clients section** (§5) is the first surface painted from a wire reply:
   the roster it renders crossed loopback mTLS, was scoped against the window's
   own registrations, and was decoded like any seat's. Its per-derivation memo
@@ -2693,13 +2718,13 @@ holding*.
   that counts frames is fine; one that counts frames *and* reads a migrated
   surface is not.
 - **One ast-grep rule gained a carve-out, keyed to the enum path rather than to
-  a file.** `no-engine-tree-in-paint` forbids paint code naming `GitTree`/`Agent`/
-  `CommitNode`; `Query::Agent` and `Reply::Agent` are the words a seat writes to
-  declare *a payload the codec spells in both directions*, which is exactly what
-  the rule exists to permit. The exception matches only an identifier whose
-  scoped parent's path is `Query` or `Reply`, so `crate::git_tree::Agent` is
-  still flagged everywhere it appears; the fixtures still bite and `src` is
-  clean, which is the two-direction check.
+  a file.** `no-engine-tree-in-paint` forbade paint code naming `GitTree`/
+  `Agent`/`CommitNode`, and `Query::Agent` / `Reply::Agent` are the words a seat
+  writes to declare *a payload the codec spells in both directions* — so the
+  exception matched only an identifier whose scoped parent's path was `Query` or
+  `Reply`. The rule is retired with the paint layer (bl-7942); the distinction
+  it drew is the one this section is about, and it survives as the shape of the
+  reply vocabulary rather than as a lint.
 
 **The accessory tail, part one: the folds that needed no question (bl-296f).**
 Seven of the tail's accessors are gone and the boundary gained **no new
@@ -3329,8 +3354,8 @@ the order live here; every other section keeps describing the tree as it
 stands and is amended by the ball that moves it.
 
 - **yog** — the standalone server: holder of the world, the balls, the
-  conversations. No UI, no execution. What is `yog serve` today becomes the
-  whole binary (bl-7942).
+  conversations. No UI, no execution. **Landed** (bl-7942): what was `yog serve`
+  is the whole binary, and the verb is gone with the second face it named.
 - **lernie** — the seat: the window and the seat-client face, extracted into
   their own crate and repo (bl-0716, **landed** — the crate's first landing is
   the wire client and the verb over it; the window is filed in that
@@ -3384,10 +3409,21 @@ each repo's DESIGN governs only its own component.
 
 Migration order (strangler; each step ships green): thrall founded (bl-1dd3,
 landed) → engine renamed (bl-9905, landed; the pin lives in `Cargo.toml`)
-→ seat severed, with yog's window mode riding one deprecated release
-(bl-0716, landed) → yog drops the UI and goes inert by default (bl-7942).
+→ seat severed (bl-0716, landed) → yog drops the UI and goes inert by default
+(bl-7942, **landed** — the order is complete).
+
+**The window's deprecated release was never cut, deliberately.** This order
+gave yog's window one release of overlap while the seat crate was stood up. The
+operator pulled the cutover trigger with every component's publish batched into
+ONE coordinated moment, which makes a deprecation release a publish nobody
+consumes — and the only deployments are the operator's own dev box and one
+server, neither of which needs the overlap. So bl-7942 dropped the window
+outright rather than deprecating it, and the strangler's middle step ended one
+release earlier than planned.
 
 Supersessions, so stale prose is not read as live: §8's "one crate, one
-multi-call binary" is **era-stamped in place** and now describes a deprecated
-mode rather than where a face belongs — bl-7942 is what deletes it; §11's
-rejection of a separate client crate is lifted in place above.
+multi-call binary" is **era-stamped in place** and describes what bl-7942
+deleted; §11's rejection of a separate client crate is lifted in place above.
+And DESIGN §11 — the UI structure — is **retired** by bl-7942, with a reading
+rule at its tombstone for the sentences elsewhere in that document that still
+describe a face.

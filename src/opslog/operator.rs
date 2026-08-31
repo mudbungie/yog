@@ -45,27 +45,6 @@ pub(crate) const ACK_STEP: &str = "ack-failures";
 /// `argv[1]` of the **clear** line: the first row of the trail it begins.
 pub(crate) const CLEAR_STEP: &str = "clear-trail";
 
-/// The dismiss control's label, one home for two seats (the §7.3 banner and the
-/// §11 ops pane both offer it, and a control the operator meets twice must not
-/// be spelled two ways).
-pub(crate) const ACK_LABEL: &str = "Dismiss";
-
-/// What the dismiss control says on hover (bl-68ac: every control explains
-/// itself). It states the two things the operator cannot see from the button —
-/// that the quiet is not permanent, and that nothing is thrown away.
-pub(crate) const ACK_HOVER: &str = "Mark every failure and drift now on screen as seen. \
-The banners and the activity chip go quiet; the trail keeps every row, and the \
-next failure raises them again. Typed, it is `/ack`.";
-
-/// The clear verb's label (§11 ops pane).
-pub(crate) const CLEAR_LABEL: &str = "Clear trail";
-
-/// What the clear verb says on hover — it names the destruction outright,
-/// because this is the one gesture in yog that discards durable history.
-pub(crate) const CLEAR_HOVER: &str = "Start a fresh trail: discard every row of \
-ops.jsonl and log this clear as the new trail's first row. The discarded rows \
-are not kept anywhere else. Typed, it is `/clear-trail`.";
-
 /// Append the **ack** line (§4.2): the operator's seen-watermark over the trail.
 /// `ts` is the caller's clock stamp, as for every other line — this module
 /// reads no clock.

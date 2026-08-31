@@ -35,8 +35,8 @@ files=$(find "$dir" -name verdicts.jsonl | sort)
 # A VERDICT-LESS RUN IS REPORTED, NOT REFUSED (bl-d0a0). This used to exit 1
 # before emitting a byte, which made the generator the loudest thing about a
 # run it knew nothing about: `drive.sh` redirects into `drive-log.md` and dies
-# on the non-zero under `set -e`, so a seat that never came up produced a
-# zero-byte report and a complaint about the report in place of the seat's own
+# on the non-zero under `set -e`, so an engine that never came up produced a
+# zero-byte report and a complaint about the report in place of the boot's own
 # error. Emitting the run is the generator's job and it can always do it — the
 # beat table is simply the sentence "no verdicts produced", which is a finding.
 # The stderr line stays: it is a diagnostic for this terminal, not the product.
@@ -133,13 +133,11 @@ cat <<HEAD
 - **Date:** $(date -u +%Y-%m-%d)
 - **Build driven:** \`$sha\` on \`$branch\`, $tree — $binfield
 - **Wire:** HAND-FINISH — which model, and whether it was up
-- **Seat:** isolated Xvfb, claimed per run (\`scripts/drive/yogdrive.sh seat\`),
-  scratch worlds under \`$dir\` (never \`~/.local/share/yog\`)
+- **World:** one scratch world per run verb under \`$dir\` (never
+  \`~/.local/share/yog\`). No display is claimed: every beat is a §8.5 gesture.
 - **Harness:** \`make drive\` → \`scripts/drive/stories.sh <verb> <data> <out>\`;
   this table is emitted from each run's own \`verdicts.jsonl\`
-- **Host tool tuple:** Xvfb \`$(command -v Xvfb || echo absent)\`;
-  $(first xdotool --version); $(first ffmpeg -version | cut -d' ' -f1-3);
-  $(first python3 --version); $(first git --version)
+- **Host tool tuple:** $(first python3 --version); $(first git --version)
 - **Machine:** $(uname -srm), $(nproc) cpu, load average $l1 / $l5 / $l15
 HEAD
 
@@ -211,15 +209,13 @@ for path, rows in runs:
     ok = sum(1 for row in rows if row["verdict"] == "PASS")
     beats = "beat" if len(rows) == 1 else "beats"
     print(f"### `stories.sh {verb}` — {len(rows)} {beats}, {ok} PASS, {len(rows)-ok} FAIL\n")
-    print("| Beat | Verdict | Evidence |")
+    print("| Beat | Verdict | Detail |")
     print("|---|---|---|")
     for row in rows:
-        shot = os.path.basename(row.get("evidence") or "") or "—"
         note = row.get("detail") or ""
-        ev = f"`{shot}`" + (f" — {cell(note)}" if note else "")
         mark = "PASS" if row["verdict"] == "PASS" else "**FAIL**"
-        print(f"| {cell(row['label'])} | {mark} | {ev} |")
-    print(f"\nEvidence: `{out}` (shots, `gestures.jsonl`, `verdicts.jsonl`)\n")
+        print(f"| {cell(row['label'])} | {mark} | {cell(note) or '—'} |")
+    print(f"\nEvidence: `{out}` (`gestures.jsonl`, `verdicts.jsonl`)\n")
 PY
 
 cat <<'TAIL'

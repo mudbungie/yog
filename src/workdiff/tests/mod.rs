@@ -9,7 +9,6 @@
 //! litany workspace.
 
 mod candidates;
-mod paint;
 mod plan;
 mod read;
 

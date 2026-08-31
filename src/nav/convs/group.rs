@@ -90,7 +90,7 @@ mod tests {
             name: None,
             name_display_only: false,
             verdict: None,
-            tone: crate::transcript::Tone::Plain,
+            tone: crate::nav::convs::Tone::Plain,
         }
     }
 

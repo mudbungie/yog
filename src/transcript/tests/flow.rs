@@ -1,10 +1,8 @@
 //! Enumeration order, skipping, the in-progress query, and the live tail.
 
-use std::collections::HashSet;
-
 use super::{AGENT, write_msg, write_response};
 use crate::git_tree::Stream;
-use crate::transcript::{AutoExpand, EntryKind, Tone, Transcript, build, rows};
+use crate::transcript::{EntryKind, Transcript, build};
 use tempfile::tempdir;
 
 #[test]
@@ -56,16 +54,11 @@ fn tool_in_progress_true_until_result_committed() {
     assert!(!build(dir.path(), AGENT).tool_in_progress("t1"));
 }
 
-/// Is any row pulsing (a tool call with no result)?
-fn pulsing(t: &Transcript) -> bool {
-    rows(
-        t,
-        super::rows::SPEAKER,
-        AutoExpand::default(),
-        &HashSet::new(),
-    )
-    .iter()
-    .any(|r| r.tone == Tone::InFlight)
+/// Is `id`'s call still in flight — a committed `tool_use` with no committed
+/// `tool_result`? The query, not a stored flag (PRINCIPLES: single source of
+/// truth), and the fact a seat renders its pulse from.
+fn pulsing(t: &Transcript, id: &str) -> bool {
+    t.tool_in_progress(id)
 }
 
 /// The operator's stuck `⚙ bash — running` (bl-47ec), byte-for-byte off disk:
@@ -81,7 +74,10 @@ fn array_shaped_result_with_opaque_id_retires_the_pulse() {
         "020-gpt-5.4.json",
         br#"[{"type":"tool_use","id":"call_QxWh5oDZm5GNM4nbnIFVb7Ou","name":"bash","input":{"command":"pwd"}}]"#,
     );
-    assert!(pulsing(&build(dir.path(), AGENT)), "no result yet");
+    assert!(
+        pulsing(&build(dir.path(), AGENT), "call_QxWh5oDZm5GNM4nbnIFVb7Ou"),
+        "no result yet"
+    );
 
     write_msg(
         dir.path(),
@@ -96,18 +92,20 @@ fn array_shaped_result_with_opaque_id_retires_the_pulse() {
         EntryKind::ToolResult { tool_use_id, content, is_error: false }
             if tool_use_id == "call_QxWh5oDZm5GNM4nbnIFVb7Ou" && content == "/ops\n"
     ));
-    assert!(!pulsing(&t), "a committed result retires the running badge");
-    let call = rows(
-        &t,
-        super::rows::SPEAKER,
-        AutoExpand::default(),
-        &HashSet::new(),
-    );
-    // Ahead of it sits the mark for the counter values `020` opens above.
     assert!(
-        call.iter().any(|r| r.prefix == "⚙ bash"),
+        !pulsing(&t, "call_QxWh5oDZm5GNM4nbnIFVb7Ou"),
+        "a committed result retires the in-flight query"
+    );
+    // And the call itself is still on the record, named, for the seat that
+    // renders it: the result did not consume the entry it answered.
+    assert!(
+        t.entries.iter().any(|e| matches!(
+            &e.kind,
+            EntryKind::Model { blocks, .. }
+                if blocks.iter().any(|b| matches!(b, crate::transcript::Block::ToolUse { name, .. } if name == "bash"))
+        )),
         "got: {:?}",
-        call.iter().map(|r| r.prefix.clone()).collect::<Vec<_>>()
+        t.entries.iter().map(|e| e.name.clone()).collect::<Vec<_>>()
     );
 }
 

@@ -1,17 +1,15 @@
 #!/bin/bash
 # harness.sh — the tier every story run shares, sourced by stories.sh: the two
-# waiting primitives, the one-name-one-definition guard, the per-run seat, and
-# the verdict in BOTH its halves — the human PASS/FAIL line, and the
-# machine-keyable row written beside it. It is the MECHANISM half; the
-# assertion helpers those wait on are `predicates.sh`, sourced below.
+# waiting primitives, the one-name-one-definition guard, and the verdict in BOTH
+# its halves — the human PASS/FAIL line, and the machine-keyable row written
+# beside it. It is the MECHANISM half; the assertion helpers those wait on are
+# `predicates.sh`, sourced below.
 #
-# It is a SEAM, not a shard. stories.sh carries the S0/S1 beats and the STEERING
-# doctrine that aims them; nothing below is about S0/S1 — every `run_*` verb in
-# every sourced `beats_*.sh` calls `pass`/`fail`/`await`/`until_landed`/
-# `claim_seat`/`verdict`, so their one home is here rather than in whichever
-# runner happened to be written first. The cut was forced and is the right one:
-# stories.sh sat at the repo's 300-line cap, so the verdict could not grow its
-# second half where it lived (bl-56d5).
+# It is a SEAM, not a shard: every `run_*` verb in every sourced `beats_*.sh`
+# calls `pass`/`fail`/`await`/`until_landed`/`verdict`, so their one home is
+# here rather than in whichever runner happened to be written first. The cut was
+# forced and is the right one: stories.sh sat at the repo's 300-line cap, so the
+# verdict could not grow its second half where it lived (bl-56d5).
 #
 # Sourced, never executed. It reads two variables from its caller — `$out`, the
 # run's evidence directory, and `$ops`, the world's ops.jsonl — and it defines
@@ -19,8 +17,8 @@
 
 # The READ tier — every true/false question a beat asks of the world on disk
 # (`verb_count`, `row_ok`, `seen_kind`, `stopped`, `md5of`, …). Its own file
-# (bl-7547): this one is how a beat waits, what a verdict is and where the seat
-# lives; that one is the vocabulary those wait on.
+# (bl-7547): this one is how a beat waits and what a verdict is; that one is the
+# vocabulary those wait on.
 fails=0
 . "$(dirname "${BASH_SOURCE[0]}")/predicates.sh"
 # The §16.2 wall fixture — `BOOTSTRAP_WS`, `wall_dir`, `seed_wall` — is the one
@@ -28,11 +26,11 @@ fails=0
 # Sourced here rather than from stories.sh because everything else this file
 # defines is reached the same way, and `beats_s5.sh` spends `wall_dir` too.
 . "$(dirname "${BASH_SOURCE[0]}")/wall.sh"
-# The §8.5 boundary transport and the engine it is aimed at — `launch_engine`,
-# `engine_alive`, `gesture` (bl-5cf7). Reached the same way and for the same
-# reason: `gesture` is a WAITING PRIMITIVE like the two above it, spent by four
-# beats files, and its deadline watches a fact (which yog is up) that every run
-# verb records at its own launch.
+# The §8.5 boundary transport and the engine it is aimed at — `engine_alive`,
+# `gesture` (bl-5cf7). Reached the same way and for the same reason: `gesture`
+# is a WAITING PRIMITIVE like the two above it, spent by every beats file, and
+# its deadline watches a fact (which yog is up) that every run verb records at
+# its own boot.
 . "$(dirname "${BASH_SOURCE[0]}")/gesture.sh"
 
 # --- the verdict, machine-keyable (bl-56d5) ---------------------------------
@@ -50,21 +48,21 @@ fails=0
 # verbatim; `beat` is the convenience key (two labels differing only in
 # punctuation would slug alike — none do, and `label` is the tiebreak).
 #
-# `evidence` is the newest screenshot in the run directory at the instant the
-# verdict was taken — the frame the beat had driven to when it was judged. That
-# is a measurement, not a claim: a beat that shot nothing inherits the previous
-# frame, which is why the field names a file rather than asserting it proves
-# anything. The shots stay what STORIES.md says they are, visual confirmation.
+# **There is no `evidence` field any more** (bl-7942). It named the newest
+# screenshot in the run directory at the instant the verdict was taken, and the
+# only thing that ever shot one was a windowed beat. A field that would now be
+# empty on every row is a column that says nothing, not a measurement — and the
+# row's real evidence has always been the beat's own `detail` and the world it
+# left behind.
 beat_id() {
   printf '%s' "$1" | tr 'A-Z' 'a-z' \
     | sed -e 's/[^a-z0-9][^a-z0-9]*/-/g' -e 's/^-//' -e 's/-$//'
 }
 json_str() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
-newest_shot() { ls -t "$out"/*.png 2>/dev/null | head -1; }
 
 # `bin` is the BINARY THIS RUN DROVE, resolved inside the run and carried on
-# every row. yogdrive.sh launches plain `yog` from PATH and `drive.sh ladder`
-# prefixes this checkout's `target/release` onto it, so the run's own PATH is
+# every row. The run boots plain `yog` from PATH and `drive.sh ladder` prefixes
+# this checkout's `target/release` onto it, so the run's own PATH is
 # the only place the answer exists — a reader that re-asks `command -v yog`
 # afterwards resolves the operator's INSTALLED yog, a different sha, into the
 # one field a drive log exists to pin (bl-d1af; QUALITY.md §4, "a verdict is a
@@ -78,9 +76,9 @@ driven_binary() {
 }
 record() {
   [ -n "${out:-}" ] && [ -d "$out" ] || return 0
-  printf '{"run":"%s","beat":"%s","label":"%s","verdict":"%s","detail":"%s","evidence":"%s","bin":"%s","at":"%s"}\n' \
+  printf '{"run":"%s","beat":"%s","label":"%s","verdict":"%s","detail":"%s","bin":"%s","at":"%s"}\n' \
     "$(json_str "${drive_run:-unknown}")" "$(beat_id "$1")" "$(json_str "$1")" \
-    "$2" "$(json_str "${3:-}")" "$(json_str "$(newest_shot)")" \
+    "$2" "$(json_str "${3:-}")" \
     "$(json_str "$(driven_binary)")" \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >>"$out/verdicts.jsonl"
 }
@@ -150,22 +148,14 @@ one_name_one_definition() {
   exit 1
 }
 
-# --- the seat: claimed per RUN, torn down with the verdict ------------------
-# Every run opens with `claim_seat` and closes with `verdict "$out"` — the ONLY
-# two places a display is named. A hardcoded seat was a singleton: two drives at
-# once stole each other's window focus mid-typing and payloads landed
-# doubled/truncated (bl-4132). `YOG_SEAT` is exported here, so every `$drive`
-# call and every sourced beats_* file inherits this run's display.
-claim_seat() { YOG_SEAT=$("$drive" seat); export YOG_SEAT; echo "seat: $YOG_SEAT"; }
-# The one tail every run shares: drop the seat, then the verdict. Pairing them
-# means a run cannot report PASS and leak its X server.
+# --- the verdict, the one tail every run shares ------------------------------
+# There is no seat to claim or drop any more (bl-7942): the harness drove an
+# isolated Xvfb display per run because half its beats pressed §11 keys at a
+# window, and the window is the seat crate's. What is left claims nothing, so
+# there is nothing a run can leak by reporting PASS.
 verdict() {
-  # A seatless run is not a special case, it is this one with an empty seat
-  # (bl-bb20's `run_headless` claims no display at all, and `yogdrive.sh`
-  # refuses outright without `YOG_SEAT`). Nothing else in the tail moves.
-  [ -z "${YOG_SEAT:-}" ] || "$drive" unseat
   echo "---"
-  echo "screenshots: $1"
-  echo "verdicts:    $1/verdicts.jsonl"
+  echo "evidence: $1"
+  echo "verdicts: $1/verdicts.jsonl"
   [ "$fails" = 0 ] && echo "ALL BEATS PASS" || { echo "$fails BEAT(S) FAILED"; return 1; }
 }

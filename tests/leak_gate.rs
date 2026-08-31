@@ -128,11 +128,24 @@ fn unreadable_content_is_rejected_rather_than_skipped() {
         err.contains("[binary-content]") && err.contains("evidence.zip"),
         "{err}"
     );
-    // The one declared exception: an icon PNG, which `make icon` regenerates
-    // and src/theme/icon/tests/artifacts.rs asserts byte for byte.
+    // **There is no declared exception left, and the rule's own message says
+    // so** (bl-7942). `BINARY_ALLOWED` named the icon PNGs — regenerable
+    // derivations with a byte-for-byte test — and the application mark went
+    // with the window, so this repository tracks no binary at all. The
+    // allowlist is an empty pattern, which refuses every path, and the
+    // finding's remedy sentence still states the standard a future one would
+    // have to meet.
     let allowed = staged(&[("assets/yog-16.png", blob)]);
     let (ok, err) = scan(allowed.path(), allowed.path());
-    assert!(ok, "a declared derivation was rejected:\n{err}");
+    assert!(!ok, "the empty allowlist admitted a binary");
+    assert!(
+        err.contains("[binary-content]") && err.contains("assets/yog-16.png"),
+        "{err}"
+    );
+    assert!(
+        err.contains("regenerable derivation with a byte-for-byte test"),
+        "the remedy states the standard a tracked binary must meet: {err}"
+    );
 }
 
 // 5. Every fixture value says, in the value, that it is fabricated.

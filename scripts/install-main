@@ -1,10 +1,15 @@
 #!/bin/sh
 # install-main — local CICD: make the installed `yog` equal to main's tip.
 #
-# Compiles `main`, installs the `yog` binary into $PATH and `make reload`s a
-# running window, so a landed merge takes effect without a manual restart (a
-# no-op if yog wasn't running). This is the LOCAL half of delivery;
-# `scripts/bl-push-main` (a balls `close.post` plugin) is the remote half.
+# Compiles `main` and installs the `yog` binary into $PATH, so a landed merge
+# is on this box's PATH without a manual build. This is the LOCAL half of
+# delivery; `scripts/bl-push-main` (a balls `close.post` plugin) is the remote
+# half.
+#
+# **It restarts nothing** (bl-7942). It used to `make reload` a running window
+# on the freshly installed binary — a launch verb that went with the window.
+# A running engine is a service: whether and when to restart it is its unit's
+# question (`scripts/deploy/`), not an installer's.
 #
 # It is a CONVERGENCE, not an event handler: it asks "is main's tip what is
 # installed?" and acts only if the answer is no. That is what lets its trigger
@@ -59,7 +64,6 @@ if [ "$1" = __build ]; then
   if git -C "$root" worktree add --quiet --detach "$wt" main; then
     if CARGO_TARGET_DIR="$root/target" make -C "$wt" install; then
       status=0
-      make -C "$root" reload
     fi
     git -C "$root" worktree remove --force "$wt" 2>/dev/null
   else

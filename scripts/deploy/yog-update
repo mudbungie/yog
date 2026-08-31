@@ -70,7 +70,7 @@ die() { say "$*" >&2; exit 1; }
 # is one audit away from being deleted by whoever checks the claim (bl-286b).
 #
 # WHY THE PROCESS COUNT IS THE PREDICATE. The substrate is linked in-process
-# (§16.7) and the engine's own concurrency is threads, so an idle `yog serve`
+# (§16.7) and the engine's own concurrency is threads, so an idle yog engine
 # is exactly one process; a turn in flight is a `litany` child in the same
 # cgroup. That needs no yog-side API, no new gesture and no field on the model
 # — the fact is already there to read.

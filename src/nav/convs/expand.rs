@@ -17,13 +17,13 @@
 //! §8.5: *views gain no boundary representation*), one derivation still serves
 //! every seat, and a seat with no fold at all selects the root subset.
 //!
-//! Shaped after [`crate::jsonview::flatten`] one altitude out: a pre-order walk
+//! A pre-order walk
 //! that stops descending at a node the caller's set does not name, with the set
 //! passed **in** rather than stored — expansion is viewport ephemera (§5.3,
 //! §13.1) and never rides a [`ConvRow`].
 //!
 //! The **mutation** is that module's too: a click on the §11 subagent field
-//! flips one id with `jsonview::toggle_path`, the crate's one
+//! flips one id's membership in that set, the crate's one
 //! disclosure-set toggle, already shared by the transcript and queue folds. A
 //! second spelling of "flip a membership" would be a second thing to keep
 //! honest, so this module only ever *reads* a set.

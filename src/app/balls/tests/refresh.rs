@@ -43,13 +43,9 @@ fn balls_section_carries_the_delivered_badge_after_a_close() {
         }],
         "the §11 balls section groups the delivered ball under cobalt"
     );
-    // bl-abbe: Delivered is the state ▶ Continue does *not* reach, so this is
-    // the row the section renders itself — the list is not dead, it is disjoint.
+    // bl-abbe: Delivered is a state the resume seat does *not* reach, so this
+    // is the row the listing renders itself — not dead, disjoint.
     assert_eq!(crate::nav::balls::roster(&rows), rows);
-    assert!(
-        m.resumable().is_empty(),
-        "a delivered ball is not resumable"
-    );
 }
 
 #[test]

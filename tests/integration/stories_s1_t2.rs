@@ -38,7 +38,6 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
     let build = || {
         AppModel::boot(
             roots.clone(),
-            None,
             Arc::new(SystemClock),
             Box::new(BlStore::new(
                 Xdg::with(root.path(), None, None),
@@ -63,17 +62,15 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
     // same tab bar and the same conversation list (age injected, so it can't
     // diverge by wall clock).
     assert_eq!(first.tree(&ws), second.tree(&ws), "snapshots diverged");
+    let name = yog::naming::leaf(&ws);
     assert_eq!(
-        crate::support::tab_bar(&first),
-        crate::support::tab_bar(&second),
+        crate::support::tab_bar(&first, Some(&name)),
+        crate::support::tab_bar(&second, Some(&name)),
         "tab bars diverged across a restart"
     );
-    let (mut a, mut b) = (first, second);
-    a.focus_workspace(&yog::naming::leaf(&ws));
-    b.focus_workspace(&yog::naming::leaf(&ws));
     assert_eq!(
-        crate::support::conversation_rows(&a, 1000),
-        crate::support::conversation_rows(&b, 1000),
+        crate::support::conversation_rows(&first, &name, 1000),
+        crate::support::conversation_rows(&second, &name, 1000),
         "conversation lists diverged across a restart"
     );
 }

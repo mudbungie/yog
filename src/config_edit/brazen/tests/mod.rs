@@ -112,10 +112,8 @@ fn load_reads_existing_bytes_into_draft() {
 }
 
 #[test]
-fn draft_mut_and_set_draft_edit_the_buffer() {
+fn set_draft_replaces_the_buffer() {
     let mut ed = loaded(&FakeFs::default());
-    ed.draft_mut().push_str("x = 1");
-    assert_eq!(ed.draft(), "x = 1");
     ed.set_draft("y = 2".into());
     assert_eq!(ed.draft(), "y = 2");
 }

@@ -127,15 +127,6 @@ impl AppModel {
         self.mark_dirty([self.roots.yog_state.clone()]);
     }
 
-    /// The yog data root — where bound workspaces live (§3.1) and the anchor
-    /// every world path derives from (§16.2). The start flow reads
-    /// `roots.yog_data` through `PlanInputs`; the V2 fork composer reads it
-    /// here, to name the world's skills pool without minting a whole
-    /// [`boundary_deps`](Self::boundary_deps) per frame.
-    pub(crate) fn yog_data_root(&self) -> &Path {
-        &self.roots.yog_data
-    }
-
     /// The balls state root — the parent of the per-project clones dir (balls
     /// arch §1: `clones/` always lives under it); the start flow's
     /// `work_worktree_path` derives from it (§3.3).
@@ -156,36 +147,27 @@ impl AppModel {
     /// is answered in place, and the acceptance world's stand-in for the
     /// transport — both reads.
     ///
-    /// The world it carries is **lensed on the focused workspace's wall**
-    /// (§16.2 as amended): a §9 config gesture folds brazen's destinations out
-    /// of `deps.world`, and those live inside the sphere the operator is
-    /// looking at. No focus is no wall — the gesture refuses rather than
-    /// reaching the machine's own brazen state.
+    /// The world it carries is the **unlensed** one (§16.2). A §9 config
+    /// gesture folds brazen's destinations out of `deps.world` and those live
+    /// inside a workspace's own wall, so the wall is layered on where the
+    /// gesture names its workspace — at the consumer, which is the arm every
+    /// act crosses. It was lensed on the *focused* workspace while a window
+    /// held a focus in this process; a server holds none (REMOTE §7).
     pub fn boundary_deps(&self, litany: &Cli, bl: &Cli) -> crate::boundary::dispatch::Deps {
         crate::boundary::dispatch::Deps {
             litany: litany.clone(),
             bl: bl.clone(),
             state_root: self.state_root().to_path_buf(),
             yog_binary: crate::cli_outbound::self_exe().unwrap_or_default(),
-            world: crate::world::wall::env_opt(
-                &self.roots.world,
-                self.focused_workspace().as_deref(),
-            ),
+            world: self.roots.world.clone(),
             home: self.roots.home.clone(),
             yog_data_root: self.roots.yog_data.clone(),
             balls_state_root: self.balls_state_root(),
-            // The **derivation**, never the §7.2 fold: a gesture and a
-            // machine-facing query may not be decided by a fact that is only
-            // optimistic.
-            snapshot: std::sync::Arc::clone(&self.derived),
+            snapshot: std::sync::Arc::clone(&self.snap),
             caller: crate::boundary::dispatch::Caller::default(),
         }
     }
 }
-
-/// The start-flow's hand-off (`startable`/`resumable`/`start_bare_inputs`/…) —
-/// split out per §12's 300-line budget.
-mod starts;
 
 /// `pub(crate)` so a sibling test corpus shares this one `FakeBl` rather than
 /// standing up a second fake of the same runner.

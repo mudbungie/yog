@@ -23,12 +23,8 @@
 use std::path::{Path, PathBuf};
 
 mod detail;
-mod drill;
 mod logs;
 mod orphan;
-mod raw;
-mod render;
-mod tail;
 mod truncation;
 mod vm;
 mod window;

@@ -72,10 +72,12 @@ fn packaged() -> Vec<String> {
         .collect()
 }
 
-/// The classes ruled into the published crate: the crate's own source, the
-/// icon artifacts `src/theme/icon/tests/artifacts.rs` embeds, and the files
-/// crates.io renders. `Cargo.toml.orig` and `.cargo_vcs_info.json` are minted
-/// by cargo into the tarball and are not tree files at all.
+/// The classes ruled into the published crate: the crate's own source and the
+/// three files crates.io renders. `Cargo.toml.orig` and `.cargo_vcs_info.json`
+/// are minted by cargo into the tarball and are not tree files at all.
+///
+/// The icon artifacts were the fourth class until bl-7942; they were the
+/// application mark, and a server has none.
 fn is_ruled_in(path: &str) -> bool {
     let named = matches!(
         path,
@@ -86,15 +88,11 @@ fn is_ruled_in(path: &str) -> bool {
             | "README.md"
             | "LICENSE"
             | "CHANGELOG.md"
-            | "assets/yog.svg"
     );
     named
         || path
             .strip_prefix("src/")
             .is_some_and(|p| p.ends_with(".rs"))
-        || path
-            .strip_prefix("assets/yog-")
-            .is_some_and(|p| p.ends_with(".png"))
 }
 
 /// The defect: design commentary, gate apparatus and agent guides shipping to
@@ -159,17 +157,22 @@ fn the_list_is_not_vacuous() {
     let list = packaged();
     let sources = list.iter().filter(|p| p.starts_with("src/")).count();
     assert!(
-        sources > 300,
+        sources > 250,
         "the packaged list carries {sources} src paths over {} entries — the \
          spawn is broken, not the tree",
         list.len()
     );
+    // **Nothing outside `src` is a compile input any more** (bl-7942: the icon
+    // artifacts were the only ones). The sweep is kept because it answers a
+    // question the allowlist cannot — *what does the build READ that an
+    // `include` list could silently drop* — and an embed appearing here is the
+    // signal that `include` must gain a class. Its own bite is proved on a
+    // scratch tree (`embeds::tests`), since this tree can no longer prove it.
     let embeds = embedded_paths();
     assert!(
-        embeds.len() >= 7,
-        "the embed sweep found {} non-src compile-time embeds; the icon \
-         artifacts alone are seven",
-        embeds.len()
+        embeds.is_empty(),
+        "the build reads {embeds:?} outside `src`; rule the class into \
+         `include` in Cargo.toml and into `is_ruled_in` above"
     );
 }
 
@@ -189,7 +192,6 @@ fn the_allowlist_sees_its_own_violations() {
         "Makefile",
         "deny.toml",
         "tests/packaged_files.rs",
-        "examples/icon.rs",
         "rules/no-bare-command.yml",
         ".github/workflows/ci.yml",
         ".githooks/pre-commit",
@@ -197,17 +199,14 @@ fn the_allowlist_sees_its_own_violations() {
         // the unanchored-pattern sighting: a bare `README.md` include pattern
         // shipped this, and no `scripts` class rules it in
         "scripts/leak-fixtures/README.md",
+        // every asset class the mark used to ship under (bl-7942)
         "assets/yog.desktop",
+        "assets/yog.svg",
+        "assets/yog-16.png",
     ] {
         assert!(!is_ruled_in(stray), "{stray} must not be ruled in");
     }
-    for shipped in [
-        "src/main.rs",
-        "src/app/mod.rs",
-        "assets/yog-16.png",
-        "assets/yog.svg",
-        "LICENSE",
-    ] {
+    for shipped in ["src/main.rs", "src/app/mod.rs", "LICENSE"] {
         assert!(is_ruled_in(shipped), "{shipped} must be ruled in");
     }
 }

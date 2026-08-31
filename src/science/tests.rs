@@ -10,7 +10,6 @@
 mod compose;
 mod join;
 mod outcome;
-mod render;
 mod respdiff;
 mod wire;
 

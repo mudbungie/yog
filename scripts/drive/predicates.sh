@@ -6,9 +6,9 @@
 # (bl-7547).
 #
 # The seam is real and it restores harness.sh's own header. That file is "the
-# assertion helpers, the two waiting primitives, the per-run seat, and the
+# assertion helpers, the two waiting primitives and the
 # verdict"; a predicate is none of the last three. What is left there is
-# MECHANISM — how a beat waits, what a verdict is, where the seat lives — and
+# MECHANISM — how a beat waits and what a verdict is — and
 # what is here is the vocabulary those wait on. `await` and `until_landed`
 # take one of these; none of these knows either exists.
 #

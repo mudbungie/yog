@@ -110,7 +110,7 @@ impl Cadence {
         self.cheap_sweep
             .saturating_add(self.debounce)
             .saturating_add(self.late_pass(super::dirty::Sweep::Full))
-            .saturating_add(crate::wire::asker::ASK_PERIOD)
+            .saturating_add(crate::wire::ASK_PERIOD)
     }
 
     /// How long one derivation pass may take before it is itself drift (§7.2)

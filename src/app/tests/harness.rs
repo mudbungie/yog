@@ -73,7 +73,11 @@ impl Harness {
             yog_state: root.path().join("state"),
             balls_clones: root.path().join("balls").join("clones"),
             home: root.path().join("home"),
-            world: crate::test_support::no_world(),
+            // A world **under this tempdir**, so a §9 destination the
+            // derivation reads (the global `models.yaml`, §9.2) is a real path
+            // a test can write. Hermetic either way: nothing here is the
+            // operator's, and an unexpected write lands in the tempdir.
+            world: crate::test_support::world_under(root.path()),
         };
         std::fs::create_dir_all(&roots.yog_state).unwrap();
         let ws = roots.workspaces().join("ws");
@@ -129,23 +133,10 @@ impl Harness {
         self.fx.build_agent(id, msg);
     }
 
-    /// Settle `agent`'s step 001 with `response` bytes — the §4.4 framing
-    /// input (e.g. the live kind:auth failure shape).
-    pub(crate) fn write_response(&self, agent: &str, response: &[u8]) {
-        let step = self.fx.path.join("steps").join(agent).join("001");
-        std::fs::create_dir_all(&step).unwrap();
-        std::fs::write(step.join("response.json"), response).unwrap();
-    }
-
     pub(crate) fn model(&self) -> (FakeClock, Rig) {
-        self.model_focused(None)
-    }
-
-    pub(crate) fn model_focused(&self, initial: Option<PathBuf>) -> (FakeClock, Rig) {
         let clock = FakeClock::new();
         let (model, deriver) = AppModel::boot(
             self.roots.clone(),
-            initial,
             clock.arc(),
             Box::new(no_balls()),
             Some("me".to_string()),

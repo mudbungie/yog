@@ -202,3 +202,57 @@ fn search_is_answered_here_too_because_every_seat_that_reaches_this_is_off_frame
     );
     assert_eq!(ask(""), crate::search::Found::default());
 }
+
+/// **The three arms that RETURN rather than fall through** (§8.5): the
+/// governing read, which refuses where its siblings answer absent because its
+/// walk is the workspace's own git; and the two routing reads, which name a
+/// machine rather than a world and so never reach the workspace resolution
+/// above them.
+///
+/// Each is asserted at the chokepoint rather than at its body, because the
+/// arm IS the claim: a query wired to the wrong body, or to none, is exactly
+/// what a table of one-line arms loses silently.
+#[test]
+fn the_governing_read_refuses_and_the_routing_reads_name_no_world() {
+    let d = deps(snapshot(
+        &ws(),
+        "alba",
+        vec![agent("c-1", AgentState::Live, 100)],
+        vec![],
+    ));
+    // A hermetic snapshot's workspace has no git at all, so the walk cannot
+    // read a policy — and this query says so instead of answering absent.
+    let governing = answer(
+        &Query::Governing {
+            workspace: "alba".to_owned(),
+            agent: "c-1".to_owned(),
+            at: None,
+        },
+        &d,
+        &ui(),
+        200,
+    );
+    assert!(governing.is_err(), "got {governing:?}");
+
+    // Neither routing read names a workspace, so neither reaches the
+    // resolution above — and an in-world caller, which is what this `Deps`
+    // carries, has no certificate to be addressed by. Both say so, which is
+    // the arm proving it routed rather than fell through to a workspace
+    // refusal naming the query's absent workspace.
+    let held = answer(&Query::Invocations, &d, &ui(), 200)
+        .expect_err("an in-world caller carries no certificate to be addressed by");
+    assert!(held.contains("no client identity"), "{held}");
+    let capture = answer(
+        &Query::Capture {
+            invocation: "inv-404".to_owned(),
+        },
+        &d,
+        &ui(),
+        200,
+    )
+    .expect_err("a handle nobody posted");
+    assert!(
+        capture.contains("inv-404"),
+        "the handle is named: {capture}"
+    );
+}

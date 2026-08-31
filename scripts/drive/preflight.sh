@@ -2,21 +2,22 @@
 # preflight.sh — name EVERY missing prerequisite at once, before anything is
 # driven (bl-56d5).
 #
-# The harness used to discover its host the hard way: a run claimed a seat, went
-# quiet for ten seconds, and died on the first `xdotool` or the first `ffmpeg`
-# with a bare "command not found" — one missing tool per attempt, a full seat
-# claim spent to learn each. This checks the whole contract in under a second and
-# reports the whole of it, so a box is made ready in one pass instead of four.
+# The harness used to discover its host the hard way: a run went quiet for ten
+# seconds and died on the first missing tool with a bare "command not found" —
+# one per attempt, a whole run spent to learn each. This checks the whole
+# contract in under a second and reports the whole of it, so a box is made ready
+# in one pass instead of four.
 #
 # It reports rather than guesses: every subject prints its resolved path or
 # version, which is also the "Host tool tuple" line every drive log carries —
 # `logskel.sh` reads the same facts from the same probes.
 #
 # THE SUBJECTS ARE WHAT THE SCRIPTS ACTUALLY CALL, verified against them, not
-# what an X11 harness is assumed to want. Capture is `ffmpeg -f x11grab`
-# (yogdrive.sh `shot`), so ImageMagick `import`/`convert`, `scrot` and `xwd` are
-# NOT subjects — the harness has never invoked one, and a box without them
-# drives the full ladder green.
+# what a harness is assumed to want. **The four X11 tools left with the window**
+# (bl-7942): `Xvfb`, `xdotool`, `ffmpeg` and `ffprobe` existed for the display, the
+# keystrokes and the screenshots, and nothing in this harness claims a display
+# any more. A required row naming a tool nothing calls is a box refused for a
+# reason that is not true.
 #
 # A HOST TOOL IS NOT THE ONLY WAY A RUN CAN BE UNREADY (bl-49c6). Since the
 # blast-radius ruling (DESIGN §16.2) brazen's config, credentials and
@@ -94,11 +95,7 @@ template_rows() {
 echo "preflight — host prerequisites for scripts/drive/"
 echo
 echo "required — every run verb dies without these:"
-tool Xvfb    "the isolated per-run seat (yogdrive.sh seat) — install xvfb"
-tool xdotool "every windowed gesture: focus, type, key, click — install xdotool"
-tool ffmpeg  "screen capture (yogdrive.sh shot, -f x11grab) — install ffmpeg"
-tool ffprobe "the shot's own width and height (locate.sh) — ships with ffmpeg"
-tool python3 "the step-kind reader (beats_s7.sh), locate.sh's rule scan, and the log skeleton's beat table"
+tool python3 "the boundary reply reader (headless.sh) and the log skeleton's beat table"
 tool git     "the scratch project fixture, and the clean room's floor"
 tool yog     "the binary under drive — build it (make release) and put target/release first on PATH"
 seedfile "$real_world/models.yaml" \

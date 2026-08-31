@@ -17,19 +17,15 @@
 # on its verdict — which is why no `until_landed` wraps one: that primitive
 # exists because a click has no reply and may have hit blank panel, and a
 # deposit cannot miss. The reply JSON lands beside the screenshots as the audit
-# half; the SCREENSHOT after is the other half, and proves what it never could —
-# that the window converged on a gesture it did not itself fire.
+# half; what the world holds afterwards is the other.
 
 # --- the engine under drive -------------------------------------------------
-# WHICH yog this run's gestures are aimed at, recorded where it is launched and
-# nowhere else (bl-5cf7). Every run verb launches exactly one engine at a time —
-# `launch_engine` for a windowed one, `boot_headless` for the seatless one — and
-# each sets this on the way through, so there is no second place a run says which
-# process it is driving and no way to launch without saying it. `engine_wid` is
-# the same launch's window (empty for the headless engine, which has none).
+# WHICH yog this run's gestures are aimed at, recorded where it is booted and
+# nowhere else (bl-5cf7). Every run verb boots exactly one engine at a time —
+# `boot_headless` — and sets this on the way through, so there is no second
+# place a run says which process it is driving and no way to boot without
+# saying it.
 engine_pid=""
-engine_wid=""
-launch_engine() { read -r engine_pid engine_wid < <("$drive" launch "$1"); }
 # An EMPTY pid is not "no claim", it is a refusal: a gesture with no engine
 # recorded is a gesture nothing can answer, and reporting that in milliseconds
 # beats waiting out a deadline to say the same thing (the empty-subject

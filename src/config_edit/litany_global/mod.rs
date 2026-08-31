@@ -28,7 +28,7 @@
 
 use super::{Draft, FileIo};
 use crate::xdg::Env;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// The litany-global editable surface, rooted at one config root (§9.2). The
 /// root is the Y2 fold ([`litany_config_root`](Env::litany_config_root),
@@ -139,20 +139,19 @@ impl Editor {
         }
     }
 
-    /// The file this editor targets.
-    pub(crate) fn path(&self) -> &Path {
+    /// The file this editor targets — a test-only reader since bl-7942 took the
+    /// pane that used to ask.
+    #[cfg(test)]
+    pub(crate) fn path(&self) -> &std::path::Path {
         self.draft.path()
     }
 
-    /// The RAM draft (§5.3 carve-out) — the text the §9.5 pane derives its
-    /// typed rows from and writes back through, and the raw escape's read.
+    /// The RAM draft (§5.3 carve-out) — a test-only reader, for the same
+    /// reason: the write path goes through [`set_draft`](Self::set_draft) and
+    /// `apply`, and only a test reads the buffer back.
+    #[cfg(test)]
     pub(crate) fn draft(&self) -> &str {
         self.draft.text()
-    }
-
-    /// The draft as a mutable buffer — the binding an egui `TextEdit` edits.
-    pub(crate) fn draft_mut(&mut self) -> &mut String {
-        self.draft.text_mut()
     }
 
     /// Replace the draft text wholesale.

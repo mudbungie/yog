@@ -1,9 +1,9 @@
 //! **The hand-off half**: what a watcher's tick becomes once it has fired —
 //! the [`DirtySet`] a background thread marks and the frame drains, the pure
 //! [`pump`] step over it (both arms), the real background [`Bridge`] end to
-//! end (a disk change surfaces as a dirty root), and [`EguiRepaint`], the hook
-//! that wakes the window. Split from [`super`] at §12's budget on the seam
-//! between **arming** a watch and **spending** what it produced.
+//! end (a disk change surfaces as a dirty root). Split from [`super`] at §12's
+//! budget on the seam between **arming** a watch and **spending** what it
+//! produced.
 
 use super::super::*;
 use super::{DETECT, wait_armed, wait_until, workspace};
@@ -83,27 +83,4 @@ fn the_bridge_thread_marks_a_real_disk_change_dirty() {
     });
     assert!(seen.is_some(), "the bridge marked the root dirty");
     drop(bridge); // clean stop + join
-}
-
-#[test]
-fn egui_repaint_requests_without_panicking() {
-    EguiRepaint(egui::Context::default()).request();
-}
-
-#[test]
-fn the_windowless_repaint_does_nothing_by_contract() {
-    // §8.5: `yog serve` has no event loop to wake — the whole impl.
-    NoRepaint.request();
-}
-
-#[test]
-fn a_shared_hook_forwards_to_the_hook_it_holds() {
-    // The seam that lets one `Engine::boot` serve both faces: the difference
-    // between them travels as a value (VISION §5 V5.4). Shared rather than
-    // owned because two engine threads wake the face — the derivation worker
-    // when a snapshot lands, the §7.2 follower when characters do.
-    let shared: std::sync::Arc<dyn Repaint> =
-        std::sync::Arc::new(EguiRepaint(egui::Context::default()));
-    shared.request();
-    std::sync::Arc::clone(&shared).request();
 }

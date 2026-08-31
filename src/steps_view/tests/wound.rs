@@ -8,10 +8,9 @@
 
 use tempfile::tempdir;
 
-use super::render::painted;
 use super::{AGENT, write_file};
 use crate::git_tree::{AgentState, Framing};
-use crate::steps_view::{NO_RESPONSE, StepTab, Wound, build, latest_wound};
+use crate::steps_view::{NO_RESPONSE, Wound, build, latest_wound};
 
 /// The observed repro: litany wrote `request.json`, opened `response.json`,
 /// and died on a substrate version skew — zero bytes, no `meta.json`.
@@ -174,10 +173,9 @@ fn a_wound_with_an_empty_stderr_log_says_so_rather_than_inventing_a_cause() {
         build(bare.path(), AGENT, AgentState::Stopped).steps[0].wound,
         Wound::Mute
     );
-    // Not a wound, no sentence and no badge word — the caller gates on
-    // `wounded` and paints the framing instead.
+    // Not a wound and no sentence — the caller gates on `wounded` and says the
+    // framing instead.
     assert_eq!(Wound::None.banner(), "");
-    assert_eq!(Wound::None.word(), "");
     assert_eq!(Wound::default(), Wound::None);
 }
 
@@ -196,18 +194,20 @@ fn a_chatty_adapter_is_quoted_by_its_tail_not_in_full() {
     assert_eq!(wound, Wound::Spoke("one\ntwo\nthree".to_owned()));
 }
 
+/// **The wound reaches a seat**, which is the whole point of the class: the
+/// §8.5 answer carries the class token in place of the settled framing, so no
+/// seat can render the quiet badge over a step that produced nothing.
 #[test]
-fn the_wound_reaches_the_paint_output_in_place_of_the_quiet_badge() {
+fn the_wound_reaches_the_answer_in_place_of_the_quiet_framing() {
     let dir = tempdir().unwrap();
     let ws = dir.path();
     write_repro(ws, "001");
-    let text = painted(
-        &build(ws, AGENT, AgentState::Stopped),
-        None,
-        None,
-        StepTab::Meta,
+    let answered = crate::steps_view::wire::steps(&build(ws, AGENT, AgentState::Stopped));
+    let row = &answered["rows"][0];
+    assert_eq!(row["wound"], "no_response", "got:\n{answered:#}");
+    assert_ne!(row["framing"], "complete", "got:\n{answered:#}");
+    assert!(
+        Wound::Mute.banner().contains(NO_RESPONSE),
+        "and the sentence a seat renders names the class"
     );
-    assert!(text.contains(NO_RESPONSE), "got:\n{text}");
-    assert!(text.contains('✖'), "the wound badge, not the ash ■: {text}");
-    assert!(!text.contains('■'), "got:\n{text}");
 }

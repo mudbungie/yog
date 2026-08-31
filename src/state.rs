@@ -29,7 +29,6 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use crate::app::Snapshot;
-use crate::search::Found;
 use crate::watch::{Mark, WatchSet};
 
 /// The shared [`WatchSet`](crate::watch::WatchSet): the §7.2 worker reconciles
@@ -78,83 +77,6 @@ pub(crate) fn publish_snapshot(cell: &SnapshotCell, snapshot: Arc<Snapshot>) {
 /// renders from a value nothing can mutate under it.
 pub(crate) fn latest_snapshot(cell: &SnapshotCell) -> Arc<Snapshot> {
     Arc::clone(&lock_cell(cell))
-}
-
-/// The §8.5 search hand-off — **frame ⇄ searcher, one cell**, because a search
-/// is one question at a time and two cells could disagree about which question
-/// is current. The frame writes the ask and reads the answer; the
-/// [`Searcher`](crate::search::Searcher) does the reverse.
-///
-/// The serial is the whole protocol. Every ask bumps `seq`; a run carries the
-/// seq it started on and publishes only if that is still the current one, so a
-/// superseded run's work is discarded rather than raced. It is also the
-/// **cancellation** signal: the run asks whether `seq` still equals its own
-/// between conversations and abandons when it does not. Nothing here is
-/// durable — a query's answer lives only as long as the surface that asked
-/// (§5.3 #26).
-#[derive(Clone, Default)]
-pub struct SearchCell {
-    inner: Arc<Mutex<SearchSlot>>,
-}
-
-/// The cell's contents: the current ask, and the answer to whichever ask has
-/// been answered. `seq == answered` means nothing is outstanding — the starting
-/// state, with no bootstrap branch to write.
-#[derive(Default)]
-struct SearchSlot {
-    seq: u64,
-    text: String,
-    answered: u64,
-    found: Found,
-}
-
-impl SearchCell {
-    /// The poison-immune guard (see [`lock_cell`] for the discipline).
-    fn guard(&self) -> MutexGuard<'_, SearchSlot> {
-        self.inner.lock().unwrap_or_else(PoisonError::into_inner)
-    }
-
-    /// Ask (frame side): supersede whatever was pending. Cheap by construction
-    /// — one lock, one string move — because the frame is what calls it.
-    pub fn ask(&self, text: &str) {
-        let mut slot = self.guard();
-        slot.seq = slot.seq.wrapping_add(1);
-        text.clone_into(&mut slot.text);
-    }
-
-    /// The outstanding ask as `(seq, text)`, or `None` when the published
-    /// answer already answers the current question.
-    pub(crate) fn pending(&self) -> Option<(u64, String)> {
-        let slot = self.guard();
-        (slot.seq != slot.answered).then(|| (slot.seq, slot.text.clone()))
-    }
-
-    /// The current ask's serial — the run's liveness test.
-    pub(crate) fn seq(&self) -> u64 {
-        self.guard().seq
-    }
-
-    /// Publish (searcher side), iff `seq` is still the question being asked.
-    pub(crate) fn publish(&self, seq: u64, found: Found) {
-        let mut slot = self.guard();
-        if slot.seq == seq {
-            slot.answered = seq;
-            slot.found = found;
-        }
-    }
-
-    /// The published answer (frame side) — a clone, so the frame renders a
-    /// value nothing can mutate under it.
-    pub fn found(&self) -> Found {
-        self.guard().found.clone()
-    }
-
-    /// Whether an ask is still outstanding — the "searching…" fact, derived
-    /// from the same two serials rather than stored beside them.
-    pub fn searching(&self) -> bool {
-        let slot = self.guard();
-        slot.seq != slot.answered
-    }
 }
 
 /// The dirty-root hand-off: root paths, each with the [`Mark`] naming **why**

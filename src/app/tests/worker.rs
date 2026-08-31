@@ -4,25 +4,15 @@
 //!
 //! The pass itself is driven by hand everywhere else in this suite. What is
 //! proven here is the shell around it — that a real thread picks work up,
-//! publishes, wakes the window, and stops cleanly.
+//! publishes and stops cleanly.
 
 use super::{Harness, Rig};
 use crate::app::Worker;
 use crate::test_support::FakeClock;
 use crate::ui_state::SystemClock;
-use crate::watch::{Mark, Repaint};
+use crate::watch::Mark;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
-
-/// A [`Repaint`] double counting requests — the window the worker would wake.
-struct CountingRepaint(Arc<AtomicUsize>);
-
-impl Repaint for CountingRepaint {
-    fn request(&self) {
-        self.0.fetch_add(1, Ordering::Relaxed);
-    }
-}
 
 /// Poll `probe` until it yields or `timeout` elapses. The worker is a real
 /// thread here; nothing else in this file waits on one.
@@ -43,34 +33,31 @@ fn wait_until_gives_up_and_reports_the_last_reading() {
 }
 
 #[test]
-fn the_worker_thread_derives_a_marked_root_and_wakes_the_window() {
+fn the_worker_thread_derives_a_marked_root_and_publishes_it() {
     let h = Harness::new();
     // A real clock: this test is about the thread, and the pass it runs must
     // reach its own debounce without a test advancing anything.
-    let (mut model, deriver) = crate::AppModel::boot(
+    let (model, deriver) = crate::AppModel::boot(
         h.roots.clone(),
-        None,
         Arc::new(SystemClock),
         Box::new(super::harness::no_balls()),
         Some("me".to_string()),
     );
+    let cell = model.snapshot_cell();
     let dirty = deriver.dirty_handle();
-    let count = Arc::new(AtomicUsize::new(0));
-    let worker = Worker::spawn(deriver, CountingRepaint(Arc::clone(&count)));
+    let worker = Worker::spawn(deriver);
 
     // Disk moves and the root is announced; the worker — nobody else — derives.
     h.build_more("c-2", "yo");
     dirty.mark_all([(h.ws.clone(), Mark::Watch)]);
     assert!(
-        wait_until(Duration::from_secs(5), || count.load(Ordering::Relaxed) > 0),
-        "the worker published and asked for a repaint"
-    );
-    assert!(
         wait_until(Duration::from_secs(5), || {
-            model.refresh();
-            model.tree(&h.ws).is_some_and(|t| t.agents.len() == 2)
+            crate::state::latest_snapshot(&cell)
+                .trees
+                .get(&h.ws)
+                .is_some_and(|t| t.agents.len() == 2)
         }),
-        "and the frame's snapshot carries the new agent"
+        "the worker published a snapshot carrying the new agent"
     );
     drop(worker); // clean stop + join
 }
@@ -96,7 +83,6 @@ fn a_pass_that_outruns_its_cadence_names_itself_once_however_long_it_lasts() {
     let clock = FakeClock::lurching(Duration::from_secs(1));
     let (model, deriver) = crate::AppModel::boot(
         h.roots.clone(),
-        None,
         clock.arc(),
         Box::new(super::harness::no_balls()),
         Some("me".to_string()),

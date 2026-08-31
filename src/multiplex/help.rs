@@ -31,50 +31,6 @@ mod tests;
 /// a word that does not run.
 pub(super) const COMMANDS: &[HelpRow] = &[
     HelpRow {
-        verb: crate::boundary::SERVE_SUBCMD,
-        usage: "yog serve",
-        summary: "the same engine with no window: worker, watcher, gesture consumer, wire",
-        detail: "Boot the one engine a window boots — the derivation worker, the watch bridge, \
-                 the gestures-inbox consumer and the mTLS wire listener — with no face beside \
-                 it, and park until a signal ends the process. State is write-through, so \
-                 nothing pends at exit. This is the engine `yog gesture` deposits into and \
-                 `yog seat` connects to; boot mints whatever wire material this box lacks, \
-                 aimed at loopback on a kernel-chosen port, so the listener is up with no \
-                 operator act behind it. `yog wire-certs` is the act for everything wider — a \
-                 stated address another machine dials, or a rotation. A mint or a bind that \
-                 fails is said on stderr and the engine runs on without a wire.",
-    },
-    HelpRow {
-        verb: crate::wire::SEAT_SUBCMD,
-        usage: "yog seat <gesture>",
-        summary: "cross the control boundary over the wire: the same envelope or /slash line",
-        detail: "Send one gesture to an engine over mTLS and print the reply. The payload and \
-                 flags are `yog gesture`'s exactly — a JSON envelope or a `/slash` line, with \
-                 `--ws / --agent / --project / --as / --prepared` stating the context a \
-                 terminal has no selection for — because the wire transports the boundary and \
-                 adds nothing to it. The engine, the certificate this machine presents and the \
-                 CA both ends verify against come from the wire material an operator \
-                 provisioned (`make wire-certs`); with none, this refuses and says so. Use \
-                 `yog gesture` instead from inside the world: disk is the bus there.",
-    },
-    HelpRow {
-        verb: crate::wire::HOST_SUBCMD,
-        usage: "yog tool-host",
-        summary: "be a tool host: run this machine's tools for an engine over the wire",
-        detail: "Presents what `<yog-data-root>/tools.json` says this machine can run — the \
-                 same document, with `command`/`cwd` dropped, so what is offered and what can \
-                 actually be run cannot drift — then waits for work and runs it. Each element \
-                 is `{\"name\", \"description\", \"input_schema\", \"command\": [argv…], \
-                 \"cwd\"?}`; the argv is spawned directly, never through a shell, and the \
-                 invocation's JSON arrives on the command's stdin exactly as a local tool's \
-                 does. One invocation at a time; a tool that has not answered in two minutes \
-                 is terminated and the capture says so. The engine, the certificate this \
-                 machine presents and the CA both ends verify against come from the wire \
-                 material an operator provisioned (`make wire-certs`); with none, or with no \
-                 config, this refuses and says which. When the channel fails it exits, naming \
-                 the failure — restarting it is the supervision this machine already has.",
-    },
-    HelpRow {
         verb: crate::wire::provision::verb::SUBCMD,
         usage: "yog wire-certs",
         summary: "mint this box's wire certificates: a local CA and its server/client leaves",

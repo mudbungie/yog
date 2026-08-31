@@ -1,8 +1,12 @@
-//! STORIES **S6-T4** rollups-and-jump: the workspace rollup is the count of its
+//! STORIES **S6-T4** rollups: the workspace rollup is the count of its
 //! attention-bearing agents (§6's "max over its agents" is that count's
-//! `> 0`), the strip total sums those counts across every workspace, and
-//! jump-to-next walks the derived order — wrapping, and never sticking on the
-//! current row (STORIES S6.1, DESIGN §6, §11).
+//! `> 0`), the strip total sums those counts across every workspace, and each
+//! acknowledgement takes exactly one off it — while a quiet conversation has
+//! none to take (STORIES S6.1, DESIGN §6).
+//!
+//! **The jump half went with the window** (bl-7942): walking the queue is a
+//! seat's cursor. What is left is the fact the cursor walked over, which is the
+//! half that was ever the server's.
 
 #![allow(clippy::unwrap_used)]
 
@@ -24,9 +28,9 @@ fn quiet(id: &str) -> AgentFixture {
         .mark("abandoned")
 }
 
-/// STORIES **S6-T4** rollups-and-jump.
+/// STORIES **S6-T4** rollups.
 #[test]
-fn s6_t4_rollups_sum_and_jump_to_next_wraps_without_sticking() {
+fn s6_t4_rollups_sum_and_each_acknowledgement_takes_one_off() {
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
@@ -51,9 +55,8 @@ fn s6_t4_rollups_sum_and_jump_to_next_wraps_without_sticking() {
         build_agents(&ws, &agents);
     }
 
-    let (mut m, _worker) = AppModel::boot(
+    let (m, _worker) = AppModel::boot(
         roots,
-        None,
         Arc::new(SystemClock),
         Box::new(FakeBl::default()),
         None,
@@ -74,49 +77,34 @@ fn s6_t4_rollups_sum_and_jump_to_next_wraps_without_sticking() {
     // The strip total is their sum across every workspace.
     assert_eq!(crate::support::strip_total(&m), 3, "2 + 1 + 0");
 
-    // --- Jump-to-next walks the derived order across workspaces. The control
-    // **acknowledges what it lands on** (§6.3: landing is acknowledging), so it
-    // is a walk through the queue rather than a cycle over a fixed list — each
-    // jump takes one signal off the strip.
-    let mut visited = Vec::new();
+    // --- The queue drains as each signal is answered. The walk itself is a
+    // seat's cursor (bl-7942 took it out of this crate with the window); what
+    // stays here is the fact the cursor walks over — one acknowledgement, one
+    // signal off the strip, and only the flagged agents have one to take.
+    let flagged = [("alpha", "a-001"), ("bravo", "b-001"), ("alpha", "a-003")];
     let mut remaining = Vec::new();
-    for _ in 0..3 {
-        m.jump_next_attention();
-        visited.push((
-            m.focused_workspace().unwrap().clone(),
-            m.focused_agent().unwrap().agent_id.clone(),
-        ));
+    for (workspace, agent) in flagged {
+        crate::support::act(
+            &m,
+            &yog::boundary::Action::MarkSeen {
+                workspace: workspace.to_owned(),
+                agent: agent.to_owned(),
+            },
+        )
+        .expect("the ack lands");
         remaining.push(crate::support::strip_total(&m));
     }
-    let mut names: Vec<&str> = visited.iter().map(|(_, a)| a.as_str()).collect();
-    // Each flagged agent is visited exactly once — no repeats, nothing missed.
-    assert!(
-        visited.windows(2).all(|w| w[0] != w[1]),
-        "no jump lands where it started"
-    );
-    names.sort_unstable();
-    assert_eq!(
-        names,
-        ["a-001", "a-003", "b-001"],
-        "every flagged agent, and only those"
-    );
-    // It never stops on a quiet agent, and never on charlie, which has none.
-    assert!(
-        !names.contains(&"a-002") && !names.contains(&"b-002") && !names.contains(&"c-001"),
-        "jump visits attention, not rows"
-    );
-    // The strip drains as it walks — three jumps, three signals answered.
-    assert_eq!(remaining, [2, 1, 0], "each landing takes one off the strip");
+    assert_eq!(remaining, [2, 1, 0], "each acknowledgement takes one off");
 
-    // It wraps rather than running off the end: the walk crossed into bravo and
-    // came back to alpha for the last one.
-    assert_eq!(visited[1].0, bravo);
-    assert_eq!(visited[2].0, alpha, "the order wrapped back to the front");
-
-    // With the strip empty the control has nowhere to go, and says so by not
-    // moving — which is not "sticking": there is no next signal to stick past.
-    let before = m.focused_agent().map(|a| a.agent_id.clone());
-    m.jump_next_attention();
+    // A quiet agent has nothing to take: acknowledging one leaves the strip
+    // where it was, which is what "attention is evidence, not rows" means.
+    crate::support::act(
+        &m,
+        &yog::boundary::Action::MarkSeen {
+            workspace: "alpha".to_owned(),
+            agent: "a-002".to_owned(),
+        },
+    )
+    .expect("the ack lands");
     assert_eq!(crate::support::strip_total(&m), 0);
-    assert_eq!(m.focused_agent().map(|a| a.agent_id.clone()), before);
 }

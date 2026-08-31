@@ -16,7 +16,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tempfile::tempdir;
 use yog::projects::join::JoinState;
-use yog::theme;
 use yog::ui_state::SystemClock;
 use yog::{AppModel, Roots};
 
@@ -59,7 +58,6 @@ fn s4_t4_conversation_badges_are_honest_about_what_the_join_knows() {
 
     let (mut m, mut deriver) = AppModel::boot(
         roots,
-        None,
         Arc::new(SystemClock),
         Box::new(FakeBl {
             live: HashMap::from([(project.path().to_path_buf(), LIVE.to_owned())]),
@@ -68,7 +66,7 @@ fn s4_t4_conversation_badges_are_honest_about_what_the_join_knows() {
         }),
         None,
     );
-    m.focus_workspace(&yog::naming::leaf(&ws));
+    let name = yog::naming::leaf(&ws);
     // The closed listing is **on demand** (§5.1 #4) — never on the fetch cadence,
     // so at boot the dead set is empty and the delivered badge has nothing to
     // colour by. A landed `bl` verb is its one trigger, which is also the only
@@ -77,13 +75,13 @@ fn s4_t4_conversation_badges_are_honest_about_what_the_join_knows() {
     m.after_bl_verb(project.path());
     for _ in 0..200 {
         deriver.step();
-        if m.refresh() {
+        if m.take() {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
 
-    let rows = crate::support::conversation_rows(&m, 1000);
+    let rows = crate::support::conversation_rows(&m, &name, 1000);
     assert_eq!(rows.len(), 4, "four conversations: {rows:?}");
     let by_root: HashMap<&str, &yog::nav::convs::ConvRow> =
         rows.iter().map(|r| (r.root_id.as_str(), r)).collect();
@@ -93,13 +91,11 @@ fn s4_t4_conversation_badges_are_honest_about_what_the_join_knows() {
     let bound = ball_of("c-001").expect("a stamped conversation carries its ball");
     assert_eq!(bound.id, "bl-1");
     assert_eq!(bound.state, Some(JoinState::Bound));
-    assert_eq!(theme::ball_hue(JoinState::Bound), theme::HYDRA);
 
     // 2. Delivered ball ⇒ still stamped, now ash.
     let delivered = ball_of("c-002").expect("a delivered ball is still a stamp");
     assert_eq!(delivered.id, "bl-2");
     assert_eq!(delivered.state, Some(JoinState::Delivered));
-    assert_eq!(theme::ball_hue(JoinState::Delivered), theme::ASH);
 
     // 3. A stamped id the join does not know ⇒ the id renders UNCOLOURED. The
     //    stamp is source 1 and always true; the colour is the join's, and the

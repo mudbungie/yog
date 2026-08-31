@@ -18,6 +18,23 @@ use serde_json::Value;
 /// The `ui.json` key holding every dragged panel size.
 const PANELS: &str = "panels";
 
+/// The share of a window a container keeps for its own content (§11 rule 5).
+///
+/// A share rather than a point count because the defect it bounds is a ratio:
+/// 690 pt of a 1150 pt window is a wide roster, and of an 800 pt one it is an
+/// unusable centre. It was `layout::KEEP` until bl-7942 — the rest of that
+/// module was the accessory-stack arithmetic a *painting* face does, and it
+/// went with the face. This half stays because the size it bounds is the one
+/// a seat stores in its pane document, and the clamp on a stored size is the
+/// document's own (REMOTE §7).
+const KEEP: f32 = 0.5;
+
+/// The largest a *sized* panel may open at, given the extent of the window
+/// along its own axis (§4.1 `panels`).
+fn panel_ceiling(window: f32) -> f32 {
+    window * KEEP
+}
+
 /// A panel whose boundary the operator may drag (§11). Sizes are in **logical
 /// points**, so they are independent of the §4.1 `zoom`: a text-size change
 /// rescales what a panel holds, never how wide the operator made it.
@@ -69,13 +86,13 @@ impl Panel {
     /// panel's **own** axis — width for the side panel, height for the two
     /// bottom ones. Never below the floor: a window too small to hold twice a
     /// sliver still owes the operator a boundary to grab.
-    /// The share itself lives in [`crate::layout`] (§11 rule 5 as amended,
-    /// bl-9551) — one home, so a boundary the operator drags and an accessory
-    /// the pane docks cannot disagree about what half means. The floor
+    /// The share is [`KEEP`] — half the window, which is what §11 rule 5's
+    /// budget was ever about: the centre is what the window is *for*, so every
+    /// accessory around it divides the other half. The floor
     /// ([`Panel::min_size`]) stays in points for the opposite reason to the
     /// ceiling's share: a grabbable sliver is a physical size.
     pub fn max_size(self, window: f32) -> f32 {
-        crate::layout::panel_ceiling(window).max(self.min_size())
+        panel_ceiling(window).max(self.min_size())
     }
 
     /// `size` folded into this panel's floor…ceiling at `window` — **the one

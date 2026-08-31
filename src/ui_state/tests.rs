@@ -155,6 +155,40 @@ fn transcript_density_knobs_roundtrip_with_the_operator_defaults() {
     assert!(!junk.transcript_expand_others());
 }
 
+/// **The whole-UI zoom** (§4.1 `zoom`, REMOTE §7's pane document): a seat's
+/// text size, clamped to a domain and snapped to a hundredth so the `f32`
+/// round-trips exactly and a relaunch reopens at the size it closed at. The
+/// clamp is what stops a hand-edited `ui.json` from opening a face nobody can
+/// read; the snap is what keeps the document readable.
+#[test]
+fn the_zoom_is_clamped_snapped_and_round_trips() {
+    let d = tempdir().unwrap();
+    let mut ui = mk(d.path());
+    assert!((ui.zoom() - 1.0).abs() < f32::EPSILON, "unset reads as 1.0");
+
+    ui.set_zoom(1.234);
+    assert!(
+        (ui.zoom() - 1.23).abs() < f32::EPSILON,
+        "snapped to a hundredth: {}",
+        ui.zoom()
+    );
+    // Both ends of the domain, from outside it. A seat that asks for something
+    // unreadable is given the nearest readable thing rather than a refusal.
+    ui.set_zoom(99.0);
+    let high = ui.zoom();
+    ui.set_zoom(0.01);
+    let low = ui.zoom();
+    assert!(high > 1.0 && low < 1.0 && low > 0.0, "{low} … {high}");
+    ui.set_zoom(1000.0);
+    assert!(
+        (ui.zoom() - high).abs() < f32::EPSILON,
+        "the ceiling is a ceiling"
+    );
+
+    // Non-numeric is the forgiving read every other knob takes.
+    assert!((load_pane(br#"{"zoom":"big"}"#).zoom() - 1.0).abs() < f32::EPSILON);
+}
+
 /// The §6 escalation knob (bl-e160): armed by default — the strip is invisible
 /// exactly when the operator needs it, so a notifier off until you find its
 /// switch is a feature nobody has. Severable: the key alone turns it off, and

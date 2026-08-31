@@ -55,17 +55,6 @@ impl Doc {
         }
     }
 
-    /// The record's backing bytes — what the §11 Raw toggle shows. Empty iff
-    /// the record is [`Absent`](Doc::Absent), which is the same fact said
-    /// twice only if you spell it twice: the renderer reads emptiness here
-    /// rather than re-matching the variant.
-    pub(super) fn raw(&self) -> &[u8] {
-        match self {
-            Doc::Json { raw, .. } | Doc::Unparsed(raw) => raw,
-            Doc::Absent => &[],
-        }
-    }
-
     /// Read a file into a [`Doc`]; a missing/unreadable file is
     /// [`Absent`](Doc::Absent).
     fn of_file(path: &Path) -> Doc {
@@ -134,7 +123,7 @@ pub fn detail(workspace: &Path, agent_id: &str, seq: &str) -> StepDetail {
 /// A capture log as bounded bytes, or `None` when there is nothing to read —
 /// absent, unstattable, or empty, which are one fact for a file nobody promised
 /// to write (bl-83d6). This single read **is** the picker's presence rule
-/// ([`super::records::seats`]): nothing stats these files twice, so a seat can
+/// ([`super::records`]): nothing stats these files twice, so a seat can
 /// never be offered over bytes that are not there.
 ///
 /// The bound is [`crate::files_view::preview`]'s, not a new one: 64 KiB of a

@@ -54,7 +54,6 @@ mod bound;
 pub mod compose;
 mod observed;
 mod outcome;
-pub mod render;
 pub mod respdiff;
 pub(crate) mod wire;
 

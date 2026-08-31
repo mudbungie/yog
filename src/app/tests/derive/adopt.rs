@@ -46,13 +46,15 @@ fn adopting_our_own_ui_json_echo_is_suppressed() {
     let (_c, mut model) = h.model();
     // Pin the real workspace (write-through to ui.json), then let the state
     // root fire.
+    // `ui.json` keys pins by PATH (§4.1) — durable state whose re-keying would
+    // be its own migration — while a tab is addressed by its §3.1 name.
     let key = crate::naming::leaf(&h.ws);
-    model.toggle_pin(&key);
+    model.ui.set_pinned(vec![crate::nav::ws_key(&h.ws)]);
     model
         .dirty_handle()
         .mark_all([(h.roots.yog_state.clone(), Mark::Watch)]);
     model.tick(); // adopt_ui reads our own bytes → is_echo true → skip adopt
-    let bar = model.tab_bar();
+    let bar = model.tab_bar(Some(&key));
     assert!(
         bar.tabs.first().is_some_and(|t| t.pinned),
         "the pin survives the echo: {bar:?}"
@@ -102,5 +104,68 @@ fn a_fleet_entry_is_adopted_and_deleted_on_the_clocks_own_announcement() {
     assert!(
         fleet(&model).is_empty(),
         "deleting the entry deletes the loop, not a code path"
+    );
+}
+
+/// **The §9.2 global `models.yaml`, adopted on the sweep** (§5.1 #35): the
+/// context windows it declares reach the published snapshot, and a change to
+/// them republishes. Not a watch of its own — the file is world-global and
+/// hand-edited, so it changes at operator speed and rides the full sweep.
+#[test]
+fn the_declared_context_windows_are_adopted_and_re_adopted() {
+    let h = Harness::new();
+    let models = crate::config_edit::litany_global::LitanyGlobal::resolve(&h.roots.world).models();
+    std::fs::create_dir_all(models.parent().expect("a root")).expect("mkdir");
+    let declare = |window: u64| {
+        std::fs::write(
+            &models,
+            format!("models:\n  opus:\n    context_window: {window}\n"),
+        )
+        .expect("write");
+    };
+    declare(200_000);
+    let (clock, mut model) = h.model();
+    assert_eq!(
+        model.snap.windows.get("opus").copied(),
+        Some(200_000),
+        "the boot's own sweep adopted the declaration"
+    );
+    // The adopt rides the 15 s full sweep, so the clock is what makes one due.
+    declare(400_000);
+    clock.advance(std::time::Duration::from_mins(1));
+    assert!(model.tick(), "a moved window republishes");
+    assert_eq!(model.snap.windows.get("opus").copied(), Some(400_000));
+}
+
+/// **Another instance's `ui.json` is adopted wholesale** (§4.1, I5) — the other
+/// side of the echo suppression above, and the whole of I0's convergence: two
+/// yogs over one document agree because each takes what the worker read, and
+/// only its own bytes are skipped.
+#[test]
+fn an_external_ui_json_write_is_adopted() {
+    let h = Harness::new();
+    let (_c, mut model) = h.model();
+    let key = crate::naming::leaf(&h.ws);
+    assert!(
+        model
+            .ws_listing()
+            .rows
+            .iter()
+            .all(|row| row.pinned.is_none()),
+        "nothing is pinned yet"
+    );
+    // A write this instance did not make: another yog's, or an operator's
+    // editor. `ui.json` keys pins by path (§4.1), which is why the fixture
+    // writes the key rather than the name.
+    crate::ui_state::UiState::open(model.ui_json_path())
+        .set_pinned(vec![crate::nav::ws_key(&h.ws)]);
+    model
+        .dirty_handle()
+        .mark_all([(h.roots.yog_state.clone(), Mark::Watch)]);
+    assert!(model.tick(), "the re-read publishes");
+    let bar = model.tab_bar(Some(&key));
+    assert!(
+        bar.tabs.first().is_some_and(|t| t.pinned),
+        "the other instance's pin is this one's too: {bar:?}"
     );
 }

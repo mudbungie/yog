@@ -14,7 +14,9 @@
 //! everything else. An editor is now a [`Draft`] plus its gate.
 
 use super::{Commit, FileIo, is_pristine, load_snapshot, stage};
-use std::path::{Path, PathBuf};
+#[cfg(test)]
+use std::path::Path;
+use std::path::PathBuf;
 
 /// One file's editable text and the snapshot it was read at.
 #[derive(Debug, Clone)]
@@ -44,19 +46,18 @@ impl Draft {
         }
     }
 
-    /// The file this draft targets.
+    /// The file this draft targets — a test-only reader since the pane that
+    /// asked left the crate (bl-7942).
+    #[cfg(test)]
     pub(crate) fn path(&self) -> &Path {
         &self.path
     }
 
-    /// The draft text (§5.3 carve-out).
+    /// The draft text (§5.3 carve-out) — a test-only reader, for the same
+    /// reason.
+    #[cfg(test)]
     pub(crate) fn text(&self) -> &str {
         &self.text
-    }
-
-    /// The draft as a mutable buffer — the binding an egui `TextEdit` edits.
-    pub(crate) fn text_mut(&mut self) -> &mut String {
-        &mut self.text
     }
 
     /// Replace the draft text wholesale.

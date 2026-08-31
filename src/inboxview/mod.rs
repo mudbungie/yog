@@ -23,9 +23,7 @@
 use crate::nav::convs::Titles;
 use std::path::Path;
 
-mod render;
 pub(crate) mod wire;
-pub use render::render;
 
 /// Workspace subdir holding per-agent inboxes (ARCH §2.11).
 const INBOX_DIR: &str = "inbox";
@@ -123,18 +121,6 @@ pub struct InboxEntry {
     /// The file's bytes, unaltered.
     pub raw: Vec<u8>,
     pub deposit: Deposit,
-}
-
-impl InboxEntry {
-    /// Whether this deposit exists **only in memory** — §7.2's pending echo,
-    /// the message yog has sent and the driver has not yet written. A listed
-    /// deposit *is* a file, so it always has a name; an empty one cannot come
-    /// from [`list_inbox`], which makes this a query rather than a flag. Its
-    /// one consumer is the §11 tone — faded while a send is only yog's word for
-    /// it, brightening when the derivation makes it a statement.
-    pub fn in_memory(&self) -> bool {
-        self.name.is_empty()
-    }
 }
 
 /// The one-line `✉ from · at` header of a deposit — the wording every seat of

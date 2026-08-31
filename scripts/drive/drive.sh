@@ -2,11 +2,10 @@
 # drive.sh — the one front door to the real-substrate harness (bl-56d5).
 #
 # The scripts beside it are primitives with positional arguments and no defaults:
-# to drive the ladder you had to know that a seat is claimed per run, that each
-# run verb wants its OWN scratch world, that the driven `yog` resolves from
-# `PATH` so a worktree build must be prefixed onto it, and where to put the
-# evidence. That is four facts to get right before the first beat, and getting
-# any of them wrong is silent — which is why the ladder went undriven for eleven
+# to drive the ladder you had to know that each run verb wants its OWN scratch
+# world, that the driven `yog` resolves from `PATH` so a worktree build must be
+# prefixed onto it, and where to put the evidence. That is three facts to get
+# right before the first beat, and getting any of them wrong is silent — which is why the ladder went undriven for eleven
 # days while 177 commits landed. This file knows all four, so the Makefile's
 # `drive` family is a one-line wrapper over it and a fresh agent needs one
 # command per script family.
@@ -16,7 +15,6 @@
 #
 # Usage:
 #   drive.sh preflight              name every missing host prerequisite at once
-#   drive.sh seat | unseat          claim / drop an isolated Xvfb display
 #   drive.sh seed [dir]             lay a scratch world, print its path
 #   drive.sh ladder [verb ...]      run the ladder (default: every run verb)
 #   drive.sh cleanroom [verb]       the §16.7 W14 batteries proof, in the room
@@ -48,14 +46,14 @@ live=${XDG_DATA_HOME:-$HOME/.local/share}
 # own `$XDG_DATA_HOME` would delete their workspaces, conversations and world
 # without a prompt. The check is a two-directional path-prefix test rather than
 # an equality test, because containment either way is the same accident.
-# `make ux` and `make reload` are the live-world verbs by design (bl-6260);
+# The live world is the operator's engine's (bl-6260);
 # nothing in this family ever is.
 refuse() {
   echo "drive.sh: refusing to drive the LIVE world." >&2
   echo "  scratch: $1" >&2
   echo "  live:    $live" >&2
   echo "A run wipes its world before it starts, so the two may never overlap." >&2
-  echo "Point DRIVE_ROOT somewhere else; make ux / make reload own the live one." >&2
+  echo "Point DRIVE_ROOT somewhere else; the live world is the engine's." >&2
   exit 1
 }
 guard() {
@@ -80,8 +78,8 @@ stamp() { date -u +%Y%m%dT%H%M%SZ; }
 # EVERY STAGE THIS FILE DRIVES LEAVES A ROW, whatever happened to it — verb and
 # exit code, appended before the next stage starts (bl-d0a0). A stage that dies
 # before its first beat writes no verdict, so until this it left no trace at all:
-# a seat that never came up, a duplicate beat definition refused at source time,
-# a preflight tool that answered and then quit. The report reads these rows, so
+# an engine that never came up, a duplicate beat definition refused at source
+# time, a preflight tool that answered and then quit. The report reads these rows, so
 # "which stage failed" is in the document rather than in a scrolled-past
 # terminal. It is not a second copy of the verdicts — it is the only record of a
 # run that produced none, and the only record of the process's own exit code.
@@ -95,9 +93,11 @@ stage_row() { printf '%s\t%s\n' "$2" "$3" >>"$1/stages.tsv"; }
 # `verdicts.jsonl`, so a run that died before its first beat took drive.sh out
 # HERE — leaving a zero-byte `drive-log.md`, swallowing the "N of the driven
 # verbs reported failing beats" line, and ending on the generator's complaint
-# instead of on the seat failure that actually happened. The generator now
+# instead of on the failure that actually happened. The generator now
 # reports a verdict-less run instead of refusing it, and this guard keeps the
-# primary failure and the exit code below whatever else it does.
+# primary failure and the exit code below whatever else it does. (The run that
+# found this had died claiming an X seat; there is no seat to fail at now, but
+# an engine that will not boot fails in exactly the same place.)
 skeleton() {
   "$here/logskel.sh" "$1" >"$1/drive-log.md" \
     || echo "drive.sh: the log skeleton failed; the run's own verdict stands" >&2
@@ -117,10 +117,12 @@ seed_world() {
 
 ladder() {
   runs=${*:-}
-  # `run-headless` first: it is the only verb that claims no seat and spends
-  # nothing on the wire (bl-bb20), so a ladder that is going to fail on the
-  # world's own shape fails in seconds rather than after four windowed runs.
-  [ -n "$runs" ] || runs="run-headless run run-unseeded run-s3s4s6 run-s5s8 run-s7"
+  # One verb since bl-7942: every windowed run went with the window, and what
+  # is left claims no display and spends nothing on the wire. The list stays a
+  # list rather than collapsing to a call, because the ladder's shape — one
+  # world per verb, one verdict row per verb — is what a second verb would slot
+  # into, and this file should not have to be rewritten to grow one.
+  [ -n "$runs" ] || runs="run-headless"
   # PATH first, THEN preflight: the preflight's `yog` row must name the binary
   # that is about to be driven, not whatever happens to be installed.
   use_release
@@ -147,7 +149,7 @@ ladder() {
 }
 
 cleanroom() {
-  verb=${1:-run}
+  verb=${1:-run-headless}
   use_release
   "$here/preflight.sh"
   base="$root/$(stamp)/cleanroom-$verb"
@@ -170,8 +172,6 @@ log_it() {
 
 case ${1:-} in
 preflight) shift; exec "$here/preflight.sh" "$@" ;;
-seat)      exec "$here/yogdrive.sh" seat ;;
-unseat)    exec "$here/yogdrive.sh" unseat ;;
 seed)      shift; seed_world "${1:-}" ;;
 ladder)    shift; ladder "$@" ;;
 cleanroom) shift; cleanroom "$@" ;;

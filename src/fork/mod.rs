@@ -58,7 +58,6 @@ use std::path::{Path, PathBuf};
 
 pub mod choices;
 pub mod composer;
-pub mod render;
 #[cfg(test)]
 mod tests;
 

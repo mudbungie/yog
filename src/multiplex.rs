@@ -56,7 +56,8 @@ pub fn dispatch(argv: &[String]) -> Option<i32> {
     // higher-order rule at the argv surface, `help`). A namespace's `--help` is
     // the embedded tool's, so it falls through to the arm, which answers it
     // world-free. The top level is intercepted here rather than left to clap,
-    // which knows only the window's own flags and would advertise nothing below.
+    // which knows only the binary's own two flags and would advertise nothing
+    // below.
     if let Some(page) = help::answer(argv) {
         println!("{page}");
         return Some(0);
@@ -65,9 +66,9 @@ pub fn dispatch(argv: &[String]) -> Option<i32> {
     Some(namespace.run(argv.get(2..).unwrap_or_default()))
 }
 
-/// The whole top-level surface, in one place: the window's own flags (rendered
-/// by clap, so they are never restated here), then every leading word yog
-/// answers to. Both come from [`help::COMMANDS`] — the same table every
+/// The whole top-level surface, in one place: the binary's own header and
+/// flags (rendered by clap, so they are never restated here), then every
+/// leading word yog answers to. Both come from [`help::COMMANDS`] — the same table every
 /// per-command page is rendered from, whose `verb` is the const its dispatcher
 /// routes on — so nothing here can drift from what runs. A row with no summary
 /// is unadvertised (`tool-control`, a machine seam); balls' two plugin binaries
@@ -133,15 +134,6 @@ mod gesture {
         })
     }
 }
-
-/// The two **wire client** arms (REMOTE §8, §5; bl-b6fa, bl-024b): `seat`
-/// types one gesture over mTLS instead of depositing it into this world's
-/// inbox; `tool-host` offers this machine's own tools to an engine and runs
-/// what it is asked to. Both compose the world here at the process edge as the
-/// `gesture` arm does, for one reason: the certificate and the tool config are
-/// facts of *this* machine's yog data root (§16.2) even when the engine they
-/// reach is elsewhere.
-mod wire;
 
 /// The `litany` arm — **filled by W11**: litany's own thin exec binding, in
 /// yog's process (see the module doc in `multiplex/litany.rs`).

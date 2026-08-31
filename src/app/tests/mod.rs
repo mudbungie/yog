@@ -1,21 +1,15 @@
 //! Shared harness + the construction / enumeration / accessor tests for the
 //! multi-workspace [`AppModel`] (§15 Y11). The tick/sweep machinery is in
-//! `derive`, the roster/attention/seen surface (and the M2 convergence proof)
-//! in `focus`.
+//! `derive`.
+//!
+//! What a seat is *looking at* is no longer here to test (bl-7942): the focus,
+//! its startup derivation and the optimistic echo folded over it were the
+//! window's, and a server holds none of them (REMOTE §7).
 
-mod agent_deletes;
-mod attention;
-mod deletes;
+mod delete_exec;
 pub(super) mod derive;
 mod drift;
-mod echo;
-mod focus;
 pub(crate) mod harness;
-mod knobs;
-mod panels;
-mod search;
-mod started;
-mod view;
 mod worker;
 
 use super::*;
@@ -26,15 +20,7 @@ pub(super) use harness::Harness;
 pub(crate) use harness::Rig;
 pub(crate) use harness::agent;
 use harness::no_balls;
-use std::path::PathBuf;
 use tempfile::tempdir;
-
-#[test]
-fn args_workspace_is_optional_and_parses() {
-    assert_eq!(Args::try_parse_from(["yog"]).unwrap().workspace, None);
-    let a = Args::try_parse_from(["yog", "--workspace", "/tmp/x"]).unwrap();
-    assert_eq!(a.workspace, Some(PathBuf::from("/tmp/x")));
-}
 
 #[test]
 fn new_enumerates_and_snapshots_every_workspace() {
@@ -50,7 +36,7 @@ fn new_enumerates_and_snapshots_every_workspace() {
 fn replays_enumerate_into_the_tab_overflow_and_render_read_only() {
     let mut h = Harness::new();
     let replay = h.add_replay("99XYZ", "r-1");
-    let (_c, mut model) = h.model();
+    let (_c, model) = h.model();
     // Enumerated across the three roots and classified Replay by its root alone.
     assert!(
         model
@@ -59,8 +45,9 @@ fn replays_enumerate_into_the_tab_overflow_and_render_read_only() {
             .any(|w| w.path == replay && w.kind == WorkspaceKind::Replay),
         "the replay is enumerated"
     );
-    // "Replay is not a mode": it lands in the tab bar's overflow, flagged (§11).
-    let bar = model.tab_bar();
+    // "Replay is not a mode": it lands in the tab bar's overflow, flagged, and
+    // the answered row is where a seat reads that from.
+    let bar = model.tab_bar(Some(&crate::naming::leaf(&h.ws)));
     assert!(
         bar.overflow
             .iter()
@@ -68,42 +55,11 @@ fn replays_enumerate_into_the_tab_overflow_and_render_read_only() {
                 && t.kind == crate::nav::tabs::Kind::Replay),
         "overflow carries the replay: {bar:?}"
     );
-    // Focused, it is read-only; the ad-hoc workspace beside it is writable.
-    model.focus_workspace(&crate::naming::leaf(&replay));
-    assert!(model.focused_is_replay(), "a focused replay is read-only");
-    model.focus_workspace(&crate::naming::leaf(&h.ws));
-    assert!(
-        !model.focused_is_replay(),
-        "the ad-hoc workspace is writable"
-    );
 }
 
 #[test]
-fn startup_focus_is_the_attention_bearing_workspace() {
-    let h = Harness::new();
-    let (_c, model) = h.model();
-    // The one workspace has an unseen stop → attention → it is the startup focus.
-    assert_eq!(model.focused_workspace(), Some(h.ws.clone()));
-    assert!(
-        model.focus().agent.is_none(),
-        "no agent selected at startup"
-    );
-    assert_eq!(model.focused_tree().map(|t| t.agents.len()), Some(1));
-}
-
-#[test]
-fn startup_focus_override_wins() {
-    let h = Harness::new();
-    // The override names a workspace (§4.1); the focus holds its §3.1 name and
-    // resolves it against the enumeration like any other (bl-7407).
-    let (_c, model) = h.model_focused(Some(h.ws.clone()));
-    assert_eq!(model.focused_ws_name().as_deref(), Some("ws"));
-    assert_eq!(model.focused_workspace(), Some(h.ws.clone()));
-}
-
-#[test]
-fn startup_focus_falls_back_to_first_when_nothing_needs_attention() {
-    // No workspaces at all: focus derives to None (the general empty path).
+fn an_empty_world_answers_every_read_with_nothing() {
+    // No workspaces at all — the general empty path, not a case of its own.
     let root = tempdir().unwrap();
     let roots = Roots {
         yog_data: root.path().join("yog"),
@@ -114,26 +70,26 @@ fn startup_focus_falls_back_to_first_when_nothing_needs_attention() {
         world: crate::test_support::no_world(),
     };
     let clock = FakeClock::new();
-    let (mut model, _deriver) =
-        AppModel::boot(roots, None, clock.arc(), Box::new(no_balls()), None);
+    let (model, _deriver) = AppModel::boot(roots, clock.arc(), Box::new(no_balls()), None);
     assert!(model.workspaces().is_empty());
-    assert_eq!(model.focused_workspace(), None);
-    // With no focus and an empty roster, the read-only queries are empty and the
-    // jump is a no-op (the general empty path, not a special case).
-    assert!(
-        crate::test_support::convs::conversations(&model, 10).is_empty(),
-        "no focus: no rows"
+    assert!(model.ws_listing().rows.is_empty(), "nothing to enumerate");
+    let deps = model.boundary_deps(
+        &crate::cli_outbound::Cli::new("litany"),
+        &crate::cli_outbound::Cli::new("bl"),
     );
-    assert!(!model.focused_is_replay());
-    // An unfocused window echoes nothing onto an answered list either: an echo
-    // belongs to the workspace it was fired in, and there is none to compare
-    // against (REMOTE §9.7, bl-44e9).
-    assert!(model.echoed(Vec::new(), 10).is_empty());
-    // Nor onto an answered inbox listing, which is the echo's third projection
-    // (REMOTE §9.7, bl-b4b5) and takes the same door.
-    assert!(model.echoed_pending("c-1", Vec::new()).is_empty());
-    model.jump_next_attention();
-    assert_eq!(model.focused_workspace(), None, "nothing to jump onto");
+    assert!(
+        model
+            .answer(
+                &deps,
+                &crate::boundary::Query::Conversations {
+                    workspace: "ws".to_owned(),
+                },
+                10,
+            )
+            .is_err(),
+        "a name nothing answers is a refusal, which is a seat's no rows"
+    );
+    assert!(model.workspace_path("ws").is_none());
 }
 
 #[test]
@@ -169,28 +125,4 @@ fn idle_tick_changes_nothing() {
     let h = Harness::new();
     let (_c, mut model) = h.model();
     assert!(!model.tick(), "no dirt, no due sweep → no change");
-}
-
-/// **The wire refusal is a model fact the frame paints** (bl-dc14): kept at
-/// the FIRST reason — the engine's own bind refusal outranks the derived "no
-/// seat" recorded after it — and `None` on a wired window, which is what lets
-/// `shell::refusal` gate the whole shell on one read.
-#[test]
-fn the_first_wire_refusal_is_the_one_the_frame_paints() {
-    let h = Harness::new();
-    let (_clock, mut rig) = h.model();
-    assert_eq!(
-        rig.model.wire_refusal(),
-        None,
-        "a wired window says nothing"
-    );
-    rig.model
-        .refuse_wire("bind 127.0.0.1:1: Address already in use".to_owned());
-    rig.model
-        .refuse_wire("this engine has no listener".to_owned());
-    assert_eq!(
-        rig.model.wire_refusal().as_deref(),
-        Some("bind 127.0.0.1:1: Address already in use"),
-        "the cause, never the consequence recorded after it"
-    );
 }

@@ -1,7 +1,9 @@
-# The yog engine as a user service (DESIGN §8.5, REMOTE §8): `yog serve` is the
-# same `Engine::boot` the window runs, with no window beside it — the world
-# converged, the derivation worker and watch bridge up, the gestures-inbox
-# consumer answering deposits and the §9.5 wire listener answering seats.
+# The yog engine as a user service (DESIGN §8.5, REMOTE §8, §12): a bare `yog`
+# IS the engine — the world converged, the derivation worker and watch bridge
+# up, the gestures-inbox consumer answering deposits and the §9.5 wire listener
+# answering seats. It was `yog serve` until bl-7942, when the window left the
+# crate and the verb stopped naming anything: there is one face, so it needs no
+# word to select it.
 #
 # User-level and not system-level, because the world is the operator's: it
 # resolves under `$XDG_DATA_HOME/yog/world` (§16.2), and a system unit would
@@ -11,7 +13,7 @@
 # Requires lingering (`loginctl enable-linger`) or the manager — and so the
 # engine — stops at logout. `scripts/deploy/seat.sh` enables it.
 [Unit]
-Description=yog engine (yog serve)
+Description=yog engine
 Documentation=https://github.com/mudbungie/yog
 # The engine dials nothing at boot, but its agents do.
 After=network-online.target
@@ -26,8 +28,8 @@ StartLimitBurst=5
 
 [Service]
 Type=simple
-ExecStart=%h/.cargo/bin/yog serve
-# `yog serve` parks until a signal (main.rs). A crash is a defect, not a state
+ExecStart=%h/.cargo/bin/yog
+# A bare `yog` parks until a signal (main.rs). A crash is a defect, not a state
 # to sit in: come back and keep converging.
 Restart=always
 RestartSec=5s

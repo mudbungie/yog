@@ -12,14 +12,12 @@
 //! there is one file to write and no order to get wrong.
 //!
 //! This module holds everything that can be decided without touching disk,
-//! network or egui: the [`grammar`] both config files are read and written
+//! network or a face: the [`grammar`] both config files are read and written
 //! through,
 //! the [`query`] view-model over the live `bz --list-models` run, the [`pick`]
 //! one gesture produces and the gates it passes, the [`header`] row the
 //! conversation wears (the pair its
-//! two dropdowns show, plus the §9.4 drift clause), the [`remedy`] an
-//! auth-shaped roster failure routes to, and the
-//! sentences the surface paints — kept here rather than in
+//! two dropdowns show, plus the §9.4 drift clause), //! sentences the surface paints — kept here rather than in
 //! the excluded shell so the scope claim the UI makes is testable, and so it
 //! has exactly one home.
 
@@ -29,7 +27,6 @@ pub mod header;
 /// text it produces (§9.4).
 pub mod pick;
 pub mod query;
-pub mod remedy;
 
 #[cfg(test)]
 pub(crate) mod tests;
@@ -40,7 +37,6 @@ pub use header::{
     birth_row, conversation_row, row_role,
 };
 pub use pick::{Pick, PickError, plan, role_fault};
-pub use remedy::{Remedy, remedy};
 
 /// The role that talks to you (litany's `WORKER_ROLE`) — the one the
 /// conversation's model row shows and writes, because that is the question

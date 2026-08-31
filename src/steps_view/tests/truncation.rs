@@ -8,10 +8,9 @@
 
 use tempfile::tempdir;
 
-use super::render::painted;
 use super::{AGENT, write_file};
 use crate::git_tree::{AgentState, Framing};
-use crate::steps_view::{OUTPUT_LIMIT, StepTab, Wound, build, latest_wound};
+use crate::steps_view::{OUTPUT_LIMIT, Wound, build, latest_wound};
 
 /// The bl-fb87 shape on disk: the model thought, said nothing, and the request
 /// ran out of `max_tokens`. Every transport promise kept; the turn unfinished.
@@ -135,18 +134,15 @@ fn the_output_limit_wound_says_what_ended_the_turn_and_how_to_carry_on() {
         "one sentence, not a source continuation leaking its indent: {sentence}"
     );
 
-    let text = painted(
-        &build(ws, AGENT, AgentState::Stopped),
-        None,
-        None,
-        StepTab::Meta,
-    );
-    assert!(text.contains(OUTPUT_LIMIT), "got:\n{text}");
-    assert!(text.contains('✖'), "the wound badge: {text}");
-    assert!(
-        !text.contains("complete"),
-        "the framing word must not stand where the turn was cut off:\n{text}"
-    );
+    // The answer carries BOTH, and that is the class's whole shape: the
+    // transport framed cleanly — so the framing is `complete` and honest — and
+    // the wound is what says the turn was cut off inside that clean frame. A
+    // seat says the wound where it would otherwise say the framing; the server
+    // states the two facts and does not choose between them.
+    let answered = crate::steps_view::wire::steps(&build(ws, AGENT, AgentState::Stopped));
+    let row = &answered["rows"][0];
+    assert_eq!(row["wound"], "output_limit", "got:\n{answered:#}");
+    assert_eq!(row["framing"], "complete", "got:\n{answered:#}");
 }
 
 /// The liveness gate is the class-blind one it always was: a driver at work on

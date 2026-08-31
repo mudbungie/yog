@@ -80,8 +80,8 @@ fn kind_of(wire: &serde_json::Value) -> String {
 #[test]
 fn every_conversation_row_token_survives_both_halves_of_its_table() {
     use crate::git_tree::AgentState;
+    use crate::nav::convs::Tone;
     use crate::nav::convs::{ConvRow, Flight};
-    use crate::transcript::Tone;
     let base = ConvRow {
         root_id: "c".into(),
         state: AgentState::Live,
