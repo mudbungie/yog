@@ -1,7 +1,8 @@
 +++
 title = "a conversation's first driver can load a remote tool but can never call one: `prompt` mints the agent, so `Injection::driving` is None and `tools()` declares only `clients`"
 created = 1788150343
-updated = 1788150343
+updated = 1788150949
+claimant = "OrderArbiter"
 priority = 9
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["remote", "tool-host"]
