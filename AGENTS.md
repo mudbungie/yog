@@ -664,6 +664,21 @@ cost is recorded per item; the notes are the checklist's evidence that it works.
 4. **Repository text nobody committed.** Pull-request titles and bodies, issue
    text, review comments, release notes, and the crates.io description and
    metadata. None of it is in the tree.
+
+   **The standing ruling — no agent-session URL in this repository's published
+   text, anywhere** (bl-1e67, operator 2026-08-30: *ban them, no reason to
+   allow it*). Pull-request titles and bodies, issue text, review comments and
+   release notes never carry a session URL or a conversation identifier. The
+   harness convention of appending one to a pull-request body is **overridden
+   here**: strip it before you open the PR, because a body cannot be
+   un-published afterwards — the forge keeps a body's edit history and serves
+   `refs/pull/<n>/head` forever, so an edit buys the false assurance a history
+   rewrite buys elsewhere (item 2). The ruling came from the seat repository,
+   where exactly that happened and is now permanent. `session-artifact` reads
+   both forms since bl-1e67 — the bare session id and the code-session URL path
+   shape — so a commit message or a ball body carrying one is refused at the
+   moment of writing; a PR body is in no tree and no gate will ever see it.
+   That half is yours.
 5. **Actions logs and artifacts.** A failed gate prints paths, hostnames and
    sometimes the offending line into a public log; `.github/workflows/
    speculate.yml` also uploads a `verdicts` artifact. Both survive the run.
