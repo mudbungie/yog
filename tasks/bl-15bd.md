@@ -1,7 +1,8 @@
 +++
 title = "android: one app named yog shipping all three components, each behind a bootstrap"
 created = 1788067966
-updated = 1788139182
+updated = 1788146280
+claimant = "OrderCrier"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
