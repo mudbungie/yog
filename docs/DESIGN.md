@@ -6093,7 +6093,10 @@ the config-branch `for-each-ref` — are gone with it.
   and it lives in a **workflow of its own** (`.github/workflows/macos.yml`,
   bl-0158) on ci.yml's triggers: same visibility, but the release gate reads the
   `CI` workflow's verdict, so macOS reports without holding the pipeline. Moving
-  it back under the name `CI` is a decision to let it block a release.
+  it back under the name `CI` is a decision to let it block a release. That leg
+  runs the **suite** on a mac; **producing a distributable mac artifact is a
+  separate question and §10.2 is where it is answered** — for the components
+  that can be cross-produced from Linux at all, and for the two that cannot.
 - **The macOS suite is green, and what it took is recorded here because the
   obvious reading was wrong** (bl-1015). Thirteen tests failed there from its
   first run to 2026-08-14, and the standing hypothesis was two causes: a
@@ -6314,6 +6317,161 @@ the next person reads it:
   `yog wire-certs` or by a boot into the mounted root. An image that arrived
   able to present an identity would be the in-channel bootstrap that must never
   exist; `make image-scan` is what turns that promise into a check.
+
+### 10.2 The macOS artifact: `zig cc` from a Linux container, and what it cannot reach (bl-888d)
+
+§10.1 put the Linux images on a reproducible line. This is the other half of
+the same ruling: **the macOS binaries come off that line too, not off a
+laptop.** A mac binary produced by hand is one nobody can reproduce, nothing
+gates, and no one can say what it was built from.
+
+The shape follows §10.1 exactly and for the same reason — **each repo owns its
+own `Containerfile.mac` and `make mac-artifact`; there is no shared build
+tooling and no meta-repo.** The components meet at the wire and nowhere else.
+
+#### The toolchain is `zig cc`, and osxcross is refused on Apple's licence
+
+Two toolchains can emit Mach-O from Linux. osxcross drives **Apple's own SDK**,
+which the *Xcode and Apple SDKs Agreement* forbids twice over — and either
+clause alone settles it:
+
+> **2.7** The grants set forth in this Agreement do not permit You to, and You
+> agree not to, install, use or run the Apple Software or Apple Services on any
+> non-Apple-branded computer or device, or to enable others to do so. … You
+> agree not to rent, lease, lend, upload to or host on any website or server,
+> sell, redistribute, or sublicense the Apple Software and Apple Services, in
+> whole or in part, or to enable others to do so.
+
+> **2.5** You may not alter the Apple Software or Services in any way in such
+> copy, e.g., You are expressly prohibited from separately using the Apple SDKs
+> or attempting to run any part of the Apple Software on non-Apple-branded
+> hardware.
+
+The first means the SDK may never sit in a repository nor in any layer that is
+published. **The second closes the escape hatch the obvious design would have
+reached for** — take the SDK path as a build argument, keep it out of the tree,
+let the operator supply it — because the builder is not Apple-branded hardware
+either. So no repo here holds the SDK at arm's length; the whole arm is
+refused, and a `Containerfile` with an SDK input would be inviting an operator
+into a term they cannot satisfy on a Linux box.
+
+`zig` acquires nothing from Apple: it ships one darwin stub of its own in its
+own distribution and under its own licence. It is pinned by version **and**
+sha256; `cargo-zigbuild`, which filters the darwin linker flags `zig cc` will
+not take, is pinned exactly and installed `--locked`; and both live in a build
+stage that is discarded whole.
+
+**It is a C toolchain, deliberately, and that is not the posture `deny.toml`
+holds.** The bans on the `openssl-sys` / `native-tls` / `aws-lc-sys` class exist
+to stop a C toolchain arriving **implicitly**, through a dependency edge nobody
+reviewed. This one arrives explicitly, in a file that argues for it, pinned, in
+a stage nothing ships from — and **no crate gained a dependency**: `Cargo.toml`
+is untouched by this everywhere except litany's, where the change was a
+*removal* (below). The posture is against the accident, not against the
+compiler.
+
+#### The rule the choice imposes: libSystem, and nothing above it
+
+zig ships **exactly one** darwin stub — `lib/libc/darwin/libSystem.tbd` — and
+**no framework stubs at all**. Not CoreFoundation, not CoreServices, not
+AppKit, not OpenGL, and no `libobjc`. So:
+
+> **A component can be cross-produced from Linux exactly when its crate graph
+> links nothing above libSystem.** One that links any Apple framework fails at
+> the link step with *"unable to find framework"*, and there is no lawful way
+> to supply the frameworks on a Linux builder.
+
+That reads as a packaging constraint and is really §10's own gap list wearing a
+different hat: **the components that need a macOS platform API are exactly the
+ones whose artifact cannot come off this line.** The watcher, the window and
+the `lsof` probe are the three places this design reaches for macOS itself, and
+each is a framework edge.
+
+#### Measured, per component — built, not assumed
+
+| Component | Cross-produces? | The edge |
+|---|---|---|
+| **thrall** (the foot) | **Yes** — landed, thrall bl-e479 | none; `rustls`/`ring` and `serde_json` over std |
+| **litany** (the engine) + `bz` | **Yes** — landed, litany bl-c2b9 | had one, removed |
+| **lernie** (the seat) | **No** | `libobjc` + OpenGL, AppKit, CoreGraphics, Foundation, CoreFoundation, ApplicationServices, CoreVideo, Carbon |
+| **yog** (the server) | **No** | CoreServices, and CoreFoundation |
+
+- **thrall passes and is the reference.** Its artifact is a Mach-O arm64
+  executable loading three libraries, all stock `/usr/lib`.
+- **litany passed after a subtraction.** Its one framework edge was `chrono`'s
+  `clock` feature, which pulls `iana-time-zone`, which links CoreFoundation on
+  darwin; the crate uses `Utc` only, so the feature narrowed to `now` and five
+  crates left its lockfile with it. Smaller graph and a portable one by the
+  same edit. `bz` cross-installs at the pin and needed nothing.
+- **The seat cannot, and the reason is what the seat IS.** Every crate in the
+  window's graph compiles for the target; the build dies at the last link, on
+  `libobjc` and eight frameworks. There is no flag for it and no other Linux
+  toolchain to try, because the constraint is Apple's licence rather than zig's
+  feature set: a toolchain that succeeded would be one that had acquired the
+  SDK. Recorded with its measurement in lernie bl-9380.
+- **The server cannot either, and one of its two edges is permanent.** The
+  removable one is inherited: the embedded litany 0.0.2 still carries the
+  `clock` feature, so a later litany release retires it here for free. The
+  other does not go away — `notify` reaches FSEvents through `fsevent-sys`,
+  which links **CoreServices**, and a macOS watcher is not something yog can
+  decline to have (§7). So the server's mac binary is not a scheduling
+  question; it is off this line for good.
+
+#### What an artifact proves, and what it does not
+
+**No mac executes anything here.** A green build is not evidence: a wrong
+architecture, a dependency on a dylib no stock mac carries, and a binary macOS
+would refuse to start all look identical to a successful `cargo build`. So each
+repo carries a `scripts/mac-verify.sh` that **reads the produced Mach-O** — the
+header, the architecture, the filetype, `LC_BUILD_VERSION`, the code signature,
+and every `LC_LOAD_DYLIB`, each of which must be a stock `/usr/lib` or
+`/System/Library` path — and runs its negative direction first, on fabricated
+malformed inputs it must refuse, because a checker that has quietly stopped
+checking passes everything forever.
+
+- **Proven** — the artifact has the shape of a working mac binary, in every
+  respect a file can be read for.
+- **Not proven** — that it runs. It has not been observed to.
+
+Two properties ride along and both are read rather than declared:
+
+- **The minimum macOS version is the pinned toolchain's, not a setting.**
+  `rustc` asks for one and the pinned zig stamps its own; `cargo-zigbuild`'s
+  versioned-darwin target syntax does not survive this zig either. So the floor
+  is a property of the pinned pair — **read it off the artifact, where
+  `mac-verify` prints it, and never from a document, this one included.**
+- **The signature is ad-hoc, which is not notarization.** An arm64 mac refuses
+  to start an unsigned binary and the cross-linker's ad-hoc signature satisfies
+  exactly that. A copy that arrives over a network still carries a quarantine
+  attribute; clearing it, or replacing the signature with a real one, is an act
+  on a mac by the operator and is outside what this line can do.
+
+#### The route that is left for the components this cannot reach
+
+**Apple hardware, which for CI means a macOS runner.** That is not a defeat of
+the ruling so much as its boundary: this section puts on the container line
+every component that can lawfully be there, and names the two that cannot along
+with why. Two things such a route must answer and this section does not —
+whether a CI provider's mac satisfies §2.2.A's *"Apple-branded computers that
+are owned or controlled by You"* is the operator's question, not an
+implementer's; and signing and notarization are acts on a mac by whoever
+publishes.
+
+It is a different thing from the macOS leg §10 already describes.
+`.github/workflows/macos.yml` runs the **suite** on `macos-14` and reports;
+producing a distributable **artifact** is a second job with a second set of
+questions, and neither implies the other.
+
+#### The push posture, unchanged
+
+`make mac-artifact` pushes nothing and no repo has a target that does — the
+same refusal §10.1 makes for images, for the same reason. The build's last
+stage is `FROM scratch` carrying the binaries, so `create` + `cp` lifts them
+out and the wrapper image is deleted; it is never pushed, which is why
+`make image-scan` does not apply to it and is not being skipped. An artifact's
+content is compiled from the same tree `make leak-scan` already reads, exactly
+as every Linux release binary is.
+
 
 ---
 
