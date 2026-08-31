@@ -49,18 +49,24 @@ pub use file::ConfigFile;
 
 pub(crate) mod read;
 pub(crate) mod write;
-use file::located;
 use read::{branch_text, text_at};
 use write::{cadence_path, commit};
 
 /// Run one config apply (§9). The reply says what landed: a file destination
 /// answers with the path written, a lineage with `litany config`'s captured run
 /// — the same distinction every other action makes between a write and a spawn.
-pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Result<Reply, String> {
-    // The destination's own address, resolved once (REMOTE §8, bl-f5f6): two of
-    // the five name a wall, three name no world at all, and the three that do
-    // not never read this.
-    let ws = &located(deps, file)?;
+///
+/// `ws` is the destination's own workspace, resolved by the chokepoint's one
+/// address resolution (REMOTE §8, bl-523f) — the empty path for the three
+/// destinations that name no world, which is the general path with no input:
+/// no arm that takes it reads the value.
+pub(super) fn apply(
+    deps: &Deps,
+    ts: &str,
+    ws: &Path,
+    file: &ConfigFile,
+    text: &str,
+) -> Result<Reply, String> {
     match file {
         ConfigFile::Brazen { .. } => write::brazen(deps, ws, text),
         ConfigFile::LitanyModels => {
@@ -92,8 +98,7 @@ pub(super) fn apply(deps: &Deps, ts: &str, file: &ConfigFile, text: &str) -> Res
 /// because where the next commit lands is not where the current bytes are;
 /// [`Query::Lineages`](super::Query::Lineages) is the browse that says which
 /// paths a lineage holds.
-pub(super) fn read(deps: &Deps, file: &ConfigFile) -> Result<Reply, String> {
-    let ws = &located(deps, file)?;
+pub(super) fn read(deps: &Deps, ws: &Path, file: &ConfigFile) -> Result<Reply, String> {
     let text = match file {
         ConfigFile::Brazen { .. } => text_at(&brazen_paths(deps, ws).config)?,
         ConfigFile::LitanyModels => text_at(&LitanyGlobal::resolve(&deps.world).models())?,

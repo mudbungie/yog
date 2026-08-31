@@ -176,7 +176,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         }
         // The §9 config family's reads (§8.5, bl-0164): asked of the world at
         // the moment they are asked, exactly as the writes beside them are.
-        Query::ReadConfig { file } => return config::read(deps, file),
+        Query::ReadConfig { file } => return config::read(deps, ws, file),
         Query::Marks { .. } => return Ok(config::read_marks(deps, ws)),
         Query::Providers { .. } => config::providers(deps, ws),
         // The §9.3 browse and the §9.4 roster (bl-dff8), on the same terms as

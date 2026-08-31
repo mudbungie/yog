@@ -41,7 +41,8 @@ impl Gesture {
 
 impl Action {
     /// The **workspace** this gesture names (§3.1), or `None` when it names
-    /// none — the ack, the trail clear, and the two `bl`-only families.
+    /// none — the ack, the trail clear, the two `bl`-only families, and the
+    /// three §9 destinations that name no world.
     pub fn workspace(&self) -> Option<String> {
         let mut named = self.clone();
         named.workspace_slot().map(std::mem::take)
@@ -51,8 +52,9 @@ impl Action {
     /// the read above and the rewrite beside it cannot disagree about which
     /// arms have one. The nested payloads answer through it: a deferred prompt
     /// and a fan both name the workspace their
-    /// [`Prepared`](crate::start::Prepared) was prepared in, and the
-    /// monitor/fleet verbs name their own.
+    /// [`Prepared`](crate::start::Prepared) was prepared in, the monitor/fleet
+    /// verbs name their own, and the §9 family names the wall its destination
+    /// lands in ([`ConfigFile`](crate::boundary::config::ConfigFile)).
     fn workspace_slot(&mut self) -> Option<&mut String> {
         match self {
             Action::Message { workspace, .. }
@@ -76,6 +78,13 @@ impl Action {
             }
             Action::Monitor(verb) => Some(verb.workspace_slot()),
             Action::Fleet(verb) => Some(verb.workspace_slot()),
+            // The §9 config family answers through its destination (bl-523f):
+            // the wall a provider config or a lineage file belongs to is the
+            // workspace the act is aimed AT, so it is the address §8.2 rewrites
+            // and the entry routing reads. Two of the five name a wall and
+            // three name no world at all, so the row is the destination's own
+            // table rather than an arm per variant.
+            Action::ApplyConfig { file, .. } => file.workspace_slot(),
             // An advertisement names its CLIENT, never a workspace (REMOTE §5,
             // bl-4e08): a tool set is a fact about the machine, and which
             // workspaces see it is the registration listing that already exists.
@@ -84,19 +93,12 @@ impl Action {
             // one is a fact about that machine, not about a workspace.
             Action::Advertise { .. }
             | Action::Route(_)
-            // The §9 config family answers through its destination instead
-            // ([`config::ConfigFile::workspace`](crate::boundary::config::ConfigFile)):
-            // two of the five name a wall and three name no world at all, so
-            // the table would have to read the file to answer here anyway.
-            | Action::ApplyConfig { .. }
             | Action::Close { .. }
             | Action::Assign { .. }
             | Action::Release { .. }
             | Action::Create { .. }
             | Action::Update { .. }
-            | Action::Fan(
-                crate::fan::Verb::Retire { .. } | crate::fan::Verb::Deliver { .. },
-            )
+            | Action::Fan(crate::fan::Verb::Retire { .. } | crate::fan::Verb::Deliver { .. })
             | Action::Ack
             | Action::ClearTrail => None,
         }
@@ -106,10 +108,10 @@ impl Action {
 impl Query {
     /// The **workspace** this read is aimed at (§3.1), or `None` for the reads
     /// that span the world (the roster, the board, the trail, search) and the
-    /// one whose subject is the interface (help). The §9 config family answers
-    /// through its destination instead
-    /// ([`ConfigFile`](crate::boundary::config::ConfigFile)), for the reason
-    /// [`Action::workspace`] gives.
+    /// one whose subject is the interface (help). The §9 config read answers
+    /// through its destination
+    /// ([`ConfigFile`](crate::boundary::config::ConfigFile)), exactly as
+    /// [`Action::workspace`] does.
     ///
     /// The mirror of the action table above, and it exists for the same reason:
     /// one resolution stands ahead of [`answer`](crate::boundary::answer::answer)'s
@@ -140,6 +142,10 @@ impl Query {
             | Query::Providers { workspace }
             | Query::WorkspaceBalls { workspace }
             | Query::Clients { workspace } => Some(workspace),
+            // The §9 read answers through its destination, exactly as the write
+            // does (bl-523f) — one row on each side of the one table, so a read
+            // and a write of the same file cross the same channel.
+            Query::ReadConfig { file } => file.workspace_slot(),
             Query::Workspaces
             | Query::Balls
             | Query::Board
@@ -147,7 +153,6 @@ impl Query {
             | Query::Ops { .. }
             | Query::Search { .. }
             | Query::Help { .. }
-            | Query::ReadConfig { .. }
             // The routing leg's two reads: one is answered to the intake's own
             // identity, the other to a handle — neither names a world.
             | Query::Invocations

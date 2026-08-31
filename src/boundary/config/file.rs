@@ -1,13 +1,14 @@
-//! **Where one config gesture lands** (§9): the [`ConfigFile`] destination, the
-//! workspace it names, and that name located. Its own file at §12's cap
-//! (bl-f5f6) on the seam the `action` and `query` rosters are already cut on: a
-//! *destination* is a datum every seat constructs, and the pipelines that spend
-//! it are [`super`]'s. The addressing rides with the datum because only the
-//! destination can answer which sphere it is for.
+//! **Where one config gesture lands** (§9): the [`ConfigFile`] destination and
+//! the workspace it names. Its own file at §12's cap (bl-f5f6) on the seam the
+//! `action` and `query` rosters are already cut on: a *destination* is a datum
+//! every seat constructs, and the pipelines that spend it are [`super`]'s. The
+//! addressing rides with the datum because only the destination can answer
+//! which sphere it is for — and since bl-523f that answer *is* the gesture's
+//! address, read by the one workspace table
+//! ([`address::workspace`](crate::boundary::address)) and **resolved once at
+//! each chokepoint** like every other gesture's, never a second time here.
 
-use super::Deps;
 use crate::config_edit::branch::edit::EditOrigin;
-use std::path::PathBuf;
 
 /// Where one [`ApplyConfig`](crate::boundary::Action::ApplyConfig) lands (§9). The
 /// destination decides the pipeline, so the gesture carries no mode flag: a
@@ -53,30 +54,27 @@ pub enum ConfigFile {
 }
 
 impl ConfigFile {
-    /// The workspace this destination names (REMOTE §8), or `None` for the
-    /// three that name no world — litany's globals and yog's own cadence file.
-    /// The §9 family's own half of [`Action::workspace`](crate::boundary::Action), where
-    /// it belongs: the destination decides, and only it can say.
-    pub fn workspace(&self) -> Option<String> {
+    /// **The destination's row of the one workspace table** (REMOTE §8, §8.2;
+    /// bl-523f): the wall this config gesture is aimed at, or `None` for the
+    /// three destinations that name no world — litany's globals and yog's own
+    /// cadence file. The §9 family's own half of
+    /// [`Action::workspace`](crate::boundary::Action), where it belongs: the
+    /// destination decides, and only it can say.
+    ///
+    /// Borrowed rather than read, for that table's reason exactly: the §8.2
+    /// rewrite is spent at the channel boundary over *whatever* field names the
+    /// gesture's workspace, and this family's is nested one level down, inside
+    /// `target`. Until this row existed a config act aimed at a workspace held
+    /// on another box under a local rename resolved to no entry, fell through
+    /// to the local engine, and edited the local wall's file.
+    pub(crate) fn workspace_slot(&mut self) -> Option<&mut String> {
         match self {
             ConfigFile::Brazen { workspace } | ConfigFile::Branch { workspace, .. } => {
-                Some(workspace.clone())
+                Some(workspace)
             }
             ConfigFile::LitanyModels | ConfigFile::LitanyWorkflow { .. } | ConfigFile::Cadence => {
                 None
             }
         }
-    }
-}
-
-/// The wall a destination names, **located** (REMOTE §8, bl-f5f6) — the empty
-/// path for the three that name none, which is the general path with no input:
-/// no arm that takes it reads this value. The single home of "which workspace
-/// is this config file's", so the write, the read and
-/// [`Action::workspace`](crate::boundary::Action) cannot disagree.
-pub(super) fn located(deps: &Deps, file: &ConfigFile) -> Result<PathBuf, String> {
-    match file.workspace() {
-        Some(name) => deps.snapshot.ws_path(&name),
-        None => Ok(PathBuf::new()),
     }
 }

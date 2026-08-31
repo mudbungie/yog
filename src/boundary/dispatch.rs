@@ -140,7 +140,7 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Action::ClearTrail => wrote(crate::opslog::clear(root, ts), Reply::TrailCleared),
         // The §9 config family (bl-3f46) — one executor module, because each of
         // the three is a composition of pipelines that already exist.
-        Action::ApplyConfig { file, text } => config::apply(deps, ts, file, text),
+        Action::ApplyConfig { file, text } => config::apply(deps, ts, ws, file, text),
         Action::SetMarks { branch, .. } => config::set_marks(deps, ts, ws, branch),
         Action::PickModel {
             role,
