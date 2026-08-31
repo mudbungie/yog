@@ -392,10 +392,42 @@ argument, never an edit.
 
 **What `make deploy` does, in order.** `make image` builds under the pinned
 toolchain and runs `image-scan`; the result is retagged
-`yog:<version>-<short-commit>`; that tag travels by `save | ssh … load`; the
-unit and one generated environment file are seated; the unit is restarted onto
-the new tag. It refuses a dirty worktree, because the tag names a commit and
-the whole point of an immutable tag is that the box can say what it is running.
+`yog:<version>-<short-commit>`; that tag travels by `save | ssh … load` and the
+loaded name is reconciled back to it on the box; the unit and one generated
+environment file are seated; the unit is restarted onto the new tag; and the
+engine is **verified answering**, or the deploy fails. It refuses a dirty
+worktree, because the tag names a commit and the whole point of an immutable
+tag is that the box can say what it is running.
+
+**The carrier renames the image, so the box renames it back** (bl-0719).
+podman's `save` archive spells a locally built image `localhost/yog:<tag>` —
+the registry podman invents for it — and `docker load` faithfully restores
+*that* name, while the unit is pointed at the bare `yog:<tag>` this checkout
+built. `docker run` then cannot resolve it and the unit crash-loops. The deploy
+reads the name `docker load` reports and retags it to the tag the unit knows,
+rather than writing `localhost/` into `deploy.env`: the tag is a fact about the
+crate — a version and a commit — while the prefix is a fact about which engine
+carried it, and the unit's name must not encode the carrier's quirk.
+
+**The last act is a verification, and its exit code is the deploy's**
+(`scripts/deploy/verify.sh`). A deploy that prints success over a crash loop is
+the defect it exists to prevent: `systemctl --user is-active` says `active`
+whenever the `docker run` client process exists, which is not the same fact as
+an engine serving. One ssh and one bounded wait past the unit's `RestartSec`,
+then five beats — the unit is active; the running container's image is
+*exactly* the tag just deployed; `yog --version` inside it answers the version
+just built; and an anonymous `openssl s_client` gets a certificate chain out of
+the §9.5 listener at the address the engine itself names in `wire/address`.
+That last beat needs no seat and no credential: a TLS server sends its
+certificate before it ever asks the client for one, so the dial is refused for
+want of a client certificate — which is mutual auth working — while the chain
+it arrives with proves the wire is bound and serving. On a failure the unit's
+last 20 journal lines print with it. It is a separate script so that re-asking
+"is it answering?" never means re-seating the box:
+
+    scripts/deploy/verify.sh <ssh-host> <image-tag> <version>
+
+(`make deploy-status` prints the tag the box was pointed at.)
 
 **Nothing is pushed to any registry.** The ghcr package publishes only from
 this repo's release workflow at tag time (DESIGN §10.1); a deploy is a stream
@@ -456,7 +488,10 @@ expresses that ordering as patience — twenty starts five seconds apart, a
 past it the unit enters `failed`, where `make deploy-status` shows it. That
 window is wider than a crash-loop detector wants; the trade is deliberate,
 since the boot race happens on every reboot while a bad build is caught by
-`make image` before a byte reaches the box.
+`make image` before a byte reaches the box — and, since bl-0719, a release that
+cannot start is caught by the deploy's own verification within it, because the
+beats above wait past one `RestartSec` and then read the container rather than
+the unit.
 
 ### The image
 

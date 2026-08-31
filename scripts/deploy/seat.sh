@@ -27,6 +27,10 @@
 #
 # Idempotent, and the upgrade path. Re-run it to move the box to the tip;
 # re-running is also how a box seated on the old binary units adopts this one.
+#
+# **It ends by PROVING the engine answers** (`verify.sh`, bl-0719) and exits
+# non-zero when it does not — a deploy that prints success over a crash loop is
+# the defect, so the exit code and not a status print carries the truth.
 set -eu
 
 host=${1:-}
@@ -66,8 +70,29 @@ engine=$(command -v podman 2>/dev/null || command -v docker 2>/dev/null) \
 
 # `save | ssh load` and no registry. The stream is the whole transfer; nothing
 # is written to a third place that could then be pulled by anyone else.
+#
+# **The carrier renames the image, so the box reconciles the name** (bl-0719).
+# podman's save archive spells the image with the registry it invents for a
+# local build — `localhost/yog:<tag>` — `docker load` faithfully restores THAT
+# name, and the unit is pointed at the bare `yog:<tag>` this checkout built.
+# `docker run` cannot resolve it, the unit crash-loops under `Restart=always`,
+# and the deploy used to print an `active` unit over the loop.
+#
+# Reconciled here rather than by writing `localhost/` into `deploy.env`,
+# because the two spellings are not equally true: the tag is a fact about the
+# crate — a version and a commit — while `localhost/` is a fact about which
+# engine happened to carry it. **The unit's name must not encode the carrier's
+# quirk**, or every box's environment file records the machine that last
+# deployed to it and a docker-side deploy needs a different one. So the rename
+# is undone where it happens: `docker load` names what it loaded, and that name
+# is retagged to the name the unit knows. Unconditional and so idempotent —
+# under a docker carrier the loaded name already IS `$tag`.
 say "loading $tag on $host"
-"$engine" save "$tag" | ssh "$host" 'docker load'
+loaded=$("$engine" save "$tag" | ssh "$host" 'docker load' \
+    | sed -n 's/^Loaded image: *//p' | tail -n 1)
+[ -n "$loaded" ] || die "docker load on $host named no image; it did not carry $tag"
+say "reconciling the loaded name ($loaded) to $tag"
+ssh -n "$host" "docker tag '$loaded' '$tag'"
 
 say "seating the unit on $host"
 ssh -n "$host" 'mkdir -p "$HOME/.config/systemd/user" "$HOME/.config/yog" \
@@ -111,5 +136,13 @@ ssh -n "$host" 'systemctl --user daemon-reload; \
     systemctl --user enable yog.service; \
     systemctl --user restart yog.service'
 
-say "state on $host"
-ssh -n "$host" 'systemctl --user --no-pager --lines=0 status yog.service 2>&1 | sed -n "1,6p;/Active:/p"'
+# **The last act is a VERIFICATION, and it fails the deploy** (bl-0719). What
+# stood here was a status print, which is exactly what could not see a
+# crash-looping unit: `is-active` says `active` because a `docker run` client
+# process exists, not because the engine serves. `verify.sh` is the whole of
+# that question — one ssh, one bounded sleep, five beats ending at a real TLS
+# handshake with the §9.5 listener — and it says why in full. It is a separate
+# file because re-asking "is it answering?" must not require re-seating a box.
+say "verifying the engine on $host"
+"$here/verify.sh" "$host" "$tag" "$version" \
+    || die "the engine is not answering on $host (still seated on $tag)"
