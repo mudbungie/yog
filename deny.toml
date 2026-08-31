@@ -96,9 +96,9 @@ deny = [
 # §16.7 — W8 balls, W10 brazen, W11 litany) are exact registry pins (`=x.y.z`)
 # since bl-89a4.
 #
-# ONE interim exception is in force (bl-fd24, the §16.7 phase-2 shape): litany
-# rides an exact `git`/`rev` pin while its bl-ddaa injection-seam amendment is
-# unpublished. The named exit — litany's next registry release — deletes this
-# entry and Cargo.toml's git half together; `make publish` is re-blocked until
-# then, knowingly.
-allow-git = ["https://github.com/mudbungie/litany"]
+# NO exception is in force, and there is deliberately no `allow-git` key here:
+# an empty list is the same refusal, but a key present is a place for an entry
+# to be added back quietly. bl-fd24 took the one §16.7 phase-2 interim
+# exception (litany on an exact `git`/`rev` while its bl-ddaa injection-seam
+# amendment was unpublished) and bl-f91a spent its named exit at litany 0.0.4,
+# deleting the entry and Cargo.toml's git half together. `make publish` works.

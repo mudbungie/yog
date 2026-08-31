@@ -441,8 +441,9 @@ checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
 name = "litany"
-version = "0.0.3"
-source = "git+https://github.com/mudbungie/litany.git?rev=7dc45a68c1bbaa4311aeec19c7de73fe33c31db4#7dc45a68c1bbaa4311aeec19c7de73fe33c31db4"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f265aa6044114a3e784ddcc0e0c07ede98a9582e7f50438b9811fcefc999df22"
 dependencies = [
  "brazen",
  "chrono",
