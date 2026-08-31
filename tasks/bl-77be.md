@@ -1,7 +1,8 @@
 +++
 title = "the total router left the shipped worker grant dead: seven of eight granted tools refuse, taking subagents, agent messaging, skills and the conversation's own worktree with them"
 created = 1788150349
-updated = 1788150535
+updated = 1788151145
+claimant = "OrderArbiter"
 priority = 9
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["remote", "tool-host"]
