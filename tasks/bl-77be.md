@@ -1,7 +1,7 @@
 +++
 title = "the total router left the shipped worker grant dead: seven of eight granted tools refuse, taking subagents, agent messaging, skills and the conversation's own worktree with them"
 created = 1788150349
-updated = 1788150349
+updated = 1788150535
 priority = 9
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["remote", "tool-host"]
@@ -80,3 +80,7 @@ This is not eight wasted declarations. It is four capabilities:
 Whatever the ruling, the state on the tree today is the one shape that is
 certainly wrong: eight tools declared, seven of them incapable, and no config
 edit anywhere that says so.
+
+---
+
+Supporting evidence from the same campaign: after a conversation completed its build project end to end (two files authored, a test written and run green), `work-diff` on it answers `{"kind":"work-diff","ok":true,"rows":[]}` and `science` answers empty too. The artifacts exist — on the foot's box, in the foot's scratch directory. The workspace repo holds the transcript of the work and none of the work. That is the second question in this ball's body answered from the outside: today, a conversation's worktree is written by nothing.
