@@ -191,3 +191,30 @@ fn age_label_buckets() {
     assert_eq!(age_label(7200), "2h");
     assert_eq!(age_label(200_000), "2d");
 }
+
+/// **The roster's passive sighting of a provider refusal** (bl-b43b). The
+/// badge set is frozen at four (§5.1 #9), so a conversation refused at its
+/// first model call comes to rest `stopped` exactly as one the operator
+/// stopped — and a list where the two read identically is a list that cannot
+/// be scanned.
+#[test]
+fn a_refused_conversation_paints_bad_and_a_stopped_one_does_not() {
+    let stopped = agent("r1-0", AgentState::Stopped, 10);
+    let mut refused = agent("r2-0", AgentState::Stopped, 20);
+    refused.refused = true;
+    let rows = build(&[stopped, refused], "/ws", &unseen, 100, &plain, &[]);
+
+    let tone = |id: &str| {
+        rows.iter()
+            .find(|r| r.root_id == id)
+            .map(|r| r.tone)
+            .expect(id)
+    };
+    assert_eq!(tone("r2-0"), Tone::Bad);
+    assert_eq!(tone("r1-0"), Tone::Plain);
+    assert_eq!(
+        rows.iter().map(|r| r.state).collect::<Vec<_>>(),
+        vec![AgentState::Stopped, AgentState::Stopped],
+        "the badge is the same word for both, which is the whole defect"
+    );
+}

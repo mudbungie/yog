@@ -34,6 +34,7 @@ pub(super) fn agent() -> Vec<Reply> {
             display_only: true,
             tip: "a".repeat(40),
             state: AgentState::InFlight,
+            refused: false,
             // Every arm of the mark table, so a transposed token cannot pass.
             marks: vec![
                 AgentMark::Notified,
@@ -91,6 +92,9 @@ pub(super) fn agent() -> Vec<Reply> {
             display_only: false,
             tip: String::new(),
             state: AgentState::Stopped,
+            // The other side of the pair the corpus must carry: a rest the
+            // operator did not cause (bl-b43b).
+            refused: true,
             marks: vec![],
             held: None,
             flight: None,

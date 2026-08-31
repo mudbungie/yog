@@ -40,6 +40,7 @@
         "/nudgeable:bool",
         "/ok:bool",
         "/present:bool",
+        "/refused:bool",
         "/root:string",
         "/seats/[]/doing:string",
         "/seats/[]/name:string",
@@ -68,7 +69,7 @@
         "/tip:string",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/answered": {
       "signature": [

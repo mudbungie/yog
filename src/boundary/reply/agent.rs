@@ -67,6 +67,12 @@ pub(super) fn reply(view: &AgentView) -> Value {
     map.insert("display_only".to_owned(), json!(view.display_only));
     map.insert("tip".to_owned(), json!(view.tip));
     map.insert("state".to_owned(), json!(state_token(view.state)));
+    // The *why* beside the state (bl-b43b, §5.1 #9's own shape): the badge set
+    // is frozen at four, so a conversation refused at the provider rung comes
+    // to rest `stopped` exactly as an operator's own `/stop` does, and this is
+    // what tells the two apart on the surface whose whole job is *what it is
+    // doing, what may be done to it*.
+    map.insert("refused".to_owned(), json!(view.refused));
     if !view.marks.is_empty() {
         let marks: Vec<&str> = view.marks.iter().copied().map(mark_token).collect();
         map.insert("marks".to_owned(), json!(marks));
@@ -149,6 +155,7 @@ pub(super) fn view_of(o: &Map<String, Value>) -> Result<AgentView, String> {
         display_only: bool_of(o, "display_only")?,
         tip: str_of(o, "tip")?,
         state: state_of(o)?,
+        refused: bool_of(o, "refused")?,
         marks,
         held: opt_val(o, "held", held_of)?,
         flight: opt(o, "flight", |o, k| pick(o, k, &FLIGHTS))?,

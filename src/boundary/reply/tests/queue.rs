@@ -25,6 +25,10 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
             AttentionKind::Conflicted,
             AttentionKind::Mail,
             AttentionKind::Held,
+            // Rule 2's other word (bl-b43b) — in the table beside `stopped`
+            // even though a real row carries one or the other, because this
+            // test's whole job is that no token is transposed.
+            AttentionKind::Refused,
         ],
         preview: "which branch?".into(),
         age_secs: 42,
@@ -50,7 +54,15 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
     assert_eq!(out["pending"], 3);
     assert_eq!(
         out["signals"],
-        serde_json::json!(["notify", "stopped", "budget", "conflicted", "mail", "held"]),
+        serde_json::json!([
+            "notify",
+            "stopped",
+            "budget",
+            "conflicted",
+            "mail",
+            "held",
+            "refused"
+        ]),
         "the §6 signals in the `ui.json` watermark's own vocabulary"
     );
     // The park rides the row rather than a query of its own (§8.6): a reader

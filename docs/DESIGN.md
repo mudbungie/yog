@@ -2303,7 +2303,10 @@ worth persisting. Don't "fix" the asymmetry.
    and tip oid ≠ `seen[ws][agent].stopped` — a conversation waiting at a tip you
    have not seen. Rest is the general condition; a stop is only the wounded way
    of coming to rest. The clean end and the failed end differ in the state
-   badge, never in whether your turn has come *(widened bl-2194)*.
+   badge, never in whether your turn has come *(widened bl-2194)*. Which
+   way it came to rest is the *word* the signal wears, not a second signal:
+   a rest whose latest response was refused at the provider rung says `refused`
+   rather than `stopped` *(bl-b43b, below)*.
 3. `refs/litany/budget-exhausted/<branch>` oid ≠ `seen[ws][agent].budget`.
 4. `refs/litany/conflicted/<id>` oid ≠ `seen[ws][agent].conflicted`.
 5. Pending inbox > 0 **and** lock Free — mail nobody is driving (the
@@ -2516,6 +2519,45 @@ failed or killed latest `response.json` classifies the agent Stopped
 never "nothing stirs". Acknowledging it clears the *signal*, not the fact: the
 conversation list's state badge and the §11 Login affordance keep rendering
 the settled failure (the badge is state, not attention).
+
+**And since bl-b43b it stirs in its own word.** The clause above was true and
+insufficient: an auth-failed step classifies Stopped, and `stopped` is the word
+an operator's own `/stop` earns — so a conversation that was refused at its
+first model call told the operator they had done a thing they had not done, on
+a plain row, with an empty transcript, while the remedy (sign a provider in)
+was named on no surface they were looking at. The fact was computed, stored and
+answered correctly, and reached exactly one surface: the per-step `auth_failed`
+/ `auth_row` pair, behind a second query nobody opens on a conversation that
+looks stopped. That is §11's own reading rule failing on itself — *"anything
+this document says yog paints is a fact it answers"* — with this section as the
+document.
+
+The remedy is a **word, not a badge and not a rule**. Three things stay exactly
+where they are: the badge set is frozen at four (§5.1 #9, bl-d816), the rule set
+does not grow, and the count does not move — a refused conversation fires rule 2
+once, as any rest does. What changes is *which way* it is said to be waiting,
+which §6 has always made the row's job:
+
+- **`AttentionKind::Refused` stands where `Stopped` would**, never beside it.
+  One firing, said in the word that is true of it, with its sentence in the same
+  one home every other rule's lives in (`AttentionKind::says`) — so the bl-e160
+  desktop escalation names the act rather than reporting a stop nobody made.
+- **The fact rides beside the state on the agent**, exactly as bl-fb87's
+  truncation reading does and off the same read: the §3.5 classifier already
+  reads the latest `response.json` once, and `Agent::refused` is one more
+  reading of those bytes rather than a second syscall (§5.1 #10). Every
+  derivation pure over the view-model gets it for nothing — the queue's
+  `signals`, the roster row, the `agent` answer.
+- **The roster row wears it as a hue** (`Tone::Bad`), which is the operator's
+  one *passive* sighting. The hue is never the explanation (§11's glyph
+  doctrine): the word is the signal above, and the provider **row** that refused
+  — the credential to sign in — stays the steps surface's `auth_row`, one fact
+  in one home, one query deeper on the conversation the operator opens.
+
+What is deliberately NOT done: the conversation's transcript still paints
+nothing for a refused conversation. Seating a virtual notice entry there is the
+`Compacted`/`Streaming` move a third time and is worth doing, but it is a new
+`EntryKind` and its own ball rather than a rider on this one.
 
 **The prompt that never became a conversation (bl-a649).** Rules 1–5 are all
 per-*agent*, so they can only stir once a conversation root exists. A detached

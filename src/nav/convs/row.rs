@@ -117,11 +117,7 @@ pub(super) fn row(
         // Faded while the conversation is only in memory (§11, the faded-send
         // ruling): a row with no branch behind it is a send yog has
         // made and the world has not yet confirmed.
-        tone: if root.is_some_and(Agent::in_memory) {
-            Tone::Weak
-        } else {
-            Tone::Plain
-        },
+        tone: tone_of(root),
         name: root.and_then(crate::git_tree::Agent::name_fact),
         name_display_only: root.is_some_and(Agent::name_display_only),
         verdict: crate::monitor::row::worst(
@@ -134,6 +130,27 @@ pub(super) fn row(
         ),
     };
     (last_active, row)
+}
+
+/// **How solid, and how well, the row paints** (§11, bl-915e; widened bl-b43b).
+///
+/// [`Tone::Weak`] while the row is §7.2's *pending conversation* — a start yog
+/// has fired whose driver has not written a branch, so the row is only yog's
+/// own word for it. [`Tone::Bad`] for a conversation whose latest turn was
+/// **refused at the provider rung**: the badge set is frozen at four (§5.1 #9)
+/// so the refusal comes to rest `stopped` like an operator's own `/stop`, and
+/// the roster is the operator's one *passive* sighting of it — a list where the
+/// two read identically is a list that cannot be scanned. The hue is the
+/// sighting and never the explanation (§11 glyph doctrine): the word is §6's
+/// `refused` signal and the provider row is the steps surface's `auth_row`.
+///
+/// Nothing here decides; it reads two facts the derivation already carries.
+fn tone_of(root: Option<&Agent>) -> Tone {
+    match root {
+        Some(agent) if agent.in_memory() => Tone::Weak,
+        Some(agent) if agent.refused => Tone::Bad,
+        _ => Tone::Plain,
+    }
 }
 
 /// The aggregated badge state (§11): InFlight if any member streams, else Live

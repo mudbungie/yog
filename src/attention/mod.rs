@@ -27,6 +27,10 @@
 //! 5. **mail** — a non-empty `pending` listing **and** the lock is definitely `Free`
 //!    (a driver-absence stall). Signals 1–4 are seen-gated on `ui.json`; **mail
 //!    is not** — it self-clears when a driver drains the inbox (§6 rule 5).
+//!    Since bl-b43b it also says **which way** the rest came about: a rest whose
+//!    latest response was refused at the provider rung earns
+//!    [`AttentionKind::Refused`] instead, which is one firing said in the word
+//!    that is true of it and never a second signal beside it.
 //! 6. **held** — the capability control parked a tool invocation before it
 //!    executed (`refs/litany/held/<id>`, §8.6). **Not seen-gated**, on mail's
 //!    own precedent and for a stronger reason: a park costs the drone no
@@ -63,6 +67,13 @@ pub enum AttentionKind {
     /// A tool invocation is parked at the capability boundary (§6 rule 6,
     /// §8.6) — the one signal an answer, not an acknowledgement, clears.
     Held,
+    /// **Rule 2's rest was a provider refusal** (bl-b43b) — not a seventh rule
+    /// and not a seventh signal: the same firing, said in the word that is
+    /// true of it. [`Stopped`](Self::Stopped) is what an operator's own `/stop`
+    /// earns, and a conversation that never got past its first model call is
+    /// not something the operator did. The two are mutually exclusive by
+    /// construction ([`Attention::kinds`]).
+    Refused,
 }
 
 impl AttentionKind {
@@ -83,6 +94,7 @@ impl AttentionKind {
             Self::Conflicted => "has a conflicted branch",
             Self::Mail => "has mail queued and no driver taking it",
             Self::Held => "parked a tool invocation for your answer",
+            Self::Refused => "was refused at the provider — sign a provider in on this workspace",
         }
     }
 }
@@ -94,6 +106,10 @@ impl AttentionKind {
 pub struct Attention {
     pub notify: bool,
     pub stopped: bool,
+    /// Rule 2's rest is a **provider refusal** (bl-b43b): a refinement of
+    /// [`stopped`](Self::stopped), never a signal beside it — it is only ever
+    /// true where that one is, and it changes the word rather than the count.
+    pub refused: bool,
     pub budget: bool,
     pub conflicted: bool,
     pub mail: bool,
@@ -111,7 +127,14 @@ impl Attention {
     pub fn kinds(self) -> Vec<AttentionKind> {
         [
             (self.notify, AttentionKind::Notify),
-            (self.stopped, AttentionKind::Stopped),
+            (
+                self.stopped,
+                if self.refused {
+                    AttentionKind::Refused
+                } else {
+                    AttentionKind::Stopped
+                },
+            ),
             (self.budget, AttentionKind::Budget),
             (self.conflicted, AttentionKind::Conflicted),
             (self.mail, AttentionKind::Mail),
@@ -138,6 +161,10 @@ pub fn attention(
             .as_deref()
             .is_some_and(|o| unseen(SeenKind::Notify, o)),
         stopped: rest_evidence(agent).is_some_and(|o| unseen(SeenKind::Stopped, &o)),
+        // Which way that rest came about (bl-b43b), off the fact the §3.5
+        // classification already read: a refusal at the provider rung is a
+        // wound the operator did not inflict, and `stopped` is `/stop`'s word.
+        refused: agent.refused,
         budget: agent
             .budget_oid
             .as_deref()

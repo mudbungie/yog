@@ -98,6 +98,12 @@ pub(super) struct Liveness {
     /// holding the lease is itself the answer to "what now", and the step it
     /// is filling has no settled tail to read.
     pub truncated: bool,
+    /// The latest turn was **refused at the provider rung** (bl-b43b): the same
+    /// bytes, the same pass, the same at-rest gate as
+    /// [`truncated`](Self::truncated) — one more reading of the one file this
+    /// classification reads, never a second syscall and never a second
+    /// mid-write state of it.
+    pub refused: bool,
 }
 
 /// Classify `agent_id` in `workspace` from the two liveness observations
@@ -118,6 +124,7 @@ pub(super) fn classify(
                 state,
                 uncertain,
                 truncated: false,
+                refused: false,
             }
         }
         // No driver: the terminal-only reading rules (§4.4) settle the file.
@@ -150,7 +157,7 @@ fn live_substate(workspace: &Path, agent_id: &str, writer: &dyn WriterProbe) -> 
 /// complete-and-whole latest `response.json` is `Quiescent`, anything else
 /// `Stopped`, and an output-limited tail says so beside the state.
 fn at_rest(workspace: &Path, agent_id: &str, uncertain: bool) -> Liveness {
-    let settled = latest_settled(workspace, agent_id);
+    let (settled, refused) = latest_settled(workspace, agent_id);
     Liveness {
         state: if settled.whole() {
             AgentState::Quiescent
@@ -159,6 +166,7 @@ fn at_rest(workspace: &Path, agent_id: &str, uncertain: bool) -> Liveness {
         },
         uncertain,
         truncated: settled.ending == Ending::OutputLimit,
+        refused,
     }
 }
 
@@ -167,14 +175,21 @@ fn latest_response_path(workspace: &Path, agent_id: &str) -> Option<PathBuf> {
     Some(latest_step_dir(&steps)?.join(RESPONSE_FILE))
 }
 
-/// The latest step's §4.4 settled reading. Reads the file once; absence and an
-/// unreadable file both read as the *killed* tail they honestly are.
-fn latest_settled(workspace: &Path, agent_id: &str) -> Settled {
+/// The latest step's §4.4 settled reading **and whether it was refused at the
+/// provider rung** (bl-b43b) — two readings off one read, for the reason this
+/// module already gathers three: reading the file twice could catch two
+/// different mid-write states of it. Absence and an unreadable file both read
+/// as the *killed* tail they honestly are, and as no refusal — nothing on disk
+/// says a provider said no.
+fn latest_settled(workspace: &Path, agent_id: &str) -> (Settled, bool) {
     let Some(path) = latest_response_path(workspace, agent_id) else {
-        return Settled::KILLED;
+        return (Settled::KILLED, false);
     };
     match std::fs::read(&path) {
-        Ok(bytes) => settled(&bytes),
-        Err(_) => Settled::KILLED,
+        Ok(bytes) => (
+            settled(&bytes),
+            crate::login::auth::classify(&bytes).offered(),
+        ),
+        Err(_) => (Settled::KILLED, false),
     }
 }

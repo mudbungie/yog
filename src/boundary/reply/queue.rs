@@ -47,17 +47,21 @@ fn signal_token(kind: AttentionKind) -> &'static str {
         AttentionKind::Conflicted => "conflicted",
         AttentionKind::Mail => "mail",
         AttentionKind::Held => "held",
+        AttentionKind::Refused => "refused",
     }
 }
 
 /// The §6 signal table — [`signal_token`]'s other half (bl-7067).
-const SIGNALS: [(&str, AttentionKind); 6] = [
+const SIGNALS: [(&str, AttentionKind); 7] = [
     ("notify", AttentionKind::Notify),
     ("stopped", AttentionKind::Stopped),
     ("budget", AttentionKind::Budget),
     ("conflicted", AttentionKind::Conflicted),
     ("mail", AttentionKind::Mail),
     ("held", AttentionKind::Held),
+    // Rule 2's rest said in the word that is true of it (bl-b43b) — it stands
+    // where `stopped` would, never beside it.
+    ("refused", AttentionKind::Refused),
 ];
 
 /// One queue row read back. `display` is answered rather than re-derived here

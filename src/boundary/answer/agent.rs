@@ -100,6 +100,16 @@ pub struct AgentView {
     /// that is selected is the altitude mistake `ConvRow`'s own definition
     /// exists to prevent.
     pub seats: Vec<crate::nav::convs::Seat>,
+    /// **The latest turn was refused at the provider rung** (bl-b43b) — the
+    /// §3.5 fact read off the same bytes the state was, carried here because
+    /// this is the answer that says what may be done to a conversation and a
+    /// refusal is the one rest whose remedy is not a gesture on it at all.
+    /// `false` under a held lock, where the question is not asked.
+    ///
+    /// The provider **row** is deliberately not here: it costs a git read of
+    /// the governing roles, it is a fact about one *step*, and the steps
+    /// surface already answers it as `auth_row`.
+    pub refused: bool,
     /// **The §11 bottom in-flight strip** (§5.1 #28, bl-905f): the live
     /// characteristics of what is running in this conversation, `None` at rest
     /// — which is what makes an idle window paint no strip at all.
@@ -158,6 +168,7 @@ pub fn agent(snap: &Snapshot, ui: &UiState, ws: &Path, agent: &str, now_unix: i6
             .any(|a| a.agent_id == root && a.name_display_only()),
         tip: found.map(|a| a.tip_oid.clone()).unwrap_or_default(),
         state: found.map_or(AgentState::Stopped, |a| a.state),
+        refused: found.is_some_and(|a| a.refused),
         marks: found.map(Agent::marks).unwrap_or_default(),
         held: found.and_then(|a| a.held.clone()),
         present: found.is_some(),

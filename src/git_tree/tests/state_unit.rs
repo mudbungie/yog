@@ -56,6 +56,18 @@ pub(super) fn reading(
     (read.state, read.uncertain, read.truncated)
 }
 
+/// The **provider-refusal** reading beside the state (bl-b43b) — its own
+/// helper rather than a fourth element on [`reading`], so the mapping table
+/// this module owns keeps the shape every one of its cases is written to.
+pub(super) fn refusal(
+    dir: &Path,
+    agent: &str,
+    lock: &dyn LockProbe,
+    writer: &dyn WriterProbe,
+) -> bool {
+    classify(dir, agent, lock, writer).refused
+}
+
 pub(super) fn resp(dir: &Path, agent: &str, seq: &str) -> PathBuf {
     dir.join(format!("{STEPS_DIR}/{agent}/{seq}/{RESPONSE_FILE}"))
 }
