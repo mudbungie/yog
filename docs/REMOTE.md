@@ -1038,6 +1038,35 @@ fourth lock carve-out). A slot lives from the post until the capture is read,
 and a post older than an hour is swept — a driver that died mid-invocation
 costs one entry rather than a leak.
 
+**Hand-off is not delivery, so an unanswered invocation is redelivered**
+(bl-e658, twin of thrall bl-9261). The read parks for the mailbox's whole hold
+and a thread asleep in that loop has not learned that its peer's socket is
+gone, so marking a slot spent where it is handed to the answering code loses
+every invocation posted into a dead parked read — silently, and for the hour
+until the sweep, because *absent* is documented above as *still running*. The
+mark is therefore a **lease**, and the thing that ends it is the client's own
+next follow-class read: every slot that client was handed and this engine has
+no capture for goes back on the queue at the moment it asks for work again.
+The connection cannot be the lease's scope — a host dials per ask and drops the
+connection the instant the answer is read, so a lease released on connection
+end would re-queue an invocation at the moment it was correctly delivered.
+
+**Which makes the leg at-least-once, and the invocation id is the idempotency
+key.** The trade is deliberate and it is not symmetric: what the latch bought
+was silence — an invocation nobody ran and nobody was told about — and what the
+lease costs is a second run in the one case where a host executed something and
+its `complete` never landed. A redelivery carries the **id it was first handed
+under**, so a far end that must not run a thing twice has a stable name to
+dedupe on and needs no field of its own to get it. Nothing on the wire moved:
+`invocation` is the id the follow-class read has always carried.
+
+**One reader per client identity is what makes the predicate exact.** "The
+client asked for work again" only means "it did not finish what it holds" while
+one connection at a time may ask. Two parked readers under one identity is two
+processes claiming one machine's name — the pathology bl-1462 rules on, in
+§5.1's neighborhood, and the guard it installs is this predicate's precondition
+rather than a decoration on it.
+
 **A capture is text, and the transcode happens once.** A capture ends as a
 model's tool result and a model's message is text, so the *executor* transcodes
 its child's bytes at the one place bytes stop being bytes, and nothing

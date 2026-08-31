@@ -174,6 +174,36 @@ fn a_lane_whose_invoke_is_never_answered_refuses_in_band() {
     assert!(said.contains("no engine answered"), "{said}");
 }
 
+/// **The lane's first ask can fail too**, and it is refused in band on the same
+/// terms the routing leg is: a lane whose *roster* read never lands has no set
+/// to select from, so the transport's own sentence is what the model reads —
+/// never a hang, and never a silent empty roster read as "nothing advertises
+/// it", which would name the wrong remedy.
+#[test]
+fn a_lane_whose_roster_is_never_answered_refuses_in_band() {
+    let root = TempDir::new().expect("tmp");
+    let input = json!({"command": "ls"});
+    let stop = AtomicBool::new(false);
+    let site = crate::tool_host::Site {
+        state_root: root.path().to_path_buf(),
+        workspace: "home".to_owned(),
+        agent: "dulcet-mongoose".to_owned(),
+        budget: crate::tool_host::tests::impatient(),
+        patience: crate::tool_host::tests::impatient(),
+        clock: FakeClock::new().arc(),
+    };
+    let capture = super::answer(&site, &call!("bash", &input, &stop));
+
+    assert_eq!(capture.exit_code, 1);
+    let said = String::from_utf8_lossy(&capture.stderr).into_owned();
+    assert!(said.starts_with("bash: "), "{said}");
+    assert!(said.contains("no engine answered"), "{said}");
+    assert!(
+        !said.contains("advertises"),
+        "a failed roster read is a transport fact, not a selection one: {said}"
+    );
+}
+
 /// The selection is pure over the roster, so the one-name-two-entries shapes
 /// are provable without an engine: a duplicate name inside one client's set
 /// cannot reach here (the advertisement refuses it), but one consenting and

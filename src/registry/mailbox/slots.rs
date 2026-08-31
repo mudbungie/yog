@@ -134,7 +134,9 @@ impl Mailbox {
     /// empty set when the hold expires, which is not a failure — the host asks
     /// again, and an answer that never came would be the hang the deadline
     /// exists to exclude.
+    /// It **acknowledges the previous read first** — see [`requeue`](Self::requeue).
     pub fn take(&self, client: &str) -> Vec<Invocation> {
+        self.requeue(client);
         for _ in 0..self.waits {
             let taken = self.drain(client);
             if !taken.is_empty() {
@@ -143,6 +145,42 @@ impl Mailbox {
             std::thread::sleep(self.tick);
         }
         self.drain(client)
+    }
+
+    /// **The acknowledgement** (bl-e658): every slot this client was handed and
+    /// never answered goes back on the queue, at the moment it asks for work
+    /// again.
+    ///
+    /// `taken` used to be a **latch** — set where the invocation is handed to
+    /// the answering code, never cleared, so nothing was ever offered twice.
+    /// That reads the drain as the delivery, and the two are not the same
+    /// instant: [`take`](Self::take) parks for the whole hold and a thread
+    /// asleep in that loop has not learned its peer's socket is gone, so an
+    /// invocation posted into a dead parked read was consumed by a thread that
+    /// could not deliver it and was never offered again. The window is the
+    /// hold's own width and the events that land in it are ordinary — a host
+    /// restarting under its supervisor, a blip, a box being upgraded.
+    ///
+    /// **The connection is not the lease's scope.** A tool host dials per ask
+    /// and drops the connection the moment the answer is read (REMOTE §5.3), so
+    /// a lease released on connection end would re-queue every invocation at
+    /// the instant it was correctly delivered. The client's **next
+    /// follow-class read** is the acknowledgement instead: the executor is
+    /// serial by REMOTE §5.3 — `invocations` → run → `complete`, one at a time
+    /// — so a client asking again while a slot it was handed carries no capture
+    /// is that client saying it did not finish that slot. The predicate is
+    /// exact only because one identity may hold one parked reader (bl-1462).
+    ///
+    /// A completed slot is never re-queued, so a capture the asker has not
+    /// collected yet is not re-run: the only thing offered twice is work this
+    /// engine has no answer for.
+    fn requeue(&self, client: &str) {
+        let mut slots = lock_mail(&self.cell);
+        for slot in slots.live.values_mut() {
+            if slot.client == client && slot.capture.is_none() {
+                slot.taken = false;
+            }
+        }
     }
 
     /// One look: every untaken invocation for `client`, marked taken.

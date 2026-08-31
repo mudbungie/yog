@@ -54,17 +54,63 @@ fn an_invocation_crosses_and_the_capture_comes_back() {
     );
 }
 
-/// A queue is per client: one host never drains another's work, and a taken
-/// invocation is not handed out twice.
+/// A queue is per client: one host never drains another's work.
 #[test]
-fn a_take_drains_only_this_clients_untaken_work() {
+fn a_take_drains_only_this_clients_work() {
     let mail = quick();
     let mine = mail.post(10, "local", &call("laptop", "Bash"));
     mail.post(10, "local", &call("phone", "Bash"));
     let taken = mail.take("laptop");
     assert_eq!(taken.len(), 1);
     assert_eq!(taken.first().map(|i| i.id.clone()), Some(mine));
-    assert!(mail.take("laptop").is_empty(), "taken once, never twice");
+}
+
+/// **The hand-off is not the delivery** (bl-e658): a slot handed to a read that
+/// never answered it goes back on the queue at the client's next read, under
+/// the id it was first handed.
+///
+/// This is the defect's own shape. `taken` was a latch, so an invocation
+/// drained into a parked read whose peer had already died was consumed by a
+/// thread that could not deliver it, and no later read ever offered it again.
+#[test]
+fn work_handed_to_a_read_that_never_answered_is_offered_again() {
+    let mail = quick();
+    let id = mail.post(10, "local", &call("laptop", "Bash"));
+    assert_eq!(mail.take("laptop").len(), 1, "handed over once");
+    assert_eq!(
+        mail.take("laptop").first().map(|i| i.id.clone()),
+        Some(id),
+        "the next read is the acknowledgement the first one never gave"
+    );
+}
+
+/// **A completed slot is never re-run.** The redelivery above offers only work
+/// this engine has no answer for, so a capture waiting to be collected is not
+/// handed out a second time.
+#[test]
+fn an_answered_invocation_is_not_offered_again() {
+    let mail = quick();
+    let id = mail.post(10, "local", &call("laptop", "Bash"));
+    assert_eq!(mail.take("laptop").len(), 1);
+    assert_eq!(mail.complete("laptop", &id, &ran(0)), Ok(ran(0)));
+    assert!(
+        mail.take("laptop").is_empty(),
+        "answered work is finished work"
+    );
+}
+
+/// The acknowledgement is **per client**: one machine asking again says nothing
+/// about what another machine is holding.
+#[test]
+fn a_read_acknowledges_only_its_own_clients_work() {
+    let mail = quick();
+    let theirs = mail.post(10, "local", &call("phone", "Bash"));
+    assert_eq!(mail.take("phone").len(), 1);
+    assert!(mail.take("laptop").is_empty());
+    assert_eq!(
+        mail.take("phone").first().map(|i| i.id.clone()),
+        Some(theirs)
+    );
 }
 
 /// **The hold ends** (REMOTE §3): a host with nothing waiting is answered with

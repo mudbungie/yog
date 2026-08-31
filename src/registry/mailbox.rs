@@ -70,6 +70,12 @@ impl Eq for Call {}
 #[derive(Debug, Clone, PartialEq)]
 pub struct Invocation {
     /// The engine's handle, minted at the post and quoted by the completion.
+    ///
+    /// **It is also the idempotency key** (bl-e658). An invocation the engine
+    /// has no capture for is offered again at the client's next follow-class
+    /// read, and a redelivery carries the id it was first handed under — so a
+    /// far end that must not run something twice has one stable name to dedupe
+    /// on, and needs no field of its own to get it (REMOTE §5.3).
     pub id: String,
     pub tool: String,
     pub input: Value,
