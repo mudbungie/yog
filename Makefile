@@ -1,4 +1,4 @@
-.PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny \
+.PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny image image-scan \
         corpus drive drive-preflight drive-cleanroom drive-seed drive-log wire-certs \
         deploy deploy-status deploy-audit
 
@@ -380,6 +380,68 @@ ifeq ($(CONFIRM),yes)
 else
 	@echo "dry-run passed. Publishing is an explicit decision: re-run with 'make publish CONFIRM=yes'."
 endif
+
+# The OCI image — the unit of install for a box that takes containers rather
+# than binaries. `Containerfile` is the whole of what it builds and states why
+# each layer is what it is.
+#
+# The version is READ FROM Cargo.toml and never typed here: the crate version
+# has one home, and a tag typed into a Makefile is that fact stored twice. The
+# `sed` range restricts to `[package]` so a dependency's own `version =` cannot
+# be picked up. Both `:<version>` and `:latest` are applied to the same build.
+#
+# Podman or docker, whichever the box has, podman first — it needs no daemon
+# and no group membership, which is the difference between "the operator can
+# build this" and "the operator can build this after an admin says yes".
+# Override with `make image ENGINE=docker`.
+#
+# IT PUSHES NOTHING, and there is no `push` target to forget to guard. The
+# registry is named — `ghcr.io/mudbungie/yog`, one package per repo, pushed
+# only from that repo's release workflow at tag time (DESIGN §10.1, operator
+# ruling 2026-08-30) — and the push still does not live here. A push is not
+# undoable: a tag can move, but the bytes anyone pulled are theirs. What
+# publishes is the version tag and the manifest digest, both immutable, and
+# never a moving `latest`; the `:latest` applied below is LOCAL, a convenience
+# on one box nobody else can pull.
+IMAGE_NAME    ?= yog
+IMAGE_VERSION := $(shell sed -n '/^\[package\]/,/^\[/{s/^version *= *"\([^"]*\)".*/\1/p;}' Cargo.toml)
+IMAGE_TAG     := $(IMAGE_NAME):$(IMAGE_VERSION)
+ENGINE ?= $(shell command -v podman 2>/dev/null || command -v docker 2>/dev/null)
+
+image:
+	@test -n "$(ENGINE)" || { echo "image: no podman and no docker on PATH" >&2; exit 1; }
+	@test -n "$(IMAGE_VERSION)" || { echo "image: no version in Cargo.toml" >&2; exit 1; }
+	@echo "image: $(notdir $(ENGINE)) build -> $(IMAGE_TAG)"
+	@$(ENGINE) build -f Containerfile \
+	  -t "$(IMAGE_TAG)" -t "$(IMAGE_NAME):latest" .
+	@$(ENGINE) image inspect "$(IMAGE_TAG)" \
+	  --format 'image: {{.Id}} {{.Size}} bytes'
+	@$(MAKE) --no-print-directory image-scan
+
+# The image-side disclosure gate — DESIGN §10.1's condition on the registry
+# ruling, and the check nothing in this repo previously performed. `leak-scan`
+# reads the git INDEX; an image is built from inputs no commit has — the build
+# context as the engine actually receives it, the base layers, the package
+# index, and the image CONFIG. yog's is the image whose trust root matters
+# most: the Containerfile promises no CA and no leaf in any layer (REMOTE §1.4),
+# and until this target nothing read the layers to check.
+#
+# It is a step of `image` and not a target beside it, for the reason the
+# pre-commit hook is not a target beside `commit`: a gate a person has to
+# remember to run is not a gate. Run it alone to re-judge an image already
+# built. `scripts/image-scan.sh` states what it scans and how it isolates the
+# authored content; this target only decides which tag and runs BOTH
+# directions — the planted-secret self-test first, because a scan that has
+# stopped matching passes everything forever, then the real image.
+#
+# NOT part of `check`. `check` must run on a box with no container engine and
+# must not depend on an artifact a build step produced; this needs both. It is
+# the image's gate, and it runs where the image is made.
+image-scan:
+	@test -n "$(ENGINE)" || { echo "image-scan: no podman and no docker on PATH" >&2; exit 1; }
+	@test -n "$(IMAGE_VERSION)" || { echo "image-scan: no version in Cargo.toml" >&2; exit 1; }
+	@ENGINE=$(ENGINE) scripts/image-scan.sh --self-test "$(IMAGE_TAG)"
+	@ENGINE=$(ENGINE) scripts/image-scan.sh "$(IMAGE_TAG)"
 
 clean:
 	cargo clean

@@ -57,9 +57,8 @@ pub mod delete;
 /// Where to cut a string that will not fit (QUALITY G1, L4) — one rule, cut
 /// where the information is not. Machine strings only; prose keeps its head.
 pub(crate) mod elide;
-/// The one assembly both faces boot (VISION §5 V5) — model, worker, bridge,
-/// gesture consumer; the window and `yog serve` differ only in what they add
-/// beside it.
+/// The one assembly a bare `yog` boots (VISION §5 V5) — model, worker, bridge,
+/// gesture consumer, monitor sentry, fleet pilot and the wire listener.
 pub mod engine;
 /// The VISION §4.10 mutating fan — N isolated candidate attempts over one
 /// delivery obligation, materialized through balls' attempt capability.

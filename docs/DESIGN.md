@@ -6284,13 +6284,36 @@ prevention-is-local, enforcement-is-late split AGENTS.md draws for the task
 store; the late half here is that a published image can only be superseded,
 never recalled, which is why the gate lives ahead of the push and not after it.
 
-**yog's own image is deferred, not skipped, and the reason is §0's.** The image
-is the **UI-free server** — the post-severance binary of bl-7942, which takes
-the eframe/egui/GL stack out of the crate. Containerizing today's windowed
-binary would ship a GL display stack into a layer nothing in a server can
-present, so the yog image is filed behind that severance and the seat's image
-behind the seat's own window chain (bl-320b). Both cite this section for the
-shape.
+**yog's own image is landed** (bl-10f9), and the deferral it waited out is
+worth keeping stated: the image is the **UI-free server**, so containerizing
+the windowed binary would have shipped a GL display stack into a layer nothing
+in a server can present — it was filed behind bl-7942's severance for that one
+reason and no other. The seat's image is still behind the seat's own window
+chain (bl-320b) and cites this section for the shape.
+
+Three answers are yog's alone, and each is written into `Containerfile` where
+the next person reads it:
+
+- **The runtime layer is `git`, `openssl`, `sh` and yog itself.** yog execs
+  more than any other component, and §16.4/§16.7's self-multiplex is what keeps
+  the list short: the world's `PATH` head is re-exec shims of this binary, so
+  `bl`, `litany`, `bz`, the two balls plugin seams and `tool-control` need no
+  host binary at all. What is left is git (the crate's one fork, `git_env`),
+  `openssl` (the §1.4 mint the boot performs when a box has none — without it a
+  fresh mount comes up with no listener), and `sh` (the `$EDITOR` re-entry a
+  §9.3 lineage write performs). `lsof` is absent because §10's macOS liveness
+  shim is not compiled into a Linux binary. **Nothing an agent runs is in the
+  layer**, which is REMOTE §12's ship-inert posture stated as bytes.
+- **`XDG_DATA_HOME` is the only root that mounts**, because it is the world's
+  anchor (§16.2). `LITANY_HOME` and `XDG_STATE_HOME` are *derived* onto
+  `<yog-data-root>/world/…` and handed to every child, so an operator who
+  mounted the three separately would be fighting the nesting and would watch
+  the world re-found itself. One mount: the data root.
+- **No wire material in a layer** (REMOTE §1.4). The CA, the leaves and the
+  `address` file are the operator's, minted on the operator's box by
+  `yog wire-certs` or by a boot into the mounted root. An image that arrived
+  able to present an identity would be the in-channel bootstrap that must never
+  exist; `make image-scan` is what turns that promise into a check.
 
 ---
 

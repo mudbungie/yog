@@ -290,6 +290,8 @@ config, so removing the space deletes config, not code.
 | `make drive-preflight` | Name every missing host prerequisite at once (python3, git, the `yog` under drive, the world seed, and the workspace **wall** — whether a scratch world can birth a workspace at all, plus the brazen fixtures seeded into it) |
 | `make drive-seed` | Lay a scratch world and print its path — the starting point for a hand-steered capture pass (`docs/QUALITY.md` §3) |
 | `make drive-log` [`DRIVE_LOG_DIR=<d>`] | Re-emit a run's drive-log skeleton (sha, host tuple, load, beat table) from its verdict rows |
+| `make image` [`ENGINE=docker`] | Build the OCI image from `Containerfile`, tagged `yog:<Cargo.toml version>` and `yog:latest`, then run `image-scan` on it. Pushes nothing (see "The image") |
+| `make image-scan` | Re-judge an already-built image on its own, both directions — the planted-secret self-test, then the real image |
 | `make install` [`INSTALL_PREFIX=<p>`] | Release-build and drop `yog` into `$INSTALL_PREFIX/bin` (default `~/.local/bin`) |
 | `make install-hooks` | Seat every `.githooks/` hook as a symlink in the repo's own hooks directory — do this once per clone, in the main checkout |
 
@@ -473,6 +475,113 @@ correct, but it means a long-running turn can hold an update for hours; the
 journal says so on every tick, and `systemctl --user restart yog.service` is the
 override. And the deferral is coarse: any child in the cgroup counts, so a
 transient spawn can cost one tick.
+
+### The image
+
+`make image` builds an OCI image from `Containerfile` — a third route, for a
+box that takes images rather than binaries. **The image is the unit of install
+and nothing more.** No part of yog uses the container filesystem as a feature,
+and no state lives in a layer: the XDG root is the runtime contract and it is
+mounted in.
+
+```
+make image                   # podman or docker, whichever is on PATH
+make image ENGINE=docker
+```
+
+It builds under the pinned toolchain (`rust:1.95.0-alpine`, checked against
+`rust-toolchain.toml` during the build so the two pins cannot drift) and copies
+one static musl binary into an `alpine` runtime layer.
+
+**The runtime layer is what the engine execs**, which is why `FROM scratch` is
+wrong here whatever the linking story says. Four things: `git` (every workspace
+read and every act is git — `src/git_env.rs` is the crate's one fork),
+`openssl` (the wire mint the boot performs when a box has none; without it a
+fresh mount comes up with no listener), `sh` (the `$EDITOR` re-entry a §9.3
+lineage write performs), and **yog itself** — the world's `PATH` head is
+re-exec shims of this binary, so `bl`, `litany` and `bz` need no host binary at
+all. System CA roots ride along for the adapter's HTTPS and for an HTTPS git
+remote. `lsof` is absent: DESIGN §10's macOS liveness shim is not compiled into
+a Linux binary.
+
+#### What mounts where
+
+`XDG_DATA_HOME` is set to `/state`, which puts yog's data root at `/state/yog`
+— the extra level is XDG's, not the image's. **That one directory is the whole
+mount**, and that is the point: yog composes a nested world under it and
+derives `LITANY_HOME` and `XDG_STATE_HOME` onto `world/litany` and
+`world/state` for itself and every child, so mounting those separately is
+fighting the nesting rather than configuring it.
+
+```
+podman run --rm \
+  -v ~/yog-state:/state/yog:Z \
+  -v ~/work:/work:Z \
+  yog:0.0.5 gesture '/attention'
+```
+
+Inside that one root: `world/litany` (the nested harness home), `world/state`
+(balls' clones and worktrees, and yog's own `ui.json` / `ops.jsonl`),
+`world/tools` (the re-exec shims, seeded by the engine), `workspaces/` (the
+named workspaces) and `wire/` — the wire material, beside the world rather than
+inside it, because the world is a generated artifact yog reseeds and a reseed
+must not be a revocation.
+
+Nothing in the image runs a seed. The engine founds what it finds missing on
+its own boot, into the mount; writing any of it into a **layer** would put the
+one state yog owns where a mount cannot replace it and an upgrade cannot see
+it.
+
+There is no `VOLUME` instruction on purpose — and for yog that matters more
+than for the other components. A `VOLUME` would let an unmounted run succeed
+against an empty anonymous volume, and yog's boot would found a whole world
+there and answer as if it were real. Without one, an unmounted run founds its
+world inside the container and takes it down with the container, which is at
+least visible.
+
+#### What the image deliberately does not contain
+
+- **No wire material.** The CA, its leaves and the `address` file are the
+  operator's, minted on the operator's box (`yog wire-certs`, or the engine's
+  own boot into the mounted root). REMOTE §1.4 is that certificates arrive out
+  of channel by hand, forever; an image that arrived able to present an
+  identity would be the in-channel bootstrap that must never exist.
+- **No provider credentials, and no world at all.** Both are mounts. A
+  credential baked into a layer is a credential published to everyone who can
+  pull it.
+- **Nothing an agent runs.** A tool call routes to an enrolled thrall over the
+  real wire or refuses in band (REMOTE §12's ship-inert posture); the engine
+  runs no tool itself. A toolchain in this layer for agents to use would be
+  quietly undoing that.
+- **No git identity.** yog's substrate commits into the workspaces it drives,
+  and git refuses with `Please tell me who you are` against an
+  identity-less container. Supply one — `GIT_AUTHOR_NAME` /
+  `GIT_AUTHOR_EMAIL` / `GIT_COMMITTER_NAME` / `GIT_COMMITTER_EMAIL`, or a
+  mounted `.gitconfig`.
+- **No `cargo`, no compiler, no source, no `target/`.** The build stage is
+  discarded whole; only the binary crosses.
+
+#### The image-side disclosure gate
+
+`make image` ends in `make image-scan`, and that is a condition of the registry
+ruling rather than a convenience (DESIGN §10.1). `make leak-scan` reads the git
+**index**; an image is built from inputs no commit has — the build context as
+the engine actually receives it, the base layers, the package index, and the
+image **config**. The scan reads all three surfaces through the **same rule
+table** (`scripts/leak-rules.sh`, sourced and never copied) and runs both
+directions: a scratch image with a planted secret in a layer, another in an
+`ENV`, and an undeclared binary, all of which must be caught, before the real
+image is scanned clean.
+
+What it cannot promise, stated rather than implied: it scans one image, on the
+box that built it, before the push. It does not read what is already in the
+registry, it cannot un-publish a digest, and whoever runs the build can bypass
+it exactly as `--no-verify` bypasses the commit hook.
+
+**`make image` pushes nothing, and there is no `push` target.** The registry is
+`ghcr.io/mudbungie/yog`, pushed only from this repo's release workflow at tag
+time; a push is not undoable, and a convenience target for an irreversible act
+is how the act happens by accident.
 
 ## Publishing
 

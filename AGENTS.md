@@ -428,6 +428,22 @@ demotion removes an internal API from the boundary's obligations. Reach for
   from `git rev-parse` in the working directory, so `cd <any git checkout> &&
   <repo>/scripts/leak-scan.sh` judges that checkout's index by this table. That
   is how the task store is gated below without a second copy of the rules.
+
+  **A second artifact needs a second gate: `make image-scan`** (bl-10f9, under
+  DESIGN §10.1). The scan above reads the git INDEX, and an OCI image is built
+  from inputs no commit has — the build context as the engine actually receives
+  it, the base layers, the package index, and the image CONFIG. The image gate
+  reads all three surfaces through **this same rule table**, is a step of `make
+  image` rather than a target beside it, and runs both directions (a scratch
+  image with a planted secret in a layer, another in an `ENV`, and an
+  undeclared binary, all of which must be caught, before the real image is
+  scanned). `README.md` §"The image-side disclosure gate" states its mechanism.
+  **The build context is the image's `include` list** — `Containerfile` COPYs
+  by name and `.containerignore` keeps the rest from being sent at all — so the
+  one question the publication checklist asks is now asked once per channel,
+  and `make image-scan` is the container half's answer to `cargo package
+  --list`. It is **not** part of `make check`: `check` must run on a box with
+  no container engine and must not depend on an artifact a build step produced.
 - `make rules-audit` — `ast-grep scan src` (must be clean) AND a negative check
   that `ast-grep scan rules/fixtures` *fails* (proving every rule still bites).
   Every rule governs production style. **Three governed the paint layer and
@@ -653,8 +669,13 @@ cost is recorded per item; the notes are the checklist's evidence that it works.
    speculate.yml` also uploads a `verdicts` artifact. Both survive the run.
    A fresh repository starts with no run history, which is the other reason
    item 2's rename-and-recreate is cheaper than it looks.
-6. **Already-published versions.** `cargo publish` is irreversible: a yanked
-   version stays downloadable. Audit the packaged file list
+6. **Already-published versions, on BOTH channels.** `cargo publish` is
+   irreversible: a yanked version stays downloadable — and so is `podman push`,
+   where a bad image can only be superseded by the next version, never recalled
+   (DESIGN §10.1: the registry is `ghcr.io/mudbungie/yog`, one immutable
+   version tag and one digest, never a moving `latest`). The image half is
+   gated: `make image-scan` runs as a step of `make image`, so an image reaches
+   a push only through a scan. The crate half is item 6 below. Audit the packaged file list
    (`cargo package --list`) before `make publish CONFIRM=yes`, not after.
 
    This is the item that was learned the hard way. **0.0.1 was published on
