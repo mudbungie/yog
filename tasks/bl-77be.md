@@ -1,7 +1,7 @@
 +++
 title = "the total router left the shipped worker grant dead: seven of eight granted tools refuse, taking subagents, agent messaging, skills and the conversation's own worktree with them"
 created = 1788150349
-updated = 1788151145
+updated = 1788151382
 claimant = "OrderArbiter"
 priority = 9
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -10,78 +10,62 @@ tags = ["remote", "tool-host"]
 REMOTE §5.4's inversion made the router total: `ToolInjection::call` answers the
 `clients` tool, the two engine acts, every loaded remote name, and renders
 `UNLOADED` for everything else (`src/tool_host.rs`). Nothing resolves a binary
-behind it any more.
+behind it any more. The shipped worker grant was not moved with it: seven of
+its eight names refused in band — subagents, inter-agent messaging, the skills
+corpus and every act on the conversation's own worktree, all dead, with the
+artifacts of every build landing in a foot's scratch and `work-diff` empty.
+(The original evidence — the probe conversation's 4/4 refusals, the control
+that proved the mechanism — is in this ball's journal history.)
 
-The shipped worker grant was not moved with it. `providers.yaml` in the first
-config commit still grants:
+## The ruling, as landed
 
-    tools: [apply_patch, bash, cd, dispatch, load_skill, message, multi_tool, read_file]
+**The grant splits by subject** (REMOTE §5's subject-locality invariant, asked
+name by name), and each half gets its lane:
 
-Seven of those eight are now dead names. They are declared to the model on every
-single request — they are in the toolset the grant gate enumerates, their
-schemas ship in `descriptions/tools/*.json`, their skill docs ship in
-`descriptions/skills/*.md` — and every one of them earns the same refusal:
+1. **Engine acts** — `dispatch`, `message`, `load_skill`, `cd` join the
+   compactor pair in `engine_act::NAMES` (two rows to six): each one's subject
+   is the conversation or the world (a fork on the workspace, an inbox
+   deposit, a server-disk skill copy, a mark ref), so each is performed at the
+   engine's own front door with the caller identity on the env — bl-dfce's
+   mechanism unchanged, now at the caller's resolved cwd (litany bl-ddaa).
+2. **The worktree lane** — `bash`, `read_file`, `apply_patch` (and any
+   granted pool name): subject is the conversation's working tree, which
+   lives on the server's box, so the subject chose the executing machine. The
+   router resolves the bare name against the workspace roster: the ONE
+   registered client that both advertises it and consents to workspace-cwd
+   execution (`"subject_cwd": true` on that entry in its own tools.json —
+   advertised, because the engine routes on it) runs it, and the invocation
+   carries the conversation's resolved cwd (`RoutedCall::cwd`, litany
+   bl-ddaa — REMOTE §5's "the half the thrall move owed", landed). Zero
+   consenting machines refuses in band naming both remedies; two is a config
+   ambiguity refused naming them. The consenting box is §5.4's co-located
+   thrall, the normal install.
+3. **`multi_tool`** — untouched: litany's step loop fans it out before any
+   router; each inner name is judged on its own subject.
 
-    <name>: no tool of that name is loaded in this conversation; use the clients
-    tool to see this workspace's machines and load what one advertises
+Wire: the advertised element gained optional `subject_cwd`, invoke/invocations
+gained optional `cwd`; the corpus ledger flagged exactly those four shapes and
+PROTOCOL moved 1 -> 2, with thrall in lockstep (thrall bl-36f7).
 
-`multi_tool` is the exception and only because litany fans it out itself; each
-of its sub-invocations then meets the same wall.
+## Rejected
 
-## Proven, not inferred
+- **Narrowing the grant to `[multi_tool]`** — stops the decoys, returns none
+  of the four capabilities.
+- **Answering bash/read_file/apply_patch as engine acts** — the server
+  executing machine work in its own process is the second pipeline §12's
+  front-door invariant exists to exclude; the compactor carve-out does not
+  stretch to filesystem acts.
+- **yog re-deriving the conversation's cwd** from litany's mark ref — a
+  second home for litany's own fact; the seam hands the resolved value over
+  instead.
+- **A per-name "worktree tools" roster in yog** — the lane is the router's
+  general else-branch, so an operator-granted pool name routes with no list
+  to drift.
+- **Ambient consent** (routing bare names to any advertiser) — a box must opt
+  in before executing at a caller-named path; the containment-honesty clause
+  stays true because the stating box is the enforcing box.
 
-A probe conversation was told to call four of them once each in one parallel
-batch and report what came back. Result: `4 invocations: 0 ok, 4 failed, 0
-skipped` — `load_skill`, `dispatch`, `message` and `cd`, each the sentence
-above. A separate conversation's opening step had already taken the same
-refusal for `bash` and `read_file`. That is six of the seven demonstrated; the
-seventh, `apply_patch`, takes the same path by construction — the router has one
-else-branch.
-
-## What is actually gone
-
-This is not eight wasted declarations. It is four capabilities:
-
-- **Subagents.** `dispatch` is the only way a conversation spawns a child. VISION
-  V1's two-edge taxonomy and the child card have nothing to hang on.
-- **Inter-agent messaging.** `message` is how one conversation reaches another.
-- **The skills corpus.** `load_skill` is its only door. The world ships a
-  populated `litany/skills/` that no agent can open.
-- **The conversation's own worktree.** `bash`, `cd`, `read_file` and
-  `apply_patch` were the only acts on it. An agent cannot read the `goal.md`
-  sitting beside it, cannot write a file into its own branch, and therefore
-  produces nothing a `/files`, a `/work-diff` or a delivery would ever see. The
-  first observed conversation tried to read its own `goal.md` in its opening
-  step and was refused.
-
-  Everything an agent now builds is built on a foot, in the foot's scratch
-  directory, on the foot's box. The workspace repo records the transcript of it
-  and none of the artifact.
-
-## Two questions this ball is asking, not answering
-
-1. **Is the grant the bug, or is it the seam?** Narrowing the grant to
-   `[multi_tool]` stops the decoys and costs one wasted step per conversation —
-   but it does not give `dispatch`, `message` or `load_skill` back, and those
-   are not machine acts. By REMOTE §5.4's own subject-locality test ("a tool
-   executes where its subject lives") all three have the conversation as their
-   subject, the conversation lives on the server, and they belong beside
-   `write_summary` / `mark_for_deletion` as engine acts. `src/tool_host/
-   engine_act.rs` says the name set is closed at two "because the procedure is
-   the only second source of injected definitions litany has" — that is a fact
-   about where a DEFINITION comes from, not about where an ACT belongs, and
-   these three arrive as role grants rather than as procedure injections.
-
-2. **Is a conversation meant to have a worktree at all any more?** If every
-   artifact lives on a foot, then `/files`, `/work-diff`, `/science`, the
-   candidate delivery flow and the fan/deliver family are all reading a tree
-   nothing writes. That is a §12 migration-order question and it is bigger than
-   this ball, but the answer changes what the fix here should be.
-
-Whatever the ruling, the state on the tree today is the one shape that is
-certainly wrong: eight tools declared, seven of them incapable, and no config
-edit anywhere that says so.
-
----
-
-Supporting evidence from the same campaign: after a conversation completed its build project end to end (two files authored, a test written and run green), `work-diff` on it answers `{"kind":"work-diff","ok":true,"rows":[]}` and `science` answers empty too. The artifacts exist — on the foot's box, in the foot's scratch directory. The workspace repo holds the transcript of the work and none of the work. That is the second question in this ball's body answered from the outside: today, a conversation's worktree is written by nothing.
+Question 2 in the original body ("is a conversation meant to have a worktree
+at all any more?") is answered YES by the lane: the worktree stays the work
+product's home, written through a consenting thrall that holds it, and
+`/files` / `/work-diff` / delivery keep their subject.
