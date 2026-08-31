@@ -16,7 +16,12 @@ name: Release-plz
 #     default GITHUB_TOKEN cannot trigger another workflow (GitHub's
 #     anti-recursion rule), so a separate binaries workflow would silently never
 #     fire without a PAT. `workflow_dispatch` with `binaries_tag` backfills an
-#     existing tag — and reaches ONLY this job (see the boundary below).
+#     existing tag — and reaches ONLY this job (see the boundary below). Which
+#     tag it builds arrives as DATA from the release job's `tag` output (or
+#     from that dispatch input), and the job refuses when the tag disagrees
+#     with the checked-out `Cargo.toml` version — never `git describe`, which
+#     raced the tag it was released for on 0.0.6 and uploaded the previous
+#     version's archive over the previous release (bl-159d).
 #   * prune-stale-branches (right after the release PR job) — deletes every
 #     branch that has no open PR, keeping only `main`, `balls/tasks` and any
 #     live `speculation/**`. release-plz pushes a NEW timestamped branch each
@@ -172,9 +177,14 @@ jobs:
     concurrency:
       group: release-plz-release
       cancel-in-progress: false
-    # Tell the binaries job whether a release actually happened.
+    # Tell the binaries job whether a release actually happened, and WHICH tag
+    # it cut. The tag must be handed off as DATA, not re-derived downstream:
+    # this job tags a commit the binaries job's own checkout may not have
+    # fetched yet, so an ancestor walk (`git describe`) from there answers with
+    # whatever tag it happens to see — the 0.0.6 race (bl-159d).
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
+      tag: ${{ steps.released.outputs.tag }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -209,6 +219,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Extract the released tag
+        # `releases` is the action's own JSON record of what it just released,
+        # e.g. [{"package_name":"yog","prs":[],"tag":"v0.0.7","version":"0.0.7"}].
+        # One crate releases here, so `.[0].tag` is it. Read via env, so the
+        # JSON never reaches the shell as code (boundary rule 7).
+        id: released
+        if: steps.release.outputs.releases_created == 'true'
+        env:
+          RELEASES: ${{ steps.release.outputs.releases }}
+        run: |
+          set -euo pipefail
+          printf 'tag=%s\n' "$(jq -r '.[0].tag' <<<"$RELEASES")" >> "$GITHUB_OUTPUT"
 
   release-binaries:
     name: yog x86_64-unknown-linux-gnu
@@ -243,16 +265,41 @@ jobs:
         # `${{ }}` text spliced into this script (boundary rule 7).
         env:
           BINARIES_TAG: ${{ github.event.inputs.binaries_tag }}
+          RELEASED_TAG: ${{ needs.release-plz-release.outputs.tag }}
         run: |
           set -euo pipefail
-          tag="${BINARIES_TAG:-}"
-          [ -n "$tag" ] || tag="$(git describe --tags --abbrev=0)"
+          # The manual backfill input wins; otherwise the tag the release job
+          # just cut, handed over as its output. NEVER `git describe` — that
+          # asks this checkout what it can see, and this checkout is fetched
+          # concurrently with the tag being pushed. On the 0.0.6 release it
+          # answered `v0.0.5` seconds after v0.0.6 was tagged, so the job built
+          # the previous version and uploaded it OVER the previous release's own
+          # asset, while the new release got nothing (bl-159d).
+          tag="${BINARIES_TAG:-$RELEASED_TAG}"
+          if [ -z "$tag" ]; then
+            echo "no tag to build: neither binaries_tag nor the release job's tag output is set" >&2
+            exit 1
+          fi
           # Must name a real tag: that pins the checkout below to a tag object
           # rather than a same-named branch or a path, whatever was typed.
           git rev-parse -q --verify "refs/tags/$tag" >/dev/null
           printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
           # Build the tagged (released) code, not whatever main's tip is now.
           git checkout "refs/tags/$tag"
+          # And refuse outright if the tree we just checked out is not the
+          # version the tag names. This is what turns the whole class from
+          # "uploaded the wrong thing, silently" into "said no": the tag and
+          # the manifest are two independent statements of one fact, and an
+          # asset is only ever published when they agree. The `sed` range
+          # restricts to `[package]`, so a dependency's `version =` cannot be
+          # read as the crate's.
+          manifest="$(sed -n '/^\[package\]/,/^\[/p' Cargo.toml |
+                      sed -n 's/^version *= *"\([^"]*\)".*/\1/p' | head -1)"
+          if [ "$tag" != "v$manifest" ]; then
+            echo "tag $tag does not name the checked-out crate version $manifest — refusing to upload" >&2
+            exit 1
+          fi
+          echo "building $tag (Cargo.toml says $manifest)"
       - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable branch @ 2026-08-05
         with:
           toolchain: stable
