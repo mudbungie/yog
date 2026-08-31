@@ -1,7 +1,8 @@
 +++
 title = "EXIT the litany interim git pin: flip Cargo.toml back to a registry pin and delete deny.toml's allow-git entry when litany next publishes"
 created = 1788151367
-updated = 1788151367
+updated = 1788152855
+claimant = "OrderConductor"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
