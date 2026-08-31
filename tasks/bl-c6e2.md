@@ -1,7 +1,8 @@
 +++
 title = "the deploy path seats a binary unit while the server now runs the image: make deploy would overwrite the cutover"
 created = 1788138752
-updated = 1788138752
+updated = 1788146187
+claimant = "OrderCrier"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
