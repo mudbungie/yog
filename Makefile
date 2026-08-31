@@ -1,6 +1,6 @@
 .PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny image image-scan \
         corpus drive drive-preflight drive-cleanroom drive-seed drive-log wire-certs \
-        deploy deploy-status deploy-audit
+        deploy deploy-status
 
 # Install location for `make install`. Defaults to the XDG-ish user-local
 # convention; override for system-wide installs or packaging:
@@ -80,7 +80,6 @@ coverage:
 lint:
 	$(MAKE) line-cap
 	$(MAKE) beat-audit
-	$(MAKE) deploy-audit
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
 	$(MAKE) rules-audit
@@ -327,33 +326,33 @@ drive-seed:
 drive-log:
 	@DRIVE_ROOT="$(DRIVE_ROOT)" $(DRIVE) log $(DRIVE_LOG_DIR)
 
-# Seat the deployment on a server: the `yog` user service plus the hourly
-# registry reconciler that keeps it current (bl-bf35). HOST is an ssh
-# destination and the only parameter — no machine is named in this tree.
+# Seat the deployment on a server: build the image here, carry it over the ssh
+# channel, and point the `yog` user service at that exact tag (bl-bf35,
+# containerized in bl-b973, reconciled with this tree in bl-c6e2). HOST is an
+# ssh destination and the only parameter — no machine is named in this tree.
 #
 #   make deploy HOST=myserver
 #
-# This is NOT `make install`. That target builds and seats the binary from this
-# checkout; a server wants no checkout — it installs from the registry, which is
-# also what makes "a new version dropped" an event it can observe.
-# The restart decision the unattended reconciler makes (bl-bf35), checked
-# without a server, a release or an agent. It sits in `lint` beside
-# `beat-audit` and for the same reason: the branch that matters is the one that
-# REFUSES to act, so nothing on a live box ever exercises it on a good day, and
-# a silent regression there kills a conversation rather than reddening a run.
-deploy-audit:
-	@scripts/deploy/yog-update --self-test
-
+# This is NOT `make install`. That target builds and seats a binary from this
+# checkout for the operator's own box; a server takes the image, which is the
+# unit of install and carries its own toolchain pin and its own disclosure gate.
+#
+# **There is no `deploy-audit` and no reconciler.** The hourly one reconciled a
+# cargo-installed BINARY against the crates.io index and read quiescence off
+# the unit's cgroup — both wrong against a container unit, in the direction
+# that acts — so it is retired with the install shape it served (see the head
+# of `scripts/deploy/seat.sh`). An upgrade is this target, run by a human.
 deploy:
 	@[ -n "$(HOST)" ] || { echo "usage: make deploy HOST=<ssh-host>" >&2; exit 2; }
 	@scripts/deploy/seat.sh "$(HOST)"
 
-# What that server is running right now, and what the reconciler last did.
+# What that server is running right now: the unit, and the immutable tag it was
+# pointed at — the box's own answer to "what version is this".
 deploy-status:
 	@[ -n "$(HOST)" ] || { echo "usage: make deploy-status HOST=<ssh-host>" >&2; exit 2; }
-	@ssh "$(HOST)" 'systemctl --user --no-pager --lines=0 status yog.service yog-update.timer; \
-	  echo; systemctl --user list-timers --no-pager yog-update.timer; \
-	  echo; journalctl --user -u yog-update.service --no-pager -n 15'
+	@ssh "$(HOST)" 'systemctl --user --no-pager --lines=0 status yog.service; \
+	  echo; cat "$$HOME/.config/yog/deploy.env" 2>/dev/null | grep ^YOG_IMAGE=; \
+	  echo; journalctl --user -u yog.service --no-pager -n 15'
 
 uninstall:
 	@rm -f "$(INSTALL_BIN)/yog" "$(INSTALL_STAMP)"

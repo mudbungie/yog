@@ -103,9 +103,9 @@ metadata, not a location (DESIGN §3.2). Which workspace a seat is
 looking at is the seat's own state and rides in the gesture; the engine keeps
 no focus. There is no `--repo` flag — the whole roster is the answer.
 
-`make install` builds and seats the binary from your checkout; a server runs it
-under its own unit (`make deploy HOST=<ssh-host>`). The binary links no display
-stack and needs no `apt install` step.
+`make install` builds and seats the binary from your checkout; a server runs
+the image under its own unit (`make deploy HOST=<ssh-host>`). The binary links
+no display stack and needs no `apt install` step.
 
 **No substrate needs installing.** litany, balls and brazen are compiled in, and
 every `litany` / `bl` / `bz` yog runs is yog re-execing itself under that verb
@@ -378,103 +378,85 @@ is `cfg`'d out).
 
 The section above builds `main`'s tip out of a checkout. A server wants none of
 that — a checkout on it would be a second source of truth about what is
-running. So a server installs from **the registry**, which is also what makes
-"a new version dropped" an event it can observe:
+running. **A server runs the image** (see "The image" below): it is the unit of
+install, it carries its own toolchain pin and its own disclosure gate, and it
+lands on the box as one immutable tag.
 
-    make deploy HOST=<ssh-host>          # seat it (idempotent; also the upgrade path)
-    make deploy-status HOST=<ssh-host>   # what it is running, and what the last tick did
+    make deploy HOST=<ssh-host>          # build here, carry it over, seat it
+    make deploy-status HOST=<ssh-host>   # the unit, and the tag it is running
 
 `HOST` is an ssh destination and the only parameter. No machine, address or
 account name is committed anywhere in this tree — that is the leak gate's rule
 and the severability one at once: pointing this at another box is a different
 argument, never an edit.
 
-What gets seated is three units and one script (`scripts/deploy/`):
+**What `make deploy` does, in order.** `make image` builds under the pinned
+toolchain and runs `image-scan`; the result is retagged
+`yog:<version>-<short-commit>`; that tag travels by `save | ssh … load`; the
+unit and one generated environment file are seated; the unit is restarted onto
+the new tag. It refuses a dirty worktree, because the tag names a commit and
+the whole point of an immutable tag is that the box can say what it is running.
+
+**Nothing is pushed to any registry.** The ghcr package publishes only from
+this repo's release workflow at tag time (DESIGN §10.1); a deploy is a stream
+between two boxes and writes to no third place.
+
+What gets seated is one unit and one file (`scripts/deploy/`):
 
 | | |
 |---|---|
-| `yog.service` | a bare `yog` — the engine (DESIGN §8.5, REMOTE §8), `Restart=always`, under the user manager so the world stays the operator's |
-| `yog-update.timer` | hourly, `Persistent=true` |
-| `yog-update.service` | the oneshot the timer runs, niced below the agents it serves |
-| `yog-update` | the reconciler |
+| `yog.service` | `docker run` of the immutable tag, `--network host`, one state mount, `ExecStop=docker stop -t 30`, `Restart=always` — under the user manager, so the world stays the operator's |
+| `~/.config/yog/deploy.env` | generated on the box: `YOG_IMAGE=<the tag>` and the git identity the container commits under |
+
+The tag lives in that file rather than in the unit because the crate version
+has one home and a version typed into a unit is that fact stored twice. The
+git identity lives there because yog's substrate commits and git refuses
+against an identity-less container — `seat.sh` takes it from the deploying
+checkout's own `git config`, so no name is committed to this tree.
 
 Lingering (`loginctl enable-linger`) is enabled by the deploy, and it is
 load-bearing: without it the user manager — and so the engine — stops at
 logout, which presents as "it just stopped overnight".
 
-**The reconciler is two reconciliations, not one procedure**, because they have
-different safety conditions and must be free to happen at different times:
+**The mount is one directory**, `~/.local/share/yog` — the box's real XDG data
+root, exactly where a binary install's world would be — bound to `/state/yog`
+inside the container, plus `~/work` for §8.1's bare-rung cwd. The nesting is
+why it is one and not three; "What mounts where" below is the whole contract.
 
-1. the **installed binary** against the registry's newest live version, and
-2. the **running engine** against the installed binary.
+**The stop is `docker stop`, not a signal to the unit.** DESIGN §8.5's 30 s
+grace is only spent if SIGTERM reaches PID 1 *inside* the container; killing
+the `docker run` client detaches from the container rather than stopping it.
+`TimeoutStopSec` is longer than that grace, or systemd's own kill lands
+mid-window and the grace is decorative.
 
-The first is always safe while the engine runs — an install replaces the file
-by rename, so the running process keeps its own inode — and so it happens
-immediately. The second is not, and that is why this is a script rather than a
-`cargo install && systemctl restart` line.
+**The hourly reconciler is retired** (bl-c6e2), and re-running the deploy
+disables it on a box that still has it. It reconciled a *cargo-installed
+binary* against the crates.io index and read quiescence off the unit's own
+cgroup. Against a container unit both facts are wrong in the direction that
+**acts**: it would see the installed binary differ from what is running and
+restart the unit under it. The reconcile question for an image is "is a newer
+image loaded", and nothing on the box can answer that without a registry to
+poll — which is deliberately not there.
 
-**A restart is deferred while a turn is in flight.** A restart SIGTERMs the
-whole control group. The engine survives that — §4.1 state is write-through and
-there is no `on_exit` hook (bl-b54e) — and so, since the pinned substrate, does
-the conversation: a `litany` turn killed between a tool call and its result
-leaves an unpaired tool-use tail, and litany **settles** it. At the next drive
-boundary, strictly before delivery, every unanswered `tool_use` in the trailing
-assistant window is committed an in-band `is_error` `tool_result` saying the
-executor died — so the tail pairs, the warrant reads `ModelCallDue`, and an
-ordinary deposit revives the branch (litany ARCH §6 crash settlement, upstream
-bl-4187, consumed here in bl-4c1f; `src/prompt/dispatch/advance/crash.rs` in the
-current pin, idempotent because the answered ids are read back out of the
-transcript rather than a cursor). The graceful exit settles its own window the
-same way on the way out (§2.9). The one shape settlement cannot repair — a
-`tool_use` already buried behind a delivered message, which positional pairing
-cannot fix by appending — is unreachable from a restart, because delivery runs
-strictly after settlement.
+So an upgrade is `make deploy`, run by a human, and the restart it performs is
+unconditional. That is a real loss and worth naming: the retired reconciler
+**deferred** a restart while a turn was in flight, because an unattended timer
+cannot know whether it is interrupting anything. A deploy can — there is a
+person at the keyboard who chose the moment. What a killed turn costs is
+unchanged: the tools in flight die, their side effects stand, and the next
+model call is paid again to re-derive from a window of error results. The
+conversation itself survives, because the pinned litany settles the unpaired
+tool-use tail at the next drive boundary (ARCH §6 crash settlement, upstream
+bl-4187, consumed here in bl-4c1f), so an ordinary deposit revives the branch.
 
-**What a killed turn costs is the work in flight and the spend that bought it.**
-The tools that were running die mid-execution, whatever side effects they had
-already performed stand, and the next model call is paid again to re-derive from
-a window of error results. That is the reason to defer, and stating it correctly
-is the point: a mechanism defended by a claim that stopped being true is one
-audit away from being deleted by the reader who checks the claim.
-
-**Quiescence is read, not asked for.** The substrate is linked in-process
-(§16.7) and the engine's concurrency is threads, so an idle yog engine is
-exactly one process and a turn in flight is a child in the same cgroup. The
-service cgroup's process count is therefore the predicate, and it needs no
-yog-side API, no new gesture and no field on the model.
-
-Nothing is stored. Which version is installed is the binary's own `--version`;
-whether a restart is pending is the running `/proc/<pid>/exe` inode differing
-from the installed one — a kernel fact, so a hand install or a hand restart
-needs no reconciling. An unreadable fact defers rather than acts.
-
-The decision is a pure function of those three facts and is checked by
-`make deploy-audit` (wired into `make lint`, and run again by the deploy before
-it touches a host). It is in the gate for the same reason `beat-audit` is: the
-branch that matters is the one that **refuses** to act, so nothing on a live box
-exercises it on a good day, and a silent regression there costs a conversation
-rather than reddening a run.
-
-**A release that cannot start is recovered without logging in.** `Restart=always`
-alone would hide one: systemd's default start limit never trips at a 5s restart
-delay, so a crash-loop presents as "running" forever. The unit therefore fails
-after five starts in five minutes, and the reconciler treats a *failed* unit as
-its own case — there is no turn to protect, and no point retrying the version
-that just failed, so it acts only when a version the unit has not run is
-available. Together with the lever below, that is a complete unattended
-recovery: yank the bad release and the box puts the previous one back and starts
-it.
-
-**Yanking is the rollback lever.** The reconciler resolves the newest *live*
-version from the sparse index rather than letting `cargo install` decide, and
-installs it with an explicit `--version`, so a yanked bad release is picked up
-as a difference on the next tick and the previous version goes back on.
-
-Two consequences worth knowing. A box that is never quiescent never restarts —
-correct, but it means a long-running turn can hold an update for hours; the
-journal says so on every tick, and `systemctl --user restart yog.service` is the
-override. And the deferral is coarse: any child in the cgroup counts, so a
-transient spawn can cost one tick.
+**A release that cannot start is visible rather than hidden.** A user unit
+cannot order against the container daemon, which is a system unit, so the unit
+expresses that ordering as patience — twenty starts five seconds apart, a
+~100 s window in which the daemon can finish coming up after a reboot — and
+past it the unit enters `failed`, where `make deploy-status` shows it. That
+window is wider than a crash-loop detector wants; the trade is deliberate,
+since the boot race happens on every reboot while a bad build is caught by
+`make image` before a byte reaches the box.
 
 ### The image
 

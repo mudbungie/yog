@@ -1,56 +1,93 @@
-# The yog engine as a user service (DESIGN §8.5, REMOTE §8, §12): a bare `yog`
-# IS the engine — the world converged, the derivation worker and watch bridge
-# up, the gestures-inbox consumer answering deposits and the §9.5 wire listener
-# answering seats. It was `yog serve` until bl-7942, when the window left the
-# crate and the verb stopped naming anything: there is one face, so it needs no
-# word to select it.
+# The yog engine as a CONTAINER user service (DESIGN §8.5, §10.1; REMOTE §8,
+# §12) — the unit `scripts/deploy/seat.sh` seats, and the one shape the
+# deployment box runs since the bl-b973 cutover.
 #
-# User-level and not system-level, because the world is the operator's: it
-# resolves under `$XDG_DATA_HOME/yog/world` (§16.2), and a system unit would
-# either run as another user or need that path hard-coded. `%h` keeps this file
+# It runs the OCI image `Containerfile` builds. The image is the unit of
+# install and nothing more (README "The image"): no state lives in a layer, and
+# the XDG root is the runtime contract, mounted in below. Nothing here seeds
+# anything — the engine founds what it finds missing on its own boot, into the
+# mount.
+#
+# **The image is named by `%h/.config/yog/deploy.env`, which `seat.sh` writes.**
+# The tag has one home and it is not this file: a version typed into a unit is
+# the crate version stored twice. `YOG_IMAGE` is an IMMUTABLE
+# `yog:<version>-<short-commit>` tag, never a moving `latest`, so the box can
+# always say what it is running and a rebuild cannot silently change it under a
+# unit that was never restarted. That file also carries the git identity below.
+#
+# User-level and not system-level, because the world is the operator's: the
+# mounted data root is `%h/.local/share/yog` — the box's real XDG data root,
+# exactly where a binary install's world would be — and `%h` keeps this file
 # free of any account name.
 #
-# Requires lingering (`loginctl enable-linger`) or the manager — and so the
-# engine — stops at logout. `scripts/deploy/seat.sh` enables it.
+# Requires lingering (`loginctl enable-linger`) or the manager, and so the
+# engine, stops at logout. `seat.sh` enables it.
 [Unit]
-Description=yog engine
+Description=yog engine (container)
 Documentation=https://github.com/mudbungie/yog
 # The engine dials nothing at boot, but its agents do.
 After=network-online.target
 Wants=network-online.target
-# `Restart=always` below must not hide a release that cannot start. Systemd's
-# defaults (5 starts per 10s) never trip at a 5s restart delay, so a crash-loop
-# would present as "running" forever and the reconciler would see a live pid.
-# Five failures in five minutes is a broken version, not a blip: enter `failed`
-# and let it be seen — and let the reconciler try the next version over it.
-StartLimitIntervalSec=5min
-StartLimitBurst=5
+# **A user unit cannot order against the container daemon**, which is a SYSTEM
+# unit: `After=docker.service` is unresolvable from here. So the ordering is
+# expressed as patience instead — twenty starts five seconds apart is a ~100 s
+# window in which the daemon can finish coming up after a reboot, and past that
+# the unit enters `failed` where it can be seen.
+#
+# That window is wider than the binary unit's five-in-five-minutes, and it
+# costs the crash-loop detection that limit was for: a release that cannot
+# start now retries for a hundred seconds before it stops. The trade is
+# deliberate — the boot race is real and happens on every reboot, while the bad
+# release is caught by `make image`'s own build and scan before a byte reaches
+# the box.
+StartLimitIntervalSec=100s
+StartLimitBurst=20
 
 [Service]
 Type=simple
-ExecStart=%h/.cargo/bin/yog
+EnvironmentFile=%h/.config/yog/deploy.env
+# The engine is PID 1 inside the container and `docker run` is a client of the
+# daemon, so a stale container from a hard kill would take the name and refuse
+# the next start. Clearing it is `-`-prefixed: there is usually nothing there.
+ExecStartPre=-/usr/bin/docker rm -f yog
+# `--network host`, because the §9.5 listener binds what `wire/address` names
+# and a bridge namespace does not hold that address.
+#
+# `--user`, because the mount is the operator's own files and must stay so —
+# a root-owned world inside a user's data root is a mess only root can undo.
+#
+# ONE state mount (README "What mounts where"): the image sets
+# `XDG_DATA_HOME=/state`, so yog's data root is `/state/yog` and that single
+# directory holds the nested world, the workspaces and the wire material. The
+# work dir beside it is only §8.1's bare-rung cwd, and it is a mount so work on
+# a checkout outlives the container.
+#
+# The git identity is passed by NAME, not by value: the values live in the
+# environment file above, so this file states no identity and the box states
+# it once. yog's substrate commits, and git refuses against an identity-less
+# container.
+ExecStart=/usr/bin/docker run --rm --name yog \
+    --network host \
+    --user %U:%G \
+    -v %h/.local/share/yog:/state/yog \
+    -v %h/work:/work \
+    -e GIT_AUTHOR_NAME -e GIT_AUTHOR_EMAIL \
+    -e GIT_COMMITTER_NAME -e GIT_COMMITTER_EMAIL \
+    ${YOG_IMAGE}
 # A bare `yog` parks until a signal (main.rs). A crash is a defect, not a state
 # to sit in: come back and keep converging.
 Restart=always
 RestartSec=5s
-# The grace a stop actually spends (DESIGN §8.5, bl-269a). The engine catches
-# SIGTERM now: the face's loop ends, the Engine drops, each thread finishes its
-# pass and joins, and every piped child gets Stream's polite SIGTERM-then-
-# SIGKILL instead of dying with the process. yog states no deadline of its own —
-# this is it, and the kernel's SIGKILL at the end of it is the only bound that
-# cannot be out-waited. Until bl-269a nothing used this window at all: `yog
-# serve` parked with the default disposition and was killed where it stood.
-#
-# The control-group kill still reaches a running turn beside yog, which is what
-# a deliberate stop should do — the detached `litany` driver takes its own copy
-# of this SIGTERM and settles its unanswered tool window on the way out.
-TimeoutStopSec=30s
-# The engine shells out for two things it links no library for: `openssl`, for
-# the REMOTE §8 certificate mint its boot performs when a box has none, and
-# `git`, under the embedded balls substrate. A systemd user unit does not
-# inherit a login shell's PATH, so both are named here along with the install
-# root the binary itself lives in.
-Environment=PATH=%h/.cargo/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+# The grace a stop actually spends (DESIGN §8.5, bl-269a) — and it is spelled
+# as `docker stop` rather than left to systemd because SIGTERM has to reach PID
+# 1 INSIDE the container. Killing the `docker run` client does not stop the
+# container; it detaches from it. The engine catches that SIGTERM: the loop
+# ends, the Engine drops, each thread joins, and every piped child gets
+# Stream's polite SIGTERM-then-SIGKILL instead of dying with the process.
+ExecStop=/usr/bin/docker stop -t 30 yog
+# Longer than the 30 s above, or systemd's own kill lands mid-grace and the
+# window is decorative.
+TimeoutStopSec=45s
 
 [Install]
 WantedBy=default.target

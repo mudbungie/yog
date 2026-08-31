@@ -1180,7 +1180,8 @@ spawns; and `yog wire-certs`, the operator's mint (below).
 stood beside it; with one face the word selects nothing, and two spellings of
 one face are two facts — which is the same reasoning that renamed `headless` to
 `serve` in the first place (below). An operator's systemd unit runs the bare
-binary (`scripts/deploy/yog.service`).
+binary — since the bl-b973 cutover, inside the OCI image
+(`scripts/deploy/yog.service` is a `docker run` unit).
 
 > **Until bl-0716 (landed):** one crate, one multi-call binary. `yog serve`
 > runs the engine (the former `headless` boot plus the wire listener); bare
