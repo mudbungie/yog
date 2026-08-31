@@ -68,17 +68,42 @@ fn perform_maps_each_outcome_to_its_exit() {
     assert_eq!(perform(Outcome::Exec(cmd)), 1);
 }
 
-/// The injection's per-process context (REMOTE §5, bl-c907): `advance` names
-/// the agent it drives, so its loaded set is declared; every other verb names
-/// none — `prompt` and `dispatch` *mint* their agent, and an agent that does
-/// not exist yet has loaded nothing.
+/// The injection reads no verb at all (bl-fd24): the driven agent is the
+/// seam's own per-assembly fact since litany bl-ddaa, so a `prompt` driver —
+/// whose verb mints its agent and whose argv names none — declares an
+/// identical set to a resumed `advance` driver of the same agent. Before
+/// this, the binding read `(workspace, agent)` off its own argv, the minting
+/// verbs answered `None`, and the conversation's first driver could load but
+/// never call.
 #[test]
-fn driving_names_an_agent_only_for_the_driver_verb() {
-    let advance = parse(&args(&["advance", "/w/home", "dulcet-mongoose"])).unwrap();
-    assert_eq!(
-        driving(&advance.command),
-        Some(("home".to_owned(), "dulcet-mongoose".to_owned()))
+fn the_minting_verb_and_the_naming_verb_declare_one_set() {
+    use ::litany::cmd::ToolInjection as _;
+    let root = tempfile::TempDir::new().expect("tmp");
+    crate::tool_host::loaded::add(
+        root.path(),
+        "home",
+        "dulcet-mongoose",
+        &[crate::tool_host::loaded::Entry {
+            client: "laptop".to_owned(),
+            tool: crate::registry::tools::Tool {
+                name: "Bash".to_owned(),
+                description: "run a command".to_owned(),
+                input_schema: serde_json::json!({"type": "object"}),
+            },
+        }],
+    )
+    .expect("seed the loaded set");
+    let injection = crate::tool_host::Injection::new(
+        root.path().to_path_buf(),
+        root.path().join("no-front-door"),
+        crate::tool_host::ask::Budget::default(),
+        crate::tool_host::remote::patience(),
+        std::sync::Arc::new(SystemClock),
     );
-    let prompt = parse(&args(&["prompt", "/w/home", "hello"])).unwrap();
-    assert_eq!(driving(&prompt.command), None);
+    let names: Vec<String> = injection
+        .tools(Path::new("/w/home"), "dulcet-mongoose")
+        .into_iter()
+        .map(|t| t.name)
+        .collect();
+    assert_eq!(names, vec!["clients".to_owned(), "laptop_Bash".to_owned()]);
 }

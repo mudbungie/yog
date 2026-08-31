@@ -21,25 +21,19 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 use tempfile::TempDir;
 
-fn injection(root: &Path, driving: Option<(String, String)>) -> Injection {
-    at(root, root.join("no-such-front-door"), impatient(), driving)
+fn injection(root: &Path) -> Injection {
+    at(root, root.join("no-such-front-door"), impatient())
 }
 
 /// An injection with every knob named — the front door it re-enters for an
 /// engine act, and the budget both its waits are bounded by.
-fn at(
-    root: &Path,
-    driver_target: PathBuf,
-    budget: ask::Budget,
-    driving: Option<(String, String)>,
-) -> Injection {
+fn at(root: &Path, driver_target: PathBuf, budget: ask::Budget) -> Injection {
     Injection::new(
         root.to_path_buf(),
         driver_target,
         budget,
         budget,
         FakeClock::new().arc(),
-        driving,
     )
 }
 
@@ -57,6 +51,7 @@ macro_rules! call {
             input: $input,
             workspace: $workspace,
             agent: "dulcet-mongoose",
+            cwd: $workspace,
             stop: $stop,
         }
     };
@@ -90,13 +85,13 @@ fn an_answer_is_dated_at_the_instant_it_was_read() {
     assert_eq!(s.observed(), "2026-08-02 00:24:26Z");
 }
 
-/// The `clients` tool is in the prefix always, and it is the whole prefix when
-/// the verb names no agent — which is what a conversation with no loads reads
-/// as too, so there is one shape, not two.
+/// The `clients` tool is in the prefix always, and it is the whole prefix for
+/// an agent with no loads — a fresh conversation's shape, whatever verb fired
+/// its driver (bl-fd24).
 #[test]
 fn the_clients_tool_is_declared_on_every_request() {
     let root = TempDir::new().expect("tmp");
-    let declared = injection(root.path(), None).tools();
+    let declared = injection(root.path()).tools(Path::new("/w/home"), "dulcet-mongoose");
     assert_eq!(declared.len(), 1);
     assert_eq!(declared[0].name, clients::NAME);
     assert_eq!(
@@ -122,8 +117,7 @@ fn a_loaded_tool_is_declared_under_its_own_name() {
     )
     .expect("loaded");
 
-    let driving = Some(("home".to_owned(), "dulcet-mongoose".to_owned()));
-    let declared = injection(root.path(), driving).tools();
+    let declared = injection(root.path()).tools(Path::new("/w/home"), "dulcet-mongoose");
     assert_eq!(
         declared.iter().map(|t| t.name.clone()).collect::<Vec<_>>(),
         vec![clients::NAME.to_owned(), "laptop_Bash".to_owned()]
@@ -147,7 +141,7 @@ fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
     let door = front_door(root.path(), "printf compacted");
     let input = json!({});
     let stop = AtomicBool::new(false);
-    let live = at(root.path(), door, budget(), None);
+    let live = at(root.path(), door, budget());
 
     let refused = live.route(call!("Read", &input, &stop));
     assert_eq!(refused.exit_code, 1);
@@ -181,7 +175,7 @@ fn a_clients_op_answers_as_a_zero_exit_capture() {
     let input = json!({"op": "list"});
     let stop = AtomicBool::new(false);
     let capture =
-        at(root.path(), PathBuf::new(), budget(), None).route(call!(clients::NAME, &input, &stop));
+        at(root.path(), PathBuf::new(), budget()).route(call!(clients::NAME, &input, &stop));
     handle.join().expect("engine");
 
     assert_eq!(capture.exit_code, 0);
@@ -204,7 +198,7 @@ fn a_refusal_is_an_in_band_non_zero_capture() {
     let root = TempDir::new().expect("tmp");
     let input = json!({"op": "nope"});
     let stop = AtomicBool::new(false);
-    let capture = injection(root.path(), None).route(call!(clients::NAME, &input, &stop));
+    let capture = injection(root.path()).route(call!(clients::NAME, &input, &stop));
     assert_eq!(capture.exit_code, 1);
     assert!(capture.stdout.is_empty());
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();

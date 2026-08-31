@@ -92,8 +92,13 @@ deny = [
 
 [sources]
 # Every crate must come from a known registry (crates.io) — no unvetted
-# registries and no ad-hoc git sources. There is no `allow-git` list: the
-# embedded substrate crates (DESIGN §16.7 — W8 balls, W10 brazen, W11 litany)
-# are exact registry pins (`=x.y.z`) since bl-89a4, so yog's whole graph comes
-# from crates.io and `cargo publish` is unblocked. Nothing goes back on this
-# list; a git dep is not the shape any more.
+# registries and no ad-hoc git sources. The embedded substrate crates (DESIGN
+# §16.7 — W8 balls, W10 brazen, W11 litany) are exact registry pins (`=x.y.z`)
+# since bl-89a4.
+#
+# ONE interim exception is in force (bl-fd24, the §16.7 phase-2 shape): litany
+# rides an exact `git`/`rev` pin while its bl-ddaa injection-seam amendment is
+# unpublished. The named exit — litany's next registry release — deletes this
+# entry and Cargo.toml's git half together; `make publish` is re-blocked until
+# then, knowingly.
+allow-git = ["https://github.com/mudbungie/litany"]

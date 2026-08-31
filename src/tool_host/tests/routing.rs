@@ -33,7 +33,7 @@ fn a_loaded_remote_name_is_routed_and_its_capture_comes_back() {
     let input = json!({"command": "ls"});
     let stop = AtomicBool::new(false);
     let capture =
-        at(root.path(), PathBuf::new(), budget(), None).route(call!("laptop_Bash", &input, &stop));
+        at(root.path(), PathBuf::new(), budget()).route(call!("laptop_Bash", &input, &stop));
     handle.join().expect("engine");
 
     assert_eq!(capture.exit_code, 3, "the far machine's verdict, verbatim");
@@ -69,7 +69,7 @@ fn an_engine_that_never_answers_refuses_in_band() {
 
     let input = json!({"command": "ls"});
     let stop = AtomicBool::new(false);
-    let capture = injection(root.path(), None).route(call!("laptop_Bash", &input, &stop));
+    let capture = injection(root.path()).route(call!("laptop_Bash", &input, &stop));
     assert_eq!(capture.exit_code, 1);
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();
     assert!(said.starts_with("laptop_Bash: "), "{said}");

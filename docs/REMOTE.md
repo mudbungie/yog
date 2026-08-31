@@ -913,6 +913,18 @@ operating branch at a moment the miss is already inevitable. Nothing here
 defers, and nothing here should: a deferred unload whose queue does not yet
 exist would be an unload that silently did not happen.
 
+**The loaded set is declared for the driven agent, per assembly** (bl-fd24;
+litany bl-ddaa). litany's seam asks `tools()` *for* an agent — the same
+`workspace`/`agent` discriminants every routed call carries — so the injection
+reads that agent's loaded document whatever verb fired the driver. Before the
+amendment the binding read the pair off its own argv, `prompt` (which mints
+its agent) answered none, and a conversation's first driver declared only the
+`clients` tool for its whole drive: it could load — the load answered
+"callable from the next step on" — and could never call, because the grant
+gate enumerates exactly what `tools()` declared. The control that proved it:
+the same conversation's identical load worked first try when a deposit resumed
+it under a verb that named the agent.
+
 **Where the injection runs, and what it may touch.** It is installed by the
 `yog litany` arm (DESIGN §16.7 W11) at `Fx::tool_injection`, which puts it
 inside the **driver** — a child process, not the engine. Two consequences, both

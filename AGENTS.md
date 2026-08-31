@@ -128,16 +128,18 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    the authority for which ones and why — no advisory, count or rationale is
    restated here**, an entry that stops matching being a warning telling you to
    drop it. **Zero new dependencies without explicit user approval.**
-   Sources are **registry-only, with no exception in force**: since
-   bl-89a4 all three embedded substrate crates (`balls`, `brazen`, `litany`)
-   are plain crates.io pins — **`Cargo.toml` is the pin authority and no
-   version is restated here**, the restatement having gone stale once already —
-   `deny.toml` has no `allow-git` list, and `make publish` works. The phase-2
-   ruling (DESIGN §16.7) still permits ONE interim exception — an embedded substrate crate
-   pinned `version = "=x.y.z"` **plus** an exact `git`/`rev` while an upstream
-   publish is in flight — but taking it re-blocks `make publish` (crates.io
-   refuses git deps) and re-exposes yog to a rewritten upstream history
-   orphaning the rev, so it is a last resort with a named exit. The pin must
+   Sources are **registry-only, with ONE interim exception in force**
+   (bl-fd24, the phase-2 shape DESIGN §16.7 permits): `litany` rides an exact
+   `version = "=x.y.z"` **plus** `git`/`rev` pin while its bl-ddaa
+   injection-seam amendment awaits a registry release. **`Cargo.toml` is the
+   pin authority and no version is restated here**, the restatement having
+   gone stale once already; `deny.toml` carries the matching one-entry
+   `allow-git` list, and both state the NAMED EXIT — litany's next registry
+   release flips the pin back and deletes the entry. Until then
+   `make publish` is re-blocked (crates.io refuses git deps) and yog is
+   exposed to a rewritten upstream history orphaning the rev — known,
+   accepted, interim. `balls` and `brazen` stay plain crates.io pins
+   (bl-89a4), and the exception is a last resort, never the shape. The pin must
    always be exact and lockfile-fixed; a `path` dependency is never lawful.
 
 7. **`Mutex`/`RwLock` only in `src/state.rs`; no `Rc`/`RefCell` anywhere. yog

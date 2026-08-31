@@ -117,14 +117,6 @@ pub struct Injection {
     budget: ask::Budget,
     patience: ask::Budget,
     clock: Arc<dyn Clock>,
-    /// The `(workspace, agent)` this driver process was launched to drive, when
-    /// its verb names one. [`ToolInjection::tools`] has no call to read them
-    /// off — the seam is per-process, not per-agent (litany's §7) — so the
-    /// binding reads them out of its own argv and hands them over. A verb that
-    /// names no agent (`prompt`, which mints one, and every operator verb)
-    /// declares the `clients` tool and nothing else, which is exactly what a
-    /// conversation with no loads reads as.
-    driving: Option<(String, String)>,
 }
 
 impl Injection {
@@ -138,7 +130,6 @@ impl Injection {
         budget: ask::Budget,
         patience: ask::Budget,
         clock: Arc<dyn Clock>,
-        driving: Option<(String, String)>,
     ) -> Self {
         Self {
             state_root,
@@ -146,7 +137,6 @@ impl Injection {
             budget,
             patience,
             clock,
-            driving,
         }
     }
 
@@ -219,19 +209,26 @@ fn routed(site: &Site, entry: &loaded::Entry, call: &RoutedCall<'_>) -> RoutedCa
 impl ToolInjection for Injection {
     /// The `clients` tool, always, plus this agent's loaded set — read off
     /// disk, so assembly never waits on an engine and never varies with one.
-    fn tools(&self) -> Vec<InjectedTool> {
+    ///
+    /// **The driven agent is the seam's own fact since litany bl-ddaa**
+    /// (yog bl-fd24): assembly asks *for* an agent, and the answer is that
+    /// agent's document — so a `prompt` driver, whose verb mints its agent
+    /// and whose argv therefore names none, declares its loads exactly as a
+    /// resumed driver does. Before the amendment this read a
+    /// binding-supplied `(workspace, agent)` that was `None` for every
+    /// minting verb, and the conversation's whole first driver could load
+    /// but never call.
+    fn tools(&self, workspace: &Path, agent: &str) -> Vec<InjectedTool> {
         let mut out = vec![declaration()];
-        if let Some((workspace, agent)) = &self.driving {
-            out.extend(
-                loaded::read(&self.state_root, workspace, agent)
-                    .into_iter()
-                    .map(|entry| InjectedTool {
-                        name: entry.presented(),
-                        input_schema: entry.tool.input_schema,
-                        description: Some(entry.tool.description),
-                    }),
-            );
-        }
+        out.extend(
+            loaded::read(&self.state_root, &crate::naming::leaf(workspace), agent)
+                .into_iter()
+                .map(|entry| InjectedTool {
+                    name: entry.presented(),
+                    input_schema: entry.tool.input_schema,
+                    description: Some(entry.tool.description),
+                }),
+        );
         out
     }
 

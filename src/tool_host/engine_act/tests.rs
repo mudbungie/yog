@@ -24,6 +24,7 @@ macro_rules! act {
             input: $input,
             workspace: $workspace,
             agent: "dulcet-mongoose",
+            cwd: $workspace,
             stop: $stop,
         }
     };
@@ -101,7 +102,6 @@ fn an_engine_act_never_reaches_an_enrolled_thralls_mailbox() {
         budget(),
         budget(),
         FakeClock::new().arc(),
-        Some(("home".to_owned(), "dulcet-mongoose".to_owned())),
     )
     .route(act!("mark_for_deletion", root.path(), &input, &stop));
 

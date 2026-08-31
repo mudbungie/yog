@@ -162,7 +162,16 @@ clap = { version = "4", features = ["derive"] }
 # `brazen =0.0.6`, the same exact version yog pins, so exactly ONE brazen
 # resolves — skew death is structural otherwise (§16.7). The two pins move
 # TOGETHER, in one change, for that reason.
-litany = "=0.0.2"
+# INTERIM git pin (the one §16.7 phase-2 exception, taken by bl-fd24 with the
+# named exit recorded here): the injection-seam amendment litany bl-ddaa —
+# `tools(workspace, agent)` and `RoutedCall::cwd`, the two facts bl-fd24 and
+# bl-77be stand on — is on litany's main and not yet on the registry. The pin
+# is exact and lockfile-fixed (`rev`, never a branch); the EXIT is litany's
+# next registry release: when it publishes, this line goes back to
+# `litany = "=x.y.z"`, deny.toml's `allow-git` entry is deleted with it, and
+# `make publish` is unblocked again (crates.io refuses git deps — known,
+# accepted for the interim).
+litany = { version = "=0.0.3", git = "https://github.com/mudbungie/litany.git", rev = "7dc45a68c1bbaa4311aeec19c7de73fe33c31db4" }
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

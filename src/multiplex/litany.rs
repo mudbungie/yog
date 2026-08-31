@@ -28,7 +28,7 @@ use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use ::litany::cmd::{self, Command, Fx, Outcome, prelude};
+use ::litany::cmd::{self, Fx, Outcome, prelude};
 use clap::Parser as _;
 
 use crate::cli_outbound::{Binary, Cli};
@@ -88,7 +88,6 @@ pub(super) fn run(args: &[String]) -> i32 {
         tool_host::ask::Budget::default(),
         tool_host::remote::patience(),
         Arc::new(SystemClock),
-        driving(&cli.command),
     );
     // Stdio is locked for the whole verb (the `tool` verb writes raw bytes into
     // it) and released before the outcome is performed — holding the lock
@@ -122,21 +121,6 @@ fn parse(args: &[String]) -> Result<cmd::Cli, i32> {
         let _ = e.print();
         e.exit_code()
     })
-}
-
-/// The `(workspace name, agent id)` this invocation drives, when its verb names
-/// one (REMOTE §5, bl-c907). `advance` is the driver verb and the only one that
-/// names an existing agent; `prompt` and `dispatch` *mint* their agent, and an
-/// agent that does not exist yet has loaded nothing — so `None` is the honest
-/// answer rather than a case. It feeds
-/// [`Injection::tools`](crate::tool_host::Injection), which the seam gives no
-/// per-call context (litany's `docs/DESIGN_TOOL_INJECTION.md` §7: the injection
-/// is per-process, not per-agent).
-fn driving(command: &Command) -> Option<(String, String)> {
-    match command {
-        Command::Advance(args) => Some((crate::naming::leaf(&args.workspace), args.agent.clone())),
-        _ => None,
-    }
 }
 
 /// Converge the world's `litany`/`bz` re-exec shims and return them as the
