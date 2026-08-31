@@ -295,6 +295,20 @@
       ],
       "since": 1
     },
+    "reply/enrolled": {
+      "signature": [
+        "/address:string",
+        "/ca:string",
+        "/cert:string",
+        "/grade:string",
+        "/key:string",
+        "/kind:string",
+        "/name:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
     "reply/fanned": {
       "signature": [
         "/kind:string",
@@ -1056,6 +1070,16 @@
     },
     "request/disband": {
       "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/enroll": {
+      "signature": [
+        "/grade:string",
+        "/name:string",
         "/op:string",
         "/workspace:string",
         ":object"

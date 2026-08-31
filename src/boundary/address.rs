@@ -81,6 +81,7 @@ impl Action {
             | Action::ClearTrail
             | Action::ApplyConfig { .. }
             | Action::Advertise { .. }
+            | Action::Enroll(_)
             | Action::Route(_)
             | Action::PickModel { .. } => None,
         }

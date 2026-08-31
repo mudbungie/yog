@@ -85,6 +85,10 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "trail-cleared" => Ok(Reply::TrailCleared),
         "applied" => Ok(Reply::Applied),
         "advertised" => Ok(Reply::Advertised),
+        // The QR envelope's payload (bl-f4e3), strict on all six: a seat that
+        // read five of them and defaulted the sixth would draw a code that
+        // cannot dial, or one whose grade nobody asked for.
+        super::encode::ENROLLED => enrolled(o),
         // The routing leg's asking side (bl-024b): the handle always, the
         // capture only once there is one — `opt_val` is what makes "absent"
         // and "answered nothing" two readings rather than one.
@@ -131,6 +135,20 @@ fn outcome(o: &Map<String, Value>) -> Result<Reply, String> {
         exit,
         stdout: str_of(o, "stdout")?,
         stderr: str_of(o, "stderr")?,
+    }))
+}
+
+/// One enrollment's material, read back (bl-f4e3). The grade goes through the
+/// registry's own table, so an unknown word refuses here exactly as it refuses
+/// in the gesture that asked for it.
+fn enrolled(o: &Map<String, Value>) -> Result<Reply, String> {
+    Ok(Reply::Enrolled(crate::registry::enroll::Enrolled {
+        grade: crate::boundary::codec::grade_of(&str_of(o, "grade")?)?,
+        name: str_of(o, "name")?,
+        address: str_of(o, "address")?,
+        ca: str_of(o, "ca")?,
+        cert: str_of(o, "cert")?,
+        key: str_of(o, "key")?,
     }))
 }
 

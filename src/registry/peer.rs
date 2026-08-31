@@ -36,6 +36,13 @@ use crate::registry::Client;
 /// authorities for one fact.
 pub const FOOT: &str = "foot";
 
+/// The other grade's word — spelled only where a grade is *said*: the
+/// enrollment envelope, its line, and its reply (REMOTE §1.4 as amended,
+/// bl-f4e3). It is deliberately not what the mint writes into a subject:
+/// operator grade is the **absence** of `OU=foot`, which is what
+/// default-operator means, so a certificate never carries this word.
+pub const OPERATOR: &str = "operator";
+
 /// The one sentence a refused foot earns — **in band and naming the grade**,
 /// never absent-shaped. §4's absence rule exists so a scoped caller cannot map
 /// what it is not registered in; a foot asking for the board learns nothing
@@ -69,6 +76,33 @@ impl Grade {
                     Action::Advertise { .. } | Action::Route(super::mailbox::Verb::Complete(_))
                 ) | Gesture::Ask(Query::Invocations)
             ),
+        }
+    }
+
+    /// This grade's one word (bl-f4e3) — the token the enrollment envelope, its
+    /// line and its reply all carry. [`of`](Self::of) is its exact inverse, the
+    /// `Ruling::word`/`of` pair's shape: a match is the compile gate and a
+    /// table is the parser, and one vocabulary serves every serialization.
+    ///
+    /// `pub(crate)` for `Ruling::word`'s reason exactly (AGENTS.md rule 2): a
+    /// `pub fn` may not hand back a borrow, and the honest demotion is cheaper
+    /// than cloning a `&'static str` to own it.
+    pub(crate) fn word(self) -> &'static str {
+        match self {
+            Self::Operator => OPERATOR,
+            Self::Foot => FOOT,
+        }
+    }
+
+    /// The grade a word names, or `None` — an unknown token is refused by its
+    /// reader, never rounded to a default. Rounding down would demote a seat
+    /// silently and rounding up would promote a foot, and §4.2 forbids the
+    /// second outright.
+    pub(crate) fn of(word: &str) -> Option<Self> {
+        match word {
+            OPERATOR => Some(Self::Operator),
+            FOOT => Some(Self::Foot),
+            _ => None,
         }
     }
 }

@@ -164,6 +164,10 @@ pub enum Reply {
     /// said twice — the [`Applied`](Self::Applied) shape. Whether the write
     /// actually touched the file is an optimization, not an answer.
     Advertised,
+    /// **One device enrolled** (REMOTE §8.4, bl-f4e3): the QR envelope's whole
+    /// payload, and the only moment the minted key exists off the device it is
+    /// for — [`enroll::Enrolled`](crate::registry::enroll::Enrolled)'s fields.
+    Enrolled(crate::registry::enroll::Enrolled),
     /// **One routed invocation, and its capture if it has one yet** (REMOTE §5,
     /// bl-024b) — the answer to all three gestures of the routing leg's asking
     /// side, because they are one subject at three moments: `invoke` has just

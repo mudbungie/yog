@@ -202,3 +202,9 @@ pub fn window() -> Client {
 pub mod peer;
 
 pub use peer::{Grade, Peer};
+
+/// **Enrollment's two values** (REMOTE §1.4 as amended, §4.2; bl-f4e3) — what
+/// an operator asks for when a device joins, and what the engine answers with.
+///
+/// Declared at the bottom beside [`peer`] and [`mailbox`], for their reason.
+pub mod enroll;

@@ -100,6 +100,21 @@ fn spell_action(action: &Action) -> String {
         Action::Advertise { tools } => {
             format!("/advertise {}", crate::registry::tools::encode(tools))
         }
+        // REMOTE §1.4's enrollment (bl-f4e3). The workspace is the seat's, as
+        // `/marks`' is; the name is stated because nothing on this side holds
+        // it; and operator grade spells **bare**, because that is what
+        // default-operator means at a keyboard (§4.2).
+        Action::Enroll(request) => match request.grade {
+            crate::registry::Grade::Operator => {
+                format!("/{} {}", crate::boundary::codec::ENROLL, request.name)
+            }
+            grade @ crate::registry::Grade::Foot => format!(
+                "/{} {} {}",
+                crate::boundary::codec::ENROLL,
+                request.name,
+                grade.word()
+            ),
+        },
         Action::Route(verb) => spell_route(verb),
     }
 }

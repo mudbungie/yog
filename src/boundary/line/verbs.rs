@@ -229,3 +229,37 @@ pub(super) fn fleet(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, St
     };
     Ok(act(Action::Fleet(gesture)))
 }
+
+/// `/enroll <common-name> [foot]` — REMOTE §1.4's enrollment, typed (bl-f4e3).
+///
+/// The common name is the one fact no seat's context holds: it names a machine
+/// that has never connected, so nothing on this side can have it selected. The
+/// workspace it seats the new client in is the seat's own, exactly as
+/// `/marks`' and `/clients`' are.
+///
+/// **Bare is operator grade** (§4.2's default-operator, made typable): there is
+/// one word to add and adding it is the demotion, so no spelling can promote a
+/// foot by accident. The word itself is the registry's own — `foot`, and
+/// `operator` said outright is lawful and spells back bare — and anything else
+/// refuses naming the token rather than rounding to either grade.
+pub(super) fn enroll(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    let (name, rest) = args::first_word(tail);
+    if name.is_empty() {
+        return Err(format!(
+            "/{verb}: the common name the device's certificate will carry is required — \
+             /{verb} <common-name> [{}]",
+            crate::registry::peer::FOOT
+        ));
+    }
+    let grade = match args::optional_word(&rest, verb)? {
+        None => crate::registry::Grade::default(),
+        Some(word) => {
+            crate::boundary::codec::grade_of(&word).map_err(|e| format!("/{verb}: {e}"))?
+        }
+    };
+    Ok(act(Action::Enroll(crate::registry::enroll::Request {
+        workspace: args::workspace(ctx, verb)?,
+        name,
+        grade,
+    })))
+}

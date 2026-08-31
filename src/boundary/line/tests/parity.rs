@@ -244,3 +244,40 @@ fn the_config_familys_reads_round_trip() {
         provider: "acme".to_owned(),
     }));
 }
+
+/// REMOTE §1.4's enrollment, typed (bl-f4e3): the common name is the one word
+/// no seat's context can hold, and the grade is default-operator made typable —
+/// bare is a seat, one word demotes, and nothing promotes by accident.
+#[test]
+fn the_enrollment_round_trips_at_both_grades() {
+    for grade in [
+        crate::registry::Grade::Operator,
+        crate::registry::Grade::Foot,
+    ] {
+        rt(Gesture::Act(Action::Enroll(
+            crate::registry::enroll::Request {
+                workspace: "ws".to_owned(),
+                name: "phone-1".to_owned(),
+                grade,
+            },
+        )));
+    }
+    // `operator` said outright is the same gesture as saying nothing — one
+    // vocabulary, read by the registry's own table in both serializations.
+    assert_eq!(
+        parse("/enroll phone-1 operator", &ctx()),
+        parse("/enroll phone-1", &ctx())
+    );
+    // Nothing rounds: an unknown word refuses naming itself, rather than
+    // becoming either grade.
+    let refusal = parse("/enroll phone-1 fott", &ctx()).expect_err("refused");
+    assert!(refusal.contains("unknown grade \"fott\""), "{refusal}");
+    let unnamed = parse("/enroll", &ctx()).expect_err("the name is required");
+    assert!(unnamed.contains("common name"), "{unnamed}");
+    let unfocused = parse(
+        "/enroll phone-1",
+        &crate::boundary::line::Context::default(),
+    )
+    .expect_err("a device is seated in a workspace, and none is focused");
+    assert!(unfocused.contains("no workspace in context"), "{unfocused}");
+}

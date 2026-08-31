@@ -31,7 +31,29 @@ pub(crate) fn gestures() -> Vec<Gesture> {
         super::fleet::surface(),
         super::retarget::surface(),
         super::query::surface(),
+        enroll(),
         crate::boundary::codec::config::tests::surface(),
     ]
     .concat()
+}
+
+/// REMOTE §1.4's enrollment (bl-f4e3) — **one entry per grade**, because the
+/// grade is a two-armed vocabulary and a fixture that only ever spelled the
+/// default would prove only that the default crosses.
+fn enroll() -> Vec<Gesture> {
+    [
+        crate::registry::Grade::Operator,
+        crate::registry::Grade::Foot,
+    ]
+    .into_iter()
+    .map(|grade| {
+        Gesture::Act(crate::boundary::Action::Enroll(
+            crate::registry::enroll::Request {
+                workspace: "ws".to_owned(),
+                name: "phone-1".to_owned(),
+                grade,
+            },
+        ))
+    })
+    .collect()
 }

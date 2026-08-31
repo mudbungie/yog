@@ -49,6 +49,21 @@ id is cited, the path to the ruling is not narrated.
    an operator who administers both machines. Key and certificate provisioning
    is an act the operator performs on the boxes; yog carries no enrollment,
    pairing, or account protocol in the channel, ever.
+
+   **The `enroll` act does not lift this, and the distinction is exact**
+   (operator ruling 2026-08-30, bl-f4e3; §8.4). What this clause forbids is a
+   **device enrolling itself** — a machine holding no material opening a
+   connection and being handed some. That stays impossible rather than merely
+   forbidden: with no certificate there is no handshake, so the new device
+   performs no channel act of any kind. `enroll` is performed by an
+   **operator-grade seat**, over a channel already authenticated by material
+   that already moved out of channel, and what it produces is bytes the
+   operator then carries — a QR on a screen is a screen-shaped `scp`, and the
+   operator is standing in front of both machines. That is the same class as
+   the boot-time mint §8 already blessed: the operator's own tooling, reached
+   through the boundary because §3 forbids a capability that exists on the wire
+   and nowhere else. Nothing is *learned* in channel that the operator's own CA
+   did not mint one hop away, and no unauthenticated peer is ever answered.
 5. **Client registration is per-workspace; the workspace is the trust
    domain — at both ends** *(amended bl-aaec)*. Server-side as always: a
    client registered in one workspace is invisible in another — the corporate
@@ -514,6 +529,17 @@ A new `Action` is operator-only by construction — the foot set is enumerated,
 not subtracted from. §11's rejection is of a *policy layer*, and a policy layer
 is the thing with a place to put a rule; this has none. §11's entry stands
 unamended.
+
+**The enrollment act is the first proof of that construction, and it cost no
+row** (bl-f4e3, §8.4). `enroll` mints a certificate and seats a registration —
+the most privileged thing on the surface — and nothing about the grade was
+touched to keep a foot out of it. An act is not among the foot's enumerated
+three, so `answer_as` refuses it in band, naming the grade, ahead of the
+dispatch and ahead of the create's auto-registration; the executor writes no
+check of its own, because a second authority for one fact is the one that
+drifts. The inverse is worth stating too: an act a foot *may* say would have to
+be added to that enumeration by hand, which is what makes the set closed rather
+than default-open.
 
 **What it closes.** §9.6 states a residual plainly: *"a client registered in
 one workspace still reads the trail of every workspace"*. For a foot that is no
@@ -1027,7 +1053,7 @@ today:
   measured against — nothing NEW goes into the engine that a thrall could
   advertise.
 - **A thrall beside the server is the normal install, not a special case.** The
-  single-box operator runs both and enrolls the local one, and that enrolment
+  single-box operator runs both and enrolls the local one, and that enrollment
   is an explicit act (§12's "ship inert"). There is no in-process shortcut for
   the co-located case and no unix socket beside the wire: one transport, one
   code path, no place for a bug to hide (§12's "front door only"). The
@@ -1936,6 +1962,87 @@ not hold.
   any seat can now complete.
 - A provider with neither a device endpoint nor a reachable redirect: the same
   stated operator remedy. No paste-back arm — §11.
+
+### 8.4 Enrollment, and the QR envelope (bl-f4e3)
+
+**The ruling** (operator, 2026-08-30): the boundary gains one act, spelled
+`enroll` (American spelling, everywhere in this tree). It mints a new device's
+leaf on the engine's own CA, seats that client's registration, answers the
+material, and keeps no private key. §1.4 is **not** lifted, for the reason
+that clause now states in place: the new device performs no channel act, an
+operator-grade seat does, and the material travels the last hop out of channel.
+
+**The act.** `enroll` addresses a workspace like every other gesture (§8), and
+that is not decoration: the act *creates the registration*, and a registration
+is the pair `(client, workspace)` — an enrollment naming no workspace would
+mint a certificate that authenticates and sees nothing, leaving the operator to
+finish the job with a `touch`. One act, one pair.
+
+| Field | Meaning |
+|---|---|
+| `workspace` | the workspace the new client is seated in — `clients/<name>/workspaces/<workspace>` (§4.1) |
+| `name` | the subject common name, which **is** the client identity (§2); refused on §4.1's own rule — one path component, never `local` |
+| `grade` | `operator` or `foot` (§4.2), minted into the subject by the operator's own CA |
+
+The reply kind is `enrolled` and carries six fields: `grade`, `name`,
+`address`, `ca`, `cert`, `key`. `address` is **the engine's own wire address as
+clients dial it**, read from `wire/address` where the boot records it (§8) — not
+the port a `:0` request became, which only the listener knows and which is a
+different number after the next boot. An `address` whose port is `0` therefore
+**refuses**, naming `yog wire-certs WIRE_HOST=… WIRE_PORT=…`: a QR carrying a
+runtime port would be stale before it was scanned.
+
+**What is retained and what is not.** The engine mints the pair, reads it,
+answers it and **shreds the key** — mint → answer → shred, the pattern the
+manual recipe already follows, made unconditional so a failed read leaves no key
+either. What stays on disk is the **certificate**, deliberately: it is public
+material, and its presence is exactly what refuses a second enrollment under one
+name (`provision::issue` — re-issuing distrusts nothing, so both would be live).
+Keeping it is the guard; keeping the key would be the leak. Custody after the
+answer is the transport's, and the two intakes differ: over the wire the answer
+is TLS bytes and a seat's RAM (§6), while a deposit through the `gestures/`
+inbox lands it in a reply file inside the world — on the operator's own box,
+beside a CA that can mint the same leaf again at will, so it discloses nothing
+to anyone who could not already mint. It does *persist*, and the remedy is `rm`.
+The shipped path is the wire one, because the seat is what draws the code.
+
+**The payload contract — this section is its authority.** The QR envelope is
+**compact JSON** (no whitespace), the reply's six fields under a version marker:
+
+```json
+{"yog-enroll":1,"grade":"foot","name":"phone-1","address":"engine.invalid:7737","ca":"-----BEGIN CERTIFICATE-----\n…","cert":"-----BEGIN CERTIFICATE-----\n…","key":"-----BEGIN …-----\n…"}
+```
+
+(`key` carries the leaf's own PEM verbatim; its banner is elided above because
+the disclosure gate reads this file too, and must never find one.)
+
+`ok` and `kind` do not travel: they say what a *wire answer* is, and a
+photograph is not one. `yog-enroll` is the marker a scanner recognizes it by and
+the version it will be told about if the fields ever move. The seat and the
+Android app build to this envelope; the engine returns the JSON and draws
+nothing — QR rendering is the seat's job, on the seat's screen.
+
+**PEM rides verbatim, and that is measured rather than assumed.** With the
+certificates `wire/provision` actually mints — P-256 keys, 825-day leaves, one
+`OU=foot` on the larger of the two subjects — the envelope is **1567 bytes** of
+compact JSON (`ca` 570, `cert` 623, `key` 241, plus the JSON escaping of every
+newline). A version-40 QR code in byte mode carries 2953 bytes at
+error-correction level L, 2331 at M, 1663 at Q and 1273 at H, so the envelope
+fits at L, M and Q and overflows only at H. DER-plus-base64 per field was the
+fallback and is **not taken**: it measures 1359 bytes, buys ~13%, and costs the
+one property worth keeping — a field an operator can paste into `openssl x509
+-text`. The rule is therefore **PEM as minted, at level M or lower**; H needs a
+smaller envelope and there is no payer for one. `boundary::dispatch::enroll`'s
+`envelope` test takes that measurement against a real mint on every run, so a
+recipe that moved to RSA would fail there rather than in a photograph.
+
+**The corpus carries the shapes and none of the material** (§3). `request/enroll`
+and `reply/enrolled` are additions, so `PROTOCOL` is **not** bumped — strict
+decode already refuses an unknown op in band, and the drift ledger records both
+at the standing version. Their fixture strings are fabricated and marked
+`notreal`; a real minted key must never enter the corpus, and the key fixture
+deliberately carries no private-key banner, because the leak gate reads every
+committed byte in this tree and must never find one.
 
 ## 9. Build sequence
 
@@ -3327,7 +3434,21 @@ Recorded so they are not relitigated:
   passwords, bearer tokens, OAuth flows: each is an enrollment or secret
   surface §1.3–§1.4 exist to exclude.
 - **An in-channel pairing/enrollment protocol** — bootstrap is out-of-channel
-  by ruling; convenience flows reopen the exact surface mTLS closed.
+  by ruling; convenience flows reopen the exact surface mTLS closed. **What is
+  rejected is the DEVICE enrolling itself**, and bl-f4e3 sharpened that rather
+  than lifting it (§1.4, §8.4). The banned shape is a machine holding no
+  material opening a connection and being handed some — a pairing code, a
+  claim token, a first-connect ceremony, a "trust on first use" window, any of
+  which is an unauthenticated peer the engine must answer. The `enroll` act is
+  none of those: the new device says nothing, an **operator-grade seat**
+  performs the act over a channel already authenticated by material that
+  already moved out of channel, and the result leaves the wire in the
+  operator's hand. It is the operator's own tooling reached through the
+  boundary — the same class as §8's engine-boot mint — and it is on the
+  boundary rather than in the wire because §3 forbids a capability that exists
+  on one face and not the others. The unlifted half is the one that matters:
+  **no gesture will ever be answered to a peer that could not already
+  connect.**
 - ~~**A separate client crate or binary for v1**~~ — **lifted by the bl-37fd
   ruling (§12)**: the four-component split makes the seat its own crate and
   repo. The rejection's reasoning — no payer for a split — held until the
@@ -3487,7 +3608,7 @@ describe a face.
 **Operator ruling 2026-08-30:** the Android app is named **yog** and ships all
 three runnable components — the seat, the foot, and the server — each gated
 behind an explicit **bootstrap** rather than auto-started. The default
-bootstrap is mTLS client enrolment: a seat or a foot dialing a host engine on
+bootstrap is mTLS client enrollment: a seat or a foot dialing a host engine on
 material provisioned out of channel (§1.4). Running the server *on the phone*
 is allowed, and is the deliberate non-default choice.
 

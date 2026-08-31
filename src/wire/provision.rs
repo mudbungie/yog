@@ -41,6 +41,13 @@
 //! no CA, writes no address and touches no other leaf, and the material it
 //! writes still leaves this box in the operator's hand.
 //!
+//! **Two callers reach that one issuance now** (bl-f4e3): `yog wire-certs
+//! WIRE_LEAF=…`, and the boundary's `enroll` act (REMOTE §8.4), which mints
+//! through this recipe, seats the registration, answers the material and
+//! shreds the key. §1.4 is unlifted either way — the enrolling device performs
+//! no channel act, an operator-grade seat does, and the material's last hop is
+//! still out of channel.
+//!
 //! **Nothing complete is ever overwritten.** Every step here asks whether its
 //! artifact is already there, so a second call mints nothing — which is what
 //! makes it safe on every boot. A rotation distrusts every certificate already

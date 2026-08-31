@@ -134,9 +134,19 @@ fn encode_action(action: &Action) -> Value {
             goal,
         } => fork::encode(workspace, parent, attempt, goal),
         Action::Advertise { tools } => tools::encode(tools),
+        // REMOTE §1.4's enrollment (bl-f4e3): the workspace it seats the new
+        // client in, the common name its certificate will carry, and the grade
+        // — in the one grade vocabulary `Grade::word`/`of` spell both ways.
+        Action::Enroll(request) => json!({ "op": ENROLL, "workspace": request.workspace,
+                                           "name": request.name,
+                                           "grade": request.grade.word() }),
         Action::Route(verb) => tools::encode_route(verb),
     }
 }
+
+/// Enrollment's op token, named once so the envelope, the line and the help
+/// page cannot spell it three ways (REMOTE §1.4 as amended, bl-f4e3).
+pub(crate) const ENROLL: &str = "enroll";
 
 /// The three one-shape **conversation** envelopes — op, workspace, agent — said
 /// once rather than three times, for [`balls::ball`]'s reason exactly: the
@@ -144,6 +154,13 @@ fn encode_action(action: &Action) -> Value {
 /// a match arm that rebuilds it is a body pretending to be a row.
 fn at_agent(op: &str, workspace: &str, agent: &str) -> Value {
     json!({ "op": op, "workspace": workspace, "agent": agent })
+}
+
+/// One grade word read back, or the refusal naming the token (bl-f4e3) — the
+/// registry's own table, spent here and by the line, so the two serializations
+/// share one vocabulary rather than each carrying a copy.
+pub(crate) fn grade_of(word: &str) -> Result<crate::registry::Grade, String> {
+    crate::registry::Grade::of(word).ok_or_else(|| format!("unknown grade {word:?}"))
 }
 
 /// Decode a deposit envelope. The `op` table is the boundary's whole verb
@@ -214,6 +231,14 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         tools::ADVERTISE | tools::INVOKE | tools::COMPLETE => {
             tools::decode(op.as_str(), o).map(act)
         }
+        // REMOTE §1.4's enrollment (bl-f4e3). Every field is required, the
+        // grade included: a default here would be a promotion or a demotion
+        // nobody typed, and §4.2 forbids the first outright.
+        ENROLL => Ok(act(Action::Enroll(crate::registry::enroll::Request {
+            workspace: str_of(o, "workspace")?,
+            name: str_of(o, "name")?,
+            grade: grade_of(&str_of(o, "grade")?)?,
+        }))),
         // The two families that read in their own modules (bl-3f46, bl-3746):
         // every query — `config`/`marks` read-shaped among them, bl-0164 —
         // then the §9 config verbs. This match stays the action roster rather

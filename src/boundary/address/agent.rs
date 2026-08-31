@@ -77,6 +77,7 @@ impl Action {
             | Action::ApplyConfig { .. }
             | Action::SetMarks { .. }
             | Action::Advertise { .. }
+            | Action::Enroll(_)
             | Action::Route(_)
             | Action::PickModel { .. } => None,
         }

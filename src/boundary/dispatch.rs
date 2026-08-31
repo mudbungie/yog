@@ -38,6 +38,11 @@ mod deps;
 /// `prompt`). The `Prepare`/`Prompt` arms delegate here, so a line, a deposit
 /// and a click all spend one body.
 mod doors;
+/// REMOTE §1.4's enrollment (bl-f4e3) — the third gating arm, beside
+/// [`advertise`] and [`delete_exec`]: it mints a certificate and seats a
+/// registration, so it re-derives every precondition at fire time and refuses
+/// fail-closed.
+mod enroll;
 /// The one address resolution, and the §4.1 raise it carries — split off at
 /// §12's cap (bl-4e08); it stands ahead of the table rather than inside it.
 mod resolve;
@@ -152,6 +157,11 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // identity the INTAKE carries, so the gate is who is asking rather than
         // what was named — an in-world caller has no client and is refused.
         Action::Advertise { tools } => advertise::advertise(deps, tools),
+        // REMOTE §1.4's enrollment (bl-f4e3): mint a device's leaf on this
+        // box's CA, seat its registration, answer the material and shred the
+        // key. Operator grade only, and no gate here says so — an act is
+        // outside the foot set, so `Grade::admits` refuses it one layer up.
+        Action::Enroll(request) => enroll::enroll(deps, ts, request),
         // REMOTE §5's routing leg (bl-024b): queue a call for the machine that
         // advertised it, and take a tool host's answer to one. Neither waits —
         // the intake here is one thread for the whole world.

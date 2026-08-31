@@ -18,6 +18,10 @@ use crate::registry::mailbox::{capture_value, invocation_value};
 /// The follow lane's reply kind (bl-73e7), named once for both directions.
 pub(super) const FOLLOW: &str = "follow";
 
+/// Enrollment's reply kind (bl-f4e3), named once for both directions — and the
+/// word REMOTE §1.4's QR envelope contract is written against.
+pub(super) const ENROLLED: &str = "enrolled";
+
 /// Encode a reply to its file body. `ok` is the one field every reply carries.
 pub fn encode(reply: &Reply) -> Value {
     match reply {
@@ -55,6 +59,7 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::TrailCleared => json!({ "ok": true, "kind": "trail-cleared" }),
         Reply::Applied => json!({ "ok": true, "kind": "applied" }),
         Reply::Advertised => json!({ "ok": true, "kind": "advertised" }),
+        Reply::Enrolled(enrolled) => enrolled_reply(enrolled),
         // The routing leg's asking side (bl-024b): the handle, and the capture
         // once there is one. `capture` is **absent** rather than empty while
         // the far machine still runs it — a reader must not have to tell "not
@@ -208,6 +213,20 @@ fn delivered(delivery: &crate::fan::Delivery) -> Value {
         map.insert("commit".to_owned(), json!(commit));
     }
     Value::Object(map)
+}
+
+/// The QR envelope's payload (REMOTE §1.4 as amended, bl-f4e3). Every field is
+/// present always — there is no absent case, because a device handed five of
+/// the six facts cannot dial, cannot verify, or cannot say who it is — and the
+/// three PEMs ride **verbatim**, newlines and all: the envelope measures 1567
+/// bytes of compact JSON against a byte-mode QR's 2953, so nothing is
+/// re-encoded to buy room it does not need.
+fn enrolled_reply(enrolled: &crate::registry::enroll::Enrolled) -> Value {
+    json!({
+        "ok": true, "kind": ENROLLED, "grade": enrolled.grade.word(),
+        "name": enrolled.name, "address": enrolled.address,
+        "ca": enrolled.ca, "cert": enrolled.cert, "key": enrolled.key,
+    })
 }
 
 /// The config-frozen-at answer (bl-13f9). The oid rides both ways — short is

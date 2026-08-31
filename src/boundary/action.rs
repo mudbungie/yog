@@ -278,6 +278,10 @@ pub enum Action {
     /// end costs.
     Route(crate::registry::mailbox::Verb),
 
+    /// **Enroll a device** (REMOTE §1.4 as amended, §8.4; bl-f4e3) — one variant
+    /// over [`enroll::Request`](crate::registry::enroll::Request), whose own doc
+    /// carries the ruling and the §4.2 grade a foot is refused it by.
+    Enroll(crate::registry::enroll::Request),
     /// The §9.4 model pick: give `role` this `model` on this provider row, for
     /// `workspace`. §9.2 and §9.3 composed by one gesture — refuse either half
     /// and neither is written — because litany's cross-check makes the role

@@ -76,6 +76,12 @@ impl Action {
             | Action::Fan(crate::fan::Verb::Spread { prepared, .. }) => {
                 Some(&mut prepared.workspace)
             }
+            // An enrollment names the workspace it SEATS the new client in
+            // (REMOTE §1.4 as amended, §4.1): the act creates the registration,
+            // and a registration is the pair — so it is addressed like every
+            // other gesture, scoped like one, and renamed at a §8.2 entry's
+            // channel boundary like one.
+            Action::Enroll(request) => Some(&mut request.workspace),
             Action::Monitor(verb) => Some(verb.workspace_slot()),
             Action::Fleet(verb) => Some(verb.workspace_slot()),
             // The §9 config family answers through its destination (bl-523f):

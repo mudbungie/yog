@@ -140,6 +140,14 @@ fn every_workspace_bearing_action_answers_with_its_name() {
             agent: "c".into(),
             raised: true,
         },
+        // The enrollment names the workspace it SEATS the new client in
+        // (REMOTE §1.4 as amended, §4.1) — the act creates the registration,
+        // and a registration is the pair.
+        Action::Enroll(crate::registry::enroll::Request {
+            workspace: WS.into(),
+            name: "phone-1".into(),
+            grade: crate::registry::Grade::Foot,
+        }),
     ];
     named.extend(nested());
     for action in named {

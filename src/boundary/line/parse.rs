@@ -154,6 +154,10 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
                 tools: crate::registry::tools::decode(&set)?,
             }))
         }
+        // REMOTE §1.4's enrollment (bl-f4e3): the common name is the one thing
+        // no seat's context can supply, the grade is default-operator, and the
+        // workspace it seats the new client in is the seat's own.
+        crate::boundary::codec::ENROLL => verbs::enroll(tail, ctx, verb),
         // The queries (§8.5): populating reads, spellable exactly as actions
         // are — a seat with no panes still has to be able to look. Split out
         // at the §12 line budget; an unknown verb refuses there too, so this
