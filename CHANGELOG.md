@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.7](https://github.com/mudbungie/yog/compare/v0.0.6...v0.0.7) - 2026-08-31
+
+### Changes
+
+- EXIT the litany interim git pin: flip Cargo.toml back to a registry pin and delete deny.toml's allow-git entry when litany next publishes [bl-f91a]
+- the follow lane's frame is called a `delta` and carries the whole accumulated answer: 20x wire amplification on a 416-byte reply, quadratic in the answer's length [bl-3655]
+- a conversation refused at the provider rung paints as `stopped` with an empty transcript and an empty-stderr trail row: only /steps carries auth_failed, and `stopped` is the word /stop already owns [bl-b43b]
+- the advertised set is last-writer-wins on the client identity: a second connection can blank a live foot's tools and neither end is told [bl-1462]
+- the mailbox loses an invocation at hand-off: `taken` is a latch set at the drain, so anything posted into a parked read whose peer already died is consumed and never redelivered [bl-e658]
+- the total router left the shipped worker grant dead: seven of eight granted tools refuse, taking subagents, agent messaging, skills and the conversation's own worktree with them [bl-77be]
+- a conversation's first driver can load a remote tool but can never call one: `prompt` mints the agent, so `Injection::driving` is None and `tools()` declares only `clients` [bl-fd24]
+- seat.sh ships a name docker will not run: podman save embeds the localhost/ prefix, docker load restores it, and the unit points at the bare tag — the deploy prints success over a crash-looping engine [bl-0719]
+- a boundary Action to mint a client leaf, so a trusted seat can bootstrap a new device [bl-f4e3]
+
 ## [0.0.6](https://github.com/mudbungie/yog/compare/v0.0.5...v0.0.6) - 2026-08-30
 
 ### Changes
