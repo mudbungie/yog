@@ -3481,3 +3481,48 @@ deleted; §11's rejection of a separate client crate is lifted in place above.
 And DESIGN §11 — the UI structure — is **retired** by bl-7942, with a reading
 rule at its tombstone for the sentences elsewhere in that document that still
 describe a face.
+
+### 12.1 The phone is one more box (bl-15bd)
+
+**Operator ruling 2026-08-30:** the Android app is named **yog** and ships all
+three runnable components — the seat, the foot, and the server — each gated
+behind an explicit **bootstrap** rather than auto-started. The default
+bootstrap is mTLS client enrolment: a seat or a foot dialing a host engine on
+material provisioned out of channel (§1.4). Running the server *on the phone*
+is allowed, and is the deliberate non-default choice.
+
+**This document is not amended by it, and that is the point.** A phone is one
+more box — it holds §8.2 entries, presents a leaf, is scoped by its §4.1
+registrations and graded by §4.2 like every other client. §1's canonical scene
+already had it: *"a phone seat talks to a conversation."* The app is a
+**packaging** of components this section already names, and it adds no noun, no
+verb and no protocol. The one thing worth writing down is what an app that
+ships three components does *not* get to invent:
+
+- **Which component a launch runs is derived, never stored.** No material and
+  nothing runs; the grade on the certificate says seat or foot (§4.2). So
+  enrolling a phone as a tool host is **minting it a foot-grade leaf**, not
+  tapping a setting on the phone — there is no stored choice that could
+  disagree with the certificate. The first-run surface has no button, on
+  purpose: §1.4 stands on a phone exactly as it stands on a laptop, and a
+  button that acquired an identity would be the in-channel bootstrap that must
+  never exist.
+- **The wire is §3's, whole.** The app states its version and its request in
+  one breath and confirms the engine's on the way to the answer, refusing a
+  mismatch fail-closed in the server's own sentence (§12's bl-a670). It
+  replays the vendored corpus in **both** directions — a client that only
+  sends requests still decodes the request fixtures — and §3's third rule
+  reaches *inside* an envelope, so a frame stating a rung that client does not
+  spell is refused rather than flattened into the shape it has.
+- **A local server on the phone is a platform question, not a protocol one.**
+  Nothing in the Rust half stops it: yog cross-compiles for
+  `aarch64-linux-android` with the whole substrate in the graph and no C
+  toolchain acquired. Two rungs do, and neither is here — Android ships no
+  `git`, and yog's world seeds shell shims its own agents run into app-private
+  storage, which that platform has refused to execute since API 29. The second
+  is yog's own shape and is filed as bl-6a6a; the app offers the bootstrap,
+  states both blockers in the operator's terms, and starts nothing.
+
+Work lands in the Android repository with its own tracking; this section is
+yog's record of the ruling and of what the wire owes a phone, which is nothing
+it does not already owe a laptop.
