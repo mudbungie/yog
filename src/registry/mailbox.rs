@@ -33,7 +33,7 @@ use serde_json::{Value, json};
 use crate::boundary::codec::fields::{i64_of, str_of};
 
 /// Where in-flight invocations live — the map, and the one lock this leg has.
-mod slots;
+pub(crate) mod slots;
 
 pub use slots::Mailbox;
 

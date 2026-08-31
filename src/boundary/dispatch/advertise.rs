@@ -30,8 +30,38 @@ pub(super) fn advertise(deps: &Deps, tools: &[Tool]) -> Result<Reply, String> {
         );
     }
     tools::validate(tools)?;
+    superseding(deps, tools)?;
     tools::store(&deps.state_root, client, tools).map_err(|e| e.to_string())?;
     Ok(Reply::Advertised)
+}
+
+/// **A serving machine's set may not be replaced under it** (REMOTE §5.1,
+/// bl-1462). The store is keyed on the identity and was last-writer-wins, so
+/// any connection bearing the certificate could blank a healthy host's tools —
+/// and by REMOTE §5's own traffic ruling the set is presented once per channel,
+/// so the host that is running never learns it was disarmed. The only symptom
+/// was invocations refused for a tool that plainly exists.
+///
+/// The seam is drawn at the one moment the engine can tell the two apart: a
+/// **parked follow-class read** is a machine that is serving right now, and a
+/// set that **differs** from the one in force is a second party disagreeing
+/// with it. A host re-presenting an unchanged set on reconnect writes nothing
+/// and never reaches this — which is the ordinary path, so the guard costs it
+/// no refusal and no file read.
+fn superseding(deps: &Deps, tools: &[Tool]) -> Result<(), String> {
+    let client = &deps.caller.client;
+    if !deps.caller.mailbox.serving(&client.name())
+        || tools::read(&deps.state_root, client) == tools
+    {
+        return Ok(());
+    }
+    Err(format!(
+        "advertise: {:?} is holding this engine's follow-class read and this is not the \
+         set in force — a second connection may not replace a serving machine's tools, \
+         because the machine that is serving would never learn it was disarmed. \
+         Re-present the set in force, or stop the connection that is serving",
+        client.name()
+    ))
 }
 
 #[cfg(test)]

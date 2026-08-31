@@ -17,6 +17,12 @@ fn call(client: &str, tool: &str) -> Call {
     }
 }
 
+/// One follow-class read that is expected to be granted its reader slot — the
+/// ordinary case, so the refusal stays visible where a test means it.
+fn took(mail: &Mailbox, client: &str) -> Vec<Invocation> {
+    mail.take(client).expect("this client has no other reader")
+}
+
 fn ran(exit_code: i32) -> Capture {
     Capture {
         stdout: "out".to_owned(),
@@ -36,7 +42,7 @@ fn an_invocation_crosses_and_the_capture_comes_back() {
         Ok(None),
         "nothing has answered yet"
     );
-    let taken = mail.take("laptop");
+    let taken = took(&mail, "laptop");
     assert_eq!(
         taken,
         vec![Invocation {
@@ -60,7 +66,7 @@ fn a_take_drains_only_this_clients_work() {
     let mail = quick();
     let mine = mail.post(10, "local", &call("laptop", "Bash"));
     mail.post(10, "local", &call("phone", "Bash"));
-    let taken = mail.take("laptop");
+    let taken = took(&mail, "laptop");
     assert_eq!(taken.len(), 1);
     assert_eq!(taken.first().map(|i| i.id.clone()), Some(mine));
 }
@@ -76,9 +82,9 @@ fn a_take_drains_only_this_clients_work() {
 fn work_handed_to_a_read_that_never_answered_is_offered_again() {
     let mail = quick();
     let id = mail.post(10, "local", &call("laptop", "Bash"));
-    assert_eq!(mail.take("laptop").len(), 1, "handed over once");
+    assert_eq!(took(&mail, "laptop").len(), 1, "handed over once");
     assert_eq!(
-        mail.take("laptop").first().map(|i| i.id.clone()),
+        took(&mail, "laptop").first().map(|i| i.id.clone()),
         Some(id),
         "the next read is the acknowledgement the first one never gave"
     );
@@ -91,12 +97,65 @@ fn work_handed_to_a_read_that_never_answered_is_offered_again() {
 fn an_answered_invocation_is_not_offered_again() {
     let mail = quick();
     let id = mail.post(10, "local", &call("laptop", "Bash"));
-    assert_eq!(mail.take("laptop").len(), 1);
+    assert_eq!(took(&mail, "laptop").len(), 1);
     assert_eq!(mail.complete("laptop", &id, &ran(0)), Ok(ran(0)));
     assert!(
-        mail.take("laptop").is_empty(),
+        took(&mail, "laptop").is_empty(),
         "answered work is finished work"
     );
+}
+
+/// **One reader per identity** (bl-1462): a second connection presenting the
+/// same certificate while one is parked is refused in band, naming the client
+/// and the two ways out — and the first reader keeps its work.
+#[test]
+fn a_second_reader_under_one_identity_is_refused() {
+    let mail = quick();
+    let id = mail.post(10, "local", &call("laptop", "Bash"));
+    let parked = mail.reading("laptop").expect("the first reader");
+    assert!(mail.serving("laptop"), "a machine is serving");
+
+    let said = mail
+        .take("laptop")
+        .expect_err("one machine's queue has one reader");
+    assert!(said.contains("\"laptop\""), "{said}");
+    assert!(said.contains("already holding"), "{said}");
+    assert!(said.contains("presenting this certificate"), "{said}");
+
+    drop(parked);
+    assert_eq!(
+        took(&mail, "laptop").first().map(|i| i.id.clone()),
+        Some(id),
+        "the work was never taken by the refused reader"
+    );
+}
+
+/// The claim is released **however the read leaves**, so the slot is a claim on
+/// a live reader and never a latch of its own — and `serving` answers the same
+/// fact the advertisement's gate reads.
+#[test]
+fn the_reader_slot_is_released_when_the_read_ends() {
+    let mail = quick();
+    assert!(!mail.serving("laptop"), "nobody is reading");
+    assert!(took(&mail, "laptop").is_empty());
+    assert!(!mail.serving("laptop"), "the hold ended, so did the claim");
+    assert!(
+        mail.take("laptop").is_ok(),
+        "a client may read again once its own read is over"
+    );
+}
+
+/// The claim is **per identity**: one machine reading never shuts another out.
+#[test]
+fn two_machines_read_at_once() {
+    let mail = quick();
+    let _phone = mail.reading("phone").expect("the phone's own slot");
+    let mine = mail.post(10, "local", &call("laptop", "Bash"));
+    assert_eq!(
+        took(&mail, "laptop").first().map(|i| i.id.clone()),
+        Some(mine)
+    );
+    assert!(!mail.serving("laptop"), "and it let its own slot go");
 }
 
 /// The acknowledgement is **per client**: one machine asking again says nothing
@@ -105,10 +164,10 @@ fn an_answered_invocation_is_not_offered_again() {
 fn a_read_acknowledges_only_its_own_clients_work() {
     let mail = quick();
     let theirs = mail.post(10, "local", &call("phone", "Bash"));
-    assert_eq!(mail.take("phone").len(), 1);
-    assert!(mail.take("laptop").is_empty());
+    assert_eq!(took(&mail, "phone").len(), 1);
+    assert!(took(&mail, "laptop").is_empty());
     assert_eq!(
-        mail.take("phone").first().map(|i| i.id.clone()),
+        took(&mail, "phone").first().map(|i| i.id.clone()),
         Some(theirs)
     );
 }
@@ -117,7 +176,7 @@ fn a_read_acknowledges_only_its_own_clients_work() {
 /// nothing, and asks again. An answer that never came would be the hang.
 #[test]
 fn an_empty_hold_expires_and_answers_nothing() {
-    assert!(quick().take("laptop").is_empty());
+    assert!(took(&quick(), "laptop").is_empty());
 }
 
 /// The hold ends **early** when work lands — the whole point of a follow-class
@@ -130,7 +189,7 @@ fn work_landing_mid_hold_ends_it() {
         std::thread::sleep(Duration::from_millis(20));
         writer.post(10, "local", &call("laptop", "Bash"))
     });
-    let taken = mail.take("laptop");
+    let taken = took(&mail, "laptop");
     let id = hand.join().expect("the writer");
     assert_eq!(taken.first().map(|i| i.id.clone()), Some(id));
 }
@@ -186,6 +245,6 @@ fn the_default_hold_is_the_production_bound() {
     assert_eq!(mail.waits, HOLD_WAITS);
     assert_eq!(mail.tick, HOLD_TICK);
     let id = mail.post(0, "local", &call("laptop", "Bash"));
-    assert_eq!(mail.take("laptop").len(), 1, "work waiting ends the hold");
+    assert_eq!(took(&mail, "laptop").len(), 1, "work waiting ends the hold");
     assert_eq!(mail.collect("local", &id), Ok(None));
 }

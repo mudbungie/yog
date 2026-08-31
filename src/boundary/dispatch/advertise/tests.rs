@@ -91,6 +91,47 @@ fn a_colliding_name_declines_and_leaves_the_stored_set_alone() {
     );
 }
 
+/// **A serving machine's set may not be replaced under it** (bl-1462). The
+/// store was last-writer-wins on the identity, so a second connection bearing
+/// the same certificate could present the empty set and disarm a healthy host
+/// — engine-side every later invoke was refused for a tool that plainly
+/// existed, and neither end was told.
+#[test]
+fn a_second_connection_may_not_blank_a_serving_machines_set() {
+    let root = tempdir().expect("tempdir");
+    let laptop = Client::parse("laptop").expect("identity");
+    let deps = deps(root.path(), laptop.clone());
+    advertise(&deps, &[tool("Bash")]).expect("stored");
+
+    let parked = deps
+        .caller
+        .mailbox
+        .reading("laptop")
+        .expect("the machine's own read");
+    let refusal = advertise(&deps, &[]).expect_err("refused while serving");
+    assert!(refusal.contains("\"laptop\""), "{refusal}");
+    assert!(
+        refusal.contains("would never learn it was disarmed"),
+        "{refusal}"
+    );
+    assert_eq!(
+        crate::registry::tools::read(root.path(), &laptop),
+        vec![tool("Bash")],
+        "the serving machine keeps its tools"
+    );
+
+    // The ordinary path is untouched in both directions: the machine itself
+    // re-presenting the set in force writes nothing and is not refused, and
+    // once nothing is serving, a changed set lands as it always did.
+    advertise(&deps, &[tool("Bash")]).expect("an unchanged set is not a replacement");
+    drop(parked);
+    advertise(&deps, &[tool("Read")]).expect("nobody is serving");
+    assert_eq!(
+        crate::registry::tools::read(root.path(), &laptop),
+        vec![tool("Read")]
+    );
+}
+
 /// An unwritable registry is a refusal, not a panic.
 #[test]
 fn an_unwritable_registry_refuses() {

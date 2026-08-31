@@ -748,6 +748,38 @@ error worth naming, not an authentication failure worth hiding. The threading is
 the act-side twin of `ConsumerCtx::answer_as`: one `caller` on the dispatch
 `Deps`, carrying who is asking and who else is connected.
 
+**A set is not replaced under a machine that is serving, and one identity has
+one reader** (bl-1462, twin of thrall bl-2d78). The store is keyed on the
+identity and was last-writer-wins, so any connection bearing the certificate
+could present the empty array and be answered `ok`; from then on every invoke
+for that client was refused engine-side for a tool that plainly existed, while
+the host sat there healthy and holding a full set. The host cannot notice on
+its own — the bullet above is why, and its traffic reasoning is right: the set
+is presented once per channel, and re-presenting before every read would double
+the traffic to say a thing that had not changed. What that reasoning assumes is
+that nothing else writes the set, and nothing in the protocol made it true.
+
+The seam is drawn at the one moment the engine can tell a reconnect from a
+usurper, and it needs no version, no generation and no receipt — three facts
+yog would store and could not check:
+
+- **A second concurrent `invocations` read is refused in band**, naming the
+  client. Two parked readers under one identity is two processes claiming one
+  machine's name; the newcomer would take work the first is waiting for and
+  neither end would learn it. The claim is RAII inside the mailbox, released
+  however the read leaves — presence's own shape, and there is no leave verb.
+- **An advertisement that would CHANGE the set in force is refused while that
+  client holds a parked read**, naming the client and both ways out. A host
+  re-presenting an unchanged set writes nothing and never reaches the guard, so
+  the ordinary reconnect pays neither a refusal nor a file read; a genuinely
+  reconfigured box restarting is refused for at most the hold's width and lands
+  on its next dial, loudly, rather than silently disarming whatever is serving.
+
+Refusal rather than a trail note because both parties can act on a refusal and
+only one of them reads a trail — and because §5.3's redelivery predicate reads
+"the client asked for work again" as "it did not finish what it holds", which
+is exact only while one connection at a time may ask.
+
 **A name collision inside one client's set declines loudly**, naming the token;
 a collision *across* clients is legal and ordinary — two laptops both offering
 `Bash` — and disambiguating them belongs to the act that loads one.
@@ -1063,9 +1095,9 @@ dedupe on and needs no field of its own to get it. Nothing on the wire moved:
 **One reader per client identity is what makes the predicate exact.** "The
 client asked for work again" only means "it did not finish what it holds" while
 one connection at a time may ask. Two parked readers under one identity is two
-processes claiming one machine's name — the pathology bl-1462 rules on, in
-§5.1's neighborhood, and the guard it installs is this predicate's precondition
-rather than a decoration on it.
+processes claiming one machine's name, and §5.1 refuses the second in band
+(bl-1462) — that guard is this predicate's precondition, not a decoration on
+it.
 
 **A capture is text, and the transcode happens once.** A capture ends as a
 model's tool result and a model's message is text, so the *executor* transcodes

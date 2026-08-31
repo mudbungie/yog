@@ -86,9 +86,15 @@ fn complete(deps: &Deps, done: &Completion) -> Result<Reply, String> {
 /// It blocks the calling intake for the mailbox's hold — which is a connection
 /// thread and never the deposit consumer, because an in-world caller is refused
 /// before the wait rather than parked in it.
+///
+/// **One reader per identity** (REMOTE §5.1, bl-1462): a second connection
+/// presenting the same certificate while one is parked here is refused in band.
+/// Two readers on one queue is two processes claiming one machine's name — the
+/// newcomer would take work the first is waiting for, and neither end would
+/// learn it.
 pub(super) fn invocations(deps: &Deps) -> Result<Reply, String> {
     let client = connected(deps, "invocations")?;
-    Ok(Reply::Invocations(deps.caller.mailbox.take(&client)))
+    Ok(Reply::Invocations(deps.caller.mailbox.take(&client)?))
 }
 
 /// The asker's poll: the capture if the far machine has answered, nothing yet
