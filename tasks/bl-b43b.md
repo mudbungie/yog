@@ -1,7 +1,7 @@
 +++
 title = "a conversation refused at the provider rung paints as `stopped` with an empty transcript and an empty-stderr trail row: only /steps carries auth_failed, and `stopped` is the word /stop already owns"
 created = 1788150402
-updated = 1788150402
+updated = 1788150495
 priority = 7
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["ux", "remote"]
@@ -69,3 +69,7 @@ conversation on a second engine never appears in it regardless. That is
 consistent with the seat holding one channel per entry and reading through, and
 is not part of this ball — but it does mean the roster row above is the operator's
 only passive sighting of the failure when the engine is a remote one.
+
+---
+
+Confirmed on the WINDOW as well as the CLI, which is the surface that matters. The refused conversation's roster row reads `<name> [stopped] 7m 1 waiting` — the identical shape an operator-stopped conversation gets — and the conversation pane paints the user message and then nothing at all. No wound row, no provider row named, no remedy offered. The window carries none of the auth_failed / auth_row facts the steps surface holds, so on the operator's primary face a provider refusal is indistinguishable from a conversation they stopped themselves.
