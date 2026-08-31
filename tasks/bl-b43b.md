@@ -1,7 +1,8 @@
 +++
 title = "a conversation refused at the provider rung paints as `stopped` with an empty transcript and an empty-stderr trail row: only /steps carries auth_failed, and `stopped` is the word /stop already owns"
 created = 1788150402
-updated = 1788150495
+updated = 1788152074
+claimant = "OrderWright2"
 priority = 7
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["ux", "remote"]
