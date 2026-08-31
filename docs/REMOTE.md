@@ -1300,6 +1300,62 @@ in the engine is a second vocabulary on a surface §3 keeps down to one, and the
 bridge belongs where the servers are. Nothing about v1 is blocked on this and
 nothing in v1 anticipates it.
 
+### 5.5 The follow lane's frame is an append (bl-3655)
+
+**A `Query::Follow` frame carries what landed since that read's previous frame,
+not the whole answer.** This is the ruling a seat implements against, and it is
+one rule with no flag and no case:
+
+> Absorb every frame of a read, in order, onto an empty fold. What you hold
+> after the last frame you have received is what you paint.
+
+Three consequences fall out of it and none needs a field:
+
+- **A read starts holding nothing**, and the engine's reader is minted per held
+  connection and opens the response file at byte zero — so the **first** frame
+  of any read is the whole tail so far. A seat that dropped a connection
+  mid-answer re-asks and is whole on its first frame, with nothing to
+  reconcile. That is the property the old whole-text frame existed for, and it
+  is kept.
+- **The one-shot answer is unchanged.** An intake that cannot hold a connection
+  (§3: the streaming form is not a second form) is answered `Reply::Follow` with
+  the accumulated tail — which is a stream of one frame absorbed onto nothing,
+  i.e. exactly the rule above. Two reads by the same seat are two reads: the
+  second starts holding nothing, so it replaces rather than appending.
+- **The fold is the crate's own and the seat may copy it.** `Stream::absorb`
+  accumulates text in stream order and lets the newer delta kind win, and its
+  contract is `fold(a).absorb(fold(b)) == fold(a ++ b)` on any line boundary.
+  The engine gathers its frames with that same operation, so an engine frame and
+  a seat's accumulation agree by contract rather than by coincidence.
+
+**The wire spelling did not move, and that is the hazard worth stating.** The
+frame body is still `{"delta": "text"|"thinking", "text": "…", "thinking": "…"}`
+— `delta` names the kind of the last content event, as it always did, and the
+two text fields are now the *appended* part rather than the accumulated one.
+The corpus ledger records field paths and types, so it cannot see a change of
+meaning under an unchanged signature: nothing forced a version bump and none was
+taken. PROTOCOL 2 is unreleased, so the move is free; a seat consuming this lane
+(the mobile seat's protocol-2 follow-up) must consume this section with it.
+
+**Why the trade flipped.** The whole-text frame was idempotent per frame and
+order-independent, which is a real property and was the right first answer on
+loopback. Its cost is **quadratic in the answer's length**: one measured reply
+was 32 frames, 416 bytes of answer, 8,310 bytes on the wire — 20x, and that is
+the *floor*, measured on two sentences. The same frame density over an
+eight-hundred-word answer is half a megabyte for five kilobytes of text. This
+lane exists for a phone on a mobile link watching a long answer write itself,
+and §6 already says a client holds "key material and RAM" — RAM is precisely
+what makes the accumulation cheap to keep locally, and a seat is already holding
+the accumulated text in order to paint it.
+
+**Frame count is not addressed and is deliberately left alone.** Coalescing —
+a minimum interval or a minimum new-byte count — was the cheaper half-fix
+before the frame carried an append; with the append it buys only per-frame
+envelope overhead, which is linear rather than quadratic and is the tick's
+question (§7.2's write cadence), not the frame's. Adding a second mechanism to
+save bytes the first one already stopped multiplying is mechanism for its own
+sake.
+
 ## 6. What lives where
 
 Everything durable is the server's: the world, the logs (`ops.jsonl`), the

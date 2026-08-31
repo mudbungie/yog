@@ -13,6 +13,24 @@
 //! [`absorb`](crate::git_tree::Stream::absorb)'s contract rather than by
 //! coincidence, and `follow::tests` pins that.
 //!
+//! **A frame is an append, and the reassembly is the fold's own contract**
+//! (REMOTE §5's follow-lane ruling, bl-3655). Each frame carries what landed
+//! since the frame before it, and a seat folds them onto what it holds with
+//! [`Stream::absorb`](crate::git_tree::Stream::absorb) — the same operation
+//! this file uses to gather them, whose contract
+//! (`fold(a).absorb(fold(b)) == fold(a ++ b)`) is what makes the two one
+//! description. A read starts holding nothing and its reader opens at byte
+//! zero, so the *first* frame is the whole tail and the rule needs no case for
+//! joining late: absorb every frame of a read, in order, onto an empty fold.
+//!
+//! A frame used to carry the whole accumulated answer instead, re-sent from the
+//! beginning each time. That bought idempotence and cost **quadratic** wire
+//! bytes in the answer's length — measured at 20x amplification on a
+//! two-sentence reply, and that ratio is the floor. The property it bought is
+//! kept where it was actually needed (a seat that dropped a connection re-asks
+//! and is answered from zero) and paid for where it was not: this lane exists
+//! for a phone on a mobile link watching a long answer write itself.
+//!
 //! **The stream is one step's.** A response file belongs to exactly one step,
 //! so the step advancing is not an accumulator to reset — it is this stream
 //! ending, which the frame protocol already spells (a zero-length frame). The
@@ -62,9 +80,10 @@ const HOLD_TICK: Duration = Duration::from_millis(16);
 /// held read has. [`Iterator::next`] is this plus the parking, which is why a
 /// test can drive the mechanism with no clock and no sleep at all.
 pub(crate) enum Frame {
-    /// The fold moved: a frame to write. It carries the **fold** rather than
-    /// the [`Reply`] wrapping it, so the vocabulary a held read has is the
-    /// vocabulary of the thing it follows — and so the arms stay the same size.
+    /// The fold moved: a frame to write, carrying **what landed since the last
+    /// one** (bl-3655). It carries a [`Stream`] rather than the [`Reply`]
+    /// wrapping it, so the vocabulary a held read has is the vocabulary of the
+    /// thing it follows — and so the arms stay the same size.
     Ready(Stream),
     /// Nothing new yet. The hold's own answer, and never an end.
     Waiting,
@@ -80,15 +99,17 @@ pub(crate) struct Follow {
     /// The file this stream is, once a call is in flight. `None` before one
     /// begins — which is a hold, not an answer.
     open: Option<Open>,
-    /// The fold so far. A frame carries the whole of it rather than a delta, so
-    /// a seat replaces what it holds and never reassembles anything.
-    stream: Stream,
-    /// The last fold written, which starts **empty rather than absent**: a
-    /// stream that has said nothing is a seat's own resting state, so there is
-    /// nothing to tell it. Bytes moving is not the same as the tail moving — a
-    /// `message_start` or a tool-argument delta advances the offset and says
-    /// nothing an operator can see — so this is what decides a frame.
-    said: Stream,
+    /// **What is owed to the seat**: the fold of everything that has landed
+    /// since the last frame went out, and the body of the next one (bl-3655).
+    ///
+    /// It starts **empty rather than absent**, and it is emptied by every frame
+    /// — so the first frame of a read carries the whole file's fold (a reader
+    /// is minted per held connection and opens at byte zero, [`open`]) and each
+    /// later one carries only the appended part. It is also what decides
+    /// *whether* there is a frame: bytes moving is not the same as the tail
+    /// moving, and a `message_start` or a tool-argument delta folds to nothing,
+    /// advancing the offset while saying nothing an operator can see.
+    pending: Stream,
     waits: u32,
     quiet: u32,
     tick: Duration,
@@ -116,8 +137,7 @@ impl Follow {
             ws,
             agent,
             open: None,
-            stream: Stream::default(),
-            said: Stream::default(),
+            pending: Stream::default(),
             waits,
             quiet: 0,
             tick,
@@ -151,14 +171,13 @@ impl Follow {
             (None, _) => return Frame::Waiting,
         };
         if let Some(appended) = open.read_appended() {
-            self.stream.absorb(appended);
+            self.pending.absorb(appended);
         }
         self.open = Some(open);
         // The final bytes come out before the close: a step that committed
         // between two looks still wrote what it wrote.
-        if self.said != self.stream {
-            self.said = self.stream.clone();
-            return Frame::Ready(self.stream.clone());
+        if self.pending != Stream::default() {
+            return Frame::Ready(std::mem::take(&mut self.pending));
         }
         if live { Frame::Waiting } else { Frame::Over }
     }

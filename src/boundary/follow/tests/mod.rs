@@ -114,8 +114,8 @@ pub(super) fn appended_bytes_are_on_a_frame_with_no_derivation_between() {
     append(&file, &text_delta("half."));
     assert_eq!(
         said(follow.poll()).and_then(|s| s.text).as_deref(),
-        Some("the first half."),
-        "every character that landed is on the next frame"
+        Some("half."),
+        "every character that landed since is on the next frame, and nothing else"
     );
     assert!(
         std::sync::Arc::ptr_eq(&pinned, &crate::state::latest_snapshot(&cell)),
@@ -123,10 +123,14 @@ pub(super) fn appended_bytes_are_on_a_frame_with_no_derivation_between() {
     );
 }
 
-/// **The one-moment invariant** (bl-6233): for the same bytes, the follow
-/// lane's frame and the pull path's fold are the same value. The lane changes
-/// the transport and the cadence; it never changes the fold, so two seats
-/// watching one conversation cannot describe one moment differently.
+/// **The one-moment invariant** (bl-6233, restated by bl-3655): for the same
+/// bytes, a read's frames absorbed in order and the pull path's fold are the
+/// same value. Frames are appends now, so the invariant is over the *stream*
+/// rather than over any one frame of it — and the first frame of a read is
+/// still the whole tail, because a reader is minted per connection and opens
+/// at byte zero. The lane changes the transport and the cadence; it never
+/// changes the fold, so two seats watching one conversation cannot describe one
+/// moment differently.
 #[test]
 fn a_frame_says_exactly_what_the_pull_fold_says_of_the_same_bytes() {
     let (dir, _cell, mut follow) = flying();
@@ -165,4 +169,81 @@ fn reasoning_streams_and_carries_the_doing_split_with_it() {
     let stream = said(follow.poll()).expect("a frame");
     assert_eq!(stream.text.as_deref(), Some("here goes"));
     assert_eq!(stream.last_delta, Some(Delta::Text));
+}
+
+/// **A frame carries the append and not the answer** (bl-3655) — the whole of
+/// what this ball changed, stated as bytes.
+///
+/// The old frame re-sent the accumulated text from the beginning every time,
+/// which is quadratic in the answer's length: a two-sentence reply measured 32
+/// frames, 416 bytes of answer and 8,310 bytes on the wire. The assertion here
+/// is the shape of that fix — the total of the frames is the answer, once.
+#[test]
+fn the_frames_of_a_read_sum_to_the_answer_and_carry_it_once() {
+    let (dir, _cell, mut follow) = flying();
+    let file = response(dir.path(), 1);
+    let words = ["A sentence ", "that arrives ", "in pieces."];
+
+    let mut framed = Vec::new();
+    for word in words {
+        append(&file, &text_delta(word));
+        framed.push(
+            said(follow.poll())
+                .and_then(|s| s.text)
+                .unwrap_or_else(|| panic!("a frame for {word:?}")),
+        );
+    }
+    assert_eq!(framed, words, "each frame is exactly what landed for it");
+    assert_eq!(
+        framed.concat().len(),
+        words.concat().len(),
+        "and the answer crosses once, not once per frame"
+    );
+}
+
+/// **Absorbing a read's frames in order is the pull fold** — the reassembly
+/// rule a seat implements, proven with the crate's own operation rather than
+/// asserted in prose. It is what makes the append safe: a frame is not a
+/// smaller truth than the whole-text frame was, only a later one.
+#[test]
+fn absorbing_every_frame_of_a_read_is_the_fold_of_the_same_bytes() {
+    let (dir, _cell, mut follow) = flying();
+    let file = response(dir.path(), 1);
+
+    let mut held = Stream::default();
+    for (thinking, text) in [("weighing ", "the answer "), ("it up. ", "so far.")] {
+        append(&file, &thinking_delta(thinking));
+        append(&file, &text_delta(text));
+        // Both halves land between looks, so one frame carries both — which is
+        // itself the append being a fold and not a single delta event.
+        held.absorb(said(follow.poll()).expect("a frame"));
+    }
+    assert_eq!(
+        held,
+        crate::git_tree::stream_from_disk(dir.path(), AGENT),
+        "the seat's accumulation is the file's own fold"
+    );
+    assert_eq!(held.text.as_deref(), Some("the answer so far."));
+    assert_eq!(held.thinking.as_deref(), Some("weighing it up. "));
+}
+
+/// **The first frame of a read is the whole tail**, which is why the rule needs
+/// no case for joining late: a reader is minted per held connection and opens
+/// at byte zero, so a seat that dropped one and re-asked is correct on its
+/// first frame with nothing to reconcile.
+#[test]
+fn a_read_that_starts_mid_answer_is_whole_on_its_first_frame() {
+    let (dir, cell, mut early) = flying();
+    let file = response(dir.path(), 1);
+    append(&file, &text_delta("already said. "));
+    assert!(matches!(early.poll(), Frame::Ready(_)));
+    drop(early);
+
+    append(&file, &text_delta("and more."));
+    let mut late = Follow::new(cell, dir.path().to_path_buf(), AGENT.to_owned());
+    assert_eq!(
+        said(late.poll()).and_then(|s| s.text).as_deref(),
+        Some("already said. and more."),
+        "a fresh read is answered from zero, holding nothing"
+    );
 }

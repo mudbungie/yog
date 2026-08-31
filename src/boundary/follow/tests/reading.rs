@@ -70,9 +70,10 @@ fn a_file_that_shrank_is_read_again_from_the_start() {
     std::fs::write(&file, text_delta("short")).expect("truncate");
     assert_eq!(
         said(follow.poll()).and_then(|s| s.text).as_deref(),
-        Some("the long first answershort"),
-        "the accumulated text is now wrong by the bytes that vanished, and the \
-         next derivation is what corrects it — the follower's own ruling, kept"
+        Some("short"),
+        "the replacement file is read whole and appended, so a seat's \
+         accumulation is now wrong by the bytes that vanished — the follower's \
+         own ruling, kept: the next derivation is what corrects it"
     );
 }
 
@@ -118,7 +119,7 @@ fn the_stream_ends_when_the_call_does_and_the_last_bytes_come_out_first() {
     );
     assert_eq!(
         said(follow.poll()).and_then(|s| s.text).as_deref(),
-        Some("the model begins and ends"),
+        Some(" and ends"),
         "nothing written is dropped by the close"
     );
     assert!(matches!(follow.poll(), Frame::Over), "then the terminator");

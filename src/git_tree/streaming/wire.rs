@@ -8,6 +8,16 @@
 //! which is not the same claim as an empty string — and `delta` names the kind
 //! of the **last** one, absent while the stream has produced nothing at all
 //! (§5.1 #9's "waiting for the API").
+//!
+//! **What the two text fields mean depends on which read spelled them, and the
+//! difference is the reader's own position** (bl-3655). On a *pull* — the
+//! derivation's `Stream`, and the one-shot `Query::Follow` answer an intake
+//! that cannot hold a connection gets — they are the accumulated answer. On the
+//! **follow lane** they are what landed since that read's previous frame. The
+//! two are one rule and not two spellings: absorb every frame of a read, in
+//! order, onto an empty fold, and a read of one frame lands on the accumulated
+//! value. So `delta` names the kind of the last content event either way, and
+//! nothing here needs a flag saying which kind of answer it is.
 
 use serde_json::{Map, Value, json};
 
