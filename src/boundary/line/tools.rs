@@ -33,17 +33,35 @@ pub(super) fn route(verb: &str, tail: &str) -> Result<Gesture, String> {
     }
 }
 
-/// `/invoke <client> <tool> <json input>` — queue one call for a machine.
+/// `/invoke <client> <tool> [--cwd <dir>] <json input>` — queue one call for
+/// a machine, optionally naming the subject's working directory (REMOTE §5's
+/// worktree lane, bl-77be). The flag sits between the words and the document
+/// because the document runs to the end of the line; a directory containing
+/// whitespace cannot ride this face, and the JSON serializations carry it
+/// whole.
 fn invoke(tail: &str, verb: &str) -> Result<Gesture, String> {
     let (client, rest) = args::first_word(tail);
-    let (tool, input) = args::first_word(&rest);
+    let (tool, mut input) = args::first_word(&rest);
     if client.is_empty() || tool.is_empty() {
-        return Err(format!("/{verb}: usage: /{verb} <client> <tool> <json>"));
+        return Err(format!(
+            "/{verb}: usage: /{verb} <client> <tool> [--cwd <dir>] <json>"
+        ));
+    }
+    let mut cwd = None;
+    let (flag, rest) = args::first_word(&input);
+    if flag == "--cwd" {
+        let (dir, tail) = args::first_word(&rest);
+        if dir.is_empty() {
+            return Err(format!("/{verb}: --cwd names no directory"));
+        }
+        cwd = Some(dir);
+        input = tail;
     }
     Ok(act(Action::Route(Verb::Invoke(Call {
         client,
         tool,
         input: document(&input, verb)?,
+        cwd,
     }))))
 }
 

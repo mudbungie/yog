@@ -51,16 +51,18 @@ pub fn invoke(
     site: &Site,
     entry: &loaded::Entry,
     input: &Value,
+    cwd: Option<&str>,
     stop: &AtomicBool,
 ) -> Result<Capture, String> {
-    let invocation = routed(
-        site,
-        &json!({ "op": "invoke", "client": entry.client,
-                 "tool": entry.tool.name, "input": input }),
-        &entry.client,
-        stop,
-    )?
-    .0;
+    let mut ask = json!({ "op": "invoke", "client": entry.client,
+                 "tool": entry.tool.name, "input": input });
+    // The subject's location rides only on the worktree lane (REMOTE §5.4,
+    // bl-77be): a loaded host-bound instance keeps its entry's own directory,
+    // which is that box's business.
+    if let (Some(cwd), Some(map)) = (cwd, ask.as_object_mut()) {
+        map.insert("cwd".to_owned(), Value::String(cwd.to_owned()));
+    }
+    let invocation = routed(site, &ask, &entry.client, stop)?.0;
     let poll = json!({ "op": "capture", "invocation": invocation });
     for _ in 0..site.patience.waits {
         if let (_, Some(capture)) = routed(site, &poll, &entry.client, stop)? {

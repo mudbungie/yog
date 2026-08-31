@@ -14,6 +14,7 @@ fn tool(name: &str) -> Tool {
         name: name.to_owned(),
         description: "does a thing".to_owned(),
         input_schema: json!({"type": "object"}),
+        subject_cwd: false,
     }
 }
 

@@ -108,6 +108,7 @@ fn the_roster_is_the_landed_clients_query() {
             name: "Bash".to_owned(),
             description: "run a command".to_owned(),
             input_schema: json!({"type": "object"}),
+            subject_cwd: false,
         }],
     }];
     let answer = crate::boundary::reply::encode(&Reply::Clients(rows.clone()));

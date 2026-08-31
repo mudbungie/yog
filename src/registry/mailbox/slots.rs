@@ -119,6 +119,7 @@ impl Mailbox {
                     id: id.clone(),
                     tool: call.tool.clone(),
                     input: call.input.clone(),
+                    cwd: call.cwd.clone(),
                 },
                 taken: false,
                 capture: None,

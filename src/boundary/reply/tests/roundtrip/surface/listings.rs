@@ -160,6 +160,16 @@ pub(super) fn listings() -> Vec<Reply> {
             files: vec!["workflow.yaml".into()],
         }]),
         Reply::Models(vec!["opus".into(), "sonnet".into()]),
+    ]);
+    out.extend(routing());
+    out
+}
+
+/// The routing leg's listing rows (bl-024b, bl-77be) — their own fn at the
+/// clippy line budget, and the seam is real: these are the two replies the
+/// worktree lane moved at PROTOCOL 2.
+fn routing() -> Vec<Reply> {
+    vec![
         // The follow-class read's answer at both of its arms (bl-024b): a hold
         // that ended with nothing, and one carrying work whose input must
         // survive the trip verbatim.
@@ -168,6 +178,15 @@ pub(super) fn listings() -> Vec<Reply> {
             id: "inv-1".into(),
             tool: "Bash".into(),
             input: serde_json::json!({"command": "ls -l", "timeout": 30}),
+            cwd: None,
+        }]),
+        // The worktree lane's row (bl-77be): the subject's location crosses
+        // to the machine that runs it.
+        Reply::Invocations(vec![crate::registry::mailbox::Invocation {
+            id: "inv-2".into(),
+            tool: "bash".into(),
+            input: serde_json::json!({"command": "printf made > out.txt"}),
+            cwd: Some("/w/home/agents/c-1".into()),
         }]),
         // REMOTE §5's roster (bl-4e08): both presence arms, a client that
         // advertises and one that has not, and a schema deep enough that a
@@ -176,15 +195,25 @@ pub(super) fn listings() -> Vec<Reply> {
             crate::registry::roster::ClientRow {
                 client: "laptop".into(),
                 present: true,
-                tools: vec![crate::registry::tools::Tool {
-                    name: "Bash".into(),
-                    description: "run a command".into(),
-                    input_schema: serde_json::json!({
-                        "type": "object",
-                        "properties": {"command": {"type": "string", "minLength": 1}},
-                        "required": ["command"],
-                    }),
-                }],
+                tools: vec![
+                    crate::registry::tools::Tool {
+                        name: "Bash".into(),
+                        description: "run a command".into(),
+                        input_schema: serde_json::json!({
+                            "type": "object",
+                            "properties": {"command": {"type": "string", "minLength": 1}},
+                            "required": ["command"],
+                        }),
+                        subject_cwd: false,
+                    },
+                    // The consenting element (bl-77be), beside the plain one.
+                    crate::registry::tools::Tool {
+                        name: "bash".into(),
+                        description: "run a command in the conversation's cwd".into(),
+                        input_schema: serde_json::json!({"type": "object"}),
+                        subject_cwd: true,
+                    },
+                ],
             },
             crate::registry::roster::ClientRow {
                 client: "phone".into(),
@@ -192,6 +221,5 @@ pub(super) fn listings() -> Vec<Reply> {
                 tools: Vec::new(),
             },
         ]),
-    ]);
-    out
+    ]
 }

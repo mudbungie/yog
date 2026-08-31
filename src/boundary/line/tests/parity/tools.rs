@@ -15,6 +15,7 @@ fn advertised() -> crate::registry::tools::Tool {
             "properties": {"command": {"type": "string", "minLength": 1}},
             "required": ["command"],
         }),
+        subject_cwd: false,
     }
 }
 
@@ -23,7 +24,11 @@ fn advertised() -> crate::registry::tools::Tool {
 /// never withdraw one.
 #[test]
 fn the_presentation_round_trips_with_its_schema_and_when_it_is_empty() {
-    for tools in [Vec::new(), vec![advertised()]] {
+    let consenting = crate::registry::tools::Tool {
+        subject_cwd: true,
+        ..advertised()
+    };
+    for tools in [Vec::new(), vec![advertised()], vec![consenting]] {
         rt(Gesture::Act(Action::Advertise { tools }));
     }
 }
@@ -34,13 +39,16 @@ fn the_presentation_round_trips_with_its_schema_and_when_it_is_empty() {
 /// nothing at all.
 #[test]
 fn the_routing_legs_gestures_round_trip() {
-    rt(Gesture::Act(Action::Route(
-        crate::registry::mailbox::Verb::Invoke(crate::registry::mailbox::Call {
-            client: "laptop".to_owned(),
-            tool: "Bash".to_owned(),
-            input: serde_json::json!({"command": "ls -l", "timeout": 30}),
-        }),
-    )));
+    for cwd in [None, Some("/w/home/agents/c-1".to_owned())] {
+        rt(Gesture::Act(Action::Route(
+            crate::registry::mailbox::Verb::Invoke(crate::registry::mailbox::Call {
+                client: "laptop".to_owned(),
+                tool: "Bash".to_owned(),
+                input: serde_json::json!({"command": "ls -l", "timeout": 30}),
+                cwd,
+            }),
+        )));
+    }
     rt(Gesture::Act(Action::Route(
         crate::registry::mailbox::Verb::Complete(crate::registry::mailbox::Completion {
             invocation: "inv-1".to_owned(),
@@ -55,6 +63,18 @@ fn the_routing_legs_gestures_round_trip() {
     rt(Gesture::Ask(Query::Capture {
         invocation: "inv-1".to_owned(),
     }));
+}
+
+/// The lane's flag must name a directory: a bare `--cwd` is the line's own
+/// refusal, before any gesture exists (bl-77be).
+#[test]
+fn a_cwd_flag_naming_nothing_is_refused() {
+    let e = crate::boundary::line::parse(
+        "/invoke laptop Bash --cwd",
+        &crate::boundary::line::Context::default(),
+    )
+    .expect_err("refused");
+    assert!(e.contains("--cwd names no directory"), "{e}");
 }
 
 /// The roster spells as the verb alone: its workspace is the seat's, exactly as

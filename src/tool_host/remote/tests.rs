@@ -46,7 +46,7 @@ fn the_poll_waits_for_a_capture_that_is_not_there_yet() {
         waits: 8,
         tick: Duration::from_millis(1),
     };
-    let got = invoke(&s, &entry(), &json!({"command": "ls"}), &quiet());
+    let got = invoke(&s, &entry(), &json!({"command": "ls"}), None, &quiet());
     handle.join().expect("engine");
     assert_eq!(
         got,
@@ -77,7 +77,7 @@ fn a_machine_that_never_answers_runs_out_and_says_so() {
         waits: 1,
         tick: Duration::ZERO,
     };
-    let e = invoke(&s, &entry(), &json!({}), &quiet()).expect_err("nothing answered");
+    let e = invoke(&s, &entry(), &json!({}), None, &quiet()).expect_err("nothing answered");
     handle.join().expect("engine");
     assert!(e.contains("inv-7") && e.contains("laptop"), "{e}");
 }
@@ -124,7 +124,7 @@ fn a_stop_ends_the_wait_on_the_tool() {
                 }
             }
         });
-        invoke(&s, &entry(), &json!({}), &stop)
+        invoke(&s, &entry(), &json!({}), None, &stop)
     });
     let said = format!("{got:?}");
     assert!(
@@ -144,8 +144,14 @@ fn an_answer_that_is_not_a_routed_invocation_names_itself() {
         (json!({"ok": true, "kind": "teleported"}), "undecodable"),
     ] {
         let (handle, _seen) = scripted(root.path(), &[reply]);
-        let e = invoke(&site(root.path(), budget()), &entry(), &json!({}), &quiet())
-            .expect_err("not an invocation");
+        let e = invoke(
+            &site(root.path(), budget()),
+            &entry(),
+            &json!({}),
+            None,
+            &quiet(),
+        )
+        .expect_err("not an invocation");
         handle.join().expect("engine");
         assert!(e.contains(needle), "{e}");
     }
@@ -159,6 +165,7 @@ fn no_engine_is_a_sentence_at_the_first_ask() {
         &site(root.path(), impatient()),
         &entry(),
         &json!({}),
+        None,
         &quiet(),
     )
     .expect_err("no consumer");

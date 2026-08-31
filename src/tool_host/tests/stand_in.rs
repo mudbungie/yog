@@ -72,6 +72,7 @@ pub(in crate::tool_host) fn tool(name: &str) -> Tool {
         name: name.to_owned(),
         description: format!("what {name} does"),
         input_schema: json!({"type": "object"}),
+        subject_cwd: false,
     }
 }
 

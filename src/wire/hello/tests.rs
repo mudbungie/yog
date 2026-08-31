@@ -91,7 +91,10 @@ fn a_peer_of_this_version_is_admitted_and_told_ours() {
 /// the whole of the upgrade prompt, so the test reads it rather than a code.
 #[test]
 fn a_peer_of_another_version_is_refused_by_name() {
-    let mut peer = Peer::stating(&json!({ "protocol": 2 }));
+    // Relative to OUR version, so the beat survives a lawful bump — the
+    // constant is the one authority and the fixture derives from it.
+    let other = PROTOCOL + 1;
+    let mut peer = Peer::stating(&json!({ "protocol": other }));
     assert!(!admit(&mut peer));
     let frames = peer.frames();
     assert_eq!(frames.len(), 2, "our preface, then the refusal");
@@ -99,7 +102,7 @@ fn a_peer_of_another_version_is_refused_by_name() {
     assert_eq!(frames[1]["ok"], json!(false));
     let said = frames[1]["error"].as_str().expect("a sentence");
     assert!(said.contains(&format!("version {PROTOCOL}")), "{said}");
-    assert!(said.contains("the peer speaks 2"), "{said}");
+    assert!(said.contains(&format!("the peer speaks {other}")), "{said}");
     assert!(said.contains("no negotiation"), "{said}");
 }
 

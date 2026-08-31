@@ -32,12 +32,15 @@
 //! inside the model's cached context, which is what REMOTE §5 was amended to
 //! exclude.
 //!
-//! **A name the router does not own is a refusal it renders.** Nothing resolves
-//! a binary behind the injection any more, so there is nothing to hand a name
-//! back to: an unowned name earns a non-zero capture saying so, which is the
-//! shape an absent binary produced anyway. A conversation with nothing loaded
-//! therefore refuses every ordinary call in band — REMOTE §12's ship-inert
-//! posture working, not an error state.
+//! **A name that is none of those takes the worktree lane** ([`subject`],
+//! REMOTE §5.4, bl-77be): a granted, unqualified name is a workspace-subject
+//! attempt — its subject is the conversation's working tree — routed to the
+//! ONE registered machine that both advertises the name and consents to
+//! workspace-cwd execution, with the conversation's resolved cwd on the
+//! invocation. Where no machine consents, the lane renders the refusal
+//! itself, in band and naming the way out — REMOTE §12's ship-inert posture
+//! working, not an error state: nothing resolves a binary behind the
+//! injection, so there is nothing to hand a name back to.
 //!
 //! **Adjudication is untouched and still runs first.** `yog tool-control`
 //! (DESIGN §8.6) is consulted before the executor routes anything, so a routed
@@ -73,6 +76,10 @@ pub mod loaded;
 pub mod remote;
 /// The dated observations the tool appends to context.
 pub mod render;
+/// The worktree lane (REMOTE §5.4, bl-77be): a granted, unqualified name
+/// routed to the workspace's one consenting machine, with the conversation's
+/// working directory on the invocation.
+pub mod subject;
 
 /// The loaded-set root's leaf under yog's state root, and the workspace/agent
 /// an answer is about — everything a `clients` op needs beyond the invocation
@@ -162,14 +169,6 @@ fn declaration() -> InjectedTool {
     }
 }
 
-/// **What a name nobody offers earns.** The router is total, so this is a
-/// refusal yog renders rather than a hand-back — and it is the *whole* of the
-/// ship-inert posture: a server with no machine enrolled, or an agent that has
-/// loaded nothing, refuses every ordinary call in band and the model steps on.
-/// It names the way out rather than the rule, because its reader is a model.
-const UNLOADED: &str = "no tool of that name is loaded in this conversation; \
-     use the clients tool to see this workspace's machines and load what one advertises";
-
 /// A [`Result`] in the stdio vocabulary litany's executor already speaks
 /// (`docs/DESIGN_TOOL_INJECTION.md` §3.1): a product on stdout at exit 0, or
 /// the reason on stderr at exit 1. The model cannot tell this from a local
@@ -196,7 +195,7 @@ fn capture(name: &str, answered: Result<String, String>) -> RoutedCapture {
 /// failure is the in-band refusal [`capture`] spells, which is the shape a
 /// vanished endpoint already had to produce (litany's §3.3).
 fn routed(site: &Site, entry: &loaded::Entry, call: &RoutedCall<'_>) -> RoutedCapture {
-    match remote::invoke(site, entry, call.input, call.stop) {
+    match remote::invoke(site, entry, call.input, None, call.stop) {
         Ok(got) => RoutedCapture {
             stdout: got.stdout.into_bytes(),
             stderr: got.stderr.into_bytes(),
@@ -232,9 +231,13 @@ impl ToolInjection for Injection {
         out
     }
 
-    /// Answer every name, because the router is total (litany's inverted seam):
-    /// the `clients` tool, the compactor's two engine acts, every loaded remote
-    /// name — and a refusal, rendered here, for anything else.
+    /// Answer every name, because the router is total (litany's inverted
+    /// seam): the `clients` tool, the six engine acts, every loaded remote
+    /// name — and, for everything else, the **worktree lane** (REMOTE §5.4,
+    /// bl-77be): a granted, unqualified name is a workspace-subject attempt,
+    /// routed to the workspace's one consenting machine with the
+    /// conversation's working directory on the invocation, and refused in
+    /// band naming the way out when no machine consents.
     fn route(&self, call: RoutedCall<'_>) -> RoutedCapture {
         let site = self.site(call.workspace, call.agent);
         if call.name == clients::NAME {
@@ -248,7 +251,7 @@ impl ToolInjection for Injection {
             .find(|entry| entry.presented() == call.name)
         {
             Some(entry) => routed(&site, &entry, &call),
-            None => capture(call.name, Err(UNLOADED.to_owned())),
+            None => subject::answer(&site, &call),
         }
     }
 }

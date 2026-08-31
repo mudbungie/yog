@@ -131,10 +131,11 @@ fn a_loaded_tool_is_declared_under_its_own_name() {
 }
 
 /// **A name the injection does not own is a refusal it renders**, because the
-/// router is total and nothing resolves a binary behind it. A conversation with
-/// nothing loaded therefore refuses every ordinary call in band — the ship-inert
-/// posture working — while the compactor's engine acts still go through, so
-/// nothing about compaction depends on a machine being enrolled.
+/// router is total and nothing resolves a binary behind it. With nothing
+/// loaded and no machine advertising the name, the worktree lane (bl-77be)
+/// renders the loadless sentence with both remedies — the ship-inert posture
+/// working — while the compactor's engine acts still go through, so nothing
+/// about compaction depends on a machine being enrolled.
 #[test]
 fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
     let root = TempDir::new().expect("tmp");
@@ -143,12 +144,21 @@ fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
     let stop = AtomicBool::new(false);
     let live = at(root.path(), door, budget());
 
+    let (engine, _seen) = scripted(
+        root.path(),
+        &[json!({"ok": true, "kind": "clients", "rows": []})],
+    );
     let refused = live.route(call!("Read", &input, &stop));
+    engine.join().expect("engine");
     assert_eq!(refused.exit_code, 1);
     assert!(refused.stdout.is_empty());
     let said = String::from_utf8_lossy(&refused.stderr).into_owned();
     assert!(
         said.starts_with("Read: no tool of that name is loaded"),
+        "{said}"
+    );
+    assert!(
+        said.contains("no machine of this workspace advertises"),
         "{said}"
     );
     assert!(said.contains("use the clients tool"), "{said}");

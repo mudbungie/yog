@@ -13,6 +13,7 @@ fn call(client: &str, tool: &str) -> Call {
         client: client.to_owned(),
         tool: tool.to_owned(),
         input: json!({"command": "ls"}),
+        cwd: None,
     }
 }
 
@@ -42,6 +43,7 @@ fn an_invocation_crosses_and_the_capture_comes_back() {
             id: id.clone(),
             tool: "Bash".to_owned(),
             input: json!({"command": "ls"}),
+            cwd: None,
         }]
     );
     assert_eq!(mail.complete("laptop", &id, &ran(0)), Ok(ran(0)));

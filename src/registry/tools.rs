@@ -40,8 +40,10 @@ use crate::boundary::codec::fields::str_of;
 /// One client's advertised set, under its own registry directory.
 pub const TOOLS: &str = "tools.json";
 
-/// One advertised tool (REMOTE §5): the three facts, and the JSON Schema
-/// carried as the value it arrived as.
+/// One advertised tool (REMOTE §5): the three facts, the JSON Schema carried
+/// as the value it arrived as — and the optional fourth fact (REMOTE §5.4's
+/// worktree lane, bl-77be): whether the advertising box consents to run this
+/// tool at a working directory the invocation names.
 ///
 /// **[`Eq`] is written rather than derived**, because [`Value`] is not `Eq` —
 /// it holds `f64`, whose `NaN` is the one value equality is not reflexive over.
@@ -57,6 +59,12 @@ pub struct Tool {
     pub description: String,
     /// Its JSON Schema, verbatim.
     pub input_schema: Value,
+    /// Whether the advertising box consents to executing this tool at the
+    /// invocation's own working directory (`"subject_cwd": true` in that
+    /// box's tools.json; absent reads false). Advertised because the engine
+    /// routes the worktree lane on it — a bare granted name goes to the ONE
+    /// registered client that both advertises it and consents.
+    pub subject_cwd: bool,
 }
 
 impl Eq for Tool {}
@@ -78,8 +86,12 @@ pub fn encode(tools: &[Tool]) -> Value {
 /// definition frozen at the load act beside the client it came from — a second
 /// spelling of these three keys is exactly the drift this module's doc refuses.
 pub fn one(t: &Tool) -> Value {
-    json!({ "name": t.name, "description": t.description,
-            "input_schema": t.input_schema })
+    let mut o = json!({ "name": t.name, "description": t.description,
+            "input_schema": t.input_schema });
+    if let (true, Some(map)) = (t.subject_cwd, o.as_object_mut()) {
+        map.insert("subject_cwd".to_owned(), Value::Bool(true));
+    }
+    o
 }
 
 /// Read a set back, strictly — a missing field or a mistyped one refuses with
@@ -104,6 +116,11 @@ pub fn of_one(row: &Value) -> Result<Tool, String> {
             .get("input_schema")
             .cloned()
             .ok_or("tool: missing field \"input_schema\"")?,
+        subject_cwd: match o.get("subject_cwd") {
+            None => false,
+            Some(Value::Bool(b)) => *b,
+            Some(_) => return Err("tool: field \"subject_cwd\" is not a boolean".to_owned()),
+        },
     })
 }
 

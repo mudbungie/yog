@@ -36,8 +36,14 @@ pub(super) fn encode(set: &[tools::Tool]) -> Value {
 /// spend and the same the client-side executor writes.
 pub(super) fn encode_route(verb: &mailbox::Verb) -> Value {
     match verb {
-        mailbox::Verb::Invoke(call) => json!({ "op": INVOKE, "client": call.client,
-                                               "tool": call.tool, "input": call.input }),
+        mailbox::Verb::Invoke(call) => {
+            let mut o = json!({ "op": INVOKE, "client": call.client,
+                                "tool": call.tool, "input": call.input });
+            if let (Some(cwd), Some(map)) = (&call.cwd, o.as_object_mut()) {
+                map.insert("cwd".to_owned(), Value::String(cwd.clone()));
+            }
+            o
+        }
         mailbox::Verb::Complete(done) => {
             json!({ "op": COMPLETE, "invocation": done.invocation,
                     "capture": mailbox::capture_value(&done.capture) })
@@ -55,6 +61,7 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String>
             client: str_of(o, "client")?,
             tool: str_of(o, "tool")?,
             input: o.get("input").cloned().ok_or("invoke: missing input")?,
+            cwd: mailbox::cwd_of(o).map_err(|e| format!("invoke: {e}"))?,
         }))),
         COMPLETE => Ok(Action::Route(mailbox::Verb::Complete(
             mailbox::Completion {

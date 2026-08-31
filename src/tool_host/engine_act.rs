@@ -46,13 +46,38 @@ use ::litany::cmd::{RoutedCall, RoutedCapture};
 use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 
 /// **The engine-act name set, closed and enumerated here and nowhere else.**
-/// Two names, because the compactor's procedure is the only source of injected
-/// definitions litany has besides the host. A third would be a deliberate act
-/// upstream, and it would arrive here as a row — never as a prefix test or a
-/// name shape, which is how a closed set stops being closed. The strings are
-/// yog's own spelling: the engine keeps its constants crate-private, so the
-/// names cross as text exactly as they do in the model's `tool_use` block.
-pub const NAMES: [&str; 2] = ["write_summary", "mark_for_deletion"];
+/// Six rows since bl-77be, in two families, each admitted by the
+/// subject-locality invariant (REMOTE §5: *"a tool executes where its subject
+/// lives"*) and by nothing else:
+///
+/// - the compactor's procedure pair (`write_summary`, `mark_for_deletion`,
+///   REMOTE §5.4, bl-dfce) — the conversation's own summary and files;
+/// - the conversation-subject worker grants (REMOTE §5.4 as amended by
+///   bl-77be): `dispatch` mints and launches a child conversation on the
+///   workspace the server holds, `message` deposits into another
+///   conversation's inbox, `load_skill` copies a server-disk skill into the
+///   agent's server-disk worktree, and `cd` writes the agent's
+///   working-directory mark, a ref on the workspace. None of them is work on
+///   a *machine*, so none of them is a thrall's — routing them anywhere would
+///   send a box that does not hold the world a request about it.
+///
+/// What is deliberately NOT here: `bash`, `read_file`, `apply_patch` — acts
+/// at the conversation's working directory, which is machine work and takes
+/// the worktree lane ([`super::subject`]); and `multi_tool`, which litany's
+/// own step loop fans out before any router sees it. A seventh row is a
+/// deliberate act with this audit's question asked again — never a prefix
+/// test or a name shape, which is how a closed set stops being closed. The
+/// strings are yog's own spelling: the engine keeps its constants
+/// crate-private, so the names cross as text exactly as they do in the
+/// model's `tool_use` block.
+pub const NAMES: [&str; 6] = [
+    "write_summary",
+    "mark_for_deletion",
+    "dispatch",
+    "message",
+    "load_skill",
+    "cd",
+];
 
 /// The `litany` verb the built-in front door answers under.
 const VERB: &str = "tool";
@@ -103,7 +128,11 @@ fn run(
             (CONV_BRANCH.to_owned(), call.agent.to_owned()),
         ])
         .run_input(
-            Some(call.workspace),
+            // The caller's resolved working directory (litany bl-ddaa), which
+            // is the §3.3 contract for in-process built-ins — a relative `cd`
+            // resolves against where the agent stands, not against the
+            // workspace root.
+            Some(call.cwd),
             call.input.to_string().as_bytes(),
             &[VERB, call.name],
         )

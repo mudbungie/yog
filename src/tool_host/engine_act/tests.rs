@@ -65,13 +65,29 @@ fn the_pair_is_performed_at_the_engines_own_front_door() {
     );
 }
 
-/// The set is closed and enumerated in one place, and both members go through
-/// it — the second name is not a variation on the first.
+/// The set is closed and enumerated in one place, and every member goes
+/// through it. The six rows are the two subject-locality families (bl-77be):
+/// the compactor's procedure pair, and the conversation-subject worker
+/// grants — while the worktree names (`bash`, `read_file`, `apply_patch`)
+/// and litany's own `multi_tool` stay out, each for the reason the roster's
+/// doc states.
 #[test]
-fn both_names_are_engine_acts_and_nothing_else_is() {
-    assert_eq!(NAMES, ["write_summary", "mark_for_deletion"]);
+fn the_six_names_are_engine_acts_and_nothing_else_is() {
+    assert_eq!(
+        NAMES,
+        [
+            "write_summary",
+            "mark_for_deletion",
+            "dispatch",
+            "message",
+            "load_skill",
+            "cd",
+        ]
+    );
     assert!(NAMES.iter().copied().all(is));
-    assert!(!is("Bash"));
+    for machine_work in ["bash", "read_file", "apply_patch", "multi_tool", "Bash"] {
+        assert!(!is(machine_work), "{machine_work} is not an engine act");
+    }
     assert!(!is("write_summary_2"));
 }
 
@@ -189,5 +205,49 @@ fn a_working_engine_is_ended_by_the_stop_flag_and_by_the_deadline() {
         String::from_utf8_lossy(&capture.stderr).contains("did not answer within"),
         "{:?}",
         String::from_utf8_lossy(&capture.stderr)
+    );
+}
+
+/// **The four conversation-subject grants perform at the same front door**
+/// (bl-77be) — the defect's own probe, answered: `dispatch`, `message`,
+/// `load_skill` and `cd` each reach `<driver_target> tool <name>` with the
+/// caller identity on the environment and the input on stdin, where before
+/// the audit every one of them earned the loadless refusal. The engine's own
+/// semantics stay upstream's; what is proven here is that the router now
+/// takes these names to the engine instead of to a machine or a refusal.
+#[test]
+fn the_worker_grants_perform_at_the_engines_own_front_door() {
+    let root = TempDir::new().expect("tmp");
+    let door = front_door(
+        root.path(),
+        "printf '%s|%s|%s|%s|%s' \"$1\" \"$2\" \
+         \"$LITANY_CONV_REPO\" \"$LITANY_CONV_BRANCH\" \"$(cat)\"",
+    );
+    let stop = AtomicBool::new(false);
+    for (name, input) in [
+        ("dispatch", json!({"role": "worker", "goal": "g"})),
+        ("message", json!({"agent": "amber", "content": "hi"})),
+        ("load_skill", json!({"name": "review"})),
+        ("cd", json!({"path": "sub"})),
+    ] {
+        let capture = perform(
+            &door,
+            budget().span(),
+            &act!(name, root.path(), &input, &stop),
+        );
+        assert_eq!(capture.exit_code, 0, "{name}");
+        assert_eq!(
+            String::from_utf8_lossy(&capture.stdout),
+            format!(
+                "tool|{name}|{}|dulcet-mongoose|{}",
+                root.path().display(),
+                input
+            ),
+            "{name} crosses the front door with the caller's identity"
+        );
+    }
+    assert!(
+        deposit::pending(root.path()).is_empty(),
+        "an engine act queues nothing at any machine's mailbox"
     );
 }

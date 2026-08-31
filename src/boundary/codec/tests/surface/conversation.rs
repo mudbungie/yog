@@ -16,6 +16,7 @@ fn advertised() -> crate::registry::tools::Tool {
             "properties": {"command": {"type": "string", "minLength": 1}},
             "required": ["command"],
         }),
+        subject_cwd: false,
     }
 }
 
@@ -86,19 +87,30 @@ pub(super) fn surface() -> Vec<Gesture> {
     out.push(Gesture::Act(Action::ClearTrail));
     // REMOTE §5's presentation (bl-4e08). The empty set is a set — a host that
     // stops offering everything says so with this gesture, not by silence —
-    // and the schema must survive the trip verbatim.
-    for tools in [Vec::new(), vec![advertised()]] {
+    // and the schema must survive the trip verbatim. The consenting element
+    // (bl-77be) rides beside the plain one, because a table that only ever
+    // spells the easy case proves only that the easy case crosses.
+    let consenting = crate::registry::tools::Tool {
+        subject_cwd: true,
+        ..advertised()
+    };
+    for tools in [Vec::new(), vec![advertised()], vec![consenting]] {
         out.push(Gesture::Act(Action::Advertise { tools }));
     }
     // The routing leg's two acts (bl-024b): the model's arguments and the
-    // program's own output, each carried verbatim.
-    out.push(Gesture::Act(Action::Route(
-        crate::registry::mailbox::Verb::Invoke(crate::registry::mailbox::Call {
-            client: "laptop".into(),
-            tool: "Bash".into(),
-            input: serde_json::json!({"command": "ls -l", "timeout": 30}),
-        }),
-    )));
+    // program's own output, each carried verbatim. The worktree lane's call
+    // (bl-77be) rides beside the bare one: the subject's location is an
+    // optional field, and both arms must cross.
+    for cwd in [None, Some("/w/home/agents/c-1".to_owned())] {
+        out.push(Gesture::Act(Action::Route(
+            crate::registry::mailbox::Verb::Invoke(crate::registry::mailbox::Call {
+                client: "laptop".into(),
+                tool: "Bash".into(),
+                input: serde_json::json!({"command": "ls -l", "timeout": 30}),
+                cwd,
+            }),
+        )));
+    }
     out.push(Gesture::Act(Action::Route(
         crate::registry::mailbox::Verb::Complete(crate::registry::mailbox::Completion {
             invocation: "inv-1".into(),

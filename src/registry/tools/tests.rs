@@ -13,6 +13,7 @@ fn tool(name: &str) -> Tool {
         name: name.to_owned(),
         description: format!("what {name} does"),
         input_schema: json!({"type": "object", "properties": {"path": {"type": "string"}}}),
+        subject_cwd: false,
     }
 }
 
@@ -101,4 +102,29 @@ fn an_unwritable_document_refuses() {
     let tmp = TempDir::new().expect("tmp");
     std::fs::write(tmp.path().join(super::super::CLIENTS), b"not a directory").expect("write");
     assert!(store(tmp.path(), &client("laptop"), &[tool("Bash")]).is_err());
+}
+
+/// **The consent fact reads strictly** (bl-77be): true rides and rounds,
+/// absence is false, and a mistyped value refuses rather than silently
+/// dropping — or inventing — an operator's statement.
+#[test]
+fn subject_cwd_rides_only_when_true_and_a_mistyped_one_refuses() {
+    let consenting = Tool {
+        subject_cwd: true,
+        ..tool("bash")
+    };
+    let spelled = one(&consenting);
+    assert_eq!(spelled.get("subject_cwd"), Some(&serde_json::json!(true)));
+    assert_eq!(of_one(&spelled), Ok(consenting));
+
+    let plain = one(&tool("Bash"));
+    assert!(plain.get("subject_cwd").is_none(), "absence is the default");
+    assert_eq!(of_one(&plain), Ok(tool("Bash")));
+
+    let mut mistyped = one(&tool("Bash"));
+    mistyped["subject_cwd"] = serde_json::json!("yes");
+    assert_eq!(
+        of_one(&mistyped),
+        Err("tool: field \"subject_cwd\" is not a boolean".to_owned())
+    );
 }

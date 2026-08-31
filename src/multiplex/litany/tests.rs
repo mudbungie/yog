@@ -89,6 +89,7 @@ fn the_minting_verb_and_the_naming_verb_declare_one_set() {
                 name: "Bash".to_owned(),
                 description: "run a command".to_owned(),
                 input_schema: serde_json::json!({"type": "object"}),
+                subject_cwd: false,
             },
         }],
     )

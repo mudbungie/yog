@@ -611,10 +611,12 @@ where it is the same ruling it always was.
   Substrate access therefore reaches an agent as a **tool the executing end
   advertises** (§12's thrall) or as an engine act, never as ambient inherited
   env. As the tree stands the executing end already supplies its own
-  environment — `src/wire/host/exec.rs` spawns the operator's argv folding
-  nothing off the wire — and the subject location is the host config's own
-  `cwd` (§5.2); carrying the location on the *invocation* instead is the half
-  bl-1dd3's thrall moves.
+  environment, and the subject location is the host config's own
+  `cwd` (§5.2) for every cwd-less invocation. **Carrying the location on the
+  *invocation* — the half this bullet said the thrall move owed — landed with
+  bl-77be's worktree lane** (§5.4): an `invoke` may carry the conversation's
+  resolved working directory, and the far end honours it only for an entry its
+  own operator marked `subject_cwd` (§5.2's document; thrall's DESIGN §3.4).
 - **No broadcast** (bl-71d0). The invocation shape names one addressee and takes
   no hosts list, in the wire verb (§5.3's `invoke`) and in the loaded name
   alike. One adjudication decision must stand for exactly one execution on one
@@ -668,12 +670,17 @@ where it is the same ruling it always was.
   carries. Enrolling a thrall — the local one included — is the explicit
   operator act that makes execution possible at all.
 
-  **Two names reach that router and are not tool calls at all** (bl-dfce): the
-  compactor's procedure pair, which yog answers itself as an **engine act**
-  rather than routing anywhere. The road above is the road every call *on a
-  machine* takes, and that is the whole of what "the same road" ever claimed;
-  §5.4 records the ruling, its subject-locality reasoning and how the acts are
-  performed. A server with no thrall therefore still compacts.
+  **Six names reach that router and are not tool calls on a machine at all**
+  (bl-dfce widened by bl-77be): the compactor's procedure pair and the four
+  conversation-subject worker grants (`dispatch`, `message`, `load_skill`,
+  `cd`), which yog answers itself as **engine acts** rather than routing
+  anywhere. The road above is the road every call *on a machine* takes, and
+  that is the whole of what "the same road" ever claimed; §5.4 records the
+  ruling, the name-by-name subject audit and how the acts are performed. A
+  server with no thrall therefore still compacts, dispatches subagents,
+  messages, loads skills and moves its agents' working directories — and the
+  worktree names (`bash`, `read_file`, `apply_patch`) take §5.4's worktree
+  lane to the workspace's one consenting thrall.
 - **Honesty about containment:** execution happens on a machine the
   adjudicator cannot inspect. Adjudication judges the invocation exactly as
   today; any containment beyond that is whatever the client enforces locally,
@@ -717,6 +724,14 @@ carries one field, `tools`, an array whose element is exactly three facts:
 - **`input_schema` is the JSON Schema, verbatim.** yog neither validates nor
   rewrites it: it is the host's statement to a model, and any narrowing here
   would be yog inventing a contract it does not own.
+- **`subject_cwd` is the one optional fourth fact** (bl-77be, PROTOCOL 2):
+  `true` states that the advertising box consents to run this tool at a
+  working directory the invocation names — §5.4's worktree lane routes on it.
+  Absent reads false, rides only when true, and a mistyped value refuses at
+  the read. It is advertised rather than kept local because it is the fact the
+  ENGINE routes on; it stays checkable because the box that stated it is the
+  box that enforces it (thrall refuses a carried cwd against an unconsenting
+  entry, in band, naming the key).
 
 Nothing else. There is no version, no enable flag and no per-workspace list —
 each would be a fact yog stores and cannot check.
@@ -955,8 +970,14 @@ of `wire/` and of the world subtree, for the same reason the key material is
   "cwd": "/srv/work"}]
 ```
 
-The first three keys **are** §5.1's advertised element, verbatim; `command` and
-the optional `cwd` are the local half. The client presents the advertisement by
+The first three keys — and an optional `"subject_cwd": true` (bl-77be) —
+**are** §5.1's advertised element, verbatim; `command` and
+the optional `cwd` are the local half. `subject_cwd` is the worktree lane's
+per-tool consent (§5.4): this box will execute that entry at the working
+directory an invocation carries, overriding the entry's own `cwd`. It is the
+operator's statement about the machine, in the machine's own file, and
+deleting the key deletes the capability — the severability the whole document
+exists for. The client presents the advertisement by
 reading this file and dropping the local half — one document, two readings — so
 what a host offers and what it can actually run cannot drift, which is the whole
 of why the config is not a second list beside the advertisement.
@@ -979,7 +1000,12 @@ verbatim (§5.1), and any other syntax would make the operator transcribe it.
 tool host's — `invocations`, the follow-class read that waits for this
 machine's next work, and `complete`, the act that answers one — and two are the
 asking side's: `invoke`, which queues a call for the machine that advertised
-the tool, and `capture`, which polls for what came back. All four are ordinary
+the tool, and `capture`, which polls for what came back. Since bl-77be an
+`invoke` — and the `invocations` row the far machine is handed — may carry one
+optional field, `cwd`: the subject's location (§5's worktree lane), set only
+by the lane and honoured only under §5.2's `subject_cwd` consent. That field
+and §5.1's consent flag are the two shape moves PROTOCOL 2 versions; the
+corpus ledger is what forced the bump. All four are ordinary
 gestures in all three serializations, typable at any seat, and the compile
 gates (`codec`, `line::spell`, the dispatch and answer matches) are what
 enforced it.
@@ -1117,6 +1143,71 @@ tool" an absent binary produced behind the front door. That is §12's ship-inert
 posture reaching its natural edge — a server with zero enrolled thralls refuses
 every ordinary call in band **and still compacts**, because compaction was
 never a machine's work.
+
+**The conversation-subject worker grants are engine acts too** (bl-77be,
+which widened bl-dfce's set from two to six). The engine's shipped worker
+grant carries eight names, and under the total router seven refused —
+subagents, inter-agent messaging, the skills corpus and every act on the
+conversation's own worktree all dead in band. The remedy is not one mechanism
+but the subject-locality audit, name by name:
+
+- **`dispatch`** mints and launches a child conversation — branch, goal
+  deposit, driver launch, all on the workspace the server holds. Engine act.
+- **`message`** deposits into another conversation's inbox. Engine act.
+- **`load_skill`** copies a server-disk skill (`<data-root>/skills/<name>`)
+  into the agent's server-disk worktree. Engine act.
+- **`cd`** writes the agent's working-directory mark, a ref on the workspace,
+  and validates the path against the filesystem that holds the worktree.
+  Engine act — and its validation being server-side is consistent with the
+  lane below, whose consenting box holds that same filesystem.
+- **`bash`, `read_file`, `apply_patch`** are execution and filesystem acts at
+  the conversation's working directory: machine work, never an engine act —
+  the worktree lane below.
+- **`multi_tool`** never reaches the router at all (the engine's own step
+  loop fans it out); each inner name is judged on its own subject.
+
+The engine-act name set stays closed and enumerated in exactly one place
+(`src/tool_host/engine_act.rs`), now six rows, and the mechanism is bl-dfce's
+unchanged: re-entry at the engine's own front door with the caller identity on
+the child's environment — and, since the seam hands it over (litany bl-ddaa),
+at the caller's **resolved working directory**, which is the engine's own
+contract for in-process built-ins (a relative `cd` resolves against where the
+agent stands). A seventh row is a deliberate act with this audit's question
+asked again.
+
+**The worktree lane** (bl-77be). A granted, unqualified name that is neither
+the `clients` tool, an engine act, nor a loaded host-qualified instance is a
+**workspace-subject attempt**: its subject is the conversation's working tree,
+the worktree lives on the server's box, so the subject already chose the
+executing box — which is why a bare name is not a call with an implicit
+location, and why §5's locality-rides-in-the-name rule for *loaded* instances
+is not contradicted. The router resolves it against the workspace roster: the
+ONE registered client that both advertises the name and consents to
+workspace-cwd execution (`subject_cwd`, §5.1/§5.2) executes it, and the
+invocation carries the conversation's resolved working directory — the
+mark-or-worktree resolution the engine already performs, crossing the seam as
+`RoutedCall::cwd` (litany bl-ddaa). Zero consenting advertisers is an in-band
+refusal naming both ways out (load a host-bound instance, which runs in that
+box's own directory; or the operator marks an entry `subject_cwd` on the box
+that holds this server's worktrees). More than one is a config ambiguity,
+refused naming every claimant: one adjudication decision must stand for
+exactly one execution on one machine (§5, no broadcast). The consenting box is
+normally the co-located thrall — the normal install above — because it
+actually holds the worktrees; a box that consents without holding them earns
+honest in-band failures from its own end (thrall refuses a directory it does
+not hold, naming it). Front-door-only and ship-inert are untouched: the lane
+is the same adjudicate → mailbox → execute → capture pipeline every call
+takes, the server still executes nothing, and a workspace with no consenting
+thrall refuses in band, which is the posture working.
+
+Two shapes this deliberately is not. **Not a narrowed grant**: cutting the
+shipped grant to `[multi_tool]` would stop the decoys and give nothing back —
+the four capabilities the grant names are real and the audit above houses
+each. **Not engine-side execution**: answering `bash` at the engine's front
+door (the compactor pair's mechanism) would be the server executing machine
+work in its own process — the exact second pipeline §12's front-door invariant
+exists to exclude; the compactor carve-out does not stretch to names whose
+subject is a filesystem act.
 
 **Local config gates what a thrall enables**, and it is §5.2's document
 unchanged: `<yog-data-root>/tools.json` on the thrall's own box, operator

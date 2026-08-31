@@ -125,7 +125,17 @@ fn spell_action(action: &Action) -> String {
 fn spell_route(verb: &crate::registry::mailbox::Verb) -> String {
     use crate::registry::mailbox::{Verb, capture_value};
     match verb {
-        Verb::Invoke(call) => format!("/invoke {} {} {}", call.client, call.tool, call.input),
+        Verb::Invoke(call) => match &call.cwd {
+            // The subject's location rides as a word between the tool and the
+            // document (bl-77be) — the one line spelling, mirrored by the
+            // reader. A cwd containing whitespace cannot ride the line face;
+            // the JSON serializations carry it whole.
+            Some(cwd) => format!(
+                "/invoke {} {} --cwd {} {}",
+                call.client, call.tool, cwd, call.input
+            ),
+            None => format!("/invoke {} {} {}", call.client, call.tool, call.input),
+        },
         Verb::Complete(done) => format!(
             "/complete {} {}",
             done.invocation,

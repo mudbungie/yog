@@ -54,6 +54,11 @@ pub struct Call {
     pub tool: String,
     /// The `tool_use.input` JSON, verbatim.
     pub input: Value,
+    /// The subject's location, when the call carries one (REMOTE §5's
+    /// worktree lane, bl-77be): the conversation's resolved working
+    /// directory, honoured at the far end only for an entry its operator
+    /// marked `subject_cwd`.
+    pub cwd: Option<String>,
 }
 
 impl Eq for Call {}
@@ -68,6 +73,9 @@ pub struct Invocation {
     pub id: String,
     pub tool: String,
     pub input: Value,
+    /// The subject's location the call carried, passed to the machine that
+    /// runs it (bl-77be).
+    pub cwd: Option<String>,
 }
 
 impl Eq for Invocation {}
@@ -141,6 +149,17 @@ pub fn capture_of(v: &Value) -> Result<Capture, String> {
     })
 }
 
+/// The optional subject location (bl-77be), read strictly: absent and null
+/// are the ordinary no-location case, and anything but a string refuses —
+/// a place a tool will run is an instruction, not an observation.
+pub fn cwd_of(o: &serde_json::Map<String, Value>) -> Result<Option<String>, String> {
+    match o.get("cwd") {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(s)) => Ok(Some(s.clone())),
+        Some(_) => Err("field \"cwd\" is not a string".to_owned()),
+    }
+}
+
 /// An exit code narrowed to what a process can actually have exited with.
 fn exit_of(code: i64) -> Result<i32, String> {
     i32::try_from(code).map_err(|_| format!("capture: exit_code {code} out of range"))
@@ -148,8 +167,12 @@ fn exit_of(code: i64) -> Result<i32, String> {
 
 /// One queued invocation as JSON — the follow-class read's row.
 pub fn invocation_value(invocation: &Invocation) -> Value {
-    json!({ "invocation": invocation.id, "tool": invocation.tool,
-            "input": invocation.input })
+    let mut o = json!({ "invocation": invocation.id, "tool": invocation.tool,
+            "input": invocation.input });
+    if let (Some(cwd), Some(map)) = (&invocation.cwd, o.as_object_mut()) {
+        map.insert("cwd".to_owned(), Value::String(cwd.clone()));
+    }
+    o
 }
 
 /// [`invocation_value`]'s inverse, on the same strict terms.
@@ -162,6 +185,7 @@ pub fn invocation_of(v: &Value) -> Result<Invocation, String> {
             .get("input")
             .cloned()
             .ok_or("invocation: missing field \"input\"")?,
+        cwd: cwd_of(o)?,
     })
 }
 

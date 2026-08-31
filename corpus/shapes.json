@@ -1,5 +1,5 @@
 {
-  "protocol": 1,
+  "protocol": 2,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -219,13 +219,14 @@
         "/rows/[]/tools/[]/input_schema/type:string",
         "/rows/[]/tools/[]/input_schema:object",
         "/rows/[]/tools/[]/name:string",
+        "/rows/[]/tools/[]/subject_cwd:bool",
         "/rows/[]/tools/[]:object",
         "/rows/[]/tools:array",
         "/rows/[]:object",
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/config": {
       "signature": [
@@ -422,6 +423,7 @@
       "signature": [
         "/kind:string",
         "/ok:bool",
+        "/rows/[]/cwd:string",
         "/rows/[]/input/command:string",
         "/rows/[]/input/timeout:number",
         "/rows/[]/input:object",
@@ -431,7 +433,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/lineages": {
       "signature": [
@@ -878,11 +880,12 @@
         "/tools/[]/input_schema/type:string",
         "/tools/[]/input_schema:object",
         "/tools/[]/name:string",
+        "/tools/[]/subject_cwd:bool",
         "/tools/[]:object",
         "/tools:array",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "request/agent": {
       "signature": [
@@ -1204,6 +1207,7 @@
     "request/invoke": {
       "signature": [
         "/client:string",
+        "/cwd:string",
         "/input/command:string",
         "/input/timeout:number",
         "/input:object",
@@ -1211,7 +1215,7 @@
         "/tool:string",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "request/lineages": {
       "signature": [

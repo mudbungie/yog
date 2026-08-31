@@ -17,6 +17,7 @@ fn tool(name: &str) -> tools::Tool {
         name: name.to_owned(),
         description: "does a thing".to_owned(),
         input_schema: json!({"type": "object"}),
+        subject_cwd: false,
     }
 }
 
@@ -51,6 +52,7 @@ fn call(client: &str, tool: &str) -> Call {
         client: client.to_owned(),
         tool: tool.to_owned(),
         input: json!({"command": "ls"}),
+        cwd: None,
     }
 }
 
@@ -92,6 +94,7 @@ fn a_call_crosses_and_the_capture_comes_back() {
                 id: id.clone(),
                 tool: "Bash".to_owned(),
                 input: json!({"command": "ls"}),
+                cwd: None,
             }
         ]))
     );

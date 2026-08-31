@@ -9,6 +9,7 @@ fn tool(name: &str) -> Tool {
         name: name.to_owned(),
         description: format!("what {name} does"),
         input_schema: json!({"type": "object", "properties": {"cmd": {"type": "string"}}}),
+        subject_cwd: false,
     }
 }
 
