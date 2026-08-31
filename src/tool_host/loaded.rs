@@ -28,10 +28,17 @@
 //! staleness that freezing admits is corrected where §5 already corrects it —
 //! *"a client refuses a tool it no longer carries"*, in band, at the call.
 //!
-//! **The key is the agent, and there is no unload.** v1 offers no subtraction
-//! and no inheritance: the set belongs to the agent that loaded it, so a fresh
-//! conversation — and a freshly dispatched subagent — starts clean and loads
-//! what it needs through the same `clients` tool every agent always has.
+//! **The key is the agent, and there is no inheritance.** The set belongs to
+//! the agent that loaded it, so a fresh conversation — and a freshly dispatched
+//! subagent — starts clean and loads what it needs through the same `clients`
+//! tool every agent always has.
+//!
+//! **Two writers, and they are symmetric** (REMOTE §5.2, bl-3455). [`add`] is
+//! the load act's, [`remove`] the unload act's, and neither resolves a name:
+//! each takes entries the act already resolved — load's against what the client
+//! advertises right now, unload's against what this document actually holds —
+//! so the whole-or-not-at-all rule lives once, in the act, and this module only
+//! ever seals a set it was handed.
 
 use std::io;
 use std::path::{Path, PathBuf};
@@ -150,20 +157,54 @@ pub fn read(state_root: &Path, workspace: &str, agent: &str) -> Vec<Entry> {
 /// Add `entries` to this agent's set and answer the whole of it. Union by
 /// presented name, later wins: re-loading a tool the client has re-advertised
 /// refreshes the frozen definition, which is the only way a definition ever
-/// changes (there is no unload, and no other writer).
+/// changes in place.
 pub fn add(
     state_root: &Path,
     workspace: &str,
     agent: &str,
     entries: &[Entry],
 ) -> io::Result<Vec<Entry>> {
+    let mut kept = without(state_root, workspace, agent, entries);
+    kept.extend(entries.iter().cloned());
+    seal(state_root, workspace, agent, kept)
+}
+
+/// Drop `gone` from this agent's set and answer what is left (REMOTE §5.2,
+/// bl-3455). The caller resolved those entries against this very document, so
+/// a name it does not hold refused the act before this was reached — which is
+/// why there is no miss to report here and why the last unload leaves an empty
+/// array rather than a special case: [`read`] already answers an empty set for
+/// a document that is absent, unreadable or empty, so a set emptied and a set
+/// never written read alike.
+pub fn remove(
+    state_root: &Path,
+    workspace: &str,
+    agent: &str,
+    gone: &[Entry],
+) -> io::Result<Vec<Entry>> {
+    let kept = without(state_root, workspace, agent, gone);
+    seal(state_root, workspace, agent, kept)
+}
+
+/// This agent's set with every entry `named` presents dropped — the half both
+/// writers share, because a load replaces by presented name exactly as an
+/// unload deletes by it.
+fn without(state_root: &Path, workspace: &str, agent: &str, named: &[Entry]) -> Vec<Entry> {
+    read(state_root, workspace, agent)
+        .into_iter()
+        .filter(|old| !named.iter().any(|one| one.presented() == old.presented()))
+        .collect()
+}
+
+/// Write `kept` as this agent's whole set, sorted, and answer it back.
+fn seal(
+    state_root: &Path,
+    workspace: &str,
+    agent: &str,
+    mut kept: Vec<Entry>,
+) -> io::Result<Vec<Entry>> {
     let file = path(state_root, workspace, agent)
         .ok_or_else(|| io::Error::other(format!("unusable address {workspace:?}/{agent:?}")))?;
-    let mut kept: Vec<Entry> = read(state_root, workspace, agent)
-        .into_iter()
-        .filter(|old| !entries.iter().any(|new| new.presented() == old.presented()))
-        .collect();
-    kept.extend(entries.iter().cloned());
     kept.sort_by_key(Entry::presented);
     if let Some(parent) = file.parent() {
         std::fs::create_dir_all(parent)?;

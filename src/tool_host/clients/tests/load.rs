@@ -24,7 +24,7 @@ fn load_makes_the_named_tools_callable_and_durable() {
     assert!(said.contains("loaded, observed 1970-01-01"), "{said}");
     assert!(said.contains("laptop_Bash — what Bash does"), "{said}");
     assert!(said.contains("now holds 1 loaded tool."), "{said}");
-    assert!(said.contains("There is no unload"), "{said}");
+    assert!(said.contains("op=unload drops them again"), "{said}");
 
     let held = crate::tool_host::loaded::read(root.path(), "home", "dulcet-mongoose");
     assert_eq!(held.len(), 1);

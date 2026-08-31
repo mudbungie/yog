@@ -746,7 +746,7 @@ is not this — it is §5.2, and it is built on this read.
 
 ### 5.2 The tool, the load, and the client's own config (bl-c907)
 
-**One tool, named `clients`, three ops.** Its subject is the roster, which is
+**One tool, named `clients`, four ops.** Its subject is the roster, which is
 why it is one tool rather than one per op — and why loaded remote tools still
 surface as individually named definitions of their own. litany's
 `docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too: a generic
@@ -772,7 +772,7 @@ The declared schema:
  "input_schema": {
    "type": "object",
    "properties": {
-     "op": {"type": "string", "enum": ["list", "get", "load"]},
+     "op": {"type": "string", "enum": ["list", "get", "load", "unload"]},
      "client": {"type": "string"},
      "tools": {"type": "array", "items": {"type": "string"}}},
    "required": ["op"]}}
@@ -784,6 +784,14 @@ The declared schema:
   with its description, and the name that tool would become callable under.
 - **`load {client, tools}`** — those definitions become callable from the next
   step on.
+- **`unload {client, tools?}`** — they stop being declared from the next
+  assembly on. `tools` is optional and absent means *that client's whole loaded
+  set*, which is the ordinary case: an agent that has finished with a machine
+  has finished with all of it, and making it spell out what it loaded turns
+  done-here into a recall exercise. An empty array is not that spelling — it is
+  still an act with no effect and still declines, because a model that meant
+  *all of them* must be told rather than answered with a no-op it will read as
+  success.
 
 Every answer opens with the instant it was observed at, because presence is true
 only then and a line that did not say when it was read would be a claim about
@@ -792,9 +800,28 @@ workspace has not registered (**absent**, §4 — the same sentence a name nobod
 seated earns), a tool the client does not advertise, an engine that did not
 answer. Nothing here ever mutates the prefix.
 
-**A load resolves whole or not at all.** Every named tool must be advertised
-right now; one miss refuses the whole act, because a partial load leaves the
-model believing it holds a tool it does not.
+**A load resolves whole or not at all, and so does an unload.** Every named
+tool must be advertised right now; one miss refuses the whole act, because a
+partial load leaves the model believing it holds a tool it does not. The mirror
+is the reason for the second: every named tool must be one the document
+actually holds, and one miss refuses the whole act, because a partial unload
+leaves the model believing it dropped a tool it still declares. The belief
+desyncs in one direction or the other and neither is acceptable.
+
+**The two acts resolve against different authorities, which is the whole
+asymmetry between them.** A load's authority is the roster, so it needs the
+engine and carries the observation's date. An unload's is the durable document
+on the box the driver runs on, so it asks no engine and deposits nothing — a
+finished host can be dropped while the engine, or the machine, is down. That is
+the same reason this section already gives for declaring: *"declaring touches
+nothing but disk, so a slow or absent engine can never change the prefix"*.
+
+**The client is half of every name.** An unload names a client and, optionally,
+tools *that client* contributed; two machines both advertising `Bash` are two
+loaded tools, and dropping by bare tool name would silently change which
+machine a name reaches. A client this conversation has loaded nothing from
+refuses rather than answering an empty success — the wholesale form's version
+of the same rule, and the only way a model learns its recollection was wrong.
 
 **The presented name is `<client>_<tool>`, always.** §5.1 leaves the
 cross-client collision — two laptops both advertising `Bash` — to the act that
@@ -833,11 +860,32 @@ was amended to remove. The staleness freezing admits is corrected where §5
 already corrects it — *"a client refuses a tool it no longer carries"*, in band,
 at the call.
 
-**There is no unload in v1, and no inheritance.** The set belongs to the agent
-that loaded it; a fresh conversation, and a freshly dispatched subagent, starts
-clean and loads what it needs through the `clients` tool every agent always has.
-Subtraction is a second act on the one surface §5 says nothing but an explicit
-load may change, and nothing has yet needed it.
+**Subtraction is an explicit act, and there is no inheritance** (bl-3455).
+`unload` removes entries from the same document; the next assembly re-declares
+without them, one paid prefix rebuild at a moment the agent chose, exactly as
+load's own settlement reads. It is still true that nothing but an explicit act
+of the agent's own ever changes the tool surface — `unload` is a second such
+act, not an exception to the rule. The set belongs to the agent that loaded it;
+a fresh conversation, and a freshly dispatched subagent, starts clean and loads
+what it needs through the `clients` tool every agent always has.
+
+**Emptying the set is not a special case.** The last unload leaves an empty
+array, and a document that is absent, unreadable or empty already reads as the
+same nothing every agent reads before its first load — so no reader carries a
+second case, and a load after an unload is an ordinary load.
+
+**Why this is here and not in the model's own hands.** The operator's standing
+principle is that context management happens in yog: what an agent declares is
+a property of the conversation the server holds, so the act that changes it is
+a tool this side offers rather than a discipline a model is asked to keep. That
+also fixes what this op is NOT. It lands the edit immediately, and immediately
+costs the prompt-cache rebuild that is the whole reason the loaded document
+only ever grew. **Scheduling such an edit against a cache miss that was going
+to be paid anyway is a different mechanism and a different ball** — bl-b6f9,
+where a maintenance act queues against the agent's context and merges into the
+operating branch at a moment the miss is already inevitable. Nothing here
+defers, and nothing here should: a deferred unload whose queue does not yet
+exist would be an unload that silently did not happen.
 
 **Where the injection runs, and what it may touch.** It is installed by the
 `yog litany` arm (DESIGN §16.7 W11) at `Fx::tool_injection`, which puts it
@@ -1965,6 +2013,11 @@ valuable with no network at all — they finish VISION V5 teleop parity.
      §5.2 config, advertises the projection of it, and runs what it is handed.
      An agent's call on a loaded remote name now crosses to the machine that
      advertised it and the capture comes back, verbatim.
+   - bl-3455 (§5.2, later): the fourth op, `unload` — the symmetric
+     subtraction the first pass deliberately left out. The set can now shrink,
+     so a finished host stops riding every later assembly. It resolves against
+     the durable document rather than the roster, which is why it is the one
+     op that asks no engine.
 
    The day the leg landed the same call succeeded with nothing above it
    changing, which is what the interim refusal was shaped to make true: an

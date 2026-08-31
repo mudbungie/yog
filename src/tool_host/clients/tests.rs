@@ -8,6 +8,12 @@
 /// read-only ops share none of it.
 mod load;
 
+/// **What it stops declaring** — `load`'s mirror, in its own file for the same
+/// reason: it is the second op that writes, its refusals are its own (a tool
+/// the document does not hold, a document that cannot be written), and each of
+/// them must refuse whole.
+mod unload;
+
 use super::*;
 use crate::boundary::reply::{self, Reply};
 use crate::registry::tools::Tool;
@@ -36,17 +42,18 @@ fn against(root: &Path, rows: Vec<ClientRow>, input: &Value) -> Result<String, S
     answered
 }
 
-/// The schema declares the three ops and requires the one field that selects
+/// The schema declares the four ops and requires the one field that selects
 /// among them.
 #[test]
-fn the_declared_schema_names_the_three_ops() {
+fn the_declared_schema_names_the_four_ops() {
     let s = schema();
     assert_eq!(
         s["properties"]["op"]["enum"],
-        json!(["list", "get", "load"])
+        json!(["list", "get", "load", "unload"])
     );
     assert_eq!(s["required"], json!(["op"]));
     assert!(DESCRIPTION.contains("op=load"));
+    assert!(DESCRIPTION.contains("op=unload"));
 }
 
 /// Every op the model can spell, read back.
@@ -61,6 +68,27 @@ fn a_well_formed_invocation_reads_as_its_op() {
         parse(&json!({"op": "load", "client": "laptop", "tools": ["Bash"]})).expect("load"),
         Op::Load("laptop".to_owned(), vec!["Bash".to_owned()])
     );
+    assert_eq!(
+        parse(&json!({"op": "unload", "client": "laptop", "tools": ["Bash"]})).expect("unload"),
+        Op::Unload("laptop".to_owned(), Some(vec!["Bash".to_owned()]))
+    );
+}
+
+/// **`tools` is optional on an unload and only there**, and absent is not the
+/// same as empty: omitting it (or spelling it `null`) means the client's whole
+/// loaded set, while `[]` is still an act with no effect and still declines.
+#[test]
+fn an_unload_may_omit_its_tools_but_may_not_empty_them() {
+    assert_eq!(
+        parse(&json!({"op": "unload", "client": "laptop"})).expect("unload"),
+        Op::Unload("laptop".to_owned(), None)
+    );
+    assert_eq!(
+        parse(&json!({"op": "unload", "client": "laptop", "tools": null})).expect("unload"),
+        Op::Unload("laptop".to_owned(), None)
+    );
+    let e = parse(&json!({"op": "unload", "client": "laptop", "tools": []})).expect_err("declined");
+    assert!(e.contains("\"tools\""), "{e}");
 }
 
 /// Every malformed one declines naming the field, because the caller is a
@@ -80,6 +108,11 @@ fn a_malformed_invocation_names_the_field() {
         ),
         (
             json!({"op": "load", "client": "a", "tools": ["Bash", 7]}),
+            "\"tools\"",
+        ),
+        (json!({"op": "unload"}), "\"client\""),
+        (
+            json!({"op": "unload", "client": "a", "tools": "Bash"}),
             "\"tools\"",
         ),
     ];

@@ -84,7 +84,27 @@ pub fn load(observed: &str, added: &[Entry], total: usize) -> String {
     out.push(String::new());
     out.push(format!(
         "Callable from the next step on. This conversation now holds {}. \
-         There is no unload: a fresh conversation starts with none.",
+         op=unload drops them again when you are done with that machine; \
+         a fresh conversation starts with none.",
+        plural(total, "loaded tool")
+    ));
+    lines(&out)
+}
+
+/// `op=unload`: what stopped being declared, and how large this agent's set now
+/// is (REMOTE §5.2, bl-3455).
+///
+/// It carries no observation of its own subject — the set is this box's file
+/// and was true when it was read — but it is dated like every other reply,
+/// because a model reading two `clients` answers should not have to know which
+/// ops date themselves and which do not.
+pub fn unload(observed: &str, gone: &[Entry], total: usize) -> String {
+    let mut out = vec![format!("unloaded, observed {observed}"), String::new()];
+    out.extend(gone.iter().map(|entry| format!("  {}", entry.presented())));
+    out.push(String::new());
+    out.push(format!(
+        "No longer declared from the next step on. This conversation now holds {}. \
+         op=load makes any of them callable again.",
         plural(total, "loaded tool")
     ));
     lines(&out)
