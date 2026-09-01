@@ -1264,7 +1264,9 @@ itself: non-zero, the reason on stderr, indistinguishable from the "no such
 tool" an absent binary produced behind the front door. That is §12's ship-inert
 posture reaching its natural edge — a server with zero enrolled thralls refuses
 every ordinary call in band **and still compacts**, because compaction was
-never a machine's work.
+never a machine's work. Since bl-5710 it also still **reads and writes its own
+worktrees**: the three names the engine implements take the lane's last rung
+below rather than a refusal.
 
 **The conversation-subject worker grants are engine acts too** (bl-77be,
 which widened bl-dfce's set from two to six). The engine's shipped worker
@@ -1283,8 +1285,10 @@ but the subject-locality audit, name by name:
   Engine act — and its validation being server-side is consistent with the
   lane below, whose consenting box holds that same filesystem.
 - **`bash`, `read_file`, `apply_patch`** are execution and filesystem acts at
-  the conversation's working directory: machine work, never an engine act —
-  the worktree lane below.
+  the conversation's working directory: they take the worktree lane below,
+  reaching a consenting machine where the operator enrolled one and the
+  engine's own front door where none consents (the lane's last rung, bl-5710).
+  Never an engine act, because an engine act never consults the roster.
 - **`multi_tool`** never reaches the router at all (the engine's own step
   loop fans it out); each inner name is judged on its own subject.
 
@@ -1317,19 +1321,66 @@ exactly one execution on one machine (§5, no broadcast). The consenting box is
 normally the co-located thrall — the normal install above — because it
 actually holds the worktrees; a box that consents without holding them earns
 honest in-band failures from its own end (thrall refuses a directory it does
-not hold, naming it). Front-door-only and ship-inert are untouched: the lane
-is the same adjudicate → mailbox → execute → capture pipeline every call
-takes, the server still executes nothing, and a workspace with no consenting
-thrall refuses in band, which is the posture working.
+not hold, naming it). Front-door-only is untouched: a routed call is the same
+adjudicate → mailbox → execute → capture pipeline every call takes, and the
+server executes nothing in its own process. **Zero consenting advertisers is
+no longer the end of the lane** — see the last rung below (bl-5710) — but for
+every name the engine does not implement it is still the refusal, unchanged.
 
-Two shapes this deliberately is not. **Not a narrowed grant**: cutting the
+One shape this deliberately is not. **Not a narrowed grant**: cutting the
 shipped grant to `[multi_tool]` would stop the decoys and give nothing back —
 the four capabilities the grant names are real and the audit above houses
-each. **Not engine-side execution**: answering `bash` at the engine's front
-door (the compactor pair's mechanism) would be the server executing machine
-work in its own process — the exact second pipeline §12's front-door invariant
-exists to exclude; the compactor carve-out does not stretch to names whose
-subject is a filesystem act.
+each.
+
+**The lane's last rung: the engine performs its own built-ins** (bl-5710,
+operator ruling 2026-08-31: *ship some basic tools — a default install must be
+able to write a file*). bl-77be closed with a second rejection beside the one
+above — *not engine-side execution*, on the argument that answering `bash` at
+the engine's front door would be the server executing machine work in its own
+process. **That rejection is reversed here**, and what it cost is the reason:
+the shipped worker grant offers `bash`, `read_file` and `apply_patch` to every
+model, a bare engine is the default install, and with no foot enrolled every
+one of those calls refused. A conversation on such an install opened with
+`apply_patch`, spent a step per refusal, and ended having written nothing —
+five refused calls and seven round trips, measured. A server that cannot act
+on its own worktrees is not inert; it is dead, and ship-inert was never meant
+to reach that far.
+
+So the lane is a **ladder**, and its rungs are ordered by how explicit the
+operator's intent is:
+
+1. **Exactly one consenting machine** — an enrollment plus a `subject_cwd`
+   key, both operator acts. It wins, unchanged: bl-77be's landing stands, and
+   an operator who wants the work on a particular box still gets it there.
+2. **More than one** — the config ambiguity above, refused naming every
+   claimant. An ambiguity the operator authored is a defect to tell them
+   about, never a reason to quietly execute somewhere third.
+3. **No consenting machine, and the engine implements the name** — performed
+   at the engine's own front door, `<driver_target> tool <name>`, the
+   compactor pair's mechanism unchanged: the caller identity on the child's
+   environment, the `tool_use` input on its stdin, and the conversation's
+   resolved working directory as the child's cwd.
+4. **Anything else** — the refusals above, verbatim. A pool name an operator
+   granted has no engine implementation behind it, so it keeps the sentence
+   that names the enrollment.
+
+**What that rung does not concede.** §12's front-door invariant says the
+server executes nothing **in its own process**, and it still does not: the act
+crosses the engine's own front door as a child process, which is the same door
+the compactor pair takes and the same one litany's own resolution addressed
+before the seam inverted. yog restates none of what the three names *do* —
+`litany tool <name>` is the one definition, upstream's. And subject locality
+is not bent either: the conversation's working tree lives on the server's box,
+so the server's box is the box subject locality already named. A co-located
+thrall is the *explicit* way to reach that box and still wins; the front door
+is the default, because a default install has no foot.
+
+**The rung's set is closed and enumerated in exactly one place in code**
+(`src/tool_host/subject.rs`, `PERFORMED`): `apply_patch`, `bash`, `read_file`.
+Three rows, each admitted by two facts together — its subject is the
+conversation's working tree, and the engine already ships an implementation of
+it. A fourth row is a deliberate act with both questions asked again, never a
+prefix test or a name shape.
 
 **Local config gates what a thrall enables**, and it is §5.2's document
 unchanged: `<yog-data-root>/tools.json` on the thrall's own box, operator

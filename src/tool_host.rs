@@ -33,14 +33,14 @@
 //! exclude.
 //!
 //! **A name that is none of those takes the worktree lane** ([`subject`],
-//! REMOTE §5.4, bl-77be): a granted, unqualified name is a workspace-subject
-//! attempt — its subject is the conversation's working tree — routed to the
-//! ONE registered machine that both advertises the name and consents to
-//! workspace-cwd execution, with the conversation's resolved cwd on the
-//! invocation. Where no machine consents, the lane renders the refusal
-//! itself, in band and naming the way out — REMOTE §12's ship-inert posture
-//! working, not an error state: nothing resolves a binary behind the
-//! injection, so there is nothing to hand a name back to.
+//! REMOTE §5.4, bl-77be as amended by bl-5710): a granted, unqualified name is
+//! a workspace-subject attempt — its subject is the conversation's working
+//! tree — routed to the ONE registered machine that both advertises the name
+//! and consents to workspace-cwd execution, with the conversation's resolved
+//! cwd on the invocation. Where no machine consents, the lane's last rung is
+//! the engine's own front door for the three names the engine implements
+//! ([`subject::PERFORMED`]), so a default install writes a file with nothing
+//! enrolled; every other name is refused in band, naming the way out.
 //!
 //! **Adjudication is untouched and still runs first.** `yog tool-control`
 //! (DESIGN §8.6) is consulted before the executor routes anything, so a routed
@@ -251,7 +251,7 @@ impl ToolInjection for Injection {
             .find(|entry| entry.presented() == call.name)
         {
             Some(entry) => routed(&site, &entry, &call),
-            None => subject::answer(&site, &call),
+            None => subject::answer(&self.driver_target, self.patience.span(), &site, &call),
         }
     }
 }

@@ -135,7 +135,10 @@ fn a_loaded_tool_is_declared_under_its_own_name() {
 /// loaded and no machine advertising the name, the worktree lane (bl-77be)
 /// renders the loadless sentence with both remedies — the ship-inert posture
 /// working — while the compactor's engine acts still go through, so nothing
-/// about compaction depends on a machine being enrolled.
+/// about compaction depends on a machine being enrolled. `Read` is the name
+/// under test precisely because the engine does not implement it: the three
+/// that it does take the lane's last rung instead (bl-5710,
+/// `subject::PERFORMED`), which is that ball's whole subject.
 #[test]
 fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
     let root = TempDir::new().expect("tmp");

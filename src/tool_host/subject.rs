@@ -21,43 +21,100 @@
 //! landed. The consenting box is normally §5.4's co-located thrall — the
 //! normal install, because it actually holds the server's worktrees.
 //!
-//! **Every miss is an in-band refusal that names the way out.** No consenting
-//! advertiser: the sentence says what the operator enrolls and what the model
-//! can do instead (load a host-bound instance, which runs in that box's own
-//! directory). More than one: a config ambiguity, refused naming every
+//! **When no machine consents, the engine performs its own built-in**
+//! ([`PERFORMED`], REMOTE §5.4 as amended by bl-5710, operator ruling
+//! 2026-08-31: *ship some basic tools — a default install must be able to
+//! write a file*). The lane is a ladder, ordered by how explicit the
+//! operator's intent is: a consenting machine is an enrollment plus a
+//! `subject_cwd` key, so it wins; with no consenting machine the executing
+//! box is the one subject-locality already named — the server's own, which
+//! holds the worktree — and the act is performed at the engine's own front
+//! door ([`super::engine_act::perform`]), the same `<driver_target> tool
+//! <name>` re-entry the compactor pair takes, at the conversation's resolved
+//! cwd with the caller identity on the child's environment. yog restates none
+//! of what the three names *do*: the definitions are the engine's built-ins
+//! and the front door is the one way in.
+//!
+//! **Every remaining miss is an in-band refusal that names the way out.** A
+//! name the engine does not implement and no machine consents to: the
+//! sentence says what the operator enrolls and what the model can do instead
+//! (load a host-bound instance, which runs in that box's own directory). More
+//! than one consenting machine: a config ambiguity, refused naming every
 //! claimant — one adjudication must stand for exactly one execution on one
 //! machine (REMOTE §5, no broadcast). The engine unreachable: the transport
 //! sentence every other ask already renders.
 //!
-//! **Front-door-only and ship-inert hold.** The lane is the same adjudicate →
-//! mailbox → execute → capture pipeline every call takes; the server still
-//! executes nothing, and a workspace with no consenting thrall refuses in
-//! band, which is the posture working.
+//! **Front-door-only holds; ship-inert now stops short of the worktree.** The
+//! lane is still the same adjudicate → mailbox → execute → capture pipeline
+//! for a routed call, and the server still executes nothing **in its own
+//! process** — [`PERFORMED`] crosses the engine's front door as a child, which
+//! is what §12's invariant asks. What changed is the posture's reach: a
+//! server that refuses every act on its own worktrees is not inert, it is
+//! dead, and the operator ruled that a default install writes a file.
+
+use std::path::Path;
+use std::time::Duration;
 
 use ::litany::cmd::{RoutedCall, RoutedCapture};
 
 use super::{Site, capture, loaded, remote};
 use crate::registry::roster::ClientRow;
 
+/// **The lane's last rung, closed and enumerated here and nowhere else**
+/// (bl-5710): the worktree names the engine itself implements, performed at
+/// its own front door when no machine consents to run them.
+///
+/// Three rows, and each is admitted by the same two facts together: its
+/// subject is the conversation's working tree, which lives on the server's
+/// box; and `litany tool <name>` is an implementation the engine already
+/// ships, so performing it restates nothing. A pool name an operator granted
+/// is on neither footing — the engine has no implementation to reach — so it
+/// keeps the refusal that names the enrollment. A fourth row is a deliberate
+/// act with both questions asked again, never a prefix test or a name shape.
+/// The strings are yog's own spelling: the engine keeps its built-in
+/// constants crate-private, so the names cross as text exactly as they do in
+/// the model's `tool_use` block.
+pub const PERFORMED: [&str; 3] = ["apply_patch", "bash", "read_file"];
+
+/// Where one workspace-subject attempt is executed, once the roster has been
+/// read. Three outcomes because the lane has three: a machine the operator
+/// enrolled and consented, the engine's own front door, or a sentence.
+enum Lane {
+    /// Route to this machine, with the conversation's cwd on the invocation.
+    Machine(Box<loaded::Entry>),
+    /// Perform it here, at the engine's front door ([`PERFORMED`]).
+    Engine,
+    /// Nothing can run it; this is what the model reads instead.
+    Refused(String),
+}
+
 /// Answer one workspace-subject attempt: route it to the workspace's one
-/// consenting advertiser with the conversation's cwd on the invocation, or
-/// render the refusal that names the way out.
-pub fn answer(site: &Site, call: &RoutedCall<'_>) -> RoutedCapture {
+/// consenting advertiser with the conversation's cwd on the invocation,
+/// perform it at the engine's own front door when the engine implements it
+/// and no machine consents, or render the refusal that names the way out.
+pub fn answer(
+    driver_target: &Path,
+    deadline: Duration,
+    site: &Site,
+    call: &RoutedCall<'_>,
+) -> RoutedCapture {
     let roster = match super::ask::roster(&site.state_root, &site.workspace, site.budget, call.stop)
     {
         Ok(rows) => rows,
         Err(reason) => return capture(call.name, Err(reason)),
     };
     match verdict(&roster, call.name) {
-        Ok(entry) => routed(site, &entry, call),
-        Err(refusal) => capture(call.name, Err(refusal)),
+        Lane::Machine(entry) => routed(site, &entry, call),
+        Lane::Engine => super::engine_act::perform(driver_target, deadline, call),
+        Lane::Refused(refusal) => capture(call.name, Err(refusal)),
     }
 }
 
-/// The lane's selection: exactly one consenting advertiser is an answer, and
-/// everything else is a sentence. Pure over the roster, so every arm is
-/// reachable without an engine.
-fn verdict(roster: &[ClientRow], name: &str) -> Result<loaded::Entry, String> {
+/// The lane's selection, pure over the roster so every rung is reachable
+/// without an engine: exactly one consenting advertiser is that machine, no
+/// consenting advertiser is the engine's front door for a name it implements
+/// and a sentence for one it does not, and more than one is an ambiguity.
+fn verdict(roster: &[ClientRow], name: &str) -> Lane {
     let mut consenting: Vec<loaded::Entry> = Vec::new();
     let mut advertisers: Vec<String> = Vec::new();
     for row in roster {
@@ -75,9 +132,10 @@ fn verdict(roster: &[ClientRow], name: &str) -> Result<loaded::Entry, String> {
         }
     }
     match consenting.len() {
-        1 => Ok(consenting.remove(0)),
-        0 => Err(unconsented(name, &advertisers)),
-        _ => Err(format!(
+        1 => Lane::Machine(Box::new(consenting.remove(0))),
+        0 if PERFORMED.contains(&name) => Lane::Engine,
+        0 => Lane::Refused(unconsented(name, &advertisers)),
+        _ => Lane::Refused(format!(
             "{} machines consent to run {name} in this conversation's working \
              directory ({}), and one execution needs one machine: the operator \
              must leave \"subject_cwd\": true on exactly one entry",

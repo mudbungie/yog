@@ -62,8 +62,12 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 ///   send a box that does not hold the world a request about it.
 ///
 /// What is deliberately NOT here: `bash`, `read_file`, `apply_patch` — acts
-/// at the conversation's working directory, which is machine work and takes
-/// the worktree lane ([`super::subject`]); and `multi_tool`, which litany's
+/// at the conversation's working directory, which take the worktree lane
+/// ([`super::subject`]) and reach a consenting machine when the operator
+/// enrolled one. The lane's last rung calls [`perform`] below on them
+/// ([`super::subject::PERFORMED`], bl-5710), so the mechanism is shared and
+/// the *ordering* is what separates the two sets: an engine act never
+/// consults the roster, a worktree name always does. And `multi_tool`, which litany's
 /// own step loop fans out before any router sees it. A seventh row is a
 /// deliberate act with this audit's question asked again — never a prefix
 /// test or a name shape, which is how a closed set stops being closed. The
