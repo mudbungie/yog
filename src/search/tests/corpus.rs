@@ -27,17 +27,21 @@ fn one_query_spans_balls_workspaces_conversations_and_transcripts() {
     );
     let found = run(&snap, "kraken", &always());
     let at: Vec<&Address> = found.hits.iter().map(|h| &h.at).collect();
+    // Every address is a wire name (REMOTE §8.1, bl-764a): the §5.1 #1
+    // project name and the §3.1 workspace leaf, never an engine path.
     assert!(at.contains(&&Address::Ball {
-        project: PathBuf::from("/proj"),
+        project: "proj".to_owned(),
         id: "bl-kraken".to_owned()
     }));
     assert!(at.contains(&&Address::Ball {
-        project: PathBuf::from("/proj"),
+        project: "proj".to_owned(),
         id: "bl-dead".to_owned()
     }));
-    assert!(at.contains(&&Address::Workspace { path: ws.clone() }));
+    assert!(at.contains(&&Address::Workspace {
+        name: "kraken".to_owned()
+    }));
     assert!(at.contains(&&Address::Conversation {
-        workspace: ws.clone(),
+        workspace: "kraken".to_owned(),
         agent: AGENT.to_owned()
     }));
     assert_eq!(found.unreadable, Vec::<String>::new());
@@ -123,12 +127,19 @@ fn unreadable_sources_are_named_and_the_rest_of_the_world_still_answers() {
         2,
         "workspace name + transcript: {found:?}"
     );
-    assert!(found.unreadable.iter().any(|u| u.contains("goal.md")));
+    // Gaps are named by wire address too (bl-764a): the workspace leaf and
+    // the conversation's `<workspace>/<agent>`, never the engine's path.
     assert!(
         found
             .unreadable
             .iter()
-            .any(|u| u.ends_with(": no derived tree") && u.contains("derived"))
+            .any(|u| u.starts_with(&format!("kraken/{AGENT}: goal.md: ")))
+    );
+    assert!(
+        found
+            .unreadable
+            .iter()
+            .any(|u| u == "derived: no derived tree")
     );
     assert!(
         found

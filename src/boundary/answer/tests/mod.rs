@@ -161,6 +161,9 @@ fn help_is_answered_without_reading_the_world() {
 #[test]
 fn search_is_answered_here_too_because_every_seat_that_reaches_this_is_off_frame() {
     let mut snap = snapshot(&ws(), "alba", vec![], vec![]);
+    // The ball hit's `project` is the §5.1 #1 wire name (bl-764a), resolved
+    // over the enumerated set — so the set must hold the directory.
+    snap.projects.push(PathBuf::from("/proj"));
     snap.balls_by_project.insert(
         PathBuf::from("/proj"),
         vec![crate::projects::balls::Ball {
@@ -196,7 +199,7 @@ fn search_is_answered_here_too_because_every_seat_that_reaches_this_is_off_frame
     assert_eq!(
         found.hits[0].at,
         crate::search::Address::Ball {
-            project: PathBuf::from("/proj"),
+            project: "proj".to_owned(),
             id: "bl-1f2a".to_owned(),
         }
     );

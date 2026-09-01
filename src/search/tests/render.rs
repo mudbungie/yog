@@ -38,20 +38,20 @@ fn a_hit_labels_as_what_it_is_and_where() {
     };
     assert_eq!(
         label(&hit(Address::Ball {
-            project: PathBuf::from("/p"),
+            project: "p".to_owned(),
             id: "bl-1".to_owned()
         })),
         "ball bl-1 — x"
     );
     assert_eq!(
         label(&hit(Address::Workspace {
-            path: PathBuf::from("/w/storm")
+            name: "storm".to_owned()
         })),
         "workspace storm — x"
     );
     assert_eq!(
         label(&hit(Address::Conversation {
-            workspace: PathBuf::from("/w/storm"),
+            workspace: "storm".to_owned(),
             agent: "aa".to_owned()
         })),
         "storm/aa — x"
@@ -66,7 +66,7 @@ fn the_tokens_are_the_headless_spelling_of_the_two_enums() {
     );
     assert_eq!(
         Address::Ball {
-            project: PathBuf::new(),
+            project: String::new(),
             id: String::new()
         }
         .token(),
@@ -74,14 +74,14 @@ fn the_tokens_are_the_headless_spelling_of_the_two_enums() {
     );
     assert_eq!(
         Address::Workspace {
-            path: PathBuf::new()
+            name: String::new()
         }
         .token(),
         "workspace"
     );
     assert_eq!(
         Address::Conversation {
-            workspace: PathBuf::new(),
+            workspace: String::new(),
             agent: String::new()
         }
         .token(),

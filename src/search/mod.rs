@@ -27,7 +27,6 @@
 //! bytes it points into — and the bytes are what is authoritative here.
 
 use crate::app::Snapshot;
-use std::path::PathBuf;
 
 mod corpus;
 mod excerpt;
@@ -70,14 +69,22 @@ impl Field {
 
 /// Where a hit lives: an address yog already selects by, and nothing else.
 /// Ordered so the sort's last tie-break is a fact rather than an accident.
+///
+/// **Every field is a wire name, never a path** (REMOTE §8.1, bl-764a): the
+/// §5.1 #1 project name and the §3.1 workspace leaf — the same words
+/// [`JoinRow`](crate::projects::join::JoinRow) answers and every gesture takes
+/// — so a seat feeds a hit straight back as an address
+/// ([`Query::Transcript`](crate::boundary::Query::Transcript),
+/// [`Agent`](crate::boundary::Query::Agent)) instead of deriving a leaf from
+/// an engine-local path it should never have been shown.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Address {
     /// A ball in a project (§3.5) — what every `bl` verb takes.
-    Ball { project: PathBuf, id: String },
-    /// An enumerated workspace (§3.1).
-    Workspace { path: PathBuf },
+    Ball { project: String, id: String },
+    /// An enumerated workspace (§3.1), by its leaf name.
+    Workspace { name: String },
     /// A conversation: a root or member agent in a workspace (§11).
-    Conversation { workspace: PathBuf, agent: String },
+    Conversation { workspace: String, agent: String },
 }
 
 impl Address {
@@ -186,7 +193,10 @@ pub fn run(snap: &Snapshot, text: &str, wanted: &dyn Fn() -> bool) -> Found {
             &agent,
             &mut found.unreadable,
         ));
-        let at = Address::Conversation { workspace, agent };
+        let at = Address::Conversation {
+            workspace: snap.ws_name(&workspace),
+            agent,
+        };
         push(&mut found.hits, &needle, at, &fields);
     }
     found.unreadable.sort();
@@ -221,10 +231,8 @@ fn push(hits: &mut Vec<Hit>, needle: &str, at: Address, fields: &[(Field, String
 pub fn label(hit: &Hit) -> String {
     let at = match &hit.at {
         Address::Ball { id, .. } => format!("ball {id}"),
-        Address::Workspace { path } => format!("workspace {}", crate::naming::leaf(path)),
-        Address::Conversation { workspace, agent } => {
-            format!("{}/{agent}", crate::naming::leaf(workspace))
-        }
+        Address::Workspace { name } => format!("workspace {name}"),
+        Address::Conversation { workspace, agent } => format!("{workspace}/{agent}"),
     };
     format!("{at} — {}", hit.excerpt)
 }

@@ -39,16 +39,18 @@ pub(super) fn from_snapshot(snap: &Snapshot) -> Vec<(Address, Fields)> {
     projects.dedup();
     let mut rows: Vec<(Address, Fields)> = Vec::new();
     for project in projects {
+        // The §5.1 #1 wire name (REMOTE §8.1) — what `JoinRow::project` already
+        // answers, so a ball hit and a balls row spell one project one way.
+        let name = snap.project_name(project);
         let live = snap.balls_by_project.get(project).into_iter().flatten();
         let closed = snap.closed_by_project.get(project).into_iter().flatten();
-        rows.extend(live.chain(closed).map(|ball| ball_row(project, ball)));
+        rows.extend(live.chain(closed).map(|ball| ball_row(&name, ball)));
     }
     rows.extend(snap.workspaces.iter().map(|w| {
+        let name = leaf_name(&w.path);
         (
-            Address::Workspace {
-                path: w.path.clone(),
-            },
-            vec![(Field::Name, leaf_name(&w.path))],
+            Address::Workspace { name: name.clone() },
+            vec![(Field::Name, name)],
         )
     }));
     rows
@@ -56,10 +58,10 @@ pub(super) fn from_snapshot(snap: &Snapshot) -> Vec<(Address, Fields)> {
 
 /// One ball as a subject: its id is what it **is**, its title what it is
 /// **for**, its body what it **says**.
-fn ball_row(project: &Path, ball: &Ball) -> (Address, Fields) {
+fn ball_row(project: &str, ball: &Ball) -> (Address, Fields) {
     (
         Address::Ball {
-            project: project.to_path_buf(),
+            project: project.to_owned(),
             id: ball.id.clone(),
         },
         vec![
@@ -112,7 +114,12 @@ pub(super) fn read_conversation(
     let mut fields: Fields = Vec::new();
     match std::fs::read(&goal) {
         Ok(bytes) => fields.push((Field::Summary, String::from_utf8_lossy(&bytes).into_owned())),
-        Err(e) if goal.exists() => unreadable.push(format!("{}: {e}", goal.display())),
+        // Named by wire address, not engine path (REMOTE §8.1, bl-764a): the
+        // gap crosses the wire beside the hits, and a remote seat can spend a
+        // name where a path under the engine's home is only a disclosure.
+        Err(e) if goal.exists() => {
+            unreadable.push(format!("{}/{agent}: goal.md: {e}", leaf_name(workspace)));
+        }
         Err(_) => {}
     }
     let transcript = crate::transcript::build(workspace, agent);
@@ -121,7 +128,7 @@ pub(super) fn read_conversation(
             unreadable.push(format!(
                 "{}/{agent}: entries {first:03}\u{2013}{last:03} compacted away — searched the \
                  surviving record and the compaction summary",
-                workspace.display()
+                leaf_name(workspace)
             ));
         }
     }
@@ -144,7 +151,7 @@ pub(super) fn unreadable(snap: &Snapshot) -> Vec<String> {
         .workspaces
         .iter()
         .filter(|w| !snap.trees.contains_key(&w.path))
-        .map(|w| format!("{}: no derived tree", w.path.display()));
+        .map(|w| format!("{}: no derived tree", leaf_name(&w.path)));
     let projects = snap
         .join_rows
         .iter()

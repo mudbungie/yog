@@ -3,8 +3,6 @@
 //! classification token — because a listing whose rows are all the easy case
 //! proves only that the easy case survives.
 
-use std::path::PathBuf;
-
 use super::super::super::super::Reply;
 
 /// The §11 altitude-0 answers — the enumeration with its §7.2 notes, and one
@@ -77,16 +75,14 @@ fn found() -> Found {
                 excerpt: "bl-1".into(),
             },
             Hit {
-                at: Address::Workspace {
-                    path: PathBuf::from("/ws"),
-                },
+                at: Address::Workspace { name: "ws".into() },
                 field: Field::Summary,
                 offset: 3,
                 excerpt: "ws".into(),
             },
             Hit {
                 at: Address::Conversation {
-                    workspace: PathBuf::from("/ws"),
+                    workspace: "ws".into(),
                     agent: "c-1".into(),
                 },
                 field: Field::Text,
@@ -94,7 +90,7 @@ fn found() -> Found {
                 excerpt: "the gate".into(),
             },
         ],
-        unreadable: vec!["/p: not a repo".into()],
+        unreadable: vec!["p: balls unlistable".into()],
     }
 }
 

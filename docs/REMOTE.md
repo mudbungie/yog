@@ -1891,13 +1891,35 @@ rather than carrying a relative spelling.
     with `unknown workspace`. It is the §3.1 name now, the token the gestures
     take, and `app::tests::attention` posts the answered pair straight back as
     a `/seen` to prove the round trip rather than the spelling.
-  - **Three remain, all of them disclosure rather than broken addressing**, and
-    each needs a ruling of the kind this bullet's first half is, not a rename:
-    `search::Address`'s three path fields (`Reply::Search`), `fleet::Facts`'s
-    `workspace` and `project` (`Reply::Board`), and `OpRow::cwd`
-    (`Reply::Ops`), whose *subject* is where a command ran — the one case §8
-    already says keeps path semantics, since answering it by name answers a
-    different question.
+  - ~~**Three remain**~~ — **two remain, and `search::Address` is closed**
+    (bl-764a). Its three fields were not mere disclosure: the ball arrived as
+    *"no conversation search: a client can only scroll"*, and the survey found
+    the query was never missing — `Query::Search` already spans conversation
+    names, goals and transcript text and answers one hit per selectable
+    address — but its answer was unusable off-box, because a conversation
+    hit's `workspace` key carried the engine's absolute path where every
+    gesture and every read (`/transcript`, `/agent`) takes the §3.1 name.
+    Exactly the QueueRow defect above, on the read whose whole product is *an
+    address you ask next*. So the ruling is the JoinRow one, not a new query
+    family and not a parameter: **a hit is an address, and every address
+    field crosses as the wire name** — the §3.1 workspace leaf on
+    `Workspace`/`Conversation`, the §5.1 #1 project name on `Ball`, resolved
+    back through `Snapshot::ws_path` / `project_path` at the one seam that
+    owns the round trip. `Found::unreadable`'s prose names its sources the
+    same way (`<workspace>/<agent>: …`), because the gap rides the same reply.
+    No protocol bump, on the bl-22ab reading: the field always *meant* the
+    address, and the path was the regression. A seat wanting a
+    title-only filter over the roster it already holds still filters
+    client-side — the answer to "search conversations" a seat can give alone —
+    and asks the engine only when content must be read, which is what the
+    engine-side corpus (goal + transcript bytes, re-read at ask time) exists
+    for.
+  - **Two remain, both disclosure rather than broken addressing**, and each
+    needs a ruling of the kind this bullet's first half is, not a rename:
+    `fleet::Facts`'s `workspace` and `project` (`Reply::Board`), and
+    `OpRow::cwd` (`Reply::Ops`), whose *subject* is where a command ran — the
+    one case §8 already says keeps path semantics, since answering it by name
+    answers a different question.
 
   The general lesson is the one bl-f5f6 already paid for once: a type migration
   is finished when the **encoders** are swept, not when the types the ball named
