@@ -1,7 +1,7 @@
 +++
 title = "the wire refusals name commands the operator cannot run: 'make wire-certs' on a box with no checkout, and env-only settings spelled as argv that yog wire-certs accepts, ignores and calls success"
 created = 1788235220
-updated = 1788235398
+updated = 1788235474
 claimant = "Roamer"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -72,12 +72,28 @@ sends people there does not.
     WIRE_DIR=<empty> yog wire-certs WIRE_HOST=h WIRE_PORT=9999 && cat <empty>/address
     # 127.0.0.1:7737 — both words ignored, exit 0
 
-## Shape of the fix
+## The fix
 
-- `REMEDY` becomes the verb, `yog wire-certs`. One const, three refusals, and
-  `make wire-certs` stays what it is: a wrapper a developer types.
-- The `/enroll` refusal spells the settings as the environment prefix they are.
-- **And the verb should refuse an argv tail it cannot read.** That is the half
-  that makes the other two impossible to get wrong again: a stray word today is
-  accepted, ignored, and reported as success — the failure mode where the
-  operator is told the act worked and it did the default instead.
+- `material::REMEDY` is the verb, `yog wire-certs`. One const, three refusals,
+  and `make wire-certs` stays what it is: a wrapper a developer types.
+- The `/enroll` refusal and the mint's own "issue another client with" line
+  spell the settings as the environment prefix they are.
+- **`verb::stray` refuses an argv tail**, which is what makes the other two
+  impossible to get wrong again. A word after the verb now names itself, names
+  all six readings, and exits 2 having written nothing:
+
+  ```
+  $ WIRE_DIR=<dir> yog wire-certs WIRE_HOST=engine.example.com WIRE_PORT=9999
+  yog wire-certs: "WIRE_HOST=engine.example.com" is not a setting this verb reads
+    — WIRE_DIR, WIRE_HOST, WIRE_PORT, FORCE, WIRE_LEAF, WIRE_FOOT are environment
+    readings, so they go BEFORE the verb: `WIRE_HOST=<host> WIRE_PORT=<port> yog wire-certs`
+  ```
+
+## A third instance, found while fixing the first two
+
+The make target passed **four** of the six readings, so the very spelling its
+own comment block teaches was inert for the other two: `make wire-certs FORCE=1`
+did not rotate, and the mint's refusal — *"Re-run with FORCE=1 if that is what
+you mean"* — answered the re-run with the same refusal. Same shape, other
+direction: a setting the operator states and the act never sees. All six pass
+through now.
