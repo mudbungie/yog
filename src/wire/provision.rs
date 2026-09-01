@@ -170,9 +170,17 @@ pub(crate) fn issue(dir: &Path, cn: &str, grade: crate::registry::Grade) -> Resu
     }
     let pair = [format!("{cn}.pem"), format!("{cn}.key")];
     if pair.iter().any(|name| dir.join(name).is_file()) {
+        // The operator most likely to hit this is one act past done: they
+        // enrolled a device as a seat and are now enrolling its "tool side",
+        // which the first leaf already serves (REMOTE §5 — one identity, two
+        // connections). The refusal teaches that, because without it the
+        // block reads as arbitrary (bl-7a4a).
         return Err(format!(
             "{} already holds {}: re-issuing distrusts nothing, so both would be live under one \
-             identity — state another common name, or rotate the whole directory with FORCE=1",
+             identity. One device is one name and one leaf, whatever its grade — an \
+             operator-grade leaf already serves the seat AND the tool host, so a device that \
+             chats and tools enrolls once; a foot leaf is for a tools-only device under its own \
+             name. State another common name, or rotate the whole directory with FORCE=1",
             dir.display(),
             pair.join(" or ")
         ));

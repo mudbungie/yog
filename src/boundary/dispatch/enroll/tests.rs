@@ -116,6 +116,12 @@ fn the_key_is_absent_server_side_and_the_certificate_is_not() {
     let again = enroll(&deps, "8", &request("phone-1", Grade::Operator)).expect_err("refused");
     assert!(again.contains("already holds"), "{again}");
     assert!(again.contains("re-issuing distrusts nothing"), "{again}");
+    // The refusal teaches the design (bl-7a4a): the likeliest second
+    // enrollment is a seat's "tool side", which the first leaf serves.
+    assert!(
+        again.contains("serves the seat AND the tool host"),
+        "{again}"
+    );
 }
 
 /// **The address is the one a client dials** (§8): the same fact the seat's own
