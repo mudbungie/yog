@@ -326,6 +326,67 @@ says — and adds no verb, no field and no envelope:
   answering function — `ConsumerCtx::answer` — so the second door opens onto
   the same room and can add no verb.)*
 
+### 3.1 Stopping a turn: the envelope is the gesture, a deposited line is text (bl-1cf4)
+
+Worked once, in full, because a client author was otherwise reverse-engineering
+it from the codec: **a client that wants a stop control on an in-flight turn
+sends `{"op":"stop","workspace":…,"agent":…,"children":<bool>}`, and nothing
+else stops a turn.**
+
+**A slash line never crosses the wire.** `/stop` is the boundary's third
+serialization (`src/boundary/line.rs`) and it is read **at the seat**: `yog
+gesture '/stop' --ws … --agent …` parses the line against the seat's own
+selection and deposits the envelope it encodes to
+(`sugar::argv::envelope`). Both engine intakes — a `gestures/` file and a wire
+frame — meet at `consume::run_value` → `codec::decode`, which reads envelopes
+only; a line handed to either is refused (`deposit is not JSON`). A client that
+lets a human type `/stop` parses it on its own side, exactly as the argv seat
+does, and `boundary::line::{is_command, unescape}` are `pub` for that: a
+leading `/` is a command, a leading `//` is the escape that sends one slash.
+
+**A `/stop` sent as `content` is a message, and this is the trap.**
+`{"op":"message",…,"content":"/stop"}` decodes to `Action::Message` and spawns
+`litany message <ws> <agent> /stop`: the text reaches the model verbatim (§3.3's
+rule — a deposit's content is never read for flags) and wakes the very driver
+the operator meant to kill. Nothing at either intake inspects `content`.
+
+**Which of the three to send.** All three answer `Reply::Outcome` — the spawned
+verb's `exit`/`stdout`/`stderr`, `ok` iff it exited 0.
+
+- `stop` → `litany stop <ws> <agent>`, plus `--stop-children` when `children`
+  is true, which cascades over the §2.3 hyphenated descent. `children` is
+  optional and decodes `false` when absent; `workspace` and `agent` are
+  required. One §4.2 ops row. Work the conversation already committed is kept.
+- `interrupt` → `litany stop`, then `litany message`, carrying the same three
+  fields `message` does and no `children` flag. The deposit is what restarts
+  the conversation (ARCH §2.9: there is no resume verb), so this **replaces**
+  the turn rather than ending it. **Two ops rows**, because the halves fail
+  independently, and the reply is the *deposit's* outcome. A stop declined
+  because nothing was running still deposits, so `interrupt` degrades to a
+  plain send — that is the same gesture at zero work, not a case to branch on.
+- `message` → `litany message`. No stop at all.
+
+A stopped conversation is not a dead one: it comes to rest `stopped` and the
+next deposit starts a driver again. A stop that lands inside a tool window is
+settled in band by the pinned litany — one `is_error` `tool_result` per
+unanswered `tool_use` — so the branch is left replayable and the deposit
+revives it (`src/boundary/interrupt.rs` carries that ruling).
+
+**When to offer the control.** `stoppable` and `stop_children` ride the
+conversation reads — every `Reply::Conversations` row and `Reply::Agent`'s
+`AgentView` — so a seat never derives the gate (§9.4: a gate that is not
+derivable from a row goes on the row). `stoppable` is true iff that
+conversation is `live` or `in-flight`, the two states where a driver holds the
+executor lock; `stop_children` is true iff some other agent's id extends
+`<agent>-` (`src/actions/enabled.rs`). A row's `state` is the badge aggregated
+over the subtree and is **not** the gate: a quiet root with a working child
+reads `live` and has no driver to kill. Firing `stop` anyway is not an error —
+it is an `Outcome` with `ok: false` and litany's own words.
+
+**The corpus carries all three request shapes** — `corpus/request/stop.json`,
+`interrupt.json`, `message.json` — and `stop`'s fixture is the `children: true`
+spelling.
+
 ## 4. Identity, authentication, authorization
 
 - **mTLS both ways.** The operator runs a private CA out-of-channel and
