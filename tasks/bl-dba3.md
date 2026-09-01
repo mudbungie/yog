@@ -1,7 +1,8 @@
 +++
 title = "the provider pane re-derives brazen's credential column from a file probe, so an ambient credential renders as 'not signed in' with a Login button"
 created = 1788235095
-updated = 1788235095
+updated = 1788235126
+claimant = "Forge"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["providers"]
