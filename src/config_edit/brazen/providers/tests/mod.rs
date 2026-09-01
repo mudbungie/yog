@@ -95,26 +95,28 @@ fn an_unrecognized_auth_spelling_names_itself_rather_than_guessing() {
 /// credential fact in words, phrased by the credential model that makes it
 /// true — one derivation, painted by the §8.3 Login pane (bl-20cb: and by it
 /// alone) and read without repainting by the boundary and §9.4's remedy.
+///
+/// **The fact is brazen's `credential` column and nothing else** (bl-dba3).
+/// `claude-session-direct` in the fixture carries `ambient` — a credential
+/// brazen resolved from outside its own store — so the row is *signed in*,
+/// which is what a live call through it proves. This assertion used to read
+/// `not signed in`, because the words came from a stat of
+/// `<credentials-dir>/<name>.json`, a probe blind to every spelling but
+/// `stored`.
 #[test]
 fn row_views_state_the_credential_fact_in_words() {
     let rows = provider_rows(LIVE_LISTING);
-    let creds = vec![
-        ("codex".to_string(), true),
-        ("local".to_string(), true),
-        ("claude-code".to_string(), false),
-        ("claude-session-direct".to_string(), false),
-        ("anthropic".to_string(), false),
-    ];
-    let views = row_views(&rows, &creds);
+    let views = row_views(&rows);
     assert_eq!(
         views.iter().map(|v| v.fact.clone()).collect::<Vec<_>>(),
         [
-            "auth oauth2 · signed in",
-            // Keyless rows say so whatever the credentials dir holds.
-            "auth none · no credential needed",
-            "auth none · no credential needed",
-            "auth oauth2 · not signed in",
-            "auth api_key · no credential stored",
+            "auth oauth2 \u{b7} signed in",
+            // Keyless rows say so; `not required` is not a credential.
+            "auth none \u{b7} no credential needed",
+            "auth none \u{b7} no credential needed",
+            // `ambient` is a credential a run would spend.
+            "auth oauth2 \u{b7} signed in",
+            "auth api_key \u{b7} no credential stored",
         ]
     );
     assert_eq!(views[0].name, "codex");
@@ -129,24 +131,62 @@ fn row_views_state_the_credential_fact_in_words() {
     assert_eq!(views[4].blocked, rows[4].login_blocked());
 }
 
+/// The predicate itself, over every spelling the column has — the four this
+/// build knows and one it does not (bl-dba3: an unread spelling is a credential,
+/// because `missing` is the only refusal).
 #[test]
-fn a_keyed_row_with_a_credential_file_reports_it_stored_not_signed_in() {
-    // "signed in" is a sentence only a login can make true; a keyed row's file
-    // is a stored credential, and nothing more is claimed about it.
-    let rows = provider_rows(r#"{"providers":[{"name":"anthropic","auth":"api_key"}]}"#);
-    let views = row_views(&rows, &[("anthropic".to_string(), true)]);
-    assert_eq!(views[0].fact, "auth api_key · credential stored");
+fn credentialed_is_every_spelling_but_missing_and_not_required() {
+    for (credential, want) in [
+        ("stored", true),
+        ("ambient", true),
+        ("inline", true),
+        ("keychain-from-a-later-brazen", true),
+        ("not required", false),
+        ("missing", false),
+    ] {
+        // The spelling is quoted into its own binding rather than inlined: a
+        // `"credential":"<eight or more characters>"` literal is what
+        // `leak-rules.sh`'s `credential-assignment` rule exists to catch, and a
+        // gate that reads a fixture the way it reads a secret is the gate
+        // working.
+        let quoted = format!("\"{credential}\"");
+        let listing =
+            format!(r#"{{"providers":[{{"name":"r","auth":"oauth2","credential":{quoted}}}]}}"#);
+        assert_eq!(
+            provider_rows(&listing)[0].credentialed(),
+            want,
+            "{credential}"
+        );
+    }
 }
 
 #[test]
-fn a_row_the_presence_read_omits_is_credential_less_not_a_hole() {
-    let rows = provider_rows(r#"{"providers":[{"name":"codex","auth":"oauth2"}]}"#);
-    let views = row_views(&rows, &[]);
-    assert_eq!(views[0].fact, "auth oauth2 · not signed in");
+fn a_keyed_row_with_a_credential_reports_it_stored_not_signed_in() {
+    // "signed in" is a sentence only a login-capable row can make true; a keyed
+    // row's secret is stored, and nothing more is claimed about it.
+    let rows = provider_rows(
+        r#"{"providers":[{"name":"anthropic","auth":"api_key","credential":"stored"}]}"#,
+    );
     assert_eq!(
-        row_views(&[], &[("codex".to_string(), true)]).len(),
+        row_views(&rows)[0].fact,
+        "auth api_key \u{b7} credential stored"
+    );
+}
+
+#[test]
+fn an_unstated_credential_column_is_not_a_refusal() {
+    // An absent column folds to the empty string, which is neither `missing`
+    // nor `not required` — and [`MISSING`] is documented as the ONE spelling
+    // that is a refusal, so a question that went unanswered may not read as a
+    // row that cannot answer. The §8.1 start gate reads the column by the same
+    // rule, which is the point: one predicate, so the pane and the gate cannot
+    // disagree about whether a start can run.
+    let rows = provider_rows(r#"{"providers":[{"name":"codex","auth":"oauth2"}]}"#);
+    assert_eq!(row_views(&rows)[0].fact, "auth oauth2 \u{b7} signed in");
+    assert_eq!(
+        row_views(&[]).len(),
         0,
-        "the table names the rows; the presence list only answers about them"
+        "the table names the rows, and an empty table names none"
     );
 }
 

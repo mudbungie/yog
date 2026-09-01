@@ -1,10 +1,13 @@
-//! The read-only derived surfaces over a loaded editor (§5.1 rows 20/22/23):
-//! the effective dump, credential presence, the model cache, and the folded
-//! [`BrazenPaths`]. None of these touch the Apply pipeline — that is
-//! [`super`]'s half.
+//! The read-only derived surfaces over a loaded editor (§5.1 rows 20/23): the
+//! effective dump, the model cache, and the folded [`BrazenPaths`]. None of
+//! these touch the Apply pipeline — that is [`super`]'s half. (The
+//! credential-presence read that stood here went in bl-dba3: brazen's own
+//! `credential` column is the fact, and a stat of the credentials directory was
+//! a second derivation of it that could not see `ambient` or `inline`.)
 
-use super::{FakeRunner, cfg, loaded, paths};
-use crate::config_edit::brazen::{BUILT_IN_ROWS_HINT, BrazenPaths, BzRunner, credential_presence};
+use super::{FakeRunner, loaded};
+use crate::config_edit::brazen::{BUILT_IN_ROWS_HINT, BrazenPaths};
+use crate::config_edit::brazen::{BzRunner as _, row_views};
 use crate::test_support::FakeFs;
 use crate::xdg::Env;
 use std::path::{Path, PathBuf};
@@ -18,24 +21,19 @@ fn effective_runs_dump_config_against_real_env() {
     assert_eq!(*runner.log(), vec!["effective".to_string()]);
 }
 
+/// The rendered table is the runner's own listing, asked once — the whole of
+/// what the boundary's `Providers` reply does (bl-dba3: it used to pair that
+/// listing with a stat of the credentials directory, and the two answers about
+/// one fact disagreed).
 #[test]
-fn credential_presence_stats_a_file_per_effective_provider() {
-    let fs = FakeFs::seed(&cfg(), b"name = \"ignored-draft-scan\"\n");
-    // openai has a credential file; anthropic does not. The rows come from the
-    // effective table (§16.7 W10), never from the draft text.
-    fs.map()
-        .insert(PathBuf::from("/creds/openai.json"), b"{}".to_vec());
-    let _ = loaded(&fs);
+fn the_rendered_table_is_the_listing_asked_once() {
     let runner = FakeRunner::listing(&["openai", "anthropic"]);
-    // The Login surface asks brazen once and hands the same table here (§8.3).
-    let rows = runner.providers();
+    let views = row_views(&runner.providers());
     assert_eq!(
-        credential_presence(&paths().credentials_dir, &rows, &fs),
-        vec![
-            ("openai".to_string(), true),
-            ("anthropic".to_string(), false),
-        ]
+        views.iter().map(|v| v.name.clone()).collect::<Vec<_>>(),
+        ["openai", "anthropic"]
     );
+    assert_eq!(views[0].fact, "auth none \u{b7} no credential needed");
     assert_eq!(*runner.log(), vec!["providers".to_string()]);
 }
 

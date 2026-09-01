@@ -93,9 +93,6 @@ impl FileIo for FakeFs {
         self.map().remove(path);
         Ok(())
     }
-    fn exists(&self, path: &Path) -> bool {
-        self.map().contains_key(path)
-    }
     fn list_dir(&self, dir: &Path) -> std::io::Result<Vec<PathBuf>> {
         Ok(self
             .map()

@@ -31,10 +31,6 @@ impl FileIo for RealFileIo {
         std::fs::remove_file(path)
     }
 
-    fn exists(&self, path: &Path) -> bool {
-        path.exists()
-    }
-
     fn list_dir(&self, dir: &Path) -> std::io::Result<Vec<PathBuf>> {
         match std::fs::read_dir(dir) {
             // An unreadable individual entry is dropped, not fatal — the same
@@ -52,22 +48,23 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn read_write_rename_remove_exists_roundtrip() {
+    fn read_write_rename_remove_roundtrip() {
         let dir = tempdir().unwrap();
         let io = RealFileIo;
         let a = dir.path().join("a");
         let b = dir.path().join("b");
-        // read of a missing file → None (fold identity).
+        // read of a missing file → None (fold identity), which is also how
+        // absence is asked now that the seam carries no `exists` (bl-dba3: its
+        // one caller was the credential probe, and the probe was a second
+        // derivation of a column brazen already answers).
         assert_eq!(io.read(&a).unwrap(), None);
-        assert!(!io.exists(&a));
         io.write(&a, b"hello").unwrap();
         assert_eq!(io.read(&a).unwrap(), Some(b"hello".to_vec()));
-        assert!(io.exists(&a));
         io.rename(&a, &b).unwrap();
-        assert!(!io.exists(&a));
+        assert_eq!(io.read(&a).unwrap(), None);
         assert_eq!(io.read(&b).unwrap(), Some(b"hello".to_vec()));
         io.remove(&b).unwrap();
-        assert!(!io.exists(&b));
+        assert_eq!(io.read(&b).unwrap(), None);
     }
 
     #[test]

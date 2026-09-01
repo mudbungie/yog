@@ -106,14 +106,30 @@ impl ProviderRow {
         }
     }
 
+    /// Does this row carry a credential a run would actually spend? The
+    /// [`credential`](Self::credential) column, judged by the one rule there is:
+    /// every spelling but [`MISSING`] and [`NOT_REQUIRED`] is a secret
+    /// `fetch_cred` found — the two this build knows beside `stored`
+    /// (`ambient`, `inline`) and any it has never heard of.
+    ///
+    /// **One predicate, one home** (bl-dba3). The §8.1 start gate
+    /// ([`WallCredit`](crate::start::WallCredit)) asks this question of the same
+    /// column, and the rendered row used to answer it a second way — a stat of
+    /// `<credentials-dir>/<name>.json`, which is blind to `ambient` and `inline`
+    /// by construction. Two representations of one fact, and they drifted: a row
+    /// answering live off an ambient credential rendered *not signed in*.
+    pub fn credentialed(&self) -> bool {
+        self.credential != MISSING && self.credential != NOT_REQUIRED
+    }
+
     /// The credential fact in the words this row's credential model makes true
     /// (bl-402f, STORIES S5 point 4 "presence renders"): a login-capable row is
-    /// signed in or not, a keyless row needs nothing, and a keyed row's file is
-    /// stored or absent — "signed in" is a sentence only a login can earn.
-    /// `present` is the §5.1 #22 existence read, the only credential fact yog
-    /// ever holds.
-    fn credential_words(&self, present: bool) -> &'static str {
-        match (self.auth.as_str(), present) {
+    /// signed in or not, a keyless row needs nothing, and a keyed row's secret
+    /// is there or absent — "signed in" is a sentence only a login-capable row
+    /// can earn. The boolean is [`credentialed`](Self::credentialed), brazen's
+    /// own answer to whether the row could answer at all.
+    fn credential_words(&self) -> &'static str {
+        match (self.auth.as_str(), self.credentialed()) {
             (OAUTH2, true) => "signed in",
             (OAUTH2, false) => "not signed in",
             (NONE, _) => "no credential needed",
@@ -123,10 +139,10 @@ impl ProviderRow {
     }
 
     /// This row as every surface renders it (§8.3, §9.5).
-    fn view(&self, present: bool) -> ProviderRowView {
+    fn view(&self) -> ProviderRowView {
         ProviderRowView {
             name: self.name.clone(),
-            fact: format!("auth {} · {}", self.auth, self.credential_words(present)),
+            fact: format!("auth {} · {}", self.auth, self.credential_words()),
             blocked: self.login_blocked(),
         }
     }
@@ -145,17 +161,11 @@ pub struct ProviderRowView {
     pub blocked: Option<String>,
 }
 
-/// Pair the effective table with the credential-presence answer (§5.1 #22) into
-/// the rendered rows, in listing order. The **table** names the rows; a row the
-/// presence list does not answer about is credential-less, not a hole (absence
-/// is the answer, so no branch and no error case).
-pub fn row_views(rows: &[ProviderRow], creds: &[(String, bool)]) -> Vec<ProviderRowView> {
-    rows.iter()
-        .map(|row| {
-            let present = creds.iter().any(|(name, yes)| *name == row.name && *yes);
-            row.view(present)
-        })
-        .collect()
+/// The effective table as the rendered rows, in listing order. Every fact a
+/// surface states about a provider is a column of the row itself (bl-dba3), so
+/// this is a projection and takes nothing beside the table.
+pub fn row_views(rows: &[ProviderRow]) -> Vec<ProviderRowView> {
+    rows.iter().map(ProviderRow::view).collect()
 }
 
 /// Parse `bz --list-providers --json`

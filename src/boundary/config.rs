@@ -29,12 +29,9 @@
 //! check a new file wants. Nothing here re-implements the pipeline: every write
 //! is the same `stage → validate → hash-guard → atomic rename` the panes drive.
 
-use crate::config_edit::RealFileIo;
 use crate::config_edit::branch::config_file;
 use crate::config_edit::branch::edit::EditOrigin;
-use crate::config_edit::brazen::{
-    BrazenPaths, BzRunner, RealBzRunner, credential_presence, row_views,
-};
+use crate::config_edit::brazen::{BrazenPaths, BzRunner, RealBzRunner, row_views};
 use crate::config_edit::litany_global::LitanyGlobal;
 use crate::model_pick::{BRANCH, PROVIDERS, Pick};
 use crate::world::marks;
@@ -136,21 +133,18 @@ pub(super) fn read_marks(deps: &Deps, workspace: &Path) -> Reply {
     }
 }
 
-/// One workspace's effective provider table with the §5.1 #22 credential
-/// presence, rendered (§8.5, bl-0164) — the §8.3 login pane's `↻ providers +
-/// credentials`. Rows and credentials are read **inside the named sphere's
-/// wall** (bl-fcd5): a provider row reads *signed in* only where this
-/// workspace signed it in, so the table is meaningless without the workspace
-/// that scopes it. brazen unanswerable is an empty table, never an error: the
-/// same "asked, never stored" contract [`Deps::provider_rows`] carries.
+/// One workspace's effective provider table, rendered (§8.5, bl-0164) — the
+/// §8.3 login pane's `↻ providers + credentials`. The table is read **inside
+/// the named sphere's wall** (bl-fcd5): a provider row reads *signed in* only
+/// where this workspace signed it in, so the table is meaningless without the
+/// workspace that scopes it. The credential fact rides the listing's own
+/// `credential` column (bl-dba3) — one ask, and no second derivation over the
+/// credentials directory. brazen unanswerable is an empty table, never an
+/// error: the same "asked, never stored" contract [`Deps::provider_rows`]
+/// carries.
 pub(super) fn providers(deps: &Deps, workspace: &Path) -> Reply {
     let wall = wall_env(deps, workspace);
-    let rows = RealBzRunner::resolve(&wall).providers();
-    let dir = BrazenPaths::of(&wall)
-        .map(|p| p.credentials_dir)
-        .unwrap_or_default();
-    let creds = credential_presence(&dir, &rows, &RealFileIo);
-    Reply::Providers(row_views(&rows, &creds))
+    Reply::Providers(row_views(&RealBzRunner::resolve(&wall).providers()))
 }
 
 /// The named workspace's brazen locations (§16.2 as amended). **The gesture's

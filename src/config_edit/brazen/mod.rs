@@ -22,10 +22,10 @@
 //! state transition under Linux tarpaulin; the real [`RealBzRunner`] is a thin
 //! shell over [`crate::bz_host`] plus one recorder-covered spawn.
 //!
-//! The three on-disk locations themselves — and the two reads that need nothing
-//! but them ([`credential_presence`], [`model_cache_at`]) — are [`paths`],
-//! split off at §12's pre-split band: a layout is not an editor, and both of
-//! those reads were already documented as free of one.
+//! The three on-disk locations themselves — and the read that needs nothing but
+//! them ([`model_cache_at`]) — are [`paths`], split off at §12's pre-split band:
+//! a layout is not an editor, and that read was already documented as free of
+//! one.
 //!
 //! Apply is the shared [`pipeline`](super::pipeline) (stage → hash-guard →
 //! atomic rename) with brazen's one addition, the `bz` validator gate:
@@ -48,10 +48,10 @@ use std::path::Path;
 mod effects;
 pub use effects::RealBzRunner;
 
-/// The wall's brazen layout and the two reads that need only it (§5.1
-/// #19/#22/#23) — free of the editor, because every caller asks without one.
+/// The wall's brazen layout and the read that needs only it (§5.1 #19/#23) —
+/// free of the editor, because every caller asks without one.
 mod paths;
-pub use paths::{BrazenPaths, credential_presence, model_cache_at};
+pub use paths::{BrazenPaths, model_cache_at};
 
 mod providers;
 pub use providers::{

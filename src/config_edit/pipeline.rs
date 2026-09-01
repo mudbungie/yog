@@ -28,7 +28,6 @@ pub trait FileIo {
     fn write(&self, path: &Path, bytes: &[u8]) -> std::io::Result<()>;
     fn rename(&self, from: &Path, to: &Path) -> std::io::Result<()>;
     fn remove(&self, path: &Path) -> std::io::Result<()>;
-    fn exists(&self, path: &Path) -> bool;
     /// The child paths of `dir`, or an empty vec when `dir` is absent. Order is
     /// unspecified; a caller that needs determinism sorts.
     fn list_dir(&self, dir: &Path) -> std::io::Result<Vec<PathBuf>>;
