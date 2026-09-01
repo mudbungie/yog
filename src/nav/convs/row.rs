@@ -81,8 +81,9 @@ pub(super) fn row(
     // goal.md is its own sub-task, never a yog ball attribution.
     let conv_ball = root.and_then(|a| a.goal_ball.as_deref()).map(ball);
     let (state, uncertain) = agg_state(&members, root);
-    // One recency fact, gathered at snapshot time (§3.5) and spent twice: it
-    // orders the list and it dates the row. `last_action_unix` already folds
+    // One recency fact, gathered at snapshot time (§3.5) and spent three ways:
+    // it orders the list, it ages the row and it dates it.
+    // `last_action_unix` already folds
     // the tip commit, the newest `messages/` entry and the live tail (bl-cad5),
     // so nothing here stats disk from the render path.
     let last_active = members
@@ -110,6 +111,10 @@ pub(super) fn row(
         uncertain,
         preview: preview(root),
         age_secs: (now_unix - last_active).max(0),
+        // …and spent a third time, unsubtracted (bl-b7d9): a roster that can
+        // only say a distance cannot stamp a row, and a client subtracting its
+        // own clock would say a different time than the engine's.
+        last_active_unix: last_active,
         flight: flight(&members),
         attention: attention_count,
         members: members.len(),

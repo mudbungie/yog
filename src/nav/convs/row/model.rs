@@ -30,9 +30,10 @@ pub struct ConvBall {
 
 /// One list row (§11): the id of the agent this row is rooted at, the state
 /// badge aggregated over **its** subtree (+ §10 uncertainty), the first-line
-/// preview, seconds since that subtree's last activity, the live-activity
-/// class, its attention count, its member count (this agent + its descendants),
-/// how deep it hangs and how many children it dispatched itself.
+/// preview, seconds since that subtree's last activity **and when that was**,
+/// the live-activity class, its attention count, its member count (this agent +
+/// its descendants), how deep it hangs and how many children it dispatched
+/// itself.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConvRow {
     /// The agent this row is the subtree of — the conversation root at depth 0,
@@ -42,6 +43,14 @@ pub struct ConvRow {
     pub uncertain: bool,
     pub preview: String,
     pub age_secs: i64,
+    /// **When** that subtree last acted, in unix epoch seconds (REMOTE §9.9,
+    /// bl-b7d9) — the same one recency fact [`age_secs`](ConvRow::age_secs) is
+    /// the distance to. Both ride because they are not one statement: the age
+    /// is relative to the *engine's* clock at answer time and is the only
+    /// carrier of it, the stamp is absolute, and a seat wanting the engine's
+    /// `now` adds them. Carried rather than subtracted at the seat, so a phone
+    /// with a drifting clock and a headless reader say the same time.
+    pub last_active_unix: i64,
     /// What kind of work is in flight here (§5.1 #28), by the operator's
     /// priority `inference > tools > subagents`; `None` when the conversation
     /// is at rest. The one carrier of "this row pulses" — there is no separate

@@ -262,6 +262,7 @@
         "/rows/[]/display:string",
         "/rows/[]/display_only:bool",
         "/rows/[]/flight:string",
+        "/rows/[]/last_active_unix:number",
         "/rows/[]/members:number",
         "/rows/[]/name:string",
         "/rows/[]/preview:string",
@@ -275,7 +276,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/deleted": {
       "signature": [

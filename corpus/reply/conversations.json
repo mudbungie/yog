@@ -28,6 +28,7 @@
           "display": "brave-fox",
           "display_only": false,
           "flight": "inference",
+          "last_active_unix": 1700000000,
           "members": 3,
           "name": "brave-fox",
           "preview": "first line",
@@ -48,6 +49,7 @@
           "direct": 0,
           "display": "c-2",
           "display_only": false,
+          "last_active_unix": 1700000042,
           "members": 1,
           "preview": "",
           "root_id": "c-2",
@@ -64,6 +66,7 @@
           "direct": 0,
           "display": "goal-stamped",
           "display_only": true,
+          "last_active_unix": 1700000042,
           "members": 1,
           "preview": "",
           "root_id": "c-3",
@@ -76,6 +79,6 @@
       ]
     }
   ],
-  "protocol": 1,
+  "protocol": 2,
   "shape": "conversations"
 }

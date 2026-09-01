@@ -88,6 +88,7 @@ fn every_conversation_row_token_survives_both_halves_of_its_table() {
         uncertain: false,
         preview: String::new(),
         age_secs: 0,
+        last_active_unix: 1_700_000_042,
         flight: None,
         attention: 0,
         members: 1,

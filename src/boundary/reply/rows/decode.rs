@@ -121,6 +121,7 @@ pub(crate) fn conv_row(v: &Value) -> Result<ConvRow, String> {
         uncertain: bool_of(o, "uncertain")?,
         preview: str_of(o, "preview")?,
         age_secs: i64_of(o, "age_secs")?,
+        last_active_unix: i64_of(o, "last_active_unix")?,
         flight: opt(o, "flight", |o, k| pick(o, k, &FLIGHTS))?,
         attention: usize_of(o, "attention")?,
         members: usize_of(o, "members")?,

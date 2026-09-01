@@ -17,6 +17,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
         uncertain: true,
         preview: "first line".into(),
         age_secs: 42,
+        last_active_unix: 1_700_000_000,
         flight: Some(Flight::Inference),
         attention: 1,
         members: 3,
@@ -50,6 +51,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
         uncertain: false,
         preview: String::new(),
         age_secs: 0,
+        last_active_unix: 1_700_000_042,
         flight: None,
         attention: 0,
         members: 1,
@@ -84,6 +86,14 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
         "the strict child count rides the answer"
     );
     assert_eq!(rows[1]["direct"], 0);
+    // bl-b7d9: both time facts ride, and they say the same instant two ways —
+    // the stamp is absolute, and `age_secs` is the distance from the engine's
+    // own clock, so a reader adding them recovers the `now` this was answered
+    // at (1_700_000_000 + 42 == 1_700_000_042).
+    assert_eq!(rows[0]["last_active_unix"], 1_700_000_000_i64);
+    assert_eq!(rows[0]["age_secs"], 42);
+    assert_eq!(rows[1]["last_active_unix"], 1_700_000_042_i64);
+    assert_eq!(rows[1]["age_secs"], 0);
     assert_eq!(rows[0]["ball"]["state"], "bound");
     assert_eq!(rows[0]["ball"]["badge"], "closed");
     assert_eq!(rows[1]["state"], "quiescent");
@@ -108,6 +118,7 @@ fn a_display_only_name_is_withheld_from_the_boundary_as_a_message_target() {
         uncertain: false,
         preview: "first line".into(),
         age_secs: 0,
+        last_active_unix: 1_700_000_042,
         flight: None,
         attention: 0,
         members: 1,

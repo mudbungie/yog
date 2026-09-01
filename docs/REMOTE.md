@@ -3597,6 +3597,61 @@ an act and nothing in the window posts one unprompted. The engine's substrate
 binaries live on the **world**, not on the driver, for the same reason a posted
 act carries no `Cli`: they are the engine's, and a seat never had them.
 
+### 9.9 The roster says *when* (bl-b7d9)
+
+**`ConvRow` gained `last_active_unix`** — the conversation subtree's last action
+as a **unix epoch second**, on `reply/conversations` beside the `age_secs` that
+was already there.
+
+The ask came from the phone's parity ledger, and §12.1's closing sentence is why
+it belongs here rather than there: *the wire owes a phone nothing it does not
+already owe a laptop.* Every list-shaped seat orders and **stamps** by last
+activity. yog answered only the distance, so a seat could sort but could not
+say *when* — and the fact was never missing from the engine, only from the
+spelling. That is §9.4's finding a second time.
+
+Three things were decided and each is the kind that rots quietly if it is not
+written down.
+
+- **It is carried, not derived.** A seat holding `age_secs` alone could
+  subtract it from its own clock, and then every client says a different time
+  for one instant — a phone with a drifting clock, a desktop in another zone,
+  a headless `/conversations` piped into a script. The engine states the fact
+  once and every reader repeats it. This is DESIGN §5.1's own rule reaching the
+  wire: the source of truth is `Agent::last_action_unix` (§5.1 #12, bl-cad5 —
+  the fold of the tip commit, the newest `messages/` mtime and the live
+  streaming tail), gathered at snapshot time, and `nav::convs::row` now spends
+  that one gathered value three ways instead of two: it orders the list, it
+  ages the row, and it dates it. **Nothing new is stored and nothing is stat-ed
+  from the answer path.**
+- **Both time fields ride, and they are not two copies of one fact.** The
+  obvious subtraction — replace `age_secs` with the stamp — is wrong, and not
+  only because withdrawing a field in use is the one §3 change that *does* bump
+  the version. `age_secs` is the distance from the **engine's** clock at answer
+  time, and it is the reply's only carrier of that clock; the stamp is
+  absolute. So the pair says strictly more than either half: a seat dates the
+  row from the stamp, and a seat that wants the engine's `now` — to correct its
+  own skew, or to keep a sitting list's ages honest without re-asking — adds
+  the two. They cannot disagree, being one value encoded twice at one instant
+  in one function, which is the only shape under which two spellings of a fact
+  are lawful.
+- **Epoch seconds, not RFC3339.** The wire's every other time is an integer of
+  seconds — `committed` on the lineage row, `tick_secs`/`lease_secs`/
+  `last_act_secs_ago` on the board, the §7.2 staleness stamp, `age_secs` itself
+  — and the chokepoint's clock is an `i64` minted at the process boundary
+  precisely so every derivation is deterministic under test (§9.7's staleness
+  ruling). A calendar string would put a zone and a format into a codec that
+  has neither, and would be the second representation this section refuses.
+
+**The corpus moved and `PROTOCOL` did not, by the rule already in force** (§3).
+`reply/conversations` gained a field, so its ledger signature moved and its
+`since` advanced from 1 to **2** — the standing version, which is unreleased,
+so the move is free exactly as bl-3655's follow-lane move was. `make corpus`
+adjudicated it rather than an author: the ledger refuses only a signature that
+moves while its own `since` **equals** the protocol being generated. A client
+vendoring the corpus decodes the new key or fails its own fixture, which is the
+whole mechanism.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer
@@ -3931,6 +3986,13 @@ ships three components does *not* get to invent:
 Work lands in the Android repository with its own tracking; this section is
 yog's record of the ruling and of what the wire owes a phone, which is nothing
 it does not already owe a laptop.
+
+**The parity ledger's asks land in §9, not here** (bl-b7d9, the first of them).
+The phone's ledger is a list of facts a list-shaped seat needs and yog does not
+answer; each one is a payload question about what the engine can *say*, which is
+§9's subject, and each is owed to every seat the moment it is owed to one. The
+sentence above is the test: an ask that is really about a phone would be an
+amendment here, and none has been.
 
 
 ## 13. The punched wire — dynamic reachability (bl-4d56, reworked bl-aad5; operator rulings 2026-08-31)

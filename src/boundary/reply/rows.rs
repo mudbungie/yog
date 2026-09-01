@@ -94,6 +94,12 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
     map.insert("uncertain".to_owned(), json!(row.uncertain));
     map.insert("preview".to_owned(), json!(row.preview));
     map.insert("age_secs".to_owned(), json!(row.age_secs));
+    // The same recency fact undistanced (REMOTE §9.9, bl-b7d9): an age alone
+    // orders a roster and cannot stamp one. Epoch seconds, the unit every
+    // other time on this wire speaks (`committed` above); it rides *beside*
+    // `age_secs` because the age is the only carrier of the engine's own clock
+    // at answer time, and the pair is one value encoded twice at one instant.
+    map.insert("last_active_unix".to_owned(), json!(row.last_active_unix));
     if let Some(flight) = row.flight {
         map.insert("flight".to_owned(), json!(flight_token(flight)));
     }

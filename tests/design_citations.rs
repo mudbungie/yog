@@ -55,12 +55,13 @@ const FOREIGN: &[&str] = &[
     // the scanner is deliberately prefix-blind, and DESIGN §1 has no
     // subsections at all (bl-b6fa).
     "1.2", "1.3", "1.4", "1.5",
-    // REMOTE.md's build-sequence residuals — §9.7 (the read path, bl-ae05) and
-    // §9.8 (the act path, bl-4841) — cited the same prefixed way. DESIGN's own
-    // §9 stops short of both today, which
-    // [`foreign_keys_are_not_design_headings`] is what keeps honest: the day it
-    // grows one, this entry fails rather than masking it.
-    "9.7", "9.8",
+    // REMOTE.md's build-sequence residuals — §9.7 (the read path, bl-ae05),
+    // §9.8 (the act path, bl-4841) and §9.9 (the roster's last-activity stamp,
+    // bl-b7d9) — cited the same prefixed way. DESIGN's own §9 stops short of
+    // all three today, which [`foreign_keys_are_not_design_headings`] is what
+    // keeps honest: the day it grows one, this entry fails rather than masking
+    // it.
+    "9.7", "9.8", "9.9",
     // REMOTE.md's §5.4 — the thrall and the local execution corpus, and since
     // bl-dfce the home of the ruling that the compactor's procedure pair is an
     // engine act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN

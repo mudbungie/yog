@@ -25,6 +25,11 @@ fn one_row_per_root_with_subtree_member_counts() {
     assert_eq!(rows[1].members, 2);
     assert!(rows[1].has_children());
     assert_eq!(rows[1].age_secs, 80, "age from the subtree's latest action");
+    // bl-b7d9: the stamp is that same latest action, undistanced — the
+    // conversation's own child (20), never the root's own 10 and never the
+    // clock the age was measured against.
+    assert_eq!(rows[1].last_active_unix, 20);
+    assert_eq!(rows[0].last_active_unix, 30);
 }
 
 #[test]

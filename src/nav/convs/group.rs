@@ -79,6 +79,7 @@ mod tests {
             uncertain: false,
             preview: String::new(),
             age_secs: 0,
+            last_active_unix: 1_700_000_042,
             flight: None,
             attention: 0,
             members: 1,
