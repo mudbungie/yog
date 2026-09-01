@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.8](https://github.com/mudbungie/yog/compare/v0.0.7...v0.0.8) - 2026-09-01
+
+### Changes
+
+- the boundary still speaks fork-is-the-freeze: /retarget's surface and REMOTE predate litany's follow-the-tip ruling [bl-e654]
+- a newly primed project refuses for a whole sweep: bl-6c9e made workspace birth a barrier and left the project noun on the cached set — and no gesture answers which project names exist [bl-3377]
+- the terminal seat tells the operator to focus a workspace it cannot focus, and never names --ws: the flags exist only in a refusal that missing-target refusals do not print [bl-e66f]
+- /flag raises no attention item: it writes one exit-0 ops row and the §6 predicate reads no ops row, so the monitor's floor grant signals where nobody looks [bl-6f2f]
+- /prompt discards the prepared prefill, so a composer-less seat fires a path rung with no working-directory headline and a ball rung with no ball [bl-06a1]
+- a conversation refusing at the provider rung is silent at every seat: drivers launch, every model call fails, and the operator reads nothing [bl-9b88]
+- a path-rung conversation's deliverable is invisible at the boundary: /files promises work products and lists none, /work-diff is empty, and neither says why [bl-1015]
+- the worktree lane's refusal sends the model to the loaded lane, which runs a workspace-subject build in the foot's inherited process cwd — the conversation reports done and the bound directory is empty [bl-68e1]
+- nothing ships an implementation of the shipped worker grant's worktree tools, so a default install offers apply_patch/bash/read_file to every model and answers none of them [bl-5710]
+- the wire refusals name commands the operator cannot run: 'make wire-certs' on a box with no checkout, and env-only settings spelled as argv that yog wire-certs accepts, ignores and calls success [bl-a0dd]
+- /enroll's ':0' refusal prints a wire-certs remedy that always refuses on the box it is printed for, and omits the restart the new address needs [bl-a6b7]
+- the provider pane re-derives brazen's credential column from a file probe, so an ambient credential renders as 'not signed in' with a Login button [bl-dba3]
+- no conversation search: a client can only scroll [bl-764a]
+- roster rows carry no time: a phone's conversation list cannot say when anything last moved [bl-b7d9]
+- the /enroll grade word is certificate jargon at the glass — accept and explain the brands [bl-427b]
+- a same-name enrollment refuses without teaching the design: one device, one leaf — an operator leaf already serves the seat AND the tool host [bl-7a4a]
+
 ## [0.0.7](https://github.com/mudbungie/yog/compare/v0.0.6...v0.0.7) - 2026-08-31
 
 ### Changes
