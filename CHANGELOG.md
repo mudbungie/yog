@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.9](https://github.com/mudbungie/yog/compare/v0.0.8...v0.0.9) - 2026-09-01
+
+### Changes
+
+- the boundary speaks effort and priority: two role-tuning gestures, and the providers rows state the capability — one PROTOCOL bump [bl-23bd]
+- the two boundary rosters are at the 300 wall: Action 295 and Reply 297, and an enum has no seam [bl-92d3]
+
 ## [0.0.8](https://github.com/mudbungie/yog/compare/v0.0.7...v0.0.8) - 2026-09-01
 
 ### Changes
