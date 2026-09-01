@@ -3867,3 +3867,221 @@ ships three components does *not* get to invent:
 Work lands in the Android repository with its own tracking; this section is
 yog's record of the ruling and of what the wire owes a phone, which is nothing
 it does not already owe a laptop.
+
+## 13. The roving wire — dynamic reachability (designed 2026-08-31, bl-4d56; adoption rulings in §13.7)
+
+§8 makes the address one fact with one home, and §1's canonical scene puts the
+engine on a home server. Those two sentences collide the moment the scene is
+real: a home server sits behind residential NAT, so its public address is not
+its own fact (the ISP reassigns it, and under CGNAT it is not even distinct),
+and it cannot accept an unsolicited inbound connection at all — while the
+phone seat dialing it sits behind a cellular NAT that is stricter still. The
+deployed answer today is a third-party overlay network: the engine binds a
+tailnet interface and the entry's `address` names the overlay's hostname. It
+works, and it is a dependency this section exists to remove — the operator's
+ability to reach the operator's own boxes should not rest on a vendor's
+coordination servers, relays and account, which is the same sovereignty
+argument §4 makes for the CA: nothing in-channel to phish, and nobody else's
+outage to inherit.
+
+### 13.1 The physics, stated once
+
+Two NATed ends cannot find each other. Every system in this class —
+tailscale-shaped or otherwise — is three capabilities standing on one
+mutually reachable anchor: **presence** (where is the engine now),
+**introduction** (tell each end the other's observed address, so they can try
+to reach each other directly), and **carriage** (carry the bytes when direct
+fails). The anchor must have a static, dialable address; there is no protocol
+that dissolves that requirement, only vendors that hide it. The design's
+whole move is that **only the anchor needs one**: the static-address
+requirement lands on the one box built for it — a small rented public box the
+operator administers like any other — and every other box's address stops
+being a fact anything stores. The engine roams with it: a residential
+re-assignment, a move to another network, a laptop engine on hotel wifi are
+all the same non-event, because the engine's address was never written down.
+
+### 13.2 The relay, and the two nouns this section adds
+
+- **relay** — the operator's public anchor: one small stateless process, one
+  listener, mTLS against the operator's own CA, on the box with the static
+  address. It performs presence, introduction and carriage and nothing else.
+  It holds no world state and no durable anything: a restarted relay is
+  re-moored within one redial, and a relay wiped to nothing is re-provisioned
+  from the CA in one mint.
+- **moor** — an engine's standing outbound connection to its relay: the
+  engine's presence, and the channel a dial-back request rides. The word is
+  chosen for what it implies: the engine ties up at the anchor; nothing ever
+  dials the engine.
+
+**The rendezvous vocabulary is transport-layer, and §3's ban is not lifted.**
+After the outer mTLS handshake and the §3 version preface — the same preface,
+because the relay is one more thing a versioned end dials — the first frame
+states the connection's role, and there are exactly three:
+
+```text
+{"moor": "<leaf>"}     an engine ties up under its certificate's name
+{"reach": "<leaf>"}    a client asks for the engine of that name
+{"back": "<token>"}    the engine answers a dial-back request
+```
+
+The role a connection claims must match the leaf it presented — a `moor` for
+a name the certificate does not bear is refused in band, naming both. These
+frames ride the relay's own channels only; no gesture envelope gains a field,
+no boundary verb exists here to add, and the inner wire that crosses the
+splice is byte for byte §3's, its own preface included.
+
+**Dial-back, not multiplexing.** A `reach` naming a moored leaf makes the
+relay write `{"dial": "<token>"}` down that moor; the engine dials a fresh
+outbound connection to the relay and opens it with `{"back": "<token>"}`; the
+relay splices the two streams and becomes a byte pipe until either end hangs
+up. The token is single-use, random (128-bit) and short-lived (30 s), and it
+correlates a back-leg with its reach — it authenticates nothing, because the
+back-leg is outer-mTLS like every other connection the relay accepts: one
+listener, one posture, and the surface exposed to the open internet stays the
+TLS handshake and nothing behind it (§4). Dial-back is chosen over
+multiplexing streams onto the moor because it keeps thread-per-connection at
+both ends and adds no framing protocol: the moor carries only rendezvous
+frames, and every request-stream is one TCP connection per side, exactly the
+shape `Engine`'s accept loop already serves.
+
+**End-to-end trust is untouched, and that is the load-bearing sentence.**
+Through the splice, the seat performs the same inner mTLS against the same
+`ca.pem`, verifying the same engine name it verifies on a direct dial, and
+the engine reads the same client leaf off the inner handshake — §4's identity,
+registration and scoping are byte for byte unchanged. The relay carries
+ciphertext it cannot read and cannot forge. What the relay does see is
+metadata — which leaves reached which engine, when, and how much — and the
+answer to that is not a mechanism: the relay is the operator's own box, inside
+the same trust the CA already is, and the fact is stated here rather than
+engineered around.
+
+**The moor's liveness is application frames, not socket options.** The engine
+writes `{"ping": n}` at idle cadence and the relay echoes `{"pong": n}`; 25
+seconds, because residential NATs commonly reap idle TCP mappings at 30–60 s
+and the std library exposes no keepalive knob to lean on instead — which is a
+virtue here: the liveness question lives in frames the tests can speak. A
+dead moor is discovered by either side's next write; the engine redials with
+bounded backoff, and a `reach` for a leaf not currently moored refuses in
+band naming the fact — *"<leaf> is not moored here"* — which is the §5
+use-is-attempt posture, not an error state.
+
+### 13.3 The address becomes a ladder
+
+An entry (§8.2) gains one optional file, and the engine's flat wire root
+gains the same one:
+
+```text
+relay    the operator's anchor, host:port — entry-side: where to reach this
+         workspace's engine; engine-side: where to moor
+```
+
+Client-side, a dial is now a **ladder, run per ask**: rung 1, the direct
+`address` when the entry holds one, attempted with a short bound; rung 2,
+`reach` via the entry's relay. §10's dial-per-ask ruling is what makes the
+ladder nearly free and path migration a non-problem: there is no held
+connection to move, a follow lane that drops re-asks and re-runs the ladder,
+and "which rung worked last" is RAM for the run — the runtime half of §8's
+`:0` discipline, never written to disk. The name the inner handshake verifies
+is the engine's, whichever socket was dialed. Both files are severable in
+§8's own sense: an entry with `address` and no `relay` is today byte for
+byte; an entry with `relay` and no `address` is a workspace whose engine has
+no address at all, which is the normal case this section exists for; the
+engine with no `relay` file moors nowhere, starts no thread, and is exactly
+today's listener.
+
+### 13.4 What it costs, named
+
+- **The engine's first standing outbound connection.** §10 has refused every
+  held connection for want of a payer; the moor is the payer, and what it
+  buys — a redial ladder, a liveness cadence — is confined to the one moor,
+  not a general mechanism. Seats still dial per ask; nothing else holds.
+- **TLS-in-TLS on both spliced legs.** The engine's serving loop accepts a
+  generic byte pipe rather than a `TcpStream`, so a dial-back connection
+  (inner wire inside the outer relay session) is served by the same code the
+  listener's accept feeds. That is a signature, not a protocol.
+- **The relay's availability is the roving path's availability.** A relay
+  down is every roving entry unreachable until it returns — rung 1 still
+  stands where an `address` exists, and the degradation is precisely today's
+  behavior. One relay, no failover: a second relay waits for the first
+  operator whose one relay was ever the thing that was down.
+
+### 13.5 The punch rung — introduction, staged second
+
+The relay already sees the one fact only it can see: each end's **observed**
+public `ip:port`. Introduction is those two facts crossed: the `dial` and the
+splice-confirm frames each carry the peer's observed address, both ends
+attempt a TCP simultaneous open from the same local port their relay
+connection used, the SYNs cross inside both NATs' fresh mappings, and on
+success the punched route enters the ladder as a RAM-cached rung 1 for the
+rest of the run while the relay drops back to rendezvous-only. Where the NAT
+pair refuses — symmetric mapping, CGNAT on both ends — the relay carries,
+which is the posture working, not a failure.
+
+It is staged second because the relay alone delivers the ask — *always* reach
+the engine — and the punch buys latency and relay egress, while costing the
+two things v1 must not pay: **source-port reuse** (`SO_REUSEADDR`, and on
+some platforms `SO_REUSEPORT`) which std does not expose, so the rung needs
+either a `socket2` dependency (rule 6: zero new deps without approval) or a
+`setsockopt` beside the four effects in `sys.rs` (rule 3's location
+authority) — a ruling either way; and acceptance that TCP simultaneous open
+lands on fewer NAT pairs than UDP punching would, while a UDP data plane
+means QUIC, which is a dependency avalanche and an async runtime (rules 6
+and 8) for traffic that is human-cadence JSON frames. The criterion for
+taking the rung is stated rather than felt: **when relayed bytes measurably
+hurt** — a bulk payload class, or relay egress an operator can feel on a
+bill — and not before.
+
+### 13.6 Rejections
+
+- **Riding the third-party overlay permanently.** Works today; is a vendor's
+  coordination plane under the operator's only path to the world. The reason
+  this section exists.
+- **A port-forward or static DNS at the home router.** Does not survive CGNAT,
+  couples an entry's fact to a router the operator may not control, and §8.3
+  already scopes port-forwarding to what it is: a stated per-incident remedy,
+  never the architecture.
+- **UPnP / NAT-PMP.** Asks the router for a favor it may lawfully refuse, adds
+  a second discovery protocol, and covers only the NATs that were never the
+  hard case.
+- **Dynamic DNS.** Publishes an address but performs neither introduction nor
+  carriage, fails under CGNAT entirely, and is one more third party.
+- **A QUIC/UDP data plane.** Rules 6 and 8; rejected above with the punch
+  rung's staging.
+- **An embedded wireguard.** A tunnel crate brings its own key universe beside
+  the CA's — two identities for one machine — plus the dependency graph. The
+  wire already has end-to-end identity; what it lacked was rendezvous.
+- **A plaintext token-only back-leg.** Cheaper (no TLS-in-TLS on that leg) and
+  rejected: the relay's listener would accept one plaintext frame before
+  authenticating, and one listener with two postures is the crack §4's
+  sentence exists to close.
+- **Multiplexing request-streams over the moor.** A framing protocol, flow
+  control and head-of-line questions, to save connections nobody is short of.
+- **The relay reading or terminating the inner wire.** Never: carriage is
+  ciphertext, and a relay that could read a gesture would be a third trusted
+  computer in a design that has two.
+
+### 13.7 What adoption waits on (rulings, then balls)
+
+1. **The anchor exists.** The design assumes the operator rents one small
+   public box and administers it like any other (§1.4's posture). No anchor,
+   no roving wire — the section is inert until then, which is severability at
+   the plan level.
+2. **Packaging: `yog relay` verb, recommended.** The relay is ~three small
+   files riding the existing wire/frame/TLS code; a fifth component buys a
+   repo, a gate and a release pipeline for a process with no world, while one
+   more process-edge verb beside `yog wire-certs` costs one match arm. The
+   counterargument — the full engine image standing on a public box with its
+   substrate unused — is real and judged acceptable; overrule here if not.
+3. **The punch rung's dependency question** (§13.5): `socket2` versus
+   `sys.rs`, decided when the rung's criterion is met and not before.
+
+**Component impact.** yog: the relay verb, the moor (dial, hold, heartbeat,
+dial-back), the serving loop's generic byte pipe, `wire-certs` minting a
+relay leaf, and the `relay` file at the wire root. lernie: the entry's
+`relay` file and the dial ladder. thrall: the same ladder — and its redial
+discipline, where bl-0a74's never-redialled channel stops being a wart and
+becomes load-bearing. The phone app: the same ladder over the same entries
+(§12.1 holds: nothing is owed a phone that is not owed a laptop), with
+cellular flapping answered by the ladder's own per-ask shape. Deployment:
+the relay's unit on the anchor, and walking the deployed engine off the
+overlay once its entry carries a `relay` line.
