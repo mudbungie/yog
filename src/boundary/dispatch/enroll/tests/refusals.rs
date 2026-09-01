@@ -29,6 +29,12 @@ fn a_kernel_chosen_port_refuses_before_anything_is_minted() {
         "{refusal}"
     );
     assert!(refusal.contains("WIRE_HOST"), "{refusal}");
+    // bl-a6b7: the remedy must be typeable ON THIS BOX. The material was just
+    // read, so the re-mint is a rotation the bare command refuses, and the
+    // running engine holds its `:0` listener until it restarts — a remedy
+    // missing either half is one the operator spends their first attempt on.
+    assert!(refusal.contains("FORCE=1"), "{refusal}");
+    assert!(refusal.contains("restart the engine"), "{refusal}");
     assert!(!dir.join("phone-1.pem").exists(), "nothing was minted");
 }
 

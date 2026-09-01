@@ -80,6 +80,16 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
 /// stale before it was scanned. The remedy is the operator's own statement of
 /// intent, which is the act §8 has always named.
 ///
+/// **The remedy is spelled the way it must be typed HERE** (bl-a6b7). Reaching
+/// this arm means the material was read, so the re-mint is a *rotation* and the
+/// bare command refuses ("already holds material … Re-run with FORCE=1") — a box
+/// that can produce this sentence is, by construction, a box the bare remedy
+/// turns away. And the address is read at bind time, so the engine standing on
+/// the `:0` listener keeps it until it is restarted; an enrollment retried
+/// before that would hand a device a port nothing is listening on. Both facts
+/// are known at the refusal, and a remedy that cannot succeed is worse than
+/// none — it is spent first.
+///
 /// It reads the **server** end because that is the end a client dials, and
 /// reading it as material rather than as a file is what makes a
 /// half-provisioned box say so in `material`'s own words.
@@ -98,7 +108,9 @@ fn dialable(dir: &Path) -> Result<String, String> {
         return Err(format!(
             "{address} names no port a device can dial: a `:0` is a request the listener answers \
              in RAM, and its answer changes at every boot. State the endpoint — \
-             `yog {} WIRE_HOST=<host> WIRE_PORT=<port>`",
+             `FORCE=1 WIRE_HOST=<host> WIRE_PORT=<port> yog {}` (a rotation, because this box \
+             already holds the material its own boot minted) — then restart the engine, which \
+             binds the address as it starts",
             provision::verb::SUBCMD
         ));
     }
