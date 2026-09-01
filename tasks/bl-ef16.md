@@ -1,7 +1,7 @@
 +++
 title = "RECURRENCE of bl-22ab: /search rows address workspaces and projects by engine path, so a hit cannot be fed to the gesture whose keys it spells"
 created = 1788235214
-updated = 1788235214
+updated = 1788235397
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "wire", "addressing"]
