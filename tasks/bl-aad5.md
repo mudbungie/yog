@@ -2,6 +2,7 @@
 title = "REMOTE $13 rework: the punched wire — no anchor, no port-forward, the engine never listens publicly; DHT rendezvous, punched TCP data path, held connections"
 created = 1788233488
 updated = 1788233488
+claimant = "Alligator"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
