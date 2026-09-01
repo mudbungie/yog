@@ -33,6 +33,19 @@ fails=0
 # its own boot.
 . "$(dirname "${BASH_SOURCE[0]}")/gesture.sh"
 
+# --- the §8.4 hatch ---------------------------------------------------------
+# One command INSIDE the world (`yog exec`) — the other transport a beat spends,
+# beside the §8.5 gesture above. It is the story's own gesture and not new
+# harness machinery: §8.4's hatch is what the empty balls section itself prints
+# as the paved way into a project.
+#
+# It lives here by this file's own seam rule (`beats_headless.sh` and
+# `beats_s13.sh` both spend it, so its one home is the tier they share). It was
+# defined in `beats_s3s4s6.sh` and bl-7942 deleted every windowed beat file with
+# the window, leaving both calls standing — the run then died inside a
+# `>/dev/null 2>&1` with nothing said at all (bl-9397).
+in_world() { d=$1; shift; XDG_DATA_HOME="$d" yog exec --cwd "$d/proj" "$@"; }
+
 # --- the verdict, machine-keyable (bl-56d5) ---------------------------------
 # Every PASS/FAIL line also lands as ONE JSONL row in `$out/verdicts.jsonl`,
 # beside the `gestures.jsonl` the boundary transport writes. The printf lines

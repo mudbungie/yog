@@ -67,6 +67,40 @@
 #                      retake it (`beats_s18.sh`). The unarmed clause is still
 #                      the S13 beats below, and is now this rung's bracket.
 
+# --- the project fixture ----------------------------------------------------
+# A real git project primed INTO the world, carrying one ready ball; prints the
+# ball id. The S11 diff is real git over the worktree `bl claim` cuts and the
+# S13 columns are real balls' own blocker resolution, so neither rung has
+# anything to read until this has run.
+#
+# IT LIVES HERE BECAUSE THIS FILE IS ITS ONE CALLER (bl-9397). It was defined in
+# `beats_s3s4s6.sh` and shared with the windowed runs; bl-7942 deleted every
+# windowed beat file and left this call standing, so the sole surviving run verb
+# died at `seed_balls: command not found` before its first beat and the whole
+# ladder answered with no verdicts at all. A fixture with one consumer belongs
+# in it.
+#
+# It does NOT re-seed the world: `run_headless` lays the world seed itself, one
+# line before it writes the cadence this run is timed against, and a fixture
+# saying that a second time is the same fact in two places.
+seed_balls() {
+  data=$1 ; p="$data/proj"
+  mkdir -p "$p"
+  git -C "$p" init -q -b main
+  git -C "$p" config user.email drive@yog.invalid
+  git -C "$p" config user.name yogdrive
+  : > "$p/README.md" ; git -C "$p" add -A ; git -C "$p" commit -qm init
+  in_world "$data" bl prime --as yogdrive >/dev/null 2>&1
+  # The body is the goal's payload verbatim (§3.3), and a fire binds the agent's
+  # working directory to the ball worktree (bl-6654) — which reads as an
+  # invitation to work the repo, so the body forbids tools outright: these beats
+  # are about yog's surfaces, not about an agent doing a job, and every tool
+  # round trip is wire spend.
+  in_world "$data" bl create "drive ball" \
+    --body "Respond with exactly this text and nothing else: Ball wire OK. Run no commands and no tools." \
+    --as yogdrive
+}
+
 # --- the run ----------------------------------------------------------------
 run_headless() {
   data=$1 ; out=$2
