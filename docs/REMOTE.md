@@ -3659,7 +3659,10 @@ act carries no `Cli`: they are the engine's, and a seat never had them.
 
   The criterion is unchanged and still the thing to measure a future candidate
   against. One surface met it. The row stays open because the next one will have
-  to argue the same case.
+  to argue the same case. **The next one is arguing it now (§14.4, bl-5f41):**
+  the attention lane's case is the criterion inverted — not an ask rate an
+  operator could not read at, but an asker that cannot re-ask (a pocketed
+  phone) — and the ruling is pending there, not here.
 - ~~When polling graduates to a follow-class query~~ — **settled and built by
   bl-024b**: `Query::Invocations` is the first follow-class read with a
   consumer, and it needed no wire change. ~~What stays open is only whether the
@@ -4122,3 +4125,140 @@ and thrall's redial discipline (bl-0a74) becomes load-bearing, since a foot
 that does not come back has no roving value. The app's half is Kotlin and
 lands in its own repository (§12.1 holds). Deploy: prove the punched path
 live from a laptop and from the phone, then walk the engine off the overlay.
+
+## 14. Attention without a push path — the pocketed phone (bl-80d0)
+
+Attention is DESIGN §6's derived predicate — an unacked notify, a
+conversation at rest at a tip you have not seen, an exhausted budget, a
+conflict, mail nobody is driving, a held tool call — and on this wire it
+exists only as an **answer**: `Reply::Attention`'s queue rows and the
+rollups inside `Query::Workspaces`, each computed per ask under the asker's
+scope (§9.7). The engine initiates nothing toward a client — §3's posture,
+restated by §13 as the punch: both ends arrange a connection, neither is
+dialled cold. So a phone seat learns its turn has come at its next read, and
+a phone in a pocket performs none: the platform ends a backgrounded app's
+sockets and schedules it nothing. The gap is real and it is
+platform-shaped. On Android exactly three things wake a sleeping app — an
+OS-scheduled job, a foreground service that never slept, and the OS
+vendor's own push relay — and no wire design adds a fourth. The design
+space below is that list, entire.
+
+**The reframe: the wire needs no push path, because a standing ask already
+is one.** This document dissolved push-versus-pull once (§3: the streaming
+form is not a second form; §5.5): a follow-class read is an ask that
+stands, and every frame after the first is still an answer to it. What a
+pocketed phone lacks is not a channel the engine could push down — it is
+the *right to keep its ask standing*, and that right is the operator's to
+grant on the phone (a foreground service is exactly that grant), never the
+engine's to manufacture. So the design is one small lane plus an honest
+ladder of what a phone does with it, and this ball's own title survives
+byte for byte: attention exists only when a client asks; the ask may stand.
+
+### 14.1 The attention lane
+
+**`Query::Attention`, answered as a sequence by an intake that can hold.**
+The wire spelling does not move: the query and `Reply::Attention` stand as
+they are, and — exactly as `Query::Follow` already behaves — an intake that
+cannot hold a connection is answered with the answer as of now, one frame,
+which is today's read byte for byte. What the lane adds is the holding
+intake's cadence: the first frame is the answer at connect, and a further
+frame is written whenever that asker's answer **changes**, discovered at
+the derivation worker's own republish — no new clock, no new watch, no
+engine-side subscription noun. The scope is spent at connect and the
+identity is per request, a held read being one request (§4, the same terms
+the follow lane and §13.4 already hold on).
+
+**Frames replace; they never append.** The opposite of §5.5, on §5.5's own
+argument: the append flip existed because a transcript answer grows with
+the conversation and re-sending it was quadratic. An attention answer is a
+handful of small rows that grows with nothing, so a delta encoding here
+would buy a fold contract to save bytes that never multiplied. A seat
+paints the last frame it holds, and a seat that drops the lane re-asks and
+is whole on its first frame — the same no-reconciliation property, had for
+free.
+
+**Liveness is not this lane's to invent.** On a §13.4 held punched
+connection the idle ping at its stated cadence (§13.7's ruling 3 owns the
+number) is what proves the peer; on a direct connection the follow lane's
+bounded-hold discipline applies unamended — the hold ends, and the lane
+re-asks, a stream that ended and a dial that failed being one case (§10).
+Severability is the follow lane's too: nothing runs for a seat that never
+holds the lane, and a foot never reaches it (§4.2).
+
+### 14.2 The ladder on the phone
+
+Three rungs, each an operator's choice, and whose work each is — §12.1
+holds, so the app halves land in the app's own repository:
+
+- **Rung 0 — the foreground read.** The status quo, stated: a seat on glass
+  asks at cadence; pocketed, it learns at the next look. Not a defect to
+  paper over — it is the whole answer for an operator who treats the phone
+  as a glass they pick up, and it costs nothing.
+- **Rung 1 — the scheduled fetch.** App-side only, no wire change, and the
+  default. The app schedules the platform's own periodic work; each run
+  performs one ordinary ask — direct or punched, `Query::Attention`, one
+  frame — and paints the rows as a local notification. The OS owns the
+  cadence: a fifteen-minute floor, batched into Doze maintenance windows,
+  hours apart in deep sleep. Zero new trust and zero engine work; the
+  punch's seconds-cold first contact (§13.5) is invisible inside a
+  scheduled job. What it does not solve is timeliness, and it cannot — that
+  bound is the platform's, not the design's.
+- **Rung 2 — the held lane.** The timely choice: a foreground service holds
+  one §13.4 connection with the attention lane standing on it; a frame is
+  the wake, and the notification paints the rows the frame carried — no
+  second read. In-posture and third-party-free. Its costs are the phone's
+  and they are real: a permanent notification (the platform's price for the
+  grant), the ping cadence's radio wakes, and vendor task killers that
+  fight even granted services. Off by default, enabled as an explicit
+  operator act — §12.1's bootstrap discipline.
+
+### 14.3 Shapes attacked and refused
+
+- **Engine-initiated contact** — the engine punching toward, or writing the
+  rendezvous inbox of, a phone at the moment attention fires. It fails on
+  physics before posture: a pocketed phone's NAT mapping is dead, its app
+  polls no inbox and holds no socket, and a punch needs both ends awake —
+  the SYN lands nowhere. Where it could land (a phone on glass) the pull
+  already answers. And it inverts §3: the engine initiating toward a
+  client is the one direction this wire has never had.
+- **A third-party wake relay** — the vendor push service, or a UnifiedPush
+  distributor. Weighed honestly rather than waved off: it is the *only*
+  Doze-proof, zero-battery wake, because the platform blesses exactly one
+  always-on socket per device — its own — and a content-free ping
+  ("something changed; ask") keeps every attention fact inside mTLS. What
+  it costs is the posture itself: an account and a credential held by the
+  engine, a vendor SDK inside the app, a timing-metadata stream naming
+  each moment this operator's engine wants this operator's device, and a
+  device token that is a durable third-party name for the phone. The
+  self-hosted-distributor variant trades the vendor for a publicly
+  dialable box, which is §13's rulings 1 and 2 reversed. Recommended:
+  refused, and parked §13.6-style with a criterion (§14.4) rather than
+  deleted — the honest record is that this rung exists and what it costs,
+  not that it does not work.
+- **An out-of-band adapter** — mail or messaging at attention-fire, riding
+  a push channel the operator already carries. Refused: it exports the
+  fact out of the wire's mTLS into a channel with its own custodians,
+  grows an engine-side adapter and a credential where DESIGN §5.1 #22
+  says yog holds none, and wakes a mail client, not a seat.
+
+### 14.4 Open, awaiting operator ruling
+
+1. **Admit the attention lane** (§14.1) as the third follow-class read —
+   filed as bl-5f41. §10's held-connection row stands on every candidate
+   arguing its own case; this one's case is not a rate an operator could
+   not read at but the inverse, an asker that cannot re-ask. Recommended:
+   **yes**. This is the one gate on the engine work (bl-09aa), and rung 2
+   consumes it.
+2. **The wake-relay class** (§14.3) — filed as bl-4dea. Recommended
+   default: **refuse now, park behind a criterion**: reopen only if an
+   operator's actual device measurably cannot hold rung 2 *and* rung 1's
+   latency bites where it matters — bl-a9b0's shape, evidence rather than
+   taste.
+
+**Component impact.** yog: the follow arm of the wire intake widened to
+answer `Query::Attention` as a sequence — change-detection at the worker's
+republish, frames that replace, the one-frame answer untouched for every
+intake that cannot hold (bl-09aa, gated on ruling 1). lernie: nothing — the
+window never sleeps mid-ask. The app: rungs 1 and 2, filed and tracked in
+its own repository (§12.1); rung 1 needs nothing from anyone and can land
+today.
