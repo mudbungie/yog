@@ -51,9 +51,17 @@ pub const ADDRESS: &str = "address";
 /// the pair has to name the destination. One home for the word, so the mint's
 /// sentence and the client that reads the directory cannot drift.
 pub const ENTRIES: &str = "workspaces";
-/// The target that mints the lot, named in every refusal so a seat that cannot
+/// The act that mints the lot, named in every refusal so a seat that cannot
 /// start says how to make it start.
-pub const REMEDY: &str = "make wire-certs";
+///
+/// **The verb, never the make target** (bl-a0dd). It said `make wire-certs`,
+/// which is a wrapper over `cargo run` and so wants a checkout: a deployed
+/// engine is an installed binary or the OCI image (DESIGN §10.1) and has
+/// neither. That is REMOTE §8's own argument for retiring `wire-certs.sh` —
+/// *"an installed binary has no repository to find a script in"* — and it
+/// condemns a Makefile exactly as far as it condemned a script. The one
+/// spelling every box has is the verb.
+pub const REMEDY: &str = "yog wire-certs";
 
 /// Which end of the wire is asking. One certificate is one client identity
 /// (REMOTE §2), and the server's is its own — so the leaf names differ and

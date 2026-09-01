@@ -1,4 +1,12 @@
 //! `yog wire-certs`: what the environment says, and what the verb does with it.
+//!
+//! **What the verb does NOT take is [`argv`](self::argv)**, split out at §12's
+//! per-file budget (bl-a0dd). The seam is the subject: this file drives the
+//! environment fold and the two acts it selects; that one drives the refusal a
+//! word on the command line earns, which is a question about argv and reaches
+//! neither.
+
+mod argv;
 
 use super::*;
 use crate::test_support::world_under;

@@ -131,13 +131,24 @@ beat-audit:
 # that may advertise, take invocations and complete them, and say nothing else
 # to the boundary. Unset is operator grade — inherited from the environment like
 # FORCE, so there is no word to mistype into a demotion.
+# ALL SIX READINGS PASS THROUGH, so `make wire-certs FORCE=1` rotates and
+# `make wire-certs WIRE_FOOT=1 WIRE_LEAF=x` grades a foot (bl-a0dd). Two of them
+# reached the verb only by environment inheritance before, so the make-variable
+# spelling this comment teaches was silently inert for exactly the two settings
+# whose absence is a no-op: a refusal saying "Re-run with FORCE=1" answered the
+# re-run with the same refusal.
 #   make wire-certs
 #   make wire-certs WIRE_HOST=engine.example.com WIRE_PORT=7737
 #   make wire-certs WIRE_LEAF=phone
-#   WIRE_FOOT=1 make wire-certs WIRE_LEAF=buildbox
+#   make wire-certs WIRE_LEAF=buildbox WIRE_FOOT=1
+# The binary itself takes NO argv — every setting is an environment reading, so
+# it is a prefix there and the verb refuses a trailing word rather than
+# ignoring it:
+#   WIRE_HOST=engine.example.com WIRE_PORT=7737 yog wire-certs
 wire-certs:
 	@WIRE_DIR="$(WIRE_DIR)" WIRE_HOST="$(WIRE_HOST)" WIRE_PORT="$(WIRE_PORT)" \
-		WIRE_LEAF="$(WIRE_LEAF)" cargo run --quiet -- wire-certs
+		WIRE_LEAF="$(WIRE_LEAF)" FORCE="$(FORCE)" WIRE_FOOT="$(WIRE_FOOT)" \
+		cargo run --quiet -- wire-certs
 
 # Regenerate the wire conformance corpus (REMOTE §3, bl-32cb) from the boundary
 # itself. The corpus is committed under corpus/; a test verifies it on every

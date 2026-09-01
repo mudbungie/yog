@@ -119,6 +119,30 @@ pub const READS: [&str; 6] = [
     "WIRE_FOOT",
 ];
 
+/// The refusal a word on the command line earns, or `None` for the empty tail
+/// this verb is the whole of (bl-a0dd).
+///
+/// **Every setting is an environment reading** ([`READS`]), so a word here is a
+/// setting the shell put in the wrong place — and the shape of the mistake is
+/// exactly the one the Makefile teaches: `make wire-certs WIRE_HOST=…` is a
+/// make variable the recipe passes on, while `yog wire-certs WIRE_HOST=…` is
+/// argv. Accepting it silently was the real defect behind two wrong remedy
+/// sentences: the words vanished, the mint aimed at the *default* loopback
+/// endpoint, exit was `0`, and the operator was told it had worked — with a
+/// trust root that then needs `FORCE=1` to correct, distrusting everything
+/// already issued. A refusal costs one re-run; a wrong CA costs the fleet.
+///
+/// It names the first offender and the prefix spelling, and it is `pub` because
+/// the process edge is where argv lives and `main.rs` holds only the call.
+pub fn stray(tail: &[String]) -> Option<String> {
+    let word = tail.first()?;
+    Some(format!(
+        "yog {SUBCMD}: {word:?} is not a setting this verb reads — {} are environment readings, \
+         so they go BEFORE the verb: `WIRE_HOST=<host> WIRE_PORT=<port> yog {SUBCMD}`",
+        READS.join(", ")
+    ))
+}
+
 /// Perform `plan`, printing what it wrote. Exit `0` acted, `1` refused, and
 /// every refusal is the act's own sentence naming its own remedy.
 pub fn perform(plan: &Plan) -> i32 {
@@ -187,8 +211,8 @@ fn report(dir: &Path, address: &str) {
     );
     println!("  the engine binds and a local seat dials {address}");
     println!(
-        "  issue another client with: {SUBCMD} WIRE_LEAF=<common-name>, and a tool host's with \
-         {}=1 beside that",
+        "  issue another client with: WIRE_LEAF=<common-name> yog {SUBCMD}, and a tool host's \
+         with {}=1 beside that",
         READS[5]
     );
 }

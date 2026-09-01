@@ -105,7 +105,9 @@ fn main() {
         // a server another machine dials by name, or a rotation. The boot's own
         // mint covers this box aimed at loopback, so this is the act for
         // everything else, and it is the same recipe reached by a verb.
-        Some(yog::wire::provision::verb::SUBCMD) => wire_certs(&ambient),
+        Some(yog::wire::provision::verb::SUBCMD) => {
+            wire_certs(&ambient, argv.get(2..).unwrap_or_default());
+        }
         _ => {}
     }
     // The binary's own two flags (`--version`, and the usage error an unknown
@@ -138,8 +140,16 @@ fn main() {
 /// environment readings happen here because the process edge is where every
 /// environment read in this crate happens (the xdg discipline); they fold into
 /// `verb::plan`, which is pure.
-fn wire_certs(ambient: &Env) -> ! {
+///
+/// `tail` is argv past the verb, and the verb reads none of it: `verb::stray`
+/// judges it so a setting spelled after the command refuses instead of
+/// vanishing into a default mint (bl-a0dd).
+fn wire_certs(ambient: &Env, tail: &[String]) -> ! {
     use yog::wire::provision::verb;
+    if let Some(refusal) = verb::stray(tail) {
+        eprintln!("{refusal}");
+        std::process::exit(2);
+    }
     let read = |key: &str| std::env::var(key).ok();
     let world = yog::world::compose(ambient);
     std::process::exit(verb::perform(&verb::plan(

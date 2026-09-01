@@ -104,6 +104,14 @@ fn dialable(dir: &Path) -> Result<String, String> {
             )
         })?
         .address;
+    // **And the settings go BEFORE the verb because they are environment
+    // readings** (`provision::verb::READS`, read at the process edge). This
+    // sentence once spelled them after it, borrowed from the Makefile, where a
+    // trailing `VAR=value` is a make variable the recipe passes on; on the
+    // binary the same words are argv, which the verb does not read. It minted
+    // the DEFAULT loopback endpoint and exited 0 — the wrong trust root,
+    // reported as a success. `verb::stray` now refuses a trailing word outright,
+    // so this order is checked rather than merely written (bl-a0dd).
     if address.rsplit_once(':').map(|(_, port)| port) == Some("0") {
         return Err(format!(
             "{address} names no port a device can dial: a `:0` is a request the listener answers \
