@@ -1,7 +1,7 @@
 +++
 title = "the wire refusals name commands the operator cannot run: 'make wire-certs' on a box with no checkout, and env-only settings spelled as argv that yog wire-certs accepts, ignores and calls success"
 created = 1788235220
-updated = 1788235474
+updated = 1788235644
 claimant = "Roamer"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
