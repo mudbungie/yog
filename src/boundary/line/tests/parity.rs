@@ -268,10 +268,24 @@ fn the_enrollment_round_trips_at_both_grades() {
         parse("/enroll phone-1 operator", &ctx()),
         parse("/enroll phone-1", &ctx())
     );
+    // The brands read as their grades (bl-427b): thrall is the foot
+    // spelling and lernie the operator one, at this layer only — spell
+    // still emits the registry's words, so the round trip stays canonical.
+    assert_eq!(
+        parse("/enroll phone-1 thrall", &ctx()),
+        parse("/enroll phone-1 foot", &ctx())
+    );
+    assert_eq!(
+        parse("/enroll phone-1 lernie", &ctx()),
+        parse("/enroll phone-1", &ctx())
+    );
     // Nothing rounds: an unknown word refuses naming itself, rather than
-    // becoming either grade.
+    // becoming either grade — and the refusal teaches both vocabularies.
     let refusal = parse("/enroll phone-1 fott", &ctx()).expect_err("refused");
     assert!(refusal.contains("unknown grade \"fott\""), "{refusal}");
+    assert!(refusal.contains("thrall"), "{refusal}");
+    let unnamed = parse("/enroll", &ctx()).expect_err("usage names both vocabularies");
+    assert!(unnamed.contains("thrall"), "{unnamed}");
     let unnamed = parse("/enroll", &ctx()).expect_err("the name is required");
     assert!(unnamed.contains("common name"), "{unnamed}");
     let unfocused = parse(

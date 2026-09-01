@@ -230,7 +230,8 @@ pub(super) fn fleet(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, St
     Ok(act(Action::Fleet(gesture)))
 }
 
-/// `/enroll <common-name> [foot]` — REMOTE §1.4's enrollment, typed (bl-f4e3).
+/// `/enroll <common-name> [foot|thrall]` — REMOTE §1.4's enrollment, typed
+/// (bl-f4e3; brands read since bl-427b).
 ///
 /// The common name is the one fact no seat's context holds: it names a machine
 /// that has never connected, so nothing on this side can have it selected. The
@@ -239,23 +240,33 @@ pub(super) fn fleet(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, St
 ///
 /// **Bare is operator grade** (§4.2's default-operator, made typable): there is
 /// one word to add and adding it is the demotion, so no spelling can promote a
-/// foot by accident. The word itself is the registry's own — `foot`, and
-/// `operator` said outright is lawful and spells back bare — and anything else
-/// refuses naming the token rather than rounding to either grade.
+/// foot by accident. **Two vocabularies read, one spells** (bl-427b): the
+/// registry's own words (`foot`, and `operator` said outright) and the brands
+/// an operator says out loud (`thrall`, `lernie`) both parse — `foot` without
+/// context confused exactly the operator this verb serves — while `spell`
+/// emits only the registry's word, so a spelled line round-trips in one
+/// vocabulary. Anything else refuses naming the token rather than rounding to
+/// either grade.
 pub(super) fn enroll(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     let (name, rest) = args::first_word(tail);
     if name.is_empty() {
         return Err(format!(
             "/{verb}: the common name the device's certificate will carry is required — \
-             /{verb} <common-name> [{}]",
+             /{verb} <common-name> [{}] — bare enrolls a Lernie (operator grade: the seat, \
+             which reads and steers and hosts its device's tools); add {0} (or thrall) for \
+             a device that should ONLY offer tools",
             crate::registry::peer::FOOT
         ));
     }
-    let grade = match args::optional_word(&rest, verb)? {
-        None => crate::registry::Grade::default(),
-        Some(word) => {
-            crate::boundary::codec::grade_of(&word).map_err(|e| format!("/{verb}: {e}"))?
-        }
+    let grade = match args::optional_word(&rest, verb)?.as_deref() {
+        None | Some("lernie") => crate::registry::Grade::default(),
+        Some("thrall") => crate::registry::Grade::Foot,
+        Some(word) => crate::boundary::codec::grade_of(word).map_err(|e| {
+            format!(
+                "/{verb}: {e} — say thrall or foot for a tools-only device, lernie or \
+                     operator (the bare default) for a seat"
+            )
+        })?,
     };
     Ok(act(Action::Enroll(crate::registry::enroll::Request {
         workspace: args::workspace(ctx, verb)?,
