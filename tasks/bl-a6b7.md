@@ -1,7 +1,8 @@
 +++
 title = "/enroll's ':0' refusal prints a wire-certs remedy that always refuses on the box it is printed for, and omits the restart the new address needs"
 created = 1788235121
-updated = 1788235121
+updated = 1788235517
+claimant = "Forge"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["wire"]
