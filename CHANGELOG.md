@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12](https://github.com/mudbungie/yog/compare/v0.0.11...v0.0.12) - 2026-09-02
+
+### Changes
+
+- auto-merge release PRs: the release is already CI-gated post-merge, so merge the bot PR on arrival [bl-1c05]
+- the ghcr image push job does not exist: §10.1 names the registry and the authority, and nothing performs it [bl-6b96]
+- a tool host channel that drops is never redialled: the fan-out treats a dead thread as a dropped sender, so one network blip permanently silences that engine's tools until the process restarts [bl-0a74]
+
 ## [0.0.11](https://github.com/mudbungie/yog/compare/v0.0.10...v0.0.11) - 2026-09-02
 
 ### Changes
