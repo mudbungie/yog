@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.10](https://github.com/mudbungie/yog/compare/v0.0.9...v0.0.10) - 2026-09-02
+
+### Changes
+
+- classify every help row control|machine and publish it through the corpus (docs/PARITY.md sec 2-3) [bl-8758]
+- fixture worlds: named deterministic world states a client harness can dial and render [bl-8741]
+- the workspace's current role tuning is unreadable from a seat: controls cannot load what is actually set [bl-2410]
+- the third boundary roster is at the 300 wall too: Query rests at 298 and the §9 config reads are the untaken fold [bl-719a]
+
 ## [0.0.9](https://github.com/mudbungie/yog/compare/v0.0.8...v0.0.9) - 2026-09-01
 
 ### Changes
