@@ -1313,9 +1313,10 @@ workspace-cwd execution (`subject_cwd`, §5.1/§5.2) executes it, and the
 invocation carries the conversation's resolved working directory — the
 mark-or-worktree resolution the engine already performs, crossing the seam as
 `RoutedCall::cwd` (litany bl-ddaa). Zero consenting advertisers is an in-band
-refusal naming both ways out (load a host-bound instance, which runs in that
-box's own directory; or the operator marks an entry `subject_cwd` on the box
-that holds this server's worktrees). More than one is a config ambiguity,
+refusal naming **the one way out that is one** — the operator marks an entry
+`subject_cwd` on the box that holds this server's worktrees — and saying
+outright that loading a host-bound instance is *not* that (bl-68e1, below).
+More than one is a config ambiguity,
 refused naming every claimant: one adjudication decision must stand for
 exactly one execution on one machine (§5, no broadcast). The consenting box is
 normally the co-located thrall — the normal install above — because it
@@ -1360,9 +1361,39 @@ operator's intent is:
    compactor pair's mechanism unchanged: the caller identity on the child's
    environment, the `tool_use` input on its stdin, and the conversation's
    resolved working directory as the child's cwd.
-4. **Anything else** — the refusals above, verbatim. A pool name an operator
-   granted has no engine implementation behind it, so it keeps the sentence
-   that names the enrollment.
+4. **Anything else** — the refusals above. A pool name an operator granted
+   has no engine implementation behind it, so it keeps the sentence that
+   names the enrollment.
+
+**A refusal names ways out, and a way out that lands the work somewhere else
+is not one** (bl-68e1). Rung 4's two sentences used to offer the loaded lane
+*first*, as the remedy the model could take unaided — *"use the clients tool
+to see this workspace's machines and load what one advertises"*, *"load it
+with the clients tool to run it in that machine's own directory"*. That offer
+is wrong on the lane's own premise: a workspace-subject name's subject is the
+conversation's working tree, so the subject already chose the box, and running
+the same argv on a different one is not the act the model was refused. It is
+worse than wrong in practice, because **a loaded invocation carries no
+directory at all** — §5's locality-rides-in-the-name definition — so the far
+foot runs it in whatever directory its own process inherited. That is exactly
+the directory thrall's DESIGN §3.4 refuses to resolve a relative `cwd`
+against: *"a place nobody wrote down, which changes when the unit file does,
+and which nothing in the running system reports"* — the refused case reached
+through a different door.
+
+A drive took the offer, and nothing at the boundary could tell. Every write,
+every test run and every `ls` the model made to check itself happened in the
+foot's inherited directory, so the check could not fail; the conversation
+reported success with output quoted, and the bound directory was empty.
+`/files` and `/work-diff` read the conversation's own tree, so a run that
+built in the right place and one that built in the foot's scratch answer
+alike. **So the refusal names only the operator's config edit** — the one act
+that puts the work where its subject is — and names the load as what it is
+not, in one clause carrying where a loaded instance would run and that nothing
+this conversation can read would show what it wrote there
+(`src/tool_host/subject/refusal.rs`, `NOT_A_REMEDY`, the one home of that
+sentence). The lane still *has* a loaded rung and the `clients` tool still
+loads; what ended is a refusal recommending it for a subject it cannot serve.
 
 **What that rung does not concede.** §12's front-door invariant says the
 server executes nothing **in its own process**, and it still does not: the act

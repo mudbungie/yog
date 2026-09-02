@@ -35,14 +35,21 @@
 //! of what the three names *do*: the definitions are the engine's built-ins
 //! and the front door is the one way in.
 //!
-//! **Every remaining miss is an in-band refusal that names the way out.** A
-//! name the engine does not implement and no machine consents to: the
-//! sentence says what the operator enrolls and what the model can do instead
-//! (load a host-bound instance, which runs in that box's own directory). More
-//! than one consenting machine: a config ambiguity, refused naming every
-//! claimant — one adjudication must stand for exactly one execution on one
-//! machine (REMOTE §5, no broadcast). The engine unreachable: the transport
-//! sentence every other ask already renders.
+//! **Every remaining miss is an in-band refusal that names the way out — and
+//! only a way out that is one** (bl-68e1). A name the engine does not
+//! implement and no machine consents to: the sentence names the operator's
+//! config edit, the only act that puts the work where its subject is, and
+//! says outright that loading a machine's tool is not that act, because a
+//! loaded invocation carries no directory and lands in the far process's
+//! inherited one (`refusal::NOT_A_REMEDY`, which carries that drive's
+//! evidence). More than one consenting machine: a config ambiguity, refused
+//! naming every claimant — one adjudication must stand for exactly one
+//! execution on one machine (REMOTE §5, no broadcast). The engine
+//! unreachable: the transport sentence every other ask already renders.
+//!
+//! **The sentences live one level down** (`subject/refusal.rs`): [`verdict`]
+//! decides which rung a name lands on, and that file decides what a landing
+//! on a refusing rung says.
 //!
 //! **Front-door-only holds; ship-inert now stops short of the worktree.** The
 //! lane is still the same adjudicate → mailbox → execute → capture pipeline
@@ -134,50 +141,15 @@ fn verdict(roster: &[ClientRow], name: &str) -> Lane {
     match consenting.len() {
         1 => Lane::Machine(Box::new(consenting.remove(0))),
         0 if PERFORMED.contains(&name) => Lane::Engine,
-        0 => Lane::Refused(unconsented(name, &advertisers)),
-        _ => Lane::Refused(format!(
-            "{} machines consent to run {name} in this conversation's working \
-             directory ({}), and one execution needs one machine: the operator \
-             must leave \"subject_cwd\": true on exactly one entry",
-            consenting.len(),
-            names(
-                &consenting
-                    .iter()
-                    .map(|e| e.client.clone())
-                    .collect::<Vec<_>>()
-            ),
+        0 => Lane::Refused(refusal::unconsented(name, &advertisers)),
+        _ => Lane::Refused(refusal::ambiguous(
+            name,
+            &consenting
+                .iter()
+                .map(|e| e.client.clone())
+                .collect::<Vec<_>>(),
         )),
     }
-}
-
-/// The zero-consent refusal, in the two shapes it honestly has: machines
-/// advertise the name but none consents, or nothing advertises it at all.
-/// Both name the remedy, because the reader is a model and the fixer is an
-/// operator.
-fn unconsented(name: &str, advertisers: &[String]) -> String {
-    if advertisers.is_empty() {
-        return format!(
-            "no tool of that name is loaded in this conversation and no machine \
-             of this workspace advertises {name}; use the clients tool to see \
-             this workspace's machines and load what one advertises — or the \
-             operator enrolls a thrall on the box that holds this server's \
-             worktrees, with \"subject_cwd\": true on a {name} entry in its \
-             tools.json"
-        );
-    }
-    format!(
-        "{} advertises {name}, but no machine of this workspace consents to run \
-         it in this conversation's working directory; load it with the clients \
-         tool to run it in that machine's own directory, or the operator adds \
-         \"subject_cwd\": true to the {name} entry in tools.json on the box \
-         that holds this server's worktrees",
-        names(advertisers),
-    )
-}
-
-/// A comma-joined machine list for a sentence.
-fn names(clients: &[String]) -> String {
-    clients.join(", ")
 }
 
 /// The routing leg with the subject's location on the invocation — the far
@@ -194,6 +166,9 @@ fn routed(site: &Site, entry: &loaded::Entry, call: &RoutedCall<'_>) -> RoutedCa
         Err(reason) => capture(call.name, Err(reason)),
     }
 }
+
+/// The lane's sentences, which decide what a refusing rung says.
+mod refusal;
 
 #[cfg(test)]
 mod tests;

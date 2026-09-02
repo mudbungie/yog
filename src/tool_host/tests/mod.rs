@@ -164,7 +164,10 @@ fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
         said.contains("no machine of this workspace advertises"),
         "{said}"
     );
-    assert!(said.contains("use the clients tool"), "{said}");
+    assert!(
+        said.contains("clients tool is not a way to do this work"),
+        "{said}"
+    );
 
     for name in engine_act::NAMES {
         let acted = live.route(call!(name, &input, &stop, root.path()));

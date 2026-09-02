@@ -19,8 +19,16 @@ use tempfile::TempDir;
 
 /// **Advertised without consent is a refusal naming the key** — the box must
 /// opt in before it executes at a path the conversation names, and the
-/// sentence carries both ways out: the model's (load the host-bound
-/// instance) and the operator's (the config edit, by key, file and box).
+/// sentence carries the ONE way out that is one: the operator's config edit,
+/// by key, file and box.
+///
+/// It also names the loaded lane as what it is *not* (bl-68e1). The old
+/// sentence offered it first — *"load it with the clients tool to run it in
+/// that machine's own directory"* — and a drive took that offer, wrote its
+/// whole deliverable into the far foot's inherited process directory, checked
+/// itself there, and reported success over an empty bound directory. So the
+/// assertion is two-directional: the clients tool must be mentioned, and it
+/// must be mentioned as not a way to do this work.
 #[test]
 fn an_unconsenting_advertiser_is_refused_naming_the_remedy() {
     let root = TempDir::new().expect("tmp");
@@ -41,7 +49,14 @@ fn an_unconsenting_advertiser_is_refused_naming_the_remedy() {
         "{said}"
     );
     assert!(said.contains("\"subject_cwd\": true"), "{said}");
-    assert!(said.contains("clients tool"), "{said}");
+    assert!(
+        said.contains("clients tool is not a way to do this work"),
+        "{said}"
+    );
+    assert!(
+        said.contains("never this conversation's"),
+        "the sentence must say where a loaded instance would run: {said}"
+    );
 }
 
 /// **Two consenting machines is a config ambiguity, refused naming both** —

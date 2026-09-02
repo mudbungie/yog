@@ -90,12 +90,30 @@ fn a_consenting_machine_wins_and_the_engine_takes_what_is_left() {
     assert!(matches!(verdict(&unconsented, "bash"), Lane::Engine));
     assert!(matches!(verdict(&[], "apply_patch"), Lane::Engine));
     assert!(matches!(verdict(&[], "read_file"), Lane::Engine));
-    // And a pool name the engine cannot perform keeps both remedies.
+    // And a pool name the engine cannot perform keeps the operator's remedy —
+    // the only one that puts the work where its subject is (bl-68e1). The
+    // load the model could take unaided is named as what it is NOT, so a
+    // refusal can never again be the step that sends a deliverable to a
+    // directory nothing at the boundary reads.
     match verdict(&[], "deploy") {
         Lane::Refused(said) => {
-            assert!(said.contains("no machine of this workspace advertises deploy"));
-            assert!(said.contains("clients tool"), "{said}");
+            assert!(
+                said.contains("this engine does not implement deploy"),
+                "{said}"
+            );
+            assert!(
+                said.contains("no machine of this workspace advertises it"),
+                "{said}"
+            );
             assert!(said.contains("\"subject_cwd\": true"), "{said}");
+            assert!(
+                said.contains("clients tool is not a way to do this work"),
+                "{said}"
+            );
+            assert!(
+                !said.contains("load what one advertises"),
+                "the refusal must not steer to another machine's directory: {said}"
+            );
         }
         _ => panic!("a name nothing implements and nothing advertises is refused"),
     }
@@ -175,8 +193,12 @@ fn an_empty_roster_still_refuses_a_name_the_engine_cannot_perform() {
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();
     assert!(said.starts_with("deploy: "), "{said}");
     assert!(
-        said.contains("no machine of this workspace advertises deploy"),
+        said.contains("no machine of this workspace advertises it"),
         "{said}"
     );
     assert!(said.contains("enrolls a thrall"), "{said}");
+    assert!(
+        said.contains("clients tool is not a way to do this work"),
+        "{said}"
+    );
 }
