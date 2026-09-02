@@ -1,7 +1,8 @@
 +++
 title = "the boundary speaks effort and priority: two role-tuning gestures, and the providers rows state the capability — one PROTOCOL bump"
 created = 1788321305
-updated = 1788321305
+updated = 1788322035
+claimant = "Bridger"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
