@@ -193,6 +193,8 @@ fn a_role_on_a_row_brazen_lacks_is_marked_in_the_pick_gates_words() {
         role: WORKER_ROLE.to_string(),
         provider: "codex".to_string(),
         model: "gpt-5.4".to_string(),
+        effort: None,
+        priority: false,
     };
     let live = vec!["openai-chatgpt".to_string()];
     assert_eq!(

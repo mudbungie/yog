@@ -198,6 +198,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
                 config::Read::Providers { .. } => Ok(config::providers(deps, ws)),
                 config::Read::Lineages { .. } => config::lineages(ws),
                 config::Read::Models { provider, .. } => config::models(deps, ws, provider),
+                config::Read::Roles { .. } => Ok(config::roles(ws)),
             };
         }
         // REMOTE §5's roster (bl-4e08): the §4.1 registration listing, the

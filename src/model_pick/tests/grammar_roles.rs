@@ -18,11 +18,15 @@ fn reads_every_role_litanys_template_declares() {
                 role: "worker".into(),
                 provider: "codex".into(),
                 model: "gpt-5.4".into(),
+                effort: None,
+                priority: false,
             },
             RoleModel {
                 role: "compactor".into(),
                 provider: "codex".into(),
                 model: "gpt-5.4-mini".into(),
+                effort: None,
+                priority: false,
             },
         ]
     );
@@ -60,6 +64,8 @@ fn comments_and_blanks_ride_inside_a_block() {
             role: "worker".into(),
             provider: "codex".into(),
             model: "gpt-5.4".into(),
+            effort: None,
+            priority: false,
         }]
     );
 }
@@ -99,11 +105,15 @@ fn set_role_model_moves_two_lines_and_nothing_else() {
                 role: "worker".into(),
                 provider: "codex".into(),
                 model: "gpt-5.6-sol".into(),
+                effort: None,
+                priority: false,
             },
             RoleModel {
                 role: "compactor".into(),
                 provider: "codex".into(),
                 model: "gpt-5.4-mini".into(),
+                effort: None,
+                priority: false,
             },
         ]
     );
@@ -160,4 +170,59 @@ fn set_role_model_declines_a_role_missing_the_field_it_must_move() {
         }
     );
     assert!(err.to_string().contains("model"));
+}
+
+/// **The entry's two optional knobs are read with the pointer** (bl-2410), so
+/// the workspace-assignments answer and the `/effort` / `/priority` writes are
+/// one vocabulary over one line-block. A role carrying neither reads as neither.
+#[test]
+fn the_tuning_knobs_are_read_beside_the_pointer() {
+    let tuned = "roles:\n  worker:\n    provider: codex\n    model: gpt-5.4\n    effort: high\n    \
+                 priority: true\n  compactor:\n    provider: codex\n    model: gpt-5.4-mini\n";
+    assert_eq!(
+        roles(tuned),
+        vec![
+            RoleModel {
+                role: "worker".into(),
+                provider: "codex".into(),
+                model: "gpt-5.4".into(),
+                effort: Some("high".into()),
+                priority: true,
+            },
+            RoleModel {
+                role: "compactor".into(),
+                provider: "codex".into(),
+                model: "gpt-5.4-mini".into(),
+                effort: None,
+                priority: false,
+            },
+        ]
+    );
+}
+
+/// **A level yog would never write is carried, not swallowed.** The §9.1 raw
+/// editor is the operator's own authority, so the file can say anything; a read
+/// that normalized it to absent would report *nothing is set*, which is the
+/// defect bl-2410 exists to end. `priority` has no such case — anything but
+/// `true` is *not asking*, which is the engine's own reading said back.
+#[test]
+fn an_unrecognized_level_survives_the_read_and_a_stray_priority_word_does_not() {
+    let odd = "roles:\n  worker:\n    provider: codex\n    model: gpt-5.4\n    effort: extreme\n    \
+               priority: yes\n";
+    let read = roles(odd);
+    assert_eq!(read[0].effort.as_deref(), Some("extreme"));
+    assert!(!read[0].priority, "only `true` asks for the lane");
+}
+
+/// A role missing half its pointer is not an assignment and is dropped, while a
+/// role missing a knob is an ordinary role — the required/optional split, at the
+/// one place it is decided.
+#[test]
+fn a_half_declared_pointer_drops_the_role_but_a_missing_knob_does_not() {
+    let half = "roles:\n  worker:\n    provider: codex\n  compactor:\n    provider: codex\n    \
+                model: m\n";
+    let read = roles(half);
+    assert_eq!(read.len(), 1);
+    assert_eq!(read[0].role, "compactor");
+    assert_eq!(read[0].effort, None);
 }

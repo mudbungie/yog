@@ -27,6 +27,8 @@ pub(super) fn role(name: &str, model: &str) -> RoleModel {
         role: name.to_owned(),
         provider: "anthropic".to_owned(),
         model: model.to_owned(),
+        effort: None,
+        priority: false,
     }
 }
 

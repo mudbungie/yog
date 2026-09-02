@@ -24,10 +24,7 @@ pub(super) const ENROLLED: &str = "enrolled";
 /// Encode a reply to its file body. `ok` is the one field every reply carries.
 pub fn encode(reply: &Reply) -> Value {
     match reply {
-        Reply::Outcome(outcome) => json!({
-            "ok": outcome.ok(), "kind": "outcome", "exit": outcome.exit,
-            "stdout": outcome.stdout, "stderr": outcome.stderr,
-        }),
+        Reply::Outcome(outcome) => outcome_reply(outcome),
         Reply::Prepared(prepared) => {
             json!({ "ok": true, "kind": "prepared", "prepared": prepared_value(prepared) })
         }
@@ -153,8 +150,12 @@ pub fn encode(reply: &Reply) -> Value {
         // Spelled beside its own rows (bl-1015), the `board` and `queue`
         // shape: one file learns how a search answer is said.
         Reply::Search(found) => super::search::reply(found),
+        // The §9 config family's answers, one arm since bl-2410: the carrier
+        // its questions were folded onto (bl-719a) has a matching set of
+        // replies, and the roster names the family once on this side too.
         Reply::Config { text } => json!({ "ok": true, "kind": "config", "text": text }),
         Reply::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
+        Reply::Roles(rows) => rows_reply("roles", rows.iter().map(role_row)),
         Reply::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),
         // The one listing whose row is a bare id: a model has no other fact
         // yog knows — brazen publishes an id and a default flag, and which one
@@ -184,6 +185,32 @@ pub fn refusal(error: &str) -> Value {
 /// dialect to speak, and it is spoken one layer down where the column is read.
 fn provider_row(row: &crate::config_edit::brazen::ProviderRowView) -> Value {
     json!({ "name": row.name, "fact": row.fact, "blocked": row.blocked,
+            "effort": row.effort, "priority": row.priority })
+}
+
+/// A captured run as its receipt (§7.3): the verb's own exit and streams,
+/// with `ok` derived from the exit rather than stored beside it.
+///
+/// A body rather than a row for the reason [`delivered`] and [`governing`] are
+/// already bodies here — an arm that builds a four-key object is a body, and
+/// the roster stops reading as one once any of them is.
+fn outcome_reply(outcome: &crate::actions::verbs::Outcome) -> Value {
+    json!({
+        "ok": outcome.ok(), "kind": "outcome", "exit": outcome.exit,
+        "stdout": outcome.stdout, "stderr": outcome.stderr,
+    })
+}
+
+/// One role's assignment as the workspace's config declares it (§9.4, §5.1
+/// #27; bl-2410): the model binding, and the two tuning knobs beside it.
+///
+/// `effort` is the file's own word or `null` — a *reported* value, not the
+/// gesture's closed vocabulary, so a level yog did not write is visible rather
+/// than flattened into *not set*. `priority` is always a boolean, because
+/// `false` and absent are one fact upstream and a reader must not be made to
+/// tell them apart.
+fn role_row(row: &crate::model_pick::RoleModel) -> Value {
+    json!({ "role": row.role, "provider": row.provider, "model": row.model,
             "effort": row.effort, "priority": row.priority })
 }
 

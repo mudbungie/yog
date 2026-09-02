@@ -156,7 +156,11 @@ says — and adds no verb, no field and no envelope:
   bl-a670 — `src/wire/hello.rs`)*: **each end writes one frame,
   `{"protocol": <integer>}`, before it reads the peer's.** Both write before
   either reads, so neither waits on the other and there is no ordering rule to
-  remember. `PROTOCOL` is `1`.
+  remember. **The version itself is not restated here.** It lives in
+  `src/wire/hello.rs`'s `PROTOCOL`, with the changelog of what moved it beside
+  it, and the subsections below record each bump as it was taken; this
+  paragraph carried a literal `1` until bl-2410 and was five versions stale by
+  then, which is what a second home for one fact does.
 
   **Why now, and not before.** Until the four-component split (§12) one crate
   shipped both ends of every connection, so the wire could not skew and a
@@ -3931,6 +3935,58 @@ things.
   is `false` at the column read and the booleans are **required** on the wire:
   an unanswered question may not block a row, and it may not grant it a control
   either, so the seat is told outright rather than left to infer.
+
+### 9.14 What a workspace's roles are set to (bl-2410)
+
+**A new read, `roles`, answering the focused workspace's role assignments** —
+provider row, model id, effort level, priority lane, one row per role. It joins
+the §9 config family as its sixth member (bl-719a folded that family onto one
+carrier), so it is a member of an existing subject rather than a new one.
+
+**It is an addition, and `PROTOCOL` therefore stays where bl-23bd left it** —
+§9.8's reason verbatim: strict decode already refuses an unknown op in band by
+name, and the drift ledger records both new shapes at the standing version. The
+ledger is the authority on that and it was asked: `reply/roles` and
+`request/roles` entered at the standing version, and no existing signature
+moved. A bump was considered and rejected, because a bump is not free — every
+client re-vendors — and there was nothing to batch it with: nothing else
+shape-changing stood unshipped on `main`, and this change moves no shape.
+
+**The ruling it answers** (operator, 2026-09-01, reversing the tuning design's
+stays-out decision): a control should open showing what the workspace is
+actually set to, not blank until this device sets something. The engine holds
+that truth and no seat could ask for it.
+
+- **`providers` was the wrong shape, and the reason is the subject.** That
+  answer is per *provider row* — brazen's table, scoped to a wall, saying what
+  each row is **capable** of, `effort`/`priority` included since bl-23bd. This
+  one is per *role* — the workspace's own config, saying what has been
+  **chosen**. Capability and choice are different questions with different
+  cardinalities, and no projection of the first contains the second. Widening
+  the rows would have made one answer carry two subjects joined by nothing.
+- **`config` was the wrong shape for the opposite reason.** A seat can already
+  read `providers.yaml` as raw text through the §9 read, and a seat that parsed
+  it would be the second reader of an anchored block grammar litany's own
+  parser is private for — REMOTE §9's whole shape is that the seat holds no
+  derivations. One grammar, one reader, and the wire carries the rows.
+- **It is read where the write lands**: the tip of the lineage §9.3 writes,
+  which is the commit `/model`, `/effort` and `/priority` stage against and —
+  under follow-the-tip (§9.12) — the one every conversation there resolves at
+  its next step. So a seat that just wrote reads its own write back, and what
+  it reads is what governs rather than what governed.
+- **`effort` is the file's own word, `priority` is a boolean, and the asymmetry
+  is deliberate.** The *gesture* asserts a level from a closed set; this
+  **reports** what the file holds, and yog does not own that file — the §9.1 raw
+  editor is the operator's authority. Flattening an unrecognized level to
+  absent would say *nothing is set*, which is the exact defect this read exists
+  to end, so the word rides across and a control can show that it does not
+  recognize it. `priority` has no such case: `false` and omitted are one fact
+  upstream, so there is nothing a stray word could mean but *not asking*.
+- **Nothing set is an answer, not a refusal.** A workspace whose config cannot
+  be read, or whose `roles:` block is absent or inline, answers the empty list.
+  That is the opposite of the §11 `governing` read, which refuses — and the
+  difference is real: *this conversation has no policy* is never true, while
+  *this workspace has assigned no role* is a state every fresh world is in.
 
 ## 10. Open questions (living)
 

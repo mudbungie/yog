@@ -116,6 +116,9 @@ pub(crate) fn surface() -> Vec<Gesture> {
         workspace: "ws".to_owned(),
     })));
     out.push(Gesture::Ask(providers()));
+    out.push(Gesture::Ask(Query::Config(Read::Roles {
+        workspace: "ws".to_owned(),
+    })));
     out
 }
 

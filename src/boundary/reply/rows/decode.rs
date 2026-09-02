@@ -203,6 +203,21 @@ pub(crate) fn provider_row(v: &Value) -> Result<ProviderRowView, String> {
     })
 }
 
+/// One role assignment read back (bl-2410). `effort` is optional and `null` is
+/// its absence — the encoder writes the key always, so absence and null are one
+/// reading; `priority` is required, because a checkbox that could be missing
+/// would make a reader tell *off* from *unstated*, which upstream does not.
+pub(crate) fn role_row(v: &Value) -> Result<crate::model_pick::RoleModel, String> {
+    let o = v.as_object().ok_or("role row: not an object")?;
+    Ok(crate::model_pick::RoleModel {
+        role: str_of(o, "role")?,
+        provider: str_of(o, "provider")?,
+        model: str_of(o, "model")?,
+        effort: opt_str_of(o, "effort")?,
+        priority: bool_of(o, "priority")?,
+    })
+}
+
 /// A listing's `rows` array, each element read by `read`.
 pub(crate) fn rows_of<T>(
     obj: &serde_json::Map<String, Value>,

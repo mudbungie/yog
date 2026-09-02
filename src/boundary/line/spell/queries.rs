@@ -28,6 +28,7 @@ fn spell_config(read: &Read) -> String {
         ),
         Read::Marks { .. } => "/marks".to_owned(),
         Read::Providers { .. } => "/providers".to_owned(),
+        Read::Roles { .. } => "/roles".to_owned(),
         Read::Lineages { .. } => "/lineages".to_owned(),
         Read::Models { provider, .. } => format!("/models {provider}"),
     }

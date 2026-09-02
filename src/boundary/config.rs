@@ -148,6 +148,30 @@ pub(super) fn providers(deps: &Deps, workspace: &Path) -> Reply {
     Reply::Providers(row_views(&RealBzRunner::resolve(&wall).providers()))
 }
 
+/// This workspace's **role assignments** (§9.4, §5.1 #27; bl-2410) — what
+/// `/model`, `/effort` and `/priority` have actually set, read back.
+///
+/// It reads exactly where those three write: `providers.yaml` at the tip of the
+/// lineage §9.3 writes, through the one anchored grammar this tree has. A read
+/// and a write naming the place the same way is the discipline the §9 family
+/// already keeps, and here it is also what makes the answer *current* — under
+/// follow-the-tip that tip is what every conversation in this workspace
+/// resolves at its next step, so a control showing it is showing what governs.
+///
+/// **A lineage it cannot read declares no role**, and that is an answer rather
+/// than a refusal: a workspace with no config yet, or one whose `roles:` block
+/// is absent or inline, has nothing set — which is exactly what a control
+/// opening on it should show. That differs from the §11 `Governing` read, which
+/// refuses, and the difference is real: *this conversation has no policy* is
+/// never true, while *this workspace has assigned no role* is an ordinary state
+/// a fresh world passes through.
+pub(super) fn roles(workspace: &Path) -> Reply {
+    let text = config_file(workspace, &format!("config/{BRANCH}"), PROVIDERS)
+        .map(|b| String::from_utf8_lossy(&b).into_owned())
+        .unwrap_or_default();
+    Reply::Roles(crate::model_pick::grammar::roles(&text))
+}
+
 /// The named workspace's brazen locations (§16.2 as amended). **The gesture's
 /// own workspace is the single source** (bl-fcd5): the executor lenses on it
 /// rather than trusting whatever wall happened to stand in `deps.world`, so a

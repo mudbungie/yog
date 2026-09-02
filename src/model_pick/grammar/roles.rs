@@ -25,8 +25,14 @@ pub fn roles(providers_yaml: &str) -> Vec<RoleModel> {
         .filter_map(|(role, i)| {
             Some(RoleModel {
                 role,
+                // The pointer is required — a half-declared role is not an
+                // assignment and this list is what a picker offers — while the
+                // two knobs are optional by construction, so their absence is
+                // a value and never a reason to drop the row.
                 provider: field(&lines, i, PROVIDER)?.0,
                 model: field(&lines, i, MODEL)?.0,
+                effort: field(&lines, i, EFFORT).map(|(value, _)| value),
+                priority: field(&lines, i, PRIORITY).is_some_and(|(v, _)| v == "true"),
             })
         })
         .collect()

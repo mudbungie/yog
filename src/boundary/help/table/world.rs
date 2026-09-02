@@ -98,6 +98,23 @@ pub const WORLD: &[HelpRow] = &[
                  a workspace, so the same row can read signed-in in one and not in another.",
     },
     HelpRow {
+        verb: "roles",
+        usage: "/roles",
+        summary: "what this workspace's roles are actually set to, and how they are tuned",
+        detail: "One row per role this workspace's config declares: the provider row and model \
+                 id bound to it, the effort level it asks for, and whether it asks for the \
+                 priority lane. This is what `/model`, `/effort` and `/priority` have set — \
+                 read back from the same place they write it, so a control can open showing \
+                 what is in force instead of blank. It is the other half of `/providers`, and \
+                 the two do not overlap: that one is per provider row and says what a row is \
+                 capable of, this one is per role and says what has been chosen. Under \
+                 follow-the-tip these are the settings every conversation here resolves at its \
+                 next step, not just the next one started. A workspace whose config declares no \
+                 role answers an empty list rather than refusing — nothing set is a state a \
+                 fresh workspace is really in. Scoped to the seat's workspace (`--ws`, or the \
+                 focused one), exactly as `/providers` is.",
+    },
+    HelpRow {
         verb: "clients",
         usage: "/clients",
         summary: "the machines registered in this workspace, who is connected, and what they offer",

@@ -125,6 +125,7 @@ fn encode_config(read: &crate::boundary::config::Read) -> Value {
         }
         Read::Marks { workspace } => json!({ "op": "marks", "workspace": workspace }),
         Read::Providers { workspace } => json!({ "op": "providers", "workspace": workspace }),
+        Read::Roles { workspace } => json!({ "op": "roles", "workspace": workspace }),
         Read::Lineages { workspace } => json!({ "op": "lineages", "workspace": workspace }),
         Read::Models {
             workspace,
@@ -205,6 +206,11 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
             workspace: str_of(o, "workspace")?,
         }),
         "providers" => Query::Config(Read::Providers {
+            workspace: str_of(o, "workspace")?,
+        }),
+        // The workspace's own role assignments (bl-2410) — the other half of
+        // the §9.4 picture, and the one a control loads itself from.
+        "roles" => Query::Config(Read::Roles {
             workspace: str_of(o, "workspace")?,
         }),
         // REMOTE §5's roster (bl-4e08): who is registered here, who is live,

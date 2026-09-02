@@ -222,6 +222,9 @@ fn the_query_table_answers_both_ways() {
             workspace: WS.into(),
             agent: "c".into(),
         },
+        Query::Config(Read::Roles {
+            workspace: WS.into(),
+        }),
         Query::Config(Read::Providers {
             workspace: WS.into(),
         }),

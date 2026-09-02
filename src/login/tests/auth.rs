@@ -70,6 +70,8 @@ fn row_of_model_names_a_row_only_when_the_config_binds_exactly_one() {
         role: role.to_string(),
         provider: provider.to_string(),
         model: model.to_string(),
+        effort: None,
+        priority: false,
     };
     let roles = [
         role("worker", "claude-session-direct", "claude-opus-4-6"),

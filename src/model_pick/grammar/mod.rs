@@ -95,12 +95,42 @@ pub const MODELS_YAML: &str = "models.yaml";
 pub const ROLES: &str = "roles";
 pub const MODELS: &str = "models";
 
-/// One role's assignment as `providers.yaml` declares it (§5.1 #27).
+/// One role's assignment as `providers.yaml` declares it (§5.1 #27) — **the
+/// whole entry, not just the pointer** (bl-2410).
+///
+/// The two required halves are the model binding; the two optional ones are the
+/// §9.4 tuning knobs `/effort` and `/priority` write. One type and one reader
+/// ([`roles`]) for all four, because they are one entry: a second struct that
+/// carried the knobs beside this one would be two readings of one line-block,
+/// and the second would drift.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RoleModel {
     pub role: String,
     pub provider: String,
     pub model: String,
+    /// The role's `effort:` line **verbatim**, or `None` when it has none.
+    ///
+    /// A `String` and not the closed [`Effort`](crate::model_pick::Effort) the
+    /// *gesture* takes, and the difference is the point: a gesture **asserts** a
+    /// level out of a closed set, while this **reports** what the file holds —
+    /// and yog does not own that file. The §9.1 raw editor is the operator's
+    /// own authority, so `effort: extreme` is a thing this can be asked to
+    /// describe. Normalizing it to `None` would say *nothing is set*, which is
+    /// precisely the defect this read exists to end; carrying the word lets a
+    /// control show that it does not recognize it. The same discipline
+    /// [`is_unknown_row`](crate::model_pick::grammar::is_unknown_row) keeps: a
+    /// question that went unanswered is never reported as a refusal.
+    pub effort: Option<String>,
+    /// Whether the role asks the provider's priority lane — `true` exactly when
+    /// the line says `true`.
+    ///
+    /// A `bool` where `effort` is a string, because this is a **checkbox** and
+    /// litany reads it as one: `false` and omitted are one fact upstream, so
+    /// there is no third state for a word to name and nothing an unrecognized
+    /// one could mean but *not asking*. Reporting `false` for anything but
+    /// `true` is therefore not a normalization — it is the engine's own
+    /// reading, said back.
+    pub priority: bool,
 }
 
 /// Where a top-level block key sits, or why it cannot be used.

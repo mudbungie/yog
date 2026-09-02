@@ -4,16 +4,15 @@
 //! spelling, and this says the spelling is the gesture.
 
 use super::{ctx, existing, prepared};
-use crate::boundary::config::ConfigFile;
-use crate::boundary::config::Read;
 use crate::boundary::help;
 use crate::boundary::line::{parse, spell};
-use crate::boundary::{Action, Gesture, Query};
+use crate::boundary::{Action, Gesture};
 use crate::fan::Verb;
 use crate::start::{BallSpec, Payload};
 use std::path::PathBuf;
 
 mod balls;
+mod config;
 mod inspector;
 mod policy;
 mod tools;
@@ -194,56 +193,6 @@ fn every_trail_verb_and_query_round_trips() {
         agent: "c-1".to_owned(),
     }));
     rt(Gesture::Act(Action::ClearTrail));
-}
-
-/// The config family's reads (§8.5, bl-0164): the same verb as the write
-/// beside them, spelled with nothing after the destination.
-#[test]
-fn the_config_familys_reads_round_trip() {
-    for file in [
-        ConfigFile::Brazen {
-            workspace: "ws".to_owned(),
-        },
-        ConfigFile::LitanyModels,
-        ConfigFile::Cadence,
-        ConfigFile::LitanyWorkflow {
-            name: "review".to_owned(),
-        },
-    ] {
-        rt(Gesture::Ask(Query::Config(Read::File { file })));
-    }
-    // A lineage destination reads too (bl-dff8), in all three of its origins:
-    // the same words the write takes, with nothing after them.
-    for origin in [
-        crate::config_edit::branch::edit::EditOrigin::Advance,
-        crate::config_edit::branch::edit::EditOrigin::Orphan,
-        crate::config_edit::branch::edit::EditOrigin::Fork {
-            source: "base".to_owned(),
-        },
-    ] {
-        rt(Gesture::Ask(Query::Config(Read::File {
-            file: ConfigFile::Branch {
-                workspace: "ws".to_owned(),
-                lineage: "strict".to_owned(),
-                origin,
-                path: "workflow.yaml".to_owned(),
-            },
-        })));
-    }
-    rt(Gesture::Ask(Query::Config(Read::Marks {
-        workspace: "ws".to_owned(),
-    })));
-    rt(Gesture::Ask(Query::Config(Read::Providers {
-        workspace: "ws".to_owned(),
-    })));
-    // The browse and the roster beside them (bl-dff8).
-    rt(Gesture::Ask(Query::Config(Read::Lineages {
-        workspace: "ws".to_owned(),
-    })));
-    rt(Gesture::Ask(Query::Config(Read::Models {
-        workspace: "ws".to_owned(),
-        provider: "acme".to_owned(),
-    })));
 }
 
 /// REMOTE §1.4's enrollment, typed (bl-f4e3): the common name is the one word

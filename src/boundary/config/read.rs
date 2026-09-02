@@ -40,6 +40,17 @@ pub enum Read {
     /// This workspace's effective provider table with each row's credential
     /// fact and tuning capability (§8.3, bl-0164/bl-23bd).
     Providers { workspace: String },
+    /// **What this workspace's roles are actually set to** (§9.4, §5.1 #27;
+    /// bl-2410): every role its config lineage declares, with the provider row
+    /// and model id bound to it and the two §9.4 tuning knobs it carries.
+    ///
+    /// A different subject from [`Providers`](Self::Providers), which is why it
+    /// is a different member: that one is per *provider row* and says what a
+    /// row is **capable** of, this is per *role* and says what has been
+    /// **chosen**. REMOTE §9.14 carries the rest of the argument — why it is
+    /// not a raw-text read, where it is read from, and why nothing set is an
+    /// answer rather than a refusal.
+    Roles { workspace: String },
 }
 
 impl Read {
@@ -58,7 +69,8 @@ impl Read {
             Self::Lineages { workspace }
             | Self::Models { workspace, .. }
             | Self::Marks { workspace }
-            | Self::Providers { workspace } => Some(workspace),
+            | Self::Providers { workspace }
+            | Self::Roles { workspace } => Some(workspace),
         }
     }
 }

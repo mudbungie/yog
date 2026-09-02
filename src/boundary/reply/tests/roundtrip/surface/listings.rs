@@ -151,6 +151,33 @@ pub(super) fn listings() -> Vec<Reply> {
         Reply::Search(found()),
         // A search that matched nothing still knows its own question.
         Reply::Search(Found::default()),
+        // The §9.4 role assignments (bl-2410): a role tuned both ways beside
+        // one tuned neither, so `effort`'s two spellings and `priority`'s two
+        // both cross. A level yog would never WRITE rides here too, because
+        // this answer reports the file rather than asserting a vocabulary.
+        Reply::Roles(vec![
+            crate::model_pick::RoleModel {
+                role: "worker".into(),
+                provider: "anthropic".into(),
+                model: "claude-sonnet-5".into(),
+                effort: Some("high".into()),
+                priority: true,
+            },
+            crate::model_pick::RoleModel {
+                role: "compactor".into(),
+                provider: "codex".into(),
+                model: "gpt-5.4-mini".into(),
+                effort: None,
+                priority: false,
+            },
+            crate::model_pick::RoleModel {
+                role: "critic".into(),
+                provider: "codex".into(),
+                model: "gpt-5.4".into(),
+                effort: Some("extreme".into()),
+                priority: false,
+            },
+        ]),
         Reply::Providers(vec![
             ProviderRowView {
                 name: "anthropic".into(),

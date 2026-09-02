@@ -9,6 +9,7 @@ use crate::boundary::config::ConfigFile;
 use crate::boundary::config::Read;
 use crate::boundary::dispatch::Deps;
 use crate::boundary::reply::Reply;
+use crate::git_tree::tests::fixture::Fixture;
 use std::path::{Path, PathBuf};
 use tempfile::tempdir;
 
@@ -180,5 +181,63 @@ fn marks_read_answers_the_branch_and_the_space_it_is_a_branch_of() {
         Ok(Reply::Marks {
             branch: crate::world::marks::SHARED_BRANCH.to_owned(),
         })
+    );
+}
+
+/// bl-2410. The assignments read answers what the §9.4 gestures set, out of the
+/// commit they stage against — so a control opens on what is in force. The
+/// fixture's `worker` is tuned and its `compactor` is not, which is both arms of
+/// each optional knob in one read.
+#[test]
+fn the_roles_read_answers_the_lineages_own_assignments() {
+    let root = tempdir().unwrap();
+    let fx = Fixture::new();
+    fx.commit_other(
+        "providers.yaml",
+        "roles:\n  worker:\n    provider: acme\n    model: m-9\n    effort: low\n    \
+         priority: true\n  compactor:\n    provider: acme\n    model: m-1\n",
+    );
+    let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
+    let rows = match ask(
+        &deps,
+        &Query::Config(Read::Roles {
+            workspace: crate::naming::leaf(&fx.path),
+        }),
+    ) {
+        Ok(Reply::Roles(rows)) => rows,
+        other => panic!("roles answers roles: {other:?}"),
+    };
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0].role, "worker");
+    assert_eq!(rows[0].provider, "acme");
+    assert_eq!(rows[0].model, "m-9");
+    assert_eq!(rows[0].effort.as_deref(), Some("low"));
+    assert!(rows[0].priority);
+    assert_eq!(rows[1].role, "compactor");
+    assert_eq!(rows[1].effort, None);
+    assert!(!rows[1].priority);
+}
+
+/// **Nothing set is an answer.** A workspace with no readable config lineage has
+/// assigned no role, and that is the honest thing to show a control opening on a
+/// fresh world — unlike the §11 `governing` read, which refuses, because *this
+/// conversation has no policy* is never true while this is an ordinary state.
+#[test]
+fn a_workspace_with_no_readable_lineage_declares_no_roles() {
+    let root = tempdir().unwrap();
+    // Known to the boundary — an unknown name is refused by the address table
+    // long before the executor, which is a different answer entirely — but
+    // holding no config lineage to read.
+    let ws = root.path().join("workspaces").join("fresh");
+    std::fs::create_dir_all(&ws).unwrap();
+    let deps = super::seeing(&quiet(root.path()), &[ws.as_path()]);
+    assert_eq!(
+        ask(
+            &deps,
+            &Query::Config(Read::Roles {
+                workspace: crate::naming::leaf(&ws),
+            }),
+        ),
+        Ok(Reply::Roles(vec![])),
     );
 }

@@ -254,6 +254,14 @@ pub enum Reply {
     /// presence (§8.5, bl-0164) — [`Providers`](super::Query::Providers)'
     /// answer, the §8.3 login pane's own rows.
     Providers(Vec<crate::config_edit::brazen::ProviderRowView>),
+    /// This workspace's role assignments (§9.4, §5.1 #27) —
+    /// [`Read::Roles`](crate::boundary::config::Read::Roles)' answer: the whole
+    /// `roles:` block of the commit its lineage stands at, one row per role, in
+    /// file order. The type is the grammar's own
+    /// [`RoleModel`](crate::model_pick::RoleModel), which the §9.4 gestures
+    /// already write and the fork composer already reads — one vocabulary for
+    /// one entry (bl-2410).
+    Roles(Vec<crate::model_pick::RoleModel>),
     /// The workspace's config lineages with each tip's files (§9.3, bl-dff8) —
     /// [`Lineages`](super::Query::Lineages)' answer, the config pane's two
     /// dropdowns.

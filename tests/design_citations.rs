@@ -61,7 +61,11 @@ const FOREIGN: &[&str] = &[
     // all three today, which [`foreign_keys_are_not_design_headings`] is what
     // keeps honest: the day it grows one, this entry fails rather than masking
     // it.
-    "9.7", "9.8", "9.9",
+    // §9.14 joins them (bl-2410): the workspace's role assignments, whose whole
+    // argument — why `providers` was the wrong shape, why a raw-text read was,
+    // and why nothing set is an answer — lives there rather than in the
+    // variant's own doc.
+    "9.7", "9.8", "9.9", "9.14",
     // REMOTE.md's §5.4 — the thrall and the local execution corpus, and since
     // bl-dfce the home of the ruling that the compactor's procedure pair is an
     // engine act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN

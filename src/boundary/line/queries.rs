@@ -66,6 +66,14 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
                 workspace: args::workspace(ctx, verb)?,
             })))
         }
+        // What this workspace's roles are set to (bl-2410) — `/providers`'
+        // shape at the other subject, and scoped by the seat the same way.
+        "roles" => {
+            args::none(tail, verb)?;
+            Ok(ask(Query::Config(Read::Roles {
+                workspace: args::workspace(ctx, verb)?,
+            })))
+        }
         // REMOTE §5's roster (bl-4e08): who is registered in the seat's own
         // workspace, who is live, and what each advertises. Scoped by the seat
         // exactly as `/providers` is.

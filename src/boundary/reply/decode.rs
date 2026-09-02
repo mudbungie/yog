@@ -30,7 +30,9 @@ use serde_json::{Map, Value};
 use super::Reply;
 use super::board::decode::board;
 use super::queue::queue_row_of;
-use super::rows::decode::{conv_row, join_row, lineage_row, op_row, provider_row, rows_of, ws_row};
+use super::rows::decode::{
+    conv_row, join_row, lineage_row, op_row, provider_row, role_row, rows_of, ws_row,
+};
 use super::search::hit_of;
 use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, opt_val, str_of, strings_of};
 use crate::boundary::codec::prepared_from_value;
@@ -176,6 +178,7 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "help" => help(o),
         "search" => search(o),
         "providers" => rows_of(o, provider_row).map(Reply::Providers),
+        "roles" => rows_of(o, role_row).map(Reply::Roles),
         "lineages" => rows_of(o, lineage_row).map(Reply::Lineages),
         "models" => strings_of(o, "rows").map(Reply::Models),
         "clients" => rows_of(o, client_row).map(Reply::Clients),
