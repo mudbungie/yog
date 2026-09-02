@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.13](https://github.com/mudbungie/yog/compare/v0.0.12...v0.0.13) - 2026-09-02
+
+### Changes
+
+- the advertise reply cannot say whether it stored, so a foot re-presenting its set heals silently and still never learns it was disarmed [bl-66d4]
+
 ## [0.0.12](https://github.com/mudbungie/yog/compare/v0.0.11...v0.0.12) - 2026-09-02
 
 ### Changes
