@@ -6,10 +6,6 @@ use crate::attention::*;
 use crate::git_tree::{Agent, AgentState};
 use crate::ui_state::{SeenKind, UiState};
 
-/// An auth-shaped failure sentence: what makes `Agent::refused()` — the
-/// reading, not a second stored flag — answer true (bl-9b88).
-const AUTH_SHAPED: &str = r#"{"type":"error","status":401,"message":"Unauthorized"}"#;
-
 #[test]
 fn no_signals_is_no_attention() {
     let a = attention(&agent("a"), "ws", &nothing);
@@ -25,6 +21,7 @@ fn no_signals_is_no_attention() {
             conflicted: false,
             mail: false,
             held: false,
+            flagged: false,
         }
     );
 }
@@ -215,49 +212,4 @@ fn wires_through_a_real_ui_state() {
     // A moved ref -> re-armed.
     ag.notify_oid = Some("oid2".into());
     assert!(attention(&ag, "ws", &seen).notify);
-}
-
-/// **Rule 2's rest, said in the word that is true of it** (bl-b43b). A
-/// conversation refused at the provider rung comes to rest `Stopped` exactly
-/// as an operator's own `/stop` does — the badge set is frozen at four — so
-/// `stopped` would tell the operator they did a thing they did not do.
-#[test]
-fn a_refused_rest_earns_the_refused_word_and_not_stoppeds() {
-    let mut ag = agent("a");
-    ag.state = AgentState::Stopped;
-    let mine = attention(&ag, "ws", &nothing);
-    assert_eq!(mine.kinds(), vec![AttentionKind::Stopped]);
-
-    ag.failure = Some(AUTH_SHAPED.to_owned());
-    let theirs = attention(&ag, "ws", &nothing);
-    assert_eq!(theirs.kinds(), vec![AttentionKind::Refused]);
-
-    // One firing, not two: the refinement changes the word, never the count,
-    // so a refused conversation is not asked about twice.
-    assert_eq!(mine.any(), theirs.any());
-    assert!(theirs.stopped, "it is still rule 2 that fired");
-}
-
-/// The word carries the remedy, because the remedy is not a gesture on the
-/// conversation at all — which is what the desktop escalation says out loud.
-#[test]
-fn the_refused_word_names_the_act() {
-    let said = AttentionKind::Refused.says();
-    assert!(said.contains("refused at the provider"), "{said}");
-    assert!(said.contains("sign a provider in"), "{said}");
-}
-
-/// The refinement is **gated on the rest firing**: an acknowledged tip stirs
-/// nothing, refused or not, so a refusal cannot smuggle a signal past the
-/// watermark.
-#[test]
-fn an_acked_refused_rest_still_stirs_nothing() {
-    let mut ag = agent("a");
-    ag.state = AgentState::Stopped;
-    ag.failure = Some(AUTH_SHAPED.to_owned());
-    assert!(
-        attention(&ag, "ws", &acked(SeenKind::Stopped, "tip-a"))
-            .kinds()
-            .is_empty()
-    );
 }

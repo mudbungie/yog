@@ -19,6 +19,7 @@ fn row(ws: &str, display: &str, signals: Vec<AttentionKind>) -> QueueRow {
         pending: 0,
         held: None,
         failure: None,
+        flag: None,
     }
 }
 

@@ -16,7 +16,7 @@
 
 use std::path::Path;
 
-use crate::monitor::{Verb, arming, row};
+use crate::monitor::{Verb, arming, flag as flagging};
 use crate::opslog::{self, OpEntry, Origin};
 
 use super::dispatch::Deps;
@@ -104,7 +104,7 @@ fn flag(
     agent: &str,
     reason: &str,
 ) -> Result<Reply, String> {
-    let entry = row::flagged(ts.to_owned(), workspace, agent, reason);
+    let entry = flagging::raised(ts.to_owned(), workspace, agent, reason);
     opslog::append(&deps.state_root, &entry).map_err(|e| e.to_string())?;
     Ok(Reply::Flagged)
 }

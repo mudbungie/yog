@@ -29,6 +29,8 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
             // even though a real row carries one or the other, because this
             // test's whole job is that no token is transposed.
             AttentionKind::Refused,
+            // …and rule 7's own word (bl-6f2f), for the same reason.
+            AttentionKind::Flagged,
         ],
         preview: "which branch?".into(),
         age_secs: 42,
@@ -39,6 +41,12 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
             reason: "bash {\"command\":\"curl x\"} classified open-world".into(),
         }),
         failure: Some("Unauthorized".into()),
+        // The signal-out verb's own words (bl-6f2f), beside the class token
+        // above — a flag that cannot say why costs a second read to act on.
+        flag: Some(crate::monitor::Flag {
+            at: "1".into(),
+            reason: "please look at this one".into(),
+        }),
     };
     let encoded = encode(&Reply::Attention(vec![row]));
     assert_eq!(encoded["ok"], true);
@@ -62,7 +70,8 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
             "conflicted",
             "mail",
             "held",
-            "refused"
+            "refused",
+            "flagged"
         ]),
         "the §6 signals in the `ui.json` watermark's own vocabulary"
     );
@@ -70,6 +79,9 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
     // sees what is waiting, why, and has the address to answer it.
     assert_eq!(out["held"]["tool_use"], "toolu_42");
     assert_eq!(out["held"]["tool"], "bash");
+    // …and so does the flag's own sentence (bl-6f2f), for the same reason.
+    assert_eq!(out["flag"]["at"], "1");
+    assert_eq!(out["flag"]["reason"], "please look at this one");
     assert!(
         out["held"]["reason"]
             .as_str()
@@ -94,6 +106,7 @@ fn a_row_with_no_park_spells_it_null() {
         pending: 0,
         held: None,
         failure: None,
+        flag: None,
     };
     let encoded = encode(&Reply::Attention(vec![row]));
     assert_eq!(encoded["rows"][0]["held"], serde_json::Value::Null);

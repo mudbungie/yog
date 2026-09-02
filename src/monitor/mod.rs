@@ -33,11 +33,15 @@
 //!
 //! The pieces: [`arming`] is the config tie-point, [`verdict`] the three-valued
 //! answer and its parse, [`check`] the one bounded tool-less call, [`row`] the
-//! ops-row encoding and the standing-verdict derivation, and [`sentry`] the
+//! ops-row encoding and the standing-verdict derivation, [`flag`] the
+//! signal-out verb's own row and the §6 signal it raises, and [`sentry`] the
 //! off-thread level trigger that fires a check only when a branch tip moved.
 
 pub mod arming;
 pub mod check;
+/// The **flag** — the signal-out verb's row and the §6 signal it raises
+/// (bl-7aef, joined to attention by bl-6f2f).
+pub mod flag;
 pub mod row;
 pub mod sentry;
 pub mod verdict;
@@ -102,6 +106,7 @@ impl Verb {
 
 pub use arming::Watch;
 pub use check::{BzCaller, Called, Caller};
+pub use flag::Flag;
 pub use row::Check;
 pub use sentry::{Sentry, SentryCtx};
 pub use verdict::{Reply, Verdict};

@@ -47,7 +47,7 @@ use super::frame;
 /// two protocols meeting. This changes when the *existing* shape changes
 /// meaning: the framing, the envelope, or what a spelling already in use is
 /// taken to say.
-pub const PROTOCOL: u32 = 3;
+pub const PROTOCOL: u32 = 4;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

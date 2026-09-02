@@ -3801,6 +3801,29 @@ holds the derivation and the reasoning; what belongs here is the wire's half:
   spellings, and a value that becomes true in more of the cases it always
   claimed to cover is neither.
 
+### 9.11 The queue says *somebody asked you to look* (bl-6f2f)
+
+**The §6 queue row gained `flag`** — when a flag was raised on the
+conversation, and why in the raiser's own words — and `signals` gained the
+token `flagged` beside it. `PROTOCOL` is **4**.
+
+DESIGN §6 rule 7 holds the derivation and the reasoning. The wire's half:
+
+- **A new signal token is not a shape change.** `signals` is an array of
+  strings and a seat that does not know `flagged` still reads the row; §3 says
+  as much of every new spelling in an existing vocabulary. The `flag` object
+  beside it *is* a gained field, and that is what bumps the version.
+- **`null`, not absent**, matching `held` on the row `held` already spells that
+  way — one encoder, one convention, and this row's convention was set first.
+- **Two bumps in one unreleased cycle, and that is the ledger's granularity,
+  not a second fleet event.** §9.10 raised 3; this raises 4, and neither has
+  shipped, so no peer ever spoke 3 and the release carries one number. The
+  corpus ledger refuses a shape whose signature moves while its `since` equals
+  the protocol being generated, which is *per bump*, not per release — so a
+  second change to a shape inside one cycle costs a second integer. That is
+  cheap and honest; collapsing it would mean teaching the ledger what has been
+  published, which nothing in this tree knows.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

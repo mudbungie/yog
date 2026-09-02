@@ -21,6 +21,7 @@ fn agent() -> Agent {
         state_uncertain: false,
         truncated: false,
         failure: None,
+        flagged: None,
         pending: vec![],
         conflicted_oid: None,
         budget_oid: None,

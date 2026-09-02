@@ -91,29 +91,6 @@ pub fn entry(ts: String, check: &Check) -> OpEntry {
     }
 }
 
-/// `argv[0]` of a **flag** row (VISION §4.9, bl-7aef): an attention item raised
-/// on one conversation, with its reason. Its own pseudo-binary rather than a
-/// monitor row, because it asserts something different — a monitor row is a
-/// verdict about a sha, a flag is "a human should look at this" — and because
-/// anyone granted the verb may write one, not only the check.
-pub const YOG_FLAG: &str = "yog-flag";
-
-/// The row a flag appends. `argv[1]` is the conversation, `stdout` the reason,
-/// exit `0`: raising attention is not a failure, and must not banner as one.
-pub fn flagged(ts: String, workspace: &Path, agent: &str, reason: &str) -> OpEntry {
-    OpEntry {
-        ts,
-        argv: vec![YOG_FLAG.to_owned(), agent.to_owned()],
-        cwd: crate::nav::ws_key(workspace),
-        exit: 0,
-        stdout: clip(reason),
-        stderr: String::new(),
-        // The subject is a conversation, which is what §7.3 attribution names —
-        // not the surface the hand that raised it happened to be on.
-        origin: Origin::Conversation,
-    }
-}
-
 /// The row a *failed* check appends: a `["yog-step","monitor"]` synthetic
 /// failure carrying why. It deliberately names no sha — see [`STEP`].
 pub fn failure(ts: String, workspace: &Path, agent: &str, why: &str) -> OpEntry {
@@ -200,7 +177,7 @@ fn tokens(token: &str) -> Option<u64> {
     token.parse().ok()
 }
 
-fn clip(reason: &str) -> String {
+pub(super) fn clip(reason: &str) -> String {
     let flat = reason.replace(['\n', '\r'], " ");
     if flat.chars().count() > REASON_MAX {
         flat.chars().take(REASON_MAX).collect()

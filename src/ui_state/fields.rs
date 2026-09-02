@@ -30,6 +30,10 @@ pub enum SeenKind {
     Stopped,
     Budget,
     Conflicted,
+    /// The §6 rule-7 flag (bl-6f2f): the evidence is the raising row's
+    /// timestamp rather than a ref oid, and behaves identically — a later flag
+    /// is a later stamp and fires again.
+    Flag,
 }
 
 impl SeenKind {
@@ -39,6 +43,7 @@ impl SeenKind {
             SeenKind::Stopped => "stopped",
             SeenKind::Budget => "budget",
             SeenKind::Conflicted => "conflicted",
+            SeenKind::Flag => "flag",
         }
     }
 }

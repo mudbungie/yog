@@ -74,6 +74,16 @@ pub struct QueueRow {
     /// *which* credential the world is waiting on rather than that some
     /// credential is.
     pub failure: Option<String>,
+    /// **The flag raised on this conversation** (§6 rule 7, VISION §4.9,
+    /// bl-6f2f): when, and why in the raiser's own words. `None` for every row
+    /// nobody flagged.
+    ///
+    /// It rides the row for `held`'s reason exactly — a queue row exists to be
+    /// answerable without a second read, and a signal that says "look at this"
+    /// and cannot say why is a signal the operator must go hunting through
+    /// `/ops` to act on. That hunt was the whole defect: the row was written
+    /// and nothing carried it anywhere an operator looks.
+    pub flag: Option<crate::monitor::Flag>,
 }
 
 /// The §6 flattened roster across every enumerated workspace — **the** roster,
@@ -126,6 +136,7 @@ fn row(snap: &Snapshot, ui: &UiState, key: &RosterKey, now_unix: i64) -> Option<
         pending: agent.pending.len(),
         held: agent.held.clone(),
         failure: agent.failure.as_deref().map(crate::git_tree::clause),
+        flag: agent.flagged.clone(),
     })
 }
 

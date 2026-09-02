@@ -34,7 +34,11 @@ fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
             display: "Cobalt".into(),
             state: AgentState::Stopped,
             uncertain: false,
-            signals: vec![AttentionKind::Held, AttentionKind::Mail],
+            signals: vec![
+                AttentionKind::Held,
+                AttentionKind::Mail,
+                AttentionKind::Flagged,
+            ],
             preview: "p".into(),
             age_secs: 5,
             pending: 2,
@@ -47,6 +51,13 @@ fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
             // sentence beside the class, since a class alone is what the live
             // sighting already had.
             failure: Some("Unauthorized".into()),
+            // …and the flag's own words beside them (bl-6f2f): the queue row is
+            // the "attention item" VISION §4.9 promises, so the corpus pins the
+            // sentence the raiser wrote.
+            flag: Some(crate::monitor::Flag {
+                at: "2026-01-01T00:00:00Z".into(),
+                reason: "please look at this one".into(),
+            }),
         },
         QueueRow {
             workspace: "ws".into(),
@@ -60,6 +71,7 @@ fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
             pending: 0,
             held: None,
             failure: None,
+            flag: None,
         },
     ]
 }

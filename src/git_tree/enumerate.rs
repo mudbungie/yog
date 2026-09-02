@@ -97,6 +97,11 @@ pub(super) fn enumerate_agents(
             abandoned_oid: marks.abandoned_oid(&agent_id),
             notify_oid: marks.notify_oid(&agent_id),
             held: marks.held(&agent_id),
+            // Stamped later, by the one reader of yog's own ops trail
+            // (`monitor::flag::fold`): a flag is not a fact this workspace
+            // holds, and inventing a read of the state root here would put a
+            // second home on the wrong side of the boundary (bl-6f2f).
+            flagged: None,
             goal_ball: goal.ball,
             goal_name: goal.name,
             call_start_unix: call_start_from_disk(workspace, &agent_id),

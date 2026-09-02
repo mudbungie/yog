@@ -163,6 +163,20 @@ pub struct Agent {
     /// drone that cannot move — so there is nothing to seen-gate, and what the
     /// operator needs is what the blob says.
     pub held: Option<crate::control::hold::Held>,
+    /// The newest **flag** raised on this agent (VISION §4.9, §6 rule 7,
+    /// bl-6f2f): when, and why in the raiser's own words. `None` for every
+    /// conversation nobody has flagged, which is nearly all of them.
+    ///
+    /// **The one field on this type the workspace does not answer.** Every
+    /// other fact here is read off `<workspace>/…` by [`super::super::from_repo`];
+    /// a flag lives in yog's own `ops.jsonl`, and this is stamped on by
+    /// [`crate::monitor::flag::fold`] at the one place the ops trail and the
+    /// derived trees are both final. It rides *here* rather than arriving as a
+    /// seventh parameter because §6's predicate and its acknowledgement both
+    /// take `&Agent` and nothing else — that is the shape of a signal, and a
+    /// signal that did not fit it would have to be threaded through the rank
+    /// sort, both rollups, the roster walk and every caller of each.
+    pub flagged: Option<crate::monitor::Flag>,
     /// The start-flow ball id stamped in this agent's `goal.md` (DESIGN §3.3),
     /// parsed back by [`crate::start::parse_ball_stamp`] — the *derived*
     /// conversation↔ball association, never stored (§3.2, §5.1: a fact whose

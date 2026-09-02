@@ -29,6 +29,9 @@ pub(super) fn queue_row(row: &QueueRow) -> Value {
         // The `refused` signal's own words (bl-9b88) — null, not absent, on the
         // one row encoder that already spells `held` that way.
         "failure": row.failure,
+        // The flag's own words (§6 rule 7, bl-6f2f), null when nobody raised
+        // one — `held`'s spelling on the row `held` already spells that way.
+        "flag": row.flag.as_ref().map(flag),
     })
 }
 
@@ -37,6 +40,14 @@ pub(super) fn queue_row(row: &QueueRow) -> Value {
 /// — which is the point of the reason carrying the input summary and the class.
 fn held(held: &crate::control::hold::Held) -> Value {
     json!({ "tool_use": held.tool_use_id, "tool": held.tool, "reason": held.reason })
+}
+
+/// The raised flag, when the row carries one (§6 rule 7): when it was raised
+/// and why. The stamp rides because it is the acknowledgement's own evidence —
+/// a reader that saw one flag and wants to know whether a later one landed
+/// compares it, and `/seen` writes exactly this string.
+fn flag(raised: &crate::monitor::Flag) -> Value {
+    json!({ "at": raised.at, "reason": raised.reason })
 }
 
 /// The §6 signal tokens — the `ui.json` `seen` keys' own words for four of
@@ -51,11 +62,12 @@ fn signal_token(kind: AttentionKind) -> &'static str {
         AttentionKind::Mail => "mail",
         AttentionKind::Held => "held",
         AttentionKind::Refused => "refused",
+        AttentionKind::Flagged => "flagged",
     }
 }
 
 /// The §6 signal table — [`signal_token`]'s other half (bl-7067).
-const SIGNALS: [(&str, AttentionKind); 7] = [
+const SIGNALS: [(&str, AttentionKind); 8] = [
     ("notify", AttentionKind::Notify),
     ("stopped", AttentionKind::Stopped),
     ("budget", AttentionKind::Budget),
@@ -65,6 +77,9 @@ const SIGNALS: [(&str, AttentionKind); 7] = [
     // Rule 2's rest said in the word that is true of it (bl-b43b) — it stands
     // where `stopped` would, never beside it.
     ("refused", AttentionKind::Refused),
+    // §6 rule 7 (bl-6f2f) — the signal-out verb's own word, beside the six
+    // yog derives for itself and the one refinement.
+    ("flagged", AttentionKind::Flagged),
 ];
 
 /// One queue row read back. `display` is answered rather than re-derived here
@@ -86,6 +101,7 @@ pub(super) fn queue_row_of(v: &Value) -> Result<QueueRow, String> {
         pending: usize_of(o, "pending")?,
         held: opt_val(o, "held", held_of)?,
         failure: crate::boundary::codec::fields::opt_str_of(o, "failure")?,
+        flag: opt_val(o, "flag", flag_of)?,
     })
 }
 
@@ -96,6 +112,15 @@ fn signal_of(v: &Value) -> Result<AttentionKind, String> {
         .find(|(word, _)| *word == token)
         .map(|(_, kind)| *kind)
         .ok_or_else(|| format!("unknown signal {token:?}"))
+}
+
+fn flag_of(v: &Value) -> Result<crate::monitor::Flag, String> {
+    use crate::boundary::codec::fields::str_of;
+    let o = v.as_object().ok_or("flag: not an object")?;
+    Ok(crate::monitor::Flag {
+        at: str_of(o, "at")?,
+        reason: str_of(o, "reason")?,
+    })
 }
 
 fn held_of(v: &Value) -> Result<crate::control::hold::Held, String> {

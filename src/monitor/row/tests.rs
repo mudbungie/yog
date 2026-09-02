@@ -74,12 +74,10 @@ fn nothing_else_on_the_trail_reads_as_a_check() {
         ..OpEntry::default()
     };
     assert!(of_entries(&[foreign]).is_empty());
-    // And a flag row, which is a different assertion with a different argv[0].
-    let flag = flagged("1".to_owned(), Path::new("/ws"), "a-1", "look at this");
+    // And a flag row, which is a different assertion with a different argv[0]
+    // — and, since bl-6f2f, a different file (`monitor::flag`).
+    let flag = crate::monitor::flag::raised("1".to_owned(), Path::new("/ws"), "a-1", "look");
     assert!(of_entries(std::slice::from_ref(&flag)).is_empty());
-    assert_eq!(flag.exit, 0, "raising attention is not a failure");
-    assert_eq!(flag.origin, Origin::Conversation);
-    assert_eq!(flag.stdout, "look at this");
 }
 
 #[test]

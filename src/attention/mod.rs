@@ -74,6 +74,12 @@ pub enum AttentionKind {
     /// not something the operator did. The two are mutually exclusive by
     /// construction ([`Attention::kinds`]).
     Refused,
+    /// Somebody raised a flag on this conversation (§6 rule 7, VISION §4.9) —
+    /// the signal-out verb's whole point, and the alignment monitor's floor
+    /// grant. The *reason* rides the queue row beside this word, because a
+    /// signal that says "look at this" and cannot say why costs a second read
+    /// to act on.
+    Flagged,
 }
 
 impl AttentionKind {
@@ -95,6 +101,7 @@ impl AttentionKind {
             Self::Mail => "has mail queued and no driver taking it",
             Self::Held => "parked a tool invocation for your answer",
             Self::Refused => "was refused at the provider — sign a provider in on this workspace",
+            Self::Flagged => "was flagged for a look, with a reason",
         }
     }
 }
@@ -114,16 +121,24 @@ pub struct Attention {
     pub conflicted: bool,
     pub mail: bool,
     pub held: bool,
+    /// Rule 7 (bl-6f2f): a flag was raised here and its row's stamp is unseen.
+    pub flagged: bool,
 }
 
 impl Attention {
     /// The §6 predicate: any signal firing.
     pub fn any(self) -> bool {
-        self.notify || self.stopped || self.budget || self.conflicted || self.mail || self.held
+        self.notify
+            || self.stopped
+            || self.budget
+            || self.conflicted
+            || self.mail
+            || self.held
+            || self.flagged
     }
 
     /// The firing kinds, in fixed badge order (notify, stop, budget, conflict,
-    /// mail, held).
+    /// mail, held, flagged).
     pub fn kinds(self) -> Vec<AttentionKind> {
         [
             (self.notify, AttentionKind::Notify),
@@ -139,6 +154,7 @@ impl Attention {
             (self.conflicted, AttentionKind::Conflicted),
             (self.mail, AttentionKind::Mail),
             (self.held, AttentionKind::Held),
+            (self.flagged, AttentionKind::Flagged),
         ]
         .into_iter()
         .filter_map(|(on, kind)| on.then_some(kind))
@@ -178,6 +194,12 @@ pub fn attention(
         // has *no* driver — the seam exits after writing the mark — so gating
         // this on rest would only restate what the mark already asserts.
         held: agent.held.is_some(),
+        // Rule 7 (bl-6f2f): the raising row's stamp is the evidence, and it
+        // acknowledges exactly as an oid does.
+        flagged: agent
+            .flagged
+            .as_ref()
+            .is_some_and(|f| unseen(SeenKind::Flag, &f.at)),
     }
 }
 
@@ -217,6 +239,7 @@ pub fn evidence(agent: &Agent) -> Vec<(SeenKind, String)> {
         (SeenKind::Stopped, rest_evidence(agent)),
         (SeenKind::Budget, agent.budget_oid.clone()),
         (SeenKind::Conflicted, agent.conflicted_oid.clone()),
+        (SeenKind::Flag, agent.flagged.as_ref().map(|f| f.at.clone())),
     ]
     .into_iter()
     .filter_map(|(kind, oid)| oid.map(|oid| (kind, oid)))

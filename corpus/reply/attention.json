@@ -10,6 +10,10 @@
           "agent": "c-1",
           "display": "Cobalt",
           "failure": "Unauthorized",
+          "flag": {
+            "at": "2026-01-01T00:00:00Z",
+            "reason": "please look at this one"
+          },
           "held": {
             "reason": "writes",
             "tool": "Bash",
@@ -19,7 +23,8 @@
           "preview": "p",
           "signals": [
             "held",
-            "mail"
+            "mail",
+            "flagged"
           ],
           "state": "stopped",
           "uncertain": false,
@@ -30,6 +35,7 @@
           "agent": "c-2",
           "display": "Dun",
           "failure": null,
+          "flag": null,
           "held": null,
           "pending": 0,
           "preview": "",
@@ -41,6 +47,6 @@
       ]
     }
   ],
-  "protocol": 3,
+  "protocol": 4,
   "shape": "attention"
 }

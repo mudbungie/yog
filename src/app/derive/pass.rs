@@ -127,7 +127,11 @@ impl Deriver {
             Arc::new(Snapshot {
                 workspaces: self.workspaces.clone(),
                 projects: self.projects.clone(),
-                trees: self.trees.clone(),
+                // The §6 flag signal is the one agent fact that does not come
+                // off the workspace (bl-6f2f): it is stamped here, where the
+                // ops trail and the derived trees are both final, onto the
+                // clone this freeze was already paying for.
+                trees: crate::monitor::flag::fold(self.trees.clone(), &self.ops),
                 bills: self.bills.clone(),
                 windows: self.windows.clone(),
                 balls_by_project: self.balls_by_project.clone(),

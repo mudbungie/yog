@@ -6,6 +6,7 @@ use super::*;
 use crate::binding::{Workspace, WorkspaceKind};
 use crate::boundary::tests::{agent, snapshot};
 use crate::git_tree::GitTree;
+use crate::opslog::OpRow;
 use crate::ui_state::SeenKind;
 use tempfile::TempDir;
 
@@ -144,6 +145,38 @@ fn a_row_carries_its_address_its_reason_and_what_it_last_said() {
         ],
         "all five §6 signals, in badge order"
     );
+}
+
+/// **The join the defect was missing** (bl-6f2f): `/flag` writes its ops row,
+/// the fold stamps the conversation, and the queue — the §6 strip made
+/// addressable — carries the row with the raiser's own sentence on it. Before
+/// this, a flag answered `{"kind":"flagged","ok":true}` and the queue was
+/// byte-identical before and after.
+#[test]
+fn a_flagged_conversation_is_in_the_queue_with_the_reason_that_raised_it() {
+    let quiet = agent("c-3", AgentState::Quiescent, 90);
+    let mut snap = world(vec![quiet], vec![]);
+    let (_dir, mut ui) = writable();
+    // Acknowledged at its tip, so rest is quiet and the flag is the only thing
+    // that can put this row in the queue.
+    mark_seen(&snap, &mut ui, &ws_a(), "c-3").unwrap();
+    assert!(queue(&snap, &ui, 200).is_empty());
+
+    let raised =
+        crate::monitor::flag::raised("9".to_owned(), &ws_a(), "c-3", "please look at this one");
+    snap.trees = crate::monitor::flag::fold(snap.trees.clone(), &[OpRow::from(&raised)]);
+    let rows = queue(&snap, &ui, 200);
+    assert_eq!(rows.len(), 1, "the flag is what put it here");
+    assert_eq!(rows[0].signals, vec![AttentionKind::Flagged]);
+    assert_eq!(
+        rows[0].flag.as_ref().map(|f| f.reason.as_str()),
+        Some("please look at this one"),
+        "the item carries why, so answering it needs no second read"
+    );
+
+    // …and acknowledging it is the ordinary gesture, on the ordinary evidence.
+    mark_seen(&snap, &mut ui, &ws_a(), "c-3").unwrap();
+    assert!(queue(&snap, &ui, 200).is_empty());
 }
 
 /// The I0 convergence proof, from the headless side: `seen` writes exactly the

@@ -171,7 +171,7 @@ fn flagging_writes_one_row_and_does_nothing_else() {
     assert_eq!(tail.len(), 2, "two rows, nothing else");
     assert_eq!(
         tail[0].argv.first().map(String::as_str),
-        Some(crate::monitor::row::YOG_FLAG)
+        Some(crate::monitor::flag::YOG_FLAG)
     );
     assert_eq!(tail[0].stdout, "this looks wrong");
     assert!(

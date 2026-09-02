@@ -32,6 +32,7 @@ fn agent(id: &str, name: Option<&str>, state: AgentState, last_action: i64) -> A
         state,
         truncated: false,
         failure: None,
+        flagged: None,
         state_uncertain: false,
         pending: vec![],
         conflicted_oid: None,

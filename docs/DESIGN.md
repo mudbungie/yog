@@ -2367,8 +2367,37 @@ worth persisting. Don't "fix" the asymmetry.
    no tokens and *nothing but an answer releases it*, so a watermark could only
    ever hide a conversation that cannot move. It self-clears when litany lifts
    the mark, which happens exactly when the answer's re-adjudication runs.
+7. A **flag** was raised on the conversation and the raising row's `ts` ≠
+   `seen[ws][agent].flag` *(VISION §4.9, bl-6f2f)*. `/flag <why…>` is the
+   signal-out verb and the alignment monitor's **floor grant** — a responder
+   granted only `flag` is a pure judge — and it wrote its one exit-0 ops row
+   into a trail this predicate did not read. So the verb whose entire purpose
+   is letting a machine raise its hand raised it where nobody looks: VISION
+   §4.9's ladder table, `Reply::Flagged`'s doc and the gesture's own help all
+   promised *"attention item + ops row"*, and only the row existed.
 
-Signals 1–4 are seen-gated on the `ui.json` watermarks (§4.1); focusing an
+   Seen-gated like 1–4, with the **row's timestamp standing where an oid
+   stands**: nothing about a watermark needs a ref, only a value that changes
+   when the fact does, and a later flag is a later stamp. Nothing is stored —
+   the row is the home and the signal is a query over it
+   (`monitor::flag::latest`).
+
+   **The fact rides the agent, not a seventh parameter.** `attention` and
+   `evidence` both take `&Agent` and nothing else, and that is the shape of a
+   signal rather than an accident of one: a rule reached by an extra argument
+   would have to be threaded through the rank sort, both rollups, the roster
+   walk and every caller of each, and the acknowledgement path could not follow
+   it at all. So `Agent::flagged` is stamped by `monitor::flag::fold` at the one
+   place the ops trail and the derived trees are both final — the snapshot's
+   publish — which makes it the single field on that type the workspace does
+   not answer, said out loud where it is declared.
+
+   The **reason** rides the §6 queue row beside the word, on `held`'s
+   precedent: a queue row exists to be answerable without a second read, and a
+   signal that says *look at this* and cannot say why sends the operator
+   hunting through `/ops` — which is where the flag already was.
+
+Signals 1–4 and 7 are seen-gated on the `ui.json` watermarks (§4.1); focusing an
 agent records the current evidence oids as seen. Because `seen` converges,
 **acknowledging in one instance acknowledges in both — attention is data, and
 it converges.** Live focus does not.
@@ -2392,8 +2421,9 @@ timer, a clock threshold with no §5.3 home).
 **Every signal's fact has a carrier the ack cannot reach (bl-efa2).**
 "Acknowledging clears the signal, not the fact" only holds where the fact is
 *rendered* somewhere the watermark does not touch. Rule 2's carrier is the state
-badge; rule 5's is the `✉n` accessory and the Inbox tab; rules 1, 3, 4 and 6 are
-the agent's `refs/litany/*` **marks**. The marks are one closed set
+badge; rule 5's is the `✉n` accessory and the Inbox tab; rule 7's is the flag's
+own `ops.jsonl` row, which `/ops` renders whether or not it was acknowledged;
+rules 1, 3, 4 and 6 are the agent's `refs/litany/*` **marks**. The marks are one closed set
 (`git_tree::AgentMark`, total over the namespaces `marks.rs` reads —
 `abandoned` included, since the assertion that *suppresses* rule 2 is exactly why
 a quiet stopped branch is quiet, and `held` since bl-765d), each with its label
@@ -6797,6 +6827,7 @@ that named one of its files; the rule it taught is not.)
 | `src/main.rs` (excl.) | entry, multi-call/namespace dispatch, the window face (its `Engine::boot`, and what a window adds beside the engine) and the one call that is the other one (`Engine::serve`) |
 | `src/model_pick/{mod,header,pick,grammar/mod,grammar/fields,grammar/models,grammar/roles,grammar/tools,query}.rs` | the §9.4 picker: `pick` the gesture itself — one operator choice, the three gates it passes and the `providers.yaml` text it produces, cut off `mod.rs` at the §12 pre-split band so the picker's vocabulary (the role and branch it writes, where its dropdown lands and what it had to leave behind, the sentences the surface paints) is not the derivation that consumes it — the **one-file** pure plan (bl-d9cb — `plan` returns the `providers.yaml` text and nothing else, litany having retired the `models:` table the second write fed; `grammar/models` survives for yog's own table and the §5.1 #35 denominator read out of it, which since bl-3ffa is the whole of what it writes) + the provider-row gate and default (bl-bd89) + `role_fault`, the role rows' one judgement over the LIVE pointer in the pick gate's own words, the **two** scope sentences the one pane is handed (conversation vs. birth, bl-824e) and the **two** config lines — the conversation's freeze + derived drift clause with the two exits it earns (bl-9786, bl-2d19) and the birth block's pair-and-branch-head line, the anchored block grammars (no YAML dep) — `fields` the generic locate/read/replace every rewrite and the §9.5 pane share — the ONE row judgement (`is_unknown_row`) every §9 gate calls, the protocol-capability gate beside it (`PickError::Incapable`, bl-3d22 — the effective table is carried whole because a row name cannot answer whether the dialect takes tools), and `remedy` the way out of a credential-shaped roster failure (bl-91f1, §9.4): §8.3's own `looks_auth` as the gate, `ProviderRow::login_blocked` as the words, a §11 tab as the destination — no wording and no classifier of its own, and no `Unrouted` state, because the picker named the row in the query it just fired |
 | `src/monitor/{mod,arming,verdict,row}.rs` | the VISION §4.9 alignment monitor's data half: the anti-reinvention law stated where it must hold; the `cadence.yaml` `monitor:` block (arming, the model pin, the policy file it names) and the seed that file starts from; the three-valued verdict and the one reading of a model's reply; and the ops row that is audit trail, level-trigger memory and tuning dataset at once — with `latest`/`worst`, the queries that make a standing verdict a derivation rather than a field |
+| `src/monitor/flag.rs` | the **flag** (VISION §4.9, bl-7aef): the signal-out verb's own ops row — its pseudo-binary, its writer and its reader — and, since bl-6f2f, the fold that makes it §6 rule 7. Split from `row.rs` on the seam the two assertions already draw: a monitor row is a verdict about a sha, a flag is *"a human should look at this"* and anyone granted the verb may write one. The fold runs at the snapshot's publish, the one place the ops trail and the derived trees are both final |
 | `src/monitor/{window,check,sentry}.rs` | its acting half: the evidence one check reads (`goal.md` verbatim + the transcript delta derived from the last-checked sha by `git diff`, tail-clipped — plus every §5.1 #12 compaction marker and its summary, quoted as data in every window because the summary is what litany handed the agent in place of the span: the VISION §4.9 compaction ruling, bl-fde5); the one bounded tool-less call through the embedded brazen adapter (§16.7 W10) behind a `Caller` seam, and the NDJSON read that takes the verdict and the provider's own counters; and the level trigger and its thread (§7.2) — one check per tick, only when a tip moved, retry by re-firing |
 | `{src/multiplex.rs,src/multiplex/bl.rs,src/multiplex/litany.rs,src/multiplex/help.rs,src/multiplex/landing.rs,src/multiplex/namespace.rs}` | the §16.7 namespace arms: each embedded crate's verb surface, dispatched from `main.rs` — plus the router's namespace table and its exhaustive `owns_argv` classification (`namespace`, bl-4667 — which arms own their argv and answer `--help` themselves, and which are answered from the command table like `serve`); `help` (bl-52ed): the argv seat's whole command table, the top-level roster rendered from it, every per-command page, and the discovery probe the `bl`/`bz` arms answer world-free (§8.5's every-command-answers-help rule at the argv surface); and `landing` (bl-7e54): the §16.3 repair the `bl` arm converges on the way in, re-deriving a pre-nesting landing's plugin schedule from balls' own seed; and `wire` (bl-b6fa, bl-024b): the two wire CLIENT arms — `yog seat` and `yog tool-host` — which compose the world at the process edge because the certificate and the tool config are facts of *this* machine's data root even when the engine is elsewhere |
 | `src/names/mod.rs` | the §3.1 workspace-name validation, and only that. The §3.3 conversation mint left with bl-cd38 (bl-aca4's ruling, consumed at lernie 0.0.8): the wordlist, the injected-`Rng` seam and the bounded wraparound scan are `litany::mint`'s, and `words.txt` is deleted |

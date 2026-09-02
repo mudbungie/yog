@@ -5,6 +5,7 @@
 use super::*;
 use crate::git_tree::{Agent, AgentState};
 
+mod derived;
 mod roster;
 mod signals;
 
@@ -30,6 +31,7 @@ fn agent(id: &str) -> Agent {
         state_uncertain: false,
         truncated: false,
         failure: None,
+        flagged: None,
         pending: vec![],
         conflicted_oid: None,
         budget_oid: None,
