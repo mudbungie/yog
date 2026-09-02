@@ -157,6 +157,17 @@ impl Env {
         self.xdg("XDG_DATA_HOME", ".local/share", "yog")
     }
 
+    /// Yog **cache** root: `$XDG_CACHE_HOME/yog` else `~/.cache/yog`. Nothing
+    /// yog derives lives here — it is where a *throwaway* tree goes, so a
+    /// caller that needs scratch space outside every root the engine reads has
+    /// one fold to ask rather than an ambient `TMPDIR` read of its own (the
+    /// module rule: [`Env::from_env`] is the crate's one environment read).
+    /// `scripts/drive/drive.sh` already defaults its evidence root the same
+    /// way, so the two scratch families sit beside each other.
+    pub fn yog_cache_root(&self) -> PathBuf {
+        self.xdg("XDG_CACHE_HOME", ".cache", "yog")
+    }
+
     /// Yog state root: `$XDG_STATE_HOME/yog` else `~/.local/state/yog`.
     pub fn yog_state_root(&self) -> PathBuf {
         self.xdg("XDG_STATE_HOME", ".local/state", "yog")

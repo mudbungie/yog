@@ -289,11 +289,73 @@ config, so removing the space deletes config, not code.
 | `make drive-cleanroom` [`DRIVE_VERB=<verb>`] | The same ladder with only `yog` and `git` on `PATH` — the standing batteries-included done-bar |
 | `make drive-preflight` | Name every missing host prerequisite at once (python3, git, the `yog` under drive, the world seed, and the workspace **wall** — whether a scratch world can birth a workspace at all, plus the brazen fixtures seeded into it) |
 | `make drive-seed` | Lay a scratch world and print its path — the starting point for a hand-steered capture pass (`docs/QUALITY.md` §3) |
+| `make fixture` [`STATE=<name>`] | Lay a named, deterministic **fixture world**, boot an engine on it and print the address a client harness dials; Ctrl-C stops the engine and removes the root. Bare, it lists the states. See "Fixture worlds" below |
 | `make drive-log` [`DRIVE_LOG_DIR=<d>`] | Re-emit a run's drive-log skeleton (sha, host tuple, load, beat table) from its verdict rows |
 | `make image` [`ENGINE=docker`] | Build the OCI image from `Containerfile`, tagged `yog:<Cargo.toml version>` and `yog:latest`, then run `image-scan` on it. Pushes nothing (see "The image") |
 | `make image-scan` | Re-judge an already-built image on its own, both directions — the planted-secret self-test, then the real image |
 | `make install` [`INSTALL_PREFIX=<p>`] | Release-build and drop `yog` into `$INSTALL_PREFIX/bin` (default `~/.local/bin`) |
 | `make install-hooks` | Seat every `.githooks/` hook as a symlink in the repo's own hooks directory — do this once per clone, in the main checkout |
+
+### Fixture worlds
+
+A client harness — the seat's snapshot pass, an emulator screencap loop —
+needs a yog serving a **known** world at an address it can dial, laid the same
+way every run. `yog fixture` is that, and it is a verb rather than a script for
+the reason `wire-certs` is: an installed binary has no repository to find a
+script in, and every consumer of this one lives in another repository.
+
+```
+yog fixture                  # the roster, one state per line
+yog fixture busy             # lay it; one JSON object on stdout
+```
+
+The object is the whole contract — `state`, `root`, `address`, `anchors`,
+`chain`, `key`, `origin`, `hold` — so a harness needs no second document to
+look a path up in:
+
+```
+root=$(yog fixture busy | jq -r .root)
+XDG_DATA_HOME="$root" yog &          # boot an engine on it
+# …dial the address with ca.pem + client.pem + client.key, render, compare…
+kill %1 && rm -rf "$root"            # tear it down
+```
+
+**It lays and prints; it does not boot.** The consumer owns the engine process
+because the consumer is the one that has to kill it. `make fixture STATE=busy`
+is the one-command door over the pair for a hand-run.
+
+| State | What it lays |
+| --- | --- |
+| `empty` | a seeded world with no workspaces — the first-run state |
+| `busy` | one workspace, six conversations across every resting state and every `refs/litany/*` mark |
+| `wound` | two wounded conversations: one whose `stderr.log` speaks, one mute |
+| `orphan` | an orphaned delivered message and an orphaned tool window |
+| `transcript` | a compacted transcript with an entry past every preview cap |
+| `settings` | a tuned `cadence.yaml` and a workspace wall carrying provider rows |
+
+**What makes it deterministic.** Every byte a state contains is compiled in;
+every commit, message and step is dated from the recipe's own offsets rather
+than the laying machine's clock; the `config/default` root commit is pinned at
+a fixed instant, so its oid is byte-identical across runs; and the address is
+**stated** before the engine binds, because self-provisioning writes
+`127.0.0.1:0` and only the listener ever learns what that became.
+
+The residual is named rather than hidden: yog serves derived ages, and the
+engine's clock is the system's — there is no environment seam that fakes it and
+this deliberately does not add one, because a product that can be told to lie
+about the time is worse than a harness that normalises. `origin` reports the
+second every offset was measured back from, so an exact age is computable.
+
+**`hold` is the one thing a harness must act on.** A *speaking* conversation is
+not a file: liveness is derived from an open `response.json` write fd and a held
+executor lock, so no static tree can be one. `hold` names those two paths, and
+the harness opens them for the run — one line of shell (`exec 9<dir`), in the
+process that already owns the engine. `make fixture` does exactly that.
+
+**It never touches your own world.** The root defaults under your cache root
+(`FIXTURE_ROOT` names another) and is a scratch tree the lay wipes before it
+writes, so a root overlapping this box's yog data root — in either
+direction — is refused before anything is removed.
 
 Code style is governed by the Rust Bootstrap v3 standard — the flat-numbered,
 yog-adapted rules in [`AGENTS.md`](AGENTS.md), machine-enforced by `rules/*.yml`

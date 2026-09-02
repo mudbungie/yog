@@ -52,6 +52,26 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  out-of-channel act and yog links no certificate library.",
     },
     HelpRow {
+        verb: crate::fixture::verb::SUBCMD,
+        usage: "yog fixture [state]",
+        summary: "lay a named, deterministic world state for a client harness to dial",
+        detail: "Write one of a fixed roster of world states into a scratch data root and \
+                 print, as one JSON object, everything a harness needs to dial an engine \
+                 booted on it: the root, the address, the CA and the client leaf. Bare, it \
+                 lists the roster. Booting is the caller's — `XDG_DATA_HOME=<root> yog` — \
+                 because the caller is the one that has to kill it, and tearing down is `rm \
+                 -rf <root>`. `FIXTURE_ROOT` names the root (the default is a stable \
+                 path under this box's cache root), and `WIRE_HOST`/`WIRE_PORT` state the address \
+                 the material is minted for, exactly as `wire-certs` reads them; with no \
+                 port stated a free one is taken from the kernel, because a `127.0.0.1:0` in \
+                 the material is a request only the listener ever learns the answer to. It \
+                 REFUSES a root that overlaps this box's own yog data root in either \
+                 direction: a lay wipes its root before it writes. The `hold` list it \
+                 answers with names the fds a harness keeps open for the run to make a \
+                 streaming conversation read as a live model call — a live call is derived \
+                 from an open descriptor, so no tree on disk can be one by itself.",
+    },
+    HelpRow {
         verb: crate::world::hatch::ENV_SUBCMD,
         usage: "yog env [--ws WORKSPACE]",
         summary: "print the world's environment (`eval \"$(yog env)\"`)",

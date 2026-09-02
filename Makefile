@@ -1,5 +1,5 @@
 .PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny image image-scan \
-        corpus drive drive-preflight drive-cleanroom drive-seed drive-log wire-certs \
+        corpus drive drive-preflight drive-cleanroom drive-seed drive-log wire-certs fixture \
         deploy deploy-status
 
 # Install location for `make install`. Defaults to the XDG-ish user-local
@@ -296,6 +296,27 @@ install: release
 	@git rev-parse HEAD >"$(INSTALL_STAMP)" 2>/dev/null || rm -f "$(INSTALL_STAMP)"
 	@echo "installed $(INSTALL_BIN)/yog"
 	@echo "note: no substrate to install — litany, balls and brazen are compiled in (DESIGN §16.7)."
+
+# --- fixture worlds (bl-8741) -----------------------------------------------
+# The one-command door over `yog fixture`: lay a named, deterministic world
+# state, boot an engine on it, print the address a harness dials, and remove
+# both on the way out.
+#
+#   make fixture                 list the states
+#   make fixture STATE=busy      lay it and serve it until Ctrl-C
+#
+# It depends on `release` and prefixes this checkout's build onto PATH, for
+# `drive`'s reason: a run must prove the binary in hand rather than whatever
+# happens to be installed. `FIXTURE_ROOT`, `WIRE_HOST` and `WIRE_PORT` are the
+# verb's own environment readings and pass through untouched.
+#
+# **A harness in another repository should spend the VERB, not this target.**
+# `yog fixture <state>` answers one JSON object and exits; the consumer boots
+# `XDG_DATA_HOME=<root> yog` itself, because the consumer is the one that has
+# to kill it. That is also why there is no `make` variable here for anything
+# the verb already reads from the environment.
+fixture: release
+	@PATH="$(CARGO_TARGET_DIR)/release:$$PATH" scripts/fixture.sh $(STATE)
 
 # --- the real-substrate drive (STORIES.md, "Real-substrate drive") ----------
 # The second half of the done-bar, as make verbs. Each run gets its own scratch

@@ -64,6 +64,9 @@ pub mod engine;
 /// delivery obligation, materialized through balls' attempt capability.
 pub mod fan;
 pub mod files_view;
+/// Named deterministic world states a client harness can dial and render
+/// (bl-8741) — the fixture roster, its writer and the `yog fixture` verb.
+pub mod fixture;
 /// The VISION §4.3 armed loop — off until the operator arms it per workspace.
 pub mod fleet;
 pub mod fork;

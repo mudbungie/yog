@@ -108,6 +108,14 @@ fn main() {
         Some(yog::wire::provision::verb::SUBCMD) => {
             wire_certs(&ambient, argv.get(2..).unwrap_or_default());
         }
+        // `yog fixture <state>` (bl-8741): lay a named, deterministic world
+        // state under a scratch root and print what a harness needs to dial an
+        // engine booted on it. A development door, beside the mint above and
+        // for its reason — every consumer is in another repository, and an
+        // installed binary has no script to find.
+        Some(yog::fixture::verb::SUBCMD) => {
+            fixture(&ambient, argv.get(2..).unwrap_or_default());
+        }
         _ => {}
     }
     // The binary's own two flags (`--version`, and the usage error an unknown
@@ -132,6 +140,27 @@ fn main() {
     // is the one call, which is all a coverage-excluded file should ever hold
     // of a face.
     Engine::serve(&ambient, &overrides);
+}
+
+/// `yog fixture [state]` (bl-8741): lay one named world state, or list the
+/// roster. The subject is argv (a state is what the verb is *about*); the three
+/// settings are environment readings, taken here because the process edge is
+/// where every environment read in this crate happens, and folded into
+/// `verb::plan`, which is pure.
+fn fixture(ambient: &Env, tail: &[String]) -> ! {
+    use yog::fixture::verb;
+    if let Some(refusal) = verb::stray(tail) {
+        eprintln!("{refusal}");
+        std::process::exit(2);
+    }
+    let read = |key: &str| std::env::var(key).ok();
+    std::process::exit(verb::perform(&verb::plan(
+        ambient,
+        tail.first().cloned(),
+        read(verb::READS[0]),
+        read(verb::READS[1]),
+        read(verb::READS[2]),
+    )));
 }
 
 /// `yog wire-certs` (REMOTE §8, §8.2; bl-ae05, bl-64a7): the operator's explicit
