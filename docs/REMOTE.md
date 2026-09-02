@@ -4274,6 +4274,13 @@ answer; each one is a payload question about what the engine can *say*, which is
 sentence above is the test: an ask that is really about a phone would be an
 amendment here, and none has been.
 
+**Interface parity between the seats is its own contract, and its authority is
+`docs/PARITY.md`** (bl-80c1): each client is judged against the help table's
+op roster — classified `control`/`machine` at the table and published through
+the vendored corpus — by its own accessibility inventory, never against the
+other client. Deliberate absences are cited exemption config in the client's
+repo, loud and machine-checked in both directions.
+
 
 ## 13. The punched wire — dynamic reachability (bl-4d56, reworked bl-aad5; operator rulings 2026-08-31)
 
