@@ -1,7 +1,8 @@
 +++
 title = "/flag raises no attention item: it writes one exit-0 ops row and the §6 predicate reads no ops row, so the monitor's floor grant signals where nobody looks"
 created = 1788235207
-updated = 1788235207
+updated = 1788318328
+claimant = "Signal"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "attention"]
