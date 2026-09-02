@@ -88,3 +88,50 @@ fn the_context_flags_aim_a_line() {
         json!({"op": "message", "workspace": "/ws", "agent": "c-1", "content": "ship it"})
     );
 }
+
+/// **The refusal names the control this seat actually has** (bl-e66f). The
+/// terminal holds no selection — its own module doc opens by saying so — so
+/// *"focus one"* sent the operator to a control it does not have, and `--ws`,
+/// the flag that exists for exactly this, was named nowhere. It is named now,
+/// on **every** refusal this seat hands back rather than on the two it happened
+/// to raise itself: a missing target was the one refusal that carried no usage,
+/// which made typing a gesture wrong the only way to learn how to aim one.
+#[test]
+fn every_refusal_names_the_flags_and_none_names_a_focus() {
+    for args in [
+        // The line parser's own — the case that motivated the ball.
+        vec!["/conversations".to_owned()],
+        vec!["/scan".to_owned()],
+        // …and the two the seat already carried usage on, which must not
+        // double it now that one place appends.
+        vec!["--nope".to_owned(), "x".to_owned(), "/scan".to_owned()],
+        vec![],
+        // …and an envelope that decodes to nothing.
+        vec!["not json".to_owned()],
+    ] {
+        let why = argv::read_gesture("gesture", &args).expect_err("refused");
+        assert!(why.contains("--ws NAME"), "{args:?}: {why}");
+        assert!(why.contains("yog gesture --help"), "{args:?}: {why}");
+        assert!(
+            !why.contains("focus"),
+            "{args:?}: this seat has nothing to focus: {why}"
+        );
+        assert_eq!(
+            why.matches("usage: yog gesture").count(),
+            1,
+            "{args:?}: one usage line, not two: {why}"
+        );
+    }
+}
+
+/// The shared sentence still says *what* was missing — the half every seat
+/// needs — and says it without naming a control (bl-e66f).
+#[test]
+fn the_shared_sentence_states_the_fact_and_not_the_remedy() {
+    let why = argv::read_gesture("gesture", &["/conversations".to_owned()]).expect_err("refused");
+    assert!(
+        why.contains("/conversations: no workspace in context"),
+        "{why}"
+    );
+    assert!(!why.contains("envelope"), "{why}");
+}

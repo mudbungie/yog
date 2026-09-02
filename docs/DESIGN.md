@@ -4771,7 +4771,7 @@ elided target with is what states this one.
 
 Three consequences worth stating. **The refusal moved to the edge and stayed a
 refusal**: a line with no `--ws` and no focus refuses in `args::workspace`'s own
-words (*"no workspace in context — focus one, or use the envelope"*) and an
+words (*"no workspace in context"*) and an
 envelope without the field refuses in the codec, so nothing reaches an executor
 that would have to guess a wall — which is why `boundary::config::brazen_paths`
 is now infallible and the old `NO_WALL` executor refusal is gone. **The line
@@ -4783,6 +4783,32 @@ so `pick_model` judges against the wall of the workspace it is picking for
 rather than the seat's — judging with the wrong wall would refuse a valid pick,
 and judging headless with no wall at all would gate on an empty table and let
 anything through.
+
+**And the remedy is the seat's, not the sentence's (bl-e66f).** That refusal
+read *"no workspace in context — focus one, or use the envelope"* until bl-e66f,
+and it is shared: the line parser is one implementation, reached by a window's
+composer and by `yog gesture` alike. At the terminal there is nothing to focus —
+`boundary::sugar::argv`'s module doc opens by saying so, *"it holds no
+selection … a line typed here states its targets outright"* — so the sentence
+sent the operator to a control that seat does not have, while `--ws`, the flag
+that exists for exactly this, was named nowhere in it. Worse, the flags were
+named nowhere at all: `argv::usage` printed **only on a refusal**, and the
+refusal for a *missing target* was the one refusal that did not print it, so the
+way to learn how to aim a gesture was to type one wrong.
+
+Two corrections, both keeping one implementation:
+
+- **The shared sentence states the fact; the seat states the remedy.** What is
+  missing is true at every seat; how to supply it is not. So `args::workspace`
+  says only *"no workspace in context"*, and `argv::read_gesture` appends the
+  seat's usage to **every** refusal it hands back — the line parser's included,
+  where before it appended only to the two the flag reader raised itself. One
+  rule, one place, and a refusal at this seat now always ends in the flags.
+- **`--help` prints the seat's line around the shared answer.** The rewrite
+  into `/help` exists so one answer serves both seats, which is precisely why
+  the argv flags may not live inside that answer — they are one seat's fact. So
+  `sugar::help_answer` is the seat's usage line, a blank line, then
+  `help::render`, and `yog gesture --help` finally names the flags it aims with.
 
 **The marks pane's `Read current` is now the boundary too** — the click
 constructs `Query::Marks` and calls `AppModel::answer`, the same chokepoint

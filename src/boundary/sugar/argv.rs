@@ -47,7 +47,9 @@ struct Invocation {
 /// `--help` rewrite are one implementation and cannot drift apart. `verb` is
 /// the seat's own name, which is all a usage line differs by.
 pub(crate) fn read_gesture(verb: &str, args: &[String]) -> Result<(Gesture, Value), String> {
-    envelope(&read(verb, args)?)
+    read(args)
+        .and_then(|invocation| envelope(&invocation))
+        .map_err(|why| format!("{why}; {}", usage(verb)))
 }
 
 /// The deposit envelope this invocation means: a line read at the seat its
@@ -70,7 +72,11 @@ fn envelope(invocation: &Invocation) -> Result<(Gesture, Value), String> {
 
 /// Read the multiplexed tail. Refuses — naming the offender — on an unknown
 /// flag, a flag with no value, or anything other than exactly one payload.
-fn read(verb: &str, args: &[String]) -> Result<Invocation, String> {
+/// The **usage line is not appended here** (bl-e66f): [`read_gesture`] carries
+/// it onto every refusal this seat hands back, including the ones the line
+/// parser raised, so there is one rule and one place rather than a per-site
+/// decision that had already been made two ways.
+fn read(args: &[String]) -> Result<Invocation, String> {
     let mut context = Context::default();
     let mut payload: Option<String> = None;
     let mut asked_help = false;
@@ -100,7 +106,7 @@ fn read(verb: &str, args: &[String]) -> Result<Invocation, String> {
                     .map_err(|e| format!("--prepared: not JSON: {e}"))?;
                 context.prepared = Some(prepared_from_value(&v)?);
             }
-            other => return Err(format!("unknown flag --{other}; {}", usage(verb))),
+            other => return Err(format!("unknown flag --{other}")),
         }
     }
     // The rewrite: whatever else was typed, help is what was asked. A word
@@ -113,14 +119,19 @@ fn read(verb: &str, args: &[String]) -> Result<Invocation, String> {
             payload: format!("/help {about}").trim_end().to_owned(),
         });
     }
-    let payload = payload.ok_or_else(|| format!("nothing to do; {}", usage(verb)))?;
+    let payload = payload.ok_or_else(|| "nothing to do".to_owned())?;
     Ok(Invocation { context, payload })
 }
 
 /// The one usage line, so a refusal always says how to be right. It differs
 /// between the two argv seats by the verb alone, which is the whole reason
 /// this is a function rather than a second const.
-fn usage(verb: &str) -> String {
+///
+/// `pub(crate)` since bl-e66f: the seat also prints it above the help answer,
+/// because the flags had lived **only** in refusals — so the way to learn how
+/// to aim a gesture was to type one wrong, and the refusal for a *missing
+/// target* was the one refusal that did not carry it.
+pub(crate) fn usage(verb: &str) -> String {
     format!(
         "usage: yog {verb} [--ws NAME] [--agent ID|NAME] [--project NAME] [--as NAME] \
          [--prepared JSON] '<json>' | '/line'\n       yog {verb} --help [command] — every \

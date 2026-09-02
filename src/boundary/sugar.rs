@@ -35,6 +35,24 @@ pub const USAGE_EXIT: i32 = 2;
 /// This seat's own word, for the usage line its refusals carry.
 const VERB: &str = "gesture";
 
+/// **What this seat answers `--help` with** (bl-e66f): how to aim a gesture
+/// *here*, then the shared gesture list.
+///
+/// `--help` is a rewrite into `/help` precisely so **one answer serves both
+/// seats** (§8.5's higher-order rule), which is exactly why the argv flags may
+/// not live inside that answer: they are one seat's. So the seat prints its own
+/// line around it. Until bl-e66f it printed nothing of its own, and the flags
+/// existed only in refusals — so `yog gesture --help`, the one place an
+/// operator looks, named none of them, and the way to learn how to aim a
+/// gesture was to type one wrong.
+fn help_answer(verb: Option<&str>) -> String {
+    format!(
+        "{}\n\n{}",
+        argv::usage(VERB),
+        help::render(&help::rows(verb))
+    )
+}
+
 /// Run the sugar verb: `args` is the multiplexed tail (exactly one JSON
 /// envelope), `seed` the legibility hint the deposit id is minted from
 /// ([`deposit::mint`] — the world, not the caller, decides the id), and
@@ -62,7 +80,7 @@ pub fn run(
     // what a command does must not depend on a yog being up — and must not
     // exit non-zero, because it is an answer, not a refusal.
     if let Gesture::Ask(Query::Help { verb }) = &gesture {
-        println!("{}", help::render(&help::rows(verb.as_deref())));
+        println!("{}", help_answer(verb.as_deref()));
         return 0;
     }
     // Mint, then deposit: the id is won from the world (an exclusive reply-slot

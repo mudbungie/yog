@@ -218,3 +218,26 @@ fn the_help_flag_wins_over_the_gesture_it_is_typed_beside() {
     );
     assert!(deposit::pending(root.path()).is_empty(), "nothing ran");
 }
+
+/// **The help answer says how to aim, then what to ask** (bl-e66f). `yog
+/// gesture --help` used to print the gesture list and nothing else, while
+/// `yog --help` said only `yog gesture <gesture>` — so the five flags that
+/// aim a gesture at this seat appeared in no help anywhere, only in refusals.
+#[test]
+fn the_help_answer_opens_with_the_seats_own_usage() {
+    let whole = help_answer(None);
+    let (first, rest) = whole.split_once("\n\n").expect("a line, then the list");
+    for flag in [
+        "--ws NAME",
+        "--agent ID|NAME",
+        "--project NAME",
+        "--as NAME",
+        "--prepared JSON",
+    ] {
+        assert!(first.contains(flag), "{flag} unnamed: {first}");
+    }
+    assert!(rest.contains("/message"), "the shared list follows: {rest}");
+    // One command's page gets the same line: how to aim is a fact about the
+    // seat, not about which gesture was asked after.
+    assert!(help_answer(Some("close")).starts_with(first));
+}

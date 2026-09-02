@@ -6,6 +6,17 @@
 //! a typed control obeys §11's discoverability rule exactly as a clicked one
 //! does: the operator must learn what the gesture needed without reading the
 //! source.
+//!
+//! **What is missing is stated here; how to supply it is the seat's** (bl-e66f).
+//! These sentences are shared by every seat — the line parser is one
+//! implementation and the window's composer and the argv terminal both reach
+//! it — so a remedy written into one of them is a remedy asserted at seats that
+//! do not have it. The workspace refusal used to end *"focus one, or use the
+//! envelope"*, and at `yog gesture` there is nothing to focus: the module doc
+//! of [`crate::boundary::sugar::argv`] opens by saying so (*"it holds no
+//! selection … a line typed here states its targets outright"*), and the flag
+//! that does supply it, `--ws`, went unnamed. The argv seat appends its own
+//! usage to every refusal it hands back, which is where a remedy can be true.
 
 use super::Context;
 use crate::start::BallSpec;
@@ -14,7 +25,7 @@ use crate::start::BallSpec;
 pub(super) fn workspace(ctx: &Context, verb: &str) -> Result<String, String> {
     ctx.workspace
         .clone()
-        .ok_or_else(|| format!("/{verb}: no workspace in context — focus one, or use the envelope"))
+        .ok_or_else(|| format!("/{verb}: no workspace in context"))
 }
 
 /// The selected conversation's agent, or the refusal naming it.
