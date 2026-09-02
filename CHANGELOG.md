@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.15](https://github.com/mudbungie/yog/compare/v0.0.14...v0.0.15) - 2026-09-02
+
+### Changes
+
+- drive preflight refuses on a world-seed file no founded world holds: template/providers.yaml is an operator override, and it gates the whole drive family [bl-85ea]
+
 ## [0.0.14](https://github.com/mudbungie/yog/compare/v0.0.13...v0.0.14) - 2026-09-02
 
 ### Changes

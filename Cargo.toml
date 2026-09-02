@@ -1,6 +1,6 @@
 [package]
 name = "yog"
-version = "0.0.14"
+version = "0.0.15"
 edition = "2024"
 description = "yog: the standalone server for litany loops — the world, the balls and the conversations, behind one wire"
 license = "MIT"
