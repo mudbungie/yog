@@ -3,6 +3,7 @@
 //! rows carry derived sub-objects (gates, drones, figures).
 
 use super::super::*;
+use crate::board::Board;
 use crate::projects::join::JoinState;
 
 /// The V4 board's spelling: the column leads, the binding state rides beside

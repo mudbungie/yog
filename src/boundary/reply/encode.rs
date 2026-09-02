@@ -11,7 +11,6 @@ use serde_json::{Map, Value, json};
 use super::board::{board_row, fleet_facts};
 use super::queue::queue_row;
 use super::rows::{conv_row, join_row, lineage_row, op_row, ws_row};
-use super::search::hit_row;
 use super::{Reply, prepared_value};
 use crate::registry::mailbox::{capture_value, invocation_value};
 
@@ -136,7 +135,11 @@ pub fn encode(reply: &Reply) -> Value {
                                          "stream": crate::git_tree::stream_wire::stream_value(stream) }),
         Reply::Steps(view) => crate::steps_view::wire::steps(view),
         Reply::Step(detail) => crate::steps_view::wire::detail(detail),
-        Reply::Files { view, preview } => crate::files_view::wire::reply(view, preview.as_ref()),
+        Reply::Files {
+            view,
+            preview,
+            working_dir,
+        } => crate::files_view::wire::reply(view, preview.as_ref(), working_dir.as_deref()),
         Reply::Rail(rail) => crate::rail::wire::reply(rail),
         // Flat rather than a row list (bl-13f9): a governing config is one
         // object, so it wears the `config` reply's shape and not `lineages`'.
@@ -147,16 +150,9 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Inbox(entries) => crate::inboxview::wire::reply(entries),
         // The seat's read of its selection (REMOTE §9.4, bl-1eb0).
         Reply::Agent(view) => super::agent::reply(view),
-        // The needle rides with the hits (bl-7067). Without it the answer
-        // could not say which question it answers -- the very fact bl-648a put
-        // on the datum, because "was a search asked?" and "did anything
-        // match?" are the same value exactly when a search found nothing,
-        // which is the one case that must be told apart.
-        Reply::Search(found) => json!({
-            "ok": true, "kind": "search", "needle": found.needle,
-            "rows": found.hits.iter().map(hit_row).collect::<Vec<Value>>(),
-            "unreadable": found.unreadable,
-        }),
+        // Spelled beside its own rows (bl-1015), the `board` and `queue`
+        // shape: one file learns how a search answer is said.
+        Reply::Search(found) => super::search::reply(found),
         Reply::Config { text } => json!({ "ok": true, "kind": "config", "text": text }),
         Reply::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
         Reply::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),

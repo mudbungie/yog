@@ -111,3 +111,54 @@ fn names_in_reads_the_name_fact_children_included() {
     );
     assert!(names_in(&snap, Path::new("/other")).is_empty());
 }
+
+/// **A bound conversation's deliverable is not in the listing, and the answer
+/// says where it is** (bl-1015). A path or ball rung seeds litany's cwd mark
+/// at creation (DESIGN §3.3, *"the one channel"*), so every tool step of every
+/// turn runs at the target while `/files` walks the agent worktree — which
+/// held goal and soul and no work product, with nothing anywhere saying the
+/// work had gone elsewhere.
+///
+/// Both "here" cases collapse to `None`, which is why the reply carries a path
+/// exactly when there is somewhere else to name: no mark at all (a bare start,
+/// whose tools run in the listed worktree) and a mark that names that very
+/// worktree (an agent that `cd`ed home).
+#[test]
+fn a_bound_conversation_names_the_directory_its_work_lands_in() {
+    let dir = tempfile::tempdir().expect("tmp");
+    let ws = dir.path().join("ws");
+    let repo = ws.join("repo.git");
+    std::fs::create_dir_all(&repo).expect("repo");
+    assert_eq!(inspector::working_dir(&ws, "amber-1"), None);
+    let git = |args: &[&str]| {
+        crate::git_env::output(crate::git_env::git().arg("--git-dir").arg(&repo).args(args))
+            .expect("git")
+    };
+    assert!(git(&["init", "--bare", "-b", "main"]).status.success());
+    let mark = |at: &Path| {
+        let blob = dir.path().join("cwd");
+        std::fs::write(&blob, format!("{}\n", at.display())).expect("write");
+        let out = git(&["hash-object", "-w", "--", &blob.display().to_string()]);
+        let oid = String::from_utf8(out.stdout)
+            .expect("oid")
+            .trim()
+            .to_owned();
+        assert!(
+            git(&["update-ref", "refs/litany/cwd/amber-1", &oid])
+                .status
+                .success()
+        );
+    };
+
+    let bound = PathBuf::from("/home/u/proj");
+    mark(&bound);
+    assert_eq!(inspector::working_dir(&ws, "amber-1"), Some(bound));
+
+    let home = crate::files_view::agent_worktree(&ws, "amber-1");
+    mark(&home);
+    assert_eq!(
+        inspector::working_dir(&ws, "amber-1"),
+        None,
+        "a mark naming the listed worktree is the case where the listing is the answer"
+    );
+}

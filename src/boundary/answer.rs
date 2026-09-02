@@ -148,9 +148,18 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         }
         Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent)),
         Query::Step { seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
+        // The listing, plus **where this conversation's work actually lands**
+        // when that is not the worktree the listing walked (bl-1015): a path
+        // or ball rung seeds litany's cwd mark at creation, so every tool step
+        // runs at the target and the agent worktree holds none of the work.
+        // The listing alone promised work products and named none of that.
         Query::Files { path, at, .. } => {
             let (view, preview) = inspector::files(ws, agent, path.as_deref(), at.as_deref());
-            Reply::Files { view, preview }
+            Reply::Files {
+                view,
+                preview,
+                working_dir: inspector::working_dir(ws, agent),
+            }
         }
         Query::Rail { .. } => {
             let steps = inspector::steps(snap, ws, agent);

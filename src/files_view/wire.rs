@@ -12,9 +12,19 @@ use serde_json::{Map, Value, json};
 
 use super::{FileEntry, FilesView, Preview};
 
-/// The `files` reply body: the listing, plus the asked-for file's preview when
-/// one was named and the listing carried it.
-pub(crate) fn reply(view: &FilesView, preview: Option<&Preview>) -> Value {
+/// The `files` reply body: the listing, the asked-for file's preview when one
+/// was named and the listing carried it, and — when the conversation's work
+/// lands somewhere this listing does not reach — **where** (bl-1015).
+///
+/// `working_dir` is present exactly when there is somewhere else to name, so a
+/// reader never has to compare it against the worktree the rows came from: its
+/// absence is the case where this listing *is* the working directory and the
+/// promise of work products holds.
+pub(crate) fn reply(
+    view: &FilesView,
+    preview: Option<&Preview>,
+    working_dir: Option<&std::path::Path>,
+) -> Value {
     let mut map = Map::new();
     map.insert("ok".to_owned(), json!(true));
     map.insert("kind".to_owned(), json!("files"));
@@ -36,6 +46,12 @@ pub(crate) fn reply(view: &FilesView, preview: Option<&Preview>) -> Value {
     }
     if let Some(preview) = preview {
         map.insert("preview".to_owned(), preview_value(preview));
+    }
+    if let Some(at) = working_dir {
+        map.insert(
+            "working_dir".to_owned(),
+            json!(at.to_string_lossy().into_owned()),
+        );
     }
     Value::Object(map)
 }
@@ -95,4 +111,18 @@ pub(crate) fn preview_of(v: &Value) -> Result<Preview, String> {
         }),
         other => Err(format!("preview: unknown kind {other:?}")),
     }
+}
+
+/// The work-target statement read back (bl-1015). Absent is the ordinary case
+/// — the listing is the working directory — so this is an `Option` read and
+/// never a refusal; a present value that is not a string is a codec that has
+/// drifted, which `str_of` names.
+pub(crate) fn working_dir_of(
+    obj: &serde_json::Map<String, Value>,
+) -> Result<Option<std::path::PathBuf>, String> {
+    obj.get("working_dir")
+        .map(|_| {
+            crate::boundary::codec::fields::str_of(obj, "working_dir").map(std::path::PathBuf::from)
+        })
+        .transpose()
 }

@@ -14,7 +14,11 @@ mod search;
 mod workdiff;
 
 use super::*;
+// The type-bearing imports the answer enum itself carries (`reply/model.rs`,
+// bl-1015): the corpus builds the same variants, so it names them the same way.
+use crate::actions::verbs::Outcome;
 use crate::opslog::Origin;
+use crate::start::Prepared;
 use std::path::PathBuf;
 
 fn outcome(exit: i32) -> Outcome {

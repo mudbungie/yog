@@ -206,12 +206,14 @@ pub(super) fn inspector() -> Vec<Reply> {
                 truncated: true,
             },
             preview: Some(Preview::Text("body".into())),
+            working_dir: Some("/home/u/proj".into()),
         },
         // The torn-down worktree, whose absence is a fact rather than an
         // empty listing — and the opaque preview arm beside it.
         Reply::Files {
             view: FilesView::AbsentWorktree,
             preview: Some(Preview::Binary { size: 4 }),
+            working_dir: None,
         },
         Reply::Rail(rail()),
         Reply::Inbox(inbox()),

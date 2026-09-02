@@ -24,7 +24,7 @@
 //!
 //! [`Search`]: crate::boundary::Query::Search
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::app::Snapshot;
 use crate::budgets::{Scope, bills, total};
@@ -114,6 +114,25 @@ pub fn files(
             None => files_view::preview(&files_view::agent_worktree(ws, agent).join(path)),
         });
     (view, preview)
+}
+
+/// **Where this conversation's work actually lands, when that is not the
+/// worktree [`files`] just listed** (bl-1015).
+///
+/// The one channel is litany's `refs/litany/cwd/<agent-id>` mark (DESIGN §3.3:
+/// *"the creation-seeded mark … is the one channel — no misleading
+/// redundancy"*), which a path or ball rung's fire seeds at creation and the
+/// executor reads back at every tool spawn. So this is the same read
+/// [`crate::control::root::agent_cwd`] already makes for operand resolution —
+/// one home for the fact, asked here for the other consumer.
+///
+/// `None` where the listing IS the working directory, which is both the unset
+/// mark (a bare start) and a mark that names the agent worktree itself (an
+/// agent that `cd`ed home). One answer for "the promise holds", so the reply
+/// carries the path exactly when there is somewhere else to name.
+pub fn working_dir(ws: &Path, agent: &str) -> Option<PathBuf> {
+    crate::control::root::agent_cwd(ws, agent)
+        .filter(|at| at != &files_view::agent_worktree(ws, agent))
 }
 
 /// Whether the listing carries `path` as a file of its own.

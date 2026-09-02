@@ -51,6 +51,7 @@ fn files(o: &Map<String, Value>) -> Result<Reply, String> {
     Ok(Reply::Files {
         view: crate::files_view::wire::view_of(o)?,
         preview: opt_val(o, "preview", crate::files_view::wire::preview_of)?,
+        working_dir: crate::files_view::wire::working_dir_of(o)?,
     })
 }
 

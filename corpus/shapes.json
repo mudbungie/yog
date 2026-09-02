@@ -341,10 +341,11 @@
         "/rows/[]:object",
         "/rows:array",
         "/truncated:bool",
+        "/working_dir:string",
         "/worktree:bool",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/flagged": {
       "signature": [

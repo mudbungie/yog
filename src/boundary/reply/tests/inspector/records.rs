@@ -160,6 +160,7 @@ fn a_files_reply_tells_an_absent_worktree_from_an_empty_one() {
             truncated: true,
         },
         preview: Some(Preview::Text("fn main() {}".to_owned())),
+        working_dir: Some(std::path::PathBuf::from("/home/u/proj")),
     });
     assert_eq!(present["kind"], "files");
     assert_eq!(present["worktree"], true);
@@ -168,13 +169,22 @@ fn a_files_reply_tells_an_absent_worktree_from_an_empty_one() {
     assert_eq!(present["rows"][1]["path"], "src/a.rs");
     assert_eq!(present["rows"][1]["size"], 12);
     assert_eq!(present["preview"]["kind"], "text");
+    // bl-1015: the work lands outside the worktree these rows came from, and
+    // the reply says where rather than answering a listing that holds none of
+    // it. Absent below, which is the case where the listing IS that directory.
+    assert_eq!(present["working_dir"], "/home/u/proj");
     let gone = encode(&Reply::Files {
         view: FilesView::AbsentWorktree,
         preview: None,
+        working_dir: None,
     });
     assert_eq!(gone["worktree"], false);
     assert!(gone.get("rows").is_none(), "there is nothing to list");
     assert!(gone.get("preview").is_none());
+    assert!(
+        gone.get("working_dir").is_none(),
+        "absent is the case where this listing is the working directory"
+    );
 }
 
 /// The spine: a notch that can be pinned states its commit and its seat, one

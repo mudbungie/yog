@@ -6,7 +6,24 @@
 
 use serde_json::{Map, Value, json};
 
-use crate::search::{Address, Field, Hit};
+use crate::search::{Address, Field, Found, Hit};
+
+/// The whole search reply, envelope included — moved off `encode`'s match
+/// (bl-1015) so the one place that learns how a search answer is *said* is the
+/// file its rows are already spelled in, the `board` and `queue` shape.
+///
+/// **The needle rides with the hits** (bl-7067). Without it the answer could
+/// not say which question it answers — the very fact bl-648a put on the datum,
+/// because "was a search asked?" and "did anything match?" are the same value
+/// exactly when a search found nothing, which is the one case that must be
+/// told apart.
+pub(super) fn reply(found: &Found) -> Value {
+    json!({
+        "ok": true, "kind": "search", "needle": found.needle,
+        "rows": found.hits.iter().map(hit_row).collect::<Vec<Value>>(),
+        "unreadable": found.unreadable,
+    })
+}
 
 /// One hit as data: the address it names, spread flat so a consumer reads the
 /// same `project`/`id`/`workspace`/`agent` keys — and words — the gestures
