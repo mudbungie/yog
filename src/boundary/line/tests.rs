@@ -237,3 +237,45 @@ fn a_verbatim_payload_may_still_mention_the_flag() {
     };
     assert_eq!(content, "run --help on it");
 }
+
+/// **A `/prompt` with no goal fires the prepared prefill, whole** (bl-06a1).
+///
+/// The flagship terminal workflow is `/prepare` then `/prompt`, and every
+/// conversation it fired went out with the operator's typed sentence ALONE:
+/// the path rung lost its `Working directory:` headline and the ball rung lost
+/// the ball, including the `Ball <id>:` header §3.2 calls the conversation→ball
+/// join. A typed goal is still the whole payload, verbatim and never prefixed —
+/// bl-6920's ruling, which a composer seat depends on — so the fix is the empty
+/// input, and the three cases are asserted together because they are one rule.
+#[test]
+fn a_promptless_goal_falls_to_the_prepared_prefill() {
+    let ball = Prepared {
+        goal: "Ball bl-1: a title\n\na body".to_owned(),
+        ..prepared()
+    };
+    let seat = |p: &Prepared| Context {
+        prepared: Some(p.clone()),
+        ..ctx()
+    };
+    let fired = |line: &str, p: &Prepared| match parse(line, &seat(p)) {
+        Ok(Gesture::Act(Action::Prompt { goal, .. })) => Ok(goal),
+        other => Err(format!("{other:?}")),
+    };
+
+    assert_eq!(fired("/prompt", &ball), Ok(ball.goal.clone()));
+    // A goal that was typed is the whole payload and nothing is prepended to
+    // it: the prefill is a default, never a head.
+    assert_eq!(
+        fired("/prompt do the thing", &ball),
+        Ok("do the thing".to_owned())
+    );
+    // The bare rung prepares no prefill, so it is the same "the goal is
+    // required" refusal it always was — the general path with empty inputs,
+    // not an arm of its own.
+    assert!(
+        fired("/prompt", &prepared())
+            .unwrap_err()
+            .contains("the goal is required"),
+        "a bare rung with nothing typed has nothing to send"
+    );
+}

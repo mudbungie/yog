@@ -33,17 +33,26 @@ pub(super) fn retarget(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture,
     }))
 }
 
-/// `/prompt <goal…>` — the §8.1 deferred fire, against whatever this seat has
+/// `/prompt [<goal…>]` — the §8.1 deferred fire, against whatever this seat has
 /// prepared. **It carries no §3.3 seed** (bl-1747): a seed is the firing
 /// seat's own prediction and this reader paints none, so the door draws off
 /// the stamp — the window's line, which *does* have a preview above it, fills
 /// the seed in after the read.
+///
+/// **The goal is optional, and the prepared prefill is what it falls to**
+/// (bl-06a1, [`args::goal_or_prefill`] — which states why this is a default
+/// and not a concatenation). The reader is where a seat's held facts become a
+/// gesture — it already resolves the workspace, the agent, the ball and the
+/// prepared start off [`Context`] — so the prefill standing in for an unsaid
+/// goal is that same act, and `Action::Prompt`'s `goal` still means the whole
+/// payload, verbatim, at every seat and on the wire.
 pub(super) fn prompt(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    let prepared = ctx.prepared.clone().ok_or_else(|| {
+        format!("/{verb}: nothing is prepared — /prepare first, then say the goal")
+    })?;
     Ok(act(Action::Prompt {
-        prepared: ctx.prepared.clone().ok_or_else(|| {
-            format!("/{verb}: nothing is prepared — /prepare first, then say the goal")
-        })?,
-        goal: args::required(tail, verb, "the goal")?,
+        goal: args::goal_or_prefill(tail, &prepared.goal, verb)?,
+        prepared,
         seed: None,
     }))
 }

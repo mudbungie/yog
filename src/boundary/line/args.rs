@@ -59,6 +59,33 @@ pub(super) fn required(tail: &str, verb: &str, what: &str) -> Result<String, Str
     Ok(text.to_owned())
 }
 
+/// **The goal `/prompt` fires: what was typed, or the prepared prefill when
+/// nothing was** (§3.3, bl-06a1).
+///
+/// `goal` stays the **whole payload, never a tail** — that is bl-6920's ruling
+/// (*"the operator sees and edits exactly the whole payload that is sent …
+/// fired verbatim"*) and a composer seat depends on it: such a seat pre-loads
+/// its box with the prefill and sends the edited whole back, so a `/prompt`
+/// that CONCATENATED would fire every composer-typed prefill twice, and no
+/// test on the wire can tell one seat's send from the other's without a new
+/// flag. Concatenation is therefore not yog's to take alone.
+///
+/// What was actually missing is the **empty input**, not composition. A seat
+/// with no composer — a terminal, where each `yog gesture` is its own process
+/// — had no way to say *"the prepared prefill is my payload"*: `/prompt` made
+/// the goal mandatory, so a path rung fired without its `Working directory:`
+/// headline and a **ball rung lost the ball entirely**, including the `Ball
+/// <id>:` header §3.2 calls the conversation→ball join. So the prefill is what
+/// fires when nothing was typed, and the *"the goal is required"* refusal is
+/// unchanged where there is neither — the bare rung, whose prefill is empty by
+/// construction, is that same refusal rather than an arm of its own.
+pub(super) fn goal_or_prefill(tail: &str, prefill: &str, verb: &str) -> Result<String, String> {
+    match tail.trim() {
+        "" => required(prefill, verb, "the goal"),
+        typed => Ok(typed.to_owned()),
+    }
+}
+
 /// A tail that must be empty: the no-argument verbs' whole grammar.
 pub(super) fn none(tail: &str, verb: &str) -> Result<(), String> {
     let extra = tail.trim();

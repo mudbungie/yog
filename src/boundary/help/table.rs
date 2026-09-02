@@ -86,13 +86,19 @@ pub const ACTIONS: &[HelpRow] = &[
     },
     HelpRow {
         verb: "prompt",
-        usage: "/prompt <goal…>",
+        usage: "/prompt [<goal…>]",
         summary: "fire the prepared start with this goal, verbatim",
         detail: "Fires the detached `litany prompt` a `/prepare` made ready, with this goal as \
-                 its whole tail, verbatim. Refuses when nothing is prepared. At a seat with no \
-                 composer to hold it — a terminal, where each `yog gesture` is its own process — \
+                 the whole payload, verbatim — nothing is prepended to it. Say no goal and the \
+                 `/prepare` reply's own prefill fires instead, whole: the ball rung's `Ball \
+                 <id>: <title>` header and body, or the path rung's `Working directory: <dir>` \
+                 preamble. A bare start prepares no prefill, so there the goal is required. To \
+                 fire a prefill with words of your own, send the two joined as one goal — that \
+                 text is the reply's `prepared.goal`, and editing it is exactly what a seat with \
+                 a composer does. Refuses when nothing is prepared. At a seat with no composer \
+                 to hold it — a terminal, where each `yog gesture` is its own process — \
                  hand the `/prepare` reply's own `prepared` object back with `yog gesture \
-                 --prepared '<that object>' '/prompt <goal…>'`. The conversation keeps running \
+                 --prepared '<that object>' '/prompt [<goal…>]'`. The conversation keeps running \
                  whatever yog does. The receipt's `conversation` is the minted name, and a name \
                  is an address: hand it back at `--agent` to any conversation verb or read.",
     },
