@@ -1,6 +1,6 @@
 //! The conversation-addressed answers that are **one object rather than a
 //! listing**: the §11 seat's own view of its selection (REMOTE §9.4, bl-1eb0)
-//! and the policy that selection is frozen on (bl-13f9). Their own file beside
+//! and the policy that selection resolves (bl-13f9). Their own file beside
 //! the rest of the family, on the seam their spellings already take — a flat
 //! envelope of scalars, never a `rows` array.
 //!
@@ -8,8 +8,9 @@
 //! absent-not-null: an agent wearing every §6 mark with a class in flight, a
 //! full live mark and a strip, and one at rest wearing none (the arm where
 //! `marks`, `flight`, `seats` and `strip` are keys the encoder declines to
-//! write at all), and a governing config still standing at
-//! a lineage's tip beside the ordinary frozen one that has been left behind.
+//! write at all), and a conversation following its lineage beside one held on
+//! its fork commit by a divergence, which is the arm where `follows` is the
+//! key the encoder writes as null and the count rides in its place.
 
 use super::super::super::super::Reply;
 use crate::boundary::answer::agent::AgentView;
@@ -120,15 +121,18 @@ pub(super) fn agent() -> Vec<Reply> {
         Reply::Governing(GoverningConfig {
             oid: "b".repeat(40),
             short_oid: "bbbbbbbb".to_owned(),
-            branch_name_if_tip_of_one: Some("default".to_owned()),
+            governance: crate::config_edit::branch::Governance::Follows("default".to_owned()),
             files: vec!["workflow.yaml".to_owned(), "souls/base.md".to_owned()],
         }),
-        // The ordinary frozen case: the lineage has advanced past the commit,
-        // so it names no branch and the key is one the encoder writes as null.
+        // The held case (bl-e654): diverged lineages reach the conversation,
+        // so it follows none, `follows` is the key the encoder writes as null,
+        // and the count is what rides in its place.
         Reply::Governing(GoverningConfig {
             oid: "c".repeat(40),
             short_oid: "cccccccc".to_owned(),
-            branch_name_if_tip_of_one: None,
+            governance: crate::config_edit::branch::Governance::Held {
+                diverged_lineages: 2,
+            },
             files: vec![],
         }),
     ]

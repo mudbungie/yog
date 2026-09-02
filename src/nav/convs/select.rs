@@ -22,7 +22,8 @@
 //! new is asked, nothing is latched, and the answer changes in the same frame
 //! the selection does.
 //!
-//! What is **not** here is the selection's own detail — its config freeze, its
+//! What is **not** here is the selection's own detail — the config it
+//! resolves, its
 //! §6 marks, its §8.6 park, its `Nudge` gate. Those are facts about one agent
 //! rather than about the list, they gate no gesture (an unpainted button cannot
 //! be clicked), and they ride the standing `Query::Agent` at the seat

@@ -2,12 +2,18 @@
 //! the one write this module makes, and the reason every drone is born
 //! adjudicated.
 //!
-//! An agent's policy is its `workflow.yaml`, frozen at the config commit its
-//! branch forks off. So the control is authored **onto `config/default`, at
-//! every start**: a workspace created a moment ago and a workspace created last
-//! week both converge to a tip that names the shim, and every agent forked after
-//! that commit is controlled. Agents already running keep the policy they froze
-//! — that is litany's law, not a gap this could close.
+//! An agent's policy is its `workflow.yaml`, resolved from the config lineage
+//! its branch forked off — at that lineage's **head, at every step boundary**
+//! (litany's follow-the-tip ruling, upstream bl-403b; yog bl-e654). So the
+//! control is authored **onto `config/default`, at every start**: a workspace
+//! created a moment ago and a workspace created last week both converge to a
+//! tip that names the shim, and every agent on that lineage is controlled —
+//! including the ones already running, from their next step. That last clause
+//! is new. It used to read *agents already running keep the policy they froze*,
+//! and the convergence-at-every-start shape was the only reach this write had;
+//! the shape survives the ruling unchanged and now reaches further than it was
+//! designed to, which is the outcome to want from an inversion, not a reason to
+//! revisit it.
 //!
 //! **The ruling named a different file, and the tree says it cannot work.** The
 //! ruling authored the block into `<LITANY_HOME>/template/workflow.yaml`, on

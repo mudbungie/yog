@@ -86,8 +86,8 @@ impl AuthFailure {
     }
 
     /// The conversation banner's sentence — the one authoritative home for this
-    /// wording, beside the classification that decides it (the `frozen_label`
-    /// discipline of `config_edit::branch`). A routed failure states the row,
+    /// wording, beside the classification that decides it (the
+    /// `GoverningConfig::label` discipline of `config_edit::branch`). A routed failure states the row,
     /// so the operator reads the remedy instead of inferring it; an unrouted one
     /// keeps the sentence that was there before, which is exactly as much as is
     /// known. `No` has no banner and the caller does not paint one; a value is

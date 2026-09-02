@@ -10,11 +10,13 @@
 //! materialized into config would make `rm capability.yaml` mean "no rules",
 //! which is precisely the inversion the ruling forbids.
 //!
-//! **The live tip, never the governing commit.** An agent's `workflow.yaml` is
-//! frozen where its branch forked (litany ARCH §2.2), and that is right for the
-//! agent's own structure — but this is the *operator's* policy, and revocation
-//! that only bound conversations started afterwards would not be revocation. So
-//! the read is `config/default:capability.yaml` at its head, on every consult.
+//! **The live tip, on every consult.** This is the *operator's* policy, and a
+//! revocation that only bound conversations started afterwards would not be a
+//! revocation — so the read is `config/default:capability.yaml` at its head.
+//! That argument was once a **deviation** from litany's fork-is-the-freeze law
+//! and had to be justified as one; since the follow-the-tip ruling (upstream
+//! bl-403b; yog bl-e654) the engine resolves its own control the same way, and
+//! this read is the ordinary case rather than an exception to state.
 //!
 //! The grammar is four keys, flat and line-oriented — deliberately not a YAML
 //! subset with a parser to trust, and deliberately no new dependency:

@@ -63,12 +63,16 @@ pub enum Action {
     /// [`Message`](Self::Message) with an empty body: a deposit would put a
     /// second user turn on the wire saying what the first already said.
     Nudge { workspace: String, agent: String },
-    /// `litany retarget <ws> <agent>` — the §9.4 exit from the config freeze
-    /// (bl-2d19): mark this conversation to be re-forked onto the config
-    /// lineage's head, which its own executor lands at the next step boundary.
-    /// **No config name on the wire**: yog's picker writes one lineage and the
-    /// drift it offers this against is measured against that lineage's tip, so
-    /// naming a branch here would be a knob with one lawful value (§9.3).
+    /// `litany retarget <ws> <agent>` — the §9.4 **change of lineage**
+    /// (bl-2d19, re-scoped by bl-e654): mark this conversation to be re-forked
+    /// onto the config lineage's head, which its own executor lands at the next
+    /// step boundary. It is not how a config edit reaches a running
+    /// conversation — that needs no gesture at all, since control resolves the
+    /// followed lineage's tip at every step — it is how a conversation changes
+    /// *which* lineage it follows, and the one way out of a divergence holding
+    /// it on its fork commit. **No config name on the wire**: yog's picker
+    /// writes one lineage, and that lineage is the one lawful destination, so
+    /// naming a branch here would be a knob with one value (§9.3).
     Retarget { workspace: String, agent: String },
     /// `bl close <id> --as <name>` (§8.2) — `name` is the ball's bound
     /// workspace name (§3.2), never the operator `$USER`.

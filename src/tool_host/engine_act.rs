@@ -65,7 +65,7 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 /// at the conversation's working directory, which take the worktree lane
 /// ([`super::subject`]) and reach a consenting machine when the operator
 /// enrolled one. The lane's last rung calls [`perform`] below on them
-/// ([`super::subject::PERFORMED`], bl-5710), so the mechanism is shared and
+/// ([`super::subject::performs`], bl-5710), so the mechanism is shared and
 /// the *ordering* is what separates the two sets: an engine act never
 /// consults the roster, a worktree name always does. And `multi_tool`, which litany's
 /// own step loop fans out before any router sees it. A seventh row is a

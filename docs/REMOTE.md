@@ -1406,12 +1406,20 @@ so the server's box is the box subject locality already named. A co-located
 thrall is the *explicit* way to reach that box and still wins; the front door
 is the default, because a default install has no foot.
 
-**The rung's set is closed and enumerated in exactly one place in code**
-(`src/tool_host/subject.rs`, `PERFORMED`): `apply_patch`, `bash`, `read_file`.
-Three rows, each admitted by two facts together — its subject is the
-conversation's working tree, and the engine already ships an implementation of
-it. A fourth row is a deliberate act with both questions asked again, never a
-prefix test or a name shape.
+**The rung's set is closed, and since bl-e654 it is *derived* in exactly one
+place in code rather than listed** (`src/tool_host/subject.rs`, `performs`):
+`litany::cmd::BUILTIN_TOOLS` — the engine's own constant, exported since litany
+0.0.5, upstream bl-4cbb — **minus** `engine_act::NAMES`. The two admitting facts
+are unchanged and are now *stated by the partition itself*: a row's subject is
+the conversation's working tree (it is not an engine act), and the engine
+already ships an implementation of it (it is a builtin). What the partition
+leaves today is `apply_patch`, `bash` and `read_file` — three rows — and those
+literals live in the test that audits the partition, not in yog's prose or its
+source. yog restates no name it does not own, so an upstream builtin added or
+renamed moves the rung by moving the engine's constant, and reddens that one
+test rather than silently disagreeing with a stale copy. A fourth row is still a
+deliberate act with both questions asked again, upstream, and never a prefix test
+or a name shape.
 
 **Local config gates what a thrall enables**, and it is §5.2's document
 unchanged: `<yog-data-root>/tools.json` on the thrall's own box, operator
@@ -2904,7 +2912,7 @@ gain no boundary representation* is true of the letter and of the spirit.
   tree; the other three read something the seat already holds. Headless it is
   `/files [<path>] [--at <commit>]`, and the window's own pinned tab is the memo
   around that one answer rather than a second spelling of the same two arms.
-  **Config-frozen-at is the same shape and has no query at all yet** — when it
+  **The config tab is the same shape and has no query at all yet** — when it
   gets one it takes `at` for this reason, and that is a residual below rather
   than a decision left open.
 
@@ -3044,7 +3052,7 @@ named rather than open.
 
 - ~~The §11 inspector family is still read in process~~ — **landed, bl-13f9**,
   below.
-- ~~Config-frozen-at has no query~~ — **spelled, bl-13f9**, below.
+- ~~The config tab has no query~~ — **spelled, bl-13f9**, below.
 - ~~The Files preview reads its own two arms~~ — **dissolved, bl-13f9**, below.
 - **The workspace tab bar** (class 2) — ~~blocked on the raise's unenumerated
   focus~~ **unblocked, bl-7407**: focus is a name and the raise holds a claim, so
@@ -3079,7 +3087,7 @@ half is deliberately not on that list: `startable` /
 `resumable` and the composer's fire-time inputs are the acts side of bl-adcb's
 own line (*what crosses is the read, not the affordance*).
 
-**The §11 inspector family crossed, and config-frozen-at got its query
+**The §11 inspector family crossed, and the config tab got its query
 (bl-13f9).** Six tab reads — transcript, steps, one step's records, the worktree
 listing, the spine, the mail — plus the seventh the pin needed and nobody had
 spelled. The window's Altitude-2 pane derives nothing at all now; what is left in
@@ -3102,7 +3110,7 @@ spelled. The window's Altitude-2 pane derives nothing at all now; what is left i
   row index, because the number would index a listing that landed a round trip
   ago. That is `work_sel`'s own shape one tab over, and it is the general rule
   for a selection that is a query's parameter.
-- **Config-frozen-at is `Query::Governing { workspace, agent, at }`**, all three
+- **The config tab is `Query::Governing { workspace, agent, at }`**, all three
   serializations plus a help page, answered by `answer::inspector::governing`.
   `at` is the `Files` shape and for the same reason — it names *which commit*,
   which is the question and not the view — and absent it is the agent's own tip,
@@ -3111,6 +3119,22 @@ spelled. The window's Altitude-2 pane derives nothing at all now; what is left i
   siblings answer absent: the derivation is a walk of the workspace's git and
   fails as `Lineages` fails, and "this conversation has no policy" is never a
   reading. Headless it is `/governing [--at <commit>]`.
+
+  **The query survives the follow-the-tip ruling; what it *answers* inverted**
+  (yog bl-e654, upstream bl-403b/bl-e580, operator ruling 2026-09-01). The
+  address, the `at` selection and the refusal are untouched. The answer is no
+  longer the commit an agent is frozen on but the commit it **resolves**: DESIGN
+  §5.1 #17's followed-or-held derivation, where the fork's governing commit is
+  the input and the lineage's current tip is the answer. So the reply's shape
+  changed with it — the `"branch"` key, which used to say *the tip of the one
+  lineage this frozen commit happens to head*, is now **`"follows"`**: the name
+  of the lineage the conversation resolves, or `null` where it is held — beside
+  **`"diverged_lineages"`**, an integer that is `0` when followed and the count
+  of distinct config tips reaching the fork commit when held. One shape says
+  both arms, because a `null` name with a non-zero count is exactly what held
+  means. A seat renders it through `GoverningConfig::label()`'s two wordings and
+  composes no sentence of its own; nothing here reads litany's stderr notice,
+  and DESIGN §9.4 says why that is a rule and not an oversight.
 - **The pin stayed seat-side and §8.5 is still unamended.** Every field it shows
   is on an answer (bl-44e9's altitude work), so `shell/inspector/rail.rs` is two
   selections and nothing else: pick a notch out of the landed spine, cut the
@@ -3375,7 +3399,8 @@ seven above** — filed whole as **bl-b4b5**, and closed by it below.
   these ordinary reads rather than a class of their own.
 - **The misc singles** — `focused_pending` (the composer's §5.1 #11 queue),
   `agent_titles` (the §3.3 table a seat resolves a *third party* against), and
-  `config_tip` (the §2.2 lineage tip the §9.4 row's drift clause reads).
+  `config_tip` (the §2.2 lineage tip the §9.4 row's **apart** clause reads —
+  what a conversation's followed commit is compared against, since bl-e654).
 - **`staleness`, and the one thing in the tail that is not scope.** The §7.2
   staleness line is the age of `Snapshot::derived_at`, an `Instant`; the
   chokepoint takes `now_unix`, an `i64` minted at the process boundary
@@ -3837,6 +3862,37 @@ DESIGN §6 rule 7 holds the derivation and the reasoning. The wire's half:
   second change to a shape inside one cycle costs a second integer. That is
   cheap and honest; collapsing it would mean teaching the ledger what has been
   published, which nothing in this tree knows.
+
+### 9.12 Which config governs is an answer that moves (bl-e654)
+
+**`reply/governing` lost `branch` and gained `follows` and
+`diverged_lineages`, and its `oid` changed meaning.** `PROTOCOL` is **5**.
+
+litany's follow-the-tip ruling (upstream bl-403b, operator 2026-09-01) is
+DESIGN §9.4's subject; the wire's half is that one shape now says a different
+thing under the same verb, which is exactly §3's bump condition — *what a
+spelling already in use is taken to say*.
+
+- **`oid` was the fork commit and is the resolved one.** Before, it named the
+  `config/*` ancestor an agent's branch forked off, a commit that never moved.
+  Now it names the commit control actually reads at every step boundary: the
+  followed lineage's head. A seat that painted the old value as *what this
+  conversation runs* would keep painting, and would keep being wrong, which is
+  why the number has to move even though the key did not.
+- **One enum, two keys, and neither is redundant.** `follows` is the lineage's
+  name and `diverged_lineages` is `0`; or `follows` is `null` and the count is
+  how many distinct lineage tips reached the conversation and therefore held it
+  on its fork commit. The decoder rebuilds the enum off `follows` alone and
+  reads the count only where it can be non-zero, so the pair cannot decode to a
+  state the encoder could not have written. `null` rather than absent, matching
+  what the field it replaced spelled.
+- **The count is derived, never scraped.** litany announces the same fact on
+  its driver's stderr at every held step (`litany: notice: N diverged config
+  lineages reach […]`). yog does not read that line and grows no contract that
+  would let it: bl-b95e already deleted the marker table that classified
+  litany's sentences and ruled content a diagnosis, never a trigger. Both sides
+  run the same git query against the same refs, which is the one place the fact
+  lives.
 
 ## 10. Open questions (living)
 

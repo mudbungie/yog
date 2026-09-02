@@ -70,15 +70,20 @@ pub const DRIVING: &[HelpRow] = &[
     HelpRow {
         verb: "retarget",
         usage: "/retarget",
-        summary: "move the selected conversation onto the config this workspace runs now",
-        detail: "A conversation is frozen on the config commit it forked off, so a model you \
-                 picked afterwards governs the next conversation and not this one. This moves \
-                 this one (`litany retarget`): it marks the conversation, and the conversation's \
-                 own driver re-forks it onto the current config at its next step, replaying \
+        summary: "settle the selected conversation onto this workspace's config lineage",
+        detail: "You do not need this to make a config edit reach a running conversation: a \
+                 conversation follows its lineage's head at every step boundary, so a model you \
+                 pick now governs this one at its next step by itself. What this changes is \
+                 which *lineage* it follows — and it is the way out of the one state that has \
+                 no head to follow, where two or more lineages have diverged over the \
+                 conversation's fork point and it is held there until somebody says which. This \
+                 runs `litany retarget`: it marks the conversation, and the conversation's own \
+                 driver re-forks it onto this workspace's lineage at its next step, replaying \
                  everything it has already done on top — nothing is discarded and nothing is \
                  killed. It takes effect at that next step, never mid-step, which in practice is \
                  the message you send after it. Takes the workspace and the conversation from the \
-                 seat; litany declines it when the conversation is already on that config, or \
-                 when the target config does not describe the role it runs as.",
+                 seat; a conversation already on that lineage is a clean no-op litany reports for \
+                 itself, and litany declines the move when the target does not describe the role \
+                 it runs as.",
     },
 ];

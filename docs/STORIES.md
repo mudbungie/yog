@@ -136,7 +136,7 @@ trajectory no fixture snapshot can hold — a tick claims and spawns through rea
 `bl` and the real start flow, a later tick gives the claim back with the
 comparison on the trail, and a later one still does not retake that ball
 (bl-3988's law, the wedge this rung exists to catch) — and `beats_s10.sh` reads
-the drone's transcript, steps, step drill-in, files, rail, governing freeze and
+the drone's transcript, steps, step drill-in, files, rail, governing config and
 mail through their §8.5 lines. Its zero-token step is also the run's own no-wire
 proof, made on the one surface a spend would show up on.
 
@@ -1322,8 +1322,10 @@ Machine state: a conversation that did something surprising.
    is the same acknowledgement gesture as anywhere else (§6).
 2. **Six** tabs answer six questions: what was said (Transcript), what ran
    (Steps), what is waiting (Inbox), what was written (Files), what policy
-   governed it (Config — "policy frozen at `<short-oid>`", derived from git
-   ancestry, not from a stored pointer), and what an attempt actually changed
+   governs it (Config — `policy follows config/<name>, now at <short-oid>`, or
+   `policy held at <short-oid> — <n> diverged config lineages` where the lineage
+   has forked; derived from git, not from a stored pointer), and what an attempt
+   actually changed
    (Work). This rung said "five" until the attempt surface landed; Work is the
    one tab a history notch does not pin.
 3. Steps drill into meta / request / response / staging and per-tool input and
@@ -1340,11 +1342,23 @@ Machine state: a conversation that did something surprising.
    per-file preview *is* the file's bytes (bounded at 64 KiB, with a hit cap
    said outright and a binary declared opaque rather than mangled), so a toggle
    there would swap the bytes for the bytes. **Config** parses no file at all:
-   it names the commit policy is frozen at and lists that commit's tree, so
-   there is no file whose bytes it stands in front of. The cost of that
-   honesty, stated plainly: the frozen commit's *contents* are unreachable from
-   that tab — the §9.3 editor reads branch tips, not the ancestor an agent
-   forked off. Reading a file **as of a commit** is the history rung's job
+   it names the commit the conversation's policy resolves to and lists that
+   commit's tree, so there is no file whose bytes it stands in front of.
+
+   **The cost this rung used to state has mostly gone away** (yog bl-e654,
+   upstream bl-403b/bl-e580, operator ruling 2026-09-01). It read: *the frozen
+   commit's contents are unreachable from that tab — the §9.3 editor reads
+   branch tips, not the ancestor an agent forked off.* A conversation is no
+   longer pinned to that ancestor: it **follows** its config lineage, and what
+   this tab names is the lineage's tip. So in the ordinary case the §9.3 editor
+   is reading the very same commit, and the contents are one tab away — the
+   editor and this tab agree by construction rather than by luck. The residual
+   is the **held** case alone: where two config lineages have diverged over a
+   conversation's fork point, the derivation refuses to guess and resolves the
+   fork commit itself, which is a tip of nothing and so is unreachable from the
+   editor exactly as before. That is a state the model row offers a verb for
+   (`retarget` settles the lineage, DESIGN §9.4), which is a better answer than
+   a reader. Reading a file **as of a commit** is still the history rung's job
    (VISION V1: "selecting a notch pins the whole inspector to that commit"),
    which is one mechanism for every tab, not a per-frame `git show` per listed
    path bolted behind a checkbox — the per-frame git read this repo already
@@ -1541,11 +1555,25 @@ VISION V1 (bl-98da); the rung's authority for what it must do is that section.
    where the transcript's tail already sits (re-seated by bl-1802 — the ruling
    and its reasoning are VISION V1's "Re-seated by bl-1802" note).
 2. Selecting a notch **pins the whole inspector** to that commit: transcript as
-   of, agent-context files as of, config frozen at, budget folded to that point
+   of, agent-context files as of, the config, budget folded to that point
    (§5.1 #31). One commit, four reads, **no new mechanism per tab** — which is
-   the shape S7 point 3 named when it declined a per-tab checkbox, and it is why
-   the frozen commit's contents are reachable at last. The Raw toggle keeps
-   showing verbatim bytes of the pinned tree. Project files are not in that tree;
+   the shape S7 point 3 named when it declined a per-tab checkbox. The Raw
+   toggle keeps showing verbatim bytes of the pinned tree.
+
+   **The Config tab is the one "as of" this rung cannot honestly promise, and
+   it says so** (yog bl-e654, upstream bl-403b/bl-e580, operator ruling
+   2026-09-01). A conversation is no longer pinned to the config it forked off;
+   it follows its config lineage's tip at every step boundary. So *which config
+   governed step N* is now a fact about **when step N ran**, not one the pinned
+   commit's ancestry can be asked — the tab answers what governs this
+   conversation now, and no re-pointing of the same read recovers the other
+   question. What is exact at the notch is the policy's **effects**: the step's
+   own `request.json` carries the model id, the soul, the tools and the retry it
+   actually ran under, which is what a historian reading this rung is usually
+   after. The missing document is filed upstream rather than faked here (litany
+   bl-e4a0 records the resolved config commit in each step's `meta.json`), and
+   when it lands this tab gains the second reading with no new mechanism —
+   exactly the shape point 2 already has. Project files are not in that tree;
    naming a project commit a notch can join is bl-2b8c's, not this rung's.
 3. **The release reaches every pinnable tab**, because the pin does: an
    operator who pins and then opens Files must still be able to let go. The
@@ -1721,11 +1749,26 @@ implementation rulings recorded there.
    yog invents rides along.
 3. **The role is the model, and that is what keeps it honest.** litany binds a
    provider and a model id to a role in the `providers.yaml` of the config
-   commit governing the fork point, and nowhere else — so the composer lists
-   that ref's roles with the model each names, read from the file the run will
+   commit the run **resolves**, and nowhere else — so the composer lists that
+   point's roles with the model each names, read from the file the run will
    resolve against (§5.1 #33). A free model dropdown here could offer a model
    no config declares; giving an attempt one is a config write (§9.4), not a
    dispatch flag.
+
+   **Which commit that is, is a fork-point question with a follow-the-tip
+   answer** (yog bl-e654, upstream bl-403b/bl-e580, operator ruling
+   2026-09-01). A fork point settles the **lineage** a candidate will run on,
+   not the commit: `config/<name>` names that lineage outright, and `here`
+   inherits whichever lineage this conversation already follows. The roles this
+   composer lists are therefore the lineage tip's, which is what the run
+   resolves at its first step *and at every step after it* — a stronger promise
+   than the rung used to make, not a weaker one. A listing that had to be
+   re-read as "the roles this candidate is born with, until somebody edits the
+   config" is now simply "the roles this candidate runs under". The one case
+   where the listing and the run can part is the same one everywhere else in
+   this repo: a lineage that has **diverged** over the fork point, where the
+   derivation refuses to guess and the candidate is held on the fork commit
+   until `retarget` settles it (DESIGN §9.4).
 4. **×N repeats the gesture; it is not a gesture of its own.** The boundary
    grew one attempt-shaped `Fork` and Fire crosses it once per candidate, each
    with its own overrides. So one attempt and a parallel cohort are the same
@@ -1760,12 +1803,13 @@ Tests:
   pool's own layout, so a pinned skill lands where `load_skill` would have put
   it.
 - **S12-T2 fire-time-policy**: against a real fixture repo, the points are
-  `here` plus every config branch; each carries the roles its **governing**
-  config commit declares with the model each binds (worker on sonnet,
-  compactor on haiku, straight out of the file); and two ways a ref declares
-  nothing — no config lineage reaches it, or the lineage carries no
-  `providers.yaml` — both leave the point showing and offering nothing, which
-  is a fact about the workspace rather than a silence.
+  `here` plus every config branch; each carries the roles the config commit it
+  **resolves** declares with the model each binds (worker on sonnet, compactor
+  on haiku, straight out of the file) — §5.1 #17 whole, so a point on an
+  advanced lineage lists the tip's roles rather than an ancestor's; and two
+  ways a ref declares nothing — no config lineage reaches it, or the lineage
+  carries no `providers.yaml` — both leave the point showing and offering
+  nothing, which is a fact about the workspace rather than a silence.
 - **S12-T3 cohort-one-path**: ×N grows by cloning the last candidate and
   floors at one; skills toggle per candidate and a stale index edits nothing;
   readiness is one rule both seats refuse on; candidates born at one notch are

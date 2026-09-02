@@ -39,10 +39,11 @@ pub struct ForkPoint {
     pub label: String,
     /// What `--from` receives: the pinned commit oid, or `config/<name>`.
     pub refspec: String,
-    /// The roles this ref's **governing config commit** declares, each with
-    /// the provider row and model id it names. Read from that commit's
-    /// `providers.yaml` — the file litany itself resolves against — so the
-    /// model shown at the point of choice is the model that will run. Empty
+    /// The roles the config lineage governing this ref declares **at its
+    /// head**, each with the provider row and model id it names. Read from the
+    /// commit litany itself resolves against, at every step boundary since
+    /// follow-the-tip (bl-e654) — so the model shown at the point of choice is
+    /// the model that will run, and stays that as the lineage advances. Empty
     /// when the ref names no config lineage yog can reach: the composer then
     /// offers nothing to fire rather than guessing a role.
     pub roles: Vec<RoleModel>,
@@ -106,9 +107,10 @@ fn point(label: String, refspec: String, workspace: &Path) -> ForkPoint {
     }
 }
 
-/// The roles a ref's governing config commit declares (`providers.yaml`'s
-/// `roles:` block), each with its provider row and model id. Reuses §9.4's own
-/// grammar reader, so the picker and the fork composer can never disagree
+/// The roles the config a ref resolves declares (`providers.yaml`'s `roles:`
+/// block), each with its provider row and model id. Reuses §9.4's own grammar
+/// reader — and the same which-config-governs derivation every other surface
+/// asks — so the picker, the fork composer and the engine can never disagree
 /// about what a config file says.
 pub fn roles_at(workspace: &Path, refspec: &str) -> Vec<RoleModel> {
     let Ok(gov) = governing_config(workspace, refspec) else {

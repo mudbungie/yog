@@ -53,9 +53,11 @@ pub struct WsRow {
     ///
     /// A field rather than a query of its own, because it is a fact **about a
     /// workspace** exactly as [`running`](Self::running) is, and this is the
-    /// question that answers those. The §9.4 drift clause reads it against the
-    /// conversation's own frozen commit (`Query::Governing`), which is the
-    /// *other* fact and stays where it is.
+    /// question that answers those. The §9.4 apart clause reads it against the
+    /// commit the conversation itself resolves (`Query::Governing`), which is
+    /// the *other* fact and stays where it is — and since bl-e654 the two are
+    /// equal for every conversation following this workspace's lineage, which
+    /// is what makes their inequality worth a sentence.
     pub config_tip: Option<crate::model_pick::ConfigTip>,
 }
 

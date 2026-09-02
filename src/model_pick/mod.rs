@@ -17,7 +17,8 @@
 //! the [`query`] view-model over the live `bz --list-models` run, the [`pick`]
 //! one gesture produces and the gates it passes, the [`header`] row the
 //! conversation wears (the pair its
-//! two dropdowns show, plus the §9.4 drift clause), //! sentences the surface paints — kept here rather than in
+//! two dropdowns show, plus the §9.4 clause naming a conversation that resolves
+//! something else), //! sentences the surface paints — kept here rather than in
 //! the excluded shell so the scope claim the UI makes is testable, and so it
 //! has exactly one home.
 
@@ -33,8 +34,8 @@ pub(crate) mod tests;
 
 pub use grammar::{GrammarError, RoleModel};
 pub use header::{
-    ConfigPoint, ConfigTip, ModelRow, NEW_CONVERSATION_EXIT, RETARGET_EXIT, RETARGET_HOVER,
-    birth_row, conversation_row, row_role,
+    ConfigPoint, ConfigTip, ModelRow, RETARGET_EXIT, RETARGET_HOVER, birth_row, conversation_row,
+    row_role,
 };
 pub use pick::{Pick, PickError, plan, role_fault};
 
@@ -113,24 +114,30 @@ pub fn default_row(current: &str, rows: &[String]) -> Scoped {
     }
 }
 
-/// The scope sentence the picker paints **at the point of change** (§9.4). It
-/// says the thing the operator would otherwise get wrong: this advances a
-/// workspace-wide config branch, and the conversation in front of them keeps
-/// the policy it forked off.
+/// The scope sentence the picker paints **at the point of change** (§9.4, as
+/// inverted by bl-e654). It says the thing the operator would otherwise get
+/// wrong, and what that is has changed sides: the write is still
+/// workspace-wide, but the conversation in front of them does **not** keep the
+/// policy it forked off — it follows this lineage's head, so the pick lands on
+/// it at its next step along with every other conversation here.
+///
+/// `short_oid` is the head the pick advances **from**, which is what makes the
+/// sentence checkable against the row beside it rather than a promise.
 pub fn scope_sentence(workspace_leaf: &str, branch: &str, short_oid: &str) -> String {
     format!(
         "changes config/{branch} for the whole {workspace_leaf} workspace — \
-         it governs the NEXT conversation started here; this one stays frozen \
-         at {short_oid}"
+         every conversation following it, this one included, picks it up at \
+         its next step; advances from {short_oid}"
     )
 }
 
 /// The scope sentence the same picker paints when it is opened from the §11
 /// **birth-config block** — the surface for a conversation not started yet.
 ///
-/// [`scope_sentence`] is about a conversation already frozen ("this one stays
-/// frozen at …"), which is not a fact the birth block has. What the birth block
-/// must say instead is the one thing the operator would otherwise get wrong:
+/// [`scope_sentence`] is about conversations that already exist and will feel
+/// this write at their next step, which is not a fact the birth block has.
+/// What the birth block must say instead is the one thing the operator would
+/// otherwise get wrong:
 /// **there is no per-conversation pick to make.** litany's `litany prompt`
 /// takes no config argument and resolves the head of `config/<branch>` itself,
 /// so a start-time pick *is* the workspace default moving — the same write the

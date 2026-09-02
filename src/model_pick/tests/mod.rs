@@ -4,7 +4,7 @@
 //! half on the seam the production module already has — the roster
 //! [`query`](super::query), the
 //! composed [`plan`](super::plan) + the sentences the surface paints, the
-//! conversation [`header`](super::header) line and its drift clause, the
+//! conversation [`header`](super::header) line and its apart clause, the
 //! `models.yaml` read-back that judges a declared provider row (`validate`),
 //! the [`remedy`](super::remedy) a credential-shaped roster failure routes to,
 //! and the protocol-`capability` gate that keeps a row brazen ships but cannot

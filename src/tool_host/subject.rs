@@ -22,7 +22,7 @@
 //! normal install, because it actually holds the server's worktrees.
 //!
 //! **When no machine consents, the engine performs its own built-in**
-//! ([`PERFORMED`], REMOTE §5.4 as amended by bl-5710, operator ruling
+//! ([`performs`], REMOTE §5.4 as amended by bl-5710, operator ruling
 //! 2026-08-31: *ship some basic tools — a default install must be able to
 //! write a file*). The lane is a ladder, ordered by how explicit the
 //! operator's intent is: a consenting machine is an enrollment plus a
@@ -54,7 +54,7 @@
 //! **Front-door-only holds; ship-inert now stops short of the worktree.** The
 //! lane is still the same adjudicate → mailbox → execute → capture pipeline
 //! for a routed call, and the server still executes nothing **in its own
-//! process** — [`PERFORMED`] crosses the engine's front door as a child, which
+//! process** — a [`performs`] name crosses the engine's front door as a child, which
 //! is what §12's invariant asks. What changed is the posture's reach: a
 //! server that refuses every act on its own worktrees is not inert, it is
 //! dead, and the operator ruled that a default install writes a file.
@@ -67,21 +67,38 @@ use ::litany::cmd::{RoutedCall, RoutedCapture};
 use super::{Site, capture, loaded, remote};
 use crate::registry::roster::ClientRow;
 
-/// **The lane's last rung, closed and enumerated here and nowhere else**
-/// (bl-5710): the worktree names the engine itself implements, performed at
-/// its own front door when no machine consents to run them.
+/// **The lane's last rung, derived and not restated** (bl-5710, deduped
+/// bl-e654): whether `name` is a worktree name the engine itself implements,
+/// and so is performed at its own front door when no machine consents.
 ///
-/// Three rows, and each is admitted by the same two facts together: its
-/// subject is the conversation's working tree, which lives on the server's
-/// box; and `litany tool <name>` is an implementation the engine already
-/// ships, so performing it restates nothing. A pool name an operator granted
-/// is on neither footing — the engine has no implementation to reach — so it
-/// keeps the refusal that names the enrollment. A fourth row is a deliberate
-/// act with both questions asked again, never a prefix test or a name shape.
-/// The strings are yog's own spelling: the engine keeps its built-in
-/// constants crate-private, so the names cross as text exactly as they do in
-/// the model's `tool_use` block.
-pub const PERFORMED: [&str; 3] = ["apply_patch", "bash", "read_file"];
+/// It is one subtraction over two closed sets yog does not own halves of:
+///
+/// > `litany::cmd::BUILTIN_TOOLS` — the names `litany tool <name>` answers to,
+/// > exported by the engine since litany 0.0.5 for exactly this reader — MINUS
+/// > [`super::engine_act::NAMES`], the acts whose subject is the *conversation*
+/// > rather than its working tree.
+///
+/// The subtraction is total, and that is the claim worth attacking: a name the
+/// engine implements is performed by the engine either way, and the only
+/// question yog answers is **which lane reaches it** — an engine act never
+/// consults the roster, a worktree name always does. So there is no third
+/// class to fall through to, and a built-in the engine adds lands on the
+/// worktree lane by default, where a consenting machine still outranks it.
+/// Classifying one as conversation-subject is the deliberate act, and its
+/// home is `engine_act`'s own enumerated set. `engine_act` is the wider of the
+/// two only because it also carries the compactor's injected procedure pair,
+/// which is no built-in at all; subtracting those from a set that never held
+/// them costs nothing.
+///
+/// Until 0.0.5 the engine kept these names crate-private and this was three
+/// string literals — a second spelling of somebody else's closed set, which is
+/// the drift the export exists to end. What the literals still pin is the
+/// **audit**, in `subject/tests/engine.rs`: the partition's three members by
+/// name, so a set that moves upstream reddens a test instead of changing yog's
+/// behavior in silence.
+pub fn performs(name: &str) -> bool {
+    ::litany::cmd::BUILTIN_TOOLS.contains(&name) && !super::engine_act::is(name)
+}
 
 /// Where one workspace-subject attempt is executed, once the roster has been
 /// read. Three outcomes because the lane has three: a machine the operator
@@ -89,7 +106,7 @@ pub const PERFORMED: [&str; 3] = ["apply_patch", "bash", "read_file"];
 enum Lane {
     /// Route to this machine, with the conversation's cwd on the invocation.
     Machine(Box<loaded::Entry>),
-    /// Perform it here, at the engine's front door ([`PERFORMED`]).
+    /// Perform it here, at the engine's front door ([`performs`]).
     Engine,
     /// Nothing can run it; this is what the model reads instead.
     Refused(String),
@@ -140,7 +157,7 @@ fn verdict(roster: &[ClientRow], name: &str) -> Lane {
     }
     match consenting.len() {
         1 => Lane::Machine(Box::new(consenting.remove(0))),
-        0 if PERFORMED.contains(&name) => Lane::Engine,
+        0 if performs(name) => Lane::Engine,
         0 => Lane::Refused(refusal::unconsented(name, &advertisers)),
         _ => Lane::Refused(refusal::ambiguous(
             name,

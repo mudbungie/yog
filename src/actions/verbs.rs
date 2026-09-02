@@ -156,17 +156,19 @@ pub fn stop(
     )
 }
 
-/// `litany retarget <ws> <agent>` — the §9.4 exit from the config freeze
-/// (bl-2d19). It writes a ref mark and returns; the conversation's **own**
-/// executor consumes it at its next step boundary, re-forking the branch onto
-/// the marked config commit and replaying its work on top. Piped, not detached,
-/// for `dispatch`'s reason: a refusal — an agent the workspace has not got, a
-/// role the target config does not describe — must come back in litany's own
-/// words rather than as a click that did nothing.
+/// `litany retarget <ws> <agent>` — the §9.4 **change of lineage** (bl-2d19,
+/// re-scoped by bl-e654). It writes a ref mark and returns; the conversation's
+/// **own** executor consumes it at its next step boundary, re-forking the
+/// branch onto the marked config commit and replaying its work on top. Piped,
+/// not detached, for `dispatch`'s reason: a refusal — an agent the workspace
+/// has not got, a role the target config does not describe — must come back in
+/// litany's own words rather than as a click that did nothing. A conversation
+/// already on that lineage is litany's own clean no-op, reported the same way,
+/// which is why yog models no such state.
 ///
 /// No `--config`: litany defaults to the `default` lineage, which is the one
-/// yog's picker writes and the one the drift this verb answers is measured
-/// against (§9.3, §9.4).
+/// yog's picker writes and therefore the only lawful destination a seat could
+/// name (§9.3, §9.4).
 pub fn retarget(litany: &Bound, state_root: &Path, ts: &str, agent: &str) -> io::Result<Outcome> {
     let ws_s = litany.workspace_arg();
     run_logged(

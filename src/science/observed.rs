@@ -24,7 +24,7 @@ const AGENTS_DIR: &str = "agents";
 
 /// What the bound conversation can be asked — every column of the projection
 /// that is a fact about the *agent* rather than about the refs. Default is the
-/// honest answer for an attempt with no conversation: nothing was frozen,
+/// honest answer for an attempt with no conversation: nothing was fired,
 /// nothing was spent and nothing was said.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(super) struct Observed {
@@ -72,11 +72,12 @@ fn goal(workspace: &Path, agent: &str) -> Option<String> {
     std::fs::read_to_string(path).ok()
 }
 
-/// The config commit this agent is frozen on (§5.1 #17) — the walk from its own
-/// branch tip, exactly as the §11 Config tab asks it. `None` for an agent the
-/// snapshot does not carry and for a workspace whose git will not answer: the
-/// projection says the freeze is unreadable rather than naming some other
-/// commit.
+/// The config commit this agent resolves (§5.1 #17) — the derivation from its
+/// own branch tip, exactly as the §11 Config tab asks it, and therefore the
+/// followed lineage's head rather than the fork commit (bl-e654). `None` for an
+/// agent the snapshot does not carry and for a workspace whose git will not
+/// answer: the projection says the config is unreadable rather than naming some
+/// other commit.
 fn governing(snap: &Snapshot, workspace: &Path, agent: &str) -> Option<String> {
     let tip = snap
         .trees

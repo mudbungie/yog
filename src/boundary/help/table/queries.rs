@@ -68,18 +68,24 @@ pub const QUERIES: &[HelpRow] = &[
     HelpRow {
         verb: "governing",
         usage: "/governing [--at <commit>]",
-        summary: "the config commit this conversation is frozen on, and what it holds",
-        detail: "Every conversation forks off a commit of a `config/*` lineage and keeps running \
-                 that commit's policy however far the lineage moves on afterwards. This answers \
-                 which commit that is — short and full — whether it is still some lineage's own \
-                 tip (named if so, and absent once the branch has advanced past it, which is the \
-                 ordinary frozen case), and every path its tree holds: the souls, the workflow, \
-                 the manifest, the provider table and the descriptions the conversation is \
-                 actually running under. `--at` asks the same question of a different commit — \
-                 the same policy-as-of the window's notch pin shows — and bare it is the \
-                 conversation's own branch tip, so a seat need not know one to ask. A workspace \
-                 that cannot be read, and a commit that forks off no config lineage at all, are \
-                 each said outright: a conversation with no policy is not a reading.",
+        summary: "the config commit this conversation resolves its policy from, and what it \
+                  holds",
+        detail: "A conversation forks off a commit of a `config/*` lineage, and the fork settles \
+                 which lineage governs it — not which commit. Control then resolves that \
+                 lineage's current head at every step boundary, so an edit you make now reaches \
+                 this conversation at its next step, with nothing to press. This answers which \
+                 commit it resolves — short and full — which lineage it follows, and every path \
+                 that commit's tree holds: the souls, the workflow, the manifest, the provider \
+                 table and the descriptions it is actually running under. When two or more \
+                 lineages have diverged over its fork point there is no one head to follow, so \
+                 it is held on that fork commit and the answer says how many reached it; \
+                 `/retarget` is what settles that. `--at` starts the walk from a different \
+                 commit and bare it is the conversation's own branch tip, so a seat need not \
+                 know one to ask — but it names a rev, not a moment: policy as of an earlier \
+                 step is no longer derivable from ancestry, and what records it is each step's \
+                 own request. A workspace that cannot be read, and a commit that forks off no \
+                 config lineage at all, are each said outright: a conversation with no policy is \
+                 not a reading.",
     },
     HelpRow {
         verb: "rail",
@@ -109,7 +115,7 @@ pub const QUERIES: &[HelpRow] = &[
                   be done to it",
         detail: "One conversation's own facts, as any seat paints them: the id and the \
                  conversation it belongs to, the name it goes by — and whether that name is one \
-                 peers can actually address it with — the commit its policy is frozen against, \
+                 peers can actually address it with — the commit its policy resolves from, \
                  whether it is running right now, the marks it wears (notified, over budget, in \
                  conflict, holding a tool call, abandoned), what kind of work is in flight \
                  anywhere beneath it, and whether Stop and its children cascade are offered. A \

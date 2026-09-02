@@ -167,11 +167,12 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
             Reply::Rail(inspector::rail(snap, ws, agent, &steps, &tx))
         }
         Query::Inbox { .. } => Reply::Inbox(crate::inboxview::list_inbox(ws, agent)),
-        // Config-frozen-at (VISION V1.2, bl-13f9): the §5.1 #17 derivation
-        // asked at whichever commit the seat named, the agent's tip when it
-        // named none. It **refuses** where its siblings answer absent, because
-        // its walk is the workspace's own git and a conversation with no
-        // policy at all is not a reading (the `Lineages` shape).
+        // Which config governs (VISION V1.2, bl-13f9; follow-the-tip,
+        // bl-e654): the §5.1 #17 derivation asked at whichever commit the seat
+        // named, the agent's tip when it named none. It **refuses** where its
+        // siblings answer absent, because its walk is the workspace's own git
+        // and a conversation with no policy at all is not a reading (the
+        // `Lineages` shape).
         Query::Governing { at, .. } => {
             return inspector::governing(snap, ws, agent, at.as_deref()).map(Reply::Governing);
         }

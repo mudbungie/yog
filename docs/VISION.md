@@ -558,6 +558,22 @@ presentation.
    acceptance mark now rides the **claim** attempt too, since an N = 1 start
    whose acceptance cannot be read would be item 8's "not a case" made a case.
 
+   **Amended: the config commit is no longer a frozen input** (yog bl-e654,
+   upstream bl-403b/bl-e580, operator ruling 2026-09-01). `goal` and `pins`
+   really are fork-time artifacts and stay in the list above; the config commit
+   is not one any more. Fork settles only which config *lineage* governs, and
+   control resolves from that lineage's tip at every step boundary — so what
+   this projection can derive is the commit an attempt **follows now**, never
+   the one it ran under then. The honest reading of the column is therefore
+   *the policy this attempt resolves*, and the per-step provenance the freeze
+   used to give away for free is a filed gap rather than a silent one (litany
+   bl-e4a0 records the resolved config commit in each step's `meta.json`). What
+   survives exactly — and is what the projection actually compares candidates
+   on — is the policy's **effects**: each step's `request.json` carries the
+   model id, soul, tools and retry the step really ran under, so "model and
+   skills ride it" stays true of the record even where the document is not
+   recoverable.
+
 8. **Bare, path, and ball.** A bare start binds nothing — tools run in the
    agent worktree, the general path with empty inputs. A path start binds
    the named directory (typed, not prose) with no delivery obligation — no
@@ -745,9 +761,17 @@ Machine state: a conversation with history worth walking.
    notch is where S7 already lives. It is drawn **through** the chat — one
    horizontal rule per operable commit — not beside it (bl-1802, below).
 2. Selecting a notch pins the agent-history inspector to that commit:
-   transcript as of, **agent-context** files as of, config-frozen-at, budget
+   transcript as of, **agent-context** files as of, the config, budget
    folded to that point. The Raw toggle keeps showing verbatim bytes of the
-   pinned tree. Project files are not in that tree and never will be (§4.10
+   pinned tree. **The config tab is the one "as of" this surface cannot
+   honestly promise** (yog bl-e654, upstream bl-403b/bl-e580, operator ruling
+   2026-09-01): a conversation is no longer pinned to the config it forked off,
+   it follows its lineage's tip at every step boundary, so the tab answers what
+   governs the conversation *now* rather than what governed the pinned step.
+   Per-step policy provenance is a fact about when the step ran and is filed
+   upstream rather than faked here (litany bl-e4a0 — the resolved config commit
+   recorded in each step's `meta.json`); what is exact at the notch today is the
+   policy's effects, which the step's own `request.json` already carries. Project files are not in that tree and never will be (§4.10
    item 4 — the join is by pointer): "project as of" resolves the step
    record's observed project OID against the project repo, and renders only
    once the bl-d0b4 pin lands; until then the surface stays honestly absent.
@@ -896,9 +920,12 @@ amend items 2 and 3 above and are the authority over their first wording:
   provenance, not less.
 - **"Model" is the *role*, and that is what makes it honest.** litany binds a
   provider and a model id to a role in the `providers.yaml` of the config
-  commit governing the fork point, and nowhere else. The composer therefore
-  lists the roles that ref declares *with the model each names*, read from the
-  very file the run will resolve against. Giving an attempt a model no config
+  commit the run **follows**, and nowhere else — since bl-403b that is the
+  commit resolved at every step boundary from the lineage the fork point
+  settles, not the fork point itself. The composer therefore lists the roles
+  that lineage's tip declares *with the model each names*, read from the very
+  file the run will resolve against, and it keeps being that file for the whole
+  run rather than only for its first step. Giving an attempt a model no config
   declares is a config write (§9.4's picker), not a dispatch flag — item 2's
   "model (existing picker)" as a fire-time control would have been a dropdown
   that could lie, which is exactly the capability theater item 4 forbids.

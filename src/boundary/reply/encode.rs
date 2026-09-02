@@ -225,14 +225,18 @@ fn enrolled_reply(enrolled: &crate::registry::enroll::Enrolled) -> Value {
     })
 }
 
-/// The config-frozen-at answer (bl-13f9). The oid rides both ways — short is
-/// what a pane labels the freeze with, full is what a `git show` outside yog
-/// takes — exactly as a lineage row's tip does.
+/// The which-config-governs answer (bl-13f9; follow-the-tip, bl-e654). The oid
+/// is the **resolved** commit's and rides both ways — short is what a pane
+/// labels with, full is what a `git show` outside yog takes — exactly as a
+/// lineage row's tip does. `follows` and `diverged_lineages` are the two faces
+/// of one enum: a name and `0`, or `null` and the count that held it.
 fn governing(gov: &crate::config_edit::branch::GoverningConfig) -> Value {
     json!({
         "ok": true, "kind": "governing",
         "oid": gov.oid, "short_oid": gov.short_oid,
-        "branch": gov.branch_name_if_tip_of_one, "files": gov.files,
+        "follows": gov.followed_lineage(),
+        "diverged_lineages": gov.diverged_lineages(),
+        "files": gov.files,
     })
 }
 

@@ -14,7 +14,7 @@
 use serde_json::{Map, Value};
 
 use super::super::Reply;
-use crate::boundary::codec::fields::{opt_str_of, opt_val, str_of, strings_of};
+use crate::boundary::codec::fields::{opt_str_of, opt_val, str_of, strings_of, usize_of};
 
 /// The §11 answers, plus the work diff that shares their shape. `None`
 /// when the kind is not one of them.
@@ -55,15 +55,25 @@ fn files(o: &Map<String, Value>) -> Result<Reply, String> {
     })
 }
 
-/// The config-frozen-at answer (bl-13f9). `branch` is the lineage whose tip the
-/// governing commit still *is*, and its absence is the ordinary frozen case —
-/// the field is optional here for the same reason it is `Option` on the type.
+/// The which-config-governs answer (bl-13f9; follow-the-tip, bl-e654).
+/// `follows` names the lineage whose tip the conversation resolves — the
+/// ordinary case — and its **absence is the held one**, which is why the
+/// enum is rebuilt off that key alone: `diverged_lineages` is read only where
+/// it can be anything but zero, so the two fields cannot decode to a state the
+/// encoder could not have written.
 fn governing(o: &Map<String, Value>) -> Result<Reply, String> {
+    use crate::config_edit::branch::Governance;
+    let governance = match opt_str_of(o, "follows")? {
+        Some(branch) => Governance::Follows(branch),
+        None => Governance::Held {
+            diverged_lineages: usize_of(o, "diverged_lineages")?,
+        },
+    };
     Ok(Reply::Governing(
         crate::config_edit::branch::GoverningConfig {
             oid: str_of(o, "oid")?,
             short_oid: str_of(o, "short_oid")?,
-            branch_name_if_tip_of_one: opt_str_of(o, "branch")?,
+            governance,
             files: strings_of(o, "files")?,
         },
     ))

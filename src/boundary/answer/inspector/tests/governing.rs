@@ -1,5 +1,5 @@
-//! Config-frozen-at as a *query* (VISION V1.2; REMOTE §9.7, bl-13f9), over a
-//! real config lineage. The §5.1 #17 fold itself is pinned in
+//! Which-config-governs as a *query* (VISION V1.2; REMOTE §9.7, bl-13f9), over
+//! a real config lineage. The §5.1 #17 derivation itself is pinned in
 //! `config_edit::branch::tests::governing`; what is pinned here is the one
 //! thing this layer adds — **which commit the walk starts from** — and the
 //! refusal that stands where the family's other reads answer absent.
@@ -36,34 +36,48 @@ fn world() -> (Fixture, crate::app::Snapshot) {
 fn an_unnamed_commit_is_the_agents_own_tip() {
     let (fx, snap) = world();
     let gov = governing(&snap, &fx.path, AGENT, None).expect("the fork point is derivable");
-    assert_eq!(gov.branch_name_if_tip_of_one.as_deref(), Some("default"));
+    assert_eq!(gov.followed_lineage().as_deref(), Some("default"));
     assert!(gov.files.contains(&"version".to_owned()));
 }
 
 /// Pinned, the commit is the one the seat named and nothing about the agent is
-/// read — VISION V1.2's fold, spelled as a selection. Asked at a commit the
-/// lineage has since advanced past, the answer freezes there and names no
-/// branch, which is the pin's whole point.
+/// read — VISION V1.2's fold, spelled as a selection.
+///
+/// **What the pin can and cannot buy, since bl-e654.** It still chooses the
+/// rev the walk starts from, which is the only thing this layer adds. What it
+/// no longer buys is an *as-of policy*: under follow-the-tip the answer is the
+/// followed lineage's current head whatever rev the walk starts from on that
+/// lineage, so an unpinned read and a read pinned to an older commit of the
+/// same lineage agree — and both move when the lineage advances. Per-step
+/// policy provenance is not derivable from ancestry any more; litany filed it
+/// (their bl-e4a0, the resolved commit recorded in each step's `meta.json`),
+/// and what survives meanwhile is that each step record carries the policy's
+/// byte-for-byte effects. Asserting the old freeze here would pin a fact the
+/// engine stopped producing.
 #[test]
 fn a_named_commit_is_the_one_the_walk_starts_from() {
     let (fx, snap) = world();
-    let frozen = governing(&snap, &fx.path, AGENT, None)
+    let at_fork = governing(&snap, &fx.path, AGENT, None)
         .expect("the fork point")
         .oid;
     fx.commit_other("workflow.yaml", "events: {}\n");
-    let advanced = governing(&snap, &fx.path, AGENT, None).expect("still derivable");
-    assert_eq!(advanced.oid, frozen, "the agent's own tip has not moved");
-    // The same question asked at the lineage's *new* head answers that commit
-    // instead, still-a-tip and carrying the file the advance added.
     let head = crate::config_edit::branch::config_branches(&fx.path)
         .unwrap()
         .into_iter()
         .find(|b| b.name == "default")
         .unwrap()
         .tip_oid;
-    let pinned = governing(&snap, &fx.path, AGENT, Some(&head)).expect("derivable at the head");
+    // The conversation followed the advance: unpinned, the answer is the new
+    // head and carries the file the edit added.
+    let advanced = governing(&snap, &fx.path, AGENT, None).expect("still derivable");
+    assert_ne!(advanced.oid, at_fork, "the lineage moved and it followed");
+    assert_eq!(advanced.oid, head);
+    assert!(advanced.files.contains(&"workflow.yaml".to_owned()));
+    // Pinned to the commit the conversation forked off, the walk starts there
+    // and resolves the same followed head — the selection chooses the rev, not
+    // a moment in policy.
+    let pinned = governing(&snap, &fx.path, AGENT, Some(&at_fork)).expect("derivable at the fork");
     assert_eq!(pinned.oid, head);
-    assert!(pinned.files.contains(&"workflow.yaml".to_owned()));
 }
 
 /// It **refuses** where its siblings answer absent: an agent the snapshot does

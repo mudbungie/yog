@@ -39,7 +39,7 @@
 //! and consents to workspace-cwd execution, with the conversation's resolved
 //! cwd on the invocation. Where no machine consents, the lane's last rung is
 //! the engine's own front door for the three names the engine implements
-//! ([`subject::PERFORMED`]), so a default install writes a file with nothing
+//! ([`subject::performs`]), so a default install writes a file with nothing
 //! enrolled; every other name is refused in band, naming the way out.
 //!
 //! **Adjudication is untouched and still runs first.** `yog tool-control`

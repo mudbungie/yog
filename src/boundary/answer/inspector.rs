@@ -1,6 +1,6 @@
 //! The §11 **inspector family's** derivations (bl-6233, REMOTE §9 step 1;
 //! extended bl-13f9) — one conversation's transcript, steps, files, spine,
-//! mail and the policy it is frozen on.
+//! mail and the policy it resolves.
 //!
 //! These surfaces were reachable from no seat but the window: the frame's
 //! view-models read disk directly, so the chats themselves had no headless
@@ -145,14 +145,15 @@ fn listed(view: &FilesView, path: &str) -> bool {
     }
 }
 
-/// The config commit this conversation is frozen on (§9.3, §5.1 #17) —
-/// **at the commit `at` names, or at the agent's own branch tip** (VISION V1.2
-/// config-frozen-at; REMOTE §9.7, bl-13f9).
+/// The config commit this conversation resolves its policy from (§9.3, §5.1
+/// #17) — **at the commit `at` names, or at the agent's own branch tip**
+/// (VISION V1.2 config-frozen-at; REMOTE §9.7, bl-13f9).
 ///
 /// One derivation with the commit as a parameter, the [`files`] shape: pinned
 /// and unpinned differ only in *which* commit the walk starts from, and the
 /// window's Config tab used to make that choice in process because no query
-/// spelled it. `None` resolves to the tip off the published snapshot, so a seat
+/// spelled it. Since bl-e654 that walk ends in the followed lineage's head
+/// rather than the fork commit, so both readings move when the lineage does. `None` resolves to the tip off the published snapshot, so a seat
 /// asks without knowing one — and an agent the snapshot does not carry has an
 /// empty tip, which the derivation refuses in git's own words rather than
 /// answering about some other commit.
@@ -213,9 +214,9 @@ pub fn speaker(agents: &[Agent], agent: &str) -> String {
 
 /// One child's card inputs. Its spend is the **per-agent** fold of
 /// `steps/<id>` (VISION V1.5), so a fork's shared prefix cost stays with the
-/// ancestor; its config label is the governing-config derivation (§5.1 #17),
-/// which names a branch only while the governing commit is still that branch's
-/// tip.
+/// ancestor; its config label is the which-config-governs derivation (§5.1
+/// #17), which names the lineage the child FOLLOWS — absent only where a
+/// divergence holds it and there is no one lineage to name (bl-e654).
 fn child_input(ws: &Path, agents: &[Agent], child: &Agent) -> ChildInput {
     ChildInput {
         agent_id: child.agent_id.clone(),
@@ -226,7 +227,7 @@ fn child_input(ws: &Path, agents: &[Agent], child: &Agent) -> ChildInput {
         tokens: total(&bills(ws, &Scope::Agent(child.agent_id.clone()))).total_tokens(),
         config_label: governing_config(ws, &child.tip_oid)
             .ok()
-            .and_then(|gov| gov.branch_name_if_tip_of_one),
+            .and_then(|gov| gov.followed_lineage()),
     }
 }
 

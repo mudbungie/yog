@@ -1,4 +1,4 @@
-//! The conversation's **model row** (§11) and its §9.4 drift clause. "Header"
+//! The conversation's **model row** (§11) and its §9.4 apart clause. "Header"
 //! here names the row's shape — what the two dropdowns show, plus the hover and
 //! the clause around them — not a seat: the row sits in the bottom settings
 //! rows since the settings-seat ruling (§11, bl-2e18).
@@ -9,19 +9,29 @@
 //! at <oid>`, and no *change…* button — it carries the pair, in two live
 //! dropdowns, and the facts that used to crowd it ride the hover.
 //!
-//! **What the dropdowns show is what they write: the workspace default.** A
-//! conversation is frozen on the config commit its branch forked off, and that
-//! is the invariant, not the bug (§9.4) — but a control that displayed the
-//! frozen pair would report a write it just made as a no-op, because the tip
-//! moves and the freeze cannot. So the pair shown is the config branch tip's,
-//! and the freeze is stated beside it exactly when the two have parted.
+//! **What the dropdowns show is what they write, and now also what this
+//! conversation runs.** The pair shown is the config lineage tip's. That used
+//! to need an argument — a control displaying the frozen pair would report a
+//! write it just made as a no-op — and since litany's follow-the-tip ruling it
+//! needs none: control resolves the lineage's head at every step boundary
+//! (bl-e654, upstream bl-403b), so the tip's pair *is* the conversation's pair,
+//! and a pick lands on the conversation in front of the operator at its next
+//! step.
 //!
-//! **Drift is derived, never stored.** It is the inequality of two oids the
-//! caller already holds: the conversation's governing commit (§5.1 #17) and the
-//! workspace's config-lineage tip, which the §7 snapshot already carries. No
-//! field records it and no write follows from it — and in particular there is
-//! no mid-conversation adoption, which would break the very freeze the clause
-//! exists to explain (bl-9786).
+//! **The clause survived the inversion by changing sides** (bl-e654). It is
+//! still one derived inequality over two oids the caller already holds — the
+//! commit this conversation resolves (§5.1 #17, now the followed one) against
+//! the workspace lineage's tip, which the §7 snapshot already carries — and
+//! still nothing is stored. What differs is what the inequality MEANS. It can
+//! no longer mean *frozen behind*, because following is the default; it can
+//! only mean this conversation does not resolve this workspace's lineage — it
+//! is held on a divergence, or it follows another one. Both are the states
+//! `retarget` exists for, which is why the one exit rides here.
+//!
+//! **Why a clause at all, still.** bl-9786's lesson outlived the doctrine it
+//! was filed under: the scope sentence is read at the moment of the *write* and
+//! the surprise arrives at the moment of the *read*, so the fact belongs on the
+//! row an operator comes back to, not in a caption they saw once.
 
 use super::{WORKER_ROLE, grammar};
 
@@ -63,8 +73,8 @@ impl ConfigPoint {
 }
 
 /// The model row as painted (§11): what the two dropdowns show, the hover that
-/// explains the freeze, and — only when the workspace default has moved past
-/// this conversation — the clause naming what this one is actually frozen on.
+/// explains the scope, and — only when this conversation does not resolve this
+/// workspace's lineage — the clause naming what it resolves instead.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ModelRow {
     /// The provider row the config branch tip assigns — the provider dropdown's
@@ -73,19 +83,19 @@ pub struct ModelRow {
     /// The model id the tip assigns — the model dropdown's selection.
     pub model: String,
     pub hover: String,
-    /// Drift, derived (never stored): the sentence naming the frozen pair, and
-    /// with it the two exit affordances, offered exactly here and nowhere else
-    /// — an undrifted conversation already runs the current config, so it has
-    /// nothing to escape.
-    pub drift: Option<String>,
+    /// Derived, never stored: the sentence naming the pair this conversation
+    /// actually resolves, and with it [`RETARGET_EXIT`], offered exactly here
+    /// and nowhere else — a conversation following this lineage already runs
+    /// what the dropdowns show, so there is nothing to settle.
+    pub apart: Option<String>,
 }
 
 impl ModelRow {
-    /// Whether the workspace default has parted from this conversation — the
-    /// one condition [`NEW_CONVERSATION_EXIT`] and [`RETARGET_EXIT`] are
+    /// Whether this conversation resolves something other than this
+    /// workspace's config lineage tip — the one condition [`RETARGET_EXIT`] is
     /// offered under.
-    pub fn drifted(&self) -> bool {
-        self.drift.is_some()
+    pub fn is_apart(&self) -> bool {
+        self.apart.is_some()
     }
 }
 
@@ -93,58 +103,61 @@ impl ModelRow {
 /// role: the pair is absent, and absence is a value.
 const NO_ROW: &str = "(none)";
 
-/// The exit that **discards** (bl-9786), labelled with what it does rather than
-/// with where it goes: the affordance only focuses the composer's existing
-/// new-conversation verb, so it is a pointer at a gesture, not a second way to
-/// start a conversation.
-pub const NEW_CONVERSATION_EXIT: &str = "new conversation uses the current config";
-
-/// The exit that **keeps** (bl-2d19), beside it: litany's own `retarget` verb,
-/// which re-forks this conversation off the config commit the workspace runs
-/// now and replays every commit it has made onto that base — so its whole
-/// history survives the move. Offered under the same condition, because an
-/// undrifted conversation is already there.
-pub const RETARGET_EXIT: &str = "move this conversation onto the current config";
+/// **The clause's one exit** (bl-2d19, left alone by bl-e654): litany's own
+/// `retarget` verb, which re-forks this conversation onto the lineage this
+/// workspace runs and replays every commit it has made onto that base — so its
+/// whole history survives the move.
+///
+/// It used to stand beside a second, *new conversation uses the current
+/// config*, and bl-9786 ruled them a strip of peers with this one leading
+/// because discarding a history is the larger act. The peer is **gone**
+/// (bl-e654): it was the escape from a freeze, and there is no freeze to
+/// escape — a conversation that merely wants the current config already has
+/// it. What is left here is a conversation that resolves a different lineage or
+/// none, and starting a new one settles nothing about this one.
+pub const RETARGET_EXIT: &str = "settle this conversation onto this workspace's config lineage";
 
 /// What pressing that says (§11 discoverability rule 3, which is also where its
 /// keyboard spelling is named): the verb, its timing, and the one thing an
 /// operator must know before spending it — that nothing is thrown away.
-pub const RETARGET_HOVER: &str = "Mark this conversation to be re-forked onto the config \
-    this workspace runs now (litany retarget). It keeps every message: the \
-    re-fork lands at the conversation's next step, with the work it has already \
-    done replayed on top. Type /retarget to do it without the mouse.";
+pub const RETARGET_HOVER: &str = "Mark this conversation to be re-forked onto the config lineage \
+    this workspace runs (litany retarget) — you do not need this for an edit to \
+    the lineage it already follows, which reaches it on its own. It keeps every \
+    message: the re-fork lands at the conversation's next step, with the work it \
+    has already done replayed on top. Type /retarget to do it without the mouse.";
 
-/// Compose the conversation's model row from its governing config and the
-/// workspace's current config-lineage tip. The dropdowns show `tip`, because
-/// that is what a pick moves; `governing` is what this conversation is frozen
-/// on, and it is named only when the two have parted.
-pub fn conversation_row(governing: &ConfigPoint, tip: &ConfigPoint, role: &str) -> ModelRow {
+/// Compose the conversation's model row from the config commit it **resolves**
+/// (§5.1 #17's followed answer) and the workspace's config-lineage tip. The
+/// dropdowns show `tip`, because that is both what a pick moves and — for every
+/// conversation following this lineage — what this conversation runs. `resolved`
+/// is named only when the two have parted, which is now the abnormal case.
+pub fn conversation_row(resolved: &ConfigPoint, tip: &ConfigPoint, role: &str) -> ModelRow {
     let (provider, model) = tip.pair(role);
     let hover = format!(
-        "the {role} this workspace's next conversation will be born on — picking \
-         here advances the workspace default at once. This conversation stays \
-         frozen on the config commit it forked off ({}); a conversation's policy \
-         never changes under it",
-        governing.short_oid
+        "the {role} this workspace's conversations run — picking here advances \
+         the lineage at once, and every conversation following it takes the new \
+         pair at its next step. This one resolves {}",
+        resolved.short_oid
     );
-    let drift = (governing.oid != tip.oid).then(|| {
-        let (was_provider, was_model) = governing.pair(role);
+    let apart = (resolved.oid != tip.oid).then(|| {
+        let (its_provider, its_model) = resolved.pair(role);
         format!(
-            "this conversation is frozen on {was_provider} · {was_model} at {}",
-            governing.short_oid
+            "this conversation resolves {its_provider} · {its_model} at {}, not this \
+             workspace's lineage",
+            resolved.short_oid
         )
     });
     ModelRow {
         provider,
         model,
         hover,
-        drift,
+        apart,
     }
 }
 
 /// Compose the §11 birth-config block's model row from the config branch's
-/// **head** — the commit a fresh root forks off. No drift clause: a
-/// conversation that does not exist yet cannot have parted from anything.
+/// **head** — the commit a fresh root forks off. No apart clause: a
+/// conversation that does not exist yet cannot resolve anything else.
 ///
 /// That head is not a yog choice: litany's `litany prompt <repo>
 /// <message>` takes no config argument and resolves
@@ -157,12 +170,12 @@ pub fn birth_row(tip: &ConfigPoint, role: &str, branch: &str) -> ModelRow {
         model,
         hover: format!(
             "the {role} the conversation you are about to start will be born on: a \
-             new conversation forks the head of config/{branch} ({}) and is frozen \
-             there for its whole life — litany takes no per-conversation config, so \
+             new conversation forks the head of config/{branch} ({}) and follows \
+             that lineage from then on — litany takes no per-conversation config, so \
              changing the model before the start advances that head",
             tip.short_oid
         ),
-        drift: None,
+        apart: None,
     }
 }
 

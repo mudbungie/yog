@@ -33,7 +33,8 @@
 //!   with one parameter — the fork point."*
 //! - **model** is the **role** (`<role>`). litany resolves a model from
 //!   `roles.<name>.{provider,model}` in the `providers.yaml` of the config
-//!   commit governing the fork point, and from nowhere else. So the composer
+//!   lineage governing the fork point, read at that lineage's head, and from
+//!   nowhere else. So the composer
 //!   lists the roles that ref declares **with the model each names**
 //!   ([`ForkPoint::roles`]): the model is shown at the point of choice and
 //!   cannot lie, because yog is reading the very file the run will resolve

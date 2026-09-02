@@ -66,9 +66,9 @@ pub(super) fn wrote(written: std::io::Result<()>, reply: Reply) -> Result<Reply,
     written.map(|()| reply).map_err(|e| e.to_string())
 }
 
-/// The §9.4 exit from the config freeze (bl-2d19): mark this conversation to be
-/// re-forked onto the config lineage's head, which its own executor lands at
-/// the next step boundary. A body beside [`fork`]'s rather than an arm inside
+/// The §9.4 change of lineage (bl-2d19, re-scoped bl-e654): mark this
+/// conversation to be re-forked onto the config lineage's head, which its own
+/// executor lands at the next step boundary. A body beside [`fork`]'s rather than an arm inside
 /// the table, because the table is at §12's per-function budget — the routing
 /// is one call, and it belongs to the bound family the arms above it do.
 pub(super) fn retarget(

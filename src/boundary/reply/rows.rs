@@ -43,9 +43,9 @@ pub(super) fn ws_row(row: &WsRow) -> Value {
         map.insert("pinned".to_owned(), json!(rank));
     }
     // The §2.2 lineage tip (bl-b4b5), both oids: short is what the §9.4 picker
-    // labels the freeze with, full is what a `git show` outside yog takes — the
-    // lineage row's own shape one noun over. Absent for a workspace with no
-    // lineage derived yet.
+    // labels with, full is what a `git show` outside yog takes — the lineage
+    // row's own shape one noun over. Absent for a workspace with no lineage
+    // derived yet.
     if let Some(tip) = &row.config_tip {
         map.insert(
             "config_tip".to_owned(),

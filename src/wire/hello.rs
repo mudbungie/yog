@@ -47,7 +47,13 @@ use super::frame;
 /// two protocols meeting. This changes when the *existing* shape changes
 /// meaning: the framing, the envelope, or what a spelling already in use is
 /// taken to say.
-pub const PROTOCOL: u32 = 4;
+///
+/// 4 → 5 (bl-e654): the `governing` reply's `branch` key — *the lineage whose
+/// tip the frozen commit still is* — is gone, replaced by `follows` and
+/// `diverged_lineages`, and the `oid` beside them stopped meaning the fork
+/// commit and started meaning the commit control resolves from. Same verb,
+/// same question, a different thing said: exactly the case above.
+pub const PROTOCOL: u32 = 5;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

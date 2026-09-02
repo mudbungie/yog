@@ -21,10 +21,13 @@ pub(super) fn seen(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, Str
     }))
 }
 
-/// `/retarget` — the §9.4 exit from the config freeze (bl-2d19). It names
+/// `/retarget` — the §9.4 **change of lineage** (bl-2d19, re-scoped by
+/// bl-e654). It is not how a config edit reaches this conversation, which needs
+/// no verb at all; it is how the conversation changes which lineage it follows,
+/// and the one way out of a divergence holding it on its fork commit. It names
 /// nothing at all: the conversation is the seat's, exactly as `/seen`'s is, and
-/// the config it moves onto is the workspace's one lineage head (§9.3), which
-/// is the only thing the drift beside it is measured against.
+/// the lineage it settles onto is the workspace's one head (§9.3), which is the
+/// only lawful destination there is to name.
 pub(super) fn retarget(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     args::none(tail, verb)?;
     Ok(act(Action::Retarget {

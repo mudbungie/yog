@@ -5,7 +5,7 @@
 //! branch tip the model call was assembled against, already recorded in
 //! `meta.json` and already read by the Steps view (§5.1 #29). Selecting a notch
 //! **pins** the whole inspector to that commit (the [`pin`] submodule):
-//! transcript as of, agent-context files as of, config frozen at, budget folded
+//! transcript as of, agent-context files as of, the config it resolves, budget folded
 //! to that point.
 //!
 //! **The spine is drawn through the chat, not beside it** (bl-1802). It used to
@@ -185,9 +185,10 @@ pub struct ChildInput {
     pub commits: Vec<StepCommit>,
     /// The per-agent `steps/<id>` fold (`budgets::Scope::Agent`).
     pub tokens: u64,
-    /// The child's governing config branch name, when its governing commit is
-    /// the tip of one (§5.1 #17) — what makes a clean child's label name the
-    /// branch it started from rather than an oid.
+    /// The name of the config lineage the child **follows** (§5.1 #17) — what
+    /// makes a clean child's label name a branch rather than an oid. `None`
+    /// only where diverged lineages hold it and there is no one lineage to
+    /// name (bl-e654).
     pub config_label: Option<String>,
 }
 

@@ -160,8 +160,8 @@ fn conversation(verb: &str, tail: &str, ctx: &Context) -> Option<Result<Gesture,
         // `/work-diff` shape, and for the same reason: a listing and one
         // entry's content are one question at two depths.
         "files" => files(verb, tail, ctx),
-        // Config-frozen-at (VISION V1.2, bl-13f9): the `/files` shape at the
-        // other tab whose subject is a commit's tree. Bare it is the
+        // Which config governs (VISION V1.2, bl-13f9): the `/files` shape at
+        // the other tab whose subject is a commit's tree. Bare it is the
         // conversation's own tip, so a seat that has pinned nothing types the
         // one word the window paints unpinned.
         "governing" => governing(verb, tail, ctx),

@@ -203,10 +203,13 @@ pub enum Query {
         path: Option<String>,
         at: Option<String>,
     },
-    /// **The config commit this conversation is frozen on** (§9.3, §5.1 #17;
-    /// VISION V1.2's *config-frozen-at*; REMOTE §9.7, bl-13f9): the nearest
-    /// `config/*` ancestor of a commit, whether that ancestor is still a
-    /// lineage's own tip, and every path its tree holds.
+    /// **The config commit this conversation resolves its policy from** (§9.3,
+    /// §5.1 #17; VISION V1.2's *config-frozen-at*; REMOTE §9.7, bl-13f9): the
+    /// nearest `config/*` ancestor of a commit settles which lineage governs,
+    /// and the answer is that lineage's current head — with the lineage named,
+    /// and every path the head's tree holds. Where lineages have diverged over
+    /// the fork commit there is no head to follow, so the answer is that fork
+    /// commit and the count that held it (bl-e654, upstream bl-403b).
     ///
     /// **`at` names the commit, and a commit is a selection** — the
     /// [`Files`](Query::Files) shape, and for the same reason: this is the
@@ -215,6 +218,9 @@ pub enum Query {
     /// agent's own branch tip, resolved off the published snapshot, so a seat
     /// that has pinned nothing asks nothing different and no seat has to know a
     /// tip before it may ask. Nothing about the operator's *selection* crosses.
+    /// Since follow-the-tip it selects a **rev, not a moment**: two commits of
+    /// one lineage resolve the same head, and policy as of an earlier step is
+    /// recorded by that step rather than derivable from ancestry.
     ///
     /// It **refuses** rather than answering absent, unlike its siblings: the
     /// derivation is a walk of the workspace's own git and it fails the way

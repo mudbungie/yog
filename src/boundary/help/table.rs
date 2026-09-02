@@ -145,7 +145,8 @@ pub const ACTIONS: &[HelpRow] = &[
                  (the mark you pinned) or a `config/<name>` head for a clean start — and gives \
                  the fork this goal (`litany dispatch`). `--role` is what names the model: \
                  litany reads the provider and model id from the role's entry in the config \
-                 governing that ref, so a role the config does not declare is refused there. \
+                 lineage governing that ref, at its head, so a role that lineage does not \
+                 declare is refused there. \
                  `--skills` pins each named skill's instructions into the fork's context. To \
                  compare candidates, fire this more than once from the same mark: they group \
                  themselves under that mark's rule in the chat, because siblings of one mark is a fact about \

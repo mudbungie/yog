@@ -16,7 +16,7 @@
 //! | the diff, its two refs and their OIDs, the acceptance mark | [`crate::workdiff`] (§5.1 #32) — composed, not restated |
 //! | the conversation bound to the attempt, and its frozen pins | the §4.2 trail's own fire row ([`crate::fan::fires`]) |
 //! | the goal | the agent worktree's `goal.md`, frozen at the dispatch commit |
-//! | the governing config commit | §5.1 #17's walk ([`crate::config_edit::branch`]) |
+//! | the config commit governing it | §5.1 #17's derivation ([`crate::config_edit::branch`]) — the followed one, read at projection time |
 //! | usage, wall time, step count | litany's step records, off the one walk already published as `Snapshot::bills` |
 //! | the terminal response and the verdicts | the committed `messages/` tree ([`crate::transcript`]) |
 //! | the base the two ends departed from | git: `merge-base target source`, balls' own base formula ([`outcome`]) |
@@ -90,12 +90,20 @@ pub struct Attempt {
     pub goal: Option<String>,
     /// The `<dest>=<src>` instruction documents that fire froze (§3.7).
     pub pins: Vec<String>,
-    /// The config commit this conversation is frozen on (§5.1 #17). **The
-    /// model and the skills ride it** and earn no columns of their own — that
-    /// is VISION §4.10 item 7's own parenthesis, and it is the single-source
-    /// rule: the commit is where those facts live, so a `model` field here
-    /// would be a second copy of one that could disagree with the config the
-    /// step actually ran under.
+    /// The config commit this conversation resolves (§5.1 #17). **The model
+    /// and the skills ride it** and earn no columns of their own — that is
+    /// VISION §4.10 item 7's own parenthesis, and it is the single-source rule:
+    /// the commit is where those facts live, so a `model` field here would be a
+    /// second copy of one that could disagree with the config the step actually
+    /// ran under.
+    ///
+    /// **It is a read-time fact, not a frozen input, since bl-e654.** Under
+    /// follow-the-tip this answers what the conversation resolves *now*; an
+    /// attempt that ran under an earlier head of the same lineage is not
+    /// distinguishable here, because ancestry no longer records that. The
+    /// column stays because it is still the single home of the model and the
+    /// skills, and it stops being listed among the frozen inputs beside `goal`
+    /// and `pins`, which really are the fork's.
     pub governing: Option<String>,
     /// What this attempt's conversation and its whole descent burned — the four
     /// ARCH §6 counters. A judge or synthesis child dispatched *from* the

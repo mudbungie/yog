@@ -7,8 +7,17 @@
 //! commit, and each tab reads that commit the way it already reads its own
 //! source. Transcript and budget fold here (both are prefixes of what the tab
 //! already holds); files go through [`super::files_at`]; config-frozen-at is
-//! the existing governing-config derivation asked at the pinned commit instead
-//! of the tip, with no new code at all.
+//! the existing which-config-governs derivation asked at the pinned commit
+//! instead of the tip, with no new code at all.
+//!
+//! **That fourth tab is the one the pin got weaker for** (bl-e654). Under
+//! follow-the-tip a commit selects the *rev the walk starts from*, and the walk
+//! ends at the followed lineage's head whatever notch was pinned — so the
+//! config tab answers what governs now, not what governed then. Per-step policy
+//! provenance is no longer an ancestry fact; what records it is each step's own
+//! request, and litany filed restoring the resolved commit to `meta.json`
+//! (their bl-e4a0). Not coded around here: a pin that quietly reported a
+//! today-answer as an as-of one would be the §9.4 surprise all over again.
 //!
 //! Nothing selected leaves every tab on today's read — the burden check.
 //!

@@ -3,7 +3,7 @@
 //! in band, non-zero, and naming the way out.
 //!
 //! `deploy` stands for the operator-granted pool name throughout: a name with
-//! no engine implementation behind it, so the last rung (`PERFORMED`) does not
+//! no engine implementation behind it, so the last rung (`performs`) does not
 //! catch it and the refusal is what the model reads. `bash` would be caught,
 //! which is bl-5710's whole point.
 

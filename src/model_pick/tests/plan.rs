@@ -137,15 +137,20 @@ fn the_default_row_leaves_a_row_brazen_dropped_and_says_so() {
 }
 
 /// The scope sentence must say all three things the operator would otherwise
-/// get wrong: which branch, which blast radius, and that THIS conversation does
-/// not move.
+/// get wrong: which branch, which blast radius, and — the half bl-e654
+/// inverted — that THIS conversation moves too, at its next step. The sentence
+/// used to promise the opposite in these exact words, so the assertion runs
+/// both ways: the reach is stated, and the old freeze is not.
 #[test]
-fn the_scope_sentence_states_branch_workspace_and_the_frozen_conversation() {
+fn the_scope_sentence_states_branch_workspace_and_the_reach_into_this_conversation() {
     let s = scope_sentence("mauve-tapir", "default", "1a2b3c4d");
     assert!(s.contains("config/default"));
     assert!(s.contains("mauve-tapir workspace"));
-    assert!(s.contains("NEXT conversation"));
-    assert!(s.contains("frozen at 1a2b3c4d"));
+    assert!(s.contains("this one included"));
+    assert!(s.contains("at its next step"));
+    assert!(s.contains("advances from 1a2b3c4d"));
+    assert!(!s.contains("NEXT conversation"), "{s}");
+    assert!(!s.contains("frozen"), "{s}");
 }
 
 /// The birth block's sentence carries the one admission the §11 block owes the
@@ -157,8 +162,9 @@ fn the_birth_sentence_admits_it_moves_the_workspace_default() {
     assert!(s.contains("mauve-tapir workspace default"));
     assert!(s.contains("config/default"));
     assert!(s.contains("about to start"));
-    // And it must NOT borrow the frozen-conversation clause, which names a
-    // conversation the birth block does not have.
+    // And it must NOT borrow the running-conversation clause, which names
+    // conversations the birth block does not have.
+    assert!(!s.contains("this one included"));
     assert!(!s.contains("frozen"));
 }
 

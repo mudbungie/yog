@@ -124,6 +124,14 @@ fn the_litany_arm_is_the_thin_binding_end_to_end() {
     // conflicting ambient one absent (bl-81c9).
     assert_eq!(dispatch(&argv(&["yog", "litany", "prime"])), Some(0));
     assert!(world_home.join("models.yaml").is_file());
+    // litany 0.0.5 seeds the named default workflow as an authoring source
+    // (upstream bl-fcd8), so `prime` writes it beside `models.yaml` — into the
+    // WORLD's harness root, like everything else this arm folds.
+    assert!(
+        world_home
+            .join("workflows/basic-agentic-loop.yaml")
+            .is_file()
+    );
     assert!(
         !ambient_home.exists(),
         "ambient harness root written: {}",

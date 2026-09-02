@@ -9,8 +9,8 @@
 //! and churn, wherever it is said.
 //!
 //! Absent rather than null throughout, the roster's own discipline: an attempt
-//! with no conversation, no frozen goal and no readable config freeze has
-//! absences, not empty strings.
+//! with no conversation, no frozen goal and no readable config has absences,
+//! not empty strings.
 
 use serde_json::{Map, Value, json};
 

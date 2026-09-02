@@ -89,6 +89,32 @@ clap = { version = "4", features = ["derive"] }
 # as `litany` from 0.0.1; the `lernie` name passes to the seat, whose line
 # begins at 0.1.0. So a `lernie 0.0.x` in the notes below is THIS engine at that
 # release, and every version citation in yog's tree reads against that one rule.
+# 0.0.5 **inverts the config default** (upstream bl-403b, its
+# `docs/DESIGN_CONFIG_FOLLOW.md`, operator ruling 2026-09-01): fork settles only
+# which config LINEAGE governs, and control resolves from that lineage's current
+# tip at every step boundary — so a `litany config` edit reaches every running
+# conversation on the lineage at its next step, with no per-conversation act,
+# and only a step already in flight finishes on what it started. Two or more
+# distinct tips containing the governing commit is real divergence the resolver
+# refuses to guess between: the fork commit resolves, HELD, and every step says
+# so on the driver's stderr under the standing notice prefix (`litany: notice: N
+# diverged config lineages reach [<agent>] …`). `retarget` survives re-scoped,
+# not deprecated — it is the change of LINEAGE and the act that settles a held
+# one, and retargeting the lineage you already follow is a clean no-op litany
+# reports and yog no longer needs to model. Upstream bl-e580 finished the
+# sentence for the in-process root loop, which resolved once per exchange and so
+# made a mid-exchange edit wait for the next `advance`; it now consults per step
+# like the detached driver, step 1 keeping the fork resolution that IS step 1's
+# own boundary. Alongside: the **workflow mark** and the `litany workflow` verb
+# (upstream bl-f928) — the scoped per-agent workflow pin, which composes with
+# the above as the deliberate way to hold ONE agent out of a lineage-wide
+# change — the seeded `workflows/basic-agentic-loop.yaml` so the named default
+# exists as an authoring source (bl-fcd8), and `cmd::BUILTIN_TOOLS` (bl-4cbb):
+# the engine's closed built-in name set, exported so a host with a total
+# injection derives which names this engine can perform instead of restating
+# them. yog's `tool_host` consumes it (`subject::performs`), and the partition
+# it draws over that set — conversation-subject acts to `engine_act`, everything
+# else to the worktree lane — is now the only thing yog states.
 # 0.0.2 is **the inverted tool-injection seam** (upstream bl-a00a, its
 # `docs/DESIGN_TOOL_INJECTION.md`), which REMOTE §5's one-pipeline ruling asked
 # for: `ToolInjection::route` returns a `RoutedCapture` outright rather than an
@@ -170,7 +196,7 @@ clap = { version = "4", features = ["derive"] }
 # (bl-f91a): the git/rev pin that rode here while bl-ddaa was unpublished is
 # gone, deny.toml's `allow-git` entry went with it, and `make publish` works
 # again — crates.io refuses git deps, so a git pin is never the shape.
-litany = "=0.0.4"
+litany = "=0.0.5"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

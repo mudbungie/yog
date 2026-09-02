@@ -57,8 +57,8 @@ pub struct AgentView {
     /// prose off the root's goal stamp that no litany-stored name fact backs,
     /// so peers cannot address the conversation by it.
     pub display_only: bool,
-    /// The agent branch's tip oid — the §5.1 #17 governing-config derivation's
-    /// input, and empty for an agent the snapshot does not carry.
+    /// The agent branch's tip oid — the §5.1 #17 which-config-governs
+    /// derivation's input, and empty for an agent the snapshot does not carry.
     pub tip: String,
     /// Its **own** §3.5 liveness, not the subtree aggregate a
     /// [`ConvRow`](crate::nav::convs::ConvRow) badge carries.

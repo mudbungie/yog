@@ -224,9 +224,10 @@ pub enum Reply {
         /// nothing anywhere said the work had gone elsewhere.
         working_dir: Option<std::path::PathBuf>,
     },
-    /// The config commit a conversation is frozen on (§9.3, §5.1 #17) —
-    /// [`Governing`](super::Query::Governing)'s answer, the §11 Config tab's
-    /// whole content and VISION V1.2's *config-frozen-at* spelled. The one
+    /// The config commit a conversation resolves its policy from (§9.3, §5.1
+    /// #17) — [`Governing`](super::Query::Governing)'s answer, the §11 Config
+    /// tab's whole content and VISION V1.2's *config-frozen-at* spelled, with
+    /// the lineage it follows or the divergence holding it. The one
     /// member of the family that answers a **derivation over the workspace's
     /// git** rather than a listing, so it refuses where the others answer
     /// absent: a conversation always has a policy, and "none" would be a lie.

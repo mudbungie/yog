@@ -5,7 +5,7 @@
 
 use ::litany::cmd::{RoutedCall, ToolInjection as _};
 
-use super::super::{Lane, PERFORMED, verdict};
+use super::super::{Lane, performs, verdict};
 use crate::registry::roster::ClientRow;
 use crate::registry::tools::Tool;
 use crate::test_support::FakeClock;
@@ -47,25 +47,48 @@ fn row(client: &str, name: &str, subject_cwd: bool) -> ClientRow {
     }
 }
 
-/// **The rung is closed and enumerated in one place.** Three rows, each a
-/// worktree name the engine itself implements; the engine acts and litany's
-/// own `multi_tool` are not here (they never reach the lane), and neither is
-/// any operator-granted pool name, which has no implementation to reach.
+/// **The audit of a partition yog derives rather than restates** (bl-e654).
+/// `performs` is `litany::cmd::BUILTIN_TOOLS` minus the conversation-subject
+/// engine acts, so nothing in production spells these names; the literals live
+/// here, where a set that moves upstream reddens a test instead of quietly
+/// changing which lane a name takes. Three members today, each a worktree name
+/// the engine implements. What is deliberately outside: the four built-ins
+/// whose subject is the conversation (they are `engine_act`'s and never reach
+/// the lane), the compactor's injected pair (no built-in at all), litany's own
+/// `multi_tool` (fanned out before any router sees it), an operator-granted
+/// pool name with no implementation to reach, and a name that differs only in
+/// case.
 #[test]
-fn three_names_are_performed_and_nothing_else_is() {
-    assert_eq!(PERFORMED, ["apply_patch", "bash", "read_file"]);
+fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
+    let performed: Vec<&str> = ::litany::cmd::BUILTIN_TOOLS
+        .into_iter()
+        .filter(|name| performs(name))
+        .collect();
+    assert_eq!(performed, ["apply_patch", "bash", "read_file"]);
     for elsewhere in [
         "cd",
         "dispatch",
         "message",
         "load_skill",
+        "write_summary",
+        "mark_for_deletion",
         "multi_tool",
         "deploy",
         "Bash",
     ] {
         assert!(
-            !PERFORMED.contains(&elsewhere),
+            !performs(elsewhere),
             "{elsewhere} is not the engine's to perform on the lane"
+        );
+    }
+    // The subtraction is total in the other direction too: every built-in the
+    // engine ships is either an engine act or a performed worktree name, so no
+    // built-in falls through to a refusal that would tell the operator to
+    // enroll a machine for work the engine can already do.
+    for name in ::litany::cmd::BUILTIN_TOOLS {
+        assert!(
+            performs(name) || crate::tool_host::engine_act::is(name),
+            "{name} is a built-in on neither lane"
         );
     }
 }

@@ -138,7 +138,7 @@ fn a_loaded_tool_is_declared_under_its_own_name() {
 /// about compaction depends on a machine being enrolled. `Read` is the name
 /// under test precisely because the engine does not implement it: the three
 /// that it does take the lane's last rung instead (bl-5710,
-/// `subject::PERFORMED`), which is that ball's whole subject.
+/// `subject::performs`), which is that ball's whole subject.
 #[test]
 fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
     let root = TempDir::new().expect("tmp");

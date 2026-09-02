@@ -3,10 +3,17 @@
 //! This is the **read-only browse half**. A litany workspace's policy lives on
 //! `refs/heads/config/<name>` branches in the bare `<workspace>/repo.git`
 //! (ARCH §2.2 — there is no `main`). This module enumerates those branches,
-//! lists and reads any file from a config commit's tree, and derives an
-//! agent's *governing config*: the config commit its branch actually forks off
-//! — "policy frozen at `<short-oid>`" — which is an *ancestor* of the tip and
-//! generally **not** the current head of any config branch.
+//! lists and reads any file from a config commit's tree, and answers **which
+//! config governs a conversation**.
+//!
+//! That last answer is two derivations on one seam (bl-e654). Here: the pure
+//! ancestry walk to the agent's **fork commit**, the nearest `config/*`
+//! ancestor of its branch, which never moves. In [`follow`]: that commit
+//! resolved against the lineages reaching it, which is what control actually
+//! reads at every step boundary since litany's follow-the-tip ruling. The seam
+//! is where litany's own is — its `workspace.rs::governing_config` beside its
+//! `workspace/current_config.rs` — and yog ports both rather than inventing a
+//! third answer.
 //!
 //! Every git call routes through the env-scrubbed `git_tree::cmd` wrapper
 //! (extended with the config plumbing this needs); no git is spawned here.
@@ -21,6 +28,9 @@ use crate::git_tree::{
 use std::path::Path;
 
 pub mod edit;
+pub mod follow;
+
+pub use follow::{Governance, GoverningConfig};
 
 /// One config branch: `refs/heads/config/<name>` (§5.1 #18). `name` is the
 /// user-facing bare name (the `config/` prefix stripped) — exactly what a user
@@ -42,31 +52,6 @@ pub struct Lineage {
     pub branch: ConfigBranch,
     /// Every path in the tip's tree — `git ls-tree -r` at [`ConfigBranch::tip_oid`].
     pub files: Vec<String>,
-}
-
-/// An agent's governing config commit (§5.1 #17): the config commit its branch
-/// forks off — an ancestor of the tip, rendered as "policy frozen at
-/// `<short-oid>`" in the inspector Config tab. A pure view-model; the egui
-/// wiring is a thin render over these fields, deferred to the shell.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GoverningConfig {
-    pub oid: String,
-    pub short_oid: String,
-    /// `Some(name)` iff the governing commit is the current tip of
-    /// `config/<name>` — the agent still runs that branch's head. `None` once
-    /// the branch has advanced past the fork point (the common, frozen case).
-    pub branch_name_if_tip_of_one: Option<String>,
-    /// Every path in the governing commit's tree (`souls/**`, `workflow.yaml`,
-    /// `manifest.yaml`, `providers.yaml`, `version`, `descriptions/**`).
-    pub files: Vec<String>,
-}
-
-impl GoverningConfig {
-    /// The inspector Config-tab label (§9.3): `policy frozen at <short-oid>`.
-    /// The one authoritative home for the wording.
-    pub fn frozen_label(&self) -> String {
-        format!("policy frozen at {}", self.short_oid)
-    }
 }
 
 /// First 8 hex of an oid (the repo-wide short-oid convention). `unwrap_or`
@@ -143,10 +128,15 @@ pub fn config_file(workspace: &Path, refspec: &str, path: &str) -> Result<Vec<u8
     show_file(&workspace.join(REPO_DIR), refspec, path)
 }
 
-/// Derive an agent's **governing config commit** from its branch tip
-/// (`agent_tip`, an oid): the nearest ancestor reachable from any `config/*`
-/// ref (§5.1 #17, ARCH §2.2). A faithful port of
-/// `litany/src/workspace.rs::{governing_config, nearest}`.
+/// Answer **which config governs** the agent at branch tip `agent_tip`, an oid
+/// (§5.1 #17, ARCH §2.2). Two derivations in sequence, both faithful ports:
+/// the fork commit — the nearest ancestor reachable from any `config/*` ref,
+/// `litany/src/workspace.rs::{governing_config, nearest}` — and then
+/// [`follow::resolve`] over it, which is what control reads.
+///
+/// The name is the old one because the *question* is the old one; only its
+/// answer moved, from the fork commit to the tip the fork commit's lineage now
+/// stands at (bl-e654).
 ///
 /// For each config branch, `merge-base(agent_tip, config_tip)` is the shared
 /// ancestor on that lineage — or nothing, when an unrelated orphan config
@@ -178,20 +168,17 @@ pub fn governing_config(
             Some(prev) => nearest(&repo, prev, base)?,
         });
     }
-    let oid = best.ok_or_else(|| {
+    let fork = best.ok_or_else(|| {
         GitTreeError::Governing(format!(
             "no config/* ancestor for {agent_tip} — every agent forks off a config commit"
         ))
     })?;
-    let branch_name_if_tip_of_one = branches
-        .iter()
-        .find(|b| b.tip_oid == oid)
-        .map(|b| b.name.clone());
+    let (oid, governance) = follow::resolve(&repo, &branches, &fork)?;
     let files = tree_paths(&repo, &oid)?;
     Ok(GoverningConfig {
         short_oid: short(&oid),
         oid,
-        branch_name_if_tip_of_one,
+        governance,
         files,
     })
 }
