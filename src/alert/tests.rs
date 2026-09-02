@@ -18,6 +18,7 @@ fn row(ws: &str, display: &str, signals: Vec<AttentionKind>) -> QueueRow {
         age_secs: 42,
         pending: 0,
         held: None,
+        failure: None,
     }
 }
 

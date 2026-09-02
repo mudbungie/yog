@@ -164,7 +164,7 @@ pub fn attention(
         // Which way that rest came about (bl-b43b), off the fact the §3.5
         // classification already read: a refusal at the provider rung is a
         // wound the operator did not inflict, and `stopped` is `/stop`'s word.
-        refused: agent.refused,
+        refused: agent.refused(),
         budget: agent
             .budget_oid
             .as_deref()

@@ -134,6 +134,7 @@ pub(crate) fn conv_row(v: &Value) -> Result<ConvRow, String> {
         name_display_only: display_only,
         verdict: opt_val(o, "alignment", check)?,
         tone: pick(o, "tone", &TONES)?,
+        failure: opt_str_of(o, "failure")?,
     })
 }
 

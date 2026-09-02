@@ -110,6 +110,12 @@ pub struct AgentView {
     /// the governing roles, it is a fact about one *step*, and the steps
     /// surface already answers it as `auth_row`.
     pub refused: bool,
+    /// **Why that latest model call failed**, in one clause (bl-9b88) — the
+    /// words behind [`refused`](Self::refused), and the whole of the fact when
+    /// the failure was not auth-shaped at all. `None` when the call did not
+    /// fail. bl-b43b answered the class here and left the sentence in a
+    /// `driver.log` no seat reads.
+    pub failure: Option<String>,
     /// **The §11 bottom in-flight strip** (§5.1 #28, bl-905f): the live
     /// characteristics of what is running in this conversation, `None` at rest
     /// — which is what makes an idle window paint no strip at all.
@@ -168,7 +174,8 @@ pub fn agent(snap: &Snapshot, ui: &UiState, ws: &Path, agent: &str, now_unix: i6
             .any(|a| a.agent_id == root && a.name_display_only()),
         tip: found.map(|a| a.tip_oid.clone()).unwrap_or_default(),
         state: found.map_or(AgentState::Stopped, |a| a.state),
-        refused: found.is_some_and(|a| a.refused),
+        refused: found.is_some_and(Agent::refused),
+        failure: found.and_then(|a| a.failure.as_deref().map(crate::git_tree::clause)),
         marks: found.map(Agent::marks).unwrap_or_default(),
         held: found.and_then(|a| a.held.clone()),
         present: found.is_some(),

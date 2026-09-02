@@ -43,6 +43,10 @@ fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
                 tool: "Bash".into(),
                 reason: "writes".into(),
             }),
+            // The `refused` signal's words (bl-9b88): the corpus pins the
+            // sentence beside the class, since a class alone is what the live
+            // sighting already had.
+            failure: Some("Unauthorized".into()),
         },
         QueueRow {
             workspace: "ws".into(),
@@ -55,6 +59,7 @@ fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
             age_secs: 0,
             pending: 0,
             held: None,
+            failure: None,
         },
     ]
 }

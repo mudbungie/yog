@@ -2327,7 +2327,8 @@ worth persisting. Don't "fix" the asymmetry.
    badge, never in whether your turn has come *(widened bl-2194)*. Which
    way it came to rest is the *word* the signal wears, not a second signal:
    a rest whose latest response was refused at the provider rung says `refused`
-   rather than `stopped` *(bl-b43b, below)*.
+   rather than `stopped` *(bl-b43b, below; the refusal is read off the failure
+   sentence rather than a flag since bl-9b88)*.
 3. `refs/litany/budget-exhausted/<branch>` oid ≠ `seen[ws][agent].budget`.
 4. `refs/litany/conflicted/<id>` oid ≠ `seen[ws][agent].conflicted`.
 5. Pending inbox > 0 **and** lock Free — mail nobody is driving (the
@@ -2565,10 +2566,10 @@ which §6 has always made the row's job:
   desktop escalation names the act rather than reporting a stop nobody made.
 - **The fact rides beside the state on the agent**, exactly as bl-fb87's
   truncation reading does and off the same read: the §3.5 classifier already
-  reads the latest `response.json` once, and `Agent::refused` is one more
-  reading of those bytes rather than a second syscall (§5.1 #10). Every
-  derivation pure over the view-model gets it for nothing — the queue's
-  `signals`, the roster row, the `agent` answer.
+  reads the latest `response.json` once, and the refusal is one more reading of
+  those bytes rather than a second syscall (§5.1 #10). Every derivation pure
+  over the view-model gets it for nothing — the queue's `signals`, the roster
+  row, the `agent` answer.
 - **The roster row wears it as a hue** (`Tone::Bad`), which is the operator's
   one *passive* sighting. The hue is never the explanation (§11's glyph
   doctrine): the word is the signal above, and the provider **row** that refused
@@ -2579,6 +2580,49 @@ What is deliberately NOT done: the conversation's transcript still paints
 nothing for a refused conversation. Seating a virtual notice entry there is the
 `Compacted`/`Streaming` move a third time and is worth doing, but it is a new
 `EntryKind` and its own ball rather than a rider on this one.
+
+**The half that never reaches the contract, and the words nobody carried
+(bl-9b88).** bl-b43b read a refusal out of the settled tail's `error` event —
+the in-band half, which is what brazen writes when it reached the provider and
+the provider said no. A **credential-less provider row does not get that far**:
+the adapter dies at startup, litany lands an *empty* `response.json` beside its
+own `stderr.log` (litany ARCH §2.3: *"Empty on an ordinary run … bytes here mean
+the adapter failed outside that contract"*), and the settled reading is `Killed`
+— indistinguishable, to bl-b43b's predicate, from a driver someone killed. That
+is the branch a live deployment actually hit: a workspace whose role pointed at
+a credential-less row launched a driver per conversation, every model call
+refused, every seat painted a list of conversations that simply never answer,
+and the exact failure sentence sat in files no roster reads.
+
+Three corrections, and each dissolves a case rather than adding one:
+
+- **The fact is the sentence, not the flag.** `Agent::failure` is *why the
+  latest model call failed*, verbatim, and `Agent::refused()` is the auth-shaped
+  **reading** of it — a query, never a second stored field, so the fact and the
+  reading of it cannot disagree. §6's `refused` signal and its remedy are
+  unchanged; they now fire for a startup failure that says `credential` as
+  readily as for a 401, because both are one sentence asked one question.
+- **The framing decides which file is read**, so nothing is a special case and
+  a healthy conversation pays nothing: `Failed` spends bytes already in hand,
+  `Killed` opens the step's `stderr.log`, `Complete` opens nothing. The §7.3
+  wound's `meta.json` observation is not repeated here — the wound must tell a
+  settled step from an unsettled one for a *per-step* badge, and the framing has
+  already answered that for the agent's latest call.
+- **`Tone::Bad` widens from the refusal to the failure.** bl-b43b painted the
+  auth-shaped subset; a transport reset, a malformed config and a dead adapter
+  are the same sighting to a scanning operator — *this one did not run* — and a
+  roster that reddens for one of them and not the others is a roster that
+  teaches the wrong rule. The badge set is still frozen at four and the signal
+  set at six.
+
+And the words now ride the rows that carry the hue: the §11 conversation row and
+the §6 queue row each carry the failure's **first clause** (`git_tree::clause` —
+the provider's `message` when the evidence is an event, else the evidence, first
+line, capped), so a roster of red rows says what is wrong with them instead of
+asking the operator to open each one. The whole of it — the adapter's captured
+stderr, the provider row to sign in to — stays the steps surface's, one query
+deeper. Gaining that field on three shapes is a wire change, so it bumps
+`PROTOCOL` to 3 (REMOTE §9.9's rule, mechanised by the corpus ledger).
 
 **The prompt that never became a conversation (bl-a649).** Rules 1–5 are all
 per-*agent*, so they can only stir once a conversation root exists. A detached
@@ -6710,6 +6754,7 @@ that named one of its files; the rule it taught is not.)
 | `src/git_tree/descent.rs` | hyphenated-descent ordering for the agent view (§7.1): hierarchy lives in the name, and litany's narrow grammar is the authority |
 | `src/git_tree/detect.rs` | the §3.3 preview: the operator's payload headline, folded off the goal `enumerate` already reads (`agents/<agent-id>/goal.md`) — never off the assembled request, whose head is the §3.7 instruction frame and not anything anyone said (bl-368d) |
 | `src/git_tree/enumerate.rs` | commit-node and agent construction: raw git output bridged into the view-model's shapes, the trunk the config lineage |
+| `src/git_tree/failure.rs` | **why the latest model call failed**, in the provider's own words (bl-9b88) — the one home for that sentence, and the row-altitude first clause of it. Two shapes of one fact and the §4.4 framing decides which is read: a `Failed` tail's in-band `error` event, else — for a `Killed` one — the step's own `stderr.log`, which is where an adapter that died before reaching the contract at all (a credential-less provider row) says so. A `Complete` tail pays no syscall. *Refused at the provider rung* (bl-b43b) is a **query** over this sentence, never a flag beside it |
 | `src/git_tree/{fd_probe,lsof,terminal}.rs` | the `/proc/*/fd` writer scan; the pure `lsof -F` parser + the cfg(macos) spawn shim (§10); the §4.4 settled-tail classifier — **one walk, two facts** since bl-fb87 (transport `Framing`, semantic `Ending`), because transport completion is not task completion and neither reading is recoverable from the other |
 | `src/git_tree/lock_probe.rs` | the executor-lock probe behind the §3.5 `live` classification — the inbox-directory `flock`'s holder is *the* driver |
 | `src/git_tree/marks.rs` | the `refs/litany/*` namespaces — four read as oids (the §6 watermark evidence) and `held` read as a **value**, its blob parsed by `control::hold` (§8.6); the closed `AgentMark` set (§6) |
@@ -6717,7 +6762,7 @@ that named one of its files; the rule it taught is not.)
 | `src/git_tree/probe_cache.rs` | the 2 s TTL cache over any liveness probe (§10), wrapping the macOS `lsof` backend before the classifier ever observes through it |
 | `src/git_tree/probe_stack.rs` | the platform probe stack held across ticks (§10, §15 Y11), so each tick re-derives through one stack instead of rebuilding probes and discarding the cache |
 | `src/git_tree/project.rs` | the **project** repo's five reads (§5.1 #32): name the integration branch, resolve a ref, `--numstat` a range, patch one file, and scan the target's history for a delivery tag. The two ancestry reads §3.9 asks of a project repo are deliberately **not** here (bl-40ab): `cmd`'s `merge_base`/`is_ancestor` already spell them for the §9.3 fold, and a second spelling of one git command is the drift this file exists to prevent. It sits inside `git_tree` because `cmd` is the crate's one `git` doorway — the site that scrubs the inherited `GIT_DIR`/`GIT_INDEX_FILE` (§16) — and a second fork site would be a second place to forget it |
-| `src/git_tree/state.rs` | the agent-state classifier (§3.5, §7.1): the four live-view states derived from the executor lock and the latest step's `response.json`, nothing stored — plus, off that same settled read and never a second one, the §5.1 #9 truncation reading the Nudge gate consumes (bl-fb87) |
+| `src/git_tree/state.rs` | the agent-state classifier (§3.5, §7.1): the four live-view states derived from the executor lock and the latest step's `response.json`, nothing stored — plus, off that same settled read and never a second one, the §5.1 #9 truncation reading the Nudge gate consumes (bl-fb87) and the `failure` sentence beside it (bl-9b88, derived in `failure.rs`) |
 | `src/git_tree/streaming{,/wire}.rs` | the live `response.json` fold — **one read, two facts** (§5.1 #10, #28b): the display text every tail seat reads, and the last content delta's kind that splits an open model call into waiting / thinking / inference; with `wire` the fold's own JSON spelling both directions (bl-73e7), beside the type for the reason `transcript::wire` and `rail::wire` are — the shape of a fold is the folding module's vocabulary, and the follow lane's frame body is that fold and nothing else |
 | `src/git_tree/tools.rs` | the tool-call view-model over the on-disk `tools/<tool-id>/input.json` / `output.json` records, in-flight being an input with no output beside it |
 | `src/inboxview/{mod,wire}.rs` | deposit parsing + the listing's per-file name/bytes (`InboxEntry`, §11 Raw) + the one `✉ from · at` header wording every §5.1 #11 seat shares (bl-929d), its sender resolved through the §3.3 ladder over the roster the caller paints from (bl-b6d0); render, both modes; the tests cut out of `mod` when Raw landed (bl-1ff1). Its headless spelling is `wire`, beside the type for the reason `workdiff::wire` gives — these rows' shape *is* this module's vocabulary — added when the §11 reads gained boundary queries (bl-6233). |

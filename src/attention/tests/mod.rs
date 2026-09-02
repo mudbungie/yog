@@ -29,7 +29,7 @@ fn agent(id: &str) -> Agent {
         state: AgentState::Live,
         state_uncertain: false,
         truncated: false,
-        refused: false,
+        failure: None,
         pending: vec![],
         conflicted_oid: None,
         budget_oid: None,

@@ -20,7 +20,7 @@ fn branch(name: &str, state: AgentState) -> Agent {
         state,
         state_uncertain: false,
         truncated: false,
-        refused: false,
+        failure: None,
         pending: vec![],
         conflicted_oid: None,
         budget_oid: None,

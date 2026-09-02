@@ -66,6 +66,14 @@ pub struct QueueRow {
     /// headless teleoperator therefore sees a park and answers it
     /// (`/answer pass`) without learning a new read.
     pub held: Option<crate::control::hold::Held>,
+    /// **Why this conversation's latest model call failed**, in one clause
+    /// (bl-9b88) — `None` when it did not. It rides the row for `held`'s own
+    /// reason: §6 already *is* "what needs you", and the whole point of a
+    /// queue row is that it is answerable without a second read. A `refused`
+    /// signal says the class and this says the sentence, so an operator sees
+    /// *which* credential the world is waiting on rather than that some
+    /// credential is.
+    pub failure: Option<String>,
 }
 
 /// The §6 flattened roster across every enumerated workspace — **the** roster,
@@ -117,6 +125,7 @@ fn row(snap: &Snapshot, ui: &UiState, key: &RosterKey, now_unix: i64) -> Option<
         age_secs: (now_unix - agent.last_action_unix).max(0),
         pending: agent.pending.len(),
         held: agent.held.clone(),
+        failure: agent.failure.as_deref().map(crate::git_tree::clause),
     })
 }
 

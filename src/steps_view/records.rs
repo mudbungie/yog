@@ -6,6 +6,11 @@
 //! rule that a log earns a seat only when it has bytes. A picker is a face,
 //! and the face is the seat crate's now — what a server keeps is the two
 //! *names*, which the §7.3 wound and orphan derivations open directly.
+//!
+//! `pub(crate)` since bl-9b88: the §3.5 classifier reads a step's `stderr.log`
+//! too — the out-of-band half of "why the latest model call failed"
+//! ([`crate::git_tree`]'s `failure`) — and this module's whole claim is that
+//! one file name has one spelling however many derivations open it.
 
 /// The adapter subprocess's captured stderr, per step (litany ARCH §2.3). The
 /// §7.3 wound reads its tail to say why a step produced nothing.

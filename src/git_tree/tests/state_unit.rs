@@ -59,13 +59,32 @@ pub(super) fn reading(
 /// The **provider-refusal** reading beside the state (bl-b43b) — its own
 /// helper rather than a fourth element on [`reading`], so the mapping table
 /// this module owns keeps the shape every one of its cases is written to.
+///
+/// Since bl-9b88 the classifier carries the failure *sentence* and the refusal
+/// is the auth-shaped reading of it, so this spells the same query
+/// [`Agent::refused`](crate::git_tree::Agent::refused) is.
 pub(super) fn refusal(
     dir: &Path,
     agent: &str,
     lock: &dyn LockProbe,
     writer: &dyn WriterProbe,
 ) -> bool {
-    classify(dir, agent, lock, writer).refused
+    // Bound rather than chained: tarpaulin's llvm engine mis-attributes a
+    // multi-line method chain's tail as uncovered (the discipline `summarize`
+    // and `orphan::read` already keep).
+    let said = classify(dir, agent, lock, writer).failure;
+    said.as_deref().is_some_and(crate::login::auth::looks_auth)
+}
+
+/// The failure sentence itself (bl-9b88): what the §11 row's tone and the §6
+/// queue row's clause are both derived from.
+pub(super) fn why(
+    dir: &Path,
+    agent: &str,
+    lock: &dyn LockProbe,
+    writer: &dyn WriterProbe,
+) -> Option<String> {
+    classify(dir, agent, lock, writer).failure
 }
 
 pub(super) fn resp(dir: &Path, agent: &str, seq: &str) -> PathBuf {

@@ -92,6 +92,7 @@ mod tests {
             name_display_only: false,
             verdict: None,
             tone: crate::nav::convs::Tone::Plain,
+            failure: None,
         }
     }
 

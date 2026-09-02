@@ -36,6 +36,9 @@ mod cmd;
 mod descent;
 mod detect;
 mod enumerate;
+// **Why the latest model call failed** (bl-9b88): the sentence the §3.5
+// classifier reads beside the state, and the row-altitude clause of it.
+mod failure;
 // The Linux `/proc` probe backends (§10). Compiled only where they have a
 // consumer — always on Linux (production + test), and under `cfg(test)` on
 // macOS (their own unit tests) — since macOS drives liveness through `lsof`.
@@ -88,6 +91,9 @@ pub use probe_stack::ProbeStack;
 // the same doorway discipline one repo over.
 pub(crate) use project::{file_patch, head_branch, log_marker, numstat, rev_parse};
 pub use state::AgentState;
+// The row's first clause of a failure sentence (bl-9b88) — the §11 list's own
+// bound on how much of `Agent::failure` a glance says.
+pub(crate) use failure::clause;
 // The live-tail fold and the file it folds, shared with the §7.2 follower
 // (`app::live`) so the JSONL delta parser is never duplicated (§15 Y12:
 // "reuse the streaming fold — do NOT duplicate the JSONL parser").

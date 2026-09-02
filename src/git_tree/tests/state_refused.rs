@@ -9,7 +9,7 @@
 //! response writers so no two suites can disagree about what a settled step
 //! looks like.
 
-use super::state_unit::{FINISH_END, lock, refusal, resp, write, writer};
+use super::state_unit::{FINISH_END, lock, refusal, resp, why, write, writer};
 use crate::git_tree::Probe;
 use tempfile::tempdir;
 
@@ -41,6 +41,32 @@ fn a_rest_whose_latest_call_was_refused_says_so_beside_the_state() {
     ));
 }
 
+/// **The out-of-band half** (bl-9b88), and the live sighting's own shape: a
+/// credential-less provider row kills the adapter before it reaches the §4.4
+/// contract, so `response.json` is empty and the only words are its own
+/// `stderr.log`. bl-b43b read the in-band half alone, so this branch — the one
+/// that actually happened — carried no refusal, no tone and no word anywhere.
+#[test]
+fn an_adapter_that_died_before_the_contract_is_still_a_refusal() {
+    let dir = tempdir().unwrap();
+    let agent = "20260427T140000Z-aaaa";
+    let step = resp(dir.path(), agent, "001");
+    write(&step, b"");
+    let stderr = step.with_file_name("stderr.log");
+    std::fs::write(&stderr, "bz: no credential for provider row \"work\"\n").unwrap();
+    let free = || (lock(Probe::Free), writer(Probe::Free));
+    let (l, w) = free();
+    assert_eq!(
+        why(dir.path(), agent, &l, &w).as_deref(),
+        Some("bz: no credential for provider row \"work\"")
+    );
+    let (l, w) = free();
+    assert!(
+        refusal(dir.path(), agent, &l, &w),
+        "a missing credential is auth-shaped wherever it is said"
+    );
+}
+
 #[test]
 fn a_rest_that_failed_on_anything_else_is_not_a_refusal() {
     // The state is `Stopped` either way; only the *why* differs, and a wound
@@ -56,6 +82,28 @@ fn a_rest_that_failed_on_anything_else_is_not_a_refusal() {
             "{agent}"
         );
     }
+    // The transport reset **is** a failed call, though (bl-9b88) — it just is
+    // not one signing in fixes. The two readings are one sentence and a
+    // question asked of it, never two flags that can disagree.
+    assert!(
+        why(
+            dir.path(),
+            "20260427T140000Z-tttt",
+            &lock(Probe::Free),
+            &writer(Probe::Free)
+        )
+        .is_some_and(|said| said.contains("connection reset"))
+    );
+    assert_eq!(
+        why(
+            dir.path(),
+            "20260427T140000Z-qqqq",
+            &lock(Probe::Free),
+            &writer(Probe::Free)
+        ),
+        None,
+        "a whole tail did not fail at all"
+    );
 }
 
 #[test]

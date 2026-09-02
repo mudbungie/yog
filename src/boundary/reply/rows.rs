@@ -124,6 +124,15 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
     // than the window does of the same instant.
     map.insert("depth".to_owned(), json!(row.depth));
     map.insert("tone".to_owned(), json!(tone_token(row.tone)));
+    // The hue's words (bl-9b88), **absent** rather than null for a
+    // conversation whose latest call did not fail — the `pinned` rank's own
+    // discipline: a reader must never have to tell "no failure" from "a
+    // failure with nothing to say". A `bad` tone with no `failure` beside it
+    // is therefore readable as exactly what it is, a failure the adapter left
+    // no words for.
+    if let Some(says) = &row.failure {
+        map.insert("failure".to_owned(), json!(says));
+    }
     // The standing alignment verdict (VISION §4.9 rung V6), absent — not
     // null — for a conversation no armed monitor has ruled on.
     if let Some(check) = &row.verdict {

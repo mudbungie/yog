@@ -44,6 +44,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
             output_tokens: Some(2),
         }),
         tone: crate::nav::convs::Tone::Plain,
+        failure: None,
     };
     let bare = ConvRow {
         root_id: "c-2".into(),
@@ -69,6 +70,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
         name_display_only: false,
         verdict: None,
         tone: crate::nav::convs::Tone::Plain,
+        failure: None,
     };
     let plain = ConvRow {
         ball: None,
@@ -131,6 +133,7 @@ fn a_display_only_name_is_withheld_from_the_boundary_as_a_message_target() {
         name_display_only: true,
         verdict: None,
         tone: crate::nav::convs::Tone::Plain,
+        failure: None,
     };
     let addressable = ConvRow {
         name_display_only: false,

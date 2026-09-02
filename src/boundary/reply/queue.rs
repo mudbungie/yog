@@ -26,6 +26,9 @@ pub(super) fn queue_row(row: &QueueRow) -> Value {
         "age_secs": row.age_secs,
         "pending": row.pending,
         "held": row.held.as_ref().map(held),
+        // The `refused` signal's own words (bl-9b88) — null, not absent, on the
+        // one row encoder that already spells `held` that way.
+        "failure": row.failure,
     })
 }
 
@@ -82,6 +85,7 @@ pub(super) fn queue_row_of(v: &Value) -> Result<QueueRow, String> {
         age_secs: i64_of(o, "age_secs")?,
         pending: usize_of(o, "pending")?,
         held: opt_val(o, "held", held_of)?,
+        failure: crate::boundary::codec::fields::opt_str_of(o, "failure")?,
     })
 }
 

@@ -6,6 +6,10 @@ use crate::attention::*;
 use crate::git_tree::{Agent, AgentState};
 use crate::ui_state::{SeenKind, UiState};
 
+/// An auth-shaped failure sentence: what makes `Agent::refused()` — the
+/// reading, not a second stored flag — answer true (bl-9b88).
+const AUTH_SHAPED: &str = r#"{"type":"error","status":401,"message":"Unauthorized"}"#;
+
 #[test]
 fn no_signals_is_no_attention() {
     let a = attention(&agent("a"), "ws", &nothing);
@@ -224,7 +228,7 @@ fn a_refused_rest_earns_the_refused_word_and_not_stoppeds() {
     let mine = attention(&ag, "ws", &nothing);
     assert_eq!(mine.kinds(), vec![AttentionKind::Stopped]);
 
-    ag.refused = true;
+    ag.failure = Some(AUTH_SHAPED.to_owned());
     let theirs = attention(&ag, "ws", &nothing);
     assert_eq!(theirs.kinds(), vec![AttentionKind::Refused]);
 
@@ -250,7 +254,7 @@ fn the_refused_word_names_the_act() {
 fn an_acked_refused_rest_still_stirs_nothing() {
     let mut ag = agent("a");
     ag.state = AgentState::Stopped;
-    ag.refused = true;
+    ag.failure = Some(AUTH_SHAPED.to_owned());
     assert!(
         attention(&ag, "ws", &acked(SeenKind::Stopped, "tip-a"))
             .kinds()

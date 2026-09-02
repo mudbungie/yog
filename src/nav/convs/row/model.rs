@@ -106,6 +106,17 @@ pub struct ConvRow {
     /// [`Tone::Plain`] once the derivation carries it. The one input is
     /// [`Agent::in_memory`], so nothing here decides; it reads.
     pub tone: Tone,
+    /// **Why this conversation's latest model call failed**, in one clause
+    /// (bl-9b88) — the words behind [`Tone::Bad`], so a roster of red rows says
+    /// what is wrong with them instead of asking the operator to open each one.
+    /// The engine has always held the sentence; until bl-9b88 no row carried
+    /// it, and a workspace whose provider row had no credential painted as a
+    /// list of conversations that simply never answer.
+    ///
+    /// `None` for every conversation whose latest call did not fail, which is
+    /// nearly all of them. The whole of it — the adapter's `stderr.log`, the
+    /// provider row to sign in to — is the steps surface's, one query deeper.
+    pub failure: Option<String>,
 }
 
 impl ConvRow {

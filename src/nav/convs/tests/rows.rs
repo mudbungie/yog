@@ -206,7 +206,7 @@ fn age_label_buckets() {
 fn a_refused_conversation_paints_bad_and_a_stopped_one_does_not() {
     let stopped = agent("r1-0", AgentState::Stopped, 10);
     let mut refused = agent("r2-0", AgentState::Stopped, 20);
-    refused.refused = true;
+    refused.failure = Some(r#"{"type":"error","status":401,"message":"Unauthorized"}"#.to_owned());
     let rows = build(&[stopped, refused], "/ws", &unseen, 100, &plain, &[]);
 
     let tone = |id: &str| {
@@ -222,4 +222,14 @@ fn a_refused_conversation_paints_bad_and_a_stopped_one_does_not() {
         vec![AgentState::Stopped, AgentState::Stopped],
         "the badge is the same word for both, which is the whole defect"
     );
+    // …and the hue's own words ride with it (bl-9b88): a red row that cannot
+    // say what is wrong with it is a row the operator must open to learn the
+    // one thing every red row in the workspace says.
+    let says = |id: &str| {
+        rows.iter()
+            .find(|r| r.root_id == id)
+            .and_then(|r| r.failure.clone())
+    };
+    assert_eq!(says("r2-0").as_deref(), Some("Unauthorized"));
+    assert_eq!(says("r1-0"), None);
 }

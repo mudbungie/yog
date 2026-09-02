@@ -45,6 +45,9 @@ pub(super) fn conv_rows() -> Vec<ConvRow> {
             output_tokens: None,
         }),
         tone: Tone::Weak,
+        // The hue's own words (bl-9b88) — the corpus must carry the sentence,
+        // since a hue alone is what the live sighting already had.
+        failure: Some("no credential for provider row \"work\"".to_owned()),
     };
     let bare = ConvRow {
         root_id: "c-2".into(),
@@ -70,6 +73,7 @@ pub(super) fn conv_rows() -> Vec<ConvRow> {
         name_display_only: false,
         verdict: None,
         tone: Tone::Plain,
+        failure: None,
     };
     let legacy = ConvRow {
         root_id: "c-3".into(),

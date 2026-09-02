@@ -38,6 +38,7 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
             tool: "bash".into(),
             reason: "bash {\"command\":\"curl x\"} classified open-world".into(),
         }),
+        failure: Some("Unauthorized".into()),
     };
     let encoded = encode(&Reply::Attention(vec![row]));
     assert_eq!(encoded["ok"], true);
@@ -92,6 +93,7 @@ fn a_row_with_no_park_spells_it_null() {
         age_secs: 0,
         pending: 0,
         held: None,
+        failure: None,
     };
     let encoded = encode(&Reply::Attention(vec![row]));
     assert_eq!(encoded["rows"][0]["held"], serde_json::Value::Null);

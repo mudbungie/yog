@@ -66,7 +66,7 @@ pub(crate) fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
         state,
         state_uncertain: false,
         truncated: false,
-        refused: false,
+        failure: None,
         pending: vec![],
         conflicted_oid: None,
         budget_oid: None,

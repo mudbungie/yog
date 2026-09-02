@@ -9,6 +9,7 @@
           "age_secs": 5,
           "agent": "c-1",
           "display": "Cobalt",
+          "failure": "Unauthorized",
           "held": {
             "reason": "writes",
             "tool": "Bash",
@@ -28,6 +29,7 @@
           "age_secs": 0,
           "agent": "c-2",
           "display": "Dun",
+          "failure": null,
           "held": null,
           "pending": 0,
           "preview": "",
@@ -39,6 +41,6 @@
       ]
     }
   ],
-  "protocol": 1,
+  "protocol": 3,
   "shape": "attention"
 }

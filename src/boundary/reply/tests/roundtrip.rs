@@ -101,6 +101,7 @@ fn every_conversation_row_token_survives_both_halves_of_its_table() {
         name_display_only: false,
         verdict: None,
         tone: Tone::Plain,
+        failure: None,
     };
     let mut rows = Vec::new();
     for tone in [

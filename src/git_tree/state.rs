@@ -46,6 +46,7 @@
 
 use std::path::{Path, PathBuf};
 
+use super::failure::failure;
 use super::probe::{LockProbe, Probe, WriterProbe};
 use super::streaming::latest_step_dir;
 use super::terminal::{Ending, Settled, settled};
@@ -87,7 +88,7 @@ impl AgentState {
 /// One agent's §3.5 classification: the three readings the two liveness
 /// observations plus the latest step's settled tail yield, gathered in one
 /// pass so the response file is read once.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Liveness {
     pub state: AgentState,
     /// A probe returned [`Probe::Unknown`] (DESIGN §10): the state is the best
@@ -98,12 +99,19 @@ pub(super) struct Liveness {
     /// holding the lease is itself the answer to "what now", and the step it
     /// is filling has no settled tail to read.
     pub truncated: bool,
-    /// The latest turn was **refused at the provider rung** (bl-b43b): the same
-    /// bytes, the same pass, the same at-rest gate as
-    /// [`truncated`](Self::truncated) — one more reading of the one file this
-    /// classification reads, never a second syscall and never a second
-    /// mid-write state of it.
-    pub refused: bool,
+    /// **Why the latest model call failed**, verbatim, or `None` when it did
+    /// not (bl-b43b's `refused` widened by bl-9b88). The same pass and the same
+    /// at-rest gate as [`truncated`](Self::truncated); the in-band error event
+    /// when the tail framed [`Framing::Failed`](super::Framing), else the
+    /// adapter's own `stderr.log` when it died before reaching the contract at
+    /// all. See [`super::failure`] for why the framing decides which, and why
+    /// the raw evidence rather than the row's clause is what rides.
+    ///
+    /// *Refused at the provider rung* is now a **query** over this
+    /// ([`Agent::refused`](super::Agent::refused)), not a flag beside it: the
+    /// auth heuristic is a reading of the sentence, and a fact and a reading of
+    /// it stored side by side are two chances to disagree.
+    pub failure: Option<String>,
 }
 
 /// Classify `agent_id` in `workspace` from the two liveness observations
@@ -124,7 +132,7 @@ pub(super) fn classify(
                 state,
                 uncertain,
                 truncated: false,
-                refused: false,
+                failure: None,
             }
         }
         // No driver: the terminal-only reading rules (§4.4) settle the file.
@@ -157,7 +165,7 @@ fn live_substate(workspace: &Path, agent_id: &str, writer: &dyn WriterProbe) -> 
 /// complete-and-whole latest `response.json` is `Quiescent`, anything else
 /// `Stopped`, and an output-limited tail says so beside the state.
 fn at_rest(workspace: &Path, agent_id: &str, uncertain: bool) -> Liveness {
-    let (settled, refused) = latest_settled(workspace, agent_id);
+    let (settled, failure) = latest_settled(workspace, agent_id);
     Liveness {
         state: if settled.whole() {
             AgentState::Quiescent
@@ -166,7 +174,7 @@ fn at_rest(workspace: &Path, agent_id: &str, uncertain: bool) -> Liveness {
         },
         uncertain,
         truncated: settled.ending == Ending::OutputLimit,
-        refused,
+        failure,
     }
 }
 
@@ -175,21 +183,24 @@ fn latest_response_path(workspace: &Path, agent_id: &str) -> Option<PathBuf> {
     Some(latest_step_dir(&steps)?.join(RESPONSE_FILE))
 }
 
-/// The latest step's §4.4 settled reading **and whether it was refused at the
-/// provider rung** (bl-b43b) — two readings off one read, for the reason this
+/// The latest step's §4.4 settled reading **and why its model call failed**
+/// (bl-b43b, widened bl-9b88) — two readings off one read, for the reason this
 /// module already gathers three: reading the file twice could catch two
-/// different mid-write states of it. Absence and an unreadable file both read
-/// as the *killed* tail they honestly are, and as no refusal — nothing on disk
-/// says a provider said no.
-fn latest_settled(workspace: &Path, agent_id: &str) -> (Settled, bool) {
+/// different mid-write states of it.
+///
+/// Absence of a step tree is the *killed* tail it honestly is, with no failure:
+/// nothing on disk says a call was even attempted. An **unreadable** response
+/// is not the same answer — the step exists and its adapter may have said why
+/// beside it — so it falls through to [`failure`], which is the whole of the
+/// out-of-band half.
+fn latest_settled(workspace: &Path, agent_id: &str) -> (Settled, Option<String>) {
     let Some(path) = latest_response_path(workspace, agent_id) else {
-        return (Settled::KILLED, false);
+        return (Settled::KILLED, None);
     };
-    match std::fs::read(&path) {
-        Ok(bytes) => (
-            settled(&bytes),
-            crate::login::auth::classify(&bytes).offered(),
-        ),
-        Err(_) => (Settled::KILLED, false),
-    }
+    let bytes = std::fs::read(&path).unwrap_or_default();
+    let reading = settled(&bytes);
+    // The step dir is the response file's parent by construction
+    // (`latest_response_path` joins the file onto it).
+    let step = path.parent().unwrap_or(&path);
+    (reading, failure(step, &bytes, reading))
 }

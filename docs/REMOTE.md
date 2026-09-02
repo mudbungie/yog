@@ -3749,12 +3749,57 @@ written down.
 
 **The corpus moved and `PROTOCOL` did not, by the rule already in force** (§3).
 `reply/conversations` gained a field, so its ledger signature moved and its
-`since` advanced from 1 to **2** — the standing version, which is unreleased,
-so the move is free exactly as bl-3655's follow-lane move was. `make corpus`
-adjudicated it rather than an author: the ledger refuses only a signature that
-moves while its own `since` **equals** the protocol being generated. A client
-vendoring the corpus decodes the new key or fails its own fixture, which is the
-whole mechanism.
+`since` advanced from 1 to **2** — the standing version, believed unreleased at
+the time, so the move was taken as free exactly as bl-3655's follow-lane move
+was. `make corpus` adjudicated it rather than an author: the ledger refuses only
+a signature that moves while its own `since` **equals** the protocol being
+generated. A client vendoring the corpus decodes the new key or fails its own
+fixture, which is the whole mechanism.
+
+**That belief was wrong, and §9.10 is where the correction is paid.** `PROTOCOL`
+2 shipped in **v0.0.7**, which was tagged before this row landed — so the field
+above was added to a shape at a *released* version, and the ledger let it
+through only because `reply/conversations` had not yet spent its one move at 2.
+The mechanism enforces *one move per shape per version*; the **rule** in §3 is
+stricter and is the authority: *any* change to a wire-visible shape — gained
+included — bumps the version. Read the two together as: the ledger cannot see
+what has shipped, so it catches the second author and not the first. What saves
+a client here is that the addition is optional and absent-by-default, so a v2
+seat reading a v3 row ignores a key it does not know; what a bump buys is that
+it does not have to.
+
+### 9.10 The roster says *why it did not run* (bl-9b88)
+
+**`ConvRow` and the §6 queue row gained `failure`**, the first clause of why a
+conversation's latest model call failed, and the `agent` answer gained it beside
+the `refused` class it already carried. `PROTOCOL` is **3**.
+
+The engine has held the sentence all along and no row carried it. DESIGN §6
+holds the derivation and the reasoning; what belongs here is the wire's half:
+
+- **The clause, not the whole.** A row is a glance (§11), so the wire carries
+  the provider's `message` — or the adapter's first stderr line — capped, and
+  the whole of it stays one query deeper on `/steps`. A seat that wants more
+  asks; a seat that only lists is not made to hold a stderr dump per row.
+- **Absent, not null, on the conversation row**, the same discipline `pinned`
+  and `alignment` already keep there: a reader must never have to tell *no
+  failure* from *a failure with nothing to say*. A `bad` tone with no `failure`
+  beside it therefore reads as exactly the third thing it is — a call that
+  failed and left no words. The queue row spells it `null`, because that row's
+  own encoder already spells `held` that way and one encoder should not hold two
+  conventions.
+- **The bump is the rule, not the ledger.** Three shapes gained a field, so §3's
+  rule fires; `reply/agent` and `reply/conversations` had also each spent their
+  one free move at 2, so the mechanism demanded it independently. Every shape
+  whose signature moved now stamps `since: 3`, and the rest stand where they
+  were.
+- **`tone: "bad"` widened without moving a signature.** It fired for an
+  auth-shaped refusal (bl-b43b) and now fires for any failed latest call. A
+  seat's action is unchanged — paint the row wrong-coloured — and the spelling
+  is unchanged, so this is a widening of when a value is true, not a change to
+  what it says. The distinction matters: §3's rule is about shapes and
+  spellings, and a value that becomes true in more of the cases it always
+  claimed to cover is neither.
 
 ## 10. Open questions (living)
 

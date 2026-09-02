@@ -17,7 +17,7 @@ use serde_json::{Map, Value, json};
 
 use crate::boundary::answer::agent::AgentView;
 use crate::boundary::codec::fields::{
-    bool_of, list_of, opt, opt_val, pick, str_of, strings_of, u64_of,
+    bool_of, list_of, opt, opt_str_of, opt_val, pick, str_of, strings_of, u64_of,
 };
 use crate::context::Fullness;
 use crate::control::hold::Held;
@@ -73,6 +73,13 @@ pub(super) fn reply(view: &AgentView) -> Value {
     // what tells the two apart on the surface whose whole job is *what it is
     // doing, what may be done to it*.
     map.insert("refused".to_owned(), json!(view.refused));
+    // …and the words behind it (bl-9b88), absent when the latest call did not
+    // fail. `refused` is the class and its remedy; this is what the provider
+    // actually said, which is the difference between a seat that can act and
+    // one that can only report that something is wrong.
+    if let Some(says) = &view.failure {
+        map.insert("failure".to_owned(), json!(says));
+    }
     if !view.marks.is_empty() {
         let marks: Vec<&str> = view.marks.iter().copied().map(mark_token).collect();
         map.insert("marks".to_owned(), json!(marks));
@@ -156,6 +163,7 @@ pub(super) fn view_of(o: &Map<String, Value>) -> Result<AgentView, String> {
         tip: str_of(o, "tip")?,
         state: state_of(o)?,
         refused: bool_of(o, "refused")?,
+        failure: opt_str_of(o, "failure")?,
         marks,
         held: opt_val(o, "held", held_of)?,
         flight: opt(o, "flight", |o, k| pick(o, k, &FLIGHTS))?,

@@ -35,6 +35,7 @@ pub(super) fn agent() -> Vec<Reply> {
             tip: "a".repeat(40),
             state: AgentState::InFlight,
             refused: false,
+            failure: None,
             // Every arm of the mark table, so a transposed token cannot pass.
             marks: vec![
                 AgentMark::Notified,
@@ -95,6 +96,9 @@ pub(super) fn agent() -> Vec<Reply> {
             // The other side of the pair the corpus must carry: a rest the
             // operator did not cause (bl-b43b).
             refused: true,
+            // …with the words behind it (bl-9b88): the corpus must carry the
+            // sentence, not only the class.
+            failure: Some("no credential for provider row \"work\"".to_owned()),
             marks: vec![],
             held: None,
             flight: None,

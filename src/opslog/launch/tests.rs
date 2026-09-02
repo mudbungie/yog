@@ -31,7 +31,7 @@ fn agent(id: &str, name: Option<&str>, state: AgentState, last_action: i64) -> A
         tool_calls: vec![],
         state,
         truncated: false,
-        refused: false,
+        failure: None,
         state_uncertain: false,
         pending: vec![],
         conflicted_oid: None,

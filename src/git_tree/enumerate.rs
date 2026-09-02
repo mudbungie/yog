@@ -90,7 +90,7 @@ pub(super) fn enumerate_agents(
             state: liveness.state,
             state_uncertain: liveness.uncertain,
             truncated: liveness.truncated,
-            refused: liveness.refused,
+            failure: liveness.failure,
             pending: crate::inboxview::list_inbox(workspace, &agent_id),
             conflicted_oid: marks.conflicted_oid(&agent_id),
             budget_oid: marks.budget_oid(&agent_id),

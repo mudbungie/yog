@@ -123,6 +123,12 @@ pub(super) fn row(
         // ruling): a row with no branch behind it is a send yog has
         // made and the world has not yet confirmed.
         tone: tone_of(root),
+        // The hue's own words (bl-9b88), so the roster is not a list of red
+        // rows an operator must open one by one to learn the one thing they
+        // all say.
+        failure: root
+            .and_then(|a| a.failure.as_deref())
+            .map(crate::git_tree::clause),
         name: root.and_then(crate::git_tree::Agent::name_fact),
         name_display_only: root.is_some_and(Agent::name_display_only),
         verdict: crate::monitor::row::worst(
@@ -137,23 +143,30 @@ pub(super) fn row(
     (last_active, row)
 }
 
-/// **How solid, and how well, the row paints** (§11, bl-915e; widened bl-b43b).
+/// **How solid, and how well, the row paints** (§11, bl-915e; widened bl-b43b,
+/// widened again bl-9b88).
 ///
 /// [`Tone::Weak`] while the row is §7.2's *pending conversation* — a start yog
 /// has fired whose driver has not written a branch, so the row is only yog's
-/// own word for it. [`Tone::Bad`] for a conversation whose latest turn was
-/// **refused at the provider rung**: the badge set is frozen at four (§5.1 #9)
-/// so the refusal comes to rest `stopped` like an operator's own `/stop`, and
-/// the roster is the operator's one *passive* sighting of it — a list where the
-/// two read identically is a list that cannot be scanned. The hue is the
-/// sighting and never the explanation (§11 glyph doctrine): the word is §6's
-/// `refused` signal and the provider row is the steps surface's `auth_row`.
+/// own word for it. [`Tone::Bad`] for a conversation whose **latest model call
+/// failed**, however it failed: the badge set is frozen at four (§5.1 #9) so it
+/// comes to rest `stopped` like an operator's own `/stop`, and the roster is
+/// the operator's one *passive* sighting of it — a list where the two read
+/// identically is a list that cannot be scanned. The hue is the sighting and
+/// never the explanation (§11 glyph doctrine): the words are the row's own
+/// [`failure`](ConvRow::failure) clause, §6's `refused` signal for the
+/// auth-shaped case, and the provider row is the steps surface's `auth_row`.
+///
+/// bl-b43b painted this off the auth-shaped subset alone, which is the half a
+/// failing provider *reaches the contract* to say. The half it does not — an
+/// adapter that died on a credential-less row, saying so only in its own
+/// `stderr.log` — was the live sighting, and it painted as nothing at all.
 ///
 /// Nothing here decides; it reads two facts the derivation already carries.
 fn tone_of(root: Option<&Agent>) -> Tone {
     match root {
         Some(agent) if agent.in_memory() => Tone::Weak,
-        Some(agent) if agent.refused => Tone::Bad,
+        Some(agent) if agent.failure.is_some() => Tone::Bad,
         _ => Tone::Plain,
     }
 }

@@ -100,20 +100,28 @@ pub struct Agent {
     /// unconditionally, and the §7.3 step wound says so in words. `false`
     /// under a held lock, where the question is not asked (§3.5).
     pub truncated: bool,
-    /// The latest turn was **refused at the provider rung** (bl-b43b): at rest,
-    /// with the latest step's response carrying an auth-shaped error
-    /// ([`crate::login::auth::classify`]). Read off the same bytes and in the
-    /// same pass as [`truncated`](Agent::truncated), and at rest for its reason
-    /// exactly — a driver holding the lease is itself the answer to "what now".
+    /// **Why the latest model call failed**, in the provider's own words, or
+    /// `None` when it did not (bl-b43b's `refused`, widened by bl-9b88). Read
+    /// off the same bytes and in the same pass as
+    /// [`truncated`](Agent::truncated), and at rest for its reason exactly — a
+    /// driver holding the lease is itself the answer to "what now".
+    ///
+    /// Two shapes of one fact, and until bl-9b88 only the first was read: the
+    /// in-band `error` event brazen speaks on stdout, and — when the adapter
+    /// died before reaching that contract, which is what a credential-less
+    /// provider row does — the step's own `stderr.log`. The second shape is the
+    /// one the live sighting wore: every conversation in a workspace launched a
+    /// driver, every model call refused, and every seat painted a conversation
+    /// that simply never answers.
     ///
     /// It is the *why* riding beside the state rather than a state of its own:
-    /// the badge set is frozen at four (§5.1 #9), so a refusal comes to rest
+    /// the badge set is frozen at four (§5.1 #9), so a failed call comes to rest
     /// [`Stopped`](AgentState::Stopped) like every other wound, and what
-    /// separates it from an operator's own `/stop` is this fact. §6's attention
-    /// signal is the word it earns (`AttentionKind::Refused`); the provider
-    /// **row** that refused, and so the credential to sign in, is the steps
-    /// surface's `auth_row` — one fact, one home, one query deeper.
-    pub refused: bool,
+    /// separates it from an operator's own `/stop` is this sentence. The §11 row
+    /// says its [`clause`](crate::git_tree::clause) and paints `Tone::Bad`; the
+    /// provider **row** to sign in to is the steps surface's `auth_row` — one
+    /// fact, one home, one query deeper.
+    pub failure: Option<String>,
     /// A liveness probe could not observe (DESIGN §10): the lock probe
     /// returned `Unknown`, or the writer probe did under a held lock. The
     /// [`state`](Agent::state) is then the best framing-only reading, never a
@@ -195,6 +203,18 @@ impl Agent {
     /// brightening when the derivation makes it a statement.
     pub fn in_memory(&self) -> bool {
         self.tip_oid.is_empty()
+    }
+
+    /// Was the latest model call **refused at the provider rung** (bl-b43b)?
+    /// The auth-shaped reading of [`failure`](Agent::failure)'s sentence — a
+    /// query, never a second stored flag, so the fact and the reading of it
+    /// cannot disagree. §6's `AttentionKind::Refused` is the word it earns and
+    /// the remedy (sign a provider in) is what makes it worth telling apart
+    /// from every other failed call.
+    pub fn refused(&self) -> bool {
+        self.failure
+            .as_deref()
+            .is_some_and(crate::login::auth::looks_auth)
     }
 
     pub fn name_fact(&self) -> Option<String> {
