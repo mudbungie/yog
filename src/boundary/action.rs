@@ -3,7 +3,6 @@
 //! Actions mutate the world and are the §4.2 trail's rows; queries populate.
 //! Two rosters, and only one of them can ever be wrong about the world.
 
-use crate::actions::verbs::edit;
 use crate::start::{Payload, Prepared};
 
 use super::config;
@@ -74,41 +73,14 @@ pub enum Action {
     /// writes one lineage, and that lineage is the one lawful destination, so
     /// naming a branch here would be a knob with one value (§9.3).
     Retarget { workspace: String, agent: String },
-    /// `bl close <id> --as <name>` (§8.2) — `name` is the ball's bound
-    /// workspace name (§3.2), never the operator `$USER`.
-    Close {
-        project: String,
-        id: String,
-        name: String,
-    },
-    /// `bl claim <id> --as <name>` — assign a ready ball (§8.2/§3.2).
-    Assign {
-        project: String,
-        id: String,
-        name: String,
-    },
-    /// `bl unclaim <id> --as <name>` — release (§8.2/§3.2).
-    Release {
-        project: String,
-        id: String,
-        name: String,
-    },
-    /// `bl create <title> --as <name> [fields…]` (§8.2): the whole payload is
-    /// [`edit::Create`], which owns the argv fold that spends it (bl-dbde).
-    Create {
-        project: String,
-        name: String,
-        fields: edit::Create,
-    },
-    /// `bl update <id> --as <name> [fields…]` (§8.2), payload [`edit::Update`].
-    /// One vocabulary, so a fact balls learns is added in one place instead of
-    /// in the roster, the codec's field list and a second struct beside them.
-    Update {
-        project: String,
-        id: String,
-        name: String,
-        fields: edit::Update,
-    },
+    /// **The `bl` family** (§8.2, bl-92d3): close, claim, unclaim, create,
+    /// update — one variant over
+    /// [`verbs::Verb`](crate::actions::verbs::Verb), the fold the monitor's,
+    /// the fleet's, the routing leg's and the §3.8 fan's families each took,
+    /// and on a seam every layer beneath already draws: `codec::balls`,
+    /// `line::balls`, `answer::balls`, `reply::balls`. That type's own doc
+    /// carries the five and what each spends.
+    Ball(crate::actions::verbs::Verb),
     /// The §8.1 start flow's mutating half: seed → ensure-workspace → the ball
     /// rung's `bl` steps, returning the composer's [`Prepared`] — the ▶ Start /
     /// Create-&-Start / raise gesture. The prompt is the separate, deferred

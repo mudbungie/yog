@@ -3,29 +3,30 @@
 //! the family whose payload grows every time balls learns a field.
 
 use super::rt;
+use crate::actions::verbs::Verb as BallVerb;
 use crate::actions::verbs::edit;
 use crate::boundary::{Action, Gesture};
 
 #[test]
 fn every_ball_action_round_trips() {
     let (project, id, name) = ("proj".to_owned(), "bl-1".to_owned(), "alba".to_owned());
-    rt(Gesture::Act(Action::Close {
+    rt(Gesture::Act(Action::Ball(BallVerb::Close {
         project: project.clone(),
         id: id.clone(),
         name: name.clone(),
-    }));
-    rt(Gesture::Act(Action::Assign {
+    })));
+    rt(Gesture::Act(Action::Ball(BallVerb::Assign {
         project: project.clone(),
         id: id.clone(),
         name: name.clone(),
-    }));
-    rt(Gesture::Act(Action::Release {
+    })));
+    rt(Gesture::Act(Action::Ball(BallVerb::Release {
         project: project.clone(),
         id: id.clone(),
         name: name.clone(),
-    }));
+    })));
     for body in [None, Some("the body".to_owned())] {
-        rt(Gesture::Act(Action::Create {
+        rt(Gesture::Act(Action::Ball(BallVerb::Create {
             project: project.clone(),
             name: name.clone(),
             fields: edit::Create {
@@ -33,7 +34,7 @@ fn every_ball_action_round_trips() {
                 body,
                 ..edit::Create::default()
             },
-        }));
+        })));
     }
     for fields in [
         (Some("t".to_owned()), None, None),
@@ -45,7 +46,7 @@ fn every_ball_action_round_trips() {
             Some("n".to_owned()),
         ),
     ] {
-        rt(Gesture::Act(Action::Update {
+        rt(Gesture::Act(Action::Ball(BallVerb::Update {
             project: project.clone(),
             id: id.clone(),
             name: name.clone(),
@@ -55,7 +56,7 @@ fn every_ball_action_round_trips() {
                 note: fields.2,
                 ..edit::Update::default()
             },
-        }));
+        })));
     }
 }
 
@@ -89,7 +90,7 @@ pub(super) fn every_field() -> Vec<edit::Field> {
 
 #[test]
 fn every_scheduling_fact_round_trips_on_both_authoring_verbs() {
-    rt(Gesture::Act(Action::Create {
+    rt(Gesture::Act(Action::Ball(BallVerb::Create {
         project: "proj".to_owned(),
         name: "alba".to_owned(),
         fields: edit::Create {
@@ -97,8 +98,8 @@ fn every_scheduling_fact_round_trips_on_both_authoring_verbs() {
             body: Some("the body".to_owned()),
             fields: every_field(),
         },
-    }));
-    rt(Gesture::Act(Action::Update {
+    })));
+    rt(Gesture::Act(Action::Ball(BallVerb::Update {
         project: "proj".to_owned(),
         id: "bl-1".to_owned(),
         name: "alba".to_owned(),
@@ -107,14 +108,14 @@ fn every_scheduling_fact_round_trips_on_both_authoring_verbs() {
             fields: every_field(),
             ..edit::Update::default()
         },
-    }));
+    })));
 }
 
 /// A schedule-only update is a change: the "nothing to change" refusal reads
 /// the whole payload, not just its three text fields.
 #[test]
 fn a_tag_alone_is_enough_to_be_an_update() {
-    rt(Gesture::Act(Action::Update {
+    rt(Gesture::Act(Action::Ball(BallVerb::Update {
         project: "proj".to_owned(),
         id: "bl-1".to_owned(),
         name: "alba".to_owned(),
@@ -122,5 +123,5 @@ fn a_tag_alone_is_enough_to_be_an_update() {
             fields: vec![edit::Field::Priority(Some(9))],
             ..edit::Update::default()
         },
-    }));
+    })));
 }

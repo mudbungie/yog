@@ -4,6 +4,7 @@
 //! the conformance corpus took the same list (bl-32cb).
 
 use super::decode;
+use crate::actions::verbs::Verb as BallVerb;
 use crate::actions::verbs::edit::Update;
 use crate::boundary::{Action, Gesture};
 use serde_json::json;
@@ -15,20 +16,20 @@ fn an_empty_schedule_is_omitted_and_absence_reads_as_empty() {
     let bare = json!({"op": "update", "project": "p", "id": "bl-1", "name": "alba"});
     assert_eq!(
         decode(&bare),
-        Ok(Gesture::Act(Action::Update {
+        Ok(Gesture::Act(Action::Ball(BallVerb::Update {
             project: "p".into(),
             id: "bl-1".into(),
             name: "alba".into(),
             fields: Update::default(),
-        })),
+        }))),
         "a seat that knows nothing of fields still speaks the envelope"
     );
-    let encoded = super::super::encode(&Gesture::Act(Action::Update {
+    let encoded = super::super::encode(&Gesture::Act(Action::Ball(BallVerb::Update {
         project: "p".into(),
         id: "bl-1".into(),
         name: "alba".into(),
         fields: Update::default(),
-    }));
+    })));
     assert_eq!(encoded, bare, "and nothing empty is written back out");
 }
 

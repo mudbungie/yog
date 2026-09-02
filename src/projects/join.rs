@@ -115,7 +115,7 @@ pub fn owner_name(row: &JoinRow) -> String {
 /// not reach. `Reply::Balls` therefore answered a thin seat two absolute paths
 /// under the engine's home: unusable there and a disclosure besides. They are
 /// the §5.1 #1 project name and the §3.1 workspace leaf now — the *same* two
-/// words `Action::Close`/`Assign`/`Move` already take — so a seat holding a
+/// words `Action::Ball`'s own `Close`/`Assign` already take — so a seat holding a
 /// name can select its own workspace's rows out of the answer without joining
 /// it back against the engine's table (the shape bl-7407 refused). The engine
 /// resolves either back through [`Snapshot::project_path`](crate::app::Snapshot)

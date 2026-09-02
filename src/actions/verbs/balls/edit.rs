@@ -7,8 +7,9 @@
 //! balls learns a field.
 //!
 //! It is the **boundary's** payload as well as the executor's:
-//! [`Action::Create`](crate::boundary::Action::Create) and
-//! [`Action::Update`](crate::boundary::Action::Update) carry these types whole.
+//! [`Verb::Create`](super::Verb::Create) and [`Verb::Update`](super::Verb::Update)
+//! — the family's carrier, which the §8.5 roster holds one row of — carry these
+//! types whole.
 //! Before bl-dbde the same fact was written twice — once as the roster's own
 //! variant fields and once as a struct here, bridged by an `Update::of` that
 //! re-cloned them — which is the two-representations drift the house rule names.

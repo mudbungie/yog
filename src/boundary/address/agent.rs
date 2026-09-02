@@ -64,11 +64,7 @@ impl Action {
             Action::Prepare { .. }
             | Action::Prompt { .. }
             | Action::Scan { .. }
-            | Action::Close { .. }
-            | Action::Assign { .. }
-            | Action::Release { .. }
-            | Action::Create { .. }
-            | Action::Update { .. }
+            | Action::Ball(_)
             | Action::Fan(_)
             | Action::DeleteWorkspace { .. }
             | Action::Fleet(_)

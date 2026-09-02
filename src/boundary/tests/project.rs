@@ -3,6 +3,7 @@
 //! executor read.
 
 use super::*;
+use crate::actions::verbs::Verb as BallVerb;
 use crate::fan::Verb;
 use crate::start::{BallSpec, Payload, Prepared};
 use std::path::Path;
@@ -12,32 +13,32 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
     let p = "p".to_owned();
     let ws = "ws".to_owned();
     let bl_family = [
-        Action::Close {
+        Action::Ball(BallVerb::Close {
             project: p.clone(),
             id: "b-1".into(),
             name: "n".into(),
-        },
-        Action::Assign {
+        }),
+        Action::Ball(BallVerb::Assign {
             project: p.clone(),
             id: "b-1".into(),
             name: "n".into(),
-        },
-        Action::Release {
+        }),
+        Action::Ball(BallVerb::Release {
             project: p.clone(),
             id: "b-1".into(),
             name: "n".into(),
-        },
-        Action::Create {
+        }),
+        Action::Ball(BallVerb::Create {
             project: p.clone(),
             name: "n".into(),
             fields: crate::actions::verbs::edit::Create::default(),
-        },
-        Action::Update {
+        }),
+        Action::Ball(BallVerb::Update {
             project: p.clone(),
             id: "b-1".into(),
             name: "n".into(),
             fields: crate::actions::verbs::edit::Update::default(),
-        },
+        }),
     ];
     for action in bl_family {
         assert_eq!(action.project(), Some(p.clone()), "{action:?}");

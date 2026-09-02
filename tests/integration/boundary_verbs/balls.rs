@@ -1,5 +1,5 @@
-//! The `bl` family through the §8.5 chokepoint: five variants, one project, and
-//! the exact §8.2 argv each spawns.
+//! The `bl` family through the §8.5 chokepoint: the five members of one
+//! carrier, one project, and the exact §8.2 argv each spawns.
 //!
 //! Split from [`super`] at §12's cap on the seam `codec/balls.rs` is already cut
 //! on one layer down — the litany family and the deposit round trip are one
@@ -10,6 +10,7 @@ use super::{deps, snapshot_of, ui};
 use crate::support::Recorder;
 use std::path::Path;
 use tempfile::tempdir;
+use yog::actions::verbs::Verb as BallVerb;
 use yog::actions::verbs::edit;
 use yog::boundary::Action;
 use yog::boundary::dispatch::dispatch;
@@ -20,22 +21,22 @@ use yog::opslog;
 /// The five bl-family variants, against one project.
 fn bl_actions(proj: &Path) -> [Action; 5] {
     [
-        Action::Close {
+        Action::Ball(BallVerb::Close {
             project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
-        },
-        Action::Assign {
+        }),
+        Action::Ball(BallVerb::Assign {
             project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
-        },
-        Action::Release {
+        }),
+        Action::Ball(BallVerb::Release {
             project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
-        },
-        Action::Create {
+        }),
+        Action::Ball(BallVerb::Create {
             project: yog::naming::leaf(proj),
             name: "alba".into(),
             fields: edit::Create {
@@ -43,8 +44,8 @@ fn bl_actions(proj: &Path) -> [Action; 5] {
                 body: Some("body".into()),
                 ..edit::Create::default()
             },
-        },
-        Action::Update {
+        }),
+        Action::Ball(BallVerb::Update {
             project: yog::naming::leaf(proj),
             id: "bl-1".into(),
             name: "alba".into(),
@@ -53,7 +54,7 @@ fn bl_actions(proj: &Path) -> [Action; 5] {
                 note: Some("n".into()),
                 ..edit::Update::default()
             },
-        },
+        }),
     ]
 }
 

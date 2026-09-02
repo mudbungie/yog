@@ -12,7 +12,7 @@
 //! spellings, one gesture — `/help`, `/help <verb>`, `<verb> --help|-h`, and a
 //! bare `/`, which is the question with nothing named.
 
-use super::balls::{create, id, update};
+use super::balls::read as ball;
 use super::verbs::{self, children, payload};
 use super::{Context, args, config, queries};
 use crate::boundary::{Action, Gesture, Query, help};
@@ -77,24 +77,10 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // conversation is the seat's, the lineage is the workspace's one
         // default, so the verb is the whole line.
         "retarget" => verbs::retarget(tail, ctx, verb),
-        // The §8.2 `bl` family: an id typed, or the focused ball's.
-        "close" => Ok(act(Action::Close {
-            project: args::project(ctx, verb)?,
-            id: id(tail, ctx, verb)?,
-            name: args::name(ctx, verb)?,
-        })),
-        "assign" => Ok(act(Action::Assign {
-            project: args::project(ctx, verb)?,
-            id: id(tail, ctx, verb)?,
-            name: args::name(ctx, verb)?,
-        })),
-        "release" => Ok(act(Action::Release {
-            project: args::project(ctx, verb)?,
-            id: id(tail, ctx, verb)?,
-            name: args::name(ctx, verb)?,
-        })),
-        "create" => create(tail, ctx, verb),
-        "update" => update(tail, ctx, verb),
+        // The §8.2 `bl` family (bl-92d3), one arm at its own door exactly as
+        // the fan's three are: an id typed or the focused ball's, and the two
+        // authoring verbs' payloads.
+        "close" | "assign" | "release" | "create" | "update" => ball(verb, tail, ctx),
         // The §8.1 start family, as its two real gestures.
         "prepare" => Ok(act(Action::Prepare {
             workspace: args::workspace(ctx, verb)?,

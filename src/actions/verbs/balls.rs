@@ -21,6 +21,9 @@ use crate::cli_outbound::Cli;
 use crate::opslog::Origin;
 
 pub mod edit;
+pub mod verb;
+
+pub use verb::Verb;
 
 // bl subcommands (pinned to `bl <verb> --skill`, §8.2).
 const CLOSE: &str = "close";

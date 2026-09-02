@@ -12,6 +12,7 @@
 //! **modulo context** — `parse(spell(g), ctx_of(g)) == g` — which is exactly
 //! the parity claim the line makes, and the tests read it that way.
 
+use crate::actions::verbs::Verb as BallVerb;
 use crate::boundary::{Action, Gesture, Query};
 use crate::start::{BallSpec, Payload};
 
@@ -40,22 +41,7 @@ fn spell_action(action: &Action) -> String {
         // The conversation is the seat's selection, as `/message`'s is, and the
         // lineage is the workspace's one default — so the verb is the line.
         Action::Retarget { .. } => "/retarget".to_owned(),
-        Action::Close { id, .. } => format!("/close {id}"),
-        Action::Assign { id, .. } => format!("/assign {id}"),
-        Action::Release { id, .. } => format!("/release {id}"),
-        Action::Create { fields, .. } => format!(
-            "/create {}{}{}",
-            fields.title,
-            flag("body", fields.body.as_ref()),
-            super::balls::spell_fields(&fields.fields)
-        ),
-        Action::Update { id, fields, .. } => format!(
-            "/update {id}{}{}{}{}",
-            flag("title", fields.title.as_ref()),
-            flag("body", fields.body.as_ref()),
-            flag("note", fields.note.as_ref()),
-            super::balls::spell_fields(&fields.fields)
-        ),
+        Action::Ball(verb) => spell_ball(verb),
         Action::Prepare { payload, .. } => spell_payload(payload),
         Action::Prompt { goal, .. } => format!("/prompt {goal}"),
         // N is the whole line: the obligation and the prepared start are the
@@ -158,6 +144,31 @@ fn spell_monitor(verb: &crate::monitor::Verb) -> String {
 /// The armed loop's two (VISION §4.3). The project and the workspace are the
 /// seat's selection, exactly as they are for every `bl` verb, so the cap is the
 /// whole line.
+/// The §8.2 `bl` family's five, beside [`spell_fleet`] and for its reason: the
+/// roster names the family once and the members are spelled where they live
+/// (bl-92d3). Each still spells as its own slash verb — the fold is in the
+/// carrier, never in the surface.
+fn spell_ball(verb: &BallVerb) -> String {
+    match verb {
+        BallVerb::Close { id, .. } => format!("/close {id}"),
+        BallVerb::Assign { id, .. } => format!("/assign {id}"),
+        BallVerb::Release { id, .. } => format!("/release {id}"),
+        BallVerb::Create { fields, .. } => format!(
+            "/create {}{}{}",
+            fields.title,
+            flag("body", fields.body.as_ref()),
+            super::balls::spell_fields(&fields.fields)
+        ),
+        BallVerb::Update { id, fields, .. } => format!(
+            "/update {id}{}{}{}{}",
+            flag("title", fields.title.as_ref()),
+            flag("body", fields.body.as_ref()),
+            flag("note", fields.note.as_ref()),
+            super::balls::spell_fields(&fields.fields)
+        ),
+    }
+}
+
 fn spell_fleet(verb: &crate::fleet::Verb) -> String {
     use crate::fleet::Verb;
     match verb {

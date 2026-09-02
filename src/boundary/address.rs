@@ -40,11 +40,11 @@ impl Action {
     /// refresh target. `None` for the litany/workspace families.
     pub fn project(&self) -> Option<String> {
         match self {
-            Action::Close { project, .. }
-            | Action::Assign { project, .. }
-            | Action::Release { project, .. }
-            | Action::Create { project, .. }
-            | Action::Update { project, .. } => Some(project.clone()),
+            // The §8.2 `bl` family, one arm since bl-92d3: every member names
+            // a project — that is what makes it a family — so the answer is
+            // the carrier's own, and a sixth member cannot be added without
+            // answering this question where the type is.
+            Action::Ball(verb) => Some(verb.project()),
             // A fan claims nothing, a retirement delivers nothing, and a
             // delivery closes nothing — but all three act in a project's refs,
             // and the §3.5 projection reads that project's board, so all three

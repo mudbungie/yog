@@ -139,11 +139,11 @@ fn release(deps: &Deps, ui: &mut UiState, ts: &str, row: &BoardRow, name: &str) 
         deps,
         ui,
         ts,
-        &Action::Release {
+        &Action::Ball(crate::actions::verbs::Verb::Release {
             project: row.project.clone(),
             id: row.id.clone(),
             name: name.to_owned(),
-        },
+        }),
     ))
 }
 

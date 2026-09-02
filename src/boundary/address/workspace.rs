@@ -99,11 +99,7 @@ impl Action {
             // one is a fact about that machine, not about a workspace.
             Action::Advertise { .. }
             | Action::Route(_)
-            | Action::Close { .. }
-            | Action::Assign { .. }
-            | Action::Release { .. }
-            | Action::Create { .. }
-            | Action::Update { .. }
+            | Action::Ball(_)
             | Action::Fan(crate::fan::Verb::Retire { .. } | crate::fan::Verb::Deliver { .. })
             | Action::Ack
             | Action::ClearTrail => None,

@@ -7,7 +7,7 @@
 //! the verbs that address *a ball in a project*.
 
 use super::{Context, args};
-use crate::actions::verbs::edit;
+use crate::actions::verbs::{Verb, edit};
 use crate::boundary::{Action, Gesture};
 
 fn act(action: Action) -> Gesture {
@@ -19,11 +19,40 @@ pub(super) fn id(tail: &str, ctx: &Context, verb: &str) -> Result<String, String
     args::ball_id(args::optional_word(tail, verb)?, ctx, verb)
 }
 
+/// **The family's one door** (bl-92d3), the shape [`super::fan`]'s already has:
+/// [`super::parse`]'s table names the family once and comes here for which
+/// member, so the roster reads as a roster instead of spelling one grammar
+/// three times inline. `verb` has already been matched there, so an unlisted
+/// one cannot arrive — the same contract `codec::balls::decode` keeps.
+pub(super) fn read(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
+    match verb {
+        "create" => create(tail, ctx, verb),
+        "update" => update(tail, ctx, verb),
+        _ => identified(tail, ctx, verb),
+    }
+}
+
+/// `/close [id]`, `/assign [id]`, `/release [id]` — the three that differ in
+/// nothing but which act they name, read once. The fallthrough is `release`,
+/// and [`read`]'s own contract is what keeps it honest.
+fn identified(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    let (project, id, name) = (
+        args::project(ctx, verb)?,
+        id(tail, ctx, verb)?,
+        args::name(ctx, verb)?,
+    );
+    Ok(act(Action::Ball(match verb {
+        "close" => Verb::Close { project, id, name },
+        "assign" => Verb::Assign { project, id, name },
+        _ => Verb::Release { project, id, name },
+    })))
+}
+
 /// `/create <title…> [--body <text…>] [scheduling flags…]`.
-pub(super) fn create(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+fn create(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     let (title, flags) = args::split_flags(tail);
     only(&flags, &["body"], verb)?;
-    Ok(act(Action::Create {
+    Ok(act(Action::Ball(Verb::Create {
         project: args::project(ctx, verb)?,
         name: args::name(ctx, verb)?,
         fields: edit::Create {
@@ -31,12 +60,12 @@ pub(super) fn create(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
             body: args::flag(&flags, "body", verb)?,
             fields: fields(&flags, verb)?,
         },
-    }))
+    })))
 }
 
 /// `/update [id] [--title T] [--body B] [--note N] [scheduling flags…]` — at
 /// least one field, or the line asked for nothing and the refusal says so.
-pub(super) fn update(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+fn update(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     let (positional, flags) = args::split_flags(tail);
     only(&flags, &["title", "body", "note"], verb)?;
     let edits = edit::Update {
@@ -48,12 +77,12 @@ pub(super) fn update(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
     if edits == edit::Update::default() {
         return Err(format!("/{verb}: nothing to change; usage: {UPDATE_USAGE}"));
     }
-    Ok(act(Action::Update {
+    Ok(act(Action::Ball(Verb::Update {
         project: args::project(ctx, verb)?,
         id: id(&positional, ctx, verb)?,
         name: args::name(ctx, verb)?,
         fields: edits,
-    }))
+    })))
 }
 
 /// `/update`'s usage, said once — the refusal above and the help page read it.

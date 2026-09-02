@@ -5,6 +5,7 @@
 //! board's **scheduling facts** (bl-dbde): the four a remote seat could not
 //! state at all before.
 
+use crate::actions::verbs::Verb as BallVerb;
 use crate::actions::verbs::edit::{Create, Field, Update};
 use crate::boundary::{Action, Gesture};
 
@@ -36,24 +37,24 @@ pub(crate) fn every_field() -> Vec<Field> {
 
 pub(super) fn surface() -> Vec<Gesture> {
     let mut out = vec![
-        Gesture::Act(Action::Close {
+        Gesture::Act(Action::Ball(BallVerb::Close {
             project: "proj".into(),
             id: "bl-1".into(),
             name: "alba".into(),
-        }),
-        Gesture::Act(Action::Assign {
+        })),
+        Gesture::Act(Action::Ball(BallVerb::Assign {
             project: "proj".into(),
             id: "bl-1".into(),
             name: "alba".into(),
-        }),
-        Gesture::Act(Action::Release {
+        })),
+        Gesture::Act(Action::Ball(BallVerb::Release {
             project: "proj".into(),
             id: "bl-1".into(),
             name: "alba".into(),
-        }),
+        })),
     ];
     for body in [Some("the body".to_owned()), None] {
-        out.push(Gesture::Act(Action::Create {
+        out.push(Gesture::Act(Action::Ball(BallVerb::Create {
             project: "proj".into(),
             name: "alba".into(),
             fields: Create {
@@ -61,7 +62,7 @@ pub(super) fn surface() -> Vec<Gesture> {
                 body,
                 ..Create::default()
             },
-        }));
+        })));
     }
     for fields in [
         Update {
@@ -72,15 +73,15 @@ pub(super) fn surface() -> Vec<Gesture> {
         },
         Update::default(),
     ] {
-        out.push(Gesture::Act(Action::Update {
+        out.push(Gesture::Act(Action::Ball(BallVerb::Update {
             project: "proj".into(),
             id: "bl-1".into(),
             name: "alba".into(),
             fields,
-        }));
+        })));
     }
     // The scheduling facts, on both authoring verbs.
-    out.push(Gesture::Act(Action::Create {
+    out.push(Gesture::Act(Action::Ball(BallVerb::Create {
         project: "proj".into(),
         name: "alba".into(),
         fields: Create {
@@ -88,8 +89,8 @@ pub(super) fn surface() -> Vec<Gesture> {
             body: None,
             fields: every_field(),
         },
-    }));
-    out.push(Gesture::Act(Action::Update {
+    })));
+    out.push(Gesture::Act(Action::Ball(BallVerb::Update {
         project: "proj".into(),
         id: "bl-1".into(),
         name: "alba".into(),
@@ -97,6 +98,6 @@ pub(super) fn surface() -> Vec<Gesture> {
             fields: every_field(),
             ..Update::default()
         },
-    }));
+    })));
     out
 }

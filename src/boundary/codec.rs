@@ -14,8 +14,9 @@ use serde_json::{Value, json};
 
 use super::{Action, Gesture};
 
-/// The `bl` family's six envelopes (bl-c2bd) — its own family file, the seam
-/// every sibling here is already cut on.
+/// The `bl` family's five envelopes and, since bl-92d3, its whole spelling in
+/// both directions — its own family file, the seam every sibling here is
+/// already cut on.
 mod balls;
 mod config;
 mod control;
@@ -71,20 +72,9 @@ fn encode_action(action: &Action) -> Value {
         Action::Scan { workspace } => json!({ "op": "scan", "workspace": workspace }),
         Action::Nudge { workspace, agent } => at_agent("nudge", workspace, agent),
         Action::Retarget { workspace, agent } => at_agent("retarget", workspace, agent),
-        Action::Close { project, id, name } => balls::ball("close", project, id, name),
-        Action::Assign { project, id, name } => balls::ball("assign", project, id, name),
-        Action::Release { project, id, name } => balls::ball("release", project, id, name),
-        Action::Create {
-            project,
-            name,
-            fields,
-        } => balls::create(project, name, fields),
-        Action::Update {
-            project,
-            id,
-            name,
-            fields,
-        } => balls::update(project, id, name, fields),
+        // The §8.2 `bl` family's five, each spelled in its family file
+        // (bl-c2bd), one row since bl-92d3 exactly as the fan's three are.
+        Action::Ball(verb) => balls::encode(verb),
         // The §8.1 start family's two, beside the `Prepared` body they share.
         Action::Prepare { .. } | Action::Prompt { .. } => encode_start(action),
         // The §4.10 fan's three, each spelled in its family file (bl-c2bd).

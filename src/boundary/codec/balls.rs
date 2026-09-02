@@ -7,24 +7,47 @@
 
 use serde_json::{Map, Value, json};
 
-use crate::actions::verbs::edit;
+use crate::actions::verbs::{Verb, edit};
 use crate::boundary::Action;
 
 use super::fields::{bool_of, i64_of, list_of, opt};
 use super::start::opt_field;
 use super::{obj, opt_str_of, str_of};
 
+/// The family's five spellings, off the one carrier the roster now holds
+/// (bl-92d3). It lives here rather than as five rows of `super`'s match for the
+/// reason the fan's `encode_verb` does: a family whose grammar is already one
+/// file spells itself there, and the roster names the family once.
+pub(super) fn encode(verb: &Verb) -> Value {
+    match verb {
+        Verb::Close { project, id, name } => ball("close", project, id, name),
+        Verb::Assign { project, id, name } => ball("assign", project, id, name),
+        Verb::Release { project, id, name } => ball("release", project, id, name),
+        Verb::Create {
+            project,
+            name,
+            fields,
+        } => create(project, name, fields),
+        Verb::Update {
+            project,
+            id,
+            name,
+            fields,
+        } => update(project, id, name, fields),
+    }
+}
+
 /// The three one-shape `bl` envelopes — op, project, id, `--as` name — said
 /// once rather than three times, which is also what keeps the encode roster
 /// inside §12's per-function budget.
-pub(super) fn ball(op: &str, project: &str, id: &str, name: &str) -> Value {
+fn ball(op: &str, project: &str, id: &str, name: &str) -> Value {
     json!({ "op": op, "project": project, "id": id, "name": name })
 }
 
 /// The two `bl` envelopes with **optional** fields, bodied out beside [`ball`]
 /// for the same reason: a match arm that builds a map is a body, and the arm
 /// roster stops reading as one once two of them are.
-pub(super) fn create(project: &str, name: &str, fields: &edit::Create) -> Value {
+fn create(project: &str, name: &str, fields: &edit::Create) -> Value {
     let mut map = obj(&[("op", "create"), ("title", &fields.title), ("name", name)]);
     map.insert("project".to_owned(), Value::String(project.to_owned()));
     opt_field(&mut map, "body", fields.body.as_ref());
@@ -33,7 +56,7 @@ pub(super) fn create(project: &str, name: &str, fields: &edit::Create) -> Value 
 }
 
 /// `[title, body, note]` in the order `/update`'s own flags read.
-pub(super) fn update(project: &str, id: &str, name: &str, fields: &edit::Update) -> Value {
+fn update(project: &str, id: &str, name: &str, fields: &edit::Update) -> Value {
     let mut map = obj(&[("op", "update"), ("id", id), ("name", name)]);
     map.insert("project".to_owned(), Value::String(project.to_owned()));
     for (key, value) in
@@ -103,23 +126,23 @@ fn decode_field(v: &Value) -> Result<edit::Field, String> {
 /// keeps the fallthrough arm honest: `update` is the only op left.
 pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String> {
     let project = str_of(o, "project")?;
-    Ok(match op {
-        "close" => Action::Close {
+    Ok(Action::Ball(match op {
+        "close" => Verb::Close {
             project,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
         },
-        "assign" => Action::Assign {
+        "assign" => Verb::Assign {
             project,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
         },
-        "release" => Action::Release {
+        "release" => Verb::Release {
             project,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
         },
-        "create" => Action::Create {
+        "create" => Verb::Create {
             project,
             name: str_of(o, "name")?,
             fields: edit::Create {
@@ -128,7 +151,7 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String>
                 fields: decode_fields(o)?,
             },
         },
-        _ => Action::Update {
+        _ => Verb::Update {
             project,
             id: str_of(o, "id")?,
             name: str_of(o, "name")?,
@@ -139,5 +162,5 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String>
                 fields: decode_fields(o)?,
             },
         },
-    })
+    }))
 }

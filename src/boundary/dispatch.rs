@@ -104,15 +104,23 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Action::Nudge { .. } => control::advance(deps, ts, ws, agent).map(|()| Reply::Nudged),
         Action::Retarget { .. } => outcome(retarget(deps, ts, ws, agent)),
         Action::Fork { attempt, goal, .. } => fork(deps, ts, ws, agent, attempt, goal),
-        Action::Close { id, name, .. } => spend(verbs::close, deps, ts, project, id, name),
-        Action::Assign { id, name, .. } => spend(verbs::assign, deps, ts, project, id, name),
-        Action::Release { id, name, .. } => spend(verbs::unclaim, deps, ts, project, id, name),
-        Action::Create { name, fields, .. } => {
-            outcome(verbs::create(bl, root, ts, project, name, fields))
-        }
-        Action::Update {
-            id, name, fields, ..
-        } => outcome(verbs::update(bl, root, ts, project, id, name, fields)),
+        // The §8.2 `bl` family (bl-92d3): one row here, five members one level
+        // down, exactly as the monitor's and the fan's route.
+        Action::Ball(verb) => match verb {
+            verbs::Verb::Close { id, name, .. } => spend(verbs::close, deps, ts, project, id, name),
+            verbs::Verb::Assign { id, name, .. } => {
+                spend(verbs::assign, deps, ts, project, id, name)
+            }
+            verbs::Verb::Release { id, name, .. } => {
+                spend(verbs::unclaim, deps, ts, project, id, name)
+            }
+            verbs::Verb::Create { name, fields, .. } => {
+                outcome(verbs::create(bl, root, ts, project, name, fields))
+            }
+            verbs::Verb::Update {
+                id, name, fields, ..
+            } => outcome(verbs::update(bl, root, ts, project, id, name, fields)),
+        },
         Action::Prepare { payload, .. } => staged(deps, ts, ws, project, payload),
         Action::Prompt {
             prepared,

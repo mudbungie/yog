@@ -18,6 +18,7 @@ mod chokepoint;
 mod resolve;
 
 use super::{Action, Query};
+use crate::actions::verbs::Verb as BallVerb;
 
 /// The workspace name every fixture gesture here carries.
 const WS: &str = "alba";
@@ -118,11 +119,11 @@ fn the_actions_that_name_no_conversation_say_so() {
             provider: "acme".into(),
             model: "m".into(),
         },
-        Action::Close {
+        Action::Ball(BallVerb::Close {
             project: "p".into(),
             id: "bl-1".into(),
             name: "n".into(),
-        },
+        }),
         Action::Monitor(crate::monitor::Verb::Disarm {
             workspace: WS.into(),
         }),

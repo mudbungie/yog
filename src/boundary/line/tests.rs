@@ -4,6 +4,7 @@
 //! sibling file.
 
 use super::*;
+use crate::actions::verbs::Verb as BallVerb;
 use crate::actions::verbs::edit;
 use crate::boundary::{Action, Gesture, Query, help};
 use crate::opslog::Origin;
@@ -140,15 +141,15 @@ fn an_attempts_goal_is_the_whole_tail_after_the_flag() {
 fn a_ball_verb_defaults_to_the_focused_ball() {
     assert_eq!(
         parse("/close", &ctx()),
-        Ok(Gesture::Act(Action::Close {
+        Ok(Gesture::Act(Action::Ball(BallVerb::Close {
             project: "proj".to_owned(),
             id: "bl-1".to_owned(),
             name: "alba".to_owned(),
-        }))
+        })))
     );
     assert_eq!(
         parse("/update --note ping", &ctx()),
-        Ok(Gesture::Act(Action::Update {
+        Ok(Gesture::Act(Action::Ball(BallVerb::Update {
             project: "proj".to_owned(),
             id: "bl-1".to_owned(),
             name: "alba".to_owned(),
@@ -156,7 +157,7 @@ fn a_ball_verb_defaults_to_the_focused_ball() {
                 note: Some("ping".to_owned()),
                 ..edit::Update::default()
             },
-        }))
+        })))
     );
 }
 

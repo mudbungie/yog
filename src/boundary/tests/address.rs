@@ -9,6 +9,7 @@
 //! against the empty path instead of refusing.
 
 use super::super::{Action, Query};
+use crate::actions::verbs::Verb as BallVerb;
 use crate::fan::Verb;
 use crate::start::{Payload, Prepared};
 
@@ -160,11 +161,11 @@ fn every_workspace_bearing_action_answers_with_its_name() {
 #[test]
 fn the_actions_that_name_no_workspace_say_so() {
     let anonymous = [
-        Action::Close {
+        Action::Ball(BallVerb::Close {
             project: "p".into(),
             id: "bl-1".into(),
             name: "n".into(),
-        },
+        }),
         Action::Fan(Verb::Retire {
             obligation: crate::fan::Obligation {
                 project: "p".into(),

@@ -3429,7 +3429,7 @@ field, which is bl-296f's own rule applied a second time.
   period after the name like everything else on that answer.
 - **`JoinRow` says names now, and the last path-typed payload field but one is
   gone** (§8.1). `project` is the §5.1 #1 wire name and `workspace` the §3.1
-  leaf — the *same two words* `Action::Close`/`Assign`/`Move` already take — so
+  leaf — the *same two words* `Action::Ball`'s own `Close`/`Assign` already take — so
   the seat's ball row hands its verbs a name it was answered rather than a path
   it resolved, and `Reply::Balls` is finally readable by a client that holds no
   world. `BoardRow` narrowed with it (it copies both fields off the join), and
