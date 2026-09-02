@@ -58,8 +58,8 @@ fn an_unregistered_workspace_refuses_exactly_as_an_unknown_one() {
         &json!({"op": "conversations", "workspace": "corp2"}),
     );
     assert_eq!(hidden["ok"], false);
-    assert_eq!(hidden["error"], "unknown workspace \"corp\"");
-    assert_eq!(absent["error"], "unknown workspace \"corp2\"");
+    assert_eq!(hidden["error"], "unknown workspace \"corp\" — known: home");
+    assert_eq!(absent["error"], "unknown workspace \"corp2\" — known: home");
     // The workspace it IS registered in answers.
     assert_eq!(
         ctx.answer_as(&phone, &json!({"op": "conversations", "workspace": "home"}))["ok"],
@@ -140,7 +140,10 @@ fn a_create_naming_a_workspace_that_exists_refuses_rather_than_joining_it() {
         &json!({"op": "prepare", "workspace": "corp", "payload": {"rung": "bare"}}),
     );
     assert_eq!(refusal["ok"], false);
-    assert_eq!(refusal["error"], "unknown workspace \"corp\"");
+    assert_eq!(
+        refusal["error"],
+        "unknown workspace \"corp\" — none is enumerated here"
+    );
     assert!(crate::registry::registered(root.path(), &phone.client).is_empty());
 }
 
@@ -163,7 +166,10 @@ fn a_raise_naming_something_that_is_not_a_plain_component_refuses() {
             &json!({"op": "prepare", "workspace": name, "payload": {"rung": "bare"}}),
         );
         assert_eq!(refusal["ok"], false, "{name}");
-        assert_eq!(refusal["error"], format!("unknown workspace {name:?}"));
+        assert_eq!(
+            refusal["error"],
+            format!("unknown workspace {name:?} — none is enumerated here")
+        );
     }
     assert!(crate::registry::registered(root.path(), &client("phone")).is_empty());
 }

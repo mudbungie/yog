@@ -1878,6 +1878,20 @@ live-enumeration barrier bl-6c9e added, and the conversation noun bl-49bc added
   allocates nothing (the two sets agree; the published `Arc` is handed straight
   back). And the rule runs backwards for free: a workspace §3.6 deleted stops
   resolving at once rather than at the next sweep.
+- **Both nouns, and the refusal names what it could not match** *(bl-3377)*. The
+  bullet above folded workspaces and left the **project** noun on the cached
+  copy, so a `yog bl prime` inside the world was refused by every ball gesture
+  for a whole sweep — `unknown project "proj"`, byte-identical to a typo, and
+  the same line one sweep later succeeded. A project enumerates the same way
+  (§5.1 #1, one readdir of the balls clones dir) and now folds beside the
+  workspace set, inheriting every consequence above. And because `--project`
+  takes a *derived* name that **no gesture answered** — `/balls` and `/board`
+  carry a project only for balls that exist, so a primed project with no balls
+  is a word the operator cannot learn — the refusal carries the set it could not
+  match, bounded and then counted. That is a listing verb dissolved rather than
+  added: the refusal is where the question is already being asked, and `naming`
+  is already the one home of both names. Scope runs first, so a scoped client is
+  told what *it* may address and never that something else exists.
 - **A reply speaks the name where it IDENTIFIES and the path where the path
   IS the answer.** `WsRow` identified a workspace by carrying the whole
   `Workspace` — path, kind and, for a named one, a `name` beside the path. It

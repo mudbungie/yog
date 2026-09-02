@@ -44,9 +44,29 @@ fn over(
     yog_data_root: PathBuf,
     litany: Cli,
 ) -> ConsumerCtx {
+    over_world(
+        state_root,
+        snap,
+        yog_data_root,
+        litany,
+        crate::test_support::no_world(),
+    )
+}
+
+/// The same, over a **stated world** — what the §5.1 #1 project enumeration is
+/// read out of (bl-3377). Nearly every test here wants the hermetic
+/// `no_world()`, whose clones dir does not exist and therefore enumerates
+/// nothing; the project-birth barrier is the one that needs a real one.
+fn over_world(
+    state_root: &std::path::Path,
+    snap: crate::app::Snapshot,
+    yog_data_root: PathBuf,
+    litany: Cli,
+    world: crate::xdg::Env,
+) -> ConsumerCtx {
     ConsumerCtx {
         yog_binary: PathBuf::from("/no/such/yog"),
-        world: crate::test_support::no_world(),
+        world,
         litany,
         bl: Cli::new("/no/such/bl"),
         state_root: state_root.to_path_buf(),

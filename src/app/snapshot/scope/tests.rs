@@ -80,7 +80,10 @@ fn an_unregistered_name_refuses_exactly_as_an_unknown_one_does() {
     let scoped = snap().scoped(&allowed(&["home"]));
     let hidden = scoped.ws_path("corp").expect_err("refused");
     let absent = scoped.ws_path("no-such-thing").expect_err("refused");
-    assert_eq!(hidden, "unknown workspace \"corp\"");
+    // The refusal names the set the *scoped* snapshot holds (bl-3377), which
+    // is exactly what makes naming it safe: a client is told what it may
+    // address and never that something else exists.
+    assert_eq!(hidden, "unknown workspace \"corp\" — known: home");
     assert_eq!(absent.replace("no-such-thing", "corp"), hidden);
     assert!(scoped.ws_path("home").is_ok());
 }

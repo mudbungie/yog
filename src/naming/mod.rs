@@ -78,7 +78,8 @@ pub fn is_component(name: &str) -> bool {
 pub fn by_leaf(set: &[PathBuf], name: &str) -> Result<PathBuf, String> {
     let mut hits = set.iter().filter(|p| leaf(p) == name);
     let Some(first) = hits.next() else {
-        return Err(format!("unknown workspace {name:?}"));
+        let known: Vec<String> = set.iter().map(|p| leaf(p)).collect();
+        return Err(format!("unknown workspace {name:?}{}", known_of(&known)));
     };
     match hits.next() {
         None => Ok(first.clone()),
@@ -113,7 +114,41 @@ pub fn resolve(set: &[PathBuf], name: &str) -> Result<PathBuf, String> {
     set.iter()
         .find(|p| name_of(set, p) == name)
         .cloned()
-        .ok_or_else(|| format!("unknown project {name:?}"))
+        .ok_or_else(|| {
+            let known: Vec<String> = set.iter().map(|p| name_of(set, p)).collect();
+            format!("unknown project {name:?}{}", known_of(&known))
+        })
+}
+
+/// How many names an unmatched refusal lists before it stops naming (bl-3377).
+/// A refusal is a sentence, not a listing: past this many the operator is
+/// reading a directory and the token they typed has scrolled away.
+const KNOWN_MAX: usize = 12;
+
+/// **What the caller could have typed**, appended to a refusal that matched
+/// nothing (bl-3377).
+///
+/// `--project` takes the §5.1 #1 derived name — the shortest unique trailing
+/// run of path components — and **no gesture answered that set**: `/balls` and
+/// `/board` carry a `project` field only for balls that already exist, so on a
+/// world with a primed project and no balls (exactly the state after `bl
+/// prime`) there was no way to learn the word. The refusal named the token and
+/// offered nothing. It carries the set instead of a listing verb existing to
+/// carry it, because the refusal is the one place the question is *already*
+/// being asked, and because the set is derived here — the one home of both
+/// names — rather than assembled by a second reader.
+///
+/// An empty set says so outright: "nothing here answers to a project name" is a
+/// different world from "you typed the wrong one", and the operator must not
+/// have to tell them apart by the absence of a list.
+fn known_of(known: &[String]) -> String {
+    let mut names: Vec<&str> = known.iter().map(String::as_str).collect();
+    names.sort_unstable();
+    match names.split_at(names.len().min(KNOWN_MAX)) {
+        ([], _) => " — none is enumerated here".to_owned(),
+        (shown, []) => format!(" — known: {}", shown.join(", ")),
+        (shown, rest) => format!(" — known: {}, and {} more", shown.join(", "), rest.len()),
+    }
 }
 
 /// `path`'s last `k` components, rendered — the whole path when it is shorter.

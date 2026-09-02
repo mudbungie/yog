@@ -87,7 +87,10 @@ fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
         &seat("stranger"),
         &json!({"op": "conversations", "workspace": "home"}),
     );
-    assert_eq!(refusal["error"], "unknown workspace \"home\"", "{refusal}");
+    assert_eq!(
+        refusal["error"], "unknown workspace \"home\" — none is enumerated here",
+        "{refusal}"
+    );
 }
 
 /// **A birth that died mid-way is resumable, not a wedge** (bl-c9d2):
@@ -124,5 +127,45 @@ fn a_scoped_clients_prepare_never_joins_anothers_wall() {
     let born = ctx.answer_as(&seated, &prepare("home"));
     assert_eq!(born["kind"], "prepared", "{born}");
     let refusal = ctx.answer_as(&seat("stranger"), &prepare("home"));
-    assert_eq!(refusal["error"], "unknown workspace \"home\"", "{refusal}");
+    assert_eq!(
+        refusal["error"], "unknown workspace \"home\" — none is enumerated here",
+        "{refusal}"
+    );
+}
+
+/// **Project birth is a barrier too** (bl-3377): bl-6c9e stated its ruling as a
+/// rule about *existence* and then folded one set, so `yog bl prime` founded a
+/// project the intake could not address until the next full sweep — and the
+/// refusal was byte-identical to a typo. The clones dir is one readdir away,
+/// exactly as the workspace roots are.
+#[test]
+fn a_gesture_addresses_a_project_primed_since_the_last_derivation() {
+    let (root, data, world_root) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
+    let world = crate::test_support::world_under(world_root.path());
+    let ctx = over_world(
+        root.path(),
+        world_of(data.path(), &[]),
+        data.path().to_path_buf(),
+        Cli::new("/no/such/bl"),
+        world.clone(),
+    );
+    let listing = json!({"op": "close", "project": "proj", "id": "bl-1", "name": "alba"});
+    let before = ctx.answer(&listing);
+    assert_eq!(before["ok"], false, "{before}");
+    assert_eq!(
+        before["error"], "unknown project \"proj\" — none is enumerated here",
+        "the cached set is what the defect resolved over — and it says so"
+    );
+
+    // `bl prime` lays exactly this down: one percent-encoded clone dir under
+    // the world's balls state. Nothing re-derives the snapshot afterwards,
+    // which is the engine's state in the milliseconds after a prime.
+    let clones = world.balls_clones_dir();
+    std::fs::create_dir_all(clones.join("%2Fd%2Fproj")).expect("a primed project");
+
+    let after = ctx.answer(&listing);
+    assert_ne!(
+        after["error"], before["error"],
+        "the name the prime made addressable is addressable now: {after}"
+    );
 }

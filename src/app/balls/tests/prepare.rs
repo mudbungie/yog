@@ -167,5 +167,5 @@ fn a_ball_rung_whose_project_this_world_does_not_enumerate_refuses_by_name() {
     );
     let err = staged(&mut m, &fake_litany(bin.path(), &news()), &inputs).unwrap_err();
 
-    assert_eq!(err, "unknown project \"/nowhere/at/all\"");
+    assert_eq!(err, "unknown project \"/nowhere/at/all\" — known: a");
 }

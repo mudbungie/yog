@@ -181,15 +181,20 @@ impl ConsumerCtx {
     ) -> (Deps, String, i64) {
         let ts = self.clock.stamp();
         let now_unix: i64 = ts.parse().unwrap_or(0);
-        // **The workspace set is asked, not remembered** (bl-6c9e,
-        // [`addressable`](crate::app::addressable)): a `Prepare` that founds a
-        // wall answers before the worker has enumerated it, so a resolution over
-        // the *cached* set refused the very name the last reply made
-        // addressable. Three readdirs (§3.1) on this off-frame intake are what
-        // make a success reply a barrier for the call after it.
+        // **The addressable sets are asked, not remembered** (bl-6c9e for
+        // workspaces, bl-3377 for projects — [`addressable`](crate::app::addressable)):
+        // a `Prepare` that founds a wall answers before the worker has
+        // enumerated it, and `yog bl prime` founds a project the same way, so a
+        // resolution over the *cached* sets refused the very name the last act
+        // made addressable. Four readdirs on this off-frame intake are what make
+        // a success reply a barrier for the call after it.
         let published = crate::app::addressable(
             crate::state::latest_snapshot(&self.cell),
             crate::binding::workspaces(&self.yog_data_root, &self.world.litany_data_root()),
+            crate::projects::enumerate(&self.world.balls_clones_dir())
+                .into_iter()
+                .map(|p| p.path)
+                .collect(),
         );
         let deps = Deps {
             litany: self.litany.clone(),

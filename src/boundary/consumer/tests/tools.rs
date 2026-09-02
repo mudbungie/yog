@@ -86,5 +86,8 @@ fn the_roster_answers_the_registered_set_of_a_scoped_workspace() {
         &seat("stranger"),
         &json!({"op": "clients", "workspace": "home"}),
     );
-    assert_eq!(refusal["error"], "unknown workspace \"home\"");
+    assert_eq!(
+        refusal["error"],
+        "unknown workspace \"home\" — none is enumerated here"
+    );
 }

@@ -4178,6 +4178,40 @@ exactly as published: those are the walks that are not cheap, every read of them
 is aimed by the path this resolution produced, and a newborn wall answers with
 the zeros it honestly has.
 
+**And it is both nouns, since bl-3377.** The ruling above is stated as a rule
+about *existence* — *"birth is a barrier because existence is a query"* — and
+bl-6c9e folded one set, leaving the **project** noun on the derivation's cached
+copy. So a project primed into the world was refused by every ball gesture for a
+whole sweep, in a sentence indistinguishable from a typo: `yog bl prime` in a
+repo inside the world, then `/create` on it, earned `unknown project "proj"`,
+and one full sweep later the byte-identical line succeeded. A project is
+enumerated exactly the way a workspace is (§5.1 #1 — one readdir of the balls
+clones dir, `projects::enumerate`), it was simply not included, and it inherits
+every property above: it costs nothing in the steady state, it runs backwards
+for free, and the derived per-project facts (the ball lists, the §3.5 join) stay
+as published. One readdir joins the three.
+
+**The refusal now names the set, and that is why no listing verb was added**
+(bl-3377). The other half of the defect was discoverability: `--project` takes
+the §5.1 #1 *derived* name — the shortest unique trailing run of path components
+— and no gesture answered that set. `/balls` and `/board` carry a `project`
+field only for balls that already exist, so on a world with a primed project and
+no balls, which is exactly the state after `bl prime`, the operator had no way
+to learn the word the flag wanted; the refusal named the token they typed and
+offered nothing. A `/projects` read beside `/workspaces` would answer it, and is
+one more verb, one more reply shape and one more thing to keep in step. The
+refusal is the place the question is *already* being asked, and `naming` is
+already the one home of both names — so `by_leaf` and `resolve` append what
+could have been typed (`known_of`, bounded at a dozen names and then a count,
+because a refusal is a sentence and not a listing). An empty set says so
+outright, since *"nothing here answers to a project name"* is a different world
+from *"you typed the wrong one"*.
+
+It discloses nothing new. REMOTE §4's narrowing runs before this — a scoped
+client's refusal lists that client's own registered workspaces and no others,
+which is what makes naming them safe — and project names already cross to any
+connected seat on every `/board` and `/balls` row.
+
 **The taxonomy is the existing invariants, not a new concept.**
 
 - **Actions** are the ops trail's rows (§4.2): everything that mutates a
@@ -6772,7 +6806,7 @@ that named one of its files; the rule it taught is not.)
 | `src/app/dirty.rs` | Change→dirty-root mapping, debounce/sweep scheduling over the live `Cadence`, `watch::Mark` provenance (§7.2) |
 | `src/app/drift.rs` | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |
 | `src/app/grace.rs` | the §7.3 wound banner's grace window (bl-90bf): the render-layer age gate over the same injected clock, so a wound that heals inside the rising edge's own latency (`Cadence::wound_grace`, re-sized to all four of its legs in bl-18e8) never flashes |
-| `src/app/snapshot{,/names,/scope}.rs` | the published derivation the frame renders, its age, the per-conversation branch-growth diff (§7.2), the per-workspace `steps/` fold every spend figure filters (§3.5, bl-9dd4), and the `models.yaml` context windows every fullness figure divides by (§5.1 #35, bl-a48b); `names` is the boundary's addressing read off it in **both** directions (REMOTE §8, bl-f5f6), so the two cannot disagree about what a name means, **plus `addressable`** — which set that addressing reads at the intake (bl-6c9e): the live §3.1 enumeration in place of the derivation's cached copy, `Arc` in and out so an unchanged set is handed straight back, which is what makes a workspace's birth a barrier for the gesture after it (§8.5); `scope` is the REMOTE §4 narrowing to one client's registered workspaces (bl-8bbc) — **one** filter over every workspace-keyed field, which is what makes an unregistered workspace ABSENT rather than forbidden: the roster simply does not list it and the resolver refuses it in the identical bytes a name nobody founded earns. *One* filter is the whole point and it must stay literally one: the §4.3 `fleet` map got a second predicate of its own on the belief that its key was a leaf, and because the key is the `cadence.yaml` entry — a **path** — that predicate was total, dropping every armed loop from every scoped snapshot while the loop went on acting (bl-8bf6). Every field here reads `keep`, and the fixture is keyed as the worker publishes it |
+| `src/app/snapshot{,/names,/scope}.rs` | the published derivation the frame renders, its age, the per-conversation branch-growth diff (§7.2), the per-workspace `steps/` fold every spend figure filters (§3.5, bl-9dd4), and the `models.yaml` context windows every fullness figure divides by (§5.1 #35, bl-a48b); `names` is the boundary's addressing read off it in **both** directions (REMOTE §8, bl-f5f6), so the two cannot disagree about what a name means, **plus `addressable`** — which sets that addressing reads at the intake (bl-6c9e, both nouns since bl-3377): the live §3.1 workspace enumeration and the §5.1 #1 project one in place of the derivation's cached copies, `Arc` in and out so an unchanged set is handed straight back, which is what makes a workspace's or a project's birth a barrier for the gesture after it (§8.5); `scope` is the REMOTE §4 narrowing to one client's registered workspaces (bl-8bbc) — **one** filter over every workspace-keyed field, which is what makes an unregistered workspace ABSENT rather than forbidden: the roster simply does not list it and the resolver refuses it in the identical bytes a name nobody founded earns. *One* filter is the whole point and it must stay literally one: the §4.3 `fleet` map got a second predicate of its own on the belief that its key was a leaf, and because the key is the `cadence.yaml` entry — a **path** — that predicate was total, dropping every armed loop from every scoped snapshot while the loop went on acting (bl-8bf6). Every field here reads `keep`, and the fixture is keyed as the worker publishes it |
 | `src/attention/{mod,roster}.rs` | the §7.3 attention flag: the ack state machine (incl. `evidence` — the **one** definition of what an acknowledgement writes, read by the window's focus tick and by the §8.5 `seen` action, and naming neither of the two signals no watermark may answer: mail, and the §8.6 park) and `AttentionKind::says`, the one home for each rule **in words** (bl-e160's desktop alert states it where the badges glyph it); the per-conversation roster it is raised against |
 | `src/badge.rs` | **what a derived row says in words** (§11, retired): a glyph and the fact it stands for, together, in one home per fact — [`op_badge`] over the ops trail's outcomes, [`tool_result_badge`] over a tool result's one flag, each total over its subject so a new outcome cannot ship wordless. It is what a **server** keeps of the congeries palette (bl-7942): the hues, the visuals, the fonts and the application mark were statements about how a face paints and went with the face, while the WORDS are a derived row's own content and cross the boundary inside the row |
 | `src/binding/mod.rs` | names-root enumeration (§3.1), claimant join (§3.2), worktree formula, workspace classification |

@@ -39,17 +39,20 @@ fn by_leaf_is_the_inverse() {
 }
 
 /// An unknown leaf refuses naming the token — never a guess at the one
-/// workspace that happens to exist.
+/// workspace that happens to exist — **and names what could have been typed**
+/// (bl-3377), so the refusal is a way out rather than a dead end.
 #[test]
-fn an_unknown_leaf_refuses() {
+fn an_unknown_leaf_refuses_and_names_the_set() {
     let s = set(&["/d/yog/workspaces/home"]);
     assert_eq!(
         by_leaf(&s, "nope"),
-        Err("unknown workspace \"nope\"".to_owned())
+        Err("unknown workspace \"nope\" — known: home".to_owned())
     );
+    // An empty world says so outright: "nothing answers to a name here" is a
+    // different fact from "you typed the wrong one".
     assert_eq!(
         by_leaf(&[], "home"),
-        Err("unknown workspace \"home\"".into())
+        Err("unknown workspace \"home\" — none is enumerated here".into())
     );
 }
 
@@ -108,6 +111,21 @@ fn resolve_is_the_inverse() {
     assert_eq!(resolve(&s, "a/x/proj"), Ok(s[0].clone()));
     assert_eq!(
         resolve(&s, "proj"),
-        Err("unknown project \"proj\"".to_owned())
+        Err("unknown project \"proj\" — known: a/x/proj, b/x/proj".to_owned()),
+        "the refusal names the derived words `--project` takes, not the paths"
     );
+}
+
+/// A refusal is a sentence, not a listing (bl-3377): past the cap it says how
+/// many more rather than scrolling the token away.
+#[test]
+fn a_crowded_world_names_a_bounded_prefix_and_a_count() {
+    let paths: Vec<String> = (0..20).map(|n| format!("/d/p{n:02}")).collect();
+    let s = set(&paths.iter().map(String::as_str).collect::<Vec<_>>());
+    let why = resolve(&s, "nope").expect_err("refused");
+    assert!(
+        why.starts_with("unknown project \"nope\" — known: p00, p01,"),
+        "{why}"
+    );
+    assert!(why.ends_with(", and 8 more"), "{why}");
 }

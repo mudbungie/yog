@@ -11,9 +11,10 @@
 //! cannot disagree about what a name means — which is the whole reason the
 //! resolution sits here rather than at each caller.
 //!
-//! …and [`addressable`] is **which** set that is at the boundary: the §3.1
-//! enumeration as disk holds it this instant, not the copy the last derivation
-//! cached. See its own doc for the barrier that buys.
+//! …and [`addressable`] is **which** sets those are at the boundary: the §3.1
+//! workspace enumeration and the §5.1 #1 project one as disk holds them this
+//! instant, not the copies the last derivation cached. See its own doc for the
+//! barrier that buys.
 
 use super::Snapshot;
 use crate::binding::Workspace;
@@ -79,15 +80,35 @@ impl Snapshot {
 /// over a tree no derivation holds yet), exactly as the raise claim's own fold
 /// does one frontend up.
 ///
-/// `Arc` in, `Arc` out, so the steady state pays nothing: with the two sets
-/// already agreeing — every gesture but the one after a birth or a death — the
-/// published derivation is handed straight back rather than cloned.
-pub(crate) fn addressable(published: Arc<Snapshot>, live: Vec<Workspace>) -> Arc<Snapshot> {
-    if live == published.workspaces {
+/// **Both nouns, since bl-3377.** bl-6c9e stated its own ruling as a rule about
+/// existence — *"birth is a barrier because existence is a query"* — and then
+/// folded one set, leaving the project noun on the cached copy. So a project
+/// primed into the world was refused by every ball gesture, byte-identically to
+/// a typo, until the next full sweep: `yog bl prime` then `/create` earned
+/// `unknown project "proj"`, and the same line one sweep later succeeded. A
+/// project is enumerated the same way a workspace is (§5.1 #1, one readdir of
+/// the balls clones dir), and it simply was not included; it runs backwards for
+/// free the same way, so a project removed stops resolving at once.
+///
+/// The *derived* per-project facts — the ball lists, the §3.5 join — stay as
+/// published, exactly as the per-workspace ones do and for the same reason:
+/// those are the walks that are not cheap, and every read of them is aimed by
+/// the path this resolution produced.
+///
+/// `Arc` in, `Arc` out, so the steady state pays nothing: with both pairs of
+/// sets already agreeing — every gesture but the one after a birth or a death —
+/// the published derivation is handed straight back rather than cloned.
+pub(crate) fn addressable(
+    published: Arc<Snapshot>,
+    workspaces: Vec<Workspace>,
+    projects: Vec<PathBuf>,
+) -> Arc<Snapshot> {
+    if workspaces == published.workspaces && projects == published.projects {
         return published;
     }
     Arc::new(Snapshot {
-        workspaces: live,
+        workspaces,
+        projects,
         ..(*published).clone()
     })
 }
