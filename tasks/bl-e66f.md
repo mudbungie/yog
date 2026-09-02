@@ -1,7 +1,8 @@
 +++
 title = "the terminal seat tells the operator to focus a workspace it cannot focus, and never names --ws: the flags exist only in a refusal that missing-target refusals do not print"
 created = 1788235234
-updated = 1788235234
+updated = 1788318657
+claimant = "Signal"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "language"]
