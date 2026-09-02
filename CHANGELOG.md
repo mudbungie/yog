@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.14](https://github.com/mudbungie/yog/compare/v0.0.13...v0.0.14) - 2026-09-02
+
+### Changes
+
+- a lost boundary reply has no safe recovery: re-deposit can repeat a completed non-idempotent action [bl-d1f1]
+
 ## [0.0.13](https://github.com/mudbungie/yog/compare/v0.0.12...v0.0.13) - 2026-09-02
 
 ### Changes
