@@ -52,6 +52,34 @@ fn every_gesture_the_codec_reads_has_a_page() {
     }
 }
 
+/// **Every gesture a foot may say is classed `machine`** (`docs/PARITY.md` §2,
+/// bl-8758). The two facts are written in different places for good reason —
+/// `Grade::admits` is an authorization enumeration and the class is an
+/// interface obligation — but they answer to each other: a gesture yog will
+/// only ever accept from a tool host cannot be one every seat owes a control
+/// for. The walk is the codec's own exhaustive surface, and the op token is the
+/// unit (PARITY §3), so a folded family is judged per member.
+#[test]
+fn a_foot_gesture_is_never_owed_a_control() {
+    let table = table();
+    let mut judged = 0;
+    for gesture in codec::tests::surface::gestures() {
+        if !crate::registry::peer::Grade::Foot.admits(&gesture) {
+            continue;
+        }
+        let envelope = codec::encode(&gesture);
+        let op = envelope.get("op").and_then(serde_json::Value::as_str);
+        let row = op.and_then(|op| table.iter().find(|row| row.verb == op));
+        assert_eq!(
+            row.map(|row| row.surface),
+            Some(Surface::Machine),
+            "{op:?} is admitted to a foot but is not classed machine"
+        );
+        judged += 1;
+    }
+    assert!(judged >= 3, "the foot's own three gestures went unwalked");
+}
+
 /// Asking about one verb is a page; asking about everything is a roster. The
 /// shape of the answer follows the question, because a wall of paragraphs
 /// answers nothing anyone asked.

@@ -20,7 +20,7 @@
 //! with an empty `summary` is answerable but **unadvertised** — the same rule
 //! [`NAMESPACES`](super::NAMESPACES) applies to balls' two plugin binaries.
 
-use crate::boundary::help::{HelpRow, render};
+use crate::boundary::help::{HelpRow, Surface, render};
 
 #[cfg(test)]
 mod tests;
@@ -29,6 +29,16 @@ mod tests;
 /// the roster gives it (empty = unadvertised), and the paragraph a `--help`
 /// prints. `verb` is the const its dispatcher routes on, so a page cannot name
 /// a word that does not run.
+///
+/// **Every row here is [`Surface::Machine`], and that is structural rather than
+/// a judgement per row** (`docs/PARITY.md` §2, bl-8758). The class says whether
+/// a *seat-class client* owes the op a discoverable interactable, and these are
+/// not ops: they are process-level words that cross no §8.5 control boundary,
+/// so no seat can owe one — a window cannot offer a control for "run the
+/// embedded balls CLI in this process". The parity roster never sees them
+/// either, being generated from [`boundary::help::table`](crate::boundary::help::table)
+/// alone. They share [`HelpRow`] for its four text facts and [`render`], which
+/// is the whole of what an argv page needs.
 pub(super) const COMMANDS: &[HelpRow] = &[
     HelpRow {
         verb: crate::wire::provision::verb::SUBCMD,
@@ -50,6 +60,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  name INSIDE the certificate is the identity, not the basename, so the rename \
                  costs nothing. It shells to `openssl`: provisioning is the operator's \
                  out-of-channel act and yog links no certificate library.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: crate::fixture::verb::SUBCMD,
@@ -70,6 +81,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  answers with names the fds a harness keeps open for the run to make a \
                  streaming conversation read as a live model call — a live call is derived \
                  from an open descriptor, so no tree on disk can be one by itself.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: crate::world::hatch::ENV_SUBCMD,
@@ -82,6 +94,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  wall, which is what a `bz` needs: providers, sign-ins and the model cache \
                  belong to a workspace, and without one bz refuses rather than reaching the \
                  machine's own. Prints only; it starts nothing.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: crate::world::hatch::EXEC_SUBCMD,
@@ -94,6 +107,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  nowhere else. The leading flags are yog's; every argument from the command \
                  word on belongs to the command. Bad usage exits 2, a command that could not \
                  be spawned exits 127.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: crate::control::SUBCMD,
@@ -102,6 +116,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
         detail: "The capability control an embedded litany consults before each granted tool \
                  invocation: it speaks a line protocol over stdin/stdout and is spawned with \
                  no arguments beyond this word. Nothing types it by hand.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "gesture",
@@ -111,6 +126,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  payload is a JSON envelope or a `/slash` line; `--ws / --agent / --project / \
                  --as` state the context a terminal has no selection for. `yog gesture --help` \
                  lists every gesture and `yog gesture --help <command>` is one gesture's page.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "litany",
@@ -118,6 +134,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
         summary: "the embedded litany, in yog's own process",
         detail: "Run litany's own verb surface in this process, against the nested world. The \
                  argv after the word is litany's, so `yog litany --help` is litany's own usage.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "bl",
@@ -126,6 +143,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
         detail: "Run balls' own verb surface in this process, against the world's store and \
                  landing. The argv after the word is balls', so `yog bl --help` is balls' own \
                  usage.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "bz",
@@ -138,6 +156,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  `yog exec --ws WORKSPACE bz --login --provider NAME --browser`, or stand the \
                  wall for a whole shell with `eval \"$(yog env --ws WORKSPACE)\"`. The argv \
                  after the word is brazen's, so `yog bz --help` is brazen's own usage.",
+        surface: Surface::Machine,
     },
 ];
 

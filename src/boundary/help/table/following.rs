@@ -12,7 +12,7 @@
 //! one — so the reply a `yog gesture` prints is a true answer of the same
 //! question, not a degraded one.
 
-use crate::boundary::help::HelpRow;
+use crate::boundary::help::{HelpRow, Surface};
 
 pub const FOLLOWING: &[HelpRow] = &[
     HelpRow {
@@ -28,6 +28,7 @@ pub const FOLLOWING: &[HelpRow] = &[
                  An empty answer is the ordinary answer of a hold that ended quietly, not a \
                  failure. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run \
                  it and post the result with `/complete`.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "follow",
@@ -43,5 +44,6 @@ pub const FOLLOWING: &[HelpRow] = &[
                  watching one conversation cannot describe one moment differently. Takes the \
                  workspace and the conversation from the seat; a conversation with nothing in \
                  flight has an empty tail rather than a refusal.",
+        surface: Surface::Control,
     },
 ];

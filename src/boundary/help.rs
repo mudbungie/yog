@@ -40,6 +40,41 @@ pub fn table() -> Vec<HelpRow> {
     .concat()
 }
 
+/// **Who owes this op a control** (`docs/PARITY.md` §2, bl-8758) — the one fact
+/// the interface-parity contract needs, kept here because the roster is already
+/// the suite's single list of what a client can do, and a second list would
+/// drift from it within a week.
+///
+/// Two values, deliberately: a third is added when a row honestly needs one,
+/// not speculatively.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Surface {
+    /// Every seat-class client owes this op a **discoverable interactable**,
+    /// tagged `act:<verb>` in the tree its harness walks (PARITY §4). Queries
+    /// included: the owed control for a read is the affordance that reaches the
+    /// view it populates.
+    Control,
+    /// **Spoken by programs, never owed a control**: the foot's three gestures
+    /// (`registry::peer::Grade::admits`, coherence-tested against this class)
+    /// and the routing leg's other machine ends. A seat that grows a control
+    /// anyway is not wrong — it is owed by nobody.
+    Machine,
+}
+
+impl Surface {
+    /// This class's one word — the token `corpus/reply/help.json` publishes and
+    /// every client's parity gate reads. `pub(crate)` for `Grade::word`'s
+    /// reason exactly (AGENTS.md rule 2): a `pub fn` may not hand back a
+    /// borrow, and the honest demotion is cheaper than cloning a `&'static str`
+    /// to own it.
+    pub(crate) fn word(self) -> &'static str {
+        match self {
+            Self::Control => "control",
+            Self::Machine => "machine",
+        }
+    }
+}
+
 /// One command, as help states it: how it is typed, what it does in a line, and
 /// the paragraph an operator reads when they ask about it specifically.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,6 +84,10 @@ pub struct HelpRow {
     pub usage: &'static str,
     pub summary: &'static str,
     pub detail: &'static str,
+    /// Whether a seat owes this op a control. **No default and no fallback**:
+    /// the field is stated per row, so a verb cannot land unclassified — that
+    /// compile requirement is PARITY §9's first drift rung.
+    pub surface: Surface,
 }
 
 /// Whether `verb` names a gesture. The reader, the codec and every seat ask

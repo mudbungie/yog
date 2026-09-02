@@ -61,7 +61,16 @@ use super::frame;
 /// not heard of one already refuses it in band by name. One bump for the row,
 /// and nothing else shape-changing is batched behind it: clients re-vendor per
 /// bump, and this number walked 2 → 5 inside one unreleased cycle already.
-pub const PROTOCOL: u32 = 6;
+/// 6 → 7 (bl-8758): every `reply/help` row gained `surface`, the word saying
+/// whether a seat-class client owes that op a control (`docs/PARITY.md` §2).
+/// The ledger would have let it through — help's signature last moved at 1, so
+/// its one free move at 6 was unspent — but §3's rule is the authority and is
+/// stricter than the mechanism: any wire-visible shape change, *gained
+/// included*, bumps the version, and the ledger cannot see what has shipped
+/// (REMOTE §9.9's correction). It is also the bump that pays for itself: the
+/// classification is the artifact clients vendor and judge themselves against,
+/// so a client must re-vendor to read it, and a bump is exactly what makes it.
+pub const PROTOCOL: u32 = 7;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

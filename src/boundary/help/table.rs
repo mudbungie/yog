@@ -5,7 +5,7 @@
 //! the seat when the line does not say it, and how it refuses. That is what an
 //! operator needs before pressing return on something that mutates a substrate.
 
-use super::HelpRow;
+use super::{HelpRow, Surface};
 
 /// The six §8.2 verbs whose subject is a conversation already running — split
 /// off at §12's budget (bl-c088), and joined back *ahead* of [`ACTIONS`].
@@ -34,6 +34,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  project's pre-commit gate, squashes the work onto the target branch and removes \
                  the worktree. A failing gate aborts and leaves the ball claimed. With no id, \
                  the focused ball; stamped with its claimant, never your login name.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "assign",
@@ -42,6 +43,7 @@ pub const ACTIONS: &[HelpRow] = &[
         detail: "Claims a ready ball for the seat's workspace (`bl claim`), which is what binds \
                  the ball to it: a bound ball is one a workspace holds. With no id, the \
                  focused ball.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "release",
@@ -50,6 +52,7 @@ pub const ACTIONS: &[HelpRow] = &[
         detail: "Lets a ball go (`bl unclaim`): the workspace stops holding it and anyone can \
                  claim it again. Nothing already committed in its worktree is lost. With no id, \
                  the focused ball.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "create",
@@ -62,6 +65,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  number, higher first), `--tag` (repeatable), `--parent` and `--needs` (a \
                  blocker `ID[:OP]`, `OP` defaulting to claim). A subtask is `--parent E` plus \
                  `/update E --needs <new>:close`; balls judges them and its refusal rides back.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "update",
@@ -73,6 +77,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  form beside them — `--no-priority`, `--no-parent`, and `--no-tag T` / \
                  `--no-needs ID` which drop one named entry. Repeat `--tag` to add several. \
                  With no id, the focused ball.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "prepare",
@@ -83,6 +88,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  said outright, never inferred — nothing is the bare rung, `dir` a work \
                  directory, `ball` the selected ball (or `--new` to mint one). Its reply is what \
                  `/prompt` then fires; an existing ball's spec comes from the seat's roster.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "prompt",
@@ -101,6 +107,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  --prepared '<that object>' '/prompt [<goal…>]'`. The conversation keeps running \
                  whatever yog does. The receipt's `conversation` is the minted name, and a name \
                  is an address: hand it back at `--agent` to any conversation verb or read.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "fan",
@@ -113,6 +120,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  nothing and hands back the ordinary claim binding, which is the same path with \
                  one candidate. Nothing records that the candidates belong together: they share \
                  a target and a base commit, and that is what makes them siblings.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "retire",
@@ -123,6 +131,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  delivered and yog deletes nothing on an opinion. The ref goes too only when \
                  `cadence.yaml`'s `retention:` block declares a `keep_min` for this project and \
                  the candidate has outlived it. Retiring changes no delivery target, ever.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "deliver",
@@ -136,6 +145,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  history rather than stored. A stale candidate refuses before anything merges: \
                  message its agent to incorporate the current target in its own worktree and \
                  deliver again. Rejection has no verb — a loser is simply never delivered.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "fork",
@@ -152,6 +162,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  themselves under that mark's rule in the chat, because siblings of one mark is a fact about \
                  the refs and not a list anything keeps. Everything after `--goal` is the goal, \
                  verbatim. Takes the workspace and the conversation from the seat.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "advertise",
@@ -167,6 +178,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  no client: the identity it lands under is the certificate the connection \
                  presented, so a caller inside the world — the deposit inbox, `yog gesture`, \
                  the window — has none and is refused.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "invoke",
@@ -181,6 +193,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  sees. Whether the machine is connected is deliberately not checked: a tool \
                  host holds its connection only while it is waiting, so a busy one looks \
                  absent — what makes a vanished machine visible is your own deadline.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "complete",
@@ -192,6 +205,7 @@ pub const ACTIONS: &[HelpRow] = &[
                  answer it; a handle addressed to anyone else reads as absent, which is the \
                  same sentence a handle nobody minted earns. A caller inside the world has no \
                  certificate and therefore no invocations, and is refused.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "delete-workspace",
@@ -200,6 +214,7 @@ pub const ACTIONS: &[HelpRow] = &[
         detail: "Unmakes the focused workspace and releases the balls it held. Fail-closed at \
                  fire time wherever it is asked: refused unless the workspace is yog's own, \
                  nothing in it is live, and the name you type matches it exactly.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "delete-agent",
@@ -209,5 +224,6 @@ pub const ACTIONS: &[HelpRow] = &[
                  worktree, steps and inbox. Refused while it is live. A bare line deletes the one \
                  conversation; typing its name is what arms taking its descendants with it, and \
                  without that litany declines a subtree nobody confirmed.",
+        surface: Surface::Control,
     },
 ];

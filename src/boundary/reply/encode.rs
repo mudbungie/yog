@@ -214,10 +214,16 @@ fn role_row(row: &crate::model_pick::RoleModel) -> Value {
             "effort": row.effort, "priority": row.priority })
 }
 
-/// One help page as data — the same four facts every seat renders (§8.5).
+/// One help page as data — the four facts every seat renders (§8.5), and the
+/// fifth no seat renders: **who owes this op a control** (`docs/PARITY.md` §2,
+/// bl-8758). The classification ships here rather than in a file of its own
+/// because `reply/help.json` is the artifact every client already vendors and
+/// replays, so a parity gate reads it without a second fetch and without ever
+/// reading another client's tree.
 fn help_row(row: &crate::boundary::help::HelpRow) -> Value {
     json!({ "verb": row.verb, "usage": row.usage,
-            "summary": row.summary, "detail": row.detail })
+            "summary": row.summary, "detail": row.detail,
+            "surface": row.surface.word() })
 }
 
 /// One registered client as every seat renders it (REMOTE §5): its identity,

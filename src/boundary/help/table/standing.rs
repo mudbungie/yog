@@ -11,7 +11,7 @@
 //! [`table`](crate::boundary::help::table) reads the two as one, so the split
 //! is invisible to an operator: no seat ever renders half a roster.
 
-use super::super::HelpRow;
+use super::super::{HelpRow, Surface};
 
 /// The standing families and the settings and record verbs, in the order help
 /// lists them: the §4.9 monitor's three, the §4.3 loop's two, the §9 config
@@ -29,6 +29,7 @@ pub const STANDING: &[HelpRow] = &[
                  it does by default. The question it asks lives in an editable policy file, \
                  seeded beside the settings the first time you arm. Costs money per check; \
                  `/disarm` ends it.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "disarm",
@@ -36,6 +37,7 @@ pub const STANDING: &[HelpRow] = &[
         summary: "stop watching this workspace",
         detail: "Removes the focused workspace's monitor setting. No further checks are made and \
                  nothing further is charged; every verdict already recorded stays on the trail.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "flag",
@@ -46,6 +48,7 @@ pub const STANDING: &[HelpRow] = &[
                  conversation. It is also the one verb an alignment responder is granted by \
                  default, so that signalling out is a call with a shape rather than a sentence \
                  someone has to read.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "fleet",
@@ -59,6 +62,7 @@ pub const STANDING: &[HelpRow] = &[
                  anything that is running. Add a `lease_min` to its cadence.yaml entry and it \
                  will also release a claim whose conversations have gone quiet for that long, \
                  recording the comparison that decided it. `/disband` ends it.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "disband",
@@ -68,6 +72,7 @@ pub const STANDING: &[HelpRow] = &[
                  started or released; everything already running is untouched and keeps its \
                  ball. Its own verb rather than a cap of zero, which is an armed loop that \
                  spawns nothing and still reaps.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "config",
@@ -85,6 +90,7 @@ pub const STANDING: &[HelpRow] = &[
                  With nothing after the destination, reads its current bytes instead — a file \
                  not there yet answers empty text, a lineage answers what its tip holds at that \
                  path, and `/lineages` lists the lineages and the paths to ask for.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "marks",
@@ -98,6 +104,7 @@ pub const STANDING: &[HelpRow] = &[
                  from, so a descent works one set of tasks. The answer is the branch re-read \
                  afterwards, beside the space it is a branch of, never an echo of what was \
                  asked. With no branch, reads the current one instead of changing it.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "model",
@@ -110,6 +117,7 @@ pub const STANDING: &[HelpRow] = &[
                  conversations already running too — a conversation follows its lineage's head \
                  at every step boundary, so this governs the one in front of you at its next \
                  step, and every other one here, and the next one started.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "effort",
@@ -125,6 +133,7 @@ pub const STANDING: &[HelpRow] = &[
                  it says so in the step's own failure, which is where you will read it. \
                  Refuses a role this workspace's config does not declare, and any word \
                  outside the four.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "priority",
@@ -139,6 +148,7 @@ pub const STANDING: &[HelpRow] = &[
                  call under it rather than here. Not every provider takes the request; the \
                  provider list says which do. Refuses a role this workspace's config does not \
                  declare.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "ack",
@@ -147,6 +157,7 @@ pub const STANDING: &[HelpRow] = &[
         detail: "Appends the acknowledgement line every failure-derived alarm reads past, so a \
                  failure you have understood and chosen to leave alone stops bannering. A new \
                  failure lands after the watermark and banners again.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "seen",
@@ -159,6 +170,7 @@ pub const STANDING: &[HelpRow] = &[
                  conversation has *said*; undelivered mail is not a watermark and clears only \
                  when a driver reads it. New evidence re-raises it. Refuses when the conversation \
                  is not one yog can see.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "answer",
@@ -173,6 +185,7 @@ pub const STANDING: &[HelpRow] = &[
                  (`litany advance`), which is what actually lifts the hold: the control is asked \
                  again and now finds your answer. Nothing here stops the agent. Refuses when \
                  nothing is held there.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "revoke",
@@ -185,6 +198,7 @@ pub const STANDING: &[HelpRow] = &[
                  and everything below it, including children it has not spawned yet. Anything \
                  the policy already refuses stays refused, and a call you pass with `/answer` \
                  still goes through. `/restore` gives the approval back.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "restore",
@@ -196,6 +210,7 @@ pub const STANDING: &[HelpRow] = &[
                  (`/answer pass`), which is the thing you are looking at when it is waiting. If \
                  an ancestor is still revoked, the conversation stays floored under it, and the \
                  reply says so rather than claiming a restore it did not make.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "clear-trail",
@@ -203,6 +218,7 @@ pub const STANDING: &[HelpRow] = &[
         summary: "truncate the ops trail; the clear is the new trail's first row",
         detail: "Starts a fresh `ops.jsonl`. The clear itself is logged as the new trail's first \
                  row, so the trail never lies about having been cut.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: crate::boundary::codec::ENROLL,
@@ -219,5 +235,6 @@ pub const STANDING: &[HelpRow] = &[
                  no CA, and when its address names no port a device can dial. The material \
                  travels to the device out of channel — a QR on a screen, adb, a hand — never \
                  over a connection the new device opened, which it could not open anyway.",
+        surface: Surface::Control,
     },
 ];

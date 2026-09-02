@@ -3988,6 +3988,44 @@ that truth and no seat could ask for it.
   difference is real: *this conversation has no policy* is never true, while
   *this workspace has assigned no role* is a state every fresh world is in.
 
+### 9.15 The roster says who owes this op a control (bl-8758)
+
+**Every `reply/help` row gained `surface`, one word: `control` or `machine`.**
+`PROTOCOL` is **7**. It is the interface-parity contract's single new fact
+(`docs/PARITY.md` §2) — `control` means every seat-class client owes that op a
+discoverable interactable, `machine` that it is spoken by programs and owed by
+nobody. Sixty-one of the sixty-six rows are `control`; the five that are not are
+the routing leg's own ends.
+
+- **It rides `reply/help` because that is the artifact clients already vendor.**
+  A parity gate reads its roster out of `corpus/reply/help.json`, replays it
+  against its own walked inventory of `act:<op>` tags, and never reads another
+  client's tree — which is what makes the ledger one fact with one home rather
+  than a pairwise diff that goes quadratic at the third surface. A second file
+  beside the corpus would have been a second list to keep true, and §3 already
+  refuses those.
+- **The unit is the op token, never the `Action` variant.** yog folds families
+  (`Ball`, `Monitor`, `Fan`, `Route`, `Tune`) to one variant over a family verb
+  and the wire spells each member as its own `op`; a control fires an op, so a
+  folded family is classed per member. `HelpRow::verb` is that token, and it is
+  already the envelope's `op` and the corpus filename.
+- **The bump is the rule, not the ledger** — §9.9's correction, applied. Help's
+  signature last moved at **1**, so the mechanism's one-move-per-shape-per-
+  version test would have passed a change at 6 in silence. §3's rule is
+  stricter and is the authority: a field *gained* on a wire-visible shape bumps
+  the version. Here the bump is also the point rather than a tax, because the
+  classification only reaches a client through a re-vendor and a bump is what
+  compels one. §9.14's `roles` rides it: that read declined a bump of its own
+  for want of anything to batch it with, and this is the thing to batch it
+  with — the re-vendor it did not want to force happens once, for both, inside
+  the same unreleased cycle.
+- **`enroll` carries a class like every other op**, being an ordinary help row
+  (§1.4's mint is an operator act at a seat, so `control`). What carries no
+  class is yog's **argv** surface — `yog env`, `yog bl`, `yog exec` and the
+  rest are process-level words crossing no §8.5 boundary, so no seat can owe
+  one a control; they share the row type for its text and never reach this
+  reply.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

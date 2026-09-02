@@ -10,7 +10,7 @@
 //! [`table`](crate::boundary::help::table) joins it back ahead of `QUERIES`, so
 //! an operator meets one list in one order.
 
-use crate::boundary::help::HelpRow;
+use crate::boundary::help::{HelpRow, Surface};
 
 /// The enumeration, its bindings and rollups, the two project-side derivations,
 /// the V4 board, and the §9 tables a workspace resolves.
@@ -21,6 +21,7 @@ pub const WORLD: &[HelpRow] = &[
         summary: "the workspaces with their attention rollups",
         detail: "Every workspace yog can see, classified, with the attention count, the agent \
                  count and whether anything in it is running.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "conversations",
@@ -28,6 +29,7 @@ pub const WORLD: &[HelpRow] = &[
         summary: "the focused workspace's conversation rows",
         detail: "One row per root conversation of the focused workspace, subtree-aggregated and \
                  ordered attention > running > recency — the same rows the window's list paints.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "balls",
@@ -35,6 +37,7 @@ pub const WORLD: &[HelpRow] = &[
         summary: "every ball⇄workspace binding fact",
         detail: "The join rows: which ball is claimed by which workspace, in which state. The \
                  same derivation the roster's balls section renders.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "workspace-balls",
@@ -45,6 +48,7 @@ pub const WORLD: &[HelpRow] = &[
                  tokens and money its conversations have spent on it. `/balls` answers the \
                  whole world's binding table; this answers one workspace, which is what the \
                  window's balls section paints.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "work-diff",
@@ -57,6 +61,7 @@ pub const WORLD: &[HelpRow] = &[
                  instead. It is a plain git read of the project repository and changes nothing; \
                  a repository it cannot read, and a branch that is not there yet, are each said \
                  outright rather than shown as an empty list.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "science",
@@ -74,6 +79,7 @@ pub const WORLD: &[HelpRow] = &[
                  deliver again, pending when none of that has happened. Everything is derived \
                  when you ask — nothing here is stored, so the same row a minute later is a \
                  statement about the world a minute later.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "board",
@@ -85,6 +91,7 @@ pub const WORLD: &[HelpRow] = &[
                  could not deliver, shown with the ball whose close mints its gate. Each \
                  claimed row names the conversations working it, and carries its spend plus, \
                  for an epic, the rollup over its live subtree across every workspace.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "providers",
@@ -96,6 +103,7 @@ pub const WORLD: &[HelpRow] = &[
                  read-only rows render — one derivation, every seat. Scoped to the seat's \
                  workspace (`--ws`, or the focused one): providers and their sign-ins belong to \
                  a workspace, so the same row can read signed-in in one and not in another.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "roles",
@@ -113,6 +121,7 @@ pub const WORLD: &[HelpRow] = &[
                  role answers an empty list rather than refusing — nothing set is a state a \
                  fresh workspace is really in. Scoped to the seat's workspace (`--ws`, or the \
                  focused one), exactly as `/providers` is.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "clients",
@@ -125,6 +134,7 @@ pub const WORLD: &[HelpRow] = &[
                  What each client advertises, by contrast, was written when it last presented \
                  its set and stands whether or not it is connected. A machine is registered by \
                  an operator's own act on the server, never over the wire.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "lineages",
@@ -137,6 +147,7 @@ pub const WORLD: &[HelpRow] = &[
                  bytes, then send an edit back with text after those same words. A workspace \
                  whose repository cannot be read is said outright rather than shown as no \
                  lineages at all.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "models",
@@ -150,5 +161,6 @@ pub const WORLD: &[HelpRow] = &[
                  answer is what `/model <role> <provider> <model-id>` then assigns — this says \
                  what exists, that says what a role uses. A provider that offers nothing, or \
                  cannot be asked, refuses with its own words rather than an empty list.",
+        surface: Surface::Control,
     },
 ];

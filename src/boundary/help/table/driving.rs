@@ -8,7 +8,7 @@
 //! It is a prefix of the roster, not a second list: [`table`](crate::boundary::help::table)
 //! joins it back ahead of `ACTIONS`, so an operator meets one list in one order.
 
-use crate::boundary::help::HelpRow;
+use crate::boundary::help::{HelpRow, Surface};
 
 /// The §8.2 conversation verbs: send, cut off, kill, sweep, prompt again, and
 /// move onto the config the workspace runs now.
@@ -21,6 +21,7 @@ pub const DRIVING: &[HelpRow] = &[
                  it reads it (`litany message`). The text is the whole tail, verbatim — spacing \
                  and newlines reach the model unchanged, and no flag is read out of it. Takes \
                  the workspace and the agent from the seat; refuses when nothing is selected.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "interrupt",
@@ -37,6 +38,7 @@ pub const DRIVING: &[HelpRow] = &[
                  flag is read out of it, `children` included — use `/stop children` for a \
                  subtree. Takes the workspace and the agent from the seat; refuses when nothing \
                  is selected. Ctrl+Enter in the composer is this gesture.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "stop",
@@ -45,6 +47,7 @@ pub const DRIVING: &[HelpRow] = &[
         detail: "Kills the driver running the selected conversation (`litany stop`). Everything \
                  it has already committed is kept, and it can be messaged again afterwards. Say \
                  `children` to stop the agents it spawned too, not only the one at its root.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "scan",
@@ -53,6 +56,7 @@ pub const DRIVING: &[HelpRow] = &[
         detail: "One workspace-wide sweep (`litany scan`): delivers pending inbox mail and \
                  deposits an epitaph for any agent that died silently. Acts on the focused \
                  workspace, not on the selection.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "nudge",
@@ -66,6 +70,7 @@ pub const DRIVING: &[HelpRow] = &[
                  keeps going whatever yog does. Takes the workspace and the agent from the \
                  seat; refuses when nothing is selected, and does nothing while a driver is \
                  already running the conversation.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "retarget",
@@ -85,5 +90,6 @@ pub const DRIVING: &[HelpRow] = &[
                  seat; a conversation already on that lineage is a clean no-op litany reports for \
                  itself, and litany declines the move when the target does not describe the role \
                  it runs as.",
+        surface: Surface::Control,
     },
 ];

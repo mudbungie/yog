@@ -10,7 +10,7 @@
 //! conversation**, or at nothing the seat has to name — the queue, the trail,
 //! the search, the routing poll and help itself.
 
-use crate::boundary::help::HelpRow;
+use crate::boundary::help::{HelpRow, Surface};
 
 pub const QUERIES: &[HelpRow] = &[
     HelpRow {
@@ -24,6 +24,7 @@ pub const QUERIES: &[HelpRow] = &[
                  folded on as a live trailing row, so this says what the window says about the \
                  same moment. It is aimed at the seat's workspace and selected conversation; the \
                  whole thing is a read of files on disk and changes nothing.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "steps",
@@ -35,6 +36,7 @@ pub const QUERIES: &[HelpRow] = &[
                  as such, with the adapter's own reason when it left one, and a step that failed \
                  on credentials names the provider row to log in to. Read one step's actual \
                  records with `/step <seq>`.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "step",
@@ -46,6 +48,7 @@ pub const QUERIES: &[HelpRow] = &[
                  and every tool call's input and output — each as parsed data with the bytes it \
                  parsed from beside it. Records that are missing say so, and records that are not \
                  JSON come back verbatim and framed as unparseable rather than dropped.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "files",
@@ -64,6 +67,7 @@ pub const QUERIES: &[HelpRow] = &[
                  lands. `--at` reads a commit's tree instead of the \
                  worktree — the same agent-context-files-as-of the window's notch pin shows — and \
                  a commit this conversation never recorded simply holds no files.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "governing",
@@ -86,6 +90,7 @@ pub const QUERIES: &[HelpRow] = &[
                  own request. A workspace that cannot be read, and a commit that forks off no \
                  config lineage at all, are each said outright: a conversation with no policy is \
                  not a reading.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "rail",
@@ -97,6 +102,7 @@ pub const QUERIES: &[HelpRow] = &[
                  each is, where it forked from, what it is doing, what it has spent and the last \
                  thing it said. A conversation nobody forked from answers notches and no children, \
                  which is the honest empty case rather than an error.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "inbox",
@@ -107,6 +113,7 @@ pub const QUERIES: &[HelpRow] = &[
                  ended and the commit it ended at. A half-written or hand-edited deposit is \
                  rendered rather than refused, with whatever fields it actually stated. Delivered \
                  mail is not here; it has moved into the transcript.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "agent",
@@ -121,6 +128,7 @@ pub const QUERIES: &[HelpRow] = &[
                  anywhere beneath it, and whether Stop and its children cascade are offered. A \
                  conversation this workspace does not carry answers as its own root, stopped and \
                  unmarked, rather than refusing.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "attention",
@@ -133,6 +141,7 @@ pub const QUERIES: &[HelpRow] = &[
                  the one the down arrow walks at the window; the count is the strip's. Answer a \
                  row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else \
                  about it.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "ops",
@@ -142,6 +151,7 @@ pub const QUERIES: &[HelpRow] = &[
                  outcome. Actions only: a query reads the world and changes nothing, so it \
                  leaves no row, and what was read before an action was chosen cannot be \
                  recovered here. Defaults to the last 50 rows.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "search",
@@ -156,6 +166,7 @@ pub const QUERIES: &[HelpRow] = &[
                  before a title before a body), and capped. Sources it could not read are named \
                  in the answer rather than silently dropped. At the window it is Ctrl+F, and \
                  results are clickable; a search with no text clears the last one.",
+        surface: Surface::Control,
     },
     HelpRow {
         verb: "capture",
@@ -167,6 +178,7 @@ pub const QUERIES: &[HelpRow] = &[
                  as absent. How long to keep asking is yours to decide, and that deadline is \
                  what makes an offline machine a refusal you can see rather than a wait with no \
                  end. A handle you did not invoke reads as absent too.",
+        surface: Surface::Machine,
     },
     HelpRow {
         verb: "help",
@@ -176,5 +188,6 @@ pub const QUERIES: &[HelpRow] = &[
                  With no verb it is this roster; with one it is that command's page. The same \
                  answer comes from `<verb> --help`, from a bare `/`, and from `yog gesture \
                  --help` at a terminal — one question, one answer, every seat.",
+        surface: Surface::Control,
     },
 ];

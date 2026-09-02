@@ -50,7 +50,7 @@ exist in the other" makes *which ops owe every seat a surface* a fact of the
 every client meets: yog's help table.
 
 **So the roster grows one field, and no second list.** `HelpRow` gains a
-classification (working name `surface`), two values:
+classification — landed as `surface` (bl-8758), two values:
 
 - **`control`** — every seat-class client owes this op a *discoverable
   interactable* (a tagged accessibility node, §4). Queries included: the owed
@@ -210,7 +210,22 @@ one home, machine-checked, instead of prose.
 ## 10. What lands where
 
 - **yog** — the classification field on `HelpRow`, every row classed, the
-  coherence test against `Grade::admits`, corpus regenerated (bl-8758).
+  coherence test against `Grade::admits`, corpus regenerated. **Landed
+  (bl-8758)**: `HelpRow::surface`, 66 rows, **61 `control` and 5 `machine`**;
+  the five are the routing leg's own ends — `advertise`, `complete` and
+  `invocations` (the three `Grade::Foot` admits, coherence-tested) plus
+  `invoke` and `capture`, the asking program's fire and poll. Three calls the
+  roster made and their reasons, so a later reader is not re-litigating them:
+  **`deliver` is `control`** — accepting one of `n` fanned candidates is an
+  operator judgement and the sibling of `/fan` and `/retire`, which no reading
+  makes machine; §2's `machine` is the foot's verbs and the routing leg's
+  machine ends, and `deliver` is neither. **`enroll` is `control`** — §1.4's
+  mint is an act at a seat, pairing a device that is not yet a peer. And
+  **yog's argv table is outside the ledger** — `yog env`, `yog exec`, `yog bl`
+  and the rest share the row type for its text but cross no §8.5 boundary, so
+  no seat can owe them a control and the generated roster never sees them.
+  Wire-visible: `reply/help` rows gained a field, so `PROTOCOL` is **7**
+  (REMOTE §9.14).
 - **lernie** — `act:` tags on the seat's verb controls, the §5 assertion in
   the bl-dc07 kittest harness's gate, the exemption file (bl-38d4 in the
   lernie store).
