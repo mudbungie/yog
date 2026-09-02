@@ -73,14 +73,16 @@ impl std::fmt::Display for GrammarError {
     }
 }
 
+mod entries;
 mod fields;
 mod models;
 mod roles;
 mod tools;
 
-pub use fields::{entry_field, entry_names, remove_entry, set_entry, set_field};
+pub use entries::{entry_names, remove_entry, set_entry};
+pub use fields::{entry_field, remove_field, set_field, upsert_field};
 pub use models::{DEFAULT_CONTEXT_WINDOW, context_windows, declare_model, is_unknown_row};
-pub use roles::{roles, set_role_model};
+pub use roles::{EFFORT, MODEL, PRIORITY, PROVIDER, roles, set_role_model};
 pub use tools::{flow_members, flow_value};
 
 /// The two files this grammar is spoken over, named in every refusal.

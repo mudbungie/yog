@@ -53,7 +53,15 @@ use super::frame;
 /// `diverged_lineages`, and the `oid` beside them stopped meaning the fork
 /// commit and started meaning the commit control resolves from. Same verb,
 /// same question, a different thing said: exactly the case above.
-pub const PROTOCOL: u32 = 5;
+///
+/// 5 → 6 (bl-23bd): `reply/providers` rows gained `effort` and `priority`, the
+/// two per-row tuning capabilities a seat decides a control's existence by. The
+/// **two new ops beside them cost nothing** — `/effort` and `/priority` are new
+/// spellings in an existing vocabulary, and §3's rule is that a peer which has
+/// not heard of one already refuses it in band by name. One bump for the row,
+/// and nothing else shape-changing is batched behind it: clients re-vendor per
+/// bump, and this number walked 2 → 5 inside one unreleased cycle already.
+pub const PROTOCOL: u32 = 6;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

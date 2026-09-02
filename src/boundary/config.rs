@@ -226,5 +226,42 @@ pub(super) fn pick_model(
     )
 }
 
+/// The §9.4 **tuning pair** (bl-23bd) — a role's effort level or its priority
+/// lane, written into the same `providers.yaml`, on the same lineage, through
+/// the same commit [`pick_model`] spends.
+///
+/// Beside it rather than inside it because the two answer different questions
+/// of the same file: a pick moves the (row, id) pointer and must be gated
+/// against brazen's live table, while a tuning knob is a value the config is
+/// always free to carry — the capability decides which control a seat *offers*
+/// (`ProviderRowView`'s two booleans), never whether a write is allowed. So
+/// this reads no provider table at all, which is also why it cannot be a wider
+/// pick: the pick's own gates would have nothing to judge.
+///
+/// The read → plan → commit shape is [`pick_model`]'s verbatim, and
+/// deliberately so: one staging path, one `litany config` drive, one
+/// [`Reply::Outcome`], so a tuning gesture and a pick fail the same way when
+/// the lineage will not take an edit.
+pub(super) fn tune(
+    deps: &Deps,
+    ts: &str,
+    workspace: &Path,
+    tuning: &crate::model_pick::Tuning,
+) -> Result<Reply, String> {
+    let assigned = config_file(workspace, &format!("config/{BRANCH}"), PROVIDERS)
+        .map(|b| String::from_utf8_lossy(&b).into_owned())
+        .map_err(|e| e.to_string())?;
+    let assigned = crate::model_pick::tuning::plan(&assigned, tuning).map_err(|e| e.to_string())?;
+    commit(
+        deps,
+        ts,
+        workspace,
+        BRANCH,
+        &EditOrigin::Advance,
+        PROVIDERS,
+        &assigned,
+    )
+}
+
 #[cfg(test)]
 mod tests;

@@ -25,8 +25,8 @@ pub fn roles(providers_yaml: &str) -> Vec<RoleModel> {
         .filter_map(|(role, i)| {
             Some(RoleModel {
                 role,
-                provider: field(&lines, i, "provider")?.0,
-                model: field(&lines, i, "model")?.0,
+                provider: field(&lines, i, PROVIDER)?.0,
+                model: field(&lines, i, MODEL)?.0,
             })
         })
         .collect()
@@ -36,6 +36,18 @@ pub fn roles(providers_yaml: &str) -> Vec<RoleModel> {
 /// every other byte (comments, `tools:`, sibling roles) — two applications of
 /// the one [`set_field`] rewrite. The pair is all-or-nothing: a role missing
 /// either line refuses and the intermediate text is dropped unwritten.
+/// The role assignment's four-space field names, said once (bl-23bd): two
+/// required — the (row, id) pointer §9.4 writes — and two optional tuning knobs
+/// litany reads as `Option`s. `&'static str` because [`GrammarError::NoField`]
+/// carries the name it could not find.
+pub const PROVIDER: &str = "provider";
+/// The model id half of the pointer.
+pub const MODEL: &str = "model";
+/// The role's reasoning-effort level (litany ARCH §4.3, upstream bl-acba).
+pub const EFFORT: &str = "effort";
+/// The role's priority-lane request (upstream bl-f587).
+pub const PRIORITY: &str = "priority";
+
 pub fn set_role_model(
     providers_yaml: &str,
     role: &str,
@@ -47,8 +59,8 @@ pub fn set_role_model(
         providers_yaml,
         ROLES,
         role,
-        "provider",
+        PROVIDER,
         provider,
     )?;
-    set_field(PROVIDERS_YAML, &out, ROLES, role, "model", model)
+    set_field(PROVIDERS_YAML, &out, ROLES, role, MODEL, model)
 }

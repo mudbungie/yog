@@ -161,6 +161,10 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             model,
             ..
         } => config::pick_model(deps, ts, ws, &Pick::of(role, provider, model)),
+        // The §9.4 tuning pair (bl-23bd): the same file, the same lineage and
+        // the same commit the pick spends — one arm, because the carrier is one
+        // and the executor reads which member it is.
+        Action::Tune(tuning) => config::tune(deps, ts, ws, tuning),
         // REMOTE §5's tool-host presentation (bl-4e08): the set lands under the
         // identity the INTAKE carries, so the gate is who is asking rather than
         // what was named — an in-world caller has no client and is refused.

@@ -6,6 +6,7 @@ use crate::boundary::codec::{decode, encode};
 use crate::boundary::config::ConfigFile;
 use crate::boundary::{Action, Gesture, Query};
 use crate::config_edit::branch::edit::EditOrigin;
+use crate::model_pick::{Effort, Tuning};
 use serde_json::json;
 
 fn rt(gesture: Gesture) {
@@ -51,6 +52,28 @@ fn branch(origin: EditOrigin) -> ConfigFile {
 /// entries here.
 pub(crate) fn surface() -> Vec<Gesture> {
     let mut out = Vec::new();
+    // The §9.4 tuning pair (bl-23bd), one entry per arm as the surface's own
+    // rule demands: every level AND the off that is not one, both sides of the
+    // checkbox. A table that only ever spells the easy case proves only that.
+    for level in [
+        Some(Effort::Low),
+        Some(Effort::Medium),
+        Some(Effort::High),
+        None,
+    ] {
+        out.push(Gesture::Act(Action::Tune(Tuning::Effort {
+            workspace: "ws".to_owned(),
+            role: "worker".to_owned(),
+            level,
+        })));
+    }
+    for on in [true, false] {
+        out.push(Gesture::Act(Action::Tune(Tuning::Priority {
+            workspace: "ws".to_owned(),
+            role: "compactor".to_owned(),
+            on,
+        })));
+    }
     for file in [
         brazen(),
         ConfigFile::LitanyModels,

@@ -1,5 +1,5 @@
-//! The generic field access every rewrite in this grammar was restating —
-//! locate one entry's four-space field, read it, or replace it.
+//! **One entry's four-space field** — locate it, read it, replace it, add it or
+//! drop it.
 //!
 //! [`roles`](super::roles), [`models`](super::models) and [`tools`](super::tools)
 //! each carried the same prelude (find the column-0 block, find the two-space
@@ -8,12 +8,21 @@
 //! once, as [`locate`], and the plain "set this field" case is [`set_field`] —
 //! which `set_role_model` is now two applications of.
 //!
-//! The same three primitives are what the §9.5 typed config pane
+//! The same primitives are what the §9.5 typed config pane
 //! ([`crate::config_edit::form`]) reads and writes settings through, so the
 //! pane's controls, the §9.2 Apply gate and the §9.4 picker are one grammar
 //! rather than three readers of one file shape.
+//!
+//! **What is NOT here is the entry** ([`super::entries`], bl-23bd): declaring a
+//! whole entry, dropping one, and listing a block's entries are acts at the
+//! altitude above, with their own callers (the §4.3 armed loop's `cadence.yaml`
+//! rows), and this file had been carrying both since it was the place the
+//! shared prelude landed. The two halves meet at [`entry_line`] and
+//! [`entry_span`], which are the address of an entry and therefore that file's
+//! to answer.
 
-use super::{BlockKey, GrammarError, block_end, block_key, entries, field, join};
+use super::entries::{entry_line, entry_span};
+use super::{BlockKey, GrammarError, block_key, field, join};
 
 /// The four-space `<name>:` line of `entry` under `block`: its value and its
 /// index in `lines`. Every miss is the refusal that names it — an inline block
@@ -52,29 +61,6 @@ pub(super) fn locate(
     })
 }
 
-/// The line index of the two-space `<entry>:` key under the block at `at`.
-fn entry_line(lines: &[&str], at: usize, entry: &str) -> Option<usize> {
-    entries(lines, at)
-        .into_iter()
-        .find(|(name, _)| name == entry)
-        .map(|(_, i)| i)
-}
-
-/// Every two-space entry key under `block`, in file order — the model ids a
-/// `models.yaml` declares, the roles a `providers.yaml` declares. A file with
-/// no such block (or an inline one) declares nothing, so it lists nothing:
-/// absence is a value, exactly as it is for the §9.2 gate.
-pub fn entry_names(text: &str, block: &str) -> Vec<String> {
-    let lines: Vec<&str> = text.lines().collect();
-    let BlockKey::At(at) = block_key(&lines, block) else {
-        return Vec::new();
-    };
-    entries(&lines, at)
-        .into_iter()
-        .map(|(name, _)| name)
-        .collect()
-}
-
 /// One entry's four-space field value, or `None` when the block, the entry or
 /// the field is not there. The forgiving read the pane derives a row from — a
 /// field that is absent is a control the file does not have, not an error.
@@ -108,69 +94,118 @@ pub fn set_field(
     Ok(join(&out))
 }
 
-/// Declare one whole entry — the two-space key plus its four-space fields —
-/// replacing any entry of that name outright. The block is created at the end
-/// of the file when it is absent, because an entry is what the caller is
-/// asserting and a block with no entries asserts nothing. `None` is the one
-/// refusal: an *inline* block key (`monitor: {}`) cannot be rewritten without
-/// becoming a YAML transform, which this grammar never is.
+/// Set one entry's four-space field whether or not the entry already carries
+/// it (bl-23bd) — [`set_field`] with the missing-field case answered by adding
+/// the line instead of refusing.
 ///
-/// Whole-entry replacement rather than field-wise editing is deliberate: the
-/// caller states the entry it wants, so a stale sibling field left behind by an
-/// older shape cannot survive the rewrite and be read back as policy.
-pub fn set_entry(
+/// **Why this is not just `set_field` widened.** `set_field` refuses a field the
+/// entry does not have, and that refusal is right for every caller it had: they
+/// *move* a value the file already states, so an absent line means the file is
+/// not the shape they were told it was. An **optional** assignment field is a
+/// different fact — absent is its off state, so setting it is an add exactly as
+/// often as it is a replace, and a caller made to tell the two apart would be
+/// re-deriving what this function already had to look up.
+///
+/// The three refusals that are not about the field survive untouched: an inline
+/// block, a block that is not there, an entry that is not there. You cannot add
+/// a field to a role that does not exist, and guessing the role into being is
+/// the YAML transform this grammar never is.
+pub fn upsert_field(
+    file: &'static str,
     text: &str,
     block: &str,
     entry: &str,
-    fields: &[(&str, String)],
-) -> Option<String> {
-    let lines: Vec<&str> = text.lines().collect();
-    let mut out: Vec<String> = lines.iter().map(|l| (*l).to_string()).collect();
-    let body = std::iter::once(format!("  {entry}:"))
-        .chain(fields.iter().map(|(k, v)| format!("    {k}: {v}")));
-    match block_key(&lines, block) {
-        BlockKey::Inline => return None,
-        BlockKey::Absent => {
-            out.retain(|line| !line.trim().is_empty());
-            out.push(format!("{block}:"));
-            out.extend(body);
-        }
-        BlockKey::At(at) => {
-            let span = entry_span(&lines, at, entry);
-            if let Some((from, to)) = span {
-                out.splice(from..to, body);
-            } else {
-                out.splice((at + 1)..=at, body);
-            }
-        }
+    name: &'static str,
+    value: &str,
+) -> Result<String, GrammarError> {
+    match set_field(file, text, block, entry, name, value) {
+        Err(GrammarError::NoField { .. }) => insert_field(file, text, block, entry, name, value),
+        settled => settled,
     }
-    Some(join(&out))
 }
 
-/// Remove one entry and every line it owns. A file that never declared it is
-/// returned as it stands — severability is deleting the entry, so deleting one
-/// that is already gone is the same world, not an error.
-pub fn remove_entry(text: &str, block: &str, entry: &str) -> String {
-    let lines: Vec<&str> = text.lines().collect();
-    let mut out: Vec<String> = lines.iter().map(|l| (*l).to_string()).collect();
-    if let BlockKey::At(at) = block_key(&lines, block)
-        && let Some((from, to)) = entry_span(&lines, at, entry)
-    {
-        out.drain(from..to);
-    }
-    join(&out)
+/// The half-open span one entry owns, or the refusal naming why it has none —
+/// [`locate`]'s prelude minus its last step, shared by the two rewrites that
+/// must find an entry without requiring the field to be there already.
+fn span_of(
+    file: &'static str,
+    lines: &[&str],
+    block: &str,
+    entry: &str,
+) -> Result<(usize, usize), GrammarError> {
+    let missing = || GrammarError::NoEntry {
+        file,
+        entry: entry.to_owned(),
+    };
+    let at = match block_key(lines, block) {
+        BlockKey::At(at) => at,
+        BlockKey::Inline => {
+            return Err(GrammarError::Inline {
+                file,
+                key: block.to_owned(),
+            });
+        }
+        BlockKey::Absent => return Err(missing()),
+    };
+    entry_span(lines, at, entry).ok_or_else(missing)
 }
 
-/// The half-open line range one entry owns under the block at `at`: its own
-/// two-space key line through the line before the next entry (or the block's
-/// end). `None` when the block declares no such entry.
-fn entry_span(lines: &[&str], at: usize, entry: &str) -> Option<(usize, usize)> {
-    let found = entries(lines, at);
-    let from = found.iter().find(|(name, _)| name == entry)?.1;
-    let to = found
-        .iter()
-        .map(|(_, i)| *i)
-        .find(|i| *i > from)
-        .unwrap_or_else(|| block_end(lines, from));
-    Some((from, to))
+/// Add a four-space field line to an entry that lacks it, **last among the
+/// fields it already has** — after the entry's own key line and its existing
+/// run, before the next entry. Blank lines inside the span are left where they
+/// are: the insertion goes after the last line that carries anything, so a file
+/// that separates its entries with blank lines keeps its shape.
+fn insert_field(
+    file: &'static str,
+    text: &str,
+    block: &str,
+    entry: &str,
+    name: &'static str,
+    value: &str,
+) -> Result<String, GrammarError> {
+    let lines: Vec<&str> = text.lines().collect();
+    let (from, to) = span_of(file, &lines, block, entry)?;
+    // The entry's own key line is `from` and is never blank, so the scan needs
+    // no fallback: it starts there and only ever moves forward onto another
+    // line that carries something. A blank line or a comment between entries
+    // is stepped over rather than inserted after, which is what keeps a file
+    // that spaces its entries out looking the way its author left it.
+    let mut last = from;
+    for (offset, line) in lines.iter().enumerate().take(to).skip(from) {
+        if !line.trim().is_empty() {
+            last = offset;
+        }
+    }
+    let mut out: Vec<String> = lines.iter().map(|l| (*l).to_string()).collect();
+    out.insert(last + 1, format!("    {name}: {value}"));
+    Ok(join(&out))
+}
+
+/// Drop one entry's four-space field line, leaving every other byte where it
+/// is.
+///
+/// **Two absences, and only one of them is a fault.** An entry that never
+/// carried the field is returned as it stands — removing what is already gone
+/// is the same world, which is what lets an *off* switch be one act rather than
+/// a read followed by a decision. But an entry that is not **there** is a
+/// different thing entirely, and answering it with the unchanged file would
+/// report success for a write that reached nothing. So the entry is required
+/// and the field is not, which is exactly the asymmetry
+/// [`upsert_field`] keeps, and it is why both refusals live here rather than in
+/// each caller: a caller that gated the entry itself would be a second home for
+/// one rule, and the two would phrase it differently.
+pub fn remove_field(
+    file: &'static str,
+    text: &str,
+    block: &str,
+    entry: &str,
+    name: &str,
+) -> Result<String, GrammarError> {
+    let lines: Vec<&str> = text.lines().collect();
+    let (from, _) = span_of(file, &lines, block, entry)?;
+    let mut out: Vec<String> = lines.iter().map(|l| (*l).to_string()).collect();
+    if let Some((_, i)) = field(&lines, from, name) {
+        out.remove(i);
+    }
+    Ok(join(&out))
 }

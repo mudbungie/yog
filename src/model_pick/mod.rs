@@ -28,6 +28,9 @@ pub mod header;
 /// text it produces (§9.4).
 pub mod pick;
 pub mod query;
+/// The §9.4 tuning pair — a role's effort level and its priority lane, the two
+/// optional assignment fields litany 0.0.6 reads (bl-23bd).
+pub mod tuning;
 
 #[cfg(test)]
 pub(crate) mod tests;
@@ -38,6 +41,7 @@ pub use header::{
     row_role,
 };
 pub use pick::{Pick, PickError, plan, role_fault};
+pub use tuning::{Effort, LEVELS, Tuning};
 
 /// The role that talks to you (litany's `WORKER_ROLE`) — the one the
 /// conversation's model row shows and writes, because that is the question

@@ -17,6 +17,7 @@ use super::{Context, args};
 use crate::boundary::config::ConfigFile;
 use crate::boundary::{Action, Gesture, Query};
 use crate::config_edit::branch::edit::EditOrigin;
+use crate::model_pick::{LEVELS, Tuning};
 use crate::world::marks;
 
 /// `/config <destination…> <text…>` — the destination's words, then the file;
@@ -111,6 +112,61 @@ pub(super) fn model(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, St
         model: model.to_owned(),
     }))
 }
+
+/// `/effort <role> <low|medium|high|off>` — the §9.4 reasoning level on the
+/// focused workspace (bl-23bd). Two words, fixed, the shape `/model`'s three
+/// take; the level is validated **here**, against the one vocabulary
+/// [`LEVELS`] states, so an unspellable value never reaches the grammar.
+pub(super) fn effort(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    let [role, level] = *tail.split_whitespace().collect::<Vec<_>>() else {
+        return Err(usage(verb));
+    };
+    let level = match level {
+        OFF => None,
+        word => Some(crate::model_pick::Effort::parse(word).ok_or_else(|| usage(verb))?),
+    };
+    Ok(Gesture::Act(Action::Tune(Tuning::Effort {
+        workspace: args::workspace(ctx, verb)?,
+        role: role.to_owned(),
+        level,
+    })))
+}
+
+/// `/priority <role> <on|off>` — ask this role's provider for the priority
+/// lane, or stop asking. The same two-word shape, over the one other closed
+/// vocabulary the pair has.
+pub(super) fn priority(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    let [role, state] = *tail.split_whitespace().collect::<Vec<_>>() else {
+        return Err(PRIORITY_USAGE.to_owned());
+    };
+    let on = match state {
+        ON => true,
+        OFF => false,
+        _ => return Err(PRIORITY_USAGE.to_owned()),
+    };
+    Ok(Gesture::Act(Action::Tune(Tuning::Priority {
+        workspace: args::workspace(ctx, verb)?,
+        role: role.to_owned(),
+        on,
+    })))
+}
+
+/// The word that removes a tuning field — the same one for both knobs, because
+/// they have the same off state and an operator should not have to remember two.
+const OFF: &str = "off";
+/// `/priority`'s other word.
+const ON: &str = "on";
+
+/// `/effort`'s refusal, one sentence for both ways to get it wrong (the wrong
+/// number of words, and a level outside the vocabulary): the usage names the
+/// vocabulary, so a reader who saw either has been told the whole rule.
+fn usage(verb: &str) -> String {
+    format!("/{verb}: usage: /effort <role> <{LEVELS}>")
+}
+
+/// `/priority`'s, said once for the same reason. A const rather than a
+/// formatted sentence because its verb cannot vary.
+pub const PRIORITY_USAGE: &str = "/priority: usage: /priority <role> <on|off>";
 
 /// Spell a destination as the leading words `/config` reads it back from — the
 /// writer half of the grammar above, and the reason [`spell`] can be exhaustive.

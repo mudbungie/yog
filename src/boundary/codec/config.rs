@@ -14,7 +14,9 @@ use crate::boundary::config::ConfigFile;
 use crate::config_edit::branch::edit::EditOrigin;
 use serde_json::{Map, Value, json};
 
+use super::fields::{bool_of, opt_str_of};
 use super::str_of;
+use crate::model_pick::{LEVELS, Tuning};
 
 /// Encode a config destination. `file` is the discriminant; each destination
 /// carries exactly its own parameters.
@@ -58,6 +60,8 @@ pub(super) fn decode_action(op: &str, o: &Map<String, Value>) -> Option<Result<A
         "config" => Some(decode_apply(o)),
         "marks" => Some(decode_marks(o)),
         "model" => Some(decode_pick(o)),
+        EFFORT => Some(decode_effort(o)),
+        PRIORITY => Some(decode_priority(o)),
         _ => None,
     }
 }
@@ -78,6 +82,61 @@ fn decode_marks(o: &Map<String, Value>) -> Result<Action, String> {
         workspace: str_of(o, "workspace")?,
         branch,
     })
+}
+
+/// The §9.4 tuning pair's two op words (bl-23bd) — the operator's vocabulary,
+/// which is also litany's config key and also the slash verb, so one word
+/// serves the line, the wire and the file.
+pub(super) const EFFORT: &str = "effort";
+pub(super) const PRIORITY: &str = "priority";
+
+/// One tuning gesture's envelope. Two ops off one carrier: `effort` carries the
+/// level or `null` for off, `priority` carries the boolean — each field the
+/// shape its own arm has, rather than a shared `value` that would have to be
+/// two types.
+pub(super) fn encode_tuning(tuning: &Tuning) -> Value {
+    match tuning {
+        Tuning::Effort {
+            workspace,
+            role,
+            level,
+        } => json!({ "op": EFFORT, "workspace": workspace, "role": role,
+                     "level": level.map(|l| l.as_str()) }),
+        Tuning::Priority {
+            workspace,
+            role,
+            on,
+        } => json!({ "op": PRIORITY, "workspace": workspace, "role": role, "on": on }),
+    }
+}
+
+/// `/effort`'s level, read back **strictly** — the [`decode_marks`] shape, and
+/// for its reason: the vocabulary is closed, so a word outside it is a codec
+/// that has drifted rather than an operator's typo, and answering it in band
+/// costs one sentence. `null` is `off`, and absence is the same reading: the
+/// encoder writes the key always, and a peer that omits it has said the one
+/// thing an absent optional can honestly mean.
+fn decode_effort(o: &Map<String, Value>) -> Result<Action, String> {
+    let level = match opt_str_of(o, "level")? {
+        None => None,
+        Some(word) => Some(
+            crate::model_pick::Effort::parse(&word)
+                .ok_or_else(|| format!("{EFFORT}: level must be one of {LEVELS}, got {word:?}"))?,
+        ),
+    };
+    Ok(Action::Tune(Tuning::Effort {
+        workspace: str_of(o, "workspace")?,
+        role: str_of(o, "role")?,
+        level,
+    }))
+}
+
+fn decode_priority(o: &Map<String, Value>) -> Result<Action, String> {
+    Ok(Action::Tune(Tuning::Priority {
+        workspace: str_of(o, "workspace")?,
+        role: str_of(o, "role")?,
+        on: bool_of(o, "on")?,
+    }))
 }
 
 fn decode_pick(o: &Map<String, Value>) -> Result<Action, String> {

@@ -50,6 +50,8 @@ impl FakeRunner {
                     protocol: "openai_chat".to_owned(),
                     auth: "none".to_owned(),
                     credential: "not required".to_owned(),
+                    effort: true,
+                    priority: true,
                 })
                 .collect(),
             ..Self::ok()

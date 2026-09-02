@@ -259,13 +259,23 @@ pub enum Action {
     /// carries the ruling and the §4.2 grade a foot is refused it by.
     Enroll(crate::registry::enroll::Request),
     /// The §9.4 model pick: give `role` this `model` on this provider row, for
-    /// `workspace`. §9.2 and §9.3 composed by one gesture — refuse either half
-    /// and neither is written — because litany's cross-check makes the role
-    /// assignment and the model declaration two halves of one fact.
+    /// `workspace`. **One gesture, one file** since bl-d9cb: litany retired the
+    /// cross-check that made this §9.2 and §9.3 composed, so the role
+    /// assignment is the whole binding and `providers.yaml` is the only thing
+    /// written.
     PickModel {
         workspace: String,
         role: String,
         provider: String,
         model: String,
     },
+    /// **The §9.4 tuning pair** (bl-23bd): a role's reasoning-effort level and
+    /// its priority-lane request, the two optional fields of the same
+    /// assignment `PickModel` writes (litany ARCH §4.3, upstream bl-acba and
+    /// bl-f587). One variant over
+    /// [`model_pick::Tuning`](crate::model_pick::Tuning) rather than two here,
+    /// the fold five families already take — that type's own doc says why each
+    /// is a separate gesture rather than a wider `/model`, and why `off` is a
+    /// removed line rather than a written `false`.
+    Tune(crate::model_pick::Tuning),
 }

@@ -188,13 +188,18 @@ pub(crate) fn op_row(v: &Value) -> Result<OpRow, String> {
     })
 }
 
-/// The four provider facts, and the §5.1 #22 credential answer beside them.
+/// The provider facts, the §5.1 #22 credential answer beside them, and the two
+/// §9.4 tuning capabilities (bl-23bd) — read **strictly**, as the required
+/// booleans the encoder always writes, so a peer that dropped them refuses in
+/// band instead of quietly presenting a row with both controls hidden.
 pub(crate) fn provider_row(v: &Value) -> Result<ProviderRowView, String> {
     let o = v.as_object().ok_or("provider row: not an object")?;
     Ok(ProviderRowView {
         name: str_of(o, "name")?,
         fact: str_of(o, "fact")?,
         blocked: opt_str_of(o, "blocked")?,
+        effort: bool_of(o, "effort")?,
+        priority: bool_of(o, "priority")?,
     })
 }
 

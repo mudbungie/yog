@@ -3894,6 +3894,44 @@ spelling already in use is taken to say*.
   run the same git query against the same refs, which is the one place the fact
   lives.
 
+### 9.13 The rows say which tuning a provider takes (bl-23bd)
+
+**`reply/providers` rows gained `effort` and `priority`, two booleans.**
+`PROTOCOL` is **6**. The two new ops beside them — `/effort` and `/priority` —
+cost nothing: §3's rule is that a new op is a new spelling in an existing
+vocabulary and a peer that has not heard of one refuses it in band, by name.
+One bump, for the row, and nothing else shape-changing is batched behind it.
+
+DESIGN §9.4 holds the gestures and the reasoning; the wire's half is three
+things.
+
+- **The vocabulary is the operator's, and the dialect's stays in the adapter.**
+  The wire says `effort` and `priority` because that is what the *config* says
+  and what a person means. `reasoning_effort`, `thinking.budget_tokens`,
+  `service_tier`, `flex` and `batch` are provider spellings; they do not appear
+  in an envelope, a reply, a help page or a refusal, and the day a cost-saving
+  lane is wanted it widens `priority`'s type rather than leaking one dialect's
+  word upward. This is litany's own rule at ARCH §4.3, kept at the wire because
+  a boundary that spoke one dialect's vocabulary would make every other dialect
+  a translation.
+- **A capability is a column of the row it is about.** The two booleans ride the
+  provider row rather than a query of their own, for the reason bl-7407 already
+  refused a second answer about the same subject: a seat would have to join it
+  back, and a capability is a fact about a row exactly as its credential model
+  is. They are read as columns out of `bz --list-providers --json` (brazen
+  0.0.7, upstream bl-50a5) and re-derived nowhere — which is strictly better
+  than the match on `ProtocolId` yog would otherwise have written, because
+  brazen folds the dialect's own declaration together with **that row's**
+  `unsupported_body_keys` decline, and only the row can see the second.
+- **They gate a control, never a write.** A row that takes neither knob hides
+  both selectors; it does not refuse the gesture. The config field is always
+  lawful — a level a model declines is the provider's own refusal, arriving in
+  the step's failure where it can be read — and a boundary that refused here
+  would be refusing on the strength of a question that went unanswered. Absent
+  is `false` at the column read and the booleans are **required** on the wire:
+  an unanswered question may not block a row, and it may not grant it a control
+  either, so the seat is told outright rather than left to infer.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

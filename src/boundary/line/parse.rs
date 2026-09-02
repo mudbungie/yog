@@ -125,6 +125,11 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         "config" => config::config(tail, ctx, verb),
         "marks" => config::marks(tail, ctx, verb),
         "model" => config::model(tail, ctx, verb),
+        // The §9.4 tuning pair (bl-23bd): the other two writers of the same
+        // role assignment, each its own verb because a toggle must not make
+        // the operator restate the pointer it is not changing.
+        "effort" => config::effort(tail, ctx, verb),
+        "priority" => config::priority(tail, ctx, verb),
         "fork" => super::fork::fork(tail, ctx, verb),
         "ack" => args::none(tail, verb).map(|()| act(Action::Ack)),
         "seen" => verbs::seen(tail, ctx, verb),

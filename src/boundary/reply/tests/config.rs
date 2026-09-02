@@ -51,11 +51,15 @@ fn a_providers_reply_names_each_rows_credential_fact_and_login_block() {
             name: "acme".to_owned(),
             fact: "auth oauth2 · signed in".to_owned(),
             blocked: None,
+            effort: true,
+            priority: true,
         },
         ProviderRowView {
             name: "zinc".to_owned(),
             fact: "auth none · no credential needed".to_owned(),
             blocked: Some("keyless — nothing to log in".to_owned()),
+            effort: true,
+            priority: false,
         },
     ]));
     assert_eq!(value["kind"], "providers");

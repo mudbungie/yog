@@ -156,11 +156,17 @@ pub(super) fn listings() -> Vec<Reply> {
                 name: "anthropic".into(),
                 fact: "credential present".into(),
                 blocked: None,
+                effort: true,
+                priority: true,
             },
+            // The other arm of both tuning booleans, so neither is only ever
+            // spelled one way across the surface (bl-23bd).
             ProviderRowView {
                 name: "openai".into(),
                 fact: "no credential".into(),
                 blocked: Some("no login flow".into()),
+                effort: false,
+                priority: false,
             },
         ]),
         Reply::Lineages(vec![Lineage {

@@ -85,6 +85,15 @@ pub struct ProviderRow {
     /// answer at all" and yog re-derives none of it. Read by the §8.1 start
     /// gate ([`crate::start::WallCredit`], bl-1fd0).
     pub credential: String,
+    /// **Does this row take an `effort:` assignment?** (§9.4's tuning pair,
+    /// bl-23bd.) brazen's own per-row declaration, read as a column — the
+    /// dialect's `Protocol::tuning()` answer AND this row's own
+    /// `unsupported_body_keys` decline, folded by the crate that owns both.
+    pub effort: bool,
+    /// **Does this row take a `priority:` assignment?** The same column pair,
+    /// over the `service_tier` wire spelling: the OpenAI family and Anthropic
+    /// have one, and the others narrow it away.
+    pub priority: bool,
 }
 
 impl ProviderRow {
@@ -144,6 +153,8 @@ impl ProviderRow {
             name: self.name.clone(),
             fact: format!("auth {} · {}", self.auth, self.credential_words()),
             blocked: self.login_blocked(),
+            effort: self.effort,
+            priority: self.priority,
         }
     }
 }
@@ -159,6 +170,15 @@ pub struct ProviderRowView {
     pub name: String,
     pub fact: String,
     pub blocked: Option<String>,
+    /// Whether this row takes `/effort` (§9.4's tuning pair, bl-23bd) — the
+    /// per-row capability a controls surface shows the selector under, and
+    /// hides it under otherwise. **It gates a control, never a write**: the
+    /// config field is always lawful, and a level a model declines is the
+    /// provider's own refusal in the seat's banner, said rather than gated
+    /// (§9.4's caveat discipline).
+    pub effort: bool,
+    /// Whether this row takes `/priority` — the same, over the priority lane.
+    pub priority: bool,
 }
 
 /// The effective table as the rendered rows, in listing order. Every fact a
@@ -191,6 +211,8 @@ pub fn provider_rows(listing_json: &str) -> Vec<ProviderRow> {
             protocol: column(row, "protocol"),
             auth: column(row, "auth"),
             credential: column(row, "credential"),
+            effort: flag(row, "effort"),
+            priority: flag(row, "priority"),
         })
         .collect()
 }
@@ -202,6 +224,21 @@ pub fn provider_rows(listing_json: &str) -> Vec<ProviderRow> {
 /// second place that knows which column names a row.
 pub fn row_names(rows: &[ProviderRow]) -> Vec<String> {
     rows.iter().map(|r| r.name.clone()).collect()
+}
+
+/// One boolean column of a listing row, `false` when absent or not a boolean.
+///
+/// **Absent is `false`, and that is the honest reading rather than a shrug.**
+/// The column is a *capability declaration*: a listing that does not carry it
+/// has declared nothing, and a surface that offered the control anyway would be
+/// advertising a knob nothing has said this row can take — the inverse of the
+/// rule the string columns keep, where a question that went unanswered is never
+/// a refusal. The asymmetry is the direction of the claim: an unanswered
+/// question may not *block* a row, and it may not *grant* it a control either.
+fn flag(row: &serde_json::Value, key: &str) -> bool {
+    row.get(key)
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or_default()
 }
 
 /// One string column of a listing row, or `""` when absent or not a string.

@@ -174,10 +174,17 @@ pub fn refusal(error: &str) -> Value {
 }
 
 /// One provider row as the operator reads it (§8.3, §9.5): its name, the
-/// credential fact in words, and why `bz --login` cannot serve it — `null`
-/// exactly when it can.
+/// credential fact in words, why `bz --login` cannot serve it — `null` exactly
+/// when it can — and the two **tuning capabilities** a controls surface shows
+/// its `/effort` and `/priority` controls under (bl-23bd).
+///
+/// The two are always present and always booleans, never absent-is-false on the
+/// wire: a capability the seat cannot read is a control it cannot decide about,
+/// and this is the row whose whole job is to decide it. Absence is brazen's
+/// dialect to speak, and it is spoken one layer down where the column is read.
 fn provider_row(row: &crate::config_edit::brazen::ProviderRowView) -> Value {
-    json!({ "name": row.name, "fact": row.fact, "blocked": row.blocked })
+    json!({ "name": row.name, "fact": row.fact, "blocked": row.blocked,
+            "effort": row.effort, "priority": row.priority })
 }
 
 /// One help page as data — the same four facts every seat renders (§8.5).

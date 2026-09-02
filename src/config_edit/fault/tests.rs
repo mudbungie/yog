@@ -43,6 +43,8 @@ fn the_reason_is_the_pickers_own_sentence() {
         protocol: "claude_code".to_owned(),
         auth: "none".to_owned(),
         credential: "not required".to_owned(),
+        effort: true,
+        priority: false,
     };
     let why = row.tools_blocked().expect("the dialect declines tools");
     let remedy = config_remedy(DECLINES[0]).expect("classified");

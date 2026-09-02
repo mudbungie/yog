@@ -76,6 +76,7 @@ fn spell_action(action: &Action) -> String {
             model,
             ..
         } => format!("/model {role} {provider} {model}"),
+        Action::Tune(tuning) => spell_tuning(tuning),
         Action::Fork { attempt, goal, .. } => super::fork::spell(attempt, goal),
         Action::Ack => "/ack".to_owned(),
         // The address is the seat's selection, exactly as `/message`'s is.
@@ -166,6 +167,21 @@ fn spell_ball(verb: &BallVerb) -> String {
             flag("note", fields.note.as_ref()),
             super::balls::spell_fields(&fields.fields)
         ),
+    }
+}
+
+/// The §9.4 tuning pair (bl-23bd) — each member as its own line, `off` for
+/// both absences, which is exactly the word the reader takes back.
+fn spell_tuning(tuning: &crate::model_pick::Tuning) -> String {
+    use crate::model_pick::Tuning;
+    match tuning {
+        Tuning::Effort { role, level, .. } => {
+            let word = level.map_or_else(|| "off".to_owned(), |l| l.as_str());
+            format!("/effort {role} {word}")
+        }
+        Tuning::Priority { role, on, .. } => {
+            format!("/priority {role} {}", if *on { "on" } else { "off" })
+        }
     }
 }
 

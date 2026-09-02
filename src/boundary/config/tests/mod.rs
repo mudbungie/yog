@@ -26,6 +26,7 @@ mod browse;
 mod files;
 mod knobs;
 mod reads;
+mod tuning;
 
 /// A brazen config declaring one row, so the effective table has a name this
 /// suite can pick and gate on.

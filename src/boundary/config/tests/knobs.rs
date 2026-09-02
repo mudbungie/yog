@@ -77,13 +77,13 @@ fn set_marks_refuses_an_unlawful_branch_rather_than_writing_one() {
 
 /// A real-git workspace carrying litany's own `providers.yaml` on
 /// `config/default` — what the pick reads before it rewrites it.
-fn workspace() -> Fixture {
+pub(super) fn workspace() -> Fixture {
     let fx = Fixture::new();
     fx.commit_other("providers.yaml", TEMPLATE_PROVIDERS);
     fx
 }
 
-fn pick(role: &str, provider: &str, model: &str, ws: &Path) -> Action {
+pub(super) fn pick(role: &str, provider: &str, model: &str, ws: &Path) -> Action {
     Action::PickModel {
         workspace: crate::naming::leaf(ws),
         role: role.to_owned(),

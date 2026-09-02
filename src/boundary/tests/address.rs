@@ -131,6 +131,19 @@ fn every_workspace_bearing_action_answers_with_its_name() {
             provider: "acme".into(),
             model: "m".into(),
         },
+        // The §9.4 tuning pair (bl-23bd), both members: the carrier answers the
+        // slot, so the table delegates and a member that forgot to name a
+        // workspace could not compile rather than addressing nothing.
+        Action::Tune(crate::model_pick::Tuning::Effort {
+            workspace: WS.into(),
+            role: "worker".into(),
+            level: Some(crate::model_pick::Effort::Low),
+        }),
+        Action::Tune(crate::model_pick::Tuning::Priority {
+            workspace: WS.into(),
+            role: "worker".into(),
+            on: true,
+        }),
         Action::AnswerHold {
             workspace: WS.into(),
             agent: "c".into(),

@@ -11,6 +11,7 @@ use crate::boundary::line::tests::ctx;
 use crate::boundary::line::{Context, parse, spell};
 use crate::boundary::{Action, Gesture, help};
 use crate::config_edit::branch::edit::EditOrigin;
+use crate::model_pick::{Effort, Tuning};
 
 /// The parity claim (§8.5), and the other direction of the single source: the
 /// verb the line names has a help page.
@@ -82,6 +83,52 @@ fn a_marks_amendment_and_a_pick_round_trip_as_lines() {
         provider: "codex".to_owned(),
         model: "gpt-5.4".to_owned(),
     }));
+}
+
+/// The §9.4 tuning pair round-trips as lines (bl-23bd) — every level and the
+/// `off` that is not one, both sides of the checkbox, because `off` is spelled
+/// by an `Option::None` and a `false` and both must survive the trip that
+/// carries them.
+#[test]
+fn every_tuning_arm_round_trips_as_a_line() {
+    for level in [
+        Some(Effort::Low),
+        Some(Effort::Medium),
+        Some(Effort::High),
+        None,
+    ] {
+        rt(Gesture::Act(Action::Tune(Tuning::Effort {
+            workspace: "ws".to_owned(),
+            role: "worker".to_owned(),
+            level,
+        })));
+    }
+    for on in [true, false] {
+        rt(Gesture::Act(Action::Tune(Tuning::Priority {
+            workspace: "ws".to_owned(),
+            role: "compactor".to_owned(),
+            on,
+        })));
+    }
+}
+
+/// Both readers refuse what they cannot spell, and the refusal names the whole
+/// vocabulary rather than only the word that was wrong — the same discipline
+/// `/config`'s unknown destination keeps.
+#[test]
+fn a_word_outside_either_vocabulary_refuses_naming_the_whole_of_it() {
+    for line in [
+        "/effort worker highest",
+        "/effort worker",
+        "/effort worker low extra",
+    ] {
+        let said = crate::boundary::line::parse(line, &ctx()).expect_err("refused");
+        assert!(said.contains("low|medium|high|off"), "{line}: {said}");
+    }
+    for line in ["/priority worker yes", "/priority worker", "/priority"] {
+        let said = crate::boundary::line::parse(line, &ctx()).expect_err("refused");
+        assert!(said.contains("on|off"), "{line}: {said}");
+    }
 }
 
 #[test]

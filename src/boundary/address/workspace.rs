@@ -72,6 +72,10 @@ impl Action {
             | Action::PickModel { workspace, .. }
             | Action::AnswerHold { workspace, .. }
             | Action::Floor { workspace, .. } => Some(workspace),
+            // The §9.4 tuning pair delegates, as the monitor's and the fleet's
+            // families do: both members name a workspace, so the carrier
+            // answers and this table does not match on the pair (bl-23bd).
+            Action::Tune(tuning) => Some(tuning.workspace_slot()),
             Action::Prompt { prepared, .. }
             | Action::Fan(crate::fan::Verb::Spread { prepared, .. }) => {
                 Some(&mut prepared.workspace)

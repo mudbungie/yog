@@ -34,7 +34,7 @@ mod monitor;
 mod query;
 mod start;
 mod tools;
-use config::encode_file;
+use config::{encode_file, encode_tuning};
 use deposit::{INTERRUPT, MESSAGE, deposit, deposited};
 use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, strings_of, usize_of};
 use start::{decode_payload, decode_prepared, encode_start, opt_field};
@@ -117,6 +117,10 @@ fn encode_action(action: &Action) -> Value {
             model,
         } => json!({ "op": "model", "workspace": workspace,
                      "role": role, "provider": provider, "model": model }),
+        // The §9.4 tuning pair (bl-23bd), spelled in the config family's file:
+        // one carrier here, two ops on the wire, which is what makes them free
+        // of a version bump (REMOTE §3).
+        Action::Tune(tuning) => encode_tuning(tuning),
         Action::Fork {
             workspace,
             parent,

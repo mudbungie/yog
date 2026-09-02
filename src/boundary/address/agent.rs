@@ -75,7 +75,8 @@ impl Action {
             | Action::Advertise { .. }
             | Action::Enroll(_)
             | Action::Route(_)
-            | Action::PickModel { .. } => None,
+            | Action::PickModel { .. }
+            | Action::Tune(_) => None,
         }
     }
 }

@@ -76,8 +76,18 @@ balls = "=0.5.11"
 # structural"). 0.0.6 ships an eighth default provider row, `openai-chatgpt`
 # (oauth2, no model prefixes, last in the table), so a bare install has a
 # browser-login-capable provider with no config file authored (brazen bl-77fa,
-# the ruling on yog bl-8c2d).
-brazen = { version = "=0.0.6", features = ["native-host"] }
+# the ruling on yog bl-8c2d). 0.0.7 lifts **`service_tier` as the fifth canonical
+# knob** (upstream bl-fbb0) — priority processing as request shaping rather than
+# an extra-valve key, with Anthropic's asymmetric `auto` spelling kept inside the
+# adapter — and publishes the per-row **tuning capability** on the read surface
+# (upstream bl-50a5): `bz --list-providers --json` rows gain `effort` and
+# `priority` booleans, each computed from the dialect's own `Protocol::tuning()`
+# declaration AND that row's `unsupported_body_keys` decline. That second half is
+# the migration `config_edit::brazen::providers::capability` has been waiting on
+# since bl-3d22 named it: a capability yog would otherwise have re-derived from a
+# match on `ProtocolId` is now a column, and a match could not have seen the
+# per-row decline anyway. yog reads the columns (bl-23bd).
+brazen = { version = "=0.0.7", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -89,6 +99,20 @@ clap = { version = "4", features = ["derive"] }
 # as `litany` from 0.0.1; the `lernie` name passes to the seat, whose line
 # begins at 0.1.0. So a `lernie 0.0.x` in the notes below is THIS engine at that
 # release, and every version citation in yog's tree reads against that one rule.
+# 0.0.6 gives the role assignment **two tuning knobs**, both resolved
+# follow-the-tip at every step boundary like every other control fact.
+# `effort: low|medium|high` (upstream bl-acba, litany ARCH §4.3) is how much
+# reasoning the role's model calls request, riding the canonical `reasoning`
+# knob; `priority: true` (upstream bl-f587) asks the provider's priority lane,
+# riding the `service_tier` knob brazen 0.0.7 lifted. Both are the *operator's*
+# vocabulary and neither leaks a dialect's: `service_tier`, `flex` and `batch`
+# are provider spellings that stay inside the adapter, and `priority` is a
+# **checkbox, not a tri-state** — `false` and omitted are one fact upstream, so
+# yog's `off` removes the line rather than writing a second spelling of absence.
+# This pin is the gate on yog's own two gestures (bl-23bd): litany's serde
+# ignores an unknown role key in silence, so writing either field against an
+# engine that does not read it is the bl-d9cb trap — a write that reached
+# nothing — and an exact pin at or above this release is what dissolves it.
 # 0.0.5 **inverts the config default** (upstream bl-403b, its
 # `docs/DESIGN_CONFIG_FOLLOW.md`, operator ruling 2026-09-01): fork settles only
 # which config LINEAGE governs, and control resolves from that lineage's current
@@ -196,7 +220,7 @@ clap = { version = "4", features = ["derive"] }
 # (bl-f91a): the git/rev pin that rode here while bl-ddaa was unpublished is
 # gone, deny.toml's `allow-git` entry went with it, and `make publish` works
 # again — crates.io refuses git deps, so a git pin is never the shape.
-litany = "=0.0.5"
+litany = "=0.0.6"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

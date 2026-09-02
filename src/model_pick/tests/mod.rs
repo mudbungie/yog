@@ -17,6 +17,7 @@ mod grammar_roles;
 mod header;
 mod plan;
 mod query;
+mod tuning;
 mod validate;
 
 /// brazen's effective table as the fixtures need it: one row per name, keyless,
@@ -40,6 +41,8 @@ pub(crate) fn rows_on(
             protocol: protocol.to_owned(),
             auth: "none".to_owned(),
             credential: "not required".to_owned(),
+            effort: true,
+            priority: true,
         })
         .collect()
 }
