@@ -43,6 +43,7 @@ use super::reply::Reply;
 /// The destination datum and its addressing — split at §12's cap (bl-f5f6).
 mod file;
 pub use file::ConfigFile;
+pub use read::Read;
 
 pub(crate) mod read;
 pub(crate) mod write;

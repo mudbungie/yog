@@ -19,6 +19,7 @@ mod resolve;
 
 use super::{Action, Query};
 use crate::actions::verbs::Verb as BallVerb;
+use crate::boundary::config::Read;
 
 /// The workspace name every fixture gesture here carries.
 const WS: &str = "alba";
@@ -180,9 +181,9 @@ fn the_query_table_answers_both_ways() {
         Query::Conversations {
             workspace: WS.into(),
         },
-        Query::Marks {
+        Query::Config(Read::Marks {
             workspace: WS.into(),
-        },
+        }),
         Query::Workspaces,
         Query::Help { verb: None },
     ] {

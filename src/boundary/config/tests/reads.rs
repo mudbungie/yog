@@ -6,13 +6,14 @@
 use super::{ACME, applying, ask, brazen_file, fire, quiet};
 use crate::boundary::Query;
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Read;
 use crate::boundary::dispatch::Deps;
 use crate::boundary::reply::Reply;
 use std::path::{Path, PathBuf};
 use tempfile::tempdir;
 
 fn reading(file: ConfigFile) -> Query {
-    Query::ReadConfig { file }
+    Query::Config(Read::File { file })
 }
 
 #[test]
@@ -37,7 +38,7 @@ fn a_brazen_read_answers_the_bytes_on_disk() {
 fn a_config_gesture_reads_the_sphere_it_names_not_the_seats_own() {
     let root = tempdir().unwrap();
     let deps = super::seeing(&quiet(root.path()), &[Path::new("/other-sphere")]);
-    let elsewhere = |file| Query::ReadConfig { file };
+    let elsewhere = |file| Query::Config(Read::File { file });
     assert_eq!(
         ask(&deps, &reading(brazen_file())),
         Ok(Reply::Config {
@@ -60,9 +61,9 @@ fn a_config_gesture_reads_the_sphere_it_names_not_the_seats_own() {
     // the machine's own brazen state (§16.2).
     let named = |ws: &str| match ask(
         &deps,
-        &Query::Providers {
+        &Query::Config(Read::Providers {
             workspace: crate::naming::leaf(&(PathBuf::from(ws))),
-        },
+        }),
     ) {
         Ok(Reply::Providers(rows)) => rows.into_iter().map(|r| r.name).collect::<Vec<_>>(),
         other => panic!("providers answers providers: {other:?}"),
@@ -90,9 +91,9 @@ fn a_seat_with_no_wall_of_its_own_still_reaches_the_named_sphere() {
     );
     let Ok(Reply::Providers(rows)) = ask(
         &deps,
-        &Query::Providers {
+        &Query::Config(Read::Providers {
             workspace: crate::naming::leaf(&(crate::test_support::fixture_workspace())),
-        },
+        }),
     ) else {
         panic!("providers answers providers");
     };
@@ -152,9 +153,9 @@ fn providers_reads_brazens_effective_table() {
     let deps = quiet(root.path());
     let Ok(Reply::Providers(rows)) = ask(
         &deps,
-        &Query::Providers {
+        &Query::Config(Read::Providers {
             workspace: crate::naming::leaf(&(crate::test_support::fixture_workspace())),
-        },
+        }),
     ) else {
         panic!("providers answers providers");
     };
@@ -170,9 +171,9 @@ fn marks_read_answers_the_branch_and_the_space_it_is_a_branch_of() {
     let deps = super::seeing(&deps, &[ws.as_path()]);
     let reply = ask(
         &deps,
-        &Query::Marks {
+        &Query::Config(Read::Marks {
             workspace: crate::naming::leaf(&ws),
-        },
+        }),
     );
     assert_eq!(
         reply,

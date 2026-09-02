@@ -186,15 +186,20 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         }
         // The §9 config family's reads (§8.5, bl-0164): asked of the world at
         // the moment they are asked, exactly as the writes beside them are.
-        Query::ReadConfig { file } => return config::read(deps, ws, file),
-        Query::Marks { .. } => return Ok(config::read_marks(deps, ws)),
-        Query::Providers { .. } => config::providers(deps, ws),
-        // The §9.3 browse and the §9.4 roster (bl-dff8), on the same terms as
-        // the three above: asked of the world — this workspace's git, this
-        // wall's brazen — at the moment they are asked, and answered straight
-        // through because every seat here is already off-frame.
-        Query::Lineages { .. } => return config::lineages(ws),
-        Query::Models { provider, .. } => return config::models(deps, ws, provider),
+        // One arm since bl-719a, five members one level down: the §9.3 browse
+        // and the §9.4 roster are on the same terms as the three beside them —
+        // asked of the world, this workspace's git and this wall's brazen, at
+        // the moment they are asked, and answered straight through because
+        // every seat here is already off-frame.
+        Query::Config(read) => {
+            return match read {
+                config::Read::File { file } => config::read(deps, ws, file),
+                config::Read::Marks { .. } => Ok(config::read_marks(deps, ws)),
+                config::Read::Providers { .. } => Ok(config::providers(deps, ws)),
+                config::Read::Lineages { .. } => config::lineages(ws),
+                config::Read::Models { provider, .. } => config::models(deps, ws, provider),
+            };
+        }
         // REMOTE §5's roster (bl-4e08): the §4.1 registration listing, the
         // wire's presence RAM and each client's advertised set, joined at the
         // moment they are asked. It reads the *name* rather than the resolved

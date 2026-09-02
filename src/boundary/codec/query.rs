@@ -21,6 +21,7 @@ use super::fields::opt_str_of;
 use super::start::opt_field;
 use super::{obj, str_of, usize_of};
 use crate::boundary::Query;
+use crate::boundary::config::Read;
 
 /// The §11 inspector family's own spelling (bl-6233, bl-13f9) — the queries
 /// addressed at a conversation rather than a workspace.
@@ -95,30 +96,13 @@ pub(super) fn encode(query: &Query) -> Value {
             opt_field(&mut map, "verb", verb.as_ref());
             Value::Object(map)
         }
-        // The §9 config family's reads (§8.5, bl-0164) share their write's
-        // own op: a `text`/`mode` field is what makes the envelope a write,
-        // so a read is spelled by leaving it out, never a second op token.
-        Query::ReadConfig { file } => {
-            json!({ "op": "config", "target": super::config::encode_file(file) })
-        }
-        Query::Marks { workspace } => {
-            json!({ "op": "marks", "workspace": workspace })
-        }
-        Query::Providers { workspace } => {
-            json!({ "op": "providers", "workspace": workspace })
-        }
+        // The §9 config family (bl-719a), each member spelled below. Its
+        // destination read shares its WRITE's op: a `text`/`mode` field is what
+        // makes an envelope a write, so a read is spelled by leaving it out,
+        // never by a second op token (§8.5, bl-0164).
+        Query::Config(read) => encode_config(read),
         Query::Clients { workspace } => {
             json!({ "op": "clients", "workspace": workspace })
-        }
-        Query::Lineages { workspace } => {
-            json!({ "op": "lineages", "workspace": workspace })
-        }
-        Query::Models {
-            workspace,
-            provider,
-        } => {
-            json!({ "op": "models", "workspace": workspace,
-                    "provider": provider })
         }
         // The routing leg's two reads (bl-024b). The follow-class one names
         // nothing at all: the queue it drains is the intake's own.
@@ -126,6 +110,26 @@ pub(super) fn encode(query: &Query) -> Value {
         Query::Capture { invocation } => {
             json!({ "op": CAPTURE, "invocation": invocation })
         }
+    }
+}
+
+/// The §9 family's five spellings, off the one carrier the roster holds
+/// (bl-719a) — here rather than as five rows of the match above for the reason
+/// `codec::balls::encode` is: a family whose grammar is already one subject
+/// spells itself in one place, and the roster names the family once.
+fn encode_config(read: &crate::boundary::config::Read) -> Value {
+    use crate::boundary::config::Read;
+    match read {
+        Read::File { file } => {
+            json!({ "op": "config", "target": super::config::encode_file(file) })
+        }
+        Read::Marks { workspace } => json!({ "op": "marks", "workspace": workspace }),
+        Read::Providers { workspace } => json!({ "op": "providers", "workspace": workspace }),
+        Read::Lineages { workspace } => json!({ "op": "lineages", "workspace": workspace }),
+        Read::Models {
+            workspace,
+            provider,
+        } => json!({ "op": "models", "workspace": workspace, "provider": provider }),
     }
 }
 
@@ -194,15 +198,15 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         },
         // Read-shaped only (bl-0164): present without the write's own field,
         // else `Ok(None)` falls through to `config::decode_action`'s write.
-        "config" if !o.contains_key("text") => Query::ReadConfig {
+        "config" if !o.contains_key("text") => Query::Config(Read::File {
             file: super::config::decode_file(o.get("target").ok_or("config: missing target")?)?,
-        },
-        "marks" if !o.contains_key("branch") => Query::Marks {
+        }),
+        "marks" if !o.contains_key("branch") => Query::Config(Read::Marks {
             workspace: str_of(o, "workspace")?,
-        },
-        "providers" => Query::Providers {
+        }),
+        "providers" => Query::Config(Read::Providers {
             workspace: str_of(o, "workspace")?,
-        },
+        }),
         // REMOTE §5's roster (bl-4e08): who is registered here, who is live,
         // and what each advertises.
         "clients" => Query::Clients {
@@ -213,16 +217,16 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         CAPTURE => Query::Capture {
             invocation: str_of(o, "invocation")?,
         },
-        "lineages" => Query::Lineages {
+        "lineages" => Query::Config(Read::Lineages {
             workspace: str_of(o, "workspace")?,
-        },
+        }),
         // The provider is required, with no default: a roster is a question
         // *about* one row, and guessing the row would answer about another
         // provider's models entirely.
-        "models" => Query::Models {
+        "models" => Query::Config(Read::Models {
             workspace: str_of(o, "workspace")?,
             provider: str_of(o, "provider")?,
-        },
+        }),
         _ => return Ok(None),
     }))
 }

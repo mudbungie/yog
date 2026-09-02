@@ -12,6 +12,7 @@
 use super::{ask, quiet};
 use crate::boundary::Query;
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Read;
 use crate::boundary::config::read::roster;
 use crate::boundary::reply::Reply;
 use crate::config_edit::branch::edit::EditOrigin;
@@ -21,7 +22,7 @@ use std::path::Path;
 use tempfile::tempdir;
 
 fn reading(file: ConfigFile) -> Query {
-    Query::ReadConfig { file }
+    Query::Config(Read::File { file })
 }
 
 fn lineage_file(workspace: &Path, path: &str) -> ConfigFile {
@@ -72,9 +73,9 @@ fn the_browse_lists_every_lineage_with_its_own_files() {
     fx.orphan_config("island");
     let Ok(Reply::Lineages(rows)) = ask(
         &deps,
-        &Query::Lineages {
+        &Query::Config(Read::Lineages {
             workspace: crate::naming::leaf(&(fx.path.clone())),
-        },
+        }),
     ) else {
         panic!("lineages answers lineages");
     };
@@ -105,9 +106,9 @@ fn a_workspace_with_no_repo_refuses_the_browse_rather_than_listing_nothing() {
     assert!(
         ask(
             &deps,
-            &Query::Lineages {
+            &Query::Config(Read::Lineages {
                 workspace: crate::naming::leaf(&nowhere),
-            },
+            }),
         )
         .is_err()
     );
@@ -123,10 +124,10 @@ fn a_roster_for_a_row_this_wall_does_not_have_refuses_by_name() {
     let deps = quiet(root.path());
     let err = ask(
         &deps,
-        &Query::Models {
+        &Query::Config(Read::Models {
             workspace: crate::naming::leaf(&(crate::test_support::fixture_workspace())),
             provider: "not-a-row".to_owned(),
-        },
+        }),
     )
     .unwrap_err();
     assert!(err.contains("not-a-row"), "{err}");

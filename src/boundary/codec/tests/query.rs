@@ -2,6 +2,7 @@
 //! production took (`codec/query.rs`): §4.8's taxonomy is a file boundary on
 //! both sides.
 
+use crate::boundary::config::Read;
 use crate::boundary::{Gesture, Query, codec::decode};
 
 /// The query roster's values — the workspace-scoped reads, then the §11
@@ -45,13 +46,13 @@ pub(super) fn surface() -> Vec<Gesture> {
     }));
     // The §9 browse and roster (bl-dff8), each carrying the sphere it is asked
     // in — providers, sign-ins and lineages all live inside a workspace.
-    out.push(Gesture::Ask(Query::Lineages {
+    out.push(Gesture::Ask(Query::Config(Read::Lineages {
         workspace: "ws".into(),
-    }));
-    out.push(Gesture::Ask(Query::Models {
+    })));
+    out.push(Gesture::Ask(Query::Config(Read::Models {
         workspace: "ws".into(),
         provider: "acme".into(),
-    }));
+    })));
     // REMOTE §5's roster (bl-4e08).
     out.push(Gesture::Ask(Query::Clients {
         workspace: "ws".into(),

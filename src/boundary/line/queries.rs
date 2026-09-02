@@ -10,6 +10,7 @@
 use super::parse::ask;
 use super::verbs::{max, work_file};
 use super::{Context, args};
+use crate::boundary::config::Read;
 use crate::boundary::{Gesture, Query, help};
 
 /// Read one populating verb's line, or refuse with the roster attached.
@@ -61,9 +62,9 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         // what makes the credential column mean anything.
         "providers" => {
             args::none(tail, verb)?;
-            Ok(ask(Query::Providers {
+            Ok(ask(Query::Config(Read::Providers {
                 workspace: args::workspace(ctx, verb)?,
-            }))
+            })))
         }
         // REMOTE §5's roster (bl-4e08): who is registered in the seat's own
         // workspace, who is live, and what each advertises. Scoped by the seat
@@ -79,20 +80,20 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         // then reads a file out of. Scoped by the seat like `/providers`.
         "lineages" => {
             args::none(tail, verb)?;
-            Ok(ask(Query::Lineages {
+            Ok(ask(Query::Config(Read::Lineages {
                 workspace: args::workspace(ctx, verb)?,
-            }))
+            })))
         }
         // The §9.4 roster (bl-dff8): one word, and it is the provider row —
         // the picker asks per row, and a roster with no row named is not a
         // question. The wall it is asked in is the seat's, as `/providers`' is.
-        "models" => Ok(ask(Query::Models {
+        "models" => Ok(ask(Query::Config(Read::Models {
             workspace: args::workspace(ctx, verb)?,
             provider: match args::optional_word(tail, verb)? {
                 Some(provider) => provider,
                 None => return Err(format!("/{verb}: usage: /models <provider>")),
             },
-        })),
+        }))),
         // REMOTE §3's follow-class read and the poll beside it (bl-024b). The
         // first names nothing: the queue it drains is the intake's own, so a
         // line seat typing it drains nothing and is told why at dispatch.

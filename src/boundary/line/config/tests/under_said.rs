@@ -5,6 +5,7 @@
 
 use super::brazen;
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Read;
 use crate::boundary::line::tests::ctx;
 use crate::boundary::line::{Context, parse};
 use crate::boundary::{Gesture, Query, help};
@@ -28,9 +29,9 @@ fn a_wall_scoped_gesture_with_no_workspace_refuses_by_name() {
     // Named, they resolve — the same lines the window's focus supplies.
     assert_eq!(
         parse("/providers", &ctx()),
-        Ok(Gesture::Ask(Query::Providers {
+        Ok(Gesture::Ask(Query::Config(Read::Providers {
             workspace: "ws".to_owned(),
-        }))
+        })))
     );
 }
 
@@ -74,14 +75,14 @@ fn a_lineage_with_no_text_reads_the_file_at_its_tip() {
     for (line, origin) in cases {
         assert_eq!(
             parse(line, &ctx()),
-            Ok(Gesture::Ask(Query::ReadConfig {
+            Ok(Gesture::Ask(Query::Config(Read::File {
                 file: ConfigFile::Branch {
                     workspace: "ws".to_owned(),
                     lineage: "strict".to_owned(),
                     origin,
                     path: "workflow.yaml".to_owned(),
                 }
-            })),
+            }))),
             "{line:?}"
         );
     }
@@ -106,7 +107,7 @@ fn a_destination_with_no_text_reads_instead_of_refusing() {
     for (line, file) in cases {
         assert_eq!(
             parse(line, &ctx()),
-            Ok(Gesture::Ask(Query::ReadConfig { file })),
+            Ok(Gesture::Ask(Query::Config(Read::File { file }))),
             "{line:?}"
         );
     }
@@ -140,9 +141,9 @@ fn an_under_said_marks_or_model_line_names_what_is_missing() {
 fn a_bare_marks_line_reads_instead_of_refusing() {
     assert_eq!(
         parse("/marks", &ctx()),
-        Ok(Gesture::Ask(Query::Marks {
+        Ok(Gesture::Ask(Query::Config(Read::Marks {
             workspace: "ws".to_owned()
-        }))
+        })))
     );
 }
 

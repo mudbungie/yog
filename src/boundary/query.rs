@@ -18,6 +18,14 @@ use super::config;
 /// `src/boundary/address.rs`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Query {
+    /// **The §9 config family** (bl-719a): the destination's bytes, the §9.3
+    /// lineage browse, the §9.4 model roster, the §16.3 marks read and the §8.3
+    /// provider table — one variant over [`config::Read`], the fold `Action`
+    /// has taken five times and on the seam every layer beneath already draws
+    /// (`boundary::config` answers all five, `codec::config` spells them,
+    /// `line::config` reads them). That type's own doc carries the five, and
+    /// each is still its own verb, `op` and help page.
+    Config(config::Read),
     /// The enumerated workspaces (§3.1) with their §6 attention rollups.
     Workspaces,
     /// The §11 conversation list of one workspace: one row per root agent,
@@ -98,37 +106,6 @@ pub enum Query {
     /// and therefore the one query with no snapshot to read, which is why every
     /// seat may answer it in place instead of depositing it ([`help`]).
     Help { verb: Option<String> },
-    /// One §9 destination's current bytes (§8.5, bl-0164): the file editors'
-    /// Reload, spelled — the same [`ConfigFile`](config::ConfigFile) the write
-    /// already carries, so a read and its write name the place the same way.
-    /// A **file** destination that is not there yet answers empty text, the
-    /// same "new file" reading every editor's own load already gives; a
-    /// **lineage** answers `git show config/<lineage>:<path>` — the §9.3 pane's
-    /// own Load — and a path the lineage does not hold refuses in git's words,
-    /// because a config commit's absence and a missing blob are one answer from
-    /// git and yog will not invent an empty file over a real one (bl-dff8).
-    ReadConfig { file: config::ConfigFile },
-    /// **What lineages this workspace has, and what each holds** (§9.3,
-    /// bl-dff8): the config pane's own browse — `for-each-ref refs/heads/config/`
-    /// paired with each tip's `ls-tree`. The listing a
-    /// [`ReadConfig`](Query::ReadConfig) of a lineage reads a path out of, so a
-    /// headless operator picks a file it has seen rather than one it guessed.
-    /// A third world-bytes query: the workspace's own git, never the snapshot.
-    Lineages { workspace: String },
-    /// **The model ids one provider offers** (§9.4, §5.1 #26, bl-dff8): the
-    /// picker's roster (`bz --list-models`), spelled. Never stored and never
-    /// cached by yog — the roster is the provider's fact, so this is a query
-    /// and not a field, asked in the named workspace's wall exactly as
-    /// [`Providers`](Query::Providers) is: the same provider row is signed in
-    /// (and therefore listable) in one sphere and not in another.
-    Models { workspace: String, provider: String },
-    /// **Which branch this agent tracks on** (§16.3, bl-0164): the marks
-    /// pane's `Read current`, over the same space [`Action::SetMarks`] re-reads
-    /// after it writes. It never refuses and never spawns — the value's one
-    /// home is the space's own balls config, so a workspace with no project
-    /// (or an unprimed one) answers exactly as any other does, which is what
-    /// makes the launched-then-pointed-at-a-project case askable.
-    Marks { workspace: String },
     /// **The conversation itself** (§11 Altitude-2 Transcript, bl-6233): every
     /// committed `messages/` entry of one agent, with the live streaming tail
     /// folded on when a call is in flight. The first of the §11 inspector
@@ -251,18 +228,6 @@ pub enum Query {
     /// agent set, which is not a thing a wire can carry. Every field is a fold
     /// the boundary already owned; only the spelling is new.
     Agent { workspace: String, agent: String },
-    /// One workspace's effective provider table with the §5.1 #22 credential
-    /// presence, rendered (§8.5, bl-0164): the same derivation the §8.3 login
-    /// pane's `↻ providers + credentials` paints — one derivation, and since
-    /// bl-20cb the window has exactly one seat at it, so this reply and that
-    /// pane are the whole set.
-    ///
-    /// **It names its workspace** (bl-fcd5). Providers and their sign-ins live
-    /// inside a wall since the blast-radius ruling, so there is no global
-    /// table to answer: the same provider reads *signed in* in one sphere and
-    /// not in another, and a query that named none could only answer for
-    /// whichever wall happened to be standing.
-    Providers { workspace: String },
     /// **This workspace's registered clients** (REMOTE §5, bl-4e08): who
     /// participates in it, which of them holds a live connection right now, and
     /// what each advertises. Three reads joined at the moment they are asked —

@@ -4,6 +4,7 @@
 
 use super::*;
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Read;
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::opslog::Origin;
 use crate::start::Prepared;
@@ -30,8 +31,8 @@ fn config_shapes(named: &str) -> Vec<Gesture> {
             file: branch.clone(),
             text: String::new(),
         }),
-        Gesture::Ask(Query::ReadConfig { file: brazen }),
-        Gesture::Ask(Query::ReadConfig { file: branch }),
+        Gesture::Ask(Query::Config(Read::File { file: brazen })),
+        Gesture::Ask(Query::Config(Read::File { file: branch })),
     ]
 }
 
@@ -115,9 +116,9 @@ fn the_mapping_rewrites_a_config_gestures_nested_wall() {
             text: "x".to_owned(),
         }
     );
-    let mut ask = Query::ReadConfig {
+    let mut ask = Query::Config(Read::File {
         file: ConfigFile::Cadence,
-    };
+    });
     assert!(
         ask.workspace_slot().is_none(),
         "a destination naming no world has nothing to rewrite"
@@ -140,7 +141,7 @@ fn a_config_destination_naming_no_world_answers_none() {
             file: file.clone(),
             text: String::new(),
         });
-        let ask = Gesture::Ask(Query::ReadConfig { file });
+        let ask = Gesture::Ask(Query::Config(Read::File { file }));
         assert_eq!(act.workspace(), None, "{act:?}");
         assert_eq!(ask.workspace(), None, "{ask:?}");
     }

@@ -133,9 +133,6 @@ impl Query {
             Query::Conversations { workspace }
             | Query::WorkDiff { workspace, .. }
             | Query::Science { workspace }
-            | Query::Lineages { workspace }
-            | Query::Models { workspace, .. }
-            | Query::Marks { workspace }
             | Query::Transcript { workspace, .. }
             | Query::Follow { workspace, .. }
             | Query::Steps { workspace, .. }
@@ -145,13 +142,14 @@ impl Query {
             | Query::Rail { workspace, .. }
             | Query::Inbox { workspace, .. }
             | Query::Agent { workspace, .. }
-            | Query::Providers { workspace }
             | Query::WorkspaceBalls { workspace }
             | Query::Clients { workspace } => Some(workspace),
-            // The §9 read answers through its destination, exactly as the write
-            // does (bl-523f) — one row on each side of the one table, so a read
-            // and a write of the same file cross the same channel.
-            Query::ReadConfig { file } => file.workspace_slot(),
+            // The §9 family delegates (bl-719a), and its answer is an `Option`
+            // because one member of it addresses through a *destination*
+            // exactly as the write does (bl-523f) — one row on each side of the
+            // one table, so a read and a write of the same file cross the same
+            // channel, and the other four name a workspace outright.
+            Query::Config(read) => read.workspace_slot(),
             Query::Workspaces
             | Query::Balls
             | Query::Board

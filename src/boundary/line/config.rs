@@ -15,6 +15,7 @@
 
 use super::{Context, args};
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Read;
 use crate::boundary::{Action, Gesture, Query};
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::model_pick::{LEVELS, Tuning};
@@ -63,7 +64,7 @@ pub(super) fn config(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
         ))?,
     };
     if rest.trim().is_empty() {
-        return Ok(Gesture::Ask(Query::ReadConfig { file }));
+        return Ok(Gesture::Ask(Query::Config(Read::File { file })));
     }
     Ok(Gesture::Act(Action::ApplyConfig {
         file,
@@ -84,9 +85,9 @@ pub(super) fn config(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
 pub(super) fn marks(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
     let (branch, rest) = args::first_word(tail);
     if branch.is_empty() {
-        return Ok(Gesture::Ask(Query::Marks {
+        return Ok(Gesture::Ask(Query::Config(Read::Marks {
             workspace: args::workspace(ctx, verb)?,
-        }));
+        })));
     }
     args::none(&rest, verb)?;
     if !marks::lawful(&branch) {

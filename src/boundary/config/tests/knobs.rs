@@ -4,6 +4,7 @@
 
 use super::{ACME, deps_at, fire, quiet, script, seed_wall};
 use crate::boundary::Action;
+use crate::boundary::config::Read;
 use crate::boundary::reply::Reply;
 use crate::git_tree::tests::fixture::Fixture;
 use crate::test_support::TEMPLATE_PROVIDERS;
@@ -45,9 +46,9 @@ fn reading_marks_never_refuses_even_for_a_workspace_with_no_project() {
     let deps = super::seeing(&deps, &[ws.as_path()]);
     let reply = super::ask(
         &deps,
-        &crate::boundary::Query::Marks {
+        &crate::boundary::Query::Config(Read::Marks {
             workspace: crate::naming::leaf(&ws),
-        },
+        }),
     );
     // The launched-then-told-to-work-on-a-project case: nothing is primed,
     // nothing is bound, and the agent still has a branch — balls' default.

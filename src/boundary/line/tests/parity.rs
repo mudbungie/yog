@@ -5,6 +5,7 @@
 
 use super::{ctx, existing, prepared};
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Read;
 use crate::boundary::help;
 use crate::boundary::line::{parse, spell};
 use crate::boundary::{Action, Gesture, Query};
@@ -209,7 +210,7 @@ fn the_config_familys_reads_round_trip() {
             name: "review".to_owned(),
         },
     ] {
-        rt(Gesture::Ask(Query::ReadConfig { file }));
+        rt(Gesture::Ask(Query::Config(Read::File { file })));
     }
     // A lineage destination reads too (bl-dff8), in all three of its origins:
     // the same words the write takes, with nothing after them.
@@ -220,29 +221,29 @@ fn the_config_familys_reads_round_trip() {
             source: "base".to_owned(),
         },
     ] {
-        rt(Gesture::Ask(Query::ReadConfig {
+        rt(Gesture::Ask(Query::Config(Read::File {
             file: ConfigFile::Branch {
                 workspace: "ws".to_owned(),
                 lineage: "strict".to_owned(),
                 origin,
                 path: "workflow.yaml".to_owned(),
             },
-        }));
+        })));
     }
-    rt(Gesture::Ask(Query::Marks {
+    rt(Gesture::Ask(Query::Config(Read::Marks {
         workspace: "ws".to_owned(),
-    }));
-    rt(Gesture::Ask(Query::Providers {
+    })));
+    rt(Gesture::Ask(Query::Config(Read::Providers {
         workspace: "ws".to_owned(),
-    }));
+    })));
     // The browse and the roster beside them (bl-dff8).
-    rt(Gesture::Ask(Query::Lineages {
+    rt(Gesture::Ask(Query::Config(Read::Lineages {
         workspace: "ws".to_owned(),
-    }));
-    rt(Gesture::Ask(Query::Models {
+    })));
+    rt(Gesture::Ask(Query::Config(Read::Models {
         workspace: "ws".to_owned(),
         provider: "acme".to_owned(),
-    }));
+    })));
 }
 
 /// REMOTE §1.4's enrollment, typed (bl-f4e3): the common name is the one word

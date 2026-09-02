@@ -10,6 +10,7 @@
 
 use super::super::{Action, Query};
 use crate::actions::verbs::Verb as BallVerb;
+use crate::boundary::config::Read;
 use crate::fan::Verb;
 use crate::start::{Payload, Prepared};
 
@@ -214,16 +215,16 @@ fn the_query_table_answers_both_ways() {
         Query::Conversations {
             workspace: WS.into(),
         },
-        Query::Marks {
+        Query::Config(Read::Marks {
             workspace: WS.into(),
-        },
+        }),
         Query::Transcript {
             workspace: WS.into(),
             agent: "c".into(),
         },
-        Query::Providers {
+        Query::Config(Read::Providers {
             workspace: WS.into(),
-        },
+        }),
         // The §3.9 projection is aimed like the work diff it composes.
         Query::Science {
             workspace: WS.into(),
@@ -240,9 +241,9 @@ fn the_query_table_answers_both_ways() {
         Query::Ops { max: 1 },
         Query::Search { text: "x".into() },
         Query::Help { verb: None },
-        Query::ReadConfig {
+        Query::Config(Read::File {
             file: super::super::config::ConfigFile::Cadence,
-        },
+        }),
     ] {
         assert_eq!(query.workspace(), None, "{query:?}");
     }

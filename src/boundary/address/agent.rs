@@ -101,10 +101,7 @@ impl Query {
             Query::Conversations { .. }
             | Query::Science { .. }
             | Query::WorkDiff { .. }
-            | Query::Lineages { .. }
-            | Query::Models { .. }
-            | Query::Marks { .. }
-            | Query::Providers { .. }
+            | Query::Config(_)
             | Query::WorkspaceBalls { .. }
             | Query::Clients { .. }
             | Query::Workspaces
@@ -114,7 +111,6 @@ impl Query {
             | Query::Ops { .. }
             | Query::Search { .. }
             | Query::Help { .. }
-            | Query::ReadConfig { .. }
             | Query::Invocations
             | Query::Capture { .. } => None,
         }

@@ -4,6 +4,7 @@
 
 use crate::boundary::codec::{decode, encode};
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Read;
 use crate::boundary::{Action, Gesture, Query};
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::model_pick::{Effort, Tuning};
@@ -32,9 +33,9 @@ fn brazen() -> ConfigFile {
 }
 
 fn providers() -> Query {
-    Query::Providers {
+    Query::Config(Read::Providers {
         workspace: "ws".to_owned(),
-    }
+    })
 }
 
 fn branch(origin: EditOrigin) -> ConfigFile {
@@ -109,11 +110,11 @@ pub(crate) fn surface() -> Vec<Gesture> {
             name: "review".to_owned(),
         },
     ] {
-        out.push(Gesture::Ask(Query::ReadConfig { file }));
+        out.push(Gesture::Ask(Query::Config(Read::File { file })));
     }
-    out.push(Gesture::Ask(Query::Marks {
+    out.push(Gesture::Ask(Query::Config(Read::Marks {
         workspace: "ws".to_owned(),
-    }));
+    })));
     out.push(Gesture::Ask(providers()));
     out
 }
@@ -157,13 +158,13 @@ fn a_wall_scoped_envelope_without_its_workspace_is_refused() {
 /// `mode` for the knob.
 #[test]
 fn a_field_left_out_reads_instead_of_writing() {
-    let read = encode(&Gesture::Ask(Query::ReadConfig { file: brazen() }));
+    let read = encode(&Gesture::Ask(Query::Config(Read::File { file: brazen() })));
     assert_eq!(read["op"], "config");
     assert!(read.get("text").is_none(), "{read}");
 
-    let marks = encode(&Gesture::Ask(Query::Marks {
+    let marks = encode(&Gesture::Ask(Query::Config(Read::Marks {
         workspace: "ws".to_owned(),
-    }));
+    })));
     assert_eq!(marks["op"], "marks");
     assert!(marks.get("branch").is_none(), "{marks}");
 }
