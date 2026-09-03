@@ -1,7 +1,8 @@
 +++
 title = "DESIGN still describes a face it no longer has: ~200 sentences outside the retired §11"
 created = 1788071155
-updated = 1788071155
+updated = 1788414332
+claimant = "Spellbind-J"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 bl-7942 rewrote §0, retired §11 behind a tombstone and re-derived §12's module
