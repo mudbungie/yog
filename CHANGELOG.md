@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.26](https://github.com/mudbungie/yog/compare/v0.0.25...v0.0.26) - 2026-09-03
+
+### Changes
+
+- the §7.3 failure banner has no carrier: the ops reply hands out raw rows and every classification stays server-side [bl-4d81]
+
 ## [0.0.25](https://github.com/mudbungie/yog/compare/v0.0.24...v0.0.25) - 2026-09-03
 
 ### Changes
