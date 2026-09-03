@@ -44,3 +44,7 @@ Two more found later in the same sweep, same shape: `src/science/compose.rs` (V3
 ---
 
 Two more, both bl-1fd0's: `crate::start::StartGate` and `crate::start::WallCredit` (`src/start/gate.rs`) — the *sign-in first* rung's three-state fold over a wall's provider rows. Reached by nothing but `src/start/tests/gate.rs`. Its inputs DO cross (`Query::Providers` carries the §5.1 #22 credential presence per row), so unlike `respdiff` a seat can honour the ruling from what it is already told — but the fold itself, and the wording of what the three states mean, would then be the seat's second implementation. Same question as the rest: name a carrier for the answer, or move the module. DESIGN §8.1's sign-in-rung paragraphs now say so and cite this ball.
+
+---
+
+Also `AppModel::last_failure` / `SurfaceFailure` (`src/app/balls.rs`) — no production caller — but that one has its own ball because the missing carrier is larger than the module: bl-4d81.
