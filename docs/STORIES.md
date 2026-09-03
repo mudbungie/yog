@@ -175,8 +175,11 @@ it; the evidence needs a home), and getting any of them wrong was silent.
 - `preflight.sh` — the host contract, named in full and *at once*. Before it, a
   run went quiet for ten seconds and died on the first missing binary — one per
   attempt. Its subjects are what the scripts actually call, verified against
-  them: `python3`, `git`, the `yog` under drive, and the two world-seed files
-  every run verb copies. (`Xvfb`, `xdotool`, `ffmpeg` and `ffprobe` were
+  them: `python3`, `git`, the `yog` under drive, and the one world-seed file
+  every run verb needs — `models.yaml`; its neighbour
+  `template/providers.yaml` is the operator's install-wide override, so it is
+  reported in the advisory wire tier and never refused on (bl-85ea).
+  (`Xvfb`, `xdotool`, `ffmpeg` and `ffprobe` were
   subjects while beats pressed §11 keys at a window and shot the result; they
   went with the window, bl-7942.) It also
   names the **wall** contract (bl-49c6), because a host tool is not the only way
@@ -280,10 +283,20 @@ it; the evidence needs a home), and getting any of them wrong was silent.
 
 **The world seed (DESIGN §16.6 W3).** Before launch the runner copies the
 ambient world's `world/litany/models.yaml` (which carries a `gpt-5.4` codex
-model entry) and `world/litany/template/providers.yaml` (the provider row in
-both the worker and compactor roles) into the scratch world. The `models.yaml`
+model entry) into the scratch world, and `world/litany/template/providers.yaml`
+(the provider row in both the worker and compactor roles) **only if the host has
+one**. The `models.yaml`
 *is* litany's seeded marker, so a seeded world skips `litany prime` — the S0-T2
 general path with the seed present (§3.4), not a bootstrap branch.
+
+The two are not the same kind of file (bl-85ea). Every founded world lays
+`models.yaml`; `template/providers.yaml` is the operator's **install-wide
+override** of the birth template's role rows, and a world founded by a bare
+`yog` boot holds no `template/` directory at all. So the copy is conditional —
+a scratch world seeded on a box without one births on the shipped role rows,
+which is what a fresh install does. It was an unconditional `cp` under `set -e`,
+which made an optional override a hard prerequisite of every scratch world and,
+through preflight's required tier, of the whole drive family.
 
 **The wall seed (DESIGN §16.2, bl-49c6, bl-1851).** Nothing brazen-shaped is
 shared any more: since the blast-radius ruling a workspace's provider

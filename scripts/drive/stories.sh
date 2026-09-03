@@ -29,10 +29,18 @@ here=$(cd "$(dirname "$0")" && pwd)
 real_world="$HOME/.local/share/yog/world/litany"
 
 # --- world seed (DESIGN §16.6 W3 marker + the codex provider rows) ----------
-# Copy the real world's models.yaml (carries the gpt-5.4 codex entry) and
-# template/providers.yaml (codex in both roles) into the scratch world. The
-# models.yaml presence is litany's seeded marker, so yog skips `litany prime`
-# (S0-T2 seeded-skip) — the general path with the seed present (§3.4).
+# Copy the real world's models.yaml (carries the gpt-5.4 codex entry) into the
+# scratch world, and `template/providers.yaml` (codex in both roles) IF THE HOST
+# HAS ONE. The models.yaml presence is litany's seeded marker, so yog skips
+# `litany prime` (S0-T2 seeded-skip) — the general path with the seed present
+# (§3.4).
+#
+# The two files are not the same kind of thing (bl-85ea). `models.yaml` is laid
+# by any founded world; `template/providers.yaml` is the operator's INSTALL-WIDE
+# OVERRIDE of the birth template's role rows, and nothing founds it — a world
+# founded by a bare `yog` boot holds no `template/` directory at all. So a
+# scratch world seeded on a box without one births on the shipped role rows,
+# which is exactly what a fresh install does.
 #
 # The BOOTSTRAP SPHERE'S WALL is the third file of the same seed (bl-1851), not
 # a later step. The template above names `openai-chatgpt`, and a newborn wall
@@ -46,7 +54,14 @@ seed() {
   data=$1
   mkdir -p "$data/yog/world/litany/template"
   cp "$real_world/models.yaml" "$data/yog/world/litany/models.yaml"
-  cp "$real_world/template/providers.yaml" "$data/yog/world/litany/template/providers.yaml"
+  # The override is copied ONLY where the host has one (bl-85ea). No founded
+  # world creates it, so an unconditional copy under `set -e` made a file
+  # nothing lays a hard prerequisite of every scratch world — and through
+  # preflight's required tier, of the whole drive family.
+  if [ -f "$real_world/template/providers.yaml" ]; then
+    cp "$real_world/template/providers.yaml" \
+      "$data/yog/world/litany/template/providers.yaml"
+  fi
   seed_wall "$data" "$BOOTSTRAP_WS"
 }
 

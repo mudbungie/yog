@@ -49,12 +49,19 @@ What a dispatched model does, start to finish:
 
 0. **Preflight.** `make drive-preflight` — it names *every* missing host
    requirement at once instead of dying ten seconds in: the tools (python3,
-   git, the `yog` under drive), the two world-seed files, and the **wall** — whether a workspace born in a scratch
+   git, the `yog` under drive), the world seed's one required file
+   (`world/litany/models.yaml`, which every founded world has), and the
+   **wall** — whether a workspace born in a scratch
    world will carry the provider rows its birth template names, asked of the
    binary under drive through an empty wall, plus a host credential to seed
    into it (DESIGN §16.2; bl-49c6). Both are **advisory** since bl-00ee retired
    the §9.2 birth gate: a workspace is born whatever its template names, so a
-   missing row or sign-in costs the wire beats and nothing else. An audit that
+   missing row or sign-in costs the wire beats and nothing else. **So is
+   `world/litany/template/providers.yaml`** (bl-85ea): it is the operator's
+   install-wide *override* of the birth template's role rows, no founded world
+   creates it, and a scratch world seeded without it births on the shipped
+   rows — so preflight reports it in the wire tier beside the rows it declares,
+   and never refuses on it. An audit that
    starts here does not discover its host one binary — or one fixture — per
    attempt.
 1. **Build and isolate.** `make release`; drive the release binary in a

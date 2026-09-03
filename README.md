@@ -290,7 +290,7 @@ config, so removing the space deletes config, not code.
 | `make check` | fmt-check + lint + coverage — the complete gate CI and the pre-commit hook mirror |
 | `make drive` [`DRIVE_RUNS="…"`] | Drive the real-substrate ladder (`docs/STORIES.md`): release build, host preflight, one **scratch** world per run verb, a PASS/FAIL line and a `verdicts.jsonl` row per beat, and a pre-filled drive-log skeleton. Never the live world — an overlap with `$XDG_DATA_HOME` is refused |
 | `make drive-cleanroom` [`DRIVE_VERB=<verb>`] | The same ladder with only `yog` and `git` on `PATH` — the standing batteries-included done-bar |
-| `make drive-preflight` | Name every missing host prerequisite at once (python3, git, the `yog` under drive, the world seed, and the workspace **wall** — whether a scratch world can birth a workspace at all, plus the brazen fixtures seeded into it) |
+| `make drive-preflight` | Name every missing host prerequisite at once (python3, git, the `yog` under drive, the world seed's required `models.yaml`, and the workspace **wall** — whether a scratch world can birth a workspace at all, plus the brazen fixtures seeded into it) |
 | `make drive-seed` | Lay a scratch world and print its path — the starting point for a hand-steered capture pass (`docs/QUALITY.md` §3) |
 | `make fixture` [`STATE=<name>`] | Lay a named, deterministic **fixture world**, boot an engine on it and print the address a client harness dials; Ctrl-C stops the engine and removes the root. Bare, it lists the states. See "Fixture worlds" below |
 | `make drive-log` [`DRIVE_LOG_DIR=<d>`] | Re-emit a run's drive-log skeleton (sha, host tuple, load, beat table) from its verdict rows |

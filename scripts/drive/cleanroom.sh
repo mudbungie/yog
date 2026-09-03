@@ -32,8 +32,9 @@
 #   - `$XDG_CACHE_HOME` — the drive's own evidence root. Every root yog *nests*
 #     (litany's home, balls' store layout, yog's own artifacts) is scratch,
 #     which is what W14 asks for.
-#   - stories.sh's world seed copies the ambient world's `models.yaml` +
-#     `template/providers.yaml`, and `seed_wall` copies the host's brazen config
+#   - stories.sh's world seed copies the ambient world's `models.yaml` (plus
+#     `template/providers.yaml` where the host has that override — bl-85ea),
+#     and `seed_wall` copies the host's brazen config
 #     and credential files into the bootstrap sphere's wall. Those are config
 #     files, never a binary: the model roster, the role rows, and the provider
 #     row those roles name with the sign-in that answers for it. litany's own

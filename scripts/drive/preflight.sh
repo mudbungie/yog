@@ -29,6 +29,15 @@
 # constant `home` (bl-1851). That is a *fixture* fact this file checks in under a
 # second and reports below.
 #
+# NEITHER IS THE WORLD SEED ONE FILE (bl-85ea). `models.yaml` is required —
+# every founded world has one, and its absence changes what S0 asserts. Its
+# neighbour `template/providers.yaml` is NOT: it is the operator's install-wide
+# override of the birth template's role rows, no founded world creates it, and a
+# scratch world seeded without it births on the shipped rows. It was in the
+# required tier because `stories.sh`'s `seed()` copied it unconditionally under
+# `set -e`; the copy is conditional now and the row moved to the wire tier, where
+# the rows it declares were already being reported.
+#
 # It is ADVISORY, not required (bl-00ee). It was required while the §9.2 birth
 # gate judged the seeded birth template against the unborn workspace's wall —
 # one missing row reddened every beat of every run with nothing ever created.
@@ -63,6 +72,10 @@ seedfile() { # seedfile <path> <what it carries>
 }
 
 real_world="$HOME/.local/share/yog/world/litany"
+# The install-wide override of the birth template's role rows. It is the
+# OPERATOR'S file: nothing founds it, so it is reported in the advisory wire
+# tier below and never in the required tier (bl-85ea).
+override="$real_world/template/providers.yaml"
 # The host's own brazen state, which is a FIXTURE SOURCE now and not a
 # destination: nothing yog spawns reads it since §16.2's ruling. The harness
 # copies out of it into each scratch workspace's wall (`seed_wall`, wall.sh),
@@ -89,7 +102,7 @@ wall_rows() {
 # wall has to end up carrying for a wire beat to land.
 template_rows() {
   sed -n 's/^ *provider: *\([^ ]*\) *$/\1/p' \
-    "$real_world/template/providers.yaml" 2>/dev/null | sort -u
+    "$override" 2>/dev/null | sort -u
 }
 
 echo "preflight — host prerequisites for scripts/drive/"
@@ -100,8 +113,6 @@ tool git     "the scratch project fixture, and the clean room's floor"
 tool yog     "the binary under drive — build it (make release) and put target/release first on PATH"
 seedfile "$real_world/models.yaml" \
   "the model roster; also litany's seeded marker, so its absence changes what S0 asserts"
-seedfile "$real_world/template/providers.yaml" \
-  "the workspace-birth template — the role→provider rows the wall section below reports"
 
 echo
 echo "wire — advisory: a beat that SPENDS needs each row below to reach the"
@@ -109,11 +120,25 @@ echo "       workspace's wall AND to be signed in there; run-s5s8 (zero model"
 echo "       calls) stands without either. Nothing here blocks a run: since"
 echo "       bl-00ee retired the §9.2 birth gate a workspace is born whatever its"
 echo "       template names, and a row its wall lacks surfaces at the first"
-echo "       dispatch (§8.3), not as a refusal to create anything. Both files are"
-echo "       FIXTURE SOURCES — seed_wall copies them into"
-echo "       <world>/walls/home/brazen/ with the world seed, before the launch"
+echo "       dispatch (§8.3), not as a refusal to create anything. The first row is"
+echo "       the operator's OVERRIDE of the rows the rest of this tier judges; the"
+echo "       two brazen files under it are FIXTURE SOURCES — seed_wall copies them"
+echo "       into <world>/walls/home/brazen/ with the world seed, before the launch"
 echo "       (§16.2; §3.1 fixes the bootstrap leaf at 'home'):"
 declared=$(template_rows)
+if [ -f "$override" ]; then
+  printf '  %-14s OK       %s\n' providers.yaml "$override"
+else
+  printf '  %-14s ABSENT   %s\n' providers.yaml "$override"
+  echo "     the OPERATOR'S install-wide override of the birth template's role rows"
+  echo "     (bl-85ea). No founded world lays it — a bare \`yog\` boot writes no"
+  echo "     template/ directory at all — so its absence is the normal state and a"
+  echo "     scratch world seeded without it births on the shipped role rows. Author"
+  echo "     one only to pin a role elsewhere; the shape is:"
+  echo "       roles:"
+  echo "         worker:"
+  echo "           provider: <name>"
+fi
 if [ -e "$host_config" ]; then
   printf '  %-14s OK       %s\n' config.toml "$host_config"
 else
@@ -121,7 +146,9 @@ else
   echo "     a seeded wall then carries brazen's shipped rows only"
 fi
 if [ -z "$declared" ]; then
-  echo "  (no rows declared — the seed template above is absent, reported there)"
+  echo "  (no rows declared — the override above is absent, which is the normal"
+  echo "   state; a birth then uses the shipped role rows and there is nothing here"
+  echo "   to judge)"
 elif ! command -v yog >/dev/null 2>&1; then
   echo "  (rows not judged — no yog above to ask for a fresh wall's table)"
 else
