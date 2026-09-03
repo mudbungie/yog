@@ -104,11 +104,18 @@ pub(super) fn fork(
 }
 
 /// The §6 decision queue's answer (VISION §5 V5.2): write the watermarks the
-/// window writes by focusing, then hand back **the queue that remains** —
-/// re-derived against the `ui.json` this very call just moved, so one gesture
-/// per decision is the whole teleoperator loop. `ts` is the wall clock every
-/// boundary caller already mints (§4.2 unix seconds); a clock that states no
-/// wall time simply ages every row from zero.
+/// window writes by focusing, then hand back **what was acknowledged and the
+/// queue that remains** — the remainder re-derived against the `ui.json` this
+/// very call just moved, so one gesture per decision is the whole teleoperator
+/// loop. `ts` is the wall clock every boundary caller already mints (§4.2 unix
+/// seconds); a clock that states no wall time simply ages every row from zero.
+///
+/// The receipt names its item (bl-5cfe). Answering with the remainder alone
+/// was indistinguishable from a plain `/attention` read — the one row the act
+/// touched is precisely the row the remainder no longer holds — so the act
+/// reported nothing about itself, which is the lie `Reply::Answered` refuses
+/// one verb over. The workspace is spelled by **name**, the vocabulary every
+/// row and every gesture already shares (REMOTE §8).
 pub(super) fn acknowledge(
     deps: &Deps,
     ui: &mut UiState,
@@ -117,6 +124,10 @@ pub(super) fn acknowledge(
     agent: &str,
 ) -> Result<Reply, String> {
     answer::queue::mark_seen(&deps.snapshot, ui, workspace, agent)?;
-    let rows = answer::queue::queue(&deps.snapshot, ui, ts.parse().unwrap_or(0));
-    Ok(Reply::Attention(rows))
+    let remaining = answer::queue::queue(&deps.snapshot, ui, ts.parse().unwrap_or(0));
+    Ok(Reply::Acknowledged(answer::queue::Acknowledged {
+        workspace: deps.snapshot.ws_name(workspace),
+        agent: agent.to_owned(),
+        remaining,
+    }))
 }

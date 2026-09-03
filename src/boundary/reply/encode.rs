@@ -9,8 +9,7 @@
 use serde_json::{Map, Value, json};
 
 use super::board::{board_row, fleet_facts};
-use super::queue::queue_row;
-use super::rows::{conv_row, join_row, lineage_row, op_row, ws_row};
+use super::rows::{conv_row, join_row, lineage_row, op_row, provider_row, role_row, ws_row};
 use super::{Reply, prepared_value};
 use crate::registry::mailbox::{capture_value, invocation_value};
 
@@ -109,7 +108,8 @@ pub fn encode(reply: &Reply) -> Value {
             }
             Value::Object(map)
         }
-        Reply::Attention(rows) => rows_reply("attention", rows.iter().map(queue_row)),
+        Reply::Attention(rows) => super::queue::attention(rows),
+        Reply::Acknowledged(ack) => super::queue::acknowledged(ack),
         Reply::Ops(rows) => rows_reply("ops", rows.iter().map(op_row)),
         Reply::Help(rows) => rows_reply("help", rows.iter().map(help_row)),
         // The encoders written beside their types rather than here: each
@@ -174,20 +174,6 @@ pub fn refusal(error: &str) -> Value {
     json!({ "ok": false, "error": error })
 }
 
-/// One provider row as the operator reads it (§8.3, §9.5): its name, the
-/// credential fact in words, why `bz --login` cannot serve it — `null` exactly
-/// when it can — and the two **tuning capabilities** a controls surface shows
-/// its `/effort` and `/priority` controls under (bl-23bd).
-///
-/// The two are always present and always booleans, never absent-is-false on the
-/// wire: a capability the seat cannot read is a control it cannot decide about,
-/// and this is the row whose whole job is to decide it. Absence is brazen's
-/// dialect to speak, and it is spoken one layer down where the column is read.
-fn provider_row(row: &crate::config_edit::brazen::ProviderRowView) -> Value {
-    json!({ "name": row.name, "fact": row.fact, "blocked": row.blocked,
-            "effort": row.effort, "priority": row.priority })
-}
-
 /// A captured run as its receipt (§7.3): the verb's own exit and streams,
 /// with `ok` derived from the exit rather than stored beside it.
 ///
@@ -199,19 +185,6 @@ fn outcome_reply(outcome: &crate::actions::verbs::Outcome) -> Value {
         "ok": outcome.ok(), "kind": "outcome", "exit": outcome.exit,
         "stdout": outcome.stdout, "stderr": outcome.stderr,
     })
-}
-
-/// One role's assignment as the workspace's config declares it (§9.4, §5.1
-/// #27; bl-2410): the model binding, and the two tuning knobs beside it.
-///
-/// `effort` is the file's own word or `null` — a *reported* value, not the
-/// gesture's closed vocabulary, so a level yog did not write is visible rather
-/// than flattened into *not set*. `priority` is always a boolean, because
-/// `false` and absent are one fact upstream and a reader must not be made to
-/// tell them apart.
-fn role_row(row: &crate::model_pick::RoleModel) -> Value {
-    json!({ "role": row.role, "provider": row.provider, "model": row.model,
-            "effort": row.effort, "priority": row.priority })
 }
 
 /// One help page as data — the four facts every seat renders (§8.5), and the

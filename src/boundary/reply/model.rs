@@ -59,6 +59,14 @@ pub enum Reply {
         ruling: crate::control::judge::Ruling,
         advanced: bool,
     },
+    /// **A queue item acknowledged** (§6, bl-5cfe) — `seen`'s receipt: what the
+    /// watermark landed on, and the queue that remains beside it. The remainder
+    /// alone was the whole answer, and it reads as a plain `attention` — the
+    /// acted-on row is precisely the row it no longer holds, so the one act it
+    /// reports is the one thing it could not say (the
+    /// [`Answered`](Self::Answered) precedent, one verb over: a receipt must
+    /// not lie). The queue stays: the loop is one gesture per decision.
+    Acknowledged(crate::boundary::answer::queue::Acknowledged),
     /// A conversation's capability floor was written (§8.6, VISION §4.9's
     /// fifth rung): whether one **stands** over it now — re-derived from the
     /// trail after the write, never an echo of the direction that was asked
@@ -161,11 +169,8 @@ pub enum Reply {
     /// The V4 board (VISION §5 V4) — the columns, their rows, and each row's
     /// gates, drones and figures.
     Board(Board),
-    /// The §6 decision queue (VISION §5 V5.2): what is waiting on the operator.
-    /// The answer to **both** `attention` and `seen` — an acknowledgement is
-    /// answered by the queue that remains, never by an echo of what it wrote,
-    /// so a teleoperator's loop is one gesture per decision rather than a read
-    /// after every write (the [`Marks`](Self::Marks) precedent).
+    /// The §6 decision queue (VISION §5 V5.2): what is waiting on the operator
+    /// — [`Attention`](super::Query::Attention)'s answer.
     Attention(Vec<crate::boundary::answer::queue::QueueRow>),
     Ops(Vec<OpRow>),
     /// What a command does (§8.5): the whole roster, or one verb's page.

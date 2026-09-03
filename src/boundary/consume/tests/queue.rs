@@ -55,7 +55,12 @@ fn the_decision_queue_reads_and_answers_over_the_one_ui_json() {
     assert_eq!(consume(&d, &mut ui, "T2", 100), 1);
     let answered = deposit::read_reply(root.path(), "a-seen").unwrap();
     assert_eq!(answered["ok"], true);
-    assert_eq!(answered["kind"], "attention");
+    // The receipt names its item (bl-5cfe): a `seen` answered by the remainder
+    // alone is byte-identical to the `attention` read above once the queue
+    // empties, so the act said nothing about itself.
+    assert_eq!(answered["kind"], "acknowledged");
+    assert_eq!(answered["workspace"], "alba");
+    assert_eq!(answered["agent"], "c-1");
     assert_eq!(answered["rows"], json!([]), "the queue that remains");
     assert!(
         std::fs::read_to_string(&ui_path)

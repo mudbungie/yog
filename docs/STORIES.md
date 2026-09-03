@@ -2022,9 +2022,11 @@ Tests:
   help page, a malformed `seen` envelope refuses naming its missing field, and
   the reply encodes every signal word and the address keys the gestures take.
 - **S14-T7 read-then-answer-over-one-ui-json**: through the deposit transport,
-  `{"op":"attention"}` returns the waiting row and `{"op":"seen",…}` returns the
-  empty queue that remains — with the watermark landing in the `ui.json` the
-  window reads (I0).
+  `{"op":"attention"}` returns the waiting row and `{"op":"seen",…}` returns an
+  `acknowledged` receipt naming the pair it acted on, with the empty queue that
+  remains beside it (bl-5cfe: the remainder alone is the `attention` answer
+  above, byte for byte, so the act said nothing about itself) — and the
+  watermark lands in the `ui.json` the window reads (I0).
 - **S14-T8 a-windowless-engine-answers**: `Engine::boot` into a hermetic world
   with `NoRepaint` runs the §5.2 sweep, brings up every thread a running yog
   has and none of them a frame, answers a deposit, and stops cleanly on drop —

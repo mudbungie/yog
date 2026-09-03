@@ -60,6 +60,20 @@ pub(super) fn receipts() -> Vec<Reply> {
             ruling: crate::control::judge::Ruling::Hold,
             advanced: false,
         },
+        // `seen`'s receipt (bl-5cfe), at both of its shapes: the ordinary one,
+        // whose remainder still holds rows, and the last acknowledgement in a
+        // world — an EMPTY remainder, which is the answer a reader must not be
+        // able to confuse with a refusal or with an absent key.
+        Reply::Acknowledged(crate::boundary::answer::queue::Acknowledged {
+            workspace: "ws".into(),
+            agent: "c-9".into(),
+            remaining: super::listings::queue(),
+        }),
+        Reply::Acknowledged(crate::boundary::answer::queue::Acknowledged {
+            workspace: "ws".into(),
+            agent: "c-9".into(),
+            remaining: vec![],
+        }),
         Reply::Floored { standing: true },
         Reply::Nudged,
         Reply::Acked,

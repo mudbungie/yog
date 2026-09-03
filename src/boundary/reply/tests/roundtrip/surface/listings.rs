@@ -24,7 +24,7 @@ use convs::conv_rows;
 
 /// The §6 decision queue: a parked row with every signal it can carry, and a
 /// quiet one carrying none.
-fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
+pub(super) fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
     use crate::attention::AttentionKind;
     use crate::boundary::answer::queue::QueueRow;
     vec![

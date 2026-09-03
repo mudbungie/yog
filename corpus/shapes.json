@@ -9,6 +9,39 @@
       ],
       "since": 1
     },
+    "reply/acknowledged": {
+      "signature": [
+        "/agent:string",
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/age_secs:number",
+        "/rows/[]/agent:string",
+        "/rows/[]/display:string",
+        "/rows/[]/failure:null",
+        "/rows/[]/failure:string",
+        "/rows/[]/flag/at:string",
+        "/rows/[]/flag/reason:string",
+        "/rows/[]/flag:null",
+        "/rows/[]/flag:object",
+        "/rows/[]/held/reason:string",
+        "/rows/[]/held/tool:string",
+        "/rows/[]/held/tool_use:string",
+        "/rows/[]/held:null",
+        "/rows/[]/held:object",
+        "/rows/[]/pending:number",
+        "/rows/[]/preview:string",
+        "/rows/[]/signals/[]:string",
+        "/rows/[]/signals:array",
+        "/rows/[]/state:string",
+        "/rows/[]/uncertain:bool",
+        "/rows/[]/workspace:string",
+        "/rows/[]:object",
+        "/rows:array",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 8
+    },
     "reply/advertised": {
       "signature": [
         "/kind:string",

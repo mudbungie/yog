@@ -86,6 +86,21 @@ pub struct QueueRow {
     pub flag: Option<crate::monitor::Flag>,
 }
 
+/// **`seen`'s receipt** (bl-5cfe): the item the acknowledgement landed on, and
+/// the queue that remains after it. Both, because either alone lies — the
+/// remainder cannot say what was acted on (the acted-on row is precisely the
+/// row it no longer holds), and the item alone would cost the teleoperator the
+/// read that makes the loop one gesture per decision.
+///
+/// The address is the pair every conversation gesture takes, in the §3.1
+/// vocabulary [`QueueRow`] spells: the workspace's **name**, never its path.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Acknowledged {
+    pub workspace: String,
+    pub agent: String,
+    pub remaining: Vec<QueueRow>,
+}
+
 /// The §6 flattened roster across every enumerated workspace — **the** roster,
 /// shared by the window's ↑/↓ and jump-to-next-attention
 /// ([`AppModel::pick_roster`](crate::AppModel)) and by [`queue`]. Path order

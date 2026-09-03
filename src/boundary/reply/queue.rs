@@ -11,10 +11,46 @@
 //! had just answered it.
 
 use crate::attention::AttentionKind;
-use crate::boundary::answer::queue::QueueRow;
+use crate::boundary::answer::queue::{Acknowledged, QueueRow};
 use serde_json::{Value, json};
 
-pub(super) fn queue_row(row: &QueueRow) -> Value {
+/// The queue itself, and the acknowledgement's receipt — the two replies whose
+/// body is this file's rows, spelled here rather than in [`super::encode`]'s
+/// match for the reason the search reply's envelope is (bl-1015): one file
+/// learns how a queue answer is said.
+pub(super) fn attention(rows: &[QueueRow]) -> Value {
+    json!({ "ok": true, "kind": "attention",
+            "rows": rows.iter().map(queue_row).collect::<Vec<Value>>() })
+}
+
+/// `seen`'s receipt (bl-5cfe): the conversation the watermark landed on, in
+/// the same two keys every queue row spells its address with, and the queue
+/// that remains under the `rows` key every listing uses. The address is the
+/// §3.1 **name**, never a path (REMOTE §8) — a receipt a seat cannot feed back
+/// into the next gesture is the defect bl-22ab closed one reply over.
+pub(super) fn acknowledged(ack: &Acknowledged) -> Value {
+    json!({ "ok": true, "kind": ACKNOWLEDGED,
+            "workspace": ack.workspace, "agent": ack.agent,
+            "rows": ack.remaining.iter().map(queue_row).collect::<Vec<Value>>() })
+}
+
+/// The acknowledgement receipt's kind, named once for both directions.
+pub(super) const ACKNOWLEDGED: &str = "acknowledged";
+
+/// That receipt read back (bl-5cfe) — the queue rows through the one row
+/// decoder, so a remainder and an `attention` answer are read the same way.
+pub(super) fn acknowledged_of(
+    o: &serde_json::Map<String, Value>,
+) -> Result<crate::boundary::reply::Reply, String> {
+    use crate::boundary::codec::fields::{list_of, str_of};
+    Ok(crate::boundary::reply::Reply::Acknowledged(Acknowledged {
+        workspace: str_of(o, "workspace")?,
+        agent: str_of(o, "agent")?,
+        remaining: list_of(o, "rows", queue_row_of)?,
+    }))
+}
+
+fn queue_row(row: &QueueRow) -> Value {
     json!({
         "workspace": row.workspace,
         "agent": row.agent,

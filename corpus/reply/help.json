@@ -237,8 +237,8 @@
           "verb": "ack"
         },
         {
-          "detail": "Records what the selected conversation is currently asking about as seen, which is what takes it off the attention queue — the same watermarks the window writes simply by having that conversation open, so a headless answer and a windowed one are the same thing. The answer is the queue that remains. It quiets what the conversation has *said*; undelivered mail is not a watermark and clears only when a driver reads it. New evidence re-raises it. Refuses when the conversation is not one yog can see.",
-          "summary": "answer the selected conversation's place in the attention queue",
+          "detail": "Records what the selected conversation is currently asking about as seen, which is what takes it off the attention queue — the same watermarks the window writes simply by having that conversation open, so a headless answer and a windowed one are the same thing. It is a write, and the answer says so: the receipt names the conversation it acknowledged, and carries the queue that remains beside it — the remainder alone reads as a plain `/attention`, since the row it acted on is exactly the row the remainder no longer holds. It quiets what the conversation has *said*; undelivered mail is not a watermark and clears only when a driver reads it. New evidence re-raises it. Refuses when the conversation is not one yog can see.",
+          "summary": "acknowledge the selected conversation and answer the queue that remains",
           "surface": "control",
           "usage": "/seen",
           "verb": "seen"

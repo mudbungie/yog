@@ -84,6 +84,10 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "floored" => bool_of(o, "standing").map(|standing| Reply::Floored { standing }),
         "nudged" => Ok(Reply::Nudged),
         "acked" => Ok(Reply::Acked),
+        // `seen`'s receipt (bl-5cfe) — a receipt here rather than a listing
+        // because the queue it carries is the *remainder* of an act, and it is
+        // the two address keys beside it that say which act.
+        super::queue::ACKNOWLEDGED => super::queue::acknowledged_of(o),
         "trail-cleared" => Ok(Reply::TrailCleared),
         "applied" => Ok(Reply::Applied),
         "advertised" => bool_of(o, "wrote").map(|wrote| Reply::Advertised { wrote }),
