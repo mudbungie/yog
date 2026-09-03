@@ -1,7 +1,7 @@
 +++
 title = "the §6 desktop escalation derives on the engine and reaches nothing: src/alert has no caller and no boundary spelling"
 created = 1788414430
-updated = 1788414430
+updated = 1788414937
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["boundary"]
@@ -34,3 +34,7 @@ Three shapes to weigh, not a foregone answer:
 
 Whichever wins, DESIGN §6 and §4.1's `notify_unfocused` row must be amended to
 match; today they describe a window.
+
+---
+
+Narrowed by bl-09aa, which landed the attention lane (REMOTE §14.1, `src/boundary/attend.rs`) while this ball was being written. `Query::Attention` is now answerable as a frame SEQUENCE — the answer as of connect, then a frame whenever the answer under that asker's scope changes, with row ages zeroed for the comparison so a clock reading never reads as news. That IS the arrival signal an alert is a difference against, so the second of this ball's three candidate shapes is already half-built and a seat's baseline is one set operation over frames it is handed rather than a poll it runs. What remains open is only the announcing: whose desktop hears it. If the answer is the seat's, `src/alert/` and the §4.1 `notify_unfocused` key move to the seat crate and this crate keeps `AttentionKind::says` as the one wording; if it is the engine box's, `alert::send` gains a caller and the knob gains a carrier (bl-f936 is the ball for the pane document that holds it). DESIGN §6 and §12's `src/alert` row now say exactly this.
