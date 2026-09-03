@@ -1,7 +1,8 @@
 +++
 title = "UPSTREAM brazen: openai-chatgpt has no seat-independent sign-in — implement the Codex device flow (custom, not RFC 8628) and project the device capability as a --list-providers column"
 created = 1787548682
-updated = 1787548682
+updated = 1788407697
+claimant = "Spellbind"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["upstream", "brazen"]
