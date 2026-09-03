@@ -8233,6 +8233,31 @@ the shim is named plainly (`bl`), placed on the agent's `PATH`, and invoked
 exactly as a host `bl` would be — which is what lets the goal preamble carry
 no tool instruction at all (§3.3).
 
+**Stated constraint: the shim mechanism needs a filesystem that executes what
+yog writes** (bl-6a6a). *No ask is attached to this paragraph — it is here so
+the shape is not rediscovered as a defect.* A shim is *write a file, then run
+it*: [`world::tools::ensure_shim`] authors `<world>/tools/<name>` at runtime and
+something later `exec`s it. That is a filesystem assumption, and it is not
+universal. Android's app-private storage is non-executable by platform policy
+(API 29 and later): a file the process just wrote cannot be exec'd at all, and
+the one executable location — the app's own native library directory — is
+filled at install time and cannot be generated. So on that platform the roster
+has no landing site, and not for want of a permission an operator could grant.
+The Rust half is not what stops it: the crate cross-compiles and links for
+`aarch64-linux-android` with `balls`, `brazen`, `litany`, `ureq`, `rustls` and
+`ring` in the graph and no C toolchain acquired.
+
+**And the fact the shim carries already has a second home.** A shim exists
+because an agent's `bash` needs a `PATH` entry and a `PATH` entry must name a
+file; what it encodes is *"`bl` means this yog under the `bl` namespace"* — and
+that is exactly `Cli::resolve`'s `Binary::target` table (§16.7 W12), where yog's
+own spawns resolve to `self_exe()` plus a namespace word and consult no shim at
+all. One fact, two homes, and only one of them needs a writable executable file.
+Whether that is worth collapsing is a design question nobody is asking today;
+the observation is recorded rather than acted on. (The other rung a phone would
+need is not yog's: Android ships no `git`, and the world, every workspace and
+the task store are all git.)
+
 **Identity rides the env, not the argv.** "Stamping `--as $YOG_NAME`" is
 implemented where balls reads the default — the multiplex arm's
 `Edge::default_actor` (`$YOG_NAME` → `$USER` → `"unknown"`) — so it is one rule
