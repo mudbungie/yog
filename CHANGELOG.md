@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.24](https://github.com/mudbungie/yog/compare/v0.0.23...v0.0.24) - 2026-09-03
+
+### Changes
+
+- two tests are load-sensitive: boundary::login's a_lane_ends_when_the_run_it_was_reading_is_gone and boundary::consumer's the_boot_answers_a_dead_claimants_gesture_in_doubt fail under gate contention, green on re-run [bl-5510]
+
 ## [0.0.23](https://github.com/mudbungie/yog/compare/v0.0.22...v0.0.23) - 2026-09-03
 
 ### Changes
