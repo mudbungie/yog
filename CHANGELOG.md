@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.17](https://github.com/mudbungie/yog/compare/v0.0.16...v0.0.17) - 2026-09-03
+
+### Changes
+
+- the sign-in is a boundary act: Action::Login runs bz on the ENGINE inside the named workspace's wall, and a follow-class read streams its lines to any seat [bl-c285]
+- the image gate's config surface is silently empty under docker: one --format template, no History field, one newline past the emptiness check [bl-09d4]
+- a child conversation's /agent answers with its root's spend under an attribution that says one conversation, so a subagent's cost cannot be read [bl-131d]
+- the follow-lane engine test is sleep-timed and dies under parallel gate load: said == [] where the tail should have three frames [bl-b8c8]
+- a self-provisioned engine's bound port is knowable by nobody: the :0 answer was handed to the window in RAM, and the window left with bl-7942 [bl-e058]
+- the engine reaps no connection whose peer vanished without a FIN: the serve thread and its presence refcount are held forever, so the roster says present for a box that is gone [bl-1421]
+
 ## [0.0.16](https://github.com/mudbungie/yog/compare/v0.0.15...v0.0.16) - 2026-09-02
 
 ### Changes
