@@ -1,7 +1,7 @@
 +++
 title = "drive preflight refuses on a world-seed file no founded world holds: template/providers.yaml is an operator override, and it gates the whole drive family"
 created = 1788235195
-updated = 1788407718
+updated = 1788407831
 claimant = "Spellbind-B"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -81,3 +81,7 @@ Confirmed the other direction too: authoring a two-role
 This is what a fresh agent hits **first**, before any beat: the drive protocol's
 step 0 refuses on a file the product never creates, so the ladder reads as
 unrunnable rather than as unconfigured.
+
+---
+
+Premise check: the ball cites QUALITY §3 step 0's "Both are advisory since bl-00ee" as covering the seed files. It does not — that "Both" is the wall's provider row and its sign-in, two sentences earlier. The doc never ruled on the override's tier, so this landing states it there rather than merely aligning to it. Everything else in the body verified: a founded world has no template/ directory, seed() copied the file unconditionally under set -e, and preflight's required tier exited 1.
