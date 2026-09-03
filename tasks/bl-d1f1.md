@@ -1,7 +1,7 @@
 +++
 title = "a lost boundary reply has no safe recovery: re-deposit can repeat a completed non-idempotent action"
 created = 1787206349
-updated = 1788402121
+updated = 1788402373
 claimant = "Oncewright"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -121,3 +121,52 @@ stop; claim, run the effect, then stop), and `boundary/consume/tests` already
 has the fixture shape. The wire path's window is not drivable without a way to
 drop a connection mid-answer, which is itself a finding: the path with the worst
 recovery story is the one with no test seam for it.
+
+---
+
+Resolved: one recovery rule for every action, and it is the parked analysis's
+A-half made mechanical rather than its D-half. **An act with no reply is IN
+DOUBT; the recovery is a read, never a resend. Asks re-ask freely.**
+
+What landed (REMOTE §3 new bullet, DESIGN §8.5 + §7.3 row, deposit/claim.rs,
+consume::sweep):
+
+- The claim is lock-held (std File::try_lock, no new dep): locked before the
+  rename so a claimed file is locked from before it appears in claimed/, and
+  the kernel releases it at claimant death — the one fact that tells debris
+  from work in flight. The next engine boot sweeps unlocked claims with no
+  parsed reply and answers the reply slot an in-doubt refusal carrying the
+  contract, so a polling depositor gets a sentence instead of a forever-124.
+  This is bl-e658's silence fix transposed: hand-off is not delivery there,
+  claim is not reply here — but the mailbox REDELIVERS because its far end
+  holds a stable id to dedupe on; here windows 2 and 3 are on-disk identical,
+  so the only honest terminal is in-doubt, never a re-run.
+- "Re-deposit to re-run" is deleted everywhere it stood and refused
+  mechanically: a claimed id is spent (deposit checks claimed/ beside the
+  inbox; minted ids were already never reused).
+- The wire's half is contract, not mechanism: REMOTE §3 states in-doubt/read
+  recovery for a connection that dies after an act; PROTOCOL stands at 8,
+  corpus unchanged, nothing wire-visible moved.
+
+Shapes attacked and refused, on the tree as it now stands:
+
+- Engine-side act journal / idempotency token (the ball's own suggestion):
+  a receipt could only assert dispatched, never committed — the effect is a
+  subprocess's, so exactly-once is not yog's to promise; it is a second
+  record of ops.jsonl; a stored replayed reply violates §5.3's re-read
+  discipline when the honest answer by then is a fresh read; and thrall
+  bl-9261 just declined the exact cousin (a remembered id set is memory
+  across the gap its DESIGN 3.8 refuses).
+- Reply redelivery riding the lease: the disk bus already HAS a durable
+  reply slot the client's own poll redeems; on the wire it needs a
+  client-minted token (PROTOCOL bump) plus the TTL sweep §9.8 celebrated
+  not having, and the redelivered reply's information is dominated by the
+  query the seat can already make — the query IS the recovery.
+- The parked D (pre-effect stamp): with the sweep answering both windows
+  honestly, the stamp only rescues the microseconds between rename and
+  dispatch, at one extra write per gesture forever, and it still cannot make
+  "may have run" definite. Refused as mechanism without a consumer.
+
+Downstream: lernie + yog-android balls filed (never auto-resend an act on
+transport error; paint in-doubt; reads exempt). Thrall needs none — its leg's
+contract is §5.3 at-least-once, closed as thrall bl-9261.
