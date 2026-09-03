@@ -1,7 +1,8 @@
 +++
 title = "the seat ships as an OCI image, and the display stack is the question the other three did not have to answer"
 created = 1788068754
-updated = 1788068827
+updated = 1788407698
+claimant = "Spellbind"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
