@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.27](https://github.com/mudbungie/yog/compare/v0.0.26...v0.0.27) - 2026-09-03
+
+### Changes
+
+- seat-shaped derivations still in the server with no boundary spelling: drafts, enabled, the name preview, the fork composer [bl-7cc8]
+
 ## [0.0.26](https://github.com/mudbungie/yog/compare/v0.0.25...v0.0.26) - 2026-09-03
 
 ### Changes
