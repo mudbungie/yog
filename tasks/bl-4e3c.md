@@ -1,7 +1,8 @@
 +++
 title = "unattended engine CD: reconcile the box against ghcr released tags, restart only when the boundary says idle"
 created = 1788398596
-updated = 1788398596
+updated = 1788398612
+claimant = "Shipward"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
