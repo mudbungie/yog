@@ -162,3 +162,61 @@ fn a_bound_conversation_names_the_directory_its_work_lands_in() {
         "a mark naming the listed worktree is the case where the listing is the answer"
     );
 }
+
+/// **The settled-failure notice, at the chokepoint** (bl-015b). A conversation
+/// refused at its first model call answered one committed entry and nothing
+/// else; the answerer now folds the §7.3 wound on as a virtual trailing entry,
+/// so the pane the operator reads names the provider row to sign in to.
+#[test]
+fn a_stopped_conversation_answers_its_wound_as_a_trailing_entry() {
+    let dir = tempfile::tempdir().unwrap();
+    let ws = dir.path();
+    let id = "20260101T000000Z-c1";
+    let messages = ws.join("agents").join(id).join("messages");
+    std::fs::create_dir_all(&messages).unwrap();
+    std::fs::write(messages.join("001-user.md"), b"go").unwrap();
+    // The live shape of a refusal: brazen speaks it in band on stdout, so the
+    // step settles Failed with an auth-class error and no `meta.json`.
+    let step = ws.join("steps").join(id).join("001");
+    std::fs::create_dir_all(&step).unwrap();
+    std::fs::write(
+        step.join("response.json"),
+        b"{\"type\":\"error\",\"message\":\"no credential for this provider\"}\n{\"type\":\"end\"}\n",
+    )
+    .unwrap();
+
+    let snap = snapshot(ws, "alba", vec![agent(id, AgentState::Stopped, 10)], vec![]);
+    let answered = inspector::transcript(&snap, ws, id);
+    assert_eq!(answered.entries.len(), 2, "the message AND the notice");
+    let said = String::from_utf8(answered.entries[1].raw.clone()).unwrap();
+    assert!(
+        said.contains("credentials"),
+        "it says what happened: {said}"
+    );
+}
+
+/// The two folds are one question asked at two moments, and the live one wins:
+/// a wound is claimed only of a step nobody is driving, so an in-flight call
+/// answers its tail and never a notice.
+#[test]
+fn an_in_flight_conversation_answers_its_tail_and_no_notice() {
+    let dir = tempfile::tempdir().unwrap();
+    let ws = dir.path();
+    let id = "20260101T000000Z-c1";
+    let messages = ws.join("agents").join(id).join("messages");
+    std::fs::create_dir_all(&messages).unwrap();
+    std::fs::write(messages.join("001-user.md"), b"go").unwrap();
+    let mut live = agent(id, AgentState::InFlight, 10);
+    live.stream = crate::git_tree::Stream {
+        text: Some("half".into()),
+        thinking: None,
+        last_delta: Some(crate::git_tree::Delta::Text),
+    };
+    let snap = snapshot(ws, "alba", vec![live], vec![]);
+    let answered = inspector::transcript(&snap, ws, id);
+    assert_eq!(answered.entries.len(), 2);
+    assert!(matches!(
+        answered.entries[1].kind,
+        crate::transcript::EntryKind::Streaming { .. }
+    ));
+}

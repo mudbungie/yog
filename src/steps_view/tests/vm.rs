@@ -71,9 +71,9 @@ fn build_flags_auth_shaped_step_failures_for_the_login_affordance() {
     let view = build(ws, AGENT, AgentState::Stopped);
     // Only the auth-shaped failure carries the Login affordance (§8.3 detection):
     // a complete step and a non-auth failure do not.
-    assert!(!view.steps[0].auth_failed.offered());
-    assert!(!view.steps[1].auth_failed.offered());
-    assert!(view.steps[2].auth_failed.offered());
+    assert!(!view.steps[0].auth_failed().offered());
+    assert!(!view.steps[1].auth_failed().offered());
+    assert!(view.steps[2].auth_failed().offered());
 }
 
 #[test]
@@ -128,10 +128,10 @@ fn an_auth_failed_step_names_the_row_its_governing_config_binds() {
 
     let view = build(&fx.path, CONV, AgentState::Stopped);
     // A healthy step is never routed — there is nothing to log in to.
-    assert_eq!(view.steps[0].auth_failed, AuthFailure::No);
+    assert_eq!(view.steps[0].auth_failed(), AuthFailure::No);
     // The failing one names the row TEMPLATE_PROVIDERS binds claude-sonnet-5 to.
     assert_eq!(
-        view.steps[1].auth_failed,
+        view.steps[1].auth_failed(),
         AuthFailure::Row("anthropic".to_string())
     );
 }
@@ -167,6 +167,11 @@ fn an_unroutable_auth_failure_still_offers_the_affordance() {
 
     let view = build(&fx.path, CONV, AgentState::Stopped);
     for step in &view.steps {
-        assert_eq!(step.auth_failed, AuthFailure::Unrouted, "step {}", step.seq);
+        assert_eq!(
+            step.auth_failed(),
+            AuthFailure::Unrouted,
+            "step {}",
+            step.seq
+        );
     }
 }

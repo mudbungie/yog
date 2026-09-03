@@ -1,5 +1,5 @@
 {
-  "protocol": 8,
+  "protocol": 9,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -794,7 +794,6 @@
         "/orphan:string",
         "/orphan_reason:string",
         "/rows/[]/attempts:number",
-        "/rows/[]/auth_failed:bool",
         "/rows/[]/auth_row:string",
         "/rows/[]/commit:string",
         "/rows/[]/ended_at:string",
@@ -813,7 +812,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 9
     },
     "reply/trail-cleared": {
       "signature": [
@@ -827,6 +826,7 @@
       "signature": [
         "/kind:string",
         "/ok:bool",
+        "/rows/[]/auth_row:string",
         "/rows/[]/blocks/[]/id:string",
         "/rows/[]/blocks/[]/input:string",
         "/rows/[]/blocks/[]/kind:string",
@@ -851,11 +851,13 @@
         "/rows/[]/tool_use_id:string",
         "/rows/[]/usage/input_tokens:number",
         "/rows/[]/usage:object",
+        "/rows/[]/wound:string",
+        "/rows/[]/wound_reason:string",
         "/rows/[]:object",
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 9
     },
     "reply/work-diff": {
       "signature": [

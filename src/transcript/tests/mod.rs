@@ -6,7 +6,8 @@
 //! enumeration order, skipping, the in-progress query, and the live tail.
 //! [`compaction`] pins the one thing a readdir cannot see — the entries
 //! litany's compactor deleted, derived from the hole they left in the `NNN`
-//! counter, and the `summary/` prose that replaced them.
+//! counter, and the `summary/` prose that replaced them. [`wound`] covers the
+//! other virtual entry a caller folds on: the settled-failure notice.
 //!
 //! What a seat makes of the record — the one-line row projection, its folds,
 //! its speaker seat and the step spine drawn through it — went with the seat
@@ -17,6 +18,7 @@ use std::path::Path;
 mod compaction;
 mod flow;
 mod vm;
+mod wound;
 
 /// Fixed agent id all fs-backed tests build under.
 pub(super) const AGENT: &str = "20260427T120000Z-aaaa";

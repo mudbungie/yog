@@ -5,6 +5,8 @@
 
 use crate::boundary::reply::{Reply, encode};
 use crate::inboxview::{Deposit, Epitaph, InboxEntry};
+use crate::login::auth::AuthFailure;
+use crate::steps_view::Wound;
 use crate::transcript::{Block, Entry, EntryKind, Transcript, Usage};
 
 fn entry(name: &str, raw: &str, kind: EntryKind) -> Entry {
@@ -17,7 +19,9 @@ fn entry(name: &str, raw: &str, kind: EntryKind) -> Entry {
 
 /// Every `EntryKind` arm answers its own token and its own fields — a
 /// delivered message, a model turn with all three block kinds and the
-/// provider's own counters, a tool result, the live tail, and the raw bucket.
+/// provider's own counters, a tool result, the live tail, the compaction
+/// marker and the raw bucket. The eighth arm, the settled-failure notice, is
+/// the beat below: it is the one whose fields are another module's vocabulary.
 #[test]
 fn every_transcript_entry_class_says_which_it_is() {
     let usage: Usage = [("input_tokens".to_owned(), 5u64)].into_iter().collect();
@@ -157,5 +161,48 @@ fn a_deposit_carries_what_it_stated_and_omits_what_it_did_not() {
     assert_eq!(bare["deposit"]["body"], "no envelope");
     for key in ["from", "deposited_at", "epitaph", "terminal_ref"] {
         assert!(bare["deposit"].get(key).is_none(), "{key} was never stated");
+    }
+}
+
+/// **The settled-failure notice crosses as the wound, not as the sentence**
+/// (bl-015b) — the compaction marker's own ruling, read on the row that
+/// carries §7.3's vocabulary instead of §5.1 #12's counters. The class, the
+/// adapter's reason and the provider row cross; the banner a seat paints is a
+/// projection every seat runs for itself, and it is spelled by the one encoder
+/// that owns the wound, so this shape and `reply/steps` cannot drift into two
+/// dialects of one enum.
+#[test]
+fn the_settled_failure_notice_says_the_wound_and_never_the_sentence() {
+    let rows = |wound| {
+        encode(&Reply::Transcript(Transcript {
+            entries: vec![entry(
+                "\u{ab}wound\u{bb}",
+                "banner",
+                EntryKind::Wounded { wound },
+            )],
+        }))["rows"][0]
+            .clone()
+    };
+    let refused = rows(Wound::Refused(AuthFailure::Row("acme".to_owned())));
+    assert_eq!(refused["kind"], "wounded");
+    assert_eq!(refused["wound"], "refused");
+    assert_eq!(refused["auth_row"], "acme");
+    assert!(
+        refused.get("wound_reason").is_none(),
+        "a refusal's reason is its class"
+    );
+    // Unrouted: refused, and no row is derivable — the honest middle, said as
+    // an absent key rather than an empty string standing in for a row.
+    let unrouted = rows(Wound::Refused(AuthFailure::Unrouted));
+    assert_eq!(unrouted["wound"], "refused");
+    assert!(unrouted.get("auth_row").is_none());
+    let spoke = rows(Wound::Spoke("no credential".to_owned()));
+    assert_eq!(spoke["wound"], "no_response");
+    assert_eq!(spoke["wound_reason"], "no credential");
+    assert_eq!(rows(Wound::Mute)["wound"], "no_response");
+    assert_eq!(rows(Wound::OutputLimit)["wound"], "output_limit");
+    // No sentence rides any of them: the words are the seat's projection.
+    for row in [refused, unrouted, spoke] {
+        assert!(row.get("banner").is_none());
     }
 }

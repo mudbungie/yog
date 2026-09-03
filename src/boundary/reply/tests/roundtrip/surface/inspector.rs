@@ -15,14 +15,17 @@ use super::preview;
 use crate::files_view::{FileEntry, FilesView, Preview};
 use crate::git_tree::AgentState;
 use crate::inboxview::{Deposit, Epitaph, InboxEntry};
+use crate::login::auth::AuthFailure;
 use crate::rail::{ChildCard, Notch, Place, Rail};
-use crate::steps_view::{Orphan, StepsView};
+use crate::steps_view::{Orphan, StepsView, Wound};
 use crate::transcript::{Block, Entry, EntryKind, Transcript};
 use science::science;
 use steps::{step_detail, steps};
 use workdiff::attempts;
 
-/// One entry per [`EntryKind`] arm, the epitaph present and absent.
+/// One entry per [`EntryKind`] arm, the epitaph present and absent — and the
+/// settled-failure notice once per [`Wound`] arm it can carry, because each is
+/// its own decode arm on this shape too (bl-015b).
 fn transcript() -> Transcript {
     let entry = |name: &str, kind| Entry {
         name: name.into(),
@@ -84,6 +87,35 @@ fn transcript() -> Transcript {
                     first: 6,
                     last: 8,
                     summary: "what the compactor cut".into(),
+                },
+            ),
+            // The bl-015b settled-failure notice, once per way the §7.3 wound
+            // can reach it — the refusal's two routings among them, since the
+            // row is the one field this shape carries that the steps shape
+            // spells beside a step instead.
+            entry(
+                "«wound»",
+                EntryKind::Wounded {
+                    wound: Wound::Refused(AuthFailure::Row("anthropic".into())),
+                },
+            ),
+            entry(
+                "«wound»",
+                EntryKind::Wounded {
+                    wound: Wound::Refused(AuthFailure::Unrouted),
+                },
+            ),
+            entry(
+                "«wound»",
+                EntryKind::Wounded {
+                    wound: Wound::Spoke("the adapter's last words".into()),
+                },
+            ),
+            entry("«wound»", EntryKind::Wounded { wound: Wound::Mute }),
+            entry(
+                "«wound»",
+                EntryKind::Wounded {
+                    wound: Wound::OutputLimit,
                 },
             ),
             entry("005-junk.json", EntryKind::Raw),

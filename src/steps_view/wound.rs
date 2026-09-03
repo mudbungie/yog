@@ -1,5 +1,5 @@
 //! The §7.3 **step wound**: what went wrong with one step, said in words where
-//! the step is rendered. Two classes, which is the whole of the vocabulary:
+//! the step is rendered. Three classes, which is the whole of the vocabulary:
 //!
 //! - **No response** — the driver died before the model produced anything, and
 //!   since bl-55d8, why.
@@ -9,6 +9,13 @@
 //!   complete`, which is true of the transport and a lie about the turn — the
 //!   same quiet-step misreading the no-response class exists to correct, one
 //!   layer up.
+//! - **Refused** — the provider said no: the step settled `Failed` with an
+//!   auth-shaped error, which is §8.3's [`AuthFailure`] classification exactly.
+//!   The arm **wraps that answer** rather than restating it, so the Login
+//!   affordance and the wound are one fact with one derivation; what the arm
+//!   adds is that the refusal is now IN the vocabulary, which is what makes
+//!   [`latest_wound`] total over the ways a conversation dies quietly and lets
+//!   the §8.5 transcript seat one notice for all of them (bl-015b).
 //!
 //! The no-response class, in detail:
 //!
@@ -65,6 +72,7 @@
 use std::path::Path;
 
 use crate::git_tree::{AgentState, Ending};
+use crate::login::auth::AuthFailure;
 
 /// The sentence yog renders at the wound — the §7.3 rendered fact for this
 /// class. Used verbatim beside the Steps row and composed into the §11
@@ -125,6 +133,13 @@ pub enum Wound {
     /// of its own: the reason IS the class, stated by the canonical finish
     /// reason rather than recovered from anybody's stderr.
     OutputLimit,
+    /// The provider refused the call (§8.3, bl-015b). It carries the §8.3
+    /// three-state answer whole — refused on this row, or refused with no
+    /// derivable row — because that answer is [`AuthFailure`]'s entire
+    /// subject and a row of this arm's own would be the second spelling that
+    /// drifts. [`AuthFailure::No`] never rides here: the arm is built only
+    /// from a classification that is [`offered`](AuthFailure::offered).
+    Refused(AuthFailure),
 }
 
 impl Wound {
@@ -144,11 +159,24 @@ impl Wound {
             Wound::Mute => format!("{ALARM} {NO_RESPONSE} — {MUTE}"),
             Wound::Spoke(words) => format!("{ALARM} {NO_RESPONSE} — {SPOKE} {words}"),
             Wound::OutputLimit => format!("{ALARM} {OUTPUT_LIMIT} — {CUT_OFF}"),
+            // The sentence is §8.3's, not a fourth one built here: the
+            // classification that decides this arm already owns the wording,
+            // and one home is the whole reason the arm wraps the answer.
+            Wound::Refused(auth) => auth.banner(),
         }
     }
 }
 
-/// Read one step's wound from its own bytes. `response`, `meta_present` and
+/// Read one step's wound from its own bytes. The **refusal is asked first**
+/// and its answer is [`crate::login::auth::classify`]'s, unchanged: a provider
+/// that said no settled the step with an error event, so it can never be one
+/// of the unanswered classes below and the two questions are disjoint by
+/// construction rather than by an ordering rule. What `classify` cannot know
+/// is the provider **row** — that needs the agent's governing config, one git
+/// read for the whole view — so it answers `Unrouted` here and
+/// `steps_view`'s own `route_auth` upgrades it.
+///
+/// `response`, `meta_present` and
 /// `ending` are the reads [`summarize`](super::summarize) already made —
 /// `meta_present` is the *existence* of `meta.json`, not its parse, since a
 /// malformed meta still means the step settled, and `ending` is the §4.4
@@ -165,6 +193,10 @@ impl Wound {
 /// file yog ever reads, [`crate::opslog::rows::stderr_tail`] for how much of a
 /// stderr a *surface* says.
 pub(super) fn read(step: &Path, response: &[u8], meta_present: bool, ending: Ending) -> Wound {
+    let refusal = crate::login::auth::classify(response);
+    if refusal.offered() {
+        return Wound::Refused(refusal);
+    }
     if !response.is_empty() || meta_present {
         return if ending == Ending::OutputLimit {
             Wound::OutputLimit

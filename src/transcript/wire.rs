@@ -93,6 +93,14 @@ fn kind_fields(kind: &EntryKind, map: &mut Map<String, Value>) {
             map.insert("summary".to_owned(), json!(summary));
             "compacted"
         }
+        // The §7.3 wound crosses in its own vocabulary, spelled by the one
+        // encoder that owns it (`steps_view::wire`) — the class token, the
+        // adapter's reason, the refusal's provider row. The **sentence** does
+        // not cross, for the reason the compaction counters give one arm up.
+        EntryKind::Wounded { wound } => {
+            crate::steps_view::wire::wound_fields(wound, map);
+            "wounded"
+        }
         EntryKind::Raw => "raw",
     };
     map.insert("kind".to_owned(), json!(word));

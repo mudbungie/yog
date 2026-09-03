@@ -46,11 +46,11 @@ fn s0_t6_an_auth_failed_step_carries_the_login_affordance() {
 
     // The clean step offers no Login; only the auth-shaped failure carries it.
     assert!(
-        !view.steps[0].auth_failed.offered(),
+        !view.steps[0].auth_failed().offered(),
         "a complete step needs no Login"
     );
     assert!(
-        view.steps[1].auth_failed.offered(),
+        view.steps[1].auth_failed().offered(),
         "the auth-failed step carries the Login affordance one click away"
     );
     // It is a genuine failure, not merely flagged (framing is Failed).

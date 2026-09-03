@@ -50,6 +50,9 @@ fn entry_row(v: &Value) -> Result<Entry, String> {
             last: usize_of(o, "last")?,
             summary: str_of(o, "summary")?,
         },
+        "wounded" => EntryKind::Wounded {
+            wound: crate::steps_view::wire::decode::wound(o)?,
+        },
         "raw" => EntryKind::Raw,
         other => return Err(format!("transcript row: unknown kind {other:?}")),
     };

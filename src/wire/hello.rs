@@ -75,7 +75,13 @@ use super::frame;
 /// is required rather than optional-absent-reads-false, because absent would
 /// read as *"nothing was restored"* — the reassuring answer — on exactly the
 /// build that cannot tell, and the field exists to make one event audible.
-pub const PROTOCOL: u32 = 8;
+/// 8 → 9 (bl-015b): `reply/transcript` gained the `wounded` entry — the §8.5
+/// settled-failure notice, the third virtual entry — and `reply/steps` LOST
+/// `auth_failed`, the §8.3 affordance now being the `refused` arm of the wound
+/// vocabulary both shapes spell. A gain and a loss on two shapes, which is
+/// two of the four things §3 says bump the version; the ledger's one free move
+/// would have covered neither, since it cannot see what has shipped.
+pub const PROTOCOL: u32 = 9;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

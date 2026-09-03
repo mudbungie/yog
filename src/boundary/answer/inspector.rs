@@ -37,7 +37,24 @@ use crate::steps_view::{self, StepsView};
 use crate::transcript::{self, Transcript};
 
 /// One agent's whole conversation: the committed `messages/` read, with the
-/// **live streaming tail folded on** when a call is in flight.
+/// **live streaming tail folded on** when a call is in flight — and, when one
+/// is not, the **settled-failure notice** when the conversation stopped on a
+/// §7.3 wound.
+///
+/// **The two folds are one question asked at two moments** (bl-015b): *what is
+/// this conversation doing right now, that its `messages/` cannot say?* A call
+/// in flight answers with the tail; a call that will never land answers with
+/// the wound. They are exclusive by derivation and not by a rule here — a
+/// wound is claimed only of a step nobody is driving — so the match is over
+/// the live tail alone and the wound is derived only in its absence, which is
+/// also what keeps a healthy in-flight conversation from paying for a steps
+/// walk it would throw away.
+///
+/// Without the second fold, a conversation refused at its first model call
+/// painted its user message and then nothing at all: one committed entry, no
+/// tail, and a pane that was honest and useless while the remedy — sign a
+/// provider row in — was named on no surface the operator was reading
+/// (§6's *what is deliberately NOT done*, now done).
 ///
 /// **Why the tail is folded rather than dropped** (bl-6233). The tail is not a
 /// disk read: it is the rendered snapshot's own [`Stream`], which the §7.2
@@ -53,7 +70,7 @@ pub fn transcript(snap: &Snapshot, ws: &Path, agent: &str) -> Transcript {
     let committed = transcript::build(ws, agent);
     match live_tail(snap, ws, agent) {
         Some(stream) => committed.with_live(&stream),
-        None => committed,
+        None => committed.with_wound(&steps_view::latest_wound(&steps(snap, ws, agent))),
     }
 }
 

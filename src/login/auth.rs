@@ -85,20 +85,29 @@ impl AuthFailure {
         }
     }
 
-    /// The conversation banner's sentence — the one authoritative home for this
-    /// wording, beside the classification that decides it (the
-    /// `GoverningConfig::label` discipline of `config_edit::branch`). A routed failure states the row,
+    /// The refusal's sentence — the one authoritative home for this wording,
+    /// beside the classification that decides it (the `GoverningConfig::label`
+    /// discipline of `config_edit::branch`). A routed failure states the row,
     /// so the operator reads the remedy instead of inferring it; an unrouted one
     /// keeps the sentence that was there before, which is exactly as much as is
     /// known. `No` has no banner and the caller does not paint one; a value is
     /// still returned rather than an `Option` the caller must unwrap in a branch
     /// it has already taken.
+    ///
+    /// **It names the act, never a direction** (bl-015b). It used to end
+    /// *"log in below"*, which was true of the window's own pane and of
+    /// nothing else; the sentence now rides `steps_view::Wound::Refused` into
+    /// the §8.5 transcript notice, where no seat can be told where its Login
+    /// control is. So it names the gesture and what the gesture buys, the way
+    /// the output-limit wound names Nudge in order to retire it.
     pub fn banner(&self) -> String {
         match self {
             Self::No => String::new(),
-            Self::Unrouted => "⚠ the last step failed on credentials — log in below".to_string(),
+            Self::Unrouted => {
+                "⚠ the last step failed on credentials — log in to carry it on".to_string()
+            }
             Self::Row(row) => {
-                format!("⚠ the last step failed on {row}'s credentials — log in below")
+                format!("⚠ the last step failed on {row}'s credentials — log in to carry it on")
             }
         }
     }
@@ -160,6 +169,6 @@ pub fn latest_step_auth_failed(steps: &crate::steps_view::StepsView) -> AuthFail
     steps
         .steps
         .last()
-        .map(|s| s.auth_failed.clone())
+        .map(crate::steps_view::StepSummary::auth_failed)
         .unwrap_or_default()
 }

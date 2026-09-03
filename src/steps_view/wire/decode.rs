@@ -2,17 +2,17 @@
 //! encoder in [`super`], across both tiers: the summary list and one step's
 //! drill-in.
 //!
-//! The §8.3 login affordance is read back from a **pair** of keys rather than
-//! a discriminant, because that is how it is written: `auth_failed` + an
-//! optional `auth_row` is a bijection over its three-armed enum —
-//! offered-with-a-row, offered-without, not offered — so nothing needed
-//! widening for the round trip.
+//! The §7.3 wound is a class token plus two optional keys: the token picks the
+//! class, `wound_reason` separates the no-response class's two arms — the one
+//! thing that ever distinguished them — and `auth_row` names the provider row
+//! a refusal routed to. It was a `(bool, Option<reason>)` pair until bl-fb87
+//! gave it a fourth arm, which a pair cannot address.
 //!
-//! The §7.3 wound was such a pair too until bl-fb87 gave it a fourth arm. A
-//! `(bool, Option<reason>)` cannot address four, so it is a class token plus
-//! the same optional reason now: the token picks the class and the reason
-//! separates the no-response class's two arms, which is the one thing that
-//! ever distinguished them.
+//! **The §8.3 login affordance is read back off that token** (bl-015b), not
+//! off a key of its own: `refused` IS the affordance being offered, and
+//! `auth_row` present or absent is the routed/unrouted half — so the
+//! `auth_failed` boolean the encoder used to write beside them was one fact's
+//! third spelling and is gone.
 
 use serde_json::Value;
 
@@ -35,19 +35,41 @@ const FRAMINGS: [(&str, Framing); 3] = [
 /// The §7.3 wound's class, [`wound_token`](super::wound_token)'s other half.
 /// A [`Wound`] of its own cannot stand in the table — [`pick`] answers `Copy`
 /// values and [`Wound::Spoke`] carries a `String` — so the class is named here
-/// and the reason key resolves it below.
+/// and the two optional keys resolve it below.
 #[derive(Clone, Copy)]
 enum WoundKind {
     None,
     NoResponse,
     OutputLimit,
+    Refused,
 }
 
-const WOUNDS: [(&str, WoundKind); 3] = [
+const WOUNDS: [(&str, WoundKind); 4] = [
     ("none", WoundKind::None),
     ("no_response", WoundKind::NoResponse),
     ("output_limit", WoundKind::OutputLimit),
+    ("refused", WoundKind::Refused),
 ];
+
+/// The §7.3 wound read back off whichever object carries it —
+/// [`wound_fields`](super::wound_fields)'s other half, `pub(crate)` for the
+/// same reason it is: the §8.5 transcript's settled-failure notice spells this
+/// same vocabulary and must read it the same way (bl-015b).
+pub(crate) fn wound(o: &serde_json::Map<String, Value>) -> Result<Wound, String> {
+    let row = opt_str_of(o, "auth_row")?;
+    Ok(
+        match (pick(o, "wound", &WOUNDS)?, opt_str_of(o, "wound_reason")?) {
+            (WoundKind::None, _) => Wound::None,
+            (WoundKind::NoResponse, None) => Wound::Mute,
+            (WoundKind::NoResponse, Some(reason)) => Wound::Spoke(reason),
+            (WoundKind::OutputLimit, _) => Wound::OutputLimit,
+            (WoundKind::Refused, _) => Wound::Refused(match row {
+                None => AuthFailure::Unrouted,
+                Some(row) => AuthFailure::Row(row),
+            }),
+        },
+    )
+}
 
 /// Which [`Tail`] is orphaned, [`orphan_token`](super::orphan_token)'s other
 /// half. `None` is the un-orphaned tail, which is why the table's value type
@@ -78,18 +100,9 @@ pub(crate) fn steps(obj: &serde_json::Map<String, Value>) -> Result<StepsView, S
 
 fn step_row(v: &Value) -> Result<StepSummary, String> {
     let o = v.as_object().ok_or("step row: not an object")?;
-    let auth_row = opt_str_of(o, "auth_row")?;
-    let auth_failed = match (bool_of(o, "auth_failed")?, auth_row) {
-        (false, _) => AuthFailure::No,
-        (true, None) => AuthFailure::Unrouted,
-        (true, Some(row)) => AuthFailure::Row(row),
-    };
-    let wound = match (pick(o, "wound", &WOUNDS)?, opt_str_of(o, "wound_reason")?) {
-        (WoundKind::None, _) => Wound::None,
-        (WoundKind::NoResponse, None) => Wound::Mute,
-        (WoundKind::NoResponse, Some(reason)) => Wound::Spoke(reason),
-        (WoundKind::OutputLimit, _) => Wound::OutputLimit,
-    };
+    // The §8.3 affordance is not read at all: it is `StepSummary::auth_failed`,
+    // a query over the wound below, so the wire never spelled it twice and this
+    // side never has to reconcile two keys that could disagree (bl-015b).
     Ok(StepSummary {
         seq: str_of(o, "seq")?,
         framing: pick(o, "framing", &FRAMINGS)?,
@@ -98,8 +111,7 @@ fn step_row(v: &Value) -> Result<StepSummary, String> {
         commit: opt_str_of(o, "commit")?,
         started_at: opt_str_of(o, "started_at")?,
         ended_at: opt_str_of(o, "ended_at")?,
-        auth_failed,
-        wound,
+        wound: wound(o)?,
     })
 }
 

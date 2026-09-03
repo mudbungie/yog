@@ -31,10 +31,12 @@
 //! committed `tool_result`), never a stored flag (PRINCIPLES: single source
 //! of truth).
 //!
-//! **[`build`] reads only what is committed.** The live streaming tail is
-//! [`Transcript::with_live`], a virtual trailing entry the *caller* folds on
-//! from the rendered snapshot's [`Stream`](crate::git_tree::Stream) — because
-//! the two have different clocks (§7.2): the committed read is memoized per
+//! **[`build`] reads only what is committed.** The two *trailing* virtual
+//! entries — the live streaming tail and the settled-failure notice — are
+//! [`tail`]'s, folded on by the caller from what it already holds: the
+//! rendered snapshot's [`Stream`](crate::git_tree::Stream), and the §7.3
+//! [`Wound`](crate::steps_view::Wound) off a built steps view. Because the
+//! halves have different clocks (§7.2): the committed read is memoized per
 //! published snapshot, and the tail moves at frame cadence. Merging them into
 //! one build made the tail as slow as the derivation, which is the defect
 //! bl-54f7 closed.
@@ -46,6 +48,8 @@ pub(crate) use key::key;
 mod parse;
 /// The committed record's disk read — its own file at §12's budget (bl-73e7).
 mod read;
+/// The two virtual **trailing** entries and the folds that seat them.
+mod tail;
 pub(crate) mod wire;
 use parse::{parse_model, parse_tool_result};
 pub use read::build;
@@ -62,12 +66,10 @@ const MESSAGES_DIR: &str = "messages";
 const TOOL_ORIGIN: &str = "tool";
 const MD_EXT: &str = "md";
 const JSON_EXT: &str = "json";
-/// Synthetic filename for the virtual live-streaming entry.
-const STREAMING_NAME: &str = "«live»";
-
-/// A parsed agent transcript: the ordered `messages/` entries, plus — when
-/// the latest step is in flight — the live streaming tail as a virtual
-/// trailing entry.
+/// A parsed agent transcript: the ordered `messages/` entries, plus whichever
+/// [`tail`] entry the conversation's moment has — the live streaming tail
+/// while a call is in flight, the settled-failure notice once it has stopped
+/// on a §7.3 wound.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Transcript {
     pub entries: Vec<Entry>,
@@ -78,8 +80,8 @@ pub struct Transcript {
 /// verbatim bytes"); `kind` is the parsed projection.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
-    /// Source filename (`003-claude-opus.json`), or [`STREAMING_NAME`] for
-    /// the virtual streaming entry.
+    /// Source filename (`003-claude-opus.json`), or one of [`tail`]'s
+    /// bracketed synthetic names for a virtual entry.
     pub name: String,
     /// Verbatim backing bytes (the file's contents; the folded text for the
     /// streaming entry).
@@ -121,6 +123,16 @@ pub enum EntryKind {
     /// a model that has only thought so far, or one that answered without
     /// reasoning, and an empty half is simply no row.
     Streaming { thinking: String, text: String },
+    /// The conversation's **settled failure**, in the §7.3 wound vocabulary —
+    /// it stopped, nobody is driving it, and this is what happened to it last
+    /// (bl-015b). Virtual and trailing, like [`Streaming`](Self::Streaming),
+    /// and folded on by the same caller ([`Transcript::with_wound`]).
+    ///
+    /// It carries the [`Wound`](crate::steps_view::Wound) and not the sentence
+    /// built from it, for [`Compacted`](Self::Compacted)'s reason: the words a
+    /// seat paints are the wound's own projection, and a headless seat runs
+    /// that same projection over this decoded entry.
+    Wounded { wound: crate::steps_view::Wound },
     /// A span of entries litany's compactor **deleted** — a hole in the `NNN`
     /// counter, standing where they were. `first` and `last` are the missing
     /// counter values, inclusive, and are the only thing this entry asserts.
@@ -170,45 +182,6 @@ impl Transcript {
         !self.entries.iter().any(|e| {
             matches!(&e.kind, EntryKind::ToolResult { tool_use_id: id, .. } if id == tool_use_id)
         })
-    }
-
-    /// This transcript with the live tail as a virtual trailing entry (§7.2).
-    /// `stream` is a fold somebody else already made — never a disk read from
-    /// here, which is what lets the two halves keep different clocks.
-    ///
-    /// A stream that has said nothing yet adds no entry: an empty live row is
-    /// not the same claim as a model that has begun, and "waiting for the API"
-    /// is the §11 live mark's to say, not a blank line's.
-    ///
-    /// **It replaces a live entry rather than appending beside one** (bl-73e7),
-    /// so `a.with_live(x).with_live(y) == a.with_live(y)`. That is not a
-    /// convenience: the tail now reaches a seat by two routes at two cadences —
-    /// the pull `Query::Transcript` folds one on at ask cadence, and the follow
-    /// lane delivers a newer one at write cadence — and *the newest fold wins*
-    /// is the only reconciliation either needs. Appending would paint the
-    /// answer twice, and a caller stripping the older one by hand would be a
-    /// second party deciding what a live row is.
-    #[must_use]
-    pub fn with_live(&self, stream: &crate::git_tree::Stream) -> Transcript {
-        let (thinking, text) = (
-            stream.thinking.clone().unwrap_or_default(),
-            stream.text.clone().unwrap_or_default(),
-        );
-        let mut entries = self.entries.clone();
-        if matches!(
-            entries.last().map(|e| &e.kind),
-            Some(EntryKind::Streaming { .. })
-        ) {
-            entries.pop();
-        }
-        if !thinking.is_empty() || !text.is_empty() {
-            entries.push(Entry {
-                name: STREAMING_NAME.to_string(),
-                raw: format!("{thinking}{text}").into_bytes(),
-                kind: EntryKind::Streaming { thinking, text },
-            });
-        }
-        Transcript { entries }
     }
 }
 

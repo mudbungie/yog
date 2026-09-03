@@ -70,19 +70,14 @@ pub struct StepSummary {
     pub commit: Option<String>,
     pub started_at: Option<String>,
     pub ended_at: Option<String>,
-    /// The **Login affordance** (§8.3 detection, §15 M6 Z8): whether this step is
-    /// an auth-shaped failure — framing Failed with credential/auth-class error
-    /// text — and the provider row its remedy points at
-    /// ([`crate::login::auth::AuthFailure`]). When offered, the shell paints Login
-    /// one click away beside the step (a prompt-time failure surfaces here as
-    /// derived agent state, §13.3). Logic covered; shell paints.
-    pub auth_failed: AuthFailure,
     /// The §7.3 **step wound** (the `wound` module) — what went wrong with this
-    /// step, in the badge's own seat and in words. Two classes: the driver
+    /// step, in the badge's own seat and in words. Three classes: the driver
     /// produced nothing (no response bytes, no settled `meta.json`, nobody
     /// driving — [`NO_RESPONSE`], carrying the adapter's own reason from the
     /// step's `stderr.log` when there is one, bl-55d8), or the **output limit**
-    /// ended the turn ([`OUTPUT_LIMIT`], bl-fb87). Each renders as a failure
+    /// ended the turn ([`OUTPUT_LIMIT`], bl-fb87), or the provider **refused**
+    /// it ([`Wound::Refused`], bl-015b — [`auth_failed`](Self::auth_failed)
+    /// read as a wound, never a second store). Each renders as a failure
     /// row (ichor) instead of the reading its framing alone gives — the quiet
     /// ash "stopped" for the first, and a `✔ complete` that is true of the
     /// transport and false of the turn for the second.
@@ -126,8 +121,8 @@ pub fn build(workspace: &Path, agent_id: &str, state: AgentState) -> StepsView {
     }
 }
 
-/// Upgrade every auth-shaped step from `Unrouted` to the provider row it failed
-/// on (bl-8e34), so the Login affordance beside it names what to log in to.
+/// Upgrade every refused step from `Unrouted` to the provider row it failed
+/// on (bl-8e34), so the Login affordance names what to log in to.
 ///
 /// The whole derivation is here rather than in [`summarize`] because it is the
 /// one **git** read in this module: the agent's governing config commit, asked
@@ -138,15 +133,15 @@ pub fn build(workspace: &Path, agent_id: &str, state: AgentState) -> StepsView {
 /// its own model id (its `request.json`, read for that step alone), and the
 /// join is [`row_of_model`].
 fn route_auth(workspace: &Path, agent_id: &str, steps: &mut [StepSummary]) {
-    if !steps.iter().any(|step| step.auth_failed.offered()) {
+    if !steps.iter().any(|step| step.auth_failed().offered()) {
         return;
     }
     let roles = crate::fork::roles_at(workspace, &format!("agents/{agent_id}"));
-    for step in steps.iter_mut().filter(|s| s.auth_failed.offered()) {
+    for step in steps.iter_mut().filter(|s| s.auth_failed().offered()) {
         if let Some(row) = step_model(workspace, agent_id, &step.seq)
             .and_then(|model| row_of_model(&model, &roles))
         {
-            step.auth_failed = AuthFailure::Row(row);
+            step.wound = Wound::Refused(AuthFailure::Row(row));
         }
     }
 }
@@ -205,8 +200,27 @@ fn summarize(workspace: &Path, agent_id: &str, seq: &str) -> StepSummary {
         commit: meta_field(meta.as_ref(), "commit"),
         started_at: meta_field(meta.as_ref(), "started_at"),
         ended_at: meta_field(meta.as_ref(), "ended_at"),
-        auth_failed: crate::login::auth::classify(&response),
         wound: wound::read(&step, &response, meta_bytes.is_some(), settled.ending),
+    }
+}
+
+impl StepSummary {
+    /// The **Login affordance** (§8.3 detection, §15 M6 Z8): whether this step
+    /// is an auth-shaped failure — framing Failed with credential/auth-class
+    /// error text — and the provider row its remedy points at
+    /// ([`AuthFailure`]). When offered, a seat paints Login one click away
+    /// beside the step (a prompt-time failure surfaces here as derived agent
+    /// state, §13.3).
+    ///
+    /// **A query over the wound, never a field beside it** (bl-015b). It was a
+    /// stored field until the refusal entered the §7.3 vocabulary as
+    /// [`Wound::Refused`]; the two then said one thing twice, and the wire
+    /// spelled it a third time. One home, and the affordance is the reading.
+    pub fn auth_failed(&self) -> AuthFailure {
+        match &self.wound {
+            Wound::Refused(auth) => auth.clone(),
+            _ => AuthFailure::No,
+        }
     }
 }
 

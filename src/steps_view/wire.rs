@@ -65,20 +65,36 @@ fn step_row(step: &StepSummary) -> Value {
             map.insert(key.to_owned(), json!(value));
         }
     }
-    // The §8.3 login affordance: offered at all, and the provider row it points
-    // at when one was derivable. `auth_row` absent is `Unrouted` — the
-    // affordance paints and there is nothing to pick for you.
-    map.insert("auth_failed".to_owned(), json!(step.auth_failed.offered()));
-    if let Some(row) = step.auth_failed.row() {
-        map.insert("auth_row".to_owned(), json!(row));
-    }
-    // The §7.3 wound: which class it is, and the adapter's own reason when the
-    // no-response class left words behind.
-    map.insert("wound".to_owned(), json!(wound_token(&step.wound)));
-    if let Wound::Spoke(reason) = &step.wound {
-        map.insert("wound_reason".to_owned(), json!(reason));
-    }
+    // The §7.3 wound, which since bl-015b carries the §8.3 login affordance
+    // too: the `refused` class IS the affordance being offered, and
+    // `auth_row` is the provider row it points at. The `auth_failed` boolean
+    // that used to ride beside them was that same fact a third time, so it is
+    // gone — a decoder reads the affordance back off the class.
+    wound_fields(&step.wound, &mut map);
     Value::Object(map)
+}
+
+/// The §7.3 wound's whole wire spelling — its class token, the adapter's own
+/// reason when the no-response class left words behind, and the provider row
+/// when the refusal routed to one.
+///
+/// `pub(crate)` for the `spend_value` reason one screen down: the §8.5
+/// transcript's settled-failure notice (`transcript::wire`, bl-015b) carries
+/// this same vocabulary, and one spelling in one place is what keeps the two
+/// shapes from drifting into two dialects of one enum.
+pub(crate) fn wound_fields(wound: &Wound, map: &mut Map<String, Value>) {
+    map.insert("wound".to_owned(), json!(wound_token(wound)));
+    match wound {
+        Wound::Spoke(reason) => {
+            map.insert("wound_reason".to_owned(), json!(reason));
+        }
+        Wound::Refused(auth) => {
+            if let Some(row) = auth.row() {
+                map.insert("auth_row".to_owned(), json!(row));
+            }
+        }
+        Wound::None | Wound::Mute | Wound::OutputLimit => {}
+    }
 }
 
 /// The §7.3 wound's **class**, beside the optional reason (bl-fb87). A class
@@ -86,12 +102,14 @@ fn step_row(step: &StepSummary) -> Value {
 /// fourth arm the (bool, Option<reason>) pair stopped being a bijection, and
 /// the honest fix is a discriminant, not a second boolean beside the first.
 /// The two no-response arms share one token because the reason key is exactly
-/// what tells them apart.
+/// what tells them apart; `refused` carries its row in `auth_row` for the same
+/// reason, which is the key the affordance already spelled it under.
 fn wound_token(wound: &Wound) -> &'static str {
     match wound {
         Wound::None => "none",
         Wound::Mute | Wound::Spoke(_) => "no_response",
         Wound::OutputLimit => "output_limit",
+        Wound::Refused(_) => "refused",
     }
 }
 

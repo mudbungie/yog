@@ -45,7 +45,6 @@ pub(super) fn step(seq: &str, oid: Option<&str>, tokens: u64) -> StepSummary {
         commit: oid.map(str::to_owned),
         started_at: None,
         ended_at: None,
-        auth_failed: crate::login::auth::AuthFailure::No,
         wound: Wound::None,
     }
 }

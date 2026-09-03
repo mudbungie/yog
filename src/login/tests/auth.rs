@@ -117,7 +117,7 @@ fn each_state_states_exactly_what_was_derived() {
     assert_eq!(unrouted.row(), None);
     assert_eq!(
         unrouted.banner(),
-        "⚠ the last step failed on credentials — log in below"
+        "⚠ the last step failed on credentials — log in to carry it on"
     );
     assert_eq!(unrouted.step_mark(), "⚠ auth — Login ↙");
 
@@ -126,7 +126,7 @@ fn each_state_states_exactly_what_was_derived() {
     assert_eq!(routed.row(), Some("claude-session-direct"));
     assert_eq!(
         routed.banner(),
-        "⚠ the last step failed on claude-session-direct's credentials — log in below"
+        "⚠ the last step failed on claude-session-direct's credentials — log in to carry it on"
     );
     assert_eq!(
         routed.step_mark(),

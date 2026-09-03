@@ -133,9 +133,12 @@ fn say(entry: &Entry) -> String {
         }
         // None of these reaches a v1 check's text: the streaming tail is
         // excluded by construction (`build(.., false)` — staging text has no
-        // commit to replay a verdict against), and a Raw entry is bytes yog
-        // could not classify.
-        EntryKind::Streaming { .. } | EntryKind::Raw => String::new(),
+        // commit to replay a verdict against), the settled-failure notice is
+        // yog's own reading of the steps tree rather than anything the agent
+        // read (and is folded by the §8.5 answerer, so it cannot arrive on a
+        // committed build at all), and a Raw entry is bytes yog could not
+        // classify.
+        EntryKind::Streaming { .. } | EntryKind::Wounded { .. } | EntryKind::Raw => String::new(),
     }
 }
 

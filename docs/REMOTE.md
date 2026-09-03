@@ -4193,6 +4193,46 @@ the routing leg's own ends.
   one a control; they share the row type for its text and never reach this
   reply.
 
+### 9.16 The transcript says the conversation is dead (bl-015b)
+
+**`reply/transcript` gained a row kind, `wounded`, and `reply/steps` lost
+`auth_failed`.** `PROTOCOL` is **9**.
+
+A conversation refused at its first model call answered one committed entry and
+no tail: the pane a seat paints from it was honest and useless, and the remedy
+— sign a provider row in — was named on no surface the operator was reading.
+yog held the fact the whole time (§9.10's `failure`, the roster's hue, the
+per-step `auth_row`); what it lacked was a seat for it where the reading
+happens. DESIGN §6 and §8.5 hold the derivation and the ruling; the wire's half
+is this:
+
+- **The notice is the WOUND, not the refusal.** A refusal, a driver that
+  produced nothing and an output limit that ended the turn are one sighting to
+  an operator — *this conversation is not coming back* — so the row carries
+  yog's §7.3 wound vocabulary whole and the refusal is one arm of it. A
+  refusal-only row would have been a second answer to a question the engine
+  already answers four ways.
+- **It is a virtual trailing entry, and the third of them.** `compacted` stands
+  in a hole the compactor left and `streaming` rides the open response; this
+  rides the steps tree. No file backs any of the three, and a seat needs no new
+  rule to render one — the shape is a `rows[]` entry like the rest.
+- **The class token crosses; the sentence does not.** `wound` is the class
+  (`no_response` / `output_limit` / `refused` / `none`), `wound_reason` the
+  adapter's own words when the no-response class left any, `auth_row` the
+  provider row a refusal routed to. The banner a seat paints is a projection of
+  those three, and a headless seat runs the same projection — the rule
+  `compacted` already states for its counters, on a third shape.
+- **The steps row spells the same three keys, and one fewer than it did.**
+  `auth_failed` was the §8.3 affordance as a boolean beside `auth_row`, and
+  `refused` now says exactly what it said. One encoder writes the wound on both
+  shapes, so the two cannot drift into two dialects of one enum, and a seat that
+  read `auth_failed` reads `wound == "refused"` instead.
+- **The bump is the rule, not the ledger** — §9.9's correction again. Both
+  shapes' signatures last moved below 9, so the mechanism's
+  one-move-per-shape-per-version test would have passed a gain and a loss in
+  silence. §3's rule is the authority: a field gained, and a field lost, each
+  bump the version on their own.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer
