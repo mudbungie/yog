@@ -10,7 +10,7 @@ use tempfile::tempdir;
 
 use super::{AGENT, write_file};
 use crate::git_tree::{AgentState, Framing};
-use crate::steps_view::{NO_RESPONSE, Wound, build, latest_wound};
+use crate::steps_view::{NO_RESPONSE, Wound, build_aged, latest_wound};
 
 /// The observed repro: litany wrote `request.json`, opened `response.json`,
 /// and died on a substrate version skew — zero bytes, no `meta.json`.
@@ -31,7 +31,7 @@ fn a_driver_that_wrote_nothing_is_a_wound_not_a_quiet_step() {
     let ws = dir.path();
     write_repro(ws, "001");
 
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     let step = &view.steps[0];
     assert!(
         step.wound.wounded(),
@@ -53,7 +53,7 @@ fn an_absent_response_with_no_meta_is_the_same_wound() {
     // Died before the model call opened the file at all — same fact.
     write_file(ws, "001", "request.json", b"{}");
     assert!(
-        build(ws, AGENT, AgentState::Stopped).steps[0]
+        build_aged(ws, AGENT, AgentState::Stopped).steps[0]
             .wound
             .wounded()
     );
@@ -76,13 +76,13 @@ fn a_step_with_bytes_or_a_settled_meta_is_not_a_wound() {
     // …and a settled step's stderr is nobody's business: a retried attempt may
     // have written to it before the next one succeeded, which is not a wound.
     write_file(ws, "002", "stderr.log", BZ_REFUSAL.as_bytes());
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     assert_eq!(view.steps[0].wound, Wound::None);
     assert_eq!(view.steps[1].wound, Wound::None);
     assert!(!latest_wound(&view).wounded());
     // No steps at all: nothing to banner.
     assert_eq!(
-        latest_wound(&build(ws, "ghost", AgentState::Stopped)),
+        latest_wound(&build_aged(ws, "ghost", AgentState::Stopped)),
         Wound::None
     );
 }
@@ -95,13 +95,13 @@ fn a_live_drivers_newest_step_is_a_call_in_flight_not_a_wound() {
     // A driver holds the lock: the newest step is legitimately empty for the
     // moments before the first streamed event (§10 — never a false definite).
     for state in [AgentState::Live, AgentState::InFlight] {
-        let view = build(ws, AGENT, state);
+        let view = build_aged(ws, AGENT, state);
         assert!(!view.steps[0].wound.wounded());
         assert!(!latest_wound(&view).wounded());
     }
     // Nobody driving: the same bytes are the wound.
     for state in [AgentState::Quiescent, AgentState::Stopped] {
-        assert!(build(ws, AGENT, state).steps[0].wound.wounded());
+        assert!(build_aged(ws, AGENT, state).steps[0].wound.wounded());
     }
 }
 
@@ -111,7 +111,7 @@ fn a_live_driver_excuses_only_its_newest_step() {
     let ws = dir.path();
     write_repro(ws, "001");
     write_repro(ws, "002");
-    let view = build(ws, AGENT, AgentState::InFlight);
+    let view = build_aged(ws, AGENT, AgentState::InFlight);
     assert!(
         view.steps[0].wound.wounded(),
         "where the conversation died stays rendered after a resume"
@@ -128,7 +128,7 @@ fn the_wound_carries_the_adapters_own_words_off_the_steps_stderr_log() {
     write_repro(ws, "001");
     write_file(ws, "001", "stderr.log", BZ_REFUSAL.as_bytes());
 
-    let wound = latest_wound(&build(ws, AGENT, AgentState::Stopped));
+    let wound = latest_wound(&build_aged(ws, AGENT, AgentState::Stopped));
     assert_eq!(wound, Wound::Spoke(BZ_REFUSAL.to_owned()));
     let sentence = wound.banner();
     assert!(sentence.contains(NO_RESPONSE), "the class: {sentence}");
@@ -151,11 +151,11 @@ fn a_wound_with_an_empty_stderr_log_says_so_rather_than_inventing_a_cause() {
     write_repro(ws, "001");
     write_file(ws, "001", "stderr.log", b"");
     assert_eq!(
-        build(ws, AGENT, AgentState::Stopped).steps[0].wound,
+        build_aged(ws, AGENT, AgentState::Stopped).steps[0].wound,
         Wound::Mute
     );
     write_file(ws, "001", "stderr.log", b"  \n\n ");
-    let wound = latest_wound(&build(ws, AGENT, AgentState::Stopped));
+    let wound = latest_wound(&build_aged(ws, AGENT, AgentState::Stopped));
     assert_eq!(wound, Wound::Mute);
     let sentence = wound.banner();
     assert!(
@@ -170,7 +170,7 @@ fn a_wound_with_an_empty_stderr_log_says_so_rather_than_inventing_a_cause() {
     let bare = tempdir().unwrap();
     write_repro(bare.path(), "001");
     assert_eq!(
-        build(bare.path(), AGENT, AgentState::Stopped).steps[0].wound,
+        build_aged(bare.path(), AGENT, AgentState::Stopped).steps[0].wound,
         Wound::Mute
     );
     // Not a wound and no sentence — the caller gates on `wounded` and says the
@@ -190,7 +190,7 @@ fn a_chatty_adapter_is_quoted_by_its_tail_not_in_full() {
     let mut log = "noise line\n".repeat(600);
     log.push_str("one\ntwo\nthree\n");
     write_file(ws, "001", "stderr.log", log.as_bytes());
-    let wound = latest_wound(&build(ws, AGENT, AgentState::Stopped));
+    let wound = latest_wound(&build_aged(ws, AGENT, AgentState::Stopped));
     assert_eq!(wound, Wound::Spoke("one\ntwo\nthree".to_owned()));
 }
 
@@ -202,7 +202,7 @@ fn the_wound_reaches_the_answer_in_place_of_the_quiet_framing() {
     let dir = tempdir().unwrap();
     let ws = dir.path();
     write_repro(ws, "001");
-    let answered = crate::steps_view::wire::steps(&build(ws, AGENT, AgentState::Stopped));
+    let answered = crate::steps_view::wire::steps(&build_aged(ws, AGENT, AgentState::Stopped));
     let row = &answered["rows"][0];
     assert_eq!(row["wound"], "no_response", "got:\n{answered:#}");
     assert_ne!(row["framing"], "complete", "got:\n{answered:#}");

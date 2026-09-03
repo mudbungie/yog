@@ -71,9 +71,9 @@ const BUSY: Recipe = Recipe {
 };
 
 /// **the §7.3 wound**, both arms: one driver that left words behind and one
-/// that left none. The banner a seat paints is gated by its own
-/// `wound_grace` window — see [`super`] on why that gate is the seat's and
-/// not this fixture's.
+/// that left none. Both conversations are dated well past the §7.2
+/// `wound_grace` window the engine waits out before it states a wound at all
+/// (bl-776a) — see [`super`] on why a fixture must age its own step.
 const WOUND: Recipe = Recipe {
     summary: "two wounded conversations: one whose stderr.log speaks, one mute",
     workspaces: &[Wsp {

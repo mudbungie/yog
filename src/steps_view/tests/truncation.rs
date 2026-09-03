@@ -10,7 +10,7 @@ use tempfile::tempdir;
 
 use super::{AGENT, write_file};
 use crate::git_tree::{AgentState, Framing};
-use crate::steps_view::{OUTPUT_LIMIT, Wound, build, latest_wound};
+use crate::steps_view::{OUTPUT_LIMIT, Wound, build_aged, latest_wound};
 
 /// The bl-fb87 shape on disk: the model thought, said nothing, and the request
 /// ran out of `max_tokens`. Every transport promise kept; the turn unfinished.
@@ -31,7 +31,7 @@ fn an_output_limited_step_is_a_wound_though_its_framing_is_complete() {
     write_file(ws, "001", "response.json", THINKING_ONLY_LENGTH);
     write_file(ws, "001", "meta.json", br#"{"commit":"abc"}"#);
 
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     let step = &view.steps[0];
     assert_eq!(step.wound, Wound::OutputLimit);
     assert_eq!(
@@ -60,7 +60,7 @@ fn a_partial_text_turn_keeps_its_text_and_is_still_marked_truncated() {
 "#,
     );
     assert_eq!(
-        build(ws, AGENT, AgentState::Stopped).steps[0].wound,
+        build_aged(ws, AGENT, AgentState::Stopped).steps[0].wound,
         Wound::OutputLimit
     );
     assert_eq!(
@@ -98,7 +98,7 @@ fn no_other_settled_shape_becomes_the_output_limit_wound() {
         "response.json",
         b"{\"type\":\"content_delta\"}\n",
     );
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     for step in &view.steps {
         assert_eq!(step.wound, Wound::None, "step {}", step.seq);
     }
@@ -115,7 +115,7 @@ fn the_output_limit_wound_says_what_ended_the_turn_and_how_to_carry_on() {
     let ws = dir.path();
     write_file(ws, "001", "response.json", THINKING_ONLY_LENGTH);
 
-    let sentence = latest_wound(&build(ws, AGENT, AgentState::Stopped)).banner();
+    let sentence = latest_wound(&build_aged(ws, AGENT, AgentState::Stopped)).banner();
     assert!(sentence.contains(OUTPUT_LIMIT), "the class: {sentence}");
     assert!(
         sentence.contains("output budget ran out"),
@@ -139,7 +139,7 @@ fn the_output_limit_wound_says_what_ended_the_turn_and_how_to_carry_on() {
     // the wound is what says the turn was cut off inside that clean frame. A
     // seat says the wound where it would otherwise say the framing; the server
     // states the two facts and does not choose between them.
-    let answered = crate::steps_view::wire::steps(&build(ws, AGENT, AgentState::Stopped));
+    let answered = crate::steps_view::wire::steps(&build_aged(ws, AGENT, AgentState::Stopped));
     let row = &answered["rows"][0];
     assert_eq!(row["wound"], "output_limit", "got:\n{answered:#}");
     assert_eq!(row["framing"], "complete", "got:\n{answered:#}");
@@ -153,7 +153,7 @@ fn a_driver_at_work_excuses_the_newest_output_limited_step_only() {
     let ws = dir.path();
     write_file(ws, "001", "response.json", THINKING_ONLY_LENGTH);
     write_file(ws, "002", "response.json", THINKING_ONLY_LENGTH);
-    let view = build(ws, AGENT, AgentState::InFlight);
+    let view = build_aged(ws, AGENT, AgentState::InFlight);
     assert_eq!(view.steps[0].wound, Wound::OutputLimit);
     assert_eq!(view.steps[1].wound, Wound::None);
 }

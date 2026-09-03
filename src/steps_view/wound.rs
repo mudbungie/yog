@@ -219,6 +219,52 @@ pub(super) fn driven(state: AgentState) -> bool {
     matches!(state, AgentState::Live | AgentState::InFlight)
 }
 
+/// The **second** reason the newest step's unanswered shape may still be a call
+/// in flight (§7.2, bl-90bf/bl-18e8; judged here since bl-776a): the liveness
+/// half of [`driven`] is younger than its own catch-up latency.
+///
+/// The no-response wound's two halves do not share a clock. Its disk half is
+/// read fresh at every ask; its liveness half rides the last published
+/// snapshot, and a driver *taking* its flock emits no fs event — so for the
+/// whole of [`Cadence::wound_grace`](crate::app::Cadence::wound_grace) after a
+/// call starts, a genuinely-in-flight empty step reads as a wound. A structural
+/// TOCTOU, not a bad classifier, and the fix is time: **a wound is stated only
+/// once the reading that would contradict it has had time to arrive.** The wait
+/// was a render-layer gate with no consumer in this crate and no carrier to a
+/// seat, so every seat either hard-coded a window or flashed the alarm the
+/// grace exists to prevent; spent here, the wound crosses **already-judged**
+/// and a seat holds no period at all.
+///
+/// The anchor is the step's own `request.json` mtime — litany writes it
+/// immediately before invoking the model, so it is that call's start (§5.1 #28,
+/// the stamp `call_start_unix` already reads) and a fact about the world rather
+/// than about any observer's first sight. No stamp means nothing on disk says
+/// the step is young, and the wound stands.
+///
+/// **Only the unanswered classes** ([`Wound::Mute`]/[`Wound::Spoke`]) wait:
+/// they are the two whose truth depends on the stale half. A refusal and an
+/// output limit are settled on disk the instant they are written. Whole
+/// seconds, rounding **down**: the grace bounds how long a healthy call may
+/// look wounded, never how long a real wound is held back. A **zero** grace is
+/// therefore no window at all rather than a special case, and a stamp *ahead*
+/// of the caller's clock reads as an age of zero rather than a negative one —
+/// §7.2's own convention for a derivation stamped after the reader (a clock
+/// wound back, two boxes a second apart), and the conservative arm either
+/// way.
+pub(super) fn in_flight_window(
+    step: &Path,
+    wound: &Wound,
+    now_unix: i64,
+    grace: std::time::Duration,
+) -> bool {
+    if !matches!(wound, Wound::Mute | Wound::Spoke(_)) {
+        return false;
+    }
+    let grace_secs = i64::try_from(grace.as_secs()).unwrap_or(i64::MAX);
+    crate::git_tree::mtime_unix(&step.join(super::REQUEST_FILE))
+        .is_some_and(|started| now_unix.saturating_sub(started).max(0) < grace_secs)
+}
+
 /// The agent's **latest** step's wound — the §11 Altitude-1 banner's input,
 /// read off an already-built [`super::StepsView`] (the one owner of the
 /// per-step reading) exactly as the Login banner reads its own. It takes the

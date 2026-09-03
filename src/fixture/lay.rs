@@ -7,9 +7,11 @@
 //!
 //! **Times are the recipe's, never the clock's.** Each conversation's dispatch
 //! commit, messages and step are stamped `origin - age_secs`, and the step's
-//! `response.json` mtime is stamped with them — `last_action_unix` is the
-//! newest of those three, so a file left at "now" would drown every dated
-//! commit and collapse the §11 order into an id tiebreak.
+//! `request.json` and `response.json` mtimes are stamped with them —
+//! `last_action_unix` is the newest of those three, so a file left at "now"
+//! would drown every dated commit and collapse the §11 order into an id
+//! tiebreak. The request's stamp carries two more facts: §5.1 #28's call start,
+//! and the anchor the §7.2 catch-up window judges a wound against (bl-776a).
 
 use super::disk::{display, git, mkdir, stamp, write};
 use super::places::Places;
@@ -185,7 +187,14 @@ fn lay_step(ws: &Path, conv: &Conv, at: i64, hold: &mut Vec<PathBuf>) -> Result<
     }
     let steps = ws.join("steps").join(conv.id);
     let step = steps.join(SEQ);
-    write(&step.join("request.json"), "{\"model\":\"fixture-1\"}\n")?;
+    let request = step.join("request.json");
+    write(&request, "{\"model\":\"fixture-1\"}\n")?;
+    // The call's own start (§5.1 #28) — and the anchor the §7.2 catch-up window
+    // judges a wound against (bl-776a). Left at "now" it made every laid
+    // conversation read as a call that began this instant, so a laid wound
+    // answered as an in-flight call for the whole of `wound_grace` and the
+    // whole recipe stopped being deterministic.
+    stamp(&request, at)?;
     if !conv.driver_log.is_empty() {
         write(&steps.join("driver.log"), conv.driver_log)?;
     }

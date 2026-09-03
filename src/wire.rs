@@ -55,11 +55,15 @@ pub mod tls;
 /// and the number REMOTE §10's ask-rate criterion is measured against.
 ///
 /// It is a **protocol** period rather than a client's private knob, which is
-/// why it survived the seat's departure (bl-7942): the §7.3 wound grace is the
-/// sum of every leg a fact crosses before a seat can see it
+/// why it survived the seat's departure (bl-7942) and why it stayed after
+/// bl-776a: the §7.3 wound grace is the sum of every leg a fact crosses before
+/// a seat can see it
 /// ([`Cadence::wound_grace`](crate::app::Cadence::wound_grace)), and the last
-/// of those legs is the ask. A server that did not name the period could not
-/// state the grace, and would raise the alarm the grace exists to prevent.
+/// of those legs is the ask. The engine **spends** that grace itself now — a
+/// wound crosses already-judged — so this constant is load-bearing in the
+/// stronger sense: a server that did not know the seat's own poll period could
+/// not compute the window it waits out, and would raise the alarm the grace
+/// exists to prevent.
 pub const ASK_PERIOD: std::time::Duration = std::time::Duration::from_millis(500);
 
 /// Bring the engine's listener up, or explain why there is none.

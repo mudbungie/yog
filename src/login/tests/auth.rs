@@ -145,7 +145,8 @@ fn latest_step_auth_failed_reads_the_last_step_only() {
         b"{\"type\":\"error\",\"kind\":\"auth\",\"message\":\"no credential for this provider: run `bz --login --provider <id>`\",\"provider_detail\":null}\n{\"type\":\"end\"}\n",
     )
     .unwrap();
-    let steps_of = |agent: &str| crate::steps_view::build(ws.path(), agent, AgentState::Stopped);
+    let steps_of =
+        |agent: &str| crate::steps_view::build_aged(ws.path(), agent, AgentState::Stopped);
     assert!(
         crate::login::auth::latest_step_auth_failed(&steps_of("root-1")).offered(),
         "an auth-failed latest step banners Login (§11)"

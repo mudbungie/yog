@@ -15,14 +15,11 @@
 #![allow(clippy::unwrap_used)]
 
 use std::path::Path;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{Duration, Instant};
+use std::time::{Duration, SystemTime};
 use tempfile::tempdir;
-use yog::app::{Cadence, WoundGrace};
+use yog::app::Cadence;
 use yog::git_tree::{AgentState, Framing};
-use yog::steps_view::{self, NO_RESPONSE, Wound, latest_wound};
-use yog::ui_state::Clock;
+use yog::steps_view::{self, NO_RESPONSE, StepsView, Wound, latest_wound};
 
 const AGENT: &str = "20260725T050000Z-skew";
 
@@ -32,39 +29,41 @@ const BZ_REFUSAL: &str = "bz: no workspace in this environment — providers, si
 model cache belong to a workspace, and there is nothing shared to fall back to. Run this inside \
 a yog workspace, or focus one in yog.";
 
-/// The default cadence's grace window (bl-3381) — what the shell passes when
-/// the operator has not re-tuned.
+/// The default cadence's catch-up window (bl-3381) — what the engine spends
+/// when the operator has not re-tuned.
 fn window() -> Duration {
     Cadence::default().wound_grace()
 }
 
-/// A clock the test moves by hand (the crate's `FakeClock` is `pub(crate)`), so
-/// the grace window is exercised without sleeping.
-struct TestClock {
-    base: Instant,
-    millis: AtomicU64,
+/// A caller's clock **past** that window, measured from the step this test just
+/// wrote: `request.json`'s mtime is the call's start (§5.1 #28) and the wound
+/// is judged against it, so this is the reading at which the engine has had its
+/// own catch-up latency to be contradicted and was not.
+fn after_the_window() -> i64 {
+    let now = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    i64::try_from(now + window().as_secs()).unwrap() + 1
 }
 
-impl TestClock {
-    fn new() -> Arc<Self> {
-        Arc::new(Self {
-            base: Instant::now(),
-            millis: AtomicU64::new(0),
-        })
-    }
-    fn advance(&self, by: Duration) {
-        self.millis
-            .fetch_add(by.as_millis() as u64, Ordering::SeqCst);
-    }
+/// This box's clock right now — the reading at which a step written a moment
+/// ago is still inside the window.
+fn just_now() -> i64 {
+    i64::try_from(
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    )
+    .unwrap()
 }
 
-impl Clock for TestClock {
-    fn now(&self) -> Instant {
-        self.base + Duration::from_millis(self.millis.load(Ordering::SeqCst))
-    }
-    fn stamp(&self) -> String {
-        "TS".to_string()
-    }
+/// The steps view as the §8.5 boundary builds it: the agent's liveness, the
+/// caller's clock, and the live cadence's window (bl-776a — the wound crosses
+/// already-judged, so no seat holds a period of its own).
+fn judged(ws: &Path, state: AgentState, now_unix: i64) -> StepsView {
+    steps_view::build(ws, AGENT, state, now_unix, window())
 }
 
 /// Lay down one step exactly as litany leaves it (ARCH §2.3 write order):
@@ -108,7 +107,7 @@ fn a_driver_that_died_without_a_response_renders_a_cause() {
     );
     write_step(ws, 2, Some(b""), None);
 
-    let view = steps_view::build(ws, AGENT, AgentState::Stopped);
+    let view = judged(ws, AgentState::Stopped, after_the_window());
     assert_eq!(view.steps.len(), 2);
     assert!(
         !view.steps[0].wound.wounded(),
@@ -125,9 +124,9 @@ fn a_driver_that_died_without_a_response_renders_a_cause() {
 
     // The §11 Altitude-1 banner reads the same derivation, so the cause is on
     // the conversation surface whichever inspector tab is open.
-    assert!(latest_wound(&steps_view::build(ws, AGENT, AgentState::Stopped)).wounded());
+    assert!(latest_wound(&judged(ws, AgentState::Stopped, after_the_window())).wounded());
     // …and never while a driver is still filling that step (§10).
-    assert!(!latest_wound(&steps_view::build(ws, AGENT, AgentState::InFlight)).wounded());
+    assert!(!latest_wound(&judged(ws, AgentState::InFlight, after_the_window())).wounded());
 }
 
 /// bl-55d8, from the falsifying run's own bytes: `002/response.json` at zero
@@ -145,7 +144,7 @@ fn the_wound_states_the_reason_the_step_recorded() {
     );
     write_step_with_stderr(ws, 2, Some(b""), None, BZ_REFUSAL.as_bytes());
 
-    let wound = latest_wound(&steps_view::build(ws, AGENT, AgentState::Stopped));
+    let wound = latest_wound(&judged(ws, AgentState::Stopped, after_the_window()));
     assert_eq!(wound, Wound::Spoke(BZ_REFUSAL.to_owned()));
     let sentence = wound.banner();
     assert!(sentence.contains(NO_RESPONSE), "the class: {sentence}");
@@ -156,53 +155,33 @@ fn the_wound_states_the_reason_the_step_recorded() {
 
     // The step that answered keeps its own silence: reading a reason is gated
     // on the wound, so a healthy conversation is unchanged and pays nothing.
-    let view = steps_view::build(ws, AGENT, AgentState::Stopped);
+    let view = judged(ws, AgentState::Stopped, after_the_window());
     assert_eq!(view.steps[0].wound, Wound::None);
 }
 
-/// bl-90bf: the banner is an alarm, and the predicate's liveness half is the
-/// snapshot's — up to a §7.2 poll behind the disk half the frame re-reads. So a
-/// freshly-sent step whose driver already holds the lock reads wounded until
-/// the cache catches up. The grace gate is what keeps that off the screen,
-/// without ever silencing a driver that really did die.
+/// bl-90bf, judged on the engine since bl-776a: the wound's liveness half is
+/// the snapshot's — up to a §7.2 catch-up latency behind the disk half read at
+/// the ask — so a freshly-sent step whose driver already holds the lock reads
+/// wounded until the cache catches up. The engine waits that window out itself,
+/// so what crosses the §8.5 boundary is already judged and no seat times
+/// anything; and a driver that really did die is still never silenced.
 #[test]
-fn the_banner_waits_out_the_grace_window() {
+fn the_engine_waits_out_the_catch_up_window() {
     let dir = tempdir().unwrap();
     let ws = dir.path();
     // A live send, one instant old: request written, response empty, no meta —
     // byte-for-byte the wound's shape, and the cached state has not yet seen
     // the flock the driver took (no fs event announces one).
     write_step(ws, 1, Some(b""), None);
-    let wounded = latest_wound(&steps_view::build(ws, AGENT, AgentState::Stopped)).wounded();
-    assert!(wounded, "the raw predicate reads the wound");
-
-    let clock = TestClock::new();
-    // The double is a whole `Clock`: `stamp` is the trait's §4.2 ops-timestamp
-    // half, which the grace gate never reads and this one answers constant.
-    assert_eq!(clock.stamp(), "TS");
-    let mut grace = WoundGrace::new(clock.clone());
     assert!(
-        !grace.paints(ws, AGENT, wounded, window()),
-        "never on first sight"
+        !latest_wound(&judged(ws, AgentState::Stopped, just_now())).wounded(),
+        "inside the window the engine claims nothing — the alarm bl-90bf closed"
     );
-    clock.advance(window() / 2);
+    // The other half of the same rule: a driver visibly at work, at any age.
+    assert!(!latest_wound(&judged(ws, AgentState::InFlight, after_the_window())).wounded());
+    // Past the window the honest wound is stated — delayed, never dropped.
     assert!(
-        !grace.paints(ws, AGENT, wounded, window()),
-        "still inside the window"
-    );
-    // The snapshot catches up: the driver was alive the whole time. The alarm
-    // that would have flashed red on a healthy send never painted.
-    let healed = latest_wound(&steps_view::build(ws, AGENT, AgentState::InFlight)).wounded();
-    assert!(!grace.paints(ws, AGENT, healed, window()));
-
-    // Now the honest wound: the driver really is gone, and it stays wounded
-    // across the window — so it banners, delayed but never dropped.
-    let clock = TestClock::new();
-    let mut grace = WoundGrace::new(clock.clone());
-    assert!(!grace.paints(ws, AGENT, wounded, window()));
-    clock.advance(window());
-    assert!(
-        grace.paints(ws, AGENT, wounded, window()),
-        "{NO_RESPONSE} — banner-ed"
+        latest_wound(&judged(ws, AgentState::Stopped, after_the_window())).wounded(),
+        "{NO_RESPONSE} — stated once the world has had its say"
     );
 }

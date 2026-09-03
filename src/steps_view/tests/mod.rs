@@ -19,9 +19,13 @@
 //! [`orphan`] and [`window`] drive the two shapes of the §7.3 orphaned-tail
 //! state — delivered mail nobody answers (bl-ace6) and a tool window an
 //! executor died inside (bl-abba) — split at §12's budget on that seam.
+//! [`catch_up`] drives the §7.2 window the engine waits out before it states a
+//! no-response wound at all (bl-776a), which is the one part of the derivation
+//! that takes a clock.
 
 use std::path::{Path, PathBuf};
 
+mod catch_up;
 mod detail;
 mod logs;
 mod orphan;

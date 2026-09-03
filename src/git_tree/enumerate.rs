@@ -206,10 +206,10 @@ fn live_tail_mtime(workspace: &Path, agent_id: &str) -> i64 {
 /// stamp to read (absent path, or one from before the epoch). The recency fold
 /// spends a `None` as zero — an unknown action time is no action, and it is
 /// taking a max — while the two elapsed starts (§5.1 #28) keep it as absence,
-/// which is what makes the strip omit rather than invent. `pub(super)` so the
-/// tool-record reader ([`super::tools`]) stamps `input.json` through this one
-/// definition.
-pub(super) fn mtime_unix(path: &Path) -> Option<i64> {
+/// which is what makes the strip omit rather than invent. `pub(crate)` so the
+/// tool-record reader ([`super::tools`]) stamps `input.json`, and the §7.3
+/// wound reads its step's own call start, through this one definition.
+pub(crate) fn mtime_unix(path: &Path) -> Option<i64> {
     std::fs::metadata(path)
         .and_then(|meta| meta.modified())
         .ok()

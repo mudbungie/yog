@@ -12,6 +12,10 @@ use crate::git_tree::AgentState;
 use crate::projects::join::JoinState;
 use std::path::{Path, PathBuf};
 
+/// A caller's clock long past any step these tests write — the §7.2 in-flight
+/// window (bl-776a) has elapsed, so a wound the world holds is stated.
+const AFTER_THE_WINDOW: i64 = 4_000_000_000;
+
 /// REMOTE §9.7's altitude ruling (bl-44e9): the answer is the whole descent
 /// forest with its per-row rollups, and the all-collapsed list every seat used
 /// to be handed is the **root subset** a seat selects out of it.
@@ -186,7 +190,7 @@ fn a_stopped_conversation_answers_its_wound_as_a_trailing_entry() {
     .unwrap();
 
     let snap = snapshot(ws, "alba", vec![agent(id, AgentState::Stopped, 10)], vec![]);
-    let answered = inspector::transcript(&snap, ws, id);
+    let answered = inspector::transcript(&snap, ws, id, AFTER_THE_WINDOW);
     assert_eq!(answered.entries.len(), 2, "the message AND the notice");
     let said = String::from_utf8(answered.entries[1].raw.clone()).unwrap();
     assert!(
@@ -213,7 +217,7 @@ fn an_in_flight_conversation_answers_its_tail_and_no_notice() {
         last_delta: Some(crate::git_tree::Delta::Text),
     };
     let snap = snapshot(ws, "alba", vec![live], vec![]);
-    let answered = inspector::transcript(&snap, ws, id);
+    let answered = inspector::transcript(&snap, ws, id, AFTER_THE_WINDOW);
     assert_eq!(answered.entries.len(), 2);
     assert!(matches!(
         answered.entries[1].kind,

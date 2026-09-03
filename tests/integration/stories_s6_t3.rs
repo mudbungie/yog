@@ -102,7 +102,9 @@ fn s6_t3_the_ack_quiets_the_signal_and_keeps_every_fact() {
     // And the auth-shaped death keeps its inline Login one click away: the
     // affordance is derived from the step's own bytes, which no watermark
     // touches.
-    let steps = steps_view::build(&ws, "d-001", agent.state);
+    // A refusal is settled on disk, so the §7.2 in-flight window (bl-776a)
+    // never holds it back and a zero grace is the general path here.
+    let steps = steps_view::build(&ws, "d-001", agent.state, 0, std::time::Duration::ZERO);
     let failure = auth::latest_step_auth_failed(&steps);
     assert!(
         failure.offered(),

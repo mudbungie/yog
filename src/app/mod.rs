@@ -35,7 +35,6 @@ pub mod cadence;
 mod derive;
 mod dirty;
 mod drift;
-mod grace;
 mod roots;
 mod snapshot;
 /// The model's read surface (§7.2) — split from this root at the cap.
@@ -57,7 +56,6 @@ pub use self::derive::worker::Worker;
 /// the boundary says them and this module derives them — one wording, read at
 /// the chokepoint rather than restated for a seat.
 pub use self::drift::stale_label;
-pub use self::grace::WoundGrace;
 pub use self::roots::Roots;
 /// The §3.1 enumeration standing in for the derivation's cached copy at the
 /// boundary's intake (bl-6c9e) — re-exported here because the engine builds a

@@ -38,12 +38,31 @@ fn a_laid_state_enumerates_as_a_named_workspace_with_its_conversations() {
 
 /// The §7.3 wound, both arms, read by the production predicate — the state's
 /// whole reason to exist.
+///
+/// Read through the **live** cadence's catch-up window (bl-776a), not around
+/// it: the engine states a no-response wound only once the step's own call
+/// start has outlived that window, so a recipe whose `request.json` was left at
+/// "now" would answer no wound at all and the state would be a promise it
+/// cannot keep. Judged from this box's clock, which is what a harness reading
+/// the laid world has.
 #[test]
 fn the_wound_state_lays_a_spoken_wound_and_a_mute_one() {
-    let (_tmp, places, _) = laid("wound", 2_000_000_000);
+    // The verb's own origin is this box's clock (`fixture::verb`), so the read
+    // below is the read a harness makes of a world just laid.
+    let now = i64::try_from(
+        std::time::SystemTime::now()
+            .duration_since(std::time::SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    )
+    .unwrap();
+    let (_tmp, places, _) = laid("wound", now);
     let ws = places.workspace(roster::WORKSPACE);
-    let spoke = crate::steps_view::build(&ws, "c-101", crate::git_tree::AgentState::Stopped);
-    let mute = crate::steps_view::build(&ws, "c-102", crate::git_tree::AgentState::Stopped);
+    let grace = crate::app::Cadence::default().wound_grace();
+    let read = |id: &str| {
+        crate::steps_view::build(&ws, id, crate::git_tree::AgentState::Stopped, now, grace)
+    };
+    let (spoke, mute) = (read("c-101"), read("c-102"));
     assert!(matches!(
         crate::steps_view::latest_wound(&spoke),
         crate::steps_view::Wound::Spoke(_)
@@ -63,8 +82,8 @@ fn the_wound_state_lays_a_spoken_wound_and_a_mute_one() {
 fn the_orphan_state_lays_both_tails() {
     let (_tmp, places, _) = laid("orphan", 2_000_000_000);
     let ws = places.workspace(roster::WORKSPACE);
-    let mail = crate::steps_view::build(&ws, "c-201", crate::git_tree::AgentState::Stopped);
-    let window = crate::steps_view::build(&ws, "c-202", crate::git_tree::AgentState::Stopped);
+    let mail = crate::steps_view::build_aged(&ws, "c-201", crate::git_tree::AgentState::Stopped);
+    let window = crate::steps_view::build_aged(&ws, "c-202", crate::git_tree::AgentState::Stopped);
     assert!(
         mail.orphan
             .banner()

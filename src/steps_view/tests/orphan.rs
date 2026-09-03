@@ -12,7 +12,7 @@ use tempfile::tempdir;
 
 use super::AGENT;
 use crate::git_tree::AgentState;
-use crate::steps_view::{ORPHANED_MAIL, Orphan, Tail, build};
+use crate::steps_view::{ORPHANED_MAIL, Orphan, Tail, build_aged};
 
 /// Lay a transcript whose entries are exactly `names`, in that order.
 pub(super) fn write_messages(ws: &std::path::Path, names: &[&str]) {
@@ -47,7 +47,7 @@ fn mail_with_no_driver_and_a_spoken_log_carries_the_words() {
     write_messages(ws, &["001-user.md", "002-opus.json", "003-user.md"]);
     write_driver_log(ws, DECLINE);
 
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     let Orphan::Spoke(Tail::Mail, words) = &view.orphan else {
         panic!("expected Spoke(Mail), got {:?}", view.orphan);
     };
@@ -64,7 +64,7 @@ fn mail_with_no_driver_and_no_log_is_mute_and_says_so() {
     let ws = dir.path();
     write_messages(ws, &["001-user.md"]);
 
-    let view = build(ws, AGENT, AgentState::Quiescent);
+    let view = build_aged(ws, AGENT, AgentState::Quiescent);
     assert_eq!(view.orphan, Orphan::Mute(Tail::Mail));
     let banner = view.orphan.banner();
     assert!(banner.contains(ORPHANED_MAIL), "{banner}");
@@ -78,7 +78,7 @@ fn a_settled_tail_is_no_orphan() {
     // Newest entry is model output whose bytes yog cannot classify: the mail
     // was answered, and bytes nobody can read assert nothing.
     write_messages(ws, &["001-user.md", "002-opus.json"]);
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     assert_eq!(view.orphan, Orphan::None);
     assert!(!view.orphan.orphaned());
     assert!(view.orphan.banner().is_empty());
@@ -92,14 +92,14 @@ fn a_driven_agent_is_never_an_orphan() {
     let ws = dir.path();
     write_messages(ws, &["001-user.md"]);
     for state in [AgentState::Live, AgentState::InFlight] {
-        assert_eq!(build(ws, AGENT, state).orphan, Orphan::None);
+        assert_eq!(build_aged(ws, AGENT, state).orphan, Orphan::None);
     }
 }
 
 #[test]
 fn an_absent_transcript_is_no_orphan() {
     let dir = tempdir().unwrap();
-    let view = build(dir.path(), AGENT, AgentState::Stopped);
+    let view = build_aged(dir.path(), AGENT, AgentState::Stopped);
     assert_eq!(view.orphan, Orphan::None);
 }
 
@@ -111,5 +111,8 @@ fn an_empty_transcript_directory_is_no_orphan() {
     let dir = tempdir().unwrap();
     let ws = dir.path();
     messages(ws);
-    assert_eq!(build(ws, AGENT, AgentState::Stopped).orphan, Orphan::None);
+    assert_eq!(
+        build_aged(ws, AGENT, AgentState::Stopped).orphan,
+        Orphan::None
+    );
 }

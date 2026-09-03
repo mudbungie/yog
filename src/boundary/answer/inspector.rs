@@ -66,11 +66,11 @@ use crate::transcript::{self, Transcript};
 /// implementation exists to prevent. A settled step's trailing text is already
 /// committed, so the fold is gated on [`AgentState::InFlight`] — merging it
 /// otherwise paints the last answer twice.
-pub fn transcript(snap: &Snapshot, ws: &Path, agent: &str) -> Transcript {
+pub fn transcript(snap: &Snapshot, ws: &Path, agent: &str, now_unix: i64) -> Transcript {
     let committed = transcript::build(ws, agent);
     match live_tail(snap, ws, agent) {
         Some(stream) => committed.with_live(&stream),
-        None => committed.with_wound(&steps_view::latest_wound(&steps(snap, ws, agent))),
+        None => committed.with_wound(&steps_view::latest_wound(&steps(snap, ws, agent, now_unix))),
     }
 }
 
@@ -95,8 +95,24 @@ pub(crate) fn live_tail(snap: &Snapshot, ws: &Path, agent: &str) -> Option<Strea
 /// definite). An agent the snapshot does not carry reads as
 /// [`Stopped`](AgentState::Stopped), which is what an untracked tree's newest
 /// step honestly is.
-pub fn steps(snap: &Snapshot, ws: &Path, agent: &str) -> StepsView {
-    steps_view::build(ws, agent, state_of(snap, ws, agent))
+///
+/// **The §7.2 grace is applied here and crosses judged** (bl-776a). The
+/// liveness above is only as fresh as the snapshot it came off, so a wound is
+/// stated only once that reading has had its own catch-up latency
+/// ([`Cadence::wound_grace`](crate::app::Cadence::wound_grace)) to contradict
+/// it. The number is derived from the live cadence the snapshot already
+/// carries, and it is spent here rather than named in a reply: a period a seat
+/// had to honour would be one derivation with two implementations, and a
+/// window a seat had to time would be this engine's own staleness made the
+/// seat's problem.
+pub fn steps(snap: &Snapshot, ws: &Path, agent: &str, now_unix: i64) -> StepsView {
+    steps_view::build(
+        ws,
+        agent,
+        state_of(snap, ws, agent),
+        now_unix,
+        snap.cadence.wound_grace(),
+    )
 }
 
 /// The agent worktree's listing, and the named path's preview when the listing

@@ -52,11 +52,12 @@
 //!   and [`Laid::hold`] names the two paths a harness opens to complete it —
 //!   one line of shell (`exec 9<dir`), in the process that already owns the
 //!   engine.
-//! - **`wound_grace` is the seat's, not the server's.** The window left with
-//!   bl-7942 and [`WoundGrace`](crate::app::WoundGrace) has had no consumer in
-//!   this crate since; what yog serves is the wound itself. A fixture can lay
-//!   the wound — the `wound` state does — and the grace window is the
-//!   rendering client's own gate over it.
+//! - **`wound_grace` is the server's, and a laid wound must outlive it.** The
+//!   §7.2 catch-up window is spent on the engine (bl-776a): a no-response wound
+//!   is stated only once the step's own call start is older than it, so a
+//!   fixture that laid its step at *now* would answer no wound at all. The
+//!   `wound` state dates its step from the recipe's own offsets like everything
+//!   else here, which is why it reads as one.
 
 /// How a byte gets written — the four primitives every writer here spends.
 pub mod disk;

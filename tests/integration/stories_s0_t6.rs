@@ -41,7 +41,16 @@ fn s0_t6_an_auth_failed_step_carries_the_login_affordance() {
         b"{\"type\":\"error\",\"status\":401,\"message\":\"Unauthorized: check credentials\"}\n{\"type\":\"end\"}\n",
     );
 
-    let view = steps_view::build(ws, AGENT, yog::git_tree::AgentState::Stopped);
+    // The §7.2 in-flight window (bl-776a) waits out only the *unanswered*
+    // classes; a refusal is settled on disk the instant it is written, so a
+    // zero grace here is the general path and not a test's special case.
+    let view = steps_view::build(
+        ws,
+        AGENT,
+        yog::git_tree::AgentState::Stopped,
+        0,
+        std::time::Duration::ZERO,
+    );
     assert_eq!(view.steps.len(), 2);
 
     // The clean step offers no Login; only the auth-shaped failure carries it.

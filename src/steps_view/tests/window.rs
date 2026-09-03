@@ -14,7 +14,7 @@ use tempfile::tempdir;
 use super::AGENT;
 use super::orphan::{DECLINE, messages, write_driver_log, write_messages};
 use crate::git_tree::AgentState;
-use crate::steps_view::{ORPHANED_WINDOW, Orphan, Tail, build};
+use crate::steps_view::{ORPHANED_WINDOW, Orphan, Tail, build_aged};
 
 /// A committed assistant entry that calls a tool, in the bare-array envelope
 /// litany commits (`transcript` module doc).
@@ -63,7 +63,7 @@ fn an_unanswered_tool_window_with_no_driver_banners_and_names_the_remedy() {
     write_tool_window(ws, "002-opus.json");
     write_driver_log(ws, DECLINE);
 
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     let Orphan::Spoke(Tail::ToolWindow, words) = &view.orphan else {
         panic!("expected Spoke(ToolWindow), got {:?}", view.orphan);
     };
@@ -80,7 +80,7 @@ fn a_mute_tool_window_still_banners_its_own_class() {
     let ws = dir.path();
     write_tool_window(ws, "001-opus.json");
 
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     assert_eq!(view.orphan, Orphan::Mute(Tail::ToolWindow));
     let banner = view.orphan.banner();
     assert!(banner.contains(ORPHANED_WINDOW), "{banner}");
@@ -99,7 +99,10 @@ fn a_model_turn_that_called_nothing_is_no_orphan() {
     )
     .unwrap();
 
-    assert_eq!(build(ws, AGENT, AgentState::Stopped).orphan, Orphan::None);
+    assert_eq!(
+        build_aged(ws, AGENT, AgentState::Stopped).orphan,
+        Orphan::None
+    );
 }
 
 /// A committed `tool_result` on the tail is a window that closed: the call
@@ -115,7 +118,10 @@ fn an_answered_tool_call_is_no_orphan() {
     )
     .unwrap();
 
-    assert_eq!(build(ws, AGENT, AgentState::Stopped).orphan, Orphan::None);
+    assert_eq!(
+        build_aged(ws, AGENT, AgentState::Stopped).orphan,
+        Orphan::None
+    );
 }
 
 /// A **parked** call wears this exact shape and is waiting on purpose (§8.6):
@@ -129,7 +135,10 @@ fn a_parked_tool_call_is_no_orphan() {
     write_driver_log(ws, DECLINE);
     park(ws, AGENT);
 
-    assert_eq!(build(ws, AGENT, AgentState::Stopped).orphan, Orphan::None);
+    assert_eq!(
+        build_aged(ws, AGENT, AgentState::Stopped).orphan,
+        Orphan::None
+    );
 }
 
 /// A driver at work on the window is filling it, not abandoning it.
@@ -139,6 +148,6 @@ fn a_driven_tool_window_is_never_an_orphan() {
     let ws = dir.path();
     write_tool_window(ws, "001-opus.json");
     for state in [AgentState::Live, AgentState::InFlight] {
-        assert_eq!(build(ws, AGENT, state).orphan, Orphan::None);
+        assert_eq!(build_aged(ws, AGENT, state).orphan, Orphan::None);
     }
 }

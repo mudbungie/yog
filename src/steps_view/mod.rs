@@ -23,7 +23,7 @@
 //! from the git_tree §4.4 terminal classifier, and **token counts** from the
 //! budgets Usage fold — both reused, never duplicated (§15 Y13).
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
@@ -104,13 +104,32 @@ pub struct StepsView {
 /// that one step's unanswered shape is a call in flight, not a wound (§10:
 /// never a false definite). Every other field is a pure read of the step's own
 /// bytes and ignores `state`.
-pub fn build(workspace: &Path, agent_id: &str, state: AgentState) -> StepsView {
+///
+/// `now_unix` and `grace` are the **same rule read once more** (bl-776a):
+/// `state` can only say *a driver is at work* as freshly as the snapshot it
+/// came off, so an unanswered step younger than that reading's own catch-up
+/// latency is equally a call in flight
+/// ([`wound::in_flight_window`]). Judged here, the wound crosses the §8.5
+/// boundary already-judged and no seat re-derives a period of its own.
+pub fn build(
+    workspace: &Path,
+    agent_id: &str,
+    state: AgentState,
+    now_unix: i64,
+    grace: std::time::Duration,
+) -> StepsView {
     let mut steps: Vec<StepSummary> = step_seqs(workspace, agent_id)
         .into_iter()
         .map(|seq| summarize(workspace, agent_id, &seq))
         .collect();
-    if wound::driven(state)
-        && let Some(newest) = steps.last_mut()
+    if let Some(newest) = steps.last_mut()
+        && (wound::driven(state)
+            || wound::in_flight_window(
+                &step_dir(workspace, agent_id, &newest.seq),
+                &newest.wound,
+                now_unix,
+                grace,
+            ))
     {
         newest.wound = Wound::None;
     }
@@ -119,6 +138,15 @@ pub fn build(workspace: &Path, agent_id: &str, state: AgentState) -> StepsView {
         steps,
         orphan: orphan::read(workspace, agent_id, state),
     }
+}
+
+/// [`build`] with **no** §7.2 in-flight window — what every test that is not
+/// *about* that window means by "build". A zero grace excuses nothing, which is
+/// the window's own general path with no waiting left to do rather than a
+/// test-only bypass.
+#[cfg(test)]
+pub(crate) fn build_aged(workspace: &Path, agent_id: &str, state: AgentState) -> StepsView {
+    build(workspace, agent_id, state, 0, std::time::Duration::ZERO)
 }
 
 /// Upgrade every refused step from `Unrouted` to the provider row it failed
@@ -181,8 +209,14 @@ fn step_seqs(workspace: &Path, agent_id: &str) -> Vec<String> {
     seqs
 }
 
+/// One step's own directory — the path arithmetic, in one place, because the
+/// wound's age gate opens the same directory the summary was read from.
+fn step_dir(workspace: &Path, agent_id: &str, seq: &str) -> PathBuf {
+    workspace.join(STEPS_DIR).join(agent_id).join(seq)
+}
+
 fn summarize(workspace: &Path, agent_id: &str, seq: &str) -> StepSummary {
-    let step = workspace.join(STEPS_DIR).join(agent_id).join(seq);
+    let step = step_dir(workspace, agent_id, seq);
     let response = std::fs::read(step.join(RESPONSE_FILE)).unwrap_or_default();
     let meta_bytes = std::fs::read(step.join(META_FILE)).ok();
     let meta = meta_bytes

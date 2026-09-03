@@ -8,7 +8,7 @@ use tempfile::tempdir;
 
 use super::{AGENT, step_dir, write_file};
 use crate::git_tree::{AgentState, Framing};
-use crate::steps_view::build;
+use crate::steps_view::build_aged;
 
 const COMPLETE: &[u8] = br#"{"type":"message_start"}
 {"type":"usage","input_tokens":10,"output_tokens":5}
@@ -42,7 +42,7 @@ fn build_summarizes_steps_in_order_reusing_framing_attempts_tokens() {
     std::fs::create_dir_all(step_dir(ws, "notaseq")).unwrap();
     std::fs::write(ws.join("steps").join(AGENT).join("006"), b"x").unwrap();
 
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     let seqs: Vec<&str> = view.steps.iter().map(|s| s.seq.as_str()).collect();
     assert_eq!(seqs, vec!["001", "002", "003"]);
 
@@ -68,7 +68,7 @@ fn build_flags_auth_shaped_step_failures_for_the_login_affordance() {
     write_file(ws, "001", "response.json", COMPLETE);
     write_file(ws, "002", "response.json", FAILED); // a generic failure
     write_file(ws, "003", "response.json", AUTH_FAILED); // a 401 auth failure
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     // Only the auth-shaped failure carries the Login affordance (§8.3 detection):
     // a complete step and a non-auth failure do not.
     assert!(!view.steps[0].auth_failed().offered());
@@ -80,7 +80,7 @@ fn build_flags_auth_shaped_step_failures_for_the_login_affordance() {
 fn build_missing_tree_is_empty() {
     let dir = tempdir().unwrap();
     assert_eq!(
-        build(dir.path(), AGENT, AgentState::Stopped).steps,
+        build_aged(dir.path(), AGENT, AgentState::Stopped).steps,
         Vec::new()
     );
 }
@@ -91,7 +91,7 @@ fn build_forgiving_when_meta_is_malformed_or_absent() {
     let ws = dir.path();
     write_file(ws, "001", "response.json", COMPLETE);
     write_file(ws, "001", "meta.json", b"not json at all");
-    let view = build(ws, AGENT, AgentState::Stopped);
+    let view = build_aged(ws, AGENT, AgentState::Stopped);
     // Malformed meta → all meta-derived fields absent, framing still read.
     assert_eq!(view.steps[0].commit, None);
     assert_eq!(view.steps[0].started_at, None);
@@ -126,7 +126,7 @@ fn an_auth_failed_step_names_the_row_its_governing_config_binds() {
     step("001", COMPLETE, Some("claude-sonnet-5"));
     step("002", AUTH_FAILED, Some("claude-sonnet-5"));
 
-    let view = build(&fx.path, CONV, AgentState::Stopped);
+    let view = build_aged(&fx.path, CONV, AgentState::Stopped);
     // A healthy step is never routed — there is nothing to log in to.
     assert_eq!(view.steps[0].auth_failed(), AuthFailure::No);
     // The failing one names the row TEMPLATE_PROVIDERS binds claude-sonnet-5 to.
@@ -165,7 +165,7 @@ fn an_unroutable_auth_failure_still_offers_the_affordance() {
     step("003", Some(br#"{"max_tokens":4096}"#));
     step("004", Some(br#"{"model":"gpt-5.6-sol"}"#));
 
-    let view = build(&fx.path, CONV, AgentState::Stopped);
+    let view = build_aged(&fx.path, CONV, AgentState::Stopped);
     for step in &view.steps {
         assert_eq!(
             step.auth_failed(),

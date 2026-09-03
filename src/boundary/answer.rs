@@ -136,7 +136,9 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // so no seat but the window could read a chat. World-bytes queries
         // like the two above, answered straight through for the same reason,
         // over the derivations in [`inspector`] the frame delegates to.
-        Query::Transcript { .. } => Reply::Transcript(inspector::transcript(snap, ws, agent)),
+        Query::Transcript { .. } => {
+            Reply::Transcript(inspector::transcript(snap, ws, agent, now_unix))
+        }
         // The follow lane's read, answered **once** (REMOTE §3, bl-73e7): this
         // is the chokepoint every intake shares, and most intakes cannot hold a
         // connection open — so what they get is the tail as of now, which is
@@ -151,7 +153,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // of now, and the intake that can hold a connection drives
         // `login::Lane`, whose frames come off this same buffer.
         Query::LoginTail { provider, .. } => login::standing(deps, ws, provider),
-        Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent)),
+        Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent, now_unix)),
         Query::Step { seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
         // The listing, plus **where this conversation's work actually lands**
         // when that is not the worktree the listing walked (bl-1015): a path
@@ -167,8 +169,8 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
             }
         }
         Query::Rail { .. } => {
-            let steps = inspector::steps(snap, ws, agent);
-            let tx = inspector::transcript(snap, ws, agent);
+            let steps = inspector::steps(snap, ws, agent, now_unix);
+            let tx = inspector::transcript(snap, ws, agent, now_unix);
             Reply::Rail(inspector::rail(snap, ws, agent, &steps, &tx))
         }
         Query::Inbox { .. } => Reply::Inbox(crate::inboxview::list_inbox(ws, agent)),

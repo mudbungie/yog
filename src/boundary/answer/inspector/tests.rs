@@ -16,6 +16,10 @@ use crate::boundary::tests::{agent, snapshot};
 use crate::git_tree::{AgentState, Stream};
 use tempfile::TempDir;
 
+/// A caller's clock long past any step these tests write — the §7.2 in-flight
+/// window (bl-776a) has elapsed, so a wound the world holds is stated.
+const AFTER_THE_WINDOW: i64 = 4_000_000_000;
+
 const AGENT: &str = "c-1";
 const CHILD: &str = "c-1-w-1";
 
@@ -47,7 +51,7 @@ fn the_live_tail_is_folded_only_while_a_call_is_in_flight() {
     let dir = world();
     let (ws, other) = (dir.path(), Path::new("/nowhere"));
     let flying = snap_at(ws, AgentState::InFlight);
-    let tail = transcript(&flying, ws, AGENT);
+    let tail = transcript(&flying, ws, AGENT, AFTER_THE_WINDOW);
     assert_eq!(tail.entries.len(), 2, "the committed half plus the tail");
     assert_eq!(
         tail.entries[1].kind,
@@ -65,7 +69,7 @@ fn the_live_tail_is_folded_only_while_a_call_is_in_flight() {
     ] {
         assert!(live_tail(&snap, at, agent_id).is_none());
         assert_eq!(
-            transcript(&snap, at, agent_id),
+            transcript(&snap, at, agent_id, AFTER_THE_WINDOW),
             crate::transcript::build(at, agent_id),
             "nothing beyond the committed half"
         );
@@ -82,15 +86,26 @@ fn the_steps_read_their_liveness_off_the_snapshot() {
     let step = ws.join("steps").join(AGENT).join("001");
     std::fs::create_dir_all(&step).unwrap();
     std::fs::write(step.join("response.json"), b"").unwrap();
-    let driven = steps(&snap_at(ws, AgentState::Live), ws, AGENT);
+    let driven = steps(&snap_at(ws, AgentState::Live), ws, AGENT, AFTER_THE_WINDOW);
     assert_eq!(driven.steps.len(), 1);
     assert!(!driven.steps[0].wound.wounded(), "a driver is filling it");
-    let abandoned = steps(&snap_at(ws, AgentState::Stopped), ws, AGENT);
+    let abandoned = steps(
+        &snap_at(ws, AgentState::Stopped),
+        ws,
+        AGENT,
+        AFTER_THE_WINDOW,
+    );
     assert!(abandoned.steps[0].wound.wounded(), "nobody is driving it");
     // An agent the snapshot never carried reads as stopped, which is what an
     // untracked tree's newest step honestly is.
     assert!(
-        steps(&snap_at(Path::new("/nowhere"), AgentState::Live), ws, AGENT).steps[0]
+        steps(
+            &snap_at(Path::new("/nowhere"), AgentState::Live),
+            ws,
+            AGENT,
+            AFTER_THE_WINDOW,
+        )
+        .steps[0]
             .wound
             .wounded()
     );
@@ -176,7 +191,10 @@ fn the_rail_gathers_its_children_off_the_snapshot() {
         ],
         vec![],
     );
-    let (view, tx) = (steps(&snap, ws, AGENT), transcript(&snap, ws, AGENT));
+    let (view, tx) = (
+        steps(&snap, ws, AGENT, AFTER_THE_WINDOW),
+        transcript(&snap, ws, AGENT, AFTER_THE_WINDOW),
+    );
     let spine = rail(&snap, ws, AGENT, &view, &tx);
     assert!(spine.notches.is_empty(), "no steps on disk, no notches");
     // A workspace the snapshot does not carry gathers nothing at all — the
