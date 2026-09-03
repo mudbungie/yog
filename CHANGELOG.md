@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.34](https://github.com/mudbungie/yog/compare/v0.0.33...v0.0.34) - 2026-09-03
+
+### Changes
+
+- python joins the engine-act set, the re-exec target answers litany's invoke verb, and routed spawns carry LITANY_TOOL_ID [bl-fe43]
+- the login spawn's own doc names wall::pairs, but the flow read moved it to one wall::env lens [bl-4911]
+
 ## [0.0.33](https://github.com/mudbungie/yog/compare/v0.0.32...v0.0.33) - 2026-09-03
 
 ### Changes
