@@ -22,6 +22,7 @@
           },
           "pending": 2,
           "preview": "p",
+          "says": "parked a tool invocation for your answer; has mail queued and no driver taking it; was flagged for a look, with a reason",
           "signals": [
             "held",
             "mail",
@@ -40,6 +41,7 @@
           "held": null,
           "pending": 0,
           "preview": "",
+          "says": "",
           "signals": [],
           "state": "live",
           "uncertain": true,
@@ -56,6 +58,6 @@
       "workspace": "ws"
     }
   ],
-  "protocol": 8,
+  "protocol": 11,
   "shape": "acknowledged"
 }

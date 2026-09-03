@@ -84,14 +84,21 @@ pub enum AttentionKind {
 
 impl AttentionKind {
     /// The rule in words — why this signal is asking (§6). The **one** home for
-    /// that sentence, so the seats that state it rather than badge it (the
-    /// bl-e160 desktop alert today) cannot word the same rule two ways. Written
-    /// as a clause that completes *"this conversation …"*, since every seat that
-    /// spends it has already named the conversation.
+    /// that sentence, so the seats that state it rather than badge it cannot
+    /// word the same rule two ways. Written as a clause that completes *"this
+    /// conversation …"*, since every seat that spends it has already named the
+    /// conversation.
+    ///
+    /// **Its carrier is the queue row's `says`** (bl-09ef,
+    /// [`boundary::reply`](crate::boundary::reply)): the announcing is a
+    /// seat's — a desktop notification belongs on the box the operator is
+    /// looking at — so the sentence crosses the §8.5 boundary beside the
+    /// signal tokens rather than being re-worded at each seat. The engine-side
+    /// `notify-send` fold that used to spend it went with the frame.
     ///
     /// `pub(crate)` per AGENTS.md rule 2: an internal accessor is demoted
     /// rather than cloned to own — the sentence is a `'static` literal and its
-    /// only consumer is in-crate ([`crate::alert`]).
+    /// only consumer is the row encoder.
     pub(crate) fn says(self) -> &'static str {
         match self {
             Self::Notify => "raised a notify mark",

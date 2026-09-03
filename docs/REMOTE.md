@@ -1680,7 +1680,7 @@ Which document owns which key:
 | Document | Keys | Why |
 |---|---|---|
 | world (`ui.json`) | `seen`, `pinned`, `identity_last_used`, `ceiling`, `prices` | assertions about the world, or operator policy over it. `identity_last_used` is the §3.2 name the operator last claimed a ball under — a thing they did to the world, and two seats claiming under different names is worse than converging. §10 keeps *whether a pin is a world or a pane fact* open; §7's default to world is kept. |
-| pane (`pane.json`) | `panels`, `collapsed`, `zoom`, the two transcript-density knobs, `notify_unfocused` | how one piece of glass is arranged. A phone that puts the roster away must not put it away on the desktop; a desktop notifier is a fact about a desktop. |
+| pane (`pane.json`) | `panels`, `collapsed`, `zoom`, the two transcript-density knobs | how one piece of glass is arranged. A phone that puts the roster away must not put it away on the desktop. (`notify_unfocused` was here and is not: a desktop notifier is a fact about a desktop, and the announcing is the seat's — DESIGN §6 as ruled by bl-09ef.) |
 
 **The local window is a client called `yog-window`** (§4.1 as narrowed by
 bl-ae05), and that is the whole of its spelling: it presents a certificate
@@ -3079,10 +3079,15 @@ synchronously* — is empty now, and neither half needed a mechanism.
   than the frame's, and the focus gate is read on the frame the answer lands.
   A window buried and re-focused inside one ask period folds once instead of
   thirty times, which is a difference no difference detector can feel.
-  Its witness is **both directions** (`shell/acceptance/alerts.rs`), because the
+  Its witness was **both directions** (`shell/acceptance/alerts.rs`), because the
   positive one alone would have passed against a seat that never asked: each
-  test seeds the baseline with an empty fold first, since with no prior
-  observation `announce` returns nothing whatever the frames did.
+  test seeded the baseline with an empty fold first, since with no prior
+  observation `announce` returned nothing whatever the frames did. **The fold
+  itself is gone** (bl-09ef): the rule above is a seat's to keep, because the
+  announcing is — a notification belongs on the box the operator is looking at.
+  What this engine keeps is the wording (`AttentionKind::says`, carried on the
+  queue row's `says` key) and the change signal the baseline is differenced
+  against (the §14.1 attention lane).
 - The **§9 config family** was smaller than the audit read it as, and that is
   worth recording rather than quietly acting on. Of the five queries the audit
   named (`ReadConfig`, `Lineages`, `Models`, `Providers`, `Marks`) exactly

@@ -1833,8 +1833,7 @@ mechanics.
   "transcript_expand_responses": true,
   "transcript_expand_others": false,
   "zoom": 1.0,
-  "panels": { "conversations": 260, "activity_trail": 200, "start_goal": 240 },
-  "notify_unfocused": true
+  "panels": { "conversations": 260, "activity_trail": 200, "start_goal": 240 }
 }
 ```
 
@@ -1886,17 +1885,6 @@ mechanics.
   clones are now hidden unconditionally, so no key backs the view and none is
   read: a stale `"show_internal"` in an existing `ui.json` round-trips as an
   unknown key and means nothing. See §5.1 #1 for the ruling.
-- **`notify_unfocused`** — the §6 desktop escalation (bl-e160): may a seat
-  that is not being looked at tell the desktop that something new needs the
-  operator? Default `true` — the strip is invisible exactly when the operator
-  needs it, so a notifier off until you find its switch is a feature nobody
-  has. The severability test in one line: delete the key and the default
-  returns, set it `false` and the behaviour is gone, and no code path knows
-  either way. **The behaviour it governs currently reaches nothing** — it is a
-  pane fact no reply carries, and `src/alert/` derives an announcement no
-  caller spends (bl-09ef). The key is a pane fact rather than a world one
-  because whether *this* glass may raise a notification is that glass's
-  question.
 - **`transcript_expand_responses` / `transcript_expand_others`** — the §11
   transcript-density automatics: which row classes arrive expanded (defaults
   `true` / `false`, the operator's ruling — the conversation open, the
@@ -2560,21 +2548,33 @@ state rather than a gesture (bl-aa1f above): with rule 2 firing on every rest, a
 one-shot ack would raise the flag on the conversation the operator is actively
 driving at each of its turn-ends.
 
-**Attention escalates to the desktop when nobody is looking at a seat (bl-e160,
-and see bl-09ef).** §6 is yog's core promise — *does anything need me?* — and
-it answers only where somebody is reading an answer, which is precisely not
-when it matters. So when a new thing needs the operator **and no seat is being
-looked at**, the desktop is told: one notification per conversation, naming its
-workspace wall, its §3.3 display name, and the firing rules in words
-(`AttentionKind::says`, the one home for that sentence).
+**Attention escalates to the desktop, and the escalating is a seat's
+(bl-e160, ruled bl-09ef).** §6 is yog's core promise — *does anything need me?*
+— and it answers only where somebody is reading an answer, which is precisely
+not when it matters. So when a new thing needs the operator and no seat is
+being looked at, the desktop is told: one notification per conversation, naming
+its workspace wall, its §3.3 display name, and the firing rules in words.
 
-*Nothing new is modelled.* An alert is a projection of the §8.5 decision queue
-(`boundary::answer::queue`) — already "what needs you" made addressable — so the
-number a seat states and the ask the desktop names cannot diverge, and the
-acknowledgement that empties one empties the other. **No sixth signal, no ref,
-no `ui.json` `seen` key, no verb.** An alert is *output*: it writes nothing, so
-I7 stands and `ops.jsonl` (§4.2, the log of what yog did to the world) gains no
-row — including on failure.
+**Whose desktop is not a question yog may answer, so yog does not raise it.** A
+notification belongs on the box the operator is looking at, which is wherever
+the *seat* is (REMOTE §12) and never the engine box — a headless engine on
+another machine announcing to its own session tells nobody. `src/alert/`
+derived the announcement here and spawned `notify-send` here, with no caller
+since the frame left; it is **deleted** (bl-09ef), and with it the §4.1
+`notify_unfocused` key, which is a fact about one pane of glass and therefore a
+seat's own to store.
+
+*Nothing new is modelled, and one wording crosses.* An alert is a projection of
+the §8.5 decision queue (`boundary::answer::queue`) — already "what needs you"
+made addressable — so the number a seat states and the ask a desktop names
+cannot diverge, and the acknowledgement that empties one empties the other. The
+sentence stays yog's: **`AttentionKind::says` is the one home for each rule in
+words, and it crosses on the queue row's `says` key** beside the signal tokens
+(`boundary::reply::queue`), so a seat announces with the engine's wording
+rather than inventing a second one — the drift this document exists to stop.
+**No sixth signal, no ref, no `ui.json` `seen` key, no verb.** An announcement
+is *output*: it writes nothing, so I7 stands and `ops.jsonl` (§4.2, the log of
+what yog did to the world) gains no row — including on failure.
 
 *What counts as new is the row's own sentence.* A conversation is announced once
 per **set of firing rules**, not once per observation and not once per rule: a
@@ -2585,54 +2585,42 @@ acknowledgement that already exists, since a row leaves the queue exactly when
 `/seen` is spent on it. A ref that moves puts the row back and so re-announces
 for free (§4.1's "a moved ref re-notifies", one layer out).
 
-*The baseline is per seat, and it advances only on an observation that was
-told something.* What has been announced is a **difference against the queue as
-this seat last saw it** — never a stored fact, because two seats each own theirs
-and neither should converge. Two rules fall out and both are load-bearing: a
-seat that has just opened has witnessed no *arrival*, so its first read is its
-baseline and says nothing (the general path with no prior observation, not a
-first-run branch); and **an unanswered ask is not a reading of the queue**, so a
-refusal or a dropped connection advances nothing — folding an empty answer would
-read as everything departing and then, on the next answer, as everything
-arriving at once, which is the first-boot flood re-armed at the ask cadence.
-
-**The queue crosses; the announcing does not (bl-09ef).**
-`src/alert/{mod,send}.rs` holds the projection and the one `notify-send` spawn,
-and nothing in this crate calls either: the fold ran on the frame, gated on the
-window's own focus, and the frame is the seat crate's. What the far side now
-has is more than a poll — **the attention lane** (REMOTE §14.1, bl-09aa,
-`src/boundary/attend.rs`) answers `Query::Attention` as a *sequence*: the
+*The baseline is the seat's, and yog hands it the arrival signal.* What has been
+announced is a **difference against the queue as this seat last saw it** — never
+a stored fact, because two seats each own theirs and neither should converge.
+The difference is cheap because the far side is handed changes rather than
+polling for them: **the attention lane** (REMOTE §14.1, bl-09aa,
+`src/boundary/attend.rs`) answers `Query::Attention` as a *sequence* — the
 answer as of connect, then a frame whenever the answer under that asker's scope
 **changes**, with row ages zeroed for the comparison so a clock reading is never
-mistaken for news. That is precisely the arrival signal the baseline above is
-computed against, and it makes the differencing a seat's one set operation over
-frames it is handed rather than a poll it has to run. What is still unanswered
-is the *announcement*: the sentence (`AttentionKind::says`) is derived here and
-crosses on the queue row, but nothing decides whose desktop hears it, and the
-spawn sits with no caller. The derivation is kept rather than deleted because
-that wording is the one home §6 depends on, and inventing a second one at a seat
-is the drift this document exists to stop.
+mistaken for news. Two rules fall out and both are load-bearing: a seat that has
+just opened has witnessed no *arrival*, so its first frame is its baseline and
+says nothing (the general path with no prior observation, not a first-run
+branch); and **an unanswered ask is not a reading of the queue**, so a dropped
+lane advances nothing — folding an empty answer would read as everything
+departing and then, on the next frame, as everything arriving at once, which is
+the first-boot flood re-armed at the ask cadence.
 
-*The mechanism, wherever it is reconnected, is a spawned binary and had to be.*
-AGENTS.md rule 6 forbids a new dependency, and every Rust crate that raises a
-freedesktop notification (`notify-rust` and its `zbus`/`dbus` stack) is one. The
-spec's own reference client is a binary every desktop already ships —
-libnotify's `notify-send` — and yog is a program whose substrate is spawned
-binaries, so this is the discipline it already has pointed one process further
-out. It is spawned **bare** (`git_env::command`, not `Cli`): the notifier is the
-operator's desktop session reached through the session-bus address the process
-inherited, not substrate, so the §16.2 world fold must not ride it. Nothing
-waits on it — the spawn and its wait go to a thread of their own — and every
-failure, an absent notifier included, is **silent**: a desktop that cannot take
-a notification is not an event, and the feature degrades to the world before it
-existed. Which box's desktop that is is exactly the question bl-09ef must
-answer, and is why "yog spawns it" is not the foregone shape.
+*The mechanism at the seat is a spawned binary, and had to be.* AGENTS.md rule
+6 forbids a new dependency, and every Rust crate that raises a freedesktop
+notification (`notify-rust` and its `zbus`/`dbus` stack) is one. The spec's own
+reference client is a binary every desktop already ships — libnotify's
+`notify-send` — and this suite's substrate is spawned binaries, so it is the
+discipline already in hand pointed one process further out. It is spawned
+**bare** (the notifier is the operator's desktop session reached through the
+session-bus address the process inherited, not substrate, so the §16.2 world
+fold must not ride it), nothing waits on it, and every failure — an absent
+notifier included — is **silent**: a desktop that cannot take a notification is
+not an event, and the feature degrades to the world before it existed. All of
+that is now the seat crate's to hold, and this paragraph records the ruling it
+inherits rather than a mechanism standing here.
 
-*Severable in one key* (§4.1 `notify_unfocused`, default `true`). Deleting the
-key restores the default; setting it `false` deletes the behaviour without
-touching a line of code. Armed by default because a notifier that is off until
-you find its switch is a feature nobody has — and this one is the operator's own
-request.
+*Severable at the seat, in the same one key.* `notify_unfocused` is the switch —
+absent, the escalation is armed, because the attention answer is invisible
+exactly when the operator is not reading it and a notifier that is off until you
+find its switch is a feature nobody has. It is a **glass** fact: whether *this*
+pane may raise a notification is that pane's question, so it lives wherever that
+seat keeps its own local state (bl-f936) and never in a yog document.
 
 **What the ruling accepts, and must not "fix".** (1) **First-boot flood** — on
 upgrade every parked conversation with an unstamped tip stirs at once; the `⏭`
@@ -4869,8 +4857,11 @@ variants carry it, and everything else it needs already existed:
   key walked until bl-fa82 made stepping a seat's over the rows it is showing;
   the queue and any jump still share this one build, each row
   carrying its address (`workspace` + `agent`, spelled with the keys the
-  gestures take), its display name, its state, which signals fire, what it last
-  said, its age and its pending-mail count. Per **agent**, not per conversation
+  gestures take), its display name, its state, which signals fire **and what
+  they say** (`says` — the firing rules in words, from `AttentionKind::says`,
+  the one home for that sentence, so a seat that announces one announces this
+  engine's wording; bl-09ef), what it last said, its age and its pending-mail
+  count. Per **agent**, not per conversation
   root: the strip counts agents and the ↓ key lands on agents, so a child that
   raised its hand is a row of its own. It is not a second model of "what needs
   you" — `answer::queue::roster` is the flattened roster `app::focus` steps
@@ -7078,12 +7069,14 @@ narration (a ruling stated in the tense it was made) or the wire's own sense of
 instead rather than describing what left — §7.2's pending echo and raise claim,
 §3.4's focus claim and held sends, §5.3's whitelist, §9's editor panes.
 
-**Six facts had no boundary spelling, and each is filed rather than fixed
-here** — the sweep's real product, since a doc pass may not add a surface:
+**Six facts had no boundary spelling, and each was filed rather than fixed
+here** — the sweep's real product, since a doc pass may not add a surface. Each
+row below carries its ball, and a struck row is one that has since been
+answered:
 
 | Fact | Ball |
 |---|---|
-| the §6 desktop escalation: `src/alert/` derives an announcement no caller spends and no reply carries | bl-09ef |
+| ~~the §6 desktop escalation: `src/alert/` derives an announcement no caller spends and no reply carries~~ — closed (bl-09ef): **deleted**, not wired. The announcing is a seat's — a notification belongs on the box the operator is looking at — so what crosses is the wording (`AttentionKind::says`, on every queue row's `says` key) rather than the act | bl-09ef |
 | seat-shaped derivations still in this crate with no carrier and no caller — drafts, the §3.3 name preview, the fork composer, `science::{compose,respdiff}`, the §8.1 start gate | bl-7cc8, **landed**: deleted. The §8.2 `enabled` predicates were the sweep's one dead premise — three of them DO cross, as `nudgeable`/`stoppable`/`stop_children` on the §8.5 agent answer — so only the one with no carrier (the message gate's composer-text half) went with them |
 | the derived cadence periods a seat must honour, `wound_grace` first among them | bl-776a |
 | ~~the §7.3 failure alarm: `Query::Ops` answers raw rows and every classification stays server-side~~ — closed (bl-4d81): the rows carry `failed`, `exit_label` and `standing` | bl-4d81 |
@@ -7157,7 +7150,6 @@ that named one of its files; the rule it taught is not.)
 | `src/actions/{mod,enabled}.rs` | the action root (ARCH §3.4/§3.5): whether there is anything to fire at all, with `enabled` the §8.2 predicates over a selection, each refusing exactly what the underlying verb would. Pure, and the verbs themselves live in `verbs` (§8.2). **`enabled` does cross** — `nudge_enabled`, `stop_enabled` and `stop_children_offered` are the §8.5 agent answer's `nudgeable`/`stoppable`/`stop_children`, so the seat is told rather than asked to re-derive. The message gate's other half went the other way (bl-7cc8): its content test is a composer's text, so the conjunction is the seat's and this crate states only `present`. **The seat's own RAM left with the face** (bl-7942, deleted bl-7cc8): the composer drafts keyed by target (§5.3), the `ActionsState` that held them beside the selection and the birth-config box, and the clean-send predicate that cleared one |
 | `src/actions/verbs{,/balls,/balls/verb,/balls/edit,/bound}.rs` | the §8.2 verb dispatchers + opslog wiring, cut on the table's own seam when the V2 attempt joined it (bl-dc0c): `verbs` the litany family — message, the attempt's `dispatch`, stop, scan, and the §9.4 `retarget` change-of-lineage (bl-2d19, re-scoped bl-e654) — acting on a conversation in a workspace; `balls` the `bl` family, acting on a ball in a project and stamped `--as` its §3.2 claimant to a verb; `balls/verb` **the family's carrier** (bl-92d3) — the one `Verb` the §8.5 roster holds a single row of, split off `balls` at the pre-split band on the seam the family already has: the parent spends an argv, this is the intent the boundary carries to it, and it is where `Action::Ball`'s address answer lives so the project table reads one arm instead of five; `balls/edit` **what a create/update carries** (bl-dbde), split at the budget on the seam `balls`' own doc draws: the verbs act on a ball in a project, this is what a ball is made of, and only the second grows every time balls learns a field — the boundary carries these types WHOLE, so the roster, the codec and the executor read one vocabulary rather than three copies bridged by an `of` constructor; `bound` the workspace-bound spawn seam every litany verb takes (§8.2's workspace-bound rider, bl-bf79) — one fold laying the wall and the name, so the family owes no per-verb decision |
 | `src/actions/verbs/dispatch.rs` | the dispatch + `ops.jsonl` logging core beneath the short verbs (§8.2, §4.2 as amended): every attempted action leaves a durable ops line, a spawn failure logging a synthetic one, so no error class is un-logged (§7.3) |
-| `src/alert/{mod,send}.rs` | §6 as amended (bl-e160) — attention escalated to the desktop. `mod` is the whole decision, pure: a §8.5 queue row projected to the sentence a notification shows, the per-seat baseline of what has already been said, and the two gates (nobody looking, the §4.1 knob) that silence the announcing while the baseline advances regardless. `send` is the one spawn — libnotify's `notify-send` through the bare `git_env::command` constructor (not `Cli`: the desktop is not substrate and must not take the §16.2 world fold). **Neither half has a production caller and no reply carries an alert** (bl-09ef): the fold ran on the frame and the frame is the seat crate's. The *change* signal it wants does now cross — `boundary::attend`'s lane frames the queue whenever it moves — so what is open is whose desktop hears it, not how a seat learns something arrived |
 | `src/app/{mod,roots,view,boot}.rs` | `AppModel` — **what the engine holds between passes** (§7.2): the published snapshot, the ui-state handle, the dirty set, the injected clock. It was *what a frame owns* until bl-7942, and the fields that left were all one seat's — the focus and every accessor over it, the optimistic echo folded over the derivation, the window's wire channels, its follow lane and its act path. `view` is what may be **read** off one and nothing that changes one, every query over `snap` alone; `roots` the boot-time fold of the composed world and the four derived paths every root read goes through (bl-3f46); `ops` the two operator *writes* to the trail — the ack and the clear verb (§4.2 as amended, bl-c417); and `boot` the model's **founding and its one outbound signal**, split off the root at this section's budget on the seam that root's own doc draws — the root declares what the model owns, `boot` is how one is brought into being (the `Deriver` built and handed back as a pair, the first derivation taken synchronously so the engine answers real content from its first gesture) with `mark_dirty` beside it as the **only** way anything reaches the worker, so the root keeps carrying no coverable `impl` header |
 | `src/app/balls.rs` | the engine's read of the live `bl` projection — the ops tail and the two post-verb dirty marks (§5.1, §7.2); the §3.4/§8.1 start hand-off. **The §3.2/§3.5 read half is gone** (REMOTE §9.7, bl-b4b5): `ws_balls`/`roster_ball_rows`/`bound_ball` and the whole `spend.rs` beside them folded the window's own join and bills on the paint thread; one workspace-addressed `Query::WorkspaceBalls` answers the listing *with* each ball's figure, and the roster's partition and the ▶ Continue row's object are pure selections out of it (`nav::balls`). `targets.rs` emptied out when the ball Move was retired (bl-6c28). The §7.3 standing-failure query per origin — `last_failure`, and `opslog::SurfaceFailure` beside it — was deleted here by bl-4d81: it had no production caller after the severance, and the answer now carries each row's own `standing`, so a banner is a filter over `Query::Ops` rather than a second derivation |
 | `src/app/cadence.rs` | the clock's periods (§7.2, bl-3381): the `Cadence` value, its `cadence.yaml` grammar (total parse, shared bounds), and the derived periods (wound grace, late pass, staleness) |
@@ -7166,7 +7158,7 @@ that named one of its files; the rule it taught is not.)
 | `src/app/drift.rs` | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |
 | `src/app/grace.rs` | the §7.3 wound alarm's grace window (bl-90bf): the age gate over the injected clock, so a wound that heals inside the rising edge's own latency (`Cadence::wound_grace`, re-sized to all four of its legs in bl-18e8) is never announced. **No production caller since bl-7942** — holding an alarm until it has persisted is the seat's, and the period it needs crosses no boundary (bl-776a) |
 | `src/app/snapshot{,/names,/scope}.rs` | the published derivation every answer is a filter over, its age, the per-conversation branch-growth diff (§7.2), the per-workspace `steps/` fold every spend figure filters (§3.5, bl-9dd4), and the `models.yaml` context windows every fullness figure divides by (§5.1 #35, bl-a48b); `names` is the boundary's addressing read off it in **both** directions (REMOTE §8, bl-f5f6), so the two cannot disagree about what a name means — with `armed_path` beside the two enumerated round trips since bl-ef16, the §4.3 arming table's own one: `fleet::Facts` crosses as the §3.1 name like every other addressed row, the pilot needs the directory to spawn into, and the resolution reads `cadence.yaml`'s keys rather than the §3.1 enumeration because an entry arms a directory verbatim and may name a workspace the enumeration has not reached — **plus `addressable`** — which sets that addressing reads at the intake (bl-6c9e, both nouns since bl-3377): the live §3.1 workspace enumeration and the §5.1 #1 project one in place of the derivation's cached copies, `Arc` in and out so an unchanged set is handed straight back, which is what makes a workspace's or a project's birth a barrier for the gesture after it (§8.5); `scope` is the REMOTE §4 narrowing to one client's registered workspaces (bl-8bbc) — **one** filter over every workspace-keyed field, which is what makes an unregistered workspace ABSENT rather than forbidden: the roster simply does not list it and the resolver refuses it in the identical bytes a name nobody founded earns. *One* filter is the whole point and it must stay literally one: the §4.3 `fleet` map got a second predicate of its own on the belief that its key was a leaf, and because the key is the `cadence.yaml` entry — a **path** — that predicate was total, dropping every armed loop from every scoped snapshot while the loop went on acting (bl-8bf6). Every field here reads `keep`, and the fixture is keyed as the worker publishes it |
-| `src/attention/{mod,roster}.rs` | the §6 attention flag: the ack state machine (incl. `evidence` — the **one** definition of what an acknowledgement writes, spent by the §8.5 `seen` action and by nothing else since bl-7942 took the focus tick, and naming neither of the two signals no watermark may answer: mail, and the §8.6 park) and `AttentionKind::says`, the one home for each rule **in words** (which the bl-e160 desktop alert would state, when it has a carrier — bl-09ef); the per-conversation roster it is raised against |
+| `src/attention/{mod,roster}.rs` | the §6 attention flag: the ack state machine (incl. `evidence` — the **one** definition of what an acknowledgement writes, spent by the §8.5 `seen` action and by nothing else since bl-7942 took the focus tick, and naming neither of the two signals no watermark may answer: mail, and the §8.6 park) and `AttentionKind::says`, the one home for each rule **in words**, carried to the seats that announce them on the queue row's `says` key (bl-09ef); the per-conversation roster it is raised against |
 | `src/badge.rs` | **what a derived row says in words** (§11, retired): a glyph and the fact it stands for, together, in one home per fact — [`op_badge`] over the ops trail's outcomes, [`tool_result_badge`] over a tool result's one flag, each total over its subject so a new outcome cannot ship wordless. It is what a **server** keeps of the congeries palette (bl-7942): the hues, the visuals, the fonts and the application mark were statements about how a face paints and went with the face, while the WORDS are a derived row's own content and cross the boundary inside the row |
 | `src/binding/mod.rs` | names-root enumeration (§3.1), claimant join (§3.2), worktree formula, workspace classification |
 | `src/board/{mod,rows,rollup}.rs` | the V4 board (§11, VISION §5 V4): the four columns as balls' ladder crossed with its close-gate predicate, and the whole board built pure over one snapshot — its rows, and (bl-66fb) the facts of any §4.3 loop armed over them, empty in every unarmed world; one row's gate, drones and figure; the epic rollup that crosses workspaces, one slice apiece |
@@ -7291,7 +7283,7 @@ that named one of its files; the rule it taught is not.)
 | `src/tool_host/subject/refusal.rs` | **what a landing on a refusing rung says** (bl-68e1), split from the lane because it answers a different question than `verdict` does: which rung, versus what the model reads. Two zero-consent shapes (nothing advertises the name; machines advertise it and none consents) and the config ambiguity, each naming the operator's edit by key, file and box. Both zero-consent shapes close on `NOT_A_REMEDY`, the one home of the sentence that the loaded lane is **not** a way to do this work — a loaded invocation carries no directory (REMOTE §5's locality-rides-in-the-name), so it runs in the far process's inherited directory, and nothing this conversation can read would show what it wrote there. The old sentences offered that load first, as the remedy the model could take unaided, and a drive took it: the whole deliverable landed in the foot's inherited directory, every self-check was made in the same wrong place so none could fail, and the conversation reported success over an empty bound directory |
 | `src/transcript/{mod,read,tail,compaction,parse,wire,wire/decode}.rs` | the **committed** transcript's enumeration — `read` the directory walk itself, split off at the budget when the follow lane made the two clocks load-bearing (bl-73e7): what a transcript *is* and what it projects is `mod`, and the disk read that produces one is its own file. `tail` is the two virtual **trailing** entries and the folds that seat them (bl-015b, split off at this section's budget): the live streaming tail, and the **settled-failure notice** — the §7.3 wound as a row, so a conversation refused at its first model call stops answering a user message and nothing else. They are one move made twice and `compaction`'s marker is the third; each fold **replaces** its own kind of tail through one shared strip, so neither can forget the rule. The live tail is still the caller's fold (§7.2 bl-54f7), and `with_live` **replaces** a live entry rather than appending beside one, so the pull answer's tail and the follow lane's newer one reconcile by newest-wins and cannot state the answer twice (over the seat's own accumulation since bl-3655, a follow frame being an append rather than the whole answer — §7.2), forgiving parsers, the §11 row vocabulary (classes, tones, roles — bl-3acb — and the auto-state rule incl. the in-flight input), `compaction` — the one reader of what the compactor **deleted** and of the `summary/` prose that replaced it (bl-7bd2), a query over the `NNN` counter splicing a virtual marker into every hole, cut out of `mod` because it is the only part of the enumeration that reads a directory `messages/` is not and the only one whose ruling is about what the bytes CANNOT say (no summary-to-span link exists, so none is guessed) — and — cut at that seam when the §3.3 sender label landed (bl-2335) — the entry→rows projection with the labels and roles, over `project/build`'s row constructor and preview/body split (bl-54f7's own cut: *what an entry becomes* vs *what a row is made of*), with `project/compacted` the one arm of that match which projects a **hole** rather than something somebody said or a tool answered — split off at this section's budget on that same seam (bl-3b22), and the row altitude of `compaction`'s own enumeration, so the two halves of one subject sit one per file rather than one per subsystem, then the §11 turn rollup over it (bl-1f21: the turn boundary, the aggregate line, what a shut turn omits), with `turns/counts` split off at the cap on the seam between deciding *where a turn is* and saying *what it contained*, the fold with the role marker at every row's edge and the bl-7654 payload rule stated at the row rather than inherited (the expanded body and the Raw view wrap; the chrome and an abridged preview truncate), cut at this section's budget into the scrolling list and where the spine's rules fall in it, over the row projection — the chrome line, the fold state, the inline preview and the expanded body, which is the very seam the projection above is cut along (bl-3b22), and `spine` — the step spine threaded *through* the chat (bl-1802): the operable-commit rule that pins, and the cards and cohorts born at it, which is the whole of what the retired `history-rail` side panel was; and `wire` the chat's §8.5 spelling, with `wire/decode` its other direction at the §12 budget (bl-7067) — every entry class stays distinguishable on the wire, each row carrying the bytes it was read from because a headless seat has no Raw toggle to reach them with (bl-6233) |
 | `src/transcript/key.rs` | a transcript row's stable identity — `tx/<entry filename>#<block index>` — the one spelling of the address a seat and this engine both name a row by. The row projection that minted it went with the window (bl-7942); the §7.3 step spine's placements still tell a seat which row each rule is drawn above, and say so in this vocabulary |
-| `src/ui_state/{mod,json,doc,knobs,fields,clock}.rs` | the UI-state schema — **two** documents since REMOTE §7's per-seat split (bl-8bbc): the shared `ui.json` of world facts (`seen`, `pinned`, `identity_last_used`) and the per-client pane document of glass facts (`panels`, `collapsed`, the knobs), read through one handle so which file owns a key is stated once, at that key's accessor. `doc` is the file mechanics spent twice — forgiving load, echo-hash, atomic write-through. Also the seen API, the knobs + `zoom` + the §6 escalation's `notify_unfocused` (§4.1); the per-field accessors derived from it; and `clock`, split off at the budget — the crate's **one** injected time seam (§7.2's `Clock`/`SystemClock`) beside the one calendar routine both directions of its rendering ride on (`format_iso8601`/`iso8601_extended`/`epoch_from_iso8601`, Hinnant's civil-day math, no `chrono`/`time` dep — bl-61db), together because keeping them apart is what would spread that freedom over two files; none of it reads a document |
+| `src/ui_state/{mod,json,doc,knobs,fields,clock}.rs` | the UI-state schema — **two** documents since REMOTE §7's per-seat split (bl-8bbc): the shared `ui.json` of world facts (`seen`, `pinned`, `identity_last_used`) and the per-client pane document of glass facts (`panels`, `collapsed`, the knobs), read through one handle so which file owns a key is stated once, at that key's accessor. `doc` is the file mechanics spent twice — forgiving load, echo-hash, atomic write-through. Also the seen API, the knobs + `zoom` (§4.1 — the §6 escalation's `notify_unfocused` went to the seats that announce, bl-09ef); the per-field accessors derived from it; and `clock`, split off at the budget — the crate's **one** injected time seam (§7.2's `Clock`/`SystemClock`) beside the one calendar routine both directions of its rendering ride on (`format_iso8601`/`iso8601_extended`/`epoch_from_iso8601`, Hinnant's civil-day math, no `chrono`/`time` dep — bl-61db), together because keeping them apart is what would spread that freedom over two files; none of it reads a document |
 | `src/ui_state/panels.rs` | the §4.1 `panels` object: the `Panel` enum (key, default, floor, ceiling + the one clamp — one home per boundary) and its forgiving read / snapped write |
 | `src/ui_state/{prices,ceiling}.rs` | the §4.1 `prices` object: the §3.5 price table's one read, forgiving and setter-free; the §4.1 `ceiling` number beside it, read the same way — absent is no gate (bl-56d5) |
 | `src/ui_state/prune.rs` | the §3.6 prunes: a deleted workspace's keys; a deleted conversation subtree's `seen` watermarks (bl-f17a) |

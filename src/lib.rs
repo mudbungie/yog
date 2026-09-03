@@ -31,9 +31,6 @@
 //! line to mis-attribute, so coverage stays at 100% as modules land.
 
 pub mod actions;
-/// The §6 attention strip escalated to the desktop (bl-e160) — what a decision
-/// queue row becomes when the window is buried, and the one spawn that says it.
-pub mod alert;
 pub mod app;
 pub mod attention;
 /// What a derived row **says** about a fact — the badge vocabulary that is

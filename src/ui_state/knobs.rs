@@ -1,6 +1,14 @@
 //! The knobs of `ui.json` (DESIGN §4.1) — the view filters, the §11
 //! transcript-density automatics, and the whole-UI zoom (text size).
 //!
+//! **`notify_unfocused` is not among them** (bl-09ef): the §6 escalation it
+//! gated was derived here and announced by nobody, and the ruling put the
+//! announcing at the **seat** — a desktop notification belongs on the box the
+//! operator is looking at, which is wherever the seat is and never the engine
+//! box. So the knob is a seat's own, stored where that seat stores its glass
+//! facts; a stale `"notify_unfocused"` in an existing document round-trips as
+//! an unknown key and means nothing.
+//!
 //! A child module so [`super`] stays inside its line budget (§12); privacy is
 //! unaffected (a child sees its ancestor's private fields), and every knob
 //! reads through the one forgiving [`UiState::flag`] accessor rather than
@@ -11,9 +19,6 @@ use serde_json::Value;
 
 /// The whole-UI zoom key (§4.1): egui's scale factor, i.e. the text size.
 const ZOOM: &str = "zoom";
-
-/// The §6 desktop-escalation key (§4.1, bl-e160).
-const NOTIFY_UNFOCUSED: &str = "notify_unfocused";
 
 /// The zoom domain — egui's own clamp (`egui::gui_zoom`), restated here
 /// because yog owns the gesture (§11) and this document, not the egui
@@ -56,19 +61,6 @@ impl UiState {
 
     pub fn set_transcript_expand_others(&mut self, expand: bool) {
         self.set_flag(EXPAND_OTHERS, expand);
-    }
-
-    /// §6 escalation knob (bl-e160): when a new conversation needs the operator
-    /// and the window does **not** have focus, does the desktop say so?
-    ///
-    /// Default `true`, and the default is the ball's whole point: the attention
-    /// strip is invisible while the window is buried, which is precisely when
-    /// the operator needs telling. A notifier that is off until you find its
-    /// switch is a feature nobody has. Severable in the §4.1 sense — deleting
-    /// the key restores the default, and setting it `false` deletes the
-    /// behaviour without touching a line of code.
-    pub fn notify_unfocused(&self) -> bool {
-        self.flag(NOTIFY_UNFOCUSED, true)
     }
 
     /// The whole-UI zoom factor — the operator's text size (§4.1). `1.0` when

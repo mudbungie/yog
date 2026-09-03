@@ -1,5 +1,5 @@
 {
-  "protocol": 11,
+  "protocol": 12,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -30,6 +30,7 @@
         "/rows/[]/held:object",
         "/rows/[]/pending:number",
         "/rows/[]/preview:string",
+        "/rows/[]/says:string",
         "/rows/[]/signals/[]:string",
         "/rows/[]/signals:array",
         "/rows/[]/state:string",
@@ -40,7 +41,7 @@
         "/workspace:string",
         ":object"
       ],
-      "since": 8
+      "since": 11
     },
     "reply/advertised": {
       "signature": [
@@ -155,6 +156,7 @@
         "/rows/[]/held:object",
         "/rows/[]/pending:number",
         "/rows/[]/preview:string",
+        "/rows/[]/says:string",
         "/rows/[]/signals/[]:string",
         "/rows/[]/signals:array",
         "/rows/[]/state:string",
@@ -164,7 +166,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 4
+      "since": 11
     },
     "reply/balls": {
       "signature": [

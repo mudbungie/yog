@@ -75,6 +75,14 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
         ]),
         "the §6 signals in the `ui.json` watermark's own vocabulary"
     );
+    // The firing rules in words (bl-09ef): the announcing is a seat's, so the
+    // one home for the sentence (`AttentionKind::says`) crosses beside the
+    // tokens — a seat that re-worded them from the tokens would be the second
+    // wording §6 forbids.
+    assert_eq!(
+        out["says"],
+        "raised a notify mark; came to rest — your turn; exhausted its budget; has a conflicted branch; has mail queued and no driver taking it; parked a tool invocation for your answer; was refused at the provider — sign a provider in on this workspace; was flagged for a look, with a reason"
+    );
     // The park rides the row rather than a query of its own (§8.6): a reader
     // sees what is waiting, why, and has the address to answer it.
     assert_eq!(out["held"]["tool_use"], "toolu_42");
@@ -110,6 +118,8 @@ fn a_row_with_no_park_spells_it_null() {
     };
     let encoded = encode(&Reply::Attention(vec![row]));
     assert_eq!(encoded["rows"][0]["held"], serde_json::Value::Null);
+    // One firing rule is one clause, with nothing to join it to.
+    assert_eq!(encoded["rows"][0]["says"], "came to rest — your turn");
 }
 
 /// Nothing waiting is an ordinary answer, not an absence of one.

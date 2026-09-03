@@ -96,7 +96,15 @@ use super::frame;
 /// already in use, which §3's rule bumps outright; and the bump is the point
 /// rather than a tax, since the whole gain is a classification that reaches a
 /// client only through a re-vendor.
-pub const PROTOCOL: u32 = 11;
+/// 11 → 12 (bl-09ef): every queue row — `reply/attention` and the
+/// `reply/acknowledged` remainder that spells rows the same way — gained
+/// `says`, the firing rules **in words**. The escalation those words existed
+/// for was ruled a **seat's** act (DESIGN §6: a desktop notification belongs on
+/// the box the operator is looking at), and `AttentionKind::says` stays this
+/// engine's one home for the sentence, so the sentence has to cross rather than
+/// be re-worded per seat. A gain on two shapes, which the ledger sees and §3
+/// bumps for regardless.
+pub const PROTOCOL: u32 = 12;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

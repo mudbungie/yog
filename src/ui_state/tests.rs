@@ -189,19 +189,6 @@ fn the_zoom_is_clamped_snapped_and_round_trips() {
     assert!((load_pane(br#"{"zoom":"big"}"#).zoom() - 1.0).abs() < f32::EPSILON);
 }
 
-/// The §6 escalation knob (bl-e160): armed by default — the strip is invisible
-/// exactly when the operator needs it, so a notifier off until you find its
-/// switch is a feature nobody has. Severable: the key alone turns it off, and
-/// deleting the key restores the default.
-#[test]
-fn the_desktop_escalation_knob_is_armed_by_default_and_switched_off_by_one_key() {
-    let d = tempdir().unwrap();
-    assert!(mk(d.path()).notify_unfocused());
-    assert!(!load_pane(br#"{"notify_unfocused":false}"#).notify_unfocused());
-    // A hand-edited non-bool is the forgiving read's default, not a refusal.
-    assert!(load_pane(br#"{"notify_unfocused":"loud"}"#).notify_unfocused());
-}
-
 #[test]
 fn unknown_keys_survive_writeback() {
     let d = tempdir().unwrap();
