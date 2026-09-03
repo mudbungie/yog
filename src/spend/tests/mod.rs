@@ -4,7 +4,7 @@
 
 mod pricing;
 
-use super::{Attribution, Prices, of_ball, of_conversation, select};
+use super::{Attribution, Prices, of_ball, of_branch, select};
 use crate::budgets::{Scope, StepBill};
 use serde_json::json;
 use std::path::Path;
@@ -45,7 +45,7 @@ fn walk(ws: &Path) -> Vec<StepBill> {
 fn an_absent_table_prices_nothing_and_deletes_the_column() {
     let dir = tempfile::tempdir().unwrap();
     write_step(dir.path(), ROOT, "001", 1_000_000, 0, Some("opus"));
-    let figure = of_conversation(&walk(dir.path()), ROOT, &Prices::default());
+    let figure = of_branch(&walk(dir.path()), ROOT, &Prices::default());
     assert_eq!(figure.tokens.input_tokens, 1_000_000);
     assert!(figure.cost.is_none(), "empty table ⇒ no cost seat at all");
 }
@@ -58,7 +58,7 @@ fn a_conversation_figure_prices_its_whole_descent() {
     // A sibling conversation must not leak in.
     write_step(dir.path(), OTHER, "001", 9_000_000, 0, Some("opus"));
 
-    let figure = of_conversation(&walk(dir.path()), ROOT, &table());
+    let figure = of_branch(&walk(dir.path()), ROOT, &table());
     assert_eq!(figure.attribution, Attribution::Conversations(1));
     assert_eq!(figure.tokens.total_tokens(), 3_500_000);
     // 3 Mtok in at $1 + 0.5 Mtok out at $2 = $4.00.
@@ -75,9 +75,7 @@ fn a_step_on_an_unpriced_model_is_reported_not_rounded_to_free() {
     write_step(dir.path(), ROOT, "002", 7, 3, Some("mystery"));
     write_step(dir.path(), ROOT, "003", 5, 0, None);
 
-    let cost = of_conversation(&walk(dir.path()), ROOT, &table())
-        .cost
-        .unwrap();
+    let cost = of_branch(&walk(dir.path()), ROOT, &table()).cost.unwrap();
     assert_eq!(cost.micro_usd, 1_000_000);
     assert_eq!(cost.unpriced_tokens, 15);
 }

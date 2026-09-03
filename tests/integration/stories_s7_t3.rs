@@ -75,7 +75,7 @@ fn s7_t3_the_subtree_folds_and_the_limit_is_never_parsed() {
     assert_eq!(all.total_tokens(), 715 + 1998);
 
     // --- The same fold through the header's own seat.
-    let figure = spend::of_conversation(&bills, r, &Prices::default());
+    let figure = spend::of_branch(&bills, r, &Prices::default());
     assert_eq!(figure.tokens.total_tokens(), 715);
     assert_eq!(figure.attribution, Attribution::Conversations(1));
     // With no price table there is no cost — the severability gate. yog states

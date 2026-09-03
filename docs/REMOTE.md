@@ -3542,7 +3542,11 @@ seven above** — filed whole as **bl-b4b5**, and closed by it below.
   the bound balls with their figures, not eight small ones, and the §8.1
   narrowing of `JoinRow` rides with it. The two conversation-scoped figures
   (`conversation_spend`, `conversation_context`) are `AgentView`'s shape — facts
-  about one conversation's subtree, like `flight` and now `strip`.
+  about one subtree, like `flight` and now `strip`, and since bl-131d about the
+  subtree the answer NAMES: both were folded over the selection's *root*, so a
+  dispatched subagent's `/agent` reported its parent's totals byte for byte
+  under `attribution {count: 1, kind: "conversations"}` — an answer whose
+  subject and whose number were different things, with nothing saying so.
 - **The §3.6/§8.4 fire-time gates** — `delete_confirmation`,
   `agent_delete_confirmation`, `move_targets`, `conversation_names`. The
   rendering split is already exact and must stay so: the chokepoint re-derives

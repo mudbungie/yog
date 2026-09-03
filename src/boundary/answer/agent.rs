@@ -126,17 +126,33 @@ pub struct AgentView {
     /// segment is a compact `5s`/`2m` label, and half a second of lag in a
     /// figure that ticks in seconds is not a difference a reader can feel.
     pub strip: Option<crate::nav::convs::FlightStrip>,
-    /// **The conversation's priced whole-tree figure** (§3.5, bl-b4b5): the
-    /// root agent and its descent (ARCH §6), attributed to itself. It rides
-    /// here for [`seats`](Self::seats)' reason exactly — a fact about **one
-    /// conversation's** subtree, like the strip beside it — and its workspace
+    /// **The priced figure of the branch this answer is about** (§3.5, bl-b4b5):
+    /// [`agent_id`](Self::agent_id) and its descent (ARCH §6), attributed to
+    /// itself. It rides here for [`seats`](Self::seats)' reason exactly — a
+    /// fact about **one** subtree, like the strip beside it — and its workspace
     /// twin is `Query::WorkspaceBalls`' per-ball figure, the other half of the
     /// §3.5 pair the §11 settings band paints.
+    ///
+    /// **The selection's branch, not its root** (bl-131d). It folded the root's
+    /// whole tree whatever was selected, so a dispatched subagent answered its
+    /// parent's totals byte for byte under an attribution reading *one
+    /// conversation* — and nothing in the reply said whose number it was, which
+    /// made "what did that subagent cost me" unanswerable. The fold keys per
+    /// branch already ([`spend::of_branch`](crate::spend::of_branch) is one
+    /// prefix filter over `Snapshot::bills`), so the honest answer was free:
+    /// the number's subject is now the reply's own subject, and selecting the
+    /// root still folds the whole conversation because a root's branch is it.
     pub spend: crate::spend::Figure,
-    /// **How full its context is** (§5.1 #35): the prompt its root agent's
-    /// latest step sent, against the window `models.yaml` declares for the
-    /// model that sent it. `None` when nothing measured can be said, which is
-    /// the ordinary answer for a conversation that has not run yet.
+    /// **How full its context is** (§5.1 #35): the prompt
+    /// [`agent_id`](Self::agent_id)'s own latest step sent, against the window
+    /// `models.yaml` declares for the model that sent it. `None` when nothing
+    /// measured can be said, which is the ordinary answer for a conversation
+    /// that has not run yet.
+    ///
+    /// The selection's own step since bl-131d, for
+    /// [`spend`](Self::spend)'s reason and by §5.1 #35's own sentence — *"a
+    /// dispatched child runs its own context in its own tree"* — which the
+    /// read then contradicted by asking about the root whatever was selected.
     ///
     /// Deliberately apart from [`spend`](Self::spend) in what it answers:
     /// spend is the whole descent's cumulative burn, fullness is this
@@ -166,8 +182,8 @@ pub fn agent(snap: &Snapshot, ui: &UiState, ws: &Path, agent: &str, now_unix: i6
     // budget line costs this answer no disk read.
     let bills = snap.bills.get(ws).cloned().unwrap_or_default();
     AgentView {
-        spend: crate::spend::of_conversation(&bills, &root, &ui.prices()),
-        context: crate::context::of_conversation(&bills, &root, &snap.windows),
+        spend: crate::spend::of_branch(&bills, agent, &ui.prices()),
+        context: crate::context::of_agent(&bills, agent, &snap.windows),
         name: display_name_of(&agents, &root),
         display_only: agents
             .iter()

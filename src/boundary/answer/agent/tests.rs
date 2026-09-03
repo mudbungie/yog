@@ -145,3 +145,60 @@ fn an_agent_the_snapshot_does_not_carry_is_answered_not_refused() {
         assert!(!view.stop_children && view.held.is_none());
     }
 }
+
+/// One bill for one agent, with a distinct prompt so a transposed subject is
+/// visible in both figures at once.
+fn bill(conv: &str, tokens: u64) -> crate::budgets::StepBill {
+    let spend = crate::budgets::BudgetSpend {
+        input_tokens: tokens,
+        output_tokens: 0,
+        cache_read_tokens: 0,
+        cache_write_tokens: 0,
+    };
+    crate::budgets::StepBill {
+        conv: conv.to_owned(),
+        seq: "001".to_owned(),
+        model: Some("m".to_owned()),
+        spend,
+        last_usage: spend,
+        wall_secs: 0,
+    }
+}
+
+/// **A subagent's cost is its own** (bl-131d). The spend fold and the fullness
+/// beside it are taken over the agent this answer is *about*, not over its
+/// root: a child asked what it spent used to be handed its parent's totals byte
+/// for byte, under an attribution reading *one conversation* and with nothing
+/// in the reply saying whose number it was. Selecting the root still folds the
+/// whole tree, because a root's branch is the tree.
+#[test]
+fn a_child_answers_its_own_spend_and_its_own_context() {
+    let ws = Path::new("/w");
+    let mut snap = snapshot(
+        ws,
+        "alba",
+        vec![
+            agent_row(ROOT, AgentState::Quiescent, 1),
+            agent_row(CHILD, AgentState::InFlight, 2),
+        ],
+        vec![],
+    );
+    snap.bills
+        .insert(ws.to_path_buf(), vec![bill(ROOT, 70), bill(CHILD, 30)]);
+    snap.windows.insert("m".to_owned(), 100);
+
+    let at_child = agent(&snap, &ui(), ws, CHILD, 0);
+    assert_eq!(at_child.spend.tokens.input_tokens, 30, "the child's own");
+    assert_eq!(
+        at_child.spend.attribution,
+        crate::spend::Attribution::Conversations(1),
+        "one subject, and now it is the selected one"
+    );
+    assert_eq!(at_child.context.map(|f| f.percent()), Some(30));
+
+    // The root's branch is the whole tree, so nothing was lost: the number the
+    // old answer gave for both is still exactly one selection away.
+    let at_root = agent(&snap, &ui(), ws, ROOT, 0);
+    assert_eq!(at_root.spend.tokens.input_tokens, 100, "root and descent");
+    assert_eq!(at_root.context.map(|f| f.percent()), Some(70));
+}

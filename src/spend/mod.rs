@@ -181,11 +181,18 @@ pub fn of_world(workspaces: &[PathBuf], prices: &Prices) -> Option<Cost> {
     priced(&bills, prices)
 }
 
-/// One conversation's whole-tree figure (§5.1 #16 priced): the root agent and
+/// **One branch's whole-tree figure** (§5.1 #16 priced): the agent named and
 /// its hyphenated descent, attributed to itself. `bills` is its workspace's
 /// walk.
-pub fn of_conversation(bills: &[StepBill], root_id: &str, prices: &Prices) -> Figure {
-    let roots = [root_id.to_owned()];
+///
+/// A *branch*, not a root (bl-131d). [`Scope::Tree`] is a prefix predicate and
+/// a child id is itself such a prefix, so the same one filter over the same
+/// already-walked bills answers "what did this subagent cost" as cheaply as it
+/// answers the whole conversation's — which is why the seat asks it about the
+/// agent it is showing rather than about that agent's root. Selecting the root
+/// still folds the whole tree, because the root's branch *is* the tree.
+pub fn of_branch(bills: &[StepBill], branch_id: &str, prices: &Prices) -> Figure {
+    let roots = [branch_id.to_owned()];
     figure(
         &select(bills, &roots),
         prices,

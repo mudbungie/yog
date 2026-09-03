@@ -1,7 +1,7 @@
 //! The §5.1 #35 derivation: the latest step of the root, its prompt reading,
 //! and every way the figure declines to be fabricated.
 
-use super::{Fullness, of_conversation};
+use super::{Fullness, of_agent};
 use crate::budgets::{BudgetSpend, StepBill};
 use std::collections::BTreeMap;
 
@@ -40,7 +40,7 @@ fn windows() -> BTreeMap<String, u64> {
 #[test]
 fn fullness_reads_the_folded_prompt_not_the_bare_input_counter() {
     let bills = [bill(ROOT, "001", Some("sonnet"), usage(2_000, 48_000, 0))];
-    let full = of_conversation(&bills, ROOT, &windows()).expect("a measured context");
+    let full = of_agent(&bills, ROOT, &windows()).expect("a measured context");
     assert_eq!(full.prompt_tokens, 48_000);
 }
 
@@ -53,7 +53,7 @@ fn the_root_s_latest_step_is_the_context() {
         bill(ROOT, "002", Some("sonnet"), usage(2_000, 48_000, 0)),
         bill(KID, "009", Some("sonnet"), usage(190_000, 0, 0)),
     ];
-    let full = of_conversation(&bills, ROOT, &windows()).expect("a measured context");
+    let full = of_agent(&bills, ROOT, &windows()).expect("a measured context");
     assert_eq!(
         full,
         Fullness {
@@ -73,7 +73,7 @@ fn step_order_is_lexical_because_the_width_is_fixed() {
         bill(ROOT, "009", Some("sonnet"), usage(9, 0, 0)),
         bill(ROOT, "010", Some("sonnet"), usage(100_000, 0, 0)),
     ];
-    let full = of_conversation(&bills, ROOT, &windows()).expect("a measured context");
+    let full = of_agent(&bills, ROOT, &windows()).expect("a measured context");
     assert_eq!(full.prompt_tokens, 100_000);
     assert_eq!(full.percent(), 50);
 }
@@ -83,9 +83,9 @@ fn step_order_is_lexical_because_the_width_is_fixed() {
 /// for.
 #[test]
 fn nothing_honest_to_say_is_no_figure_at_all() {
-    assert_eq!(of_conversation(&[], ROOT, &windows()), None);
+    assert_eq!(of_agent(&[], ROOT, &windows()), None);
     assert_eq!(
-        of_conversation(
+        of_agent(
             &[bill(ROOT, "001", None, usage(10, 0, 0))],
             ROOT,
             &windows()
@@ -93,7 +93,7 @@ fn nothing_honest_to_say_is_no_figure_at_all() {
         None
     );
     assert_eq!(
-        of_conversation(
+        of_agent(
             &[bill(ROOT, "001", Some("opus"), usage(10, 0, 0))],
             ROOT,
             &windows()
@@ -107,6 +107,6 @@ fn nothing_honest_to_say_is_no_figure_at_all() {
 #[test]
 fn a_context_past_its_declared_window_is_not_clamped() {
     let bills = [bill(ROOT, "001", Some("sonnet"), usage(280_000, 0, 0))];
-    let full = of_conversation(&bills, ROOT, &windows()).expect("a measured context");
+    let full = of_agent(&bills, ROOT, &windows()).expect("a measured context");
     assert_eq!(full.percent(), 140);
 }

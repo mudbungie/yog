@@ -54,18 +54,24 @@ impl Fullness {
     }
 }
 
-/// One conversation's fullness, or `None` when nothing honest can be said: the
-/// root has taken no step, its latest step names no model, or that model
-/// declares no window. **Render nothing, never an estimate** — the whole point
-/// of the figure is that it is measured.
-pub fn of_conversation(
+/// **One agent's** fullness, or `None` when nothing honest can be said: it has
+/// taken no step, its latest step names no model, or that model declares no
+/// window. **Render nothing, never an estimate** — the whole point of the
+/// figure is that it is measured.
+///
+/// One agent and never a descent (§5.1 #35: *"a dispatched child runs its own
+/// context in its own tree"*), and since bl-131d the agent is the one the
+/// caller named rather than that agent's root — a child asked about its own
+/// context was answered with its parent's, off the same one filter that could
+/// have answered honestly.
+pub fn of_agent(
     bills: &[StepBill],
-    root_id: &str,
+    agent_id: &str,
     windows: &BTreeMap<String, u64>,
 ) -> Option<Fullness> {
     let latest = bills
         .iter()
-        .filter(|b| b.conv == root_id)
+        .filter(|b| b.conv == agent_id)
         .max_by(|a, b| a.seq.cmp(&b.seq))?;
     let model = latest.model.clone()?;
     let window = *windows.get(&model)?;
