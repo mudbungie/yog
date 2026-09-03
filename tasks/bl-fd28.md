@@ -1,7 +1,8 @@
 +++
 title = "fan's lib beats fork inside balls: Attempt::open/resume/deliver leave the ETXTBSY class open after bl-6bf5"
 created = 1788415404
-updated = 1788415404
+updated = 1788415543
+claimant = "Spellbind-P"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["flake", "tests"]
