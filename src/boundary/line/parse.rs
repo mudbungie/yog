@@ -144,6 +144,16 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         "fork" => super::fork::fork(tail, ctx, verb),
         "ack" => args::none(tail, verb).map(|()| act(Action::Ack)),
         "seen" => verbs::seen(tail, ctx, verb),
+        // The §4.1 pin, in its two directions (bl-b986): the workspace is the
+        // seat's own, exactly as `/marks`' is, so the verb is the whole line —
+        // and the verb IS the direction, which is what makes it a set.
+        crate::boundary::codec::PIN | crate::boundary::codec::UNPIN => {
+            args::none(tail, verb)?;
+            Ok(act(Action::Pin {
+                workspace: args::workspace(ctx, verb)?,
+                pinned: verb == crate::boundary::codec::PIN,
+            }))
+        }
         "clear-trail" => args::none(tail, verb).map(|()| act(Action::ClearTrail)),
         // REMOTE §5's tool-host presentation (bl-4e08): the whole tail is the
         // set, as JSON — a document spelled verbatim, exactly as `--body` and a

@@ -1391,6 +1391,14 @@
       ],
       "since": 1
     },
+    "request/pin": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 10
+    },
     "request/prepare": {
       "signature": [
         "/op:string",
@@ -1578,6 +1586,14 @@
         ":object"
       ],
       "since": 1
+    },
+    "request/unpin": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 10
     },
     "request/update": {
       "signature": [

@@ -78,6 +78,7 @@ impl Action {
             | Action::Fork { .. }
             | Action::Ack
             | Action::MarkSeen { .. }
+            | Action::Pin { .. }
             | Action::ClearTrail
             | Action::ApplyConfig { .. }
             | Action::Advertise { .. }

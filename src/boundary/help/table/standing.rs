@@ -183,6 +183,30 @@ pub const STANDING: &[HelpRow] = &[
         surface: Surface::Control,
     },
     HelpRow {
+        verb: "pin",
+        usage: "/pin",
+        summary: "float this workspace to the front of the strip and keep it there",
+        detail: "Adds the selected workspace to the durable pin list every seat orders its \
+                 workspace strip by: pinned workspaces come first, in the order they were \
+                 pinned, ahead of the rest in name order. A pin is an assertion about the \
+                 world, not an arrangement of one screen, so it is the same list on every seat \
+                 and it survives a restart. Pinning one already pinned moves it to the end of \
+                 the pinned run rather than saying it twice. The answer is the workspace \
+                 listing with the ranks it now carries. `/unpin` takes it back out.",
+        surface: Surface::Control,
+    },
+    HelpRow {
+        verb: "unpin",
+        usage: "/unpin",
+        summary: "take this workspace back out of the pinned run",
+        detail: "Removes the selected workspace from the pin list, so it falls back into name \
+                 order with everything unpinned. Says what it means rather than flipping \
+                 whatever it found: unpinning one that is not pinned leaves the list alone, \
+                 which is what lets two seats send it at once and agree. The answer is the \
+                 workspace listing with the ranks it now carries.",
+        surface: Surface::Control,
+    },
+    HelpRow {
         verb: "answer",
         usage: crate::boundary::line::ANSWER_USAGE,
         summary: "release, decline or keep parked the tool call held at this conversation",

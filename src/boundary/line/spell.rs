@@ -89,6 +89,11 @@ fn spell_action(action: &Action) -> String {
         Action::Ack => "/ack".to_owned(),
         // The address is the seat's selection, exactly as `/message`'s is.
         Action::MarkSeen { .. } => "/seen".to_owned(),
+        // The workspace is the seat's, as `/marks`' is; the direction is the
+        // verb (§4.1, bl-b986).
+        Action::Pin { pinned, .. } => {
+            format!("/{}", if *pinned { "pin" } else { "unpin" })
+        }
         Action::ClearTrail => "/clear-trail".to_owned(),
         // The set is the whole line, in its one spelling (REMOTE §5, bl-4e08);
         // the client is the intake's and is never typed.

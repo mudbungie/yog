@@ -68,6 +68,7 @@ impl Action {
             | Action::DeleteWorkspace { workspace, .. }
             | Action::DeleteAgent { workspace, .. }
             | Action::MarkSeen { workspace, .. }
+            | Action::Pin { workspace, .. }
             | Action::SetMarks { workspace, .. }
             | Action::PickModel { workspace, .. }
             | Action::AnswerHold { workspace, .. }

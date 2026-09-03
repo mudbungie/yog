@@ -1870,7 +1870,28 @@ viewport ephemera (§5.3, reasoning in §13.1).
   ack verb exists) — so "the user has seen this" is a yog fact: **the mark is
   litany's, the acknowledgement is yog's.** A moved ref re-notifies.
 - **`pinned`** — ordered float list of workspaces (a user assertion, no other
-  home).
+  home). **Written by `Action::Pin { workspace, pinned }`** (§8.5, bl-b986) and
+  by nothing else. Its only writer had been `AppModel::toggle_pin`, the tab
+  strip's click handler, which bl-7942 removed with the window — so from then
+  until bl-b986 every seat could render a pin rank (§11, bl-296f) and no seat
+  could make one, which had been a REMOTE §1.2 violation since before the
+  severance: the act never crossed the boundary, so a remote seat never had it
+  either.
+
+  **An explicit set, not a toggle** (the ruling). A toggle is one word, but two
+  seats reading one rank and each flipping it cancel — the second undoes the
+  first and neither operator asked for what they got. A set is idempotent and
+  says what it means, which is what a *standing assertion* has to be; it wears
+  two op tokens (`pin`/`unpin`) for the `Floor` reason, so unpinning is an
+  instruction rather than the absence of a field. Setting one already pinned
+  moves it to the **end** of the float — the order is the assertion, and
+  re-asserting it is not saying it twice.
+
+  **The key is the path and the wire is the name** (REMOTE §8): `ui.json` keys
+  by workspace path, whose re-keying is its own migration (bl-7407), and the
+  gesture addresses by §3.1 name like every other. The resolution is the
+  dispatch chokepoint's, once, exactly as `Action::MarkSeen`'s is — the shape
+  this act was written to copy, being the other durable `ui.json` writer.
 - **`collapsed`** — explicit user expansion overrides only; default expansion
   is derived from attention, so the file stays tiny. A persisted *view* (§13.0),
   not durable data.
@@ -5027,6 +5048,24 @@ variants carry it, and everything else it needs already existed:
   where every other act is a plain imperative — and now says what it does:
   *acknowledge the selected conversation and answer the queue that remains*.
   It refuses a conversation the published snapshot does not carry.
+
+**The other durable `ui.json` writer, and why it wears two ops** (bl-b986).
+**`Action::Pin { workspace, pinned }` → `Reply::Workspaces`** (`/pin`,
+`/unpin`; `{"op":"pin","workspace":…}`) — §4.1's pin list, which every seat has
+ranked its workspace strip by since bl-296f and which nothing had written since
+bl-7942 took the window's tab strip with the window. It is the queue
+acknowledgement's shape one document key over: the name resolves at the
+chokepoint, the write is `ui.json` and nothing else, and the answer is the very
+read the write moved — re-derived after it, never an echo of the direction
+asked (the `SetMarks` precedent again).
+
+Two differences from `MarkSeen`, both deliberate. It is an explicit **set**
+rather than a toggle, because a pin is a standing assertion and two seats
+toggling one rank cancel; §4.1 carries that ruling and the idempotence it
+buys. And its receipt is the **listing**, where bl-5cfe had to give `/seen` an
+address of its own: the row a pin acted on is still in the answer, carrying its
+new rank or none, while the row an acknowledgement acted on *leaves* the queue
+— so here the remainder can point at what happened and there it could not.
 
 **Why this is an action when §4.8 files seen watermarks under views.** The
 views clause above stands where it was written — *at the window, the watermark

@@ -191,6 +191,15 @@ pub enum Action {
     /// windowed seat keeps its focus-tick entry (focus is a view and gains no
     /// spelling); this is the entry a seat with no focus needs.
     MarkSeen { workspace: String, agent: String },
+    /// **Pin a workspace, or unpin it** (§4.1 `pinned`, bl-b986): the durable
+    /// operator assertion the §11 tab strip hoists in — a fact every seat has
+    /// read since bl-296f and nothing has written since bl-7942 took the
+    /// window's tab strip. An explicit **set**, never a toggle: a toggle races
+    /// two seats, each reading one rank and flipping it, so the second undoes
+    /// the first and neither operator asked for what they got. Two ops for one
+    /// variant, the [`Floor`](Self::Floor) shape — a boolean field would make
+    /// unpinning the absence of pinning rather than an instruction.
+    Pin { workspace: String, pinned: bool },
     /// Start a fresh trail (§4.2 as amended): truncate `ops.jsonl`, logging
     /// the clear as the new trail's first row.
     ClearTrail,

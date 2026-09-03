@@ -193,6 +193,15 @@ fn every_trail_verb_and_query_round_trips() {
         agent: "c-1".to_owned(),
     }));
     rt(Gesture::Act(Action::ClearTrail));
+    // The §4.1 pin, both directions (bl-b986): the workspace is the seat's, so
+    // the line is one word — and the word carries the whole instruction, which
+    // is what the round trip has to prove for a set rather than a toggle.
+    for pinned in [true, false] {
+        rt(Gesture::Act(Action::Pin {
+            workspace: "ws".to_owned(),
+            pinned,
+        }));
+    }
 }
 
 /// REMOTE §1.4's enrollment, typed (bl-f4e3): the common name is the one word

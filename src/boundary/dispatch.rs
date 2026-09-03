@@ -46,7 +46,7 @@ mod enroll;
 /// The one address resolution, and the §4.1 raise it carries — split off at
 /// §12's cap (bl-4e08); it stands ahead of the table rather than inside it.
 mod resolve;
-use arms::{acknowledge, fork, outcome, retarget, spend, staged, wrote};
+use arms::{acknowledge, fork, outcome, pin, retarget, spend, staged, wrote};
 use delete_exec::{delete_agent, unmake};
 pub use deps::{Caller, Deps};
 pub use doors::{prepare, prompt};
@@ -150,6 +150,9 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // bodies the frame's ops pane calls ([`crate::opslog::ack`]/[`clear`]).
         Action::Ack => wrote(crate::opslog::ack(root, ts), Reply::Acked),
         Action::MarkSeen { .. } => acknowledge(deps, ui, ts, ws, agent),
+        // The §4.1 pin (bl-b986): the other durable `ui.json` assertion, and
+        // the one whose reader every seat has had since bl-296f.
+        Action::Pin { pinned, .. } => Ok(pin(deps, ui, ts, ws, *pinned)),
         Action::ClearTrail => wrote(crate::opslog::clear(root, ts), Reply::TrailCleared),
         // The §9 config family (bl-3f46) — one executor module, because each of
         // the three is a composition of pipelines that already exist.

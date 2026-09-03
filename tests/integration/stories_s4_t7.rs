@@ -32,6 +32,22 @@ fn quiet(id: &str) -> AgentFixture {
         .mark("abandoned")
 }
 
+/// Fire the §4.1 pin act and take the listing it answers with (bl-b986) — the
+/// receipt IS the chrome the pin ranks, re-derived after the write.
+fn pin(m: &AppModel, workspace: &str, pinned: bool) -> yog::boundary::reply::Workspaces {
+    let reply = crate::support::act(
+        m,
+        &yog::boundary::Action::Pin {
+            workspace: workspace.to_owned(),
+            pinned,
+        },
+    );
+    match reply {
+        Ok(yog::boundary::reply::Reply::Workspaces(rows)) => rows,
+        other => unreachable!("a pin lands and answers the chrome it ranked: {other:?}"),
+    }
+}
+
 /// STORIES **S4-T7** tab-strip.
 #[test]
 fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
@@ -114,15 +130,29 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     );
 
     // --- Pinned: hoisted in PIN order, ahead of the name-ordered remainder.
-    // A pin is durable operator state in `ui.json` (§4.1) and no gesture writes
-    // it (see the residual on bl-7942), so the fixture writes the document and
-    // a fresh instance reads it — which is exactly how one instance's pin
-    // reaches another (I0: restart is re-read).
-    let mut ui = yog::ui_state::UiState::open(m.ui_json_path());
-    ui.set_pinned(vec![
-        yog::nav::ws_key(&names_root.join("delta")),
-        yog::nav::ws_key(&names_root.join("charlie")),
-    ]);
+    // A pin is durable operator state in `ui.json` (§4.1), and since bl-b986 it
+    // is written by a **boundary act** rather than by a hand-edited document —
+    // which is the whole of what that ball was: every seat had read the rank
+    // since bl-296f and nothing had written one since bl-7942 took the window's
+    // tab strip. Two acts, in pin order; the second instance below then reads
+    // the same document, which is how one seat's pin reaches another (I0:
+    // restart is re-read).
+    for (rank, name) in ["delta", "charlie"].into_iter().enumerate() {
+        let seen = pin(&m, name, true);
+        // The receipt is the listing the pin ranks, re-derived after the write.
+        assert_eq!(
+            seen.rows
+                .iter()
+                .find(|r| r.workspace == name)
+                .and_then(|r| r.pinned),
+            Some(rank),
+            "{name} carries the rank the act just gave it"
+        );
+    }
+    // The set is idempotent and says what it means (the ruling, bl-b986):
+    // unpinning one that was never pinned leaves the float alone, so two seats
+    // sending the same instruction agree where two toggles would cancel.
+    pin(&m, "alpha", false);
     drop(m);
     let (m, _worker) = AppModel::boot(
         roots,
@@ -142,4 +172,25 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     let badge = |name: &str| bar.tabs.iter().find(|t| t.name == name).unwrap().attention;
     assert_eq!(badge("delta"), 1);
     assert_eq!(badge("alpha"), 2);
+
+    a_set_is_idempotent_and_says_which_way(&m);
+}
+
+/// The set's own two remaining moods, on the instance that READ the document
+/// rather than the one that wrote it (bl-b986). Re-pinning something already
+/// pinned moves it to the end of the float rather than saying it twice — the
+/// order IS the assertion — and an unpin takes one back out. Both are the same
+/// instruction said again, which is what makes the act safe for two seats to
+/// send at once, and what a toggle could never be.
+fn a_set_is_idempotent_and_says_which_way(m: &AppModel) {
+    pin(m, "delta", true);
+    let bar = crate::support::tab_bar(m, None);
+    let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
+    assert_eq!(names, ["charlie", "delta", "alpha"], "re-pinned last");
+    pin(m, "charlie", false);
+    let bar = crate::support::tab_bar(m, None);
+    let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
+    assert_eq!(names, ["delta", "alpha", "charlie"], "unpinned falls back");
+    let pinned: Vec<bool> = bar.tabs.iter().map(|t| t.pinned).collect();
+    assert_eq!(pinned, [true, false, false], "only delta is still floated");
 }

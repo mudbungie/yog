@@ -32,10 +32,26 @@ pub(crate) fn gestures() -> Vec<Gesture> {
         super::retarget::surface(),
         super::query::surface(),
         login(),
+        pins(),
         enroll(),
         crate::boundary::codec::config::tests::surface(),
     ]
     .concat()
+}
+
+/// The §4.1 pin (bl-b986) — **one entry per direction**, because the direction
+/// is the op token and a fixture that only ever spelled `pin` would leave the
+/// instruction that is not the default unproven on the wire.
+fn pins() -> Vec<Gesture> {
+    [true, false]
+        .into_iter()
+        .map(|pinned| {
+            Gesture::Act(crate::boundary::Action::Pin {
+                workspace: "ws".to_owned(),
+                pinned,
+            })
+        })
+        .collect()
 }
 
 /// The §8.3 sign-in (REMOTE §8.3, bl-c285) — one entry, because the act's

@@ -131,3 +131,47 @@ pub(super) fn acknowledge(
         remaining,
     }))
 }
+
+/// **The §4.1 pin, set** (bl-b986): put `workspace` into `ui.json`'s ordered
+/// pin list or take it out, then answer the §11 chrome that list ranks — the
+/// [`acknowledge`] shape one document key over, re-derived against the
+/// `ui.json` this very call just moved.
+///
+/// **Idempotent, and the order is the assertion.** The key is dropped and
+/// re-appended, so pinning something already pinned moves it to the end of the
+/// float rather than duplicating it, and unpinning something unpinned writes
+/// the list it already had. That is what an explicit set buys over a toggle:
+/// two seats sending the same instruction agree, where two toggles cancel.
+///
+/// **The receipt is the listing, not a rank**, and it does not lie the way
+/// bl-5cfe's did: the acted-on row is still in the answer — with its new rank,
+/// or with none — where an acknowledged queue row *leaves* the queue and could
+/// not be pointed at. The listing is also what a seat re-renders its tab strip
+/// from, so the loop stays one gesture per decision.
+///
+/// The key is the §3.1 path (`ui.json`'s own, bl-7407) and the gesture named
+/// the workspace by name: the resolution is the chokepoint's, once, exactly as
+/// [`acknowledge`]'s is.
+pub(super) fn pin(
+    deps: &Deps,
+    ui: &mut UiState,
+    ts: &str,
+    workspace: &std::path::Path,
+    pinned: bool,
+) -> Reply {
+    let key = crate::nav::ws_key(workspace);
+    let mut list = ui.pinned();
+    list.retain(|held| *held != key);
+    if pinned {
+        list.push(key);
+    }
+    ui.set_pinned(list);
+    // Infallible by construction, and it says so: the one thing that could
+    // refuse — a name no workspace answers to — refused at the chokepoint
+    // before this arm ran, and a list is a list whatever was in it.
+    Reply::Workspaces(answer::workspaces(
+        &deps.snapshot,
+        ui,
+        ts.parse().unwrap_or(0),
+    ))
+}

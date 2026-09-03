@@ -103,6 +103,12 @@ fn encode_action(action: &Action) -> Value {
         } => control::encode_floor(workspace, agent, *raised),
         Action::Ack => json!({ "op": "ack" }),
         Action::MarkSeen { workspace, agent } => at_agent("seen", workspace, agent),
+        // The §4.1 pin's two directions (bl-b986), the floor's shape: two ops
+        // for one variant, so unpinning is an instruction and not a missing
+        // field.
+        Action::Pin { workspace, pinned } => {
+            json!({ "op": if *pinned { PIN } else { UNPIN }, "workspace": workspace })
+        }
         Action::ClearTrail => json!({ "op": "clear-trail" }),
         Action::ApplyConfig { file, text } => {
             json!({ "op": "config", "target": encode_file(file), "text": text })
@@ -148,6 +154,11 @@ fn encode_action(action: &Action) -> Value {
 /// The sign-in act's op token (bl-c285), named once for both directions and
 /// for the line that types it.
 pub(crate) const LOGIN: &str = "login";
+
+/// The §4.1 pin's two op tokens (bl-b986), named once for the envelope, the
+/// line and the help page — which is how one act cannot be spelled three ways.
+pub(crate) const PIN: &str = "pin";
+pub(crate) const UNPIN: &str = "unpin";
 
 /// Enrollment's op token, named once so the envelope, the line and the help
 /// page cannot spell it three ways (REMOTE §1.4 as amended, bl-f4e3).
@@ -231,6 +242,12 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             agent: str_of(o, "agent")?,
         })),
         "clear-trail" => Ok(act(Action::ClearTrail)),
+        // The §4.1 pin (bl-b986): the op token IS the direction, so nothing is
+        // defaulted and an unpin can never read as a pin that lost a field.
+        PIN | UNPIN => Ok(act(Action::Pin {
+            workspace: str_of(o, "workspace")?,
+            pinned: op == PIN,
+        })),
         // Both halves required (REMOTE §8.3): a sign-in that guessed either
         // would write a credential into the wrong sphere, or into the right
         // one for a row nobody named.
