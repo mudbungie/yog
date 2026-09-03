@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.21](https://github.com/mudbungie/yog/compare/v0.0.20...v0.0.21) - 2026-09-03
+
+### Changes
+
+- multiplex landing repair test fails with NotFound on the balls clone path — /var vs /private/var canonicalization is the suspect [bl-2f8b]
+
 ## [0.0.20](https://github.com/mudbungie/yog/compare/v0.0.19...v0.0.20) - 2026-09-03
 
 ### Changes
