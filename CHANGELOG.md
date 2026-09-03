@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.30](https://github.com/mudbungie/yog/compare/v0.0.29...v0.0.30) - 2026-09-03
+
+### Changes
+
+- the derived cadence periods a seat must honour cross no boundary: wound_grace, ASK_PERIOD's siblings [bl-776a]
+
 ## [0.0.29](https://github.com/mudbungie/yog/compare/v0.0.28...v0.0.29) - 2026-09-03
 
 ### Changes
