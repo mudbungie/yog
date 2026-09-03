@@ -1,7 +1,7 @@
 +++
 title = "fan's lib beats fork inside balls: Attempt::open/resume/deliver leave the ETXTBSY class open after bl-6bf5"
 created = 1788415404
-updated = 1788415543
+updated = 1788416313
 claimant = "Spellbind-P"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -53,3 +53,68 @@ So attack the shape before moving anything. Candidates, none designed:
 Do not take "hold the spawn lock across the call into balls": `git_env`'s
 module doc forbids waiting on a child under the lock, and `Attempt::open`
 waits on several.
+
+---
+
+Shape 2 taken by ruling, and the shape's own objection is answered rather than
+waived. The ball recorded it as "a write-side contract, which git_env's module
+doc argues against on the grounds that the victim's own care cannot save it."
+That argument was against a write-side BRACKET — a lock only excludes forks
+that agree to take it, and the linked substrate's forks never did. It does not
+reach a write-side RELOCATION: `sh -c 'cat > "$1" && chmod 755 "$1"'` leaves no
+descriptor in this process, so there is nothing for any fork, in any crate, to
+copy. Candidate 1 (widen `pub` for `fan`) publishes internals for a test's sake
+and closes one victim; candidate 3 (an upstream fork hook) closes nothing here
+until a release. Shape 2 closes every victim at once and subtracts a lock.
+
+Prior art decided it: `tests/integration/support/mod.rs` already wrote its
+fixtures from a child, for the reason that proves the argument — yog linked as
+a library is not `cfg(test)`, so the spawn lock was compiled out of the one
+binary that needed it, and ~1 run in 8 failed until the fd moved. That helper
+is now the shared `tests/support/write_exec.rs`, `#[path]`-included by the
+binaries that write a fixture; `src/test_support/fixture.rs` is the lib half
+(`write_exec`, plus narrow `read_only`/`writable` for the one non-exec mode
+fixture, neither taking a mode).
+
+Converted every site in the tree: 25 in `src`, 8 in `tests`. Structural, not a
+convention: `rules/no-hand-chmod.yml` refuses `set_permissions`/`from_mode`/
+`set_mode` anywhere in `src` outside `test_support/**` and three named
+production files (`world/tools.rs`'s W9 shims, and the 0600/0700 narrowing in
+`wire/provision.rs` and `bz_host/store.rs`) — with violation 15 in
+`rules/fixtures/violations.rs` so the negative half of `make rules-audit`
+proves it bites. A mode READ is untouched. `rules-audit` scans `src` only, so
+`tests/` was swept by hand and that file says so.
+
+THE MEASUREMENT (the ball's real question). bl-6bf5's recipe, unchanged: one
+filter over the lib test binary — `fan::` plus `start::tests::exec`,
+`cli_outbound::tests::run::spawned`, `cli_outbound::tests::detach`,
+`cli_outbound::piped::tests`, `boundary::login::tests` — 16 workers x 70
+iterations on a 16-core box, three runs each side, 3,360 test-binary runs per
+side, counting "Text file busy":
+
+  lock in place:   0 / 0 / 0
+  guard removed:   0 / 0 / 0
+
+Baseline for both: the same filter cost 2 before this change. So the lock was
+closing nothing once the descriptor was gone, and it is DELETED — `SPAWN_LOCK`,
+`spawn_guard`, and every mention (git_env and test_support module docs,
+`rules/no-bare-fork.yml`'s rationale, `rules/locks-outside-state.yml`'s
+carve-out, CLAUDE.md rule 7 and its bare-fork paragraph, DESIGN section 12's
+git_env row and its testing note, and eight stale in-tree comments that still
+described holding it). The fork chokepoint itself stays: one place to reason
+about what a child inherits, and `exec`'s SIGPIPE/environ contracts are its
+own.
+
+Wider evidence, beyond the recipe: the whole lib suite lockless, 8 workers x 4
+iterations (32 full runs, 2,333 tests each) — 0 ETXTBSY. One unrelated failure
+in those 32, `test_support::seat::tests::a_dead_address_refuses_naming_itself`,
+"Connection reset by peer": it binds port 0, drops the listener and calls the
+port "certainly dead", which stops being true when 32 copies of the suite are
+binding ports on one box. No fork, no exec, no fixture — an artifact of the
+stress, not of this change, and not reachable at CI's concurrency.
+
+bl-6bf5's placement rule ("the lib test binary drives no embedded substrate
+in-process") is no longer load-bearing for ETXTBSY. The `tests/multiplex_*.rs`
+split keeps its other reason, which is `git_env::INHERITED`: a binary running
+its subject in-process must scrub its own process env. Both doc sites now say
+that and not the old thing.
