@@ -26,6 +26,8 @@ mod browse;
 mod files;
 mod knobs;
 mod reads;
+/// The §9.5 typed half of a config read (bl-dc3f).
+mod settings;
 mod tuning;
 
 /// A brazen config declaring one row, so the effective table has a name this

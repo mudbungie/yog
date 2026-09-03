@@ -266,12 +266,9 @@ pub enum Reply {
     /// line, mark row, live badge and §8.2 gates, none of which had a spelling
     /// any face but the window could read.
     Agent(crate::boundary::answer::agent::AgentView),
-    /// One §9 destination's current bytes (§8.5, bl-0164) —
-    /// [`ReadConfig`](super::Query::ReadConfig)'s answer, the file editors'
-    /// Reload spelled.
-    Config {
-        text: String,
-    },
+    /// One §9 destination, raw bytes and typed settings both — see
+    /// [`ConfigView`](super::ConfigView).
+    Config(super::ConfigView),
     /// brazen's effective provider table with the §5.1 #22 credential
     /// presence (§8.5, bl-0164) — [`Providers`](super::Query::Providers)'
     /// answer, the §8.3 login pane's own rows.

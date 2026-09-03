@@ -4,6 +4,7 @@
 //! lineage browse and the §9.4 model roster.
 
 use super::super::*;
+use crate::boundary::reply::ConfigView;
 use crate::config_edit::branch::{ConfigBranch, Lineage};
 use crate::config_edit::brazen::ProviderRowView;
 
@@ -29,17 +30,19 @@ fn the_config_family_says_what_landed_and_what_the_knob_now_reads() {
 
 #[test]
 fn a_config_text_reply_carries_the_bytes_verbatim() {
-    let empty = encode(&Reply::Config {
+    let empty = encode(&Reply::Config(ConfigView {
         text: String::new(),
-    });
+        settings: Vec::new(),
+    }));
     assert_eq!(empty["ok"], true);
     assert_eq!(empty["kind"], "config");
     assert_eq!(empty["text"], "");
     let text = "models:\n  m-1:\n    provider: acme\n";
     assert_eq!(
-        encode(&Reply::Config {
-            text: text.to_owned()
-        })["text"],
+        encode(&Reply::Config(ConfigView {
+            text: text.to_owned(),
+            settings: Vec::new(),
+        }))["text"],
         text
     );
 }

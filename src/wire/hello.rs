@@ -104,7 +104,18 @@ use super::frame;
 /// engine's one home for the sentence, so the sentence has to cross rather than
 /// be re-worded per seat. A gain on two shapes, which the ledger sees and §3
 /// bumps for regardless.
-pub const PROTOCOL: u32 = 12;
+/// 12 → 13 (bl-dc3f): `reply/config` gained `settings` — the file's own schema
+/// applied to the text answered beside it (§9.5), so a config destination is
+/// read as the typed thing it is and not as bytes a seat must parse. A field
+/// gained on a shape in use, which §3's rule bumps outright; **the ledger could
+/// not have caught it**, since `reply/config`'s signature had stood at 1 and
+/// its one free move would have covered exactly this — REMOTE §9.15's
+/// correction, applied again. It does **not** batch onto 12 the way §9.15
+/// batched two reads: 12 landed on `main` ahead of this, and whether a release
+/// captures it before this lands is a race no reader could resolve later —
+/// batching is the exception, and an exception taken against a running release
+/// train is how a version comes to mean two things.
+pub const PROTOCOL: u32 = 13;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

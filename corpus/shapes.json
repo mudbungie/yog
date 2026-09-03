@@ -1,5 +1,5 @@
 {
-  "protocol": 12,
+  "protocol": 13,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -276,10 +276,21 @@
       "signature": [
         "/kind:string",
         "/ok:bool",
+        "/settings/[]/control/kind:string",
+        "/settings/[]/control/max:number",
+        "/settings/[]/control/min:number",
+        "/settings/[]/control:object",
+        "/settings/[]/entry:string",
+        "/settings/[]/fault:string",
+        "/settings/[]/help:string",
+        "/settings/[]/name:string",
+        "/settings/[]/value:string",
+        "/settings/[]:object",
+        "/settings:array",
         "/text:string",
         ":object"
       ],
-      "since": 1
+      "since": 13
     },
     "reply/conversations": {
       "signature": [

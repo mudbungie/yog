@@ -31,6 +31,9 @@ mod balls;
 mod board;
 /// The composer's draft-clearing predicate — its own file at the budget.
 mod cleared;
+/// What a §9 config read answers (bl-dc3f) — the file's two views as one type,
+/// and both directions of their spelling.
+mod config_view;
 /// The whole surface's JSON spelling read back into the type (bl-7067) -- the
 /// thin seat's half of the codec, cut on the same seam as the spelling itself.
 mod decode;
@@ -57,6 +60,7 @@ mod search;
 mod ws_row;
 
 pub use cleared::cleared;
+pub use config_view::ConfigView;
 pub use decode::decode;
 pub use encode::{encode, refusal};
 pub use ws_row::{Workspaces, WsRow};

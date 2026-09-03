@@ -47,7 +47,7 @@ pub use read::Read;
 
 pub(crate) mod read;
 pub(crate) mod write;
-use read::{branch_text, text_at};
+pub(super) use read::file;
 use write::{cadence_path, commit};
 
 /// Run one config apply (§9). The reply says what landed: a file destination
@@ -84,31 +84,6 @@ pub(super) fn apply(
             ..
         } => commit(deps, ts, ws, lineage, origin, path, text),
     }
-}
-
-/// Read one §9 destination's current bytes (§8.5, bl-0164): [`apply`]'s
-/// read-only twin, and the file editors' Reload spelled headless. A file
-/// destination that is not there yet answers empty text — the same "new
-/// file" reading every editor's own load already gives — so only a real I/O
-/// failure refuses. A **lineage** answers the pane's own Load (bl-dff8): `git
-/// show config/<lineage>:<path>`, the very bytes an Apply on that destination
-/// would be diffed against. It carries the write's `origin` and ignores it,
-/// because where the next commit lands is not where the current bytes are;
-/// [`Query::Lineages`](super::Query::Lineages) is the browse that says which
-/// paths a lineage holds.
-pub(super) fn read(deps: &Deps, ws: &Path, file: &ConfigFile) -> Result<Reply, String> {
-    let text = match file {
-        ConfigFile::Brazen { .. } => text_at(&brazen_paths(deps, ws).config)?,
-        ConfigFile::LitanyModels => text_at(&LitanyGlobal::resolve(&deps.world).models())?,
-        ConfigFile::LitanyWorkflow { name } => text_at(
-            &LitanyGlobal::resolve(&deps.world)
-                .new_workflow(name)
-                .map_err(|e| e.to_string())?,
-        )?,
-        ConfigFile::Cadence => text_at(&cadence_path(&deps.world))?,
-        ConfigFile::Branch { lineage, path, .. } => branch_text(ws, lineage, path)?,
-    };
-    Ok(Reply::Config { text })
 }
 
 /// The §9.3 browse (§8.5, bl-dff8): the workspace's lineages, each with the

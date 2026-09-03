@@ -77,4 +77,27 @@ impl ConfigFile {
             }
         }
     }
+
+    /// **The destination's leaf name** — what
+    /// [`schema_for`](crate::config_edit::form::schema_for) is asked to decide
+    /// whether this file has typed settings (§9.5, bl-dc3f).
+    ///
+    /// The name and nothing else, because that is already the one authority on
+    /// which files yog has a grammar for: a `providers.yaml` is the same shape
+    /// wherever it sits, and the three destinations yog declines to interpret —
+    /// brazen's `config.toml`, a `workflows/<name>.yaml`, any lineage path with
+    /// no table — are declined by the *same* table returning nothing, which is
+    /// §9.5's raw-text fallback as the general path with empty input rather
+    /// than a branch here.
+    pub(crate) fn file_name(&self) -> String {
+        match self {
+            ConfigFile::Brazen { .. } => "config.toml".to_owned(),
+            ConfigFile::LitanyModels => crate::model_pick::grammar::MODELS_YAML.to_owned(),
+            ConfigFile::LitanyWorkflow { name } => format!("{name}.yaml"),
+            ConfigFile::Cadence => crate::app::cadence::CADENCE_YAML.to_owned(),
+            ConfigFile::Branch { path, .. } => {
+                path.rsplit('/').next().unwrap_or_default().to_owned()
+            }
+        }
+    }
 }

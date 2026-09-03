@@ -4365,6 +4365,62 @@ answers and three readings of `exit_label`. A client that renders the trail
 should stop classifying `exit` and read the words; one that does not render it
 still decodes the fixture, which is what catches the fields it drops.
 
+### 9.18 A config file is answered as the typed thing it is (bl-dc3f)
+
+**`reply/config` gained `settings`.** `PROTOCOL` is **13** — not a batch onto
+bl-09ef's 12, which landed on `main` ahead of this: whether a release captured
+it first is a race no reader could resolve afterwards, and §9.15's batching is
+an exception rather than the rule.
+
+DESIGN §9.5 rules that *"every setting the files declare is answered as the
+typed thing it is"*, judged at input rather than at Apply. yog holds that
+enumeration — a schema per file, a control per field, the bounds the control is
+legal in, and the provider judgement the §9.4 pick gate makes — and answered
+none of it: `ReadConfig` returned bytes, so a seat editing `cadence.yaml` had
+exactly the blind buffer the ruling was written to end.
+
+- **One answer, both views, one read of disk.** The reply now carries the
+  destination's `text` and, beside it, that file's schema applied to *those very
+  bytes* — never a second read, which could be of a different state. The
+  alternative was `Query::ConfigSchema`, a pure interface-description read like
+  `Query::Help`; it is refused because a schema alone does not say what the
+  values ARE, so a seat would always have to join it against a `ReadConfig`, and
+  two reads of one file have staleness between them.
+- **A flat list, each row naming its `entry`.** `models.yaml` declares one entry
+  per model id and `providers.yaml` one per role, so the rows group — but a
+  grouping is `entry` read twice, and a seat makes it while it paints. The
+  engine keeps no second shape for it.
+- **The bounds ride the control**, as a shape rather than four optional
+  siblings: `{"kind":"number","min":…,"max":…}` beside the bare
+  `{"kind":"provider"}` / `list` / `text`. Judging at input is the ruling's own
+  verb and cannot be done without the range, and yog's ranges are the worker's
+  own consts — a seat re-deriving them would be a second authority on the
+  clock's limits.
+- **`fault` is absent, never null.** It is the row's judgement in words, and the
+  provider arm is literally `grammar::is_unknown_row` — the same call §9.4's
+  pick gate makes — so the typed view and the gate cannot disagree *across* the
+  boundary and not merely inside one process. An unanswerable brazen is an empty
+  table, which faults nothing: no surface may refuse on the strength of a
+  question that went unanswered.
+- **A file with no schema answers an EMPTY array**, not an absent key. §9.5's
+  three justified raw-text fallbacks — brazen's `config.toml`, a
+  `workflows/*.yaml`, a config commit's prose paths — are the general path with
+  empty input rather than a branch, and a seat with no settings is already
+  showing the raw editor.
+- **The write is unchanged.** `ApplyConfig` still carries the whole text through
+  the same stage → gate → hash-guard → rename pipeline; a typed edit is a seat
+  composing that text and applying it, which is the act the raw editor already
+  makes. No new act, no per-setting write, no second commit per keystroke.
+
+**The bump is the rule, not the ledger** — §9.15's correction, applied again.
+`reply/config`'s signature had stood at 1, so the mechanism's one free move per
+shape would have passed this in silence; §3's rule is the authority, and a field
+gained on a shape already in use bumps the version. **What a client owes it:**
+re-vendor `corpus/`, whose `reply/config` fixture now spells three frames — a
+file with no grammar, a `providers.yaml` whose role is bound to a row brazen's
+table does not carry, and `cadence.yaml`'s three bounded numbers — so every
+control kind and both `fault` readings cross.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

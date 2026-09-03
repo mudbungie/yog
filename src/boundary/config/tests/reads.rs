@@ -8,7 +8,7 @@ use crate::boundary::Query;
 use crate::boundary::config::ConfigFile;
 use crate::boundary::config::Read;
 use crate::boundary::dispatch::Deps;
-use crate::boundary::reply::Reply;
+use crate::boundary::reply::{ConfigView, Reply};
 use crate::git_tree::tests::fixture::Fixture;
 use std::path::{Path, PathBuf};
 use tempfile::tempdir;
@@ -23,9 +23,10 @@ fn a_brazen_read_answers_the_bytes_on_disk() {
     let deps = quiet(root.path());
     assert_eq!(
         ask(&deps, &reading(brazen_file())),
-        Ok(Reply::Config {
-            text: ACME.to_owned()
-        })
+        Ok(Reply::Config(ConfigView {
+            text: ACME.to_owned(),
+            settings: Vec::new(),
+        }))
     );
 }
 
@@ -42,18 +43,20 @@ fn a_config_gesture_reads_the_sphere_it_names_not_the_seats_own() {
     let elsewhere = |file| Query::Config(Read::File { file });
     assert_eq!(
         ask(&deps, &reading(brazen_file())),
-        Ok(Reply::Config {
-            text: ACME.to_owned()
-        })
+        Ok(Reply::Config(ConfigView {
+            text: ACME.to_owned(),
+            settings: Vec::new(),
+        }))
     );
     let other = ConfigFile::Brazen {
         workspace: crate::naming::leaf(&(PathBuf::from("/other-sphere"))),
     };
     assert_eq!(
         ask(&deps, &elsewhere(other)),
-        Ok(Reply::Config {
-            text: String::new()
-        }),
+        Ok(Reply::Config(ConfigView {
+            text: String::new(),
+            settings: Vec::new(),
+        })),
         "another workspace's wall is another workspace's file"
     );
     // And the table follows the same name: rows are read inside the sphere the
@@ -86,9 +89,10 @@ fn a_seat_with_no_wall_of_its_own_still_reaches_the_named_sphere() {
     };
     assert_eq!(
         ask(&deps, &reading(brazen_file())),
-        Ok(Reply::Config {
-            text: ACME.to_owned()
-        })
+        Ok(Reply::Config(ConfigView {
+            text: ACME.to_owned(),
+            settings: Vec::new(),
+        }))
     );
     let Ok(Reply::Providers(rows)) = ask(
         &deps,
@@ -115,9 +119,10 @@ fn a_destination_not_there_yet_reads_as_empty_not_a_refusal() {
     ] {
         assert_eq!(
             ask(&deps, &reading(file)),
-            Ok(Reply::Config {
-                text: String::new()
-            })
+            Ok(Reply::Config(ConfigView {
+                text: String::new(),
+                settings: Vec::new(),
+            }))
         );
     }
 }
@@ -132,9 +137,10 @@ fn a_round_trip_apply_then_read_returns_the_same_bytes() {
     assert!(fire(&deps, &applying(ConfigFile::LitanyModels, text)).is_ok());
     assert_eq!(
         ask(&deps, &reading(ConfigFile::LitanyModels)),
-        Ok(Reply::Config {
-            text: text.to_owned()
-        })
+        Ok(Reply::Config(ConfigView {
+            text: text.to_owned(),
+            settings: Vec::new(),
+        }))
     );
 }
 

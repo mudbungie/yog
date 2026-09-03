@@ -205,7 +205,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // every seat here is already off-frame.
         Query::Config(read) => {
             return match read {
-                config::Read::File { file } => config::read(deps, ws, file),
+                config::Read::File { file } => config::file(deps, ws, file),
                 config::Read::Marks { .. } => Ok(config::read_marks(deps, ws)),
                 config::Read::Providers { .. } => Ok(config::providers(deps, ws)),
                 config::Read::Lineages { .. } => config::lineages(ws),

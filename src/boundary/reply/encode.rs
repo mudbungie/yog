@@ -162,7 +162,9 @@ pub fn encode(reply: &Reply) -> Value {
         // The §9 config family's answers, one arm since bl-2410: the carrier
         // its questions were folded onto (bl-719a) has a matching set of
         // replies, and the roster names the family once on this side too.
-        Reply::Config { text } => json!({ "ok": true, "kind": "config", "text": text }),
+        // The raw bytes and the same bytes read through the file's schema
+        // (§9.5, bl-dc3f): one answer, both views, the file the single fact.
+        Reply::Config(view) => super::config_view::config(view),
         Reply::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
         Reply::Roles(rows) => rows_reply("roles", rows.iter().map(role_row)),
         Reply::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),

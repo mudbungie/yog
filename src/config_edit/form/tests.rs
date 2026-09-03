@@ -2,7 +2,9 @@
 //! on, and what it writes back. Every arm is pure text → text, so the whole
 //! table is driven without egui, disk or brazen.
 
-use super::{Control, Group, MODELS_SCHEMA, ROLES_SCHEMA, Row, read, schema_for, write};
+use super::{
+    Control, FieldSpec, MODELS_SCHEMA, ROLES_SCHEMA, Row, Schema, read, schema_for, write,
+};
 use crate::model_pick::grammar::MODELS_YAML;
 use crate::model_pick::tests::{SEEDED_MODELS, TEMPLATE_PROVIDERS};
 
@@ -10,13 +12,30 @@ fn rows() -> Vec<String> {
     vec!["codex".to_string(), "anthropic".to_string()]
 }
 
-fn row_of(groups: &[Group], entry: &str, field: &str) -> Row {
-    groups
-        .iter()
-        .find(|g| g.entry == entry)
-        .and_then(|g| g.rows.iter().find(|r| r.field == field))
+fn row_of(rows: &[Row], entry: &str, field: &str) -> Row {
+    rows.iter()
+        .find(|r| r.entry == entry && r.name == field)
         .cloned()
         .unwrap_or_else(|| panic!("no {entry}.{field} row"))
+}
+
+/// The settings one entry declares, in file order — what a `Group` used to be,
+/// derived from the flat answer the way a seat derives it (bl-dc3f).
+fn fields_of(rows: &[Row], entry: &str) -> Vec<String> {
+    rows.iter()
+        .filter(|r| r.entry == entry)
+        .map(|r| r.name.clone())
+        .collect()
+}
+
+/// The schema's own spec for one field — what [`write`] is handed now that a
+/// row may have come off a wire.
+fn spec_of(schema: &Schema, name: &str) -> FieldSpec {
+    *schema
+        .fields
+        .iter()
+        .find(|f| f.name == name)
+        .unwrap_or_else(|| panic!("no {name} field"))
 }
 
 #[test]
@@ -36,18 +55,22 @@ fn schema_is_the_three_files_yog_reads_and_nothing_else() {
 fn cadence_yaml_reads_as_the_watcher_entry_and_writes_in_place() {
     use crate::app::cadence;
     let schema = schema_for(cadence::CADENCE_YAML).unwrap();
-    let groups = read(&schema, cadence::TEMPLATE, &[]);
-    assert_eq!(groups.len(), 1, "one entry: {groups:?}");
-    assert_eq!(groups[0].entry, "watcher");
-    let fields: Vec<&str> = groups[0].rows.iter().map(|r| r.field).collect();
+    let rows = read(&schema, cadence::TEMPLATE, &[]);
+    assert!(rows.iter().all(|r| r.entry == "watcher"), "{rows:?}");
     assert_eq!(
-        fields,
+        fields_of(&rows, "watcher"),
         ["debounce_ms", "cheap_sweep_ms", "full_sweep_ms"],
         "the three periods, each typed"
     );
-    assert!(groups[0].rows.iter().all(|r| r.fault.is_none()));
-    let row = row_of(&groups, "watcher", "cheap_sweep_ms");
-    let text = write(&schema, cadence::TEMPLATE, &row, "5000").unwrap();
+    assert!(rows.iter().all(|r| r.fault.is_none()));
+    let text = write(
+        &schema,
+        cadence::TEMPLATE,
+        "watcher",
+        &spec_of(&schema, "cheap_sweep_ms"),
+        "5000",
+    )
+    .unwrap();
     assert_eq!(cadence::parse(&text).cheap_sweep.as_millis(), 5000);
     assert!(
         text.contains("full_sweep_ms: 15000") && text.contains("# yog's clock"),
@@ -61,31 +84,33 @@ fn cadence_yaml_reads_as_the_watcher_entry_and_writes_in_place() {
 /// setting that cannot matter, and the pane shows the settings that exist.
 #[test]
 fn models_yaml_reads_as_one_group_per_declared_id() {
-    let groups = read(&MODELS_SCHEMA, SEEDED_MODELS, &rows());
-    assert_eq!(groups.len(), 1);
-    assert_eq!(groups[0].entry, "gpt-5.4");
-    let fields: Vec<&str> = groups[0].rows.iter().map(|r| r.field).collect();
-    assert_eq!(fields, vec!["model_id", "context_window"]);
-    assert_eq!(row_of(&groups, "gpt-5.4", "model_id").value, "gpt-5.4");
-    assert_eq!(row_of(&groups, "gpt-5.4", "context_window").value, "400000");
-    assert!(!row_of(&groups, "gpt-5.4", "context_window").help.is_empty());
+    let rows = read(&MODELS_SCHEMA, SEEDED_MODELS, &rows());
+    assert_eq!(
+        fields_of(&rows, "gpt-5.4"),
+        vec!["model_id", "context_window"]
+    );
+    assert_eq!(rows.len(), 2, "one entry, its two settings: {rows:?}");
+    assert_eq!(row_of(&rows, "gpt-5.4", "model_id").value, "gpt-5.4");
+    assert_eq!(row_of(&rows, "gpt-5.4", "context_window").value, "400000");
+    assert!(!row_of(&rows, "gpt-5.4", "context_window").help.is_empty());
 }
 
 #[test]
 fn providers_yaml_reads_as_one_group_per_role() {
-    let groups = read(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &rows());
-    let names: Vec<&str> = groups.iter().map(|g| g.entry.as_str()).collect();
-    assert_eq!(names, vec!["worker", "compactor"]);
+    let rows = read(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &rows());
+    let mut names: Vec<&str> = rows.iter().map(|r| r.entry.as_str()).collect();
+    names.dedup();
     assert_eq!(
-        row_of(&groups, "worker", "tools").value,
+        names,
+        vec!["worker", "compactor"],
+        "entry order is file order"
+    );
+    assert_eq!(
+        row_of(&rows, "worker", "tools").value,
         "bash, read_file, load_skill"
     );
     // The compactor declares no `tools:`, so it simply has no such row.
-    let compactor = groups
-        .iter()
-        .find(|g| g.entry == "compactor")
-        .map(|g| g.rows.iter().map(|r| r.field).collect::<Vec<_>>());
-    assert_eq!(compactor, Some(vec!["provider", "model"]));
+    assert_eq!(fields_of(&rows, "compactor"), vec!["provider", "model"]);
 }
 
 #[test]
@@ -119,8 +144,7 @@ fn an_off_shape_list_and_an_off_range_number_fault_rather_than_render_typed() {
     assert_eq!(tools.value, "");
     assert!(tools.fault.is_some_and(|f| f.contains("inline")));
     let odd = "models:\n  m:\n    context_window: lots\n";
-    let groups = read(&MODELS_SCHEMA, odd, &rows());
-    let window = row_of(&groups, "m", "context_window");
+    let window = row_of(&read(&MODELS_SCHEMA, odd, &rows()), "m", "context_window");
     assert_eq!(window.value, "lots");
     assert!(window.fault.is_some_and(|f| f.contains("whole number")));
     // Zero is out of range too — the bound is a setting, not a hint.
@@ -134,9 +158,15 @@ fn an_off_shape_list_and_an_off_range_number_fault_rather_than_render_typed() {
 
 #[test]
 fn writing_a_control_rewrites_one_line_and_nothing_else() {
-    let groups = read(&MODELS_SCHEMA, SEEDED_MODELS, &rows());
-    let row = row_of(&groups, "gpt-5.4", "model_id");
-    let out = write(&MODELS_SCHEMA, SEEDED_MODELS, &row, " gpt-5.4-mini ").unwrap();
+    let spec = spec_of(&MODELS_SCHEMA, "model_id");
+    let out = write(
+        &MODELS_SCHEMA,
+        SEEDED_MODELS,
+        "gpt-5.4",
+        &spec,
+        " gpt-5.4-mini ",
+    )
+    .unwrap();
     assert!(out.contains("    model_id: gpt-5.4-mini\n"));
     // Every other byte survives: the comment header, and the legacy fields yog
     // neither writes nor offers a control over.
@@ -147,28 +177,32 @@ fn writing_a_control_rewrites_one_line_and_nothing_else() {
 
 #[test]
 fn a_number_is_clamped_and_a_list_is_re_emitted_as_a_flow_sequence() {
-    let groups = read(&MODELS_SCHEMA, SEEDED_MODELS, &rows());
-    let window = row_of(&groups, "gpt-5.4", "context_window");
-    let out = write(&MODELS_SCHEMA, SEEDED_MODELS, &window, "999999999999").unwrap();
-    assert!(out.contains("    context_window: 100000000\n"));
+    let window = spec_of(&MODELS_SCHEMA, "context_window");
+    let at = |v| write(&MODELS_SCHEMA, SEEDED_MODELS, "gpt-5.4", &window, v).unwrap();
+    assert!(at("999999999999").contains("    context_window: 100000000\n"));
     // Unparseable falls to the floor rather than writing a line yog cannot read.
-    let out = write(&MODELS_SCHEMA, SEEDED_MODELS, &window, "").unwrap();
-    assert!(out.contains("    context_window: 1\n"));
-    let roles = read(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &rows());
-    let tools = row_of(&roles, "worker", "tools");
-    let out = write(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &tools, " a , ,b ").unwrap();
-    assert!(out.contains("    tools: [a, b]\n"));
-    let out = write(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &tools, "").unwrap();
-    assert!(out.contains("    tools: []\n"));
+    assert!(at("").contains("    context_window: 1\n"));
+    let tools = spec_of(&ROLES_SCHEMA, "tools");
+    let at = |v| write(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, "worker", &tools, v).unwrap();
+    assert!(at(" a , ,b ").contains("    tools: [a, b]\n"));
+    assert!(at("").contains("    tools: []\n"));
 }
 
 #[test]
 fn writing_a_role_field_declines_loudly_off_grammar() {
-    let groups = read(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &rows());
-    let row = row_of(&groups, "worker", "model");
-    assert!(write(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, &row, "opus-5").is_ok());
-    // The same row against a file whose block is inline: refused, not guessed.
-    let err = write(&ROLES_SCHEMA, "roles: {}\n", &row, "opus-5").unwrap_err();
+    let model = spec_of(&ROLES_SCHEMA, "model");
+    assert!(
+        write(
+            &ROLES_SCHEMA,
+            TEMPLATE_PROVIDERS,
+            "worker",
+            &model,
+            "opus-5"
+        )
+        .is_ok()
+    );
+    // The same field against a file whose block is inline: refused, not guessed.
+    let err = write(&ROLES_SCHEMA, "roles: {}\n", "worker", &model, "opus-5").unwrap_err();
     assert!(err.to_string().contains("inline value"));
 }
 

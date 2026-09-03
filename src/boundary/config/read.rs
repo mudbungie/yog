@@ -5,8 +5,12 @@
 //! of the world at the moment they are asked*, which is what this module is.
 
 use super::ConfigFile;
+use crate::boundary::dispatch::Deps;
+use crate::boundary::reply::{ConfigView, Reply};
 use crate::config_edit::branch::{Lineage, config_file, lineages};
-use crate::config_edit::brazen::{BzOutcome, BzRunner, RealBzRunner};
+use crate::config_edit::brazen::{BzOutcome, BzRunner, RealBzRunner, row_names};
+use crate::config_edit::form::{self, Control, Row, schema_for};
+use crate::config_edit::litany_global::LitanyGlobal;
 use crate::config_edit::{RealFileIo, load_snapshot};
 use crate::model_pick::query::{EMPTY_ROSTER, model_ids};
 use std::path::Path;
@@ -97,6 +101,66 @@ pub(super) fn branch_text(workspace: &Path, lineage: &str, path: &str) -> Result
     config_file(workspace, &format!("config/{lineage}"), path)
         .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
         .map_err(|e| e.to_string())
+}
+
+/// Read one §9 destination (§8.5, bl-0164): [`apply`](super::apply)'s read-only
+/// twin, and the file editors' Reload spelled headless. A file destination that
+/// is not there yet answers empty text — the same "new file" reading every
+/// editor's own load already gives — so only a real I/O failure refuses. A
+/// **lineage** answers the pane's own Load (bl-dff8): `git show
+/// config/<lineage>:<path>`, the very bytes an Apply on that destination would
+/// be diffed against. It carries the write's `origin` and ignores it, because
+/// where the next commit lands is not where the current bytes are;
+/// [`Query::Lineages`](crate::boundary::Query::Lineages) is the browse that
+/// says which paths a lineage holds.
+///
+/// **The answer is the text AND the file's typed settings** (§9.5, bl-dc3f):
+/// the same bytes read twice, once verbatim and once through the schema, so one
+/// answer serves the raw editor and the controls pane and the file stays the
+/// single fact. It is a fold over the text just returned — never a second read
+/// of disk, which would let the two halves of one answer disagree. A file yog
+/// has no grammar for answers an **empty** list, not an absent field: §9.5's
+/// three raw-text fallbacks are *"the general path with empty input, not a
+/// branch"*, and a seat with no settings to show is already showing the raw
+/// editor.
+pub(crate) fn file(deps: &Deps, ws: &Path, dest: &ConfigFile) -> Result<Reply, String> {
+    let text = match dest {
+        ConfigFile::Brazen { .. } => text_at(&super::brazen_paths(deps, ws).config)?,
+        ConfigFile::LitanyModels => text_at(&LitanyGlobal::resolve(&deps.world).models())?,
+        ConfigFile::LitanyWorkflow { name } => text_at(
+            &LitanyGlobal::resolve(&deps.world)
+                .new_workflow(name)
+                .map_err(|e| e.to_string())?,
+        )?,
+        ConfigFile::Cadence => text_at(&super::cadence_path(&deps.world))?,
+        ConfigFile::Branch { lineage, path, .. } => branch_text(ws, lineage, path)?,
+    };
+    let settings = settings(deps, ws, dest, &text);
+    Ok(Reply::Config(ConfigView { text, settings }))
+}
+
+/// The file's schema applied to the text it just answered (§9.5) — the settings
+/// table, the bounds each control judges at input, and the provider judgement
+/// `is_unknown_row` makes, all of which §9.5 rules must reach the surface and
+/// none of which crossed before bl-dc3f.
+///
+/// **brazen is asked only where a control needs it.** The provider fault is the
+/// one judgement here that is not a fact of the text, and only a schema
+/// declaring a [`Control::Provider`] field can carry it — so a `cadence.yaml`
+/// read spawns nothing, and the `Deps` contract ("asked, never stored", read
+/// inside the wall the gesture names — bl-fcd5) is kept where it does. An
+/// unanswerable brazen is an empty table, which faults nothing: no surface may
+/// refuse on the strength of a question that went unanswered.
+fn settings(deps: &Deps, ws: &Path, dest: &ConfigFile, text: &str) -> Vec<Row> {
+    let Some(schema) = schema_for(&dest.file_name()) else {
+        return Vec::new();
+    };
+    let providers = if schema.fields.iter().any(|f| f.control == Control::Provider) {
+        row_names(&RealBzRunner::resolve(&super::wall_env(deps, ws)).providers())
+    } else {
+        Vec::new()
+    };
+    form::read(&schema, text, &providers)
 }
 
 /// The §9.3 browse (bl-dff8): every lineage with the files its tip holds. A

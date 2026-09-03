@@ -14,7 +14,7 @@ use crate::boundary::Query;
 use crate::boundary::config::ConfigFile;
 use crate::boundary::config::Read;
 use crate::boundary::config::read::roster;
-use crate::boundary::reply::Reply;
+use crate::boundary::reply::{ConfigView, Reply};
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::brazen::BzOutcome;
 use crate::git_tree::tests::fixture::Fixture;
@@ -45,9 +45,10 @@ fn a_lineage_read_answers_the_bytes_at_its_tip() {
     // The fixture seeds `version` = "1\n" on the first config commit.
     assert_eq!(
         ask(&deps, &reading(lineage_file(&fx.path, "version"))),
-        Ok(Reply::Config {
-            text: "1\n".to_owned()
-        })
+        Ok(Reply::Config(ConfigView {
+            text: "1\n".to_owned(),
+            settings: Vec::new(),
+        }))
     );
 }
 

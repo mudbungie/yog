@@ -29,43 +29,44 @@ pub use schema::{
     CADENCE_SCHEMA, Control, FieldSpec, MODELS_SCHEMA, ROLES_SCHEMA, Schema, schema_for,
 };
 
-/// One rendered setting: what it edits, what the file currently spells, and why
-/// that value is not usable.
+/// One rendered setting: which entry declares it, what it edits, what the file
+/// currently spells, and why that value is not usable.
+///
+/// **Owned, not `&'static`, since bl-dc3f.** The rows cross the §8.5 boundary
+/// on `Query::ReadConfig`'s answer, so they are read back off a wire as well as
+/// built from [`FieldSpec`]'s tables, and a decoded row has no static text to
+/// borrow. One type in both directions, as everywhere else on this boundary.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Row {
+    /// The block entry this setting hangs under — a model id, a role name. A
+    /// seat groups the flat list by it; the engine keeps no second shape for
+    /// that, because a grouping IS this field read twice.
     pub entry: String,
-    pub field: &'static str,
+    pub name: String,
     pub control: Control,
-    pub help: &'static str,
+    pub help: String,
     /// The value as its control shows it — a flow sequence as its members.
     pub value: String,
     /// Why this value cannot be used as it stands, or `None`.
     pub fault: Option<String>,
 }
 
-/// One block entry's settings: a model id's, or a role's.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Group {
-    pub entry: String,
-    pub rows: Vec<Row>,
-}
-
-/// Read a file's text as typed settings (§9.5). A field the entry does not
-/// declare yields no row: the pane shows the settings that exist, and litany's
-/// own loader stays the authority on a half-written entry.
+/// Read a file's text as typed settings (§9.5) — **one flat list, entry order
+/// then field order**. A field the entry does not declare yields no row: the
+/// answer carries the settings that exist, and litany's own loader stays the
+/// authority on a half-written entry.
 ///
 /// `provider_rows` is brazen's effective table; an empty one is no answer and
 /// faults nothing ([`is_unknown_row`]).
-pub fn read(schema: &Schema, text: &str, provider_rows: &[String]) -> Vec<Group> {
+pub fn read(schema: &Schema, text: &str, provider_rows: &[String]) -> Vec<Row> {
     entry_names(text, schema.block)
         .into_iter()
-        .map(|entry| {
-            let rows = schema
+        .flat_map(|entry| {
+            schema
                 .fields
                 .iter()
                 .filter_map(|spec| row(schema, text, &entry, spec, provider_rows))
-                .collect();
-            Group { entry, rows }
+                .collect::<Vec<Row>>()
         })
         .collect()
 }
@@ -81,9 +82,9 @@ fn row(
     let (value, fault) = present(spec.control, &raw, provider_rows);
     Some(Row {
         entry: entry.to_owned(),
-        field: spec.name,
+        name: spec.name.to_owned(),
         control: spec.control,
-        help: spec.help,
+        help: spec.help.to_owned(),
         value,
         fault,
     })
@@ -127,14 +128,25 @@ fn present(control: Control, raw: &str, provider_rows: &[String]) -> (String, Op
 /// anchored line edit the picker writes through, so an off-grammar file
 /// declines here exactly as it declines there. The caller Applies the returned
 /// text through the unchanged §9 pipeline; nothing here touches disk.
-pub fn write(schema: &Schema, text: &str, row: &Row, value: &str) -> Result<String, GrammarError> {
+///
+/// It takes the [`FieldSpec`] rather than a [`Row`] (bl-dc3f): a row is now an
+/// **answered** thing a peer may hand back, so the field being written and the
+/// control normalizing it must come from the schema — the one authority on what
+/// this file declares — and not from the bytes asking for the write.
+pub fn write(
+    schema: &Schema,
+    text: &str,
+    entry: &str,
+    spec: &FieldSpec,
+    value: &str,
+) -> Result<String, GrammarError> {
     set_field(
         schema.file,
         text,
         schema.block,
-        &row.entry,
-        row.field,
-        &normalize(row.control, value),
+        entry,
+        spec.name,
+        &normalize(spec.control, value),
     )
 }
 

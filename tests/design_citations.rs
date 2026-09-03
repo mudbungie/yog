@@ -65,7 +65,11 @@ const FOREIGN: &[&str] = &[
     // argument — why `providers` was the wrong shape, why a raw-text read was,
     // and why nothing set is an answer — lives there rather than in the
     // variant's own doc.
-    "9.7", "9.8", "9.9", "9.14",
+    // §9.15 joins them (bl-8758, cited by bl-dc3f's own bump note): the
+    // correction that the *rule* bumps the protocol version and the corpus
+    // ledger only enforces what it can see — which every later bump on a shape
+    // whose signature had stood still is an application of.
+    "9.7", "9.8", "9.9", "9.14", "9.15",
     // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
     // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
     // "Rejections" and has no subsections at all, which the sibling test keeps

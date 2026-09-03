@@ -104,7 +104,7 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         // lane frame, because they are one value.
         super::encode::LOGIN => crate::login::wire::view_of(o).map(Reply::Login),
         "marks" => str_of(o, "branch").map(|branch| Reply::Marks { branch }),
-        "config" => str_of(o, "text").map(|text| Reply::Config { text }),
+        "config" => super::config_view::config_of(o).map(Reply::Config),
         _ => return None,
     })
 }
