@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.19](https://github.com/mudbungie/yog/compare/v0.0.18...v0.0.19) - 2026-09-03
+
+### Changes
+
+- the server leaf covers one host, and widening it costs the whole CA [bl-52f4]
+
 ## [0.0.18](https://github.com/mudbungie/yog/compare/v0.0.17...v0.0.18) - 2026-09-03
 
 ### Changes
