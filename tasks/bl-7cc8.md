@@ -1,7 +1,7 @@
 +++
 title = "seat-shaped derivations still in the server with no boundary spelling: drafts, enabled, the name preview, the fork composer"
 created = 1788414434
-updated = 1788415221
+updated = 1788415504
 claimant = "Spellbind-M"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -49,3 +49,13 @@ Two more, both bl-1fd0's: `crate::start::StartGate` and `crate::start::WallCredi
 ---
 
 Also `AppModel::last_failure` / `SurfaceFailure` (`src/app/balls.rs`) — no production caller — but that one has its own ball because the missing carrier is larger than the module: bl-4d81.
+
+---
+
+Landed as DELETE, with one dead premise corrected.
+
+Deleted: `src/actions/drafts.rs` (+ `ActionsState` and `draft_clears`, which held and cleared them), `start::goal::{preview, Composer}` + `start::identity::identity_preview`, `src/fork/composer.rs` (and with it `fork::choices`' `Choices`/`ForkPoint`/`choices()`/`pool()` and the now-unread `CONFIG_REF`, all callerless once the composer went), `src/science/{compose,respdiff}.rs`, `src/start/gate.rs` (`StartGate`/`WallCredit`). About 1780 lines out.
+
+**`src/actions/enabled.rs` was NOT callerless and the ball's premise on it is dead.** `src/boundary/answer/agent.rs` carries three of its predicates into the §8.5 agent answer — `nudgeable: nudge_enabled(..)`, `stoppable: stop_enabled(..)`, `stop_children: stop_children_offered(..)` — so a seat is TOLD, not asked to re-derive; `assign_enabled`/`close_enabled`/`unclaim_enabled` are read by `src/nav/menu.rs`. The file stays. The one member with no carrier went: `message_enabled(present, content)`, whose `content` half is a composer's text — the answer already states `present`, the half a boundary can know.
+
+Same shape, still unfiled, deliberately left: `src/nav/menu.rs` (the §11 context-menu roster — a pure seat table reached by nothing but itself), and the actions root's remaining form predicates `work_dir_refusal`/`goal_present`/`new_prompt_enabled`/`create_ball_enabled`/`new_ball_hints`, none of which has a production caller. They are questions about *inputs* rather than views, and they were outside this ball's list, so they want their own ruling.
