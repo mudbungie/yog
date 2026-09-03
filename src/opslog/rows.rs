@@ -1,15 +1,19 @@
-//! Ops-pane and surface-failure view-models (DESIGN §4.2, §7.3, §11).
+//! The ops-trail row view-model (DESIGN §4.2, §7.3, §11).
 //!
 //! [`OpRow`] carries the **full** `ops.jsonl` entry (argv, cwd, exit, stdout,
 //! stderr) so the ops pane can expand a row to the whole record — "a trail that
 //! hides *why* is not a trail" (§7.3). What that `exit` field *means* — is the
 //! row a failure, a drift, and how does its exit read in words — is the one
-//! classification in [`super::exit`], which carries `OpRow`'s other half;
-//! [`SurfaceFailure`]
-//! is what the originating surface (start pane, input bar) holds as its §5.3
-//! RAM item and paints in ichor red — argv + a stderr tail. Both are pure
-//! projections of the durable ops line, so the surface's RAM item and the ops
-//! pane never diverge (§5.3: "renders the durable fact from the pane").
+//! classification in [`super::exit`], which carries `OpRow`'s other half; where
+//! the row *stands* in the trail is [`super::standing`]'s, and both cross the
+//! §8.5 boundary on the row itself.
+//!
+//! **`SurfaceFailure` stood here and is gone (bl-4d81).** It was the compact
+//! argv-plus-stderr-tail a §7.3 banner painted, held by whichever surface the
+//! op's `origin` named — and it had no production caller once the window left
+//! (bl-7942). The row-level [`Standing`](super::Standing) answers it: a banner
+//! is the rows standing `live`, grouped by `origin`, and every field it would
+//! have projected is already on the row it projected from.
 
 use super::{OpEntry, Origin};
 
@@ -101,30 +105,6 @@ impl From<&OpEntry> for OpRow {
             stdout: entry.stdout.clone(),
             stderr: entry.stderr.clone(),
             origin: entry.origin,
-        }
-    }
-}
-
-/// The failure a surface paints in ichor red (§7.3): the attempted `argv` and
-/// the tail of its `stderr`. Built from the same ops line the pane renders, so
-/// the two never diverge.
-///
-/// It carries no origin of its own (bl-48f8). The attribution lives on the
-/// durable row ([`OpRow::origin`]) and is the *question*
-/// [`AppModel::last_failure`](crate::AppModel::last_failure) is asked — a
-/// surface that named an origin to get this value cannot learn anything by
-/// reading it back, and a second copy of one fact is how the two drift.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct SurfaceFailure {
-    pub argv: String,
-    pub stderr_tail: String,
-}
-
-impl From<&OpRow> for SurfaceFailure {
-    fn from(row: &OpRow) -> Self {
-        Self {
-            argv: row.argv.clone(),
-            stderr_tail: stderr_tail(&row.stderr),
         }
     }
 }

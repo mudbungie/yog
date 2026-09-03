@@ -3,7 +3,7 @@
 //! trail. Both directions, end to end — write the line, fire the §8.5 act, let
 //! the worker re-read the tail (`tick`), assert what the answers derive.
 
-use super::{model, world};
+use super::{banner, model, world};
 use crate::AppModel;
 use crate::opslog::{self, Origin};
 
@@ -81,8 +81,8 @@ fn an_ack_quiets_the_banners_and_the_chip_without_hiding_a_row() {
     drift(&m);
     m.after_litany_verb();
     m.tick();
-    assert!(m.last_failure(Origin::Balls).is_some());
-    assert!(m.last_failure(Origin::Conversation).is_some());
+    assert!(banner(&m, Origin::Balls).is_some());
+    assert!(banner(&m, Origin::Conversation).is_some());
     assert_eq!(m.activity().errors, 2);
     assert_eq!(m.activity().drifts, 1);
     assert!(m.activity().alarming(), "and the pane offers its Dismiss");
@@ -90,10 +90,10 @@ fn an_ack_quiets_the_banners_and_the_chip_without_hiding_a_row() {
     ack(&m);
     m.tick();
     assert!(
-        m.last_failure(Origin::Balls).is_none(),
+        banner(&m, Origin::Balls).is_none(),
         "every surface's banner is quiet, not just the one it was clicked on"
     );
-    assert!(m.last_failure(Origin::Conversation).is_none());
+    assert!(banner(&m, Origin::Conversation).is_none());
     assert_eq!(m.activity().errors, 0);
     assert_eq!(
         m.activity().drifts,
@@ -130,17 +130,17 @@ fn a_new_failure_after_an_ack_banners_again() {
     fail(&m, Origin::Balls);
     ack(&m);
     m.tick();
-    assert!(m.last_failure(Origin::Balls).is_none());
+    assert!(banner(&m, Origin::Balls).is_none());
 
     fail(&m, Origin::Conversation);
     m.after_litany_verb();
     m.tick();
     assert_eq!(
-        m.last_failure(Origin::Conversation).unwrap().argv,
+        banner(&m, Origin::Conversation).unwrap().argv,
         "litany prime"
     );
     assert!(
-        m.last_failure(Origin::Balls).is_none(),
+        banner(&m, Origin::Balls).is_none(),
         "and the acked one stays acknowledged — bl-48f8's per-surface rule holds"
     );
     assert_eq!(m.activity().errors, 1);
@@ -168,7 +168,7 @@ fn clear_leaves_a_one_row_trail_whose_row_is_the_clear() {
     assert_eq!(row.origin, Origin::World);
     assert!(!row.failed());
     assert_eq!(row.exit_label(), "exit 0");
-    assert!(m.last_failure(Origin::Balls).is_none());
+    assert!(banner(&m, Origin::Balls).is_none());
     assert!(!m.activity().alarming());
     assert_eq!(m.activity().total, 1, "the chip counts the new trail only");
     assert_eq!(

@@ -11,7 +11,7 @@
 //! stillbirth a failure **and** must leave a live launch alone whatever its
 //! sink says: the two beats are one another's burden check.
 
-use super::{model, world};
+use super::{banner, model, world};
 use crate::git_tree::tests::fixture::Fixture;
 use crate::opslog::{self, DETACHED_EXIT, Origin};
 use std::fs;
@@ -82,7 +82,7 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     // The launch alone: a clean `-2` row, nothing to see — the §13.3 hole.
     m.after_litany_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
-    assert!(m.last_failure(Origin::Conversation).is_none());
+    assert!(banner(&m, Origin::Conversation).is_none());
     assert!(!m.snap.ops.last().unwrap().failed());
     assert!(!m.snap.ops.last().unwrap().has_output());
 
@@ -100,11 +100,11 @@ fn a_detached_prompt_that_died_after_launch_surfaces_on_the_next_sweep() {
     assert!(row.failed(), "a launch that produced nothing is a failure");
     assert!(row.has_output(), "and the pane offers the expansion");
     assert_eq!(
-        m.last_failure(Origin::Conversation).unwrap().stderr_tail,
+        crate::opslog::rows::stderr_tail(&banner(&m, Origin::Conversation).unwrap().stderr),
         CRY.trim_end()
     );
     assert!(
-        m.last_failure(Origin::Balls).is_none(),
+        banner(&m, Origin::Balls).is_none(),
         "the balls fold offered no bare rung and says nothing"
     );
     assert_eq!(
@@ -141,7 +141,7 @@ fn a_launch_inside_the_grace_window_never_alarms_however_its_sink_reads() {
     assert!(row.stderr.is_empty(), "and its sink was never read");
     assert!(!row.has_output());
     assert!(
-        m.last_failure(Origin::Conversation).is_none(),
+        banner(&m, Origin::Conversation).is_none(),
         "the surface that fired it is not bannered"
     );
     assert_eq!(m.activity().errors, 0, "and the chip counts no failure");

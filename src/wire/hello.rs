@@ -90,7 +90,13 @@ use super::frame;
 /// cannot see, since frame count is not a field signature. A seat built against
 /// 9 would read the first frame and then wait on a terminator up to a hold
 /// away; strict equality here is what turns that into an upgrade sentence.
-pub const PROTOCOL: u32 = 10;
+/// 10 → 11 (bl-4d81): `reply/ops` gained the three readings a §7.3 failure
+/// banner is made of — `failed`, `exit_label` and `standing` — so the row
+/// answers what it *is* and not only what was logged. A field gained on a shape
+/// already in use, which §3's rule bumps outright; and the bump is the point
+/// rather than a tax, since the whole gain is a classification that reaches a
+/// client only through a re-vendor.
+pub const PROTOCOL: u32 = 11;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

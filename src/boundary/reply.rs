@@ -40,6 +40,9 @@ mod encode;
 /// off this file at §12's pre-split band on `start/model`'s seam — what an
 /// answer *is*, beside the modules that say it.
 mod model;
+/// The §4.2 trail row in both directions (bl-4d81) — its own file on the seam
+/// its own doc gives: the one row whose derived readings are the answer.
+mod op_row;
 /// The §6 decision queue's row encoder — the other reply whose rows carry a
 /// derived list (its firing signals).
 mod queue;

@@ -60,7 +60,7 @@ fn s0_t3_a_failed_prime_aborts_before_any_further_spawn() {
     );
 
     // The failure is a rendered fact: the ops row holds the exit + stderr (§4.2),
-    // from which Z5's SurfaceFailure view-model paints argv + the stderr tail.
+    // which is what a §7.3 banner quotes — argv and the tail of that stderr.
     let ops = yog::opslog::tail(state.path(), 16);
     assert_eq!(ops.len(), 1, "just the failed prime");
     assert_eq!(ops[0].exit, 2);

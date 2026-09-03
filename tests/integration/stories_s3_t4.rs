@@ -9,7 +9,7 @@ use crate::support::Recorder;
 use tempfile::tempdir;
 use yog::actions::verbs;
 use yog::cli_outbound::Cli;
-use yog::opslog::{self, OpRow, SurfaceFailure};
+use yog::opslog::{self, OpRow, Standing};
 
 #[test]
 fn s3_t4_close_gate_failure_is_verbatim_in_ops_and_view_model() {
@@ -41,17 +41,26 @@ fn s3_t4_close_gate_failure_is_verbatim_in_ops_and_view_model() {
         &["close", "bl-4db6", "--as", "cobalt-gecko"]
     );
 
-    // The surface view-model (Z5) renders argv + the stderr tail in ichor red.
+    // What a §7.3 banner renders (Z5) is that row and its standing — argv, the
+    // stderr the pane quotes a tail of, and `live` because nothing has re-run
+    // the verb clean since (bl-4d81: the reading crosses; no seat derives it).
     let row = OpRow::from(&ops[0]);
     assert!(row.failed(), "a non-zero close is a rendered failure");
-    let surface = SurfaceFailure::from(&row);
+    let answered = opslog::standings(&[row]);
+    let view = answered.first().unwrap();
+    assert_eq!(view.standing, Standing::Live);
     assert!(
-        surface.argv.ends_with("close bl-4db6 --as cobalt-gecko"),
+        view.row.argv.ends_with("close bl-4db6 --as cobalt-gecko"),
         "the attempted verb is shown: {}",
-        surface.argv
+        view.row.argv
     );
     assert!(
-        surface.stderr_tail.contains("aborting close"),
+        view.row.stderr.contains("aborting close"),
         "the gate cause is shown"
+    );
+    assert_eq!(
+        view.row.exit_label(),
+        "exit 1",
+        "and its exit reads as words"
     );
 }

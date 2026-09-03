@@ -59,7 +59,9 @@ fn a_full_sweep_that_changes_an_unannounced_snapshot_names_the_dropped_event() {
     assert_eq!(activity.errors, 0, "a drift is not a failed action");
     assert!(activity.chip().contains("1 drift"));
     assert!(
-        model.last_failure(crate::opslog::Origin::World).is_none(),
+        crate::opslog::standings(&model.snap.ops)
+            .iter()
+            .all(|v| v.standing != crate::opslog::Standing::Live),
         "and never hijacks the §7.3 failure banner"
     );
 }

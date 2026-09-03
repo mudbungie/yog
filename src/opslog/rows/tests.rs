@@ -1,7 +1,7 @@
 //! [`super::OpRow`]'s own tables: the collapsed summary's newline fold and its
 //! §11-scan elision (bl-0bf9, cut through the middle since bl-3aa1 so a column
 //! of ops that share a long invariant path prefix stays readable), the human
-//! timestamp column (bl-61db), and the [`super::SurfaceFailure`] projection.
+//! timestamp column (bl-61db), and the stderr tail a §7.3 banner quotes.
 //! Pure — no filesystem, no clock. Split from the module at the §12 line cap on
 //! this directory's own seam (`line/tests.rs`, `detached/tests.rs`).
 
@@ -148,14 +148,6 @@ fn two_ops_differing_only_in_their_tail_do_not_summarize_alike() {
         other.ends_with("scratch 20260807T220107Z-c0ffeeba"),
         "{other}"
     );
-}
-
-#[test]
-fn surface_failure_carries_argv_and_stderr_tail() {
-    let row = OpRow::from(&entry(2, "line1\nline2"));
-    let f = SurfaceFailure::from(&row);
-    assert_eq!(f.argv, "bl close bl-4db6");
-    assert_eq!(f.stderr_tail, "line1\nline2");
 }
 
 #[test]

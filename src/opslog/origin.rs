@@ -2,10 +2,10 @@
 //! fact the ops row lacked, and without which "the originating surface renders
 //! the failure" was unhonorable.
 //!
-//! [`super::rows::SurfaceFailure`] carries argv + a stderr tail and nothing that
-//! says *whose* failure it is, so every banner surface asked the same global
-//! question ("did the last op fail?") and a single start failure painted itself
-//! on all of them at once (bl-48f8). The attribution is a fact of the **gesture**,
+//! A row's exit and its stderr say what went wrong and nothing about *whose*
+//! failure it is, so every banner surface asked the same global question ("did
+//! the last op fail?") and a single start failure painted itself on all of them
+//! at once (bl-48f8). The attribution is a fact of the **gesture**,
 //! not of the row's bytes: `bl close` and `litany message` are told apart by
 //! their argv, but `litany prompt` / `litany new` / `["yog-step","mkdir"]` are
 //! written identically by a ball-rung start and by the composer's own Enter. So
@@ -19,7 +19,8 @@
 //! makes. A ball verb is about a ball wherever it was clicked.
 
 /// The subject an attempted action acted on — the §7.3 attribution a banner
-/// surface filters by ([`AppModel::last_failure`](crate::AppModel::last_failure)).
+/// surface filters by, and the field it groups the answered rows standing
+/// [`Live`](super::Standing::Live) under ([`super::standings`]).
 ///
 /// Three, because yog has three kinds of subject and one banner surface each:
 /// the roster's balls section paints [`Balls`](Self::Balls), the composer (the

@@ -31,7 +31,7 @@ use super::Reply;
 use super::board::decode::board;
 use super::queue::queue_row_of;
 use super::rows::decode::{
-    conv_row, join_row, lineage_row, op_row, provider_row, role_row, rows_of, ws_row,
+    conv_row, join_row, lineage_row, provider_row, role_row, rows_of, ws_row,
 };
 use super::search::hit_of;
 use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, opt_val, str_of, strings_of};
@@ -182,7 +182,7 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "balls" => rows_of(o, join_row).map(Reply::Balls),
         "board" => board(o).map(Reply::Board),
         "attention" => rows_of(o, queue_row_of).map(Reply::Attention),
-        "ops" => rows_of(o, op_row).map(Reply::Ops),
+        "ops" => rows_of(o, super::op_row::decode).map(Reply::Ops),
         "help" => help(o),
         "search" => search(o),
         "providers" => rows_of(o, provider_row).map(Reply::Providers),

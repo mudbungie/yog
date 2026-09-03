@@ -40,6 +40,19 @@ mod ops;
 // The §8.5 line context (what a slash command elides) — its own file, this
 // world's focus read as a seat.
 
+/// **The §7.3 banner, asked the way a seat asks it** (bl-4d81): the newest row
+/// of `origin` whose [`Standing`](crate::opslog::Standing) is `Live` — the
+/// retirement projection and the ack watermark already folded in. It stood as
+/// `AppModel::last_failure` until the carrier landed; the derivation is the
+/// boundary's now, and this is the same question over the answered rows.
+fn banner(m: &AppModel, origin: crate::opslog::Origin) -> Option<crate::opslog::OpRow> {
+    crate::opslog::standings(&m.snap.ops)
+        .into_iter()
+        .rev()
+        .find(|v| v.row.origin == origin && v.standing == crate::opslog::Standing::Live)
+        .map(|v| v.row)
+}
+
 /// The §3.5 join row for one workspace, off the **answered** binding table
 /// (`Query::Balls`) — the rows are addressed by name since bl-b4b5, so a test
 /// asks the boundary rather than a deleted accessor.

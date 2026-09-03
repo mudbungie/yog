@@ -7,7 +7,7 @@
 use crate::actions::verbs::Outcome;
 use crate::board::Board;
 use crate::nav::convs::ConvRow;
-use crate::opslog::OpRow;
+use crate::opslog::OpView;
 use crate::projects::join::JoinRow;
 use crate::search::Found;
 use crate::start::Prepared;
@@ -172,7 +172,7 @@ pub enum Reply {
     /// The §6 decision queue (VISION §5 V5.2): what is waiting on the operator
     /// — [`Attention`](super::Query::Attention)'s answer.
     Attention(Vec<crate::boundary::answer::queue::QueueRow>),
-    Ops(Vec<OpRow>),
+    Ops(Vec<OpView>),
     /// What a command does (§8.5): the whole roster, or one verb's page.
     Help(Vec<crate::boundary::help::HelpRow>),
     /// What matched (§8.5): the ranked hits *and* the sources that could not be

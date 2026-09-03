@@ -185,9 +185,16 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // over the snapshot, unlike the five above, because everything it says
         // was already derived when the tree was.
         Query::Agent { .. } => Reply::Agent(agent::agent(snap, ui, ws, agent, now_unix)),
+        // The §4.2 trail, each row **with its standing** (§7.3, bl-4d81): §6's
+        // retirement projection folded with the ack watermark, computed here
+        // rather than by every seat. The slice is taken first and the fold runs
+        // over it, which changes no answer — retirement reads only later rows,
+        // and an ack line dropped with the prefix leaves every remaining row
+        // after it, which is what those rows already were.
         Query::Ops { max } => {
             let skip = snap.ops.len().saturating_sub(*max);
-            Reply::Ops(snap.ops.iter().skip(skip).cloned().collect())
+            let tail: Vec<crate::opslog::OpRow> = snap.ops.iter().skip(skip).cloned().collect();
+            Reply::Ops(crate::opslog::standings(&tail))
         }
         // The §9 config family's reads (§8.5, bl-0164): asked of the world at
         // the moment they are asked, exactly as the writes beside them are.

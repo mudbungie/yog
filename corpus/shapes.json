@@ -1,5 +1,5 @@
 {
-  "protocol": 10,
+  "protocol": 11,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -546,7 +546,10 @@
         "/rows/[]/argv:string",
         "/rows/[]/cwd:string",
         "/rows/[]/exit:number",
+        "/rows/[]/exit_label:string",
+        "/rows/[]/failed:bool",
         "/rows/[]/origin:string",
+        "/rows/[]/standing:string",
         "/rows/[]/stderr:string",
         "/rows/[]/stdout:string",
         "/rows/[]/ts:string",
@@ -554,7 +557,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 11
     },
     "reply/outcome": {
       "signature": [

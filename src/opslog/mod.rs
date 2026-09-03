@@ -156,14 +156,23 @@ pub fn tail(state_root: &Path, max: usize) -> Vec<OpEntry> {
 }
 
 /// View-models over the log (§4.2, §7.3, §11), split out per §12's line budget:
-/// `rows` = the expandable [`OpRow`] and the [`SurfaceFailure`] a surface holds;
+/// `rows` = the expandable [`OpRow`];
 /// `live` = §6's retirement projection over a tail of rows ([`OpOutcome`]: which
 /// failures are still live — the log keeps every failure, prominence is derived)
 /// + [`Activity`].
 pub mod live;
 pub mod rows;
 pub use live::{Activity, OpOutcome, activity, outcomes};
-pub use rows::{OpRow, SurfaceFailure};
+pub use rows::OpRow;
+
+/// **What a row stands at**, the §7.3 carrier (bl-4d81): [`live`]'s retirement
+/// projection folded with [`operator`]'s ack watermark into one total
+/// [`Standing`] per row, so the failure banner crosses the §8.5 boundary as a
+/// fact a seat renders rather than five derivations it re-implements. Its own
+/// file rather than a third of [`live`], which is already at §12's pre-split
+/// band.
+pub mod standing;
+pub use standing::{OpView, Standing, standings};
 
 /// The one reading of the `exit` field (§4.2's sentinels) and the one home of
 /// its wording: [`exit::ExitKind`] plus the `OpRow` half that asks it

@@ -13,7 +13,6 @@
 
 use super::AppModel;
 use crate::cli_outbound::Cli;
-use crate::opslog::SurfaceFailure;
 use crate::projects::join;
 use crate::projects::runner;
 use std::path::{Path, PathBuf};
@@ -38,37 +37,6 @@ impl AppModel {
     /// — not a workspace — is the reporter.
     pub fn identity(&self) -> String {
         runner::identity(self.ui.identity_last_used(), self.identity_user.clone())
-    }
-
-    /// **One surface's** last-failure view-model (§5.3, §7.3): the most recent
-    /// ops row `origin` attributed to that surface, *iff* it is a rendered
-    /// failure ([`OpRow::failed`]), projected to its argv and stderr tail.
-    /// `None` when that surface's last attempted action succeeded, so the
-    /// surface clears its ichor-red banner. Reads the already-derived tail, so
-    /// the banner and the ops pane never diverge (both project the same durable
-    /// ops line, §4.2). The shell paints it; nothing is held.
-    ///
-    /// **The banner's lifetime now ends at an ack as well** (bl-c417): the query
-    /// runs over [`since_ack`](crate::opslog::since_ack)'s rows, so a dismissal
-    /// quiets it even though nothing was retried. It is still not a stored flag —
-    /// the watermark is the newest ack *line*, and a NEW failure of this origin
-    /// lands after it and banners again.
-    ///
-    /// The origin parameter is the whole fix for bl-48f8. Un-parameterised this
-    /// asked one global question — "did the *last* op fail?" — which three
-    /// surfaces then answered identically, so a failed ▶ Start painted itself on
-    /// the balls fold, the composer and the bootstrap box at once, and any one
-    /// surface's clean run wiped the other two's live banners. Per-origin it is
-    /// the same rule with the general input: the last row **of this surface**,
-    /// iff it failed. §6's retirement therefore stays per-surface too — a clean
-    /// re-run retires the banner it superseded and no one else's.
-    pub fn last_failure(&self, origin: crate::opslog::Origin) -> Option<SurfaceFailure> {
-        crate::opslog::since_ack(&self.snap.ops)
-            .iter()
-            .rev()
-            .find(|r| r.origin == origin)
-            .filter(|r| r.failed())
-            .map(SurfaceFailure::from)
     }
 
     /// The yog state root — where `ops.jsonl` lives, the verb-log target the

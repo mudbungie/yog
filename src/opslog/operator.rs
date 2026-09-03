@@ -86,9 +86,10 @@ fn entry(ts: &str, state_root: &Path, step: &str) -> OpEntry {
 
 /// The rows an alarm may consider: everything **after** the newest ack line, or
 /// all of them when the operator has acknowledged nothing. The one derivation
-/// of the watermark — [`AppModel::last_failure`](crate::AppModel::last_failure)
-/// and the §11 chip's counts ([`super::activity`]) both read it, so a banner
-/// and a chip can never disagree about what has been seen.
+/// of the watermark — the §7.3 standing a row is answered with
+/// ([`super::standings`]) and the §11 chip's counts ([`super::activity`]) both
+/// read it, so a banner and a chip can never disagree about what has been
+/// seen.
 ///
 /// Slicing off a *prefix* cannot change what the rows that remain mean: §6's
 /// retirement looks only at rows *later* than the one it judges

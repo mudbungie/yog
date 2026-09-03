@@ -12,11 +12,9 @@ use crate::git_tree::AgentState;
 use crate::monitor::Check;
 use crate::nav::convs::Tone;
 use crate::nav::convs::{ConvRow, Flight};
-use crate::opslog::OpRow;
 use crate::projects::join::JoinRow;
 
 use super::super::codec::join_token;
-use super::super::codec::origin_token;
 
 /// The decoders, beside the tokens they undo (bl-7067).
 pub(crate) mod decode;
@@ -175,14 +173,6 @@ pub(super) fn join_row(row: &JoinRow) -> Value {
         map.insert("title".to_owned(), json!(title));
     }
     Value::Object(map)
-}
-
-pub(super) fn op_row(row: &OpRow) -> Value {
-    json!({
-        "ts": row.ts, "argv": row.argv, "cwd": row.cwd, "exit": row.exit,
-        "stdout": row.stdout, "stderr": row.stderr,
-        "origin": origin_token(row.origin),
-    })
 }
 
 /// The §5.1 agent-state tokens.

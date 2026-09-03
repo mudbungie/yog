@@ -67,7 +67,12 @@ pub(crate) fn tab_bar(model: &AppModel, focused: Option<&str>) -> TabBar {
 /// expanded trail paints.
 pub(crate) fn activity(model: &AppModel) -> Activity {
     match ask(model, &Query::Ops { max: OPS_TAIL }, 0) {
-        Some(Reply::Ops(rows)) => crate::opslog::activity(&rows),
+        Some(Reply::Ops(rows)) => {
+            // The answer carries each row's standing; the chip's counts are the
+            // same fold over the lines beneath them (bl-4d81).
+            let lines: Vec<_> = rows.into_iter().map(|v| v.row).collect();
+            crate::opslog::activity(&lines)
+        }
         _ => Activity {
             total: 0,
             errors: 0,

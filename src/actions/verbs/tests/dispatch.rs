@@ -124,12 +124,13 @@ fn s0_t3_failed_step_entry_carries_stderr_and_view_model_renders_argv_and_tail()
     let e = w.logged();
     assert_eq!(e.exit, 2);
     assert_eq!(e.stderr, "prime failed\nmodels.yaml missing\n");
-    // Both view-models project the one durable entry — surface RAM never diverges.
+    // The row projects the one durable entry, and it is a rendered failure —
+    // what a §7.3 banner quotes is that row's own argv and the tail of its
+    // stderr (bl-4d81: no second view-model stands between the two).
     let row = opslog::OpRow::from(&e);
     assert!(row.failed());
-    let failure = opslog::SurfaceFailure::from(&row);
-    assert_eq!(failure.argv, format!("{} prime", w.cli.binary().display()));
-    assert_eq!(failure.stderr_tail, "prime failed\nmodels.yaml missing");
+    assert_eq!(row.argv, format!("{} prime", w.cli.binary().display()));
+    assert_eq!(row.stderr, "prime failed\nmodels.yaml missing\n");
 }
 
 #[test]

@@ -12,12 +12,13 @@ use super::super::super::super::Reply;
 mod chrome;
 /// The conversation rows, the widest row type here.
 mod convs;
+/// The §4.2 trail, whose rows only mean anything together (bl-4d81).
+mod trail;
 use super::board::board;
 use crate::board::Board;
 use crate::config_edit::branch::{ConfigBranch, Lineage};
 use crate::config_edit::brazen::ProviderRowView;
 use crate::git_tree::AgentState;
-use crate::opslog::{OpRow, Origin};
 use crate::projects::join::{JoinRow, JoinState};
 use crate::search::{Address, Field, Found, Hit};
 use convs::conv_rows;
@@ -138,15 +139,7 @@ pub(super) fn listings() -> Vec<Reply> {
         // The unarmed world, whose `fleet` key is absent rather than empty.
         Reply::Board(Board::default()),
         Reply::Attention(queue()),
-        Reply::Ops(vec![OpRow {
-            ts: "1700".into(),
-            argv: "bl close x".into(),
-            cwd: "/p".into(),
-            exit: 1,
-            stdout: String::new(),
-            stderr: "gate".into(),
-            origin: Origin::Balls,
-        }]),
+        Reply::Ops(trail::ops()),
         Reply::Help(crate::boundary::help::rows(None)),
         Reply::Search(found()),
         // A search that matched nothing still knows its own question.

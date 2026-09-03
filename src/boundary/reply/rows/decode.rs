@@ -15,14 +15,13 @@ use crate::binding::WorkspaceKind;
 use crate::boundary::codec::fields::{
     bool_of, i64_of, list_of, opt, opt_str_of, opt_val, pick, str_of, strings_of, u64_of, usize_of,
 };
-use crate::boundary::codec::{parse_join, parse_origin};
+use crate::boundary::codec::parse_join;
 use crate::config_edit::branch::{ConfigBranch, Lineage};
 use crate::config_edit::brazen::ProviderRowView;
 use crate::git_tree::AgentState;
 use crate::monitor::{Check, Verdict};
 use crate::nav::convs::Tone;
 use crate::nav::convs::{ConvBall, ConvRow, Flight};
-use crate::opslog::OpRow;
 use crate::projects::join::JoinRow;
 
 /// The §5.1 agent-state table — [`state_token`](super::state_token)'s other
@@ -172,19 +171,6 @@ pub(crate) fn join_row(v: &Value) -> Result<JoinRow, String> {
         workspace: opt_str_of(o, "workspace")?,
         claimant: opt_str_of(o, "claimant")?,
         title: opt_str_of(o, "title")?,
-    })
-}
-
-pub(crate) fn op_row(v: &Value) -> Result<OpRow, String> {
-    let o = v.as_object().ok_or("ops row: not an object")?;
-    Ok(OpRow {
-        ts: str_of(o, "ts")?,
-        argv: str_of(o, "argv")?,
-        cwd: str_of(o, "cwd")?,
-        exit: i32::try_from(i64_of(o, "exit")?).map_err(|_| "ops row: exit out of range")?,
-        stdout: str_of(o, "stdout")?,
-        stderr: str_of(o, "stderr")?,
-        origin: parse_origin(&str_of(o, "origin")?)?,
     })
 }
 

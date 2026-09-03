@@ -4312,6 +4312,54 @@ is this:
   silence. §3's rule is the authority: a field gained, and a field lost, each
   bump the version on their own.
 
+### 9.17 The trail says what it stands at (bl-4d81)
+
+**`reply/ops` gained three fields — `failed`, `exit_label` and `standing`.**
+`PROTOCOL` is **11**.
+
+DESIGN §7.3 rules that a failed action is *"an answered fact, never
+stderr-only, and said exactly once"*, at the one surface the op's `origin`
+names, and that its alarm ends two ways — retirement by a newer clean run of
+the same verb, or the operator's ack watermark. Every one of those was a
+derivation the engine owned and none of them crossed: the reply handed out the
+durable `ops.jsonl` line and nothing else.
+
+- **The classification crosses, not a second query.** A seat that wanted the
+  banner had to re-implement the sentinel table (`-1`/`-2`/`-3`/`-4`), the
+  `128 + n` signal reading, the `(cwd, verb)` retirement key, the ack scan and
+  the origin grouping — five derivations this document names one home for
+  apiece, and whose failure mode is a seat quietly disagreeing rather than
+  failing to build. `Query::Failures` was the other candidate and is refused:
+  it answers a *selection* over the same rows, so it would be a second reading
+  of one trail with its own staleness, and the rows would still have to say
+  what they were for the pane beside the banner.
+- **One field for both endings.** `standing` is `clean` / `detached` / `live` /
+  `retired` / `acked` — DESIGN §6's outcome folded with §4.2's watermark. A
+  banner is *the rows standing `live`, grouped by `origin`*, which is §7.3's
+  "one banner per subject" with no derivation left in it; and a seat can say
+  **why** an alarm is down, because retirement and the ack are told apart.
+- **Total, never absent.** The vocabulary covers a clean row and a handoff as
+  well as the three failure standings. The alternative — the field present only
+  on failures — would leave a reader telling *ran clean* from *handed off, no
+  exit observed* by re-reading the `exit` integer, which is the very thing the
+  row exists to stop.
+- **`failed` rides beside it deliberately.** It is the row's **own** question,
+  answerable of a single line held alone — an expanded detail, a banner
+  quoting one row — while `standing` is a fact about that row's place in a
+  tail. The corpus round trip decodes only `standing`, because the other two
+  are recomputable from the line and the encoder recomputes them: the wire
+  states a derivation so a seat need not do it, and no second authority for it
+  is created (`conv_row`'s `display` is decoded on the same rule).
+- **`origin` did not move and did not need to.** It is stored on the line
+  because it cannot be derived (bl-48f8), it already crossed, and it is what a
+  banner groups by. What changed is only the reading.
+
+**What a client owes this bump:** re-vendor `corpus/`, whose `reply/ops`
+fixture now spells one trail carrying all five standings, both `failed`
+answers and three readings of `exit_label`. A client that renders the trail
+should stop classifying `exit` and read the words; one that does not render it
+still decodes the fixture, which is what catches the fields it drops.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer
@@ -4923,11 +4971,11 @@ holds the lane, and a foot never reaches it (§4.2).
 **Two things the design as written did not price, both found in the building
 and both paid here.**
 
-**The bump.** `PROTOCOL` is **9**. No field moved and no spelling changed, so
+**The bump.** `PROTOCOL` went to **10**. No field moved and no spelling changed, so
 the corpus ledger — which records field signatures — could not have caught
 this: frame *count* is not a signature. But §3's rule is the authority and the
 preface's own words are exact — a bump is for *"what a spelling already in use
-is taken to say"*, and `attention` now says a sequence. A seat built against 8
+is taken to say"*, and `attention` now says a sequence. A seat built against 9
 would read the first frame and then wait on a terminator up to a hold away,
 which is a hang no sentence explains; the handshake is strict equality, so the
 bump converts that silence into the upgrade prompt. This is also what makes
@@ -5040,7 +5088,7 @@ on the recommendation recorded in its own ball. Neither is open.
 arm answers `Query::Attention` as a sequence beside `Query::Follow`, change
 found at the worker's republish, frames that replace, the one-frame answer
 untouched for every intake that cannot hold. It cost one thing the design did
-not price: `PROTOCOL` is 9 (§14.1). lernie: nothing — the window never sleeps
+not price: `PROTOCOL` is 10 (§14.1). lernie: nothing — the window never sleeps
 mid-ask, and it reads attention off `Query::Workspaces`' rollups rather than
 this lane. The app: rungs 1 and 2, filed and tracked in its own repository
 (§12.1); rung 1 needs nothing from anyone and can land today.

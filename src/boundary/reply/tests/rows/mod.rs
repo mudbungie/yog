@@ -130,9 +130,14 @@ fn ops_rows_encode_the_durable_line_fields() {
         stderr: "gate".into(),
         origin: Origin::Balls,
     };
-    let v = encode(&Reply::Ops(vec![row]));
+    let v = encode(&Reply::Ops(crate::opslog::standings(&[row])));
     let rows = v["rows"].as_array().unwrap();
     assert_eq!(rows[0]["ts"], "1700");
     assert_eq!(rows[0]["exit"], 1);
     assert_eq!(rows[0]["origin"], "balls");
+    // And the three derived readings §7.3 needs (bl-4d81): the row's own
+    // verdict, its exit in words, and where it stands in the trail.
+    assert_eq!(rows[0]["failed"], true);
+    assert_eq!(rows[0]["exit_label"], "exit 1");
+    assert_eq!(rows[0]["standing"], "live");
 }

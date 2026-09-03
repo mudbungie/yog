@@ -5,7 +5,7 @@
 
 mod detached;
 
-use super::{append_op, model, world};
+use super::{append_op, banner, model, world};
 use crate::AppModel;
 use crate::opslog::{self, Origin};
 
@@ -31,22 +31,25 @@ fn prime(m: &AppModel, cwd: &str, exit: i32, origin: Origin) {
 }
 
 #[test]
-fn last_failure_projects_only_a_failed_last_op() {
+fn a_banner_projects_only_a_failed_last_op() {
     let w = world();
     let (_c, mut m) = model(&w);
     // No ops → no banner; a clean last op → still no banner (§7.3).
-    assert!(m.last_failure(Origin::Balls).is_none());
+    assert!(banner(&m, Origin::Balls).is_none());
     append_op(&m);
     m.after_litany_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
-    assert!(m.last_failure(Origin::Balls).is_none());
-    // A failed last op → the surface failure view-model projects argv + tail.
+    assert!(banner(&m, Origin::Balls).is_none());
+    // A failed last op → that origin's banner is the row itself, argv and all.
     prime(&m, "/proj", 2, Origin::Balls);
     m.after_litany_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
-    let f = m.last_failure(Origin::Balls).unwrap();
+    let f = banner(&m, Origin::Balls).unwrap();
     assert_eq!(f.argv, "litany prime");
-    assert_eq!(f.stderr_tail, "unrecognized subcommand");
+    assert_eq!(
+        crate::opslog::rows::stderr_tail(&f.stderr),
+        "unrecognized subcommand"
+    );
 }
 
 /// bl-48f8, the whole of it: a failure renders on the surface that originated
@@ -63,16 +66,16 @@ fn a_failure_banners_on_its_own_origin_and_on_no_other() {
     m.after_litany_verb();
     m.tick();
     assert_eq!(
-        m.last_failure(Origin::Balls).unwrap().argv,
+        banner(&m, Origin::Balls).unwrap().argv,
         "litany prime",
         "the balls fold, where the ▶ Start row that fired it is (§11, bl-6ad8)"
     );
     assert!(
-        m.last_failure(Origin::Conversation).is_none(),
+        banner(&m, Origin::Conversation).is_none(),
         "the composer (and the bootstrap box) says nothing about someone else's start"
     );
     assert!(
-        m.last_failure(Origin::World).is_none(),
+        banner(&m, Origin::World).is_none(),
         "and neither does the config/login/delete class"
     );
 }
@@ -90,17 +93,17 @@ fn each_origin_class_is_rendered_by_its_own_surface_only() {
     prime(&m, "/ws", 2, Origin::Conversation);
     m.after_litany_verb();
     m.tick();
-    assert!(m.last_failure(Origin::Conversation).is_some());
-    assert!(m.last_failure(Origin::Balls).is_none());
-    assert!(m.last_failure(Origin::World).is_none());
+    assert!(banner(&m, Origin::Conversation).is_some());
+    assert!(banner(&m, Origin::Balls).is_none());
+    assert!(banner(&m, Origin::World).is_none());
 
     prime(&m, "/ws", 3, Origin::World);
     m.after_litany_verb();
     m.tick();
-    assert!(m.last_failure(Origin::World).is_some());
-    assert!(m.last_failure(Origin::Balls).is_none());
+    assert!(banner(&m, Origin::World).is_some());
+    assert!(banner(&m, Origin::Balls).is_none());
     assert!(
-        m.last_failure(Origin::Conversation).is_some(),
+        banner(&m, Origin::Conversation).is_some(),
         "and a later World failure does not retire the composer's live one"
     );
 }
@@ -118,15 +121,15 @@ fn a_clean_run_clears_only_its_own_surfaces_banner() {
     m.after_litany_verb();
     m.tick();
     assert!(
-        m.last_failure(Origin::Conversation).is_some(),
+        banner(&m, Origin::Conversation).is_some(),
         "the composer's failure is still the composer's last word"
     );
-    assert!(m.last_failure(Origin::Balls).is_none());
+    assert!(banner(&m, Origin::Balls).is_none());
     // Now the composer itself re-runs clean: its banner retires.
     prime(&m, "/ws", 0, Origin::Conversation);
     m.after_litany_verb();
     m.tick();
-    assert!(m.last_failure(Origin::Conversation).is_none());
+    assert!(banner(&m, Origin::Conversation).is_none());
     assert_eq!(m.snap.ops.len(), 3, "the log keeps every line");
 }
 
@@ -159,5 +162,5 @@ fn a_re_run_green_verb_retires_its_stale_failure_from_the_chip() {
     m.after_litany_verb();
     m.tick(); // the ops re-read is the worker's next pass (§7.2)
     assert_eq!(m.activity().errors, 1);
-    assert_eq!(m.last_failure(Origin::Balls).unwrap().argv, "litany prime");
+    assert_eq!(banner(&m, Origin::Balls).unwrap().argv, "litany prime");
 }

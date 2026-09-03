@@ -121,7 +121,7 @@ fn the_four_query_families_answer_from_one_snapshot() {
         panic!("ops answers ops");
     };
     assert_eq!(
-        rows.iter().map(|r| r.ts.as_str()).collect::<Vec<_>>(),
+        rows.iter().map(|r| r.row.ts.as_str()).collect::<Vec<_>>(),
         ["2", "3"],
         "the tail, newest last"
     );

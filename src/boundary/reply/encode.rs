@@ -12,7 +12,7 @@ use serde_json::{Map, Value, json};
 mod bodies;
 
 use super::board::{board_row, fleet_facts};
-use super::rows::{conv_row, join_row, lineage_row, op_row, provider_row, role_row, ws_row};
+use super::rows::{conv_row, join_row, lineage_row, provider_row, role_row, ws_row};
 use super::{Reply, prepared_value};
 use crate::registry::mailbox::{capture_value, invocation_value};
 use bodies::{delivered, enrolled_reply, governing, outcome_reply};
@@ -118,7 +118,7 @@ pub fn encode(reply: &Reply) -> Value {
         }
         Reply::Attention(rows) => super::queue::attention(rows),
         Reply::Acknowledged(ack) => super::queue::acknowledged(ack),
-        Reply::Ops(rows) => rows_reply("ops", rows.iter().map(op_row)),
+        Reply::Ops(rows) => rows_reply("ops", rows.iter().map(super::op_row::op_row)),
         Reply::Help(rows) => rows_reply("help", rows.iter().map(help_row)),
         // The encoders written beside their types rather than here: each
         // family's rows are that module's own vocabulary (see its `wire`). The
