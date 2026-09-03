@@ -1,6 +1,6 @@
 name: Release-plz
 
-# Build-gated, hands-off release. Four jobs:
+# Build-gated, hands-off release. Five jobs:
 #
 #   * release-plz PR (every push to main) — opens/updates ONE "release PR" that
 #     bumps the version in Cargo.toml and stages the CHANGELOG.md entry for it.
@@ -22,6 +22,13 @@ name: Release-plz
 #     with the checked-out `Cargo.toml` version — never `git describe`, which
 #     raced the tag it was released for on 0.0.6 and uploaded the previous
 #     version's archive over the previous release (bl-159d).
+#   * release-image — builds the OCI image with `make image` (so the image-side
+#     disclosure gate runs ON THE RUNNER, over the bytes about to leave it) and
+#     pushes ONE immutable version tag to `ghcr.io/<this repo>`. Same `needs:`
+#     shape and the same tag-vs-manifest refusal as the binaries job, and one
+#     door fewer: no dispatch backfill, because a Release asset can be replaced
+#     and a registry tag cannot. DESIGN §10.1 is the ruling it performs; the
+#     box-side reconciler (`scripts/deploy/reconcile.sh`) is what consumes it.
 #   * prune-stale-branches (right after the release PR job) — deletes every
 #     branch that has no open PR, keeping only `main`, `balls/tasks` and any
 #     live `speculation/**`. release-plz pushes a NEW timestamped branch each
@@ -36,7 +43,10 @@ name: Release-plz
 #
 # So the flow is: merge work to main -> CI runs -> the release PR is kept fresh;
 # merge the release PR -> CI runs -> on green the new version is released AND
-# its binaries build and upload.
+# its binaries build and upload AND its image publishes to ghcr. The crate, the
+# archive and the image are one publication carrying one version, which is why
+# all three hang off the one release job's outputs rather than off three
+# triggers that could disagree.
 #
 # Bumps default to PATCH (0.0.1 -> 0.0.2). See release-plz.toml for the
 # `[minor]` / `[major]` opt-in markers.
@@ -95,6 +105,13 @@ name: Release-plz
 #     publish to pause for a human. A repo-level secret of the same name still
 #     resolves for this job, so the workflow works before the move; moving it is
 #     what makes rule 2 real.
+#   * ONCE, AFTER THE FIRST RELEASE PUBLISHES AN IMAGE: flip the ghcr package
+#     to PUBLIC. GitHub creates a new package private whatever the repository's
+#     visibility, and every deployed box reads the registry anonymously by
+#     design (it holds no registry credential — DESIGN §10.1), so until the
+#     flip each box's reconcile pass refuses instead of upgrading. There is no
+#     REST route for it; the act is the package's own settings page:
+#     Packages -> yog -> Package settings -> Danger Zone -> Change visibility.
 #   * RELEASE_PLZ_TOKEN — OPTIONAL fine-grained PAT (contents + pull-requests
 #     write), so the release PR's own commits re-trigger CI. The default
 #     GITHUB_TOKEN cannot trigger workflows from its own pushes; the job falls
@@ -315,6 +332,189 @@ jobs:
           archive: yog-$target
           ref: refs/tags/${{ steps.tag.outputs.tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  release-image:
+    name: ghcr image
+    needs: release-plz-release
+    # ONE door, and it is a release that actually happened — the same output
+    # that says a crate version went out. There is deliberately no dispatch
+    # backfill beside the binaries job's: an uploaded asset can be replaced,
+    # and a published registry tag cannot (DESIGN §10.1, "a version is
+    # published once" — re-pushing corrected bytes under an existing tag is a
+    # moving `latest` wearing a version number). A version that missed its
+    # image is superseded by the next version, exactly as a bad crate release
+    # is. No `!cancelled()` either, for the same reason: this job has no
+    # skipped-`needs` path to rescue.
+    if: >-
+      github.repository_owner == 'mudbungie' &&
+      needs.release-plz-release.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    # The build compiles the crate from source inside `rust:1.95.0-alpine` and
+    # the gate then exports two root filesystems and compares them file by
+    # file. Neither is fast; both are bounded.
+    timeout-minutes: 60
+    permissions:
+      # This is the whole of the publishing authority DESIGN §10.1 rules for
+      # images: `packages: write` on the repository's OWN package, held by the
+      # workflow's GITHUB_TOKEN, which exists only inside this run. No PAT, no
+      # registry secret, nothing to rotate, and "who may publish an image" is
+      # answered by the same access control that answers "who may push a tag".
+      # `contents: read` is the checkout and nothing else — this job pushes no
+      # ref, cuts no release and is handed no crates.io token (boundary
+      # rules 1 and 4).
+      contents: read
+      packages: write
+    env:
+      # Derived, never typed. §10.1 is "one package per repo, named for the
+      # component", so the repository IS the package; a literal here would be
+      # that fact stored twice, and the box-side reconciler already states it
+      # once for the box.
+      PACKAGE: ghcr.io/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          # This job pushes no git ref — the registry push authenticates on its
+          # own — so checkout leaves no credential in `.git/config` for a build
+          # step to find (boundary rule 8). It matters more here than anywhere:
+          # the build hands a whole context to a container engine.
+          persist-credentials: false
+      - name: Check out the released tag, and refuse a tree that disagrees with it
+        id: tag
+        env:
+          RELEASED_TAG: ${{ needs.release-plz-release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="$RELEASED_TAG"
+          [ -n "$tag" ] || { echo "the release job cut no tag — nothing to publish" >&2; exit 1; }
+          # Named outright, never `git describe`: that asks this checkout what
+          # it happens to see while the tag is being pushed, and on 0.0.6 it
+          # answered with the previous version (bl-159d).
+          git rev-parse -q --verify "refs/tags/$tag" >/dev/null
+          git checkout "refs/tags/$tag"
+          # `make` reads the version out of Cargo.toml — its one home — and
+          # prints the local tag `make image` is about to build.
+          local_tag="$(make -s print-image-tag)"
+          version="${local_tag##*:}"
+          # The tag and the manifest are two independent statements of one
+          # fact, and an artifact publishes only when they agree.
+          if [ "$tag" != "v$version" ]; then
+            echo "tag $tag does not name the checked-out crate version $version — refusing to publish an image" >&2
+            exit 1
+          fi
+          printf 'local=%s\n' "$local_tag" >> "$GITHUB_OUTPUT"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          echo "publishing $tag as $PACKAGE:$version"
+      - name: A version publishes once — stop if this one already did
+        id: existing
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # The trigger above already makes this rare — release-plz reports a
+          # release once per version — but a re-run of a job whose `needs`
+          # outputs are replayed would arrive here a second time, and a rebuild
+          # is not byte-identical, so a second push would move the tag onto new
+          # bytes. That is the one thing §10.1 forbids outright.
+          #
+          # ghcr's OAuth dance: exchange the workflow token for a pull-scoped
+          # bearer, then ask for the manifest. Measured against this package
+          # before it existed: WITH credentials the token exchange answers 200
+          # and both `tags/list` and `manifests/<v>` answer 404, while an
+          # ANONYMOUS exchange for a package that is absent (or private) is
+          # refused 403 with no token at all — which is why this reads with the
+          # workflow token, and why the box-side reconciler, which holds no
+          # credential, needs the package to be public.
+          bearer="$(curl -sS -u "x:$REGISTRY_TOKEN" \
+            "https://ghcr.io/token?service=ghcr.io&scope=repository:$REPOSITORY:pull" |
+            sed -n 's/.*"token":"\([^"]*\)".*/\1/p')"
+          [ -n "$bearer" ] || { echo "ghcr issued no pull token for $REPOSITORY" >&2; exit 1; }
+          code="$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $bearer" \
+            -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
+            -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' \
+            "https://ghcr.io/v2/$REPOSITORY/manifests/$VERSION")"
+          case "$code" in
+            404) printf 'push=yes\n' >> "$GITHUB_OUTPUT"
+                 echo "$PACKAGE has no $VERSION — publishing it" ;;
+            200) printf 'push=no\n' >> "$GITHUB_OUTPUT"
+                 echo "$PACKAGE:$VERSION is already published — not re-pushing" ;;
+            # Anything else is a question this job must not answer by guessing:
+            # the guess that costs something is the one that pushes.
+            *)   echo "ghcr answered $code for $PACKAGE:$VERSION — refusing to publish on an unread registry" >&2
+                 exit 1 ;;
+          esac
+      - name: Build the image, gate included
+        if: steps.existing.outputs.push == 'yes'
+        # `make image` ends in `make image-scan` (DESIGN §10.1's condition on
+        # the registry ruling), so the disclosure gate runs here, on this
+        # runner, over the exact image the next step pushes — build, scan, then
+        # push, in one job, or the gate is a different image's. It also tags
+        # `yog:latest` LOCALLY; that tag dies with the runner and is never
+        # pushed.
+        #
+        # ENGINE IS STATED, AND IT IS PODMAN — measured, not preferred. A
+        # runner carries both engines, and under docker the gate's THIRD
+        # SURFACE (the image config) silently reads as empty: `docker image
+        # inspect` has no top-level `History`, so `image-scan.sh`'s one
+        # `--format` template fails execution, writes a single newline and
+        # exits non-zero, which is enough to satisfy an emptiness check and
+        # leaves every `Env` unscanned. The self-test catches it and the build
+        # is refused rather than published — the gate fails closed — but a
+        # refused build publishes nothing at all. Proven on a runner: podman
+        # builds this image, catches all five planted findings and scans the
+        # real image clean. The docker gap is bl-09d4; when it closes,
+        # this becomes a one-word change. Autodetect would pick podman here
+        # anyway; naming it means a runner image that drops podman fails loudly
+        # instead of silently changing what gates a published artifact.
+        # `.dockerignore` is a symlink to `.containerignore` so the build
+        # context is one list under either engine.
+        #
+        # SINGLE-ARCH, x86_64, and stated rather than implied: the runner is
+        # amd64 and the image carries one static musl binary built for it. An
+        # arm64 box gets nothing it can run. A multi-arch manifest is a real
+        # cost (emulated or cross builds, and a gate run per architecture) and
+        # would be its own decision, not a flag added here.
+        run: |
+          set -euo pipefail
+          command -v podman >/dev/null || {
+            echo "this runner has no podman, and the image gate's config surface does not survive docker — refusing to publish an ungated image" >&2
+            exit 1
+          }
+          make image ENGINE=podman
+      - name: Log in to ghcr as this run
+        if: steps.existing.outputs.push == 'yes'
+        env:
+          # Both arrive as DATA in the environment rather than as `${{ }}`
+          # spliced into the script (boundary rule 7).
+          ACTOR: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$REGISTRY_TOKEN" | podman login ghcr.io -u "$ACTOR" --password-stdin
+      - name: Push the version tag, and record the digest
+        if: steps.existing.outputs.push == 'yes'
+        env:
+          LOCAL_TAG: ${{ steps.tag.outputs.local }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          remote="$PACKAGE:$VERSION"
+          podman tag "$LOCAL_TAG" "$remote"
+          # The digest is the other immutable name §10.1 publishes, and it is
+          # only knowable after the push — so it is read from the push itself
+          # rather than asked of the engine afterwards, which would answer
+          # about a local record of a remote fact.
+          podman push --digestfile digest.txt "$remote"
+          digest="$(cat digest.txt)"
+          [ -n "$digest" ] || { echo "pushed $remote but the push reported no digest" >&2; exit 1; }
+          echo "published $remote@$digest"
+          {
+            echo "### Image published"
+            echo
+            echo "- tag: \`$remote\`"
+            echo "- digest: \`$digest\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   prune-stale-branches:
     name: prune stale branches

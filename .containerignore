@@ -5,6 +5,14 @@
 # what keeps the CONTEXT from being sent at all. `target/` alone is gigabytes,
 # and the build engine reads the whole context before the first instruction
 # runs. `corpus/` and `lcov.info` are the other two of any size here.
+#
+# `.dockerignore` IS A SYMLINK TO THIS FILE, and that is one home rather than
+# two. podman reads `.containerignore` and falls back to `.dockerignore`;
+# docker reads only `.dockerignore` and has never heard of this name — so a
+# `make image ENGINE=docker`, which the Makefile advertises, sent `.git/` and
+# every byte of `target/` (tens of gigabytes in a working checkout) to the
+# daemon before the symlink existed. Two copies of an ignore list drift within
+# a week; a link cannot.
 target/
 .git/
 corpus/

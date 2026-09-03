@@ -1,4 +1,4 @@
-.PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny image image-scan \
+.PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny image image-scan print-image-tag \
         corpus drive drive-preflight drive-cleanroom drive-seed drive-log wire-certs fixture \
         deploy deploy-status
 
@@ -445,6 +445,12 @@ endif
 # publishes is the version tag and the manifest digest, both immutable, and
 # never a moving `latest`; the `:latest` applied below is LOCAL, a convenience
 # on one box nobody else can pull.
+#
+# SINCE bl-6b96 THE PUSH EXISTS, and it still is not here: it is the
+# `release-image` job of `.github/workflows/release-plz.yml`, which runs THIS
+# target (so the image-side gate runs on the runner, on the bytes that go out)
+# and then pushes what it built. `print-image-tag` below is what that job asks
+# for the tag rather than re-deriving it — the `sed` above stays the one home.
 IMAGE_NAME    ?= yog
 IMAGE_VERSION := $(shell sed -n '/^\[package\]/,/^\[/{s/^version *= *"\([^"]*\)".*/\1/p;}' Cargo.toml)
 IMAGE_TAG     := $(IMAGE_NAME):$(IMAGE_VERSION)
@@ -459,6 +465,13 @@ image:
 	@$(ENGINE) image inspect "$(IMAGE_TAG)" \
 	  --format 'image: {{.Id}} {{.Size}} bytes'
 	@$(MAKE) --no-print-directory image-scan
+
+# The local tag `image` just built, for a caller that has to name it —
+# the release workflow's ghcr job, which retags it for the registry. Printing
+# it beats a second copy of the `sed`: the crate version has one home and this
+# is the one spelling of the tag made from it.
+print-image-tag:
+	@echo '$(IMAGE_TAG)'
 
 # The image-side disclosure gate — DESIGN §10.1's condition on the registry
 # ruling, and the check nothing in this repo previously performed. `leak-scan`

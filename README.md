@@ -513,12 +513,16 @@ emergency path: it carries an unreleased `yog:<version>-<commit>` by
 `reconcile.sh` handles released versions only — a strict `<major>.<minor>.<patch>`
 tag, never `latest`, never a dev spelling — and defers instead.
 
-**Nothing is published to that registry yet** (bl-6b96, above), so until it is,
-every pass finds an empty package, says so and exits 0. That is the standing
-state and it is deliberately not a failure — a timer going red every fifteen
-minutes on a condition nobody has promised to fix is a timer that gets switched
-off. A package that *refuses* an anonymous read is a different answer and does
-fail, with the remedy named.
+**A package with nothing in it is a clean no-op**: the pass says so and exits 0,
+deliberately not a failure — a timer going red every fifteen minutes on a
+condition nobody has promised to fix is a timer that gets switched off. A
+package that *refuses* an anonymous read is a different answer and does fail,
+with the remedy named. Measured (DESIGN §10.1): anonymously those two are the
+same `403`, because ghcr will not even issue a pull token for a package that is
+absent or private — so **until the first release publishes and its package is
+flipped public, a seated box's pass refuses with the visibility remedy**, which
+is the right act stated for the benign reason. The box keeps serving the tag
+`make deploy` put on it; nothing is downgraded.
 
 What one pass does: read `YOG_IMAGE` out of `deploy.env`; ask the registry
 anonymously for its released tags (the package is public, so the box holds no
@@ -713,15 +717,45 @@ box that built it, before the push. It does not read what is already in the
 registry, it cannot un-publish a digest, and whoever runs the build can bypass
 it exactly as `--no-verify` bypasses the commit hook.
 
+**Run it under podman today.** `make image ENGINE=docker` refuses at the
+self-test: `docker image inspect` exposes no top-level `History`, so the one
+`--format` template the scan reads the image **config** with fails execution
+and yields a single newline — the `Env` surface goes unscanned, the planted
+ENV secret is missed, and the build is refused rather than published. The gate
+fails closed, which is the right direction, but it means the docker path builds
+nothing until that is fixed (bl-09d4). Podman is the Makefile's default anyway, and it is
+what the release workflow names.
+
 **`make image` pushes nothing, and there is no `push` target.** The registry is
 `ghcr.io/mudbungie/yog`, pushed only from this repo's release workflow at tag
 time; a push is not undoable, and a convenience target for an irreversible act
 is how the act happens by accident.
 
-**That push does not exist yet** (bl-6b96): DESIGN §10.1 names the registry,
-the tag convention and the publishing authority, and no workflow performs it.
-So the package is empty today, and the unattended reconciler below is written
-against the convention — an empty registry is a clean no-op, not a failure.
+**What does push is the `release-image` job** in
+`.github/workflows/release-plz.yml` (bl-6b96). It hangs off the release job's
+own output, so an image publishes exactly when a crate version does and behind
+the same green-CI gate; it builds with `make image` on the runner, so the
+disclosure gate above runs there over the exact bytes it is about to push; and
+it pushes ONE name, `ghcr.io/mudbungie/yog:<version>`, recording the manifest
+digest in the run summary. The local `:latest` dies with the runner. Its
+authority is the workflow's own `GITHUB_TOKEN` with `packages: write` — no PAT,
+no registry secret, nothing to rotate.
+
+Three things it deliberately does not do: there is **no manual dispatch door**
+(a Release asset can be replaced, a published tag cannot), it **reads the
+registry first and refuses to re-push a version that is already there** (a
+rebuild is not byte-identical, so a second push would move the tag onto new
+bytes), and it publishes **single-arch x86_64** — the runner is amd64 and the
+image carries one static musl binary, so an arm64 box gets nothing it can run.
+A multi-arch manifest would be its own decision.
+
+**The package needs one operator act, once.** GitHub creates a new package
+private whatever the repository's visibility, and every box reads the registry
+anonymously by design — so after the first release publishes, flip the package
+to public: the repository's **Packages** → `yog` → **Package settings** →
+**Danger Zone** → **Change visibility** → **Public**. There is no REST route
+for it (DESIGN §10.1 records the probe). Until that flip, a reconcile pass
+refuses loudly and names it.
 
 ## Publishing
 
@@ -735,7 +769,8 @@ In CI: `.github/workflows/release-plz.yml` keeps ONE open "release PR" that
 bumps the version and stages the changelog entry. **Merging that PR is the
 human decision**; nothing publishes until you do. The merge lands on `main`,
 CI runs, and only a CI run that concludes `success` releases — tag, GitHub
-Release, crates.io upload, then the linux-gnu binary archive.
+Release, crates.io upload, then the linux-gnu binary archive and the ghcr image
+(see "The image"). One version, three artifacts, one trigger.
 
 That release job is the only thing in the repo holding publish authority, so
 the boundary around it is written out rule by rule in the header of

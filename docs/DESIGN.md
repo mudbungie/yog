@@ -6631,7 +6631,8 @@ Four properties, and each is a refusal of a way this goes wrong:
   identity is the repository's own `GITHUB_TOKEN`, which exists only inside
   that workflow run — so "who can publish" is answered by the same access
   control that answers "who can push a tag", and there is no long-lived
-  registry credential on any box.
+  registry credential on any box. **yog's job exists** (bl-6b96):
+  `release-image` in `.github/workflows/release-plz.yml`, described below.
 - **The version tag and the manifest digest, both immutable. Never a moving
   `latest`.** A published `latest` is a name whose bytes change under everyone
   who ever wrote it down; a digest is the only tag that means one thing
@@ -6813,24 +6814,92 @@ one**, and each is a refusal:
 publishes once, so the remedy for a bad release is the next version — every box
 picks it up on its own next pass, and nothing has to be reached into.
 
-**The publishing half of this section is ruled and NOT YET BUILT, and that is
-the reconciler's standing state** (bl-6b96). The registry above says images
-publish "from that repo's own release workflow, at tag time"; no job in
-`.github/workflows/` performs that push today, so the package this section
-names is empty and every reconcile pass finds nothing. **The reconciler is
-therefore written against the convention rather than against the artifact**,
-and "the registry has no such tag yet" is a clean no-op that says so and exits
-0 — not a failure. A timer that went red every fifteen minutes on the one box
-state it was written to sit in quietly is a timer an operator switches off, and
-it would have been red on every box until bl-6b96 lands.
+**The reconciler is written against the convention rather than against the
+artifact**, and "the registry has no such tag yet" is a clean no-op that says
+so and exits 0 — not a failure. A timer that went red every fifteen minutes on
+the one box state it was written to sit in quietly is a timer an operator
+switches off, and it would have been red on every box for as long as the
+package stayed empty. So an empty package and a *locked* one are two answers
+rather than one, and the reconciler reads the HTTP status instead of collapsing
+every failure into `curl -f`'s single exit code: nothing published is the
+standing state, while a refusal is a box that has silently stopped upgrading
+and says so with a remedy.
 
-That makes an empty package and a *locked* one two answers rather than one, so
-the reconciler reads the HTTP status instead of collapsing every failure into
-`curl -f`'s single exit code: `404` and an empty tag set are the standing
-state, while `401`/`403` is a box that has silently stopped upgrading and says
-so with a remedy. When bl-6b96 lands it should also record the operator step
-its own channel needs — GitHub creates a new package **private** whatever the
-repository's visibility, and an anonymous poller cannot read a private package.
+#### What performs the push (bl-6b96)
+
+**`release-image`, a fifth job in `.github/workflows/release-plz.yml`.** It
+hangs off the release job's `releases_created` output, so an image publishes
+exactly when a crate version does and by the same gate — a CI run that
+concluded `success` on the exact commit that was tested. The crate, the binary
+archive and the image are one publication carrying one version (the property
+the tag-from-`Cargo.toml` rule above buys), which is why all three descend from
+one job's outputs rather than from three triggers that could disagree.
+
+Six properties, each answering a way this job could be less than the ruling:
+
+- **It builds with `make image`, so the disclosure gate runs on the runner over
+  the bytes that leave it.** Build, scan, push, in one job. The alternative — a
+  build-and-push action reading the same `Containerfile` — builds a SECOND time
+  and pushes an image no gate ever read.
+- **The engine is stated, and it is podman — measured, not preferred.** A
+  runner carries both engines, and **the gate's third surface does not survive
+  docker**: `docker image inspect` exposes no top-level `History`, so
+  `image-scan.sh`'s one `--format` template fails execution, writes a single
+  newline and exits non-zero — enough to satisfy an emptiness check, and every
+  `Env` in the image goes unscanned. The self-test catches it (the build is
+  refused, so the gate fails closed and nothing ungated is published), and that
+  gap is bl-09d4; under podman the same runner catches all five planted
+  findings and scans the real image clean. `.dockerignore` is now a **symlink
+  to `.containerignore`** for the same one-home reason — docker never read the
+  latter name, so a `make image ENGINE=docker` sent `.git/` and all of
+  `target/` into the context this section calls the image's `include` list.
+- **One tag is pushed and the digest is recorded.** `<package>:<version>` and
+  the manifest digest the push resolves to, printed into the run summary;
+  `make image`'s `:latest` stays on the runner and dies with it. No commit-sha
+  tag: the digest already names those bytes immutably and forever, the box-side
+  reconciler reads strictly `<major>.<minor>.<patch>`, and a second name for
+  one artifact is one fact stored twice.
+- **The tree must agree with the tag before anything is built** — the same
+  refusal the binaries job makes, for the same reason (bl-159d): the tag is
+  named outright and never derived by `git describe`, and `Cargo.toml`'s
+  version must equal it.
+- **No manual door, and a re-push is refused.** There is no `workflow_dispatch`
+  backfill beside the binaries job's, because an uploaded asset can be replaced
+  and a published tag cannot. A re-run whose `needs` outputs are replayed would
+  arrive a second time, and a rebuild is not byte-identical, so the job reads
+  the registry first and stops when the version is already there.
+- **Single-arch x86_64, stated rather than implied.** The runner is amd64 and
+  the image carries one static musl binary for it; an arm64 box gets nothing it
+  can run. A multi-arch manifest is emulated or cross builds plus a gate run
+  per architecture — its own decision, not a flag.
+
+**The registry answers a credentialed read and an anonymous one differently,
+and that asymmetry is measured rather than assumed.** With credentials, a
+package that does not exist answers `200` at ghcr's token exchange and `404` at
+both `tags/list` and `manifests/<version>` — which is what makes the job's
+once-only check honest on the very first publish. **Anonymously, a package that
+is absent and one that is private are the same answer**: the token exchange
+itself is refused `403` with no token issued at all, so the reconciler never
+reaches its `404` arm for an unpublished package. That is exactly right after
+the first release — a box that cannot read the package is a box that has
+stopped upgrading, and the remedy it names is the visibility below — and it
+means a box seated before any image is published reports the same refusal for
+the benign reason.
+
+**The one operator act, and it is not automatable.** GitHub creates a new
+package **private** whatever the repository's visibility, and the reconciler
+reads anonymously by design (a box holds no registry credential — that is the
+property this whole channel is built on), so the first published version is
+unreadable by every deployed box until the package is flipped to public, once,
+by hand. There is no REST route for it: `PATCH /user/packages/container/<name>`
+answers with the generic route-not-found body rather than a
+per-endpoint one, and the packages API documents only list, get, delete and
+restore. The act is the package's own settings page — the repository's
+**Packages** → `yog` → **Package settings** → **Danger Zone** → **Change
+visibility** → **Public** — performed once, after the first release publishes
+and before any box is expected to reconcile against it. A box seated in the
+meantime keeps working: it is running the tag `make deploy` put on it, and its
+reconcile pass refuses loudly rather than downgrading anything.
 
 ### 10.2 The macOS artifact: `zig cc` from a Linux container, and what it cannot reach (bl-888d)
 
