@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.23](https://github.com/mudbungie/yog/compare/v0.0.22...v0.0.23) - 2026-09-03
+
+### Changes
+
+- a pin is answered but no gesture writes one: ui.json's pinned list has no boundary act [bl-b986]
+- a pin is answered but no gesture writes one: ui.json's pinned list has no boundary act [bl-b986]
+
 ## [0.0.22](https://github.com/mudbungie/yog/compare/v0.0.21...v0.0.22) - 2026-09-03
 
 ### Changes
