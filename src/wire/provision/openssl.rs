@@ -80,8 +80,9 @@ pub(super) fn leaf(dir: &Path, role: Role, host: &str) -> Result<(), String> {
 /// because a directory holding several must say which is which. That basename
 /// is a filing convenience and nothing more: the name **inside** is the
 /// identity (REMOTE §2), and on the client box the pair is placed into
-/// `wire/workspaces/<leaf>/` as `client.pem`/`client.key` (§8.2) without
-/// changing what it authenticates as.
+/// `wire/workspaces/<workspace>/` as `client.pem`/`client.key` (§8.2) — that
+/// directory named for the workspace it addresses, not for this common name —
+/// without changing what it authenticates as.
 ///
 /// **`grade` is the other thing the subject says** (REMOTE §4.2, bl-7ff3), and
 /// it is written here because the operator's own CA is the only thing entitled

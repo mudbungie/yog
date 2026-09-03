@@ -29,7 +29,7 @@
 //! is — the readings that do not apply to the selected act are inert here and
 //! always have been.
 
-use super::super::material::{ADDRESS, DIR, ENTRIES, Role};
+use super::super::material::{ADDRESS, DIR, ENTRIES, ENTRY, Role};
 use super::{ANCHORS, LOOPBACK, PORT};
 use crate::registry::Grade;
 use crate::xdg::Env;
@@ -189,13 +189,17 @@ fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
     for name in [format!("{cn}.pem"), format!("{cn}.key")] {
         println!("  {}", dir.join(name).display());
     }
-    // Spelled from the reader's own constants, so the instruction and the
-    // directory a client files it into cannot drift.
+    // Spelled from the reader's own constants — the destination's own name
+    // ([`ENTRY`]) among them, because that was the one token still written by
+    // hand here and it is the one that drifted (bl-686c): it said `<leaf>`, and
+    // a directory named for the leaf just issued is a channel no gesture routes
+    // to.
     let client = Role::Client.leaf();
     println!(
-        "  carry those and {} to that box by hand, into its {DIR}/{ENTRIES}/<leaf>/ as \
-         {client}.pem, {client}.key and {ANCHORS}, beside an {ADDRESS} you state; the common \
-         name inside, not the basename, is the identity",
+        "  carry those and {} to that box by hand, into its {DIR}/{ENTRIES}/{ENTRY}/ — named for \
+         the WORKSPACE it will address, not for {cn} — as {client}.pem, {client}.key and \
+         {ANCHORS}, beside an {ADDRESS} you state; the common name inside, not the basename, is \
+         the identity",
         dir.join(ANCHORS).display()
     );
     0

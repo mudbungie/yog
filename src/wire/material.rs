@@ -45,12 +45,27 @@ pub const ANCHORS: &str = "ca.pem";
 pub const ADDRESS: &str = "address";
 
 /// The directory a **client** box files one host's material under, inside its
-/// own [`DIR`] — `wire/workspaces/<leaf>/` (REMOTE §8.2). yog holds no
+/// own [`DIR`] — `wire/workspaces/<workspace>/` (REMOTE §8.2). yog holds no
 /// entries since bl-7942 (a seat does), but it still *issues* the leaf a
 /// visiting box files there (`WIRE_LEAF`), and the instruction that goes with
 /// the pair has to name the destination. One home for the word, so the mint's
 /// sentence and the client that reads the directory cannot drift.
 pub const ENTRIES: &str = "workspaces";
+
+/// What that directory is **named for** — the workspace, never the leaf
+/// (bl-686c). A seat holds one channel per directory under [`ENTRIES`] and
+/// routes every gesture by the workspace it names, so material filed under the
+/// common name `WIRE_LEAF` stated is a channel no gesture can address: present,
+/// valid, correctly permissioned, unreachable. The common name inside the
+/// certificate is the identity and the basename is a filing convenience (REMOTE
+/// §2), which is exactly why the two are free to differ and why the
+/// instruction may not spell one as the other.
+///
+/// It is a constant because the mint's sentence is otherwise assembled from
+/// [`DIR`] and [`ENTRIES`] *"so the instruction and the directory a client
+/// files it into cannot drift"* — and the one token still written by hand there
+/// is the one that drifted.
+pub const ENTRY: &str = "<workspace>";
 /// The act that mints the lot, named in every refusal so a seat that cannot
 /// start says how to make it start.
 ///

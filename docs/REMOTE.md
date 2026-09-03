@@ -2351,7 +2351,14 @@ client leaf under a stated common name — the one recipe, one more artifact it
 can be asked for) and writes the registration (§4.1's `mkdir` and `touch`).
 The anchors, leaf and key are carried to the client box by hand — the same
 out-of-channel act the certificates always rode — and written into
-`wire/workspaces/<leaf>/` beside an `address` the operator states. No
+`wire/workspaces/<workspace>/` beside an `address` the operator states. **That
+directory's name is the workspace's, never the common name the leaf was issued
+under** (bl-686c): a client routes a gesture by the workspace it names, so
+material filed under the leaf's name is a channel no gesture can address —
+present, valid and unreachable. The two names are free to differ precisely
+because the identity is the name *inside* the certificate (§2), which is why
+the mint's instruction spells the destination from
+`material::ENTRY` and not by hand. No
 enrollment, no pairing, no first-connect ceremony. A workspace that does not
 yet exist on the host is founded by the entry's own first `Prepare` (§4.1's
 raise), which auto-registers its creator — in-channel work, on material that

@@ -59,8 +59,12 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  asks for the other act instead: issue ONE extra client leaf under that name, \
                  over the CA already here — no CA, no address, no other leaf. That is the leaf \
                  a visiting box participates as; carry it, its key and `ca.pem` to that box by \
-                 hand and place them in its `wire/workspaces/<leaf>/` as `client.pem`, \
-                 `client.key` and `ca.pem`, beside an `address` naming this engine. The common \
+                 hand and place them in its `wire/workspaces/<workspace>/` as `client.pem`, \
+                 `client.key` and `ca.pem`, beside an `address` naming this engine. That \
+                 directory is named for the WORKSPACE the client will address, never for the \
+                 common name the leaf was issued under — a seat routes a gesture by the \
+                 workspace it names, so a directory named for the leaf is a channel nothing \
+                 can reach. The common \
                  name INSIDE the certificate is the identity, not the basename, so the rename \
                  costs nothing. It shells to `openssl`: provisioning is the operator's \
                  out-of-channel act and yog links no certificate library.",
