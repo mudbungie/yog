@@ -69,19 +69,6 @@ fn stop_picks_correct_agent_among_several() {
     assert!(!stop_enabled(Some("c"), &bs));
 }
 
-#[test]
-fn message_enabled_only_for_a_present_selection_with_text() {
-    // Any state — Message is the resume gesture (contrast stop_enabled); the
-    // roster half is the §11 seat's own `present` since bl-1eb0, so this
-    // predicate is the text half and the conjunction, nothing more.
-    assert!(message_enabled(true, "continue please"));
-    assert!(!message_enabled(true, "   "), "blank text");
-    assert!(
-        !message_enabled(false, "hi"),
-        "no selection, or an absent id"
-    );
-}
-
 /// The nudge and Stop partition the four states between them (bl-9bef): every
 /// agent is offered exactly one of the two, so neither is ever a control that
 /// fires and does nothing (QUALITY H4). The one exception is
@@ -131,9 +118,9 @@ fn a_truncated_turn_is_not_nudgeable() {
         "an ordinary resting conversation is unaffected"
     );
     // Neither is Stop offered — the conversation holds no driver — so this is
-    // the one shape with no §8.2 conversation verb but Message.
+    // the one shape with no §8.2 conversation verb but Message, whose gate is
+    // the seat's (bl-7cc8).
     assert!(!stop_enabled(Some("a"), &bs));
-    assert!(message_enabled(true, "carry on"));
 }
 
 #[test]

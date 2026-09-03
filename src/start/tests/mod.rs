@@ -9,7 +9,6 @@
 mod control;
 mod ensure;
 mod exec;
-mod gate;
 mod goal;
 mod identity;
 mod lineage;

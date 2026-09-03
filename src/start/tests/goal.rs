@@ -1,13 +1,12 @@
-//! Goal composition + the pre-mint preview (§3.3): the per-rung prefills and
-//! typed target bindings, the ball header and its inverse, [`compose_prepared`]
-//! (whose workspace name is a query over the target path, §3.1), and
-//! [`preview`]. The name prediction's own tables are [`super::identity`].
+//! Goal composition (§3.3): the per-rung prefills and typed target bindings,
+//! the ball header and its inverse, and [`compose_prepared`] (whose workspace
+//! name is a query over the target path, §3.1). The mint's own tables are
+//! [`super::identity`].
 
 use crate::binding::{work_worktree_path, workspace_path};
 use crate::projects::join::JoinState;
 use crate::start::goal::{compose_prepared, prefill, target_binding};
-use crate::start::identity::mint_conversation;
-use crate::start::{BallSpec, Payload, StartInputs, parse_ball_stamp, preview};
+use crate::start::{BallSpec, Payload, StartInputs, parse_ball_stamp};
 use std::path::{Path, PathBuf};
 
 const YOG: &str = "/yog";
@@ -170,42 +169,4 @@ fn compose_prepared_derives_the_fire_params() {
         ..inputs
     };
     assert_eq!(compose_prepared(&foreign, None).workspace, "20260101T-aa");
-}
-
-#[test]
-fn preview_pairs_the_predicted_identity_with_the_prefill() {
-    let w = super::World::new();
-    let mut inputs = w.inputs(
-        "cobalt-gecko",
-        Payload::Path {
-            dir: PathBuf::from("/d"),
-        },
-    );
-    // The workspace's one live root already wears this name; the prediction
-    // scans past it, exactly as fire will.
-    let taken = mint_conversation(&[], &super::rng()).unwrap();
-    inputs.conversation_names = vec![taken.clone()];
-    let c = preview(&inputs, &super::rng());
-    assert_ne!(c.preview, format!("will be named {taken}"));
-    assert!(c.preview.starts_with("will be named "));
-    assert!(
-        !c.preview.contains("cobalt-gecko"),
-        "the workspace name is never the previewed identity (§3.3, bl-df65)"
-    );
-    assert!(c.prefill.contains("/d"));
-}
-
-#[test]
-fn preview_predicts_a_minted_name() {
-    let w = super::World::new();
-    let inputs = w.inputs(crate::names::DEFAULT_NAME, Payload::Bare);
-    let c = preview(&inputs, &super::rng());
-    assert_eq!(
-        c.preview,
-        format!(
-            "will be named {}",
-            mint_conversation(&[], &super::rng()).unwrap()
-        )
-    );
-    assert_eq!(c.prefill, "", "bare has no prefill");
 }

@@ -1,4 +1,4 @@
-//! Goal composition + the pre-mint name preview (DESIGN §3.3, §3.4).
+//! Goal composition (DESIGN §3.3, §3.4).
 //!
 //! Everything here is pure. The **payload prefill** ([`prefill`]) is the editable
 //! text the operator sees: empty (bare), a target preamble naming the directory
@@ -8,11 +8,11 @@
 //! litany states the stored fact in its assembled context. The name is the
 //! **conversation's** ([`mint_conversation`]): the workspace never enters the
 //! prompt (bl-df65), because `YOG_NAME` already carries it and the world's `bl`
-//! shim defaults `--as` to it (§16.7 W9, §3.3). [`preview`] mints the predicted
-//! conversation name from a pure read (the target workspace's already-derived
-//! name facts + the injected RNG) and pairs it with the prefill; the mint is
-//! re-derived at fire — the preview is a prediction, the fire's mint is the
-//! truth.
+//! shim defaults `--as` to it (§16.7 W9, §3.3). **The pre-mint name prediction
+//! and the composer view-model that paired it with the prefill are the seat's**
+//! (bl-7cc8): the mint that matters is the one `execute_prompt` re-derives at
+//! fire, and no §8.5 reply carries a predicted name, so a prediction composed
+//! here reached nothing.
 //!
 //! The one stamp still composed here is read back by its inverse **in this
 //! module**, one home for compose and parse (§3.3, PRINCIPLES "single source of
@@ -22,28 +22,9 @@
 //! [`parse_identity_stamp`]'s legacy rung (`super::identity`) — its compose is
 //! retired.
 
-use super::identity::identity_preview;
 use super::{BallSpec, Payload, StartInputs};
 use crate::binding::work_worktree_path;
-use litany::mint::Rng;
 use std::path::{Path, PathBuf};
-
-/// The composer view-model (§3.3): the greyed name-prediction `preview` line and
-/// the editable payload `prefill`. Both are pure reads — nothing spawns (I7).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Composer {
-    pub preview: String,
-    pub prefill: String,
-}
-
-/// The pre-submit composer view-model (§3.3): the predicted name paired with
-/// the payload prefill. Nothing spawns (I7).
-pub fn preview(inputs: &StartInputs, rng: &dyn Rng) -> Composer {
-    Composer {
-        preview: identity_preview(&inputs.conversation_names, rng),
-        prefill: prefill(&inputs.payload),
-    }
-}
 
 /// The editable payload prefill (§3.3), per rung — since bl-6920 also exactly
 /// what fires: nothing is prepended. Bare is empty (the operator types); path

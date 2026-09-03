@@ -1,10 +1,12 @@
-//! The conversation's **identity** (DESIGN §3.3): the mint that draws the name,
-//! the composer's pre-mint name preview, and the **legacy** stamp parse.
+//! The conversation's **identity** (DESIGN §3.3): the mint that draws the name
+//! and the **legacy** stamp parse. The composer's pre-mint name *preview* left
+//! with bl-7cc8 — the wording of a prediction is a seat's, and no reply carried
+//! it.
 //!
 //! The `You are <name>.` stamp no longer composes anywhere (bl-6920): the goal reaches the model exactly as the operator edited it, and
 //! identity rides `--name` alone — litany states the stored name fact in its
 //! assembled context (litany bl-d55f, released 0.0.4). What remains here is
-//! pure: the mint, the preview wording, and the two inverses of the retired
+//! pure: the mint and the two inverses of the retired
 //! compose ([`parse_identity_stamp`] / [`strip_identity_stamp`]), kept only to
 //! read pre-0.0.4 roots until litany's 30-day retention ages them out. Parse
 //! and the shape it reads live together (PRINCIPLES "single source of truth"):
@@ -65,20 +67,4 @@ pub fn strip_identity_stamp(goal: &str) -> String {
 /// uniqueness would buy nothing.
 pub(super) fn mint_conversation(occupied: &[String], rng: &dyn Rng) -> Result<String, MintError> {
     litany::mint::mint(rng, &occupied.iter().cloned().collect())
-}
-
-/// The greyed name prediction the composer shows (§3.3, I7): the mint drawn over
-/// the target workspace's `occupied` set and `rng` — the same two inputs the fire
-/// re-derives from, so it predicts the name `--name` will carry. Worded as a
-/// prediction (`will be named <name>`), **not** as a line of the goal: since
-/// bl-6920 nothing is prepended to the payload — litany states the name to the
-/// model from its stored fact. An exhausted pool yields an empty line (the
-/// prediction simply has no name — fire logs the abort, §8.1), which
-/// `unwrap_or_default` folds with no separate branch. The one entry point for a
-/// surface that has a resolved workspace but no [`StartInputs`](super::StartInputs)
-/// (the ball rung's composer, already past `prepare`).
-pub fn identity_preview(occupied: &[String], rng: &dyn Rng) -> String {
-    mint_conversation(occupied, rng)
-        .map(|name| format!("will be named {name}"))
-        .unwrap_or_default()
 }

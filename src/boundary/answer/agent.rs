@@ -77,8 +77,9 @@ pub struct AgentView {
     /// header badge's class, `None` at rest.
     pub flight: Option<Flight>,
     /// Whether the published snapshot carries this agent at all — the roster
-    /// half of §8.2's message gate ([`message_enabled`](crate::actions::message_enabled);
-    /// the text half is the composer's, and no boundary can know it).
+    /// half of §8.2's message gate. The text half is the composer's, and no
+    /// boundary can know it, so the conjunction is the seat's (bl-7cc8) and
+    /// this crate states only the half it owns.
     pub present: bool,
     /// Whether §8.2's `Nudge` is offered — a settled conversation the model can
     /// be run on again ([`nudge_enabled`]).

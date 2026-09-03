@@ -37,10 +37,13 @@
 //! disk reads it adds are the frozen inputs of each row and, when a sibling has
 //! landed, one ancestry probe per superseded attempt.
 //!
-//! **The §11 fan-group seat renders this projection** (bl-77bc): [`render`]
-//! is the group card, [`compose`] turns its affordance clicks into composer
-//! text, and [`respdiff`] is V3.3's response comparison — all consumers of the
-//! rows above, owning no fact of their own.
+//! **A seat renders this projection, and yog does not render it for one**
+//! (bl-7cc8). The §11 fan-group card's affordance-to-composer-text composition
+//! and V3.3's response comparison were derived here and reached nothing:
+//! `Reply::Science` carries each row's `response` verbatim and no draft text at
+//! all, so a seat that wants a diff has both sides already, and a diff computed
+//! here would be the second implementation this module exists to avoid. They
+//! left with the face they served (bl-7942).
 
 use std::path::Path;
 
@@ -51,10 +54,8 @@ use crate::budgets::BudgetSpend;
 use crate::opslog::OpEntry;
 
 mod bound;
-pub mod compose;
 mod observed;
 mod outcome;
-pub mod respdiff;
 pub(crate) mod wire;
 
 pub use outcome::Outcome;

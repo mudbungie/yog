@@ -2,9 +2,10 @@
 //! materializes. `litany prime`, `litany new <names-root>/home` — the §3.1
 //! default name, taken without asking, so the first Enter meets no name picker —
 //! and a detached `litany prompt` carrying the typed text **verbatim** (bl-6920:
-//! identity rides `--name`, never the payload), `YOG_NAME=home`, cwd `~`; the
-//! pre-submit view-model already carried the greyed name prediction (STORIES
-//! S0.2, DESIGN §3.1/§3.3/§3.4/§8.1).
+//! identity rides `--name`, never the payload), `YOG_NAME=home`, cwd `~`
+//! (DESIGN §3.1/§3.3/§3.4/§8.1). The pre-submit name *prediction* is the seat's
+//! since bl-7cc8 — no reply carries one — so what is asserted here is the mint
+//! the fire actually makes.
 
 #![allow(clippy::unwrap_used)]
 
@@ -41,15 +42,6 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
         conversation_names: Vec::new(),
     };
 
-    // Pre-submit: the greyed name prediction, a pure read (nothing spawned yet).
-    let composer = start::preview(&inputs, &SplitMix64::from_seed(7));
-    assert!(composer.preview.starts_with("will be named "));
-    assert_eq!(
-        bl_rec.invocations().len(),
-        0,
-        "the preview spawns nothing (I7)"
-    );
-
     // Enter: seed + new, then the detached prompt with the typed text.
     let prepared = start::prepare(&deps, &inputs, "T0").unwrap();
     let name = prepared.workspace.clone();
@@ -61,8 +53,7 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     // §3.1: the workspace's name IS its address (bl-f5f6), so the path is the
     // one derivation off it rather than a second field.
     let ws = workspace_path(yog.path(), &name);
-    // The conversation mint re-derives at fire off a fresh generator on the same
-    // held seed the preview used — so the greyed prediction is the fired name (§3.3).
+    // The conversation mint is drawn at fire, off the held seed (§3.3).
     let minted = start::execute_prompt(
         &deps.litany,
         state.path(),
@@ -102,11 +93,6 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     assert_eq!(
         inv[2].argv[4], "make me a plan",
         "the typed text fires verbatim — no identity line, no mutation (bl-6920)"
-    );
-    assert_eq!(
-        composer.preview,
-        format!("will be named {conversation}"),
-        "the pre-submit view-model already predicted this exact name (S0-T1)"
     );
     // The workspace enters the harness channel and nothing else (§3.3, bl-df65):
     // its path is never in the goal text, only in the workspace argument and the

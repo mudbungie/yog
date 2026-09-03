@@ -28,19 +28,9 @@ pub fn stop_enabled(selected_branch: Option<&str>, agents: &[Agent]) -> bool {
         .any(|a| a.agent_id == name && matches!(a.state, AgentState::Live | AgentState::InFlight))
 }
 
-/// Message is the resume gesture (§8.2, ARCH §2.9: no resume verb — the
-/// deposit restarts a driver). Unlike [`stop_enabled`] it is *not* gated on
-/// agent state: a Quiescent or Stopped agent is precisely what you message to
-/// continue it. Enabled iff the target is a conversation the world carries
-/// (`present` — the §11 seat's own fact since bl-1eb0, so no caller re-walks
-/// the agent set to ask) and the composer text is non-blank.
-pub fn message_enabled(present: bool, content: &str) -> bool {
-    present && !content.trim().is_empty()
-}
-
 /// Nudge fires inference on the selected conversation from the state it is
 /// already in (§8.2, bl-9bef) — `litany advance`, no text at all. So it is
-/// [`message_enabled`] without the content half, and [`stop_enabled`]'s
+/// the message gate without the content half, and [`stop_enabled`]'s
 /// **complement** on state: a driver already holds the lease of a Live or
 /// InFlight agent, and litany's own hop would take the clean no-op branch
 /// (ARCH §2.11 Writer/driver totality). Offering it there would be a control
@@ -54,8 +44,8 @@ pub fn message_enabled(present: bool, content: &str) -> bool {
 /// no `tool_use`, and linked litany's `advance` derives `Warrant::NothingDue`
 /// from exactly that — it releases the lease and exits without creating a
 /// step. So the control would fire and do nothing, which is the theater the
-/// partition above exists to prevent; the recovery is [`message_enabled`],
-/// which needs no gate because a deposit lands user-side and warrants a call.
+/// partition above exists to prevent; the recovery is a Message, which needs
+/// no gate because a deposit lands user-side and warrants a call.
 /// The §7.3 step wound says so in words at the same moment
 /// ([`crate::steps_view::OUTPUT_LIMIT`]).
 ///

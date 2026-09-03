@@ -2,7 +2,7 @@
 //! pool its skill pins are drawn from.
 
 use super::attempt;
-use crate::fork::{Fire, argv, pool, skills_root};
+use crate::fork::{Fire, argv, skills_root};
 use std::path::{Path, PathBuf};
 
 /// One addressed attempt, spelled out.
@@ -96,24 +96,6 @@ fn every_skill_is_one_pin_at_the_pools_own_layout() {
             "skills/read_file/SKILL.md=/pool/skills/read_file/SKILL.md",
         ]
     );
-}
-
-/// **S12-T6 skills-pool**: the pool is the world's own, a directory counts only
-/// when it carries the instructions, and an absent pool is no skills rather
-/// than an error — the composer then offers none.
-#[test]
-fn the_pool_is_the_worlds_skill_directories() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path();
-    for name in ["read_file", "bash"] {
-        std::fs::create_dir_all(root.join(name)).unwrap();
-        std::fs::write(root.join(name).join("SKILL.md"), "---\nname: x\n---\n").unwrap();
-    }
-    // A directory with no SKILL.md is not a skill; nor is a stray file.
-    std::fs::create_dir_all(root.join("references")).unwrap();
-    std::fs::write(root.join("notes.md"), "").unwrap();
-    assert_eq!(pool(root), vec!["bash".to_owned(), "read_file".to_owned()]);
-    assert!(pool(&root.join("nowhere")).is_empty());
 }
 
 /// The pool hangs off the world's `$LITANY_HOME`, derived from the same anchor

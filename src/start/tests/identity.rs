@@ -4,23 +4,7 @@
 //! the *work* — prefills, the ball header, the driver cwd — is [`super::goal`]'s.
 
 use crate::start::identity::mint_conversation;
-use crate::start::{identity_preview, parse_identity_stamp, strip_identity_stamp};
-
-/// The preview predicts the **name** and claims nothing about the payload
-/// (bl-6920): it is not a line of the goal — nothing is prepended at fire — so
-/// its wording must not read as one, and it still instructs nothing (§16.7 W9).
-#[test]
-fn the_preview_predicts_the_name_and_is_not_a_goal_line() {
-    let line = identity_preview(&[], &super::rng());
-    let name = line.strip_prefix("will be named ").expect("the prediction");
-    assert!(!name.is_empty() && !name.contains(char::is_whitespace));
-    assert!(
-        parse_identity_stamp(&line).is_none(),
-        "the preview no longer wears the retired stamp's shape"
-    );
-    assert!(!line.contains("--as"));
-    assert!(!line.contains("workspace"));
-}
+use crate::start::{parse_identity_stamp, strip_identity_stamp};
 
 /// The **legacy** parse reads the line the retired compose used to write
 /// (`You are <x>.`, pre-0.0.4 roots only) — the fallback rung of the §3.3
@@ -72,25 +56,19 @@ fn mint_conversation_skips_the_workspaces_occupied_names() {
     assert_ne!(second, first, "an occupied name is scanned past");
 }
 
-/// **Preview parity** (§3.3, bl-cd38): the composer's prediction and the fire's
-/// mint are the *same function* — `litany::mint::mint`, drawn through the crate
-/// yog links rather than a second list of yog's own. Same seed, same occupied
-/// set, same word, at both altitudes; and calling the crate directly with those
-/// inputs lands the same word again, which is what says yog kept no draw of its
-/// own. This is the assertion a re-grown local wordlist would fail.
+/// **Mint parity** (§3.3, bl-cd38): the fire's mint is `litany::mint::mint`
+/// drawn through the crate yog links, not a second list of yog's own. Same
+/// seed, same occupied set, same word; and calling the crate directly with
+/// those inputs lands the same word again, which is what says yog kept no draw
+/// of its own. This is the assertion a re-grown local wordlist would fail.
 #[test]
-fn preview_and_fire_draw_the_one_litany_mint() {
+fn the_fire_draws_the_one_litany_mint() {
     let occupied = ["ash".to_owned(), "bay".to_owned()];
     let fired = mint_conversation(&occupied, &super::rng()).unwrap();
     assert_eq!(
-        identity_preview(&occupied, &super::rng()),
-        format!("will be named {fired}"),
-        "the prediction names the word the fire mints"
-    );
-    assert_eq!(
         litany::mint::mint(&super::rng(), &occupied.iter().cloned().collect()).unwrap(),
         fired,
-        "and that word is the crate's own draw — yog holds no second list"
+        "the word is the crate's own draw — yog holds no second list"
     );
     assert!(!occupied.contains(&fired));
 }

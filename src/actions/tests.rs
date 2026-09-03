@@ -123,31 +123,6 @@ fn new_ball_hints_name_both_boxes() {
 }
 
 #[test]
-fn draft_clears_only_on_a_clean_send() {
-    use crate::actions::verbs::Outcome;
-    let clean = Ok(Outcome {
-        exit: 0,
-        stdout: String::new(),
-        stderr: String::new(),
-    });
-    let ran_nonzero = Ok(Outcome {
-        exit: 3,
-        stdout: String::new(),
-        stderr: "boom".into(),
-    });
-    let never_launched: std::io::Result<Outcome> = Err(std::io::Error::other("no binary"));
-    assert!(draft_clears(&clean), "a clean send clears the draft");
-    assert!(
-        !draft_clears(&ran_nonzero),
-        "a ran-but-failed verb keeps the draft"
-    );
-    assert!(
-        !draft_clears(&never_launched),
-        "a spawn failure keeps the draft"
-    );
-}
-
-#[test]
 fn close_enabled_only_for_bound() {
     assert!(close_enabled(JoinState::Bound));
     assert!(!close_enabled(JoinState::ClaimedElsewhere));
@@ -173,29 +148,4 @@ fn assign_enabled_only_for_a_ready_ball() {
     assert!(!assign_enabled(JoinState::Delivered));
     assert!(!assign_enabled(JoinState::UnassignedWorkspace));
     assert!(!assign_enabled(JoinState::OrphanedProject));
-}
-
-#[test]
-fn actions_state_default_is_empty() {
-    let s = ActionsState::default();
-    assert!(s.drafts.is_empty());
-    assert!(s.path_dir.is_empty());
-    assert!(s.selected_branch.is_none());
-    assert!(!s.stop_children);
-}
-
-#[test]
-fn actions_state_clone_eq() {
-    let s = ActionsState {
-        drafts: {
-            let mut d = Drafts::default();
-            d.set(DraftKey::Message("b".to_string()), "hi".to_string());
-            d
-        },
-        selected_branch: Some("b".to_string()),
-        stop_children: true,
-        ..Default::default()
-    };
-    let s2 = s.clone();
-    assert_eq!(s, s2);
 }

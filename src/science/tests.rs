@@ -7,10 +7,8 @@
 //! real attempts — because the projection *is* a join over those reads, and a
 //! mocked one would test the mock.
 
-mod compose;
 mod join;
 mod outcome;
-mod respdiff;
 mod wire;
 
 use std::collections::HashMap;
@@ -131,48 +129,4 @@ pub(super) fn claimed_project() -> Project {
     project.commit("src/a.rs", "fn a() {}\n");
     project.checkout(crate::workdiff::tests::MAIN);
     project
-}
-
-/// A candidate science row built in memory — the render and compose halves
-/// need rows, not repos: what they consume is the projection's answer, and the
-/// projection itself is proved against real repos in [`join`].
-pub(super) fn candidate(handle: &str, response: Option<&str>) -> super::Attempt {
-    super::Attempt {
-        diff: crate::workdiff::Attempt {
-            project: "proj".to_owned(),
-            ball_id: BALL.to_owned(),
-            handle: Some(handle.to_owned()),
-            delivered: None,
-            change: crate::workdiff::Change::Diff {
-                target: format!("work/{BALL}"),
-                source: format!("attempt/{handle}"),
-                target_oid: "aaaa1111bbbb2222".to_owned(),
-                source_oid: format!("{handle}00tip"),
-                files: vec![crate::workdiff::FileChurn {
-                    path: "src/a.rs".to_owned(),
-                    churn: crate::workdiff::Churn::Text {
-                        added: 4,
-                        removed: 1,
-                    },
-                }],
-                truncated: false,
-            },
-        },
-        base: Some("basebase1234beef".to_owned()),
-        conversation: Some(AGENT.to_owned()),
-        goal: Some("the goal".to_owned()),
-        pins: Vec::new(),
-        governing: None,
-        usage: BudgetSpend {
-            input_tokens: 70,
-            output_tokens: 7,
-            ..BudgetSpend::default()
-        },
-        wall_secs: 61,
-        steps: 3,
-        response: response.map(str::to_owned),
-        verdicts: Vec::new(),
-        compacted: 0,
-        outcome: super::Outcome::Pending,
-    }
 }

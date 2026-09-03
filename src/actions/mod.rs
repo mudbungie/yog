@@ -14,8 +14,8 @@
 //! signal ([`stop_enabled`]); **Nudge** is its complement — the states with no
 //! driver holding the lease, less the one shape litany reads as nothing-due
 //! ([`nudge_enabled`]); **Message** is the resume
-//! gesture and works on *any* selected agent ([`message_enabled`], ARCH §2.9 —
-//! no resume verb);
+//! gesture and works on *any* selected agent (ARCH §2.9 — no resume verb; its
+//! gate's text half is a composer's, so the conjunction is the seat's, bl-7cc8);
 //! **Close** needs the ball bound to a local workspace ([`close_enabled`] =
 //! `JoinState::Bound`); **Unclaim**/release needs the same
 //! ([`unclaim_enabled`]); **Assign** needs a ready, unclaimed
@@ -26,64 +26,33 @@
 //! frontend. One reads the filesystem — [`work_dir_refusal`], which asks whether a
 //! typed work directory is there (bl-6191); it is a *question about an input*, not
 //! state, and it is asked here rather than in the coverage-excluded form for the
-//! same reason every other refusal is. Per §3.5 the UI holds no persistent state —
-//! `ActionsState` is in-memory only and discarded on exit.
+//! same reason every other refusal is.
+//!
+//! **A seat's own RAM is not held here** (bl-7cc8): the composer drafts keyed by
+//! target (§5.3), the selection they were typed against, and the predicate that
+//! decided when a send cleared one were a running frontend's state kept in a
+//! server no §8.5 act ever asked for it. They left with the face they served
+//! (bl-7942); if a seat ever needs one of these facts stated, it files against
+//! yog and the reply is designed then.
 
-pub mod drafts;
 /// **Whether a verb is offered for the current selection** (§8.2), split off at
 /// §12's budget: this file asks whether there is anything to fire, `enabled`
 /// asks whether this selection permits it.
 pub mod enabled;
 pub mod verbs;
 
-pub use drafts::{DraftKey, Drafts};
 pub use enabled::{
-    assign_enabled, close_enabled, message_enabled, nudge_enabled, stop_children_offered,
-    stop_enabled, unclaim_enabled,
+    assign_enabled, close_enabled, nudge_enabled, stop_children_offered, stop_enabled,
+    unclaim_enabled,
 };
-
-use std::io;
-
-/// Ephemeral action-surface state. Held in memory by the running
-/// frontend and discarded on exit (ARCH §3.5: frontends hold no
-/// persistent state).
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct ActionsState {
-    /// In-progress composer text, **keyed by the target it was typed for**
-    /// ([`Drafts`], bl-a69a): the box is one widget whose verb follows the
-    /// selection (§11), so its buffer is one draft *per* target — a new-root
-    /// prompt in a workspace, or a message to an agent. Read and written back
-    /// each frame through [`DraftKey::composer`]; a send clears its own key.
-    /// Each draft is disabled while empty (or whitespace-only).
-    pub drafts: Drafts,
-    /// The **work directory** a new conversation is born with (§3.4 path rung,
-    /// STORIES S2) — the §11 birth-config block's editable box (bl-7927), not the
-    /// composer's. RAM (§3.5), and **pre-filled** at boot with the bare rung's own
-    /// resolution (the operator's home dir), so it always states where the next
-    /// start runs instead of meaning it by being blank. Set ⇒ a new prompt fires
-    /// `Payload::Path` with this directory as the target preamble + driver cwd;
-    /// emptied by hand ⇒ the bare rung, which resolves to that same home.
-    ///
-    /// `Default` leaves it empty because `ActionsState` cannot read the env; the
-    /// seed is folded once in `ShellState::new`, the one boundary that can.
-    pub path_dir: String,
-    /// User-selected agent id (§2.3 — the id is the address; `litany
-    /// stop`/`message` take it, not the `agents/*` ref). Gates Stop (which
-    /// also needs the agent live) and Message.
-    pub selected_branch: Option<String>,
-    /// Whether Stop should cascade to the selected agent's descendants
-    /// (§8.2 `--stop-children`; the §11 composer's children checkbox). Offered
-    /// only when the agent actually has descendants ([`stop_children_offered`]).
-    pub stop_children: bool,
-}
 
 /// The §11 birth-config work-directory field's verdict (bl-6191): the refusal
 /// sentence when `typed` names something that is not an existing directory, or
 /// `None` when the next start may run there.
 ///
 /// **Empty is lawful, not a refusal** — an emptied box is the bare rung, which
-/// resolves to the same home the pre-filled default states ([`ActionsState::path_dir`],
-/// `shell::fire`), so it is the general path with no input rather than a case.
+/// resolves to the same home the bare rung resolves to, so it is the general
+/// path with no input rather than a case.
 ///
 /// The question itself is the **spawn boundary's**
 /// ([`crate::cli_outbound::work_dir_fault`]), asked here before Enter fires
@@ -156,16 +125,6 @@ pub struct NewBallHints {
     pub title: String,
     /// Placeholder for the multiline body box.
     pub body: String,
-}
-
-/// A composer draft is RAM until it is cleanly *deposited* (§5.3, STORIES S1): a
-/// message clears its draft iff the verb both launched (`Ok`) and exited 0
-/// ([`Outcome::ok`](verbs::Outcome::ok)) — every failure keeps the text so the
-/// operator can retry. Pinned here as a covered predicate, never in coverage-
-/// excluded shell glue, so a regression that ate the draft on failure fails a
-/// test instead of slipping through.
-pub fn draft_clears(result: &io::Result<verbs::Outcome>) -> bool {
-    result.as_ref().is_ok_and(verbs::Outcome::ok)
 }
 
 #[cfg(test)]

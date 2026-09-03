@@ -30,20 +30,21 @@
 //!
 //! The effectful half — the piped `bl`/`litany` executors and the claim
 //! cross-check — lives in [`exec`]; the detached `litany prompt` and the
-//! conversation mint it fires with in [`prompt`]; the goal composition and the
-//! pre-mint preview in [`goal`]. The **goal reaches the model unmutated**
-//! (§3.3, bl-6920): [`goal::preview`] renders the greyed
-//! name prediction pre-submit, and [`prompt::execute_prompt`] mints afresh and
+//! conversation mint it fires with in [`prompt`]; the goal composition in
+//! [`goal`]. The **goal reaches the model unmutated**
+//! (§3.3, bl-6920): [`prompt::execute_prompt`] mints afresh and
 //! passes the name via `--name` as it fires — litany states the stored fact in
 //! its assembled context; nothing is prepended to the payload. The name is the
 //! *conversation's* (bl-df65); the workspace's rides `YOG_NAME` and never the
-//! goal text.
+//! goal text. **The pre-submit name prediction and the composer view-model are
+//! the seat's** (bl-7cc8): `Prepared` carries no predicted name, so `/prepare`
+//! answers nothing a seat could preview, and a derivation with no carrier is
+//! not this crate's.
 
 use crate::projects::join::JoinState;
 
 mod ensure;
 mod exec;
-mod gate;
 mod goal;
 mod identity;
 pub mod instructions;
@@ -59,9 +60,8 @@ pub use exec::{
     ClaimResolved, DETACHED_EXIT, Deps, Prepared, StartError, cross_check_claim, execute_claim,
     execute_create, on_mint,
 };
-pub use gate::{StartGate, WallCredit};
-pub use goal::{Composer, parse_ball_stamp, preview};
-pub use identity::{identity_preview, parse_identity_stamp, strip_identity_stamp};
+pub use goal::parse_ball_stamp;
+pub use identity::{parse_identity_stamp, strip_identity_stamp};
 pub use model::{BallSpec, Payload, StartInputs, Step};
 pub use prompt::{Fire, execute_prompt};
 pub use run::{prepare, resolve_worktree};

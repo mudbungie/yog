@@ -34,9 +34,8 @@
 //! - **model** is the **role** (`<role>`). litany resolves a model from
 //!   `roles.<name>.{provider,model}` in the `providers.yaml` of the config
 //!   lineage governing the fork point, read at that lineage's head, and from
-//!   nowhere else. So the composer
-//!   lists the roles that ref declares **with the model each names**
-//!   ([`ForkPoint::roles`]): the model is shown at the point of choice and
+//!   nowhere else. So the roles a ref declares, **with the model each names**,
+//!   are read at that ref ([`roles_at`]): the model shown at the point of choice
 //!   cannot lie, because yog is reading the very file the run will resolve
 //!   against. Giving an attempt a model no config declares is a config write
 //!   — §9.4's [`PickModel`](crate::boundary::Action::PickModel) — not a
@@ -46,9 +45,15 @@
 //!   operator) pins without rewriting the goal or authoring a config commit"*,
 //!   and the shipped worker manifest composes `order: skills/**`, so a pinned
 //!   skill reaches assembled context by the config's own glob. The pool is the
-//!   world's `$LITANY_HOME/skills` ([`pool`]) — the same directory the agent's
-//!   own `load_skill` tool copies out of, so the composer offers exactly what
+//!   world's `$LITANY_HOME/skills` ([`skills_root`]) — the same directory the
+//!   agent's own `load_skill` tool copies out of, so a pin names exactly what
 //!   the agent could have loaded for itself.
+//!
+//! **Composing the choice is the seat's** (bl-7cc8). The ×N control, the
+//! fork-point list and the skill-pool listing were derived here and reached
+//! nothing: `Action::Fork` carries one attempt by ruling (§8.5) and fires N
+//! times, and no §8.5 reply carries an offer. They are gone; what stays is what
+//! the argv itself needs.
 //!
 //! **Read-only by construction** (VISION §4.10, bl-2b8c). An attempt forks the
 //! *conversation* repo and nothing else; project-mutating attempts need
@@ -58,11 +63,10 @@
 use std::path::{Path, PathBuf};
 
 pub mod choices;
-pub mod composer;
 #[cfg(test)]
 mod tests;
 
-pub use choices::{Choices, ForkPoint, choices, pool, roles_at, skills_root};
+pub use choices::{roles_at, skills_root};
 
 /// The litany subcommand an attempt is (ARCH §3.4).
 const DISPATCH: &str = "dispatch";
@@ -77,9 +81,6 @@ pub const SKILLS_DIR: &str = "skills";
 /// destination is one path, so a skill's `references/**` stay where the
 /// agent's own `load_skill` can still fetch them whole.
 const SKILL_FILE: &str = "SKILL.md";
-/// The `config/` ref prefix a clean fork point wears (litany ARCH §2.2).
-pub const CONFIG_REF: &str = "config/";
-
 /// One attempt's fire-time overrides — everything that varies between the
 /// candidates of a cohort. The goal, the workspace and the dispatching parent
 /// do not vary (they are what makes the candidates comparable), so they are
@@ -88,7 +89,7 @@ pub const CONFIG_REF: &str = "config/";
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Attempt {
     /// The fork point (`--from`): the pinned notch's commit, or
-    /// `config/<name>`. Empty is not a value — the composer refuses to fire
+    /// `config/<name>`. Empty is not a value — a seat refuses to fire
     /// without one, because a fork with no ref is a different gesture.
     pub from: String,
     /// The role (`<role>`), which is the model: litany resolves the provider
