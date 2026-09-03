@@ -1,7 +1,8 @@
 +++
 title = "the §8.5 line's in-process query arm still resolves over the frame's cached derivation, so a wall born this instant refuses for one pass"
 created = 1786845533
-updated = 1787206017
+updated = 1788407740
+claimant = "Spellbind-I"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["residual", "boundary"]
