@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.20](https://github.com/mudbungie/yog/compare/v0.0.19...v0.0.20) - 2026-09-03
+
+### Changes
+
+- the attention lane: Query::Attention answered as a sequence by a holding intake — frames replace, written on change at the worker's republish (REMOTE §14.1) [bl-09aa]
+
 ## [0.0.19](https://github.com/mudbungie/yog/compare/v0.0.18...v0.0.19) - 2026-09-03
 
 ### Changes
