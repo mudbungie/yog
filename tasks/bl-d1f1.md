@@ -1,7 +1,8 @@
 +++
 title = "a lost boundary reply has no safe recovery: re-deposit can repeat a completed non-idempotent action"
 created = 1787206349
-updated = 1787275394
+updated = 1788402121
+claimant = "Oncewright"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design", "boundary", "security"]
