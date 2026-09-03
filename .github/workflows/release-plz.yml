@@ -4,8 +4,12 @@ name: Release-plz
 #
 #   * release-plz PR (every push to main) — opens/updates ONE "release PR" that
 #     bumps the version in Cargo.toml and stages the CHANGELOG.md entry for it.
-#     It never publishes; it just keeps the next release queued. Merging that PR
-#     is the human control point.
+#     It never publishes; it just keeps the next release queued. That PR is
+#     merged by `release-automerge.yml` once its CI run is green — it used to be
+#     a human control point and is not one (bl-1c05): the publish is gated
+#     AFTER the merge by the release job below, so the build is the gate and the
+#     merge was only ever a hand. Read that file's header for the guards and for
+#     why it merges with RELEASE_PLZ_TOKEN.
 #   * release (when the CI workflow concludes `success` on main) — releases any
 #     version on main that is not out yet: tags it `v<version>`, cuts a GitHub
 #     Release and publishes it to crates.io. Gated on `workflow_run` of CI, so a
@@ -112,10 +116,16 @@ name: Release-plz
 #     flip each box's reconcile pass refuses instead of upgrading. There is no
 #     REST route for it; the act is the package's own settings page:
 #     Packages -> yog -> Package settings -> Danger Zone -> Change visibility.
-#   * RELEASE_PLZ_TOKEN — OPTIONAL fine-grained PAT (contents + pull-requests
-#     write), so the release PR's own commits re-trigger CI. The default
-#     GITHUB_TOKEN cannot trigger workflows from its own pushes; the job falls
-#     back to it when RELEASE_PLZ_TOKEN is unset.
+#   * RELEASE_PLZ_TOKEN — a fine-grained PAT (contents + pull-requests write),
+#     so the release PR's own commits re-trigger CI. The default GITHUB_TOKEN
+#     cannot trigger workflows from its own pushes; the job below falls back to
+#     it when the PAT is unset. It was optional and is now what the hands-off
+#     release rests on (bl-1c05): the PAT is why the release PR carries checks
+#     at all, and `release-automerge.yml` merges with it precisely so the merge
+#     push re-triggers CI on main and reaches the release job. Without it,
+#     auto-merge merges nothing and the release PR waits for a hand — which is
+#     the honest degradation, since without it there would be neither a check to
+#     wait on nor a trigger afterwards.
 
 on:
   push:

@@ -759,18 +759,27 @@ refuses loudly and names it.
 
 ## Publishing
 
-The crate reaches [crates.io](https://crates.io/crates/yog) two ways, and both
-put a human at the trigger.
+The crate reaches [crates.io](https://crates.io/crates/yog) two ways.
 
 By hand: `make publish` runs `cargo publish --dry-run` unconditionally, and the
 real upload only when you opt in with `make publish CONFIRM=yes`.
 
-In CI: `.github/workflows/release-plz.yml` keeps ONE open "release PR" that
-bumps the version and stages the changelog entry. **Merging that PR is the
-human decision**; nothing publishes until you do. The merge lands on `main`,
-CI runs, and only a CI run that concludes `success` releases — tag, GitHub
-Release, crates.io upload, then the linux-gnu binary archive and the ghcr image
-(see "The image"). One version, three artifacts, one trigger.
+In CI, hands-off end to end: `.github/workflows/release-plz.yml` keeps ONE open
+"release PR" that bumps the version and stages the changelog entry, and
+`.github/workflows/release-automerge.yml` merges that PR once its `CI` run is
+green. The merge lands on `main`, CI runs there, and only a CI run that
+concludes `success` releases — tag, GitHub Release, crates.io upload, then the
+linux-gnu binary archive and the ghcr image (see "The image"). One version,
+three artifacts, one trigger.
+
+**The gate is the build, not the merge** (bl-1c05). Holding the release PR open
+for a hand looked like a control point and was not one: the decision it asked
+for had already been made by the work that landed on `main`, and the publish is
+gated *after* the merge anyway, so a red build skips the release and leaves the
+bump sitting harmlessly on `main`. What auto-merge removes is a hand, not a
+check. The merge guards, why the token doing the merging is
+`RELEASE_PLZ_TOKEN` and never `GITHUB_TOKEN`, and why this needs no post-merge
+dispatch, are written out in that workflow's header.
 
 That release job is the only thing in the repo holding publish authority, so
 the boundary around it is written out rule by rule in the header of
