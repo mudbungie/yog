@@ -4,8 +4,11 @@
 # stays auditable in one file.
 #
 # Carve-outs (`ignores`):
-#   - Test scaffolding: the fork/env serialization locks (`SPAWN_LOCK`,
-#     `ENV_LOCK`) and test-double interior mutability are not app state. The
+#   - Test scaffolding: test-double interior mutability is not app state (a
+#     `FakeFs`' path->bytes map, a fake clock's shared instant). This carve-out
+#     used to name a `SPAWN_LOCK` beside them; bl-fd28 measured that lock out
+#     once every executable fixture was written by a child, so what is left here
+#     is interior mutability and nothing that serializes anything. The
 #     glob covers the whole `test_support` **subtree** (bl-44e9): the module was
 #     one file when this carve-out was written and is a directory now, and a
 #     fake clock's shared instant is the same "test-double interior mutability"

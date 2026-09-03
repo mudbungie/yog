@@ -1,45 +1,34 @@
-//! Test-only spawn discipline for this binary — **one lock, held by the crate's
-//! one fork** ([`crate::git_env::spawn`]), and by nothing else.
+//! Test-only scaffolding for this binary: the fake effects and the fixture
+//! world — and, since bl-fd28, **the one place an
+//! executable fixture is written** ([`fixture::write_exec`]).
 //!
-//! `fs::write` on a fixture script holds a write fd. A `fork` in another thread
-//! copies that fd into a child, which keeps it until its own `exec` completes;
-//! an `exec` of the script inside that window is ETXTBSY, so a test that writes
-//! a fake binary is reddened by a peer test three modules away. The lock is one
-//! static for the whole binary because per-module locks do not exclude each
-//! other's threads.
+//! There used to be a spawn lock here too, and the story of why it is gone is
+//! the discipline. `fs::write` on a fixture script holds a write fd; a `fork`
+//! in another thread copies it into a child that keeps it until its own `exec`
+//! completes; an `exec` of the script inside that window is ETXTBSY. bl-6397
+//! answered from the fork side — one process-wide lock across
+//! [`crate::git_env::spawn`], measured at zero against 8.3% unguarded — and
+//! that held only while every fork in the process was yog's own. It was not:
+//! the linked `balls`/`litany`/`brazen` fork `git` themselves and took no lock
+//! of ours, so a beat driving one in-process reopened the window (bl-6bf5
+//! measured 8 failures, bl-fd28 another 2).
 //!
-//! It is taken **around the fork** (bl-6397). The older discipline asked every
-//! test that wrote a script to bracket its own write and exec, which is a
-//! contract each new test must be told about and most were not — the two tests
-//! that flaked were one of each kind: a victim that held the guard correctly,
-//! and an unguarded sign-in fixture that was both victim and cause. Guarding
-//! the fork alone is *sufficient*: a peer fork cannot land inside anyone's
-//! write window without holding the lock, and it returns the lock only once its
-//! child has exec'd. Measured with writes left entirely unguarded, 8
-//! write-then-exec threads against an 8-thread fork storm, ~9,600 pairs: zero
-//! ETXTBSY, against 8.3% with the fork unguarded.
+//! bl-fd28 moved the exposure instead of scheduling around it. [`write_exec`]
+//! feeds the body to `sh -c 'cat > "$1" && chmod 755 "$1"'`, so no descriptor
+//! for the file ever exists in THIS process and no peer fork — whoever performs
+//! it, in whichever crate — can copy one. With that in place the lock measured
+//! zero on both sides of its own removal (3,360 runs of the bl-6bf5 filter per
+//! side), so it was deleted rather than kept as a talisman. `rules/no-hand-chmod.yml`
+//! keeps the write side structural; [`crate::git_env`]'s module doc carries the
+//! measurement.
 //!
-//! The write-side brackets tests used to hold are gone with the contract, and
-//! they were not merely redundant: a test that holds the lock across a body
-//! whose WORKER THREAD forks starves that fork for the whole test — the wire
-//! host's tool span, which this change caught the moment the fork started
-//! taking the lock. Write the script, exec it: the fork boundary holds, and
-//! nothing in a test body needs to know it is there.
+//! No lock is left in this module's own right: the `Mutex` below is a test
+//! double's interior mutability, not serialization (`rules/locks-outside-state.yml`).
 
 use crate::config_edit::FileIo;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, PoisonError};
-
-pub(crate) static SPAWN_LOCK: Mutex<()> = Mutex::new(());
-
-/// Acquire `SPAWN_LOCK` poison-immune: a panicking fork frees the guard with
-/// its `()` intact, so recover rather than cascade-poison peer tests. Recovery
-/// stays on one line — a split reads as uncovered under `ignore-panics` (the
-/// same discipline as `state::lock_watchset`).
-pub(crate) fn spawn_guard() -> std::sync::MutexGuard<'static, ()> {
-    SPAWN_LOCK.lock().unwrap_or_else(PoisonError::into_inner)
-}
+use std::sync::Mutex;
 
 /// In-memory [`FileIo`] for editor and pipeline tests: a flat path→bytes map.
 /// `fail_write` forces the write step to error (the `Io` Apply arm). Shared by
@@ -185,6 +174,12 @@ pub(crate) mod wire;
 /// the selection's own detail — asked through the boundary, there being no
 /// model accessor left to ask instead.
 pub(crate) mod chrome;
+
+/// **Every executable fixture in this binary is written here, by a child**
+/// (bl-fd28) — the write-side half of the ETXTBSY discipline, and the one
+/// location `rules/no-hand-chmod.yml` lets a mode bit be set from.
+pub(crate) mod fixture;
+pub(crate) use fixture::write_exec;
 
 /// The deterministic [`Clock`] every debounce and sweep branch is exercised
 /// against — its own file at §12's cap, on the seam this file already had:

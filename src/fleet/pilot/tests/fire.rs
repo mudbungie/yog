@@ -140,12 +140,8 @@ fn armed_world(ws: &Path, project: &Path, claimed: bool, lease: Option<Duration>
 
 /// Write `body` as an executable `name` in `dir` and hand back its [`Cli`].
 fn fake(dir: &Path, name: &str, body: &str) -> Cli {
-    use std::os::unix::fs::PermissionsExt;
     let path = dir.join(name);
-    std::fs::write(&path, body).expect("write");
-    let mut perms = std::fs::metadata(&path).expect("stat").permissions();
-    perms.set_mode(0o755);
-    std::fs::set_permissions(&path, perms).expect("chmod");
+    crate::test_support::write_exec(&path, body);
     Cli::new(path)
 }
 

@@ -7,7 +7,6 @@
 //! stale seed template actually produced, and it is why the repair has to
 //! re-derive the whole schedule instead of patching two names into it.
 
-use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
 use balls::edge::Edge;
@@ -56,9 +55,7 @@ impl World {
         // they must be present or the seed prunes the very entries under test.
         for name in [tools::BL, tools::BL_DELIVERY, tools::BL_TRACKER] {
             let path = tools.join(name);
-            std::fs::write(&path, "#!/bin/sh\nexit 0\n").expect("sibling");
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))
-                .expect("sibling mode");
+            crate::write_exec::write_exec(&path, "#!/bin/sh\nexit 0\n");
         }
         let project = anchor.join("proj");
         std::fs::create_dir_all(&project).expect("project dir");

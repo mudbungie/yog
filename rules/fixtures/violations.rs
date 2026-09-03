@@ -14,7 +14,8 @@
 //!       * no-assert-outside-tests.yml → violation 11
 //!       * no-lint-suppression.yml     → violation 12
 //!       * no-bare-command.yml         → violation 13
-//!       * no-bare-fork.yml            → violation 14
+//!       * no-bare-fork.yml            → violations 14, 16
+//!       * no-hand-chmod.yml           → violation 15
 //!   - `ast-grep scan src` MUST exit zero (the sanctioned `unsafe` lives in
 //!     src/cli_outbound/sys.rs and the sanctioned locks in src/state.rs and
 //!     src/git_tree/probe_cache.rs, all of which the rules ignore; no
@@ -121,4 +122,17 @@ fn bare_fork(cmd: &mut std::process::Command) -> std::io::Result<std::process::O
 fn bare_exec(cmd: &mut std::process::Command) -> std::io::Error {
     use std::os::unix::process::CommandExt as _;
     cmd.exec()
+}
+
+// Violation 15: a mode bit set by hand (no-hand-chmod.yml — the
+// `call_expression` whose function text ends in `set_permissions`/`from_mode`/
+// `set_mode`, outside `test_support` and the three named production sites). An
+// executable fixture written by THIS process holds a write fd a peer's fork
+// copies, and the exec that follows is ETXTBSY (bl-fd28);
+// `crate::test_support::write_exec` writes it from a child, where there is no
+// fd of ours to copy.
+fn hand_rolled_exec_fixture(path: &std::path::Path) -> std::io::Result<()> {
+    use std::os::unix::fs::PermissionsExt as _;
+    std::fs::write(path, "#!/bin/sh\nexit 0\n")?;
+    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))
 }

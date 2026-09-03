@@ -8,7 +8,6 @@ use super::super::{Cli, census, spawn};
 use super::{CHILD, ROOT};
 use crate::opslog;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::{TempDir, tempdir};
 
@@ -23,17 +22,13 @@ impl FakeLitany {
         let dir = tempdir().unwrap();
         let log = dir.path().join("argv.log");
         let path = dir.path().join("litany");
-        fs::write(
+        crate::test_support::write_exec(
             &path,
-            format!(
+            &format!(
                 "#!/bin/sh\necho \"$@\" > {}\nprintf '%s\\n' '{stdout}'\nprintf '%s' '{stderr}' 1>&2\nexit {code}\n",
                 log.display()
             ),
-        )
-        .unwrap();
-        let mut perms = fs::metadata(&path).unwrap().permissions();
-        perms.set_mode(0o755);
-        fs::set_permissions(&path, perms).unwrap();
+        );
         Self { dir }
     }
 

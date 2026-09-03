@@ -23,18 +23,13 @@ use crate::projects::join::JoinState;
 use crate::start::{BallSpec, Payload, StartInputs};
 use crate::test_support::authoring_new_arm;
 use litany::mint::SplitMix64;
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use tempfile::{TempDir, tempdir};
 
 /// Write an executable script at `dir/name` (0755) and return its path.
 pub(super) fn write_exec(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, body);
     path
 }
 

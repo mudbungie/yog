@@ -3,7 +3,6 @@
 //! spawn arms of [`start`].
 
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::sync::mpsc;
 
 use tempfile::tempdir;
@@ -181,15 +180,13 @@ fn start_spawns_the_documented_argv_and_reads_its_roster() {
     let dir = tempdir().unwrap();
     let path = dir.path().join("fake-bz");
     let seen = dir.path().join("argv");
-    fs::write(
+    crate::test_support::write_exec(
         &path,
-        format!(
+        &format!(
             "#!/bin/sh\nprintf '%s\\n' \"$*\" > {}\nprintf '%s\\n' '{LIVE_PAYLOAD}'\n",
             seen.display()
         ),
-    )
-    .unwrap();
-    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+    );
     let mut roster = start(&Cli::new(&path), "codex");
     while roster.poll() {}
     let view = roster.view();

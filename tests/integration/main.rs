@@ -19,7 +19,7 @@
 //! thread-parallel in ONE process, all of them forking, so a fixture script
 //! written with a plain `fs::write` here can be exec'd while a peer thread's
 //! fork still holds the write fd (ETXTBSY). Every executable fixture therefore
-//! goes through [`support::write_executable`] — read its doc before adding a
+//! goes through [`support::write_exec::write_exec`] — read its doc before adding a
 //! test that writes one.
 
 mod support;

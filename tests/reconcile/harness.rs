@@ -39,26 +39,16 @@ pub const PACKAGE: &str = "ghcr.io/mudbungie/yog";
 /// One shim, written as a `sh` script and made executable.
 fn shim(bin: &Path, name: &str, body: &str) {
     let path = bin.join(name);
-    fs::write(&path, format!("#!/bin/sh\nset -eu\n{body}\n")).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    std::os::unix::fs::PermissionsExt::set_mode(&mut perms, 0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::write_exec::write_exec(&path, &format!("#!/bin/sh\nset -eu\n{body}\n"));
 }
 
-/// **The shims are written ONCE for the whole binary, and this is the ETXTBSY
-/// discipline** (AGENTS.md, "Every child process is spawned through
-/// `git_env::command`"). Writing an executable holds a write fd; a fork on any
-/// other thread copies it into a child that keeps it until its own exec; and an
-/// exec of that file inside the window is `Text file busy`. The crate's answer
-/// is a spawn lock, and an integration test cannot reach it —
-/// `git_env::{spawn,output,status}` are `pub(crate)`.
-///
-/// So the window is dissolved rather than locked. Every fork this binary makes
-/// is in [`reconcile`], every one of those goes through this `OnceLock` first,
-/// and the shims are written inside its initializer — so no fork can be in
-/// flight while any shim is being written, and after the first test they are
-/// never written again. The per-test files below are only ever `cat`-ed, never
-/// exec'd, so they are outside the class entirely.
+/// **The shims are written ONCE for the whole binary**, inside this `OnceLock`'s
+/// initializer, so after the first test they are never written again. That was
+/// this file's own answer to ETXTBSY before bl-fd28 gave the tree a general one
+/// (`tests/support/write_exec.rs`: the fixture is written by a child, so no
+/// descriptor exists here for a peer fork to copy). Both hold; the `OnceLock`
+/// also earns its keep as plain memoization. The per-test files below are only
+/// ever `cat`-ed, never exec'd, so they are outside the class entirely.
 ///
 /// `CARGO_TARGET_TMPDIR` rather than a leaked `TempDir`: cargo owns it, so
 /// nothing is stranded in `/tmp` per run.

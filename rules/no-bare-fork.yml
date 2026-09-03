@@ -13,16 +13,20 @@
 # does not, and under `cargo test` the corpse is the whole binary, reported as
 # `signal: 13, SIGPIPE` with no test failing (bl-3792).
 #
-# The invariant is ETXTBSY (bl-6397). `fs::write` on a fixture script holds a
-# write fd; a fork on ANOTHER thread copies that fd into a child that keeps it
-# until its own exec completes; an exec of the script inside that window fails
-# with ETXTBSY. So the fork is not merely the victim of a peer's write window,
-# it is the other party to it — and a test that writes a fake binary is
-# reddened by a spawn site three modules away that it has no way to know about.
-# Under `cfg(test)` the three verbs take one process-wide lock across the fork,
-# which is the whole of the discipline: measured with the writes left entirely
-# unguarded, 8 write-then-exec threads against an 8-thread fork storm over
-# ~9,600 pairs, zero ETXTBSY — against 8.3% with the fork unguarded.
+# The invariant is now what a child INHERITS: one fork is one place to reason
+# about the scrubbed env, the stdio a caller asked for, and the process group a
+# detached child lands in. A per-call promise at ~40 sites is not an invariant.
+#
+# It used to be ETXTBSY as well, and that half has MOVED (bl-fd28). Under
+# `cfg(test)` these verbs took one process-wide lock across the fork, on the
+# argument that a peer's write fd could not be copied while it was held —
+# measured at zero against 8.3% unguarded (bl-6397). The lock only ever covered
+# yog's OWN forks, though, and the linked `balls`/`litany`/`brazen` fork `git`
+# without it (bl-6bf5: 8 failures from one in-process substrate beat, bl-fd28:
+# 2 more from `fan`). So the exposure was removed instead of scheduled around:
+# every executable fixture is written by a child (`rules/no-hand-chmod.yml`),
+# which leaves no descriptor in this process for ANY fork to copy, and the lock
+# — measured at zero on both sides of its own removal — is gone.
 #
 # Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser: a
 # method call `cmd.spawn()` is a `call_expression` whose `function` field is a

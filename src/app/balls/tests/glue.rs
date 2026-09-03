@@ -12,8 +12,6 @@ use crate::cli_outbound::Cli;
 use crate::opslog::{self, DETACHED_EXIT};
 use crate::start::Prepared;
 use crate::test_support::engine;
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tempfile::tempdir;
 
@@ -25,10 +23,7 @@ const AGENT: &str = "20260101T000000Z-c1";
 /// An everything-succeeds fake `litany`.
 fn fake_litany(dir: &Path) -> Cli {
     let path = dir.join("litany");
-    fs::write(&path, "#!/bin/sh\nexit 0\n").unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, "#!/bin/sh\nexit 0\n");
     Cli::new(path)
 }
 

@@ -11,15 +11,11 @@ use crate::actions::verbs::collect;
 use crate::cli_outbound::Cli;
 use crate::opslog::{OpEntry, Origin};
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
 
 fn script(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, body);
     path
 }
 

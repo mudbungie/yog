@@ -3,7 +3,7 @@
 //! writes through, plus the workspace whose wall it stands in.
 //!
 //! Its own file at §12's cap, on a real seam: everything in [`super`] fakes an
-//! *effect* (a clock, a filesystem, the spawn lock), while this composes a
+//! *effect* (a clock, a filesystem, a fixture writer), while this composes a
 //! *world* — a set of paths derived by the same production folds the executors
 //! use, so a fixture can never write where nothing reads (bl-fcd5).
 

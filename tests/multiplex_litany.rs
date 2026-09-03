@@ -25,11 +25,16 @@
 //! would use is never written. This file asserted the opposite until bl-81c9 —
 //! the arm was resolving whatever `LITANY_HOME` the caller happened to carry,
 //! which for a bare `yog litany` at a shell is the operator's own harness.
-
 // clippy's allow-*-in-tests reaches `#[test]` fns, not the free fixture
 // helpers of an integration-test crate — those unwrap freely like any test
 // (the `tests/support` precedent).
 #![allow(clippy::unwrap_used)]
+
+// The executable-fixture writer, shared by every integration binary that
+// writes one (bl-fd28). `#[path]` because this file IS the test target's
+// crate root, and a second top-level `tests/*.rs` would be a second binary.
+#[path = "support/write_exec.rs"]
+mod write_exec;
 
 use std::fs;
 use std::path::Path;
@@ -70,14 +75,11 @@ fn fixture_gitconfig(dir: &Path) -> std::path::PathBuf {
 /// A scripted `$EDITOR` (the upstream `config_cli.rs` idiom): writes `content`
 /// to `rel` inside the checkout it is handed as `"$1"`.
 fn editor_writing(dir: &Path, rel: &str, content: &str) -> std::path::PathBuf {
-    use std::os::unix::fs::PermissionsExt;
     let path = dir.join("scripted-editor.sh");
-    fs::write(
+    write_exec::write_exec(
         &path,
-        format!("#!/bin/sh\nprintf '%s' '{content}' > \"$1/{rel}\"\n"),
-    )
-    .unwrap();
-    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        &format!("#!/bin/sh\nprintf '%s' '{content}' > \"$1/{rel}\"\n"),
+    );
     path
 }
 

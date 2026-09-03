@@ -10,8 +10,6 @@ use crate::actions::verbs::edit::{Create as BallCreate, Update as BallUpdate};
 use crate::cli_outbound::Cli;
 use crate::opslog;
 use crate::xdg::Env;
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::{TempDir, tempdir};
 
@@ -23,10 +21,7 @@ mod edit;
 /// (`crate::git_env`) owns the ETXTBSY exclusion, so a fixture just writes.
 fn recorder(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, body);
     path
 }
 

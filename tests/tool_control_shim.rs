@@ -8,12 +8,16 @@
 //! script execs a yog which reads one JSON request on stdin, writes one JSON
 //! verdict on stdout, and exits 0 for every answer including a refusal (the seam
 //! fails closed on a non-zero exit, so a decline must not look like a fault).
-
 // The fixture helpers of an integration-test crate unwrap freely like any test.
 #![allow(clippy::unwrap_used)]
 
+// The executable-fixture writer, shared by every integration binary that
+// writes one (bl-fd28). `#[path]` because this file IS the test target's
+// crate root, and a second top-level `tests/*.rs` would be a second binary.
+#[path = "support/write_exec.rs"]
+mod write_exec;
+
 use std::io::Write;
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
@@ -31,10 +35,7 @@ fn seed_shim(tools: &Path) -> std::path::PathBuf {
         "#!/bin/sh\nexec '{}' {TOOL_CONTROL} \"$@\"\n",
         env!("CARGO_BIN_EXE_yog"),
     );
-    std::fs::write(&path, body).unwrap();
-    let mut perms = std::fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    std::fs::set_permissions(&path, perms).unwrap();
+    write_exec::write_exec(&path, &body);
     path
 }
 

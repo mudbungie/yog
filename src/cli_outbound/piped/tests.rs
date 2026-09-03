@@ -3,8 +3,6 @@
 
 use super::*;
 use crate::cli_outbound::Chunk;
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
 
 /// Everything a stream said, in order, and the exit it ended on.
@@ -27,8 +25,7 @@ fn drained(stream: Stream) -> (String, i32) {
 fn the_input_arrives_and_the_pipe_closes() {
     let dir = tempdir().expect("tmp");
     let tool = dir.path().join("cat-tool");
-    fs::write(&tool, "#!/bin/sh\ncat\nexit 3\n").expect("script");
-    fs::set_permissions(&tool, fs::Permissions::from_mode(0o755)).expect("chmod");
+    crate::test_support::write_exec(&tool, "#!/bin/sh\ncat\nexit 3\n");
 
     let stream = Cli::new(&tool)
         .run_input(Some(dir.path()), b"{\"command\":\"ls\"}", &[])
@@ -46,8 +43,7 @@ fn the_input_arrives_and_the_pipe_closes() {
 fn a_child_that_ignores_its_input_still_answers() {
     let dir = tempdir().expect("tmp");
     let tool = dir.path().join("deaf-tool");
-    fs::write(&tool, "#!/bin/sh\necho 'never read it'\n").expect("script");
-    fs::set_permissions(&tool, fs::Permissions::from_mode(0o755)).expect("chmod");
+    crate::test_support::write_exec(&tool, "#!/bin/sh\necho 'never read it'\n");
 
     let stream = Cli::new(&tool)
         .run_input(None, &vec![b'x'; 4096], &[])

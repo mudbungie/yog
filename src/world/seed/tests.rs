@@ -2,15 +2,13 @@
 //! [`ensure_seeded`] converger — the argv landing and the **standing** world
 //! `LITANY_HOME` (§16.6 W2) reaching the child (seed sets no per-call env), the
 //! seeded-skip proven (a bogus binary is never run), the ops entry written, and
-//! the non-zero / spawn-failure error arms. Fork-based, so the spawning tests
-//! hold the crate-wide `SPAWN_LOCK` (the ETXTBSY discipline).
+//! the non-zero / spawn-failure error arms.
 
 use super::{SeedError, ensure_seeded, seeded};
 use crate::cli_outbound::Cli;
 use crate::opslog::{self, OpEntry, Origin};
 use crate::world::{Layout, layout_under};
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tempfile::{TempDir, tempdir};
 
@@ -52,10 +50,7 @@ impl World {
 /// Write an executable `litany` (0755) with the given shell `body`.
 fn fake_litany(dir: &Path, body: &str) -> std::path::PathBuf {
     let path = dir.join("litany");
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, body);
     path
 }
 

@@ -1,7 +1,6 @@
 use super::*;
 use crate::cli_outbound::Cli;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
 
 /// Ambient snapshot: `HOME` + the XDG anchors, with the two vars the world
@@ -133,12 +132,10 @@ fn a_bare_bl_spawned_in_the_world_resolves_to_the_seeded_shim() {
     let log = bin.path().join("ran");
     // The shim's target: a recorder standing in for the yog binary.
     let target = bin.path().join("yog");
-    fs::write(
+    crate::test_support::write_exec(
         &target,
-        format!("#!/bin/sh\nprintf '%s' \"$*\" > '{}'\n", log.display()),
-    )
-    .unwrap();
-    fs::set_permissions(&target, fs::Permissions::from_mode(0o755)).unwrap();
+        &format!("#!/bin/sh\nprintf '%s' \"$*\" > '{}'\n", log.display()),
+    );
     let data_s = data.path().to_string_lossy().into_owned();
     let amb = Env::from_pairs([
         ("HOME", "/h"),
@@ -175,17 +172,13 @@ fn watched_clones_dir_equals_the_dir_a_world_spawned_bl_writes() {
     // A recorder `bl` that reports the XDG_STATE_HOME it was spawned with (printf
     // builtin only — no fork to race the coverage ptrace engine).
     let path = bin.path().join("bl");
-    fs::write(
+    crate::test_support::write_exec(
         &path,
-        format!(
+        &format!(
             "#!/bin/sh\nprintf '%s' \"$XDG_STATE_HOME\" > '{}'\n",
             log.display()
         ),
-    )
-    .unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    );
     // Spawn it in the world (standing overrides), then drain to completion.
     let stream = Cli::new(path).with_env(ov).run(&[]).unwrap();
     for _ in stream {}

@@ -117,15 +117,13 @@ fn the_seeded_shim_runs_and_passes_argv_through_verbatim() {
     let dir = tempdir().unwrap();
     let target = dir.path().join("fake yog");
     let log = dir.path().join("argv");
-    fs::write(
+    crate::test_support::write_exec(
         &target,
-        format!(
+        &format!(
             "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\nexit 3\n",
             log.display()
         ),
-    )
-    .unwrap();
-    fs::set_permissions(&target, fs::Permissions::from_mode(SHIM_MODE)).unwrap();
+    );
     let tools = dir.path().join("tools");
     let shim = ensure_shim(&tools, BL, &host(target.to_string_lossy().as_ref())).unwrap();
     let out = crate::git_env::output(crate::git_env::command(&shim).args([

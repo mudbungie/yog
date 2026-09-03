@@ -23,62 +23,75 @@
 //! its `git` spelling), it scrubs, and a caller cannot opt out because there is
 //! nothing else to call. Enforced by `rules/no-bare-command.yml`.
 //!
-//! # The fork is the boundary too (bl-6397)
+//! # The fork is the boundary too (bl-6397, amended bl-fd28)
 //!
 //! Building every child here and then letting each caller fork it by hand left
-//! a second per-call contract open, and it cost the suite a recurring flake.
-//! `fs::write` on a fixture script holds a write fd; a `fork` in ANOTHER thread
-//! copies that fd into a child that keeps it until its own `exec` completes; an
-//! `exec` of the script inside that window is **ETXTBSY**. So a test that never
-//! spawns anything can still redden a test three modules away, and the victim's
-//! own care cannot save it.
+//! a second per-call contract open. [`spawn`], [`output`] and [`status`] are
+//! therefore the crate's one fork — one place to reason about what a child
+//! inherits, instead of a promise at every call site. [`exec`] joins them for a
+//! different hazard: it forks nothing, it *replaces*, and the two
+//! process-global effects a RETURNING one leaves are its own (bl-3792's
+//! `SIGPIPE` reset, which it repairs, and bl-419d's freed `environ` copy, which
+//! nothing can — read [`exec`] there). `rules/no-bare-fork.yml` holds the
+//! chokepoint.
 //!
-//! [`spawn`], [`output`] and [`status`] are therefore the crate's one fork, and
-//! in `cfg(test)` they take one process-wide lock across the fork — the whole of
-//! the discipline, in one place nobody has to remember. [`exec`] joins them for
-//! the same reason and not the same hazard: it forks nothing, it *replaces*,
-//! and the two process-global effects a RETURNING one leaves are its own
-//! (bl-3792's `SIGPIPE` reset, which it repairs, and bl-419d's freed `environ`
-//! copy, which nothing can — read [`exec`] there). Measured on this box
-//! with 8 write-then-exec threads against an 8-thread fork storm, ~9,600 pairs
-//! each: unguarded forks, 8.3% ETXTBSY; every fork through one lock, **zero** —
-//! and zero *with the writes left entirely unguarded*, which is why the write
-//! side needs no contract at all. Releasing the lock the instant the fork
-//! returns is enough (a child's inherited fds are gone by then), so a child is
-//! never waited on under it and the suite's subprocesses still run concurrently.
+//! ## ETXTBSY is closed on the WRITE side, and the lock is gone (bl-fd28)
 //!
-//! ## The lock covers yog's forks, and the binary must contain no others
+//! The fork carried a second job for two rounds and no longer does. `fs::write`
+//! on a fixture script holds a write fd; a `fork` in ANOTHER thread copies that
+//! fd into a child that keeps it until its own `exec` completes; an `exec` of
+//! the script inside that window is **ETXTBSY**. So this module took one
+//! process-wide lock across the fork under `cfg(test)`: measured with 8
+//! write-then-exec threads against an 8-thread fork storm, ~9,600 pairs,
+//! unguarded forks cost 8.3% ETXTBSY and every fork through one lock cost zero
+//! (bl-6397).
 //!
-//! **That "zero" was measured with every fork in the process going through the
-//! lock — a CONDITION, not a property of the lock** (bl-6bf5). The lock is a
-//! `cfg(test)` bracket around `Command::spawn` here; a fork performed by
-//! another crate in this same process never passes through it. yog links its
-//! substrate — `balls`, `litany`, `brazen` — and each forks on its own account
-//! (this module says so below, at [`exec`]: *"the linked balls' own `git`
-//! forks, which take no lock of yog's"*). A lib test that drives one of them
-//! **in-process** puts an unlocked forker back in the binary, and every
-//! write-then-exec fixture in it is a victim again.
+//! **That zero was a CONDITION, not a property of the lock** (bl-6bf5). The
+//! lock was a `cfg(test)` bracket around `Command::spawn` HERE, and a fork
+//! performed by another crate in this same process never passed through it. yog
+//! links its substrate — `balls`, `litany`, `brazen` — and each forks `git` on
+//! its own account (this module says so below, at [`exec`]: *"the linked balls'
+//! own `git` forks, which take no lock of yog's"*). A lib beat that drove one of
+//! them in-process was an unlocked forker for as long as it ran. Measured over
+//! one filter, 16 workers x 70 iterations on a 16-core box: the landing
+//! repair's in-process `balls::substrate::found_landing` cost **8** ETXTBSY
+//! failures, and `fan`'s attempt machinery another **2**. bl-6bf5 answered by
+//! moving the beat out to a `tests/*.rs` of its own; `fan` could not follow,
+//! its beats being unit tests of `pub(crate)` code no `tests/*.rs` can reach.
 //!
-//! So the condition to keep is: **the lib test binary drives no embedded
-//! substrate in-process.** A beat that must belongs in a `tests/*.rs` process
-//! of its own — `tests/multiplex_bl.rs`, `tests/multiplex_litany.rs`,
-//! `tests/multiplex_landing.rs` — each carrying the note that says why it may
-//! not come back. That placement is also what lets those files scrub their own
-//! process env of [`INHERITED`]: no spawn boundary exists to do it for a fork
-//! they do not perform.
+//! bl-fd28 closed the hazard on the side that owns it instead. **Every
+//! executable fixture in this crate is written by a CHILD** —
+//! [`crate::test_support::write_exec`] for the lib binary,
+//! `tests/support/write_exec.rs` for the integration ones, feeding the body to
+//! `sh -c 'cat > "$1" && chmod 755 "$1"'` — so the write fd never exists in
+//! this process and a peer fork, in ANY crate, locked or not, has nothing of
+//! ours to copy. `rules/no-hand-chmod.yml` makes it structural rather than a
+//! convention.
 //!
-//! Measured both ways, one filter over the lib test binary (`multiplex` plus
-//! the five fixture-exec families), 16 workers x 70 iterations on a 16-core
-//! box: with the landing repair's in-process `balls::substrate::found_landing`
-//! still in the lib binary, **8 ETXTBSY failures**; with it moved out, **0** —
-//! and 0 for the same victims with no substrate beat in the filter at all.
+//! **This module's older claim that "the victim's own care cannot save it" is
+//! retired with the lock.** It was true of a write-side *bracket* — a lock that
+//! only excludes forks agreeing to take it — and false of a write-side
+//! *relocation*, which leaves no descriptor for anyone to inherit.
+//! `tests/integration/support/mod.rs` had already reached that answer for the
+//! reason that proves it: yog linked as a library is not `cfg(test)`, so no
+//! lock of this module's was ever available to that binary, and writing the
+//! fixture from `sh` was the only move it had. It measured ~1 run in 8 before
+//! and none after.
 //!
-//! **One unlocked forker remains and is not a test's to move** (bl-6bf5, filed
-//! on as bl-fd28): `fan`'s production path opens balls' attempts, which forks `git` inside
-//! balls, and `fan`'s beats are unit tests of `pub(crate)` code no `tests/*.rs`
-//! can reach. Same filter with `fan::` in place of `multiplex`, same volume:
-//! 2 ETXTBSY failures. Adding an in-process substrate drive here is therefore not "one
-//! more like fan" — it re-opens a hole that is already costing the suite.
+//! **So the lock was measured out.** Same recipe as above — `fan::` plus the
+//! five fixture-exec families, 16 workers x 70 iterations, three runs each,
+//! 3,360 test-binary runs per side: **0 / 0 / 0** with the lock still standing,
+//! **0 / 0 / 0** with the guard removed. It was closing nothing once the write
+//! fd was gone, so `SPAWN_LOCK` and `spawn_guard` are gone with it. The one
+//! fork above stays for its own reasons; the ETXTBSY discipline now lives
+//! entirely on the write side, where the fd is.
+//!
+//! One consequence is subtraction, not vigilance: bl-6bf5's placement rule —
+//! *the lib test binary drives no embedded substrate in-process* — is no longer
+//! load-bearing for ETXTBSY. The `tests/multiplex_*.rs` split keeps its OTHER
+//! reason, which is [`INHERITED`]: a binary that runs its subject in-process
+//! must scrub its own process env, no spawn boundary existing to do it for a
+//! fork it does not perform.
 
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus, Output, Stdio};
@@ -115,12 +128,10 @@ pub fn git() -> Command {
 }
 
 /// Fork + exec `cmd` — **the crate's one fork**, and the only lawful way to
-/// start a child here (`rules/no-bare-fork.yml`). Under `cfg(test)` the fork
-/// happens under the binary-wide spawn lock; see the module doc for the race
-/// that buys.
+/// start a child here (`rules/no-bare-fork.yml`). It takes no lock: the ETXTBSY
+/// window it used to close is closed on the write side now (module doc,
+/// bl-fd28).
 pub(crate) fn spawn(cmd: &mut Command) -> std::io::Result<Child> {
-    #[cfg(test)]
-    let _guard = crate::test_support::spawn_guard();
     cmd.spawn()
 }
 
@@ -157,10 +168,9 @@ pub(crate) fn status(cmd: &mut Command) -> std::io::Result<ExitStatus> {
 /// scrub is: a contract a caller has to remember is a defect nobody sees until
 /// it fires.
 ///
-/// No spawn lock, and the asymmetry is the point: ETXTBSY needs a fork to copy
-/// somebody's write fd into a child, and an exec forks nothing. It can only be
-/// ETXTBSY's *victim*, and the discipline above already retired the party that
-/// makes one.
+/// It is not an ETXTBSY party either way: that needs a fork to copy somebody's
+/// write fd into a child, and an exec forks nothing. It could only ever be the
+/// *victim*, and the write-side discipline above retired the fd that makes one.
 ///
 /// # A returning exec has a SECOND global effect, and it cannot be repaired
 ///

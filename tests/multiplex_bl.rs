@@ -21,8 +21,13 @@
 //! plugin chain then runs the built yog's own multiplex arms, which is the
 //! production shape (a shim whose target is yog) with the target made
 //! explicit.
-
 #![allow(clippy::unwrap_used)]
+
+// The executable-fixture writer, shared by every integration binary that
+// writes one (bl-fd28). `#[path]` because this file IS the test target's
+// crate root, and a second top-level `tests/*.rs` would be a second binary.
+#[path = "support/write_exec.rs"]
+mod write_exec;
 
 use std::fs;
 use std::path::Path;

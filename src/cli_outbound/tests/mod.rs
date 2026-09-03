@@ -13,13 +13,12 @@
 //! Shared fixtures (`write_script`, `collect`, `process_exists`) live here
 //! so the submodules do not duplicate them. Binary resolution is tested
 //! against an injected env lookup ([`Cli::resolve_with`]), so no test
-//! mutates ambient env — there is no `ENV_LOCK`. The binary-wide
-//! `SPAWN_LOCK` is the one static from `crate::test_support` (per-module
-//! locks do not exclude each other's threads).
+//! mutates ambient env. Every script here is authored by
+//! `crate::test_support::write_exec`, which is the whole of the ETXTBSY
+//! discipline since bl-fd28 — no lock, no bracket, no per-test contract.
 
 use super::*;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 
 // Spawn discipline rationale and the binary-wide lock live in
 // crate::test_support — one static for every test module, because
@@ -36,10 +35,7 @@ mod wrap;
 
 fn write_script(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, body);
     path
 }
 

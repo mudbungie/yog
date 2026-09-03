@@ -5,7 +5,6 @@
 use super::*;
 use crate::cli_outbound::Cli;
 use crate::xdg::Env;
-use std::os::unix::fs::PermissionsExt;
 use tempfile::{TempDir, tempdir};
 
 /// A hermetic balls state root with one clone of `/proj`, laid out the way balls
@@ -65,10 +64,7 @@ impl World {
 /// fork (`crate::git_env`) owns the ETXTBSY exclusion.
 fn write_bl(dir: &Path, body: &str) -> PathBuf {
     let path = dir.join("bl");
-    std::fs::write(&path, body).unwrap();
-    let mut perms = std::fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    std::fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, body);
     path
 }
 

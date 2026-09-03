@@ -43,9 +43,7 @@ pub(super) fn git_optional(repo: &Path, args: &[&str]) -> Result<Option<Vec<u8>>
 }
 
 /// Fork + exec `git`, capturing stdout/stderr — the crate's one fork
-/// (`crate::git_env::output`), which under `cargo test` takes the binary-wide
-/// spawn lock so this `git` never forks while a recorder-script test holds a
-/// write fd it is about to exec (ETXTBSY — see `crate::git_env`).
+/// (`crate::git_env::output`).
 fn spawn_output(mut cmd: Command) -> std::io::Result<std::process::Output> {
     crate::git_env::output(&mut cmd)
 }

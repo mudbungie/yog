@@ -47,8 +47,8 @@ exit 0
 "#;
     // Never a bare `fs::write`: this script is exec'd, and a write fd on it in
     // this process is the ETXTBSY race peer test threads lose
-    // (`crate::support::write_executable`).
-    crate::support::write_executable(&path, body);
+    // (`tests/support/write_exec.rs`).
+    crate::support::write_exec::write_exec(&path, body);
     path
 }
 

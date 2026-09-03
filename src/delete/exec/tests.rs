@@ -9,7 +9,6 @@ use crate::cli_outbound::Cli;
 use crate::opslog::{self, OpEntry, SYNTHETIC_EXIT, YOG_STEP};
 use crate::ui_state::UiState;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::{TempDir, tempdir};
 
@@ -51,10 +50,10 @@ impl World {
     /// A `bl` that exits `code`, echoing its args back on stderr.
     fn bl(&self, code: i32) -> Cli {
         let path = self.bin.path().join("bl");
-        fs::write(&path, format!("#!/bin/sh\necho \"$@\" 1>&2\nexit {code}\n")).unwrap();
-        let mut perms = fs::metadata(&path).unwrap().permissions();
-        perms.set_mode(0o755);
-        fs::set_permissions(&path, perms).unwrap();
+        crate::test_support::write_exec(
+            &path,
+            &format!("#!/bin/sh\necho \"$@\" 1>&2\nexit {code}\n"),
+        );
         Cli::new(path)
     }
 

@@ -13,8 +13,6 @@ use crate::boundary::{Action, reply::Reply};
 use crate::cli_outbound::Cli;
 use crate::git_tree::AgentState;
 use crate::test_support::engine;
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use tempfile::{TempDir, tempdir};
 
@@ -22,10 +20,7 @@ use tempfile::{TempDir, tempdir};
 /// what the act spawned — and an empty one is proof it spawned nothing.
 fn fake(dir: &Path, name: &str) -> Cli {
     let path = dir.join(name);
-    fs::write(&path, "#!/bin/sh\nprintf '%s\\n' \"$*\"\nexit 0\n").unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, "#!/bin/sh\nprintf '%s\\n' \"$*\"\nexit 0\n");
     Cli::new(path)
 }
 

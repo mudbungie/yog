@@ -2,21 +2,24 @@
 //! disk** — founded by `balls::substrate::found_landing`, damaged the way this
 //! box's live world was damaged (see [`world`]), then converged.
 //!
-//! # Why this is a test binary and must never move back into the lib (bl-6bf5)
+//! # Why this is a test binary of its own (bl-6bf5, amended bl-fd28)
 //!
 //! `World::found` calls `balls::substrate::found_landing`, which forks `git`
-//! **on balls' own account** — outside `yog::git_env`, and therefore outside
-//! the binary-wide spawn lock that `git_env::{spawn,output,status}` take under
-//! `cfg(test)`. A fork copies every open fd, so a peer thread holding a write
-//! fd on a fixture script it has just written loses the `exec` that follows:
-//! `Text file busy`. The victim's own care cannot save it — the fork is the
-//! other party — and no lock yog owns can reach a fork inside another crate.
+//! **on balls' own account** — outside `yog::git_env`. That used to be an
+//! ETXTBSY hazard: a fork copies every open fd, so a peer thread holding a
+//! write fd on a fixture script it had just written lost the `exec` that
+//! followed (`Text file busy`), and no lock yog owns can reach a fork inside
+//! another crate. Measured on a 16-core box, one filter over the lib test
+//! binary (`multiplex` plus the five fixture-exec families), 16 workers × 70
+//! iterations each: **8 ETXTBSY failures with these beats in the lib binary, 0
+//! without.**
 //!
-//! Measured on a 16-core box, one filter over the lib test binary (`multiplex`
-//! plus the five fixture-exec families), 16 workers × 70 iterations each: **8
-//! ETXTBSY failures with these beats in the lib binary, 0 without.** They are
-//! here because a `tests/*.rs` file is a process of its own, so its forks fall
-//! in nobody else's window.
+//! **bl-fd28 dissolved that reason** — every executable fixture is now written
+//! by a child, so no process holds a descriptor for any fork to copy, and the
+//! lock the argument turned on is deleted. What keeps these beats here is the
+//! other half: a binary running its subject **in-process** must scrub its own
+//! env of `yog::git_env::INHERITED`, there being no spawn boundary to do it for
+//! a fork it does not perform.
 //!
 //! **This binary owns its process environment** (the `tests/multiplex_bl.rs`
 //! precedent, for the same reason): the balls it drives runs in-process, so a
@@ -25,8 +28,13 @@
 //! spawn sites use. Everything is one `#[test]` because that scrub is a
 //! process-global act with no peer thread to race — the same rule and the same
 //! shape as `tests/multiplex_bl.rs`.
-
 #![allow(clippy::unwrap_used, clippy::expect_used)]
+
+// The executable-fixture writer, shared by every integration binary that
+// writes one (bl-fd28). `#[path]` because this file IS the test target's
+// crate root, and a second top-level `tests/*.rs` would be a second binary.
+#[path = "support/write_exec.rs"]
+mod write_exec;
 
 use yog::multiplex::landing::{commit, converge, git};
 use yog::world::tools;

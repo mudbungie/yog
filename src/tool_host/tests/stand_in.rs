@@ -7,7 +7,6 @@
 //! in, and it lives in its own file because four sibling modules ask for it.
 
 use super::*;
-use std::os::unix::fs::PermissionsExt as _;
 
 /// A stand-in engine: answer the first deposit that lands with `reply`, hand
 /// the request back over a channel, and stop. It is the deposit consumer's
@@ -62,8 +61,7 @@ pub(in crate::tool_host) fn impatient() -> ask::Budget {
 /// absolute path exactly as the real shim is.
 pub(in crate::tool_host) fn front_door(dir: &Path, body: &str) -> PathBuf {
     let path = dir.join("litany");
-    std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).expect("front door");
-    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+    crate::test_support::write_exec(&path, &format!("#!/bin/sh\n{body}\n"));
     path
 }
 

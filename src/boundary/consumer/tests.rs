@@ -113,16 +113,12 @@ fn world_of(root: &std::path::Path, names: &[&str]) -> crate::app::Snapshot {
 /// steps — the world's seed marker and the workspace's config branch — and
 /// nothing else. `prime` is short-circuited by [`seed`] ahead of it.
 fn fake_litany(dir: &std::path::Path) -> Cli {
-    use std::os::unix::fs::PermissionsExt;
     let body = format!(
         "#!/bin/sh\ncase \"$1\" in\n{arm}esac\nexit 0\n",
         arm = crate::test_support::authoring_new_arm()
     );
     let path = dir.join("litany");
-    std::fs::write(&path, body).unwrap();
-    let mut perms = std::fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    std::fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, &body);
     Cli::new(path)
 }
 

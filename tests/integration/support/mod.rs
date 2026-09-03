@@ -20,6 +20,12 @@
 // `editor_roundtrip` precedent).
 #![allow(clippy::unwrap_used)]
 
+// The executable-fixture writer, shared with the standalone `tests/*.rs`
+// binaries that write one too (bl-fd28). Declared inside `support` rather than
+// beside it so it inherits this module's test-code lint relaxations.
+#[path = "../../support/write_exec.rs"]
+pub mod write_exec;
+
 use std::fs;
 use std::io;
 use std::io::Write as _;
@@ -30,46 +36,6 @@ use std::collections::HashMap;
 
 use yog::projects::balls::{Ball, parse_list};
 use yog::projects::runner::BlRunner;
-
-/// Author the executable fixture script `body` at `path` (mode 0755) — the ONE
-/// way this binary creates a file it is going to exec.
-///
-/// The write happens in a **child**, never here, and that is the whole point.
-/// `exec` on a file some process still holds open for writing fails with
-/// `ETXTBSY`, and a plain `fs::write` in a test thread hands exactly that fd to
-/// any peer thread that happens to `fork` while it is open (the copy lives in
-/// the child until its own `exec` clears CLOEXEC). With ~25 tests sharing one
-/// process and each of them forking, that window is hit often — measured at
-/// roughly one run in eight, as an `ETXTBSY` on a recorder script another test
-/// had just written.
-///
-/// Excluding it with a lock is not available here: the forks that matter are
-/// **yog's own** (`git_tree::cmd`, `cli_outbound`), and yog routes those
-/// through its `SPAWN_LOCK` only under `#[cfg(test)]` — false when yog is
-/// linked as a library, which is what an integration test does. So the fd is
-/// removed from this process instead of scheduled around: `sh` opens the file,
-/// `cat` fills it, `chmod` marks it, and all of it dies with the child we wait
-/// on. A fork of *this* process copies *this* fd table, which never held the
-/// descriptor, so on return the file has no writer anywhere and never will
-/// again.
-pub fn write_executable(path: &Path, body: &str) {
-    let mut child = Command::new("sh")
-        .args(["-c", r#"cat > "$1" && chmod 755 "$1""#, "sh"])
-        .arg(path)
-        .stdin(Stdio::piped())
-        .spawn()
-        .unwrap();
-    // Taken and dropped in one statement: `cat` sees EOF only once this end of
-    // the pipe is closed, and the wait below would otherwise never return.
-    child
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(body.as_bytes())
-        .unwrap();
-    let status = child.wait().unwrap();
-    assert!(status.success(), "authoring {}: {status}", path.display());
-}
 
 /// A fake [`BlRunner`] for `AppModel`-construction stories: canned bedrock JSON
 /// per project keyed by the decoded project path (parsed through the same

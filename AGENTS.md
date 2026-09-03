@@ -145,8 +145,10 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
 
 7. **`Mutex`/`RwLock` only in `src/state.rs`; no `Rc`/`RefCell` anywhere. yog
    ADAPTATION:** the lock chokepoint (`state.rs`) has five sanctioned
-   carve-outs — the test scaffolding locks (`SPAWN_LOCK`/`ENV_LOCK` in
-   `test_support`), `src/git_tree/probe_cache.rs` (a macOS 2 s TTL cache whose
+   carve-outs — `test_support`'s test-double interior mutability (a `FakeFs`'
+   path→bytes map, a fake clock's shared instant; the `SPAWN_LOCK` this list
+   used to name was measured out by bl-fd28, below, and `ENV_LOCK` is already
+   gone from the tree), `src/git_tree/probe_cache.rs` (a macOS 2 s TTL cache whose
    `Mutex` is uncontended single-thread interior mutability),
    `src/fs_watcher/hub.rs` (the process's one `notify` instance and its fan-out
    registry, `OnceLock` singletons that are never dropped or handed out —
@@ -251,17 +253,10 @@ demotion removes an internal API from the boundary's obligations. Reach for
   an `$EDITOR` shim, the suite's fake substrate scripts). A bare `Command::new`
   outside `src/git_env.rs` is an error — `rules/no-bare-command.yml`. **So is a
   bare fork** (bl-6397): `git_env::{spawn, output, status}` is the crate's one
-  `spawn`/`output`/`status` on a `Command`, and under `cfg(test)` it takes the
-  binary-wide spawn lock — `rules/no-bare-fork.yml`. Building every child here
-  and letting each caller fork it left a second per-call contract open, and it
-  cost the suite a recurring flake: `fs::write` on a fixture script holds a
-  write fd, a fork on any other thread copies that fd into a child that keeps it
-  until its own exec, and an exec of the script inside that window is ETXTBSY.
-  The victim's own care cannot save it — the fork is the other party — so the
-  discipline belongs at the fork and NOT at the write. A test writes its fake
-  binary bare and execs it; the ~150 write-side brackets that used to stand were
-  swept, and they were not merely redundant (one held the lock across a body
-  whose worker thread forked, starving that fork for the whole test).
+  `spawn`/`output`/`status` on a `Command` — `rules/no-bare-fork.yml`. Building
+  every child here and letting each caller fork it left a second per-call
+  contract open: one place to reason about what a child inherits beats a promise
+  at forty call sites.
   **`git commit` inside a `work/<id>` worktree is safe again:** the hook runs
   the suite, and the suite no longer writes to the outer repo (regression:
   `tests/git_env_scrub.rs`; verified by running the whole suite with
@@ -271,6 +266,24 @@ demotion removes an internal API from the boundary's obligations. Reach for
   the embedded substrate **in-process** (`multiplex::dispatch`) must scrub its
   own process env from `git_env::INHERITED`, as `tests/multiplex_bl.rs` and
   `tests/multiplex_litany.rs` do — no spawn boundary exists to do it for them.
+- **An executable fixture is written by a CHILD, never by the test process**
+  (bl-fd28) — `crate::test_support::write_exec` in the lib binary,
+  `tests/support/write_exec.rs` in the integration ones, enforced in `src` by
+  `rules/no-hand-chmod.yml`. `fs::write` on a fixture script holds a write fd; a
+  fork on any other thread copies it into a child that keeps it until its own
+  exec, and an exec of the script inside that window is ETXTBSY. This used to be
+  guarded from the fork side by a `cfg(test)` spawn lock, and the note here used
+  to read *"the victim's own care cannot save it — the fork is the other
+  party"*. **Both are retired.** The lock could only ever exclude yog's OWN
+  forks, and yog links `balls`/`litany`/`brazen`, which fork `git` without it —
+  bl-6bf5 measured 8 ETXTBSY failures from one in-process substrate beat and
+  bl-fd28 another 2 from `fan`, whose beats are `pub(crate)` unit tests that
+  cannot be moved out to a `tests/*.rs`. Writing the file from `sh -c 'cat >
+  "$1" && chmod 755 "$1"'` leaves no descriptor in this process for ANY fork, in
+  any crate, to copy — a write-side *relocation*, which the old argument
+  (against a write-side *bracket*) does not reach. With that in place the lock
+  measured **0/0/0 with it and 0/0/0 without** over 3,360 runs of the bl-6bf5
+  filter per side, so `SPAWN_LOCK` and `spawn_guard` are deleted.
 - **300-line hard cap on every source file, inline tests included.** Docs and
   config (`.md`/`.toml`/`.yml`/`.json`/lock, `Makefile`, `LICENSE`) are exempt.
   Anything projected ≥200 is pre-split at design time (DESIGN §12), not at the

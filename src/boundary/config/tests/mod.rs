@@ -18,7 +18,6 @@ use crate::cli_outbound::Cli;
 use crate::test_support::world_under;
 use crate::ui_state::UiState;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -89,14 +88,11 @@ pub(super) fn quiet(root: &Path) -> Deps {
     )
 }
 
-/// An executable `#!/bin/sh` script. The caller holds `SPAWN_LOCK` across
-/// write + spawn (the ETXTBSY discipline).
+/// An executable `#!/bin/sh` script, written by a child (the bl-fd28 ETXTBSY
+/// discipline — `crate::test_support::write_exec`).
 pub(super) fn script(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
-    fs::write(&path, format!("#!/bin/sh\n{body}")).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, &format!("#!/bin/sh\n{body}"));
     path
 }
 

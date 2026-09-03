@@ -10,17 +10,14 @@ use std::path::{Path, PathBuf};
 /// A wrapper program answering a sibling plugin's contract by exec'ing the
 /// built yog under that namespace (the parent's module doc).
 pub(crate) fn plugin_wrapper(dir: &Path, namespace: &str) -> PathBuf {
-    use std::os::unix::fs::PermissionsExt;
     let path = dir.join(namespace);
-    fs::write(
+    crate::write_exec::write_exec(
         &path,
-        format!(
+        &format!(
             "#!/bin/sh\nexec '{}' '{namespace}' \"$@\"\n",
             env!("CARGO_BIN_EXE_yog")
         ),
-    )
-    .unwrap();
-    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+    );
     path
 }
 

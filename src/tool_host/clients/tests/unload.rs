@@ -11,8 +11,6 @@
 //! engine ask gives up at once. That is the assertion, not a shortcut: an
 //! unload that asked the engine would fail on every one of these.
 
-use std::os::unix::fs::PermissionsExt;
-
 use super::*;
 
 /// The site every test here spends: impatient, so any engine ask would refuse.
@@ -214,13 +212,13 @@ fn an_unload_that_cannot_be_recorded_says_so() {
     load_from(root.path(), "laptop", vec![tool("Bash")], &["Bash"]);
     let file = crate::tool_host::loaded::path(root.path(), "home", "dulcet-mongoose")
         .expect("addressable");
-    std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o444)).expect("chmod");
+    crate::test_support::fixture::read_only(&file);
     let e = answer(
         &offline(root.path()),
         &json!({"op": "unload", "client": "laptop"}),
         &quiet(),
     )
     .expect_err("unrecordable");
-    std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o644)).expect("chmod");
+    crate::test_support::fixture::writable(&file);
     assert!(e.contains("recording the unload"), "{e}");
 }

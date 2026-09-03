@@ -134,8 +134,8 @@ impl Recorder {
             .replace("__ARMS__", &arms);
         // Never a bare `fs::write`: the script is about to be exec'd, and a
         // write fd on it in *this* process is the ETXTBSY race peer test
-        // threads lose (see [`super::write_executable`]).
-        super::write_executable(&self.path, &script);
+        // threads lose (see `tests/support/write_exec.rs`).
+        super::write_exec::write_exec(&self.path, &script);
         self.path.clone()
     }
 

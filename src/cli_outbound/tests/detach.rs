@@ -13,10 +13,9 @@
 //! `ps` — see [`GROUP_DRIVER`]. This mirrors litany's fire-and-forget
 //! launcher.
 //!
-//! `spawn_detached` forks directly like `run`, so — as with the streaming
-//! and actions fixtures — each test HOLDS `SPAWN_LOCK` across the call:
-//! `write_script` returns the guard (kept as `_guard` through the fifo
-//! read), and the missing-binary test takes the lock explicitly.
+//! `spawn_detached` forks directly like `run`. Nothing here brackets that:
+//! `write_script` authors the fixture from a child, so there is no write fd
+//! for the fork to copy and no ETXTBSY window to schedule around (bl-fd28).
 
 use super::*;
 use std::time::Duration;
@@ -163,9 +162,6 @@ fn spawn_detached_propagates_cwd() {
 
 #[test]
 fn spawn_detached_errors_on_missing_binary() {
-    // A failing spawn still forks before exec reports ENOENT; hold
-    // SPAWN_LOCK so that transient child can't inherit a peer's recorder
-    // write fd.
     let dir = tempdir().unwrap();
     let cli = Cli::new("/definitely/not/a/real/binary/litany-detach");
     let err = cli

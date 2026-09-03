@@ -7,8 +7,6 @@
 //! that the reader thread exists at all — and the **wired** one is
 //! [`Streamed::from_rx`], which drives every buffer arm with no process to race.
 
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::time::Duration;
@@ -26,8 +24,7 @@ fn workspace() -> PathBuf {
 
 fn script(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
-    fs::write(&path, body).expect("write");
-    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).expect("chmod");
+    crate::test_support::write_exec(&path, body);
     path
 }
 

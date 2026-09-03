@@ -62,9 +62,7 @@ impl Cli {
         if let Some(dir) = cwd {
             cmd.current_dir(dir);
         }
-        // Through the crate's one fork like `run`, so under `cargo test` it
-        // takes the spawn lock and never lands while a peer holds a
-        // not-yet-closed recorder write fd (ETXTBSY, `crate::git_env`).
+        // Through the crate's one fork like `run` (`crate::git_env`).
         let child = crate::git_env::spawn(&mut cmd)
             .map_err(|e| CliError::spawn(self.exec_target(), cwd, e))?;
         let pid = child.id();

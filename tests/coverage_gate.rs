@@ -15,11 +15,15 @@
 //! `make` first on `PATH`, so nothing here can pass by agreeing with a private
 //! copy of the logic. The fake counts its own invocations, which is how "retry
 //! once, and only for that class" is asserted in both directions.
-
 #![allow(clippy::unwrap_used)]
 
+// The executable-fixture writer, shared by every integration binary that
+// writes one (bl-fd28). `#[path]` because this file IS the test target's
+// crate root, and a second top-level `tests/*.rs` would be a second binary.
+#[path = "support/write_exec.rs"]
+mod write_exec;
+
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
 use tempfile::TempDir;
@@ -63,8 +67,7 @@ impl Probe {
         let (t, make) = (tally.display(), bin.join("make"));
         let script =
             format!("#!/usr/bin/env bash\necho x >>\"{t}\"\nn=$(wc -l <\"{t}\")\n{body}\n");
-        fs::write(&make, script).unwrap();
-        fs::set_permissions(&make, fs::Permissions::from_mode(0o755)).unwrap();
+        write_exec::write_exec(&make, &script);
         Self { dir, bin, tally }
     }
 

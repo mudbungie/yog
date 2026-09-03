@@ -7,7 +7,6 @@
 use super::*;
 use crate::cli_outbound::Cli;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
@@ -67,7 +66,7 @@ fn compose_orphan_adds_orphan_flag() {
 }
 
 /// A recorder `litany` that logs `EDITOR`/`YOG_EDIT_SRC`/argv to `log`,
-/// prints canned stdout/stderr, and exits `code`. Caller holds `SPAWN_LOCK`.
+/// prints canned stdout/stderr, and exits `code`.
 fn recorder(dir: &Path, log: &Path, code: i32) -> PathBuf {
     let path = dir.join("litany");
     let body = format!(
@@ -78,10 +77,7 @@ fn recorder(dir: &Path, log: &Path, code: i32) -> PathBuf {
         log.display(),
         code
     );
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, &body);
     path
 }
 
@@ -149,8 +145,7 @@ fn drive_records_a_signal_death_as_a_negative_exit() {
     // -1, not a spurious success.
     let dir = tempdir().unwrap();
     let bin = dir.path().join("litany");
-    fs::write(&bin, "#!/bin/sh\nkill -TERM $$\n").unwrap();
-    fs::set_permissions(&bin, fs::Permissions::from_mode(0o755)).unwrap();
+    crate::test_support::write_exec(&bin, "#!/bin/sh\nkill -TERM $$\n");
     let state = dir.path().join("state");
     let p = plan(&EditOrigin::Advance);
     let entry = drive(

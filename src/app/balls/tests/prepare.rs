@@ -19,7 +19,6 @@ use crate::boundary::{Action, reply::Reply};
 use crate::cli_outbound::Cli;
 use crate::test_support::{authoring_new_arm, engine};
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tempfile::tempdir;
 
@@ -37,10 +36,7 @@ const FAILS: &str = "#!/bin/sh\nprintf 'boom\\n' 1>&2\nexit 3\n";
 /// Write `body` as an executable `litany` in `dir` and hand back its [`Cli`].
 fn fake_litany(dir: &Path, body: &str) -> Cli {
     let path = dir.join("litany");
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, body);
     Cli::new(path)
 }
 
@@ -99,11 +95,6 @@ fn a_raise_founds_the_wall_the_reply_names() {
     let bin = tempdir().unwrap();
     let w = world();
     seed(&w.roots.yog_data);
-    // The model is built BEFORE the guard: `AppModel::new` derives every
-    // workspace snapshot through `git`, which forks via `spawn_locked` — taking
-    // `SPAWN_LOCK` here first would deadlock against it (the mutex is not
-    // reentrant). The guard covers only what needs it: the fake script's
-    // write-then-exec window (the ETXTBSY race `test_support` documents).
     let (_c, mut m) = model(&w);
 
     let target = crate::binding::workspace_path(&w.roots.yog_data, "ops");

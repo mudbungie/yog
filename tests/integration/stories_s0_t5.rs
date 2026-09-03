@@ -8,9 +8,9 @@
 //! oauth row can serve and the only one a GUI can drive. Credentials stay bz's —
 //! yog renders.
 //!
-//! One `#[test]` runs both scenarios sequentially: two live `bz` spawns in one
-//! thread never race each other's recorder-script write into ETXTBSY (the
-//! integration crate cannot reach the unit-side `SPAWN_LOCK`).
+//! One `#[test]` runs both scenarios sequentially — a shape this file kept
+//! from the era when a recorder-script write could race a peer's fork into
+//! ETXTBSY. It cannot since bl-fd28: every fixture here is written by a child.
 
 #![allow(clippy::unwrap_used)]
 

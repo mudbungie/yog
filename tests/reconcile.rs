@@ -17,10 +17,15 @@
 //! deferral has no other product; a rollback is asserted by what the box ends
 //! up **serving**, because "the rollback script ran" is exactly the claim
 //! bl-0719 caught a status print making.
-
 #![allow(clippy::unwrap_used)]
+
+// The executable-fixture writer, shared by every integration binary that
+// writes one (bl-fd28). `#[path]` because this file IS the test target's
+// crate root, and a second top-level `tests/*.rs` would be a second binary.
 #[path = "reconcile/harness.rs"]
 mod harness;
+#[path = "support/write_exec.rs"]
+mod write_exec;
 use harness::{
     IDLE, PACKAGE, boundary_says, box_at, calls, crash_loops, deploy_env, key, reconcile, registry,
     registry_answers, serving,

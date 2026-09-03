@@ -1,10 +1,10 @@
 //! The repair's **pure error plumbing** — the two arms of [`sited`] and the
 //! three of [`report`]. Everything that needs a real balls landing on disk
-//! lives in `tests/multiplex_landing.rs` instead, and must stay there
-//! (bl-6bf5): founding one calls `balls::substrate::found_landing`, which forks
-//! `git` on balls' own account — outside `git_env`'s spawn lock, and so inside
-//! every peer thread's write-then-exec window. Read that file's crate-root doc
-//! before moving a beat back here; it carries the measurement.
+//! lives in `tests/multiplex_landing.rs` instead (bl-6bf5), and its OTHER
+//! reason to stay there outlived the ETXTBSY one bl-fd28 dissolved: a binary
+//! that founds a landing in-process must scrub its own env of
+//! `git_env::INHERITED`, no spawn boundary existing to do it for a fork it does
+//! not perform. Read that file's crate-root doc before moving a beat back.
 
 use super::*;
 

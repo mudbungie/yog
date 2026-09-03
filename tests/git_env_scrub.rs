@@ -20,11 +20,15 @@
 //! **One `#[test]` per binary, deliberately.** The setup mutates process-global
 //! env, `unsafe` in edition 2024 and sound only with no peer thread reading it —
 //! the same discipline (and the same reason) as `tests/multiplex_bl.rs`.
-
 #![allow(clippy::unwrap_used)]
 
+// The executable-fixture writer, shared by every integration binary that
+// writes one (bl-fd28). `#[path]` because this file IS the test target's
+// crate root, and a second top-level `tests/*.rs` would be a second binary.
+#[path = "support/write_exec.rs"]
+mod write_exec;
+
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 
 use yog::cli_outbound::Cli;
@@ -36,14 +40,12 @@ use yog::git_env::INHERITED;
 /// child `git` actually resolved.
 fn probe(dir: &Path) -> std::path::PathBuf {
     let path = dir.join("probe");
-    fs::write(
+    write_exec::write_exec(
         &path,
         "#!/bin/sh\nenv | sed -n 's/^\\(GIT_[A-Z_]*\\)=.*/\\1/p' | sort > \"$1/leaked\"\n\
          git init -q --bare \"$1/probe.git\"\n\
          git -C \"$1/probe.git\" rev-parse --absolute-git-dir > \"$1/aimed\"\n",
-    )
-    .unwrap();
-    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+    );
     path
 }
 

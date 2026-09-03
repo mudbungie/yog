@@ -3,7 +3,6 @@
 //! lane driven look by look with no clock and no sleep.
 
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::mpsc;
@@ -55,8 +54,7 @@ fn deps_with(root: &Path, bz: &Path) -> Deps {
 
 fn script(dir: &Path, name: &str, body: &str) -> PathBuf {
     let path = dir.join(name);
-    fs::write(&path, body).expect("write");
-    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).expect("chmod");
+    crate::test_support::write_exec(&path, body);
     path
 }
 
@@ -215,12 +213,11 @@ fn a_lane_ends_when_the_run_it_was_reading_is_gone() {
     // **`bz` already exists, and is never a fixture written here** (bl-5510).
     // The sweep below is this beat's subject and the child is incidental —
     // nothing reads what it said — so writing one buys nothing and costs the
-    // ETXTBSY window `git_env`'s module doc names: a peer thread's fork copies
-    // the write fd, and an exec inside that window is "Text file busy". yog's
-    // own forks hold the spawn lock and cannot open that window; `multiplex`'s
-    // in-process `balls`/`litany`/`bz` arms fork on their own account and hold
-    // nothing. Measured: 16 sightings across the suite's write-then-exec
-    // fixtures with `multiplex` in the run, this beat among them, none without.
+    // ETXTBSY window `git_env`'s module doc names. Measured: 16 sightings
+    // across the suite's write-then-exec fixtures with `multiplex` in the run,
+    // this beat among them, none without. bl-fd28 has since closed that window
+    // for fixtures that must exist (they are written by a child); a fixture
+    // that need not exist is still better not written.
     let runs = Runs::of(Cli::new("/bin/sh"));
     let (run, _tx) = wired(dir.path());
     runs.seat(&workspace(), "openai", run, 0);

@@ -18,7 +18,6 @@ use crate::test_support::authoring_new_arm;
 use crate::test_support::world::no_world;
 use crate::ui_state::UiState;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -37,10 +36,7 @@ fn fake_litany(dir: &Path, fifo: &Path) -> PathBuf {
         fifo = fifo.display(),
     );
     let path = dir.join("litany");
-    fs::write(&path, body).unwrap();
-    let mut perms = fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&path, perms).unwrap();
+    crate::test_support::write_exec(&path, &body);
     path
 }
 
