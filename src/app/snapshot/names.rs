@@ -86,15 +86,20 @@ impl Snapshot {
 /// compose two processes deep, and the window's own posted receipt earned
 /// `unknown workspace` for the wall its previous act had founded. **Birth is a
 /// barrier because existence is a query** — and no claim is held anywhere to
-/// make it one, which is what keeps `boundary_deps`' rule ("the derivation,
-/// never the §7.2 fold") intact: this is disk answering, not optimism.
+/// make it one, which keeps the rule ("the derivation, never the §7.2 fold")
+/// intact: this is disk answering, not optimism.
 ///
 /// The same rule runs backwards for free: a workspace the §3.6 unmaking has
 /// deleted leaves the resolution at once rather than at the next sweep.
 ///
-/// It stands **at the intake and only there**. The frame does no IO (§7.2) and
-/// keeps its cached copy plus the §3.4 raise claim; every intake is already
-/// off-frame, so the authority is cheap enough to ask per gesture. The *derived*
+/// It stands **at every intake**, which since bl-7942 is every caller there is.
+/// bl-6c9e left exactly one on the cached copy — `AppModel::boundary_deps`,
+/// whose one production caller was inside the render pass, where a frame does
+/// no IO (§7.2) and holds the §3.4 raise claim instead. The window is gone and
+/// so is that caller (bl-ab32): what still builds a `Deps` off a model is the
+/// acceptance world standing in for the transport, and it stands where the
+/// intake stands, so it asks here too. Every intake is off-frame, so the
+/// authority is cheap enough to ask per gesture. The *derived*
 /// per-workspace facts — trees, bills, the §3.5 join — stay as published,
 /// because those are the walks that are not cheap, and every read of them is
 /// aimed by the path this resolution produced. A newborn wall therefore answers

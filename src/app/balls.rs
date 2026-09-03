@@ -138,14 +138,30 @@ impl AppModel {
     }
 
     /// The boundary [`Deps`](crate::boundary::dispatch::Deps) this instance
-    /// answers with (§8.5): its roots, its composed world, its published
+    /// answers with (§8.5): its roots, its composed world, its addressable
     /// snapshot, its verb binaries.
     ///
-    /// **No gesture executes through it any more** (REMOTE §9.8, bl-1747): the
-    /// window posts every act over the wire and the engine builds the `Deps`
-    /// the act runs in. What is left here is the §8.5 line's *query* arm, which
-    /// is answered in place, and the acceptance world's stand-in for the
-    /// transport — both reads.
+    /// **Nothing in production calls it** (bl-ab32). The window posted its acts
+    /// over the wire from bl-1747, leaving only the §8.5 line's *query* arm
+    /// here; bl-7942 then deleted the window and that arm with it. What is left
+    /// is the acceptance world's stand-in for the transport — a story asking
+    /// the engine's own environment for a `Deps` because no seat lives in this
+    /// process to post through.
+    ///
+    /// **So it asks disk for the addressable sets, exactly as the intake does**
+    /// ([`addressable`](crate::app::addressable),
+    /// [`ConsumerCtx::deps`](crate::boundary::consumer::ConsumerCtx)). It was
+    /// the one caller deliberately left on the cached derivation by bl-6c9e —
+    /// lawfully, while its caller was inside the render pass and a frame does
+    /// no IO (§7.2) — so a query naming a wall born this instant refused for
+    /// one pass. There is no render pass any more: every caller of this door
+    /// stands where the intake stands, and a stand-in that resolves names over
+    /// a *different* set than the engine is a fixture asserting against a
+    /// world production never builds. The residual dissolved with the frame;
+    /// what remains is the alignment.
+    ///
+    /// It stays the **derivation, never the §7.2 fold**: the enumeration is
+    /// disk answering, and there is no optimistic copy left to confuse it with.
     ///
     /// The world it carries is the **unlensed** one (§16.2). A §9 config
     /// gesture folds brazen's destinations out of `deps.world` and those live
@@ -163,7 +179,14 @@ impl AppModel {
             home: self.roots.home.clone(),
             yog_data_root: self.roots.yog_data.clone(),
             balls_state_root: self.balls_state_root(),
-            snapshot: std::sync::Arc::clone(&self.snap),
+            snapshot: crate::app::addressable(
+                std::sync::Arc::clone(&self.snap),
+                crate::binding::workspaces(&self.roots.yog_data, &self.roots.litany_data),
+                crate::projects::enumerate(&self.roots.balls_clones)
+                    .into_iter()
+                    .map(|p| p.path)
+                    .collect(),
+            ),
             caller: crate::boundary::dispatch::Caller::default(),
         }
     }

@@ -60,10 +60,12 @@ pub struct Deps {
 /// is exactly right for a box with no wire provisioned, the deposit inbox and
 /// every test. The general path with no input, not a case of its own.
 ///
-/// **A face that builds its own `Deps` gets that default, and it is not the
-/// engine's.** The window's click-glue and the §4.3 pilot each construct one,
-/// so a gesture fired there reaches a presence map and a mailbox no listener
-/// touches. That is right for every gesture they *can* fire — none names a
+/// **Anything that builds its own `Deps` gets that default, and it is not the
+/// engine's.** The §4.3 pilot constructs one per pass, and so does
+/// `AppModel::boundary_deps` — the acceptance world's stand-in for the
+/// transport, and since bl-ab32 that door's only caller — so a gesture fired
+/// through either reaches a presence map and a mailbox no listener touches.
+/// That is right for every gesture they *can* fire — none names a
 /// client — and it is the trap to know about before wiring
 /// [`Action::Route`](crate::boundary::Action::Route) — or
 /// [`Action::Login`](crate::boundary::Action::Login), whose run a default

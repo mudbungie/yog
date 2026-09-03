@@ -117,10 +117,14 @@ impl AppModel {
 
     /// The in-process query chokepoint (§8.5): the same
     /// [`answer`](crate::boundary::answer::answer) the deposit consumer runs,
-    /// over `deps` — one derivation, two serializations (VISION §4.8). `deps`
-    /// is the same [`boundary_deps`](Self::boundary_deps) every dispatch takes:
-    /// the §9 config family's three reads (bl-0164) ask the world through it
-    /// exactly as their writes do.
+    /// over `deps` — one derivation, two serializations (VISION §4.8).
+    ///
+    /// **No production caller reaches it** (bl-ab32): every read a seat takes
+    /// crosses the wire and is answered by the intake. What is left is the
+    /// acceptance world asking the same call the intake makes, over the same
+    /// [`boundary_deps`](Self::boundary_deps) — which asks disk for its
+    /// addressable sets exactly as the intake does, so a story cannot resolve
+    /// a name against a set the engine would not.
     pub fn answer(
         &self,
         deps: &crate::boundary::dispatch::Deps,

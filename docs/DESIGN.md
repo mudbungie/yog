@@ -4218,10 +4218,17 @@ and each is load-bearing. It costs nothing in the steady state (the two sets
 agree, so the published `Arc` is handed straight back rather than cloned). It
 runs backwards for free (a workspace the §3.6 unmaking deleted stops resolving
 at once instead of at the next sweep). And it does not touch §7.2's partition:
-the enumeration is disk answering, never the frame's optimistic fold, so
-`boundary_deps`' rule — *the derivation, never the §7.2 fold* — is intact, and
-the frame keeps both its cached copy and its §3.4 raise claim because a frame
-does no IO. The *derived* per-workspace facts (trees, bills, the §3.5 join) stay
+the enumeration is disk answering, never the frame's optimistic fold, so the
+rule — *the derivation, never the §7.2 fold* — is intact. The frame kept both
+its cached copy and its §3.4 raise claim because a frame does no IO, and that
+is why `AppModel::boundary_deps` was the one door deliberately left resolving
+over the cached derivation: its one production caller was inside the render
+pass, and a query naming a wall born that instant refused for one pass. **That
+residual dissolved with the frame** (bl-ab32): bl-7942 deleted the window, so
+that door's only remaining caller is the acceptance world standing in for the
+transport, which stands exactly where an intake stands — it asks disk here too,
+and a story therefore cannot resolve a name against a set the engine would not.
+The *derived* per-workspace facts (trees, bills, the §3.5 join) stay
 exactly as published: those are the walks that are not cheap, every read of them
 is aimed by the path this resolution produced, and a newborn wall answers with
 the zeros it honestly has.
