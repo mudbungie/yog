@@ -1,7 +1,7 @@
 +++
 title = "seat-shaped derivations still in the server with no boundary spelling: drafts, enabled, the name preview, the fork composer"
 created = 1788414434
-updated = 1788414479
+updated = 1788414650
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["boundary"]
@@ -40,3 +40,7 @@ face terms and must be amended with whichever answer lands.
 ---
 
 Two more found later in the same sweep, same shape: `src/science/compose.rs` (V3's four fan-group affordances, composed as text for a seat's composer) and `src/science/respdiff.rs` (V3.3's line LCS over two candidates' terminal responses). Neither has a caller outside its own tests. `Reply::Science` carries each row's `response` string, so a seat CAN diff them — which is the second-implementation trap this crate exists to avoid — and carries no draft text at all. DESIGN §3.9's seat paragraph cited `science::render`, a module that does not exist; the sweep replaced that citation with this ball's id.
+
+---
+
+Two more, both bl-1fd0's: `crate::start::StartGate` and `crate::start::WallCredit` (`src/start/gate.rs`) — the *sign-in first* rung's three-state fold over a wall's provider rows. Reached by nothing but `src/start/tests/gate.rs`. Its inputs DO cross (`Query::Providers` carries the §5.1 #22 credential presence per row), so unlike `respdiff` a seat can honour the ruling from what it is already told — but the fold itself, and the wording of what the three states mean, would then be the seat's second implementation. Same question as the rest: name a carrier for the answer, or move the module. DESIGN §8.1's sign-in-rung paragraphs now say so and cite this ball.
