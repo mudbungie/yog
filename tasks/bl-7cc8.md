@@ -1,7 +1,7 @@
 +++
 title = "seat-shaped derivations still in the server with no boundary spelling: drafts, enabled, the name preview, the fork composer"
 created = 1788414434
-updated = 1788414434
+updated = 1788414479
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["boundary"]
@@ -36,3 +36,7 @@ is 100%-covered code proving nothing about a running system.
 
 DESIGN §3.3, §3.4, §5.3 and §12's rows for these modules describe them in
 face terms and must be amended with whichever answer lands.
+
+---
+
+Two more found later in the same sweep, same shape: `src/science/compose.rs` (V3's four fan-group affordances, composed as text for a seat's composer) and `src/science/respdiff.rs` (V3.3's line LCS over two candidates' terminal responses). Neither has a caller outside its own tests. `Reply::Science` carries each row's `response` string, so a seat CAN diff them — which is the second-implementation trap this crate exists to avoid — and carries no draft text at all. DESIGN §3.9's seat paragraph cited `science::render`, a module that does not exist; the sweep replaced that citation with this ball's id.
