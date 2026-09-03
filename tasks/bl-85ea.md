@@ -1,7 +1,8 @@
 +++
 title = "drive preflight refuses on a world-seed file no founded world holds: template/providers.yaml is an operator override, and it gates the whole drive family"
 created = 1788235195
-updated = 1788235195
+updated = 1788407718
+claimant = "Spellbind-B"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "drive"]
