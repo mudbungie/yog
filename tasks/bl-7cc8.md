@@ -1,7 +1,8 @@
 +++
 title = "seat-shaped derivations still in the server with no boundary spelling: drafts, enabled, the name preview, the fork composer"
 created = 1788414434
-updated = 1788414650
+updated = 1788415221
+claimant = "Spellbind-M"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["boundary"]
