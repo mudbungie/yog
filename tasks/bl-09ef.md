@@ -1,7 +1,8 @@
 +++
 title = "the §6 desktop escalation derives on the engine and reaches nothing: src/alert has no caller and no boundary spelling"
 created = 1788414430
-updated = 1788414937
+updated = 1788415223
+claimant = "Spellbind-N"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["boundary"]
