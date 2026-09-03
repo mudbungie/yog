@@ -1,7 +1,7 @@
 +++
 title = "the spawn lock is not the binary's: multiplex's in-process balls/litany forks copy fixture write fds, and every write-then-exec test is an ETXTBSY victim"
 created = 1788414802
-updated = 1788414981
+updated = 1788415410
 claimant = "Spellbind-L"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -65,3 +65,53 @@ committing.
 Whichever wins, `git_env`'s module doc has to stop claiming zero — the
 measurement it quotes was taken with every fork locked, which is not the
 condition the suite actually runs in.
+
+---
+
+Premise check, then the fix.
+
+**The ball's isolation is right but not complete.** Re-measured on a 16-core
+box with the ball's own shape — one filter over the lib test binary, 16
+workers x 70 iterations each, counting `Text file busy`:
+
+    FILTER = <set> start::tests::exec cli_outbound::tests::run::spawned \
+             cli_outbound::tests::detach cli_outbound::piped::tests \
+             boundary::login::tests
+    16 workers, each: for i in $(seq 1 70); do <lib test binary> $FILTER; done
+
+- `multiplex` + victims: **8** ETXTBSY, across 6 distinct tests.
+- victims alone: **0**.
+- `multiplex::landing` + victims (16 x 40): **4**.
+- `multiplex::tests`, `multiplex::litany`, `multiplex::help` each + victims
+  (16 x 40): **0**, **0**, **0**.
+
+So within `multiplex` the party is `landing`'s fixture and nothing else: the
+`bl`/`bz`/plugin arms the ball names are reached in the lib suite only by
+probes and clap short-circuits, which fork nothing. The one unlocked fork is
+`World::found` calling `balls::substrate::found_landing` — balls' own `git`
+forks while founding a landing.
+
+- `fan::` + victims: **2** (at 16 x 40 and again at 16 x 70).
+
+That one the ball did not have, and it does not yield to shape 2: `fan`'s
+beats are unit tests of `pub(crate)` code, over a fixture that leans on other
+`#[cfg(test)]` modules, so no `tests/*.rs` can reach them. Filed as **bl-fd28**
+with the measurement and three candidate shapes.
+
+**What landed.** Shape 2, for the party this ball can move.
+`src/multiplex/landing/tests/` is gone; the on-disk half is
+`tests/multiplex_landing.rs` (+ `tests/multiplex_landing/world.rs`), one
+`#[test]` calling nine beats, scrubbing its own process env of
+`git_env::INHERITED` for the `tests/multiplex_bl.rs` reason. `converge`,
+`commit` and `git` are `pub` to reach it; `sited` and `report` stay private
+with their three pure beats beside the code, in a
+`src/multiplex/landing/tests.rs` whose module doc says why nothing that founds
+a landing may come back. After the move, the ball's own filter at the same
+volume: **0**.
+
+**`git_env`'s module doc no longer claims zero.** New section: the lock is a
+`cfg(test)` bracket on yog's own `Command::spawn` and reaches no other crate's
+fork, so the "every fork through one lock, zero" measurement was a CONDITION —
+namely that the lib test binary drives no embedded substrate in-process — and
+the doc now states that condition, the placement rule it implies, both
+measurements, and bl-fd28 as the standing residual.
