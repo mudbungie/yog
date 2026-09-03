@@ -11,7 +11,7 @@
 use std::sync::Arc;
 
 use super::super::row;
-use super::{Facts, Move, PilotCtx};
+use super::{Move, PilotCtx};
 use crate::app::Snapshot;
 use crate::board::BoardRow;
 use crate::boundary::Action;
@@ -30,7 +30,7 @@ impl PilotCtx {
         snapshot: &Arc<Snapshot>,
         ui: &mut UiState,
         ts: &str,
-        fleet: &Facts,
+        workspace: &std::path::Path,
         one: &Move,
     ) -> bool {
         let deps = self.deps(snapshot);
@@ -47,13 +47,13 @@ impl PilotCtx {
                 if !release(&deps, ui, ts, row, claimant) {
                     return false;
                 }
-                row::reaped(ts.to_owned(), &fleet.workspace, &row.id, claimant, since)
+                row::reaped(ts.to_owned(), workspace, &row.id, claimant, since)
             }
             Move::Spawn { row } => {
-                let Some(conversation) = Self::birth(&deps, ui, ts, fleet, row) else {
+                let Some(conversation) = Self::birth(&deps, ui, ts, workspace, row) else {
                     return false;
                 };
-                row::spawned(ts.to_owned(), &fleet.workspace, &row.id, &conversation)
+                row::spawned(ts.to_owned(), workspace, &row.id, &conversation)
             }
         };
         let _ = opslog::append(&deps.state_root, &entry);
@@ -79,7 +79,7 @@ impl PilotCtx {
         deps: &Deps,
         ui: &mut UiState,
         ts: &str,
-        fleet: &Facts,
+        workspace: &std::path::Path,
         row: &BoardRow,
     ) -> Option<String> {
         // The row names its project (bl-b4b5); the live cache is keyed by the
@@ -105,17 +105,17 @@ impl PilotCtx {
                 tags: ball.tags.clone(),
             },
         };
-        let prepared = dispatch::prepare(deps, ts, &fleet.workspace, &project, &payload).ok()?;
+        let prepared = dispatch::prepare(deps, ts, workspace, &project, &payload).ok()?;
         // The composed goal verbatim (§3.3, bl-6920): there is no operator at
         // the composer to edit it, and the loop must not become a second author.
         let goal = prepared.goal.clone();
         // No preview, so no seed (bl-1747): the mint draws off the stamp.
-        let fired = dispatch::prompt(deps, ui, ts, &fleet.workspace, &prepared, &goal, None);
+        let fired = dispatch::prompt(deps, ui, ts, workspace, &prepared, &goal, None);
         if fired.is_err() {
             // The claim above landed and the fire did not: give it back. The
             // claimant is the workspace's own leaf, which is what the start
             // flow stamped `--as` a moment ago.
-            release(deps, ui, ts, row, &crate::naming::leaf(&fleet.workspace));
+            release(deps, ui, ts, row, &crate::naming::leaf(workspace));
         }
         fired.ok()
     }

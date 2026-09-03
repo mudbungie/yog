@@ -231,11 +231,13 @@ fn an_acknowledgement_aimed_at_nothing_refuses_by_name() {
     let (_dir, mut ui) = writable();
     assert_eq!(
         mark_seen(&snap, &mut ui, &ws_a(), "ghost"),
-        Err("no conversation \"ghost\" in /names/alba".to_owned())
+        // The §3.1 name, not the path (REMOTE §8.1, bl-ef16): a refusal is a
+        // reply body and crosses to whatever seat asked.
+        Err("no conversation \"ghost\" in \"alba\"".to_owned())
     );
     assert_eq!(
         mark_seen(&snap, &mut ui, Path::new("/nowhere"), "c-1"),
-        Err("no conversation \"c-1\" in /nowhere".to_owned())
+        Err("no conversation \"c-1\" in \"nowhere\"".to_owned())
     );
 }
 

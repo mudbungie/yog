@@ -3,7 +3,6 @@
 //! carry derived sub-objects of their own (gates, drones, two §3.5 figures) and
 //! whose reply carries a second list beside the rows.
 
-use std::path::PathBuf;
 use std::time::Duration;
 
 use super::spend;
@@ -67,7 +66,7 @@ pub(super) fn board() -> Board {
             },
         ],
         fleet: vec![crate::fleet::Facts {
-            workspace: PathBuf::from("/ws"),
+            workspace: "ws".into(),
             project: "p".into(),
             cap: 4,
             count: 1,

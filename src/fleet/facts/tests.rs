@@ -17,12 +17,16 @@ const NOW: i64 = 1_000_000;
 fn snap(fleet: Vec<(&str, super::super::Policy)>) -> Snapshot {
     let mut snap = Snapshot::empty(0);
     snap.fleet = fleet.into_iter().map(|(k, p)| (k.to_owned(), p)).collect();
+    // The §5.1 #1 naming set the facts spell their project out of (bl-ef16) —
+    // an armed world has the clone enumerated, which is how a board row and an
+    // armed entry name one project one way.
+    snap.projects = vec![std::path::PathBuf::from(PROJECT)];
     snap
 }
 
 fn policy(cap: usize, lease: Option<Duration>) -> super::super::Policy {
     super::super::Policy {
-        project: PathBuf::from(PROJECT),
+        project: std::path::PathBuf::from(PROJECT),
         cap,
         lease,
     }
@@ -72,7 +76,7 @@ fn the_count_is_the_boards_own_claimed_rows_for_this_workspace() {
     let one = facts.first().expect("one armed workspace");
     assert_eq!(one.count, 2);
     assert_eq!(one.cap, 3);
-    assert_eq!(one.project, PathBuf::from(PROJECT));
+    assert_eq!(one.project, "yog", "the §5.1 #1 wire name, bl-ef16");
     assert!(one.has_room(), "under the cap and ungated");
     assert_eq!(one.since_act, None, "it has never acted");
     assert_eq!(one.tick, snap.cadence.full_sweep, "the clock's own period");
@@ -126,7 +130,8 @@ fn table() -> Prices {
 #[test]
 fn the_ceiling_renders_where_it_will_bind_and_closes_the_room() {
     let mut snap = snap(vec![(WS, policy(4, None))]);
-    snap.bills.insert(PathBuf::from(WS), bill(3_000_000));
+    snap.bills
+        .insert(std::path::PathBuf::from(WS), bill(3_000_000));
     let ceiling = Ceiling::from_json(Some(&json!(2)));
     let facts = of(&snap, &table(), ceiling, &[], NOW);
     let one = facts.first().expect("armed");
@@ -145,8 +150,10 @@ fn the_ceiling_renders_where_it_will_bind_and_closes_the_room() {
 fn a_second_armed_project_cannot_multiply_the_allowance() {
     const OTHER: &str = "/names/heron";
     let mut snap = snap(vec![(WS, policy(4, None)), (OTHER, policy(4, None))]);
-    snap.bills.insert(PathBuf::from(WS), bill(2_000_000));
-    snap.bills.insert(PathBuf::from(OTHER), bill(2_000_000));
+    snap.bills
+        .insert(std::path::PathBuf::from(WS), bill(2_000_000));
+    snap.bills
+        .insert(std::path::PathBuf::from(OTHER), bill(2_000_000));
     let facts = of(
         &snap,
         &table(),

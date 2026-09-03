@@ -169,7 +169,9 @@ pub fn mark_seen(snap: &Snapshot, ui: &mut UiState, ws: &Path, agent: &str) -> R
         .get(ws)
         .and_then(|t| t.agents.iter().find(|a| a.agent_id == agent))
         .map(attention::evidence)
-        .ok_or_else(|| format!("no conversation {agent:?} in {}", ws.display()))?;
+        // The §3.1 name, never the path (REMOTE §8.1, bl-ef16) — the token the
+        // gesture named this workspace by, and the one a remote seat can read.
+        .ok_or_else(|| format!("no conversation {agent:?} in {:?}", snap.ws_name(ws)))?;
     ui.record_seen(&ws_key(ws), agent, &marks);
     Ok(())
 }

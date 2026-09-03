@@ -2189,12 +2189,65 @@ rather than carrying a relative spelling.
     and asks the engine only when content must be read, which is what the
     engine-side corpus (goal + transcript bytes, re-read at ask time) exists
     for.
-  - **Two remain, both disclosure rather than broken addressing**, and each
-    needs a ruling of the kind this bullet's first half is, not a rename:
-    `fleet::Facts`'s `workspace` and `project` (`Reply::Board`), and
-    `OpRow::cwd` (`Reply::Ops`), whose *subject* is where a command ran — the
-    one case §8 already says keeps path semantics, since answering it by name
-    answers a different question.
+  - ~~**Two remain**~~ — **none remain, and the sweep is on the record**
+    (bl-ef16). This bullet said the last two were *"disclosure rather than
+    broken addressing"*, needing a ruling and not a rename. That was half
+    right, and the wrong half was the one that mattered.
+
+    `fleet::Facts`'s `workspace` and `project` were **broken addressing**, the
+    bl-22ab shape exactly: they ride `Reply::Board`'s `fleet` list under the
+    keys `workspace` and `project` — the two words every gesture and every
+    `--project` take — with engine-absolute paths as their values, one array
+    away from a `BoardRow` spelling the same two facts as names. So the rename
+    was the ruling: the §3.1 leaf and the §5.1 #1 wire name, folded where
+    `facts::of` already had both. The engine kept needing the directory (the
+    §4.3 pilot spawns into it), and it resolves at **one** seam, as
+    `WorkDiff`'s project does: `Snapshot::armed_path` — over the
+    `cadence.yaml` arming table's own keys, not over the §3.1 enumeration,
+    because an entry arms a directory verbatim and a loop may be armed on a
+    workspace the enumeration has not reached; answering that loop "unknown
+    workspace" would stop it planning, which is a behaviour change and not an
+    addressing fix. No protocol bump, on the bl-22ab reading again: the fields
+    always *meant* the address.
+
+    `OpRow::cwd` **stays a path, and that is the ruling.** Its subject is
+    where a command ran, which is the case §8 already exempts — a name answers
+    a different question, and the trail's whole purpose is that the row is
+    what happened. `OpRow::argv` is the same fact one field over (an argv
+    rewritten into names is not the argv that ran), and so is the drift
+    finding `app::drift` writes into a row's `stderr`, whose subject is the
+    root a derivation failed over.
+
+  - **The rest of the sweep, since bl-22ab asked for one and no ball had
+    recorded it** (bl-ef16). Every remaining wire-reply field that serializes a
+    path, with the §8.1 question asked of each — *does this IDENTIFY something
+    the asker can name, or is the path itself the answer?*
+
+    **Locate — the path is the answer, all keep:** `Prepared::binding` (ruled
+    above); `Reply::Files`' `working_dir`, the §3.3 cwd mark whose entire job
+    is saying that the work went somewhere this listing does not reach and
+    where; `OpRow::cwd`/`argv`/drift `stderr`, above; the enrollment refusals
+    in `dispatch::enroll`, which name a file on the engine box because the
+    remaining act is the operator's own (`run … where the CA lives`, `remove
+    it by hand`), and enrolment is operator-grade; and `Held::reason`, the
+    control's sentence about a parked call (`moves to <dest>`), where the path
+    is the drone's own tool input under adjudication — rewriting it would put
+    a different call in front of the operator.
+
+    **Not residuals at all:** `FileEntry::path` and `WorkDiff`'s per-file
+    `path` are repo-relative and always were; `Lineage::files` and
+    `GoverningConfig::files` are tree paths inside a config commit;
+    `Payload::Path { dir }` travels on a *gesture*, where the operator typed
+    the directory; `Workspaces::stale` and `growth` render an age and a
+    conversation's §3.3 name, no path in either.
+
+    **Identify — leaks, and closed here:** `fleet::Facts`' two, above, and the
+    two **refusal strings**, which are reply bodies (`{"ok": false, "error":
+    …}`) and had never been swept because the list only ever asked about
+    fields: `control::answer_hold`'s *"nothing is held on X in \<ws path\>"* and
+    `answer::queue::mark_seen`'s *"no conversation X in \<ws path\>"*. Both now
+    say the §3.1 name — which is the token the seat addressed the gesture by,
+    so the refusal names what the asker named.
 
   The general lesson is the one bl-f5f6 already paid for once: a type migration
   is finished when the **encoders** are swept, not when the types the ball named

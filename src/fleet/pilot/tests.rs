@@ -27,7 +27,13 @@ fn a_workspace_under_its_cap_takes_the_top_ready_ball() {
         row("bl-2", Column::Ready, vec![]),
         row("bl-9", Column::Ready, vec![]),
     ];
-    let one = plan(&snap(vec![]), &facts(2, 1, None), &rows, NOW);
+    let one = plan(
+        &snap(vec![]),
+        &facts(2, 1, None),
+        Path::new(fixture::WS),
+        &rows,
+        NOW,
+    );
     assert_eq!(
         one,
         Some(Move::Spawn {
@@ -41,20 +47,32 @@ fn a_workspace_under_its_cap_takes_the_top_ready_ball() {
 fn a_full_workspace_a_gated_ball_and_a_bound_ceiling_all_spawn_nothing() {
     let ready = vec![row("bl-2", Column::Ready, vec![])];
     assert_eq!(
-        plan(&snap(vec![]), &facts(1, 1, None), &ready, NOW),
+        plan(
+            &snap(vec![]),
+            &facts(1, 1, None),
+            Path::new(fixture::WS),
+            &ready,
+            NOW
+        ),
         None,
         "at the cap"
     );
     let gated = vec![row("bl-2", Column::Gated, vec![])];
     assert_eq!(
-        plan(&snap(vec![]), &facts(3, 0, None), &gated, NOW),
+        plan(
+            &snap(vec![]),
+            &facts(3, 0, None),
+            Path::new(fixture::WS),
+            &gated,
+            NOW
+        ),
         None,
         "a gated ball can be started but not delivered, so the loop leaves it"
     );
     let mut bound = facts(3, 0, None);
     bound.ceiling = Some("spend ceiling reached".to_owned());
     assert_eq!(
-        plan(&snap(vec![]), &bound, &ready, NOW),
+        plan(&snap(vec![]), &bound, Path::new(fixture::WS), &ready, NOW),
         None,
         "the ceiling binds on the next spawn, so there is no next spawn"
     );
@@ -65,7 +83,13 @@ fn a_ready_ball_in_another_project_is_not_this_loops_work() {
     let mut elsewhere = row("bl-2", Column::Ready, vec![]);
     elsewhere.project = "litany".to_owned();
     assert_eq!(
-        plan(&snap(vec![]), &facts(3, 0, None), &[elsewhere], NOW),
+        plan(
+            &snap(vec![]),
+            &facts(3, 0, None),
+            Path::new(fixture::WS),
+            &[elsewhere],
+            NOW
+        ),
         None
     );
 }
@@ -77,6 +101,7 @@ fn a_quiet_ball_past_its_lease_is_reaped_with_the_comparison_as_its_reason() {
     let one = plan(
         &snap(vec![quiet]),
         &facts(3, 1, Some(Duration::from_mins(30))),
+        Path::new(fixture::WS),
         &rows,
         NOW,
     );
@@ -108,6 +133,7 @@ fn a_running_drone_is_never_reaped_however_old_its_claim() {
             plan(
                 &snap(vec![busy]),
                 &facts(1, 1, Some(Duration::from_mins(1))),
+                Path::new(fixture::WS),
                 &rows,
                 NOW
             ),
@@ -122,7 +148,13 @@ fn no_lease_reaps_nothing_and_a_ball_still_inside_its_lease_is_left_alone() {
     let quiet = agent("root-1", crate::git_tree::AgentState::Stopped, NOW - 60);
     let rows = vec![row("bl-1", Column::Claimed, vec!["root-1"])];
     assert_eq!(
-        plan(&snap(vec![quiet.clone()]), &facts(1, 1, None), &rows, NOW),
+        plan(
+            &snap(vec![quiet.clone()]),
+            &facts(1, 1, None),
+            Path::new(fixture::WS),
+            &rows,
+            NOW
+        ),
         None,
         "an absent lease reaps nothing rather than reaping on a default"
     );
@@ -130,6 +162,7 @@ fn no_lease_reaps_nothing_and_a_ball_still_inside_its_lease_is_left_alone() {
         plan(
             &snap(vec![quiet]),
             &facts(1, 1, Some(Duration::from_mins(30))),
+            Path::new(fixture::WS),
             &rows,
             NOW
         ),
@@ -151,6 +184,7 @@ fn a_row_that_names_no_claimant_is_not_reapable() {
         plan(
             &snap(vec![quiet]),
             &facts(3, 1, Some(Duration::from_mins(1))),
+            Path::new(fixture::WS),
             &[anonymous],
             NOW
         ),
@@ -165,6 +199,7 @@ fn a_claim_with_no_conversation_and_no_birth_row_is_not_reapable_and_reaps_go_fi
         plan(
             &snap(vec![]),
             &facts(3, 1, Some(Duration::from_secs(1))),
+            Path::new(fixture::WS),
             &droneless,
             NOW
         ),
@@ -181,6 +216,7 @@ fn a_claim_with_no_conversation_and_no_birth_row_is_not_reapable_and_reaps_go_fi
     let one = plan(
         &snap(vec![quiet]),
         &facts(9, 1, Some(Duration::from_mins(1))),
+        Path::new(fixture::WS),
         &both,
         NOW,
     );
@@ -201,6 +237,7 @@ fn a_workspace_with_no_derived_tree_reaps_nothing() {
         plan(
             &none,
             &facts(1, 1, Some(Duration::from_secs(1))),
+            Path::new(fixture::WS),
             &rows,
             NOW
         ),

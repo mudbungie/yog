@@ -71,14 +71,11 @@ pub(super) fn board_row(row: &BoardRow) -> Value {
 /// never has.
 pub(super) fn fleet_facts(facts: &crate::fleet::Facts) -> Value {
     let mut map = Map::new();
-    map.insert(
-        "workspace".to_owned(),
-        json!(facts.workspace.to_string_lossy().into_owned()),
-    );
-    map.insert(
-        "project".to_owned(),
-        json!(facts.project.to_string_lossy().into_owned()),
-    );
+    // The §3.1 workspace leaf and the §5.1 #1 project name (REMOTE §8.1,
+    // bl-ef16) — the same two words `board_row` above already spells, under the
+    // same two keys the gestures take.
+    map.insert("workspace".to_owned(), json!(facts.workspace));
+    map.insert("project".to_owned(), json!(facts.project));
     map.insert("cap".to_owned(), json!(facts.cap));
     map.insert("count".to_owned(), json!(facts.count));
     map.insert("room".to_owned(), json!(facts.has_room()));

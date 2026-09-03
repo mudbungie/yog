@@ -149,6 +149,36 @@ fn fake(dir: &Path, name: &str, body: &str) -> Cli {
     Cli::new(path)
 }
 
+/// **One name for two armed workspaces addresses neither** (bl-ef16). A
+/// `fleet::Facts` row crosses as the §3.1 name and the tick resolves it back
+/// through the arming table, so two entries whose directories share a leaf are
+/// a name the §3.1 rule cannot tell apart. The tick passes over both rather
+/// than guessing — `naming::by_leaf`'s own answer, at the one seam that spends
+/// the round trip — and the loop that would otherwise have reaped stands down.
+#[test]
+fn two_armed_entries_sharing_a_leaf_are_planned_for_neither() {
+    let root = tempdir().expect("tempdir");
+    let project = root.path().join("proj");
+    let ws = root.path().join("ws");
+    std::fs::create_dir_all(&project).expect("mkdir");
+    let bl = fake(root.path(), "bl", "#!/bin/sh\nexit 0\n");
+    let mut world = armed_world(&ws, &project, true, Some(Duration::from_mins(30)));
+    // A second entry arming a different directory under the same leaf.
+    let twin = root.path().join("other").join(crate::naming::leaf(&ws));
+    let policy = world.fleet.values().next().cloned().expect("armed");
+    world.fleet.insert(crate::nav::ws_key(&twin), policy);
+    let mut ctx = ctx(root.path(), world);
+    ctx.deps.bl = bl;
+    assert!(
+        !ctx.pass(),
+        "the reap the single-entry world fires is not fired here"
+    );
+    assert!(
+        !root.path().join("ops.jsonl").exists(),
+        "an unaddressable name leaves no row at all"
+    );
+}
+
 /// A reap that lands leaves exactly one row, and the row's reason is the
 /// comparison — the whole durable the loop keeps.
 #[test]

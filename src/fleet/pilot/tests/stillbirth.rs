@@ -44,8 +44,13 @@ fn snap_with(ops: Vec<OpRow>) -> Snapshot {
 fn a_birth_whose_driver_died_gives_the_claim_back_without_a_lease() {
     let droneless = vec![row("bl-1", Column::Claimed, vec![])];
     let snapshot = snap_with(birth_rows(NOW - 5, "bl-1", "OtterBrook", "no such role\n"));
-    let Some(Move::Reap { row, since, .. }) = plan(&snapshot, &facts(3, 1, None), &droneless, NOW)
-    else {
+    let Some(Move::Reap { row, since, .. }) = plan(
+        &snapshot,
+        &facts(3, 1, None),
+        Path::new(fixture::WS),
+        &droneless,
+        NOW,
+    ) else {
         panic!("a reap");
     };
     assert_eq!(row.id, "bl-1");
@@ -62,7 +67,13 @@ fn a_live_handoff_and_a_snapshot_that_predates_the_spawn_are_left_alone() {
     let droneless = vec![row("bl-1", Column::Claimed, vec![])];
     let quiet = snap_with(birth_rows(NOW - 5, "bl-1", "OtterBrook", ""));
     assert_eq!(
-        plan(&quiet, &facts(3, 1, None), &droneless, NOW),
+        plan(
+            &quiet,
+            &facts(3, 1, None),
+            Path::new(fixture::WS),
+            &droneless,
+            NOW
+        ),
         None,
         "a launch with nothing said against it is a birth still converging"
     );
@@ -71,7 +82,13 @@ fn a_live_handoff_and_a_snapshot_that_predates_the_spawn_are_left_alone() {
         ..snap_with(birth_rows(NOW - 5, "bl-1", "OtterBrook", "boom\n"))
     };
     assert_eq!(
-        plan(&stale, &facts(3, 1, None), &droneless, NOW),
+        plan(
+            &stale,
+            &facts(3, 1, None),
+            Path::new(fixture::WS),
+            &droneless,
+            NOW
+        ),
         None,
         "the conversation is missing from a snapshot taken before the spawn: \
          that is yog's own latency, not a fact about the world"
@@ -84,7 +101,16 @@ fn a_live_handoff_and_a_snapshot_that_predates_the_spawn_are_left_alone() {
 fn only_this_loops_own_birth_on_this_ball_is_evidence() {
     let droneless = vec![row("bl-1", Column::Claimed, vec![])];
     let elsewhere = snap_with(birth_rows(NOW - 5, "bl-7", "OtterBrook", "boom\n"));
-    assert_eq!(plan(&elsewhere, &facts(3, 1, None), &droneless, NOW), None);
+    assert_eq!(
+        plan(
+            &elsewhere,
+            &facts(3, 1, None),
+            Path::new(fixture::WS),
+            &droneless,
+            NOW
+        ),
+        None
+    );
     let anonymous = vec![BoardRow {
         claimant: None,
         ..row("bl-1", Column::Claimed, vec![])
@@ -93,6 +119,7 @@ fn only_this_loops_own_birth_on_this_ball_is_evidence() {
         plan(
             &snap_with(birth_rows(NOW - 5, "bl-1", "OtterBrook", "boom\n")),
             &facts(3, 1, None),
+            Path::new(fixture::WS),
             &anonymous,
             NOW
         ),

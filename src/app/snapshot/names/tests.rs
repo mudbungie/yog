@@ -161,3 +161,37 @@ fn an_unchanged_enumeration_is_handed_straight_back() {
     let current = addressable(Arc::clone(&published), live, published.projects.clone());
     assert!(Arc::ptr_eq(&published, &current));
 }
+
+/// The §4.3 arming table's own round trip (bl-ef16): a `fleet::Facts` row
+/// crosses as the §3.1 name and the pilot needs the directory back.
+///
+/// It reads **`cadence.yaml`'s keys, not the §3.1 enumeration** — the two sets
+/// are not the same, and the difference is the whole reason this is not
+/// `ws_path`: an entry arms a directory verbatim, so an armed workspace the
+/// enumeration has not reached still resolves here. `None` says *this name
+/// addresses no one armed loop* — unarmed, or shared by two entries, which §3.1
+/// cannot tell apart and `naming::by_leaf` already refuses.
+#[test]
+fn an_armed_name_resolves_off_the_arming_table_and_an_ambiguous_one_refuses() {
+    let policy = |project: &str| crate::fleet::Policy {
+        project: PathBuf::from(project),
+        cap: 1,
+        lease: None,
+    };
+    let mut s = snap(&[], &[]);
+    s.fleet
+        .insert("/elsewhere/otter".to_owned(), policy("/dev/p"));
+    // Armed but unenumerated — `workspaces` above is empty on purpose.
+    assert_eq!(
+        s.armed_path("otter"),
+        Some(PathBuf::from("/elsewhere/otter"))
+    );
+    assert_eq!(s.armed_path("badger"), None, "no armed entry carries it");
+
+    s.fleet.insert("/other/otter".to_owned(), policy("/dev/p"));
+    assert_eq!(
+        s.armed_path("otter"),
+        None,
+        "one name for two armed workspaces addresses neither"
+    );
+}

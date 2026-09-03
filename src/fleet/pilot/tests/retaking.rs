@@ -41,6 +41,7 @@ fn a_reaped_ball_is_not_retaken_and_the_next_ready_ball_runs() {
     let one = plan(
         &with(vec![act(crate::fleet::row::REAP, "bl-high")]),
         &facts(1, 0, None),
+        Path::new(fixture::WS),
         &board,
         NOW,
     );
@@ -62,6 +63,7 @@ fn a_reaped_ball_alone_on_the_board_stops_the_loop_rather_than_looping() {
         plan(
             &with(vec![act(crate::fleet::row::REAP, "bl-high")]),
             &facts(1, 0, None),
+            Path::new(fixture::WS),
             &board,
             NOW
         ),
@@ -81,7 +83,13 @@ fn the_newest_act_in_this_workspace_is_the_whole_memory() {
     ];
     assert!(
         matches!(
-            plan(&with(retaken), &facts(1, 0, None), &board, NOW),
+            plan(
+                &with(retaken),
+                &facts(1, 0, None),
+                Path::new(fixture::WS),
+                &board,
+                NOW
+            ),
             Some(Move::Spawn { .. })
         ),
         "the newest act is a spawn, so the loop holds it rather than having given it back"
@@ -90,7 +98,13 @@ fn the_newest_act_in_this_workspace_is_the_whole_memory() {
     elsewhere.cwd = "/names/heron".to_owned();
     assert!(
         matches!(
-            plan(&with(vec![elsewhere]), &facts(1, 0, None), &board, NOW),
+            plan(
+                &with(vec![elsewhere]),
+                &facts(1, 0, None),
+                Path::new(fixture::WS),
+                &board,
+                NOW
+            ),
             Some(Move::Spawn { .. })
         ),
         "another workspace's loop gave that ball back, not this one"

@@ -4,9 +4,10 @@
 //! the seam between *the world a tick reads* and *what it decides in it* —
 //! every table in this corpus builds the same three, so they have one home.
 
-use super::super::{BoardRow, Facts};
+use super::super::BoardRow;
 use crate::app::Snapshot;
 use crate::board::Column;
+use crate::fleet::Facts;
 use crate::git_tree::GitTree;
 use crate::projects::join::JoinState;
 use std::path::{Path, PathBuf};
@@ -18,8 +19,8 @@ pub(super) const NOW: i64 = 1_000_000;
 
 pub(super) fn facts(cap: usize, count: usize, lease: Option<Duration>) -> Facts {
     Facts {
-        workspace: PathBuf::from(WS),
-        project: PathBuf::from(PROJECT),
+        workspace: crate::naming::leaf(Path::new(WS)),
+        project: crate::naming::leaf(Path::new(PROJECT)),
         cap,
         count,
         tick: Duration::from_secs(15),
@@ -66,6 +67,17 @@ pub(super) fn snap(agents: Vec<crate::git_tree::Agent>) -> Snapshot {
     // project (bl-b4b5), so the naming set has to hold it for the two to be
     // put into one vocabulary — which is what an armed world always is.
     snap.projects = vec![PathBuf::from(PROJECT)];
+    // The facts name the workspace and the pilot needs the directory, so the
+    // arming table it resolves through has to hold the entry (bl-ef16) — which
+    // is what an armed world always is: `facts::of` folds these very keys.
+    snap.fleet.insert(
+        WS.to_owned(),
+        crate::fleet::Policy {
+            project: PathBuf::from(PROJECT),
+            cap: 1,
+            lease: None,
+        },
+    );
     snap.trees.insert(
         PathBuf::from(WS),
         GitTree {

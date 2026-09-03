@@ -115,8 +115,8 @@ fn board_rows_encode_the_column_the_gate_the_drones_and_the_figures() {
 #[test]
 fn an_armed_loops_facts_encode_beside_the_rows() {
     let facts = crate::fleet::Facts {
-        workspace: std::path::PathBuf::from("/ws"),
-        project: std::path::PathBuf::from("/proj"),
+        workspace: "ws".to_owned(),
+        project: "proj".to_owned(),
         cap: 3,
         count: 1,
         tick: std::time::Duration::from_secs(15),
@@ -129,8 +129,8 @@ fn an_armed_loops_facts_encode_beside_the_rows() {
         fleet: vec![facts.clone()],
     }));
     let one = &v["fleet"][0];
-    assert_eq!(one["workspace"], "/ws");
-    assert_eq!(one["project"], "/proj");
+    assert_eq!(one["workspace"], "ws");
+    assert_eq!(one["project"], "proj");
     assert_eq!(one["cap"], 3);
     assert_eq!(one["count"], 1);
     assert_eq!(one["tick_secs"], 15);

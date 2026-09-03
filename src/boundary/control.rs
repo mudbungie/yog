@@ -71,7 +71,14 @@ pub(super) fn answer_hold(
     ruling: Ruling,
 ) -> Result<Reply, String> {
     let held = hold::read(workspace, agent).ok_or_else(|| {
-        format!("nothing is held on {agent:?} in {} — the capability boundary is parking no invocation there", workspace.display())
+        // The §3.1 name, never the path (REMOTE §8.1, bl-ef16): a refusal is a
+        // reply body, it crosses to whatever seat asked, and it names the very
+        // workspace that seat addressed the gesture by.
+        format!(
+            "nothing is held on {agent:?} in {:?} — the capability boundary is parking no \
+             invocation there",
+            crate::naming::leaf(workspace)
+        )
     })?;
     let row = OpEntry {
         ts: ts.to_owned(),

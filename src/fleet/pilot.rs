@@ -34,7 +34,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-use super::Facts;
 use crate::board::BoardRow;
 use crate::boundary::dispatch::Deps;
 use crate::state::SnapshotCell;
@@ -89,8 +88,20 @@ impl PilotCtx {
         let mut ui = UiState::open(self.ui_path.clone());
         let board = crate::board::build(&snapshot, &ui, now);
         for fleet in &board.fleet {
-            if let Some(one) = plan(&snapshot, fleet, &board.rows, now) {
-                return self.fire(&snapshot, &mut ui, &ts, fleet, &one);
+            // The armed row names its workspace (§3.1, bl-ef16) and everything
+            // below takes the directory, so the round trip is spent **once**,
+            // here — which is what keeps `plan` a pure function of a path and
+            // leaves no resolution branch in either of them.
+            //
+            // `None` is one thing and it is not "unarmed": two armed entries
+            // whose directories share a leaf are one name for two workspaces,
+            // which §3.1 cannot address and `naming::by_leaf` already refuses.
+            // The tick passes over both rather than guessing which was meant.
+            let Some(workspace) = snapshot.armed_path(&fleet.workspace) else {
+                continue;
+            };
+            if let Some(one) = plan(&snapshot, fleet, &workspace, &board.rows, now) {
+                return self.fire(&snapshot, &mut ui, &ts, &workspace, &one);
             }
         }
         false

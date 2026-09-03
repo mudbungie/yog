@@ -126,7 +126,7 @@ fn a_real_armed_entry_survives_scoping_and_reaches_the_board() {
         "a registered seat sees the loop over its own workspace"
     );
     assert_eq!(facts[0].cap, 2);
-    assert_eq!(facts[0].workspace, ws);
+    assert_eq!(facts[0].workspace, name, "the §3.1 name, bl-ef16");
 
     let theirs = model.snap.scoped(&allowed(&["somebody-else"]));
     assert!(

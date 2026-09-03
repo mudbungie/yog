@@ -16,10 +16,16 @@ use crate::git_tree::{AgentState, GitTree};
 /// One workspace's move, or `None` when its loop has nothing to do. Pure over
 /// the published snapshot and the board built from it — which is what lets the
 /// whole decision be a table test.
-pub fn plan(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Option<Move> {
-    stillborn(snap, fleet, rows)
-        .or_else(|| reap(snap, fleet, rows, now))
-        .or_else(|| spawn(snap, fleet, rows))
+pub fn plan(
+    snap: &Snapshot,
+    fleet: &Facts,
+    workspace: &std::path::Path,
+    rows: &[BoardRow],
+    now: i64,
+) -> Option<Move> {
+    stillborn(snap, fleet, workspace, rows)
+        .or_else(|| reap(snap, fleet, workspace, rows, now))
+        .or_else(|| spawn(snap, fleet, workspace, rows))
 }
 
 /// **The stillbirth** (bl-ab13): a claim this loop holds that has no
@@ -55,8 +61,13 @@ pub fn plan(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Opti
 /// A driver that dies **silently** leaves no evidence — its sink is empty, so
 /// the fold puts nothing in the row — and is out of reach here; that claim is
 /// still the lease's to reap once one is set.
-fn stillborn(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow]) -> Option<Move> {
-    let key = crate::nav::ws_key(&fleet.workspace);
+fn stillborn(
+    snap: &Snapshot,
+    fleet: &Facts,
+    workspace: &std::path::Path,
+    rows: &[BoardRow],
+) -> Option<Move> {
+    let key = crate::nav::ws_key(workspace);
     let acts = fleet_row::of_rows(&snap.ops);
     rows.iter()
         .filter(|r| held_here(r, fleet) && r.drones.is_empty())
@@ -89,9 +100,15 @@ fn died(snap: &Snapshot, ws: &str, ts: i64) -> bool {
 /// The reap: the first claimed ball of this workspace whose conversations have
 /// all been quiet past the lease. No lease, no reap — releasing a claim is not
 /// something yog does on a default (see [`arming`]).
-fn reap(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Option<Move> {
+fn reap(
+    snap: &Snapshot,
+    fleet: &Facts,
+    workspace: &std::path::Path,
+    rows: &[BoardRow],
+    now: i64,
+) -> Option<Move> {
     let lease = i64::try_from(fleet.lease?.as_secs()).ok()?;
-    let tree = snap.trees.get(&fleet.workspace)?;
+    let tree = snap.trees.get(workspace)?;
     rows.iter().filter(|r| held_here(r, fleet)).find_map(|row| {
         // A row that names nobody cannot be released from anyone.
         let claimant = row.claimant.clone()?;
@@ -112,18 +129,24 @@ fn reap(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow], now: i64) -> Option<M
 /// the ceiling would not refuse the birth anyway. **Ready only** — a gated ball
 /// can be started but cannot be delivered, and a loop that fills its cap with
 /// undeliverable work has stopped being a fleet.
-fn spawn(snap: &Snapshot, fleet: &Facts, rows: &[BoardRow]) -> Option<Move> {
+fn spawn(
+    snap: &Snapshot,
+    fleet: &Facts,
+    workspace: &std::path::Path,
+    rows: &[BoardRow],
+) -> Option<Move> {
     if !fleet.has_room() {
         return None;
     }
-    // The armed entry names a clone directory and the row names the project
-    // (bl-b4b5), so the entry is put into the row's vocabulary rather than the
-    // row into the entry's — the one direction the naming set can answer.
-    let project = snap.project_name(&fleet.project);
+    // Both sides speak the row's vocabulary since bl-ef16 — the armed entry's
+    // directory became the §3.1 name and its project the §5.1 #1 one where the
+    // facts are folded, so nothing is converted at the comparison.
     let acts = fleet_row::of_rows(&snap.ops);
-    let key = crate::nav::ws_key(&fleet.workspace);
+    let key = crate::nav::ws_key(workspace);
     rows.iter()
-        .find(|r| r.column == Column::Ready && r.project == project && !given_back(&acts, &key, r))
+        .find(|r| {
+            r.column == Column::Ready && r.project == fleet.project && !given_back(&acts, &key, r)
+        })
         .map(|row| Move::Spawn { row: row.clone() })
 }
 
@@ -154,8 +177,7 @@ fn given_back(acts: &[fleet_row::Act], workspace: &str, row: &BoardRow) -> bool 
 
 /// Whether this row is a ball the armed workspace holds right now.
 fn held_here(row: &BoardRow, fleet: &Facts) -> bool {
-    row.column == Column::Claimed
-        && row.workspace.as_deref() == Some(crate::naming::leaf(&fleet.workspace).as_str())
+    row.column == Column::Claimed && row.workspace.as_deref() == Some(fleet.workspace.as_str())
 }
 
 /// How long every conversation on this ball has been quiet, or `None` when one

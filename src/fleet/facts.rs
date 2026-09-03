@@ -30,7 +30,6 @@
 //! verdict is folded once and every armed row shows it: one allowance, however
 //! many projects are armed, is the whole of what that ball fixed.
 
-use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::app::Snapshot;
@@ -40,9 +39,16 @@ use crate::spend::{Ceiling, Prices};
 /// One armed workspace's loop, as the board states it. A value, never a record.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Facts {
-    pub workspace: PathBuf,
-    /// Where this loop takes ready work from.
-    pub project: PathBuf,
+    /// The workspace's **§3.1 name**, never its path (REMOTE §8.1, bl-ef16).
+    /// This row crosses on `Reply::Board` under the key every gesture takes, so
+    /// a path here was the bl-22ab shape one reply over: a value a seat cannot
+    /// feed back to the act its key names, and the engine's layout disclosed
+    /// besides. The pilot resolves it at the one seam that owns the round trip
+    /// ([`Snapshot::armed_path`](crate::app::Snapshot::armed_path)).
+    pub workspace: String,
+    /// Where this loop takes ready work from — the project's **§5.1 #1 wire
+    /// name**, the word `BoardRow::project` and `--project` already take.
+    pub project: String,
     /// The most balls this workspace may hold at once.
     pub cap: usize,
     /// How many it holds now — the board's claimed rows, counted.
@@ -124,11 +130,14 @@ pub fn of(
     snap.fleet
         .iter()
         .map(|(key, policy)| {
-            let workspace = PathBuf::from(key);
+            // The arming table keys by directory and this row speaks names, so
+            // the fold is where the two meet (bl-ef16) — once per armed loop,
+            // in the vocabulary `held` below was already comparing in.
+            let workspace = crate::naming::leaf(std::path::Path::new(key));
             Facts {
                 count: held(rows, &workspace),
                 cap: policy.cap,
-                project: policy.project.clone(),
+                project: snap.project_name(&policy.project),
                 tick: snap.cadence.full_sweep,
                 lease: policy.lease,
                 since_act: super::row::last_act(&acts, key).map(|ts| now.saturating_sub(ts)),
@@ -142,13 +151,12 @@ pub fn of(
 /// The balls this workspace holds right now: the board's claimed rows bound to
 /// it. One ball is one drone by construction — the loop spawns one conversation
 /// per ball — so this is the drone count the cap governs.
-pub fn held(rows: &[BoardRow], workspace: &std::path::Path) -> usize {
-    // A board row names its workspace since bl-b4b5; the `cadence.yaml` entry
-    // this loop was armed from names a directory, and §3.1 makes the leaf the
-    // name, so the comparison is made in the vocabulary the answer speaks.
-    let name = crate::naming::leaf(workspace);
+pub fn held(rows: &[BoardRow], workspace: &str) -> usize {
+    // A board row names its workspace since bl-b4b5, and since bl-ef16 so does
+    // the row this count rides on — the comparison that used to convert here is
+    // one vocabulary on both sides.
     rows.iter()
-        .filter(|r| r.column == Column::Claimed && r.workspace.as_deref() == Some(name.as_str()))
+        .filter(|r| r.column == Column::Claimed && r.workspace.as_deref() == Some(workspace))
         .count()
 }
 

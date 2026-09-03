@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use crate::board::{Board, BoardRow, Column, Drone, Gate};
 use crate::boundary::codec::fields::{
-    i64_of, list_of, opt, opt_str_of, opt_val, path_of, pick, str_of, u64_of, usize_of,
+    i64_of, list_of, opt, opt_str_of, opt_val, pick, str_of, u64_of, usize_of,
 };
 use crate::boundary::codec::parse_join;
 use crate::fleet::Facts;
@@ -83,8 +83,8 @@ fn drone(v: &Value) -> Result<Drone, String> {
 fn fleet_facts(v: &Value) -> Result<Facts, String> {
     let o = v.as_object().ok_or("fleet facts: not an object")?;
     Ok(Facts {
-        workspace: path_of(o, "workspace")?,
-        project: path_of(o, "project")?,
+        workspace: str_of(o, "workspace")?,
+        project: str_of(o, "project")?,
         cap: usize_of(o, "cap")?,
         count: usize_of(o, "count")?,
         tick: Duration::from_secs(u64_of(o, "tick_secs")?),

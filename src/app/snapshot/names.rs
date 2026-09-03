@@ -51,6 +51,28 @@ impl Snapshot {
     pub fn project_path(&self, name: &str) -> Result<PathBuf, String> {
         naming::resolve(&self.projects, name)
     }
+
+    /// The **armed** workspace `name` addresses (§4.3, bl-ef16) — the round
+    /// trip for [`fleet::Facts`](crate::fleet::Facts), whose wire spelling is
+    /// the §3.1 name and whose pilot needs the directory.
+    ///
+    /// It resolves over the `cadence.yaml` **arming table's own keys**, not
+    /// over the §3.1 enumeration [`ws_path`](Self::ws_path) reads. The two sets
+    /// are not the same: an entry arms a directory verbatim, so a loop may be
+    /// armed on a workspace the enumeration has not reached — and answering
+    /// that loop "unknown workspace" would stop it planning at all, which is a
+    /// behaviour change and not an addressing fix. `None` for a name no armed
+    /// entry carries, and for one two of them share: an ambiguous leaf is
+    /// refused here exactly as [`naming::by_leaf`] refuses it.
+    pub fn armed_path(&self, name: &str) -> Option<PathBuf> {
+        let mut hit = self
+            .fleet
+            .keys()
+            .map(PathBuf::from)
+            .filter(|p| naming::leaf(p) == name);
+        let one = hit.next()?;
+        hit.next().is_none().then_some(one)
+    }
 }
 
 /// **The workspace set the boundary addresses over is ASKED, never remembered**
