@@ -1,7 +1,8 @@
 +++
 title = "the world's agent-tool shims assume a filesystem that executes what yog writes"
 created = 1788139089
-updated = 1788139089
+updated = 1788411969
+claimant = "Spellbind-I"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Filed from the android client (yog-android bl-d6c6), which walked the chain for
