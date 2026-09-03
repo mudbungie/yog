@@ -145,7 +145,13 @@ mod bl;
 /// landing yog founded before balls' config home was nested carries a schedule
 /// seeded from the operator's stale template, and balls re-seeds a landing only
 /// when founding one. See the module doc.
-mod landing;
+///
+/// `pub` for one reason (bl-6bf5): founding a landing to converge calls
+/// `balls::substrate::found_landing`, a fork inside balls that no `git_env`
+/// lock reaches, so the on-disk half of this module's proof runs in
+/// `tests/multiplex_landing.rs` — a process of its own — and reaches
+/// `converge`/`commit`/`git` from there.
+pub mod landing;
 
 /// The argv seat's help, read above the router (§8.5, bl-52ed) — the top-level
 /// roster, every per-command page, and the discovery probe the namespace arms

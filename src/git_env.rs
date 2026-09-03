@@ -46,6 +46,39 @@
 //! side needs no contract at all. Releasing the lock the instant the fork
 //! returns is enough (a child's inherited fds are gone by then), so a child is
 //! never waited on under it and the suite's subprocesses still run concurrently.
+//!
+//! ## The lock covers yog's forks, and the binary must contain no others
+//!
+//! **That "zero" was measured with every fork in the process going through the
+//! lock — a CONDITION, not a property of the lock** (bl-6bf5). The lock is a
+//! `cfg(test)` bracket around `Command::spawn` here; a fork performed by
+//! another crate in this same process never passes through it. yog links its
+//! substrate — `balls`, `litany`, `brazen` — and each forks on its own account
+//! (this module says so below, at [`exec`]: *"the linked balls' own `git`
+//! forks, which take no lock of yog's"*). A lib test that drives one of them
+//! **in-process** puts an unlocked forker back in the binary, and every
+//! write-then-exec fixture in it is a victim again.
+//!
+//! So the condition to keep is: **the lib test binary drives no embedded
+//! substrate in-process.** A beat that must belongs in a `tests/*.rs` process
+//! of its own — `tests/multiplex_bl.rs`, `tests/multiplex_litany.rs`,
+//! `tests/multiplex_landing.rs` — each carrying the note that says why it may
+//! not come back. That placement is also what lets those files scrub their own
+//! process env of [`INHERITED`]: no spawn boundary exists to do it for a fork
+//! they do not perform.
+//!
+//! Measured both ways, one filter over the lib test binary (`multiplex` plus
+//! the five fixture-exec families), 16 workers x 70 iterations on a 16-core
+//! box: with the landing repair's in-process `balls::substrate::found_landing`
+//! still in the lib binary, **8 ETXTBSY failures**; with it moved out, **0** —
+//! and 0 for the same victims with no substrate beat in the filter at all.
+//!
+//! **One unlocked forker remains and is not a test's to move** (bl-6bf5, filed
+//! on as bl-fd28): `fan`'s production path opens balls' attempts, which forks `git` inside
+//! balls, and `fan`'s beats are unit tests of `pub(crate)` code no `tests/*.rs`
+//! can reach. Same filter with `fan::` in place of `multiplex`, same volume:
+//! 2 ETXTBSY failures. Adding an in-process substrate drive here is therefore not "one
+//! more like fan" — it re-opens a hole that is already costing the suite.
 
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus, Output, Stdio};

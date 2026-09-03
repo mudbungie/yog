@@ -83,7 +83,7 @@ const SUBJECT: &str = "balls: converge landing schedule";
 /// outside itself to rewrite a file it does not own — the §16.2 severability
 /// promise inverted — so a landing that is not under `<yog-data-root>/world` is
 /// left alone, however tracker-less it looks.
-pub(super) fn converge(edge: &Edge, world: &Path) -> io::Result<bool> {
+pub fn converge(edge: &Edge, world: &Path) -> io::Result<bool> {
     let landing = edge.xdg.clone_dir(&edge.invocation_path).landing();
     if !landing.starts_with(world) {
         return Ok(false);
@@ -152,7 +152,7 @@ fn reseed(edge: &Edge, landing: &Path) -> io::Result<()> {
 /// shape. Gated on a dirty tree, so a re-seed that reproduced the bytes already
 /// there costs a `status` and stops — which is what makes the whole convergence
 /// idempotent independently of the [`converge`] gate above.
-fn commit(landing: &Path, actor: &str) -> io::Result<()> {
+pub fn commit(landing: &Path, actor: &str) -> io::Result<()> {
     if git(landing, &["status", "--porcelain"])?.trim().is_empty() {
         return Ok(());
     }
@@ -190,7 +190,7 @@ pub(super) fn report(outcome: io::Result<bool>) {
 /// absent `cwd`, indistinguishable from a failed read in a bare error) reads
 /// the same way as a failure to *succeed*, and both say which of the three
 /// forks it was.
-fn git(cwd: &Path, args: &[&str]) -> io::Result<String> {
+pub fn git(cwd: &Path, args: &[&str]) -> io::Result<String> {
     // The subcommand alone, never the whole argument vector: one of these forks
     // carries the rendered commit message, and a site label is for locating a
     // failure, not for reprinting its input.
