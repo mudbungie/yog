@@ -146,6 +146,21 @@ pub(crate) fn status(cmd: &mut Command) -> std::io::Result<ExitStatus> {
 /// in 21.2M reads; zero with the env delta removed, which is the leg that
 /// proves the swap is the party.
 ///
+/// **The torn read has two faces, and the quiet one buys a wrong diagnosis**
+/// (bl-2f8b). The NUL above is the loud one. The other is a peer whose spawn
+/// cannot find its *program*: the `PATH` it read out of that array was gone or
+/// garbage, `execvp` answers ENOENT, and the spawn fails
+/// `NotFound: "No such file or directory"` — which reads as a missing
+/// DIRECTORY, so the reader goes hunting a path bug. It was seen as a `git
+/// status` refusing a landing checkout that existed and had just been
+/// committed to, and it was filed against a `/var` vs `/private/var`
+/// canonicalization split that the failing log itself refutes: both halves of
+/// that path carry one spelling, and a split needs two. Both sightings landed
+/// in `multiplex::landing`, which is simply the densest git-forker in the lib
+/// binary and therefore the likeliest victim, never the author. That it showed
+/// on macOS and not on Linux is the allocator: glibc's `free` leaves the bytes
+/// readable, so the same race there usually reads intact.
+///
 /// Nothing here can fix it — the window is inside std, and the victim is any
 /// env reader in the process, including the linked balls' own `git` forks,
 /// which take no lock of yog's. So the discipline is placement, not repair:

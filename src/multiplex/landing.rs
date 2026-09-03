@@ -114,6 +114,14 @@ pub(super) fn converge(edge: &Edge, world: &Path) -> io::Result<bool> {
 /// takes an already-evaluated `Result` rather than a closure on purpose: one
 /// arm, one test, and a site label at each call instead of a per-site error
 /// type nobody would match on.
+///
+/// **The label locates the fork; it does not promise the path is the fault.**
+/// A `NotFound` off one of these forks has been the *program* rather than the
+/// cwd — a peer thread's returning `exec` freeing the environment this fork's
+/// `PATH` was read out of, so `git` itself could not be found while the
+/// checkout named here existed the whole time (bl-2f8b; the mechanism and its
+/// placement rule live at [`crate::git_env::exec`]). Rule that out before
+/// reading the path as the complaint.
 fn sited<T>(site: &str, path: &Path, result: io::Result<T>) -> io::Result<T> {
     result.map_err(|e| io::Error::new(e.kind(), format!("{site} ({}): {e}", path.display())))
 }
