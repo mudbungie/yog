@@ -1,7 +1,8 @@
 +++
 title = "the corpus ledger stamps 'since' at first regeneration, not at the bump: a shape edited before PROTOCOL is raised keeps the pre-bump number, and two shapes on main carry the wrong one"
 created = 1788416400
-updated = 1788416400
+updated = 1788416408
+claimant = "Spellbind-Q"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["boundary", "corpus"]
