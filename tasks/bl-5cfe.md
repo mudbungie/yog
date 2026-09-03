@@ -1,7 +1,8 @@
 +++
 title = "/seen is a write whose help reads as a read: it clears the badge for the selected conversation and its receipt is the queue without it"
 created = 1788235239
-updated = 1788235239
+updated = 1788407731
+claimant = "Spellbind-E"
 priority = 4
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug", "language"]
