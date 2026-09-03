@@ -14,16 +14,31 @@
 # Nothing is pushed to any registry — the ghcr package publishes only from this
 # repo's release workflow at tag time, and a push is not undoable.
 #
-# **The hourly reconciler is RETIRED, and this script disables it.** It
-# reconciled a cargo-installed binary against the crates.io index and read
-# quiescence off the unit's own cgroup; against a container unit both facts are
-# wrong in the direction that ACTS — it would see the installed binary differ
-# from the running container and restart the unit under it. The reconcile
-# question for an image is "is a newer image loaded", which nothing on the box
-# can answer without a registry to poll, and there is deliberately no registry
-# it may poll. So an upgrade is this script, run by a human, which is also the
-# only shape in which the restart below is an operator's decision rather than
-# an unattended one.
+# **A RECONCILER IS SEATED AGAIN, and this comment block used to say it never
+# would be** (bl-4e3c, operator instruction 2026-09-02). What stood here was:
+# *"the reconcile question for an image is 'is a newer image loaded', which
+# nothing on the box can answer without a registry to poll, and there is
+# deliberately no registry it may poll. So an upgrade is this script, run by a
+# human."* That was right about the binary-era reconciler this script still
+# disables below — it reconciled a cargo-installed binary against the crates.io
+# index and read quiescence off the unit's own cgroup, which for a container
+# unit answers about `docker run`, a client process — and it was right about
+# dev builds, which still travel only by the `save | load` stream below.
+#
+# It was wrong about RELEASES, and became more wrong once §10.1's registry
+# landed: `ghcr.io/mudbungie/yog` publishes one immutable version tag per crate
+# version from this repo's release workflow at tag time. That is a registry a
+# box may poll, it is public, and it only moves forward. And the second
+# objection — an unattended restart killing an in-flight turn — is answered by
+# asking the engine over the §8.5 control boundary instead of asking the
+# cgroup. `scripts/deploy/reconcile.sh` states both answers in full and is what
+# this script now seats.
+#
+# **So the two paths are split by what they carry, not by who is watching.**
+# THIS script is the bootstrap, the first seat, the dev-build path and the
+# emergency path: it builds here, carries an unreleased tag over ssh, and its
+# restart is unconditional because a human is at the keyboard. The reconciler
+# is the released path, and it defers.
 #
 # Idempotent, and the upgrade path. Re-run it to move the box to the tip;
 # re-running is also how a box seated on the old binary units adopts this one.
@@ -96,11 +111,26 @@ ssh -n "$host" "docker tag '$loaded' '$tag'"
 
 say "seating the unit on $host"
 ssh -n "$host" 'mkdir -p "$HOME/.config/systemd/user" "$HOME/.config/yog" \
-    "$HOME/.local/share/yog" "$HOME/work"'
+    "$HOME/.local/share/yog" "$HOME/.local/bin" "$HOME/work"'
 scp -q "$here/yog.service" "$host:.config/systemd/user/yog.service"
+
+# The reconciler and the proof it gates on, seated in ONE directory because
+# `reconcile.sh` resolves `verify.sh` beside itself — the same file this script
+# runs over ssh at the end, never a second copy of the five beats.
+say "seating the reconciler on $host"
+scp -q "$here/reconcile.sh" "$host:.local/bin/yog-reconcile"
+scp -q "$here/verify.sh" "$host:.local/bin/verify.sh"
+scp -q "$here/yog-reconcile.service" "$here/yog-reconcile.timer" \
+    "$host:.config/systemd/user/"
+ssh -n "$host" 'chmod +x "$HOME/.local/bin/yog-reconcile" "$HOME/.local/bin/verify.sh"'
 
 # The one generated file on the box: which image the unit runs, and the identity
 # it commits under. Everything else about the deployment is in the unit.
+#
+# **Rewriting it whole is how a human clears a refusal** (bl-4e3c). The
+# reconciler records a tag that failed verification as `YOG_REFUSED` here and
+# never re-attempts it; this write drops that line, which is right, because a
+# human seating a box by hand IS the review the refusal was waiting for.
 say "pointing the unit at $tag"
 ssh "$host" "cat > \$HOME/.config/yog/deploy.env" <<EOF
 YOG_IMAGE=$tag
@@ -112,6 +142,9 @@ EOF
 
 # The binary-era units, retired. A box seated before the cutover still has the
 # timer armed, and an armed reconciler would fight this unit on the next hour.
+# These are the OLD `yog-update.*` names and this stays true of them: what
+# bl-4e3c seated above is `yog-reconcile.*`, a different unit asking a different
+# question, and the two never coexist under one name.
 say "retiring the binary-era reconciler"
 ssh -n "$host" 'systemctl --user disable --now yog-update.timer 2>/dev/null; \
     rm -f "$HOME/.config/systemd/user/yog-update.timer" \
@@ -128,13 +161,20 @@ ssh -n "$host" 'loginctl enable-linger "$USER"' \
 # running the tag just loaded, so it clears a tripped start limit on the way in
 # — `enable --now` will not, and a unit that hit its limit refuses to start
 # until the interval expires. The restart is unconditional: a deploy is a human
-# at a keyboard, which is exactly the condition the retired reconciler's
-# deferral could not assume.
+# at a keyboard, which is the one condition under which killing an in-flight
+# turn is somebody's decision. `reconcile.sh` cannot assume it and so defers
+# instead — same `reset-failed`, different answer to "may I restart now".
 say "starting the engine on $tag"
 ssh -n "$host" 'systemctl --user daemon-reload; \
     systemctl --user reset-failed yog.service 2>/dev/null; \
     systemctl --user enable yog.service; \
     systemctl --user restart yog.service'
+
+# The timer, armed last: it must not fire against a half-seated box, and its
+# first pass is ten minutes out in any case. `enable --now` starts the TIMER,
+# not a pass.
+say "arming the reconcile timer on $host"
+ssh -n "$host" 'systemctl --user enable --now yog-reconcile.timer'
 
 # **The last act is a VERIFICATION, and it fails the deploy** (bl-0719). What
 # stood here was a status print, which is exactly what could not see a

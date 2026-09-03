@@ -1,0 +1,30 @@
+# **The retry cadence** (bl-4e3c) — and it is the whole of the reconciler's
+# retry mechanism. `reconcile.sh` never sleeps and looks again; it answers once
+# and exits, and a deferred upgrade is simply re-asked here. That is the same
+# discipline `verify.sh` states as "one bounded sleep, no polling loop", and it
+# is what keeps a busy engine from being polled by a script that outlives it.
+#
+# Fifteen minutes, because the two costs bracket it: the interval is how long a
+# box lags a release in the worst case AND how long an upgrade waits after the
+# turn that deferred it ends, while every fire spends one anonymous registry
+# read. A shorter cadence buys minutes of lag for a lot of reads; a longer one
+# makes "it deployed" a thing an operator waits an hour to see.
+#
+# `OnBootSec` is ten minutes rather than immediate: a box that just rebooted is
+# starting its engine, its container daemon and whatever else, and the reconcile
+# pass has no deadline that competes with any of that.
+#
+# `RandomizedDelaySec` because a fleet seated from one checkout would otherwise
+# ask the registry the same question at the same second forever.
+[Unit]
+Description=yog engine reconcile timer (unattended CD)
+Documentation=https://github.com/mudbungie/yog
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=15min
+RandomizedDelaySec=5min
+Unit=yog-reconcile.service
+
+[Install]
+WantedBy=timers.target

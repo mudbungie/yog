@@ -2,7 +2,15 @@
 # **Prove the deployed engine ANSWERS** (bl-0719) — `seat.sh`'s last act, and
 # the only act in the deploy whose whole product is an exit code.
 #
-#   verify.sh <ssh-host> <image-tag> <version>
+#   verify.sh <ssh-host|--local> <image-tag> <version>
+#
+# **`--local` runs the same beats ON the box** (bl-4e3c). `reconcile.sh`, the
+# unattended reconciler, has to establish exactly this fact after it restarts
+# the unit, and it runs where the unit runs — so it needs the beats without an
+# ssh hop. It gets them by calling this file, never by carrying a copy: two
+# statements of one verification drift, and the copy that drifts is the one
+# nobody re-reads. Only the carrier below is conditional; the payload is one
+# text and does not know which way it arrived.
 #
 # A status print stood at the end of the deploy, and a status print is exactly
 # what could not see the defect this file was written for: `systemctl --user
@@ -46,9 +54,19 @@ host=${1:-}
 tag=${2:-}
 version=${3:-}
 [ -n "$host" ] && [ -n "$tag" ] && [ -n "$version" ] \
-    || { echo "usage: ${0##*/} <ssh-host> <image-tag> <version>" >&2; exit 2; }
+    || { echo "usage: ${0##*/} <ssh-host|--local> <image-tag> <version>" >&2; exit 2; }
 
-ssh "$host" "sh -s -- '$tag' '$version'" <<'REMOTE'
+# The carrier, and the whole of what `--local` changes. `sh -s --` either way,
+# so the payload's argv is spelled once.
+beats() {
+    if [ "$host" = --local ]; then
+        sh -s -- "$tag" "$version"
+    else
+        ssh "$host" "sh -s -- '$tag' '$version'"
+    fi
+}
+
+beats <<'REMOTE'
 set -eu
 tag=$1
 version=$2

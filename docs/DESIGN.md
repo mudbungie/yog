@@ -6747,6 +6747,91 @@ the next person reads it:
   able to present an identity would be the in-channel bootstrap that must never
   exist; `make image-scan` is what turns that promise into a check.
 
+#### Unattended CD: the box reconciles itself against released tags (bl-4e3c)
+
+**Operator instruction 2026-09-02: engine boxes rebuild and redeploy with
+nobody at the keyboard.** That reverses a ruling this section's deployment
+scripts carried in full — `scripts/deploy/seat.sh` said *"an upgrade is this
+script, run by a human"* — and the reversal is recorded here, in that file's
+own comment block and in the README, rather than being taken silently.
+
+The old ruling rested on two objections. Both had answers by the time the
+instruction came, and both answers are properties of things this section
+already ruled:
+
+- *"Nothing on the box can answer 'is a newer image loaded' without a registry
+  to poll, and there is deliberately no registry it may poll."* True of dev
+  builds and still true: they travel by `save | load` over ssh and touch no
+  third place. It stopped being true of **releases** the moment the registry
+  above was ruled — one public package, one immutable version tag per crate
+  version, published from one workflow at tag time, moving only forward. That
+  is the one thing a box may poll, and it is the only thing it does poll.
+- *"An unattended restart kills an in-flight turn."* The retired hourly
+  reconciler read quiescence off the unit's own **cgroup**, which under a
+  container unit answers about `docker run` — a client process — so it was the
+  wrong question wearing the right word. The right one is asked over the §8.5
+  control boundary, of the engine itself.
+
+**The idle read is `Query::Workspaces`, and no gesture was added.**
+`WsRow::running` is *"whether anything in it is Live/InFlight right now"* — the
+boundary's one **aggregate** liveness bit — so the union over its rows is
+exactly "no turn in flight anywhere in this world". Every other liveness on the
+roster (`Query::Agent`, `Query::Conversations`) is addressed at a named
+workspace and agent, so answering from those would mean an enumeration, N+1
+deposits, and a window between them in which a turn can begin. A machine-class
+read would have been lawful to add (PARITY §2 classes it, and REMOTE §3 makes a
+new `Query` additive rather than a `PROTOCOL` bump); it was not needed, and a
+verb that restates a field is the near-duplicate question bl-296f refused. The
+reply's own `stale` note defers too: the engine saying its derivation is behind
+the world is the engine saying its `running` bits may be a photograph.
+
+The transport is the **gestures inbox**, not the wire — the §8.5 boundary's
+other serialization, carrying byte for byte the frame the wire carries, needing
+no certificate on a box that deliberately holds none.
+
+**Three properties keep an unattended upgrade from being worse than a manual
+one**, and each is a refusal:
+
+- **A deferral is a correct steady state, so it is unbounded, and a turn is
+  never killed to make room.** The timer is the retry cadence; the script never
+  sleeps and looks again (`verify.sh`'s "one bounded sleep, no polling loop",
+  one file over).
+- **What IS bounded is failure: a tag that fails verification here is attempted
+  exactly once, ever.** The bound is an invariant rather than a counter — a
+  rollback writes `YOG_REFUSED` into `deploy.env` beside the `YOG_IMAGE` it
+  restored, and a human re-seating the box clears it by rewriting that file,
+  which is the review the refusal was waiting for. Without it a bad release
+  restarts the engine every fifteen minutes forever, which is the failure mode
+  an unattended upgrade has and a manual one does not.
+- **The same `verify.sh` gates both paths** — `--local`, because the reconciler
+  runs on the box. Five beats ending at a real TLS handshake with the §9.5
+  listener; on a failure the unit goes back to the tag it was serving and the
+  box is re-proved on that. One file, because two statements of one
+  verification drift and the copy that drifts is the one nobody re-reads.
+
+**Yank-or-supersede on the registry stays the fleet-wide lever.** A version
+publishes once, so the remedy for a bad release is the next version — every box
+picks it up on its own next pass, and nothing has to be reached into.
+
+**The publishing half of this section is ruled and NOT YET BUILT, and that is
+the reconciler's standing state** (bl-6b96). The registry above says images
+publish "from that repo's own release workflow, at tag time"; no job in
+`.github/workflows/` performs that push today, so the package this section
+names is empty and every reconcile pass finds nothing. **The reconciler is
+therefore written against the convention rather than against the artifact**,
+and "the registry has no such tag yet" is a clean no-op that says so and exits
+0 — not a failure. A timer that went red every fifteen minutes on the one box
+state it was written to sit in quietly is a timer an operator switches off, and
+it would have been red on every box until bl-6b96 lands.
+
+That makes an empty package and a *locked* one two answers rather than one, so
+the reconciler reads the HTTP status instead of collapsing every failure into
+`curl -f`'s single exit code: `404` and an empty tag set are the standing
+state, while `401`/`403` is a box that has silently stopped upgrading and says
+so with a remedy. When bl-6b96 lands it should also record the operator step
+its own channel needs — GitHub creates a new package **private** whatever the
+repository's visibility, and an anonymous poller cannot read a private package.
+
 ### 10.2 The macOS artifact: `zig cc` from a Linux container, and what it cannot reach (bl-888d)
 
 §10.1 put the Linux images on a reproducible line. This is the other half of

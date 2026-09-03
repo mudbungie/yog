@@ -369,21 +369,32 @@ drive-log:
 # checkout for the operator's own box; a server takes the image, which is the
 # unit of install and carries its own toolchain pin and its own disclosure gate.
 #
-# **There is no `deploy-audit` and no reconciler.** The hourly one reconciled a
-# cargo-installed BINARY against the crates.io index and read quiescence off
-# the unit's cgroup — both wrong against a container unit, in the direction
-# that acts — so it is retired with the install shape it served (see the head
-# of `scripts/deploy/seat.sh`). An upgrade is this target, run by a human.
+# **This target seats a RECONCILER, and this comment used to say there is
+# none** (bl-4e3c). The binary-era one is still retired and still wrong for the
+# reasons that retired it — it reconciled a cargo-installed BINARY against the
+# crates.io index and read quiescence off the unit's cgroup, which under a
+# container unit answers about `docker run`, a client process. What replaced it
+# polls the §10.1 registry for RELEASED version tags only and asks the engine
+# itself, over the §8.5 control boundary, whether a turn is in flight. So this
+# target is the bootstrap, the dev-build path and the emergency path — a human
+# carrying an unreleased tag over ssh — and released versions arrive on their
+# own. `scripts/deploy/reconcile.sh` and DESIGN §10.1 carry the reasoning.
 deploy:
 	@[ -n "$(HOST)" ] || { echo "usage: make deploy HOST=<ssh-host>" >&2; exit 2; }
 	@scripts/deploy/seat.sh "$(HOST)"
 
 # What that server is running right now: the unit, and the immutable tag it was
 # pointed at — the box's own answer to "what version is this".
+#
+# Since bl-4e3c it also answers "and is it still upgrading itself": the timer's
+# next fire, and any `YOG_REFUSED` line, which is the one state that makes a box
+# stop moving forward on purpose. A refusal that only a `journalctl` reader ever
+# sees is a refusal nobody sees.
 deploy-status:
 	@[ -n "$(HOST)" ] || { echo "usage: make deploy-status HOST=<ssh-host>" >&2; exit 2; }
 	@ssh "$(HOST)" 'systemctl --user --no-pager --lines=0 status yog.service; \
-	  echo; cat "$$HOME/.config/yog/deploy.env" 2>/dev/null | grep ^YOG_IMAGE=; \
+	  echo; grep -E "^YOG_(IMAGE|REFUSED)=" "$$HOME/.config/yog/deploy.env" 2>/dev/null; \
+	  echo; systemctl --user --no-pager list-timers yog-reconcile.timer 2>/dev/null; \
 	  echo; journalctl --user -u yog.service --no-pager -n 15'
 
 uninstall:

@@ -1,0 +1,30 @@
+# The unattended reconcile pass (bl-4e3c) — one run of
+# `scripts/deploy/reconcile.sh`, which `seat.sh` installs beside `verify.sh` in
+# `%h/.local/bin/`. The timer beside this file is the cadence; this unit is one
+# question asked once.
+#
+# User-level, like `yog.service` and for its reason: the world is the
+# operator's, `systemctl --user restart yog.service` is a user-manager act, and
+# `%h` keeps this file free of any account name.
+#
+# **`Type=oneshot` and no `Restart=`.** A pass that fails has answered — the
+# tag it tried is recorded refused in `deploy.env` and will not be re-attempted
+# (reconcile.sh's bound) — so restarting it would re-ask a question that is
+# already answered. The unit is left in `failed`, which is where an operator
+# sees it: `systemctl --user list-units --failed`.
+[Unit]
+Description=yog engine reconcile (unattended CD)
+Documentation=https://github.com/mudbungie/yog
+# It dials the registry, so it needs the network — and it must not race the
+# engine it is about to ask a question of.
+After=network-online.target yog.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/yog/deploy.env
+ExecStart=%h/.local/bin/yog-reconcile
+# A pull and a verify are bounded work; a pass that has not finished in ten
+# minutes is wedged, and a wedged pass must not still be holding the box when
+# the next one fires.
+TimeoutStartSec=10min

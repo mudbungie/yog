@@ -491,16 +491,72 @@ last 20 journal lines print with it. It is a separate script so that re-asking
 
 (`make deploy-status` prints the tag the box was pointed at.)
 
-**Nothing is pushed to any registry.** The ghcr package publishes only from
-this repo's release workflow at tag time (DESIGN §10.1); a deploy is a stream
-between two boxes and writes to no third place.
+**`make deploy` pushes nothing to any registry.** The ghcr package publishes
+only from this repo's release workflow at tag time (DESIGN §10.1); a deploy is
+a stream between two boxes and writes to no third place.
 
-What gets seated is one unit and one file (`scripts/deploy/`):
+### Unattended upgrades
+
+**A seated box upgrades itself to released versions, and this reverses what
+`seat.sh` used to say** (bl-4e3c, operator instruction 2026-09-02). That file
+carried *"an upgrade is this script, run by a human"*; it now seats a timer
+that reconciles the box against `ghcr.io/mudbungie/yog` every fifteen minutes.
+The reversal is deliberate and DESIGN §10.1 records why both original
+objections stopped holding — in short, releases now have exactly one immutable
+registry to poll, and idleness is asked of the engine rather than of a cgroup
+that was answering about the wrong process.
+
+**The two paths are split by what they carry, not by who is watching.**
+`make deploy` stays the bootstrap, the first seat, the dev-build path and the
+emergency path: it carries an unreleased `yog:<version>-<commit>` by
+`save | load` and restarts unconditionally, because a human is there.
+`reconcile.sh` handles released versions only — a strict `<major>.<minor>.<patch>`
+tag, never `latest`, never a dev spelling — and defers instead.
+
+**Nothing is published to that registry yet** (bl-6b96, above), so until it is,
+every pass finds an empty package, says so and exits 0. That is the standing
+state and it is deliberately not a failure — a timer going red every fifteen
+minutes on a condition nobody has promised to fix is a timer that gets switched
+off. A package that *refuses* an anonymous read is a different answer and does
+fail, with the remedy named.
+
+What one pass does: read `YOG_IMAGE` out of `deploy.env`; ask the registry
+anonymously for its released tags (the package is public, so the box holds no
+credential — if a pull ever needs one, the pass fails naming the remedy);
+stop if nothing is newer, if the box is *ahead* of the registry, or if this
+tag already failed here; ask the engine over the §8.5 control boundary whether
+a turn is in flight; and only then pull, repoint, `reset-failed`, restart and
+prove.
+
+**The idle question is `{"op":"workspaces"}` and it added no gesture.** A
+workspace row already carries `running` — "whether anything in it is
+Live/InFlight right now" — so the union over the rows is the whole question,
+asked in one deposit. A reply that is `stale` defers too, since that is the
+engine saying its own answer may be out of date. A turn is never killed to
+make room for an upgrade; the timer simply asks again.
+
+**A release that does not serve is rolled back and never retried.**
+`verify.sh --local` runs the same five beats on the box; on a failure the unit
+goes back to the tag it was serving, is re-proved on it, and the failed tag is
+recorded as `YOG_REFUSED` in `deploy.env` so no later pass re-attempts it. The
+bound is an invariant, not a counter: without it a bad release would restart
+the engine every fifteen minutes forever. Re-running `make deploy` clears the
+refusal, which is the human review it was waiting for. Fleet-wide, the lever is
+the registry: a version publishes once, so a bad release is superseded by the
+next one and every box picks it up on its own next pass.
+
+Where a refusal shows up: `systemctl --user list-units --failed`, and
+`journalctl --user -u yog-reconcile`.
+
+What gets seated is two units, two scripts and one file (`scripts/deploy/`):
 
 | | |
 |---|---|
 | `yog.service` | `docker run` of the immutable tag, `--network host`, one state mount, `ExecStop=docker stop -t 30`, `Restart=always` — under the user manager, so the world stays the operator's |
-| `~/.config/yog/deploy.env` | generated on the box: `YOG_IMAGE=<the tag>` and the git identity the container commits under |
+| `yog-reconcile.timer` | the retry cadence and the whole of it: every 15 min, 10 min after boot, randomized so a fleet does not ask in unison |
+| `yog-reconcile.service` | one `oneshot` pass, left in `failed` when it refuses so an operator can see it |
+| `~/.local/bin/yog-reconcile` | `reconcile.sh`, beside the `verify.sh` it calls |
+| `~/.config/yog/deploy.env` | generated on the box: `YOG_IMAGE=<the tag>`, the git identity the container commits under, and `YOG_REFUSED` after a rollback |
 
 The tag lives in that file rather than in the unit because the crate version
 has one home and a version typed into a unit is that fact stored twice. The
@@ -661,6 +717,11 @@ it exactly as `--no-verify` bypasses the commit hook.
 `ghcr.io/mudbungie/yog`, pushed only from this repo's release workflow at tag
 time; a push is not undoable, and a convenience target for an irreversible act
 is how the act happens by accident.
+
+**That push does not exist yet** (bl-6b96): DESIGN §10.1 names the registry,
+the tag convention and the publishing authority, and no workflow performs it.
+So the package is empty today, and the unattended reconciler below is written
+against the convention — an empty registry is a clean no-op, not a failure.
 
 ## Publishing
 
