@@ -1890,7 +1890,33 @@ and the address file are derived from the same `WIRE_HOST`, because two
 spellings of one host is the drift §8's name resolution removed from the
 boundary. The verb refuses to overwrite: a rotation distrusts every
 certificate already issued, so it is `FORCE=1` and never a silent re-mint. (The
-boot's call cannot rotate at all — it only ever adds what is absent.) Test material is
+boot's call cannot rotate at all — it only ever adds what is absent.)
+
+**`WIRE_HOST` is a LIST, and re-issuing the server leaf is not a rotation**
+*(bl-52f4)*. A box on an overlay network has a resolvable name, an overlay
+address and a LAN address, and different clients reach it different ways — a
+device whose resolver is its emulator's cannot use the name, and an address the
+certificate omits fails *verification* rather than routing, so the error names
+trust where the fact is reachability. Two amendments, and they are one
+remedy:
+
+- The reading is comma-separated, each entry read as an address or a name
+  exactly as the single one was, `IP:127.0.0.1` still appended once and the
+  whole list de-duplicated. A single host is a list of one, so every existing
+  spelling means what it meant. The **address file** still takes one endpoint —
+  the first host stated, on `WIRE_PORT` — because what a box binds and what a
+  certificate covers are two facts, not one twice: the address is the endpoint,
+  the SAN is the set of spellings a seat may verify what it dialled against.
+- `WIRE_HOST` on a directory that **already holds material** re-issues the
+  server leaf over the CA already there, and refuses nothing: no CA founded, no
+  address written, no other leaf touched — `WIRE_LEAF`'s guard, not the mint's,
+  because it is `WIRE_LEAF`'s kind of act. The server's own leaf is the one
+  artifact whose replacement strands nobody (a client verifies the CA), where
+  `FORCE=1` re-founds the CA and distrusts every leaf already carried to
+  another box. Widening what a certificate covers used to cost that whole
+  fleet. The signal is the existing reading rather than a new one, and a bare
+  re-run — nothing stated — still earns the standing rotation refusal, because
+  it asks for nothing this act could perform. Test material is
 minted the same way at test runtime (`src/test_support/wire.rs`) — **a
 certificate fixture is never committed**, which `make leak-scan` would refuse
 anyway and which would be a private key in a public repository whether or not

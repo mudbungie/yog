@@ -12,6 +12,16 @@
 //! and `FORCE` are read from the environment, exactly as the Makefile already
 //! passed them — so the operator's spelling is unchanged.
 //!
+//! **`WIRE_HOST` is a list, and it selects between two answers** (REMOTE §8,
+//! bl-52f4). Comma-separated, each entry read as an address or a name exactly
+//! as the single one was, so every existing spelling is a list of one. And on a
+//! directory that already holds material a stated host is not the mint being
+//! asked again: it re-issues THE SERVER LEAF over the CA already there, which
+//! is [`issuing`](super::issuing)'s kind of act and takes its guard. A box that
+//! gained a way in then costs one signature instead of the `FORCE=1` that
+//! distrusts every leaf already carried away. Nothing stated is still the
+//! standing refusal — a bare re-run asks for nothing this act could perform.
+//!
 //! **`WIRE_LEAF` is the fifth reading** (REMOTE §8.2, bl-64a7), and it selects
 //! the other act rather than modifying this one: issue ONE extra client leaf
 //! under the common name it states, over the CA already here. That is the host
@@ -29,11 +39,16 @@
 //! is — the readings that do not apply to the selected act are inert here and
 //! always have been.
 
-use super::super::material::{ADDRESS, DIR, ENTRIES, ENTRY, Role};
-use super::{ANCHORS, LOOPBACK, PORT};
+use super::PORT;
 use crate::registry::Grade;
 use crate::xdg::Env;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+/// What the verb does once the environment has been folded — the acts and the
+/// sentences they print.
+mod acts;
+
+pub use acts::perform;
 
 /// This verb's own word: `yog wire-certs`.
 pub const SUBCMD: &str = "wire-certs";
@@ -53,12 +68,23 @@ pub struct Plan {
 /// would be exactly backwards in front of it — a leaf is issued *because* the
 /// directory already holds material, and it founds no CA, writes no address and
 /// touches no other leaf. Nothing here is a state a `Mint` could also be in.
+///
+/// **A mint states hosts and a port, never an address** (bl-52f4). Both facts
+/// the mint writes derive from those two: the `address` file is the first host
+/// on the port, and the server leaf's SAN is every host stated. Holding the
+/// composed address here as well would be one fact in two places, and the empty
+/// host list is load-bearing besides — it is exactly "the operator stated no
+/// host", which is what [`perform`] reads to tell a bare re-run apart from a
+/// statement about the server leaf.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Act {
-    /// Mint whatever the directory lacks, aimed at a stated address.
+    /// Mint whatever the directory lacks, aimed at the hosts stated.
     Mint {
-        /// The `host:port` the engine binds and a seat dials.
-        address: String,
+        /// Every host the box answers to, in `WIRE_HOST`'s own order. Empty is
+        /// unstated, and the mint's address is then loopback.
+        hosts: Vec<String>,
+        /// The port the engine binds and a seat dials.
+        port: String,
         /// Whether to rotate, distrusting every certificate already issued.
         force: bool,
     },
@@ -87,16 +113,31 @@ pub fn plan(
     };
     let act = stated(leaf).map_or_else(
         || Act::Mint {
-            address: format!(
-                "{}:{}",
-                stated(host).unwrap_or_else(|| LOOPBACK.to_owned()),
-                stated(port).unwrap_or_else(|| PORT.to_owned())
-            ),
+            hosts: hosts(stated(host).as_deref()),
+            port: stated(port).unwrap_or_else(|| PORT.to_owned()),
             force: stated(force).is_some(),
         },
         |cn| Act::Leaf(cn, grade),
     );
     Plan { dir, act }
+}
+
+/// `WIRE_HOST` as the **list** it is (bl-52f4): a box on an overlay network has
+/// a resolvable name, an overlay address and a LAN address, and a client whose
+/// resolver cannot reach the name has no lawful spelling left unless the
+/// certificate says so. Comma-separated, because a host may not contain one and
+/// the reading it replaces was a single host that still parses as a list of
+/// one. Empty entries and surrounding space are dropped, on the same argument
+/// [`stated`] makes for the whole value: a `make` variable that expanded to
+/// nothing must not become an empty host, and a trailing comma is that.
+fn hosts(stated: Option<&str>) -> Vec<String> {
+    stated
+        .unwrap_or_default()
+        .split(',')
+        .map(str::trim)
+        .filter(|entry| !entry.is_empty())
+        .map(str::to_owned)
+        .collect()
 }
 
 /// One environment reading, as a statement. An empty value is the same as an
@@ -141,94 +182,6 @@ pub fn stray(tail: &[String]) -> Option<String> {
          so they go BEFORE the verb: `WIRE_HOST=<host> WIRE_PORT=<port> yog {SUBCMD}`",
         READS.join(", ")
     ))
-}
-
-/// Perform `plan`, printing what it wrote. Exit `0` acted, `1` refused, and
-/// every refusal is the act's own sentence naming its own remedy.
-pub fn perform(plan: &Plan) -> i32 {
-    match &plan.act {
-        Act::Mint { address, force } => mint(&plan.dir, address, *force),
-        Act::Leaf(cn, grade) => leaf(&plan.dir, cn, *grade),
-    }
-}
-
-/// The mint, and the refusal to overwrite that is the whole of the rotation
-/// guard: material already here is a trust root other machines may hold, and
-/// replacing it silently would strand every one of them.
-fn mint(dir: &Path, address: &str, force: bool) -> i32 {
-    if dir.join(ANCHORS).is_file() && !force {
-        eprintln!(
-            "yog {SUBCMD}: {} already holds material; rotating distrusts every certificate \
-             already issued. Re-run with FORCE=1 if that is what you mean.",
-            dir.display()
-        );
-        return 1;
-    }
-    match super::mint(dir, address, force) {
-        Ok(()) => {
-            report(dir, address);
-            0
-        }
-        Err(e) => {
-            eprintln!("yog {SUBCMD}: {e}");
-            1
-        }
-    }
-}
-
-/// One extra client leaf, and the out-of-channel act that follows it. What is
-/// printed is where the two files are and what to do with them — REMOTE §1.4 is
-/// verbatim and forever, so the carrying is the operator's and yog's last word
-/// on it is a sentence.
-fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
-    if let Err(e) = super::issue(dir, cn, grade) {
-        eprintln!("yog {SUBCMD}: {e}");
-        return 1;
-    }
-    println!("yog {SUBCMD}: issued a {} leaf for {cn}", word(grade));
-    for name in [format!("{cn}.pem"), format!("{cn}.key")] {
-        println!("  {}", dir.join(name).display());
-    }
-    // Spelled from the reader's own constants — the destination's own name
-    // ([`ENTRY`]) among them, because that was the one token still written by
-    // hand here and it is the one that drifted (bl-686c): it said `<leaf>`, and
-    // a directory named for the leaf just issued is a channel no gesture routes
-    // to.
-    let client = Role::Client.leaf();
-    println!(
-        "  carry those and {} to that box by hand, into its {DIR}/{ENTRIES}/{ENTRY}/ — named for \
-         the WORKSPACE it will address, not for {cn} — as {client}.pem, {client}.key and \
-         {ANCHORS}, beside an {ADDRESS} you state; the common name inside, not the basename, is \
-         the identity",
-        dir.join(ANCHORS).display()
-    );
-    0
-}
-
-/// Say what is where. **Never say any of it**: the CA key is the whole trust
-/// root, and the one thing an operator needs told is where it is.
-fn report(dir: &Path, address: &str) {
-    println!(
-        "yog {SUBCMD}: {} holds {}",
-        dir.display(),
-        super::artifacts().join(", ")
-    );
-    println!("  the engine binds and a local seat dials {address}");
-    println!(
-        "  issue another client with: WIRE_LEAF=<common-name> yog {SUBCMD}, and a tool host's \
-         with {}=1 beside that",
-        READS[5]
-    );
-}
-
-/// The word a grade is reported under — the mint's own spelling for a foot
-/// (`crate::registry::peer::FOOT`), so what is printed and what is written into
-/// the subject cannot drift.
-fn word(grade: Grade) -> &'static str {
-    match grade {
-        Grade::Operator => "client",
-        Grade::Foot => crate::registry::peer::FOOT,
-    }
 }
 
 #[cfg(test)]

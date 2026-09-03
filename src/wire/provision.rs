@@ -56,8 +56,13 @@
 use super::material::{ADDRESS, ANCHORS, LEAVES, Role};
 use std::path::Path;
 
+/// The two acts over a CA that already exists — one more client leaf, and this
+/// box's server leaf re-issued.
+mod issuing;
 /// The `openssl` invocations and the two X.509 facts they carry.
 mod openssl;
+
+pub(crate) use issuing::{issue, reissue};
 
 /// The CA's private key. [`material`](super::material) never names it: it is
 /// what issues the *next* leaf, and nothing but issuance reads it — so its
@@ -88,13 +93,21 @@ pub(super) const CURVE: &str = "ec_paramgen_curve:P-256";
 /// address, which is [`verb`]'s job and defaults to [`PORT`].
 pub fn ensure(dir: &Path) -> Result<(), String> {
     let address = address_at(dir).unwrap_or_else(|| format!("{LOOPBACK}:0"));
-    mint(dir, &address, false)
+    mint(dir, &address, &[], false)
 }
 
 /// [`ensure`] against a stated address, optionally rotating. `force` deletes
 /// every artifact first, which is what makes a rotation a rotation: the CA that
 /// issued the old leaves is gone, so nothing holding one connects again.
-pub fn mint(dir: &Path, address: &str, force: bool) -> Result<(), String> {
+///
+/// `also` is **every further host the server leaf answers to** (bl-52f4). The
+/// address and the SAN are two facts, not one twice: the address is the single
+/// endpoint the engine binds and a local seat dials, while the SAN is the set
+/// of spellings a client may verify what it dialled against — so the address's
+/// own host leads the list and each further one is stated beside it. `&[]` is
+/// the box that is reachable exactly one way, which is every caller but the
+/// operator's own verb.
+pub fn mint(dir: &Path, address: &str, also: &[String], force: bool) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     private(dir, 0o700);
     if force {
@@ -111,10 +124,10 @@ pub fn mint(dir: &Path, address: &str, force: bool) -> Result<(), String> {
         openssl::ca(dir)?;
     }
     if ca_key.is_file() {
-        let host = host_of(address);
+        let hosts = hosts_of(address, also);
         for role in LEAVES {
             if !leaf_present(dir, role) {
-                openssl::leaf(dir, role, &host)?;
+                openssl::leaf(dir, role, &hosts)?;
             }
         }
     }
@@ -123,69 +136,6 @@ pub fn mint(dir: &Path, address: &str, force: bool) -> Result<(), String> {
             .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))?;
     }
     Ok(())
-}
-
-/// Issue **one extra client leaf** under a stated common name — the host half
-/// of provisioning an entry (REMOTE §8.2, bl-64a7). The operator mints a leaf
-/// for a visiting box; the anchors, that leaf and its key are then carried to
-/// it by hand, which is §1.4 verbatim and forever. Nothing here is reachable
-/// from the channel, and nothing here founds a trust root: this is one more
-/// artifact the one recipe can be asked for, over a CA that already exists.
-///
-/// It refuses three ways, each naming its remedy:
-///
-/// - **An identity the registry would refuse.** The same rule, spent once
-///   ([`Client::parse`](crate::registry::Client::parse)): a common name is one
-///   path component and `local` is reserved for the certificate-less in-world
-///   callers (§4.1). A name that could carry a separator is a name that could
-///   address the filesystem — here, and again on the box that files the pair.
-/// - **No CA key.** A box holding an operator's `ca.pem` with no key beside it
-///   is a *client* machine, and the mint never replaces an operator's trust
-///   root (§8). `ca.key`'s presence is exactly the question "can this box
-///   mint?", so it is exactly the question asked here.
-/// - **A pair already under that name.** Re-issuing distrusts nothing — the
-///   certificate already carried away stays valid until the CA behind it is
-///   rotated — so it would put two live certificates under one identity for no
-///   gain. A fresh common name is the remedy; rotating the trust root stays the
-///   verb's `FORCE` over the whole directory.
-///
-/// **`grade` is minted into the subject** (REMOTE §4.2, bl-7ff3). Making a foot
-/// is minting a certificate for it, out of channel, on the operator's own CA —
-/// which is exactly the friction the out-of-channel ruling wants, and the
-/// reason the grade is not a registration field a gesture over the wire could
-/// widen, nor a config file on the box being trusted.
-pub(crate) fn issue(dir: &Path, cn: &str, grade: crate::registry::Grade) -> Result<(), String> {
-    crate::registry::Client::parse(cn).map_err(|refusal| {
-        format!(
-            "{refusal} — a common name is one path component, and {:?} is reserved for the              in-world callers; state another one",
-            crate::registry::LOCAL
-        )
-    })?;
-    if !dir.join(CA_KEY).is_file() {
-        return Err(format!(
-            "{} holds no {CA_KEY}: only the box that founded this trust root can issue under it \
-             — run this where the CA lives",
-            dir.display()
-        ));
-    }
-    let pair = [format!("{cn}.pem"), format!("{cn}.key")];
-    if pair.iter().any(|name| dir.join(name).is_file()) {
-        // The operator most likely to hit this is one act past done: they
-        // enrolled a device as a seat and are now enrolling its "tool side",
-        // which the first leaf already serves (REMOTE §5 — one identity, two
-        // connections). The refusal teaches that, because without it the
-        // block reads as arbitrary (bl-7a4a).
-        return Err(format!(
-            "{} already holds {}: re-issuing distrusts nothing, so both would be live under one \
-             identity. One device is one name and one leaf, whatever its grade — an \
-             operator-grade leaf already serves the seat AND the tool host, so a device that \
-             chats and tools enrolls once; a foot leaf is for a tools-only device under its own \
-             name. State another common name, or rotate the whole directory with FORCE=1",
-            dir.display(),
-            pair.join(" or ")
-        ));
-    }
-    openssl::stated_leaf(dir, cn, grade)
 }
 
 /// Every file the mint writes — the rotation's delete list, and the summary a
@@ -207,6 +157,15 @@ fn address_at(dir: &Path) -> Option<String> {
     let text = std::fs::read_to_string(dir.join(ADDRESS)).ok()?;
     let text = text.trim().to_owned();
     (!text.is_empty()).then_some(text)
+}
+
+/// Every host the server leaf answers to: the address's own first, then each
+/// further one stated. One assembly point, so the mint and [`reissue`] cannot
+/// disagree about what a certificate covers.
+fn hosts_of(address: &str, also: &[String]) -> Vec<String> {
+    let mut hosts = vec![host_of(address)];
+    hosts.extend(also.iter().cloned());
+    hosts
 }
 
 /// The host half of a `host:port`, unbracketed — what a SAN is derived from.

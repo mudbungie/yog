@@ -58,13 +58,14 @@ pub(super) fn ca(dir: &Path) -> Result<(), String> {
 /// One of the three roles' leaves: [`Role`] derives the basename it is written
 /// under, the common name it carries — which **is** the client identity the
 /// engine reads back off the presented certificate (REMOTE §2) — and the two
-/// X.509 facts below.
-pub(super) fn leaf(dir: &Path, role: Role, host: &str) -> Result<(), String> {
+/// X.509 facts below. `hosts` is every way in the server answers to; a client
+/// leaf ignores it, because nothing dials a client.
+pub(super) fn leaf(dir: &Path, role: Role, hosts: &[String]) -> Result<(), String> {
     issue(
         dir,
         &role.leaf(),
         &format!("/CN={}", role.common_name()),
-        &san(role, host),
+        &san(role, hosts),
         eku(role),
     )
 }
@@ -181,30 +182,45 @@ fn issue(dir: &Path, name: &str, subject: &str, san: &str, eku: &str) -> Result<
     Ok(())
 }
 
-/// A leaf's subject alternative name. The **server**'s is derived from the
-/// address, because that is the name a seat verifies against what it dialled —
+/// A leaf's subject alternative name. The **server**'s names every way in the
+/// box answers to, because a seat verifies what it dialled against this list —
 /// an IP literal is an IP identity and anything else a DNS one, the same rule
-/// [`client`](super::client) reads it back by. A client leaf's names itself:
-/// nothing dials a client.
+/// [`client`](super::client) reads it back by, applied to each entry alike. A
+/// client leaf's names itself: nothing dials a client.
+///
+/// **A box is reachable more than one way, and saying so is not a rotation**
+/// (bl-52f4). A host on an overlay network has a resolvable name, an overlay
+/// address and a LAN address, and different clients reach it differently — a
+/// device whose resolver is its emulator's cannot use the name, and an address
+/// the certificate omits fails *verification* rather than routing, so the error
+/// names trust where the fact is reachability. One host per certificate made
+/// the remedy `FORCE=1`, which re-founds the CA and strands every client leaf
+/// already carried away. The list is the dissolution: state every spelling
+/// once.
 ///
 /// **Loopback is always on the server leaf** (bl-ae05). The local window is a
 /// client of `127.0.0.1` unconditionally — that is what the ruling means by the
 /// front door — so a server certificate that only named an operator's public
 /// host would refuse the one seat that is certain to be there. It costs one
 /// SAN entry and removes a whole class of "the window cannot reach its own
-/// engine".
-pub(super) fn san(role: Role, host: &str) -> String {
-    let loopback = format!("IP:{LOOPBACK}");
+/// engine". It is appended, and the whole list is de-duplicated as it is built,
+/// so a box stated as loopback says it once.
+pub(super) fn san(role: Role, hosts: &[String]) -> String {
     match role {
-        Role::Server if host.parse::<IpAddr>().is_ok() => {
-            let named = format!("IP:{host}");
-            if named == loopback {
-                named
-            } else {
-                format!("{named},{loopback}")
+        Role::Server => {
+            let mut names: Vec<String> = Vec::new();
+            for host in hosts.iter().map(String::as_str).chain([LOOPBACK]) {
+                let entry = if host.parse::<IpAddr>().is_ok() {
+                    format!("IP:{host}")
+                } else {
+                    format!("DNS:{host}")
+                };
+                if !names.contains(&entry) {
+                    names.push(entry);
+                }
             }
+            names.join(",")
         }
-        Role::Server => format!("DNS:{host},{loopback}"),
         _ => format!("DNS:{}", role.common_name()),
     }
 }

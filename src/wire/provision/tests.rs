@@ -1,10 +1,12 @@
 //! The mint: what a box with nothing gets, what a box with something keeps,
 //! and what a rotation costs.
 
+mod hosts;
 mod issue;
 
 use super::openssl::{eku, run, san, tool};
 use super::*;
+use crate::git_env;
 use crate::wire::material::{self, Material};
 use tempfile::TempDir;
 
@@ -19,6 +21,27 @@ fn provisioned(dir: &Path) -> Vec<Material> {
                 .expect("provisioned")
         })
         .collect()
+}
+
+/// What `openssl` says about a certificate, whitespace-squeezed so the one
+/// difference between OpenSSL 3 and the LibreSSL macOS ships as `openssl`
+/// — `CN = x` against `CN=x` — is not a platform gate.
+pub(super) fn described(pem: &Path, args: &[&str]) -> String {
+    let mut argv = vec!["x509", "-noout", "-in"];
+    let path = pem.to_string_lossy().into_owned();
+    argv.push(&path);
+    argv.extend_from_slice(args);
+    let out = git_env::output(git_env::command(Path::new("openssl")).args(&argv)).expect("openssl");
+    assert!(
+        out.status.success(),
+        "openssl x509 refused {}",
+        pem.display()
+    );
+    String::from_utf8_lossy(&out.stdout)
+        .split_whitespace()
+        .collect::<Vec<&str>>()
+        .join(" ")
+        .replace(" = ", "=")
 }
 
 /// The unprovisioned box (REMOTE §8 as amended, bl-ae05): boot finds nothing,
@@ -103,7 +126,7 @@ fn an_existing_address_is_kept_and_the_server_leaf_names_it() {
         .expect("provisioned");
     assert_eq!(m.address, "engine.example.com:7737");
     assert_eq!(
-        san(Role::Server, "engine.example.com"),
+        san(Role::Server, &["engine.example.com".to_owned()]),
         format!("DNS:engine.example.com,IP:{LOOPBACK}")
     );
 }
@@ -113,9 +136,9 @@ fn an_existing_address_is_kept_and_the_server_leaf_names_it() {
 #[test]
 fn a_rotation_replaces_the_trust_root() {
     let tmp = TempDir::new().expect("tmp");
-    mint(tmp.path(), "127.0.0.1:0", false).expect("mint");
+    mint(tmp.path(), "127.0.0.1:0", &[], false).expect("mint");
     let before = std::fs::read(tmp.path().join(ANCHORS)).expect("ca");
-    mint(tmp.path(), "127.0.0.1:9", true).expect("rotate");
+    mint(tmp.path(), "127.0.0.1:9", &[], true).expect("rotate");
     assert_ne!(
         std::fs::read(tmp.path().join(ANCHORS)).expect("ca"),
         before,
@@ -168,13 +191,11 @@ fn a_host_is_the_address_without_its_port_or_brackets() {
 /// entry is unconditional — except where it would be said twice.
 #[test]
 fn a_server_leaf_always_names_loopback_and_never_twice() {
-    assert_eq!(san(Role::Server, LOOPBACK), format!("IP:{LOOPBACK}"));
+    let one = |host: &str| san(Role::Server, &[host.to_owned()]);
+    assert_eq!(one(LOOPBACK), format!("IP:{LOOPBACK}"));
+    assert_eq!(one("192.0.2.7"), format!("IP:192.0.2.7,IP:{LOOPBACK}"));
     assert_eq!(
-        san(Role::Server, "192.0.2.7"),
-        format!("IP:192.0.2.7,IP:{LOOPBACK}")
-    );
-    assert_eq!(
-        san(Role::Client, "ignored"),
+        san(Role::Client, &["ignored".to_owned()]),
         format!("DNS:{}", Role::Client.common_name())
     );
     assert_eq!(eku(Role::Server), "serverAuth");
@@ -212,18 +233,19 @@ fn an_unwritable_target_refuses() {
     let tmp = TempDir::new().expect("tmp");
     let blocked = tmp.path().join("file");
     std::fs::write(&blocked, b"not a directory").expect("file");
-    assert!(mint(&blocked, "127.0.0.1:0", false).is_err(), "no dir");
+    assert!(mint(&blocked, "127.0.0.1:0", &[], false).is_err(), "no dir");
 
     // The first leaf's extension file, with a directory standing where it goes.
     let extless = tmp.path().join("extless");
     let ext = extless.join(format!("{}.ext", Role::Server.leaf()));
     std::fs::create_dir_all(&ext).expect("a directory where the file goes");
-    let refusal = mint(&extless, "127.0.0.1:0", false).expect_err("cannot write the extensions");
+    let refusal =
+        mint(&extless, "127.0.0.1:0", &[], false).expect_err("cannot write the extensions");
     assert!(refusal.contains("server.ext"), "{refusal}");
 
     let dir = tmp.path().join("wire");
     std::fs::create_dir_all(dir.join(ADDRESS)).expect("a directory where the file goes");
-    let refusal = mint(&dir, "127.0.0.1:0", false).expect_err("cannot write the address");
+    let refusal = mint(&dir, "127.0.0.1:0", &[], false).expect_err("cannot write the address");
     assert!(refusal.contains(ADDRESS), "{refusal}");
 }
 

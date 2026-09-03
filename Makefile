@@ -31,6 +31,11 @@ YOG_DATA_HOME := $(or $(XDG_DATA_HOME),$(HOME)/.local/share)/yog
 # not be a revocation. Same `yog_data_root` fold as everything above, so the
 # directory the engine reads and the directory this mints into are one path.
 WIRE_DIR      ?= $(YOG_DATA_HOME)/wire
+# A LIST since bl-52f4: comma-separated, each entry read as an address or a name,
+# so a box reachable by name, by overlay address and on the LAN says so once and
+# one certificate covers all three. The first entry is what the `address` file
+# names; every entry rides the server leaf's SAN, with 127.0.0.1 always beside
+# them.
 WIRE_HOST     ?= 127.0.0.1
 WIRE_PORT     ?= 7737
 # Set to a common name to ask the same recipe for ONE extra client leaf instead
@@ -123,6 +128,11 @@ beat-audit:
 # Nothing it writes is in the repo — `WIRE_DIR` is under the yog data root,
 # beside the world. Refuses to overwrite; `FORCE=1` rotates, which distrusts
 # every certificate already issued.
+# `WIRE_HOST=<host>[,<host>...]` on a directory that ALREADY holds material is
+# not a rotation and not a refusal (REMOTE §8, bl-52f4): it re-issues the server
+# leaf alone over the CA already there, so a box that gained a way in stops
+# costing every enrolled client a new certificate. No CA founded, no address
+# written, no other leaf touched.
 # `WIRE_LEAF=<common-name>` asks for the other act (REMOTE §8.2): one extra
 # client leaf under that name, over the CA already here — the host half of
 # provisioning an entry on a visiting box. The pair is then carried to that box
@@ -139,6 +149,7 @@ beat-audit:
 # re-run with the same refusal.
 #   make wire-certs
 #   make wire-certs WIRE_HOST=engine.example.com WIRE_PORT=7737
+#   make wire-certs WIRE_HOST=engine.example.com,198.51.100.9,192.0.2.7
 #   make wire-certs WIRE_LEAF=phone
 #   make wire-certs WIRE_LEAF=buildbox WIRE_FOOT=1
 # The binary itself takes NO argv — every setting is an environment reading, so

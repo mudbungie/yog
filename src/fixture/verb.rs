@@ -194,7 +194,7 @@ pub fn perform_lay(state: &str, root: &PathBuf, address: &str) -> Result<Laid, S
     let origin = now_unix();
     let hold = super::lay::lay(root, recipe, origin)?;
     let places = Places::under(root);
-    crate::wire::provision::mint(&places.wire, address, false)?;
+    crate::wire::provision::mint(&places.wire, address, &[], false)?;
     let leaf = Role::Client.leaf();
     Ok(Laid {
         state: state.to_owned(),

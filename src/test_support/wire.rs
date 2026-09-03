@@ -25,7 +25,7 @@ pub(crate) const EPHEMERAL: &str = "127.0.0.1:0";
 /// Mint a CA and every leaf into `dir`, plus the `address` file — the whole of
 /// what a boot mints, in the shape [`crate::wire::material::read`] expects.
 pub(crate) fn mint(dir: &Path) {
-    crate::wire::provision::mint(dir, EPHEMERAL, false).expect("the wire mint runs");
+    crate::wire::provision::mint(dir, EPHEMERAL, &[], false).expect("the wire mint runs");
 }
 
 /// The material for `role` in `dir`, aimed at `address` — the read

@@ -29,7 +29,7 @@ pub(super) const STATED: &str = "engine.invalid:7737";
 pub(super) fn provisioned(tmp: &TempDir) -> (Deps, PathBuf) {
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);
-    provision::mint(&dir, STATED, false).expect("the operator's own mint");
+    provision::mint(&dir, STATED, &[], false).expect("the operator's own mint");
     let state_root = tmp.path().join("state-root");
     (deps(&world, &state_root), dir)
 }

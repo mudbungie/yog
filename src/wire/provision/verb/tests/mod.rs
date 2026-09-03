@@ -7,7 +7,10 @@
 //! neither.
 
 mod argv;
+mod mint;
 
+use super::super::ANCHORS;
+use super::acts::word;
 use super::*;
 use crate::test_support::world_under;
 use tempfile::TempDir;
@@ -23,7 +26,8 @@ fn an_unstated_plan_is_the_worlds_own_loopback() {
     assert_eq!(
         plan.act,
         Act::Mint {
-            address: format!("{LOOPBACK}:{PORT}"),
+            hosts: Vec::new(),
+            port: PORT.to_owned(),
             force: false,
         },
         "nothing stated is the mint it has always been"
@@ -50,7 +54,8 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
     assert_eq!(
         stated.act,
         Act::Mint {
-            address: "engine.example.com:7000".to_owned(),
+            hosts: vec!["engine.example.com".to_owned()],
+            port: "7000".to_owned(),
             force: true,
         }
     );
@@ -68,7 +73,8 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
     assert_eq!(
         blank.act,
         Act::Mint {
-            address: format!("{LOOPBACK}:{PORT}"),
+            hosts: Vec::new(),
+            port: PORT.to_owned(),
             force: false,
         },
         "an empty FORCE is not a rotation, and an empty WIRE_LEAF is not a leaf"
@@ -128,54 +134,6 @@ fn a_stated_foot_grades_the_leaf_and_an_empty_one_does_not() {
     assert_eq!(blank.act, Act::Leaf("box".to_owned(), Grade::Operator));
 }
 
-/// The verb mints, then refuses to mint again, then rotates when told to —
-/// which is the rotation guard's whole contract.
-#[test]
-fn it_mints_then_refuses_then_rotates() {
-    let tmp = TempDir::new().expect("tmp");
-    let dir = tmp.path().join("wire");
-    let mut plan = Plan {
-        dir: dir.clone(),
-        act: Act::Mint {
-            address: "127.0.0.1:0".to_owned(),
-            force: false,
-        },
-    };
-    assert_eq!(perform(&plan), 0, "minted");
-    let first = std::fs::read(dir.join(ANCHORS)).expect("ca");
-    assert_eq!(perform(&plan), 1, "refused: material is already here");
-    assert_eq!(
-        std::fs::read(dir.join(ANCHORS)).expect("ca"),
-        first,
-        "and refused without touching it"
-    );
-    plan.act = Act::Mint {
-        address: "127.0.0.1:0".to_owned(),
-        force: true,
-    };
-    assert_eq!(perform(&plan), 0, "rotated");
-    assert_ne!(std::fs::read(dir.join(ANCHORS)).expect("ca"), first);
-}
-
-/// A mint that cannot run exits non-zero rather than reporting a directory it
-/// did not write.
-#[test]
-fn a_mint_that_cannot_run_exits_one() {
-    let tmp = TempDir::new().expect("tmp");
-    let blocked = tmp.path().join("file");
-    std::fs::write(&blocked, b"not a directory").expect("file");
-    assert_eq!(
-        perform(&Plan {
-            dir: blocked,
-            act: Act::Mint {
-                address: "127.0.0.1:0".to_owned(),
-                force: false,
-            },
-        }),
-        1
-    );
-}
-
 /// The leaf act end to end: the mint first, then one extra leaf over it, then
 /// the refusal to issue a second under the same name. Nothing but that pair is
 /// written — no CA is founded, no address is touched, no other leaf appears.
@@ -193,7 +151,8 @@ fn the_leaf_act_issues_once_and_writes_nothing_else() {
         perform(&Plan {
             dir: dir.clone(),
             act: Act::Mint {
-                address: "127.0.0.1:0".to_owned(),
+                hosts: Vec::new(),
+                port: "0".to_owned(),
                 force: false,
             },
         }),
@@ -201,7 +160,7 @@ fn the_leaf_act_issues_once_and_writes_nothing_else() {
         "minted"
     );
     let ca = std::fs::read(dir.join(ANCHORS)).expect("ca");
-    let address = std::fs::read(dir.join(super::super::ADDRESS)).expect("address");
+    let address = std::fs::read(dir.join(crate::wire::material::ADDRESS)).expect("address");
 
     assert_eq!(perform(&leaf), 0, "issued");
     assert_eq!(perform(&leaf), 1, "and refuses a second under one name");
@@ -221,7 +180,7 @@ fn the_leaf_act_issues_once_and_writes_nothing_else() {
     );
     assert_eq!(std::fs::read(dir.join(ANCHORS)).expect("ca"), ca);
     assert_eq!(
-        std::fs::read(dir.join(super::super::ADDRESS)).expect("address"),
+        std::fs::read(dir.join(crate::wire::material::ADDRESS)).expect("address"),
         address
     );
 }
@@ -270,7 +229,8 @@ fn the_verb_issues_a_foot_leaf_beside_an_ordinary_one() {
         perform(&Plan {
             dir: dir.clone(),
             act: Act::Mint {
-                address: "127.0.0.1:0".to_owned(),
+                hosts: Vec::new(),
+                port: "0".to_owned(),
                 force: false,
             },
         }),

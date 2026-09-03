@@ -6,6 +6,7 @@
 //! certificate fixture is never committed (REMOTE §8).
 
 use super::super::{CA_KEY, ensure, issue};
+use super::described;
 use crate::git_env;
 use crate::registry::{Grade, LOCAL};
 use crate::wire::material::{ADDRESS, ANCHORS, Role, read_dir};
@@ -14,27 +15,6 @@ use tempfile::TempDir;
 
 /// The name the host's operator states for the visiting box.
 const VISITOR: &str = "phone";
-
-/// What `openssl` says about a certificate, whitespace-squeezed so the one
-/// difference between OpenSSL 3 and the LibreSSL macOS ships as `openssl`
-/// — `CN = x` against `CN=x` — is not a platform gate.
-fn described(pem: &Path, args: &[&str]) -> String {
-    let mut argv = vec!["x509", "-noout", "-in"];
-    let path = pem.to_string_lossy().into_owned();
-    argv.push(&path);
-    argv.extend_from_slice(args);
-    let out = git_env::output(git_env::command(Path::new("openssl")).args(&argv)).expect("openssl");
-    assert!(
-        out.status.success(),
-        "openssl x509 refused {}",
-        pem.display()
-    );
-    String::from_utf8_lossy(&out.stdout)
-        .split_whitespace()
-        .collect::<Vec<&str>>()
-        .join(" ")
-        .replace(" = ", "=")
-}
 
 /// A box that founded its own trust root can issue for a visitor, and what it
 /// issues is `Role::Client`'s recipe under the operator's name: signed by the

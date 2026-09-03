@@ -53,7 +53,13 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  and a seat dials. The engine's own boot already does this for a box that has \
                  none, aimed at loopback, so this is the act for everything else: a server \
                  another machine dials by name (`WIRE_HOST=engine.example.com WIRE_PORT=7737`), \
-                 a different directory (`WIRE_DIR`), or a rotation (`FORCE=1`). It refuses to \
+                 a different directory (`WIRE_DIR`), or a rotation (`FORCE=1`). `WIRE_HOST` is a \
+                 comma-separated LIST — a box reachable by name, by overlay address and on the \
+                 LAN says so once, every entry rides the server leaf and 127.0.0.1 always does, \
+                 while the `address` file takes the first entry alone. On a directory that \
+                 already holds material a stated host re-issues THE SERVER LEAF over the CA \
+                 already there — no CA founded, no address written, no other leaf touched, so \
+                 nothing already carried away stops verifying. It refuses to \
                  overwrite otherwise, because a rotation distrusts every certificate already \
                  issued and every seat holding one stops connecting. `WIRE_LEAF=<common-name>` \
                  asks for the other act instead: issue ONE extra client leaf under that name, \
