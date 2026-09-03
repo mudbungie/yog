@@ -33,6 +33,7 @@ fn intake(state_root: &std::path::Path) -> Intake {
         cell: crate::state::new_snapshot_cell(snap),
         presence: crate::registry::presence::Presence::default(),
         mailbox: crate::registry::mailbox::Mailbox::default(),
+        logins: crate::login::runs::Runs::default(),
         clock: Arc::new(SystemClock),
     }))
 }

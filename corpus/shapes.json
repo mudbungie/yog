@@ -498,6 +498,20 @@
       ],
       "since": 1
     },
+    "reply/login": {
+      "signature": [
+        "/fallback:string",
+        "/kind:string",
+        "/lines/[]/err:bool",
+        "/lines/[]/text:string",
+        "/lines/[]:object",
+        "/lines:array",
+        "/ok:bool",
+        "/outcome:number",
+        ":object"
+      ],
+      "since": 8
+    },
     "reply/marks": {
       "signature": [
         "/branch:string",
@@ -1300,6 +1314,24 @@
         ":object"
       ],
       "since": 1
+    },
+    "request/login": {
+      "signature": [
+        "/op:string",
+        "/provider:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 8
+    },
+    "request/login-tail": {
+      "signature": [
+        "/op:string",
+        "/provider:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 8
     },
     "request/marks": {
       "signature": [

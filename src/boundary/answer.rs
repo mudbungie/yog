@@ -22,7 +22,7 @@ use crate::ui_state::UiState;
 
 use super::dispatch::Deps;
 use super::reply::Reply;
-use super::{Query, config, help};
+use super::{Query, config, help, login};
 
 /// One conversation as a seat sees it (REMOTE §9.4, bl-1eb0) — the
 /// [`Agent`](crate::git_tree::Agent)'s wire projection.
@@ -146,6 +146,11 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         Query::Follow { .. } => {
             Reply::Follow(inspector::live_tail(snap, ws, agent).unwrap_or_default())
         }
+        // The sign-in lane's read, answered **once** (REMOTE §8.3, bl-c285) —
+        // the `Follow` shape exactly: this chokepoint answers the standing as
+        // of now, and the intake that can hold a connection drives
+        // `login::Lane`, whose frames come off this same buffer.
+        Query::LoginTail { provider, .. } => login::standing(deps, ws, provider),
         Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent)),
         Query::Step { seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
         // The listing, plus **where this conversation's work actually lands**

@@ -8,13 +8,21 @@
 
 use serde_json::{Map, Value, json};
 
+/// The keyed bodies, split at §12's cap — see that module's doc.
+mod bodies;
+
 use super::board::{board_row, fleet_facts};
 use super::rows::{conv_row, join_row, lineage_row, op_row, provider_row, role_row, ws_row};
 use super::{Reply, prepared_value};
 use crate::registry::mailbox::{capture_value, invocation_value};
+use bodies::{delivered, enrolled_reply, governing, outcome_reply};
 
 /// The follow lane's reply kind (bl-73e7), named once for both directions.
 pub(super) const FOLLOW: &str = "follow";
+
+/// The sign-in standing's reply kind (bl-c285), named once for both
+/// directions — one kind, because a receipt and a frame are one value.
+pub(super) const LOGIN: &str = "login";
 
 /// Enrollment's reply kind (bl-f4e3), named once for both directions — and the
 /// word REMOTE §1.4's QR envelope contract is written against.
@@ -130,6 +138,7 @@ pub fn encode(reply: &Reply) -> Value {
         // are the same value said the same way.
         Reply::Follow(stream) => json!({ "ok": true, "kind": FOLLOW,
                                          "stream": crate::git_tree::stream_wire::stream_value(stream) }),
+        Reply::Login(view) => bodies::login_reply(view),
         Reply::Steps(view) => crate::steps_view::wire::steps(view),
         Reply::Step(detail) => crate::steps_view::wire::detail(detail),
         Reply::Files {
@@ -174,19 +183,6 @@ pub fn refusal(error: &str) -> Value {
     json!({ "ok": false, "error": error })
 }
 
-/// A captured run as its receipt (§7.3): the verb's own exit and streams,
-/// with `ok` derived from the exit rather than stored beside it.
-///
-/// A body rather than a row for the reason [`delivered`] and [`governing`] are
-/// already bodies here — an arm that builds a four-key object is a body, and
-/// the roster stops reading as one once any of them is.
-fn outcome_reply(outcome: &crate::actions::verbs::Outcome) -> Value {
-    json!({
-        "ok": outcome.ok(), "kind": "outcome", "exit": outcome.exit,
-        "stdout": outcome.stdout, "stderr": outcome.stderr,
-    })
-}
-
 /// One help page as data — the four facts every seat renders (§8.5), and the
 /// fifth no seat renders: **who owes this op a control** (`docs/PARITY.md` §2,
 /// bl-8758). The classification ships here rather than in a file of its own
@@ -208,51 +204,6 @@ fn client_row(row: &crate::registry::roster::ClientRow) -> Value {
 
 /// The envelope every reply opens with, before its own fields — the shape
 /// [`rows_map`] builds a listing on and the one a keyed answer builds itself on.
-/// The delivery's four identities (V3.2, bl-c2bd). The two options are
-/// **absent** rather than null, upstream's own meaning kept: an unmade source
-/// ref and a delivery that landed nothing are absences, not empty strings.
-fn delivered(delivery: &crate::fan::Delivery) -> Value {
-    let mut map = obj_reply("delivered");
-    map.insert("target".to_owned(), json!(delivery.target));
-    map.insert("base".to_owned(), json!(delivery.base));
-    if let Some(source) = &delivery.source {
-        map.insert("source".to_owned(), json!(source));
-    }
-    if let Some(commit) = &delivery.commit {
-        map.insert("commit".to_owned(), json!(commit));
-    }
-    Value::Object(map)
-}
-
-/// The QR envelope's payload (REMOTE §1.4 as amended, bl-f4e3). Every field is
-/// present always — there is no absent case, because a device handed five of
-/// the six facts cannot dial, cannot verify, or cannot say who it is — and the
-/// three PEMs ride **verbatim**, newlines and all: the envelope measures 1567
-/// bytes of compact JSON against a byte-mode QR's 2953, so nothing is
-/// re-encoded to buy room it does not need.
-fn enrolled_reply(enrolled: &crate::registry::enroll::Enrolled) -> Value {
-    json!({
-        "ok": true, "kind": ENROLLED, "grade": enrolled.grade.word(),
-        "name": enrolled.name, "address": enrolled.address,
-        "ca": enrolled.ca, "cert": enrolled.cert, "key": enrolled.key,
-    })
-}
-
-/// The which-config-governs answer (bl-13f9; follow-the-tip, bl-e654). The oid
-/// is the **resolved** commit's and rides both ways — short is what a pane
-/// labels with, full is what a `git show` outside yog takes — exactly as a
-/// lineage row's tip does. `follows` and `diverged_lineages` are the two faces
-/// of one enum: a name and `0`, or `null` and the count that held it.
-fn governing(gov: &crate::config_edit::branch::GoverningConfig) -> Value {
-    json!({
-        "ok": true, "kind": "governing",
-        "oid": gov.oid, "short_oid": gov.short_oid,
-        "follows": gov.followed_lineage(),
-        "diverged_lineages": gov.diverged_lineages(),
-        "files": gov.files,
-    })
-}
-
 fn obj_reply(kind: &str) -> Map<String, Value> {
     let mut map = Map::new();
     map.insert("ok".to_owned(), json!(true));

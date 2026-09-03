@@ -134,6 +134,12 @@ pub enum Query {
     /// with one frame. The pull read stays the fallback, so a seat that loses
     /// the lane keeps the tail at ask cadence rather than losing it.
     Follow { workspace: String, agent: String },
+    /// **One sign-in's output, followed** (REMOTE §8.3, bl-c285) — the third
+    /// follow-class read: what `bz --login` has printed for this workspace's
+    /// `provider` row, buffered from the start and then live to the settled
+    /// exit. [`login`](super::login) carries the frame rule and the reason a
+    /// pair with no run answers emptiness rather than refusing.
+    LoginTail { workspace: String, provider: String },
     /// **Every step one conversation has taken** (§11 Altitude-2 Steps): the
     /// cheap per-step summary list — framing, attempts, tokens, timestamps, the
     /// §8.3 login affordance and the §7.3 wound. The agent's liveness is read

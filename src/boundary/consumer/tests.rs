@@ -9,6 +9,9 @@ mod birth;
 /// The REMOTE §4.2 half (bl-7ff3): the certificate grade raising at this same
 /// chokepoint — what a foot may say, and the sentence everything else earns.
 mod grade;
+/// The follow-class door's second lane (REMOTE §8.3, bl-c285) — its own file
+/// on the seam production is cut along ([`super::lanes`]).
+mod lanes;
 /// The scoped intake (REMOTE §4, bl-8bbc): what a connection enumerates, what
 /// an unregistered name earns, and the create that seats its own client. Its
 /// own file at §12's cap — a real seam, because everything above is the
@@ -77,6 +80,7 @@ fn over_world(
         cell: crate::state::new_snapshot_cell(std::sync::Arc::new(snap)),
         presence: crate::registry::presence::Presence::default(),
         mailbox: crate::registry::mailbox::Mailbox::default(),
+        logins: crate::login::runs::Runs::default(),
         clock: Arc::new(SystemClock),
     }
 }

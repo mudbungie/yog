@@ -16,7 +16,7 @@ use crate::model_pick::Pick;
 use crate::ui_state::UiState;
 
 use super::reply::Reply;
-use super::{Action, config, control, fan, fleet, interrupt, monitor, routing};
+use super::{Action, config, control, fan, fleet, interrupt, login, monitor, routing};
 
 /// The §3.6 unmaking's two executors — the workspace and the one conversation
 /// — split off at §12's budget when the §4.11 capability arm landed (bl-765d).
@@ -174,6 +174,11 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // key. Operator grade only, and no gate here says so — an act is
         // outside the foot set, so `Grade::admits` refuses it one layer up.
         Action::Enroll(request) => enroll::enroll(deps, ts, request),
+        // The §8.3 sign-in (REMOTE §8.3, bl-c285): a `bz --login` started on
+        // THIS box inside the named workspace's wall, so the credential lands
+        // where that workspace's agents read it. Like the routing leg below it
+        // never waits — the receipt is the run's standing, re-read.
+        Action::Login { provider, .. } => login::start(deps, ts, ws, provider),
         // REMOTE §5's routing leg (bl-024b): queue a call for the machine that
         // advertised it, and take a tool host's answer to one. Neither waits —
         // the intake here is one thread for the whole world.

@@ -18,6 +18,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
+/// The follow-class door — the arm of this intake that answers a *sequence*
+/// (REMOTE §3), split off at §12's budget on the seam the answer shape itself
+/// draws: everything else here answers one frame.
+mod lanes;
+
 use super::consume::{consume, run_gesture, run_value};
 use super::deposit;
 use super::dispatch::Deps;
@@ -52,6 +57,10 @@ pub struct ConsumerCtx {
     /// What is queued for each client and what came back (REMOTE §5, bl-024b)
     /// — the routing leg's own RAM, shared by handle beside the presence map.
     pub mailbox: crate::registry::mailbox::Mailbox,
+    /// The `bz --login` runs in flight (REMOTE §8.3, bl-c285) — the engine's
+    /// own, beside the two above and for their reason: the act starts one
+    /// through this context and a lane held on another connection reads it.
+    pub logins: crate::login::runs::Runs,
 }
 
 impl ConsumerCtx {
@@ -135,49 +144,6 @@ impl ConsumerCtx {
         answered
     }
 
-    /// **The same gesture, answered as a stream** (REMOTE §3, bl-73e7) — `Some`
-    /// only for the one query whose answer is a *sequence*, and only once its
-    /// address has resolved under this client's scope.
-    ///
-    /// `None` is the whole of "this is not a follow-class read, or it is one
-    /// nobody can answer", and it is deliberately the same `None` for both: an
-    /// unresolvable workspace and an unknown conversation fall back to
-    /// [`answer_as`](Self::answer_as), which refuses in the resolver's own
-    /// words and in one frame. The intake needs no second refusal path, and a
-    /// seat cannot tell a refused follow from any other refused read.
-    ///
-    /// The scope is spent HERE, at connect, exactly as it is for a one-frame
-    /// answer — the identity is per request (REMOTE §4) and a held read is one
-    /// request. What the stream then re-reads per look is the state of a
-    /// conversation this caller was already authorized for.
-    ///
-    /// **A foot never reaches the lane** (REMOTE §4.2, bl-7ff3): a follow-class
-    /// read is not one of the three gestures its grade admits, so this answers
-    /// `None` for it and [`answer_as`](Self::answer_as) words the refusal —
-    /// which is the same fall-through an unresolvable address already takes.
-    pub fn follow(
-        &self,
-        peer: &crate::registry::Peer,
-        request: &Value,
-    ) -> Option<Box<dyn Iterator<Item = Value>>> {
-        let Ok(gesture) = super::codec::decode(request) else {
-            return None;
-        };
-        if !peer.grade.admits(&gesture) {
-            return None;
-        }
-        let super::Gesture::Ask(super::Query::Follow { workspace, agent }) = gesture else {
-            return None;
-        };
-        let client = &peer.client;
-        let scope = crate::registry::registered(&self.state_root, client);
-        let (deps, _, _) = self.deps(client, Some(&scope));
-        let ws = deps.snapshot.ws_path(&workspace).ok()?;
-        let agent = super::address::resolve_agent(&deps.snapshot, &ws, Some(agent)).ok()?;
-        let frames = super::follow::Follow::new(self.cell.clone(), ws, agent);
-        Some(Box::new(frames.map(|reply| super::reply::encode(&reply))))
-    }
-
     /// The per-gesture [`Deps`] every intake builds — freshly against whatever
     /// the worker has published, with this moment's stamp beside it, and with
     /// the **workspace set re-asked of disk** rather than taken off that
@@ -233,6 +199,7 @@ impl ConsumerCtx {
                 client: client.clone(),
                 presence: self.presence.clone(),
                 mailbox: self.mailbox.clone(),
+                logins: self.logins.clone(),
             },
         };
         (deps, ts, now_unix)

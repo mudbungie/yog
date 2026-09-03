@@ -202,6 +202,12 @@ pub enum Reply {
     /// REMOTE §5.5 states that rule; this does not restate it. Empty is the
     /// honest answer for a conversation with nothing in flight.
     Follow(crate::git_tree::Stream),
+    /// **A sign-in's standing** (REMOTE §8.3, bl-c285) — the receipt
+    /// [`Login`](super::Action::Login) earns *and* one
+    /// [`LoginTail`](super::Query::LoginTail) frame, which are the same value
+    /// at two moments: a frame carries what the standing gained since the frame
+    /// before it, and the one carrying an outcome is the last.
+    Login(crate::login::LoginView),
     /// Every step the conversation has taken (§11) —
     /// [`Steps`](super::Query::Steps)' answer, the Steps tab's list.
     Steps(crate::steps_view::StepsView),

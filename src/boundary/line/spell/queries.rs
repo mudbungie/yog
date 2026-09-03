@@ -96,6 +96,10 @@ pub(super) fn spell_query(query: &Query) -> String {
         Query::Config(read) => spell_config(read),
         // The workspace is the seat's, as `/providers`' is.
         Query::Clients { .. } => "/clients".to_owned(),
+        // The sign-in lane: the wall is the seat's, the row is not.
+        Query::LoginTail { provider, .. } => {
+            format!("/{} {provider}", crate::boundary::line::queries::LOGIN_TAIL)
+        }
         // The follow-class read names nothing at all; its sibling names the
         // handle, which is the one thing a seat cannot hold.
         Query::Invocations => "/invocations".to_owned(),

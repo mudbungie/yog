@@ -269,6 +269,13 @@ pub enum Action {
         provider: String,
         model: String,
     },
+    /// **The sign-in, as an act** (REMOTE §8.3; DESIGN §8.3 as amended by
+    /// bl-61bf): start `bz --login` on the ENGINE inside the named workspace's
+    /// wall, so the credential lands where that workspace's agents read it
+    /// whichever box the seat is on. It never waits for the run and its receipt
+    /// is that run's standing, re-read — [`login`](super::login) carries both
+    /// rulings, and [`Query::LoginTail`](super::Query::LoginTail) is the lane.
+    Login { workspace: String, provider: String },
     /// **The §9.4 tuning pair** (bl-23bd): a role's reasoning-effort level and
     /// its priority-lane request, the two optional fields of the same
     /// assignment `PickModel` writes (litany ARCH §4.3, upstream bl-acba and

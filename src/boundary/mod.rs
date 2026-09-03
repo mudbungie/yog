@@ -56,6 +56,10 @@ pub mod help;
 /// routes one act, and this arm is the only one that composes two.
 pub mod interrupt;
 pub mod line;
+/// The §8.3 sign-in as a boundary act (REMOTE §8.3, bl-c285): the act that
+/// starts a `bz --login` on the engine inside the named workspace's wall, the
+/// read that answers what it has said, and the second follow-class lane.
+pub(crate) mod login;
 /// The VISION §4.9 monitor's two executors — arming and flagging.
 pub mod monitor;
 pub mod reply;

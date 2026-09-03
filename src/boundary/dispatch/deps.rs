@@ -65,9 +65,11 @@ pub struct Deps {
 /// so a gesture fired there reaches a presence map and a mailbox no listener
 /// touches. That is right for every gesture they *can* fire — none names a
 /// client — and it is the trap to know about before wiring
-/// [`Action::Route`](crate::boundary::Action::Route) to a control: the routing
-/// leg is answered through [`ConsumerCtx`](crate::boundary::consumer::ConsumerCtx),
-/// which holds the engine's own handles, and nothing else may.
+/// [`Action::Route`](crate::boundary::Action::Route) — or
+/// [`Action::Login`](crate::boundary::Action::Login), whose run a default
+/// holder would strand — to a control: both are answered through
+/// [`ConsumerCtx`](crate::boundary::consumer::ConsumerCtx), which holds the
+/// engine's own handles, and nothing else may.
 #[derive(Clone, Default)]
 pub struct Caller {
     /// The identity the intake carries: a connection's certificate common name
@@ -83,6 +85,15 @@ pub struct Caller {
     /// an invocation posted through one intake is drained through another, and
     /// a copy taken when the gesture arrived would be a hand-off to nobody.
     pub mailbox: crate::registry::mailbox::Mailbox,
+    /// The sign-in runs in flight (REMOTE §8.3, bl-c285) — the third handle,
+    /// and shared for the mailbox's reason exactly: a `bz --login` started by
+    /// one gesture is read by a lane held on another connection entirely, so a
+    /// copy taken when the act arrived would be a run nobody could watch. It
+    /// rides here rather than on the snapshot because it changes at a browser's
+    /// rate and not the worker's, and it is RAM by ruling — what a sign-in
+    /// *lands* is bz's credential in the wall (§5.1 #22); the run is a fact
+    /// about this process.
+    pub logins: crate::login::runs::Runs,
 }
 
 impl Deps {

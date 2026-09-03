@@ -84,6 +84,9 @@ impl Action {
             | Action::Enroll(_)
             | Action::Route(_)
             | Action::PickModel { .. }
+            // A sign-in writes a credential into a wall, not a ref in a
+            // project: nothing on any board moves (REMOTE §8.3).
+            | Action::Login { .. }
             | Action::Tune(_) => None,
         }
     }

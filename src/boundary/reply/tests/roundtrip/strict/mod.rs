@@ -55,6 +55,24 @@ fn receipt_fields_are_read_strictly() {
     );
 }
 
+/// The sign-in standing's own body (REMOTE §8.3, bl-c285). A frame is what a
+/// seat paints a live sign-in from, so every part of it is read strictly: a
+/// line that is not an object, one that will not say which stream it came from,
+/// and an exit no `i32` can hold each refuse **naming the offender** rather
+/// than shortening the frame or flattening the tag.
+#[test]
+fn a_sign_in_frame_is_read_strictly() {
+    let login = |lines: Value| json!({ "ok": true, "kind": "login", "lines": lines });
+    refuses(&json!({ "ok": true, "kind": "login" }), "\"lines\"");
+    refuses(&login(json!([1])), "line is not an object");
+    refuses(&login(json!([{ "err": true }])), "\"text\"");
+    refuses(&login(json!([{ "text": "x" }])), "\"err\"");
+    refuses(
+        &json!({ "ok": true, "kind": "login", "lines": [], "outcome": 1e300 }),
+        "\"outcome\"",
+    );
+}
+
 #[test]
 fn every_row_level_token_refuses_by_name() {
     refuses(

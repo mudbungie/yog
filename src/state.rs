@@ -8,7 +8,7 @@
 //! shared state, and a generic decorator folded in here would break llvm-cov's
 //! per-line coverage (see that module's doc).
 //!
-//! **Three residents, and they are the whole inter-thread interface** (§7.2).
+//! **Four residents, and they are the whole inter-thread interface** (§7.2).
 //! Since bl-ee0a yog runs three threads — the frame, the derivation worker, and
 //! the watch bridge — so this file is the complete inventory of what they share:
 //!
@@ -18,6 +18,9 @@
 //!   is dirty). The bridge fills it from the watchers; the frame fills it when a
 //!   dispatched verb changed something the watch would only find later. The
 //!   worker drains it.
+//! - [`LoginCell`] — **the §8.3 sign-in runs** (REMOTE §8.3): the act seats a
+//!   `bz --login` child, its own reader thread drains it, and any number of
+//!   held lanes read the buffer.
 //! - [`SnapshotCell`] — **worker → frame**: the latest *completed*
 //!   [`Snapshot`]. The worker swaps a fresh `Arc` in; the frame clones it out
 //!   once per frame. The lock is held for exactly one pointer move on either
@@ -77,6 +80,18 @@ pub(crate) fn publish_snapshot(cell: &SnapshotCell, snapshot: Arc<Snapshot>) {
 /// renders from a value nothing can mutate under it.
 pub(crate) fn latest_snapshot(cell: &SnapshotCell) -> Arc<Snapshot> {
     Arc::clone(&lock_cell(cell))
+}
+
+/// The engine's live sign-in runs (REMOTE §8.3, bl-c285): one `bz --login`
+/// child per workspace × provider, written by the act and by each run's own
+/// reader thread, read by every lane held on one. A transparent alias, so the
+/// `Mutex` token stays confined here while the map and every rule about it live
+/// with the runs ([`login::runs`](crate::login::runs)).
+pub(crate) type LoginCell = Arc<Mutex<crate::login::runs::Board>>;
+
+/// Lock the sign-in runs, poison-immune — [`lock_cell`]'s one-line discipline.
+pub(crate) fn lock_logins(cell: &LoginCell) -> MutexGuard<'_, crate::login::runs::Board> {
+    cell.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
 /// The dirty-root hand-off: root paths, each with the [`Mark`] naming **why**

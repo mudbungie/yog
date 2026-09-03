@@ -151,6 +151,13 @@ pub const STANDING: &[HelpRow] = &[
         surface: Surface::Control,
     },
     HelpRow {
+        verb: "login",
+        usage: "/login <provider>",
+        summary: "sign this workspace in to a provider row, on the box that holds it",
+        detail: "Starts `bz --login` for one provider row **inside the focused workspace's own                  settings**, on the engine — so the credential lands where that workspace's                  agents will read it, whichever box you are sitting at. It answers the moment                  the run starts rather than when it finishes: a browser sign-in is minutes of                  your attention and nothing else may wait on it, so what comes back is the                  run's standing, and `/login-tail <provider>` is how you watch the rest.                  Firing it again on a row already signing in cancels that run and starts a                  fresh one — the restart is the cancel, so there is no second verb. yog never                  reads or writes a credential; it carries the flow's lines and nothing else.                  A row that cannot be signed in shows the reason where the verb would be, in                  the provider list.",
+        surface: Surface::Control,
+    },
+    HelpRow {
         verb: "ack",
         usage: "/ack",
         summary: "acknowledge every alarm on the ops trail",

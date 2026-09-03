@@ -31,10 +31,22 @@ pub(crate) fn gestures() -> Vec<Gesture> {
         super::fleet::surface(),
         super::retarget::surface(),
         super::query::surface(),
+        login(),
         enroll(),
         crate::boundary::codec::config::tests::surface(),
     ]
     .concat()
+}
+
+/// The §8.3 sign-in (REMOTE §8.3, bl-c285) — one entry, because the act's
+/// whole envelope is the pair it names: the flow is the row's own capability
+/// and never a field a seat spells (DESIGN §8.3 rule 1), so there is no arm
+/// here for a fixture to walk.
+fn login() -> Vec<Gesture> {
+    vec![Gesture::Act(crate::boundary::Action::Login {
+        workspace: "ws".to_owned(),
+        provider: "acme".to_owned(),
+    })]
 }
 
 /// REMOTE §1.4's enrollment (bl-f4e3) — **one entry per grade**, because the

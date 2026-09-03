@@ -117,6 +117,11 @@ impl Engine {
             // drain it while the deposit inbox's callers fill it, so one
             // handle, held by the one context both intakes answer through.
             mailbox: crate::registry::mailbox::Mailbox::default(),
+            // The §8.3 sign-in runs (REMOTE §8.3, bl-c285), minted here beside
+            // them and over the **world-nested** `bz` every other substrate
+            // spawn goes through: the act layers the named workspace's wall on
+            // top of it, so the credential lands in that sphere (§16.2).
+            logins: crate::login::runs::Runs::of(Cli::resolve_in_world(Binary::Bz, overrides)),
         });
         let consumer = Consumer::spawn(Arc::clone(&intake));
         // The REMOTE §9.5 wire listener (bl-b6fa), beside the consumer and for

@@ -110,9 +110,10 @@ pub(super) const COMMANDS: &[HelpRow] = &[
         summary: "run one command inside the composed world",
         detail: "Run exactly one command with the world's environment standing, and exit with \
                  that command's own code. `--ws WORKSPACE` also stands that workspace's wall, \
-                 which is how a headless seat signs in: `yog exec --ws WORKSPACE bz --login \
-                 --provider NAME --browser` writes the credential into that workspace and \
-                 nowhere else. The leading flags are yog's; every argument from the command \
+                 which is how a shell **on this box** signs a workspace in: `yog exec --ws \
+                 WORKSPACE bz --login --provider NAME --browser` writes the credential into \
+                 that workspace and nowhere else. A seat that is not on this box says \
+                 `/login <provider>` instead, which runs the same thing here. The leading flags are yog's; every argument from the command \
                  word on belongs to the command. Bad usage exits 2, a command that could not \
                  be spawned exits 127.",
         surface: Surface::Machine,

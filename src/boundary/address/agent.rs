@@ -76,6 +76,9 @@ impl Action {
             | Action::Enroll(_)
             | Action::Route(_)
             | Action::PickModel { .. }
+            // A sign-in is about a provider row in a wall; no conversation is
+            // named, and none would mean anything (REMOTE §8.3).
+            | Action::Login { .. }
             | Action::Tune(_) => None,
         }
     }
@@ -112,6 +115,7 @@ impl Query {
             | Query::Search { .. }
             | Query::Help { .. }
             | Query::Invocations
+            | Query::LoginTail { .. }
             | Query::Capture { .. } => None,
         }
     }

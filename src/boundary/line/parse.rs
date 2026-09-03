@@ -130,6 +130,17 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // the operator restate the pointer it is not changing.
         "effort" => config::effort(tail, ctx, verb),
         "priority" => config::priority(tail, ctx, verb),
+        // The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall is the seat's own
+        // workspace, exactly as `/model`'s is, and the one word is the provider
+        // row — the thing no seat's context can supply. No flow flag, ever: the
+        // flow is the row's own capability (DESIGN §8.3 rule 1).
+        crate::boundary::codec::LOGIN => match args::optional_word(tail, verb)? {
+            Some(provider) => Ok(act(Action::Login {
+                workspace: args::workspace(ctx, verb)?,
+                provider,
+            })),
+            None => Err(format!("/{verb}: usage: /{verb} <provider>")),
+        },
         "fork" => super::fork::fork(tail, ctx, verb),
         "ack" => args::none(tail, verb).map(|()| act(Action::Ack)),
         "seen" => verbs::seen(tail, ctx, verb),

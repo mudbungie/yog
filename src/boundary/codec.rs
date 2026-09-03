@@ -135,8 +135,19 @@ fn encode_action(action: &Action) -> Value {
                                            "name": request.name,
                                            "grade": request.grade.word() }),
         Action::Route(verb) => tools::encode_route(verb),
+        // The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall it runs in and the
+        // provider row it signs into, and nothing else — the flow is the row's
+        // own capability, never a field a seat may spell (DESIGN §8.3 rule 1).
+        Action::Login {
+            workspace,
+            provider,
+        } => json!({ "op": LOGIN, "workspace": workspace, "provider": provider }),
     }
 }
+
+/// The sign-in act's op token (bl-c285), named once for both directions and
+/// for the line that types it.
+pub(crate) const LOGIN: &str = "login";
 
 /// Enrollment's op token, named once so the envelope, the line and the help
 /// page cannot spell it three ways (REMOTE §1.4 as amended, bl-f4e3).
@@ -220,6 +231,13 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             agent: str_of(o, "agent")?,
         })),
         "clear-trail" => Ok(act(Action::ClearTrail)),
+        // Both halves required (REMOTE §8.3): a sign-in that guessed either
+        // would write a credential into the wrong sphere, or into the right
+        // one for a row nobody named.
+        LOGIN => Ok(act(Action::Login {
+            workspace: str_of(o, "workspace")?,
+            provider: str_of(o, "provider")?,
+        })),
         // REMOTE §5's tool-host family (bl-4e08, bl-024b): the presentation,
         // and the routing leg's two halves.
         tools::ADVERTISE | tools::INVOKE | tools::COMPLETE => {

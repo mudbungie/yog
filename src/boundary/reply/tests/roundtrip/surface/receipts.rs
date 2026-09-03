@@ -129,4 +129,39 @@ pub(super) fn receipts() -> Vec<Reply> {
             }),
         },
     ]
+    .into_iter()
+    .chain(logins())
+    .collect()
+}
+
+/// The sign-in's standing (REMOTE §8.3, bl-c285) at each of its three moments,
+/// because a fixture that only ever spelled the live one would prove only that
+/// the live one crosses: a run that has said nothing, a run mid-flow — both
+/// stream tags, since bz writes its human-facing flow to stderr and its
+/// machine-readable output to stdout — and a settled non-zero exit carrying the
+/// §8.3 run-by-hand fallback.
+fn logins() -> Vec<Reply> {
+    let line = |text: &str, err: bool| crate::cli_outbound::StreamedLine {
+        text: text.to_owned(),
+        err,
+    };
+    vec![
+        Reply::Login(crate::login::LoginView::default()),
+        Reply::Login(crate::login::LoginView {
+            lines: vec![
+                line("open https://provider.invalid/auth", true),
+                line("{\"ready\":true}", false),
+            ],
+            outcome: None,
+            fallback: None,
+        }),
+        Reply::Login(crate::login::LoginView {
+            lines: vec![line(
+                "this provider has no device endpoint; use `--browser`",
+                true,
+            )],
+            outcome: Some(78),
+            fallback: Some("yog exec --ws /ws bz --login --provider acme --browser".into()),
+        }),
+    ]
 }

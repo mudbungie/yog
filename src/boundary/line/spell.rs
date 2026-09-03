@@ -80,6 +80,11 @@ fn spell_action(action: &Action) -> String {
             ..
         } => format!("/model {role} {provider} {model}"),
         Action::Tune(tuning) => spell_tuning(tuning),
+        // The §8.3 sign-in: the wall is the seat's, as `/model`'s is, and the
+        // row is the one word the context cannot supply.
+        Action::Login { provider, .. } => {
+            format!("/{} {provider}", crate::boundary::codec::LOGIN)
+        }
         Action::Fork { attempt, goal, .. } => super::fork::spell(attempt, goal),
         Action::Ack => "/ack".to_owned(),
         // The address is the seat's selection, exactly as `/message`'s is.

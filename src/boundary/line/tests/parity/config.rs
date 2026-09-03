@@ -61,3 +61,36 @@ fn the_config_familys_reads_round_trip() {
         provider: "acme".to_owned(),
     })));
 }
+
+/// **The §8.3 sign-in, both halves** (REMOTE §8.3, bl-c285): the act and its
+/// lane, in this file because they are the sixth thing a provider row is
+/// addressed by — `/providers` lists the rows, `/model` picks off one, and
+/// these two sign one in and watch it. Both elide the workspace, which is the
+/// seat's, and state the row, which is not.
+#[test]
+fn the_sign_in_and_its_lane_round_trip() {
+    rt(Gesture::Act(crate::boundary::Action::Login {
+        workspace: "ws".to_owned(),
+        provider: "acme".to_owned(),
+    }));
+    rt(Gesture::Ask(Query::LoginTail {
+        workspace: "ws".to_owned(),
+        provider: "acme".to_owned(),
+    }));
+}
+
+/// Neither takes a bare line: a sign-in with no row named is not a gesture, and
+/// a lane with none is not a question. The refusal names the usage rather than
+/// guessing at a row, exactly as `/models`' does.
+#[test]
+fn a_sign_in_with_no_provider_named_refuses_with_its_usage() {
+    for verb in ["login", "login-tail"] {
+        let refusal = crate::boundary::line::parse(&format!("/{verb}"), &super::super::ctx())
+            .expect_err("a row is required");
+        assert!(refusal.contains("usage"), "{verb}: {refusal}");
+        assert!(
+            crate::boundary::line::parse(&format!("/{verb} a b"), &super::super::ctx()).is_err(),
+            "{verb}: one word, not a sentence"
+        );
+    }
+}

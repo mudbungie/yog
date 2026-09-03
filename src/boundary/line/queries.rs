@@ -13,6 +13,10 @@ use super::{Context, args};
 use crate::boundary::config::Read;
 use crate::boundary::{Gesture, Query, help};
 
+/// The sign-in lane's verb (bl-c285), named once for the reader and the
+/// writer — the boundary's own op token, typed.
+pub(super) const LOGIN_TAIL: &str = "login-tail";
+
 /// Read one populating verb's line, or refuse with the roster attached.
 pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
     // The conversation-addressed family reads first, in its own table — the
@@ -109,6 +113,17 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         "capture" => match args::optional_word(tail, verb)? {
             Some(invocation) => Ok(ask(Query::Capture { invocation })),
             None => Err(format!("/{verb}: usage: /{verb} <invocation>")),
+        },
+        // The sign-in lane (REMOTE §8.3, bl-c285) — `/login`'s own grammar at
+        // the read: the wall is the seat's, the row is the one word. A line
+        // seat holds no connection to hold open, so it earns the standing as of
+        // now, which is the general path with one frame.
+        LOGIN_TAIL => match args::optional_word(tail, verb)? {
+            Some(provider) => Ok(ask(Query::LoginTail {
+                workspace: args::workspace(ctx, verb)?,
+                provider,
+            })),
+            None => Err(format!("/{verb}: usage: /{verb} <provider>")),
         },
         "attention" => args::none(tail, verb).map(|()| ask(Query::Attention)),
         "ops" => Ok(ask(Query::Ops { max: max(tail)? })),

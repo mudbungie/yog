@@ -211,8 +211,12 @@ one home, machine-checked, instead of prose.
 
 - **yog** — the classification field on `HelpRow`, every row classed, the
   coherence test against `Grade::admits`, corpus regenerated. **Landed
-  (bl-8758)**: `HelpRow::surface`, 66 rows, **61 `control` and 5 `machine`**;
-  the five are the routing leg's own ends — `advertise`, `complete` and
+  (bl-8758)**: `HelpRow::surface`, every row classed, with exactly **five
+  `machine`** rows and everything else `control` — the roster's own length is
+  a count nobody should restate, and this paragraph carried two that went stale
+  the next time a verb landed (bl-c285's `/login` and `/login-tail`). Ask
+  `reply/help.json`, which is generated. The five machine rows are the routing
+  leg's own ends — `advertise`, `complete` and
   `invocations` (the three `Grade::Foot` admits, coherence-tested) plus
   `invoke` and `capture`, the asking program's fire and poll. Three calls the
   roster made and their reasons, so a later reader is not re-litigating them:

@@ -2467,23 +2467,38 @@ that section governs the channel's own material, and a provider credential is
 a different object; the deposit loses on custody (§5.1 #22, §6), not on
 bootstrap doctrine.
 
-**Two verbs, and the wire gains nothing (§3).** Implementation is bl-c285; the
-window's consumption bl-1ddb; the flow branch bl-7c9f.
+**Two verbs, and the wire gains nothing (§3). Landed at bl-c285**, in all
+three serializations and with no wire vocabulary of their own; the seat-side
+consumption is the seat crate's bl-e3c5, the flow branch bl-7c9f.
 
-- `Action::Login { workspace, provider }` starts the run engine-side — inside
-  the named workspace's wall, the same lens the config reads spend — and
+- `Action::Login { workspace, provider }` (`login`, `/login <provider>`) starts
+  the run engine-side — inside the named workspace's wall, the same lens the
+  config reads spend, laid on the spawn as `wall::pairs` — and
   answers at once with the run's standing (the `Marks` re-read discipline):
   the intake is one thread for the whole world, so an act that waited out a
   browser-minutes flow would stop every deposit converging — the same reason
   `invoke` queues and answers a handle (§3).
-- A follow-class read streams the run's lines: buffered from the start, then
-  live to the outcome. Re-ask replays — a dropped lane, a re-attached seat and
-  a settled run are one case (the `Query::Follow` discipline, §10).
+- `Query::LoginTail { workspace, provider }` (`login-tail`, `/login-tail
+  <provider>`) streams the run's lines: buffered from the start, then
+  live to the outcome, the settled exit the last frame. Re-ask replays — a
+  dropped lane, a re-attached seat and a settled run are one case (the
+  `Query::Follow` discipline, §10), and it needs no rule of its own because a
+  lane holds nothing when it opens, so its first frame is the whole buffer. A
+  pair with no run opens on **one empty frame**, not on silence: *nobody has
+  signed in here* is a reading, and §10's honesty rule applies to it.
+- Both answer in ONE frame at every intake that cannot hold a connection
+  (`answer`'s own arm), which is the same fold answered once rather than a
+  degraded reading — the follow lane's own discipline, unchanged.
 - The run is engine RAM, one per workspace × provider. A second `Login` on a
   live pair terminates and replaces it — the operator's own restart is the
-  cancel, so no cancel verb exists — and a run older than an hour is swept
-  (§5.3's mailbox bound). The `ops.jsonl` outcome row appends engine-side: it
-  was always world state.
+  cancel, so no cancel verb exists — and the termination happens **before** the
+  replacement is spawned, because an abandoned loopback flow still holds the
+  row's redirect port. A run older than an hour is swept
+  (§5.3's mailbox bound), at the one moment the map can grow. One reader thread
+  per run owns the cadence while the map owns the run, so two seats may hold
+  lanes on one and a run **with no lane at all** still settles — settling is
+  what appends the `ops.jsonl` outcome row engine-side: it was always world
+  state.
 
 **The flow follows the row's capability; the browser follows the human.** The
 flow-selection rule is DESIGN §8.3's and is amended there (rule 1): the device

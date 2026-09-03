@@ -99,6 +99,10 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         // capture only once there is one — `opt_val` is what makes "absent"
         // and "answered nothing" two readings rather than one.
         "routed" => routed(o),
+        // The sign-in's standing (REMOTE §8.3, bl-c285), read back by the
+        // module that spells it — one kind for the act's receipt and every
+        // lane frame, because they are one value.
+        super::encode::LOGIN => crate::login::wire::view_of(o).map(Reply::Login),
         "marks" => str_of(o, "branch").map(|branch| Reply::Marks { branch }),
         "config" => str_of(o, "text").map(|text| Reply::Config { text }),
         _ => return None,

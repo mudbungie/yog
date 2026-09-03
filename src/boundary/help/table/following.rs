@@ -11,6 +11,9 @@
 //! that can hold a connection answers many frames, and one that cannot answers
 //! one — so the reply a `yog gesture` prints is a true answer of the same
 //! question, not a degraded one.
+//!
+//! Three since bl-c285: the sign-in's output is written at a provider's pace
+//! and a human's, which is the same criterion (REMOTE §10) at a third subject.
 
 use crate::boundary::help::{HelpRow, Surface};
 
@@ -44,6 +47,13 @@ pub const FOLLOWING: &[HelpRow] = &[
                  watching one conversation cannot describe one moment differently. Takes the \
                  workspace and the conversation from the seat; a conversation with nothing in \
                  flight has an empty tail rather than a refusal.",
+        surface: Surface::Control,
+    },
+    HelpRow {
+        verb: "login-tail",
+        usage: "/login-tail <provider>",
+        summary: "watch a sign-in: what `bz --login` has printed for this row, as it prints it",
+        detail: "The output of the run `/login <provider>` started in the focused workspace —                  the authorize URL, whatever else bz says, and the exit when it finishes, which                  is the last thing this ever says. It starts from the beginning every time it                  is asked, so re-asking after a dropped connection replays rather than losing                  the URL: a seat holds nothing between asks and there is no offset to name.                  Over a connection that can be held it stays open and speaks as the run does;                  at a seat that cannot it answers everything said so far, in one frame, which                  is the same reading answered once. A row with no run answers nothing said,                  which is what never-signed-in looks like — not a refusal.",
         surface: Surface::Control,
     },
 ];

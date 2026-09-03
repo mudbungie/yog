@@ -57,6 +57,11 @@ pub(super) fn surface() -> Vec<Gesture> {
     out.push(Gesture::Ask(Query::Clients {
         workspace: "ws".into(),
     }));
+    // The sign-in lane (REMOTE §8.3, bl-c285): the pair its act names.
+    out.push(Gesture::Ask(Query::LoginTail {
+        workspace: "ws".into(),
+        provider: "acme".into(),
+    }));
     // The §11 balls section one workspace deep (bl-b4b5), and the help pages
     // (§8.5) — two spellings whose envelopes had no round trip of their own
     // until the conformance corpus took this list (bl-32cb). The help verb is

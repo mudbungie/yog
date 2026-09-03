@@ -71,7 +71,10 @@ impl Action {
             | Action::SetMarks { workspace, .. }
             | Action::PickModel { workspace, .. }
             | Action::AnswerHold { workspace, .. }
-            | Action::Floor { workspace, .. } => Some(workspace),
+            | Action::Floor { workspace, .. }
+            // The sign-in names the wall its child runs in (REMOTE §8.3): the
+            // workspace whose agents will read the credential, not a focus.
+            | Action::Login { workspace, .. } => Some(workspace),
             // The §9.4 tuning pair delegates, as the monitor's and the fleet's
             // families do: both members name a workspace, so the carrier
             // answers and this table does not match on the pair (bl-23bd).
@@ -143,7 +146,9 @@ impl Query {
             | Query::Inbox { workspace, .. }
             | Query::Agent { workspace, .. }
             | Query::WorkspaceBalls { workspace }
-            | Query::Clients { workspace } => Some(workspace),
+            | Query::Clients { workspace }
+            // The sign-in lane, addressed at the wall its run belongs to.
+            | Query::LoginTail { workspace, .. } => Some(workspace),
             // The §9 family delegates (bl-719a), and its answer is an `Option`
             // because one member of it addresses through a *destination*
             // exactly as the write does (bl-523f) — one row on each side of the

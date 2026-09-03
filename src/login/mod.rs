@@ -41,6 +41,11 @@ use crate::cli_outbound::{
 use crate::opslog::{self, OpEntry, Origin};
 
 pub mod auth;
+/// The engine's live-run holder (REMOTE §8.3, bl-c285): one `bz --login` child
+/// per workspace × provider, read by lanes and settled by a thread of its own.
+pub mod runs;
+/// The standing's one JSON spelling, both directions — beside its own type.
+pub mod wire;
 
 #[cfg(test)]
 mod tests;

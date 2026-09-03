@@ -104,6 +104,12 @@ pub(super) fn encode(query: &Query) -> Value {
         Query::Clients { workspace } => {
             json!({ "op": "clients", "workspace": workspace })
         }
+        // The sign-in lane (bl-c285): the same pair its act names, because it
+        // is that act's run being read.
+        Query::LoginTail {
+            workspace,
+            provider,
+        } => json!({ "op": LOGIN_TAIL, "workspace": workspace, "provider": provider }),
         // The routing leg's two reads (bl-024b). The follow-class one names
         // nothing at all: the queue it drains is the intake's own.
         Query::Invocations => json!({ "op": INVOCATIONS }),
@@ -139,6 +145,12 @@ const WORKSPACE_BALLS: &str = "workspace-balls";
 
 /// The §3.9 projection's op token (bl-40ab), named once for both directions.
 pub(super) const SCIENCE: &str = "science";
+
+/// The sign-in lane's op token (bl-c285). Its own word rather than the act's,
+/// because the two are a write and a read of one subject and every other such
+/// pair here is spelled apart (`config`/`marks` share a token only because a
+/// field tells them apart, which a follow-class read has none of).
+pub(super) const LOGIN_TAIL: &str = "login-tail";
 
 /// The routing leg's read tokens, named once for the encoder and the arm.
 pub(super) const INVOCATIONS: &str = "invocations";
@@ -217,6 +229,10 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         // and what each advertises.
         "clients" => Query::Clients {
             workspace: str_of(o, "workspace")?,
+        },
+        LOGIN_TAIL => Query::LoginTail {
+            workspace: str_of(o, "workspace")?,
+            provider: str_of(o, "provider")?,
         },
         // The tool host's follow-class read, and the asker's poll (bl-024b).
         INVOCATIONS => Query::Invocations,
