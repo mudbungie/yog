@@ -3,6 +3,8 @@
 //! ops row — no error class dropped (INV-2) — and the §4.2 parity the `/ops`
 //! help now states: an action leaves a row, a query leaves none.
 
+/// The crash-debris sweep (bl-d1f1): in-doubt answers, never re-runs.
+mod debris;
 /// The §6 decision queue's own read-and-answer rung.
 mod queue;
 

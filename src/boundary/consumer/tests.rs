@@ -206,3 +206,25 @@ fn the_thread_consumes_a_deposit_and_stops_on_drop() {
     }
     drop(consumer); // joins cleanly — the Drop is the shutdown
 }
+
+/// bl-d1f1: the boot answers a crashed predecessor's debris before the first
+/// pass — a claimed gesture nobody holds the lock on earns its in-doubt
+/// refusal, so a depositor still polling gets a sentence, not a 124.
+#[test]
+fn the_boot_answers_a_dead_claimants_gesture_in_doubt() {
+    let root = tempdir().unwrap();
+    deposit::deposit(root.path(), "g-died", &json!({"op": "ack"})).unwrap();
+    drop(deposit::claim(root.path(), "g-died").unwrap()); // the crash
+    let consumer = Consumer::spawn(Arc::new(ctx(root.path())));
+    let deadline = Instant::now() + Duration::from_secs(10);
+    loop {
+        if let Some(reply) = deposit::read_reply(root.path(), "g-died") {
+            assert_eq!(reply["ok"], false);
+            assert!(reply["error"].as_str().unwrap().contains("in doubt"));
+            break;
+        }
+        assert!(Instant::now() < deadline, "the boot never swept the debris");
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    drop(consumer);
+}

@@ -263,8 +263,11 @@ Actions run the same §8 executors the GUI's buttons do and log the same
 `ops.jsonl` rows; queries return the same typed data the GUI renders. The roster
 is deliberately not restated here — `yog gesture --help` prints every command,
 one line each, read off the interface itself. Exit: `0` ok, `1` refused/failed,
-`2` never deposited, `124` no consumer answered (the deposit remains and
-converges later).
+`2` never deposited, `124` no consumer answered (an unclaimed deposit remains
+and converges later; a gesture whose engine died mid-run is answered *in
+doubt* by the next engine boot — a refusal telling you to read the world
+rather than re-send, because an action is not idempotent and a re-send is a
+second act).
 
 **Each agent tracks on a balls space of its own** (DESIGN §16.3). A workspace's space is its own clone bundle and its own balls
 config home, under its wall, so two agents' task churn never collides; the

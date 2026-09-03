@@ -19,7 +19,10 @@
 //! go to stderr. Exit: `0` reply ok, `1` reply not-ok or a deposit failure,
 //! `2` an envelope that never deposited (usage/parse/decode), [`TIMEOUT_EXIT`]
 //! when no consumer answered — the deposit **remains**, and the next running
-//! yog converges it (I0).
+//! yog converges it (I0). A gesture claimed by an engine that then died is
+//! answered *in doubt* at the next boot (bl-d1f1, [`deposit`]'s module doc):
+//! the reply arrives as a refusal, so a still-polling caller exits `1` with
+//! the recovery contract on stdout rather than waiting out the budget.
 
 use serde_json::Value;
 use std::path::Path;

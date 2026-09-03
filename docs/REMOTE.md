@@ -320,6 +320,31 @@ says — and adds no verb, no field and no envelope:
   and nothing here is a push channel: a push/subscription channel stays
   deliberately deferred (§10, §11), being an optimization of the same surface
   rather than a different one.
+- **A lost reply leaves an act IN DOUBT, and the recovery is a read — never a
+  resend** *(bl-d1f1)*. A connection that dies between the engine completing
+  an act and the reply frame landing tells the client nothing about whether
+  the effect ran, and nothing on the wire can be added to say it: an act is
+  not idempotent (§9.8 — two clicks of Nudge are two nudges), an engine-side
+  receipt journal could only assert *dispatched*, never *committed* — the
+  effect belongs to a subprocess (`bl`, litany), so exactly-once is the effect
+  owner's to provide and never the wire's to promise — and a stored reply
+  replayed later would violate the receipt discipline (§5.3: a receipt is a
+  re-read, never an echo) when the honest answer by then is a fresh read
+  anyway. So no idempotency token rides the act envelope and no redelivery
+  slot exists for acts: a client whose act earned a transport error instead of
+  a reply paints the failure and consults the world, which is the durable
+  record (§9.8: the `ops.jsonl` trail, the transcript, the roster — the reads
+  are the recovery). **Asks are the opposite case and re-ask freely**: a read
+  is answered in place, and asking twice is asking once (§9.7). The one
+  deliberate exception is §5.3's invocation leg, at-least-once *by design*
+  with the invocation id offered as the dedupe key — and thrall declines even
+  that memory and re-runs (its DESIGN §3.8), which is this same ruling read
+  from the other side. The disk inbox's cousin of this window is answered
+  mechanically — a claim is lock-held, and a dead claimant's gesture earns an
+  in-doubt refusal on its durable reply slot at the next engine boot (yog
+  DESIGN §8.5) — because there a reply slot exists to answer into; the wire
+  has none, so here the contract is this bullet, and it moves no wire-visible
+  shape: `PROTOCOL` stands.
 - **The disk inbox survives for in-world callers.** Agents drive yog through
   the `yog` PATH shim and the `gestures/` deposit inbox — same machine, same
   world, disk is the bus. The wire is for cross-trust-domain callers; the

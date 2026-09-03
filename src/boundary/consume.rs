@@ -14,6 +14,7 @@ use crate::opslog::Origin;
 use crate::ui_state::UiState;
 use serde_json::Value;
 use std::fs;
+use std::path::Path;
 
 use super::dispatch::{Deps, dispatch};
 use super::{Gesture, answer, codec, deposit, reply};
@@ -25,9 +26,12 @@ pub fn consume(deps: &Deps, ui: &mut UiState, ts: &str, now_unix: i64) -> usize 
     let root = deps.state_root.clone();
     let mut consumed = 0;
     for (id, _) in deposit::pending(&root) {
-        // The rename is the claim: losing the race to another consumer is the
-        // benign outcome, not an error — the winner answers.
-        let Ok(claimed) = deposit::claim(&root, &id) else {
+        // The lock-then-rename is the claim (bl-d1f1): losing either race to
+        // another consumer is the benign outcome, not an error — the winner
+        // answers. The guard is held until the reply is written, so a crash
+        // anywhere in this body releases it and the next boot's [`sweep`]
+        // answers the reply slot in doubt.
+        let Ok(claim) = deposit::claim(&root, &id) else {
             continue;
         };
         let answered = run(
@@ -35,7 +39,7 @@ pub fn consume(deps: &Deps, ui: &mut UiState, ts: &str, now_unix: i64) -> usize 
             ui,
             ts,
             now_unix,
-            &fs::read(&claimed).unwrap_or_default(),
+            &fs::read(claim.path()).unwrap_or_default(),
         );
         if deposit::write_reply(&root, &id, &answered).is_err() {
             let _ = log_step_failure(
@@ -50,6 +54,51 @@ pub fn consume(deps: &Deps, ui: &mut UiState, ts: &str, now_unix: i64) -> usize 
         consumed += 1;
     }
     consumed
+}
+
+/// Answer the debris a dead engine left (§8.5, bl-d1f1): a claimed gesture
+/// nobody holds the lock on and whose reply never parsed is a crash between
+/// claim and reply. "Claimed, never ran" and "ran, reply lost" are on-disk
+/// identical, so the only honest terminal answer is **in doubt** — the sweep
+/// writes the reply slot a refusal saying so rather than re-running (a
+/// gesture is not idempotent, REMOTE §9.8), and the depositor's poll
+/// terminates with the sentence instead of waiting forever. Runs once at
+/// engine boot ([`super::consumer::Consumer::spawn`]), the same startup
+/// convergence the dotfile-temp debris already gets (§7.3).
+pub fn sweep(state_root: &Path, ts: &str) -> usize {
+    let mut answered = 0;
+    for (id, path) in deposit::claimed(state_root) {
+        if deposit::read_reply(state_root, &id).is_some() || !deposit::unheld(&path) {
+            continue;
+        }
+        let refusal = reply::refusal(&format!(
+            "gesture {id:?} was claimed and its engine died before replying; \
+             the effect is in doubt — read the world (the ops trail, the \
+             transcript, the roster) before acting again: a re-send is a \
+             second act, not a retry"
+        ));
+        if deposit::write_reply(state_root, &id, &refusal).is_err() {
+            let _ = log_step_failure(
+                state_root,
+                ts,
+                &deposit::gestures_dir(state_root),
+                "gesture-reply",
+                &format!("reply for {id:?} could not be written"),
+                Origin::World,
+            );
+            continue;
+        }
+        let _ = log_step_failure(
+            state_root,
+            ts,
+            &deposit::gestures_dir(state_root),
+            "gesture-debris",
+            &format!("gesture {id:?} died in flight; answered in doubt"),
+            Origin::World,
+        );
+        answered += 1;
+    }
+    answered
 }
 
 /// Decode and run one gesture's bytes to its reply value. Every failure mode

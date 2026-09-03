@@ -87,8 +87,8 @@ fn pending_lists_real_deposits_in_one_order_and_nothing_else() {
 fn the_claim_is_the_rename_and_losing_the_race_is_benign() {
     let root = tempdir().unwrap();
     deposit(root.path(), "g-1", &json!({"op": "balls"})).unwrap();
-    let claimed = claim(root.path(), "g-1").unwrap();
-    assert!(claimed.is_file());
+    let held = claim(root.path(), "g-1").unwrap();
+    assert!(held.path().is_file());
     assert!(
         pending(root.path()).is_empty(),
         "a claimed deposit is off the list"
@@ -97,6 +97,69 @@ fn the_claim_is_the_rename_and_losing_the_race_is_benign() {
         claim(root.path(), "g-1").is_err(),
         "the loser gets the error"
     );
+}
+
+/// bl-d1f1: the claim is **held** — an OS file lock taken before the rename
+/// and released only when the claimant lets go (or dies, which is the same
+/// release to the kernel). While it is held, the claimed file reads as work in
+/// flight; the moment it is dropped, as debris a sweep may answer.
+#[test]
+fn a_claim_is_lock_held_for_the_claimants_life_and_unheld_after() {
+    let root = tempdir().unwrap();
+    deposit(root.path(), "g-1", &json!({"op": "balls"})).unwrap();
+    let held = claim(root.path(), "g-1").unwrap();
+    assert!(
+        !unheld(&held.path()),
+        "a live claim is locked — never debris"
+    );
+    let path = held.path();
+    drop(held);
+    assert!(unheld(&path), "a dropped claim is debris, tellably");
+    assert!(
+        !unheld(&path.with_file_name("nope.json")),
+        "a file that cannot be opened is nobody's debris"
+    );
+}
+
+/// bl-d1f1: the lock is the first race, ahead of the rename — a rival holding
+/// the deposit's lock means the claim is already someone's, and the loser
+/// moves on exactly as a lost rename always meant.
+#[test]
+fn a_deposit_another_holds_the_lock_on_is_not_claimable() {
+    let root = tempdir().unwrap();
+    let path = deposit(root.path(), "g-1", &json!({"op": "balls"})).unwrap();
+    let rival = std::fs::File::open(&path).unwrap();
+    rival.try_lock().unwrap();
+    let lost = claim(root.path(), "g-1").unwrap_err();
+    assert_eq!(lost.kind(), std::io::ErrorKind::WouldBlock);
+    assert!(
+        path.is_file(),
+        "the loser renamed nothing — the deposit stays where it was"
+    );
+}
+
+/// bl-d1f1: a claimed id is spent. Re-depositing under it was the old doc's
+/// own recovery advice ("re-deposit to re-run") and is exactly the unsafe
+/// path — the first run is at best in doubt — so it refuses mechanically.
+#[test]
+fn a_claimed_id_is_spent_and_a_re_deposit_under_it_refuses() {
+    let root = tempdir().unwrap();
+    deposit(root.path(), "g-1", &json!({"op": "balls"})).unwrap();
+    let held = claim(root.path(), "g-1").unwrap();
+    drop(held);
+    let again = deposit(root.path(), "g-1", &json!({"op": "balls"}));
+    assert_eq!(again.unwrap_err().kind(), std::io::ErrorKind::AlreadyExists);
+}
+
+#[test]
+fn claimed_lists_the_taken_deposits_and_an_empty_world_is_the_empty_set() {
+    let root = tempdir().unwrap();
+    assert!(claimed(root.path()).is_empty());
+    deposit(root.path(), "g-1", &json!({"op": "balls"})).unwrap();
+    let held = claim(root.path(), "g-1").unwrap();
+    let ids: Vec<String> = claimed(root.path()).into_iter().map(|(id, _)| id).collect();
+    assert_eq!(ids, ["g-1"]);
+    drop(held);
 }
 
 #[test]

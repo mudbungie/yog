@@ -70,6 +70,16 @@ impl ConsumerCtx {
         consume(&deps, &mut ui, &ts, now_unix)
     }
 
+    /// Answer the crash debris once, at boot (§8.5, bl-d1f1): every claimed
+    /// gesture whose claimant died before its reply earns the in-doubt
+    /// refusal on its reply slot ([`super::consume::sweep`]). Boot-time
+    /// rather than per-pass because debris can only exist where an engine
+    /// died, and the restart that follows is this — the same startup
+    /// convergence the dotfile temps get (§7.3).
+    pub fn sweep(&self) -> usize {
+        super::consume::sweep(&self.state_root, &self.clock.stamp())
+    }
+
     /// One gesture envelope, answered where a deposit is answered — **for an
     /// in-world caller**, which is unscoped (REMOTE §3: the inbox is the
     /// world's own residents' door, and they hold no certificate).
@@ -244,6 +254,10 @@ impl Consumer {
         let stop = Arc::new(AtomicBool::new(false));
         let flag = Arc::clone(&stop);
         let handle = std::thread::spawn(move || {
+            // The one boot-time act (bl-d1f1): answer the debris a crashed
+            // predecessor left, before the first pass, so a depositor still
+            // polling a dead engine's claim gets its in-doubt sentence now.
+            ctx.sweep();
             while !flag.load(Ordering::Relaxed) {
                 ctx.pass();
                 std::thread::park_timeout(CONSUMER_POLL);

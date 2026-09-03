@@ -8,8 +8,14 @@
 //! atomic rename is the claim, so two consumers on one world never double-run
 //! a gesture) → `replies/<id>.json` (answered). A deposit with no reply is
 //! simply not yet converged (I0): the next consumer pass takes it, whichever
-//! yog process that is. A crash between claim and reply leaves the claimed
-//! file as debris naming exactly what was in flight — re-deposit to re-run.
+//! yog process that is. A claim is additionally held under an OS file lock for
+//! as long as its claimant lives (bl-d1f1), so a crash between claim and reply
+//! leaves the claimed file **unlocked** — debris the next engine boot answers
+//! with an in-doubt refusal on the reply slot ([`super::consume::sweep`]). The
+//! effect may or may not have landed and no artifact can say which, so the
+//! recovery is to read the world, never to re-send: a gesture is not
+//! idempotent (REMOTE §9.8), a re-deposit is a second act, and a spent id
+//! refuses ([`deposit`] checks the claimed file beside the inbox).
 //!
 //! **The id is claimed, never guessed** ([`mint`], bl-aa9f). A depositor's id
 //! is also its reply key, so two depositors holding one id is two callers
@@ -89,6 +95,10 @@ pub fn mint(state_root: &Path, seed: &str) -> io::Result<String> {
 /// Deposit one gesture envelope, create-only: dotfile temp, then `rename` to
 /// `<id>.json`. An already-present id refuses — a deposit is never replayed
 /// in place, and two depositors minting one id is the error it looks like.
+/// A **claimed** id refuses too (bl-d1f1): the id is spent the moment a
+/// consumer takes it, and re-depositing under it would re-run an act whose
+/// first run is at best in doubt — the recovery contract is a read, not a
+/// resend.
 pub fn deposit(state_root: &Path, id: &str, gesture: &Value) -> io::Result<PathBuf> {
     if !valid_id(id) {
         return Err(io::Error::new(
@@ -99,7 +109,7 @@ pub fn deposit(state_root: &Path, id: &str, gesture: &Value) -> io::Result<PathB
     let dir = gestures_dir(state_root);
     fs::create_dir_all(&dir)?;
     let path = dir.join(format!("{id}{EXT}"));
-    if path.exists() {
+    if path.exists() || dir.join(CLAIMED_DIR).join(format!("{id}{EXT}")).exists() {
         return Err(io::Error::new(
             io::ErrorKind::AlreadyExists,
             format!("gesture {id:?} already deposited"),
@@ -111,12 +121,11 @@ pub fn deposit(state_root: &Path, id: &str, gesture: &Value) -> io::Result<PathB
     Ok(path)
 }
 
-/// The waiting deposits: every non-dot `*.json` directly in the inbox, as
-/// `(id, path)`, name-ordered so two consumers walk one order (I9). A missing
-/// inbox is the empty set — the general path with no inputs.
-pub fn pending(state_root: &Path) -> Vec<(String, PathBuf)> {
-    let dir = gestures_dir(state_root);
-    let Ok(entries) = fs::read_dir(&dir) else {
+/// Every non-dot `*.json` directly in `dir`, as `(id, path)`, name-ordered so
+/// two readers walk one order (I9). A missing dir is the empty set — the
+/// general path with no inputs.
+fn list(dir: &Path) -> Vec<(String, PathBuf)> {
+    let Ok(entries) = fs::read_dir(dir) else {
         return Vec::new();
     };
     let mut out: Vec<(String, PathBuf)> = entries
@@ -135,18 +144,15 @@ pub fn pending(state_root: &Path) -> Vec<(String, PathBuf)> {
     out
 }
 
-/// Claim one pending deposit by renaming it into `claimed/`. The rename is the
-/// mutual exclusion: the loser of a race gets the error and moves on. Returns
-/// the claimed path, whose content is now this consumer's to answer.
-pub fn claim(state_root: &Path, id: &str) -> io::Result<PathBuf> {
-    let dir = gestures_dir(state_root);
-    let claimed_dir = dir.join(CLAIMED_DIR);
-    fs::create_dir_all(&claimed_dir)?;
-    let from = dir.join(format!("{id}{EXT}"));
-    let to = claimed_dir.join(format!("{id}{EXT}"));
-    fs::rename(&from, &to)?;
-    Ok(to)
+/// The waiting deposits: [`list`] over the inbox itself.
+pub fn pending(state_root: &Path) -> Vec<(String, PathBuf)> {
+    list(&gestures_dir(state_root))
 }
+
+/// The claim lifecycle (bl-d1f1): the lock-held [`Claim`](claim::Claim), the
+/// `claimed/` listing and the debris probe.
+mod claim;
+pub use claim::{Claim, claim, claimed, unheld};
 
 /// Write the reply for `id`, atomically (dotfile temp + rename): the reply's
 /// existence is the done marker a waiting depositor polls for.
