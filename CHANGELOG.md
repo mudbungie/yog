@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.31](https://github.com/mudbungie/yog/compare/v0.0.30...v0.0.31) - 2026-09-03
+
+### Changes
+
+- a blank goal sends: bl-6191's 'a blank goal never sends' invariant was carried by actions::goal_present, which nothing called, so no door refuses an empty prompt [bl-54c1]
+
 ## [0.0.30](https://github.com/mudbungie/yog/compare/v0.0.29...v0.0.30) - 2026-09-03
 
 ### Changes
