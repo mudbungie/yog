@@ -1779,7 +1779,12 @@ one engine, and that ruling is untouched. What changed is that the second role
 left: a local window used to share this process and be handed its address in
 RAM, because only the listener knows what a `:0` became. A seat is a separate
 program now and reads the address the way every other seat does — the operator
-states it, or a local one is told the bound port by the operator. The two
+states it, or a local one is told the bound port by the operator, **who learns
+it from the boot** (bl-e058): a successful bind prints
+`yog: wire: listening on <host>:<port>` on stderr, the success arm of the line
+the refusal already had. That sentence had no mechanism behind it until then —
+stdout and stderr were empty on success, so on a self-provisioned box the port
+was knowable only by asking the kernel about the process. The two
 alternatives §8 already rejected stay rejected and neither is needed: nothing
 spawns a second engine, and nothing refuses a desktop launch with a terminal
 instruction, because a desktop launch is the seat's own program.
@@ -1829,17 +1834,21 @@ and each get a live window, converging over the world's files exactly as
 instances always have (instance coordination stays disk-only, DESIGN §14; the
 wire is a seat's transport to ONE engine, never the bus between two). The `:0`
 in the file is a **request**, and the request is the fact the file is the one
-home of; what it *became* is runtime, held by the listener and handed to the
-one seat that needs it — the window, in RAM (above). Nothing publishes the
-bound port anywhere else, so a remote seat's known port is never a moving
-target: a host that is not loopback is written by an operator — by `yog
+home of; what it *became* is runtime, held by the listener and **said once, on
+stderr, by the boot that bound it** (bl-e058 — the window that used to be
+handed it in RAM left with bl-7942). Said, not stored: a server announcing its
+endpoint is ordinary, and a second address file would be a second home for one
+fact, disagreeing with `address` the moment an operator edited either. Nothing
+publishes the bound port anywhere else, so a remote seat's known port is never
+a moving target: a host that is not loopback is written by an operator — by `yog
 wire-certs WIRE_HOST=…` (whose *stated* default port stays `7737`: an explicit
 mint is a statement another machine will be told to dial), or by editing
 `address` — and *that* is the statement of intent. One fact with one home
 (below), no flag, and no ladder deciding how far a listener reaches. A local
 `yog seat` on a self-provisioned world is refused legibly at the seat — a `:0`
-names no dialable port, and the remedy is the operator's stated address —
-which is the scope self-provisioned material always had.
+names no dialable port, and the remedy is the operator's stated address, or the
+one the boot just printed — which is the scope self-provisioned material always
+had.
 
 A *half*-provisioned wire the mint **cannot heal** is still warned about and
 still does not listen, because silently degrading to no encryption is the one

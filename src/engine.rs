@@ -135,7 +135,20 @@ impl Engine {
                 as Arc<dyn crate::wire::server::Answerer>,
             presence,
         ) {
-            Ok(listener) => Some(listener),
+            // **The engine says what it bound** (REMOTE §8, bl-e058). A `:0`
+            // in `address` is a request the kernel answers in RAM, and the
+            // in-process consumer that used to be told the answer was the
+            // window, which left with bl-7942 — so on a self-provisioned box
+            // the bound port was knowable only by asking the kernel about the
+            // process. A server announcing its endpoint is ordinary, and this
+            // is the success arm of a line the refusal already had. It is not
+            // a second address file: `address` stays the operator's *request*
+            // and its one home (bl-dc14), and this says what that request
+            // became on this boot.
+            Ok(listener) => {
+                eprintln!("yog: wire: listening on {}", listener.address());
+                Some(listener)
+            }
             Err(reason) => {
                 eprintln!("yog: wire: {reason}");
                 None

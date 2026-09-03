@@ -90,6 +90,22 @@ no verb to select it, because there is one face (it was `yog serve` while a
 window stood beside it). A seat — the `lernie` window, an android client,
 `yog gesture` from an agent's own bash — is a client of that boundary.
 
+**The boot says what it bound**, on stderr:
+
+```
+yog: wire: listening on 127.0.0.1:39271
+```
+
+That line is the whole of how a port is learned on a box yog provisioned for
+itself. Its `wire/address` holds `127.0.0.1:0` — a *request* for whatever port
+is free, so two engines on one box never contend — and the port is the kernel's
+answer, which only the listener knows. State the address a seat dials, or
+enroll a device with it. A box whose `address` names a host and port (an
+operator's own statement, written into `wire/address` or minted by
+`yog wire-certs`) prints that same line naming what it stated. A wire that
+could not come up prints its refusal on the same stream, and the engine runs on
+without one.
+
 yog enumerates every litany workspace (named workspaces under
 `<yog-data-root>/workspaces/` — the resolved root is spelled out under "The
 world" below — foreign workspaces and replays under the

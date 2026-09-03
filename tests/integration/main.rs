@@ -73,3 +73,4 @@ mod stories_s8_t1;
 mod stories_s8_t2;
 mod stories_s8_t3;
 mod stories_s8_t4;
+mod wire_boot_address;
