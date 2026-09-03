@@ -854,6 +854,33 @@ yog would store and could not check:
   reconfigured box restarting is refused for at most the hold's width and lands
   on its next dial, loudly, rather than silently disarming whatever is serving.
 
+**The receipt says whether the engine WROTE** (`{"kind": "advertised", "ok":
+true, "wrote": true|false}` — bl-66d4, PROTOCOL 8). The answer used to be the
+same `ok` whether the document changed or was found identical and compared, so
+a box re-presenting an unchanged set and a box restoring a set another
+connection had blanked read alike, and the second event — two processes
+claiming one machine's name — reached no log on either side.
+
+It is **false on the ordinary re-presentation**: every reconnect makes one, and
+so does every §5.3 hand-off, since the foot re-asserts at the end of each
+(thrall bl-2d78). A box that presents once per channel sees `true` on its first
+presentation and never again. **A `true` on any later re-assertion is the
+machine learning it was disarmed while it was absent**, and the sentence it
+prints is the whole remedy — the window is the one the two guards above cannot
+reach, because a foot executing a tool holds no parked read and `serving()` is
+false for that tool's whole runtime.
+
+It is not an echo and §8.1's test still holds: the stored set after the write
+*is* the set the gesture carried, so answering the set would be one fact said
+twice. `wrote` is a fact about the **document**, and it is the one fact in this
+exchange the advertising box cannot compute for itself. **Required rather than
+optional-absent-reads-false**, because absent would read as *"nothing was
+restored"* — the reassuring answer — on exactly the build too old to tell; a
+field that exists to make one event audible must not be silently false. The
+engine already computed it (`registry::tools::store` answers "did it write" and
+the dispatch discarded it), so what landed is one field on one reply and no new
+verb.
+
 Refusal rather than a trail note because both parties can act on a refusal and
 only one of them reads a trail — and because §5.3's redelivery predicate reads
 "the client asked for work again" as "it did not finish what it holds", which

@@ -19,7 +19,20 @@ use super::Deps;
 use crate::boundary::reply::Reply;
 
 /// Validate the set and store it under the caller's own identity, writing only
-/// when it differs from what is stored (REMOTE §5).
+/// when it differs from what is stored (REMOTE §5) — and **answer whether it
+/// wrote** (REMOTE §5.1, bl-66d4).
+///
+/// [`tools::store`] has always computed that bool and this executor always
+/// discarded it, so a box re-presenting an unchanged set and a box restoring a
+/// set some other connection blanked were answered the identical `ok`. The
+/// second of those is two processes claiming one machine's name, and it reached
+/// no log on either side: bl-1462's guards cover the whole of an IDLE host's
+/// life, and the window they cannot cover is the one the host opens itself —
+/// §5.3's foot is absent for a tool's whole runtime, holds no parked read, and
+/// so `superseding` below waves the replacement through. The foot's own half
+/// (thrall bl-2d78) re-asserts at the end of every hand-off, which bounds that
+/// window to one tool's runtime and then **heals silently**. This is the
+/// sentence that makes the heal audible, and it costs one field on one reply.
 pub(super) fn advertise(deps: &Deps, tools: &[Tool]) -> Result<Reply, String> {
     let client = &deps.caller.client;
     if client.is_local() {
@@ -31,8 +44,8 @@ pub(super) fn advertise(deps: &Deps, tools: &[Tool]) -> Result<Reply, String> {
     }
     tools::validate(tools)?;
     superseding(deps, tools)?;
-    tools::store(&deps.state_root, client, tools).map_err(|e| e.to_string())?;
-    Ok(Reply::Advertised)
+    let wrote = tools::store(&deps.state_root, client, tools).map_err(|e| e.to_string())?;
+    Ok(Reply::Advertised { wrote })
 }
 
 /// **A serving machine's set may not be replaced under it** (REMOTE §5.1,

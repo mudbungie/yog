@@ -70,7 +70,12 @@ use super::frame;
 /// (REMOTE §9.9's correction). It is also the bump that pays for itself: the
 /// classification is the artifact clients vendor and judge themselves against,
 /// so a client must re-vendor to read it, and a bump is exactly what makes it.
-pub const PROTOCOL: u32 = 7;
+/// 7 → 8 (bl-66d4): `reply/advertised` gained `wrote`, the word saying whether
+/// this engine WROTE the advertised set or found it identical and compared. It
+/// is required rather than optional-absent-reads-false, because absent would
+/// read as *"nothing was restored"* — the reassuring answer — on exactly the
+/// build that cannot tell, and the field exists to make one event audible.
+pub const PROTOCOL: u32 = 8;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

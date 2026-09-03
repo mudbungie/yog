@@ -44,21 +44,45 @@ fn deps(state_root: &Path, client: Client) -> Deps {
 }
 
 /// The identity is the intake's, so the set lands under the connection's own
-/// name — and the receipt carries nothing, because the stored set *is* the set
-/// the gesture carried.
+/// name — and the receipt says the document was **written**, because there was
+/// none before. It still echoes no set: what it carries is what happened to the
+/// file, which is the one fact the advertising box cannot compute.
 #[test]
 fn a_connections_set_lands_under_its_own_identity() {
     let root = tempdir().expect("tempdir");
     let laptop = Client::parse("laptop").expect("identity");
     let deps = deps(root.path(), laptop.clone());
-    assert_eq!(
-        advertise(&deps, &[tool("Bash")]),
-        Ok(crate::boundary::reply::Reply::Advertised)
-    );
+    assert_eq!(advertise(&deps, &[tool("Bash")]), Ok(advertised(true)));
     assert_eq!(
         crate::registry::tools::read(root.path(), &laptop),
         vec![tool("Bash")]
     );
+}
+
+/// **The re-presentation is silent and the restoration is not** (REMOTE §5.1,
+/// bl-66d4). Presenting the same set again writes nothing and answers `false`,
+/// which is every reconnect and every §5.3 hand-off; presenting it again after
+/// something blanked it writes and answers `true`, and that `true` is the box
+/// learning it was disarmed while it was absent. Both arrive as the identical
+/// `ok` without the field, which is why it exists.
+#[test]
+fn only_a_write_answers_true_and_a_restoration_is_a_write() {
+    let root = tempdir().expect("tempdir");
+    let laptop = Client::parse("laptop").expect("identity");
+    let deps = deps(root.path(), laptop.clone());
+    assert_eq!(advertise(&deps, &[tool("Bash")]), Ok(advertised(true)));
+    assert_eq!(advertise(&deps, &[tool("Bash")]), Ok(advertised(false)));
+
+    // A rival bearing the same certificate blanks the box while it is running
+    // a tool — the window bl-1462's guards cannot close, because an executing
+    // foot holds no parked read.
+    assert_eq!(advertise(&deps, &[]), Ok(advertised(true)));
+    assert_eq!(advertise(&deps, &[tool("Bash")]), Ok(advertised(true)));
+}
+
+/// The receipt, spelled once for the tests that read it.
+fn advertised(wrote: bool) -> crate::boundary::reply::Reply {
+    crate::boundary::reply::Reply::Advertised { wrote }
 }
 
 /// **An intake with no client identity refuses in band** (REMOTE §5): the

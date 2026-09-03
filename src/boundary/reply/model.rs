@@ -110,12 +110,23 @@ pub enum Reply {
     Marks {
         branch: String,
     },
-    /// A tool host's set landed (REMOTE §5, bl-4e08). **It carries nothing**,
-    /// on §8.1's own test: the stored set after the write *is* the set the
-    /// gesture carried, so a count or an echo here would be one computable fact
-    /// said twice — the [`Applied`](Self::Applied) shape. Whether the write
-    /// actually touched the file is an optimization, not an answer.
-    Advertised,
+    /// A tool host's set landed (REMOTE §5, bl-4e08), and **whether this
+    /// engine WROTE it** (REMOTE §5.1, bl-66d4, PROTOCOL 8). It carried nothing
+    /// until then, on §8.1's own test — the stored set after the write *is* the
+    /// set the gesture carried, so an echo would be one computable fact said
+    /// twice, the [`Applied`](Self::Applied) shape — and that test still rules
+    /// out an echo. What it does not rule out is this: `wrote` is not the set,
+    /// it is what happened to the DOCUMENT, and no other party can compute it.
+    ///
+    /// It is false on the ordinary re-presentation, which every reconnect and
+    /// every §5.3 hand-off makes. A `true` on any later re-assertion is the
+    /// advertising box learning that something blanked or replaced its set
+    /// while it was absent — the one event bl-4e08's traffic ruling made
+    /// undetectable from that end, reported here rather than in a trail that
+    /// only this side reads.
+    Advertised {
+        wrote: bool,
+    },
     /// **One device enrolled** (REMOTE §8.4, bl-f4e3): the QR envelope's whole
     /// payload, and the only moment the minted key exists off the device it is
     /// for — [`enroll::Enrolled`](crate::registry::enroll::Enrolled)'s fields.

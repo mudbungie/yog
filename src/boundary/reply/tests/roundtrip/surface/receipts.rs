@@ -71,7 +71,11 @@ pub(super) fn receipts() -> Vec<Reply> {
         Reply::Config {
             text: "roles: []".into(),
         },
-        Reply::Advertised,
+        // Both readings of bl-66d4's receipt, because the false one is the
+        // ordinary reconnect and the true one is the whole point: a client
+        // that decoded only the shape it usually sees would miss the event.
+        Reply::Advertised { wrote: false },
+        Reply::Advertised { wrote: true },
         // REMOTE §1.4's enrollment (bl-f4e3), at both grades. **The material is
         // fabricated and says so**: a real minted key must never enter this
         // corpus, and what a client needs from the fixture is the shape — three

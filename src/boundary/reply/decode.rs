@@ -86,7 +86,7 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "acked" => Ok(Reply::Acked),
         "trail-cleared" => Ok(Reply::TrailCleared),
         "applied" => Ok(Reply::Applied),
-        "advertised" => Ok(Reply::Advertised),
+        "advertised" => bool_of(o, "wrote").map(|wrote| Reply::Advertised { wrote }),
         // The QR envelope's payload (bl-f4e3), strict on all six: a seat that
         // read five of them and defaulted the sixth would draw a code that
         // cannot dial, or one whose grade nobody asked for.

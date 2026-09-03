@@ -54,7 +54,7 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Acked => json!({ "ok": true, "kind": "acked" }),
         Reply::TrailCleared => json!({ "ok": true, "kind": "trail-cleared" }),
         Reply::Applied => json!({ "ok": true, "kind": "applied" }),
-        Reply::Advertised => json!({ "ok": true, "kind": "advertised" }),
+        Reply::Advertised { wrote } => json!({ "ok": true, "kind": "advertised", "wrote": wrote }),
         Reply::Enrolled(enrolled) => enrolled_reply(enrolled),
         // The routing leg's asking side (bl-024b): the handle, and the capture
         // once there is one. `capture` is **absent** rather than empty while
