@@ -131,19 +131,6 @@ pub const QUERIES: &[HelpRow] = &[
         surface: Surface::Control,
     },
     HelpRow {
-        verb: "attention",
-        usage: "/attention",
-        summary: "everything waiting on you, across every workspace",
-        detail: "The decision queue: one row per conversation asking for you, anywhere yog can \
-                 see — why it is asking (it notified you, it came to rest, it hit its budget, a \
-                 transfer was declined, its mail is undelivered), what it last said, how long it \
-                 has waited, and the workspace and conversation to aim an answer at. The order is \
-                 the one the down arrow walks at the window; the count is the strip's. Answer a \
-                 row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else \
-                 about it.",
-        surface: Surface::Control,
-    },
-    HelpRow {
         verb: "ops",
         usage: "/ops [n]",
         summary: "the last n ops rows, newest last",

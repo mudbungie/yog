@@ -1,11 +1,17 @@
-//! The **follow-class** reads' page (REMOTE §3, §10; bl-73e7) — the two verbs
-//! whose answer is a *sequence* rather than a value, and whose hold is a
-//! connection thread.
+//! The **follow-class** reads' page (REMOTE §3, §10, §14.1; bl-73e7, bl-09aa)
+//! — the verbs whose answer is a *sequence* rather than a value, and whose hold
+//! is a connection thread.
 //!
 //! Split from [`queries`](super::queries) at §12's 300-line cap on the seam
 //! REMOTE §3 already draws: every other read answers what is true now and is
-//! done, while these two stay open and keep saying it. [`table`](super::super::table)
+//! done, while these stay open and keep saying it. [`table`](super::super::table)
 //! reads both halves as one, so the split is not a seam an operator can see.
+//!
+//! **The page is the class, so a read that graduates moves here.** `attention`
+//! did (REMOTE §14.1): it was on the queries page while it answered once, and
+//! it is here now that a holding intake answers it as a sequence. Leaving it
+//! there would have made this page's own sentence false, which is the only way
+//! an operator could learn the class from `/help` at all.
 //!
 //! What each page has to explain is the same fact from two sides: an intake
 //! that can hold a connection answers many frames, and one that cannot answers
@@ -18,6 +24,23 @@
 use crate::boundary::help::{HelpRow, Surface};
 
 pub const FOLLOWING: &[HelpRow] = &[
+    HelpRow {
+        verb: "attention",
+        usage: "/attention",
+        summary: "everything waiting on you, across every workspace",
+        detail: "The decision queue: one row per conversation asking for you, anywhere yog can \
+                 see — why it is asking (it notified you, it came to rest, it hit its budget, a \
+                 transfer was declined, its mail is undelivered), what it last said, how long it \
+                 has waited, and the workspace and conversation to aim an answer at. The order is \
+                 the one the down arrow walks at the window; the count is the strip's. Answer a \
+                 row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else \
+                 about it. Over a connection that can be held it stays open: the first frame is \
+                 the answer as of now, and a further frame arrives whenever what needs you \
+                 changes — each frame the whole answer, so paint the last one you were given. \
+                 The hold ends quietly after thirty seconds and the asker asks again. At a seat \
+                 that cannot hold one it is the same answer, once.",
+        surface: Surface::Control,
+    },
     HelpRow {
         verb: "invocations",
         usage: "/invocations",

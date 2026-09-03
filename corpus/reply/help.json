@@ -426,13 +426,6 @@
           "verb": "agent"
         },
         {
-          "detail": "The decision queue: one row per conversation asking for you, anywhere yog can see — why it is asking (it notified you, it came to rest, it hit its budget, a transfer was declined, its mail is undelivered), what it last said, how long it has waited, and the workspace and conversation to aim an answer at. The order is the one the down arrow walks at the window; the count is the strip's. Answer a row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else about it.",
-          "summary": "everything waiting on you, across every workspace",
-          "surface": "control",
-          "usage": "/attention",
-          "verb": "attention"
-        },
-        {
           "detail": "The tail of `ops.jsonl` — one line per action anything attempted, with its outcome. Actions only: a query reads the world and changes nothing, so it leaves no row, and what was read before an action was chosen cannot be recovered here. Defaults to the last 50 rows.",
           "summary": "the last n ops rows, newest last",
           "surface": "control",
@@ -459,6 +452,13 @@
           "surface": "control",
           "usage": "/help [verb]",
           "verb": "help"
+        },
+        {
+          "detail": "The decision queue: one row per conversation asking for you, anywhere yog can see — why it is asking (it notified you, it came to rest, it hit its budget, a transfer was declined, its mail is undelivered), what it last said, how long it has waited, and the workspace and conversation to aim an answer at. The order is the one the down arrow walks at the window; the count is the strip's. Answer a row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else about it. Over a connection that can be held it stays open: the first frame is the answer as of now, and a further frame arrives whenever what needs you changes — each frame the whole answer, so paint the last one you were given. The hold ends quietly after thirty seconds and the asker asks again. At a seat that cannot hold one it is the same answer, once.",
+          "summary": "everything waiting on you, across every workspace",
+          "surface": "control",
+          "usage": "/attention",
+          "verb": "attention"
         },
         {
           "detail": "The routing leg's follow-class read. It does not answer until this machine has an invocation or the engine's hold expires — thirty seconds — so a tool host waits here rather than polling, and asks again the moment it is answered. It names nothing: the queue it drains is the one addressed to the certificate this connection presented, which is why a caller inside the world (`yog gesture`, the deposit inbox, the window) is refused rather than handed somebody's work. An empty answer is the ordinary answer of a hold that ended quietly, not a failure. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run it and post the result with `/complete`.",

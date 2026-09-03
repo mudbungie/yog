@@ -44,7 +44,9 @@ const ACCEPT_POLL: Duration = Duration::from_millis(20);
 /// wait** — thrall's channel states the same two minutes from the other end,
 /// and for the same reason: the engine's longest legitimate quiet is a
 /// follow-class hold, which is thirty seconds
-/// ([`slots`](crate::registry::mailbox), [`follow`](crate::boundary::follow))
+/// ([`slots`](crate::registry::mailbox), [`follow`](crate::boundary::follow),
+/// and [`attend`](crate::boundary::attend), which holds on the follow lane's
+/// own two constants rather than a third pair)
 /// and then an answer, so a client parked for hours is a sequence of answered
 /// reads and never one read held for hours. No client idles past it: a foot
 /// re-asks immediately, a seat dials per gesture.

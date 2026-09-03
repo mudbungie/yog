@@ -19,8 +19,8 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 /// The follow-class door — the arm of this intake that answers a *sequence*
-/// (REMOTE §3), split off at §12's budget on the seam the answer shape itself
-/// draws: everything else here answers one frame.
+/// (REMOTE §3, §14.1), split off at §12's budget on the seam the answer shape
+/// itself draws: everything else here answers one frame.
 mod lanes;
 
 use super::consume::{consume, run_gesture, run_value};

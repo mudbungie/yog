@@ -1,16 +1,24 @@
-//! **The follow-class door** (REMOTE §3, §10) — the one arm of the intake whose
-//! answer is a frame *sequence* rather than a value, split from [`super`] at
-//! §12's budget on the seam the answer's own shape draws.
+//! **The follow-class door** (REMOTE §3, §10, §14.1) — the one arm of the
+//! intake whose answer is a frame *sequence* rather than a value, split from
+//! [`super`] at §12's budget on the seam the answer's own shape draws.
 //!
-//! Two reads reach it and they share everything but their subject: `Follow` is
-//! one conversation's live tail (bl-73e7) and `LoginTail` is one sign-in's
-//! output (REMOTE §8.3, bl-c285). Both are answered *once* by
+//! Three reads reach it and they share everything but their subject: `Follow`
+//! is one conversation's live tail (bl-73e7), `LoginTail` is one sign-in's
+//! output (REMOTE §8.3, bl-c285), and `Attention` is what needs the operator
+//! (REMOTE §14.1, bl-09aa). All three are answered *once* by
 //! [`answer`](crate::boundary::answer::answer) at every other intake — the tail
-//! as of now, the standing as of now, which is the general path with one frame
-//! — and held open only here, because this is the only intake that owns a
-//! connection to hold.
+//! as of now, the standing as of now, the queue as of now, which is the general
+//! path with one frame — and held open only here, because this is the only
+//! intake that owns a connection to hold.
+//!
+//! **The third one names nothing, and that costs no branch** (REMOTE §14.1): a
+//! read that names no workspace resolves to nothing and no arm reads it, which
+//! is the resolution [`answer`](crate::boundary::answer::answer) already
+//! performs the same way — the general path with no input rather than a case of
+//! its own.
 
 use serde_json::Value;
+use std::sync::Arc;
 
 use super::ConsumerCtx;
 use crate::boundary::reply::Reply;
@@ -18,13 +26,16 @@ use crate::boundary::{Gesture, Query};
 
 /// Which lane a follow-class read opens, with the one thing that read names
 /// beyond its workspace. It exists so the address resolution below can be
-/// written once, ahead of the two constructors, exactly as the two chokepoints
-/// resolve ahead of their tables — and so neither arm is unreachable.
+/// written once, ahead of the three constructors, exactly as the two
+/// chokepoints resolve ahead of their tables — and so no arm is unreachable.
 enum Subject {
     /// The conversation whose live tail is followed.
     Tail(String),
     /// The provider row whose sign-in is followed.
     Login(String),
+    /// What needs the operator, under this asker's scope. It names no
+    /// workspace: the queue is world-wide and the scope is the narrowing.
+    Attention,
 }
 
 impl ConsumerCtx {
@@ -42,7 +53,13 @@ impl ConsumerCtx {
     /// The scope is spent HERE, at connect, exactly as it is for a one-frame
     /// answer — the identity is per request (REMOTE §4) and a held read is one
     /// request. What the stream then re-reads per look is the state of a
-    /// conversation, or of a sign-in, this caller was already authorized for.
+    /// conversation, of a sign-in, or of the world under the registrations this
+    /// caller was already authorized for.
+    ///
+    /// **The attention lane can never be a read nobody can answer** (REMOTE
+    /// §14.1): it addresses nothing, so there is nothing to resolve, and a seat
+    /// registered in no workspace is answered a lane whose every frame is empty
+    /// — REMOTE §4's absence, said as a stream — rather than a refusal.
     ///
     /// **A foot never reaches the lane** (REMOTE §4.2, bl-7ff3): a follow-class
     /// read is not one of the three gestures its grade admits, so this answers
@@ -60,17 +77,23 @@ impl ConsumerCtx {
             return None;
         }
         let (named, subject) = match gesture {
-            Gesture::Ask(Query::Follow { workspace, agent }) => (workspace, Subject::Tail(agent)),
+            Gesture::Ask(Query::Follow { workspace, agent }) => {
+                (Some(workspace), Subject::Tail(agent))
+            }
             Gesture::Ask(Query::LoginTail {
                 workspace,
                 provider,
-            }) => (workspace, Subject::Login(provider)),
+            }) => (Some(workspace), Subject::Login(provider)),
+            Gesture::Ask(Query::Attention) => (None, Subject::Attention),
             _ => return None,
         };
         let client = &peer.client;
         let scope = crate::registry::registered(&self.state_root, client);
         let (deps, _, _) = self.deps(client, Some(&scope));
-        let ws = deps.snapshot.ws_path(&named).ok()?;
+        let ws = match named {
+            Some(name) => deps.snapshot.ws_path(&name).ok()?,
+            None => std::path::PathBuf::new(),
+        };
         let frames: Box<dyn Iterator<Item = Reply>> = match subject {
             Subject::Tail(agent) => {
                 let agent =
@@ -86,6 +109,13 @@ impl ConsumerCtx {
                 deps.caller.logins.clone(),
                 ws,
                 provider,
+            )),
+            Subject::Attention => Box::new(crate::boundary::attend::Attend::new(
+                self.cell.clone(),
+                scope,
+                self.ui_path.clone(),
+                crate::registry::pane(&self.state_root, client),
+                Arc::clone(&self.clock),
             )),
         };
         Some(Box::new(

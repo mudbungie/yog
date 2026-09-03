@@ -73,8 +73,12 @@ use open::Open;
 /// own bound. The tick is the §7.2 follower's own period, which is what "at
 /// write cadence" means in a number: half the §11 pulse, so a repaint that was
 /// going to happen carries the newest bytes rather than the previous look's.
-const HOLD_WAITS: u32 = 1875;
-const HOLD_TICK: Duration = Duration::from_millis(16);
+///
+/// `pub(super)` because the attention lane holds on the **same** bound (REMOTE
+/// §14.1: "the follow lane's bounded-hold discipline applies unamended") — one
+/// pair of numbers, not two that can drift apart.
+pub(super) const HOLD_WAITS: u32 = 1875;
+pub(super) const HOLD_TICK: Duration = Duration::from_millis(16);
 
 /// What one look found — [`Follow::poll`]'s answer, and the whole vocabulary a
 /// held read has. [`Iterator::next`] is this plus the parking, which is why a

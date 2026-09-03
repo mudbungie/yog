@@ -66,6 +66,11 @@ const FOREIGN: &[&str] = &[
     // and why nothing set is an answer — lives there rather than in the
     // variant's own doc.
     "9.7", "9.8", "9.9", "9.14",
+    // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
+    // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
+    // "Rejections" and has no subsections at all, which the sibling test keeps
+    // honest: the day it grows a §14.1, this entry fails rather than masking it.
+    "14.1",
     // REMOTE.md's §5.4 — the thrall and the local execution corpus, and since
     // bl-dfce the home of the ruling that the compactor's procedure pair is an
     // engine act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN

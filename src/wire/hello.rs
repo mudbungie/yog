@@ -81,7 +81,16 @@ use super::frame;
 /// vocabulary both shapes spell. A gain and a loss on two shapes, which is
 /// two of the four things §3 says bump the version; the ledger's one free move
 /// would have covered neither, since it cannot see what has shipped.
-pub const PROTOCOL: u32 = 9;
+/// 9 → 10 (bl-09aa): **no field moved, and that is why this bump is the rule
+/// rather than an exception to it.** `attention` became follow-class (REMOTE
+/// §14.1): the same ask, the same reply shape, but a *sequence* — the first
+/// frame at connect, a further frame whenever the answer changes, the
+/// terminator when the hold ends. That is precisely "what a spelling already in
+/// use is taken to say", and it is the one class of change the corpus ledger
+/// cannot see, since frame count is not a field signature. A seat built against
+/// 9 would read the first frame and then wait on a terminator up to a hold
+/// away; strict equality here is what turns that into an upgrade sentence.
+pub const PROTOCOL: u32 = 10;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

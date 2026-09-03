@@ -25,6 +25,10 @@
 //! match non-exhaustive until the spelling exists.
 
 pub mod answer;
+/// The attention lane's engine half (REMOTE §14.1, bl-09aa): `Query::Attention`
+/// answered as a frame *sequence* — a frame per change of the answer, found at
+/// the derivation worker's own republish.
+pub(crate) mod attend;
 /// The §3.5 spend ceiling's one seat — the spawn gate.
 pub mod ceiling;
 pub mod codec;
@@ -46,8 +50,9 @@ pub mod dispatch;
 pub mod fan;
 /// The VISION §4.3 armed loop's one executor — arming, which is a config write.
 pub mod fleet;
-/// The follow lane's engine half (REMOTE §3, §10; bl-73e7): the one query whose
-/// answer is a frame *sequence*, held open at the rate the model writes.
+/// The follow lane's engine half (REMOTE §3, §10; bl-73e7): the read whose
+/// answer is a frame *sequence*, held open at the rate the model writes — and
+/// whose hold bound [`attend`] holds on too.
 pub(crate) mod follow;
 pub mod help;
 /// The §8.2 send-and-interrupt's one executor (bl-a33d) — a stop and a deposit,

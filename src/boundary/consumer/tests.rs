@@ -9,8 +9,9 @@ mod birth;
 /// The REMOTE §4.2 half (bl-7ff3): the certificate grade raising at this same
 /// chokepoint — what a foot may say, and the sentence everything else earns.
 mod grade;
-/// The follow-class door's second lane (REMOTE §8.3, bl-c285) — its own file
-/// on the seam production is cut along ([`super::lanes`]).
+/// The follow-class door's own beats (REMOTE §3, §8.3, §14.1; bl-73e7,
+/// bl-c285, bl-09aa) — which asks the intake answers as a stream and which it
+/// does not, on the seam production is cut along ([`super::lanes`]).
 mod lanes;
 /// The scoped intake (REMOTE §4, bl-8bbc): what a connection enumerates, what
 /// an unregistered name earns, and the create that seats its own client. Its

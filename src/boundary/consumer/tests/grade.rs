@@ -94,21 +94,27 @@ fn a_foot_may_not_ask_about_the_world_act_on_it_or_invoke() {
     }
 }
 
-/// **A foot never reaches the follow lane**, and the refusal it reads is the
-/// same one every other over-reach earns: `follow` answers no stream, and the
-/// one function that words refusals words this one too.
+/// **A foot never reaches a held lane** — either of them (REMOTE §4.2, §14.1)
+/// — and the refusal it reads is the same one every other over-reach earns:
+/// `follow` answers no stream, and the one function that words refusals words
+/// this one too. The grade is spent once, above the arm that picks the lane, so
+/// a lane added later is covered by that raise rather than by remembering it.
 #[test]
 fn a_foot_gets_no_stream_and_the_grades_sentence_instead() {
     let (root, data) = (tempdir().unwrap(), tempdir().unwrap());
     let ctx = quiet(root.path(), data.path());
     let host = foot("host");
     crate::registry::register(root.path(), &host.client, "home").unwrap();
-    let request = json!({"op": "follow", "workspace": "home", "agent": "c-1"});
-    assert!(ctx.follow(&host, &request).is_none());
-    assert!(
-        refused_for_grade(&ctx.answer_as(&host, &request)),
-        "refused"
-    );
+    for request in [
+        json!({"op": "follow", "workspace": "home", "agent": "c-1"}),
+        json!({"op": "attention"}),
+    ] {
+        assert!(ctx.follow(&host, &request).is_none(), "{request}");
+        assert!(
+            refused_for_grade(&ctx.answer_as(&host, &request)),
+            "refused"
+        );
+    }
 }
 
 /// **Default-operator is the whole of the compatibility story** (REMOTE §4.2):

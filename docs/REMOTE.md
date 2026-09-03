@@ -4321,10 +4321,16 @@ is this:
 
   The criterion is unchanged and still the thing to measure a future candidate
   against. One surface met it. The row stays open because the next one will have
-  to argue the same case. **The next one is arguing it now (§14.4, bl-5f41):**
-  the attention lane's case is the criterion inverted — not an ask rate an
-  operator could not read at, but an asker that cannot re-ask (a pocketed
-  phone) — and the ruling is pending there, not here.
+  to argue the same case. **The next one argued it and won (§14.4, bl-5f41,
+  operator ruling 2026-09-03; built as bl-09aa):** the attention lane's case is
+  the criterion *inverted* — not an ask rate an operator could not read at, but
+  an asker that cannot re-ask (a pocketed phone) — and admitting it widened the
+  criterion by exactly that much rather than loosening it. Note what it did not
+  change, which is the same list this row kept for the follow lane: per-request
+  identity stands (the scope is spent at connect, and a held read is one
+  request), the pull model stands for every human-cadence read, and there is
+  still no reconnect ladder and no liveness protocol — the lane's hold is the
+  follow lane's own bound, imported rather than restated, and the seat re-asks.
 - ~~When polling graduates to a follow-class query~~ — **settled and built by
   bl-024b**: `Query::Invocations` is the first follow-class read with a
   consumer, and it needed no wire change. ~~What stays open is only whether the
@@ -4830,7 +4836,7 @@ engine's to manufacture. So the design is one small lane plus an honest
 ladder of what a phone does with it, and this ball's own title survives
 byte for byte: attention exists only when a client asks; the ask may stand.
 
-### 14.1 The attention lane
+### 14.1 The attention lane (landed, bl-09aa)
 
 **`Query::Attention`, answered as a sequence by an intake that can hold.**
 The wire spelling does not move: the query and `Reply::Attention` stand as
@@ -4860,6 +4866,45 @@ bounded-hold discipline applies unamended — the hold ends, and the lane
 re-asks, a stream that ended and a dial that failed being one case (§10).
 Severability is the follow lane's too: nothing runs for a seat that never
 holds the lane, and a foot never reaches it (§4.2).
+
+**Two things the design as written did not price, both found in the building
+and both paid here.**
+
+**The bump.** `PROTOCOL` is **9**. No field moved and no spelling changed, so
+the corpus ledger — which records field signatures — could not have caught
+this: frame *count* is not a signature. But §3's rule is the authority and the
+preface's own words are exact — a bump is for *"what a spelling already in use
+is taken to say"*, and `attention` now says a sequence. A seat built against 8
+would read the first frame and then wait on a terminator up to a hold away,
+which is a hang no sentence explains; the handshake is strict equality, so the
+bump converts that silence into the upgrade prompt. This is also what makes
+"the wire spelling does not move" and "no seat is surprised" hold at once: the
+spelling is the same, and no build that predates the lane can connect to find
+out.
+
+**The age is a clock reading, not a change.** Every queue row carries
+`age_secs`, which is `now - last_action`, so an answer compared *with* its ages
+in it differs at every republish — and the §7.2 full sweep republishes every
+15 s whether the world moved or not. Taken naively the lane would therefore
+have degraded into a 15 s poll, writing a frame to say only that it is later
+now, on the one seat whose battery is the whole reason the lane exists. So the
+change comparison is over the answer with its ages zeroed and the frame carries
+this moment's. That is the only projection in the lane, and it is not a second
+definition of the answer: it is the answer without its clock.
+
+**Change is found where the answer's inputs already are.** The derived trees
+and `ui.json`'s `seen` watermarks are the whole of what the queue reads, and
+both are inside the published snapshot — the worker adopts the document on its
+own watch. So a look whose cell holds the very pointer it last computed from is
+finished before it starts, an acknowledgement made on the seat's *other*
+connection empties the lane at the next republish, and the lane itself watches
+nothing.
+
+**The lane addresses nothing, which is why it needs no fall-through.** A follow
+answers `None` for an address that will not resolve and the one-frame answer
+words the refusal; attention names no workspace and no conversation, so there is
+nothing to resolve. A seat registered in nothing is answered a lane whose frames
+are empty — §4's absence, said as a stream — rather than a refusal.
 
 ### 14.2 The ladder on the phone
 
@@ -4907,34 +4952,42 @@ holds, so the app halves land in the app's own repository:
   each moment this operator's engine wants this operator's device, and a
   device token that is a durable third-party name for the phone. The
   self-hosted-distributor variant trades the vendor for a publicly
-  dialable box, which is §13's rulings 1 and 2 reversed. Recommended:
-  refused, and parked §13.6-style with a criterion (§14.4) rather than
-  deleted — the honest record is that this rung exists and what it costs,
-  not that it does not work.
+  dialable box, which is §13's rulings 1 and 2 reversed. **Ruled refused**
+  (bl-4dea, operator 2026-09-03), and parked §13.6-style behind §14.4's
+  criterion rather than deleted — the honest record is that this rung exists
+  and what it costs, not that it does not work.
 - **An out-of-band adapter** — mail or messaging at attention-fire, riding
   a push channel the operator already carries. Refused: it exports the
   fact out of the wire's mTLS into a channel with its own custodians,
   grows an engine-side adapter and a credential where DESIGN §5.1 #22
   says yog holds none, and wakes a mail client, not a seat.
 
-### 14.4 Open, awaiting operator ruling
+### 14.4 Ruled (operator, 2026-09-03)
 
-1. **Admit the attention lane** (§14.1) as the third follow-class read —
-   filed as bl-5f41. §10's held-connection row stands on every candidate
-   arguing its own case; this one's case is not a rate an operator could
-   not read at but the inverse, an asker that cannot re-ask. Recommended:
-   **yes**. This is the one gate on the engine work (bl-09aa), and rung 2
-   consumes it.
-2. **The wake-relay class** (§14.3) — filed as bl-4dea. Recommended
-   default: **refuse now, park behind a criterion**: reopen only if an
-   operator's actual device measurably cannot hold rung 2 *and* rung 1's
-   latency bites where it matters — bl-a9b0's shape, evidence rather than
-   taste.
+Both questions this section queued were put and answered on the same day, each
+on the recommendation recorded in its own ball. Neither is open.
 
-**Component impact.** yog: the follow arm of the wire intake widened to
-answer `Query::Attention` as a sequence — change-detection at the worker's
-republish, frames that replace, the one-frame answer untouched for every
-intake that cannot hold (bl-09aa, gated on ruling 1). lernie: nothing — the
-window never sleeps mid-ask. The app: rungs 1 and 2, filed and tracked in
-its own repository (§12.1); rung 1 needs nothing from anyone and can land
-today.
+1. **Admit the attention lane** (§14.1) as the third follow-class read — filed
+   as bl-5f41, **ADMITTED**. §10's held-connection row stands on every candidate
+   arguing its own case; this one's case is not a rate an operator could not
+   read at but the inverse, an asker that cannot re-ask. It was the one gate on
+   the engine work, and that work is landed (bl-09aa): the lane is small,
+   severable, and the in-posture alternative to every wake-relay shape §14.3
+   refuses. Rung 2 consumes it.
+2. **The wake-relay class** (§14.3) — filed as bl-4dea, **REFUSED and parked**,
+   §13.6-style rather than deleted. The criterion for reopening is stated so it
+   cannot be re-argued from taste: reopen only if an operator's actual device
+   measurably cannot hold rung 2 **and** rung 1's scheduled-fetch latency bites
+   where it matters — bl-a9b0's shape, evidence rather than preference. Until
+   both halves are met, the account, the vendor SDK, the timing-metadata stream
+   and the durable third-party device name stay out of the posture, and §14.3's
+   honest record of what that rung would buy stands as written.
+
+**Component impact.** yog: **landed** (bl-09aa) — the wire intake's held-read
+arm answers `Query::Attention` as a sequence beside `Query::Follow`, change
+found at the worker's republish, frames that replace, the one-frame answer
+untouched for every intake that cannot hold. It cost one thing the design did
+not price: `PROTOCOL` is 9 (§14.1). lernie: nothing — the window never sleeps
+mid-ask, and it reads attention off `Query::Workspaces`' rollups rather than
+this lane. The app: rungs 1 and 2, filed and tracked in its own repository
+(§12.1); rung 1 needs nothing from anyone and can land today.
