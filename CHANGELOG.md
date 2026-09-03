@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.16](https://github.com/mudbungie/yog/compare/v0.0.15...v0.0.16) - 2026-09-02
+
+### Changes
+
+- /seen is a write whose help reads as a read: it clears the badge for the selected conversation and its receipt is the queue without it [bl-5cfe]
+- the mint tells the operator to file material under the leaf's name; the seat routes on the workspace's [bl-686c]
+
 ## [0.0.15](https://github.com/mudbungie/yog/compare/v0.0.14...v0.0.15) - 2026-09-02
 
 ### Changes

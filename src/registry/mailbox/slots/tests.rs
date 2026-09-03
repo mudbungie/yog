@@ -1,6 +1,8 @@
 //! The mailbox: a queue per client, a slot per invocation, and a hold that
 //! ends rather than hangs.
 
+use std::time::Instant;
+
 use super::*;
 use serde_json::json;
 
@@ -181,17 +183,32 @@ fn an_empty_hold_expires_and_answers_nothing() {
 
 /// The hold ends **early** when work lands — the whole point of a follow-class
 /// read over a poll at human cadence.
+///
+/// **The hand-off is `serving`, never a sleep** (bl-b8c8). The read publishes
+/// its reader claim on the way in, so that flag is a fact both threads observe
+/// and the post is ordered after the park by the mailbox itself. A sleep is
+/// not a rendezvous: on a loaded box the writer's wake lands after the hold
+/// has expired, and the beat then fails on the machine rather than on the
+/// fold. The deadline is the writer's own escape — it posts anyway, so a read
+/// that never parked fails the assertion below instead of hanging the suite.
 #[test]
 fn work_landing_mid_hold_ends_it() {
     let mail = Mailbox::holding(400, Duration::from_millis(5));
     let writer = mail.clone();
     let hand = std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(20));
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while !writer.serving("laptop") && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(1));
+        }
         writer.post(10, "local", &call("laptop", "Bash"))
     });
     let taken = took(&mail, "laptop");
     let id = hand.join().expect("the writer");
-    assert_eq!(taken.first().map(|i| i.id.clone()), Some(id));
+    assert_eq!(
+        taken.first().map(|i| i.id.clone()),
+        Some(id),
+        "the parked read answered with the work rather than expiring empty"
+    );
 }
 
 /// A handle this engine does not hold refuses **naming it**, at both readers:
