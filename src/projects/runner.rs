@@ -121,11 +121,13 @@ impl BlRunner for BlStore {
     }
 }
 
-/// The operator's claim identity for the claimed-by-me axis (§4.1): the recorded
-/// `identity_last_used`, else the invoking `$USER`, else empty (nothing is
-/// "mine" when the identity is unknown — the safe default).
-pub fn identity(recorded: Option<String>, user: Option<String>) -> String {
-    recorded.or(user).unwrap_or_default()
+/// The operator's claim identity for the claimed-by-me axis (§4.1): the
+/// invoking `$USER`, else empty (nothing is "mine" when the identity is
+/// unknown — the safe default). No document overrides it: `identity_last_used`
+/// was read here and written nowhere, so bl-f936 deleted the key and this is
+/// the whole rule.
+pub fn identity(user: Option<String>) -> String {
+    user.unwrap_or_default()
 }
 
 #[cfg(test)]

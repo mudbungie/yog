@@ -50,8 +50,7 @@ replicate the same data, with nothing RAM-only except unsubmitted input text.**
 yog is a pure derivation of disk plus a small set of gesture dispatchers. The
 only durable state yog itself owns is one UI-state document (`ui.json`), one
 action-outcome log (`ops.jsonl`) and one clock-settings document
-(`cadence.yaml`, §7.2, bl-3381), plus a per-client pane document beside them
-(REMOTE §7). Everything else already has an authoritative home in balls,
+(`cadence.yaml`, §7.2, bl-3381). Everything else already has an authoritative home in balls,
 litany, brazen, or git, and yog derives it.
 
 Crate `yog`, bin `yog`, repo `github.com/mudbungie/yog`, published on
@@ -1793,19 +1792,23 @@ selection, and scroll are deliberately **not** here: they are per-seat ephemera
 (§5.3, reasoning in §13.1) and they never cross the boundary at all (§8.5:
 views do not cross).
 
-**Two documents, not one** (REMOTE §7, bl-8bbc), read through one handle
-(`src/ui_state/`) so which file owns a key is stated once, at that key's
-accessor. **The pane document has no boundary spelling at all — bl-f936**: its
-six keys are written by nothing and answered to nobody since the frame that
-read them left, so read the block below as the schema it is and the policy it
-is meant to be, not as behaviour standing today. `ui.json` is the **world** document: the operator's assertions about
-the world, shared by every seat, and the only one this section's name refers
-to. Beside it is one **pane** document per registered client — facts about a
-pane of glass, which converge across that client's own seats and must not
-converge across clients (a fold answered on the phone must not close a section
-on the desktop). Both take the same write discipline, the same forgiving read
-and the same echo hash; the split is in what a fact is *about*, never in the
-mechanics.
+**One document, and every key in it is a fact about the world** (bl-f936,
+amending REMOTE §7's split): the operator's assertions, shared by every seat.
+
+*It was two, and the second is deleted.* bl-8bbc gave each registered client a
+**pane** document — `panels`, `collapsed`, `zoom`, the two transcript-density
+knobs and `notify_unfocused` — on the argument that a glass fact converges
+across one client's own seats and must not converge across clients. The
+argument was sound and the document never kept it: its readers and writers were
+all the frame's, bl-7942 took the frame, and no `Action` or `Reply` ever
+replaced them, so for the whole of its life **not one of those six keys was
+written by anything or answered to anybody**. A promise a seat cannot reach is
+not a weaker promise, it is none — so rather than mint six gestures for a view,
+§8.5's own rule stands: *a view gains no boundary representation*. **A glass
+fact is each seat's own local storage**, and the cost is exactly the promise
+that was never kept: a fold answered on the phone does not clear on the
+desktop. Nothing else changes — a stale `pane.json` under `clients/<client>/`
+is read by nothing and may be deleted at leisure.
 
 ```json
 // ui.json — the world document
@@ -1818,24 +1821,12 @@ mechanics.
     }
   },
   "pinned":   ["/abs/ws/path", "..."],
-  "identity_last_used": "op@example.invalid",
   "prices": { "opus": { "input": 15, "output": 75,
                         "cache_read": 1.5, "cache_write": 18.75 } },
   "ceiling": 25
 }
 ```
 
-```json
-// <state-root>/clients/<client>/pane.json — one per registered client
-{
-  "v": 1,
-  "collapsed": ["proj:/home/u/dev/brazen", "ws:/abs/ws/path"],
-  "transcript_expand_responses": true,
-  "transcript_expand_others": false,
-  "zoom": 1.0,
-  "panels": { "conversations": 260, "activity_trail": 200, "start_goal": 240 }
-}
-```
 
 - **`seen`** — the attention-acknowledgement watermarks (§6), one per signal
   kind, keyed to ref oids (notify/budget/conflicted = the `refs/litany/*` ref
@@ -1877,64 +1868,39 @@ mechanics.
   gesture addresses by §3.1 name like every other. The resolution is the
   dispatch chokepoint's, once, exactly as `Action::MarkSeen`'s is — the shape
   this act was written to copy, being the other durable `ui.json` writer.
-- **`collapsed`** — explicit user expansion overrides only; default expansion
-  is derived from attention, so the file stays tiny. A persisted *view* (§13.0),
-  not durable data.
 - ~~**`show_internal`**~~ — **deleted (bl-e3e7).** It was the global
   nested-delivery ("internal") clone view filter (§5.1 #1). Nested-delivery
   clones are now hidden unconditionally, so no key backs the view and none is
   read: a stale `"show_internal"` in an existing `ui.json` round-trips as an
   unknown key and means nothing. See §5.1 #1 for the ruling.
-- **`transcript_expand_responses` / `transcript_expand_others`** — the §11
-  transcript-density automatics: which row classes arrive expanded (defaults
-  `true` / `false`, the operator's ruling — the conversation open, the
-  machinery around it folded). The key names are the durable ones and stay as
-  written; bl-6ec6 widened what `responses` *covers* (delivered messages
-  joined it) without touching what an existing `ui.json` means. Policy, not data — and the reason
-  they are *here* is that `ui.json` is the durable UI-state artifact yog
-  already has; inventing a second file for two booleans would give one fact
-  two homes. Absent ⇒ the default; a non-bool value ⇒ the default (the
-  forgiving read). Deleting them restores the ruling, deletes no code path.
-- **`zoom`** — the operator's **text size** for this client's glass. Absent or
-  non-numeric ⇒ `1.0`; the read clamps to a 0.2–5.0 domain, so a hand-edited
-  value can never open a pane nobody can read, and the write snaps to a
-  hundredth so the `f32` round-trips exactly. **This document is the authority
-  and a seat's own scale factor is its projection** — a seat re-asserts the
-  stored value rather than holding its own, and switches off any toolkit's
-  built-in zoom (bl-42e7 did exactly that in the window). The alternative —
-  letting the toolkit hold the live factor and mirroring it here — gives one
-  fact two homes: it is lost at exit (the symptom filed: set the size, quit,
-  relaunch, it is 1.0 again), and two seats would each write their own back over
-  the other's adoption, forever. Derived-from-one-home has no such fixpoint: an
-  adopted change lands on the next read.
-- **`panels`** — the sizes the operator dragged the resizable panel boundaries
-  to, in **logical points**: the conversation column's width, and the heights of
-  the expanded activity trail and the start-goal composer (§11). One object
-  keyed by panel, so a new draggable boundary is one member, not a new
-  top-level key. Absent, non-numeric, or a `panels` that is not an object all
-  read as *never dragged* ⇒ that panel's default; a value below the panel's
-  floor is raised to it, so a hand edit can never open a panel with no boundary
-  left to grab, and one above the panel's **ceiling** — half the window along
-  the panel's own axis (§11 rule 5) — is lowered to it *on read*, so a width
-  stored on a wide screen opens usable on a small one without the document
-  losing what the operator actually dragged. Sizes are in points and therefore independent of `zoom`: a text
-  size change rescales what a panel holds, never how wide the operator made it.
-  **The same authority ruling as `zoom`** — this document is the authority and
-  a seat's live layout is its projection: the seat hands each panel its stored
-  size and writes back only what a *released* boundary settled on (one drag, one
-  write; an unmoved boundary writes nothing, so a still seat never touches the
-  disk). A view kept durable for convenience (§13.0), like `collapsed` — never
-  required to replicate the way state is. The **ceiling** clause cites §11 rule
-  5 (half the pane along its own axis); the rule is retired with §11 and the
-  clamp is kept as stated here, because a stored size must open usable on glass
-  it was not measured on.
-- **`identity_last_used`** — prefills `--as` for verbs dispatched *outside*
-  any workspace (a `bl create`/`bl update` aimed at a project, not a workspace;
-  default `$USER` when absent). **It is read and never written** — its writer
-  was the frame's and went with it, so the fallback is `$USER` unconditionally
-  today (bl-f936). Workspace-scoped verbs never consult it: they stamp
-  the workspace's name (§3.2). The severability showcase: no yog config file exists;
-  deleting `ui.json` restores defaults and deletes no code path.
+- ~~**`collapsed`**~~, ~~**`transcript_expand_responses`** /
+  **`transcript_expand_others`**~~, ~~**`zoom`**~~, ~~**`panels`**~~ and
+  ~~**`notify_unfocused`**~~ — **deleted with the pane document** (bl-f936,
+  bl-09ef). Each was a fact about one pane of glass: which sections are folded,
+  which transcript row classes arrive expanded, the text size, the sizes the
+  operator dragged the panel boundaries to, and whether this glass may raise a
+  desktop notification. Every one of them is now a **seat's own**, stored
+  wherever that seat stores its local state, and the rulings behind them stay
+  the seat's to keep: replies arrive open and machinery folded; a stored text
+  size is the authority a live scale factor is a projection of, so a toolkit's
+  own zoom is switched off rather than mirrored; a dragged panel size is in
+  logical points and therefore independent of the text size, clamped on read to
+  a floor and to half the pane along its own axis so a size stored on a wide
+  screen opens usable on a small one; and the escalation is armed unless the
+  key says otherwise. A stale key of any of these names in an existing document
+  round-trips as an unknown key and means nothing.
+- ~~**`identity_last_used`**~~ — **deleted (bl-f936).** It was to prefill
+  `--as` for verbs dispatched *outside* any workspace (a `bl create`/`bl
+  update` aimed at a project, not a workspace), and it was **read and never
+  written**: its writer was the frame's and went with it, so the fallback was
+  `$USER` unconditionally for the key's whole life. **The `--as` fallback
+  outside a workspace is `$USER`, and empty when the environment names none** —
+  one rule, in `projects::runner::identity`, with no document able to override
+  it. Workspace-scoped verbs never consulted it and do not now: they stamp the
+  workspace's name (§3.2). A stale `"identity_last_used"` in an existing
+  `ui.json` round-trips as an unknown key and means nothing. The severability
+  showcase is unchanged: no yog config file exists, and deleting `ui.json`
+  restores defaults and deletes no code path.
 - **`prices`** — the §3.5 spend-attribution price table: model id → the four
   brazen counters' rates, quoted in **USD per million tokens** the way a
   provider's price page prints them, so the operator transcribes rather than
@@ -2390,10 +2356,12 @@ whitelist that names what may be held here is falsified by held state nothing
 put on it: the paragraph above is now true of the tree as well as of the
 design.
 
-**A durable view is still the deliberate counter-example:** the pane document's
-`collapsed` overrides (§4.1) — which sections a client keeps folded — converge
-benignly for that client's convenience, intentionally unlike everything above.
-Only the section override is worth persisting. Don't "fix" the asymmetry.
+**The durable-view counter-example is gone with the document that held it**
+(bl-f936). `collapsed` — which sections a client keeps folded — was the one
+view this engine kept, on the argument that it converged benignly across that
+client's own seats; nothing ever wrote or read it across the boundary, so a
+folded section is a seat's own local state like every other view. There is now
+no asymmetry to preserve, and re-adding one needs an act, not a key.
 ---
 
 ## 6. The attention model
@@ -3379,7 +3347,7 @@ making a genuine dropped event read as the watcher working.
 | Watched dir replaced (clone re-primed, workspace deleted) | 2 s reconcile rebuilds the watcher: the backend watches an *inode*, so a same-path replacement leaves a deaf watch a name-keyed desired-set diff would keep forever. `Watcher::is_stale` compares the armed `(dev, ino)` against the path's current identity |
 | Startup read/arm ordering | `Deriver::boot` arms the watch set **before** the first snapshot: a watch armed after the read is blind to everything that landed in between |
 | A derivation pass that outruns its own cadence (a branch-count storm, a loaded machine) | answering is unaffected — every answer is over the last completed snapshot and no reader waits on the worker (§7.2). The lateness is named: a `yog-drift late` line, plus the `derivation N s behind` line on `Query::Workspaces` once the published snapshot passes two full-sweep periods |
-| Atomic-rename inode swap on a watched file (`ui.json`, a pane document, a task file) | the watch is on the *directory*, which sees Remove+Create; the allowlist matches by name, so the new inode is admitted under the same entry. (Config files are not watched at all — §7.1's bl-9130 ruling — so this row is about the yog-state and balls-clone roots) |
+| Atomic-rename inode swap on a watched file (`ui.json`, a task file) | the watch is on the *directory*, which sees Remove+Create; the allowlist matches by name, so the new inode is admitted under the same entry. (Config files are not watched at all — §7.1's bl-9130 ruling — so this row is about the yog-state and balls-clone roots) |
 | Event storm from streaming response.json | 100 ms coalescing debounce per root; balls `log` files excluded from allowlists |
 | Concurrent `ui.json` writers | LWW + echo-hash (§4.1) |
 | Concurrent `ops.jsonl` appenders | O_APPEND + ≤PIPE_BUF lines — kernel-atomic, no interleave |
@@ -7124,7 +7092,7 @@ answered:
 | seat-shaped derivations still in this crate with no carrier and no caller — drafts, the §3.3 name preview, the fork composer, `science::{compose,respdiff}`, the §8.1 start gate | bl-7cc8, **landed**: deleted. The §8.2 `enabled` predicates were the sweep's one dead premise — three of them DO cross, as `nudgeable`/`stoppable`/`stop_children` on the §8.5 agent answer — so only the one with no carrier (the message gate's composer-text half) went with them |
 | the derived cadence periods a seat must honour, `wound_grace` first among them | bl-776a |
 | ~~the §7.3 failure alarm: `Query::Ops` answers raw rows and every classification stays server-side~~ — closed (bl-4d81): the rows carry `failed`, `exit_label` and `standing` | bl-4d81 |
-| the per-client pane document: six keys written by nothing and answered to nobody, and `identity_last_used` read but never written | bl-f936 |
+| ~~the per-client pane document: six keys written by nothing and answered to nobody, and `identity_last_used` read but never written~~ — closed (bl-f936): **deleted**, both of them. A glass fact is each seat's own local storage, and the `--as` fallback outside a workspace is `$USER` | bl-f936 |
 | ~~§9.5's typed config settings: `config_edit::form` has no carrier~~ — closed (bl-dc3f): `Query::ReadConfig` answers `settings` beside its `text` | bl-dc3f |
 
 Each is cited inline where this document states the ruling it belongs to, so a
@@ -7298,7 +7266,7 @@ that named one of its files; the rule it taught is not.)
 | `src/projects/join{.rs,/enumerate.rs}` | the §3.5 join-state table (§3.2, §5.1 #7) — (status, bound?) ⇒ exactly one state, never an ad-hoc branch — with `enumerate` the walk that asks it once per combination: the ball × workspace product enumerated once, bound iff the ball's claimant equals the workspace name — no operator identity, no stored fact |
 | `src/projects/runner.rs` | the `bl` effect behind `projects::balls` (§5.1 #2/#4, §16.7 W8): the three ball reads of one project, typed, in-process since W8 and faked in tests |
 | `src/rail/{mod,cards,cohort,pin,place,tree,wire}.rs` | the **step spine** (VISION V1, bl-98da; re-seated into the chat by bl-1802), cut on five seams and all derivation: `mod` the spine's *shape* — the notch spine over the Steps view's `meta.commit` (§5.1 #29) and the row→notch lookup a seat threads its chat through; `place` where each notch sits among the transcript's rows and how far its pin cuts, pairing one sealed model-output entry to each completed step (the ordinal alignment bl-929d and bl-98da both got wrong); `cards` a child's *placement* on it — the shared-commit-prefix fork point, the two edges, the fork label and the streaming tail, all pure over facts the snapshot already carries; `pin` the fold that threads one notch through the inspector (the transcript prefix, the budget as-of); `tree` the only new disk read — the Files tab out of `ls-tree`/`git show` at the pinned commit; `cohort` V2's fan, which is nothing but those cards grouped by the notch they were born at (§5.1 #33); and `wire` the spine's §8.5 spelling both ways, beside the type for the reason `workdiff::wire` gives — notches, seats and cards are this module's own vocabulary (bl-6233, decode bl-7067) |
-| `src/registry{,/enroll,/leaf,/mailbox,/mailbox/slots,/peer,/presence,/roster,/tools}.rs` | the REMOTE §4 client registry (bl-8bbc): one **file per registration** under `<yog-state-root>/clients/<client>/workspaces/<name>`, so registering is a write, revocation is a delete and the registered set is a listing — nothing stored that the path already says. Plus the reserved `local` identity every in-world caller (window, deposit inbox) owns a §7 pane document under, and `leaf` — the subject common name read off a peer's certificate by a structural DER walk, because yog links no certificate library and a byte search for the CN object identifier would return the issuer's name, which comes first. REMOTE §5's two facts about a tool host hang off the same directory (bl-4e08) and they are deliberately different KINDS of thing: `tools` is the durable half — `clients/<client>/tools.json`, one document per client rather than one per registration, because a tool set is a fact about a machine and the registration listing already says which workspaces see it — carrying the ONE spelling of an element (name, description, JSON Schema verbatim) that the boundary codec and the file both spend, plus the write-only-when-it-differs store and the two ways a presentation declines; `presence` is the live half — a refcount per identity behind the `state.rs` alias, entered by the listener as an RAII guard so there is no leave verb to forget, and never a file, since presence changes at connection rate; and `roster` joins the three reads at the moment they are asked (listing, presence, advertised set) so every seat is handed identical rows, with the reserved `local` name filtered by the rule that already refuses it rather than by a second case. `mailbox` is REMOTE §5's third fact about a tool host (bl-024b): the vocabulary of a routed invocation — the call, the invocation, the capture, the completion, and the `Verb` that folds the two acts — plus its ONE JSON spelling, spent by the gesture codec, by both replies that carry a capture and by the client-side executor alike; `mailbox/slots` is where in-flight ones live, a queue per client and a slot per invocation behind this leg's one lock (the fourth `rules/locks-outside-state.yml` carve-out, for `presence`'s measured reason), swept an hour after a post so a driver that died mid-invocation costs one entry rather than a leak. It also holds **which identities are parked on a follow-class read** (bl-1462): one reader per client, an RAII claim rather than presence's refcount, because two connections on one machine's queue is the pathology itself where two on its presence is an operator with two seats — the second read is refused in band, and so is an advertisement that would change a serving machine's set out from under it (REMOTE §5.1). The hand-off mark there is a **lease and not a latch** (bl-e658, REMOTE §5.3): a read parks for the whole hold and cannot learn its peer went away, so a slot handed to a read that never answered it is re-queued at that client's next follow-class read — the leg is at-least-once, and the invocation id it is redelivered under is the idempotency key `peer` is REMOTE §4.2's grade (bl-7ff3): the two values a leaf's subject can carry, the closed set of gestures a foot may say (advertise, take its invocations, complete one — never `invoke`, the asking side's), and the `Peer` an intake answers as. It is a value BESIDE the identity rather than a field on it, because `Client` keys the presence map, the mailbox and every registration on disk: a peer that connected under one grade must not be a different key from the same client read off the `clients/` listing. Default-operator is total rather than defaulted — `leaf::grade` answers a `Grade` and not an `Option`, so a certificate minted before the grade existed, or bytes that are no certificate at all, read as operator. `enroll` is REMOTE §1.4's two values (bl-f4e3) — what an operator asks for when a device joins (a workspace to seat it in, the common name its certificate will carry, the grade that certificate may say) and the whole of what the engine answers with (that grade and name, the address clients dial, and the three PEMs). They live here rather than at the boundary because the identity the act mints and the registration it seats are the registry's own two facts, and because a payload type with its own module is the fold `mailbox::Verb` and the monitor's family already take: ONE variant at the boundary, one home for the ruling. The private key exists in the `Enrolled` value and nowhere else on this box — the executor shreds it before the answer leaves, and the certificate stays precisely because its presence is what refuses a second enrollment under one name |
+| `src/registry{,/enroll,/leaf,/mailbox,/mailbox/slots,/peer,/presence,/roster,/tools}.rs` | the REMOTE §4 client registry (bl-8bbc): one **file per registration** under `<yog-state-root>/clients/<client>/workspaces/<name>`, so registering is a write, revocation is a delete and the registered set is a listing — nothing stored that the path already says. Plus the reserved `local` identity every in-world caller (window, deposit inbox) owns a directory under, and `leaf` — the subject common name read off a peer's certificate by a structural DER walk, because yog links no certificate library and a byte search for the CN object identifier would return the issuer's name, which comes first. REMOTE §5's two facts about a tool host hang off the same directory (bl-4e08) and they are deliberately different KINDS of thing: `tools` is the durable half — `clients/<client>/tools.json`, one document per client rather than one per registration, because a tool set is a fact about a machine and the registration listing already says which workspaces see it — carrying the ONE spelling of an element (name, description, JSON Schema verbatim) that the boundary codec and the file both spend, plus the write-only-when-it-differs store and the two ways a presentation declines; `presence` is the live half — a refcount per identity behind the `state.rs` alias, entered by the listener as an RAII guard so there is no leave verb to forget, and never a file, since presence changes at connection rate; and `roster` joins the three reads at the moment they are asked (listing, presence, advertised set) so every seat is handed identical rows, with the reserved `local` name filtered by the rule that already refuses it rather than by a second case. `mailbox` is REMOTE §5's third fact about a tool host (bl-024b): the vocabulary of a routed invocation — the call, the invocation, the capture, the completion, and the `Verb` that folds the two acts — plus its ONE JSON spelling, spent by the gesture codec, by both replies that carry a capture and by the client-side executor alike; `mailbox/slots` is where in-flight ones live, a queue per client and a slot per invocation behind this leg's one lock (the fourth `rules/locks-outside-state.yml` carve-out, for `presence`'s measured reason), swept an hour after a post so a driver that died mid-invocation costs one entry rather than a leak. It also holds **which identities are parked on a follow-class read** (bl-1462): one reader per client, an RAII claim rather than presence's refcount, because two connections on one machine's queue is the pathology itself where two on its presence is an operator with two seats — the second read is refused in band, and so is an advertisement that would change a serving machine's set out from under it (REMOTE §5.1). The hand-off mark there is a **lease and not a latch** (bl-e658, REMOTE §5.3): a read parks for the whole hold and cannot learn its peer went away, so a slot handed to a read that never answered it is re-queued at that client's next follow-class read — the leg is at-least-once, and the invocation id it is redelivered under is the idempotency key `peer` is REMOTE §4.2's grade (bl-7ff3): the two values a leaf's subject can carry, the closed set of gestures a foot may say (advertise, take its invocations, complete one — never `invoke`, the asking side's), and the `Peer` an intake answers as. It is a value BESIDE the identity rather than a field on it, because `Client` keys the presence map, the mailbox and every registration on disk: a peer that connected under one grade must not be a different key from the same client read off the `clients/` listing. Default-operator is total rather than defaulted — `leaf::grade` answers a `Grade` and not an `Option`, so a certificate minted before the grade existed, or bytes that are no certificate at all, read as operator. `enroll` is REMOTE §1.4's two values (bl-f4e3) — what an operator asks for when a device joins (a workspace to seat it in, the common name its certificate will carry, the grade that certificate may say) and the whole of what the engine answers with (that grade and name, the address clients dial, and the three PEMs). They live here rather than at the boundary because the identity the act mints and the registration it seats are the registry's own two facts, and because a payload type with its own module is the fold `mailbox::Verb` and the monitor's family already take: ONE variant at the boundary, one home for the ruling. The private key exists in the `Enrolled` value and nowhere else on this box — the executor shreds it before the answer leaves, and the certificate stays precisely because its presence is what refuses a second enrollment under one name |
 | `src/science/{mod,bound,observed,outcome,wire}.rs` | the §3.9 **attempt science projection** (VISION §4.10 item 7, bl-40ab), cut on four seams and owning no fact of its own: `mod` the join — the row type and the one function that assembles it, over `workdiff::read`'s own row set so *which attempts are there* has one answer, and each row *carrying* the `workdiff::Attempt` it composes rather than restating its identity, refs, OIDs, churn and acceptance mark; `bound` *which* conversation an attempt is bound to — the one binding rule at every N (the last fire whose `--cwd` names this attempt's worktree, by balls' own `attempt_path`/`work_worktree_path` formulas) and the §3.3 name→id resolution; `observed` *what about it* — the fork's own inputs (`goal.md`) beside §5.1 #17's **followed** config commit, which since bl-e654 is a fact about now rather than a frozen one (§3.9), the terminal response and the delivered messages with the compacted bound beside them (how many entries the counter proves deleted, bl-fde5 — the §3.9 statement that both were read over a rewritten record), and the step-record columns as an in-memory filter of `Snapshot::bills`, so the projection makes no second pass over `steps/`; `outcome` the four arms over three git facts — the derived acceptance mark, whether the source ref still resolves, and `merge-base --is-ancestor`, which is the delivery law's own staleness precondition read from outside and this ball's reframe of *"the source advanced after a refusal"* — plus, beside them because it is the same question in the same shape, the **base** commit the two ends departed from (item 7's third OID, balls' `merge-base(target, source)` formula spelled here because asking balls means resuming an attempt, and resuming writes); both ancestry calls are `git_tree::cmd`'s existing ones, never a second spelling; `wire` its §8.5 JSON shape both ways, beside the type for `workdiff::wire`'s reason, with the diff column spelled by that module's own row codec |
 | `src/scratch.rs` | I3's scratch temp (§2 I3, §5.2, bl-e47c): the one spelling of `.<name>.yog-tmp-<pid>` every write site asks for, the exact predicate that recognizes one back, and the startup sweep — the pure 24 h decision, the best-effort per-directory removal, and `dirs`, the fold naming every destination yog writes a temp into. Name and sweep are one home because a sweep spelled differently from the writer deletes nothing, or something else |
 | `src/search/{mod,corpus,excerpt}.rs` | the §8.5 global search: the `Address`/`Field`/`Hit` vocabulary, the answer that carries its own needle (`Found::asked`, the strip's offer predicate, beside `Found::is_empty`, the pane's — bl-648a) and the empty answer's wording, the deterministic rank and bound, and `run` — the one engine all three seats end in; the corpus (the snapshot half free, the conversation half re-read from disk and the half cancellation is checked between); and the matched-line window at char boundaries. Every `Address` field is a wire name — the §3.1 workspace leaf, the §5.1 #1 project name — never an engine path, so a hit is an address a seat asks next (REMOTE §8.1, bl-764a). The seat-side searcher thread left with the window (bl-7942): fan-out over many channels and the union's non-promises are the seat crate's, ruled in REMOTE §8.2 |
@@ -7328,8 +7296,7 @@ that named one of its files; the rule it taught is not.)
 | `src/tool_host/subject/refusal.rs` | **what a landing on a refusing rung says** (bl-68e1), split from the lane because it answers a different question than `verdict` does: which rung, versus what the model reads. Two zero-consent shapes (nothing advertises the name; machines advertise it and none consents) and the config ambiguity, each naming the operator's edit by key, file and box. Both zero-consent shapes close on `NOT_A_REMEDY`, the one home of the sentence that the loaded lane is **not** a way to do this work — a loaded invocation carries no directory (REMOTE §5's locality-rides-in-the-name), so it runs in the far process's inherited directory, and nothing this conversation can read would show what it wrote there. The old sentences offered that load first, as the remedy the model could take unaided, and a drive took it: the whole deliverable landed in the foot's inherited directory, every self-check was made in the same wrong place so none could fail, and the conversation reported success over an empty bound directory |
 | `src/transcript/{mod,read,tail,compaction,parse,wire,wire/decode}.rs` | the **committed** transcript's enumeration — `read` the directory walk itself, split off at the budget when the follow lane made the two clocks load-bearing (bl-73e7): what a transcript *is* and what it projects is `mod`, and the disk read that produces one is its own file. `tail` is the two virtual **trailing** entries and the folds that seat them (bl-015b, split off at this section's budget): the live streaming tail, and the **settled-failure notice** — the §7.3 wound as a row, so a conversation refused at its first model call stops answering a user message and nothing else. They are one move made twice and `compaction`'s marker is the third; each fold **replaces** its own kind of tail through one shared strip, so neither can forget the rule. The live tail is still the caller's fold (§7.2 bl-54f7), and `with_live` **replaces** a live entry rather than appending beside one, so the pull answer's tail and the follow lane's newer one reconcile by newest-wins and cannot state the answer twice (over the seat's own accumulation since bl-3655, a follow frame being an append rather than the whole answer — §7.2), forgiving parsers, the §11 row vocabulary (classes, tones, roles — bl-3acb — and the auto-state rule incl. the in-flight input), `compaction` — the one reader of what the compactor **deleted** and of the `summary/` prose that replaced it (bl-7bd2), a query over the `NNN` counter splicing a virtual marker into every hole, cut out of `mod` because it is the only part of the enumeration that reads a directory `messages/` is not and the only one whose ruling is about what the bytes CANNOT say (no summary-to-span link exists, so none is guessed) — and — cut at that seam when the §3.3 sender label landed (bl-2335) — the entry→rows projection with the labels and roles, over `project/build`'s row constructor and preview/body split (bl-54f7's own cut: *what an entry becomes* vs *what a row is made of*), with `project/compacted` the one arm of that match which projects a **hole** rather than something somebody said or a tool answered — split off at this section's budget on that same seam (bl-3b22), and the row altitude of `compaction`'s own enumeration, so the two halves of one subject sit one per file rather than one per subsystem, then the §11 turn rollup over it (bl-1f21: the turn boundary, the aggregate line, what a shut turn omits), with `turns/counts` split off at the cap on the seam between deciding *where a turn is* and saying *what it contained*, the fold with the role marker at every row's edge and the bl-7654 payload rule stated at the row rather than inherited (the expanded body and the Raw view wrap; the chrome and an abridged preview truncate), cut at this section's budget into the scrolling list and where the spine's rules fall in it, over the row projection — the chrome line, the fold state, the inline preview and the expanded body, which is the very seam the projection above is cut along (bl-3b22), and `spine` — the step spine threaded *through* the chat (bl-1802): the operable-commit rule that pins, and the cards and cohorts born at it, which is the whole of what the retired `history-rail` side panel was; and `wire` the chat's §8.5 spelling, with `wire/decode` its other direction at the §12 budget (bl-7067) — every entry class stays distinguishable on the wire, each row carrying the bytes it was read from because a headless seat has no Raw toggle to reach them with (bl-6233) |
 | `src/transcript/key.rs` | a transcript row's stable identity — `tx/<entry filename>#<block index>` — the one spelling of the address a seat and this engine both name a row by. The row projection that minted it went with the window (bl-7942); the §7.3 step spine's placements still tell a seat which row each rule is drawn above, and say so in this vocabulary |
-| `src/ui_state/{mod,json,doc,knobs,fields,clock}.rs` | the UI-state schema — **two** documents since REMOTE §7's per-seat split (bl-8bbc): the shared `ui.json` of world facts (`seen`, `pinned`, `identity_last_used`) and the per-client pane document of glass facts (`panels`, `collapsed`, the knobs), read through one handle so which file owns a key is stated once, at that key's accessor. `doc` is the file mechanics spent twice — forgiving load, echo-hash, atomic write-through. Also the seen API, the knobs + `zoom` (§4.1 — the §6 escalation's `notify_unfocused` went to the seats that announce, bl-09ef); the per-field accessors derived from it; and `clock`, split off at the budget — the crate's **one** injected time seam (§7.2's `Clock`/`SystemClock`) beside the one calendar routine both directions of its rendering ride on (`format_iso8601`/`iso8601_extended`/`epoch_from_iso8601`, Hinnant's civil-day math, no `chrono`/`time` dep — bl-61db), together because keeping them apart is what would spread that freedom over two files; none of it reads a document |
-| `src/ui_state/panels.rs` | the §4.1 `panels` object: the `Panel` enum (key, default, floor, ceiling + the one clamp — one home per boundary) and its forgiving read / snapped write |
+| `src/ui_state/{mod,json,doc,fields,clock}.rs` | the UI-state schema — **one** document since bl-f936: `ui.json`, the world facts (`seen`, `pinned`, `ceiling`, `prices`). REMOTE §7's per-client pane document (bl-8bbc) stood here for the glass facts — `panels`, `collapsed`, `zoom`, the two transcript-density knobs and `notify_unfocused` — and **not one of them ever had a writer or a reader outside this module**: their callers were the frame's and bl-7942 took the frame, so the document, its per-client path derivation and the `knobs`/`panels` files are deleted and a glass fact is each seat's own local storage. `doc` is the file mechanics — forgiving load, echo-hash, atomic write-through — now spent once. Also the seen API, the per-field accessors, and `clock`, split off at the budget — the crate's **one** injected time seam (§7.2's `Clock`/`SystemClock`) beside the one calendar routine both directions of its rendering ride on (`format_iso8601`/`iso8601_extended`/`epoch_from_iso8601`, Hinnant's civil-day math, no `chrono`/`time` dep — bl-61db), together because keeping them apart is what would spread that freedom over two files; none of it reads a document |
 | `src/ui_state/{prices,ceiling}.rs` | the §4.1 `prices` object: the §3.5 price table's one read, forgiving and setter-free; the §4.1 `ceiling` number beside it, read the same way — absent is no gate (bl-56d5) |
 | `src/ui_state/prune.rs` | the §3.6 prunes: a deleted workspace's keys; a deleted conversation subtree's `seen` watermarks (bl-f17a) |
 | `src/watch/mod.rs` | WatchSet reconcile and the ingest bridge thread (§7). The wake-the-face effect it used to carry beside them went with the face (bl-7942): there is nothing in this process to wake, and a seat asks on `wire::ASK_PERIOD` |
@@ -7437,16 +7404,16 @@ The user clarified the durability requirement: **"no STATE in RAM" — not
 of §13 applies. A *view* is which data you look at and how a seat is arranged:
 focus, selection, scroll position, which rows or sections are folded, a
 window's own geometry. *State* (durable data) is a user assertion with no other
-authoritative home: the seen watermarks, pins, the last-used identity. State
-must replicate so every seat agrees (§4.1); a view may live in RAM and be lost
-on a crash. §13.1's focus/scroll ruling was the first statement of this rule and
+authoritative home: the seen watermarks and pins. State must replicate so every
+seat agrees (§4.1); a view may live in RAM and be lost on a crash. §13.1's focus/scroll ruling was the first statement of this rule and
 is now just its leading instance. **The severance made the rule structural**
 (bl-7942): every view left this process with the face that held them, so what is
 in RAM here is not *permitted* to be a view — there is none. The persisted-view
-keys (`collapsed` and the pane document beside it — §4.1) are the allowed
-converse and the one thing that did stay: a view is *permitted* to be kept
-durable for convenience, but is never *required* to replicate the way state
-is.
+keys (`collapsed` and the pane document that held it) were the allowed converse
+and are **deleted** (bl-f936): a view is permitted to be kept durable for
+convenience, and this engine kept six that no seat could reach, which is the
+convenience of nobody. Where one is kept durable now, it is kept by the seat
+whose view it is.
 
 ### 13.1 Live focus/selection and scroll are per-seat ephemera
 
@@ -7460,20 +7427,20 @@ re-derived from what yog answers — next-attention, else first, §4.1; scroll
 re-anchors), and mirroring them makes two seats actively hostile — every
 selection in one yanks the other's view, which two of three judges found defeats
 the point of running two. `ui.json` therefore keeps the genuinely-converging
-*state* — the four seen watermarks, pins, `identity_last_used` — and the pane
-document beside it the persisted *views* kept for convenience (§13.0). **Which
-rows are unfolded is this rule, not that one** (bl-fa82): a conversation list's
-expanded set, a JSON tree's collapse set and the transcript's fold overrides are
-all "which data you look at", keyed by content rather than by a named section,
-and none of them crosses the boundary at all. The `collapsed` array stays the
-deliberate counter-example it always was.
+*state* — the four seen watermarks and pins — and keeps nothing else (bl-f936
+deleted the pane document of persisted views, none of which any seat could ever
+read or set). **Which rows are unfolded is this rule, not that one** (bl-fa82):
+a conversation list's expanded set, a JSON tree's collapse set and the
+transcript's fold overrides are all "which data you look at", keyed by content
+rather than by a named section, and none of them crosses the boundary at all —
+which is now true of the section overrides too.
 Everything the operator would call data — including acknowledgements, which a
 zero-durable-state stance structurally cannot represent — is durable and
 converges. **Veto path:** if the strict-literal reading is wanted (mirrored
 focus/scroll), `focus`/`scroll` become `ui.json` keys with content-anchor scroll
 representation *and a boundary act to write them* — which is the shape bl-b986
-gave pins and bl-f936 asks for the pane document; the write/adopt machinery
-already supports the storage half.
+gave pins and the shape bl-f936 declined to give a view; the write/adopt
+machinery already supports the storage half.
 
 ### 13.3 Detached prompt defers error immediacy to disk
 

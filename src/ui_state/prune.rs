@@ -13,25 +13,20 @@ use serde_json::Value;
 
 impl UiState {
     /// Drop every key the workspace `key` (its path — [`ws_key`](crate::nav::ws_key))
-    /// owns: its `seen` map, its `pinned` entry, and its `ws:<path>` `collapsed`
-    /// override (§4.1). Absent keys are left absent — the prune adds nothing to
+    /// owns: its `seen` map and its `pinned` entry (§4.1). Absent keys are left absent — the prune adds nothing to
     /// the document, so pruning a workspace that owned none writes nothing at all
     /// (the §4.1 content-hash elision).
-    /// **It spans both documents** (REMOTE §7, bl-8bbc): `seen` and `pinned`
-    /// are world facts and the collapse override is this seat's client's own,
-    /// so the unmake subtracts from each and saves each. Another client's pane
-    /// keeps its `ws:<path>` entry — a collapse override for a section that no
-    /// longer renders is inert by the §4.1 forgiving read, and readdir'ing
-    /// every registered client to delete an inert key would be a sweep buying
-    /// nothing.
+    /// **One document since bl-f936** (REMOTE §7 as amended): `seen` and
+    /// `pinned` are world facts, and the `ws:<path>` collapse override the
+    /// prune used to drop beside them is a seat's own glass fact that this
+    /// engine never stored. A seat's stale override is inert where it lives —
+    /// a section that no longer renders costs nothing.
     pub fn prune_workspace(&mut self, key: &str) {
         if let Some(Value::Object(seen)) = self.world.root.get_mut("seen") {
             seen.remove(key);
         }
         drop_from(&mut self.world.root, "pinned", key);
-        drop_from(&mut self.pane.root, "collapsed", &format!("ws:{key}"));
         self.world.save();
-        self.pane.save();
     }
 
     /// Drop a deleted conversation's acknowledgement watermarks: `seen[key][id]`
@@ -52,8 +47,8 @@ impl UiState {
 
 /// Remove `value` from the string array at `field` of `root`, leaving an absent
 /// or non-array field untouched (the forgiving read, §4.1). A free function
-/// rather than a method since the prune spans two documents: the borrow is of
-/// one map, not of the whole handle.
+/// taking the map rather than a method taking the handle: the borrow is of one
+/// map, which is what the mutation needs.
 fn drop_from(root: &mut serde_json::Map<String, Value>, field: &str, value: &str) {
     let Some(Value::Array(arr)) = root.get_mut(field) else {
         return;
@@ -74,13 +69,11 @@ mod tests {
         ui.record_seen(WS, "c-1", &[(SeenKind::Notify, "oid1".to_owned())]);
         ui.record_seen(OTHER, "c-9", &[(SeenKind::Notify, "oid9".to_owned())]);
         ui.set_pinned(vec![WS.to_owned(), OTHER.to_owned()]);
-        ui.set_collapsed(&format!("ws:{WS}"), true);
-        ui.set_collapsed(&format!("ws:{OTHER}"), true);
         ui
     }
 
     #[test]
-    fn the_prune_drops_seen_pin_and_collapse_and_spares_every_other_workspace() {
+    fn the_prune_drops_seen_and_pin_and_spares_every_other_workspace() {
         let dir = tempdir().unwrap();
         let path = dir.path().join("ui.json");
         let mut ui = seeded(path.clone());
@@ -88,10 +81,8 @@ mod tests {
 
         assert!(!ui.is_seen(SeenKind::Notify, WS, "c-1", "oid1"));
         assert_eq!(ui.pinned(), [OTHER.to_owned()]);
-        assert!(!ui.is_collapsed(&format!("ws:{WS}")));
         // The neighbour's own keys are untouched — deletion is per-workspace.
         assert!(ui.is_seen(SeenKind::Notify, OTHER, "c-9", "oid9"));
-        assert!(ui.is_collapsed(&format!("ws:{OTHER}")));
 
         // Write-through (§4.1): the prune is on disk before it returned.
         let reread = UiState::open(path);
@@ -141,11 +132,10 @@ mod tests {
         let path = dir.path().join("ui.json");
         let mut ui = UiState::open(path.clone());
         ui.prune_workspace(WS);
-        // No `seen`/`pinned`/`collapsed` field existed and none was materialized —
-        // the prune is a subtraction, never a schema seeding.
+        // No `seen`/`pinned` field existed and none was materialized — the
+        // prune is a subtraction, never a schema seeding.
         assert!(ui.pinned().is_empty());
-        assert!(!ui.is_collapsed(&format!("ws:{WS}")));
         let doc = String::from_utf8(std::fs::read(&path).unwrap()).unwrap();
-        assert!(!doc.contains("pinned") && !doc.contains("collapsed") && !doc.contains("seen"));
+        assert!(!doc.contains("pinned") && !doc.contains("seen"));
     }
 }

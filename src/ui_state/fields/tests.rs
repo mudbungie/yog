@@ -4,7 +4,7 @@
 //! mechanics they end on — forgiving load, echo/adopt, the atomic write — are
 //! `super::super`'s.
 
-use super::super::tests::{load, load_pane, mark, mk};
+use super::super::tests::{load, mark, mk};
 use super::*;
 use tempfile::tempdir;
 
@@ -64,17 +64,14 @@ fn record_seen_with_no_marks_materializes_nothing() {
 }
 
 #[test]
-fn pinned_and_collapsed_roundtrip() {
+fn pinned_roundtrips_in_the_order_it_was_asserted() {
     let d = tempdir().unwrap();
     let mut ui = mk(d.path());
-    assert!(!ui.is_collapsed("proj:/none")); // no collapsed key yet
+    assert!(ui.pinned().is_empty()); // no pinned key yet
     ui.set_pinned(vec!["/a".into(), "/b".into()]);
     assert_eq!(ui.pinned(), vec!["/a".to_string(), "/b".to_string()]);
-    ui.set_collapsed("proj:/x", true);
-    assert!(ui.is_collapsed("proj:/x"));
-    assert!(!ui.is_collapsed("proj:/y")); // present array, key absent
-    ui.set_collapsed("proj:/x", false); // remove
-    assert!(!ui.is_collapsed("proj:/x"));
+    ui.set_pinned(vec!["/b".into()]);
+    assert_eq!(ui.pinned(), vec!["/b".to_string()]);
 }
 
 #[test]
@@ -83,10 +80,5 @@ fn getters_filter_wrong_types() {
         load(br#"{"pinned":["/a",7]}"#).pinned(),
         vec!["/a".to_string()]
     ); // number dropped
-    // The collapse set is the PANE's (REMOTE §7), and forgiving on its own terms.
-    let mut ui = load_pane(br#"{"collapsed":["k",3]}"#);
-    assert!(ui.is_collapsed("k"));
-    ui.set_collapsed("m", true); // rebuilds set, dropping the non-string 3
-    assert!(ui.is_collapsed("m"));
-    assert!(ui.is_collapsed("k"));
+    assert!(load(br#"{"pinned":"/a"}"#).pinned().is_empty()); // not an array at all
 }

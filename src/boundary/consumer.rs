@@ -99,8 +99,9 @@ impl ConsumerCtx {
     }
 
     /// The same gesture, answered **for a wire client** (REMOTE §4, bl-8bbc):
-    /// the world narrowed to that client's registrations, and that client's own
-    /// pane document (§7) beside the shared one.
+    /// the world narrowed to that client's registrations. The world document is
+    /// the same one every caller reads — since bl-f936 there is no second,
+    /// per-client document beside it.
     ///
     /// **Auto-registration on create needs no create-detection.** Under scope a
     /// gesture can name only a workspace the client is registered in — or one
@@ -123,10 +124,7 @@ impl ConsumerCtx {
         let client = &peer.client;
         let scope = crate::registry::registered(&self.state_root, client);
         let (deps, ts, now_unix) = self.deps(client, Some(&scope));
-        let mut ui = UiState::open_at(
-            self.ui_path.clone(),
-            crate::registry::pane(&self.state_root, client),
-        );
+        let mut ui = UiState::open(self.ui_path.clone());
         let Ok(gesture) = super::codec::decode(request) else {
             return run_value(&deps, &mut ui, &ts, now_unix, request);
         };

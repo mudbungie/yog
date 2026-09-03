@@ -42,7 +42,6 @@ fn lane(agents: Vec<Agent>, scope: &[&str]) -> (TempDir, SnapshotCell, FakeClock
         Arc::clone(&cell),
         scope.iter().map(|s| (*s).to_owned()).collect(),
         dir.path().join("ui.json"),
-        dir.path().join("pane.json"),
         clock.arc(),
     );
     (dir, cell, clock, attend)
@@ -144,7 +143,6 @@ fn the_hold_is_bounded_and_a_quiet_lane_ends() {
         cell,
         [WS.to_owned()].into_iter().collect(),
         dir.path().join("ui.json"),
-        dir.path().join("pane.json"),
         FakeClock::new().arc(),
         2,
         Duration::ZERO,
@@ -171,7 +169,7 @@ fn an_acknowledgement_elsewhere_empties_the_lane() {
     let (dir, cell, _clock, mut attend) = lane(vec![asking("c-1")], &[WS]);
     assert_eq!(named(&attend.look().expect("a frame")), ["c-1"]);
 
-    let mut ui = UiState::open_at(dir.path().join("ui.json"), dir.path().join("pane.json"));
+    let mut ui = UiState::open(dir.path().join("ui.json"));
     crate::boundary::answer::queue::mark_seen(
         &crate::state::latest_snapshot(&cell),
         &mut ui,

@@ -15,8 +15,8 @@
 //! both show up correctly with nothing to invalidate.
 //!
 //! **`local` is filtered by the rule that already reserves it.** The window and
-//! every other in-world caller own a directory here for their §7 pane document
-//! but hold no certificate and are not scoped (§4.1), so
+//! every other in-world caller own a directory here but hold no certificate and
+//! are not scoped (§4.1), so
 //! [`Client::parse`](super::Client::parse) refuses the name and the roster
 //! skips it — one rule, not a second special case.
 

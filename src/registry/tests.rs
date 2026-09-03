@@ -30,14 +30,13 @@ fn the_reserved_local_identity_is_not_parseable() {
     assert!(!client("yog-client").is_local());
 }
 
-/// The layout, stated as paths: a client's directory holds its pane document
-/// and one file per registration.
+/// The layout, stated as paths: a client's directory holds one file per
+/// registration.
 #[test]
-fn the_layout_is_the_client_directory_its_pane_and_its_registrations() {
+fn the_layout_is_the_client_directory_and_its_registrations() {
     let root = std::path::Path::new("/home/u/state/yog");
     let c = client("phone");
     assert_eq!(dir(root, &c), root.join(CLIENTS).join("phone"));
-    assert_eq!(pane(root, &c), dir(root, &c).join(PANE));
     assert_eq!(registrations(root, &c), dir(root, &c).join(WORKSPACES));
 }
 

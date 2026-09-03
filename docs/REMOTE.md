@@ -445,7 +445,6 @@ spelling.
 **A registration is a file, and its existence is the fact.**
 
 ```text
-<yog-state-root>/clients/<client>/pane.json          the §7 pane-of-glass facts
 <yog-state-root>/clients/<client>/workspaces/<name>   one empty file per registration
 ```
 
@@ -471,7 +470,7 @@ A fingerprint would have been cheaper and wrong twice over: unreadable in a
 `clients/` listing, and changed by a renewal, silently de-scoping every
 registration the operator wrote. `local` is **reserved** for the
 **certificate-less in-world callers** (§3) — the `gestures/` deposit inbox and
-`yog gesture` — which hold no certificate but do own a pane document; a
+`yog gesture` — which hold no certificate but still name a directory; a
 certificate claiming it is refused on the same rule that refuses `.` and `..`,
 so the reservation is one rule and not three special cases.
 
@@ -480,7 +479,7 @@ of its own, `yog-window` (`registry::WINDOW` — one const, spent by the mint th
 puts the name on the certificate and by the seating that writes its
 registrations), so it is identified exactly as a phone seat is: by the common
 name on the certificate it presented. It is scoped like any client, it appears
-in its own workspaces' rosters, and its §7 pane document keys on that leaf. The
+in its own workspaces' rosters, and its registrations key on that leaf. The
 reservation narrowed rather than dissolving, because the deposit inbox and
 `yog gesture` still hold no certificate and still must not be scoped — each
 intake the religion of its domain.
@@ -915,7 +914,7 @@ is exact only while one connection at a time may ask.
 a collision *across* clients is legal and ordinary — two laptops both offering
 `Bash` — and disambiguating them belongs to the act that loads one.
 
-**The document.** One file per client, beside its §7 pane document:
+**The document.** One file per client, in that client's own directory:
 
 ```text
 <yog-state-root>/clients/<client>/tools.json   the advertised set, one JSON array
@@ -1657,47 +1656,64 @@ painted unreachable, not one remembered stale.
 
 ## 7. Per-seat UI state
 
-`ui.json` was one last-writer-wins document holding two kinds of fact. The
-split cuts along that line:
+`ui.json` was one last-writer-wins document holding two kinds of fact, and this
+section split it. **The split is reversed (bl-f936): there is one document
+again, and every key in it is a fact about the world.** The reasoning below is
+kept because the criterion is still the right one — it is what the ruling was
+made on.
 
 - **Facts about the world** — seen watermarks, pins, acks — are operator
   facts, shared across every seat: one document, as today. (Attention answered
   on the phone must clear on the desktop; that is I0's whole point.)
 - **Facts about the pane of glass** — panel sizes, collapsed sets, view knobs
-  — become per-client documents keyed by client identity, held server-side so
-  the client stays stateless and any two seats of the same client converge.
+  — are the client's, and must not converge across clients: a fold answered on
+  the phone must not close a section on the desktop.
 
-**As landed (bl-8bbc).** The world document stays exactly where it is,
-`<yog-state-root>/ui.json`, so the §7.2 worker's watch, the whole-file `adopt`
-and every external editor are untouched. The pane document is
-`<yog-state-root>/clients/<client>/pane.json` — §4.1's layout, because a pane
-document and a registration are both *this client's*, and one home for a client
-beats two. The pane path is **derived, never stored**: `ui.json` sits at the
-state root and `clients/` is its sibling.
+**As landed (bl-8bbc), and as removed (bl-f936).** The world document never
+moved: `<yog-state-root>/ui.json`, so the §7.2 worker's watch, the whole-file
+`adopt` and every external editor are untouched. Beside it stood one **pane**
+document per client, `<yog-state-root>/clients/<client>/pane.json`, holding
+`panels`, `collapsed`, `zoom`, the two transcript-density knobs and
+`notify_unfocused`.
 
-Which document owns which key:
+**It is deleted, because it was never reachable.** Not one of those six keys
+had a writer or a reader outside `src/ui_state` and its tests: the callers were
+all the frame's, bl-7942 took the frame, and no `Action` was ever minted to
+write one and no `Reply` to carry one. So the server held six glass facts on
+disk that no seat could read or set, for the whole of the document's life —
+which makes the promise it existed for ("any two seats of one client converge")
+one nothing kept. Minting six gestures to keep it would have spent the
+boundary on a **view**, against §8.5's own rule that a view gains no
+representation; the opposite reading is bl-b986's pin, and the criterion that
+separates them is whether the fact changes what *other seats are told*. A pin
+does. A fold does not.
+
+**So a glass fact is each seat's own local storage**, and the server keeps only
+what converges:
 
 | Document | Keys | Why |
 |---|---|---|
-| world (`ui.json`) | `seen`, `pinned`, `identity_last_used`, `ceiling`, `prices` | assertions about the world, or operator policy over it. `identity_last_used` is the §3.2 name the operator last claimed a ball under — a thing they did to the world, and two seats claiming under different names is worse than converging. §10 keeps *whether a pin is a world or a pane fact* open; §7's default to world is kept. |
-| pane (`pane.json`) | `panels`, `collapsed`, `zoom`, the two transcript-density knobs | how one piece of glass is arranged. A phone that puts the roster away must not put it away on the desktop. (`notify_unfocused` was here and is not: a desktop notifier is a fact about a desktop, and the announcing is the seat's — DESIGN §6 as ruled by bl-09ef.) |
+| world (`ui.json`) | `seen`, `pinned`, `ceiling`, `prices` | assertions about the world, or operator policy over it. §10 keeps *whether a pin is a world or a pane fact* open; the default to world is kept, and is now the only home there is. |
+| ~~pane (`pane.json`)~~ | ~~`panels`, `collapsed`, `zoom`, the two transcript-density knobs, `notify_unfocused`~~ | deleted (bl-f936, and `notify_unfocused` with bl-09ef): how one piece of glass is arranged is that glass's own fact, kept by the seat. A stale file under `clients/<client>/` is read by nothing. |
+
+**`identity_last_used` was a seventh key and is gone too** (bl-f936). It was a
+world fact by this section's own criterion — the §3.2 name the operator last
+claimed a ball under — but it was **read and never written**, its writer having
+been the frame's, so the `--as` fallback outside a workspace was always `$USER`
+and now says so in one place (DESIGN §4.1).
 
 **The local window is a client called `yog-window`** (§4.1 as narrowed by
 bl-ae05), and that is the whole of its spelling: it presents a certificate
-carrying that common name, it is scoped by its registrations, and it owns a pane
-document like any other seat — so the window's panel sizes and the phone's are
-two documents rather than one that grows a second reader later. The path is
-derived from the identity at both ends, so the document the frame writes through
-in process and the one a gesture the window sends over the wire lands in are the
-same file. It was `local` until the ruling; the one visible cost of the move is
-that a window's stored panel sizes reset once, on the boot that mints its leaf.
+carrying that common name and it is scoped by its registrations. It owned a
+pane document like any other seat until bl-f936, and now no client owns one;
+what remains keyed on the identity is its registration directory, which is the
+fact §2 says a file's existence *is*.
 
-Both documents are read through **one handle**, so which file owns a key is
-stated once, at that key's own accessor, and no caller knows there are two. The
-§3.6 unmake subtracts from both; another client's pane keeps its now-inert
-collapse override, because a collapse override for a section that no longer
-renders costs nothing and readdir'ing every client to delete one would be a
-sweep buying nothing.
+The world document is read through one handle (`src/ui_state/`), so a key's
+home is stated once, at its own accessor. The §3.6 unmake subtracts from it —
+`seen` and the pin — and from nothing else; a seat's own stale collapse
+override for a workspace that no longer exists is inert where it lives, and
+reaching into seats to tidy it was never this engine's to do.
 
 ## 8. Shape of the code
 
@@ -2937,7 +2953,7 @@ fixed set each, nothing to configure (§4.2 argues it in full).
 - ~~The window is not scoped, because the window is not a client yet~~ —
   **closed by bl-ae05** (§9.7). It carries `yog-window`'s leaf, it is scoped by
   its registrations like any client, and the engine seats it in every workspace
-  it enumerates (§4.1). Its pane document moved with the identity.
+  it enumerates (§4.1).
 - **A workspace name is a global namespace.** Creation refuses on a collision,
   including with a workspace the creator cannot see, so two clients cannot both
   hold a workspace called `home`. Per-client name spaces would dissolve it and
@@ -2950,8 +2966,9 @@ Landed (bl-ccf7): §8.1's narrowing of the path-typed reply fields, and §10's t
 transport questions settled. It could not move the read path, because §1.2 and
 §4.1 could not both be executed and the tree had already executed §4.1 — a
 window that dialled the wire would present a leaf, be identified by *that* name,
-be scoped like any remote client and read a different pane document, and on an
-unprovisioned box would have no read path at all.
+be scoped like any remote client and (while the per-client pane document still
+stood — bl-f936) read a different one of those, and on an unprovisioned box
+would have no read path at all.
 
 **The ruling, 2026-08-14: neither of §9.7's cheap options — the window is a wire
 client of localhost.** One boundary, everything through the front door: the real
@@ -4529,10 +4546,11 @@ control kind and both `fault` readings cross.
 - Certificate hygiene: lifetime, rotation cadence, whether the CA distrusts
   or registrations carry the whole revocation load.
 - **Whether a seat ever reads a foreign host's per-engine policy keys**
-  (bl-aaec). §7 routes a workspace's world facts to its host and the pane to
-  the box's own engine; the keys with no per-workspace subject (`ceiling`,
-  `prices`, `identity_last_used`) stay the window's own engine's. Reading — or
-  editing — another host's waits for the first surface that needs it.
+  (bl-aaec). §7 routes a workspace's world facts to its host, and since bl-f936
+  a glass fact is the seat's own and reaches no engine at all; the keys with no
+  per-workspace subject (`ceiling`, `prices`) stay the window's own engine's.
+  Reading — or editing — another host's waits for the first surface that needs
+  it.
 
 ## 11. Rejections
 

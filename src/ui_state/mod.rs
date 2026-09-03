@@ -1,17 +1,19 @@
 //! yog's converging UI state (DESIGN §4.1, §15 Y8) — the four attention `seen`
-//! watermarks, `pinned`, `identity_last_used`, `ceiling`, `prices`, and the
-//! pane's own `panels` / `collapsed` / knobs ([`knobs`]: the §11
-//! transcript-density automatics, the zoom, the §6 escalation).
+//! watermarks, `pinned`, `ceiling` and `prices`.
 //!
-//! **It is two documents, split on what the fact is about** (REMOTE §7,
-//! bl-8bbc). `ui.json` holds facts about the **world** — an acknowledgement,
-//! a pin, a spend ceiling — and every seat shares it, because attention
-//! answered on the phone must clear on the desktop (I0). A **pane of glass**
-//! fact — how wide a panel was dragged, what is collapsed, how big the text is
-//! — belongs to the client whose glass it is, and lives in that client's own
-//! document under [`registry`](crate::registry). Both are read through one
-//! [`UiState`], so which file owns a key is stated exactly once, in the
-//! accessor for that key, and no caller knows there are two.
+//! **It is one document, and every key in it is a fact about the world**
+//! (REMOTE §7 as amended, bl-f936): an acknowledgement, a pin, a spend
+//! ceiling — assertions every seat shares, because attention answered on the
+//! phone must clear on the desktop (I0).
+//!
+//! **A fact about a pane of glass is not stored here and never was reachable**
+//! — how wide a panel was dragged, what is collapsed, how big the text is.
+//! bl-8bbc gave those a second per-client document on the promise that they
+//! would converge across one client's seats; the frame that read them left with
+//! bl-7942 and no gesture ever replaced it, so for the whole of that document's
+//! life nothing wrote a key and no reply carried one. A glass fact is each
+//! seat's own local storage (§4.1), which costs a boundary act nothing and
+//! keeps this document to the facts that genuinely converge.
 //!
 //! **Single source of truth:** each document is one [`serde_json::Value`]
 //! object (`root`); every known field is a *query* over that map and every
@@ -46,9 +48,6 @@ mod clock;
 mod doc;
 mod fields;
 mod json;
-mod knobs;
-/// The §11 resizable panel sizes — `ui.json`'s `panels` object (§4.1).
-mod panels;
 mod prices;
 /// The §3.6 workspace prune — a deleted workspace's keys leave the document.
 mod prune;
@@ -57,13 +56,8 @@ pub(crate) use clock::format_iso8601;
 pub use clock::{Clock, SystemClock, epoch_from_iso8601, iso8601_extended};
 pub use fields::SeenKind;
 use json::{default_root, descend, parse_or_default, string_array};
-pub use panels::Panel;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
-
-/// The two §11 transcript auto-expand knobs' `ui.json` keys (§4.1).
-const EXPAND_RESPONSES: &str = "transcript_expand_responses";
-const EXPAND_OTHERS: &str = "transcript_expand_others";
 
 /// Stable content hash of file bytes — the echo-suppression identity (§4.1).
 pub fn content_hash(bytes: &[u8]) -> u64 {
@@ -83,54 +77,24 @@ pub fn derive_startup_focus(roster: &[&str], attention: &[&str]) -> Option<Strin
     roster.first().map(|w| (*w).to_string())
 }
 
-/// The live UI-state handle: **two** documents (REMOTE §7, bl-8bbc), read and
-/// written through one interface.
+/// The live UI-state handle: **one** document (REMOTE §7 as amended, bl-f936),
+/// `ui.json`, holding the operator's facts about the world.
 ///
-/// - `world` is `ui.json` — the operator's facts about the world, shared by
-///   every seat as they always were. Attention answered on the phone must clear
-///   on the desktop; that is I0's whole point.
-/// - `pane` is that seat's client's own document — the facts about a pane of
-///   glass, held server-side so a client that is stateless (REMOTE §6) still
-///   finds its panel sizes, and so any two seats of one client converge.
-///
-/// The split is invisible to every caller: which document owns a key is a
-/// property of the key, stated once in the accessor that reads it, so nothing
-/// outside this module knows there are two files.
+/// It was two until bl-f936. The second held one client's glass facts and was
+/// answered to nobody — no `Action` wrote a key and no `Reply` carried one from
+/// the moment the frame that read them left — so the promise it existed for
+/// ("a fold answered on the phone clears on the desktop") was never kept by it.
+/// A seat keeps its own glass facts; this file keeps what converges.
 pub struct UiState {
     world: doc::Doc,
-    pane: doc::Doc,
 }
 
 impl UiState {
-    /// The window's own handle: the world document at `path`, with the
-    /// **window client's** pane beside it (REMOTE §7 as amended, bl-ae05).
-    ///
-    /// The pane keys on [`WINDOW`](crate::registry::WINDOW) rather than on
-    /// `local` because the window carries its own certificate now and is a
-    /// client like any other — so the document the frame writes through here
-    /// and the one a gesture the window sends over the wire lands in are the
-    /// same file, which is the whole of what keying it on the leaf buys.
-    ///
-    /// **The pane path is derived, never stored** — `ui.json` lives at yog's
-    /// state root and `clients/` is its sibling, so the layout answers where
-    /// the pane is rather than a second field carrying it.
+    /// Open the world document at `path`. Missing or corrupt is the fold
+    /// identity — all defaults, never an error (§4.1's forgiving read).
     pub fn open(path: PathBuf) -> Self {
-        let state_root = path.parent().unwrap_or(&path).to_path_buf();
-        let pane = crate::registry::pane(&state_root, &crate::registry::window());
-        Self::open_at(path, pane)
-    }
-
-    /// The handle a seat reads through (REMOTE §4, §7): the shared world
-    /// document at `path`, and the pane document at `pane`.
-    ///
-    /// The pane is named outright rather than derived here, because the caller
-    /// that has a client to name — the wire's scoped intake — already holds the
-    /// state root it reads that client's registrations out of, and deriving a
-    /// second one off `path` would make one location two facts.
-    pub fn open_at(path: PathBuf, pane: PathBuf) -> Self {
         Self {
             world: doc::Doc::open(path),
-            pane: doc::Doc::open(pane),
         }
     }
 

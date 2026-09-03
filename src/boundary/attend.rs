@@ -71,7 +71,6 @@ pub(crate) struct Attend {
     /// already carried.
     scope: BTreeSet<String>,
     ui_path: PathBuf,
-    pane: PathBuf,
     clock: Arc<dyn Clock>,
     /// The derivation the last computed answer came off, by pointer — the
     /// worker's republish, read as the one fact it is.
@@ -102,10 +101,9 @@ impl Attend {
         cell: SnapshotCell,
         scope: BTreeSet<String>,
         ui_path: PathBuf,
-        pane: PathBuf,
         clock: Arc<dyn Clock>,
     ) -> Self {
-        Self::holding(cell, scope, ui_path, pane, clock, HOLD_WAITS, HOLD_TICK)
+        Self::holding(cell, scope, ui_path, clock, HOLD_WAITS, HOLD_TICK)
     }
 
     /// The same, on a stated hold — a test names a short one rather than
@@ -115,7 +113,6 @@ impl Attend {
         cell: SnapshotCell,
         scope: BTreeSet<String>,
         ui_path: PathBuf,
-        pane: PathBuf,
         clock: Arc<dyn Clock>,
         waits: u32,
         tick: Duration,
@@ -124,7 +121,6 @@ impl Attend {
             cell,
             scope,
             ui_path,
-            pane,
             clock,
             seen: None,
             last: None,
@@ -149,7 +145,7 @@ impl Attend {
             return None;
         }
         self.seen = Some(Arc::clone(&snap));
-        let ui = UiState::open_at(self.ui_path.clone(), self.pane.clone());
+        let ui = UiState::open(self.ui_path.clone());
         let rows = queue(&snap.scoped(&self.scope), &ui, self.clock.unix());
         let key = settled(&rows);
         if self.last.as_ref() == Some(&key) {

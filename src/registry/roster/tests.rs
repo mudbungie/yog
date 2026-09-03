@@ -74,7 +74,7 @@ fn each_row_carries_what_that_client_advertises() {
     assert!(rows[1].tools.is_empty(), "a client that never advertised");
 }
 
-/// `local` owns a directory here for its pane document and is not a client:
+/// `local` owns a directory here and is not a client:
 /// the reservation that refuses the name is the whole of the filter.
 #[test]
 fn the_reserved_local_directory_is_never_a_row() {

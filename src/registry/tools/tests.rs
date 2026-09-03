@@ -17,9 +17,9 @@ fn tool(name: &str) -> Tool {
     }
 }
 
-/// The document is the client's own, beside its pane (§4.1's layout).
+/// The document is the client's own, in its own directory (§4.1's layout).
 #[test]
-fn the_set_lands_beside_the_clients_pane_document() {
+fn the_set_lands_in_the_clients_own_directory() {
     let root = Path::new("/home/u/state/yog");
     let c = client("laptop");
     assert_eq!(path(root, &c), super::super::dir(root, &c).join(TOOLS));

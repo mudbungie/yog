@@ -29,14 +29,18 @@ pub struct EmptyHint {
 }
 
 impl AppModel {
-    /// The operator identity (§4.1): recorded `identity_last_used` else `$USER`
-    /// else empty. **Not** a claim stamp — Z3's start flow and Z4's close/release/
+    /// The operator identity (§4.1): the invoking `$USER`, else empty. It was
+    /// `ui.json`'s `identity_last_used` else `$USER`, but nothing ever wrote
+    /// that key — its writer was the frame's and went with it — so the fallback
+    /// was always the whole answer, and bl-f936 deleted the key rather than
+    /// keeping a document field only a hand edit could reach. **Not** a claim
+    /// stamp — Z3's start flow and Z4's close/release/
     /// assign/move all stamp `--as <workspace name>` (§3.2 ownership line), never
     /// the operator. Retained as the *author* identity for the standalone `bl
     /// create`/`bl update` verbs (§8.2 New ball / Update ball), where the operator
     /// — not a workspace — is the reporter.
     pub fn identity(&self) -> String {
-        runner::identity(self.ui.identity_last_used(), self.identity_user.clone())
+        runner::identity(self.identity_user.clone())
     }
 
     /// The yog state root — where `ops.jsonl` lives, the verb-log target the

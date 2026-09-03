@@ -176,11 +176,7 @@ fn closed_errors_on_spawn_failure_and_on_a_nonzero_exit() {
 }
 
 #[test]
-fn identity_prefers_recorded_then_user_then_empty() {
-    assert_eq!(
-        identity(Some("recorded".to_owned()), Some("user".to_owned())),
-        "recorded"
-    );
-    assert_eq!(identity(None, Some("user".to_owned())), "user");
-    assert_eq!(identity(None, None), "");
+fn identity_is_the_invoking_user_else_empty() {
+    assert_eq!(identity(Some("user".to_owned())), "user");
+    assert_eq!(identity(None), "");
 }

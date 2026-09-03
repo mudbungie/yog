@@ -8,7 +8,6 @@
 //! document to parse, no list to keep in step and no last-writer-wins window:
 //!
 //! ```text
-//! <yog-state-root>/clients/<client>/pane.json          the §7 pane-of-glass facts
 //! <yog-state-root>/clients/<client>/tools.json         the §5 advertised set (bl-4e08)
 //! <yog-state-root>/clients/<client>/workspaces/<name>   one empty file per registration
 //! ```
@@ -28,8 +27,8 @@
 //!
 //! **`local` is the reserved identity of every in-world caller** — the window,
 //! the `gestures/` deposit inbox, `yog gesture`. They carry no certificate and
-//! are not scoped (§3: each intake the religion of its domain), but they do own
-//! a pane document, so they need a name for it. [`Client::parse`] refuses
+//! are not scoped (§3: each intake the religion of its domain), but they still
+//! need a name for their directory. [`Client::parse`] refuses
 //! `local` exactly as it refuses `.` and `..`: all three are names the layout
 //! has already spent, which is one rule rather than three special cases.
 
@@ -52,8 +51,6 @@ pub mod tools;
 pub const LOCAL: &str = "local";
 /// The registry root's leaf under yog's state root.
 pub const CLIENTS: &str = "clients";
-/// One client's §7 pane-of-glass document.
-pub const PANE: &str = "pane.json";
 /// The directory whose entries are one client's registrations.
 pub const WORKSPACES: &str = "workspaces";
 
@@ -108,12 +105,6 @@ impl Client {
 /// This client's directory: `<state-root>/clients/<client>`.
 pub fn dir(state_root: &Path, client: &Client) -> PathBuf {
     state_root.join(CLIENTS).join(&client.0)
-}
-
-/// This client's §7 pane-of-glass document — server-held, so any two seats of
-/// one client converge on the same panel sizes and view knobs.
-pub fn pane(state_root: &Path, client: &Client) -> PathBuf {
-    dir(state_root, client).join(PANE)
 }
 
 /// This client's registration directory — one file per workspace it
@@ -171,8 +162,8 @@ pub mod mailbox;
 /// `yog-window`, the subject common name yog's own mint puts on the window leaf
 /// ([`Role::Window`](crate::wire::material::Role::Window)) — and therefore the
 /// name the engine reads off the certificate the window presents, the directory
-/// its §7 pane document lives in, and the name a registration seats. One
-/// spelling, here, because an identity's home is the registry.
+/// its registrations live in, and the name a registration seats. One spelling,
+/// here, because an identity's home is the registry.
 ///
 /// **The module doc and [`LOCAL`]'s own doc still say `local` is the
 /// window's**, and they are deliberately not edited — the reason [`mailbox`] is

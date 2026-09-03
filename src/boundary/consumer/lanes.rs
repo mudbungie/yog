@@ -114,7 +114,6 @@ impl ConsumerCtx {
                 self.cell.clone(),
                 scope,
                 self.ui_path.clone(),
-                crate::registry::pane(&self.state_root, client),
                 Arc::clone(&self.clock),
             )),
         };
