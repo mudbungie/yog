@@ -5,15 +5,19 @@
 //! command's page. Nothing routes, composes, spawns, parks or writes first.
 //!
 //! **Which commands answer here, and which answer themselves.** yog's own
-//! subcommands ([`crate::world::hatch`]'s two, `headless`, `tool-control` —
-//! and `tool-host`, which routes as a namespace but takes no argv, bl-4667)
-//! have no interface of their own to consult, so their page is [`COMMANDS`]
-//! and this module prints it. A namespace that owns its argv
-//! ([`super::Namespace::owns_argv`]: `gesture`, `litany`, `bl`, `bz`, `seat`,
-//! balls' two plugin seams): its `--help` is the embedded tool's own answer,
-//! so the ask is passed through to the arm, which must reach it **world-free**
-//! — that is why [`is_discovery`] exists and why `bl`'s shim converge and
-//! `bz`'s wall gate both step aside for a probe.
+//! subcommands have no interface of their own to consult, so their page is
+//! [`COMMANDS`] and this module prints it. A namespace that owns its argv
+//! ([`super::Namespace::owns_argv`]) does not: its `--help` is the embedded
+//! tool's own answer, so the ask is passed through to the arm, which must reach
+//! it **world-free** — that is why [`is_discovery`] exists and why `bl`'s shim
+//! converge and `bz`'s wall gate both step aside for a probe.
+//!
+//! **Neither side is enumerated here, deliberately** (bl-0a74). This paragraph
+//! used to list both, and both rotted at the severance (bl-7942): it still
+//! named `tool-host` as the one namespace that routes without owning its argv
+//! and `seat` as one that does, long after the wire's client modes had left for
+//! the seat crate — sending a reader after a distinction that no longer had a
+//! member. The two tables below and beside are the answer to each question.
 //!
 //! [`COMMANDS`] is the single source: the top-level roster ([`super::usage`]),
 //! every per-command page, and the parity tests all read this one list. A row
@@ -164,9 +168,10 @@ pub(super) const COMMANDS: &[HelpRow] = &[
 /// — the two shapes of the module doc, read above the router. A namespace
 /// that **owns its argv** ([`super::Namespace::owns_argv`]) has its `--help`
 /// deliberately **not** answered here: its argv is the tool's, and the arm
-/// answers it (world-free) with the tool's own page. One that does not
-/// (`tool-host`, bl-4667) is answered from [`COMMANDS`] like any of yog's own
-/// subcommands.
+/// answers it (world-free) with the tool's own page. One that does not (bl-4667
+/// — a class with no member since the severance, and kept because the
+/// classification is exhaustive rather than because a word is in it) is answered
+/// from [`COMMANDS`] like any of yog's own subcommands.
 pub(super) fn answer(argv: &[String]) -> Option<String> {
     let word = argv.get(1)?.as_str();
     if matches!(word, "--help" | "-h" | "help") {

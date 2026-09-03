@@ -145,6 +145,16 @@ impl Mailbox {
     /// both: the read **claims this client's one reader slot**, refusing a
     /// second connection that is already holding it (bl-1462), and it
     /// **acknowledges the previous read** (bl-e658, [`requeue`](Self::requeue)).
+    ///
+    /// **The claim's life is this call, not the connection's** (REMOTE §5.1,
+    /// bl-0a74) — it is dropped on the way out, before the caller has written a
+    /// byte of the answer. That is the contract a redialling foot rests on: a
+    /// peer that vanished without a FIN leaves a thread asleep in this loop,
+    /// and its slot comes free within one hold's width rather than whenever
+    /// some later socket act notices, so the one-reader refusal a redial meets
+    /// is a dying predecessor and is **retryable**. Handing the claim back to
+    /// the caller would read as a tidier lifetime and would silently make the
+    /// first network blip permanent.
     pub fn take(&self, client: &str) -> Result<Vec<Invocation>, String> {
         let _reading = self.reading(client)?;
         self.requeue(client);

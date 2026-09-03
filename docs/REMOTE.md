@@ -833,6 +833,20 @@ yog would store and could not check:
   machine's name; the newcomer would take work the first is waiting for and
   neither end would learn it. The claim is RAII inside the mailbox, released
   however the read leaves — presence's own shape, and there is no leave verb.
+
+  **Its life is the hold and not the connection's, which is what makes the
+  refusal retryable** (bl-0a74). `Mailbox::take` drops the claim on the way out,
+  *before* the caller writes the answer, so a peer that vanished without a FIN
+  frees the slot within one hold's width — thirty seconds — rather than when
+  some later socket act finally notices. A machine redialling after a blip
+  therefore meets this sentence naming *itself*, from a predecessor that is
+  already dying, and the right answer is to wait and ask again. It is stated
+  here because the alternative reading is catastrophic in exactly the case the
+  guard was built for: a redial that took the refusal as final would make the
+  first network blip permanent, which is the failure §5.3's reversal exists to
+  end. It is a *contract*, not an implementation note — a refactor handing the
+  claim back to the caller would break a foot on the far side of the wire with
+  nothing here to catch it, so `slots.rs` carries the test that names it.
 - **An advertisement that would CHANGE the set in force is refused while that
   client holds a parked read**, naming the client and both ways out. A host
   re-presenting an unchanged set writes nothing and never reaches the guard, so
@@ -1171,13 +1185,49 @@ downstream carries an encoding case. A tool whose output is not UTF-8 loses
 exactly the bytes no string can name, which is the trade every other §11 file
 read already makes.
 
-**The executor is `yog tool-host`, a client mode beside `yog seat`.** It reads
-the §5.2 config, advertises the projection of it, and then loops: `invocations`
-→ run → `complete`. It runs **serially** (one invocation at a time, which is
-what makes a busy host absent) and it **does not reconnect** — a channel that
-fails is an exit naming the failure, because restart policy belongs to the
-supervision the operator's machine already has, and inventing one here would be
-yog deciding how a box it does not administer runs a program.
+**The executor is the thrall (§5.4), and it is not in this crate.** It reads the
+§5.2 config, advertises the projection of it, and then loops: `invocations` →
+run → `complete`. It runs **serially** — one invocation at a time, which is what
+makes a busy host absent. *This paragraph named `yog tool-host`, a client mode
+beside `yog seat`, until the severance (bl-7942) took every client out of yog:
+the crate now holds a listener and no dialler at all, and the sentence stood
+long enough to send a reader after `src/wire/host/` that had not existed for
+days.*
+
+***The no-reconnect ruling is reversed at the channel and kept at the process***
+*(bl-0a74).* It read: *"it **does not reconnect** — a channel that fails is an
+exit naming the failure, because restart policy belongs to the supervision the
+operator's machine already has, and inventing one here would be yog deciding how
+a box it does not administer runs a program."* The premise is sound and the
+conclusion does not follow, because **supervision restarts a process and the
+roaming case does not kill one**. §1's canonical box sleeps, changes networks
+and crosses a relay switch: TCP drops, the channel's thread ends with its
+sentence, and the foot process stays healthy — serving its other engines, if it
+has any. A supervisor sees an exit code that never comes. From that moment the
+engine believes this box is gone (presence is connection RAM, correctly) and the
+box believes it is serving, and nothing on either side says otherwise until
+somebody restarts a process that never failed.
+
+So a foot **redials its own channels**, with a backoff that settles rather than
+spins — a box in airplane mode must reach a slow cadence, not burn a core — and
+still **exits when it cannot be a foot at all**, which is the part supervision
+was always the right owner of. It is not a session resume and there is nothing
+to resume: presence re-forms as it does for any fresh connection, the
+advertisement rides the connection already, registration is durable engine-side,
+and an invocation in flight when the wire died is the mailbox's lease (above),
+not the redial's. **A redial is also a coarser instance of the §5.1
+re-assertion** — it presents the set again on the new connection — which is why
+the two are one subject and not two.
+
+**The one refusal a redial must expect is its own predecessor.** A read parked
+when its connection died does not leave until this engine tries to answer it, so
+a redial inside that window meets §5.1's one-reader refusal naming this very
+client. It is **retryable** and it is **bounded**: the claim's life is the
+mailbox's hold and not the connection's — `Mailbox::take` releases it on the way
+out, before its answer is written — so the stale predecessor is gone within one
+hold's width (thirty seconds) whether or not the socket has been noticed. A
+redial loop that treated that sentence as final would turn the first blip into
+the permanent stop this reversal exists to end.
 
 **A tool runs under two deadlines, and they measure different things.** The
 host's own bound terminates the child (SIGTERM then SIGKILL, the cascade the
@@ -1196,8 +1246,9 @@ particular** — it dials per ask and holds a connection only while it is
 *waiting*, so a busy thrall is absent (§5's presence amendment), and **nothing
 in the path is the engine speaking first** (§3's routing ruling). Founding the
 repo is bl-1dd3's other half and lands there; this section is what it
-implements against, and until it ships `yog tool-host` is the same executor
-reached by a verb.
+implements against. **It has shipped, and it is the only executor** — the
+interim reading, *"until it ships `yog tool-host` is the same executor reached
+by a verb"*, expired with the severance (bl-7942, §5.3).
 
 **The thrall owns the local execution corpus, and yog owns none of it.** This
 is the bl-37fd ruling's sharpest consequence and it inverts what the tree does

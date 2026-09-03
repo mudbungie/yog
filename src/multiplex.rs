@@ -28,7 +28,7 @@
 //! that do too, so no `Env` value reaches either — one spelling, one world. The
 //! rest need no fold: `bz`'s state is per-**wall**, not per XDG (§16.2 as
 //! amended); the plugin arms are spawned by a balls that folded already; and
-//! `gesture`/`seat`/`tool-host` are yog's own code over a composed `Env`. It is
+//! `gesture` is yog's own code over a composed `Env`. It is
 //! each arm's own act, not the router's, because the fold must land after that
 //! arm's "touches nothing yet" point — for `litany` that is below the clap
 //! parse, which is what keeps a probe and a bad verb world-free.
