@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.22](https://github.com/mudbungie/yog/compare/v0.0.21...v0.0.22) - 2026-09-03
+
+### Changes
+
+- the world's agent-tool shims assume a filesystem that executes what yog writes [bl-6a6a]
+- the §8.5 line's in-process query arm still resolves over the frame's cached derivation, so a wall born this instant refuses for one pass [bl-ab32]
+- RECURRENCE of bl-22ab: /search rows address workspaces and projects by engine path, so a hit cannot be fed to the gesture whose keys it spells [bl-ef16]
+
 ## [0.0.21](https://github.com/mudbungie/yog/compare/v0.0.20...v0.0.21) - 2026-09-03
 
 ### Changes
