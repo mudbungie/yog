@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.32](https://github.com/mudbungie/yog/compare/v0.0.31...v0.0.32) - 2026-09-03
+
+### Changes
+
+- the mailbox lease is unbounded and an exhausted one is silent: count hand-offs, answer the fourth read in doubt as a capture of the engine's own, and name the restart in the spent-handle sentence (REMOTE §5.6, rulings 2 and 3) [bl-8016]
+
 ## [0.0.31](https://github.com/mudbungie/yog/compare/v0.0.30...v0.0.31) - 2026-09-03
 
 ### Changes
