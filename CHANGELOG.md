@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.25](https://github.com/mudbungie/yog/compare/v0.0.24...v0.0.25) - 2026-09-03
+
+### Changes
+
+- the spawn lock is not the binary's: multiplex's in-process balls/litany forks copy fixture write fds, and every write-then-exec test is an ETXTBSY victim [bl-6bf5]
+
 ## [0.0.24](https://github.com/mudbungie/yog/compare/v0.0.23...v0.0.24) - 2026-09-03
 
 ### Changes
