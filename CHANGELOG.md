@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.18](https://github.com/mudbungie/yog/compare/v0.0.17...v0.0.18) - 2026-09-03
+
+### Changes
+
+- a refused conversation's transcript is still empty: the wound has no seat where the operator is reading, and the vocabulary for it is dead in production [bl-015b]
+
 ## [0.0.17](https://github.com/mudbungie/yog/compare/v0.0.16...v0.0.17) - 2026-09-03
 
 ### Changes
