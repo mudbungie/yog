@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.29](https://github.com/mudbungie/yog/compare/v0.0.28...v0.0.29) - 2026-09-03
+
+### Changes
+
+- the per-client pane document is written by nothing and answered to nobody: REMOTE §7 glass facts have no boundary act [bl-f936]
+- fan's lib beats fork inside balls: Attempt::open/resume/deliver leave the ETXTBSY class open after bl-6bf5 [bl-fd28]
+
 ## [0.0.28](https://github.com/mudbungie/yog/compare/v0.0.27...v0.0.28) - 2026-09-03
 
 ### Changes
