@@ -938,6 +938,35 @@ identity, because one client may hold two seats and the second closing must not
 unsay the first. The `Mutex` sits in `src/state.rs` (the crate's lock
 chokepoint) and the operations beside it in `registry::presence`.
 
+**A connection that says nothing for two minutes has ended** (bl-1421). That
+bound is protocol-visible and every client must know it: the engine sets a
+read timeout on each accepted socket, and a read that expires ends the serve
+loop exactly as an EOF does — the presence guard drops and the thread returns.
+It exists because "however it ends" was not true of the case it was written
+for: a peer that vanishes **without a FIN or an RST** — a sleeping laptop, a
+changed network, the relay switch §1 calls canonical — leaves the socket
+ESTABLISHED with no kernel timer against it, so the read blocks forever, the
+roster answers `present` for a box that is gone, and a box that flaps
+accumulates one leaked thread per flap.
+
+It is **a bound on the transport, not on the wait**, and thrall's channel
+states the same two minutes from the other end for the same reason: the
+engine's longest legitimate quiet is a follow-class hold — thirty seconds
+(above, and §5.5) — and then an answer, so a client parked for hours is a
+sequence of answered reads and never one read held for hours. No client idles
+past it: a foot re-asks the moment it is answered, a seat dials per gesture
+(§10), and a third client that held a connection open and silent for longer
+would find it closed under it, which is why the number is stated here rather
+than left to the implementation.
+
+**A timeout is "the connection is gone", never a retry.** It fires mid-record
+as readily as between records and rustls has no clean resume from a half-read
+frame, so there is one arm and it is the EOF arm. The client's remedy is the
+ordinary one — dial again. It is not §13.4's idle ping, which is the punched
+wire's, needs both ends, and is unimplemented; and it is not a sweep over
+presence, which has no timestamp and would become stored state that can
+disagree with the map.
+
 **The roster is the read.** `Query::Clients {workspace}` →
 `Reply::Clients([{client, present, tools}])` joins the three at the moment it is
 asked — the §4.1 registration listing, the presence map, each client's stored

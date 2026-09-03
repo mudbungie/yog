@@ -39,6 +39,22 @@ use std::time::Duration;
 /// until the next look.
 const ACCEPT_POLL: Duration = Duration::from_millis(20);
 
+/// How long an accepted connection may say nothing before the engine treats it
+/// as gone (REMOTE §5.1, bl-1421). **A bound on the transport, not on the
+/// wait** — thrall's channel states the same two minutes from the other end,
+/// and for the same reason: the engine's longest legitimate quiet is a
+/// follow-class hold, which is thirty seconds
+/// ([`slots`](crate::registry::mailbox), [`follow`](crate::boundary::follow))
+/// and then an answer, so a client parked for hours is a sequence of answered
+/// reads and never one read held for hours. No client idles past it: a foot
+/// re-asks immediately, a seat dials per gesture.
+///
+/// **A timeout is "the connection is gone", never a retry.** It fires mid-record
+/// as readily as between them, and rustls has no clean resume from a half-read
+/// frame — so the read loop ends on it exactly as it ends on an EOF, which is
+/// what releases the presence guard and returns the thread.
+const IDLE_TIMEOUT: Duration = Duration::from_mins(2);
+
 /// What answers a request frame: the reply stream it becomes, one [`Value`] per
 /// frame. Most answers are one element long; a follow-class read is the same
 /// signature with more of them (see [`frame`](super::frame)).
@@ -133,7 +149,7 @@ fn accept_loop(
                 let presence = presence.clone();
                 std::thread::spawn(move || {
                     let _ = stream.set_nonblocking(false);
-                    serve(stream, &config, answerer.as_ref(), &presence);
+                    serve(stream, &config, answerer.as_ref(), &presence, IDLE_TIMEOUT);
                 });
             }
             Err(_) => std::thread::sleep(ACCEPT_POLL),
@@ -143,12 +159,21 @@ fn accept_loop(
 
 /// One connection: handshake (inside the first read), then request → reply
 /// stream → terminator, until the peer goes away or a frame refuses.
+///
+/// `idle` is how long a read may find nothing before the peer counts as gone —
+/// [`IDLE_TIMEOUT`] is the production bound, and a test names a short one
+/// rather than sleeping for real ([`Mailbox::holding`](crate::registry::mailbox::Mailbox::holding)'s
+/// own shape). A socket that refuses the timeout is served without one: the
+/// engine having no bound is the behaviour it had before, never a reason to
+/// hang up on a peer that has done nothing wrong.
 pub(crate) fn serve(
     tcp: TcpStream,
     config: &Arc<ServerConfig>,
     answerer: &dyn Answerer,
     presence: &Presence,
+    idle: Duration,
 ) {
+    let _ = tcp.set_read_timeout(Some(idle));
     let Ok(conn) = ServerConnection::new(Arc::clone(config)) else {
         return;
     };
@@ -160,7 +185,9 @@ pub(crate) fn serve(
     // **Presence is this scope** (REMOTE §5, bl-4e08): the guard is taken when
     // the connection first names its client and released when this function
     // leaves, however it leaves — a clean close, a refused frame, a peer that
-    // vanished. There is no leave verb to forget, which is what makes
+    // vanished without a FIN (which is [`IDLE_TIMEOUT`] expiring, and was the
+    // one case this list claimed and did not hold — bl-1421). There is no
+    // leave verb to forget, which is what makes
     // "connected right now" true rather than aspirational. It cannot be taken
     // any earlier: the handshake completes inside the first read, so before it
     // there is no certificate to read an identity off.

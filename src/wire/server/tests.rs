@@ -130,6 +130,7 @@ fn an_unusable_config_drops_the_connection() {
                 chunks: 1,
             },
             &Presence::default(),
+            IDLE_TIMEOUT,
         );
     });
     drop(TcpStream::connect(address).expect("connect"));
