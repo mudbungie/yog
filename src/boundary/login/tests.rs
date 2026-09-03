@@ -212,8 +212,16 @@ fn a_lane_ends_when_the_run_it_was_reading_is_gone() {
     let dir = tempdir().expect("tmp");
     let world = crate::test_support::world::world_under(dir.path());
     let state = tempdir().expect("tmp");
-    let bz = script(dir.path(), "bz-quiet", "#!/bin/sh\nexit 0\n");
-    let runs = Runs::of(Cli::new(bz));
+    // **`bz` already exists, and is never a fixture written here** (bl-5510).
+    // The sweep below is this beat's subject and the child is incidental —
+    // nothing reads what it said — so writing one buys nothing and costs the
+    // ETXTBSY window `git_env`'s module doc names: a peer thread's fork copies
+    // the write fd, and an exec inside that window is "Text file busy". yog's
+    // own forks hold the spawn lock and cannot open that window; `multiplex`'s
+    // in-process `balls`/`litany`/`bz` arms fork on their own account and hold
+    // nothing. Measured: 16 sightings across the suite's write-then-exec
+    // fixtures with `multiplex` in the run, this beat among them, none without.
+    let runs = Runs::of(Cli::new("/bin/sh"));
     let (run, _tx) = wired(dir.path());
     runs.seat(&workspace(), "openai", run, 0);
     let mut lane = lane(&runs, "openai");
