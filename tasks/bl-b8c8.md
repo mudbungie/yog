@@ -1,7 +1,8 @@
 +++
 title = "the follow-lane engine test is sleep-timed and dies under parallel gate load: said == [] where the tail should have three frames"
 created = 1787549117
-updated = 1787635316
+updated = 1788407713
+claimant = "Spellbind-A"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Seen once during a `bl close` gate on 2026-08-24, with four instrumented tarpaulin suites running on the box at the same time (the suite took 2831 s, roughly 90x its unloaded 32 s):
