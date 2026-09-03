@@ -41,7 +41,7 @@
         "/workspace:string",
         ":object"
       ],
-      "since": 11
+      "since": 12
     },
     "reply/advertised": {
       "signature": [
@@ -166,7 +166,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 11
+      "since": 12
     },
     "reply/balls": {
       "signature": [

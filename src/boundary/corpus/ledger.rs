@@ -9,6 +9,20 @@
 //! The record remembers what the shapes *were*, so a signature that moved
 //! while the version stood still is refusable at the moment it is regenerated.
 //!
+//! **The version the comparison is against is the record's own, not the
+//! shape's** (bl-00de). `protocol` at the top level is the version this record
+//! was last generated at, and a signature may move only when the version being
+//! generated is greater than it. The per-shape `since` is then a *stamp* — the
+//! version at which that shape last moved, which is what a client reads — and
+//! never a term in the test. It used to be one, and the reasoning was wrong in
+//! a way that only showed later: a shape edited at a version that was then
+//! found spent, and raised past, kept the pre-bump number, because the
+//! regeneration after the bump saw an unchanged signature and had nothing to
+//! restamp. The record then said a shape changed at a version it did not
+//! change at. Refusing across the record's own version stamps at the bump
+//! instead, and a regeneration at an unchanged version with unchanged
+//! signatures stays a byte-identical no-op.
+//!
 //! **A signature is field paths and their JSON types, not bytes.** Adding a
 //! sample to a shape leaves the signature alone, which is right: a new fixture
 //! is not a wire change. Renaming a field, changing its type, gaining one,
@@ -134,9 +148,11 @@ fn kind(value: &Value) -> &'static str {
 }
 
 /// The record this boundary earns, or the refusal that says why it cannot have
-/// one. A shape whose signature moved — or that vanished — while its own
-/// `since` still equals the protocol being generated is the case REMOTE's rule
-/// covers, and the sentence carries both halves of the remedy.
+/// one. **A signature may change only across a bump** (bl-00de): the record's
+/// own top-level `protocol` is the version it was last generated at, and any
+/// shape that moved — or vanished — is refused unless the version being
+/// generated is greater than that one. The sentence carries both halves of the
+/// remedy.
 pub(super) fn advance(
     shapes: &[Shape],
     previous: &Ledger,
@@ -149,12 +165,10 @@ pub(super) fn advance(
     let moved: Vec<String> = previous
         .shapes
         .iter()
-        .filter(|(name, entry)| {
-            entry.since >= protocol && fresh.get(*name) != Some(&entry.signature)
-        })
+        .filter(|(name, entry)| fresh.get(*name) != Some(&entry.signature))
         .map(|(name, _)| name.clone())
         .collect();
-    if !moved.is_empty() {
+    if !moved.is_empty() && protocol <= previous.protocol {
         return Err(format!(
             "these wire shapes changed at an unchanged protocol version: {}. \
              A change to a shape already in use bumps the version: raise PROTOCOL \

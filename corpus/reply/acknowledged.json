@@ -58,6 +58,6 @@
       "workspace": "ws"
     }
   ],
-  "protocol": 11,
+  "protocol": 12,
   "shape": "acknowledged"
 }

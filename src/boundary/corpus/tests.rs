@@ -26,14 +26,22 @@ fn blessed(dir: &Path) {
 }
 
 /// The round trip the corpus itself is: write, then verify — and verifying a
-/// second time is still clean, so the generator is idempotent.
+/// second time is still clean, so the generator is idempotent. The record's own
+/// bytes are the sharp half: a regeneration at an unchanged protocol with
+/// unchanged signatures restamps nothing (bl-00de).
 #[test]
 fn a_regenerated_corpus_passes_its_own_gate_twice() {
     let dir = tempdir().expect("scratch");
     blessed(dir.path());
     assert_eq!(run(None, dir.path()), Ok(()));
+    let record = fs::read_to_string(dir.path().join("shapes.json")).expect("record");
     blessed(dir.path());
     assert_eq!(run(None, dir.path()), Ok(()));
+    assert_eq!(
+        fs::read_to_string(dir.path().join("shapes.json")).expect("record"),
+        record,
+        "a no-op regeneration is byte-identical"
+    );
 }
 
 /// The whole surface is present, both halves, and every fixture is stamped.
@@ -73,26 +81,46 @@ fn a_stale_fixture_and_an_orphan_are_both_named() {
     assert_eq!(run(None, dir.path()), Ok(()));
 }
 
-/// **The rule this ball adds, mechanically**: a wire-visible shape that changed
-/// while the protocol version stood still is refused, and the sentence says
-/// both what to bump and what to run.
-#[test]
-fn a_changed_shape_at_a_standing_version_demands_the_bump() {
-    let shape = Shape {
+/// One `ack` shape whose signature has gained `reason`.
+fn moved_ack() -> Shape {
+    Shape {
         direction: "request",
         name: "ack".to_owned(),
         frames: vec![json!({ "op": "ack", "reason": "why" })],
-    };
-    let previous = Ledger::read(&canonical(&json!({
-        "protocol": protocol(),
-        "shapes": { "request/ack": { "since": protocol(), "signature": ["/op:string", ":object"] } },
-    })));
-    let refusal = advance(&[shape], &previous, protocol())
+    }
+}
+
+/// A record generated at `protocol` holding one `ack` stamped `since`.
+fn recorded(protocol: u32, since: u32) -> Ledger {
+    Ledger::read(&canonical(&json!({
+        "protocol": protocol,
+        "shapes": { "request/ack": { "since": since, "signature": ["/op:string", ":object"] } },
+    })))
+}
+
+/// **The rule, mechanically**: a wire-visible shape that changed while the
+/// protocol version stood still is refused, and the sentence says both what to
+/// bump and what to run. The comparison is against the record's OWN version,
+/// never the shape's `since` — so an old stamp is no licence (bl-00de).
+#[test]
+fn a_changed_shape_at_an_unbumped_version_demands_the_bump() {
+    let previous = recorded(protocol(), 1);
+    let refusal = advance(&[moved_ack()], &previous, protocol())
         .err()
         .expect("refused");
     assert!(refusal.contains("request/ack"), "{refusal}");
     assert!(refusal.contains("src/wire/hello.rs"), "{refusal}");
     assert!(refusal.contains("make corpus"), "{refusal}");
+}
+
+/// And the bump stamps the NEW number, not the stale one the shape carried.
+/// This is the drift the old per-shape test let through: a shape edited at a
+/// version later found spent kept the pre-bump stamp forever.
+#[test]
+fn a_change_after_a_bump_stamps_the_new_number() {
+    let next = advance(&[moved_ack()], &recorded(12, 11), 13).expect("lawful across a bump");
+    assert_eq!(next.protocol, 13);
+    assert_eq!(next.shapes["request/ack"].since, 13);
 }
 
 /// A shape that vanished is the same offence: a spelling in use stopped being
@@ -101,7 +129,7 @@ fn a_changed_shape_at_a_standing_version_demands_the_bump() {
 fn a_vanished_shape_demands_the_bump_too() {
     let previous = Ledger::read(&canonical(&json!({
         "protocol": protocol(),
-        "shapes": { "request/gone": { "since": protocol(), "signature": [":object"] } },
+        "shapes": { "request/gone": { "since": 1, "signature": [":object"] } },
     })));
     let refusal = advance(&[], &previous, protocol()).err().expect("refused");
     assert!(refusal.contains("request/gone"), "{refusal}");

@@ -250,9 +250,10 @@ says — and adds no verb, no field and no envelope:
   the corpus adds is enforcement. A test regenerates and diffs, so a boundary
   change that alters an emitted byte fails until the corpus is regenerated; and
   because regenerating would otherwise erase the evidence, the standing record
-  remembers each shape's field signature, and `make corpus` **refuses** to
-  rewrite a shape whose signature moved while its own version stood still. Both
-  failures name both halves of the remedy. A *new* shape is exempt, as the
+  remembers each shape's field signature **and the version it was last
+  generated at**, and `make corpus` **refuses** to rewrite any shape whose
+  signature moved unless the version being generated is greater than that one
+  (§9.9). Both failures name both halves of the remedy. A *new* shape is exempt, as the
   preface bullet already says a new verb is: strict decode refuses an unknown
   one in band, naming it.
 
@@ -4062,10 +4063,11 @@ written down.
 `reply/conversations` gained a field, so its ledger signature moved and its
 `since` advanced from 1 to **2** — the standing version, believed unreleased at
 the time, so the move was taken as free exactly as bl-3655's follow-lane move
-was. `make corpus` adjudicated it rather than an author: the ledger refuses only
-a signature that moves while its own `since` **equals** the protocol being
-generated. A client vendoring the corpus decodes the new key or fails its own
-fixture, which is the whole mechanism.
+was. `make corpus` adjudicated it rather than an author: at the time, the ledger
+refused only a signature that moved while its own `since` **equals** the
+protocol being generated — the per-shape test the paragraph below records as
+wrong and the one after it replaces. A client vendoring the corpus decodes the
+new key or fails its own fixture, which is the whole mechanism.
 
 **That belief was wrong, and §9.10 is where the correction is paid.** `PROTOCOL`
 2 shipped in **v0.0.7**, which was tagged before this row landed — so the field
@@ -4078,6 +4080,39 @@ what has shipped, so it catches the second author and not the first. What saves
 a client here is that the addition is optional and absent-by-default, so a v2
 seat reading a v3 row ignores a key it does not know; what a bump buys is that
 it does not have to.
+
+**The test that replaces it: a signature may change only across a bump**
+(bl-00de). *One move per shape per version* is recorded above as wrong, and this
+is what the ledger enforces instead. The standing record's **top-level
+`protocol` is the version it was last generated at** — one field, the whole
+term of the test — and `advance` refuses **any** signature change, and any
+vanished shape, unless the version being generated is **greater** than that
+recorded one. A change that gets through is stamped with the new version. There
+is no per-shape reasoning left: `since` is a stamp a client reads, never an
+input.
+
+Two things fall out of that, and both are the point.
+
+- **The stamp lands at the bump, not at the first regeneration.** The old test
+  let a shape edited at version N take `since: N`; if N was then found spent —
+  another ball bumped in the same cycle, or N had shipped — and `PROTOCOL` was
+  raised to N+1, the next regeneration saw an unchanged signature, had nothing
+  to restamp, and left the record saying the shape moved at a version it did
+  not move at. It happened twice in one day: `reply/config` came out at 11 for
+  a change that shipped at 13, and `reply/attention` and `reply/acknowledged`
+  read 11 on `main` for a move bl-09ef took at 12. Both are corrected in the
+  committed record. Under the new test the first regeneration is the refusal,
+  so the author bumps *before* anything is stamped and the number cannot be
+  stale.
+- **A no-op regeneration is still byte-identical**, which is what keeps
+  `make corpus` runnable at any moment: unchanged signatures at an unchanged
+  version write the same bytes back, and only a *change* needs the version to
+  have moved.
+
+What this still cannot see is what has **shipped** — nothing in this tree knows
+that — so §9.11's granularity holds unchanged: the ledger's unit is the bump,
+not the release, and a second change to one shape inside one unreleased cycle
+costs a second integer.
 
 ### 9.10 The roster says *why it did not run* (bl-9b88)
 
@@ -4129,8 +4164,9 @@ DESIGN §6 rule 7 holds the derivation and the reasoning. The wire's half:
 - **Two bumps in one unreleased cycle, and that is the ledger's granularity,
   not a second fleet event.** §9.10 raised 3; this raises 4, and neither has
   shipped, so no peer ever spoke 3 and the release carries one number. The
-  corpus ledger refuses a shape whose signature moves while its `since` equals
-  the protocol being generated, which is *per bump*, not per release — so a
+  corpus ledger refuses a signature that moves unless the version being
+  generated is greater than the one the record was last generated at (§9.9's
+  replacement test, bl-00de), which is *per bump*, not per release — so a
   second change to a shape inside one cycle costs a second integer. That is
   cheap and honest; collapsing it would mean teaching the ledger what has been
   published, which nothing in this tree knows.
