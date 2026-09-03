@@ -185,15 +185,26 @@ resolve_in_root() {
 
 # config_text IMAGE — the third surface. An `ENV` ships to everyone who pulls
 # whether or not any file holds it, and build arguments echo into history.
+#
+# TWO READS, BECAUSE ONE TEMPLATE IS NOT PORTABLE — a DELIBERATE DIVERGENCE
+# from the thrall and litany copies (bl-09d4). This was one `image inspect
+# --format` naming `.History`, for which **docker's `image inspect` has no
+# top-level key**: the template failed, wrote ONE NEWLINE, exited non-zero, and
+# the caller's `[ -s ]` passed it — so under docker this surface was scanned
+# blank and an `ENV` shipping to everyone who pulls was read by nothing. It
+# failed CLOSED (`make image ENGINE=docker` refused every build, the self-test
+# missing its own planted `ENV`), but a gate that reads nothing must SAY so.
+# Both engines carry `--format '{{json .Config}}'` — Env, Labels, Entrypoint,
+# Cmd, WorkingDir, User in one field, whole rather than field by field, so a
+# key one engine omits cannot break the read — and `history --no-trunc`, where
+# docker keeps what podman puts in `.History`. Non-zero from either is non-zero
+# from here, and `scan_image` dies on the KEYS, never on the length.
 config_text() {
-  "$ENGINE" image inspect "$1" --format '{{range .Config.Env}}Env {{.}}
-{{end}}{{range $k, $v := .Config.Labels}}Label {{$k}}={{$v}}
-{{end}}Entrypoint {{.Config.Entrypoint}}
-Cmd {{.Config.Cmd}}
-WorkingDir {{.Config.WorkingDir}}
-User {{.Config.User}}
-{{range .History}}History {{.CreatedBy}} {{.Comment}}
-{{end}}'
+  local ref="$1" cfg hist
+  cfg="$("$ENGINE" image inspect "$ref" --format '{{json .Config}}')" || return 1
+  hist="$("$ENGINE" history --no-trunc --format '{{.CreatedBy}} {{.Comment}}' "$ref")" || return 1
+  printf 'Config %s\n' "$cfg"
+  printf '%s\n' "$hist" | sed 's/^/History /'
 }
 
 # --- the scan ---------------------------------------------------------------
@@ -243,8 +254,15 @@ scan_image() {
     printf '%s\n' "$rootfs$p" >>"$work/scan.txt"
   done <"$work/authored.txt"
 
-  config_text "$image" >"$work/image-config.txt"
-  [ -s "$work/image-config.txt" ] || die "$image reported an empty config — the inspect is broken, not the image"
+  # Guarded on WHAT CAME BACK, never on length (bl-09d4): both reads exited 0,
+  # the config carries the `Env` array every image inherits from its base, and
+  # the history carries a line. Each arm names the surface it lost.
+  config_text "$image" >"$work/image-config.txt" ||
+    die "$image: the config surface could not be read — '$ENGINE image inspect --format {{json .Config}}' or '$ENGINE history --no-trunc' failed. The read is broken, not the image"
+  grep -q '^Config .*"Env"' "$work/image-config.txt" ||
+    die "$image: the config surface came back with no Env — '$ENGINE image inspect --format {{json .Config}}' answered nothing this gate can read"
+  grep -q '^History .' "$work/image-config.txt" ||
+    die "$image: the config surface came back with no history — '$ENGINE history --no-trunc' answered nothing this gate can read"
   printf '%s\n' "$work/image-config.txt" >>"$work/scan.txt"
   [ -s "$work/links.txt" ] && printf '%s\n' "$work/links.txt" >>"$work/scan.txt"
 

@@ -6876,15 +6876,18 @@ Six properties, each answering a way this job could be less than the ruling:
   the bytes that leave it.** Build, scan, push, in one job. The alternative — a
   build-and-push action reading the same `Containerfile` — builds a SECOND time
   and pushes an image no gate ever read.
-- **The engine is stated, and it is podman — measured, not preferred.** A
-  runner carries both engines, and **the gate's third surface does not survive
-  docker**: `docker image inspect` exposes no top-level `History`, so
-  `image-scan.sh`'s one `--format` template fails execution, writes a single
-  newline and exits non-zero — enough to satisfy an emptiness check, and every
-  `Env` in the image goes unscanned. The self-test catches it (the build is
-  refused, so the gate fails closed and nothing ungated is published), and that
-  gap is bl-09d4; under podman the same runner catches all five planted
-  findings and scans the real image clean. `.dockerignore` is now a **symlink
+- **The engine is stated, and it is podman — determinism, not capability.**
+  Autodetect would pick podman on a runner anyway; naming it means a runner
+  image that drops podman fails loudly instead of silently changing what gates
+  a published artifact. It used to be a capability claim — **the gate's third
+  surface did not survive docker**, because `docker image inspect` exposes no
+  top-level `History`, so `image-scan.sh`'s one `--format` template failed
+  execution, wrote a single newline and exited non-zero, which was enough to
+  satisfy an emptiness check while every `Env` in the image went unscanned.
+  bl-09d4 closed that: the surface is read as `image inspect --format
+  '{{json .Config}}'` plus `history --no-trunc`, which both engines carry, and
+  the guard reads the exit status and the keys rather than the byte count.
+  `.dockerignore` is now a **symlink
   to `.containerignore`** for the same one-home reason — docker never read the
   latter name, so a `make image ENGINE=docker` sent `.git/` and all of
   `target/` into the context this section calls the image's `include` list.

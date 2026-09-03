@@ -465,22 +465,20 @@ jobs:
         # `yog:latest` LOCALLY; that tag dies with the runner and is never
         # pushed.
         #
-        # ENGINE IS STATED, AND IT IS PODMAN — measured, not preferred. A
-        # runner carries both engines, and under docker the gate's THIRD
-        # SURFACE (the image config) silently reads as empty: `docker image
-        # inspect` has no top-level `History`, so `image-scan.sh`'s one
-        # `--format` template fails execution, writes a single newline and
-        # exits non-zero, which is enough to satisfy an emptiness check and
-        # leaves every `Env` unscanned. The self-test catches it and the build
-        # is refused rather than published — the gate fails closed — but a
-        # refused build publishes nothing at all. Proven on a runner: podman
-        # builds this image, catches all five planted findings and scans the
-        # real image clean. The docker gap is bl-09d4; when it closes,
-        # this becomes a one-word change. Autodetect would pick podman here
-        # anyway; naming it means a runner image that drops podman fails loudly
-        # instead of silently changing what gates a published artifact.
-        # `.dockerignore` is a symlink to `.containerignore` so the build
-        # context is one list under either engine.
+        # ENGINE IS STATED, AND IT IS PODMAN — determinism, not capability.
+        # Autodetect would pick podman on this runner anyway; naming it means a
+        # runner image that drops podman fails loudly instead of silently
+        # changing what gates a published artifact. It WAS a capability claim:
+        # under docker the gate's THIRD SURFACE (the image config) silently
+        # read as empty, because `docker image inspect` has no top-level
+        # `History` and `image-scan.sh`'s one `--format` template failed
+        # execution, wrote a single newline and exited non-zero — enough to
+        # satisfy an emptiness check while every `Env` went unscanned. bl-09d4
+        # closed that (two reads both engines carry, guarded on the exit status
+        # and on the keys, not the byte count), so the engine below is a choice
+        # rather than a requirement. `.dockerignore` is a symlink to
+        # `.containerignore` so the build context is one list under either
+        # engine.
         #
         # SINGLE-ARCH, x86_64, and stated rather than implied: the runner is
         # amd64 and the image carries one static musl binary built for it. An
@@ -490,7 +488,7 @@ jobs:
         run: |
           set -euo pipefail
           command -v podman >/dev/null || {
-            echo "this runner has no podman, and the image gate's config surface does not survive docker — refusing to publish an ungated image" >&2
+            echo "this runner has no podman, and this job names its engine rather than letting one be picked for it — refusing to publish an image built by an unstated engine" >&2
             exit 1
           }
           make image ENGINE=podman

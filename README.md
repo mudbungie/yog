@@ -644,7 +644,7 @@ mounted in.
 
 ```
 make image                   # podman or docker, whichever is on PATH
-make image ENGINE=docker
+make image ENGINE=docker     # the gate reads the same three surfaces on both
 ```
 
 It builds under the pinned toolchain (`rust:1.95.0-alpine`, checked against
@@ -736,14 +736,19 @@ box that built it, before the push. It does not read what is already in the
 registry, it cannot un-publish a digest, and whoever runs the build can bypass
 it exactly as `--no-verify` bypasses the commit hook.
 
-**Run it under podman today.** `make image ENGINE=docker` refuses at the
-self-test: `docker image inspect` exposes no top-level `History`, so the one
-`--format` template the scan reads the image **config** with fails execution
-and yields a single newline — the `Env` surface goes unscanned, the planted
-ENV secret is missed, and the build is refused rather than published. The gate
-fails closed, which is the right direction, but it means the docker path builds
-nothing until that is fixed (bl-09d4). Podman is the Makefile's default anyway, and it is
-what the release workflow names.
+**Both engines, and the config surface is read portably** (bl-09d4). It was
+one `image inspect --format` template naming `.History`, for which `docker
+image inspect` has no top-level key: under docker the template failed
+execution, wrote a single newline, and slipped past a guard that only asked
+whether the file was empty — so the `Env` surface went unscanned and `make
+image ENGINE=docker` built nothing (the self-test missed its own planted ENV
+secret and refused the build; the gate failed closed, which is the right
+direction, but the surface was still unread). It is now two reads both engines
+carry — `image inspect --format '{{json .Config}}'` for `Env`, `Labels`,
+`Entrypoint`, `Cmd`, `WorkingDir` and `User`, and `history --no-trunc` — and
+the guard checks the reads' exit status **and** that the keys came back, so a
+one-byte answer cannot pass it. Podman stays the Makefile's default and what
+the release workflow names.
 
 **`make image` pushes nothing, and there is no `push` target.** The registry is
 `ghcr.io/mudbungie/yog`, pushed only from this repo's release workflow at tag
