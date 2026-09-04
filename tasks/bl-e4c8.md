@@ -1,7 +1,8 @@
 +++
 title = "two loopback socket beats fail under heavy full-suite concurrency: a refused preface reads as a closed connection"
 created = 1788484554
-updated = 1788484554
+updated = 1788484690
+claimant = "Spellbind-V"
 priority = 4
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["flake", "wire"]
