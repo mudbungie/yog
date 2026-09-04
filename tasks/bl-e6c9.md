@@ -1,7 +1,7 @@
 +++
 title = "world::tools::ensure_shim writes an executable in-process, so a peer fork can ETXTBSY the exec that follows it"
 created = 1788484551
-updated = 1788484686
+updated = 1788484905
 claimant = "Spellbind-U"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -21,3 +21,7 @@ That covers fixtures. It does not cover **production**: `world::tools::ensure_sh
 — in this process, and the caller execs the shim immediately after. The write fd exists here, a fork on any other thread copies it, and an exec inside that window is ETXTBSY. The beat is the sighting, but the hazard is the engine's: yog composes a world's shims and then runs them, and yog forks from every thread.
 
 Worth attacking as a subtraction rather than a bracket — the same relocation bl-fd28 chose for the fixtures: write the shim through the one child yog already has (`git_env`), or write-then-rename so the exec'd inode is never the written one (a rename target has no write fd anywhere). `no-hand-chmod.yml` evidently exempts this site; check whether the exemption is what let the hazard stand.
+
+---
+
+Reproduced and fixed. bl-fd28's stress filter with the world::tools/world::tests beats folded in, 16 workers x 70 iterations (1,120 lib-test-binary runs): 7 ETXTBSY failures before, every one a shim exec (the_seeded_shim_runs_and_passes_argv_through_verbatim x4, a_bare_bl_spawned_in_the_world_resolves_to_the_seeded_shim x3); 0 after, and 0 non-ok runs in a further 320. The write moved to git_env::write_exec, now the crate's one home for creating an executable file in production and in tests alike; no retry loop. rules/no-hand-chmod.yml drops the world/tools.rs exemption that was the hazard and records why wire/provision.rs and bz_host/store.rs stay: they narrow non-executables, so no exec can land in a window they open.
