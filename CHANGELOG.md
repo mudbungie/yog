@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.35](https://github.com/mudbungie/yog/compare/v0.0.34...v0.0.35) - 2026-09-04
+
+### Changes
+
+- the Prompt door says sign in first: the bl-1fd0 rung has one home, and it is the fire every seat passes [bl-2291]
+
 ## [0.0.34](https://github.com/mudbungie/yog/compare/v0.0.33...v0.0.34) - 2026-09-03
 
 ### Changes
