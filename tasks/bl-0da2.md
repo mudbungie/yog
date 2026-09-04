@@ -1,7 +1,8 @@
 +++
 title = "cellular result for the NAT probe: the engine box punches a direct UDP path to the phone on cellular over carrier IPv4; the laptop behind the same NAT reaches it by relay only"
 created = 1788493530
-updated = 1788493530
+updated = 1788493568
+claimant = "Spellbind-Z"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["remote"]
