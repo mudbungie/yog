@@ -4,9 +4,11 @@
 //! streamed runner's [`LoginView`] carries them **verbatim**; ONE outcome row
 //! lands in `ops.jsonl` at exit (§4.2, the stream never logged line-by-line); a
 //! non-zero exit carries the exact run-by-hand command as the fallback (§8.3).
-//! The spawn is the **browser** flow (`--browser`, bl-b4e5): the one flow every
-//! oauth row can serve and the only one a GUI can drive. Credentials stay bz's —
-//! yog renders.
+//! Both scenarios here fire the **browser** flow, which since §8.3 rule 1's
+//! amendment (bl-61bf) is the arm a row taking no device endpoint gets — the
+//! floor every oauth row can serve. Which arm a given row gets is read at the
+//! spawn and is `login::runs`' own fact; this story is about the STREAM.
+//! Credentials stay bz's — yog renders.
 //!
 //! One `#[test]` runs both scenarios sequentially — a shape this file kept
 //! from the era when a recorder-script write could race a peer's fork into
@@ -18,7 +20,7 @@ use crate::support::Recorder;
 use std::path::Path;
 use tempfile::tempdir;
 use yog::cli_outbound::Cli;
-use yog::login::{self, LoginRun, LoginView};
+use yog::login::{self, Flow, LoginRun, LoginView};
 
 /// Poll the run to settlement (bounded — the fake exits promptly), returning the
 /// terminal view-model the shell would paint.
@@ -50,6 +52,7 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
         ok_state.path(),
         "T0",
         Some(Path::new("/ws")),
+        Flow::Browser,
     )
     .unwrap();
     let view = drain(&mut run);
@@ -70,8 +73,8 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
     assert_eq!(view.outcome, Some(0));
     assert_eq!(view.fallback, None, "a clean exit needs no fallback");
 
-    // The spawn was the BROWSER flow — not bz's device-flow default, which
-    // 78s on any row whose `oauth` block omits the optional `device_url`.
+    // The spawn was the BROWSER flow — the flag is what selects it over bz's
+    // device-flow default, which 78s on a row declaring no device endpoint.
     let inv = bz_ok.invocations();
     assert_eq!(inv.len(), 1);
     assert_eq!(
@@ -105,6 +108,7 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
         bad_state.path(),
         "T0",
         Some(Path::new("/ws")),
+        Flow::Browser,
     )
     .unwrap();
     let view = drain(&mut run);

@@ -45,6 +45,7 @@ fn the_reason_is_the_pickers_own_sentence() {
         credential: "not required".to_owned(),
         effort: true,
         priority: false,
+        device: String::new(),
     };
     let why = row.tools_blocked().expect("the dialect declines tools");
     let remedy = config_remedy(DECLINES[0]).expect("classified");

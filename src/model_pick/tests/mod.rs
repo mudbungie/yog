@@ -43,6 +43,7 @@ pub(crate) fn rows_on(
             credential: "not required".to_owned(),
             effort: true,
             priority: true,
+            device: String::new(),
         })
         .collect()
 }

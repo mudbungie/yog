@@ -37,6 +37,11 @@ fn wired(state_root: &Path) -> (LoginRun, mpsc::Sender<Chunk>) {
     )
 }
 
+/// The lines a settled view carries, in arrival order.
+fn lines(view: &LoginView) -> Vec<String> {
+    view.lines.iter().map(|l| l.text.clone()).collect()
+}
+
 /// Wait for the reader thread to settle the run — bounded, because the fake
 /// exits at once and a hang here is the defect, not a slow box. Running out
 /// **panics**: handing back an unsettled view would turn a dead reader thread
@@ -208,4 +213,60 @@ fn a_run_older_than_an_hour_is_swept_at_the_next_start() {
         "a run inside the bound is untouched"
     );
     assert_eq!(settled(&runs, "openai").outcome, Some(0));
+}
+
+/// **The flow follows the row** (§8.3 rule 1 as amended by bl-61bf; bl-7c9f).
+/// The argv is the whole assertion, because `--browser` is the one word that
+/// selects a flow: a row brazen's own table declares a device endpoint for is
+/// fired headless — bz binds no loopback and the verification URL and user code
+/// stream down the lane, so the sign-in completes from any seat — and a row
+/// declaring none is fired `--browser`, byte for byte as before.
+#[test]
+fn the_spawn_drops_browser_exactly_where_the_row_declares_a_device_endpoint() {
+    let dir = tempdir().expect("tmp");
+    let world = crate::test_support::world::world_under(dir.path());
+    let state = tempdir().expect("tmp");
+    // A browser-only oauth row, authored in this workspace's own wall beside
+    // brazen's built-ins: `openai-chatgpt` is the built-in row that declares a
+    // device endpoint, and this one deliberately declares none.
+    let paths = crate::test_support::world::wall_paths(dir.path());
+    std::fs::create_dir_all(paths.config.parent().expect("the wall's brazen dir")).expect("mkdir");
+    std::fs::write(
+        &paths.config,
+        "[[provider]]\nname = \"acme-oauth\"\nprotocol = \"openai_chat\"\n\
+         base_url = \"https://acme.test\"\nauth = \"oauth2\"\n\
+         api_header = { name = \"Authorization\", scheme = \"bearer\" }\n\
+         [provider.oauth]\nclient_id = \"c\"\n\
+         authorize_url = \"https://acme.test/authorize\"\n\
+         token_url = \"https://acme.test/token\"\n",
+    )
+    .expect("write");
+    // bz echoes the argv it was fired with, then the device flow's own line.
+    let bz = script(
+        dir.path(),
+        "bz",
+        "#!/bin/sh\nprintf '%s\\n' \"$*\" 1>&2\n\
+         printf 'open https://example.test/device and enter CODE-1234\\n' 1>&2\nexit 0\n",
+    );
+    let runs = Runs::of(Cli::new(bz));
+
+    runs.start(&world, &workspace(), "openai-chatgpt", state.path(), "100")
+        .expect("started");
+    let headless = lines(&settled(&runs, "openai-chatgpt"));
+    assert_eq!(
+        headless[0], "--login --provider openai-chatgpt",
+        "no --browser: bz binds no loopback and serves the row's device flow"
+    );
+    assert!(
+        headless[1].contains("https://example.test/device") && headless[1].contains("CODE-1234"),
+        "the URL and the user code stream down the lane: {headless:?}"
+    );
+
+    runs.start(&world, &workspace(), "acme-oauth", state.path(), "100")
+        .expect("started");
+    assert_eq!(
+        lines(&settled(&runs, "acme-oauth"))[0],
+        "--login --provider acme-oauth --browser",
+        "a row declaring no device endpoint keeps the loopback flow"
+    );
 }

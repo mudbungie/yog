@@ -9,6 +9,13 @@
 //! §3), so [`Runs::start`] answers the run's standing at once and every later
 //! look is a re-read of that same standing.
 //!
+//! **The flow is read here, once** (§8.3 rule 1 as amended by bl-61bf; bl-7c9f).
+//! Which flow a row is fired in is the row's own `device` column, and this is
+//! the one place that asks: the wall lens the spawn already folds through is
+//! also what `bz --list-providers` answers under, so the read is the same lens
+//! and the branch is one fact at one seam ([`flow_of`]). No surface carries a
+//! selector and nothing downstream re-derives it.
+//!
 //! **A second `Login` on a live pair terminates and replaces it.** The
 //! operator's own restart is the cancel, so there is no cancel verb; the
 //! termination is not best-effort housekeeping but a precondition — an
@@ -41,8 +48,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use super::{LoginRun, LoginView};
+use super::{Flow, LoginRun, LoginView};
 use crate::cli_outbound::{Binary, Cli};
+use crate::config_edit::brazen::{BzRunner, ProviderRow, RealBzRunner};
 use crate::state::{LoginCell, lock_logins as lock_runs};
 
 /// How often a reader thread drains its child. The §7.2 follower's own period,
@@ -127,14 +135,19 @@ impl Runs {
     ) -> Result<LoginView, String> {
         let now: i64 = ts.parse().unwrap_or(0);
         let key = (workspace.to_path_buf(), provider.to_owned());
-        let bz = self.bz.and_env(crate::world::wall::pairs(world, workspace));
+        // One wall lens, two uses: the flow read and the child's own env. Both
+        // must be this workspace's sphere, and deriving them from one value is
+        // what makes that structural rather than a convention.
+        let wall = crate::world::wall::env(world, workspace);
+        let flow = flow_of(&wall, provider);
+        let bz = self.bz.and_env(crate::world::wall::pairs_of(&wall));
         let mut board = lock_runs(&self.cell);
         // The sweep, at the one moment the map can grow — and the replacement,
         // *before* the spawn, so the port a live flow holds is released rather
         // than contended (module doc).
         board.live.retain(|_, slot| now - slot.at <= TTL_SECONDS);
         board.live.remove(&key);
-        let run = super::start(&bz, provider, state_root, ts, Some(workspace))
+        let run = super::start(&bz, provider, state_root, ts, Some(workspace), flow)
             .map_err(|e| e.to_string())?;
         board.seq += 1;
         let serial = board.seq;
@@ -218,6 +231,25 @@ impl Runs {
     #[cfg(test)]
     pub(crate) fn read_once(&self, workspace: &Path, provider: &str, serial: u64) -> bool {
         self.drain(&(workspace.to_path_buf(), provider.to_owned()), serial)
+    }
+}
+
+/// **Which flow `provider` is fired in**, off brazen's effective table read in
+/// `wall` — the §8.3 rule 1 branch, and the whole of it. A row declaring a
+/// device endpoint is fired headless; every other row, and a name the table does
+/// not carry at all, gets `--browser`. The unknown name is not a special case:
+/// `--browser` is the floor every oauth row can serve, so a row nothing declared
+/// anything about is fired the way an undeclared row is, and bz refuses it in
+/// its own words if it cannot serve that either.
+fn flow_of(wall: &crate::xdg::Env, provider: &str) -> Flow {
+    let headless = RealBzRunner::resolve(wall)
+        .providers()
+        .iter()
+        .any(|row| row.name == provider && ProviderRow::headless_login(row));
+    if headless {
+        Flow::Device
+    } else {
+        Flow::Browser
     }
 }
 

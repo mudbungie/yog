@@ -7,15 +7,20 @@
 //! carries the exact command as a run-by-hand fallback (§8.3). Credentials stay
 //! bz's: yog renders the flow, never reads or writes a credential (§5.1 #22).
 //!
-//! **The flow is the browser flow, always** (§8.3, bl-b4e5). bz defaults to the
-//! headless RFC 8628 device flow and refuses it — exit 78, "this provider has
-//! no device endpoint; use `--browser`" — on any row whose `oauth` block omits
-//! the optional `device_url`, which is most of them. The loopback AuthCode flow
-//! (RFC 8252) has no such hole: `authorize_url`/`token_url` are *required*
-//! fields of every `oauth` block, so `--browser` is the one flow every oauth row
-//! can serve. yog is a desktop GUI with a browser at hand and no terminal to
-//! type a device code into, so it is also the right one. No per-row branch, no
-//! capability yog has to guess at, no flow flag on the surface.
+//! **The flow follows the row** (§8.3 rule 1 as amended by bl-61bf; bl-b4e5 for
+//! the rule it replaces). bz's default is the headless device flow and it
+//! refuses one — exit 78, "this provider has no device endpoint; use
+//! `--browser`" — on any row whose `oauth` block declares no `device` endpoint.
+//! So the flag follows brazen's own `device` column
+//! ([`ProviderRow::headless_login`](crate::config_edit::brazen::ProviderRow::headless_login)):
+//! a row that declares one is fired headless — bz binds nothing and streams the
+//! verification URL and user code down the lane, so the sign-in completes from
+//! any seat, a phone's browser included — and every other row is fired
+//! `--browser`, the loopback AuthCode flow (RFC 8252) whose
+//! `authorize_url`/`token_url` are *required* of every `oauth` block and which
+//! is therefore the floor. That branch is [`Flow`], and it is read ONCE at the
+//! spawn ([`runs::Runs::start`]): still no flow selector on any surface, and
+//! nothing yog guesses at.
 //!
 //! The selectable providers come from
 //! [`BzRunner::providers`](crate::config_edit::brazen::BzRunner::providers) —
@@ -50,12 +55,36 @@ pub mod wire;
 #[cfg(test)]
 mod tests;
 
-/// bz's login subcommand flag, its provider selector (§8.2), and the flow
-/// selector — see the module note: the loopback browser flow is the only one
-/// every oauth row can serve, and the only one a GUI can sensibly drive.
+/// bz's login subcommand flag, its provider selector (§8.2), and the one flag
+/// that selects a flow — see the module note.
 const LOGIN_FLAG: &str = "--login";
 const PROVIDER_FLAG: &str = "--provider";
 const BROWSER_FLAG: &str = "--browser";
+
+/// **Which sign-in flow a row is fired with** (§8.3 rule 1 as amended by
+/// bl-61bf). Not a choice any surface offers: the row's own `device` column
+/// decides it, and [`runs::Runs::start`] is the one place that reads it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Flow {
+    /// The loopback browser flow (RFC 8252), selected by `--browser`. The floor
+    /// every oauth row can serve, and the flow whose redirect only completes
+    /// where a browser can reach the engine's own loopback.
+    Browser,
+    /// bz's default headless device-code flow — no flag at all, because bz
+    /// selects it by the row's `device` block and the style declared there.
+    Device,
+}
+
+/// The `bz` words one sign-in is fired with. **One spelling, three readers**:
+/// the spawn's argv, the `ops.jsonl` row and the run-by-hand fallback all read
+/// this, so what is logged and what is offered can never diverge from what ran.
+fn login_args(provider: &str, flow: Flow) -> Vec<&str> {
+    let mut args = vec![LOGIN_FLAG, PROVIDER_FLAG, provider];
+    if flow == Flow::Browser {
+        args.push(BROWSER_FLAG);
+    }
+    args
+}
 
 /// The pure view-model the shell paints for a login run (§8.3). All three fields
 /// are derived facts of the streamed child; the shell holds a [`LoginRun`] as its
@@ -108,27 +137,28 @@ pub struct LoginRun {
 /// name — which is exactly what `yog exec --ws <workspace>` is for. Outside any
 /// workspace there is no lawful spelling at all, so the fallback says what to
 /// fix rather than offering a command that would refuse.
-pub fn by_hand(workspace: Option<&Path>, provider: &str) -> String {
+pub fn by_hand(workspace: Option<&Path>, provider: &str, flow: Flow) -> String {
+    let args = login_args(provider, flow).join(" ");
     let Some(ws) = workspace else {
         return format!(
             "no workspace: a sign-in belongs to one, so there is nothing to run by hand — \
-             focus a workspace, then yog {} {} <workspace> bz {LOGIN_FLAG} {PROVIDER_FLAG} \
-             {provider} {BROWSER_FLAG}",
+             focus a workspace, then yog {} {} <workspace> bz {args}",
             crate::world::hatch::EXEC_SUBCMD,
             crate::world::hatch::WS_FLAG,
         );
     };
     format!(
-        "yog {} {} {} bz {LOGIN_FLAG} {PROVIDER_FLAG} {provider} {BROWSER_FLAG}",
+        "yog {} {} {} bz {args}",
         crate::world::hatch::EXEC_SUBCMD,
         crate::world::hatch::WS_FLAG,
         ws.display(),
     )
 }
 
-/// Spawn `bz --login --provider <provider> --browser` as the streamed-piped
-/// class (§8): stdin null (this verb never reads TTY input — the flow completes
-/// through the loopback redirect), stdout/stderr piped for live line-buffering.
+/// Spawn `bz --login --provider <provider>` in `flow` as the streamed-piped
+/// class (§8): stdin null (this verb never reads TTY input — the browser flow
+/// completes through the loopback redirect and the device flow through a code
+/// the human types elsewhere), stdout/stderr piped for live line-buffering.
 /// A spawn failure (bz absent) appends a synthetic `ops.jsonl` line (§4.2) and
 /// returns the error, so no attempt is ever un-logged (§7.3). `ts` is the
 /// wall-clock stamp minted at the shell boundary, kept clock-free here.
@@ -138,8 +168,9 @@ pub fn start(
     state_root: &Path,
     ts: &str,
     workspace: Option<&Path>,
+    flow: Flow,
 ) -> std::io::Result<LoginRun> {
-    let args = [LOGIN_FLAG, PROVIDER_FLAG, provider, BROWSER_FLAG];
+    let args = login_args(provider, flow);
     let mut argv = vec![bz.binary().display().to_string()];
     argv.extend(args.iter().map(|s| (*s).to_string()));
     match bz.run(&args) {
@@ -147,7 +178,7 @@ pub fn start(
             streamed: Streamed::new(stream),
             view: LoginView::default(),
             argv,
-            by_hand: by_hand(workspace, provider),
+            by_hand: by_hand(workspace, provider, flow),
             state_root: state_root.to_path_buf(),
             ts: ts.to_owned(),
         }),
@@ -199,8 +230,8 @@ impl LoginRun {
     /// live, never re-logged line-by-line). The logged stderr is derived from the
     /// very lines the pane painted, so the log and the surface can never name
     /// different text. A non-zero exit sets the §8.3 fallback — the exact argv
-    /// that was attempted, `--browser` included, so the command offered to run by
-    /// hand is one that would actually succeed. An append io error has nowhere
+    /// that was attempted, in the flow it was attempted in, so the command
+    /// offered to run by hand is one that would actually succeed. An append io error has nowhere
     /// else to be recorded, so it is dropped (mirrors `Stream`'s best-effort
     /// cleanup) — the live view already showed the run.
     fn finalize(&mut self, outcome: StreamedOutcome) {
@@ -232,7 +263,7 @@ impl LoginRun {
         Self {
             streamed,
             view: LoginView::default(),
-            by_hand: by_hand(Some(Path::new("/ws")), "openai"),
+            by_hand: by_hand(Some(Path::new("/ws")), "openai", Flow::Browser),
             argv,
             state_root: state_root.to_path_buf(),
             ts: "TS".to_owned(),

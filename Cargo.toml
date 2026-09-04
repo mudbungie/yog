@@ -86,8 +86,14 @@ balls = "=0.5.11"
 # the migration `config_edit::brazen::providers::capability` has been waiting on
 # since bl-3d22 named it: a capability yog would otherwise have re-derived from a
 # match on `ProtocolId` is now a column, and a match could not have seen the
-# per-row decline anyway. yog reads the columns (bl-23bd).
-brazen = { version = "=0.0.7", features = ["native-host"] }
+# per-row decline anyway. yog reads the columns (bl-23bd). 0.0.8 makes the
+# headless sign-in a row-declared fact (upstream bl-6680): `[provider.oauth]`'s
+# `device_url` becomes `device = { url, style }` and the listing gains a `device`
+# column naming the style — `codex` on the builtin `openai-chatgpt` row, OpenAI's
+# own pre-standard device-code wire, which is why the column carries a STYLE and
+# not a bool. That is the flow key DESIGN §8.3 rule 1 as amended needs, and yog
+# reads it at the one spawn (bl-7c9f).
+brazen = { version = "=0.0.8", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -220,7 +226,10 @@ clap = { version = "4", features = ["derive"] }
 # (bl-f91a): the git/rev pin that rode here while bl-ddaa was unpublished is
 # gone, deny.toml's `allow-git` entry went with it, and `make publish` works
 # again — crates.io refuses git deps, so a git pin is never the shape.
-litany = "=0.0.6"
+# 0.0.7 is the parity move and nothing else: litany's own `brazen = "="` is the
+# gate on this one, so the two pins step together to 0.0.8 or neither does
+# (bl-7c9f, upstream litany bl-8daa).
+litany = "=0.0.7"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

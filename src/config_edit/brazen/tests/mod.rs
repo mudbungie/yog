@@ -52,6 +52,7 @@ impl FakeRunner {
                     credential: "not required".to_owned(),
                     effort: true,
                     priority: true,
+                    device: String::new(),
                 })
                 .collect(),
             ..Self::ok()

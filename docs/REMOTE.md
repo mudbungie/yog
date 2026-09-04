@@ -2756,9 +2756,9 @@ wire. A **browser-only row** completes only where a browser can reach the
 ENGINE's loopback: the engine's own box (the window's local case, unchanged),
 or an operator's own port-forward — an operator act on boxes the operator
 administers, §1.4's own posture, **stated as the remedy where the seat is
-remote and never built into the channel**. At the current brazen pin the one
-builtin oauth row is browser-only and the projection carries no device fact;
-the upstream ask that closes both halves is bl-c5fe.
+remote and never built into the channel**. Both halves landed at bl-7c9f: the
+projection carries the `device` column, and the builtin oauth row declares an
+endpoint, so the default install's sign-in completes from any seat.
 
 **Faces (one capability, N spellings — §3).** The window's Login pane aims at
 the FOCUSED workspace across channels (§8.2): a local workspace asks this
@@ -2773,8 +2773,9 @@ not hold.
 
 - A browser-only row signed in from a seat with no shell (a phone): the
   port-forward remedy assumes a terminal somewhere. The hole closes per row as
-  bl-c5fe lands; until then that pairing has no paved path, and the pane says
-  so rather than offering a verb that cannot finish.
+  its provider gains a device endpoint — the builtin oauth row has one since
+  bl-7c9f — and for a row that still declares none, that pairing has no paved
+  path: the pane says so rather than offering a verb that cannot finish.
 - Re-auth when a token expires mid-conversation on the host: already owned —
   bz's silent refresh renews without interaction, and where refresh fails the
   auth-failed banner (DESIGN §8.3 rule 5) routes to this same one act, which

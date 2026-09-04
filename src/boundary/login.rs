@@ -3,9 +3,10 @@
 //! has said, and the lane that keeps saying it.
 //!
 //! The act is [`Action::Login`](super::Action::Login) and it does exactly two
-//! things — start `bz --login --provider <row> --browser` on the ENGINE inside
-//! the *named* workspace's wall, and answer that run's standing. It never
-//! waits: a browser flow is minutes of a human's attention and the intake is
+//! things — start `bz --login --provider <row>`, in the flow that row's own
+//! `device` column declares (§8.3 rule 1 as amended by bl-61bf), on the ENGINE
+//! inside the *named* workspace's wall, and answer that run's standing. It never
+//! waits: a sign-in is minutes of a human's attention and the intake is
 //! one thread for the whole world (REMOTE §3), so an act that waited it out
 //! would stop every deposit converging. The receipt is therefore the standing
 //! **re-read** rather than an echo of what was asked — the `Marks` discipline

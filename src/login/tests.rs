@@ -14,7 +14,7 @@ use std::sync::mpsc;
 
 use tempfile::tempdir;
 
-use super::{LoginRun, start};
+use super::{Flow, LoginRun, start};
 use crate::cli_outbound::{Chunk, Cli, ExitInfo, Streamed};
 use crate::opslog::{self, SYNTHETIC_EXIT};
 
@@ -80,14 +80,32 @@ fn login_run_streams_lines_live_then_logs_a_clean_outcome_row() {
 #[test]
 fn the_run_by_hand_spelling_binds_the_workspace_or_says_there_is_none() {
     assert_eq!(
-        by_hand(Some(Path::new("/spheres/corp")), "anthropic"),
+        by_hand(Some(Path::new("/spheres/corp")), "anthropic", Flow::Browser),
         "yog exec --ws /spheres/corp bz --login --provider anthropic --browser"
     );
-    let none = by_hand(None, "anthropic");
+    let none = by_hand(None, "anthropic", Flow::Browser);
     assert!(none.contains("no workspace"), "{none}");
     assert!(
         !none.starts_with("yog exec"),
         "not offered as runnable: {none}"
+    );
+}
+
+/// §8.3 rule 1 as amended (bl-61bf): the flow is a word in the command, so the
+/// run-by-hand spelling has to carry the one that was actually fired. A device
+/// row's sign-in takes no flag at all — `--browser` is what SELECTS the loopback
+/// flow, so offering it back would hand the operator a different sign-in from
+/// the one that failed.
+#[test]
+fn the_run_by_hand_spelling_carries_the_flow_that_was_fired() {
+    assert_eq!(
+        by_hand(Some(Path::new("/ws")), "openai-chatgpt", Flow::Device),
+        "yog exec --ws /ws bz --login --provider openai-chatgpt"
+    );
+    let none = by_hand(None, "openai-chatgpt", Flow::Device);
+    assert!(
+        none.ends_with("bz --login --provider openai-chatgpt"),
+        "{none}"
     );
 }
 
@@ -133,9 +151,16 @@ fn start_logs_a_synthetic_row_when_bz_cannot_spawn() {
     let bz = Cli::new("/definitely/not/a/real/bz-xyz");
     // `.err()` sidesteps `unwrap_err`'s `T: Debug` bound (LoginRun holds a live
     // Stream and is deliberately not Debug).
-    let err = start(&bz, "openai", dir.path(), "TS", Some(Path::new("/ws")))
-        .err()
-        .unwrap();
+    let err = start(
+        &bz,
+        "openai",
+        dir.path(),
+        "TS",
+        Some(Path::new("/ws")),
+        Flow::Browser,
+    )
+    .err()
+    .unwrap();
     assert_eq!(err.kind(), std::io::ErrorKind::Other);
 
     // The failed spawn still leaves a rendered fact: one synthetic ops row.

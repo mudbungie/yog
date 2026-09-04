@@ -29,12 +29,13 @@
 //! (bl-20cb retired the §9.5 config copy); the boundary's `Providers` reply and
 //! §9.4's remedy sentence read the same derivation without repainting the row.
 //!
-//! The projection carries no *device-endpoint* fact (`OAuthConfig::device_url`
-//! is not a listed column at the brazen pin — `Cargo.toml` is the pin
-//! authority and no version is restated here), and it does not need
-//! to: `authorize_url`/`token_url` are required fields of every `oauth` block
-//! while `device_url` is `Option`, so the **browser** flow is the one flow every
-//! oauth row can serve — see [`crate::login`] for the flow rule.
+//! **`device` is the flow capability.** The column names the headless sign-in a
+//! row serves, in brazen's own `device.style` spelling. `authorize_url`/
+//! `token_url` are required fields of every `oauth` block while `device` is
+//! optional, so the **browser** flow stays the floor every oauth row can serve
+//! and this column says which rows do better: [`ProviderRow::headless_login`] is
+//! the whole of the branch, read once at the spawn (§8.3 rule 1 as amended by
+//! bl-61bf; [`crate::login`]).
 
 /// brazen's `auth` spelling for an OAuth row (`AuthId::OAuth2`'s serde rename).
 const OAUTH2: &str = "oauth2";
@@ -62,8 +63,8 @@ pub const NOT_REQUIRED: &str = "not required";
 /// question that went unanswered.
 pub const MISSING: &str = "missing";
 
-/// One row of the effective provider table (§5.1 #20/#21) — the three columns
-/// yog consumes, verbatim from brazen's `--list-providers --json` object.
+/// One row of the effective provider table (§5.1 #20/#21) — the columns yog
+/// consumes, verbatim from brazen's `--list-providers --json` object.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProviderRow {
     /// The row's name — the `--provider <name>` selector and the credential
@@ -94,6 +95,13 @@ pub struct ProviderRow {
     /// over the `service_tier` wire spelling: the OpenAI family and Anthropic
     /// have one, and the others narrow it away.
     pub priority: bool,
+    /// **Which headless sign-in this row serves**, in brazen's own
+    /// `device.style` spelling (`rfc8628`, `codex`) — empty for a row that
+    /// serves none. A *style* rather than a boolean because the endpoint's
+    /// grammar is the row's fact too and brazen selects the wire from it; yog's
+    /// one reader ([`headless_login`](Self::headless_login)) asks only whether
+    /// there is one.
+    pub device: String,
 }
 
 impl ProviderRow {
@@ -113,6 +121,22 @@ impl ProviderRow {
                 "auth \"{other}\" — bz --login signs in oauth2 rows only"
             )),
         }
+    }
+
+    /// **Can this row be signed in with no browser on the engine's box?** (§8.3
+    /// rule 1 as amended by bl-61bf.) The [`device`](Self::device) column alone:
+    /// a row declaring a device endpoint serves the seat-independent flow — bz
+    /// binds nothing and streams the verification URL and user code to whichever
+    /// seat asked — while a row declaring none can only serve the loopback
+    /// browser flow, which completes where the browser reaches the engine.
+    ///
+    /// **One column, deliberately not two.** It does not re-ask
+    /// [`login_blocked`](Self::login_blocked): brazen carries `device` inside the
+    /// `oauth` block, so a row with no login capability has no column to declare
+    /// it with, and the two answer separate questions — whether the verb is
+    /// offered, and which flow it fires.
+    pub fn headless_login(&self) -> bool {
+        !self.device.is_empty()
     }
 
     /// Does this row carry a credential a run would actually spend? The
@@ -213,6 +237,7 @@ pub fn provider_rows(listing_json: &str) -> Vec<ProviderRow> {
             credential: column(row, "credential"),
             effort: flag(row, "effort"),
             priority: flag(row, "priority"),
+            device: column(row, "device"),
         })
         .collect()
 }
