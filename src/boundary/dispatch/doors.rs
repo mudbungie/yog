@@ -16,6 +16,11 @@ use litany::mint::SplitMix64;
 use super::super::{answer, ceiling, control};
 use super::Deps;
 
+/// The §8.1 step 2 refusal a blank goal rides back (bl-6191, seated by
+/// bl-54c1). One sentence, spelled once, so every spelling of the fire is
+/// refused in the same words.
+const BLANK_GOAL: &str = "the goal is blank: say what the conversation is for";
+
 /// The §8.1 mutating half: seed → ensure-workspace → the ball rung's `bl`
 /// steps, the composer's [`Prepared`](crate::start::Prepared) back. The
 /// occupied names and roots re-derive here from [`Deps`] — the same sources
@@ -64,6 +69,17 @@ pub fn prepare(
 /// ceiling: a workspace that requires a confinement layer this platform does
 /// not have fires nothing at all, so there is no spend to judge.
 ///
+/// **A blank goal never sends** (§8.1 step 2, bl-6191): the refusal is
+/// [`BLANK_GOAL`] and it stands **first**, ahead of both gates above — the
+/// confinement gate reads the workspace's live policy and the ceiling's
+/// refusal writes a §4.2 row, and a fire with nothing to say must cost
+/// neither. Trimmed, because whitespace is not a payload. The invariant is
+/// seated here for the reason the ceiling is: this is the one door every
+/// spelling passes — the table's `Prompt` arm behind a line and a deposit, and
+/// the §4.3 loop's own re-prompt — so one test gates every one of them, and a
+/// blank goal is spend for nothing and a conversation whose first entry is
+/// empty. A seat may grey its own send button, but that is a view (bl-54c1).
+///
 /// **`seed` is the firing seat's own §3.3 prediction** (bl-1747), and `None` is
 /// a caller that made none — a deposited line, the §4.3 loop — for which this
 /// moment's stamp is the draw. One default, at the one door that mints, rather
@@ -78,6 +94,9 @@ pub fn prompt(
     goal: &str,
     seed: Option<u64>,
 ) -> Result<String, String> {
+    if goal.trim().is_empty() {
+        return Err(BLANK_GOAL.to_owned());
+    }
     control::confinement_gate(workspace)?;
     // The §3.5 ceiling is the **world's** since bl-a80a, so its comparison is
     // folded over the §3.1 roster rather than over the one workspace this birth

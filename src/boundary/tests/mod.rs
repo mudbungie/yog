@@ -6,6 +6,9 @@
 /// What a gesture addresses (REMOTE §8, bl-f5f6): the workspace table and the
 /// query one, over the whole roster.
 mod address;
+/// §8.1 step 2's *a blank goal never sends* (bl-6191, seated by bl-54c1), one
+/// beat per spelling of the fire.
+mod blank_goal;
 /// Which gestures name a project (§3.5) and which name none.
 mod project;
 /// The §8.1 start family driven the way a terminal must drive it — two real
