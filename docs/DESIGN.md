@@ -4286,7 +4286,14 @@ doubt — never re-run** (bl-d1f1). The claimant locks the deposit *before* the
 rename (locks follow the inode, so a file in `claimed/` is locked from before
 it appears there) and holds the lock until the reply is written; the kernel
 releases it the instant a claimant dies, which is the one fact that tells
-debris from work in flight. A crash between claim and reply therefore leaves
+debris from work in flight. **A living claimant releases by `unlock`, never by
+letting the descriptor close** (bl-98ce): the lock belongs to the open file
+description, and a `fork` on any other thread — yog forks constantly — hands a
+child a second descriptor onto that same description which `O_CLOEXEC` closes
+only at the child's `exec`, so a release-by-close leaves the claim reading as
+live work for that window and a sweep in it answers nothing. The debris probe
+`unheld` unlocks its own momentary hold for the same reason. A crash between
+claim and reply therefore leaves
 the claimed file unlocked with an unparseable reply, and the next engine boot
 sweeps exactly that pair (`boundary::consume::sweep`, run once ahead of the
 consumer loop — the same startup convergence the dotfile temps get, §7.3): it

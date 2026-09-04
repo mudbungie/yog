@@ -26,7 +26,16 @@ pub fn claimed(state_root: &Path) -> Vec<(String, PathBuf)> {
 #[derive(Debug)]
 pub struct Claim {
     path: PathBuf,
-    _lock: fs::File,
+    lock: fs::File,
+}
+
+impl Drop for Claim {
+    /// Release the claim explicitly (bl-98ce, module doc): a close only
+    /// releases when the LAST descriptor onto this description goes, and a
+    /// concurrently forked child owns one of those until its `exec`.
+    fn drop(&mut self) {
+        let _ = self.lock.unlock();
+    }
 }
 
 impl Claim {
@@ -55,14 +64,46 @@ pub fn claim(state_root: &Path, id: &str) -> io::Result<Claim> {
     fs::rename(&from, &to)?;
     Ok(Claim {
         path: to,
-        _lock: file,
+        lock: file,
     })
 }
 
 /// True when nobody holds `path`'s claim lock: the claimant is gone, however
-/// it went. The probe's own lock is released on return; the only later writer
-/// of a debris reply slot is another sweep writing the same sentence, so the
-/// momentary hold is enough.
+/// it went. The probe's own lock is dropped by [`fs::File::unlock`] before it
+/// returns, never by the close (module doc) — a probe whose descriptor a fork
+/// copied would otherwise leave the file reading as claimed by nobody.
 pub fn unheld(path: &Path) -> bool {
-    fs::File::open(path).is_ok_and(|f| f.try_lock().is_ok())
+    let Ok(file) = fs::File::open(path) else {
+        return false;
+    };
+    if file.try_lock().is_err() {
+        return false;
+    }
+    let _ = file.unlock();
+    true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::boundary::deposit::deposit;
+    use serde_json::json;
+    use tempfile::tempdir;
+
+    /// bl-98ce: the release is the `unlock`, so a **copy of the claimant's
+    /// descriptor** — which is exactly what a `fork` on any other thread hands
+    /// a child — cannot hold the claim open past the drop. `try_clone` is that
+    /// copy, in-process and deterministic; released by close instead, this
+    /// beat reads the dropped claim as work still in flight.
+    #[test]
+    fn a_dropped_claim_releases_while_a_copy_of_its_descriptor_still_lives() {
+        let root = tempdir().unwrap();
+        deposit(root.path(), "g-1", &json!({"op": "ack"})).unwrap();
+        let held = claim(root.path(), "g-1").unwrap();
+        let path = held.path();
+        let forked = held.lock.try_clone().unwrap();
+        drop(held);
+        assert!(unheld(&path), "the drop released the lock, not the close");
+        drop(forked);
+    }
 }
