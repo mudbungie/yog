@@ -1,7 +1,7 @@
 +++
 title = "two boundary::consume::tests::debris beats fail under full-suite parallelism and pass in isolation"
 created = 1788484252
-updated = 1788484538
+updated = 1788484556
 claimant = "Spellbind-T"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -51,3 +51,14 @@ At the root, in production, no test changed: **the release is an `unlock`, never
 Regression beat lives in `deposit/claim.rs` (it needs the private descriptor): `try_clone` is a fork's descriptor copy, in-process and deterministic — clone the claim's lock, drop the claim, assert `unheld`. Verified to bite both ways: with the `unlock` removed it fails on exactly that assertion.
 
 DESIGN §8.5 amended with the unlock rule beside the kernel-release sentence.
+
+---
+
+## Verification
+
+Same stress, fix in: **80 full-suite lib runs (4 concurrent x 20 batches) — zero failures in the family.** All four beats above passed every run.
+
+Five of the 80 runs failed on unrelated beats under that artificial load, filed rather than folded in:
+
+- bl-e6c9 — `world::tools::ensure_shim` writes an executable in-process (`fs::write` + `set_permissions`, `src/world/tools.rs:216`) and the caller execs it, so a peer fork can ETXTBSY it. `git_env`'s bl-fd28 doc says the write side is closed because every executable fixture is written by a child; that covers fixtures and not production. Two hits.
+- bl-e4c8 — two loopback socket beats that read zero frames where a refusal was due (`wire::server::tests::protocol::a_skewed_peer_is_refused_and_never_reaches_the_answerer` twice, `test_support::seat::tests::a_dead_address_refuses_naming_itself` once). Three hits.
