@@ -1,7 +1,8 @@
 +++
 title = "world::tools::ensure_shim writes an executable in-process, so a peer fork can ETXTBSY the exec that follows it"
 created = 1788484551
-updated = 1788484551
+updated = 1788484686
+claimant = "Spellbind-U"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["flake", "world"]
