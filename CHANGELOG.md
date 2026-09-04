@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.37](https://github.com/mudbungie/yog/compare/v0.0.36...v0.0.37) - 2026-09-04
+
+### Changes
+
+- capability.rs re-judges two facts brazen now publishes: the tools match is brazen's Protocol::shapes, and the ollama context caveat's premise died at 0.0.10 [bl-b6c9]
+
 ## [0.0.36](https://github.com/mudbungie/yog/compare/v0.0.35...v0.0.36) - 2026-09-04
 
 ### Changes
