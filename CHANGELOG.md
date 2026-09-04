@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.36](https://github.com/mudbungie/yog/compare/v0.0.35...v0.0.36) - 2026-09-04
+
+### Changes
+
+- pin the litany release that carries brazen =0.0.10, and brazen =0.0.10 with it: one brazen in the graph [bl-d58d]
+- the fullness denominator is dark until hand-declared: if it should prefer the window brazen served, the shape is a read-time query over the model cache [bl-9c8a]
+
 ## [0.0.35](https://github.com/mudbungie/yog/compare/v0.0.34...v0.0.35) - 2026-09-04
 
 ### Changes
