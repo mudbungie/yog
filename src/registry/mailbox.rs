@@ -133,8 +133,40 @@ pub enum Verb {
 }
 
 /// The one sentence an unheld handle earns, said the same way at both readers.
+///
+/// **It names three causes and the third is the restart**
+/// (REMOTE §5.6, ruling 3). The mailbox is RAM and stays RAM: the durable home of a tool result is
+/// litany's step record, reached only through the driver's collect, so a
+/// capture nobody had collected when this process died is gone. A driver that
+/// outlives the engine then polls a handle the new one never minted, and until
+/// bl-8016 was told two of the three reasons that could be true. The third
+/// carries the gesture lane's own instruction, because the engine cannot know
+/// whether the box ran it.
 pub(super) fn unknown(invocation: &str) -> String {
-    format!("no invocation {invocation:?} is in flight; it was answered already or it expired")
+    format!(
+        "no invocation {invocation:?} is in flight; it was answered already, it expired, or \
+         this engine restarted since it was posted — the box may have run it; read the world \
+         before acting again"
+    )
+}
+
+/// **What an exhausted lease is answered with** (REMOTE §5.6, ruling 2): the
+/// engine's own capture, written at the read that would hand a slot out for a
+/// fourth time. Non-zero, because it is a failed tool result and the model
+/// reads it as one; empty on stdout, because nothing ran *here*; and one
+/// sentence naming the client, the count and the instruction the gesture lane
+/// already gives — a box that dropped three hand-offs of one tool, with its
+/// own redial series in between, is a box that tool is killing, and the
+/// recovery is a read rather than a re-send.
+pub(super) fn in_doubt(client: &str, handed: u32) -> Capture {
+    Capture {
+        stdout: String::new(),
+        stderr: format!(
+            "this invocation was handed to {client:?} {handed} times and never answered; \
+             each hand-off may have run it; read the world before acting again"
+        ),
+        exit_code: 1,
+    }
 }
 
 /// A capture as JSON — the **one** spelling, spent by the completing act, by

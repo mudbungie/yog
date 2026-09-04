@@ -3,14 +3,21 @@
 
 use std::time::Instant;
 
+use super::read::{HOLD_TICK, HOLD_WAITS};
 use super::*;
 use serde_json::json;
 
-fn quick() -> Mailbox {
+/// **The lease's own corpus** (REMOTE §5.3, §5.6): redelivery, the bound
+/// on it, and the answer an exhausted one earns. Its own file for the
+/// reason `read.rs` is its own module — a slot's life is one subject and
+/// how many reads it may be handed to is another.
+mod lease;
+
+pub(super) fn quick() -> Mailbox {
     Mailbox::holding(2, Duration::from_millis(1))
 }
 
-fn call(client: &str, tool: &str) -> Call {
+pub(super) fn call(client: &str, tool: &str) -> Call {
     Call {
         client: client.to_owned(),
         tool: tool.to_owned(),
@@ -21,11 +28,11 @@ fn call(client: &str, tool: &str) -> Call {
 
 /// One follow-class read that is expected to be granted its reader slot — the
 /// ordinary case, so the refusal stays visible where a test means it.
-fn took(mail: &Mailbox, client: &str) -> Vec<Invocation> {
+pub(super) fn took(mail: &Mailbox, client: &str) -> Vec<Invocation> {
     mail.take(client).expect("this client has no other reader")
 }
 
-fn ran(exit_code: i32) -> Capture {
+pub(super) fn ran(exit_code: i32) -> Capture {
     Capture {
         stdout: "out".to_owned(),
         stderr: String::new(),
@@ -71,40 +78,6 @@ fn a_take_drains_only_this_clients_work() {
     let taken = took(&mail, "laptop");
     assert_eq!(taken.len(), 1);
     assert_eq!(taken.first().map(|i| i.id.clone()), Some(mine));
-}
-
-/// **The hand-off is not the delivery** (bl-e658): a slot handed to a read that
-/// never answered it goes back on the queue at the client's next read, under
-/// the id it was first handed.
-///
-/// This is the defect's own shape. `taken` was a latch, so an invocation
-/// drained into a parked read whose peer had already died was consumed by a
-/// thread that could not deliver it, and no later read ever offered it again.
-#[test]
-fn work_handed_to_a_read_that_never_answered_is_offered_again() {
-    let mail = quick();
-    let id = mail.post(10, "local", &call("laptop", "Bash"));
-    assert_eq!(took(&mail, "laptop").len(), 1, "handed over once");
-    assert_eq!(
-        took(&mail, "laptop").first().map(|i| i.id.clone()),
-        Some(id),
-        "the next read is the acknowledgement the first one never gave"
-    );
-}
-
-/// **A completed slot is never re-run.** The redelivery above offers only work
-/// this engine has no answer for, so a capture waiting to be collected is not
-/// handed out a second time.
-#[test]
-fn an_answered_invocation_is_not_offered_again() {
-    let mail = quick();
-    let id = mail.post(10, "local", &call("laptop", "Bash"));
-    assert_eq!(took(&mail, "laptop").len(), 1);
-    assert_eq!(mail.complete("laptop", &id, &ran(0)), Ok(ran(0)));
-    assert!(
-        took(&mail, "laptop").is_empty(),
-        "answered work is finished work"
-    );
 }
 
 /// **One reader per identity** (bl-1462): a second connection presenting the
@@ -160,20 +133,6 @@ fn two_machines_read_at_once() {
     assert!(!mail.serving("laptop"), "and it let its own slot go");
 }
 
-/// The acknowledgement is **per client**: one machine asking again says nothing
-/// about what another machine is holding.
-#[test]
-fn a_read_acknowledges_only_its_own_clients_work() {
-    let mail = quick();
-    let theirs = mail.post(10, "local", &call("phone", "Bash"));
-    assert_eq!(took(&mail, "phone").len(), 1);
-    assert!(took(&mail, "laptop").is_empty());
-    assert_eq!(
-        took(&mail, "phone").first().map(|i| i.id.clone()),
-        Some(theirs)
-    );
-}
-
 /// **The hold ends** (REMOTE §3): a host with nothing waiting is answered with
 /// nothing, and asks again. An answer that never came would be the hang.
 #[test]
@@ -213,12 +172,31 @@ fn work_landing_mid_hold_ends_it() {
 
 /// A handle this engine does not hold refuses **naming it**, at both readers:
 /// the completion that quotes it and the poll that waits on it.
+///
+/// **And the sentence names the restart** (REMOTE §5.6, ruling 3). The mailbox
+/// is RAM across a restart and stays RAM — the durable home of a tool result
+/// is litany's step record — so a driver that outlived this engine polls a
+/// handle the new one never minted. Two causes were named and the true third
+/// was not, which left that driver reading "answered already" about work
+/// nobody has any record of; it gains the gesture lane's own instruction,
+/// because the engine cannot know whether the box ran it.
 #[test]
-fn an_unheld_handle_refuses_at_both_readers() {
+fn the_spent_handle_sentence_names_the_restart_at_both_readers() {
     let mail = quick();
     let refusal = mail.complete("laptop", "inv-9", &ran(0));
     assert_eq!(refusal, Err(unknown("inv-9")));
-    assert!(refusal.unwrap_err().contains("inv-9"));
+    let said = refusal.expect_err("no such handle");
+    assert!(said.contains("inv-9"), "{said}");
+    assert!(said.contains("answered already"), "{said}");
+    assert!(said.contains("it expired"), "{said}");
+    assert!(
+        said.contains("this engine restarted since it was posted"),
+        "{said}"
+    );
+    assert!(
+        said.contains("read the world before acting again"),
+        "{said}"
+    );
     assert_eq!(mail.collect("local", "inv-9"), Err(unknown("inv-9")));
 }
 

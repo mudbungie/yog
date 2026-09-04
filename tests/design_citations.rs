@@ -79,7 +79,10 @@ const FOREIGN: &[&str] = &[
     // bl-dfce the home of the ruling that the compactor's procedure pair is an
     // engine act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN
     // §5 has no subsections, which the sibling test keeps honest.
-    "5.4",
+    // §5.6 joins it (bl-8016): the bounded lease, the exhausted one answered
+    // in doubt, and the swallowed capture re-posted. Cited "REMOTE §5.6"
+    // everywhere, and the same sibling test keeps DESIGN §5 subsectionless.
+    "5.4", "5.6",
 ];
 
 /// Parse a section key (`digits`, optionally `.digits`) starting at `i`;

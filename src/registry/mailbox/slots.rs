@@ -21,12 +21,10 @@ use std::time::Duration;
 
 use super::{Call, Capture, Invocation, unknown};
 
-/// How long a follow-class read waits for work before answering with none:
-/// 240 looks, 125 ms apart — thirty seconds. A bound rather than an open wait,
-/// because the read holds a connection thread and a peer that went away must
-/// not hold one forever.
-const HOLD_WAITS: u32 = 240;
-const HOLD_TICK: Duration = Duration::from_millis(125);
+/// The follow-class read, its one-reader claim and the bound on its lease.
+pub(crate) mod read;
+
+use read::{HOLD_TICK, HOLD_WAITS};
 
 /// How long an uncollected slot survives before the next post sweeps it: an
 /// hour. A driver that died mid-invocation collects nothing, and a map that
@@ -46,7 +44,14 @@ struct Slot {
     /// disclosure).
     by: String,
     invocation: Invocation,
-    taken: bool,
+    /// **How many follow-class reads this slot has been handed to** — the one
+    /// stored fact about the lease, and `taken` derived from it rather than
+    /// stored beside it (REMOTE §5.6). "Handed to the read that is running
+    /// now" is what the old flag meant, and that is a question about *this*
+    /// call rather than about the slot: [`Mailbox::take`] redelivers on its
+    /// first look and offers only fresh work on the rest, so a count and a
+    /// per-look predicate say everything two fields did, and cannot disagree.
+    handed: u32,
     capture: Option<Capture>,
     at: i64,
 }
@@ -127,99 +132,12 @@ impl Mailbox {
                     input: call.input.clone(),
                     cwd: call.cwd.clone(),
                 },
-                taken: false,
+                handed: 0,
                 capture: None,
                 at: now,
             },
         );
         id
-    }
-
-    /// **The follow-class read** (REMOTE §3): everything queued for `client`,
-    /// waiting up to this mailbox's hold for the first of it. It answers the
-    /// empty set when the hold expires, which is not a failure — the host asks
-    /// again, and an answer that never came would be the hang the deadline
-    /// exists to exclude.
-    ///
-    /// Two things happen before the wait, and REMOTE §5.3 is the authority on
-    /// both: the read **claims this client's one reader slot**, refusing a
-    /// second connection that is already holding it (bl-1462), and it
-    /// **acknowledges the previous read** (bl-e658, [`requeue`](Self::requeue)).
-    ///
-    /// **The claim's life is this call, not the connection's** (REMOTE §5.1,
-    /// bl-0a74) — it is dropped on the way out, before the caller has written a
-    /// byte of the answer. That is the contract a redialling foot rests on: a
-    /// peer that vanished without a FIN leaves a thread asleep in this loop,
-    /// and its slot comes free within one hold's width rather than whenever
-    /// some later socket act notices, so the one-reader refusal a redial meets
-    /// is a dying predecessor and is **retryable**. Handing the claim back to
-    /// the caller would read as a tidier lifetime and would silently make the
-    /// first network blip permanent.
-    pub fn take(&self, client: &str) -> Result<Vec<Invocation>, String> {
-        let _reading = self.reading(client)?;
-        self.requeue(client);
-        for _ in 0..self.waits {
-            let taken = self.drain(client);
-            if !taken.is_empty() {
-                return Ok(taken);
-            }
-            std::thread::sleep(self.tick);
-        }
-        Ok(self.drain(client))
-    }
-
-    /// **One reader per identity** (REMOTE §5.1, bl-1462): the claim a parked
-    /// read holds, released however the read leaves. A second connection under
-    /// the same certificate is two processes claiming one machine's name, and
-    /// it is refused in band rather than silently taking the work the first is
-    /// parked for.
-    pub(crate) fn reading(&self, client: &str) -> Result<Reading, String> {
-        if !lock_mail(&self.cell).reading.insert(client.to_owned()) {
-            return Err(format!(
-                "invocations: {client:?} is already holding this engine's follow-class \
-                 read — one machine's queue has one reader, because a second would take \
-                 work the first is parked for and neither end would learn it. Something \
-                 else is presenting this certificate: stop it, or stop this"
-            ));
-        }
-        Ok(Reading {
-            cell: self.cell.clone(),
-            name: client.to_owned(),
-        })
-    }
-
-    /// Is `client` parked on a follow-class read right now? The advertisement's
-    /// own gate reads it (REMOTE §5.1): a set may not be replaced under a
-    /// machine that is serving.
-    pub fn serving(&self, client: &str) -> bool {
-        lock_mail(&self.cell).reading.contains(client)
-    }
-
-    /// **The acknowledgement** (bl-e658, REMOTE §5.3): every slot this client
-    /// was handed and this engine has no capture for goes back on the queue, at
-    /// the moment it asks for work again. The hand-off mark is a lease and not a
-    /// latch — a parked read cannot learn its peer went away, so treating the
-    /// drain as the delivery loses whatever is posted into a dead one.
-    fn requeue(&self, client: &str) {
-        let mut slots = lock_mail(&self.cell);
-        for slot in slots.live.values_mut() {
-            if slot.client == client && slot.capture.is_none() {
-                slot.taken = false;
-            }
-        }
-    }
-
-    /// One look: every untaken invocation for `client`, marked taken.
-    fn drain(&self, client: &str) -> Vec<Invocation> {
-        let mut slots = lock_mail(&self.cell);
-        let mut out = Vec::new();
-        for slot in slots.live.values_mut() {
-            if slot.client == client && !slot.taken {
-                slot.taken = true;
-                out.push(slot.invocation.clone());
-            }
-        }
-        out
     }
 
     /// Answer one invocation **as the client it was addressed to**, and hand
@@ -259,21 +177,6 @@ impl Mailbox {
         };
         slots.live.remove(invocation);
         Ok(Some(capture))
-    }
-}
-
-/// One parked follow-class read, as a claim on its client's reader slot.
-/// Releasing it is [`Drop`] and nothing else — presence's own shape and its
-/// reason: a read leaves by answering, by refusing, by its peer vanishing and
-/// by a thread panicking, and a leave verb would be forgotten at one of them.
-pub(crate) struct Reading {
-    cell: MailCell,
-    name: String,
-}
-
-impl Drop for Reading {
-    fn drop(&mut self) {
-        lock_mail(&self.cell).reading.remove(&self.name);
     }
 }
 
