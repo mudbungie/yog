@@ -5046,6 +5046,10 @@ and the fixed local port it punches from), sealed under the pairing material
 so the commons stores opaque bytes — a DHT node, or anyone walking the
 keyspace, learns neither that this is an engine nor where it lives. Signed,
 sequenced, republished on an hourly cadence against the DHT's storage decay.
+**The observed port is a separate fact from the local one and presence must
+carry the observed one** (§13.8): port preservation is best-effort even on a
+NAT that has it, and a second host behind the same NAT already holding that
+external port is enough to make the two differ — measured.
 
 **The inbox** is the signaling half: a client that wants a connection writes
 a signed, sealed item at a key derived from the pairing salt — *"call me:
@@ -5064,7 +5068,11 @@ Both ends bind their fixed punch port and TCP-simultaneous-open toward each
 other's observed endpoints — listen and connect from one port, SYNs retried
 across a bounded window, v6 tried first where both ends published it
 (a stateful v6 firewall punches far more reliably than a v4 NAT, having no
-ports to rewrite). The first SYN pair that crosses is the connection; the
+ports to rewrite). **"Both ends" is the whole of that rung and it is the end
+most likely to fail** — bl-a9b0 measured a residential engine path with no
+routable v6 at all facing a cellular seat path that is v6-native, so the rung
+cannot fire and the pair falls to v4, where the cellular end holds no address
+of its own (§13.8). The first SYN pair that crosses is the connection; the
 seat's inner mTLS runs over it against the same `ca.pem`, verifying the same
 engine name a direct dial verifies, and the engine reads the same client
 leaf. §4 is untouched. A client that is publicly reachable is the degenerate
@@ -5110,7 +5118,10 @@ polls; a client touches the DHT only at the moment it wants a connection.
   Held connections hide it from every ask but the first; the cold open of a
   seat is where it shows.
 - **No carriage.** A punch-refusing NAT pair has no path. Accepted by ruling;
-  measured by bl-a9b0; §13.6 is the exit.
+  §13.6 is the exit. bl-a9b0 measured the residential half and could not
+  measure the cellular half (§13.8): the engine's NAT is as punchable as a NAT
+  gets, and the risk that remains is not the one this design assumed — it is
+  **no common address family**, not a symmetric mapping.
 - **The commons is a dependency, honestly smaller.** Bootstrap nodes are
   third parties (cached routing tables outlive them); a network that blocks
   outbound UDP blocks the rendezvous itself, and the ladder's direct-address
@@ -5129,7 +5140,11 @@ The first cut's relay — one stateless process on a public box, outer mTLS on
 the operator's CA, `moor`/`reach`/`back`, dial-back and splice (bl-4d56's
 §13.2, in the store's history) — remains the designed exit, unbuilt. Its
 criterion: **a client the operator actually needs measurably cannot punch**
-— bl-a9b0's verdict, or a live pairing that fails where it matters. Standing
+— bl-a9b0's verdict, or a live pairing that fails where it matters. **bl-a9b0
+did not meet it and did not refute it** (§13.8): the residential end measured
+green on every property a punch needs, and the cellular end could not be
+measured at all, so the criterion still waits on the one trial nobody has run.
+Standing
 one up then is severable in both directions: one file per entry opts in, and
 no code the punched path runs knows the relay exists.
 
@@ -5163,6 +5178,57 @@ Open, awaiting operator ruling:
    a published crate of its own.
 3. **Cadence defaults** (15 s poll, hourly republish, 25 s ping) — stated so
    they can be wrong in public; revisit on evidence, not taste.
+
+### 13.8 What bl-a9b0 measured
+
+Three paths were probed: the operator's laptop and the deployed engine box,
+both behind one residential NAT, and the phone seat. The full table and method
+live in bl-a9b0's body; what §13 turns on is this.
+
+**The residential NAT is the best case a punch can ask for.** Its UDP mapping
+is endpoint-independent — one socket on one bound source port, five distinct
+STUN servers across five destination addresses and three destination ports,
+one external port every time — and its TCP mapping is endpoint-independent
+too, measured with three *concurrent* held TCP connections from a single bound
+source port to three distinct servers, twice, once from each host. Both
+protocols preserve the port when the external port is free, so the fixed punch
+port §13.2 publishes is the port a peer sees. No port-mapping protocol is
+offered (UPnP, NAT-PMP and PCP all absent) and none is needed.
+
+**Two negative facts about it, both load-bearing.** It does not hairpin: a
+synchronized TCP simultaneous open between the two hosts through the public
+address, retried for twenty seconds, connected in neither direction, and a UDP
+trial over fifteen seconds was silent too. Two devices behind one NAT
+therefore reach each other only by §13.4's direct-address rung, never by a
+punch — which is what that rung is for. And its filtering is **not**
+endpoint-independent: with an outbound TCP mapping held open from a port, three
+independent third-party fetchers aimed at that port from addresses the mapping
+had never seen all timed out while a listener bound to it accepted nothing (the
+host's own firewall is not the cause — its input policy accepts and only the
+overlay's interface chain is installed). A punch here must be a real
+simultaneous open; a "one side just listens" shortcut has no chance.
+
+**The cellular half was not measured, and the reason is worth recording.** The
+phone offers no shell — every port tried over the overlay answers
+connection-refused, `adb` cannot connect and discovers no service — so no code
+could be run on it, and throughout the window it was on the residential Wi-Fi,
+so the overlay's own direct paths to it are LAN paths and prove nothing about
+a punch. A cellular-to-residential trial needs the phone off Wi-Fi with code
+on it, and that is the one trial §13.6's criterion still waits on.
+
+**What the phone did disclose changes an assumption.** Its published endpoint
+set carries a 464XLAT translator address (RFC 7335, not routable) and two
+global IPv6 addresses whose prefixes RDAP attributes to a US mobile carrier:
+the cellular data path is IPv6-native with IPv4 by translation, and the set
+carries no carrier-observed public IPv4 endpoint. Meanwhile neither residential
+host holds any routable v6 — no global address, no default v6 route, and a
+connect to a public v6 address returns ENETUNREACH. So the pair that matters
+has **no address family in common**: §13.3's v6-first rung is dead on the
+residential side, and on v4 the engine has no address to aim a SYN at, which
+degenerates simultaneous open into a one-directional SYN whose fate rests on a
+carrier translator neither end can observe. **The cheapest thing that would
+change this verdict is not a relay — it is routable IPv6 on the residential
+side**, which turns the risk case into the easy case §13.3 already describes.
 
 **Component impact.** yog: the DHT client, the rendezvous loop (publish,
 poll, verify, punch), held-connection serving, and the mint growing the
