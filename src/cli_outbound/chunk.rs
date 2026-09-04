@@ -64,11 +64,11 @@ impl CliError {
 /// is it a directory that exists? `Some(fault)` is the refusal, worded as the
 /// operator will read it — absent, or present but not a directory.
 ///
-/// Public because the §11 birth-config block's work-directory field pre-flights
-/// **this** question before Enter fires anything
-/// ([`crate::actions::work_dir_refusal`] reads it for the form): one reading of
-/// "lawful cwd" and one sentence for it, so the field's red flag and a forced
-/// spawn failure cannot disagree.
+/// **This is the only home for the question** (bl-33e9). The §11 birth-config
+/// block's field used to pre-flight it through an `actions::work_dir_refusal`
+/// that read this very function one step early; the field is a seat's and the
+/// pre-flight went with it, leaving one reading of "lawful cwd" and one
+/// sentence for it, on the boundary that actually forks.
 pub fn work_dir_fault(dir: &Path) -> Option<CliError> {
     if dir.is_dir() {
         return None;

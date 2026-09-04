@@ -38,6 +38,26 @@ fn a_missing_work_directory_is_named_instead_of_the_binary() {
     );
 }
 
+/// The other half of the same question (bl-6191, bl-33e9): a path that is
+/// plainly *there* but is not a directory. Its own sentence, because "does not
+/// exist" would be a second lie about it and the fix the operator needs is a
+/// different one.
+#[test]
+fn a_work_directory_that_is_not_a_directory_is_named_as_such() {
+    let dir = tempdir().unwrap();
+    let bin = write_script(dir.path(), "fake_litany", "#!/bin/sh\nexit 0\n");
+    let file = dir.path().join("a-file");
+    std::fs::write(&file, b"x").unwrap();
+    let cli = Cli::new(bin);
+    let Err(err) = cli.run_in(&file, &[]) else {
+        panic!("expected spawn failure");
+    };
+    assert_eq!(
+        err.to_string(),
+        format!("work directory is not a directory: {}", file.display())
+    );
+}
+
 #[test]
 fn drop_terminates_long_running_child() {
     let dir = tempdir().unwrap();

@@ -1,8 +1,11 @@
+//! The §8.2 conversation gates the §8.5 agent answer carries: Stop, its
+//! children cascade, and the nudge that is Stop's complement. Every one of them
+//! reads the focused workspace's agent set — what a conversation is currently
+//! doing — which is the only shape of gate this crate still holds (bl-33e9: a
+//! gate derivable from a row the boundary already answers is the seat's).
+
 use super::*;
 use crate::git_tree::{Agent, AgentState};
-use crate::projects::join::JoinState;
-
-mod conversation;
 
 fn branch(name: &str, state: AgentState) -> Agent {
     Agent {
@@ -35,117 +38,132 @@ fn branch(name: &str, state: AgentState) -> Agent {
     }
 }
 
-/// bl-9acf: the one reading of "blank" every goal-fire site shares. A goal made
-/// of whitespace is nothing said — firing it spends the wire on the identity
-/// preamble alone — and a rung whose prefill is blank has no draft to open.
 #[test]
-fn a_blank_goal_is_not_a_goal_anywhere() {
-    assert!(goal_present("fix the gate"));
-    assert!(goal_present("  surrounded by spaces  "));
-    // §3.4's bare rung composes exactly this prefill (pinned in
-    // `start::tests::goal`), which is why the raise opens no draft.
-    assert!(!goal_present(""));
-    assert!(!goal_present("   \t\n"));
+fn stop_disabled_when_selection_is_none() {
+    let bs = vec![branch("foo", AgentState::InFlight)];
+    assert!(!stop_enabled(None, &bs));
 }
 
 #[test]
-fn new_prompt_enabled_when_text_present() {
-    assert!(new_prompt_enabled("hi", ""));
-    assert!(new_prompt_enabled("  surrounded by spaces  ", ""));
+fn stop_disabled_when_selection_not_in_agents() {
+    let bs = vec![branch("foo", AgentState::InFlight)];
+    assert!(!stop_enabled(Some("bar"), &bs));
 }
 
 #[test]
-fn new_prompt_disabled_for_empty_input() {
-    assert!(!new_prompt_enabled("", ""));
+fn stop_disabled_when_selected_agent_stopped() {
+    let bs = vec![branch("foo", AgentState::Stopped)];
+    assert!(!stop_enabled(Some("foo"), &bs));
 }
 
 #[test]
-fn new_prompt_disabled_for_whitespace_only() {
-    assert!(!new_prompt_enabled("   \t\n", ""));
+fn stop_disabled_when_selected_agent_quiescent() {
+    // A finished-for-now agent has no executor to signal (§2.9).
+    let bs = vec![branch("foo", AgentState::Quiescent)];
+    assert!(!stop_enabled(Some("foo"), &bs));
 }
 
-/// bl-6191: something to say is not enough — Enter also needs somewhere lawful
-/// to say it, so the start never reaches a fork that would misname the fault.
 #[test]
-fn new_prompt_disabled_when_the_work_directory_does_not_exist() {
-    let dir = tempfile::tempdir().unwrap();
-    assert!(new_prompt_enabled("hi", &dir.path().display().to_string()));
-    assert!(!new_prompt_enabled(
-        "hi",
-        &dir.path().join("nope").display().to_string()
-    ));
+fn stop_enabled_when_selection_is_in_flight() {
+    let bs = vec![branch("foo", AgentState::InFlight)];
+    assert!(stop_enabled(Some("foo"), &bs));
 }
 
-/// The field's own sentence (bl-6191): the refusal names the directory, an
-/// existing one says nothing — and so does an empty box, which is the bare rung
-/// rather than a bad path.
 #[test]
-fn work_dir_refusal_names_a_directory_that_is_not_there() {
-    let dir = tempfile::tempdir().unwrap();
-    assert_eq!(work_dir_refusal(""), None);
-    assert_eq!(work_dir_refusal("   "), None);
-    assert_eq!(work_dir_refusal(&dir.path().display().to_string()), None);
-    let missing = dir.path().join("nonexistent-uat-dir");
-    assert_eq!(
-        work_dir_refusal(&format!("  {}  ", missing.display())),
-        Some(format!(
-            "work directory does not exist: {}",
-            missing.display()
-        ))
+fn stop_enabled_when_selection_is_live() {
+    // A driver between model calls (running a tool) is stoppable — the
+    // very case §2.9's lock-fd discovery exists for.
+    let bs = vec![branch("foo", AgentState::Live)];
+    assert!(stop_enabled(Some("foo"), &bs));
+}
+
+#[test]
+fn stop_disabled_when_agents_empty() {
+    let bs: Vec<Agent> = vec![];
+    assert!(!stop_enabled(Some("foo"), &bs));
+}
+
+#[test]
+fn stop_picks_correct_agent_among_several() {
+    let bs = vec![
+        branch("a", AgentState::Stopped),
+        branch("b", AgentState::InFlight),
+        branch("c", AgentState::Quiescent),
+        branch("d", AgentState::Live),
+    ];
+    assert!(stop_enabled(Some("b"), &bs));
+    assert!(stop_enabled(Some("d"), &bs));
+    assert!(!stop_enabled(Some("a"), &bs));
+    assert!(!stop_enabled(Some("c"), &bs));
+}
+
+/// The nudge and Stop partition the four states between them (bl-9bef): every
+/// agent is offered exactly one of the two, so neither is ever a control that
+/// fires and does nothing (QUALITY H4). The one exception is
+/// [`a_truncated_turn_is_not_nudgeable`], where the partition would put the
+/// nudge on a shape litany answers with nothing.
+#[test]
+fn nudge_is_offered_exactly_where_stop_is_not() {
+    let bs = vec![
+        branch("a", AgentState::Stopped),
+        branch("b", AgentState::InFlight),
+        branch("c", AgentState::Quiescent),
+        branch("d", AgentState::Live),
+    ];
+    for id in ["a", "b", "c", "d"] {
+        assert_ne!(
+            nudge_enabled(Some(id), &bs),
+            stop_enabled(Some(id), &bs),
+            "{id} is offered both or neither"
+        );
+    }
+    assert!(
+        nudge_enabled(Some("a"), &bs),
+        "a stopped turn re-dispatches"
     );
-    // A file is refused by the same one question — but never told it is absent.
-    let file = dir.path().join("a-file");
-    std::fs::write(&file, b"x").unwrap();
-    assert_eq!(
-        work_dir_refusal(&file.display().to_string()),
-        Some(format!(
-            "work directory is not a directory: {}",
-            file.display()
-        ))
+    assert!(nudge_enabled(Some("c"), &bs), "a quiescent one continues");
+    assert!(!nudge_enabled(None, &bs), "no selection");
+    assert!(!nudge_enabled(Some("zz"), &bs), "absent id");
+    assert!(!nudge_enabled(Some("a"), &[]), "no agents at all");
+}
+
+/// bl-fb87: a turn the output limit cut off leaves an assistant-side tail with
+/// no `tool_use`, which linked litany's `advance` reads as `Warrant::NothingDue`
+/// — it releases the lease and exits without creating a step. So the partition
+/// above gives way here rather than offering a control that fires and does
+/// nothing; Message, the recovery, is ungated and unaffected.
+#[test]
+fn a_truncated_turn_is_not_nudgeable() {
+    let mut cut_off = branch("a", AgentState::Stopped);
+    cut_off.truncated = true;
+    let mut settled_at_rest = branch("b", AgentState::Quiescent);
+    settled_at_rest.truncated = true;
+    let bs = vec![cut_off, settled_at_rest, branch("c", AgentState::Stopped)];
+    assert!(!nudge_enabled(Some("a"), &bs), "stopped and cut off");
+    assert!(!nudge_enabled(Some("b"), &bs), "quiescent and cut off");
+    assert!(
+        nudge_enabled(Some("c"), &bs),
+        "an ordinary resting conversation is unaffected"
     );
+    // Neither is Stop offered — the conversation holds no driver — so this is
+    // the one shape with no §8.2 conversation verb but Message, whose gate is
+    // the seat's (bl-7cc8).
+    assert!(!stop_enabled(Some("a"), &bs));
 }
 
 #[test]
-fn create_ball_enabled_requires_a_nonblank_title() {
-    assert!(create_ball_enabled("Fix the bug"));
-    assert!(!create_ball_enabled(""));
-    assert!(!create_ball_enabled("  \t "));
-}
-
-#[test]
-fn new_ball_hints_name_both_boxes() {
-    // bl-b2ed: the form's two dark boxes are indistinguishable empty. Each
-    // carries a hint, and the body's says what to write, not just its name —
-    // the composer's own idiom ("say what you want done"), not a bare noun.
-    let hints = crate::actions::new_ball_hints();
-    assert_eq!(hints.title, "title");
-    assert_eq!(hints.body, "body — what done looks like");
-}
-
-#[test]
-fn close_enabled_only_for_bound() {
-    assert!(close_enabled(JoinState::Bound));
-    assert!(!close_enabled(JoinState::ClaimedElsewhere));
-    assert!(!close_enabled(JoinState::ReadyStartable));
-    assert!(!close_enabled(JoinState::Delivered));
-}
-
-#[test]
-fn unclaim_enabled_only_for_bound() {
-    assert!(unclaim_enabled(JoinState::Bound));
-    assert!(!unclaim_enabled(JoinState::ClaimedElsewhere));
-    assert!(!unclaim_enabled(JoinState::ReadyStartable));
-    assert!(!unclaim_enabled(JoinState::UnassignedWorkspace));
-}
-
-#[test]
-fn assign_enabled_only_for_a_ready_ball() {
-    // Assign binds an unbound ball → only ReadyStartable (what `bl claim` allows).
-    assert!(assign_enabled(JoinState::ReadyStartable));
-    assert!(!assign_enabled(JoinState::Bound), "already bound");
-    assert!(!assign_enabled(JoinState::Blocked));
-    assert!(!assign_enabled(JoinState::ClaimedElsewhere));
-    assert!(!assign_enabled(JoinState::Delivered));
-    assert!(!assign_enabled(JoinState::UnassignedWorkspace));
-    assert!(!assign_enabled(JoinState::OrphanedProject));
+fn stop_children_offered_only_with_a_descendant() {
+    let bs = vec![
+        branch("root-x", AgentState::Live),
+        branch("root-x-c1", AgentState::Stopped),
+        branch("root-y", AgentState::Live),
+    ];
+    assert!(stop_children_offered("root-x", &bs), "has a child");
+    assert!(!stop_children_offered("root-y", &bs), "leaf agent");
+    // A hyphen-boundary miss: root-xx is not a descendant of root-x.
+    let bs2 = vec![
+        branch("root-x", AgentState::Live),
+        branch("root-xx", AgentState::Live),
+    ];
+    assert!(!stop_children_offered("root-x", &bs2));
 }

@@ -1,20 +1,23 @@
 //! STORIES **S4-T2** assign-release: the §8.2 late-binding verbs spawn the exact
-//! argv (assign = `bl claim --as <to>`, release = `bl unclaim --as <name>`),
-//! every outcome lands in `ops.jsonl`, and the enablement predicates refuse
-//! exactly what the underlying `bl` verb would (§8.2, §3.2, §3.5, §15 M6 Z4).
+//! argv (assign = `bl claim --as <to>`, release = `bl unclaim --as <name>`) and
+//! every outcome lands in `ops.jsonl` (§8.2, §3.2, §3.5, §15 M6 Z4).
+//!
+//! **Whether the verb is offered is no longer asked here** (bl-33e9): the gate
+//! is a fold over the §3.5 `JoinState` that `Query::WorkspaceBalls` already
+//! answers on every row, so REMOTE §9.4 leaves it to the seat and `bl` itself
+//! refuses at the fire. What this beat pins is the argv and the trail.
 
 #![allow(clippy::unwrap_used)]
 
 use crate::support::Recorder;
 use tempfile::tempdir;
-use yog::actions::{assign_enabled, unclaim_enabled, verbs};
+use yog::actions::verbs;
 use yog::cli_outbound::Cli;
 use yog::opslog;
-use yog::projects::join::JoinState;
 
 /// STORIES **S4-T2** assign-release.
 #[test]
-fn s4_t2_assign_release_argv_and_enablement() {
+fn s4_t2_assign_release_argv_and_trail() {
     let (bin, state, project) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let bl = Recorder::new(bin.path(), "bl");
     let cli = Cli::new(bl.path());
@@ -37,13 +40,4 @@ fn s4_t2_assign_release_argv_and_enablement() {
     let ops = opslog::tail(sr, 16);
     assert_eq!(ops.len(), 2, "assign + release, both logged");
     assert!(ops.iter().all(|e| e.argv[0].ends_with("bl") && e.exit == 0));
-
-    // Enablement refuses what `bl` would (§3.5): assign only a ready ball;
-    // release only a ball this yog owns (Bound).
-    assert!(assign_enabled(JoinState::ReadyStartable));
-    assert!(!assign_enabled(JoinState::Bound));
-    assert!(!assign_enabled(JoinState::ClaimedElsewhere));
-    assert!(unclaim_enabled(JoinState::Bound));
-    assert!(!unclaim_enabled(JoinState::ReadyStartable));
-    assert!(!unclaim_enabled(JoinState::ClaimedElsewhere));
 }

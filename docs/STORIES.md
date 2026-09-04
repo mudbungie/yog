@@ -1154,8 +1154,11 @@ world with no balls renders no badge column at all.
 Tests:
 - **S4-T1 new-workspace-verb**: typed name validated (shape, reserved
   `unknown`, leaf collision refused — DESIGN §3.1) + `litany new`.
-- **S4-T2 assign-release**: argv per §8.2; enablement predicates refuse
-  what balls would refuse.
+- **S4-T2 assign-release**: argv per §8.2, and both attempts on the §4.2
+  trail. The enablement half went with the roster that read it (bl-33e9): the
+  gate is a fold over the §3.5 `JoinState` every `Query::WorkspaceBalls` row
+  already carries, so it is a seat's (REMOTE §9.4) and `bl` refuses again at
+  the fire.
 - **S4-T3 join-rows**: one fixture per §3.5 row state; the balls section
   groups bound balls under their claimant workspace.
 - **S4-T4 conversation-badges** (`stories_s4_t4.rs`): four conversations in one workspace — goal

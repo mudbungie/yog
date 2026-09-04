@@ -408,7 +408,7 @@ conversation reads — every `Reply::Conversations` row and `Reply::Agent`'s
 derivable from a row goes on the row). `stoppable` is true iff that
 conversation is `live` or `in-flight`, the two states where a driver holds the
 executor lock; `stop_children` is true iff some other agent's id extends
-`<agent>-` (`src/actions/enabled.rs`). A row's `state` is the badge aggregated
+`<agent>-` (`src/actions/mod.rs`). A row's `state` is the badge aggregated
 over the subtree and is **not** the gate: a quiet root with a working child
 reads `live` and has no driver to kill. Firing `stop` anyway is not an error —
 it is an `Outcome` with `ok: false` and litany's own words.
