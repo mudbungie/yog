@@ -2717,8 +2717,9 @@ three serializations and with no wire vocabulary of their own; the seat-side
 consumption is the seat crate's bl-e3c5, the flow branch bl-7c9f.
 
 - `Action::Login { workspace, provider }` (`login`, `/login <provider>`) starts
-  the run engine-side — inside the named workspace's wall, the same lens the
-  config reads spend, laid on the spawn as `wall::pairs` — and
+  the run engine-side — inside the named workspace's wall, the same `wall::env`
+  lens the config reads spend, laid on the spawn as `wall::pairs_of` (bl-7c9f:
+  one lens, because the flow branch reads the row through it too) — and
   answers at once with the run's standing (the `Marks` re-read discipline):
   the intake is one thread for the whole world, so an act that waited out a
   browser-minutes flow would stop every deposit converging — the same reason

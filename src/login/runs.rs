@@ -120,11 +120,14 @@ impl Runs {
     /// **Start the sign-in for this pair** and answer its standing at once.
     ///
     /// `world` is the composed world and `workspace` the gesture's own resolved
-    /// path (bl-fcd5, never a focus): the wall rides the child's environment
-    /// through [`wall::pairs`](crate::world::wall::pairs), which is the spawn
-    /// form of the very lens `boundary::config` reads providers through. A
-    /// spawn failure refuses in bz's own words and has already left its
-    /// synthetic `ops.jsonl` row (`login::start`).
+    /// path (bl-fcd5, never a focus): the wall is folded ONCE, by the very lens
+    /// `boundary::config` reads providers through
+    /// ([`wall::env`](crate::world::wall::env)), and laid on the child by that
+    /// lens's own inverse ([`wall::pairs_of`](crate::world::wall::pairs_of)) —
+    /// so the sphere the flow is read in and the sphere the child writes its
+    /// credential into are one value, not two derivations. A spawn failure
+    /// refuses in bz's own words and has already left its synthetic
+    /// `ops.jsonl` row (`login::start`).
     pub fn start(
         &self,
         world: &crate::xdg::Env,
