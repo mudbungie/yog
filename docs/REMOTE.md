@@ -203,6 +203,20 @@ says — and adds no verb, no field and no envelope:
   version and an operator reads a transport error where a sentence belongs.
   Naming both versions is the requirement, so the preface is in band.
 
+  **In band means READ, and that costs the engine a half-close** (bl-e4c8). A
+  refused peer is the one connection the engine ends first, and a socket closed
+  outright while the peer's bytes are still unread — or written a moment later,
+  which is exactly what a seat that sent its request in the same breath as its
+  preface does — is answered by the kernel with an RST. **An RST discards what
+  the peer already received**, so the refusal sitting in the seat's own buffer
+  is dropped unread and the operator gets a transport error rather than the
+  upgrade prompt: ALPN's failure, arriving through the door the preface was
+  chosen to avoid it by. So the engine writes the refusal, sends `close_notify`,
+  half-closes, and reads to EOF before letting go — a bound already named by
+  §5.1's idle timeout, since a peer that will not hang up is a peer saying
+  nothing. Every other connection is closed by the peer, and none of them needs
+  this.
+
   **What bumps it.** A new `Query`, a new `Action` or a new reply kind is
   **not** a bump: the strict decode already refuses an unknown one in band,
   naming it, which is the boundary correcting itself rather than two protocols

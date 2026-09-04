@@ -66,17 +66,31 @@ fn an_unverifiable_address_refuses_at_open() {
 }
 
 /// Nothing listening is a refusal naming the address, never a hang.
+///
+/// **Port zero, because it is the one port nothing can ever answer on**
+/// (bl-e4c8). The beat used to bind `:0`, read back the port the kernel picked
+/// and drop the listener, calling the port "certainly dead" — but a just-freed
+/// ephemeral port is precisely the port the kernel hands the next binder, so on
+/// a box running this suite in parallel another test takes it between the drop
+/// and the dial. The connect then SUCCEEDS and the failure arrives from the
+/// write instead (`send: Connection reset by peer`), which names no address:
+/// the beat's premise was only ever true on an idle box.
+///
+/// Zero is not an ephemeral port that happens to be free — in a `bind` it is
+/// the *request* meaning "pick one", so no socket on any box is ever listening
+/// there and `connect` has nothing to reach. It needs no privilege to be
+/// unbindable (unlike a port below 1024, which a suite running as root could
+/// take) and no routing assumption (unlike a TEST-NET address, which refuses on
+/// one box and hangs on another). Whatever errno the platform names it with,
+/// the failure is the connect's and the connect's sentence carries the address.
 #[test]
 fn a_dead_address_refuses_naming_itself() {
     let tmp = TempDir::new().expect("tmp");
     mint(tmp.path());
-    // Bind to learn a free port, then drop it: the port is now certainly dead.
-    let dead = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
-    let address = dead.local_addr().expect("addr").to_string();
-    drop(dead);
-    let seat = Seat::open(&material(tmp.path(), Role::Client, &address)).expect("seat");
+    let address = "127.0.0.1:0";
+    let seat = Seat::open(&material(tmp.path(), Role::Client, address)).expect("seat");
     let err = seat.ask(&json!({"op": "workspaces"})).expect_err("refused");
-    assert!(err.contains(&address), "{err}");
+    assert!(err.contains(address), "{err}");
 }
 
 /// A peer that accepts and then says nothing TLS-shaped is a receive failure,

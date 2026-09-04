@@ -28,7 +28,8 @@ use crate::registry::{Client, Peer};
 use rustls::pki_types::CertificateDer;
 use rustls::{ServerConfig, ServerConnection, StreamOwned};
 use serde_json::Value;
-use std::net::{TcpListener, TcpStream};
+use std::io::{Read, Write};
+use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
@@ -182,6 +183,7 @@ pub(crate) fn serve(
     let mut tls = StreamOwned::new(conn, tcp);
     // The §3 version preface, stated and checked before any gesture (bl-a670).
     if !super::hello::admit(&mut tls) {
+        hang_up(&mut tls);
         return;
     }
     // **Presence is this scope** (REMOTE §5, bl-4e08): the guard is taken when
@@ -215,6 +217,31 @@ pub(crate) fn serve(
             return;
         }
     }
+}
+
+/// **A refusal is only a refusal if the peer can read it** (bl-e4c8).
+///
+/// A refused peer is the one connection the engine hangs up on *first*:
+/// everywhere else the peer closes and the engine reads the EOF. Closing a
+/// socket that still holds unread bytes — or that the peer writes to just after
+/// — makes the kernel answer RST, and an RST **discards what the peer had
+/// already received**. So the seat whose refusal was sitting in its receive
+/// buffer reads a transport error instead, having been told nothing: exactly
+/// the outcome [`hello`](super::hello) refused ALPN to avoid, arriving by a
+/// different door. It is a race and it reads as silence, which is the worst
+/// pair of properties a refusal can have.
+///
+/// The engine therefore half-closes and reads to EOF. `close_notify` and a FIN
+/// say there is nothing more coming; the read side stays open until the peer
+/// has said its own last word, so nothing it wrote is ever unread at the close.
+/// The wait is [`serve`]'s `idle` bound and not a new one — a peer that will
+/// not hang up is a peer saying nothing, which is the case that clock is for.
+fn hang_up(tls: &mut StreamOwned<ServerConnection, TcpStream>) {
+    tls.conn.send_close_notify();
+    let _ = tls.flush();
+    let _ = tls.sock.shutdown(Shutdown::Write);
+    let mut spent = [0u8; 1024];
+    while matches!(tls.sock.read(&mut spent), Ok(1..)) {}
 }
 
 /// The peer a presented chain names (REMOTE §2, §4.2): the **leaf's** subject
