@@ -92,8 +92,12 @@ balls = "=0.5.11"
 # column naming the style — `codex` on the builtin `openai-chatgpt` row, OpenAI's
 # own pre-standard device-code wire, which is why the column carries a STYLE and
 # not a bool. That is the flow key DESIGN §8.3 rule 1 as amended needs, and yog
-# reads it at the one spawn (bl-7c9f).
-brazen = { version = "=0.0.8", features = ["native-host"] }
+# reads it at the one spawn (bl-7c9f). 0.0.9 is the parity move and nothing
+# else: litany 0.0.8 links `brazen =0.0.9` to read the model's context window
+# off the `Usage` event (upstream litany bl-a537), and the lockfile is the check
+# that exactly ONE brazen resolves — so the two pins stepped together, as they
+# always do (bl-fe43).
+brazen = { version = "=0.0.9", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -229,7 +233,21 @@ clap = { version = "4", features = ["derive"] }
 # 0.0.7 is the parity move and nothing else: litany's own `brazen = "="` is the
 # gate on this one, so the two pins step together to 0.0.8 or neither does
 # (bl-7c9f, upstream litany bl-8daa).
-litany = "=0.0.7"
+# 0.0.8 moves the tool pool under yog's router (bl-fe43, bl-81cc). Two built-ins
+# arrive — `python`, one round trip that runs a model-authored program which
+# composes the agent's own tools through `litany invoke`, and `search_history`,
+# a pickaxe over the workspace's `agents/*` refs — and both are engine acts, so
+# `engine_act::NAMES` grows to eight in the same change or the router ships them
+# to a foot that holds neither a step record nor a repository. One name LEAVES:
+# `multi_tool` retires (upstream bl-99bb), a program being what the envelope was
+# for, and with it the executor's batch API — yog called neither, so the bump is
+# compile-clean and what changed is prose (the shipped-grant quotes) and one
+# retired tool-control row. The stdio contract gains `LITANY_TOOL_ID` (upstream
+# bl-e8d7), which every spawn this router makes now carries, and the front door
+# gains the `invoke` verb (upstream bl-bae9), which the W11 arm answers by
+# construction — it builds one `Fx` for every verb, so the injection is
+# installed there exactly as for `advance` and `tool`.
+litany = "=0.0.8"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

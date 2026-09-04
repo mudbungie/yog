@@ -30,6 +30,12 @@ macro_rules! act {
     };
 }
 
+/// **The closed set itself** (bl-fe43): which names are engine acts, and the
+/// two proofs that a machine cannot take one — the enrolled thrall whose
+/// mailbox stays empty, and the id every spawn carries. Its own file at §12's
+/// per-file budget, sharing this module's fixtures and `act!`.
+mod set;
+
 /// **The pair reaches the engine's own front door**, with the verb litany
 /// answers built-ins under, the caller identity off the CALL rather than off
 /// this process, the `tool_use` input on stdin — and the child's product back
@@ -62,70 +68,6 @@ fn the_pair_is_performed_at_the_engines_own_front_door() {
             "tool|write_summary|{}|dulcet-mongoose|{{\"content\":\"a summary\"}}",
             root.path().display()
         )
-    );
-}
-
-/// The set is closed and enumerated in one place, and every member goes
-/// through it. The six rows are the two subject-locality families (bl-77be):
-/// the compactor's procedure pair, and the conversation-subject worker
-/// grants — while the worktree names (`bash`, `read_file`, `apply_patch`)
-/// and litany's own `multi_tool` stay out, each for the reason the roster's
-/// doc states.
-#[test]
-fn the_six_names_are_engine_acts_and_nothing_else_is() {
-    assert_eq!(
-        NAMES,
-        [
-            "write_summary",
-            "mark_for_deletion",
-            "dispatch",
-            "message",
-            "load_skill",
-            "cd",
-        ]
-    );
-    assert!(NAMES.iter().copied().all(is));
-    for machine_work in ["bash", "read_file", "apply_patch", "multi_tool", "Bash"] {
-        assert!(!is(machine_work), "{machine_work} is not an engine act");
-    }
-    assert!(!is("write_summary_2"));
-}
-
-/// **Compaction never reaches a thrall's mailbox**, even with one enrolled and
-/// its tools loaded: the pair's subject is the conversation, so no invocation
-/// is queued at the engine at all. The loaded set is present precisely so the
-/// beat can say the router had a machine to route to and did not use it.
-#[test]
-fn an_engine_act_never_reaches_an_enrolled_thralls_mailbox() {
-    let root = TempDir::new().expect("tmp");
-    loaded::add(
-        root.path(),
-        "home",
-        "dulcet-mongoose",
-        &[loaded::Entry {
-            client: "laptop".to_owned(),
-            tool: tool("Bash"),
-        }],
-    )
-    .expect("loaded");
-    let door = front_door(root.path(), "printf marked");
-    let input = json!({"path": "messages/004-user.md"});
-    let stop = AtomicBool::new(false);
-
-    let capture = Injection::new(
-        root.path().to_path_buf(),
-        door,
-        budget(),
-        budget(),
-        FakeClock::new().arc(),
-    )
-    .route(act!("mark_for_deletion", root.path(), &input, &stop));
-
-    assert_eq!(capture.exit_code, 0);
-    assert_eq!(capture.stdout, b"marked");
-    assert!(
-        deposit::pending(root.path()).is_empty(),
-        "an engine act queues nothing at the engine"
     );
 }
 

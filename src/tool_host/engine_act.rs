@@ -1,5 +1,7 @@
-//! **The compactor's procedure pair, answered as an engine act** (REMOTE §5.4,
-//! bl-dfce): `write_summary` and `mark_for_deletion`.
+//! **The acts whose subject is the conversation, answered here** (REMOTE §5.4,
+//! bl-dfce): the compactor's procedure pair `write_summary` /
+//! `mark_for_deletion`, the four worker grants, and the two acts that read and
+//! write the agent's own record — the set below is the enumeration.
 //!
 //! The seam inversion made the router *total* — while an injection is installed
 //! it answers every invocation the agent makes, and nothing resolves a binary
@@ -30,6 +32,18 @@
 //! shim, standing in the same world; nothing of the compactor's semantics is
 //! reimplemented, so the pair has exactly one definition and it is upstream's.
 //!
+//! **The invocation's own id rides the child's environment** (litany's §3.3
+//! stdio contract as amended by upstream bl-e8d7): `LITANY_TOOL_ID` is the
+//! `tool_use.id` the engine is recording this call under, so the id the child
+//! reads and the `steps/<agent-id>/<NNN>/tools/<tool-id>/` directory it writes
+//! beside cannot disagree. A routing host is handed that id on the call and
+//! owes it on any spawn it makes, exactly as it already owes the caller
+//! identity and the cwd — and `python` is the first act that cannot work
+//! without it, because naming its own record directory is how it puts each
+//! inner invocation's record where the engine expects one. **The routed leg
+//! owes nothing here**: the spawn a machine makes is the foot's own, and the
+//! id addresses a directory on the server's disk that no foot holds.
+//!
 //! **The tool control still sees them, and yog has no say in that.** litany
 //! adjudicates in the tool window, *before* the executor is entered, for every
 //! name including an injected one — so `yog tool-control` judges these two
@@ -46,7 +60,7 @@ use ::litany::cmd::{RoutedCall, RoutedCapture};
 use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 
 /// **The engine-act name set, closed and enumerated here and nowhere else.**
-/// Six rows since bl-77be, in two families, each admitted by the
+/// Eight rows since bl-fe43, in three families, each admitted by the
 /// subject-locality invariant (REMOTE §5: *"a tool executes where its subject
 /// lives"*) and by nothing else:
 ///
@@ -60,6 +74,18 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 ///   working-directory mark, a ref on the workspace. None of them is work on
 ///   a *machine*, so none of them is a thrall's — routing them anywhere would
 ///   send a box that does not hold the world a request about it.
+/// - the two acts whose subject is the agent's own record and history
+///   (bl-fe43, bl-81cc). `python` runs a program the model authored, and the
+///   program composes the agent's own tools: the built-in generates a
+///   `litany_tools` stub per tool this injection declares, each one a
+///   `<driver_target> invoke` of the front door, and it writes each inner
+///   call's record under the agent's in-flight `steps/<agent>/<NNN>/tools/`
+///   (litany `docs/DESIGN_CODE_EXECUTION.md` §2.8). Both the step record and
+///   the front door are the server's. `search_history` runs a fixed-string
+///   pickaxe over the workspace's `agents/*` refs — every agent's transcript
+///   (litany `docs/DESIGN_CONTEXT_ECONOMY.md` §4) — and a foot holds no
+///   repository at all, so a routed one would search nothing and answer
+///   *nothing found*, the worst answer a search can give.
 ///
 /// What is deliberately NOT here: `bash`, `read_file`, `apply_patch` — acts
 /// at the conversation's working directory, which take the worktree lane
@@ -67,20 +93,21 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 /// enrolled one. The lane's last rung calls [`perform`] below on them
 /// ([`super::subject::performs`], bl-5710), so the mechanism is shared and
 /// the *ordering* is what separates the two sets: an engine act never
-/// consults the roster, a worktree name always does. And `multi_tool`, which litany's
-/// own step loop fans out before any router sees it. A seventh row is a
+/// consults the roster, a worktree name always does. A ninth row is a
 /// deliberate act with this audit's question asked again — never a prefix
 /// test or a name shape, which is how a closed set stops being closed. The
 /// strings are yog's own spelling: the engine keeps its constants
 /// crate-private, so the names cross as text exactly as they do in the
 /// model's `tool_use` block.
-pub const NAMES: [&str; 6] = [
+pub const NAMES: [&str; 8] = [
     "write_summary",
     "mark_for_deletion",
     "dispatch",
     "message",
     "load_skill",
     "cd",
+    "python",
+    "search_history",
 ];
 
 /// The `litany` verb the built-in front door answers under.
@@ -91,6 +118,10 @@ const CONV_REPO: &str = "LITANY_CONV_REPO";
 
 /// The agent id half of the same identity, litany's spelling.
 const CONV_BRANCH: &str = "LITANY_CONV_BRANCH";
+
+/// The invocation's own id — the third variable of litany's stdio contract,
+/// its spelling, and the name of the record directory the child writes beside.
+const TOOL_ID: &str = "LITANY_TOOL_ID";
 
 /// How often a running child is looked at — a latency knob on the answer, not
 /// on the act.
@@ -130,6 +161,7 @@ fn run(
                 call.workspace.to_string_lossy().into_owned(),
             ),
             (CONV_BRANCH.to_owned(), call.agent.to_owned()),
+            (TOOL_ID.to_owned(), call.id.to_owned()),
         ])
         .run_input(
             // The caller's resolved working directory (litany bl-ddaa), which

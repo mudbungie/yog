@@ -57,7 +57,7 @@ pub struct Recorder {
 /// top (§8.1, bl-7fc8).
 pub const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: anthropic\n    \
      model: claude-sonnet-5\n    tools: [apply_patch, bash, cd, dispatch, load_skill, message, \
-     multi_tool, read_file]\n  compactor:\n    provider: anthropic\n    model: claude-haiku-4-5\n";
+     python, read_file, search_history]\n  compactor:\n    provider: anthropic\n    model: claude-haiku-4-5\n";
 
 /// The `new)` arm [`Recorder::authoring_workspaces`] injects: `git init --bare
 /// -b config/default`, then the orphan first config commit carrying the

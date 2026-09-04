@@ -607,7 +607,7 @@ presentation.
 
 The verified premise (bl-7fc8): pinned litany's shipped `worker` role grants
 the **entire** tool pool — `[apply_patch, bash, cd, dispatch, load_skill,
-message, multi_tool, read_file]` — yog grants nothing on top and has no grant
+message, python, read_file, search_history]` — yog grants nothing on top and has no grant
 path at all, so an unattended drone has unrestricted `bash`/`apply_patch`/`cd`
 from its first step. The comparison target is Claude Code's allow/deny/ask
 *permission mediation*, not a sandbox claim — its OS sandbox is separately

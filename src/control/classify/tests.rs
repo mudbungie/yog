@@ -68,11 +68,6 @@ fn every_built_in_carries_its_intrinsic_class() {
         Effect::TargetWrite
     );
     assert_eq!(effect(DISPATCH, json!({"role": "worker"})), Effect::Process);
-    // The envelope is inert: litany adjudicates each inner on its own.
-    assert_eq!(
-        effect(MULTI_TOOL, json!({"invocations": [{"name": "bash"}]})),
-        Effect::Read
-    );
 }
 
 #[test]

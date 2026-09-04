@@ -109,7 +109,6 @@ const READ_FILE: &str = "read_file";
 const LOAD_SKILL: &str = "load_skill";
 const MESSAGE: &str = "message";
 const DISPATCH: &str = "dispatch";
-const MULTI_TOOL: &str = "multi_tool";
 const APPLY_PATCH: &str = "apply_patch";
 const CD: &str = "cd";
 const BASH: &str = "bash";
@@ -132,13 +131,13 @@ pub fn classify(request: &Request, root: &Root, policy: &super::policy::Policy) 
             Effect::Process,
             "mints an agent, under the harness's own budget and depth gates",
         ),
-        // The envelope itself observes nothing and changes nothing: litany
-        // adjudicates each inner invocation through this same seam, so passing
-        // the wrapper structurally is the general path, not an exemption.
-        MULTI_TOOL => Classified::new(
-            Effect::Read,
-            "an envelope whose every inner invocation is adjudicated on its own",
-        ),
+        // `multi_tool` had an arm here — an envelope whose inners the engine
+        // fanned out and this seam adjudicated one by one. It retired upstream
+        // at litany 0.0.8 (litany bl-99bb, its work being what a `python`
+        // program does), and the names that replaced it are classified by the
+        // open-world arm below rather than by a row apiece: a program the model
+        // authored and a search over the workspace's own history are both
+        // things this control cannot read the effect of from the input.
         APPLY_PATCH => patch(&request.field("input"), root),
         CD => move_to(&request.field("path"), root),
         BASH => super::bash::classify(&request.field("command"), root, policy),

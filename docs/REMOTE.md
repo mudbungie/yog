@@ -1443,17 +1443,58 @@ but the subject-locality audit, name by name:
   reaching a consenting machine where the operator enrolled one and the
   engine's own front door where none consents (the lane's last rung, bl-5710).
   Never an engine act, because an engine act never consults the roster.
-- **`multi_tool`** never reaches the router at all (the engine's own step
-  loop fans it out); each inner name is judged on its own subject.
+- **`multi_tool`** never reached the router at all — the engine's own step
+  loop fanned it out, and each inner name was judged on its own subject.
+  **The name retired upstream at litany 0.0.8** (litany bl-99bb): a program
+  composing the agent's own tools is what the envelope was for, so the built-in
+  and its fan-out are gone and the tool window answers no name itself. The row
+  is kept as an obituary because a transcript that already names it still
+  assembles.
+
+**Two more rows at litany 0.0.8** (bl-fe43, bl-81cc), each admitted by the same
+audit and neither a machine's:
+
+- **`python`** runs a program the model authored — and the program composes the
+  agent's own tools. The built-in generates a `litany_tools` module with one
+  stub per tool the injection declares, each stub a `<driver_target> invoke` of
+  the engine's own front door, and it lands every inner call's record under the
+  agent's in-flight `steps/<agent-id>/<NNN>/tools/<tool-id>-<k>/` (litany
+  `docs/DESIGN_CODE_EXECUTION.md` §2.8). The step record is the server's and so
+  is the door the stubs re-enter, so the act is the server's. Engine act.
+- **`search_history`** runs a fixed-string pickaxe over the workspace's
+  `agents/*` refs — every agent's transcript, not just the caller's (litany
+  `docs/DESIGN_CONTEXT_ECONOMY.md` §4). A foot holds no repository at all, so a
+  routed one would search nothing and answer *nothing found*: the worst answer
+  a search can give, because it is indistinguishable from a true miss. Engine
+  act.
 
 The engine-act name set stays closed and enumerated in exactly one place
-(`src/tool_host/engine_act.rs`), now six rows, and the mechanism is bl-dfce's
+(`src/tool_host/engine_act.rs`), now eight rows, and the mechanism is bl-dfce's
 unchanged: re-entry at the engine's own front door with the caller identity on
 the child's environment — and, since the seam hands it over (litany bl-ddaa),
 at the caller's **resolved working directory**, which is the engine's own
 contract for in-process built-ins (a relative `cd` resolves against where the
-agent stands). A seventh row is a deliberate act with this audit's question
+agent stands). A ninth row is a deliberate act with this audit's question
 asked again.
+
+**Every spawn the router makes carries the invocation's own id** (bl-fe43;
+litany's §3.3 stdio contract as amended by litany bl-e8d7). `LITANY_TOOL_ID` is
+the `tool_use.id` the engine records the call under, and it rides the child's
+environment beside `LITANY_CONV_REPO`/`LITANY_CONV_BRANCH`, so the id the child
+reads and the record directory on disk cannot disagree. A routing host is
+handed that id on the invocation and owes it on any spawn it makes, exactly as
+it already owes the cwd. `python` is the act that cannot work without it: the
+built-in names its own record directory from that variable. **The routed leg
+owes nothing here** — the spawn a machine makes is the foot's own, and the id
+addresses a directory on the server's disk that no foot holds.
+
+**And the re-exec target answers `invoke`.** A stub's `subprocess.run` reaches
+the world's `litany` shim, which is a re-exec of yog under the `litany`
+namespace; the arm is litany's thin binding and builds one `Fx` for every verb,
+so the injection this router lives behind is installed for `invoke` exactly as
+for `advance` and `tool` — a program's inner invocation is adjudicated by the
+same router as any other invocation, with no verb table of yog's own to fall
+out of step (`tests/litany_invoke.rs` drives the real shim both ways).
 
 **The worktree lane** (bl-77be). A granted, unqualified name that is neither
 the `clients` tool, an engine act, nor a loaded host-qualified instance is a
@@ -1483,9 +1524,10 @@ no longer the end of the lane** — see the last rung below (bl-5710) — but fo
 every name the engine does not implement it is still the refusal, unchanged.
 
 One shape this deliberately is not. **Not a narrowed grant**: cutting the
-shipped grant to `[multi_tool]` would stop the decoys and give nothing back —
-the four capabilities the grant names are real and the audit above houses
-each.
+shipped grant back to an envelope would stop the decoys and give nothing back —
+the capabilities the grant names are real and the audit above houses each. (The
+envelope that spelling named, `multi_tool`, has since retired upstream, so the
+alternative no longer even exists to take.)
 
 **The lane's last rung: the engine performs its own built-ins** (bl-5710,
 operator ruling 2026-08-31: *ship some basic tools — a default install must be

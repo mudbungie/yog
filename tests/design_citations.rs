@@ -38,7 +38,11 @@ const FOREIGN: &[&str] = &[
     // documents — the mechanism DESIGN §3.7's instruction freeze rides.
     // §2.7 is litany's compactor toolset — the `write_summary` /
     // `mark_for_deletion` pair REMOTE §5.4 rules an engine act (bl-dfce).
-    "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.9", "2.10", "2.11", "4.3", "4.4", "5.5",
+    // §2.8 is litany's `docs/DESIGN_CODE_EXECUTION.md` — the `python` built-in's
+    // generated `litany_tools` stubs, each a `<driver_target> invoke` of the
+    // engine's front door (bl-fe43). Cited with its doc prefix, foreign here
+    // because the scanner is deliberately prefix-blind.
+    "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11", "4.3", "4.4", "5.5",
     // VISION.md's §4.5 (spend attribution's join discipline, bl-afc4), §4.8
     // (the control-boundary ruling), §4.9 (the alignment
     // monitor, bl-af1a), §4.10 (the project-delivery contract, bl-2b8c) and

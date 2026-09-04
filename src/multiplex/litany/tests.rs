@@ -22,6 +22,15 @@ fn parse_accepts_a_verb_and_maps_help_and_errors_to_exit_codes() {
     assert!(matches!(cli.command, cmd::Command::New(_)));
     // `--help` is clap's short-circuit: printed, exit 0 — never a verb.
     assert_eq!(parse(&args(&["--help"])).unwrap_err(), 0);
+    // The door verb takes no arguments and is a verb like any other — a
+    // program's `litany_tools` stub spawns exactly this argv (litany
+    // `docs/DESIGN_CODE_EXECUTION.md` §2.8), and the arm builds one `Fx`, so
+    // the injection it re-enters through is installed here as for `advance`.
+    // `tests/litany_invoke.rs` drives the real shim end to end.
+    assert!(matches!(
+        parse(&args(&["invoke"])).unwrap().command,
+        cmd::Command::Invoke(_)
+    ));
     // An unknown verb and a bare argv are clap usage errors, exit 2.
     assert_eq!(parse(&args(&["no-such-verb"])).unwrap_err(), 2);
     assert_eq!(parse(&[]).unwrap_err(), 2);
