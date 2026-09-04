@@ -1,7 +1,8 @@
 +++
 title = "probe the NAT classes before ruling on DHT-only: is the core's NAT (and the cellular path's) endpoint-independent for TCP?"
 created = 1788232976
-updated = 1788233562
+updated = 1788492890
+claimant = "Spellbind-W"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
