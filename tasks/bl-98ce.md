@@ -1,7 +1,8 @@
 +++
 title = "two boundary::consume::tests::debris beats fail under full-suite parallelism and pass in isolation"
 created = 1788484252
-updated = 1788484263
+updated = 1788484277
+claimant = "Spellbind-T"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
