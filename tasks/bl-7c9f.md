@@ -1,7 +1,8 @@
 +++
 title = "the flow follows the row: fire the device flow where brazen's table declares a device endpoint"
 created = 1787548693
-updated = 1788493196
+updated = 1788493581
+claimant = "Spellbind-Y"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
