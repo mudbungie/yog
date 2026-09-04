@@ -1,7 +1,8 @@
 +++
 title = "boundary::consumer's dead-claimant gesture tests fail only under full parallel suite load: three sightings across three agents, green in isolation"
 created = 1788416884
-updated = 1788416884
+updated = 1788484263
+claimant = "Spellbind"
 priority = 4
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["flake", "tests"]
