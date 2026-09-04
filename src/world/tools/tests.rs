@@ -6,6 +6,8 @@
 
 mod roster;
 
+use std::os::unix::fs::PermissionsExt as _;
+
 use super::*;
 use tempfile::tempdir;
 
@@ -55,8 +57,11 @@ fn ensure_shim_creates_the_tree_and_marks_it_executable() {
         fs::read_to_string(&path).unwrap(),
         shim_script(BL, &host("/usr/bin/bl").exec_words())
     );
+    // 0o755 — executable by all, writable only by the owner. The mode is the
+    // child writer's now (`git_env::write_exec`), so this is what proves the
+    // relocation did not lose the bit that makes a shim runnable.
     let mode = fs::metadata(&path).unwrap().permissions().mode();
-    assert_eq!(mode & 0o777, SHIM_MODE);
+    assert_eq!(mode & 0o777, 0o755);
 }
 
 #[test]

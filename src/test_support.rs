@@ -1,10 +1,10 @@
 //! Test-only scaffolding for this binary: the fake effects and the fixture
-//! world — and, since bl-fd28, **the one place an
-//! executable fixture is written** ([`fixture::write_exec`]).
+//! world — and the suite's door onto the executable-file discipline
+//! ([`fixture::write_exec`], a panic over [`crate::git_env::write_exec`]).
 //!
 //! There used to be a spawn lock here too, and the story of why it is gone is
-//! the discipline. `fs::write` on a fixture script holds a write fd; a `fork`
-//! in another thread copies it into a child that keeps it until its own `exec`
+//! the discipline. `fs::write` on a script holds a write fd; a `fork` in
+//! another thread copies it into a child that keeps it until its own `exec`
 //! completes; an `exec` of the script inside that window is ETXTBSY. bl-6397
 //! answered from the fork side — one process-wide lock across
 //! [`crate::git_env::spawn`], measured at zero against 8.3% unguarded — and
@@ -13,14 +13,12 @@
 //! of ours, so a beat driving one in-process reopened the window (bl-6bf5
 //! measured 8 failures, bl-fd28 another 2).
 //!
-//! bl-fd28 moved the exposure instead of scheduling around it. [`write_exec`]
-//! feeds the body to `sh -c 'cat > "$1" && chmod 755 "$1"'`, so no descriptor
-//! for the file ever exists in THIS process and no peer fork — whoever performs
-//! it, in whichever crate — can copy one. With that in place the lock measured
-//! zero on both sides of its own removal (3,360 runs of the bl-6bf5 filter per
-//! side), so it was deleted rather than kept as a talisman. `rules/no-hand-chmod.yml`
-//! keeps the write side structural; [`crate::git_env`]'s module doc carries the
-//! measurement.
+//! bl-fd28 moved the exposure instead of scheduling around it, and bl-e6c9
+//! found the same hazard standing in the ENGINE — `world::tools::ensure_shim`
+//! wrote a shim yog then exec'd — so the helper is production's now and this
+//! module only spells it without a `Result`. Everything about the hazard, the
+//! two measurements and the shapes that were rejected is stated once, in
+//! [`crate::git_env::write_exec`]'s module doc.
 //!
 //! No lock is left in this module's own right: the `Mutex` below is a test
 //! double's interior mutability, not serialization (`rules/locks-outside-state.yml`).
@@ -175,9 +173,10 @@ pub(crate) mod wire;
 /// model accessor left to ask instead.
 pub(crate) mod chrome;
 
-/// **Every executable fixture in this binary is written here, by a child**
-/// (bl-fd28) — the write-side half of the ETXTBSY discipline, and the one
-/// location `rules/no-hand-chmod.yml` lets a mode bit be set from.
+/// The suite's spelling of [`crate::git_env::write_exec`] (bl-fd28, bl-e6c9),
+/// plus the two narrow mode helpers for the "this file cannot be rewritten"
+/// fixture — the one location `rules/no-hand-chmod.yml` still lets a mode bit
+/// be set from.
 pub(crate) mod fixture;
 pub(crate) use fixture::write_exec;
 

@@ -1,7 +1,8 @@
-//! **Executable fixtures are written by a CHILD, never by this process** — the
-//! `tests/` half of the discipline `src/test_support/fixture.rs` holds for the
-//! lib binary, which the integration crate cannot see (`test_support` is
-//! `#[cfg(test)] pub(crate)`).
+//! **Executable files are written by a CHILD, never by this process** — the
+//! `tests/` half of the discipline `src/git_env/write_exec.rs` holds for the
+//! lib binary, which the integration crate cannot see (`git_env::write_exec` is
+//! `pub(crate)`, and publishing it on the library surface for a test's sake is
+//! the trade bl-fd28 declined).
 //!
 //! `exec` on a file some process still holds open for writing fails with
 //! `ETXTBSY`, and a plain `fs::write` in a test thread hands exactly that fd to
@@ -20,7 +21,9 @@
 //! dies with the child we wait on. A fork of *this* process copies *this* fd
 //! table, which never held the descriptor. That answer generalized in bl-fd28 —
 //! the lib binary took it too, and its spawn lock, having nothing left to
-//! exclude, was measured out (`src/git_env.rs`'s module doc).
+//! exclude, was measured out — and again in bl-e6c9, which found the ENGINE
+//! still writing the world's shims in-process and exec'ing them
+//! (`src/git_env.rs`'s module doc carries every measurement).
 //!
 //! `#[path]`-included by each binary that needs it, the way every other shared
 //! `tests/` module is. `make rules-audit` scans `src` only, so

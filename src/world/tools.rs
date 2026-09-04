@@ -38,7 +38,6 @@
 
 use std::fs;
 use std::io;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
 use crate::cli_outbound::{Binary, Cli};
@@ -155,9 +154,6 @@ pub fn seed(ambient: &crate::xdg::Env) {
     }
 }
 
-/// Shim permissions: executable by all, writable only by the owner.
-const SHIM_MODE: u32 = 0o755;
-
 /// The shim's body: a `/bin/sh` re-exec of `exec_words` (yog's own executable
 /// plus the namespace prefix, [`Cli::exec_words`]) with the caller's argv passed
 /// through verbatim. Every word is [`shell_quote`]d, so a yog installed under a
@@ -193,6 +189,14 @@ pub fn shim_script(namespace: &str, exec_words: &[String]) -> String {
 /// leave the last good file alone and say so: the caller surfaces it — `yog
 /// env`/`yog exec` warn on stderr, and a Start fails with the reason rather
 /// than seeding an adjudicator that cannot run.
+///
+/// **The write itself is a child's** ([`crate::git_env::write_exec`], bl-e6c9).
+/// This is the engine's own ETXTBSY window and not a test's: yog seeds a shim
+/// and then execs it, and yog forks from every thread, so an `fs::write` here
+/// held a descriptor any peer fork could copy into the exec that follows —
+/// measured at 7 failures over 1,120 runs of bl-fd28's stress filter with these
+/// beats folded in, and zero once the descriptor moved. A retry on ETXTBSY was
+/// rejected: a hazard must not become a production loop.
 pub fn ensure_shim(tools: &Path, namespace: &str, cli: &Cli) -> io::Result<PathBuf> {
     let path = tools.join(namespace);
     let words = cli.exec_words();
@@ -213,8 +217,7 @@ pub fn ensure_shim(tools: &Path, namespace: &str, cli: &Cli) -> io::Result<PathB
         return Ok(path);
     }
     fs::create_dir_all(tools)?;
-    fs::write(&path, &want)?;
-    fs::set_permissions(&path, fs::Permissions::from_mode(SHIM_MODE))?;
+    crate::git_env::write_exec(&path, &want)?;
     Ok(path)
 }
 

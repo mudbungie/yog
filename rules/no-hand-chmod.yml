@@ -1,24 +1,38 @@
-# An executable fixture is written by a CHILD process, never by this one
-# (bl-fd28). This rule is the structural half of that: nothing in `src` sets a
-# mode bit by hand, so the discipline cannot decay back into a convention the
-# next fixture forgets.
+# An executable file is written by a CHILD process, never by this one (bl-fd28,
+# generalized to production by bl-e6c9). This rule is the structural half of
+# that: nothing in `src` sets a mode bit by hand, so the discipline cannot decay
+# back into a convention the next executable forgets.
 #
-# The hazard is ETXTBSY, the same one `no-bare-fork.yml` guards from the other
-# side. `fs::write` on a fixture script holds a write fd; a `fork` on ANY thread
-# copies that fd into a child that keeps it until its own `exec` completes; an
-# `exec` of the script inside that window fails. `git_env`'s `cfg(test)` spawn
-# lock closes every fork YOG performs — but yog links `balls`, `litany` and
-# `brazen`, each of which forks `git` on its own account and takes no lock of
-# yog's, so a beat that drives one of them in-process is an unlocked forker for
-# as long as it runs (bl-6bf5 measured 8 failures, bl-fd28 another 2 in `fan`).
+# The hazard is ETXTBSY. `fs::write` on a file holds a write fd; a `fork` on ANY
+# thread copies that fd into a child that keeps it until its own `exec`
+# completes; an `exec` of the file inside that window fails. `git_env` used to
+# hold a `cfg(test)` spawn lock across every fork YOG performs — but yog links
+# `balls`, `litany` and `brazen`, each of which forks `git` on its own account
+# and takes no lock of yog's, so a beat that drives one of them in-process was an
+# unlocked forker for as long as it ran (bl-6bf5 measured 8 failures, bl-fd28
+# another 2 in `fan`). The lock is gone; the write side is the whole discipline.
 #
 # `git_env`'s module doc used to argue the write side was hopeless — "the
 # victim's own care cannot save it" — and that was true of a write-side
 # *bracket*, which only works if the peer's fork respects the same lock. It is
-# false of a write-side *relocation*: `crate::test_support::write_exec` feeds
-# the body to `sh -c 'cat > "$1" && chmod 755 "$1"'`, so the write fd is the
-# CHILD's and a peer fork has nothing of this process's to copy. That closes
-# every victim at once, whoever forks and in whichever crate.
+# false of a write-side *relocation*: `crate::git_env::write_exec` feeds the body
+# to `sh -c 'cat > "$1" && chmod 755 "$1"'`, so the write fd is the CHILD's and a
+# peer fork has nothing of this process's to copy. That closes every victim at
+# once, whoever forks and in whichever crate.
+#
+# **`world/tools.rs` was exempt for one round and that exemption WAS the
+# hazard** (bl-e6c9). It was granted on the reading that this rule governed test
+# fixtures and that a production shim was a different thing with "no `sh` to
+# borrow at that layer". Both halves were wrong: `ensure_shim` wrote the world's
+# shims with `fs::write` + `set_permissions` and a caller exec'd one immediately
+# after — the engine is the process that forks the most, not the least — and the
+# `sh` was always there, `git_env` being the crate's one fork. bl-fd28's own
+# stress filter with the `world::tools`/`world::tests` beats folded in cost 7
+# ETXTBSY failures over 1,120 runs, and zero after. A retry loop on ETXTBSY was
+# rejected outright: a hazard must not become a production shape. So the helper
+# is `pub(crate)` production code, `crate::test_support::write_exec` is that same
+# function with the error turned into a panic, and there is one home for "write
+# an executable" rather than one per face.
 #
 # The matched names are the whole of the `PermissionsExt` write surface:
 # `set_permissions` (the act), `from_mode` and `set_mode` (the two ways to build
@@ -26,17 +40,22 @@
 # — is untouched, because reading one is not the hazard.
 #
 # `ignores` is the one location authority, the shape `unsafe-outside-sys.yml`
-# uses. Add a site to one of these files rather than widening the list:
-#   - `test_support/**` — where `write_exec` lives, plus the two narrow
-#     `read_only`/`writable` helpers for the "this file cannot be rewritten"
-#     fixture. Neither exposes a mode parameter, so an exec bit is not reachable
-#     through them.
-#   - `world/tools.rs` — PRODUCTION: §16.7 W9's world shims, the one executable
-#     file yog writes for real. It is not a test fixture and there is no `sh` to
-#     borrow at that layer.
-#   - `wire/provision.rs`, `bz_host/store.rs` — PRODUCTION, and not the exec bit
-#     at all: `0600`/`0700` narrowing on key material and the credential store,
-#     which `openssl` and the ambient umask would otherwise leave world-readable.
+# uses. Add a site to one of these files rather than widening the list. Note
+# that `git_env/write_exec.rs` is NOT among them and needs no entry: the `chmod`
+# it performs is a word in a shell recipe, not a Rust call, which is exactly the
+# relocation this rule exists to force.
+#   - `test_support/fixture.rs` — the two narrow `read_only`/`writable` helpers
+#     for the "this file cannot be rewritten" fixture. Neither exposes a mode
+#     parameter, so an exec bit is not reachable through them.
+#   - `wire/provision.rs`, `bz_host/store.rs` — PRODUCTION, and **not this
+#     hazard**: they NARROW an existing file to its owner (`0600` key material,
+#     `0700` on the credential store) where `openssl` and the ambient umask
+#     would otherwise leave it world-readable. They set no executable bit,
+#     nothing ever execs what they touch, and neither is paired with a write
+#     this process performs and then runs — so no `exec` can land in a window
+#     they open, because they open none. They stay, and they are the shape that
+#     tells the exemptions apart: an exemption is lawful here only when the file
+#     it governs is never exec'd.
 #
 # `make rules-audit` scans `src` only, so the integration crate is NOT covered.
 # `tests/support/write_exec.rs` is the same helper for those binaries and the
@@ -49,10 +68,9 @@
 id: no-hand-chmod
 language: rust
 severity: error
-message: "write executable fixtures with crate::test_support::write_exec — a mode bit set by hand re-opens the ETXTBSY window (see rules/no-hand-chmod.yml)"
+message: "write executable files with crate::git_env::write_exec — a mode bit set by hand re-opens the ETXTBSY window (see rules/no-hand-chmod.yml)"
 ignores:
-  - "**/test_support/**"
-  - "**/world/tools.rs"
+  - "**/test_support/fixture.rs"
   - "**/wire/provision.rs"
   - "**/bz_host/store.rs"
 rule:

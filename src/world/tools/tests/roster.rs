@@ -6,6 +6,8 @@
 //! itself at §12's budget on the seam between *what one shim is* and *what
 //! standing them all up means*.
 
+use std::os::unix::fs::PermissionsExt as _;
+
 use super::super::*;
 use tempfile::tempdir;
 
@@ -28,7 +30,7 @@ fn ensure_tools_converges_every_roster_shim() {
             "{namespace}"
         );
         let mode = fs::metadata(&path).unwrap().permissions().mode();
-        assert_eq!(mode & 0o777, SHIM_MODE, "{namespace}");
+        assert_eq!(mode & 0o777, 0o755, "{namespace}");
     }
     // The roster carries yog itself (bl-3ff4), and its shim is the one that
     // names NO verb word — `exec <yog> "$@"`, not `exec <yog> yog "$@"` — so an

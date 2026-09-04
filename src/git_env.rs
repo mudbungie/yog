@@ -38,13 +38,12 @@
 //! ## ETXTBSY is closed on the WRITE side, and the lock is gone (bl-fd28)
 //!
 //! The fork carried a second job for two rounds and no longer does. `fs::write`
-//! on a fixture script holds a write fd; a `fork` in ANOTHER thread copies that
-//! fd into a child that keeps it until its own `exec` completes; an `exec` of
-//! the script inside that window is **ETXTBSY**. So this module took one
-//! process-wide lock across the fork under `cfg(test)`: measured with 8
-//! write-then-exec threads against an 8-thread fork storm, ~9,600 pairs,
-//! unguarded forks cost 8.3% ETXTBSY and every fork through one lock cost zero
-//! (bl-6397).
+//! on a script holds a write fd; a `fork` in ANOTHER thread copies that fd into
+//! a child that keeps it until its own `exec` completes; an `exec` of the script
+//! inside that window is **ETXTBSY**. So this module took one process-wide lock
+//! across the fork under `cfg(test)`: measured with 8 write-then-exec threads
+//! against an 8-thread fork storm, ~9,600 pairs, unguarded forks cost 8.3%
+//! ETXTBSY and every fork through one lock cost zero (bl-6397).
 //!
 //! **That zero was a CONDITION, not a property of the lock** (bl-6bf5). The
 //! lock was a `cfg(test)` bracket around `Command::spawn` HERE, and a fork
@@ -59,14 +58,22 @@
 //! moving the beat out to a `tests/*.rs` of its own; `fan` could not follow,
 //! its beats being unit tests of `pub(crate)` code no `tests/*.rs` can reach.
 //!
-//! bl-fd28 closed the hazard on the side that owns it instead. **Every
-//! executable fixture in this crate is written by a CHILD** —
-//! [`crate::test_support::write_exec`] for the lib binary,
-//! `tests/support/write_exec.rs` for the integration ones, feeding the body to
-//! `sh -c 'cat > "$1" && chmod 755 "$1"'` — so the write fd never exists in
-//! this process and a peer fork, in ANY crate, locked or not, has nothing of
-//! ours to copy. `rules/no-hand-chmod.yml` makes it structural rather than a
-//! convention.
+//! bl-fd28 closed the hazard on the side that owns it instead, and bl-e6c9
+//! finished the job. **Every executable file this crate writes is written by a
+//! CHILD** — [`write_exec`], feeding the body to
+//! `sh -c 'cat > "$1" && chmod 755 "$1"'` — so the write fd never exists in this
+//! process and a peer fork, in ANY crate, has nothing of ours to copy.
+//! `rules/no-hand-chmod.yml` makes it structural rather than a convention.
+//!
+//! **It is not a test discipline, and for one round this doc said it was.**
+//! bl-fd28 converted the fixtures and wrote "every executable *fixture*" here,
+//! which read as a settled boundary; the ENGINE still wrote its world shims with
+//! `fs::write` + `set_permissions` and exec'd them (`world::tools::ensure_shim`),
+//! which is the same window in the process that forks the most. Folding those
+//! beats into bl-fd28's own filter reproduced it at **7** failures over 1,120
+//! runs. The helper is production's now — [`write_exec`] is `pub(crate)` and
+//! `crate::test_support::write_exec` is that function with the error turned into
+//! a panic — so there is one home for "write an executable", not one per face.
 //!
 //! **This module's older claim that "the victim's own care cannot save it" is
 //! retired with the lock.** It was true of a write-side *bracket* — a lock that
@@ -95,6 +102,10 @@
 
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus, Output, Stdio};
+
+mod write_exec;
+
+pub(crate) use write_exec::write_exec;
 
 /// The variables `git` exports into a hook's (or any child's) environment that
 /// re-aim a child `git` at another repository. Public because a few callers
