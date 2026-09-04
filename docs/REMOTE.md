@@ -1265,6 +1265,10 @@ its `complete` never landed. A redelivery carries the **id it was first handed
 under**, so a far end that must not run a thing twice has a stable name to
 dedupe on and needs no field of its own to get it. Nothing on the wire moved:
 `invocation` is the id the follow-class read has always carried.
+**Since bl-2bd5 the lease is bounded and the swallowed capture is not
+re-run**: three hand-offs, then the engine answers the slot in doubt as a
+capture of its own, and a foot posts the capture it still holds ahead of its
+next read rather than letting the lease re-run the tool (§5.6).
 
 **One reader per client identity is what makes the predicate exact.** "The
 client asked for work again" only means "it did not finish what it holds" while
@@ -1656,6 +1660,137 @@ envelope overhead, which is linear rather than quadratic and is the tick's
 question (§7.2's write cadence), not the frame's. Adding a second mechanism to
 save bytes the first one already stopped multiplying is mechanism for its own
 sake.
+
+### 5.6 Completion is not delivery — the lease is bounded, the exhausted one is answered in doubt, and a swallowed capture is re-posted (bl-2bd5)
+
+**The lesson, and the one lane that lacked it.** Distinguish *completion* (the
+tool ran) from *delivery* (its capture reached the asker), and where the two
+can come apart be honest that the leg is at-least-once: deliver an unsent
+answer without re-running the work, bound the retries, and say so when the
+bound is spent. Two of this document's three lanes already had it. A seat's
+answer is a **read** of a durable transcript, re-asked freely and whole on its
+first frame (§3, §5.5) — there is no send to lose, so delivery of a *result* is
+at-least-once by construction and nothing here amends it. The gesture inbox
+answers a dead claimant's gesture **in doubt** and never re-runs it (yog DESIGN
+§8.5, bl-d1f1). The routed tool lane had the lease (§5.3) and nothing else:
+an invocation nobody answered was handed out again on every redial until the
+hour sweep, a capture the wire swallowed on its way back was dropped by the
+only party holding it, and neither the model nor the operator was told either
+had happened. This section is the tool lane catching up, in three rulings, and
+the fact each ruling rests on has exactly one home.
+
+**Ruling 1 — the fact "this box ran it" lives in the foot's own in-flight
+channel state, for as long as that process lives, and nowhere else.** thrall
+holds no world (its DESIGN §2), and bl-9261 refused an id ledger for reasons
+that still hold: a remembered set of ids is memory across the gap the redial
+refuses, and *suppressing* a redelivered run without answering it would leave
+the engine holding a slot with no capture — the silence that ball was about,
+reintroduced from the client side. What that refusal did **not** reach is the
+capture the foot is already holding on its stack at the moment a `complete`
+fails on the wire. Today `run::hold` drops it and lets the lease re-run the
+tool; the honest move is to **post it first on the next dial**, before that
+channel's first follow-class read — because the read is what releases the lease
+(§5.3), so a capture posted ahead of it lands on a slot the engine still holds
+with no capture, and the driver collects a result the box computed once.
+That is the lesson's *"an unsent answer is delivered without re-running"*,
+and it is not the ledger: no id set, no dedupe, nothing that outlives the
+process, **one** capture per channel, held for an interval with a name — until
+the next channel's first act is answered, landed or refused. bl-9261's second
+reason said the interval had no name; posting rather than waiting gives it
+one, and that is the whole of what is reversed. A refusal of the re-post is
+dropped, never `Over`: the engine that refuses it has swept the slot, restarted,
+or already handed the driver an answer, and a foot that ended its channel over
+a capture nobody was waiting for would be turning the ordinary case into the
+terminal one. Idempotence is **not** declared per tool and the absence is
+deliberate: a declaration would be a second fact about a tool, authored on the
+box and read on the engine, that could only ever be trusted as far as the
+operator's own containment claim (thrall DESIGN §3.5) — and a `read_file`
+declared idempotent is still a tool whose second run costs a second read of a
+world that may have moved. The one property this design needs from a tool is
+none; what it needs from the *path* is that a run whose capture the foot still
+holds is never run again, and that is Ruling 1.
+
+**Ruling 2 — three hand-offs, then the engine answers the slot in doubt.** A
+slot counts how many follow-class reads it has been handed to. The second
+hand-off is the redelivery bl-e658 bought — the at-least-once leg, kept. The
+third separates a blip from a poison invocation: a box that dropped twice
+running one tool, with its own redial series in between, is a box that tool is
+killing, and a fourth hand-off would be a loop the hour sweep ends rather than
+a retry. So at the read that would hand it a fourth time the engine instead
+**writes the slot's capture itself**: non-zero exit, empty stdout, and one
+sentence on stderr naming the client, the count, and the instruction the
+gesture lane already gives — *handed to this box three times and never
+answered; each hand-off may have run it; read the world before acting again*.
+It is then a capture like any other: not offered again, collected by the
+driver's ordinary poll, passed through to the model as the failed tool result
+it is, so the model sees the attempt count in the one place it sees anything.
+No wire shape moves and `PROTOCOL` stands: the capture is the one spelling
+(§5.3), and an exhausted lease is a transport failure of exactly the class
+§5.3 already lets be *"a sentence of yog's own"*. This is the gesture lane's
+answer under the gesture lane's contract — the engine fills the reply slot in
+doubt, and the recovery is a read, never a re-send — so the two lanes now
+state one contract from two ends, differing only in *when* the engine can
+know: there, at boot from a lock the kernel dropped; here, at the count.
+A `complete` that lands late on an in-doubt slot the driver has not yet
+collected **overwrites it**, because a real capture is better than a doubt;
+one that lands after the collect is refused as any spent handle is, which is
+the behaviour a swept slot has always had.
+
+**The expiry is already two numbers, and no third is added.** What the model
+waits is the driver's patience — `tool_host/remote::patience`, two minutes —
+which ends with a sentence of its own naming the client and that the tool
+*"may be offline, or … still running there"*. What the map holds is the hour
+sweep, which bounds the engine's RAM and not the attempt: by the time it runs
+no driver is polling, and a capture landing on a slot nobody will collect is
+freed by the sweep exactly as before. The lesson's day-long window is a
+messaging platform's number; here the asker's own bound is the honest one, and
+a bound the asker has already walked away from is a leak, not a contract.
+
+**Below the cap the redelivered run is not marked, and that is a decision with
+a named exit.** The one carrier for *"this is attempt two"* is a field on
+`Reply::Routed`, which three decoders read and whose gain is a `PROTOCOL` bump
+by §3's rule. It would buy the model a warning for the case Ruling 1 makes
+rare — a foot that died in the window after the tool finished and before its
+`complete` was written — and the second run's capture already reads the world
+the first run wrote, verbatim. If a driven run ever shows a model misreading a
+redelivered capture, the field is `handed` on the slot's re-read, one bump, and
+this paragraph is where the cost was weighed.
+
+**Ruling 3 — the mailbox stays RAM across an engine restart, and the durable
+home of a tool result is the step record.** A capture the foot posted and no
+driver has collected when the engine dies is lost, and honestly so: the record
+that outlives a process is litany's — the tool's `output.json` under the
+step directory, and the tool-result entry the step commit seals into the
+conversation (yog DESIGN §5.1 #28a, #29) — and it is reached **only** through
+the driver's collect. Persisting the slot would put a captured result in two
+places for the seconds between the foot's post and the driver's poll, and
+make a crashed driver's abandoned answer durable, which is the reason §5.3
+gave for RAM in the first place. What changes is the sentence: a driver that
+outlives the engine polls a handle the new engine never minted, through the
+inbox that did survive, and is refused in band — today *"answered already or
+expired"*, which names two causes and omits the true third. It gains *this
+engine restarted since it was posted* and the in-doubt instruction, so the
+refusal is the same sentence the gesture sweep writes, and the driver that
+died with the engine is the orphaned-tail state the transcript already shows
+(yog DESIGN §3.5's liveness beside `steps_view/orphan`).
+
+**Refused: a per-client acknowledgement that a seat saw a reply.** The lesson
+tracks delivered/failed per platform send because a platform send is the
+recipient's only copy. A seat's copy is a re-read, and the only "seen" with a
+reader is the seat's own watermark (yog DESIGN §6, `seen[ws][agent]`), which
+drives attention and lives where the eyes are. An engine-side receipt would
+have no consumer: no gesture branches on it, and §14.3 rules that the engine
+initiates nothing toward a client, so nothing would retry on its absence. A
+fact nothing reads is a second representation waiting to drift.
+
+**What proves it.** Engine: `src/registry/mailbox/slots/tests.rs` — a third
+unanswered hand-off is answered in doubt naming the count, an in-doubt slot is
+not offered again, a late completion overwrites an uncollected in-doubt
+answer, and the restart sentence at both readers. Foot: thrall's
+`src/run/tests/redial.rs` — a capture the wire swallowed is posted first on the
+next dial and the driver-side slot is never re-run, and a refused re-post is
+dropped and the channel reads on. The two suites meet only at the wire's
+existing spellings, which is why neither needs the other to run.
 
 ## 6. What lives where
 
