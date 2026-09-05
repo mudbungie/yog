@@ -92,7 +92,7 @@ print(json.loads(line).get('stdout','').strip())")
     || fail "S13-T9 schedule: the board reads back the priority, the parent and the block" \
       "the row is not scheduled as stated"
   # The tag reaches no reply, so the store is the witness.
-  if in_world "$data" bl show "$new" | grep -E '^ *tags ' | grep -q 'hot'; then
+  if grep -q 'hot' <<<"$(in_world "$data" bl show "$new" | grep -E '^ *tags ')"; then
     pass "S13-T9 schedule: the tag lands in balls' own store"
   else
     fail "S13-T9 schedule: the tag lands in balls' own store" "no tag on the ball"

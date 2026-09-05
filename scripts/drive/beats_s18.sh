@@ -163,8 +163,8 @@ PY
     || fail "S18-T4 reap: a quiet drone's claim comes back" "no reap row for $ball"
   # The reason is the COMPARISON itself and never a diagnosis (§4.3, verbatim).
   # The row's stdout is where the loop wrote it.
-  grep "\"yog-fleet\",\"reap\",\"$ball\"" "$ops" 2>/dev/null \
-    | grep -q '"stdout":"lease expired' \
+  grep -q '"stdout":"lease expired' \
+    <<<"$(grep "\"yog-fleet\",\"reap\",\"$ball\"" "$ops" 2>/dev/null)" \
     && pass "S18-T4 reap: the reason on the trail is the comparison" \
     || fail "S18-T4 reap: the reason on the trail is the comparison" "no comparison in the row"
   # The release is real: the board's own row is ready again and the loop has

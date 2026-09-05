@@ -157,7 +157,7 @@ else
   # workspace's is, rather than a copy kept here to drift.
   rows=$(wall_rows)
   for p in $declared; do
-    if printf '%s\n' "$rows" | grep -qx -- "$p"; then
+    if grep -qx -- "$p" <<<"$rows"; then
       printf '  %-14s OK       %s\n' "$p" "a fresh wall's table ships this row"
     else
       printf '  %-14s VIA CFG  %s\n' "$p" \

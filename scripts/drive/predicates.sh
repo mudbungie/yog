@@ -39,9 +39,9 @@ verb_count() { c=$(grep -c "\"litany\",\"$1\"" "$ops" 2>/dev/null) || true; echo
 # §8.1 order assertion compares two of these.
 verb_line() { grep -n "\"$1\",\"$2\"" "$ops" 2>/dev/null | head -1 | cut -d: -f1; }
 # does any ops row carry this exact argv fragment *and* a clean exit?
-row_ok() { grep "$1" "$ops" 2>/dev/null | grep -q '"exit":0'; }
+row_ok() { grep -q '"exit":0' <<<"$(grep "$1" "$ops" 2>/dev/null)"; }
 # a *gpt* reply message exists under any agent of the focused workspace
-reply_exists() { find "$ws_root" -path '*messages*gpt*.json' 2>/dev/null | grep -q . ; }
+reply_exists() { [ -n "$(find "$ws_root" -path '*messages*gpt*.json' 2>/dev/null)" ]; }
 # THE SECOND TURN'S REPLY (bl-bf79): some conversation carries two or more user
 # turns AND its newest message is an assistant record that arrived after the last
 # of them. A transcript is numbered in arrival order (`001-user.md`,
@@ -74,8 +74,8 @@ PY
 # steps at all, so this passed in every run where the message it is about never
 # reached a driver (bl-f16e).
 no_dead_step() {
-  find "$ws_root/steps" -name response.json 2>/dev/null | grep -q . \
-    && ! find "$ws_root/steps" -name response.json -size 0 2>/dev/null | grep -q .
+  [ -n "$(find "$ws_root/steps" -name response.json 2>/dev/null)" ] \
+    && [ -z "$(find "$ws_root/steps" -name response.json -size 0 2>/dev/null)" ]
 }
 agent_count() { find "$ws_root/agents" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l; }
 # does this file carry this text? (`beats_s5.sh` and `beats_s6.sh`, so it lives
@@ -108,7 +108,7 @@ agents_ge() { [ "$(agent_count)" -ge "$1" ]; }
 # An EMPTY id is refused, never interpolated: `grep -q '""'` matches almost any
 # ops row. Every id-taking predicate in this harness carries the same guard, so
 # the trap cannot be re-armed one call site at a time (bl-f16e).
-stopped() { [ -n "$1" ] && grep '"litany","stop"' "$ops" 2>/dev/null | grep -q "\"$1\""; }
+stopped() { [ -n "$1" ] && grep -q "\"$1\"" <<<"$(grep '"litany","stop"' "$ops" 2>/dev/null)"; }
 # the id of the one conversation under `$ws_root` that is NOT `$1` — empty when
 # there is none. A world that lays two roots can then name either by identity
 # instead of by its rank in a list, which is a thing yog's list no longer has.

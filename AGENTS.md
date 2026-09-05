@@ -338,8 +338,9 @@ demotion removes an internal API from the boundary's obligations. Reach for
   the tree's one ≥250 file long after bl-2335 had split that file in two, and
   the other asserted that nothing rode the 300 wall while three files sat on
   it. One fact, one home, and the home is the command.
-- `make beat-audit` — the two mechanically checkable shapes of a **drive beat
-  that proves nothing** (bl-70b8, `scripts/beat-audit.sh`). *(a)* Every label
+- `make beat-audit` — the three mechanically checkable shapes of an
+  **assertion that proves nothing** (bl-70b8, bl-e33a,
+  `scripts/beat-audit.sh`). *(a)* Every label
   handed to `pass` is also handed to `fail`: a `gesture … || pass "…"` emits a
   row only when it succeeds, so the one outcome it exists to catch deletes the
   beat from the verdict instead of reddening it, and a ladder counts the rows
@@ -349,10 +350,29 @@ demotion removes an internal API from the boundary's obligations. Reach for
   and it bites hardest when the beat ABOVE it is the thing that failed to
   produce the id. `grep -qx` is exempt structurally, not by allowlist — `-x`
   anchors to a whole line, so an empty pattern matches only an empty line.
+  *(c)* No `grep -q` **fed by a pipe** (bl-e33a): `grep -q` exits the instant
+  it matches and closes the read end, the writer dies of SIGPIPE mid-write, and
+  `set -o pipefail` then takes the pipeline's status from that dead writer — so
+  the pipeline reports failure **exactly when the pattern matched**
+  (`PIPESTATUS` reads `141 0`). Read the subject from a herestring instead:
+  `grep -q PAT <<<"$subject"` has no second process to die. The ban is on the
+  shape and not on the option, because a sourced file cannot see whether its
+  caller set `pipefail`. **Shape (c) alone is read over every tracked bash
+  script in the repo, not just `scripts/drive/`** — it flaked the leak
+  self-test into calling a live rule dead, and at `leak-scan.sh`'s `scan_paths`
+  (`… && report`) it would have dropped a real finding in silence, so it is the
+  one shape that can make the *gate* lie rather than merely mis-score a beat.
+  Scope is where `pipefail` exists, which is bash: a `#!` naming another
+  interpreter is skipped (`scripts/deploy/` is POSIX `/bin/sh` on purpose),
+  while a file with **no** `#!` is a sourced bash fragment and is in scope. The
+  pattern is written `[|]` so the check cannot flag its own text, the same
+  idiom `leak-rules.sh` uses for `Fil[e]`.
   Two-direction, like `leak-scan`: the harness must be clean AND the script's
   own fixture must still fire, so an edited pattern that matches nothing cannot
-  pass as green forever. The **third** shape of this family is structural and
-  lives in the harness itself — `one_name_one_definition` (`harness.sh`),
+  pass as green forever — and enumerating **zero** scripts fails outright, the
+  same discipline `make line-cap` carries. A further shape of this family is
+  structural and lives in the harness itself — `one_name_one_definition`
+  (`harness.sh`),
   which refuses a duplicate top-level beat name outright, because bash's flat
   sourced namespace lets a later definition silently delete an earlier stage
   and a beat that never runs writes no row at all (bl-0e44).
@@ -414,7 +434,12 @@ demotion removes an internal API from the boundary's obligations. Reach for
   (`notreal`), because no regex can tell a real secret from a fabricated one
   and only the value can say so. Plus `clean.txt` / `clean-paths.txt`,
   near-misses that must NOT be flagged. Both directions, because a leak gate
-  dies by matching nothing, and a noisy one dies by being bypassed.
+  dies by matching nothing, and a noisy one dies by being bypassed. A fixture
+  that does not read as **text** in this locale is reported as an
+  infrastructure fault in its own sentence, never as a dead rule (bl-e33a):
+  `scan_rule` greps with `-I`, which reports no hits for a file grep judges
+  binary and says nothing about why, so without that arm the box's fault and
+  the gate's fault arrive as the same sentence.
   `tests/leak_gate.rs` holds the other half: seven tests that drive the real
   scanner over throwaway repositories.
 

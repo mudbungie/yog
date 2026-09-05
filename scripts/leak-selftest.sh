@@ -17,24 +17,51 @@
 # direction is `clean.txt` / `clean-paths.txt`: near-misses that must NOT be
 # flagged, because a gate that cries wolf on a fifth of the tree gets bypassed,
 # and a bypassed gate is no gate.
+#
+# A `grep -q` HERE READS FROM A HERESTRING, NEVER FROM A PIPE (bl-e33a), and
+# `scripts/beat-audit.sh` holds every tracked bash script in this repo to it. A
+# `grep -q` on the receiving end of a pipe is a race, not a style: it exits the
+# instant it matches and closes the read end, the writer is killed by SIGPIPE
+# part-way through its own write, and `set -o pipefail` then takes the
+# pipeline's status from that DEAD WRITER rather than from the reader that
+# answered — so the pipeline reports FAILURE exactly when the pattern MATCHED.
+# `PIPESTATUS` at a false answer reads `141 0`. Here that reported a live rule
+# dead in one `make check` and passed on the next; the rates are measured at
+# SHAPE C in `beat-audit.sh`, which is the guard and the one home for them.
+# The ban is on the SHAPE rather than on the option, because a sourced
+# file cannot see whether its caller set `pipefail` — this one does not set it
+# and inherited it, which is how the defect reached the one file whose whole
+# job is to prove the gate is not lying — and a herestring has no second
+# process to die under either setting.
 
 # Every non-blank, non-'#' line of a rule's fixture must be flagged BY THAT
 # RULE and must carry FIXTURE_MARKER; nothing in the clean fixtures may be
 # flagged by anything.
 fixture_lines() {
   local rule="$1" fixture="$2" hit="$3" ln fails=0 n=0 content
+  # ASK THE INFRASTRUCTURE QUESTION FIRST, AND NAME IT SEPARATELY. `scan_rule`
+  # greps with `-I`, which reports NO HITS for a file grep judges binary and
+  # says nothing about why — so "this rule matched nothing" and "this file could
+  # not be read as text here" would arrive as the same sentence, and only the
+  # second is a fault of the box rather than of the gate. A fixture is tracked
+  # text; if it does not read as text in this locale, the run has no verdict to
+  # give about the rule.
+  if ! grep -qI '' "$fixture"; then
+    echo "self-test: $fixture could not be read as text under LC_ALL=${LC_ALL:-unset} LANG=${LANG:-unset} — an infrastructure fault, not a dead rule" >&2
+    return 1
+  fi
   while IFS= read -r ln; do
     [ -n "$ln" ] || continue
     n=$((n + 1))
     content="$(sed -n "${ln}p" "$fixture")"
     if [ "$rule" = forbidden-path ]; then
-      printf '%s\n' "$hit" | grep -qF "$content" || {
+      grep -qF "$content" <<<"$hit" || {
         echo "self-test: [$rule] line $ln of $fixture was NOT flagged" >&2; fails=1; }
       continue
     fi
-    printf '%s\n' "$hit" | grep -qE ":$ln  \[" || {
+    grep -qE ":$ln  \[" <<<"$hit" || {
       echo "self-test: [$rule] line $ln of $fixture was NOT flagged" >&2; fails=1; }
-    printf '%s' "$content" | grep -qi "$FIXTURE_MARKER" || {
+    grep -qi "$FIXTURE_MARKER" <<<"$content" || {
       echo "self-test: [$rule] line $ln of $fixture carries no '$FIXTURE_MARKER' marker — a fixture value must be unmistakably fabricated" >&2
       fails=1; }
   done <<<"$(grep -nvE '^(#|$)' "$fixture" | cut -d: -f1)"
