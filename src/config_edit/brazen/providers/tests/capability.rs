@@ -1,21 +1,22 @@
-//! What the `protocol` column says about a yog turn (§9.4) — the two total
-//! matches over brazen's own `ProtocolId`: the tool refusal (bl-3d22) and the
-//! context caveat (bl-671d), plus the remedy the second one hands the
-//! operator. The parent owns the columns; this owns the dialect judgement over
+//! What a row's tool capability says about a yog turn (§9.4) — the refusal
+//! (bl-3d22), read since bl-b6c9 off brazen's own `tools` column instead of a
+//! total match over `ProtocolId`, and the dead step's route back to the same
+//! column (bl-5252). The parent owns the columns; this owns the judgement over
 //! one of them, exactly as `providers/capability.rs` does in production.
 
-use super::super::{CONTEXT_REMEDY, provider_rows};
+use super::super::{dialect_decline, provider_rows};
 use super::LIVE_LISTING;
 
-/// bl-3d22. The tool capability is read off the `protocol` column through
-/// brazen's own `ProtocolId` rename, over a TOTAL match — so the answer is a
-/// fact about the dialect, never about a row NAME. `claude-code` is the one
-/// shipped row whose dialect declines tools; every other dialect in the table
-/// carries them.
+/// bl-3d22, migrated by bl-b6c9. The tool capability is read off brazen's own
+/// `tools` column — a fact about the row's dialect, computed by the crate that
+/// owns the encoder, never about a row NAME. `claude-code` is the one shipped
+/// row whose dialect declines tools; every other dialect in the table carries
+/// them.
 #[test]
-fn the_tool_capability_is_read_off_the_protocol_column() {
+fn the_tool_capability_is_read_off_brazens_own_column() {
     let rows = provider_rows(LIVE_LISTING);
     assert_eq!(rows[2].protocol, "claude_code");
+    assert_eq!(rows[2].tools, Some(false));
     let why = rows[2].tools_blocked().expect("claude_code declines tools");
     assert!(why.starts_with("claude_code declares no tools"), "{why}");
     assert!(why.contains("`clients` tool"), "{why}");
@@ -28,86 +29,78 @@ fn the_tool_capability_is_read_off_the_protocol_column() {
     }
 }
 
-/// A protocol spelling this build's brazen cannot name — a newer dialect, or a
-/// degraded column — is **no answer**, not a refusal: no surface may refuse on
-/// the strength of a question that went unanswered. The compile-time half of
-/// this guarantee is the total match itself, which a new upstream variant breaks
-/// until its arm is added.
+/// A `bz` older than 0.0.12 serves no `tools` key, and a degraded row may carry
+/// none either. That is **no answer**, not a refusal: no surface may refuse on
+/// the strength of a question that went unanswered. The old shape of this
+/// guarantee was the total match itself — a compile error on a new upstream
+/// dialect — which judged only the dialects this build was compiled against;
+/// the column judges every dialect brazen ships, and an absent column judges
+/// nothing at all.
 #[test]
-fn an_unspellable_protocol_answers_nothing_about_tools() {
+fn an_absent_tools_column_answers_nothing() {
     let rows = provider_rows(
-        r#"{"providers":[{"name":"x","protocol":"mystery_wire","auth":"none"},{"name":"y","auth":"none"}]}"#,
+        r#"{"providers":[{"name":"x","protocol":"mystery_wire","auth":"none"},
+                         {"name":"y","protocol":"claude_code","auth":"none"}]}"#,
     );
+    assert_eq!(rows[0].tools, None);
     assert_eq!(rows[0].tools_blocked(), None);
     assert_eq!(
         rows[1].tools_blocked(),
         None,
-        "an absent column asks nothing"
+        "a dialect this build knows is still not judged by this build"
     );
 }
 
-/// bl-671d. The context caveat is the same column read the same way, and its
-/// answer is the *other* kind: `ollama_chat` — the `local` row here — states a
-/// fact and stays pickable, and no other shipped dialect answers at all. What
-/// the sentence claims about the wire is not asserted here but in
-/// `tests/brazen_ollama_context.rs`, which drives the linked brazen; this pins
-/// the words and the protocol they are keyed on.
+/// A dialect this build's brazen was never compiled against is judged all the
+/// same, which is the whole point of the migration: the column carries the
+/// answer, so an unknown spelling that DECLINES is refused and one that carries
+/// tools is not.
 #[test]
-fn the_context_caveat_is_read_off_the_same_column() {
+fn an_unknown_dialect_is_judged_by_the_column() {
+    let rows = provider_rows(
+        r#"{"providers":[{"name":"x","protocol":"mystery_wire","auth":"none","tools":false},
+                         {"name":"y","protocol":"other_wire","auth":"none","tools":true}]}"#,
+    );
+    let why = rows[0].tools_blocked().expect("the column declined");
+    assert!(why.starts_with("mystery_wire declares no tools"), "{why}");
+    assert_eq!(rows[1].tools_blocked(), None);
+}
+
+/// bl-5252, on the same column since bl-b6c9. A dead step's own words name the
+/// dialect; the table answers for it, and the sentence is the one the picker
+/// gives, so the banner and the picker cannot word one refusal two ways.
+#[test]
+fn a_dead_steps_words_route_back_to_the_same_column() {
     let rows = provider_rows(LIVE_LISTING);
-    assert_eq!(rows[1].protocol, "ollama_chat");
-    let caveat = rows[1]
-        .context_caveat()
-        .expect("ollama_chat declares no context size");
-    assert!(
-        caveat.starts_with("ollama_chat declares no context size"),
-        "{caveat}"
-    );
-    assert!(
-        caveat.contains("the server's own default governs"),
-        "{caveat}"
-    );
-    assert!(
-        caveat.contains("tool payload alone can exhaust it"),
-        "{caveat}"
-    );
-    for i in [0, 2, 3, 4] {
-        assert_eq!(
-            rows[i].context_caveat(),
-            None,
-            "row {i} carries its own context size"
-        );
-    }
+    let line = "provider error (ParseInput) on provider row \"claude-code\": \
+                claude_code carries no tool declarations; use the `anthropic` row for tools";
+    let why = dialect_decline(line, &rows).expect("the decline names its dialect");
+    assert_eq!(why, rows[2].tools_blocked().expect("the same sentence"));
 }
 
-/// The remedy is the operator's next move, not yog's: the ONE config line that
-/// makes an `ollama_chat` row carry a context, in the file that authors a row.
-/// It was two lines and a restated output cap until brazen 0.0.10 folded the
-/// row's `extra` one namespace deep (upstream bl-f19d), and the line the
-/// operator types is asserted here so the sentence cannot drift from the
-/// behaviour `tests/brazen_ollama_context.rs` leg two measures.
+/// The scan is exact and case-sensitive on brazen's own spelling, so the row
+/// NAME — hyphen, the thing an operator's config and every other failure line
+/// carry — answers nothing, and a tool-carrying dialect that names itself
+/// answers nothing either.
 #[test]
-fn the_context_remedy_is_the_one_line_that_lands() {
-    let remedy = CONTEXT_REMEDY;
-    assert!(
-        remedy.contains("body_defaults = { options = { num_ctx = <your context> } }"),
-        "{remedy}"
+fn a_row_name_and_a_capable_dialect_route_nowhere() {
+    let rows = provider_rows(LIVE_LISTING);
+    assert_eq!(
+        dialect_decline("unknown provider `claude-code`", &rows),
+        None
     );
-    assert!(
-        !remedy.contains("unsupported_body_keys"),
-        "the recipe no longer clears the typed cap: {remedy}"
-    );
-    assert!(
-        remedy.contains("num_predict") && remedy.contains("`num_ctx` sizing the input window"),
-        "the two limits stay distinct in the operator's words: {remedy}"
+    assert_eq!(
+        dialect_decline("anthropic_messages requires max_tokens", &rows),
+        None
     );
 }
 
-/// An unnameable spelling answers nothing about the context either — the same
-/// discipline as the tool read, on the same parse.
+/// An empty table is one more unanswered question — the same rule `plan` keeps
+/// for a table that carries no such row at all.
 #[test]
-fn an_unspellable_protocol_answers_nothing_about_context() {
-    let rows =
-        provider_rows(r#"{"providers":[{"name":"x","protocol":"mystery_wire","auth":"none"}]}"#);
-    assert_eq!(rows[0].context_caveat(), None);
+fn an_empty_table_routes_nothing() {
+    assert_eq!(
+        dialect_decline("claude_code carries no tool declarations", &[]),
+        None
+    );
 }

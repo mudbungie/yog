@@ -26,7 +26,10 @@ pub(crate) fn table(names: &[&str]) -> Vec<crate::config_edit::brazen::ProviderR
 }
 
 /// The same table on a named dialect — the seam the capability tests aim a
-/// `claude_code` row, and an unspellable protocol, through.
+/// `claude_code` row, and a column that answers nothing, through. The `tools`
+/// column carries the answer brazen's own listing gives that dialect (bl-b6c9):
+/// `claude_code` declines, everything else carries them, and a protocol this
+/// table names with no column answers nothing.
 pub(crate) fn rows_on(
     names: &[&str],
     protocol: &str,
@@ -40,6 +43,7 @@ pub(crate) fn rows_on(
             credential: "not required".to_owned(),
             effort: true,
             priority: true,
+            tools: Some(protocol != "claude_code"),
             device: String::new(),
         })
         .collect()

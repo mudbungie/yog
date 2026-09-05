@@ -97,6 +97,7 @@ mod tests {
             credential: credential.to_owned(),
             effort: false,
             priority: false,
+            tools: Some(true),
             device: String::new(),
         }
     }

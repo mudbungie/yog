@@ -1,17 +1,25 @@
-//! What a row's `protocol` column says about a yog turn (DESIGN §9.4) — the
-//! two reads keyed on brazen's own `ProtocolId`, split off [`super`] at §12's
-//! line budget along the seam the module already had: the parent is the table's
-//! *projection* (three columns, the credential model, the rendered row), and
-//! this is the dialect judgement over one of those columns.
+//! What a row's tool capability says about a yog turn (DESIGN §9.4) — the read
+//! keyed on brazen's own `tools` column, split off [`super`] at §12's line
+//! budget along the seam the module already had: the parent is the table's
+//! *projection* (the columns, the credential model, the rendered row), and this
+//! is the judgement over one of those columns.
 //!
-//! **`protocol` is the TOOL capability** (bl-3d22). The column carries brazen's
-//! own `ProtocolId` spelling, and `ProtocolId` is a public, closed enum on
-//! brazen's library surface — so [`ProviderRow::tools_blocked`] parses the
-//! column back into that enum through brazen's own serde rename and answers
-//! over a **total match**, which a new upstream dialect fails to compile until
-//! its arm is added. That is the whole reason the judgement is here rather than
-//! a table of row NAMES: `claude-code` is a name, `claude_code` is a protocol,
-//! and only the second is a fact about request shape.
+//! **The tool capability is brazen's, and this file no longer re-derives it**
+//! (bl-b6c9). It used to: [`ProviderRow::tools_blocked`] parsed the `protocol`
+//! column back into brazen's `ProtocolId` and answered over a **total match**,
+//! so a new upstream dialect failed to compile until an arm was added here. The
+//! declaration is a column since brazen 0.0.12 (upstream bl-5053) — `shapes()`
+//! per dialect, proved there against each dialect's own `encode` — so the match
+//! is deleted and the answer is read. A total match could never have been the
+//! right shape anyway: it can only judge the dialects THIS build was compiled
+//! against, and the compile error it bought arrives at the wrong moment (a pin
+//! bump), on the wrong side (yog's), for a fact brazen already knows.
+//!
+//! **It stays a ROW read, never a table of row NAMES** (bl-3d22, the reasoning
+//! that survives the migration intact): `claude-code` is a name, `claude_code`
+//! is a protocol, and only the second is a fact about request shape. The column
+//! is per row for exactly that reason — brazen computes it off the row, and a
+//! row is what an operator picks.
 //!
 //! It exists because row EXISTENCE never established request-shape
 //! compatibility, which §9.4 used to claim it did: `/model worker claude-code
@@ -29,140 +37,65 @@
 //! step still dies at encode, and the §7.3 banner offered it Dismiss and nothing
 //! else, because [`crate::config_edit::fault`] keyed on litany's `Config`-kind
 //! wrapper and brazen stamps every dialect decline `ErrorKind::ParseInput`. So
-//! [`dialect_decline`] reads the dead step's own words into the same match a row
-//! is read into — the route, not a second table.
+//! [`dialect_decline`] reads the dead step's own words back to the SAME column
+//! a pick is refused on — one judgement, two readers, and the banner and the
+//! picker cannot word the refusal differently.
 //!
-//! **The upstream ask is already filed, and is brazen bl-5053** ("publish
-//! per-row capability declines (tools, multi-turn) on the read surface"): brazen
-//! projects no capability column — `--list-providers` serves `name`/`protocol`/
-//! `auth`/`credential`, and the `Protocol` trait that owns the rejection is
-//! crate-private, so the authoritative answer cannot be asked for. That ball was
-//! filed off THIS defect seen once before, and its own words name the cost:
-//! *"yog's model picker validated provider=claude-code for a tool-bearing worker
-//! role (it only checks the row exists in `bz --list-providers`), and every
-//! session call then died at encode"*. It was never gated on yog's side, so it
-//! recurred. When brazen serves the column, the match below is deleted and the
-//! column read in its place — that is the whole migration.
+//! **An unanswered question refuses nothing.** A row whose `tools` key this
+//! build's `bz` does not serve (any brazen before 0.0.12) answers `None`, which
+//! is *no answer* rather than a refusal — the discipline
+//! [`is_unknown_row`](crate::model_pick::grammar::is_unknown_row) applies to a
+//! table that did not answer, and the reason the column is read as an
+//! `Option<bool>` rather than a bool.
 //!
-//! **The refusal is per-ROLE, and removes nothing from the catalog.** The VISION
-//! §4.9 alignment monitor's check is structurally tool-less
-//! ([`crate::monitor::check`]: *"`bz` takes no tool flag, so tool-lessness here
-//! is structural rather than a promise"*) and pins a MODEL rather than a provider
-//! row, so a tool-less dialect is a legitimate target for it. What cannot be a
-//! litany role's row is not thereby useless.
-//!
-//! **The second read is a CAVEAT, not a refusal** (bl-671d, §9.4). A dialect
-//! whose request declares no context size hands that number to the server, and
-//! yog cannot see what the server chose — so the honest answer is the fact and
-//! the remedy, at the seat where the row is picked, and never a gate. It is the
-//! same discipline [`is_unknown_row`](crate::model_pick::grammar::is_unknown_row)
-//! applies to a table that did not answer: no surface may refuse on the strength
-//! of a question that went unanswered. `ollama_chat` is the dialect
-//! ([`ProviderRow::context_caveat`]), and it is the *whole* of what the wire
-//! carries: the pin's own encoder maps the output cap to `options.num_predict`
-//! and emits no `options.num_ctx` at all — `tests/brazen_ollama_context.rs`
-//! drives the linked brazen and asserts that body, so the sentence below is
-//! true because a test says so and fails the day brazen changes it. **The
-//! upstream ask was brazen bl-f19d and it landed in 0.0.10**: a row's
-//! `body_defaults` `extra` folds one namespace deep, so [`CONTEXT_REMEDY`] is
-//! one line rather than three. The dialect arm itself is what bl-b6c9 rewrites
-//! — since brazen 0.0.13 a ROW can state the window and brazen stamps it on the
-//! `Usage` event, so the honest caveat is a row-statement read, not a dialect
-//! judgement.
+//! **The context caveat retired here** (bl-b6c9, was bl-671d). It stated that
+//! `ollama_chat` "declares no context size", over a second total match on
+//! `ProtocolId`, and both halves of that stopped being yog's to say. brazen
+//! 0.0.10 (upstream bl-f19d) folds a row's `body_defaults` `extra` one
+//! namespace deep, so an `options.num_ctx` a row states reaches the request;
+//! brazen 0.0.13 (upstream bl-c655) makes a row's own `context_windows` table
+//! the last rung of the window a turn reports, and stamps whichever rung
+//! answered onto every `Usage` event. So the window is a ROW's statement now,
+//! not a dialect's silence — and **no column publishes it**, so yog cannot read
+//! whether a given row states one. A caveat asserted on a dialect while the
+//! fact belongs to a row is a statement on the strength of a question that went
+//! unanswered, which is the one thing this file's own discipline forbids; and
+//! it reached no surface in any case — nothing painted it, and
+//! [`ProviderRowView`](super::ProviderRowView) never carried it. The operator's
+//! next move survives where it is always true rather than per row: DESIGN §9.4
+//! states both row syntaxes, and `tests/brazen_ollama_context.rs` keeps
+//! measuring the behaviour that prose rests on.
 
 use super::ProviderRow;
 
-/// The operator's way to give an `ollama_chat` row an explicit context, in the
-/// one file that authors a row (§9.1's editor) — the hover beside
-/// [`ProviderRow::context_caveat`], because the fact fits a line and the recipe
-/// does not.
-///
-/// **One line since brazen 0.0.10** (upstream bl-f19d), and it was three before.
-/// The recipe used to clear the typed cap and restate it inside the object,
-/// because `encode` inserted the typed `options` FIRST and folded config
-/// passthrough with `or_insert`, dropping a `body_defaults` `options` beside a
-/// typed `max_tokens` **whole and silently**. The `extra` fold now goes one
-/// namespace deep, so the two keys compose per key and the operator writes the
-/// context alone. Measured against the linked brazen either way —
-/// `tests/brazen_ollama_context.rs` leg two asserted the drop and now asserts
-/// the composition, so this sentence fails the day the fold changes again.
-pub const CONTEXT_REMEDY: &str = "give the row an explicit context in this workspace's brazen \
-     config.toml: `body_defaults = { options = { num_ctx = <your context> } }`. It composes with \
-     the output cap the request already carries — the two are distinct fields, `num_ctx` sizing \
-     the input window and `num_predict` capping the output.";
-
 impl ProviderRow {
     /// Why this row can carry no litany **role**, or `None` when it can
-    /// (bl-3d22). Read by the §9.4 pick gate
-    /// ([`plan`](crate::model_pick::plan)) and by the picker's provider control,
-    /// which offers the row unselectably with this sentence beside it.
+    /// (bl-3d22, migrated to brazen's column by bl-b6c9). Read by the §9.4 pick
+    /// gate ([`plan`](crate::model_pick::plan)) and by the picker's provider
+    /// control, which offers the row unselectably with this sentence beside it.
     ///
-    /// Three answers, and the third is the load-bearing one. A dialect that
-    /// declines tools is refused, naming its protocol. A dialect that carries
-    /// them is fine. A spelling **this build's brazen does not know** is *no
-    /// answer* rather than a refusal — the same discipline
-    /// [`is_unknown_row`](crate::model_pick::grammar::is_unknown_row) applies to
-    /// an unanswerable table: no surface may refuse on the strength of a
-    /// question that went unanswered.
-    ///
-    /// It is a column read into [`dialect_blocked`], which is the judgement
-    /// itself and is also what [`dialect_decline`] reads a dead step into.
+    /// Three answers, and the third is the load-bearing one.
+    /// [`tools`](ProviderRow::tools) `Some(false)` is refused, naming the
+    /// protocol the row speaks. `Some(true)` is fine. `None` — a `bz` that
+    /// serves no such column — is *no answer* rather than a refusal.
     pub fn tools_blocked(&self) -> Option<String> {
-        dialect_blocked(&self.protocol)
-    }
-
-    /// What this row's dialect leaves to the server that a yog turn needs, or
-    /// `None` when it leaves nothing (bl-671d). Stated beside a row that stays
-    /// selectable — see the module note on why this is not a gate — with
-    /// [`CONTEXT_REMEDY`] as its hover.
-    ///
-    /// One dialect answers today. `ollama_chat`'s request declares no context
-    /// size, so the Ollama server's own default governs rather than the model's
-    /// capacity, and a yog turn's tool payload alone can exhaust a small one:
-    /// the drive this came from spent 4095 input tokens on the payload and
-    /// finished on `length` having generated a single token, against a model
-    /// whose own context was two hundred times larger. The same total match as
-    /// [`Self::tools_blocked`], for the same reason.
-    pub fn context_caveat(&self) -> Option<String> {
-        match protocol_id(&self.protocol)? {
-            brazen::ProtocolId::OllamaChat => Some(format!(
-                "{} declares no context size — the request carries the output cap and \
-                 nothing else, so the server's own default governs rather than the \
-                 model's capacity, and a turn's tool payload alone can exhaust it",
-                self.protocol
-            )),
-            brazen::ProtocolId::AnthropicMessages
-            | brazen::ProtocolId::OpenAiChat
-            | brazen::ProtocolId::OpenAiResponses
-            | brazen::ProtocolId::GoogleGenAi
-            | brazen::ProtocolId::ClaudeCode => None,
-        }
+        (self.tools == Some(false)).then(|| blocked_words(&self.protocol))
     }
 }
 
-/// Why a dialect can carry no litany role, keyed on the `protocol` **spelling**
-/// rather than on a row — the one match, which [`ProviderRow::tools_blocked`]
-/// reads a column into and [`dialect_decline`] reads a dead step's own words
-/// into. Two callers, one arm per dialect: a second table would be the thing
-/// bl-3d22 refused to build.
-fn dialect_blocked(protocol: &str) -> Option<String> {
-    match protocol_id(protocol)? {
-        brazen::ProtocolId::ClaudeCode => Some(format!(
-            "{protocol} declares no tools — every yog turn carries at least the \
-             `clients` tool, so this row can serve no role"
-        )),
-        brazen::ProtocolId::AnthropicMessages
-        | brazen::ProtocolId::OpenAiChat
-        | brazen::ProtocolId::OpenAiResponses
-        | brazen::ProtocolId::GoogleGenAi
-        | brazen::ProtocolId::OllamaChat => None,
-    }
+/// The refusal in words, given the dialect the row speaks. One home, so the
+/// picker's gate and [`dialect_decline`]'s route cannot word it differently.
+fn blocked_words(protocol: &str) -> String {
+    format!(
+        "{protocol} declares no tools — every yog turn carries at least the \
+         `clients` tool, so this row can serve no role"
+    )
 }
 
 /// Why the dialect a **failed step's own words** name can serve no role, or
 /// `None` when they name none (bl-5252) — the route from a dead step back to
-/// [`dialect_blocked`], which [`crate::config_edit::fault`] pairs with the §9.1
-/// route.
+/// the same column [`ProviderRow::tools_blocked`] reads, which
+/// [`crate::config_edit::fault`] pairs with the §9.1 route.
 ///
 /// **The signal is the dialect naming ITSELF, and that is brazen's own habit.**
 /// Every decline the `claude_code` encoder writes leads with its `ProtocolId`
@@ -170,23 +103,25 @@ fn dialect_blocked(protocol: &str) -> Option<String> {
 /// a tool_choice"*, *"…is single-turn"*, *"…accepts only text content in
 /// {slot}"* — one family from one `reject` helper, all four stamped
 /// `ErrorKind::ParseInput`, so no error KIND separates them from a malformed
-/// image block. So the scan is over whole `[a-z0-9_]` tokens, judged by the
-/// match above, which makes it narrow in the only way that matters: it is
-/// **exact and case-sensitive on brazen's spelling**, so the row NAME
-/// `claude-code` — hyphen, the thing an operator's config and every other
-/// failure line carry — answers nothing, and a tool-capable dialect that names
-/// itself (*"anthropic_messages requires max_tokens"*) answers nothing either.
-/// A dialect this build cannot name is an unanswered question, as everywhere
-/// else here.
-pub fn dialect_decline(text: &str) -> Option<String> {
+/// image block. So the scan is over whole `[a-z0-9_]` tokens, answered by the
+/// table, which makes it narrow in the only way that matters: it is **exact and
+/// case-sensitive on brazen's spelling**, so the row NAME `claude-code` —
+/// hyphen, the thing an operator's config and every other failure line carry —
+/// answers nothing, and a tool-capable dialect that names itself
+/// (*"anthropic_messages requires max_tokens"*) answers nothing either.
+///
+/// **`rows` is the table, and it is the judgement — not a join** (bl-b6c9).
+/// Since the answer moved to brazen's column there is nowhere else to ask it:
+/// the fact is per row, and every row speaking one dialect answers alike
+/// because brazen computes the column off the dialect's `shapes()`. So the
+/// first row whose protocol the text names answers for the dialect. A table
+/// that carries no such row is one more unanswered question, exactly as an
+/// empty table gates nothing in [`plan`](crate::model_pick::plan).
+pub fn dialect_decline(text: &str, rows: &[ProviderRow]) -> Option<String> {
     text.split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
-        .find_map(dialect_blocked)
-}
-
-/// A `protocol` spelling parsed back into brazen's own registry key, through
-/// brazen's own serde rename — never a second table of spellings beside it.
-/// `None` for a spelling this build cannot name, which is a *newer* brazen
-/// or a degraded column, and in both cases an unanswered question.
-fn protocol_id(protocol: &str) -> Option<brazen::ProtocolId> {
-    serde_json::from_value(serde_json::Value::String(protocol.to_owned())).ok()
+        .find_map(|token| {
+            rows.iter()
+                .find(|row| row.protocol == token)
+                .and_then(ProviderRow::tools_blocked)
+        })
 }

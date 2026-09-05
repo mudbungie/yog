@@ -55,8 +55,8 @@ pub use paths::{BrazenPaths, model_cache_at};
 
 mod providers;
 pub use providers::{
-    CONTEXT_REMEDY, MISSING, NOT_REQUIRED, ProviderRow, ProviderRowView, dialect_decline,
-    provider_rows, row_names, row_views,
+    MISSING, NOT_REQUIRED, ProviderRow, ProviderRowView, dialect_decline, provider_rows, row_names,
+    row_views,
 };
 
 #[cfg(test)]

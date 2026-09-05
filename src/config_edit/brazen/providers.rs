@@ -8,11 +8,13 @@
 //! a run would actually reach for — all four spelled by brazen's own serde
 //! renames.
 //!
-//! **What the `protocol` column judges lives beside it** in
-//! [`capability`]: the tool-capability refusal (bl-3d22), the context caveat
-//! (bl-671d) and the dead step's route back to the first of them (bl-5252) — all
-//! keyed on brazen's own public `ProtocolId` over one total match. This module
-//! owns the columns; that one owns what a dialect does to a yog turn.
+//! **What the tool capability means for a yog turn lives beside it** in
+//! [`capability`]: the refusal itself (bl-3d22) and the dead step's route back
+//! to it (bl-5252). Since bl-b6c9 the JUDGEMENT is not there either — it is
+//! brazen's [`tools`](ProviderRow::tools) column (upstream bl-5053), so a
+//! dialect this build was never compiled against is judged by the crate that
+//! owns the encoder. This module owns the columns; that one owns the sentence a
+//! refusal is worded in.
 //!
 //! **`auth` is the login capability.** brazen's `Provider::oauth` is documented
 //! `present exactly when auth = "oauth2"` — resolution pairs the two or fails
@@ -96,6 +98,20 @@ pub struct ProviderRow {
     /// over the `service_tier` wire spelling: the OpenAI family and Anthropic
     /// have one, and the others narrow it away.
     pub priority: bool,
+    /// **Can this row's dialect carry a tool declaration at all?** (§9.4,
+    /// bl-b6c9.) brazen's own `Protocol::shapes()` answer, published as a
+    /// column since 0.0.12 (upstream bl-5053) and proved there against each
+    /// dialect's own `encode` — the fact [`capability`] used to re-derive from
+    /// a total match on `ProtocolId`, which by construction could only judge
+    /// the dialects THIS build was compiled against.
+    ///
+    /// `None` is **no answer**, not a refusal: a `bz` older than 0.0.12 serves
+    /// no such key, and no surface may refuse on the strength of a question
+    /// that went unanswered ([`is_unknown_row`](crate::model_pick::grammar::is_unknown_row)'s
+    /// discipline). That is why it is an `Option<bool>` where
+    /// [`effort`](Self::effort) and [`priority`](Self::priority) are plain
+    /// bools: those two gate a control, this one gates a WRITE.
+    pub tools: Option<bool>,
     /// **Which headless sign-in this row serves**, in brazen's own
     /// `device.style` spelling (`rfc8628`, `codex`) — empty for a row that
     /// serves none. A *style* rather than a boolean because the endpoint's
@@ -238,6 +254,7 @@ pub fn provider_rows(listing_json: &str) -> Vec<ProviderRow> {
             credential: column(row, "credential"),
             effort: flag(row, "effort"),
             priority: flag(row, "priority"),
+            tools: row.get("tools").and_then(serde_json::Value::as_bool),
             device: column(row, "device"),
         })
         .collect()
@@ -277,7 +294,7 @@ fn column(row: &serde_json::Value, key: &str) -> String {
 
 mod capability;
 
-pub use capability::{CONTEXT_REMEDY, dialect_decline};
+pub use capability::dialect_decline;
 
 #[cfg(test)]
 mod tests;

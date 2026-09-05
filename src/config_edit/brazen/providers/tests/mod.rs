@@ -13,15 +13,22 @@ mod capability;
 
 use super::{ProviderRow, provider_rows, row_views};
 
-/// The operator's real table, verbatim from `bz --list-providers --json` on the
-/// box that filed bl-b4e5 — the fixture the acceptance asserts against, so the
-/// tests never read the ambient config to know it.
+/// The operator's real table from `bz --list-providers --json` on the box that
+/// filed bl-b4e5 — the fixture the acceptance asserts against, so the tests
+/// never read the ambient config to know it.
+///
+/// **The `tools` column was added to it at bl-b6c9**, with the value the
+/// dialect's own `shapes()` gives, because the capture predates brazen 0.0.12
+/// and the tool judgement is that column now. A capture with the column absent
+/// can only ever prove the *unanswered* case, which has its own beat
+/// (`capability::an_absent_tools_column_answers_nothing`); leaving this one
+/// column-less would have made every other beat here assert that.
 pub(super) const LIVE_LISTING: &str = r#"{"providers":[
-    {"auth":"oauth2","credential":"stored","name":"codex","protocol":"openai_responses"},
-    {"auth":"none","credential":"not required","name":"local","protocol":"ollama_chat"},
-    {"auth":"none","credential":"not required","name":"claude-code","protocol":"claude_code"},
-    {"auth":"oauth2","credential":"ambient","name":"claude-session-direct","protocol":"anthropic_messages"},
-    {"auth":"api_key","credential":"missing","name":"anthropic","protocol":"anthropic_messages"}
+    {"auth":"oauth2","credential":"stored","name":"codex","protocol":"openai_responses","tools":true},
+    {"auth":"none","credential":"not required","name":"local","protocol":"ollama_chat","tools":true},
+    {"auth":"none","credential":"not required","name":"claude-code","protocol":"claude_code","tools":false},
+    {"auth":"oauth2","credential":"ambient","name":"claude-session-direct","protocol":"anthropic_messages","tools":true},
+    {"auth":"api_key","credential":"missing","name":"anthropic","protocol":"anthropic_messages","tools":true}
 ]}"#;
 
 #[test]
@@ -241,6 +248,7 @@ fn a_row_missing_a_column_degrades_to_empty_not_loginable() {
                 credential: String::new(),
                 effort: false,
                 priority: false,
+                tools: None,
                 device: String::new(),
             },
             ProviderRow {
@@ -250,6 +258,7 @@ fn a_row_missing_a_column_degrades_to_empty_not_loginable() {
                 credential: String::new(),
                 effort: false,
                 priority: false,
+                tools: None,
                 device: String::new(),
             },
         ]

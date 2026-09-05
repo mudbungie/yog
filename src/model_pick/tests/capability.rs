@@ -70,20 +70,19 @@ fn an_unanswerable_table_and_a_capable_row_both_pass() {
     assert!(plan(TEMPLATE_PROVIDERS, &table(&["codex"]), &pick("codex")).is_ok());
 }
 
-/// The caveat is NOT a gate (bl-671d). An `ollama_chat` row answers
-/// [`ProviderRow::context_caveat`] — its request declares no context size — and
-/// the pick is still written, because yog cannot see what the server chose and
-/// no surface may refuse on the strength of a question that went unanswered.
-/// Refusing here would refuse a correctly-raised server; the operator is told
-/// the fact instead, at the seat where the row is picked.
+/// The context is NOT a gate, and since bl-b6c9 it is not a caveat here either
+/// (was bl-671d). An `ollama_chat` row's request carries no context size unless
+/// the row states one, and the pick is written all the same: yog cannot see
+/// what the server chose, and no surface may refuse on the strength of a
+/// question that went unanswered. Refusing here would refuse a correctly-raised
+/// server. The window a turn runs in is a ROW's statement now and rides the
+/// `Usage` event (brazen 0.0.13, §5.1 #35) — nothing about it is read off this
+/// table, so the ONE thing this table decides for a pick is the tool
+/// capability, and this beat pins that.
 #[test]
-fn a_dialect_that_leaves_the_context_to_the_server_is_stated_not_refused() {
+fn a_dialect_that_leaves_the_context_to_the_server_is_not_refused() {
     let rows = rows_on(&["local"], "ollama_chat");
-    assert!(
-        rows[0].context_caveat().is_some(),
-        "the fixture is the dialect that carries the caveat"
-    );
-    assert_eq!(rows[0].tools_blocked(), None, "the tools read is separate");
+    assert_eq!(rows[0].tools_blocked(), None, "the tools read is the gate");
     assert!(plan(TEMPLATE_PROVIDERS, &rows, &pick("local")).is_ok());
 }
 

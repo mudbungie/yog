@@ -3897,18 +3897,25 @@ knows the workspace, and no downstream seat has to be told.*
      So the second way in is keyed on **the dialect the decline names**. brazen's
      habit is to lead with its own `ProtocolId` spelling (*"`claude_code`
      carries no tool declarations…"*), so `dialect_decline` scans the failure's
-     own words for a whole `[a-z0-9_]` token and hands it to the **same match**
-     `ProviderRow::tools_blocked` reads the `protocol` column into — the
-     judgement bl-3d22 landed, not a second table, so the failure's reason and §9.4's
-     provider control cannot disagree about why the row is unusable. The match is
+     own words for a whole `[a-z0-9_]` token and asks the **effective table**
+     for the row that speaks it — the same `tools` column `ProviderRow::tools_blocked`
+     answers a pick from, not a second table, so the failure's reason and §9.4's
+     provider control cannot disagree about why the row is unusable. The scan is
      exact and case-sensitive on brazen's spelling, which is the whole of its
      narrowness: the row NAME `claude-code` carries a hyphen and rides every
      other failure line through that row, and a tool-capable dialect that names
      itself (*"`anthropic_messages` requires max_tokens"*) is not refused. The
      added sentence is the next move — a tool-carrying row, chosen in §9.4's
      picker or authored in the §9.1 editor — and brazen's words stay verbatim
-     above it. When brazen bl-5053 serves the capability column, this route
-     follows `tools_blocked` to it; it holds no dialect fact of its own.
+     above it. **brazen bl-5053 served that column at 0.0.12 and bl-b6c9 followed
+     it**, exactly as this paragraph said it would: the local total match is
+     deleted and both ways in read the column, so the classifier now takes the
+     table beside the text. That is not the join this section forbids — the
+     forbidden one is re-deriving the failing ROW, which brazen already quoted
+     in the sentence; the dialect's tool capability was never in the sentence
+     and is now a published answer rather than a yog-side guess. An empty or
+     column-less table classifies nothing, which keeps the unanswered-question
+     rule intact on the way in.
      `tests/brazen_claude_code_decline.rs` drives the **linked** brazen to earn
      the sentence it keys on, so a rewording upstream reddens rather than
      silently un-classifying the family.
@@ -5824,27 +5831,32 @@ warned, and the warning was the dead end:
   tools"*. A role's own `tools: []` buys no exemption, because the injection is
   not the role's election.
 
-  The capability is therefore judged too, and **from the protocol, never from a
-  row name**: the effective table's `protocol` column carries brazen's own
-  `ProtocolId` spelling, `ProviderRow::tools_blocked` parses it back into that
-  public closed enum through brazen's serde rename and answers over a **total
-  match**, so a new upstream dialect fails to compile until its arm is added, and
-  a spelling this build cannot name is *no answer* rather than a refusal. The
-  picker's provider list shows such a row with its reason and does not offer it,
-  which is how this invariant is kept true rather than weakened; the row is
-  **not** removed from the catalog, because the VISION §4.9 alignment monitor's
-  check is structurally tool-less and pins a model rather than a role.
+  The capability is therefore judged too, and **from the row, never from a row
+  name**: `ProviderRow::tools_blocked` reads brazen's own `tools` column — the
+  dialect's `Protocol::shapes()` answer, proved upstream against that dialect's
+  own `encode` — and refuses a row that answers `false`, naming the protocol it
+  speaks. The picker's provider list shows such a row with its reason and does
+  not offer it, which is how this invariant is kept true rather than weakened;
+  the row is **not** removed from the catalog, because the VISION §4.9 alignment
+  monitor's check is structurally tool-less and pins a model rather than a role.
+  A row whose `tools` key is absent — any `bz` before 0.0.12 — is *no answer*
+  rather than a refusal, which is why the column is read as an `Option<bool>`
+  where the two tuning columns beside it are plain bools: those gate a control,
+  this gates a write.
 
-  brazen projects no capability column of its own — `--list-providers` serves
-  `name`/`protocol`/`auth`/`credential`, and the `Protocol` trait that owns the
-  rejection is crate-private. **The upstream ask is already filed as brazen
-  bl-5053** (per-row capability declines on the read surface, derived from the
-  protocol's own reject arms and never a config field); until it lands, the total
-  match over `ProtocolId` is the closest derivable thing, and it is keyed on
-  brazen's enum rather than on a table of names yog invented. That ball was filed
-  off this same defect seen once before and yog never gated on its own side,
-  which is why it recurred — the local gate is not a stand-in for the column, it
-  is the half yog owns.
+  **It was a total match over `ProtocolId` until bl-b6c9, and the column is
+  strictly better.** brazen projected no capability column when bl-3d22 landed —
+  `--list-providers` served `name`/`protocol`/`auth`/`credential` and the
+  `Protocol` trait that owns the rejection is crate-private — so yog parsed the
+  `protocol` spelling back into brazen's public closed enum and answered over a
+  match, buying a compile error on a new upstream variant. brazen bl-5053 served
+  the column at 0.0.12 and the match is deleted. What the match could never do is
+  what the column does: judge a dialect **this build was never compiled against**.
+  Its compile error also arrived at the wrong moment — a pin bump — on the wrong
+  side, for a fact brazen already knew, and it could not have seen a per-row
+  decline at all. The ROW-not-NAME reasoning survives untouched: `claude-code` is
+  a name, `claude_code` is a protocol, and only the second is a fact about request
+  shape — brazen computes the column off the row for exactly that reason.
 
   **The gate is not the whole remedy, because a config can predate it** (bl-5252).
   This bullet gates the picker; it reaches no assignment written before the
@@ -5853,9 +5865,9 @@ warned, and the warning was the dead end:
   carrying no remedy at all, because the classifier there keyed on litany's
   `Config` wrapper while brazen stamps every dialect decline
   `ErrorKind::ParseInput`. The same `tools_blocked` judgement now answers that
-  failure too, reached from the dialect the decline names rather than from a
-  column (§8.3 rule 6): one match, two ways in, so the failure's reason is the
-  sentence this gate states.
+  failure too, reached from the dialect the decline names rather than from the
+  role's row (§8.3 rule 6): one column, two ways in, so the failure's reason is
+  the sentence this gate states.
 - **`plan` refuses a row brazen lacks** (`PickError::UnknownProvider`), before
   the file is touched. It is the picker's own gate and always was the only one
   that could be: the §9.2 Apply gate judged a different file, since bl-d9cb a
@@ -5874,49 +5886,63 @@ warned, and the warning was the dead end:
   custom entry can produce one; a listed candidate is a string brazen itself
   printed.
 
-**And one thing the same column says that is NOT a refusal** (bl-671d). A
-dialect can be tool-capable and still leave a fact the turn depends on to the
-server. `ollama_chat` is the case: brazen's encoder maps the output cap to
-`options.num_predict` and emitted **no `options.num_ctx` at all**, so the Ollama
-server's own default context governed every yog turn — not the model's capacity,
-and not any `context_window` `models.yaml` then declared (a number that reached
-no request). brazen 0.0.10 (bl-f19d) closed that half: a row's
-`body_defaults = { options = { num_ctx = N } }` now composes with the typed cap
-and reaches the request, so the number in force is the row's — and since
-bl-9c8a the row is also the one seat for the §5.1 #35 denominator, so the two
-can be one fact. A drive through the offered row
-reached local inference and produced nothing usable: 4095 input tokens on the
-platform payload, one generated token, `finish_reason: length`, against a model
-whose own context was 262144.
+**And one thing the same table does NOT say** (bl-671d, retired as a per-row
+caveat by bl-b6c9). A dialect can be tool-capable and still leave a fact the turn
+depends on to the server. `ollama_chat` is the case: brazen's encoder maps the
+output cap to `options.num_predict` and emits **no `options.num_ctx` of its
+own**, so the Ollama server's default context governs a yog turn unless the row
+supplies one — not the model's capacity, and not any `context_window`
+`models.yaml` once declared (a number that reached no request). A drive through
+the offered row reached local inference and produced nothing usable: 4095 input
+tokens on the platform payload, one generated token, `finish_reason: length`,
+against a model whose own context was 262144.
 
-This is **stated, not gated**, and the difference is the whole ruling. yog cannot
+**The remedy is one line, and it lives here rather than on a row.** In the
+workspace's own brazen `config.toml`:
+
+```toml
+[[provider]]
+name = "ollama"
+body_defaults = { options = { num_ctx = 32768 } }
+```
+
+That is the window the turn actually runs in: brazen 0.0.10 (upstream bl-f19d)
+folds a row's `body_defaults` `extra` one namespace deep, so the object composes
+with the typed cap per key instead of being dropped whole beside it — it was
+three lines and a restated `num_predict` before that — and brazen 0.0.13
+(upstream bl-c655) makes a pinned `num_ctx` the FIRST rung of the window it
+stamps on every `Usage` event, so the number in force and §5.1 #35's denominator
+are one number. Where a provider's list serves no limit and the request pins
+none, the same row can state the denominator alone:
+
+```toml
+context_windows = { "<wire-model-id>" = 200000 }
+```
+
+— the ladder's last rung, documented on brazen's own `context_windows` row
+syntax, read at the stamp and never written into the model cache. The two are different facts and both are the
+row's: `num_ctx` sizes the input window a turn gets, `context_windows` declares
+the capacity a turn is measured against.
+
+**Stated, not gated, and since bl-b6c9 not stated per row either.** yog cannot
 see what the server was started with, so a refusal would be a refusal on the
-strength of a question that went unanswered — the same discipline
-`is_unknown_row` applies to an unanswerable table — and it would refuse a
-correctly-raised server. `ProviderRow::context_caveat` is therefore a caveat carried *on* a row that
-stays pickable, with the remedy in the caveat itself, and `plan` does not
-consult it. That is not the dead-end warning this section retired, because it
-carries the operator's next move: the row gets an explicit context in the
-workspace's own brazen `config.toml` — `body_defaults = { options = { num_ctx =
-… } }` — which is config in the file that authors a row, and the operator's
-number rather than a default yog guessed.
-
-**That recipe was three lines until brazen 0.0.10, and the reason it shrank is
-the second half of the defect closing.** The encoder inserted its typed
-`options` first and folded config passthrough with `or_insert`, so a
-`body_defaults` `options` beside a typed `max_tokens` was dropped **whole and
-silently** — the obvious fix did nothing and said nothing — and the recipe had
-to clear the typed cap and restate the output limit inside the object it handed
-over. **The upstream ask was brazen bl-f19d and it landed in 0.0.10** (bl-d58d
-pinned it): the row's `extra` folds one namespace deep, the two keys compose per
-key, and the operator writes the context alone. All three facts — the missing
-`num_ctx`, the composing fold, the longer recipe still landing both limits — are
-asserted against the linked brazen in `tests/brazen_ollama_context.rs`, and it
-is the leg that asserted the DROP which caught the day the fold changed, which
-is what a two-direction pin is for. What is left to settle is the caveat's own
-basis rather than its remedy: brazen 0.0.13 lets a ROW state the window and
-stamps it on the `Usage` event, so "this dialect declares no context size" is
-becoming "this row states no window" (bl-b6c9).
+strength of a question that went unanswered — the discipline `is_unknown_row`
+keeps — and it would refuse a correctly-raised server. `plan` therefore never
+consulted it. What bl-b6c9 removed is the *caveat*: `ProviderRow::context_caveat`
+asserted, over a second total match on `ProtocolId`, that `ollama_chat` "declares
+no context size", and both halves of that stopped being yog's to say. The window
+is a ROW's statement now, and **no column publishes it** — `--list-providers`
+serves the capability and credential columns and nothing about windows — so a
+sentence keyed on the dialect would be exactly the unanswered-question assertion
+this section forbids, wrong for every operator who has already written the line
+above. It also reached no surface: nothing painted it and `ProviderRowView` never
+carried it. So the fact and its remedy live in this section, where they are true
+for every row, and `tests/brazen_ollama_context.rs` keeps measuring the brazen
+behaviour they rest on — a remedy nothing measures outlives its behaviour whether
+it sits in a const or in prose. **The upstream ask, if a per-row surface is ever
+wanted, is a window column on `--list-providers --json`**; until one exists there
+is nothing here to read, and the honest answer at pick time is the recipe rather
+than a badge.
 
 **One gesture, ONE file (bl-d9cb).** A pick writes `providers.yaml` on
 `config/<name>` through the §9.3 path (staged draft + `litany config`, the only
@@ -7237,10 +7263,10 @@ that named one of its files; the rule it taught is not.)
 | `src/config_edit/branch/edit/staging.rs` | §9.3 step 1 and §5.2 step 5, split off `edit.rs` at the §12 pre-split band along that module's own numbered flow: the `<nonce>/` dir a drafted file waits in for litany's `$EDITOR` callback (`DraftFile`, `next_nonce`, `stage_files`) and the startup sweep of the ones a crash left behind (`stale_staging` the clock-injected pure decision, `sweep_staging` the best-effort delete). A scratch-dir lifecycle with no subprocess in it; steps 2–4 are an argv, an environment and a spawn, and the dir is all the two halves share |
 | `src/config_edit/branch/follow.rs` | the §9.4 **follow** derivation and the answer type it produces (bl-e654). The seam is where a fact stops being ancestry: `branch.rs` answers *which `config/*` commit is this agent's fork point*, a pure walk that never moves, and this file answers *which commit does the conversation therefore resolve* — the config heads containing that fork point, reduced to distinct tips, one of them **followed** and two or more **held**. It is a faithful port of litany's `workspace/current_config.rs` exactly as the ancestry query above is of its `workspace.rs::governing_config`, and for the same reason: yog derives the fact itself from git rather than reading it off litany's operator stderr (§9.4). `GoverningConfig`'s `governance`, and the one `label()` wording every seat prints, are here |
 | `src/config_edit/brazen/{mod,effects,paths,providers}.rs` | the §9.1 editor (staged validation, hash guard); `paths` the wall's `BrazenPaths` layout and the two reads that need nothing but it — `credential_presence` and `model_cache_at`, which the §8.3 Login surface, the boundary's `Providers` reply and the §9.4 pick all ask holding no draft — cut off `mod.rs` at the §12 pre-split band on the seam its own prose already drew (*"free of the editor"*); the real BzRunner; the provider-row projection (§8.3) — the consumed columns (four strings, plus the two **tuning capability** booleans brazen 0.0.7 publishes, bl-23bd/upstream bl-50a5), `auth` → `login_blocked` (§8.3), and the derived row every answer carries. Those two ride that *row* rather than a query of their own for bl-7407's reason: a second answer about the same rows is a join the seat would have to make, and a capability is a fact about a row exactly as its credential model is. They are read as columns and not re-derived from a match on `ProtocolId` — which is the migration `providers/capability.rs` was filed waiting for, and better than the match could ever have been, since brazen folds the dialect's declaration together with that row's own `unsupported_body_keys` decline and only the row can see the second |
-| `src/config_edit/brazen/providers/capability.rs` | what the `protocol` column says about a yog turn (§9.4), split off `providers.rs` at the §12 pre-split band along the seam it already had: the parent owns the columns, this owns the dialect judgement over one of them. Two reads, both a total match over brazen's own public `ProtocolId` so a new upstream dialect fails to compile rather than being guessed at — `tools_blocked` (bl-3d22), which `plan` refuses on, and `context_caveat` (bl-671d), which nothing refuses on: a dialect that leaves the context size to the server is stated beside a selectable row, with `CONTEXT_REMEDY` as the operator's next move, because yog cannot see what the server chose. `dialect_decline` (bl-5252) is a third **way in** and not a third read: a dead step's own words scanned for the protocol spelling brazen's declines lead with, handed to the same `tools_blocked` match, so §7.3's banner and §9.4's control share one judgement |
+| `src/config_edit/brazen/providers/capability.rs` | what a row's tool capability says about a yog turn (§9.4), split off `providers.rs` at the §12 pre-split band along the seam it already had: the parent owns the columns, this owns the judgement over one of them. **One read since bl-b6c9** — `tools_blocked` (bl-3d22), which `plan` refuses on — and it is brazen's `tools` column rather than a total match over `ProtocolId`, so a dialect this build was never compiled against is judged by the crate that owns the encoder and an absent column answers nothing. `dialect_decline` (bl-5252) is a second **way in** and not a second read: a dead step's own words scanned for the protocol spelling brazen's declines lead with, answered by the row in the table that speaks it, so §7.3's banner and §9.4's control share one judgement worded once. Two things left with bl-b6c9 — the `ProtocolId` match, and `context_caveat`/`CONTEXT_REMEDY` (bl-671d), whose fact became a ROW's statement that no column publishes; §9.4 states the recipe instead |
 | `src/config_edit/draft.rs` | the ONE staged-edit `Draft` both §9.1/§9.2 editors are built from — dirty tracking, revert, the hash guard |
 | `src/config_edit/effects.rs` | the production `FileIo` — the thin `std::fs` shell behind every editor's pure view-model, covered against a real tempdir with no fakes |
-| `src/config_edit/fault.rs` | **where a config-kind failure is fixed** (§9.1, bl-dd7f): the narrow classifier over a failure's own words — litany's `provider error (config)` wrapper and brazen's `unknown provider` — the row it quotes, read out of the sentence rather than joined from the tree, and the one line the §7.3 banner pairs with a route to the §9.1 editor. §8.3 rule 5's sibling on the other kind of fault, and it re-words nothing: brazen's and litany's sentences stay verbatim above it. **Two ways in since bl-5252**, because brazen's dialect declines carry no config-kind word at all: a marker hit, or the request-shape family reached through `brazen::dialect_decline` — the same `tools_blocked` judgement §9.4's picker refuses on, so no dialect fact is written down here |
+| `src/config_edit/fault.rs` | **where a config-kind failure is fixed** (§9.1, bl-dd7f): the narrow classifier over a failure's own words — litany's `provider error (config)` wrapper and brazen's `unknown provider` — the row it quotes, read out of the sentence rather than joined from the tree, and the one line the §7.3 banner pairs with a route to the §9.1 editor. §8.3 rule 5's sibling on the other kind of fault, and it re-words nothing: brazen's and litany's sentences stay verbatim above it. **Two ways in since bl-5252**, because brazen's dialect declines carry no config-kind word at all: a marker hit, or the request-shape family reached through `brazen::dialect_decline` — the same `tools_blocked` judgement §9.4's picker refuses on, so no dialect fact is written down here. Since bl-b6c9 that judgement is brazen's own `tools` column, so `looks_config`/`config_remedy` take the effective table beside the text; the no-join rule is about the failing ROW (brazen quoted it, so re-deriving it could only disagree) and is untouched — an empty or column-less table simply classifies nothing |
 | `src/config_edit/form{,/schema}.rs` | §9.5's typed settings: a setting read out of a file's bytes and written back through the §9.4 grammar, with the shared provider judgement; and the enumeration itself — which settings exist, and what kind each is. **The read half is answered** since bl-dc3f (`Query::ReadConfig`'s `settings`, spelled by `boundary/reply/config_view`), which is why a `Row` owns its strings rather than borrowing the `FieldSpec`'s: it is read back off a wire as well as built from the tables, and the `Group` that used to wrap the rows per entry is gone — a grouping is the row's own `entry` read twice. `write` still has no production caller, `ApplyConfig` carrying whole text by §9.5's own ruling; it is kept as the one home of how a typed setting is spelled back, and it takes the schema's `FieldSpec` rather than a `Row`, because the field being written must come from the enumeration and not from bytes a peer handed over |
 | `src/config_edit/litany_global/mod.rs` | the §9.2 editors — the shared pipeline and nothing else since bl-3ffa retired the provider gate over `models.<id>.provider`, a field whose only reader was the refusal; and the `models.yaml` name, beside its path, since bl-9c8a left the grammar nothing to spell it for |
 | `src/config_edit/pipeline.rs` | the write pipeline every §9 editor shares: the one home for how a draft reaches disk without a torn write or a silent last-writer-wins over a concurrent edit |

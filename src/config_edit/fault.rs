@@ -52,11 +52,13 @@
 /// `config` is **excluded** — it appears in every path yog prints.
 const CONFIG_MARKERS: &[&str] = &["provider error (config)", "unknown provider"];
 
+use crate::config_edit::brazen::ProviderRow;
+
 /// Does `text` look config-shaped? Either a [`CONFIG_MARKERS`] hit or a
 /// **request-shape decline** ([`dialect_remedy`]) — two ways in, because brazen
 /// spells the second one with no config-kind word in it at all.
-pub fn looks_config(text: &str) -> bool {
-    marker_hit(text) || dialect_remedy(text).is_some()
+pub fn looks_config(text: &str, rows: &[ProviderRow]) -> bool {
+    marker_hit(text) || dialect_remedy(text, rows).is_some()
 }
 
 /// A [`CONFIG_MARKERS`] hit. Pure, case-insensitive substring match — the same
@@ -75,14 +77,23 @@ fn marker_hit(text: &str) -> bool {
 /// them `provider error (ParseInput) …` and the words above match nothing —
 /// while the only remedy there IS a config file. The judgement is not
 /// re-derived here either: `dialect_decline` reads the dialect out of the
-/// failure's own words and answers with the sentence
-/// [`tools_blocked`](crate::config_edit::brazen::ProviderRow::tools_blocked)
-/// already gives the picker, so the banner and the picker cannot disagree about
+/// failure's own words and answers off brazen's own `tools` column, the same
+/// one [`tools_blocked`](crate::config_edit::brazen::ProviderRow::tools_blocked)
+/// gives the picker, so the banner and the picker cannot disagree about
 /// why the row is unusable. What this adds is the operator's next move, and the
 /// route is the same one an `unknown provider` gets: the §9.1 editor authors a
 /// row, §9.4's picker chooses between them.
-fn dialect_remedy(text: &str) -> Option<String> {
-    let why = crate::config_edit::brazen::dialect_decline(text)?;
+///
+/// **`rows` is the judgement arriving, not the tree being joined** (bl-b6c9).
+/// The no-join rule this module keeps is about the failing ROW — the name is
+/// read out of the sentence because brazen already quoted it, and a second
+/// derivation could only disagree. The dialect's tool capability was never in
+/// the sentence: it was a total match here until brazen published it as a
+/// column, and reading a published answer is the opposite of re-deriving one.
+/// An empty table answers nothing and classifies nothing, which is the same
+/// rule [`plan`](crate::model_pick::plan) keeps.
+fn dialect_remedy(text: &str, rows: &[ProviderRow]) -> Option<String> {
+    let why = crate::config_edit::brazen::dialect_decline(text, rows)?;
     Some(format!(
         "{why} — the fix is the row and not a retry: give this role a \
          tool-carrying row in the model picker, or author one in brazen's config.toml"
@@ -98,8 +109,8 @@ fn dialect_remedy(text: &str) -> Option<String> {
 /// tree: brazen quotes the name it could not resolve, so the fact is already
 /// in the sentence being classified, and a second derivation could only
 /// disagree with it.
-pub fn config_remedy(text: &str) -> Option<String> {
-    if let Some(remedy) = dialect_remedy(text) {
+pub fn config_remedy(text: &str, rows: &[ProviderRow]) -> Option<String> {
+    if let Some(remedy) = dialect_remedy(text, rows) {
         return Some(remedy);
     }
     marker_hit(text).then(|| match failing_row(text) {

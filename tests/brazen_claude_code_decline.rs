@@ -14,6 +14,13 @@
 //! could not see it; yog routes it anyway; and the same turn through a
 //! tool-carrying row reaches the wire, so what is being classified is the
 //! **dialect** and never the request.
+//!
+//! **Both halves are the linked brazen's since bl-b6c9.** The sentence comes
+//! from its encoder, and the JUDGEMENT that the sentence names a tool-less
+//! dialect now comes from its `--list-providers --json` `tools` column
+//! (upstream bl-5053) rather than from a match yog kept — so [`rows`] runs the
+//! same crate's listing route in the same process, and this file is end to end
+//! through one brazen with nothing about dialects written down in yog.
 
 #![allow(clippy::unwrap_used)]
 
@@ -89,6 +96,35 @@ const TURN: &[u8] = br#"{"model":"sonnet","system":[{"type":"text","text":"you a
     "tools":[{"name":"clients","description":"the machines that can run work",
               "input_schema":{"type":"object","properties":{}}}]}"#;
 
+/// The linked brazen's own effective table, projected as yog consumes it —
+/// `bz --list-providers --json` through the same in-process route
+/// `config_edit::brazen::effects` spawns, over the shipped default rows. This
+/// is the answer `config_remedy` judges with, so the column and the decline
+/// below come from one crate at one version.
+fn rows() -> Vec<yog::config_edit::brazen::ProviderRow> {
+    let args = brazen::Args {
+        argv: vec!["--list-providers".to_owned(), "--json".to_owned()],
+        env: brazen::EnvSnapshot(std::collections::BTreeMap::new()),
+        tty: false,
+        stdout_tty: false,
+    };
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let mut io = brazen::ProvidersIo {
+        stdout: &mut stdout,
+        stderr: &mut stderr,
+        store: &NoStore,
+    };
+    assert_eq!(brazen::list_providers(&args, &mut io), 0);
+    let listing = String::from_utf8(stdout).unwrap();
+    let rows = yog::config_edit::brazen::provider_rows(&listing);
+    assert!(
+        rows.iter().any(|r| r.protocol == "claude_code"),
+        "the shipped table lost its exec row: {listing}"
+    );
+    rows
+}
+
 /// Run one `bz --provider <row>` turn against brazen's shipped defaults and
 /// return what it said and whether the request ever reached the wire. brazen
 /// writes an in-band error's message to stderr, one line.
@@ -151,10 +187,17 @@ fn the_dialect_declines_at_encode_and_never_calls_it_a_config_fault() {
 fn yog_routes_brazens_own_decline_to_the_config_editor() {
     let (said, _) = turn("claude-code");
     let line = format!("provider error (ParseInput) on provider row \"claude-code\": {said}");
-    let remedy = yog::config_edit::fault::config_remedy(&line)
+    let remedy = yog::config_edit::fault::config_remedy(&line, &rows())
         .expect("a dialect decline has a way out of the banner");
     assert!(remedy.contains("declares no tools"), "{remedy}");
     assert!(remedy.contains("config.toml"), "{remedy}");
+    // The judgement is the column's, so an empty table classifies nothing —
+    // a listing yog could not read must not become a refusal.
+    assert_eq!(
+        yog::config_edit::fault::config_remedy(&line, &[]),
+        None,
+        "an unanswered table refused a step"
+    );
 }
 
 /// Leg three — the control, and the reason the sentence blames the dialect. The
@@ -171,7 +214,7 @@ fn the_same_turn_reaches_the_wire_on_a_tool_carrying_row() {
     );
     let line = format!("provider error (Transport) on provider row \"ollama\": {said}");
     assert_eq!(
-        yog::config_edit::fault::config_remedy(&line),
+        yog::config_edit::fault::config_remedy(&line, &rows()),
         None,
         "{said}"
     );

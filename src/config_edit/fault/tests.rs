@@ -1,6 +1,28 @@
 //! The config-kind classifier and its sentence (bl-dd7f).
 
-use super::{config_remedy, failing_row, looks_config};
+use super::{ProviderRow, config_remedy, failing_row, looks_config};
+
+/// The table the judgement is read out of (bl-b6c9): brazen's own `tools`
+/// column, in the shape `provider_rows` projects a `--list-providers --json`
+/// row into. Two rows and no more — the tool-less exec dialect and one that
+/// carries them — because what is under test here is the classifier, not the
+/// table, and `tests/brazen_claude_code_decline.rs` runs the linked brazen's
+/// real listing against the same code.
+fn rows() -> Vec<ProviderRow> {
+    ["claude_code", "anthropic_messages"]
+        .iter()
+        .map(|protocol| ProviderRow {
+            name: String::new(),
+            protocol: (*protocol).to_owned(),
+            auth: "none".to_owned(),
+            credential: "not required".to_owned(),
+            effort: true,
+            priority: false,
+            tools: Some(*protocol != "claude_code"),
+            device: String::new(),
+        })
+        .collect()
+}
 
 /// brazen's four `claude_code` declines, verbatim from the pinned encoder's own
 /// `reject` sites, inside litany's `AdapterError` wrapper — the text the §7.3
@@ -25,8 +47,8 @@ const DECLINES: &[&str] = &[
 #[test]
 fn every_request_shape_decline_earns_the_config_route() {
     for line in DECLINES {
-        assert!(looks_config(line), "{line}");
-        let remedy = config_remedy(line).expect("a dialect decline has a way out");
+        assert!(looks_config(line, &rows()), "{line}");
+        let remedy = config_remedy(line, &rows()).expect("a dialect decline has a way out");
         assert!(remedy.contains("claude_code declares no tools"), "{remedy}");
         assert!(remedy.contains("config.toml"), "{remedy}");
         assert!(remedy.contains("model picker"), "{remedy}");
@@ -38,17 +60,10 @@ fn every_request_shape_decline_earns_the_config_route() {
 /// why the row is unusable.
 #[test]
 fn the_reason_is_the_pickers_own_sentence() {
-    let row = crate::config_edit::brazen::ProviderRow {
-        name: "claude-code".to_owned(),
-        protocol: "claude_code".to_owned(),
-        auth: "none".to_owned(),
-        credential: "not required".to_owned(),
-        effort: true,
-        priority: false,
-        device: String::new(),
-    };
-    let why = row.tools_blocked().expect("the dialect declines tools");
-    let remedy = config_remedy(DECLINES[0]).expect("classified");
+    let why = rows()[0]
+        .tools_blocked()
+        .expect("the dialect declines tools");
+    let remedy = config_remedy(DECLINES[0], &rows()).expect("classified");
     assert!(remedy.starts_with(&why), "{remedy}");
 }
 
@@ -68,8 +83,8 @@ fn no_unrelated_failure_on_that_row_is_claimed() {
         "provider error (ParseInput) on provider row \"anthropic\": anthropic_messages \
          requires max_tokens",
     ] {
-        assert!(!looks_config(other), "{other}");
-        assert_eq!(config_remedy(other), None, "{other}");
+        assert!(!looks_config(other, &rows()), "{other}");
+        assert_eq!(config_remedy(other, &rows()), None, "{other}");
     }
 }
 
@@ -78,9 +93,9 @@ fn no_unrelated_failure_on_that_row_is_claimed() {
 #[test]
 fn the_failing_dispatch_of_bl_9b52_earns_a_remedy_that_names_its_row() {
     let line = "litany prompt: provider error (Config): unknown provider `openai-chatgpt`";
-    assert!(looks_config(line));
+    assert!(looks_config(line, &rows()));
     assert_eq!(failing_row(line).as_deref(), Some("openai-chatgpt"));
-    let remedy = config_remedy(line).expect("a config fault has a way out");
+    let remedy = config_remedy(line, &rows()).expect("a config fault has a way out");
     assert!(remedy.contains("openai-chatgpt"), "{remedy}");
     assert!(remedy.contains("config.toml"), "{remedy}");
 }
@@ -91,7 +106,7 @@ fn the_failing_dispatch_of_bl_9b52_earns_a_remedy_that_names_its_row() {
 fn the_row_is_read_from_litanys_own_wrapper_as_well() {
     let line = "provider error (Config) on provider row \"codex\": no such row";
     assert_eq!(failing_row(line).as_deref(), Some("codex"));
-    assert!(config_remedy(line).is_some_and(|r| r.contains("codex")));
+    assert!(config_remedy(line, &rows()).is_some_and(|r| r.contains("codex")));
 }
 
 /// A config fault that names no row still earns the remedy — the file is the
@@ -100,7 +115,7 @@ fn the_row_is_read_from_litanys_own_wrapper_as_well() {
 fn a_config_fault_with_no_row_still_names_the_file() {
     let line = "litany prompt: provider error (config): the table could not be read";
     assert_eq!(failing_row(line), None);
-    let remedy = config_remedy(line).expect("still config-shaped");
+    let remedy = config_remedy(line, &rows()).expect("still config-shaped");
     assert!(remedy.contains("config.toml"), "{remedy}");
     assert!(!remedy.contains("named"), "no row to name: {remedy}");
 }
@@ -116,8 +131,8 @@ fn no_other_failure_class_is_claimed() {
         "reading config from /home/u/.config/brazen/config.toml",
         "",
     ] {
-        assert!(!looks_config(other), "{other}");
-        assert_eq!(config_remedy(other), None, "{other}");
+        assert!(!looks_config(other, &rows()), "{other}");
+        assert_eq!(config_remedy(other, &rows()), None, "{other}");
     }
 }
 
@@ -127,9 +142,9 @@ fn no_other_failure_class_is_claimed() {
 #[test]
 fn an_unclosed_quote_names_nothing() {
     let line = "unknown provider `openai-chatgpt";
-    assert!(looks_config(line));
+    assert!(looks_config(line, &rows()));
     assert_eq!(failing_row(line), None);
-    let remedy = config_remedy(line).expect("still config-shaped");
+    let remedy = config_remedy(line, &rows()).expect("still config-shaped");
     assert!(!remedy.contains("openai-chatgpt"), "{remedy}");
 }
 
@@ -137,4 +152,18 @@ fn an_unclosed_quote_names_nothing() {
 #[test]
 fn an_empty_quote_names_nothing() {
     assert_eq!(failing_row("unknown provider ``"), None);
+}
+
+/// An unanswered table classifies nothing (bl-b6c9). The dialect route is the
+/// column's answer arriving, so a listing yog could not read — an empty table,
+/// a `bz` older than the column — must leave the decline unclassified rather
+/// than refuse a step on a question nobody answered. The marker way in is
+/// untouched by it: a config-shaped failure is config-shaped whatever the table
+/// says.
+#[test]
+fn an_unanswered_table_classifies_no_dialect_decline() {
+    assert!(!looks_config(DECLINES[0], &[]));
+    assert_eq!(config_remedy(DECLINES[0], &[]), None);
+    let marker = "litany prompt: provider error (Config): unknown provider `openai-chatgpt`";
+    assert!(looks_config(marker, &[]), "the marker way in is table-free");
 }

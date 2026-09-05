@@ -1,8 +1,13 @@
 //! What the LINKED brazen actually puts on the wire for an Ollama row (bl-671d)
-//! — the evidence behind
-//! [`ProviderRow::context_caveat`](yog::config_edit::brazen::ProviderRow::context_caveat)
-//! and its [`CONTEXT_REMEDY`](yog::config_edit::brazen::CONTEXT_REMEDY), and the
-//! thing that fails the day either stops being true.
+//! — the evidence behind DESIGN §9.4's context remedy, and the thing that fails
+//! the day it stops being true.
+//!
+//! It answered for a per-row caveat and its remedy string until bl-b6c9 retired
+//! both: the window a turn runs in is a ROW's statement since brazen 0.0.13 and
+//! no column publishes it, so yog states the recipe in §9.4 where it is true
+//! for every row instead of beside one dialect. The measurement did not move —
+//! a remedy nothing measures outlives the behaviour it rests on, whether it
+//! lives in a const or in prose.
 //!
 //! A drive through the offered Ollama provider reached local inference and could
 //! not produce one useful agent turn: 4095 input tokens, one generated token, and
