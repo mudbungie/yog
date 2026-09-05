@@ -96,8 +96,29 @@ balls = "=0.5.11"
 # else: litany 0.0.8 links `brazen =0.0.9` to read the model's context window
 # off the `Usage` event (upstream litany bl-a537), and the lockfile is the check
 # that exactly ONE brazen resolves — so the two pins stepped together, as they
-# always do (bl-fe43).
-brazen = { version = "=0.0.9", features = ["native-host"] }
+# always do (bl-fe43). 0.0.10 seals **`input_total_tokens`** on every `Usage`
+# event (upstream bl-d192) — the whole prompt with the cached slices included,
+# resolved by the decoder that knows which dialect answered, so a consumer stops
+# guessing at the overlap; and folds a row's `body_defaults` `extra` one
+# namespace deep (upstream bl-f19d), which is what lets an `ollama` row's
+# `options.num_ctx` reach the wire beside the typed cap instead of being dropped
+# by it. 0.0.11 and 0.0.14 are brazen's own repository infrastructure (an
+# auto-merge job for its release PR; a packaging `include` allowlist) and change
+# nothing yog links. 0.0.12 publishes the per-row **shape capability** (upstream
+# bl-5053): `Protocol::shapes()` answers `tools` and `multi_turn` per dialect,
+# proved against each dialect's own `encode`, and `bz --list-providers` gains a
+# `shapes` column with `tools`/`multi_turn` booleans on the `--json` row — the
+# second migration `config_edit::brazen::providers::capability` has been waiting
+# on since bl-3d22, and yog's own bl-b6c9 is where it lands. 0.0.13 makes the
+# context window on the `Usage` event a **three-rung ladder** (upstream bl-c655):
+# what the request body pins (`options.num_ctx`), else what the provider's list
+# served, else what the `[[provider]]` row DECLARES in a `context_windows =
+# { "<wire-model-id>" = <limit> }` table — so the number a turn runs in can be
+# stated for any row without waiting on a provider's models list, and the caveat
+# `capability::context_caveat` states becomes a row-statement read rather than a
+# dialect arm (bl-b6c9 again). yog's transcript `Usage` is a `BTreeMap` of every
+# integer counter verbatim, so both new numbers ride the codec with no edit.
+brazen = { version = "=0.0.14", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -233,6 +254,14 @@ clap = { version = "4", features = ["derive"] }
 # 0.0.7 is the parity move and nothing else: litany's own `brazen = "="` is the
 # gate on this one, so the two pins step together to 0.0.8 or neither does
 # (bl-7c9f, upstream litany bl-8daa).
+# 0.0.9 is the parity move and a re-read, in that order (upstream bl-a825,
+# bl-d21b). litany's own brazen pin walks to `=0.0.14`, which is what makes the
+# lockfile's one-brazen check hold at this pin. Riding with it: the compaction
+# survey that refused `window_percent` as the shipped default (upstream bl-4c64)
+# is re-read against brazen 0.0.13's declared window and STILL refuses it — both
+# new rungs of the ladder are authored configuration and brazen ships no row
+# declaring one, so the shipped template keeps `every_n_commits: 20` and the
+# variant stays a two-line opt-in. Nothing litany exposes to yog moved.
 # 0.0.8 moves the tool pool under yog's router (bl-fe43, bl-81cc). Two built-ins
 # arrive — `python`, one round trip that runs a model-authored program which
 # composes the agent's own tools through `litany invoke`, and `search_history`,
@@ -247,7 +276,7 @@ clap = { version = "4", features = ["derive"] }
 # gains the `invoke` verb (upstream bl-bae9), which the W11 arm answers by
 # construction — it builds one `Fx` for every verb, so the injection is
 # installed there exactly as for `advance` and `tool`.
-litany = "=0.0.8"
+litany = "=0.0.9"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

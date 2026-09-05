@@ -63,9 +63,12 @@
 //! and emits no `options.num_ctx` at all — `tests/brazen_ollama_context.rs`
 //! drives the linked brazen and asserts that body, so the sentence below is
 //! true because a test says so and fails the day brazen changes it. **The
-//! upstream ask is brazen bl-f19d** (a first-class context declaration, or a
-//! config passthrough that composes with the typed `options` instead of being
-//! dropped by it); when it lands, this read and [`CONTEXT_REMEDY`] go together.
+//! upstream ask was brazen bl-f19d and it landed in 0.0.10**: a row's
+//! `body_defaults` `extra` folds one namespace deep, so [`CONTEXT_REMEDY`] is
+//! one line rather than three. The dialect arm itself is what bl-b6c9 rewrites
+//! — since brazen 0.0.13 a ROW can state the window and brazen stamps it on the
+//! `Usage` event, so the honest caveat is a row-statement read, not a dialect
+//! judgement.
 
 use super::ProviderRow;
 
@@ -74,18 +77,19 @@ use super::ProviderRow;
 /// [`ProviderRow::context_caveat`], because the fact fits a line and the recipe
 /// does not.
 ///
-/// Both halves are load-bearing and both were measured against the linked
-/// brazen (`tests/brazen_ollama_context.rs`). Clearing the typed cap is what
-/// lets a nested `options` object through: `encode` inserts the typed `options`
-/// FIRST and folds config passthrough with `or_insert`, so a `body_defaults`
-/// `options` beside a typed `max_tokens` is dropped **whole and silently** —
-/// which is why the recipe restates the output cap inside the object it hands
-/// over.
+/// **One line since brazen 0.0.10** (upstream bl-f19d), and it was three before.
+/// The recipe used to clear the typed cap and restate it inside the object,
+/// because `encode` inserted the typed `options` FIRST and folded config
+/// passthrough with `or_insert`, dropping a `body_defaults` `options` beside a
+/// typed `max_tokens` **whole and silently**. The `extra` fold now goes one
+/// namespace deep, so the two keys compose per key and the operator writes the
+/// context alone. Measured against the linked brazen either way —
+/// `tests/brazen_ollama_context.rs` leg two asserted the drop and now asserts
+/// the composition, so this sentence fails the day the fold changes again.
 pub const CONTEXT_REMEDY: &str = "give the row an explicit context in this workspace's brazen \
-     config.toml: `unsupported_body_keys = [\"max_tokens\"]` together with \
-     `body_defaults = { options = { num_ctx = <your context>, num_predict = <your output cap> } }`. \
-     Restate the output cap inside that object — clearing the typed one is what lets the object \
-     reach the wire, and a nested `options` beside a typed cap is dropped whole and silently.";
+     config.toml: `body_defaults = { options = { num_ctx = <your context> } }`. It composes with \
+     the output cap the request already carries — the two are distinct fields, `num_ctx` sizing \
+     the input window and `num_predict` capping the output.";
 
 impl ProviderRow {
     /// Why this row can carry no litany **role**, or `None` when it can

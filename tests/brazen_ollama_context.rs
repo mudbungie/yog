@@ -13,8 +13,10 @@
 //! governs every yog turn, and a turn's tool payload alone can fill a small one.
 //!
 //! Three legs, because a caveat that only states the defect leaves the operator
-//! nowhere: the plain turn carries no context size; the obvious config fix is
-//! **silently dropped**; and the recipe the caveat hands over does land. Each is
+//! nowhere: the plain turn carries no context size; the one-line config fix
+//! **lands** (it did not, before brazen 0.0.10 folded the row's `extra` one
+//! namespace deep — bl-f19d, and leg two is what caught the day it changed);
+//! and the longer recipe, which clears the typed cap, lands too. Each is
 //! asserted against yog's own linked brazen — no network, no Ollama, and no
 //! second copy of brazen's behaviour written down in prose.
 //!
@@ -163,23 +165,29 @@ fn a_yog_turn_reaches_ollama_with_no_context_size() {
     assert_eq!(body["tools"][0]["function"]["name"], "clients", "{body}");
 }
 
-/// Leg two — why the obvious fix is not the fix. A nested `options` in the row's
-/// `body_defaults` is dropped **whole and silently**: the encoder inserts the
-/// typed `options` (holding `num_predict`) first and folds config passthrough
-/// with `or_insert`, so the operator's context never reaches the wire and
-/// nothing says so. This is the half of the defect a reader would otherwise
-/// have to rediscover.
+/// Leg two — the obvious fix IS the fix, since brazen 0.0.10. A nested
+/// `options` in the row's `body_defaults` used to be dropped **whole and
+/// silently**, because the encoder inserted the typed `options` (holding
+/// `num_predict`) first and folded config passthrough with `or_insert`; that is
+/// why [`CONTEXT_REMEDY`] once told the operator to clear the typed cap and
+/// restate it inside the object. brazen bl-f19d folds the `extra` one namespace
+/// deep instead, so the two keys compose per key and the operator writes one
+/// line. This leg is what fails the day that stops being true — the same
+/// two-direction discipline it had when it proved the drop.
 #[test]
-fn a_nested_options_default_is_dropped_beside_the_typed_cap() {
+fn a_nested_options_default_composes_with_the_typed_cap() {
     let body = wire_body(
         "[[provider]]\nname = \"ollama\"\n\
          body_defaults = { options = { num_ctx = 32768 } }\n",
     );
-    assert_eq!(body["options"]["num_predict"], 4096, "{body}");
-    assert!(
-        body["options"].get("num_ctx").is_none(),
-        "the passthrough valve now composes with the typed options — the remedy's \
-         second half is obsolete: {body}"
+    assert_eq!(
+        body["options"]["num_ctx"], 32768,
+        "the passthrough valve no longer composes with the typed options — the \
+         one-line remedy is wrong again: {body}"
+    );
+    assert_eq!(
+        body["options"]["num_predict"], 4096,
+        "the typed cap survives the fold beside it: {body}"
     );
 }
 

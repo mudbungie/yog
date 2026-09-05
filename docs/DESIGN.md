@@ -5897,23 +5897,26 @@ correctly-raised server. `ProviderRow::context_caveat` is therefore a caveat car
 stays pickable, with the remedy in the caveat itself, and `plan` does not
 consult it. That is not the dead-end warning this section retired, because it
 carries the operator's next move: the row gets an explicit context in the
-workspace's own brazen `config.toml` — `unsupported_body_keys = ["max_tokens"]`
-plus `body_defaults = { options = { num_ctx = …, num_predict = … } }` — which is
-config in the file that authors a row, and the operator's number rather than a
-default yog guessed.
+workspace's own brazen `config.toml` — `body_defaults = { options = { num_ctx =
+… } }` — which is config in the file that authors a row, and the operator's
+number rather than a default yog guessed.
 
-**Both halves of that recipe are load-bearing, and the reason is the second half
-of the defect.** The encoder inserts its typed `options` first and folds config
-passthrough with `or_insert`, so a `body_defaults` `options` beside a typed
-`max_tokens` is dropped **whole and silently** — the obvious fix does nothing and
-says nothing. Clearing the typed cap is what opens the valve, which is why the
-cap is restated inside the object handed over. All three facts — the missing
-`num_ctx`, the silent drop, the recipe landing both limits — are asserted against
-the linked brazen in `tests/brazen_ollama_context.rs`, so the caveat is true
-because a test says so and dies the day brazen changes. **The upstream ask is
-brazen bl-f19d** (a first-class context declaration, or a passthrough that
-composes with the typed `options`); when it lands, the caveat and the remedy are
-deleted together.
+**That recipe was three lines until brazen 0.0.10, and the reason it shrank is
+the second half of the defect closing.** The encoder inserted its typed
+`options` first and folded config passthrough with `or_insert`, so a
+`body_defaults` `options` beside a typed `max_tokens` was dropped **whole and
+silently** — the obvious fix did nothing and said nothing — and the recipe had
+to clear the typed cap and restate the output limit inside the object it handed
+over. **The upstream ask was brazen bl-f19d and it landed in 0.0.10** (bl-d58d
+pinned it): the row's `extra` folds one namespace deep, the two keys compose per
+key, and the operator writes the context alone. All three facts — the missing
+`num_ctx`, the composing fold, the longer recipe still landing both limits — are
+asserted against the linked brazen in `tests/brazen_ollama_context.rs`, and it
+is the leg that asserted the DROP which caught the day the fold changed, which
+is what a two-direction pin is for. What is left to settle is the caveat's own
+basis rather than its remedy: brazen 0.0.13 lets a ROW state the window and
+stamps it on the `Usage` event, so "this dialect declares no context size" is
+becoming "this row states no window" (bl-b6c9).
 
 **One gesture, ONE file (bl-d9cb).** A pick writes `providers.yaml` on
 `config/<name>` through the §9.3 path (staged draft + `litany config`, the only
@@ -7347,7 +7350,7 @@ that named one of its files; the rule it taught is not.)
 | `src/world/wall.rs` | the per-workspace wall (§16.2, §3.1): the `YOG_WALL` layer, its layout and its read lens |
 | `src/xdg/{mod,substrate}.rs` | env folds: yog roots, the wall (§16.2), percent-decode, and — in `substrate`, split at the cap on the seam between yog's own roots and where another tool keeps its things — the balls layout (delegated to `balls::layout::Xdg`, over the §16.3 space's two home directories) and the litany roots behind `LITANY_HOME`. brazen's ambient per-OS fold was deleted with the sharing it served |
 | `tests/brazen_claude_code_decline.rs` | the dialect-decline pin (bl-5252, §8.3 rule 6): drives the LINKED brazen with the request a yog turn is — one user message and the unconditional `clients` tool — and takes the sentence its `claude_code` encoder declines with, before any transport. Three legs: the decline names no config fault (so litany's `Config` wrapper cannot carry it, which is why the marker table missed the family); yog's classifier routes it, wrapped exactly as litany's `AdapterError` words it, to §9.1's destination; and the same turn through a tool-carrying row reaches the wire, so what is classified is the dialect and never the request. A classifier keyed on another crate's words that nothing measures outlives the words |
-| `tests/brazen_ollama_context.rs` | the Ollama context pin (bl-671d, §9.4): drives the LINKED brazen with a capturing `Transport` — no network, no server — and asserts the three facts the §9.4 caveat and its remedy rest on. A yog turn reaches an `ollama_chat` row with the output cap and **no** `options.num_ctx`, so the server's own default governs; a row's `body_defaults` `options` beside that typed cap is dropped whole and silently; and clearing the typed cap lets an explicit `num_ctx`/`num_predict` pair through. A caveat about upstream behaviour that nothing measures outlives the behaviour, so this fails the day brazen bl-f19d lands and names what to delete |
+| `tests/brazen_ollama_context.rs` | the Ollama context pin (bl-671d, §9.4): drives the LINKED brazen with a capturing `Transport` — no network, no server — and asserts the three facts the §9.4 caveat and its remedy rest on. A yog turn reaches an `ollama_chat` row with the output cap and **no** `options.num_ctx`, so the server's own default governs; a row's `body_defaults` `options` beside that typed cap **composes** with it per key; and clearing the typed cap lets an explicit `num_ctx`/`num_predict` pair through. A caveat about upstream behaviour that nothing measures outlives the behaviour — and this is the file that proved it: leg two asserted the silent DROP until brazen bl-f19d landed at 0.0.10, where it went red at the pin bump (bl-d58d) and named the remedy sentence to shorten |
 | `tests/design_citations.rs` | the citation guard: every cited `§N`/`§N.M` resolves to a DESIGN heading (the header's retirement doctrine, machine-checked); its `strings` half is the other direction (bl-cdd2) — a `§` belongs in a comment and never in a string the operator reads — split off at the cap on that seam, carrying the scanner only it uses |
 | `tests/design_module_map.rs` | the module-map guard (bl-9f72, widened by bl-273c to every rule §12 states about itself): both path directions, the sort, the no-test-module rule, the two-cell row shape and single-entry — brace lists expanded, test corpora excluded from the file sweep per the rule above. The guard is the mechanism; the prose rule alone had already failed three times over |
 | `tests/integration/support/{mod,recorder,world,payload,clock}.rs` | the story harness (STORIES "Test harness"): the fake-`bl` runner and the one-agent workspace, the argv/env recorder script and its read-back parser, the **multi-agent** workspace builder (goal stamps, `refs/litany/*` marks incl. the hold blob, dated commits, settled step framing), and the on-disk payload writers (`messages/`, `steps/`, `inbox/`, the balls clone dir) it composes — plus `clock`, the harness's own hand-driven `Clock` (bl-9006): `AppModel::boot` takes an `Arc<dyn Clock>` exactly so a test can supply one, and until INV-1 reddened under a nine-tarpaulin gate every beat in this crate had booted on the system clock and measured the machine instead of yog. Split at those three seams when the Z10–Z14 fake halves landed (bl-3b24) |

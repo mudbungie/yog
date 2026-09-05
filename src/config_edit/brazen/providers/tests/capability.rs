@@ -80,24 +80,27 @@ fn the_context_caveat_is_read_off_the_same_column() {
     }
 }
 
-/// The remedy is the operator's next move, not yog's: the two config lines that
-/// make an `ollama_chat` row carry a context, in the file that authors a row.
-/// Both halves are asserted because leaving either out silently loses — the
-/// nested `options` is dropped whole beside a typed cap, so the recipe must
-/// clear the typed cap AND restate the output limit inside the object.
+/// The remedy is the operator's next move, not yog's: the ONE config line that
+/// makes an `ollama_chat` row carry a context, in the file that authors a row.
+/// It was two lines and a restated output cap until brazen 0.0.10 folded the
+/// row's `extra` one namespace deep (upstream bl-f19d), and the line the
+/// operator types is asserted here so the sentence cannot drift from the
+/// behaviour `tests/brazen_ollama_context.rs` leg two measures.
 #[test]
-fn the_context_remedy_carries_both_halves() {
+fn the_context_remedy_is_the_one_line_that_lands() {
     let remedy = CONTEXT_REMEDY;
     assert!(
-        remedy.contains("unsupported_body_keys = [\"max_tokens\"]"),
+        remedy.contains("body_defaults = { options = { num_ctx = <your context> } }"),
         "{remedy}"
     );
-    assert!(remedy.contains("num_ctx = <your context>"), "{remedy}");
     assert!(
-        remedy.contains("num_predict = <your output cap>"),
-        "{remedy}"
+        !remedy.contains("unsupported_body_keys"),
+        "the recipe no longer clears the typed cap: {remedy}"
     );
-    assert!(remedy.contains("dropped whole and silently"), "{remedy}");
+    assert!(
+        remedy.contains("num_predict") && remedy.contains("`num_ctx` sizing the input window"),
+        "the two limits stay distinct in the operator's words: {remedy}"
+    );
 }
 
 /// An unnameable spelling answers nothing about the context either — the same

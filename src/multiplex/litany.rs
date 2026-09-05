@@ -69,6 +69,13 @@ pub(super) fn run(args: &[String]) -> i32 {
             return 1;
         }
     };
+    // The §3.3 stdio-contract sender, read HERE for the same reason `$EDITOR`
+    // is (upstream bl-b5b1): `litany message` resolves a deposit's sender from
+    // `LITANY_CONV_BRANCH`, which is a per-PROCESS fact, and litany's `Fx`
+    // exists so that no verb reaches for one of its own. The variable's name
+    // has one home — litany re-exports it beside the field a binding fills
+    // from it — so this arm spells it no second time.
+    let conv_branch = std::env::var_os(cmd::seam::ENV_CONV_BRANCH);
     // `$EDITOR` resolved once, at the binding (litany's `cli::edit_in_editor`
     // reads it at spawn time; same value, earlier read).
     let editor_cmd = std::env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
@@ -99,6 +106,7 @@ pub(super) fn run(args: &[String]) -> i32 {
         let mut fx = Fx {
             driver_target,
             adapter_target: Some(adapter_target),
+            conv_branch,
             editor: &editor,
             tool_stdin: &mut stdin,
             tool_stdout: &mut stdout,
