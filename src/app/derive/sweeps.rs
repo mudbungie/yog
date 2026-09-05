@@ -123,10 +123,6 @@ impl Deriver {
         let found = self.reconcile(Mark::Sweep);
         self.refresh_balls();
         self.refresh_ops();
-        // The §5.1 #35 windows ride the fetch cadence's floor for the same
-        // reason the balls do: one hand-edited world-global file, re-read on
-        // the sweep rather than watched (`adopt_windows`).
-        self.adopt_windows();
         let all: Vec<(PathBuf, Mark)> = self
             .workspaces
             .iter()

@@ -35,7 +35,6 @@ const AGENT: &str = "20260101T000000Z-c1";
 fn snapshot_of(workspaces: &[&Path], projects: &[&Path]) -> Arc<Snapshot> {
     Arc::new(Snapshot {
         bills: HashMap::default(),
-        windows: std::collections::BTreeMap::default(),
         workspaces: workspaces
             .iter()
             .map(|path| yog::binding::Workspace {

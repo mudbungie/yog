@@ -103,7 +103,10 @@ fn s7_t3_the_subtree_folds_and_the_limit_is_never_parsed() {
     );
     // The files that DO have a schema are the ones yog genuinely owns a form
     // for, which is what makes the absence above a rule rather than an oversight.
-    assert!(schema_for("models.yaml").is_some());
+    // `models.yaml` left that set with its one typed row (bl-9c8a): the window
+    // it declared rides the step record now, so yog owns no form over it either.
     assert!(schema_for("providers.yaml").is_some());
+    assert!(schema_for("cadence.yaml").is_some());
+    assert!(schema_for("models.yaml").is_none());
     assert!(schema_for("anything-else.yaml").is_none());
 }

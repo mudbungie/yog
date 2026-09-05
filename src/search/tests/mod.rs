@@ -86,7 +86,6 @@ fn world(ws: &Path, agents: Vec<Agent>, live: Vec<Ball>, closed: Vec<Ball>) -> S
         projects: vec![project.clone()],
         trees,
         bills: HashMap::new(),
-        windows: std::collections::BTreeMap::default(),
         balls_by_project: HashMap::from([(project.clone(), live)]),
         closed_by_project: HashMap::from([(project, closed)]),
         join_rows: vec![],

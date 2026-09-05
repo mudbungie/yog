@@ -107,36 +107,6 @@ fn a_fleet_entry_is_adopted_and_deleted_on_the_clocks_own_announcement() {
     );
 }
 
-/// **The §9.2 global `models.yaml`, adopted on the sweep** (§5.1 #35): the
-/// context windows it declares reach the published snapshot, and a change to
-/// them republishes. Not a watch of its own — the file is world-global and
-/// hand-edited, so it changes at operator speed and rides the full sweep.
-#[test]
-fn the_declared_context_windows_are_adopted_and_re_adopted() {
-    let h = Harness::new();
-    let models = crate::config_edit::litany_global::LitanyGlobal::resolve(&h.roots.world).models();
-    std::fs::create_dir_all(models.parent().expect("a root")).expect("mkdir");
-    let declare = |window: u64| {
-        std::fs::write(
-            &models,
-            format!("models:\n  opus:\n    context_window: {window}\n"),
-        )
-        .expect("write");
-    };
-    declare(200_000);
-    let (clock, mut model) = h.model();
-    assert_eq!(
-        model.snap.windows.get("opus").copied(),
-        Some(200_000),
-        "the boot's own sweep adopted the declaration"
-    );
-    // The adopt rides the 15 s full sweep, so the clock is what makes one due.
-    declare(400_000);
-    clock.advance(std::time::Duration::from_mins(1));
-    assert!(model.tick(), "a moved window republishes");
-    assert_eq!(model.snap.windows.get("opus").copied(), Some(400_000));
-}
-
 /// **Another instance's `ui.json` is adopted wholesale** (§4.1, I5) — the other
 /// side of the echo suppression above, and the whole of I0's convergence: two
 /// yogs over one document agree because each takes what the worker read, and

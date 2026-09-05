@@ -100,6 +100,7 @@ pub(super) fn bill(conv: &str, seq: &str, input: u64, wall_secs: u64) -> StepBil
             ..BudgetSpend::default()
         },
         last_usage: BudgetSpend::default(),
+        window: None,
         wall_secs,
     }
 }

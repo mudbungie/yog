@@ -1,8 +1,8 @@
-//! The anchored block grammar yog reads and writes the two config files
-//! through: `providers.yaml`'s `roles:` — the §9.4 picker's one write, and the
-//! single home of a role's (provider row, model id) pointer — and
-//! `models.yaml`'s `models:`, which no longer reaches litany at all and is
-//! yog's own table (see `models.rs`).
+//! The anchored block grammar yog reads and writes `providers.yaml` through:
+//! its `roles:` block — the §9.4 picker's one write, and the single home of a
+//! role's (provider row, model id) pointer. It read `models.yaml`'s `models:`
+//! block too until bl-9c8a, when the one fact in it (the §5.1 #35 window)
+//! moved to the step record brazen writes it on (see `rows.rs`).
 //!
 //! **This is not a YAML parser and must never become one.** yog declares no
 //! YAML dependency (§9.2) and litany's own parser is private (its crate exposes
@@ -11,17 +11,11 @@
 //! four-space fields —
 //!
 //! ```text
-//! roles:                      models:
-//!   worker:                     gpt-5.4:
-//!     provider: codex             context_window: 400000
+//! roles:
+//!   worker:
+//!     provider: codex
 //!     model: gpt-5.4
 //! ```
-//!
-//! The `models:` entry is the shape yog WRITES since bl-3ffa — the id and the one
-//! fact anything reads out of it. The read side takes the block's older four-field
-//! shape unchanged (`provider`, `model_id`, `capabilities` beside it), because
-//! these are anchored line reads: a field nothing looks for is a line nothing
-//! looks at.
 //!
 //! and **declines loudly** ([`GrammarError`], rendered in ichor per §7.3) on
 //! anything else, pointing at the §9.2 / §9.3 raw editors. Declining is not a
@@ -75,25 +69,22 @@ impl std::fmt::Display for GrammarError {
 
 mod entries;
 mod fields;
-mod models;
 mod roles;
+mod rows;
 mod tools;
 
 pub use entries::{entry_names, remove_entry, set_entry};
 pub use fields::{entry_field, remove_field, set_field, upsert_field};
-pub use models::{DEFAULT_CONTEXT_WINDOW, context_windows, declare_model, is_unknown_row};
 pub use roles::{EFFORT, MODEL, PRIORITY, PROVIDER, roles, set_role_model};
+pub use rows::is_unknown_row;
 pub use tools::{flow_members, flow_value};
 
-/// The two files this grammar is spoken over, named in every refusal.
+/// The file this grammar is spoken over, named in every refusal.
 pub const PROVIDERS_YAML: &str = "providers.yaml";
-pub const MODELS_YAML: &str = "models.yaml";
 
-/// The column-0 block key each file's entries hang under — the role map and the
-/// model map. Named once here because three rewrites and the §9.5 pane all
-/// spell them.
+/// The column-0 block key the file's entries hang under — the role map. Named
+/// once here because three rewrites and the §9.5 pane all spell it.
 pub const ROLES: &str = "roles";
-pub const MODELS: &str = "models";
 
 /// One role's assignment as `providers.yaml` declares it (§5.1 #27) — **the
 /// whole entry, not just the pointer** (bl-2410).

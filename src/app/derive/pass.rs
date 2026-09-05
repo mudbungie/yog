@@ -44,7 +44,6 @@ impl Deriver {
         // The clock's periods first (bl-3381): the first schedule decision
         // already runs at the operator's tuning, not one default tick of it.
         self.adopt_cadence();
-        self.adopt_windows();
         self.workspaces = crate::binding::workspaces(&self.roots.yog_data, &self.roots.litany_data);
         lock_watchset(&self.watches).reconcile(&desired_watches(&self.roots, &self.workspaces));
         let paths: Vec<PathBuf> = self.workspaces.iter().map(|w| w.path.clone()).collect();
@@ -133,7 +132,6 @@ impl Deriver {
                 // clone this freeze was already paying for.
                 trees: crate::monitor::flag::fold(self.trees.clone(), &self.ops),
                 bills: self.bills.clone(),
-                windows: self.windows.clone(),
                 balls_by_project: self.balls_by_project.clone(),
                 closed_by_project: self.closed_by_project.clone(),
                 join_rows: self.join_rows.clone(),

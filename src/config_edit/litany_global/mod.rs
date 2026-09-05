@@ -16,8 +16,9 @@
 //! resolved *through* that declaration. litany retired the `models:` table
 //! (bl-35e2) and bl-d9cb re-pointed the picker at `providers.yaml`, leaving the
 //! gate judging a field whose only remaining reader was the refusal itself: it
-//! could refuse an Apply that was correcting the one line anything reads
-//! (`context_window`), on the strength of a dead one. The row judgement now runs
+//! could refuse an Apply that was correcting the one line anything then read
+//! (`context_window`, itself gone with bl-9c8a), on the strength of a dead
+//! one. The row judgement now runs
 //! only where the live pointer is
 //! ([`is_unknown_row`](crate::model_pick::grammar::is_unknown_row), §9.4's pick
 //! gate and role marks, §9.5's control over `roles.<r>.provider`).
@@ -29,6 +30,12 @@
 use super::{Draft, FileIo};
 use crate::xdg::Env;
 use std::path::PathBuf;
+
+/// litany's global `models.yaml` — its one load-bearing field is `adapter:`
+/// (litany bl-35e2), and since bl-9c8a yog reads nothing out of it at all: the
+/// `models:` block was yog's own one-fact table, and the fact moved to the
+/// step record. It is edited here as raw text, like `workflows/*.yaml`.
+pub const MODELS_YAML: &str = "models.yaml";
 
 /// The litany-global editable surface, rooted at one config root (§9.2). The
 /// root is the Y2 fold ([`litany_config_root`](Env::litany_config_root),
@@ -47,11 +54,11 @@ impl LitanyGlobal {
         }
     }
 
-    /// The single `models.yaml` path. Always offered: a missing file is a
+    /// The single [`MODELS_YAML`] path. Always offered: a missing file is a
     /// new-file edit (its editor reports [`is_new`](Editor::is_new)), not an
     /// error.
     pub fn models(&self) -> PathBuf {
-        self.root.join("models.yaml")
+        self.root.join(MODELS_YAML)
     }
 
     /// The `workflows/` directory that holds the `*.yaml` workflow files.

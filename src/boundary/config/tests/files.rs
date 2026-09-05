@@ -69,8 +69,8 @@ fn a_litany_global_apply_lands_the_text_it_is_handed() {
         fs::read_to_string(root.path().join("litany/models.yaml")).unwrap(),
         text
     );
-    // A legacy entry naming a row brazen does not have lands too — refusing it
-    // would refuse an Apply that is correcting the one line anything reads.
+    // A legacy entry naming a row brazen does not have lands too: nothing in
+    // this file reaches yog any more (bl-9c8a), so nothing in it is judged.
     let legacy = "models:\n  m-2:\n    provider: nope\n    context_window: 400000\n";
     assert_eq!(
         fire(&deps, &applying(ConfigFile::LitanyModels, legacy)),

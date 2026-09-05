@@ -48,7 +48,6 @@ fn world(ws: &Path) -> Snapshot {
         projects: vec![],
         trees: HashMap::new(),
         bills: HashMap::new(),
-        windows: std::collections::BTreeMap::default(),
         balls_by_project: HashMap::from([(
             ws.join("proj"),
             vec![ball("bl-1f2a", "wake the kraken", "body")],

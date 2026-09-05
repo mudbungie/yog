@@ -25,9 +25,7 @@ use crate::model_pick::grammar::{
 
 mod schema;
 
-pub use schema::{
-    CADENCE_SCHEMA, Control, FieldSpec, MODELS_SCHEMA, ROLES_SCHEMA, Schema, schema_for,
-};
+pub use schema::{CADENCE_SCHEMA, Control, FieldSpec, ROLES_SCHEMA, Schema, schema_for};
 
 /// One rendered setting: which entry declares it, what it edits, what the file
 /// currently spells, and why that value is not usable.

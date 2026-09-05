@@ -3,10 +3,11 @@
 //! table is driven without egui, disk or brazen.
 
 use super::{
-    Control, FieldSpec, MODELS_SCHEMA, ROLES_SCHEMA, Row, Schema, read, schema_for, write,
+    CADENCE_SCHEMA, Control, FieldSpec, ROLES_SCHEMA, Row, Schema, read, schema_for, write,
 };
-use crate::model_pick::grammar::MODELS_YAML;
-use crate::model_pick::tests::{SEEDED_MODELS, TEMPLATE_PROVIDERS};
+use crate::app::cadence::{self, FULL_SWEEP_MS, TEMPLATE};
+use crate::config_edit::litany_global::MODELS_YAML;
+use crate::model_pick::tests::TEMPLATE_PROVIDERS;
 
 fn rows() -> Vec<String> {
     vec!["codex".to_string(), "anthropic".to_string()]
@@ -39,11 +40,12 @@ fn spec_of(schema: &Schema, name: &str) -> FieldSpec {
 }
 
 #[test]
-fn schema_is_the_three_files_yog_reads_and_nothing_else() {
-    assert_eq!(schema_for(MODELS_YAML).map(|s| s.block), Some("models"));
+fn schema_is_the_two_files_yog_reads_and_nothing_else() {
     assert_eq!(schema_for("providers.yaml").map(|s| s.block), Some("roles"));
     assert_eq!(schema_for("cadence.yaml").map(|s| s.block), Some("cadence"));
-    // A file yog has no reader for keeps the raw editor.
+    // A file yog has no reader for keeps the raw editor — `models.yaml` among
+    // them since bl-9c8a took its one typed row to the step record.
+    assert!(schema_for(MODELS_YAML).is_none());
     assert!(schema_for("compact.yaml").is_none());
     assert!(schema_for("").is_none());
 }
@@ -78,21 +80,21 @@ fn cadence_yaml_reads_as_the_watcher_entry_and_writes_in_place() {
     );
 }
 
-/// `models.yaml` has **two** settings since bl-3ffa: the wire id and the window.
-/// The fixture is a legacy entry carrying `provider:` and `capabilities:` beside
-/// them, and neither gets a row — a control over a fact nothing consumes is a
+/// `cadence.yaml` reads as one group of bounded numbers, each with the words
+/// the pane paints beside it. `models.yaml` read this way too until bl-9c8a
+/// deleted its one typed row: a control over a fact nothing consumes is a
 /// setting that cannot matter, and the pane shows the settings that exist.
 #[test]
-fn models_yaml_reads_as_one_group_per_declared_id() {
-    let rows = read(&MODELS_SCHEMA, SEEDED_MODELS, &rows());
+fn cadence_yaml_reads_as_one_group_of_bounded_numbers() {
+    let rows = read(&CADENCE_SCHEMA, TEMPLATE, &rows());
     assert_eq!(
-        fields_of(&rows, "gpt-5.4"),
-        vec!["model_id", "context_window"]
+        fields_of(&rows, cadence::WATCHER),
+        vec![cadence::DEBOUNCE_MS, cadence::CHEAP_SWEEP_MS, FULL_SWEEP_MS]
     );
-    assert_eq!(rows.len(), 2, "one entry, its two settings: {rows:?}");
-    assert_eq!(row_of(&rows, "gpt-5.4", "model_id").value, "gpt-5.4");
-    assert_eq!(row_of(&rows, "gpt-5.4", "context_window").value, "400000");
-    assert!(!row_of(&rows, "gpt-5.4", "context_window").help.is_empty());
+    assert_eq!(rows.len(), 3, "one entry, its three settings: {rows:?}");
+    let full = row_of(&rows, cadence::WATCHER, FULL_SWEEP_MS);
+    assert_eq!(full.value, "15000");
+    assert!(!full.help.is_empty());
 }
 
 #[test]
@@ -115,7 +117,7 @@ fn providers_yaml_reads_as_one_group_per_role() {
 
 #[test]
 fn a_file_with_no_block_has_no_settings() {
-    assert!(read(&MODELS_SCHEMA, "steps:\n  - run\n", &rows()).is_empty());
+    assert!(read(&CADENCE_SCHEMA, "steps:\n  - run\n", &rows()).is_empty());
     assert!(read(&ROLES_SCHEMA, "", &rows()).is_empty());
 }
 
@@ -143,45 +145,47 @@ fn an_off_shape_list_and_an_off_range_number_fault_rather_than_render_typed() {
     let tools = row_of(&read(&ROLES_SCHEMA, odd_list, &rows()), "worker", "tools");
     assert_eq!(tools.value, "");
     assert!(tools.fault.is_some_and(|f| f.contains("inline")));
-    let odd = "models:\n  m:\n    context_window: lots\n";
-    let window = row_of(&read(&MODELS_SCHEMA, odd, &rows()), "m", "context_window");
-    assert_eq!(window.value, "lots");
-    assert!(window.fault.is_some_and(|f| f.contains("whole number")));
+    let odd = "cadence:\n  watcher:\n    full_sweep_ms: lots\n";
+    let period = row_of(
+        &read(&CADENCE_SCHEMA, odd, &rows()),
+        "watcher",
+        FULL_SWEEP_MS,
+    );
+    assert_eq!(period.value, "lots");
+    assert!(period.fault.is_some_and(|f| f.contains("whole number")));
     // Zero is out of range too — the bound is a setting, not a hint.
-    let zero = "models:\n  m:\n    context_window: 0\n";
+    let zero = "cadence:\n  watcher:\n    full_sweep_ms: 0\n";
     assert!(
-        row_of(&read(&MODELS_SCHEMA, zero, &rows()), "m", "context_window")
-            .fault
-            .is_some()
+        row_of(
+            &read(&CADENCE_SCHEMA, zero, &rows()),
+            "watcher",
+            FULL_SWEEP_MS
+        )
+        .fault
+        .is_some()
     );
 }
 
 #[test]
 fn writing_a_control_rewrites_one_line_and_nothing_else() {
-    let spec = spec_of(&MODELS_SCHEMA, "model_id");
-    let out = write(
-        &MODELS_SCHEMA,
-        SEEDED_MODELS,
-        "gpt-5.4",
-        &spec,
-        " gpt-5.4-mini ",
-    )
-    .unwrap();
-    assert!(out.contains("    model_id: gpt-5.4-mini\n"));
-    // Every other byte survives: the comment header, and the legacy fields yog
-    // neither writes nor offers a control over.
-    assert!(out.starts_with("# Global config-root models.yaml"));
-    assert!(out.contains("    provider: codex\n"));
-    assert!(out.contains("    capabilities: [tool_use_native, streaming]\n"));
+    let spec = spec_of(&ROLES_SCHEMA, "model");
+    let text = format!("# header\n{TEMPLATE_PROVIDERS}");
+    let out = write(&ROLES_SCHEMA, &text, "worker", &spec, " opus-5 ").unwrap();
+    assert!(out.contains("  worker:\n    provider: codex\n    model: opus-5\n"));
+    // Every other byte survives: the comment header, the fields beside it and
+    // the other entry.
+    assert!(out.starts_with("# header\n"));
+    assert!(out.contains("    tools: [bash, read_file, load_skill]\n"));
+    assert!(out.contains("  compactor:\n    provider: codex\n    model: gpt-5.4-mini\n"));
 }
 
 #[test]
 fn a_number_is_clamped_and_a_list_is_re_emitted_as_a_flow_sequence() {
-    let window = spec_of(&MODELS_SCHEMA, "context_window");
-    let at = |v| write(&MODELS_SCHEMA, SEEDED_MODELS, "gpt-5.4", &window, v).unwrap();
-    assert!(at("999999999999").contains("    context_window: 100000000\n"));
+    let period = spec_of(&CADENCE_SCHEMA, FULL_SWEEP_MS);
+    let at = |v| write(&CADENCE_SCHEMA, TEMPLATE, "watcher", &period, v).unwrap();
+    assert!(at("999999999999").contains("    full_sweep_ms: 3600000\n"));
     // Unparseable falls to the floor rather than writing a line yog cannot read.
-    assert!(at("").contains("    context_window: 1\n"));
+    assert!(at("").contains("    full_sweep_ms: 1000\n"));
     let tools = spec_of(&ROLES_SCHEMA, "tools");
     let at = |v| write(&ROLES_SCHEMA, TEMPLATE_PROVIDERS, "worker", &tools, v).unwrap();
     assert!(at(" a , ,b ").contains("    tools: [a, b]\n"));

@@ -1,24 +1,21 @@
 //! Tests for the §9.4 picker's pure half. Split by concern: the generic
 //! [`fields`](super::grammar::entry_field) access every rewrite shares, the
-//! block [`grammar`](super::grammar) — its `roles:` half and its `models:`
-//! half on the seam the production module already has — the roster
+//! block [`grammar`](super::grammar) over `roles:`, the roster
 //! [`query`](super::query), the
 //! composed [`plan`](super::plan) + the sentences the surface paints, the
-//! conversation [`header`](super::header) line and its apart clause, the
-//! `models.yaml` read-back that judges a declared provider row (`validate`),
+//! conversation [`header`](super::header) line and its apart clause,
 //! the [`remedy`](super::remedy) a credential-shaped roster failure routes to,
 //! and the protocol-`capability` gate that keeps a row brazen ships but cannot
-//! serve a role out of both config files (bl-3d22).
+//! serve a role out of both config files (bl-3d22). The `models:` grammar and
+//! its read-back went with the table (bl-9c8a).
 
 mod capability;
 mod fields;
-mod grammar_models;
 mod grammar_roles;
 mod header;
 mod plan;
 mod query;
 mod tuning;
-mod validate;
 
 /// brazen's effective table as the fixtures need it: one row per name, keyless,
 /// on a dialect that **carries tools** (bl-3d22). A fixture of bare names could
@@ -53,12 +50,3 @@ pub(crate) fn rows_on(
 /// this back, so a template change upstream fails here rather than in the UI.
 pub(crate) const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: codex\n    model: gpt-5.4\n    \
      tools: [bash, read_file, load_skill]\n  compactor:\n    provider: codex\n    model: gpt-5.4-mini\n";
-
-/// `models.yaml` carrying the block's **legacy four-field entry** — the shape
-/// litany's `install/models.yaml` seeded before it retired the table (bl-35e2),
-/// and the shape an operator's file still has on disk. yog writes the id and
-/// `context_window` alone since bl-3ffa; every read here is over this fuller
-/// shape on purpose, because writing less changed no reader.
-pub(crate) const SEEDED_MODELS: &str = "# Global config-root models.yaml (ARCH §4.2).\n\nmodels:\n  \
-     gpt-5.4:\n    provider: codex\n    model_id: gpt-5.4\n    capabilities: [tool_use_native, streaming]\n    \
-     context_window: 400000\n";

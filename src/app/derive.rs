@@ -82,10 +82,6 @@ pub struct Deriver {
     /// The per-workspace `steps/` fold ridden out on every snapshot (§3.5,
     /// bl-9dd4) — the one walk every spend figure is then a filter over.
     pub(super) bills: HashMap<PathBuf, Vec<StepBill>>,
-    /// The §9.2 `models.yaml` context-window declarations (§5.1 #35), ridden
-    /// out on every snapshot for the same reason the cadence periods are: the
-    /// frame must not read disk to say a number.
-    pub(super) windows: std::collections::BTreeMap<String, u64>,
     pub(super) balls_by_project: HashMap<PathBuf, Vec<Ball>>,
     pub(super) closed_by_project: HashMap<PathBuf, Vec<Ball>>,
     pub(super) join_rows: Vec<JoinRow>,
@@ -130,7 +126,6 @@ impl Deriver {
             workspaces: Vec::new(),
             trees: HashMap::new(),
             bills: HashMap::new(),
-            windows: std::collections::BTreeMap::new(),
             balls_by_project: HashMap::new(),
             closed_by_project: HashMap::new(),
             join_rows: Vec::new(),

@@ -119,6 +119,7 @@ fn bill(input: u64) -> Vec<StepBill> {
             ..BudgetSpend::default()
         },
         last_usage: BudgetSpend::default(),
+        window: None,
         wall_secs: 0,
     }]
 }

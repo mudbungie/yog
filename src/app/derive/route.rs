@@ -102,26 +102,4 @@ impl Deriver {
             self.changed = true;
         }
     }
-
-    /// Read the §9.2 global `models.yaml` for the context windows it declares
-    /// (§5.1 #35), republishing only when they moved. Total like
-    /// [`adopt_cadence`](Self::adopt_cadence): a missing or hand-broken file
-    /// declares nothing, and nothing declared renders no figure — never a
-    /// stale one.
-    ///
-    /// It rides the **boot and the 15 s full sweep** rather than a watch of its
-    /// own. The file is world-global and hand-edited (§9.2), so it changes at
-    /// operator speed; arming a fifth root over one file would buy latency
-    /// nobody can perceive at the cost of a root kind, a reconcile arm and a
-    /// routing branch (§7.1's roots are the enumeration set, not a file list).
-    pub(super) fn adopt_windows(&mut self) {
-        let path =
-            crate::config_edit::litany_global::LitanyGlobal::resolve(&self.roots.world).models();
-        let text = std::fs::read_to_string(path).unwrap_or_default();
-        let next = crate::model_pick::grammar::context_windows(&text);
-        if next != self.windows {
-            self.windows = next;
-            self.changed = true;
-        }
-    }
 }

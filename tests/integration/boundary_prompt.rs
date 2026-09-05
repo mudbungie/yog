@@ -36,7 +36,6 @@ fn deps(litany: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
         balls_state_root: state_root.join("balls"),
         snapshot: Arc::new(Snapshot {
             bills: HashMap::default(),
-            windows: std::collections::BTreeMap::default(),
             workspaces: workspaces
                 .iter()
                 .map(|path| yog::binding::Workspace {

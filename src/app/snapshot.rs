@@ -72,13 +72,6 @@ pub struct Snapshot {
     /// costs one walk rather than N on the frame thread (§7.2). Derived, never
     /// stored: it is re-walked from disk like every other §5.1 fact.
     pub bills: HashMap<PathBuf, Vec<StepBill>>,
-    /// The context windows `models.yaml` declares, wire-model id → tokens
-    /// (§5.1 #35): the denominator of every context-fullness figure, read by
-    /// the worker on the same 15 s full sweep the balls fetch rides. World-wide
-    /// rather than per-workspace because the file is — §9.2's global litany
-    /// config, one home for the declaration. Empty is the ordinary quiet case:
-    /// nothing declared, so nothing is rendered.
-    pub windows: std::collections::BTreeMap<String, u64>,
     /// Cached live balls per **visible** project (§5.1 #2).
     pub balls_by_project: HashMap<PathBuf, Vec<Ball>>,
     /// Cached **closed** balls per project (§5.1 #4) — fetched on demand, never
@@ -129,7 +122,6 @@ impl Snapshot {
             projects: Vec::new(),
             trees: HashMap::new(),
             bills: HashMap::new(),
-            windows: BTreeMap::new(),
             balls_by_project: HashMap::new(),
             closed_by_project: HashMap::new(),
             join_rows: Vec::new(),

@@ -118,22 +118,72 @@ fn empty_bytes_are_zero_spend() {
 
 /// Fullness reads the LAST segment, spend reads them all — over the very
 /// same bytes, so a retried step can never be read as a context that grew
-/// by the retry (§5.1 #35).
+/// by the retry (§5.1 #35). Per field, last wins: an Anthropic stream's
+/// `message_delta` usage carries only the output, and reading that line
+/// alone was a prompt of zero.
 #[test]
-fn last_usage_takes_the_final_segment_not_the_fold() {
+fn last_usage_takes_the_final_segment_per_field_not_the_fold() {
     let jsonl = [
         r#"{"type":"usage","input_tokens":10,"cache_read_tokens":90}"#,
         r#"{"type":"content_delta","index":0,"delta":{"text_delta":"hi"}}"#,
-        r#"{"type":"usage","input_tokens":4,"cache_read_tokens":120}"#,
+        r#"{"type":"usage","input_tokens":4,"cache_read_tokens":120,"output_tokens":null}"#,
+        r#"{"type":"usage","input_tokens":null,"output_tokens":15}"#,
     ]
     .join("\n");
     let last = last_usage(jsonl.as_bytes());
     assert_eq!(last.input_tokens, 4);
     assert_eq!(last.cache_read_tokens, 120);
+    assert_eq!(last.output_tokens, 15);
     assert_eq!(spend_from_bytes(jsonl.as_bytes()).input_tokens, 14);
 }
 
 #[test]
 fn a_payload_with_no_usage_line_has_no_last_segment() {
     assert_eq!(last_usage(b"{\"type\":\"end\"}"), BudgetSpend::default());
+    assert_eq!(context_window(b"{\"type\":\"end\"}"), None);
+}
+
+/// brazen's `input_total_tokens` is the whole prompt, sealed by the decoder
+/// that knows whether the cached slice sits inside or beside the provider's
+/// own counter — so where a line carries it, it IS the prompt, on the disjoint
+/// shape the max rule could only floor. A line without it reads as before.
+#[test]
+fn the_sealed_prompt_total_is_read_where_a_line_carries_it() {
+    let sealed = spend_from_bytes(
+        br#"{"type":"usage","input_tokens":4000,"output_tokens":500,"cache_read_tokens":90000,"cache_write_tokens":6000,"input_total_tokens":100000}"#,
+    );
+    assert_eq!(sealed.prompt_tokens(), 100_000);
+    assert_eq!(sealed.uncached_prompt_tokens(), 4_000);
+    assert_eq!(sealed.total_tokens(), 100_500);
+    assert_eq!(
+        sealed.uncached_prompt_tokens() + sealed.cached_tokens() + sealed.output_tokens,
+        sealed.total_tokens()
+    );
+}
+
+/// The denominator rides the same lines as the numerator (§5.1 #35): the
+/// window brazen stamps on the usage event, last stated wins, a zero or an
+/// absent one is no window at all.
+#[test]
+fn the_window_is_the_last_one_the_usage_lines_state() {
+    let stated = [
+        r#"{"type":"usage","input_tokens":10,"context_window":200000}"#,
+        r#"{"type":"usage","output_tokens":5}"#,
+    ]
+    .join("\n");
+    assert_eq!(context_window(stated.as_bytes()), Some(200_000));
+    let moved = [
+        r#"{"type":"usage","input_tokens":10,"context_window":200000}"#,
+        r#"{"type":"usage","input_tokens":10,"context_window":1000000}"#,
+    ]
+    .join("\n");
+    assert_eq!(context_window(moved.as_bytes()), Some(1_000_000));
+    assert_eq!(
+        context_window(br#"{"type":"usage","input_tokens":10,"context_window":0}"#),
+        None
+    );
+    assert_eq!(
+        context_window(br#"{"type":"usage","input_tokens":10}"#),
+        None
+    );
 }

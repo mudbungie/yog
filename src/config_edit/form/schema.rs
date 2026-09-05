@@ -8,12 +8,12 @@
 //! settings of bl-3381 land here as rows).
 
 use crate::app::cadence;
-use crate::model_pick::grammar::{MODELS, MODELS_YAML, PROVIDERS_YAML, ROLES};
+use crate::model_pick::grammar::{PROVIDERS_YAML, ROLES};
 
 /// How one setting is edited (§9.5). Four kinds, because four are what the
 /// files declare: a reference to a brazen provider row, a bounded number, one
 /// of litany's inline flow sequences, and a scalar whose value set belongs to
-/// the far side (a provider's model id, a litany tool name) rather than to yog.
+/// the far side (a role's model id) rather than to yog.
 ///
 /// There is deliberately no boolean and no closed-enum kind: **no file these
 /// surfaces reach declares one.** The two enumerated settings in config mode —
@@ -49,33 +49,6 @@ pub struct Schema {
     pub block: &'static str,
     pub fields: &'static [FieldSpec],
 }
-
-/// `models.yaml`'s two settings — **the id, and the one fact anything reads out
-/// of the block** (bl-3ffa). The entry's `provider` and `capabilities` had
-/// controls until this ball: a `provider` picker over a field nothing dispatches
-/// through (its only reader was the §9.2 Apply gate that judged it, retired with
-/// it) and a `capabilities` list no program in the suite reads a word of. A
-/// control over a fact nothing consumes is a setting that cannot matter. Neither
-/// control kind died with them — [`Control::Provider`] and [`Control::List`] are
-/// `providers.yaml`'s, over the live pointer and the role's tools.
-const MODEL_FIELDS: &[FieldSpec] = &[
-    FieldSpec {
-        name: "model_id",
-        control: Control::Text,
-        help: "the wire id the provider itself serves, when the entry is filed \
-               under a different key; the entry key stands in when it is absent",
-    },
-    FieldSpec {
-        name: "context_window",
-        control: Control::Number {
-            min: 1,
-            max: 100_000_000,
-        },
-        help: "declared, never discovered — brazen publishes no window; this is \
-               the denominator of yog's context-fullness figure, and the only \
-               thing anything reads out of this table",
-    },
-];
 
 const ROLE_FIELDS: &[FieldSpec] = &[
     FieldSpec {
@@ -131,13 +104,6 @@ const CADENCE_FIELDS: &[FieldSpec] = &[
     },
 ];
 
-/// `models.yaml`'s settings (§9.2): one entry per declared model id.
-pub const MODELS_SCHEMA: Schema = Schema {
-    file: MODELS_YAML,
-    block: MODELS,
-    fields: MODEL_FIELDS,
-};
-
 /// `providers.yaml`'s settings (§9.3): one entry per declared role.
 pub const ROLES_SCHEMA: Schema = Schema {
     file: PROVIDERS_YAML,
@@ -154,13 +120,14 @@ pub const CADENCE_SCHEMA: Schema = Schema {
 };
 
 /// The schema for a file basename, or `None` when yog has no reader for it —
-/// which is the raw-text fallback, not a failure: `workflows/*.yaml`, `souls/**`
-/// prose and litany's own `workflow.yaml`/`manifest.yaml` are documents yog
-/// declines to interpret (§9.5), and a form over a shape yog guessed at would
-/// be exactly the second authority §9 forbids.
+/// which is the raw-text fallback, not a failure: `models.yaml` (since
+/// bl-9c8a, its one yog-read fact having moved to the step record),
+/// `workflows/*.yaml`, `souls/**` prose and litany's own
+/// `workflow.yaml`/`manifest.yaml` are documents yog declines to interpret
+/// (§9.5), and a form over a shape yog guessed at would be exactly the second
+/// authority §9 forbids.
 pub fn schema_for(file_name: &str) -> Option<Schema> {
     match file_name {
-        MODELS_YAML => Some(MODELS_SCHEMA),
         PROVIDERS_YAML => Some(ROLES_SCHEMA),
         cadence::CADENCE_YAML => Some(CADENCE_SCHEMA),
         _ => None,

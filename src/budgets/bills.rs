@@ -14,7 +14,10 @@
 use std::fs;
 use std::path::Path;
 
-use super::{BudgetSpend, RESPONSE_FILE, STEP_SEQ_WIDTH, STEPS_DIR, last_usage, spend_from_bytes};
+use super::{
+    BudgetSpend, RESPONSE_FILE, STEP_SEQ_WIDTH, STEPS_DIR, context_window, last_usage,
+    spend_from_bytes,
+};
 
 /// The wire-request snapshot of one step (ARCH §2.3) — where the model that
 /// billed the step is named.
@@ -86,6 +89,12 @@ pub struct StepBill {
     /// step cost, `last_usage` is how big its final prompt was — and only the
     /// second describes the context as it now stands.
     pub last_usage: BudgetSpend,
+    /// The context window the same usage lines carry (§5.1 #35's denominator,
+    /// [`context_window`]) — brazen's in-band statement of the resolved model
+    /// row's window, so the numerator and the denominator of one step's
+    /// fullness are read off one record. `None` where the row served no
+    /// window, which renders no figure rather than a percentage of a guess.
+    pub window: Option<u64>,
     /// This step's `meta.json` span in seconds — `started_at` → `ended_at`
     /// (§3.9, bl-40ab), the wall half of the science projection's step-record
     /// columns. It rides the bill for bl-9dd4's own reason: the tree is walked
@@ -161,6 +170,7 @@ fn step_bill(step_dir: &Path, conv: &str, seq: &str) -> StepBill {
         model: step_model(step_dir),
         spend: spend_from_bytes(&bytes),
         last_usage: last_usage(&bytes),
+        window: context_window(&bytes),
         wall_secs: step_wall(step_dir),
     }
 }
@@ -184,8 +194,7 @@ fn step_wall(step_dir: &Path) -> u64 {
 }
 
 /// The model named in a step's `request.json` — the wire request's own
-/// `"model"` string, i.e. the id `models.yaml` declares and the §3.5 price
-/// table is keyed by. `None` on any read/parse/shape failure.
+/// `"model"` string, i.e. the wire id the §3.5 price table is keyed by. `None` on any read/parse/shape failure.
 fn step_model(step_dir: &Path) -> Option<String> {
     let bytes = fs::read(step_dir.join(REQUEST_FILE)).ok()?;
     let value: serde_json::Value = serde_json::from_slice(&bytes).ok()?;

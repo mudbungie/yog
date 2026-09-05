@@ -86,7 +86,6 @@ pub(crate) fn snapshot(ws: &Path, name: &str, agents: Vec<Agent>, join: Vec<Join
         projects,
         trees,
         bills: HashMap::new(),
-        windows: std::collections::BTreeMap::default(),
         balls_by_project: HashMap::new(),
         closed_by_project: HashMap::new(),
         join_rows: join,

@@ -30,7 +30,8 @@ pub enum ConfigFile {
     /// names neither is refused where every other missing target is, at the
     /// edge.
     Brazen { workspace: String },
-    /// litany's global `models.yaml` (§9.2).
+    /// litany's global `models.yaml` (§9.2) — raw text since bl-9c8a, like the
+    /// workflows beside it: yog holds no grammar over anything in it.
     LitanyModels,
     /// One `workflows/<name>.yaml` (§9.2). The name must be a safe single-file
     /// basename; anything else is refused before a byte is staged.
@@ -92,7 +93,7 @@ impl ConfigFile {
     pub(crate) fn file_name(&self) -> String {
         match self {
             ConfigFile::Brazen { .. } => "config.toml".to_owned(),
-            ConfigFile::LitanyModels => crate::model_pick::grammar::MODELS_YAML.to_owned(),
+            ConfigFile::LitanyModels => crate::config_edit::litany_global::MODELS_YAML.to_owned(),
             ConfigFile::LitanyWorkflow { name } => format!("{name}.yaml"),
             ConfigFile::Cadence => crate::app::cadence::CADENCE_YAML.to_owned(),
             ConfigFile::Branch { path, .. } => {

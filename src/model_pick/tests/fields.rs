@@ -1,10 +1,17 @@
 //! The grammar's generic field access — the prelude every rewrite shares, and
 //! the plain read/replace the §9.5 pane is built on.
 
-use super::{SEEDED_MODELS, TEMPLATE_PROVIDERS};
+use super::TEMPLATE_PROVIDERS;
 use crate::model_pick::grammar::{
-    GrammarError, MODELS, MODELS_YAML, PROVIDERS_YAML, ROLES, entry_field, entry_names, set_field,
+    GrammarError, PROVIDERS_YAML, ROLES, entry_field, entry_names, set_field,
 };
+
+/// A block this grammar has no reader for any more (the `models:` table went
+/// with bl-9c8a): the primitives are generic over the block key, and a foreign
+/// block is the fixture that proves it.
+const OTHER: &str = "models";
+const OTHER_FILE: &str = "other.yaml";
+const OTHER_TEXT: &str = "# header\n\nmodels:\n  gpt-5.4:\n    model_id: gpt-5.4\n";
 
 #[test]
 fn entry_names_lists_the_block_in_file_order_and_absence_is_empty() {
@@ -12,9 +19,9 @@ fn entry_names_lists_the_block_in_file_order_and_absence_is_empty() {
         entry_names(TEMPLATE_PROVIDERS, ROLES),
         ["worker", "compactor"]
     );
-    assert_eq!(entry_names(SEEDED_MODELS, MODELS), ["gpt-5.4"]);
+    assert_eq!(entry_names(OTHER_TEXT, OTHER), ["gpt-5.4"]);
     // No such block, an inline one, and an empty file all declare nothing.
-    assert!(entry_names(TEMPLATE_PROVIDERS, MODELS).is_empty());
+    assert!(entry_names(TEMPLATE_PROVIDERS, OTHER).is_empty());
     assert!(entry_names("roles: {}\n", ROLES).is_empty());
     assert!(entry_names("", ROLES).is_empty());
 }
@@ -27,7 +34,7 @@ fn entry_field_reads_one_value_and_folds_every_miss_to_none() {
     );
     // No block, no entry, no field — three misses, one value.
     assert_eq!(
-        entry_field(TEMPLATE_PROVIDERS, MODELS, "worker", "model"),
+        entry_field(TEMPLATE_PROVIDERS, OTHER, "worker", "model"),
         None
     );
     assert_eq!(
@@ -83,6 +90,6 @@ fn set_field_declines_loudly_on_every_shape_it_does_not_edit() {
 
 #[test]
 fn the_file_name_a_refusal_carries_is_the_callers() {
-    let err = set_field(MODELS_YAML, "", MODELS, "m", "provider", "codex").unwrap_err();
-    assert!(err.to_string().starts_with(MODELS_YAML));
+    let err = set_field(OTHER_FILE, "", OTHER, "m", "provider", "codex").unwrap_err();
+    assert!(err.to_string().starts_with(OTHER_FILE));
 }

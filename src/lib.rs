@@ -45,7 +45,7 @@ pub(crate) mod bz_host;
 pub mod cli_outbound;
 pub mod config_edit;
 /// How full a conversation's context is (§5.1 #35) — the latest step's prompt
-/// against the window `models.yaml` declares. Fullness, not spend.
+/// against the window its own usage lines state. Fullness, not spend.
 pub mod context;
 /// The capability control (§8.6, VISION §4.11) — the adjudicator litany's
 /// tool-control seam consults before every granted tool invocation.

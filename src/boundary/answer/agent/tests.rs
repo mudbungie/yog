@@ -147,7 +147,7 @@ fn an_agent_the_snapshot_does_not_carry_is_answered_not_refused() {
 }
 
 /// One bill for one agent, with a distinct prompt so a transposed subject is
-/// visible in both figures at once.
+/// visible in both figures at once, on a row that stated a 100-token window.
 fn bill(conv: &str, tokens: u64) -> crate::budgets::StepBill {
     let spend = crate::budgets::BudgetSpend {
         input_tokens: tokens,
@@ -161,6 +161,7 @@ fn bill(conv: &str, tokens: u64) -> crate::budgets::StepBill {
         model: Some("m".to_owned()),
         spend,
         last_usage: spend,
+        window: Some(100),
         wall_secs: 0,
     }
 }
@@ -185,7 +186,6 @@ fn a_child_answers_its_own_spend_and_its_own_context() {
     );
     snap.bills
         .insert(ws.to_path_buf(), vec![bill(ROOT, 70), bill(CHILD, 30)]);
-    snap.windows.insert("m".to_owned(), 100);
 
     let at_child = agent(&snap, &ui(), ws, CHILD, 0);
     assert_eq!(at_child.spend.tokens.input_tokens, 30, "the child's own");

@@ -20,7 +20,9 @@
 //! table; the tree walk both share is [`bills`].
 
 mod bills;
+mod last;
 pub use bills::{Scope, StepBill, bills, total, wall};
+pub use last::{context_window, last_usage};
 
 /// Conv-repo subdir of per-conversation step records (ARCH §2.2).
 const STEPS_DIR: &str = "steps";
@@ -32,9 +34,12 @@ const STEP_SEQ_WIDTH: usize = 3;
 /// Tokens spent by a root agent and its descent, split by the four brazen
 /// `Usage` counters. The wire shape is
 /// `{"type":"usage","input_tokens":N,"output_tokens":M,
-/// "cache_read_tokens":R,"cache_write_tokens":W}` (brazen
-/// `canonical::event`) — every counter nullable, a `null`/absent field
-/// counting **zero, never fabricated**. [`total_tokens`](BudgetSpend::total_tokens)
+/// "cache_read_tokens":R,"cache_write_tokens":W,"input_total_tokens":T}`
+/// (brazen `canonical::event`) — every counter nullable, a `null`/absent field
+/// counting **zero, never fabricated**. `input_tokens` here is the **whole
+/// prompt** — `T` where the line carries it (brazen 0.0.10), else `N`, which
+/// [`prompt_tokens`](BudgetSpend::prompt_tokens) reads by the containment
+/// rule below. [`total_tokens`](BudgetSpend::total_tokens)
 /// is what exhausts `max_total_tokens` (ARCH §6), and it is **not** the four
 /// summed: the counters overlap on some providers, so the prompt is folded
 /// once ([`prompt_tokens`](BudgetSpend::prompt_tokens)).
@@ -122,52 +127,49 @@ impl BudgetSpend {
 /// contributes zero.
 pub fn spend_from_bytes(bytes: &[u8]) -> BudgetSpend {
     let mut total = BudgetSpend::default();
-    for line in bytes.split(|b| *b == b'\n') {
-        if let Some(spend) = usage_line(line) {
-            total.add(spend);
-        }
+    for event in usage_events(bytes) {
+        total.add(counters(&event));
     }
     total
 }
 
-/// The **last** `Usage` line's counters, not the fold — the final attempt
-/// segment's, which is the only one whose prompt still describes the context
-/// as it now stands (§5.1 #35). Summing segments answers *spend*; the last
-/// segment answers *fullness*, and a step retried three times would read as a
-/// context three times its real size under the fold. Zero when the payload
-/// carries no `Usage` line at all — the general path with no inputs.
-pub fn last_usage(bytes: &[u8]) -> BudgetSpend {
-    bytes
-        .split(|b| *b == b'\n')
-        .filter_map(usage_line)
-        .next_back()
-        .unwrap_or_default()
-}
-
-/// The counters of one JSONL event line iff it is a `{"type":"usage",…}`
-/// event (brazen's internally-tagged `Event::Usage`). A non-`usage` type,
-/// a line that does not parse, or one with no string `type` yields `None`.
-fn usage_line(line: &[u8]) -> Option<BudgetSpend> {
-    let value: serde_json::Value = serde_json::from_slice(line).ok()?;
-    if value.get("type")?.as_str()? != "usage" {
-        return None;
-    }
-    Some(BudgetSpend {
-        input_tokens: counter(&value, "input_tokens"),
-        output_tokens: counter(&value, "output_tokens"),
-        cache_read_tokens: counter(&value, "cache_read_tokens"),
-        cache_write_tokens: counter(&value, "cache_write_tokens"),
+/// Every `{"type":"usage",…}` event line of a JSONL payload (brazen's
+/// internally-tagged `Event::Usage`). A non-`usage` type, a line that does not
+/// parse, or one with no string `type` is skipped.
+pub(crate) fn usage_events(bytes: &[u8]) -> impl Iterator<Item = serde_json::Value> + '_ {
+    bytes.split(|b| *b == b'\n').filter_map(|line| {
+        let value: serde_json::Value = serde_json::from_slice(line).ok()?;
+        (value.get("type")?.as_str()? == "usage").then_some(value)
     })
 }
 
-/// One `Usage` counter as `u64`: a `null`, absent, or non-integer field is
-/// zero — brazen's Usage-Option contract (a counter a provider never
-/// reported is unknown, rendered zero, never fabricated).
-fn counter(value: &serde_json::Value, key: &str) -> u64 {
-    value
-        .get(key)
-        .and_then(serde_json::Value::as_u64)
-        .unwrap_or(0)
+/// One event's counters, each absent one zero.
+pub(crate) fn counters(event: &serde_json::Value) -> BudgetSpend {
+    BudgetSpend {
+        input_tokens: prompt(event).unwrap_or(0),
+        output_tokens: counter(event, "output_tokens").unwrap_or(0),
+        cache_read_tokens: counter(event, "cache_read_tokens").unwrap_or(0),
+        cache_write_tokens: counter(event, "cache_write_tokens").unwrap_or(0),
+    }
+}
+
+/// The prompt one line reports: brazen's `input_total_tokens` — the whole
+/// prompt, cached slices included, sealed by the decoder that knows the
+/// provider's containment shape (brazen bl-d192, 0.0.10) — or, on a line
+/// written before that counter existed, the provider's own `input_tokens`,
+/// which [`BudgetSpend::prompt_tokens`]' max rule still reads. Not a version
+/// shim: every step record on disk is one shape or the other forever, and
+/// `input_total_tokens` is `None` exactly when `input_tokens` is, so presence
+/// is one question.
+fn prompt(event: &serde_json::Value) -> Option<u64> {
+    counter(event, "input_total_tokens").or_else(|| counter(event, "input_tokens"))
+}
+
+/// One `Usage` counter, or `None` for a `null`, absent, or non-integer field —
+/// brazen's Usage-Option contract (a counter a provider never reported is
+/// unknown, never fabricated).
+pub(crate) fn counter(event: &serde_json::Value, key: &str) -> Option<u64> {
+    event.get(key).and_then(serde_json::Value::as_u64)
 }
 
 #[cfg(test)]

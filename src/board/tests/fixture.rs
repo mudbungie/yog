@@ -74,6 +74,7 @@ pub(super) fn bill(conv: &str, input: u64) -> StepBill {
             ..BudgetSpend::default()
         },
         last_usage: BudgetSpend::default(),
+        window: None,
         wall_secs: 0,
     }
 }
@@ -134,7 +135,6 @@ pub(super) fn world(
     balls_by_project.insert(PathBuf::from(PROJECT), balls);
     World {
         snap: Snapshot {
-            windows: std::collections::BTreeMap::default(),
             // Both walls are enumerated: a join row addresses its workspace
             // by §3.1 name since bl-b4b5, and the board resolves that name back
             // through the snapshot's own round trip.

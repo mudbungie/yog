@@ -146,9 +146,10 @@ pub struct AgentView {
     pub spend: crate::spend::Figure,
     /// **How full its context is** (§5.1 #35): the prompt
     /// [`agent_id`](Self::agent_id)'s own latest step sent, against the window
-    /// `models.yaml` declares for the model that sent it. `None` when nothing
-    /// measured can be said, which is the ordinary answer for a conversation
-    /// that has not run yet.
+    /// that step's own usage lines state for the model that sent it. `None`
+    /// when nothing measured can be said, which is the ordinary answer for a
+    /// conversation that has not run yet, or one on a row that serves no
+    /// window.
     ///
     /// The selection's own step since bl-131d, for
     /// [`spend`](Self::spend)'s reason and by §5.1 #35's own sentence — *"a
@@ -184,7 +185,7 @@ pub fn agent(snap: &Snapshot, ui: &UiState, ws: &Path, agent: &str, now_unix: i6
     let bills = snap.bills.get(ws).cloned().unwrap_or_default();
     AgentView {
         spend: crate::spend::of_branch(&bills, agent, &ui.prices()),
-        context: crate::context::of_agent(&bills, agent, &snap.windows),
+        context: crate::context::of_agent(&bills, agent),
         name: display_name_of(&agents, &root),
         display_only: agents
             .iter()

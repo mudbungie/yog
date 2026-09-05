@@ -2,9 +2,21 @@
 //! settings rows.) The context-window percentage is shown per chat.
 //!
 //! Derived, never stored, and pure: a query over the worker's already-walked
-//! [`StepBill`]s (§3.5, bl-9dd4) and the windows `models.yaml` declares. Yog
-//! keeps no counter and no cache — asking twice re-derives, like every other
-//! §5.1 fact.
+//! [`StepBill`]s (§3.5, bl-9dd4), and nothing else — the window is on the bill
+//! too, read off the same usage line as the prompt (bl-9c8a). Yog keeps no
+//! counter, no cache and no table of windows — asking twice re-derives, like
+//! every other §5.1 fact.
+//!
+//! **The denominator is the provider's fact, served in band.** brazen stamps
+//! the resolved model row's context window on every `Usage` event (its
+//! model-discovery §5.5, 0.0.9), and litany's own `window_percent` compaction
+//! trigger divides by exactly that number off the same record. A window yog
+//! declared on its own would be a second representation of one fact that the
+//! engine compacting the context could not see — the percentage here and the
+//! compaction one layer down would disagree about one context. So there is no
+//! declaration: a row that states no window renders no figure, and the seat to
+//! state one is upstream, on brazen's provider row, where for Ollama it is
+//! already the `num_ctx` in force.
 //!
 //! **Fullness is not spend.** [`crate::budgets`] sums every counter of every
 //! attempt of every step of a whole descent — that is what exhausts
@@ -28,34 +40,33 @@
 //! questions, two derivations — one reading of a prompt.
 
 use crate::budgets::StepBill;
-use std::collections::BTreeMap;
 
 /// One conversation's context as of its latest step (§5.1 #35).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Fullness {
-    /// The wire model that step ran on — the id `request.json` named, which is
-    /// also the key the window was found under.
+    /// The wire model that step ran on — the id `request.json` named.
     pub model: String,
     /// The prompt that step sent, by the reading in this module's header. A
     /// floor on a provider that slices its prompt counters disjointly.
     pub prompt_tokens: u64,
-    /// The window that model declares. Never zero: an undeclared or zero
-    /// window yields no [`Fullness`] at all rather than a division to guess at.
+    /// The window the step's own usage lines state for that model. Never
+    /// zero: an unstated or zero window yields no [`Fullness`] at all rather
+    /// than a division to guess at.
     pub window: u64,
 }
 
 impl Fullness {
     /// The figure itself, rounded to whole percent. Not clamped: a context that
     /// has outgrown its declared window is a fact worth reading as `140%`,
-    /// which says *the declaration is wrong or the provider compacted* — where
-    /// a clamp to 100 would render an overflow and a full context alike.
+    /// which says *the row's window is wrong or the provider compacted* —
+    /// where a clamp to 100 would render an overflow and a full context alike.
     pub fn percent(&self) -> u64 {
         self.prompt_tokens.saturating_mul(100) / self.window
     }
 }
 
 /// **One agent's** fullness, or `None` when nothing honest can be said: it has
-/// taken no step, its latest step names no model, or that model declares no
+/// taken no step, its latest step names no model, or its usage lines state no
 /// window. **Render nothing, never an estimate** — the whole point of the
 /// figure is that it is measured.
 ///
@@ -64,21 +75,15 @@ impl Fullness {
 /// caller named rather than that agent's root — a child asked about its own
 /// context was answered with its parent's, off the same one filter that could
 /// have answered honestly.
-pub fn of_agent(
-    bills: &[StepBill],
-    agent_id: &str,
-    windows: &BTreeMap<String, u64>,
-) -> Option<Fullness> {
+pub fn of_agent(bills: &[StepBill], agent_id: &str) -> Option<Fullness> {
     let latest = bills
         .iter()
         .filter(|b| b.conv == agent_id)
         .max_by(|a, b| a.seq.cmp(&b.seq))?;
-    let model = latest.model.clone()?;
-    let window = *windows.get(&model)?;
     Some(Fullness {
-        model,
+        model: latest.model.clone()?,
         prompt_tokens: latest.last_usage.prompt_tokens(),
-        window,
+        window: latest.window?,
     })
 }
 
