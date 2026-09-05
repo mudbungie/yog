@@ -1,7 +1,7 @@
 +++
 title = "the fullness denominator is dark until hand-declared: if it should prefer the window brazen served, the shape is a read-time query over the model cache"
 created = 1786937639
-updated = 1788580639
+updated = 1788580834
 claimant = "Animations-H"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -70,3 +70,17 @@ f19d matters more than the body's "dissolves part of this" suggests: bl-671d mea
 ## What the implementation ball needs, when filed
 
 Gate: file it only after brazen bl-f19d resolves, and re-read against what actually landed. Contents: recover `served_window` from 535737d3; derive a per-workspace served map in the route sweep by folding every provider cache file under each enumerated workspace's wall (walls are path algebra over the snapshot's existing workspace keys — no StepBill change, no new watch root, no spawn); precedence = declaration wins, served fills; and if f19d landed the declaration-reaches-the-request shape, weigh whether the served fill should feed the DECLARATION seat (a suggested value in the §9.2 editor) rather than the gauge directly, so the number in force and the denominator can never diverge.
+
+---
+
+RULING (bl-9c8a, re-read against brazen 0.0.9/0.0.10 and litany 0.0.8). The denominator is the context_window the step's own usage line states; yog's declaration family is deleted, not queried around.
+
+Three upstream facts changed the ground. (1) brazen 0.0.9 (bl-fb0c) stamps the resolved model row's context_window on every Usage event, and litany 0.0.8 (bl-a537) already divides its window_percent compaction trigger by that number off the same step record, keeping no per-model table. (2) brazen 0.0.10 (bl-d192) adds input_total_tokens, the whole prompt sealed by the decoder that knows the provider's containment shape, with the documented rule fullness = input_total_tokens / context_window. (3) brazen 0.0.10 (bl-f19d) lets an ollama row's body_defaults options.num_ctx reach the request, so the number in force can be the row's.
+
+Why the ball's designed shape dissolves rather than lands. The read-time query over model_cache_at that this ball sketched, per workspace and per provider row, folded on the sweep with a precedence rule over the declaration, is exactly the read brazen performs on every call before stamping the event. The engine already records that event per step, so the query, its keying (the StepBill gap), the sweep arm and the precedence question all collapse into one read off the record: budgets::context_window, the last window the step's usage lines state. A special case was a missing reframe.
+
+Why the declaration goes too, rather than winning or filling. litany compacts on the in-band number and cannot see a yog-side declaration, so a declared window let the percentage here and the compaction one layer down disagree about one context; two representations of one fact, and the engine holds the one that acts. The one seat to state a window for a row whose list serves none is brazen's provider row, where for ollama it is ALREADY the num_ctx in force since 0.0.10: declared once, reaching the request, the event, litany and yog alike. Filed upstream as brazen bl-c655 (a row-stated window reaches the Usage event). Until it lands, Google rows (and a Codex row naming context_key) render a figure and Anthropic/OpenAI/Ollama rows render none, which is the fresh-world state since bl-d9cb anyway, now with the remedy in the right program.
+
+Landed here: budgets::context_window on StepBill beside last_usage; context::of_agent takes the window off the bill; last_usage merges per field last-wins (brazen's consumer rule; the final line alone read an Anthropic stream, whose message_delta carries only output, as a prompt of zero); input_total_tokens read as the prompt where a line carries it, the max rule kept for every line written before the counter existed. Deleted: grammar/models (context_windows, declare_model, DEFAULT_CONTEXT_WINDOW), MODELS_SCHEMA and the §9.5 typed rows over models.yaml, Snapshot::windows, derive.windows, adopt_windows; grammar/rows keeps is_unknown_row; models.yaml is a raw-text destination. DESIGN §5.1 #16/#35, §9.2, §9.4, §9.5, §12 amended. The sibling dead-columns ball (bl-3ffa) had already closed; this removes what it left.
+
+NOT landed: the brazen pin bump to =0.0.10. yog links brazen directly AND through litany, and the lockfile must resolve ONE brazen (CLAUDE.md rule 6, Cargo.toml). litany pins =0.0.9 at 0.0.8; its bl-3fe6 (ready) moves it to =0.0.10, and only its next release lets yog step both pins together. Nothing in this ball needs the pin: yog parses the recorded JSON lines, not brazen's structs, so context_window and input_total_tokens are read wherever a line carries them. What the bump enables is yog's own in-process bz emitting input_total_tokens and honouring a row's num_ctx. yog bl-cb05 carries the bump, gated on litany's release.
