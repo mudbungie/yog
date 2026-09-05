@@ -77,6 +77,9 @@ fn the_prompt_action_fires_detached_and_returns_the_minted_name() {
     let bin = tempdir().unwrap();
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
+    // The door's *sign in first* rung (§8.1, bl-2291) stands ahead of the
+    // fire; a lineage naming a keyless row is what lets a hermetic beat past.
+    crate::support::keyless_wall(ws.path());
     let rec = Recorder::new(bin.path(), "litany");
     let litany = Cli::new(rec.path());
     let d = deps(&litany, state.path(), &[ws.path()]);
@@ -126,6 +129,7 @@ fn the_prompt_action_fires_detached_and_returns_the_minted_name() {
 fn a_fork_that_never_lands_is_a_refusal_with_its_synthetic_row() {
     let state = tempdir().unwrap();
     let ws = tempdir().unwrap();
+    crate::support::keyless_wall(ws.path());
     let litany = Cli::new("/no/such/litany");
     let d = deps(&litany, state.path(), &[ws.path()]);
     let action = Action::Prompt {

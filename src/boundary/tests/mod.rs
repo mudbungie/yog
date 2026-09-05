@@ -11,6 +11,9 @@ mod address;
 mod blank_goal;
 /// Which gestures name a project (§3.5) and which name none.
 mod project;
+/// §8.1's *sign in first* (bl-1fd0, seated at the door by bl-2291), over real
+/// walls.
+mod sign_in;
 /// The §8.1 start family driven the way a terminal must drive it — two real
 /// `yog gesture` invocations, the second carrying the first's reply (bl-44d8).
 mod start_terminal;

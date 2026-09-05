@@ -73,7 +73,10 @@ const FOREIGN: &[&str] = &[
     // correction that the *rule* bumps the protocol version and the corpus
     // ledger only enforces what it can see — which every later bump on a shape
     // whose signature had stood still is an application of.
-    "9.7", "9.8", "9.9", "9.14", "9.15",
+    // §9.19 joins them (bl-2291): the `prompt` door's *sign in first* — a
+    // refusal that widened without a shape moving, cited "REMOTE §9.19" from
+    // DESIGN §8.1 as the seat's half of the ruling.
+    "9.7", "9.8", "9.9", "9.14", "9.15", "9.19",
     // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
     // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
     // "Rejections" and has no subsections at all, which the sibling test keeps

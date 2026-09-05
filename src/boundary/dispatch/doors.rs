@@ -80,6 +80,14 @@ pub fn prepare(
 /// blank goal is spend for nothing and a conversation whose first entry is
 /// empty. A seat may grey its own send button, but that is a view (bl-54c1).
 ///
+/// **Sign in first** (§8.1's bl-1fd0 ruling, seated here by bl-2291) stands
+/// second: behind the blank goal, because a fire with nothing to say reads no
+/// wall, and ahead of the confinement read and the ceiling, because a wall
+/// that would reach no model must cost neither a policy read nor a trail row.
+/// The fold is [`super::signin`]'s; the door only names it, as it names the
+/// other two. It is the one home of the decision — a seat paints the refusal
+/// where it paints every refusal and re-derives nothing.
+///
 /// **`seed` is the firing seat's own §3.3 prediction** (bl-1747), and `None` is
 /// a caller that made none — a deposited line, the §4.3 loop — for which this
 /// moment's stamp is the draw. One default, at the one door that mints, rather
@@ -97,6 +105,7 @@ pub fn prompt(
     if goal.trim().is_empty() {
         return Err(BLANK_GOAL.to_owned());
     }
+    super::signin::gate(deps, workspace, prepared.lineage.as_deref())?;
     control::confinement_gate(workspace)?;
     // The §3.5 ceiling is the **world's** since bl-a80a, so its comparison is
     // folded over the §3.1 roster rather than over the one workspace this birth

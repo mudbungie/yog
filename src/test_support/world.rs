@@ -66,3 +66,13 @@ pub(crate) fn no_wall(root: &Path) -> crate::xdg::Env {
 pub(crate) fn no_world() -> crate::xdg::Env {
     world_under(Path::new("/nonexistent/yog-test-world"))
 }
+
+/// The same world with **every wall signed in**, and not a byte on disk
+/// (§8.1's *sign in first*, bl-2291). brazen's built-in `anthropic` row
+/// declares an ambient `ANTHROPIC_API_KEY` source and the wall's store
+/// discovers it off the injected snapshot, so that one row reads `ambient`
+/// and the `Prompt` door lets the fire through. For a fixture whose beat is
+/// the fire rather than the wall; a beat about the wall builds one.
+pub(crate) fn signed(world: &crate::xdg::Env) -> crate::xdg::Env {
+    world.with_overrides(&[("ANTHROPIC_API_KEY", "notreal-signed-fixture")])
+}

@@ -15,6 +15,15 @@ use crate::test_support::engine;
 use std::path::Path;
 use tempfile::tempdir;
 
+/// The door's fire over a wall that is signed in (bl-2291) — these beats are
+/// about the mint and the launch, not the wall.
+fn signed(deps: crate::boundary::dispatch::Deps) -> crate::boundary::dispatch::Deps {
+    crate::boundary::dispatch::Deps {
+        world: crate::test_support::signed(&deps.world),
+        ..deps
+    }
+}
+
 /// The conversation the retarget and the fork address. **Id-shaped** (ARCH
 /// §2.3's compact stamp): the §8.5 chokepoint resolves the conversation a
 /// gesture names (bl-49bc), and an id reads as one on its own.
@@ -93,7 +102,7 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
     let w = world();
     let (_c, m) = model(&w);
     let litany = fake_litany(bin.path());
-    let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
+    let deps = signed(m.boundary_deps(&litany, &Cli::new("/no/bl")));
     let action = Action::Prompt {
         prepared: prepared(&w),
         goal: "go".into(),
@@ -117,7 +126,7 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
     );
 
     // The same door refuses when the fork cannot land, error text riding back.
-    let dead = m.boundary_deps(&Cli::new("/no/such/litany"), &Cli::new("/no/bl"));
+    let dead = signed(m.boundary_deps(&Cli::new("/no/such/litany"), &Cli::new("/no/bl")));
     let err = engine::act(&m, &dead, "T2", &action).unwrap_err();
     assert!(!err.is_empty());
 }
@@ -132,7 +141,7 @@ fn a_seedless_prompt_mints_off_the_stamp() {
     let w = world();
     let (_c, m) = model(&w);
     let litany = fake_litany(bin.path());
-    let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
+    let deps = signed(m.boundary_deps(&litany, &Cli::new("/no/bl")));
     let action = Action::Prompt {
         prepared: prepared(&w),
         goal: "go".into(),

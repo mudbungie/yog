@@ -149,7 +149,7 @@ pub(crate) fn prepared_replacement(path: &std::path::Path) -> std::path::PathBuf
 /// file at §12's cap, on the seam between faking an *effect* and composing a
 /// *world* (bl-fcd5).
 pub(crate) mod world;
-pub(crate) use world::{fixture_workspace, no_wall, no_world, wall_paths, world_under};
+pub(crate) use world::{fixture_workspace, no_wall, no_world, signed, wall_paths, world_under};
 
 /// A real litany workspace on disk, for the tests that need one (§8.6's control
 /// authoring and the start-flow abort it can raise). Its own file: the cap is a

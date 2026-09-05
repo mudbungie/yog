@@ -52,8 +52,8 @@ const BEARER: &str = "bearer";
 /// brazen's `credential` spelling for a row that needs none at all — its
 /// `auth = "none"` arm, answered before any store is consulted. A keyless row
 /// is a local runtime or a host CLI carrying its own sign-in, so this says
-/// nothing about whether that runtime is *there* — see
-/// [`WallCredit`](crate::start::WallCredit), the one consumer that cares.
+/// nothing about whether that runtime is *there* — see the §8.1 sign-in gate
+/// (`boundary::dispatch::signin`), the one consumer that cares.
 pub const NOT_REQUIRED: &str = "not required";
 
 /// brazen's `credential` spelling for a row with no credential to use: its
@@ -83,8 +83,9 @@ pub struct ProviderRow {
     /// required` ([`NOT_REQUIRED`] — the keyless arm) or `missing`
     /// ([`MISSING`]). brazen computes it through the very `fetch_cred` a run
     /// spends, minus the network, so it is the authority on "could this row
-    /// answer at all" and yog re-derives none of it. Read by the §8.1 start
-    /// gate ([`crate::start::WallCredit`], bl-1fd0).
+    /// answer at all" and yog re-derives none of it. Read by the §8.1 sign-in
+    /// gate at the `Prompt` door (`boundary::dispatch::signin`, bl-1fd0 seated
+    /// by bl-2291).
     pub credential: String,
     /// **Does this row take an `effort:` assignment?** (§9.4's tuning pair,
     /// bl-23bd.) brazen's own per-row declaration, read as a column — the
@@ -145,9 +146,9 @@ impl ProviderRow {
     /// `fetch_cred` found — the two this build knows beside `stored`
     /// (`ambient`, `inline`) and any it has never heard of.
     ///
-    /// **One predicate, one home** (bl-dba3). The §8.1 start gate
-    /// ([`WallCredit`](crate::start::WallCredit)) asks this question of the same
-    /// column, and the rendered row used to answer it a second way — a stat of
+    /// **One predicate, one home** (bl-dba3). The §8.1 sign-in gate
+    /// (`boundary::dispatch::signin`) asks this question of the same column,
+    /// and the rendered row used to answer it a second way — a stat of
     /// `<credentials-dir>/<name>.json`, which is blind to `ambient` and `inline`
     /// by construction. Two representations of one fact, and they drifted: a row
     /// answering live off an ambient credential rendered *not signed in*.

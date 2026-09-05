@@ -4667,6 +4667,36 @@ file with no grammar, a `providers.yaml` whose role is bound to a row brazen's
 table does not carry, and `cadence.yaml`'s three bounded numbers — so every
 control kind and both `fault` readings cross.
 
+### 9.19 The `prompt` door says *sign in first* (bl-2291)
+
+**No shape moved and `PROTOCOL` stands at 13.** What widened is *when* a
+`prompt` act is refused: DESIGN §8.1's bl-1fd0 rung — on a wall holding no
+usable provider credential, the first thing to say is sign in — now lives at
+the engine's `Prompt` door, in the order blank goal → sign in → confinement →
+ceiling. The refusal rides the `{"ok": false, "error": …}` every act already
+answers with, so this is §9.10's own distinction applied again: a value that
+becomes true in more of the cases it always claimed to cover is neither a
+shape nor a spelling, and a seat's action is unchanged — paint the refusal
+where every refusal is painted, and keep the goal, because a refused fire
+spends nothing.
+
+**Why the engine and not the seat.** §8.1 had left the fold to whichever seat
+asked `/providers` first, and none did: a seat re-judging the rows is a second
+implementation of a settled decision, and there are two seats. The engine
+holds the wall, so the engine judges it, once, at the one door a click, a line
+and a deposit all pass. **What a seat owes it:** nothing new on the wire. A
+seat that holds a start across the two acts retires it on the refusal and
+hands the goal back to the box — the seat repository's bl-b180 records that
+half, including the one thing this side cannot tell it: which act a refusal
+frame answered is a fact the seat's own poster holds, since a refusal carries
+no `kind`.
+
+**What it does not carry, on purpose.** No `sign_in_required` field on the
+`prepared` body and no standing *ready?* query: the first would make a seat
+hold a prediction the door re-derives anyway, and the second is a read a
+start typed before its answer must race — the question dissolves at a door
+and would only be answered at a query.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

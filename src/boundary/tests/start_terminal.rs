@@ -72,7 +72,7 @@ fn a_prepared_reply_fires_the_next_invocations_prompt() {
         bl: Cli::new("/no/such/bl"),
         state_root: state.path().to_path_buf(),
         yog_binary: PathBuf::from("/no/such/yog"),
-        world: no_world(),
+        world: crate::test_support::signed(&no_world()),
         home: home.path().to_path_buf(),
         yog_data_root: yog.path().to_path_buf(),
         balls_state_root: balls.path().to_path_buf(),

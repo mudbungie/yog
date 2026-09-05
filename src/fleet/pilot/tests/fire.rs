@@ -31,7 +31,7 @@ fn ctx(state_root: &Path, snapshot: Snapshot) -> PilotCtx {
             bl: Cli::new("/no/such/bl"),
             state_root: state_root.to_path_buf(),
             yog_binary: PathBuf::from("/no/such/yog"),
-            world: crate::test_support::no_world(),
+            world: crate::test_support::signed(&crate::test_support::no_world()),
             home: state_root.join("home"),
             yog_data_root: state_root.join("data"),
             balls_state_root: state_root.join("balls"),

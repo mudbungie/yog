@@ -46,6 +46,11 @@ mod enroll;
 /// The one address resolution, and the §4.1 raise it carries — split off at
 /// §12's cap (bl-4e08); it stands ahead of the table rather than inside it.
 mod resolve;
+/// The bl-1fd0 rung — *sign in first* — at the `Prompt` door (bl-2291): the
+/// wall's credential fold, its one home, split out on the seam the other
+/// gates keep (the ceiling and the confinement refusal each live in their own
+/// module and the door only names them).
+mod signin;
 use arms::{acknowledge, fork, outcome, pin, retarget, spend, staged, wrote};
 use delete_exec::{delete_agent, unmake};
 pub use deps::{Caller, Deps};

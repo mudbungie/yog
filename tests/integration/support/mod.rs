@@ -160,3 +160,41 @@ pub fn build_workspace(ws: &Path) {
     run_git(&wt, &["add", "goal.md"]);
     run_git(&wt, &["commit", "-q", "-m", "dispatch [c-001]"]);
 }
+
+/// **A wall the `Prompt` door lets a fire through, with nothing signed in**
+/// (DESIGN §8.1's *sign in first*, bl-2291): a bare `repo.git` whose
+/// `config/default` names brazen's built-in keyless `ollama` row in a role. The
+/// door reads the lineage the fire forks off, and a keyless row a role names
+/// readies the wall — the operator's own hand rather than the built-in merge.
+/// For a beat about the fire rather than the wall; it touches no credential
+/// store and no real world, which an integration test could not reach anyway.
+pub fn keyless_wall(ws: &Path) {
+    let repo = ws.join("repo.git");
+    fs::create_dir_all(&repo).unwrap();
+    run_git(&repo, &["init", "-q", "--bare", "-b", "config/default"]);
+    run_git(&repo, &["config", "user.email", "t@t.local"]);
+    run_git(&repo, &["config", "user.name", "Tester"]);
+    run_git(&repo, &["config", "commit.gpgsign", "false"]);
+    let author = ws.join(".author");
+    let author_str = author.to_string_lossy().to_string();
+    run_git(
+        &repo,
+        &[
+            "worktree",
+            "add",
+            "-q",
+            "--orphan",
+            "-b",
+            "config/default",
+            &author_str,
+        ],
+    );
+    fs::write(
+        author.join("providers.yaml"),
+        "roles:\n  worker:\n    provider: ollama\n    model: tiny\n",
+    )
+    .unwrap();
+    run_git(&author, &["add", "providers.yaml"]);
+    run_git(&author, &["commit", "-q", "-m", "config: keyless role"]);
+    run_git(&repo, &["worktree", "remove", &author_str]);
+}
