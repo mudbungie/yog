@@ -90,6 +90,14 @@ const FOREIGN: &[&str] = &[
     // in doubt, and the swallowed capture re-posted. Cited "REMOTE §5.6"
     // everywhere, and the same sibling test keeps DESIGN §5 subsectionless.
     "5.4", "5.6",
+    // lernie DESIGN's §6.4 — the seat's reasoned exception to §10.1's
+    // one-image-per-component ruling (lernie bl-18c7) — and §6.3, the seat's
+    // install line on a mac, which §6.4's argument rests on. Cited prefixed
+    // ("lernie DESIGN §6.4") from §10.1, where the two documents are made to
+    // agree (bl-df1f). DESIGN §6 is "The attention model" and has no
+    // subsections at all, which the sibling test keeps honest: the day it
+    // grows one, these entries fail rather than masking it.
+    "6.3", "6.4",
 ];
 
 /// Parse a section key (`digits`, optionally `.digits`) starting at `i`;

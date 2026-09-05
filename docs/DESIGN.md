@@ -6615,7 +6615,28 @@ semantics: no component uses the container filesystem as a feature, none may
 start to, and a container is never a containment claim any component makes on
 the wire. The image is the unit of install. That is the whole of the ruling,
 and the rest of this section is the shape the two containerized repos landed
-against it (litany bl-6467, thrall bl-3586), which the remaining two follow.
+against it (litany bl-6467, thrall bl-3586), which yog follows.
+
+**The seat is the one recorded exception, and it answered with a ruling rather
+than a build** (lernie bl-18c7, recorded as lernie DESIGN §6.4, *"The seat
+ships no OCI image: the reasoned exception to yog's §10.1"*). The ruling's own
+premise is what excepts it: *"An image is the unit of install for a box that
+takes images, and a seat's box is a desktop."* The three headless components
+run where no toolchain, no display and no operator is; a seat runs where all
+three are, and its unit of install was settled before the question was asked —
+the published crate, compiled on the box, by `make install` or the hourly
+reconciler on Linux (lernie bl-155a) and by `cargo install` on a mac (lernie
+DESIGN §6.3). That already buys what this ruling names: one immutable version
+per install, an hourly convergence, and a yank as the rollback lever. What a
+seat image would have to carry is host state — the display stack, the GL/EGL
+and client libraries, the fonts — while the display socket, the GPU device,
+the seat's XDG state and its wire material would all be mounted back in, which
+is the coupling an image exists to remove. The one face a container could host
+is the headless verb surface, and lernie bl-9380 already named that a
+different product; one binary carries both faces today. **So this section
+names three images, not four.** §10.2's table row for the seat (it cannot
+cross-produce) stays correct as written, and nothing here forecloses the
+image's return if that other product is ever cut.
 
 **Each repo owns its own `Containerfile` and `make image`; there is no shared
 build tooling and no meta-repo.** The components meet at the wire and nowhere
@@ -6667,7 +6688,8 @@ Six properties, and each is load-bearing rather than stylistic:
 #### The registry (operator ruling 2026-08-30)
 
 **`ghcr.io/mudbungie/<component>` — one package per repo, named for the
-component.** `ghcr.io/mudbungie/litany`, `/thrall`, `/yog`, `/lernie`. GitHub's
+component.** `ghcr.io/mudbungie/litany`, `/thrall`, `/yog` — three, not four:
+the seat publishes no image (lernie DESIGN §6.4, above). GitHub's
 registry and not a fifth account somewhere else, because the repos are already
 there: the package inherits the repo's owner, its visibility and its access
 control, so there is no second identity to hold, no second credential to
