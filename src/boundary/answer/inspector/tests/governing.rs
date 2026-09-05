@@ -49,11 +49,14 @@ fn an_unnamed_commit_is_the_agents_own_tip() {
 /// followed lineage's current head whatever rev the walk starts from on that
 /// lineage, so an unpinned read and a read pinned to an older commit of the
 /// same lineage agree — and both move when the lineage advances. Per-step
-/// policy provenance is not derivable from ancestry any more; litany filed it
-/// (their bl-e4a0, the resolved commit recorded in each step's `meta.json`),
-/// and what survives meanwhile is that each step record carries the policy's
-/// byte-for-byte effects. Asserting the old freeze here would pin a fact the
-/// engine stopped producing.
+/// policy provenance is not derivable from ancestry any more; litany SHIPPED
+/// it in 0.0.10 (their bl-e4a0: each step's `meta.json` records
+/// `config_commit` and `workflow_commit` beside the branch tip it already
+/// carried). yog reads that record field-by-field and asks for neither yet, so
+/// per-step provenance is available to a reader that wants it and this layer
+/// is unchanged — what it answers is still the followed lineage's head, and
+/// asserting the old freeze here would pin a fact the engine stopped
+/// producing.
 #[test]
 fn a_named_commit_is_the_one_the_walk_starts_from() {
     let (fx, snap) = world();

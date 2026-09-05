@@ -276,7 +276,20 @@ clap = { version = "4", features = ["derive"] }
 # gains the `invoke` verb (upstream bl-bae9), which the W11 arm answers by
 # construction — it builds one `Fx` for every verb, so the injection is
 # installed there exactly as for `advance` and `tool`.
-litany = "=0.0.9"
+# 0.0.10 moves three things yog reads and one it does not call. `litany
+# workflow <ws> <agent>` with no `--config` is now a READ of the governing
+# commit rather than a write that MARKED the default (upstream bl-5c02) — yog
+# invokes that verb nowhere (its `/config workflow <name>` is a file read/write
+# under `ConfigFile::LitanyWorkflow`, not the verb), so the behaviour change
+# reaches no caller and no drive beat. `meta.json` gains `config_commit` and
+# `workflow_commit` (upstream bl-e4a0) and the record grows-only; yog reads it
+# field-by-field through `steps_view::meta_field` over a `serde_json::Value`
+# with no strict struct anywhere, so additive keys ride through unread until a
+# reader asks for one. The other two are litany's own: the deletion predicate
+# now judges the removal set (bl-7234), and tool descriptions are re-cut at
+# every step boundary BEFORE the read-state capture (bl-37cd), so a `litany
+# config` edit reaches a running loop one step sooner than it did.
+litany = "=0.0.10"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).
