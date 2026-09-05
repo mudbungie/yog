@@ -1,7 +1,8 @@
 +++
 title = "a `grep -q` fed by a pipe answers FALSE when it matched: the leak self-test's flake, and one site where the gate drops a finding"
 created = 1788582608
-updated = 1788582608
+updated = 1788583685
+claimant = "Animations-X"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
