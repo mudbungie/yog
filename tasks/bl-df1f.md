@@ -1,7 +1,8 @@
 +++
 title = "DESIGN 10.1 names a ghcr package for the seat that will never exist: record the seat's reasoned exception"
 created = 1788583177
-updated = 1788583177
+updated = 1788584008
+claimant = "Animations-X"
 priority = 4
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
