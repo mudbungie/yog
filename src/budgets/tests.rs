@@ -161,6 +161,35 @@ fn the_sealed_prompt_total_is_read_where_a_line_carries_it() {
     );
 }
 
+/// The shape is decided **per line, not per record** (bl-bf8b): a
+/// `response.json` written across a `bz` upgrade — an attempt segment from
+/// before 0.0.10 folded with one after it — reads each line by what that line
+/// carries, because [`prompt`] asks the question once per event and
+/// [`BudgetSpend::add`] folds the answers. There is no version to detect and no
+/// record-wide branch: the sealed line contributes its served total, the older
+/// one its max reading, and the ceiling sees their sum.
+#[test]
+fn each_line_is_read_by_its_own_shape_when_a_record_carries_both() {
+    let mixed = [
+        // Pre-0.0.10: disjoint Anthropic counters, floored by the max rule to
+        // 96_000 — the cached slices, since `input` is only the uncached tail.
+        r#"{"type":"usage","input_tokens":4000,"output_tokens":500,"cache_read_tokens":90000,"cache_write_tokens":6000}"#,
+        // 0.0.10 and after: the served total, which the max cannot move.
+        r#"{"type":"usage","input_tokens":4000,"output_tokens":500,"cache_read_tokens":90000,"cache_write_tokens":6000,"input_total_tokens":100000}"#,
+    ]
+    .join("\n");
+    let folded = spend_from_bytes(mixed.as_bytes());
+    assert_eq!(folded.input_tokens, 4_000 + 100_000);
+    assert_eq!(folded.cached_tokens(), 192_000);
+    assert_eq!(folded.prompt_tokens(), 192_000, "the floor is the fold's");
+    assert_eq!(folded.total_tokens(), 193_000);
+    // Read alone, each line is exactly what its own shape says.
+    let old_only = spend_from_bytes(mixed.split('\n').next().unwrap().as_bytes());
+    assert_eq!(old_only.prompt_tokens(), 96_000);
+    let new_only = spend_from_bytes(mixed.split('\n').nth(1).unwrap().as_bytes());
+    assert_eq!(new_only.prompt_tokens(), 100_000);
+}
+
 /// The denominator rides the same lines as the numerator (§5.1 #35): the
 /// window brazen stamps on the usage event, last stated wins, a zero or an
 /// absent one is no window at all.

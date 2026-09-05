@@ -59,25 +59,37 @@ impl BudgetSpend {
             .saturating_add(self.cache_write_tokens)
     }
 
-    /// The prompt these counters describe: `max(input, cache_read +
-    /// cache_write)`, so a cached slice that already sits **inside** the prompt
-    /// counter is counted once.
+    /// The prompt these counters describe. **Where the line carried
+    /// `input_total_tokens`, this is that number and the `max` decides
+    /// nothing**: the served total already contains the cached slice, so it is
+    /// never below `cache_read + cache_write` and the expression returns it
+    /// unchanged. The max rule is the **fallback for a line written before that
+    /// counter existed**, not the fold's rule.
     ///
-    /// brazen's canonical `Usage` reports each provider's own counters
-    /// unaltered, and the providers disagree about overlap: Anthropic's prompt
-    /// counters are **disjoint** slices (`input_tokens` beside
-    /// `cache_read_input_tokens` / `cache_creation_input_tokens`), while the
-    /// OpenAI-shaped and Google decoders map a prompt counter that **contains**
-    /// the cached one (`prompt_tokens` ⊇ `prompt_tokens_details.cached_tokens`,
+    /// Which shape a line is, is decided once, at [`prompt`] — brazen's
+    /// `input_total_tokens` (0.0.10, upstream bl-d192) is the whole prompt,
+    /// sealed by the decoder that knows the provider's containment shape, and
+    /// [`counters`] puts it in [`input_tokens`](Self::input_tokens). So the
+    /// containment argument below is history for every record a pinned `bz`
+    /// writes, and live only for the older ones on disk.
+    ///
+    /// **The fallback, and why it is a `max`.** brazen's canonical `Usage`
+    /// reported each provider's own counters unaltered, and the providers
+    /// disagree about overlap: Anthropic's prompt counters are **disjoint**
+    /// slices (`input_tokens` beside `cache_read_input_tokens` /
+    /// `cache_creation_input_tokens`), while the OpenAI-shaped and Google
+    /// decoders map a prompt counter that **contains** the cached one
+    /// (`prompt_tokens` ⊇ `prompt_tokens_details.cached_tokens`,
     /// `input_tokens` ⊇ `input_tokens_details.cached_tokens`,
     /// `promptTokenCount` ⊇ `cachedContentTokenCount`), and ollama reports no
-    /// cache counters at all. Nothing on the `Usage` event says which shape it
-    /// is and a step record carries no protocol, so the fold takes the larger of
-    /// the two readings of the prompt rather than their sum: **exact** where the
+    /// cache counters at all. Nothing on such a line says which shape it is and
+    /// a step record carries no protocol, so the fold takes the larger of the
+    /// two readings of the prompt rather than their sum: **exact** where the
     /// slice is contained, a **floor** (never an over-statement) where the
     /// counters are disjoint, and plain `input_tokens` where no cache counter is
-    /// reported. One formula, no per-provider branch — normalizing the overlap
-    /// is brazen's to do, not yog's to guess at.
+    /// reported. One expression covers both eras with no version branch and no
+    /// per-provider branch, which is why it stays written this way: normalizing
+    /// the overlap was brazen's to do and brazen did it.
     pub fn prompt_tokens(&self) -> u64 {
         self.input_tokens.max(self.cached_tokens())
     }
@@ -86,7 +98,11 @@ impl BudgetSpend {
     /// applies to (§3.5). The fold's remainder by construction: `uncached +
     /// cache_read + cache_write + output` is exactly [`Self::total_tokens`], so
     /// the dollar figure prices the very tokens the token figure counts, and the
-    /// two can never tell different stories about one usage line.
+    /// two can never tell different stories about one usage line. On a line
+    /// carrying `input_total_tokens` it is **exact on every provider shape** —
+    /// the served total contains the cached slice, so subtracting it leaves the
+    /// tail — where under the fallback it is exact only where the provider's own
+    /// counter contained the slice, and zero on a disjoint one.
     pub fn uncached_prompt_tokens(&self) -> u64 {
         self.input_tokens.saturating_sub(self.cached_tokens())
     }
@@ -101,9 +117,18 @@ impl BudgetSpend {
     /// be the same arithmetic — change one only by changing both. A floor rather
     /// than a ceiling on purpose: spend is what was really consumed, and billing
     /// a prompt twice ends a conversation before the bound its operator
-    /// declared. Collapses back to the plain four-counter sum the day brazen
-    /// normalizes the overlap in its decoders (brazen bl-d192) — the named exit,
-    /// and the only thing that would make a sum correct here.
+    /// declared.
+    ///
+    /// **The named exit was reached and it was the wrong shape** (bl-bf8b). This
+    /// doc used to say the figure "collapses back to the plain four-counter sum
+    /// the day brazen normalizes the overlap in its decoders (brazen bl-d192)".
+    /// brazen bl-d192 shipped in 0.0.10 and the sum is *more* wrong for it: the
+    /// counter it added is the whole prompt **with** the cached slices inside,
+    /// so `input + read + write + output` now double-bills them by
+    /// construction. What normalization actually bought is one line above —
+    /// `prompt_tokens` stops flooring and starts being exact — and this
+    /// expression, `prompt + output`, is the collapsed form. There is no
+    /// remaining exit to wait for.
     pub fn total_tokens(&self) -> u64 {
         self.prompt_tokens().saturating_add(self.output_tokens)
     }
