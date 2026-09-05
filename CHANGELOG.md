@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.39](https://github.com/mudbungie/yog/compare/v0.0.38...v0.0.39) - 2026-09-05
+
+### Changes
+
+- pin litany =0.0.10: follow-the-tip re-cuts descriptions at every step boundary, meta.json records config_commit/workflow_commit, and litany workflow bare is a read [bl-f4ae]
+
 ## [0.0.38](https://github.com/mudbungie/yog/compare/v0.0.37...v0.0.38) - 2026-09-04
 
 ### Changes
