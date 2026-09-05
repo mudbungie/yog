@@ -1,7 +1,8 @@
 +++
 title = "the fullness denominator is dark until hand-declared: if it should prefer the window brazen served, the shape is a read-time query over the model cache"
 created = 1786937639
-updated = 1787205968
+updated = 1788580639
+claimant = "Animations-H"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design", "context", "provider"]
