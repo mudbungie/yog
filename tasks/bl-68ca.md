@@ -1,7 +1,8 @@
 +++
 title = "the workspace is the trust domain on the wire and not on the disk: an agent's bash at the engine's front-door rung reads every other workspace's goals and transcripts"
 created = 1788673805
-updated = 1788673805
+updated = 1788674524
+claimant = "Cantaloups-Y3"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
