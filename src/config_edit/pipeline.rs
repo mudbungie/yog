@@ -18,13 +18,19 @@ use std::path::{Path, PathBuf};
 
 /// The filesystem seam every editor and the pipeline read and write through.
 /// `read` and `list_dir` map a missing path to the empty case (`None` / no
-/// entries), not an error — absence is a value, not a fault. [`RealFileIo`] is
-/// `std::fs`; tests inject an in-memory fake.
+/// entries), not an error — absence is a value, not a fault — and `write`
+/// keeps the same posture on the other side: a destination directory that
+/// does not exist yet is one the write makes. [`RealFileIo`] is `std::fs`;
+/// tests inject an in-memory fake.
 ///
 /// [`RealFileIo`]: super::RealFileIo
 pub trait FileIo {
     /// File bytes, or `None` when the file does not exist.
     fn read(&self, path: &Path) -> std::io::Result<Option<Vec<u8>>>;
+    /// Write `bytes` at `path`, **creating the destination's directory when it
+    /// is not there** (bl-8c06). A wall leaf is a place the first write makes
+    /// (§16.2), so a §9.1 write into a newborn workspace's `<wall>/brazen/`
+    /// lands rather than failing `ENOENT` with no subject to name.
     fn write(&self, path: &Path, bytes: &[u8]) -> std::io::Result<()>;
     fn rename(&self, from: &Path, to: &Path) -> std::io::Result<()>;
     fn remove(&self, path: &Path) -> std::io::Result<()>;

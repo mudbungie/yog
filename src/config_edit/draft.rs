@@ -65,6 +65,16 @@ impl Draft {
         self.text = text;
     }
 
+    /// An IO fault at this draft's own file, **named** (bl-8c06). An editor's
+    /// terminal `Io` arm is the whole of what the operator is told about a
+    /// write that never landed, and a bare [`std::io::Error`] Display names
+    /// neither the file nor the act — `/config brazen` on a newborn workspace
+    /// answered `No such file or directory (os error 2)` and nothing else.
+    /// One home, so §9.1's and §9.2's Io arms cannot word it differently.
+    pub(crate) fn io_fault(&self, e: &std::io::Error) -> String {
+        format!("{}: {e}", self.path.display())
+    }
+
     /// Whether the file was absent at load — a "new file" being authored.
     /// Flips to `false` once Apply creates it.
     pub(crate) fn is_new(&self) -> bool {

@@ -8023,6 +8023,23 @@ deliberately no inheritance to make birth richer. Any yog surface that judges a
 provider row must therefore judge it against a wall that exists — §9.2 records
 the one gate that did not and was retired for it.
 
+**Born empty is born as a PLACE THE FIRST WRITE MAKES, not as a directory the
+birth lays** (bl-8c06). "yog seeds no wall, ever" is a statement about
+*content*, and it was read for one round as a statement about the directory
+too: nothing created `<world>/walls/<name>/brazen/`, so the very act that fills
+a newborn wall — `/config brazen`, the one gesture that can add a provider row
+brazen does not ship — staged its temp into a directory that did not exist and
+answered `No such file or directory (os error 2)`, naming no file and no act.
+On a remote engine that is terminal: every surface is a gesture and no gesture
+makes a directory, so a workspace born there could never be given a row at all
+(REMOTE §1). The other two leaves of this same layout were always right —
+`bz_host::store`'s credential store and model cache each `create_dir_all` at
+their own `put` — so the wall leaf is made by whichever write first needs it,
+and the §9.1 editor now folds absence on the write side exactly as the seam
+already folded it on the read side (`config_edit::FileIo::write`). No seeding,
+no birth-time act, and nothing inherited: an unwritten wall is still not on
+disk.
+
 **"Nothing can seed a wall before the birth" was this section's stated reason,
 and it holds only of a MINTED leaf (bl-1851).** A wall is keyed by a *name*, so a
 hand that knows the name can lay one whenever it likes — and the empty-world

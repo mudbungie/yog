@@ -6,7 +6,8 @@ use super::FileIo;
 use std::path::{Path, PathBuf};
 
 /// `std::fs`-backed filesystem seam. Missing paths fold to the empty case
-/// (`read` ⇒ `None`, `list_dir` ⇒ empty), matching the trait contract.
+/// (`read` ⇒ `None`, `list_dir` ⇒ empty) and a missing destination *directory*
+/// is made by the write that needs it, matching the trait contract.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct RealFileIo;
 
@@ -20,6 +21,17 @@ impl FileIo for RealFileIo {
     }
 
     fn write(&self, path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+        // The place is made by the write that fills it (bl-8c06) — the same
+        // move brazen's own two wall leaves already make
+        // (`bz_host::store`'s credential store and model cache both
+        // `create_dir_all` at `put`). A `<wall>/brazen/` that no act has
+        // written yet does not exist, so §9.1's stage — a temp in the
+        // destination's own directory — was an `ENOENT` with nothing but
+        // `os error 2` to say, and the one act that can put a provider row in
+        // a newborn wall could never land.
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
         std::fs::write(path, bytes)
     }
 
@@ -65,6 +77,23 @@ mod tests {
         assert_eq!(io.read(&b).unwrap(), Some(b"hello".to_vec()));
         io.remove(&b).unwrap();
         assert_eq!(io.read(&b).unwrap(), None);
+    }
+
+    /// The write makes the place it writes into (bl-8c06) — absence on the
+    /// write side folds the way absence on the read side already did, which is
+    /// what lets a §9.1 apply land in a wall no act has filled yet.
+    #[test]
+    fn write_founds_the_destinations_directory() {
+        let dir = tempdir().unwrap();
+        let io = RealFileIo;
+        let deep = dir.path().join("walls/home/brazen/config.toml");
+        io.write(&deep, b"[[provider]]").unwrap();
+        assert_eq!(io.read(&deep).unwrap(), Some(b"[[provider]]".to_vec()));
+        // And a directory that cannot be made is still a fault, not a fold: an
+        // ancestor that is a regular file is `NotADirectory`, never `NotFound`.
+        let blocked = dir.path().join("file");
+        io.write(&blocked, b"x").unwrap();
+        assert!(io.write(&blocked.join("under/it"), b"x").is_err());
     }
 
     #[test]

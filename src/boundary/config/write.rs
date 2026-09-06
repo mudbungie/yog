@@ -34,8 +34,9 @@ pub(super) const CONFLICT: &str =
 /// is judging rather than another workspace's, or none.
 pub(super) fn brazen(deps: &Deps, workspace: &Path, text: &str) -> Result<Reply, String> {
     let paths = super::brazen_paths(deps, workspace);
+    let file = paths.config.clone();
     let io = RealFileIo;
-    let mut editor = BrazenEditor::load(paths, &io).map_err(|e| e.to_string())?;
+    let mut editor = BrazenEditor::load(paths, &io).map_err(|e| named(&file, &e))?;
     editor.set_draft(text.to_owned());
     applied(editor.apply(
         &RealBzRunner::resolve(&super::wall_env(deps, workspace)),
@@ -68,7 +69,15 @@ pub(super) fn write_file(dest: PathBuf, text: &str) -> Result<Reply, String> {
 
 /// Load one §9.2 editor — the single read every file apply enters through.
 pub(super) fn editor_at(dest: &Path) -> Result<Editor, String> {
-    Editor::load(dest.to_path_buf(), &RealFileIo).map_err(|e| e.to_string())
+    Editor::load(dest.to_path_buf(), &RealFileIo).map_err(|e| named(dest, &e))
+}
+
+/// An IO fault at a config destination, **naming the file** (bl-8c06) — the
+/// load half of the sentence [`Draft::io_fault`](crate::config_edit) spells for
+/// the apply half. A bare [`std::io::Error`] Display names neither the file nor
+/// the act, and every other refusal on this surface names its subject.
+fn named(dest: &Path, e: &std::io::Error) -> String {
+    format!("{}: {e}", dest.display())
 }
 
 /// Fold a §9.2 Apply outcome into the boundary's verdict: refusals are the

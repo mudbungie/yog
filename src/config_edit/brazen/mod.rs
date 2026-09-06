@@ -165,12 +165,13 @@ impl BrazenEditor {
     }
 
     /// Run the §9.1 Apply pipeline. Any filesystem error becomes
-    /// [`Applied::Io`]; the logical outcomes are `Ok`, `Rejected`, `Conflict`.
+    /// [`Applied::Io`], naming the file it could not write (bl-8c06); the
+    /// logical outcomes are `Ok`, `Rejected`, `Conflict`.
     pub fn apply(&mut self, runner: &dyn BzRunner, io: &dyn FileIo) -> Applied {
         match self.apply_inner(runner, io) {
             Ok(applied) => applied,
             Err(e) => Applied::Io {
-                error: e.to_string(),
+                error: self.draft.io_fault(&e),
             },
         }
     }

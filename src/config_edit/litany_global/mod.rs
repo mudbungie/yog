@@ -187,12 +187,12 @@ impl Editor {
 
     /// Apply the draft through the shared pipeline. A concurrent change (or an
     /// already-present file when creating) ⇒ [`Saved::Conflict`]; any fs error ⇒
-    /// [`Saved::Io`].
+    /// [`Saved::Io`], naming the file it could not write (bl-8c06).
     pub fn apply(&mut self, io: &dyn FileIo) -> Saved {
         match self.apply_inner(io) {
             Ok(saved) => saved,
             Err(e) => Saved::Io {
-                error: e.to_string(),
+                error: self.draft.io_fault(&e),
             },
         }
     }

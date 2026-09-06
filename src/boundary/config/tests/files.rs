@@ -35,13 +35,41 @@ fn a_brazen_apply_lands_only_what_bz_accepts() {
     assert_eq!(fs::read_to_string(&dest).unwrap(), good, "left untouched");
 }
 
+/// **A newborn wall is a place the first write makes** (bl-8c06). The wall of a
+/// workspace nothing has written into does not exist — `<world>/walls/` itself
+/// does not — and the §9.1 stage puts its temp in the destination's own
+/// directory, so `/config brazen` on a freshly-prepared workspace answered
+/// `No such file or directory (os error 2)`: the one act that can give a new
+/// sphere a provider row brazen does not ship could never land, and on a remote
+/// engine no gesture makes a directory. The write makes the leaf now, exactly
+/// as brazen's own credential store and model cache already do.
 #[test]
-fn a_brazen_apply_that_cannot_write_says_so() {
+fn a_brazen_apply_founds_the_wall_it_writes_into() {
     let root = tempdir().unwrap();
-    // A world whose brazen config sits under a directory that does not exist:
-    // the read is absence (a value), the staged write is a real failure.
+    let deps = quiet(root.path());
+    let dest = crate::test_support::wall_paths(root.path()).config;
+    let wall = dest.parent().expect("the wall's brazen dir").to_path_buf();
+    fs::remove_dir_all(&wall).unwrap();
+    assert!(!wall.exists(), "the newborn wall is not on disk");
+    let good = ACME.replace("acme", "zinc");
+    assert_eq!(
+        fire(&deps, &applying(brazen_file(), &good)),
+        Ok(Reply::Applied)
+    );
+    assert_eq!(fs::read_to_string(&dest).unwrap(), good);
+}
+
+#[test]
+fn a_brazen_apply_that_cannot_write_names_the_file() {
+    let root = tempdir().unwrap();
+    // A world whose brazen config sits under a *file*: `create_dir_all` cannot
+    // make the place, so the staged write is a real failure — and the refusal
+    // names its subject, where a bare `io::Error` Display named neither the
+    // file nor the act.
+    let blocked = root.path().join("blocked");
+    fs::write(&blocked, b"not a directory").unwrap();
     let deps = Deps {
-        world: world_under(&root.path().join("gone")),
+        world: world_under(&blocked),
         ..quiet(root.path())
     };
     let err = fire(
@@ -49,7 +77,8 @@ fn a_brazen_apply_that_cannot_write_says_so() {
         &applying(brazen_file(), &ACME.replace("acme", "zinc")),
     )
     .unwrap_err();
-    assert!(!err.is_empty(), "the io error rides back verbatim");
+    assert!(err.contains("config.toml"), "{err}");
+    assert!(err.contains(&blocked.display().to_string()), "{err}");
 }
 
 /// The §9.2 destination lands the bytes it is handed and judges none of them
