@@ -1,7 +1,8 @@
 +++
 title = "a fresh box has no git identity, so the first start dies with a verbatim git error dump instead of a named prerequisite"
 created = 1788673617
-updated = 1788673617
+updated = 1788674931
+claimant = "Cantaloups-Y1"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
