@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.46](https://github.com/mudbungie/yog/compare/v0.0.45...v0.0.46) - 2026-09-06
+
+### Changes
+
+- a workspace created from the engine's own box is invisible to that box's seat, and no verb registers an existing leaf: wire-certs mints a window leaf that /enroll cannot adopt [bl-bd48]
+- the failure clause is cut at 120 chars with no elision mark, so a truncated remedy reads as a whole sentence [bl-8550]
+- /config brazen on a newborn workspace fails with a bare "No such file or directory (os error 2)": the wall's brazen directory is never created, and a seat cannot mkdir on the engine's box [bl-8c06]
+
 ## [0.0.45](https://github.com/mudbungie/yog/compare/v0.0.44...v0.0.45) - 2026-09-06
 
 ### Changes
