@@ -121,6 +121,39 @@ fn the_operator_s_answers_fold_over_the_table() {
     assert!(matches!(held, Verdict::Hold(_)), "{held:?}");
 }
 
+/// **What a floor covers, and what it deliberately does not** (bl-d118). The
+/// gesture's own help promises "everything but a read waits for you", and a
+/// read is what the *call does* — the vocabulary classifies invocations, never
+/// tool names (§4.11 item 1). So `bash` running `echo` still runs under a
+/// standing floor and `bash` writing outside the worktree parks, and the ball
+/// that read the first of those as a broken floor was reading the second half
+/// of the promise as the whole of it.
+#[test]
+fn a_floor_parks_by_what_the_call_reaches_not_by_which_tool_it_is() {
+    let w = World::new();
+    w.answer(&[YOG_CONTROL, "floor", "amber", "raise"]);
+    let verdict = |id: &str, command: &str| {
+        adjudicate(
+            &w.consult(),
+            &Request::parse(
+                &json!({"id": id, "name": "bash", "input": {"command": command},
+                        "role": "worker", "agent_id": "amber"})
+                .to_string(),
+            )
+            .unwrap(),
+        )
+    };
+    for read in ["echo ADJUDICATED", "ls -la", "cat Cargo.toml"] {
+        assert_eq!(verdict("toolu_r", read), Verdict::Pass, "{read}");
+    }
+    for parked in ["mkdir -p /tmp/elsewhere", "curl https://x", "touch /etc/x"] {
+        assert!(
+            matches!(verdict("toolu_h", parked), Verdict::Hold(_)),
+            "{parked}"
+        );
+    }
+}
+
 #[test]
 fn a_reason_never_hands_the_reader_a_section_number() {
     let w = World::new();

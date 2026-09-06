@@ -227,7 +227,11 @@ pub const STANDING: &[HelpRow] = &[
         summary: "take away this conversation's tool auto-approval, and its descendants'",
         detail: "Stops letting the selected conversation act on its own: from its next tool \
                  call, everything but a read waits for you — the same park a held call already \
-                 makes, applied to all of them. It keeps running, keeps its branch and keeps \
+                 makes, applied to all of them. **A read is what the call does, not which \
+                 tool it is**: every invocation is classified on what it reaches, so `bash` \
+                 running `ls`, `cat` or `echo` is a read and still runs, while the same \
+                 `bash` writing outside its worktree, reaching the network or touching \
+                 credentials parks. It keeps running, keeps its branch and keeps \
                  reading, so nothing is lost and nothing is killed. It covers the conversation \
                  and everything below it, including children it has not spawned yet. Anything \
                  the policy already refuses stays refused, and a call you pass with `/answer` \

@@ -128,6 +128,15 @@ fn the_seeded_shim_answers_the_seam_over_real_stdio() {
     assert!(out.contains(r#""verdict":"hold""#), "{out}");
     assert!(out.contains("open-world"), "{out}");
 
+    // …and the floor's own promise, both halves (bl-d118): "everything but a
+    // read waits for you", where a read is what the CALL does. `bash` running
+    // `echo` is a read and still passes under the same standing floor — the
+    // behaviour a live drive read as a broken floor, and it is the gesture's
+    // help working.
+    let (code, out) = consult(&shim, root.path(), &workspace, &request("echo READY"));
+    assert_eq!(code, 0);
+    assert_eq!(out.trim(), r#"{"verdict":"pass"}"#);
+
     // Loss is declined in band — still exit 0, because a decline is an answer
     // and a non-zero exit is what the seam reads as a fault.
     let (code, out) = consult(&shim, root.path(), &workspace, &request("rm -rf /etc"));
