@@ -221,16 +221,32 @@ state=$(systemctl --user show -P ActiveState "$UNIT" 2>/dev/null || echo unknown
 [ -n "$state" ] || state=unknown
 pid=$(systemctl --user show -P MainPID "$UNIT" 2>/dev/null || echo 0)
 
-# "A restart is pending" is not a flag anybody writes — it is the running
-# process executing a different file than the one installed. The kernel holds
-# that fact: `/proc/<pid>/exe` still resolves to the replaced inode after an
-# install renames a new file over the path.
+# "A restart is pending" is not a flag anybody writes: it is the running process
+# being an older VERSION than the one installed. Both halves are self-reported —
+# the running engine through `/proc/<pid>/exe`, which is still the replaced file
+# after an install renamed a new one over the path, and the installed binary
+# through the path itself.
+#
+# **It is the version and not the inode, and that distinction is the whole of
+# bl-6b27.** The inode says "some other file is there now", which was the same
+# question while this reconciler was the only writer of the path. It is not:
+# `scripts/install-main` writes it too, on every move of `refs/heads/main`, and
+# its whole job is to make the installed binary equal to main's TIP. Under the
+# inode read, a ball closing on this box became an unattended deploy of
+# unreleased code onto the operator's live engine — install-main restarts
+# nothing precisely because "whether and when to restart is the unit's
+# question", and answering it by inode made install-main a deploy behind its own
+# back. The rule this file states is *the engine should be running the newest
+# live version*; after step 1 the installed binary IS that version, so comparing
+# versions asks the rule directly. A dev build swapped underneath at the same
+# version is then correctly not a publication and not a restart.
+version_of() { [ -x "$1" ] && "$1" --version 2>/dev/null | awk 'NR==1 {print $NF}'; }
 pending=unknown
-running_inode=
-[ "${pid:-0}" = 0 ] || running_inode=$(stat -Lc %i "/proc/$pid/exe" 2>/dev/null || true)
-installed_inode=$(stat -Lc %i "$BIN" 2>/dev/null || true)
-if [ -n "$running_inode" ] && [ -n "$installed_inode" ]; then
-    if [ "$running_inode" = "$installed_inode" ]; then pending=no; else pending=yes; fi
+running_version=
+[ "${pid:-0}" = 0 ] || running_version=$(version_of "/proc/$pid/exe" || true)
+installed_version=$(version_of "$BIN" || true)
+if [ -n "$running_version" ] && [ -n "$installed_version" ]; then
+    if [ "$running_version" = "$installed_version" ]; then pending=no; else pending=yes; fi
 fi
 
 # The boundary read, and only when there is something to defer FOR: an engine
@@ -266,7 +282,7 @@ case "$(decide "$state" "$changed" "$pending" "$idle")" in
                 "idle: $idle); deferring the restart to the next tick"
         fi ;;
     restart)
-        say "starting $UNIT on $(installed) (was $state)"
+        say "starting $UNIT on $installed_version (was ${running_version:-$state})"
         # `reset-failed` FIRST, always. A unit that tripped its start limit is
         # REFUSED a restart until the limit's interval expires — so without this
         # the recovery arm above cannot actually recover anything, which is

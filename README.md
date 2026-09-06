@@ -692,10 +692,11 @@ newest live version, unless a turn is in flight or the operator stopped it*:
   version that just failed. A version it has NOT run is the one useful act, so
   it restarts on one. With the yank lever below that closes the loop: a release
   that crashes on boot is recovered by yanking it, with nobody logging in.
-- **the running engine already IS the installed binary** — nothing to do. This
-  is read as a kernel fact (`/proc/<pid>/exe`'s inode against the installed
-  file's) rather than a flag anybody writes, and it is why a hand-restart or a
-  hand-install needs no reconciling.
+- **the running engine is already the installed VERSION** — nothing to do. Both
+  halves are self-reported: the running process through `/proc/<pid>/exe`, which
+  is still the replaced file after an install renamed a new one over the path,
+  and the installed binary through the path itself. No flag anybody writes, so a
+  hand-restart or a hand-install needs no reconciling.
 - **a turn is in flight** — defer. The read is the §8.5 boundary's, put to the
   running engine's own binary: `{"op":"workspaces"}`, with any `"running":true`
   or any `stale` note deferring. A deferral is a correct steady state, so it is
@@ -704,6 +705,21 @@ newest live version, unless a turn is in flight or the operator stopped it*:
   upgrade**.
 - **anything unreadable** — defer. A fact we could not read is never grounds for
   killing a turn we cannot see.
+
+**The version, and deliberately not the inode** (bl-6b27). "Some other file is
+there now" was the same question only while this reconciler was the sole writer
+of `~/.local/bin/yog`. It is not: `scripts/install-main` writes it too, on every
+move of `refs/heads/main`, and its whole job is to make the installed binary
+equal to main's **tip**. Under an inode read, a ball closing on a dev box became
+an unattended deploy of unreleased code onto the operator's live engine — and
+install-main restarts nothing on purpose, precisely because *"whether and when
+to restart it is its unit's question"*. Answering that question by inode made
+install-main a deploy behind its own back. Comparing versions asks the stated
+rule directly, and a dev build swapped underneath at the same version is then
+correctly not a publication and not a restart. A box that runs both is two
+writers of one path, and this is which one the reader obeys: **the reconciler
+installs and restarts on published versions; install-main installs and the
+engine adopts it at the next restart somebody asks for.**
 
 **A yank is the rollback lever**, and it is the whole of the rollback story on
 this shape. Yanked versions are filtered *here* rather than left to cargo, so
