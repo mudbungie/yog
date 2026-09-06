@@ -1,7 +1,7 @@
 +++
 title = "the workspace is the trust domain on the wire and not on the disk: an agent's bash at the engine's front-door rung reads every other workspace's goals and transcripts"
 created = 1788673805
-updated = 1788674524
+updated = 1788674761
 claimant = "Cantaloups-Y3"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -68,3 +68,7 @@ about a machine the adjudicator cannot inspect; this is the engine's own box.
 p2. It needs a co-tenant to matter, which is exactly the configuration this
 lane exists to test and exactly the one the four-component split invites. It
 takes one obvious command and no privilege.
+
+---
+
+Doc amendment only, per ruling 6. DESIGN 16.2 now states, beside the blast-radius ruling, that filesystem confinement between workspaces is NOT claimed at the engine's own execution rung -- with the three things that are true (the wire boundary is structural and holds; the 8.6 classifier bites on what it can read but is the wrong layer to hold a trust boundary; the writable root bounds writes, not reads) and the fourth that is the ruling: confinement lives in the foot. The engine's rung is REMOTE 5.4's fallback for a default install with nothing enrolled, and a fallback cannot be a wall; capability.yaml's `confinement: required` is the line for a workspace that will not run drones without an OS layer. REMOTE 5's honesty-about-containment bullet gains the other direction. No code change: the ball's own 'Expected' offers exactly this alternative and the ruling took it.
