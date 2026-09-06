@@ -1,7 +1,8 @@
 +++
 title = "the README never says how to install yog: cargo install appears nowhere, though the published crate installs clean from a bare container in under a minute"
 created = 1788673635
-updated = 1788673665
+updated = 1788674834
+claimant = "Cantaloups-Y2"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
