@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.40](https://github.com/mudbungie/yog/compare/v0.0.39...v0.0.40) - 2026-09-06
+
+### Changes
+
+- a native-binary box has no CD: the deployment seats only the container shape, so a laptop engine is hand-launched and never upgrades [bl-8ea9]
+
 ## [0.0.39](https://github.com/mudbungie/yog/compare/v0.0.38...v0.0.39) - 2026-09-05
 
 ### Changes
