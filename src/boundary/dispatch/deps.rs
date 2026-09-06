@@ -41,7 +41,6 @@ pub struct Deps {
     /// The bare rung's driver cwd (`~`), resolved at the process boundary.
     pub home: PathBuf,
     pub yog_data_root: PathBuf,
-    pub balls_state_root: PathBuf,
     /// The published derivation the start/delete families read (§7.2): the
     /// occupied conversation names, the §3.6 confirmation's liveness + claims.
     pub snapshot: Arc<Snapshot>,

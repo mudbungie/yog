@@ -80,7 +80,6 @@ fn over_world(
         state_root: state_root.to_path_buf(),
         home: PathBuf::from("/home/x"),
         yog_data_root,
-        balls_state_root: PathBuf::from("/balls"),
         ui_path: state_root.join("ui.json"),
         cell: crate::state::new_snapshot_cell(std::sync::Arc::new(snap)),
         presence: crate::registry::presence::Presence::default(),

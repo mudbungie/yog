@@ -59,10 +59,12 @@ fn spread(
     obligation: &Obligation,
     n: usize,
 ) -> Result<Reply, String> {
-    let xdg = deps.world.balls_layout();
     // The one resolution (REMOTE §8): the obligation names its project, the
-    // chokepoint turns that name into the repo everything below works in.
+    // chokepoint turns that name into the repo everything below works in — and
+    // the repo is what balls' layout folds off (§16.2's one-store-per-project
+    // invariant, bl-262a), so it is resolved first.
     let repo = deps.snapshot.project_path(&obligation.project)?;
+    let xdg = deps.world.balls_layout_for(&repo);
     let spread = fan::spread(prepared, obligation, &repo, &xdg, n).map_err(|e| e.to_string());
     logged(deps, ts, &repo, FAN_STEP, spread).map(Reply::Fanned)
 }
@@ -73,8 +75,8 @@ fn spread(
 /// deleting the `retention:` entry restores the standing default — keep the ref
 /// — without touching a line of this.
 fn retire(deps: &Deps, ts: &str, obligation: &Obligation, handle: &str) -> Result<Reply, String> {
-    let xdg = deps.world.balls_layout();
     let repo = deps.snapshot.project_path(&obligation.project)?;
+    let xdg = deps.world.balls_layout_for(&repo);
     let keep = retention::keep(&cadence(deps), &repo);
     let discarded = retention::expired(keep, retention::age(&repo, handle, SystemTime::now()));
     let spent = if discarded {
@@ -106,8 +108,8 @@ fn deliver(
     handle: &str,
     summary: &str,
 ) -> Result<Reply, String> {
-    let xdg = deps.world.balls_layout();
     let repo = deps.snapshot.project_path(&obligation.project)?;
+    let xdg = deps.world.balls_layout_for(&repo);
     let spent = fan::deliver(obligation, &repo, &xdg, handle, summary).map_err(|e| e.to_string());
     logged(deps, ts, &repo, DELIVER_STEP, spent).map(Reply::Delivered)
 }

@@ -155,3 +155,49 @@ fn from_env_snapshots_process_env() {
     let env = Env::from_env();
     let _ = env.yog_state_root();
 }
+
+/// **Both clone roots, and the one they collapse to** (§5.1 #1, bl-262a).
+///
+/// Inside a composed world the two differ — the world's own bundle and the
+/// host's — because a project is one balls invocation path and the store for a
+/// directory is the directory's. Outside one they are the same path and the
+/// pair is a single root: nothing to enumerate twice, and no case to spell.
+#[test]
+fn the_clone_roots_are_the_worlds_and_the_hosts_or_the_one_they_collapse_to() {
+    let ambient = Env::from_pairs([
+        ("HOME", "/h"),
+        ("XDG_DATA_HOME", "/d"),
+        ("XDG_STATE_HOME", "/s"),
+    ]);
+    assert_eq!(
+        ambient.balls_clone_roots(),
+        vec![PathBuf::from("/s/balls/clones")],
+        "outside a world there is one bundle"
+    );
+    assert_eq!(
+        crate::world::compose(&ambient).balls_clone_roots(),
+        vec![
+            PathBuf::from("/d/yog/world/state/balls/clones"),
+            PathBuf::from("/s/balls/clones"),
+        ],
+        "inside one, the world's own and the host's — world first, since a \
+         path present in both is one project and the first reading wins"
+    );
+}
+
+/// The host's state home is the ambient reading until the world carries one in,
+/// and then it is the one the world carried (bl-262a) — which is what makes the
+/// fold survive the very override that hides it.
+#[test]
+fn the_host_state_home_is_the_ambient_reading_the_world_carried_in() {
+    let ambient = Env::from_pairs([("HOME", "/h"), ("XDG_STATE_HOME", "/s")]);
+    assert_eq!(ambient.host_state_home(), PathBuf::from("/s"));
+    assert_eq!(
+        Env::from_pairs([("HOME", "/h")]).host_state_home(),
+        PathBuf::from("/h/.local/state"),
+        "with no XDG_STATE_HOME it is balls' own fallback, off HOME"
+    );
+    let world = crate::world::compose(&ambient);
+    assert_ne!(world.host_state_home(), world.balls_state_home());
+    assert_eq!(world.host_state_home(), PathBuf::from("/s"));
+}

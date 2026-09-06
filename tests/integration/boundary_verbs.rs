@@ -67,7 +67,6 @@ fn deps(litany: &Cli, bl: &Cli, state_root: &Path, snapshot: Arc<Snapshot>) -> D
         world: yog::world::compose(&yog::xdg::Env::from_env()),
         home: state_root.join("home"),
         yog_data_root: state_root.join("data"),
-        balls_state_root: state_root.join("balls"),
         snapshot,
         caller: yog::boundary::dispatch::Caller::default(),
     }

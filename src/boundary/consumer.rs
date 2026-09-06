@@ -41,7 +41,6 @@ pub struct ConsumerCtx {
     pub state_root: PathBuf,
     pub home: PathBuf,
     pub yog_data_root: PathBuf,
-    pub balls_state_root: PathBuf,
     /// yog's own binary — the `$EDITOR` shim a §9.3 lineage write re-enters.
     pub yog_binary: PathBuf,
     /// The composed world (§16.2) — what the §9 config family folds its
@@ -181,7 +180,7 @@ impl ConsumerCtx {
         let published = crate::app::addressable(
             crate::state::latest_snapshot(&self.cell),
             crate::binding::workspaces(&self.yog_data_root, &self.world.litany_data_root()),
-            crate::projects::enumerate(&self.world.balls_clones_dir())
+            crate::projects::enumerate_all(&self.world.balls_clone_roots())
                 .into_iter()
                 .map(|p| p.path)
                 .collect(),
@@ -194,7 +193,6 @@ impl ConsumerCtx {
             world: self.world.clone(),
             home: self.home.clone(),
             yog_data_root: self.yog_data_root.clone(),
-            balls_state_root: self.balls_state_root.clone(),
             // **The one filter** (REMOTE §4): scoping is a narrowing of the
             // published derivation, so every enumeration answers the registered
             // set and every resolution refuses an unregistered name in the same

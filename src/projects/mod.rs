@@ -83,6 +83,29 @@ pub fn enumerate(clones_dir: &Path) -> Vec<Project> {
     out
 }
 
+/// Every balls project under **all** of `clone_roots`, deduplicated by path and
+/// sorted (§5.1 #1, bl-262a).
+///
+/// Two roots exist inside a world — the world's own bundle and the host's —
+/// because the store a directory's tasks live in is the *directory's* (§16.2's
+/// one-store-per-project invariant), so an operator's own checkout is clonedin
+/// their bundle and yog's world-owned directories in the world's. A project
+/// present in both (one yog founded before that invariant, beside the
+/// operator's own) is one project: the path is the identity, so the first
+/// reading wins and the roots are ordered world-first.
+pub fn enumerate_all(clone_roots: &[PathBuf]) -> Vec<Project> {
+    let mut out: Vec<Project> = Vec::new();
+    for root in clone_roots {
+        for project in enumerate(root) {
+            if !out.iter().any(|seen| seen.path == project.path) {
+                out.push(project);
+            }
+        }
+    }
+    out.sort_by(|a, b| a.path.cmp(&b.path));
+    out
+}
+
 /// The longest a project's roster label may run before it elides (§11): the
 /// left panel is a column of names, and a name this long has stopped naming.
 const LABEL_MAX: usize = 32;

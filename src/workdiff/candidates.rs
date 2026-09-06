@@ -15,7 +15,6 @@
 use std::path::Path;
 
 use balls::delivery_path::{attempt_branch, work_branch};
-use balls::layout::Xdg;
 
 use crate::app::Snapshot;
 use crate::control::root::claimed;
@@ -36,7 +35,7 @@ pub(super) fn candidates(
     snap: &Snapshot,
     workspace: &Path,
     entries: &[OpEntry],
-    xdg: &Xdg,
+    world: &crate::xdg::Env,
     name: &str,
 ) -> Vec<Attempt> {
     let Some((project, ball)) = claimed(entries, name) else {
@@ -44,14 +43,19 @@ pub(super) fn candidates(
     };
     let named = snap.project_name(&project);
     let target = work_branch(&ball);
-    fan::cohort::members(entries, xdg, &project, workspace)
-        .into_iter()
-        .map(|member| Attempt {
-            project: named.clone(),
-            ball_id: ball.clone(),
-            delivered: delivered_commit(&project, &target, &member.handle),
-            change: diff_change(&project, target.clone(), attempt_branch(&member.handle)),
-            handle: Some(member.handle),
-        })
-        .collect()
+    fan::cohort::members(
+        entries,
+        &world.balls_layout_for(&project),
+        &project,
+        workspace,
+    )
+    .into_iter()
+    .map(|member| Attempt {
+        project: named.clone(),
+        ball_id: ball.clone(),
+        delivered: delivered_commit(&project, &target, &member.handle),
+        change: diff_change(&project, target.clone(), attempt_branch(&member.handle)),
+        handle: Some(member.handle),
+    })
+    .collect()
 }

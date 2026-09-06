@@ -108,8 +108,10 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
             // writable root reads — the trail's claim row and its fire rows —
             // so the trail is read here, where the question is asked.
             let entries = crate::opslog::tail(&deps.state_root, usize::MAX);
-            let xdg = deps.world.balls_layout();
-            let attempts = crate::workdiff::read(snap, ws, &entries, &xdg);
+            // The world, not one layout: an attempt's balls paths resolve
+            // through **its own project's** space (§16.2, bl-262a), and one
+            // workspace's attempts may sit in two bundles.
+            let attempts = crate::workdiff::read(snap, ws, &entries, &deps.world);
             let patch = file
                 .as_ref()
                 .and_then(|f| crate::workdiff::patch(snap, &attempts, f));
@@ -122,14 +124,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // snapshot's own pre-walked bills, so the join costs no second pass.
         Query::Science { .. } => {
             let entries = crate::opslog::tail(&deps.state_root, usize::MAX);
-            let xdg = deps.world.balls_layout();
-            Reply::Science(crate::science::project(
-                snap,
-                ws,
-                &entries,
-                &xdg,
-                &deps.balls_state_root,
-            ))
+            Reply::Science(crate::science::project(snap, ws, &entries, &deps.world))
         }
         // The §11 inspector family (bl-6233, REMOTE §9 step 1): the
         // conversation's own reads, which had no headless spelling at all —

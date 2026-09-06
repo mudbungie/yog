@@ -9,7 +9,7 @@ use crate::files_view::Preview;
 use crate::opslog::OpEntry;
 use crate::workdiff::{Change, WorkFile, patch, read};
 
-use super::{ball, snap, xdg};
+use super::{ball, snap, world, xdg};
 
 const WS: &str = "/data/workspaces/storeroom";
 const NAME: &str = "storeroom";
@@ -78,7 +78,7 @@ fn candidates_read_at_the_ruled_range_and_wear_the_derived_mark() {
         vec![ball(BALL, Some(NAME), None)],
     );
 
-    let attempts = read(&snap, Path::new(WS), &entries, &xdg);
+    let attempts = read(&snap, Path::new(WS), &entries, &world(dir.path()));
     // The claim row first (its WorkFile address has no handle), then one row
     // per candidate, oldest fire first.
     assert_eq!(attempts.len(), 3, "{attempts:?}");
@@ -126,7 +126,7 @@ fn candidates_read_at_the_ruled_range_and_wear_the_derived_mark() {
         "take it",
     )
     .unwrap();
-    let attempts = read(&snap, Path::new(WS), &entries, &xdg);
+    let attempts = read(&snap, Path::new(WS), &entries, &world(dir.path()));
     assert_eq!(attempts[1].delivered, delivery.commit);
     assert_eq!(attempts[2].delivered, None);
 }
@@ -138,7 +138,6 @@ fn candidates_read_at_the_ruled_range_and_wear_the_derived_mark() {
 fn an_ordinary_claim_fire_is_no_candidate() {
     let project = super::Project::new();
     let dir = tempfile::tempdir().unwrap();
-    let xdg = xdg(dir.path());
     let claim_worktree = dir.path().join("claim");
     let entries = trail(&project.path, &[&claim_worktree]);
     let snap = snap(
@@ -147,7 +146,7 @@ fn an_ordinary_claim_fire_is_no_candidate() {
         &project.path,
         vec![ball(BALL, Some(NAME), None)],
     );
-    let attempts = read(&snap, Path::new(WS), &entries, &xdg);
+    let attempts = read(&snap, Path::new(WS), &entries, &world(dir.path()));
     assert_eq!(attempts.len(), 1, "the claim row alone: {attempts:?}");
     assert_eq!(attempts[0].handle, None);
 }

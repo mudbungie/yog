@@ -14,6 +14,7 @@ use crate::projects::runner::BlRunner;
 use crate::test_support::FakeClock;
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tempfile::{TempDir, tempdir};
 
@@ -76,12 +77,12 @@ pub(crate) fn world() -> World {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
-        balls_clones: root.path().join("clones"),
+        balls_clones: vec![root.path().join("clones")],
         home: root.path().join("home"),
         world: crate::test_support::no_world(),
     };
     // A clone whose percent-encoded basename decodes to /proj/a.
-    fs::create_dir_all(roots.balls_clones.join("%2Fproj%2Fa")).unwrap();
+    fs::create_dir_all(roots.balls_clones[0].join("%2Fproj%2Fa")).unwrap();
     fs::create_dir_all(&roots.yog_state).unwrap();
     let project = PathBuf::from("/proj/a");
     // Named workspaces under yog's flat names root: the leaf is the name.

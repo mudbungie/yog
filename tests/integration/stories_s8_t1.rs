@@ -42,8 +42,16 @@ fn s8_t1_the_world_nests_three_vars_and_re_composing_is_a_fixed_point() {
     let ov = map(&ambient);
     assert_eq!(
         ov.keys().cloned().collect::<Vec<_>>(),
-        ["LITANY_HOME", "PATH", "XDG_STATE_HOME"],
-        "the nesting set, and nothing else"
+        ["LITANY_HOME", "PATH", "XDG_STATE_HOME", "YOG_HOST_STATE"],
+        "the three that nest, and the one that remembers (bl-262a)"
+    );
+    // `YOG_HOST_STATE` nests nothing: it carries the AMBIENT state home
+    // forward, because the override above it is what makes that value
+    // unreadable and a directory the world does not own still keeps its store
+    // there (§16.2's one-store-per-project invariant).
+    assert_ne!(
+        ov["YOG_HOST_STATE"], ov["XDG_STATE_HOME"],
+        "the host's state home is not the world's"
     );
     // Each value is the layout's own path — one derivation, so the dir yog
     // watches and the dir a spawned child writes cannot be two answers.

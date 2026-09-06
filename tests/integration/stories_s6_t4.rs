@@ -36,7 +36,7 @@ fn s6_t4_rollups_sum_and_each_acknowledgement_takes_one_off() {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
-        balls_clones: root.path().join("clones"),
+        balls_clones: vec![root.path().join("clones")],
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };

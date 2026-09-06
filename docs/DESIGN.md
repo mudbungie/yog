@@ -7594,7 +7594,7 @@ that named one of its files; the rule it taught is not.)
 | `src/wire/server.rs` | the engine's synchronous mTLS listener (REMOTE §4, §8): a non-blocking accept loop so `Drop` stops it, a blocking thread per connection, and the `Answerer` seam the intake fills. An unauthenticated peer fails inside the handshake and never reaches the boundary |
 | `src/wire/tls.rs` | the two rustls configurations, built from that material with the `ring` provider named outright rather than read from a process-global default that panics when there is none (AGENTS.md rule 4): the server requires a client certificate the operator CA issued, the client requires the same of the server and presents its own |
 | `src/workdiff/{mod,candidates,plan,read,wire}.rs` | the §5.1 #32 **project work-diff** (VISION §4.10, bl-3746), cut on six seams: `mod` the vocabulary an answer is said in — the three distinct states a change can take, never one silent empty listing — with `read` the pure git read that says it: resolve each attempt's two ends, count the churn, read one file's patch (a patch pick is addressed by ball **and** handle since bl-c2bd, because a fan's candidates all wear the obligation's ball); `candidates` the §3.8 fan's rows (VISION V3.2–V3.3, bl-c2bd) — one row per cohort member at the ruled `work/<id>..attempt/<handle>` range, each wearing `delivered_commit`'s derived acceptance mark, the obligation read from the same last-claim rule the §8.6 writable root spends (`control::root::claimed`); `plan` the pure half — which attempts a workspace holds and balls' own delivery-target rule re-derived over the snapshot's balls, plus the numstat parse; `wire` its §8.5 JSON shape, written and read back beside the type whose vocabulary it spells (the reply roster still names the codec; bl-7067 added the decode half). The tests are the S11 rung — the pure derivation, the read against a real project repo, and the paint — plus V3's candidate rows against a real fan |
-| `src/world/{mod,seed,marks,marks/write,hatch,tools,seat}.rs` | the composed world (§16.2): env + overrides, `litany prime` seeding, the §16.3 **agent balls space** (the `YOG_MARKS` fold, balls' two home directories per space, and the one `tasks_branch` read — bl-e47b — with `marks/write` the one act that points a space at a branch, authoring balls' layer-2 config in full and handing back what landed rather than what was asked), the §8.4 hatches, the §16.4 shim roster (the §8.6 control shim and, since bl-3ff4, `yog` itself among them; every shim written by a child since bl-e6c9 — `git_env::write_exec` — because yog execs what it just seeded), and `seat` — which seat may open a window, the guard that keeps that `yog` shim from becoming an agent's way to found a rival engine (§16.4). `template.rs` — the §9.2 gate over the workspace-birth template — is deleted with the gate (bl-00ee): yog reads that file nowhere now |
+| `src/world/{mod,seed,marks,marks/which,marks/write,hatch,tools,seat}.rs` | the composed world (§16.2): env + overrides, `litany prime` seeding, the §16.3 **agent balls space** (the `YOG_MARKS` fold, balls' two home directories per space, and the one `tasks_branch` read — bl-e47b — with `marks/which` the §16.2 **one-store-per-project** fold — *whose* space a given DIRECTORY resolves, the world's own for a directory under `<yog-data-root>` and the host's for every other, split off at the pre-split band on the seam that invariant draws (bl-262a: `marks` is what a space is, `which` is whose it is) — and `marks/write` the one act that points a space at a branch, authoring balls' layer-2 config in full and handing back what landed rather than what was asked), the §8.4 hatches, the §16.4 shim roster (the §8.6 control shim and, since bl-3ff4, `yog` itself among them; every shim written by a child since bl-e6c9 — `git_env::write_exec` — because yog execs what it just seeded), and `seat` — which seat may open a window, the guard that keeps that `yog` shim from becoming an agent's way to found a rival engine (§16.4). `template.rs` — the §9.2 gate over the workspace-birth template — is deleted with the gate (bl-00ee): yog reads that file nowhere now |
 | `src/world/wall.rs` | the per-workspace wall (§16.2, §3.1): the `YOG_WALL` layer, its layout and its read lens |
 | `src/xdg/{mod,substrate}.rs` | env folds: yog roots, the wall (§16.2), percent-decode, and — in `substrate`, split at the cap on the seam between yog's own roots and where another tool keeps its things — the balls layout (delegated to `balls::layout::Xdg`, over the §16.3 space's two home directories) and the litany roots behind `LITANY_HOME`. brazen's ambient per-OS fold was deleted with the sharing it served |
 | `tests/brazen_claude_code_decline.rs` | the dialect-decline pin (bl-5252, §8.3 rule 6): drives the LINKED brazen with the request a yog turn is — one user message and the unconditional `clients` tool — and takes the sentence its `claude_code` encoder declines with, before any transport. Three legs: the decline names no config fault (so litany's `Config` wrapper cannot carry it, which is why the marker table missed the family); yog's classifier routes it, wrapped exactly as litany's `AdapterError` words it, to §9.1's destination; and the same turn through a tool-carrying row reaches the wire, so what is classified is the dialect and never the request. A classifier keyed on another crate's words that nothing measures outlives the words |
@@ -7967,6 +7967,14 @@ not a structural given.** The world encapsulates litany, balls, and brazen
 state so completely that yog and the human's own shell never collide unless the
 user chooses overlap.
 
+**And binding a workspace to the user's own directory IS choosing overlap**
+(bl-262a). The sentence above is about *policy* — which branch an agent tracks
+on, which project it is pointed at — and it was read for a while as though it
+also governed *addressing*, which it cannot: a directory the operator already
+tracks with `bl` has one store, and yog reading a different one at the same
+path is not encapsulation but a wrong answer. §16.2 states that invariant and
+what the nesting still isolates.
+
 **Rejected:** yog as a pure ambient overlay (no nested state) — the coordination
 point would be the user's live working tree and clones, so every yog action
 would perturb the user's own `bl`/`litany` work; encapsulation is what makes yog
@@ -7984,8 +7992,73 @@ path yog reads *and* to spawn every child. Overridden, to nest:
 | `LITANY_HOME` | `<yog-data-root>/world/litany` | litany config **and** data (the `Env::litany_home` collapse) |
 | `XDG_STATE_HOME` | `<yog-data-root>/world/state` | balls clones/worktrees/op-logs **and** yog's own `ui.json`/`ops.jsonl` |
 | `PATH` | `<yog-data-root>/world/tools:$PATH` | the tool an agent's bash *finds* — yog's own `bl` shim ahead of any host binary (§16.4, §16.7 W9) |
+| `YOG_HOST_STATE` | the **ambient** `XDG_STATE_HOME` | nothing — it *remembers*, so the fold below can put an operator's project store back where its owner keeps it (bl-262a) |
 
-The first two nest **state**; the third nests the **toolchain**. It is the same
+The first two nest **state**; the third nests the **toolchain**. The fourth
+nests nothing at all and is carried for the invariant immediately below: the
+second row is what makes the ambient value unreadable once composed, and a
+directory the world does not own still keeps its store there. It is idempotent
+in the `PATH` prepend's own way — a set value is carried through unchanged, so
+re-deriving the set from a composed world reproduces the ambient reading rather
+than re-taking the world's own.
+
+**One store per project — the invariant the nesting does NOT reach** (operator
+ruling on bl-262a). balls keys a clone on `(state home, invocation path)`.
+Overriding the state home therefore changes which store a *directory* resolves,
+and for an operator's own checkout that is simply wrong: yog and the operator
+addressed two different stores at the same path. A conversation aimed at a
+project the operator tracks with `bl` ran for four minutes, spent 2.6M tokens,
+and wrote a status report whose first heading was *"The board is **empty**"* —
+tabulating eight `bl list` variants, all `[]`, with a "Tracker health" section
+arguing the absence could be trusted. `bl -C <repo> list` in the same directory
+printed four balls. The failure is not an error the operator can see; it is
+well-written work about a fact that is false, on the paved path (§3.3's path
+rung) of asking an agent about a project's own tasks.
+
+> **The store a directory's tasks live in is a fact of the DIRECTORY.** A
+> workspace bound to an operator directory that already has a balls store
+> addresses THAT store, and yog's board for it reads the same store.
+
+So balls' space is resolved **per directory** (`world::marks::space_for`), on
+balls' own key:
+
+- **World-owned** — anything under `<yog-data-root>`: a litany workspace
+  checkout, a wall, a `work/<id>` worktree cut inside the world. These resolve
+  §16.3's space, the world's or the agent's own `YOG_MARKS` one. The per-agent
+  default lives entirely here.
+- **Everything else** — the operator's checkouts: balls' two homes exactly as
+  the operator's own shell resolves them (state from `YOG_HOST_STATE`, config
+  from the ambient `XDG_CONFIG_HOME` §16.2 already leaves alone). **Both**
+  halves, because a landing holds ONE store worktree: reading a shared clone
+  with a different `tasks_branch` than its owner's would thrash the checkout
+  rather than agree with it. `YOG_MARKS` does not reach these directories,
+  which is the ruling — a project's board is the project's, not the visiting
+  agent's, and §16.3's table already said as much for the one case it could see
+  ("its `bl` *is* the board's").
+
+**What the nested world still isolates, unchanged.** Everything yog owns: the
+litany home and every workspace checkout under it, each wall's brazen config,
+credentials and model cache, yog's own `ui.json`/`ops.jsonl`, the world's tool
+shims, and every balls clone, landing, store checkout and `work/<id>` worktree
+for a **world-owned** directory. §16.1's claim is intact and now stated
+precisely: the world encapsulates the substrate state *yog drives*, and it never
+meant that a directory somebody else already tracks acquires a second store
+because yog is the one asking. Severability is what keeps the branch honest —
+one `rm -rf $XDG_DATA_HOME/yog` still erases the entire world, and an
+operator's own clone was never yog's to erase.
+
+**Two clone roots follow, and §5.1 #1 enumerates both** (`Env::balls_clone_roots`,
+`projects::enumerate_all`). A project is one balls invocation path; with the
+store per directory an operator's checkout has its clone in their bundle while
+world-owned directories have theirs in the world's. Enumerating one root would
+drop half the board — and would leave a bound operator project *unaddressable
+by name*, since `Snapshot::project_path` resolves over exactly that enumeration.
+A path present in both roots is one project: the path is the identity. Every
+balls path folded off a project — its store, its landing, its `work/<id>`
+worktree, its attempt tree, and therefore §8.6's writable root — is resolved
+through that project's own space, which is why the layout is asked for **with a
+directory** (`Env::balls_layout_for`) everywhere rather than held once per
+engine. It is the same
 encapsulation argument one layer up: env inheritance already makes an ambient
 `bl` read the *right paths*, but it is still not yog's balls implementation
 (§16.4's (b)), and under W14's clean room there is no host `bl` at all. It is a
@@ -8272,6 +8345,16 @@ clone lives in:
 > An agent's **space** is balls' state home and balls' config home, together.
 > One var names it — **`YOG_MARKS`** — layered onto a spawn exactly as
 > `YOG_WALL` is, and inherited by the whole descendant tree for free.
+
+**A space governs the WORLD'S directories, and only those** (bl-262a). §16.2's
+one-store-per-project invariant is resolved first: a directory outside
+`<yog-data-root>` resolves the store its own operator resolves, and no
+`YOG_MARKS` reaches it. That is not an exception carved out of this section —
+it is the clause below, generalized. The table's second row already says a ball
+rung "carries no `YOG_MARKS` and its `bl` *is* the board's", because that ball
+was offered on a project's board; the invariant says the same thing for every
+rung, keyed on the directory rather than on how the start was composed, which
+is what makes it hold for an agent that simply `cd`s into the project.
 
 - **Absent = the world's space**: state stays `<world>/state` (every clone yog's
   board already reads) and config becomes `<world>/config`. yog's own `bl`

@@ -56,9 +56,15 @@ use std::path::{Path, PathBuf};
 
 use crate::xdg::Env;
 
+/// **Which store a DIRECTORY's tasks live in** (§16.2's one-store-per-project
+/// invariant, bl-262a) — the fold split off at §12's pre-split band, on the
+/// seam the invariant itself draws: this module is *what a space is*, and that
+/// one is *whose space a given directory resolves*.
+mod which;
 /// **Pointing a space at a branch** — the write, split off at §12's budget.
 mod write;
 
+pub use which::{space_for, world_owned};
 pub use write::{REFUSAL, apply, body};
 
 /// The one var naming an agent's own balls space (§16.3). Absent = the world's
@@ -107,6 +113,31 @@ impl Space {
             state: root.to_path_buf(),
             config: root.to_path_buf(),
         }
+    }
+
+    /// **The host's own space** (§16.2's one-store-per-project invariant,
+    /// bl-262a): balls' two homes exactly as the operator's own shell resolves
+    /// them. Both halves are the operator's, and they have to be: a landing
+    /// holds ONE store worktree, so a yog reading a directory's clone with a
+    /// different `tasks_branch` than the operator's `bl` would thrash the
+    /// checkout they share rather than agree with it.
+    pub fn host(env: &Env) -> Space {
+        Space {
+            state: env.host_state_home(),
+            config: env.host_config_home(),
+        }
+    }
+
+    /// This space's per-project clones dir — balls' own fold, asked of the
+    /// space rather than of an `Env`, so a caller holding one need not rebuild
+    /// a layout to find where its clones are.
+    pub fn clones_dir(&self, home: &Path) -> PathBuf {
+        balls::layout::Xdg::with(
+            home,
+            Some(&self.config.to_string_lossy()),
+            Some(&self.state.to_string_lossy()),
+        )
+        .clones_dir()
     }
 
     /// The store branch this space tracks on: `tasks_branch` from balls' own
@@ -164,6 +195,11 @@ pub fn own_root(world: &Env, workspace: &Path) -> PathBuf {
 /// is layered on, else the world's. The one resolution, used by every read and
 /// by the embedded `bl` arm alike, so the space yog reads and the space an
 /// agent's `bl` writes are one answer.
+///
+/// **It answers for a WORLD-OWNED directory.** Which store a given directory's
+/// tasks live in is [`space_for`]; this is what that resolves to on the world's
+/// own side, and the two are one function with one branch rather than two
+/// resolutions that could disagree.
 pub fn space(env: &Env) -> Space {
     match env.var(YOG_MARKS) {
         Some(root) => Space::own(Path::new(&root)),

@@ -14,7 +14,7 @@ struct Fan {
     _dir: tempfile::TempDir,
     project: Project,
     xdg: balls::layout::Xdg,
-    balls_root: std::path::PathBuf,
+    world: crate::xdg::Env,
     ws: std::path::PathBuf,
     obligation: crate::fan::Obligation,
     candidates: Vec<crate::fan::Candidate>,
@@ -24,7 +24,8 @@ impl Fan {
     fn open(n: usize) -> Fan {
         let project = claimed_project();
         let dir = tempfile::tempdir().unwrap();
-        let (xdg, balls_root) = layout(dir.path());
+        let (xdg, _balls_root) = layout(dir.path());
+        let world = super::world(dir.path());
         let ws = dir.path().join("ws");
         std::fs::create_dir_all(&ws).unwrap();
         let obligation = crate::fan::Obligation {
@@ -36,7 +37,7 @@ impl Fan {
             _dir: dir,
             project,
             xdg,
-            balls_root,
+            world,
             ws,
             obligation,
             candidates,
@@ -62,7 +63,7 @@ impl Fan {
             .collect();
         let entries = trail(&self.ws, &self.project.path, &bindings);
         let snap = snap(&self.ws, &self.project.path, vec![], vec![]);
-        project(&snap, &self.ws, &entries, &self.xdg, &self.balls_root)
+        project(&snap, &self.ws, &entries, &self.world)
     }
 
     fn deliver(&self, i: usize) -> Option<String> {

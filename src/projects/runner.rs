@@ -47,13 +47,23 @@ pub trait BlRunner: Send {
 /// the one residual subprocess (the closed listing) runs on. Construct in the
 /// shell with the composed world (§16.6 W2).
 pub struct BlStore {
-    xdg: Xdg,
+    world: crate::xdg::Env,
     cli: Cli,
 }
 
 impl BlStore {
-    pub fn new(xdg: Xdg, cli: Cli) -> Self {
-        Self { xdg, cli }
+    pub fn new(world: crate::xdg::Env, cli: Cli) -> Self {
+        Self { world, cli }
+    }
+
+    /// balls' layout **for this project** (§16.2's one-store-per-project
+    /// invariant, bl-262a). It is resolved per project rather than held,
+    /// because the store a directory's tasks live in is a fact of the
+    /// directory: yog's board for a workspace bound to an operator's own
+    /// checkout reads the store that checkout's owner reads, and the world's
+    /// own layout answers only for the directories the world owns.
+    fn xdg(&self, project: &Path) -> Xdg {
+        self.world.balls_layout_for(project)
     }
 
     /// The store checkout (`clones/<pct-enc-path>/tasks`) of a **founded**
@@ -63,7 +73,7 @@ impl BlStore {
     /// not a balls project reads as unlistable rather than as an empty store
     /// (`Catalog::load` is silent-empty on an absent `tasks/`).
     fn store(&self, project: &Path) -> io::Result<PathBuf> {
-        let clone = self.xdg.clone_dir(project);
+        let clone = self.xdg(project).clone_dir(project);
         if clone.landing().join("config").is_dir() {
             Ok(clone.store())
         } else {

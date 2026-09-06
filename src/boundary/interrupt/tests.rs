@@ -50,7 +50,6 @@ impl World {
             state_root: self.state(),
             home: self.dir.path().join("home"),
             yog_data_root: self.dir.path().join("data"),
-            balls_state_root: self.dir.path().join("balls"),
             yog_binary: PathBuf::from("/no/such/yog"),
             world: crate::xdg::Env::from_env(),
             snapshot: Arc::new(snapshot(&self.workspace(), "alba", Vec::new(), Vec::new())),

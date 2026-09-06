@@ -92,14 +92,21 @@ fn layout_names_the_world_subtree() {
     assert_eq!(l.tools, PathBuf::from("/d/yog/world/tools"));
 }
 
-/// The override set is exactly the §16.2 three, in order, and the `PATH` entry
-/// leads with the world's tools dir (§16.7 W9) rather than replacing the ambient
-/// search path. Re-deriving the set from the **composed world** `Env` — which
+/// The override set is the §16.2 three that **nest**, in order, with the `PATH`
+/// entry leading with the world's tools dir (§16.7 W9) rather than replacing the
+/// ambient search path — and, since bl-262a, one that **remembers**:
+/// `YOG_HOST_STATE` carries the ambient `XDG_STATE_HOME` forward, because the
+/// override above it is what makes that value unreadable and a directory the
+/// world does not own still keeps its store there (§16.2's one-store-per-project
+/// invariant).
+///
+/// Re-deriving the set from the **composed world** `Env` — which
 /// `marks`/`config_edit` do — reproduces it byte-for-byte: the composition is
-/// idempotent, so no re-entry stacks a second tools entry. That fixed point is
+/// idempotent, so no re-entry stacks a second tools entry, and none re-takes the
+/// world's own state home as the host's. That fixed point is
 /// also what makes [`inhabit`](super::inhabit) safe to call on an
-/// already-folded process (bl-81c9), and the set being exactly these three is
-/// why the fold can displace neither an agent's own space (`YOG_MARKS`) nor a
+/// already-folded process (bl-81c9), and the set carrying nothing per-workspace
+/// is why the fold can displace neither an agent's own space (`YOG_MARKS`) nor a
 /// workspace's wall (`YOG_WALL`): both ride one layer in, and neither is here.
 #[test]
 fn the_override_set_nests_two_state_vars_and_fronts_the_tool_path() {
@@ -114,9 +121,15 @@ fn the_override_set_nests_two_state_vars_and_fronts_the_tool_path() {
                 "PATH".to_owned(),
                 "/d/yog/world/tools:/usr/bin:/bin".to_owned()
             ),
+            ("YOG_HOST_STATE".to_owned(), "/ambient/state".to_owned()),
         ]
     );
-    assert_eq!(overrides(&compose(&amb)), ov);
+    assert_eq!(
+        overrides(&compose(&amb)),
+        ov,
+        "idempotent: a re-derivation keeps the HOST state home rather than \
+         re-reading the world's own over it"
+    );
 }
 
 /// §16.7 W9 end to end — **the agent's `bl` is yog's.** Seed the world's shim,

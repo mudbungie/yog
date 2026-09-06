@@ -4,6 +4,13 @@ use super::*;
 use crate::opslog::Origin;
 use tempfile::tempdir;
 
+/// A hermetic world whose host state home is `/state` — every project in these
+/// tests is outside any yog data root, so its balls state root is `/state/balls`
+/// (§16.2's one-store-per-project invariant, bl-262a).
+fn world() -> crate::xdg::Env {
+    crate::xdg::Env::from_pairs([("HOME", "/home/u"), ("XDG_STATE_HOME", "/state")])
+}
+
 /// A root over `writable`, with `cwd` and a fixed home.
 fn root(writable: &[&str], cwd: &str) -> Root {
     Root {
@@ -69,6 +76,7 @@ fn the_agent_worktree_is_the_workspace_s_agents_dir() {
 
 #[test]
 fn the_bound_worktree_is_the_last_claim_this_workspace_made() {
+    let world = world();
     let balls = Path::new("/state/balls");
     let rows = [
         claim_row("/dev/proj", "bl-0000", "someone-else"),
@@ -79,7 +87,7 @@ fn the_bound_worktree_is_the_last_claim_this_workspace_made() {
     // spellings are candidates, since which one balls minted is a disk fact
     // containment need not ask about.
     assert_eq!(
-        bound_worktrees(&rows, balls, "cobalt-gecko"),
+        bound_worktrees(&rows, &world, "cobalt-gecko"),
         [
             crate::binding::work_worktree_path(balls, Path::new("/dev/other"), "bl-2222", None),
             crate::binding::work_worktree_path(
@@ -92,13 +100,14 @@ fn the_bound_worktree_is_the_last_claim_this_workspace_made() {
     );
     // A workspace that never claimed through yog gets no bound worktree — the
     // stated limit of the §3.2 join, not an error.
-    assert!(bound_worktrees(&rows, balls, "nobody").is_empty());
-    assert!(bound_worktrees(&[], balls, "cobalt-gecko").is_empty());
+    assert!(bound_worktrees(&rows, &world, "nobody").is_empty());
+    assert!(bound_worktrees(&[], &world, "cobalt-gecko").is_empty());
 }
 
 #[test]
 fn only_a_bl_claim_row_stamped_with_this_claimant_joins() {
-    let balls = Path::new("/state/balls");
+    let world = world();
+
     let mut close = claim_row("/dev/proj", "bl-1111", "cobalt-gecko");
     close.argv[1] = "close".to_owned();
     let mut foreign = claim_row("/dev/proj", "bl-1111", "cobalt-gecko");
@@ -110,7 +119,7 @@ fn only_a_bl_claim_row_stamped_with_this_claimant_joins() {
     short.argv.truncate(2);
     for row in [close, foreign, unstamped, short] {
         assert!(
-            bound_worktrees(std::slice::from_ref(&row), balls, "cobalt-gecko").is_empty(),
+            bound_worktrees(std::slice::from_ref(&row), &world, "cobalt-gecko").is_empty(),
             "{:?} is not a claim this workspace made",
             row.argv
         );
@@ -123,7 +132,8 @@ fn only_a_bl_claim_row_stamped_with_this_claimant_joins() {
 /// it has.
 #[test]
 fn a_fanned_candidates_own_worktree_is_writable_and_a_strangers_is_not() {
-    let xdg = balls::layout::Xdg::with(Path::new("/home/u"), None, Some("/home/u/.local/state"));
+    let world = crate::xdg::Env::from_pairs([("HOME", "/home/u")]);
+    let xdg = world.balls_layout_for(Path::new("/dev/proj"));
     let ws = Path::new("/w/workspaces/cobalt-gecko");
     let mine = balls::delivery_path::attempt_path(&xdg, "/dev/proj", "at-0badcafe");
     let fire = |binding: &Path, cwd: &str| OpEntry {
@@ -157,12 +167,12 @@ fn a_fanned_candidates_own_worktree_is_writable_and_a_strangers_is_not() {
         ),
     ];
     assert_eq!(
-        candidate_worktrees(&trail, &xdg, ws, "cobalt-gecko"),
+        candidate_worktrees(&trail, &world, ws, "cobalt-gecko"),
         vec![mine],
     );
     // A workspace that never claimed anything has no obligation, so it has no
     // candidates either — the join starts at the claim, as the work one does.
-    assert!(candidate_worktrees(&trail, &xdg, ws, "somebody-else").is_empty());
+    assert!(candidate_worktrees(&trail, &world, ws, "somebody-else").is_empty());
 }
 
 #[test]

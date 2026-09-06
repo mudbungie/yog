@@ -55,8 +55,9 @@ fn s8_t3_yog_env_prints_the_world_and_yog_exec_runs_inside_it() {
         .collect();
     assert_eq!(
         keys,
-        ["LITANY_HOME", "XDG_STATE_HOME", "PATH"],
-        "the world's own override set, in its own order"
+        ["LITANY_HOME", "XDG_STATE_HOME", "PATH", "YOG_HOST_STATE"],
+        "the world's own override set, in its own order — the three that nest \
+         and the one that remembers the host's state home (bl-262a)"
     );
     assert!(
         stdout.contains(&*world_root.join("litany").to_string_lossy()),
@@ -79,6 +80,10 @@ fn s8_t3_yog_env_prints_the_world_and_yog_exec_runs_inside_it() {
             (
                 "PATH".to_owned(),
                 extract(&stdout, "PATH").expect("a PATH line")
+            ),
+            (
+                "YOG_HOST_STATE".to_owned(),
+                extract(&stdout, "YOG_HOST_STATE").expect("a YOG_HOST_STATE line")
             ),
         ]),
         "one serializer, one answer"

@@ -28,7 +28,6 @@ fn intake(state_root: &std::path::Path) -> Intake {
         state_root: state_root.to_path_buf(),
         home: PathBuf::from("/home/x"),
         yog_data_root: PathBuf::from("/data"),
-        balls_state_root: PathBuf::from("/balls"),
         ui_path: state_root.join("ui.json"),
         cell: crate::state::new_snapshot_cell(snap),
         presence: crate::registry::presence::Presence::default(),

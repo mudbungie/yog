@@ -111,6 +111,13 @@ pub(super) fn layout(root: &Path) -> (balls::layout::Xdg, std::path::PathBuf) {
     (xdg(root), root.join("state").join("balls"))
 }
 
+/// The world the projection folds those same two out of, per project (bl-262a)
+/// — `workdiff::tests::world`, so the fixture and the fold agree by
+/// construction rather than by two hand-built layouts.
+pub(super) fn world(root: &Path) -> crate::xdg::Env {
+    crate::workdiff::tests::world(root)
+}
+
 /// Write the agent worktree bytes the projection reads: its frozen `goal.md`
 /// and, for each entry, one `messages/` file in litany's own naming.
 pub(super) fn worktree(ws: &Path, agent: &str, goal: &str, messages: &[(&str, &str)]) {

@@ -44,7 +44,6 @@ pub(super) fn deps(world: &crate::xdg::Env, state_root: &Path) -> Deps {
         state_root: state_root.to_path_buf(),
         home: PathBuf::from("/home/x"),
         yog_data_root: PathBuf::from("/data"),
-        balls_state_root: PathBuf::from("/balls"),
         yog_binary: PathBuf::from("/no/such/yog"),
         world: world.clone(),
         snapshot: Arc::new(snapshot(

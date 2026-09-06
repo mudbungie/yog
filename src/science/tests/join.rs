@@ -25,6 +25,7 @@ pub(super) struct Lab {
     pub(super) project: Project,
     xdg: balls::layout::Xdg,
     balls_root: PathBuf,
+    world: crate::xdg::Env,
     pub(super) ws: PathBuf,
 }
 
@@ -38,6 +39,7 @@ impl Lab {
     pub(super) fn over(project: Project) -> Lab {
         let dir = tempfile::tempdir().unwrap();
         let (xdg, balls_root) = layout(dir.path());
+        let world = super::world(dir.path());
         let ws = dir.path().join("workspaces").join(NAME);
         std::fs::create_dir_all(&ws).unwrap();
         Lab {
@@ -45,12 +47,13 @@ impl Lab {
             project,
             xdg,
             balls_root,
+            world,
             ws,
         }
     }
 
     pub(super) fn project_at(&self, snap: &Snapshot, entries: &[OpEntry]) -> Vec<Attempt> {
-        project(snap, &self.ws, entries, &self.xdg, &self.balls_root)
+        project(snap, &self.ws, entries, &self.world)
     }
 
     /// The claim attempt's own worktree path, by balls' formula.

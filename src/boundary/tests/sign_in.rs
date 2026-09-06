@@ -85,7 +85,6 @@ impl Wall {
             world: self.world.clone(),
             home: self.fixture.path.join("home"),
             yog_data_root: self.fixture.path.join("data"),
-            balls_state_root: self.fixture.path.join("balls"),
             snapshot: Arc::new(snapshot(&ws, "alba", vec![], vec![])),
             caller: crate::boundary::dispatch::Caller::default(),
         }

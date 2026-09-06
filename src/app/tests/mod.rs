@@ -65,7 +65,7 @@ fn an_empty_world_answers_every_read_with_nothing() {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
-        balls_clones: root.path().join("balls").join("clones"),
+        balls_clones: vec![root.path().join("balls").join("clones")],
         home: root.path().join("home"),
         world: crate::test_support::no_world(),
     };

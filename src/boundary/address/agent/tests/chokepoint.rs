@@ -39,7 +39,6 @@ fn world() -> (TempDir, PathBuf, Deps) {
         state_root: dir.path().join("state"),
         home: dir.path().join("home"),
         yog_data_root: dir.path().join("data"),
-        balls_state_root: dir.path().join("balls"),
         yog_binary: PathBuf::from("/no/such/yog"),
         world: crate::test_support::no_world(),
         snapshot: Arc::new(crate::boundary::tests::snapshot(

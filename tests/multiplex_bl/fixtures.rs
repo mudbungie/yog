@@ -86,8 +86,15 @@ pub(crate) fn sole_child(dir: &Path) -> PathBuf {
 /// `/var/…`. Deriving the expected paths from the same source keeps both sides
 /// in one spelling on every platform (a no-op on Linux).
 pub(crate) fn found_project(tmp: &Path) -> PathBuf {
-    let proj = tmp.join("proj");
-    fs::create_dir(&proj).unwrap();
+    found_project_at(&tmp.join("proj"))
+}
+
+/// The same, at a stated path — the world-owned half of the drive needs a
+/// project *inside* `<yog-data-root>`, since that is where a §16.3 space
+/// decides anything (bl-262a).
+pub(crate) fn found_project_at(proj: &Path) -> PathBuf {
+    let proj = proj.to_path_buf();
+    fs::create_dir_all(&proj).unwrap();
     git(&proj, &["init", "-q", "-b", "main"]);
     let (name, email) = IDENT;
     git(&proj, &["config", "user.name", name]);

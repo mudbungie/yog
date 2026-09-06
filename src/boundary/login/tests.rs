@@ -38,7 +38,6 @@ fn deps_with(root: &Path, bz: &Path) -> Deps {
         world,
         home: root.join("home"),
         yog_data_root: root.join("data/yog"),
-        balls_state_root: root.join("state/balls"),
         snapshot: Arc::new(crate::boundary::tests::snapshot(
             &workspace(),
             "alba",

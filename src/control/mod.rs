@@ -34,7 +34,6 @@
 //! drift; adversarial evasion is the OS layer's problem, later and
 //! platform-explicit.
 
-use balls::layout::Xdg as BallsXdg;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
@@ -79,11 +78,16 @@ const UNREADABLE: i32 = 2;
 pub struct Consult {
     /// The workspace root — the control's own cwd, per litany's contract.
     pub workspace: PathBuf,
-    /// balls' own layout — where the bl-delivery formula is rooted, and where
-    /// the §4.10 attempt formula places a fan candidate's worktree. balls'
-    /// value, not a mirror of it (§16.7 W8), so both formulas are asked of the
-    /// crate that owns them.
-    pub balls: BallsXdg,
+    /// The composed world, from which balls' own layout is folded **per
+    /// project** — where the bl-delivery formula is rooted, and where the §4.10
+    /// attempt formula places a fan candidate's worktree. balls' value, not a
+    /// mirror of it (§16.7 W8), so both formulas are asked of the crate that
+    /// owns them; the world rather than one layout since bl-262a, because the
+    /// store — and therefore the territory — a project's worktrees live in is a
+    /// fact of that project's directory (§16.2's one-store-per-project
+    /// invariant), and a claim in an operator's own checkout cuts its worktree
+    /// in the operator's own bundle.
+    pub world: crate::xdg::Env,
     /// yog's state root, holding the `ops.jsonl` this fold reads.
     pub state_root: PathBuf,
     /// `$HOME`, for `~` in operands.
@@ -106,7 +110,7 @@ impl Consult {
     pub fn new(env: &Env, workspace: &Path, cwd: Option<PathBuf>, policy: Policy) -> Consult {
         Consult {
             workspace: workspace.to_path_buf(),
-            balls: env.balls_layout(),
+            world: env.clone(),
             state_root: env.yog_state_root(),
             home: env.home_dir(),
             cwd,
@@ -123,11 +127,7 @@ impl Consult {
             .map(|s| s.to_string_lossy().into_owned())
             .unwrap_or_default();
         let mut writable = vec![agent.clone()];
-        writable.extend(root::bound_worktrees(
-            entries,
-            &self.balls.state_dir(),
-            &claimant,
-        ));
+        writable.extend(root::bound_worktrees(entries, &self.world, &claimant));
         // …and the §4.10 fan's candidates beside it: with N > 1 the work does
         // not happen in `work/<id>` at all, it happens in each candidate's own
         // attempt worktree, so a root that named only the claim would refuse
@@ -135,7 +135,7 @@ impl Consult {
         // same claim — yog's own rows, never the agent's mark (`root`).
         writable.extend(root::candidate_worktrees(
             entries,
-            &self.balls,
+            &self.world,
             &self.workspace,
             &claimant,
         ));

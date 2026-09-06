@@ -12,9 +12,18 @@
 //! whole regression: the world's territory must carry no worktree for a ball an
 //! own space claimed.
 //!
-//! Environment mutation is lawful here for the parent binary's reason (its
-//! module doc): every `tests/*.rs` is one process and the parent's is this
-//! binary's only `#[test]`, so nothing runs concurrently with these writes.
+//! **It drives a WORLD-OWNED directory, and it has to** (bl-262a). A space
+//! decides balls' homes only where §16.2's one-store-per-project invariant has
+//! not already decided them: a directory outside `<yog-data-root>` resolves its
+//! own operator's store and no `YOG_MARKS` reaches it. So this founds its
+//! project *inside* the world — which is what a yog-raised project is — and
+//! the parent's drive, in an operator's own checkout, is the other side of the
+//! same rule.
+//!
+//! Environment and working-directory mutation are lawful here for the parent
+//! binary's reason (its module doc): every `tests/*.rs` is one process and the
+//! parent's is this binary's only `#[test]`, so nothing runs concurrently with
+//! these writes.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -27,7 +36,12 @@ use crate::fixtures::sole_child;
 /// worktree land under the space, and the world's plugin territory stays empty
 /// of it. `world_balls` is the world's `balls/` state root (the parent's
 /// anchor); `proj` is the invocation path, resolved as the parent resolved it.
-pub(crate) fn an_own_space_owns_its_worktrees(tmp: &Path, proj: &Path, world_balls: &Path) {
+pub(crate) fn an_own_space_owns_its_worktrees(tmp: &Path, outer: &Path, world_balls: &Path) {
+    // A project the WORLD owns — under `<yog-data-root>` — because that is
+    // where a space decides anything (bl-262a). The parent's project is the
+    // operator's own and resolves the operator's store whatever `YOG_MARKS`
+    // says.
+    let proj = &crate::fixtures::found_project_at(&tmp.join("data/yog/world/raised"));
     // `<wall>/marks` is the shape §16.3 names — an own space is one directory
     // serving as both of balls' homes, keyed by the workspace name.
     let space = tmp.join("data/yog/world/walls/spaced/marks");
@@ -83,6 +97,8 @@ pub(crate) fn an_own_space_owns_its_worktrees(tmp: &Path, proj: &Path, world_bal
     // Leave the world's space standing for whatever the parent drives next: an
     // absent var IS the world's space, and the arm re-folds it on the way in.
     set_marks(None);
+    // …and leave the parent's own invocation directory standing too.
+    std::env::set_current_dir(outer).unwrap();
 }
 
 /// Layer an own space onto this process's env, or take it away.

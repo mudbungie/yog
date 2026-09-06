@@ -168,14 +168,20 @@ pub fn agent_cwd(workspace: &Path, agent_id: &str) -> Option<PathBuf> {
 /// contains nothing. Empty when this workspace never claimed through yog.
 pub fn bound_worktrees(
     entries: &[OpEntry],
-    balls_state_root: &Path,
+    world: &crate::xdg::Env,
     claimant: &str,
 ) -> Vec<PathBuf> {
     claimed(entries, claimant)
         .map(|(project, id)| {
+            // The **project's** state root (§16.2's one-store-per-project
+            // invariant, bl-262a): a claim in an operator's own checkout cut
+            // its worktree in the operator's territory, so a root folded off
+            // the world's would classify the drone's own worktree as
+            // open-world and refuse every write it makes.
+            let state_root = world.balls_state_root_for(&project);
             vec![
-                work_worktree_path(balls_state_root, &project, &id, None),
-                work_worktree_path(balls_state_root, &project, &id, Some(claimant)),
+                work_worktree_path(&state_root, &project, &id, None),
+                work_worktree_path(&state_root, &project, &id, Some(claimant)),
             ]
         })
         .unwrap_or_default()
@@ -191,12 +197,19 @@ pub fn bound_worktrees(
 /// Empty for an ordinary N = 1 start, which binds no attempt at all.
 pub fn candidate_worktrees(
     entries: &[OpEntry],
-    balls: &balls::layout::Xdg,
+    world: &crate::xdg::Env,
     workspace: &Path,
     claimant: &str,
 ) -> Vec<PathBuf> {
     claimed(entries, claimant)
-        .map(|(project, _)| crate::fan::cohort::worktrees(entries, balls, &project, workspace))
+        .map(|(project, _)| {
+            crate::fan::cohort::worktrees(
+                entries,
+                &world.balls_layout_for(&project),
+                &project,
+                workspace,
+            )
+        })
         .unwrap_or_default()
 }
 

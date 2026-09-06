@@ -29,7 +29,7 @@ pub fn read(
     snap: &Snapshot,
     workspace: &Path,
     entries: &[crate::opslog::OpEntry],
-    xdg: &balls::layout::Xdg,
+    world: &crate::xdg::Env,
 ) -> Vec<Attempt> {
     let Some(name) = named_of(&snap.workspaces, workspace) else {
         return Vec::new();
@@ -41,7 +41,9 @@ pub fn read(
             resolve(plan, named)
         })
         .collect();
-    out.extend(candidates::candidates(snap, workspace, entries, xdg, &name));
+    out.extend(candidates::candidates(
+        snap, workspace, entries, world, &name,
+    ));
     out
 }
 

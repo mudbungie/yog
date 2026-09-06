@@ -10,6 +10,7 @@ use crate::projects::join::JoinState;
 use crate::test_support::FakeClock;
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tempfile::{TempDir, tempdir};
 
@@ -125,7 +126,7 @@ fn an_unlistable_clone_renders_orphaned() {
     // A second clone whose `bl list` fails (a process failure, not an empty
     // listing): it is enumerated but absent from the ball map, so the join marks
     // it orphaned (§3.5), distinct from a listable-but-empty project.
-    fs::create_dir_all(w.roots.balls_clones.join("%2Fproj%2Fgone")).unwrap();
+    fs::create_dir_all(w.roots.balls_clones[0].join("%2Fproj%2Fgone")).unwrap();
     let bad = PathBuf::from("/proj/gone");
     w.fail.lock().unwrap().insert(bad.clone());
     let (_c, m) = model(&w);
@@ -147,7 +148,7 @@ pub(super) fn empty_model() -> (TempDir, AppModel) {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
-        balls_clones: root.path().join("clones"),
+        balls_clones: vec![root.path().join("clones")],
         home: root.path().join("home"),
         world: crate::test_support::no_world(),
     };

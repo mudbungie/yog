@@ -47,8 +47,6 @@
 
 use std::path::Path;
 
-use balls::layout::Xdg;
-
 use crate::app::Snapshot;
 use crate::budgets::BudgetSpend;
 use crate::opslog::OpEntry;
@@ -168,13 +166,15 @@ pub fn project(
     snap: &Snapshot,
     workspace: &Path,
     entries: &[OpEntry],
-    xdg: &Xdg,
-    balls_state_root: &Path,
+    world: &crate::xdg::Env,
 ) -> Vec<Attempt> {
-    let diffs = crate::workdiff::read(snap, workspace, entries, xdg);
+    let diffs = crate::workdiff::read(snap, workspace, entries, world);
     let fires = crate::fan::fires(entries, workspace);
     let claimant = crate::binding::named_of(&snap.workspaces, workspace).unwrap_or_default();
-    let layout = bound::Layout::of(xdg, balls_state_root, &claimant);
+    // The world rather than one layout (bl-262a): every balls path below folds
+    // off the **project** the row names, and one workspace's rows may name a
+    // world-owned directory and an operator's checkout in the same pass.
+    let layout = bound::Layout::of(world, &claimant);
     diffs
         .iter()
         .map(|diff| {

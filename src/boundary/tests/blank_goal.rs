@@ -56,7 +56,6 @@ fn deps(state: &Path, yog: &Path) -> Deps {
         world: no_world(),
         home: yog.to_path_buf(),
         yog_data_root: yog.to_path_buf(),
-        balls_state_root: yog.to_path_buf(),
         snapshot: Arc::new(snapshot(&ws, WS, vec![], vec![])),
         caller: crate::boundary::dispatch::Caller::default(),
     }

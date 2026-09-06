@@ -23,7 +23,7 @@ fn s3_t5_zero_projects_carries_the_yog_exec_bl_prime_hint() {
         yog_state: root.path().join("state"),
         // The clones root is absent ⇒ `projects::enumerate` finds nothing ⇒ zero
         // projects; the injected `bl` is never consulted.
-        balls_clones: root.path().join("clones"),
+        balls_clones: vec![root.path().join("clones")],
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };

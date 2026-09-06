@@ -12,6 +12,7 @@ use tempfile::{TempDir, tempdir};
 /// through balls' OWN layout arithmetic, never a hand-spelled path.
 struct World {
     _root: TempDir,
+    env: Env,
     xdg: Xdg,
     project: PathBuf,
 }
@@ -28,9 +29,9 @@ impl World {
                 root.path().join("state").to_string_lossy().into_owned(),
             ),
         ]);
-        let xdg = env.balls_layout();
-        // A REAL dir: the residual `bl` subprocess runs cwd = the project (§5.1 #2).
         let project = root.path().join("proj");
+        let xdg = env.balls_layout_for(&project);
+        // A REAL dir: the residual `bl` subprocess runs cwd = the project (§5.1 #2).
         std::fs::create_dir_all(&project).unwrap();
         let clone = xdg.clone_dir(&project);
         std::fs::create_dir_all(clone.store().join("tasks")).unwrap();
@@ -39,6 +40,7 @@ impl World {
         }
         Self {
             _root: root,
+            env,
             xdg,
             project,
         }
@@ -56,7 +58,7 @@ impl World {
 
     /// A store over this world, its residual `bl` subprocess bound to `cli`.
     fn store(&self, cli: Cli) -> BlStore {
-        BlStore::new(self.xdg.clone(), cli)
+        BlStore::new(self.env.clone(), cli)
     }
 }
 

@@ -103,7 +103,7 @@ fn clones_dirtiness_refetches_balls() {
     let (_c, mut m) = model(&w);
     set_list(&w, "[]"); // both balls gone
     m.dirty_handle()
-        .mark_all([(w.roots.balls_clones.clone(), Mark::Watch)]);
+        .mark_all([(w.roots.balls_clones[0].clone(), Mark::Watch)]);
     m.tick();
     assert_eq!(
         super::row_for(&m, &w.ws_cobalt).unwrap().state,

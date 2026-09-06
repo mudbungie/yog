@@ -15,7 +15,7 @@ use super::AppModel;
 use crate::cli_outbound::Cli;
 use crate::projects::join;
 use crate::projects::runner;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// The empty-project hint's two lines (STORIES S3-T5, bl-b491): elidable prose
 /// then the verbatim command. The split is the fix — see
@@ -99,16 +99,6 @@ impl AppModel {
         self.mark_dirty([self.roots.yog_state.clone()]);
     }
 
-    /// The balls state root — the parent of the per-project clones dir (balls
-    /// arch §1: `clones/` always lives under it); the start flow's
-    /// `work_worktree_path` derives from it (§3.3).
-    pub fn balls_state_root(&self) -> PathBuf {
-        let clones = &self.roots.balls_clones;
-        // `clones` is always nested under the state root, so it has a parent;
-        // the fallback (the clones dir itself) keeps this panic-free.
-        clones.parent().unwrap_or(clones).to_path_buf()
-    }
-
     /// The boundary [`Deps`](crate::boundary::dispatch::Deps) this instance
     /// answers with (§8.5): its roots, its composed world, its addressable
     /// snapshot, its verb binaries.
@@ -150,11 +140,10 @@ impl AppModel {
             world: self.roots.world.clone(),
             home: self.roots.home.clone(),
             yog_data_root: self.roots.yog_data.clone(),
-            balls_state_root: self.balls_state_root(),
             snapshot: crate::app::addressable(
                 std::sync::Arc::clone(&self.snap),
                 crate::binding::workspaces(&self.roots.yog_data, &self.roots.litany_data),
-                crate::projects::enumerate(&self.roots.balls_clones)
+                crate::projects::enumerate_all(&self.roots.balls_clones)
                     .into_iter()
                     .map(|p| p.path)
                     .collect(),

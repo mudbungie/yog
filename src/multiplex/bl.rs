@@ -71,6 +71,16 @@ pub(super) fn run(args: &[String]) -> i32 {
 /// place, so the space the `Edge` carries and the state home balls' plugin
 /// children read can never be two answers (bl-c21d).
 ///
+/// **The space is resolved for the INVOCATION DIRECTORY** (§16.2's
+/// one-store-per-project invariant, bl-262a), which is balls' own clone key.
+/// A directory the world owns resolves the world's space (or the agent's own,
+/// where `YOG_MARKS` is layered on); every other directory — an operator's
+/// checkout the conversation was aimed at — resolves the store its own owner
+/// resolves. Standing in it is what carries that to `bl-delivery` and
+/// `bl-tracker`, which rebuild their layout from `$XDG_STATE_HOME` and hold no
+/// `Edge`: a `claim` in an operator's project cuts its worktree in the
+/// operator's own territory, beside the store it sealed the ball in.
+///
 /// Two folds, one layer apart, each closing the same hole from its own side: the
 /// world ([`crate::world::inhabit`], bl-81c9) because balls' plugin chain spawns
 /// `bl-delivery`/`bl-tracker`/`git` as children that resolve `$XDG_STATE_HOME`
@@ -86,13 +96,14 @@ pub(super) fn run(args: &[String]) -> i32 {
 /// [`edge`] needs one — but from the ambient env, and balls answers from argv
 /// before it resolves anything that space names.
 fn stand(probe: bool) -> Space {
+    let here = env::current_dir().unwrap_or_default();
     if probe {
-        return crate::world::marks::space(&crate::xdg::Env::from_env());
+        return crate::world::marks::space_for(&crate::xdg::Env::from_env(), &here);
     }
     crate::world::inhabit();
     // Read AFTER the world fold: an absent `YOG_MARKS` resolves the world's own
     // space, which is the world's state home — the value just written.
-    let space = crate::world::marks::space(&crate::xdg::Env::from_env());
+    let space = crate::world::marks::space_for(&crate::xdg::Env::from_env(), &here);
     crate::world::inhabit_space(&space);
     space
 }

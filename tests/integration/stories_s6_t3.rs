@@ -35,7 +35,7 @@ fn s6_t3_the_ack_quiets_the_signal_and_keeps_every_fact() {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
-        balls_clones: root.path().join("clones"),
+        balls_clones: vec![root.path().join("clones")],
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };

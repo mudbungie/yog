@@ -14,7 +14,7 @@ fn an_undeclared_retention_releases_the_worktree_and_keeps_the_source_ref() {
     let candidate = crate::fan::open(
         &World::obligation(),
         &world.project,
-        &deps.world.balls_layout(),
+        &deps.world.balls_layout_for(&world.project),
         1,
     )
     .unwrap()
@@ -38,7 +38,7 @@ fn a_declared_and_expired_retention_takes_the_source_ref_too() {
     let candidate = crate::fan::open(
         &World::obligation(),
         &world.project,
-        &deps.world.balls_layout(),
+        &deps.world.balls_layout_for(&world.project),
         1,
     )
     .unwrap()
@@ -69,7 +69,7 @@ fn a_retention_that_has_not_expired_keeps_the_ref() {
     let candidate = crate::fan::open(
         &World::obligation(),
         &world.project,
-        &deps.world.balls_layout(),
+        &deps.world.balls_layout_for(&world.project),
         1,
     )
     .unwrap()

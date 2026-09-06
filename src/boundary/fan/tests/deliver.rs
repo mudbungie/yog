@@ -26,7 +26,7 @@ fn a_delivery_answers_the_four_identities_and_leaves_one_step() {
     let candidate = crate::fan::open(
         &World::obligation(),
         &world.project,
-        &deps.world.balls_layout(),
+        &deps.world.balls_layout_for(&world.project),
         1,
     )
     .unwrap()
@@ -69,7 +69,7 @@ fn the_chokepoint_routes_a_delivery_to_this_family() {
     let candidate = crate::fan::open(
         &World::obligation(),
         &world.project,
-        &deps.world.balls_layout(),
+        &deps.world.balls_layout_for(&world.project),
         1,
     )
     .unwrap()

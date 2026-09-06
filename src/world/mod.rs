@@ -19,8 +19,17 @@
 //! | `LITANY_HOME` | `world/litany` | litany config **and** data (the `litany_home` collapse) |
 //! | `XDG_STATE_HOME` | `world/state` | balls clones/worktrees/op-logs **and** yog's `ui.json`/`ops.jsonl` |
 //! | `PATH` | `world/tools:$PATH` | the tool an agent's bash *finds* — yog's own `bl`/`litany`/`bz` shims, not host binaries (§16.7 W9/W11, [`tools`]) |
+//! | `YOG_HOST_STATE` | the **ambient** `XDG_STATE_HOME` | nothing — it *remembers* ([`HOST_STATE`], bl-262a), so [`marks::space_for`] can put an operator's own project store back where its owner keeps it |
 //!
-//! The first two nest **state**; the third nests the **toolchain** — the same
+//! **The fourth nests nothing, and that is the point.** balls keys a clone on
+//! `(state home, invocation path)`, so the second row changes which store a
+//! *directory* resolves — and for an operator's own checkout that is a wrong
+//! answer rather than isolation (§16.2's one-store-per-project invariant): yog
+//! and the operator addressed two different stores at one path, and a
+//! conversation aimed at a tracked project reported the board empty. The
+//! ambient value is unreadable once composed, so the world carries it.
+//!
+//! The first three nest **state** and the **toolchain** — the same
 //! encapsulation argument one layer up (§16.4: an ambient `bl` reads the right
 //! paths by inheritance but is not yog's balls implementation). It is a prepend,
 //! not a replacement: everything else on the operator's `PATH` still resolves.
@@ -136,6 +145,22 @@ const XDG_STATE_HOME: &str = "XDG_STATE_HOME";
 /// `PATH` — puts [`Layout::tools`] in front of the ambient search path, so an
 /// agent's bare `bl` is the world's shim (§16.7 W9, [`tools::prepend_path`]).
 const PATH: &str = "PATH";
+/// `YOG_HOST_STATE` — **the ambient `XDG_STATE_HOME`, carried forward**
+/// (§16.2 as amended, bl-262a).
+///
+/// The world overrides `XDG_STATE_HOME`, so after one composition the value the
+/// operator's own shell resolves is gone from the environment — and it is
+/// exactly the value balls needs for a directory the world does not own (one
+/// store per project, [`marks::space_for`]). It is not a fourth *nesting*: the
+/// three above say where yog's substrate lives, this one remembers where the
+/// operator's does, so the fold can put a project's store back where its owner
+/// keeps it.
+///
+/// It is **idempotent by the same construction the `PATH` prepend uses**: a set
+/// value is carried through unchanged, so re-deriving the override set from an
+/// already-composed world `Env` reproduces the ambient reading rather than
+/// re-taking the world's own.
+pub(crate) const HOST_STATE: &str = "YOG_HOST_STATE";
 
 /// The world's fixed override set (§16.2) as `(var, nested-value)` pairs — the
 /// **single source of truth** for which vars nest and to what, consumed
@@ -169,6 +194,10 @@ pub fn overrides(ambient: &Env) -> Vec<(String, String)> {
         (
             PATH.to_owned(),
             tools::prepend_path(&l.tools, ambient.search_path()),
+        ),
+        (
+            HOST_STATE.to_owned(),
+            ambient.host_state_home().to_string_lossy().into_owned(),
         ),
     ]
 }

@@ -118,8 +118,15 @@ fn desired_watches(roots: &Roots, workspaces: &[Workspace]) -> Vec<(PathBuf, Roo
         (roots.workspaces(), RootKind::WorkspacesRoot),
         (roots.replays(), RootKind::WorkspacesRoot),
         (roots.yog_state.clone(), RootKind::YogState),
-        (roots.balls_clones.clone(), RootKind::BallsClones),
     ];
+    // One watch per clone root (bl-262a): the world's and the host's, or the
+    // one path they collapse to outside a world.
+    desired.extend(
+        roots
+            .balls_clones
+            .iter()
+            .map(|dir| (dir.clone(), RootKind::BallsClones)),
+    );
     desired.extend(
         workspaces
             .iter()

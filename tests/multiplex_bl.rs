@@ -42,10 +42,16 @@ mod fixtures;
 use fixtures::{IDENT, fixture_gitconfig, found_project, git, plugin_wrapper, sole_child};
 
 /// The §16.3 space half of the same drive (bl-c21d), split at the 300-line cap:
-/// the rung above runs in the world's space (no `YOG_MARKS`), this one in an
-/// agent's own, where the worktree must follow the store.
+/// the rung above runs in the directory's own store, this one in an agent's
+/// own space over a world-owned directory, where the worktree must follow the
+/// store.
 #[path = "multiplex_bl/marks.rs"]
 mod marks;
+
+/// The board half (bl-262a): yog's own §5.1 #2 read, asked for the same
+/// project, must answer out of the same store the arm above just wrote.
+#[path = "multiplex_bl/board.rs"]
+mod board;
 
 // git vars a hook-invoked test may inherit. This binary scrubs them from its
 // OWN env rather than a child's — the balls it drives runs in-process — but the
@@ -86,20 +92,32 @@ fn an_unusable_anchor_fails_every_verb_but_a_probe(tmp: &Path) {
     assert_eq!(dispatch(&argv(&["yog", "bl", "--help"])), Some(0));
 }
 
-/// bl-81c9 — **the rung runs in the WORLD's balls state and no other.** The arm
-/// stands the process in the world before balls reads a byte of env, so the
-/// conflicting ambient `$XDG_STATE_HOME` this binary set — standing for the
-/// operator's own landing — keeps whatever was there, which is nothing. Returns
-/// the world's balls state root, the anchor of every store and territory path
-/// below. Until bl-81c9 this file asserted the mirror image of both halves.
-fn the_world_state_and_no_other(tmp: &Path) -> std::path::PathBuf {
-    let ambient = tmp.join("state");
+/// bl-262a — **the rung runs in the store of the DIRECTORY it is invoked in.**
+///
+/// The invocation path here is the operator's own project (`found_project`
+/// chdirs into it), which the world does not own — so §16.2's
+/// one-store-per-project invariant resolves the HOST's bundle, the very store
+/// the operator's own `bl` in that directory resolves. Returns it, the anchor
+/// of every store and territory path below.
+///
+/// **This is the mirror image of what bl-81c9 asserted here, and deliberately.**
+/// That ball's complaint stands and is unchanged — one command spelling must
+/// not address two universes — but it is *satisfied* by this, not violated: for
+/// this directory `yog bl` and a bare `bl` now name the same store, where
+/// before they named two. What bl-81c9 fixed is the world FOLD, still whole:
+/// the arm stands the process in the world for `LITANY_HOME`, `PATH` and
+/// balls' config home before balls reads a byte, and the world's own balls
+/// state still serves every directory the world owns (`marks::…`, which drives
+/// exactly that). What this proves is the half the fold cannot decide: which
+/// store a directory has.
+fn the_directorys_own_store(tmp: &Path) -> std::path::PathBuf {
+    let world_balls = tmp.join("data/yog/world/state/balls/clones");
     assert!(
-        !ambient.exists(),
-        "ambient balls state written: {}",
-        ambient.display()
+        !world_balls.exists(),
+        "a world clone was founded for an operator's own directory: {}",
+        world_balls.display()
     );
-    tmp.join("data/yog/world/state/balls")
+    tmp.join("state/balls")
 }
 
 #[test]
@@ -157,11 +175,7 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
     // bl-2930: the former W9 refusals are balls' own verbs — their `--skill`
     // docs print (exit 0), no yog guard interposed.
     for verb in ["prime", "sync", "install"] {
-        assert_eq!(
-            dispatch(&argv(&["yog", "bl", "--skill", verb])),
-            Some(0),
-            "{verb}"
-        );
+        assert_eq!(dispatch(&argv(&["yog", "bl", "--skill", verb])), Some(0));
     }
 
     // `prime` — founds the checkout AND binds the plugin chain: the arm hands
@@ -175,7 +189,7 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
     for shim in ["bl", "litany", "bz", "bl-delivery", "bl-tracker"] {
         assert!(tools.join(shim).is_file(), "shim {shim} converged");
     }
-    let balls_state = the_world_state_and_no_other(tmp.path());
+    let balls_state = the_directorys_own_store(tmp.path());
     let clone = sole_child(&balls_state.join("clones"));
     assert!(clone.join("config").is_dir(), "landing founded");
     for plugin in ["bl-delivery", "bl-tracker"] {
@@ -203,17 +217,18 @@ fn the_bl_arm_runs_the_whole_rung_on_the_embedded_balls() {
     let task = balls_md.remove(0);
     let id = task.file_stem().unwrap().to_str().unwrap().to_string();
 
+    board::the_board_reads_the_directorys_own_store(&proj, &id);
     // `claim` — cuts the code worktree through the bound bl-delivery shim (a
     // real subprocess chain: symlink → shim → yog's plugin arm).
     assert_eq!(
         dispatch(&argv(&["yog", "bl", "claim", &id, "--as", "seam"])),
         Some(0)
     );
-    // The worktree lands in the world's plugin territory too — the half an
-    // `Edge` alone could never fix: `bl-delivery` is a real subprocess that
-    // folds `$XDG_STATE_HOME` out of its OWN env, so before bl-81c9 a bare `yog
-    // bl claim` sealed the ball in the world and cut the worktree in the
-    // operator's ambient territory.
+    // The worktree lands in the SAME bundle as the store — the half an `Edge`
+    // alone could never fix: `bl-delivery` is a real subprocess that folds
+    // `$XDG_STATE_HOME` out of its OWN env (bl-81c9), so the arm stands the
+    // process in whichever space the invocation directory resolves. Store and
+    // territory are one fact, and since bl-262a that fact is the directory's.
     let territory = balls_state.join("plugins/bl-delivery");
     let worktree = territory.join(proj.strip_prefix("/").unwrap()).join(&id);
     assert!(

@@ -22,7 +22,8 @@ fn a_landed_spawn_starts_a_drone_and_leaves_one_row() {
     // layout puts under this state root.
     let worktree = ctx
         .deps
-        .balls_state_root
+        .world
+        .balls_state_root_for(&project)
         .join("plugins/bl-delivery")
         .join(project.strip_prefix("/").expect("absolute"))
         .join("bl-1");
@@ -70,7 +71,8 @@ fn a_birth_whose_fire_never_launches_gives_its_own_claim_back() {
     let mut ctx = ctx(root.path(), armed_world(&ws, &project, false, None));
     let worktree = ctx
         .deps
-        .balls_state_root
+        .world
+        .balls_state_root_for(&project)
         .join("plugins/bl-delivery")
         .join(project.strip_prefix("/").expect("absolute"))
         .join("bl-1");

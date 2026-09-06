@@ -39,11 +39,11 @@ fn s4_t4_conversation_badges_are_honest_about_what_the_join_knows() {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
-        balls_clones: root.path().join("clones"),
+        balls_clones: vec![root.path().join("clones")],
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };
-    clone_dir(&roots.balls_clones, project.path());
+    clone_dir(&roots.balls_clones[0], project.path());
     let ws = roots.yog_data.join("workspaces").join("cobalt");
     std::fs::create_dir_all(&ws).unwrap();
     build_agents(

@@ -32,7 +32,7 @@ impl Deriver {
                 self.adopt_ui();
                 self.adopt_cadence();
                 self.refresh_ops();
-            } else if root == self.roots.balls_clones {
+            } else if self.roots.balls_clones.contains(&root) {
                 self.refresh_balls();
             } else if self.projects.contains(&root) {
                 self.refetch_project(&root);

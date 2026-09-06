@@ -66,7 +66,6 @@ fn staged(
 /// were the seat's rungs and went with it (bl-7942), and what the ENGINE has
 /// always taken is this struct.
 fn inputs(
-    m: &crate::AppModel,
     w: &super::World,
     workspace: &Path,
     payload: crate::start::Payload,
@@ -77,7 +76,7 @@ fn inputs(
         repo: None,
         home: w.roots.home.clone(),
         yog_data_root: w.roots.yog_data.clone(),
-        balls_state_root: m.balls_state_root(),
+        balls_state_root: w.roots.world.balls_state_root_for(workspace),
         conversation_names: Vec::new(),
     }
 }
@@ -98,7 +97,7 @@ fn a_raise_founds_the_wall_the_reply_names() {
     let (_c, mut m) = model(&w);
 
     let target = crate::binding::workspace_path(&w.roots.yog_data, "ops");
-    let inputs = inputs(&m, &w, &target, crate::start::Payload::Bare);
+    let inputs = inputs(&w, &target, crate::start::Payload::Bare);
     let prepared = staged(&mut m, &fake_litany(bin.path(), &news()), &inputs).unwrap();
 
     assert_eq!(
@@ -123,7 +122,7 @@ fn a_failed_prepare_answers_the_refusal_and_founds_nothing() {
     let (_c, mut m) = model(&w);
 
     let raised = crate::binding::workspace_path(&w.roots.yog_data, "ops");
-    let inputs = inputs(&m, &w, &raised, crate::start::Payload::Bare);
+    let inputs = inputs(&w, &raised, crate::start::Payload::Bare);
     let err = staged(&mut m, &fake_litany(bin.path(), FAILS), &inputs).unwrap_err();
 
     assert!(err.contains("boom"), "the refusal rode back");
@@ -145,7 +144,6 @@ fn a_ball_rung_whose_project_this_world_does_not_enumerate_refuses_by_name() {
     let (_c, mut m) = model(&w);
 
     let inputs = inputs(
-        &m,
         &w,
         &crate::binding::workspace_path(&w.roots.yog_data, "ops"),
         crate::start::Payload::Ball {

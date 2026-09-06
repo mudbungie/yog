@@ -35,13 +35,13 @@ fn s4_t3_balls_section_groups_all_bound_balls_under_their_workspace() {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
-        balls_clones: root.path().join("clones"),
+        balls_clones: vec![root.path().join("clones")],
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };
     // A clone whose percent-encoded basename decodes to /proj/a (FakeBl never
     // chdirs, so the decoded path need not exist).
-    std::fs::create_dir_all(roots.balls_clones.join("%2Fproj%2Fa")).unwrap();
+    std::fs::create_dir_all(roots.balls_clones[0].join("%2Fproj%2Fa")).unwrap();
     // Two yog-named workspaces (§3.1, leaf = name): "cobalt" (bound) and "spare"
     // (unassigned — no ball claims it).
     for name in ["cobalt", "spare"] {

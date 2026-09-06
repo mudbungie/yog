@@ -74,7 +74,6 @@ impl World {
             ]),
             home: self.dir.path().join("home"),
             yog_data_root: self.dir.path().join("data"),
-            balls_state_root: self.dir.path().join("balls"),
             snapshot: Arc::new({
                 let mut snap = snapshot(&ws, "cobalt-gecko", Vec::new(), Vec::new());
                 // The enumerated set the obligation's project name resolves

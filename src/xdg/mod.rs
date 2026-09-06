@@ -25,7 +25,11 @@ use std::path::{Path, PathBuf};
 
 /// An immutable snapshot of the environment variables the folds consult.
 /// Constructed once from the process (`from_env`) or explicitly (`from_pairs`).
-#[derive(Debug, Clone)]
+///
+/// Equality is the snapshot's own — two `Env`s are equal when they carry the
+/// same variables — which is what lets a value holding one stay comparable
+/// (`control::Consult`, whose balls layout became this world in bl-262a).
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Env {
     vars: HashMap<String, String>,
 }
@@ -38,8 +42,21 @@ impl Env {
         }
     }
 
-    /// Build from explicit pairs — the hermetic path for tests (the sole
-    /// non-`from_env` constructor; production reads the process env once).
+    /// Build a snapshot from explicit `(key, value)` pairs — the hermetic
+    /// constructor, owned and concrete so it may be `pub` (rule 9 bans a bound
+    /// on a public item). The `tests/` crate needs one since bl-262a: a
+    /// [`BlStore`](crate::projects::runner::BlStore) takes the world it resolves
+    /// each project's layout through, and a story fixture cannot hand it the
+    /// operator's real environment. Production reads the process env once,
+    /// through [`from_env`](Self::from_env).
+    pub fn of(pairs: Vec<(String, String)>) -> Env {
+        Env {
+            vars: pairs.into_iter().collect(),
+        }
+    }
+
+    /// [`of`](Self::of)'s generic sugar for the src-side suite — bounded, and
+    /// therefore `pub(crate)`.
     #[cfg(test)]
     pub(crate) fn from_pairs<I, K, V>(pairs: I) -> Self
     where
@@ -47,11 +64,12 @@ impl Env {
         K: Into<String>,
         V: Into<String>,
     {
-        let mut vars = HashMap::new();
-        for (k, v) in pairs {
-            vars.insert(k.into(), v.into());
-        }
-        Self { vars }
+        Env::of(
+            pairs
+                .into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect(),
+        )
     }
 
     /// Derive a new snapshot from this one with the given `(key, value)` pairs

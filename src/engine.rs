@@ -105,7 +105,7 @@ impl Engine {
         // env resolves the nested store checkout, and the `bl` Cli rides along
         // only for the one history-served read, which spawns `yog bl …`.
         let balls = Box::new(BlStore::new(
-            world.balls_layout(),
+            world.clone(),
             Cli::resolve_in_world(Binary::Bl, overrides),
         ));
         // `boot` takes the first derivation synchronously — every workspace
@@ -130,7 +130,6 @@ impl Engine {
             state_root: world.yog_state_root(),
             home: world.home_dir(),
             yog_data_root: world.yog_data_root(),
-            balls_state_root: model.balls_state_root(),
             yog_binary: crate::cli_outbound::self_exe().unwrap_or_default(),
             world: world.clone(),
             ui_path: model.ui_json_path(),
@@ -209,7 +208,6 @@ impl Engine {
                 world: world.clone(),
                 home: world.home_dir(),
                 yog_data_root: world.yog_data_root(),
-                balls_state_root: model.balls_state_root(),
                 // Replaced per tick by what the worker has published.
                 snapshot: crate::state::latest_snapshot(&model.snapshot_cell()),
                 caller: crate::boundary::dispatch::Caller::default(),

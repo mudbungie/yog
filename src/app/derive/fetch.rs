@@ -21,7 +21,7 @@ impl Deriver {
     /// dirtiness or the 15 s full sweep (§7.2), never per frame. Nested-delivery
     /// clones are never walked (§5.1 #1, bl-e3e7).
     pub(super) fn refresh_balls(&mut self) {
-        let all = projects::enumerate(&self.roots.balls_clones);
+        let all = projects::enumerate_all(&self.roots.balls_clones);
         self.projects = all.iter().map(|p| p.path.clone()).collect();
         let visible: Vec<PathBuf> = projects::visible(&all)
             .into_iter()

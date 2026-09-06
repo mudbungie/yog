@@ -38,11 +38,11 @@ fn s3_t7_close_stamps_the_bound_workspace_and_the_row_re_derives_delivered() {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state"),
-        balls_clones: root.path().join("clones"),
+        balls_clones: vec![root.path().join("clones")],
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };
-    clone_dir(&roots.balls_clones, project.path());
+    clone_dir(&roots.balls_clones[0], project.path());
     // The workspace "cobalt" with one conversation whose goal stamps bl-7 (§3.3).
     let ws = roots.yog_data.join("workspaces").join("cobalt");
     std::fs::create_dir_all(&ws).unwrap();

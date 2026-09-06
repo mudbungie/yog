@@ -8,7 +8,6 @@
 #![allow(clippy::unwrap_used)]
 
 use crate::support::build_workspace;
-use balls::layout::Xdg;
 use std::sync::Arc;
 use tempfile::tempdir;
 use yog::cli_outbound::Cli;
@@ -26,7 +25,7 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
         yog_state: root.path().join("state"),
         // A non-existent clones root ⇒ no projects ⇒ the injected `bl` runner is
         // never consulted (no live spawn), like the `AppModel` unit harness.
-        balls_clones: root.path().join("balls/clones"),
+        balls_clones: vec![root.path().join("balls/clones")],
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };
@@ -40,7 +39,10 @@ fn s1_t2_two_appmodels_over_one_disk_derive_identical_view_models() {
             roots.clone(),
             Arc::new(SystemClock),
             Box::new(BlStore::new(
-                Xdg::with(root.path(), None, None),
+                yog::xdg::Env::of(vec![(
+                    "HOME".to_owned(),
+                    root.path().to_string_lossy().into_owned(),
+                )]),
                 Cli::new("bl"),
             )),
             Some("me".to_owned()),

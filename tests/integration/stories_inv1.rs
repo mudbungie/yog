@@ -47,12 +47,26 @@ fn inv1_idle_construction_and_ticks_perform_no_mutation() {
     // One hermetic balls state root, addressed through balls' OWN layout — the
     // same arithmetic the model's clone enumeration and the store read use.
     let state = root.path().join("state");
+    // The world the store resolves each project's layout through (bl-262a):
+    // every project here is outside any yog data root, so its space is the
+    // host's — exactly the `Xdg` beside it, by construction rather than by two
+    // hand-built layouts.
+    let world = yog::xdg::Env::of(vec![
+        (
+            "HOME".to_owned(),
+            root.path().to_string_lossy().into_owned(),
+        ),
+        (
+            "XDG_STATE_HOME".to_owned(),
+            state.to_string_lossy().into_owned(),
+        ),
+    ]);
     let xdg = Xdg::with(root.path(), None, Some(&state.to_string_lossy()));
     let roots = Roots {
         yog_data: root.path().join("yog"),
         litany_data: root.path().join("litany"),
         yog_state: root.path().join("state-yog"),
-        balls_clones: xdg.clones_dir(),
+        balls_clones: vec![xdg.clones_dir()],
         home: root.path().join("home"),
         world: yog::world::compose(&yog::xdg::Env::from_env()),
     };
@@ -75,7 +89,7 @@ fn inv1_idle_construction_and_ticks_perform_no_mutation() {
     let (mut model, mut deriver) = AppModel::boot(
         roots.clone(),
         clock.arc(),
-        Box::new(BlStore::new(xdg, Cli::new(bl.path()))),
+        Box::new(BlStore::new(world, Cli::new(bl.path()))),
         Some("me".to_owned()),
     );
     // Five derivation passes, driven by hand: in the app these are the worker

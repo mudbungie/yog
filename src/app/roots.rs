@@ -14,9 +14,18 @@ pub struct Roots {
     pub yog_data: PathBuf,
     pub litany_data: PathBuf,
     pub yog_state: PathBuf,
-    /// The balls per-project clones dir (`$XDG_STATE_HOME/balls/clones/`, §5.1
-    /// #1) — project enumeration and the `BallsClones` watch (§7.1).
-    pub balls_clones: PathBuf,
+    /// The balls per-project clone roots (`<state home>/balls/clones/`, §5.1 #1)
+    /// — project enumeration and the `BallsClones` watches (§7.1).
+    ///
+    /// **Two of them since bl-262a**, and one outside a world: the world's own
+    /// and the host's. A project is one balls invocation path, and since the
+    /// store for a directory is the directory's (§16.2's one-store-per-project
+    /// invariant) an operator's own checkout keeps its clone in the host bundle
+    /// while every world-owned directory keeps its own in the world's.
+    /// Enumerating one root would drop half the board, and would leave a bound
+    /// operator project unaddressable by name — `Snapshot::project_path`
+    /// resolves over exactly this enumeration.
+    pub balls_clones: Vec<PathBuf>,
     /// The operator's home dir (`~`, §3.4) — the bare rung's driver cwd.
     pub home: PathBuf,
     /// The composed world (§16.2) the four roots above were folded from at
@@ -39,7 +48,7 @@ impl Roots {
             yog_data: world.yog_data_root(),
             litany_data: world.litany_data_root(),
             yog_state: world.yog_state_root(),
-            balls_clones: world.balls_clones_dir(),
+            balls_clones: world.balls_clone_roots(),
             home: world.home_dir(),
             world: world.clone(),
         }

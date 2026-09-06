@@ -33,7 +33,6 @@ fn deps(litany: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
         world: yog::world::compose(&yog::xdg::Env::from_env()),
         home: state_root.join("home"),
         yog_data_root: state_root.join("data"),
-        balls_state_root: state_root.join("balls"),
         snapshot: Arc::new(Snapshot {
             bills: HashMap::default(),
             workspaces: workspaces

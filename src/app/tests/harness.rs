@@ -28,8 +28,7 @@ use tempfile::{TempDir, tempdir};
 /// uncovered — its reads are proven in `projects::runner`, the ball/join wiring in
 /// `crate::app::balls`.
 pub(crate) fn no_balls() -> BlStore {
-    let xdg = Env::from_pairs([("HOME", "/nonexistent")]).balls_layout();
-    BlStore::new(xdg, Cli::new("bl"))
+    BlStore::new(Env::from_pairs([("HOME", "/nonexistent")]), Cli::new("bl"))
 }
 
 /// A hermetic test world: XDG roots under one tempdir, plus one ad-hoc
@@ -71,7 +70,7 @@ impl Harness {
             yog_data: root.path().join("yog"),
             litany_data: root.path().join("litany"),
             yog_state: root.path().join("state"),
-            balls_clones: root.path().join("balls").join("clones"),
+            balls_clones: vec![root.path().join("balls").join("clones")],
             home: root.path().join("home"),
             // A world **under this tempdir**, so a §9 destination the
             // derivation reads (the global `models.yaml`, §9.2) is a real path

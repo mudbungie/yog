@@ -27,7 +27,6 @@ fn deps(state_root: &Path, client: Client) -> Deps {
         state_root: state_root.to_path_buf(),
         home: PathBuf::from("/home/x"),
         yog_data_root: PathBuf::from("/data"),
-        balls_state_root: PathBuf::from("/balls"),
         yog_binary: PathBuf::from("/no/such/yog"),
         world: crate::xdg::Env::from_env(),
         snapshot: Arc::new(snapshot(

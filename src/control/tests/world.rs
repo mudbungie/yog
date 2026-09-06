@@ -40,11 +40,16 @@ impl World {
     pub(super) fn consult(&self) -> Consult {
         Consult {
             workspace: self.workspace(),
-            balls: balls::layout::Xdg::with(
-                &self.dir.path().join("home"),
-                None,
-                Some(&self.dir.path().join("state").to_string_lossy()),
-            ),
+            world: crate::xdg::Env::from_pairs([
+                (
+                    "HOME",
+                    self.dir.path().join("home").to_string_lossy().into_owned(),
+                ),
+                (
+                    "XDG_STATE_HOME",
+                    self.dir.path().join("state").to_string_lossy().into_owned(),
+                ),
+            ]),
             state_root: self.state(),
             home: self.dir.path().join("home"),
             cwd: None,

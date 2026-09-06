@@ -58,7 +58,7 @@ fn a_prepared_reply_fires_the_next_invocations_prompt() {
     let state = tempfile::tempdir().unwrap();
     let yog = tempfile::tempdir().unwrap();
     let home = tempfile::tempdir().unwrap();
-    let balls = tempfile::tempdir().unwrap();
+    let _balls = tempfile::tempdir().unwrap();
     let repo = tempfile::tempdir().unwrap();
     let fifo = bin.path().join("report");
     make_fifo(&fifo);
@@ -75,7 +75,6 @@ fn a_prepared_reply_fires_the_next_invocations_prompt() {
         world: crate::test_support::signed(&no_world()),
         home: home.path().to_path_buf(),
         yog_data_root: yog.path().to_path_buf(),
-        balls_state_root: balls.path().to_path_buf(),
         snapshot: Arc::new(snapshot(&ws, "alba", vec![], vec![])),
         caller: crate::boundary::dispatch::Caller::default(),
     };

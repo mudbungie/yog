@@ -21,7 +21,6 @@
 use std::path::{Path, PathBuf};
 
 use balls::delivery_path::attempt_path;
-use balls::layout::Xdg;
 
 use crate::app::Snapshot;
 use crate::binding::work_worktree_path;
@@ -33,18 +32,20 @@ use crate::fan::Fire;
 /// once per row against facts that do not change between rows.
 #[derive(Debug, Clone)]
 pub(super) struct Layout {
-    xdg: Xdg,
-    balls_state_root: PathBuf,
+    /// The composed world, because balls' two roots below are a function of the
+    /// **project** and not of the engine (§16.2's one-store-per-project
+    /// invariant, bl-262a): an operator's own checkout folds them off their own
+    /// state home, a world-owned directory off the world's.
+    world: crate::xdg::Env,
     /// The §3.2 claimant — the workspace's own name, which is what balls
     /// disambiguates a taken work-worktree leaf with.
     claimant: String,
 }
 
 impl Layout {
-    pub(super) fn of(xdg: &Xdg, balls_state_root: &Path, claimant: &str) -> Layout {
+    pub(super) fn of(world: &crate::xdg::Env, claimant: &str) -> Layout {
         Layout {
-            xdg: xdg.clone(),
-            balls_state_root: balls_state_root.to_path_buf(),
+            world: world.clone(),
             claimant: claimant.to_owned(),
         }
     }
@@ -52,13 +53,18 @@ impl Layout {
     /// Every worktree path this attempt could be bound to, in `repo` — one for
     /// a candidate, both leaf spellings for a claim.
     fn worktrees(&self, attempt: &crate::workdiff::Attempt, repo: &Path) -> Vec<PathBuf> {
-        match &attempt.handle {
-            Some(handle) => vec![attempt_path(&self.xdg, &repo.to_string_lossy(), handle)],
-            None => [None, Some(self.claimant.as_str())]
-                .into_iter()
-                .map(|c| work_worktree_path(&self.balls_state_root, repo, &attempt.ball_id, c))
-                .collect(),
+        if let Some(handle) = &attempt.handle {
+            return vec![attempt_path(
+                &self.world.balls_layout_for(repo),
+                &repo.to_string_lossy(),
+                handle,
+            )];
         }
+        let state_root = self.world.balls_state_root_for(repo);
+        [None, Some(self.claimant.as_str())]
+            .into_iter()
+            .map(|c| work_worktree_path(&state_root, repo, &attempt.ball_id, c))
+            .collect()
     }
 }
 
