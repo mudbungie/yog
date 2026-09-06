@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.49](https://github.com/mudbungie/yog/compare/v0.0.48...v0.0.49) - 2026-09-06
+
+### Changes
+
+- a failed start leaves a half-created workspace directory, and every later start on that name is refused unknown workspace with no remedy [bl-1af5]
+- the follow lane carries only the model's prose, so an operator watching an agent administer their machines sees nothing about what is being run on them [bl-5305]
+
 ## [0.0.48](https://github.com/mudbungie/yog/compare/v0.0.47...v0.0.48) - 2026-09-06
 
 ### Changes
