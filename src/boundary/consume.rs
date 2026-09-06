@@ -16,6 +16,12 @@ use serde_json::Value;
 use std::fs;
 use std::path::Path;
 
+/// **A workspace this box founds is seen by the seats this box minted**
+/// (bl-bd48, bl-0fbc) — the registration rule this room spends for both
+/// intakes, in its own file on the seam this module's own doc draws:
+/// everything here is one pass over the inbox.
+mod founding;
+
 use super::dispatch::{Deps, dispatch};
 use super::{Gesture, answer, codec, deposit, reply};
 
@@ -142,7 +148,13 @@ pub(crate) fn run_gesture(
     now_unix: i64,
     gesture: &Gesture,
 ) -> Value {
-    match gesture {
+    // **What a gesture FOUNDS, the seats this box minted see** (bl-bd48,
+    // bl-0fbc). Asked here, ahead of the run, because afterwards a founding and
+    // an ordinary act name a workspace that exists alike — and here rather than
+    // at either intake, because this is the one room both open onto and a rule
+    // written twice is a rule that drifts once.
+    let founding = founding::pending(deps, gesture);
+    let answered = match gesture {
         Gesture::Act(action) => match dispatch(deps, ui, ts, action) {
             Ok(r) => reply::encode(&r),
             Err(e) => reply::refusal(&e),
@@ -151,7 +163,9 @@ pub(crate) fn run_gesture(
             Ok(r) => reply::encode(&r),
             Err(e) => reply::refusal(&e),
         },
-    }
+    };
+    founding::seat(deps, founding.as_deref(), &answered);
+    answered
 }
 
 #[cfg(test)]

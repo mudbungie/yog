@@ -6,6 +6,10 @@
 /// start flow is, at both intakes. Its own file beside [`scope`] for that
 /// file's reason — a real seam, and the one the drive reproduced on.
 mod birth;
+/// **A workspace this box founds is seen by the seats this box minted**
+/// (bl-bd48, bl-0fbc) — the registration rule both intakes spend, beside
+/// [`birth`] because it is the same composition asked one question further on.
+mod founding;
 /// The REMOTE §4.2 half (bl-7ff3): the certificate grade raising at this same
 /// chokepoint — what a foot may say, and the sentence everything else earns.
 mod grade;

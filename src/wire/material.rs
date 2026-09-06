@@ -99,6 +99,13 @@ pub enum Role {
 /// Every role a mint issues a leaf for, in the order it issues them.
 pub const LEAVES: [Role; 3] = [Role::Server, Role::Client, Role::Window];
 
+/// The roles whose leaf is a **client identity** — the seats this box mints for
+/// itself, as against the server end it binds with (bl-bd48). One certificate
+/// is one client identity (REMOTE §2), and the server's own leaf is the only
+/// one of the three that names no client, so the registry's own reads are over
+/// this list rather than over [`LEAVES`] minus a special case.
+pub const SEATS: [Role; 2] = [Role::Client, Role::Window];
+
 impl Role {
     /// This role's leaf basename: `server`, `client` or `window`.
     pub fn leaf(self) -> String {

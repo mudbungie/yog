@@ -261,13 +261,19 @@ pub const STANDING: &[HelpRow] = &[
     HelpRow {
         verb: crate::boundary::codec::ENROLL,
         usage: "/enroll <common-name> [foot]",
-        summary: "mint a new device's certificate here, register it, and hand back its material",
+        summary: "mint or adopt a device's certificate here, register it, and hand back its \
+                  material",
         detail: "Issues a leaf under the stated common name on this engine's own CA, registers \
                  that client in the focused workspace, and answers the whole of what the device \
                  needs: the anchors, its certificate, its private key and the address it dials. \
                  The key is shredded here before the answer leaves, so this box keeps none of \
-                 it; the certificate stays, and its presence is what refuses a second enrollment \
-                 under the same name — re-issuing distrusts nothing, so both would be live. \
+                 it. A name whose leaf `yog wire-certs WIRE_LEAF=` already minted is ADOPTED \
+                 rather than refused: registering is not issuing, so the standing certificate \
+                 is registered and handed over with nothing re-issued and nothing distrusted — \
+                 which is the repair for a leaf that was minted into no workspace and so \
+                 advertised into nothing. The grade then comes off that certificate, and an \
+                 enrollment asking for a grade the subject does not carry is refused. A name \
+                 already enrolled through this door has no key left to hand over and says so. \
                  Bare is operator grade; add `foot` for a tool host that may advertise, take its \
                  invocations and complete them and say nothing else. Refuses when this box holds \
                  no CA, and when its address names no port a device can dial. The material \

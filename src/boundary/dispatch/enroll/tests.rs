@@ -3,6 +3,9 @@
 //! split at §12's budget on the seam every other family here is cut on; the QR
 //! envelope's measured size is [`envelope`].
 
+/// **A leaf that already exists is adopted, not refused** (bl-bd48, bl-6b14) —
+/// the four states of a name, in their own file beside the two below.
+mod adopt;
 mod envelope;
 mod refusals;
 
@@ -113,15 +116,13 @@ fn the_key_is_absent_server_side_and_the_certificate_is_not() {
     assert!(!dir.join("phone-1.key").exists(), "shredded");
     assert!(dir.join("phone-1.pem").is_file(), "kept, and public");
 
+    // A second enrollment under one name is refused because the key is GONE
+    // (bl-bd48): the certificate is public and adoption re-hands nothing, so
+    // the sentence is about the material rather than about re-issuing. The
+    // `wire-certs` half still refuses a pair outright — `provision::issue`
+    // owns that one, and its own beat asserts it.
     let again = enroll(&deps, "8", &request("phone-1", Grade::Operator)).expect_err("refused");
-    assert!(again.contains("already holds"), "{again}");
-    assert!(again.contains("re-issuing distrusts nothing"), "{again}");
-    // The refusal teaches the design (bl-7a4a): the likeliest second
-    // enrollment is a seat's "tool side", which the first leaf serves.
-    assert!(
-        again.contains("serves the seat AND the tool host"),
-        "{again}"
-    );
+    assert!(again.contains("was enrolled already"), "{again}");
 }
 
 /// **The address is the one a client dials** (§8): the same fact the seat's own

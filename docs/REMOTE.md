@@ -499,15 +499,37 @@ reservation narrowed rather than dissolving, because the deposit inbox and
 `yog gesture` still hold no certificate and still must not be scoped — each
 intake the religion of its domain.
 
-**Seating the window is the engine's own act, and it is the general path.** §4
-already has the first registration on a fresh server performed out-of-channel by
-the operator; this is that act, performed by the engine for the one client it
-*is*. The asker seats `yog-window` in every workspace the published derivation
-enumerates, on every pass — idempotent, one directory read when nothing is new —
-so a workspace founded while the window is up is registered within one cadence
-period. No create to detect, no bootstrap flow, and the same `mkdir`/`touch` an
-operator performs for a remote client, performed by the process that already
-holds the enumeration.
+**Seating the box's own leaves is the engine's own act, and it is the general
+path** *(amended bl-bd48, bl-0fbc; the window's own asker went with the window
+at bl-7942)*. §4 already has the first registration on a fresh server performed
+out-of-channel by the operator; this is that act, performed by the engine for
+the clients this box *minted for itself*. **A workspace this box founds is
+registered to every leaf under `SEATS`** — `yog-client` and `yog-window`, the
+two client identities `wire-certs` writes into this box's own `wire/` and
+carries nowhere — at the moment it is founded, whichever intake founded it.
+
+What that closes is the whole of a headless install. §4 auto-registers *the
+creating client*, and the creator of everything made on the engine's own box is
+the reserved in-world identity (`yog gesture`, the `gestures/` inbox), which
+holds no certificate and is registered nowhere — so `yog gesture --ws ops
+'/prepare'`, the act the README teaches, founded a workspace every seat then
+answered `unknown workspace` for. The name is global (§9.6), so it was spent on
+something nothing could reach, rename or delete, and no gesture repaired it:
+`/enroll` mints, and it refused a name whose leaf already existed.
+
+Three properties, each load-bearing:
+
+- **Founding only, never joining.** Revocation is deleting the file, so a
+  gesture that merely *names* a standing workspace seats nothing — otherwise
+  the operator's `rm` would be undone by the next `/prepare`. The question
+  asked is whether the name was addressable before the gesture ran.
+- **This box's own leaves, and no others.** Registering every client that
+  exists would hand a foot on another machine a workspace nobody enrolled it
+  in. §1.5's separation argument is about a leaf *carried to another box*, and
+  the `client` and `window` leaves are the one class that is not: they are the
+  seats of the box that holds the CA.
+- **Present-only.** A role whose leaf is not on disk is registered for nothing,
+  so a registration never names a certificate that does not exist.
 
 **Scoping is one filter, not twenty checks.** The engine narrows the published
 derivation (`Snapshot::scoped`) to the client's registered workspaces before
@@ -2913,12 +2935,40 @@ different number after the next boot. An `address` whose port is `0` therefore
 **refuses**, naming `yog wire-certs WIRE_HOST=… WIRE_PORT=…`: a QR carrying a
 runtime port would be stale before it was scanned.
 
+**A leaf that already exists is ADOPTED, not refused** *(amended bl-bd48,
+bl-6b14)*. `yog wire-certs WIRE_LEAF=<name>` is the act the binary's own help
+teaches for provisioning another box, and it registers the leaf in **nothing**:
+§5.1's advertisement then presents into the empty set, so the foot dials,
+handshakes, advertises and is useless, silently at both ends. The one act that
+registers was this one, and it refused a name whose pair already existed —
+correctly, on the ground that re-issuing distrusts nothing and two live
+certificates under one identity is the hazard. Both halves were right and the
+conclusion was wrong: **registering is not issuing.** So an enrollment naming a
+leaf that is already here mints nothing, distrusts nothing and creates no second
+certificate — it seats the registration the leaf was always missing and hands
+over the material the operator was going to carry by hand anyway. The four
+states of a name are the whole rule:
+
+| on disk | what enrollment does |
+|---|---|
+| neither `<name>.pem` nor `<name>.key` | mints, as it always has |
+| both | **adopts**: registers, answers that certificate, shreds the key |
+| `.pem` only | refuses — enrolled through this door already, and the key left the box then; the refusal names §4.1's `touch` for a second workspace |
+| `.key` only | refuses — debris from a mint that did not finish; the refusal names the file |
+
+**The grade comes off the certificate, never off the gesture.** A grade is
+minted into the subject by the operator's own CA (§4.2), so an adoption that
+believed the word typed at a seat would be a promotion granted by registration —
+exactly what default-operator exists to make impossible. An enrollment asking
+for a grade the standing subject does not carry is refused naming both.
+
 **What is retained and what is not.** The engine mints the pair, reads it,
 answers it and **shreds the key** — mint → answer → shred, the pattern the
 manual recipe already follows, made unconditional so a failed read leaves no key
 either. What stays on disk is the **certificate**, deliberately: it is public
-material, and its presence is exactly what refuses a second enrollment under one
-name (`provision::issue` — re-issuing distrusts nothing, so both would be live).
+material, and its presence is what makes a second enrollment under one name an
+adoption or a refusal rather than a re-issue (`provision::issue` still refuses a
+standing pair outright, which is `wire-certs`' own guard).
 Keeping it is the guard; keeping the key would be the leak. Custody after the
 answer is the transport's, and the two intakes differ: over the wire the answer
 is TLS bytes and a seat's RAM (§6), while a deposit through the `gestures/`

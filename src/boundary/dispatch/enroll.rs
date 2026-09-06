@@ -40,13 +40,27 @@ use crate::boundary::reply::Reply;
 /// and the fact worth recording is that an enrollment happened here.
 const STEP: &str = "enroll";
 
-/// Mint, read, shred, seat, log — each step refusing with its own sentence.
+/// **What a name whose leaf already exists means** (bl-bd48) — the one question
+/// asked before the act runs, in its own file at §12's budget.
+mod stance;
+
+/// Mint or adopt, read, shred, seat, log — each step refusing with its own
+/// sentence.
 ///
 /// The order is the fail-closed one. The identity is parsed first, so an
 /// unusable name refuses before `openssl` runs; the address second, because
 /// material a device cannot dial is not worth minting; the mint third, being
 /// the only step that can fail for a reason outside yog; and the registration
 /// last, its input already validated by the chokepoint's own resolution.
+///
+/// **The third step mints OR adopts** ([`stance`], bl-bd48): a name whose leaf
+/// `wire-certs` already issued is registered rather than refused, because
+/// registering is not issuing — it mints nothing, distrusts nothing and leaves
+/// one certificate under one identity. That is what makes this door the repair
+/// for the leaf `WIRE_LEAF` strands, which was reachable before only by hand or
+/// by a rotation. The grade the reply carries is then the one the CA wrote into
+/// the subject, read back off the certificate, rather than the word the gesture
+/// asked with.
 /// Neither half-landing is a hazard — a registration with no certificate grants
 /// nothing and a certificate with no registration sees nothing — but a mint
 /// whose material never reached the answer would leave a live key on disk, and
@@ -55,13 +69,13 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
     let client = Client::parse(&request.name)?;
     let dir = material::dir(&deps.world);
     let address = dialable(&dir)?;
-    provision::issue(&dir, &request.name, request.grade)?;
+    let grade = stance::mint_or_adopt(&dir, request)?;
     let (ca, cert, key) = carry(&dir, &request.name)?;
     registry::register(&deps.state_root, &client, &request.workspace).map_err(|e| e.to_string())?;
     crate::actions::verbs::log_step_done(&deps.state_root, ts, &dir, STEP, Origin::World)
         .map_err(|e| e.to_string())?;
     Ok(Reply::Enrolled(Enrolled {
-        grade: request.grade,
+        grade,
         name: request.name.clone(),
         address,
         ca,

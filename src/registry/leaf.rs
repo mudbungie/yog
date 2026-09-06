@@ -84,6 +84,25 @@ pub fn grade(der: &[u8]) -> crate::registry::Grade {
     }
 }
 
+/// **The grade a leaf ON DISK carries** (bl-bd48) — [`grade`] against a stored
+/// PEM, or the refusal naming the file it could not read.
+///
+/// The one caller is the enrollment that ADOPTS a leaf `wire-certs` already
+/// minted (`boundary::dispatch::enroll`): the grade is a fact the operator's own
+/// CA wrote into a subject, so an adoption that took the asked-for grade on
+/// trust would grant a foot's authority to an operator leaf, or the reverse, on
+/// the strength of a word typed at a seat.
+///
+/// The PEM framing is rustls' — the crate already links it for the channel
+/// (`wire::tls`), and base64 between two labels is not a certificate library.
+/// The certificate itself is still read by [`grade`]'s own DER walk.
+pub fn grade_at(cert: &std::path::Path) -> Result<crate::registry::Grade, String> {
+    use rustls::pki_types::pem::PemObject;
+    let der = rustls::pki_types::CertificateDer::from_pem_file(cert)
+        .map_err(|e| format!("{}: {e}", cert.display()))?;
+    Ok(grade(&der))
+}
+
 /// The `Name` bytes of the certificate's **subject** — located relative to the
 /// serial number, for the reason the module doc gives.
 fn subject(der: &[u8]) -> Option<&[u8]> {
