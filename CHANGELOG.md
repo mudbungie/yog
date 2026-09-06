@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.42](https://github.com/mudbungie/yog/compare/v0.0.41...v0.0.42) - 2026-09-06
+
+### Changes
+
+- the same-box seat still cannot be provisioned from anything the suite says: bl-e058 closed the engine half, and the seat's refusal names no remedy [bl-98ef]
+
 ## [0.0.41](https://github.com/mudbungie/yog/compare/v0.0.40...v0.0.41) - 2026-09-06
 
 ### Changes
