@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.53](https://github.com/mudbungie/yog/compare/v0.0.52...v0.0.53) - 2026-09-06
+
+### Changes
+
+- the protocol number's home is a Rust path every gate hardcodes, and yog already moved it: one repo-root PROTOCOL file, built into the constant [bl-3e57]
+- pin the next litany (tool-output pagination, cache-prefix hold, prompt --role) and brazen (prompt_cache_key): REMOTE §5.2's unload wording is stale under the prefix hold [bl-9ced]
+- steal from hermes and codex: /answer has verdicts but no scope, and a refusal's text to the model is unstated — an operator re-answers the same class of call forever [bl-94a5]
+- the learning loop is unreachable from the control boundary: no gesture reads, accepts or rejects a staged proposal [bl-dd88]
+- a mistyped enrollment name burns the material: /enroll shreds the key and refuses a second enrollment under one name, and FORCE=1 (a CA rotation) is the only remedy [bl-f867]
+- write_exec's failure beat is a race: the child dies before the parent writes, so the error is EPIPE and not the child's own reason — it reddens roughly one close gate in five, repo-wide [bl-4b71]
+- an in-flight step reads 'killed' in lernie steps, the one word an interrupt writes: watching a live conversation shows a false interrupt on every step [bl-ab53]
+- litany's stop now always takes the children, so the boundary's stop_children field and the 'stop with its children' offer name no choice [bl-6efc]
+- every path-rung conversation is named by the engine's own preface, so the roster and the attention queue are a column of identical absolute paths and the start receipt's name addresses nothing [bl-e2ad]
+- a destructive routed shell is refused in band to the model, not held for the operator, and the model rephrases past it with cd: 115 MB deleted on a remote box unsupervised [bl-1772]
+- the follow lane calls a HELD conversation 'at rest (quiescent)' and exits: the live view is blind at the one moment the operator is the blocker [bl-58bb]
+
 ## [0.0.52](https://github.com/mudbungie/yog/compare/v0.0.51...v0.0.52) - 2026-09-06
 
 ### Changes
