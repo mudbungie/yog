@@ -1,7 +1,7 @@
 +++
 title = "an agent with the shipped bash grant advances its own config lineage: EDITOR plus the world's litany shim rewrites souls, facts, skills and role models, and the learning loop's veto is walkable"
 created = 1788673868
-updated = 1788673868
+updated = 1788674798
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
@@ -49,3 +49,21 @@ SEVERITY
 p1: it is reachable by a model that was merely asked to remember something, with no adversarial prompting at all, and it silently rewrites the policy every other conversation in the workspace resolves.
 
 RELATED: litany has no agent-facing way to record a durable fact, which is what sent the model looking. Filed separately in litany.
+
+---
+
+Closed from the litany side by litany bl-d273 (landed b17889d4 on litany main, round-1 fix lane L3, triage ruling 3).
+
+`litany config` and `litany proposal --accept` — the only two acts that advance a `config/*` branch — now refuse when `LITANY_TOOL_ID` is set. That marker is on every tool subprocess the executor spawns (ARCH §3.3, litany bl-e8d7) and is owed by a routing host on any spawn it makes, so the exact escalation in this body is refused at the door: the `bash` step exports its `$EDITOR`, runs the world shim, and gets
+
+    litany config: advance a config lineage from inside a step: LITANY_TOOL_ID is set, so this process is a tool invocation of a running conversation (ARCH §3.3). The config lineage a conversation runs on is advanced by the operator, or by a proposal the operator accepted — never from inside a step (docs/DESIGN_LEARNING_LOOP.md §3). Stage the change as a proposal and say so in your answer; `litany proposal <workspace>` is where the operator reads and accepts it
+
+The refusal stands ahead of the root resolution and the transient checkout, so a refused call materializes nothing and reads no ref, and the lineage is byte-identical after it. Reading is not refused: `litany proposal` bare, an id, and `--reject` stay open to a step — reading is nobody's risk, and a rejection deletes a branch no lineage points at rather than advancing one.
+
+Two facts for the yog side.
+
+1. The seam widened. litany's `cmd::Fx` gains one field, `tool_id: Option<OsString>`, filled once at the binding from `cmd::seam::ENV_TOOL_ID` — the same shape `conv_branch` has, and for the same reason (the environment is per-process, and reading it inside the verb makes a beat load-sensitive). A linked consumer that constructs `Fx` must fill it when it takes the next litany pin. The exec binding needs nothing.
+
+2. The motive is being removed beside the refusal. The agent in this scenario was not attacking anything — it was asked to remember something and had no lawful way (litany bl-3c11, same lane, in flight): a `remember`-shaped door that stages a `facts.md` patch as a proposal, settled by the `litany proposal --accept` the operator already runs. A refusal without that door leaves an agent with no answer at all, which is why the two balls are one pair.
+
+litany docs amended in the same delivery: ARCHITECTURE §3.3 (beside the `LITANY_TOOL_ID` bullet) and DESIGN_LEARNING_LOOP §3 ("One writer per branch holds" — the sentence that stated the veto as a description now states it as a mechanism).
