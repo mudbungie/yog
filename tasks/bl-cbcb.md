@@ -1,7 +1,7 @@
 +++
 title = "WIRE_FOOT is the only way to mint a foot-grade leaf and no shipped page names it: wire-certs --help omits it, and the one in-binary statement is a line the founding mint prints once"
 created = 1788673492
-updated = 1788673492
+updated = 1788673955
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
@@ -40,3 +40,13 @@ help surface in this suite (thrall`s, lernie`s) is a usage line and a short
 indented table, and reads far better. `yog wire-certs --help` is the page an
 operator reads at the worst moment — provisioning a second box, out of channel
 — and it is the least readable one.
+
+---
+
+The loop closes badly from the other end too. thrall refuses an operator-grade leaf with:
+
+    ops: .../client.pem: the leaf "yog-client" is not foot grade — a thrall carries a certificate whose subject says OU=foot and nothing else (REMOTE §4.2). Mint one on the box that holds the CA.
+
+So the foot tells the operator to mint a foot leaf and does not say how (correctly — it is the other box`s act), and the other box`s `yog wire-certs --help` does not say how either. The only two surfaces an operator meets in that moment both stop one word short of `WIRE_FOOT=1`.
+
+Also worth noting while the sentence is open: it cites `REMOTE §4.2`, and `docs/**` is outside `Cargo.toml`s include allowlist, so a person who installed the crate cannot read the coordinate it sends them to.
