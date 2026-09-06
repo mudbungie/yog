@@ -1,7 +1,8 @@
 +++
 title = "a foot's tool is classified by name, so a routed shell is open-world and passes: the destructive and secret floor does not reach the machine the foot administers"
 created = 1788673474
-updated = 1788673945
+updated = 1788674133
+claimant = "Cantaloups-Y3"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
