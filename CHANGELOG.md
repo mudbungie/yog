@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.51](https://github.com/mudbungie/yog/compare/v0.0.50...v0.0.51) - 2026-09-06
+
+### Changes
+
+- a PROTOCOL bump publishes ahead of its consumers, so every release window leaves the suite un-composable: today crates.io holds engine 15, foot 14, seat 13 [bl-bca2]
+
 ## [0.0.50](https://github.com/mudbungie/yog/compare/v0.0.49...v0.0.50) - 2026-09-06
 
 ### Changes
