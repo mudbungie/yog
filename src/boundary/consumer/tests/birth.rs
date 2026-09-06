@@ -82,9 +82,12 @@ fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
     );
     assert_eq!(listed["kind"], "conversations", "{listed}");
     // Scope still decides, and it decides on registration rather than on what
-    // disk holds: the very same wall is absent to a certificate nobody seated.
+    // disk holds: the very same wall is absent to a certificate seated
+    // elsewhere. (A certificate seated NOWHERE is told that instead — bl-2a84.)
+    let stranger = seat("stranger");
+    crate::registry::register(root.path(), &stranger.client, "elsewhere").expect("seated");
     let refusal = ctx.answer_as(
-        &seat("stranger"),
+        &stranger,
         &json!({"op": "conversations", "workspace": "home"}),
     );
     assert_eq!(

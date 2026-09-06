@@ -173,3 +173,77 @@ fn a_raise_naming_something_that_is_not_a_plain_component_refuses() {
     }
     assert!(crate::registry::registered(root.path(), &client("phone")).is_empty());
 }
+
+/// **"Not enrolled" and "nothing here" stop being the same reply** (bl-2a84).
+/// A certificate the operator never seated completed the handshake, was
+/// answered `{"kind":"workspaces","ok":true,"rows":[]}` and could not tell that
+/// from an engine holding nothing — so a first-time operator reads their own
+/// missing enrolment as a broken server. The registration is a fact about the
+/// CALLER, so saying it leaks nothing: the sentence names no workspace.
+#[test]
+fn a_client_registered_nowhere_is_told_so_rather_than_answered_empty() {
+    let root = tempdir().unwrap();
+    let data = tempdir().unwrap();
+    let ctx = over(
+        root.path(),
+        world_of(data.path(), &["home"]),
+        data.path().to_path_buf(),
+        Cli::new("/no/such/litany"),
+    );
+    let stranger = seat("stranger");
+    for gesture in [json!({"op": "workspaces"}), json!({"op": "attention"})] {
+        let refusal = ctx.answer_as(&stranger, &gesture);
+        assert_eq!(refusal["ok"], false, "{refusal}");
+        let said = refusal["error"].as_str().unwrap_or_default();
+        assert!(said.contains("registered in no workspace"), "{said}");
+        assert!(said.contains("/enroll stranger"), "{said}");
+        assert!(!said.contains("home"), "it names no workspace: {said}");
+    }
+
+    // One registration anywhere and the ordinary answers come back — including
+    // the empty ROW SET for a workspace this client is not in, which is §4's
+    // absence rule and is untouched.
+    crate::registry::register(root.path(), &stranger.client, "elsewhere").unwrap();
+    let listed = ctx.answer_as(&stranger, &json!({"op": "workspaces"}));
+    assert_eq!(listed["kind"], "workspaces", "{listed}");
+    assert!(
+        listed_is_empty(&listed),
+        "and it enumerates nothing it may not see"
+    );
+}
+
+/// **The one gesture an unregistered client may still say is the one that
+/// registers it** (bl-2a84): §4 auto-registers a workspace's creator, so a
+/// fresh seat's first act is its own bootstrap and refusing it would leave a
+/// client that can never become a registered one over the wire.
+#[test]
+fn an_unregistered_client_may_still_found_a_workspace() {
+    let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
+    seed(data.path());
+    let ctx = over(
+        root.path(),
+        world_of(data.path(), &[]),
+        data.path().to_path_buf(),
+        fake_litany(bin.path()),
+    );
+    let fresh = seat("fresh");
+    let born = ctx.answer_as(
+        &fresh,
+        &json!({"op": "prepare", "workspace": "home", "payload": {"rung": "bare"}}),
+    );
+    assert_eq!(born["kind"], "prepared", "{born}");
+    assert!(
+        crate::registry::registered(root.path(), &fresh.client).contains("home"),
+        "and founding it seated the founder"
+    );
+    assert_eq!(
+        ctx.answer_as(&fresh, &json!({"op": "workspaces"}))["kind"],
+        "workspaces",
+        "so the next gesture is answered rather than refused"
+    );
+}
+
+/// Rows, or the absence of them — spelled once for the beat above.
+fn listed_is_empty(reply: &serde_json::Value) -> bool {
+    reply["rows"].as_array().is_some_and(Vec::is_empty)
+}

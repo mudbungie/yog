@@ -82,10 +82,13 @@ fn the_roster_answers_the_registered_set_of_a_scoped_workspace() {
     // Presence is the wire server's RAM and this context holds an empty one:
     // a client that is registered and not connected is a row all the same.
     assert_eq!(reply["rows"][0]["present"], false);
-    let refusal = ctx.answer_as(
-        &seat("stranger"),
-        &json!({"op": "clients", "workspace": "home"}),
-    );
+    // §4's absence rule, asserted where it still applies: a client registered
+    // SOMEWHERE else is answered about `home` in the bytes a workspace nobody
+    // founded earns. (A client registered nowhere at all is told that instead —
+    // bl-2a84, whose own beat is in `scope`.)
+    let stranger = seat("stranger");
+    crate::registry::register(root.path(), &stranger.client, "elsewhere").expect("seated");
+    let refusal = ctx.answer_as(&stranger, &json!({"op": "clients", "workspace": "home"}));
     assert_eq!(
         refusal["error"],
         "unknown workspace \"home\" — none is enumerated here"

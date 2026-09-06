@@ -52,6 +52,30 @@ pub const REFUSAL: &str = "this certificate is a foot: it may advertise its tool
                            invocations addressed to it and complete them, and nothing else. \
                            An operator-grade certificate is what the rest of the boundary needs.";
 
+/// **The sentence a client registered in NO workspace earns** (REMOTE §4, §5;
+/// bl-2a84) — in band and naming its own remedy, exactly as [`REFUSAL`] is.
+///
+/// §4's absence rule is what makes scoping structural: an unregistered
+/// workspace is not withheld, it is *not there*, in the same bytes a workspace
+/// nobody founded earns. That is right about every OTHER client's workspaces
+/// and wrong about the caller's own registration, which is a fact about the
+/// caller: a seat registered nowhere got `{"rows": []}` with `ok: true`, which
+/// is indistinguishable from an engine that holds nothing at all — so a
+/// first-time operator cannot tell their own missing enrolment from a broken
+/// engine, and the sentence they need is the one nobody was saying. Nothing
+/// leaks: this says what THIS certificate may see, and names no workspace.
+pub fn unregistered(client: &Client) -> String {
+    let name = client.name();
+    format!(
+        "this certificate ({name:?}) is registered in no workspace on this engine, so every \
+         read here would be empty and every name unknown — that is what this client may see, \
+         not what the engine holds. Enrol it where it should work: `/enroll {name}` from a seat \
+         already in that workspace (add `{FOOT}` for a tool host), which adopts the leaf already \
+         minted under that name rather than issuing a second one. A workspace this client \
+         founds itself registers it too."
+    )
+}
+
 /// The two grades a leaf can carry (REMOTE §4.2).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Grade {

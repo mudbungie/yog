@@ -38,12 +38,25 @@ fn intake(state_root: &std::path::Path) -> Intake {
     }))
 }
 
+/// A seat as a peer, **registered somewhere** — which is what a certificate
+/// that has been enrolled is, and what an answer rather than the bl-2a84
+/// refusal needs. `local` stands in for a wire peer nowhere else because no
+/// certificate can carry that name (`Client::parse` refuses it).
+fn seated(state_root: &std::path::Path) -> crate::registry::Peer {
+    let client = crate::registry::Client::parse("laptop").expect("identity");
+    crate::registry::register(state_root, &client, "home").expect("its enrolment's file");
+    crate::registry::Peer {
+        client,
+        grade: crate::registry::Grade::Operator,
+    }
+}
+
 /// A request becomes a one-frame reply stream — today's every answer.
 #[test]
 fn a_request_is_one_reply_frame() {
     let root = tempdir().expect("tmp");
     let stream: Vec<_> = intake(root.path())
-        .answer(&local(), json!({"op": "workspaces"}))
+        .answer(&seated(root.path()), json!({"op": "workspaces"}))
         .collect();
     assert_eq!(stream.len(), 1);
     assert_eq!(stream[0]["kind"], "workspaces");

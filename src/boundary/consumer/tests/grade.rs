@@ -126,6 +126,7 @@ fn an_operator_grade_peer_is_untouched_by_the_raise() {
     let (root, data) = (tempdir().unwrap(), tempdir().unwrap());
     let ctx = quiet(root.path(), data.path());
     let desk = seat("host");
+    crate::registry::register(root.path(), &desk.client, "home").expect("its enrolment's file");
     assert_eq!(desk.grade, Grade::default(), "unstated is operator");
     let listed = ctx.answer_as(&desk, &json!({"op": "workspaces"}));
     assert_eq!(listed["kind"], "workspaces", "{listed}");

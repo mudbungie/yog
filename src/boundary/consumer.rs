@@ -131,6 +131,22 @@ impl ConsumerCtx {
         if !peer.grade.admits(&gesture) {
             return super::reply::refusal(crate::registry::peer::REFUSAL);
         }
+        // **And a client registered NOWHERE is told so** (bl-2a84), rather
+        // than being handed the empty projection of that fact — `{"rows": []}`
+        // reads as an engine holding nothing, and a first-time operator cannot
+        // tell it from their own missing enrolment. Two gestures pass anyway,
+        // each for its own reason: one that FOUNDS a workspace is this
+        // client's own bootstrap (§4 auto-registers its creator, and the raise
+        // is the one resolution that may name what nothing enumerates), and
+        // the machine-addressed set — the three a foot may say — is addressed
+        // to a CLIENT rather than into a workspace and is gated where each
+        // lands.
+        if scope.is_empty()
+            && !matches!(&gesture, super::Gesture::Act(action) if action.founds())
+            && !crate::registry::Grade::Foot.admits(&gesture)
+        {
+            return super::reply::refusal(&crate::registry::peer::unregistered(client));
+        }
         let named = gesture.workspace();
         let answered = run_gesture(&deps, &mut ui, &ts, now_unix, &gesture);
         if let Some(name) = named

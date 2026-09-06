@@ -55,7 +55,7 @@ pub(super) fn resolve_workspace(
         Ok(path) => return Ok(path),
         Err(e) => e,
     };
-    if !matches!(action, Action::Prepare { .. }) || !crate::naming::is_component(name) {
+    if !action.founds() || !crate::naming::is_component(name) {
         return Err(refusal);
     }
     let raised = crate::binding::names_root(&deps.yog_data_root).join(name);

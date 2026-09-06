@@ -36,6 +36,21 @@ mod workspace;
 pub(super) use agent::resolve_agent;
 
 impl Action {
+    /// **Whether this action can FOUND the workspace it names** (REMOTE §4.1,
+    /// §8; bl-2a84). Exactly one can — [`Prepare`](Action::Prepare), whose
+    /// `EnsureWorkspace` step raises an absent wall — which is why the
+    /// chokepoint's resolution lets that one name a workspace nothing
+    /// enumerates ([`resolve`](super::dispatch)) and why a client registered
+    /// nowhere may still say it (`ConsumerCtx::answer_as`).
+    ///
+    /// A method rather than a `matches!` at each of those two sites, because
+    /// they are one fact: a second founding action would have to change the
+    /// resolver and the scope gate together, or a client could found something
+    /// it is then refused for naming.
+    pub(crate) fn founds(&self) -> bool {
+        matches!(self, Action::Prepare { .. })
+    }
+
     /// The project a `bl`-family action mutates — the §8.2 after-verb ball
     /// refresh target. `None` for the litany/workspace families.
     pub fn project(&self) -> Option<String> {

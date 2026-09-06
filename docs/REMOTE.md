@@ -445,6 +445,21 @@ spelling.
   else is not "forbidden" — it is **absent**: enumeration replies simply do
   not contain unregistered workspaces, the same shape as a workspace that
   does not exist. Scope errors that confirm existence are a disclosure.
+- **A client registered in NO workspace is told so** *(amended bl-2a84)*, and
+  that is not an exception to the rule above — it is the one fact the rule was
+  never about. Absence keeps a caller from mapping *other* clients' workspaces;
+  a caller's own registration is a fact about the caller, and saying it names
+  nothing the engine holds. Unsaid, it arrives as `{"kind":"workspaces",
+  "ok":true,"rows":[]}`, which is byte-for-byte an engine that holds nothing at
+  all — so a first-time operator cannot tell a missing enrolment from a broken
+  server, and the two failures that cost the most in round 1 (a seat given the
+  engine's own leaf, a foot given a `WIRE_LEAF` one) both landed exactly there.
+  The refusal names the client and the act that enrols it. **Two gestures pass
+  anyway**: one that FOUNDS a workspace, because §4 auto-registers a creator
+  and refusing it would leave a client that can never become a registered one
+  over the wire; and the machine-addressed set (the three a foot may say),
+  which is addressed to a client rather than into a workspace and is gated
+  where each lands — §5.1's advertisement carries its own sentence.
 - **Unscoped gestures.** Reads enumerate the registered set. A workspace
   created over the wire auto-registers its creating client. The first
   registration on a fresh server is out-of-channel like the certificates: the
