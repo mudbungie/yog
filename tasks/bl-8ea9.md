@@ -1,7 +1,8 @@
 +++
 title = "a native-binary box has no CD: the deployment seats only the container shape, so a laptop engine is hand-launched and never upgrades"
 created = 1788673583
-updated = 1788673583
+updated = 1788673591
+claimant = "Cantaloups-H"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
