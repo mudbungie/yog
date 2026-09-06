@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.44](https://github.com/mudbungie/yog/compare/v0.0.43...v0.0.44) - 2026-09-06
+
+### Changes
+
+- the compactor's empty grant is not a confinement: `clients` is injected for every role, so a compactor loaded a foot's bash and ran 30 shell commands inside the engine's own worktrees [bl-52b7]
+
 ## [0.0.43](https://github.com/mudbungie/yog/compare/v0.0.42...v0.0.43) - 2026-09-06
 
 ### Changes
