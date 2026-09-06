@@ -1,7 +1,8 @@
 +++
 title = "the conversation-name mint is seeded from a one-second wall clock, so two conversations started in the same second are minted the same name and every seat verb then addresses neither"
 created = 1788675709
-updated = 1788675709
+updated = 1788675809
+claimant = "Cantaloups-Y1"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
