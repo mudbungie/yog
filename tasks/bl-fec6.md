@@ -1,7 +1,8 @@
 +++
 title = "the enroll envelope carries the engine's own wire/address verbatim, so a device that reaches the engine by any other route is enrolled pointing somewhere it cannot dial"
 created = 1788673813
-updated = 1788673813
+updated = 1788675046
+claimant = "Cantaloups-Y2"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
