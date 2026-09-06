@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.45](https://github.com/mudbungie/yog/compare/v0.0.44...v0.0.45) - 2026-09-06
+
+### Changes
+
+- the path rung's goal preface tells the agent not to trust its cwd — which IS the bound directory — and one run answered by running `find /` for the file and finding three sibling copies [bl-fea6]
+
 ## [0.0.44](https://github.com/mudbungie/yog/compare/v0.0.43...v0.0.44) - 2026-09-06
 
 ### Changes
