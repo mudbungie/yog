@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.52](https://github.com/mudbungie/yog/compare/v0.0.51...v0.0.52) - 2026-09-06
+
+### Changes
+
+- a tool call held by /revoke never reaches the attention queue: held is null and the row still says 'came to rest — your turn' [bl-511d]
+- lernie step <ws> <agent> 3 answers a full frame of absent instead of refusing: the record dir is zero-padded, so a plausible seq reads as a step that recorded nothing [bl-136f]
+- a redelivered invocation is unmarked: a foot restart mid-flight ran the command twice on the box and the capture reads as one clean run [bl-0655]
+- a conversation that is dead on arrival cannot be diagnosed from any seat: the ops row records exit -2 with empty stderr, and the driver's real refusal is written to state/yog/detached/<ts>-<ws>.err, which no gesture reads [bl-6495]
+- a routed tool with no command line is opaque and held on every call: capability.yaml rules: gains a row keyed on the host-qualified name, and the hold names it as the way out [bl-b65d]
+- a /revoke floor reaches the compactor and holds its own write_summary: the operator is queued a machinery act they cannot judge, and the floored conversation cannot compact [bl-a821]
+
 ## [0.0.51](https://github.com/mudbungie/yog/compare/v0.0.50...v0.0.51) - 2026-09-06
 
 ### Changes
