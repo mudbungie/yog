@@ -39,6 +39,10 @@ use crate::app::Snapshot;
 use crate::boundary::{Action, Query};
 use std::path::Path;
 
+/// **The disk rung's hold** (bl-802a): why a name that is not there yet is not
+/// yet an unknown name, and the two knobs the wait is spelled in.
+mod settle;
+
 impl Action {
     /// The **conversation** this gesture names (§3.3), or `None` when it names
     /// none. `Fork` answers with its `parent` — the agent it dispatches *from*
@@ -147,6 +151,11 @@ impl Query {
 ///    its detached driver is launched, so the name its receipt hands back is
 ///    addressable before the next §7.2 pass has read the branch. Reached only
 ///    when rung two has no answer at all, so the steady state never pays for it.
+///    **And it holds before it gives up** ([`settle`], bl-802a): the driver
+///    writes the branch a second or two after the fire returns, so a refusal
+///    inside that window is a race and not an answer. See that module for the
+///    trade — a name that resolves pays one look; only a name with no answer
+///    waits, and it waits three seconds.
 ///
 /// An unknown needle refuses and so does an ambiguous one, in the resolver's own
 /// words — never a pass-through, which is what let a display name reach `floor`,
@@ -155,6 +164,25 @@ pub(crate) fn resolve_agent(
     snap: &Snapshot,
     workspace: &Path,
     needle: Option<String>,
+) -> Result<String, String> {
+    resolving(
+        snap,
+        workspace,
+        needle,
+        settle::SETTLE_LOOKS,
+        settle::SETTLE_TICK,
+    )
+}
+
+/// The same resolution on a **stated** hold — the production bound is
+/// [`resolve_agent`], and a test names a short one rather than sleeping for
+/// real ([`Follow::holding`](crate::boundary::follow::Follow)'s own shape).
+pub(crate) fn resolving(
+    snap: &Snapshot,
+    workspace: &Path,
+    needle: Option<String>,
+    looks: u32,
+    tick: std::time::Duration,
 ) -> Result<String, String> {
     let Some(needle) = needle else {
         return Ok(String::new());
@@ -165,7 +193,7 @@ pub(crate) fn resolve_agent(
     if let Some(id) = within(&derived(snap, workspace), &needle)? {
         return Ok(id);
     }
-    if let Some(id) = within(&crate::git_tree::living_agents(workspace), &needle)? {
+    if let Some(id) = settle::on_disk(workspace, &needle, looks, tick)? {
         return Ok(id);
     }
     Err(format!("unknown conversation {needle:?}"))

@@ -2346,7 +2346,13 @@ live-enumeration barrier bl-6c9e added, and the conversation noun bl-49bc added
   id-shape → the published derivation (the same set every read answers from) →
   disk, that last rung being the bullet below's barrier one noun down. Unknown
   and ambiguous refuse, and so does the ladder's legacy display-only rung, which
-  is a title no ref answers to and never was an address.
+  is a title no ref answers to and never was an address. **The disk rung holds
+  before it refuses** *(bl-802a)*: the driver commits `agents/<id>` a second or
+  two after the fire has answered, so a refusal inside that gap is a race and
+  not an answer — `start` then `follow` failed every time it was typed. A name
+  that resolves pays one look; only a name with no answer waits, three seconds,
+  and then refuses as before. See DESIGN §8.5 for why the wait is here rather
+  than inside the fire.
 - **The resolution is one function, at the chokepoint, ahead of the table.**
   `Action::workspace()` / `Action::project()` / `Query::workspace()`
   (`src/boundary/address.rs`) are tables *on* the enums; `dispatch` and `answer`
