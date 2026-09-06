@@ -1,7 +1,7 @@
 +++
 title = "the same-box seat still cannot be provisioned from anything the suite says: bl-e058 closed the engine half, and the seat's refusal names no remedy"
 created = 1788673626
-updated = 1788673626
+updated = 1788673665
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
@@ -74,3 +74,7 @@ page names. Neither yog's README nor lernie's carries the same-box recipe at
 all: lernie's unprovisioned refusal names `yog wire-certs WIRE_LEAF=<name>`,
 which is the VISITING-box recipe, and mints a leaf registered in no workspace
 (see bl-6b14, bl-bd48).
+
+---
+
+The image route reproduces this and adds a second turn of the screw. `make image` builds and `image-scan` passes both directions (43.9 MB, 603 authored paths; the self-test catches a layer secret, an ENV secret and an undeclared binary). A bare `podman run --rm -v <state>:/state/yog:Z yog:<v>` then boots correctly and prints `yog: wire: listening on 127.0.0.1:38113` — but that is loopback inside the container network namespace, on a kernel-chosen port, so it is reachable from nothing at all: no seat outside the container, and no `-p` mapping is even expressible for a port that is not known until after the bind. A containerized engine is therefore unusable until an address is stated, which is this ball. `make deploy` handles it (the unit and deploy.env state one), but the README section "The image" shows the bare `podman run` with no mention that the engine it starts can be dialled by nobody.
