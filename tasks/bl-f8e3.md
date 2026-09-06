@@ -1,7 +1,7 @@
 +++
 title = "the README never says how to install yog: cargo install appears nowhere, though the published crate installs clean from a bare container in under a minute"
 created = 1788673635
-updated = 1788673635
+updated = 1788673665
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
@@ -56,3 +56,7 @@ looks for and its absence reads as "this is not for you".
 ## Note
 
 thrall's README has the same gap and is filed on its own board.
+
+---
+
+Doc rot in the same file, found while walking the image route: README "The image" shows `podman run … yog:0.0.5 gesture /attention`, many versions behind the tag `make image` actually produces (0.0.38 this round). Worth fixing in the same pass — an example naming a tag the reader does not have fails at the copy-paste.
