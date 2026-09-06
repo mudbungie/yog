@@ -1,7 +1,7 @@
 +++
 title = "the same-box seat still cannot be provisioned from anything the suite says: bl-e058 closed the engine half, and the seat's refusal names no remedy"
 created = 1788673626
-updated = 1788673665
+updated = 1788674034
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
@@ -78,3 +78,7 @@ which is the VISITING-box recipe, and mints a leaf registered in no workspace
 ---
 
 The image route reproduces this and adds a second turn of the screw. `make image` builds and `image-scan` passes both directions (43.9 MB, 603 authored paths; the self-test catches a layer secret, an ENV secret and an undeclared binary). A bare `podman run --rm -v <state>:/state/yog:Z yog:<v>` then boots correctly and prints `yog: wire: listening on 127.0.0.1:38113` — but that is loopback inside the container network namespace, on a kernel-chosen port, so it is reachable from nothing at all: no seat outside the container, and no `-p` mapping is even expressible for a port that is not known until after the bind. A containerized engine is therefore unusable until an address is stated, which is this ball. `make deploy` handles it (the unit and deploy.env state one), but the README section "The image" shows the bare `podman run` with no mention that the engine it starts can be dialled by nobody.
+
+---
+
+Cross-reference for triage, from the same install-lane walk: bl-2a84 (a seat whose leaf is registered in no workspace gets an empty roster rather than a refusal) and bl-fec6 (the enroll envelope carries wire/address verbatim) are the two neighbours of this one. All three are the same underlying fact — `wire/address` is written by a mint that only ever knows loopback-and-a-kernel-port, and every consumer downstream inherits whatever it says. A fix that lets an operator state the address over an existing CA without rotating is upstream of all three.
