@@ -1,7 +1,8 @@
 +++
 title = "a deposit records no client identity: every seat's message is 'from: user' and the ops trail has no client field, so a shared workspace cannot say who said what"
 created = 1788673800
-updated = 1788673800
+updated = 1788674859
+claimant = "Cantaloups-Y5"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
