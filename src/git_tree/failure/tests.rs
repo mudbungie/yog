@@ -96,6 +96,39 @@ fn plain_stderr_gives_its_first_line_capped() {
     );
     let long = "x".repeat(400);
     assert_eq!(clause(&long).chars().count(), super::CLAUSE_CAP);
+    assert!(
+        clause(&long).ends_with('\u{2026}'),
+        "one word, cut where it runs out"
+    );
+}
+
+/// **A cut clause says it was cut, and says it at a word boundary** (bl-8550).
+/// The sighting: a provider's remedy sentence ended `"or enab"`, which reads as
+/// a whole instruction. It must end in the same `…` every sibling preview uses,
+/// and the word the cut lands in must go with it.
+#[test]
+fn a_cut_clause_is_marked_and_ends_on_a_word() {
+    let said = "model: not-a-real-model-xyz; `not-a-real-model-xyz` is not in \
+                the model cache; run `bz --list-models` to refresh or enable partial matching";
+    let cut = clause(said);
+    assert!(cut.chars().count() <= super::CLAUSE_CAP, "{cut}");
+    assert!(
+        cut.ends_with("or\u{2026}"),
+        "marked, and on a word boundary: {cut}"
+    );
+    assert!(
+        !cut.contains("enab"),
+        "no half word survives the cut: {cut}"
+    );
+}
+
+/// A clause that fits is returned whole — no mark, because nothing was
+/// removed. The mark is a claim about missing text, so an uncut string must
+/// never carry one.
+#[test]
+fn a_clause_that_fits_carries_no_mark() {
+    let said = "bz: no credential for provider `anthropic`";
+    assert_eq!(clause(said), said);
 }
 
 /// Evidence with nothing readable in it at all still answers a string, never a
