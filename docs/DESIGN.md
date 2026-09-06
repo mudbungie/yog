@@ -5018,8 +5018,11 @@ to *be* that executable and to own every fact it reads.
   binary can shadow it. It is **side-effect-free per consult** (the seam
   demands idempotence — release is re-adjudication): it writes nothing, ever.
   Two moves per consult: **classify** the invocation into VISION §4.11's
-  effect vocabulary (intrinsic class map for built-ins; the workspace
-  ruleset over `bash` commands, unmatched = open-world; `cd`/`apply_patch`
+  effect vocabulary (intrinsic class map for the closed set of names this
+  control implements; the workspace ruleset over `bash` commands, unmatched
+  program = open-world; every other name the **fail-closed routed lane** — a
+  command line classified by that same ruleset, anything else `opaque`, which
+  the table holds (bl-72bd); `cd`/`apply_patch`
   judged against the writable root — the bound attempt worktree plus the
   agent worktree, the agent's cwd read from litany's
   `refs/litany/cwd/<agent-id>` mark, the ball worktree computed by the
@@ -5040,6 +5043,39 @@ to *be* that executable and to own every fact it reads.
   nothing for the paths that matter most (files a patch is about to create);
   symlink escape is out of the threat model by construction (VISION §4.11
   item 8).
+
+  **The routed leg is adjudicated by the same table, and it used to be the one
+  leg that was not** (bl-72bd, ruling 2 of the round-1 triage). A tool a
+  registered machine advertises is presented to the model host-qualified
+  (`box2_shell`, REMOTE §5) and is never one of the built-in names, so it fell
+  off the classifier's `match` into `other => OpenWorld` — which the shipped
+  table passes. The engine's own `bash` refuses `find <path> -delete` outside
+  the writable root in band; the same line as `box2_shell {"command": …}` ran,
+  and 180 MB went. Two changes, and the second is the durable one. A routed
+  input carrying a `command` string — the field litany's own `bash` schema
+  declares, and every thrall shell tool's — is handed to the **same** `bash`
+  ruleset, operands resolved against the *local* writable root so a
+  far-machine path falls outside it and classifies wider; that is what
+  "exactly as the engine's bash is" costs and what it buys, on a leg REMOTE §5
+  is already honest about not seeing into. And the fall-off is **deleted
+  rather than redirected**: `classify` folds a name into a closed enum
+  (`classify/intrinsic`) and matches it exhaustively, so a name with no row
+  does not compile, and every name outside that set goes to one named lane
+  (`classify/routed`) whose only two answers are the command line's own class
+  and `opaque`. There is no arm from a tool name to a passing class for a
+  future edit to recur.
+
+  Two consequences worth stating rather than discovering. The **compactor's
+  procedure pair, `python`, `search_history` and yog's own `clients`** now
+  carry intrinsic rows; before bl-72bd the same fall-off passed them, and the
+  rows keep their behaviour exactly (`python` is open-world — a program the
+  model authored, whose reach no input field states — which is what the
+  ruleset already gives an unmatched `bash` program, and the table still
+  passes it). And a foot tool that is **not** shell-shaped —
+  `install_package`, `rotate_log` — now parks for the operator on its first
+  call, which is ruling 2's whole point; a workspace that does not want that
+  writes `table:` / `  opaque: pass`, and the shipped ruleset gained the two
+  `find` rows (`-delete`, `-exec`) the drive walked through on the way.
 - **Fact homes, one each.** The *request* is litany's hold mark
   (`refs/litany/held/<agent-id>`), which unlike the other four `refs/litany/*`
   marks carries a **value**: a blob naming the held `tool_use` id, the tool,
@@ -5048,11 +5084,14 @@ to *be* that executable and to own every fact it reads.
   config read at its **live tip** — the control acts for the operator, so
   revocation binds at the next consult, never frozen at the governing
   commit. Absence is the shipped defaults (read / target write / process /
-  open-world → pass; destructive / secret → refuse — bl-1ef1: everything
-  passes but loss and credentials) — the
-  `cadence.yaml` severability pattern. **Nothing the shipped table says is a
-  hold**: a park is *imposed*, by a workspace's `table:` row or by a raised
-  floor, never by standing policy. A shipped open-world hold made the operator
+  open-world → pass; destructive / secret → refuse; **opaque → hold**) — the
+  `cadence.yaml` severability pattern. bl-1ef1 made everything a *reach* passes
+  but loss and credentials; bl-72bd added the seventh class, which is not a
+  reach at all but the control saying it could not read one. **Nothing the
+  shipped table says about a reach is a hold**: a park over an effect is
+  *imposed*, by a workspace's `table:` row or by a raised floor, never by
+  standing policy — and the one standing hold is over the case where no effect
+  was determined, which is the only park bl-1ef1's argument does not reach. A shipped open-world hold made the operator
   answer for every `python` and every fetch — approvals given by reflex, which
   is the failure mode a gate is supposed to avoid — so the safety story after
   bl-1ef1 is the floor: the monitor aims a park at the conversation that earned
@@ -7370,7 +7409,7 @@ that named one of its files; the rule it taught is not.)
 | `src/config_edit/litany_global/mod.rs` | the §9.2 editors — the shared pipeline and nothing else since bl-3ffa retired the provider gate over `models.<id>.provider`, a field whose only reader was the refusal; and the `models.yaml` name, beside its path, since bl-9c8a left the grammar nothing to spell it for |
 | `src/config_edit/pipeline.rs` | the write pipeline every §9 editor shares: the one home for how a draft reaches disk without a torn write or a silent last-writer-wins over a concurrent edit |
 | `src/context/mod.rs` | §5.1 #35 — the context-fullness query (the agent's latest step's prompt against the window that step's own usage lines state, `None` wherever nothing measured can be said) and why the denominator is read there and declared nowhere (bl-9c8a). Pure over `Snapshot::bills` and nothing else |
-| `src/control/{mod,wire,classify,bash,lex,rules,rules/table,policy,hold,root,judge,author}.rs` | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; litany's two wire shapes; the effect vocabulary and the built-in intrinsic map; the bash ruleset over every program a command runs; the shell lexer that finds them; the grammar one rule is written in, with `rules/table` the shipped ruleset as data — one list, because first-match-wins makes its order the policy; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` litany's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated **and born unbounded** — one pass over `workflow.yaml` that authors the `tool_control:` block and strips litany's whole-tree `budgets:` ceiling (bl-56af: §3.5's dollar ceiling is the one that survives, and a template only reaches workspaces born after it); its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
+| `src/control/{mod,wire,classify,classify/intrinsic,classify/operand,classify/routed,bash,lex,rules,rules/table,policy,hold,root,judge,author}.rs` | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; litany's two wire shapes; the effect vocabulary, and under it the three files that are the classification itself (bl-72bd): `classify/intrinsic` the **closed** set of names this control implements a row for, folded into an enum before anything classifies so the match over it is exhaustive and a name added without a class does not compile; `classify/operand` the two rows (`cd`, `apply_patch`) judged against the writable root at consult time; `classify/routed` the fail-closed lane every other name takes — a command line is classified by the bash ruleset exactly as the engine's own `bash` is, and anything else is `opaque`, the one class the shipped table holds. There is no arm from a tool NAME to a passing class; the bash ruleset over every program a command runs; the shell lexer that finds them; the grammar one rule is written in, with `rules/table` the shipped ruleset as data — one list, because first-match-wins makes its order the policy; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` litany's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated **and born unbounded** — one pass over `workflow.yaml` that authors the `tool_control:` block and strips litany's whole-tree `budgets:` ceiling (bl-56af: §3.5's dollar ceiling is the one that survives, and a template only reaches workspaces born after it); its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
 | `src/control/confine.rs` | the **OS confinement backend** (§8.6, VISION §4.11 item 8, bl-bca4): the platform switch (Linux is bubblewrap, shelled like §16.7's openssl mint — no crate, no `unsafe`; every other OS an explicit refusal naming itself), the availability probe that runs the exact sandbox shape a wrap spends (derived at each birth, never stored), the birth-gate refusal both drone doors call, and the wrapper argv — the fixed shape plus the derived writable set, unconditional under a `confinement: required` policy so an absent backend fails the spawn loudly rather than falling back bare. The set is four members and each is a derivation: the workspace and the composed world root off the env, the host `/tmp` off the fixed shape, and the **bound project repo** off the §3.2 claimant join `control::root::claimed` already owns (bl-34b1) — so a revived driver, which carries no payload, confines exactly as the fire it resumes did. A member that is not on disk drops out rather than failing the spawn on `bwrap`'s own refusal (§3.5's orphaned project), which can only narrow the set |
 | `src/delete/{mod,exec}.rs` | the §3.6 unmake: pure confirmation + plan; the logged runner |
 | `src/delete/agent.rs` | the §3.6 one-conversation delete (bl-f17a): the member-scoped gate, the blast-radius arming, the `DeleteReport` census parse, the dry-run and removal spawns |

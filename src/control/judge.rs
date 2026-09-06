@@ -92,6 +92,14 @@ impl Ruling {
 ///   with absence the (now permissive) default and the file the override;
 /// - the alignment monitor's revoke rung raises a per-conversation floor, under
 ///   which every class above read holds ([`Answers::floored`]).
+///
+/// **One exception, and it is not about a reach** (bl-72bd): the seventh class
+/// [`Opaque`](Effect::Opaque) holds, because it is what the classifier says
+/// when it could not read the invocation at all. bl-1ef1's argument does not
+/// reach it — that argument was about parking effects the operator was always
+/// going to approve, and this class is the one where nobody knows what is
+/// being approved. A workspace that wants the old, open answer writes
+/// `table:` / `  opaque: pass`, the same one line, the same way round.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Table;
 
@@ -103,6 +111,12 @@ impl Table {
                 Ruling::Pass
             }
             Effect::Destructive | Effect::Secret => Ruling::Refuse,
+            // The one shipped hold, and it is not a policy about a reach — it
+            // is what the control says when it could not read one (bl-72bd).
+            // A refusal would be a claim about the invocation this control has
+            // no basis for; a pass is the arm the routed leg fell off into for
+            // a year. So it parks, and the operator answers once.
+            Effect::Opaque => Ruling::Hold,
         }
     }
 }

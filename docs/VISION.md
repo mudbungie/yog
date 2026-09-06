@@ -614,8 +614,9 @@ from its first step. The comparison target is Claude Code's allow/deny/ask
 optional and defaults off, and so is ours (item 8). This section rules the
 mediation.
 
-1. **The effect vocabulary classifies invocations, never tool names.** Six
-   classes: **read** (observes only), **target write** (mutation confined to
+1. **The effect vocabulary classifies invocations, never tool names.** Seven
+   classes — six reaches and, since bl-72bd, the absence of one. **read**
+   (observes only), **target write** (mutation confined to
    the writable root, or to the world's own substrates through their gated
    verbs), **destructive** (irreversible loss: history rewrite, forced ref
    updates, deletion beyond git's recoverability), **process** (minting
@@ -630,8 +631,38 @@ mediation.
    ruleset over its command — and an **unmatched bash invocation is
    open-world**: classification error fails toward the wider class, so
    obfuscation never lands in `read` and is what an override or a floor bites
-   on. External `litany-tool-*` binaries default to open-world until the
-   ruleset classifies them.
+   on.
+
+   The seventh class is **opaque**: *this control could not read what the
+   invocation does.* It is the only class the shipped table **holds**, and it
+   exists because the sentence that used to stand here — "external
+   `litany-tool-*` binaries default to open-world until the ruleset classifies
+   them" — was an answer nobody chose and it reached the wrong leg. Open-world
+   passes (item 6), and a name outside the intrinsic map is not a `litany-tool-*`
+   binary any more: it is a **routed** tool on a machine a foot administers
+   (REMOTE §5). So the engine's own `bash` refused `rm -rf` in band while the
+   identical line sent as `box2_shell {"command": …}` was passed without a
+   word — strictest about the machine the operator is sitting at, blind about
+   the boxes whose blast radius the operator cannot see. **Ruling 2 of the
+   round-1 triage** settles both halves, and the second is why the first is not
+   enough on its own:
+
+   - **A routed tool whose input carries a command line is classified by that
+     command line, exactly as the engine's own `bash` is.** A foot's shell is a
+     shell. Operands resolve against the *local* writable root, so a path on
+     the far machine is outside it and classifies to the wider class — the
+     honest direction on a leg the adjudicator cannot see into (REMOTE §5).
+   - **A routed tool the classifier cannot read is HELD.** Not refused — a
+     refusal would be a claim about the invocation there is no basis for — and
+     never passed. The operator answers once, in band, with the tool and its
+     input in front of them.
+
+   And **the fall-off is deleted structurally, not fixed**: names are folded
+   into a closed enum before anything classifies them and matched exhaustively,
+   so no future arm can land a name in a passing class by default (DESIGN §12,
+   `src/control/classify/`). A workspace that wants the open answer back writes
+   `table:` / `  opaque: pass` — one line, the same severability as every other
+   row.
 
 2. **The enforcement point is litany's shipped tool-control seam — no new
    primitive anywhere.** The pinned 0.0.8 already carries it (litany ARCH
@@ -685,15 +716,18 @@ mediation.
    attention item is answered in seconds or in hours, so attendance is
    latency, not a mode, and the interactive/armed policy split dissolves.
 
-6. **One default table, and it passes everything but loss and credentials**
-   (amended by bl-1ef1; it shipped open-world → hold): read, target write,
-   process, open-world → pass; destructive, secret → refuse. The parked
+6. **One default table, and it passes everything but loss, credentials and
+   the unreadable** (amended by bl-1ef1, then bl-72bd): read, target write,
+   process, open-world → pass; destructive, secret → refuse; opaque → hold. The parked
    open-world default made the operator answer for every `python` and every
    fetch, and an approval given by reflex is the failure mode a gate exists to
    avoid — so **a hold is imposed, never standing**: a workspace writes one
    `table:` row to get the park back, and the §4.9 monitor's floor aims one at
    the conversation that earned it. Destructive and secret keep refusing;
-   those two are what an unattended drone must not decide for itself.
+   those two are what an unattended drone must not decide for itself, and the
+   third — opaque — is the one case where nobody knows what is being decided,
+   which is why bl-1ef1's argument (an approval given by reflex is worthless)
+   does not reach it.
    Once-answers are scoped to the held `tool_use` id (provider-unique, so a
    once-grant needs no consumption and cannot race); persistent answers are
    policy rows. Revocation binds at the next consult — a verdict already

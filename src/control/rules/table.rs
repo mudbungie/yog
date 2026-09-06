@@ -55,12 +55,27 @@ pub const DEFAULT: &[Rule] = &[
             outside: Destructive,
         },
     ),
+    // `find <path> -delete` is `rm -r <path>` spelled as an observation, and
+    // the observation row below reads it as one. It is the line bl-72bd's
+    // drive deleted 180 MB with, so the two rows sit here rather than under
+    // `find`: the qualifying word is the effect.
+    (
+        "find",
+        &["-delete"],
+        ByRoot {
+            inside: TargetWrite,
+            outside: Destructive,
+        },
+    ),
     // ---- past the root and the world --------------------------------------
     ("git", &["push"], Fixed(OpenWorld)),
     ("git", &["fetch"], Fixed(OpenWorld)),
     ("git", &["pull"], Fixed(OpenWorld)),
     ("git", &["clone"], Fixed(OpenWorld)),
     ("git", &["remote"], Fixed(OpenWorld)),
+    // …and `-exec` runs an arbitrary program per hit, which no row for `find`
+    // itself can see the reach of.
+    ("find", &["-exec"], Fixed(OpenWorld)),
     ("curl", ANY, Fixed(OpenWorld)),
     ("wget", ANY, Fixed(OpenWorld)),
     ("nc", ANY, Fixed(OpenWorld)),

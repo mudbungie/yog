@@ -71,8 +71,14 @@ fn consult(shim: &Path, root: &Path, workspace: &Path, request: &str) -> (i32, S
 
 /// One `tool_use` block as the seam serializes it.
 fn request(command: &str) -> String {
+    named("bash", &format!(r#"{{"command":"{command}"}}"#))
+}
+
+/// The same, for any tool name and any input object — the routed leg's shape
+/// (bl-72bd): a foot's tool arrives under its host-qualified name.
+fn named(name: &str, input: &str) -> String {
     format!(
-        r#"{{"id":"toolu_01","name":"bash","input":{{"command":"{command}"}},"role":"worker","agent_id":"amber"}}"#
+        r#"{{"id":"toolu_01","name":"{name}","input":{input},"role":"worker","agent_id":"amber"}}"#
     )
 }
 
@@ -127,6 +133,30 @@ fn the_seeded_shim_answers_the_seam_over_real_stdio() {
     let (code, out) = consult(&shim, root.path(), &workspace, &request("rm -rf /etc"));
     assert_eq!(code, 0);
     assert!(out.contains(r#""verdict":"refuse""#), "{out}");
+
+    // A foot's shell IS a shell (bl-72bd, ruling 2): the same line through a
+    // routed name gets the same verdict the engine's own bash just got, and
+    // this is the leg that passed it unread for a year.
+    let (code, out) = consult(
+        &shim,
+        root.path(),
+        &workspace,
+        &named("box2_shell", r#"{"command":"rm -rf /etc"}"#),
+    );
+    assert_eq!(code, 0);
+    assert!(out.contains(r#""verdict":"refuse""#), "{out}");
+
+    // …and a routed tool whose input carries no command line is HELD, never
+    // passed: the control cannot read what it reaches, and says so.
+    let (code, out) = consult(
+        &shim,
+        root.path(),
+        &workspace,
+        &named("box2_install_package", r#"{"name":"curl"}"#),
+    );
+    assert_eq!(code, 0);
+    assert!(out.contains(r#""verdict":"hold""#), "{out}");
+    assert!(out.contains("opaque"), "{out}");
 
     // A request nobody could adjudicate exits non-zero, which fails closed at
     // the seam: the invocation never executes.

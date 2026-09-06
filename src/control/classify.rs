@@ -6,7 +6,8 @@
 //! class at once, so a per-name allow-list is theatre and only per-invocation
 //! adjudication can tell a `ls` from a `curl | sh`.
 //!
-//! Six classes, ordered by how far each reaches past the job:
+//! Seven classes. Six are reaches, ordered by how far each goes past the job;
+//! the seventh is the absence of one:
 //!
 //! | Class | Reaches |
 //! |---|---|
@@ -16,28 +17,40 @@
 //! | [`OpenWorld`](Effect::OpenWorld) | past the root and the world: network egress, host writes, a `cd` out |
 //! | [`Destructive`](Effect::Destructive) | irreversible loss: history rewrite, forced refs, deletion past git's reach |
 //! | [`Secret`](Effect::Secret) | credentials and environment |
+//! | [`Opaque`](Effect::Opaque) | **unknown** — this control could not read what the invocation does |
 //!
-//! Built-ins carry an **intrinsic map**; two of them (`cd`, `apply_patch`) are
-//! judged against the writable root at consult time, and `bash` goes to the
-//! operator ruleset ([`super::bash`]). Everything the map does not name — an
-//! external `litany-tool-*` binary, a tool a later litany adds — is
-//! [`OpenWorld`](Effect::OpenWorld): classification error fails toward the
-//! widest class short of loss, so an unrecognised effect is never mistaken for
-//! a read and stays something an override or a floor can catch.
-//!
-//! **Substrate verbs are target writes, not exemptions.** `message` and the
-//! world's `bl`/`litany` shims mutate the world's own substrates *through their
-//! gated verbs* — the delivery law, the front door — which is literally the
-//! second half of the target-write definition. They therefore pass by the
-//! ordinary table rather than by a bypass, and the control keeps ruling host
-//! effects rather than deliveries.
+//! **There is no arm from a tool NAME to a passing class** (bl-72bd). Names are
+//! folded into a closed enum first ([`intrinsic::Known`]) and matched
+//! exhaustively, so a name added without a row does not compile; everything the
+//! enum does not name goes to [`routed`], whose two answers are the command
+//! line's own class and [`Opaque`](Effect::Opaque). The arm this replaced read
+//! `other => OpenWorld`, and open-world passes: a foot's `box2_shell` running
+//! `rm -rf` was therefore passed unread while the engine's own `bash` refused
+//! the same line. Falling off a match into the most permissive class is the one
+//! answer nobody chose, and it is now unrepresentable rather than merely fixed.
 
 use super::root::Root;
 use super::wire::Request;
 
-/// A tool's reach, in the six-class vocabulary. Ordered: a higher variant is a
-/// wider reach, which is what lets a compound command take the worst of its
-/// parts without a table of pairs.
+/// The input field a command line rides in — litany's own `bash` schema and
+/// every thrall shell tool's ([`routed`]), said once here so the built-in and
+/// the routed lane read the same field name and cannot drift.
+const COMMAND: &str = "command";
+
+/// The intrinsic map: the closed set of names this control implements a row
+/// for, and the row each carries.
+mod intrinsic;
+/// The two intrinsic rows judged against the writable root at consult time.
+mod operand;
+/// The fail-closed lane for every name the intrinsic map does not hold
+/// (bl-72bd) — a foot's routed tool, or anything a later litany adds.
+mod routed;
+
+/// A tool's reach, in the seven-class vocabulary. Ordered: a higher variant is
+/// a wider reach, which is what lets a compound command take the worst of its
+/// parts without a table of pairs. [`Opaque`](Effect::Opaque) is highest
+/// because an unread invocation may be any of them — the fold has to carry the
+/// unknown outward, never let a known part bury it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Effect {
     Read,
@@ -46,6 +59,7 @@ pub enum Effect {
     OpenWorld,
     Destructive,
     Secret,
+    Opaque,
 }
 
 impl Effect {
@@ -58,6 +72,7 @@ impl Effect {
             Effect::OpenWorld => "open-world",
             Effect::Destructive => "destructive",
             Effect::Secret => "secret",
+            Effect::Opaque => "opaque",
         }
     }
 
@@ -74,6 +89,7 @@ impl Effect {
             Effect::OpenWorld,
             Effect::Destructive,
             Effect::Secret,
+            Effect::Opaque,
         ]
         .into_iter()
         .find(|e| e.word().replace(' ', "-") == word)
@@ -96,7 +112,10 @@ pub struct Classified {
 }
 
 impl Classified {
-    fn new(effect: Effect, why: impl Into<String>) -> Self {
+    /// Build one. `pub(crate)` rather than private since bl-72bd split the
+    /// intrinsic map and the routed lane out of this file: the two arms of one
+    /// classification are two modules now, and both mint this.
+    pub(crate) fn new(effect: Effect, why: impl Into<String>) -> Self {
         Self {
             effect,
             why: why.into(),
@@ -104,119 +123,14 @@ impl Classified {
     }
 }
 
-/// Built-in tool names, as litany spells them.
-const READ_FILE: &str = "read_file";
-const LOAD_SKILL: &str = "load_skill";
-const MESSAGE: &str = "message";
-const DISPATCH: &str = "dispatch";
-const APPLY_PATCH: &str = "apply_patch";
-const CD: &str = "cd";
-const BASH: &str = "bash";
-
 /// Classify one invocation. Total over every tool name and every input shape:
-/// an input that does not match its schema simply yields no operands, which
-/// lands it in the same open-world arm an unknown tool does.
+/// an input that does not match its schema simply yields no operands, and a
+/// name no row names goes to the [`routed`] lane rather than to a default arm.
 pub fn classify(request: &Request, root: &Root, policy: &super::policy::Policy) -> Classified {
-    match request.name.as_str() {
-        READ_FILE => Classified::new(Effect::Read, "reads a file"),
-        LOAD_SKILL => Classified::new(
-            Effect::TargetWrite,
-            "writes a skill body into the agent worktree",
-        ),
-        MESSAGE => Classified::new(
-            Effect::TargetWrite,
-            "deposits into another agent's inbox through the world's own gated verb",
-        ),
-        DISPATCH => Classified::new(
-            Effect::Process,
-            "mints an agent, under the harness's own budget and depth gates",
-        ),
-        // `multi_tool` had an arm here — an envelope whose inners the engine
-        // fanned out and this seam adjudicated one by one. It retired upstream
-        // at litany 0.0.8 (litany bl-99bb, its work being what a `python`
-        // program does), and the names that replaced it are classified by the
-        // open-world arm below rather than by a row apiece: a program the model
-        // authored and a search over the workspace's own history are both
-        // things this control cannot read the effect of from the input.
-        APPLY_PATCH => patch(&request.field("input"), root),
-        CD => move_to(&request.field("path"), root),
-        BASH => super::bash::classify(&request.field("command"), root, policy),
-        other => Classified::new(
-            Effect::OpenWorld,
-            format!("{other} is not a tool this control can classify"),
-        ),
+    match intrinsic::Known::of(&request.name) {
+        Some(known) => intrinsic::row(known, request, root, policy),
+        None => routed::classify(request, root, policy),
     }
-}
-
-/// A `cd`: [`Read`](Effect::Read) inside the writable root (moving is not
-/// writing), [`OpenWorld`](Effect::OpenWorld) out of it — a move out of the root
-/// is how every later relative operand leaves it.
-fn move_to(path: &str, root: &Root) -> Classified {
-    let dest = root.resolve(path);
-    if root.holds(&dest) {
-        Classified::new(
-            Effect::Read,
-            format!("moves to {} inside the writable root", dest.display()),
-        )
-    } else {
-        Classified::new(
-            Effect::OpenWorld,
-            format!("moves to {}, outside the writable root", dest.display()),
-        )
-    }
-}
-
-/// An `apply_patch`: a target write when every file the envelope names resolves
-/// inside the writable root, open-world otherwise. An envelope naming no file
-/// at all patches nothing and reads as a write of nothing.
-fn patch(envelope: &str, root: &Root) -> Classified {
-    let paths = patch_paths(envelope);
-    if root.holds_all(&paths) {
-        Classified::new(
-            Effect::TargetWrite,
-            "patches files inside the writable root",
-        )
-    } else {
-        Classified::new(
-            Effect::OpenWorld,
-            format!(
-                "patches {}, outside the writable root",
-                outside(&paths, root)
-            ),
-        )
-    }
-}
-
-/// The first operand of `paths` that falls outside the root, for the reason
-/// line. Total: the caller only asks when one exists, and an empty answer would
-/// still read as a sentence.
-fn outside(paths: &[String], root: &Root) -> String {
-    paths
-        .iter()
-        .find(|p| !root.holds(&root.resolve(p)))
-        .cloned()
-        .unwrap_or_default()
-}
-
-/// Every path an `apply_patch` envelope names — its `Add File` / `Delete File` /
-/// `Update File` sections and any `Move to` destination.
-fn patch_paths(envelope: &str) -> Vec<String> {
-    const MARKERS: [&str; 4] = [
-        "*** Add File: ",
-        "*** Delete File: ",
-        "*** Update File: ",
-        "*** Move to: ",
-    ];
-    envelope
-        .lines()
-        .filter_map(|line| {
-            MARKERS
-                .iter()
-                .find_map(|m| line.trim_end().strip_prefix(m))
-                .map(|p| p.trim().to_owned())
-        })
-        .filter(|p| !p.is_empty())
-        .collect()
 }
 
 #[cfg(test)]
