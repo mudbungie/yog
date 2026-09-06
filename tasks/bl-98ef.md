@@ -1,7 +1,8 @@
 +++
 title = "the same-box seat still cannot be provisioned from anything the suite says: bl-e058 closed the engine half, and the seat's refusal names no remedy"
 created = 1788673626
-updated = 1788674034
+updated = 1788674137
+claimant = "Cantaloups-Y2"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
