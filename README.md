@@ -99,10 +99,20 @@ yog: wire: listening on 127.0.0.1:39271
 That line is the whole of how a port is learned on a box yog provisioned for
 itself. Its `wire/address` holds `127.0.0.1:0` — a *request* for whatever port
 is free, so two engines on one box never contend — and the port is the kernel's
-answer, which only the listener knows. State the address a seat dials, or
-enroll a device with it. A box whose `address` names a host and port (an
-operator's own statement, written into `wire/address` or minted by
-`yog wire-certs`) prints that same line naming what it stated. A wire that
+answer, which only the listener knows. A seat cannot dial that, and an
+enrollment refuses to put it in a QR, so **state the endpoint**:
+
+```
+WIRE_HOST=127.0.0.1 WIRE_PORT=7737 yog wire-certs   # then restart the engine
+```
+
+On a box that already holds material that is not a rotation and distrusts
+nothing: it re-issues the server leaf over the CA already there and writes
+`wire/address` to match, so every leaf already carried to another box still
+verifies. `WIRE_HOST` is a comma-separated list — every entry rides the server
+leaf, and the first one, on `WIRE_PORT`, is the address. An unstated
+`WIRE_PORT` keeps the port `address` already names. A box whose `address` names
+a host and port prints that same line naming what it stated. A wire that
 could not come up prints its refusal on the same stream, and the engine runs on
 without one.
 

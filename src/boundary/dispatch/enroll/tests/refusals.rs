@@ -29,11 +29,16 @@ fn a_kernel_chosen_port_refuses_before_anything_is_minted() {
         "{refusal}"
     );
     assert!(refusal.contains("WIRE_HOST"), "{refusal}");
-    // bl-a6b7: the remedy must be typeable ON THIS BOX. The material was just
-    // read, so the re-mint is a rotation the bare command refuses, and the
-    // running engine holds its `:0` listener until it restarts — a remedy
-    // missing either half is one the operator spends their first attempt on.
-    assert!(refusal.contains("FORCE=1"), "{refusal}");
+    // bl-a6b7: the remedy must be typeable ON THIS BOX. The running engine holds
+    // its `:0` listener until it restarts, so a remedy missing that half is one
+    // the operator spends their first attempt on. And since bl-98ef it is NOT a
+    // rotation: stating the endpoint over standing material re-issues the server
+    // leaf and writes the address, distrusting nothing, so a refusal that still
+    // said `FORCE=1` would be telling an operator with a `:0` to distrust every
+    // leaf they have carried away.
+    assert!(refusal.contains("WIRE_PORT"), "{refusal}");
+    assert!(!refusal.contains("FORCE=1"), "{refusal}");
+    assert!(refusal.contains("distrusts nothing"), "{refusal}");
     assert!(refusal.contains("restart the engine"), "{refusal}");
     assert!(!dir.join("phone-1.pem").exists(), "nothing was minted");
 }

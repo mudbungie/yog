@@ -62,7 +62,7 @@ mod issuing;
 /// The `openssl` invocations and the two X.509 facts they carry.
 mod openssl;
 
-pub(crate) use issuing::{issue, reissue};
+pub(crate) use issuing::{issue, reissue, state};
 
 /// The CA's private key. [`material`](super::material) never names it: it is
 /// what issues the *next* leaf, and nothing but issuance reads it — so its
@@ -157,6 +157,26 @@ fn address_at(dir: &Path) -> Option<String> {
     let text = std::fs::read_to_string(dir.join(ADDRESS)).ok()?;
     let text = text.trim().to_owned();
     (!text.is_empty()).then_some(text)
+}
+
+/// The port the `address` file already names, or [`PORT`] when it names none
+/// this box could bind (bl-98ef).
+///
+/// **A `:0` is not a port to keep.** It is the request a self-provisioning boot
+/// writes — the kernel's answer, known only to the listener that took it — so
+/// an operator stating where this engine listens is stating the endpoint a `:0`
+/// never was. Every other port is theirs and is kept: a box that binds 7752 and
+/// gains a way in states the new host alone, and its endpoint must not move to
+/// the default underneath it.
+pub(crate) fn port_at(dir: &Path) -> String {
+    address_at(dir)
+        .and_then(|address| {
+            address
+                .rsplit_once(':')
+                .map(|(_, port)| port.to_owned())
+                .filter(|port| !port.is_empty() && port != "0")
+        })
+        .unwrap_or_else(|| PORT.to_owned())
 }
 
 /// Every host the server leaf answers to: the address's own first, then each

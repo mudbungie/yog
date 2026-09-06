@@ -22,6 +22,19 @@
 //! distrusts every leaf already carried away. Nothing stated is still the
 //! standing refusal — a bare re-run asks for nothing this act could perform.
 //!
+//! **That statement is the `address` file's too** (REMOTE §8 as amended,
+//! bl-98ef). It said the endpoint and left the file alone, and the box that
+//! most needs an endpoint stated is the box that can least reach one: a boot
+//! that provisioned itself wrote `127.0.0.1:0`, a port only the listener ever
+//! learns, and every consumer downstream inherits it — a seat cannot dial it,
+//! and an enrollment refuses to mint a QR that names it. The only act that
+//! could replace it was `FORCE=1`, a rotation, which distrusts every leaf
+//! already carried to every other box in order to change one line of text.
+//! Stating where a server listens distrusts nothing, so the two facts a stated
+//! host is a statement about — what the engine binds, and what a client may
+//! verify it against — are written by one act, and the engine binds the new
+//! one when it is next started.
+//!
 //! **`WIRE_LEAF` is the fifth reading** (REMOTE §8.2, bl-64a7), and it selects
 //! the other act rather than modifying this one: issue ONE extra client leaf
 //! under the common name it states, over the CA already here. That is the host
@@ -39,7 +52,6 @@
 //! is — the readings that do not apply to the selected act are inert here and
 //! always have been.
 
-use super::PORT;
 use crate::registry::Grade;
 use crate::xdg::Env;
 use std::path::PathBuf;
@@ -83,8 +95,14 @@ pub enum Act {
         /// Every host the box answers to, in `WIRE_HOST`'s own order. Empty is
         /// unstated, and the mint's address is then loopback.
         hosts: Vec<String>,
-        /// The port the engine binds and a seat dials.
-        port: String,
+        /// The port the engine binds and a seat dials — **`None` is unstated**
+        /// (bl-98ef), which is a different answer at each of the two acts a
+        /// stated host can ask for. A founding mint takes [`PORT`], the stated
+        /// endpoint another machine is told to dial; a statement over standing
+        /// material keeps the port the `address` file already names, because an
+        /// operator widening the SAN of a box that binds 7752 must not have its
+        /// endpoint moved to the default underneath them.
+        port: Option<String>,
         /// Whether to rotate, distrusting every certificate already issued.
         force: bool,
     },
@@ -114,7 +132,7 @@ pub fn plan(
     let act = stated(leaf).map_or_else(
         || Act::Mint {
             hosts: hosts(stated(host).as_deref()),
-            port: stated(port).unwrap_or_else(|| PORT.to_owned()),
+            port: stated(port),
             force: stated(force).is_some(),
         },
         |cn| Act::Leaf(cn, grade),

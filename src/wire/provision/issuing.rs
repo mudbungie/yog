@@ -12,7 +12,7 @@
 //! material.
 
 use super::openssl;
-use super::{CA_KEY, Role};
+use super::{ADDRESS, CA_KEY, Role};
 use std::path::Path;
 
 /// Issue **one extra client leaf** under a stated common name — the host half
@@ -110,4 +110,23 @@ fn founded(dir: &Path) -> Result<(), String> {
          — run this where the CA lives",
         dir.display()
     ))
+}
+
+/// **State the address this engine binds** (REMOTE §8 as amended, bl-98ef) —
+/// the third act over a trust root that already exists, and the smallest: one
+/// line of text, no signature, nothing distrusted.
+///
+/// It exists because the fact had no non-destructive spelling. `address` is
+/// written once, by whichever mint founded the directory, and a boot that
+/// provisioned its own box wrote `127.0.0.1:0` — a request only the listener
+/// ever learns the answer to, which no seat can dial and no enrollment can put
+/// in a QR. The only act that could replace it was `FORCE=1`, which re-founds
+/// the CA and distrusts every leaf already carried to every other box. Saying
+/// where a server listens is not a rotation, so this is not one.
+///
+/// It writes rather than adds, unlike everything else here: the endpoint is the
+/// one fact this file is the home of, and stating it is the whole act.
+pub(crate) fn state(dir: &Path, address: &str) -> Result<(), String> {
+    std::fs::write(dir.join(ADDRESS), format!("{address}\n"))
+        .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))
 }

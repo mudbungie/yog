@@ -16,7 +16,7 @@ fn it_mints_then_refuses_then_rotates() {
         dir: dir.clone(),
         act: Act::Mint {
             hosts: Vec::new(),
-            port: "0".to_owned(),
+            port: Some("0".to_owned()),
             force: false,
         },
     };
@@ -30,7 +30,7 @@ fn it_mints_then_refuses_then_rotates() {
     );
     plan.act = Act::Mint {
         hosts: Vec::new(),
-        port: "0".to_owned(),
+        port: Some("0".to_owned()),
         force: true,
     };
     assert_eq!(perform(&plan), 0, "rotated");
@@ -49,7 +49,7 @@ fn a_mint_that_cannot_run_exits_one() {
             dir: blocked,
             act: Act::Mint {
                 hosts: Vec::new(),
-                port: "0".to_owned(),
+                port: Some("0".to_owned()),
                 force: false,
             },
         }),
@@ -73,11 +73,10 @@ fn a_stated_host_is_a_list_of_them() {
     );
 }
 
-/// **A stated host on standing material re-issues the server leaf** (bl-52f4),
-/// which is the act the refusal above cannot perform: the CA stands, every leaf
-/// already issued still verifies, and the address file is left naming the one
-/// endpoint the engine binds. The signal is `WIRE_HOST` itself — there is no
-/// new reading and no new verb.
+/// **A stated host on standing material re-issues the server leaf** (bl-52f4)
+/// **and states the address** (bl-98ef), which is the act the refusal above
+/// cannot perform: the CA stands and every leaf already issued still verifies.
+/// The signal is `WIRE_HOST` itself — there is no new reading and no new verb.
 #[test]
 fn a_stated_host_over_standing_material_re_issues_the_server_leaf() {
     let tmp = TempDir::new().expect("tmp");
@@ -86,7 +85,7 @@ fn a_stated_host_over_standing_material_re_issues_the_server_leaf() {
         dir: dir.clone(),
         act: Act::Mint {
             hosts: hosts.iter().map(|h| (*h).to_owned()).collect(),
-            port: "7737".to_owned(),
+            port: Some("7737".to_owned()),
             force: false,
         },
     };
@@ -111,8 +110,94 @@ fn a_stated_host_over_standing_material_re_issues_the_server_leaf() {
         std::fs::read(dir.join("client.pem")).expect("client leaf"),
         client
     );
-    assert_eq!(std::fs::read(dir.join(ADDRESS)).expect("address"), address);
+    assert_ne!(
+        std::fs::read(dir.join(ADDRESS)).expect("address"),
+        address,
+        "the endpoint is stated, not left behind"
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
+        "engine.example.com:7737\n",
+        "the first host stated, on the port stated"
+    );
     assert!(Role::Server.leaf() == "server");
+}
+
+/// **The box a self-provisioned boot left behind is the one this act is for**
+/// (bl-98ef). Its `address` reads `127.0.0.1:0` — a request only the listener
+/// ever learns the answer to, which no seat can dial and no enrollment can put
+/// in a QR — and the only act that could replace it was the `FORCE=1` that
+/// distrusts every leaf already carried away. A stated endpoint writes it, over
+/// the CA already here, and nothing stops verifying.
+#[test]
+fn a_stated_endpoint_replaces_a_self_provisioned_request() {
+    let tmp = TempDir::new().expect("tmp");
+    let dir = tmp.path().join("wire");
+    super::super::super::ensure(&dir).expect("the boot's own mint");
+    assert_eq!(
+        std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
+        "127.0.0.1:0\n",
+        "what a boot with nothing to read writes"
+    );
+    let ca = std::fs::read(dir.join(ANCHORS)).expect("ca");
+
+    assert_eq!(
+        perform(&Plan {
+            dir: dir.clone(),
+            act: Act::Mint {
+                hosts: vec!["127.0.0.1".to_owned()],
+                port: Some("7752".to_owned()),
+                force: false,
+            },
+        }),
+        0
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
+        "127.0.0.1:7752\n"
+    );
+    assert_eq!(
+        std::fs::read(dir.join(ANCHORS)).expect("ca"),
+        ca,
+        "and the trust root is untouched, which is what makes it not a rotation"
+    );
+}
+
+/// **An unstated port keeps the standing one, and a `:0` is not one** (bl-98ef).
+/// An operator widening the SAN of a box that binds 7752 states no port, and
+/// moving its endpoint to the default underneath them would be this act
+/// breaking the box it was asked to describe — while a `:0` names no endpoint
+/// to keep, so a statement over it lands on the default a machine can be told
+/// to dial.
+#[test]
+fn an_unstated_port_keeps_the_standing_endpoint() {
+    let tmp = TempDir::new().expect("tmp");
+    let dir = tmp.path().join("wire");
+    let widen = |hosts: &[&str]| Plan {
+        dir: dir.clone(),
+        act: Act::Mint {
+            hosts: hosts.iter().map(|h| (*h).to_owned()).collect(),
+            port: None,
+            force: false,
+        },
+    };
+    assert_eq!(perform(&widen(&[])), 0, "minted at the default port");
+    super::super::super::state(&dir, "127.0.0.1:7752").expect("an operator's own endpoint");
+
+    assert_eq!(perform(&widen(&["127.0.0.1", "192.0.2.7"])), 0);
+    assert_eq!(
+        std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
+        "127.0.0.1:7752\n",
+        "the port the operator stated, not the default"
+    );
+
+    super::super::super::state(&dir, "127.0.0.1:0").expect("a self-provisioned request");
+    assert_eq!(perform(&widen(&["127.0.0.1"])), 0);
+    assert_eq!(
+        std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
+        "127.0.0.1:7737\n",
+        "a `:0` names no endpoint to keep"
+    );
 }
 
 /// A re-issue that cannot run exits non-zero rather than reporting a leaf it
@@ -127,7 +212,7 @@ fn a_re_issue_a_client_box_cannot_perform_exits_one() {
             dir: tmp.path().to_owned(),
             act: Act::Mint {
                 hosts: vec!["engine.example.com".to_owned()],
-                port: "7737".to_owned(),
+                port: Some("7737".to_owned()),
                 force: false,
             },
         }),

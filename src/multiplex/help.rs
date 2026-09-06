@@ -57,9 +57,15 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  comma-separated LIST — a box reachable by name, by overlay address and on the \
                  LAN says so once, every entry rides the server leaf and 127.0.0.1 always does, \
                  while the `address` file takes the first entry alone. On a directory that \
-                 already holds material a stated host re-issues THE SERVER LEAF over the CA \
-                 already there — no CA founded, no address written, no other leaf touched, so \
-                 nothing already carried away stops verifying. It refuses to \
+                 already holds material a stated host is a statement about where this engine \
+                 listens: it re-issues THE SERVER LEAF over the CA already there and writes the \
+                 `address` file to match — no CA founded, no other leaf touched, so nothing \
+                 already carried away stops verifying, and the engine binds the stated endpoint \
+                 when it is next started. That is the act for a box whose own boot provisioned \
+                 it: a self-provisioned `127.0.0.1:0` is a request only the listener learns the \
+                 answer to, and stating an endpoint over it costs one signature rather than a \
+                 rotation. A stated `WIRE_PORT` is taken and an unstated one keeps the port the \
+                 `address` file already names. It refuses to \
                  overwrite otherwise, because a rotation distrusts every certificate already \
                  issued and every seat holding one stops connecting. `WIRE_LEAF=<common-name>` \
                  asks for the other act instead: issue ONE extra client leaf under that name, \

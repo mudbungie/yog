@@ -2117,14 +2117,39 @@ remedy:
   the SAN is the set of spellings a seat may verify what it dialled against.
 - `WIRE_HOST` on a directory that **already holds material** re-issues the
   server leaf over the CA already there, and refuses nothing: no CA founded, no
-  address written, no other leaf touched — `WIRE_LEAF`'s guard, not the mint's,
+  other leaf touched — `WIRE_LEAF`'s guard, not the mint's,
   because it is `WIRE_LEAF`'s kind of act. The server's own leaf is the one
   artifact whose replacement strands nobody (a client verifies the CA), where
   `FORCE=1` re-founds the CA and distrusts every leaf already carried to
   another box. Widening what a certificate covers used to cost that whole
   fleet. The signal is the existing reading rather than a new one, and a bare
   re-run — nothing stated — still earns the standing rotation refusal, because
-  it asks for nothing this act could perform. Test material is
+  it asks for nothing this act could perform.
+
+**A stated host writes the `address` file too, and that is the whole of the
+same statement** *(amended bl-98ef)*. It did not, on the argument above that
+what a box binds and what a certificate covers are two facts — which is true of
+the facts and was wrong about the act. The two amendments below stand together:
+
+- The fact with no non-destructive spelling was the **endpoint**. `address` is
+  written once, by whichever mint founded the directory, and a boot that
+  provisioned its own box wrote `127.0.0.1:0` — a request only the listener ever
+  learns the answer to. A seat cannot dial it, an enrollment refuses to put it
+  in a QR (§8.4), and a containerized engine on it is reachable from nothing at
+  all. The only act that could replace it was `FORCE=1`: a rotation, distrusting
+  every leaf already carried to every other box, to change one line of text.
+  Saying where a server listens distrusts nothing, so it is not a rotation and
+  is not spelled as one.
+- **`WIRE_PORT` is taken when stated and the standing port is kept when it is
+  not**, with one exception that is the same rule: a `:0` names no endpoint to
+  keep, so a statement over it lands on the default port a machine can be told
+  to dial. An operator widening the SAN of a box that binds 7752 states hosts
+  and no port, and moving that endpoint underneath them would be this act
+  breaking the box it was asked to describe.
+
+The engine binds the address as it starts, so the act names the restart beside
+itself, and every refusal that used to spell `FORCE=1` for a `:0` — the
+enrollment's, and the verb's own — now spells this. Test material is
 minted the same way at test runtime (`src/test_support/wire.rs`) — **a
 certificate fixture is never committed**, which `make leak-scan` would refuse
 anyway and which would be a private key in a public repository whether or not

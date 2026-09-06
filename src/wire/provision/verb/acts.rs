@@ -7,7 +7,7 @@
 //! this one performs it. Nothing here reads the environment; nothing there
 //! touches the directory.
 
-use super::super::{ANCHORS, LOOPBACK};
+use super::super::{ANCHORS, LOOPBACK, PORT};
 use super::{Act, Plan, READS, SUBCMD};
 use crate::registry::Grade;
 use crate::wire::material::{ADDRESS, DIR, ENTRIES, ENTRY, Role};
@@ -17,7 +17,7 @@ use std::path::Path;
 /// every refusal is the act's own sentence naming its own remedy.
 pub fn perform(plan: &Plan) -> i32 {
     match &plan.act {
-        Act::Mint { hosts, port, force } => mint(&plan.dir, hosts, port, *force),
+        Act::Mint { hosts, port, force } => mint(&plan.dir, hosts, port.as_deref(), *force),
         Act::Leaf(cn, grade) => leaf(&plan.dir, cn, *grade),
     }
 }
@@ -34,21 +34,28 @@ pub fn perform(plan: &Plan) -> i32 {
 /// material re-issues the server leaf, no new reading and no new verb — and the
 /// standing refusal is what an operator who stated NOTHING still gets, because
 /// a bare re-run asks for nothing this act could perform.
-fn mint(dir: &Path, hosts: &[String], port: &str, force: bool) -> i32 {
+fn mint(dir: &Path, hosts: &[String], port: Option<&str>, force: bool) -> i32 {
     if dir.join(ANCHORS).is_file() && !force {
         if hosts.is_empty() {
             eprintln!(
                 "yog {SUBCMD}: {} already holds material; rotating distrusts every certificate \
                  already issued. Re-run with FORCE=1 if that is what you mean, or state \
-                 {}=<host>[,<host>…] to re-issue the server leaf alone.",
+                 {}=<host>[,<host>…] {}=<port> to say where this engine listens — which \
+                 re-issues the server leaf and writes the address, over the CA already here, \
+                 distrusting nothing.",
                 dir.display(),
-                READS[1]
+                READS[1],
+                READS[2]
             );
             return 1;
         }
-        return reissue(dir, hosts);
+        return restate(dir, hosts, port);
     }
-    let address = format!("{}:{port}", hosts.first().map_or(LOOPBACK, String::as_str));
+    let address = format!(
+        "{}:{}",
+        hosts.first().map_or(LOOPBACK, String::as_str),
+        port.unwrap_or(PORT)
+    );
     match super::super::mint(dir, &address, hosts.get(1..).unwrap_or_default(), force) {
         Ok(()) => {
             report(dir, &address);
@@ -61,12 +68,32 @@ fn mint(dir: &Path, hosts: &[String], port: &str, force: bool) -> i32 {
     }
 }
 
-/// Re-issue the server leaf over the CA already here, and say what it now
-/// answers to. The `address` file is untouched — it names the one endpoint the
-/// engine binds, which is a different fact from the set of spellings a seat may
-/// verify against, and restating THAT is a rotation or an edit.
-fn reissue(dir: &Path, hosts: &[String]) -> i32 {
-    if let Err(e) = super::super::reissue(dir, hosts) {
+/// **State where this engine listens** (bl-98ef): re-issue the server leaf over
+/// the CA already here, and write the `address` file to match it.
+///
+/// One act, because a stated host is one statement about two facts — what the
+/// engine binds, and what a client may verify what it dialled against — and
+/// splitting them left the second sayable only by a rotation. `FORCE=1` was
+/// then the only spelling that could replace a `127.0.0.1:0`, which is the
+/// address a self-provisioned boot writes and the one address nothing
+/// downstream can use: it distrusts every leaf already carried away in order to
+/// change one line of text. Nothing here distrusts anything — the CA stands,
+/// every leaf already issued still verifies, and the engine binds the stated
+/// endpoint when it is next started.
+///
+/// The port is the operator's when they state one and **the standing one
+/// otherwise**: an operator widening the SAN of a box that binds 7752 states no
+/// port, and moving it to the default underneath them would be this act
+/// breaking the box it was asked to describe.
+fn restate(dir: &Path, hosts: &[String], port: Option<&str>) -> i32 {
+    let standing = super::super::port_at(dir);
+    let address = format!(
+        "{}:{}",
+        hosts.first().map_or(LOOPBACK, String::as_str),
+        port.unwrap_or(&standing)
+    );
+    let acted = super::super::reissue(dir, hosts).and_then(|()| super::super::state(dir, &address));
+    if let Err(e) = acted {
         eprintln!("yog {SUBCMD}: {e}");
         return 1;
     }
@@ -80,10 +107,10 @@ fn reissue(dir: &Path, hosts: &[String]) -> i32 {
     }
     println!("  it answers to {}", hosts.join(", "));
     println!(
-        "  the CA is untouched, so every leaf already issued still verifies; {} is unchanged — \
-         it names the one endpoint the engine binds",
+        "  {} names {address} — restart the engine, which binds it as it starts",
         dir.join(ADDRESS).display()
     );
+    println!("  the CA is untouched, so every leaf already issued still verifies");
     0
 }
 

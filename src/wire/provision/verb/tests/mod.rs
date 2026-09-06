@@ -27,7 +27,7 @@ fn an_unstated_plan_is_the_worlds_own_loopback() {
         plan.act,
         Act::Mint {
             hosts: Vec::new(),
-            port: PORT.to_owned(),
+            port: None,
             force: false,
         },
         "nothing stated is the mint it has always been"
@@ -55,7 +55,7 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
         stated.act,
         Act::Mint {
             hosts: vec!["engine.example.com".to_owned()],
-            port: "7000".to_owned(),
+            port: Some("7000".to_owned()),
             force: true,
         }
     );
@@ -74,7 +74,7 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
         blank.act,
         Act::Mint {
             hosts: Vec::new(),
-            port: PORT.to_owned(),
+            port: None,
             force: false,
         },
         "an empty FORCE is not a rotation, and an empty WIRE_LEAF is not a leaf"
@@ -152,7 +152,7 @@ fn the_leaf_act_issues_once_and_writes_nothing_else() {
             dir: dir.clone(),
             act: Act::Mint {
                 hosts: Vec::new(),
-                port: "0".to_owned(),
+                port: Some("0".to_owned()),
                 force: false,
             },
         }),
@@ -230,7 +230,7 @@ fn the_verb_issues_a_foot_leaf_beside_an_ordinary_one() {
             dir: dir.clone(),
             act: Act::Mint {
                 hosts: Vec::new(),
-                port: "0".to_owned(),
+                port: Some("0".to_owned()),
                 force: false,
             },
         }),
