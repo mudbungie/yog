@@ -1,7 +1,7 @@
 +++
 title = 'a workspace made through the local yog gesture boundary is registered to nobody, so every seat answers "unknown workspace" and no verb can repair it'
 created = 1788673482
-updated = 1788673482
+updated = 1788674614
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
@@ -55,3 +55,7 @@ Severity p2 rather than p1 because the workaround (make workspaces from the
 seat) is discoverable once you know; the refusal sentence gives no hint that
 the workspace exists and the caller merely cannot see it, which is the part
 that costs the hour.
+
+---
+
+Fixed with bl-bd48 in one change (one defect from two angles). run_gesture — the one room both intakes open onto — now asks, ahead of every gesture, whether the workspace it names is addressable yet; when the answer that follows succeeded, the leaves this box minted for itself (yog-client, yog-window, present-only) are registered in it. Founding only, never joining, so an operator's rm stays revoked. The repair path is the second half: /enroll adopts a leaf wire-certs already issued rather than refusing it, reading the grade off the certificate. REMOTE 4.1 and 8.4 amended; DESIGN 12 rows added.
