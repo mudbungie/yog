@@ -43,7 +43,8 @@ fn prefill_is_empty_for_bare() {
 
 /// The path rung leads with its headline (§3.3): the directory is on line one,
 /// verbatim, because the derived conversation display name is the goal's first
-/// payload line. The prose that once buried it on line two follows.
+/// payload line. Line two states the binding the fire also passes typed
+/// (bl-fea6) — it may restate that channel, never contradict it.
 #[test]
 fn prefill_names_the_path_verbatim_on_line_one() {
     let g = prefill(&Payload::Path {
@@ -51,7 +52,7 @@ fn prefill_names_the_path_verbatim_on_line_one() {
     });
     assert_eq!(
         g,
-        "Working directory: /work/here\nDo all work there, by absolute path. Do not rely on the current directory.",
+        "Working directory: /work/here\nThis is already your current directory: every tool call starts there and relative paths resolve there. Keep the work inside it.",
     );
     assert_eq!(g.lines().next(), Some("Working directory: /work/here"));
     assert!(!g.contains("workspace"));

@@ -54,9 +54,29 @@ pub(super) fn prefill(payload: &Payload) -> String {
 /// display ladder's second rung is the first payload line (§3.3), so a sentence
 /// that buried the path on line two previewed the conversation by its own
 /// boilerplate. The ball rung's `Ball <id>: <title>` header is the same invariant.
+///
+/// **Line two states the binding; it used to contradict it** (bl-fea6). The
+/// sentence read *"Do all work there, by absolute path. Do not rely on the
+/// current directory."* — and the second half was false: the same directory
+/// rides the fire typed, as litany's `--cwd`
+/// ([`prompt`](super::prompt)), which seeds the agent's working-directory mark
+/// at creation, so every tool step of every turn starts there and a first
+/// `pwd` prints the bound path. Told not to believe it, models spent their
+/// orientation phase disproving it: one run's first tool call was a `cd` into
+/// an invented generic home followed by `find /` for the target file, which
+/// returned three sibling copies and cost five more calls to disambiguate; a
+/// second opened `cd "$(pwd)" && pwd`; a third `cd`'d to that same invented
+/// home and back. Two of three unrelated conversations invented the same
+/// sandbox home, because *"do not rely on the current directory"* reads as
+/// *"you are somewhere else"*.
+///
+/// bl-6654 retired the ball rung's location prose on the ground that *"location
+/// stops being prose"*. The path rung keeps one line because the headline is
+/// the display ladder's, and what follows it now **agrees** with the typed
+/// channel instead of denying it.
 fn path_preamble(dir: &Path) -> String {
     format!(
-        "Working directory: {}\nDo all work there, by absolute path. Do not rely on the current directory.",
+        "Working directory: {}\nThis is already your current directory: every tool call starts there and relative paths resolve there. Keep the work inside it.",
         dir.display(),
     )
 }

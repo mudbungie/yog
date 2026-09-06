@@ -717,10 +717,23 @@ argv:** the multiplex `bl` arm resolves `Edge::default_actor` as `$YOG_NAME`
 that takes no `--as` is untouched. One rule, no per-verb flag table.
 
 The path rung appends a target preamble whose first line is the headline —
-`Working directory: <dir>`, the directory verbatim — followed by the
-work-there-by-absolute-path sentence; the ball rung composes the header and the
-ball body verbatim, and nothing else (bl-6654 retired the worktree preamble;
-the path is the typed `--cwd` binding now, not prose):
+`Working directory: <dir>`, the directory verbatim — followed by **one sentence
+that agrees with the typed binding**: *"This is already your current directory:
+every tool call starts there and relative paths resolve there. Keep the work
+inside it."* It used to read *"Do all work there, by absolute path. Do not rely
+on the current directory,"* and the second half was **false** (bl-fea6): the
+same directory rides the fire as litany's `--cwd`, which seeds the agent's
+working-directory mark at creation, so a first `pwd` prints the bound path.
+Told not to believe it, models spent their orientation phase disproving it —
+one measured run's first tool call was a `cd` into an invented generic home
+followed by a whole-filesystem `find` for the target file, which returned three
+sibling copies and cost five further calls to disambiguate; two of three
+unrelated conversations invented that same sandbox home. A rung's prose may
+restate the typed channel or say nothing; it may not contradict it.
+
+The ball rung composes the header and the ball body verbatim, and nothing else
+(bl-6654 retired the worktree preamble; the path is the typed `--cwd` binding
+now, not prose):
 
 ```
 Ball <id>: <title>
