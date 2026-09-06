@@ -1,7 +1,8 @@
 +++
 title = "the path rung's goal preface tells the agent not to trust its cwd — which IS the bound directory — and one run answered by running `find /` for the file and finding three sibling copies"
 created = 1788673451
-updated = 1788673451
+updated = 1788674606
+claimant = "Cantaloups-Y4"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
