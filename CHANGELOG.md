@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.41](https://github.com/mudbungie/yog/compare/v0.0.40...v0.0.41) - 2026-09-06
+
+### Changes
+
+- the native reconciler restarts the engine onto ANY replaced binary, so a main-tip build lands on the operator's live engine unattended [bl-6b27]
+
 ## [0.0.40](https://github.com/mudbungie/yog/compare/v0.0.39...v0.0.40) - 2026-09-06
 
 ### Changes
