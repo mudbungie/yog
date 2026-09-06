@@ -1,7 +1,8 @@
 +++
 title = "a workspace created from the engine's own box is invisible to that box's seat, and no verb registers an existing leaf: wire-certs mints a window leaf that /enroll cannot adopt"
 created = 1788673440
-updated = 1788673440
+updated = 1788674297
+claimant = "Cantaloups-Y2"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
