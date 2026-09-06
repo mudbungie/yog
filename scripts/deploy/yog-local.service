@@ -1,0 +1,74 @@
+# The yog engine as a NATIVE user service — the unit `scripts/deploy/local.sh`
+# seats, and the shape a box without a container engine runs (DESIGN §8.5,
+# REMOTE §8, §12). It is seated AS `yog.service`, and that is deliberate: a box
+# runs ONE engine over ONE world, so the unit NAME must stay single or two
+# managers converge the same `%h/.local/share/yog` against each other. Seating
+# either shape replaces the other, exactly as `seat.sh` says of the binary units
+# it superseded.
+#
+# A bare `yog` IS the engine — the world converged, the derivation worker and
+# watch bridge up, the gestures-inbox consumer answering deposits and the §9.5
+# wire listener answering seats. There is one face, so it needs no word to
+# select it.
+#
+# **The binary is `%h/.local/bin/yog` and not cargo's default root**, for the
+# reason lernie's seat reconciler states about its own: the install root is the
+# Makefile's `INSTALL_PREFIX` default, so `make install` and the reconciler
+# write the same path, and a box cannot end up with two engines and a coin toss
+# about which one the unit execs. `local-reconcile.sh` passes the matching
+# `--root`.
+#
+# User-level and not system-level, because the world is the operator's: it
+# resolves under `$XDG_DATA_HOME/yog/world` (§16.2), and a system unit would
+# either run as another user or need that path hard-coded. `%h` keeps this file
+# free of any account name.
+#
+# Requires lingering (`loginctl enable-linger`) or the manager — and so the
+# engine — stops at logout. `scripts/deploy/local.sh` enables it.
+[Unit]
+Description=yog engine
+Documentation=https://github.com/mudbungie/yog
+# The engine dials nothing at boot, but its agents do.
+After=network-online.target
+Wants=network-online.target
+# `Restart=always` below must not hide a release that cannot start. Systemd's
+# defaults (5 starts per 10s) never trip at a 5s restart delay, so a crash-loop
+# would present as "running" forever and the reconciler would see a live pid.
+# Five failures in five minutes is a broken version, not a blip: enter `failed`
+# and let it be seen — and let the reconciler try the next version over it.
+#
+# It is deliberately tighter than the container unit's twenty-in-a-hundred,
+# because the boot race that widened THAT one is a race against the container
+# daemon, a system unit a user unit cannot order against. A native engine has
+# no such daemon to wait for, so the window buys nothing and costs the
+# crash-loop detection.
+StartLimitIntervalSec=5min
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/yog
+# A bare `yog` parks until a signal (main.rs). A crash is a defect, not a state
+# to sit in: come back and keep converging.
+Restart=always
+RestartSec=5s
+# The grace a stop actually spends (DESIGN §8.5, bl-269a). The engine catches
+# SIGTERM: the face's loop ends, the Engine drops, each thread finishes its pass
+# and joins, and every piped child gets Stream's polite SIGTERM-then-SIGKILL
+# instead of dying with the process. yog states no deadline of its own — this is
+# it, and the kernel's SIGKILL at the end of it is the only bound that cannot be
+# out-waited.
+#
+# The control-group kill still reaches a running turn beside yog, which is what
+# a deliberate stop should do — the detached `litany` driver takes its own copy
+# of this SIGTERM and settles its unanswered tool window on the way out.
+TimeoutStopSec=30s
+# The engine shells out for two things it links no library for: `openssl`, for
+# the REMOTE §8 certificate mint its boot performs when a box has none, and
+# `git`, under the embedded balls substrate. A systemd user unit does not
+# inherit a login shell's PATH, so both are named here along with the install
+# root the binary itself lives in.
+Environment=PATH=%h/.local/bin:%h/.cargo/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target

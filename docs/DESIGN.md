@@ -6975,6 +6975,83 @@ and before any box is expected to reconcile against it. A box seated in the
 meantime keeps working: it is running the tag `make deploy` put on it, and its
 reconcile pass refuses loudly rather than downgrading anything.
 
+#### 10.1.1 The second shape: a native box, and what carries a release to it (bl-8ea9)
+
+§10.1 above is written for a **server**, where the image is the unit of install
+and one immutable ghcr tag is the whole of what a box can be pointed at. It is
+not the only shape yog runs in and never was. A **workstation** runs the engine
+as a plain binary: there may be no container engine on it at all, and its world
+is the operator's own `$XDG_DATA_HOME/yog` rather than a mount, so the image's
+one real service — being the unit of install — buys nothing it does not already
+have.
+
+**The operator ruling this section answers** (2026-09-05): *every device should
+run effectively full CD — any new publication should result in an upgrade of
+the running versions.* §10.1's channel satisfies that for image boxes only.
+Native boxes had no channel at all: no unit, no timer, no upgrade. Measured on
+a live one, the engine was a hand-launched process three days old running
+0.0.10 against a published 0.0.39, and `Linger=no` meant a logout would have
+ended it silently.
+
+**The publication is the same act; only the carrier differs.** One release job
+emits three artifacts from one version (§10.1): the crate on crates.io, the
+`v<version>` tag with a `yog-x86_64-unknown-linux-gnu` archive on it, and the
+ghcr image. A container box polls the third. **A native box polls the first**,
+and that choice is load-bearing rather than incidental:
+
+- **crates.io is the only one of the three with a `yanked` bit**, and yanking is
+  the native shape's whole rollback story. Filtering yanked versions in the
+  reconciler rather than leaving them to cargo makes a yank the operator's
+  rollback lever: the previous version becomes newest-live, the next tick sees
+  it differ from what is installed, and puts it back with nobody logging in. A
+  release archive has no such bit — deleting a GitHub asset is not a
+  publication event and leaves no forward record — so the container shape has to
+  carry `YOG_REFUSED` in `deploy.env` instead, which is a per-box fact rather
+  than a fleet-wide one.
+- **`cargo install --locked` re-derives the published lockfile**, which is the
+  parity check that yog and its embedded substrate resolve one `brazen` (§16.7).
+  The archive is one artifact of one runner's resolution, already made.
+- **It is one mechanism for three components.** yog, `thrall` and `lernie` are
+  separately installed native binaries on separate schedules (REMOTE §12), and
+  all three now reconcile from the same sparse index by the same rule. A
+  release-asset carrier would have covered yog alone, because thrall and lernie
+  publish no archive — two shapes where one suffices.
+
+The cost is a build on the box, which is why the native reconcile unit carries
+`Nice=19` with idle IO and CPU scheduling and fires hourly rather than every
+fifteen minutes: a background build that makes a workstation unpleasant to type
+on is worse than a slow one, because it gets the timer switched off, and a
+switched-off timer is no CD at all.
+
+**Idleness is asked once, of the engine.** §10.1's reconciler put
+`{"op":"workspaces"}` over the §8.5 boundary because a container unit's cgroup
+answers about `docker run`, a client process. A native unit's cgroup would in
+fact answer honestly — that objection does not reach it — but the boundary read
+is kept anyway, because two statements of one idle question drift and the one
+that drifts is the one nobody re-reads. The engine is asked in **its own
+words**, through `/proc/<pid>/exe` rather than the binary just installed: the
+gesture inbox is a serialization, and the process that reads it should be
+addressed by the build that reads it.
+
+**One unit name, and that is the invariant.** Both shapes seat `yog.service`.
+A box runs one engine over one world, and two units converging the same data
+root against each other is a failure with no upper bound on its damage; a
+second name would make that state reachable by seating twice. So seating either
+shape replaces the other, and the recipe says so rather than guarding against
+it — the same ruling `seat.sh` recorded when it superseded the binary units of
+bl-bf35, now read in both directions.
+
+**What was restored, and what stayed retired.** bl-bf35 shipped exactly this
+reconciler and bl-c6e2 deleted it at the container cutover. The deletion was
+right for the server and was read afterwards as a statement about the project;
+it was a statement about a shape. What came back is the crates.io half and the
+`failed`-unit recovery arm. What did not is the cgroup process count as the
+idle predicate — replaced by the boundary read above — and `~/.cargo/bin` as
+the install root, replaced by `$HOME/.local/bin`, which is the Makefile's
+`INSTALL_PREFIX` default and the path the unit execs. An install to a path the
+unit never reads is a CD that is silently dead: a timer updating a binary
+nothing runs, with no error anywhere.
+
 ### 10.2 The macOS artifact: `zig cc` from a Linux container, and what it cannot reach (bl-888d)
 
 §10.1 put the Linux images on a reproducible line. This is the other half of

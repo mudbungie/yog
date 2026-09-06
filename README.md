@@ -602,14 +602,21 @@ the `docker run` client detaches from the container rather than stopping it.
 `TimeoutStopSec` is longer than that grace, or systemd's own kill lands
 mid-window and the grace is decorative.
 
-**The hourly reconciler is retired** (bl-c6e2), and re-running the deploy
-disables it on a box that still has it. It reconciled a *cargo-installed
-binary* against the crates.io index and read quiescence off the unit's own
-cgroup. Against a container unit both facts are wrong in the direction that
-**acts**: it would see the installed binary differ from what is running and
-restart the unit under it. The reconcile question for an image is "is a newer
-image loaded", and nothing on the box can answer that without a registry to
-poll — which is deliberately not there.
+**The hourly reconciler is retired ON THIS SHAPE** (bl-c6e2), and re-running
+the deploy disables it on a container box that still has it. It reconciled a
+*cargo-installed binary* against the crates.io index and read quiescence off
+the unit's own cgroup. Against a container unit both facts are wrong in the
+direction that **acts**: it would see the installed binary differ from what is
+running and restart the unit under it. The reconcile question for an image is
+"is a newer image loaded", and nothing on the box can answer that without a
+registry to poll — which is deliberately not there.
+
+That is a statement about a container box and it was read for a year as a
+statement about the project. It is not: a box that runs the BINARY has exactly
+the two facts the retired reconciler read, and reads them correctly. "The
+native shape" below restores it there, with the cgroup predicate replaced by
+the same boundary read `reconcile.sh` uses — so there is one idle question in
+the tree and the engine answers it (bl-8ea9).
 
 So an upgrade is `make deploy`, run by a human, and the restart it performs is
 unconditional. That is a real loss and worth naming: the retired reconciler
@@ -633,6 +640,88 @@ since the boot race happens on every reboot while a bad build is caught by
 cannot start is caught by the deploy's own verification within it, because the
 beats above wait past one `RestartSec` and then read the container rather than
 the unit.
+
+### The native shape: a box that runs the binary
+
+A server runs the image. A **workstation** usually cannot: there may be no
+container engine on it, and the engine's world is the operator's own
+`~/.local/share/yog` rather than a mount. That box runs `yog` as a plain
+binary — and until bl-8ea9 it had no unit, no timer and no upgrade path at all,
+so its engine was whatever somebody last launched from a shell. Observed live:
+a hand-launched engine three days old, running a version twenty-nine releases
+behind, with `Linger=no` so a logout would have ended it.
+
+    make deploy-local        # seat THIS box: units, reconciler, timer, first pass
+    make deploy-status       # with no HOST: what this box runs and when it next looks
+
+**No parameter and no ssh.** `make deploy` cannot seat the box it is run on —
+a workstation is the box least likely to be running an sshd, and it cannot ssh
+to itself — so the local form is the same three acts without the hop. Every
+fact about the box is the box's own, which is why the target takes nothing:
+pointing it at a second laptop is a different checkout, not an edit, and a box
+that should stop tracking releases is one `systemctl --user disable` away with
+no file in this tree to change.
+
+**One unit name, two shapes.** `deploy-local` seats `yog.service` over whatever
+`yog.service` was, and `deploy` seats it back. A box runs one engine over one
+world; two units converging the same data root against each other is the
+failure the single name prevents.
+
+| what | where it lands |
+|---|---|
+| `scripts/deploy/yog-local.service` | `~/.config/systemd/user/yog.service` — `ExecStart=%h/.local/bin/yog`, `Restart=always`, five failures in five minutes then `failed` |
+| `scripts/deploy/local-reconcile.sh` | `~/.local/bin/yog-reconcile` |
+| `scripts/deploy/yog-local-reconcile.service` | `~/.config/systemd/user/yog-reconcile.service` — oneshot, `Nice=19`, idle IO and CPU |
+| `scripts/deploy/yog-local-reconcile.timer` | `~/.config/systemd/user/yog-reconcile.timer` — hourly, `Persistent=true` |
+
+Nothing is compiled by the seating and nothing is carried onto the box: it
+installs from crates.io on its own schedule from then on. That is the
+difference from `make deploy`, where the image is the unit of install and a
+human carries it; a native box's unit of install is a **published version**,
+and the registry already serves it.
+
+**What one pass does.** Read the newest live version off the crates.io sparse
+index; if it differs from what `~/.local/bin/yog --version` says, `cargo install
+yog --root ~/.local --locked --version <v> --force`. Then decide whether to
+restart, from four facts and one rule — *the engine should be running the
+newest live version, unless a turn is in flight or the operator stopped it*:
+
+- **the unit is `inactive`** — stopped on purpose, not ours to move. Installs,
+  restarts nothing.
+- **the unit is `failed`** — no turn to protect, and no point retrying the
+  version that just failed. A version it has NOT run is the one useful act, so
+  it restarts on one. With the yank lever below that closes the loop: a release
+  that crashes on boot is recovered by yanking it, with nobody logging in.
+- **the running engine already IS the installed binary** — nothing to do. This
+  is read as a kernel fact (`/proc/<pid>/exe`'s inode against the installed
+  file's) rather than a flag anybody writes, and it is why a hand-restart or a
+  hand-install needs no reconciling.
+- **a turn is in flight** — defer. The read is the §8.5 boundary's, put to the
+  running engine's own binary: `{"op":"workspaces"}`, with any `"running":true`
+  or any `stale` note deferring. A deferral is a correct steady state, so it is
+  silent-ish and unbounded: the timer is the retry cadence, there is no
+  sleep-and-look-again, and **a turn is never killed to make room for an
+  upgrade**.
+- **anything unreadable** — defer. A fact we could not read is never grounds for
+  killing a turn we cannot see.
+
+**A yank is the rollback lever**, and it is the whole of the rollback story on
+this shape. Yanked versions are filtered *here* rather than left to cargo, so
+yanking a bad release makes the previous one newest-live; the next tick sees it
+differ from what is installed and puts it back, with nobody logging in. That is
+why the install passes an explicit `--version` with `--force` — `cargo install`
+refuses to go backwards otherwise. (The container shape records `YOG_REFUSED`
+instead, because an image tag cannot be yanked.)
+
+**`make deploy-selftest` is the regression half and runs in `make lint`.** It
+drives the real reconciler under a fake `curl`, `cargo` and `systemctl` in a
+scratch `HOME`, both directions: half the cases assert an install or a restart
+happened *and with exactly which arguments*, and half assert `cargo` was never
+invoked or the unit was never touched. A reconciler that installs on every tick
+and one that has quietly stopped are both broken, and only one of them is loud.
+The decision itself is a pure function with its own table
+(`scripts/deploy/local-reconcile.sh --self-test`), because the restart arms need
+a live `/proc/<pid>/exe` that no fake world can offer.
 
 ### The image
 

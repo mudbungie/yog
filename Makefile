@@ -85,6 +85,7 @@ coverage:
 lint:
 	$(MAKE) line-cap
 	$(MAKE) beat-audit
+	$(MAKE) deploy-selftest
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
 	$(MAKE) rules-audit
@@ -394,6 +395,31 @@ deploy:
 	@[ -n "$(HOST)" ] || { echo "usage: make deploy HOST=<ssh-host>" >&2; exit 2; }
 	@scripts/deploy/seat.sh "$(HOST)"
 
+# The NATIVE shape of the same deployment (bl-8ea9): seat THIS box on the binary
+# unit and the crates.io reconciler. No ssh, no image and no container engine —
+# `deploy` above is the server recipe and cannot seat the box it is run on,
+# because the box most likely to run a native engine is a workstation, which is
+# the box least likely to be running an sshd and cannot ssh to itself.
+#
+# It takes no parameter, and that is the severability test passing: every fact
+# about the box is the box's own, so pointing this at a second laptop is a
+# different checkout, not an edit, and a box that should stop tracking releases
+# is one `systemctl --user disable` away with no file here to change.
+#
+# **The unit name is single on purpose.** This seats `yog.service` over whatever
+# `yog.service` was, because a box runs one engine over one world; re-running
+# `deploy` is how a box goes back to the container shape. `scripts/deploy/local.sh`
+# carries the reasoning.
+deploy-local:
+	@scripts/deploy/local.sh
+
+# The reconciler's regression half, in the gate: it drives the real
+# `local-reconcile.sh` under a fake curl, cargo and systemctl, both directions,
+# and needs no network, no toolchain, no release and no box. Seconds, so it sits
+# up beside `beat-audit` at the head of `lint`.
+deploy-selftest:
+	@scripts/deploy/local-selftest.sh
+
 # What that server is running right now: the unit, and the immutable tag it was
 # pointed at — the box's own answer to "what version is this".
 #
@@ -401,9 +427,19 @@ deploy:
 # next fire, and any `YOG_REFUSED` line, which is the one state that makes a box
 # stop moving forward on purpose. A refusal that only a `journalctl` reader ever
 # sees is a refusal nobody sees.
+# With no HOST it answers for THIS box, which is the native shape's only door:
+# there is no ssh hop to take. A native box has no `deploy.env` and no image tag
+# — the installed binary's own `--version` is what it is running — so the two
+# forms print the box's version from the one place each shape stores it.
 deploy-status:
-	@[ -n "$(HOST)" ] || { echo "usage: make deploy-status HOST=<ssh-host>" >&2; exit 2; }
-	@ssh "$(HOST)" 'systemctl --user --no-pager --lines=0 status yog.service; \
+	@if [ -z "$(HOST)" ]; then \
+	  systemctl --user --no-pager --lines=0 status yog.service; \
+	  echo; "$(INSTALL_BIN)/yog" --version 2>/dev/null; \
+	  echo; systemctl --user --no-pager list-timers yog-reconcile.timer; \
+	  echo; journalctl --user -u yog.service --no-pager -n 15; \
+	  exit 0; \
+	fi; \
+	ssh "$(HOST)" 'systemctl --user --no-pager --lines=0 status yog.service; \
 	  echo; grep -E "^YOG_(IMAGE|REFUSED)=" "$$HOME/.config/yog/deploy.env" 2>/dev/null; \
 	  echo; systemctl --user --no-pager list-timers yog-reconcile.timer 2>/dev/null; \
 	  echo; journalctl --user -u yog.service --no-pager -n 15'

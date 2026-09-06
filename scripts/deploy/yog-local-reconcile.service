@@ -1,0 +1,43 @@
+# The unattended reconcile pass on a NATIVE box (bl-8ea9) — one run of
+# `scripts/deploy/local-reconcile.sh`, which `local.sh` installs at
+# `%h/.local/bin/yog-reconcile`. The timer beside this file is the cadence; this
+# unit is one question asked once. It is seated AS `yog-reconcile.service`,
+# beside the `yog.service` `yog-local.service` becomes.
+#
+# It is a separate file from the container shape's `yog-reconcile.service`
+# rather than a drop-in over it, because the two differ in every field that
+# matters — what they need on PATH, what they may not require, and how long a
+# pass may lawfully take — and a shared unit carrying both sets of answers would
+# be a unit that states neither box's.
+#
+# **`Type=oneshot` and no `Restart=`.** A pass that fails has answered; the unit
+# is left in `failed`, which is where an operator sees it:
+# `systemctl --user list-units --failed`.
+[Unit]
+Description=yog engine reconcile (unattended CD)
+Documentation=https://github.com/mudbungie/yog
+# It dials the registry, so it needs the network — and it must not race the
+# engine it is about to ask a question of.
+After=network-online.target yog.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/yog-reconcile
+# **The build is the long pole**, and it runs on this box's own cores: a native
+# reconcile is a `cargo install` of the whole engine, not a registry pull. The
+# container shape's ten minutes is the wrong bound here — a cold first build is
+# minutes and a cold-cache one on a laptop can be many. Long enough for that,
+# short enough that a wedged pass does not hold the box out forever.
+TimeoutStartSec=45min
+# `cargo`, the `cc` a build shells to, the linker, `curl`, `systemctl`, and the
+# install root the reconciler writes and reads.
+Environment=PATH=%h/.local/bin:%h/.cargo/bin:/usr/local/bin:/usr/bin:/bin
+# **This box may be somebody's desktop and they may be using it.** A background
+# build that makes the machine unpleasant to type on is worse than a slow one:
+# it gets the timer switched off, and a switched-off timer is no CD at all. It
+# must also never outrank the engine it is building for — the whole point of the
+# box is the agents already running on it.
+Nice=19
+IOSchedulingClass=idle
+CPUSchedulingPolicy=idle
