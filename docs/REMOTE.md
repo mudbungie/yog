@@ -993,6 +993,39 @@ is not this — it is §5.2, and it is built on this read.
 
 ### 5.2 The tool, the load, and the client's own config (bl-c907)
 
+**`clients` is granted, not injected beside the grant** (bl-52b7, round-1
+triage ruling 3: *a grant is a grant*). litany's grant gate permits a name that
+is in the role's `providers.yaml` `tools:` grant **or** injected by the host —
+so a host that declares unconditionally is a host that grants unconditionally,
+and every role's grant was silently widened by whatever any enrolled machine
+advertised. Measured, and it is the worst case rather than a corner: a
+**compactor**, whose grant is empty in litany's own template and whose
+deletion-only confinement its `docs/PRINCIPLES.md` states as a guarantee, was
+correctly refused `bash` by that gate, then called `clients {"op":"load"}` and
+made thirty arbitrary shell calls on an enrolled machine inside the engine's
+own git worktrees. The empty grant bought nothing.
+
+So yog's injection now declares **nothing at all** — `clients` and the loaded
+set alike — unless the calling agent's role is granted `clients`. The loaded
+set rides the same answer because loading is the act `clients` exists to
+perform: a role that may not load may not keep what a load left behind. The two
+facts it reads have one home each and yog stores neither: the **role** is
+litany's dispatch commit subject (its ARCH §2.5), and the **grant** is
+`roles.<role>.tools` in the `providers.yaml` of the config that governs the
+agent, read through §9.4's own block grammar. Every unreadable fact answers
+*granted nothing*.
+
+**The operator consequence, stated because it is not automatic.** litany's
+shipped template grants the worker the whole tool pool and the pool does not
+contain `clients` — it is yog's tool, not litany's. A conversation that should
+drive its machines through the roster therefore needs one line of its
+workspace's `providers.yaml`: `tools: [… , clients]`, written through the §9.4
+picker or the §9.3 raw editor. Nothing yog does re-adds it, deliberately: a
+fixed point that put `clients` back at every start would be the unconditional
+injection again, wearing a config file. The **worktree lane** (§5.4) is
+unaffected — it routes a name the role was *already* granted, which is the
+distinction the whole ruling turns on.
+
 **One tool, named `clients`, four ops.** Its subject is the roster, which is
 why it is one tool rather than one per op — and why loaded remote tools still
 surface as individually named definitions of their own. litany's

@@ -74,3 +74,52 @@ pub(crate) fn seed_workspace_lineage(workspace: &Path, name: &str) {
     .unwrap();
     assert!(status.success(), "git branch {branch}");
 }
+
+/// Fork an **agent branch** off `config/default` carrying litany's own
+/// founding subject (its ARCH §2.5): `dispatch: <role> [<agent>]` for a child,
+/// and the root's `step 001: dispatch [<agent>]` when `role` is `None` — the
+/// one home an agent's role is derived from, and therefore what
+/// [`crate::tool_host::grant`] reads.
+pub(crate) fn seed_agent_branch(workspace: &Path, agent: &str, role: Option<&str>) {
+    let repo = workspace.join("repo.git").display().to_string();
+    let tree = workspace.join("agents").join(agent);
+    let tree_s = tree.display().to_string();
+    // The **branch**, which is `agents/<id>` and not the bare id (litany ARCH
+    // §2.3, and what `git for-each-ref` shows on a live workspace).
+    let branch = format!("agents/{agent}");
+    let subject = match role {
+        Some(role) => format!("dispatch: {role} [{agent}]"),
+        None => format!("step 001: dispatch [{agent}]"),
+    };
+    let run = |args: &[&str]| {
+        let status = crate::git_env::status(crate::git_env::git().args(args)).unwrap();
+        assert!(status.success(), "git {args:?}");
+    };
+    run(&[
+        "-C",
+        &repo,
+        "worktree",
+        "add",
+        "-q",
+        "-b",
+        &branch,
+        &tree_s,
+        "config/default",
+    ]);
+    std::fs::write(tree.join("goal.md"), "g").unwrap();
+    run(&["-C", &tree_s, "add", "-A"]);
+    run(&[
+        "-C",
+        &tree_s,
+        "-c",
+        "user.email=t@t.local",
+        "-c",
+        "user.name=T",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "-m",
+        &subject,
+    ]);
+}

@@ -22,8 +22,10 @@ use std::path::Path;
 
 /// The `refs/heads/` prefix every agent branch carries (ARCH §2.3) — the branch
 /// name minus this prefix is the agent id, the same strip
-/// [`enumerate`](super::enumerate) makes.
-const AGENT_REF_PREFIX: &str = "agents/";
+/// [`enumerate`](super::enumerate) makes. `pub(crate)` since bl-52b7: the
+/// §5.2 grant read addresses an agent's **branch**, and a second spelling of
+/// this prefix is exactly the drift that would make it read the wrong role.
+pub(crate) const AGENT_REF_PREFIX: &str = "agents/";
 
 /// Every living agent in `workspace`, as `(id, stored name)` — the `agents/*`
 /// enumeration with each ref's own [`ref_name`] blob read out of it. The

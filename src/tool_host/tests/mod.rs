@@ -85,13 +85,29 @@ fn an_answer_is_dated_at_the_instant_it_was_read() {
     assert_eq!(s.observed(), "2026-08-02 00:24:26Z");
 }
 
-/// The `clients` tool is in the prefix always, and it is the whole prefix for
-/// an agent with no loads — a fresh conversation's shape, whatever verb fired
-/// its driver (bl-fd24).
+/// A workspace whose `config/default` grants the worker `tools` and whose one
+/// agent branch carries litany's founding subject — what [`grant`] reads. The
+/// leaf is `home`, which is the key the loaded set is written under.
+fn granted(root: &Path, tools: &str) -> PathBuf {
+    let workspace = root.join("home");
+    crate::test_support::workspace::seed_workspace_config(
+        &workspace,
+        &[(
+            "providers.yaml",
+            &format!("roles:\n  worker:\n    provider: p\n    model: m\n    tools: [{tools}]\n"),
+        )],
+    );
+    crate::test_support::workspace::seed_agent_branch(&workspace, "dulcet-mongoose", None);
+    workspace
+}
+
+/// The `clients` tool is the whole prefix for a granted agent with no loads —
+/// a fresh conversation's shape, whatever verb fired its driver (bl-fd24).
 #[test]
-fn the_clients_tool_is_declared_on_every_request() {
+fn the_clients_tool_is_declared_for_a_role_granted_it() {
     let root = TempDir::new().expect("tmp");
-    let declared = injection(root.path()).tools(Path::new("/w/home"), "dulcet-mongoose");
+    let workspace = granted(root.path(), "bash, clients");
+    let declared = injection(root.path()).tools(&workspace, "dulcet-mongoose");
     assert_eq!(declared.len(), 1);
     assert_eq!(declared[0].name, clients::NAME);
     assert_eq!(
@@ -101,11 +117,50 @@ fn the_clients_tool_is_declared_on_every_request() {
     assert_eq!(declared[0].input_schema, clients::schema());
 }
 
+/// **Nothing at all for a role whose grant does not name `clients`**
+/// (bl-52b7): litany permits what a host declares, so a declaration for an
+/// ungranted role IS a grant. The loaded set goes with it — loading is the act
+/// `clients` exists to perform, and a role that may not load may not keep what
+/// a load left behind.
+#[test]
+fn a_role_without_the_roster_in_its_grant_is_declared_nothing() {
+    let root = TempDir::new().expect("tmp");
+    let workspace = granted(root.path(), "apply_patch, bash, read_file");
+    loaded::add(
+        root.path(),
+        "home",
+        "dulcet-mongoose",
+        &[loaded::Entry {
+            client: "laptop".to_owned(),
+            tool: tool("Bash"),
+        }],
+    )
+    .expect("loaded");
+    assert!(
+        injection(root.path())
+            .tools(&workspace, "dulcet-mongoose")
+            .is_empty()
+    );
+    // …and the compactor of the ball's own drive, whose row declares no
+    // `tools:` line at all: an empty grant is empty.
+    crate::test_support::workspace::seed_agent_branch(
+        &workspace,
+        "dulcet-mongoose-1",
+        Some("compactor"),
+    );
+    assert!(
+        injection(root.path())
+            .tools(&workspace, "dulcet-mongoose-1")
+            .is_empty()
+    );
+}
+
 /// A loaded tool is declared **individually named**, carrying the definition
 /// frozen at the load act — never a multiplexer, and never an engine read.
 #[test]
 fn a_loaded_tool_is_declared_under_its_own_name() {
     let root = TempDir::new().expect("tmp");
+    let workspace = granted(root.path(), "clients");
     loaded::add(
         root.path(),
         "home",
@@ -117,7 +172,7 @@ fn a_loaded_tool_is_declared_under_its_own_name() {
     )
     .expect("loaded");
 
-    let declared = injection(root.path()).tools(Path::new("/w/home"), "dulcet-mongoose");
+    let declared = injection(root.path()).tools(&workspace, "dulcet-mongoose");
     assert_eq!(
         declared.iter().map(|t| t.name.clone()).collect::<Vec<_>>(),
         vec![clients::NAME.to_owned(), "laptop_Bash".to_owned()]

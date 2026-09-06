@@ -88,6 +88,18 @@ fn perform_maps_each_outcome_to_its_exit() {
 fn the_minting_verb_and_the_naming_verb_declare_one_set() {
     use ::litany::cmd::ToolInjection as _;
     let root = tempfile::TempDir::new().expect("tmp");
+    // A granted workspace, because the grant is the gate on the whole
+    // injection since bl-52b7 — the fact under test here is the *agent*, and
+    // it is only visible for a role the roster is granted to.
+    let workspace = root.path().join("home");
+    crate::test_support::workspace::seed_workspace_config(
+        &workspace,
+        &[(
+            "providers.yaml",
+            "roles:\n  worker:\n    provider: p\n    model: m\n    tools: [clients]\n",
+        )],
+    );
+    crate::test_support::workspace::seed_agent_branch(&workspace, "dulcet-mongoose", None);
     crate::tool_host::loaded::add(
         root.path(),
         "home",
@@ -111,7 +123,7 @@ fn the_minting_verb_and_the_naming_verb_declare_one_set() {
         std::sync::Arc::new(SystemClock),
     );
     let names: Vec<String> = injection
-        .tools(Path::new("/w/home"), "dulcet-mongoose")
+        .tools(&workspace, "dulcet-mongoose")
         .into_iter()
         .map(|t| t.name)
         .collect();

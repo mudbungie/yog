@@ -10,8 +10,9 @@
 //! every invocation the agent makes, and no binary resolution stands behind it.
 //! yog fills it with:
 //!
-//! - [`clients`] — ONE tool in the stable prefix, always. Its subject is the
-//!   roster, and `load` is the act that makes a host's tools callable.
+//! - [`clients`] — ONE tool in the stable prefix, **for a role whose grant
+//!   names it** (bl-52b7). Its subject is the roster, and `load` is the act
+//!   that makes a host's tools callable.
 //! - [`loaded`] — the agent's durable loaded set, read at every assembly, each
 //!   entry surfacing as an **individually named** tool. Never a multiplexer:
 //!   litany's `docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too, so the
@@ -47,6 +48,16 @@
 //! invocation is judged exactly as a local one — and litany is honest that what
 //! happens on the far machine is beyond the adjudicator's reach (REMOTE §5).
 //!
+//! **The injection is inside the grant, not beside it** (round-1 triage ruling
+//! 3, bl-52b7). litany's gate permits `grant ∪ injected`, so a host that
+//! declares unconditionally is a host that grants unconditionally: a compactor
+//! — empty grant, deletion-only confinement stated as a guarantee — was
+//! correctly refused `bash` by that gate and then loaded a foot's `bash`
+//! through `clients` and ran thirty shell commands with it. So this injection
+//! declares **nothing at all** unless the calling agent's role is granted
+//! `clients` in `providers.yaml` ([`grant`]); an empty grant is empty, and the
+//! loaded set goes with it, because loading is what `clients` is for.
+//!
 //! **A loaded remote name runs where it lives** (REMOTE §9 step 7, bl-024b).
 //! [`remote`] is the driver's end of the routing leg: two ordinary gestures
 //! through the same inbox door — one that queues the call in the engine's
@@ -70,6 +81,9 @@ pub mod ask;
 pub mod clients;
 /// The compactor's procedure pair, performed as engine acts.
 pub mod engine_act;
+/// The calling role's `providers.yaml` grant — the gate on this whole
+/// injection since bl-52b7.
+pub mod grant;
 /// The agent's durable loaded set.
 pub mod loaded;
 /// The driver's end of the routing leg (REMOTE §5, bl-024b).
@@ -206,8 +220,10 @@ fn routed(site: &Site, entry: &loaded::Entry, call: &RoutedCall<'_>) -> RoutedCa
 }
 
 impl ToolInjection for Injection {
-    /// The `clients` tool, always, plus this agent's loaded set — read off
-    /// disk, so assembly never waits on an engine and never varies with one.
+    /// The `clients` tool plus this agent's loaded set, for a role whose
+    /// grant names `clients` (bl-52b7) — and nothing at all for one whose does
+    /// not. Read off disk, so assembly never waits on an engine and never
+    /// varies with one.
     ///
     /// **The driven agent is the seam's own fact since litany bl-ddaa**
     /// (yog bl-fd24): assembly asks *for* an agent, and the answer is that
@@ -218,6 +234,16 @@ impl ToolInjection for Injection {
     /// minting verb, and the conversation's whole first driver could load
     /// but never call.
     fn tools(&self, workspace: &Path, agent: &str) -> Vec<InjectedTool> {
+        // **The grant is the gate on the whole injection** (bl-52b7). litany
+        // permits what a host declares, so declaring for a role that was not
+        // granted `clients` is granting it — and the loaded set rides the same
+        // answer, because loading is the act `clients` exists to perform.
+        if !grant::of(workspace, agent)
+            .iter()
+            .any(|t| t == clients::NAME)
+        {
+            return Vec::new();
+        }
         let mut out = vec![declaration()];
         out.extend(
             loaded::read(&self.state_root, &crate::naming::leaf(workspace), agent)
