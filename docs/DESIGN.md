@@ -2315,6 +2315,16 @@ staging dirs by `config_edit::branch::edit::sweep_staging`. The sweep takes only
 a regular file whose name yog itself would have written, directly in one of
 those directories: never a directory, never a symlink, never a walk.
 
+One more yog-owned file exists and holds **no content at all**: the world's
+engine lock, `$XDG_STATE_HOME/yog/engine.lock` (§8.5, bl-1d9b). Its bytes are
+never read and there are none; what is durable is the *advisory lock* a booting
+engine takes on it, and the fact that fact carries — *one world has one engine*
+— lives in the kernel and dies with the process holding it, however it dies.
+Deleting the file while an engine runs loses nothing and excludes nothing (the
+lock rides the open descriptor, not the name); deleting it while none runs is
+the same as it never having existed. It is listed here because it is a file yog
+writes, not because anything about it survives yog.
+
 One more *class* of yog-owned file exists and is deliberately **not state**: the
 world's tool shims, `<yog-data-root>/world/tools/<name>`, one per
 `world::tools::ROSTER` entry (§16.7 W9's `bl`, extended to all three agent tools
@@ -4996,6 +5006,39 @@ rejects. That is also why a bare `yog` from inside an agent seat is refused
 the word that used to open a window on the operator's desktop now founds a rival
 engine on the world the agent is already speaking to.
 
+**It was an assumption until bl-1d9b, and now it is enforced.** Nothing checked
+it: a second `yog` on a held world printed its bind refusal and carried on
+without a listener, still draining the world's `gestures/` inbox and still
+holding its own `registry::mailbox` — its own `seq`, its own `live` map, its own
+presence map. Two consumers of one inbox are two mailboxes minting into one
+`inv-N` namespace, so a routed tool call was answered *"no invocation is in
+flight"* when the handle missed and handed back **another invocation's capture**
+when it collided; a model reasoned on a result belonging to a different question
+and caught it only because it had added an echo marker. Presence forked the same
+way, one engine saying "not connected right now" while the other said
+"connected right now", both reaching one conversation.
+
+So a boot **refuses**, twice over, and exits non-zero (`Engine::serve`'s
+`NO_ENGINE`):
+
+- **The world is claimed first** (`src/engine/sole.rs`): an advisory lock on
+  `$XDG_STATE_HOME/yog/engine.lock`, taken before the sweep and before any
+  thread, released by the `Engine`'s drop. It is a **lock and not the bind**
+  because the bind cannot carry this: a self-provisioned box requests
+  `127.0.0.1:0` — deliberately, so two engines in two *worlds* never contend for
+  a process-global port (REMOTE §8, bl-dc14) — and two `:0` binds both succeed.
+  Minting a concrete port instead would make the bind exclusive at the cost of
+  putting a listener in the ephemeral range, where a boot that finds its own
+  port taken by an outbound connection is an engine that will not start for a
+  reason no operator can see.
+- **The listener is not optional** (§8.5's wire clause, above): a yog that
+  cannot bind is not an engine, so the refusal names the address and the process
+  exits. The listener is asked for *before* the gesture consumer is spawned, so
+  a boot that will refuse has consumed nothing.
+
+Neither is a new signal, a flag or a config key: one is the world, the other is
+the address, and both already existed.
+
 Before `engine.rs`, `main.rs` carried the assembly **twice**, in the one file
 `tarpaulin.toml` excludes, so the copies were free to drift and no test could
 notice; `src/engine/tests.rs` boots an engine into a hermetic world and reads a
@@ -7438,6 +7481,7 @@ that named one of its files; the rule it taught is not.)
 | `src/elide.rs` | **where to cut a string that will not fit** (QUALITY G1, L4; bl-3aa1) — one rule, *cut where the information is not*. Prose is written front-first and keeps its head, so the eight prose sites (previews, reasons, titles) are correct as they stand and are deliberately NOT routed here — a module claiming every cut while they kept their own would be a false claim. A **machine string** (absolute path, spawned `argv`, ancestry chain) is invariant at the front and distinguishing at the back, and that is `middle`'s case and the only one: the activity rows all opened with the same `/home/<user>/.cache/…/data/yog/` run, over half the row, while the workspace leaf and agent id that told two operations apart were exactly what the old head-keeping cut discarded. Carries a legibility FLOOR a tighter cap is raised to, since `…e` names nothing. The other half of L4 — an **id**, whose distinguishing end is a whole terminal segment rather than a character count — is a floor and not a cut, and keeps its one home in `nav::convs::id_floor` (bl-63a1) |
 | `src/engine.rs` | **the one assembly a bare `yog` boots** (VISION §5 V5, bl-f6fe): the §5.2 startup sweep, the §7.1 roots, the model's first synchronous derivation, and the derivation worker + watch bridge + gesture consumer + VISION §4.9 monitor sentry + VISION §4.3 fleet pilot spawned beside it (bl-8da1, bl-66fb — each is a fact of the world, so none rode a face even when there were two). It left `main.rs` precisely because that file is coverage-excluded and carried the assembly twice. Since bl-7942 it hands a face nothing at all: the four channel ends it used to mint for a window — the read path, one per §8.2 entry, the follow lane's and the act path's — went with the window, and what a seat gets is a socket (`src/wire/server.rs`) |
 | `src/engine/serve.rs` | **the windowless face, whole** (§8.5, bl-269a): `Engine::serve` — seed the world's §8.4 tool shims, catch the §8.5 stop before the engine exists, boot, park, come back stopped. It left `main.rs` for that file's own standing reason (it is coverage-excluded, so what lives there drifts unwatched), and what had kept it there was that it never returned: a face that parks forever is not a function a test can drive. The stop is what dissolved that, so the whole headless face is now under test and `main.rs`'s arm is one call |
+| `src/engine/sole.rs` | **one world has one engine** (§8.5, bl-1d9b): the advisory lock a boot takes on `<yog-state-root>/engine.lock` before it consumes anything, held by the `Engine` and released by its drop. It is a lock and not the bind because a self-provisioned box's `wire/address` says `127.0.0.1:0` (bl-dc14, so two engines in two *worlds* never contend for a process-global port) and two `:0` binds both succeed; recording a concrete port at mint time would put a listener in the ephemeral range, where a boot that finds its own port taken is an engine that will not start for a reason no operator can see. It is a lock and not a pid file because an open file description is released by the kernel however the process ends — no stale record, no liveness probe, no reused pid. The one window it cannot close is fork-to-exec, which can delay a next engine and never admit a second |
 | `src/engine/stop.rs` | **what a SIGTERM means to a running yog** (§8.5, bl-269a): the disposition catch, the process-wide flag, and `Engine::park_until_stopped` — which takes the engine BY VALUE, so returning from the loop and dropping the engine are one act and parking-without-dropping cannot be written. Almost entirely a subtraction: dropping the engine already stops and joins every thread (§7.2) and SIGTERMs every piped child (`Stream`'s drop), so nothing here drains, orchestrates or waits on its own account, and nothing here bounds — `yog.service`'s `TimeoutStopSec` is the bound |
 | `src/fan/{mod,cohort,delivery,retention,spread}.rs` | the §3.8 **mutating fan** (VISION §4.10, bl-8746) and its V3 resolution (bl-c2bd): `mod` the family's own `Verb` — the three gestures the boundary carries as one `Action::Fan`, folded there in bl-a33d beside `monitor::Verb` and `fleet::Verb` and for their reasons — the obligation and the one route from a handle back to a live attempt, a thin in-process consumer of balls' attempt capability, which owns every name and path here; `spread` the materializing half, split out at §12's budget when the delivery arm arrived — open N candidates, prove one fan's members share one base, rebind a prepared start once per candidate; `delivery` **Deliver candidate** (VISION V3.2) — balls' one delivery law spent by handle, and `delivered_commit`, the derived acceptance mark read off the target's own `[<handle>]`-tagged history, stored nowhere; `cohort` the membership fold, derived from yog's own fire rows and never from the agent-writable `cd` mark; `retention` the one severable `cadence.yaml` policy that turns a released candidate into a discarded one, absent meaning never discard |
 | `src/files_view/{mod,wire}.rs` | agent-worktree bounded walk + file preview (§11 Files); `classify` is the one "what this file is" fold — bytes + true size ⇒ `Text`/`Truncated`/`Binary` — shared by the live walk, the pinned `git show` (§5.1 #31) and the Work tab's patch (#32), so three seats never grow three vocabularies. `wire` is the §8.5 spelling of the tab — since bl-1015 carrying the conversation's `working_dir` when the work lands somewhere the listing does not reach, present exactly when there is somewhere else to name — *and* the one home of `preview_value`/`preview_of`, which the work diff's patch codec reads rather than keeping a second wording of a bounded file (bl-6233, both directions since bl-7067) |
@@ -7520,7 +7564,7 @@ that named one of its files; the rule it taught is not.)
 | `src/ui_state/{prices,ceiling}.rs` | the §4.1 `prices` object: the §3.5 price table's one read, forgiving and setter-free; the §4.1 `ceiling` number beside it, read the same way — absent is no gate (bl-56d5) |
 | `src/ui_state/prune.rs` | the §3.6 prunes: a deleted workspace's keys; a deleted conversation subtree's `seen` watermarks (bl-f17a) |
 | `src/watch/mod.rs` | WatchSet reconcile and the ingest bridge thread (§7). The wake-the-face effect it used to carry beside them went with the face (bl-7942): there is nothing in this process to wake, and a seat asks on `wire::ASK_PERIOD` |
-| `src/wire.rs` | the REMOTE §9.5 client/server wire (bl-b6fa) — the module root's one function is bringing a booting engine's listener up, and since bl-ae05 it **founds its own material first**: absence stopped being the off switch the day REMOTE §1.2's window became a client of this listener, so an unprovisioned box mints a loopback trust root rather than answering nothing. Half-provisioned material the mint cannot heal still refuses, because silently degrading to no encryption is the one failure the split excludes — and since bl-dc14 every refusal here is a *returned sentence*, said on stderr by the boot: a bind another process beat it to, or a mint this box cannot perform, leaves the engine running without a wire — every deposit still converges, and only a seat is shut out |
+| `src/wire.rs` | the REMOTE §9.5 client/server wire (bl-b6fa) — the module root's one function is bringing a booting engine's listener up, and since bl-ae05 it **founds its own material first**: absence stopped being the off switch the day REMOTE §1.2's window became a client of this listener, so an unprovisioned box mints a loopback trust root rather than answering nothing. Half-provisioned material the mint cannot heal still refuses, because silently degrading to no encryption is the one failure the split excludes — and since bl-dc14 every refusal here is a *returned sentence*, said on stderr by the boot: a bind another process beat it to, or a mint this box cannot perform. Since bl-1d9b that sentence is also **fatal** — the boot returns it and `Engine::serve` exits `NO_ENGINE` — because the window that justified running on without a wire left with bl-7942, and what remains of a wire-less yog is a process that answers no seat and drains the world's gesture inbox |
 | `src/wire/frame.rs` | the framing bl-b6fa decided and REMOTE §3/§10 record: a big-endian `u32` length then that many bytes of JSON, a zero-length frame ending a reply stream, and one bound on what a peer may make a reader allocate. Every answer is a stream, so a follow-class read is the general path with more frames rather than a second form |
 | `src/wire/hello.rs` | the wire's **version preface** (REMOTE §3, §12; bl-a670): each end writes one frame stating its protocol version before it reads the peer's, so neither waits on the other and a skew is nameable from whichever side notices. A mismatch is fail-closed — the engine refuses in band on the connection the peer opened, the seat refuses to its caller as the one `Err(String)` every transport failure already arrives as, and both say the same sentence naming BOTH versions, because with four separately installed components (REMOTE §12) the refusal IS the upgrade prompt. No negotiation, no capability probe, no compat shim, and no change to the request frame: the preface rides beside the gesture envelope, so the frame the wire carries is still byte for byte the frame the `gestures/` inbox carries. ALPN would have cost no frame and refused inside rustls, but a TLS alert cannot name a version — which is the requirement |
 | `src/wire/intake.rs` | the wire's half of the ONE intake (REMOTE §3): a request frame handed straight to the deposit consumer's own context, so the listener reaches the same codec and the same `dispatch`/`answer` the inbox does — which is why the wire can add no verb |

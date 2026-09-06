@@ -50,13 +50,17 @@ fn an_unprovisioned_box_founds_its_own_loopback_wire() {
     }
 }
 
-/// **Two engines on one box each get their own wire** (I0, bl-dc14): the
-/// default request is `:0`, so a second listener — a second world, or a second
-/// window on this one — binds its own kernel-chosen port instead of losing a
-/// race for a process-global one. Same world here, which is the harder case:
-/// one address file, two live listeners, two distinct ports.
+/// **Two listeners on one box each get their own port** (I0, bl-dc14): the
+/// default request is `:0`, so a second listener — the ordinary case being a
+/// second *world* — binds its own kernel-chosen port instead of losing a race
+/// for a process-global one. Two listeners on ONE world is spelled here because
+/// it is the harder case for this property (one address file, two live
+/// listeners, two distinct ports) and **not** because it is a lawful
+/// arrangement: two engines on one world is refused a rung up, by the world's
+/// own lock (`engine::sole`, bl-1d9b), which exists precisely because this
+/// property means the bind can never be that exclusion.
 #[test]
-fn two_engines_on_one_box_each_get_their_own_wire() {
+fn two_listeners_on_one_box_each_get_their_own_port() {
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let first = listen(&world, Arc::new(Silent), Presence::default()).expect("the first wire");
@@ -88,11 +92,13 @@ fn a_stated_port_another_process_holds_is_a_refusal_that_names_it() {
     assert!(refusal.contains(&format!("bind {held}")), "{refusal}");
 }
 
-/// A box whose material directory cannot even be MADE keeps its engine and
-/// says why: the mint is a capability, and a box without `openssl` or without a
-/// writable data root is the one place absence is still the answer.
+/// A box whose material directory cannot even be MADE is told why, in a
+/// sentence naming the cause: the mint is a capability, and a box without
+/// `openssl` or without a writable data root cannot have a wire. What the
+/// engine then does with that sentence is `Engine::boot`'s — since bl-1d9b it
+/// refuses and exits, a yog with no listener being no engine at all.
 #[test]
-fn a_box_the_mint_cannot_provision_keeps_its_engine() {
+fn a_box_the_mint_cannot_provision_is_told_why() {
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);
@@ -144,10 +150,11 @@ fn a_half_provisioned_box_the_mint_cannot_heal_does_not_listen() {
     assert!(refusal.contains("half-provisioned"), "{refusal}");
 }
 
-/// An engine that cannot bind carries on without a wire: a listener is a
-/// capability, and losing it is not losing the engine.
+/// An address no socket can take is a refusal, returned. The consequence is the
+/// boot's — fatal since bl-1d9b — and this asserts only the half that is this
+/// module's: the sentence exists and names the bind.
 #[test]
-fn an_unbindable_address_leaves_the_engine_running() {
+fn an_unbindable_address_refuses() {
     let tmp = TempDir::new().expect("tmp");
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);

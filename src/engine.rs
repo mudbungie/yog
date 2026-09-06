@@ -22,6 +22,9 @@
 /// **The windowless face, whole** (§8.5) — `yog serve`, which left `main.rs`
 /// for that file's own coverage reason once bl-269a gave its loop an exit.
 pub mod serve;
+/// **One world has one engine** (§8.5, bl-1d9b): the exclusion a boot takes
+/// before it consumes anything, and why it is a lock rather than the bind.
+pub mod sole;
 /// **What a SIGTERM means to a running yog** (§8.5, bl-269a): the catch, the
 /// flag both faces consult, and the windowless face's loop — which ends by
 /// dropping this engine, since the drop already IS the stop.
@@ -50,19 +53,36 @@ pub struct Engine {
     _bridge: Bridge,
     _worker: Worker,
     _consumer: Consumer,
-    /// The REMOTE §9.5 wire listener (bl-b6fa) — `None` only where the mint
-    /// itself failed, since bl-ae05 made an unprovisioned box found its own
-    /// loopback material rather than go without a listener. Held so it lives as
-    /// long as the engine and stops when it drops, and **read** by
-    /// [`asker`](Self::asker): the window dials the port this actually bound.
-    _wire: Option<crate::wire::server::Listener>,
+    /// The REMOTE §9.5 wire listener (bl-b6fa). **Not an `Option` since
+    /// bl-1d9b**: a yog that cannot listen is not an engine — the window that
+    /// used to justify carrying on without one left with bl-7942, so the only
+    /// thing a wire-less engine could still do was drain the world's gesture
+    /// inbox, which is the half-engine that ball is about. A refusal is fatal
+    /// and names the address. Held so it lives as long as the engine and stops
+    /// when it drops.
+    _wire: crate::wire::server::Listener,
     _sentry: Sentry,
     _pilot: Pilot,
+    /// **The world's one-engine exclusion** ([`sole`], bl-1d9b), declared last
+    /// so it is dropped last: the lock is released only once every thread above
+    /// has stopped and joined, so the next engine never overlaps this one.
+    _sole: sole::Sole,
 }
 
 impl Engine {
     /// Boot the engine into `world` (already composed, §16.2) with `overrides`
-    /// standing on every child spawn.
+    /// standing on every child spawn — **or refuse, in one sentence the caller
+    /// prints and exits on** (bl-1d9b).
+    ///
+    /// Two refusals, and each is the same statement from a different side.
+    /// [`sole::take`] is *one world has one engine*: it is taken first, before
+    /// a single gesture is consumed, so a second `yog` on a held world is
+    /// refused rather than becoming a second consumer of one inbox with a
+    /// second `inv-N` namespace behind it. [`wire::listen`](crate::wire::listen)
+    /// is *an engine listens*: since bl-7942 there is no window, so every read
+    /// and every act crosses that wire (REMOTE §1.2) and a yog without one
+    /// answers no seat at all. It is asked **before** the consumer is spawned,
+    /// so a boot that will refuse has taken nothing out of the world's inbox.
     ///
     /// The §5.2 startup sweep runs here rather than at either caller: dropping
     /// stale scratch is the *engine's* housekeeping, and its wall clock is the
@@ -71,7 +91,12 @@ impl Engine {
     /// artifacts off one clock read: the scripted-editor staging dirs, and
     /// (bl-e47c) the I3 temps left in the destination directories yog writes
     /// through — the half the doc had promised since I3 and nobody had written.
-    pub fn boot(world: &Env, overrides: &[(String, String)], clock: Arc<dyn Clock>) -> Self {
+    pub fn boot(
+        world: &Env,
+        overrides: &[(String, String)],
+        clock: Arc<dyn Clock>,
+    ) -> Result<Self, String> {
+        let sole = sole::take(&world.yog_state_root())?;
         let now_secs = clock.stamp().parse().unwrap_or(0);
         config_edit::branch::edit::sweep_staging(&world.yog_stage_root(), now_secs);
         crate::scratch::sweep(&crate::scratch::dirs(world), now_secs);
@@ -123,42 +148,41 @@ impl Engine {
             // top of it, so the credential lands in that sphere (§16.2).
             logins: crate::login::runs::Runs::of(Cli::resolve_in_world(Binary::Bz, overrides)),
         });
-        let consumer = Consumer::spawn(Arc::clone(&intake));
-        // The REMOTE §9.5 wire listener (bl-b6fa), beside the consumer and for
-        // its reason exactly: a seat must reach whichever face is up, so the
-        // channel rides the ENGINE and not a face. It is the same intake — the
-        // context above, handed to a connection instead of to a poll — so the
-        // wire adds no verb and no second dispatch. A refusal — a bind another
-        // process beat this one to, a mint this box cannot perform — is said on
-        // stderr and the engine runs on without a wire: every deposit still
-        // converges through the inbox, and only a seat is shut out. It was said
-        // twice while a window read over this same wire in process (bl-dc14);
-        // there is one face left and stderr is where it speaks.
-        let wire = match crate::wire::listen(
+        // The REMOTE §9.5 wire listener (bl-b6fa), ahead of the consumer and
+        // for the reason bl-1d9b names: a seat must reach whichever face is up,
+        // so the channel rides the ENGINE and not a face. It is the same intake
+        // — the context above, handed to a connection instead of to a poll — so
+        // the wire adds no verb and no second dispatch.
+        //
+        // **A refusal is fatal, and it is fatal here so nothing has been
+        // consumed yet** (bl-1d9b). It used to be said on stderr while the
+        // engine ran on without a wire, on the argument that every deposit
+        // still converges through the inbox and only a seat is shut out. That
+        // argument died with the window (bl-7942): the seat IS the face, so a
+        // wire-less yog is a process that answers nobody and drains the world's
+        // gesture inbox while looking healthy — which is worse than no engine,
+        // because the operator cannot see it. The refusal is returned rather
+        // than printed, since one caller owns the saying and the exit code.
+        let wire = crate::wire::listen(
             world,
-            Arc::new(crate::wire::intake::Intake::new(intake))
+            Arc::new(crate::wire::intake::Intake::new(Arc::clone(&intake)))
                 as Arc<dyn crate::wire::server::Answerer>,
             presence,
-        ) {
-            // **The engine says what it bound** (REMOTE §8, bl-e058). A `:0`
-            // in `address` is a request the kernel answers in RAM, and the
-            // in-process consumer that used to be told the answer was the
-            // window, which left with bl-7942 — so on a self-provisioned box
-            // the bound port was knowable only by asking the kernel about the
-            // process. A server announcing its endpoint is ordinary, and this
-            // is the success arm of a line the refusal already had. It is not
-            // a second address file: `address` stays the operator's *request*
-            // and its one home (bl-dc14), and this says what that request
-            // became on this boot.
-            Ok(listener) => {
-                eprintln!("yog: wire: listening on {}", listener.address());
-                Some(listener)
-            }
-            Err(reason) => {
-                eprintln!("yog: wire: {reason}");
-                None
-            }
-        };
+        )
+        .map_err(|reason| format!("wire: {reason}"))?;
+        // **The engine says what it bound** (REMOTE §8, bl-e058). A `:0` in
+        // `address` is a request the kernel answers in RAM, and the in-process
+        // consumer that used to be told the answer was the window, which left
+        // with bl-7942 — so on a self-provisioned box the bound port was
+        // knowable only by asking the kernel about the process. A server
+        // announcing its endpoint is ordinary, and this is the success arm of a
+        // line the refusal already had. It is not a second address file:
+        // `address` stays the operator's *request* and its one home (bl-dc14),
+        // and this says what that request became on this boot.
+        eprintln!("yog: wire: listening on {}", wire.address());
+        // The §8.5 gestures-inbox consumer starts only once the boot can no
+        // longer refuse: one door is open, so the other may be too.
+        let consumer = Consumer::spawn(intake);
         // The VISION §4.9 alignment monitor's level trigger. Spawned
         // unconditionally and free when unarmed: with no `cadence.yaml` monitor
         // entry a tick finds no workspace to check and makes no call. It rides
@@ -194,7 +218,7 @@ impl Engine {
             clock: pilot_clock,
             ui_path: model.ui_json_path(),
         });
-        Self {
+        Ok(Self {
             model,
             _bridge: bridge,
             _worker: worker,
@@ -202,7 +226,8 @@ impl Engine {
             _wire: wire,
             _sentry: sentry,
             _pilot: pilot,
-        }
+            _sole: sole,
+        })
     }
 }
 

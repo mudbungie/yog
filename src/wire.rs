@@ -77,12 +77,14 @@ pub const ASK_PERIOD: std::time::Duration = std::time::Duration::from_millis(500
 /// act: `address` is one fact with one home, and only an operator ever writes
 /// a host that is not loopback into it.
 ///
-/// A refusal is *returned*, never fatal — a box with no `openssl` gets the
-/// engine yog has always been. The caller owns the saying (bl-dc14): the
-/// engine's boot writes it to stderr for the windowless face and hands it to
-/// the model for the windowed one, because a window whose every read and act
-/// crosses this wire must paint the refusal, not open inert with one line on a
-/// stream a desktop launch has nowhere to show.
+/// A refusal is *returned* rather than said here, and the caller owns both the
+/// saying and the consequence (bl-dc14): the engine's boot hands it up, and
+/// `Engine::serve` prints it and **exits non-zero** (bl-1d9b). It used not to
+/// be fatal — a box with no `openssl` got the engine yog had always been — on
+/// the argument that only a seat was shut out; the window that made that true
+/// left with bl-7942, so a yog with no listener answers nobody while still
+/// draining the world's gesture inbox, which is the half-engine bl-1d9b is
+/// about.
 pub fn listen(
     world: &Env,
     answerer: Arc<dyn server::Answerer>,

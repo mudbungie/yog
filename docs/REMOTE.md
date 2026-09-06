@@ -2239,13 +2239,30 @@ refusal has to be *paintable*, and it made `wire::listen` RETURN the sentence
 instead of swallowing it, said once per face.
 
 There is one face, and it has a terminal: the engine says the sentence on
-stderr, its unit's journal keeps it, and the engine **runs on without a wire**
-— every deposit still converges through the inbox, so only a seat is shut out.
-A seat that cannot connect learns it from its own dial and paints its own
-sentence, which is the seat crate's half of this ruling and is why the
-paintable half left with the window. What is not negotiable in either half is
-the first line of the original ruling: the engine states the CAUSE (a bind, a
-mint, a missing file), never the consequence derived from it.
+stderr, its unit's journal keeps it — and **exits non-zero** *(bl-1d9b,
+reversing the clause that stood here)*. It used to run on without a wire, on
+the argument that every deposit still converges through the inbox so only a
+seat is shut out. That argument was the window's, and the window left with
+bl-7942: the seat IS the face now, so a wire-less yog answers nobody while
+still draining the world's `gestures/` inbox — a half-engine that looks healthy,
+which is worse than no engine because nothing after the first line says
+otherwise. A seat that cannot connect still learns it from its own dial and
+paints its own sentence, which is the seat crate's half of this ruling and is
+why the paintable half left with the window. What is not negotiable in either
+half is the first line of the original ruling: the engine states the CAUSE (a
+bind, a mint, a missing file), never the consequence derived from it.
+
+**And one world has one engine** *(bl-1d9b)*. The bind cannot be that exclusion
+— a self-provisioned box requests `127.0.0.1:0` so two engines in two worlds
+never contend for a process-global port, and two `:0` binds both succeed — so
+the boot takes an advisory lock on `<yog-state-root>/engine.lock` before it
+consumes anything (DESIGN §8.5, `src/engine/sole.rs`). Two engines on one world
+is not a degraded mode: two consumers of one inbox are two `registry::mailbox`
+instances minting into one `inv-N` namespace, so a routed tool call is answered
+"not in flight" when the handle misses and handed **another invocation's
+capture** when it collides, and presence forks the same way — one engine
+answering "not connected right now" while the other answers "connected right
+now", both sentences reaching one model.
 
 **The material sits BESIDE the world, not inside it** — `<yog-data-root>/wire`,
 the sibling of `<yog-data-root>/world`. The world subtree is a generated

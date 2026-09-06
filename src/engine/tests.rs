@@ -46,7 +46,7 @@ fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
     let state_root = world.yog_state_root();
     deposit::deposit(&state_root, "e-1", &json!({"op": "attention"})).unwrap();
 
-    let engine = Engine::boot(&world, &[], Arc::new(AtClock(far_future)));
+    let engine = Engine::boot(&world, &[], Arc::new(AtClock(far_future))).expect("booted");
     assert!(!stale.exists(), "the §5.2 startup sweep is the engine's");
     assert_eq!(
         engine.model.ui_json_path(),
@@ -72,13 +72,19 @@ fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
     drop(engine); // every thread stops and joins — the Drop is the shutdown
 }
 
-/// **An engine that cannot get its wire up runs anyway** (bl-dc14, narrowed by
-/// bl-7942): the refusal is said on stderr — the unit's journal is where a
-/// server's words go — and everything else boots. A deposit still converges
-/// through the inbox, so only a seat is shut out, which is exactly the
-/// difference between losing a capability and losing the engine.
+/// **An engine that cannot get its wire up is not an engine** (bl-1d9b,
+/// reversing bl-dc14's narrowing): the boot refuses, naming the address, and
+/// nothing is consumed — the deposit sitting in the inbox is still sitting
+/// there afterwards.
+///
+/// This used to be the opposite assertion: the refusal was said on stderr and
+/// the engine ran on, on the argument that a deposit still converges through
+/// the inbox so only a seat is shut out. The seat IS the face since bl-7942, so
+/// what that argument buys is a process that answers nobody, drains the world's
+/// gesture inbox and looks healthy — the half-engine whose second `inv-N`
+/// namespace handed one model another invocation's capture.
 #[test]
-fn a_boot_whose_stated_address_cannot_bind_still_answers_the_inbox() {
+fn a_boot_whose_stated_address_cannot_bind_refuses_and_consumes_nothing() {
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     let dir = crate::wire::material::dir(&world);
@@ -93,18 +99,55 @@ fn a_boot_whose_stated_address_cannot_bind_still_answers_the_inbox() {
     let state_root = world.yog_state_root();
     deposit::deposit(&state_root, "e-2", &json!({"op": "attention"})).unwrap();
 
-    let engine = Engine::boot(&world, &[], Arc::new(AtClock(0)));
+    let refusal = Engine::boot(&world, &[], Arc::new(AtClock(0)))
+        .err()
+        .expect("a yog that cannot listen is not an engine");
+    assert!(refusal.starts_with("wire: "), "{refusal}");
+    assert!(
+        refusal.contains("256.256.256.256:1"),
+        "it names the address: {refusal}"
+    );
+    assert!(
+        deposit::read_reply(&state_root, "e-2").is_none(),
+        "a boot that refuses has not consumed a gesture"
+    );
+}
+
+/// **One world has one engine** (bl-1d9b). The second boot on a world the first
+/// still holds is refused before it spawns a consumer, so there is never a
+/// second drain of one `gestures/` inbox and never a second `inv-N` namespace
+/// behind it. The first engine keeps answering throughout.
+#[test]
+fn a_second_engine_on_one_world_refuses_while_the_first_keeps_answering() {
+    let root = tempdir().unwrap();
+    let world = world_under(root.path());
+    let state_root = world.yog_state_root();
+    let first = Engine::boot(&world, &[], Arc::new(AtClock(0))).expect("the first engine");
+
+    let refusal = Engine::boot(&world, &[], Arc::new(AtClock(0)))
+        .err()
+        .expect("the second is refused");
+    assert!(refusal.contains("one world has one engine"), "{refusal}");
+
+    deposit::deposit(&state_root, "e-3", &json!({"op": "attention"})).unwrap();
     let deadline = Instant::now() + Duration::from_secs(10);
     let reply = loop {
-        if let Some(reply) = deposit::read_reply(&state_root, "e-2") {
+        if let Some(reply) = deposit::read_reply(&state_root, "e-3") {
             break reply;
         }
-        assert!(
-            Instant::now() < deadline,
-            "a wireless engine still answers its own residents"
-        );
+        assert!(Instant::now() < deadline, "the one engine still answers");
         std::thread::sleep(Duration::from_millis(10));
     };
     assert_eq!(reply["ok"], true);
-    drop(engine);
+    drop(first);
+    // The world frees when its engine goes — modulo the one window no advisory
+    // lock can close (see `sole`): a `fork` on another thread at that instant
+    // copies the descriptor, and the copy goes at that child's own `exec`. The
+    // wait is that window and nothing else, which is why it is spelled in
+    // milliseconds; the fact under test is that the lock is released at all.
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while crate::engine::sole::take(&state_root).is_err() {
+        assert!(Instant::now() < deadline, "the world never freed");
+        std::thread::sleep(Duration::from_millis(20));
+    }
 }
