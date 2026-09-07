@@ -40,6 +40,7 @@ pub(super) fn prepared(name: &str, binding: Option<&Path>) -> Prepared {
         goal: String::new(),
         origin: Origin::Conversation,
         lineage: None,
+        role: None,
     }
 }
 

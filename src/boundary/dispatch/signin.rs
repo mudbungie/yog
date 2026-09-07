@@ -33,9 +33,17 @@
 //! the wall **does not declare at all** is not a sign-in, and telling its
 //! operator to `/login` a row that is not there is a loop with no exit.
 //!
-//! **The role is [`WORKER_ROLE`] and only it**, because that is the role this
-//! door's fire resolves — litany's *roots are workers*, and this door births
-//! roots. The other declared roles are not the fire's question and refusing on
+//! **The role is the one the fire names, and [`WORKER_ROLE`] when it names
+//! none** (bl-9ced). It was `worker` unconditionally, on the true premise that
+//! *roots are workers* — until litany 0.0.12 made a root's role an input
+//! (`litany prompt --role`, upstream bl-946c) and `Prepared` gained the field
+//! (REMOTE §9.21). A door that kept reading `worker` would then read a row the
+//! fire does not resolve, in both directions: passing a start whose `planner`
+//! points at an empty row, and refusing one whose `planner` points at a good
+//! row because `worker` does not. So the role rides in, and the sentences name
+//! it — `/model <that role> …` is the remedy, and naming `worker` there would
+//! send the operator to fix a row the start never touches.
+//! The other declared roles are not the fire's question and refusing on
 //! one would be the conservatism §8.1 warns about: litany's shipped template
 //! declares a `reviewer` **unbound** — nothing dispatches it until a workflow
 //! binds it — so a wall that would run for hours would be refused for a role
@@ -44,7 +52,7 @@
 //! clause; that is a corpse with a cause, which is what those surfaces are for,
 //! and not the zero-percent birth this rung exists to stop.
 //!
-//! **A lineage that declares no worker falls back to the wall predicate**,
+//! **A lineage that declares no such role falls back to the wall predicate**,
 //! which is the general path with an empty input rather than a special case: a
 //! config that could not be read declares nothing (the `Roles` read's own
 //! answer rather than a refusal), and the only thing left to ask is whether any
@@ -80,15 +88,22 @@ mod tests;
 
 /// The rung: `Ok` when the fire would reach a model, the refusal otherwise.
 /// `lineage` is the `Prepared`'s §8.7 birth lineage — `None` is
-/// `config/default`, exactly as the fire itself reads it.
-pub(crate) fn gate(deps: &Deps, workspace: &Path, lineage: Option<&str>) -> Result<(), String> {
+/// `config/default` — and `role` is its §8.1 birth role — `None` is
+/// [`WORKER_ROLE`] — both read exactly as the fire itself reads them.
+pub(crate) fn gate(
+    deps: &Deps,
+    workspace: &Path,
+    lineage: Option<&str>,
+    role: Option<&str>,
+) -> Result<(), String> {
     let rows = RealBzRunner::resolve(&wall_env(deps, workspace)).providers();
     if rows.is_empty() {
         return Ok(());
     }
-    match verdict(&rows, &roles(workspace, lineage)) {
+    let role = role.unwrap_or(WORKER_ROLE);
+    match verdict(&rows, &roles(workspace, lineage), role) {
         None => Ok(()),
-        Some(unready) => Err(refusal::say(&unready, &rows)),
+        Some(unready) => Err(refusal::say(&unready, &rows, role)),
     }
 }
 
@@ -103,31 +118,34 @@ fn roles(workspace: &Path, lineage: Option<&str>) -> Vec<RoleModel> {
     crate::model_pick::grammar::roles(&text)
 }
 
-/// Why this wall would reach no model, or `None` when it would. The role is
-/// always [`WORKER_ROLE`] and so is not carried: a variant holding a string
-/// only one value ever reaches would be a second home for the door's own scope.
+/// Why this wall would reach no model, or `None` when it would. The role the
+/// verdict was taken for is **not** carried: it is the caller's own parameter
+/// one line up, so the sentence reads it from where it was decided rather than
+/// from a copy — the same reason it was not carried when it could only ever be
+/// [`WORKER_ROLE`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Unready {
-    /// The worker points at a row this wall's table does not carry at all — the
-    /// bl-21e9 case, whose remedy is the row table and never a sign-in.
+    /// The fired role points at a row this wall's table does not carry at all —
+    /// the bl-21e9 case, whose remedy is the row table and never a sign-in.
     Undeclared { provider: String },
-    /// The worker points at a row that is here and holds no credential. It
+    /// The fired role points at a row that is here and holds no credential. It
     /// carries the row rather than its name because the remedy is the row's own
     /// credential model, and looking it up again would be a second read with a
     /// no-such-row arm nothing can reach.
     Uncredentialed { row: ProviderRow },
-    /// The lineage declares no worker, and no row here could answer at all.
+    /// The lineage declares no such role, and no row here could answer at all.
     Wall,
 }
 
-/// The fold itself, pure over the table and the roles the lineage declares.
-pub(crate) fn verdict(rows: &[ProviderRow], roles: &[RoleModel]) -> Option<Unready> {
-    let Some(worker) = roles.iter().find(|role| role.role == WORKER_ROLE) else {
+/// The fold itself, pure over the table, the roles the lineage declares, and
+/// the role this fire will be born on.
+pub(crate) fn verdict(rows: &[ProviderRow], roles: &[RoleModel], fired: &str) -> Option<Unready> {
+    let Some(named) = roles.iter().find(|role| role.role == fired) else {
         return (!rows.iter().any(ProviderRow::credentialed)).then_some(Unready::Wall);
     };
-    match rows.iter().find(|row| row.name == worker.provider) {
+    match rows.iter().find(|row| row.name == named.provider) {
         None => Some(Unready::Undeclared {
-            provider: worker.provider.clone(),
+            provider: named.provider.clone(),
         }),
         Some(row) if row.credential == MISSING => {
             Some(Unready::Uncredentialed { row: row.clone() })

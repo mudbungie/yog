@@ -6,6 +6,18 @@
 //! **A version is never restated anywhere else.** REMOTE §3 says so outright:
 //! a second home for this number went five versions stale before anybody
 //! noticed, so the doc points here and this is the only place it lives.
+//!
+//! **Two integers live here, not one** (bl-9ced): the version this build
+//! SPEAKS and the newest version yog has PUBLISHED. They are the two halves of
+//! the `<n> → <m>` heading every entry below already writes in prose, and the
+//! second is here rather than derived because the one reader that needs it —
+//! the corpus ledger's gate — is an ordinary unit test on a bare checkout.
+//!
+//! **The file grows by design, and its next seam is an era, not a line
+//! count.** A ledger's whole value is that no entry is ever deleted, so §12's
+//! pre-split band cannot be answered here by moving prose around: when this
+//! file next crosses the cap, the entries at or below a spent version move to
+//! a closed `version/<n>.rs` record whole, and the live entries stay.
 
 /// The protocol this build speaks.
 ///
@@ -198,4 +210,61 @@
 /// how wide the instruction was, and *wider* is the reading nobody may arrive
 /// at by accident. Two shapes, because the gesture and its receipt are one
 /// move.
+///
+/// **The `prepare` reply's `prepared` body gained `role`** (bl-9ced) — the
+/// role the conversation is born on, beside the `lineage` it already carried
+/// and read out of the same config commit. litany 0.0.12 (upstream bl-946c)
+/// made `litany prompt --role <name>` resolve a root's soul, provider
+/// assignment and tool grant as any role the governing commit declares, which
+/// is what turns plan mode from *a lineage a workspace must author, forever,
+/// to restate a config commit* into one field of a start. yog derives nothing
+/// into it: `prepare` answers `null` — litany's `worker`, spelled as an
+/// absence exactly as `lineage`'s default is — and a seat that wants a
+/// planning conversation deposits the same body back as `/prompt` with
+/// `"role": "planner"`. Every shape carrying a `prepared` gains it, which is
+/// four; a field gained on a shape in use, so §3's rule bumps. It lands on
+/// THIS entry rather than on 19, which is what this version's own heading asks
+/// for and what nothing could honour until [`PROTOCOL_PUBLISHED`] below: the
+/// corpus ledger refused a moved signature at the version the record was last
+/// GENERATED at, a proxy that advances whether or not the bump ever shipped.
 pub const PROTOCOL: u32 = 18;
+
+/// **The newest `PROTOCOL` yog has PUBLISHED**, and therefore the newest a
+/// peer out there can be speaking (REMOTE §3, §9.11 as amended by bl-9ced).
+///
+/// It exists for one reader: the corpus ledger's rule that *a wire-visible
+/// shape may not change at a version already in use*
+/// (`crate::boundary`'s standing record). That rule used to be judged against
+/// the version the record was last **generated** at, which is a proxy for this
+/// and not the thing itself — so the second lane of one unreleased wave was
+/// refused and had to take another integer, and REMOTE §9.11 accepted that
+/// cost with the reason *"collapsing it would mean teaching the ledger what
+/// has been published, which nothing in this tree knows"*.
+///
+/// **Two facts have changed since.** Something in this tree does know: this
+/// constant, which is the left-hand side of the `<n> → <m>` heading every
+/// entry above already writes in prose, now written once where a program can
+/// read it. And an extra integer is no longer cheap — under bl-bca2's release
+/// gate a raise HOLDS the release until three consumer repositories vendor the
+/// number on their mains, so a wave that costs three numbers costs nine
+/// consumer edits and three windows in which no published suite composes.
+///
+/// **How it moves.** A lane that raises `PROTOCOL` leaves this alone unless
+/// the number it is raising FROM has shipped; then it raises this to that
+/// number in the same edit. So the pair reads exactly as the heading does —
+/// `17 → 18` is `PROTOCOL_PUBLISHED = 17`, `PROTOCOL = 18` — and every later
+/// lane of the same wave shares 18 by leaving both alone.
+///
+/// **What it does not do.** It is not a compatibility window and the handshake
+/// never reads it: the wire is still fail-closed on `PROTOCOL` alone, with no
+/// negotiation. And it is a stated fact rather than a derived one — the
+/// derivation exists (`scripts/protocol-gate.sh read` over yog's newest
+/// `v<x.y.z>` tag is what `.github/workflows/release-automerge.yml` already
+/// does), but it needs git and a network, and the ledger's gate is an ordinary
+/// unit test that must run on a bare checkout. The residual is that a lane
+/// which raises `PROTOCOL` after a release and forgets to raise this one is
+/// under-strict for one wave; that is strictly better than the standing state,
+/// where the answer to every shared wave was *take another integer*, and the
+/// pair is read together in one file so the forgetting is visible where the
+/// raise is made.
+pub const PROTOCOL_PUBLISHED: u32 = 17;

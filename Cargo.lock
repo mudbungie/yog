@@ -99,9 +99,9 @@ dependencies = [
 
 [[package]]
 name = "brazen"
-version = "0.0.17"
+version = "0.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9221e8e2e2ae438eb46d03be9709737684fc93e681b230251a2326c255797c62"
+checksum = "2f2dbbc23daa94c0bba172be58516d681d03c504c9d4bcb7f00d350abc30ba9c"
 dependencies = [
  "base64",
  "libc",
@@ -441,9 +441,9 @@ checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
 name = "litany"
-version = "0.0.11"
+version = "0.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dffa3d706ba3164b76e735ddbae8d10de63c3459757e9f678b24dec28f3e2087"
+checksum = "05146e116084cd6f3dfa2955fcb4582071b1e717ba8f855c70f41ba53e713a06"
 dependencies = [
  "brazen",
  "chrono",

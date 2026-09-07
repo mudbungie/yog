@@ -49,6 +49,7 @@ fn the_prepared_reply_is_the_prompt_gestures_own_spelling() {
         goal: "g".into(),
         origin: Origin::Balls,
         lineage: None,
+        role: None,
     };
     let v = encode(&Reply::Prepared(prepared.clone()));
     assert_eq!(v["ok"], true);

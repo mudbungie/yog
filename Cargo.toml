@@ -118,7 +118,16 @@ balls = "=0.5.11"
 # `capability::context_caveat` states becomes a row-statement read rather than a
 # dialect arm (bl-b6c9 again). yog's transcript `Usage` is a `BTreeMap` of every
 # integer counter verbatim, so both new numbers ride the codec with no edit.
-brazen = { version = "=0.0.17", features = ["native-host"] }
+# 0.0.18 gives `CanonicalRequest` a `cache_key`, the prompt-cache routing key
+# the two OpenAI dialects project to `prompt_cache_key` (upstream bl-8b47) — a
+# byte-identical append-only resend read back ZERO cached tokens without one,
+# measured over the same ladder that billed ~13 k cached tokens per claude step.
+# **yog links none of that surface**: it never constructs a `CanonicalRequest`
+# and never calls `build_request`; brazen is here for the `native-host` `bz`
+# multiplex arm alone, and the key is set by litany, which hands every model
+# call the agent id (upstream litany bl-6961). The pin moves because the
+# lockfile must resolve exactly ONE brazen and litany's is 0.0.18.
+brazen = { version = "=0.0.18", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -289,7 +298,45 @@ clap = { version = "4", features = ["derive"] }
 # now judges the removal set (bl-7234), and tool descriptions are re-cut at
 # every step boundary BEFORE the read-state capture (bl-37cd), so a `litany
 # config` edit reaches a running loop one step sooner than it did.
-litany = "=0.0.11"
+#
+# 0.0.12 carries five linked surfaces and yog consumes four of them (bl-9ced).
+# `read_tool_output` is a new built-in — the page read that makes the bounded
+# projection's cut middle recoverable out of the agent's own
+# `steps/**/tools/<id>/output.json` — so `BUILTIN_TOOLS` grew and yog classified
+# it: an ENGINE ACT (its subject is the agent's record, REMOTE §5.4) and an
+# intrinsic `Read` row in the capability control, without which it would fall to
+# the routed lane and be held Opaque on every call. `litany prompt --role` /
+# `litany retarget --role` resolve a root's soul, provider row and grant as any
+# role the governing commit declares, which is what turns plan mode from a
+# per-workspace lineage into one field of a start: `Prepared` gains `role`
+# (REMOTE §9.21, PROTOCOL 18) and the fire passes it; yog's own `/retarget`
+# stays bare. ARCH §5.5's **prefix hold** means a subtraction from the declared
+# tools array is held until the next PAID cache miss rather than landing at the
+# next assembly, which is a wording amendment to REMOTE §5.2's `unload` and no
+# code — the queue's home is the previous step's own `request.json`, upstream's
+# entirely. And `template/workflow.yaml` ships `budgets: max_depth: 5`, which
+# `control::author::authored` strips like any other top-level `budgets:` block
+# — the strip is on the BLOCK and never on an axis, so an upstream template
+# that renames a limit cannot smuggle a whole-tree ceiling into a workspace yog
+# manages (beat: `the_shipped_depth_ceiling_is_stripped_like_any_other_budget`).
+# The fifth is unread and stays that way: `meta.json` gains `provider`, the
+# `bz --provider` string that step ran through, which is the half of the
+# `(provider, model)` pair a price table needs and no reader here asks for yet
+# (bl-53d1 is where it would land).
+#
+# 0.0.13 lands one defect and changes no linked surface: a compaction point is
+# an arbitrary commit while a tool window spans several, so the §2.7 span sweep
+# took a `tool_use` into the base and left its `tool_result` replaying on top —
+# a history every provider refuses on every LATER prompt, which killed three
+# live compactor conversations outright (upstream bl-2d93). The sweep now stops
+# at the last settled boundary and assembly drops an orphan `tool_result` a
+# past cut already made, so a wedged branch revives at its next prompt instead
+# of dying at every one. Its one on-disk addition is `meta.json`'s
+# `dropped_orphans`, which rides through `steps_view::meta_field` unread beside
+# `provider` for the same grows-only reason. `BUILTIN_TOOLS`,
+# `template/workflow.yaml` and `template/providers.yaml` are byte-identical to
+# 0.0.12's, and its brazen pin is the same `=0.0.18`.
+litany = "=0.0.13"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

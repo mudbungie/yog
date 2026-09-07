@@ -17,15 +17,17 @@
 use std::collections::BTreeMap;
 
 use crate::config_edit::brazen::{NOT_REQUIRED, ProviderRow};
-use crate::model_pick::WORKER_ROLE;
 
 use super::Unready;
 
-/// The one sentence for each way a wall would reach no model.
-pub(super) fn say(unready: &Unready, rows: &[ProviderRow]) -> String {
+/// The one sentence for each way a wall would reach no model. `role` is the
+/// role this fire will be born on (bl-9ced) — `worker` for every start that
+/// named none, and the named one otherwise, because a remedy that pointed at
+/// `worker` would send the operator to fix a row the start never resolves.
+pub(super) fn say(unready: &Unready, rows: &[ProviderRow], role: &str) -> String {
     match unready {
-        Unready::Undeclared { provider } => undeclared(provider, rows),
-        Unready::Uncredentialed { row } => uncredentialed(row),
+        Unready::Undeclared { provider } => undeclared(provider, rows, role),
+        Unready::Uncredentialed { row } => uncredentialed(row, role),
         Unready::Wall => wall(rows),
     }
 }
@@ -42,10 +44,10 @@ fn remedy(row: &ProviderRow) -> String {
 
 /// A role resolves a row that is here and empty: the bl-1fd0 rung, said about
 /// the role the fire will actually resolve rather than about the wall.
-fn uncredentialed(row: &ProviderRow) -> String {
+fn uncredentialed(row: &ProviderRow, role: &str) -> String {
     let (provider, act) = (&row.name, remedy(row));
     format!(
-        "sign in first: `{WORKER_ROLE}` resolves provider `{provider}`, which holds no credential in \
+        "sign in first: `{role}` resolves provider `{provider}`, which holds no credential in \
          this workspace's wall, so a conversation begun here would reach no model — {act}"
     )
 }
@@ -53,13 +55,13 @@ fn uncredentialed(row: &ProviderRow) -> String {
 /// A role resolves a row the wall does not carry (bl-21e9). Not a sign-in: the
 /// row has to arrive before it can hold anything, and the operator's other move
 /// is to point the role at one that is here.
-fn undeclared(provider: &str, rows: &[ProviderRow]) -> String {
+fn undeclared(provider: &str, rows: &[ProviderRow], role: &str) -> String {
     format!(
-        "`{WORKER_ROLE}` resolves provider `{provider}`, and this workspace's wall declares no \
+        "`{role}` resolves provider `{provider}`, and this workspace's wall declares no \
          such row, so a conversation begun here would reach no model — a wall holds brazen's \
          built-in rows plus its own config.toml and nothing else, so add the row with \
          /config brazen, or point the role at one that is here with \
-         /model {WORKER_ROLE} <provider> <model-id> (rows here: {})",
+         /model {role} <provider> <model-id> (rows here: {})",
         names(rows)
     )
 }

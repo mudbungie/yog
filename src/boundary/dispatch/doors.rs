@@ -128,7 +128,12 @@ pub fn prompt(
     if goal.trim().is_empty() {
         return Err(BLANK_GOAL.to_owned());
     }
-    super::signin::gate(deps, workspace, prepared.lineage.as_deref())?;
+    super::signin::gate(
+        deps,
+        workspace,
+        prepared.lineage.as_deref(),
+        prepared.role.as_deref(),
+    )?;
     control::confinement_gate(workspace)?;
     // The §3.5 ceiling is the **world's** since bl-a80a, so its comparison is
     // folded over the §3.1 roster rather than over the one workspace this birth

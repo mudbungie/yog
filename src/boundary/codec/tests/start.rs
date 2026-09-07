@@ -67,6 +67,7 @@ pub(super) fn surface() -> Vec<Gesture> {
                         goal: "the goal".into(),
                         origin,
                         lineage: None,
+                        role: None,
                     },
                     goal: "edited goal".into(),
                     seed,
@@ -74,6 +75,25 @@ pub(super) fn surface() -> Vec<Gesture> {
             }
         }
     }
+    // **Plan mode, spelled once** (bl-9ced): the one gesture where the two
+    // config-resolution fields of `prepared` carry values rather than the
+    // `null` every case above spells. Product axes would have doubled the
+    // matrix twice to say it; a client's obligation is to decode a `lineage`
+    // and a `role` that are STRINGS, and one fixture discharges it. The pair
+    // rides together because they are one fact of a birth — which config
+    // commit governs, and which role is resolved out of it.
+    out.push(Gesture::Act(Action::Prompt {
+        prepared: Prepared {
+            workspace: "ws".into(),
+            binding: Some(p("/target")),
+            goal: "the goal".into(),
+            origin: Origin::Balls,
+            lineage: Some("plan".into()),
+            role: Some("planner".into()),
+        },
+        goal: "edited goal".into(),
+        seed: None,
+    }));
     out
 }
 

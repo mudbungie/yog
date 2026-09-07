@@ -98,19 +98,35 @@ fn recorded(protocol: u32, since: u32) -> Ledger {
     })))
 }
 
-/// **The rule, mechanically**: a wire-visible shape that changed while the
-/// protocol version stood still is refused, and the sentence says both what to
-/// bump and what to run. The comparison is against the record's OWN version,
-/// never the shape's `since` — so an old stamp is no licence (bl-00de).
+/// **The rule, mechanically**: a wire-visible shape that changed at a version
+/// that has already been PUBLISHED is refused, and the sentence says both what
+/// to bump and what to run. The comparison is against neither the record's own
+/// generation stamp nor the shape's `since` — so an old stamp is no licence
+/// (bl-00de) and a bump that never shipped is no bar (bl-9ced).
 #[test]
-fn a_changed_shape_at_an_unbumped_version_demands_the_bump() {
+fn a_changed_shape_at_a_published_version_demands_the_bump() {
     let previous = recorded(protocol(), 1);
-    let refusal = advance(&[moved_ack()], &previous, protocol())
+    let refusal = advance(&[moved_ack()], &previous, protocol(), protocol())
         .err()
         .expect("refused");
     assert!(refusal.contains("request/ack"), "{refusal}");
-    assert!(refusal.contains("src/wire/hello.rs"), "{refusal}");
+    assert!(refusal.contains("src/wire/hello/version.rs"), "{refusal}");
     assert!(refusal.contains("make corpus"), "{refusal}");
+}
+
+/// **A wave of lanes shares one unreleased number** (bl-9ced). The record was
+/// generated at the current version by the lane ahead — so the old rule
+/// refused this one outright — and the version is still above the published
+/// floor, so the shape moves and re-stamps at the same number the lane ahead
+/// used. This is the shape of every release wave: one integer, three
+/// consumers vendoring it once.
+#[test]
+fn a_second_lane_of_one_unreleased_wave_shares_the_number() {
+    let previous = recorded(protocol(), protocol());
+    let next = advance(&[moved_ack()], &previous, protocol(), protocol() - 1)
+        .expect("lawful below the published floor");
+    assert_eq!(next.protocol, protocol());
+    assert_eq!(next.shapes["request/ack"].since, protocol());
 }
 
 /// And the bump stamps the NEW number, not the stale one the shape carried.
@@ -118,7 +134,7 @@ fn a_changed_shape_at_an_unbumped_version_demands_the_bump() {
 /// version later found spent kept the pre-bump stamp forever.
 #[test]
 fn a_change_after_a_bump_stamps_the_new_number() {
-    let next = advance(&[moved_ack()], &recorded(12, 11), 13).expect("lawful across a bump");
+    let next = advance(&[moved_ack()], &recorded(12, 11), 13, 12).expect("lawful across a bump");
     assert_eq!(next.protocol, 13);
     assert_eq!(next.shapes["request/ack"].since, 13);
 }
@@ -131,7 +147,9 @@ fn a_vanished_shape_demands_the_bump_too() {
         "protocol": protocol(),
         "shapes": { "request/gone": { "since": 1, "signature": [":object"] } },
     })));
-    let refusal = advance(&[], &previous, protocol()).err().expect("refused");
+    let refusal = advance(&[], &previous, protocol(), protocol())
+        .err()
+        .expect("refused");
     assert!(refusal.contains("request/gone"), "{refusal}");
 }
 
@@ -156,7 +174,7 @@ fn a_bump_lets_the_change_through_and_leaves_the_still_shapes_alone() {
             "request/scan": { "since": 1, "signature": ["/op:string", ":object"] },
         },
     })));
-    let next = advance(&[moved, still], &previous, 2).expect("lawful at a higher version");
+    let next = advance(&[moved, still], &previous, 2, 1).expect("lawful at a higher version");
     assert_eq!(next.protocol, 2);
     assert_eq!(next.shapes["request/ack"].since, 2, "the shape that moved");
     assert_eq!(
@@ -175,7 +193,7 @@ fn a_new_shape_lands_at_the_standing_version() {
         name: "novel".to_owned(),
         frames: vec![json!({ "op": "novel" })],
     };
-    let next = advance(&[fresh], &Ledger::read(""), protocol()).expect("additive");
+    let next = advance(&[fresh], &Ledger::read(""), protocol(), protocol()).expect("additive");
     assert_eq!(next.shapes["request/novel"].since, protocol());
 }
 

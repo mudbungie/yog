@@ -91,6 +91,11 @@ pub(crate) fn encode_prepared(p: &Prepared) -> Value {
         // real `null` for "the default lineage", so a reply deposits back as
         // the gesture it came from.
         "lineage": p.lineage,
+        // The §8.1 birth ROLE (bl-9ced), same shape and same reason again: a
+        // real `null` for litany's `worker` default. This is the one field of
+        // the body a seat is expected to CHANGE before depositing it back —
+        // `"planner"` is plan mode, in one act and with no lineage authored.
+        "role": p.role,
         "goal": p.goal,
         "origin": origin_token(p.origin),
     })
@@ -127,6 +132,7 @@ pub(crate) fn decode_prepared(v: &Value) -> Result<Prepared, String> {
         workspace: str_of(obj, "workspace")?,
         binding: opt_path_of(obj, "binding")?,
         lineage: opt_str_of(obj, "lineage")?,
+        role: opt_str_of(obj, "role")?,
         goal: str_of(obj, "goal")?,
         origin: parse_origin(&str_of(obj, "origin")?)?,
     })

@@ -99,6 +99,7 @@ impl World {
             goal: "Ball bl-1f2a: do it".to_owned(),
             origin: Origin::Balls,
             lineage: None,
+            role: None,
         }
     }
 

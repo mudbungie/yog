@@ -34,6 +34,12 @@ const PIN_FLAG: &str = "--pin";
 /// policy's one channel — the whole of how a ball's tags reach the model and
 /// the skill set the drone is born with.
 const CONFIG_FLAG: &str = "--config";
+/// litany's birth-role selector (upstream bl-946c, released 0.0.12): resolve
+/// the root's soul, provider assignment and tool grant as `<role>` out of the
+/// same config commit `--config` chose, instead of the `worker` default. The
+/// §8.1 plan-mode channel ([`Prepared::role`](super::Prepared::role)) — an
+/// omitted flag is litany's own `WORKER_ROLE`, so yog never spells the default.
+const ROLE_FLAG: &str = "--role";
 const YOG_NAME: &str = "YOG_NAME";
 
 /// One fire, whole (§8.1): the `Prepared` a `/prompt` carries, the edited
@@ -59,6 +65,14 @@ pub struct Fire {
 /// text no longer duplicates), the driver standing in the workspace it drives.
 /// `prepared` carries all of it,
 /// composed once by [`goal::compose_prepared`](super::goal).
+///
+/// **`--role` is plan mode's one channel** (§8.1, bl-9ced, litany 0.0.12
+/// upstream bl-946c): the root is born on the role the start names, resolved
+/// through the ordinary path from the same config commit `--config` chose —
+/// the same `souls/<role>.md`, the same `providers.yaml` assignment, the same
+/// `tools:` grant. It rides only when the seat set one; an absent flag is
+/// litany's `worker`, so the untagged, unroled start spells nothing and every
+/// start yog made before this release is byte-identical.
 ///
 /// **`--cwd` is the work target's one channel** (§3.3, bl-6654 consuming
 /// bl-2b8c's ruling / VISION §4.10 item 2): the rung's typed binding — the ball
@@ -140,6 +154,15 @@ pub fn execute_prompt(
     // litany's own `config/default`, so the untagged case spells nothing.
     if let Some(name) = prepared.lineage.as_deref() {
         args.extend([CONFIG_FLAG, name]);
+    }
+    // The §8.1 birth role (bl-9ced), beside the lineage and read out of the
+    // same commit: absent for every start the seat did not name one on, which
+    // is litany's `worker` and therefore every start yog made before 0.0.12.
+    // A role the commit does not declare is refused by litany's resolution,
+    // which runs before the fork — so a bad value costs a decline, not a
+    // half-born conversation.
+    if let Some(role) = prepared.role.as_deref() {
+        args.extend([ROLE_FLAG, role]);
     }
     if let Some(dir) = bound.as_deref() {
         args.extend([CWD_FLAG, dir]);

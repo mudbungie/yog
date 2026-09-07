@@ -44,6 +44,7 @@ fn prepared(w: &super::World) -> Prepared {
         goal: "prefill".into(),
         origin: crate::opslog::Origin::Conversation,
         lineage: None,
+        role: None,
     }
 }
 

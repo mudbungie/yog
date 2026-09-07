@@ -71,6 +71,7 @@ fn the_fan_reply_rows_re_enter_as_prompt_gestures() {
         goal: "g".into(),
         origin: Origin::Balls,
         lineage: None,
+        role: None,
     };
     let v = encode(&Reply::Fanned(vec![prepared.clone()]));
     assert_eq!(v["ok"], true);

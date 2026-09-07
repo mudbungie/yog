@@ -18,7 +18,12 @@ pub(super) fn rows(deps: &Deps, name: &str, path: &Path) -> Vec<Row> {
 /// which is the whole of this gesture's idea: that sentence, asked before the
 /// failure instead of at it.
 fn wall(deps: &Deps, name: &str, path: &Path) -> Row {
-    match crate::boundary::dispatch::signin_gate(deps, path, None) {
+    // The default birth, on both axes: `config/default` and litany's `worker`
+    // (bl-9ced). The doctor asks about the workspace, not about one operator's
+    // pending gesture — a start that names a lineage or a role is asking a
+    // different question, and the sentence it would earn is the one the door
+    // gives it at the fire.
+    match crate::boundary::dispatch::signin_gate(deps, path, None, None) {
         Ok(()) => Row::ok(
             "wall",
             format!("{name}'s wall holds a credential a role can use"),

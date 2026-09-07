@@ -17,6 +17,7 @@ fn prepared(binding: Option<&str>) -> Prepared {
         goal: "Ball bl-1f2a: do it".into(),
         origin: Origin::Balls,
         lineage: None,
+        role: None,
     }
 }
 

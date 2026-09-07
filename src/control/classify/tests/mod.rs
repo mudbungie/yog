@@ -101,6 +101,19 @@ fn every_built_in_carries_its_intrinsic_class() {
         effect("remember", json!({"fact": "the wire is mutual TLS"})),
         Effect::TargetWrite
     );
+    // litany 0.0.12's `read_tool_output` (bl-9ced): the recovery the bounded
+    // projection's own cut marker names. It reads one file the agent itself
+    // produced and touches nothing, so it is Read for the reason
+    // `search_history` is — and `remember`'s note applies with more force,
+    // since without the row the one way out of a cut the harness imposed would
+    // be held Opaque on every call.
+    assert_eq!(
+        effect(
+            "read_tool_output",
+            json!({"address": "steps/a/001/tools/t/output.json#stdout@0"})
+        ),
+        Effect::Read
+    );
 }
 
 /// The compactor's procedure pair and yog's own roster tool carry rows of

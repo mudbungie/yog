@@ -38,6 +38,7 @@ fn prepared() -> Prepared {
         workspace: WS.to_owned(),
         binding: None,
         lineage: None,
+        role: None,
         goal: String::new(),
         origin: Origin::Conversation,
     }

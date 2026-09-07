@@ -60,7 +60,7 @@ use ::litany::cmd::{RoutedCall, RoutedCapture};
 use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 
 /// **The engine-act name set, closed and enumerated here and nowhere else.**
-/// Nine rows since bl-ebef, in three families, each admitted by the
+/// Ten rows since bl-9ced, in three families, each admitted by the
 /// subject-locality invariant (REMOTE §5: *"a tool executes where its subject
 /// lives"*) and by nothing else:
 ///
@@ -74,8 +74,8 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 ///   working-directory mark, a ref on the workspace. None of them is work on
 ///   a *machine*, so none of them is a thrall's — routing them anywhere would
 ///   send a box that does not hold the world a request about it.
-/// - the three acts whose subject is the agent's own record, history and
-///   lineage (bl-fe43, bl-81cc, bl-ebef). `python` runs a program the model authored, and the
+/// - the four acts whose subject is the agent's own record, history and
+///   lineage (bl-fe43, bl-81cc, bl-ebef, bl-9ced). `python` runs a program the model authored, and the
 ///   program composes the agent's own tools: the built-in generates a
 ///   `litany_tools` stub per tool this injection declares, each one a
 ///   `<driver_target> invoke` of the front door, and it writes each inner
@@ -95,6 +95,16 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 ///   asked to remember something must reach instead of driving `litany config`,
 ///   which is now refused under `LITANY_TOOL_ID`. Routing it would put a
 ///   workspace-repository write on a box that does not hold the workspace.
+///   `read_tool_output` (litany 0.0.12, upstream bl-9a6e) pages the cut middle
+///   of one of *this agent's own* captures back out of
+///   `steps/<agent-id>/<NNN>/tools/<tool-id>/output.json` — the diagnostic
+///   record litany lands beside the step, on the server's disk, under a
+///   domain bound that is one string equality against the caller's own
+///   `LITANY_CONV_BRANCH`. Its subject is therefore the agent's record and
+///   never a working tree, and a foot that holds no `steps/` tree could only
+///   answer *no such address* — the same worst-answer `search_history` would
+///   give. It is the recovery the bounded projection's cut marker names, so a
+///   routed one would make the marker's own way out unreachable.
 ///
 /// What is deliberately NOT here: `bash`, `read_file`, `apply_patch` — acts
 /// at the conversation's working directory, which take the worktree lane
@@ -102,13 +112,13 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 /// enrolled one. The lane's last rung calls [`perform`] below on them
 /// ([`super::subject::performs`], bl-5710), so the mechanism is shared and
 /// the *ordering* is what separates the two sets: an engine act never
-/// consults the roster, a worktree name always does. A tenth row is a
+/// consults the roster, a worktree name always does. An eleventh row is a
 /// deliberate act with this audit's question asked again — never a prefix
 /// test or a name shape, which is how a closed set stops being closed. The
 /// strings are yog's own spelling: the engine keeps its constants
 /// crate-private, so the names cross as text exactly as they do in the
 /// model's `tool_use` block.
-pub const NAMES: [&str; 9] = [
+pub const NAMES: [&str; 10] = [
     "write_summary",
     "mark_for_deletion",
     "dispatch",
@@ -118,6 +128,7 @@ pub const NAMES: [&str; 9] = [
     "python",
     "remember",
     "search_history",
+    "read_tool_output",
 ];
 
 /// The `litany` verb the built-in front door answers under.

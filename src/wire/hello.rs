@@ -43,8 +43,10 @@ use super::frame;
 /// its own file at §12's cap (bl-94a5), because the number is one line and
 /// the reasoning behind each move of it is the rest: `hello` is the preface
 /// EXCHANGE, `version` is what the preface states and why it ever changed.
+/// Since bl-9ced it also holds the newest version yog has PUBLISHED, which no
+/// preface ever states — the corpus ledger's gate is its one reader.
 mod version;
-pub use version::PROTOCOL;
+pub use version::{PROTOCOL, PROTOCOL_PUBLISHED};
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

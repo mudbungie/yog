@@ -1209,8 +1209,10 @@ The declared schema:
   with its description, and the name that tool would become callable under.
 - **`load {client, tools}`** — those definitions become callable from the next
   step on.
-- **`unload {client, tools?}`** — they stop being declared from the next
-  assembly on. `tools` is optional and absent means *that client's whole loaded
+- **`unload {client, tools?}`** — they stop being declared at the next paid
+  cache miss (see *"A subtraction lands at the next paid miss"* below; it was
+  *the next assembly* until litany 0.0.12). `tools` is optional and absent
+  means *that client's whole loaded
   set*, which is the ordinary case: an agent that has finished with a machine
   has finished with all of it, and making it spell out what it loaded turns
   done-here into a recall exercise. An empty array is not that spelling — it is
@@ -1286,9 +1288,8 @@ already corrects it — *"a client refuses a tool it no longer carries"*, in ban
 at the call.
 
 **Subtraction is an explicit act, and there is no inheritance** (bl-3455).
-`unload` removes entries from the same document; the next assembly re-declares
-without them, one paid prefix rebuild at a moment the agent chose, exactly as
-load's own settlement reads. It is still true that nothing but an explicit act
+`unload` removes entries from the same document. It is still true that nothing
+but an explicit act
 of the agent's own ever changes the tool surface — `unload` is a second such
 act, not an exception to the rule. The set belongs to the agent that loaded it;
 a fresh conversation, and a freshly dispatched subagent, starts clean and loads
@@ -1299,18 +1300,43 @@ array, and a document that is absent, unreadable or empty already reads as the
 same nothing every agent reads before its first load — so no reader carries a
 second case, and a load after an unload is an ordinary load.
 
+**A subtraction lands at the next paid miss, not at the next assembly**
+(litany 0.0.12, upstream bl-b902's ARCH §5.5; yog bl-9ced). This paragraph used
+to say the opposite, and the opposite is what it cost: an unload is a *prefix*
+edit, provider caching reads a request in cache order — tools, system, messages
+— and every byte ahead of the transcript tail that moves re-bills everything
+behind it. So dropping a tool the agent had finished with re-billed the whole
+transcript at the step it landed, which is a bill nobody chose to pay for a
+subtraction the model loses nothing by not hearing about yet. The engine now
+holds it: the request keeps sending the tools array the previous step sent,
+byte for byte, until the model, the system slot or the first wire message moves
+for some other reason — a config edit, a retarget, a compaction landing — and
+then the current composition goes out whole with every pending subtraction
+riding it. **An addition is never held**, so `load`'s *"callable from the next
+step on"* above is unchanged and exact.
+
+**Three things this does not change, and they are the ones a reader will
+doubt.** The `clients` op still lands its edit on the document immediately, so
+the durable set and the answer the model reads are both current at once. A call
+into an unloaded name is still refused in band exactly as before, so the held
+declaration is never a tool the model can actually reach. And nothing about
+this is yog's to schedule: the queue's home is the previous step's own
+`request.json`, litany reads it back at the next step, and yog holds no boundary
+flag, no list of boundary kinds and no second tree path — which is why the
+amendment here is one of *wording* and no code moved.
+
+**bl-b6f9 is where the general form still lives.** That ball is *"context
+maintenance is queued against the inevitable cache miss"* — a maintenance act
+merging into the operating branch at a moment the miss is already inevitable —
+and the tools array is the one prefix slot upstream has now done. The rest of
+that ball (a mid-run `load_skill` still inserts into the body and re-bills from
+its position; a config edit that moves the soul, the model or the descriptor cut
+is a paid miss by ruling) is untouched.
+
 **Why this is here and not in the model's own hands.** The operator's standing
 principle is that context management happens in yog: what an agent declares is
 a property of the conversation the server holds, so the act that changes it is
-a tool this side offers rather than a discipline a model is asked to keep. That
-also fixes what this op is NOT. It lands the edit immediately, and immediately
-costs the prompt-cache rebuild that is the whole reason the loaded document
-only ever grew. **Scheduling such an edit against a cache miss that was going
-to be paid anyway is a different mechanism and a different ball** — bl-b6f9,
-where a maintenance act queues against the agent's context and merges into the
-operating branch at a moment the miss is already inevitable. Nothing here
-defers, and nothing here should: a deferred unload whose queue does not yet
-exist would be an unload that silently did not happen.
+a tool this side offers rather than a discipline a model is asked to keep.
 
 **The loaded set is declared for the driven agent, per assembly** (bl-fd24;
 litany bl-ddaa). litany's seam asks `tools()` *for* an agent — the same
@@ -1686,13 +1712,29 @@ audit and neither a machine's:
   `LITANY_TOOL_ID` (upstream bl-d273), and a refusal with no door leaves an
   agent asked to remember something with no answer at all. Engine act.
 
+**One more at litany 0.0.12** (bl-9ced), admitted by the same audit:
+
+- **`read_tool_output`** pages the cut middle of one of *this agent's own*
+  captures back out of `steps/<agent-id>/<NNN>/tools/<tool-id>/output.json` —
+  the diagnostic record litany lands beside the step, on the server's disk,
+  under a domain bound that is one string equality against the caller's own
+  `LITANY_CONV_BRANCH` (litany `docs/DESIGN_CONTEXT_ECONOMY.md` §7). Its
+  subject is the agent's record and never a working tree, and a foot that holds
+  no `steps/` tree could only answer *no such address* — `search_history`'s
+  worst answer again. It is also the recovery the §3.3 bounded projection's own
+  cut marker names, so a routed one would make the marker point at a door the
+  model cannot open. Engine act — and, for the same reason, an intrinsic
+  `Read` row in the capability control (DESIGN §8.6): without one it would fall
+  to the routed lane and be held Opaque on every call, demanding an operator
+  answer for the one way out of a cut the harness imposed.
+
 The engine-act name set stays closed and enumerated in exactly one place
-(`src/tool_host/engine_act.rs`), now nine rows, and the mechanism is bl-dfce's
+(`src/tool_host/engine_act.rs`), now ten rows, and the mechanism is bl-dfce's
 unchanged: re-entry at the engine's own front door with the caller identity on
 the child's environment — and, since the seam hands it over (litany bl-ddaa),
 at the caller's **resolved working directory**, which is the engine's own
 contract for in-process built-ins (a relative `cd` resolves against where the
-agent stands). A ninth row is a deliberate act with this audit's question
+agent stands). An eleventh row is a deliberate act with this audit's question
 asked again.
 
 **Every spawn the router makes carries the invocation's own id** (bl-fe43;
@@ -4921,7 +4963,10 @@ DESIGN §6 rule 7 holds the derivation and the reasoning. The wire's half:
   replacement test, bl-00de), which is *per bump*, not per release — so a
   second change to a shape inside one cycle costs a second integer. That is
   cheap and honest; collapsing it would mean teaching the ledger what has been
-  published, which nothing in this tree knows.
+  published, which nothing in this tree knows. **Superseded by §9.21's second
+  half (bl-9ced):** something in this tree does know now
+  (`PROTOCOL_PUBLISHED`), and under bl-bca2's release hold the second integer
+  stopped being cheap. A wave of lanes shares one unreleased number.
 
 ### 9.12 Which config governs is an answer that moves (bl-e654)
 
@@ -5351,6 +5396,76 @@ ceiling` trail row (§9.8); `reply/board`'s `ceiling` verdict, still the same
 `Ceiling::verdict` text; the figure's encoder, still one function. And the §6
 table is unchanged: `ui.json` still holds exactly `seen`, `pinned`,
 `ceiling`, `prices` — the door reaches two keys that were always there.
+
+### 9.21 A conversation can be born on a role (bl-9ced)
+
+**`reply/prepare`'s `prepared` body gains `role`**, and every shape that
+carries a `prepared` gains it with them (`request/prompt`, `request/fan`,
+`reply/fanned`, `reply/prepared`). A field gained on a shape already in use,
+which §3's rule bumps outright — **and it lands on 18, the version bl-58bb
+raised, rather than on 19.** That is the sharing the version's own ledger entry
+asked for, and §9.11's amendment below is what made it possible; the wire is
+otherwise untouched.
+
+- **What it carries.** The role the conversation is born on: the
+  `souls/<role>.md`, the `providers.yaml` assignment and the `tools:` grant
+  litany resolves out of the **same** config commit `lineage` already chose
+  (litany 0.0.12, upstream bl-946c). `null` — a real value of the field, as
+  `binding`'s and `lineage`'s are — is litany's `worker`, so a body that names
+  no role is byte-identical in meaning to every body yog answered before this.
+- **yog derives nothing into it, and that is the point.** A lineage falls out
+  of the ball's tags (§8.7); a role does not fall out of anything. Which role
+  an operator wants their **own** conversation under is a choice made between
+  the prepare and the fire, and plan mode is exactly that choice — so `prepare`
+  answers `null` and the seat deposits the body back as `/prompt` with
+  `"role": "planner"`. A prepare reply is the next gesture (§8), so this is one
+  field of a body the seat was already carrying verbatim: no second op, no
+  second round trip, no state on the server between them.
+- **A bad value costs a decline, not a half-born conversation.** litany
+  resolves the role *before* the fork, so a role the governing commit does not
+  declare — or declares with no soul — leaves no branch, no ref and no
+  worktree. yog holds no second validity check that could disagree with it.
+- **What did not move: `/retarget`.** litany 0.0.12 also takes `--role` on the
+  retarget landing, which is how a running conversation changes role and how a
+  finished plan is accepted (`--role worker` back on the same lineage). yog's
+  `/retarget` is still the bare verb (§9.4) and carries no role, so accepting a
+  plan is not yet one gesture here. Naming it rather than shipping it: the
+  start is where plan mode is *entered*, which is the half the seat asked for,
+  and the return half is a second field on a second shape that would want its
+  own beat and its own ledger line.
+
+### 9.11 amended: the ledger refuses against the PUBLISHED floor (bl-9ced)
+
+§9.11 ruled that two bumps in one unreleased cycle is the corpus ledger's
+granularity, and gave the reason: *"collapsing it would mean teaching the
+ledger what has been published, which nothing in this tree knows."* Both halves
+have since changed.
+
+- **Something does know.** `src/wire/hello/version.rs` now states
+  `PROTOCOL_PUBLISHED` beside `PROTOCOL` — the left-hand side of the `<n> → <m>`
+  heading every ledger entry already wrote in prose, written once where a
+  program can read it. The corpus ledger's rule refuses a shape that moved at
+  or below **that** floor instead of at or below the version the record was
+  last *generated* at, which was only ever a proxy for it. A wave of lanes
+  therefore shares one unreleased number, which is what bl-58bb's entry
+  instructed and what nothing could honour until now.
+- **An extra integer stopped being cheap.** Under bl-bca2's release gate
+  (§3) a raise HOLDS the release until `thrall`, `lernie` and `yog-android`
+  carry the number on their mains. A wave that costs three numbers costs nine
+  consumer edits and three windows in which no published suite composes, and
+  that is the cost §9.11 was weighing against a single integer when it had no
+  such gate to weigh.
+- **The residual, stated.** `PROTOCOL_PUBLISHED` is a stated fact, not a
+  derived one. The derivation exists —
+  `scripts/protocol-gate.sh read` over yog's newest `v<x.y.z>` tag is what
+  `.github/workflows/release-automerge.yml` already does — but it needs git and
+  a network, and the ledger's gate is an ordinary unit test that must run on a
+  bare checkout. So a lane that raises `PROTOCOL` after a release and forgets
+  to raise the floor with it is under-strict for one wave. That is strictly
+  better than the standing state, where the answer to every shared wave was
+  *take another integer*, and the pair is read together in one file so the
+  forgetting is visible where the raise is made.
+
 ### 9.22 The learning loop is reachable (bl-dd88)
 
 **Two new ops and one new reply kind, and `PROTOCOL` does not move** — §3's
@@ -5396,7 +5511,6 @@ Both ops are members of the §9 config family — a proposal is a candidate conf
 commit, which is the same subject `lineages` browses and `config` writes. yog
 DESIGN §9.6 carries the rest: why the read is derived engine-side and the settle
 is not, and why freshness is read at ask time and stored nowhere.
-
 
 ## 10. Open questions (living)
 

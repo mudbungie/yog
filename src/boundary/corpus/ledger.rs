@@ -9,19 +9,28 @@
 //! The record remembers what the shapes *were*, so a signature that moved
 //! while the version stood still is refusable at the moment it is regenerated.
 //!
-//! **The version the comparison is against is the record's own, not the
-//! shape's** (bl-00de). `protocol` at the top level is the version this record
-//! was last generated at, and a signature may move only when the version being
-//! generated is greater than it. The per-shape `since` is then a *stamp* — the
-//! version at which that shape last moved, which is what a client reads — and
-//! never a term in the test. It used to be one, and the reasoning was wrong in
-//! a way that only showed later: a shape edited at a version that was then
-//! found spent, and raised past, kept the pre-bump number, because the
-//! regeneration after the bump saw an unchanged signature and had nothing to
-//! restamp. The record then said a shape changed at a version it did not
-//! change at. Refusing across the record's own version stamps at the bump
-//! instead, and a regeneration at an unchanged version with unchanged
-//! signatures stays a byte-identical no-op.
+//! **The version the comparison is against is neither the shape's nor the
+//! record's: it is the newest version that has been PUBLISHED**
+//! ([`crate::wire::hello::PROTOCOL_PUBLISHED`], bl-9ced amending bl-00de).
+//! The per-shape `since` is a *stamp* — the version at which that shape last
+//! moved, which is what a client reads — and never a term in the test. It used
+//! to be one, and the reasoning was wrong in a way that only showed later: a
+//! shape edited at a version that was then found spent, and raised past, kept
+//! the pre-bump number, because the regeneration after the bump saw an
+//! unchanged signature and had nothing to restamp. bl-00de replaced it with
+//! the record's own top-level `protocol` — the version the record was last
+//! *generated* at — which fixed the stamp and left one thing wrong: that
+//! number is a **proxy** for "a version a peer may be speaking", and it
+//! advances at every bump whether or not the bump ever shipped. So the second
+//! lane of one unreleased wave was refused and had to take another integer,
+//! which §9.11 accepted as cheap. Under bl-bca2's release hold it is not
+//! cheap — each number is three consumer repositories re-vendoring a constant
+//! and one more window in which no published suite composes — so the term is
+//! now the thing itself. `protocol` stays in the record as the generation
+//! stamp a reader wants; it is no longer a term in the rule.
+//!
+//! A regeneration at an unchanged version with unchanged signatures is still a
+//! byte-identical no-op.
 //!
 //! **A signature is field paths and their JSON types, not bytes.** Adding a
 //! sample to a shape leaves the signature alone, which is right: a new fixture
@@ -148,15 +157,17 @@ fn kind(value: &Value) -> &'static str {
 }
 
 /// The record this boundary earns, or the refusal that says why it cannot have
-/// one. **A signature may change only across a bump** (bl-00de): the record's
-/// own top-level `protocol` is the version it was last generated at, and any
-/// shape that moved — or vanished — is refused unless the version being
-/// generated is greater than that one. The sentence carries both halves of the
-/// remedy.
+/// one. **A signature may change only above the published floor** (bl-9ced
+/// amending bl-00de): `published` is the newest version any peer can be
+/// speaking, and any shape that moved — or vanished — is refused unless the
+/// version being generated is greater than it. The sentence carries both
+/// halves of the remedy, and names the floor so the reader can see which of
+/// the two integers is in their way.
 pub(super) fn advance(
     shapes: &[Shape],
     previous: &Ledger,
     protocol: u32,
+    published: u32,
 ) -> Result<Ledger, String> {
     let fresh: BTreeMap<String, Vec<String>> = shapes
         .iter()
@@ -168,11 +179,12 @@ pub(super) fn advance(
         .filter(|(name, entry)| fresh.get(*name) != Some(&entry.signature))
         .map(|(name, _)| name.clone())
         .collect();
-    if !moved.is_empty() && protocol <= previous.protocol {
+    if !moved.is_empty() && protocol <= published {
         return Err(format!(
-            "these wire shapes changed at an unchanged protocol version: {}. \
+            "these wire shapes changed at a published protocol version: {}. \
              A change to a shape already in use bumps the version: raise PROTOCOL \
-             in src/wire/hello.rs, then run `make corpus`.",
+             above the published floor of {published} in src/wire/hello/version.rs, \
+             then run `make corpus`.",
             moved.join(", ")
         ));
     }

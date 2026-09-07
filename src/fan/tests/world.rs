@@ -80,5 +80,6 @@ pub(super) fn prepared(dir: &TempDir) -> Prepared {
         goal: "Ball bl-1f2a: do the thing".to_owned(),
         origin: Origin::Balls,
         lineage: None,
+        role: None,
     }
 }

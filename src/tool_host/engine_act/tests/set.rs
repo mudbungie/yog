@@ -6,17 +6,19 @@
 use super::*;
 
 /// The set is closed and enumerated in one place, and every member goes
-/// through it. The nine rows are the three subject-locality families: the
+/// through it. The ten rows are the three subject-locality families: the
 /// compactor's procedure pair, the conversation-subject worker grants, and the
-/// three acts on the agent's own record, history and lineage (`python`'s inner
+/// four acts on the agent's own record, history and lineage (`python`'s inner
 /// invocations land under the in-flight step and re-enter the front door;
 /// `search_history` reads the workspace's `agents/*` refs; `remember` commits a
-/// staged `proposal/<agent-id>` branch on the workspace repository). The
+/// staged `proposal/<agent-id>` branch on the workspace repository;
+/// `read_tool_output` pages the agent's own `steps/**/output.json` capture,
+/// bounded to its own `LITANY_CONV_BRANCH`). The
 /// worktree names (`bash`, `read_file`, `apply_patch`) stay out, for the reason
 /// the roster's doc states — their subject is the working tree, which a
 /// consenting machine may hold.
 #[test]
-fn the_nine_names_are_engine_acts_and_nothing_else_is() {
+fn the_ten_names_are_engine_acts_and_nothing_else_is() {
     assert_eq!(
         NAMES,
         [
@@ -29,6 +31,7 @@ fn the_nine_names_are_engine_acts_and_nothing_else_is() {
             "python",
             "remember",
             "search_history",
+            "read_tool_output",
         ]
     );
     assert!(NAMES.iter().copied().all(is));

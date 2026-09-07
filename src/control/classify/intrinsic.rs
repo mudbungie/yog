@@ -5,14 +5,15 @@
 //! fall-off-the-match arm, and the split is the mechanism rather than a tidy:
 //! a name is folded into [`Known`] *before* anything classifies it, and
 //! [`row`] then matches that enum **exhaustively**, with no catch-all. A
-//! fourteenth name cannot be added without a class being chosen for it, and no
+//! fifteenth name cannot be added without a class being chosen for it, and no
 //! name can reach a passing class by default — which is exactly what
 //! `other => OpenWorld` used to do to every routed foot tool.
 //!
 //! Three families sit in here, and each is here for its own reason:
 //!
 //! - **litany's own pool** (`read_file`, `load_skill`, `message`, `dispatch`,
-//!   `apply_patch`, `cd`, `bash`, `python`, `remember`, `search_history`). `cd` and
+//!   `apply_patch`, `cd`, `bash`, `python`, `remember`, `search_history`,
+//!   `read_tool_output`). `cd` and
 //!   `apply_patch` are judged against the writable root at consult time and
 //!   `bash` goes to the operator ruleset ([`super::super::bash`]); the rest
 //!   carry a fixed class.
@@ -45,6 +46,7 @@ pub(super) enum Known {
     Python,
     Remember,
     SearchHistory,
+    ReadToolOutput,
     WriteSummary,
     MarkForDeletion,
     Clients,
@@ -65,6 +67,7 @@ impl Known {
             "python" => Some(Known::Python),
             "remember" => Some(Known::Remember),
             "search_history" => Some(Known::SearchHistory),
+            "read_tool_output" => Some(Known::ReadToolOutput),
             "write_summary" => Some(Known::WriteSummary),
             "mark_for_deletion" => Some(Known::MarkForDeletion),
             "clients" => Some(Known::Clients),
@@ -87,6 +90,21 @@ pub(super) fn row(
         Known::SearchHistory => Classified::new(
             Effect::Read,
             "searches the conversation's own history, which it observes and does not touch",
+        ),
+        // The recovery the §3.3 bounded projection's own cut marker names
+        // (litany 0.0.12, upstream bl-9a6e): it pages bytes back out of
+        // `steps/<agent-id>/<NNN>/tools/<tool-id>/output.json`, a diagnostic
+        // record litany already wrote, under a domain bound that is one string
+        // equality against the caller's own `LITANY_CONV_BRANCH`. It reads one
+        // file the agent itself produced and touches nothing, so it is Read for
+        // the reason `search_history` is. `Remember`'s note applies with more
+        // force here: without a row it would fall to the routed lane and be
+        // held Opaque on every call — an operator answer demanded for the one
+        // way out of a cut the harness imposed, which would leave the marker
+        // pointing at a door the model cannot open.
+        Known::ReadToolOutput => Classified::new(
+            Effect::Read,
+            "pages this agent's own captured tool output, which it reads and does not touch",
         ),
         // The one lawful door from a step to a durable fact (litany 0.0.11,
         // upstream bl-3c11): it appends to `facts.md` in a config commit on

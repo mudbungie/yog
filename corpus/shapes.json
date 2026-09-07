@@ -118,7 +118,7 @@
         "/verdict:string",
         ":object"
       ],
-      "since": 17
+      "since": 18
     },
     "reply/applied": {
       "signature": [
@@ -391,12 +391,13 @@
         "/rows/[]/goal:string",
         "/rows/[]/lineage:null",
         "/rows/[]/origin:string",
+        "/rows/[]/role:null",
         "/rows/[]/workspace:string",
         "/rows/[]:object",
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 18
     },
     "reply/files": {
       "signature": [
@@ -616,11 +617,12 @@
         "/prepared/goal:string",
         "/prepared/lineage:null",
         "/prepared/origin:string",
+        "/prepared/role:null",
         "/prepared/workspace:string",
         "/prepared:object",
         ":object"
       ],
-      "since": 1
+      "since": 18
     },
     "reply/proposals": {
       "signature": [
@@ -1046,7 +1048,7 @@
         "/workspace:string",
         ":object"
       ],
-      "since": 17
+      "since": 18
     },
     "request/arm": {
       "signature": [
@@ -1261,12 +1263,13 @@
         "/prepared/goal:string",
         "/prepared/lineage:null",
         "/prepared/origin:string",
+        "/prepared/role:null",
         "/prepared/workspace:string",
         "/prepared:object",
         "/project:string",
         ":object"
       ],
-      "since": 1
+      "since": 18
     },
     "request/files": {
       "signature": [
@@ -1505,14 +1508,17 @@
         "/prepared/binding:string",
         "/prepared/goal:string",
         "/prepared/lineage:null",
+        "/prepared/lineage:string",
         "/prepared/origin:string",
+        "/prepared/role:null",
+        "/prepared/role:string",
         "/prepared/workspace:string",
         "/prepared:object",
         "/seed:null",
         "/seed:number",
         ":object"
       ],
-      "since": 1
+      "since": 18
     },
     "request/proposal": {
       "signature": [

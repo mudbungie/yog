@@ -24,6 +24,7 @@ fn prepared() -> Prepared {
         goal: "g".to_owned(),
         origin: crate::opslog::Origin::Conversation,
         lineage: None,
+        role: None,
     }
 }
 

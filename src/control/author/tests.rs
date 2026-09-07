@@ -6,10 +6,13 @@ use super::*;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
-/// lernie's shipped workflow as `0.0.11` seeds it: no ceiling, and a second
-/// top-level block that must survive every transform here.
+/// The shipped workflow as litany `0.0.12` seeds it (upstream bl-c701): a
+/// second top-level block that must survive every transform here, and a
+/// `budgets:` block that must not — depth only, and the template's own comment
+/// names yog as the consumer that severs it.
 const SHIPPED: &str = "events:\n  user_message:\n    - dispatch(worker)\n\n\
-     compaction:\n  intermediate:\n    trigger: on_flush\n";
+     compaction:\n  intermediate:\n    trigger: on_flush\n\n\
+     budgets:\n  max_depth: 5\n";
 
 /// The same file as a workspace born before litany retired the seed carries
 /// it — the stale whole-tree ceiling this convergence exists to remove.
@@ -30,6 +33,22 @@ fn authoring_appends_the_block_and_keeps_every_other_default() {
         out.contains("tool_control:\n  command: /data/yog/world/tools/tool-control\n"),
         "{out}"
     );
+}
+
+/// **The strip is on the block, not on an axis** (bl-9ced): litany 0.0.12's
+/// template seeds `budgets:` again with a *different* limit than the one
+/// bl-56af removed, and the pass takes it out with no edit here — which is the
+/// claim worth a beat, since an upstream template that renames a limit must
+/// not be able to smuggle a whole-tree ceiling into every workspace yog
+/// manages.
+#[test]
+fn the_shipped_depth_ceiling_is_stripped_like_any_other_budget() {
+    let out = authored(SHIPPED, &shim());
+    assert!(!out.contains("budgets:\n"), "{out}");
+    assert!(!out.contains("max_depth"), "{out}");
+    assert!(out.contains(BUDGETS_MARK), "{out}");
+    // Still a fixed point with the new seed in play.
+    assert_eq!(authored(&out, &shim()), out);
 }
 
 /// The whole point of bl-56af: the seeded whole-tree ceiling is gone, every

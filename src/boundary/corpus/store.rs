@@ -19,7 +19,7 @@ const RECORD: &str = "shapes.json";
 fn rendered(protocol: u32, dir: &Path) -> Result<BTreeMap<String, String>, String> {
     let shapes = shapes();
     let previous = Ledger::read(&read(dir, RECORD));
-    let next = advance(&shapes, &previous, protocol)?;
+    let next = advance(&shapes, &previous, protocol, super::published())?;
     let mut out: BTreeMap<String, String> = shapes
         .iter()
         .map(|shape| {
@@ -58,14 +58,14 @@ pub(super) fn check(dir: &Path) -> Result<(), String> {
     Err(format!(
         "the wire conformance corpus is stale at {}. Run `make corpus` to \
          regenerate it; if a shape already in use changed, raise PROTOCOL in \
-         src/wire/hello.rs first.",
+         src/wire/hello/version.rs first.",
         stale.join(", ")
     ))
 }
 
 /// **The regeneration.** Write what the boundary spells and drop what it no
-/// longer does — refusing, before either, a shape that moved under a standing
-/// protocol version.
+/// longer does — refusing, before either, a shape that moved at or below the
+/// published protocol floor.
 pub(super) fn bless(dir: &Path) -> Result<(), String> {
     let want = rendered(super::protocol(), dir)?;
     for path in present(dir) {

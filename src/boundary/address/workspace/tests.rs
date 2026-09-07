@@ -46,6 +46,7 @@ fn shapes(named: &str) -> Vec<Gesture> {
         goal: String::new(),
         origin: Origin::Conversation,
         lineage: None,
+        role: None,
     };
     vec![
         Gesture::Act(Action::Scan {

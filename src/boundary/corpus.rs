@@ -86,6 +86,13 @@ fn protocol() -> u32 {
     crate::wire::hello::PROTOCOL
 }
 
+/// The newest protocol yog has PUBLISHED — the floor a shape may not move at
+/// or below, and the wire's own constant again rather than a second spelling
+/// (bl-9ced).
+fn published() -> u32 {
+    crate::wire::hello::PROTOCOL_PUBLISHED
+}
+
 /// Every shape, request half then answer half, each sorted by name.
 pub(crate) fn shapes() -> Vec<Shape> {
     let requests = crate::boundary::codec::tests::surface::gestures()

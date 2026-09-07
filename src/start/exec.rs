@@ -93,6 +93,29 @@ pub struct Prepared {
     /// litany's `config/default`, and it is an absent flag rather than a value
     /// yog spells, so an unmatched tag and no tag at all are one path.
     pub lineage: Option<String>,
+    /// **The role the conversation is born on** (litany 0.0.12, upstream
+    /// bl-946c; yog bl-9ced): the `souls/<role>.md`, the `providers.yaml`
+    /// assignment and the `tools:` grant the root resolves out of the **same**
+    /// config commit [`lineage`](Self::lineage) chose. `None` is litany's own
+    /// `WORKER_ROLE` default, spelled as an absent flag rather than a string
+    /// yog writes — the discipline [`lineage`](Self::lineage) already carries,
+    /// so an unset role and a role set to `worker` are one path.
+    ///
+    /// **It is the seat's field, and `prepare` answers `null` into it.** yog
+    /// derives nothing here: a lineage falls out of the ball's tags, but which
+    /// role an operator wants their *own* conversation under is a choice made
+    /// between the prepare and the fire — plan mode is exactly that choice
+    /// (litany ARCH §6 *Plan mode is a lineage*, and `--role` is what stops it
+    /// from also being a per-workspace lineage authored to restate a config
+    /// commit). A prepare reply is the next gesture, so a seat that wants a
+    /// planning conversation deposits the body back with `"role": "planner"`
+    /// and nothing else moves.
+    ///
+    /// A role the governing commit does not declare, or declares with no soul,
+    /// is refused by litany's own resolution **before** the fork, so a bad
+    /// value leaves no branch, ref or worktree and yog holds no second
+    /// validity check to disagree with it.
+    pub role: Option<String>,
     pub goal: String,
     /// The §7.3 banner surface this start's ops rows carry (bl-48f8) — the
     /// rung's own ([`Payload::origin`](super::Payload::origin)), carried here so

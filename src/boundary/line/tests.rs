@@ -47,6 +47,7 @@ pub(super) fn prepared() -> Prepared {
         goal: String::new(),
         origin: Origin::Conversation,
         lineage: None,
+        role: None,
     }
 }
 

@@ -79,11 +79,21 @@ const FOREIGN: &[&str] = &[
     // §9.20 joins them (bl-d13d): the wire's half of the spend ruling — the
     // cost field beside every token count, and the price/ceiling door — cited
     // "REMOTE §9.20" from DESIGN §3.5.
+    // §9.11 and §9.21 join them (bl-9ced). §9.21 is the birth role on the
+    // prepare rung — `Prepared.role`, `litany prompt --role` and the sign-in
+    // door reading it — cited "REMOTE §9.21" from DESIGN §8.1 and from the
+    // door's own module. §9.11 is the corpus ledger's granularity ruling, whose
+    // amendment §9.21 carries: the ledger refuses against the PUBLISHED
+    // protocol floor rather than against the version the record was last
+    // generated at, which is what lets a wave of lanes share one unreleased
+    // number.
     // §9.22 joins them (bl-dd88): the learning loop made reachable — the two
     // new ops and the one new reply kind, and why none of them moves the
     // protocol version. DESIGN's own §9.6 carries the engine-side half, so a
     // reader following either prefix lands where the argument is.
-    "9.7", "9.8", "9.9", "9.14", "9.15", "9.19", "9.20", "9.22",
+    // DESIGN §9 is "Config editing write paths" and stops at §9.6, which the
+    // sibling test keeps honest.
+    "9.7", "9.8", "9.9", "9.11", "9.14", "9.15", "9.19", "9.20", "9.21", "9.22",
     // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
     // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
     // "Rejections" and has no subsections at all, which the sibling test keeps

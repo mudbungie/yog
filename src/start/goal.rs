@@ -208,6 +208,10 @@ pub(super) fn compose_prepared(inputs: &StartInputs, worktree: Option<&Path>) ->
         // planner's preview never names one, and [`prepare`](super::prepare)
         // — the one caller that resolved it — fills it in on the way out.
         lineage: None,
+        // The role is nobody's derivation (bl-9ced): a prepare answers the
+        // worker default as an absence and the seat sets it on the gesture it
+        // deposits back, which is where plan mode is chosen.
+        role: None,
         goal: prefill(&inputs.payload),
         origin: inputs.payload.origin(),
     }

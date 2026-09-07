@@ -47,10 +47,24 @@
 //! allowance a root and its whole descent spend together. lernie's pre-`0.0.11`
 //! template shipped it *set*, so every workspace born before that release froze
 //! `max_wall_seconds: 3600` and `max_depth: 4` into its `config/default` and
-//! caps every agent forked off that lineage. litany has since retired the seed,
-//! but a template only ever reaches workspaces born after it — this convergence
+//! caps every agent forked off that lineage. A template only ever reaches
+//! workspaces born after it — this convergence
 //! is the only thing that reaches the ones already standing, which is the same
 //! argument that put the control here.
+//!
+//! **The shipped template carries a `budgets:` block again, and this strip is
+//! unchanged** (litany 0.0.12, upstream bl-c701, checked at yog bl-9ced).
+//! `template/workflow.yaml` now ships `budgets:\n  max_depth: 5` — depth only,
+//! neither spend ceiling — and litany's own comment beside it names yog as the
+//! consumer that severs it. So the seed is back, on a different axis, and the
+//! pass below removes it exactly as it removed the pre-`0.0.11` one: the strip
+//! is on the **block**, by top-level key, never on an axis, so an upstream
+//! template that adds, drops or renames a limit needs no edit here.
+//! `max_depth` is a real prohibition on growth for the plain-`litany` operator
+//! (bl-d023's runaway crossed depth 4 before a person ended it) and yog's
+//! answer to that concern is not a per-tree number: it is the ui.json
+//! `ceiling` below plus the operator standing at the board, and two ceilings
+//! over one concern is the second representation that drifts.
 //!
 //! So [`authored`] **strips** a top-level `budgets:` block and leaves one line
 //! saying so. Unconditionally, not down to a smaller number: a whole-tree
@@ -80,7 +94,9 @@ const WORKFLOW_YAML: &str = "workflow.yaml";
 const KEY: &str = "tool_control:";
 /// litany's whole-tree spend ceiling (litany ARCH §6). The second top-level
 /// block this fixed point holds, and the only one it holds **empty** — yog
-/// authors no ceiling and removes the one a pre-`0.0.11` template seeded.
+/// authors no ceiling and removes whichever one the template of the day
+/// seeded (`max_wall_seconds`/`max_depth` before `0.0.11`, `max_depth: 5`
+/// again since `0.0.12`).
 const BUDGETS: &str = "budgets:";
 /// The prefix of the one comment line yog authors. Stripped by the same pass
 /// that strips the block, so authoring stays a fixed point: a note that
