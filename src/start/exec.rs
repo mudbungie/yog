@@ -149,11 +149,12 @@ pub fn on_mint(
     ts: &str,
     cwd: &Path,
     origin: Origin,
+    client: crate::registry::Client,
 ) -> Result<String, StartError> {
     match result {
         Ok(name) => Ok(name),
         Err(e) => {
-            log_step_failure(state_root, ts, cwd, MINT, &e.to_string(), origin)?;
+            log_step_failure(state_root, ts, cwd, MINT, &e.to_string(), origin, client)?;
             Err(StartError::Mint(e))
         }
     }

@@ -13,6 +13,7 @@ fn row(words: &[&str]) -> OpEntry {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::World,
+        client: crate::registry::Client::default(),
     }
 }
 

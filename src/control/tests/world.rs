@@ -123,6 +123,7 @@ impl World {
                 stdout: String::new(),
                 stderr: String::new(),
                 origin,
+                client: crate::registry::Client::default(),
             },
         )
         .unwrap();

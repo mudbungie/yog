@@ -114,6 +114,7 @@ pub fn execute_prompt(
         ts,
         workspace,
         prepared.origin,
+        litany.client(),
     )?;
     let ws_s = workspace.to_string_lossy();
     let bound = prepared.binding.as_ref().map(|p| p.to_string_lossy());
@@ -160,9 +161,14 @@ pub fn execute_prompt(
     // never-launched spawn writes; `DETACHED_EXIT` is reserved for a handoff
     // that actually happened, and so records nothing but the launch.
     let entry = match spawn.as_ref().err() {
-        Some(e) => {
-            OpEntry::synthetic_failure(ts.to_owned(), argv, cwd, e.to_string(), prepared.origin)
-        }
+        Some(e) => OpEntry::synthetic_failure(
+            ts.to_owned(),
+            argv,
+            cwd,
+            e.to_string(),
+            prepared.origin,
+            litany.client(),
+        ),
         None => OpEntry {
             ts: ts.to_owned(),
             argv,
@@ -171,6 +177,7 @@ pub fn execute_prompt(
             stdout: String::new(),
             stderr: String::new(),
             origin: prepared.origin,
+            client: litany.client(),
         },
     };
     opslog::append(state_root, &opslog::clip_goal(&entry))?;

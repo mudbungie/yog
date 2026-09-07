@@ -70,6 +70,9 @@ pub fn reaped(ts: String, workspace: &Path, ball: &str, claimant: &str, since: &
     entry(ts, workspace, REAP, ball, claimant, since.to_owned())
 }
 
+/// Every row here is the §4.3 **armed loop's**, not an operator's: nobody
+/// asked for a spawn or a reap, the arming did — so the author is the in-world
+/// identity (bl-e59e), the same attribution a §7.2 drift observation carries.
 fn entry(
     ts: String,
     workspace: &Path,
@@ -93,6 +96,7 @@ fn entry(
         // The board is the surface the loop acts on, so a loop row belongs to
         // the same §7.3 attribution a ▶ Start from that section carries.
         origin: Origin::Balls,
+        client: crate::registry::Client::local(),
     }
 }
 

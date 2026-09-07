@@ -17,6 +17,7 @@ fn row(argv: &str, cwd: &str, exit: i32) -> OpRow {
             "boom".into()
         },
         origin: Origin::default(),
+        client: crate::registry::Client::default(),
     })
 }
 
@@ -40,6 +41,7 @@ fn detached(argv: &str, cwd: &str, stderr: &str) -> OpRow {
         stdout: String::new(),
         stderr: stderr.into(),
         origin: Origin::default(),
+        client: crate::registry::Client::default(),
     })
 }
 

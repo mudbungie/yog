@@ -13,6 +13,12 @@ use serde_json::{Map, Value};
 /// older yog wrote (which the parser reads as the default).
 const ORIGIN: &str = "origin";
 
+/// The line's **author** key (see [`OpEntry::client`], bl-e59e). A fixed field
+/// like the rest: short, never truncated, and absent only from a line an older
+/// yog wrote — which the parser reads as the in-world default, because that is
+/// what every writer of such a line was.
+const CLIENT: &str = "client";
+
 /// The pure ≤[`CAP`] serializer: JSON object plus `'\n'`, truncating `stdout`
 /// then `stderr` (heads kept) with a `"truncated":true` marker whenever the
 /// full line would exceed the cap. The fixed fields never truncate.
@@ -49,6 +55,7 @@ fn serialize(entry: &OpEntry, stdout: &str, stderr: &str, truncated: bool) -> Ve
     map.insert("cwd".into(), Value::from(entry.cwd.as_str()));
     map.insert("exit".into(), Value::from(entry.exit));
     map.insert(ORIGIN.into(), Value::from(entry.origin.as_str()));
+    map.insert(CLIENT.into(), Value::from(entry.client.name()));
     map.insert("stdout".into(), Value::from(stdout));
     map.insert("stderr".into(), Value::from(stderr));
     if truncated {
@@ -153,6 +160,12 @@ pub(super) fn parse_line(line: &str) -> Option<OpEntry> {
         stdout: str_field(obj, "stdout"),
         stderr: str_field(obj, "stderr"),
         origin: Origin::parse(&str_field(obj, ORIGIN)),
+        // Forgiving like every other field, and its fallback is a *reading*
+        // rather than a blank: a line with no `client` was written before the
+        // key existed, and every writer of such a line was an in-world caller.
+        // An unusable token reads the same way — the registry's own validator
+        // decides what a name may be, so this parser needs no second opinion.
+        client: crate::registry::Client::parse(&str_field(obj, CLIENT)).unwrap_or_default(),
     })
 }
 

@@ -26,6 +26,7 @@ fn op(ts: &str, argv: &[&str], cwd: &str, exit: i32, stderr: &str) -> OpEntry {
         stdout: String::new(),
         stderr: stderr.to_owned(),
         origin: Origin::Balls,
+        client: yog::registry::Client::default(),
     }
 }
 
@@ -63,6 +64,7 @@ fn s6_t5_the_chip_counts_and_every_row_expands_verbatim() {
             "/proj".to_owned(),
             "no such file or directory (os error 2)".to_owned(),
             Origin::Balls,
+            yog::registry::Client::default(),
         ),
     )
     .unwrap();

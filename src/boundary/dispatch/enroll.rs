@@ -72,8 +72,15 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
     let grade = stance::mint_or_adopt(&dir, request)?;
     let (ca, cert, key) = carry(&dir, &request.name)?;
     registry::register(&deps.state_root, &client, &request.workspace).map_err(|e| e.to_string())?;
-    crate::actions::verbs::log_step_done(&deps.state_root, ts, &dir, STEP, Origin::World)
-        .map_err(|e| e.to_string())?;
+    crate::actions::verbs::log_step_done(
+        &deps.state_root,
+        ts,
+        &dir,
+        STEP,
+        Origin::World,
+        deps.caller.client.clone(),
+    )
+    .map_err(|e| e.to_string())?;
     Ok(Reply::Enrolled(Enrolled {
         grade,
         name: request.name.clone(),

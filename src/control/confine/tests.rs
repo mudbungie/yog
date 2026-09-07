@@ -51,6 +51,7 @@ fn claim(world: &crate::xdg::Env, project: &Path, claimant: &str) {
             stdout: String::new(),
             stderr: String::new(),
             origin: Origin::Balls,
+            client: crate::registry::Client::default(),
         },
     )
     .unwrap();

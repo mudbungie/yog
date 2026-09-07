@@ -14,6 +14,7 @@ fn failure() -> OpRow {
         "/proj".into(),
         "gate refused\n".into(),
         Origin::Balls,
+        crate::registry::Client::default(),
     ))
 }
 
@@ -29,7 +30,12 @@ fn drift() -> OpRow {
 
 /// The row [`ack`] writes, without going through the filesystem.
 fn ack_row() -> OpRow {
-    OpRow::from(&entry("3", Path::new("/state"), ACK_STEP))
+    OpRow::from(&entry(
+        "3",
+        Path::new("/state"),
+        ACK_STEP,
+        crate::registry::Client::default(),
+    ))
 }
 
 #[test]
@@ -97,6 +103,7 @@ fn only_a_real_ack_line_moves_the_watermark() {
         "mint",
         "/state".into(),
         Origin::World,
+        crate::registry::Client::default(),
     ));
     let foreign = OpRow::from(&OpEntry::drift(
         "9".into(),
@@ -113,7 +120,7 @@ fn only_a_real_ack_line_moves_the_watermark() {
 #[test]
 fn ack_appends_a_clean_world_step_line_that_banners_nowhere() {
     let dir = tempdir().unwrap();
-    ack(dir.path(), "17").unwrap();
+    ack(dir.path(), "17", crate::registry::Client::default()).unwrap();
     let rows: Vec<OpRow> = opslog::tail(dir.path(), 8)
         .iter()
         .map(OpRow::from)
@@ -143,13 +150,14 @@ fn clear_leaves_a_one_row_trail_whose_row_is_the_clear() {
                 "/proj".into(),
                 "boom".into(),
                 Origin::Balls,
+                crate::registry::Client::default(),
             ),
         )
         .unwrap();
     }
     assert_eq!(opslog::tail(dir.path(), 8).len(), 3);
 
-    clear(dir.path(), "42").unwrap();
+    clear(dir.path(), "42", crate::registry::Client::default()).unwrap();
     let rows: Vec<OpRow> = opslog::tail(dir.path(), 8)
         .iter()
         .map(OpRow::from)
@@ -176,7 +184,7 @@ fn clear_leaves_a_one_row_trail_whose_row_is_the_clear() {
 fn clear_founds_a_missing_state_root() {
     let dir = tempdir().unwrap();
     let root = dir.path().join("yog").join("state");
-    clear(&root, "1").unwrap();
+    clear(&root, "1", crate::registry::Client::default()).unwrap();
     assert_eq!(opslog::tail(&root, 8).len(), 1);
 }
 
@@ -195,12 +203,23 @@ fn a_concurrent_append_after_the_truncate_is_not_clobbered() {
     // The other instance's append lands first, at the (new) end of file.
     opslog::append(
         dir.path(),
-        &OpEntry::step_done("7".into(), "mint", "/state".into(), Origin::World),
+        &OpEntry::step_done(
+            "7".into(),
+            "mint",
+            "/state".into(),
+            Origin::World,
+            crate::registry::Client::default(),
+        ),
     )
     .unwrap();
     // Then this clear's own write, still through O_APPEND: after it, not over it.
     handle
-        .write_all(&build_line(&entry("8", dir.path(), CLEAR_STEP)))
+        .write_all(&build_line(&entry(
+            "8",
+            dir.path(),
+            CLEAR_STEP,
+            crate::registry::Client::default(),
+        )))
         .unwrap();
     let tail = opslog::tail(dir.path(), 8);
     assert_eq!(tail.len(), 2);
@@ -217,7 +236,12 @@ fn a_concurrent_append_after_the_truncate_is_not_clobbered() {
 #[test]
 fn both_shapes_are_bounded_and_inside_the_pipe_buf_cap() {
     for step in [ACK_STEP, CLEAR_STEP] {
-        let e = entry("1785630266", Path::new("/home/u/.local/state/yog"), step);
+        let e = entry(
+            "1785630266",
+            Path::new("/home/u/.local/state/yog"),
+            step,
+            crate::registry::Client::default(),
+        );
         assert!(e.stdout.is_empty() && e.stderr.is_empty());
         assert_eq!(e.argv.len(), 2);
         assert!(build_line(&e).len() <= opslog::CAP);

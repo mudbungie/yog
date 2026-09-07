@@ -21,6 +21,7 @@ fn on_mint_passes_a_name_through() {
         "TS",
         w.home.path(),
         Origin::Conversation,
+        crate::registry::Client::default(),
     )
     .unwrap();
     assert_eq!(name, "cobalt-gecko");
@@ -39,6 +40,7 @@ fn on_mint_logs_an_exhausted_pool() {
         "TS",
         w.home.path(),
         Origin::Conversation,
+        crate::registry::Client::default(),
     )
     .unwrap_err();
     assert!(matches!(err, StartError::Mint(MintError::Exhausted(6))));

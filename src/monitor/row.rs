@@ -86,8 +86,11 @@ pub fn entry(ts: String, check: &Check) -> OpEntry {
         stderr: String::new(),
         // A check is yog's own observation about the world, made by no operator
         // gesture — the same attribution a drift observation carries, and the
-        // one that raises no §7.3 banner on a surface that did not ask.
+        // one that raises no §7.3 banner on a surface that did not ask. Its
+        // author is the in-world identity for that same reason (bl-e59e): no
+        // seat asked for this row, so naming one would be an invention.
         origin: Origin::World,
+        client: crate::registry::Client::local(),
     }
 }
 
@@ -100,6 +103,8 @@ pub fn failure(ts: String, workspace: &Path, agent: &str, why: &str) -> OpEntry 
         crate::nav::ws_key(workspace),
         format!("{agent}: {why}"),
         Origin::World,
+        // The loop's own row, like [`entry`]'s: nobody asked for it.
+        crate::registry::Client::local(),
     )
 }
 

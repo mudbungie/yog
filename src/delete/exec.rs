@@ -65,7 +65,9 @@ pub fn execute(
                 }
             }
             Step::Prune { key } => ui.prune_workspace(key),
-            Step::Remove { workspace, wall } => remove(workspace, wall, state_root, ts)?,
+            Step::Remove { workspace, wall } => {
+                remove(workspace, wall, state_root, ts, bl.client())?;
+            }
         }
     }
     Ok(())
@@ -74,11 +76,17 @@ pub fn execute(
 /// Remove the workspace directory whole and log the non-spawn step (§3.6 step 3,
 /// §4.2). The ops row's `cwd` is the names root the write is made against — the
 /// truthful directory, since the subject itself is gone by the time it lands.
-fn remove(workspace: &Path, wall: &Path, state_root: &Path, ts: &str) -> Result<(), DeleteError> {
+fn remove(
+    workspace: &Path,
+    wall: &Path,
+    state_root: &Path,
+    ts: &str,
+    client: crate::registry::Client,
+) -> Result<(), DeleteError> {
     let cwd = workspace.parent().unwrap_or(workspace);
     match remove_both(workspace, wall) {
         Ok(()) => {
-            log_step_done(state_root, ts, cwd, DELETE_STEP, Origin::World)?;
+            log_step_done(state_root, ts, cwd, DELETE_STEP, Origin::World, client)?;
             Ok(())
         }
         Err(e) => {
@@ -89,6 +97,7 @@ fn remove(workspace: &Path, wall: &Path, state_root: &Path, ts: &str) -> Result<
                 DELETE_STEP,
                 &e.to_string(),
                 Origin::World,
+                client,
             )?;
             Err(DeleteError::Io(e))
         }

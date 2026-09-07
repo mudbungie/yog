@@ -118,7 +118,14 @@ fn s8_t4_each_agent_tracks_in_a_space_of_its_own() {
         "untouched = default"
     );
 
-    let landed = marks::apply(&a_space, &state, "T0", "balls/agents/alice").unwrap();
+    let landed = marks::apply(
+        &a_space,
+        &state,
+        "T0",
+        "balls/agents/alice",
+        yog::registry::Client::default(),
+    )
+    .unwrap();
     assert_eq!(landed, "balls/agents/alice");
     assert_eq!(a_space.branch(), "balls/agents/alice");
     // …and it moved nobody else. That is the whole of the ruling's first

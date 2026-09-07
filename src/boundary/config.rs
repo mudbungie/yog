@@ -178,7 +178,14 @@ pub(super) fn set_marks(
     branch: &str,
 ) -> Result<Reply, String> {
     let space = marks::read(&deps.world, workspace);
-    let landed = marks::apply(&space, &deps.state_root, ts, branch).map_err(|e| e.to_string())?;
+    let landed = marks::apply(
+        &space,
+        &deps.state_root,
+        ts,
+        branch,
+        deps.caller.client.clone(),
+    )
+    .map_err(|e| e.to_string())?;
     Ok(Reply::Marks { branch: landed })
 }
 

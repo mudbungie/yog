@@ -55,6 +55,10 @@ pub fn consume(deps: &Deps, ui: &mut UiState, ts: &str, now_unix: i64) -> usize 
                 "gesture-reply",
                 &format!("reply for {id:?} could not be written"),
                 Origin::World,
+                // yog's own failure to answer, not the depositor's act
+                // (bl-e59e): the gesture had an author and this row does not
+                // report one, because this row is about the engine.
+                crate::registry::Client::local(),
             );
         }
         consumed += 1;
@@ -91,6 +95,7 @@ pub fn sweep(state_root: &Path, ts: &str) -> usize {
                 "gesture-reply",
                 &format!("reply for {id:?} could not be written"),
                 Origin::World,
+                crate::registry::Client::local(),
             );
             continue;
         }
@@ -101,6 +106,7 @@ pub fn sweep(state_root: &Path, ts: &str) -> usize {
             "gesture-debris",
             &format!("gesture {id:?} died in flight; answered in doubt"),
             Origin::World,
+            crate::registry::Client::local(),
         );
         answered += 1;
     }

@@ -75,7 +75,15 @@ pub fn execute_ensure_workspace(
     .collect();
     let authored = converge(deps, workspace, config, &drafts, state_root, ts, origin)?;
     if let Some(entry) = authored.filter(|e| e.exit != 0) {
-        log_step_failure(state_root, ts, workspace, CONTROL, &entry.stderr, origin)?;
+        log_step_failure(
+            state_root,
+            ts,
+            workspace,
+            CONTROL,
+            &entry.stderr,
+            origin,
+            deps.litany.client(),
+        )?;
         return Err(StartError::Control(entry.stderr));
     }
     Ok(created)
@@ -162,7 +170,15 @@ fn create_workspace(
     }
     let parent = workspace.parent().unwrap_or(workspace);
     if let Err(e) = std::fs::create_dir_all(parent) {
-        log_step_failure(state_root, ts, parent, MKDIR, &e.to_string(), origin)?;
+        log_step_failure(
+            state_root,
+            ts,
+            parent,
+            MKDIR,
+            &e.to_string(),
+            origin,
+            litany.client(),
+        )?;
         return Err(StartError::Io(e));
     }
     let birth = crate::scratch::temp_in(parent, &crate::naming::leaf(workspace));
@@ -182,7 +198,15 @@ fn create_workspace(
         Err(e) => {
             drop(std::fs::remove_dir_all(&birth));
             if let StartError::Io(io) = &e {
-                log_step_failure(state_root, ts, workspace, BIRTH, &io.to_string(), origin)?;
+                log_step_failure(
+                    state_root,
+                    ts,
+                    workspace,
+                    BIRTH,
+                    &io.to_string(),
+                    origin,
+                    litany.client(),
+                )?;
             }
             Err(e)
         }

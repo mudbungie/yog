@@ -132,9 +132,10 @@ fn logged<T>(
     outcome: Result<T, String>,
 ) -> Result<T, String> {
     let cwd = repo.display().to_string();
+    let (ts, who) = (ts.to_owned(), deps.caller.client.clone());
     let entry = match outcome.as_ref().err() {
-        Some(err) => OpEntry::step_failure(ts.to_owned(), step, cwd, err.clone(), Origin::Balls),
-        None => OpEntry::step_done(ts.to_owned(), step, cwd, Origin::Balls),
+        Some(err) => OpEntry::step_failure(ts, step, cwd, err.clone(), Origin::Balls, who),
+        None => OpEntry::step_done(ts, step, cwd, Origin::Balls, who),
     };
     opslog::append(&deps.state_root, &entry).map_err(|e| e.to_string())?;
     outcome

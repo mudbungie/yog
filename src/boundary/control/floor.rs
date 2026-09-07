@@ -75,6 +75,7 @@ pub(crate) fn set_floor(
         stderr: String::new(),
         // The subject is a conversation, which is what §7.3 attribution names.
         origin: Origin::Conversation,
+        client: deps.caller.client.clone(),
     };
     opslog::append(&deps.state_root, &row).map_err(|e| e.to_string())?;
     let standing = Answers::fold(&opslog::tail(&deps.state_root, usize::MAX)).floored(agent);

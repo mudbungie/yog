@@ -58,6 +58,7 @@ fn launch(m: &crate::AppModel, ts: &str, ws: &Path) {
             stdout: String::new(),
             stderr: String::new(),
             origin: Origin::Conversation,
+            client: crate::registry::Client::default(),
         },
     )
     .unwrap();

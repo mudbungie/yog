@@ -126,6 +126,7 @@ impl Cli {
             prefix: Vec::new(),
             env: Vec::new(),
             wrapper: Vec::new(),
+            client: crate::registry::Client::default(),
         }
     }
 
@@ -139,6 +140,7 @@ impl Cli {
             prefix: vec![namespace.to_string()],
             env: Vec::new(),
             wrapper: Vec::new(),
+            client: crate::registry::Client::default(),
         }
     }
 

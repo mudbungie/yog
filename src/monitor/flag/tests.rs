@@ -18,12 +18,19 @@ fn row(ts: &str, cwd: &str, argv: &str, stdout: &str) -> OpRow {
         stdout: stdout.to_owned(),
         stderr: String::new(),
         origin: Origin::Conversation,
+        client: crate::registry::Client::default(),
     }
 }
 
 #[test]
 fn the_row_names_the_conversation_and_never_banners() {
-    let entry: OpEntry = raised("7".to_owned(), Path::new(WS), "c-1", "look at this");
+    let entry: OpEntry = raised(
+        "7".to_owned(),
+        Path::new(WS),
+        "c-1",
+        "look at this",
+        crate::registry::Client::default(),
+    );
     assert_eq!(entry.argv, vec![YOG_FLAG.to_owned(), "c-1".to_owned()]);
     assert_eq!(entry.cwd, WS);
     assert_eq!(entry.exit, 0, "raising attention is not a failure");

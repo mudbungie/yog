@@ -15,6 +15,7 @@ fn row(exit: i32, stderr: &str) -> OpRow {
         stdout: String::new(),
         stderr: stderr.into(),
         origin: Origin::default(),
+        client: crate::registry::Client::default(),
     })
 }
 
@@ -73,6 +74,7 @@ fn a_failed_yog_step_is_not_worded_as_a_spawn() {
         "/proj".into(),
         "pool exhausted".into(),
         Origin::default(),
+        crate::registry::Client::default(),
     );
     let r = OpRow::from(&e);
     assert_eq!(r.argv, format!("{YOG_STEP} mint"));

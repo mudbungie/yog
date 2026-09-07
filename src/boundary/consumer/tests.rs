@@ -232,3 +232,36 @@ fn the_boot_answers_a_dead_claimants_gesture_in_doubt() {
     }
     drop(consumer);
 }
+
+/// **A shared workspace's trail says who said what** (REMOTE §4.1, round-1
+/// ruling 5; bl-e59e). The identity the intake carries is recorded on the §4.2
+/// row the act leaves, so a workspace two seats share can answer *who did
+/// this* — and an in-world caller's row says `local`, which is the fact rather
+/// than a blank.
+///
+/// The act asserted on is the trail's own ack, for two reasons: it addresses no
+/// workspace, so nothing about scoping is in the way of the question being
+/// asked; and it is the gesture that *quiets a shared trail's alarms*, which is
+/// precisely the act a second seat needs attributed.
+#[test]
+fn the_trail_names_the_seat_that_asked() {
+    let root = tempdir().unwrap();
+    let ctx = ctx(root.path());
+    let ack = json!({"op": "ack"});
+    // Registered, because an unregistered certificate is refused ahead of every
+    // gesture (§4) — the attribution is asked of a client that may act at all.
+    crate::registry::register(root.path(), &client("seat1"), "home").expect("seated");
+
+    assert_eq!(ctx.answer_as(&seat("seat1"), &ack)["ok"], true);
+    assert_eq!(ctx.answer(&ack)["ok"], true);
+
+    let authors: Vec<String> = crate::opslog::tail(root.path(), 16)
+        .into_iter()
+        .map(|e| e.client.name())
+        .collect();
+    assert_eq!(
+        authors,
+        vec!["seat1".to_owned(), "local".to_owned()],
+        "the wire client's act, then the in-world one's"
+    );
+}

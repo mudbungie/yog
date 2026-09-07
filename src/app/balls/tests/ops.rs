@@ -25,6 +25,7 @@ fn prime(m: &AppModel, cwd: &str, exit: i32, origin: Origin) {
                 "unrecognized subcommand\n".into()
             },
             origin,
+            client: crate::registry::Client::default(),
         },
     )
     .unwrap();

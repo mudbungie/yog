@@ -94,6 +94,7 @@ pub(super) fn answer_hold(
         stderr: String::new(),
         // The subject is a conversation, which is what §7.3 attribution names.
         origin: Origin::Conversation,
+        client: deps.caller.client.clone(),
     };
     opslog::append(&deps.state_root, &row).map_err(|e| e.to_string())?;
     let advanced = ruling != Ruling::Hold && advance(deps, ts, workspace, agent).is_ok();
@@ -142,6 +143,7 @@ pub(super) fn advance(deps: &Deps, ts: &str, workspace: &Path, agent: &str) -> R
             cwd,
             e.to_string(),
             Origin::Conversation,
+            deps.caller.client.clone(),
         ),
         None => OpEntry {
             ts: ts.to_owned(),
@@ -151,6 +153,7 @@ pub(super) fn advance(deps: &Deps, ts: &str, workspace: &Path, agent: &str) -> R
             stdout: String::new(),
             stderr: String::new(),
             origin: Origin::Conversation,
+            client: deps.caller.client.clone(),
         },
     };
     opslog::append(&deps.state_root, &entry).map_err(|e| e.to_string())?;

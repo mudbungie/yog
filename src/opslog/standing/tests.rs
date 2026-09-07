@@ -17,6 +17,7 @@ fn row(argv: &str, exit: i32) -> OpRow {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::Balls,
+        client: crate::registry::Client::default(),
     }
 }
 

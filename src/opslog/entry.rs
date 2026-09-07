@@ -27,6 +27,25 @@ pub struct OpEntry {
     pub stdout: String,
     pub stderr: String,
     pub origin: Origin,
+    /// **Who made this gesture** (REMOTE §4.1, ruling 5 of round 1; bl-e59e):
+    /// the identity the intake carried — a wire connection's certificate common
+    /// name, or [`local`](crate::registry::Client::local) for the window, the
+    /// `gestures/` inbox, `yog gesture` and yog's own loops.
+    ///
+    /// The trail recorded `argv`, `cwd`, `origin` and `exit` and nothing about
+    /// *whose* act it was, so a workspace two seats share could not say who
+    /// said what — and unlike every other fact here that is unrecoverable
+    /// afterwards, since no later derivation can reconstruct the author of a
+    /// line nobody attributed. The engine knew the name at every one of those
+    /// acts: it reads the common name off the presented leaf, narrows the whole
+    /// published derivation by it and prints it in the client roster.
+    ///
+    /// It changes at the rate of the **act**, not of the connection, which is
+    /// why it is durable here while presence stays RAM (REMOTE §5). Its type is
+    /// the registry's own [`Client`](crate::registry::Client), so a trail row
+    /// and a roster row spell one identity one way, and the default is `local`
+    /// rather than an empty string nothing could resolve.
+    pub client: crate::registry::Client,
 }
 
 impl OpEntry {
@@ -41,6 +60,7 @@ impl OpEntry {
         cwd: String,
         stderr: String,
         origin: Origin,
+        client: crate::registry::Client,
     ) -> Self {
         Self {
             ts,
@@ -50,6 +70,7 @@ impl OpEntry {
             stdout: String::new(),
             stderr,
             origin,
+            client,
         }
     }
 
@@ -63,6 +84,7 @@ impl OpEntry {
         cwd: String,
         stderr: String,
         origin: Origin,
+        client: crate::registry::Client,
     ) -> Self {
         Self::synthetic_failure(
             ts,
@@ -70,6 +92,7 @@ impl OpEntry {
             cwd,
             stderr,
             origin,
+            client,
         )
     }
 
@@ -79,7 +102,13 @@ impl OpEntry {
     /// `["yog-step","delete-workspace"]`. The sentinels are for failures; a step
     /// that succeeded has a status, so it states one, and the trail records the
     /// deletion rather than vanishing with its subject (§3.6, §4.2).
-    pub fn step_done(ts: String, step: &str, cwd: String, origin: Origin) -> Self {
+    pub fn step_done(
+        ts: String,
+        step: &str,
+        cwd: String,
+        origin: Origin,
+        client: crate::registry::Client,
+    ) -> Self {
         Self {
             ts,
             argv: vec![YOG_STEP.to_string(), step.to_string()],
@@ -88,6 +117,7 @@ impl OpEntry {
             stdout: String::new(),
             stderr: String::new(),
             origin,
+            client,
         }
     }
 
@@ -108,6 +138,10 @@ impl OpEntry {
             stdout: String::new(),
             stderr: roots,
             origin: Origin::World,
+            // yog's own observation about its own watcher, made by no operator
+            // gesture — so its author is the in-world identity for the same
+            // reason its origin takes no parameter (bl-e59e).
+            client: crate::registry::Client::local(),
         }
     }
 }

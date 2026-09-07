@@ -26,6 +26,7 @@ fn prompt(ws: &Path) -> OpEntry {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::default(),
+        client: crate::registry::Client::default(),
     }
 }
 

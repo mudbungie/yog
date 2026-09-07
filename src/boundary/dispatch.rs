@@ -153,12 +153,18 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Action::Floor { raised, .. } => control::set_floor(deps, ts, ws, agent, *raised),
         // The trail's own two operator verbs (§4.2, bl-c417): the same one
         // bodies the frame's ops pane calls ([`crate::opslog::ack`]/[`clear`]).
-        Action::Ack => wrote(crate::opslog::ack(root, ts), Reply::Acked),
+        Action::Ack => wrote(
+            crate::opslog::ack(root, ts, deps.caller.client.clone()),
+            Reply::Acked,
+        ),
         Action::MarkSeen { .. } => acknowledge(deps, ui, ts, ws, agent),
         // The §4.1 pin (bl-b986): the other durable `ui.json` assertion, and
         // the one whose reader every seat has had since bl-296f.
         Action::Pin { pinned, .. } => Ok(pin(deps, ui, ts, ws, *pinned)),
-        Action::ClearTrail => wrote(crate::opslog::clear(root, ts), Reply::TrailCleared),
+        Action::ClearTrail => wrote(
+            crate::opslog::clear(root, ts, deps.caller.client.clone()),
+            Reply::TrailCleared,
+        ),
         // The §9 config family (bl-3f46) — one executor module, because each of
         // the three is a composition of pipelines that already exist.
         Action::ApplyConfig { file, text } => config::apply(deps, ts, ws, file, text),

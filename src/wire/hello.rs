@@ -138,7 +138,17 @@ use super::frame;
 /// optional-absent-reads-empty**, on `reply/advertised`'s own precedent at 8 —
 /// absent would read as *nothing ran*, the reassuring answer, on exactly the
 /// build that cannot tell.
-pub const PROTOCOL: u32 = 15;
+/// 15 → 16 (bl-e59e): `reply/ops` rows gained `client` — the identity that made
+/// the act: a connection's certificate common name, or `local` for the window,
+/// the `gestures/` inbox, `yog gesture` and yog's own loops. Round-1 ruling 5
+/// (*identity is the leaf*) landing on the durable half: §4.1 already makes the
+/// leaf's common name the identity, §4 narrows the published derivation by it
+/// and §5's roster renders it, and then the trail dropped it at the one place a
+/// person later has to reconstruct what happened. It is the one fact on the row
+/// that **cannot** be recovered afterwards — presence is a point-in-time
+/// observation by design, so nothing later can say who a row belonged to. A
+/// field gained on a shape in use, which §3's rule bumps outright.
+pub const PROTOCOL: u32 = 16;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

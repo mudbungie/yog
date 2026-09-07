@@ -6,7 +6,7 @@
 use super::{World, fake_bl, fake_fail};
 use crate::binding::work_worktree_path;
 use crate::cli_outbound::Cli;
-use crate::opslog::{SYNTHETIC_EXIT, YOG_STEP};
+
 use crate::start::{StartError, cross_check_claim, execute_claim, execute_create};
 
 #[test]
@@ -108,8 +108,6 @@ fn cross_check_accepts_the_claimant_suffix_variant() {
         w.project.path(),
         "bl-9",
         "n",
-        w.state.path(),
-        "TS",
     )
     .unwrap();
     assert!(r.suffixed);
@@ -118,7 +116,7 @@ fn cross_check_accepts_the_claimant_suffix_variant() {
 }
 
 #[test]
-fn cross_check_drift_is_surfaced_loudly_and_logged() {
+fn cross_check_drift_is_surfaced_loudly() {
     let w = World::new();
     let err = cross_check_claim(
         "/somewhere/unexpected",
@@ -126,14 +124,43 @@ fn cross_check_drift_is_surfaced_loudly_and_logged() {
         w.project.path(),
         "bl-9",
         "n",
-        w.state.path(),
-        "TS",
     )
     .unwrap_err();
     assert!(matches!(err, StartError::Drift { .. }));
-    // The Drift is a rendered fact: a `["yog-step","cross-check"]` row (Z5).
-    let e = &w.ops()[0];
-    assert_eq!(e.argv, [YOG_STEP, "cross-check"]);
-    assert_eq!(e.exit, SYNTHETIC_EXIT);
-    assert!(e.stderr.contains("drift"));
+}
+
+/// **The drift row is the caller's, and it is still written** (bl-e59e). The
+/// cross-check became pure when the author moved onto the line — only the
+/// caller holds the spawn handle that knows which seat asked — so the
+/// `["yog-step","cross-check"]` row (Z5) has to be proven on the path that
+/// writes it now, which is the executor rather than the judgement.
+#[test]
+fn a_drifted_claim_leaves_the_step_row_the_caller_is_named_on() {
+    let w = World::new();
+    let bl = Cli::new(fake_bl(
+        w.bin.path(),
+        "x",
+        std::path::Path::new("/somewhere/else"),
+    ));
+    let seat = crate::registry::Client::parse("seat1").expect("a leaf name");
+    let err = execute_claim(
+        &bl.by(seat.clone()),
+        w.state.path(),
+        "TS",
+        w.project.path(),
+        "bl-7",
+        "cobalt-gecko",
+        w.balls.path(),
+    )
+    .unwrap_err();
+    assert!(matches!(err, StartError::Drift { .. }));
+    let drift = w
+        .ops()
+        .into_iter()
+        .find(|e| e.argv.first().is_some_and(|a| a == crate::opslog::YOG_STEP))
+        .expect("the cross-check row");
+    assert_eq!(drift.argv[1], "cross-check");
+    assert_eq!(drift.exit, crate::opslog::SYNTHETIC_EXIT);
+    assert!(drift.stderr.contains("drift"));
+    assert_eq!(drift.client, seat, "and it names who asked for the start");
 }

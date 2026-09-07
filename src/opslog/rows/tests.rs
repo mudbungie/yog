@@ -16,6 +16,7 @@ fn entry(exit: i32, stderr: &str) -> OpEntry {
         stdout: "out".into(),
         stderr: stderr.into(),
         origin: Origin::default(),
+        client: crate::registry::Client::default(),
     }
 }
 

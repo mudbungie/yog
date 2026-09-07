@@ -11,6 +11,7 @@ pub(super) fn sample() -> OpEntry {
         stdout: "ok".into(),
         stderr: String::new(),
         origin: Origin::default(),
+        client: crate::registry::Client::default(),
     }
 }
 #[test]
@@ -84,6 +85,7 @@ fn parse_line_defaults_absent_and_mistyped_fields() {
                 stdout: String::new(),
                 stderr: String::new(),
                 origin: Origin::default(),
+                client: crate::registry::Client::default(),
             },
             OpEntry {
                 ts: String::new(),
@@ -93,6 +95,7 @@ fn parse_line_defaults_absent_and_mistyped_fields() {
                 stdout: String::new(),
                 stderr: String::new(),
                 origin: Origin::default(),
+                client: crate::registry::Client::default(),
             },
         ]
     );
@@ -106,6 +109,7 @@ fn synthetic_failure_encodes_the_intended_argv_and_stderr() {
         "/proj".into(),
         "No such file or directory".into(),
         Origin::Balls,
+        crate::registry::Client::default(),
     );
     assert_eq!(e.exit, SYNTHETIC_EXIT);
     assert_eq!(e.argv, vec!["litany".to_string(), "prompt".to_string()]);
@@ -122,6 +126,7 @@ fn step_failure_encodes_the_yog_step_argv() {
         String::new(),
         "pool exhausted".into(),
         Origin::Balls,
+        crate::registry::Client::default(),
     );
     assert_eq!(e.argv, vec![YOG_STEP.to_string(), "mint".to_string()]);
     assert_eq!(e.exit, SYNTHETIC_EXIT);

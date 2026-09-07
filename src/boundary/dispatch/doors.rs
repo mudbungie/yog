@@ -141,7 +141,15 @@ pub fn prompt(
             .into_iter()
             .map(|w| w.path)
             .collect();
-    ceiling::gate(ui, &deps.state_root, ts, workspace, &world, prepared.origin)?;
+    ceiling::gate(
+        ui,
+        &deps.state_root,
+        ts,
+        workspace,
+        &world,
+        prepared.origin,
+        deps.caller.client.clone(),
+    )?;
     // The fired loop carries the target workspace's wall (§16.2 as amended):
     // litany hands its own environment to every tool subprocess, and a bare
     // `bz` in an agent's bash is the world's shim re-entering yog — so this one

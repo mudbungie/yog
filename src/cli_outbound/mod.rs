@@ -101,6 +101,17 @@ pub struct Cli {
     /// [`binary`](Self::binary) and to [`exec_words`](Self::exec_words) — the
     /// trail and the W9 shim record the act, not its envelope.
     wrapper: Vec<String>,
+    /// **Who this spawn is on behalf of** (REMOTE §4.1, bl-e59e) — the identity
+    /// stamped on the §4.2 trail row the spawn's outcome lands in. Carried here
+    /// for [`binary`](Self::binary)'s reason exactly: the ops row's `argv[0]` is
+    /// already this value's answer, and a caller identity threaded through every
+    /// verb signature instead would be one fact restated at forty call sites.
+    /// It is laid where the caller is known — [`Deps::bound`](crate::boundary)
+    /// and the boundary's own `bl` handle — so a verb written later inherits it
+    /// by construction, which is `Bound`'s own argument (bl-bf79) applied to the
+    /// other half of an ops row's attribution. The default is `local`, which is
+    /// what every spawn nobody stamped actually was.
+    client: crate::registry::Client,
 }
 
 impl Cli {
@@ -111,6 +122,19 @@ impl Cli {
     /// construction, which is a claim about what a *child* observes, and the
     /// `tests/` crate cannot mutate process env to arrange it any other way
     /// (`set_var` is `unsafe` under the parallel runner). Owned in, owned out.
+    /// A clone acting for `client` (bl-e59e) — the builder the boundary lays
+    /// the caller's identity with. Owned in, owned out, like every other.
+    #[must_use]
+    pub(crate) fn by(mut self, client: crate::registry::Client) -> Self {
+        self.client = client;
+        self
+    }
+
+    /// Who this spawn acts for — the §4.2 row's `client`.
+    pub(crate) fn client(&self) -> crate::registry::Client {
+        self.client.clone()
+    }
+
     #[must_use]
     pub fn with_env(mut self, env: Vec<(String, String)>) -> Self {
         self.env = env;

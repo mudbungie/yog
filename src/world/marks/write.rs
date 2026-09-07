@@ -20,14 +20,20 @@ use crate::opslog::{self, OpEntry};
 /// balls' layer-2 config for that space, log the write to `ops.jsonl` (§4.2, the
 /// mutation-logging discipline), and hand back the branch **re-read** — what
 /// landed, never an echo of what was asked.
-pub fn apply(space: &Space, state_root: &Path, ts: &str, branch: &str) -> io::Result<String> {
+pub fn apply(
+    space: &Space,
+    state_root: &Path,
+    ts: &str,
+    branch: &str,
+    client: crate::registry::Client,
+) -> io::Result<String> {
     let path = config_file(&space.config);
     let outcome = if lawful(branch) {
         write_branch(&path, branch)
     } else {
         Err(io::Error::other(REFUSAL))
     };
-    log_op(state_root, ts, &path, branch, &outcome)?;
+    log_op(state_root, ts, &path, branch, &outcome, client)?;
     outcome?;
     Ok(space.branch())
 }
@@ -66,6 +72,7 @@ fn log_op(
     path: &Path,
     branch: &str,
     outcome: &io::Result<()>,
+    client: crate::registry::Client,
 ) -> io::Result<()> {
     let (exit, stderr) = match outcome {
         Ok(()) => (0, String::new()),
@@ -83,6 +90,7 @@ fn log_op(
             // The §16.3 knob's own pane states this outcome in place (§7.3,
             // bl-48f8), so no banner elsewhere repeats it.
             origin: crate::opslog::Origin::World,
+            client,
         },
     )
 }

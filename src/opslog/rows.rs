@@ -53,6 +53,12 @@ pub struct OpRow {
     /// The §7.3 attribution the durable line carried ([`Origin`]) — what lets a
     /// banner surface ask for *its own* last failure rather than the world's.
     pub origin: Origin,
+    /// **Who made this gesture** ([`OpEntry::client`], bl-e59e) — the other
+    /// half of a row's attribution: `origin` says which surface, this says
+    /// which seat. It is what makes a shared workspace's trail answer *who said
+    /// what*, and it is carried rather than derived because nothing in the line
+    /// could re-derive it.
+    pub client: crate::registry::Client,
 }
 
 impl OpRow {
@@ -105,6 +111,7 @@ impl From<&OpEntry> for OpRow {
             stdout: entry.stdout.clone(),
             stderr: entry.stderr.clone(),
             origin: entry.origin,
+            client: entry.client.clone(),
         }
     }
 }

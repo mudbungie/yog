@@ -78,6 +78,7 @@ fn arm(deps: &Deps, ts: &str, workspace: &Path, model: Option<&str>) -> Result<R
         step,
         crate::nav::ws_key(workspace),
         Origin::World,
+        deps.caller.client.clone(),
     );
     opslog::append(&deps.state_root, &done).map_err(|e| e.to_string())?;
     Ok(Reply::Armed {
@@ -104,7 +105,13 @@ fn flag(
     agent: &str,
     reason: &str,
 ) -> Result<Reply, String> {
-    let entry = flagging::raised(ts.to_owned(), workspace, agent, reason);
+    let entry = flagging::raised(
+        ts.to_owned(),
+        workspace,
+        agent,
+        reason,
+        deps.caller.client.clone(),
+    );
     opslog::append(&deps.state_root, &entry).map_err(|e| e.to_string())?;
     Ok(Reply::Flagged)
 }

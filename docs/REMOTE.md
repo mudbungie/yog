@@ -5026,6 +5026,41 @@ hold a prediction the door re-derives anyway, and the second is a read a
 start typed before its answer must race — the question dissolves at a door
 and would only be answered at a query.
 
+### 9.20 The trail says who said it (bl-e59e)
+
+**`reply/ops` rows gained `client`** — the identity that made the act: a
+connection's certificate common name, or `local` for the window, the
+`gestures/` inbox, `yog gesture` and yog's own loops. `PROTOCOL` is **16**.
+
+This is round-1 ruling 5 (*identity is the leaf*) landing on the durable half.
+§4.1 already makes the leaf's common name the identity, §4 narrows the whole
+published derivation by it and §5's roster renders it — and then the engine
+dropped it at the one place a person later has to reconstruct what happened.
+Two seats depositing into one conversation within the same second left two
+rows spelling `argv`, `cwd`, `origin` and `exit` and nothing that told them
+apart. **It is the one fact here that cannot be recovered later**: presence is
+a point-in-time observation by design, so nothing after the fact can say who a
+row belonged to.
+
+- **It is a field of the row, not of the connection.** The identity changes at
+  the rate of the *act*, which is why it is written durably where presence (§5)
+  is deliberately not. That distinction is the whole reason the two facts can
+  live at different rates without disagreeing.
+- **The vocabulary already existed.** `local` is §3's reserved in-world
+  identity, so a row yog wrote about itself has a true answer rather than a
+  blank, and the type on the wire is the registry's own — a trail row and a
+  roster row spell one identity one way.
+- **The deposit's own frontmatter is litany's half and is not claimed here.**
+  A delivered message still reads `from: user`, because `from` is the *sender
+  role* litany's ARCH §2.11 defines (an agent id, or the reserved `user`) and
+  the compaction sweep and the reply-address derivation both key on it. Which
+  *seat* spoke is a third fact, and it belongs beside `from` rather than
+  instead of it; that is an upstream ball, and until it lands the trail is
+  where a shared workspace answers who said what.
+- **A field gained on a shape already in use**, which §3's rule bumps outright.
+  The ledger would have caught this one too — `reply/ops`' signature last moved
+  at 11 — but the rule is the authority and is stricter than the mechanism.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

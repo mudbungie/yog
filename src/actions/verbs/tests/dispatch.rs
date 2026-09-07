@@ -146,6 +146,7 @@ fn log_step_failure_writes_a_yog_step_line() {
         "mint",
         "name pool exhausted",
         Origin::Conversation,
+        crate::registry::Client::default(),
     )
     .unwrap();
     let e = opslog::tail(state.path(), 8).pop().unwrap();

@@ -33,6 +33,7 @@ fn claim_row(project: &str, id: &str, claimant: &str) -> OpEntry {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::Balls,
+        client: crate::registry::Client::default(),
     }
 }
 
@@ -156,6 +157,7 @@ fn a_fanned_candidates_own_worktree_is_writable_and_a_strangers_is_not() {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::Balls,
+        client: crate::registry::Client::default(),
     };
     let trail = vec![
         claim_row("/dev/proj", "bl-1111", "cobalt-gecko"),

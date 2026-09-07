@@ -61,7 +61,13 @@ pub struct Flag {
 /// The ops entry a flag appends. `argv[1]` is the conversation, `stdout` the
 /// reason, exit `0`: raising attention is not a failure, and must not banner as
 /// one (§7.3's ichor is for actions that failed).
-pub fn raised(ts: String, workspace: &Path, agent: &str, reason: &str) -> OpEntry {
+pub fn raised(
+    ts: String,
+    workspace: &Path,
+    agent: &str,
+    reason: &str,
+    client: crate::registry::Client,
+) -> OpEntry {
     OpEntry {
         ts,
         argv: vec![YOG_FLAG.to_owned(), agent.to_owned()],
@@ -72,6 +78,10 @@ pub fn raised(ts: String, workspace: &Path, agent: &str, reason: &str) -> OpEntr
         // The subject is a conversation, which is what §7.3 attribution names —
         // not the surface the hand that raised it happened to be on.
         origin: Origin::Conversation,
+        // Who raised it (bl-e59e). A flag is somebody's assertion — a
+        // teleoperator's or a responder's — and a signal saying *look at this*
+        // that cannot say who is asking is half a signal.
+        client,
     }
 }
 

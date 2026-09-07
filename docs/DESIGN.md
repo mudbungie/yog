@@ -2025,8 +2025,35 @@ class with no ops row is an error no seat can be told about — the §7.3
 failed-action row depends on this, and `Query::Ops` is its one carrier:
 
 ```json
-{"ts":"2026-07-17T12:00:00Z","argv":["bl","close","bl-4db6"],"cwd":"/home/u/dev/brazen","exit":0,"origin":"balls","stdout":"…","stderr":"…"}
+{"ts":"2026-07-17T12:00:00Z","argv":["bl","close","bl-4db6"],"cwd":"/home/u/dev/brazen","exit":0,"origin":"balls","client":"seat1","stdout":"…","stderr":"…"}
 ```
+
+- **`client` is who made the gesture** *(REMOTE §4.1, round-1 ruling 5;
+  bl-e59e)* — the identity the intake carried: a wire connection's certificate
+  common name, or `local` for the window, the `gestures/` inbox, `yog gesture`
+  and yog's own loops. A *fixed* field like `origin`, never truncated, and
+  stored for that field's reason exactly: **nothing in the line could re-derive
+  it**. The trail recorded `argv`, `cwd`, `origin` and `exit` and nothing about
+  *whose* act it was, so a workspace two seats share could not answer who said
+  what — and unlike every other fact here that is unrecoverable afterwards,
+  since no later derivation can reconstruct the author of a line nobody
+  attributed. The engine knew the name at every one of those acts: it reads the
+  common name off the presented leaf, narrows the whole published derivation by
+  it (§4.1) and prints it in the client roster. The identity changes at the rate
+  of the **act**, not of the connection, which is why it is durable here while
+  presence stays RAM (REMOTE §5).
+
+  **It is laid on the spawn handles, not threaded through every verb.** The
+  caller is stamped onto the gesture's `litany`/`bl` `Cli`s once, where the
+  identity is known (`boundary::consumer`), and the §4.2 writer reads it back
+  off the handle — `Bound`'s own argument (bl-bf79) applied to the other half of
+  a row's attribution, so a verb written later inherits the attribution by
+  construction rather than by remembering. A row yog writes about **itself** —
+  a §7.2 drift observation, an alignment-monitor check, the gesture consumer's
+  own failure to answer, the §4.3 armed loop's spawns — says `local`, because
+  no seat asked for it and naming one would be an invention. A line with no
+  field at all (an older yog) reads the same way, which is what every writer of
+  such a line actually was.
 
 - **`origin` is the §7.3 attribution** — `balls` / `conversation` / `world`,
   the [`opslog::Origin`] tokens (bl-48f8). A *fixed* field like `ts`/`cwd`/

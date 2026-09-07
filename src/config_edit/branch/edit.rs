@@ -162,6 +162,9 @@ pub fn drive(
         stdout,
         stderr,
         origin,
+        // Who asked (bl-e59e), off the `Cli` the caller was stamped onto — the
+        // §9.3 commit is a spawn like every other, so it needs no parameter.
+        client: cli.client(),
     };
     let _ = opslog::append(state_root, &entry);
     entry

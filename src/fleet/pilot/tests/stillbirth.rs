@@ -23,6 +23,7 @@ fn birth_rows(ts: i64, ball: &str, conversation: &str, dying_words: &str) -> Vec
         stdout: String::new(),
         stderr: dying_words.to_owned(),
         origin: crate::opslog::Origin::Balls,
+        client: crate::registry::Client::default(),
     };
     vec![OpRow::from(&driver), OpRow::from(&fleet)]
 }

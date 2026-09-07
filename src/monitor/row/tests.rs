@@ -54,6 +54,7 @@ fn nothing_else_on_the_trail_reads_as_a_check() {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::Balls,
+        client: crate::registry::Client::default(),
     };
     assert!(of_entries(&[other]).is_empty());
     // Right pseudo-binary, wrong arity, and an unreadable verdict token.
@@ -76,7 +77,13 @@ fn nothing_else_on_the_trail_reads_as_a_check() {
     assert!(of_entries(&[foreign]).is_empty());
     // And a flag row, which is a different assertion with a different argv[0]
     // — and, since bl-6f2f, a different file (`monitor::flag`).
-    let flag = crate::monitor::flag::raised("1".to_owned(), Path::new("/ws"), "a-1", "look");
+    let flag = crate::monitor::flag::raised(
+        "1".to_owned(),
+        Path::new("/ws"),
+        "a-1",
+        "look",
+        crate::registry::Client::default(),
+    );
     assert!(of_entries(std::slice::from_ref(&flag)).is_empty());
 }
 

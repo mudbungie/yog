@@ -189,6 +189,7 @@ pub fn start(
                 String::new(),
                 spawn.to_string(),
                 Origin::World,
+                bz.client(),
             );
             opslog::append(state_root, &entry)?;
             Err(std::io::Error::other(spawn))
@@ -251,6 +252,7 @@ impl LoginRun {
             // run-by-hand fallback (§7.3, bl-48f8) — the composer has no
             // business breaking that news.
             origin: Origin::World,
+            client: crate::registry::Client::default(),
         };
         let _ = opslog::append(&self.state_root, &entry);
     }

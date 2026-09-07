@@ -16,6 +16,7 @@ fn view(exit: i32, standing: Standing) -> OpView {
             stdout: String::new(),
             stderr: "boom".to_owned(),
             origin: Origin::Conversation,
+            client: crate::registry::Client::default(),
         },
         standing,
     }
@@ -81,4 +82,25 @@ fn an_out_of_range_exit_refuses() {
     frame["exit"] = json!(i64::from(i32::MAX) + 1);
     let err = decode(&frame).expect_err("out of range");
     assert!(err.contains("out of range"), "{err}");
+}
+
+/// **Who said what crosses** (bl-e59e). `client` is the second field a reader
+/// cannot recompute from the line beside it, so it is written and read back
+/// exactly — and a token that names no identity reads as the in-world caller,
+/// which is what an engine writing its own rows is.
+#[test]
+fn the_author_crosses_beside_the_surface_that_asked() {
+    let seat = crate::registry::Client::parse("seat2").expect("a leaf name");
+    let mut asked = view(0, Standing::Clean);
+    asked.row.client = seat.clone();
+    let v = op_row(&asked);
+    assert_eq!(v["client"], "seat2");
+    assert_eq!(decode(&v).expect("decodes").row.client, seat);
+
+    let local = op_row(&view(0, Standing::Clean));
+    assert_eq!(local["client"], "local", "and the engine's own rows say so");
+    assert_eq!(
+        decode(&local).expect("decodes").row.client,
+        crate::registry::Client::local()
+    );
 }

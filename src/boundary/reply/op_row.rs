@@ -50,6 +50,9 @@ pub(super) fn op_row(view: &OpView) -> Value {
         "ts": row.ts, "argv": row.argv, "cwd": row.cwd, "exit": row.exit,
         "stdout": row.stdout, "stderr": row.stderr,
         "origin": origin_token(row.origin),
+        // Who asked (bl-e59e) — the other half of the row's attribution, and
+        // the only one no reader could recompute from the line beside it.
+        "client": row.client.name(),
         "failed": row.failed(), "exit_label": row.exit_label(),
         "standing": view.standing.token(),
     })
@@ -77,6 +80,10 @@ pub(crate) fn decode(v: &Value) -> Result<OpView, String> {
             stdout: str_of(o, "stdout")?,
             stderr: str_of(o, "stderr")?,
             origin: parse_origin(&str_of(o, "origin")?)?,
+            // Strict like `standing` and for its reason: this is the second
+            // field a reader cannot recompute, so a frame that omits it is a
+            // codec that has drifted rather than a row nobody authored.
+            client: crate::registry::Client::parse(&str_of(o, "client")?).unwrap_or_default(),
         },
         standing: crate::boundary::codec::fields::pick(o, "standing", &STANDINGS)?,
     })

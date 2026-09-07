@@ -71,6 +71,7 @@ fn entry(ts: &str, argv: &[&str], exit: i32) -> OpEntry {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::Conversation,
+        client: crate::registry::Client::default(),
     }
 }
 

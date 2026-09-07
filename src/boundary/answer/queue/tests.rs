@@ -162,8 +162,13 @@ fn a_flagged_conversation_is_in_the_queue_with_the_reason_that_raised_it() {
     mark_seen(&snap, &mut ui, &ws_a(), "c-3").unwrap();
     assert!(queue(&snap, &ui, 200).is_empty());
 
-    let raised =
-        crate::monitor::flag::raised("9".to_owned(), &ws_a(), "c-3", "please look at this one");
+    let raised = crate::monitor::flag::raised(
+        "9".to_owned(),
+        &ws_a(),
+        "c-3",
+        "please look at this one",
+        crate::registry::Client::default(),
+    );
     snap.trees = crate::monitor::flag::fold(snap.trees.clone(), &[OpRow::from(&raised)]);
     let rows = queue(&snap, &ui, 200);
     assert_eq!(rows.len(), 1, "the flag is what put it here");

@@ -209,3 +209,43 @@ fn origin_round_trips_and_a_line_without_one_reads_as_the_composer() {
     let legacy = r#"{"ts":"T","argv":["bl","close"],"cwd":"/p","exit":1,"stderr":"boom"}"#;
     assert_eq!(parse_line(legacy).unwrap().origin, Origin::Conversation);
 }
+
+/// **The author crosses the line codec, and its absence is a reading**
+/// (bl-e59e). A seat's own name round-trips; a line an older yog wrote carries
+/// no `client` at all and reads as the in-world identity, which is what every
+/// writer of such a line actually was; and a token no client identity could be
+/// reads the same way rather than inventing one, because the registry's
+/// validator is the one authority on what a name may be.
+#[test]
+fn the_author_round_trips_and_an_unnamed_line_reads_as_the_in_world_caller() {
+    let seat = crate::registry::Client::parse("seat1").expect("a leaf name");
+    let entry = OpEntry {
+        client: seat.clone(),
+        ..sample()
+    };
+    let line = String::from_utf8(build_line(&entry)).unwrap();
+    assert_eq!(parsed(line.as_bytes())["client"], Value::from("seat1"));
+    assert_eq!(parse_line(&line).unwrap().client, seat);
+
+    // A fixed field, so it survives the truncation that sacrifices the streams.
+    let truncating = OpEntry {
+        client: seat.clone(),
+        stdout: "a".repeat(100_000),
+        ..sample()
+    };
+    let line = String::from_utf8(build_line(&truncating)).unwrap();
+    assert_eq!(parse_line(&line).unwrap().client, seat);
+
+    let legacy = r#"{"ts":"T","argv":["bl","close"],"cwd":"/p","exit":1,"stderr":"boom"}"#;
+    assert_eq!(
+        parse_line(legacy).unwrap().client,
+        crate::registry::Client::local(),
+        "a line written before the key existed was written in-world"
+    );
+    let nonsense = r#"{"ts":"T","argv":[],"cwd":"/p","exit":0,"client":"../etc"}"#;
+    assert_eq!(
+        parse_line(nonsense).unwrap().client,
+        crate::registry::Client::local(),
+        "and a token no identity could be is not one"
+    );
+}

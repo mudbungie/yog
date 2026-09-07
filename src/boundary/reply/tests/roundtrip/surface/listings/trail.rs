@@ -25,6 +25,7 @@ fn line(ts: &str, argv: &str, exit: i32, stderr: &str, origin: Origin) -> OpRow 
         stdout: String::new(),
         stderr: stderr.to_owned(),
         origin,
+        client: crate::registry::Client::default(),
     }
 }
 

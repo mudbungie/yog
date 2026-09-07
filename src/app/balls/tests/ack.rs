@@ -54,6 +54,7 @@ fn fail(m: &AppModel, origin: Origin) {
             "/proj".into(),
             "unrecognized subcommand\n".into(),
             origin,
+            crate::registry::Client::default(),
         ),
     )
     .unwrap();

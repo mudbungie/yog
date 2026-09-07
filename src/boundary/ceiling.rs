@@ -52,6 +52,7 @@ pub fn gate(
     workspace: &Path,
     world: &[PathBuf],
     origin: crate::opslog::Origin,
+    client: crate::registry::Client,
 ) -> Result<(), String> {
     let Some(refusal) = ui.ceiling().refusal(world, &ui.prices()) else {
         return Ok(());
@@ -62,6 +63,7 @@ pub fn gate(
         workspace.display().to_string(),
         refusal.clone(),
         origin,
+        client,
     );
     // Best-effort like every other trail write whose product is not the write
     // (§7.2's drift lines, §9.3's editor line): the refusal is what the caller
@@ -119,7 +121,8 @@ mod tests {
                 "T1",
                 dir.path(),
                 &world(dir.path()),
-                Origin::Balls
+                Origin::Balls,
+                crate::registry::Client::default(),
             )
             .is_ok()
         );
@@ -141,7 +144,8 @@ mod tests {
                 "T1",
                 dir.path(),
                 &world(dir.path()),
-                Origin::Balls
+                Origin::Balls,
+                crate::registry::Client::default(),
             )
             .is_ok()
         );
@@ -160,6 +164,7 @@ mod tests {
             dir.path(),
             &world(dir.path()),
             Origin::Balls,
+            crate::registry::Client::default(),
         )
         .unwrap_err();
         assert!(refusal.contains("spend ceiling reached"), "{refusal}");
@@ -182,7 +187,16 @@ mod tests {
         spent(&busy);
         let ui = ui(dir.path(), PRICED);
         let roster = vec![idle.clone(), busy];
-        let refusal = gate(&ui, dir.path(), "T1", &idle, &roster, Origin::Balls).unwrap_err();
+        let refusal = gate(
+            &ui,
+            dir.path(),
+            "T1",
+            &idle,
+            &roster,
+            Origin::Balls,
+            crate::registry::Client::default(),
+        )
+        .unwrap_err();
         assert!(refusal.contains("$3.00"), "{refusal}");
         let trail = std::fs::read_to_string(dir.path().join("ops.jsonl")).unwrap();
         assert!(trail.contains("idle"), "{trail}");
@@ -203,7 +217,8 @@ mod tests {
                 "T1",
                 dir.path(),
                 &world(dir.path()),
-                Origin::Balls
+                Origin::Balls,
+                crate::registry::Client::default(),
             )
             .is_err()
         );

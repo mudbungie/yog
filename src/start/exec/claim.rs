@@ -48,29 +48,39 @@ pub fn execute_claim(
         )?,
         CLAIM,
     )?;
-    cross_check_claim(
-        &out.stdout,
-        balls_state_root,
-        project,
-        id,
-        name,
-        state_root,
-        ts,
-    )
+    // The judgement is pure and its **row is this caller's** (bl-e59e): the
+    // drift line is attributed to the seat that asked for the start, and only a
+    // caller holding the spawn handle knows who that was. Separating the two is
+    // this file's own seam said one level down — what is judged here, and what
+    // that judgement costs the trail there.
+    cross_check_claim(&out.stdout, balls_state_root, project, id, name).inspect_err(|err| {
+        let _ = log_step_failure(
+            state_root,
+            ts,
+            project,
+            DRIFT,
+            &err.to_string(),
+            Origin::Balls,
+            bl.client(),
+        );
+    })
 }
 
 /// Cross-check `bl claim`'s stdout against the bl-delivery worktree formula
 /// (§3.3, §5.1 #5): the canonical `<id>` leaf or the `<id>-<claimant>` variant
-/// matches; anything else is a workspace-convention [`Drift`](StartError::Drift),
-/// logged as a `["yog-step","cross-check"]` row (Z5) before it returns.
+/// matches; anything else is a workspace-convention
+/// [`Drift`](StartError::Drift).
+///
+/// **Pure since bl-e59e** — the `["yog-step","cross-check"]` row (Z5) is
+/// [`execute_claim`]'s, which is the only caller that knows which seat asked.
+/// No error class is invisible to §7.3 by that move: the row is still written
+/// on every path that reaches this judgement through the flow.
 pub fn cross_check_claim(
     stdout: &str,
     balls_state_root: &Path,
     project: &Path,
     id: &str,
     name: &str,
-    state_root: &Path,
-    ts: &str,
 ) -> Result<ClaimResolved, StartError> {
     let got = PathBuf::from(stdout.trim());
     let canonical = work_worktree_path(balls_state_root, project, id, None);
@@ -92,13 +102,5 @@ pub fn cross_check_claim(
         canonical: canonical.display().to_string(),
         suffixed: suffixed.display().to_string(),
     };
-    log_step_failure(
-        state_root,
-        ts,
-        project,
-        DRIFT,
-        &err.to_string(),
-        Origin::Balls,
-    )?;
     Err(err)
 }

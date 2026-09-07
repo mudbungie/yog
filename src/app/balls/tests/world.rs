@@ -151,6 +151,7 @@ pub(crate) fn append_op(m: &AppModel) {
             stdout: String::new(),
             stderr: String::new(),
             origin: opslog::Origin::Balls,
+            client: crate::registry::Client::default(),
         },
     )
     .unwrap();

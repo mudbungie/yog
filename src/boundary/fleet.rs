@@ -73,7 +73,13 @@ fn arm(
     } else {
         DISARM_STEP
     };
-    let done = OpEntry::step_done(ts.to_owned(), step, key, Origin::Balls);
+    let done = OpEntry::step_done(
+        ts.to_owned(),
+        step,
+        key,
+        Origin::Balls,
+        deps.caller.client.clone(),
+    );
     opslog::append(&deps.state_root, &done).map_err(|e| e.to_string())?;
     Ok(Reply::Armed {
         armed: policy.is_some(),

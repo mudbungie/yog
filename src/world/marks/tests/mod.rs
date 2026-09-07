@@ -98,7 +98,14 @@ fn a_write_lands_in_the_spaces_own_balls_config_and_reads_back() {
     let ws = dir.path().join("workspaces").join("home");
     let state = dir.path().join("ops");
 
-    let landed = apply(&read(&world, &ws), &state, "T0", "balls/agents/home").unwrap();
+    let landed = apply(
+        &read(&world, &ws),
+        &state,
+        "T0",
+        "balls/agents/home",
+        crate::registry::Client::default(),
+    )
+    .unwrap();
     assert_eq!(landed, "balls/agents/home");
 
     let space = read(&world, &ws);
@@ -115,7 +122,14 @@ fn a_write_lands_in_the_spaces_own_balls_config_and_reads_back() {
 
     // Re-pointing replaces rather than accumulating: one key, one home.
     assert_eq!(
-        apply(&read(&world, &ws), &state, "T1", SHARED_BRANCH).unwrap(),
+        apply(
+            &read(&world, &ws),
+            &state,
+            "T1",
+            SHARED_BRANCH,
+            crate::registry::Client::default()
+        )
+        .unwrap(),
         SHARED_BRANCH
     );
     assert_eq!(read(&world, &ws).branch(), SHARED_BRANCH);
@@ -127,7 +141,14 @@ fn every_write_leaves_one_ops_row_naming_the_file_and_the_branch() {
     let world = world_at(&dir);
     let ws = dir.path().join("workspaces").join("home");
     let state = dir.path().join("ops");
-    apply(&read(&world, &ws), &state, "T0", "balls/mine").unwrap();
+    apply(
+        &read(&world, &ws),
+        &state,
+        "T0",
+        "balls/mine",
+        crate::registry::Client::default(),
+    )
+    .unwrap();
 
     let rows = crate::opslog::tail(&state, 10);
     assert_eq!(rows.len(), 1);
@@ -150,7 +171,14 @@ fn an_unlawful_branch_refuses_at_the_write_and_still_logs_the_attempt() {
     let ws = dir.path().join("workspaces").join("home");
     let state = dir.path().join("ops");
 
-    let err = apply(&read(&world, &ws), &state, "T0", "balls/config").unwrap_err();
+    let err = apply(
+        &read(&world, &ws),
+        &state,
+        "T0",
+        "balls/config",
+        crate::registry::Client::default(),
+    )
+    .unwrap_err();
     assert!(err.to_string().contains("landing branch"), "{err}");
     // Nothing was written, and the refusal is a durable row like every other
     // failed mutation (§4.2's -3 synthetic-failure exit).
@@ -209,6 +237,15 @@ fn an_unwritable_space_refuses_and_says_so_rather_than_reporting_a_branch() {
     std::fs::create_dir_all(root.parent().unwrap()).unwrap();
     std::fs::write(&root, "not a dir").unwrap();
 
-    assert!(apply(&read(&world, &ws), &state, "T0", "balls/x").is_err());
+    assert!(
+        apply(
+            &read(&world, &ws),
+            &state,
+            "T0",
+            "balls/x",
+            crate::registry::Client::default()
+        )
+        .is_err()
+    );
     assert_eq!(crate::opslog::tail(&state, 10)[0].exit, -3);
 }

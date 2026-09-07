@@ -45,6 +45,7 @@ fn fire(conversation: &str, binding: &str) -> OpEntry {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::Balls,
+        client: crate::registry::Client::default(),
     }
 }
 

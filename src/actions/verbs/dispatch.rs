@@ -134,13 +134,22 @@ fn log_attempt(
                     stdout: outcome.stdout.clone(),
                     stderr: outcome.stderr.clone(),
                     origin,
+                    // Who asked (bl-e59e). Read off the `Cli` the caller was
+                    // stamped onto, never threaded through every verb.
+                    client: cli.client(),
                 },
             )?;
             Ok(outcome)
         }
         Err(spawn) => {
-            let entry =
-                OpEntry::synthetic_failure(ts.to_string(), argv, cwd, spawn.to_string(), origin);
+            let entry = OpEntry::synthetic_failure(
+                ts.to_string(),
+                argv,
+                cwd,
+                spawn.to_string(),
+                origin,
+                cli.client(),
+            );
             opslog::append(state_root, &entry)?;
             Err(io::Error::other(spawn))
         }
@@ -165,10 +174,17 @@ pub fn log_step_done(
     cwd: &Path,
     step: &str,
     origin: Origin,
+    client: crate::registry::Client,
 ) -> io::Result<()> {
     opslog::append(
         state_root,
-        &OpEntry::step_done(ts.to_string(), step, cwd.display().to_string(), origin),
+        &OpEntry::step_done(
+            ts.to_string(),
+            step,
+            cwd.display().to_string(),
+            origin,
+            client,
+        ),
     )
 }
 
@@ -183,6 +199,7 @@ pub fn log_step_failure(
     step: &str,
     err: &str,
     origin: Origin,
+    client: crate::registry::Client,
 ) -> io::Result<()> {
     opslog::append(
         state_root,
@@ -192,6 +209,7 @@ pub fn log_step_failure(
             cwd.display().to_string(),
             err.to_string(),
             origin,
+            client,
         ),
     )
 }

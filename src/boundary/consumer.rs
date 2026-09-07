@@ -204,8 +204,14 @@ impl ConsumerCtx {
                 .collect(),
         );
         let deps = Deps {
-            litany: self.litany.clone(),
-            bl: self.bl.clone(),
+            // **The caller rides the spawn handles** (bl-e59e): every §4.2 row
+            // a spawned verb leaves is stamped with the identity the intake
+            // carried, and it is laid here — once, where the identity is known
+            // — rather than threaded through every verb signature. `Bound`'s
+            // own argument (bl-bf79) applied to the other half of a row's
+            // attribution: a verb written later inherits it by construction.
+            litany: self.litany.clone().by(client.clone()),
+            bl: self.bl.clone().by(client.clone()),
             state_root: self.state_root.clone(),
             yog_binary: self.yog_binary.clone(),
             world: self.world.clone(),

@@ -53,6 +53,7 @@ fn nothing_else_on_the_trail_reads_as_an_act() {
         stdout: String::new(),
         stderr: String::new(),
         origin: Origin::Balls,
+        client: crate::registry::Client::default(),
     };
     assert!(of_rows(&[OpRow::from(&other)]).is_empty());
     // Right pseudo-binary, wrong arity.

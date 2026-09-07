@@ -48,8 +48,8 @@ pub(crate) const CLEAR_STEP: &str = "clear-trail";
 /// Append the **ack** line (§4.2): the operator's seen-watermark over the trail.
 /// `ts` is the caller's clock stamp, as for every other line — this module
 /// reads no clock.
-pub fn ack(state_root: &Path, ts: &str) -> io::Result<()> {
-    super::append(state_root, &entry(ts, state_root, ACK_STEP))
+pub fn ack(state_root: &Path, ts: &str, client: crate::registry::Client) -> io::Result<()> {
+    super::append(state_root, &entry(ts, state_root, ACK_STEP, client))
 }
 
 /// **Clear the trail** (§4.2 as amended, §11): truncate `ops.jsonl` and log the
@@ -62,25 +62,29 @@ pub fn ack(state_root: &Path, ts: &str) -> io::Result<()> {
 /// truncate and the write is preserved rather than overwritten. The reader is
 /// stateless (it re-reads the whole file, §4.2), so a shrinking file needs no
 /// handling of its own.
-pub fn clear(state_root: &Path, ts: &str) -> io::Result<()> {
+pub fn clear(state_root: &Path, ts: &str, client: crate::registry::Client) -> io::Result<()> {
     fs::create_dir_all(state_root)?;
     let mut file = fs::OpenOptions::new()
         .create(true)
         .append(true)
         .open(state_root.join(FILENAME))?;
     file.set_len(0)?;
-    file.write_all(&build_line(&entry(ts, state_root, CLEAR_STEP)))?;
+    file.write_all(&build_line(&entry(ts, state_root, CLEAR_STEP, client)))?;
     Ok(())
 }
 
 /// The shared shape of both lines: a completed `["yog-step", <step>]` row in
-/// the state root, attributed to [`Origin::World`].
-fn entry(ts: &str, state_root: &Path, step: &str) -> OpEntry {
+/// the state root, attributed to [`Origin::World`] and to the seat that asked
+/// (bl-e59e) — these two are the operator's own gestures about the trail, so
+/// *whose* ack quieted a shared workspace's alarms is exactly the fact a second
+/// seat needs.
+fn entry(ts: &str, state_root: &Path, step: &str, client: crate::registry::Client) -> OpEntry {
     OpEntry::step_done(
         ts.to_owned(),
         step,
         state_root.to_string_lossy().into_owned(),
         Origin::World,
+        client,
     )
 }
 

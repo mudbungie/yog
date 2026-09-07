@@ -129,6 +129,7 @@ fn ops_rows_encode_the_durable_line_fields() {
         stdout: String::new(),
         stderr: "gate".into(),
         origin: Origin::Balls,
+        client: crate::registry::Client::default(),
     };
     let v = encode(&Reply::Ops(crate::opslog::standings(&[row])));
     let rows = v["rows"].as_array().unwrap();
