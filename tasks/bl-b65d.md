@@ -1,7 +1,8 @@
 +++
 title = "a routed tool with no command line is opaque and held on every call: capability.yaml rules: gains a row keyed on the host-qualified name, and the hold names it as the way out"
 created = 1788744427
-updated = 1788744427
+updated = 1788744621
+claimant = "Cantaloups-Y7"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r2"]
