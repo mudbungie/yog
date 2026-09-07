@@ -47,13 +47,11 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Deleted => json!({ "ok": true, "kind": "deleted" }),
         Reply::Armed { armed } => json!({ "ok": true, "kind": "armed", "armed": armed }),
         Reply::Flagged => json!({ "ok": true, "kind": "flagged" }),
-        Reply::Answered {
-            tool_use,
-            tool,
-            ruling,
-            advanced,
-        } => json!({ "ok": true, "kind": "answered", "tool_use": tool_use, "tool": tool,
-                     "verdict": ruling.word(), "advanced": advanced }),
+        Reply::Answered(answered) => json!({ "ok": true, "kind": "answered",
+                     "tool_use": answered.tool_use, "tool": answered.tool,
+                     "verdict": answered.answer.ruling.word(),
+                     "scope": answered.answer.scope.word(),
+                     "advanced": answered.advanced }),
         Reply::Floored { standing } => {
             json!({ "ok": true, "kind": "floored", "standing": standing })
         }

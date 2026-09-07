@@ -66,17 +66,13 @@ pub(super) fn surface() -> Vec<Gesture> {
             reason: "it is rewriting an unrelated crate".into(),
         })),
     ];
-    // The §8.6 capability answer, one envelope per verdict — the vocabulary is
-    // the control's own, so all three spell and read back.
-    for ruling in [
-        crate::control::judge::Ruling::Pass,
-        crate::control::judge::Ruling::Hold,
-        crate::control::judge::Ruling::Refuse,
-    ] {
+    // The §8.6 capability answer, one envelope per verdict and scope — the
+    // vocabulary is the control's own, so every pairing spells and reads back.
+    for answer in super::super::control::answers() {
         out.push(Gesture::Act(Action::AnswerHold {
             workspace: "ws".into(),
             agent: "c-1".into(),
-            ruling,
+            answer,
         }));
     }
     out.push(Gesture::Act(Action::Ack));

@@ -94,8 +94,8 @@ fn encode_action(action: &Action) -> Value {
         Action::AnswerHold {
             workspace,
             agent,
-            ruling,
-        } => control::encode(workspace, agent, *ruling),
+            answer,
+        } => control::encode(workspace, agent, *answer),
         Action::Floor {
             workspace,
             agent,

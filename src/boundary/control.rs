@@ -6,7 +6,7 @@
 //! writer is here, and it writes exactly one `ops.jsonl` row:
 //!
 //! ```text
-//! ["yog-control","answer",<tool_use id>,"pass"|"hold"|"refuse"]
+//! ["yog-control","answer",<key>,"pass"|"hold"|"refuse",<scope>]
 //! ```
 //!
 //! which is at once the audit and the fold's memory ([`crate::control::judge`]
@@ -18,7 +18,13 @@
 //!    carried from a snapshot: it is read off `refs/litany/held/<agent>` at
 //!    fire time, so the answer names what is parked now. Nothing parked is a
 //!    refusal — a gesture is an instruction, and an answer aimed at nothing
-//!    must say so rather than report a silent success.
+//!    must say so rather than report a silent success. **An answer wider than
+//!    the call reads the mark for its CLASS too** (bl-94a5): the sentence yog
+//!    wrote into that mark says which class was parked
+//!    ([`crate::control::reason::class_of`]), and the class is half the key a
+//!    standing answer stands over. A mark whose class cannot be read takes
+//!    `--scope call` only — fail-closed, because a key nobody can compute is a
+//!    grant nobody can bound.
 //! 2. *Write the row.* Durable before anything is launched, so a driver that
 //!    re-consults a microsecond later already sees the answer. The reverse
 //!    order would race the very thing it is trying to release.
@@ -37,11 +43,17 @@
 use std::path::Path;
 
 use crate::control::hold;
-use crate::control::judge::Ruling;
-use crate::opslog::{self, DETACHED_EXIT, OpEntry, Origin, YOG_CONTROL};
+use crate::control::judge::{Answer, Ruling, Scope, class_key};
+use crate::opslog::{self, OpEntry, Origin, YOG_CONTROL};
 
 use super::dispatch::Deps;
 use super::reply::Reply;
+
+/// The releasing driver launch, shared with the §8.2 nudge — its own file
+/// because it is a *launch*, not a judgment: nothing in it reads a mark, a row
+/// or a policy.
+mod drive;
+pub(super) use drive::advance;
 
 /// The family's other writer — the §4.9 fifth rung's per-conversation floor
 /// (bl-94b4). Its own file on a real seam: this one answers **one invocation**
@@ -50,17 +62,26 @@ use super::reply::Reply;
 mod floor;
 pub(super) use floor::set_floor;
 
-/// The ops-row verb naming a once-answer. Mirrored from the fold that reads it
-/// ([`crate::control::judge`]); the two words are held equal by a test rather
-/// than by a shared const, because the reader deliberately owns its grammar.
+/// The ops-row verb naming an answer to a held call. Mirrored from the fold
+/// that reads it (`crate::control::judge::answers`); the words are held equal
+/// by a test rather than by a shared const, because the reader deliberately
+/// owns its grammar.
 const ANSWER: &str = "answer";
 
-// litany's re-drive verb — `litany advance <ws> <agent>` (its ARCH §6): one
-// hop of the workflow chain, which re-enters the tool window under the mark
-// and re-consults the control. That re-consult *is* the release. The token is
-// `opslog::launch`'s since bl-b95e — the launch writes it into `ops.jsonl` and
-// the §8.1 verdict reads it back out, so the join has one home.
-use opslog::launch::ADVANCE;
+/// **What one answered park is**: the invocation the answer landed on, read
+/// live off the mark rather than typed; the tool it named; the answer written
+/// — verdict and the scope it now stands over; and whether the releasing
+/// `litany advance` was launched. Its own named type rather than four fields
+/// on [`Reply`], the [`Acknowledged`](crate::boundary::answer::queue::Acknowledged)
+/// shape: a receipt is a thing, and this one is minted here and spelled in
+/// exactly two other places.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Answered {
+    pub tool_use: String,
+    pub tool: String,
+    pub answer: Answer,
+    pub advanced: bool,
+}
 
 /// Answer the invocation parked at `(workspace, agent)`.
 pub(super) fn answer_hold(
@@ -68,7 +89,7 @@ pub(super) fn answer_hold(
     ts: &str,
     workspace: &Path,
     agent: &str,
-    ruling: Ruling,
+    answer: Answer,
 ) -> Result<Reply, String> {
     let held = hold::read(workspace, agent).ok_or_else(|| {
         // The §3.1 name, never the path (REMOTE §8.1, bl-ef16): a refusal is a
@@ -80,13 +101,15 @@ pub(super) fn answer_hold(
             crate::naming::leaf(workspace)
         )
     })?;
+    let key = key(&held, agent, answer.scope)?;
     let row = OpEntry {
         ts: ts.to_owned(),
         argv: vec![
             YOG_CONTROL.to_owned(),
             ANSWER.to_owned(),
-            held.tool_use_id.clone(),
-            ruling.word().to_owned(),
+            key,
+            answer.ruling.word().to_owned(),
+            answer.scope.word().to_owned(),
         ],
         cwd: crate::nav::ws_key(workspace),
         exit: 0,
@@ -97,67 +120,45 @@ pub(super) fn answer_hold(
         client: deps.caller.client.clone(),
     };
     opslog::append(&deps.state_root, &row).map_err(|e| e.to_string())?;
-    let advanced = ruling != Ruling::Hold && advance(deps, ts, workspace, agent).is_ok();
-    Ok(Reply::Answered {
+    let advanced = answer.ruling != Ruling::Hold && advance(deps, ts, workspace, agent).is_ok();
+    Ok(Reply::Answered(Answered {
         tool_use: held.tool_use_id,
         tool: held.tool,
-        ruling,
+        answer,
         advanced,
-    })
+    }))
 }
 
-/// Fire `litany advance <ws> <agent>` detached, logging the launch exactly as
-/// the §8.1 fire logs its own: [`DETACHED_EXIT`] for a handoff that happened, a
-/// §4.2 synthetic-failure line for a fork that never landed. The row is the
-/// receipt — the answer's own reply says only whether the launch was made.
+/// **What this answer stands over**, in one word for the row: the held
+/// `tool_use` id at [`Scope::Call`], and the class of the held call — the same
+/// tool at the same reach — at either wider scope, prefixed by the answering
+/// conversation where the scope is that conversation's descent.
 ///
-/// **Two callers, one body** (bl-9bef): the release above, and the §8.2 nudge —
-/// the operator's own "run it again from here", which is this launch and
-/// nothing else, since litany derives what is due from the transcript tail
-/// (ARCH §6). Shared rather than re-written, so a driver launch has one home.
-///
-/// **The spawn is workspace-bound** ([`Deps::bound`], bl-bf79): what this
-/// launches is a *driver*, which makes model calls, so it owes its workspace
-/// the §16.2 wall — without it the driver's first `bz` dies with `no workspace
-/// in this environment` and the turn produces an empty reply. That is the same
-/// fold every §8.2 litany verb takes, and it was missing here.
-pub(super) fn advance(deps: &Deps, ts: &str, workspace: &Path, agent: &str) -> Result<(), String> {
-    let ws_s = workspace.to_string_lossy();
-    let sink = opslog::detached::sink(&deps.state_root, ts, workspace);
-    let bound = deps.bound(workspace);
-    let spawn =
-        bound
-            .cli()
-            .spawn_detached(Some(workspace), &sink, &[ADVANCE, ws_s.as_ref(), agent]);
-    let argv = vec![
-        deps.litany.binary().display().to_string(),
-        ADVANCE.to_owned(),
-        ws_s.into_owned(),
-        agent.to_owned(),
-    ];
-    let cwd = crate::nav::ws_key(workspace);
-    let entry = match spawn.as_ref().err() {
-        Some(e) => OpEntry::synthetic_failure(
-            ts.to_owned(),
-            argv,
-            cwd,
-            e.to_string(),
-            Origin::Conversation,
-            deps.caller.client.clone(),
-        ),
-        None => OpEntry {
-            ts: ts.to_owned(),
-            argv,
-            cwd,
-            exit: DETACHED_EXIT,
-            stdout: String::new(),
-            stderr: String::new(),
-            origin: Origin::Conversation,
-            client: deps.caller.client.clone(),
-        },
-    };
-    opslog::append(&deps.state_root, &entry).map_err(|e| e.to_string())?;
-    spawn.map(|_pid| ()).map_err(|e| e.to_string())
+/// Two refusals, and both are the fail-closed direction. A class the mark's
+/// sentence does not name cannot bound a standing grant, so the answer is
+/// narrowed to the call by refusing outright rather than by silently answering
+/// something else; and loss and credentials take the call alone
+/// ([`Answer::permits`]), which is the shipped table's own line answering a new
+/// question rather than a new floor.
+fn key(held: &hold::Held, agent: &str, scope: Scope) -> Result<String, String> {
+    if scope == Scope::Call {
+        return Ok(held.tool_use_id.clone());
+    }
+    let effect = crate::control::reason::class_of(&held.reason).ok_or_else(|| {
+        format!(
+            "the hold on {agent:?} does not say which class it parked, so only --scope call can \
+             be answered there: a standing answer stands over a class of calls and this one \
+             cannot be named"
+        )
+    })?;
+    scope.permits(effect)?;
+    let class = class_key(&held.tool, effect);
+    match scope {
+        Scope::Conversation => Ok(format!("{agent} {class}")),
+        // The workspace is the row's own `cwd`, never a second copy of it in
+        // the argv: one fact, one home, and the fold reads it back from there.
+        _ => Ok(class),
+    }
 }
 
 /// The §4.11 item-8 **confinement gate**: a workspace whose live policy

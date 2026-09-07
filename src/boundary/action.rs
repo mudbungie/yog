@@ -150,11 +150,11 @@ pub enum Action {
     AnswerHold {
         workspace: String,
         agent: String,
-        /// `pass` releases it, `refuse` declines it in band, `hold` pins the
-        /// park across a later policy edit — the control's own vocabulary,
-        /// one word list ([`crate::control::judge::Ruling`]) in both
-        /// directions.
-        ruling: crate::control::judge::Ruling,
+        /// The verdict **and the scope it stands over** (bl-94a5): `pass`
+        /// releases, `refuse` declines in band, `hold` pins the park; `call`
+        /// settles the held call alone, `conversation` and `workspace` settle
+        /// its whole class ([`crate::control::judge::Answer`]).
+        answer: crate::control::judge::Answer,
     },
     /// **Raise or lower one conversation's capability floor** (VISION §4.9's
     /// fifth rung, §4.11 item 7, §8.6): under a raised floor every effect class

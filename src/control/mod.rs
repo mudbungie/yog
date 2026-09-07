@@ -48,11 +48,11 @@ pub mod hold;
 pub mod judge;
 pub mod lex;
 pub mod policy;
+pub mod reason;
 pub mod root;
 pub mod rules;
 pub mod wire;
 
-use classify::Classified;
 use judge::Answers;
 use policy::Policy;
 use root::Root;
@@ -150,52 +150,21 @@ impl Consult {
 /// Adjudicate one invocation: classify it, then judge the class against the
 /// shipped table folded with the operator's own answers. Pure over `consult`
 /// plus one read of the ops trail.
+///
+/// The judgment answers **with the scope it came from** as well as the ruling,
+/// because a refusal has to tell the model how far the decision reaches
+/// ([`reason::verdict`]) — a call, a conversation, or the workspace.
 pub fn adjudicate(consult: &Consult, request: &Request) -> Verdict {
     let entries = opslog::tail(&consult.state_root, usize::MAX);
     let root = consult.root(&request.agent_id, &entries);
     let classified = classify::classify(request, &root, &consult.policy);
-    let ruling = Answers::fold(&entries).ruling(
-        &request.id,
-        &request.agent_id,
-        &request.name,
+    let standing = Answers::fold(&entries).ruling(
+        request,
+        &crate::nav::ws_key(&consult.workspace),
         classified.effect,
         &consult.policy,
     );
-    ruling.verdict(&reason(request, &classified))
-}
-
-/// How many `char`s of the invocation's input the reason carries. Enough to
-/// recognise the command; bounded because the sentence rides a git blob an
-/// operator reads at a glance.
-const SUMMARY_MAX: usize = 160;
-
-/// The sentence a hold hands the operator and a refusal hands the model: the
-/// tool, **what it was about to do**, the class it landed in, and the evidence
-/// that put it there. Never a section number — the reader has the window, not
-/// the document.
-///
-/// The input summary lives here rather than at the attention item because the
-/// control is the only thing that sees the invocation: the mark carries the
-/// sentence, so the parked drone's whole story is one fact with one home, and
-/// the operator never opens a transcript to learn what is waiting.
-pub fn reason(request: &Request, classified: &Classified) -> String {
-    format!(
-        "{} {} classified {} ({})",
-        request.name,
-        clip(&request.input.to_string()),
-        classified.effect.word(),
-        classified.why,
-    )
-}
-
-/// `text` bounded to [`SUMMARY_MAX`] chars, saying so when it was cut.
-fn clip(text: &str) -> String {
-    let flat = text.replace(['\n', '\r'], " ");
-    if flat.chars().count() > SUMMARY_MAX {
-        flat.chars().take(SUMMARY_MAX).chain("…".chars()).collect()
-    } else {
-        flat
-    }
+    reason::verdict(standing, request, &classified)
 }
 
 /// The `world/tools/` shim's process body: read one request, answer one verdict.

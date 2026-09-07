@@ -70,7 +70,7 @@ fn every_conversation_bearing_action_answers_with_its_needle() {
         Action::AnswerHold {
             workspace: WS.into(),
             agent: NEEDLE.into(),
-            ruling: crate::control::judge::Ruling::Pass,
+            answer: crate::control::judge::Answer::once(crate::control::judge::Ruling::Pass),
         },
         Action::Floor {
             workspace: WS.into(),

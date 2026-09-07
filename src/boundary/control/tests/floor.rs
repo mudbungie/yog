@@ -21,13 +21,14 @@ const LOOKALIKE: &str = "20260101T000000Z-a10";
 /// The tool is `bash`: the floor's one exemption is the compactor's checkpoint
 /// pair, which is [`judge`](crate::control::judge)'s own case to pin.
 fn ruling(world: &World, agent: &str, effect: Effect) -> Ruling {
-    Answers::fold(&tail(&world.state(), usize::MAX)).ruling(
-        "toolu_x",
-        agent,
-        "bash",
-        effect,
-        &Policy::default(),
-    )
+    Answers::fold(&tail(&world.state(), usize::MAX))
+        .ruling(
+            &super::request("toolu_x", "bash", agent),
+            &crate::nav::ws_key(&world.workspace()),
+            effect,
+            &Policy::default(),
+        )
+        .ruling
 }
 
 #[test]

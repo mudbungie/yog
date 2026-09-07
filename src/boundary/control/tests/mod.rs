@@ -13,8 +13,10 @@ use world::{AGENT, World};
 use super::*;
 use crate::boundary::dispatch::Deps;
 use crate::cli_outbound::Cli;
-use crate::control::judge::Answers;
+use crate::control::classify::Effect;
+use crate::control::judge::{Answer, Answers, Scope, Standing};
 use crate::control::policy::CAPABILITY_YAML;
+use crate::control::wire::Request;
 use crate::opslog::{DETACHED_EXIT, tail};
 use std::path::{Path, PathBuf};
 
@@ -28,34 +30,36 @@ fn an_answer_writes_the_row_the_control_folds_and_launches_the_release() {
         "1000",
         &world.workspace(),
         AGENT,
-        Ruling::Pass,
+        Answer::once(Ruling::Pass),
     )
     .expect("something is parked");
     assert_eq!(
         reply,
-        Reply::Answered {
+        Reply::Answered(Answered {
             tool_use: "toolu_42".to_owned(),
             tool: "bash".to_owned(),
-            ruling: Ruling::Pass,
+            answer: Answer::once(Ruling::Pass),
             advanced: true,
-        }
+        })
     );
     let rows = tail(&world.state(), usize::MAX);
     // The row is the grammar the fold reads — and the fold reads it back.
     let answer = rows.first().expect("the answer row");
     assert_eq!(
         answer.argv,
-        vec!["yog-control", "answer", "toolu_42", "pass"]
+        vec!["yog-control", "answer", "toolu_42", "pass", "call"]
     );
     assert_eq!(
         Answers::fold(&rows).ruling(
-            "toolu_42",
-            AGENT,
-            "bash",
-            crate::control::classify::Effect::Destructive,
+            &request("toolu_42", "bash", AGENT),
+            &crate::nav::ws_key(&world.workspace()),
+            Effect::Destructive,
             &crate::control::policy::Policy::default(),
         ),
-        Ruling::Pass,
+        Standing {
+            ruling: Ruling::Pass,
+            scope: Scope::Call
+        },
     );
     // …and the release was launched, detached, as its own logged row.
     let advance = rows.get(1).expect("the advance row");
@@ -79,10 +83,10 @@ fn the_answer_is_reachable_from_the_chokepoint_every_seat_enters() {
         &crate::boundary::Action::AnswerHold {
             workspace: crate::naming::leaf(&(world.workspace())),
             agent: AGENT.to_owned(),
-            ruling: Ruling::Hold,
+            answer: Answer::once(Ruling::Hold),
         },
     );
-    assert!(matches!(through, Ok(Reply::Answered { .. })));
+    assert!(matches!(through, Ok(Reply::Answered(_))));
 }
 
 #[test]
@@ -95,16 +99,19 @@ fn keeping_it_parked_writes_the_row_and_launches_nothing() {
         "1000",
         &world.workspace(),
         AGENT,
-        Ruling::Hold,
+        Answer::once(Ruling::Hold),
     )
     .expect("something is parked");
     assert!(matches!(
         reply,
-        Reply::Answered {
+        Reply::Answered(Answered {
             advanced: false,
-            ruling: Ruling::Hold,
+            answer: Answer {
+                ruling: Ruling::Hold,
+                ..
+            },
             ..
-        }
+        })
     ));
     let rows = tail(&world.state(), usize::MAX);
     assert_eq!(rows.len(), 1, "a hold answer drives nothing");
@@ -120,10 +127,13 @@ fn a_refusal_releases_too_because_a_decline_is_in_band() {
         "1000",
         &world.workspace(),
         AGENT,
-        Ruling::Refuse,
+        Answer::once(Ruling::Refuse),
     )
     .expect("something is parked");
-    assert!(matches!(reply, Reply::Answered { advanced: true, .. }));
+    assert!(matches!(
+        reply,
+        Reply::Answered(Answered { advanced: true, .. })
+    ));
 }
 
 #[test]
@@ -133,14 +143,20 @@ fn a_failed_launch_is_still_an_answer_and_still_a_row() {
     world.park(AGENT, "toolu_9");
     let mut deps = world.deps();
     deps.litany = Cli::new("/no/such/litany");
-    let reply = answer_hold(&deps, "1000", &world.workspace(), AGENT, Ruling::Pass)
-        .expect("the answer is durable whatever the launch does");
+    let reply = answer_hold(
+        &deps,
+        "1000",
+        &world.workspace(),
+        AGENT,
+        Answer::once(Ruling::Pass),
+    )
+    .expect("the answer is durable whatever the launch does");
     assert!(matches!(
         reply,
-        Reply::Answered {
+        Reply::Answered(Answered {
             advanced: false,
             ..
-        }
+        })
     ));
     // Both rows land: the answer, then the §4.2 synthetic failure for the fork
     // that never happened.
@@ -158,12 +174,28 @@ fn answering_where_nothing_is_parked_refuses_and_writes_nothing() {
         "1000",
         &world.workspace(),
         AGENT,
-        Ruling::Pass,
+        Answer::once(Ruling::Pass),
     )
     .expect_err("an answer aimed at nothing says so");
     assert!(err.contains("nothing is held"), "{err}");
     assert!(tail(&world.state(), usize::MAX).is_empty());
 }
+
+/// One invocation, for reading a written row back through the fold.
+fn request(id: &str, name: &str, agent: &str) -> Request {
+    Request {
+        id: id.to_owned(),
+        name: name.to_owned(),
+        input: serde_json::json!({}),
+        role: "worker".to_owned(),
+        agent_id: agent.to_owned(),
+    }
+}
+
+/// The scopes an answer may stand over (bl-94a5) — their own file, on the seam
+/// the ruling draws: the beats above are one park answered once, these are the
+/// class of calls an answer stands for after it.
+mod scope;
 
 /// The §4.11 item-8 confinement refusal — its own file at §12's cap, on the
 /// seam the ruling draws: answering a park is what this module *does*, and

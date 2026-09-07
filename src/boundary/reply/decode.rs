@@ -171,13 +171,18 @@ fn enrolled(o: &Map<String, Value>) -> Result<Reply, String> {
 
 fn answered(o: &Map<String, Value>) -> Result<Reply, String> {
     let word = str_of(o, "verdict")?;
-    Ok(Reply::Answered {
+    let said = str_of(o, "scope")?;
+    Ok(Reply::Answered(crate::boundary::control::Answered {
         tool_use: str_of(o, "tool_use")?,
         tool: str_of(o, "tool")?,
-        ruling: crate::control::judge::Ruling::of(&word)
-            .ok_or_else(|| format!("unknown verdict {word:?}"))?,
+        answer: crate::control::judge::Answer {
+            ruling: crate::control::judge::Ruling::of(&word)
+                .ok_or_else(|| format!("unknown verdict {word:?}"))?,
+            scope: crate::control::judge::Scope::of(&said)
+                .ok_or_else(|| format!("unknown scope {said:?}"))?,
+        },
         advanced: bool_of(o, "advanced")?,
-    })
+    }))
 }
 
 /// The listings (§8.5): what a populating read answered.

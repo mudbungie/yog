@@ -9,6 +9,7 @@ use super::{HelpRow, Surface};
 
 /// The six §8.2 verbs whose subject is a conversation already running — split
 /// off at §12's budget (bl-c088), and joined back *ahead* of [`ACTIONS`].
+pub mod capability;
 pub mod driving;
 pub mod following;
 pub mod queries;

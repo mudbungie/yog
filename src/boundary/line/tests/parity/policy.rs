@@ -12,23 +12,38 @@ use crate::boundary::line::{Context, parse};
 use crate::boundary::{Action, Gesture, Query};
 use crate::monitor::Verb;
 
-/// The §8.6 capability answer: aimed by the seat like `/seen`, and its whole
-/// tail is the verdict — the held `tool_use` id is derived at fire time, so
-/// there is nothing else a line could carry.
+/// The §8.6 capability answer: aimed by the seat like `/seen`, and its tail is
+/// the verdict and how far it stands — the held `tool_use` id is derived at
+/// fire time, so there is nothing else a line could carry.
 #[test]
 fn every_hold_answer_round_trips_and_a_bad_verdict_refuses() {
-    use crate::control::judge::Ruling;
+    use crate::control::judge::{Answer, Ruling, Scope};
     for ruling in [Ruling::Pass, Ruling::Hold, Ruling::Refuse] {
-        rt(Gesture::Act(Action::AnswerHold {
-            workspace: "ws".to_owned(),
-            agent: "c-1".to_owned(),
-            ruling,
-        }));
+        for scope in [Scope::Call, Scope::Conversation, Scope::Workspace] {
+            rt(Gesture::Act(Action::AnswerHold {
+                workspace: "ws".to_owned(),
+                agent: "c-1".to_owned(),
+                answer: Answer { ruling, scope },
+            }));
+        }
     }
     let bad = parse("/answer maybe", &ctx()).expect_err("only the three words");
     assert!(bad.contains("unknown verdict"), "{bad}");
     let bare = parse("/answer", &ctx()).expect_err("no default verdict exists");
     assert!(bare.contains("pass, hold or refuse"), "{bare}");
+    // The scope is a flag, and an unknown one refuses rather than defaulting:
+    // a wide answer read out of a typo is the one mistake a default makes.
+    let scope = parse("/answer pass --scope everywhere", &ctx()).expect_err("three scopes");
+    assert!(scope.contains("unknown scope"), "{scope}");
+    // …and the default is the narrow one, which is what leaving it off means.
+    assert_eq!(
+        parse("/answer pass", &ctx()).expect("the call alone"),
+        Gesture::Act(Action::AnswerHold {
+            workspace: "ws".to_owned(),
+            agent: "c-1".to_owned(),
+            answer: Answer::once(Ruling::Pass),
+        })
+    );
 }
 
 /// The §4.9 fifth rung over that same fold: two verbs, aimed by the seat, each

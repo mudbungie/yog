@@ -35,16 +35,19 @@ fn every_flat_receipt_says_what_happened() {
     assert_eq!(encode(&Reply::Flagged)["kind"], "flagged");
     // The §8.6 answer names the call it landed on — the receipt an audit reads
     // — and says whether the release was actually launched.
-    let answered = encode(&Reply::Answered {
+    let answered = encode(&Reply::Answered(crate::boundary::control::Answered {
         tool_use: "toolu_42".into(),
         tool: "bash".into(),
-        ruling: crate::control::judge::Ruling::Pass,
+        answer: crate::control::judge::Answer::once(crate::control::judge::Ruling::Pass),
         advanced: true,
-    });
+    }));
     assert_eq!(answered["kind"], "answered");
     assert_eq!(answered["tool_use"], "toolu_42");
     assert_eq!(answered["tool"], "bash");
     assert_eq!(answered["verdict"], "pass");
+    // …and how far the answer now stands (bl-94a5), which is the other half of
+    // what an audit reads back.
+    assert_eq!(answered["scope"], "call");
     assert_eq!(answered["advanced"], true);
     // The §4.9 fifth rung's receipt states what **stands**, not what was asked
     // — so a restore under an ancestor's floor cannot read as a restore.

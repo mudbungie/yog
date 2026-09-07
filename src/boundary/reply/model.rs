@@ -48,17 +48,13 @@ pub enum Reply {
     /// An attention item was raised on a conversation (VISION §4.9).
     Flagged,
     /// A parked invocation was answered (§8.6): which `tool_use` the answer
-    /// landed on, the tool it names, the verdict written, and whether the
-    /// releasing `litany advance` was launched. It answers with the *held
-    /// invocation* rather than the queue that remains (the `seen` precedent):
-    /// the mark lifts only once the re-adjudication runs, so a queue read here
-    /// would still show the park it just answered — a receipt that lied.
-    Answered {
-        tool_use: String,
-        tool: String,
-        ruling: crate::control::judge::Ruling,
-        advanced: bool,
-    },
+    /// landed on, the tool it names, the answer written — verdict **and the
+    /// scope it now stands over** (bl-94a5) — and whether the releasing
+    /// `litany advance` was launched. It answers with the *held invocation*
+    /// rather than the queue that remains (the `seen` precedent): the mark
+    /// lifts only once the re-adjudication runs, so a queue read here would
+    /// still show the park it just answered — a receipt that lied.
+    Answered(crate::boundary::control::Answered),
     /// **A queue item acknowledged** (§6, bl-5cfe) — `seen`'s receipt: what the
     /// watermark landed on, and the queue that remains beside it. The remainder
     /// alone was the whole answer, and it reads as a plain `attention` — the

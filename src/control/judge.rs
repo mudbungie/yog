@@ -1,6 +1,7 @@
-//! The **judgment fold** (VISION §4.11 items 4, 6, 7; DESIGN §8.6): a class, the
-//! shipped default table, and the two kinds of operator answer the ops trail
-//! already carries.
+//! The **judgment vocabulary** (VISION §4.11 items 4, 6, 7; DESIGN §8.6): a
+//! ruling, the shipped default table, and the **scope** an operator's answer
+//! stands over. The fold that reads the operator's answers off the trail is
+//! [`answers`].
 //!
 //! The control writes nothing, ever — the seam re-adjudicates a held invocation
 //! on every later drive, so a consult with a side effect would answer
@@ -11,35 +12,47 @@
 //! - **standing policy** is the shipped [`Table`], overridden row by row by the
 //!   workspace's own [`Policy`](super::policy::Policy) when it declares one —
 //!   absence *is* the defaults, the `cadence.yaml` severability pattern;
-//! - **answers** are `ops.jsonl` rows, which are at once the audit and this
+//! - **answers** are `ops.jsonl` rows, which are at once the audit and the
 //!   fold's memory. No new durable artifact; I2 holds at three.
 //!
-//! Two answer kinds, and only two:
+//! **An answer has a scope, and the scope is the whole of what a wider one
+//! costs** (bl-94a5). Before it, every answer was one call, so an operator
+//! holding a conversation answered the same question for every call of a kind
+//! they had already decided about — eleven holds and eleven releases of one
+//! narrow routed tool in a single measured run. Three scopes now:
 //!
-//! 1. A **once-answer** scoped to one `tool_use` id. The id is provider-unique,
-//!    so the grant needs no consumption and cannot race: the same id is never
-//!    asked twice by two different invocations.
-//! 2. A **floor** on a conversation — the alignment monitor's revoke rung
-//!    (bl-94b4) — under which every class above read adjudicates to a hold. It
-//!    matches by descent prefix, so revoking a conversation revokes its whole
-//!    subtree without enumerating one.
+//! 1. [`Call`](Scope::Call) — the held `tool_use` id, which is today's answer
+//!    and the default. The id is provider-unique, so the grant needs no
+//!    consumption and cannot race.
+//! 2. [`Conversation`](Scope::Conversation) — the **class** of the held call
+//!    ([`class_key`]: the same tool at the same reach) over that conversation
+//!    and its whole descent, matched by the descent prefix the floor is.
+//! 3. [`Workspace`](Scope::Workspace) — that class over every conversation in
+//!    the workspace the answer was given in.
 //!
-//! Precedence is the operator's: a once-answer to *this exact* invocation wins
-//! over the floor and over the table. The floor then raises whatever the table
-//! said; it never lowers it, so a refusal stays a refusal.
+//! Two rules bound the two wide scopes, and neither is a new floor:
 //!
-//! **Revocation binds at the next consult, never mid-window.** A verdict already
-//! passed runs its one call; recalling it would mean stopping the agent, and a
-//! stop mid-tool-window wedges the branch permanently.
+//! - **Loss and credentials take [`Call`](Scope::Call) only.** Those are the
+//!   two classes the shipped table refuses outright, and they are exactly the
+//!   ones an operator must not be able to decide once and forget
+//!   ([`Answer::permits`]).
+//! - **A raised floor suspends every standing answer** ([`answers`]). §4.9's
+//!   fifth rung means *walk me through each call from here*, and a standing
+//!   grant is the auto-approval it revoked. That is also what makes a standing
+//!   answer revocable: `/revoke` parks the next call of the class, the operator
+//!   answers it again at the same scope, `/restore` lowers the floor.
 
-use std::collections::HashMap;
+use super::classify::Effect;
 
-use super::classify::{self, Effect};
-use super::wire::Verdict;
-use crate::opslog::{OpEntry, YOG_CONTROL};
+/// The trail fold: the operator's answers, read back off `ops.jsonl`.
+pub mod answers;
+/// The shipped default table — the ruling for a class nobody has answered for.
+pub mod table;
+pub use answers::{Answers, Standing};
+pub use table::Table;
 
 /// What the policy says about a class, before a reason is attached.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Ruling {
     Pass,
     Hold,
@@ -89,158 +102,103 @@ impl Ruling {
             Ruling::Pass | Ruling::Hold => self,
         }
     }
+}
 
-    /// The verdict this ruling carries, given the classification's clause.
-    pub fn verdict(self, why: &str) -> Verdict {
+/// How far one answer stands. Ordered narrowest first, which is also the
+/// order the fold consults them in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Scope {
+    /// The held call, and nothing else.
+    Call,
+    /// The class of the held call, over this conversation and its descent.
+    Conversation,
+    /// The class of the held call, over this workspace. Also what the shipped
+    /// table and a workspace's own `capability.yaml` stand over, which is why
+    /// a ruling that came from neither an answer nor a floor reports this one.
+    Workspace,
+}
+
+impl Scope {
+    /// The scope as its row, its gesture field and its flag all spell it.
+    pub(crate) fn word(self) -> &'static str {
         match self {
-            Ruling::Pass => Verdict::Pass,
-            Ruling::Hold => Verdict::Hold(why.to_owned()),
-            Ruling::Refuse => Verdict::Refuse(why.to_owned()),
+            Scope::Call => "call",
+            Scope::Conversation => "conversation",
+            Scope::Workspace => "workspace",
+        }
+    }
+
+    /// The scope a word names, or `None` for anything else.
+    pub fn of(word: &str) -> Option<Scope> {
+        [Scope::Call, Scope::Conversation, Scope::Workspace]
+            .into_iter()
+            .find(|s| s.word() == word)
+    }
+
+    /// What a decision at this scope covers, in the words a refusal hands the
+    /// model. Never an invitation: it names the reach of the decision so the
+    /// model can tell that another spelling of the same call is inside it.
+    pub fn stands_for(self, tool: &str, effect: Effect) -> String {
+        match self {
+            Scope::Call => "this one call".to_owned(),
+            Scope::Conversation => format!(
+                "every {tool} call classified {} in this conversation and its descent",
+                effect.word()
+            ),
+            Scope::Workspace => format!(
+                "every {tool} call classified {} in this workspace",
+                effect.word()
+            ),
+        }
+    }
+
+    /// Whether an answer at this scope may stand over `effect`, and why not
+    /// where it may not. Loss and credentials take [`Call`](Scope::Call) only:
+    /// they are the two classes the shipped table refuses outright, so an
+    /// answer to one is the operator overriding the strictest thing the control
+    /// says — a decision about the call in front of them, never about a class
+    /// of calls to come. The refusal names the way to make it standing anyway:
+    /// a `capability.yaml` row, which lives where policy is read and deleted.
+    pub fn permits(self, effect: Effect) -> Result<(), String> {
+        if self == Scope::Call || !matches!(effect, Effect::Destructive | Effect::Secret) {
+            return Ok(());
+        }
+        Err(format!(
+            "a {class} call takes --scope call only: {class} is what the control refuses \
+             outright, so it is answered for the call in front of you and never for a class of \
+             calls to come. To make it standing anyway, state the tool's reach in this \
+             workspace's capability.yaml `rules:` block, where it is read and deleted.",
+            class = effect.word(),
+        ))
+    }
+}
+
+/// One operator answer: the verdict, and how far it stands. The two travel
+/// together everywhere — gesture, envelope, ops row, receipt — because they
+/// are one decision, and a verdict whose scope was carried beside it would be
+/// two facts to keep true.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Answer {
+    pub ruling: Ruling,
+    pub scope: Scope,
+}
+
+impl Answer {
+    /// A once-answer: the default, and what every answer was before bl-94a5.
+    pub fn once(ruling: Ruling) -> Answer {
+        Answer {
+            ruling,
+            scope: Scope::Call,
         }
     }
 }
 
-/// The class → ruling table: **everything passes except loss and credentials**.
-/// An unattended drone is there to work, and a shipped hold on open-world made
-/// the operator answer for every `python` and every fetch — approving what they
-/// were always going to approve. So the four classes that are the job pass, and
-/// only irreversible loss and credential access decline in band: those two are
-/// what a drone must not decide for itself, and neither is answerable by
-/// reflex.
-///
-/// **Hold is no longer standing policy; it is imposed.** Two mechanisms carry
-/// the weight the shipped hold used to, and both aim it at the conversation
-/// that earned it rather than at all of them:
-///
-/// - a workspace that wants the parked default writes one line of
-///   `capability.yaml` — `table:` / `  open-world: hold` (see
-///   [`Policy`](super::policy::Policy)); severability still runs the right way,
-///   with absence the (now permissive) default and the file the override;
-/// - the alignment monitor's revoke rung raises a per-conversation floor, under
-///   which every class above read holds ([`Answers::floored`]).
-///
-/// **One exception, and it is not about a reach** (bl-72bd): the seventh class
-/// [`Opaque`](Effect::Opaque) holds, because it is what the classifier says
-/// when it could not read the invocation at all. bl-1ef1's argument does not
-/// reach it — that argument was about parking effects the operator was always
-/// going to approve, and this class is the one where nobody knows what is
-/// being approved. A workspace that wants the old, open answer writes
-/// `table:` / `  opaque: pass`, the same one line, the same way round.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Table;
-
-impl Table {
-    /// This class's ruling.
-    pub fn ruling(effect: Effect) -> Ruling {
-        match effect {
-            Effect::Read | Effect::TargetWrite | Effect::Process | Effect::OpenWorld => {
-                Ruling::Pass
-            }
-            Effect::Destructive | Effect::Secret => Ruling::Refuse,
-            // The one shipped hold, and it is not a policy about a reach — it
-            // is what the control says when it could not read one (bl-72bd).
-            // A refusal would be a claim about the invocation this control has
-            // no basis for; a pass is the arm the routed leg fell off into for
-            // a year. So it parks, and the operator answers once.
-            Effect::Opaque => Ruling::Hold,
-        }
-    }
-}
-
-/// The ops-row verb naming a once-answer to one held `tool_use`.
-const ANSWER: &str = "answer";
-/// The ops-row verb naming a per-conversation floor, raised or lowered.
-const FLOOR: &str = "floor";
-/// The floor's two states, as its row spells them.
-const RAISE: &str = "raise";
-const LOWER: &str = "lower";
-
-/// The operator's answers, folded from the trail. Later rows supersede earlier
-/// ones for the same key — the log is append-only, so the fold is the state.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Answers {
-    once: HashMap<String, Ruling>,
-    floors: HashMap<String, bool>,
-}
-
-impl Answers {
-    /// Fold every `yog-control` row in `entries`, oldest first.
-    pub fn fold(entries: &[OpEntry]) -> Answers {
-        let mut answers = Answers::default();
-        for argv in entries.iter().map(|e| &e.argv) {
-            let words: Vec<&str> = argv.iter().map(String::as_str).collect();
-            match words.as_slice() {
-                [YOG_CONTROL, ANSWER, key, word] => {
-                    if let Some(ruling) = Ruling::of(word) {
-                        answers.once.insert((*key).to_owned(), ruling);
-                    }
-                }
-                [YOG_CONTROL, FLOOR, conv, state @ (RAISE | LOWER)] => {
-                    answers.floors.insert((*conv).to_owned(), *state == RAISE);
-                }
-                _ => {}
-            }
-        }
-        answers
-    }
-
-    /// Whether a floor stands over `agent_id` — its own conversation's, or that
-    /// of any ancestor in its hyphenated descent.
-    pub fn floored(&self, agent_id: &str) -> bool {
-        self.floors.iter().any(|(conv, raised)| {
-            *raised
-                && (agent_id == conv
-                    || agent_id
-                        .strip_prefix(conv.as_str())
-                        .is_some_and(|rest| rest.starts_with('-')))
-        })
-    }
-
-    /// The ruling for one invocation: the once-answer if the operator gave one,
-    /// else the workspace's table — addressed to the leg the name runs on
-    /// ([`Ruling::for_the_operator`], bl-1772) and raised by any standing floor.
-    ///
-    /// **The floor does not reach the compactor's checkpoint pair** (bl-a821,
-    /// VISION §4.11 item 7). `revoke` takes auto-approval from a conversation
-    /// *and its descendants*, and the compactor is a descendant — so a floor
-    /// raised on a long conversation held `write_summary`, which is the one act
-    /// no role can declare and litany injects from its own procedure. The
-    /// operator was queued a machinery act they have no basis to judge and did
-    /// not ask for, and until they answered it the floored conversation could
-    /// not compact: a floor set out of worry stalled the conversation on
-    /// context rather than on policy. A floor is a statement about what the
-    /// AGENT may do to the world; this pair touches the conversation's own
-    /// compactor branch and nothing else ([`classify::checkpoint`]). Everything
-    /// else about descent propagation stands — a dispatched child's calls are
-    /// the agent's acts, and the floor still reaches them.
-    ///
-    /// The exemption is the floor's alone. The table still rules the pair, so a
-    /// workspace that writes `target-write: hold` gets what it asked for; what
-    /// is dissolved is the hold nobody asked for.
-    pub fn ruling(
-        &self,
-        tool_use_id: &str,
-        agent_id: &str,
-        name: &str,
-        effect: Effect,
-        policy: &super::policy::Policy,
-    ) -> Ruling {
-        if let Some(once) = self.once.get(tool_use_id) {
-            return *once;
-        }
-        // The once-answer stands ahead of the leg on purpose: an operator who
-        // answered this exact `tool_use` id has MADE the decision, and
-        // re-parking it would ask them what they just answered. What the leg
-        // addresses is the table's answer, which nobody has read yet.
-        let table = match classify::Leg::of(name) {
-            classify::Leg::Engine => policy.ruling(effect),
-            classify::Leg::Routed => policy.ruling(effect).for_the_operator(),
-        };
-        if effect > Effect::Read && !classify::checkpoint(name) && self.floored(agent_id) {
-            return table.max(Ruling::Hold);
-        }
-        table
-    }
+/// The **class of a call**: the same tool at the same reach, in one token. It
+/// is the key every scope wider than [`Call`](Scope::Call) stands over, and it
+/// is deliberately not the tool alone — a `Bash` released for a read must not
+/// carry a later destructive line, so the reach is half the key.
+pub fn class_key(tool: &str, effect: Effect) -> String {
+    format!("{tool}@{}", effect.policy_word())
 }
 
 #[cfg(test)]

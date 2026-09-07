@@ -53,6 +53,31 @@ fn config_views() -> Vec<Reply> {
     ]
 }
 
+/// The §4.11 capability family's receipts, their own list so `receipts` stays
+/// under the length a reviewer can hold: a narrow answer and a widened one,
+/// whose `scope` is the field a client must carry (bl-94a5).
+fn answered() -> Vec<Reply> {
+    use crate::control::judge::{Answer, Ruling, Scope};
+    [
+        Answer::once(Ruling::Hold),
+        Answer {
+            ruling: Ruling::Pass,
+            scope: Scope::Conversation,
+        },
+    ]
+    .into_iter()
+    .enumerate()
+    .map(|(n, answer)| {
+        Reply::Answered(crate::boundary::control::Answered {
+            tool_use: format!("toolu_{n}"),
+            tool: "beta2_read_log".into(),
+            answer,
+            advanced: n == 1,
+        })
+    })
+    .collect()
+}
+
 pub(super) fn receipts() -> Vec<Reply> {
     vec![
         // A non-zero exit on purpose: `ok: false` on an answer is the one
@@ -99,12 +124,6 @@ pub(super) fn receipts() -> Vec<Reply> {
         Reply::Deleted,
         Reply::Armed { armed: true },
         Reply::Flagged,
-        Reply::Answered {
-            tool_use: "toolu_1".into(),
-            tool: "Bash".into(),
-            ruling: crate::control::judge::Ruling::Hold,
-            advanced: false,
-        },
         // `seen`'s receipt (bl-5cfe), at both of its shapes: the ordinary one,
         // whose remainder still holds rows, and the last acknowledgement in a
         // world — an EMPTY remainder, which is the answer a reader must not be
@@ -174,6 +193,7 @@ pub(super) fn receipts() -> Vec<Reply> {
     .into_iter()
     .chain(config_views())
     .chain(logins())
+    .chain(answered())
     .collect()
 }
 

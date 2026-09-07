@@ -50,8 +50,13 @@ fn receipt_fields_are_read_strictly() {
     );
     refuses(
         &json!({ "ok": true, "kind": "answered", "tool_use": "t", "tool": "Bash",
-                 "verdict": "maybe", "advanced": false }),
+                 "verdict": "maybe", "scope": "call", "advanced": false }),
         "unknown verdict \"maybe\"",
+    );
+    refuses(
+        &json!({ "ok": true, "kind": "answered", "tool_use": "t", "tool": "Bash",
+                 "verdict": "pass", "scope": "everywhere", "advanced": false }),
+        "unknown scope \"everywhere\"",
     );
 }
 

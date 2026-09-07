@@ -79,12 +79,23 @@ impl World {
 
     /// Park `agent` on `tool_use`, exactly as litany's seam does.
     pub(super) fn park(&self, agent: &str, tool_use: &str) {
+        // The reason is the sentence yog itself writes into the mark, class
+        // clause and all — a widened answer reads its class back out of it.
+        self.park_as(
+            agent,
+            tool_use,
+            "bash",
+            "bash {\"command\":\"curl x\"} classified open-world (`curl` reaches the network)",
+        );
+    }
+
+    /// The same park, spelling the tool and the control's own sentence.
+    pub(super) fn park_as(&self, agent: &str, tool_use: &str, tool: &str, reason: &str) {
         let staged = self.dir.path().join("mark.json");
-        std::fs::write(
-            &staged,
-            format!(r#"{{"tool_use_id":"{tool_use}","tool":"bash","reason":"open-world"}}"#),
-        )
-        .unwrap();
+        let blob = serde_json::json!({
+            "tool_use_id": tool_use, "tool": tool, "reason": reason,
+        });
+        std::fs::write(&staged, blob.to_string()).unwrap();
         let hashed = self.git(&["hash-object", "-w", "--", &staged.to_string_lossy()]);
         let oid = String::from_utf8_lossy(&hashed.stdout).trim().to_owned();
         self.git(&[

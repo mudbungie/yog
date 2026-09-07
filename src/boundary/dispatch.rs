@@ -154,7 +154,7 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Action::Fleet(verb) => fleet::dispatch(deps, ts, ws, verb),
         // The §8.6 capability family's one writer: the once-answer row, then
         // the releasing `advance`.
-        Action::AnswerHold { ruling, .. } => control::answer_hold(deps, ts, ws, agent, *ruling),
+        Action::AnswerHold { answer, .. } => control::answer_hold(deps, ts, ws, agent, *answer),
         // The same family's other writer (VISION §4.9's fifth rung): standing
         // policy for a whole descent, one row, nothing launched.
         Action::Floor { raised, .. } => control::set_floor(deps, ts, ws, agent, *raised),

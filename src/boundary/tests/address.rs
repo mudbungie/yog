@@ -149,7 +149,7 @@ fn every_workspace_bearing_action_answers_with_its_name() {
         Action::AnswerHold {
             workspace: WS.into(),
             agent: "c".into(),
-            ruling: crate::control::judge::Ruling::Pass,
+            answer: crate::control::judge::Answer::once(crate::control::judge::Ruling::Pass),
         },
         Action::Floor {
             workspace: WS.into(),

@@ -60,7 +60,7 @@ pub use balls::{CREATE_USAGE, UPDATE_USAGE};
 pub use config::USAGE as CONFIG_USAGE;
 pub use parse::parse;
 pub use spell::spell;
-pub use verbs::ANSWER_USAGE;
+pub use verbs::control::{ANSWER_USAGE, spell_answer};
 
 /// The selection facts a seat holds (§8.5): what the line elides. Every field
 /// is the same fact the GUI's click-glue resolves off the focus before it

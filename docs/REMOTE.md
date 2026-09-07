@@ -1878,9 +1878,17 @@ Three consequences reach this document, and none of them moves the wire:
   `<client>_<tool>` with an input shaped by the server's schema — no `command`
   field — so bl-72bd's routed lane classifies it **opaque** and the shipped
   table holds it: the first call parks for the operator with the tool and its
-  input in front of them. The standing answer is a `rules:` row in the
-  workspace's `capability.yaml` keyed on the host-qualified name (bl-b65d),
-  the operator's own statement of what that tool on that box reaches. It is
+  input in front of them. The **immediate** answer is the gesture, widened
+  (bl-94a5): `/answer pass --scope conversation` settles that tool at that
+  reach for the conversation and its descent, `--scope workspace` for every
+  conversation here, so the eleven-holds-for-one-tool run is one release. The
+  **permanent** answer is a `rules:` row in the workspace's `capability.yaml`
+  keyed on the host-qualified name (bl-b65d), the operator's own statement of
+  what that tool on that box reaches. The two are not the same fact and the
+  boundary will not write the second from the first: an answer says *I have
+  decided about these calls*, a row says *this is what that tool reaches*, and
+  only the operator can say the second — which is also why the row is the one
+  that outlives the trail and is deleted where policy is. It is
   host-qualified because the same server on two boxes is two trust decisions,
   which is what locality-rides-in-the-name already says. A shell-shaped MCP
   tool — one whose input carries `command` — is classified by its line like
@@ -2032,6 +2040,20 @@ the frame now says it:
   file body is an ordinary write argument, while this lane exists to be read
   *while* it streams. The cut keeps both ends — the head says which command, the
   tail says which invocation of it.
+
+**The capability answer carries its scope (bl-94a5, PROTOCOL 17).**
+`request/answer` and `reply/answered` each gained one string field, `scope`,
+over `call | conversation | workspace` — how far the operator's verdict stands
+(VISION §4.11 item 6). It is **required in both directions**, not
+optional-defaults-to-`call`: an absent field would let the two ends disagree
+about how wide an instruction was, and *wider* is the reading nobody may reach
+by accident. Two shapes and one bump, because the gesture and its receipt are
+one move. Nothing else in the family moves: the held `tool_use` id stays off
+the wire in both directions — it is derived from the hold mark at fire time,
+and an id a caller could quote is an id that went stale a tick ago — and the
+class the wide scopes stand over is derived at the engine too, read back out of
+the sentence yog wrote into that mark, so a seat spells a decision and never a
+key.
 
 **The lane's subject moved with it: a follow read follows a STEP, not a model
 call.** The engine keyed the read on the open `response.json`, which is one

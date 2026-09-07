@@ -112,12 +112,13 @@
         "/advanced:bool",
         "/kind:string",
         "/ok:bool",
+        "/scope:string",
         "/tool:string",
         "/tool_use:string",
         "/verdict:string",
         ":object"
       ],
-      "since": 1
+      "since": 17
     },
     "reply/applied": {
       "signature": [
@@ -1040,11 +1041,12 @@
       "signature": [
         "/agent:string",
         "/op:string",
+        "/scope:string",
         "/verdict:string",
         "/workspace:string",
         ":object"
       ],
-      "since": 1
+      "since": 17
     },
     "request/arm": {
       "signature": [

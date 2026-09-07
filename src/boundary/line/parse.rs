@@ -123,11 +123,11 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // The VISION §4.11 capability answer: the conversation is the seat's,
         // as it is for `/message` and `/stop`, and the held `tool_use` id is
         // derived at fire time — so the whole line is one word, the verdict.
-        "answer" => verbs::answer(tail, ctx, verb),
+        "answer" => verbs::control::answer(tail, ctx, verb),
         // The VISION §4.9 fifth rung, written into that same fold: the floor
         // under which everything above a read waits for an answer. The
         // conversation is the seat's, so the verb is the whole line.
-        "revoke" | "restore" => verbs::floor(verb, tail, ctx),
+        "revoke" | "restore" => verbs::control::floor(verb, tail, ctx),
         // The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall is the seat's own
         // workspace, exactly as `/model`'s is, and the one word is the provider
         // row — the thing no seat's context can supply. No flow flag, ever: the

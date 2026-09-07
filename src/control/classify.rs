@@ -102,10 +102,21 @@ impl Effect {
     /// both ways — so an operator writes the vocabulary the reason lines
     /// already speak.
     pub fn of(word: &str) -> Option<Effect> {
+        Effect::every()
+            .into_iter()
+            .find(|e| e.policy_word() == word)
+    }
+
+    /// Every class, once: the six reaches and the absence of one. Derived from
+    /// [`REACHES`](Effect::REACHES) rather than written out, so
+    /// [`of`](Effect::of) and [`class_of`](super::reason::class_of) — a word
+    /// read against it and a sentence scanned against it — cannot drift from
+    /// the one list.
+    pub(crate) fn every() -> Vec<Effect> {
         Effect::REACHES
             .into_iter()
             .chain([Effect::Opaque])
-            .find(|e| e.policy_word() == word)
+            .collect()
     }
 
     /// The reach words a `rules:` row accepts, as a hold sentence offers them

@@ -62,8 +62,10 @@ fn spell_action(action: &Action) -> String {
         Action::Monitor(verb) => spell_monitor(verb),
         Action::Fleet(verb) => spell_fleet(verb),
         // The conversation is the seat's selection, exactly as `/seen`'s is;
-        // the held id is derived, so the verdict is the whole line.
-        Action::AnswerHold { ruling, .. } => format!("/answer {}", ruling.word()),
+        // the held id is derived, so the verdict and its scope are the whole
+        // line — and the default scope is spelled by leaving the flag off,
+        // which is how it is typed.
+        Action::AnswerHold { answer, .. } => super::spell_answer(*answer),
         // Same address, same elision; the direction is the verb.
         Action::Floor { raised, .. } => match raised {
             true => "/revoke".to_owned(),

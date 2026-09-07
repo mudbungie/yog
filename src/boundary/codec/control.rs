@@ -7,6 +7,11 @@
 //! that guessed its own verdict would be the boundary inventing an operator's
 //! decision, which is the one thing a gesture must never do.
 //!
+//! The **scope** is a field, and a required one (bl-94a5, PROTOCOL 17): an
+//! answer that stands over a class of calls rather than over one is a
+//! different instruction, and a default read out of an absent field would let
+//! two ends disagree about which instruction was sent.
+//!
 //! The `tool_use` id is **not** a field, in either direction. It is derived
 //! from `refs/litany/held/<agent>` at fire time (§8.6): a headless caller that
 //! had to quote an id would be quoting a fact it read a tick ago, and the
@@ -15,17 +20,17 @@
 
 use serde_json::{Map, Value, json};
 
-use crate::control::judge::Ruling;
+use crate::control::judge::{Answer, Ruling, Scope};
 
 use super::{Action, Gesture, str_of};
 
 /// One hold answer as its envelope.
-pub(super) fn encode(workspace: &str, agent: &str, ruling: Ruling) -> Value {
-    json!({ "op": "answer", "workspace": workspace,
-            "agent": agent, "verdict": ruling.word() })
+pub(super) fn encode(workspace: &str, agent: &str, answer: Answer) -> Value {
+    json!({ "op": "answer", "workspace": workspace, "agent": agent,
+            "verdict": answer.ruling.word(), "scope": answer.scope.word() })
 }
 
-/// The inverse. `op` is already known to be `answer`; the verdict is checked
+/// The inverse. `op` is already known to be `answer`; both words are checked
 /// here, where the refusal can name what was said and what is allowed.
 pub(super) fn decode(o: &Map<String, Value>) -> Result<Gesture, String> {
     let workspace = str_of(o, "workspace")?;
@@ -33,10 +38,14 @@ pub(super) fn decode(o: &Map<String, Value>) -> Result<Gesture, String> {
     let word = str_of(o, "verdict")?;
     let ruling = Ruling::of(&word)
         .ok_or_else(|| format!("answer: unknown verdict {word:?}; say pass, hold or refuse"))?;
+    let said = str_of(o, "scope")?;
+    let scope = Scope::of(&said).ok_or_else(|| {
+        format!("answer: unknown scope {said:?}; say call, conversation or workspace")
+    })?;
     Ok(Gesture::Act(Action::AnswerHold {
         workspace,
         agent,
-        ruling,
+        answer: Answer { ruling, scope },
     }))
 }
 

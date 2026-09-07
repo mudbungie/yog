@@ -10,6 +10,9 @@ use crate::monitor::Verb;
 use crate::start::{BallSpec, Payload};
 use std::path::PathBuf;
 
+/// The §4.11 capability family — `/answer` and the floor's two verbs.
+pub mod control;
+
 /// `/seen` — the §6 queue's answer. The seat's own selection is the item,
 /// exactly as it is for `/message`: answering and acknowledging aim alike, so
 /// the line names neither and the context supplies both.
@@ -60,43 +63,10 @@ pub(super) fn prompt(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
     }))
 }
 
-/// `/answer pass|hold|refuse` — the §4.11 capability answer. The conversation
-/// is the seat's, like `/seen`'s; the held `tool_use` id is derived at fire
-/// time, so the only word a line can carry is the verdict — and it is
-/// required, because an answer with a default verdict would be yog deciding.
-pub(super) fn answer(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
-    let word = args::required(tail, verb, "pass, hold or refuse")?;
-    let ruling = crate::control::judge::Ruling::of(word.trim())
-        .ok_or_else(|| format!("/{verb}: unknown verdict {word:?}; usage: {ANSWER_USAGE}"))?;
-    Ok(act(Action::AnswerHold {
-        workspace: args::workspace(ctx, verb)?,
-        agent: args::agent(ctx, verb)?,
-        ruling,
-    }))
-}
-
-/// `/answer`'s usage, said once — the refusal above and the help page below
-/// read this one string.
-pub const ANSWER_USAGE: &str = "/answer pass | hold | refuse";
-
-/// `/revoke` and `/restore` — VISION §4.9's fifth rung over the §4.11 fold.
-/// Neither names anything but itself: the conversation is the seat's own, as
-/// `/answer`'s and `/flag`'s are, and the direction is the verb rather than a
-/// word after it, because raising and lowering are two instructions and a
-/// gesture is never read out of an absence.
-pub(super) fn floor(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
-    args::none(tail, verb)?;
-    Ok(act(Action::Floor {
-        workspace: args::workspace(ctx, verb)?,
-        agent: args::agent(ctx, verb)?,
-        raised: verb == "revoke",
-    }))
-}
-
 /// `/ops` with no count: the tail an operator means by "what just happened".
 const OPS_DEFAULT: usize = 50;
 
-fn act(action: Action) -> Gesture {
+pub(super) fn act(action: Action) -> Gesture {
     Gesture::Act(action)
 }
 

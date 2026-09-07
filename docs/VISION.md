@@ -829,6 +829,62 @@ mediation.
    passed runs its one call, because recalling it mid-window is the wedge
    above.
 
+   **And an answer has a SCOPE, because a verdict with none makes the operator
+   re-answer a class of call forever** (bl-94a5). Measured: eleven holds and
+   eleven releases in one conversation, every one of them the same narrow
+   routed tool at the same reach, six of them the same tool with six different
+   paths. Every comparator's approval prompt offers a scope and this one
+   offered none. Three, and only the three the boundary can actually enforce:
+
+   - **call** — the held `tool_use` id. Today's answer, and the **default**:
+     the narrow reading is the one an operator gets without thinking about it,
+     and a wider one is typed on purpose (`--scope`, `/answer pass --scope
+     conversation`).
+   - **conversation** — the **class** of the held call over that conversation
+     and its whole descent, matched by the same descent prefix the floor is.
+   - **workspace** — that class over every conversation in the workspace the
+     answer was given in.
+
+   **The class is the tool AND its reach** (`<tool>@<class>`), never the tool
+   alone: a `Bash` released for a read must not carry a later destructive line,
+   so half the key is the thing the classifier computed. Both wide scopes are
+   ops rows like the once-answer — same trail, same fold, no fourth durable
+   artifact — keyed on the class, and on the answering conversation or the
+   answering workspace.
+
+   Three rules bound them, and not one of them is a new floor:
+
+   - **Loss and credentials take `call` only.** Those are exactly the two
+     classes the shipped table refuses outright, so answering one is the
+     operator overriding the strictest thing the control says: a decision
+     about the call in front of them, never about calls to come. The refusal
+     names the way to make it standing anyway — a `capability.yaml` row, which
+     lives where policy is read and deleted. That is the existing floor
+     answering a new question.
+   - **A raised floor suspends every standing answer.** §4.9's fifth rung means
+     *walk me through each call from here*, and a standing grant is precisely
+     the auto-approval it revoked. It is also what makes a standing answer
+     revocable at all: `/revoke` parks the next call of the class, the operator
+     answers it again at the same scope, `/restore` lowers the floor. No new
+     verb, and the precedence rule *is* the revocation path.
+   - **Nothing permanent is an answer.** A grant that outlives the trail
+     belongs in the workspace's own `capability.yaml`, where an operator reads
+     it and deletes it. The boundary will not write one for them, because a
+     policy row states *what a tool reaches* and only the operator can say
+     that.
+
+   **And what the model is handed on a refusal is stated** (bl-94a5). It used
+   to be the classification sentence and nothing else — which reads as a
+   correctable error, and a measured run answered one by probing the
+   confinement over three steps and finding a spelling that passed. The
+   refusal now says who decided, **how far the decision stands**, and that
+   retrying, rephrasing and reaching the same outcome by another command,
+   another tool, another path or a change of working directory are all inside
+   it. It never invites a rephrasing and never offers a way round: the way
+   forward is the operator's. This does not soften the routed-destructive
+   ruling — a destructive routed call is *held* for the operator, not refused
+   in band — it states what a refusal means wherever one is still the answer.
+
 7. **The monitor's fifth rung now has its substrate** — and, since bl-94b4,
    its writer. Revoke-auto-approval (§4.9) is a boundary action writing a
    per-conversation floor — every class above read adjudicates to hold, over

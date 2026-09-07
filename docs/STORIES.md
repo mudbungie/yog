@@ -2125,9 +2125,19 @@ Nothing is running; nothing is lost; nothing has been spent since.
    buttons that appear with the park and vanish with it. The held `tool_use` id
    is never typed: it is read off the mark at fire time, so the answer lands on
    what is parked *now* and cannot be spent by a different call.
+   **And it says how far it stands** (bl-94a5): bare, one call — the reading an
+   operator gets without thinking about it. `--scope conversation` settles the
+   whole *class* of that call, the same tool at the same reach, for the
+   conversation and everything below it; `--scope workspace` settles that class
+   for every conversation here. So a narrow routed tool held eleven times in
+   one run is released once. A destructive or credential-reaching call takes
+   the bare form only, and the refusal names the `capability.yaml` row that
+   makes it standing where policy is read and deleted.
 4. **The answer is the audit.** One `ops.jsonl` row — `["yog-control","answer",
-   <tool_use id>,<verdict>]` — is at once the record and the memory the control
-   folds on its next consult. No fourth durable artifact.
+   <key>,<verdict>,<scope>]` — is at once the record and the memory the control
+   folds on its next consult. No fourth durable artifact. The key is the held
+   `tool_use` id at the call scope, and the class of the call — `<tool>@<class>`
+   — at either wider one.
 5. **The release is the re-adjudication.** A pass or a refuse fires `litany
    advance` detached; the seam re-enters the tool window under the mark,
    re-consults the control, now finds the answer, and the branch moves. Nothing
@@ -2186,7 +2196,9 @@ saw it yourself. You do not want it dead; you want it to stop deciding.
    revoking a parent revokes a fan without enumerating one — and a drone it
    spawns afterwards is born under the same floor.
 3. **It raises; it never lowers.** Anything the policy already refuses stays
-   refused, and a call you pass with `/answer pass` still goes through — so a
+   refused, and a call you pass with `/answer pass` still goes through — while
+   every *standing* answer is suspended for as long as the floor stands, which
+   is what makes a wide release revocable, and so a
    floored conversation can be walked forward one call at a time, which is what
    makes revoking a supervision mode rather than a death sentence.
 4. **The floor is the audit.** One `ops.jsonl` row —

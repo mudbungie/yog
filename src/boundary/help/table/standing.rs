@@ -207,50 +207,6 @@ pub const STANDING: &[HelpRow] = &[
         surface: Surface::Control,
     },
     HelpRow {
-        verb: "answer",
-        usage: crate::boundary::line::ANSWER_USAGE,
-        summary: "release, decline or keep parked the tool call held at this conversation",
-        detail: "Answers the invocation the capability boundary parked before it ran. `pass` \
-                 lets that one call through, `refuse` declines it in band — the model reads why \
-                 and carries on — and `hold` keeps it parked even if the policy later would have \
-                 passed it. The answer is scoped to the exact call that is held, which is read \
-                 from the conversation's own hold mark, so nothing is typed and nothing can be \
-                 spent by a different call. Passing or refusing then drives the conversation on \
-                 (`litany advance`), which is what actually lifts the hold: the control is asked \
-                 again and now finds your answer. Nothing here stops the agent. Refuses when \
-                 nothing is held there.",
-        surface: Surface::Control,
-    },
-    HelpRow {
-        verb: "revoke",
-        usage: "/revoke",
-        summary: "take away this conversation's tool auto-approval, and its descendants'",
-        detail: "Stops letting the selected conversation act on its own: from its next tool \
-                 call, everything but a read waits for you — the same park a held call already \
-                 makes, applied to all of them. **A read is what the call does, not which \
-                 tool it is**: every invocation is classified on what it reaches, so `bash` \
-                 running `ls`, `cat` or `echo` is a read and still runs, while the same \
-                 `bash` writing outside its worktree, reaching the network or touching \
-                 credentials parks. It keeps running, keeps its branch and keeps \
-                 reading, so nothing is lost and nothing is killed. It covers the conversation \
-                 and everything below it, including children it has not spawned yet. Anything \
-                 the policy already refuses stays refused, and a call you pass with `/answer` \
-                 still goes through. `/restore` gives the approval back.",
-        surface: Surface::Control,
-    },
-    HelpRow {
-        verb: "restore",
-        usage: "/restore",
-        summary: "give this conversation's tool auto-approval back",
-        detail: "Lifts a floor `/revoke` put on the selected conversation: its calls are \
-                 adjudicated by the ordinary policy again, from its next one. It drives nothing \
-                 — a conversation parked at a held call is released by answering that call \
-                 (`/answer pass`), which is the thing you are looking at when it is waiting. If \
-                 an ancestor is still revoked, the conversation stays floored under it, and the \
-                 reply says so rather than claiming a restore it did not make.",
-        surface: Surface::Control,
-    },
-    HelpRow {
         verb: "clear-trail",
         usage: "/clear-trail",
         summary: "truncate the ops trail; the clear is the new trail's first row",
