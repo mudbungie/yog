@@ -1,7 +1,8 @@
 +++
 title = "an in-flight step reads 'killed' in lernie steps, the one word an interrupt writes: watching a live conversation shows a false interrupt on every step"
 created = 1788745977
-updated = 1788745977
+updated = 1788746705
+claimant = "Cantaloups-Y9"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r2"]
