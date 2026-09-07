@@ -1,7 +1,8 @@
 +++
 title = "litany's stop now always takes the children, so the boundary's stop_children field and the 'stop with its children' offer name no choice"
 created = 1788675635
-updated = 1788675635
+updated = 1788746494
+claimant = "Cantaloups-Y8"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r2"]
