@@ -1750,14 +1750,55 @@ its own installable does not change this by one word — if anything it makes th
 sentence more literal, since the box now runs a different program, by a
 different name, that the server never shipped.
 
-**MCP enters only as a thrall-local bridge, and is deferred.** The shape, when
-it is paid for: a thrall is an MCP *client* on its own box, and re-advertises
-the tools its local MCP servers offer up the wire as ordinary §5.1 elements. It
-buys the existing ecosystem without any of it reaching the engine. **yog never
-learns MCP** — not a verb, not a schema, not a transport — because a protocol
-in the engine is a second vocabulary on a surface §3 keeps down to one, and the
-bridge belongs where the servers are. Nothing about v1 is blocked on this and
-nothing in v1 anticipates it.
+**MCP enters only as a thrall-local bridge, and it is ruled** (bl-df52; the
+design is thrall's DESIGN §6, thrall bl-3b03). A thrall is an MCP *client* on
+its own box: it speaks the protocol to a server it spawns there and advertises
+that server's tools up the wire as ordinary §5.1 elements — a pinned tool is a
+line in the foot's tool document whose `command` is the thrall binary in its
+bridge verb, so the document gains no key and this section's advertisement
+gains no field. **yog never learns MCP** — not a verb, not a schema field, not
+a transport — because a protocol in the engine is a second vocabulary on a
+surface §3 keeps down to one, and the bridge belongs where the servers are:
+the box that holds the database, the credential and the runtime. The
+engine-side placement litany's bridge document framed — a `litany-tool-mcp`
+binary in the external-tool slot — has no executor in this suite: the router
+above is total and the lane's rung 4 refuses a pool name with no engine
+implementation behind it, so a bridge there would be a binary nothing forks.
+
+Three consequences reach this document, and none of them moves the wire:
+
+- **Adjudication reads the invocation, and a pinned tool's is unreadable until
+  the operator says otherwise.** The call arrives at `yog tool-control` as
+  `<client>_<tool>` with an input shaped by the server's schema — no `command`
+  field — so bl-72bd's routed lane classifies it **opaque** and the shipped
+  table holds it: the first call parks for the operator with the tool and its
+  input in front of them. The standing answer is a `rules:` row in the
+  workspace's `capability.yaml` keyed on the host-qualified name (bl-b65d),
+  the operator's own statement of what that tool on that box reaches. It is
+  host-qualified because the same server on two boxes is two trust decisions,
+  which is what locality-rides-in-the-name already says. A shell-shaped MCP
+  tool — one whose input carries `command` — is classified by its line like
+  every other shell.
+- **The foot never advertises a class.** MCP servers annotate their tools
+  (`readOnlyHint`, `destructiveHint`, `openWorldHint`); thrall's pin verb
+  prints them for the operator writing that row and puts none of them on the
+  wire, by §5.1's own rule — a fact yog stores and cannot check is not a
+  field.
+- **Credentials stay on the box.** A server's token is in the server's own
+  argv or the wrapper the operator wrote there, in the local half of the
+  document, which never crosses (§5.2). A foot is per box and per enrolment,
+  so a credential's reach is the foot's; a workspace that must not share one
+  is served by its own foot.
+
+**And the web tool is the first pinned server** (litany bl-4409, closed
+superseded). A fetch is a machine's act and the engine executes none (this
+section's first ruling), so it is neither an engine act nor a thrall feature:
+it is the reference `mcp-server-fetch` pinned into the foot's example document
+(thrall bl-b6ab), which needs no credential — the acceptance story litany's
+§7 Slack swap never ran for want of one. `bash` reaching the web is already
+visible to the control (`curl` and `wget` classify open-world in the shipped
+ruleset); what the pinned tool adds is a name in the roster and a row in the
+policy.
 
 ### 5.5 The follow lane's frame is an append (bl-3655)
 
