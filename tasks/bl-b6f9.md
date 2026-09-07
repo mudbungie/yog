@@ -1,7 +1,7 @@
 +++
 title = "context maintenance is queued against the inevitable cache miss: prefix edits like tool unload merge into the operating branch when the miss is already paid"
 created = 1788066933
-updated = 1788752430
+updated = 1788754168
 priority = 4
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
@@ -10,3 +10,7 @@ Operator direction, jotted for eventual design (not for dispatch now). A prefix 
 ---
 
 Designed and landed on the litany side as litany bl-b902 (the assembly is the only place that knows when a miss is inevitable). The queue's home is the previous step's own request.json; the fold is a byte comparison against it — model, system slot, first wire message — so no boundary flag and no list of boundary kinds. First customer is exactly this ball's: a host retiring an injected tool (bl-3455 unload) is held, byte for byte, until a paid miss. Invariant and classification table in litany ARCH §5.5; follow-ups litany bl-70d2 (load_skill anchoring) and brazen bl-8b47 (prompt_cache_key on the OpenAI dialects).
+
+---
+
+litany 0.0.12 (upstream bl-b902, ARCH $5.5) landed the tools-array half of this ball upstream: a subtraction from the declared surface is now held until the next PAID cache miss rather than landing at the next assembly, with the queue's home the previous step's own request.json. yog consumed it as a wording amendment to REMOTE $5.2 and no code (bl-9ced). What is left here is the rest: a mid-run load_skill still inserts into the body and re-bills from its position until a landing, and a config edit that moves the soul, the model or the descriptor cut is a paid miss by ruling. Re-read the ball's premise before working it — its 'unload lands the edit immediately and immediately costs the rebuild' sentence is no longer true.
