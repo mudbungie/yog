@@ -59,6 +59,7 @@ pub use roster::{
 };
 
 pub use kind::AttentionKind;
+pub(crate) use kind::row_says;
 
 use crate::git_tree::{Agent, AgentState};
 use crate::ui_state::SeenKind;

@@ -59,12 +59,14 @@ fn queue_row(row: &QueueRow) -> Value {
         "uncertain": row.uncertain,
         "signals": row.signals.iter().map(|k| signal_token(*k)).collect::<Vec<&str>>(),
         // The firing rules **in words** (bl-09ef): the one home for that
-        // sentence is `AttentionKind::says`, and the announcing is a seat's —
+        // sentence is `attention::row_says`, and the announcing is a seat's —
         // a desktop notification belongs on the box the operator is looking
         // at. So the sentence crosses beside the tokens rather than being
         // re-worded at each seat, which is the drift §6 forbids. Derived at
-        // the encoder, never stored: the row's own home for it is the token.
-        "says": row.signals.iter().map(|k| k.says()).collect::<Vec<&str>>().join("; "),
+        // the encoder, never stored: the row's own home for it is the token
+        // plus the state, which since bl-511d is what tells a clean rest from
+        // a conversation that stopped without finishing.
+        "says": crate::attention::row_says(&row.signals, row.state),
         "preview": row.preview,
         "age_secs": row.age_secs,
         "pending": row.pending,

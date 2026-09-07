@@ -80,12 +80,13 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
         "the §6 signals in the `ui.json` watermark's own vocabulary"
     );
     // The firing rules in words (bl-09ef): the announcing is a seat's, so the
-    // one home for the sentence (`AttentionKind::says`) crosses beside the
+    // one home for the sentence (`attention::row_says`) crosses beside the
     // tokens — a seat that re-worded them from the tokens would be the second
-    // wording §6 forbids.
+    // wording §6 forbids. This row is `Stopped`, so rule 2's clause is the
+    // wounded one (bl-511d) and rule 6's names the verb that releases it.
     assert_eq!(
         out["says"],
-        "raised a notify mark; came to rest — your turn; exhausted its budget; has a conflicted branch; has mail queued and no driver taking it; parked a tool invocation for your answer; was refused at the provider — sign a provider in on this workspace; was cut off at its output cap — nothing was committed; raise the role's max_output_tokens in providers.yaml, or ask for less in one step; was flagged for a look, with a reason"
+        "raised a notify mark; stopped without finishing — your turn; exhausted its budget; has a conflicted branch; has mail queued and no driver taking it; parked a tool invocation for your answer — /answer pass|refuse; was refused at the provider — sign a provider in on this workspace; was cut off at its output cap — nothing was committed; raise the role's max_output_tokens in providers.yaml, or ask for less in one step; was flagged for a look, with a reason"
     );
     // The park rides the row rather than a query of its own (§8.6): a reader
     // sees what is waiting, why, and has the address to answer it.

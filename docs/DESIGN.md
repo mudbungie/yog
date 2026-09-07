@@ -2572,6 +2572,25 @@ no asymmetry to preserve, and re-adding one needs an act, not a key.
    `providers.yaml`, or a smaller ask, and the signal's own sentence names
    both.
 
+   **And a wounded rest does not say it came to rest** *(bl-511d)*. The word
+   was refined once, for the provider refusal, and the refinement stopped
+   there: every other wounded rest — a birth that died in its first step, a
+   killed driver, a step that never ran — still said *"came to rest — your
+   turn"*, which is the sentence a clean turn-end says. A conversation that
+   finished, one that is parked on an answer only the operator can give and one
+   that is dead read as **one row**, and that is the row an operator uses to
+   decide whether anything is wrong. So a rest arrived at in state `Stopped`
+   says *"stopped without finishing — your turn"*.
+
+   This is a **word, not a signal and not a token**: rule 2 still fires exactly
+   as it did, the row's `signals` list is byte for byte what it was, and the
+   refinement is read off the `state` the row already carries beside the
+   sentence. Nothing on the wire moved, so `PROTOCOL` stands — which is also
+   why the refinement is not a `refused`-shaped new kind: that one had a remedy
+   of its own to name (*sign a provider in*) and earned a token; this one has
+   the state's own badge already beside it and needs only to stop asserting
+   something false.
+
    **The turn passes to whoever can take it, and for a dispatched conversation
    that is not the operator** *(bl-3592)*. A conversation forked by another —
    a compactor, a reviewer, a subagent, a fan candidate — comes to rest **into
@@ -2616,6 +2635,14 @@ no asymmetry to preserve, and re-adding one needs an act, not a key.
    no tokens and *nothing but an answer releases it*, so a watermark could only
    ever hide a conversation that cannot move. It self-clears when litany lifts
    the mark, which happens exactly when the answer's re-adjudication runs.
+
+   **The clause names the releasing verb** *(bl-511d)*. Every other rule here
+   states a condition an operator can act on from the row it is reading; this
+   one states a condition that *nothing but an answer clears*, and it left the
+   operator to already know which gesture gives one — so it says *"parked a
+   tool invocation for your answer — /answer pass|refuse"*. The tool is **not**
+   repeated into the sentence: `held.tool` is on the row beside it, and one
+   fact does not get two homes.
 7. A **flag** was raised on the conversation and the raising row's `ts` ≠
    `seen[ws][agent].flag` *(VISION §4.9, bl-6f2f)*. `/flag <why…>` is the
    signal-out verb and the alignment monitor's **floor grant** — a responder

@@ -101,6 +101,54 @@ fn an_acked_refused_rest_still_stirs_nothing() {
     );
 }
 
+/// **Three conditions must not read as one row** (bl-511d). A conversation
+/// that finished, one that stopped without finishing and one parked on an
+/// answer all put your turn on the queue — rule 2 is unchanged and the tokens
+/// are unchanged — but the sentence has to tell them apart, and it did not: a
+/// birth that died in its first step said *"came to rest — your turn"*, which
+/// is the same words a clean turn-end says.
+#[test]
+fn a_wounded_rest_does_not_say_it_came_to_rest() {
+    let clean = crate::attention::row_says(&[AttentionKind::Stopped], AgentState::Quiescent);
+    let wounded = crate::attention::row_says(&[AttentionKind::Stopped], AgentState::Stopped);
+    assert_eq!(clean, "came to rest — your turn");
+    assert_eq!(wounded, "stopped without finishing — your turn");
+
+    // Every other clause is a fact about the signal alone and reads the same
+    // either way — the state refines rule 2's word and nothing else's.
+    for state in [AgentState::Quiescent, AgentState::Stopped] {
+        assert_eq!(
+            crate::attention::row_says(&[AttentionKind::Mail], state),
+            AttentionKind::Mail.says()
+        );
+    }
+    // And the clauses join in signal order, one row, one sentence.
+    assert_eq!(
+        crate::attention::row_says(
+            &[AttentionKind::Stopped, AttentionKind::Held],
+            AgentState::Stopped
+        ),
+        format!(
+            "stopped without finishing — your turn; {}",
+            AttentionKind::Held.says()
+        )
+    );
+}
+
+/// **Nothing but an answer clears a park** (§6 rule 6), so the clause names
+/// the gesture that gives one. Every other rule states a condition an operator
+/// can act on from the row; this one used to state a condition and leave the
+/// verb to be known.
+#[test]
+fn the_held_word_names_the_verb_that_releases_it() {
+    let said = AttentionKind::Held.says();
+    assert!(said.contains("/answer"), "{said}");
+    assert!(said.contains("pass"), "{said}");
+    assert!(said.contains("refuse"), "{said}");
+    // The tool is not repeated into the sentence: `held.tool` is on the row.
+    assert!(!said.contains("bash"), "{said}");
+}
+
 /// **Rule 2's rest, said in the other true word** (bl-ebef). litany 0.0.11
 /// fails a turn cut off at the request's output cap
 /// (`Error::OutputTruncated`): the staging sink is never sealed, so nothing is
