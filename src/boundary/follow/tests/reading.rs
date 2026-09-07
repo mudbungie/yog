@@ -22,7 +22,7 @@ fn a_step_that_has_opened_no_response_file_is_waited_on() {
     assert!(!file.exists(), "the step dir is there and the file is not");
     assert!(matches!(follow.poll(), Frame::Waiting));
     append(&file, &text_delta("and then it speaks"));
-    assert!(matches!(follow.poll(), Frame::Ready(_)));
+    assert!(matches!(follow.poll(), Frame::Ready(..)));
 }
 
 /// A half-written line waits for its newline — partial-write tolerance at the
@@ -52,7 +52,7 @@ fn an_event_the_operator_cannot_see_is_not_a_frame() {
     append(&file, "{\"type\":\"message_start\"}\n");
     assert!(matches!(follow.poll(), Frame::Waiting), "nothing to say");
     append(&file, &text_delta("now something"));
-    assert!(matches!(follow.poll(), Frame::Ready(_)));
+    assert!(matches!(follow.poll(), Frame::Ready(..)));
     assert!(
         matches!(follow.poll(), Frame::Waiting),
         "and an unchanged file is not news either"
@@ -66,7 +66,7 @@ fn a_file_that_shrank_is_read_again_from_the_start() {
     let (dir, _cell, mut follow) = flying();
     let file = response(dir.path(), 1);
     append(&file, &text_delta("the long first answer"));
-    assert!(matches!(follow.poll(), Frame::Ready(_)));
+    assert!(matches!(follow.poll(), Frame::Ready(..)));
     std::fs::write(&file, text_delta("short")).expect("truncate");
     assert_eq!(
         said(follow.poll()).and_then(|s| s.text).as_deref(),
@@ -102,7 +102,7 @@ fn the_stream_ends_when_the_call_does_and_the_last_bytes_come_out_first() {
     let file = response(dir.path(), 1);
     append(&file, &text_delta("the model begins"));
     assert!(
-        matches!(follow.poll(), Frame::Ready(_)),
+        matches!(follow.poll(), Frame::Ready(..)),
         "the stream is open"
     );
     // The last characters land, and the driver finishes: the derivation
@@ -131,7 +131,7 @@ fn the_stream_ends_when_the_call_does_and_the_last_bytes_come_out_first() {
 fn a_step_advancing_ends_the_stream() {
     let (dir, _cell, mut follow) = flying();
     append(&response(dir.path(), 1), &text_delta("step one"));
-    assert!(matches!(follow.poll(), Frame::Ready(_)));
+    assert!(matches!(follow.poll(), Frame::Ready(..)));
     append(&response(dir.path(), 2), &text_delta("step two"));
     assert!(matches!(follow.poll(), Frame::Over));
 }
@@ -143,7 +143,7 @@ fn a_step_advancing_ends_the_stream() {
 fn a_tree_that_went_away_ends_the_stream() {
     let (dir, _cell, mut follow) = flying();
     append(&response(dir.path(), 1), &text_delta("here"));
-    assert!(matches!(follow.poll(), Frame::Ready(_)));
+    assert!(matches!(follow.poll(), Frame::Ready(..)));
     std::fs::remove_dir_all(dir.path().join("steps")).expect("delete the steps");
     assert!(matches!(follow.poll(), Frame::Over));
 }

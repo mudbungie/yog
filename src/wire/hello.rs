@@ -128,7 +128,17 @@ use super::frame;
 /// than null when unstated — the absence is the fact in each case ("this
 /// engine's own address", "never") — and both land at ONE version, because two
 /// bumps a minute apart would make every client re-pin twice for one wave.
-pub const PROTOCOL: u32 = 14;
+/// 14 → 15 (bl-5305): `reply/follow` gained `tools`, the **tool window** — an
+/// entry as a call is posted (its name, which for a routed call carries the
+/// machine, and its bounded input) and another when the capture lands (its exit
+/// code). The lane carried the model's prose alone, so an operator watching an
+/// agent administer their boxes saw a thinking marker and two sentences while
+/// eight commands ran on two machines. A field gained on a shape in use, which
+/// §3's rule bumps outright; and the field is **required rather than
+/// optional-absent-reads-empty**, on `reply/advertised`'s own precedent at 8 —
+/// absent would read as *nothing ran*, the reassuring answer, on exactly the
+/// build that cannot tell.
+pub const PROTOCOL: u32 = 15;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

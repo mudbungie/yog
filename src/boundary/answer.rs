@@ -140,9 +140,12 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // the general path with one frame rather than a degraded answer. The
         // holding is `follow::Follow`, driven by the one intake that can, and
         // its frames come off this same fold.
-        Query::Follow { .. } => {
-            Reply::Follow(inspector::live_tail(snap, ws, agent).unwrap_or_default())
-        }
+        // The tool window rides the same one look (bl-5305), and on the lane's
+        // own two liveness questions: the prose only while a model call
+        // streams, the window for as long as a driver holds the lease — which
+        // is the span the step's tools run in. A conversation nobody is working
+        // has neither, which is an empty frame rather than a case of its own.
+        Query::Follow { .. } => Reply::Follow(super::follow::once(snap, ws, agent)),
         // The sign-in lane's read, answered **once** (REMOTE §8.3, bl-c285) —
         // the `Follow` shape exactly: this chokepoint answers the standing as
         // of now, and the intake that can hold a connection drives

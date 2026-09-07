@@ -195,13 +195,13 @@ pub enum Reply {
     /// answer: the committed `messages/` entries with the in-flight tail folded
     /// on, which is the whole of what the window's chat pane paints.
     Transcript(crate::transcript::Transcript),
-    /// **One frame of the live tail** (REMOTE §3, §5.5; DESIGN §7.2; bl-73e7,
-    /// bl-3655) — [`Follow`](super::Query::Follow)'s answer, and an **append**
-    /// since bl-3655: what landed since the read's previous frame, folded onto
-    /// what a seat holds ([`Stream::absorb`](crate::git_tree::Stream::absorb)).
-    /// REMOTE §5.5 states that rule; this does not restate it. Empty is the
-    /// honest answer for a conversation with nothing in flight.
-    Follow(crate::git_tree::Stream),
+    /// **One frame of the live tail** (REMOTE §3, §5.5; bl-73e7, bl-3655,
+    /// bl-5305) — [`Follow`](super::Query::Follow)'s answer: the prose fold and
+    /// the tool window, both **appends**. One variant over
+    /// [`FollowFrame`](super::FollowFrame) rather than two fields here, the
+    /// fold six families already take; that type's own doc carries the rule and
+    /// why the second half exists.
+    Follow(super::FollowFrame),
     /// **A sign-in's standing** (REMOTE §8.3, bl-c285) — the receipt
     /// [`Login`](super::Action::Login) earns *and* one
     /// [`LoginTail`](super::Query::LoginTail) frame, which are the same value

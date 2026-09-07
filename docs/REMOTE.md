@@ -1815,6 +1815,70 @@ question (§7.2's write cadence), not the frame's. Adding a second mechanism to
 save bytes the first one already stopped multiplying is mechanism for its own
 sake.
 
+**The frame carries the tool window beside the prose (bl-5305, PROTOCOL 15).**
+A `Query::Follow` frame body gained `tools`, a list of window transitions
+appended by the same rule the fold obeys — concatenate the lists of a read's
+frames in order, and a one-shot answer is that concatenation taken in one look.
+Two entries per call and both are transitions, because litany lands
+`input.json` immediately before it dispatches a call and `output.json` when the
+capture returns (litany ARCH §3.3), so the pair of file existences *is* the
+window opening and closing:
+
+    {"tool_use": "toolu_01", "tool": "box2_Bash",
+     "input": "{\"command\":\"hostname && uptime\"}"}
+    {"tool_use": "toolu_01", "exit_code": 0}
+
+- **`exit_code`'s presence is the status**, not a second field: absent is a call
+  in flight, present is one whose capture landed. There is no arm for "complete,
+  status unknown" and therefore no way for two readings to disagree.
+- **The closing entry restates nothing.** A follower holds the opening entry the
+  name and input rode on, keyed by the same `tool_use`; a second copy of one
+  fact is exactly what this lane's byte budget was cut for.
+- **The machine a routed call ran on is already in `tool`.** §5.1 presents a
+  loaded remote tool as `<client>_<tool>`, always and never only when ambiguous,
+  so the recorded name says where the call went. The engine does not split that
+  composition back apart and does not join the registry instead — the registry
+  answers *where it would route now*, which is a different question from where
+  it ran.
+- **`tools` is required, empty included.** Absent would make "this build has no
+  tool window" and "nothing ran since the last frame" one shape, which is
+  `reply/advertised`'s `wrote` argument at PROTOCOL 8 said again.
+- **`input` is bounded and rendered on one line**, through the same elision the
+  §4.2 trail's argv summary takes: a tool input is arbitrary JSON and a whole
+  file body is an ordinary write argument, while this lane exists to be read
+  *while* it streams. The cut keeps both ends — the head says which command, the
+  tail says which invocation of it.
+
+**The lane's subject moved with it: a follow read follows a STEP, not a model
+call.** The engine keyed the read on the open `response.json`, which is one
+call, so the stream terminated the instant a call settled into its `tool_use`
+blocks — before the first command was dispatched, leaving the lane dead for
+exactly the minutes the window exists to carry. It is now keyed on the step
+directory, and two liveness readings tell the halves apart:
+
+- **a driver holding the lease** (yog DESIGN §3.5's `Live | InFlight`) is what
+  makes a step worth following at all, and it is what the tool window is
+  answered under;
+- **a model call actually streaming** (`InFlight`) is the narrower fact, and
+  only it opens the prose half. Between the calls of one step the response file
+  is settled and `Query::Transcript` already carries it, so opening it would
+  paint the answer twice.
+
+Nothing else about the lane's ending moved: the step advancing, or the tree
+going away, is still this stream ending — the seat swaps to the committed entry
+and re-asks — and the one-shot answer answers both halves on the same two
+readings, so a seat that can hold a connection and one that cannot describe one
+moment the same way.
+
+Why it is on this lane at all: for a conversation editing its own worktree the
+omission was defensible, because the work is on disk and a diff is a read away.
+For one administering a MACHINE it is the wrong omission — the box is precisely
+the thing an operator cannot inspect afterwards, and the tool call is the only
+record that it was touched. `Query::Transcript` recorded every capture in full
+the whole time; it was the live view that dropped them, and the live view is the
+one an operator has open when a command they did not expect is about to run on
+their server.
+
 ### 5.6 Completion is not delivery — the lease is bounded, the exhausted one is answered in doubt, and a swallowed capture is re-posted (bl-2bd5)
 
 **The lesson, and the one lane that lacked it.** Distinguish *completion* (the

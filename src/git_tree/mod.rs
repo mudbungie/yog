@@ -105,6 +105,13 @@ pub(crate) use streaming::{fold_stream, latest_response_path};
 pub use streaming::{Delta, Stream, stream_from_disk};
 // The fold's wire spelling (bl-73e7), the follow lane's frame body.
 pub use streaming::wire as stream_wire;
+/// **The tool window's datum** (REMOTE §5.5, bl-5305): what one opening or
+/// closing of a tool call says, read off the per-call record and spelled for
+/// the follow lane's frame. Beside [`Stream`] for that type's reason exactly —
+/// the shape of a fact read off the workspace's disk belongs to the module that
+/// reads it, and the boundary names it rather than restating it.
+pub mod tool_event;
+pub use tool_event::ToolEvent;
 // The §4.4 terminal classifier, shared with the Y13 steps inspector so the
 // segment-boundary parser is never duplicated (§15 Y13: "reuse
 // git_tree::terminal's segment classification — do NOT duplicate the

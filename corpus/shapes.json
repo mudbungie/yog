@@ -1,5 +1,5 @@
 {
-  "protocol": 14,
+  "protocol": 15,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -428,9 +428,15 @@
         "/stream/text:string",
         "/stream/thinking:string",
         "/stream:object",
+        "/tools/[]/exit_code:number",
+        "/tools/[]/input:string",
+        "/tools/[]/tool:string",
+        "/tools/[]/tool_use:string",
+        "/tools/[]:object",
+        "/tools:array",
         ":object"
       ],
-      "since": 1
+      "since": 14
     },
     "reply/governing": {
       "signature": [

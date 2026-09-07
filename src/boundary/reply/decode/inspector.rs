@@ -37,14 +37,9 @@ pub(super) fn decode(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply,
     })
 }
 
-/// One follow frame: the fold, under the one key the encoder writes it at. A
-/// frame with no `stream` object at all is a codec that has drifted, not an
-/// empty tail — an empty tail is an empty object, which reads as
-/// [`Stream::default`](crate::git_tree::Stream).
+/// One follow frame — spelled beside its own type, and read back there.
 fn follow(o: &Map<String, Value>) -> Result<Reply, String> {
-    let body = o.get("stream").ok_or("follow: missing stream")?;
-    let body = body.as_object().ok_or("follow: stream is not an object")?;
-    crate::git_tree::stream_wire::stream_of(body).map(Reply::Follow)
+    super::super::follow_frame::frame_of(o).map(Reply::Follow)
 }
 
 fn files(o: &Map<String, Value>) -> Result<Reply, String> {

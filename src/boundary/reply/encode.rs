@@ -133,11 +133,10 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Science(rows) => crate::science::wire::reply(rows),
         // The §11 inspector family (bl-6233) — the conversation's own reads.
         Reply::Transcript(transcript) => crate::transcript::wire::reply(transcript),
-        // One frame of the live tail (bl-73e7). The body is the fold's own
-        // spelling, so a follow frame and the tail folded into a transcript
-        // are the same value said the same way.
-        Reply::Follow(stream) => json!({ "ok": true, "kind": FOLLOW,
-                                         "stream": crate::git_tree::stream_wire::stream_value(stream) }),
+        // One frame of the live tail (bl-73e7, bl-5305), spelled beside its own
+        // type: a follow frame's prose half and the tail folded into a
+        // transcript are the same value said the same way.
+        Reply::Follow(frame) => super::follow_frame::reply(frame),
         Reply::Login(view) => bodies::login_reply(view),
         Reply::Steps(view) => crate::steps_view::wire::steps(view),
         Reply::Step(detail) => crate::steps_view::wire::detail(detail),

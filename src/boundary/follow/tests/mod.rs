@@ -15,9 +15,11 @@
 //! boundary, the bound on a quiet hold — is [`reading`], split off at §12's
 //! per-file budget on the seam the §7.2 follower's own beats were cut along:
 //! *what the tail promises the operator* here, *how the bytes are gathered*
-//! there. The fixtures below serve both.
+//! there. What the **tool window** promises — the third subject, and the one
+//! bl-5305 added — is [`window`]. The fixtures below serve all three.
 
 mod reading;
+mod window;
 
 use std::path::Path;
 
@@ -90,7 +92,16 @@ pub(super) fn flying() -> (TempDir, SnapshotCell, Follow) {
 /// other reading of [`Frame`] is a beat of its own below.
 pub(super) fn said(frame: Frame) -> Option<Stream> {
     match frame {
-        Frame::Ready(stream) => Some(stream),
+        Frame::Ready(stream, _) => Some(stream),
+        _ => None,
+    }
+}
+
+/// The tool-window events a frame carries, or `None` for a look that produced
+/// no frame at all — which is a different fact from a frame carrying none.
+pub(super) fn ran(frame: Frame) -> Option<Vec<crate::git_tree::ToolEvent>> {
+    match frame {
+        Frame::Ready(_, tools) => Some(tools),
         _ => None,
     }
 }
@@ -236,7 +247,7 @@ fn a_read_that_starts_mid_answer_is_whole_on_its_first_frame() {
     let (dir, cell, mut early) = flying();
     let file = response(dir.path(), 1);
     append(&file, &text_delta("already said. "));
-    assert!(matches!(early.poll(), Frame::Ready(_)));
+    assert!(matches!(early.poll(), Frame::Ready(..)));
     drop(early);
 
     append(&file, &text_delta("and more."));

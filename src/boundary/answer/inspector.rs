@@ -277,7 +277,7 @@ fn agent_of(snap: &Snapshot, ws: &Path, agent: &str) -> Option<Agent> {
 
 /// The agent's derived §3.5 liveness, or [`Stopped`](AgentState::Stopped) for
 /// one the snapshot does not carry.
-fn state_of(snap: &Snapshot, ws: &Path, agent: &str) -> AgentState {
+pub(crate) fn state_of(snap: &Snapshot, ws: &Path, agent: &str) -> AgentState {
     agent_of(snap, ws, agent).map_or(AgentState::Stopped, |a| a.state)
 }
 

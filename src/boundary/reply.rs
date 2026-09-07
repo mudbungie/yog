@@ -39,6 +39,9 @@ mod config_view;
 mod decode;
 /// The whole surface's JSON spelling, and the envelope helpers it shares.
 mod encode;
+/// One follow frame — the two folds it carries and their spelling both ways
+/// (bl-5305), on `config_view`'s seam.
+mod follow_frame;
 /// The answer type itself (bl-1015): the enum and its variant docs, cut
 /// off this file at §12's pre-split band on `start/model`'s seam — what an
 /// answer *is*, beside the modules that say it.
@@ -63,6 +66,7 @@ pub use cleared::cleared;
 pub use config_view::ConfigView;
 pub use decode::decode;
 pub use encode::{encode, refusal};
+pub use follow_frame::FollowFrame;
 pub use ws_row::{Workspaces, WsRow};
 
 pub use model::Reply;

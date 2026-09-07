@@ -206,20 +206,40 @@ pub(super) fn inspector() -> Vec<Reply> {
         Reply::Science(science()),
         Reply::Science(vec![]),
         Reply::Transcript(transcript()),
-        // One follow frame (bl-73e7). Three readings of the fold, because each
-        // field is absent until a delta of its kind lands and absence is not
-        // the same claim as an empty string: nothing said yet, reasoning only,
-        // and both with the last delta being the answer.
-        Reply::Follow(crate::git_tree::Stream::default()),
-        Reply::Follow(crate::git_tree::Stream {
-            thinking: Some("first I".into()),
-            text: None,
-            last_delta: Some(crate::git_tree::Delta::Thinking),
+        // One follow frame (bl-73e7, bl-5305). Three readings of the fold,
+        // because each field is absent until a delta of its kind lands and
+        // absence is not the same claim as an empty string: nothing said yet,
+        // reasoning only, and both with the last delta being the answer — and
+        // the tool window beside it in both its readings, the empty list beside
+        // a call opening and one closing.
+        Reply::Follow(crate::boundary::reply::FollowFrame::default()),
+        Reply::Follow(crate::boundary::reply::FollowFrame {
+            stream: crate::git_tree::Stream {
+                thinking: Some("first I".into()),
+                text: None,
+                last_delta: Some(crate::git_tree::Delta::Thinking),
+            },
+            tools: vec![],
         }),
-        Reply::Follow(crate::git_tree::Stream {
-            thinking: Some("first I".into()),
-            text: Some("then this".into()),
-            last_delta: Some(crate::git_tree::Delta::Text),
+        Reply::Follow(crate::boundary::reply::FollowFrame {
+            stream: crate::git_tree::Stream {
+                thinking: Some("first I".into()),
+                text: Some("then this".into()),
+                last_delta: Some(crate::git_tree::Delta::Text),
+            },
+            tools: vec![
+                crate::git_tree::ToolEvent {
+                    tool_use: "toolu_01".into(),
+                    name: Some("box2_Bash".into()),
+                    input: Some("{\"command\":\"hostname && uptime\"}".into()),
+                    exit_code: None,
+                },
+                crate::git_tree::ToolEvent {
+                    tool_use: "toolu_01".into(),
+                    exit_code: Some(0),
+                    ..crate::git_tree::ToolEvent::default()
+                },
+            ],
         }),
         Reply::Steps(steps()),
         Reply::Steps(StepsView {
