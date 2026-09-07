@@ -1,7 +1,7 @@
 +++
 title = "a routed tool with no command line is opaque and held on every call: capability.yaml rules: gains a row keyed on the host-qualified name, and the hold names it as the way out"
 created = 1788744427
-updated = 1788744621
+updated = 1788746123
 claimant = "Cantaloups-Y7"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -54,3 +54,20 @@ Refusals: no `effect` field on the advertisement (REMOTE §5.1); no class
 inferred from a server's annotations by the engine; no per-name grant path
 (bl-7fc8 stands — this is a class the operator states, adjudicated per
 invocation, not a name allowed).
+
+---
+
+Round-2 devadmin lane: the cost of this, measured on the three-box scenario, and the shape it gives the operator.
+
+Two feet, deliberately different tool documents. `alpha2` advertises one shell-shaped `Bash`; `beta2` advertises a narrow admin set with no shell at all — `disk_usage`, `service_status`, `read_log`, each an executable reading its own small JSON object.
+
+One goal spanning both machines ("compare disk usage and failing services across BOTH and write me one report"). Result: **11 holds, 11 operator releases, one per call**, over 11 steps and 319k tokens. Every single one was a `beta2_*` call. Not one `alpha2_Bash` call was held — a shell command line is readable, so `df`, `du`, `find`, `ps` and `swapon` all passed unattended.
+
+The inversion is the finding. The box whose operator wrote three narrow, argument-checked, path-confined tools is interrupted on every call. The box whose operator exposed a raw shell runs unattended. The safer tool document is the one that is punished, and an operator who notices will fix it by adding a shell.
+
+Two details for the `rules:` design:
+
+- The reason sentence is otherwise excellent and names everything except the way out: `beta2_disk_usage {"path":"/"} classified opaque (beta2_disk_usage is not a tool this control implements and its input carries no command line, so what it reaches cannot be read — held rather than passed)`. It tells the operator what happened and gives them nothing to do about it beyond answering again.
+- The hold is per CALL, not per tool: `beta2_read_log` was held six separate times in one conversation with six different paths. Whatever the row keys on, releasing once has to be able to stand for the tool on that host, or the ledger is the call count.
+
+Same run under `claude -p` with podman exec standing in for ssh: same goal, 1m43s, one shot, zero interruptions.
