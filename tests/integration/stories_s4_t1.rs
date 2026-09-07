@@ -79,7 +79,10 @@ fn s4_t1_new_workspace_takes_the_operators_typed_name() {
         argv[1][1].ends_with("workspaces/ops"),
         "`litany new` targets the operator's own name under the names root",
     );
-    assert_eq!(argv.len(), 2, "nothing runs after `new`");
+    // One pass after `new`: §8.6's convergence, which on a fresh workspace has
+    // the worker's `clients` grant to author and nothing else (bl-0460).
+    assert_eq!(argv.len(), 3, "the convergence, and nothing else");
+    assert_eq!(argv[2][0], "config");
 
     // Refused shapes never reach the planner (§3.1: no suffixing, no
     // prompt-loop — the operator retypes).

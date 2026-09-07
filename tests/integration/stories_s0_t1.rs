@@ -71,17 +71,22 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     // The full argv sequence: prime, new <names-root>/home, prompt — the pinned
     // template already grants the worker role's whole tool pool (§8.1,
     // bl-7fc8), so nothing advances config/default a second time.
-    let inv = litany_rec.wait(3);
+    let inv = litany_rec.wait(4);
     assert_eq!(inv[0].argv, ["prime"]);
     assert_eq!(inv[1].argv, ["new", ws.to_string_lossy().as_ref()]);
     assert!(
         ws.starts_with(names_root(yog.path())),
         "the workspace is under the flat names root"
     );
-    assert_eq!(inv[2].argv[0], "prompt");
-    assert_eq!(inv[2].argv[1], "--name");
-    assert_eq!(inv[2].argv[3], ws.to_string_lossy());
-    let conversation = inv[2].argv[2].clone();
+    // The §8.6 convergence's one pass: on a fresh workspace it has the worker's
+    // `clients` grant to author (bl-0460 — litany's template cannot name yog's
+    // own tool), and nothing else, since the pinned template already grants
+    // litany's whole pool (bl-7fc8).
+    assert_eq!(inv[2].argv[0], "config");
+    assert_eq!(inv[3].argv[0], "prompt");
+    assert_eq!(inv[3].argv[1], "--name");
+    assert_eq!(inv[3].argv[3], ws.to_string_lossy());
+    let conversation = inv[3].argv[2].clone();
     // The fire hands the minted name back — the §3.4 focus claim's only handle:
     // the started root has no agent id until the detached driver writes it, so
     // this name is what the view-model holds until the roster carries the
@@ -91,16 +96,16 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
         "the name the fire returns is the name --name carries — one mint, one channel (§3.3)"
     );
     assert_eq!(
-        inv[2].argv[4], "make me a plan",
+        inv[3].argv[4], "make me a plan",
         "the typed text fires verbatim — no identity line, no mutation (bl-6920)"
     );
     // The workspace enters the harness channel and nothing else (§3.3, bl-df65):
     // its path is never in the goal text, only in the workspace argument and the
     // spawn's env.
-    assert!(!inv[2].argv[4].contains(ws.to_string_lossy().as_ref()));
-    assert!(!inv[2].argv[4].contains("workspace"));
+    assert!(!inv[3].argv[4].contains(ws.to_string_lossy().as_ref()));
+    assert!(!inv[3].argv[4].contains("workspace"));
     assert_eq!(
-        inv[2].env.get("YOG_NAME"),
+        inv[3].env.get("YOG_NAME"),
         Some(&"home".to_owned()),
         "YOG_NAME layered (§8), the default name verbatim"
     );
@@ -109,13 +114,14 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
         "the bare rung mutates no ball"
     );
 
-    // The ops trail is complete: prime, new, and the detached-prompt spawn line.
+    // The ops trail is complete: prime, new, the §8.6 convergence, and the
+    // detached-prompt spawn line.
     let ops = yog::opslog::tail(state.path(), 16);
-    assert_eq!(ops.len(), 3);
-    assert_eq!(ops[2].exit, DETACHED_EXIT);
-    assert_eq!(ops[2].cwd, ws.display().to_string());
+    assert_eq!(ops.len(), 4);
+    assert_eq!(ops[3].exit, DETACHED_EXIT);
+    assert_eq!(ops[3].cwd, ws.display().to_string());
     assert_eq!(
-        ops[2].argv[5], "make me a plan",
+        ops[3].argv[5], "make me a plan",
         "the logged goal is verbatim"
     );
 }

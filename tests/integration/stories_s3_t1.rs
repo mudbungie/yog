@@ -69,12 +69,14 @@ fn s3_t1_ready_ball_claims_after_new_and_binds_the_worktree() {
         ["claim", "bl-7", "--as", "cobalt-gecko"]
     );
 
-    // The single ops log proves the amended order: seed → new → claim.
+    // The single ops log proves the amended order: seed → new → converge →
+    // claim (the `config` pass is §8.6's, authoring the worker's `clients`
+    // grant on a fresh workspace — bl-0460).
     let ops = yog::opslog::tail(state.path(), 16);
     let verbs: Vec<&str> = ops.iter().map(|e| e.argv[1].as_str()).collect();
     assert_eq!(
         verbs,
-        ["prime", "new", "claim"],
+        ["prime", "new", "config", "claim"],
         "claim after litany new (§8.1)"
     );
 }

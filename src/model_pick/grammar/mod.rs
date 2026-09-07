@@ -75,7 +75,7 @@ mod tools;
 
 pub use entries::{entry_names, remove_entry, set_entry};
 pub use fields::{entry_field, remove_field, set_field, upsert_field};
-pub use roles::{EFFORT, MODEL, PRIORITY, PROVIDER, roles, set_role_model};
+pub use roles::{EFFORT, MODEL, PRIORITY, PROVIDER, TOOLS, roles, set_role_model};
 pub use rows::is_unknown_row;
 pub use tools::{flow_members, flow_value};
 

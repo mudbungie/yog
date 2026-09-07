@@ -46,6 +46,10 @@ use crate::projects::join::JoinState;
 mod ensure;
 mod exec;
 mod goal;
+/// **The §8.6 birth grant** (bl-0460): the one name yog's own roster tool needs
+/// in the worker's `providers.yaml` grant, converged in the same pass as the
+/// control block and the instruction glob.
+mod grant;
 mod identity;
 pub mod instructions;
 mod lineage;

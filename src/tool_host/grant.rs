@@ -42,7 +42,7 @@ use std::path::Path;
 
 use crate::config_edit::branch::{config_file, governing_config};
 use crate::git_tree::AGENT_REF_PREFIX;
-use crate::model_pick::grammar::{PROVIDERS_YAML, ROLES, entry_field, flow_members};
+use crate::model_pick::grammar::{PROVIDERS_YAML, ROLES, TOOLS, entry_field, flow_members};
 
 /// Workspace subdirectory holding the bare repository (litany ARCH §2.2).
 const REPO_DIR: &str = "repo.git";
@@ -52,12 +52,10 @@ const REPO_DIR: &str = "repo.git";
 // from a second spelling here.
 /// Subject prefix of a child's dispatch commit (litany ARCH §2.5).
 const DISPATCH_PREFIX: &str = "dispatch: ";
-/// The role every root agent resolves — litany's own default, spelled here
-/// because its constant is crate-private (the same reason the engine-act names
-/// are yog's own spelling).
-const WORKER: &str = "worker";
-/// The four-space field a role's grant rides in.
-const TOOLS: &str = "tools";
+/// The role every root agent resolves — litany's own default, read from yog's
+/// one home for it ([`WORKER_ROLE`]), which the §8.6 birth grant writes the
+/// same list of.
+use crate::model_pick::WORKER_ROLE as WORKER;
 
 /// The tools `agent`'s role is granted in `workspace`. Empty for every reason
 /// a grant cannot be read — see the module doc.

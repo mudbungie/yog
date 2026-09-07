@@ -54,6 +54,13 @@ pub const EFFORT: &str = "effort";
 /// The role's priority-lane request (upstream bl-f587).
 pub const PRIORITY: &str = "priority";
 
+/// The role's **grant** (litany ARCH §4.3): the tools it may call, written as
+/// the one flow sequence in the file ([`flow_members`](super::flow_members)).
+/// Named here with its four siblings because this is the one home for a role
+/// assignment's field names — the §8.6 birth grant writes it (bl-0460) and
+/// `tool_host::grant` reads it, and a second spelling is how they drift.
+pub const TOOLS: &str = "tools";
+
 pub fn set_role_model(
     providers_yaml: &str,
     role: &str,

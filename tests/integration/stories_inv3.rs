@@ -109,13 +109,11 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
     assert_eq!(bl.invocations()[0].argv, ["claim", id, "--as", NAME]);
     let l1: Vec<Vec<String>> = litany.invocations().into_iter().map(|i| i.argv).collect();
     assert_eq!(
-        l1,
-        vec![
-            vec!["prime".to_owned()],
-            vec!["new".to_owned(), ws.to_string_lossy().into_owned()],
-        ],
-        "seed, then new — the §8.1 order"
+        l1.iter().map(|a| a[0].as_str()).collect::<Vec<&str>>(),
+        vec!["prime", "new", "config"],
+        "seed, then new, then the §8.6 convergence — the §8.1 order"
     );
+    assert_eq!(l1[1][1], ws.to_string_lossy());
 
     // The kill lands after `new`: the effects the killed steps left persist
     // (§8.1). Materialize exactly that — the seed marker and workspace exist, and
@@ -129,7 +127,15 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
     // present), `new` skipped (repo.git present). No new spawn.
     let second = start::prepare(&deps, &inputs(JoinState::Bound), "T2").unwrap();
     assert_eq!(bl.invocations().len(), 1, "no second claim");
-    assert_eq!(litany.invocations().len(), 2, "no re-prime / re-new");
+    // No re-prime and no re-`new`; the §8.6 convergence runs on every prepare
+    // by design (§8.6, and bl-0460's grant rides it), and the fake `litany
+    // config` commits nothing, so it still sees its drift on the re-run.
+    let verbs: Vec<String> = litany
+        .invocations()
+        .into_iter()
+        .map(|i| i.argv[0].clone())
+        .collect();
+    assert_eq!(verbs, ["prime", "new", "config", "config"]);
     assert_eq!(
         first.binding, second.binding,
         "the same worktree either way"
@@ -137,7 +143,8 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
     assert_eq!(first.goal, second.goal, "the composed goal is stable");
     assert_eq!(
         opslog::tail(state.path(), 16).len(),
-        3,
-        "prime + new + claim, logged once each"
+        5,
+        "prime + new + converge + claim, logged once each, and the re-run's \
+         own convergence"
     );
 }

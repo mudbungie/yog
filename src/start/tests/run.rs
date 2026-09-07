@@ -39,8 +39,10 @@ fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
     );
     assert_eq!(p.binding, None, "the bare rung binds no work target");
     assert_eq!(p.goal, "", "the operator types the bare payload");
-    // Substrate only, in order — no `bl` mutation.
-    assert_eq!(w.verbs(), vec!["prime", "new"]);
+    // Substrate only, in order — no `bl` mutation. The `config` pass is the
+    // §8.6 convergence, which on a fresh workspace has the worker's `clients`
+    // grant to author (bl-0460: litany's template cannot name yog's own tool).
+    assert_eq!(w.verbs(), vec!["prime", "new", "config"]);
     assert_eq!(
         w.ops()[1].argv[2],
         workspace_path(w.yog.path(), &p.workspace).to_string_lossy(),
@@ -123,10 +125,10 @@ fn prepare_ball_ready_claims_after_new() {
         "the binding is the claim's worktree"
     );
     assert!(p.goal.contains("Ball bl-r: T"));
-    // The amended §8.1 order: seed → new → claim.
-    assert_eq!(w.verbs(), vec!["prime", "new", "claim"]);
+    // The amended §8.1 order: seed → new → converge → claim.
+    assert_eq!(w.verbs(), vec!["prime", "new", "config", "claim"]);
     assert_eq!(
-        &w.ops()[2].argv[1..],
+        &w.ops()[3].argv[1..],
         &["claim", "bl-r", "--as", "cobalt-gecko"],
         "claim stamped with the workspace name"
     );
@@ -152,7 +154,12 @@ fn prepare_new_ball_creates_then_converges_to_one_claim() {
         "re-planned as existing"
     );
     // Substrate before every `bl`, one claim (the re-plan's seed/new skip).
-    assert_eq!(w.verbs(), vec!["prime", "new", "create", "claim"]);
+    // Two `config` passes because the fake `litany config` commits nothing, so
+    // the §8.6 convergence still sees its drift on the re-plan's own ensure.
+    assert_eq!(
+        w.verbs(),
+        vec!["prime", "new", "config", "create", "config", "claim"]
+    );
 }
 
 #[test]
@@ -180,35 +187,36 @@ fn prepare_bound_ball_resumes_without_a_claim_or_mint() {
     assert!(w.ops().is_empty(), "resume: no claim, no mint, no re-seed");
 }
 
-/// §8.1, bl-7fc8: the pinned template already grants the worker role the whole
-/// tool pool (`message` and `dispatch` included), so a freshly authored
-/// workspace needs no second commit — the exact bytes `litany new` committed
-/// are the exact bytes still on `config/default` once `prepare` returns.
+/// §8.1: the pinned template grants the worker role litany's whole tool pool
+/// (`message` and `dispatch` included) and yog adds nothing of litany's to it
+/// (bl-7fc8) — but it cannot carry `clients`, which is **yog's** tool, so the
+/// §8.6 convergence authors that one name (bl-0460). The first commit is
+/// litany's; the second is the one file litany's template could never write.
 #[test]
-fn a_fresh_workspace_keeps_the_templates_grant_with_no_extra_commit() {
+fn a_fresh_workspace_gains_only_the_one_name_the_template_cannot_carry() {
     let w = World::new();
     let litany = w.litany();
     let bl = Cli::new("/no/bl");
     let inputs = w.inputs(crate::names::DEFAULT_NAME, Payload::Bare);
     let p = prepare(&deps(&w, &bl, &litany), &inputs, "TS").unwrap();
-    // No `config` step: the template's grant is already complete.
-    assert_eq!(w.verbs(), vec!["prime", "new"]);
+    assert_eq!(w.verbs(), vec!["prime", "new", "config"]);
     let committed = crate::config_edit::branch::config_file(
         &workspace_path(w.yog.path(), &p.workspace),
         "config/default",
         "providers.yaml",
     )
     .unwrap();
+    let said = String::from_utf8_lossy(&committed);
     assert_eq!(
-        String::from_utf8_lossy(&committed),
+        said,
         crate::test_support::TEMPLATE_PROVIDERS,
-        "the workspace's first commit is untouched — yog is not a second policy \
-         authority over it",
+        "the fake `litany config` commits nothing, so what is on the branch is \
+         still litany's own first commit — what this beat pins is that the pass \
+         RAN, and `start::grant` pins what it would have written",
     );
     assert!(
-        String::from_utf8_lossy(&committed).contains("message")
-            && String::from_utf8_lossy(&committed).contains("dispatch"),
-        "the worker role already carries yog's two agent-to-agent primitives",
+        said.contains("message") && said.contains("dispatch"),
+        "the worker role already carries litany's own agent-to-agent primitives",
     );
 }
 
