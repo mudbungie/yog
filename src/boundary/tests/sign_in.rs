@@ -25,10 +25,15 @@ use std::sync::Arc;
 /// fails loudly.
 const REFUSAL: &str = "sign in first";
 
-/// A brazen config declaring one keyed row and one keyless row, so the wall's
-/// table holds both spellings this gate judges beside brazen's built-ins.
+/// A brazen config declaring two keyed rows and one keyless row, so the wall's
+/// table holds both spellings this gate judges beside brazen's built-ins — and
+/// a second keyed row a sign-in never reaches, which is what lets a beat put a
+/// credential somewhere the roles do not name (bl-58e7).
 const TABLE: &str = "[[provider]]\nname = \"keyed\"\nprotocol = \"openai_chat\"\n\
                      base_url = \"https://keyed.test\"\nauth = \"api_key\"\n\
+                     api_header = { name = \"x-api-key\", scheme = \"raw\" }\n\n\
+                     [[provider]]\nname = \"other\"\nprotocol = \"openai_chat\"\n\
+                     base_url = \"https://other.test\"\nauth = \"api_key\"\n\
                      api_header = { name = \"x-api-key\", scheme = \"raw\" }\n\n\
                      [[provider]]\nname = \"local\"\nprotocol = \"openai_chat\"\n\
                      base_url = \"http://localhost:1\"\nauth = \"none\"\n";
@@ -169,6 +174,46 @@ fn a_role_naming_an_unsigned_keyed_row_is_still_refused() {
     );
     assert!(wall.fire().unwrap_err().starts_with(REFUSAL));
     assert!(!wall.trail());
+}
+
+/// **The sighting** (bl-58e7): a wall carrying a credential on a row the roles
+/// do NOT name readied the wall under the old fold, the fire went through, and
+/// the conversation was born dead on the row the roles do name — one model call
+/// spent to learn a fact the engine held before it fired. The gate asks about
+/// the role's own row now, and names the role.
+#[test]
+fn a_credential_on_a_row_no_role_names_readies_nothing() {
+    let wall = Wall::new();
+    wall.sign_in();
+    wall.fixture.commit_other(
+        "providers.yaml",
+        "roles:\n  worker:\n    provider: other\n    model: big\n",
+    );
+    let refusal = wall.fire().unwrap_err();
+    assert!(refusal.starts_with(REFUSAL), "{refusal}");
+    assert!(
+        refusal.contains("`worker` resolves provider `other`"),
+        "{refusal}"
+    );
+    assert!(!wall.trail(), "a refused fire costs no trail row");
+}
+
+/// A role naming a row the wall does not declare at all is not a sign-in
+/// (bl-21e9): the remedy is the row table, and the sentence never says
+/// `/login` — a login for a row that is not there is a loop with no exit.
+#[test]
+fn a_role_naming_a_row_the_wall_lacks_is_not_a_sign_in() {
+    let wall = Wall::new();
+    wall.sign_in();
+    wall.fixture.commit_other(
+        "providers.yaml",
+        "roles:\n  worker:\n    provider: nowhere\n    model: big\n",
+    );
+    let refusal = wall.fire().unwrap_err();
+    assert!(refusal.contains("declares no such row"), "{refusal}");
+    assert!(!refusal.contains("/login"), "{refusal}");
+    assert!(refusal.contains("/config brazen"), "{refusal}");
+    assert!(!wall.trail(), "a refused fire costs no trail row");
 }
 
 /// A brazen that cannot answer is an empty table, and no surface refuses on
