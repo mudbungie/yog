@@ -825,7 +825,14 @@ where it is the same ruling it always was.
 - **Honesty about containment:** execution happens on a machine the
   adjudicator cannot inspect. Adjudication judges the invocation exactly as
   today; any containment beyond that is whatever the client enforces locally,
-  and the design must not claim otherwise.
+  and the design must not claim otherwise. **The same honesty runs the other
+  way at the lane's last rung** (§5.4, bl-68ca): where no machine consents and
+  the tool falls back to the engine's own front door, it runs as the engine's
+  user on the engine's disk — so a conversation in one workspace can *read*
+  another workspace's goals, transcripts and worktrees, and DESIGN §16.2 says
+  so in words. Filesystem confinement between workspaces is not claimed at that
+  rung; the foot is where confinement lives, which is why enrolling one is the
+  answer rather than a stricter classifier.
 - **The driver-side seam was a litany ask, and it landed.** litany's driver
   executes tools; routing a designated tool to a remote executor needed an
   upstream seam. It is lernie 0.0.9's `Fx::tool_injection` (its

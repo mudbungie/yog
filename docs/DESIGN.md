@@ -8324,6 +8324,50 @@ before. **Severability widens (§3.1):** one `rm -rf $XDG_DATA_HOME/yog` erases
 the entire world — nested litany home, nested balls state, and yog's own
 artifacts — and leaves the *ambient* substrates untouched.
 
+**What the nesting does NOT claim: filesystem confinement between workspaces**
+(round-1 triage ruling 6, bl-68ca). The world nests **state** and the
+**toolchain**, and the wall nests a sphere's **credentials** (above). None of
+those is a boundary on the disk an agent's own execution stands on. At the
+engine's own execution rung — REMOTE §5.4's last rung, where a granted `bash`
+runs on the server because no enrolled machine consents to it — the tool runs
+as the engine's user in the agent's worktree, with the whole filesystem
+reachable by a relative `..` or an absolute path. **So one conversation in
+workspace `beta` can read `alpha`'s goals, transcripts and working trees**, and
+this section says so rather than leaving an operator to find out: the
+demonstration is one `ls ../../../alpha/agents/*/` and it needs no privilege.
+
+Three things are true at once and the ruling is the fourth.
+
+- The **wire** boundary is structural and holds: a client registered only in
+  `alpha` is answered `unknown workspace "beta"` by the resolver, and the walls
+  are genuinely separate directories with their own config and model cache.
+- The **§8.6 classifier** bites on what it can read — `env | grep …` from that
+  same conversation is refused *secret* in band — but a relative `ls` up three
+  directories is not secret-shaped, and **no classifier should be the thing
+  that holds a trust boundary.** Rule classification bounds accident and drift,
+  never adversarial evasion (VISION §4.11 item 8); asking it to be a wall is
+  asking the wrong layer.
+- The **writable root** (§8.6) bounds *writes* to the agent's worktree and its
+  bound attempt worktree. It says nothing about reads, deliberately: a read
+  outside the root is `open-world`, which the shipped table passes.
+
+**Confinement lives in the foot, not in the engine** — and that is the
+four-component split working rather than a gap in it. A workspace whose agents
+must not see another sphere's disk enrols a `thrall` on a machine (or a
+container) of its own; the tool then executes there, and what it can reach is
+that box's business. The engine's own rung is the *fallback* for a default
+install with nothing enrolled (REMOTE §5.4, bl-5710: "a default install must be
+able to write a file"), and a fallback cannot be a wall. A workspace that
+refuses to run drones with no OS layer at all already has one line for it:
+`capability.yaml`'s `confinement: required` (VISION §4.11 item 8), which
+refuses the birth rather than promising a wall that is not there.
+
+**§3.1's "app-wide blast radius" is therefore about the app, not the disk.** A
+workspace separates conversations, settings, providers, credentials and wire
+identity. An operator hosting two spheres that must not see each other's files
+on one engine is choosing something this design does not provide, and now knows
+it.
+
 The `LITANY_HOME` seed is written by litany's own bootstrap verb
 (`litany prime`, upstream bl-6d83), never by yog — yog composes the env and
 calls the verb; it never apes litany's seeding (§14).
