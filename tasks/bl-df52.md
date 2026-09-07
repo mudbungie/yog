@@ -2,6 +2,7 @@
 title = "design: REMOTE §5.4's MCP paragraph is ruled, not deferred — the bridge is thrall's, the wire gains nothing, and an MCP tool reaches the control as an opaque routed name"
 created = 1788744414
 updated = 1788744414
+claimant = "Cantaloups-M1"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r2"]
