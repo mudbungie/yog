@@ -6,7 +6,7 @@
 use crate::binding::{work_worktree_path, workspace_path};
 use crate::projects::join::JoinState;
 use crate::start::goal::{compose_prepared, prefill, target_binding};
-use crate::start::{BallSpec, Payload, StartInputs, parse_ball_stamp};
+use crate::start::{BallSpec, Payload, StartInputs, parse_ball_stamp, strip_path_preamble};
 use std::path::{Path, PathBuf};
 
 const YOG: &str = "/yog";
@@ -56,6 +56,37 @@ fn prefill_names_the_path_verbatim_on_line_one() {
     );
     assert_eq!(g.lines().next(), Some("Working directory: /work/here"));
     assert!(!g.contains("workspace"));
+}
+
+/// **THE BALL** (bl-e2ad): compose and parse, in one beat, in the module that
+/// owns both. The seat joins the operator's words after the prefill it was
+/// handed — `lernie start`'s `{prefill}\n\n{typed}` — and the §3.3 display
+/// ladder must read the operator's half, not yog's. Written as a round trip so
+/// a reworded preamble cannot leave the inverse expecting a sentence nobody
+/// composes: it reddens here, at the compose.
+#[test]
+fn the_path_preamble_comes_back_off_the_goal_the_seat_fires() {
+    let prefill = prefill(&Payload::Path {
+        dir: PathBuf::from("/work/here"),
+    });
+    let typed = "The test suite in this project fails: fix it.\n\nCommit the fix.";
+    assert_eq!(
+        strip_path_preamble(&format!("{prefill}\n\n{typed}")),
+        typed,
+        "the operator's goal, whole"
+    );
+    // Nothing follows it: the fire had no words of the operator's own, and the
+    // directory line is all there is to show. Verbatim, never empty.
+    assert_eq!(strip_path_preamble(&prefill), prefill);
+    // No preamble at all — every bare and ball rung, every foreign root — is
+    // the general path with nothing to strip.
+    for goal in [
+        "",
+        "Ball bl-1: T\n\nB",
+        "Working directory: /w/x\nnot the sentence",
+    ] {
+        assert_eq!(strip_path_preamble(goal), goal, "{goal:?}");
+    }
 }
 
 /// The ball rung's prefill is **payload and nothing else** (§3.3, bl-6654): the

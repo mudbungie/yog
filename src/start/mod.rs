@@ -64,7 +64,7 @@ pub use exec::{
     ClaimResolved, DETACHED_EXIT, Deps, Prepared, StartError, cross_check_claim, execute_claim,
     execute_create, on_mint,
 };
-pub use goal::parse_ball_stamp;
+pub use goal::{parse_ball_stamp, strip_path_preamble};
 pub use identity::{parse_identity_stamp, strip_identity_stamp};
 pub use model::{BallSpec, Payload, StartInputs, Step};
 pub use prompt::{Fire, execute_prompt};

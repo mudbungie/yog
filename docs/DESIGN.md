@@ -398,8 +398,8 @@ is three facts:
   made of content. The goal is payload now: the ball's title and body, and the
   `Ball <id>:` headline, which stays because it is the §3.2 conversation→ball
   join, not a location. (The path rung's `Working directory: <dir>` first line
-  stays too: it is that rung's headline — the display ladder's rung two, §3.3 —
-  and the operator typed it.)
+  stays too, but **not as that rung's headline** — see the display ladder
+  below, as amended by bl-e2ad: it is a preface the ladder now reads past.)
 - **The per-target `current_dir` is gone.** Yog set the initial `litany prompt`
   process's directory per rung. It reached that one process and no tool step,
   which made it look like a binding while binding nothing; DESIGN recorded it
@@ -639,7 +639,27 @@ the pre-aca4 stock until retention ages it out.
 **The name is the title; the first payload line is the preview.**
 One function derives what a conversation is called, as a ladder (bl-08f2):
 the litany-stored name fact → the legacy goal-stamp parse → the first
-payload line (the goal with the stamp stripped) → the root agent id. The two
+payload line (the goal with **every preface yog composed** stripped) → the
+root agent id.
+
+**The payload is what the operator wrote, and yog writes two prefaces above
+it** (bl-e2ad). The legacy identity stamp is one, and was the only one
+`git_tree::detect::payload_headline` took off. The other is the path rung's
+`Working directory: <dir>` + binding sentence — and the seat joins the
+operator's words *after* the prefill it was handed (§8.5's own help: *"send
+the two joined as one goal"*), so on the path rung the first payload line was
+always the preface. Every path-rung conversation in a workspace therefore wore
+the same name, and coding work always takes the path rung: a live board read
+as seven compactors with minted names and five workers all called `Working
+directory: /…`, in the one column whose job is telling them apart. Both
+prefaces now come off, by their own composes' inverses, in the order they were
+composed (`start::strip_identity_stamp`, then `start::strip_path_preamble`).
+Nothing about the directory is lost — it rides the fire typed as litany's
+`--cwd`, it is answered as `working_dir` beside the conversation's files, and
+it is still line one of `goal.md` verbatim. It stops being the *name*. A fire
+with no words of the operator's own is the one case that keeps it: there is
+nothing else to show, and naming it the directory is honest where dropping to
+rung four would not be. The two
 name rungs fold in one place (`Agent::name_fact`), so retiring the legacy
 rung is one deletion. **Every reply that names a conversation carries the
 ladder's answer, never the raw id** — `Reply::Conversations`' row title,

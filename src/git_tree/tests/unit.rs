@@ -47,6 +47,55 @@ fn payload_headline_strips_the_identity_stamp_and_keeps_the_headline() {
     assert_eq!(payload_headline("You are stench-pug."), "");
 }
 
+/// **THE BALL** (bl-e2ad): the path rung's preamble comes off too, so a
+/// conversation is named by what the operator asked for rather than by the
+/// preface yog wrote above it. Three path-rung starts into three directories
+/// used to preview as three identical `Working directory:` lines — the one
+/// column that has to tell conversations apart, carrying the machinery.
+///
+/// The preambles here are written out rather than composed, because this is the
+/// *reading* side and it must be pinned to the bytes on disk. `start`'s own
+/// round-trip beat is what holds the two ends together
+/// (`start::tests::goal`), so a reworded compose reddens there and falls
+/// through to a failure here rather than passing quietly.
+#[test]
+fn payload_headline_strips_the_path_preamble_and_names_the_operators_goal() {
+    const BINDING: &str = "This is already your current directory: every tool call starts there and relative paths resolve there. Keep the work inside it.";
+    let fired = |dir: &str, typed: &str| {
+        // Exactly what a seat fires: the prefill the engine composed, then the
+        // operator's words, joined as `lernie start` joins them.
+        format!("Working directory: {dir}\n{BINDING}\n\n{typed}")
+    };
+    assert_eq!(
+        payload_headline(&fired(
+            "/w/pyshop",
+            "The test suite in this project fails: fix it."
+        )),
+        "The test suite in this project fails: fix it."
+    );
+    // A legacy root wearing both prefaces loses both, in the order they were
+    // composed.
+    assert_eq!(
+        payload_headline(&format!(
+            "You are stench-pug.\n\n{}",
+            fired("/w/rsroman", "port the parser")
+        )),
+        "port the parser"
+    );
+    // A fire with no words of the operator's own has only the directory line to
+    // show, and naming it that is honest where falling to the id would not be.
+    assert_eq!(
+        payload_headline(&format!("Working directory: /w/tsreport\n{BINDING}")),
+        "Working directory: /w/tsreport"
+    );
+    // And a goal that merely opens with the words is not a preamble: the
+    // binding sentence is the shape, and without it nothing is stripped.
+    assert_eq!(
+        payload_headline("Working directory: /w/x\nis wrong, please fix"),
+        "Working directory: /w/x"
+    );
+}
+
 /// An empty `goal.md` is a goal that says nothing, not an absent one — absence
 /// is the read's own `None` (see the `goal.md`-removed repo test).
 #[test]

@@ -75,10 +75,49 @@ pub(super) fn prefill(payload: &Payload) -> String {
 /// the display ladder's, and what follows it now **agrees** with the typed
 /// channel instead of denying it.
 fn path_preamble(dir: &Path) -> String {
-    format!(
-        "Working directory: {}\nThis is already your current directory: every tool call starts there and relative paths resolve there. Keep the work inside it.",
-        dir.display(),
-    )
+    format!("{CWD_LEAD}{}\n{CWD_BINDING}", dir.display())
+}
+
+/// The preamble's first line, up to the directory itself.
+const CWD_LEAD: &str = "Working directory: ";
+
+/// Its second line, whole. Held as a constant beside the lead for the reason
+/// [`parse_ball_stamp`] is held beside [`ball_preamble`]: [`strip_path_preamble`]
+/// reads back exactly what this composes, so the shape has one home and the
+/// inverse cannot come to expect a sentence the compose no longer writes.
+const CWD_BINDING: &str = "This is already your current directory: every tool call starts there and relative paths resolve there. Keep the work inside it.";
+
+/// The **operator's own goal**, beneath the path rung's preamble — the inverse
+/// of [`path_preamble`] (bl-e2ad).
+///
+/// The preamble leads because the seat joins the operator's words *after* the
+/// prefill it was handed (§8.5's own help: *"send the two joined as one
+/// goal"*), so on the path rung — the rung every piece of coding work takes —
+/// the goal's first payload line was always `Working directory: <dir>`, and the
+/// §3.3 display ladder named every such conversation that. A workspace of five
+/// then read as five identical absolute paths in the one column whose job is
+/// telling them apart. The directory is not lost: it rides the fire typed as
+/// litany's `--cwd` ([`target_binding`]), it is answered as `working_dir`
+/// beside the conversation's files, and it is still line one of the goal
+/// verbatim. It stops being the *name*.
+///
+/// The goal **verbatim** when no preamble leads it — every bare and ball rung,
+/// every foreign root — and verbatim again when nothing follows one: a fire
+/// with no words of the operator's own has only the directory line to show.
+pub fn strip_path_preamble(goal: &str) -> String {
+    let payload = strip_preamble(goal).unwrap_or(goal);
+    if payload.trim().is_empty() {
+        return goal.to_owned();
+    }
+    payload.to_owned()
+}
+
+/// The text after a well-formed preamble, or `None` when none leads `goal`.
+/// Line-wise, exactly as the compose is: both lines leave, with the blank line
+/// that separated them from the payload.
+fn strip_preamble(goal: &str) -> Option<&str> {
+    let (_dir, rest) = goal.strip_prefix(CWD_LEAD)?.split_once('\n')?;
+    Some(rest.strip_prefix(CWD_BINDING)?.trim_start_matches('\n'))
 }
 
 /// The ball worktree the composer/preamble names for an **existing** ball (§3.3,
