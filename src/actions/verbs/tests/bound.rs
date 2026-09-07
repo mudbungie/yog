@@ -52,7 +52,7 @@ fn every_workspace_bound_verb_spawns_inside_the_sphere() {
     let b = w.bound();
     let seen = [
         message(&b, w.state.path(), "TS", "a-1", "hi").unwrap(),
-        stop(&b, w.state.path(), "TS", "a-1", false).unwrap(),
+        stop(&b, w.state.path(), "TS", "a-1").unwrap(),
         scan(&b, w.state.path(), "TS").unwrap(),
         fork(&b, w.state.path(), "TS", &fire(&w.cwd)).unwrap(),
     ];

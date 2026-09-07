@@ -447,10 +447,21 @@ the operator meant to kill. Nothing at either intake inspects `content`.
 **Which of the three to send.** All three answer `Reply::Outcome` — the spawned
 verb's `exit`/`stdout`/`stderr`, `ok` iff it exited 0.
 
-- `stop` → `litany stop <ws> <agent>`, plus `--stop-children` when `children`
-  is true, which cascades over the §2.3 hyphenated descent. `children` is
-  optional and decodes `false` when absent; `workspace` and `agent` are
-  required. One §4.2 ops row. Work the conversation already committed is kept.
+- `stop` → `litany stop <ws> <agent>`, which cascades over the §2.3 hyphenated
+  descent **unconditionally**. `workspace` and `agent` are required. One §4.2
+  ops row. Work the conversation already committed is kept.
+
+  **`children` is accepted and ignored** *(bl-6efc)*. It named the
+  `--stop-children` flag, and litany's bl-3114 made `stop` walk every
+  descendant whether the flag is there or not, leaving the flag parsing and
+  changing nothing. yog no longer passes it: passing an inert word is a bet
+  that it stays parseable, and the day litany drops it every stop this engine
+  makes would fail on an unrecognized argument. The FIELD stays on the wire —
+  a field lost is a `PROTOCOL` bump (§3), and since bl-bca2 a bump is a
+  four-repository act, so retiring it waits for the next one rather than
+  costing one of its own. It is optional and decodes `false` when absent; a
+  seat that still sends `true` gets exactly what it asked for, because that is
+  now what every stop does.
 - `interrupt` → `litany stop`, then `litany message`, carrying the same three
   fields `message` does and no `children` flag. The deposit is what restarts
   the conversation (ARCH §2.9: there is no resume verb), so this **replaces**
@@ -472,7 +483,12 @@ conversation reads — every `Reply::Conversations` row and `Reply::Agent`'s
 derivable from a row goes on the row). `stoppable` is true iff that
 conversation is `live` or `in-flight`, the two states where a driver holds the
 executor lock; `stop_children` is true iff some other agent's id extends
-`<agent>-` (`src/actions/mod.rs`). A row's `state` is the badge aggregated
+`<agent>-` (`src/actions/mod.rs`). **`stop_children` names a consequence, not a
+choice** *(bl-6efc)*: the fact it carries is unchanged and still worth a row —
+*does stopping this reach further than the conversation I am looking at?* —
+but there is no cascade to opt into any more, so a seat renders it as what the
+stop will do rather than as a second control beside Stop. The name outlives the
+knob until the next `PROTOCOL` bump. A row's `state` is the badge aggregated
 over the subtree and is **not** the gate: a quiet root with a working child
 reads `live` and has no driver to kill. Firing `stop` anyway is not an error —
 it is an `Outcome` with `ok: false` and litany's own words.

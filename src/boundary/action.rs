@@ -27,7 +27,8 @@ pub enum Action {
         agent: String,
         content: String,
     },
-    /// `litany stop <ws> <agent> [--stop-children]` (§8.2).
+    /// `litany stop <ws> <agent>` (§8.2) — the SIGTERM cascade over the whole
+    /// subtree; `children` is accepted and ignored (bl-6efc, REMOTE §8.2).
     Stop {
         workspace: String,
         agent: String,

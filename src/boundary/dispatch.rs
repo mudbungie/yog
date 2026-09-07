@@ -98,9 +98,10 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         Action::Message { content, .. } => {
             outcome(verbs::message(&deps.bound(ws), root, ts, agent, content))
         }
-        Action::Stop { children, .. } => {
-            outcome(verbs::stop(&deps.bound(ws), root, ts, agent, *children))
-        }
+        // `children` is decoded and DROPPED here (bl-6efc): litany's stop takes
+        // the subtree unconditionally since its bl-3114, so the field names no
+        // choice. It is still accepted on the wire — see `Action::Stop`.
+        Action::Stop { .. } => outcome(verbs::stop(&deps.bound(ws), root, ts, agent)),
         // Send-and-interrupt (bl-a33d): the one arm that composes two acts, so
         // it has a body of its own ([`interrupt`]) and leaves the two rows those
         // acts each leave. The deposit's driver-start is the trigger — litany's

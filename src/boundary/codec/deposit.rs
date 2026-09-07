@@ -5,7 +5,8 @@
 //! [`super::ball`]'s reasoning — three identical fields, and the only
 //! difference between the two gestures is what the engine does once the deposit
 //! has landed. Neither carries a `children` flag, because a deposit's subject is
-//! the conversation being talked to (`stop children` is the subtree's verb), and
+//! the conversation being talked to — and since bl-6efc no gesture anywhere
+//! carries a live one, litany's stop taking the subtree unconditionally, and
 //! the two op words are named once here so the directions cannot drift.
 
 use serde_json::{Map, Value, json};

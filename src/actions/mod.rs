@@ -98,9 +98,18 @@ pub fn nudge_enabled(selected: Option<&str>, agents: &[Agent]) -> bool {
     })
 }
 
-/// Stop offers `--stop-children` iff `agent_id` has a descendant in the id set
-/// (§8.2) — another agent whose id extends `<agent_id>-…` (the hyphenated
-/// descent, §2.3). Pure over the ids; no lone agent offers it.
+/// **Whether stopping this conversation takes a subtree with it** — true iff
+/// `agent_id` has a descendant in the id set (§8.2), another agent whose id
+/// extends `<agent_id>-…` (the hyphenated descent, §2.3). Pure over the ids.
+///
+/// **The fact is the same; what it names changed** (bl-6efc). It used to name
+/// a CHOICE — whether to offer `--stop-children` beside Stop — and litany's
+/// bl-3114 made `stop` walk every descendant unconditionally, so there is no
+/// choice left to offer. The predicate survives because the operator's
+/// question survives and got sharper: *does this stop reach further than the
+/// conversation I am looking at?* One is a knob, the other is a consequence,
+/// and only the consequence is still true. The wire keeps the name
+/// `stop_children` until the next `PROTOCOL` bump (REMOTE §8.2).
 pub fn stop_children_offered(agent_id: &str, agents: &[Agent]) -> bool {
     let prefix = format!("{agent_id}-");
     agents

@@ -440,7 +440,7 @@
           "verb": "inbox"
         },
         {
-          "detail": "One conversation's own facts, as any seat paints them: the id and the conversation it belongs to, the name it goes by — and whether that name is one peers can actually address it with — the commit its policy resolves from, whether it is running right now, the marks it wears (notified, over budget, in conflict, holding a tool call, abandoned), what kind of work is in flight anywhere beneath it, and whether Stop and its children cascade are offered. A conversation this workspace does not carry answers as its own root, stopped and unmarked, rather than refusing.",
+          "detail": "One conversation's own facts, as any seat paints them: the id and the conversation it belongs to, the name it goes by — and whether that name is one peers can actually address it with — the commit its policy resolves from, whether it is running right now, the marks it wears (notified, over budget, in conflict, holding a tool call, abandoned), what kind of work is in flight anywhere beneath it, whether Stop is offered, and whether stopping it would take a subtree down with it — which it always does when there is one. A conversation this workspace does not carry answers as its own root, stopped and unmarked, rather than refusing.",
           "summary": "the selected conversation itself: what it is called, what it is doing, what may be done to it",
           "surface": "control",
           "usage": "/agent",

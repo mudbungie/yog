@@ -57,10 +57,12 @@ pub(crate) fn interrupt(
 ) -> Result<Reply, String> {
     let bound = deps.bound(workspace);
     let root = deps.state_root.as_path();
-    // The children cascade is deliberately not offered: this gesture's subject
-    // is the conversation the operator is talking to, and `/stop children` is
-    // the gesture for a subtree. One knob fewer, and no seat has to decide.
-    verbs::stop(&bound, root, ts, agent, false).map_err(|e| e.to_string())?;
+    // The children cascade was deliberately not offered here — this gesture's
+    // subject is the conversation the operator is talking to — and since
+    // bl-6efc there is nothing to offer anywhere: litany's stop takes the
+    // subtree unconditionally (its bl-3114), so this call is the same call
+    // every stop makes.
+    verbs::stop(&bound, root, ts, agent).map_err(|e| e.to_string())?;
     verbs::message(&bound, root, ts, agent, content)
         .map(Reply::Outcome)
         .map_err(|e| e.to_string())

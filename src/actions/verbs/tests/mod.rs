@@ -89,20 +89,19 @@ fn message_builds_argv_and_runs_in_the_workspace() {
     assert_eq!(e.cwd, ws.display().to_string());
 }
 
+/// **The stop carries no flag at all** (bl-6efc). litany bl-3114 made `stop`
+/// walk every descendant unconditionally and left `--stop-children` parsing
+/// while changing nothing, so yog was passing a word that named a choice
+/// litany no longer offers — and betting it stays parseable. The argv is the
+/// verb and its subject, whatever the boundary was asked for.
 #[test]
-fn stop_omits_and_includes_the_children_flag() {
+fn stop_passes_the_verb_and_its_subject_and_no_flag() {
     let w = World::new("litany", OK_BODY);
     let ws = w.cwd.clone();
-    stop(&w.bound(), w.state.path(), "TS", "a-1", false).unwrap();
+    stop(&w.bound(), w.state.path(), "TS", "a-1").unwrap();
     assert_eq!(
         args_of(&w.logged()),
         vec!["stop", &ws.display().to_string(), "a-1"]
-    );
-    stop(&w.bound(), w.state.path(), "TS", "a-1", true).unwrap();
-    let e = opslog::tail(w.state.path(), 8).pop().unwrap();
-    assert_eq!(
-        args_of(&e),
-        vec!["stop", &ws.display().to_string(), "a-1", "--stop-children"]
     );
 }
 
@@ -166,7 +165,7 @@ fn assign_claims_the_ball_for_the_target_workspace() {
 fn every_verb_stamps_the_origin_of_its_own_subject() {
     let w = World::new("litany", OK_BODY);
     message(&w.bound(), w.state.path(), "TS", "a-1", "hi").unwrap();
-    stop(&w.bound(), w.state.path(), "TS", "a-1", false).unwrap();
+    stop(&w.bound(), w.state.path(), "TS", "a-1").unwrap();
     scan(&w.bound(), w.state.path(), "TS").unwrap();
     for e in opslog::tail(w.state.path(), 8) {
         assert_eq!(e.origin, opslog::Origin::Conversation, "{:?}", e.argv);

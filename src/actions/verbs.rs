@@ -8,7 +8,7 @@
 //! | verb | argv | cwd | origin |
 //! |---|---|---|---|
 //! | message | `litany message <ws> <agent> <text>` | ws | conversation |
-//! | stop | `litany stop <ws> <agent> [--stop-children]` | ws | conversation |
+//! | stop | `litany stop <ws> <agent>` | ws | conversation |
 //! | scan | `litany scan <ws>` | ws | conversation |
 //! | retarget | `litany retarget <ws> <agent>` | ws | conversation |
 //! | close | `bl close <id> --as <name>` | project | balls |
@@ -69,7 +69,6 @@ const MESSAGE: &str = "message";
 const STOP: &str = "stop";
 const SCAN: &str = "scan";
 const RETARGET: &str = "retarget";
-const STOP_CHILDREN: &str = "--stop-children";
 
 /// `litany message <ws> <agent> <content>` — the resume gesture (§8.2, ARCH
 /// §2.9: no resume verb exists; the deposit restarts a driver). The revived
@@ -129,23 +128,22 @@ pub fn fork(
     )
 }
 
-/// `litany stop <ws> <agent> [--stop-children]` — the §2.9 SIGTERM cascade,
-/// optionally to the agent's descendants (§8.2). It launches nothing, so the
-/// [`Bound`] layer is inert here — and taken anyway, because the alternative is
-/// a per-verb judgement about the wall, which is the bug bl-bf79 fixed
-/// ([`bound`]).
-pub fn stop(
-    litany: &Bound,
-    state_root: &Path,
-    ts: &str,
-    agent: &str,
-    stop_children: bool,
-) -> io::Result<Outcome> {
+/// `litany stop <ws> <agent>` — the §2.9 SIGTERM cascade (§8.2). It launches
+/// nothing, so the [`Bound`] layer is inert here — and taken anyway, because
+/// the alternative is a per-verb judgement about the wall, which is the bug
+/// bl-bf79 fixed ([`bound`]).
+///
+/// **The `--stop-children` flag is gone from this call** (bl-6efc). litany
+/// bl-3114 made `stop` walk every descendant unconditionally, and the flag
+/// went on parsing while changing nothing — so yog was passing a word that
+/// named a choice litany no longer offers. Passing an inert flag is a bet that
+/// it stays parseable; the day litany drops it, every stop this crate makes
+/// fails on an unrecognized argument. The cascade is not lost, it is
+/// unconditional: a stop takes the subtree, which is the only behaviour there
+/// now is.
+pub fn stop(litany: &Bound, state_root: &Path, ts: &str, agent: &str) -> io::Result<Outcome> {
     let ws_s = litany.workspace_arg();
-    let mut args = vec![STOP, ws_s.as_str(), agent];
-    if stop_children {
-        args.push(STOP_CHILDREN);
-    }
+    let args = vec![STOP, ws_s.as_str(), agent];
     run_logged(
         litany.cli(),
         state_root,

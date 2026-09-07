@@ -86,8 +86,11 @@ pub struct AgentView {
     pub nudgeable: bool,
     /// Whether §8.2's `Stop` is offered (it holds a driver right now).
     pub stoppable: bool,
-    /// Whether the `+children` cascade is offered beside it — the Stop menu's
-    /// looser prefix test, not the strict §5.1 #8 descent.
+    /// Whether stopping it would take a **subtree** down with it — the looser
+    /// prefix test, not the strict §5.1 #8 descent. Since bl-6efc this names a
+    /// consequence rather than a choice: litany's stop walks every descendant
+    /// unconditionally, so the cascade is not offered, it happens. The field
+    /// keeps its name until the next `PROTOCOL` bump (REMOTE §8.2).
     pub stop_children: bool,
     /// **The §11 live mark's seats** (§5.1 #28b, bl-296f): the eye — the agent
     /// the operator is talking to — then its subagents in §2.3 descent order,

@@ -32,7 +32,7 @@ fn s1_t3_message_stop_scan_argv_and_ops_trail() {
         ws.path(),
     );
     let m = verbs::message(&bound, state.path(), "T1", "c-001", "ping").unwrap();
-    let s = verbs::stop(&bound, state.path(), "T2", "c-001", true).unwrap();
+    let s = verbs::stop(&bound, state.path(), "T2", "c-001").unwrap();
     let sc = verbs::scan(&bound, state.path(), "T3").unwrap();
 
     // Outcomes: all exit 0; scan's summary rides back on stdout.
@@ -43,10 +43,8 @@ fn s1_t3_message_stop_scan_argv_and_ops_trail() {
     let inv = rec.invocations();
     assert_eq!(inv.len(), 3, "one spawn per verb");
     assert_eq!(inv[0].argv, ["message", ws_s.as_str(), "c-001", "ping"]);
-    assert_eq!(
-        inv[1].argv,
-        ["stop", ws_s.as_str(), "c-001", "--stop-children"]
-    );
+    // No flag: litany's stop takes the subtree unconditionally (bl-6efc).
+    assert_eq!(inv[1].argv, ["stop", ws_s.as_str(), "c-001"]);
     assert_eq!(inv[2].argv, ["scan", ws_s.as_str()]);
     let ws_canon = crate::support::canon(ws.path());
     assert!(
@@ -65,10 +63,7 @@ fn s1_t3_message_stop_scan_argv_and_ops_trail() {
         &ops[0].argv[1..],
         &["message", ws_s.as_str(), "c-001", "ping"]
     );
-    assert_eq!(
-        &ops[1].argv[1..],
-        &["stop", ws_s.as_str(), "c-001", "--stop-children"]
-    );
+    assert_eq!(&ops[1].argv[1..], &["stop", ws_s.as_str(), "c-001"]);
     assert_eq!(&ops[2].argv[1..], &["scan", ws_s.as_str()]);
     assert_eq!(ops[2].stdout, "flushed 2 inboxes\n");
     assert!(ops.iter().all(|e| e.exit == 0 && e.cwd == ws_s));

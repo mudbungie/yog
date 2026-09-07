@@ -127,7 +127,8 @@ pub const QUERIES: &[HelpRow] = &[
                  peers can actually address it with — the commit its policy resolves from, \
                  whether it is running right now, the marks it wears (notified, over budget, in \
                  conflict, holding a tool call, abandoned), what kind of work is in flight \
-                 anywhere beneath it, and whether Stop and its children cascade are offered. A \
+                 anywhere beneath it, whether Stop is offered, and whether stopping it would \
+                 take a subtree down with it — which it always does when there is one. A \
                  conversation this workspace does not carry answers as its own root, stopped and \
                  unmarked, rather than refusing.",
         surface: Surface::Control,

@@ -132,12 +132,10 @@ fn the_litany_actions_spawn_their_exact_argv_and_ops_rows() {
                 AGENT.into(),
                 "ping".into()
             ],
-            vec![
-                "stop".to_owned(),
-                ws_s.clone(),
-                AGENT.into(),
-                "--stop-children".into()
-            ],
+            // `children: true` on the gesture and NO flag in the argv
+            // (bl-6efc): litany's stop takes the subtree unconditionally, so
+            // the boundary decodes the field and drops it.
+            vec!["stop".to_owned(), ws_s.clone(), AGENT.into()],
             vec!["scan".to_owned(), ws_s.clone()],
             vec!["stop".to_owned(), ws_s.clone(), AGENT.into()],
             vec![
