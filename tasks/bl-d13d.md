@@ -1,7 +1,8 @@
 +++
 title = "design: money everywhere the wire says tokens — the price table keyed by (provider, model) and set from the boundary, a cost beside every token count, a per-workspace ledger, and a ceiling that parks a running conversation instead of only refusing a birth"
 created = 1788745494
-updated = 1788745494
+updated = 1788745495
+claimant = "Cantaloups-D2"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r2"]
