@@ -1,7 +1,8 @@
 +++
 title = "the follow lane calls a HELD conversation 'at rest (quiescent)' and exits: the live view is blind at the one moment the operator is the blocker"
 created = 1788746087
-updated = 1788746087
+updated = 1788746619
+claimant = "Cantaloups-Y10"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r2"]
