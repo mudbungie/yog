@@ -12,7 +12,7 @@
 
 use std::time::Duration;
 
-use super::super::in_doubt;
+use super::super::doubt::in_doubt;
 use super::{Invocation, MailCell, Mailbox, lock_mail};
 
 /// How long a follow-class read waits for work before answering with none:

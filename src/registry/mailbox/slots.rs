@@ -19,7 +19,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
 
-use super::{Call, Capture, Invocation, unknown};
+use super::doubt::{redelivered, unknown};
+use super::{Call, Capture, Invocation};
 
 /// The follow-class read, its one-reader claim and the bound on its lease.
 pub(crate) mod read;
@@ -145,6 +146,13 @@ impl Mailbox {
     /// [`Marks`](crate::boundary::reply::Reply::Marks) discipline: a receipt is
     /// a re-read, never an echo. A handle this engine does not hold, and a
     /// handle addressed to somebody else, earn the same sentence.
+    ///
+    /// **A capture for a slot handed out more than once is marked here**
+    /// (REMOTE §5.6, bl-0655): the count is the slot's and this is the one
+    /// place a real capture meets it, so the mark is stored rather than added
+    /// by a reader — the driver's collect, the transcript and the receipt then
+    /// carry one text, and the model reads the doubt as part of the tool
+    /// result it is about ([`redelivered`]).
     pub fn complete(
         &self,
         client: &str,
@@ -157,8 +165,9 @@ impl Mailbox {
             .get_mut(invocation)
             .filter(|slot| slot.client == client)
             .ok_or_else(|| unknown(invocation))?;
-        slot.capture = Some(capture.clone());
-        Ok(capture.clone())
+        let stored = redelivered(client, slot.handed, capture);
+        slot.capture = Some(stored.clone());
+        Ok(stored)
     }
 
     /// The asker's poll: `Some` once the host has answered — and the slot is

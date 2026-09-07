@@ -2067,15 +2067,41 @@ freed by the sweep exactly as before. The lesson's day-long window is a
 messaging platform's number; here the asker's own bound is the honest one, and
 a bound the asker has already walked away from is a leak, not a contract.
 
-**Below the cap the redelivered run is not marked, and that is a decision with
-a named exit.** The one carrier for *"this is attempt two"* is a field on
-`Reply::Routed`, which three decoders read and whose gain is a `PROTOCOL` bump
-by §3's rule. It would buy the model a warning for the case Ruling 1 makes
-rare — a foot that died in the window after the tool finished and before its
-`complete` was written — and the second run's capture already reads the world
-the first run wrote, verbatim. If a driven run ever shows a model misreading a
-redelivered capture, the field is `handed` on the slot's re-read, one bump, and
-this paragraph is where the cost was weighed.
+**Below the cap the redelivered run IS marked, and the exit this paragraph
+named was taken at a lower price than it quoted (bl-0655).** It used to read
+that a redelivered run is not marked, and that the carrier for *"this is
+attempt two"* would be a field on `Reply::Routed` — three decoders and a
+`PROTOCOL` bump — bought only if a driven run ever showed a model misreading a
+redelivered capture. A driven run showed exactly that: a foot killed and
+restarted mid-flight ran `echo RUN >> …; sleep 40; wc -l < …` twice on the box,
+and what the model was handed was `Exit code: 0` and the number `2` — a capture
+indistinguishable from one clean run, whose only evidence of the double was the
+answer itself, which the model then reported as fact. On a real box that is a
+double `apt install`, a double log rotation or a double migration reading as a
+single one.
+
+**The mark is a sentence on the capture's stderr, so no wire shape moves and
+`PROTOCOL` stands.** The field was the wrong carrier and the bump was not the
+reason: litany renders a tool result from exactly three facts — exit code,
+stdout, stderr (its ARCH §3.3) — so a fourth would be a fact only a decoder
+could read, on the lane whose reader is a language model. The engine writes it
+where the model is already looking, in front of the capture rather than behind
+it, because the bounded projection cuts what a long capture ends with. It is
+the same sentence Ruling 2 writes, said earlier and without giving up: the
+client, the count, *each hand-off may have run it*, and *read the world before
+acting again* — one clause, one home
+(`src/registry/mailbox/doubt.rs`), three endings.
+
+**It is written where the count and the capture meet, which is `complete`.**
+Not at the collect, so the mark is stored rather than added by a reader and the
+receipt, the transcript and the driver's result carry one text; and not at the
+hand-off, because a box being told it is attempt two is a fact it can do
+nothing with. Two silences fall out of the count rather than out of a case:
+`handed == 1` is the ordinary run and says nothing, and **Ruling 1's re-post is
+not a redelivery** — the foot posts its held capture before that channel's
+first follow-class read, so the slot is still at one when it lands, and the
+path that exists to keep a box from running something twice is exactly the path
+that stays quiet.
 
 **Ruling 3 — the mailbox stays RAM across an engine restart, and the durable
 home of a tool result is the step record.** A capture the foot posted and no
@@ -2104,10 +2130,11 @@ have no consumer: no gesture branches on it, and §14.3 rules that the engine
 initiates nothing toward a client, so nothing would retry on its absence. A
 fact nothing reads is a second representation waiting to drift.
 
-**What proves it.** Engine: `src/registry/mailbox/slots/tests.rs` — a third
-unanswered hand-off is answered in doubt naming the count, an in-doubt slot is
-not offered again, a late completion overwrites an uncollected in-doubt
-answer, and the restart sentence at both readers. Foot: thrall's
+**What proves it.** Engine: `src/registry/mailbox/slots/tests/lease.rs` — a
+third unanswered hand-off is answered in doubt naming the count, an in-doubt
+slot is not offered again, a late completion overwrites an uncollected in-doubt
+answer, a capture for a slot handed out twice carries the count while one
+delivered once carries nothing, and the restart sentence at both readers. Foot: thrall's
 `src/run/tests/redial.rs` — a capture the wire swallowed is posted first on the
 next dial and the driver-side slot is never re-run, and a refused re-post is
 dropped and the channel reads on. The two suites meet only at the wire's
