@@ -116,13 +116,15 @@ fn the_key_is_absent_server_side_and_the_certificate_is_not() {
     assert!(!dir.join("phone-1.key").exists(), "shredded");
     assert!(dir.join("phone-1.pem").is_file(), "kept, and public");
 
-    // A second enrollment under one name is refused because the key is GONE
-    // (bl-bd48): the certificate is public and adoption re-hands nothing, so
-    // the sentence is about the material rather than about re-issuing. The
-    // `wire-certs` half still refuses a pair outright — `provision::issue`
+    // A second enrollment under one name is a RE-MINT while no device has ever
+    // presented the first (bl-f867): the operator who mistyped a name or lost
+    // the envelope gets the name back, and the answer carries fresh material.
+    // The `wire-certs` half still refuses a pair outright — `provision::issue`
     // owns that one, and its own beat asserts it.
-    let again = enroll(&deps, "8", &request("phone-1", Grade::Operator)).expect_err("refused");
-    assert!(again.contains("was enrolled already"), "{again}");
+    let again =
+        enrolled(enroll(&deps, "8", &request("phone-1", Grade::Operator)).expect("re-mint"));
+    assert!(!again.key.is_empty(), "material a device can use");
+    assert!(!dir.join("phone-1.key").exists(), "and shredded again");
 }
 
 /// **The address is the one a client dials** (§8): the same fact the seat's own

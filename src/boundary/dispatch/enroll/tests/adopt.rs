@@ -62,19 +62,49 @@ fn an_adoption_refuses_to_grant_a_grade_the_certificate_does_not_carry() {
     );
 }
 
-/// A name enrolled through this door already has no key left to hand over — the
-/// shred is what makes the first answer the device's only copy — so the refusal
-/// says so and names the act that seats a registration by hand (§4.1).
+/// A name whose device **took the enrollment up** has no key left to hand over
+/// — the shred is what makes the first answer the device's only copy — so the
+/// refusal says so, says when the device last spoke, and names the act that
+/// seats a registration by hand (§4.1). It is the dial that seals the name
+/// (bl-f867), so the stamp is what this beat plants.
 #[test]
-fn a_name_already_enrolled_refuses_naming_the_registration_act() {
+fn a_name_the_device_took_up_stays_sealed_and_says_when_it_spoke() {
     let tmp = tempdir().expect("tmp");
     let (deps, _) = provisioned(&tmp);
     enroll(&deps, "7", &request("phone-1", Grade::Operator)).expect("first");
+    crate::registry::seen::mark(
+        &deps.state_root,
+        &Client::parse("phone-1").expect("identity"),
+        1_700_000_000,
+    );
 
     let refusal = enroll(&deps, "8", &request("phone-1", Grade::Operator)).expect_err("refused");
     assert!(refusal.contains("was enrolled already"), "{refusal}");
+    assert!(refusal.contains("1700000000"), "{refusal}");
     assert!(refusal.contains("touch"), "{refusal}");
     assert!(refusal.contains(crate::registry::WORKSPACES), "{refusal}");
+}
+
+/// …and one no device ever dialled is re-minted instead (bl-f867). A mistyped
+/// box name, or an envelope closed before it reached the device, used to cost
+/// the whole trust root: `FORCE=1` rotates the CA and distrusts every device
+/// this box enrolled, to repair one that was never used.
+#[test]
+fn a_name_no_device_ever_dialled_is_re_minted_under_the_same_name() {
+    let tmp = tempdir().expect("tmp");
+    let (deps, dir) = provisioned(&tmp);
+    let first = enrolled(enroll(&deps, "7", &request("footbx", Grade::Foot)).expect("first"));
+    let again = enrolled(enroll(&deps, "8", &request("footbx", Grade::Foot)).expect("re-mint"));
+
+    assert_eq!(
+        again.grade,
+        Grade::Foot,
+        "the grade asked for, minted afresh"
+    );
+    assert_ne!(again.cert, first.cert, "a new certificate, not the old one");
+    assert!(!again.key.is_empty(), "with a key a device can use");
+    assert!(!dir.join("footbx.key").exists(), "shredded again");
+    assert!(dir.join("footbx.pem").is_file(), "and the new leaf kept");
 }
 
 /// A key with no certificate beside it is debris from a mint that did not

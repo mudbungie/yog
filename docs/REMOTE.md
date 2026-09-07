@@ -3351,8 +3351,27 @@ states of a name are the whole rule:
 |---|---|
 | neither `<name>.pem` nor `<name>.key` | mints, as it always has |
 | both | **adopts**: registers, answers that certificate, shreds the key |
-| `.pem` only | refuses — enrolled through this door already, and the key left the box then; the refusal names §4.1's `touch` for a second workspace |
+| `.pem` only, and the client has **never dialled** | **re-mints** *(bl-f867)*: supersedes the standing certificate and issues a fresh pair under the same name |
+| `.pem` only, and the client **has** dialled | refuses — enrolled through this door already, the device took it up, and the key left the box then; the refusal says when it last spoke and names §4.1's `touch` for a second workspace |
 | `.key` only | refuses — debris from a mint that did not finish; the refusal names the file |
+
+**A name is burnt by a device, never by a typo** *(amended bl-f867)*. The
+`.pem`-only arm above used to be one refusal, and it made an operator who typed
+the box's name wrong — or closed the envelope before it reached the device —
+lose that name for the life of the CA: the only remedy on offer was `FORCE=1`,
+which rotates the trust root and distrusts **every** device this box ever
+enrolled, to repair one that was never used. The question the refusal never
+asked is whether the enrollment was ever **taken up**, and §5's own third fact
+answers it durably — `clients/<name>/seen` is stamped the first time that
+client's bytes reach the intake, so its absence means no device has ever
+presented this identity. Never adopted, the certificate is superseded here and a
+fresh pair is minted under the same name; adopted, the name stays sealed.
+
+The cost is stated rather than hidden: the CA has then signed two certificates
+for one common name and the first is not revoked, there being no CRL here. That
+matters only if the superseded envelope is *also* used, and this arm is reached
+exactly when nothing ever used it and the operator is asking for another. The
+alternative destroys more — every other device's trust — to undo less.
 
 **The grade comes off the certificate, never off the gesture.** A grade is
 minted into the subject by the operator's own CA (§4.2), so an adoption that
@@ -3365,7 +3384,7 @@ answers it and **shreds the key** — mint → answer → shred, the pattern the
 manual recipe already follows, made unconditional so a failed read leaves no key
 either. What stays on disk is the **certificate**, deliberately: it is public
 material, and its presence is what makes a second enrollment under one name an
-adoption or a refusal rather than a re-issue (`provision::issue` still refuses a
+adoption, a supersession or a refusal rather than a blind re-issue (`provision::issue` still refuses a
 standing pair outright, which is `wire-certs`' own guard).
 Keeping it is the guard; keeping the key would be the leak. Custody after the
 answer is the transport's, and the two intakes differ: over the wire the answer

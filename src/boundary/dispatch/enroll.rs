@@ -69,7 +69,7 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
     let client = Client::parse(&request.name)?;
     let dir = material::dir(&deps.world);
     let address = dialable(&dir, request.address.as_deref())?;
-    let grade = stance::mint_or_adopt(&dir, request)?;
+    let grade = stance::mint_or_adopt(&dir, &deps.state_root, request)?;
     let (ca, cert, key) = carry(&dir, &request.name)?;
     registry::register(&deps.state_root, &client, &request.workspace).map_err(|e| e.to_string())?;
     crate::actions::verbs::log_step_done(
