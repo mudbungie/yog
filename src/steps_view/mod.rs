@@ -123,16 +123,24 @@ pub fn build(
         .into_iter()
         .map(|seq| summarize(workspace, agent_id, &seq))
         .collect();
-    if let Some(newest) = steps.last_mut()
-        && (wound::driven(state)
-            || wound::in_flight_window(
-                &step_dir(workspace, agent_id, &newest.seq),
-                &newest.wound,
-                now_unix,
-                grace,
-            ))
-    {
-        newest.wound = Wound::None;
+    if let Some(newest) = steps.last_mut() {
+        let step = step_dir(workspace, agent_id, &newest.seq);
+        let filling = wound::driven(state) || wound::young(&step, now_unix, grace);
+        if wound::driven(state) || wound::in_flight_window(&step, &newest.wound, now_unix, grace) {
+            newest.wound = Wound::None;
+        }
+        // **A step being filled is not a step that was cut** (bl-ab53). §4.4's
+        // `Killed` is a tail with no terminal segment, which is equally a
+        // signalled writer and a call in progress — so watching a healthy
+        // conversation said `killed` once per step, and `killed` is the word
+        // that makes the interrupt legible. The separating fact is the one this
+        // seat already spends on the wound: a driver at work on it, or a call
+        // young enough that a reading saying otherwise has not had time to
+        // arrive. `meta.json`'s `ended_at` cannot serve — a signalled driver
+        // writes no meta either, so the two shapes are identical there.
+        if newest.framing == Framing::Killed && filling {
+            newest.framing = Framing::InFlight;
+        }
     }
     route_auth(workspace, agent_id, &mut steps);
     StepsView {

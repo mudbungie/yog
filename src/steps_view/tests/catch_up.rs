@@ -13,7 +13,7 @@ use tempfile::tempdir;
 
 use super::{AGENT, write_file};
 use crate::app::Cadence;
-use crate::git_tree::AgentState;
+use crate::git_tree::{AgentState, Framing};
 use crate::steps_view::{Wound, build, latest_wound};
 
 /// A call that started and produced nothing — `request.json` written, an empty
@@ -83,4 +83,95 @@ fn a_settled_refusal_never_waits() {
         matches!(wound, Wound::Refused(_)),
         "stated at once, inside any window: {wound:?}"
     );
+}
+
+/// **THE BALL** (bl-ab53): the §4.4 framing waits on this same reading, and for
+/// the same reason. A step being streamed has a tail with no terminal segment,
+/// which is byte-for-byte what a signalled writer leaves — so a live
+/// conversation read `killed` once per step, on the one word that makes an
+/// interrupt legible.
+#[test]
+fn a_step_being_filled_reads_in_flight_and_a_cut_one_still_reads_killed() {
+    let dir = tempdir().unwrap();
+    let ws = dir.path();
+    // Mid-stream: a request, tokens on the wire, no ending yet.
+    write_file(ws, "001", "request.json", br#"{"model":"opus"}"#);
+    write_file(
+        ws,
+        "001",
+        "response.json",
+        b"{\"type\":\"message_start\"}\n{\"type\":\"delta\"}\n",
+    );
+    let grace = Cadence::default().wound_grace();
+    let framing = |state, now| build(ws, AGENT, state, now, grace).steps[0].framing;
+    // A driver holding the lock is the answer whatever the clock says.
+    assert_eq!(framing(AgentState::Live, LATER), Framing::InFlight);
+    assert_eq!(framing(AgentState::InFlight, LATER), Framing::InFlight);
+    // And with the lock free but the call younger than the window, the stale
+    // half has not had time to say otherwise — the same seconds the wound waits.
+    let now = i64::try_from(
+        std::time::SystemTime::now()
+            .duration_since(std::time::SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+    )
+    .unwrap();
+    assert_eq!(framing(AgentState::Stopped, now), Framing::InFlight);
+    // Past it, with nobody driving, the step was cut and says so. `killed`
+    // keeps meaning the signal.
+    assert_eq!(framing(AgentState::Stopped, LATER), Framing::Killed);
+}
+
+/// Only the **newest** step can be the one being filled: an earlier endingless
+/// step is unambiguous and stays the place the conversation was cut, even under
+/// a live driver — exactly the rule the wound is gated by one line above.
+#[test]
+fn only_the_newest_step_is_ever_read_as_in_flight() {
+    let dir = tempdir().unwrap();
+    let ws = dir.path();
+    write_file(
+        ws,
+        "001",
+        "response.json",
+        b"{\"type\":\"message_start\"}\n",
+    );
+    write_file(ws, "002", "request.json", br#"{"model":"opus"}"#);
+    write_file(
+        ws,
+        "002",
+        "response.json",
+        b"{\"type\":\"message_start\"}\n",
+    );
+    let view = build(
+        ws,
+        AGENT,
+        AgentState::Live,
+        LATER,
+        Cadence::default().wound_grace(),
+    );
+    assert_eq!(view.steps[0].framing, Framing::Killed);
+    assert_eq!(view.steps[1].framing, Framing::InFlight);
+}
+
+/// And a step that settled is untouched: only an endingless tail was ever
+/// ambiguous, so a complete or failed step under a live driver keeps its own
+/// word.
+#[test]
+fn a_settled_step_keeps_its_framing_under_a_live_driver() {
+    let dir = tempdir().unwrap();
+    let ws = dir.path();
+    write_file(
+        ws,
+        "001",
+        "response.json",
+        b"{\"type\":\"finish\",\"reason\":\"stop\"}\n{\"type\":\"end\"}\n",
+    );
+    let view = build(
+        ws,
+        AGENT,
+        AgentState::Live,
+        LATER,
+        Cadence::default().wound_grace(),
+    );
+    assert_eq!(view.steps[0].framing, Framing::Complete);
 }

@@ -26,10 +26,11 @@ use crate::login::auth::AuthFailure;
 
 /// The §4.4 terminal classification, [`framing_token`](super::framing_token)'s
 /// other half.
-const FRAMINGS: [(&str, Framing); 3] = [
+const FRAMINGS: [(&str, Framing); 4] = [
     ("complete", Framing::Complete),
     ("failed", Framing::Failed),
     ("killed", Framing::Killed),
+    ("in_flight", Framing::InFlight),
 ];
 
 /// The §7.3 wound's class, [`wound_token`](super::wound_token)'s other half.

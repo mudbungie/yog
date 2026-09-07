@@ -64,8 +64,10 @@ pub(super) fn failure(step: &Path, response: &[u8], settled: Settled) -> Option<
             (!words.is_empty()).then_some(words)
         }
         // The call reached its own end. Whether the *turn* did is `truncated`'s
-        // question, not this one.
-        Framing::Complete => None,
+        // question, not this one. A call still **in flight** joins it: there is
+        // no failure yet to read, and this reading is off the raw §4.4 tail
+        // anyway, which never wears that framing (bl-ab53).
+        Framing::Complete | Framing::InFlight => None,
     }
 }
 

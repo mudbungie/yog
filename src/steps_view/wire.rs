@@ -113,12 +113,13 @@ fn wound_token(wound: &Wound) -> &'static str {
     }
 }
 
-/// The §4.4 terminal classification, in the three words the seat renders.
+/// The §4.4 terminal classification, in the four words the seat renders.
 fn framing_token(framing: Framing) -> &'static str {
     match framing {
         Framing::Complete => "complete",
         Framing::Failed => "failed",
         Framing::Killed => "killed",
+        Framing::InFlight => "in_flight",
     }
 }
 

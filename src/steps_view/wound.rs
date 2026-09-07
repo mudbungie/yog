@@ -268,9 +268,18 @@ pub(super) fn in_flight_window(
     now_unix: i64,
     grace: std::time::Duration,
 ) -> bool {
-    if !matches!(wound, Wound::Mute | Wound::Spoke(_)) {
-        return false;
-    }
+    matches!(wound, Wound::Mute | Wound::Spoke(_)) && young(step, now_unix, grace)
+}
+
+/// The window on its own, without the wound-class guard above it — the §4.4
+/// framing waits on the same reading for its own reason (bl-ab53). `Killed` is
+/// what a tail with no terminal segment says, and a call in flight has exactly
+/// that tail (§2.9), so the framing's in-flight arm rides the same stale-half
+/// TOCTOU the wound does and is excused by the same seconds.
+///
+/// One clock, one anchor, one home: two spellings of "has this step had time to
+/// be believed" would be two windows to re-tune.
+pub(super) fn young(step: &Path, now_unix: i64, grace: std::time::Duration) -> bool {
     let grace_secs = i64::try_from(grace.as_secs()).unwrap_or(i64::MAX);
     crate::git_tree::mtime_unix(&step.join(super::REQUEST_FILE))
         .is_some_and(|started| now_unix.saturating_sub(started).max(0) < grace_secs)

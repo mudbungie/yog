@@ -201,6 +201,22 @@ use super::frame;
 /// conversation. A field gained on a shape in use, which §3's rule bumps
 /// outright; its presence is the status, the discipline `exit_code` already
 /// carries on the same entry.
+///
+/// **`reply/steps` rows gained a fourth `framing` word, `in_flight`**
+/// (bl-ab53) — the step being written right now, told apart from the one an
+/// interrupt cut. §4.4 `killed` is a tail with no terminal segment, and §2.9
+/// says outright that a kill, a crash and a call in progress are
+/// indistinguishable there — so watching a working conversation reported
+/// `killed` once per step, on the one word that makes the interrupt legible.
+/// `meta.json` cannot separate them either: a signalled driver writes none, so
+/// an absent `ended_at` is equally both. The agent's §3.5 liveness can, and
+/// `steps_view::build` already spends exactly that observation on the §7.3
+/// wound, so the judgement crosses already made. Not a new key but a new VALUE,
+/// which a shape signature cannot see and a strict decoder built against 17
+/// refuses by name — §3's rule reaching past the mechanism again, and why the
+/// number and not the ledger is the authority. Refusing the connection is the
+/// loud failure that buys: an older seat would otherwise fail on precisely the
+/// step somebody is watching.
 pub const PROTOCOL: u32 = 18;
 
 /// The preface's one key, and the whole of its shape.

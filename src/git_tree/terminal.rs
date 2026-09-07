@@ -42,10 +42,27 @@ pub enum Framing {
     /// non-retryable (§2.10).
     Failed,
     /// Closed with no trailing `end`, empty, or an `end` with no `finish`
-    /// — the writer died mid-stream, the step never ran, or a call in
-    /// flight right now (kill/crash/in-flight are indistinguishable on
-    /// disk, §2.9).
+    /// — the writer died mid-stream or the step never ran. A call **in
+    /// flight** has this same tail on disk (§2.9), which is why the
+    /// arm below exists: nothing in `response.json` separates the two.
     Killed,
+    /// The step is **still being filled** — [`settled`] never answers this
+    /// (bl-ab53).
+    ///
+    /// It is the one reading here that is not off the bytes, and it is in this
+    /// enum rather than beside it because a step has exactly one outcome word
+    /// and two spellings of one word drift. The separating fact is the agent's
+    /// §3.5 liveness: a driver holding the lock is filling its newest step, so
+    /// that step's endingless tail is a call in progress, and only a step whose
+    /// driver is *gone* was cut. `steps_view::build` is where the two meet —
+    /// the same seat that already withholds the §7.3 wound on the same
+    /// observation — so the judgement crosses the §8.5 boundary made and no
+    /// seat holds a rule of its own.
+    ///
+    /// Without it `killed` — the word that makes an interrupt legible — fired
+    /// once per step on every healthy conversation an operator watched, which
+    /// costs the vocabulary the interrupt depends on.
+    InFlight,
 }
 
 /// What **ended the turn** — the semantic result the settled segment's
