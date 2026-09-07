@@ -162,6 +162,7 @@ fn both_events_round_trip_and_absence_stays_absence() {
         name: Some("box2_Bash".into()),
         input: Some("{\"command\":\"ps aux\"}".into()),
         exit_code: None,
+        held: None,
     };
     let value = event_value(&open);
     assert!(value.get("exit_code").is_none(), "in flight says nothing");

@@ -79,11 +79,17 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use crate::control::hold::Held;
 use crate::git_tree::{AgentState, Stream, latest_response_path};
 use crate::state::SnapshotCell;
 
+use super::answer::inspector;
 use super::reply::Reply;
 
+/// The **bounded hold** — the frame vocabulary, the two numbers and the
+/// parking: everything [`Follow::poll`] is patient with, where `poll` itself
+/// is the mechanism.
+mod hold;
 /// The same lane answered **once**, for the intake that cannot hold a
 /// connection — beside the held read, so the two cannot describe one moment
 /// differently.
@@ -94,40 +100,10 @@ mod open;
 /// about, and therefore what a look owes the seat.
 mod tools;
 
+pub(crate) use hold::Frame;
+pub(super) use hold::{HOLD_TICK, HOLD_WAITS};
 pub(crate) use once::once;
 use open::Open;
-
-/// How long a quiet follow read holds before it ends the stream and lets the
-/// seat re-ask: 1875 looks, 16 ms apart — thirty seconds, the mailbox hold's
-/// own bound. The tick is the §7.2 follower's own period, which is what "at
-/// write cadence" means in a number: half the §11 pulse, so a repaint that was
-/// going to happen carries the newest bytes rather than the previous look's.
-///
-/// `pub(super)` because the attention lane holds on the **same** bound (REMOTE
-/// §14.1: "the follow lane's bounded-hold discipline applies unamended") — one
-/// pair of numbers, not two that can drift apart.
-pub(super) const HOLD_WAITS: u32 = 1875;
-pub(super) const HOLD_TICK: Duration = Duration::from_millis(16);
-
-/// What one look found — [`Follow::poll`]'s answer, and the whole vocabulary a
-/// held read has. [`Iterator::next`] is this plus the parking, which is why a
-/// test can drive the mechanism with no clock and no sleep at all.
-pub(crate) enum Frame {
-    /// The lane moved: a frame to write, carrying **what landed since the last
-    /// one** (bl-3655) — the fold of the appended prose, and the tool-window
-    /// events discovered since the previous look (bl-5305). It carries the two
-    /// values rather than the [`Reply`] wrapping them, so the vocabulary a held
-    /// read has is the vocabulary of the things it follows.
-    ///
-    /// **Either half alone is a frame.** A step that runs a `find /` says
-    /// nothing in prose for a minute, and a frame gated on the fold moving
-    /// would drop exactly the events this lane was widened to carry.
-    Ready(Stream, Vec<crate::git_tree::ToolEvent>),
-    /// Nothing new yet. The hold's own answer, and never an end.
-    Waiting,
-    /// The stream ended — the step committed, advanced, or the tree went away.
-    Over,
-}
 
 /// One conversation's live tail, as a frame sequence.
 pub(crate) struct Follow {
@@ -201,13 +177,20 @@ impl Follow {
         }
     }
 
-    /// What the published derivation says this conversation is doing. Read per
-    /// look rather than carried, for the module doc's reason: a read that
-    /// deliberately outlives its request cannot be gated on a snapshot frozen
-    /// at connect.
-    fn standing(&self) -> AgentState {
+    /// What the published derivation says this conversation is doing, and what
+    /// it is waiting on. **One look, two facts** — a hold is not a state, it is
+    /// what a quiescent branch is quiescent *for*, and reading them apart would
+    /// let one look answer about two moments.
+    ///
+    /// Read per look rather than carried, for the module doc's reason: a read
+    /// that deliberately outlives its request cannot be gated on a snapshot
+    /// frozen at connect.
+    fn standing(&self) -> (AgentState, Option<Held>) {
         let snap = crate::state::latest_snapshot(&self.cell);
-        super::answer::inspector::state_of(&snap, &self.ws, &self.agent)
+        (
+            inspector::state_of(&snap, &self.ws, &self.agent),
+            inspector::held_of(&snap, &self.ws, &self.agent),
+        )
     }
 
     /// **One look at the world, taken now.** Public to the crate because it is
@@ -223,8 +206,13 @@ impl Follow {
     /// only it opens the prose half: between the calls of one step the response
     /// file is settled and the committed transcript already carries it.
     pub(crate) fn poll(&mut self) -> Frame {
-        let standing = self.standing();
-        let working = matches!(standing, AgentState::Live | AgentState::InFlight);
+        let (standing, parked) = self.standing();
+        let driving = matches!(standing, AgentState::Live | AgentState::InFlight);
+        // **A hold is not rest** (bl-58bb): the step has not committed, and
+        // what it is waiting for is the operator watching this very lane. So a
+        // parked conversation is followed on exactly the terms a driven one is
+        // — the stream is opened for it and it is never the end of one.
+        let live = driving || parked.is_some();
         let now = latest_response_path(&self.ws, &self.agent);
         let step = now.as_deref().and_then(Path::parent).map(Path::to_path_buf);
         // The step advancing — or the tree going away — is this stream ending,
@@ -238,7 +226,7 @@ impl Follow {
         let Some(step_dir) = step else {
             return Frame::Waiting;
         };
-        if !working && self.step.is_none() {
+        if !live && self.step.is_none() {
             return Frame::Waiting;
         }
         self.step = Some(step_dir.clone());
@@ -254,6 +242,8 @@ impl Follow {
         // file rather than on a cadence of its own — and it outlives the call,
         // which is why it is not inside the branch above.
         self.pending_tools.extend(self.window.look(&step_dir));
+        self.pending_tools
+            .extend(parked.as_ref().and_then(|held| self.window.parked(held)));
         // The final bytes come out before the close: a step that committed
         // between two looks still wrote what it wrote.
         if self.pending != Stream::default() || !self.pending_tools.is_empty() {
@@ -262,33 +252,7 @@ impl Follow {
                 std::mem::take(&mut self.pending_tools),
             );
         }
-        if working { Frame::Waiting } else { Frame::Over }
-    }
-}
-
-impl Iterator for Follow {
-    type Item = Reply;
-
-    /// The next frame, or the end of the stream. Parks between looks, which is
-    /// the whole of what makes this a held read — the caller is a connection
-    /// thread and nothing else waits on it.
-    fn next(&mut self) -> Option<Reply> {
-        loop {
-            match self.poll() {
-                Frame::Ready(stream, tools) => {
-                    self.quiet = 0;
-                    return Some(Reply::Follow(super::reply::FollowFrame { stream, tools }));
-                }
-                Frame::Over => return None,
-                Frame::Waiting => {
-                    self.quiet += 1;
-                    if self.quiet >= self.waits {
-                        return None;
-                    }
-                    std::thread::sleep(self.tick);
-                }
-            }
-        }
+        if live { Frame::Waiting } else { Frame::Over }
     }
 }
 

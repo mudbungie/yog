@@ -180,7 +180,28 @@ use super::frame;
 /// `reply/enroll`'s `address` precedent at 14. The id keeps riding beside it and
 /// is not replaced: it is the durable handle once the agent is deleted and the
 /// name recycled.
-pub const PROTOCOL: u32 = 17;
+/// 17 → 18: **the shapes below, one version.** Three lanes raised the wire in
+/// one night, and one number carries all of them on 14's and 17's own
+/// reasoning said a third time — two bumps a minute apart make every client
+/// re-pin twice for one wave — with a second argument this release now has:
+/// under bl-bca2's gate a raise HOLDS the release until three consumer mains
+/// vendor it, so each extra number is another window in which no published
+/// suite composes. **A later lane landing on this version adds its shape to
+/// this entry rather than taking 19.**
+///
+/// **`reply/follow`'s tool-window entry gained `held`** (bl-58bb) —
+/// the capability control's reason for parking the call, beside the `tool_use`
+/// id and the tool name the entry already carried. The window's two entries
+/// come off the pair of files litany lands, and a held invocation is parked
+/// *before* the executor is entered, so it lands neither: the one lane an
+/// operator has open while a command they did not expect is about to run on
+/// their server reported the conversation as at rest and ended the stream, at
+/// the exact moment the operator was the thing it was waiting for. On a foot
+/// lane every call to a non-shell tool is held, so this was most of the
+/// conversation. A field gained on a shape in use, which §3's rule bumps
+/// outright; its presence is the status, the discipline `exit_code` already
+/// carries on the same entry.
+pub const PROTOCOL: u32 = 18;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

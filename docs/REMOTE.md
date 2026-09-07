@@ -1922,14 +1922,51 @@ sake.
 A `Query::Follow` frame body gained `tools`, a list of window transitions
 appended by the same rule the fold obeys — concatenate the lists of a read's
 frames in order, and a one-shot answer is that concatenation taken in one look.
-Two entries per call and both are transitions, because litany lands
-`input.json` immediately before it dispatches a call and `output.json` when the
-capture returns (litany ARCH §3.3), so the pair of file existences *is* the
-window opening and closing:
+Two entries per call come off disk and both are transitions, because litany
+lands `input.json` immediately before it dispatches a call and `output.json`
+when the capture returns (litany ARCH §3.3), so the pair of file existences *is*
+the window opening and closing:
 
     {"tool_use": "toolu_01", "tool": "box2_Bash",
      "input": "{\"command\":\"hostname && uptime\"}"}
     {"tool_use": "toolu_01", "exit_code": 0}
+
+**A third transition never reaches disk, and a HELD conversation is not at rest
+(bl-58bb, PROTOCOL 17).** When the capability control answers `hold`, litany's
+seam parks the invocation *before* the executor is entered, so neither file is
+landed and the window above says nothing. The park's one record is the hold
+mark (DESIGN §8.6), which carries the three facts an opening entry carries, and
+the frame now says it:
+
+    {"tool_use": "toolu_02", "tool": "box2_service_status",
+     "held": "box2_service_status {} classified opaque (…)"}
+
+- **`held`'s presence is the park**, `exit_code`'s own discipline on the same
+  entry, so a held call is never also an opening and no two readings disagree.
+- **It is said once per read, off the published row rather than the step's
+  `tools/` subtree** — a park is not a point on the posted→captured ladder, so
+  it keeps a watermark of its own. When the operator answers it the call runs
+  and its opening and closing arrive under this same `tool_use` id, and a
+  follower keyed on that id reads one call going held → posted → complete.
+- **The lane does not end on a park, and that is the half that matters.** A
+  hold is the conversation waiting on the *operator*, and the operator is the
+  person who has this read open: the verb whose whole job is "watch this until
+  it comes to rest" reported nothing happening at the exact moment they were
+  the blocker, and then exited — so a watching or scripted operator saw a clean
+  completion where a routed call was parked with their name on it. On a foot
+  lane every call to a non-shell tool is held, which makes that most of the
+  conversation rather than a corner. The liveness question that opens this lane
+  therefore admits a park beside the lease: the step has not committed, nothing
+  advanced, and `Frame::Over` would be a claim that it had. Rest itself is
+  unchanged — a quiescent conversation with no mark ends the stream exactly as
+  before, and the hold is a distinct kind of stop rather than a new reading of
+  the old one.
+- **The fact existed the whole time and two other reads carried it** — the
+  agent row's `held` and the attention lane's item — which is why this is the
+  live view catching up rather than a new derivation. Nothing new is computed
+  and nothing is stored; the mark is read off the same published row this lane
+  already reads liveness from, on the same look, because a hold is not a state
+  but what a quiescent branch is quiescent *for*.
 
 - **`exit_code`'s presence is the status**, not a second field: absent is a call
   in flight, present is one whose capture landed. There is no arm for "complete,

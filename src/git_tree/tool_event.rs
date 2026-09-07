@@ -9,11 +9,22 @@
 //! that lane's own ([`boundary::follow::tools`](crate::boundary::follow)),
 //! exactly as [`Open`](crate::boundary::follow) is the lane's half of the fold.
 //!
-//! **Two events per call, and both are transitions.** litany lands
-//! `input.json` immediately before it dispatches a call and `output.json` when
-//! the capture returns (litany ARCH §3.3), so the pair of file existences *is*
-//! the window opening and closing. There is no third state and nothing stored:
-//! a call's standing is what the two files say the moment it is asked.
+//! **Two events per call come off disk, and both are transitions.** litany
+//! lands `input.json` immediately before it dispatches a call and `output.json`
+//! when the capture returns (litany ARCH §3.3), so the pair of file existences
+//! *is* the window opening and closing. A call's standing is what the two files
+//! say the moment it is asked; nothing is stored.
+//!
+//! **The third transition never reaches disk, because it is what stops the call
+//! from being dispatched** (bl-58bb). When the capability control answers
+//! `hold`, litany's seam parks the invocation *before* the executor is entered
+//! — so no `input.json` is landed and the window's two files say nothing at
+//! all. The park's one record is the hold mark
+//! ([`control::hold`](crate::control::hold)), which carries the same three
+//! facts an opening event does: the `tool_use` id, the tool the model named,
+//! and the control's reason. [`parked`] is that mark read as an event, so the
+//! lane has one vocabulary for *what this call is doing* rather than a second
+//! carrier beside it.
 //!
 //! **The client the call ran on rides in the name and is not joined here.** A
 //! loaded remote tool is presented as `<client>_<tool>`
@@ -72,6 +83,13 @@ pub struct ToolEvent {
     pub input: Option<String>,
     /// The captured exit code, and the whole of what "closed" means.
     pub exit_code: Option<i32>,
+    /// **Why the control parked this call** (bl-58bb) — the reason sentence off
+    /// the hold mark, and, like [`exit_code`](ToolEvent::exit_code), a status
+    /// by its presence rather than by a flag beside it. A held call has no
+    /// `input.json`, so it is never also an opening; when the operator answers
+    /// it, the call runs and its opening and closing follow under this same
+    /// `tool_use` id.
+    pub held: Option<String>,
 }
 
 /// The call directories under one step's `tools/`, keyed by `tool_use` id and
@@ -99,6 +117,22 @@ pub(crate) fn captured(dir: &Path) -> bool {
     dir.join(OUTPUT_FILE).exists()
 }
 
+/// **The window parked** (bl-58bb): the call the capability control held, off
+/// the mark litany's seam wrote instead of dispatching it.
+///
+/// It carries the mark's three fields and adds nothing. The reason is the
+/// control's own sentence — the tool, an input summary, the computed class and
+/// the evidence — so this event says what an opening says *and* why nothing
+/// ran, in the text the attention item and the agent row already show.
+pub(crate) fn parked(held: &crate::control::hold::Held) -> ToolEvent {
+    ToolEvent {
+        tool_use: held.tool_use_id.clone(),
+        name: Some(held.tool.clone()),
+        held: Some(held.reason.clone()),
+        ..ToolEvent::default()
+    }
+}
+
 /// The window **opening**: what is about to run, and — through the name — where.
 pub(crate) fn posted(tool_use: &str, dir: &Path) -> ToolEvent {
     let record = read_json(&dir.join(INPUT_FILE));
@@ -113,6 +147,7 @@ pub(crate) fn posted(tool_use: &str, dir: &Path) -> ToolEvent {
             .and_then(|v| v.get("input"))
             .map(|input| crate::elide::middle(&input.to_string(), INPUT_MAX)),
         exit_code: None,
+        held: None,
     }
 }
 
@@ -145,7 +180,8 @@ fn read_json(path: &Path) -> Option<Value> {
 
 /// One event's JSON spelling. `tool` and `input` are absent on a closing event
 /// and on a record that carried neither; `exit_code` is absent for a call in
-/// flight, which is the fact itself and not an omission.
+/// flight, and `held` for one no control parked — each the fact itself and not
+/// an omission.
 pub fn event_value(event: &ToolEvent) -> Value {
     let mut map = Map::new();
     map.insert("tool_use".to_owned(), json!(event.tool_use));
@@ -157,6 +193,9 @@ pub fn event_value(event: &ToolEvent) -> Value {
     }
     if let Some(code) = event.exit_code {
         map.insert("exit_code".to_owned(), json!(code));
+    }
+    if let Some(why) = &event.held {
+        map.insert("held".to_owned(), json!(why));
     }
     Value::Object(map)
 }
@@ -178,6 +217,7 @@ pub fn event_of(v: &Value) -> Result<ToolEvent, String> {
                     .ok_or("follow: exit_code is not an i32")?,
             ),
         },
+        held: opt_str_of(o, "held")?,
     })
 }
 

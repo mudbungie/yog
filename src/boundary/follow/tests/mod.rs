@@ -18,6 +18,7 @@
 //! there. What the **tool window** promises — the third subject, and the one
 //! bl-5305 added — is [`window`]. The fixtures below serve all three.
 
+mod park;
 mod reading;
 mod window;
 

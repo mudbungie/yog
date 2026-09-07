@@ -281,5 +281,17 @@ pub(crate) fn state_of(snap: &Snapshot, ws: &Path, agent: &str) -> AgentState {
     agent_of(snap, ws, agent).map_or(AgentState::Stopped, |a| a.state)
 }
 
+/// The invocation the capability control parked, if one stands (DESIGN §8.6).
+/// Read off the same published row [`state_of`] answers from, because the two
+/// are one look at one conversation: a hold is not a *state* — the branch is
+/// quiescent either way — it is what that quiescence is waiting on.
+pub(crate) fn held_of(
+    snap: &Snapshot,
+    ws: &Path,
+    agent: &str,
+) -> Option<crate::control::hold::Held> {
+    agent_of(snap, ws, agent)?.held
+}
+
 #[cfg(test)]
 mod tests;

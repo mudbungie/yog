@@ -240,6 +240,7 @@ pub(super) fn inspector() -> Vec<Reply> {
                     name: Some("box2_Bash".into()),
                     input: Some("{\"command\":\"hostname && uptime\"}".into()),
                     exit_code: None,
+                    held: None,
                 },
                 crate::git_tree::ToolEvent {
                     tool_use: "toolu_01".into(),
@@ -247,6 +248,23 @@ pub(super) fn inspector() -> Vec<Reply> {
                     ..crate::git_tree::ToolEvent::default()
                 },
             ],
+        }),
+        // The window's third transition (bl-58bb): the call the capability
+        // control parked. It carries no `input` and no `exit_code` — nothing
+        // was dispatched — and the reason is what makes a held conversation
+        // readable as held rather than as at rest.
+        Reply::Follow(crate::boundary::reply::FollowFrame {
+            stream: crate::git_tree::Stream::default(),
+            tools: vec![crate::git_tree::ToolEvent {
+                tool_use: "toolu_02".into(),
+                name: Some("box2_service_status".into()),
+                held: Some(
+                    "box2_service_status {} classified opaque (not a tool this control \
+                     implements and its input carries no command line)"
+                        .into(),
+                ),
+                ..crate::git_tree::ToolEvent::default()
+            }],
         }),
         Reply::Steps(steps()),
         Reply::Steps(StepsView {

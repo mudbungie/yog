@@ -103,5 +103,9 @@ fn the_one_shot_answer_is_the_held_read_s_frames_concatenated() {
     let mut held = window.look(step.path());
     capture(&dir, 7);
     held.extend(window.look(step.path()));
-    assert_eq!(held, whole(step.path()), "one rule, not two spellings");
+    assert_eq!(
+        held,
+        whole(step.path(), None),
+        "one rule, not two spellings"
+    );
 }

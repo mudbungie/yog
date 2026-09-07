@@ -25,9 +25,10 @@
 //! Nothing needs a flag saying which kind of answer it is, exactly as nothing
 //! does for the fold.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use crate::control::hold::Held;
 use crate::git_tree::{ToolEvent, tool_event};
 
 /// What this read has already said about each call: `false` once it reported
@@ -35,6 +36,12 @@ use crate::git_tree::{ToolEvent, tool_event};
 #[derive(Default)]
 pub(super) struct Window {
     said: BTreeMap<String, bool>,
+    /// The parks already reported, by `tool_use` id ([`Window::parked`]). Its
+    /// own set rather than a third value in `said`, because a park is not a
+    /// point on the posted→captured ladder: a held call has landed no
+    /// `input.json` at all, and if the operator passes it the ordinary two
+    /// events follow under this same id.
+    parks: BTreeSet<String>,
 }
 
 impl Window {
@@ -64,13 +71,30 @@ impl Window {
         }
         fresh
     }
+
+    /// **The park, said once** (bl-58bb): the capability control's hold as this
+    /// lane's third transition, the first time this read sees it.
+    ///
+    /// It comes off the published row rather than off the step directory,
+    /// because the seam parks the invocation *before* the executor is entered
+    /// and so the window's two files say nothing about it — which is the whole
+    /// defect. A conversation waiting on the operator was reported by this lane
+    /// as at rest, and the operator watching it is the blocker.
+    pub(super) fn parked(&mut self, held: &Held) -> Option<ToolEvent> {
+        self.parks
+            .insert(held.tool_use_id.clone())
+            .then(|| tool_event::parked(held))
+    }
 }
 
 /// Every event of one step, taken in one look — the answer the chokepoint
 /// gives an intake that cannot hold a connection, which is this lane's general
 /// path with one frame rather than a degraded reading of it.
-pub(crate) fn whole(step_dir: &Path) -> Vec<ToolEvent> {
-    Window::default().look(step_dir)
+pub(crate) fn whole(step_dir: &Path, held: Option<&Held>) -> Vec<ToolEvent> {
+    let mut window = Window::default();
+    let mut out = window.look(step_dir);
+    out.extend(held.and_then(|held| window.parked(held)));
+    out
 }
 
 #[cfg(test)]
