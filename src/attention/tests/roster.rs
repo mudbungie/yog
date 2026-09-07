@@ -13,7 +13,7 @@ fn roster(ags: &[Agent]) -> Vec<RosterKey> {
         .map(|a| RosterKey {
             ws: "/w".to_string(),
             agent_id: a.agent_id.clone(),
-            attention: attention(a, "/w", &nothing).any(),
+            attention: attention(a, ags, "/w", &nothing).any(),
         })
         .collect()
 }

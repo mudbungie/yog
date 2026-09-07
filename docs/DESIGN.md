@@ -2395,14 +2395,47 @@ no asymmetry to preserve, and re-adding one needs an act, not a key.
 
 1. `refs/litany/notify/<id>` exists and its oid ≠ `seen[ws][agent].notify`.
 2. State **at rest** (Quiescent or Stopped), no `refs/litany/abandoned/<id>`,
-   and tip oid ≠ `seen[ws][agent].stopped` — a conversation waiting at a tip you
-   have not seen. Rest is the general condition; a stop is only the wounded way
-   of coming to rest. The clean end and the failed end differ in the state
-   badge, never in whether your turn has come *(widened bl-2194)*. Which
-   way it came to rest is the *word* the signal wears, not a second signal:
-   a rest whose latest response was refused at the provider rung says `refused`
-   rather than `stopped` *(bl-b43b, below; the refusal is read off the failure
-   sentence rather than a flag since bl-9b88)*.
+   **nobody dispatched it**, and tip oid ≠ `seen[ws][agent].stopped` — a
+   conversation waiting at a tip you have not seen. Rest is the general
+   condition; a stop is only the wounded way of coming to rest. The clean end
+   and the failed end differ in the state badge, never in whether your turn has
+   come *(widened bl-2194)*. Which way it came to rest is the *word* the signal
+   wears, not a second signal: a rest whose latest response was refused at the
+   provider rung says `refused` rather than `stopped` *(bl-b43b, below; the
+   refusal is read off the failure sentence rather than a flag since bl-9b88)*.
+
+   **The turn passes to whoever can take it, and for a dispatched conversation
+   that is not the operator** *(bl-3592)*. A conversation forked by another —
+   a compactor, a reviewer, a subagent, a fan candidate — comes to rest **into
+   its dispatcher's inbox**: litany deposits its result there (litany ARCH §2.6)
+   and the parent's driver lands it. Saying *"came to rest — your turn"* about
+   that is saying something false, and it was two thirds of the queue: three
+   ordinary goals answered twelve rows, of which eight were the engine's own
+   context-economy machinery. STORIES S6 step 1 has the strip answer *does
+   anything need me?*, and a queue that is two thirds machinery is a queue
+   nobody reads — the same thing S6 step 2 forbids from the other direction.
+
+   **No turn is lost, and that is what makes this a suppression rather than a
+   hiding.** Either the dispatcher's driver takes the deposit, in which case
+   nothing needed the operator; or it does not, in which case the dispatcher is
+   at rest with mail nobody is driving and **rule 5 fires on the dispatcher** —
+   the same turn, raised at the altitude that can act on it. Nothing else is
+   suppressed either: a dispatched conversation that raises a notify mark,
+   exhausts a budget, conflicts, parks a tool call or is flagged still fires,
+   because none of those is a turn a parent can take. A compactor holding a
+   destructive call for an answer is precisely what the queue is for.
+
+   **It is not a role test, deliberately.** *Which* roles the harness dispatches
+   is a fact of a `workflow.yaml` the engine would have to read per workspace, it
+   would be silent on the role nobody thought of, and it would be a second answer
+   to a question the descent tree already answers — so the membership rule is
+   `git_tree::parent_index`, asked rather than restated. Its three
+   nobody's-child cases carry over exactly: a root id, an id outside litany's
+   grammar, and a descendant whose dispatcher holds no ref. The last is the one
+   that matters — nothing is left to take that rest, so it is the operator's
+   after all. Sniffing the role off the conversation's opening line
+   (`"You are the compactor for branch …"`) is what the derivation must not
+   need, and this is why it does not.
 3. `refs/litany/budget-exhausted/<branch>` oid ≠ `seen[ws][agent].budget`.
 4. `refs/litany/conflicted/<id>` oid ≠ `seen[ws][agent].conflicted`.
 5. Pending inbox > 0 **and** lock Free — mail nobody is driving (the
@@ -7448,7 +7481,7 @@ that named one of its files; the rule it taught is not.)
 | `src/app/dirty.rs` | Change→dirty-root mapping, debounce/sweep scheduling over the live `Cadence`, `watch::Mark` provenance (§7.2) |
 | `src/app/drift.rs` | the four drift kinds and their `ops.jsonl` fold, the late-pass and stale-snapshot thresholds, and the edge test that makes a permanently-late derivation one event rather than one row a sweep (§7.2, bl-4b28) |
 | `src/app/snapshot{,/names,/scope}.rs` | the published derivation every answer is a filter over, its age, the per-conversation branch-growth diff (§7.2), and the per-workspace `steps/` fold every spend figure filters (§3.5, bl-9dd4) — the fullness denominator rides that fold since bl-9c8a, so there is no windows field beside it; `names` is the boundary's addressing read off it in **both** directions (REMOTE §8, bl-f5f6), so the two cannot disagree about what a name means — with `armed_path` beside the two enumerated round trips since bl-ef16, the §4.3 arming table's own one: `fleet::Facts` crosses as the §3.1 name like every other addressed row, the pilot needs the directory to spawn into, and the resolution reads `cadence.yaml`'s keys rather than the §3.1 enumeration because an entry arms a directory verbatim and may name a workspace the enumeration has not reached — **plus `addressable`** — which sets that addressing reads at the intake (bl-6c9e, both nouns since bl-3377): the live §3.1 workspace enumeration and the §5.1 #1 project one in place of the derivation's cached copies, `Arc` in and out so an unchanged set is handed straight back, which is what makes a workspace's or a project's birth a barrier for the gesture after it (§8.5); `scope` is the REMOTE §4 narrowing to one client's registered workspaces (bl-8bbc) — **one** filter over every workspace-keyed field, which is what makes an unregistered workspace ABSENT rather than forbidden: the roster simply does not list it and the resolver refuses it in the identical bytes a name nobody founded earns. *One* filter is the whole point and it must stay literally one: the §4.3 `fleet` map got a second predicate of its own on the belief that its key was a leaf, and because the key is the `cadence.yaml` entry — a **path** — that predicate was total, dropping every armed loop from every scoped snapshot while the loop went on acting (bl-8bf6). Every field here reads `keep`, and the fixture is keyed as the worker publishes it |
-| `src/attention/{mod,roster}.rs` | the §6 attention flag: the ack state machine (incl. `evidence` — the **one** definition of what an acknowledgement writes, spent by the §8.5 `seen` action and by nothing else since bl-7942 took the focus tick, and naming neither of the two signals no watermark may answer: mail, and the §8.6 park) and `AttentionKind::says`, the one home for each rule **in words**, carried to the seats that announce them on the queue row's `says` key (bl-09ef); the per-conversation roster it is raised against |
+| `src/attention/{mod,kind,roster}.rs` | the §6 attention flag: the ack state machine (incl. `evidence` — the **one** definition of what an acknowledgement writes, spent by the §8.5 `seen` action and by nothing else since bl-7942 took the focus tick, and naming neither of the two signals no watermark may answer: mail, and the §8.6 park) and `AttentionKind::says`, the one home for each rule **in words**, carried to the seats that announce them on the queue row's `says` key (bl-09ef); the per-conversation roster it is raised against. Since bl-3592 the predicate takes the workspace's whole agent set beside the one agent, because rule 2 asks **whose** turn a rest is and that is a question about the set: a conversation somebody else dispatched comes to rest into its dispatcher's inbox, so its rest is the parent's to take and no queue row is lost — if the parent will not take it, the parent's own rule 5 raises the same turn where it can be acted on. `kind` is the signal **vocabulary** cut off `mod` at the budget on `roster`'s own seam: a word is not a derivation, and only one of the two changes when a seat needs the rule stated rather than badged |
 | `src/badge.rs` | **what a derived row says in words** (§11, retired): a glyph and the fact it stands for, together, in one home per fact — [`op_badge`] over the ops trail's outcomes, [`tool_result_badge`] over a tool result's one flag, each total over its subject so a new outcome cannot ship wordless. It is what a **server** keeps of the congeries palette (bl-7942): the hues, the visuals, the fonts and the application mark were statements about how a face paints and went with the face, while the WORDS are a derived row's own content and cross the boundary inside the row |
 | `src/binding/mod.rs` | names-root enumeration (§3.1), claimant join (§3.2), worktree formula, workspace classification |
 | `src/board/{mod,rows,rollup}.rs` | the V4 board (§11, VISION §5 V4): the four columns as balls' ladder crossed with its close-gate predicate, and the whole board built pure over one snapshot — its rows, and (bl-66fb) the facts of any §4.3 loop armed over them, empty in every unarmed world; one row's gate, drones and figure; the epic rollup that crosses workspaces, one slice apiece |

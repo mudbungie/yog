@@ -13,8 +13,13 @@ use crate::git_tree::{Agent, AgentState, descent_order};
 use crate::ui_state::SeenKind;
 
 /// Sort rank for the roster (§6): attention (0) > running (1) > idle (2).
-fn rank(agent: &Agent, ws: &str, seen: &dyn Fn(SeenKind, &str, &str, &str) -> bool) -> u8 {
-    if attention(agent, ws, seen).any() {
+fn rank(
+    agent: &Agent,
+    siblings: &[Agent],
+    ws: &str,
+    seen: &dyn Fn(SeenKind, &str, &str, &str) -> bool,
+) -> u8 {
+    if attention(agent, siblings, ws, seen).any() {
         0
     } else if matches!(agent.state, AgentState::Live | AgentState::InFlight) {
         1
@@ -35,7 +40,7 @@ pub fn sorted_roster(
         .into_iter()
         .map(|row| row.index)
         .collect();
-    order.sort_by_key(|&i| agents.get(i).map(|a| rank(a, ws, seen)));
+    order.sort_by_key(|&i| agents.get(i).map(|a| rank(a, agents, ws, seen)));
     order
 }
 
@@ -48,7 +53,7 @@ pub fn workspace_count(
 ) -> usize {
     agents
         .iter()
-        .filter(|a| attention(a, ws, seen).any())
+        .filter(|a| attention(a, agents, ws, seen).any())
         .count()
 }
 
@@ -101,7 +106,7 @@ pub fn roster_order(
                 .map(|agent| RosterKey {
                     ws: path.to_string(),
                     agent_id: agent.agent_id.clone(),
-                    attention: attention(agent, path, seen).any(),
+                    attention: attention(agent, agents, path, seen).any(),
                 }),
         );
     }

@@ -15,13 +15,19 @@
 //!
 //! 1. **notify** — `notify_oid` present and unseen.
 //! 2. **stopped** — the agent is **at rest** (`Quiescent | Stopped`), **not**
-//!    abandoned (`abandoned_oid` absent), and its branch tip oid is unseen (the
-//!    §6/§4.1 evidence for a rest is the branch tip). Ruled bl-2194: the strip
-//!    is a **turn queue**, so rule 2 fires on rest, not on the wound — a clean
-//!    turn-end and a failed one differ in the state badge, never in whether
-//!    your turn has come. The field, the [`AttentionKind`] and the `ui.json`
-//!    key keep the historical name `stopped`; the watermark's identity is the
-//!    tip oid, unchanged, which is what makes the widening migration-free.
+//!    abandoned (`abandoned_oid` absent), **nobody dispatched it**, and its
+//!    branch tip oid is unseen (the §6/§4.1 evidence for a rest is the branch
+//!    tip). Ruled bl-2194: the strip is a **turn queue**, so rule 2 fires on
+//!    rest, not on the wound — a clean turn-end and a failed one differ in the
+//!    state badge, never in whether your turn has come. The field, the
+//!    [`AttentionKind`] and the `ui.json` key keep the historical name
+//!    `stopped`; the watermark's identity is the tip oid, unchanged, which is
+//!    what makes the widening migration-free.
+//!    Since bl-3592 rule 2 also asks **whose** turn the rest is: a
+//!    conversation somebody else dispatched comes to rest into that one's
+//!    inbox, so the turn is its parent's and never the operator's
+//!    ([`rest_is_the_operators`]). DESIGN §6 rule 2 carries the argument and
+//!    what it costs; this does not restate it.
 //! 3. **budget** — `budget_oid` present and unseen.
 //! 4. **conflicted** — `conflicted_oid` present and unseen.
 //! 5. **mail** — a non-empty `pending` listing **and** the lock is definitely `Free`
@@ -42,10 +48,17 @@
 //! Signals 1–4 "re-arm" automatically: the watermark is an oid, so a moved ref
 //! (new oid ≠ the seen one) fires again (§4.1 "A moved ref re-notifies").
 
+/// **The signal vocabulary** — which signals exist and the sentence each says
+/// (§6), cut off this file at §12's budget on `roster`'s own seam: a word is
+/// not a derivation, and only one of the two changes when a seat needs the rule
+/// stated rather than badged.
+mod kind;
 mod roster;
 pub use roster::{
     RosterKey, next_attention, roster_order, sorted_roster, strip_total, workspace_count,
 };
+
+pub use kind::AttentionKind;
 
 use crate::git_tree::{Agent, AgentState};
 use crate::ui_state::SeenKind;
@@ -55,63 +68,6 @@ use crate::ui_state::SeenKind;
 // `&dyn Fn(..)` (a type alias `dyn Fn` would bake in `'static` and reject the
 // shell's `self`-capturing closure; `&dyn` defaults to the reference's own,
 // elided lifetime). Production passes `&|k, w, a, o| ui_state.is_seen(k, w, a, o)`.
-
-/// One firing signal — the per-badge detail (§6, §3.5 badge rendering).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AttentionKind {
-    Notify,
-    Stopped,
-    Budget,
-    Conflicted,
-    Mail,
-    /// A tool invocation is parked at the capability boundary (§6 rule 6,
-    /// §8.6) — the one signal an answer, not an acknowledgement, clears.
-    Held,
-    /// **Rule 2's rest was a provider refusal** (bl-b43b) — not a seventh rule
-    /// and not a seventh signal: the same firing, said in the word that is
-    /// true of it. [`Stopped`](Self::Stopped) is what an operator's own `/stop`
-    /// earns, and a conversation that never got past its first model call is
-    /// not something the operator did. The two are mutually exclusive by
-    /// construction ([`Attention::kinds`]).
-    Refused,
-    /// Somebody raised a flag on this conversation (§6 rule 7, VISION §4.9) —
-    /// the signal-out verb's whole point, and the alignment monitor's floor
-    /// grant. The *reason* rides the queue row beside this word, because a
-    /// signal that says "look at this" and cannot say why costs a second read
-    /// to act on.
-    Flagged,
-}
-
-impl AttentionKind {
-    /// The rule in words — why this signal is asking (§6). The **one** home for
-    /// that sentence, so the seats that state it rather than badge it cannot
-    /// word the same rule two ways. Written as a clause that completes *"this
-    /// conversation …"*, since every seat that spends it has already named the
-    /// conversation.
-    ///
-    /// **Its carrier is the queue row's `says`** (bl-09ef,
-    /// [`boundary::reply`](crate::boundary::reply)): the announcing is a
-    /// seat's — a desktop notification belongs on the box the operator is
-    /// looking at — so the sentence crosses the §8.5 boundary beside the
-    /// signal tokens rather than being re-worded at each seat. The engine-side
-    /// `notify-send` fold that used to spend it went with the frame.
-    ///
-    /// `pub(crate)` per AGENTS.md rule 2: an internal accessor is demoted
-    /// rather than cloned to own — the sentence is a `'static` literal and its
-    /// only consumer is the row encoder.
-    pub(crate) fn says(self) -> &'static str {
-        match self {
-            Self::Notify => "raised a notify mark",
-            Self::Stopped => "came to rest — your turn",
-            Self::Budget => "exhausted its budget",
-            Self::Conflicted => "has a conflicted branch",
-            Self::Mail => "has mail queued and no driver taking it",
-            Self::Held => "parked a tool invocation for your answer",
-            Self::Refused => "was refused at the provider — sign a provider in on this workspace",
-            Self::Flagged => "was flagged for a look, with a reason",
-        }
-    }
-}
 
 /// The per-agent attention detail: which of the six signals fire. The bare
 /// predicate is [`Attention::any`]; [`Attention::kinds`] lists the firing
@@ -171,8 +127,15 @@ impl Attention {
 
 /// The §6 per-agent predicate over injected snapshots. `ws` is the workspace's
 /// seen-key path (§4.1 `seen[ws][agent]`).
+///
+/// **`siblings` is the workspace's whole agent set**, and rule 2 is why: whose
+/// turn a rest is depends on whether anybody dispatched this conversation, and
+/// that is a question about the set rather than about one row (module doc).
+/// Every caller already holds the set — the rank sort, both rollups and the
+/// roster walk each iterate it — so the parameter costs nothing but its name.
 pub fn attention(
     agent: &Agent,
+    siblings: &[Agent],
     ws: &str,
     seen: &dyn Fn(SeenKind, &str, &str, &str) -> bool,
 ) -> Attention {
@@ -183,7 +146,8 @@ pub fn attention(
             .notify_oid
             .as_deref()
             .is_some_and(|o| unseen(SeenKind::Notify, o)),
-        stopped: rest_evidence(agent).is_some_and(|o| unseen(SeenKind::Stopped, &o)),
+        stopped: rest_is_the_operators(agent, siblings)
+            && rest_evidence(agent).is_some_and(|o| unseen(SeenKind::Stopped, &o)),
         // Which way that rest came about (bl-b43b), off the fact the §3.5
         // classification already read: a refusal at the provider rung is a
         // wound the operator did not inflict, and `stopped` is `/stop`'s word.
@@ -208,6 +172,26 @@ pub fn attention(
             .as_ref()
             .is_some_and(|f| unseen(SeenKind::Flag, &f.at)),
     }
+}
+
+/// **Whose turn this conversation's rest is** (§6 rule 2 as amended, bl-3592):
+/// the operator's only when nobody dispatched it.
+///
+/// A conversation forked by another — a compactor, a reviewer, a subagent, a
+/// fan candidate — comes to rest **into its dispatcher's inbox** (litany ARCH
+/// §2.6), so that rest is the parent's to take. **No turn is lost by the
+/// suppression**: either the parent's driver takes the deposit, and nothing
+/// needed the operator, or it does not, and the parent is at rest with mail
+/// nobody is driving — rule 5, on the row that can act. Nothing but rule 2 is
+/// suppressed, because nothing but a rest is a turn a parent can take.
+///
+/// The membership rule is the descent tree's, asked rather than restated
+/// ([`parent_index`](crate::git_tree::parent_index)): a root id, an id outside
+/// litany's grammar and a descendant whose dispatcher holds no ref all read as
+/// nobody's child here exactly as they render at depth 0 there. DESIGN §6 rule
+/// 2 carries why this is not a role test.
+fn rest_is_the_operators(agent: &Agent, siblings: &[Agent]) -> bool {
+    crate::git_tree::parent_index(siblings, &agent.agent_id).is_none()
 }
 
 /// The §6 **at rest** state class: a conversation that is not executing —

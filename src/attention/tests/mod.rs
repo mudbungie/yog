@@ -8,6 +8,7 @@ use crate::git_tree::{Agent, AgentState};
 mod derived;
 mod roster;
 mod signals;
+mod turn;
 
 /// A default agent: `Live`, no marks, no mail, a per-id tip oid (so a
 /// rest-watermark test can target this branch's tip). Running is the only state

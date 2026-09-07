@@ -93,7 +93,7 @@ pub(super) fn row(
         .unwrap_or(0);
     let attention_count = members
         .iter()
-        .filter(|a| attention::attention(a, ws, seen).any())
+        .filter(|a| attention::attention(a, agents, ws, seen).any())
         .count();
     let row = ConvRow {
         // The strict descent-id children (§5.1 #8) — the subagent field's

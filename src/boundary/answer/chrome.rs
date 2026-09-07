@@ -94,7 +94,7 @@ pub fn workspace_stats(snap: &Snapshot, ui: &UiState, ws: &Path) -> (usize, usiz
     let mut count = 0;
     let mut running = false;
     for a in &tree.agents {
-        if attention::attention(a, &key, &seen).any() {
+        if attention::attention(a, &tree.agents, &key, &seen).any() {
             count += 1;
         }
         running |= matches!(a.state, AgentState::Live | AgentState::InFlight);

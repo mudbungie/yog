@@ -40,9 +40,11 @@ fn agent_named(tree: &GitTree, id: &str) -> Agent {
         .clone()
 }
 
-/// The predicate with nothing acknowledged.
+/// The predicate with nothing acknowledged. The sibling set is empty because
+/// every fixture id below is a root: rule 2's *whose turn* clause (bl-3592) is
+/// tabled on its own, in-crate, where the descent can be built.
 fn unacked(agent: &Agent) -> Attention {
-    attention::attention(agent, WS, &|_, _, _, _| false)
+    attention::attention(agent, &[], WS, &|_, _, _, _| false)
 }
 
 /// The predicate with **every** watermark this agent could ever carry written —
@@ -50,7 +52,7 @@ fn unacked(agent: &Agent) -> Attention {
 /// watermarkable rule is covered here by construction.
 fn fully_acked(agent: &Agent) -> Attention {
     let acked = attention::evidence(agent);
-    attention::attention(agent, WS, &|kind, _, _, oid| {
+    attention::attention(agent, &[], WS, &|kind, _, _, oid| {
         acked.iter().any(|(k, o)| *k == kind && o == oid)
     })
 }

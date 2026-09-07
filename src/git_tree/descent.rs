@@ -99,7 +99,14 @@ pub fn children_of(agents: &[Agent], id: &str) -> Vec<usize> {
 /// Index of the agent this one descends from: its [`parent_id`], looked up in
 /// the present set. `None` — a root row — for a root id, for an id outside the
 /// grammar, and for a descendant whose parent ref is absent.
-fn parent_index(agents: &[Agent], id: &str) -> Option<usize> {
+///
+/// `pub` since bl-3592: **who dispatched this conversation** is also the answer
+/// to *whose turn its rest is* (§6 rule 2), and the attention predicate asks
+/// this exact question rather than a second one that could disagree with the
+/// tree the operator is looking at. The three cases that read as a root here
+/// are the three litany itself refuses to call anybody's child, which is why
+/// this and not string arithmetic on the id.
+pub fn parent_index(agents: &[Agent], id: &str) -> Option<usize> {
     let parent = parent_id(id)?;
     agents.iter().position(|a| a.agent_id == parent)
 }

@@ -68,7 +68,7 @@ mod tools;
 // name addresses, read live rather than off the derivation — the same doorway
 // discipline every other consumer here gets.
 pub(crate) use addressing::{AGENT_REF_PREFIX, living_agents};
-pub use descent::{DescentRow, children_of, descent_order};
+pub use descent::{DescentRow, children_of, descent_order, parent_index};
 pub(crate) use enumerate::mtime_unix;
 // The view-model types themselves (§7.1), re-exported so `git_tree::Agent` and
 // friends stay the one spelling every consumer already uses.

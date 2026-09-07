@@ -8,7 +8,7 @@ use crate::ui_state::{SeenKind, UiState};
 
 #[test]
 fn no_signals_is_no_attention() {
-    let a = attention(&agent("a"), "ws", &nothing);
+    let a = attention(&agent("a"), &[], "ws", &nothing);
     assert!(!a.any());
     assert!(a.kinds().is_empty());
     assert_eq!(
@@ -40,7 +40,7 @@ fn each_marked_signal_fires_when_unseen() {
     for (mutate, kind) in cases {
         let mut ag = agent("a");
         mutate(&mut ag);
-        let att = attention(&ag, "ws", &nothing);
+        let att = attention(&ag, &[], "ws", &nothing);
         assert!(att.any(), "{kind:?} should fire");
         assert_eq!(att.kinds(), vec![*kind]);
         assert!(!att.mail, "a mark never implies mail");
@@ -55,18 +55,18 @@ fn rest_fires_however_the_conversation_came_to_rest() {
     for state in [AgentState::Quiescent, AgentState::Stopped] {
         let mut ag = agent("a");
         ag.state = state;
-        let att = attention(&ag, "ws", &nothing);
+        let att = attention(&ag, &[], "ws", &nothing);
         assert!(att.stopped, "{state:?} is a turn waiting on you");
         assert_eq!(att.kinds(), vec![AttentionKind::Stopped]);
         // The same tip, acknowledged, is silent forever — the muting mechanism
         // the ruling needs none of.
-        assert!(!attention(&ag, "ws", &acked(SeenKind::Stopped, "tip-a")).stopped);
+        assert!(!attention(&ag, &[], "ws", &acked(SeenKind::Stopped, "tip-a")).stopped);
     }
     for state in [AgentState::Live, AgentState::InFlight] {
         let mut ag = agent("a");
         ag.state = state;
         assert!(
-            !attention(&ag, "ws", &nothing).stopped,
+            !attention(&ag, &[], "ws", &nothing).stopped,
             "{state:?} is still running — nothing is waiting on you"
         );
     }
@@ -78,7 +78,7 @@ fn abandoned_suppresses_the_rest_signal_from_either_rest() {
         let mut ag = agent("a");
         ag.state = state;
         ag.abandoned_oid = Some("dead".into());
-        let att = attention(&ag, "ws", &nothing);
+        let att = attention(&ag, &[], "ws", &nothing);
         assert!(
             !att.stopped,
             "abandoned = will-not-retry suppresses rest (§6), {state:?}"
@@ -98,7 +98,7 @@ fn a_park_is_attention_no_acknowledgement_can_quiet() {
         tool: "bash".into(),
         reason: "bash {\"command\":\"curl x\"} classified open-world".into(),
     });
-    let att = attention(&ag, "ws", &nothing);
+    let att = attention(&ag, &[], "ws", &nothing);
     assert!(att.held && att.any());
     assert_eq!(att.kinds(), vec![AttentionKind::Held]);
     // Every watermark in the world leaves it firing.
@@ -108,7 +108,7 @@ fn a_park_is_attention_no_acknowledgement_can_quiet() {
         SeenKind::Budget,
         SeenKind::Conflicted,
     ] {
-        assert!(attention(&ag, "ws", &acked(kind, "toolu_1")).held);
+        assert!(attention(&ag, &[], "ws", &acked(kind, "toolu_1")).held);
     }
     assert!(
         evidence(&ag).is_empty(),
@@ -134,11 +134,11 @@ fn acked_oid_clears_but_moved_oid_re_arms() {
     ag.notify_oid = Some("v2".into());
     // Watermark still on the old oid "v1": the current oid "v2" is unseen.
     assert!(
-        attention(&ag, "ws", &acked(SeenKind::Notify, "v1")).notify,
+        attention(&ag, &[], "ws", &acked(SeenKind::Notify, "v1")).notify,
         "a moved ref re-notifies (§4.1)"
     );
     // Watermark caught up to "v2": acknowledged, no attention.
-    assert!(!attention(&ag, "ws", &acked(SeenKind::Notify, "v2")).notify);
+    assert!(!attention(&ag, &[], "ws", &acked(SeenKind::Notify, "v2")).notify);
 }
 
 #[test]
@@ -146,9 +146,9 @@ fn stopped_tip_watermark_gates_on_the_branch_tip() {
     let mut ag = agent("a");
     ag.state = AgentState::Stopped;
     // Seen the current tip oid -> stop acknowledged.
-    assert!(!attention(&ag, "ws", &acked(SeenKind::Stopped, "tip-a")).stopped);
+    assert!(!attention(&ag, &[], "ws", &acked(SeenKind::Stopped, "tip-a")).stopped);
     // A stale watermark (old tip) -> re-armed.
-    assert!(attention(&ag, "ws", &acked(SeenKind::Stopped, "tip-old")).stopped);
+    assert!(attention(&ag, &[], "ws", &acked(SeenKind::Stopped, "tip-old")).stopped);
 }
 
 #[test]
@@ -171,7 +171,7 @@ fn mail_fires_only_on_pending_and_definite_free() {
         // Abandon any stop so this isolates the mail bit.
         ag.abandoned_oid = Some("x".into());
         assert_eq!(
-            attention(&ag, "ws", &nothing).mail,
+            attention(&ag, &[], "ws", &nothing).mail,
             expect,
             "{state:?} uncertain={uncertain} pending={pending}"
         );
@@ -187,7 +187,7 @@ fn all_signals_together_list_in_badge_order() {
     ag.conflicted_oid = Some("c".into());
     ag.pending = vec![crate::inboxview::InboxEntry::default()]; // Stopped + Free -> mail too
     assert_eq!(
-        attention(&ag, "ws", &nothing).kinds(),
+        attention(&ag, &[], "ws", &nothing).kinds(),
         vec![
             AttentionKind::Notify,
             AttentionKind::Stopped,
@@ -208,8 +208,8 @@ fn wires_through_a_real_ui_state() {
     ag.notify_oid = Some("oid1".into());
     let seen = |k: SeenKind, w: &str, a: &str, o: &str| ui.is_seen(k, w, a, o);
     // Acked -> no notify.
-    assert!(!attention(&ag, "ws", &seen).notify);
+    assert!(!attention(&ag, &[], "ws", &seen).notify);
     // A moved ref -> re-armed.
     ag.notify_oid = Some("oid2".into());
-    assert!(attention(&ag, "ws", &seen).notify);
+    assert!(attention(&ag, &[], "ws", &seen).notify);
 }

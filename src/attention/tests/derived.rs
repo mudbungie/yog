@@ -26,7 +26,7 @@ fn a_raised_flag_is_attention_and_its_stamp_is_the_watermark() {
         at: "7".into(),
         reason: "please look at this one".into(),
     });
-    let att = attention(&ag, "ws", &nothing);
+    let att = attention(&ag, &[], "ws", &nothing);
     assert!(att.flagged && att.any());
     assert_eq!(att.kinds(), vec![AttentionKind::Flagged]);
     assert_eq!(
@@ -35,15 +35,15 @@ fn a_raised_flag_is_attention_and_its_stamp_is_the_watermark() {
         "the raising row's stamp is what an acknowledgement records"
     );
     // Acknowledged, it is quiet…
-    assert!(!attention(&ag, "ws", &acked(SeenKind::Flag, "7")).flagged);
+    assert!(!attention(&ag, &[], "ws", &acked(SeenKind::Flag, "7")).flagged);
     // …and a *later* flag is a later stamp, so it asks again.
     ag.flagged = Some(crate::monitor::Flag {
         at: "8".into(),
         reason: "and again".into(),
     });
-    assert!(attention(&ag, "ws", &acked(SeenKind::Flag, "7")).flagged);
+    assert!(attention(&ag, &[], "ws", &acked(SeenKind::Flag, "7")).flagged);
     // A watermark of another kind never quiets it.
-    assert!(attention(&ag, "ws", &acked(SeenKind::Stopped, "8")).flagged);
+    assert!(attention(&ag, &[], "ws", &acked(SeenKind::Stopped, "8")).flagged);
 }
 
 /// The word carries what the operator is being asked for — a look, and a
@@ -63,11 +63,11 @@ fn the_flagged_word_says_a_human_should_look() {
 fn a_refused_rest_earns_the_refused_word_and_not_stoppeds() {
     let mut ag = agent("a");
     ag.state = AgentState::Stopped;
-    let mine = attention(&ag, "ws", &nothing);
+    let mine = attention(&ag, &[], "ws", &nothing);
     assert_eq!(mine.kinds(), vec![AttentionKind::Stopped]);
 
     ag.failure = Some(AUTH_SHAPED.to_owned());
-    let theirs = attention(&ag, "ws", &nothing);
+    let theirs = attention(&ag, &[], "ws", &nothing);
     assert_eq!(theirs.kinds(), vec![AttentionKind::Refused]);
 
     // One firing, not two: the refinement changes the word, never the count,
@@ -94,7 +94,7 @@ fn an_acked_refused_rest_still_stirs_nothing() {
     ag.state = AgentState::Stopped;
     ag.failure = Some(AUTH_SHAPED.to_owned());
     assert!(
-        attention(&ag, "ws", &acked(SeenKind::Stopped, "tip-a"))
+        attention(&ag, &[], "ws", &acked(SeenKind::Stopped, "tip-a"))
             .kinds()
             .is_empty()
     );

@@ -145,7 +145,7 @@ fn row(snap: &Snapshot, ui: &UiState, key: &RosterKey, now_unix: i64) -> Option<
         display: convs::member_title(agent),
         state: agent.state,
         uncertain: agent.state_uncertain,
-        signals: attention::attention(agent, &key.ws, &seen).kinds(),
+        signals: attention::attention(agent, agents, &key.ws, &seen).kinds(),
         preview: convs::preview_of(agent),
         age_secs: (now_unix - agent.last_action_unix).max(0),
         pending: agent.pending.len(),

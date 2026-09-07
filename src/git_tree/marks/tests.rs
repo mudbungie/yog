@@ -90,7 +90,7 @@ fn a_mark_survives_its_acknowledgement() {
     ag.notify_oid = Some("n".into());
     let before = ag.marks();
     let seen = |k, _w: &str, _a: &str, o: &str| k == crate::ui_state::SeenKind::Notify && o == "n";
-    assert!(!crate::attention::attention(&ag, "ws", &seen).notify);
+    assert!(!crate::attention::attention(&ag, &[], "ws", &seen).notify);
     assert_eq!(ag.marks(), before);
     assert_eq!(before, vec![AgentMark::Notified]);
 }
