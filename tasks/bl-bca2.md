@@ -1,7 +1,8 @@
 +++
 title = "a PROTOCOL bump publishes ahead of its consumers, so every release window leaves the suite un-composable: today crates.io holds engine 15, foot 14, seat 13"
 created = 1788745785
-updated = 1788745785
+updated = 1788745841
+claimant = "Cantaloups-Y8"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r2"]
