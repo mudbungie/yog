@@ -38,6 +38,15 @@
 //! it would deadlock; a shim is a few hundred bytes and a fixture is a script.
 //! `sh`'s stderr is captured rather than inherited, so the reason a write
 //! failed rides the error instead of the caller's terminal.
+//!
+//! **A failed child outranks a broken pipe** (bl-4b71). The child is waited for
+//! whatever the write did, and the write's own error is answered with only when
+//! the child exited cleanly — because `EPIPE` on the way in *means* the child is
+//! already gone, so its status and stderr are the honest reason and the raw
+//! errno is a symptom. Reporting the write first made the outcome a scheduler
+//! race between the parent's `write_all` and the child's death, which reddened
+//! roughly one close gate in five repo-wide; this ordering gives both
+//! interleavings one answer.
 
 use std::io::{self, Write as _};
 use std::path::Path;
@@ -69,16 +78,15 @@ pub(crate) fn write_exec(path: &Path, body: &str) -> io::Result<()> {
     let written = pipe.write_all(body.as_bytes());
     drop(pipe);
     let out = child.wait_with_output()?;
-    written?;
-    if out.status.success() {
-        return Ok(());
+    if !out.status.success() {
+        return Err(io::Error::other(format!(
+            "writing the executable {}: sh exited {} — {}",
+            path.display(),
+            out.status,
+            String::from_utf8_lossy(&out.stderr).trim()
+        )));
     }
-    Err(io::Error::other(format!(
-        "writing the executable {}: sh exited {} — {}",
-        path.display(),
-        out.status,
-        String::from_utf8_lossy(&out.stderr).trim()
-    )))
+    written
 }
 
 #[cfg(test)]
@@ -108,11 +116,24 @@ mod tests {
     /// The child's failure is the caller's error, named by path. A redirect
     /// into a directory that does not exist is the cheapest one to stage, and
     /// it is the real shape of the failure — a tools dir nobody created.
+    ///
+    /// **The body is deliberately larger than any pipe buffer** (bl-4b71). A
+    /// short body made this beat a coin toss: the child dies the moment its
+    /// redirect fails, so whether the parent's `write_all` landed first was a
+    /// scheduler race, and losing it returned the raw `EPIPE` instead of the
+    /// child's own reason — about one close gate in five, repo-wide. A body
+    /// the reader can never drain forces the write to fail in BOTH orderings,
+    /// so the beat now proves the ruling by construction rather than by luck:
+    /// a failed child outranks a broken pipe, because a broken pipe on the way
+    /// in means the child is already gone.
     #[test]
     fn a_child_that_cannot_write_is_reported_with_the_path() {
         let dir = tempfile::tempdir().unwrap();
         let nowhere = dir.path().join("absent").join("shim");
-        let err = write_exec(&nowhere, "#!/bin/sh\n").unwrap_err();
+        // 256 KiB: four times Linux's default pipe capacity and sixteen times
+        // the smallest macOS starts with.
+        let unswallowable = "#!/bin/sh\n".to_owned() + &"# padding\n".repeat(26_000);
+        let err = write_exec(&nowhere, &unswallowable).unwrap_err();
         let said = err.to_string();
         assert!(said.contains(&nowhere.display().to_string()), "{said}");
         assert!(said.contains("sh exited"), "{said}");
