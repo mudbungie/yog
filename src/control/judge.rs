@@ -64,6 +64,32 @@ impl Ruling {
             .find(|r| r.word() == word)
     }
 
+    /// This ruling **addressed to the party that can act on it** (bl-1772).
+    ///
+    /// A refusal is a sentence handed to the model as a tool result marked
+    /// ERROR, and the model is then the only party deciding whether to try
+    /// again differently. On the engine's own machine that is the right answer:
+    /// the operator is sitting at it, the blast radius is in front of them, and
+    /// an in-band decline costs no park. On a **routed** leg it is not an answer
+    /// at all — the drive that filed this had a bare `rm -f <dir>/*` refused
+    /// destructive, and the model then probed the confinement over three steps
+    /// and ran `cd <dir> && rm -f -- *` instead: 115 MB gone from another
+    /// machine, with no hold, no attention item, and nothing the operator could
+    /// have answered. The refusal was delivered to the one party with an
+    /// interest in rephrasing it.
+    ///
+    /// So on that leg a refusal becomes a **hold**: the operator is asked, which
+    /// is also the only way they can say *yes* to the one destructive act a foot
+    /// exists to make safe — freeing disk on a server. Under a refusal there is
+    /// nothing for `answer` to release, so that yes could not be said at all.
+    /// Never the other direction: a hold is softened into a refusal nowhere.
+    pub(crate) fn for_the_operator(self) -> Ruling {
+        match self {
+            Ruling::Refuse => Ruling::Hold,
+            Ruling::Pass | Ruling::Hold => self,
+        }
+    }
+
     /// The verdict this ruling carries, given the classification's clause.
     pub fn verdict(self, why: &str) -> Verdict {
         match self {
@@ -171,7 +197,8 @@ impl Answers {
     }
 
     /// The ruling for one invocation: the once-answer if the operator gave one,
-    /// else the workspace's table raised by any standing floor.
+    /// else the workspace's table — addressed to the leg the name runs on
+    /// ([`Ruling::for_the_operator`], bl-1772) and raised by any standing floor.
     ///
     /// **The floor does not reach the compactor's checkpoint pair** (bl-a821,
     /// VISION §4.11 item 7). `revoke` takes auto-approval from a conversation
@@ -201,7 +228,14 @@ impl Answers {
         if let Some(once) = self.once.get(tool_use_id) {
             return *once;
         }
-        let table = policy.ruling(effect);
+        // The once-answer stands ahead of the leg on purpose: an operator who
+        // answered this exact `tool_use` id has MADE the decision, and
+        // re-parking it would ask them what they just answered. What the leg
+        // addresses is the table's answer, which nobody has read yet.
+        let table = match classify::Leg::of(name) {
+            classify::Leg::Engine => policy.ruling(effect),
+            classify::Leg::Routed => policy.ruling(effect).for_the_operator(),
+        };
         if effect > Effect::Read && !classify::checkpoint(name) && self.floored(agent_id) {
             return table.max(Ruling::Hold);
         }

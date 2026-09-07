@@ -144,8 +144,12 @@ fn the_seeded_shim_answers_the_seam_over_real_stdio() {
     assert!(out.contains(r#""verdict":"refuse""#), "{out}");
 
     // A foot's shell IS a shell (bl-72bd, ruling 2): the same line through a
-    // routed name gets the same verdict the engine's own bash just got, and
-    // this is the leg that passed it unread for a year.
+    // routed name gets the same CLASS the engine's own bash just gave it, and
+    // this is the leg that passed it unread for a year. The verdict differs by
+    // one step and deliberately (bl-1772): a refusal is a sentence handed to
+    // the model, which on a machine the operator cannot see is handed to the
+    // one party that can rephrase it — so the routed leg holds and the operator
+    // is asked.
     let (code, out) = consult(
         &shim,
         root.path(),
@@ -153,7 +157,22 @@ fn the_seeded_shim_answers_the_seam_over_real_stdio() {
         &named("box2_shell", r#"{"command":"rm -rf /etc"}"#),
     );
     assert_eq!(code, 0);
-    assert!(out.contains(r#""verdict":"refuse""#), "{out}");
+    assert!(out.contains(r#""verdict":"hold""#), "{out}");
+    assert!(out.contains("destructive"), "{out}");
+
+    // …and the spelling the drive found — a `cd` into the target, so the
+    // operand is a bare glob — is the same act and now classifies as one. The
+    // routed leg vouches for no path on the other machine, so there is no
+    // "inside the writable root" for a relative operand to land in.
+    let (code, out) = consult(
+        &shim,
+        root.path(),
+        &workspace,
+        &named("box2_shell", r#"{"command":"cd /etc && rm -f -- *"}"#),
+    );
+    assert_eq!(code, 0);
+    assert!(out.contains(r#""verdict":"hold""#), "{out}");
+    assert!(out.contains("destructive"), "{out}");
 
     // …and a routed tool whose input carries no command line is HELD, never
     // passed: the control cannot read what it reaches, and says so.

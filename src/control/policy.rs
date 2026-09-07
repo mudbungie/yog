@@ -196,10 +196,20 @@ impl Policy {
     /// invocation it cannot read, which is exactly the guess bl-72bd deleted.
     /// A routed name reaches a class because the operator wrote one, or it
     /// stays opaque.
+    /// **A key ending in `_` vouches for a whole box** (bl-1772). A routed name
+    /// is `<client>_<tool>` ([`crate::tool_host::loaded`]), so `box2_:
+    /// open-world` states one class for everything that client advertises,
+    /// while `box2_fetch: open-world` states it for one tool. Measured, the
+    /// per-name row alone inverted the incentive: a box advertising three
+    /// narrow, argument-checked admin tools drew a park on every call while a
+    /// box advertising one raw shell ran unattended, so the safer tool document
+    /// was the punished one. The separator is what makes the box form
+    /// unambiguous — no advertised name ends in it, and a per-tool key like
+    /// `box2_read` therefore cannot silently vouch for `box2_read_log`.
     pub fn stated(&self, name: &str) -> Option<Row> {
         self.rules
             .iter()
-            .find(|row| row.program == name && row.words.is_empty())
+            .find(|row| row.words.is_empty() && vouches(&row.program, name))
             .cloned()
     }
 
@@ -214,6 +224,13 @@ impl Policy {
             .chain(self.secrets.iter().cloned())
             .collect()
     }
+}
+
+/// Whether a `rules:` key names this routed tool: the whole host-qualified name,
+/// or the box it is advertised by — a key ending in the `_` that separates a
+/// client from its tool (bl-1772).
+fn vouches(program: &str, name: &str) -> bool {
+    program == name || (program.ends_with('_') && name.starts_with(program))
 }
 
 /// `key: value`, trimmed. A line with no colon is all key and no value, which

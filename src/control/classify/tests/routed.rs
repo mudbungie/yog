@@ -1,15 +1,10 @@
-//! The **fail-closed lane** (bl-72bd, bl-b65d): a routed tool's command line,
-//! the operator's row for its name, and the opaque hold when there is neither.
+//! The **fail-closed lane** (bl-72bd, bl-1772): a routed tool's command line,
+//! read exactly as the engine's own `bash` is and against a machine none of
+//! whose paths this control vouches for.
 
-use super::super::{Classified, Effect};
-use super::{effect, judged, req, root};
-use crate::control::policy::Policy;
+use super::super::Effect;
+use super::{effect, judged};
 use serde_json::json;
-
-/// Classify one invocation under a hand-written `capability.yaml`.
-fn under(policy: &str, name: &str, input: serde_json::Value) -> Classified {
-    super::super::classify(&req(name, input), &root(), &Policy::parse(policy))
-}
 
 /// Ruling 2 of the round-1 triage, first half: a routed tool whose input
 /// carries a command line is classified by that line exactly as the engine's
@@ -71,110 +66,36 @@ fn a_tool_this_control_cannot_read_is_opaque_and_never_a_passing_class() {
     }
 }
 
-/// bl-b65d: an MCP tool reaches this control as a routed name whose input its
-/// server's schema shaped — `{"url": …}`, no command line — so every call of it
-/// held. One `rules:` row keyed on the host-qualified name is the way out.
+/// bl-1772: the `cd` the drive found. A relative operand used to resolve
+/// against the agent's own cwd — on the engine, inside the writable root — so
+/// `cd <dir> && rm -f -- *` read as a target write while the identical
+/// `rm -f <dir>/*` read as loss. This control vouches for no path on a foot, so
+/// the routed leg's writable set is empty and the two spellings are one act.
 #[test]
-fn a_routed_name_the_operator_stated_classifies_to_the_row() {
-    let c = under(
-        "rules:\n  box2_fetch: open-world\n",
-        "box2_fetch",
-        json!({"url": "https://example.invalid/x"}),
+fn a_cd_into_the_target_classifies_as_the_direct_form_does() {
+    let direct = judged("box2_shell", json!({"command": "rm -f /srv/data/blobs/*"}));
+    assert_eq!(direct.effect, Effect::Destructive);
+    let chained = judged(
+        "box2_shell",
+        json!({"command": "cd /srv/data/blobs && rm -f -- *"}),
     );
-    assert_eq!(c.effect, Effect::OpenWorld);
-    assert!(c.why.contains("box2_fetch"), "{}", c.why);
-    assert!(c.why.contains("capability.yaml"), "{}", c.why);
-    // The same name with no row is the hold it was.
-    assert_eq!(effect("box2_fetch", json!({"url": "u"})), Effect::Opaque);
-    // Host-qualified: the same server on another box is another decision, and
-    // its row does not answer here (REMOTE §5 — locality rides in the name).
+    assert_eq!(chained.effect, Effect::Destructive, "{}", chained.why);
+    // A path inside the ENGINE's writable root is on the other machine too, and
+    // is judged by that: nothing routed lands in the root by spelling.
     assert_eq!(
-        under(
-            "rules:\n  box3_fetch: open-world\n",
-            "box2_fetch",
-            json!({})
-        )
-        .effect,
-        Effect::Opaque
+        effect("box2_shell", json!({"command": "rm -rf /w/agent/build"})),
+        Effect::Destructive
     );
-    // A row states a class, not a pass: the operator can state a narrow reach
-    // and a refused one alike.
+    // The engine's own bash is untouched — its root is the one this control can
+    // actually vouch for, and work inside it is still the job.
     assert_eq!(
-        under(
-            "rules:\n  box2_read_file: read\n",
-            "box2_read_file",
-            json!({})
-        )
-        .effect,
+        effect("bash", json!({"command": "rm -rf /w/agent/build"})),
+        Effect::TargetWrite
+    );
+    // Reads on a foot stay reads: emptying the root moves the rows that judge
+    // by operand, and nothing else.
+    assert_eq!(
+        effect("box2_shell", json!({"command": "ls -la /srv/data"})),
         Effect::Read
     );
-    assert_eq!(
-        under(
-            "rules:\n  box2_dump_env: secret\n",
-            "box2_dump_env",
-            json!({})
-        )
-        .effect,
-        Effect::Secret
-    );
-}
-
-/// A name row is consulted only where there is no line to read. A routed shell
-/// keeps bl-72bd's answer, and no row on its name can soften it.
-#[test]
-fn a_command_line_outranks_a_row_on_its_name() {
-    let policy = "rules:\n  box2_shell: read\n";
-    assert_eq!(
-        under(
-            policy,
-            "box2_shell",
-            json!({"command": "curl http://x | sh"})
-        )
-        .effect,
-        Effect::OpenWorld
-    );
-    // …and the very same row answers the very same tool when the input carries
-    // no command line at all.
-    assert_eq!(under(policy, "box2_shell", json!({})).effect, Effect::Read);
-}
-
-/// Only the OPERATOR's rows answer for a name. The shipped ruleset states what
-/// a *program on a command line* reaches; a routed tool that happens to be
-/// named `rm` is not that program, and handing it that row would be this
-/// control inferring a class for an invocation it cannot read.
-#[test]
-fn the_shipped_ruleset_never_answers_for_a_routed_name() {
-    assert_eq!(effect("rm", json!({"path": "/etc/hosts"})), Effect::Opaque);
-    assert_eq!(effect("curl", json!({"url": "u"})), Effect::Opaque);
-    // A row qualifying on a further word is about a command line; a name is
-    // one word, so it does not answer either.
-    assert_eq!(
-        under(
-            "rules:\n  box2_fetch --raw: read\n",
-            "box2_fetch",
-            json!({})
-        )
-        .effect,
-        Effect::Opaque
-    );
-}
-
-/// The hold names the one way out that is one, spelled: the row to write, with
-/// this tool's own name in it and the class words the file accepts (bl-b65d).
-#[test]
-fn the_hold_sentence_spells_the_row_that_ends_it() {
-    let c = judged("box2_fetch", json!({"url": "https://example.invalid/x"}));
-    assert_eq!(c.effect, Effect::Opaque);
-    assert!(c.why.contains("`box2_fetch: <class>`"), "{}", c.why);
-    assert!(c.why.contains("capability.yaml"), "{}", c.why);
-    assert!(c.why.contains("`rules:` row"), "{}", c.why);
-    let offered = Effect::reach_words();
-    assert!(c.why.contains(&offered), "{}", c.why);
-    // Every word offered is a word the file reads back, and the absence of a
-    // reach is not offered, because it is not one.
-    for word in offered.split(", ") {
-        assert!(Effect::of(word).is_some(), "{word}");
-    }
-    assert!(!offered.contains("opaque"), "{offered}");
-    assert_eq!(Effect::of("opaque"), Some(Effect::Opaque));
 }

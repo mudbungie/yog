@@ -696,6 +696,32 @@ mediation.
      refusal would be a claim about the invocation there is no basis for — and
      never passed. The operator answers once, in band, with the tool and its
      input in front of them.
+   - **And on that leg a REFUSAL is a hold too** (bl-1772). The class is the
+     same on both legs; the party the verdict is delivered to is not. A refusal
+     reaches the model as a tool result marked ERROR, and the model is then the
+     only party deciding whether to try again differently — which it did: a
+     bare `rm -f <dir>/*` was refused destructive, the model probed the
+     confinement over three steps, ran `cd <dir> && rm -f -- *`, and 115 MB
+     went from another machine with no hold, no attention item and nothing the
+     operator could have answered. In band is the right answer on the machine
+     the operator is sitting at, where the blast radius is in front of them; it
+     is not an answer on a leg they cannot see. So the routed leg **asks**, and
+     that is also the only way an operator can say *yes* to the one destructive
+     act a foot exists to make safe — freeing disk on a server. Under a refusal
+     there is nothing for `answer` to release. The mapping runs one way only: a
+     hold is softened into a refusal nowhere, and an operator's own once-answer
+     of `refuse` stands, because they made that decision.
+   - **The command line is read whole, and the writable root is not on the
+     other machine** (bl-1772). The evasion above was not cleverness, it was an
+     operand test that meant nothing on a foot: a relative operand resolved
+     against the agent's own cwd, which is the engine's worktree and inside the
+     root, so a bare `*` after a `cd` read as a target write while the absolute
+     spelling of the same act read as loss. The special case was the root
+     itself — **this control vouches for no path on a machine it cannot see**,
+     so the routed leg's writable set is empty and every operand-judged row
+     takes its wider class. A `cd … &&` chain then classifies exactly as the
+     direct form because both are judged against the same nothing, with no
+     modelling of `cd` and no glob expansion anywhere.
    - **And a name the operator has stated a reach for is classified by that
      statement** (bl-b65d). A held-every-call tool is a park answered by
      reflex, which is the failure mode a gate exists to avoid, and the tools
@@ -718,7 +744,13 @@ mediation.
      command line* reaches, which a routed tool name is not. **And the hold
      says all of this**: the parked sentence spells the row to write, with the
      tool's own name in it and the class words the file accepts, because a
-     remedy the operator has to go and find is not one.
+     remedy the operator has to go and find is not one. **A key ending in the
+     `_` that separates a client from its tool vouches for the whole box**
+     (bl-1772): measured, the per-name row alone inverted the incentive — a box
+     advertising three narrow, argument-checked, path-confined tools drew a
+     park on every call while a box advertising one raw shell ran unattended,
+     so the safer tool document was the punished one, and an operator who
+     noticed would fix it by adding a shell.
 
    And **the fall-off is deleted structurally, not fixed**: names are folded
    into a closed enum before anything classifies them and matched exhaustively,

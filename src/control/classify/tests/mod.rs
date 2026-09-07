@@ -6,6 +6,10 @@ use serde_json::json;
 
 /// The fail-closed lane, its own file since bl-b65d put a third answer in it.
 mod routed;
+/// What the operator states about a routed NAME, beside the lane that reads
+/// a command line: one file is what this control can read, the other is what
+/// the operator says it cannot.
+mod stated;
 
 fn root() -> Root {
     Root {

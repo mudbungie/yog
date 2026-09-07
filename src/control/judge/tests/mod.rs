@@ -4,6 +4,10 @@ use super::*;
 use crate::control::policy::Policy;
 use crate::opslog::Origin;
 
+/// The revoke rung's own subject, its own file: what a floor reaches, what it
+/// deliberately does not, and when it stops binding.
+mod floor;
+
 /// What `answers` rules for one invocation of `name` by `agent`, on the
 /// **shipped** table — the shape every case below one takes, said once so a
 /// case reads as the fact it is about rather than as five arguments.
@@ -117,98 +121,6 @@ fn the_last_row_for_a_key_wins() {
 }
 
 #[test]
-fn a_floor_holds_every_class_above_read_across_the_whole_subtree() {
-    let answers = Answers::fold(&[row(&[YOG_CONTROL, "floor", "amber", "raise"])]);
-    assert!(answers.floored("amber"));
-    assert!(
-        answers.floored("amber-1-2"),
-        "the descent prefix carries it"
-    );
-    assert!(
-        !answers.floored("amberine"),
-        "a longer name is another agent"
-    );
-    assert!(!answers.floored("other"));
-    assert_eq!(
-        ruled(&answers, "t", "amber", "bash", Effect::Read),
-        Ruling::Pass
-    );
-    assert_eq!(
-        ruled(&answers, "t", "amber", "bash", Effect::TargetWrite),
-        Ruling::Hold
-    );
-    assert_eq!(
-        ruled(&answers, "t", "amber-1", "bash", Effect::Process),
-        Ruling::Hold
-    );
-    // The floor raises; it never lowers.
-    assert_eq!(
-        ruled(&answers, "t", "amber", "bash", Effect::Secret),
-        Ruling::Refuse
-    );
-    // And a once-answer to this exact invocation still wins over it.
-    let answers = Answers::fold(&[
-        row(&[YOG_CONTROL, "floor", "amber", "raise"]),
-        row(&[YOG_CONTROL, "answer", "toolu_1", "pass"]),
-    ]);
-    assert_eq!(
-        ruled(&answers, "toolu_1", "amber", "bash", Effect::TargetWrite),
-        Ruling::Pass
-    );
-}
-
-/// **bl-a821**: `revoke` reaches a conversation's descendants and the
-/// compactor is one, so the floor held `write_summary` — the operator was
-/// queued a machinery act they have no basis to judge, and until they answered
-/// it the floored conversation could not compact.
-#[test]
-fn a_floor_does_not_reach_the_compactor_s_checkpoint_pair() {
-    let answers = Answers::fold(&[row(&[YOG_CONTROL, "floor", "amber", "raise"])]);
-    for pair in ["write_summary", "mark_for_deletion"] {
-        assert_eq!(
-            ruled(&answers, "t", "amber", pair, Effect::TargetWrite),
-            Ruling::Pass,
-            "{pair} is the compaction procedure's own act, not the agent's"
-        );
-        assert_eq!(
-            ruled(&answers, "t", "amber-1", pair, Effect::TargetWrite),
-            Ruling::Pass,
-            "and the compactor of a floored conversation is a descendant"
-        );
-    }
-    // The exemption is the pair's and the floor's alone: every other target
-    // write under the same floor still holds, and the workspace's own table
-    // still rules the pair.
-    assert_eq!(
-        ruled(&answers, "t", "amber", "load_skill", Effect::TargetWrite),
-        Ruling::Hold
-    );
-    assert_eq!(
-        answers.ruling(
-            "t",
-            "amber",
-            "write_summary",
-            Effect::TargetWrite,
-            &Policy::parse("table:\n  target-write: hold\n")
-        ),
-        Ruling::Hold
-    );
-}
-
-#[test]
-fn a_lowered_floor_stops_binding() {
-    let answers = Answers::fold(&[
-        row(&[YOG_CONTROL, "floor", "amber", "raise"]),
-        row(&[YOG_CONTROL, "floor", "amber", "lower"]),
-    ]);
-    assert!(!answers.floored("amber"));
-    assert_eq!(
-        ruled(&answers, "t", "amber", "bash", Effect::Process),
-        Ruling::Pass
-    );
-}
-
-#[test]
 fn every_other_ops_row_folds_to_nothing() {
     // The trail is shared: a `bl claim`, a drift line, an off-grammar control
     // row and a truncated one must all leave the fold untouched.
@@ -220,4 +132,65 @@ fn every_other_ops_row_folds_to_nothing() {
         row(&[]),
     ]);
     assert_eq!(answers, Answers::default());
+}
+
+/// bl-1772: the class is the same on both legs; the party the verdict is
+/// delivered to is not. A refusal is a sentence handed to the model, and the
+/// drive that filed this rephrased past one — `cd <dir> && rm -f -- *` after a
+/// bare `rm -f <dir>/*` was declined — and deleted 115 MB from another machine
+/// with no hold, no attention item and nothing to answer.
+#[test]
+fn a_routed_refusal_is_a_hold_because_the_model_can_rephrase_a_refusal() {
+    let answers = Answers::default();
+    // The engine's own machine: the operator is sitting at it, so loss and
+    // credentials decline in band exactly as they did.
+    assert_eq!(
+        ruled(&answers, "t1", "amber", "bash", Effect::Destructive),
+        Ruling::Refuse
+    );
+    assert_eq!(
+        ruled(&answers, "t1", "amber", "bash", Effect::Secret),
+        Ruling::Refuse
+    );
+    // A machine a foot administers: the operator is asked instead, which is
+    // also the only way they can say YES to the one destructive act a foot
+    // exists to make safe.
+    assert_eq!(
+        ruled(&answers, "t1", "amber", "box2_shell", Effect::Destructive),
+        Ruling::Hold
+    );
+    assert_eq!(
+        ruled(&answers, "t1", "amber", "box2_shell", Effect::Secret),
+        Ruling::Hold
+    );
+    // Nothing else moves: what passes on one leg passes on the other, and a
+    // hold stays a hold. The mapping is never the other direction.
+    assert_eq!(
+        ruled(&answers, "t1", "amber", "box2_shell", Effect::OpenWorld),
+        Ruling::Pass
+    );
+    assert_eq!(
+        ruled(&answers, "t1", "amber", "box2_thing", Effect::Opaque),
+        Ruling::Hold
+    );
+    assert_eq!(Ruling::Pass.for_the_operator(), Ruling::Pass);
+    assert_eq!(Ruling::Hold.for_the_operator(), Ruling::Hold);
+}
+
+/// The once-answer stands ahead of the leg: an operator who answered THIS
+/// invocation has made the decision, and re-parking it would ask them the
+/// question they just answered.
+#[test]
+fn an_operators_own_refusal_of_a_routed_call_is_not_turned_back_into_a_park() {
+    let answers = Answers::fold(&[row(&[YOG_CONTROL, "answer", "toolu_9", "refuse"])]);
+    assert_eq!(
+        ruled(
+            &answers,
+            "toolu_9",
+            "amber",
+            "box2_shell",
+            Effect::Destructive
+        ),
+        Ruling::Refuse
+    );
 }

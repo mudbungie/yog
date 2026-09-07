@@ -71,11 +71,38 @@ use super::{COMMAND, Classified, Effect, Request, Root};
 
 /// Classify one invocation of a name the intrinsic map does not hold.
 pub(super) fn classify(request: &Request, root: &Root, policy: &Policy) -> Classified {
+    let far = far(root);
     let command = request.field(COMMAND);
     if command.trim().is_empty() {
-        return stated(request, root, policy);
+        return stated(request, &far, policy);
     }
-    super::super::bash::classify(&command, root, policy)
+    super::super::bash::classify(&command, &far, policy)
+}
+
+/// The writable root **as it stands on the other machine**: empty (bl-1772).
+///
+/// The doc above has always said a path on the foot classifies to the wider
+/// class, and for an *absolute* operand it did. A **relative** one did not: the
+/// lexer resolves it against the agent's own cwd, which is the engine's
+/// worktree and inside the root — so `cd /srv/data/blobs && rm -f -- *` read as
+/// `rm` on a bare `*` inside the writable root and classified target write,
+/// while the identical `rm -f /srv/data/blobs/*` classified destructive. The
+/// model found that spelling in three steps and deleted 115 MB from a machine
+/// the operator was never asked about.
+///
+/// The reframe is that the special case was the root itself. **This control
+/// vouches for no path on a foot**, absolute or relative, so the routed leg's
+/// writable set is empty and every `ByRoot` row takes its `outside` class. A
+/// `cd` chain then classifies exactly as the direct form, because both are
+/// judged against the same nothing — no modelling of `cd`, no glob expansion,
+/// and no new arm for either. `cwd` and `home` are kept so an operand still
+/// resolves to a path a reason line can name.
+fn far(root: &Root) -> Root {
+    Root {
+        cwd: root.cwd.clone(),
+        writable: Vec::new(),
+        home: root.home.clone(),
+    }
 }
 
 /// The class the **operator stated** for this routed name, or the opaque hold
@@ -88,7 +115,8 @@ fn stated(request: &Request, root: &Root, policy: &Policy) -> Classified {
                 "{name} is not a tool this control implements and its input carries no command \
                  line, so what it reaches cannot be read — held rather than passed. To state what \
                  it reaches, add a `rules:` row to this workspace's {CAPABILITY_YAML}: \
-                 `{name}: <class>`, where <class> is one of {classes}",
+                 `{name}: <class>`, where <class> is one of {classes}; a key ending in `_` \
+                 states it for every tool one box advertises",
                 name = request.name,
                 classes = Effect::reach_words(),
             ),

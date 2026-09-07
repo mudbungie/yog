@@ -172,6 +172,33 @@ pub fn checkpoint(name: &str) -> bool {
     )
 }
 
+/// **Which leg an invocation runs on** (bl-1772). The engine's own tools run on
+/// the machine the operator is sitting at; every other name is a tool a
+/// registered machine advertises, executed on that machine (REMOTE §5). The
+/// classifier already folds the two apart, and the *judgment* needs the same
+/// fact, because a refusal delivered to the model is only an answer where the
+/// model is not the party that can walk around it (see
+/// [`Ruling::for_the_operator`](super::judge::Ruling::for_the_operator)).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Leg {
+    /// The engine's own machine: an intrinsic name, adjudicated in band.
+    Engine,
+    /// A machine a foot administers: everything else.
+    Routed,
+}
+
+impl Leg {
+    /// The leg one tool name runs on — the intrinsic map's own answer, so the
+    /// two readers of "is this ours" cannot drift.
+    pub fn of(name: &str) -> Leg {
+        if intrinsic::Known::of(name).is_some() {
+            Leg::Engine
+        } else {
+            Leg::Routed
+        }
+    }
+}
+
 /// Classify one invocation. Total over every tool name and every input shape:
 /// an input that does not match its schema simply yields no operands, and a
 /// name no row names goes to the [`routed`] lane rather than to a default arm.
