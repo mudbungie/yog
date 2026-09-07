@@ -131,12 +131,16 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
     assert!(!err.is_empty());
 }
 
-/// **A caller that predicted no name still mints one** (bl-1747): `seed: None`
-/// is the deposited line and the §4.3 loop, and the door draws off this
-/// moment's stamp instead. The default lives at the door, so no intake carries
-/// a copy of it.
+/// **A caller that predicted no name still mints one, and never the same one
+/// twice** (bl-1747, bl-d88f). `seed: None` is the deposited line and the §4.3
+/// loop, and the door draws its own — per **creation**, not per second. The
+/// two fires here are identical in every input the mint reads: the same `ts`,
+/// the same workspace, and the same occupied set, because neither has landed a
+/// dispatch commit the other could see. On the old seed —
+/// `content_hash(ts)`, and `ts` is unix seconds — that made two conversations
+/// under one name and every seat verb then addressed neither.
 #[test]
-fn a_seedless_prompt_mints_off_the_stamp() {
+fn two_seedless_prompts_in_one_second_mint_two_names() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model(&w);
@@ -147,10 +151,15 @@ fn a_seedless_prompt_mints_off_the_stamp() {
         goal: "go".into(),
         seed: None,
     };
-    let Reply::Started { conversation } = engine::act(&m, &deps, "T9", &action).unwrap() else {
-        panic!("the prompt door answers the minted name");
-    };
-    assert!(!conversation.is_empty(), "a name was minted regardless");
+    let mut minted = Vec::new();
+    for _ in 0..2 {
+        let Reply::Started { conversation } = engine::act(&m, &deps, "T9", &action).unwrap() else {
+            panic!("the prompt door answers the minted name");
+        };
+        assert!(!conversation.is_empty(), "a name was minted regardless");
+        minted.push(conversation);
+    }
+    assert_ne!(minted[0], minted[1], "one stamp, two creations: {minted:?}");
 }
 
 /// **S12-T5 three-spellings** (the executor half): one attempt crosses the

@@ -4351,9 +4351,21 @@ to owe, because the answers are the ruling and the code is only where they live.
   window's greyed §3.3 preview is drawn off it, and a seat that predicts a name
   must be able to fire *that* name. It rides `Action::Prompt` as
   `seed: Option<u64>`: a parameter of the gesture, not of the environment, with
-  `None` for a caller that predicted nothing and one stamp-derived default at
-  the one door that mints. `Deps::mint_seed` is deleted, and with it the three
-  intakes that each spelled the same default. **The composer's Enter is two
+  `None` for a caller that predicted nothing and one default at the one door
+  that mints. `Deps::mint_seed` is deleted, and with it the three intakes that
+  each spelled the same default. **That default was stamp-derived and is now a
+  draw** (bl-d88f, routed from litany bl-8fe8): `Clock::stamp` is unix
+  **seconds**, so `content_hash(ts)` had one value per second per box — and
+  `litany::mint::mint` is a pure function of one draw and the occupied set,
+  which two fires in one second also share (neither has landed a dispatch
+  commit when the other reads the living names). Two conversations were minted
+  the same name and every seat verb then addressed neither, `ambiguous
+  conversation` being the honest and useless answer, whose only escape is a raw
+  agent id no start reply carries. The `None` arm draws
+  `SplitMix64::from_entropy` — nanos XOR pid, the very path litany's own
+  creations take, which is why `litany prompt`/`dispatch` were never affected.
+  A seat that predicted a name is untouched: `Some(seed)` still fires the name
+  it predicted. **The composer's Enter is two
   acts**, the `Prompt` posted when the `Prepared` lands; that chain is held in
   one place so the draft it composed empties when the *second* one lands, and
   the gesture is judged once exactly as the synchronous pair was.

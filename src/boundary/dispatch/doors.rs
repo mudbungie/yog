@@ -95,10 +95,27 @@ pub fn prepare(
 /// where it paints every refusal and re-derives nothing.
 ///
 /// **`seed` is the firing seat's own §3.3 prediction** (bl-1747), and `None` is
-/// a caller that made none — a deposited line, the §4.3 loop — for which this
-/// moment's stamp is the draw. One default, at the one door that mints, rather
-/// than a `Deps` field every intake filled the same way and one seat filled
+/// a caller that made none — a deposited line, the §4.3 loop — for which the
+/// door draws its own. One default, at the one door that mints, rather than a
+/// `Deps` field every intake filled the same way and one seat filled
 /// differently.
+///
+/// **The draw is per creation, not per second** (bl-d88f, routed from litany
+/// bl-8fe8). It used to be `content_hash(ts)`, and `ts` is
+/// [`Clock::stamp`](crate::ui_state::Clock) — unix **seconds** as a string, the
+/// crate's timestamp convention — so the seed had one value per second per box.
+/// `litany::mint::mint` is a pure function of one draw and the occupied set,
+/// and the occupied set is equal too (neither fire has landed a dispatch commit
+/// when the other reads the living names), so two fires inside one second were
+/// minted the *same name*: three `lernie start` calls on one shell line all
+/// came back `ScarfPeach`, and every seat verb then addressed neither —
+/// `ambiguous conversation`, whose only escape is a raw agent id the start
+/// reply does not carry. litany's own creation paths were never affected; they
+/// seed [`SplitMix64::from_entropy`], nanos XOR pid, a grain finer than a
+/// creation. litany ARCH §2.3 now states the contract a consumer injecting its
+/// own `Rng` owes — per-creation entropy — and litany cannot enforce it on the
+/// consumer that supplies the generator, so honoring it is this line.
+/// `Some(seed)` is untouched: a seat that predicted a name still gets it.
 pub fn prompt(
     deps: &Deps,
     ui: &UiState,
@@ -162,9 +179,7 @@ pub fn prompt(
             goal: goal.to_owned(),
         },
         &answer::names_in(&deps.snapshot, workspace),
-        &SplitMix64::from_seed(
-            seed.unwrap_or_else(|| crate::ui_state::content_hash(ts.as_bytes())),
-        ),
+        &seed.map_or_else(SplitMix64::from_entropy, SplitMix64::from_seed),
     )
     .map_err(|e| e.to_string())
 }
