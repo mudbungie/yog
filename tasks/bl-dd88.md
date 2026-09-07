@@ -1,7 +1,8 @@
 +++
 title = "the learning loop is unreachable from the control boundary: no gesture reads, accepts or rejects a staged proposal"
 created = 1788673872
-updated = 1788673872
+updated = 1788745444
+claimant = "Cantaloups-Y5"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r1"]
