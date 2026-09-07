@@ -115,19 +115,26 @@ name: Auto-merge release PR
 # combination on crates.io that composed, after the same defect had been filed
 # and correctly closed eight times.
 #
+# Every repository states the number in a top-level `PROTOCOL` file, one line
+# (bl-3e57), and that is the only path fetched below. It used to be a Rust
+# path per repository, and the engine moved its own out from under all four
+# gates: a module split left the old file re-exporting the constant, which a
+# build cannot notice and a regex cannot read, so every consumer's gate would
+# have held forever on the very bump it was waiting for (thrall bl-c618).
+#
 # The overseer ruling is an ordering rule, not a protocol change: a release
 # that RAISES PROTOCOL is held until the consumers' mains carry the new number.
 # A release that moves no wire version is unaffected — it makes nothing worse
 # than the skew already standing, and gating it would park every bugfix behind
 # a lag it cannot fix.
 #
-# This job fetches four files — yog's `hello.rs` at the last release tag and at
+# This job fetches four files — yog's `PROTOCOL` at the last release tag and at
 # the pull request's head, and each consumer's on `main` — and hands the paths
 # to `scripts/protocol-gate.sh judge`, which holds the whole decision and is
 # proved both ways by `make protocol-gate` in the local gate. The workflow
 # cannot run locally; the logic it spends can, and does on every `make lint`.
-# The roster of consumers and where each keeps its constant lives in that
-# script and is not restated here.
+# The roster of consumers, and the one path all four are read at, live in that
+# script and are not restated here.
 #
 # A hold is not a failure: the step exits 0, prints the verdict, and comments
 # it once on the pull request. Every later CI run on that pull request
@@ -274,13 +281,14 @@ jobs:
                 "$number" "${sha:0:8}" "$ci" "$state"
               continue
             fi
-            # The protocol gate (see the header). Four `hello.rs` files, and a
+            # The protocol gate (see the header). Four `PROTOCOL` files, and a
             # script that holds the whole decision. Absent files are the
             # fail-closed inputs the script judges — the fetches are `|| true`
-            # and truncate first, so a missing release, a moved constant or a
-            # network fault reads as unreadable and holds rather than merging.
+            # and truncate first, so a missing release, a release predating the
+            # file or a network fault reads as unreadable and holds rather than
+            # merging.
             gate="$(mktemp -d)"
-            hello="$(scripts/protocol-gate.sh hello)"
+            file="$(scripts/protocol-gate.sh file)"
             raw() {
               gh api "repos/$1/contents/$3?ref=$2" \
                 -H "Accept: application/vnd.github.raw" >"$4" || true
@@ -289,12 +297,12 @@ jobs:
             # No previous release leaves `published` absent on purpose; the
             # script then judges the tree AS a bump, which the consumers can
             # clear and a hand does not have to.
-            [ -z "$tag" ] || raw "$GH_REPO" "$tag" "$hello" "$gate/published"
-            raw "$GH_REPO" "$sha" "$hello" "$gate/candidate"
+            [ -z "$tag" ] || raw "$GH_REPO" "$tag" "$file" "$gate/published"
+            raw "$GH_REPO" "$sha" "$file" "$gate/candidate"
             consumers=()
-            while IFS=$'\t' read -r repo path; do
+            while read -r repo; do
               [ -n "$repo" ] || continue
-              raw "$repo" main "$path" "$gate/${repo##*/}"
+              raw "$repo" main "$file" "$gate/${repo##*/}"
               consumers+=("${repo##*/}=$gate/${repo##*/}")
             done < <(scripts/protocol-gate.sh roster)
 

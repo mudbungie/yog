@@ -57,8 +57,8 @@ pub(super) fn check(dir: &Path) -> Result<(), String> {
     stale.sort();
     Err(format!(
         "the wire conformance corpus is stale at {}. Run `make corpus` to \
-         regenerate it; if a shape already in use changed, raise PROTOCOL in \
-         src/wire/hello/version.rs first.",
+         regenerate it; if a shape already in use changed, raise the number in \
+         the repo-root PROTOCOL file first.",
         stale.join(", ")
     ))
 }

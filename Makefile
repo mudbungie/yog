@@ -166,8 +166,8 @@ wire-certs:
 # Regenerate the wire conformance corpus (REMOTE §3, bl-32cb) from the boundary
 # itself. The corpus is committed under corpus/; a test verifies it on every
 # run, so this target is only ever needed after a wire-visible change — and it
-# REFUSES a shape that changed its fields while PROTOCOL (src/wire/hello.rs)
-# stood still, which is the rule made mechanical.
+# REFUSES a shape that changed its fields while PROTOCOL (the repo-root
+# `PROTOCOL` file) stood still, which is the rule made mechanical.
 corpus:
 	@YOG_CORPUS_OUT="$(CURDIR)/corpus" cargo test --quiet --lib boundary::corpus::tests::gate -- --exact
 	@echo "corpus: regenerated from the boundary"
@@ -177,7 +177,7 @@ leak-scan:
 	@scripts/leak-scan.sh
 
 # The release-ordering gate's logic, proved both ways (bl-bca2). A yog release
-# that RAISES `src/wire/hello.rs`'s PROTOCOL may not auto-merge until the seat,
+# that RAISES the repo-root `PROTOCOL` file may not auto-merge until the seat,
 # the foot and the phone carry the new number on their mains — otherwise the
 # publish opens a window in which no combination on crates.io composes, which
 # is what a clean-box install measured on 2026-09-06.

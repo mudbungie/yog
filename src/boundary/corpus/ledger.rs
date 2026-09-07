@@ -182,8 +182,8 @@ pub(super) fn advance(
     if !moved.is_empty() && protocol <= published {
         return Err(format!(
             "these wire shapes changed at a published protocol version: {}. \
-             A change to a shape already in use bumps the version: raise PROTOCOL \
-             above the published floor of {published} in src/wire/hello/version.rs, \
+             A change to a shape already in use bumps the version: raise the number \
+             above the published floor of {published} in the repo-root PROTOCOL file, \
              then run `make corpus`.",
             moved.join(", ")
         ));

@@ -110,7 +110,7 @@ fn a_changed_shape_at_a_published_version_demands_the_bump() {
         .err()
         .expect("refused");
     assert!(refusal.contains("request/ack"), "{refusal}");
-    assert!(refusal.contains("src/wire/hello/version.rs"), "{refusal}");
+    assert!(refusal.contains("PROTOCOL file"), "{refusal}");
     assert!(refusal.contains("make corpus"), "{refusal}");
 }
 

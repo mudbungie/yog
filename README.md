@@ -1010,7 +1010,8 @@ three artifacts, one trigger.
 **A protocol bump waits for its consumers** (bl-bca2). yog is the only
 component that mints the wire protocol version, and the seat (`lernie`), the
 foot (`thrall`) and the phone (`yog-android`) each *vendor* a copy of the
-constant; the wire is fail-closed on a mismatch and does not negotiate
+number in a repo-root `PROTOCOL` file — one line, compiled into the constant by
+`build.rs` — and the wire is fail-closed on a mismatch and does not negotiate
 (`docs/REMOTE.md` §3). Publishing a bump first therefore opened a window in
 which nothing on crates.io composed — measured on a clean box as engine 15,
 foot 14, seat 13. So the auto-merge job reads `PROTOCOL` from the release PR's
@@ -1021,7 +1022,10 @@ version is unaffected. A later CI run on the pull request, or a
 `workflow_dispatch` of *Auto-merge release PR*, re-judges and merges. The
 decision itself is `scripts/protocol-gate.sh`, which reads no network and is
 proved both ways by `make protocol-gate` in the local gate — the workflow
-cannot run locally, so the logic it spends does not live in it.
+cannot run locally, so the logic it spends does not live in it. **Every read
+is of `PROTOCOL` at a repo root** (bl-3e57), and no gate names a Rust path: the
+number used to be a declaration, this repository moved the file it was declared
+in, and every consumer's gate silently stopped being able to read it.
 
 The skew runs both ways, so each consumer holds the mirror image: its release
 does not merge while its own `PROTOCOL` *exceeds* the newest published yog's.

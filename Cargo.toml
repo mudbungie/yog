@@ -47,6 +47,12 @@ categories = ["development-tools"]
 # the `/`.
 include = [
     "src/**",
+    # The wire version's one file-shaped home and the script that compiles it
+    # into the constant (bl-3e57). Both are build inputs: without them the
+    # published crate does not compile, which is the loud half of the asymmetry
+    # this list is shaped by.
+    "/PROTOCOL",
+    "/build.rs",
     "/README.md",
     "/LICENSE",
     "/CHANGELOG.md",

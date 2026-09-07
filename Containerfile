@@ -53,16 +53,18 @@ RUN set -eu; \
       exit 1; \
     fi
 
-# The manifests and the crate source, and nothing else: yog reads no asset at
-# compile time at all. `tests/packaged_files.rs` proves that in both directions
-# over the real `cargo package --list` — it fails if the build gains a
+# The manifests, the crate source, and the two root build inputs — `PROTOCOL`,
+# the wire version's one file-shaped home, and the `build.rs` that compiles it
+# into the constant (bl-3e57). Nothing else: yog reads no asset at compile time
+# at all. `tests/packaged_files.rs` proves that in both directions over the real
+# `cargo package --list` — it fails if the build gains a
 # `include_bytes!`/`include_str!` outside `src/`, which is the same question
 # this `COPY` list answers.
 #
 # `--locked` for the same reason the gate uses it: the committed Cargo.lock is
 # the dependency answer, and a build that is allowed to solve for a different
 # one is not the build the gate judged.
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml Cargo.lock PROTOCOL build.rs ./
 COPY src ./src
 RUN cargo build --release --locked --bin yog
 

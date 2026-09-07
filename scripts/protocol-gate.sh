@@ -2,8 +2,8 @@
 # protocol-gate.sh — a yog release that RAISES the wire protocol may not
 # publish before its consumers can speak it (bl-bca2).
 #
-#   scripts/protocol-gate.sh hello        yog's own hello file, one path
-#   scripts/protocol-gate.sh roster       the consumers, `repo<TAB>hello` rows
+#   scripts/protocol-gate.sh file         the path every repo states it at
+#   scripts/protocol-gate.sh roster       the consumer repositories, one a line
 #   scripts/protocol-gate.sh read FILE    the PROTOCOL integer that file states
 #   scripts/protocol-gate.sh judge PUBLISHED CANDIDATE NAME=FILE...
 #   scripts/protocol-gate.sh --self-test  both directions, no network
@@ -34,45 +34,52 @@
 #
 # THIS FILE IS PURE LOGIC AND READS NO NETWORK, which is the whole reason the
 # rule is testable: `.github/workflows/release-automerge.yml` fetches the four
-# `hello.rs` files (yog at its last release tag, yog at the pull request's
+# `PROTOCOL` files (yog at its last release tag, yog at the pull request's
 # head, and each consumer's `main`) and hands this script paths. The roster
-# below is the one home for WHERE each consumer keeps its vendored constant;
-# the workflow reads it rather than restating it.
+# below is the one home for WHICH repositories are consumers; the workflow
+# reads it rather than restating it.
+#
+# THE NUMBER IS A FILE, NOT A DECLARATION (bl-3e57). Every read here is a fetch
+# of one path out of a tree the reader does not build, and a Rust path is not a
+# stable address for that: bl-94a5 split yog's `src/wire/hello.rs` into
+# `src/wire/hello/version.rs`, leaving the old file re-exporting — invisible to
+# a build, fatal to a regex. Every consumer's gate then read the engine's
+# constant as ABSENT, which is fail-closed and therefore held, so the bump the
+# holds were waiting for would have made them permanent (thrall bl-c618). So
+# the number now has one file-shaped home per repository, at the one address a
+# module split cannot move: a top-level `PROTOCOL` file, one line, the integer.
+# yog's `build.rs` compiles it into the constant; each consumer does the same
+# for its vendored copy. There is NO Rust path in this file.
 
 set -euo pipefail
 
-# yog's own. The number's one home, and the file the two yog readings below
-# are taken from at two different commits.
-HELLO='src/wire/hello.rs'
+# The path, at the root of every one of the four repositories. One constant for
+# all four reads, because one address is the whole point: a per-repository path
+# is a per-repository way to rot.
+FILE='PROTOCOL'
 
-# The consumers, and where each vendors the constant. Tab-separated so the
-# workflow can read it with `while IFS=$'\t' read`.
-#
-# All three keep it as a plain `const PROTOCOL: u32 = N;` in a `hello`-shaped
-# module, which is why one regex reads all four files. thrall keeps a SECOND
-# copy in `src/corpus.rs` that its own tests hold equal to this one; the wire
-# constant is the one that decides a handshake, so it is the one read here.
+# The consumers. One repository a line — where each keeps its copy is no longer
+# a fact anything needs, so it is no longer a fact anything can get wrong.
 ROSTER=$(
-  printf '%s\t%s\n' \
-    'mudbungie/thrall'      'src/channel/hello.rs' \
-    'mudbungie/lernie'      'src/channel/hello.rs' \
-    'mudbungie/yog-android' 'src/hello.rs'
+  printf '%s\n' \
+    'mudbungie/thrall' \
+    'mudbungie/lernie' \
+    'mudbungie/yog-android'
 )
 
-# The declaration, anchored at the start of a line so a doc comment quoting it
-# — thrall's `src/corpus.rs` quotes the line verbatim — is not mistaken for it.
-# `pub`, `pub(crate)` and a bare `const` all read.
-DECL='^[[:space:]]*(pub[[:space:]]*(\([^)]*\))?[[:space:]]+)?const[[:space:]]+PROTOCOL[[:space:]]*:[[:space:]]*u32[[:space:]]*=[[:space:]]*([0-9]+)[[:space:]]*;.*$'
-
-# The integer FILE states, or nothing and a non-zero status. No pipe: `sed |
-# head` would kill the writer with SIGPIPE and `pipefail` would then report the
-# read as failed exactly when it succeeded (scripts/beat-audit.sh, shape C).
+# The integer FILE states, or nothing and a non-zero status. The whole file is
+# the number: any second line, any word, any punctuation is not a PROTOCOL file
+# and reads as unstated rather than as a number found inside something else.
+# Command substitution strips the trailing newline, and a newline is not a
+# digit, so the one `case` rejects an empty file and a multi-line one alike.
 protocol_of() {
-  local file=$1 hits
+  local file=$1 stated
   [ -r "$file" ] || return 1
-  hits=$(sed -nE "s/$DECL/\\3/p" "$file")
-  [ -n "$hits" ] || return 1
-  printf '%s\n' "${hits%%$'\n'*}"
+  stated=$(<"$file")
+  case $stated in
+  '' | *[!0-9]*) return 1 ;;
+  esac
+  printf '%s\n' "$stated"
 }
 
 # The verdict, as one line on stdout. Exit 0 merges, 3 holds, 2 is a usage
@@ -91,7 +98,7 @@ judge() {
   }
 
   if ! cand=$(protocol_of "$candidate"); then
-    echo "hold: no PROTOCOL declaration in the release tree's $candidate"
+    echo "hold: the release tree's $candidate states no PROTOCOL integer"
     return 3
   fi
 
@@ -102,8 +109,8 @@ judge() {
     fi
     moved="PROTOCOL $pub -> $cand"
   else
-    # No readable baseline (no previous release, or the constant moved house
-    # in the released tree). Judge it AS a bump: that is the fail-closed
+    # No readable baseline (no previous release, or a release predating the
+    # `PROTOCOL` file). Judge it AS a bump: that is the fail-closed
     # reading, and unlike an outright hold it is undone by the consumers
     # catching up rather than by a hand.
     moved="PROTOCOL $cand, with no readable baseline to compare it against"
@@ -113,7 +120,7 @@ judge() {
     name=${spec%%=*}
     file=${spec#*=}
     if ! n=$(protocol_of "$file"); then
-      lag+=("$name: no PROTOCOL declaration read")
+      lag+=("$name states no PROTOCOL integer")
     elif [ "$n" != "$cand" ]; then
       lag+=("$name speaks $n")
     fi
@@ -132,8 +139,10 @@ judge() {
 # Both directions, because the workflow that spends this cannot run locally and
 # a check that has stopped matching passes everything forever. Each case states
 # a tree and the one line the gate must answer with.
+# A tree's `PROTOCOL` file, written byte for byte — `%b` so a case can state
+# its own line endings, which is half of what these fixtures are for.
 fixture() {
-  printf '//! /// pub const PROTOCOL: u32 = 999;\n%s\n' "$2" >"$1"
+  printf '%b' "$2" >"$1"
 }
 
 expect() {
@@ -155,42 +164,50 @@ self_test() {
   # shellcheck disable=SC2064
   trap "rm -rf '$d'" EXIT
 
-  fixture "$d/pub15" 'pub const PROTOCOL: u32 = 15;'
-  fixture "$d/pub16" 'pub const PROTOCOL: u32 = 16;'
-  fixture "$d/crate16" '    pub(crate) const PROTOCOL: u32 = 16;'
-  fixture "$d/bare16" 'const PROTOCOL: u32 = 16;'
-  fixture "$d/quoted" '/// reads `pub const PROTOCOL: u32 = 15`, copied below.'
+  fixture "$d/n15" '15\n'
+  fixture "$d/n16" '16\n'
+  # A file is the number and nothing else, but the number may be spelled with
+  # the whitespace an editor leaves: no trailing newline, and a trailing blank
+  # line, are the same 16.
+  fixture "$d/tight16" '16'
+  fixture "$d/loose16" '16\n\n'
+  # What the number's home used to be. A Rust declaration is now exactly as
+  # unreadable as prose, which is the point: this file names no Rust path, so a
+  # tree that still keeps its number in a module states nothing.
+  fixture "$d/decl" 'pub const PROTOCOL: u32 = 16;\n'
 
   # A bump, and a consumer still on the published number: held, and the line
   # names the repo and what it speaks. This is the 2026-09-06 tree.
   expect 3 'hold: PROTOCOL 15 -> 16, and lernie speaks 15' \
-    "$d/pub15" "$d/pub16" "thrall=$d/pub16" "lernie=$d/pub15"
+    "$d/n15" "$d/n16" "thrall=$d/n16" "lernie=$d/n15"
   # Two behind: both named, in roster order, in one line.
   expect 3 'hold: PROTOCOL 15 -> 16, and thrall speaks 15; lernie speaks 15' \
-    "$d/pub15" "$d/pub16" "thrall=$d/pub15" "lernie=$d/pub15"
-  # The same bump once they have landed it — however each spells the constant.
+    "$d/n15" "$d/n16" "thrall=$d/n15" "lernie=$d/n15"
+  # The same bump once they have landed it — however the file is terminated.
   expect 0 'merge: PROTOCOL 15 -> 16, and every consumer main carries 16' \
-    "$d/pub15" "$d/pub16" "thrall=$d/crate16" "lernie=$d/bare16"
-  # No bump: unaffected, even with every consumer behind.
+    "$d/n15" "$d/n16" "thrall=$d/tight16" "lernie=$d/loose16"
+  # No bump: unaffected, even with every consumer behind or unreadable.
   expect 0 'merge: PROTOCOL stands at 15 — this release moves no wire version' \
-    "$d/pub15" "$d/pub15" "thrall=$d/pub15" "lernie=$d/quoted"
+    "$d/n15" "$d/n15" "thrall=$d/n15" "lernie=$d/decl"
   # Fail closed on each unreadable input, and never merge on one.
   expect 3 'hold: PROTOCOL 16, with no readable baseline to compare it against, and lernie speaks 15' \
-    "$d/absent" "$d/pub16" "lernie=$d/pub15"
-  expect 3 "hold: no PROTOCOL declaration in the release tree's $d/quoted" \
-    "$d/pub15" "$d/quoted" "lernie=$d/pub16"
-  expect 3 'hold: PROTOCOL 15 -> 16, and lernie: no PROTOCOL declaration read' \
-    "$d/pub15" "$d/pub16" "lernie=$d/absent"
+    "$d/absent" "$d/n16" "lernie=$d/n15"
+  expect 3 "hold: the release tree's $d/decl states no PROTOCOL integer" \
+    "$d/n15" "$d/decl" "lernie=$d/n16"
+  expect 3 'hold: PROTOCOL 15 -> 16, and lernie states no PROTOCOL integer' \
+    "$d/n15" "$d/n16" "lernie=$d/absent"
   expect 3 'hold: no consumer was named, so nothing was checked' \
-    "$d/pub15" "$d/pub16"
+    "$d/n15" "$d/n16"
 
   # The roster is data the workflow spends, so it is checked as data: three
-  # rows, each naming a repository and a path. A roster that enumerated
-  # nothing would merge every bump unchecked.
+  # rows, each naming a repository and nothing else. A roster that enumerated
+  # nothing would merge every bump unchecked. `FILE` is checked beside it
+  # because a path with a directory in it is a path a module split can move,
+  # which is the defect this shape exists to end.
   local rows
-  rows=$(printf '%s\n' "$ROSTER" | grep -c '^mudbungie/[a-z-]*	src/.*hello\.rs$' || true)
-  if [ "$rows" != 3 ] || [ "$HELLO" != 'src/wire/hello.rs' ]; then
-    echo "protocol-gate self-test: the roster is not three consumer rows plus yog's own" >&2
+  rows=$(printf '%s\n' "$ROSTER" | grep -c '^mudbungie/[a-z-]*$' || true)
+  if [ "$rows" != 3 ] || [ "$FILE" != 'PROTOCOL' ]; then
+    echo "protocol-gate self-test: the roster is not three bare consumer repositories, or the number is not read at the repo root" >&2
     exit 1
   fi
   echo "protocol-gate: self-test OK — 8 verdicts, both directions, over a 3-consumer roster" >&2
@@ -198,12 +215,12 @@ self_test() {
 
 case ${1:-} in
 --self-test) self_test ;;
-hello) printf '%s\n' "$HELLO" ;;
+file) printf '%s\n' "$FILE" ;;
 roster) printf '%s\n' "$ROSTER" ;;
 read) [ "$#" = 2 ] || { echo "usage: protocol-gate.sh read FILE" >&2; exit 2; }
-      protocol_of "$2" || { echo "protocol-gate: no PROTOCOL declaration in $2" >&2; exit 1; } ;;
+      protocol_of "$2" || { echo "protocol-gate: $2 states no PROTOCOL integer" >&2; exit 1; } ;;
 judge) shift
        [ "$#" -ge 2 ] || { echo "usage: protocol-gate.sh judge PUBLISHED CANDIDATE NAME=FILE..." >&2; exit 2; }
        judge "$@" ;;
-*) echo "usage: protocol-gate.sh {hello|roster|read FILE|judge ...|--self-test}" >&2; exit 2 ;;
+*) echo "usage: protocol-gate.sh {file|roster|read FILE|judge ...|--self-test}" >&2; exit 2 ;;
 esac

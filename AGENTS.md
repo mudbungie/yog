@@ -392,9 +392,12 @@ demotion removes an internal API from the boundary's obligations. Reach for
   `scripts/protocol-gate.sh` — pure logic, no network — because the workflow
   that spends it (`.github/workflows/release-automerge.yml`) cannot run
   locally, and that script also holds the ONE roster of which repositories are
-  consumers and where each keeps its constant. Every unreadable input holds
-  rather than merges. This target is its self-test: eight verdicts over
-  fabricated trees plus the roster's own shape.
+  consumers. **The number is read at `PROTOCOL` in the root of every tree, tag
+  and main judged** (bl-3e57), and the script names no Rust path: it used to
+  name one per repository, and yog moved its own out from under all four gates
+  in a module split. Every unreadable input holds rather than merges. This
+  target is its self-test: eight verdicts over fabricated trees plus the
+  roster's own shape.
 - `make leak-scan` — the disclosure gate (bl-fd5a, reworked bl-167d).
   `scripts/leak-rules.sh` is the one definition of what may not be committed:
   private keys, vendor API tokens, credential assignments, routable
@@ -832,9 +835,9 @@ green (bl-1c05 — the build is the gate, the merge was only ever a hand). One
 condition now stands beside CI, and it is the only one that can park a release
 for days:
 
-- **A release that raises `src/wire/hello.rs`'s `PROTOCOL` is held until
+- **A release that raises the repo-root `PROTOCOL` file is held until
   `mudbungie/thrall`, `mudbungie/lernie` and `mudbungie/yog-android` carry the
-  same number on their mains.** The job reads the constant from the release
+  same number in theirs on `main`.** The job reads that file from the release
   PR's own tree, from yog's last release tag (which says whether this release
   moves it at all), and from each consumer's `main`, then hands the four paths
   to `scripts/protocol-gate.sh judge`.
@@ -863,3 +866,16 @@ for days:
   components publish, which is the only place the skew was ever decidable.
   **REMOTE §3 is the one home of this rule** and every consumer repository
   cites it.
+- **The number is a FILE, in every one of the four repositories** (bl-3e57).
+  `PROTOCOL` at the repo root, one line, the integer; `build.rs` compiles it
+  into the constant `src/wire/hello/version.rs` includes, so the file IS the
+  source and there is no second copy to test against, and each consumer does
+  the same for its vendored copy. **Bump it by editing that line** — nothing
+  in `src` states the number. It is a file because these gates are four
+  repositories *fetching* the number out of trees they do not build, and a Rust
+  path is not a stable address for that: bl-94a5's split of
+  `src/wire/hello.rs` left the old path re-exporting, which a build cannot
+  notice and a regex reads as no declaration, so every consumer's gate had
+  silently stopped being able to read this engine and would have held forever
+  on the bump it was waiting for (thrall bl-c618). **No gate, workflow or
+  roster in any of the four repositories names a Rust path for it.**

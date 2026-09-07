@@ -72,9 +72,11 @@ fn packaged() -> Vec<String> {
         .collect()
 }
 
-/// The classes ruled into the published crate: the crate's own source and the
-/// three files crates.io renders. `Cargo.toml.orig` and `.cargo_vcs_info.json`
-/// are minted by cargo into the tarball and are not tree files at all.
+/// The classes ruled into the published crate: the crate's own source, the two
+/// root build inputs (`PROTOCOL`, the wire version's one file-shaped home, and
+/// the `build.rs` that compiles it into the constant — bl-3e57), and the three
+/// files crates.io renders. `Cargo.toml.orig` and `.cargo_vcs_info.json` are
+/// minted by cargo into the tarball and are not tree files at all.
 ///
 /// The icon artifacts were the fourth class until bl-7942; they were the
 /// application mark, and a server has none.
@@ -85,6 +87,8 @@ fn is_ruled_in(path: &str) -> bool {
             | "Cargo.lock"
             | "Cargo.toml.orig"
             | ".cargo_vcs_info.json"
+            | "PROTOCOL"
+            | "build.rs"
             | "README.md"
             | "LICENSE"
             | "CHANGELOG.md"
@@ -120,6 +124,10 @@ fn the_files_crates_io_needs_ship() {
         "Cargo.lock",
         "README.md",
         "LICENSE",
+        // The wire version and the script that compiles it in: without either,
+        // the published crate does not build at all (bl-3e57).
+        "PROTOCOL",
+        "build.rs",
         "src/lib.rs",
         "src/main.rs",
     ] {

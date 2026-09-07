@@ -156,11 +156,26 @@ says — and adds no verb, no field and no envelope:
   bl-a670 — `src/wire/hello.rs`)*: **each end writes one frame,
   `{"protocol": <integer>}`, before it reads the peer's.** Both write before
   either reads, so neither waits on the other and there is no ordering rule to
-  remember. **The version itself is not restated here.** It lives in
-  `src/wire/hello.rs`'s `PROTOCOL`, with the changelog of what moved it beside
-  it, and the subsections below record each bump as it was taken; this
-  paragraph carried a literal `1` until bl-2410 and was five versions stale by
-  then, which is what a second home for one fact does.
+  remember. **The version itself is not restated here.** It lives in the
+  **repo-root `PROTOCOL` file** — one line, the integer, in yog and in every
+  consumer alike (bl-3e57) — with the changelog of what moved it in
+  `src/wire/hello/version.rs` and the subsections below recording each bump as
+  it was taken; this paragraph carried a literal `1` until bl-2410 and was five
+  versions stale by then, which is what a second home for one fact does.
+
+  **Why a file and not a declaration.** The number is compiled in — yog's
+  `build.rs` writes the constant `version.rs` includes, each consumer does the
+  same for its vendored copy — so there is still exactly one copy, and no test
+  holding two in agreement. What the file buys is an ADDRESS: the two gates
+  below are four repositories FETCHING this number out of trees they do not
+  build, and a Rust path is not stable under a refactor that a build cannot
+  notice. bl-94a5 split `src/wire/hello.rs` into `src/wire/hello/version.rs`
+  and left the old path re-exporting; every consumer's gate went on fetching
+  the old path, read a `pub use` as *no declaration*, and would have held its
+  release forever on the very bump it was waiting for (thrall bl-c618). A
+  top-level file with no extension is the one path a module split cannot move,
+  and **no gate and no roster in any of the four repositories names a Rust
+  path**.
 
   **Why now, and not before.** Until the four-component split (§12) one crate
   shipped both ends of every connection, so the wire could not skew and a
@@ -207,14 +222,14 @@ says — and adds no verb, no field and no envelope:
 
   1. **yog does not publish a bump ahead of its consumers.**
      `.github/workflows/release-automerge.yml` holds a release that raises
-     `PROTOCOL` until `mudbungie/thrall`, `mudbungie/lernie` and
-     `mudbungie/yog-android` carry the same number on their mains, and
+     the root `PROTOCOL` file until `mudbungie/thrall`, `mudbungie/lernie` and
+     `mudbungie/yog-android` carry the same number in theirs on `main`, and
      comments once naming what lags. A release that moves no wire version is
      unaffected. `scripts/protocol-gate.sh` is the decision.
   2. **A consumer does not publish a bump ahead of the engine.** Each
      consumer's own `merge-release-pr` job holds a release whose `PROTOCOL`
-     **exceeds** the newest published yog's, read off yog's newest `v<x.y.z>`
-     tag — cut in the same act as the crates.io upload, so that tag *is* the
+     **exceeds** the newest published yog's, read off the root `PROTOCOL` file
+     at yog's newest `v<x.y.z>` tag — cut in the same act as the crates.io upload, so that tag *is* the
      published engine. Each carries its own `scripts/protocol-gate.sh` (thrall
      bl-635b, lernie bl-52b5, yog-android bl-5b19) and cites this section
      rather than restating the rule. **Strictly greater, not different**: a
@@ -229,8 +244,9 @@ says — and adds no verb, no field and no envelope:
 
   Negotiation, a compat window and a version list all stay refused for the
   reason above; what was wrong was the ORDER, which is the only place the skew
-  is decidable. So a `PROTOCOL` bump is a four-repository act, and the number's
-  one home stays `src/wire/hello.rs`.
+  is decidable. So a `PROTOCOL` bump is a four-repository act — and it is
+  performed by editing one line of the repo-root `PROTOCOL` file in each, which
+  is the number's one home everywhere.
 
   **A peer that states no version is refused exactly as a peer of the wrong
   one.** An unversioned build (a gesture envelope where a preface belongs), a
