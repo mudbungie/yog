@@ -34,6 +34,7 @@ use crate::login::auth::{AuthFailure, row_of_model};
 mod detail;
 mod orphan;
 pub(crate) mod records;
+mod seq;
 pub(crate) mod wire;
 mod wound;
 pub use detail::{Doc, StepDetail, ToolIo, UNPARSED, detail};

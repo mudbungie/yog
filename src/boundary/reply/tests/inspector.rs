@@ -59,6 +59,9 @@ fn every_conversation_read_answers_from_the_chokepoint() {
     std::fs::create_dir_all(work.join("messages")).unwrap();
     std::fs::write(work.join("messages").join("001-user.md"), b"go").unwrap();
     std::fs::write(work.join("goal.md"), b"ship it").unwrap();
+    // One step record, because `Query::Step` addresses one (bl-136f): a seq
+    // that names no directory refuses rather than answering absent records.
+    std::fs::create_dir_all(ws.join("steps").join(AGENT).join("001")).unwrap();
     let inbox = ws.join("inbox").join(AGENT);
     std::fs::create_dir_all(&inbox).unwrap();
     std::fs::write(inbox.join("user-001.md"), b"---\nfrom: user\n---\nhi\n").unwrap();

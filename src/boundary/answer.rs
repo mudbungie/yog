@@ -152,7 +152,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // `login::Lane`, whose frames come off this same buffer.
         Query::LoginTail { provider, .. } => login::standing(deps, ws, provider),
         Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent, now_unix)),
-        Query::Step { seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)),
+        Query::Step { seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)?),
         // The listing, plus **where this conversation's work actually lands**
         // when that is not the worktree the listing walked (bl-1015): a path
         // or ball rung seeds litany's cwd mark at creation, so every tool step

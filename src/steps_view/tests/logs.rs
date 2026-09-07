@@ -36,7 +36,7 @@ fn wounded() -> (tempfile::TempDir, StepDetail) {
     write_file(ws, "001", "response.json", b"");
     write_file(ws, "001", "stderr.log", ADAPTER.as_bytes());
     write_driver_log(ws, DRIVER.as_bytes());
-    let d = detail(ws, AGENT, "001");
+    let d = detail(ws, AGENT, "001").unwrap();
     (dir, d)
 }
 
@@ -68,7 +68,7 @@ fn an_empty_or_absent_log_is_no_reading_at_all() {
     // seat offered a row for either would be offering a dead one.
     write_file(ws, "001", "meta.json", br#"{"commit":"c0ffee"}"#);
     write_file(ws, "001", "stderr.log", b"");
-    let d = detail(ws, AGENT, "001");
+    let d = detail(ws, AGENT, "001").unwrap();
     assert_eq!(d.stderr, None, "an empty log is nothing to read");
     assert_eq!(d.driver, None, "an absent log is the same fact");
     let said = crate::steps_view::wire::detail(&d);

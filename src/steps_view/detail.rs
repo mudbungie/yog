@@ -105,11 +105,18 @@ pub struct StepDetail {
 /// forgivingly — malformed content keeps its bytes and is *framed* as
 /// malformed ([`UNPARSED`]), absent content says so; neither aborts the build,
 /// so the sibling tabs still render (S7-T2).
-pub fn detail(workspace: &Path, agent_id: &str, seq: &str) -> StepDetail {
+///
+/// **Forgiving about a record's content, never about its address** (bl-136f):
+/// the seq is resolved to the directory it names ([`super::seq::resolve`])
+/// before anything is read, and one that names none refuses. Absent records are
+/// what a step that recorded nothing looks like; a path never opened must not
+/// wear that answer.
+pub fn detail(workspace: &Path, agent_id: &str, seq: &str) -> Result<StepDetail, String> {
+    let seq = super::seq::resolve(workspace, agent_id, seq)?;
     let agent = workspace.join(STEPS_DIR).join(agent_id);
-    let step = agent.join(seq);
-    StepDetail {
-        seq: seq.to_string(),
+    let step = agent.join(&seq);
+    Ok(StepDetail {
+        seq,
         meta: Doc::of_file(&step.join(META_FILE)),
         request: Doc::of_file(&step.join(REQUEST_FILE)),
         staging: Doc::of_file(&step.join(STAGING_FILE)),
@@ -117,7 +124,7 @@ pub fn detail(workspace: &Path, agent_id: &str, seq: &str) -> StepDetail {
         tools: tool_ios(&step.join(TOOLS_SUBDIR)),
         stderr: log(&step.join(STDERR_FILE)),
         driver: log(&agent.join(DRIVER_LOG_FILE)),
-    }
+    })
 }
 
 /// A capture log as bounded bytes, or `None` when there is nothing to read —

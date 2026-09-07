@@ -42,8 +42,10 @@ pub const QUERIES: &[HelpRow] = &[
         verb: "step",
         usage: "/step <seq>",
         summary: "one step's records — request, response, staging, tools",
-        detail: "The drill-in for a single step of the selected conversation, named by the \
-                 sequence the list shows (`001`). Answers that step's `meta`, the wire request \
+        detail: "The drill-in for a single step of the selected conversation. The seq is the \
+                 number the list shows, however you spell it — `3`, `03` and `003` are one \
+                 address — and a seq naming no step is refused, naming the ones that exist. \
+                 Answers that step's `meta`, the wire request \
                  that was sent, the staged transcript entry, every event of the response stream, \
                  and every tool call's input and output — each as parsed data with the bytes it \
                  parsed from beside it. Records that are missing say so, and records that are not \
