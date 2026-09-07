@@ -18,16 +18,40 @@
 //! - **Nobody is driving it** — the target agent's §3.5 lock is free
 //!   ([`AgentState::driven`]). A driver at work is the answer to "did it
 //!   survive", so nothing else is asked.
-//! - **It has not acted since the launch** — every matching agent's
-//!   `last_action_unix` predates the row's own `ts`. A conversation that was
-//!   born, or a step that was written, is the launch's product; whatever went
-//!   wrong *after* that belongs to the wound and the orphan, which have a
-//!   surface to say it on.
+//! - **It has begun no model call since the launch** — every matching agent's
+//!   [`Agent::call_start_unix`] predates the row's own `ts`, or there is none
+//!   at all. litany writes a step's `request.json` immediately before handing
+//!   the request to the adapter, so that stamp is the one fact saying the loop
+//!   got as far as asking (§5.1 #28, the same anchor the §7.3 wound's catch-up
+//!   window rides).
 //!
 //! Both hold **vacuously when the target does not exist at all**, which is the
 //! class the sink was added for (bl-4895): a `litany prompt` whose driver died
 //! before writing a branch leaves no conversation, no step and no transcript —
 //! nothing but its ops row and its sink.
+//!
+//! **The second half used to be `last_action_unix`, and that left the
+//! commonest birth failure unreadable** (bl-6495). A `litany prompt` that
+//! refuses *after* creating the conversation — a role granting a tool its
+//! governing config does not describe, a bad lineage, a version skew — leaves
+//! a branch, a queued deposit and no step; and the branch's own dispatch
+//! commit is an action later than the row's stamp, so the launch read as
+//! having produced something and its sink was never opened. What the operator
+//! got was `ok:true` from the fire, `stopped` in the roster, an ops row saying
+//! `-2` with an empty `stderr`, and the refusal itself only in
+//! `state/yog/detached/<ts>-<ws>.err`, which no gesture reads. On a remote
+//! engine — the shape REMOTE describes — there is no reach to that file at
+//! all.
+//!
+//! The fix is to ask what the launch was fired to **produce**. A branch is not
+//! it: a conversation nobody has asked a model about is the same nothing as a
+//! conversation that does not exist, and both are this sink's class. A model
+//! call is, and from the instant one begins the §7.3 wound owns the story —
+//! the step's own `response.json`/`meta.json`/`stderr.log` say what happened
+//! to it, on the conversation surface where it is being read. So the two
+//! divisions §13.3 draws now meet exactly: **the sink answers for a driver
+//! that died before its first model call, the wound from that call onward**,
+//! with no launch falling between them and none answered twice.
 //!
 //! Nothing is stored and no new signal is introduced. The verdict is re-derived
 //! per sweep from the already-derived §3.5 trees, and the sink is read **only**
@@ -138,7 +162,7 @@ pub(crate) fn stillborn(
     tree.agents
         .iter()
         .filter(|agent| target.names(agent))
-        .all(|agent| !agent.state.driven() && agent.last_action_unix < ts)
+        .all(|agent| !agent.state.driven() && agent.call_start_unix.is_none_or(|at| at < ts))
 }
 
 #[cfg(test)]

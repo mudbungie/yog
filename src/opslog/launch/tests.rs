@@ -15,16 +15,21 @@ const MINTED: &str = "vanished-heron";
 const NOW: i64 = 10_000;
 const GRACE: Duration = Duration::from_secs(20);
 
-fn agent(id: &str, name: Option<&str>, state: AgentState, last_action: i64) -> Agent {
+/// One derived agent. `call_start` is the stamp the verdict reads — when this
+/// agent's latest step began its model call, `None` for a conversation that has
+/// never asked one. `last_action_unix` rides along at the same value because
+/// every act is one, and no beat here turns on it: the whole of bl-6495 is that
+/// it is **not** what the verdict asks.
+fn agent(id: &str, name: Option<&str>, state: AgentState, call_start: Option<i64>) -> Agent {
     Agent {
         branch_name: format!("agents/{id}"),
         agent_id: id.to_owned(),
         tip_oid: format!("tip-{id}"),
         tip_short_oid: "tip".into(),
         tip_timestamp_unix: 0,
-        last_action_unix: last_action,
+        last_action_unix: call_start.unwrap_or_default(),
         messages: 0,
-        call_start_unix: None,
+        call_start_unix: call_start,
         steps: vec![],
         preview: None,
         stream: Stream::default(),
@@ -100,7 +105,7 @@ fn a_start_that_left_no_conversation_is_stillborn() {
             "c-1",
             Some("other-name"),
             AgentState::Quiescent,
-            1
+            Some(1)
         )]),
         &prompt("100", MINTED),
         NOW,
@@ -109,12 +114,34 @@ fn a_start_that_left_no_conversation_is_stillborn() {
 }
 
 /// And the other direction, which is the whole of the ruling: the same launch,
-/// the same row, with its conversation on disk — no verdict, so the sink is
-/// never read and its words decide nothing.
+/// the same row, with a model call begun after it — no verdict, so the sink is
+/// never read and its words decide nothing. From that call onward the §7.3
+/// wound owns the story.
 #[test]
-fn a_start_whose_conversation_is_there_is_not() {
+fn a_start_that_reached_a_model_call_is_not() {
     assert!(!stillborn(
-        &forest(vec![agent("c-1", Some(MINTED), AgentState::Quiescent, 200)]),
+        &forest(vec![agent(
+            "c-1",
+            Some(MINTED),
+            AgentState::Quiescent,
+            Some(200)
+        )]),
+        &prompt("100", MINTED),
+        NOW,
+        GRACE
+    ));
+}
+
+/// **THE BALL** (bl-6495): the branch is there and nothing was ever asked of a
+/// model. A `litany prompt` that refuses after creating the conversation leaves
+/// exactly this — a conversation, a queued deposit, no step — and the branch's
+/// own dispatch commit is an action *later* than the row's stamp, so reading
+/// `last_action_unix` called the launch a success and never opened the sink
+/// that holds the refusal. The launch's product is a model call, not a branch.
+#[test]
+fn a_start_that_left_a_conversation_but_never_asked_a_model_is_stillborn() {
+    assert!(stillborn(
+        &forest(vec![agent("c-1", Some(MINTED), AgentState::Stopped, None)]),
         &prompt("100", MINTED),
         NOW,
         GRACE
@@ -129,7 +156,7 @@ fn a_driven_target_is_never_stillborn() {
     for state in [AgentState::Live, AgentState::InFlight] {
         assert!(
             !stillborn(
-                &forest(vec![agent("c-1", Some(MINTED), state, 1)]),
+                &forest(vec![agent("c-1", Some(MINTED), state, None)]),
                 &prompt("100", MINTED),
                 NOW,
                 GRACE
@@ -139,13 +166,18 @@ fn a_driven_target_is_never_stillborn() {
     }
 }
 
-/// A conversation that exists but has not moved since the launch, with nobody
-/// driving it, is the launch having produced nothing after all — a branch minted
-/// by an earlier fire whose newest driver never got anywhere.
+/// A conversation whose last model call predates the launch, with nobody
+/// driving it, is the launch having produced nothing after all — a branch whose
+/// newest driver never got anywhere.
 #[test]
-fn a_quiet_target_that_has_not_acted_since_the_launch_is_stillborn() {
+fn a_quiet_target_whose_last_call_predates_the_launch_is_stillborn() {
     assert!(stillborn(
-        &forest(vec![agent("c-1", Some(MINTED), AgentState::Stopped, 99)]),
+        &forest(vec![agent(
+            "c-1",
+            Some(MINTED),
+            AgentState::Stopped,
+            Some(99)
+        )]),
         &prompt("100", MINTED),
         NOW,
         GRACE
@@ -157,9 +189,9 @@ fn a_quiet_target_that_has_not_acted_since_the_launch_is_stillborn() {
 /// product.
 #[test]
 fn a_resume_is_judged_on_the_agent_it_named() {
-    let dead = forest(vec![agent("c-1", None, AgentState::Stopped, 99)]);
+    let dead = forest(vec![agent("c-1", None, AgentState::Stopped, Some(99))]);
     assert!(stillborn(&dead, &advance("100", "c-1"), NOW, GRACE));
-    let moved = forest(vec![agent("c-1", None, AgentState::Stopped, 101)]);
+    let moved = forest(vec![agent("c-1", None, AgentState::Stopped, Some(101))]);
     assert!(!stillborn(&moved, &advance("100", "c-1"), NOW, GRACE));
     // A resume of an agent this world has never heard of is stillborn for the
     // same vacuous reason a start with no conversation is.

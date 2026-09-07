@@ -34,6 +34,9 @@ fn derivable(w: &super::super::World) -> (Fixture, PathBuf) {
 /// The §3.3 name the fire minted, carried on the row's `--name`.
 const MINTED: &str = "vanished-heron";
 
+/// The agent id of a conversation the driver created and then abandoned.
+const BORN: &str = "20260906T102556Z-12570b20";
+
 /// The sink line both beats use — deliberately the same bytes, because the
 /// claim is that the bytes decide nothing.
 const CRY: &str = "brazen 0.0.2 refuses 0.0.3\n";
@@ -146,4 +149,42 @@ fn a_launch_inside_the_grace_window_never_alarms_however_its_sink_reads() {
         "the surface that fired it is not bannered"
     );
     assert_eq!(m.activity().errors, 0, "and the chip counts no failure");
+}
+
+/// **THE BALL** (bl-6495): the driver got as far as *creating* the conversation
+/// and then refused. The branch is there under the minted name, the deposit is
+/// queued, and no step was ever written — so the launch's dispatch commit is an
+/// action later than the row's own stamp, and reading `last_action_unix` called
+/// that a success and never opened the sink. Every seat then said `ok`,
+/// `stopped`, `exit -2`, empty `stderr`; the refusal itself sat in a file no
+/// gesture reads. A model call is the launch's product, not a branch.
+#[test]
+fn a_prompt_that_created_its_conversation_and_never_asked_a_model_still_surfaces() {
+    let w = world();
+    let (fx, ws) = derivable(&w);
+    // The conversation the fire named, born and then abandoned: a dispatch
+    // commit, the minted name settled on it, and no `steps/` tree at all.
+    fx.build_agent(BORN, "do the thing");
+    fx.name_agent(BORN, MINTED);
+    // …and no step: `build_agent` lays a step record down beside the branch,
+    // which is the shape of a conversation that ran. The one this ball is about
+    // never asked a model at all, so the tree goes.
+    fs::remove_dir_all(ws.join("steps")).unwrap();
+    let (clock, mut m) = model(&w);
+    launch(&m, "0", &ws);
+    cry(&m, "0", &ws);
+    clock.advance(Duration::from_mins(10));
+
+    m.after_litany_verb();
+    m.tick(); // the ops re-read is the worker's next pass (§7.2)
+    let row = m.snap.ops.last().unwrap();
+    assert!(
+        row.failed(),
+        "a birth that never reached a model call produced nothing"
+    );
+    assert_eq!(
+        crate::opslog::rows::stderr_tail(&banner(&m, Origin::Conversation).unwrap().stderr),
+        CRY.trim_end(),
+        "and the refusal reaches the seat instead of only the sink file"
+    );
 }

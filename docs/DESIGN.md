@@ -8168,11 +8168,41 @@ state**, and the tail is diagnosis. `opslog::launch::stillborn` reads the
 launch's own target out of the row's argv — the `--name` a `prompt` minted, the
 agent id an `advance` was handed, the tokens living in `opslog::launch` so the
 spawn and the reading cannot drift — and answers *stillborn* when no matching
-agent is being driven (§3.5) and none has acted since the row's stamp. Both
+agent is being driven (§3.5) and none has **begun a model call** since the
+row's stamp. Both
 halves hold vacuously when the target is not on disk at all, which is this
 sink's own class: a driver that died before writing a branch. Ahead of it stand
 the §7.3 grace window and §10's rule against a false definite — a workspace
-that derived no tree is no verdict, never an accusation. The marker table, the
+that derived no tree is no verdict, never an accusation.
+
+**A branch is not the launch's product (bl-6495).** The second half read
+`last_action_unix` until this ball, and that made the *creation of the
+conversation* count as the launch having produced something — so a `litany
+prompt` that refuses **after** creating it (a role granting a tool its
+governing config does not describe, a bad lineage, a version skew) had a
+dispatch commit stamped later than its own ops row, was judged a live launch,
+and its sink was never opened. The whole of what a seat could then see was
+`ok:true` from the fire, `stopped` in the roster, one queued deposit, a `-2`
+row with an empty `stderr`, and `lernie steps` answering *this loop has taken
+no step*. Nothing anywhere said why, and on a remote engine — the shape REMOTE
+describes — the operator has no reach to the sink file at all. The fact the
+verdict asks for is `Agent::call_start_unix`: the latest step's `request.json`
+mtime, which litany writes immediately before handing the request to the
+adapter (§5.1 #28), and which is `None` for a conversation that has never asked
+a model anything. A conversation nobody has asked a model about is the same
+nothing as a conversation that does not exist. **That also makes the two
+divisions below meet exactly**: the sink answers for a driver that died before
+its first model call, the wound from that call onward — no launch falls between
+them, and none is answered twice.
+
+**The `-2` in the row is not a wrong exit code and is not fixed by this.** It
+is the sentinel for the handoff itself (§4.2), written when and only when a
+child was actually handed off; yog never waits on a detached driver, so there
+is no observed status to record and the row renders "detached — handed off, no
+exit to observe" (`OpRow::exit_label`, on the wire beside `failed`). What a
+folded sink changes is that the row is a rendered *failure* carrying the
+driver's own words — which is the answer the operator needed, and the only one
+a launch yog does not reap can give. The marker table, the
 fifth `OpOutcome` and its badge are gone with it; a driver that filed a notice
 and carried on is an ordinary handoff, because nothing reads its sink. The cost
 is that a healthy launch's row has no stderr to expand — a capture log is
