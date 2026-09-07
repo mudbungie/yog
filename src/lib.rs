@@ -69,6 +69,9 @@ pub mod fleet;
 pub mod fork;
 pub mod fs_watcher;
 pub mod git_env;
+/// **Whether this box can author a commit at all** (§8.1, bl-c28c): the named
+/// prerequisite the two start doors hold, asked of `git` itself.
+pub(crate) mod git_ident;
 pub mod git_tree;
 pub mod inboxview;
 pub mod login;

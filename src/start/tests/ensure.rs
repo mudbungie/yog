@@ -89,6 +89,41 @@ fn ensure_errors_and_logs_on_a_nonzero_new() {
     assert!(matches!(err, StartError::VerbFailed { verb: "new", .. }));
 }
 
+/// **A fresh box has no git identity** (bl-c28c): `litany new`'s first commit
+/// dies with git's twelve-line *"Please tell me who you are"*, and that capture
+/// used to cross the boundary verbatim as an `error` string with embedded
+/// `\n`s, naming no prerequisite. It is one sentence now, and the ops row still
+/// holds the capture for whoever wants it.
+#[test]
+fn a_new_that_died_for_want_of_a_git_identity_names_the_prerequisite() {
+    let w = World::new();
+    let ws = workspace_path(w.yog.path(), "n");
+    let litany = Cli::new(fake_fail(
+        w.bin.path(),
+        "litany",
+        "Author identity unknown *** Please tell me who you are. Run            git config --global user.email you@example.com",
+    ));
+    let err = execute_ensure_workspace(
+        &deps(&w, &litany),
+        "TS",
+        &ws,
+        "default",
+        &layout(&w),
+        Origin::Balls,
+    )
+    .unwrap_err();
+    let said = err.to_string();
+    assert!(
+        said.starts_with("git has no identity on this box"),
+        "{said}"
+    );
+    assert!(!said.contains("Please tell me who you are"), "{said}");
+    assert_eq!(
+        &w.ops()[0].argv[1..],
+        &["new", ws.to_string_lossy().as_ref()]
+    );
+}
+
 #[test]
 fn ensure_logs_a_mkdir_step_failure() {
     // The parent chain cannot be created (a file sits where a dir must go) → a

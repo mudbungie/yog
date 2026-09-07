@@ -3714,6 +3714,41 @@ live twice in one evening and both first goals were wasted.
   follows it, so the moment the credential lands the next fire is a signed
   wall's. Nothing has to be told; the next read says it.
 
+**A prerequisite the door cannot hold, read off the failure instead (bl-c28c).**
+Every durable thing a start makes is a git commit somebody else writes —
+`litany new` authors the workspace's first `config/default` commit, `litany
+config` advances a lineage, `bl` seals a ball — and all of them fail on a box
+where git can name no author. It is the FIRST act of the Settler story
+(STORIES S0/S9) and it failed on every genuinely fresh box, answering a
+twelve-line `litany new` capture with git's own *"Please tell me who you are"*
+embedded as `\n`s inside an `error` string: no prerequisite named, and exactly
+the shape a control boundary exists to remove.
+
+It is **not** a rung beside *sign in first*, and the reason is a fact about git
+rather than about yog: **an identity is a property of a repository, not of a
+box.** `git config user.email` without `--global` is ordinary — this
+repository's own suite depends on it, every committing fixture setting a local
+identity so the suite passes where no global one exists — so a door rung would
+ask the *engine's* environment about a commit some other repository is going to
+make, and answer confidently for boxes where the two disagree in both
+directions. The shape used instead is the one §9.4 already settled for this
+family of question (bl-5252's `dialect_decline`): gate what is knowable, and
+read a dead act's **own words** back to a named fact. `start::exec::verb_ok` —
+the one place a capture becomes a refusal — hands the capture to
+`git_ident::prerequisite`, which answers one sentence naming both `git config`
+commands when git's own banner is in it, and `None` for every other failure,
+which still rides back as itself. The ops row keeps the capture.
+
+**Nor does the world supply an identity of its own**, which is the other
+obvious answer. §16.2's override set reaches **every** child and litany hands
+its environment on to every tool subprocess, so a world `GIT_AUTHOR_*` would
+reach an agent's own `git commit` in the operator's project repository; those
+variables outrank `user.name`/`user.email`, so they would *override* a
+configured identity rather than standing behind one, and git has no
+low-precedence *name* variable to stand behind it with (`EMAIL` covers only the
+address). A per-repository identity cannot be written either: `litany new`
+creates the repository and commits in one act, with no window between them.
+
 **What the gate cannot see, recorded rather than hidden:** the **model id**,
 and every role but the worker. It judges the row the worker points at — which
 is what bl-58e7 moved it to, the blind spot this paragraph used to record ("a
@@ -7580,6 +7615,7 @@ that named one of its files; the rule it taught is not.)
 | `src/fs_watcher/{roots,fold,hub}.rs` | per-root-kind allowlists (§7.1); the raw-event drain, coalesce and desync lead (§7.2); the process's one backend instance and its per-root fan-out (§7.1, bl-908c) |
 | `src/git_env.rs` | the ambient-git-env scrub at the spawn boundary; the crate's ONE `Command` constructor (bl-916a; `rules/no-bare-command.yml`), **its one fork** — `spawn`/`output`/`status`, one place to reason about what a child inherits. It took a `cfg(test)` spawn lock for two rounds so no fork landed in a peer's ETXTBSY window (bl-6397), but that lock bracketed yog's OWN forks and could reach no other crate's, so the linked substrate's `git` forks reopened the window from inside the same binary (bl-6bf5, bl-fd28). **bl-fd28 moved the discipline to the write side and deleted the lock, and bl-e6c9 finished it**: every executable file the crate writes is written by a child (`git_env::write_exec`, `rules/no-hand-chmod.yml`), which leaves no descriptor for any fork to copy, and the lock then measured zero on both sides of its own removal — the module doc carries every measurement, bl-e6c9's included — **and its one `exec`**, which returns only on failure and restores the `SIGPIPE` std reset on the way to `execvp` (bl-3792); all four verbs are `rules/no-bare-fork.yml`. A RETURNING exec leaves a second global mark that no repair reaches (bl-419d): std lends the process an environment copy it then frees, under the env READ lock, so a peer thread's env read can walk freed memory and redden its own spawn with `nul byte found in provided data`. The answer is placement — a returning exec is lawful only where no peer thread exists, which is `main.rs` in production and `tests/exec_return.rs` (one `#[test]`) in the suite, and is why `exec` alone of the four is `pub` |
 | `src/git_env/write_exec.rs` | **the crate's one "write an executable file"**, production and tests alike (bl-fd28, bl-e6c9): body down a pipe into `sh -c 'cat > "$1" && chmod 755 "$1"'`, so the write fd is the CHILD's and no peer fork — in yog or in the linked substrate — can copy one into the ETXTBSY window an `exec` of that file would hit. bl-fd28 converted the fixtures and left the engine out: `world::tools::ensure_shim` still wrote a shim yog then exec'd, which is the same window in the process that forks the most (7 failures over 1,120 runs of bl-fd28's own filter with those beats folded in; zero after). A retry loop on ETXTBSY was rejected — a hazard must not become a production shape — and a write-then-rename does not work at all, a rename leaving the inode the copied fd names. `crate::test_support::write_exec` is this function with the error turned into a panic |
+| `src/git_ident.rs` | **git has no identity here, said once** (§8.1, bl-c28c): git's own *"Please tell me who you are"* banner read out of a failed child's capture and answered with one sentence naming both `git config` commands, so the twelve-line capture the first act of the Settler story used to hand across the boundary never crosses it. A classifier and not a door rung, and the reason is a fact about git: an identity is a property of a REPOSITORY, not of a box — this repository's own suite proves it, every committing fixture setting a local one — so a probe of the engine's environment would answer confidently for a commit some other repository is going to make. Same shape as `dialect_decline` (bl-5252) for the same reason, and its one caller is `start::exec::verb_ok`, the one place a capture becomes a refusal |
 | `src/git_tree/{mod,model,model/agent}.rs` | module wiring + the platform `cfg` probe stack; the inert view-model types it re-exports, incl. the §5.1 #28a call starts (`Agent::call_start_unix`, `ToolCall::start_unix`) and #28b's `Agent::last_delta`. `model/agent` is the one agent-branch structure on its own file (bl-fb87's pre-split): it carries more documented fields than the rest of the module together, and the §5.1 #9 truncation reading (`Agent::truncated`, §8.2's Nudge gate) landed on it |
 | `src/git_tree/addressing.rs` | the **live conversation enumeration** the §8.5 boundary addresses over (bl-49bc): every `agents/*` ref with its stored `name` blob, two facts and nothing else, so it is affordable per gesture where the §7.1 tree walk is not — and asked of disk rather than remembered, for bl-6c9e's reason one noun down (a detached driver writes the branch after the fire has already answered) |
 | `src/git_tree/cmd.rs` | the git CLI wrapper and log/diff parsing — no libgit2, and every invocation built by `git_env::command` |

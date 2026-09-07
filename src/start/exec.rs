@@ -124,6 +124,13 @@ pub enum StartError {
     /// here rather than proceeding uncontrolled.
     #[error("the capability control could not be authored: {0}")]
     Control(String),
+    /// A spawned verb failed for a reason yog has a **named** sentence for, so
+    /// the capture never crosses the boundary (bl-c28c): today, git with no
+    /// identity to author a commit with. Carries the sentence itself — the
+    /// classification is [`crate::git_ident`]'s and there is nothing left here
+    /// to word.
+    #[error("{0}")]
+    Prerequisite(String),
     #[error(transparent)]
     Io(#[from] io::Error),
 }
@@ -171,11 +178,22 @@ pub fn execute_create(
 }
 
 /// Return `out` iff the verb exited 0, else a [`StartError::VerbFailed`] carrying
-/// its already-logged [`Outcome`] (§8.2).
+/// its already-logged [`Outcome`] (§8.2) — **unless the capture is git saying it
+/// can name nobody**, which is one named prerequisite and not a capture at all
+/// (bl-c28c, [`crate::git_ident`]).
+///
+/// Here rather than at the one verb that reproduced it: every spawned verb in
+/// this file ends in a commit somebody else writes — `litany new` authors the
+/// workspace's first, `litany config` advances a lineage, `bl create`/`claim`
+/// seal a ball — so a box with no identity fails all of them with the same
+/// twelve lines and the same remedy. One classification at the one place a
+/// capture becomes a refusal.
 pub(super) fn verb_ok(out: Outcome, verb: &'static str) -> Result<Outcome, StartError> {
     if out.ok() {
-        Ok(out)
-    } else {
-        Err(StartError::VerbFailed { verb, outcome: out })
+        return Ok(out);
+    }
+    match crate::git_ident::prerequisite(&out.stderr) {
+        Some(said) => Err(StartError::Prerequisite(said)),
+        None => Err(StartError::VerbFailed { verb, outcome: out }),
     }
 }

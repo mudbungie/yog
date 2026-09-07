@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.47](https://github.com/mudbungie/yog/compare/v0.0.46...v0.0.47) - 2026-09-06
+
+### Changes
+
+- the attention queue is two thirds compactors: engine machinery says 'came to rest — your turn' beside the conversations the operator started [bl-3592]
+- a conversation aimed at a project directory reads a different bl store than its operator, and reports the board empty [bl-262a]
+- a conversation the seat was just handed is answered 'unknown conversation' for a second or two: start-then-follow fails every time it is typed [bl-802a]
+- a seat whose client leaf is not registered in any workspace is answered with an empty roster, not a refusal: 'not enrolled' and 'nothing here' are the same reply [bl-2a84]
+- a second engine on one world does not exit when its listener cannot bind: two mailboxes mint colliding inv-N handles, so a routed tool call answers "not in flight" or hands back another invocation's capture [bl-1d9b]
+
 ## [0.0.46](https://github.com/mudbungie/yog/compare/v0.0.45...v0.0.46) - 2026-09-06
 
 ### Changes
