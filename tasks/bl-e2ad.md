@@ -1,7 +1,7 @@
 +++
 title = "every path-rung conversation is named by the engine's own preface, so the roster and the attention queue are a column of identical absolute paths and the start receipt's name addresses nothing"
 created = 1788745973
-updated = 1788746581
+updated = 1788752385
 claimant = "Cantaloups-Y9"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -66,3 +66,33 @@ verb accepts, or the receipt returns the id instead.
 p2. Nothing is lost, but the roster is the operators index and it currently
 indexes by a string the operator did not write and that is identical for every
 row. Coding work is the shape that always takes the path rung.
+
+---
+
+Fault 1 is fixed here and fault 2 is not this repo's, on the evidence.
+
+Fault 1 (the description is the engine's preface): fixed. `start::path_preamble`
+now composes from two constants and `start::strip_path_preamble` is its
+inverse beside it; `git_tree::detect::payload_headline` applies both inverses —
+the legacy identity stamp, then this one — so the §3.3 ladder's rung three is
+the operator's own first line. A fire with no words of the operator's own keeps
+the directory line, because there is nothing else to show and dropping to the
+id would say less. DESIGN §3.3 amended in the same close.
+
+Fault 2 (the receipt's name addresses nothing): not reproduced as an
+addressing defect, and it is very likely a consequence of the dead birth
+bl-6495 covers. `boundary::address::resolve_agent` already resolves a minted
+name three ways — id-shaped straight through, the published derivation's
+`(id, stored name)` set, then disk with a three-second settle for the branch a
+fire has not had swept yet. Rungs two and three both read litany's stored
+`name` blob, which litany writes on the DISPATCH commit that creates the agent
+(its `workspace::agent_name`: "one home: a `name` file on the agent's own
+dispatch commit"). So `unknown conversation "HarvestCavern"` means no branch
+carried that blob — which on this drive is the same driver death that left
+`exit -2` with an empty stderr and no step. The lane's own frames say the
+conversations were `stopped` with `1 waiting` and had taken no step.
+
+If it recurs on a drive where the birth SUCCEEDS, that is a different ball and
+worth filing with the `--json conversations` row beside the receipt: the pair
+(receipt name, row `name`) is the whole evidence, and this repo can then fix it
+in `resolve_agent`. Re-drive is the next round's.
