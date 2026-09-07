@@ -1,7 +1,8 @@
 +++
 title = "pin the next litany (tool-output pagination, cache-prefix hold, prompt --role) and brazen (prompt_cache_key): REMOTE §5.2's unload wording is stale under the prefix hold"
 created = 1788752535
-updated = 1788752535
+updated = 1788753431
+claimant = "Cantaloups-Y13"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r3"]
