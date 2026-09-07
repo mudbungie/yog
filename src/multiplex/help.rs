@@ -46,40 +46,56 @@ mod tests;
 pub(super) const COMMANDS: &[HelpRow] = &[
     HelpRow {
         verb: crate::wire::provision::verb::SUBCMD,
-        usage: "yog wire-certs",
-        summary: "mint this box's wire certificates: a local CA and its server/client leaves",
-        detail: "Write a private CA and the server, client and window leaves into the wire \
-                 material directory, plus the one `address` file naming what the engine binds \
-                 and a seat dials. The engine's own boot already does this for a box that has \
-                 none, aimed at loopback, so this is the act for everything else: a server \
-                 another machine dials by name (`WIRE_HOST=engine.example.com WIRE_PORT=7737`), \
-                 a different directory (`WIRE_DIR`), or a rotation (`FORCE=1`). `WIRE_HOST` is a \
-                 comma-separated LIST — a box reachable by name, by overlay address and on the \
-                 LAN says so once, every entry rides the server leaf and 127.0.0.1 always does, \
-                 while the `address` file takes the first entry alone. On a directory that \
-                 already holds material a stated host is a statement about where this engine \
-                 listens: it re-issues THE SERVER LEAF over the CA already there and writes the \
-                 `address` file to match — no CA founded, no other leaf touched, so nothing \
-                 already carried away stops verifying, and the engine binds the stated endpoint \
-                 when it is next started. That is the act for a box whose own boot provisioned \
-                 it: a self-provisioned `127.0.0.1:0` is a request only the listener learns the \
-                 answer to, and stating an endpoint over it costs one signature rather than a \
-                 rotation. A stated `WIRE_PORT` is taken and an unstated one keeps the port the \
-                 `address` file already names. It refuses to \
-                 overwrite otherwise, because a rotation distrusts every certificate already \
-                 issued and every seat holding one stops connecting. `WIRE_LEAF=<common-name>` \
-                 asks for the other act instead: issue ONE extra client leaf under that name, \
-                 over the CA already here — no CA, no address, no other leaf. That is the leaf \
-                 a visiting box participates as; carry it, its key and `ca.pem` to that box by \
-                 hand and place them in its `wire/workspaces/<workspace>/` as `client.pem`, \
-                 `client.key` and `ca.pem`, beside an `address` naming this engine. That \
-                 directory is named for the WORKSPACE the client will address, never for the \
-                 common name the leaf was issued under — a seat routes a gesture by the \
-                 workspace it names, so a directory named for the leaf is a channel nothing \
-                 can reach. The common \
-                 name INSIDE the certificate is the identity, not the basename, so the rename \
-                 costs nothing. It shells to `openssl`: provisioning is the operator's \
-                 out-of-channel act and yog links no certificate library.",
+        usage: "yog wire-certs   (every setting is an environment reading, stated before it)",
+        summary: "mint this box's wire certificates, state where the engine listens, or issue \
+                  one leaf for another box",
+        detail: "Every setting is an environment reading, so it goes BEFORE the verb — a \
+                 `VAR=value` after it is argv and is refused.\n\
+                 \n  WIRE_HOST=<host>[,<host>…]  every host the server leaf answers to. The \
+                 first, on WIRE_PORT, is the address; 127.0.0.1 always rides beside them, so a \
+                 box reachable by name, by overlay address and on the LAN says so once.\n  \
+                 WIRE_PORT=<port>            what the engine binds and a seat dials \
+                 (default 7737). Unstated over material already here, the port `address` \
+                 already names is kept.\n  \
+                 WIRE_DIR=<dir>              the material directory (default: this world's own).\n  \
+                 FORCE=1                     rotate: delete every artifact and found a new trust \
+                 root. This distrusts every certificate already issued, everywhere.\n  \
+                 WIRE_LEAF=<common-name>     issue ONE extra client leaf under that name.\n  \
+                 WIRE_FOOT=1                 beside WIRE_LEAF, mint that leaf FOOT grade.\n\
+                 \nWhat those select is one of three acts.\n\
+                 \n1. A box with no material gains the lot — a private CA, the server, client \
+                 and window leaves, and the `address` file. The engine's own boot performs this \
+                 for a box that has none, aimed at loopback on a kernel-chosen port, so the \
+                 explicit act is for a server another machine dials by name.\n\
+                 \n2. On a box that already holds material, a stated WIRE_HOST says where this \
+                 engine listens: it re-issues THE SERVER LEAF over the CA already there and \
+                 writes `address` to match. No CA is founded and no other leaf is touched, so \
+                 nothing already carried away stops verifying — restart the engine and it binds \
+                 what was stated. That is the act for a box whose own boot provisioned it: a \
+                 self-provisioned `127.0.0.1:0` is a request only the listener learns the answer \
+                 to, and stating an endpoint over it costs one signature rather than a rotation. \
+                 Stating nothing is refused, because a bare re-run asks for nothing this act \
+                 could perform; FORCE=1 is the rotation and is never implicit.\n\
+                 \n3. WIRE_LEAF issues one extra client leaf over the CA already here — no CA \
+                 founded, no address written, no other leaf touched. That is the leaf a visiting \
+                 box participates as; carry it, its key and `ca.pem` to that box by hand and \
+                 place them in its `wire/workspaces/<workspace>/` as `client.pem`, `client.key` \
+                 and `ca.pem`, beside an `address` naming this engine. That directory is named \
+                 for the WORKSPACE the client will address, never for the common name the leaf \
+                 was issued under — a seat routes a gesture by the workspace it names, so a \
+                 directory named for the leaf is a channel nothing can reach. The common name \
+                 INSIDE the certificate is the identity, not the basename, so the rename costs \
+                 nothing. WIRE_FOOT=1 mints it foot grade: a tool host that may advertise its \
+                 tools, take the invocations addressed to it and complete them, and say nothing \
+                 else — a thrall refuses to open on anything else, and an operator-grade leaf \
+                 carried to a tool host is turned away by it. Unset is operator grade, which is \
+                 a seat AND a tool host under one name.\n\
+                 \nA leaf this act issues is registered in NO workspace, and an advertisement \
+                 reaches only the workspaces its client is registered in — so enrol the same \
+                 common name from a seat in the workspace it should serve (`/enroll <name> \
+                 [foot]`), which adopts this leaf rather than issuing a second one.\n\
+                 \nIt shells to `openssl`: provisioning is the operator's out-of-channel act \
+                 and yog links no certificate library.",
         surface: Surface::Machine,
     },
     HelpRow {

@@ -20,6 +20,16 @@ fn tool(name: &str) -> Tool {
     }
 }
 
+/// The ordinary state of an advertising machine: enrolled, and therefore
+/// **registered somewhere** (REMOTE §5.1) — a set is presented into the
+/// workspaces its client is registered in, so a client in none is refused
+/// before anything is stored (bl-6b14). Every beat below but the two about that
+/// refusal starts here.
+fn seated(state_root: &Path, client: &Client) -> Deps {
+    crate::registry::register(state_root, client, "alba").expect("the enrolment's own file");
+    deps(state_root, client.clone())
+}
+
 fn deps(state_root: &Path, client: Client) -> Deps {
     Deps {
         litany: Cli::new("/no/such/litany"),
@@ -50,7 +60,7 @@ fn deps(state_root: &Path, client: Client) -> Deps {
 fn a_connections_set_lands_under_its_own_identity() {
     let root = tempdir().expect("tempdir");
     let laptop = Client::parse("laptop").expect("identity");
-    let deps = deps(root.path(), laptop.clone());
+    let deps = seated(root.path(), &laptop);
     assert_eq!(advertise(&deps, &[tool("Bash")]), Ok(advertised(true)));
     assert_eq!(
         crate::registry::tools::read(root.path(), &laptop),
@@ -68,7 +78,7 @@ fn a_connections_set_lands_under_its_own_identity() {
 fn only_a_write_answers_true_and_a_restoration_is_a_write() {
     let root = tempdir().expect("tempdir");
     let laptop = Client::parse("laptop").expect("identity");
-    let deps = deps(root.path(), laptop.clone());
+    let deps = seated(root.path(), &laptop);
     assert_eq!(advertise(&deps, &[tool("Bash")]), Ok(advertised(true)));
     assert_eq!(advertise(&deps, &[tool("Bash")]), Ok(advertised(false)));
 
@@ -103,7 +113,7 @@ fn an_in_world_caller_is_refused_with_a_sentence() {
 fn a_colliding_name_declines_and_leaves_the_stored_set_alone() {
     let root = tempdir().expect("tempdir");
     let laptop = Client::parse("laptop").expect("identity");
-    let deps = deps(root.path(), laptop.clone());
+    let deps = seated(root.path(), &laptop);
     advertise(&deps, &[tool("Bash")]).expect("stored");
     let refusal = advertise(&deps, &[tool("Read"), tool("Read")]).expect_err("declined");
     assert!(refusal.contains("duplicate tool name"), "{refusal}");
@@ -123,7 +133,7 @@ fn a_colliding_name_declines_and_leaves_the_stored_set_alone() {
 fn a_second_connection_may_not_blank_a_serving_machines_set() {
     let root = tempdir().expect("tempdir");
     let laptop = Client::parse("laptop").expect("identity");
-    let deps = deps(root.path(), laptop.clone());
+    let deps = seated(root.path(), &laptop);
     advertise(&deps, &[tool("Bash")]).expect("stored");
 
     let parked = deps
@@ -155,11 +165,37 @@ fn a_second_connection_may_not_blank_a_serving_machines_set() {
     );
 }
 
-/// An unwritable registry is a refusal, not a panic.
+/// An unwritable store is a refusal, not a panic. The client is seated, so the
+/// refusal is the store's own and not the registration gate's — a directory
+/// where the document goes is what no write can get past.
 #[test]
-fn an_unwritable_registry_refuses() {
+fn an_unwritable_store_refuses() {
     let root = tempdir().expect("tempdir");
-    std::fs::write(root.path().join(crate::registry::CLIENTS), b"file").expect("write");
-    let deps = deps(root.path(), Client::parse("laptop").expect("identity"));
+    let laptop = Client::parse("laptop").expect("identity");
+    let deps = seated(root.path(), &laptop);
+    std::fs::create_dir_all(
+        crate::registry::dir(root.path(), &laptop).join(crate::registry::tools::TOOLS),
+    )
+    .expect("a directory in the document's place");
     assert!(advertise(&deps, &[tool("Bash")]).is_err());
+}
+
+/// **An advertisement into nothing is told so** (REMOTE §5.1, bl-6b14). The
+/// documented way to provision a second machine — `wire-certs WIRE_LEAF=` —
+/// mints a leaf and registers it nowhere, so the foot dialled, advertised,
+/// parked on its mailbox read and served nobody, in silence at both ends. The
+/// refusal names the client and the act that seats it, and nothing is stored
+/// for nobody to read.
+#[test]
+fn a_client_registered_nowhere_is_refused_naming_the_enrolment() {
+    let root = tempdir().expect("tempdir");
+    let devbox = Client::parse("devbox").expect("identity");
+    let deps = deps(root.path(), devbox.clone());
+    let refusal = advertise(&deps, &[tool("Bash")]).expect_err("presented to nobody");
+    assert!(refusal.contains("registered in no workspace"), "{refusal}");
+    assert!(refusal.contains("/enroll devbox foot"), "{refusal}");
+    assert!(
+        crate::registry::tools::read(root.path(), &devbox).is_empty(),
+        "and nothing is stored for nobody to see"
+    );
 }

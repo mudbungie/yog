@@ -139,6 +139,59 @@ namespace (DESIGN §16.7). The `LITANY_BINARY` / `BL_BINARY` / `BZ_BINARY` env
 vars still override the physical target, as test seams and escape hatches back
 to a host binary.
 
+### The wire: this box, and the next one
+
+Every seat and every foot reaches the engine over mTLS, and the certificates are
+the operator's own act — yog links no certificate library and mints nothing in
+channel. One verb performs all of it, `yog wire-certs`, and **every setting is
+an environment reading, so it goes before the verb**:
+
+| reading | what it says |
+|---|---|
+| `WIRE_HOST=<host>[,<host>…]` | every host the server leaf answers to; the first, on `WIRE_PORT`, is the address. `127.0.0.1` always rides beside them |
+| `WIRE_PORT=<port>` | what the engine binds and a seat dials (default `7737`). Unstated over material already here, the port `address` already names is kept |
+| `WIRE_DIR=<dir>` | the material directory (default: this world's own) |
+| `FORCE=1` | rotate — delete every artifact and found a new trust root, distrusting every certificate already issued, everywhere |
+| `WIRE_LEAF=<common-name>` | issue ONE extra client leaf under that name, over the CA already here |
+| `WIRE_FOOT=1` | beside `WIRE_LEAF`, mint that leaf **foot** grade |
+
+`yog wire-certs --help` is the same table with the three acts those settings
+select. Two recipes are worth having in front of you.
+
+**A seat on this box.** The engine's own boot provisions a box that has none,
+aimed at `127.0.0.1:0` — a port only the listener learns, which nothing can be
+told to dial. State the endpoint, then restart the engine:
+
+```
+WIRE_HOST=127.0.0.1 WIRE_PORT=7737 yog wire-certs
+```
+
+Copy `ca.pem`, `client.pem`, `client.key` and `address` out of
+`<yog-data-root>/wire/` into the seat's own `wire/` directory. That is the whole
+of a same-box install.
+
+**A foot or a seat on another box.** Mint it a leaf of its own, carry the three
+files by hand, and then **enrol the same common name** from a seat in the
+workspace it should serve:
+
+```
+WIRE_LEAF=builder WIRE_FOOT=1 yog wire-certs     # on the box that holds the CA
+# carry builder.pem, builder.key and ca.pem to that box
+yog gesture --ws ops '/enroll builder foot'      # or `/enroll builder foot` from any seat
+```
+
+The second act is not optional and is not a second certificate: a leaf on its
+own is **registered in no workspace**, and an advertisement reaches only the
+workspaces its client is registered in — so a foot provisioned by the mint alone
+connects, advertises to nobody and is refused with that sentence. `/enroll`
+**adopts** the leaf already minted under that name rather than issuing another,
+registers it, and hands back the material; on a device you can reach a screen or
+a shell on, `/enroll` alone does both halves.
+
+A foot carries a **foot-grade** leaf and nothing else — `thrall` refuses to open
+on an operator-grade certificate, and `WIRE_FOOT=1` is the only thing that mints
+one. Operator grade (the default) is a seat and a tool host under one name.
+
 ## The world
 
 yog composes its own **nested world** — a substrate environment under

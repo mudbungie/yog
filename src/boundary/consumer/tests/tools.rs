@@ -31,6 +31,10 @@ fn a_connections_advertisement_lands_under_its_own_identity() {
     let data = tempdir().unwrap();
     let ctx = quiet(root.path(), data.path());
     let laptop = seat("laptop");
+    // Enrolled, and therefore registered: a set is presented into the
+    // workspaces its client is registered in, and a client in none is refused
+    // before anything is stored (REMOTE §5.1, bl-6b14).
+    crate::registry::register(root.path(), &laptop.client, "home").expect("seated");
     let reply = ctx.answer_as(&laptop, &json!({"op": "advertise", "tools": set()}));
     assert_eq!(reply["kind"], "advertised");
     assert_eq!(reply["ok"], true);
@@ -38,6 +42,7 @@ fn a_connections_advertisement_lands_under_its_own_identity() {
     assert_eq!(stored.len(), 1);
     assert_eq!(stored[0].name, "Bash");
     // Another certificate's set is its own: cross-client collisions are legal.
+    crate::registry::register(root.path(), &client("phone"), "home").expect("seated");
     ctx.answer_as(&seat("phone"), &json!({"op": "advertise", "tools": set()}));
     assert_eq!(
         crate::registry::tools::read(root.path(), &client("phone"))[0].name,

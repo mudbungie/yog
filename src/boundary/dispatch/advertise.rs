@@ -43,9 +43,41 @@ pub(super) fn advertise(deps: &Deps, tools: &[Tool]) -> Result<Reply, String> {
         );
     }
     tools::validate(tools)?;
+    presented(deps)?;
     superseding(deps, tools)?;
     let wrote = tools::store(&deps.state_root, client, tools).map_err(|e| e.to_string())?;
     Ok(Reply::Advertised { wrote })
+}
+
+/// **An advertisement into nothing is told so** (REMOTE §5.1, bl-6b14). A set
+/// is presented into the workspaces its client is registered in, so a client
+/// registered in NONE presents it to nobody — and that was answered `ok`, with
+/// the set stored, no line on the engine's stderr, no row on the ops trail and
+/// no row in any roster (a roster is per workspace, and this client is in
+/// none). The documented way to provision a second machine produced exactly
+/// that state: `wire-certs WIRE_LEAF=` mints a leaf and registers nothing, so
+/// the foot dialled, handshaked, advertised and parked on its mailbox read,
+/// useful to no one, silently, at both ends.
+///
+/// It refuses rather than warning because the alternative is the silence this
+/// closes: a foot's only reader is a program, and a program acts on an `ok`. It
+/// refuses **before the store**, so nothing is written for nobody to see; the
+/// host re-presents its set on its next connection, which is REMOTE §5's own
+/// traffic shape, so the enrolment and a reconnect are the whole remedy.
+fn presented(deps: &Deps) -> Result<(), String> {
+    let client = &deps.caller.client;
+    if !crate::registry::registered(&deps.state_root, client).is_empty() {
+        return Ok(());
+    }
+    Err(format!(
+        "advertise: {:?} is registered in no workspace on this engine, so this set would be \
+         presented to nobody — an advertisement reaches the workspaces its client is registered \
+         in, and that set is empty. Enrol this name in the workspace it should serve: `/enroll \
+         {} foot` from a seat there, which ADOPTS the leaf already minted for it rather than \
+         issuing a second one. Then reconnect — a set is presented once per connection",
+        client.name(),
+        client.name()
+    ))
 }
 
 /// **A serving machine's set may not be replaced under it** (REMOTE §5.1,

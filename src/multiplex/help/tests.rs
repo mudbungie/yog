@@ -160,6 +160,25 @@ fn the_mint_page_states_the_boot_mint_and_its_own_word() {
     );
 }
 
+/// **Every environment reading the verb takes is on its page** (bl-cbcb).
+/// `WIRE_FOOT` was not, and it is the only way to mint the foot-grade leaf a
+/// `thrall` will open at all — so the two surfaces an operator meets while
+/// provisioning a second box both stopped one word short of the act, and the
+/// one place the word WAS printed is a line the founding mint says once in a
+/// directory's life. Read off `READS` rather than spelled here, so a reading
+/// added tomorrow reddens this instead of going undocumented.
+#[test]
+fn the_mint_page_names_every_setting_it_reads() {
+    let mint = crate::wire::provision::verb::SUBCMD;
+    let text = answer(&argv(&["yog", mint, "--help"])).unwrap_or_default();
+    for reading in crate::wire::provision::verb::READS {
+        assert!(text.contains(reading), "{reading} is undocumented: {text}");
+    }
+    // And the half a mint cannot perform: a leaf is issued into no workspace,
+    // so the page names the act that seats it (bl-6b14).
+    assert!(text.contains("/enroll"), "the enrolment is unnamed: {text}");
+}
+
 /// The probe is recognized only when the whole argv *is* the flag (§8.5's
 /// "the flag form counts only when the tail is exactly the flag"), so no
 /// foreign crate's option grammar has to be restated to be sure a token is not

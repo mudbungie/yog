@@ -37,16 +37,22 @@ fn refused_for_grade(reply: &serde_json::Value) -> bool {
     reply["ok"] == false && reply["error"] == crate::registry::peer::REFUSAL
 }
 
-/// **The three a foot may send**, and it may send them at a server that has
-/// never heard of it: advertise its set, take the invocations addressed to it,
-/// and complete one. The completion here quotes a handle nobody minted, so what
-/// comes back is the mailbox's own sentence — which is the proof it got past
-/// the grade rather than being stopped by it.
+/// **The three a foot may send**: advertise its set, take the invocations
+/// addressed to it, and complete one. The completion here quotes a handle
+/// nobody minted, so what comes back is the mailbox's own sentence — which is
+/// the proof it got past the grade rather than being stopped by it.
+///
+/// The foot is **enrolled** here, which the beat used to leave out: an
+/// advertisement reaches the workspaces its client is registered in, so one
+/// registered nowhere is refused before it is stored (REMOTE §5.1, bl-6b14).
+/// The other two are unchanged by that — a queue and a completion are addressed
+/// to a machine, not into a workspace.
 #[test]
 fn a_foot_may_advertise_take_its_invocations_and_complete_one() {
     let (root, data) = (tempdir().unwrap(), tempdir().unwrap());
     let ctx = quiet(root.path(), data.path());
     let host = foot("host");
+    crate::registry::register(root.path(), &host.client, "home").expect("its enrolment's file");
 
     let advertised = ctx.answer_as(&host, &json!({"op": "advertise", "tools": tools()}));
     assert_eq!(advertised["kind"], "advertised", "{advertised}");

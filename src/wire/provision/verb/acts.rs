@@ -140,6 +140,21 @@ fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
          the identity",
         dir.join(ANCHORS).display()
     );
+    // **And say what it is NOT** (bl-6b14). This act issues; it registers
+    // nothing, and an advertisement reaches only the workspaces its client is
+    // registered in — so a foot provisioned by following this page alone
+    // dialled, advertised into the empty set and served nobody, with no
+    // sentence anywhere. The engine refuses that advertisement now; this is the
+    // half that stops it being reached.
+    println!(
+        "  {cn} is registered in NO workspace: enrol the same common name from a seat in the \
+         workspace it should serve (`/enroll {cn}{}`), which adopts this leaf rather than \
+         issuing a second one",
+        match grade {
+            Grade::Operator => String::new(),
+            Grade::Foot => format!(" {}", crate::registry::peer::FOOT),
+        }
+    );
     0
 }
 

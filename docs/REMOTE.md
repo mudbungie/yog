@@ -896,6 +896,25 @@ error worth naming, not an authentication failure worth hiding. The threading is
 the act-side twin of `ConsumerCtx::answer_as`: one `caller` on the dispatch
 `Deps`, carrying who is asking and who else is connected.
 
+**An advertisement into NO workspace is refused, naming the enrolment**
+*(bl-6b14)*. A set reaches the workspaces its client is registered in, so a
+client registered in none presents it to nobody — and that was answered `ok`,
+with the set stored, no line on stderr, no row on the trail and no row in any
+roster (a roster is per workspace, and this client is in none). The documented
+way to provision a second machine produced exactly that state: `yog wire-certs
+WIRE_LEAF=<name>` issues a leaf and registers nothing, so the foot dialled,
+handshaked, advertised, parked on its mailbox read and served nobody — silently,
+at both ends, with its only stated remedy a CA rotation.
+
+It **refuses** rather than warning, because a foot's only reader is a program
+and a program acts on an `ok`; and it refuses **before the store**, so nothing
+is written for nobody to read. The remedy is one act and it is named in the
+sentence: enrol that common name in the workspace it should serve, which
+**adopts** the leaf already minted for it (§8.4) rather than issuing a second
+one, then reconnect — a set is presented once per connection, which is this
+section's own traffic ruling. The mint's own success text now says the same
+thing from the other end: a leaf it issues is registered nowhere.
+
 **A set is not replaced under a machine that is serving, and one identity has
 one reader** (bl-1462, twin of thrall bl-2d78). The store is keyed on the
 identity and was last-writer-wins, so any connection bearing the certificate
