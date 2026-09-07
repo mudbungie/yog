@@ -123,6 +123,30 @@ impl Classified {
     }
 }
 
+/// **The compactor's checkpoint pair** — the two names litany injects from the
+/// calling role's own procedure and that its shipped `providers.yaml` says is
+/// "never declarable here". They are machinery, not the agent's acts: the pair
+/// writes the conversation's own summary onto its compactor branch and
+/// nominates that same conversation's files, and nothing else.
+///
+/// It exists for the **floor** ([`judge::Answers::ruling`](super::judge::Answers::ruling))
+/// and for nothing else. A floor is a statement about what the AGENT may do to
+/// the world; the compaction procedure is confined by construction rather than
+/// by adjudication — the same argument the grant already makes for it (bl-52b7)
+/// — so a floor that held it would queue the operator a decision with no
+/// decision in it and stall compaction under exactly the policy an operator
+/// sets when they are most worried (bl-a821).
+///
+/// It reads the closed [`intrinsic::Known`] enum rather than the strings, so
+/// the pair has one home: a rename upstream moves [`intrinsic::Known::of`] and
+/// this follows it.
+pub fn checkpoint(name: &str) -> bool {
+    matches!(
+        intrinsic::Known::of(name),
+        Some(intrinsic::Known::WriteSummary | intrinsic::Known::MarkForDeletion)
+    )
+}
+
 /// Classify one invocation. Total over every tool name and every input shape:
 /// an input that does not match its schema simply yields no operands, and a
 /// name no row names goes to the [`routed`] lane rather than to a default arm.

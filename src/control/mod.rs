@@ -157,6 +157,7 @@ pub fn adjudicate(consult: &Consult, request: &Request) -> Verdict {
     let ruling = Answers::fold(&entries).ruling(
         &request.id,
         &request.agent_id,
+        &request.name,
         classified.effect,
         &consult.policy,
     );

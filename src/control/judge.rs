@@ -34,7 +34,7 @@
 
 use std::collections::HashMap;
 
-use super::classify::Effect;
+use super::classify::{self, Effect};
 use super::wire::Verdict;
 use crate::opslog::{OpEntry, YOG_CONTROL};
 
@@ -172,10 +172,29 @@ impl Answers {
 
     /// The ruling for one invocation: the once-answer if the operator gave one,
     /// else the workspace's table raised by any standing floor.
+    ///
+    /// **The floor does not reach the compactor's checkpoint pair** (bl-a821,
+    /// VISION §4.11 item 7). `revoke` takes auto-approval from a conversation
+    /// *and its descendants*, and the compactor is a descendant — so a floor
+    /// raised on a long conversation held `write_summary`, which is the one act
+    /// no role can declare and litany injects from its own procedure. The
+    /// operator was queued a machinery act they have no basis to judge and did
+    /// not ask for, and until they answered it the floored conversation could
+    /// not compact: a floor set out of worry stalled the conversation on
+    /// context rather than on policy. A floor is a statement about what the
+    /// AGENT may do to the world; this pair touches the conversation's own
+    /// compactor branch and nothing else ([`classify::checkpoint`]). Everything
+    /// else about descent propagation stands — a dispatched child's calls are
+    /// the agent's acts, and the floor still reaches them.
+    ///
+    /// The exemption is the floor's alone. The table still rules the pair, so a
+    /// workspace that writes `target-write: hold` gets what it asked for; what
+    /// is dissolved is the hold nobody asked for.
     pub fn ruling(
         &self,
         tool_use_id: &str,
         agent_id: &str,
+        name: &str,
         effect: Effect,
         policy: &super::policy::Policy,
     ) -> Ruling {
@@ -183,7 +202,7 @@ impl Answers {
             return *once;
         }
         let table = policy.ruling(effect);
-        if effect > Effect::Read && self.floored(agent_id) {
+        if effect > Effect::Read && !classify::checkpoint(name) && self.floored(agent_id) {
             return table.max(Ruling::Hold);
         }
         table

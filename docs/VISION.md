@@ -782,6 +782,23 @@ mediation.
    labor is permanent: the capability boundary rules what an agent may ever
    do; the monitor rules whether what it is doing serves the goal.
 
+   **A floor does not reach a machinery role's intrinsic acts** (bl-a821). The
+   descent is the right propagation and it stays whole — a dispatched child's
+   calls are the agent's acts and the floor reaches them — but the *compactor*
+   is a descendant too, and its `write_summary` / `mark_for_deletion` are the
+   two names litany injects from the calling role's own procedure and that its
+   shipped `providers.yaml` says are "never declarable here". Holding one put a
+   decision with no decision in it into the operator's queue — they have no
+   basis to judge an act they did not ask for — and, until they answered it,
+   the floored conversation could not compact, so a long one stalled on context
+   rather than on policy under exactly the policy an operator sets when they
+   are most worried. A floor is a statement about what the AGENT may do to the
+   world; that pair touches the conversation's own compactor branch and nothing
+   else, which is the argument item 3's grant ruling (bl-52b7) already makes
+   for the same pair: machinery is confined by construction, not by
+   adjudication. The exemption is the floor's alone — the workspace table still
+   rules the pair, so `target-write: hold` still parks it.
+
 8. **The threat model, stated honestly.** The ambient PATH rides beneath the
    world's prepend; the network is unconfined; brazen credentials are
    ambient and shared by §16.2's own deliberate ruling; `cd` and absolute

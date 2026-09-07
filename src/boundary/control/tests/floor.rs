@@ -18,10 +18,13 @@ const CHILD: &str = "20260101T000000Z-a1-20260102T000000Z-b2";
 const LOOKALIKE: &str = "20260101T000000Z-a10";
 
 /// What the control would answer for `agent` under the trail as it stands.
+/// The tool is `bash`: the floor's one exemption is the compactor's checkpoint
+/// pair, which is [`judge`](crate::control::judge)'s own case to pin.
 fn ruling(world: &World, agent: &str, effect: Effect) -> Ruling {
     Answers::fold(&tail(&world.state(), usize::MAX)).ruling(
         "toolu_x",
         agent,
+        "bash",
         effect,
         &Policy::default(),
     )

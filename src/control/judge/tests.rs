@@ -1,7 +1,15 @@
 //! The judgment fold: the shipped table, the once-answer, and the floor.
 
 use super::*;
+use crate::control::policy::Policy;
 use crate::opslog::Origin;
+
+/// What `answers` rules for one invocation of `name` by `agent`, on the
+/// **shipped** table — the shape every case below one takes, said once so a
+/// case reads as the fact it is about rather than as five arguments.
+fn ruled(answers: &Answers, id: &str, agent: &str, name: &str, effect: Effect) -> Ruling {
+    answers.ruling(id, agent, name, effect, &Policy::default())
+}
 
 /// A `yog-control` ops row.
 fn row(words: &[&str]) -> OpEntry {
@@ -52,21 +60,11 @@ fn a_verdict_carries_the_reason_except_a_pass() {
 fn an_unanswered_invocation_is_the_table_s_verdict() {
     let answers = Answers::fold(&[]);
     assert_eq!(
-        answers.ruling(
-            "toolu_1",
-            "amber",
-            Effect::OpenWorld,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "toolu_1", "amber", "bash", Effect::OpenWorld),
         Ruling::Pass
     );
     assert_eq!(
-        answers.ruling(
-            "toolu_1",
-            "amber",
-            Effect::Read,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "toolu_1", "amber", "bash", Effect::Read),
         Ruling::Pass
     );
     // …and it is the *workspace's* table, so the parked default is one line of
@@ -75,8 +73,9 @@ fn an_unanswered_invocation_is_the_table_s_verdict() {
         answers.ruling(
             "toolu_1",
             "amber",
+            "bash",
             Effect::OpenWorld,
-            &crate::control::policy::Policy::parse("table:\n  open-world: hold\n")
+            &Policy::parse("table:\n  open-world: hold\n")
         ),
         Ruling::Hold
     );
@@ -89,33 +88,18 @@ fn a_once_answer_is_scoped_to_the_held_tool_use_id() {
         row(&[YOG_CONTROL, "answer", "toolu_2", "refuse"]),
     ]);
     assert_eq!(
-        answers.ruling(
-            "toolu_1",
-            "amber",
-            Effect::Destructive,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "toolu_1", "amber", "bash", Effect::Destructive),
         Ruling::Pass,
         "the operator answered this exact invocation"
     );
     assert_eq!(
-        answers.ruling(
-            "toolu_2",
-            "amber",
-            Effect::Read,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "toolu_2", "amber", "bash", Effect::Read),
         Ruling::Refuse
     );
     // Another id is untouched: a once-grant needs no consumption because the
     // provider-unique id cannot be asked twice.
     assert_eq!(
-        answers.ruling(
-            "toolu_3",
-            "amber",
-            Effect::Destructive,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "toolu_3", "amber", "bash", Effect::Destructive),
         Ruling::Refuse
     );
 }
@@ -127,12 +111,7 @@ fn the_last_row_for_a_key_wins() {
         row(&[YOG_CONTROL, "answer", "toolu_1", "refuse"]),
     ]);
     assert_eq!(
-        answers.ruling(
-            "toolu_1",
-            "a",
-            Effect::Read,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "toolu_1", "a", "bash", Effect::Read),
         Ruling::Refuse
     );
 }
@@ -151,40 +130,20 @@ fn a_floor_holds_every_class_above_read_across_the_whole_subtree() {
     );
     assert!(!answers.floored("other"));
     assert_eq!(
-        answers.ruling(
-            "t",
-            "amber",
-            Effect::Read,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "t", "amber", "bash", Effect::Read),
         Ruling::Pass
     );
     assert_eq!(
-        answers.ruling(
-            "t",
-            "amber",
-            Effect::TargetWrite,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "t", "amber", "bash", Effect::TargetWrite),
         Ruling::Hold
     );
     assert_eq!(
-        answers.ruling(
-            "t",
-            "amber-1",
-            Effect::Process,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "t", "amber-1", "bash", Effect::Process),
         Ruling::Hold
     );
     // The floor raises; it never lowers.
     assert_eq!(
-        answers.ruling(
-            "t",
-            "amber",
-            Effect::Secret,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "t", "amber", "bash", Effect::Secret),
         Ruling::Refuse
     );
     // And a once-answer to this exact invocation still wins over it.
@@ -193,13 +152,46 @@ fn a_floor_holds_every_class_above_read_across_the_whole_subtree() {
         row(&[YOG_CONTROL, "answer", "toolu_1", "pass"]),
     ]);
     assert_eq!(
-        answers.ruling(
-            "toolu_1",
-            "amber",
-            Effect::TargetWrite,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "toolu_1", "amber", "bash", Effect::TargetWrite),
         Ruling::Pass
+    );
+}
+
+/// **bl-a821**: `revoke` reaches a conversation's descendants and the
+/// compactor is one, so the floor held `write_summary` — the operator was
+/// queued a machinery act they have no basis to judge, and until they answered
+/// it the floored conversation could not compact.
+#[test]
+fn a_floor_does_not_reach_the_compactor_s_checkpoint_pair() {
+    let answers = Answers::fold(&[row(&[YOG_CONTROL, "floor", "amber", "raise"])]);
+    for pair in ["write_summary", "mark_for_deletion"] {
+        assert_eq!(
+            ruled(&answers, "t", "amber", pair, Effect::TargetWrite),
+            Ruling::Pass,
+            "{pair} is the compaction procedure's own act, not the agent's"
+        );
+        assert_eq!(
+            ruled(&answers, "t", "amber-1", pair, Effect::TargetWrite),
+            Ruling::Pass,
+            "and the compactor of a floored conversation is a descendant"
+        );
+    }
+    // The exemption is the pair's and the floor's alone: every other target
+    // write under the same floor still holds, and the workspace's own table
+    // still rules the pair.
+    assert_eq!(
+        ruled(&answers, "t", "amber", "load_skill", Effect::TargetWrite),
+        Ruling::Hold
+    );
+    assert_eq!(
+        answers.ruling(
+            "t",
+            "amber",
+            "write_summary",
+            Effect::TargetWrite,
+            &Policy::parse("table:\n  target-write: hold\n")
+        ),
+        Ruling::Hold
     );
 }
 
@@ -211,12 +203,7 @@ fn a_lowered_floor_stops_binding() {
     ]);
     assert!(!answers.floored("amber"));
     assert_eq!(
-        answers.ruling(
-            "t",
-            "amber",
-            Effect::Process,
-            &crate::control::policy::Policy::default()
-        ),
+        ruled(&answers, "t", "amber", "bash", Effect::Process),
         Ruling::Pass
     );
 }

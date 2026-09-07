@@ -51,6 +51,7 @@ fn an_answer_writes_the_row_the_control_folds_and_launches_the_release() {
         Answers::fold(&rows).ruling(
             "toolu_42",
             AGENT,
+            "bash",
             crate::control::classify::Effect::Destructive,
             &crate::control::policy::Policy::default(),
         ),
