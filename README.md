@@ -22,6 +22,39 @@ host `bl`, `bz` or `litany` in the chain, which is what `make drive-cleanroom`
 proves by putting only `yog` and `git` on `PATH`. litany, balls and brazen take
 no dependency back.
 
+## Install
+
+```
+cargo install yog --locked
+```
+
+That is the whole of it — one binary, no substrate beside it, and no system
+package beyond a C toolchain to build with. litany, balls and brazen are linked
+crates (above), so nothing else is installed and nothing else needs to be on
+`PATH`.
+
+Two things must exist **on the box yog runs on**, because yog execs them:
+
+- `git` — every workspace read and every act is git (`src/git_env.rs` is the
+  crate's one fork);
+- `openssl` — the wire mint the engine's own boot performs when a box holds no
+  certificates. Without it a fresh root comes up with no listener, and the
+  refusal says so on stderr.
+
+Then `yog` boots the engine and parks (see "Running"), and a **seat** — the
+[lernie](https://github.com/mudbungie/lernie) window, an android client — is
+what a human looks at. Provisioning the channel between them is "The wire"
+below.
+
+Two other routes exist and are documented where they belong: **the image**
+(`make image`, and `ghcr.io/mudbungie/yog` for a box that takes images rather
+than binaries — see "The image"), and **a checkout** (`make install
+[INSTALL_PREFIX=<p>]`, which release-builds this tree into
+`$INSTALL_PREFIX/bin`, default `~/.local/bin` — see "Building and
+contributing"). The binary links no display stack: there is no GL, font or
+`pkg-config` dependency to satisfy on a server, and the same is true of every
+crate in the suite.
+
 ## Architecture
 
 **`docs/DESIGN.md` is the authority** — the state inventory, the attention
@@ -843,8 +876,18 @@ fighting the nesting rather than configuring it.
 podman run --rm \
   -v ~/yog-state:/state/yog:Z \
   -v ~/work:/work:Z \
-  yog:0.0.5 gesture '/attention'
+  yog:<version> gesture '/attention'
 ```
+
+(`make print-image-tag` says which version this tree builds — the tag is
+derived from `Cargo.toml` and is not restated anywhere, including here.)
+
+A bare `podman run` with no `-p` reaches **nothing**: the engine binds inside
+the container's own network namespace, and a self-provisioned root binds a
+kernel-chosen port there. State the endpoint in the mounted root's
+`wire/address` before the run (or mint it with `WIRE_HOST`/`WIRE_PORT`, "The
+wire" above), and publish that port. `make deploy` does both for the unit it
+installs.
 
 Inside that one root: `world/litany` (the nested harness home), `world/state`
 (balls' clones and worktrees, and yog's own `ui.json` / `ops.jsonl`),
