@@ -1109,8 +1109,9 @@ worse than none. §8.5 supplied it.
   table it is denominated in — **severable in both directions**: delete
   `ceiling` and the gate is gone; delete `prices` and it is gone too, because a
   ceiling is a dollar figure and yog refuses to bound dollars it cannot compute
-  rather than inventing a token proxy for them. No new config artifact, no
-  setter, no verb, no flag.
+  rather than inventing a token proxy for them. No new config artifact and no
+  flag; the setter is a boundary act since bl-d13d (below), because the seat
+  that would edit the file stopped being on the file's box.
 - **The figure it compares is the whole world's** (bl-a80a) — every workspace
   the §3.1 roster names, folded into one number. At-or-over refuses. The
   comparison is against the figure's **floor** — unpriced tokens are reported
@@ -1166,6 +1167,95 @@ worse than none. §8.5 supplied it.
   once the ceiling moves, exactly as after any other failed fire. The text names
   both figures and the key to edit. Nothing is refused silently, and nothing
   running is touched.
+
+**Money everywhere tokens are said, and a ceiling that parks (bl-d13d).**
+Everything above landed and the round-1 comparator still recorded *"the suite
+counts tokens, never dollars"* (bl-06f3; lernie bl-9bae) — correctly, for the
+world it drove. Four facts kept the number from the operator, and each is
+answered here without a new store, a new litany budget or a rate anywhere
+below yog.
+
+- **The table is keyed by `(provider row, model)`, and a row may price a
+  wildcard.** The row a call went through is what a token costs: the
+  `claude-session-direct` row the comparator's box ran on bills
+  `claude-sonnet-4-6` at nothing marginal, and an `anthropic` API-key row
+  bills the same id at list — one key cannot say both. `ui.json.prices` is now
+  `{ "<provider row>": { "<model>": <rates>, "*": <rates> } }`; a row's `"*"`
+  is its rate for any model it does not name, so a subscription row is one
+  entry, `{ "*": {} }`, which **prices** every model it serves at `$0.00`.
+  That is a different fact from *unpriced* and the figure already says both —
+  `cost` present at zero versus `cost` absent — so no status vocabulary is
+  added: hermes' `included` is a zero row, its `estimated` is every figure yog
+  answers (yog never reads a provider's bill), and its `unknown` is the
+  `unpriced_tokens` count already beside the money. **The match is one rule
+  with the provider as a filter:** the step's `(provider, model)` takes the
+  exact row, else the row's `"*"`, else it is unpriced; a step record that
+  names no provider — every record written before litany's `meta.json` gains
+  `provider` (VISION §6 item 8) — is matched by model over every row, priced
+  when exactly one candidate prices it and unpriced when more than one does.
+  Not a version branch: it is the same lookup with the filter empty, and
+  ambiguity is reported the way an unknown model is. A table in the old
+  model-keyed shape reads as *absent* under the forgiving read — it was never
+  seeded and existed only where an operator wrote it by hand on the engine's
+  own box, and the door below is how it comes back.
+- **The table and the ceiling are read and set through the boundary.** §4.1
+  ruled them *read-only — no setter, no editor, no verb* because *a hand edit
+  is already live within a tick*, which was true while the window ran in the
+  engine's process on the engine's box. Since REMOTE §12 the seat is another
+  machine and `ui.json` is on the server, so the ruling's premise is gone and
+  the empty table is the default nobody can leave. `ui.json` stays the one
+  home and the severability stands unchanged — delete `prices` and every
+  column goes, delete `ceiling` and the gate goes — and what is added is the
+  door: `Query::Prices` answers the table, the ceiling and the world's priced
+  spend against it (the ledger, at the one altitude a world-scoped bound has);
+  `Action::Price { provider, model, rates }` writes or, with no rates, deletes
+  one row; `Action::Ceiling { usd }` writes or, with no number, deletes the
+  key. Both writes go through `UiState`'s write-through (§4.1) exactly as
+  `Pin` does, and both answer the re-derived `Prices` reply rather than an
+  echo (the `marks` precedent). Slash spellings: `/prices`,
+  `/price <provider> <model> <input> <output> [<cache_read> [<cache_write>]]`
+  with `off` in place of the rates to delete, `/ceiling <usd>` and
+  `/ceiling off`. The wire shapes are REMOTE §9.20's.
+- **A token count never travels without the cost the table puts on it.**
+  The board's ball rows, the workspace's ball rows and `Reply::Agent` carried
+  the figure; the step row, the science attempt, the rail notch and the
+  workspace row carried tokens alone. The rule is now stated rather than
+  accumulated: **every wire carrier of a token count carries `cost` beside
+  it**, in the one shape `board::figure_value` already spells —
+  `{"micro_usd", "usd", "unpriced_tokens"}` — and absent, not zero, when the
+  table is empty. Per step it is that step's own bill priced by that step's
+  own `(provider, model)` (`StepBill` already holds both halves); per
+  workspace it is `spend::priced` over that workspace's `Snapshot::bills`,
+  which is the per-workspace ledger bl-9bae found missing and the same filter
+  the board already runs (bl-9dd4: a figure per row is a filter over memory,
+  never a walk). The attribution clause does not ride these — a step, an
+  attempt, a notch and a workspace each *are* their own scope, and a label
+  saying so would be a fact with no reader.
+- **The ceiling parks a running conversation, and still never kills one.**
+  A birth is still refused at the `Prompt` door exactly as above. What was
+  unbounded is the fleet already alive: past the number, every drone kept
+  spending until its own natural end, which for a `/fleet` over a backlog is
+  the whole backlog. The second seat is **the §8.6 capability control**, and
+  it is the floor's mechanism aimed at every conversation at once: when the
+  world's priced spend is at or over `ceiling`, every consult answers `hold`,
+  carrying `Ceiling::verdict`'s own sentence as the mark's reason. A hold is
+  litany's park — the invocation waits *before* it executes, the branch keeps
+  its tree, its history and every uncommitted byte, and the attention queue
+  says so — so *never kills a running drone* holds unchanged, and the
+  overshoot is bounded at one step per live conversation (a step that ends
+  with no tool call ends the branch). No new litany budget, no hook, no
+  kill: the consult already runs before every tool call, and `hold` is a
+  verdict it already gives. **The release is the number moving.** A
+  `/ceiling` act that lifts the world back under the number — or deletes the
+  key — drives every conversation the ceiling parked, through the same
+  detached `litany advance` the answer gesture spends, selecting them by the
+  reason on their hold mark (the ceiling's sentence, which yog wrote and yog
+  reads back); a floor's park or a policy hold carries a different reason and
+  is not touched. `/answer pass` still walks one held call through, as under
+  a floor. **The cost is stated:** the consult walks the world's `steps/`
+  trees to fold the figure, once per tool call, and only while `ceiling` is
+  set and `prices` is non-empty — an unpriced or unbounded world costs the
+  consult nothing, which is the same severability read a third time.
 
 ### 3.6 Deletion: unmaking a workspace (bl-ef89)
 
@@ -1866,8 +1956,9 @@ is read by nothing and may be deleted at leisure.
     }
   },
   "pinned":   ["/abs/ws/path", "..."],
-  "prices": { "opus": { "input": 15, "output": 75,
-                        "cache_read": 1.5, "cache_write": 18.75 } },
+  "prices": { "anthropic": { "claude-opus-4-1": { "input": 15, "output": 75,
+                                                 "cache_read": 1.5, "cache_write": 18.75 } },
+              "claude-session-direct": { "*": {} } },
   "ceiling": 25
 }
 ```
@@ -1946,31 +2037,40 @@ is read by nothing and may be deleted at leisure.
   `ui.json` round-trips as an unknown key and means nothing. The severability
   showcase is unchanged: no yog config file exists, and deleting `ui.json`
   restores defaults and deletes no code path.
-- **`prices`** — the §3.5 spend-attribution price table: model id → the four
-  brazen counters' rates, quoted in **USD per million tokens** the way a
-  provider's price page prints them, so the operator transcribes rather than
-  converts. Model ids are the ones `models.yaml` declares (the string the step's
-  own `request.json` carries), so the key is the same name the picker shows.
-  **Read-only — no setter, no editor, no verb**, because the rates are operator
-  policy with no other authority and a hand edit is already live within a tick
-  (the whole-file `adopt`, I5). It is *here* rather than in a config file of its
-  own for the same reason the density knobs are: `ui.json` is the durable
+- **`prices`** — the §3.5 spend-attribution price table: provider row →
+  model id → the four brazen counters' rates, quoted in **USD per million
+  tokens** the way a provider's price page prints them, so the operator
+  transcribes rather than converts. The provider row is the brazen row name
+  litany hands `bz --provider` (the step's `meta.json`, VISION §6 item 8); the
+  model id is the string the step's own `request.json` carries, the same name
+  the picker shows; a row's `"*"` entry prices every model the row serves that
+  it does not name, and `{}` is a row priced at zero — a subscription, said as
+  `$0.00` rather than as nothing (bl-d13d). **Read and written through the
+  boundary** — `Query::Prices`, `Action::Price` — since bl-d13d: it was
+  *read-only, no setter, no verb* while a hand edit on the engine's box was
+  live within a tick (the whole-file `adopt`, I5), and the seat is no longer
+  on that box. The write is the same write-through every `ui.json` mutation
+  takes. It is *here* rather than in a config file of its
+  own for the same reason the density knobs were: `ui.json` is the durable
   artifact yog already has, and a second file for one object would give one fact
-  two homes. Absent ⇒ no cost figure is answered anywhere; a malformed row or a
-  non-numeric rate degrades to absent rather than refusing the document (the
+  two homes. Absent ⇒ no cost figure is answered anywhere; a malformed row, a
+  non-numeric rate, or a document in the pre-bl-d13d model-keyed shape degrades
+  to absent rather than refusing the document (the
   forgiving read), so a typo costs a column, never the answer. Deleting the key
   deletes the column and no code path — the severability §3.5 demands.
 - **`ceiling`** — the §3.5 spend ceiling: one number, **USD**, the bound *this
   whole world's* spend must stay under for yog to start a *new* conversation
   anywhere in it. World-scoped since bl-a80a: it is a world-level key in a
   world-level file, so it names a world-level allowance, and arming a second
-  project does not multiply it. Read exactly like `prices` and for the same reasons — read-only, no
-  setter, no editor, no verb, live within a tick through the whole-file
-  `adopt`. Absent, non-numeric or negative all read as **no ceiling**: deleting
+  project does not multiply it. Read and written exactly like `prices` and
+  for the same reasons — `Action::Ceiling` since bl-d13d, the hand edit still
+  live within a tick through the whole-file `adopt`. Absent, non-numeric or
+  negative all read as **no ceiling**: deleting
   the key deletes the gate, not a code path. An empty `prices` deletes it too
   (§3.5: a ceiling in dollars needs the table that makes dollars). A literal
-  `0` is honored — the hard stop that starts nothing new. It bounds *births*
-  only; nothing already running is ever stopped by it. **It is also the only
+  `0` is honored — the hard stop that starts nothing new. It refuses *births*
+  and, since bl-d13d, **parks** what is already running at its next tool call
+  (§3.5, §8.6); nothing is ever killed by it. **It is also the only
   ceiling a yog-dispatched conversation has** (bl-56af): §8.6's workflow fixed
   point strips litany's `budgets:` block from every workspace's `config/default`,
   so there is no second, token-denominated bound that could drift from this one.
@@ -5673,6 +5773,22 @@ confinement refusal), bl-94b4 (the floor writer above — the monitor's revoke
 rung over the same fold, whose *reader* `Answers::floored` came with the shim),
 bl-bca4 (the Linux backend behind that refusal — probe, gate and wrap) and
 bl-34b1 (the writable set's fourth member).
+
+- **The spend ceiling is a world floor, and the consult is its second seat**
+  (bl-d13d, §3.5). The §4.9 floor holds every class above `read` over one
+  descent, raised by a trail row; the ceiling holds **every** class over
+  **every** conversation in the world, raised by the world's priced spend
+  reaching `ui.json.ceiling` and lowered by that number moving. Same verdict
+  (`hold`), same mark, same queue, same `/answer pass` walk-through — the
+  difference is the predicate and its scope, and the reason on the mark is
+  `Ceiling::verdict`'s own sentence, which is how the `/ceiling` act later
+  finds what it parked and releases exactly that. `Consult` reads the key and
+  the table off `ui.json` under its `state_root` and folds `spend::of_world`
+  over `binding::workspaces`' roster; with no key or an empty table the read
+  is one `get` and no walk. It still writes nothing (the mark is litany's,
+  the number is the operator's) and still never stops: a stop mid-tool-window
+  wedges the branch (litany bl-b98d), and a park costs no process and no
+  tokens, which is the whole reason the seat is here rather than at a hook.
 
 ### 8.7 The birth policy (VISION §4.2 / §4.6, bl-380f)
 

@@ -195,6 +195,46 @@ Cost per ball is now a *query* (bl-afc4), honoring single-source-of-truth:
   *spawns* and never kills a running drone — killing mid-ball destroys
   uncommitted work, and early termination is the expensive failure.
 
+**Priced, and then said — the second half of the promise (bl-d13d).** Every
+mechanism above landed (bl-afc4, bl-56d5, bl-9dd4, bl-a80a) and the round-1
+comparator still found *"the suite counts tokens, never dollars"*, because a
+price table nobody fills is a column nobody sees. Three facts stopped the
+number reaching the operator, and the ruling answers each without moving the
+layer law: price is still policy and still yog's, brazen still counts, litany
+still sums nothing new.
+
+- **The key is the pair `(provider row, model)`, not the model.** The row a
+  call went through is what a token costs: a subscription row bills the same
+  model id at nothing marginal while an API-key row bills it at list, and the
+  box the comparator ran on used exactly such a row. A subscription is a row
+  priced at **zero** — priced, and pricing to `$0.00` — which is a different
+  fact from *unpriced*, and the figure already carries both (`cost` present at
+  zero, versus absent). No status enum: hermes' `included` is a zero row, its
+  `estimated` is every figure here (yog never reads a provider's bill), and its
+  `unknown` is the `unpriced_tokens` count the figure already answers beside
+  the money.
+- **The table and the ceiling are read and set through the boundary.** They
+  were *"read-only, hand-edited, live within a tick"* when the window and the
+  engine were one process on one box; since the four-component split (REMOTE
+  §12) `ui.json` lives on the server and the seat is another machine, so the
+  ruling's premise is gone. `ui.json` stays the one home and stays severable
+  (delete the key, lose the column); what is added is the door.
+- **A token count never travels without the cost the table puts on it.**
+  Every carrier the wire already has — the step row, the attempt, the rail
+  notch, the workspace row — says the money beside the tokens in the one
+  figure shape the board and the ball rows already use, and a per-workspace
+  figure is the ledger bl-9bae asked for.
+- **The ceiling parks a running conversation instead of only refusing a
+  birth.** A park is a hold, not a kill — the §4.11 capability control's own
+  verdict, which keeps every byte of uncommitted work and waits — so *never
+  kills a running drone* holds unchanged while a fleet past the number stops
+  spending at its next tool call rather than at each drone's natural end. No
+  litany budget returns; the seat is the consult litany already runs, and the
+  release is the number moving.
+
+DESIGN §3.5 carries the ruling in full and REMOTE §9.20 the wire; the one
+upstream ask is litany's (§6 item 8): the step record names the provider row.
+
 ### 4.6 Model selection
 
 Tag→model is the functional heuristic and stays available. The vision's
@@ -1153,6 +1193,14 @@ Filed as balls in each repo; this table is the index, the balls are the work.
    mid-tool-window wedges a branch (litany bl-b98d) — §4.11's refusal paths
    route around stop entirely, but the monitor's stop rung still wants that
    fix.
+8. **The step record names the provider row it ran through** (bl-d13d,
+   §4.5). litany already spawns `bz --json --provider <row>` (its
+   `prompt/adapter`), so the row is litany's fact at the moment the step is
+   recorded; `meta.json` gains `provider` beside `config_commit` and
+   `workflow_commit`. yog's price table is keyed on the pair, and until this
+   lands a record naming no row is matched by model alone — priced when
+   exactly one row prices that model, unpriced when more than one does.
+   Policy-blind: litany learns no rate.
 
 **balls**: two tasks, both inside its own territory — no new opinion, verb,
 or metric. bl-a1a4 corrects the delivery law (the source owner incorporates

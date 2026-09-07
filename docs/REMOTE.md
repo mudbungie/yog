@@ -5061,6 +5061,67 @@ row belonged to.
   The ledger would have caught this one too — `reply/ops`' signature last moved
   at 11 — but the rule is the authority and is stricter than the mechanism.
 
+### 9.20 The wire says what it cost, and takes the rate (bl-d13d)
+
+**The rule DESIGN §3.5 states — a token count never travels without the cost
+the table puts on it — is a wire rule, and this is where it is paid.** Four
+shapes already in use gain a field, and one bump carries all four, because §3
+prices a second change to a shape inside one cycle at a second integer and
+these are one change: `PROTOCOL` is **17**.
+
+- **`reply/steps` rows gain `cost`**, that step's own bill priced by that
+  step's own `(provider, model)`.
+- **`reply/science` attempts gain `cost`** beside `usage`.
+- **`reply/rail` notches gain `cost`** beside `budget` — the same rollup the
+  notch's token figure already is, priced.
+- **`reply/workspaces` rows gain `spend`** — the workspace's whole priced
+  figure, which is the per-workspace ledger lernie bl-9bae found missing and
+  the same `spend::priced` filter over `Snapshot::bills` the board runs.
+
+The shape is the one the board's ball rows, `reply/workspace-balls` and
+`reply/agent` already carry and lernie already decodes (`reply/spend`):
+`{"micro_usd": <u64>, "usd": "<engine-rendered>", "unpriced_tokens": <u64>}`,
+the key **absent** — never zero — when the price table is empty. Derived text
+rides beside the fact, as §9.7 ruled: a seat paints `usd` verbatim and never
+multiplies, because the box that holds the rates is the only box that may
+say the number. A `$0.00` is a priced figure (a subscription row); an absent
+`cost` is an unpriced one; `unpriced_tokens` above zero makes the figure a
+floor, and a seat says *at least*. No attribution clause on these four: each
+is its own scope.
+
+**One read and two acts, all new shapes, exempt from the bump by §3's rule.**
+
+- **`Query::Prices` → `reply/prices`**: `{"kind": "prices", "rows": [{"provider",
+  "model", "input", "output", "cache_read", "cache_write"}], "ceiling": <usd>,
+  "spent": <cost>}`. `rows` is the table flattened, a `"*"` model carried as
+  the literal string; rates are the operator's quoted USD-per-million
+  decimals, read back exactly as written; `ceiling` and `spent` are absent
+  keys when there is no number and no priced spend respectively. It addresses
+  no workspace — the table and the bound are world facts (DESIGN §4.1, §3.5
+  bl-a80a) — so it stands beside `workspaces` and `clients` in the
+  window-level set (lernie DESIGN §4.21) rather than under a wall. Slash form
+  `/prices`.
+- **`Action::Price { provider, model, rates: Option<{input, output,
+  cache_read, cache_write}> }`** — `/price <provider> <model> <input> <output>
+  [<cache_read> [<cache_write>]]` writes the row (an omitted rate is zero, the
+  table's own default), `/price <provider> <model> off` deletes it. The
+  receipt is the re-derived `prices` reply.
+- **`Action::Ceiling { usd: Option<f64> }`** — `/ceiling <usd>` and
+  `/ceiling off`. The receipt is the same `prices` reply, and the act's
+  second effect is DESIGN §3.5's release: every conversation the ceiling
+  parked is driven when the number moves back over the world's spend, and
+  the reply carries `"released": <n>` so a seat can say how many woke.
+  A refusal — a negative number, an unparseable rate, an unknown provider row
+  (the wall's `providers` answer is the roster the seat validates against,
+  and the engine refuses in band naming it) — rides the `{"ok": false,
+  "error": …}` every act already has.
+
+**What did not move.** The birth refusal's sentence and its `yog-step
+ceiling` trail row (§9.8); `reply/board`'s `ceiling` verdict, still the same
+`Ceiling::verdict` text; the figure's encoder, still one function. And the §6
+table is unchanged: `ui.json` still holds exactly `seen`, `pinned`,
+`ceiling`, `prices` — the door reaches two keys that were always there.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer
