@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.48](https://github.com/mudbungie/yog/compare/v0.0.47...v0.0.48) - 2026-09-06
+
+### Changes
+
+- birth grants clients to the roles that work, never to machinery: after bl-52b7 no role in an existing or new workspace can reach a foot until providers.yaml names clients [bl-0460]
+- the conversation-name mint is seeded from a one-second wall clock, so two conversations started in the same second are minted the same name and every seat verb then addresses neither [bl-d88f]
+- the sign-in refusal offers rows that can never ready a wall, and never names the role-assignment remedy its own module doc describes [bl-8523]
+- the enroll envelope carries the engine's own wire/address verbatim, so a device that reaches the engine by any other route is enrolled pointing somewhere it cannot dial [bl-fec6]
+- a fresh box has no git identity, so the first start dies with a verbatim git error dump instead of a named prerequisite [bl-c28c]
+- the README never says how to install yog: cargo install appears nowhere, though the published crate installs clean from a bare container in under a minute [bl-f8e3]
+- the sign-in door passes on any credentialed row in the wall while the roles name an uncredentialed one, so a new workspace's first conversation is born dead [bl-58e7]
+- the foot enrolment the binary's own help teaches is a dead end: wire-certs WIRE_LEAF mints a leaf registered in no workspace, the foot then advertises into nothing in silence, and /enroll refuses to repair it [bl-6b14]
+
 ## [0.0.47](https://github.com/mudbungie/yog/compare/v0.0.46...v0.0.47) - 2026-09-06
 
 ### Changes

@@ -32,6 +32,10 @@ pub(super) const REPO_MARK: &str = "repo.git";
 /// The `["yog-step",<name>]` step names for the non-spawn aborts (§4.2).
 const MINT: &str = "mint";
 pub(super) const MKDIR: &str = "mkdir";
+/// The rename that turns a finished birth into the workspace (bl-1af5) — the
+/// one act between litany's last write and the name being addressable, and the
+/// one non-spawn abort the create can still hit.
+pub(super) const BIRTH: &str = "birth";
 /// The §8.6 authoring of the capability control onto `config/default`.
 pub(super) const CONTROL: &str = "control";
 

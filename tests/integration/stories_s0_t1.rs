@@ -73,7 +73,15 @@ fn s0_t1_empty_world_one_enter_materializes_the_conversation() {
     // bl-7fc8), so nothing advances config/default a second time.
     let inv = litany_rec.wait(4);
     assert_eq!(inv[0].argv, ["prime"]);
-    assert_eq!(inv[1].argv, ["new", ws.to_string_lossy().as_ref()]);
+    // `new` targets an I3 temp beside the destination, renamed onto it when
+    // litany finishes (bl-1af5); the fire's own cwd below is the landed name.
+    assert_eq!(inv[1].argv[0], "new");
+    assert_eq!(
+        std::path::Path::new(&inv[1].argv[1]).parent(),
+        ws.parent(),
+        "born beside its destination: {}",
+        inv[1].argv[1]
+    );
     assert!(
         ws.starts_with(names_root(yog.path())),
         "the workspace is under the flat names root"

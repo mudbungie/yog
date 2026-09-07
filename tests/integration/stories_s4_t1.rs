@@ -76,8 +76,13 @@ fn s4_t1_new_workspace_takes_the_operators_typed_name() {
     assert_eq!(argv[0], ["prime"], "seed first (§8.1)");
     assert_eq!(argv[1][0], "new");
     assert!(
-        argv[1][1].ends_with("workspaces/ops"),
-        "`litany new` targets the operator's own name under the names root",
+        argv[1][1].starts_with(&format!(
+            "{}/workspaces/.ops.yog-tmp-",
+            yog.path().display()
+        )),
+        "`litany new` targets an I3 temp beside the operator's own name under \
+         the names root, renamed onto it when litany finishes (bl-1af5): {}",
+        argv[1][1],
     );
     // One pass after `new`: §8.6's convergence, which on a fresh workspace has
     // the worker's `clients` grant to author and nothing else (bl-0460).

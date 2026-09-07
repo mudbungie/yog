@@ -149,6 +149,18 @@ pub(crate) fn is_workspace(dir: &Path) -> bool {
     dir.join(REPO_MARK).exists()
 }
 
+/// Whether `dir` is a **birth in flight or its debris** (bl-1af5): a workspace
+/// is born under an I3 temp name in its own parent and renamed into place when
+/// litany has finished, so a directory whose leaf is one of `scratch`'s temps
+/// holds a `repo.git` that is not a workspace yet and may never be. Skipping it
+/// is I3's own promise kept — *"temp names are dotfiles so no substrate reads
+/// them"* — and it is what makes a killed birth inert rather than a wedged
+/// name: nothing enumerates it, so nothing refuses the name it was born for.
+fn is_birth_temp(dir: &Path) -> bool {
+    dir.file_name()
+        .is_some_and(|leaf| crate::scratch::is_temp(&leaf.to_string_lossy()))
+}
+
 /// One-level (flat) enumeration: direct children of `dir` that are workspaces,
 /// each tagged by `classify` over its leaf name. An absent `dir` contributes
 /// nothing. Sorted by path for a stable, determinism-derived roster (I9).
@@ -161,7 +173,7 @@ fn enumerate_flat(dir: &Path, classify: fn(&str) -> WorkspaceKind, out: &mut Vec
     let mut found: Vec<Workspace> = entries
         .flatten()
         .map(|e| e.path())
-        .filter(|p| p.is_dir() && is_workspace(p))
+        .filter(|p| p.is_dir() && is_workspace(p) && !is_birth_temp(p))
         .map(|path| {
             // A readdir entry always has a leaf; `_lossy` keeps a non-UTF-8 name
             // (foreign/replay ids are ASCII, chosen names UTF-8 by construction).

@@ -1,17 +1,15 @@
-//! The workspace-and-name executors (§4.2, Z5): the idempotent `litany new`
-//! ensure, the mint mapping the fire applies ([`on_mint`]), and the worktree
-//! resolution ladder. The `bl`-facing executors are [`super::exec`]'s concern.
+//! The workspace executor (§4.2, Z5): the idempotent, **atomic** `litany new`
+//! ensure and the §8.6/§3.7 policy convergence outside its create skip. The
+//! name-shaped halves — the mint mapping and the worktree ladder — are
+//! [`super::names`]'s since §12's cap split them off (bl-1af5); the `bl`-facing
+//! executors are [`super::exec`]'s concern.
 
-use super::{World, ball, fake_fail, fake_litany};
-use crate::binding::{work_worktree_path, workspace_path};
+use super::{World, fake_fail, fake_litany};
+use crate::binding::workspace_path;
 use crate::cli_outbound::Cli;
-use crate::opslog::{Origin, SYNTHETIC_EXIT, YOG_STEP};
-use crate::projects::join::JoinState;
-use crate::start::{
-    Deps, Payload, StartError, execute_ensure_workspace, on_mint, resolve_worktree,
-};
+use crate::opslog::{Origin, YOG_STEP};
+use crate::start::{Deps, StartError, execute_ensure_workspace};
 use crate::world::{Layout, layout_under};
-use litany::mint::MintError;
 use std::path::PathBuf;
 
 /// The world layout anchored on this world's yog data root — where the §8.6
@@ -66,10 +64,102 @@ fn ensure_creates_the_workspace_and_logs() {
         .unwrap()
     );
     assert!(ws.parent().unwrap().is_dir(), "parent chain mkdir -p'd");
+    assert!(ws.join("repo.git").is_dir(), "the birth landed at the name");
+    // The trail names the path litany was actually given — an I3 temp in the
+    // workspace's own parent, renamed into place when litany finished (bl-1af5).
+    let born = &w.ops()[0].argv[2];
     assert_eq!(
-        &w.ops()[0].argv[1..],
-        &["new", ws.to_string_lossy().as_ref()]
+        std::path::Path::new(born).parent(),
+        ws.parent(),
+        "born beside its destination, so the landing is a same-dir rename: {born}"
     );
+    assert!(
+        crate::scratch::is_temp(
+            &std::path::Path::new(born)
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+        ),
+        "{born}"
+    );
+    assert!(
+        !ws.parent().unwrap().join(born).exists(),
+        "the temp is gone"
+    );
+}
+
+/// **A birth is one act or none** (bl-1af5): a `litany new` that dies part way
+/// used to leave `<workspace>/repo.git` behind, which IS a workspace by §3.1 —
+/// so the name was enumerated, unaddressable to the client that failed to make
+/// it, and unusable forever with no in-band exit. Nothing is left now, and the
+/// very next attempt at the same name founds it.
+#[test]
+fn a_failed_birth_leaves_no_workspace_and_wedges_no_name() {
+    let w = World::new();
+    let ws = workspace_path(w.yog.path(), "n");
+    // A `litany new` that makes the directory and the marker, then dies — the
+    // shape of every failure between the bare repo and the first commit.
+    let half = super::write_exec(
+        w.bin.path(),
+        "litany",
+        "#!/bin/sh\nnew_half() { mkdir -p \"$1/repo.git\"; }\n\
+         case \"$1\" in new) new_half \"$2\"; exit 1 ;; esac\nexit 0\n",
+    );
+    let err = execute_ensure_workspace(
+        &deps(&w, &Cli::new(half)),
+        "TS",
+        &ws,
+        "default",
+        &layout(&w),
+        Origin::Balls,
+    )
+    .unwrap_err();
+    assert!(matches!(err, StartError::VerbFailed { verb: "new", .. }));
+    assert!(!ws.exists(), "the name is free: {}", ws.display());
+    assert!(
+        crate::binding::workspaces(w.yog.path(), w.yog.path()).is_empty(),
+        "and nothing enumerates the debris"
+    );
+    // The same name founds on the very next attempt.
+    let litany = Cli::new(fake_litany(w.bin.path()));
+    assert!(
+        execute_ensure_workspace(
+            &deps(&w, &litany),
+            "TS",
+            &ws,
+            "default",
+            &layout(&w),
+            Origin::Balls
+        )
+        .unwrap()
+    );
+    assert!(ws.join("repo.git").is_dir());
+}
+
+/// A rename that cannot land is a `["yog-step","birth"]` row and an `Io` error
+/// (Z5), and it still leaves nothing: debris already at the destination that is
+/// not an empty directory is `ENOTEMPTY`, where litany used to say `destination
+/// is not empty`.
+#[test]
+fn a_birth_that_cannot_land_logs_its_step_and_leaves_nothing() {
+    let w = World::new();
+    let ws = workspace_path(w.yog.path(), "n");
+    std::fs::create_dir_all(&ws).unwrap();
+    std::fs::write(ws.join("squatter"), b"x").unwrap();
+    let litany = Cli::new(fake_litany(w.bin.path()));
+    let err = execute_ensure_workspace(
+        &deps(&w, &litany),
+        "TS",
+        &ws,
+        "default",
+        &layout(&w),
+        Origin::Balls,
+    )
+    .unwrap_err();
+    assert!(matches!(err, StartError::Io(_)), "{err:?}");
+    assert!(!ws.join("repo.git").exists(), "nothing landed");
+    let step = w.ops().into_iter().find(|o| o.argv[0] == YOG_STEP);
+    assert_eq!(step.expect("a birth step row").argv[1], "birth");
 }
 
 #[test]
@@ -118,10 +208,11 @@ fn a_new_that_died_for_want_of_a_git_identity_names_the_prerequisite() {
         "{said}"
     );
     assert!(!said.contains("Please tell me who you are"), "{said}");
-    assert_eq!(
-        &w.ops()[0].argv[1..],
-        &["new", ws.to_string_lossy().as_ref()]
-    );
+    // The trail names the I3 temp litany was given (bl-1af5), beside its
+    // destination — the capture is the row's, and the row is still there.
+    let ops = w.ops();
+    assert_eq!(ops[0].argv[1], "new");
+    assert_eq!(std::path::Path::new(&ops[0].argv[2]).parent(), ws.parent());
 }
 
 #[test]
@@ -178,80 +269,5 @@ fn ensure_creates_whatever_the_birth_template_names() {
     assert!(
         !w.ops().iter().any(|e| e.argv == [YOG_STEP, "template"]),
         "no birth-time provider step remains"
-    );
-}
-
-#[test]
-fn on_mint_passes_a_name_through() {
-    let w = World::new();
-    let name = on_mint(
-        Ok("cobalt-gecko".to_owned()),
-        w.state.path(),
-        "TS",
-        w.home.path(),
-        Origin::Conversation,
-    )
-    .unwrap();
-    assert_eq!(name, "cobalt-gecko");
-    assert!(w.ops().is_empty(), "a clean mint logs nothing");
-}
-
-#[test]
-fn on_mint_logs_an_exhausted_pool() {
-    // Pool exhaustion is a non-spawn abort: a `["yog-step","mint"]` row (Z5) then
-    // the error — the conversation mint's one non-spawn failure, made visible
-    // (§3.3, §8.1 step 2; the workspace mint it once also served is gone).
-    let w = World::new();
-    let err = on_mint(
-        Err(MintError::Exhausted(6)),
-        w.state.path(),
-        "TS",
-        w.home.path(),
-        Origin::Conversation,
-    )
-    .unwrap_err();
-    assert!(matches!(err, StartError::Mint(MintError::Exhausted(6))));
-    let e = &w.ops()[0];
-    assert_eq!(e.argv, [YOG_STEP, "mint"]);
-    assert_eq!(e.exit, SYNTHETIC_EXIT);
-    assert!(e.stderr.contains("pool exhausted"));
-}
-
-#[test]
-fn resolve_worktree_prefers_the_claim_then_disk_then_canonical() {
-    // Addendum: the composer's ball worktree must be the path bl actually minted,
-    // never a hardcoded canonical guess. Four cases, one function.
-    let w = World::new();
-    let (balls, project, name) = (w.balls.path(), w.project.path(), "cobalt-gecko");
-    let existing = |id: &str| ball(project, id, JoinState::Bound);
-    // A non-ball rung names no worktree.
-    assert_eq!(
-        resolve_worktree(&Payload::Bare, Some(project), balls, name, None),
-        None
-    );
-    // The claim's cross-checked worktree wins verbatim (the `<id>-<claimant>`
-    // variant when bl minted it — threaded from `ClaimResolved`).
-    let claimed = PathBuf::from("/claimed/wt-suffixed");
-    assert_eq!(
-        resolve_worktree(
-            &existing("bl-1"),
-            Some(project),
-            balls,
-            name,
-            Some(claimed.clone())
-        ),
-        Some(claimed),
-    );
-    // Resume (no claim), neither variant on disk → the canonical `<id>` formula.
-    assert_eq!(
-        resolve_worktree(&existing("bl-2"), Some(project), balls, name, None),
-        Some(work_worktree_path(balls, project, "bl-2", None)),
-    );
-    // Resume where only the `<id>-<claimant>` worktree exists → that suffixed path.
-    let suffixed = work_worktree_path(balls, project, "bl-3", Some(name));
-    std::fs::create_dir_all(&suffixed).unwrap();
-    assert_eq!(
-        resolve_worktree(&existing("bl-3"), Some(project), balls, name, None),
-        Some(suffixed),
     );
 }

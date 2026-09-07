@@ -12,6 +12,9 @@ mod exec;
 mod goal;
 mod identity;
 mod lineage;
+/// The name-shaped executors — the mint mapping and the worktree ladder
+/// (split off `ensure` at §12's cap).
+mod names;
 mod pins;
 mod plan;
 mod prompt;

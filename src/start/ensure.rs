@@ -19,7 +19,7 @@
 //! nothing is staged and nothing spawns, which is the steady state of every
 //! start after the first.
 
-use super::exec::{CONTROL, Deps, MKDIR, NEW, REPO_MARK, StartError, verb_ok};
+use super::exec::{BIRTH, CONTROL, Deps, MKDIR, NEW, REPO_MARK, StartError, verb_ok};
 use super::instructions::manifest;
 use crate::actions::verbs::{self, log_step_failure};
 use crate::cli_outbound::Cli;
@@ -122,6 +122,34 @@ fn converge(
 /// The create half of [`execute_ensure_workspace`]: the parent chain and
 /// `litany new`. Skipped whole for a workspace that already exists — resume is
 /// the same path as opening.
+///
+/// **A birth is one act or none** (bl-1af5). `litany new` makes the directory,
+/// then the bare repository, then the first `config/default` commit — three
+/// steps, and a failure at the third left `<workspace>/repo.git` and nothing
+/// else. That debris **is** a workspace by §3.1's definition, so it is
+/// enumerated, so a scoped client that never got a registration out of the
+/// failed reply can neither address it (`unknown workspace`, REMOTE §4) nor
+/// found past it (the raise refuses to join another client's wall), and
+/// `workspaces` answers an empty list about a name that is now unusable
+/// forever. The state that causes it is invisible to every read the interface
+/// offers, and `rm -rf` on the directory is the only exit. bl-c9d2's raise
+/// already resumes past a directory with **no** marker; this is the same
+/// wedge one step later, where no raise can help.
+///
+/// So the workspace is born under an **I3 temp name** in its own parent
+/// (`.<name>.yog-tmp-<pid>`, §2 I3's one spelling) and renamed into place only
+/// once litany has finished — a same-directory rename, so it is atomic and
+/// never EXDEV. A failure at any step leaves no workspace: the temp is removed
+/// on the way out, and even a process killed mid-birth leaves only a dot-named
+/// directory that no enumeration sees ([`crate::binding`] skips I3 temps) and
+/// that blocks no name, where the old shape left a name wedged. Three
+/// consequences, each deliberate: the §4.2 trail's `new` row names the temp,
+/// because that is the path litany was actually given; a debris directory
+/// already at the destination is renamed **over** only when it is empty, which
+/// is exactly bl-c9d2's case, a non-empty one earning `ENOTEMPTY` where litany
+/// used to say `destination is not empty`; and the I3 sweep does not remove a
+/// leftover birth, since it removes files and never directories — an inert
+/// dot-directory is debris, and the wedge it replaced was a defect.
 fn create_workspace(
     litany: &Cli,
     state_root: &Path,
@@ -137,10 +165,32 @@ fn create_workspace(
         log_step_failure(state_root, ts, parent, MKDIR, &e.to_string(), origin)?;
         return Err(StartError::Io(e));
     }
-    let ws_s = workspace.to_string_lossy();
-    verb_ok(
-        verbs::run_logged(litany, state_root, ts, parent, &[NEW, &ws_s], origin)?,
-        NEW,
+    let birth = crate::scratch::temp_in(parent, &crate::naming::leaf(workspace));
+    // A leftover of this very pid — a retry after a birth this process itself
+    // failed — would earn litany's own `destination is not empty` refusal.
+    drop(std::fs::remove_dir_all(&birth));
+    let outcome = verbs::run_logged(
+        litany,
+        state_root,
+        ts,
+        parent,
+        &[NEW, &birth.to_string_lossy()],
+        origin,
     )?;
-    Ok(true)
+    match verb_ok(outcome, NEW).and_then(|_| land(&birth, workspace)) {
+        Ok(()) => Ok(true),
+        Err(e) => {
+            drop(std::fs::remove_dir_all(&birth));
+            if let StartError::Io(io) = &e {
+                log_step_failure(state_root, ts, workspace, BIRTH, &io.to_string(), origin)?;
+            }
+            Err(e)
+        }
+    }
+}
+
+/// The rename that makes a finished birth a workspace — the one act between
+/// litany's last write and the name being addressable.
+fn land(birth: &Path, workspace: &Path) -> Result<(), StartError> {
+    std::fs::rename(birth, workspace).map_err(StartError::Io)
 }

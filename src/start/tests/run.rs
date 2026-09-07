@@ -43,11 +43,17 @@ fn prepare_bare_bootstrap_seeds_and_news_under_the_default_name() {
     // §8.6 convergence, which on a fresh workspace has the worker's `clients`
     // grant to author (bl-0460: litany's template cannot name yog's own tool).
     assert_eq!(w.verbs(), vec!["prime", "new", "config"]);
-    assert_eq!(
-        w.ops()[1].argv[2],
-        workspace_path(w.yog.path(), &p.workspace).to_string_lossy(),
-        "`litany new` targets `<names-root>/home`"
-    );
+    // `litany new` targets an I3 temp **in** `<names-root>`, renamed onto
+    // `<names-root>/home` when it finishes (bl-1af5): a birth is one act or
+    // none, so a failure part way leaves no half-workspace to wedge the name.
+    let landed = workspace_path(w.yog.path(), &p.workspace);
+    assert!(landed.join("repo.git").is_dir(), "the birth landed");
+    let ops = w.ops();
+    let born = std::path::Path::new(&ops[1].argv[2]);
+    assert_eq!(born.parent(), landed.parent());
+    assert!(crate::scratch::is_temp(
+        &born.file_name().unwrap().to_string_lossy()
+    ));
 }
 
 /// §16.7 W9: founding the world seeds the agent-tool shim, so the `bl` an agent

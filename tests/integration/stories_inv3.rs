@@ -113,7 +113,14 @@ fn inv3_prepare_converges_after_a_midplan_kill() {
         vec!["prime", "new", "config"],
         "seed, then new, then the §8.6 convergence — the §8.1 order"
     );
-    assert_eq!(l1[1][1], ws.to_string_lossy());
+    // `new` targets an I3 temp beside the destination, renamed into place when
+    // litany finishes (bl-1af5): a birth is one act or none.
+    assert_eq!(
+        std::path::Path::new(&l1[1][1]).parent(),
+        ws.parent(),
+        "born beside its destination: {}",
+        l1[1][1]
+    );
 
     // The kill lands after `new`: the effects the killed steps left persist
     // (§8.1). Materialize exactly that — the seed marker and workspace exist, and

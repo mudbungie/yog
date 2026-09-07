@@ -60,8 +60,16 @@ fn a_landed_spawn_starts_a_drone_and_leaves_one_row() {
 /// loop row, because the birth did not land.
 ///
 /// The fire fails because the driver's working directory is the workspace and
-/// this `litany new` never made one: a launch into a directory that is not
-/// there is exactly the class the loop could not previously survive.
+/// it is gone by then — here removed under the flow by the `bl claim` that runs
+/// between the birth and the fire, which is the shape a `/delete` racing a
+/// start already has. A launch into a directory that is not there is exactly
+/// the class the loop could not previously survive.
+///
+/// It used to be arranged by a `litany new` that made nothing and exited zero.
+/// bl-1af5 closed that off: a birth is one act or none, so an ensure whose
+/// `litany new` left no workspace now fails outright instead of reporting a
+/// create it did not perform — which is the same defect one rung earlier, and
+/// the claim would never have been taken.
 #[test]
 fn a_birth_whose_fire_never_launches_gives_its_own_claim_back() {
     let root = tempdir().expect("tempdir");
@@ -82,12 +90,21 @@ fn a_birth_whose_fire_never_launches_gives_its_own_claim_back() {
         root.path(),
         "bl",
         &format!(
-            "#!/bin/sh\nprintf '%s\\n' \"$*\" >>'{}'\ncase \"$1\" in\n  claim) printf '%s\\n' '{}' ;;\nesac\nexit 0\n",
+            "#!/bin/sh\nprintf '%s\\n' \"$*\" >>'{}'\ncase \"$1\" in\n  \
+             claim) rm -rf '{}'; printf '%s\\n' '{}' ;;\nesac\nexit 0\n",
             seen.display(),
+            ws.display(),
             worktree.display()
         ),
     );
-    ctx.deps.litany = fake(root.path(), "litany", "#!/bin/sh\nexit 0\n");
+    ctx.deps.litany = fake(
+        root.path(),
+        "litany",
+        &format!(
+            "#!/bin/sh\ncase \"$1\" in\n{}esac\nexit 0\n",
+            crate::test_support::authoring_new_arm()
+        ),
+    );
     assert!(!ctx.pass(), "the fire never launched, so no birth landed");
     let args = std::fs::read_to_string(&seen).expect("bl was called");
     assert!(
