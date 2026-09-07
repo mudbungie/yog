@@ -14,7 +14,9 @@
 //! credential model's secret is a value in the wall's own `config.toml`, which
 //! is `/config brazen`.
 
-use crate::config_edit::brazen::ProviderRow;
+use std::collections::BTreeMap;
+
+use crate::config_edit::brazen::{NOT_REQUIRED, ProviderRow};
 use crate::model_pick::WORKER_ROLE;
 
 use super::Unready;
@@ -62,13 +64,84 @@ fn undeclared(provider: &str, rows: &[ProviderRow]) -> String {
     )
 }
 
-/// The lineage names no role at all, so the wall itself is the subject — the
-/// bl-2291 sentence, unchanged.
+/// **What act would ready one row** (bl-8523) — the partition the wall's own
+/// refusal prints, over the columns that decide it and nothing else.
+///
+/// It is a statement about a row's **credential model**, true whatever the row
+/// currently holds: an oauth row is the row you sign in to, signed in or not.
+/// That is why it is total, and why the wall sentence — printed only when no
+/// row here holds a credential at all — can print it flat. The declaration
+/// order is the reading order the refusal takes, most actionable first.
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+enum Act {
+    /// `bz --login` serves oauth rows and only oauth rows (§8.3), which is what
+    /// [`ProviderRow::login_blocked`] answers.
+    SignIn,
+    /// Every other keyed model's secret is a value in the wall's own
+    /// `config.toml`, so the act is an edit and never a sign-in.
+    WriteKey,
+    /// A keyless row needs no credential, so nothing readies it *by itself* —
+    /// brazen merges its built-in table under every config. What readies it is
+    /// the operator naming it in a role, which is their own hand and not the
+    /// merge ([`super`]'s keyless clause).
+    NameInRole,
+    /// A keyless row whose dialect carries no tool declaration can serve no
+    /// role either (bl-3d22): every yog turn declares at least the `clients`
+    /// tool. It can ready a wall by **no act at all**, and saying so is the
+    /// whole of bl-8523.
+    Never,
+}
+
+/// The act, read off the row's own columns.
+fn act(row: &ProviderRow) -> Act {
+    if row.credential == NOT_REQUIRED {
+        if row.tools_blocked().is_none() {
+            Act::NameInRole
+        } else {
+            Act::Never
+        }
+    } else if row.login_blocked().is_none() {
+        Act::SignIn
+    } else {
+        Act::WriteKey
+    }
+}
+
+/// Each act in the imperative the operator can type.
+fn phrase(act: &Act) -> &'static str {
+    match act {
+        Act::SignIn => "sign in with /login",
+        Act::WriteKey => "write a key with /config brazen",
+        Act::NameInRole => "name in a role with /model <role> <provider> <model-id>",
+        Act::Never => "can serve no role",
+    }
+}
+
+/// The lineage declares no worker at all, so the wall itself is the subject —
+/// bl-2291's sentence, with its rows **partitioned by the act each one takes**
+/// (bl-8523).
+///
+/// The flat list it used to print offered `/login <provider>` over every row,
+/// the two brazen ships keyless included: a reader who typed `/login
+/// claude-code` was told there is *nothing to log in*, and `/model` refuses that
+/// same row because `claude_code` declares no tools — so it was offered, could
+/// not be signed in to, and could ready a wall by no act at all. A loop with no
+/// exit, at the last gate before a first reply, which is the one place the
+/// product tells a stranger what to do next. Every fact was already at the site:
+/// `credential`, `auth` and `tools` are columns of the rows this is handed.
 fn wall(rows: &[ProviderRow]) -> String {
+    let mut by_act: BTreeMap<Act, Vec<&str>> = BTreeMap::new();
+    for row in rows {
+        by_act.entry(act(row)).or_default().push(&row.name);
+    }
+    let offers: Vec<String> = by_act
+        .iter()
+        .map(|(act, names)| format!("{}: {}", phrase(act), names.join(", ")))
+        .collect();
     format!(
         "sign in first: no provider in this workspace's wall holds a credential, so a \
-         conversation begun here would reach no model — /login <provider> (rows: {})",
-        names(rows)
+         conversation begun here would reach no model — {}",
+        offers.join("; ")
     )
 }
 

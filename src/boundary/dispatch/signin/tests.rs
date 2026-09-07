@@ -163,7 +163,47 @@ fn each_refusal_names_its_own_act() {
     let wall = refusal::say(&Unready::Wall, &rows);
     assert!(wall.starts_with("sign in first"), "{wall}");
     assert!(
-        wall.ends_with("(rows: openai-chatgpt, anthropic)"),
+        wall.ends_with(
+            "sign in with /login: openai-chatgpt; \
+                        write a key with /config brazen: anthropic"
+        ),
         "{wall}"
+    );
+}
+
+/// **The wall's rows are partitioned by the act each one takes** (bl-8523).
+/// The flat list offered `/login <provider>` over all of them — including the
+/// two brazen ships keyless, where `/login` answers *nothing to log in*, and
+/// one of those two can serve no role either, so it could ready a wall by no
+/// act at all and was offered anyway. Four groups, in the order an operator
+/// should read them, and a group with no rows is not printed.
+#[test]
+fn the_wall_offers_each_row_the_act_that_would_ready_it() {
+    let mut rows = vec![
+        row("openai-chatgpt", "oauth2", "missing"),
+        row("anthropic", "api_key", "missing"),
+        row("google", "api_key", "missing"),
+        row("ollama", "none", NOT_REQUIRED),
+        row("claude-code", "none", NOT_REQUIRED),
+    ];
+    // `claude_code` declares no tools, so that row can serve no role — the
+    // column brazen answers, not a name this file knows.
+    rows[4].tools = Some(false);
+    rows[4].protocol = "claude_code".to_owned();
+    let said = refusal::say(&Unready::Wall, &rows);
+    assert!(
+        said.ends_with(
+            "sign in with /login: openai-chatgpt; \
+             write a key with /config brazen: anthropic, google; \
+             name in a role with /model <role> <provider> <model-id>: ollama; \
+             can serve no role: claude-code"
+        ),
+        "{said}"
+    );
+    // A wall with one kind of row prints one group and no empty ones.
+    let one = refusal::say(&Unready::Wall, &rows[3..4]);
+    assert!(
+        one.ends_with("name in a role with /model <role> <provider> <model-id>: ollama"),
+        "{one}"
     );
 }

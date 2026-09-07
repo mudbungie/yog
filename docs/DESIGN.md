@@ -3699,7 +3699,22 @@ live twice in one evening and both first goals were wasted.
   with no exit, so the sentence names `/config brazen` to add the row and
   `/model <role> …` to point the role at one that is here; and a lineage that
   declares no role leaves the wall itself as the subject, which is bl-2291's
-  own sentence unchanged. bl-7cc8's third *state*, Unknown — a wall held
+  own sentence with its **rows partitioned by the act each one takes**
+  (bl-8523). The flat list it used to print offered `/login <provider>` over
+  every row, the two brazen ships keyless included — so a reader who typed
+  `/login claude-code` was told there is *nothing to log in*, and `/model`
+  refuses that same row because `claude_code` declares no tools, leaving it
+  offered, unsignable, and unable to ready a wall by any act at all. Four
+  groups, printed in the order an operator should read them and only when they
+  hold rows: **sign in with `/login`** (the oauth rows, the only ones `bz
+  --login` serves), **write a key with `/config brazen`** (every other keyed
+  model, whose secret is a value in the wall's own `config.toml`), **name in a
+  role with `/model`** (a keyless row that can carry a turn — the operator's
+  own hand, which is §8.1's keyless clause said forward), and **can serve no
+  role** (a keyless row whose dialect declares no tools). The partition is a
+  statement about each row's **credential model**, so it is total and needs no
+  default arm, and every fact it reads — `credential`, `auth`, `tools` — was
+  already a column of the rows the refusal is handed. bl-7cc8's third *state*, Unknown — a wall held
   elsewhere that this box has not read, bl-61bf's seam — still dissolves at the
   door: the engine judges the wall it is about to fire into, which is always
   its own.
