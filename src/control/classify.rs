@@ -76,23 +76,48 @@ impl Effect {
         }
     }
 
+    /// The class in a **policy file's** spelling — the sentence's word with its
+    /// space hyphenated, because a policy row is one token per field.
+    /// `target-write` is the only word the two spellings differ on.
+    pub fn policy_word(self) -> String {
+        self.word().replace(' ', "-")
+    }
+
+    /// The six **reaches**, widest last: the classes an operator may state a
+    /// tool's reach as. [`Opaque`](Effect::Opaque) is not among them — it is
+    /// the absence of a reach, which only a `table:` row ever names — so this
+    /// is the list a hold sentence offers and the list `of` reads plus that
+    /// one named exception, rather than a second copy of the vocabulary.
+    const REACHES: [Effect; 6] = [
+        Effect::Read,
+        Effect::TargetWrite,
+        Effect::Process,
+        Effect::OpenWorld,
+        Effect::Destructive,
+        Effect::Secret,
+    ];
+
     /// The class a policy file's word names, or `None` for anything else. The
-    /// inverse of [`word`](Effect::word), read off the same list both ways —
-    /// so an operator writes the vocabulary the reason lines already speak.
-    /// `target-write` is the one word with a hyphen where the sentence has a
-    /// space: a policy row is one token per field.
+    /// inverse of [`policy_word`](Effect::policy_word), read off the same list
+    /// both ways — so an operator writes the vocabulary the reason lines
+    /// already speak.
     pub fn of(word: &str) -> Option<Effect> {
-        [
-            Effect::Read,
-            Effect::TargetWrite,
-            Effect::Process,
-            Effect::OpenWorld,
-            Effect::Destructive,
-            Effect::Secret,
-            Effect::Opaque,
-        ]
-        .into_iter()
-        .find(|e| e.word().replace(' ', "-") == word)
+        Effect::REACHES
+            .into_iter()
+            .chain([Effect::Opaque])
+            .find(|e| e.policy_word() == word)
+    }
+
+    /// The reach words a `rules:` row accepts, as a hold sentence offers them
+    /// (bl-b65d). The operator is told the way out in the vocabulary the file
+    /// actually reads, and it cannot drift from what [`of`](Effect::of)
+    /// accepts because both are this one list.
+    pub fn reach_words() -> String {
+        Effect::REACHES
+            .iter()
+            .map(|e| e.policy_word())
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 
     /// The wider of two reaches — the fold a compound `bash` command uses.

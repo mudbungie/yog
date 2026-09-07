@@ -4,6 +4,9 @@
 use super::*;
 use serde_json::json;
 
+/// The fail-closed lane, its own file since bl-b65d put a third answer in it.
+mod routed;
+
 fn root() -> Root {
     Root {
         writable: vec![PathBuf::from("/w/agent"), PathBuf::from("/state/bl-1a2b")],
@@ -122,66 +125,6 @@ fn the_injected_names_carry_rows_rather_than_falling_off_the_match() {
         effect("python", json!({"program": "print(1)"})),
         Effect::OpenWorld
     );
-}
-
-/// Ruling 2 of the round-1 triage, first half: a routed tool whose input
-/// carries a command line is classified by that line exactly as the engine's
-/// own `bash` is. The drive that filed bl-72bd deleted 180 MB through the
-/// first of these and was not asked a question.
-#[test]
-fn a_routed_shell_is_classified_by_its_command_line() {
-    let destructive = judged(
-        "box2_shell",
-        json!({"command": "find /srv/data/blobs -mindepth 1 -delete"}),
-    );
-    assert_eq!(destructive.effect, Effect::Destructive);
-    assert!(
-        destructive.why.contains("/srv/data/blobs"),
-        "{}",
-        destructive.why
-    );
-    assert_eq!(
-        effect("box2_shell", json!({"command": "env"})),
-        Effect::Secret
-    );
-    // …and the same table, so a read on the foot is still a read.
-    assert_eq!(
-        effect("box2_shell", json!({"command": "ls -la"})),
-        Effect::Read
-    );
-    // The engine's own bash answers identically — that is what "exactly as"
-    // means, and the two are one call into one ruleset.
-    assert_eq!(
-        judged(
-            "bash",
-            json!({"command": "find /srv/data/blobs -mindepth 1 -delete"})
-        ),
-        destructive
-    );
-}
-
-/// Ruling 2, second half: a tool this control cannot read is HELD, never
-/// passed. The class it lands in is the one the shipped table parks.
-#[test]
-fn a_tool_this_control_cannot_read_is_opaque_and_never_a_passing_class() {
-    for (name, input) in [
-        ("litany-tool-deploy", json!({})),
-        ("box2_install_package", json!({"name": "curl"})),
-        ("box2_rotate_log", json!({"path": "/var/log/x"})),
-        // A `command` key that is not a string, and an empty one: neither is a
-        // command line, so neither may borrow the shell's classification.
-        ("box2_shell", json!({"command": 7})),
-        ("box2_shell", json!({"command": "   "})),
-    ] {
-        let c = judged(name, input);
-        assert_eq!(c.effect, Effect::Opaque, "{name}");
-        assert!(c.why.contains(name), "{}", c.why);
-        assert_eq!(
-            crate::control::judge::Table::ruling(c.effect),
-            crate::control::judge::Ruling::Hold,
-            "{name}"
-        );
-    }
 }
 
 #[test]

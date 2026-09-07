@@ -5475,6 +5475,54 @@ to *be* that executable and to own every fact it reads.
   and `opaque`. There is no arm from a tool name to a passing class for a
   future edit to recur.
 
+  **A name with nothing to read needs a way out, and it is a row** (bl-b65d).
+  The lane above reads a command line; a routed tool that carries none holds on
+  every call, and the class that carries none by construction is the MCP one —
+  a pinned server's tool reaches this control host-qualified with an input its
+  own schema shaped (`box2_fetch {"url": …}`, thrall DESIGN §6; REMOTE §5.4
+  rules the bridge is thrall's and the wire gains nothing), so no line will ever
+  appear. Held forever is a park answered by reflex, and the only standing
+  answer before this was `table:` / `opaque: pass`, which reopens the whole
+  class bl-72bd closed. So `capability.yaml`'s existing `rules:` grammar admits
+  a routed tool's **whole host-qualified name** as its program — `rules:` /
+  `  box2_fetch: open-world` — and `classify/routed` consults the operator's
+  rows with the request name as its one word before answering opaque. No new
+  key, no new file, no new class. Four properties are the whole design. The
+  class is the **operator's own statement** of what that tool on that box
+  reaches, informed by what `thrall mcp pin` printed of the server's
+  annotations and by nothing the wire carries — an advertisement states no
+  effect (REMOTE §5.1) and yog infers none from one. It is **host-qualified**
+  because the same server on two boxes is two trust decisions (REMOTE §5:
+  locality rides in the name). A name row **never outranks a line**: it is asked
+  only where the input carries none, so no row on `box2_shell` softens a
+  `find … -delete` the line itself classifies destructive. And **only the
+  operator's rows answer a name** (`Policy::stated`) — a shipped row states what
+  a *program on a command line* reaches, so handing `rm` the tool the `rm` the
+  program's row would be this control inferring a class for an invocation it
+  cannot read, which is the guess bl-72bd deleted. It stays a class adjudicated
+  per invocation, never a name allowed: bl-7fc8 stands.
+
+  **The cost was measured, and it inverted the incentive.** A round-2 drive over
+  two feet — one advertising a shell-shaped tool, one advertising three narrow,
+  argument-checked, path-confined admin tools and no shell at all — spent **11
+  holds and 11 operator releases on one goal**, every one of them on the foot
+  with no shell, while every shell command line on the other passed unattended
+  because a line is readable. The narrower tool document was the punished one,
+  and an operator who notices fixes it by adding a shell — which is the gate
+  arguing against its own purpose. The row removes that, and it removes it **per
+  tool rather than per call**: six calls of one log reader with six different
+  paths were six parks, and one row is all six. A once-answer still scopes to a
+  `tool_use` id, as it must; what changes is that a tool the operator has
+  spoken about never reaches the hold again.
+
+  **The hold sentence names the row.** The opaque clause the mark carries spells
+  the way out with the tool's actual name and the class words the file accepts
+  (`box2_fetch: <class>`, one of read / target-write / process / open-world /
+  destructive / secret — `Effect::reach_words`, the same list `Effect::of` reads
+  back, so the offer cannot drift from what parses). A park whose remedy the
+  operator must go and find is answered by reflex; this is bl-68e1's
+  `NOT_A_REMEDY` discipline from the other direction.
+
   Two consequences worth stating rather than discovering. The **compactor's
   procedure pair, `python`, `search_history`, `remember` and yog's own
   `clients`** now
@@ -5514,7 +5562,10 @@ to *be* that executable and to own every fact it reads.
 - **Standing policy is one file, and it is an override** (bl-765d):
   `capability.yaml` beside `workflow.yaml` on `config/default`, four keys —
   `confinement:`, `table:` (class → verdict), `rules:` (`<program>
-  [qualifying words…]` → effect class, matched *before* the shipped rows) and
+  [qualifying words…]` → effect class, matched *before* the shipped rows — and
+  since bl-b65d the same rows are what a **routed tool name** is classified by,
+  the program being the whole host-qualified name and the operator's rows the
+  only ones asked) and
   `secrets:` (extra credential-adjacent path fragments, additive only; a
   workspace may widen what counts as a secret, never narrow it). It is read
   from git on every consult, hand-parsed line by line — no YAML dependency and
@@ -7845,7 +7896,7 @@ that named one of its files; the rule it taught is not.)
 | `src/config_edit/litany_global/mod.rs` | the §9.2 editors — the shared pipeline and nothing else since bl-3ffa retired the provider gate over `models.<id>.provider`, a field whose only reader was the refusal; and the `models.yaml` name, beside its path, since bl-9c8a left the grammar nothing to spell it for |
 | `src/config_edit/pipeline.rs` | the write pipeline every §9 editor shares: the one home for how a draft reaches disk without a torn write or a silent last-writer-wins over a concurrent edit |
 | `src/context/mod.rs` | §5.1 #35 — the context-fullness query (the agent's latest step's prompt against the window that step's own usage lines state, `None` wherever nothing measured can be said) and why the denominator is read there and declared nowhere (bl-9c8a). Pure over `Snapshot::bills` and nothing else |
-| `src/control/{mod,wire,classify,classify/intrinsic,classify/operand,classify/routed,bash,lex,rules,rules/table,policy,hold,root,judge,author}.rs` | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; litany's two wire shapes; the effect vocabulary, and under it the three files that are the classification itself (bl-72bd): `classify/intrinsic` the **closed** set of names this control implements a row for, folded into an enum before anything classifies so the match over it is exhaustive and a name added without a class does not compile; `classify/operand` the two rows (`cd`, `apply_patch`) judged against the writable root at consult time; `classify/routed` the fail-closed lane every other name takes — a command line is classified by the bash ruleset exactly as the engine's own `bash` is, and anything else is `opaque`, the one class the shipped table holds. There is no arm from a tool NAME to a passing class; the bash ruleset over every program a command runs; the shell lexer that finds them; the grammar one rule is written in, with `rules/table` the shipped ruleset as data — one list, because first-match-wins makes its order the policy; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d); `hold` litany's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated **and born unbounded** — one pass over `workflow.yaml` that authors the `tool_control:` block and strips litany's whole-tree `budgets:` ceiling (bl-56af: §3.5's dollar ceiling is the one that survives, and a template only reaches workspaces born after it); its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
+| `src/control/{mod,wire,classify,classify/intrinsic,classify/operand,classify/routed,bash,lex,rules,rules/table,policy,hold,root,judge,author}.rs` | the §8.6 capability control (VISION §4.11): the consult a `world/tools/` shim runs, and the one sentence a park hands the operator — tool, bounded input summary, class, evidence; litany's two wire shapes; the effect vocabulary, and under it the three files that are the classification itself (bl-72bd): `classify/intrinsic` the **closed** set of names this control implements a row for, folded into an enum before anything classifies so the match over it is exhaustive and a name added without a class does not compile; `classify/operand` the two rows (`cd`, `apply_patch`) judged against the writable root at consult time; `classify/routed` the fail-closed lane every other name takes — a command line is classified by the bash ruleset exactly as the engine's own `bash` is; an input carrying none is classified by the operator's own `rules:` row for the **whole host-qualified name** when they wrote one (bl-b65d — the way an MCP tool, whose input its server's schema shaped, stops holding on every call), and anything else is `opaque`, the one class the shipped table holds, whose sentence spells the row that would end it. There is no arm from a tool NAME to a passing class; the bash ruleset over every program a command runs; the shell lexer that finds them; the grammar one rule is written in, with `rules/table` the shipped ruleset as data — one list, because first-match-wins makes its order the policy; `policy` the per-workspace override that ruleset is the default of — `capability.yaml` at the live config tip, four keys, absence *is* the defaults (bl-765d) — whose `rules:` rows are keyed on a routed tool NAME as well as on a program (bl-b65d), `stated` being the name lookup and the operator's rows the only ones it reads; `hold` litany's valued hold mark, read one agent at a time by the answer gesture and whole-namespace by the snapshot tick; the writable root and its lexical containment; the class→verdict table folded with the trail's answers and floors; `author` the workflow fixed point that makes a workspace born adjudicated **and born unbounded** — one pass over `workflow.yaml` that authors the `tool_control:` block and strips litany's whole-tree `budgets:` ceiling (bl-56af: §3.5's dollar ceiling is the one that survives, and a template only reaches workspaces born after it); its *drive* is `start::ensure`'s single convergence, shared with §3.7's manifest glob |
 | `src/control/confine.rs` | the **OS confinement backend** (§8.6, VISION §4.11 item 8, bl-bca4): the platform switch (Linux is bubblewrap, shelled like §16.7's openssl mint — no crate, no `unsafe`; every other OS an explicit refusal naming itself), the availability probe that runs the exact sandbox shape a wrap spends (derived at each birth, never stored), the birth-gate refusal both drone doors call, and the wrapper argv — the fixed shape plus the derived writable set, unconditional under a `confinement: required` policy so an absent backend fails the spawn loudly rather than falling back bare. The set is four members and each is a derivation: the workspace and the composed world root off the env, the host `/tmp` off the fixed shape, and the **bound project repo** off the §3.2 claimant join `control::root::claimed` already owns (bl-34b1) — so a revived driver, which carries no payload, confines exactly as the fire it resumes did. A member that is not on disk drops out rather than failing the spawn on `bwrap`'s own refusal (§3.5's orphaned project), which can only narrow the set |
 | `src/delete/{mod,exec}.rs` | the §3.6 unmake: pure confirmation + plan; the logged runner |
 | `src/delete/agent.rs` | the §3.6 one-conversation delete (bl-f17a): the member-scoped gate, the blast-radius arming, the `DeleteReport` census parse, the dry-run and removal spawns |

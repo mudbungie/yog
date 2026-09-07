@@ -696,6 +696,29 @@ mediation.
      refusal would be a claim about the invocation there is no basis for — and
      never passed. The operator answers once, in band, with the tool and its
      input in front of them.
+   - **And a name the operator has stated a reach for is classified by that
+     statement** (bl-b65d). A held-every-call tool is a park answered by
+     reflex, which is the failure mode a gate exists to avoid, and the tools
+     that hold forever are the ones with nothing to read: an MCP tool reaches
+     this control as a routed name with an input its server's schema shaped
+     (`box2_fetch {"url": …}`, thrall DESIGN §6 / REMOTE §5.4), so there is no
+     command line and never will be. The way out is the ruleset yog already
+     has — one `rules:` row keyed on the **whole host-qualified name**
+     (`box2_fetch: open-world`), host-qualified because the same server on two
+     boxes is two trust decisions. Three properties keep it from being the
+     grant path bl-7fc8 deleted. The class is the **operator's own statement**
+     of what that tool on that box reaches — informed by what `thrall mcp pin`
+     printed of the server's annotations and by nothing the wire carries, since
+     an advertisement states no effect (REMOTE §5.1) and the engine infers none
+     from one; it is a **class**, so the invocation is still adjudicated per
+     call by the same table, never a name allowed; and it is consulted only
+     where there is **no command line to read**, so a row on `box2_shell` can
+     never soften a `rm -rf` the line itself classifies. Only the operator's
+     rows answer a name — the shipped ruleset states what a *program on a
+     command line* reaches, which a routed tool name is not. **And the hold
+     says all of this**: the parked sentence spells the row to write, with the
+     tool's own name in it and the class words the file accepts, because a
+     remedy the operator has to go and find is not one.
 
    And **the fall-off is deleted structurally, not fixed**: names are folded
    into a closed enum before anything classifies them and matched exhaustively,

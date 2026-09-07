@@ -12,9 +12,37 @@
 //!    field is `command` — the one the engine's `bash` reads and the one every
 //!    thrall tool schema of that shape declares — so the two spellings have one
 //!    home and cannot drift.
-//! 2. **Everything else is [`Opaque`](Effect::Opaque)**, which the shipped
-//!    table holds. A tool whose reach this control cannot read is parked for
-//!    the operator, never passed.
+//! 2. **Everything else is the class the operator STATED for that name, and
+//!    otherwise [`Opaque`](Effect::Opaque)**, which the shipped table holds. A
+//!    tool whose reach this control cannot read is parked for the operator,
+//!    never passed.
+//!
+//! **The row is how a nameable tool stops being opaque** (bl-b65d). An MCP tool
+//! reaches this control as a routed name with an input shaped by its server's
+//! schema — `box2_fetch {"url": …}` — so there is no command line to read and
+//! every call of it holds. The way out is a `rules:` row keyed on the whole
+//! host-qualified name:
+//!
+//! ```yaml
+//! rules:
+//!   box2_fetch: open-world
+//! ```
+//!
+//! Host-qualified because the same server on two boxes is two trust decisions
+//! (REMOTE §5: locality rides in the name). The class is the **operator's own
+//! statement** of what that tool on that box reaches — informed by what `thrall
+//! mcp pin` printed of the server's annotations, and by nothing the wire
+//! carries: an advertisement states no effect (REMOTE §5.1) and this control
+//! infers none from one. That is why only the operator's rows are consulted and
+//! the shipped ruleset is not ([`Policy::stated`](super::super::policy::Policy::stated)),
+//! and why a row does not outrank a shell's own line — a name row is asked only
+//! where there is no line to read. It is a class the operator states,
+//! adjudicated per invocation, never a name allowed (bl-7fc8 stands).
+//!
+//! **The hold says so.** The opaque sentence names the row to write, spelled
+//! with the actual name and the class words the file accepts, because a park
+//! whose remedy the operator has to go and find is a park they answer by
+//! reflex — the `NOT_A_REMEDY` discipline of bl-68e1, from the other direction.
 //!
 //! **Why the old answer was backwards.** The arm this replaces was
 //! `other => OpenWorld`, and the shipped table passes open-world — so
@@ -38,21 +66,41 @@
 //! `  opaque: pass` into its `capability.yaml`. Absence stays the shipped
 //! default, and the shipped default is now the closed one.
 
-use super::super::policy::Policy;
+use super::super::policy::{CAPABILITY_YAML, Policy};
 use super::{COMMAND, Classified, Effect, Request, Root};
 
 /// Classify one invocation of a name the intrinsic map does not hold.
 pub(super) fn classify(request: &Request, root: &Root, policy: &Policy) -> Classified {
     let command = request.field(COMMAND);
     if command.trim().is_empty() {
+        return stated(request, root, policy);
+    }
+    super::super::bash::classify(&command, root, policy)
+}
+
+/// The class the **operator stated** for this routed name, or the opaque hold
+/// that says how to state one (bl-b65d).
+fn stated(request: &Request, root: &Root, policy: &Policy) -> Classified {
+    let Some(row) = policy.stated(&request.name) else {
         return Classified::new(
             Effect::Opaque,
             format!(
-                "{} is not a tool this control implements and its input carries no command \
-                 line, so what it reaches cannot be read — held rather than passed",
-                request.name
+                "{name} is not a tool this control implements and its input carries no command \
+                 line, so what it reaches cannot be read — held rather than passed. To state what \
+                 it reaches, add a `rules:` row to this workspace's {CAPABILITY_YAML}: \
+                 `{name}: <class>`, where <class> is one of {classes}",
+                name = request.name,
+                classes = Effect::reach_words(),
             ),
         );
-    }
-    super::super::bash::classify(&command, root, policy)
+    };
+    let words = [request.name.clone()];
+    let found = super::super::bash::matched(&row, &request.name, &words, root);
+    Classified::new(
+        found.effect,
+        format!(
+            "a `rules:` row in {CAPABILITY_YAML} states what `{}` reaches",
+            request.name
+        ),
+    )
 }

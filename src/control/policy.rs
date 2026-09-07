@@ -182,6 +182,27 @@ impl Policy {
             .collect()
     }
 
+    /// The **operator's own row for one name** — the routed lane's question
+    /// (bl-b65d). A `rules:` row whose program is a routed tool's whole
+    /// host-qualified name (`box2_fetch: open-world`) and which qualifies on no
+    /// further word is the operator's statement of what that tool on that box
+    /// reaches; the control consults it before answering opaque. First match
+    /// wins, as everywhere else.
+    ///
+    /// **The operator's rows only, and never the shipped ones.** A shipped row
+    /// states what a *program on a command line* reaches, which a routed tool
+    /// name is not — so letting `rm` the shipped row answer for `rm` the
+    /// advertised tool would be this control inferring a class for an
+    /// invocation it cannot read, which is exactly the guess bl-72bd deleted.
+    /// A routed name reaches a class because the operator wrote one, or it
+    /// stays opaque.
+    pub fn stated(&self, name: &str) -> Option<Row> {
+        self.rules
+            .iter()
+            .find(|row| row.program == name && row.words.is_empty())
+            .cloned()
+    }
+
     /// The effective secret-path fragments: the shipped ones plus the
     /// operator's. Additive only — a workspace may widen what counts as
     /// credential-adjacent, never narrow it, because narrowing it is what an

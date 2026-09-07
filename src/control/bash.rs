@@ -97,7 +97,11 @@ fn program_class(seg: &Segment, root: &Root, rows: &[Row]) -> Classified {
 }
 
 /// The class a matched row yields, with the clause that names what decided it.
-fn matched(rule: &Row, program: &str, words: &[String], root: &Root) -> Classified {
+/// `pub(super)` for its second caller: the routed lane asks the same question
+/// of an operator row keyed on a tool NAME (bl-b65d), whose subject is one word
+/// and no operands, so a `ByRoot` row's `inside` class is the general path there
+/// rather than a case either file has to spell twice.
+pub(super) fn matched(rule: &Row, program: &str, words: &[String], root: &Root) -> Classified {
     match rule.reach {
         Reach::Fixed(effect) => Classified {
             effect,
