@@ -9,9 +9,10 @@
 //! executors (create / claim / cross-check) are that file's concern, the
 //! workspace's existence and its policy are this one's.
 //!
-//! **Three files, one drive** (§3.7 item 4, §8.6, bl-0460). §8.6's
+//! **Four files, one drive** (§3.7 item 4, §8.6, bl-0460). §8.6's
 //! `tool_control:` block, §3.7's `instructions/**` glob and the worker's
-//! `clients` grant are three control files of one yog policy, and each owns its
+//! `clients` grant **with the description it is worthless without** (bl-7d33)
+//! are the control files of one yog policy, and each owns its
 //! own fixed point ([`control::author::workflow_drift`], [`manifest::drift`],
 //! [`grant::drift`](super::grant::drift)) and knows nothing of the others. This
 //! module collects whichever drifted and converges them in a **single** `litany
@@ -68,10 +69,10 @@ pub fn execute_ensure_workspace(
     let drafts: Vec<DraftFile> = [
         control::author::workflow_drift(workspace, config, &shim),
         manifest::drift(workspace, config),
-        super::grant::drift(workspace, config),
     ]
     .into_iter()
     .flatten()
+    .chain(super::grant::drift(workspace, config))
     .collect();
     let authored = converge(deps, workspace, config, &drafts, state_root, ts, origin)?;
     if let Some(entry) = authored.filter(|e| e.exit != 0) {

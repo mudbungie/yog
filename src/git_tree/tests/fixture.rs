@@ -84,7 +84,12 @@ impl Fixture {
                 "config/default",
             ],
         );
-        fs::write(author.join(file), body).unwrap();
+        let dest = author.join(file);
+        // A config commit carries nested paths of its own — litany's
+        // `descriptions/tools/<name>.json` above all — so a fixture that could
+        // only write a top-level file could not describe a grant (bl-7d33).
+        fs::create_dir_all(dest.parent().expect("a file has a parent")).unwrap();
+        fs::write(&dest, body).unwrap();
         run_git(&author, &["add", file]);
         run_git(&author, &["commit", "-q", "-m", &format!("add {file}")]);
         run_git(&self.repo, &["worktree", "remove", author_str.as_str()]);

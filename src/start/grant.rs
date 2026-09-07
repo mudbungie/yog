@@ -43,6 +43,30 @@
 //! the compactor, whose empty grant is the confinement bl-52b7 restored, and
 //! the reviewer, whose grant is stated as its confinement in litany's own
 //! template. A role an operator adds is the operator's own grant to write.
+//!
+//! # A grant and its description are one fact (bl-7d33)
+//!
+//! bl-0460 wrote the grant alone and that broke every conversation on main:
+//! litany's *descriptions-always* rule (ARCH §3.3) refuses a **fork** whose
+//! role grants a tool the governing config commit does not describe — before
+//! any injection is consulted, so an injected tool is no exception. Its own
+//! words for why are this module's argument back at it: *"`providers.yaml` and
+//! `descriptions/**` disagree, and both live in that one commit"*. Every
+//! `/prompt` answered `started` and died at the fork with
+//! `no descriptions/tools/clients.json`. The two files move together now, in
+//! the same pass, or neither moves — and the check is per file, so a workspace
+//! already carrying bl-0460's half-written state converges at its next start.
+//!
+//! The schema written is [`clients::schema`] itself, which is the very value
+//! [`ToolInjection::tools`](crate::tool_host) declares, so the committed
+//! description and the wire declaration cannot disagree. It is the honest one
+//! for the second reader too: since litany's bl-55b1 cut,
+//! `descriptions/tools/` **is** the callable set an agent reads with `bash`.
+//!
+//! **The pin does not decide this.** litany 0.0.10 and 0.0.11 run the same
+//! check with the same input — `clients` is yog's tool in both, and 0.0.11's
+//! `BUILTIN_TOOLS` gains `remember`, not this — so the fix is the same
+//! whichever version the manifest names.
 
 use std::path::Path;
 
@@ -56,17 +80,61 @@ use crate::tool_host::clients;
 #[cfg(test)]
 mod tests;
 
-/// `workspace`'s `providers.yaml` drift on `config/<config>`, or `None` when
-/// that tip already grants the worker `clients` — the steady state, which
-/// stages nothing and spawns nothing. The lineage is a parameter for §8.7's
-/// reason: what a drone may call must be authored where the drone forks.
-pub fn drift(workspace: &Path, config: &str) -> Option<DraftFile> {
-    let base = crate::control::author::committed(workspace, config, PROVIDERS_YAML)?;
+/// Worktree-relative home of the committed tool schemas (litany ARCH §3.3),
+/// spelled here because litany's own constant is crate-private — the same
+/// reason [`tool_host::grant`](crate::tool_host) spells the field names it
+/// reads.
+const SCHEMA_PATH: &str = "descriptions/tools/clients.json";
+
+/// `workspace`'s drift on `config/<config>` — the grant and the description it
+/// is worthless without, empty when the tip already carries both. That is the
+/// steady state, which stages nothing and spawns nothing. The lineage is a
+/// parameter for §8.7's reason: what a drone may call must be authored where
+/// the drone forks.
+pub fn drift(workspace: &Path, config: &str) -> Vec<DraftFile> {
+    let read = |file: &str| crate::control::author::committed(workspace, config, file);
+    let Some(base) = read(PROVIDERS_YAML) else {
+        return Vec::new();
+    };
     let want = authored(&base);
-    (want != base).then(|| DraftFile {
-        rel_path: PROVIDERS_YAML.to_owned(),
-        bytes: want.into_bytes(),
-    })
+    if !granted(&want) {
+        // Nothing granted, so nothing to describe: a worker with no `tools:`
+        // is a role granted nothing, and yog does not invent a description for
+        // a tool it did not grant.
+        return Vec::new();
+    }
+    let mut drafts = Vec::new();
+    if want != base {
+        drafts.push(DraftFile {
+            rel_path: PROVIDERS_YAML.to_owned(),
+            bytes: want.into_bytes(),
+        });
+    }
+    let schema = described();
+    if read(SCHEMA_PATH).as_deref() != Some(schema.as_str()) {
+        drafts.push(DraftFile {
+            rel_path: SCHEMA_PATH.to_owned(),
+            bytes: schema.into_bytes(),
+        });
+    }
+    drafts
+}
+
+/// The committed description of [`clients::NAME`]: the schema the injection
+/// declares, verbatim, so the config commit and the wire cannot disagree.
+/// Trailing newline because it is a committed text file.
+fn described() -> String {
+    let mut out = serde_json::to_string_pretty(&clients::schema()).unwrap_or_default();
+    out.push('\n');
+    out
+}
+
+/// Whether `text` grants the worker [`clients::NAME`] — asked of the *authored*
+/// file, so a grant this pass is about to write counts as granted.
+fn granted(text: &str) -> bool {
+    entry_field(text, ROLES, WORKER_ROLE, TOOLS)
+        .and_then(|value| flow_members(&value))
+        .is_some_and(|members| members.iter().any(|name| name == clients::NAME))
 }
 
 /// `base` with [`clients::NAME`] in `roles.worker.tools`. A **fixed point**: a

@@ -1,6 +1,8 @@
 //! The birth grant's fixed point, over the very template litany ships.
 
 use super::*;
+use crate::git_tree::tests::fixture::Fixture;
+use crate::model_pick::BRANCH;
 use crate::test_support::TEMPLATE_PROVIDERS;
 
 /// **The defect** (bl-0460): litany's shipped template cannot name `clients`,
@@ -51,4 +53,60 @@ fn a_file_this_has_nothing_to_say_about_is_unchanged() {
     ] {
         assert_eq!(authored(base), base, "{base:?}");
     }
+}
+
+/// The paths `drift` would stage, in order.
+fn staged(fixture: &Fixture) -> Vec<String> {
+    drift(&fixture.path, BRANCH)
+        .into_iter()
+        .map(|d| d.rel_path)
+        .collect()
+}
+
+/// **The regression** (bl-7d33): bl-0460 wrote the grant alone, and litany's
+/// descriptions-always rule refuses a fork whose role grants a tool the
+/// governing config commit does not describe — so every `/prompt` on main
+/// answered `started` and died at the fork. The grant and its description are
+/// one fact: both are staged, the half-written state converges, and the steady
+/// state stages nothing.
+#[test]
+fn the_grant_and_the_description_it_is_worthless_without_move_together() {
+    let fixture = Fixture::new();
+    fixture.commit_other(PROVIDERS_YAML, TEMPLATE_PROVIDERS);
+    assert_eq!(staged(&fixture), [PROVIDERS_YAML, SCHEMA_PATH]);
+
+    // bl-0460's half-written state, which is exactly what main shipped: the
+    // grant committed, nothing describing it. The description is still due.
+    fixture.commit_other(PROVIDERS_YAML, &authored(TEMPLATE_PROVIDERS));
+    assert_eq!(staged(&fixture), [SCHEMA_PATH]);
+
+    // Both committed: the steady state stages nothing and spawns nothing.
+    fixture.commit_other(SCHEMA_PATH, &described());
+    assert!(staged(&fixture).is_empty());
+}
+
+/// The description is **the schema the injection declares**, so the config
+/// commit and the wire cannot disagree — and it is what an agent reads with
+/// `bash`, since litany's bl-55b1 cut made `descriptions/tools/` the callable
+/// set. It parses, which is the check litany's own snapshot runs.
+#[test]
+fn the_description_is_the_declared_schema_verbatim() {
+    let said: serde_json::Value = serde_json::from_str(&described()).expect("valid JSON");
+    assert_eq!(said, clients::schema());
+    assert!(described().ends_with('\n'));
+}
+
+/// A worker granted nothing is described nothing: yog does not invent a
+/// description for a tool it did not grant, and a lineage it cannot read at
+/// all stages nothing rather than authoring into the dark.
+#[test]
+fn no_grant_means_no_description_and_no_lineage_means_neither() {
+    let fixture = Fixture::new();
+    fixture.commit_other(
+        PROVIDERS_YAML,
+        "roles:\n  worker:\n    provider: anthropic\n    model: m\n",
+    );
+    assert!(staged(&fixture).is_empty());
+    // A lineage with no `providers.yaml` at all.
+    assert!(drift(&Fixture::new().path, BRANCH).is_empty());
 }
