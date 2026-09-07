@@ -97,6 +97,24 @@ impl ConsumerCtx {
         run_value(&deps, &mut ui, &ts, now_unix, request)
     }
 
+    /// **Stamp that this client just spoke** (REMOTE §5 as amended, bl-d542) —
+    /// called once per request by the wire's own intake, which is the one door
+    /// every connection's bytes pass through.
+    ///
+    /// A request rather than a connection is the unit for one reason: this
+    /// context is where the clock and the state root are, and a connection has
+    /// no other moment that reaches both. The rate is right either way — a
+    /// request is an operator's act or a foot's parked read, not a poll — and
+    /// the fact it answers is coarse by design: "is that machine real", asked
+    /// about a client that is not connected now.
+    pub fn seen(&self, peer: &crate::registry::Peer) {
+        crate::registry::seen::mark(
+            &self.state_root,
+            &peer.client,
+            self.clock.stamp().parse().unwrap_or_default(),
+        );
+    }
+
     /// The same gesture, answered **for a wire client** (REMOTE §4, bl-8bbc):
     /// the world narrowed to that client's registrations. The world document is
     /// the same one every caller reads — since bl-f936 there is no second,

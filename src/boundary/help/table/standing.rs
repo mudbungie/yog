@@ -260,7 +260,7 @@ pub const STANDING: &[HelpRow] = &[
     },
     HelpRow {
         verb: crate::boundary::codec::ENROLL,
-        usage: "/enroll <common-name> [foot]",
+        usage: "/enroll <common-name> [foot] [--at <host>:<port>]",
         summary: "mint or adopt a device's certificate here, register it, and hand back its \
                   material",
         detail: "Issues a leaf under the stated common name on this engine's own CA, registers \
@@ -274,6 +274,12 @@ pub const STANDING: &[HelpRow] = &[
                  advertised into nothing. The grade then comes off that certificate, and an \
                  enrollment asking for a grade the subject does not carry is refused. A name \
                  already enrolled through this door has no key left to hand over and says so. \
+                 `--at <host>:<port>` states the address THIS device will dial, for a device \
+                 that does not share this engine's own view of itself — an emulator reaching its \
+                 host through the emulator's alias, a phone on the LAN, a box on an overlay. \
+                 Unstated is the engine's own `wire/address`. State one the server leaf already \
+                 answers to (`WIRE_HOST` is a list), because a route the certificate omits fails \
+                 verification at the device rather than here. \
                  Bare is operator grade; add `foot` for a tool host that may advertise, take its \
                  invocations and complete them and say nothing else. Refuses when this box holds \
                  no CA, and when its address names no port a device can dial. The material \

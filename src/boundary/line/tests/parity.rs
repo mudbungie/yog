@@ -218,6 +218,7 @@ fn the_enrollment_round_trips_at_both_grades() {
                 workspace: "ws".to_owned(),
                 name: "phone-1".to_owned(),
                 grade,
+                address: None,
             },
         )));
     }
@@ -247,6 +248,27 @@ fn the_enrollment_round_trips_at_both_grades() {
     assert!(unnamed.contains("thrall"), "{unnamed}");
     let unnamed = parse("/enroll", &ctx()).expect_err("the name is required");
     assert!(unnamed.contains("common name"), "{unnamed}");
+
+    // **`--at` is the address the DEVICE will dial** (bl-fec6): it round-trips
+    // beside the grade, it is absent when unstated — a spelled default would be
+    // a second statement of the engine's own address — and a flag this verb
+    // does not read is refused rather than dropped.
+    rt(Gesture::Act(Action::Enroll(
+        crate::registry::enroll::Request {
+            workspace: "ws".to_owned(),
+            name: "phone-1".to_owned(),
+            grade: crate::registry::Grade::Foot,
+            address: Some("192.0.2.7:7737".to_owned()),
+        },
+    )));
+    assert_eq!(
+        parse("/enroll phone-1 --at 192.0.2.7:7737", &ctx()),
+        parse("/enroll phone-1 lernie --at 192.0.2.7:7737", &ctx())
+    );
+    let stray = parse("/enroll phone-1 --to 192.0.2.7:7737", &ctx()).expect_err("unknown flag");
+    assert!(stray.contains("--to"), "{stray}");
+    let bare = parse("/enroll phone-1 --at", &ctx()).expect_err("a flag needs its value");
+    assert!(bare.contains("--at"), "{bare}");
     let unfocused = parse(
         "/enroll phone-1",
         &crate::boundary::line::Context::default(),

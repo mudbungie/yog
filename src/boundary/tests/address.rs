@@ -162,6 +162,7 @@ fn every_workspace_bearing_action_answers_with_its_name() {
             workspace: WS.into(),
             name: "phone-1".into(),
             grade: crate::registry::Grade::Foot,
+            address: None,
         }),
     ];
     named.extend(nested());

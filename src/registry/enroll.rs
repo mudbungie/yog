@@ -43,6 +43,26 @@ pub struct Request {
     /// What that certificate may say (§4.2). Minted into the subject by the
     /// operator's own CA, which is the only thing entitled to write it.
     pub grade: Grade,
+    /// **The address the DEVICE will dial** (bl-fec6), or `None` for the one
+    /// this engine wrote for itself.
+    ///
+    /// The device being enrolled is by definition not this box, so the route it
+    /// reaches this engine by is not necessarily the one this box wrote in
+    /// `wire/address`: an emulator reaches its host only through the emulator's
+    /// own alias, a phone reaches it on the LAN, an overlay peer by a name. The
+    /// envelope carried `wire/address` verbatim, so a scan was correct only for
+    /// a device sharing this box's own loopback view — and the material had to
+    /// be hand-edited afterwards on any device you could reach a shell on.
+    ///
+    /// It is a field of the REQUEST rather than a setting, because it is a fact
+    /// about the device being enrolled and not about this engine: two devices
+    /// enrolled a minute apart can rightly need two different routes. The mint
+    /// already understands this — `WIRE_HOST` is a list, and every entry rides
+    /// the server leaf — so what an operator states here should be one of the
+    /// spellings they minted; a route the certificate does not cover fails
+    /// verification at the device rather than here, which is the residual §8.4
+    /// records.
+    pub address: Option<String>,
 }
 
 /// What one enrollment answers with — the whole of what a new device needs and

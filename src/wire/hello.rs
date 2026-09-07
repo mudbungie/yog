@@ -115,7 +115,20 @@ use super::frame;
 /// captures it before this lands is a race no reader could resolve later —
 /// batching is the exception, and an exception taken against a running release
 /// train is how a version comes to mean two things.
-pub const PROTOCOL: u32 = 13;
+/// 13 → 14 (bl-fec6, bl-d542): two additive fields on two shapes in use, which
+/// §3's rule bumps for outright. `request/enroll` gained an optional
+/// **`address`** — the endpoint the DEVICE being enrolled will dial, which need
+/// not be the one this engine wrote for itself (an emulator reaches its host
+/// through the emulator's own alias, a phone on the LAN, an overlay peer by
+/// name), so the envelope stopped being correct only for a device sharing this
+/// box's loopback view. And `reply/clients` gained an optional **`last_seen`**,
+/// the unix second a client last spoke: `present` alone could not tell a
+/// machine that spoke ten seconds ago from one that never once connected, and
+/// on a terminal seat it reads `false` for everything. Both are ABSENT rather
+/// than null when unstated — the absence is the fact in each case ("this
+/// engine's own address", "never") — and both land at ONE version, because two
+/// bumps a minute apart would make every client re-pin twice for one wave.
+pub const PROTOCOL: u32 = 14;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

@@ -199,3 +199,8 @@ pub use peer::{Grade, Peer};
 ///
 /// Declared at the bottom beside [`peer`] and [`mailbox`], for their reason.
 pub mod enroll;
+
+/// **When each client last connected** (REMOTE §5 as amended, bl-d542) — the
+/// third durable fact a registration carries, declared at the bottom beside
+/// [`enroll`] and for its reason.
+pub mod seen;

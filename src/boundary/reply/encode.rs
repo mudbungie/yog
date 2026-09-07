@@ -200,8 +200,20 @@ fn help_row(row: &crate::boundary::help::HelpRow) -> Value {
 /// One registered client as every seat renders it (REMOTE §5): its identity,
 /// whether it is connected right now, and what it advertises.
 fn client_row(row: &crate::registry::roster::ClientRow) -> Value {
-    json!({ "client": row.client, "present": row.present,
-            "tools": crate::registry::tools::encode(&row.tools) })
+    let mut map = Map::new();
+    map.insert("client".to_owned(), json!(row.client));
+    map.insert("present".to_owned(), json!(row.present));
+    map.insert(
+        "tools".to_owned(),
+        crate::registry::tools::encode(&row.tools),
+    );
+    // **Absent is "never connected"** (bl-d542) — not a zero, which would be a
+    // date, and not a null, which would be a second spelling of the absence a
+    // missing key already says.
+    if let Some(last_seen) = row.last_seen {
+        map.insert("last_seen".to_owned(), json!(last_seen));
+    }
+    Value::Object(map)
 }
 
 /// The envelope every reply opens with, before its own fields — the shape

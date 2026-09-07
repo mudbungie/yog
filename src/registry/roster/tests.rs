@@ -84,3 +84,26 @@ fn the_reserved_local_directory_is_never_a_row() {
     std::fs::write(dir.join("home"), []).expect("touch");
     assert!(roster(tmp.path(), &Presence::default(), "home").is_empty());
 }
+
+/// **A ghost and a sleeping machine stop reading alike** (bl-d542). `present`
+/// is `false` for a machine that spoke ten seconds ago and for one that never
+/// once connected — and on a terminal seat it is `false` for everything, since
+/// every verb opens and closes its own connection. The stamp is the durable
+/// third fact, and its ABSENCE is the one that matters: nothing has ever
+/// dialled under that name.
+#[test]
+fn each_row_carries_when_that_client_last_spoke() {
+    let tmp = TempDir::new().expect("tmp");
+    let laptop = client("laptop");
+    super::super::register(tmp.path(), &laptop, "home").expect("seated");
+    super::super::register(tmp.path(), &client("phone"), "home").expect("seated");
+    super::super::seen::mark(tmp.path(), &laptop, 1_700_000_000);
+
+    let rows = roster(tmp.path(), &Presence::default(), "home");
+    assert_eq!(rows[0].last_seen, Some(1_700_000_000), "it dialled once");
+    assert_eq!(rows[1].last_seen, None, "and this one never has");
+    assert!(
+        !rows[0].present && !rows[1].present,
+        "which presence could not tell apart"
+    );
+}

@@ -132,8 +132,14 @@ pub const WORLD: &[HelpRow] = &[
                  is read at the moment you ask and is true only then — a client that answers \
                  here may be gone a second later, which is why nothing durable records it. \
                  What each client advertises, by contrast, was written when it last presented \
-                 its set and stands whether or not it is connected. A machine is registered by \
-                 an operator's own act on the server, never over the wire.",
+                 its set and stands whether or not it is connected. **And when it last \
+                 spoke**, which is the fact that tells a machine asleep right now from one that \
+                 has never once connected: presence reads false for both, and on a terminal \
+                 seat it reads false for everything, since every verb opens and closes its own \
+                 connection. A row with no last-seen at all has never dialled — the enrolment \
+                 was minted and abandoned, and it is the row an operator can safely remove. A \
+                 machine is registered by an operator's own act on the server, never over the \
+                 wire.",
         surface: Surface::Control,
     },
     HelpRow {

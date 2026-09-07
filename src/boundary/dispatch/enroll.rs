@@ -68,7 +68,7 @@ mod stance;
 pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, String> {
     let client = Client::parse(&request.name)?;
     let dir = material::dir(&deps.world);
-    let address = dialable(&dir)?;
+    let address = dialable(&dir, request.address.as_deref())?;
     let grade = stance::mint_or_adopt(&dir, request)?;
     let (ca, cert, key) = carry(&dir, &request.name)?;
     registry::register(&deps.state_root, &client, &request.workspace).map_err(|e| e.to_string())?;
@@ -110,7 +110,17 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
 /// It reads the **server** end because that is the end a client dials, and
 /// reading it as material rather than as a file is what makes a
 /// half-provisioned box say so in `material`'s own words.
-fn dialable(dir: &Path) -> Result<String, String> {
+fn dialable(dir: &Path, stated: Option<&str>) -> Result<String, String> {
+    // **What the operator stated wins, and is judged by the same rule**
+    // (bl-fec6). The device being enrolled is not this box, so the route it
+    // reaches this engine by need not be the one this box wrote for itself —
+    // an emulator's host alias, a LAN address, an overlay name. A stated
+    // endpoint still has to BE one, so it goes through `endpoint` exactly as
+    // the file's own does; what it is not judged against is the server leaf's
+    // SAN, which this crate cannot read (§8.4 records that residual).
+    if let Some(stated) = stated {
+        return endpoint(stated.trim());
+    }
     let address = material::read_dir(dir, material::Role::Server)?
         .ok_or_else(|| {
             format!(
@@ -129,17 +139,31 @@ fn dialable(dir: &Path) -> Result<String, String> {
     // the DEFAULT loopback endpoint and exited 0 — the wrong trust root,
     // reported as a success. `verb::stray` now refuses a trailing word outright,
     // so this order is checked rather than merely written (bl-a0dd).
-    if address.rsplit_once(':').map(|(_, port)| port) == Some("0") {
-        return Err(format!(
-            "{address} names no port a device can dial: a `:0` is a request the listener answers \
-             in RAM, and its answer changes at every boot. State the endpoint — \
-             `WIRE_HOST=<host> WIRE_PORT=<port> yog {}`, which re-issues the server leaf and \
-             writes the address over the CA already here and distrusts nothing — then restart \
-             the engine, which binds the address as it starts",
+    endpoint(&address)
+}
+
+/// One `host:port` a device can be handed, or the refusal naming its remedy —
+/// the judgement both the file's address and a stated one pass through, so
+/// there is one rule for what an envelope may carry.
+///
+/// A **`:0` port refuses**, whichever said it: it is a request the listener
+/// answers in RAM, and its answer is a different number after the next boot.
+fn endpoint(address: &str) -> Result<String, String> {
+    match address.rsplit_once(':') {
+        Some((host, port)) if !host.is_empty() && !port.is_empty() && port != "0" => {
+            Ok(address.to_owned())
+        }
+        _ => Err(format!(
+            "{address} names no endpoint a device can dial: it wants a host and a port, and a \
+             `:0` is a request the listener answers in RAM whose answer changes at every boot. \
+             State the engine's own — `WIRE_HOST=<host> WIRE_PORT=<port> yog {}`, which \
+             re-issues the server leaf and writes the address over the CA already here and \
+             distrusts nothing, then restart the engine — or state the route THIS device will \
+             dial with `--at <host>:<port>`, which must be one the server leaf already answers \
+             to",
             provision::verb::SUBCMD
-        ));
+        )),
     }
-    Ok(address)
 }
 
 /// The three PEMs the device carries away — anchors, its certificate, its key —

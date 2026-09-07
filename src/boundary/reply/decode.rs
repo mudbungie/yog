@@ -221,6 +221,13 @@ fn client_row(v: &Value) -> Result<crate::registry::roster::ClientRow, String> {
         client: str_of(o, "client")?,
         present: bool_of(o, "present")?,
         tools: crate::registry::tools::decode(o.get("tools").ok_or("client row: missing tools")?)?,
+        // Absent is never (bl-d542); a present field must be a number, so a
+        // stamp that is not one refuses here rather than reading as never.
+        last_seen: crate::boundary::codec::fields::opt(
+            o,
+            "last_seen",
+            crate::boundary::codec::fields::i64_of,
+        )?,
     })
 }
 

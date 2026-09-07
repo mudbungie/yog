@@ -37,6 +37,14 @@ pub struct ClientRow {
     /// What it advertises. Empty for a client that has advertised nothing,
     /// which is every client until it first connects as a tool host.
     pub tools: Vec<Tool>,
+    /// **When it last connected**, unix seconds, or `None` for one that never
+    /// has (REMOTE §5 as amended, bl-d542). `present` alone could not tell a
+    /// machine that spoke ten seconds ago from one that has never once dialled
+    /// — both read `false`, and on a terminal seat everything does, since every
+    /// verb opens and closes its own connection. It is the fact that turns a
+    /// roster from a list of names into an answer to "is that machine real",
+    /// and the one that makes the operator's `rm` usable.
+    pub last_seen: Option<i64>,
 }
 
 /// The clients registered in `workspace`, sorted by identity, each with its
@@ -50,6 +58,7 @@ pub fn roster(state_root: &Path, presence: &Presence, workspace: &str) -> Vec<Cl
         .map(|client| ClientRow {
             present: live.contains(&client.name()),
             tools: tools::read(state_root, &client),
+            last_seen: super::seen::read(state_root, &client),
             client: client.name(),
         })
         .collect()

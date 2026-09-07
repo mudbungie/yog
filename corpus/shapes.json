@@ -1,5 +1,5 @@
 {
-  "protocol": 13,
+  "protocol": 14,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -252,6 +252,7 @@
         "/kind:string",
         "/ok:bool",
         "/rows/[]/client:string",
+        "/rows/[]/last_seen:number",
         "/rows/[]/present:bool",
         "/rows/[]/tools/[]/description:string",
         "/rows/[]/tools/[]/input_schema/properties/command/minLength:number",
@@ -270,7 +271,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 2
+      "since": 14
     },
     "reply/config": {
       "signature": [
@@ -1189,13 +1190,14 @@
     },
     "request/enroll": {
       "signature": [
+        "/address:string",
         "/grade:string",
         "/name:string",
         "/op:string",
         "/workspace:string",
         ":object"
       ],
-      "since": 1
+      "since": 14
     },
     "request/fan": {
       "signature": [

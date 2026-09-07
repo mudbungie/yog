@@ -38,6 +38,7 @@ fn row(client: &str, name: &str, subject_cwd: bool) -> ClientRow {
     ClientRow {
         client: client.to_owned(),
         present: true,
+        last_seen: None,
         tools: vec![Tool {
             name: name.to_owned(),
             description: "a tool".to_owned(),

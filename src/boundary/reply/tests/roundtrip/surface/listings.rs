@@ -234,6 +234,10 @@ fn routing() -> Vec<Reply> {
             crate::registry::roster::ClientRow {
                 client: "laptop".into(),
                 present: true,
+                // The stamp rides when there is one and is absent when the
+                // client has never connected — both shapes in one fixture
+                // (bl-d542).
+                last_seen: Some(1_700_000_000),
                 tools: vec![
                     crate::registry::tools::Tool {
                         name: "Bash".into(),
@@ -258,6 +262,7 @@ fn routing() -> Vec<Reply> {
                 client: "phone".into(),
                 present: false,
                 tools: Vec::new(),
+                last_seen: None,
             },
         ]),
     ]

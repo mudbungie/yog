@@ -40,6 +40,10 @@ use crate::start::{BallSpec, Prepared};
 mod args;
 mod balls;
 mod config;
+/// REMOTE §1.4's enrolment grammar (bl-fec6) — `/enroll`'s two words and its
+/// one flag, its own file at §12's cap on the seam the other per-family
+/// grammars are cut on.
+mod enroll;
 mod fan;
 mod fork;
 mod parse;

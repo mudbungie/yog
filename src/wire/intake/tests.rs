@@ -81,3 +81,24 @@ fn an_unknown_verb_refuses_in_band() {
         stream[0]
     );
 }
+
+/// **A client that speaks is seen** (bl-d542): the stamp is written at this one
+/// door, per request, ahead of both arms — so a follow-class read that parks
+/// for thirty seconds is stamped when it arrives rather than when it ends.
+#[test]
+fn answering_a_request_stamps_the_client_as_seen() {
+    let root = tempdir().expect("tmp");
+    let peer = crate::registry::Peer {
+        client: crate::registry::Client::parse("laptop").expect("identity"),
+        grade: crate::registry::Grade::Operator,
+    };
+    crate::registry::register(root.path(), &peer.client, "home").expect("its enrolment's file");
+    assert_eq!(crate::registry::seen::read(root.path(), &peer.client), None);
+    let _ = intake(root.path())
+        .answer(&peer, json!({"op": "workspaces"}))
+        .count();
+    assert!(
+        crate::registry::seen::read(root.path(), &peer.client).is_some(),
+        "the connection left a durable mark"
+    );
+}

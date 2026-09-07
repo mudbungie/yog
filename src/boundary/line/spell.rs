@@ -104,17 +104,25 @@ fn spell_action(action: &Action) -> String {
         // `/marks`' is; the name is stated because nothing on this side holds
         // it; and operator grade spells **bare**, because that is what
         // default-operator means at a keyboard (§4.2).
-        Action::Enroll(request) => match request.grade {
-            crate::registry::Grade::Operator => {
-                format!("/{} {}", crate::boundary::codec::ENROLL, request.name)
-            }
-            grade @ crate::registry::Grade::Foot => format!(
-                "/{} {} {}",
+        // …and `--at` rides only when the operator stated it (bl-fec6), for
+        // the reason the envelope omits it: absent IS the engine's own address,
+        // and a spelled default would be a second statement of one fact.
+        Action::Enroll(request) => {
+            let grade = match request.grade {
+                crate::registry::Grade::Operator => String::new(),
+                grade @ crate::registry::Grade::Foot => format!(" {}", grade.word()),
+            };
+            let at = request
+                .address
+                .as_ref()
+                .map(|address| format!(" --at {address}"))
+                .unwrap_or_default();
+            format!(
+                "/{} {}{grade}{at}",
                 crate::boundary::codec::ENROLL,
-                request.name,
-                grade.word()
-            ),
-        },
+                request.name
+            )
+        }
         Action::Route(verb) => spell_route(verb),
     }
 }

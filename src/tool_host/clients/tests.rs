@@ -31,6 +31,7 @@ fn row(client: &str, present: bool, tools: Vec<Tool>) -> ClientRow {
         client: client.to_owned(),
         present,
         tools,
+        last_seen: None,
     }
 }
 

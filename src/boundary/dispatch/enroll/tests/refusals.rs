@@ -25,7 +25,7 @@ fn a_kernel_chosen_port_refuses_before_anything_is_minted() {
 
     let refusal = enroll(&deps, "7", &request("phone-1", Grade::Operator)).expect_err("refused");
     assert!(
-        refusal.contains("names no port a device can dial"),
+        refusal.contains("names no endpoint a device can dial"),
         "{refusal}"
     );
     assert!(refusal.contains("WIRE_HOST"), "{refusal}");
@@ -40,7 +40,35 @@ fn a_kernel_chosen_port_refuses_before_anything_is_minted() {
     assert!(!refusal.contains("FORCE=1"), "{refusal}");
     assert!(refusal.contains("distrusts nothing"), "{refusal}");
     assert!(refusal.contains("restart the engine"), "{refusal}");
+    // …and the other way out, which is this device's own route (bl-fec6).
+    assert!(refusal.contains("--at"), "{refusal}");
     assert!(!dir.join("phone-1.pem").exists(), "nothing was minted");
+}
+
+/// **The address the DEVICE dials is the operator's to state** (bl-fec6). The
+/// envelope carried `wire/address` verbatim, so an emulator — which reaches its
+/// host only through the emulator's own alias — came up dialling itself, and
+/// the material had to be hand-edited on the far side afterwards. A stated
+/// endpoint rides into the envelope; it is judged by the same rule the file's
+/// own is, so `--at` cannot smuggle a `:0` past the refusal above.
+#[test]
+fn a_stated_address_is_what_the_envelope_carries() {
+    let tmp = tempdir().expect("tmp");
+    let (deps, _) = super::provisioned(&tmp);
+    let stated = |address: &str| {
+        let mut request = request("phone-1", Grade::Operator);
+        request.address = Some(address.to_owned());
+        request
+    };
+    let answer = super::enrolled(enroll(&deps, "7", &stated("192.0.2.7:7737")).expect("act"));
+    assert_eq!(answer.address, "192.0.2.7:7737");
+    assert_ne!(answer.address, super::STATED, "not this engine's own");
+
+    let refusal = enroll(&deps, "8", &stated("192.0.2.7:0")).expect_err("refused");
+    assert!(
+        refusal.contains("names no endpoint a device can dial"),
+        "{refusal}"
+    );
 }
 
 /// A box holding no material at all is not a box that can issue anything: the

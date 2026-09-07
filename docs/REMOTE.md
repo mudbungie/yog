@@ -956,6 +956,22 @@ yog would store and could not check:
   reconfigured box restarting is refused for at most the hold's width and lands
   on its next dial, loudly, rather than silently disarming whatever is serving.
 
+**And a third durable fact: when this client last spoke** *(bl-d542, PROTOCOL
+14)*. §5's two facts could not tell a ghost from a sleeping machine: `present`
+reads `false` for a client that spoke ten seconds ago and for one that has never
+once connected, and on a CLI seat it reads `false` for everything, because every
+verb opens and closes its own connection. So on a workspace driven from a
+terminal the roster was a list of names — and the operator's `rm` (§4.1) was
+unusable, because no row said which was safe to delete.
+
+`clients/<client>/seen` holds unix seconds, written at the wire intake once per
+request, and `reply/clients` rows carry an optional **`last_seen`** — absent for
+a client that has never dialled, which is the reading that matters. It sits on
+the durable side of §5's own rate-of-change line: a connection is not a blip,
+and the question ("is that machine real") is asked about a client that is not
+connected now. It is best-effort by construction — a stamp that cannot be
+written costs the roster a column and never refuses the gesture it was riding.
+
 **The receipt says whether the engine WROTE** (`{"kind": "advertised", "ok":
 true, "wrote": true|false}` — bl-66d4, PROTOCOL 8). The answer used to be the
 same `ok` whether the document changed or was found identical and compared, so
@@ -2992,12 +3008,36 @@ finish the job with a `touch`. One act, one pair.
 | `grade` | `operator` or `foot` (§4.2), minted into the subject by the operator's own CA |
 
 The reply kind is `enrolled` and carries six fields: `grade`, `name`,
-`address`, `ca`, `cert`, `key`. `address` is **the engine's own wire address as
-clients dial it**, read from `wire/address` where the boot records it (§8) — not
-the port a `:0` request became, which only the listener knows and which is a
-different number after the next boot. An `address` whose port is `0` therefore
-**refuses**, naming `yog wire-certs WIRE_HOST=… WIRE_PORT=…`: a QR carrying a
-runtime port would be stale before it was scanned.
+`address`, `ca`, `cert`, `key`. `address` is **the address the DEVICE will
+dial** — by default the engine's own, read from `wire/address` where the boot
+records it (§8), never the port a `:0` request became, which only the listener
+knows and which is a different number after the next boot. An `address` whose
+port is `0` therefore **refuses**, naming `yog wire-certs WIRE_HOST=…
+WIRE_PORT=…`: a QR carrying a runtime port would be stale before it was
+scanned.
+
+**The request may state that address, and often must** *(amended bl-fec6,
+PROTOCOL 14)*. The device being enrolled is by definition not this box, so the
+route it reaches this engine by is not necessarily the one this box wrote for
+itself: an Android emulator reaches its host only through the emulator's own
+alias, a phone reaches it on the LAN, an overlay peer by name. The envelope
+carried `wire/address` verbatim, so a scan was correct only for a device sharing
+this box's own loopback view — and the workaround was an adb reverse tunnel,
+which exists on an emulator and on nothing else. `enroll` therefore takes an
+optional **`address`** (`/enroll <name> [foot] --at <host>:<port>`), and it is a
+field of the REQUEST rather than a setting because it is a fact about the device
+being enrolled: two devices enrolled a minute apart can rightly need two
+different routes. Absent is the engine's own, and both go through one
+judgement — a stated `:0` refuses exactly as the file's does.
+
+**What it is NOT checked against is the server leaf's SAN**, and that is the
+residual. The mint already understands the same problem — `WIRE_HOST` is a list
+and every entry rides the leaf (§8) — so what an operator states here should be
+one of the spellings they minted; a route the certificate omits fails
+*verification* at the device rather than here. Reading the SAN back would mean
+parsing X.509 extensions, where `registry::leaf` walks only the subject, and the
+failure it would catch is already loud on the device. The refusal that names
+`--at` says so.
 
 **A leaf that already exists is ADOPTED, not refused** *(amended bl-bd48,
 bl-6b14)*. `yog wire-certs WIRE_LEAF=<name>` is the act the binary's own help

@@ -54,6 +54,12 @@ impl super::server::Answerer for Intake {
         peer: &crate::registry::Peer,
         request: Value,
     ) -> Box<dyn Iterator<Item = Value>> {
+        // **This client is speaking, so it was seen** (REMOTE §5 as amended,
+        // bl-d542): one stamp per request, at the one door every connection's
+        // bytes pass through, ahead of both arms so a follow-class read that
+        // parks for thirty seconds is stamped when it arrives rather than when
+        // it ends.
+        self.ctx.seen(peer);
         match self.ctx.follow(peer, &request) {
             Some(frames) => frames,
             None => Box::new(std::iter::once(self.ctx.answer_as(peer, &request))),

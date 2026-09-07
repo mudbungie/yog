@@ -104,6 +104,7 @@ fn the_roster_is_the_landed_clients_query() {
     let rows = vec![crate::registry::roster::ClientRow {
         client: "laptop".to_owned(),
         present: true,
+        last_seen: None,
         tools: vec![Tool {
             name: "Bash".to_owned(),
             description: "run a command".to_owned(),

@@ -137,9 +137,20 @@ fn encode_action(action: &Action) -> Value {
         // REMOTE §1.4's enrollment (bl-f4e3): the workspace it seats the new
         // client in, the common name its certificate will carry, and the grade
         // — in the one grade vocabulary `Grade::word`/`of` spell both ways.
-        Action::Enroll(request) => json!({ "op": ENROLL, "workspace": request.workspace,
-                                           "name": request.name,
-                                           "grade": request.grade.word() }),
+        // `address` rides only when the operator stated one (bl-fec6): absent
+        // is "the address this engine wrote for itself", which the executor
+        // reads, and a null would be a second spelling of the same absence.
+        Action::Enroll(request) => {
+            let mut map = serde_json::Map::new();
+            map.insert("op".to_owned(), json!(ENROLL));
+            map.insert("workspace".to_owned(), json!(request.workspace));
+            map.insert("name".to_owned(), json!(request.name));
+            map.insert("grade".to_owned(), json!(request.grade.word()));
+            if let Some(address) = &request.address {
+                map.insert("address".to_owned(), json!(address));
+            }
+            Value::Object(map)
+        }
         Action::Route(verb) => tools::encode_route(verb),
         // The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall it runs in and the
         // provider row it signs into, and nothing else — the flow is the row's
@@ -267,6 +278,11 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             workspace: str_of(o, "workspace")?,
             name: str_of(o, "name")?,
             grade: grade_of(&str_of(o, "grade")?)?,
+            // …and the one OPTIONAL field (bl-fec6): the address the device
+            // will dial, absent when the engine's own is right. A present
+            // field must still be a string, so a mistyped one refuses here
+            // rather than reaching a QR.
+            address: opt_str_of(o, "address")?,
         }))),
         // The two families that read in their own modules (bl-3f46, bl-3746):
         // every query — `config`/`marks` read-shaped among them, bl-0164 —

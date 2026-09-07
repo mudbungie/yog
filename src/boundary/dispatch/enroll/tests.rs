@@ -61,6 +61,7 @@ pub(super) fn request(name: &str, grade: Grade) -> Request {
         workspace: "alba".to_owned(),
         name: name.to_owned(),
         grade,
+        address: None,
     }
 }
 
@@ -187,6 +188,7 @@ fn the_chokepoint_routes_it_and_refuses_an_unknown_workspace() {
                 workspace: ws.to_owned(),
                 name: name.to_owned(),
                 grade: Grade::Operator,
+                address: None,
             }),
         )
     };
