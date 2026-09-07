@@ -13,7 +13,9 @@
 use serde_json::Value;
 
 use super::super::{Block, Entry, EntryKind, Transcript, Usage};
-use crate::boundary::codec::fields::{bool_of, bytes_of, list_of, opt_val, str_of, usize_of};
+use crate::boundary::codec::fields::{
+    bool_of, bytes_of, list_of, opt_str_of, opt_val, str_of, usize_of,
+};
 use crate::inboxview::Epitaph;
 
 /// The `transcript` reply body read back: one entry per row, in message order.
@@ -28,6 +30,7 @@ fn entry_row(v: &Value) -> Result<Entry, String> {
     let kind = match str_of(o, "kind")?.as_str() {
         "delivered" => EntryKind::Delivered {
             sender: str_of(o, "sender")?,
+            sender_name: opt_str_of(o, "sender_name")?,
             epitaph: opt_val(o, "epitaph", epitaph)?,
             body: str_of(o, "body")?,
         },

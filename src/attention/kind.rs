@@ -25,6 +25,19 @@ pub enum AttentionKind {
     /// not something the operator did. The two are mutually exclusive by
     /// construction ([`Attention::kinds`]).
     Refused,
+    /// **Rule 2's rest was a truncation** (bl-ebef, litany bl-155f/bl-ecf9) —
+    /// the same refinement [`Refused`](Self::Refused) is, on the other shape of
+    /// *the turn did not end*. The provider stopped at the request's output
+    /// cap with the model mid-utterance, so litany fails the call with
+    /// `Error::OutputTruncated`: the staging sink is never sealed, nothing is
+    /// committed and no tool call runs. Saying *"came to rest — your turn"*
+    /// about that is the exact sentence the upstream ball measured — nine
+    /// `apply_patch` calls arriving as `input: {}` at 4096 output tokens, the
+    /// loop staging nothing, and the seat reporting a finished turn. It is
+    /// mutually exclusive with [`Refused`](Self::Refused) by construction: a
+    /// truncation frames COMPLETE around a `finish` whose reason is `length`,
+    /// so it carries no failure sentence, and a refusal carries nothing else.
+    Truncated,
     /// Somebody raised a flag on this conversation (§6 rule 7, VISION §4.9) —
     /// the signal-out verb's whole point, and the alignment monitor's floor
     /// grant. The *reason* rides the queue row beside this word, because a
@@ -59,6 +72,10 @@ impl AttentionKind {
             Self::Mail => "has mail queued and no driver taking it",
             Self::Held => "parked a tool invocation for your answer",
             Self::Refused => "was refused at the provider — sign a provider in on this workspace",
+            Self::Truncated => {
+                "was cut off at its output cap — nothing was committed; raise the role's \
+                 max_output_tokens in providers.yaml, or ask for less in one step"
+            }
             Self::Flagged => "was flagged for a look, with a reason",
         }
     }

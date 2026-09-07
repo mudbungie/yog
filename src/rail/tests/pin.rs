@@ -26,6 +26,7 @@ fn delivered(name: &str) -> Entry {
         raw: b"hello".to_vec(),
         kind: EntryKind::Delivered {
             sender: "user".to_owned(),
+            sender_name: None,
             epitaph: None,
             body: "hello".to_owned(),
         },

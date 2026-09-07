@@ -129,6 +129,17 @@ fn the_output_limit_wound_says_what_ended_the_turn_and_how_to_carry_on() {
         sentence.contains("Nudge cannot"),
         "and the control that vanished says why: {sentence}"
     );
+    // Since litany 0.0.11 the cut is a named failure and nothing is staged
+    // (bl-ebef): what survived it is the operator's first question, and the
+    // config edit is the remedy litany's own error names.
+    assert!(
+        sentence.contains("nothing was committed"),
+        "a truncation is not a short answer: {sentence}"
+    );
+    assert!(
+        sentence.contains("max_output_tokens"),
+        "the remedy is config, not a retry: {sentence}"
+    );
     assert!(
         !sentence.contains("  "),
         "one sentence, not a source continuation leaking its indent: {sentence}"

@@ -76,6 +76,18 @@ pub(super) fn run(args: &[String]) -> i32 {
     // has one home — litany re-exports it beside the field a binding fills
     // from it — so this arm spells it no second time.
     let conv_branch = std::env::var_os(cmd::seam::ENV_CONV_BRANCH);
+    // The same contract's `LITANY_TOOL_ID`, read at the binding for the same
+    // reason and passed through UNCHANGED — set exactly when this process is a
+    // tool invocation of a running step. It is what the two lineage-advancing
+    // verbs refuse under (upstream litany bl-d273): a step's `bash` that reaches
+    // the world's `litany` shim to run `config` or `proposal --accept` would
+    // rewrite the souls, grants, models and facts governing its own conversation,
+    // walking the learning loop's operator veto (yog bl-baed). The refusal is
+    // litany's; yog's part is to hand it the truth, so this arm must never
+    // synthesize, clear or forge the value — the shim is a re-exec of yog, so the
+    // marker the executor set on the tool subprocess is still in this process's
+    // own environment and reading it here is the whole of the contract.
+    let tool_id = std::env::var_os(cmd::seam::ENV_TOOL_ID);
     // `$EDITOR` resolved once, at the binding (litany's `cli::edit_in_editor`
     // reads it at spawn time; same value, earlier read).
     let editor_cmd = std::env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
@@ -107,6 +119,7 @@ pub(super) fn run(args: &[String]) -> i32 {
             driver_target,
             adapter_target: Some(adapter_target),
             conv_branch,
+            tool_id,
             editor: &editor,
             tool_stdin: &mut stdin,
             tool_stdout: &mut stdout,

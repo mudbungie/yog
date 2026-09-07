@@ -25,6 +25,7 @@ fn every_entry_kind_folds_to_its_quotation() {
                 raw: Vec::new(),
                 kind: EntryKind::Delivered {
                     sender: "you".to_owned(),
+                    sender_name: None,
                     epitaph: None,
                     body: "ship it".to_owned(),
                 },

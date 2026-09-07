@@ -37,8 +37,9 @@ use crate::xdg::Env;
 pub(crate) struct WallCredStore {
     dir: PathBuf,
     /// The snapshot ambient discovery reads (§5.5): an `ApiKeyEnv` spec names a
-    /// variable whose value is the key, and a `ClaudeCode` spec names a `~/`
-    /// path. Injected rather than read live, so the module rule holds here too.
+    /// variable whose value is the key, and a foreign-tool format (`ClaudeCode`,
+    /// `Codex`) names a `~/` path. Injected rather than read live, so the module
+    /// rule holds here too.
     env: Env,
 }
 
@@ -76,7 +77,9 @@ impl CredStore for WallCredStore {
     fn discover(&self, spec: &AmbientSpec) -> Option<Cred> {
         let bytes = match spec.format {
             AmbientFormat::ApiKeyEnv => self.env.var(&spec.path)?.into_bytes(),
-            AmbientFormat::ClaudeCode => fs::read(self.expand_home(&spec.path)).ok()?,
+            AmbientFormat::ClaudeCode | AmbientFormat::Codex => {
+                fs::read(self.expand_home(&spec.path)).ok()?
+            }
         };
         parse_ambient(spec.format, &bytes)
     }

@@ -34,10 +34,15 @@ fn transcript() -> Transcript {
     };
     Transcript {
         entries: vec![
+            // The stated end of the pair: a named child's result deposit, so
+            // the vocabulary carries `sender_name` (bl-6661) beside the id the
+            // filename re-asserts. The row below is the other end — `user`,
+            // who never wears a name, with nothing else asserted either.
             entry(
-                "001-user.md",
+                "001-20260814T000000Z-ab12.md",
                 EntryKind::Delivered {
-                    sender: "user".into(),
+                    sender: "20260814T000000Z-ab12".into(),
+                    sender_name: Some("DulcetMongoose".into()),
                     epitaph: Some(Epitaph::BudgetExhausted),
                     body: "hello".into(),
                 },
@@ -46,6 +51,7 @@ fn transcript() -> Transcript {
                 "002-user.md",
                 EntryKind::Delivered {
                     sender: "user".into(),
+                    sender_name: None,
                     epitaph: None,
                     body: String::new(),
                 },
@@ -176,6 +182,7 @@ fn inbox() -> Vec<InboxEntry> {
             raw: b"---\nfrom: user\n---\nhi".to_vec(),
             deposit: Deposit {
                 sender: Some("user".into()),
+                from_name: Some("DulcetMongoose".into()),
                 deposited_at: Some("t0".into()),
                 epitaph: Some(Epitaph::Unknown("sideways".into())),
                 terminal_ref: Some("refs/x".into()),

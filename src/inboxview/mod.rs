@@ -83,6 +83,18 @@ impl Epitaph {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Deposit {
     pub sender: Option<String>,
+    /// The sender's **display name** (`from_name:`, litany 0.0.11 upstream
+    /// bl-a457) — present exactly when the sender is an agent wearing one, so
+    /// `user` never carries it and an unnamed agent never does.
+    ///
+    /// It is the **second** asserted field this reader keeps, and for
+    /// `epitaph:`'s own reason (bl-6661): the dropped fields are all
+    /// re-asserted elsewhere — the sender by the filename, the timestamp by the
+    /// file order — and nothing else carries the NAME. The filename re-asserts
+    /// the ID and always will, since it is the addressing key litany's own
+    /// inbox scan derives from, so a reader with no live roster to consult had
+    /// only sixty characters of timestamped hex to attribute a row with.
+    pub from_name: Option<String>,
     pub deposited_at: Option<String>,
     pub epitaph: Option<Epitaph>,
     pub terminal_ref: Option<String>,
@@ -97,6 +109,7 @@ pub fn parse_deposit(bytes: &[u8]) -> Deposit {
     match split_frontmatter(&text) {
         Some((frontmatter, body)) => Deposit {
             sender: field(frontmatter, "from"),
+            from_name: field(frontmatter, "from_name"),
             deposited_at: field(frontmatter, "deposited_at"),
             epitaph: field(frontmatter, "epitaph").map(|v| Epitaph::parse(&v)),
             terminal_ref: field(frontmatter, "terminal_ref"),

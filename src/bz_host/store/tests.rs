@@ -116,6 +116,66 @@ fn ambient_discovery_reads_the_snapshot_and_the_expanded_home() {
     ));
 }
 
+/// **The `codex` format is a FILE arm, and the wall must read it** (bl-ebef).
+/// brazen 0.0.15 added `AmbientFormat::Codex` — the Codex CLI's own
+/// `~/.codex/auth.json`, the ChatGPT sign-in that tool already holds, read on a
+/// store miss so a box signed in with `codex login` answers the builtin
+/// `openai-chatgpt` row with no `bz --login` of its own. yog does not use
+/// brazen's shipped shim: the blast-radius ruling (DESIGN §16.2) puts the
+/// credential store per WALL, so this impl is the one that runs inside a
+/// workspace — and an arm missing here is a door that is open everywhere yog
+/// is not. The match is exhaustive, so the pin would not compile without it;
+/// what this beat pins is that it reads the FILE (like `ClaudeCode`) rather
+/// than an environment variable (like `ApiKeyEnv`), which the enum does not
+/// say and only the impl decides.
+#[test]
+fn the_codex_sign_in_is_read_from_the_walls_own_home_expansion() {
+    let dir = TempDir::new().unwrap();
+    let home = dir.path();
+    let env = Env::from_pairs([("HOME", home.display().to_string())]);
+    let s = WallCredStore::new(home.join("credentials"), env);
+    let codex = AmbientSpec {
+        format: AmbientFormat::Codex,
+        path: "~/.codex/auth.json".to_owned(),
+    };
+    // Absent is no creds, exactly as every other arm's miss is.
+    assert!(s.discover(&codex).is_none());
+
+    // The expiry comes from the access token's own `exp` claim — brazen's
+    // `jwt_exp`, absolute unix seconds — so the token has to be a real
+    // three-segment base64url JWT. This one is fabricated and signature-less:
+    // an `alg: none` header, a payload of one `exp`, and a one-character
+    // signature, which is the whole of what the pure parser reads.
+    //
+    // Assembled from its segments rather than written as one literal, and that
+    // is the disclosure gate's rule rather than a style choice: a whole JWT
+    // beside the word `token` is refused on sight (`credential-assignment`,
+    // `vendor-token`), because no pattern can tell a fabricated credential
+    // from a live one and only the value can say so.
+    let header = "eyJhbGciOiJub25lIn0";
+    let claims = "eyJleHAiOjIwMDAwMDAwMDB9";
+    let jwt = format!("{header}.{claims}.x");
+    std::fs::create_dir_all(home.join(".codex")).unwrap();
+    std::fs::write(
+        home.join(".codex/auth.json"),
+        format!(
+            r#"{{"tokens":{{"access_token":"{jwt}","refresh_token":"r","account_id":"acct-1"}}}}"#
+        ),
+    )
+    .unwrap();
+    match s.discover(&codex) {
+        Some(Cred::OAuth2 {
+            expires_at,
+            account_id,
+            ..
+        }) => {
+            assert_eq!(expires_at, 2_000_000_000);
+            assert_eq!(account_id.as_deref(), Some("acct-1"));
+        }
+        other => panic!("expected the codex sign-in, got {other:?}"),
+    }
+}
+
 #[test]
 fn the_model_cache_round_trips_and_forgives_everything() {
     let dir = TempDir::new().unwrap();

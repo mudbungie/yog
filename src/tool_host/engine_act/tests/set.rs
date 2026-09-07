@@ -6,16 +6,17 @@
 use super::*;
 
 /// The set is closed and enumerated in one place, and every member goes
-/// through it. The eight rows are the three subject-locality families: the
+/// through it. The nine rows are the three subject-locality families: the
 /// compactor's procedure pair, the conversation-subject worker grants, and the
-/// two acts on the agent's own record and history (`python`'s inner
+/// three acts on the agent's own record, history and lineage (`python`'s inner
 /// invocations land under the in-flight step and re-enter the front door;
-/// `search_history` reads the workspace's `agents/*` refs). The worktree names
-/// (`bash`, `read_file`, `apply_patch`) stay out, for the reason the roster's
-/// doc states — their subject is the working tree, which a consenting machine
-/// may hold.
+/// `search_history` reads the workspace's `agents/*` refs; `remember` commits a
+/// staged `proposal/<agent-id>` branch on the workspace repository). The
+/// worktree names (`bash`, `read_file`, `apply_patch`) stay out, for the reason
+/// the roster's doc states — their subject is the working tree, which a
+/// consenting machine may hold.
 #[test]
-fn the_eight_names_are_engine_acts_and_nothing_else_is() {
+fn the_nine_names_are_engine_acts_and_nothing_else_is() {
     assert_eq!(
         NAMES,
         [
@@ -26,6 +27,7 @@ fn the_eight_names_are_engine_acts_and_nothing_else_is() {
             "load_skill",
             "cd",
             "python",
+            "remember",
             "search_history",
         ]
     );
@@ -74,16 +76,19 @@ fn an_engine_act_never_reaches_an_enrolled_thralls_mailbox() {
     );
 }
 
-/// **A foot never sees `python` or `search_history`** (bl-fe43, bl-81cc), and a
-/// thrall that advertises both by those very names does not change it: each
+/// **A foot never sees `python`, `remember` or `search_history`** (bl-fe43,
+/// bl-81cc, bl-ebef), and a
+/// thrall that advertises them by those very names does not change it: each
 /// one is performed at the engine's own front door, and the engine is asked
 /// **nothing** — not the roster read the worktree lane opens with, and not the
 /// invoke gesture a routing leg would queue. That is the whole difference the
-/// two rows buy. Routed, `python` would compose its inner invocations against
-/// a step record the foot does not hold, and `search_history` would run its
-/// pickaxe over a box with no repository on it and answer *nothing found*.
+/// three rows buy. Routed, `python` would compose its inner invocations against
+/// a step record the foot does not hold, `search_history` would run its
+/// pickaxe over a box with no repository on it and answer *nothing found*, and
+/// `remember` would try to commit a `proposal/<agent-id>` branch onto a
+/// workspace repository that box does not have.
 #[test]
-fn a_foot_never_sees_python_or_search_history() {
+fn a_foot_never_sees_python_remember_or_search_history() {
     let root = TempDir::new().expect("tmp");
     loaded::add(
         root.path(),
@@ -96,6 +101,10 @@ fn a_foot_never_sees_python_or_search_history() {
             },
             loaded::Entry {
                 client: "laptop".to_owned(),
+                tool: tool("remember"),
+            },
+            loaded::Entry {
+                client: "laptop".to_owned(),
                 tool: tool("search_history"),
             },
         ],
@@ -105,6 +114,7 @@ fn a_foot_never_sees_python_or_search_history() {
     let stop = AtomicBool::new(false);
     for (name, input) in [
         ("python", json!({"program": "print(1)"})),
+        ("remember", json!({"fact": "the wire is mutual TLS"})),
         ("search_history", json!({"pattern": "the wedge"})),
     ] {
         let capture = Injection::new(

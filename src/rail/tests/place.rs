@@ -27,6 +27,7 @@ fn delivered(name: &str) -> Entry {
         name,
         EntryKind::Delivered {
             sender: "user".to_owned(),
+            sender_name: None,
             epitaph: None,
             body: "hi".to_owned(),
         },

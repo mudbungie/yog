@@ -105,23 +105,26 @@ fn signal_token(kind: AttentionKind) -> &'static str {
         AttentionKind::Mail => "mail",
         AttentionKind::Held => "held",
         AttentionKind::Refused => "refused",
+        AttentionKind::Truncated => "truncated",
         AttentionKind::Flagged => "flagged",
     }
 }
 
 /// The §6 signal table — [`signal_token`]'s other half (bl-7067).
-const SIGNALS: [(&str, AttentionKind); 8] = [
+const SIGNALS: [(&str, AttentionKind); 9] = [
     ("notify", AttentionKind::Notify),
     ("stopped", AttentionKind::Stopped),
     ("budget", AttentionKind::Budget),
     ("conflicted", AttentionKind::Conflicted),
     ("mail", AttentionKind::Mail),
     ("held", AttentionKind::Held),
-    // Rule 2's rest said in the word that is true of it (bl-b43b) — it stands
-    // where `stopped` would, never beside it.
+    // Rule 2's rest said in the word that is true of it (bl-b43b, bl-ebef) —
+    // each stands where `stopped` would, never beside it, and the two are
+    // mutually exclusive by construction.
     ("refused", AttentionKind::Refused),
+    ("truncated", AttentionKind::Truncated),
     // §6 rule 7 (bl-6f2f) — the signal-out verb's own word, beside the six
-    // yog derives for itself and the one refinement.
+    // yog derives for itself and the two refinements.
     ("flagged", AttentionKind::Flagged),
 ];
 

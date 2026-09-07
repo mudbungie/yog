@@ -1,6 +1,7 @@
-//! **The two §6 signals yog derives from its own reads**, and the words they
+//! **The §6 signals yog derives from its own reads**, and the words they
 //! are said in: `refused` (bl-b43b — the latest model call's failure, read off
-//! the response tail the §3.5 classifier already opened) and `flagged`
+//! the response tail the §3.5 classifier already opened), `truncated` (bl-ebef
+//! — the `length` finish on that same tail) and `flagged`
 //! (bl-6f2f — the signal-out verb's ops row). Every other signal is a
 //! `refs/litany/*` mark or the inbox listing, which is the seam this file is
 //! split from [`super::signals`] on (DESIGN §12).
@@ -98,4 +99,47 @@ fn an_acked_refused_rest_still_stirs_nothing() {
             .kinds()
             .is_empty()
     );
+}
+
+/// **Rule 2's rest, said in the other true word** (bl-ebef). litany 0.0.11
+/// fails a turn cut off at the request's output cap
+/// (`Error::OutputTruncated`): the staging sink is never sealed, so nothing is
+/// committed and no tool call runs. It settles `Stopped` like every other
+/// wound, so `stopped` told the operator their conversation had finished and
+/// handed them a turn — the exact sentence the upstream ball measured while a
+/// learning loop staged nothing across nine calls.
+#[test]
+fn a_truncated_rest_earns_the_truncated_word_and_not_stoppeds() {
+    let mut ag = agent("a");
+    ag.state = AgentState::Stopped;
+    assert_eq!(
+        attention(&ag, &[], "ws", &nothing).kinds(),
+        vec![AttentionKind::Stopped]
+    );
+
+    ag.truncated = true;
+    let cut = attention(&ag, &[], "ws", &nothing);
+    assert_eq!(cut.kinds(), vec![AttentionKind::Truncated]);
+    assert!(cut.stopped, "it is still rule 2 that fired");
+
+    // A refusal outranks it, and the pair is mutually exclusive on disk anyway
+    // — a truncation frames COMPLETE and so carries no failure sentence, while
+    // a failure carries no `finish` to read a reason off. One word either way,
+    // never two firings.
+    ag.failure = Some(AUTH_SHAPED.to_owned());
+    assert_eq!(
+        attention(&ag, &[], "ws", &nothing).kinds(),
+        vec![AttentionKind::Refused]
+    );
+}
+
+/// The word carries the remedy litany's own error names — the config edit, or
+/// a smaller ask — and says outright that nothing was committed, because the
+/// operator's first question about a cut-off turn is what survived it.
+#[test]
+fn the_truncated_word_names_the_remedy_and_says_nothing_landed() {
+    let said = AttentionKind::Truncated.says();
+    assert!(said.contains("cut off at its output cap"), "{said}");
+    assert!(said.contains("nothing was committed"), "{said}");
+    assert!(said.contains("max_output_tokens"), "{said}");
 }

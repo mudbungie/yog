@@ -5,14 +5,14 @@
 //! fall-off-the-match arm, and the split is the mechanism rather than a tidy:
 //! a name is folded into [`Known`] *before* anything classifies it, and
 //! [`row`] then matches that enum **exhaustively**, with no catch-all. A
-//! thirteenth name cannot be added without a class being chosen for it, and no
+//! fourteenth name cannot be added without a class being chosen for it, and no
 //! name can reach a passing class by default — which is exactly what
 //! `other => OpenWorld` used to do to every routed foot tool.
 //!
 //! Three families sit in here, and each is here for its own reason:
 //!
 //! - **litany's own pool** (`read_file`, `load_skill`, `message`, `dispatch`,
-//!   `apply_patch`, `cd`, `bash`, `python`, `search_history`). `cd` and
+//!   `apply_patch`, `cd`, `bash`, `python`, `remember`, `search_history`). `cd` and
 //!   `apply_patch` are judged against the writable root at consult time and
 //!   `bash` goes to the operator ruleset ([`super::super::bash`]); the rest
 //!   carry a fixed class.
@@ -43,6 +43,7 @@ pub(super) enum Known {
     Cd,
     Bash,
     Python,
+    Remember,
     SearchHistory,
     WriteSummary,
     MarkForDeletion,
@@ -62,6 +63,7 @@ impl Known {
             "cd" => Some(Known::Cd),
             "bash" => Some(Known::Bash),
             "python" => Some(Known::Python),
+            "remember" => Some(Known::Remember),
             "search_history" => Some(Known::SearchHistory),
             "write_summary" => Some(Known::WriteSummary),
             "mark_for_deletion" => Some(Known::MarkForDeletion),
@@ -85,6 +87,22 @@ pub(super) fn row(
         Known::SearchHistory => Classified::new(
             Effect::Read,
             "searches the conversation's own history, which it observes and does not touch",
+        ),
+        // The one lawful door from a step to a durable fact (litany 0.0.11,
+        // upstream bl-3c11): it appends to `facts.md` in a config commit on
+        // `proposal/<agent-id>`, a branch NO lineage points at until the
+        // operator accepts it. So it is the world's own substrate written
+        // through the world's own gated verb — the second half of the
+        // target-write definition — and deliberately not open-world: it cannot
+        // reach past the workspace, and it cannot advance the lineage its own
+        // conversation runs on, which is the act litany now refuses under
+        // `LITANY_TOOL_ID` (upstream bl-d273, yog bl-baed). Without a row here
+        // it would fall to the routed lane and be held Opaque on every call —
+        // an operator answer demanded for the door that exists so a model does
+        // not go looking for `litany config`.
+        Known::Remember => Classified::new(
+            Effect::TargetWrite,
+            "proposes one durable fact onto a staged branch the operator accepts or drops",
         ),
         Known::LoadSkill => Classified::new(
             Effect::TargetWrite,

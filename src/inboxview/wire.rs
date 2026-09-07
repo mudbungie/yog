@@ -37,6 +37,7 @@ fn deposit_value(deposit: &Deposit) -> Value {
     let mut map = Map::new();
     for (key, value) in [
         ("from", deposit.sender.as_ref()),
+        ("from_name", deposit.from_name.as_ref()),
         ("deposited_at", deposit.deposited_at.as_ref()),
         ("terminal_ref", deposit.terminal_ref.as_ref()),
     ] {
@@ -77,6 +78,7 @@ fn deposit_of(v: &Value) -> Result<Deposit, String> {
     let o = v.as_object().ok_or("deposit: not an object")?;
     Ok(Deposit {
         sender: opt_str_of(o, "from")?,
+        from_name: opt_str_of(o, "from_name")?,
         deposited_at: opt_str_of(o, "deposited_at")?,
         epitaph: opt_str_of(o, "epitaph")?.map(|w| super::Epitaph::parse(&w)),
         terminal_ref: opt_str_of(o, "terminal_ref")?,

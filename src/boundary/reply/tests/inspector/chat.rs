@@ -32,6 +32,7 @@ fn every_transcript_entry_class_says_which_it_is() {
                 "---\nfrom: user\n---\ngo\n",
                 EntryKind::Delivered {
                     sender: "user".to_owned(),
+                    sender_name: None,
                     epitaph: None,
                     body: "go\n".to_owned(),
                 },
@@ -41,6 +42,7 @@ fn every_transcript_entry_class_says_which_it_is() {
                 "bye",
                 EntryKind::Delivered {
                     sender: "kid".to_owned(),
+                    sender_name: None,
                     epitaph: Some(Epitaph::Died),
                     body: String::new(),
                 },
@@ -129,10 +131,11 @@ fn every_transcript_entry_class_says_which_it_is() {
 fn a_deposit_carries_what_it_stated_and_omits_what_it_did_not() {
     let rows = encode(&Reply::Inbox(vec![
         InboxEntry {
-            name: "user-001.md".to_owned(),
-            raw: b"---\nfrom: user\n---\nhi\n".to_vec(),
+            name: "20260814T000000Z-ab12-001.md".to_owned(),
+            raw: b"---\nfrom: 20260814T000000Z-ab12\nfrom_name: DulcetMongoose\n---\nhi\n".to_vec(),
             deposit: Deposit {
-                sender: Some("user".to_owned()),
+                sender: Some("20260814T000000Z-ab12".to_owned()),
+                from_name: Some("DulcetMongoose".to_owned()),
                 deposited_at: Some("2026-08-14T00:00:00Z".to_owned()),
                 epitaph: Some(Epitaph::FinalResponse),
                 terminal_ref: Some("sha".to_owned()),
@@ -150,16 +153,29 @@ fn a_deposit_carries_what_it_stated_and_omits_what_it_did_not() {
     ]));
     assert_eq!(rows["kind"], "inbox");
     let stated = rows["rows"][0].clone();
-    assert_eq!(stated["name"], "user-001.md");
-    assert_eq!(stated["raw"], "---\nfrom: user\n---\nhi\n");
-    assert_eq!(stated["deposit"]["from"], "user");
+    assert_eq!(stated["name"], "20260814T000000Z-ab12-001.md");
+    assert_eq!(
+        stated["raw"],
+        "---\nfrom: 20260814T000000Z-ab12\nfrom_name: DulcetMongoose\n---\nhi\n"
+    );
+    assert_eq!(stated["deposit"]["from"], "20260814T000000Z-ab12");
+    // The NAME beside the id (bl-6661): the filename re-asserts the id and
+    // nothing but the envelope carries this, so a seat with no live roster
+    // attributed the row by sixty characters of timestamped hex.
+    assert_eq!(stated["deposit"]["from_name"], "DulcetMongoose");
     assert_eq!(stated["deposit"]["deposited_at"], "2026-08-14T00:00:00Z");
     assert_eq!(stated["deposit"]["epitaph"], "final-response");
     assert_eq!(stated["deposit"]["terminal_ref"], "sha");
     assert_eq!(stated["deposit"]["body"], "hi\n");
     let bare = rows["rows"][1].clone();
     assert_eq!(bare["deposit"]["body"], "no envelope");
-    for key in ["from", "deposited_at", "epitaph", "terminal_ref"] {
+    for key in [
+        "from",
+        "from_name",
+        "deposited_at",
+        "epitaph",
+        "terminal_ref",
+    ] {
         assert!(bare["deposit"].get(key).is_none(), "{key} was never stated");
     }
 }

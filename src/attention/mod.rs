@@ -80,6 +80,14 @@ pub struct Attention {
     /// [`stopped`](Self::stopped), never a signal beside it — it is only ever
     /// true where that one is, and it changes the word rather than the count.
     pub refused: bool,
+    /// Rule 2's rest is a **truncation** (bl-ebef): the same kind of refinement
+    /// on the other shape of a turn that did not end — the provider stopped at
+    /// the request's output cap, so litany committed nothing and ran no tool
+    /// (`Error::OutputTruncated`, litany bl-155f). Mutually exclusive with
+    /// [`refused`](Self::refused) by construction: that one reads a failure
+    /// sentence off a `Failed`/`Killed` tail, this one a `length` finish on a
+    /// tail that framed cleanly.
+    pub truncated: bool,
     pub budget: bool,
     pub conflicted: bool,
     pub mail: bool,
@@ -100,19 +108,24 @@ impl Attention {
             || self.flagged
     }
 
+    /// **Which word rule 2's rest is said in** — the one home for the two
+    /// refinements, so a third cannot be added as a fourth `if` somewhere else.
+    /// Both are readings of a rest the operator did not ask for, and neither is
+    /// a signal beside it: the count is unchanged, only the sentence.
+    fn rest_word(self) -> AttentionKind {
+        match (self.refused, self.truncated) {
+            (true, _) => AttentionKind::Refused,
+            (_, true) => AttentionKind::Truncated,
+            _ => AttentionKind::Stopped,
+        }
+    }
+
     /// The firing kinds, in fixed badge order (notify, stop, budget, conflict,
     /// mail, held, flagged).
     pub fn kinds(self) -> Vec<AttentionKind> {
         [
             (self.notify, AttentionKind::Notify),
-            (
-                self.stopped,
-                if self.refused {
-                    AttentionKind::Refused
-                } else {
-                    AttentionKind::Stopped
-                },
-            ),
+            (self.stopped, self.rest_word()),
             (self.budget, AttentionKind::Budget),
             (self.conflicted, AttentionKind::Conflicted),
             (self.mail, AttentionKind::Mail),
@@ -148,10 +161,12 @@ pub fn attention(
             .is_some_and(|o| unseen(SeenKind::Notify, o)),
         stopped: rest_is_the_operators(agent, siblings)
             && rest_evidence(agent).is_some_and(|o| unseen(SeenKind::Stopped, &o)),
-        // Which way that rest came about (bl-b43b), off the fact the §3.5
-        // classification already read: a refusal at the provider rung is a
-        // wound the operator did not inflict, and `stopped` is `/stop`'s word.
+        // Which way that rest came about (bl-b43b, bl-ebef), off the two facts
+        // the §3.5 classification already read: a refusal at the provider rung
+        // and a turn cut off at the output cap are both wounds the operator did
+        // not inflict, and `stopped` is `/stop`'s word.
         refused: agent.refused(),
+        truncated: agent.truncated,
         budget: agent
             .budget_oid
             .as_deref()

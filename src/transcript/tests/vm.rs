@@ -34,6 +34,7 @@ fn delivered_md_strips_the_deposit_envelope_off_the_body() {
         ),
         EntryKind::Delivered {
             sender: "user".into(),
+            sender_name: None,
             epitaph: None,
             body: "is this thing on?\n".into()
         }
@@ -47,6 +48,7 @@ fn delivered_md_without_an_envelope_is_the_whole_file() {
         kind_of("001-alice.md", b"hi there\n"),
         EntryKind::Delivered {
             sender: "alice".into(),
+            sender_name: None,
             epitaph: None,
             body: "hi there\n".into()
         }
@@ -64,6 +66,7 @@ fn delivered_result_message_with_no_content_has_an_empty_body() {
         ),
         EntryKind::Delivered {
             sender: "kid".into(),
+            sender_name: None,
             epitaph: Some(crate::inboxview::Epitaph::Died),
             body: String::new()
         }
@@ -108,4 +111,37 @@ fn raw_entry_keeps_verbatim_bytes() {
     write_msg(dir.path(), "README", b"\x00\x01raw");
     let t = build(dir.path(), AGENT);
     assert_eq!(t.entries[0].raw, b"\x00\x01raw");
+}
+
+/// **The NAME rides beside the id** (bl-6661, litany 0.0.11 upstream bl-a457).
+/// The framing sender is the FILENAME's origin token — the addressing key
+/// litany's own inbox scan derives from — so a message a named child sent was
+/// attributed by sixty characters of timestamped hex and nothing else. The
+/// envelope's `from_name:` is the only carrier of the name, and it is kept
+/// beside the id for `epitaph:`'s own reason: every other asserted field is
+/// re-asserted elsewhere and this one is not.
+#[test]
+fn a_delivered_row_carries_the_senders_name_beside_its_id() {
+    let EntryKind::Delivered {
+        sender,
+        sender_name,
+        ..
+    } = kind_of(
+        "001-20260814T000000Z-ab12.md",
+        b"---\nfrom: 20260814T000000Z-ab12\nfrom_name: DulcetMongoose\n---\ndone\n",
+    )
+    else {
+        panic!("expected delivered");
+    };
+    assert_eq!(sender, "20260814T000000Z-ab12");
+    assert_eq!(sender_name.as_deref(), Some("DulcetMongoose"));
+
+    // `user` never wears one, and neither does an unnamed agent: the field is
+    // absent rather than empty, so a reader can tell "no name" from "".
+    let EntryKind::Delivered { sender_name, .. } =
+        kind_of("001-user.md", b"---\nfrom: user\n---\nhi\n")
+    else {
+        panic!("expected delivered");
+    };
+    assert_eq!(sender_name, None);
 }

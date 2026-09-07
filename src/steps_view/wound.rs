@@ -95,7 +95,7 @@ const MUTE: &str = "and its stderr.log is empty too — nothing on disk says why
 const SPOKE: &str = "its stderr.log says:";
 
 /// What the banner adds for the output-limit class: what the operator is
-/// looking at, and the one gesture that carries it on.
+/// looking at, what survived it, and the two acts that answer it.
 ///
 /// It names Nudge in order to **retire** it, because §8.2 offers Nudge on
 /// every other resting conversation and a control that silently disappears
@@ -103,8 +103,19 @@ const SPOKE: &str = "its stderr.log says:";
 /// assistant tail and exits without creating a step, so the honest sentence is
 /// that the gesture cannot help and which one can — never a blind retry, and
 /// never a new verb (bl-fb87).
+///
+/// **Since litany 0.0.11 it also says what did NOT happen** (bl-ebef, upstream
+/// bl-155f/bl-ecf9). The cut is now a named failure (`Error::OutputTruncated`):
+/// the staging sink is never sealed, so *nothing is committed and no tool call
+/// is run*, and the turn is a truncation rather than a short answer. That is
+/// the operator's first question about a cut-off turn, and it changes the
+/// remedy — `max_output_tokens:` in the role's `providers.yaml`, or a smaller
+/// ask, both of which litany's own error names, because re-sending the same
+/// request against the same ceiling is cut at the same byte.
 const CUT_OFF: &str = "the reply stops where the model's output budget ran out, so nothing \
-     more is coming. Nudge cannot resume it — send a message to carry it on.";
+     more is coming — and nothing was committed: no entry was written and no tool call \
+     was run. Nudge cannot resume it. Raise the role's max_output_tokens in \
+     providers.yaml, or send a message asking for less, to carry it on.";
 
 /// The §11 banner's leading mark. Never the only carrier — the sentence beside
 /// it states the fact in words (§11 glyph doctrine).

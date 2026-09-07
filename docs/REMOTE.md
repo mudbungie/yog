@@ -1580,8 +1580,20 @@ audit and neither a machine's:
   a search can give, because it is indistinguishable from a true miss. Engine
   act.
 
+**One more at litany 0.0.11** (bl-ebef), admitted by the same audit:
+
+- **`remember`** appends one durable fact to `facts.md` in a config commit on
+  `proposal/<agent-id>` — a BRANCH of the workspace repository, staged for the
+  operator's `litany proposal … --accept` (litany
+  `docs/DESIGN_LEARNING_LOOP.md` §3). It writes no file in the working tree at
+  all, and a foot holds no repository, so a routed one would have nothing to
+  commit onto. It is also the door that makes litany's new lineage refusal
+  survivable: `litany config` and `litany proposal --accept` now refuse under
+  `LITANY_TOOL_ID` (upstream bl-d273), and a refusal with no door leaves an
+  agent asked to remember something with no answer at all. Engine act.
+
 The engine-act name set stays closed and enumerated in exactly one place
-(`src/tool_host/engine_act.rs`), now eight rows, and the mechanism is bl-dfce's
+(`src/tool_host/engine_act.rs`), now nine rows, and the mechanism is bl-dfce's
 unchanged: re-entry at the engine's own front door with the caller identity on
 the child's environment — and, since the seam hands it over (litany bl-ddaa),
 at the caller's **resolved working directory**, which is the engine's own

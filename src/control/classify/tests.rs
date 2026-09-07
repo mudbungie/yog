@@ -85,6 +85,15 @@ fn every_built_in_carries_its_intrinsic_class() {
         effect("dispatch", json!({"role": "worker"})),
         Effect::Process
     );
+    // litany 0.0.11's `remember` (bl-ebef): the one lawful door from a step to
+    // a durable fact, and a target write for the same reason `message` is —
+    // it stages a `proposal/<agent-id>` branch through the world's own gated
+    // verb, and no lineage points at it until the operator accepts. Without
+    // this row it falls to the routed lane and is held Opaque on every call.
+    assert_eq!(
+        effect("remember", json!({"fact": "the wire is mutual TLS"})),
+        Effect::TargetWrite
+    );
 }
 
 /// The compactor's procedure pair and yog's own roster tool carry rows of

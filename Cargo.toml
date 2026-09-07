@@ -118,7 +118,7 @@ balls = "=0.5.11"
 # `capability::context_caveat` states becomes a row-statement read rather than a
 # dialect arm (bl-b6c9 again). yog's transcript `Usage` is a `BTreeMap` of every
 # integer counter verbatim, so both new numbers ride the codec with no edit.
-brazen = { version = "=0.0.14", features = ["native-host"] }
+brazen = { version = "=0.0.17", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -289,7 +289,7 @@ clap = { version = "4", features = ["derive"] }
 # now judges the removal set (bl-7234), and tool descriptions are re-cut at
 # every step boundary BEFORE the read-state capture (bl-37cd), so a `litany
 # config` edit reaches a running loop one step sooner than it did.
-litany = "=0.0.10"
+litany = "=0.0.11"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

@@ -42,10 +42,18 @@ fn kind_fields(kind: &EntryKind, map: &mut Map<String, Value>) {
     let word = match kind {
         EntryKind::Delivered {
             sender,
+            sender_name,
             epitaph,
             body,
         } => {
             map.insert("sender".to_owned(), json!(sender));
+            // Absent, not null, when the sender wears no name (`user`, an
+            // unnamed agent) — the absence IS the fact, on `reply/enroll`'s
+            // `address` precedent, and `epitaph` beside it is written the same
+            // way for the same reason.
+            if let Some(name) = sender_name {
+                map.insert("sender_name".to_owned(), json!(name));
+            }
             if let Some(epitaph) = epitaph {
                 map.insert("epitaph".to_owned(), json!(epitaph.label()));
             }

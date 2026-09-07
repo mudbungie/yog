@@ -67,10 +67,16 @@ fn read_messages(dir: &Path) -> Vec<Entry> {
 /// envelope's asserted fields are dropped from the parsed view exactly as
 /// the model-id line and the `tool_use_id`s are (DESIGN §11) — the framing
 /// `sender` is the filename's, and the Raw toggle still shows the envelope
-/// verbatim. **`epitaph:` is the one exception, and it is the rule's own
+/// verbatim. **`epitaph:` was the one exception, and it is the rule's own
 /// reason**: the dropped fields are re-asserted elsewhere (the sender by the
 /// filename, the timestamp by the file order), but nothing else carries the
 /// ending, and on a body-less result deposit it is the whole message (bl-71e8).
+/// **`from_name:` is the second, on that same reason** (bl-6661, litany
+/// 0.0.11): the framing sender the filename re-asserts is the ID — it is the
+/// addressing key litany's own inbox scan derives from and always will be — so
+/// nothing but the envelope carries the NAME, and a reader with no live roster
+/// attributed every message a child sent by sixty characters of timestamped
+/// hex.
 pub fn classify(name: &str, raw: &[u8]) -> EntryKind {
     let Some((_, origin, ext)) = parse_name(name) else {
         return EntryKind::Raw;
@@ -80,6 +86,7 @@ pub fn classify(name: &str, raw: &[u8]) -> EntryKind {
             let deposit = crate::inboxview::parse_deposit(raw);
             EntryKind::Delivered {
                 sender: origin.to_string(),
+                sender_name: deposit.from_name,
                 epitaph: deposit.epitaph,
                 body: deposit.body,
             }

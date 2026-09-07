@@ -97,8 +97,15 @@ pub enum EntryKind {
     /// envelope stripped (see [`classify`]). `epitaph` is `Some` exactly on a
     /// **result deposit** — a child's terminal, which asserts how it ended and
     /// may say nothing else (ARCH §2.6).
+    ///
+    /// `sender_name` is the envelope's `from_name:` (litany 0.0.11, upstream
+    /// bl-a457), present exactly when the sender is an agent wearing a name.
+    /// It rides **beside** `sender` and never replaces it (bl-6661): the id is
+    /// the durable handle once the agent is deleted and its name recycled, and
+    /// it is the only one of the two the filename can re-assert.
     Delivered {
         sender: String,
+        sender_name: Option<String>,
         epitaph: Option<crate::inboxview::Epitaph>,
         body: String,
     },

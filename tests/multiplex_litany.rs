@@ -83,6 +83,49 @@ fn editor_writing(dir: &Path, rel: &str, content: &str) -> std::path::PathBuf {
     path
 }
 
+/// **The lineage refusal reaches through this binding** (bl-ebef, bl-baed;
+/// upstream litany bl-d273). litany refuses `config` when `LITANY_TOOL_ID` is
+/// set — the marker on every tool subprocess of a running step — and the ONLY
+/// way it learns that here is `Fx::tool_id`, which the arm reads at the binding
+/// and passes through unchanged. So this is not a test of litany's rule; it is
+/// the test that yog hands it the truth. Without the field the arm still
+/// compiles, the refusal never fires, and a step's `bash` rewrites its own
+/// conversation's souls, grants and models through the world's own `litany`
+/// shim — the escalation bl-baed measured by hand.
+///
+/// A helper rather than a second `#[test]`: this binary owns its process
+/// environment and runs exactly one test for that reason (module doc).
+fn lineage_refusal_reaches_through_the_binding(tmp: &Path, ws_s: &str) {
+    // An editor that WOULD write, so a passing exit could only mean the
+    // hand-off happened: the sentinel proves it did not, and the refusal
+    // therefore stands ahead of the checkout rather than after it.
+    let sentinel = tmp.join("editor-ran");
+    let telltale = tmp.join("telltale-editor.sh");
+    write_exec::write_exec(
+        &telltale,
+        &format!(
+            "#!/bin/sh\ntouch '{}'\nprintf 'roles: {{}}\\n' > \"$1/providers.yaml\"\n",
+            sentinel.display()
+        ),
+    );
+    set("EDITOR", &telltale);
+    set("LITANY_TOOL_ID", Path::new("toolu_binding_1"));
+    assert_eq!(
+        dispatch(&argv(&["yog", "litany", "config", ws_s])),
+        Some(1),
+        "a step may not advance its own config lineage"
+    );
+    assert!(
+        !sentinel.exists(),
+        "the refusal stands ahead of the checkout: no editor was ever handed one"
+    );
+    // Cleared, the very same call is the operator's and lands.
+    // SAFETY: as `set` — one test, one thread.
+    unsafe { std::env::remove_var("LITANY_TOOL_ID") };
+    assert_eq!(dispatch(&argv(&["yog", "litany", "config", ws_s])), Some(0));
+    assert!(sentinel.exists(), "the operator's own edit still runs");
+}
+
 #[test]
 fn the_litany_arm_is_the_thin_binding_end_to_end() {
     let tmp = tempfile::TempDir::new().unwrap();
@@ -186,6 +229,8 @@ fn the_litany_arm_is_the_thin_binding_end_to_end() {
         dispatch(&argv(&["yog", "litany", "config", &ws_s])),
         Some(1)
     );
+
+    lineage_refusal_reaches_through_the_binding(tmp.path(), &ws_s);
 
     // A prelude-bearing verb (`dispatch`: pgid leadership — this process is
     // its own test binary, so taking a group is safe) walks the prelude loop,

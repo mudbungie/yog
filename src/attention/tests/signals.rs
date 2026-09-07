@@ -17,6 +17,7 @@ fn no_signals_is_no_attention() {
             notify: false,
             stopped: false,
             refused: false,
+            truncated: false,
             budget: false,
             conflicted: false,
             mail: false,

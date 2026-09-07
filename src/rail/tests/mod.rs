@@ -71,6 +71,7 @@ pub(super) fn chat(turns: usize) -> Transcript {
             format!("{:03}-user.md", turn * 2 + 1),
             EntryKind::Delivered {
                 sender: "user".to_owned(),
+                sender_name: None,
                 epitaph: None,
                 body: "hi".to_owned(),
             },

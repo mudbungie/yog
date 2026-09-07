@@ -148,7 +148,39 @@ use super::frame;
 /// that **cannot** be recovered afterwards — presence is a point-in-time
 /// observation by design, so nothing later can say who a row belonged to. A
 /// field gained on a shape in use, which §3's rule bumps outright.
-pub const PROTOCOL: u32 = 16;
+/// 16 → 17 (bl-ebef, bl-6661): **two shapes, one version**, because both are
+/// the same litany 0.0.11 pin landing and two bumps a minute apart would make
+/// every client re-pin twice for one wave (14's own reasoning).
+///
+/// The §6 signal vocabulary gained **`truncated`** — rule
+/// 2's rest said in the word that is true of it when the turn was cut off at
+/// the request's output cap, the second refinement beside `refused` and
+/// standing where `stopped` would, never beside it. litany 0.0.11 makes that
+/// cut a named failure (`Error::OutputTruncated`, upstream bl-155f / bl-ecf9):
+/// the staging sink is never sealed, so nothing is committed and no tool call
+/// runs — while the seat read *"came to rest — your turn"*, the sentence the
+/// upstream ball measured against nine `apply_patch` calls arriving as
+/// `input: {}`. **No field moved and the ledger cannot see this one**: a
+/// signature is field shapes, and this is a new VALUE in `signals`, which a
+/// strict decoder built against 16 refuses by name. That is §3's rule reaching
+/// past the mechanism for the third time (REMOTE §9.9, §9.15), and it is why
+/// the number and not the ledger is the authority. It does **not** batch onto
+/// 16: that landed on `main` ahead of this, and whether a release captures it
+/// first is a race no reader could resolve later.
+///
+/// And a delivered row — on `reply/transcript` and on `reply/inbox`'s deposit
+/// envelope alike — gained an optional **`sender_name`** / **`from_name`**
+/// (bl-6661, litany 0.0.11 upstream bl-a457): the sender's display name, present
+/// exactly when the sender is an agent wearing one. The framing sender is the
+/// FILENAME's origin token — the addressing key litany's own inbox scan derives
+/// from, and always will be — so every message a child sent was attributed by
+/// sixty characters of timestamped hex, which on a phone is the whole row
+/// header. ABSENT rather than null when there is no name (`user` never wears
+/// one, an unnamed agent never does), the absence being the fact, on
+/// `reply/enroll`'s `address` precedent at 14. The id keeps riding beside it and
+/// is not replaced: it is the durable handle once the agent is deleted and the
+/// name recycled.
+pub const PROTOCOL: u32 = 17;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

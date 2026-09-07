@@ -54,13 +54,14 @@ fn row(client: &str, name: &str, subject_cwd: bool) -> ClientRow {
 /// here, where a set that moves upstream reddens a test instead of quietly
 /// changing which lane a name takes. Three members today, each a worktree name
 /// the engine implements — and the engine grew two built-ins at litany 0.0.8
-/// without growing this side, because `python` and `search_history` were
-/// classified as engine acts in the same breath (bl-fe43, bl-81cc), which is
-/// exactly the deliberate act this audit exists to force. What is deliberately
-/// outside: the six built-ins whose subject is the conversation (they are
-/// `engine_act`'s and never reach the lane), the compactor's injected pair (no
-/// built-in at all), an operator-granted pool name with no implementation to
-/// reach, and a name that differs only in case.
+/// and a third at 0.0.11 without growing this side, because `python`,
+/// `search_history` and now `remember` were classified as engine acts in the
+/// same breath (bl-fe43, bl-81cc, bl-ebef), which is exactly the deliberate act
+/// this audit exists to force. What is deliberately outside: the seven built-ins
+/// whose subject is the conversation (they are `engine_act`'s and never reach
+/// the lane), the compactor's injected pair (no built-in at all), an
+/// operator-granted pool name with no implementation to reach, and a name that
+/// differs only in case.
 #[test]
 fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
     let performed: Vec<&str> = ::litany::cmd::BUILTIN_TOOLS
@@ -76,6 +77,7 @@ fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
         "write_summary",
         "mark_for_deletion",
         "python",
+        "remember",
         "search_history",
         "deploy",
         "Bash",

@@ -1,5 +1,5 @@
 {
-  "protocol": 16,
+  "protocol": 17,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -490,6 +490,7 @@
         "/rows/[]/deposit/deposited_at:string",
         "/rows/[]/deposit/epitaph:string",
         "/rows/[]/deposit/from:string",
+        "/rows/[]/deposit/from_name:string",
         "/rows/[]/deposit/terminal_ref:string",
         "/rows/[]/deposit:object",
         "/rows/[]/name:string",
@@ -498,7 +499,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 17
     },
     "reply/invocations": {
       "signature": [
@@ -883,6 +884,7 @@
         "/rows/[]/name:string",
         "/rows/[]/raw:string",
         "/rows/[]/sender:string",
+        "/rows/[]/sender_name:string",
         "/rows/[]/summary:string",
         "/rows/[]/text:string",
         "/rows/[]/thinking:string",
@@ -895,7 +897,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 9
+      "since": 17
     },
     "reply/work-diff": {
       "signature": [
