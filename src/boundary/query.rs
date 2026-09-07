@@ -245,6 +245,17 @@ pub enum Query {
     /// seat sees the flap and the model's cached prefix never does, which is
     /// why presence is answered here rather than declared anywhere durable.
     Clients { workspace: String },
+    /// **Is this box wired up?** (bl-28f4) — every check a first conversation
+    /// depends on, asked at once, each row carrying the fact it read and, when
+    /// it fails, the act that fixes it ([`doctor`](crate::doctor)).
+    ///
+    /// **The workspace is optional, and that is the point.** The box a doctor
+    /// is for is the box that cannot start a conversation yet, and it may hold
+    /// no workspace at all — so the engine's own checks answer with none named,
+    /// and naming one adds the two that are a workspace's (its wall, its
+    /// roster). Every other read that names a workspace requires it, because
+    /// every other read is *about* one.
+    Doctor { workspace: Option<String> },
     /// **A tool host's next work** (REMOTE §3, §5; bl-024b) — *the*
     /// follow-class read, and the first with a consumer. The answer stays
     /// pending until this client has an invocation or the engine's hold

@@ -2275,6 +2275,25 @@ names no dialable port, and the remedy is the operator's stated address, or the
 one the boot just printed — which is the scope self-provisioned material always
 had.
 
+**And one read asks all of it at once** *(bl-28f4)*. `/doctor` is the gesture
+that answers *"is this box wired up"*: the wire material, the endpoint
+`wire/address` names, **what this process actually bound** — the fact the file
+cannot give, since a `:0` there is a request the kernel answers and the boot
+says the answer once on stderr, which an operator under a supervisor cannot get
+back — and the git identity every workspace and every step is committed under.
+Naming a workspace adds that workspace's two: whether a conversation started
+there would reach a model, asked by the `Prompt` door's own gate and quoting
+the sentence it would refuse with, and who is registered to reach it.
+
+Nothing there is a new fact: every one is derived somewhere already, and the
+doctor asks them together rather than judging anything a second time — a
+diagnostic with its own opinion is a second authority for a settled decision.
+It reads and never writes, because a diagnostic has to work on a box broken in
+the way it is diagnosing, and it carries **no tally**: a seat that wants one
+counts the rows it was handed. The workspace is optional, which no other
+workspace-addressed read is, for the reason the gesture exists: the box it is
+for may hold no workspace at all.
+
 A *half*-provisioned wire the mint **cannot heal** is still warned about and
 still does not listen, because silently degrading to no encryption is the one
 failure this design exists to exclude — and because replacing an operator's

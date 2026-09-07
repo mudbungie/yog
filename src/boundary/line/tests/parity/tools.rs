@@ -85,3 +85,23 @@ fn the_roster_spells_as_the_verb_alone() {
         workspace: "ws".to_owned(),
     }));
 }
+
+/// **The doctor spells as the verb alone too, and takes the seat's workspace
+/// when it has one** (bl-28f4). A seat with none selected still asks — which no
+/// other workspace-addressed read allows, and is the whole point: the box this
+/// gesture is for may hold no workspace at all.
+#[test]
+fn the_doctor_spells_as_the_verb_alone_with_or_without_a_workspace() {
+    rt(Gesture::Ask(Query::Doctor {
+        workspace: Some("ws".to_owned()),
+    }));
+    // Unselected is its own gesture and spells the same line; parsed back with a
+    // seat that HAS a workspace it becomes that one, which is the context doing
+    // its job rather than a round trip failing.
+    let bare = Gesture::Ask(Query::Doctor { workspace: None });
+    assert_eq!(crate::boundary::line::spell(&bare), "/doctor");
+    assert_eq!(
+        crate::boundary::line::parse("/doctor", &crate::boundary::line::Context::default()),
+        Ok(bare)
+    );
+}

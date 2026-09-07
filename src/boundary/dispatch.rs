@@ -56,6 +56,12 @@ use delete_exec::{delete_agent, unmake};
 pub use deps::{Caller, Deps};
 pub use doors::{prepare, prompt};
 use resolve::resolve_workspace;
+/// **The `Prompt` door's own wall gate, reachable by the one read that asks
+/// whether this box could start a conversation** (bl-28f4). `/doctor` asks the
+/// question the door asks and quotes the sentence the door would refuse with,
+/// rather than judging a wall a second time — a second authority for one
+/// decision is how the two come to disagree.
+pub(crate) use signin::gate as signin_gate;
 
 /// Dispatch one action (§8.5). The `Err` is a refusal or executor failure —
 /// already a durable ops row wherever an executor ran; `ui` is the durable

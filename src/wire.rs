@@ -109,3 +109,40 @@ pub fn listen(
 
 #[cfg(test)]
 mod tests;
+
+/// **Declared last, and out of order on purpose** — `registry.rs`'s reason
+/// exactly: adding a type above `mod tests;` shifted every byte below it, and
+/// llvm-cov then drew a phantom *uncovered* region onto this file's own `impl`
+/// header. Appended below every line that was here before, the phantom has
+/// nowhere to land.
+///
+/// **What this process's listener bound** (REMOTE §8, bl-28f4) — a handle, set
+/// once by the boot that bound it and read by the one gesture that asks whether
+/// this box is wired (`/doctor`).
+///
+/// **It is not a second home for the address.** `wire/address` is the fact's one
+/// home and it holds a *request*; a `:0` there is answered by the kernel, and
+/// only the listener ever learns the answer. §8 says that answer is "said once,
+/// on stderr, by the boot that bound it" — which is true and is also why an
+/// operator whose engine is under a supervisor cannot get it back. This is the
+/// same sentence, kept in RAM so it can be *asked for*: never written, never
+/// derived from, and empty in every process that did not bind (a test, the §4.3
+/// pilot, an engine whose bind was refused), which is the honest reading.
+#[derive(Clone, Default)]
+pub struct Listening {
+    bound: Arc<std::sync::OnceLock<String>>,
+}
+
+impl Listening {
+    /// Record what was bound. Once, by the boot: a second listener in one
+    /// process is the thing DESIGN I0 says never happens, and `OnceLock` says
+    /// so rather than trusting the caller.
+    pub fn state(&self, address: &str) {
+        let _ = self.bound.set(address.to_owned());
+    }
+
+    /// What was bound, or `None` where nothing did.
+    pub fn address(&self) -> Option<String> {
+        self.bound.get().cloned()
+    }
+}

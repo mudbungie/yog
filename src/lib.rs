@@ -51,11 +51,14 @@ pub mod context;
 /// tool-control seam consults before every granted tool invocation.
 pub mod control;
 pub mod delete;
+/// The one assembly a bare `yog` boots (VISION §5 V5) — model, worker, bridge,
+/// gesture consumer, monitor sentry, fleet pilot and the wire listener.
+/// **Is this box wired up?** (bl-28f4) — the one read that asks every question
+/// a first conversation depends on at once, and names the act that fixes each.
+pub mod doctor;
 /// Where to cut a string that will not fit (QUALITY G1, L4) — one rule, cut
 /// where the information is not. Machine strings only; prose keeps its head.
 pub(crate) mod elide;
-/// The one assembly a bare `yog` boots (VISION §5 V5) — model, worker, bridge,
-/// gesture consumer, monitor sentry, fleet pilot and the wire listener.
 pub mod engine;
 /// The VISION §4.10 mutating fan — N isolated candidate attempts over one
 /// delivery obligation, materialized through balls' attempt capability.

@@ -70,14 +70,7 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Routed {
             invocation,
             capture,
-        } => {
-            let mut map = obj_reply("routed");
-            map.insert("invocation".to_owned(), json!(invocation));
-            if let Some(capture) = capture {
-                map.insert("capture".to_owned(), capture_value(capture));
-            }
-            Value::Object(map)
-        }
+        } => routed_reply(invocation, capture.as_ref()),
         // The follow-class read's rows, in the one invocation spelling.
         Reply::Invocations(rows) => rows_reply("invocations", rows.iter().map(invocation_value)),
         // The branch, and only the branch (REMOTE §8, bl-ccf7): the space it is
@@ -174,6 +167,7 @@ pub fn encode(reply: &Reply) -> Value {
         // The tool set rides in its ONE spelling (`registry::tools::encode`),
         // the same bytes the client's own document holds (REMOTE §5, bl-4e08).
         Reply::Clients(rows) => rows_reply("clients", rows.iter().map(client_row)),
+        Reply::Doctor(rows) => rows_reply("doctor", rows.iter().map(doctor_row)),
     }
 }
 
@@ -211,6 +205,35 @@ fn client_row(row: &crate::registry::roster::ClientRow) -> Value {
     // missing key already says.
     if let Some(last_seen) = row.last_seen {
         map.insert("last_seen".to_owned(), json!(last_seen));
+    }
+    Value::Object(map)
+}
+
+/// The routing leg's asking side (bl-024b): the handle, and the capture once
+/// there is one. **Absent rather than empty** while the far machine still runs
+/// it — a reader must not have to tell "not finished" from "finished saying
+/// nothing". A body rather than an arm for `encode`'s own budget, on the seam
+/// every other keyed answer here is already cut along.
+fn routed_reply(invocation: &str, capture: Option<&crate::registry::mailbox::Capture>) -> Value {
+    let mut map = obj_reply("routed");
+    map.insert("invocation".to_owned(), json!(invocation));
+    if let Some(capture) = capture {
+        map.insert("capture".to_owned(), capture_value(capture));
+    }
+    Value::Object(map)
+}
+
+/// One check, as every seat renders it (bl-28f4): what was examined, whether
+/// this box passes it, the fact that was read — and the act, **absent on a
+/// passing row**, because a remedy beside a fact that is fine is advice nobody
+/// asked for.
+fn doctor_row(row: &crate::doctor::Row) -> Value {
+    let mut map = Map::new();
+    map.insert("check".to_owned(), json!(row.check));
+    map.insert("ok".to_owned(), json!(row.ok));
+    map.insert("fact".to_owned(), json!(row.fact));
+    if let Some(remedy) = &row.remedy {
+        map.insert("remedy".to_owned(), json!(remedy));
     }
     Value::Object(map)
 }

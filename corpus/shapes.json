@@ -354,6 +354,20 @@
       ],
       "since": 1
     },
+    "reply/doctor": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/check:string",
+        "/rows/[]/fact:string",
+        "/rows/[]/ok:bool",
+        "/rows/[]/remedy:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 13
+    },
     "reply/enrolled": {
       "signature": [
         "/address:string",
@@ -1183,6 +1197,14 @@
         ":object"
       ],
       "since": 1
+    },
+    "request/doctor": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 13
     },
     "request/effort": {
       "signature": [

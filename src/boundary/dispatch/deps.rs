@@ -95,6 +95,12 @@ pub struct Caller {
     /// *lands* is bz's credential in the wall (§5.1 #22); the run is a fact
     /// about this process.
     pub logins: crate::login::runs::Runs,
+    /// **What this process's listener bound** (REMOTE §8, bl-28f4) — the fourth
+    /// handle, shared for the three above's reason: it is a fact about this
+    /// process, in RAM, meaningless in any context that did not bind. Default
+    /// is "nothing here is listening", which is the truthful answer for the
+    /// §4.3 pilot, for a test and for an engine whose bind was refused.
+    pub listening: crate::wire::Listening,
 }
 
 impl Deps {

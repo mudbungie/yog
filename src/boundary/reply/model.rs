@@ -294,4 +294,7 @@ pub enum Reply {
     /// sets (REMOTE §5, bl-4e08) — [`Clients`](super::Query::Clients)' answer,
     /// and the payload the navigator's clients section paints.
     Clients(Vec<crate::registry::roster::ClientRow>),
+    /// **Is this box wired up?** — [`Doctor`](super::Query::Doctor)'s answer,
+    /// one row per check; the reasoning is [`doctor`](crate::doctor)'s own.
+    Doctor(Vec<crate::doctor::Row>),
 }

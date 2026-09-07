@@ -57,6 +57,11 @@ pub(super) fn surface() -> Vec<Gesture> {
     out.push(Gesture::Ask(Query::Clients {
         workspace: "ws".into(),
     }));
+    // The doctor, in **both** of its states (bl-28f4): a box with no workspace
+    // selected — which is the box it exists for — and one with.
+    for workspace in [None, Some("ws".to_owned())] {
+        out.push(Gesture::Ask(Query::Doctor { workspace }));
+    }
     // The sign-in lane (REMOTE §8.3, bl-c285): the pair its act names.
     out.push(Gesture::Ask(Query::LoginTail {
         workspace: "ws".into(),

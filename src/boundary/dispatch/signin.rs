@@ -81,7 +81,7 @@ mod tests;
 /// The rung: `Ok` when the fire would reach a model, the refusal otherwise.
 /// `lineage` is the `Prepared`'s §8.7 birth lineage — `None` is
 /// `config/default`, exactly as the fire itself reads it.
-pub(super) fn gate(deps: &Deps, workspace: &Path, lineage: Option<&str>) -> Result<(), String> {
+pub(crate) fn gate(deps: &Deps, workspace: &Path, lineage: Option<&str>) -> Result<(), String> {
     let rows = RealBzRunner::resolve(&wall_env(deps, workspace)).providers();
     if rows.is_empty() {
         return Ok(());

@@ -81,6 +81,15 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         // REMOTE §5's roster (bl-4e08): who is registered in the seat's own
         // workspace, who is live, and what each advertises. Scoped by the seat
         // exactly as `/providers` is.
+        // **The doctor** (bl-28f4): the seat's workspace when it has one, and
+        // the engine alone when it has not — the one read that must answer on a
+        // box that cannot yet do anything else.
+        "doctor" => {
+            args::none(tail, verb)?;
+            Ok(ask(Query::Doctor {
+                workspace: ctx.workspace.clone(),
+            }))
+        }
         "clients" => {
             args::none(tail, verb)?;
             Ok(ask(Query::Clients {

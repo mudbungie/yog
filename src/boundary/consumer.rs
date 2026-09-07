@@ -56,6 +56,11 @@ pub struct ConsumerCtx {
     /// What is queued for each client and what came back (REMOTE §5, bl-024b)
     /// — the routing leg's own RAM, shared by handle beside the presence map.
     pub mailbox: crate::registry::mailbox::Mailbox,
+    /// **What the engine's listener bound** (REMOTE §8, bl-28f4) — set by the
+    /// boot after a successful bind and read by `/doctor`, which is the one
+    /// gesture that asks whether this box is reachable at all. Empty in every
+    /// context that did not bind.
+    pub listening: crate::wire::Listening,
     /// The `bz --login` runs in flight (REMOTE §8.3, bl-c285) — the engine's
     /// own, beside the two above and for their reason: the act starts one
     /// through this context and a lane held on another connection reads it.
@@ -236,6 +241,7 @@ impl ConsumerCtx {
                 presence: self.presence.clone(),
                 mailbox: self.mailbox.clone(),
                 logins: self.logins.clone(),
+                listening: self.listening.clone(),
             },
         };
         (deps, ts, now_unix)

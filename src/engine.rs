@@ -122,6 +122,11 @@ impl Engine {
         // other client does, so the second reader went with the second read
         // path.
         let presence = crate::registry::presence::Presence::default();
+        // The listener's own answer (REMOTE §8, bl-28f4), minted here beside
+        // presence: `wire/address` holds a REQUEST, and on a `:0` only the bind
+        // learns what it became. The boot says it on stderr; this is the same
+        // sentence kept where `/doctor` can be asked for it.
+        let listening = crate::wire::Listening::default();
         // The §8.5 gestures-inbox consumer: both faces are one consumer surface,
         // so a deposit converges whichever is up (I0).
         let intake = Arc::new(ConsumerCtx {
@@ -146,6 +151,10 @@ impl Engine {
             // spawn goes through: the act layers the named workspace's wall on
             // top of it, so the credential lands in that sphere (§16.2).
             logins: crate::login::runs::Runs::of(Cli::resolve_in_world(Binary::Bz, overrides)),
+            // Empty until the bind below succeeds (bl-28f4): what the listener
+            // bound is a fact only the listener has, and the engine is the one
+            // process that can put it where a read can ask for it.
+            listening: listening.clone(),
         });
         // The REMOTE §9.5 wire listener (bl-b6fa), ahead of the consumer and
         // for the reason bl-1d9b names: a seat must reach whichever face is up,
@@ -178,7 +187,12 @@ impl Engine {
         // line the refusal already had. It is not a second address file:
         // `address` stays the operator's *request* and its one home (bl-dc14),
         // and this says what that request became on this boot.
-        eprintln!("yog: wire: listening on {}", wire.address());
+        let bound = wire.address();
+        eprintln!("yog: wire: listening on {bound}");
+        // …and it is kept where a read can ask for it (bl-28f4): `/doctor`
+        // answers what this process BOUND, which `address` cannot say — the
+        // file holds a request, and the line above is said once.
+        listening.state(&bound);
         // The §8.5 gestures-inbox consumer starts only once the boot can no
         // longer refuse: one door is open, so the other may be too.
         let consumer = Consumer::spawn(intake);

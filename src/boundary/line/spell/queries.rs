@@ -96,6 +96,9 @@ pub(super) fn spell_query(query: &Query) -> String {
         Query::Config(read) => spell_config(read),
         // The workspace is the seat's, as `/providers`' is.
         Query::Clients { .. } => "/clients".to_owned(),
+        // The workspace is the seat's own, exactly as `/clients`' is, so it is
+        // not spelled — and a doctor that named none was asked with none.
+        Query::Doctor { .. } => "/doctor".to_owned(),
         // The sign-in lane: the wall is the seat's, the row is not.
         Query::LoginTail { provider, .. } => {
             format!("/{} {provider}", crate::boundary::line::queries::LOGIN_TAIL)

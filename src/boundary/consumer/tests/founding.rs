@@ -103,3 +103,45 @@ fn a_box_with_no_material_seats_no_one() {
         "no leaf, no seat"
     );
 }
+
+/// **The doctor answers through the chokepoint** (bl-28f4), with a workspace
+/// and without: the engine's own four always, its wall and its roster when one
+/// is named. The gesture is the one workspace-addressed read that may name
+/// none, because the box it exists for may hold none.
+#[test]
+fn the_doctor_answers_with_a_workspace_and_without_one() {
+    let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
+    let ctx = provisioned(root.path(), data.path(), bin.path());
+    assert_eq!(ctx.answer(&prepare("fleet"))["kind"], "prepared");
+
+    let bare = ctx.answer(&json!({"op": "doctor"}));
+    assert_eq!(bare["kind"], "doctor", "{bare}");
+    let checks: Vec<&str> = bare["rows"]
+        .as_array()
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|row| row["check"].as_str())
+                .collect()
+        })
+        .unwrap_or_default();
+    assert_eq!(checks, ["wire", "address", "listener", "git"], "{bare}");
+
+    let scoped = ctx.answer(&json!({"op": "doctor", "workspace": "fleet"}));
+    let named: Vec<&str> = scoped["rows"]
+        .as_array()
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|row| row["check"].as_str())
+                .collect()
+        })
+        .unwrap_or_default();
+    assert_eq!(
+        named,
+        ["wire", "address", "listener", "git", "wall", "clients"],
+        "{scoped}"
+    );
+    // …and a workspace nothing enumerates is refused by the one resolution that
+    // stands ahead of the table, exactly as any other named read is.
+    let refusal = ctx.answer(&json!({"op": "doctor", "workspace": "gone"}));
+    assert_eq!(refusal["ok"], false, "{refusal}");
+}

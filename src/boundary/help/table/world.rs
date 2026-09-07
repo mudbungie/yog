@@ -124,6 +124,26 @@ pub const WORLD: &[HelpRow] = &[
         surface: Surface::Control,
     },
     HelpRow {
+        verb: "doctor",
+        usage: "/doctor",
+        summary: "is this box wired up: every check a first conversation needs, and the act \
+                  that fixes each",
+        detail: "One row per check, each carrying the fact it read and — when it fails — the \
+                 act that fixes it. The engine's own four always answer, because the box this \
+                 gesture is for may hold no workspace at all: the wire material, the endpoint \
+                 `wire/address` names (a `127.0.0.1:0` is a request only the listener learns \
+                 the answer to, and no seat can dial it), what this process actually BOUND — \
+                 which the file cannot say and the boot says once on stderr — and the git \
+                 identity every workspace and every step is committed under. With a workspace \
+                 selected it adds that workspace's two: whether a conversation started there \
+                 would reach a model, asked by the same gate the fire itself passes and quoting \
+                 the sentence it would refuse with, and who is registered to reach it. It reads \
+                 and never writes: a diagnostic has to work on a box that is broken in the way \
+                 it is diagnosing, so every remedy is a sentence naming the operator's own act. \
+                 No tally rides with the rows — count them.",
+        surface: Surface::Control,
+    },
+    HelpRow {
         verb: "clients",
         usage: "/clients",
         summary: "the machines registered in this workspace, who is connected, and what they offer",

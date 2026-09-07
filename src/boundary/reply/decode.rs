@@ -190,6 +190,7 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "lineages" => rows_of(o, lineage_row).map(Reply::Lineages),
         "models" => strings_of(o, "rows").map(Reply::Models),
         "clients" => rows_of(o, client_row).map(Reply::Clients),
+        "doctor" => rows_of(o, doctor_row).map(Reply::Doctor),
         "invocations" => rows_of(o, invocation_of).map(Reply::Invocations),
         _ => return None,
     })
@@ -228,6 +229,18 @@ fn client_row(v: &Value) -> Result<crate::registry::roster::ClientRow, String> {
             "last_seen",
             crate::boundary::codec::fields::i64_of,
         )?,
+    })
+}
+
+/// One check, read back (bl-28f4) — the remedy absent exactly where the row
+/// passed, which is the one thing a seat renders differently.
+fn doctor_row(v: &Value) -> Result<crate::doctor::Row, String> {
+    let o = v.as_object().ok_or("doctor row: not an object")?;
+    Ok(crate::doctor::Row {
+        check: str_of(o, "check")?,
+        ok: bool_of(o, "ok")?,
+        fact: str_of(o, "fact")?,
+        remedy: crate::boundary::codec::fields::opt(o, "remedy", str_of)?,
     })
 }
 

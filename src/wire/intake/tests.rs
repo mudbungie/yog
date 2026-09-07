@@ -33,6 +33,7 @@ fn intake(state_root: &std::path::Path) -> Intake {
         presence: crate::registry::presence::Presence::default(),
         mailbox: crate::registry::mailbox::Mailbox::default(),
         logins: crate::login::runs::Runs::default(),
+        listening: crate::wire::Listening::default(),
         clock: Arc::new(SystemClock),
     }))
 }

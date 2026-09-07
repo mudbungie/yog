@@ -101,6 +101,16 @@ pub(super) fn encode(query: &Query) -> Value {
         // makes an envelope a write, so a read is spelled by leaving it out,
         // never by a second op token (§8.5, bl-0164).
         Query::Config(read) => encode_config(read),
+        // The doctor's one optional field (bl-28f4): absent is "examine the
+        // box", present is "and this workspace with it".
+        Query::Doctor { workspace } => {
+            let mut map = serde_json::Map::new();
+            map.insert("op".to_owned(), json!("doctor"));
+            if let Some(workspace) = workspace {
+                map.insert("workspace".to_owned(), json!(workspace));
+            }
+            Value::Object(map)
+        }
         Query::Clients { workspace } => {
             json!({ "op": "clients", "workspace": workspace })
         }
@@ -227,6 +237,9 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         }),
         // REMOTE §5's roster (bl-4e08): who is registered here, who is live,
         // and what each advertises.
+        "doctor" => Query::Doctor {
+            workspace: crate::boundary::codec::fields::opt_str_of(o, "workspace")?,
+        },
         "clients" => Query::Clients {
             workspace: str_of(o, "workspace")?,
         },

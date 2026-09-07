@@ -114,6 +114,7 @@ impl Query {
             | Query::Config(_)
             | Query::WorkspaceBalls { .. }
             | Query::Clients { .. }
+            | Query::Doctor { .. }
             | Query::Workspaces
             | Query::Balls
             | Query::Board
