@@ -1399,6 +1399,34 @@ call**, which is the `Marks` discipline (a receipt is a re-read, never an echo).
 `capture` is absent rather than empty while the far machine still runs it, so a
 reader never has to tell "not finished" from "finished saying nothing".
 
+**What that read cannot say is "never", and PRESENCE IS NOT THE FACT THAT
+WOULD SAY IT** *(bl-6023)*. A drive killed a foot mid-invocation, polled
+`capture` for two minutes and got the same `ok:true` with no capture at one
+second and at two, on an invocation whose answer was never coming — and filed
+that the read should consult presence, which the engine does derive and which
+did clear on its own. **It must not.** Presence is connection-scoped and *"a
+host dials per ask and drops the connection the instant the answer is read"*
+(the lease paragraph below): a foot that is *running the tool right now* holds
+no connection and is therefore not present, which is why
+[`invoke`](`src/boundary/routing.rs`) deliberately does not test presence
+either. A capture read that said *"the client is not connected"* would say it
+of every healthy in-flight call, which is worse than saying nothing — it is
+the same non-answer wearing an alarm.
+
+**The facts that would answer it are the slot's own, and they are two.** How
+long the slot has stood, and whether the invocation is **leased** — handed to a
+host and not yet re-queued — or sitting on the queue with nobody having asked
+for work since. Those separate *"nobody has picked this up in N seconds"* from
+*"a host took it N seconds ago and has not come back"*, which is the operator's
+actual question, and the mailbox holds both already. They are **fields gained
+on a shape in use**, so they wait for the next `PROTOCOL` bump rather than
+being smuggled in; and since bl-bca2 that bump is a four-repository act (§3),
+which is the reason this is written down here instead of landed.
+
+Until then the standing answer is the one the routing module already states:
+**the patience belongs to the caller**, who is the only party that knows how
+long its tool is worth waiting for, and a slot older than an hour is swept.
+
 **The mailbox is RAM, beside the presence refcount, and swept.** An invocation
 in flight is a fact about *this process for the seconds a tool takes*, not a
 fact about the world, so it is not a file (`src/registry/mailbox/slots.rs`, the
