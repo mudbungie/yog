@@ -15,7 +15,7 @@
 
 use super::{Context, args};
 use crate::boundary::config::ConfigFile;
-use crate::boundary::config::Read;
+use crate::boundary::config::{Read, Write};
 use crate::boundary::{Action, Gesture, Query};
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::model_pick::{LEVELS, Tuning};
@@ -66,7 +66,7 @@ pub(super) fn config(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
     if rest.trim().is_empty() {
         return Ok(Gesture::Ask(Query::Config(Read::File { file })));
     }
-    Ok(Gesture::Act(Action::ApplyConfig {
+    Ok(write(Write::Apply {
         file,
         text: args::required(&rest, verb, "the file's text")?,
     }))
@@ -93,7 +93,7 @@ pub(super) fn marks(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, St
     if !marks::lawful(&branch) {
         return Err(format!("/{verb}: {}", marks::REFUSAL));
     }
-    Ok(Gesture::Act(Action::SetMarks {
+    Ok(write(Write::Marks {
         workspace: args::workspace(ctx, verb)?,
         branch,
     }))
@@ -106,12 +106,23 @@ pub(super) fn model(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, St
             "/{verb}: usage: /model <role> <provider> <model-id>"
         ));
     };
-    Ok(Gesture::Act(Action::PickModel {
+    Ok(write(Write::Pick {
         workspace: args::workspace(ctx, verb)?,
         role: role.to_owned(),
         provider: provider.to_owned(),
         model: model.to_owned(),
     }))
+}
+
+/// **The §9.6 learning-loop pair** (bl-dd88), its own file at the budget on the
+/// seam the pair itself draws: everything here writes a config file or reads
+/// its bytes, and those two are about a *candidate* commit.
+pub(super) mod proposals;
+
+/// One §9 write, in the gesture that carries them all — the fold's one seam on
+/// this side (bl-dd88), so no reader below states the carrier twice.
+fn write(w: Write) -> Gesture {
+    Gesture::Act(Action::Config(w))
 }
 
 /// `/effort <role> <low|medium|high|off>` — the §9.4 reasoning level on the
@@ -126,7 +137,7 @@ pub(super) fn effort(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
         OFF => None,
         word => Some(crate::model_pick::Effort::parse(word).ok_or_else(|| usage(verb))?),
     };
-    Ok(Gesture::Act(Action::Tune(Tuning::Effort {
+    Ok(write(Write::Tune(Tuning::Effort {
         workspace: args::workspace(ctx, verb)?,
         role: role.to_owned(),
         level,
@@ -145,7 +156,7 @@ pub(super) fn priority(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture,
         OFF => false,
         _ => return Err(PRIORITY_USAGE.to_owned()),
     };
-    Ok(Gesture::Act(Action::Tune(Tuning::Priority {
+    Ok(write(Write::Tune(Tuning::Priority {
         workspace: args::workspace(ctx, verb)?,
         role: role.to_owned(),
         on,
@@ -241,3 +252,28 @@ fn word(rest: &str, verb: &str, what: &str) -> Result<(String, String), String> 
 
 #[cfg(test)]
 mod tests;
+
+/// Route one of the §9 family's verbs to its reader, or answer `None` for a
+/// word that is not the family's (bl-dd88). **The match is the table**: an
+/// allowlist beside it would be a second home for "which verbs are ours" and
+/// would drift from the router the day one is added — and an unreachable
+/// fallthrough arm is exactly the special case a missing reframe leaves behind.
+pub(super) fn verb(verb: &str, tail: &str, ctx: &Context) -> Option<Result<Gesture, String>> {
+    Some(match verb {
+        "config" => config(tail, ctx, verb),
+        "marks" => marks(tail, ctx, verb),
+        "model" => model(tail, ctx, verb),
+        // The §9.4 tuning pair (bl-23bd): the other two writers of the same
+        // role assignment, each its own verb because a toggle must not make the
+        // operator restate the pointer it is not changing.
+        "effort" => effort(tail, ctx, verb),
+        "priority" => priority(tail, ctx, verb),
+        // The §9.6 learning-loop pair (bl-dd88): the listing (plural, a read)
+        // and the settle (singular, an act). Two words rather than one verb
+        // with a mode, because a read and a destructive act must not be one
+        // typo apart.
+        "proposals" => proposals::proposals(tail, ctx, verb),
+        "proposal" => proposals::proposal(tail, ctx, verb),
+        _ => return None,
+    })
+}

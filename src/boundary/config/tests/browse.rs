@@ -14,6 +14,7 @@ use crate::boundary::Query;
 use crate::boundary::config::ConfigFile;
 use crate::boundary::config::Read;
 use crate::boundary::config::read::roster;
+use crate::boundary::reply::ConfigAnswer;
 use crate::boundary::reply::{ConfigView, Reply};
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::brazen::BzOutcome;
@@ -45,10 +46,10 @@ fn a_lineage_read_answers_the_bytes_at_its_tip() {
     // The fixture seeds `version` = "1\n" on the first config commit.
     assert_eq!(
         ask(&deps, &reading(lineage_file(&fx.path, "version"))),
-        Ok(Reply::Config(ConfigView {
+        Ok(Reply::Config(ConfigAnswer::File(ConfigView {
             text: "1\n".to_owned(),
             settings: Vec::new(),
-        }))
+        })))
     );
 }
 
@@ -72,7 +73,7 @@ fn the_browse_lists_every_lineage_with_its_own_files() {
     let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
     fx.commit_other("workflow.yaml", "events: {}\n");
     fx.orphan_config("island");
-    let Ok(Reply::Lineages(rows)) = ask(
+    let Ok(Reply::Config(ConfigAnswer::Lineages(rows))) = ask(
         &deps,
         &Query::Config(Read::Lineages {
             workspace: crate::naming::leaf(&(fx.path.clone())),

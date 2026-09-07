@@ -70,11 +70,12 @@ impl Action {
                 | crate::fan::Verb::Deliver { obligation, .. },
             ) => Some(obligation.project.clone()),
             Action::Prepare { payload, .. } => payload.project(),
-            // `SetMarks` named a project until the per-agent ruling re-keyed
-            // it to the agent (§16.3): it now repoints one agent's OWN space,
-            // which is a different clone bundle from the one the §3.5
-            // projection reads, so no board row can move because of it.
-            Action::SetMarks { .. }
+            // The whole §9 write family names no project: `marks` named one
+            // until the per-agent ruling re-keyed it to the agent (§16.3), and
+            // it now repoints one agent's OWN space — a different clone bundle
+            // from the one the §3.5 projection reads, so no board row can move
+            // because of it.
+            Action::Config(_)
             | Action::Message { .. }
             | Action::Stop { .. }
             | Action::Interrupt { .. }
@@ -95,15 +96,12 @@ impl Action {
             | Action::MarkSeen { .. }
             | Action::Pin { .. }
             | Action::ClearTrail
-            | Action::ApplyConfig { .. }
             | Action::Advertise { .. }
             | Action::Enroll(_)
             | Action::Route(_)
-            | Action::PickModel { .. }
             // A sign-in writes a credential into a wall, not a ref in a
             // project: nothing on any board moves (REMOTE §8.3).
-            | Action::Login { .. }
-            | Action::Tune(_) => None,
+            | Action::Login { .. } => None,
         }
     }
 }

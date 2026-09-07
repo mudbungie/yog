@@ -10,6 +10,7 @@
 
 use crate::boundary::answer::answer;
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Write;
 use crate::boundary::dispatch::{Deps, dispatch};
 use crate::boundary::reply::Reply;
 use crate::boundary::tests::snapshot;
@@ -24,6 +25,7 @@ use std::sync::Arc;
 mod browse;
 mod files;
 mod knobs;
+mod proposals;
 mod reads;
 /// The §9.5 typed half of a config read (bl-dc3f).
 mod settings;
@@ -133,8 +135,8 @@ pub(super) fn brazen_file() -> ConfigFile {
 }
 
 pub(super) fn applying(file: ConfigFile, text: &str) -> Action {
-    Action::ApplyConfig {
+    Action::Config(Write::Apply {
         file,
         text: text.to_owned(),
-    }
+    })
 }

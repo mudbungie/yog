@@ -9,6 +9,7 @@
 use super::knobs::{pick, workspace};
 use super::{deps_at, fire, quiet, script};
 use crate::boundary::Action;
+use crate::boundary::config::Write;
 use crate::boundary::reply::Reply;
 use crate::model_pick::{Effort, Tuning};
 use crate::test_support::TEMPLATE_PROVIDERS;
@@ -17,7 +18,7 @@ use std::path::Path;
 use tempfile::tempdir;
 
 fn tune(tuning: crate::model_pick::Tuning) -> Action {
-    Action::Tune(tuning)
+    Action::Config(Write::Tune(tuning))
 }
 
 /// bl-23bd. A tuning gesture is the pick's read → plan → commit, minus the

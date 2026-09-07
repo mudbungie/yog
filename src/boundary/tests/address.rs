@@ -11,6 +11,7 @@
 use super::super::{Action, Query};
 use crate::actions::verbs::Verb as BallVerb;
 use crate::boundary::config::Read;
+use crate::boundary::config::Write;
 use crate::fan::Verb;
 use crate::start::{Payload, Prepared};
 
@@ -122,29 +123,29 @@ fn every_workspace_bearing_action_answers_with_its_name() {
             workspace: WS.into(),
             agent: "c".into(),
         },
-        Action::SetMarks {
+        Action::Config(Write::Marks {
             workspace: WS.into(),
             branch: "balls/tasks".into(),
-        },
-        Action::PickModel {
+        }),
+        Action::Config(Write::Pick {
             workspace: WS.into(),
             role: "worker".into(),
             provider: "acme".into(),
             model: "m".into(),
-        },
+        }),
         // The §9.4 tuning pair (bl-23bd), both members: the carrier answers the
         // slot, so the table delegates and a member that forgot to name a
         // workspace could not compile rather than addressing nothing.
-        Action::Tune(crate::model_pick::Tuning::Effort {
+        Action::Config(Write::Tune(crate::model_pick::Tuning::Effort {
             workspace: WS.into(),
             role: "worker".into(),
             level: Some(crate::model_pick::Effort::Low),
-        }),
-        Action::Tune(crate::model_pick::Tuning::Priority {
+        })),
+        Action::Config(Write::Tune(crate::model_pick::Tuning::Priority {
             workspace: WS.into(),
             role: "worker".into(),
             on: true,
-        }),
+        })),
         Action::AnswerHold {
             workspace: WS.into(),
             agent: "c".into(),
@@ -196,10 +197,10 @@ fn the_actions_that_name_no_workspace_say_so() {
             handle: "at-0badcafe".into(),
             summary: "take it".into(),
         }),
-        Action::ApplyConfig {
+        Action::Config(Write::Apply {
             file: super::super::config::ConfigFile::Cadence,
             text: String::new(),
-        },
+        }),
         Action::Ack,
         Action::ClearTrail,
     ];

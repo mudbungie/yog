@@ -35,6 +35,14 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
     if let Some(query) = asks_help(verb, tail)? {
         return Ok(ask(query));
     }
+    // The §9 config family (bl-3f46, one row since bl-dd88): every one of its
+    // verbs is read beside its own writer, so the roster names the family once
+    // here. It answers `None` for a word that is not the family's, which is why
+    // there is no allowlist beside the router to drift from it — the match IS
+    // the table.
+    if let Some(gesture) = config::verb(verb, tail, ctx) {
+        return gesture;
+    }
     match verb {
         // The §8.2 litany family: the composer's own three.
         "message" => Ok(act(Action::Message {
@@ -120,16 +128,6 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // under which everything above a read waits for an answer. The
         // conversation is the seat's, so the verb is the whole line.
         "revoke" | "restore" => verbs::floor(verb, tail, ctx),
-        // The §9 config family (bl-3f46): each destination's own words, then
-        // the file's text verbatim — the grammar lives beside its writer.
-        "config" => config::config(tail, ctx, verb),
-        "marks" => config::marks(tail, ctx, verb),
-        "model" => config::model(tail, ctx, verb),
-        // The §9.4 tuning pair (bl-23bd): the other two writers of the same
-        // role assignment, each its own verb because a toggle must not make
-        // the operator restate the pointer it is not changing.
-        "effort" => config::effort(tail, ctx, verb),
-        "priority" => config::priority(tail, ctx, verb),
         // The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall is the seat's own
         // workspace, exactly as `/model`'s is, and the one word is the provider
         // row — the thing no seat's context can supply. No flow flag, ever: the

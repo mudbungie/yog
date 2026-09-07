@@ -151,23 +151,34 @@ pub fn encode(reply: &Reply) -> Value {
         // Spelled beside its own rows (bl-1015), the `board` and `queue`
         // shape: one file learns how a search answer is said.
         Reply::Search(found) => super::search::reply(found),
-        // The §9 config family's answers, one arm since bl-2410: the carrier
-        // its questions were folded onto (bl-719a) has a matching set of
-        // replies, and the roster names the family once on this side too.
-        // The raw bytes and the same bytes read through the file's schema
-        // (§9.5, bl-dc3f): one answer, both views, the file the single fact.
-        Reply::Config(view) => super::config_view::config(view),
-        Reply::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
-        Reply::Roles(rows) => rows_reply("roles", rows.iter().map(role_row)),
-        Reply::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),
-        // The one listing whose row is a bare id: a model has no other fact
-        // yog knows — brazen publishes an id and a default flag, and which one
-        // is default is a `providers.yaml` question, not a roster one (§9.4).
-        Reply::Models(ids) => rows_reply("models", ids.iter().map(|id| json!(id))),
+        // The §9 config family's answers, one arm since bl-2410 and one *type*
+        // since bl-dd88: the carrier its questions were folded onto (bl-719a)
+        // has a matching set of replies, and the roster names the family once
+        // on this side too.
+        Reply::Config(answer) => config_answer(answer),
         // The tool set rides in its ONE spelling (`registry::tools::encode`),
         // the same bytes the client's own document holds (REMOTE §5, bl-4e08).
         Reply::Clients(rows) => rows_reply("clients", rows.iter().map(client_row)),
         Reply::Doctor(rows) => rows_reply("doctor", rows.iter().map(doctor_row)),
+    }
+}
+
+/// The §9 family's five answers, each under the `kind` it has always had — the
+/// fold is in the carrier and never in the surface, so no protocol version
+/// moves and the corpus regenerates byte-identical.
+///
+/// `models` is the one listing whose row is a bare id: a model has no other
+/// fact yog knows — brazen publishes an id and a default flag, and which one is
+/// default is a `providers.yaml` question, not a roster one (§9.4).
+fn config_answer(answer: &super::ConfigAnswer) -> Value {
+    use super::ConfigAnswer as A;
+    match answer {
+        A::File(view) => super::config_view::config(view),
+        A::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
+        A::Roles(rows) => rows_reply("roles", rows.iter().map(role_row)),
+        A::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),
+        A::Models(ids) => rows_reply("models", ids.iter().map(|id| json!(id))),
+        A::Proposals(view) => crate::proposals::wire::reply(view),
     }
 }
 

@@ -5329,6 +5329,52 @@ ceiling` trail row (§9.8); `reply/board`'s `ceiling` verdict, still the same
 `Ceiling::verdict` text; the figure's encoder, still one function. And the §6
 table is unchanged: `ui.json` still holds exactly `seen`, `pinned`,
 `ceiling`, `prices` — the door reaches two keys that were always there.
+### 9.22 The learning loop is reachable (bl-dd88)
+
+**Two new ops and one new reply kind, and `PROTOCOL` does not move** — §3's
+rule, applied: a new `Query`, a new `Action` and a new reply kind are all
+refused in band by name if a peer has not heard of them, which is the boundary
+correcting itself rather than two protocols meeting. What clients owe is a
+corpus re-vendor to gain the shapes, not a re-pin to keep the ones they have.
+
+litany's reviewer stages a config patch on `proposal/<reviewer-id>` and the
+learning loop's whole design turns on a person being able to read it and veto
+it. Nothing on this wire could: `lineages` enumerates `config/*` only, and
+`governing` answers the commit a conversation resolves, never a candidate. So
+the veto lived at `litany proposal` on the engine's own box — an `ssh` and a
+container `exec` on a server install, which is the thing this boundary exists to
+make unnecessary.
+
+- **`request/proposals`** — `{"op": "proposals", "workspace": "…"}`, with an
+  optional `"id"`. The listing, and — when `id` names one — that proposal
+  **whole** beside it. One op at two depths, `files`' own shape: a seat that
+  names an id has already been answered the row it names, so a second ask would
+  be a second derivation of one subject. The id is **absent** rather than null
+  for the bare listing, because absence is the fact.
+- **`reply/proposals`** — `rows` plus an optional `whole`. A row is
+  `{id, lineages, parent, fresh, diffstat, subject}`. **`fresh` crosses even
+  though a seat could infer it from an empty `lineages`**: that inference is a
+  rule, and the wire states a derivation so a seat need not own one (§9.4) —
+  only the engine can be sure the two were read in one pass, which is what makes
+  the pair honest. `whole` is absent, never null, for the bare listing.
+- **`request/proposal`** — `{"op": "proposal", "workspace": "…", "id": "…",
+  "verdict": "accept"|"reject"}`. The settle. **Both the id and the verdict are
+  required**: a settle that took "the only one" would do something different the
+  day a second proposal was staged, and a verdict that defaulted would make the
+  destructive half the easy one. The verdict is a **word** and not a boolean —
+  accept and reject are two acts, not two values of one — and it is read back
+  strictly, the closed-vocabulary discipline `effort` already takes. Its answer
+  is the ordinary `reply/outcome` every §8.2 verb earns, because the act is a
+  workspace-bound `litany proposal`: the compare-and-swap that fast-forwards a
+  lineage stays in the one place that owns it, and a stale proposal, an
+  ambiguous one and an unknown id come back in litany's own words, naming the
+  tip, the lineages and the pool respectively.
+
+Both ops are members of the §9 config family — a proposal is a candidate config
+commit, which is the same subject `lineages` browses and `config` writes. yog
+DESIGN §9.6 carries the rest: why the read is derived engine-side and the settle
+is not, and why freshness is read at ask time and stored nowhere.
+
 
 ## 10. Open questions (living)
 

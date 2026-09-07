@@ -95,3 +95,50 @@ pub(crate) fn merge_base(repo: &Path, a: &str, b: &str) -> Result<Option<String>
 pub(crate) fn is_ancestor(repo: &Path, a: &str, b: &str) -> Result<bool, GitTreeError> {
     Ok(git_optional(repo, &["merge-base", "--is-ancestor", a, b])?.is_some())
 }
+
+/// Staged proposals: every `refs/heads/proposal/*` ref as `<id> <oid>` lines
+/// (litany ARCH §2.3's third ref namespace, `docs/DESIGN_LEARNING_LOOP.md` §3).
+/// `%(refname:short)` yields `proposal/<id>`; the caller strips the prefix, as
+/// it does for [`for_each_ref_config`].
+///
+/// **The namespace IS the registry** — there is nothing else to consult, which
+/// is why a listing is a `for-each-ref` and not a document read.
+pub(crate) fn for_each_ref_proposals(repo: &Path) -> Result<Vec<u8>, GitTreeError> {
+    git(
+        repo,
+        &[
+            "for-each-ref",
+            "--format=%(refname:short) %(objectname)",
+            "refs/heads/proposal/",
+        ],
+    )
+}
+
+/// One committish resolved to a full oid — `git rev-parse <rev>^{commit}`, the
+/// spelling that refuses a ref naming anything but a commit.
+pub(crate) fn rev_commit(repo: &Path, rev: &str) -> Result<String, GitTreeError> {
+    let out = git(
+        repo,
+        &["rev-parse", "--verify", &format!("{rev}^{{commit}}")],
+    )?;
+    Ok(String::from_utf8_lossy(&out).trim().to_owned())
+}
+
+/// One commit's subject line (`git log -1 --format=%s`).
+pub(crate) fn subject(repo: &Path, rev: &str) -> Result<String, GitTreeError> {
+    let out = git(repo, &["log", "-1", "--format=%s", rev])?;
+    Ok(String::from_utf8_lossy(&out).trim().to_owned())
+}
+
+/// How big a patch is, in git's own words (`git diff --shortstat a b`).
+pub(crate) fn shortstat(repo: &Path, a: &str, b: &str) -> Result<String, GitTreeError> {
+    let out = git(repo, &["diff", "--shortstat", a, b])?;
+    Ok(String::from_utf8_lossy(&out).trim().to_owned())
+}
+
+/// One commit **whole** — message and diff, `git show`. The two things §3 of
+/// litany's learning-loop design says an operator reads before settling.
+pub(crate) fn show_commit(repo: &Path, rev: &str) -> Result<String, GitTreeError> {
+    let out = git(repo, &["show", rev])?;
+    Ok(String::from_utf8_lossy(&out).into_owned())
+}

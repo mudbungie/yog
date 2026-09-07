@@ -94,3 +94,44 @@ fn a_sign_in_with_no_provider_named_refuses_with_its_usage() {
         );
     }
 }
+
+/// **The §9.6 learning-loop pair, both depths and both verdicts** (bl-dd88).
+/// The read at its two depths, because naming an id and naming none are two
+/// questions; the settle at both, because the verdict is the whole of what the
+/// line says and a table that only spelled accept would prove only that.
+#[test]
+fn the_learning_loops_pair_round_trips() {
+    for id in [None, Some("20260906T090000Z-r001".to_owned())] {
+        rt(Gesture::Ask(Query::Config(Read::Proposals {
+            workspace: "ws".to_owned(),
+            id,
+        })));
+    }
+    for verdict in [
+        crate::proposals::Verdict::Accept,
+        crate::proposals::Verdict::Reject,
+    ] {
+        rt(Gesture::Act(crate::boundary::Action::Config(
+            crate::boundary::config::Write::Proposal(crate::proposals::Settle {
+                workspace: "ws".to_owned(),
+                id: "20260906T090000Z-r001".to_owned(),
+                verdict,
+            }),
+        )));
+    }
+}
+
+/// Both refusals of the pair, in the words the line gives them: the read takes
+/// at most one id, and the settle takes exactly an id and a verdict — a
+/// mistyped verdict is refused rather than guessed at, because the destructive
+/// half must never be reached by a typo.
+#[test]
+fn the_pairs_usages_refuse_rather_than_guess() {
+    use crate::boundary::line::parse;
+    let ctx = crate::boundary::line::tests::ctx();
+    assert!(parse("/proposals a b", &ctx).is_err());
+    assert!(parse("/proposal", &ctx).is_err());
+    assert!(parse("/proposal only-an-id", &ctx).is_err());
+    assert!(parse("/proposal an-id maybe", &ctx).is_err());
+    assert!(parse("/proposal an-id accept extra", &ctx).is_err());
+}

@@ -621,6 +621,24 @@
       ],
       "since": 1
     },
+    "reply/proposals": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/diffstat:string",
+        "/rows/[]/fresh:bool",
+        "/rows/[]/id:string",
+        "/rows/[]/lineages/[]:string",
+        "/rows/[]/lineages:array",
+        "/rows/[]/parent:string",
+        "/rows/[]/subject:string",
+        "/rows/[]:object",
+        "/rows:array",
+        "/whole:string",
+        ":object"
+      ],
+      "since": 16
+    },
     "reply/providers": {
       "signature": [
         "/kind:string",
@@ -1493,6 +1511,25 @@
         ":object"
       ],
       "since": 1
+    },
+    "request/proposal": {
+      "signature": [
+        "/id:string",
+        "/op:string",
+        "/verdict:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 16
+    },
+    "request/proposals": {
+      "signature": [
+        "/id:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 16
     },
     "request/providers": {
       "signature": [

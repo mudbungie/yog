@@ -4,6 +4,7 @@
 //! lineage browse and the §9.4 model roster.
 
 use super::super::*;
+use crate::boundary::reply::ConfigAnswer;
 use crate::boundary::reply::ConfigView;
 use crate::config_edit::branch::{ConfigBranch, Lineage};
 use crate::config_edit::brazen::ProviderRowView;
@@ -30,26 +31,26 @@ fn the_config_family_says_what_landed_and_what_the_knob_now_reads() {
 
 #[test]
 fn a_config_text_reply_carries_the_bytes_verbatim() {
-    let empty = encode(&Reply::Config(ConfigView {
+    let empty = encode(&Reply::Config(ConfigAnswer::File(ConfigView {
         text: String::new(),
         settings: Vec::new(),
-    }));
+    })));
     assert_eq!(empty["ok"], true);
     assert_eq!(empty["kind"], "config");
     assert_eq!(empty["text"], "");
     let text = "models:\n  m-1:\n    provider: acme\n";
     assert_eq!(
-        encode(&Reply::Config(ConfigView {
+        encode(&Reply::Config(ConfigAnswer::File(ConfigView {
             text: text.to_owned(),
             settings: Vec::new(),
-        }))["text"],
+        })))["text"],
         text
     );
 }
 
 #[test]
 fn a_providers_reply_names_each_rows_credential_fact_and_login_block() {
-    let value = encode(&Reply::Providers(vec![
+    let value = encode(&Reply::Config(ConfigAnswer::Providers(vec![
         ProviderRowView {
             name: "acme".to_owned(),
             fact: "auth oauth2 · signed in".to_owned(),
@@ -64,7 +65,7 @@ fn a_providers_reply_names_each_rows_credential_fact_and_login_block() {
             effort: true,
             priority: false,
         },
-    ]));
+    ])));
     assert_eq!(value["kind"], "providers");
     let rows = value["rows"].as_array().expect("rows");
     assert_eq!(rows[0]["name"], "acme");
@@ -82,7 +83,7 @@ fn a_providers_reply_names_each_rows_credential_fact_and_login_block() {
 /// tip holds, which are the paths a read may ask for.
 #[test]
 fn a_lineages_reply_carries_each_tip_and_the_files_it_holds() {
-    let value = encode(&Reply::Lineages(vec![Lineage {
+    let value = encode(&Reply::Config(ConfigAnswer::Lineages(vec![Lineage {
         branch: ConfigBranch {
             name: "default".to_owned(),
             tip_oid: "0123456789abcdef0123456789abcdef01234567".to_owned(),
@@ -90,7 +91,7 @@ fn a_lineages_reply_carries_each_tip_and_the_files_it_holds() {
             tip_timestamp_unix: 1_700_000_000,
         },
         files: vec!["providers.yaml".to_owned(), "version".to_owned()],
-    }]));
+    }])));
     assert_eq!(value["kind"], "lineages");
     let rows = value["rows"].as_array().expect("rows");
     assert_eq!(rows[0]["name"], "default");
@@ -104,7 +105,10 @@ fn a_lineages_reply_carries_each_tip_and_the_files_it_holds() {
 /// no other fact yog knows (§9.4).
 #[test]
 fn a_models_reply_is_the_ids_in_the_order_the_provider_listed_them() {
-    let value = encode(&Reply::Models(vec!["m-9".to_owned(), "m-1".to_owned()]));
+    let value = encode(&Reply::Config(ConfigAnswer::Models(vec![
+        "m-9".to_owned(),
+        "m-1".to_owned(),
+    ])));
     assert_eq!(value["ok"], true);
     assert_eq!(value["kind"], "models");
     assert_eq!(value["rows"][0], "m-9");

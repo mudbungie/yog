@@ -84,7 +84,8 @@ pub use marks::AgentMark;
 // them of a *project* repo — the base two ends departed from, and whether a
 // source has incorporated its target. One spelling of one git command.
 pub(crate) use cmd::browse::{
-    diff_names, for_each_ref_config, is_ancestor, ls_tree, ls_tree_long, merge_base, show_file,
+    diff_names, for_each_ref_config, for_each_ref_proposals, is_ancestor, ls_tree, ls_tree_long,
+    merge_base, rev_commit, shortstat, show_commit, show_file, subject,
 };
 pub use probe::Probe;
 pub use probe_stack::ProbeStack;

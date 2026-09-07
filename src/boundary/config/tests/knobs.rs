@@ -5,6 +5,7 @@
 use super::{ACME, deps_at, fire, quiet, script, seed_wall};
 use crate::boundary::Action;
 use crate::boundary::config::Read;
+use crate::boundary::config::Write;
 use crate::boundary::reply::Reply;
 use crate::git_tree::tests::fixture::Fixture;
 use crate::test_support::TEMPLATE_PROVIDERS;
@@ -20,10 +21,10 @@ fn set_marks_answers_with_the_branch_it_read_back_and_logs_the_write() {
     let deps = super::seeing(&deps, &[ws.as_path()]);
     let reply = fire(
         &deps,
-        &Action::SetMarks {
+        &Action::Config(Write::Marks {
             workspace: crate::naming::leaf(&ws),
             branch: "balls/agents/home".to_owned(),
-        },
+        }),
     );
     assert_eq!(
         reply,
@@ -67,10 +68,10 @@ fn set_marks_refuses_an_unlawful_branch_rather_than_writing_one() {
     let deps = super::seeing(&quiet(root.path()), &[home.as_path()]);
     let err = fire(
         &deps,
-        &Action::SetMarks {
+        &Action::Config(Write::Marks {
             workspace: crate::naming::leaf(&home),
             branch: "balls/config".to_owned(),
-        },
+        }),
     )
     .unwrap_err();
     assert!(err.contains("landing branch"), "{err}");
@@ -85,12 +86,12 @@ pub(super) fn workspace() -> Fixture {
 }
 
 pub(super) fn pick(role: &str, provider: &str, model: &str, ws: &Path) -> Action {
-    Action::PickModel {
+    Action::Config(Write::Pick {
         workspace: crate::naming::leaf(ws),
         role: role.to_owned(),
         provider: provider.to_owned(),
         model: model.to_owned(),
-    }
+    })
 }
 
 /// bl-d9cb. The pick is ONE write: `providers.yaml`, staged for litany's own

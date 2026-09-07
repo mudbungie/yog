@@ -69,17 +69,9 @@ fn spell_action(action: &Action) -> String {
             true => "/revoke".to_owned(),
             false => "/restore".to_owned(),
         },
-        Action::ApplyConfig { file, text } => {
-            format!("/config {} {text}", super::config::target_words(file))
-        }
-        Action::SetMarks { branch, .. } => format!("/marks {branch}"),
-        Action::PickModel {
-            role,
-            provider,
-            model,
-            ..
-        } => format!("/model {role} {provider} {model}"),
-        Action::Tune(tuning) => spell_tuning(tuning),
+        // The §9 write family, one arm since bl-dd88 and five lines one level
+        // down — the read family's own shape, said on the acting side.
+        Action::Config(write) => spell_write(write),
         // The §8.3 sign-in: the wall is the seat's, as `/model`'s is, and the
         // row is the one word the context cannot supply.
         Action::Login { provider, .. } => {
@@ -193,6 +185,30 @@ fn spell_ball(verb: &BallVerb) -> String {
 
 /// The §9.4 tuning pair (bl-23bd) — each member as its own line, `off` for
 /// both absences, which is exactly the word the reader takes back.
+/// The §9 write family's five lines, off the one carrier the roster holds
+/// (bl-dd88) — here rather than as five rows of the match above, for the reason
+/// `spell_config` is one function: a family whose grammar is one subject spells
+/// itself in one place.
+fn spell_write(write: &crate::boundary::config::Write) -> String {
+    use crate::boundary::config::Write as W;
+    match write {
+        W::Apply { file, text } => {
+            format!("/config {} {text}", super::config::target_words(file))
+        }
+        W::Marks { branch, .. } => format!("/marks {branch}"),
+        W::Pick {
+            role,
+            provider,
+            model,
+            ..
+        } => format!("/model {role} {provider} {model}"),
+        W::Tune(tuning) => spell_tuning(tuning),
+        W::Proposal(settle) => {
+            format!("/proposal {} {}", settle.id, settle.verdict.word())
+        }
+    }
+}
+
 fn spell_tuning(tuning: &crate::model_pick::Tuning) -> String {
     use crate::model_pick::Tuning;
     match tuning {

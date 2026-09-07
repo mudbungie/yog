@@ -123,3 +123,51 @@ pub(crate) fn seed_agent_branch(workspace: &Path, agent: &str, role: Option<&str
         &subject,
     ]);
 }
+
+/// Stage a **proposal** on `proposal/<id>` (litany ARCH §2.3's third ref
+/// namespace, `docs/DESIGN_LEARNING_LOOP.md` §3): one commit parented on
+/// `parent`, carrying `files` and the reviewer's own subject. `parent` is a
+/// committish — `config/default` for the fresh case, an older commit for the
+/// stale one, which is the whole of what freshness reads.
+pub(crate) fn seed_proposal(
+    workspace: &Path,
+    id: &str,
+    parent: &str,
+    subject: &str,
+    files: &[(&str, &str)],
+) {
+    let repo = workspace.join("repo.git");
+    let tree = workspace.join(".proposal").join(id);
+    let (repo_s, tree_s) = (repo.display().to_string(), tree.display().to_string());
+    let branch = format!("proposal/{id}");
+    let run = |args: &[&str]| {
+        let status = crate::git_env::status(crate::git_env::git().args(args)).unwrap();
+        assert!(status.success(), "git {args:?}");
+    };
+    run(&[
+        "-C", &repo_s, "worktree", "add", "-q", "-b", &branch, &tree_s, parent,
+    ]);
+    for (name, body) in files {
+        let path = tree.join(name);
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir).unwrap();
+        }
+        std::fs::write(path, body).unwrap();
+    }
+    run(&["-C", &tree_s, "add", "-A"]);
+    run(&[
+        "-C",
+        &tree_s,
+        "-c",
+        "user.email=t@t.local",
+        "-c",
+        "user.name=T",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "-m",
+        subject,
+    ]);
+    run(&["-C", &repo_s, "worktree", "remove", "--force", &tree_s]);
+}

@@ -4,12 +4,16 @@
 //! proves only that the easy case survives.
 
 use super::super::super::super::Reply;
+use crate::boundary::reply::ConfigAnswer;
 
 /// The §11 altitude-0 answers — the enumeration with its §7.2 notes, and one
 /// workspace's ball listing — cut off this file at §12's per-file budget
 /// (bl-b4b5) on the seam the surface itself draws: those two are what the
 /// chrome asks, and everything left here is what a pane asks.
 mod chrome;
+/// **What a §9 config read answers** (bl-dd88) — one carrier, five members, cut
+/// off this file at the budget on the seam that carrier already draws.
+mod config;
 /// The conversation rows, the widest row type here.
 mod convs;
 /// The §4.2 trail, whose rows only mean anything together (bl-4d81).
@@ -17,7 +21,6 @@ mod trail;
 use super::board::board;
 use crate::board::Board;
 use crate::config_edit::branch::{ConfigBranch, Lineage};
-use crate::config_edit::brazen::ProviderRowView;
 use crate::git_tree::AgentState;
 use crate::projects::join::{JoinRow, JoinState};
 use crate::search::{Address, Field, Found, Hit};
@@ -144,52 +147,7 @@ pub(super) fn listings() -> Vec<Reply> {
         Reply::Search(found()),
         // A search that matched nothing still knows its own question.
         Reply::Search(Found::default()),
-        // The §9.4 role assignments (bl-2410): a role tuned both ways beside
-        // one tuned neither, so `effort`'s two spellings and `priority`'s two
-        // both cross. A level yog would never WRITE rides here too, because
-        // this answer reports the file rather than asserting a vocabulary.
-        Reply::Roles(vec![
-            crate::model_pick::RoleModel {
-                role: "worker".into(),
-                provider: "anthropic".into(),
-                model: "claude-sonnet-5".into(),
-                effort: Some("high".into()),
-                priority: true,
-            },
-            crate::model_pick::RoleModel {
-                role: "compactor".into(),
-                provider: "codex".into(),
-                model: "gpt-5.4-mini".into(),
-                effort: None,
-                priority: false,
-            },
-            crate::model_pick::RoleModel {
-                role: "critic".into(),
-                provider: "codex".into(),
-                model: "gpt-5.4".into(),
-                effort: Some("extreme".into()),
-                priority: false,
-            },
-        ]),
-        Reply::Providers(vec![
-            ProviderRowView {
-                name: "anthropic".into(),
-                fact: "credential present".into(),
-                blocked: None,
-                effort: true,
-                priority: true,
-            },
-            // The other arm of both tuning booleans, so neither is only ever
-            // spelled one way across the surface (bl-23bd).
-            ProviderRowView {
-                name: "openai".into(),
-                fact: "no credential".into(),
-                blocked: Some("no login flow".into()),
-                effort: false,
-                priority: false,
-            },
-        ]),
-        Reply::Lineages(vec![Lineage {
+        Reply::Config(ConfigAnswer::Lineages(vec![Lineage {
             branch: ConfigBranch {
                 name: "main".into(),
                 tip_oid: "abcdef1234".into(),
@@ -197,9 +155,10 @@ pub(super) fn listings() -> Vec<Reply> {
                 tip_timestamp_unix: 1_700_000_000,
             },
             files: vec!["workflow.yaml".into()],
-        }]),
-        Reply::Models(vec!["opus".into(), "sonnet".into()]),
+        }])),
+        Reply::Config(ConfigAnswer::Models(vec!["opus".into(), "sonnet".into()])),
     ]);
+    out.extend(config::answers());
     out.extend(routing());
     out
 }

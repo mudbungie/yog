@@ -20,6 +20,7 @@ mod resolve;
 use super::{Action, Query};
 use crate::actions::verbs::Verb as BallVerb;
 use crate::boundary::config::Read;
+use crate::boundary::config::Write;
 
 /// The workspace name every fixture gesture here carries.
 const WS: &str = "alba";
@@ -110,16 +111,16 @@ fn the_actions_that_name_no_conversation_say_so() {
             workspace: WS.into(),
             typed: WS.into(),
         },
-        Action::SetMarks {
+        Action::Config(Write::Marks {
             workspace: WS.into(),
             branch: "balls/tasks".into(),
-        },
-        Action::PickModel {
+        }),
+        Action::Config(Write::Pick {
             workspace: WS.into(),
             role: "worker".into(),
             provider: "acme".into(),
             model: "m".into(),
-        },
+        }),
         Action::Ball(BallVerb::Close {
             project: "p".into(),
             id: "bl-1".into(),
@@ -135,10 +136,10 @@ fn the_actions_that_name_no_conversation_say_so() {
         Action::Fleet(crate::fleet::Verb::Disarm {
             workspace: WS.into(),
         }),
-        Action::ApplyConfig {
+        Action::Config(Write::Apply {
             file: crate::boundary::config::ConfigFile::Cadence,
             text: String::new(),
-        },
+        }),
         Action::Ack,
         Action::ClearTrail,
     ];

@@ -5,9 +5,11 @@
 use crate::boundary::codec::{decode, encode};
 use crate::boundary::config::ConfigFile;
 use crate::boundary::config::Read;
+use crate::boundary::config::Write;
 use crate::boundary::{Action, Gesture, Query};
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::model_pick::{Effort, Tuning};
+use crate::proposals::{Settle, Verdict};
 use serde_json::json;
 
 fn rt(gesture: Gesture) {
@@ -16,12 +18,12 @@ fn rt(gesture: Gesture) {
 }
 
 fn applying(file: ConfigFile) -> Gesture {
-    Gesture::Act(Action::ApplyConfig {
+    Gesture::Act(Action::Config(Write::Apply {
         file,
         // Newlines and indentation ride through untouched — a config file's
         // whitespace is the file.
         text: "models:\n  gpt-5.4:\n    provider: codex\n".to_owned(),
-    })
+    }))
 }
 
 /// The brazen destination and the provider table, each naming their sphere
@@ -62,18 +64,20 @@ pub(crate) fn surface() -> Vec<Gesture> {
         Some(Effort::High),
         None,
     ] {
-        out.push(Gesture::Act(Action::Tune(Tuning::Effort {
+        out.push(Gesture::Act(Action::Config(Write::Tune(Tuning::Effort {
             workspace: "ws".to_owned(),
             role: "worker".to_owned(),
             level,
-        })));
+        }))));
     }
     for on in [true, false] {
-        out.push(Gesture::Act(Action::Tune(Tuning::Priority {
-            workspace: "ws".to_owned(),
-            role: "compactor".to_owned(),
-            on,
-        })));
+        out.push(Gesture::Act(Action::Config(Write::Tune(
+            Tuning::Priority {
+                workspace: "ws".to_owned(),
+                role: "compactor".to_owned(),
+                on,
+            },
+        ))));
     }
     for file in [
         brazen(),
@@ -91,17 +95,17 @@ pub(crate) fn surface() -> Vec<Gesture> {
         out.push(applying(file));
     }
     for branch in ["balls/tasks", "balls/agents/corp"] {
-        out.push(Gesture::Act(Action::SetMarks {
+        out.push(Gesture::Act(Action::Config(Write::Marks {
             workspace: "ws".to_owned(),
             branch: branch.to_owned(),
-        }));
+        })));
     }
-    out.push(Gesture::Act(Action::PickModel {
+    out.push(Gesture::Act(Action::Config(Write::Pick {
         workspace: "ws".to_owned(),
         role: "worker".to_owned(),
         provider: "codex".to_owned(),
         model: "gpt-5.4".to_owned(),
-    }));
+    })));
     for file in [
         brazen(),
         ConfigFile::LitanyModels,
@@ -119,6 +123,24 @@ pub(crate) fn surface() -> Vec<Gesture> {
     out.push(Gesture::Ask(Query::Config(Read::Roles {
         workspace: "ws".to_owned(),
     })));
+    // The §9.6 pair (bl-dd88): both settlings, because the verdict is the whole
+    // of what one envelope says and a table that only ever spelled accept would
+    // prove only that; and both depths of the read, because naming an id and
+    // naming none are two questions and the id is absent rather than null in
+    // the second.
+    for verdict in [Verdict::Accept, Verdict::Reject] {
+        out.push(Gesture::Act(Action::Config(Write::Proposal(Settle {
+            workspace: "ws".to_owned(),
+            id: "20260906T090000Z-r001".to_owned(),
+            verdict,
+        }))));
+    }
+    for id in [None, Some("20260906T090000Z-r001".to_owned())] {
+        out.push(Gesture::Ask(Query::Config(Read::Proposals {
+            workspace: "ws".to_owned(),
+            id,
+        })));
+    }
     out
 }
 
@@ -132,10 +154,10 @@ fn every_config_gesture_round_trips() {
 #[test]
 fn the_config_envelope_names_its_target_and_carries_the_text_whole() {
     let text = "[providers.codex]\nauth = \"none\"\n";
-    let encoded = encode(&Gesture::Act(Action::ApplyConfig {
+    let encoded = encode(&Gesture::Act(Action::Config(Write::Apply {
         file: brazen(),
         text: text.to_owned(),
-    }));
+    })));
     assert_eq!(encoded["op"], "config");
     assert_eq!(encoded["target"]["file"], "brazen");
     assert_eq!(encoded["text"], text);
@@ -174,10 +196,10 @@ fn a_field_left_out_reads_instead_of_writing() {
 
 #[test]
 fn a_marks_envelope_names_the_workspace_and_the_branch() {
-    let encoded = encode(&Gesture::Act(Action::SetMarks {
+    let encoded = encode(&Gesture::Act(Action::Config(Write::Marks {
         workspace: "ws".to_owned(),
         branch: "balls/agents/corp".to_owned(),
-    }));
+    })));
     assert_eq!(encoded["op"], "marks");
     assert_eq!(encoded["workspace"], "ws");
     assert_eq!(encoded["branch"], "balls/agents/corp");

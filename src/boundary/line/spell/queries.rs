@@ -16,7 +16,7 @@ use crate::boundary::config::Read;
 /// (bl-719a). Each still spells as its own slash verb — the fold is in the
 /// carrier, never in the surface.
 ///
-/// Four of the five elide their workspace, which rides the seat's own context
+/// Five of the six elide their workspace, which rides the seat's own context
 /// (`--ws`) exactly as `/marks` and `/conversations` do: a line states its
 /// targets through the context flags, never twice. What a line does state is
 /// the thing the context cannot supply — a destination, or a provider row.
@@ -31,6 +31,10 @@ fn spell_config(read: &Read) -> String {
         Read::Roles { .. } => "/roles".to_owned(),
         Read::Lineages { .. } => "/lineages".to_owned(),
         Read::Models { provider, .. } => format!("/models {provider}"),
+        Read::Proposals { id, .. } => match id {
+            Some(id) => format!("/proposals {id}"),
+            None => "/proposals".to_owned(),
+        },
     }
 }
 

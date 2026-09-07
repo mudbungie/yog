@@ -198,7 +198,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         }
         // The §9 config family's reads (§8.5, bl-0164): asked of the world at
         // the moment they are asked, exactly as the writes beside them are.
-        // One arm since bl-719a, five members one level down: the §9.3 browse
+        // One arm since bl-719a, six members one level down: the §9.3 browse
         // and the §9.4 roster are on the same terms as the three beside them —
         // asked of the world, this workspace's git and this wall's brazen, at
         // the moment they are asked, and answered straight through because
@@ -211,6 +211,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
                 config::Read::Lineages { .. } => config::lineages(ws),
                 config::Read::Models { provider, .. } => config::models(deps, ws, provider),
                 config::Read::Roles { .. } => Ok(config::roles(ws)),
+                config::Read::Proposals { id, .. } => config::proposals(ws, id.as_deref()),
             };
         }
         // REMOTE §5's roster (bl-4e08): the §4.1 registration listing, the

@@ -69,6 +69,8 @@ const MESSAGE: &str = "message";
 const STOP: &str = "stop";
 const SCAN: &str = "scan";
 const RETARGET: &str = "retarget";
+/// The §9.6 settle verb (bl-dd88) — the operator half of the learning loop.
+const PROPOSAL: &str = "proposal";
 
 /// `litany message <ws> <agent> <content>` — the resume gesture (§8.2, ARCH
 /// §2.9: no resume verb exists; the deposit restarts a driver). The revived
@@ -176,6 +178,36 @@ pub fn retarget(litany: &Bound, state_root: &Path, ts: &str, agent: &str) -> io:
         litany.workspace(),
         &[RETARGET, &ws_s, agent],
         Origin::Conversation,
+    )
+}
+
+/// `litany proposal <ws> <id> --accept|--reject` — settle one staged proposal
+/// (§9.6, bl-dd88). The learning loop's veto, and the only §9 write yog does
+/// not perform itself: accepting is a compare-and-swap fast-forward of a config
+/// lineage, whose expected old value is the freshness the listing showed, so
+/// re-implementing it here would be a second home for a rule whose failure mode
+/// is a lost race. Piped, not detached, for `retarget`'s reason exactly — a
+/// stale proposal, an ambiguous one and an unknown id each refuse in litany's
+/// own words, which name the tip, the lineages and the pool respectively, and
+/// those sentences are the whole product an operator acts on.
+///
+/// Bound like every workspace verb, though it launches nothing: "which verbs
+/// may skip the wall" is the per-verb decision [`bound`] exists to abolish.
+pub fn proposal(
+    litany: &Bound,
+    state_root: &Path,
+    ts: &str,
+    id: &str,
+    flag: &str,
+) -> io::Result<Outcome> {
+    let ws_s = litany.workspace_arg();
+    run_logged(
+        litany.cli(),
+        state_root,
+        ts,
+        litany.workspace(),
+        &[PROPOSAL, &ws_s, id, flag],
+        Origin::World,
     )
 }
 

@@ -38,7 +38,7 @@ use crate::world::marks;
 use std::path::Path;
 
 use super::dispatch::Deps;
-use super::reply::Reply;
+use super::reply::{ConfigAnswer, Reply};
 
 /// The destination datum and its addressing — split at §12's cap (bl-f5f6).
 mod file;
@@ -48,6 +48,7 @@ pub use read::Read;
 pub(crate) mod read;
 pub(crate) mod write;
 pub(super) use read::file;
+pub use write::Write;
 use write::{cadence_path, commit};
 
 /// Run one config apply (§9). The reply says what landed: a file destination
@@ -86,17 +87,31 @@ pub(super) fn apply(
     }
 }
 
+/// **The §9.6 staged proposals** (bl-dd88): every `proposal/*` a reviewer left,
+/// with the lineage it is parented on and whether that parent is still the
+/// head — and, when `id` names one, that proposal whole. The derivation is
+/// [`proposals`](crate::proposals)'; this is the family's arm.
+pub(super) fn proposals(workspace: &Path, id: Option<&str>) -> Result<Reply, String> {
+    crate::proposals::read(workspace, id)
+        .map(ConfigAnswer::Proposals)
+        .map(Reply::Config)
+}
+
 /// The §9.3 browse (§8.5, bl-dff8): the workspace's lineages, each with the
 /// files its tip holds — the pane's dropdowns, as one answer.
 pub(super) fn lineages(workspace: &Path) -> Result<Reply, String> {
-    read::browse(workspace).map(Reply::Lineages)
+    read::browse(workspace)
+        .map(ConfigAnswer::Lineages)
+        .map(Reply::Config)
 }
 
 /// The §9.4 roster (§8.5, bl-dff8): what `provider` offers **in this
 /// workspace's wall** — the picker's own read, aimed by the gesture rather
 /// than by a focus a headless seat does not have (bl-fcd5).
 pub(super) fn models(deps: &Deps, workspace: &Path, provider: &str) -> Result<Reply, String> {
-    read::models(&wall_env(deps, workspace), provider).map(Reply::Models)
+    read::models(&wall_env(deps, workspace), provider)
+        .map(ConfigAnswer::Models)
+        .map(Reply::Config)
 }
 
 /// **Which branch this agent tracks on** (§8.5, bl-0164): the marks pane's
@@ -120,7 +135,9 @@ pub(super) fn read_marks(deps: &Deps, workspace: &Path) -> Reply {
 /// carries.
 pub(super) fn providers(deps: &Deps, workspace: &Path) -> Reply {
     let wall = wall_env(deps, workspace);
-    Reply::Providers(row_views(&RealBzRunner::resolve(&wall).providers()))
+    Reply::Config(ConfigAnswer::Providers(row_views(
+        &RealBzRunner::resolve(&wall).providers(),
+    )))
 }
 
 /// This workspace's **role assignments** (§9.4, §5.1 #27; bl-2410) — what
@@ -144,7 +161,9 @@ pub(super) fn roles(workspace: &Path) -> Reply {
     let text = config_file(workspace, &format!("config/{BRANCH}"), PROVIDERS)
         .map(|b| String::from_utf8_lossy(&b).into_owned())
         .unwrap_or_default();
-    Reply::Roles(crate::model_pick::grammar::roles(&text))
+    Reply::Config(ConfigAnswer::Roles(crate::model_pick::grammar::roles(
+        &text,
+    )))
 }
 
 /// The named workspace's brazen locations (§16.2 as amended). **The gesture's

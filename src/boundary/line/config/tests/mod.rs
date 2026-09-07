@@ -7,6 +7,7 @@
 mod under_said;
 
 use crate::boundary::config::ConfigFile;
+use crate::boundary::config::Write;
 use crate::boundary::line::tests::ctx;
 use crate::boundary::line::{Context, parse, spell};
 use crate::boundary::{Action, Gesture, help};
@@ -27,10 +28,10 @@ fn rt(gesture: Gesture) {
 }
 
 fn applying(file: ConfigFile) -> Gesture {
-    Gesture::Act(Action::ApplyConfig {
+    Gesture::Act(Action::Config(Write::Apply {
         file,
         text: "roles:\n  worker:\n    provider: codex".to_owned(),
-    })
+    }))
 }
 
 /// The brazen destination, naming the seat's own workspace — what `--ws` (or
@@ -72,17 +73,17 @@ fn every_config_destination_round_trips_as_a_line() {
 #[test]
 fn a_marks_amendment_and_a_pick_round_trip_as_lines() {
     for branch in ["balls/tasks", "balls/agents/corp"] {
-        rt(Gesture::Act(Action::SetMarks {
+        rt(Gesture::Act(Action::Config(Write::Marks {
             workspace: "ws".to_owned(),
             branch: branch.to_owned(),
-        }));
+        })));
     }
-    rt(Gesture::Act(Action::PickModel {
+    rt(Gesture::Act(Action::Config(Write::Pick {
         workspace: "ws".to_owned(),
         role: "worker".to_owned(),
         provider: "codex".to_owned(),
         model: "gpt-5.4".to_owned(),
-    }));
+    })));
 }
 
 /// The §9.4 tuning pair round-trips as lines (bl-23bd) — every level and the
@@ -97,18 +98,20 @@ fn every_tuning_arm_round_trips_as_a_line() {
         Some(Effort::High),
         None,
     ] {
-        rt(Gesture::Act(Action::Tune(Tuning::Effort {
+        rt(Gesture::Act(Action::Config(Write::Tune(Tuning::Effort {
             workspace: "ws".to_owned(),
             role: "worker".to_owned(),
             level,
-        })));
+        }))));
     }
     for on in [true, false] {
-        rt(Gesture::Act(Action::Tune(Tuning::Priority {
-            workspace: "ws".to_owned(),
-            role: "compactor".to_owned(),
-            on,
-        })));
+        rt(Gesture::Act(Action::Config(Write::Tune(
+            Tuning::Priority {
+                workspace: "ws".to_owned(),
+                role: "compactor".to_owned(),
+                on,
+            },
+        ))));
     }
 }
 
@@ -138,10 +141,10 @@ fn the_text_is_the_whole_tail_and_no_flag_is_read_out_of_it() {
     let read = parse("/config cadence a: 1\n--body: not a flag", &ctx());
     assert_eq!(
         read,
-        Ok(Gesture::Act(Action::ApplyConfig {
+        Ok(Gesture::Act(Action::Config(Write::Apply {
             file: ConfigFile::Cadence,
             text: "a: 1\n--body: not a flag".to_owned(),
-        }))
+        })))
     );
 }
 
@@ -150,7 +153,7 @@ fn a_lineage_destination_takes_its_workspace_from_the_seat() {
     let read = parse("/config branch strict workflow.yaml events: {}", &ctx());
     assert_eq!(
         read,
-        Ok(Gesture::Act(Action::ApplyConfig {
+        Ok(Gesture::Act(Action::Config(Write::Apply {
             file: ConfigFile::Branch {
                 workspace: "ws".to_owned(),
                 lineage: "strict".to_owned(),
@@ -158,7 +161,7 @@ fn a_lineage_destination_takes_its_workspace_from_the_seat() {
                 path: "workflow.yaml".to_owned(),
             },
             text: "events: {}".to_owned(),
-        }))
+        })))
     );
     // …and a seat with no workspace refuses by naming it rather than guessing.
     let err = parse("/config branch strict workflow.yaml x", &Context::default()).unwrap_err();

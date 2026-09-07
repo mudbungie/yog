@@ -204,21 +204,15 @@ pub enum Action {
     /// Start a fresh trail (§4.2 as amended): truncate `ops.jsonl`, logging
     /// the clear as the new trail's first row.
     ClearTrail,
-    /// One §9 config apply, carrying the **full staged text** (bl-3f46): the
-    /// destination decides the pipeline it goes through, so the four config
-    /// editors are one gesture rather than four ([`config::ConfigFile`]).
-    ApplyConfig {
-        file: config::ConfigFile,
-        text: String,
-    },
-    /// **Amend an agent's own tracking branch** (§16.3, the
-    /// per-agent ruling): point `workspace`'s balls space at `branch`. The
-    /// launched-then-told-to-work-on-a-project case, and the same verb a launch
-    /// spends — clause 2 and clause 4 are one gesture differing only in when it
-    /// fires. It writes balls' own layer-2 config key in that space and stores
-    /// nothing of yog's own shape; the reply is the branch **re-read** after
-    /// the write.
-    SetMarks { workspace: String, branch: String },
+    /// **The §9 config write family** (bl-dd88) — one variant over
+    /// [`config::Write`](super::config::Write), the carrier matching the
+    /// questions' own ([`config::Read`](super::config::Read)): the apply, the
+    /// §16.3 marks knob, the §9.4 pick and its tuning pair, and the §9.6
+    /// proposal settle. The fold five families already take, on the seam every
+    /// layer beneath already draws (`codec::config`, `line::config`,
+    /// `boundary::config`); that type's own doc carries each member and why the
+    /// fold moves no wire spelling.
+    Config(config::Write),
     /// One **attempt** (VISION §5 V2, bl-dc0c): `litany dispatch <role> <ws>
     /// <parent> --goal <goal> --from <ref> [--pin …]` — the ordinary fork,
     /// with the pinned notch's commit (or a `config/<name>` head) as its ref.
@@ -268,17 +262,6 @@ pub enum Action {
     /// over [`enroll::Request`](crate::registry::enroll::Request), whose own doc
     /// carries the ruling and the §4.2 grade a foot is refused it by.
     Enroll(crate::registry::enroll::Request),
-    /// The §9.4 model pick: give `role` this `model` on this provider row, for
-    /// `workspace`. **One gesture, one file** since bl-d9cb: litany retired the
-    /// cross-check that made this §9.2 and §9.3 composed, so the role
-    /// assignment is the whole binding and `providers.yaml` is the only thing
-    /// written.
-    PickModel {
-        workspace: String,
-        role: String,
-        provider: String,
-        model: String,
-    },
     /// **The sign-in, as an act** (REMOTE §8.3; DESIGN §8.3 as amended by
     /// bl-61bf): start `bz --login` on the ENGINE inside the named workspace's
     /// wall, so the credential lands where that workspace's agents read it
@@ -286,13 +269,4 @@ pub enum Action {
     /// is that run's standing, re-read — [`login`](super::login) carries both
     /// rulings, and [`Query::LoginTail`](super::Query::LoginTail) is the lane.
     Login { workspace: String, provider: String },
-    /// **The §9.4 tuning pair** (bl-23bd): a role's reasoning-effort level and
-    /// its priority-lane request, the two optional fields of the same
-    /// assignment `PickModel` writes (litany ARCH §4.3, upstream bl-acba and
-    /// bl-f587). One variant over
-    /// [`model_pick::Tuning`](crate::model_pick::Tuning) rather than two here,
-    /// the fold five families already take — that type's own doc says why each
-    /// is a separate gesture rather than a wider `/model`, and why `off` is a
-    /// removed line rather than a written `false`.
-    Tune(crate::model_pick::Tuning),
 }

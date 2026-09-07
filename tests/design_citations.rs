@@ -79,7 +79,11 @@ const FOREIGN: &[&str] = &[
     // §9.20 joins them (bl-d13d): the wire's half of the spend ruling — the
     // cost field beside every token count, and the price/ceiling door — cited
     // "REMOTE §9.20" from DESIGN §3.5.
-    "9.7", "9.8", "9.9", "9.14", "9.15", "9.19", "9.20",
+    // §9.22 joins them (bl-dd88): the learning loop made reachable — the two
+    // new ops and the one new reply kind, and why none of them moves the
+    // protocol version. DESIGN's own §9.6 carries the engine-side half, so a
+    // reader following either prefix lands where the argument is.
+    "9.7", "9.8", "9.9", "9.14", "9.15", "9.19", "9.20", "9.22",
     // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
     // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
     // "Rejections" and has no subsections at all, which the sibling test keeps

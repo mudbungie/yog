@@ -266,30 +266,13 @@ pub enum Reply {
     /// line, mark row, live badge and §8.2 gates, none of which had a spelling
     /// any face but the window could read.
     Agent(crate::boundary::answer::agent::AgentView),
-    /// One §9 destination, raw bytes and typed settings both — see
-    /// [`ConfigView`](super::ConfigView).
-    Config(super::ConfigView),
-    /// brazen's effective provider table with the §5.1 #22 credential
-    /// presence (§8.5, bl-0164) — [`Providers`](super::Query::Providers)'
-    /// answer, the §8.3 login pane's own rows.
-    Providers(Vec<crate::config_edit::brazen::ProviderRowView>),
-    /// This workspace's role assignments (§9.4, §5.1 #27) —
-    /// [`Read::Roles`](crate::boundary::config::Read::Roles)' answer: the whole
-    /// `roles:` block of the commit its lineage stands at, one row per role, in
-    /// file order. The type is the grammar's own
-    /// [`RoleModel`](crate::model_pick::RoleModel), which the §9.4 gestures
-    /// already write and the fork composer already reads — one vocabulary for
-    /// one entry (bl-2410).
-    Roles(Vec<crate::model_pick::RoleModel>),
-    /// The workspace's config lineages with each tip's files (§9.3, bl-dff8) —
-    /// [`Lineages`](super::Query::Lineages)' answer, the config pane's two
-    /// dropdowns.
-    Lineages(Vec<crate::config_edit::branch::Lineage>),
-    /// The model ids one provider offers (§9.4, bl-dff8) —
-    /// [`Models`](super::Query::Models)' answer, the picker's roster. Never
-    /// empty: a provider that offered nothing is a refusal saying so, not a
-    /// list a seat would read as "no models exist".
-    Models(Vec<String>),
+    /// **What a §9 config read answers** (bl-dd88) — one variant over
+    /// [`ConfigAnswer`](super::ConfigAnswer), the carrier matching the
+    /// questions' own ([`config::Read`](super::config::Read)). The five reads
+    /// folded in bl-719a and their answers did not, so the roster named the
+    /// family once on the asking side and five times here; that type's own doc
+    /// carries each member and why the fold changes no wire spelling.
+    Config(super::ConfigAnswer),
     /// The workspace's registered clients with their presence and advertised
     /// sets (REMOTE §5, bl-4e08) — [`Clients`](super::Query::Clients)' answer,
     /// and the payload the navigator's clients section paints.

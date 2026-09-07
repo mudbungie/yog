@@ -100,7 +100,7 @@ pub(super) fn encode(query: &Query) -> Value {
         // destination read shares its WRITE's op: a `text`/`mode` field is what
         // makes an envelope a write, so a read is spelled by leaving it out,
         // never by a second op token (§8.5, bl-0164).
-        Query::Config(read) => encode_config(read),
+        Query::Config(read) => super::config::encode_read(read),
         // The doctor's one optional field (bl-28f4): absent is "examine the
         // box", present is "and this workspace with it".
         Query::Doctor { workspace } => {
@@ -126,27 +126,6 @@ pub(super) fn encode(query: &Query) -> Value {
         Query::Capture { invocation } => {
             json!({ "op": CAPTURE, "invocation": invocation })
         }
-    }
-}
-
-/// The §9 family's five spellings, off the one carrier the roster holds
-/// (bl-719a) — here rather than as five rows of the match above for the reason
-/// `codec::balls::encode` is: a family whose grammar is already one subject
-/// spells itself in one place, and the roster names the family once.
-fn encode_config(read: &crate::boundary::config::Read) -> Value {
-    use crate::boundary::config::Read;
-    match read {
-        Read::File { file } => {
-            json!({ "op": "config", "target": super::config::encode_file(file) })
-        }
-        Read::Marks { workspace } => json!({ "op": "marks", "workspace": workspace }),
-        Read::Providers { workspace } => json!({ "op": "providers", "workspace": workspace }),
-        Read::Roles { workspace } => json!({ "op": "roles", "workspace": workspace }),
-        Read::Lineages { workspace } => json!({ "op": "lineages", "workspace": workspace }),
-        Read::Models {
-            workspace,
-            provider,
-        } => json!({ "op": "models", "workspace": workspace, "provider": provider }),
     }
 }
 
@@ -261,6 +240,12 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         "models" => Query::Config(Read::Models {
             workspace: str_of(o, "workspace")?,
             provider: str_of(o, "provider")?,
+        }),
+        // The id is optional, unlike the provider above: naming none is the
+        // listing, which is a different question and not a guess at one.
+        super::config::PROPOSALS => Query::Config(Read::Proposals {
+            workspace: str_of(o, "workspace")?,
+            id: opt_str_of(o, "id")?,
         }),
         _ => return Ok(None),
     }))

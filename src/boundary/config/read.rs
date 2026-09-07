@@ -6,7 +6,7 @@
 
 use super::ConfigFile;
 use crate::boundary::dispatch::Deps;
-use crate::boundary::reply::{ConfigView, Reply};
+use crate::boundary::reply::{ConfigAnswer, ConfigView, Reply};
 use crate::config_edit::branch::{Lineage, config_file, lineages};
 use crate::config_edit::brazen::{BzOutcome, BzRunner, RealBzRunner, row_names};
 use crate::config_edit::form::{self, Control, Row, schema_for};
@@ -44,6 +44,25 @@ pub enum Read {
     /// This workspace's effective provider table with each row's credential
     /// fact and tuning capability (§8.3, bl-0164/bl-23bd).
     Providers { workspace: String },
+    /// **The staged proposals of this workspace** (§9.6, bl-dd88): every
+    /// `proposal/*` a reviewer left, with the lineage it is parented on and
+    /// whether that parent is still the head — and, when `id` names one, that
+    /// proposal **whole**, message and diff.
+    ///
+    /// It is a member of the §9 read family because a proposal is a candidate
+    /// *config commit*: the same subject the browse enumerates and the apply
+    /// writes, read one step before it governs anything.
+    ///
+    /// **`id` names which thing you are asking about**, the shape
+    /// [`Files`](crate::boundary::Query::Files)' `path` and
+    /// [`WorkDiff`](crate::boundary::Query::WorkDiff)' `file` take: a listing
+    /// and one entry's bytes are one question asked at two depths, so the read
+    /// that names one is answered the listing too and no seat has to make a
+    /// second ask to keep its table.
+    Proposals {
+        workspace: String,
+        id: Option<String>,
+    },
     /// **What this workspace's roles are actually set to** (§9.4, §5.1 #27;
     /// bl-2410): every role its config lineage declares, with the provider row
     /// and model id bound to it and the two §9.4 tuning knobs it carries.
@@ -74,6 +93,7 @@ impl Read {
             | Self::Models { workspace, .. }
             | Self::Marks { workspace }
             | Self::Providers { workspace }
+            | Self::Proposals { workspace, .. }
             | Self::Roles { workspace } => Some(workspace),
         }
     }
@@ -136,7 +156,10 @@ pub(crate) fn file(deps: &Deps, ws: &Path, dest: &ConfigFile) -> Result<Reply, S
         ConfigFile::Branch { lineage, path, .. } => branch_text(ws, lineage, path)?,
     };
     let settings = settings(deps, ws, dest, &text);
-    Ok(Reply::Config(ConfigView { text, settings }))
+    Ok(Reply::Config(ConfigAnswer::File(ConfigView {
+        text,
+        settings,
+    })))
 }
 
 /// The file's schema applied to the text it just answered (§9.5) — the settings

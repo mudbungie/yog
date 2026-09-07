@@ -31,6 +31,9 @@ mod balls;
 mod board;
 /// The composer's draft-clearing predicate — its own file at the budget.
 mod cleared;
+/// **What a §9 config read answers** (bl-dd88) — the family's answers on one
+/// carrier, matching the questions' own.
+mod config_answer;
 /// What a §9 config read answers (bl-dc3f) — the file's two views as one type,
 /// and both directions of their spelling.
 mod config_view;
@@ -63,6 +66,7 @@ mod search;
 mod ws_row;
 
 pub use cleared::cleared;
+pub use config_answer::ConfigAnswer;
 pub use config_view::ConfigView;
 pub use decode::decode;
 pub use encode::{encode, refusal};

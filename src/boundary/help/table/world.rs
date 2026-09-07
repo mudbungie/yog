@@ -176,6 +176,38 @@ pub const WORLD: &[HelpRow] = &[
         surface: Surface::Control,
     },
     HelpRow {
+        verb: "proposals",
+        usage: "/proposals [<proposal-id>]",
+        summary: "what a reviewer has staged for this workspace's config, and how big it is",
+        detail: "A reviewer agent that learned something writes it as a real config patch and \
+                 parks it on a branch of its own, waiting for you. This lists them: which \
+                 reviewer staged each one, which lineage it would move, how many lines it \
+                 changes, and what the reviewer called it. `fresh` means the lineage still \
+                 stands where the reviewer read it, so the patch can be taken as it is; `stale` \
+                 means somebody advanced that lineage since, and the answer is to reject it and \
+                 let the next checkpoint re-derive from where things now stand — a stale patch \
+                 was written against a config that no longer governs anything. Name one and you \
+                 get it whole, message and diff, beside the listing. Nothing is staged is an \
+                 empty answer, not a refusal.",
+        surface: Surface::Control,
+    },
+    HelpRow {
+        verb: "proposal",
+        usage: "/proposal <proposal-id> <accept|reject>",
+        summary: "take a reviewer's staged config patch, or throw it away",
+        detail: "The decision the whole learning loop is built around: read what an agent \
+                 concluded, then say yes or no. Accepting fast-forwards the patch's lineage onto \
+                 it and deletes the staging branch, and every conversation on that lineage picks \
+                 the change up at its next step with no act per conversation. Rejecting deletes \
+                 the staging branch and nothing else — the reviewer's own conversation survives \
+                 as the record of why it thought so. Both words are required: naming no \
+                 proposal would mean something different the day a second one is staged, and a \
+                 verdict that defaulted would make throwing work away the easy half. An accept \
+                 whose lineage moved under it refuses and names where that lineage now stands, \
+                 rather than merging somebody's memory forward.",
+        surface: Surface::Control,
+    },
+    HelpRow {
         verb: "models",
         usage: "/models <provider>",
         summary: "the model ids one provider is offering right now",

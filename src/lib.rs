@@ -86,6 +86,9 @@ pub mod naming;
 pub mod nav;
 pub mod opslog;
 pub mod projects;
+/// **The learning loop's operator half** (bl-dd88): the staged proposals a
+/// reviewer left, one of them whole, and the settle that accepts or rejects one.
+pub mod proposals;
 pub mod rail;
 /// The REMOTE §4 client registry (bl-8bbc): who participates in which
 /// workspace, and each client's own per-seat home.

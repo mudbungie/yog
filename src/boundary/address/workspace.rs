@@ -69,8 +69,6 @@ impl Action {
             | Action::DeleteAgent { workspace, .. }
             | Action::MarkSeen { workspace, .. }
             | Action::Pin { workspace, .. }
-            | Action::SetMarks { workspace, .. }
-            | Action::PickModel { workspace, .. }
             | Action::AnswerHold { workspace, .. }
             | Action::Floor { workspace, .. }
             // The sign-in names the wall its child runs in (REMOTE §8.3): the
@@ -79,7 +77,7 @@ impl Action {
             // The §9.4 tuning pair delegates, as the monitor's and the fleet's
             // families do: both members name a workspace, so the carrier
             // answers and this table does not match on the pair (bl-23bd).
-            Action::Tune(tuning) => Some(tuning.workspace_slot()),
+            Action::Config(write) => write.workspace_slot(),
             Action::Prompt { prepared, .. }
             | Action::Fan(crate::fan::Verb::Spread { prepared, .. }) => {
                 Some(&mut prepared.workspace)
@@ -98,7 +96,6 @@ impl Action {
             // and the entry routing reads. Two of the five name a wall and
             // three name no world at all, so the row is the destination's own
             // table rather than an arm per variant.
-            Action::ApplyConfig { file, .. } => file.workspace_slot(),
             // An advertisement names its CLIENT, never a workspace (REMOTE §5,
             // bl-4e08): a tool set is a fact about the machine, and which
             // workspaces see it is the registration listing that already exists.

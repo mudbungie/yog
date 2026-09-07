@@ -8,6 +8,7 @@ use crate::boundary::Query;
 use crate::boundary::config::ConfigFile;
 use crate::boundary::config::Read;
 use crate::boundary::dispatch::Deps;
+use crate::boundary::reply::ConfigAnswer;
 use crate::boundary::reply::{ConfigView, Reply};
 use crate::git_tree::tests::fixture::Fixture;
 use std::path::{Path, PathBuf};
@@ -23,10 +24,10 @@ fn a_brazen_read_answers_the_bytes_on_disk() {
     let deps = quiet(root.path());
     assert_eq!(
         ask(&deps, &reading(brazen_file())),
-        Ok(Reply::Config(ConfigView {
+        Ok(Reply::Config(ConfigAnswer::File(ConfigView {
             text: ACME.to_owned(),
             settings: Vec::new(),
-        }))
+        })))
     );
 }
 
@@ -43,20 +44,20 @@ fn a_config_gesture_reads_the_sphere_it_names_not_the_seats_own() {
     let elsewhere = |file| Query::Config(Read::File { file });
     assert_eq!(
         ask(&deps, &reading(brazen_file())),
-        Ok(Reply::Config(ConfigView {
+        Ok(Reply::Config(ConfigAnswer::File(ConfigView {
             text: ACME.to_owned(),
             settings: Vec::new(),
-        }))
+        })))
     );
     let other = ConfigFile::Brazen {
         workspace: crate::naming::leaf(&(PathBuf::from("/other-sphere"))),
     };
     assert_eq!(
         ask(&deps, &elsewhere(other)),
-        Ok(Reply::Config(ConfigView {
+        Ok(Reply::Config(ConfigAnswer::File(ConfigView {
             text: String::new(),
             settings: Vec::new(),
-        })),
+        }))),
         "another workspace's wall is another workspace's file"
     );
     // And the table follows the same name: rows are read inside the sphere the
@@ -69,7 +70,9 @@ fn a_config_gesture_reads_the_sphere_it_names_not_the_seats_own() {
             workspace: crate::naming::leaf(&(PathBuf::from(ws))),
         }),
     ) {
-        Ok(Reply::Providers(rows)) => rows.into_iter().map(|r| r.name).collect::<Vec<_>>(),
+        Ok(Reply::Config(ConfigAnswer::Providers(rows))) => {
+            rows.into_iter().map(|r| r.name).collect::<Vec<_>>()
+        }
         other => panic!("providers answers providers: {other:?}"),
     };
     assert!(named("/ws").iter().any(|n| n == "acme"));
@@ -89,12 +92,12 @@ fn a_seat_with_no_wall_of_its_own_still_reaches_the_named_sphere() {
     };
     assert_eq!(
         ask(&deps, &reading(brazen_file())),
-        Ok(Reply::Config(ConfigView {
+        Ok(Reply::Config(ConfigAnswer::File(ConfigView {
             text: ACME.to_owned(),
             settings: Vec::new(),
-        }))
+        })))
     );
-    let Ok(Reply::Providers(rows)) = ask(
+    let Ok(Reply::Config(ConfigAnswer::Providers(rows))) = ask(
         &deps,
         &Query::Config(Read::Providers {
             workspace: crate::naming::leaf(&(crate::test_support::fixture_workspace())),
@@ -119,10 +122,10 @@ fn a_destination_not_there_yet_reads_as_empty_not_a_refusal() {
     ] {
         assert_eq!(
             ask(&deps, &reading(file)),
-            Ok(Reply::Config(ConfigView {
+            Ok(Reply::Config(ConfigAnswer::File(ConfigView {
                 text: String::new(),
                 settings: Vec::new(),
-            }))
+            })))
         );
     }
 }
@@ -137,10 +140,10 @@ fn a_round_trip_apply_then_read_returns_the_same_bytes() {
     assert!(fire(&deps, &applying(ConfigFile::LitanyModels, text)).is_ok());
     assert_eq!(
         ask(&deps, &reading(ConfigFile::LitanyModels)),
-        Ok(Reply::Config(ConfigView {
+        Ok(Reply::Config(ConfigAnswer::File(ConfigView {
             text: text.to_owned(),
             settings: Vec::new(),
-        }))
+        })))
     );
 }
 
@@ -158,7 +161,7 @@ fn a_bad_workflow_name_refuses_before_any_read() {
 fn providers_reads_brazens_effective_table() {
     let root = tempdir().unwrap();
     let deps = quiet(root.path());
-    let Ok(Reply::Providers(rows)) = ask(
+    let Ok(Reply::Config(ConfigAnswer::Providers(rows))) = ask(
         &deps,
         &Query::Config(Read::Providers {
             workspace: crate::naming::leaf(&(crate::test_support::fixture_workspace())),
@@ -210,7 +213,7 @@ fn the_roles_read_answers_the_lineages_own_assignments() {
             workspace: crate::naming::leaf(&fx.path),
         }),
     ) {
-        Ok(Reply::Roles(rows)) => rows,
+        Ok(Reply::Config(ConfigAnswer::Roles(rows))) => rows,
         other => panic!("roles answers roles: {other:?}"),
     };
     assert_eq!(rows.len(), 2);
@@ -244,6 +247,6 @@ fn a_workspace_with_no_readable_lineage_declares_no_roles() {
                 workspace: crate::naming::leaf(&ws),
             }),
         ),
-        Ok(Reply::Roles(vec![])),
+        Ok(Reply::Config(ConfigAnswer::Roles(vec![]))),
     );
 }

@@ -5,6 +5,7 @@
 use super::*;
 use crate::boundary::config::ConfigFile;
 use crate::boundary::config::Read;
+use crate::boundary::config::Write;
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::opslog::Origin;
 use crate::start::Prepared;
@@ -23,14 +24,14 @@ fn config_shapes(named: &str) -> Vec<Gesture> {
         path: "providers.yaml".to_owned(),
     };
     vec![
-        Gesture::Act(Action::ApplyConfig {
+        Gesture::Act(Action::Config(Write::Apply {
             file: brazen.clone(),
             text: String::new(),
-        }),
-        Gesture::Act(Action::ApplyConfig {
+        })),
+        Gesture::Act(Action::Config(Write::Apply {
             file: branch.clone(),
             text: String::new(),
-        }),
+        })),
         Gesture::Ask(Query::Config(Read::File { file: brazen })),
         Gesture::Ask(Query::Config(Read::File { file: branch })),
     ]
@@ -100,21 +101,21 @@ fn a_config_gesture_is_addressed_by_the_wall_its_destination_names() {
 /// spends, reaching one level down into the destination.
 #[test]
 fn the_mapping_rewrites_a_config_gestures_nested_wall() {
-    let mut act = Action::ApplyConfig {
+    let mut act = Action::Config(Write::Apply {
         file: ConfigFile::Brazen {
             workspace: "leaf".to_owned(),
         },
         text: "x".to_owned(),
-    };
+    });
     *act.workspace_slot().expect("the family names a wall") = "host".to_owned();
     assert_eq!(
         act,
-        Action::ApplyConfig {
+        Action::Config(Write::Apply {
             file: ConfigFile::Brazen {
                 workspace: "host".to_owned()
             },
             text: "x".to_owned(),
-        }
+        })
     );
     let mut ask = Query::Config(Read::File {
         file: ConfigFile::Cadence,
@@ -137,10 +138,10 @@ fn a_config_destination_naming_no_world_answers_none() {
         },
         ConfigFile::Cadence,
     ] {
-        let act = Gesture::Act(Action::ApplyConfig {
+        let act = Gesture::Act(Action::Config(Write::Apply {
             file: file.clone(),
             text: String::new(),
-        });
+        }));
         let ask = Gesture::Ask(Query::Config(Read::File { file }));
         assert_eq!(act.workspace(), None, "{act:?}");
         assert_eq!(ask.workspace(), None, "{ask:?}");

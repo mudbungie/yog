@@ -172,20 +172,32 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
             crate::opslog::clear(root, ts, deps.caller.client.clone()),
             Reply::TrailCleared,
         ),
-        // The §9 config family (bl-3f46) — one executor module, because each of
-        // the three is a composition of pipelines that already exist.
-        Action::ApplyConfig { file, text } => config::apply(deps, ts, ws, file, text),
-        Action::SetMarks { branch, .. } => config::set_marks(deps, ts, ws, branch),
-        Action::PickModel {
-            role,
-            provider,
-            model,
-            ..
-        } => config::pick_model(deps, ts, ws, &Pick::of(role, provider, model)),
-        // The §9.4 tuning pair (bl-23bd): the same file, the same lineage and
-        // the same commit the pick spends — one arm, because the carrier is one
-        // and the executor reads which member it is.
-        Action::Tune(tuning) => config::tune(deps, ts, ws, tuning),
+        // The §9 config WRITE family (bl-3f46, one carrier since bl-dd88) —
+        // one arm here and five members one level down, exactly as its five
+        // questions are one arm at the read chokepoint. One executor module,
+        // because each member is a composition of pipelines that already exist.
+        Action::Config(write) => match write {
+            config::Write::Apply { file, text } => config::apply(deps, ts, ws, file, text),
+            config::Write::Marks { branch, .. } => config::set_marks(deps, ts, ws, branch),
+            config::Write::Pick {
+                role,
+                provider,
+                model,
+                ..
+            } => config::pick_model(deps, ts, ws, &Pick::of(role, provider, model)),
+            // The §9.4 tuning pair (bl-23bd): the same file, the same lineage
+            // and the same commit the pick spends.
+            config::Write::Tune(tuning) => config::tune(deps, ts, ws, tuning),
+            // The §9.6 settle (bl-dd88): a workspace-bound `litany proposal`,
+            // whose compare-and-swap is litany's and stays there.
+            config::Write::Proposal(settle) => outcome(verbs::proposal(
+                &deps.bound(ws),
+                root,
+                ts,
+                &settle.id,
+                settle.verdict.flag(),
+            )),
+        },
         // REMOTE §5's tool-host presentation (bl-4e08): the set lands under the
         // identity the INTAKE carries, so the gate is who is asking rather than
         // what was named — an in-world caller has no client and is refused.

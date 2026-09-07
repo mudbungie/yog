@@ -10,6 +10,7 @@
 use super::{applying, ask, brazen_file, fire, quiet, seeing};
 use crate::boundary::Query;
 use crate::boundary::config::{ConfigFile, Read};
+use crate::boundary::reply::ConfigAnswer;
 use crate::boundary::reply::{ConfigView, Reply};
 use crate::config_edit::branch::edit::EditOrigin;
 use crate::config_edit::form::Control;
@@ -24,7 +25,7 @@ fn reading(file: ConfigFile) -> Query {
 
 fn answered(deps: &crate::boundary::dispatch::Deps, file: ConfigFile) -> ConfigView {
     match ask(deps, &reading(file)) {
-        Ok(Reply::Config(view)) => view,
+        Ok(Reply::Config(ConfigAnswer::File(view))) => view,
         other => panic!("a config read answers a config: {other:?}"),
     }
 }

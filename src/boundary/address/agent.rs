@@ -74,19 +74,16 @@ impl Action {
             | Action::Fleet(_)
             | Action::Ack
             | Action::ClearTrail
-            | Action::ApplyConfig { .. }
-            | Action::SetMarks { .. }
+            | Action::Config(_)
             | Action::Advertise { .. }
             | Action::Enroll(_)
             | Action::Route(_)
-            | Action::PickModel { .. }
             // A pin is about the workspace itself (§4.1) — the tab, not
             // anything inside it.
             | Action::Pin { .. }
             // A sign-in is about a provider row in a wall; no conversation is
             // named, and none would mean anything (REMOTE §8.3).
-            | Action::Login { .. }
-            | Action::Tune(_) => None,
+            | Action::Login { .. } => None,
         }
     }
 }

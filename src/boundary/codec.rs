@@ -34,7 +34,7 @@ mod monitor;
 mod query;
 mod start;
 mod tools;
-use config::{encode_file, encode_tuning};
+use config::encode_write;
 use deposit::{INTERRUPT, MESSAGE, deposit, deposited};
 use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, strings_of, usize_of};
 use start::{decode_payload, decode_prepared, encode_start, opt_field};
@@ -110,23 +110,10 @@ fn encode_action(action: &Action) -> Value {
             json!({ "op": if *pinned { PIN } else { UNPIN }, "workspace": workspace })
         }
         Action::ClearTrail => json!({ "op": "clear-trail" }),
-        Action::ApplyConfig { file, text } => {
-            json!({ "op": "config", "target": encode_file(file), "text": text })
-        }
-        Action::SetMarks { workspace, branch } => {
-            json!({ "op": "marks", "workspace": workspace, "branch": branch })
-        }
-        Action::PickModel {
-            workspace,
-            role,
-            provider,
-            model,
-        } => json!({ "op": "model", "workspace": workspace,
-                     "role": role, "provider": provider, "model": model }),
-        // The §9.4 tuning pair (bl-23bd), spelled in the config family's file:
-        // one carrier here, two ops on the wire, which is what makes them free
-        // of a version bump (REMOTE §3).
-        Action::Tune(tuning) => encode_tuning(tuning),
+        // The §9 config write family (bl-dd88), spelled in the config family's
+        // own file: one carrier here, one op per member on the wire, which is
+        // what makes the fold free of a version bump (REMOTE §3).
+        Action::Config(write) => encode_write(write),
         Action::Fork {
             workspace,
             parent,

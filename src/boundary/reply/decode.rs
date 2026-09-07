@@ -29,6 +29,7 @@ use serde_json::{Map, Value};
 
 use super::Reply;
 use super::board::decode::board;
+use super::config_answer::ConfigAnswer as A;
 use super::queue::queue_row_of;
 use super::rows::decode::{
     conv_row, join_row, lineage_row, provider_row, role_row, rows_of, ws_row,
@@ -44,6 +45,12 @@ mod inspector;
 /// codec cannot read at all — and the inner `Err` is the refusal the envelope
 /// faithfully carried, which is the very `Result<Reply, String>` both
 /// chokepoints answer with.
+/// One §9 family answer, wrapped in the variant that carries them all — the
+/// fold is in the carrier, so each member is still read off its own `kind`.
+fn config(answer: A) -> Reply {
+    Reply::Config(answer)
+}
+
 pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
     let o = v.as_object().ok_or("reply: not a JSON object")?;
     let Some(kind) = o.get("kind") else {
@@ -104,7 +111,7 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         // lane frame, because they are one value.
         super::encode::LOGIN => crate::login::wire::view_of(o).map(Reply::Login),
         "marks" => str_of(o, "branch").map(|branch| Reply::Marks { branch }),
-        "config" => super::config_view::config_of(o).map(Reply::Config),
+        "config" => super::config_view::config_of(o).map(|v| config(A::File(v))),
         _ => return None,
     })
 }
@@ -185,10 +192,13 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "ops" => rows_of(o, super::op_row::decode).map(Reply::Ops),
         "help" => help(o),
         "search" => search(o),
-        "providers" => rows_of(o, provider_row).map(Reply::Providers),
-        "roles" => rows_of(o, role_row).map(Reply::Roles),
-        "lineages" => rows_of(o, lineage_row).map(Reply::Lineages),
-        "models" => strings_of(o, "rows").map(Reply::Models),
+        "providers" => rows_of(o, provider_row).map(|r| config(A::Providers(r))),
+        "roles" => rows_of(o, role_row).map(|r| config(A::Roles(r))),
+        "lineages" => rows_of(o, lineage_row).map(|r| config(A::Lineages(r))),
+        "models" => strings_of(o, "rows").map(|r| config(A::Models(r))),
+        crate::proposals::wire::KIND => {
+            crate::proposals::wire::view_of(o).map(|v| config(A::Proposals(v)))
+        }
         "clients" => rows_of(o, client_row).map(Reply::Clients),
         "doctor" => rows_of(o, doctor_row).map(Reply::Doctor),
         "invocations" => rows_of(o, invocation_of).map(Reply::Invocations),

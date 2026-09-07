@@ -1,8 +1,14 @@
-//! The pipelines each §9 destination runs (bl-3f46), split from the gestures
-//! that name them per §12's line budget: the §9.1 `bz`-validated brazen write,
-//! the §9.2 hash-guarded file write, the §9.3 staged `litany config` commit,
-//! and the two verdict folds that turn an editor's terminal state into the
-//! boundary's `Ok`/`Err`.
+//! **The §9 config WRITE family, as one gesture** (bl-dd88) and the pipelines
+//! each destination runs (bl-3f46).
+//!
+//! The five *reads* folded onto [`Read`](super::Read) in bl-719a and the four
+//! writes did not, so `action.rs` carried the family four times and rested on
+//! the 300 wall — the inversion §12 names, firing on whoever touches it next.
+//! [`Write`] is the matching carrier: one variant on the roster, one arm at the
+//! chokepoint, one address-table row, and each member keeps its own slash verb,
+//! envelope `op` and help page. **The fold is in the carrier, never in the
+//! surface**, so no protocol version moves and the corpus regenerates
+//! byte-identical — the same check the questions' own fold was made under.
 //!
 //! Nothing here re-implements a pipeline. Each is the same one the §11 panes
 //! drive, entered with the deposit's whole text instead of a live RAM draft.
@@ -20,6 +26,73 @@ use std::path::{Path, PathBuf};
 
 use crate::boundary::dispatch::Deps;
 use crate::boundary::reply::Reply;
+
+/// One mutating §9 config gesture — the write family's carrier.
+///
+/// **A proposal settle is a config write and belongs here** (bl-dd88): accept
+/// fast-forwards a `config/*` lineage onto a staged commit, which is the same
+/// subject `Apply` writes by another route. Nothing about it is a fifth kind of
+/// act; it is the operator's veto on the learning loop, and the loop's whole
+/// design turns on that veto being reachable.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Write {
+    /// One §9 config apply, carrying the **full staged text** (bl-3f46): the
+    /// destination decides the pipeline it goes through, so the four config
+    /// editors are one gesture rather than four
+    /// ([`ConfigFile`](super::ConfigFile)).
+    Apply {
+        file: super::ConfigFile,
+        text: String,
+    },
+    /// **Amend an agent's own tracking branch** (§16.3, the per-agent ruling):
+    /// point `workspace`'s balls space at `branch`. The
+    /// launched-then-told-to-work-on-a-project case, and the same verb a launch
+    /// spends — clause 2 and clause 4 are one gesture differing only in when it
+    /// fires. It writes balls' own layer-2 config key in that space and stores
+    /// nothing of yog's own shape; the reply is the branch **re-read** after the
+    /// write.
+    Marks { workspace: String, branch: String },
+    /// The §9.4 model pick: give `role` this `model` on this provider row, for
+    /// `workspace`. **One gesture, one file** since bl-d9cb: litany retired the
+    /// cross-check that made this §9.2 and §9.3 composed, so the role assignment
+    /// is the whole binding and `providers.yaml` is the only thing written.
+    Pick {
+        workspace: String,
+        role: String,
+        provider: String,
+        model: String,
+    },
+    /// **The §9.4 tuning pair** (bl-23bd): a role's reasoning-effort level and
+    /// its priority-lane request, the two optional fields of the same assignment
+    /// [`Pick`](Self::Pick) writes (litany ARCH §4.3, upstream bl-acba and
+    /// bl-f587). One member over
+    /// [`model_pick::Tuning`](crate::model_pick::Tuning) rather than two here —
+    /// that type's own doc says why each is a separate gesture rather than a
+    /// wider `/model`, and why `off` is a removed line rather than a written
+    /// `false`.
+    Tune(crate::model_pick::Tuning),
+    /// **Settle a staged proposal** (§9.6, bl-dd88) — one member over
+    /// [`Settle`](crate::proposals::Settle), whose own doc carries the accept's
+    /// compare-and-swap and why a stale one is rejected rather than merged.
+    Proposal(crate::proposals::Settle),
+}
+
+impl Write {
+    /// The workspace slot REMOTE §8.2's name→path rewrite borrows — [`Read`'s
+    /// own](super::Read::workspace_slot) shape and `Option` for its reason:
+    /// [`Apply`](Self::Apply) names a *destination* whose workspace is nested
+    /// and itself optional (a §9 file may be the engine's own), and widening the
+    /// carrier to match keeps one rule where there would otherwise be a table
+    /// arm that knows about one member.
+    pub(crate) fn workspace_slot(&mut self) -> Option<&mut String> {
+        match self {
+            Self::Apply { file, .. } => file.workspace_slot(),
+            Self::Marks { workspace, .. } | Self::Pick { workspace, .. } => Some(workspace),
+            Self::Tune(tuning) => Some(tuning.workspace_slot()),
+            Self::Proposal(settle) => Some(settle.workspace_slot()),
+        }
+    }
+}
 
 /// The refusal a moved-underneath file earns, said once for both editors.
 pub(super) const CONFLICT: &str =
