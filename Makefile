@@ -1,4 +1,4 @@
-.PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan deny image image-scan print-image-tag \
+.PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan protocol-gate deny image image-scan print-image-tag \
         corpus drive drive-preflight drive-cleanroom drive-seed drive-log wire-certs fixture \
         deploy deploy-status
 
@@ -86,6 +86,7 @@ lint:
 	$(MAKE) line-cap
 	$(MAKE) beat-audit
 	$(MAKE) deploy-selftest
+	$(MAKE) protocol-gate
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
 	$(MAKE) rules-audit
@@ -174,6 +175,21 @@ corpus:
 leak-scan:
 	@scripts/leak-scan.sh --self-test
 	@scripts/leak-scan.sh
+
+# The release-ordering gate's logic, proved both ways (bl-bca2). A yog release
+# that RAISES `src/wire/hello.rs`'s PROTOCOL may not auto-merge until the seat,
+# the foot and the phone carry the new number on their mains — otherwise the
+# publish opens a window in which no combination on crates.io composes, which
+# is what a clean-box install measured on 2026-09-06.
+#
+# `.github/workflows/release-automerge.yml` spends the decision and CANNOT run
+# locally, so the decision does not live there: `scripts/protocol-gate.sh`
+# holds it, reads no network, and this target runs its self-test — eight
+# verdicts over fabricated trees, in both directions, plus the roster's own
+# shape. Milliseconds, so it sits at the head of `lint` with the other
+# structural checks.
+protocol-gate:
+	@scripts/protocol-gate.sh --self-test
 
 # Supply-chain audit (cargo-deny 0.20.2 — see deny.toml): licenses, advisories
 # (yanked + the one ignored eframe-stack RUSTSEC — ttf-parser unmaintained),

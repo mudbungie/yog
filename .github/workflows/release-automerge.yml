@@ -95,10 +95,45 @@ name: Auto-merge release PR
 #
 # A verdict line is printed for EVERY open pull request on EVERY run, passing
 # or not: a mechanism that merges silently is one nobody can audit, and the run
-# log is the only record this workflow keeps. It writes nothing into any pull
-# request body or comment — partly because there is nothing worth saying there
-# that the log does not say, and partly because a body cannot be un-published
-# and this repository bans session artifacts from published text outright.
+# log is the only record this workflow keeps. The ONE thing it writes into a
+# pull request is the protocol-gate hold below, and that exception is argued
+# where the gate is: a release parked for days by a check nobody can see from
+# the pull request is a mechanism that looks broken. Nothing else reaches a
+# body or a comment — a body cannot be un-published, and this repository bans
+# session artifacts from published text outright, so the held comment names
+# repositories and integers and nothing else.
+#
+# ---------------------------------------------------------------------------
+# THE PROTOCOL GATE — A BUMP DOES NOT PUBLISH AHEAD OF ITS CONSUMERS (bl-bca2)
+#
+# yog is the only component that mints the wire protocol version. The seat
+# (`lernie`), the foot (`thrall`) and the phone (`yog-android`) each VENDOR a
+# copy of the constant, and the wire is fail-closed on a mismatch with no
+# negotiation (`docs/REMOTE.md` §3). So a yog release that raised PROTOCOL
+# published a suite that could not compose until three other repositories
+# caught up — measured on 2026-09-06 as engine 15, foot 14, seat 13, with no
+# combination on crates.io that composed, after the same defect had been filed
+# and correctly closed eight times.
+#
+# The overseer ruling is an ordering rule, not a protocol change: a release
+# that RAISES PROTOCOL is held until the consumers' mains carry the new number.
+# A release that moves no wire version is unaffected — it makes nothing worse
+# than the skew already standing, and gating it would park every bugfix behind
+# a lag it cannot fix.
+#
+# This job fetches four files — yog's `hello.rs` at the last release tag and at
+# the pull request's head, and each consumer's on `main` — and hands the paths
+# to `scripts/protocol-gate.sh judge`, which holds the whole decision and is
+# proved both ways by `make protocol-gate` in the local gate. The workflow
+# cannot run locally; the logic it spends can, and does on every `make lint`.
+# The roster of consumers and where each keeps its constant lives in that
+# script and is not restated here.
+#
+# A hold is not a failure: the step exits 0, prints the verdict, and comments
+# it once on the pull request. Every later CI run on that pull request
+# re-judges — as does a `workflow_dispatch` of this workflow, which is the door
+# for the case that actually happens, a consumer landing the constant hours
+# after the last release-PR refresh.
 #
 # It reads the whole open set rather than the pull request the triggering run
 # belongs to: the event is a wake-up, not the subject. That makes the workflow
@@ -123,10 +158,18 @@ on:
     # Release-PR runs only. A CI run on main is not this workflow's business,
     # and the glob cannot reach a branch with a slash in it.
     branches: ["release-plz-*"]
+  # The re-run door. A protocol-gate hold clears when a CONSUMER repository
+  # lands the constant, which is an event this repository never sees; without a
+  # hand-wakeable trigger the release would wait for the next push to main to
+  # refresh the pull request. Judging is idempotent and merging is guarded by
+  # everything below, so an operator dispatch can only ever do what a CI run
+  # would have done.
+  workflow_dispatch:
 
-# No ambient scopes, and the job below claims none: every call it makes is
-# authenticated with RELEASE_PLZ_TOKEN, because GITHUB_TOKEN is exactly the
-# token whose merge would strand the bump.
+# No ambient scopes. The job below claims exactly one — `contents: read`, for
+# the checkout that puts `scripts/protocol-gate.sh` on disk — and every GitHub
+# call it makes is still authenticated with RELEASE_PLZ_TOKEN, because
+# GITHUB_TOKEN is exactly the token whose merge would strand the bump.
 permissions: {}
 
 jobs:
@@ -143,7 +186,20 @@ jobs:
     concurrency:
       group: release-automerge
       cancel-in-progress: false
+    # For the checkout alone. Every call to the GitHub API below spends
+    # RELEASE_PLZ_TOKEN instead, so this grants nothing the merge path uses.
+    permissions:
+      contents: read
     steps:
+      # The gate's own code, from the default branch — never from the pull
+      # request, whose diff is a version bump and a changelog entry and has no
+      # business supplying the check that judges it. `persist-credentials:
+      # false` keeps GITHUB_TOKEN out of the local git config, which nothing
+      # here needs.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
       - name: Judge every open pull request, and merge a green release PR
         env:
           # The PAT, and only the PAT — see the header. Empty when the operator
@@ -151,6 +207,9 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
           GH_REPO: ${{ github.repository }}
           OWNER: ${{ github.repository_owner }}
+          # The one marker that makes the gate's own comment findable again, so
+          # a repeat is recognized rather than re-posted.
+          MARKER: "<!-- protocol-gate -->"
         run: |
           set -euo pipefail
 
@@ -213,6 +272,64 @@ jobs:
             if [ "$ci" != "success" ]; then
               printf 'PR %s  hold: CI on %s is %s  [merge state %s]\n' \
                 "$number" "${sha:0:8}" "$ci" "$state"
+              continue
+            fi
+            # The protocol gate (see the header). Four `hello.rs` files, and a
+            # script that holds the whole decision. Absent files are the
+            # fail-closed inputs the script judges — the fetches are `|| true`
+            # and truncate first, so a missing release, a moved constant or a
+            # network fault reads as unreadable and holds rather than merging.
+            gate="$(mktemp -d)"
+            hello="$(scripts/protocol-gate.sh hello)"
+            raw() {
+              gh api "repos/$1/contents/$3?ref=$2" \
+                -H "Accept: application/vnd.github.raw" >"$4" || true
+            }
+            tag="$(gh api "repos/$GH_REPO/releases/latest" -q .tag_name || true)"
+            # No previous release leaves `published` absent on purpose; the
+            # script then judges the tree AS a bump, which the consumers can
+            # clear and a hand does not have to.
+            [ -z "$tag" ] || raw "$GH_REPO" "$tag" "$hello" "$gate/published"
+            raw "$GH_REPO" "$sha" "$hello" "$gate/candidate"
+            consumers=()
+            while IFS=$'\t' read -r repo path; do
+              [ -n "$repo" ] || continue
+              raw "$repo" main "$path" "$gate/${repo##*/}"
+              consumers+=("${repo##*/}=$gate/${repo##*/}")
+            done < <(scripts/protocol-gate.sh roster)
+
+            gate_rc=0
+            gate_says="$(scripts/protocol-gate.sh judge \
+              "$gate/published" "$gate/candidate" "${consumers[@]}")" || gate_rc=$?
+            printf 'PR %s  protocol gate: %s\n' "$number" "$gate_says"
+            if [ "$gate_rc" != 0 ]; then
+              # Say it where the pull request is, once. Re-posting the same
+              # sentence on every wake-up would bury the pull request, so the
+              # gate's last comment is compared and a repeat is skipped.
+              body="$MARKER
+          **This release is held: it raises the wire protocol ahead of its consumers.**
+
+          \`\`\`
+          $gate_says
+          \`\`\`
+
+          yog is the only component that mints the wire protocol version; the seat
+          (\`lernie\`), the foot (\`thrall\`) and the phone (\`yog-android\`) each vendor a
+          copy of the constant, and the wire is fail-closed on a mismatch with no
+          negotiation (\`docs/REMOTE.md\` §3). Publishing this bump first ships a suite
+          that cannot compose on a clean box.
+
+          Land the constant on the main of every repository named above. The next CI run
+          on this pull request re-judges automatically; so does a \`workflow_dispatch\` of
+          **Auto-merge release PR**, which is the door when the fix landed elsewhere."
+              last="$(gh pr view "$number" --json comments \
+                -q "[.comments[] | select(.body | startswith(\"$MARKER\")) | .body] | last // \"\"")"
+              if [ "$last" = "$body" ]; then
+                printf 'PR %s  held: the same comment already stands\n' "$number"
+              else
+                gh pr comment "$number" --body "$body"
+                printf 'PR %s  held: commented\n' "$number"
+              fi
               continue
             fi
             printf 'PR %s  merging: release PR, CI green on %s  [merge state %s]\n' \

@@ -182,6 +182,56 @@ says — and adds no verb, no field and no envelope:
   forever, and nobody here is paying for that: an operator who installs both
   ends can upgrade the older one.
 
+  **The refusal is right and its RELEASE WINDOW was the defect** *(bl-bca2)*.
+  yog is the only component that mints the number; the seat, the foot and the
+  phone each **vendor** a copy of the constant and learn about a bump when the
+  engine they dial refuses them. So every yog release that raised `PROTOCOL`
+  published a suite that could not compose until three other repositories
+  caught up: a clean box installing all five published crates on 2026-09-06 got
+  engine 15, foot 14, seat 13, and **no combination on crates.io composed** —
+  the failure landing on the first act of the Settler and the Stranger. The
+  same defect had been filed and correctly closed eight times across two
+  repositories, each close stale by the next engine release, which is what says
+  the class is not a re-vendor. **And the skew runs both ways.** While the
+  engine-first defect was being gated, thrall published 0.0.15 speaking
+  PROTOCOL 16 against a newest published yog of 0.0.49 speaking 15 — a
+  *consumer* ahead of every engine a user can install, composing with nothing,
+  by exactly the road the first direction took. A consumer bumping off a stale
+  reading is the same defect with the arrow reversed, and the phone's landing
+  is the worst of the three because its update offer carries a released APK to
+  every device that taps it.
+
+  **The remedy is an ordering rule in two halves, and it touches no shape
+  here.** Each half is gated in the repository that can decide it, at the
+  release pull request, never at a merge to `main`:
+
+  1. **yog does not publish a bump ahead of its consumers.**
+     `.github/workflows/release-automerge.yml` holds a release that raises
+     `PROTOCOL` until `mudbungie/thrall`, `mudbungie/lernie` and
+     `mudbungie/yog-android` carry the same number on their mains, and
+     comments once naming what lags. A release that moves no wire version is
+     unaffected. `scripts/protocol-gate.sh` is the decision.
+  2. **A consumer does not publish a bump ahead of the engine.** Each
+     consumer's own `merge-release-pr` job holds a release whose `PROTOCOL`
+     **exceeds** the newest published yog's, read off yog's newest `v<x.y.z>`
+     tag — cut in the same act as the crates.io upload, so that tag *is* the
+     published engine. Each carries its own `scripts/protocol-gate.sh` (thrall
+     bl-635b, lernie bl-52b5, yog-android bl-5b19) and cites this section
+     rather than restating the rule. **Strictly greater, not different**: a
+     consumer *behind* the published engine is direction 1's defect and its
+     release is the fix, so holding it would hold the remedy shut.
+
+  **THE ORDERING THE TWO GATES PRODUCE, and the whole of what to remember when
+  bumping: the consumers' mains carry the number first, then yog publishes,
+  then the consumers publish.** Landing the constant on a `main` is held by
+  neither gate — it is what gate 1 waits for. Every hold is recoverable by a
+  re-run, and every unreadable input holds rather than publishes.
+
+  Negotiation, a compat window and a version list all stay refused for the
+  reason above; what was wrong was the ORDER, which is the only place the skew
+  is decidable. So a `PROTOCOL` bump is a four-repository act, and the number's
+  one home stays `src/wire/hello.rs`.
+
   **A peer that states no version is refused exactly as a peer of the wrong
   one.** An unversioned build (a gesture envelope where a preface belongs), a
   frame that is not an object, and a peer that hung up mid-preface are one

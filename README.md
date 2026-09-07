@@ -1007,6 +1007,29 @@ concludes `success` releases — tag, GitHub Release, crates.io upload, then the
 linux-gnu binary archive and the ghcr image (see "The image"). One version,
 three artifacts, one trigger.
 
+**A protocol bump waits for its consumers** (bl-bca2). yog is the only
+component that mints the wire protocol version, and the seat (`lernie`), the
+foot (`thrall`) and the phone (`yog-android`) each *vendor* a copy of the
+constant; the wire is fail-closed on a mismatch and does not negotiate
+(`docs/REMOTE.md` §3). Publishing a bump first therefore opened a window in
+which nothing on crates.io composed — measured on a clean box as engine 15,
+foot 14, seat 13. So the auto-merge job reads `PROTOCOL` from the release PR's
+tree, from yog's last release, and from each consumer's `main`, and **holds a
+release that raises it until all three carry the new number**, commenting once
+on the pull request to name what is lagging. A release that moves no wire
+version is unaffected. A later CI run on the pull request, or a
+`workflow_dispatch` of *Auto-merge release PR*, re-judges and merges. The
+decision itself is `scripts/protocol-gate.sh`, which reads no network and is
+proved both ways by `make protocol-gate` in the local gate — the workflow
+cannot run locally, so the logic it spends does not live in it.
+
+The skew runs both ways, so each consumer holds the mirror image: its release
+does not merge while its own `PROTOCOL` *exceeds* the newest published yog's.
+Between the two, **the ordering a bump requires is fixed — the consumers'
+mains carry the number first, then yog publishes, then the consumers
+publish.** `docs/REMOTE.md` §3 is the one home of that rule; the consumer
+repositories cite it.
+
 **The gate is the build, not the merge** (bl-1c05). Holding the release PR open
 for a hand looked like a control point and was not one: the decision it asked
 for had already been made by the work that landed on `main`, and the publish is

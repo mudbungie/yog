@@ -314,10 +314,11 @@ demotion removes an internal API from the boundary's obligations. Reach for
 
 `make check` is the complete local gate and mirrors CI exactly:
 
-    fmt-check → lint (line-cap + beat-audit + leak-scan + clippy + ast-grep scan + cargo-deny) → scripts/check-coverage.sh
+    fmt-check → lint (line-cap + beat-audit + deploy-selftest + protocol-gate + leak-scan + clippy + ast-grep scan + cargo-deny) → scripts/check-coverage.sh
 
 - `make lint` — `make line-cap` (sub-second, so it fails first), then
-  `make beat-audit` (milliseconds), then `make leak-scan` (~5s), then
+  `make beat-audit` (milliseconds), then `make deploy-selftest`, then
+  `make protocol-gate` (milliseconds), then `make leak-scan` (~5s), then
   `cargo clippy --all-targets -- -D warnings` (picks up the manifest
   `[lints]`), then `make rules-audit`, then `cargo deny check`.
 - `make line-cap` — the 300-line cap over every tracked non-exempt file. Prints
@@ -376,6 +377,24 @@ demotion removes an internal API from the boundary's obligations. Reach for
   which refuses a duplicate top-level beat name outright, because bash's flat
   sourced namespace lets a later definition silently delete an earlier stage
   and a beat that never runs writes no row at all (bl-0e44).
+- `make protocol-gate` — the **release-ordering** gate's logic, both directions
+  (bl-bca2). yog is the only component that mints the wire protocol version;
+  the seat (`lernie`), the foot (`thrall`) and the phone (`yog-android`) each
+  **vendor** a copy of the constant, and the wire is fail-closed on a mismatch
+  with no negotiation (REMOTE §3). So a release that raised `PROTOCOL` used to
+  publish a suite that could not compose until three other repositories caught
+  up — measured on a clean box on 2026-09-06 as engine 15, foot 14, seat 13,
+  with **no combination on crates.io that composed**, after the same defect had
+  been filed and correctly closed eight times across two repositories. The
+  ruling is an ordering rule and not a protocol change: **a yog release that
+  raises PROTOCOL does not auto-merge until the consumers' mains carry it**; a
+  release that moves no wire version is unaffected. The decision lives in
+  `scripts/protocol-gate.sh` — pure logic, no network — because the workflow
+  that spends it (`.github/workflows/release-automerge.yml`) cannot run
+  locally, and that script also holds the ONE roster of which repositories are
+  consumers and where each keeps its constant. Every unreadable input holds
+  rather than merges. This target is its self-test: eight verdicts over
+  fabricated trees plus the roster's own shape.
 - `make leak-scan` — the disclosure gate (bl-fd5a, reworked bl-167d).
   `scripts/leak-rules.sh` is the one definition of what may not be committed:
   private keys, vendor API tokens, credential assignments, routable
@@ -804,3 +823,43 @@ Facts the queue derives from (do not fight them):
   bump it in lockstep or remote verdicts silently stop matching.
 - A crashed `scripts/speculate-gate` can strand a `speculation/<sha>` branch
   on origin; sweep with `git push origin --delete speculation/<sha>`.
+
+### The other merge queue: the release PR, and the protocol hold (bl-bca2)
+
+`bl close` lands work on `main`; a release PR carries `main` to crates.io, and
+`.github/workflows/release-automerge.yml` merges that PR by itself once CI is
+green (bl-1c05 — the build is the gate, the merge was only ever a hand). One
+condition now stands beside CI, and it is the only one that can park a release
+for days:
+
+- **A release that raises `src/wire/hello.rs`'s `PROTOCOL` is held until
+  `mudbungie/thrall`, `mudbungie/lernie` and `mudbungie/yog-android` carry the
+  same number on their mains.** The job reads the constant from the release
+  PR's own tree, from yog's last release tag (which says whether this release
+  moves it at all), and from each consumer's `main`, then hands the four paths
+  to `scripts/protocol-gate.sh judge`.
+- **A hold is not a failure.** The job exits green, prints the verdict, and
+  comments it once on the pull request naming the lagging repositories and what
+  each speaks. It is the one thing this workflow writes into a pull request.
+- **A re-run merges it.** Every later CI run on the release PR re-judges, and
+  so does a `workflow_dispatch` of *Auto-merge release PR* — the door for the
+  case that actually happens, a consumer landing the constant hours after the
+  last refresh.
+- **The skew runs both ways, and the other half is gated in the consumers.**
+  While this was being written thrall published 0.0.15 speaking PROTOCOL 16
+  against a newest published yog of 15 — a consumer ahead of every installable
+  engine, the same defect with the arrow reversed. Each consumer's own
+  `merge-release-pr` job now holds a release whose `PROTOCOL` **exceeds** the
+  newest published yog's, read off this repository's newest `v<x.y.z>` tag
+  (thrall bl-635b, lernie bl-52b5, yog-android bl-5b19). *Strictly greater, not
+  different*: a consumer behind the published engine is the first defect and
+  its release is the fix.
+- **So a PROTOCOL bump is a four-repository act, and its ORDER is fixed: the
+  consumers' mains carry the number first, then yog publishes, then the
+  consumers publish.** Bump it here, land the vendored constant in the three
+  consumers, and only then does yog's release leave `main`. Landing a constant
+  on a `main` is held by neither gate — that is what gate 1 waits for. Nothing
+  about the handshake changed: this moves the ORDER in which the four
+  components publish, which is the only place the skew was ever decidable.
+  **REMOTE §3 is the one home of this rule** and every consumer repository
+  cites it.

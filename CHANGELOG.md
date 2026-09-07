@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.50](https://github.com/mudbungie/yog/compare/v0.0.49...v0.0.50) - 2026-09-06
+
+### Changes
+
+- pin litany =0.0.11 and brazen =0.0.17: Fx.tool_id, stop children retired, remember built-in, from_name on deposits, max_output_tokens role key, OutputTruncated is a failure not a rest [bl-ebef]
+- there is no doctor: the engine holds every fact needed to answer 'is this box wired up' and no gesture asks them all at once [bl-28f4]
+- no conversation can start on main: birth asserts the clients grant that no lineage describes, and litany refuses the run at every prompt [bl-7d33]
+- a deposit records no client identity: every seat's message is 'from: user' and the ops trail has no client field, so a shared workspace cannot say who said what [bl-e59e]
+
 ## [0.0.49](https://github.com/mudbungie/yog/compare/v0.0.48...v0.0.49) - 2026-09-06
 
 ### Changes
