@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.55](https://github.com/mudbungie/yog/compare/v0.0.54...v0.0.55) - 2026-09-08
+
+### Changes
+
+- the hello states the corpus edition: build.rs compiles corpus/shapes.json's newest stamp into EDITION beside PROTOCOL, both ends write it, the engine reads the peer's [bl-1be7]
+
 ## [0.0.54](https://github.com/mudbungie/yog/compare/v0.0.53...v0.0.54) - 2026-09-08
 
 ### Changes
