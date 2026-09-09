@@ -1,7 +1,8 @@
 +++
 title = "multi_tool is classified opaque and held on every call, so a question that fans out reads (clients get ×2) parks with no answer: classify the envelope by its invocations, strictest wins"
 created = 1788934188
-updated = 1788934188
+updated = 1788934249
+claimant = "Cantaloups-Y14"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r3"]
