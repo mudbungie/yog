@@ -19,13 +19,16 @@ const RECORD: &str = "shapes.json";
 fn rendered(protocol: u32, dir: &Path) -> Result<BTreeMap<String, String>, String> {
     let shapes = shapes();
     let previous = Ledger::read(&read(dir, RECORD));
-    let next = advance(&shapes, &previous, protocol, super::published())?;
+    let next = advance(
+        &shapes,
+        &previous,
+        protocol,
+        super::published(),
+        super::DEPRECATED,
+    )?;
     let mut out: BTreeMap<String, String> = shapes
         .iter()
-        .map(|shape| {
-            let since = next.shapes.get(&shape.key()).map_or(protocol, |e| e.since);
-            (shape.path(), shape.render(since))
-        })
+        .map(|shape| (shape.path(), shape.render(protocol)))
         .collect();
     out.insert(RECORD.to_owned(), next.render());
     Ok(out)
@@ -57,15 +60,15 @@ pub(super) fn check(dir: &Path) -> Result<(), String> {
     stale.sort();
     Err(format!(
         "the wire conformance corpus is stale at {}. Run `make corpus` to \
-         regenerate it; if a shape already in use changed, raise the number in \
-         the repo-root PROTOCOL file first.",
+         regenerate it; a field gained is stamped an edition there, and a field \
+         removed or re-typed is refused until the repo-root PROTOCOL file is raised.",
         stale.join(", ")
     ))
 }
 
 /// **The regeneration.** Write what the boundary spells and drop what it no
-/// longer does — refusing, before either, a shape that moved at or below the
-/// published protocol floor.
+/// longer does — refusing, before either, a removal or a re-type the
+/// published major still reads.
 pub(super) fn bless(dir: &Path) -> Result<(), String> {
     let want = rendered(super::protocol(), dir)?;
     for path in present(dir) {

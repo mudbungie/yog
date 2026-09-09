@@ -166,8 +166,9 @@ wire-certs:
 # Regenerate the wire conformance corpus (REMOTE §3, bl-32cb) from the boundary
 # itself. The corpus is committed under corpus/; a test verifies it on every
 # run, so this target is only ever needed after a wire-visible change — and it
-# REFUSES a shape that changed its fields while PROTOCOL (the repo-root
-# `PROTOCOL` file) stood still, which is the rule made mechanical.
+# stamps a field GAINED with the next edition, and REFUSES a field lost or
+# re-typed unless PROTOCOL (the repo-root file, a major since bl-e598) has
+# been raised and the loss was deprecated first — REMOTE §3.2 made mechanical.
 corpus:
 	@YOG_CORPUS_OUT="$(CURDIR)/corpus" cargo test --quiet --lib boundary::corpus::tests::gate -- --exact
 	@echo "corpus: regenerated from the boundary"

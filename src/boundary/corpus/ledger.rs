@@ -1,43 +1,35 @@
-//! **The corpus's standing record** (bl-32cb): per shape, the field signature
-//! its fixtures spell and the protocol version at which that signature last
-//! moved.
+//! **The corpus's standing record** (bl-32cb, reshaped bl-e598): per shape,
+//! every field path its fixtures spell and the **edition** at which that path
+//! first appeared.
 //!
-//! It exists to make one REMOTE rule mechanical rather than remembered — *a
-//! change to a wire-visible shape bumps the protocol version*. The fixtures
-//! alone cannot enforce it: regenerating them makes any diff vanish, so a
-//! shape could change meaning at a standing version and nothing would notice.
-//! The record remembers what the shapes *were*, so a signature that moved
-//! while the version stood still is refusable at the moment it is regenerated.
+//! It exists to make REMOTE §3.2's two rules mechanical rather than
+//! remembered. *An addition is free and is stamped*: a path the boundary
+//! gained takes the next edition, and nothing else moves. *A removal or a
+//! re-type is a MAJOR bump*: a path that vanished, or a key that gained a
+//! second JSON type, is refused unless the repo-root `PROTOCOL` file has been
+//! raised above the published one AND the path was deprecated first
+//! ([`super::DEPRECATED`]). The fixtures alone cannot enforce either, because
+//! regenerating them makes any diff vanish; the record remembers what the
+//! shapes *were*.
 //!
-//! **The version the comparison is against is neither the shape's nor the
-//! record's: it is the newest version that has been PUBLISHED**
-//! ([`crate::wire::hello::PROTOCOL_PUBLISHED`], bl-9ced amending bl-00de).
-//! The per-shape `since` is a *stamp* — the version at which that shape last
-//! moved, which is what a client reads — and never a term in the test. It used
-//! to be one, and the reasoning was wrong in a way that only showed later: a
-//! shape edited at a version that was then found spent, and raised past, kept
-//! the pre-bump number, because the regeneration after the bump saw an
-//! unchanged signature and had nothing to restamp. bl-00de replaced it with
-//! the record's own top-level `protocol` — the version the record was last
-//! *generated* at — which fixed the stamp and left one thing wrong: that
-//! number is a **proxy** for "a version a peer may be speaking", and it
-//! advances at every bump whether or not the bump ever shipped. So the second
-//! lane of one unreleased wave was refused and had to take another integer,
-//! which §9.11 accepted as cheap. Under bl-bca2's release hold it is not
-//! cheap — each number is three consumer repositories re-vendoring a constant
-//! and one more window in which no published suite composes — so the term is
-//! now the thing itself. `protocol` stays in the record as the generation
-//! stamp a reader wants; it is no longer a term in the rule.
-//!
-//! A regeneration at an unchanged version with unchanged signatures is still a
-//! byte-identical no-op.
+//! **Three integers, and what each is.** `protocol` is the major the corpus
+//! is for — the number the hello compares. The **edition** is the newest stamp
+//! in the record, computed and never stored: the old per-bump integer line
+//! continued, so the stamps 1..18 a client already vendors keep their meaning.
+//! `floor` is the edition at which the current major was cut: every path
+//! stamped at or below it is present on every engine speaking this major, and
+//! every later path is optional to READ — absent on an engine of an older
+//! edition, which the hello's `edition` lets a seat say honestly. It moves in
+//! the one regeneration that raises `protocol`, and never after, so a lane
+//! that adds a field in the same unreleased wave as a bump lands it
+//! post-floor: over-cautious, and safe in the only direction that matters.
 //!
 //! **A signature is field paths and their JSON types, not bytes.** Adding a
-//! sample to a shape leaves the signature alone, which is right: a new fixture
-//! is not a wire change. Renaming a field, changing its type, gaining one,
-//! losing one or losing the whole shape all move it, which is also right. A new
-//! shape moves nothing — REMOTE is explicit that a new verb is not a bump,
-//! because strict decode already refuses an unknown one in band.
+//! sample to a shape leaves it alone, which is right: a new fixture is not a
+//! wire change. A new key is a gain; a renamed key is a loss and a gain; a
+//! key that spells a second type is a re-type. A new WORD in a vocabulary is
+//! invisible here by design — it is additive, and the reader's catch-all is
+//! what makes it so (REMOTE §3.2).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -45,22 +37,27 @@ use serde_json::{Map, Value, json};
 
 use super::Shape;
 
-/// One shape's record.
+/// One shape's record: each path, with the edition it appeared at.
+#[derive(Debug)]
 pub(super) struct Entry {
-    pub(super) since: u32,
-    pub(super) signature: Vec<String>,
+    pub(super) signature: BTreeMap<String, u32>,
 }
 
-/// Every shape's record, plus the protocol the corpus as a whole is for.
+/// Every shape's record, the major it is for, the floor of that major, and
+/// what is deprecated ([`super::DEPRECATED`], rendered so a consumer reads it
+/// where it reads the rest).
+#[derive(Debug)]
 pub(super) struct Ledger {
     pub(super) protocol: u32,
+    pub(super) floor: u32,
+    pub(super) deprecated: BTreeSet<String>,
     pub(super) shapes: BTreeMap<String, Entry>,
 }
 
 impl Ledger {
     /// Read a committed record. Anything unreadable is an empty record — the
-    /// same answer a corpus that does not exist yet gives, and the gate below
-    /// then asks for a regeneration rather than for a version bump.
+    /// same answer a corpus that does not exist yet gives, and the gate then
+    /// asks for a regeneration rather than for a version bump.
     pub(super) fn read(text: &str) -> Self {
         let value = serde_json::from_str::<Value>(text).unwrap_or(Value::Null);
         let mut shapes = BTreeMap::new();
@@ -70,18 +67,38 @@ impl Ledger {
             .into_iter()
             .flatten()
         {
-            shapes.insert(
-                name.clone(),
-                Entry {
-                    since: number(entry.get("since")),
-                    signature: strings(entry.get("signature")),
-                },
-            );
+            let signature = entry
+                .get("signature")
+                .and_then(Value::as_object)
+                .into_iter()
+                .flatten()
+                .map(|(path, at)| (path.clone(), number(Some(at))))
+                .collect();
+            shapes.insert(name.clone(), Entry { signature });
         }
+        let deprecated = value
+            .get("deprecated")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .map(str::to_owned)
+            .collect();
         Self {
             protocol: number(value.get("protocol")),
+            floor: number(value.get("floor")),
+            deprecated,
             shapes,
         }
+    }
+
+    /// The newest stamp in the record: the edition this corpus is at.
+    pub(super) fn edition(&self) -> u32 {
+        self.shapes
+            .values()
+            .flat_map(|entry| entry.signature.values().copied())
+            .max()
+            .unwrap_or_default()
     }
 
     /// The record's own canonical bytes.
@@ -89,12 +106,14 @@ impl Ledger {
         let shapes: Map<String, Value> = self
             .shapes
             .iter()
-            .map(|(name, entry)| {
-                let body = json!({ "since": entry.since, "signature": entry.signature });
-                (name.clone(), body)
-            })
+            .map(|(name, entry)| (name.clone(), json!({ "signature": entry.signature })))
             .collect();
-        let doc = json!({ "protocol": self.protocol, "shapes": shapes });
+        let doc = json!({
+            "deprecated": self.deprecated,
+            "floor": self.floor,
+            "protocol": self.protocol,
+            "shapes": shapes,
+        });
         super::canonical(&doc)
     }
 }
@@ -104,28 +123,15 @@ fn number(value: Option<&Value>) -> u32 {
     u32::try_from(raw).unwrap_or_default()
 }
 
-fn strings(value: Option<&Value>) -> Vec<String> {
-    value
-        .and_then(Value::as_array)
-        .map(|items| {
-            items
-                .iter()
-                .filter_map(Value::as_str)
-                .map(str::to_owned)
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
 /// Every field path a shape's frames spell, with the JSON type found there.
 /// Array elements collapse to one `[]` step, so a two-element list and a
 /// one-element list of the same rows are one signature.
-pub(super) fn signature(frames: &[Value]) -> Vec<String> {
+pub(super) fn signature(frames: &[Value]) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     for frame in frames {
         walk("", frame, &mut out);
     }
-    out.into_iter().collect()
+    out
 }
 
 fn walk(path: &str, value: &Value, out: &mut BTreeSet<String>) {
@@ -156,48 +162,87 @@ fn kind(value: &Value) -> &'static str {
     }
 }
 
-/// The record this boundary earns, or the refusal that says why it cannot have
-/// one. **A signature may change only above the published floor** (bl-9ced
-/// amending bl-00de): `published` is the newest version any peer can be
-/// speaking, and any shape that moved — or vanished — is refused unless the
-/// version being generated is greater than it. The sentence carries both
-/// halves of the remedy, and names the floor so the reader can see which of
-/// the two integers is in their way.
+/// The path without its type: what a key IS, as against what it spells.
+fn key_of(path: &str) -> &str {
+    path.rsplit_once(':').map_or(path, |(key, _)| key)
+}
+
+/// Whether a vanished path, or its whole shape, was deprecated first.
+fn deprecated(list: &[&str], shape: &str, path: &str) -> bool {
+    let named = format!("{shape}{}", key_of(path));
+    list.contains(&shape) || list.contains(&named.as_str())
+}
+
+/// The record this boundary earns, or the refusal that says why it cannot
+/// have one. A gained path is stamped the next edition; a path that vanished
+/// or re-typed is refused unless `protocol` exceeds `published` — a major bump
+/// in flight — and, for a loss, the path is in `deprecated`.
 pub(super) fn advance(
     shapes: &[Shape],
     previous: &Ledger,
     protocol: u32,
     published: u32,
+    deprecated: &[&str],
 ) -> Result<Ledger, String> {
-    let fresh: BTreeMap<String, Vec<String>> = shapes
+    let fresh: BTreeMap<String, BTreeSet<String>> = shapes
         .iter()
         .map(|shape| (shape.key(), signature(&shape.frames)))
         .collect();
-    let moved: Vec<String> = previous
-        .shapes
-        .iter()
-        .filter(|(name, entry)| fresh.get(*name) != Some(&entry.signature))
-        .map(|(name, _)| name.clone())
-        .collect();
-    if !moved.is_empty() && protocol <= published {
+    let next = previous.edition() + 1;
+    let bumping = protocol > published;
+    let mut breaking = Vec::new();
+    for (name, entry) in &previous.shapes {
+        let now = fresh.get(name);
+        for path in entry.signature.keys() {
+            if now.is_some_and(|paths| paths.contains(path)) {
+                continue;
+            }
+            match (bumping, self::deprecated(deprecated, name, path)) {
+                (true, true) => {}
+                (true, false) => breaking.push(format!("{name}{path} vanished undeprecated")),
+                (false, _) => breaking.push(format!("{name}{path} vanished")),
+            }
+        }
+    }
+    let mut out = BTreeMap::new();
+    for (name, paths) in fresh {
+        let held = previous.shapes.get(&name);
+        let mut signature = BTreeMap::new();
+        for path in paths {
+            let stamp = held.and_then(|entry| entry.signature.get(&path).copied());
+            let retyped = held.is_some_and(|entry| {
+                stamp.is_none()
+                    && entry
+                        .signature
+                        .keys()
+                        .any(|known| key_of(known) == key_of(&path))
+            });
+            if retyped && !bumping {
+                breaking.push(format!("{name}{path} re-typed a key in use"));
+            }
+            signature.insert(path, stamp.unwrap_or(next));
+        }
+        out.insert(name, Entry { signature });
+    }
+    if !breaking.is_empty() {
         return Err(format!(
-            "these wire shapes changed at a published protocol version: {}. \
-             A change to a shape already in use bumps the version: raise the number \
-             above the published floor of {published} in the repo-root PROTOCOL file, \
-             then run `make corpus`.",
-            moved.join(", ")
+            "these wire changes break a reader of the published protocol {published}: {}. \
+             A field or a spelling is removed or re-typed only at a MAJOR bump: list it in \
+             corpus::DEPRECATED, raise the number in the repo-root PROTOCOL file, then run \
+             `make corpus`.",
+            breaking.join(", ")
         ));
     }
-    let shapes = fresh
-        .into_iter()
-        .map(|(name, signature)| {
-            let held = previous
-                .shapes
-                .get(&name)
-                .filter(|e| e.signature == signature);
-            let since = held.map_or(protocol, |entry| entry.since);
-            (name, Entry { since, signature })
-        })
-        .collect();
-    Ok(Ledger { protocol, shapes })
+    let ledger = Ledger {
+        protocol,
+        floor: previous.floor,
+        deprecated: deprecated.iter().map(|&s| s.to_owned()).collect(),
+        shapes: out,
+    };
+    let floor = if protocol > previous.protocol {
+        ledger.edition()
+    } else {
+        previous.floor
+    };
+    Ok(Ledger { floor, ..ledger })
 }

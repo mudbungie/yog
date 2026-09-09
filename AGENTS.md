@@ -378,7 +378,10 @@ demotion removes an internal API from the boundary's obligations. Reach for
   sourced namespace lets a later definition silently delete an earlier stage
   and a beat that never runs writes no row at all (bl-0e44).
 - `make protocol-gate` — the **release-ordering** gate's logic, both directions
-  (bl-bca2). yog is the only component that mints the wire protocol version;
+  (bl-bca2). **Since bl-e598 `PROTOCOL` is a MAJOR and moves only on a
+  breaking change** (REMOTE §3.2): an addition is an edition `make corpus`
+  stamps, so this gate now fires rarely and on a design ball. Its mechanism is
+  unchanged. yog is the only component that mints the wire protocol version;
   the seat (`lernie`), the foot (`thrall`) and the phone (`yog-android`) each
   **vendor** a copy of the constant, and the wire is fail-closed on a mismatch
   with no negotiation (REMOTE §3). So a release that raised `PROTOCOL` used to
@@ -828,6 +831,13 @@ Facts the queue derives from (do not fight them):
   on origin; sweep with `git push origin --delete speculation/<sha>`.
 
 ### The other merge queue: the release PR, and the protocol hold (bl-bca2)
+
+**A `PROTOCOL` bump is a MAJOR since bl-e598** (REMOTE §3.2): a field removed
+or re-typed, a meaning changed under a spelling in use, a field the engine
+newly requires on a request. A new field, word, op or reply kind is an
+**edition** — `make corpus` stamps it in `corpus/shapes.json`, the engine states
+its edition in the hello, and no file below moves. The hold below is therefore
+the rare path, walked by a design ball carrying a migration note.
 
 `bl close` lands work on `main`; a release PR carries `main` to crates.io, and
 `.github/workflows/release-automerge.yml` merges that PR by itself once CI is

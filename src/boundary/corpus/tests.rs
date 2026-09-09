@@ -1,6 +1,6 @@
-//! The generator's own tests: the regeneration writes what the gate demands,
-//! and the standing record refuses a shape that moved under a standing
-//! protocol version.
+//! The generator's own tests: the regeneration writes what the gate demands
+//! (this file), and the standing record stamps what the boundary gained and
+//! refuses what it lost or re-typed under the published major (`ledger`).
 
 use std::fs;
 use std::path::Path;
@@ -8,8 +8,11 @@ use std::path::Path;
 use serde_json::{Value, json};
 use tempfile::tempdir;
 
-use super::ledger::{Ledger, advance, signature};
-use super::{Shape, canonical, committed, destination, protocol, run, shapes, store};
+use super::ledger::{Ledger, signature};
+use super::{committed, destination, protocol, run, shapes, store};
+
+/// The standing record's rule — what a gain, a loss and a re-type each cost.
+mod ledger;
 
 /// **The drift gate.** A boundary change that alters an emitted byte fails
 /// here, and the sentence carries both halves of the remedy. It is also the
@@ -26,9 +29,9 @@ fn blessed(dir: &Path) {
 }
 
 /// The round trip the corpus itself is: write, then verify — and verifying a
-/// second time is still clean, so the generator is idempotent. The record's own
-/// bytes are the sharp half: a regeneration at an unchanged protocol with
-/// unchanged signatures restamps nothing (bl-00de).
+/// second time is still clean, so the generator is idempotent. The record's
+/// own bytes are the sharp half: a regeneration with unchanged signatures
+/// restamps nothing and moves no floor.
 #[test]
 fn a_regenerated_corpus_passes_its_own_gate_twice() {
     let dir = tempdir().expect("scratch");
@@ -44,7 +47,8 @@ fn a_regenerated_corpus_passes_its_own_gate_twice() {
     );
 }
 
-/// The whole surface is present, both halves, and every fixture is stamped.
+/// The whole surface is present, both halves, and every fixture is stamped
+/// with the major the corpus is for.
 #[test]
 fn every_shape_is_a_stamped_file_of_frames() {
     let dir = tempdir().expect("scratch");
@@ -81,122 +85,6 @@ fn a_stale_fixture_and_an_orphan_are_both_named() {
     assert_eq!(run(None, dir.path()), Ok(()));
 }
 
-/// One `ack` shape whose signature has gained `reason`.
-fn moved_ack() -> Shape {
-    Shape {
-        direction: "request",
-        name: "ack".to_owned(),
-        frames: vec![json!({ "op": "ack", "reason": "why" })],
-    }
-}
-
-/// A record generated at `protocol` holding one `ack` stamped `since`.
-fn recorded(protocol: u32, since: u32) -> Ledger {
-    Ledger::read(&canonical(&json!({
-        "protocol": protocol,
-        "shapes": { "request/ack": { "since": since, "signature": ["/op:string", ":object"] } },
-    })))
-}
-
-/// **The rule, mechanically**: a wire-visible shape that changed at a version
-/// that has already been PUBLISHED is refused, and the sentence says both what
-/// to bump and what to run. The comparison is against neither the record's own
-/// generation stamp nor the shape's `since` — so an old stamp is no licence
-/// (bl-00de) and a bump that never shipped is no bar (bl-9ced).
-#[test]
-fn a_changed_shape_at_a_published_version_demands_the_bump() {
-    let previous = recorded(protocol(), 1);
-    let refusal = advance(&[moved_ack()], &previous, protocol(), protocol())
-        .err()
-        .expect("refused");
-    assert!(refusal.contains("request/ack"), "{refusal}");
-    assert!(refusal.contains("PROTOCOL file"), "{refusal}");
-    assert!(refusal.contains("make corpus"), "{refusal}");
-}
-
-/// **A wave of lanes shares one unreleased number** (bl-9ced). The record was
-/// generated at the current version by the lane ahead — so the old rule
-/// refused this one outright — and the version is still above the published
-/// floor, so the shape moves and re-stamps at the same number the lane ahead
-/// used. This is the shape of every release wave: one integer, three
-/// consumers vendoring it once.
-#[test]
-fn a_second_lane_of_one_unreleased_wave_shares_the_number() {
-    let previous = recorded(protocol(), protocol());
-    let next = advance(&[moved_ack()], &previous, protocol(), protocol() - 1)
-        .expect("lawful below the published floor");
-    assert_eq!(next.protocol, protocol());
-    assert_eq!(next.shapes["request/ack"].since, protocol());
-}
-
-/// And the bump stamps the NEW number, not the stale one the shape carried.
-/// This is the drift the old per-shape test let through: a shape edited at a
-/// version later found spent kept the pre-bump stamp forever.
-#[test]
-fn a_change_after_a_bump_stamps_the_new_number() {
-    let next = advance(&[moved_ack()], &recorded(12, 11), 13, 12).expect("lawful across a bump");
-    assert_eq!(next.protocol, 13);
-    assert_eq!(next.shapes["request/ack"].since, 13);
-}
-
-/// A shape that vanished is the same offence: a spelling in use stopped being
-/// spelled, which is a meaning change however few bytes it moves.
-#[test]
-fn a_vanished_shape_demands_the_bump_too() {
-    let previous = Ledger::read(&canonical(&json!({
-        "protocol": protocol(),
-        "shapes": { "request/gone": { "since": 1, "signature": [":object"] } },
-    })));
-    let refusal = advance(&[], &previous, protocol(), protocol())
-        .err()
-        .expect("refused");
-    assert!(refusal.contains("request/gone"), "{refusal}");
-}
-
-/// And the bump is the way through: at a higher version the same change is
-/// lawful, and the record re-stamps only what moved.
-#[test]
-fn a_bump_lets_the_change_through_and_leaves_the_still_shapes_alone() {
-    let moved = Shape {
-        direction: "request",
-        name: "ack".to_owned(),
-        frames: vec![json!({ "op": "ack", "reason": "why" })],
-    };
-    let still = Shape {
-        direction: "request",
-        name: "scan".to_owned(),
-        frames: vec![json!({ "op": "scan" })],
-    };
-    let previous = Ledger::read(&canonical(&json!({
-        "protocol": 1,
-        "shapes": {
-            "request/ack": { "since": 1, "signature": ["/op:string", ":object"] },
-            "request/scan": { "since": 1, "signature": ["/op:string", ":object"] },
-        },
-    })));
-    let next = advance(&[moved, still], &previous, 2, 1).expect("lawful at a higher version");
-    assert_eq!(next.protocol, 2);
-    assert_eq!(next.shapes["request/ack"].since, 2, "the shape that moved");
-    assert_eq!(
-        next.shapes["request/scan"].since, 1,
-        "the shape that did not"
-    );
-}
-
-/// A **new** shape is not a bump — REMOTE is explicit that strict decode
-/// already refuses an unknown verb in band — so it lands at the standing
-/// version.
-#[test]
-fn a_new_shape_lands_at_the_standing_version() {
-    let fresh = Shape {
-        direction: "request",
-        name: "novel".to_owned(),
-        frames: vec![json!({ "op": "novel" })],
-    };
-    let next = advance(&[fresh], &Ledger::read(""), protocol(), protocol()).expect("additive");
-    assert_eq!(next.shapes["request/novel"].since, protocol());
-}
-
 /// The signature is field paths and their types: another sample of the same
 /// shape moves nothing, a renamed field moves it.
 #[test]
@@ -207,13 +95,15 @@ fn a_signature_reads_fields_and_not_bytes() {
         json!({ "op": "stop", "children": true, "tags": ["a", "b"] }),
     ]);
     assert_eq!(one, two, "samples are not shapes");
-    assert!(one.contains(&"/children:bool".to_owned()), "{one:?}");
-    assert!(one.contains(&"/tags/[]:string".to_owned()), "{one:?}");
+    assert!(one.contains("/children:bool"), "{one:?}");
+    assert!(one.contains("/tags/[]:string"), "{one:?}");
     let renamed = signature(&[json!({ "op": "stop", "kids": true, "tags": ["a"] })]);
     assert_ne!(one, renamed, "a renamed field is a moved shape");
     // Null is a type of its own: absent and present-as-null are different facts.
     assert_eq!(
-        signature(&[json!({ "at": Value::Null })]),
+        signature(&[json!({ "at": Value::Null })])
+            .into_iter()
+            .collect::<Vec<_>>(),
         vec!["/at:null", ":object"]
     );
 }
@@ -222,7 +112,8 @@ fn a_signature_reads_fields_and_not_bytes() {
 /// written names the failure rather than swallowing it.
 #[test]
 fn an_unreadable_record_is_empty_and_an_unwritable_destination_refuses() {
-    assert_eq!(Ledger::read("not json").protocol, 0);
+    let empty = Ledger::read("not json");
+    assert_eq!((empty.protocol, empty.floor, empty.edition()), (0, 0, 0));
     let dir = tempdir().expect("scratch");
     let blocked = dir.path().join("file");
     fs::write(&blocked, "").expect("seed");

@@ -40,6 +40,15 @@ const REPLY: &str = "reply";
 /// every ordinary test run — the gate verifies instead of writing.
 const DESTINATION: &str = "YOG_CORPUS_OUT";
 
+/// **What is on its way out** (REMOTE §3.2's window rule): a shape
+/// (`reply/x`) or a field (`reply/x/rows/[]/field`, the path without its
+/// type) yog still writes and a reader should stop relying on. The ledger
+/// refuses to let a path vanish that is not listed here, and this list is
+/// rendered into `corpus/shapes.json` so a consumer reads it where it reads
+/// the rest. A removal is a MAJOR bump, and never within three yog releases
+/// of the entry here landing in one.
+pub(crate) const DEPRECATED: &[&str] = &[];
+
 /// One wire shape: an `op` token on the request side, a reply `kind` on the
 /// answer side, and every fixture the boundary spells for it.
 pub(crate) struct Shape {
@@ -58,9 +67,8 @@ impl Shape {
         format!("{}/{}.json", self.direction, self.name)
     }
 
-    /// The fixture file's canonical bytes. `protocol` is **this shape's** —
-    /// the version at which its fields last moved, which is what a client
-    /// needs to know and what the standing record keeps.
+    /// The fixture file's canonical bytes. `protocol` is the major the corpus
+    /// is for; which edition each field appeared at is the standing record's.
     fn render(&self, protocol: u32) -> String {
         canonical(&json!({
             "protocol": protocol,
@@ -86,9 +94,9 @@ fn protocol() -> u32 {
     crate::wire::hello::PROTOCOL
 }
 
-/// The newest protocol yog has PUBLISHED — the floor a shape may not move at
-/// or below, and the wire's own constant again rather than a second spelling
-/// (bl-9ced).
+/// The newest protocol yog has PUBLISHED — what licenses a breaking change
+/// (`protocol` above it is a major bump in flight), and the wire's own
+/// constant again rather than a second spelling (bl-9ced).
 fn published() -> u32 {
     crate::wire::hello::PROTOCOL_PUBLISHED
 }
