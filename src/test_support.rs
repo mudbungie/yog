@@ -93,9 +93,16 @@ impl FileIo for FakeFs {
 /// `providers.yaml` exactly as litany's own `template/providers.yaml` authors
 /// it (the pinned engine) — what a materialized `litany new` commits,
 /// worker tool pool included: yog grants nothing on top (§8.1, bl-7fc8).
+///
+/// A hand copy, so it drifts — it stood a pin behind the engine's own grant
+/// until bl-d06c. What the drift can no longer cost is a parked conversation:
+/// `tests/engine_grant.rs` reads the grant out of a workspace `litany new`
+/// really authors and holds it against the classifier's intrinsic map, so the
+/// fact this constant approximates is checked against the engine and not
+/// against this string.
 pub(crate) const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: anthropic\n    \
      model: claude-sonnet-5\n    tools: [apply_patch, bash, cd, dispatch, load_skill, message, \
-     python, read_file, remember, search_history]\n  compactor:\n    provider: anthropic\n    model: claude-haiku-4-5\n";
+     python, read_file, read_tool_output, remember, search_history]\n  compactor:\n    provider: anthropic\n    model: claude-haiku-4-5\n";
 
 /// The `new)` arm of a fake `litany`: the workspace litany ARCH §2.2 describes,
 /// authored in shell — a bare `repo.git` whose orphan `config/default` root

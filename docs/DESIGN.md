@@ -5599,6 +5599,35 @@ to *be* that executable and to own every fact it reads.
   `tool_use` id, as it must; what changes is that a tool the operator has
   spoken about never reaches the hold again.
 
+  **The lane is for machines this control cannot see into, and a granted
+  built-in must never land in it** (bl-d06c). litany's `multi_tool` envelope
+  was in the shipped worker grant with no row in the intrinsic map, so every
+  call of it — a question that fanned out two `clients get` reads — classified
+  opaque and held, and the conversation parked with the operator looking at
+  tool calls and no reply. The ruling that filed it is VISION §4.11's *an
+  envelope is never a subject*: judge the inner invocations as if each had been
+  called alone and take the strictest verdict. yog implements no fold for it,
+  for two reasons that are one reason. The engine already does it better — a
+  program's inner invocations re-enter the grant gate and this control at the
+  moment each runs (litany's *no bypass*), which binds the judgment to what
+  executes rather than to a list written ahead of it — and folding a list off a
+  name the map does NOT hold would lower a class on the invocation's own say-so,
+  which is exactly the inference bl-72bd deleted. So the fold would have to hang
+  on a name in the closed map, and there is none: `multi_tool` retired upstream
+  (litany bl-99bb, at the =0.0.13 pin — the `python` program is the envelope
+  now) and `python` carries its own row.
+
+  What is left is the class of defect rather than its instance, and that is a
+  guard: `tests/engine_grant.rs` mints a workspace with the real binary
+  (`yog litany new`), reads the `worker` grant out of the config commit litany
+  itself authored, and holds every name in it — plus `tool_host::engine_act::
+  NAMES` and `tool_host::clients::NAME`, the granted names that are yog's own
+  and appear in no `providers.yaml` — against `classify::Leg::of`, the map's one
+  public reader. A name the engine grants and this control has no row for fails
+  the suite with the row to write. Both directions: the grant must parse to a
+  non-empty list holding a name we know, and a name outside the map must still
+  answer `Leg::Routed`, so the fail-closed lane is kept, not softened.
+
   **The verdict goes to the party that can act on it, and on this leg that is
   never the model** (bl-1772). A refusal reaches the model as a tool result
   marked ERROR; on the engine's own machine that is right, because the operator

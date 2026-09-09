@@ -752,6 +752,41 @@ mediation.
      so the safer tool document was the punished one, and an operator who
      noticed would fix it by adding a shell.
 
+   - **An envelope is never a subject — and reading one is the engine's job,
+     not this control's** (bl-d06c). A tool whose whole act is to carry other
+     invocations (litany's `multi_tool`: `{execution: parallel, invocations:
+     [...]}`) has no reach of its own, so the classes that matter are its
+     contents': each inner invocation judged exactly as if it had been called
+     alone, the envelope taking the strictest verdict, an unknown name inside
+     making the whole thing opaque. That is the ruling, and it is implementable
+     **only where the control implements the envelope**. For a routed name the
+     list is the invocation's own assertion about itself, and believing it is
+     precisely the inference bl-72bd deleted — the one path left by which an
+     unread invocation could talk itself into a passing class. So a routed
+     envelope stays opaque, with the `rules:` row above as its way out like any
+     other unreadable name, and no arm anywhere lowers a class on the strength
+     of a payload.
+
+     **The enforcement point is upstream and stronger than any fold here.**
+     litany re-enters the grant gate *and* this control for every inner
+     invocation at the moment it runs (its own *no bypass* rule), so an
+     envelope's contents are adjudicated whether or not the envelope itself
+     ever was — bound to what actually executes, which reading a list ahead of
+     time can never be. The intrinsic map therefore holds no envelope today and
+     wants none: `multi_tool` retired upstream (litany bl-99bb — a `python`
+     program is the same envelope with its list written as it runs), and
+     `python` carries an intrinsic row of its own.
+
+     **What actually parked the conversation this ruling came from was neither
+     half.** `multi_tool` stood in the shipped worker grant with no row in the
+     intrinsic map, so it fell to the routed lane — the lane for tools on
+     machines this control cannot see into — and held on every call; the
+     operator saw a question with tool calls and no reply. The instance is gone
+     with the name, and the **class** is now guarded rather than fixed
+     (`tests/engine_grant.rs`): every name the pinned engine's own grant
+     carries, read out of a workspace `litany new` really authors, must
+     classify on the engine leg.
+
    And **the fall-off is deleted structurally, not fixed**: names are folded
    into a closed enum before anything classifies them and matched exhaustively,
    so no future arm can land a name in a passing class by default (DESIGN §12,
