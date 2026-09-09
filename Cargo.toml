@@ -53,6 +53,11 @@ include = [
     # this list is shaped by.
     "/PROTOCOL",
     "/build.rs",
+    # The corpus's standing record, and the third build input (bl-1be7):
+    # `build.rs` reads its newest stamp as EDITION and its `floor` as FLOOR
+    # (REMOTE §3.2). The record ONLY — a client vendors the fixtures beside it
+    # out of the repository, and nothing in the crate compiles against them.
+    "/corpus/shapes.json",
     "/README.md",
     "/LICENSE",
     "/CHANGELOG.md",
@@ -361,6 +366,14 @@ notify = "6"
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 serde_json = "1"
 thiserror = "2"
+
+# `build.rs` reads `corpus/shapes.json` — the committed record whose newest
+# stamp is this build's EDITION and whose `floor` is its FLOOR (REMOTE §3.2,
+# bl-1be7). No new crate: `serde_json` is already the dependency the whole
+# boundary is spelled in, and a build script's copy of it is the same package
+# in the lockfile.
+[build-dependencies]
+serde_json = "1"
 
 [dev-dependencies]
 tempfile = "3"

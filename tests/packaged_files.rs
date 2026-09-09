@@ -72,11 +72,18 @@ fn packaged() -> Vec<String> {
         .collect()
 }
 
-/// The classes ruled into the published crate: the crate's own source, the two
-/// root build inputs (`PROTOCOL`, the wire version's one file-shaped home, and
-/// the `build.rs` that compiles it into the constant — bl-3e57), and the three
-/// files crates.io renders. `Cargo.toml.orig` and `.cargo_vcs_info.json` are
-/// minted by cargo into the tarball and are not tree files at all.
+/// The classes ruled into the published crate: the crate's own source, the
+/// three root build inputs (`PROTOCOL`, the wire major's one file-shaped home,
+/// the `build.rs` that compiles it into the constant — bl-3e57 — and
+/// `corpus/shapes.json`, whose newest stamp is the build's `EDITION` and whose
+/// `floor` is its `FLOOR`, bl-1be7), and the three files crates.io renders.
+/// `Cargo.toml.orig` and `.cargo_vcs_info.json` are minted by cargo into the
+/// tarball and are not tree files at all.
+///
+/// **`corpus/shapes.json` is named, never a `corpus/` class.** The record is a
+/// build input; the fixtures beside it are what a client vendors out of the
+/// repository, and nothing in the crate compiles against one — so a pattern
+/// that shipped the directory would ship 124 files to make one number.
 ///
 /// The icon artifacts were the fourth class until bl-7942; they were the
 /// application mark, and a server has none.
@@ -89,6 +96,7 @@ fn is_ruled_in(path: &str) -> bool {
             | ".cargo_vcs_info.json"
             | "PROTOCOL"
             | "build.rs"
+            | "corpus/shapes.json"
             | "README.md"
             | "LICENSE"
             | "CHANGELOG.md"
@@ -124,10 +132,12 @@ fn the_files_crates_io_needs_ship() {
         "Cargo.lock",
         "README.md",
         "LICENSE",
-        // The wire version and the script that compiles it in: without either,
-        // the published crate does not build at all (bl-3e57).
+        // The wire major, the corpus record the edition is read off, and the
+        // script that compiles both in: without any of them, the published
+        // crate does not build at all (bl-3e57, bl-1be7).
         "PROTOCOL",
         "build.rs",
+        "corpus/shapes.json",
         "src/lib.rs",
         "src/main.rs",
     ] {
@@ -207,6 +217,11 @@ fn the_allowlist_sees_its_own_violations() {
         // the unanchored-pattern sighting: a bare `README.md` include pattern
         // shipped this, and no `scripts` class rules it in
         "scripts/leak-fixtures/README.md",
+        // the corpus's fixtures and its guide: a client vendors them out of
+        // the repository, and only the standing record is a build input
+        "corpus/reply/acked.json",
+        "corpus/request/stop.json",
+        "corpus/README.md",
         // every asset class the mark used to ship under (bl-7942)
         "assets/yog.desktop",
         "assets/yog.svg",
@@ -214,7 +229,12 @@ fn the_allowlist_sees_its_own_violations() {
     ] {
         assert!(!is_ruled_in(stray), "{stray} must not be ruled in");
     }
-    for shipped in ["src/main.rs", "src/app/mod.rs", "LICENSE"] {
+    for shipped in [
+        "src/main.rs",
+        "src/app/mod.rs",
+        "LICENSE",
+        "corpus/shapes.json",
+    ] {
         assert!(is_ruled_in(shipped), "{shipped} must be ruled in");
     }
 }

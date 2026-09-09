@@ -119,3 +119,29 @@ fn an_unreadable_record_is_empty_and_an_unwritable_destination_refuses() {
     fs::write(&blocked, "").expect("seed");
     assert!(store::bless(&blocked.join("under")).is_err());
 }
+
+/// **The compiled constants and the committed record cannot disagree**
+/// (bl-1be7). `build.rs` reads `corpus/shapes.json` and writes `EDITION` — the
+/// newest stamp over every shape's signature — and `FLOOR`; the ledger reads
+/// the same file, and [`Ledger::edition`] is the same arithmetic in Rust. Two
+/// programs computing one fact off one file is the whole hazard, so the test
+/// is the fact itself rather than either program's arms: a regeneration that
+/// stamps a new edition and a build that did not re-run land here.
+#[test]
+fn the_hello_states_the_committed_edition_and_floor() {
+    let record =
+        Ledger::read(&fs::read_to_string(committed().join("shapes.json")).expect("record"));
+    assert_eq!(
+        crate::wire::hello::EDITION,
+        record.edition(),
+        "the compiled EDITION is not the record's newest stamp"
+    );
+    assert_eq!(
+        crate::wire::hello::FLOOR,
+        record.floor,
+        "the compiled FLOOR is not the record's floor"
+    );
+    // And the record is the one this build's major is for, so the three
+    // numbers are read off one file rather than two.
+    assert_eq!(record.protocol, protocol());
+}

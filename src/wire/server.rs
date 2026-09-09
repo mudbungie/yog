@@ -182,10 +182,13 @@ pub(crate) fn serve(
     };
     let mut tls = StreamOwned::new(conn, tcp);
     // The §3 version preface, stated and checked before any gesture (bl-a670).
-    if !super::hello::admit(&mut tls) {
+    // What an admitted peer hands back is its corpus EDITION (REMOTE §3.2,
+    // bl-1be7) — stated, never adjudicated — which rides on the presence entry
+    // below because that is where this connection's identity already lives.
+    let Some(edition) = super::hello::admit(&mut tls) else {
         hang_up(&mut tls);
         return;
-    }
+    };
     // **Presence is this scope** (REMOTE §5, bl-4e08): the guard is taken when
     // the connection first names its client and released when this function
     // leaves, however it leaves — a clean close, a refused frame, a peer that
@@ -207,7 +210,7 @@ pub(crate) fn serve(
         let Some(peer) = peer_client(tls.conn.peer_certificates()) else {
             return;
         };
-        let _ = live.get_or_insert_with(|| presence.enter(&peer.client));
+        let _ = live.get_or_insert_with(|| presence.enter(&peer.client, edition));
         for chunk in answerer.answer(&peer, request) {
             if frame::write_value(&mut tls, &chunk).is_err() {
                 return;

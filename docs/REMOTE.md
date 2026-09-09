@@ -614,17 +614,42 @@ today:
   paint is a parity fact, not an unreadability; `unreadable` holds malformed
   frames only.
 
-**Capability discovery replaces the bump for the additive class.** The hello
-gains one key beside `protocol`: **`edition`**, the corpus's edition compiled
-into the engine (yog bl-1be7). Both ends write it; a peer that states none
-is read as the floor. A seat that vendors the ledger then answers two
-questions no bump ever answered: *can this engine spell the field this
-control would send* — `stamp(shape, key) ≤ engine edition`, else grey the
-control — and *is this absent field absent because the engine cannot say it*,
-which is rendered as exactly that rather than as the reassuring default. The
-three entries that paid a bump to make an absence loud (8's `wrote`, 15's
-`tools`, 18's `held`) wanted precisely this. A seat older than the engine
-needs nothing: it ignores what it cannot spell.
+**Capability discovery replaces the bump for the additive class** *(landed,
+yog bl-1be7 — `build.rs`, `src/wire/hello.rs`)*. The hello carries one key
+beside `protocol`: **`edition`**, the corpus's edition compiled into the
+engine. `build.rs` reads `corpus/shapes.json` beside the root `PROTOCOL` file
+and writes two more constants — `EDITION`, the maximum over every stamp in
+every shape's signature (computed there exactly as `Ledger::edition` computes
+it, and held equal to it by a unit test on the committed record), and `FLOOR`,
+the record's `floor`. Both ends write the key; **a peer that states none is
+read as `FLOOR`**, and so is one whose stamp is not a number a `u32` can hold,
+because there is no third thing a reader could do with it and the floor is
+what every engine of this major has already promised. The two numbers are read
+off two committed files and declared nowhere, so `corpus/shapes.json` joins
+`PROTOCOL` and `build.rs` in the crate's `include` allowlist as its third
+build input — the record only, since the fixtures beside it are vendored out
+of the repository and nothing in the crate compiles against them.
+
+**`admit` still decides on `protocol` alone**, and that is the point of the
+split: an edition can only ever differ *within* an agreed major, so it refuses
+nobody. What an admitted peer hands back is its edition, which the listener
+keeps on the connection's presence entry (§5) — the map is now one stamp per
+live connection rather than a bare refcount, the count being its length —
+because that is where a connection's identity already lives and `reply/clients`
+is where a seat would one day read it. Nothing answers with it yet.
+
+A seat that vendors the ledger then answers two questions no bump ever
+answered: *can this engine spell the field this control would send* —
+`stamp(shape, key) ≤ engine edition`, else grey the control — and *is this
+absent field absent because the engine cannot say it*, which is rendered as
+exactly that rather than as the reassuring default. The three entries that
+paid a bump to make an absence loud (8's `wrote`, 15's `tools`, 18's `held`)
+wanted precisely this. A seat older than the engine needs nothing: it ignores
+what it cannot spell.
+
+**The hello is still not a boundary frame**, so the corpus gained nothing and
+this is not an edition: §3's preface *"rides beside the gesture envelope"*, and
+`shapes.json` records the gesture envelope.
 
 **The release holds stay, and fire only on a major.** Neither gate changes:
 each already fires only when the root `PROTOCOL` file moves, and it now moves

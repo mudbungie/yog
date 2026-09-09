@@ -48,7 +48,7 @@ fn presence_is_answered_and_absence_is_a_row_all_the_same() {
         super::super::register(tmp.path(), &client(name), "home").expect("seated");
     }
     let presence = Presence::default();
-    let _live = presence.enter(&client("phone"));
+    let _live = presence.enter(&client("phone"), 18);
     let rows = roster(tmp.path(), &presence, "home");
     assert_eq!(
         rows.iter()

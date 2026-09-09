@@ -18,6 +18,10 @@ use std::path::Path;
 
 /// Dial `address` as a client of `dir`'s CA, state `version`, ask for the
 /// workspaces, and read every frame the engine writes back.
+///
+/// It states no `edition`, which is deliberate: that is every build older than
+/// bl-1be7, the engine reads it as the floor (REMOTE §3.2), and the decision
+/// this file is about is made on the major alone.
 fn stating(dir: &Path, address: &str, version: u32) -> Vec<Value> {
     let config = crate::wire::tls::client_config(&material(dir, Role::Client, address))
         .expect("client config");
@@ -52,7 +56,10 @@ fn an_engine_states_its_version_and_answers_a_peer_that_shares_it() {
     assert_eq!(frames.len(), 2, "the preface, then the answer");
     assert_eq!(
         frames[0],
-        json!({ "protocol": crate::wire::hello::PROTOCOL })
+        json!({
+            "protocol": crate::wire::hello::PROTOCOL,
+            "edition": crate::wire::hello::EDITION,
+        })
     );
     assert_eq!(frames[1]["asked"], json!({"op": "workspaces"}));
     assert_eq!(asked.load(Ordering::Relaxed), 1);

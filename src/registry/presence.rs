@@ -10,9 +10,15 @@
 //! and writing it would put a connectivity-rate fact into a substrate the file
 //! religion promises is durable.
 //!
-//! **It is a refcount, not a set.** One client may hold two seats at once — a
-//! phone and a laptop presenting the same certificate — and the second closing
-//! must not unsay the first. Counting dissolves that without a case for it.
+//! **It is one entry per live connection, not a set.** One client may hold two
+//! seats at once — a phone and a laptop presenting the same certificate — and
+//! the second closing must not unsay the first. Counting dissolves that
+//! without a case for it, and since bl-1be7 what is counted carries something:
+//! each entry is the **corpus edition** that connection stated in its preface
+//! (REMOTE §3.2). The count is the list's length, so there is no second number
+//! to keep true — a seat's capability is a fact about the connection it
+//! arrived on, and this map is where a connection's identity already lives.
+//! Nothing answers with it yet; `reply/clients` is where it would go.
 //!
 //! **Entering is RAII and that is the whole protocol.** The wire server takes a
 //! [`Live`] when a connection first names its client and drops it when the
@@ -40,15 +46,15 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use super::Client;
 
-/// One refcount per live identity, behind the crate's ordinary
-/// `unwrap_or_else(PoisonError::into_inner)` recovery: a panic while the guard
-/// was held leaves a map that is still a map.
-type PresenceCell = Arc<Mutex<BTreeMap<String, usize>>>;
+/// Per live identity, one stated corpus edition per connection it holds,
+/// behind the crate's ordinary `unwrap_or_else(PoisonError::into_inner)`
+/// recovery: a panic while the guard was held leaves a map that is still a map.
+type PresenceCell = Arc<Mutex<BTreeMap<String, Vec<u32>>>>;
 
 /// Lock it, poison-immune. Kept on one line for `state.rs`'s own reason — a
 /// split isolates the never-taken recovery, which reads as uncovered under
 /// `ignore-panics`.
-fn lock_presence(cell: &PresenceCell) -> MutexGuard<'_, BTreeMap<String, usize>> {
+fn lock_presence(cell: &PresenceCell) -> MutexGuard<'_, BTreeMap<String, Vec<u32>>> {
     cell.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
@@ -62,14 +68,19 @@ pub struct Presence {
 }
 
 impl Presence {
-    /// Register one live connection for `client`, until the returned [`Live`]
+    /// Register one live connection for `client`, stating the corpus
+    /// `edition` its preface carried (REMOTE §3.2), until the returned [`Live`]
     /// drops.
-    pub fn enter(&self, client: &Client) -> Live {
+    pub fn enter(&self, client: &Client, edition: u32) -> Live {
         let name = client.name();
-        *lock_presence(&self.cell).entry(name.clone()).or_default() += 1;
+        lock_presence(&self.cell)
+            .entry(name.clone())
+            .or_default()
+            .push(edition);
         Live {
             cell: self.cell.clone(),
             name,
+            edition,
         }
     }
 
@@ -83,6 +94,24 @@ impl Presence {
     pub fn live(&self) -> BTreeSet<String> {
         lock_presence(&self.cell).keys().cloned().collect()
     }
+
+    /// What every live connection of `client` said it can spell: one edition
+    /// per connection, ascending, and empty for a client holding none.
+    ///
+    /// A list rather than a number, because capability is a fact about a
+    /// *connection* and a client may hold two of different builds. Answering
+    /// the newest would over-promise a routed call landing on the older one,
+    /// and answering the oldest would under-report a seat that is present and
+    /// current — so the judgement stays with the reader that needs one, and
+    /// the read stays honest until there is one.
+    pub fn editions(&self, client: &str) -> Vec<u32> {
+        let mut out = lock_presence(&self.cell)
+            .get(client)
+            .cloned()
+            .unwrap_or_default();
+        out.sort_unstable();
+        out
+    }
 }
 
 /// One connection's presence. Dropping it releases exactly that connection's
@@ -91,15 +120,22 @@ impl Presence {
 pub struct Live {
     cell: PresenceCell,
     name: String,
+    edition: u32,
 }
 
 impl Drop for Live {
     fn drop(&mut self) {
         let mut map = lock_presence(&self.cell);
-        match map.get(&self.name).copied().unwrap_or(0) {
-            0 | 1 => map.remove(&self.name),
-            held => map.insert(self.name.clone(), held - 1),
-        };
+        // `entry` rather than `get_mut`: an identity the map has already
+        // forgotten is the same act with nothing to take out of it, and a case
+        // for it would be a branch no test can reach.
+        let held = map.entry(self.name.clone()).or_default();
+        if let Some(at) = held.iter().position(|stated| *stated == self.edition) {
+            held.remove(at);
+        }
+        if held.is_empty() {
+            map.remove(&self.name);
+        }
     }
 }
 

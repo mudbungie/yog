@@ -78,13 +78,49 @@ impl Write for Gone {
     }
 }
 
+/// This end's own preface, which every beat below compares against: both
+/// keys, the major and the edition (REMOTE §3.2).
+fn ours() -> Value {
+    json!({ "protocol": PROTOCOL, "edition": EDITION })
+}
+
 /// The agreement: a peer of this build's own version is admitted, and what it
 /// was told is exactly one frame — this end's own preface, and no reply.
 #[test]
 fn a_peer_of_this_version_is_admitted_and_told_ours() {
-    let mut peer = Peer::stating(&json!({ "protocol": PROTOCOL }));
-    assert!(admit(&mut peer));
-    assert_eq!(peer.frames(), vec![json!({ "protocol": PROTOCOL })]);
+    let mut peer = Peer::stating(&ours());
+    assert_eq!(admit(&mut peer), Some(EDITION));
+    assert_eq!(peer.frames(), vec![ours()]);
+}
+
+/// **The additive case, and the whole reason the edition is not adjudicated**
+/// (REMOTE §3.2): a peer of this major that states an edition NEWER than this
+/// build's is admitted, and its edition is what comes back — an addition ships
+/// without a bump, so this is the ordinary posture of a seat one release ahead
+/// of the engine, not a skew.
+#[test]
+fn a_peer_of_a_later_edition_is_admitted_and_its_edition_read() {
+    let later = EDITION + 1;
+    let mut peer = Peer::stating(&json!({ "protocol": PROTOCOL, "edition": later }));
+    assert_eq!(admit(&mut peer), Some(later));
+    assert_eq!(peer.frames(), vec![ours()], "no reply, only our preface");
+}
+
+/// **A peer that states no edition speaks the floor.** Every build older than
+/// bl-1be7 is this peer, and reading it as the floor is not a guess: every
+/// engine of this major writes every path stamped at or below it. A stamp that
+/// is not one — a string, a number no `u32` can hold — is the same silence,
+/// because there is no third thing a reader could do with it.
+#[test]
+fn a_peer_that_states_no_usable_edition_reads_as_the_floor() {
+    for said in [
+        json!({ "protocol": PROTOCOL }),
+        json!({ "protocol": PROTOCOL, "edition": "nineteen" }),
+        json!({ "protocol": PROTOCOL, "edition": 4_294_967_296_u64 }),
+    ] {
+        let mut peer = Peer::stating(&said);
+        assert_eq!(admit(&mut peer), Some(FLOOR), "{said}");
+    }
 }
 
 /// The skew: refused, and told a sentence naming **both** versions. That is
@@ -95,10 +131,10 @@ fn a_peer_of_another_version_is_refused_by_name() {
     // constant is the one authority and the fixture derives from it.
     let other = PROTOCOL + 1;
     let mut peer = Peer::stating(&json!({ "protocol": other }));
-    assert!(!admit(&mut peer));
+    assert_eq!(admit(&mut peer), None);
     let frames = peer.frames();
     assert_eq!(frames.len(), 2, "our preface, then the refusal");
-    assert_eq!(frames[0], json!({ "protocol": PROTOCOL }));
+    assert_eq!(frames[0], ours());
     assert_eq!(frames[1]["ok"], json!(false));
     let said = frames[1]["error"].as_str().expect("a sentence");
     assert!(said.contains(&format!("version {PROTOCOL}")), "{said}");
@@ -117,7 +153,7 @@ fn a_peer_that_states_no_version_is_refused_the_same_way() {
         Peer::stating(&json!("not an object")),
         Peer::silent(),
     ] {
-        assert!(!admit(&mut peer));
+        assert_eq!(admit(&mut peer), None);
         let frames = peer.frames();
         let said = frames[1]["error"].as_str().expect("a sentence");
         assert!(said.contains("the peer speaks no version"), "{said}");
@@ -129,7 +165,7 @@ fn a_peer_that_states_no_version_is_refused_the_same_way() {
 #[test]
 fn a_version_that_is_not_a_number_states_none() {
     let mut peer = Peer::stating(&json!({ "protocol": "1" }));
-    assert!(!admit(&mut peer));
+    assert_eq!(admit(&mut peer), None);
     let said = peer.frames()[1]["error"]
         .as_str()
         .expect("a sentence")
@@ -141,14 +177,14 @@ fn a_version_that_is_not_a_number_states_none() {
 /// the sentence on, and the answer is the same one.
 #[test]
 fn a_peer_that_cannot_be_greeted_is_refused() {
-    assert!(!admit(&mut Gone));
+    assert_eq!(admit(&mut Gone), None);
 }
 
 /// The seat's half of the same rule. Agreement is silent; a skew is the one
 /// `Err(String)` every other transport failure already arrives as.
 #[test]
 fn the_seat_confirms_or_refuses_on_the_same_sentence() {
-    let mut agreed = Peer::stating(&json!({ "protocol": PROTOCOL }));
+    let mut agreed = Peer::stating(&ours());
     assert_eq!(confirm(&mut agreed), Ok(()));
 
     let mut skewed = Peer::stating(&json!({ "protocol": 99 }));
