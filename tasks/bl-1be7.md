@@ -1,7 +1,8 @@
 +++
 title = "the hello states the corpus edition: build.rs compiles corpus/shapes.json's newest stamp into EDITION beside PROTOCOL, both ends write it, the engine reads the peer's"
 created = 1788926013
-updated = 1788926013
+updated = 1788927472
+claimant = "Cantaloups-P1"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r3"]
