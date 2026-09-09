@@ -1973,6 +1973,19 @@ server executes nothing in its own process. **Zero consenting advertisers is
 no longer the end of the lane** — see the last rung below (bl-5710) — but for
 every name the engine does not implement it is still the refusal, unchanged.
 
+**A foreign name in the grant now needs the operator's `rules:` row**
+(bl-d281, DESIGN §8.6). The lane's first rung is reached by a *granted* name,
+and the names it was built for are the shipped ones — `bash`, `read_file`,
+`apply_patch` on the box that holds the worktree. A name outside the engine's
+pool is a different act: yog's birth fold prunes the worker grant to what this
+install can call, because a grant is durable and a pin is not and a retired
+built-in left in one parks every call of it. The keep for a foreign name is a
+`capability.yaml` `rules:` row naming its class — which such a grant needed
+anyway, since without one the §8.6 control classifies it `opaque` and holds. So
+the configuration the lane wants is unchanged in substance and now stated in
+two files instead of one, and a stale grant no longer looks like a deliberate
+one.
+
 One shape this deliberately is not. **Not a narrowed grant**: cutting the
 shipped grant back to an envelope would stop the decoys and give nothing back —
 the capabilities the grant names are real and the audit above houses each. (The

@@ -39,6 +39,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use yog::control::classify::Leg;
+use yog::control::policy::Policy;
 use yog::tool_host::{clients, engine_act};
 
 /// The role whose grant is what an interactive conversation can call out of the
@@ -147,4 +148,36 @@ fn every_name_a_granted_invocation_can_carry_has_an_intrinsic_row() {
     for name in ["multi_tool", "box2_shell", "no_such_tool"] {
         assert_eq!(Leg::of(name), Leg::Routed, "`{name}`");
     }
+}
+
+/// **The birth fold's prune never touches a name the pinned engine ships**
+/// (bl-d281). `start::grant` converges an existing workspace's `worker` grant
+/// on what this install can actually call, because a grant is durable and a
+/// pin is not — a lineage born before litany retired `multi_tool` kept naming
+/// it, and every call then classified opaque and parked the conversation. The
+/// set it prunes against is derived (`litany::cmd::BUILTIN_TOOLS` plus yog's
+/// engine acts and `clients`), and this is the direction that catches the
+/// derivation drifting from the engine's own file: the grant litany itself
+/// authors must come back whole, gaining `clients` and losing nothing.
+#[test]
+fn the_birth_fold_prunes_no_name_the_pinned_engine_grants() {
+    let home = tempfile::TempDir::new().unwrap();
+    let providers = shipped_providers(&minted(home.path()));
+    let before = grant(&providers, ROLE);
+    assert!(before.len() > 3, "the shipped {ROLE} grant did not parse");
+
+    // No policy override: the shipped defaults, which state no reach for any
+    // name — so nothing survives the prune except by being shipped.
+    let after = grant(
+        &yog::start::grant::authored(&providers, &Policy::parse("")),
+        ROLE,
+    );
+    for name in &before {
+        assert!(
+            after.contains(name),
+            "`{name}` is in the engine's own grant and the birth fold pruned it:              `start::grant::keep::ships` has drifted from what litany 0.0.13 ships"
+        );
+    }
+    assert!(after.contains(&clients::NAME.to_owned()), "{after:?}");
+    assert_eq!(after.len(), before.len() + 1, "{after:?}");
 }

@@ -4,6 +4,7 @@ use super::*;
 use crate::git_tree::tests::fixture::Fixture;
 use crate::model_pick::BRANCH;
 use crate::test_support::TEMPLATE_PROVIDERS;
+use crate::tool_host::engine_act;
 
 /// **The defect** (bl-0460): litany's shipped template cannot name `clients`,
 /// because the tool is yog's — so after bl-52b7 the worker was declared nothing
@@ -11,7 +12,7 @@ use crate::test_support::TEMPLATE_PROVIDERS;
 /// authoring an authored file reproduces it byte for byte.
 #[test]
 fn the_worker_gains_clients_and_authoring_is_a_fixed_point() {
-    let once = authored(TEMPLATE_PROVIDERS);
+    let once = authored(TEMPLATE_PROVIDERS, &shipped());
     assert_ne!(once, TEMPLATE_PROVIDERS, "the shipped template drifts");
     let granted = entry_field(&once, ROLES, WORKER_ROLE, TOOLS)
         .and_then(|v| flow_members(&v))
@@ -22,7 +23,7 @@ fn the_worker_gains_clients_and_authoring_is_a_fixed_point() {
     for shipped in ["apply_patch", "bash", "dispatch", "read_file"] {
         assert!(granted.iter().any(|n| n == shipped), "{granted:?}");
     }
-    assert_eq!(authored(&once), once, "the fixed point");
+    assert_eq!(authored(&once, &shipped()), once, "the fixed point");
 }
 
 /// **Machinery is never granted.** The compactor's empty grant is the
@@ -31,7 +32,7 @@ fn the_worker_gains_clients_and_authoring_is_a_fixed_point() {
 /// `tools:` line it did not have.
 #[test]
 fn the_checkpoint_roles_are_left_exactly_as_they_were() {
-    let once = authored(TEMPLATE_PROVIDERS);
+    let once = authored(TEMPLATE_PROVIDERS, &shipped());
     assert_eq!(entry_field(&once, ROLES, "compactor", TOOLS), None);
     assert_eq!(
         entry_field(&once, ROLES, "reviewer", TOOLS),
@@ -51,8 +52,14 @@ fn a_file_this_has_nothing_to_say_about_is_unchanged() {
         "roles:\n  worker:\n    provider: anthropic\n    model: m\n    tools:\n      - bash\n",
         "roles:\n  compactor:\n    provider: anthropic\n    model: m\n",
     ] {
-        assert_eq!(authored(base), base, "{base:?}");
+        assert_eq!(authored(base, &shipped()), base, "{base:?}");
     }
+}
+
+/// A workspace that states no policy override at all — the shipped defaults,
+/// which is what every test here but the operator's own row runs against.
+fn shipped() -> Policy {
+    Policy::parse("")
 }
 
 /// The paths `drift` would stage, in order.
@@ -77,7 +84,7 @@ fn the_grant_and_the_description_it_is_worthless_without_move_together() {
 
     // bl-0460's half-written state, which is exactly what main shipped: the
     // grant committed, nothing describing it. The description is still due.
-    fixture.commit_other(PROVIDERS_YAML, &authored(TEMPLATE_PROVIDERS));
+    fixture.commit_other(PROVIDERS_YAML, &authored(TEMPLATE_PROVIDERS, &shipped()));
     assert_eq!(staged(&fixture), [SCHEMA_PATH]);
 
     // Both committed: the steady state stages nothing and spawns nothing.
@@ -109,4 +116,63 @@ fn no_grant_means_no_description_and_no_lineage_means_neither() {
     assert!(staged(&fixture).is_empty());
     // A lineage with no `providers.yaml` at all.
     assert!(drift(&Fixture::new().path, BRANCH).is_empty());
+}
+
+/// **The defect this ball came from** (bl-d281): a workspace born before
+/// litany retired `multi_tool` still grants it, so every call of it classifies
+/// `opaque`, holds, and parks the conversation. The prune converges the
+/// lineage at its next start — and touches nothing else in the list.
+#[test]
+fn a_name_the_pinned_engine_no_longer_ships_is_pruned() {
+    let stale =
+        TEMPLATE_PROVIDERS.replace("tools: [apply_patch,", "tools: [multi_tool, apply_patch,");
+    assert_ne!(stale, TEMPLATE_PROVIDERS, "the stale lineage was planted");
+    let once = authored(&stale, &shipped());
+    let granted = entry_field(&once, ROLES, WORKER_ROLE, TOOLS)
+        .and_then(|v| flow_members(&v))
+        .expect("the worker's grant");
+    assert!(!granted.iter().any(|n| n == "multi_tool"), "{granted:?}");
+    assert!(granted.iter().any(|n| n == clients::NAME), "{granted:?}");
+    // Every name the engine still ships survived the prune.
+    for shipped in ::litany::cmd::BUILTIN_TOOLS {
+        assert!(granted.iter().any(|n| n == shipped), "{granted:?}");
+    }
+    assert_eq!(authored(&once, &shipped()), once, "the fixed point");
+}
+
+/// **The operator's own `rules:` row is what keeps a foreign name** (REMOTE
+/// §5.4's worktree lane): a bare name a registered machine advertises is
+/// callable only where the operator has stated its reach, and where they have,
+/// yog does not overrule the file.
+#[test]
+fn a_name_the_operator_stated_a_reach_for_is_kept() {
+    let stale =
+        TEMPLATE_PROVIDERS.replace("tools: [apply_patch,", "tools: [box2_shell, apply_patch,");
+    let stated = Policy::parse("rules:\n  box2_shell: open-world\n");
+    let kept = authored(&stale, &stated);
+    let granted = entry_field(&kept, ROLES, WORKER_ROLE, TOOLS)
+        .and_then(|v| flow_members(&v))
+        .expect("the worker's grant");
+    assert!(granted.iter().any(|n| n == "box2_shell"), "{granted:?}");
+    // …and with nothing stated, the same file loses it.
+    let pruned = authored(&stale, &shipped());
+    assert!(!pruned.contains("box2_shell"), "{pruned}");
+}
+
+/// The predicate's own two directions, over the three sets it is derived from
+/// and a name in none of them.
+#[test]
+fn the_kept_set_is_the_engine_s_own_plus_what_the_operator_states() {
+    for name in ::litany::cmd::BUILTIN_TOOLS
+        .into_iter()
+        .chain(engine_act::NAMES)
+        .chain([clients::NAME])
+    {
+        assert!(keep::keep(name, &shipped()), "{name}");
+    }
+    assert!(!keep::keep("multi_tool", &shipped()));
+    assert!(keep::keep(
+        "multi_tool",
+        &Policy::parse("rules:\n  multi_tool: read\n")
+    ));
 }

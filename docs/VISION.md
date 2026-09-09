@@ -787,6 +787,18 @@ mediation.
      carries, read out of a workspace `litany new` really authors, must
      classify on the engine leg.
 
+     **And the envelope row stays unwritten, because the retirement is real**
+     (bl-d281, verified against litany 0.0.13 rather than against a doc). The
+     pinned engine answers to eleven built-in names and `multi_tool` is not
+     among them: `litany tool multi_tool` replies *unknown built-in tool*, no
+     module, schema or skill ships for it, and `tool_host::subject::performs`
+     — which is `BUILTIN_TOOLS` minus the engine acts — does not hold it
+     either. So a workspace whose grant still names it does not execute an
+     envelope when the operator passes the hold; it gets an in-band refusal
+     from the worktree lane. There is nothing for a fold to judge, and the
+     defect is entirely in the durable grant, which DESIGN §8.6's birth prune
+     now converges.
+
    And **the fall-off is deleted structurally, not fixed**: names are folded
    into a closed enum before anything classifies them and matched exhaustively,
    so no future arm can land a name in a passing class by default (DESIGN §12,
@@ -813,6 +825,10 @@ mediation.
    yog's policy — so bl-7fc8's deletion of the grant path stands; tool-name
    narrowing returns nowhere, because the workhorse tool (`bash`) is every
    class at once and only per-invocation adjudication can tell them apart.
+   (DESIGN §8.6's birth **prune** is not that returning, bl-d281: it removes a
+   name the pinned engine cannot execute at all — a retirement the grant
+   outlived — never a name whose effects are distrusted, and its floor is the
+   engine's whole shipped pool.)
 
 3. **The writable root is §4.10's answer, restated:** the bound attempt
    worktree plus the agent's own worktree. Inside it, writing is the job
