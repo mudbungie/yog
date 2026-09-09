@@ -1,0 +1,9 @@
++++
+title = "multi_tool is classified opaque and held on every call, so a question that fans out reads (clients get ×2) parks with no answer: classify the envelope by its invocations, strictest wins"
+created = 1788934188
+updated = 1788934188
+priority = 1
+root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
+tags = ["usability-r3"]
++++
+Operator screenshot 2026-09-08 (campaign rounds/3/shots/phone-complaints/held-multi-tool-0.0.4.png): conversation BanisterIsthmus asked 'what devices do you have access to?'; the agent called `clients list` (ok) then `multi_tool` {execution: parallel, invocations: [clients get NickelBuzz, clients get cedarmoon-foot, …]} and the control HELD it: 'classified opaque (multi_tool is not a tool this control implements and its input carries no command line …)'. The user saw a question with tool calls and no reply. Ruling: multi_tool is an envelope, never a subject — the classifier judges each invocation exactly as if it were called alone (by name against the closed intrinsic enum, or by command line for shell-shaped ones) and the envelope takes the STRICTEST verdict; an envelope containing an unknown name is opaque as before. Here every invocation is `clients get` (a read) so the envelope passes. Amend VISION §4.11 / DESIGN §8.6; test: an envelope of reads passes, an envelope with one destructive shell holds, an envelope with an unknown tool is opaque. Also decide whether `multi_tool` stays in the worker grant now that litany's python built-in exists (litany bl-99bb planned its retirement) — if retiring, this classification still applies to any envelope shape.
